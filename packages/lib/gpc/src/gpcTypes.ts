@@ -139,6 +139,9 @@ export type GPCProofConfig = {
    * for configuration.
    */
   pods: Record<PODName, GPCProofObjectConfig>;
+
+  // TODO(POD-P2): List membership configuration
+  // TODO(POD-P2): Tuple configuration
 };
 
 /**
@@ -249,6 +252,9 @@ export type GPCProofInputs = {
    */
   owner?: GPCProofOwnerInputs;
 
+  // TODO(POD-P2): List membership configuration
+  // TODO(POD-P2): Tuple configuration
+
   /**
    * If this field is set, the given value will be included in the resulting
    * proof.  This allows identifying a proof as tied to a specific use case, to
@@ -336,7 +342,7 @@ export type GPCRevealedClaims = {
   pods: Record<PODName, GPCRevealedObjectClaims>;
 
   /**
-   * Revelaed information about the owner specified in the proof, if any.
+   * Revealed information about the owner specified in the proof, if any.
    *
    * The owner's identity is never directly revealed.  Instead if a nullifier
    * was calcluated, the information required to interpret it is included here.
@@ -346,6 +352,9 @@ export type GPCRevealedClaims = {
    * absence of this field is unaffected by the entry configuration.
    */
   owner?: GPCRevealedOwnerClaims;
+
+  // TODO(POD-P2): List membership configuration
+  // TODO(POD-P2): Tuple configuration
 
   /**
    * If this field is set, it matches the corresponding field in
@@ -359,3 +368,57 @@ export type GPCRevealedClaims = {
    */
   watermark?: PODValue;
 };
+
+/**
+ * GPC circuit requirements for a given proof configuration.
+ * These values will be appropriately checked against the circuit configurations
+ * at our disposal in order to accommodate all of the proof inputs. For the
+ * objects, entries, Merkle tree depth and membership list sizes, this amounts
+ * to picking the circuit description whose corresponding parameters exceed
+ * these numbers, while the choice of tuple parameters is more involved.
+ */
+export type GPCCircuitRequirements = {
+  /**
+   * Number of POD objects which must be included in a proof.
+   */
+  nObjects: number;
+
+  /**
+   * Number of POD entries which can be included in a proof.
+   */
+  nEntries: number;
+
+  /**
+   * Depth of POD merkle tree.  Max entries in any object is 2^(depth-1).
+   */
+  merkleMaxDepth: number;
+
+  /**
+   * Minimum required number of entries in each membership list to be included in proof.
+   */
+  nListElements: number[];
+
+  /**
+   * arities of tuples which must included in a proof.
+   */
+  tupleArities: number[];
+};
+
+/**
+ * GPCSizeRequirements constructor.
+ */
+export function GPCCircuitRequirements(
+  nObjects: number,
+  nEntries: number,
+  merkleMaxDepth: number,
+  nListElements: number[] = [],
+  tupleArities: number[] = []
+): GPCCircuitRequirements {
+  return {
+    nObjects,
+    nEntries,
+    merkleMaxDepth,
+    nListElements,
+    tupleArities
+  };
+}

@@ -108,7 +108,7 @@ describe("GPCPCD should work", async function () {
     expect(gpcPCD.claim.revealed.watermark?.value).to.eq("some watermark");
     // TODO(POD-P2): Revisit this when tuples and lists are in the compiler.
     expect(gpcPCD.claim.config.circuitIdentifier).to.eq(
-      "proto-pod-gpc_1o-5e-6md-1x10l-2x2t"
+      "proto-pod-gpc_1o-5e-6md-0x0l-0x0t"
     );
 
     expect(await GPCPCDPackage.verify(gpcPCD)).to.be.true;

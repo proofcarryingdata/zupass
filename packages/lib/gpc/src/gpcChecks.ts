@@ -1,7 +1,7 @@
 import {
   ProtoPODGPC,
   ProtoPODGPCCircuitDesc,
-  ProtoPODGPCCircuitParams
+  requiredNumTuples
 } from "@pcd/gpcircuits";
 import {
   POD,
@@ -21,16 +21,15 @@ import {
   GPCProofInputs,
   GPCProofObjectConfig,
   GPCRevealedClaims,
-  GPCRevealedObjectClaims
+  GPCRevealedObjectClaims,
+  GPCCircuitRequirements
 } from "./gpcTypes";
 import {
   checkPODEntryIdentifier,
   splitCircuitIdentifier,
   splitPODEntryIdentifier,
-  DEFAULT_MAX_LISTS,
-  DEFAULT_MAX_LIST_ELEMENTS,
-  DEFAULT_MAX_TUPLES,
-  DEFAULT_TUPLE_ARITY
+  DEFAULT_LIST_ELEMENTS,
+  DEFAULT_TUPLE_ARITIES
 } from "./gpcUtil";
 
 // TODO(POD-P2): Split out the parts of this which should be public from
@@ -44,18 +43,17 @@ import {
  *
  * @param proofConfig proof configuration
  * @param proofInputs proof inputs
- * @returns the minimum circuit parameter requirements for proving with
- *   these arguments
+ * @returns the circuit size requirements for proving with these arguments
  * @throws TypeError if one of the objects is malformed
  * @throws Error if logical requirements between fields are not met
  */
 export function checkProofArgs(
   proofConfig: GPCProofConfig,
   proofInputs: GPCProofInputs
-): ProtoPODGPCCircuitParams {
+): GPCCircuitRequirements {
   // Check that config and inputs are individually valid, and extract their
   // circuit requirements.
-  const requiridParams = ProtoPODGPC.mergeRequiredParams(
+  const circuitReq = mergeRequirements(
     checkProofConfig(proofConfig),
     checkProofInputs(proofInputs)
   );
@@ -63,21 +61,20 @@ export function checkProofArgs(
   // Check that config and inputs properly correspond to each other.
   checkProofInputsForConfig(proofConfig, proofInputs);
 
-  return requiridParams;
+  return circuitReq;
 }
 
 /**
  * Checks the validity of a proof configuration, throwing if it is invalid.
  *
  * @param proofConfig proof configuration
- * @returns the minimum circuit parameter requirements for proving with
- *   this configuration
+ * @returns the circuit size requirements for proving with this configuration
  * @throws TypeError if one of the objects is malformed
  * @throws Error if logical requirements between fields are not met
  */
 export function checkProofConfig(
   proofConfig: GPCProofConfig
-): ProtoPODGPCCircuitParams {
+): GPCCircuitRequirements {
   if (proofConfig.circuitIdentifier !== undefined) {
     requireType("circuitIdentifier", proofConfig.circuitIdentifier, "string");
   }
@@ -100,14 +97,12 @@ export function checkProofConfig(
     );
   }
 
-  return ProtoPODGPCCircuitParams(
+  return GPCCircuitRequirements(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
-    DEFAULT_MAX_LISTS,
-    DEFAULT_MAX_LIST_ELEMENTS,
-    DEFAULT_MAX_TUPLES,
-    DEFAULT_TUPLE_ARITY
+    DEFAULT_LIST_ELEMENTS,
+    DEFAULT_TUPLE_ARITIES
   );
 }
 
@@ -163,14 +158,13 @@ function checkProofEntryConfig(
  * Checks the validity of a proof inputs, throwing if they are invalid.
  *
  * @param proofInputs proof inputs
- * @returns the minimum circuit parameter requirements for proving with
- *   this configuration
+ * @returns the circuit size requirements for proving with this configuration
  * @throws TypeError if one of the objects is malformed
  * @throws Error if logical requirements between fields are not met
  */
 export function checkProofInputs(
   proofInputs: GPCProofInputs
-): ProtoPODGPCCircuitParams {
+): GPCCircuitRequirements {
   requireType("pods", proofInputs.pods, "object");
 
   let totalObjects = 0;
@@ -208,14 +202,12 @@ export function checkProofInputs(
     checkPODValue("watermark", proofInputs.watermark);
   }
 
-  return ProtoPODGPCCircuitParams(
+  return GPCCircuitRequirements(
     totalObjects,
     1,
     requiredMerkleDepth,
-    DEFAULT_MAX_LISTS,
-    DEFAULT_MAX_LIST_ELEMENTS,
-    DEFAULT_MAX_TUPLES,
-    DEFAULT_TUPLE_ARITY
+    DEFAULT_LIST_ELEMENTS,
+    DEFAULT_TUPLE_ARITIES
   );
 }
 
@@ -321,6 +313,9 @@ export function checkProofInputsForConfig(
   if (proofInputs.owner?.externalNullifier !== undefined && !hasOwnerEntry) {
     throw new Error("Nullifier requires an entry containing owner ID.");
   }
+
+  // TODO(POD-P2): Config and inputs should have same number of lists.
+  // TODO(POD-P2): Config and inputs should have same tuple arities.
 }
 
 /**
@@ -330,18 +325,17 @@ export function checkProofInputsForConfig(
  *
  * @param boundConfig proof configuration bound to a specific circuit
  * @param revealedClaims revealed values from the proof
- * @returns the minimum circuit parameter requirements for proving with
- *   these arguments
+ * @returns the circuit size requirements for proving with these arguments
  * @throws TypeError if one of the objects is malformed
  * @throws Error if logical requirements between fields are not met
  */
 export function checkVerifyArgs(
   boundConfig: GPCBoundConfig,
   revealedClaims: GPCRevealedClaims
-): ProtoPODGPCCircuitParams {
+): GPCCircuitRequirements {
   // Check that config and inputs are individually valid, and extract their
   // circuit requirements.
-  const requiridParams = ProtoPODGPC.mergeRequiredParams(
+  const circuitReq = mergeRequirements(
     checkBoundConfig(boundConfig),
     checkRevealedClaims(revealedClaims)
   );
@@ -349,21 +343,20 @@ export function checkVerifyArgs(
   // Check that config and inputs properly correspond to each other.
   checkVerifyClaimsForConfig(boundConfig, revealedClaims);
 
-  return requiridParams;
+  return circuitReq;
 }
 
 /**
  * Checks the validity of a proof configuration, throwing if it is invalid.
  *
  * @param boundConfig bound configuration
- * @returns the minimum circuit parameter requirements for proving with
- *   this configuration
+ * @returns the size requirements for proving with this configuration
  * @throws TypeError if one of the objects is malformed
  * @throws Error if logical requirements between fields are not met
  */
 export function checkBoundConfig(
   boundConfig: GPCBoundConfig
-): ProtoPODGPCCircuitParams {
+): GPCCircuitRequirements {
   if (boundConfig.circuitIdentifier === undefined) {
     throw new TypeError("Bound config must include circuit identifier.");
   }
@@ -376,14 +369,13 @@ export function checkBoundConfig(
  * are invalid.
  *
  * @param revealedClaims revealed claims to be verified
- * @returns the minimum circuit parameter requirements for proving with
- *   this configuration
+ * @returns the circuit size requirements for proving with this configuration
  * @throws TypeError if one of the objects is malformed
  * @throws Error if logical requirements between fields are not met
  */
 export function checkRevealedClaims(
   revealedClaims: GPCRevealedClaims
-): ProtoPODGPCCircuitParams {
+): GPCCircuitRequirements {
   let totalObjects = 0;
   let totalEntries = 0;
   let requiredMerkleDepth = 0;
@@ -414,14 +406,12 @@ export function checkRevealedClaims(
     checkPODValue("watermark", revealedClaims.watermark);
   }
 
-  return ProtoPODGPCCircuitParams(
+  return GPCCircuitRequirements(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
-    DEFAULT_MAX_LISTS,
-    DEFAULT_MAX_LIST_ELEMENTS,
-    DEFAULT_MAX_TUPLES,
-    DEFAULT_TUPLE_ARITY
+    DEFAULT_LIST_ELEMENTS,
+    DEFAULT_TUPLE_ARITIES
   );
 }
 
@@ -538,24 +528,114 @@ export function checkVerifyClaimsForConfig(
       }
     }
   }
+  // TODO(POD-P2): List membership claims
+}
+
+/**
+ * Picks the smallest available circuit in this family which can handle the
+ * size parameters of a desired configuration.
+ *
+ * @param circuitReq the circuit size requirements
+ * @returns the circuit description, or undefined if no circuit can handle
+ *   the required parameters.
+ * @throws Error if there are no circuits satisfying the given requirements.
+ */
+export function circuitDescForRequirements(
+  circuitReq: GPCCircuitRequirements
+): ProtoPODGPCCircuitDesc {
+  for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
+    if (circuitDescMeetsRequirements(circuitDesc, circuitReq)) {
+      return circuitDesc;
+    }
+  }
+
+  throw new Error(
+    `There are no circuit parameters satisfying these requirements: ${circuitReq}`
+  );
+}
+
+/**
+ * Checks whether a described circuit can meet given GPC size requirements.
+ * This will be true if each of the circuit's parameters is greater than or
+ * equal to the required value.
+ *
+ * @param circuitDesc description of the circuit to check
+ * @param circuitReq the circuit size requirements
+ * @returns `true` if the circuit meets the requirements.
+ */
+export function circuitDescMeetsRequirements(
+  circuitDesc: ProtoPODGPCCircuitDesc,
+  circuitReq: GPCCircuitRequirements
+): boolean {
+  // Check tuple parameter compatibility.
+  // Indicate negative tuple requirement check if `requiredNumTuples` throws due
+  // to an invalid choice of parameters (i.e. `params.tupleArity < 2`).
+  const tupleCheck = ((): boolean => {
+    try {
+      // The circuit description should have enough tuples of arity `tupleArity` to
+      // cover all input tuples.
+      return (
+        circuitDesc.maxTuples >=
+        circuitReq.tupleArities
+          .map((arity) => requiredNumTuples(circuitDesc.tupleArity, arity))
+          .reduce((sum, requiredNum) => sum + requiredNum, 0)
+      );
+    } catch (_) {
+      return false;
+    }
+  })();
+  return (
+    tupleCheck &&
+    circuitDesc.maxObjects >= circuitReq.nObjects &&
+    circuitDesc.maxEntries >= circuitReq.nEntries &&
+    circuitDesc.merkleMaxDepth >= circuitReq.merkleMaxDepth &&
+    circuitDesc.maxLists >= circuitReq.nListElements.length &&
+    // The circuit description should be able to contain the largest of the lists.
+    circuitDesc.maxListElements >= Math.max(...circuitReq.nListElements, 0)
+  );
+}
+
+/**
+ * Calculates the merged set of GPC size requirements meeting the unified
+ * (maximum) requirements of both inputs.
+ *
+ * @param rs1 first set of required sizes
+ * @param rs2 second set of required sizes
+ * @returns unified (maximum) sizes
+ */
+
+export function mergeRequirements(
+  rs1: GPCCircuitRequirements,
+  rs2: GPCCircuitRequirements
+): GPCCircuitRequirements {
+  return GPCCircuitRequirements(
+    Math.max(rs1.nObjects, rs2.nObjects),
+    Math.max(rs1.nEntries, rs2.nEntries),
+    Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
+    rs1.nListElements.map((nElements, i) =>
+      Math.max(nElements, rs2.nListElements[i])
+    ),
+    rs1.tupleArities.map((arity, i) => Math.max(arity, rs2.tupleArities[i]))
+  );
 }
 
 /**
  * Checks that the required circuit parameters for a proof can be satisfied
  * by a known circuit.  This is not an exact match, but instead each parameter
- * of the chosen circuit must be greater than or equal to the required value.
+ * of the chosen circuit must be able to accommodate the specified GPC input
+ * sizes.
  *
  * If the circuit name is not given, this will pick the smallest supported
  * circuit which can satisfy the requirements.
  *
- * @param requiredParameters the minimum required parameter values
+ * @param requiredParameters the GPC size requirements
  * @param circuitIdentifier a specific circuit to be used
  * @returns the full description of the circuit to be used for the proof
  * @throws Error if no known circuit can support the given parameters, or if
  *   the named circuit cannot do so.
  */
 export function checkCircuitParameters(
-  requiredParameters: ProtoPODGPCCircuitParams,
+  requiredParameters: GPCCircuitRequirements,
   circuitIdentifier?: GPCIdentifier
 ): ProtoPODGPCCircuitDesc {
   if (circuitIdentifier !== undefined) {
@@ -565,14 +645,14 @@ export function checkCircuitParameters(
     if (foundDesc === undefined) {
       throw new Error(`Unknown circuit name: "${circuitIdentifier}"`);
     }
-    if (!ProtoPODGPC.circuitMeetsRequirements(foundDesc, requiredParameters)) {
+    if (!circuitDescMeetsRequirements(foundDesc, requiredParameters)) {
       throw new Error(
         `Specified circuit "${circuitIdentifier}" does not meet proof requirements.`
       );
     }
     return foundDesc;
   } else {
-    const pickedDesc = ProtoPODGPC.pickCircuit(requiredParameters);
+    const pickedDesc = circuitDescForRequirements(requiredParameters);
     if (pickedDesc === undefined) {
       throw new Error(`No supported circuit meets proof requirements.`);
     }
