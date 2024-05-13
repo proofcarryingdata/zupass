@@ -249,7 +249,8 @@ async function verifyProof(
 ): Promise<{ valid: boolean; err?: string }> {
   const { init, verify } = GPCPCDPackage;
   await init?.({
-    zkArtifactPath: ZUPASS_URL + "artifacts/test/proto-pod-gpc"
+    zkArtifactPath:
+      "https://raw.githubusercontent.com/proofcarryingdata/snark-artifacts/artwyman/experimental/packages/proto-pod-gpc"
   });
   const verified = await verify(pcd);
   if (!verified) return { valid: false };
