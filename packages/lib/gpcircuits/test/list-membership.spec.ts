@@ -52,18 +52,16 @@ describe("List membership helpers should work", function () {
     for (const params of ProtoPODGPC.CIRCUIT_PARAMETERS.map(
       (pair) => pair[0]
     ).filter((params) => params.maxListElements > 0)) {
+      // Truncate list if necessary.
+      const truncatedList = list1.slice(0, params.maxListElements);
+
       expect(
-        processSingleList(
-          params,
-          6,
-          listComparisonValueIndex1,
-          list1.slice(0, params.maxListElements)
-        )
+        processSingleList(params, 6, listComparisonValueIndex1, truncatedList)
       ).to.deep.equal({
         tupleIndices: [],
         listComparisonValueIndex: 0,
         listValidValues: padArray(
-          list1.map((x) => podValueHash(x[0])).slice(0, params.maxListElements),
+          truncatedList.map((x) => podValueHash(x[0])),
           params.maxListElements,
           podValueHash(list1[0][0])
         )
@@ -71,57 +69,36 @@ describe("List membership helpers should work", function () {
     }
 
     expect(
-      processSingleList(
-        params1,
-        6,
-        listComparisonValueIndex2,
-        list2.slice(0, params1.maxListElements)
-      )
+      processSingleList(params1, 6, listComparisonValueIndex2, list2)
     ).to.deep.equal({
       tupleIndices: [[0, 2]],
       listComparisonValueIndex: 6,
       listValidValues: padArray(
-        list2
-          .map((x) => hashTuple(params1.tupleArity, x))
-          .slice(0, params1.maxListElements),
+        list2.map((x) => hashTuple(params1.tupleArity, x)),
         params1.maxListElements,
         hashTuple(params1.tupleArity, list2[0])
       )
     });
 
     expect(
-      processSingleList(
-        params2,
-        6,
-        listComparisonValueIndex2,
-        list2.slice(0, params2.maxListElements)
-      )
+      processSingleList(params2, 6, listComparisonValueIndex2, list2)
     ).to.deep.equal({
       tupleIndices: [[0, 2, 0]],
       listComparisonValueIndex: 6,
       listValidValues: padArray(
-        list2
-          .map((x) => hashTuple(params2.tupleArity, x))
-          .slice(0, params2.maxListElements),
+        list2.map((x) => hashTuple(params2.tupleArity, x)),
         params2.maxListElements,
         hashTuple(params2.tupleArity, list2[0])
       )
     });
 
     expect(
-      processSingleList(
-        params3,
-        6,
-        listComparisonValueIndex2,
-        list2.slice(0, params3.maxListElements)
-      )
+      processSingleList(params3, 6, listComparisonValueIndex2, list2)
     ).to.deep.equal({
       tupleIndices: [[0, 2, 0, 0]],
       listComparisonValueIndex: 6,
       listValidValues: padArray(
-        list2
-          .map((x) => hashTuple(params3.tupleArity, x))
-          .slice(0, params3.maxListElements),
+        list2.map((x) => hashTuple(params3.tupleArity, x)),
         params1.maxListElements,
         hashTuple(params3.tupleArity, list2[0])
       )

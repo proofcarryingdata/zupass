@@ -539,7 +539,7 @@ function makeTestSignals(
     .filter((list) => list.length > 0)
     .slice(0, numLists);
   const listValidValuess = [list1, list2]
-    // Omit index if it is empty
+    // Omit list if it is empty
     .filter((list) => list.length > 0)
     .slice(0, numLists)
     // Truncate membership lists if necessary.
