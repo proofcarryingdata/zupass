@@ -571,7 +571,7 @@ async function addGPCPCD(
 ): Promise<void> {
   await GPCPCDPackage.init?.({
     zkArtifactPath:
-      "https://github.com/proofcarryingdata/snark-artifacts/raw/artwyman/experimental/packages/proto-pod-gpc"
+      "https://raw.githubusercontent.com/proofcarryingdata/snark-artifacts/artwyman/experimental/packages/proto-pod-gpc"
   });
 
   const podPCD = new PODPCD(
