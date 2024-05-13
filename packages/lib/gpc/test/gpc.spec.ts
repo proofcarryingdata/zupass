@@ -21,7 +21,7 @@ import {
   sampleEntries2
 } from "./common";
 
-describe("gpc library (Precompiled Artifact) should work", async function () {
+describe("gpc library (Precompiled Artifacts) should work", async function () {
   function makeMinimalArgs(includeWatermark?: boolean): {
     proofConfig: GPCProofConfig;
     proofInputs: GPCProofInputs;

@@ -1,8 +1,8 @@
-import { ProtoPODGPCCircuitParams } from "./proto-pod-gpc";
-import { CircuitSignal } from "./types";
 import { PODValueTuple, podValueHash } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { computeTupleIndices, hashTuple } from "./multituple";
+import { ProtoPODGPCCircuitParams } from "./proto-pod-gpc";
+import { CircuitSignal } from "./types";
 import { extendedSignalArray, padArray } from "./util";
 
 export type ListMembershipModuleInputs = {

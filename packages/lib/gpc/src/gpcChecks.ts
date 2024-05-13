@@ -24,12 +24,12 @@ import {
   GPCRevealedObjectClaims
 } from "./gpcTypes";
 import {
+  DEFAULT_LIST_ELEMENTS,
+  DEFAULT_TUPLE_ARITIES,
   checkPODEntryIdentifier,
   GPCRequirements,
   splitCircuitIdentifier,
-  splitPODEntryIdentifier,
-  DEFAULT_LIST_ELEMENTS,
-  DEFAULT_TUPLE_ARITIES
+  splitPODEntryIdentifier
 } from "./gpcUtil";
 
 // TODO(POD-P2): Split out the parts of this which should be public from
@@ -200,7 +200,7 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
 
   return GPCRequirements(
     totalObjects,
-    1,
+    totalObjects,
     requiredMerkleDepth,
     DEFAULT_LIST_ELEMENTS,
     DEFAULT_TUPLE_ARITIES
