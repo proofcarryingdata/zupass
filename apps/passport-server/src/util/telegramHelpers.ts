@@ -75,6 +75,7 @@ export interface SessionData {
   selectedEvent?: LinkedPretixTelegramEvent;
   anonBotExists: boolean;
   authBotURL: string;
+  directLinkMode: boolean;
   anonBotURL: string;
   lastMessageId?: number;
   selectedChat?: TopicChat;
@@ -559,17 +560,19 @@ export const generateReactProofUrl = async (
   });
 };
 
-const getChatsWithMembershipStatus = async (
+export const getChatsWithMembershipStatus = async (
   db: Pool,
   ctx: BotContext,
-  userId: number
+  userId: number,
+  chatId?: number // if chatId is provided, only fetch chats with that id
 ): Promise<ChatIDWithChat<ChatIDWithEventsAndMembership>[]> => {
   return traced("telegram", "getChatsWithMembershipStatus", async (span) => {
     span?.setAttribute("userId", userId.toString());
 
     const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
       db,
-      userId
+      userId,
+      chatId
     );
     const chatsWithMembership = await chatIDsToChats(
       ctx,
@@ -741,10 +744,12 @@ export const chatsToJoinV2 = async (
         );
 
         range.webApp(`Join ${chat.chat?.title}`, proofUrl).row();
-        range.text(`↰  Back`, async (ctx) => {
-          ctx.session.chatToJoin = undefined;
-          ctx.menu.update();
-        });
+        if (!ctx.session.directLinkMode) {
+          range.text(`↰  Back`, async (ctx) => {
+            ctx.session.chatToJoin = undefined;
+            ctx.menu.update();
+          });
+        }
       } else {
         const chatsWithMembership = await getChatsWithMembershipStatus(
           db,
