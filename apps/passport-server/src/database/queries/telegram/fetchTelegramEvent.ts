@@ -185,18 +185,20 @@ export async function fetchUserTelegramChats(
 
 // Fetch a list of Telegram chats that can be joined with the status of user
 // The list is sorted such that chat a user hasn't joined are returned first
+// If a chatId is provided, only chats with that id are returned.
 export async function fetchTelegramChatsWithMembershipStatus(
   client: Pool,
-  userId: number
+  userId: number,
+  chatId?: number
 ): Promise<ChatIDWithEventsAndMembership[]> {
   const result = await sqlQuery(
     client,
     `
     SELECT
         tbe.telegram_chat_id AS "telegramChatID",
-        ARRAY_AGG(dpei.event_name) AS "eventNames",
-        ARRAY_AGG(tbe.ticket_event_id) AS "ticketEventIds",
-        CASE WHEN tbc.telegram_user_id IS NOT NULL THEN true ELSE false END AS "isChatMember"
+        ARRAY_AGG(DISTINCT dpei.event_name) AS "eventNames",
+        ARRAY_AGG(DISTINCT tbe.ticket_event_id) AS "ticketEventIds",
+        BOOL_OR(tbc.telegram_user_id IS NOT NULL) AS "isChatMember"
     FROM 
         telegram_bot_events tbe
     LEFT JOIN 
@@ -207,12 +209,14 @@ export async function fetchTelegramChatsWithMembershipStatus(
         devconnect_pretix_events_info dpei
     ON
         tbe.ticket_event_id = dpei.pretix_events_config_id
+    WHERE
+        ($2::bigint IS NULL OR tbe.telegram_chat_id = $2::bigint)
     GROUP BY 
-        tbe.telegram_chat_id, tbc.telegram_user_id
+        tbe.telegram_chat_id
     ORDER BY 
         "isChatMember" ASC;
     `,
-    [userId]
+    [userId, chatId]
   );
   return result.rows;
 }

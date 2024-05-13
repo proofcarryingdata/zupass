@@ -559,17 +559,19 @@ export const generateReactProofUrl = async (
   });
 };
 
-const getChatsWithMembershipStatus = async (
+export const getChatsWithMembershipStatus = async (
   db: Pool,
   ctx: BotContext,
-  userId: number
+  userId: number,
+  chatId?: number // if chatId is provided, only fetch chats with that id
 ): Promise<ChatIDWithChat<ChatIDWithEventsAndMembership>[]> => {
   return traced("telegram", "getChatsWithMembershipStatus", async (span) => {
     span?.setAttribute("userId", userId.toString());
 
     const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
       db,
-      userId
+      userId,
+      chatId
     );
     const chatsWithMembership = await chatIDsToChats(
       ctx,
