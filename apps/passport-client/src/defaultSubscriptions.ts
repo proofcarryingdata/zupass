@@ -3,9 +3,10 @@ import {
   Subscription,
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
+import urljoin from "url-join";
 import { appConfig } from "../src/appConfig";
 
-export const ZUPASS_FEED_URL = `${appConfig.zupassServer}/feeds`;
+export const ZUPASS_FEED_URL = urljoin(appConfig.zupassServer, "feeds");
 const ZUPASS_FEED_PROVIDER_NAME = "Zupass";
 const ZUPASS_SERVER_FEEDS = new Set(Object.keys(zupassDefaultSubscriptions));
 
