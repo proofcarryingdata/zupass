@@ -141,19 +141,11 @@ export function processLists(
  * entry and tuple value hashes.
  * @param listComparisonValueIndex tuple of indices of inputs to be compared to the list elements
  * @param list the tuples of constant values making up the list
-<<<<<<< HEAD
  * @returns list of tuple indices of arity `params.tupleArity` representing the
  * input tuple, number representing the index of the entry value (tuple) which
  * is a member of the list, and the (unpadded) membership list in hashed form.
  * @throws RangeError if any of the inputs are out of bounds with respect to the
  * given circuit parameters.
-=======
- * @returns list of tuple indices of arity `params.tupleArity` representing the input tuple,
- * number representing the index of the entry value (tuple) which is a member of
- * the list, and the (unpadded) membership list in hashed form.
- * @throws RangeError if any of the indices are out of bounds with respect
- * to the given parameters.
->>>>>>> 6a7229e988fb77b4c24a96ac4875cd0fff461ac8
  * @throws TypeError if the list and index arrays are malformed.
  */
 export function processSingleList(

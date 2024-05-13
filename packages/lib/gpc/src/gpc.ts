@@ -19,10 +19,13 @@ import {
   GPCBoundConfig,
   GPCProofConfig,
   GPCProofInputs,
-  GPCRevealedClaims,
-  GPCRequirements
+  GPCRevealedClaims
 } from "./gpcTypes";
-import { canonicalizeConfig, makeCircuitIdentifier } from "./gpcUtil";
+import {
+  canonicalizeConfig,
+  GPCRequirements,
+  makeCircuitIdentifier
+} from "./gpcUtil";
 
 function bindConfigWithRequirements(
   proofConfig: GPCProofConfig,

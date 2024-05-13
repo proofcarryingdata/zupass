@@ -215,6 +215,63 @@ export function makeWatermarkSignal(podValue: PODValue | undefined): bigint {
   return getPODValueForCircuit(podValue) ?? podValueHash(podValue);
 }
 
+/**
+ * General-purpose circuit requirements for a given proof.
+ * These values will be appropriately checked against the circuits at our
+ * disposal in order to accommodate all of the proof requirements. For the
+ * objects, entries, Merkle tree depth and membership list sizes, this amounts
+ * to picking the circuit description whose corresponding parameters exceed
+ * these numbers, while the choice of tuple parameters is more involved.
+ */
+export type GPCRequirements = {
+  /**
+   * Number of POD objects which can be included in a proof.
+   */
+  nObjects: number;
+
+  /**
+   * Number of POD entries which can be included in a proof.
+   */
+  nEntries: number;
+
+  /**
+   * Depth of POD merkle tree in the largest POD which can be included in a
+   * proof.  Max entries in any object is 2^(depth-1).
+   */
+  merkleMaxDepth: number;
+
+  /**
+   * Number of entries in each membership list to be included in proof.
+   * The order is not important.
+   */
+  nListElements: number[];
+
+  /**
+   * Arities (sizes) of tuples which can included in a proof.
+   * The order is not important.
+   */
+  tupleArities: number[];
+};
+
+/**
+ * GPCSizeRequirements constructor.
+ */
+export function GPCRequirements(
+  nObjects: number,
+  nEntries: number,
+  merkleMaxDepth: number,
+  nListElements: number[] = [],
+  tupleArities: number[] = []
+): GPCRequirements {
+  return {
+    nObjects,
+    nEntries,
+    merkleMaxDepth,
+    nListElements,
+    tupleArities
+  };
+}
+
 // TODO(POD-P2): Get rid of everything below this line.
 
 // Stopgap until membership list compilation is ready.

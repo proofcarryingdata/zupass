@@ -21,11 +21,11 @@ import {
   GPCProofInputs,
   GPCProofObjectConfig,
   GPCRevealedClaims,
-  GPCRevealedObjectClaims,
-  GPCRequirements
+  GPCRevealedObjectClaims
 } from "./gpcTypes";
 import {
   checkPODEntryIdentifier,
+  GPCRequirements,
   splitCircuitIdentifier,
   splitPODEntryIdentifier,
   DEFAULT_LIST_ELEMENTS,
@@ -534,7 +534,7 @@ export function checkVerifyClaimsForConfig(
  *   the required parameters.
  * @throws Error if there are no circuits satisfying the given requirements.
  */
-export function circuitDescForRequirements(
+export function pickCircuitForRequirements(
   circuitReq: GPCRequirements
 ): ProtoPODGPCCircuitDesc {
   for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
@@ -544,14 +544,12 @@ export function circuitDescForRequirements(
   }
 
   throw new Error(
-    `There are no circuit parameters satisfying these requirements: ${circuitReq}`
+    `There are no circuits with parameters satisfying these requirements: ${circuitReq}`
   );
 }
 
 /**
  * Checks whether a described circuit can meet given GPC size requirements.
- * This will be true if each of the circuit's parameters is greater than or
- * equal to the required value.
  *
  * @param circuitDesc description of the circuit to check
  * @param circuitReq the circuit size requirements
@@ -567,15 +565,23 @@ export function circuitDescMeetsRequirements(
   const tupleCheck = ((): boolean => {
     try {
       // The circuit description should have enough tuples of arity `tupleArity` to
-      // cover all input tuples.
+      // cover all input tuples when represent as a chain of tuples of arity `arity`.
+      // This is determined by the `requiredNumTuples` procedure.
       return (
         circuitDesc.maxTuples >=
         circuitReq.tupleArities
           .map((arity) => requiredNumTuples(circuitDesc.tupleArity, arity))
           .reduce((sum, requiredNum) => sum + requiredNum, 0)
       );
-    } catch (_) {
-      return false;
+    } catch (err) {
+      if (
+        err instanceof RangeError &&
+        err.message == "The tuple arity parameter must be at least 2."
+      ) {
+        return false;
+      } else {
+        throw err;
+      }
     }
   })();
   return (
@@ -597,7 +603,6 @@ export function circuitDescMeetsRequirements(
  * @param rs2 second set of required sizes
  * @returns unified (maximum) sizes
  */
-
 export function mergeRequirements(
   rs1: GPCRequirements,
   rs2: GPCRequirements
@@ -606,10 +611,8 @@ export function mergeRequirements(
     Math.max(rs1.nObjects, rs2.nObjects),
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
-    rs1.nListElements.map((nElements, i) =>
-      Math.max(nElements, rs2.nListElements[i])
-    ),
-    rs1.tupleArities.map((arity, i) => Math.max(arity, rs2.tupleArities[i]))
+    rs1.nListElements.concat(rs2.nListElements),
+    rs1.tupleArities.concat(rs2.tupleArities)
   );
 }
 
@@ -646,7 +649,7 @@ export function checkCircuitRequirements(
     }
     return foundDesc;
   } else {
-    const pickedDesc = circuitDescForRequirements(requiredParameters);
+    const pickedDesc = pickCircuitForRequirements(requiredParameters);
     if (pickedDesc === undefined) {
       throw new Error(`No supported circuit meets proof requirements.`);
     }
