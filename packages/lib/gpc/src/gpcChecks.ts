@@ -614,7 +614,7 @@ export function mergeRequirements(
 }
 
 /**
- * Checks that the required circuit parameters for a proof can be satisfied
+ * Checks that the circuit size requirements for a proof can be satisfied
  * by a known circuit.  This is not an exact match, but instead each parameter
  * of the chosen circuit must be able to accommodate the specified GPC input
  * sizes.
@@ -622,13 +622,13 @@ export function mergeRequirements(
  * If the circuit name is not given, this will pick the smallest supported
  * circuit which can satisfy the requirements.
  *
- * @param requiredParameters the GPC size requirements
+ * @param circuitReq the circuit size requirements
  * @param circuitIdentifier a specific circuit to be used
  * @returns the full description of the circuit to be used for the proof
  * @throws Error if no known circuit can support the given parameters, or if
  *   the named circuit cannot do so.
  */
-export function checkCircuitParameters(
+export function checkCircuitRequirements(
   requiredParameters: GPCRequirements,
   circuitIdentifier?: GPCIdentifier
 ): ProtoPODGPCCircuitDesc {

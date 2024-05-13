@@ -5,7 +5,7 @@ import {
 } from "@pcd/gpcircuits";
 import { Groth16Proof } from "snarkjs";
 import {
-  checkCircuitParameters,
+  checkCircuitRequirements,
   checkProofArgs,
   checkProofConfig,
   checkVerifyArgs
@@ -29,7 +29,7 @@ function bindConfigWithRequirements(
   circuitReq: GPCRequirements
 ): { boundConfig: GPCBoundConfig; circuitDesc: ProtoPODGPCCircuitDesc } {
   // Assumes proofConfig has already been checked by the caller.
-  const circuitDesc = checkCircuitParameters(
+  const circuitDesc = checkCircuitRequirements(
     circuitReq,
     proofConfig.circuitIdentifier
   );
@@ -158,7 +158,7 @@ export async function gpcVerify(
   pathToArtifacts: string
 ): Promise<boolean> {
   const circuitReq = checkVerifyArgs(boundConfig, revealedClaims);
-  const circuitDesc = checkCircuitParameters(
+  const circuitDesc = checkCircuitRequirements(
     circuitReq,
     boundConfig.circuitIdentifier
   );
