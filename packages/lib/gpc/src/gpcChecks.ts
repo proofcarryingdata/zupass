@@ -576,7 +576,7 @@ export function circuitDescMeetsRequirements(
     } catch (err) {
       if (
         err instanceof RangeError &&
-        err.message == "The tuple arity parameter must be at least 2."
+        err.message === "The tuple arity parameter must be at least 2."
       ) {
         return false;
       } else {
