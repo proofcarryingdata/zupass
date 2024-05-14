@@ -88,6 +88,7 @@ import {
   eventsToLink,
   generateReactProofUrl,
   getBotURL,
+  getChatsWithMembershipStatus,
   getDisplayEmojis,
   getGroupChat,
   getSessionKey,
@@ -288,8 +289,34 @@ export class TelegramService {
             if (username) span?.setAttribute("username", username);
             const firstName = ctx?.from?.first_name;
             const name = firstName || username;
+            ctx.session.directLinkMode = false;
+            if (ctx.match && Number.isInteger(Number(ctx.match))) {
+              const [chatWithMembership] = await getChatsWithMembershipStatus(
+                ctx.session.dbPool,
+                ctx,
+                userId,
+                Number(ctx.match)
+              );
+              if (chatWithMembership) {
+                ctx.session.chatToJoin = chatWithMembership;
+                ctx.session.directLinkMode = true;
+                const chatTitle = chatWithMembership.chat?.title;
+                if (chatWithMembership.isChatMember) {
+                  return await ctx.reply(
+                    `Welcome ${name}! 👋\n\nYou are already a member of <b>${chatTitle}</b>. Please click the button below to join!`,
+                    { reply_markup: zupassMenu, parse_mode: "HTML" }
+                  );
+                }
+                return await ctx.reply(
+                  `Welcome ${name}! 👋\n\nClick the button below to join${
+                    chatTitle ? ` <b>${chatTitle}</b>` : ""
+                  }.\n\nYou will sign in to Zupass, then ZK prove you have a valid ticket.`,
+                  { reply_markup: zupassMenu, parse_mode: "HTML" }
+                );
+              }
+            }
             await ctx.reply(
-              `Welcome ${name}! 👋\n\nClick the group you want to join.\n\nYou will sign in to Zupass, then ZK prove you have a ticket for one of the group's events.\n\nSee you soon 😽`,
+              `Welcome ${name}! 👋\n\nClick the group you want to join.\n\nYou will sign in to Zupass, then ZK prove you have a ticket for one of the group's events.`,
               { reply_markup: zupassMenu }
             );
           }
@@ -1708,7 +1735,8 @@ export async function startTelegramService(
     dbPool: context.dbPool,
     anonBotExists,
     authBotURL,
-    anonBotURL
+    anonBotURL,
+    directLinkMode: false
   });
 
   if (anonBotExists) {
