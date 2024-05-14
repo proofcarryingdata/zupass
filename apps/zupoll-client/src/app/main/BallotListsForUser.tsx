@@ -39,9 +39,8 @@ export function BallotListsForUser({
         visible={
           loginState.config.name === LegacyLoginConfigName.ZUZALU_ORGANIZER
         }
-        title={"Zuzalu Organizer Polls"}
+        title={"Advisory Polls"}
         loading={loading}
-        description={"Polls visible and voteable only by Zuzalu Organizers"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ORGANIZERONLY}
       />
@@ -51,9 +50,8 @@ export function BallotListsForUser({
           loginState.config.name === LegacyLoginConfigName.ZUZALU_ORGANIZER ||
           loginState.config.name === LegacyLoginConfigName.ZUZALU_PARTICIPANT
         }
-        title={"Organizer Polls"}
+        title={"Advisory Polls"}
         loading={loading}
-        description={"Official community polls from Zuzalu Organizers"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ADVISORYVOTE}
       />
