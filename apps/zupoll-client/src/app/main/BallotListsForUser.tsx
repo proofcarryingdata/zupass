@@ -39,9 +39,8 @@ export function BallotListsForUser({
         visible={
           loginState.config.name === LegacyLoginConfigName.ZUZALU_ORGANIZER
         }
-        title={"Zuzalu Organizer Polls"}
+        title={"Advisory Polls"}
         loading={loading}
-        description={"Polls visible and voteable only by Zuzalu Organizers"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ORGANIZERONLY}
       />
