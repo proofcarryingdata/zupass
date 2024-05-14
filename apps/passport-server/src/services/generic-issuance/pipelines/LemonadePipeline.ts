@@ -517,7 +517,7 @@ export class LemonadePipeline implements BasePipeline {
       const data = [];
       for (const atom of await this.db.load(this.id)) {
         data.push({
-          email: atom.email as string,
+          email: atom.email,
           eventId: atom.eventId,
           productId: atom.productId
         });
@@ -1188,10 +1188,6 @@ export class LemonadePipeline implements BasePipeline {
     atom: LemonadeAtom,
     semaphoreId: string
   ): ITicketData {
-    if (!atom.email) {
-      throw new Error(`Atom missing email: ${atom.id} in pipeline ${this.id}`);
-    }
-
     return {
       // unsigned fields
       attendeeName: atom.name,
@@ -1407,7 +1403,7 @@ export class LemonadePipeline implements BasePipeline {
           ticketInfo = {
             eventName: eventConfig.name,
             ticketName: this.lemonadeAtomToTicketName(ticketAtom),
-            attendeeEmail: ticketAtom.email as string,
+            attendeeEmail: ticketAtom.email,
             attendeeName: ticketAtom.name
           };
           notCheckedIn = await this.notCheckedIn(ticketAtom);
@@ -1701,14 +1697,12 @@ export class LemonadePipeline implements BasePipeline {
             // Ensure that the checker-provided event ID matches the ticket
             this.lemonadeAtomToZupassEventId(ticketAtom) === request.eventId
           ) {
-            if (ticketAtom.email) {
-              await this.badgeDB.giveBadges(
-                this.id,
-                emailClaim.emailAddress,
-                ticketAtom.email,
-                autoGrantBadges
-              );
-            }
+            await this.badgeDB.giveBadges(
+              this.id,
+              emailClaim.emailAddress,
+              ticketAtom.email,
+              autoGrantBadges
+            );
 
             // We found a Lemonade atom, so check in with the Lemonade backend
             return this.lemonadeCheckin(ticketAtom, emailClaim.emailAddress);
@@ -2044,10 +2038,6 @@ export class LemonadePipeline implements BasePipeline {
       const offlineTickets: PodboxOfflineTicket[] = [];
 
       for (const atom of await this.db.load(this.id)) {
-        if (!atom.email) {
-          continue;
-        }
-
         // If the user can check in tickets of this type
         if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
           offlineTickets.push({
@@ -2349,6 +2339,7 @@ export class LemonadePipeline implements BasePipeline {
  * save tickets, in order to be able to issue tickets based on them later on.
  */
 export interface LemonadeAtom extends PipelineAtom {
+  email: string; // Overrides the base interface, where email is optional
   name: string;
   lemonadeEventId: string;
   lemonadeTicketTypeId: string;

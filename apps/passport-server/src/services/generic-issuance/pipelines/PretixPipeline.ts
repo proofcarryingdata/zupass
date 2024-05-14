@@ -467,7 +467,7 @@ export class PretixPipeline implements BasePipeline {
       const data = [];
       for (const atom of await this.db.load(this.id)) {
         data.push({
-          email: atom.email as string,
+          email: atom.email,
           eventId: atom.eventId,
           productId: atom.productId
         });
@@ -1048,10 +1048,6 @@ export class PretixPipeline implements BasePipeline {
   }
 
   private atomToTicketData(atom: PretixAtom, semaphoreId: string): ITicketData {
-    if (!atom.email) {
-      throw new Error(`Atom missing email: ${atom.id} in pipeline ${this.id}`);
-    }
-
     return {
       // unsigned fields
       attendeeName: atom.name,
@@ -1492,7 +1488,7 @@ export class PretixPipeline implements BasePipeline {
                     ticket: {
                       eventName: this.atomToEventName(ticketAtom),
                       ticketName: this.atomToTicketName(ticketAtom),
-                      attendeeEmail: ticketAtom.email as string,
+                      attendeeEmail: ticketAtom.email,
                       attendeeName: ticketAtom.name
                     }
                   }
@@ -1515,7 +1511,7 @@ export class PretixPipeline implements BasePipeline {
                   ticket: {
                     eventName: this.atomToEventName(ticketAtom),
                     ticketName: this.atomToTicketName(ticketAtom),
-                    attendeeEmail: ticketAtom.email as string,
+                    attendeeEmail: ticketAtom.email,
                     attendeeName: ticketAtom.name
                   }
                 }
@@ -2015,10 +2011,6 @@ export class PretixPipeline implements BasePipeline {
       const offlineTickets: PodboxOfflineTicket[] = [];
 
       for (const atom of await this.db.load(this.id)) {
-        if (!atom.email) {
-          continue;
-        }
-
         // If the user can check in tickets of this type
         if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
           offlineTickets.push({
@@ -2340,6 +2332,7 @@ export interface PretixTicket {
 }
 
 export interface PretixAtom extends PipelineAtom {
+  email: string; // Overrides the base interface, where email is optional
   name: string;
   eventId: string; // UUID
   productId: string; // UUID
