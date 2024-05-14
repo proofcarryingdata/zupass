@@ -743,7 +743,17 @@ export const chatsToJoinV2 = async (
           telegramUsername
         );
 
-        range.webApp(`Join ${chat.chat?.title}`, proofUrl).row();
+        if (chat.isChatMember) {
+          const invite = await ctx.api.createChatInviteLink(
+            chat.telegramChatID,
+            {
+              creates_join_request: true
+            }
+          );
+          range.url(`Go to ${chat.chat?.title}`, invite.invite_link).row();
+        } else {
+          range.webApp(`Join ${chat.chat?.title}`, proofUrl).row();
+        }
         if (!ctx.session.directLinkMode) {
           range.text(`↰  Back`, async (ctx) => {
             ctx.session.chatToJoin = undefined;
