@@ -611,8 +611,10 @@ export function mergeRequirements(
     Math.max(rs1.nObjects, rs2.nObjects),
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
-    rs1.nListElements.concat(rs2.nListElements),
-    rs1.tupleArities.concat(rs2.tupleArities)
+    rs1.nListElements.map((nElements, i) =>
+      Math.max(nElements, rs2.nListElements[i])
+    ),
+    rs1.tupleArities.map((arity, i) => Math.max(arity, rs2.tupleArities[i]))
   );
 }
 

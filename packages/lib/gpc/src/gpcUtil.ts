@@ -242,13 +242,13 @@ export type GPCRequirements = {
 
   /**
    * Number of entries in each membership list to be included in proof.
-   * The order is not important.
+   * The order is the same as the list names (in alphabetical order).
    */
   nListElements: number[];
 
   /**
    * Arities (sizes) of tuples which can included in a proof.
-   * The order is not important.
+   * The order is the same as the tuple names (in alphabetical order).
    */
   tupleArities: number[];
 };
