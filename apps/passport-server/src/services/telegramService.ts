@@ -301,6 +301,12 @@ export class TelegramService {
                 ctx.session.chatToJoin = chatWithMembership;
                 ctx.session.directLinkMode = true;
                 const chatTitle = chatWithMembership.chat?.title;
+                if (chatWithMembership.isChatMember) {
+                  return await ctx.reply(
+                    `Welcome ${name}! 👋\n\nYou are already a member of <b>${chatTitle}</b>. Please click the button below to join!`,
+                    { reply_markup: zupassMenu, parse_mode: "HTML" }
+                  );
+                }
                 return await ctx.reply(
                   `Welcome ${name}! 👋\n\nClick the button below to join${
                     chatTitle ? ` <b>${chatTitle}</b>` : ""
