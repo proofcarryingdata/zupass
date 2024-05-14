@@ -41,6 +41,7 @@ export function useBackgroundJobs(): void {
     let activePollTimeout: NodeJS.Timeout | undefined = undefined;
     let lastBackgroundPoll = 0;
     const BG_POLL_INTERVAL_MS = 1000 * 60;
+    let offlineCheckinInterval: NodeJS.Timeout | undefined = undefined;
 
     const abortEventListeners = new AbortController();
 
@@ -154,7 +155,10 @@ export function useBackgroundJobs(): void {
 
     const startJobSyncOfflineCheckins = async (): Promise<void> => {
       await jobSyncPodboxOfflineCheckins();
-      setInterval(jobSyncPodboxOfflineCheckins, 1000 * 60);
+      offlineCheckinInterval = setInterval(
+        jobSyncPodboxOfflineCheckins,
+        1000 * 60
+      );
     };
 
     const jobSyncPodboxOfflineCheckins = async (): Promise<void> => {
@@ -229,6 +233,8 @@ export function useBackgroundJobs(): void {
     return () => {
       closeBroadcastChannel();
       abortEventListeners.abort();
+      clearInterval(offlineCheckinInterval);
+      clearTimeout(activePollTimeout);
     };
   });
 }

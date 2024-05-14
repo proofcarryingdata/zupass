@@ -77,6 +77,7 @@ import {
 import {
   CheckinCapability,
   CheckinStatus,
+  ProcessOfflineCheckinsResult,
   generateCheckinUrlPath
 } from "../capabilities/CheckinCapability";
 import {
@@ -2166,11 +2167,7 @@ export class PretixPipeline implements BasePipeline {
    * checkers. Due to the asynchronous nature of the check-in, we cannot report
    * failure directly to the user, so we record a count of the failures.
    */
-  private async processOfflineCheckins(): Promise<{
-    failedTicketIds: string[];
-    checkedInTicketIds: string[];
-    logs: PipelineLog[];
-  }> {
+  private async processOfflineCheckins(): Promise<ProcessOfflineCheckinsResult> {
     // Prevent concurrent attempts to process offline check-ins.
     return this.processOfflineCheckinQueue.add(() =>
       traced(LOG_NAME, "processOfflineCheckins", async (span) => {
@@ -2282,12 +2279,14 @@ export class PretixPipeline implements BasePipeline {
           checkedInTicketIds
         );
 
-        for (const failedTicketId of failedTicketIds) {
-          await this.offlineCheckinDB.addFailedOfflineCheckin(
-            this.id,
-            failedTicketId
-          );
-        }
+        await Promise.allSettled(
+          failedTicketIds.map((failedTicketId) =>
+            this.offlineCheckinDB.addFailedOfflineCheckin(
+              this.id,
+              failedTicketId
+            )
+          )
+        );
 
         span?.setAttribute("failed_ticket_id_count", failedTicketIds.length);
         span?.setAttribute(

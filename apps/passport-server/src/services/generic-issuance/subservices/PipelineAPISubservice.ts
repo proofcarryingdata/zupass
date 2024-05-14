@@ -573,7 +573,7 @@ export class PipelineAPISubservice {
           continue;
         }
 
-        for (const capability of pipeline?.instance?.capabilities ?? []) {
+        for (const capability of pipeline.instance.capabilities) {
           if (isCheckinCapability(capability)) {
             offlineTickets.push(
               ...(await capability.getOfflineTickets(emailAddress))
@@ -610,7 +610,7 @@ export class PipelineAPISubservice {
             request.credential
           )
         ).emailClaim.emailAddress;
-      } catch (_e) {
+      } catch {
         throw new PCDHTTPError(401, "Not authorized");
       }
 
@@ -621,7 +621,7 @@ export class PipelineAPISubservice {
 
         span?.setAttribute("event_ids", Object.keys(request.tickets));
 
-        for (const capability of pipeline?.instance?.capabilities ?? []) {
+        for (const capability of pipeline.instance.capabilities) {
           if (isCheckinCapability(capability)) {
             tracePipeline(pipeline.definition);
             for (const [eventId, ticketIds] of Object.entries(

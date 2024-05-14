@@ -1043,6 +1043,11 @@ describe("generic issuance - PretixPipeline", function () {
       expectTrue(result.success);
       // Bouncer should be able to receive all tickets
       expectLength(result.value.offlineTickets, 2);
+
+      for (const offlineTicket of result.value.offlineTickets) {
+        expect(offlineTicket.attendeeName).to.be.undefined;
+        expect(offlineTicket.attendeeEmail).to.be.undefined;
+      }
     }
 
     {

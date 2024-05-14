@@ -1,5 +1,6 @@
 import {
   ActionConfigResponseValue,
+  PipelineLog,
   PipelineOfflineCheckin,
   PodboxDeleteOfflineCheckinResponseValue,
   PodboxOfflineTicket,
@@ -14,6 +15,12 @@ import { PipelineCapability } from "./types";
 export enum CheckinStatus {
   Pending,
   Success
+}
+
+export interface ProcessOfflineCheckinsResult {
+  failedTicketIds: string[];
+  checkedInTicketIds: string[];
+  logs: PipelineLog[];
 }
 
 /**

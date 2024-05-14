@@ -178,9 +178,10 @@ export function setupTestPretixPipeline(): PretixPipelineTestData {
       enablePODTickets: true,
       offlineCheckin: {
         fields: {
-          attendeeEmail: true,
-          attendeeName: true,
-          checker: true
+          attendeeEmail: false, // Redact attendee emails
+          attendeeName: false, // Redact attendee names
+          checker: true // Show checker (though in practice checker is always
+          // null as we don't store this at present)
         }
       }
     },
