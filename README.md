@@ -55,6 +55,10 @@ The PCD SDK is a framework for developing applications that use PCDs for the pro
 
 ## For Developers: Local Development
 
+### Requirements
+
+`passport-server` uses Postgres, and requires Postgres 15 or higher.
+
 ### Environment Variables
 
 In order to develop locally, you will need to set some environment variables. The only place
