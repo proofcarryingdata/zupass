@@ -1,12 +1,11 @@
 import {
   ProtoPODGPC,
   ProtoPODGPCCircuitDesc,
-  ProtoPODGPCCircuitParams,
   gpcArtifactPaths
 } from "@pcd/gpcircuits";
 import { Groth16Proof } from "snarkjs";
 import {
-  checkCircuitParameters,
+  checkCircuitRequirements,
   checkProofArgs,
   checkProofConfig,
   checkVerifyArgs
@@ -22,15 +21,19 @@ import {
   GPCProofInputs,
   GPCRevealedClaims
 } from "./gpcTypes";
-import { canonicalizeConfig, makeCircuitIdentifier } from "./gpcUtil";
+import {
+  GPCRequirements,
+  canonicalizeConfig,
+  makeCircuitIdentifier
+} from "./gpcUtil";
 
 function bindConfigWithRequirements(
   proofConfig: GPCProofConfig,
-  requiredParams: ProtoPODGPCCircuitParams
+  circuitReq: GPCRequirements
 ): { boundConfig: GPCBoundConfig; circuitDesc: ProtoPODGPCCircuitDesc } {
   // Assumes proofConfig has already been checked by the caller.
-  const circuitDesc = checkCircuitParameters(
-    requiredParams,
+  const circuitDesc = checkCircuitRequirements(
+    circuitReq,
     proofConfig.circuitIdentifier
   );
   const boundConfig = canonicalizeConfig(
@@ -66,8 +69,8 @@ export function gpcBindConfig(proofConfig: GPCProofConfig): {
   boundConfig: GPCBoundConfig;
   circuitDesc: ProtoPODGPCCircuitDesc;
 } {
-  const requiredParams = checkProofConfig(proofConfig);
-  return bindConfigWithRequirements(proofConfig, requiredParams);
+  const circuitReq = checkProofConfig(proofConfig);
+  return bindConfigWithRequirements(proofConfig, circuitReq);
 }
 
 /**
@@ -103,10 +106,10 @@ export async function gpcProve(
   boundConfig: GPCBoundConfig;
   revealedClaims: GPCRevealedClaims;
 }> {
-  const requiredParams = checkProofArgs(proofConfig, proofInputs);
+  const circuitReq = checkProofArgs(proofConfig, proofInputs);
   const { boundConfig, circuitDesc } = bindConfigWithRequirements(
     proofConfig,
-    requiredParams
+    circuitReq
   );
 
   const artifactPaths = gpcArtifactPaths(pathToArtifacts, circuitDesc);
@@ -157,9 +160,9 @@ export async function gpcVerify(
   revealedClaims: GPCRevealedClaims,
   pathToArtifacts: string
 ): Promise<boolean> {
-  const requiredParams = checkVerifyArgs(boundConfig, revealedClaims);
-  const circuitDesc = checkCircuitParameters(
-    requiredParams,
+  const circuitReq = checkVerifyArgs(boundConfig, revealedClaims);
+  const circuitDesc = checkCircuitRequirements(
+    circuitReq,
     boundConfig.circuitIdentifier
   );
 

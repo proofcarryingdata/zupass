@@ -1,44 +1,15 @@
 {
-  "proto-pod-gpc_1o-1e-5md-1x10l-2x2t": {
-    "file": "proto-pod-gpc",
-    "template": "ProtoPODGPC",
-    "params": [
-      1,
-      1,
-      5,
-      1,
-      10,
-      2,
-      2
-    ],
-    "pubs": [
-      "objectSignerPubkeyAx",
-      "objectSignerPubkeyAy",
-      "entryObjectIndex",
-      "entryNameHash",
-      "entryIsValueEnabled",
-      "entryIsValueHashRevealed",
-      "entryEqualToOtherEntryByIndex",
-      "ownerEntryIndex",
-      "ownerExternalNullifier",
-      "ownerIsNullfierHashRevealed",
-      "tupleIndices",
-      "listComparisonValueIndex",
-      "listValidValues",
-      "globalWatermark"
-    ]
-  },
-  "proto-pod-gpc_1o-5e-6md-1x10l-2x2t": {
+  "proto-pod-gpc_1o-5e-6md-0x0l-0x0t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       1,
       5,
       6,
-      1,
-      10,
-      2,
-      2
+      0,
+      0,
+      0,
+      0
     ],
     "pubs": [
       "objectSignerPubkeyAx",

@@ -139,6 +139,9 @@ export type GPCProofConfig = {
    * for configuration.
    */
   pods: Record<PODName, GPCProofObjectConfig>;
+
+  // TODO(POD-P2): List membership configuration
+  // TODO(POD-P2): Tuple configuration
 };
 
 /**
@@ -249,6 +252,9 @@ export type GPCProofInputs = {
    */
   owner?: GPCProofOwnerInputs;
 
+  // TODO(POD-P2): List membership configuration
+  // TODO(POD-P2): Tuple configuration
+
   /**
    * If this field is set, the given value will be included in the resulting
    * proof.  This allows identifying a proof as tied to a specific use case, to
@@ -336,7 +342,7 @@ export type GPCRevealedClaims = {
   pods: Record<PODName, GPCRevealedObjectClaims>;
 
   /**
-   * Revelaed information about the owner specified in the proof, if any.
+   * Revealed information about the owner specified in the proof, if any.
    *
    * The owner's identity is never directly revealed.  Instead if a nullifier
    * was calcluated, the information required to interpret it is included here.
@@ -346,6 +352,9 @@ export type GPCRevealedClaims = {
    * absence of this field is unaffected by the entry configuration.
    */
   owner?: GPCRevealedOwnerClaims;
+
+  // TODO(POD-P2): List membership configuration
+  // TODO(POD-P2): Tuple configuration
 
   /**
    * If this field is set, it matches the corresponding field in

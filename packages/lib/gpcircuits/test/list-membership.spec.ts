@@ -22,6 +22,7 @@ describe("List membership helpers should work", function () {
     ...ProtoPODGPC.CIRCUIT_PARAMETERS[0][0],
     maxEntries: 6,
     tupleArity: 2,
+    maxLists: 3,
     maxListElements: 10,
     maxTuples: 4
   };
@@ -47,16 +48,20 @@ describe("List membership helpers should work", function () {
     const list2 = list1.map((x) => x.concat(x));
     const listComparisonValueIndex2 = [0, 2];
 
+    // Restrict attention to those parameters allowing a list membership check.
     for (const params of ProtoPODGPC.CIRCUIT_PARAMETERS.map(
       (pair) => pair[0]
-    )) {
+    ).filter((params) => params.maxListElements > 0)) {
+      // Truncate list if necessary.
+      const truncatedList = list1.slice(0, params.maxListElements);
+
       expect(
-        processSingleList(params, 6, listComparisonValueIndex1, list1)
+        processSingleList(params, 6, listComparisonValueIndex1, truncatedList)
       ).to.deep.equal({
         tupleIndices: [],
         listComparisonValueIndex: 0,
         listValidValues: padArray(
-          list1.map((x) => podValueHash(x[0])),
+          truncatedList.map((x) => podValueHash(x[0])),
           params.maxListElements,
           podValueHash(list1[0][0])
         )
@@ -82,7 +87,7 @@ describe("List membership helpers should work", function () {
       listComparisonValueIndex: 6,
       listValidValues: padArray(
         list2.map((x) => hashTuple(params2.tupleArity, x)),
-        params1.maxListElements,
+        params2.maxListElements,
         hashTuple(params2.tupleArity, list2[0])
       )
     });

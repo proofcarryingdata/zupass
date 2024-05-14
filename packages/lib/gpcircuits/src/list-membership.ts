@@ -32,7 +32,8 @@ export type ListMembershipModuleOutputNamesType = ["isMember"];
  * circuit, viz. a list of tuple indices of arity `params.tupleArity` representing the input
  * tuples, numbers representing the indices of the entry values/entry value tuples which are
  * members of the lists, and the membership lists in hashed form.
- * @throws RangeError if any of the indices are out of bounds.
+ * @throws RangeError if any of the inputs are out of bounds with respect to the
+ * circuit parameters.
  * @throws TypeError if the list and index arrays are malformed.
  */
 export function processLists(
@@ -44,6 +45,13 @@ export function processLists(
   listComparisonValueIndex: CircuitSignal[];
   listValidValues: CircuitSignal[][];
 } {
+  // Ensure that the circuit can accommodate these lists
+  if (lists.length > params.maxLists) {
+    throw new RangeError(
+      `The number of lists (${lists.length}) exceeds the maximum number of lists permissible by the circuit parameters (${params.maxLists}).`
+    );
+  }
+
   let firstAvailableTupleIndex = params.maxEntries;
   const unpaddedOutputObject: {
     tupleIndices: CircuitSignal[][];
@@ -133,11 +141,11 @@ export function processLists(
  * entry and tuple value hashes.
  * @param listComparisonValueIndex tuple of indices of inputs to be compared to the list elements
  * @param list the tuples of constant values making up the list
- * @returns list of tuple indices of arity `params.tupleArity` representing the input tuple,
- * number representing the index of the entry value (tuple) which is a member of
- * the list, and the (unpadded) membership list in hashed form.
- * @throws RangeError if any of the indices are out of bounds with respect
- * to the given parameters.
+ * @returns list of tuple indices of arity `params.tupleArity` representing the
+ * input tuple, number representing the index of the entry value (tuple) which
+ * is a member of the list, and the (unpadded) membership list in hashed form.
+ * @throws RangeError if any of the inputs are out of bounds with respect to the
+ * given circuit parameters.
  * @throws TypeError if the list and index arrays are malformed.
  */
 export function processSingleList(
@@ -164,6 +172,13 @@ export function processSingleList(
   if (listComparisonValueIndex.some((i) => i >= params.maxEntries)) {
     throw new RangeError(
       `List comparison value index ${listComparisonValueIndex} out of bounds.`
+    );
+  }
+
+  // Check parameters
+  if (params.maxListElements < list.length) {
+    throw new RangeError(
+      `The number of list elements (${list.length}) exceeds the maximum number of list elements permissible by the circuit parameters (${params.maxListElements}).`
     );
   }
 
