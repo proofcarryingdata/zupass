@@ -12,12 +12,12 @@ import {
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
-  PipelineType,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  isPretixPipelineDefinition
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { str } from "@pcd/util";
@@ -123,9 +123,7 @@ export class PipelineSubservice {
   ): Promise<boolean> {
     // todo: optimized query?
     const definitions = await this.loadPipelineDefinitions();
-    const pretixPipelines = definitions.filter(
-      isPretixPipelineDefinition
-    );
+    const pretixPipelines = definitions.filter(isPretixPipelineDefinition);
     const hasAtom = (
       await Promise.all(
         pretixPipelines.map((p) => this.pipelineAtomDB.load(p.id))
