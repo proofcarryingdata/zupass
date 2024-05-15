@@ -321,7 +321,10 @@ function RouterImpl(): JSX.Element {
           <Route path="privacy-notice" element={<PrivacyNoticeScreen />} />
           <Route path="create-password" element={<CreatePasswordScreen />} />
           <Route path="change-password" element={<ChangePasswordScreen />} />
-          <Route path="one-click-login" element={<OneClickLoginScreen />} />
+          <Route
+            path="one-click-login/:email/:code/:targetFolder"
+            element={<OneClickLoginScreen />}
+          />
           <Route
             path="enter-confirmation-code"
             element={<EnterConfirmationCodeScreen />}
