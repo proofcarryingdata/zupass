@@ -10,6 +10,7 @@ import {
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
+  ActionScreenConfig,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
@@ -244,7 +245,9 @@ export class PretixPipeline implements BasePipeline {
   public async start(): Promise<void> {
     // On startup, the pipeline definition may have changed, and manual tickets
     // may have been deleted. If so, clean up any check-ins for those tickets.
-    await this.cleanUpManualCheckins();
+
+    // @todo: turn this back on after eth berlin
+    // await this.cleanUpManualCheckins();
     // Initialize the Semaphore Group provider by loading groups from the DB,
     // if one exists.
     await this.semaphoreGroupProvider?.start();
@@ -1500,10 +1503,18 @@ export class PretixPipeline implements BasePipeline {
                 ticketAtom.id
               );
 
+              // @todo: make this configurable
+              const actionScreenConfig: ActionScreenConfig = {
+                actionButtonCopy: "Give Swag",
+                actionErrorCopy: "Swag Already Redeemed",
+                actionSuccessCopy: "Swag Given"
+              };
+
               if (canCheckInTicketResult !== true) {
                 if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
                   return {
                     success: true,
+                    actionScreenConfig,
                     checkinActionInfo: {
                       permissioned: true,
                       canCheckIn: false,
@@ -1519,6 +1530,7 @@ export class PretixPipeline implements BasePipeline {
                 }
                 return {
                   success: true,
+                  actionScreenConfig,
                   checkinActionInfo: {
                     permissioned: false,
                     canCheckIn: false,
@@ -1528,6 +1540,7 @@ export class PretixPipeline implements BasePipeline {
               } else {
                 return {
                   success: true,
+                  actionScreenConfig,
                   checkinActionInfo: {
                     permissioned: true,
                     canCheckIn: true,

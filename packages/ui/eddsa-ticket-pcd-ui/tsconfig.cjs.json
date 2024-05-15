@@ -23,6 +23,9 @@
       "path": "../../pcd/semaphore-identity-pcd/tsconfig.cjs.json"
     },
     {
+      "path": "../../lib/util/tsconfig.cjs.json"
+    },
+    {
       "path": "../../pcd/zk-eddsa-event-ticket-pcd/tsconfig.cjs.json"
     }
   ]
