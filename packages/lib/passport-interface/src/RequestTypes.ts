@@ -504,6 +504,12 @@ export interface PipelineEdDSATicketZuAuthConfig {
 // could be |'ed with other types of metadata
 export type PipelineZuAuthConfig = PipelineEdDSATicketZuAuthConfig;
 
+export interface PipelineSwagStats {
+  totalTickets: number;
+  swagClaimed: number;
+  checkedIn: number;
+}
+
 export interface PipelineInfoResponseValue {
   ownerEmail: string;
   lastLoad?: PipelineLoadSummary;

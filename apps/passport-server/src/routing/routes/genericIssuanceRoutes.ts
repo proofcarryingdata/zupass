@@ -131,6 +131,17 @@ export function initGenericIssuanceRoutes(
     res.json(result satisfies PipelineInfoResponseValue);
   });
 
+  app.get("/generic-issuance/stats/:pipelineId/:apiKey", async (req, res) => {
+    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    const pipelineId = checkUrlParam(req, "pipelineId");
+    const apiKey = checkUrlParam(req, "apiKey");
+    const result = await genericIssuanceService.handleGetSwagStats(
+      pipelineId,
+      apiKey
+    );
+    res.json(result);
+  });
+
   /**
    * Authenticated by PCD so doesn't need auth.
    */

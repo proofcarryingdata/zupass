@@ -9,6 +9,7 @@ import {
   ListFeedsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
+  PipelineSwagStats,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -32,6 +33,7 @@ import {
   isSemaphoreGroupCapability
 } from "../capabilities/SemaphoreGroupCapability";
 import { tracePipeline, traceUser } from "../honeycombQueries";
+import { PretixPipeline } from "../pipelines/PretixPipeline";
 import { PipelineUser } from "../pipelines/types";
 import { CredentialSubservice } from "./CredentialSubservice";
 import { PipelineSubservice } from "./PipelineSubservice";
@@ -84,6 +86,32 @@ export class PipelineAPISubservice {
         }
       });
       return feedResponse;
+    });
+  }
+
+  public async handleGetSwagStats(
+    pipelineId: string,
+    apiKey: string
+  ): Promise<PipelineSwagStats> {
+    return traced(SERVICE_NAME, "handleGetSwagStats", async () => {
+      const API_KEY = process.env.BERLIN_ADMIN_KEY;
+
+      if (!API_KEY) {
+        throw new Error("missing environment variable: BERLIN_ADMIN_KEY");
+      }
+
+      if (apiKey !== API_KEY) {
+        throw new PCDHTTPError(403);
+      }
+
+      const pipeline =
+        await this.pipelineSubservice.ensurePipelineStarted(pipelineId);
+
+      if (!PretixPipeline.is(pipeline)) {
+        throw new Error("only PretixPipeline supports swag stats");
+      }
+
+      return await pipeline.getSwagStats();
     });
   }
 

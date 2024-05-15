@@ -23,6 +23,7 @@ import {
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
+  PipelineSwagStats,
   PipelineType,
   PipelineZuAuthConfig,
   PodboxTicketActionError,
@@ -420,6 +421,16 @@ export class PretixPipeline implements BasePipeline {
         } satisfies PipelineLoadSummary;
       }
     );
+  }
+
+  public async getSwagStats(): Promise<PipelineSwagStats> {
+    const stats = {
+      checkedIn: 90,
+      swagClaimed: 100,
+      totalTickets: 500
+    } satisfies PipelineSwagStats;
+
+    return stats;
   }
 
   private async getAllManualTickets(): Promise<ManualTicket[]> {

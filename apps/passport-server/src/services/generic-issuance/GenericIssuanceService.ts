@@ -14,6 +14,7 @@ import {
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue,
+  PipelineSwagStats,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -222,6 +223,13 @@ export class GenericIssuanceService {
     pipelineId: string
   ): Promise<PipelineInfoResponseValue> {
     return this.pipelineSubservice.handleGetPipelineInfo(user, pipelineId);
+  }
+
+  public async handleGetSwagStats(
+    pipelineId: string,
+    apiKey: string
+  ): Promise<PipelineSwagStats> {
+    return this.pipelineSubservice.handleGetSwagStats(pipelineId, apiKey);
   }
 
   public async handleListFeed(

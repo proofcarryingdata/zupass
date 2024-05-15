@@ -494,9 +494,9 @@ export type PretixPipelineDefinition = z.infer<
 >;
 
 export function isPretixPipelineDefinition(
-  d: PipelineDefinition
+  d: PipelineDefinition | undefined
 ): d is PretixPipelineDefinition {
-  return d.type === PipelineType.Pretix;
+  return d?.type === PipelineType.Pretix;
 }
 
 export enum CSVPipelineOutputType {
