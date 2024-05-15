@@ -1,15 +1,13 @@
 import { useCallback, useEffect } from "react";
-import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
+import { useParams } from "react-router-dom";
+import { useDispatch, useSelf } from "../../../src/appHooks";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
 export function OneClickLoginScreen(): JSX.Element | null {
   const dispatch = useDispatch();
-  const query = useQuery();
-  const email = query?.get("email");
-  const code = query?.get("code");
-  const targetFolder = query?.get("targetFolder");
+  const { email, code, targetFolder } = useParams();
 
   const self = useSelf();
 
