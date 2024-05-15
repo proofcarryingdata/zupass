@@ -1501,6 +1501,7 @@ export class PretixPipeline implements BasePipeline {
                 ticketAtom.id
               );
 
+              // @todo: make this configurable
               const actionScreenConfig: ActionScreenConfig = {
                 actionButtonCopy: "Give Swag",
                 actionErrorCopy: "Error Giving Swag",
