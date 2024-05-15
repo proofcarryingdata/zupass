@@ -16,6 +16,7 @@ import styled, { CSSProperties } from "styled-components";
 import {
   useDispatch,
   useFolders,
+  useLaserScannerKeystrokeInput,
   useLoadedIssuedPCDs,
   useSelf,
   useVisiblePCDsInFolder
@@ -48,6 +49,7 @@ const FOLDER_QUERY_PARAM = "folder";
  */
 export function HomeScreenImpl(): JSX.Element | null {
   useSyncE2EEStorage();
+  useLaserScannerKeystrokeInput();
   const self = useSelf();
   const navigate = useNavigate();
   const dispatch = useDispatch();

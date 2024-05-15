@@ -246,8 +246,12 @@ export function useRequirePassword(): void {
 }
 
 // Hook that enables keystrokes to properly listen to laser scanning inputs from supported devices
-export function useLaserScannerKeystrokeInput(): string {
+export function useLaserScannerKeystrokeInput(samePage?: boolean): {
+  loading: boolean;
+  typedText: string;
+} {
   const [typedText, setTypedText] = useState("");
+  const [loading, setLoading] = useState(false);
   const nav = useNavigate();
   const usingLaserScanner = loadUsingLaserScanner();
 
@@ -260,7 +264,13 @@ export function useLaserScannerKeystrokeInput(): string {
         if (url) {
           const newLoc = maybeRedirect(url);
           if (newLoc) {
+            setLoading(true);
             nav(newLoc);
+            if (samePage) {
+              window.location.href = newLoc;
+              window.location.reload();
+            }
+            setLoading(false);
           }
         }
       }
@@ -275,9 +285,9 @@ export function useLaserScannerKeystrokeInput(): string {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [typedText, nav, usingLaserScanner]);
+  }, [typedText, nav, usingLaserScanner, samePage]);
 
-  return typedText;
+  return { loading, typedText };
 }
 
 export function useLoginIfNoSelf(
