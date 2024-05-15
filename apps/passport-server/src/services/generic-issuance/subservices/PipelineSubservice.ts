@@ -16,7 +16,8 @@ import {
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  isPretixPipelineDefinition
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { str } from "@pcd/util";
@@ -36,6 +37,7 @@ import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
 import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
+import { PretixAtom } from "../pipelines/PretixPipeline";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
 import { CredentialSubservice } from "./CredentialSubservice";
@@ -113,6 +115,25 @@ export class PipelineSubservice {
    */
   public async getPipelineAtoms(pipelineId: string): Promise<PipelineAtom[]> {
     return this.pipelineAtomDB.load(pipelineId);
+  }
+
+  public async validateEmailAndPretixOrderCode(
+    email: string,
+    code: string
+  ): Promise<boolean> {
+    // todo: optimized query?
+    const definitions = await this.loadPipelineDefinitions();
+    const pretixPipelines = definitions.filter(isPretixPipelineDefinition);
+    const hasAtom = (
+      await Promise.all(
+        pretixPipelines.map((p) => this.pipelineAtomDB.load(p.id))
+      )
+    ).some((atoms) =>
+      (atoms as PretixAtom[]).some(
+        (a) => a.email === email && a.orderCode === code
+      )
+    );
+    return hasAtom;
   }
 
   /**
