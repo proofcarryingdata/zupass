@@ -56,7 +56,7 @@
         min-width: 400px;
         font-size: 14px;
         background-color: white;
-        border: 2px solid #fcd270;
+        border: 4px solid #22413b;
         color: black;
         overflow-y: scroll;
         padding: 8px;
@@ -95,21 +95,25 @@
         align-items: center;
         gap: 8px;
       }
+
+      .selected {
+        font-weight: bold;
+      }
     </style>
   </head>
   <body>
     <div class="page">
       <div class="container">
         <div class="stat">
-          <span class="title">tickets issued</span> <div class="value"> <span id="totalTickets"></span> <span class="exp-btn" id="expand-totalTickets">emails</span> </div>
+          <span class="title" id="totalTickets-Title">tickets issued</span> <div class="value"> <span id="totalTickets"></span> <span class="exp-btn" id="expand-totalTickets">emails</span> </div>
         </div>
 
         <div class="stat">
-          <span class="title">swag claimed</span> <div class="value"> <span id="swagClaimed"></span> <span class="exp-btn" id="expand-swagClaimed">emails</span> </div>
+          <span class="title" id="swagClaimed-Title">swag claimed</span> <div class="value"> <span id="swagClaimed"></span> <span class="exp-btn" id="expand-swagClaimed">emails</span> </div>
         </div>
 
         <div class="stat">
-           <span class="title">checked in</span> <div class="value"> <span id="checkedIn"></span> <span class="exp-btn" id="expand-checkedIn">emails</span> </div>
+           <span class="title" id="checkedIn-Title">checked in</span> <div class="value"> <span id="checkedIn"></span> <span class="exp-btn" id="expand-checkedIn">emails</span> </div>
         </div>
         
         <pre id="expanded"></pre>
@@ -124,7 +128,9 @@
           document.querySelector("pre").style.display = "initial";
           document.querySelector(".container").classList.add("expanded")
           document.querySelector("#expanded").innerText = stats[`${key}Emails`].join("\n");
-        }
+          document.querySelectorAll(`.title`).forEach(function(e) { e.classList.remove("selected") });
+          document.querySelector(`#${key}-Title`).classList.add("selected");
+        };
       }
 
     </script>
