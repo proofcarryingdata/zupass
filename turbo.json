@@ -217,7 +217,6 @@
     "MULTI_CHOICE_SCAN_ENABLED",
     "IRON_SESSION_PASSWORD",
     "SHOW_POD_TICKET_PCDS",
-    "BERLIN_ADMIN_KEY",
     "//// add env vars above this line ////"
   ]
 }

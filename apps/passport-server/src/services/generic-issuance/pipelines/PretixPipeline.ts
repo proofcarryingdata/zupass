@@ -437,14 +437,11 @@ export class PretixPipeline implements BasePipeline {
   public async handleGetOrganizerView(
     apiKey: string
   ): Promise<PipelineOrganizerViewData> {
-    // @todo: per-pipeline API key stored in its PipelineDefinition
-    const API_KEY = process.env.BERLIN_ADMIN_KEY;
-
-    if (!API_KEY) {
-      throw new Error("missing environment variable: BERLIN_ADMIN_KEY");
+    if (!this.definition.options.organizerApiKey) {
+      throw new PCDHTTPError(403, "no api key configured for this pipeline");
     }
 
-    if (apiKey !== API_KEY) {
+    if (apiKey !== this.definition.options.organizerApiKey) {
       throw new PCDHTTPError(403, "wrong api key");
     }
 
