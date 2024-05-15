@@ -342,7 +342,8 @@ export class PretixPipeline implements BasePipeline {
             id: uuidv5(ticket.position_id, ticket.event.genericIssuanceId),
             secret: ticket.secret,
             timestampConsumed: ticket.pretix_checkin_timestamp,
-            isConsumed: !!ticket.pretix_checkin_timestamp
+            isConsumed: !!ticket.pretix_checkin_timestamp,
+            orderCode: ticket.order_code
           };
         });
         this.loaded = true;
@@ -827,7 +828,8 @@ export class PretixPipeline implements BasePipeline {
             is_consumed: pretix_checkin_timestamp !== null,
             position_id: id.toString(),
             secret,
-            pretix_checkin_timestamp
+            pretix_checkin_timestamp,
+            order_code: order.code
           });
         }
       }
@@ -1990,6 +1992,7 @@ export interface PretixTicket {
   event: PretixEventConfig;
   is_consumed: boolean;
   secret: string;
+  order_code: string;
   position_id: string;
   pretix_checkin_timestamp: Date | null;
 }
@@ -1998,6 +2001,7 @@ export interface PretixAtom extends PipelineAtom {
   name: string;
   eventId: string; // UUID
   productId: string; // UUID
+  orderCode: string;
   secret: string;
   timestampConsumed: Date | null;
   isConsumed: boolean;
