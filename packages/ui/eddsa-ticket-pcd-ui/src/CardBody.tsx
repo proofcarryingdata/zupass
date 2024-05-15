@@ -56,13 +56,12 @@ function EdDSATicketPCDCardBody({
   const ticketData = getEdDSATicketData(pcd);
 
   const [zk, setZk] = useState<boolean>(idBasedVerifyURL === undefined);
-  const seenZKModeInfo = loadSeenZKModeInfo();
   const onToggle = useCallback(() => {
-    if (!zk && !seenZKModeInfo) {
+    if (!zk) {
       openInfoModal();
     }
     setZk(!zk);
-  }, [zk, openInfoModal, seenZKModeInfo]);
+  }, [zk, openInfoModal]);
 
   const redact = zk && idBasedVerifyURL !== undefined;
 
