@@ -12,6 +12,7 @@ import {
   NetworkFeedApi,
   requestCreateNewUser,
   requestLogToServer,
+  requestOneClickLogin,
   requestUser,
   serializeStorage,
   StorageWithRevision,
@@ -86,6 +87,12 @@ export type Action =
       email: string;
       password: string;
       token: string;
+    }
+  | {
+      type: "one-click-login";
+      email: string;
+      code: string;
+      targetFolder: string | undefined | null;
     }
   | {
       type: "set-self";
@@ -198,6 +205,14 @@ export async function dispatch(
         state,
         update
       );
+    case "one-click-login":
+      return oneClickLogin(
+        action.email,
+        action.code,
+        action.targetFolder,
+        state,
+        update
+      );
     case "set-self":
       return setSelf(action.self, state, update);
     case "error":
@@ -295,6 +310,60 @@ async function genPassport(
   window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
 
   update({ pcds });
+}
+
+async function oneClickLogin(
+  email: string,
+  code: string,
+  targetFolder: string | undefined | null,
+  state: AppState,
+  update: ZuUpdate
+): Promise<void> {
+  update({
+    modal: { modalType: "none" }
+  });
+  // Because we skip the genPassword() step of setting the initial PCDs
+  // in the one-click flow, we'll need to do it here.
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+    identity: state.identity
+  });
+  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+
+  await savePCDs(pcds);
+  update({ pcds });
+
+  const crypto = await PCDCrypto.newInstance();
+  const encryptionKey = crypto.generateRandomKey();
+  saveEncryptionKey(encryptionKey);
+
+  update({
+    encryptionKey
+  });
+
+  const newUserResult = await requestOneClickLogin(
+    appConfig.zupassServer,
+    email,
+    code,
+    state.identity.commitment.toString(),
+    encryptionKey
+  );
+
+  if (newUserResult.success) {
+    return finishAccountCreation(
+      newUserResult.value,
+      state,
+      update,
+      targetFolder
+    );
+  }
+
+  update({
+    error: {
+      title: "Account creation failed",
+      message: "Couldn't create an account. " + newUserResult.error,
+      dismissToCurrentPage: true
+    }
+  });
 }
 
 async function createNewUserSkipPassword(

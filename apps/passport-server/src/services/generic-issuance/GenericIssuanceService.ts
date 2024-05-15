@@ -284,6 +284,13 @@ export class GenericIssuanceService {
     );
   }
 
+  public async validateEmailAndPretixOrderCode(
+    email: string,
+    code: string
+  ): Promise<boolean> {
+    return this.pipelineSubservice.validateEmailAndPretixOrderCode(email, code);
+  }
+
   public async handleGetPipelineSemaphoreGroups(
     pipelineId: string
   ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {
