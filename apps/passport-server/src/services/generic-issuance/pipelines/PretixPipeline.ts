@@ -120,7 +120,7 @@ export class PretixPipeline implements BasePipeline {
 
   // Pending check-ins are check-ins which have either completed (and have
   // succeeded) or are in-progress, but which are not yet reflected in the data
-  // loaded from Lemonade. We use this map to ensure that we do not attempt to
+  // loaded from Pretix. We use this map to ensure that we do not attempt to
   // check the same ticket in multiple times.
   private pendingCheckIns: Map<
     string,
