@@ -1,16 +1,22 @@
-import { Spacer } from "@pcd/passport-ui";
+import { Spacer, styled } from "@pcd/passport-ui";
 import { useEffect } from "react";
+import { H2, TextCenter } from "../../../../core";
 import { RippleLoader } from "../../../../core/RippleLoader";
 import { ErrorContainer, StatusContainer } from "../PodboxScannedTicketScreen";
+import { usePreCheckTicket } from "../hooks/usePrecheckTicket";
+import { PodboxTicketInfoSection } from "./PodboxTicketInfoSection";
+import { PodboxZKModeTicketInfoSection } from "./PodboxZKModeTicketInfoSection";
 import { PodboxTicketActionErrorSection } from "./actions/PodboxTicketErrors";
 import { useExecuteTicketAction } from "./actions/useExecuteTicketAction";
 
 export function InstantCheckin({
   ticketId,
-  eventId
+  eventId,
+  zkMode
 }: {
   ticketId: string;
   eventId: string;
+  zkMode: boolean;
 }): JSX.Element {
   const executor = useExecuteTicketAction({
     eventId,
@@ -20,12 +26,16 @@ export function InstantCheckin({
     }
   });
 
+  const precheck = usePreCheckTicket(ticketId, eventId);
+
+  const isLoading = executor.loading || precheck.loading;
+
   useEffect(() => {
     executor.execute();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (executor.loading) {
+  if (isLoading) {
     return (
       <>
         <RippleLoader />
@@ -34,7 +44,7 @@ export function InstantCheckin({
     );
   }
 
-  if (executor.result?.success) {
+  if (executor.result?.success && precheck.result.success) {
     const value = executor.result.value;
     if (value.success) {
       // For the richer "action executor" system used when camera-scanning, we
@@ -44,11 +54,28 @@ export function InstantCheckin({
       const successMessage = "Checked In";
       return (
         <>
+          {zkMode ? (
+            <PodboxZKModeTicketInfoSection
+              precheck={precheck.result.value}
+              isLoading={isLoading}
+            />
+          ) : (
+            <PodboxTicketInfoSection
+              precheck={precheck.result.value}
+              isLoading={isLoading}
+            />
+          )}
           <StatusContainer size="small">{successMessage}</StatusContainer>
+          <LaserScannerInfo />
         </>
       );
     } else {
-      return <PodboxTicketActionErrorSection error={value.error} />;
+      return (
+        <>
+          <PodboxTicketActionErrorSection error={value.error} />
+          <LaserScannerInfo />
+        </>
+      );
     }
   } else if (executor.result?.error) {
     const errorMessage = "Error Checking Ticket In";
@@ -59,6 +86,7 @@ export function InstantCheckin({
           {executor.result?.error ??
             "An unknown error occurred, please try again."}
         </div>
+        <LaserScannerInfo />
       </>
     );
   }
@@ -70,3 +98,30 @@ export function InstantCheckin({
     </>
   );
 }
+
+function LaserScannerInfo(): JSX.Element {
+  return (
+    <>
+      <Spacer h={64} />
+      <TextCenter>
+        <H2>Scan another ticket</H2>
+      </TextCenter>
+      <Spacer h={16} />
+      <TextCenter>
+        Press and hold down the <Orange>orange</Orange> scan button and position
+        the attendee's QR code in front of the laser light. If you're having
+        trouble, ask the participant to increase the brightness on their screen.
+      </TextCenter>
+      <Spacer h={16} />
+      <TextCenter>
+        Please reach out to the Zupass Help Desk for any further scanning
+        issues.
+      </TextCenter>
+    </>
+  );
+}
+
+const Orange = styled.span`
+  font-weight: bold;
+  color: orange;
+`;
