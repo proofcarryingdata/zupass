@@ -9,6 +9,7 @@ import {
   ListFeedsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
+  PipelineOrganizerViewData,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -32,6 +33,7 @@ import {
   isSemaphoreGroupCapability
 } from "../capabilities/SemaphoreGroupCapability";
 import { tracePipeline, traceUser } from "../honeycombQueries";
+import { PretixPipeline } from "../pipelines/PretixPipeline";
 import { PipelineUser } from "../pipelines/types";
 import { CredentialSubservice } from "./CredentialSubservice";
 import { PipelineSubservice } from "./PipelineSubservice";
@@ -84,6 +86,22 @@ export class PipelineAPISubservice {
         }
       });
       return feedResponse;
+    });
+  }
+
+  public async handleGetOrganizerView(
+    pipelineId: string,
+    apiKey: string
+  ): Promise<PipelineOrganizerViewData> {
+    return traced(SERVICE_NAME, "handleGetOrganizerView", async () => {
+      const pipeline =
+        await this.pipelineSubservice.ensurePipelineStarted(pipelineId);
+
+      if (!PretixPipeline.is(pipeline)) {
+        throw new Error("only PretixPipeline supports organizer view");
+      }
+
+      return await pipeline.handleGetOrganizerView(apiKey);
     });
   }
 

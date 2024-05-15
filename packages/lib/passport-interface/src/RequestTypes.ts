@@ -504,6 +504,22 @@ export interface PipelineEdDSATicketZuAuthConfig {
 // could be |'ed with other types of metadata
 export type PipelineZuAuthConfig = PipelineEdDSATicketZuAuthConfig;
 
+/**
+ * Data for display to pipeline owners that instead of requiring a
+ * PodBox login requires a PodBox API key to view.
+ */
+export interface PipelineOrganizerViewData {
+  eventName: string;
+
+  allTickets: number;
+  swagClaimed: number;
+  checkedIn: number;
+
+  allTicketsEmails: string[];
+  swagClaimedEmails: string[];
+  checkedInEmails: string[];
+}
+
 export interface PipelineInfoResponseValue {
   ownerEmail: string;
   lastLoad?: PipelineLoadSummary;

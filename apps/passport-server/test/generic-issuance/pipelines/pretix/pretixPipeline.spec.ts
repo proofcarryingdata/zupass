@@ -557,6 +557,7 @@ describe("generic issuance - PretixPipeline", function () {
     }
   );
 
+  // @todo: turn this test back on once we turn this feature back on
   xstep("check-ins for deleted manual tickets are removed", async function () {
     expectToExist(giService);
 

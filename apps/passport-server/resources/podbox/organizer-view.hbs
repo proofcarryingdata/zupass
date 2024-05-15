@@ -1,0 +1,182 @@
+<!-- see backend implementation of this in by ctrl+f-ing `/generic-issuance/organizer/:pipelineId/:apiKey` -->
+<!-- see also: https://github.com/proofcarryingdata/zupass/blob/ivan/swag-stats/apps/passport-server/src/services/generic-issuance/subservices/PipelineAPISubservice.ts#L92 -->
+
+<html>
+  <head>
+    <style>
+      body {
+        background-color: #19473f;
+        color: white;
+        font-size: 24px;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif
+      }
+
+      .page {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+
+      .container {
+        box-sizing: border-box;
+        border: 1px solid #ffe5a4;
+        padding: 32px;
+        border-radius: 18px;
+        background-color: #206b5e;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 16px;
+        box-shadow: 1px 1px 5px 0px rgba(0,0,0,0.5);
+      }
+
+      .page.expanded {
+        padding: 8px;
+      }
+
+      .stat {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-direction: row;
+        gap: 32px;
+        border-bottom: 1px solid rgba(252, 210, 112, 0.2);
+        padding-bottom: 4px;
+      }
+
+      .exp-btn {
+        user-select: none;
+        cursor: pointer;
+        padding: 4px 8px;
+        background-color: rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        margin-left: 8px;
+        box-sizing: border-box;
+        border: 2px solid transparent;
+        display: inline-block;
+        font-size: 14px;
+      }
+
+      .exp-btn:hover {
+        text-decoration: underline;
+      }
+
+      .exp-btn:active {
+        border: 2px solid white;
+      }
+
+      .title {
+      }
+
+      .value {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .selected {
+        color: #f4c24d
+      }
+
+      #placeholder {
+        max-height: 300px;
+        height: 300px;
+        min-width: 400px;
+        font-size: 14px;
+        background-color: rgba(0, 0, 0, 0.1);
+        border: 4px solid #22413b;
+        color: black;
+        padding: 16px;
+        color: rgba(255, 255, 255, 0.8);
+        font-style: italic;
+        border-radius: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        box-sizing: border-box;
+        line-height: 1.5em;
+      }
+
+      #expanded {
+        box-sizing: border-box;
+        max-height: 300px;
+        height: 300px;
+        min-width: 400px;
+        font-size: 14px;
+        background-color: white;
+        border: 4px solid #22413b;
+        color: black;
+        overflow-y: scroll;
+        padding: 16px;
+        border-radius: 16px;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+        display: inline-block;
+        display: none;
+        font-family: monospace;
+      }
+
+      #event-name {
+        font-size: 24px;
+        font-weight: bold;
+        text-align: left;
+        width: 100%;
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="container">
+        <div id="event-name"></div>
+        <div class="stat">
+          <span class="title" id="allTickets-Title">tickets issued</span> <div class="value"> <span id="allTickets"></span> <span class="exp-btn" id="expand-allTickets">emails</span> </div>
+        </div>
+
+        <div class="stat">
+          <span class="title" id="swagClaimed-Title">swag claimed</span> <div class="value"> <span id="swagClaimed"></span> <span class="exp-btn" id="expand-swagClaimed">emails</span> </div>
+        </div>
+
+        <div class="stat">
+           <span class="title" id="checkedIn-Title">checked in</span> <div class="value"> <span id="checkedIn"></span> <span class="exp-btn" id="expand-checkedIn">emails</span> </div>
+        </div>
+        
+        <div id="expanded"></div>
+        <div id="placeholder">
+          select a category above
+          <br />
+          to view emails
+        </div>
+      </div>
+    </div>
+     <script>
+      const stats = JSON.parse('{{stats}}');
+
+      document.querySelector("#event-name").innerText = stats.eventName;
+
+      for (let key of ["allTickets", "swagClaimed", "checkedIn"]) {
+        document.querySelector(`#${key}`).innerHTML = stats[key];
+        document.querySelector(`#expand-${key}`).onclick = function() {
+          document.querySelector("#expanded").style.display = "inline-block";
+          document.querySelector(".container").classList.add("expanded")
+          document.querySelector("#expanded").innerText = stats[`${key}Emails`].join("\n");
+          document.querySelector("#placeholder").style.display = "none";
+          document.querySelectorAll(`.title`).forEach(function(e) { e.classList.remove("selected") });
+          document.querySelector(`#${key}-Title`).classList.add("selected");
+        };
+      }
+
+    </script>
+  </body>
+</html>

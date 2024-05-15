@@ -22,6 +22,7 @@ import {
   PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
+  PipelineOrganizerViewData,
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PipelineZuAuthConfig,
@@ -53,7 +54,10 @@ import {
   IPipelineAtomDB,
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
-import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
+import {
+  IPipelineCheckinDB,
+  ManualCheckinType
+} from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
@@ -120,7 +124,11 @@ export class PretixPipeline implements BasePipeline {
   // check the same ticket in multiple times.
   private pendingCheckIns: Map<
     string,
-    { status: CheckinStatus; timestamp: number }
+    {
+      status: CheckinStatus;
+      timestamp: number;
+      checkinType?: ManualCheckinType;
+    }
   >;
 
   /**
@@ -420,6 +428,48 @@ export class PretixPipeline implements BasePipeline {
         } satisfies PipelineLoadSummary;
       }
     );
+  }
+
+  /**
+   * Displayed to organizers of PodBox-backed Pipelines who have the appropriate
+   * API key.
+   */
+  public async handleGetOrganizerView(
+    apiKey: string
+  ): Promise<PipelineOrganizerViewData> {
+    if (!this.definition.options.organizerApiKey) {
+      throw new PCDHTTPError(403, "no api key configured for this pipeline");
+    }
+
+    if (apiKey !== this.definition.options.organizerApiKey) {
+      throw new PCDHTTPError(403, "wrong api key");
+    }
+
+    const manualCheckins = await this.checkinDB.getByPipelineId(this.id);
+    const swagCheckins = manualCheckins.filter(
+      (c) => c.checkinType === ManualCheckinType.SWAG
+    );
+    const allTickets = await this.db.load(this.id);
+    const allTicketsById: Record<string, PretixAtom> = {};
+    allTickets.forEach((t) => (allTicketsById[t.id] = t));
+    const normalCheckins = allTickets.filter((t) => t.isConsumed);
+
+    return {
+      eventName: this.definition.options.name ?? "un-named",
+      checkedIn: normalCheckins.length,
+      swagClaimed: swagCheckins.length,
+      allTickets: allTickets.length,
+
+      allTicketsEmails: allTickets
+        .map((t) => t.email)
+        .filter((e) => !!e) as string[],
+      checkedInEmails: normalCheckins
+        .map((c) => c.email)
+        .filter((e) => !!e) as string[],
+      swagClaimedEmails: swagCheckins
+        .map((c) => allTicketsById[c.ticketId]?.email)
+        .filter((e) => !!e) as string[]
+    } satisfies PipelineOrganizerViewData;
   }
 
   private async getAllManualTickets(): Promise<ManualTicket[]> {
@@ -1301,7 +1351,6 @@ export class PretixPipeline implements BasePipeline {
     ticketAtom: PretixAtom
   ): Promise<true | PodboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInPretixTicket", async (span) => {
-      // boom
       // Is the ticket already checked in?
       // Only check if ticket is already checked in here, to avoid leaking
       // information about ticket check-in status to unpermitted users.
@@ -1557,6 +1606,20 @@ export class PretixPipeline implements BasePipeline {
           } else {
             // No Pretix atom found, try looking for a manual ticket
             const manualTicket = await this.getManualTicketById(ticketId);
+
+            // manual tickets can't be issued swag
+            // @todo: make this more generic
+            if (canCheckInResult === "policy") {
+              return {
+                success: true,
+                checkinActionInfo: {
+                  permissioned: false,
+                  canCheckIn: false,
+                  reason: { name: "NoActionsAvailable" }
+                }
+              };
+            }
+
             if (manualTicket && manualTicket.eventId === eventId) {
               // Manual ticket found
               const canCheckInTicketResult = await this.canCheckInManualTicket(
@@ -1712,7 +1775,14 @@ export class PretixPipeline implements BasePipeline {
         if (canCheckInResult === "superuser") {
           return this.checkInPretixTicket(ticketAtom, checkerEmail);
         } else {
-          return this.checkInManualTicket(ticketId, eventId, checkerEmail);
+          // 'policy' case
+          return this.checkInManualTicket(
+            ticketId,
+            eventId,
+            checkerEmail,
+            // @todo: make this generic if/when we have >1 use-case
+            ManualCheckinType.SWAG
+          );
         }
       } else {
         const manualTicket = await this.getManualTicketById(ticketId);
@@ -1741,7 +1811,8 @@ export class PretixPipeline implements BasePipeline {
   private async checkInManualTicket(
     ticketId: string,
     eventId: string,
-    checkerEmail: string
+    checkerEmail: string,
+    checkinType?: ManualCheckinType
   ): Promise<PodboxTicketActionResponseValue> {
     return traced<PodboxTicketActionResponseValue>(
       LOG_NAME,
@@ -1763,10 +1834,16 @@ export class PretixPipeline implements BasePipeline {
         }
 
         try {
-          await this.checkinDB.checkIn(this.id, ticketId, new Date());
+          await this.checkinDB.checkIn(
+            this.id,
+            ticketId,
+            new Date(),
+            checkinType
+          );
           this.pendingCheckIns.set(ticketId, {
             status: CheckinStatus.Success,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            checkinType
           });
         } catch (e) {
           logger(

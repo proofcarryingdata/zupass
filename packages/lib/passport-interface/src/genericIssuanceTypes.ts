@@ -50,7 +50,8 @@ const BasePipelineOptionsSchema = z.object({
    * Protected pipelines can't be deleted.
    */
   protected: z.boolean().optional(),
-  important: z.boolean().optional()
+  important: z.boolean().optional(),
+  organizerApiKey: z.string().uuid().optional()
 });
 
 export type BasePipelineOptions = z.infer<typeof BasePipelineOptionsSchema>;
@@ -494,9 +495,9 @@ export type PretixPipelineDefinition = z.infer<
 >;
 
 export function isPretixPipelineDefinition(
-  d: PipelineDefinition
+  d: PipelineDefinition | undefined
 ): d is PretixPipelineDefinition {
-  return d.type === PipelineType.Pretix;
+  return d?.type === PipelineType.Pretix;
 }
 
 export enum CSVPipelineOutputType {

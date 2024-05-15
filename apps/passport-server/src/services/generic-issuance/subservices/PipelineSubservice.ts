@@ -12,6 +12,7 @@ import {
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
+  PipelineOrganizerViewData,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -436,6 +437,16 @@ export class PipelineSubservice {
     pipelineId: string
   ): Promise<PipelineInfoResponseValue> {
     return this.pipelineAPISubservice.handleGetPipelineInfo(user, pipelineId);
+  }
+
+  public async handleGetOrganizerView(
+    pipelineId: string,
+    apiKey: string
+  ): Promise<PipelineOrganizerViewData> {
+    return this.pipelineAPISubservice.handleGetOrganizerView(
+      pipelineId,
+      apiKey
+    );
   }
 
   public async handleListFeed(

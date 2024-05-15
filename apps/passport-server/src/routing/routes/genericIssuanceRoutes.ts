@@ -22,6 +22,8 @@ import {
 } from "@pcd/passport-interface";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express from "express";
+import { readFile } from "fs/promises";
+import path from "path";
 import urljoin from "url-join";
 import { GenericIssuanceService } from "../../services/generic-issuance/GenericIssuanceService";
 import {
@@ -32,7 +34,7 @@ import {
   traceUser
 } from "../../services/generic-issuance/honeycombQueries";
 import { createQueryUrl } from "../../services/telemetryService";
-import { GlobalServices } from "../../types";
+import { ApplicationContext, GlobalServices } from "../../types";
 import { IS_PROD } from "../../util/isProd";
 import { logger } from "../../util/logger";
 import { checkBody, checkUrlParam } from "../params";
@@ -40,6 +42,7 @@ import { PCDHTTPError } from "../pcdHttpError";
 
 export function initGenericIssuanceRoutes(
   app: express.Application,
+  context: ApplicationContext,
   { genericIssuanceService }: GlobalServices
 ): void {
   logger("[INIT] initializing generic issuance routes");
@@ -130,6 +133,29 @@ export function initGenericIssuanceRoutes(
     );
     res.json(result satisfies PipelineInfoResponseValue);
   });
+
+  app.get(
+    "/generic-issuance/organizer/:pipelineId/:apiKey",
+    async (req, res) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineId = checkUrlParam(req, "pipelineId");
+      const apiKey = checkUrlParam(req, "apiKey");
+      const result = await genericIssuanceService.handleGetOrganizerView(
+        pipelineId,
+        apiKey
+      );
+
+      let template = (
+        await readFile(
+          path.join(context.resourcesDir, "podbox/organizer-view.hbs")
+        )
+      ).toString();
+
+      template = template.replace("{{stats}}", JSON.stringify(result));
+
+      res.send(template);
+    }
+  );
 
   /**
    * Authenticated by PCD so doesn't need auth.

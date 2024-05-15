@@ -88,7 +88,7 @@ export function CheckInActionSection({
   } else if (executor.result?.error) {
     const errorMessage = precheck?.value?.actionScreenConfig?.actionErrorCopy
       ? precheck.value.actionScreenConfig.actionErrorCopy
-      : "Checked In";
+      : "Error Checking Ticket In";
     return (
       <>
         <ErrorContainer>{errorMessage}</ErrorContainer>
