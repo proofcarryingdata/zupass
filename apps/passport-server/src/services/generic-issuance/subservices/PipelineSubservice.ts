@@ -124,7 +124,7 @@ export class PipelineSubservice {
     // todo: optimized query?
     const definitions = await this.loadPipelineDefinitions();
     const pretixPipelines = definitions.filter(
-      (d) => d.type === PipelineType.Pretix
+      isPretixPipelineDefinition
     );
     const hasAtom = (
       await Promise.all(
