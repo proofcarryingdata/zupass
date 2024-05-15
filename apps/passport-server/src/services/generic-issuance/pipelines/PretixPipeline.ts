@@ -432,18 +432,28 @@ export class PretixPipeline implements BasePipeline {
 
   public async getSwagStats(): Promise<PipelineSwagStats> {
     const manualCheckins = await this.checkinDB.getByPipelineId(this.id);
-    const swagCheckins: number = manualCheckins.filter(
+    const swagCheckins = manualCheckins.filter(
       (c) => c.checkinType === ManualCheckinType.SWAG
-    ).length;
+    );
     const allTickets = await this.db.load(this.id);
-    const normalCheckins: number = allTickets.filter(
-      (t) => t.isConsumed
-    ).length;
+    const allTicketsById: Record<string, PretixAtom> = {};
+    allTickets.forEach((t) => (allTicketsById[t.id] = t));
+    const normalCheckins = allTickets.filter((t) => t.isConsumed);
 
     const stats = {
-      checkedIn: normalCheckins,
-      swagClaimed: swagCheckins,
-      totalTickets: allTickets.length
+      checkedIn: normalCheckins.length,
+      swagClaimed: swagCheckins.length,
+      totalTickets: allTickets.length,
+
+      allTicketEmails: allTickets
+        .map((t) => t.email)
+        .filter((e) => !!e) as string[],
+      checkedInEmails: normalCheckins
+        .map((c) => c.email)
+        .filter((e) => !!e) as string[],
+      swagClaimedEmails: swagCheckins
+        .map((c) => allTicketsById[c.ticketId]?.email)
+        .filter((e) => !!e) as string[]
     } satisfies PipelineSwagStats;
 
     return stats;

@@ -508,6 +508,10 @@ export interface PipelineSwagStats {
   totalTickets: number;
   swagClaimed: number;
   checkedIn: number;
+
+  allTicketEmails: string[];
+  swagClaimedEmails: string[];
+  checkedInEmails: string[];
 }
 
 export interface PipelineInfoResponseValue {
