@@ -73,6 +73,7 @@ export function PodboxScannedTicketScreen(): JSX.Element {
             <InstantCheckin
               ticketId={ticketIds.ticketId}
               eventId={ticketIds.eventId}
+              zkMode={ticketIds.zkMode}
             />
           </CenterColumn>
         </AppContainer>
