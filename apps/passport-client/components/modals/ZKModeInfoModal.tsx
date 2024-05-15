@@ -28,8 +28,12 @@ export function ZKModeInfoModal(): JSX.Element {
       <H2>ZK Mode</H2>
       <Spacer h={24} />
       <p>
-        Note that some ticket information is shared with Pretix. Please come to
-        the info desk to learn more.
+        Scanners check only a <strong>ZK proof</strong> of your ticket without
+        seeing your email.
+      </p>
+      <p>
+        Some ticket information is still shared with Pretix - please come to the
+        info desk to learn more.
       </p>
 
       <Spacer h={16} />

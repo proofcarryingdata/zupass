@@ -16,6 +16,7 @@ import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { supportsZKMode } from "@pcd/util";
 import { useCallback, useState } from "react";
+import { MdInfo } from "react-icons/md";
 import { TicketQR } from "./TicketQR";
 
 export interface EdDSATicketPCDCardProps {
@@ -57,11 +58,8 @@ function EdDSATicketPCDCardBody({
 
   const [zk, setZk] = useState<boolean>(idBasedVerifyURL === undefined);
   const onToggle = useCallback(() => {
-    if (!zk) {
-      openInfoModal();
-    }
     setZk(!zk);
-  }, [zk, openInfoModal]);
+  }, [zk]);
 
   const redact = zk && idBasedVerifyURL !== undefined;
 
@@ -105,6 +103,7 @@ function EdDSATicketPCDCardBody({
                   checked={zk}
                   onChange={onToggle}
                 />
+                <MdInfo size={24} onClick={openInfoModal} color="gray" />
               </ZKMode>
             )}
         </TicketInfo>
@@ -194,7 +193,9 @@ const ZKMode = styled.div`
   display: flex;
   text-align: right;
   margin-top: 8px;
+  gap: 10px;
   padding: 0px 16px;
+  align-items: center;
   width: 100%;
   justify-content: flex-end;
 `;
