@@ -18,6 +18,12 @@
     },
     {
       "path": "../../pcd/pod-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/gpc/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/gpc-pcd/tsconfig.esm.json"
     }
   ]
 }

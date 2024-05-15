@@ -18,6 +18,12 @@
     },
     {
       "path": "../../pcd/pod-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/gpc/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/gpc-pcd/tsconfig.cjs.json"
     }
   ]
 }

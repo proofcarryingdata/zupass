@@ -1,18 +1,15 @@
 /*
  * This file provides example usage of POD (Provable Object Data) libraries.
+
  * It might eventually turn into tutorials in package docs or sample apps,
  * but for now it's just a preliminary demonstration of what code to use PODs
- * looks like.
+ * looks like.  See gpcExmaple.ts for an example of how to make proofs using
+ * PODs.
  *
  * The code for creating and manipulating PODs is found in the @pcd/pod package.
  * The @pcd/pod-pcd package wraps a POD in a way which can be created,
  * transmitted, stored, and displayed in apps like Zupass and Zubox/Podbox which
  * understand many types of PCDs.
- *
- * In future ZK proofs of PODs will be available in the @pcd/gpc package, and
- * also wrapped in a PCD in @pcd/zk-pod-gpc-pcd.  For now, you can see
- * prototype test code in @pcd/gpcircuits, but it doesn't contain complete
- * configurability yet.
  *
  * All the POD code is an early prototype, and details are subject to change.
  * Feedback is welcome.
@@ -38,7 +35,9 @@ import { v4 as uuid } from "uuid";
 /**
  * You can run this example code with this command: yarn test
  */
-export async function demo(): Promise<void> {
+export async function podDemo(): Promise<void> {
+  console.log("**** POD Demo ****");
+
   // First let's create some cryptographic data for our POD.
   // Semaphore is the default identity protocol for Zupass.  PODs themselves
   // don't care what you use, but ZK proofs will check POD ownership via
@@ -263,4 +262,6 @@ export async function demo(): Promise<void> {
   // For more things you can do with the @pcd/pod-pcd package, check out
   // PODPCD.ts.  Also look at the @pcd/util package for other useful
   // helpers.
+
+  console.log("**** End POD Demo ****");
 }

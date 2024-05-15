@@ -27,15 +27,18 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.10.0",
-    "@pcd/pod": "0.0.1",
-    "@pcd/pod-pcd": "0.0.1",
+    "@pcd/pcd-types": "0.11.0",
+    "@pcd/pod": "0.1.0",
+    "@pcd/pod-pcd": "0.1.0",
+    "@pcd/gpc": "0.0.1",
+    "@pcd/gpc-pcd": "0.0.1",
     "@semaphore-protocol/identity": "^3.15.2",
+    "lodash": "^4.17.21",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.10.0",
-    "@pcd/tsconfig": "0.10.0",
+    "@pcd/eslint-config-custom": "0.11.0",
+    "@pcd/tsconfig": "0.11.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "eslint": "^8.57.0",
