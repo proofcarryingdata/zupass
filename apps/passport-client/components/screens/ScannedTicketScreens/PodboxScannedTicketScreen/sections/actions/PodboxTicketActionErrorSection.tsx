@@ -1,4 +1,7 @@
-import { PodboxTicketActionError } from "@pcd/passport-interface";
+import {
+  ActionScreenConfig,
+  PodboxTicketActionError
+} from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import {
   ErrorContainer,
@@ -7,9 +10,12 @@ import {
 } from "../../PodboxScannedTicketScreen";
 
 export function PodboxTicketActionErrorSection({
-  error
+  error,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  uiConfig
 }: {
   error: PodboxTicketActionError;
+  uiConfig?: ActionScreenConfig;
 }): JSX.Element | undefined {
   let errorContent = null;
 
