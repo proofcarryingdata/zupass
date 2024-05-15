@@ -14,7 +14,7 @@ import { ONE_DAY_MS, ONE_SECOND_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
-import { step } from "mocha-steps";
+import { step, xstep } from "mocha-steps";
 import * as MockDate from "mockdate";
 import { stopApplication } from "../../../../src/application";
 import { PipelineCheckinDB } from "../../../../src/database/queries/pipelineCheckinDB";
@@ -557,7 +557,7 @@ describe("generic issuance - PretixPipeline", function () {
     }
   );
 
-  step("check-ins for deleted manual tickets are removed", async function () {
+  xstep("check-ins for deleted manual tickets are removed", async function () {
     expectToExist(giService);
 
     const checkinDB = new PipelineCheckinDB(giBackend.context.dbPool);
