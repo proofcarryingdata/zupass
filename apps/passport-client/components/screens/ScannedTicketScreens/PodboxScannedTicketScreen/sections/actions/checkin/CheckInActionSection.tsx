@@ -49,6 +49,10 @@ export function CheckInActionSection({
 
   if (precheck.success) {
     if (precheck.value?.checkinActionInfo.reason?.name === "AlreadyCheckedIn") {
+      const errorMessage = precheck.value.actionScreenConfig?.actionErrorCopy
+        ? precheck.value.actionScreenConfig?.actionErrorCopy
+        : "Already Checked In";
+
       return (
         <div style={isLoading ? { opacity: 0.7 } : {}}>
           <PodboxTicketActionErrorSection
@@ -56,7 +60,7 @@ export function CheckInActionSection({
             error={precheck.value?.checkinActionInfo.reason}
           />
           <Spacer h={8} />
-          <Button disabled={true}>Already Checked In</Button>
+          <Button disabled={true}>{errorMessage}</Button>
         </div>
       );
     }

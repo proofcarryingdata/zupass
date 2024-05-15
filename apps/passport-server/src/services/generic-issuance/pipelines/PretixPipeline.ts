@@ -1504,7 +1504,7 @@ export class PretixPipeline implements BasePipeline {
               // @todo: make this configurable
               const actionScreenConfig: ActionScreenConfig = {
                 actionButtonCopy: "Give Swag",
-                actionErrorCopy: "Error Giving Swag",
+                actionErrorCopy: "Swag Already Redeemed",
                 actionSuccessCopy: "Swag Given"
               };
 
@@ -1512,7 +1512,7 @@ export class PretixPipeline implements BasePipeline {
                 if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
                   return {
                     success: true,
-                    ...actionScreenConfig,
+                    actionScreenConfig,
                     checkinActionInfo: {
                       permissioned: true,
                       canCheckIn: false,
@@ -1528,7 +1528,7 @@ export class PretixPipeline implements BasePipeline {
                 }
                 return {
                   success: true,
-                  ...actionScreenConfig,
+                  actionScreenConfig,
                   checkinActionInfo: {
                     permissioned: false,
                     canCheckIn: false,
@@ -1538,7 +1538,7 @@ export class PretixPipeline implements BasePipeline {
               } else {
                 return {
                   success: true,
-                  ...actionScreenConfig,
+                  actionScreenConfig,
                   checkinActionInfo: {
                     permissioned: true,
                     canCheckIn: true,
