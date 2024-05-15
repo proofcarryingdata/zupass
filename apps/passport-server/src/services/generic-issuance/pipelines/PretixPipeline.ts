@@ -1613,7 +1613,7 @@ export class PretixPipeline implements BasePipeline {
               return {
                 success: true,
                 checkinActionInfo: {
-                  permissioned: true,
+                  permissioned: false,
                   canCheckIn: false,
                   reason: { name: "NoActionsAvailable" }
                 }
