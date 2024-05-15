@@ -636,6 +636,17 @@ export type CreateNewUserRequest = {
   autoRegister?: boolean;
 };
 
+export type OneClickLoginRequest = {
+  email: string;
+  code: string;
+  commitment: string;
+  encryptionKey: string;
+};
+
+export type OneClickLoginResponseValue =
+  | { isNewUser: true; zupassUser: ZupassUserJson }
+  | { isNewUser: false; encryptionKey: string | null };
+
 /**
  * Zupass responds with this when you ask it if it is able to
  * issue tickets. Used primarily for testing.

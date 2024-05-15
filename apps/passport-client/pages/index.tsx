@@ -38,6 +38,7 @@ import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreateP
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
+import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
@@ -320,6 +321,10 @@ function RouterImpl(): JSX.Element {
           <Route path="privacy-notice" element={<PrivacyNoticeScreen />} />
           <Route path="create-password" element={<CreatePasswordScreen />} />
           <Route path="change-password" element={<ChangePasswordScreen />} />
+          <Route
+            path="one-click-login/:email/:code/:targetFolder"
+            element={<OneClickLoginScreen />}
+          />
           <Route
             path="enter-confirmation-code"
             element={<EnterConfirmationCodeScreen />}
