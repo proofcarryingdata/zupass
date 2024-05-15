@@ -6,6 +6,7 @@ import {
   useLoginIfNoSelf,
   useQuery
 } from "../../../../src/appHooks";
+import { loadUsingLaserScanner } from "../../../../src/localstorage";
 import { pendingRequestKeys } from "../../../../src/sessionStorage";
 import { Button, CenterColumn, H5 } from "../../../core";
 import { RippleLoader } from "../../../core/RippleLoader";
@@ -16,6 +17,7 @@ import {
   TicketIdState,
   useTicketDataFromQuery
 } from "./hooks/useTicketDataFromQuery";
+import { InstantCheckin } from "./sections/PodboxInstantCheckin";
 import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection";
 
 /**
@@ -62,13 +64,28 @@ export function PodboxScannedTicketScreen(): JSX.Element {
   }
 
   if (ticketIds.state === TicketIdState.Success) {
-    return (
-      <PrecheckTicket
-        ticketId={ticketIds.ticketId}
-        eventId={ticketIds.eventId}
-        zkMode={ticketIds.zkMode}
-      />
-    );
+    if (loadUsingLaserScanner()) {
+      // If we're using the laser scanner, immediately check the ticket in and
+      // show the result.
+      return (
+        <AppContainer bg={"primary"}>
+          <CenterColumn w={400}>
+            <InstantCheckin
+              ticketId={ticketIds.ticketId}
+              eventId={ticketIds.eventId}
+            />
+          </CenterColumn>
+        </AppContainer>
+      );
+    } else {
+      return (
+        <PrecheckTicket
+          ticketId={ticketIds.ticketId}
+          eventId={ticketIds.eventId}
+          zkMode={ticketIds.zkMode}
+        />
+      );
+    }
   }
 
   return (
