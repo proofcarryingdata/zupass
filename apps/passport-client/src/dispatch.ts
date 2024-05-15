@@ -398,7 +398,7 @@ async function oneClickLogin(
   // Error - didn't match
   update({
     error: {
-      title: "Zupass link failed",
+      title: "Zupass error occurred",
       message: oneClickLoginResult.error
     }
   });

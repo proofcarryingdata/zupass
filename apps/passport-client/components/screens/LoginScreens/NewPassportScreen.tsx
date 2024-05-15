@@ -74,7 +74,6 @@ function SendEmailVerification({ email }: { email: string }): JSX.Element {
         try {
           const encryptionKey = verifyTokenResult.value?.encryptionKey;
           if (encryptionKey) {
-            // here
             const storageResult = await requestDownloadAndDecryptStorage(
               appConfig.zupassServer,
               encryptionKey
@@ -127,7 +126,6 @@ function SendEmailVerification({ email }: { email: string }): JSX.Element {
         );
         setLoadingAccount(false);
 
-        // here
         if (saltResult.success) {
           window.location.href = `#/already-registered?email=${encodeURIComponent(
             email

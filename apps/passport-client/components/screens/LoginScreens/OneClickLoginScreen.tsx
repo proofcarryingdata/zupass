@@ -25,20 +25,26 @@ export function OneClickLoginScreen(): JSX.Element | null {
         targetFolder
       });
     } catch (err) {
-      console.error(err);
+      await dispatch({
+        type: "error",
+        error: {
+          title: "An error occured",
+          message: (err as Error).message || "An error occured"
+        }
+      });
     }
   }, [dispatch, email, code, targetFolder]);
 
   useEffect(() => {
     // Redirect to home if already logged in
-    if (self) {
+    if (self || !email || !code) {
       window.location.hash = targetFolder
         ? `#/?folder=${encodeURIComponent(targetFolder)}`
         : "#/";
     } else {
       handleOneClickLogin();
     }
-  }, [self, targetFolder, handleOneClickLogin]);
+  }, [self, targetFolder, handleOneClickLogin, email, code]);
 
   return (
     <>
