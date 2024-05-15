@@ -445,7 +445,7 @@ export class PretixPipeline implements BasePipeline {
       swagClaimed: swagCheckins.length,
       totalTickets: allTickets.length,
 
-      allTicketEmails: allTickets
+      totalTicketsEmails: allTickets
         .map((t) => t.email)
         .filter((e) => !!e) as string[],
       checkedInEmails: normalCheckins

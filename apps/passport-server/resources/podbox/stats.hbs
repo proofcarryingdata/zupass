@@ -21,6 +21,7 @@
       }
 
       .container {
+        box-sizing: border-box;
         border: 1px solid #ffe5a4;
         padding: 32px;
         border-radius: 16px;
@@ -32,6 +33,10 @@
         gap: 16px;
       }
 
+      .page.expanded {
+        padding: 8px;
+      }
+
       .stat {
         width: 100%;
         display: flex;
@@ -40,27 +45,47 @@
         flex-direction: row;
         gap: 32px;
       }
+
+      pre {
+        max-height: 300px;
+        height: 300px;
+        width: 400px;
+        font-size: 14px;
+        background-color: white;
+        border: 1px solid black;
+        color: black;
+        overflow-y: scroll;
+        display: none;
+      }
     </style>
   </head>
   <body>
     <div class="page">
       <div class="container">
         <div class="stat">
-          swag claimed <span id="swagClaimed"></span>
+          swag claimed <div> <span id="swagClaimed"></span> <button id="expand-swagClaimed">show</button> </div>
         </div>
         <div class="stat">
-          checked in attendees <span id="checkedIn"></span>
+          checked in attendees <div> <span id="checkedIn"></span> <button id="expand-checkedIn">show</button> </div>
         </div>
         <div class="stat">
-          total tickets issued <span id="totalTickets"></span>
+          total tickets issued <div> <span id="totalTickets"></span> <button id="expand-totalTickets">show</button> </div>
         </div>
+        <pre id="expanded"></pre>
       </div>
     </div>
      <script>
       const stats = JSON.parse('{{stats}}');
-      document.querySelector("#totalTickets").innerHTML = stats.totalTickets;
-      document.querySelector("#swagClaimed").innerHTML = stats.swagClaimed;
-      document.querySelector("#checkedIn").innerHTML = stats.checkedIn;
+
+      for (let key of ["totalTickets", "swagClaimed", "checkedIn"]) {
+        document.querySelector(`#${key}`).innerHTML = stats[key];
+        document.querySelector(`#expand-${key}`).onclick = function() {
+          document.querySelector("pre").style.display = "initial";
+          document.querySelector(".container").classList.add("expanded")
+          document.querySelector("#expanded").innerText = stats[`${key}Emails`].join("\n");
+        }
+      }
+
     </script>
   </body>
 </html>
