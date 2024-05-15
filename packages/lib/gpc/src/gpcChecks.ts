@@ -560,30 +560,18 @@ export function circuitDescMeetsRequirements(
   circuitReq: GPCRequirements
 ): boolean {
   // Check tuple parameter compatibility.
-  // Indicate negative tuple requirement check if `requiredNumTuples` throws due
-  // to an invalid choice of parameters (i.e. `params.tupleArity < 2`).
-  const tupleCheck = ((): boolean => {
-    try {
+  const tupleCheck =
+    // If we don't require tuples, then this check passes.
+    circuitReq.tupleArities.length === 0 ||
+    // Else we ought to be checking a circuit that can accommodate tuples.
+    (circuitDesc.tupleArity >= 2 &&
       // The circuit description should have enough tuples of arity `tupleArity` to
       // cover all input tuples when represent as a chain of tuples of arity `arity`.
       // This is determined by the `requiredNumTuples` procedure.
-      return (
-        circuitDesc.maxTuples >=
+      circuitDesc.maxTuples >=
         circuitReq.tupleArities
           .map((arity) => requiredNumTuples(circuitDesc.tupleArity, arity))
-          .reduce((sum, requiredNum) => sum + requiredNum, 0)
-      );
-    } catch (err) {
-      if (
-        err instanceof RangeError &&
-        err.message === "The tuple arity parameter must be at least 2."
-      ) {
-        return false;
-      } else {
-        throw err;
-      }
-    }
-  })();
+          .reduce((sum, requiredNum) => sum + requiredNum, 0));
   return (
     tupleCheck &&
     circuitDesc.maxObjects >= circuitReq.nObjects &&
