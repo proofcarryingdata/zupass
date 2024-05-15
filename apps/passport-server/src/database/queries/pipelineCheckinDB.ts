@@ -112,10 +112,15 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
   }
 }
 
+export const enum ManualCheckinType {
+  SWAG = "SWAG"
+}
+
 /**
  * A record of a check-in.
  */
 export interface PipelineCheckin {
   ticketId: string;
   timestamp: Date;
+  checkinType?: ManualCheckinType;
 }

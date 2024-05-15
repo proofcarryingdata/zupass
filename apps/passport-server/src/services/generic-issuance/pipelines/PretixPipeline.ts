@@ -54,7 +54,10 @@ import {
   IPipelineAtomDB,
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
-import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
+import {
+  IPipelineCheckinDB,
+  ManualCheckinType
+} from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
@@ -424,10 +427,19 @@ export class PretixPipeline implements BasePipeline {
   }
 
   public async getSwagStats(): Promise<PipelineSwagStats> {
+    const manualCheckins = await this.checkinDB.getByPipelineId(this.id);
+    const swagCheckins: number = manualCheckins.filter(
+      (c) => c.checkinType === ManualCheckinType.SWAG
+    ).length;
+    const allTickets = await this.db.load(this.id);
+    const normalCheckins: number = allTickets.filter(
+      (t) => t.isConsumed
+    ).length;
+
     const stats = {
-      checkedIn: 90,
-      swagClaimed: 100,
-      totalTickets: 500
+      checkedIn: normalCheckins,
+      swagClaimed: swagCheckins,
+      totalTickets: allTickets.length
     } satisfies PipelineSwagStats;
 
     return stats;
@@ -1312,7 +1324,6 @@ export class PretixPipeline implements BasePipeline {
     ticketAtom: PretixAtom
   ): Promise<true | PodboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInPretixTicket", async (span) => {
-      // boom
       // Is the ticket already checked in?
       // Only check if ticket is already checked in here, to avoid leaking
       // information about ticket check-in status to unpermitted users.
