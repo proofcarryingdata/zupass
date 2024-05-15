@@ -40,6 +40,7 @@
     "@pcd/tsconfig": "0.11.0",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
+    "@types/snarkjs": "^0.7.8",
     "@types/url-join": "4.0.1",
     "eslint": "^8.57.0",
     "typescript": "^5.3.3"
