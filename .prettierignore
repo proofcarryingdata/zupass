@@ -1,1 +1,2 @@
 templates/*
+apps/passport-server/resources/podbox/stats.hbs

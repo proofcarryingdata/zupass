@@ -1,0 +1,66 @@
+<html>
+  <head>
+    <style>
+      body {
+        background-color: #19473f;
+        color: white;
+        font-size: 24px;
+      }
+
+      .page {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+      }
+
+      .container {
+        border: 1px solid #ffe5a4;
+        padding: 32px;
+        border-radius: 16px;
+        background-color: #206b5e;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .stat {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-direction: row;
+        gap: 32px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="container">
+        <div class="stat">
+          swag claimed <span id="swagClaimed"></span>
+        </div>
+        <div class="stat">
+          checked in attendees <span id="checkedIn"></span>
+        </div>
+        <div class="stat">
+          total tickets issued <span id="totalTickets"></span>
+        </div>
+      </div>
+    </div>
+     <script>
+      const stats = JSON.parse('{{stats}}');
+      document.querySelector("#totalTickets").innerHTML = stats.totalTickets;
+      document.querySelector("#swagClaimed").innerHTML = stats.swagClaimed;
+      document.querySelector("#checkedIn").innerHTML = stats.checkedIn;
+    </script>
+  </body>
+</html>
