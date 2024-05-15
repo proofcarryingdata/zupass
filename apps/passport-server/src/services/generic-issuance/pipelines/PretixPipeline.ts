@@ -458,6 +458,7 @@ export class PretixPipeline implements BasePipeline {
     const normalCheckins = allTickets.filter((t) => t.isConsumed);
 
     const stats = {
+      eventName: this.definition.options.name ?? "un-named",
       checkedIn: normalCheckins.length,
       swagClaimed: swagCheckins.length,
       allTickets: allTickets.length,

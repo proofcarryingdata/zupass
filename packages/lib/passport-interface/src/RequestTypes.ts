@@ -509,6 +509,8 @@ export type PipelineZuAuthConfig = PipelineEdDSATicketZuAuthConfig;
  * PodBox login requires a PodBox API key to view.
  */
 export interface PipelineOrganizerViewData {
+  eventName: string;
+
   allTickets: number;
   swagClaimed: number;
   checkedIn: number;

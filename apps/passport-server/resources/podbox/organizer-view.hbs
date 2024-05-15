@@ -124,11 +124,20 @@
         display: none;
         font-family: monospace;
       }
+
+      #event-name {
+        font-size: 24px;
+        font-weight: bold;
+        text-align: left;
+        width: 100%;
+        text-decoration: underline;
+      }
     </style>
   </head>
   <body>
     <div class="page">
       <div class="container">
+        <div id="event-name"></div>
         <div class="stat">
           <span class="title" id="allTickets-Title">tickets issued</span> <div class="value"> <span id="allTickets"></span> <span class="exp-btn" id="expand-allTickets">emails</span> </div>
         </div>
@@ -151,6 +160,8 @@
     </div>
      <script>
       const stats = JSON.parse('{{stats}}');
+
+      document.querySelector("#event-name").innerText = stats.eventName;
 
       for (let key of ["allTickets", "swagClaimed", "checkedIn"]) {
         document.querySelector(`#${key}`).innerHTML = stats[key];
