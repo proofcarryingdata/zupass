@@ -242,15 +242,13 @@ export type GPCRequirements = {
 
   /**
    * Number of entries in each membership list to be included in proof.
-   * The order is the same as the list names (in alphabetical order).
    */
-  nListElements: number[];
+  nListElements: Record<PODName, number>;
 
   /**
    * Arities (sizes) of tuples which can included in a proof.
-   * The order is the same as the tuple names (in alphabetical order).
    */
-  tupleArities: number[];
+  tupleArities: Record<PODName, number>;
 };
 
 /**
@@ -260,8 +258,8 @@ export function GPCRequirements(
   nObjects: number,
   nEntries: number,
   merkleMaxDepth: number,
-  nListElements: number[] = [],
-  tupleArities: number[] = []
+  nListElements: Record<PODName, number> = {},
+  tupleArities: Record<PODName, number> = {}
 ): GPCRequirements {
   return {
     nObjects,
@@ -275,8 +273,8 @@ export function GPCRequirements(
 // TODO(POD-P2): Get rid of everything below this line.
 
 // Stopgap until membership list compilation is ready.
-export const DEFAULT_LIST_ELEMENTS = [];
-export const DEFAULT_TUPLE_ARITIES = [];
+export const DEFAULT_LIST_ELEMENTS = {};
+export const DEFAULT_TUPLE_ARITIES = {};
 
 // Returns default values for the input to the (multi)tuple module, viz.
 // an array of tuples of 0, which corresponds to choosing the 0th entry

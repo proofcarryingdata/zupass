@@ -97,6 +97,21 @@ export type GPCProofObjectConfig = {
 };
 
 /**
+ * GPCProofConfig for a single list membership check, the list itself containing
+ * either admissible values for a single object entry or a tuple of admissible
+ * values for a tuple of object entries. This configuration specifies the object
+ * entry or tuple of object entries that should lie in this list as well as the
+ * maximum expected size of this list.
+ */
+export type GPCProofListMembershipConfig = {
+  /**
+   * The entry identifier of the value that should lie in this membership list
+   * or a tuple thereof.
+   */
+  comparisonIdentifier: PODEntryIdentifier | PODEntryIdentifier[];
+};
+
+/**
  * Contains the specific constraints to be proven in a GPC proof.  GPC
  * configuration tends to be fixed and reusable, as distinct from
  * {@link GPCProofInputs} which tends to differ for each proof.
@@ -140,8 +155,11 @@ export type GPCProofConfig = {
    */
   pods: Record<PODName, GPCProofObjectConfig>;
 
-  // TODO(POD-P2): List membership configuration
-  // TODO(POD-P2): Tuple configuration
+  /**
+   * Indicates object entry values that ought to lie in some list of valid
+   * values
+   */
+  membershipLists?: Record<PODName, GPCProofListMembershipConfig>;
 };
 
 /**

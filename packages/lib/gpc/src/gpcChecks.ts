@@ -562,14 +562,14 @@ export function circuitDescMeetsRequirements(
   // Check tuple parameter compatibility.
   const tupleCheck =
     // If we don't require tuples, then this check passes.
-    circuitReq.tupleArities.length === 0 ||
+    Object.keys(circuitReq.tupleArities).length === 0 ||
     // Else we ought to be checking a circuit that can accommodate tuples.
     (circuitDesc.tupleArity >= 2 &&
       // The circuit description should have enough tuples of arity `tupleArity` to
       // cover all input tuples when represent as a chain of tuples of arity `arity`.
       // This is determined by the `requiredNumTuples` procedure.
       circuitDesc.maxTuples >=
-        circuitReq.tupleArities
+        Object.values(circuitReq.tupleArities)
           .map((arity) => requiredNumTuples(circuitDesc.tupleArity, arity))
           .reduce((sum, requiredNum) => sum + requiredNum, 0));
   return (
@@ -577,9 +577,10 @@ export function circuitDescMeetsRequirements(
     circuitDesc.maxObjects >= circuitReq.nObjects &&
     circuitDesc.maxEntries >= circuitReq.nEntries &&
     circuitDesc.merkleMaxDepth >= circuitReq.merkleMaxDepth &&
-    circuitDesc.maxLists >= circuitReq.nListElements.length &&
+    circuitDesc.maxLists >= Object.keys(circuitReq.nListElements).length &&
     // The circuit description should be able to contain the largest of the lists.
-    circuitDesc.maxListElements >= Math.max(...circuitReq.nListElements, 0)
+    circuitDesc.maxListElements >=
+      Math.max(...Object.values(circuitReq.nListElements), 0)
   );
 }
 
@@ -599,10 +600,18 @@ export function mergeRequirements(
     Math.max(rs1.nObjects, rs2.nObjects),
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
-    rs1.nListElements.map((nElements, i) =>
-      Math.max(nElements, rs2.nListElements[i])
+    Object.fromEntries(
+      Object.keys(rs2.nListElements).map((listName) => [
+        listName,
+        Math.max(rs1.nListElements[listName] ?? 0, rs2.nListElements[listName])
+      ])
     ),
-    rs1.tupleArities.map((arity, i) => Math.max(arity, rs2.tupleArities[i]))
+    Object.fromEntries(
+      Object.keys(rs2.tupleArities).map((tupleName) => [
+        tupleName,
+        Math.max(rs1.tupleArities[tupleName] ?? 0, rs2.tupleArities[tupleName])
+      ])
+    )
   );
 }
 
