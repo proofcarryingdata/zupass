@@ -10,6 +10,7 @@ import {
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
+  ActionScreenConfig,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
@@ -1500,10 +1501,17 @@ export class PretixPipeline implements BasePipeline {
                 ticketAtom.id
               );
 
+              const actionScreenConfig: ActionScreenConfig = {
+                actionButtonCopy: "Give Swag",
+                actionErrorCopy: "Error Giving Swag",
+                actionSuccessCopy: "Swag Given"
+              };
+
               if (canCheckInTicketResult !== true) {
                 if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
                   return {
                     success: true,
+                    ...actionScreenConfig,
                     checkinActionInfo: {
                       permissioned: true,
                       canCheckIn: false,
@@ -1519,6 +1527,7 @@ export class PretixPipeline implements BasePipeline {
                 }
                 return {
                   success: true,
+                  ...actionScreenConfig,
                   checkinActionInfo: {
                     permissioned: false,
                     canCheckIn: false,
@@ -1528,6 +1537,7 @@ export class PretixPipeline implements BasePipeline {
               } else {
                 return {
                   success: true,
+                  ...actionScreenConfig,
                   checkinActionInfo: {
                     permissioned: true,
                     canCheckIn: true,

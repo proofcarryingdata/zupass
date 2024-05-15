@@ -214,9 +214,15 @@ export type LemonadePipelineEventConfig = z.infer<
   typeof LemonadePipelineEventConfigSchema
 >;
 
+/**
+ * Allows customizing the check-in screen from the server-side.
+ */
 export const ActionScreenConfigSchema = z.object({
   eventBannerUrl: z.string().optional(),
-  eventNameConfig: z.string().optional()
+  eventNameConfig: z.string().optional(),
+  actionButtonCopy: z.string().optional(),
+  actionSuccessCopy: z.string().optional(),
+  actionErrorCopy: z.string().optional()
 });
 
 export type ActionScreenConfig = z.infer<typeof ActionScreenConfigSchema>;
