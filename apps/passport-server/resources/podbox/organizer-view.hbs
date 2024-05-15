@@ -1,3 +1,4 @@
+<!-- see backend implementation of this in by ctrl+f-ing `/generic-issuance/organizer/:pipelineId/:apiKey` -->
 <html>
   <head>
     <style>
@@ -105,7 +106,7 @@
     <div class="page">
       <div class="container">
         <div class="stat">
-          <span class="title" id="totalTickets-Title">tickets issued</span> <div class="value"> <span id="totalTickets"></span> <span class="exp-btn" id="expand-totalTickets">emails</span> </div>
+          <span class="title" id="allTickets-Title">tickets issued</span> <div class="value"> <span id="allTickets"></span> <span class="exp-btn" id="expand-allTickets">emails</span> </div>
         </div>
 
         <div class="stat">
@@ -122,7 +123,7 @@
      <script>
       const stats = JSON.parse('{{stats}}');
 
-      for (let key of ["totalTickets", "swagClaimed", "checkedIn"]) {
+      for (let key of ["allTickets", "swagClaimed", "checkedIn"]) {
         document.querySelector(`#${key}`).innerHTML = stats[key];
         document.querySelector(`#expand-${key}`).onclick = function() {
           document.querySelector("pre").style.display = "initial";

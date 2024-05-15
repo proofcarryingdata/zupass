@@ -1,2 +1,2 @@
 templates/*
-apps/passport-server/resources/podbox/stats.hbs
+apps/passport-server/resources/podbox/organizer-view.hbs

@@ -9,7 +9,7 @@ import {
   ListFeedsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
-  PipelineSwagStats,
+  PipelineOrganizerViewData,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -89,21 +89,11 @@ export class PipelineAPISubservice {
     });
   }
 
-  public async handleGetSwagStats(
+  public async handleGetOrganizerView(
     pipelineId: string,
     apiKey: string
-  ): Promise<PipelineSwagStats> {
+  ): Promise<PipelineOrganizerViewData> {
     return traced(SERVICE_NAME, "handleGetSwagStats", async () => {
-      const API_KEY = process.env.BERLIN_ADMIN_KEY;
-
-      if (!API_KEY) {
-        throw new Error("missing environment variable: BERLIN_ADMIN_KEY");
-      }
-
-      if (apiKey !== API_KEY) {
-        throw new PCDHTTPError(403, "wrong api key");
-      }
-
       const pipeline =
         await this.pipelineSubservice.ensurePipelineStarted(pipelineId);
 
@@ -111,7 +101,7 @@ export class PipelineAPISubservice {
         throw new Error("only PretixPipeline supports swag stats");
       }
 
-      return await pipeline.getSwagStats();
+      return await pipeline.handleGetOrganizerView(apiKey);
     });
   }
 

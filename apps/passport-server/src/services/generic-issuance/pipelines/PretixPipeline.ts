@@ -22,8 +22,8 @@ import {
   PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
+  PipelineOrganizerViewData,
   PipelineSemaphoreGroupInfo,
-  PipelineSwagStats,
   PipelineType,
   PipelineZuAuthConfig,
   PodboxTicketActionError,
@@ -430,7 +430,24 @@ export class PretixPipeline implements BasePipeline {
     );
   }
 
-  public async getSwagStats(): Promise<PipelineSwagStats> {
+  /**
+   * Displayed to organizers of PodBox-backed Pipelines who have the appropriate
+   * API key.
+   */
+  public async handleGetOrganizerView(
+    apiKey: string
+  ): Promise<PipelineOrganizerViewData> {
+    // @todo: per-pipeline API key stored in its PipelineDefinition
+    const API_KEY = process.env.BERLIN_ADMIN_KEY;
+
+    if (!API_KEY) {
+      throw new Error("missing environment variable: BERLIN_ADMIN_KEY");
+    }
+
+    if (apiKey !== API_KEY) {
+      throw new PCDHTTPError(403, "wrong api key");
+    }
+
     const manualCheckins = await this.checkinDB.getByPipelineId(this.id);
     const swagCheckins = manualCheckins.filter(
       (c) => c.checkinType === ManualCheckinType.SWAG
@@ -443,9 +460,9 @@ export class PretixPipeline implements BasePipeline {
     const stats = {
       checkedIn: normalCheckins.length,
       swagClaimed: swagCheckins.length,
-      totalTickets: allTickets.length,
+      allTickets: allTickets.length,
 
-      totalTicketsEmails: allTickets
+      allTicketsEmails: allTickets
         .map((t) => t.email)
         .filter((e) => !!e) as string[],
       checkedInEmails: normalCheckins
@@ -454,7 +471,7 @@ export class PretixPipeline implements BasePipeline {
       swagClaimedEmails: swagCheckins
         .map((c) => allTicketsById[c.ticketId]?.email)
         .filter((e) => !!e) as string[]
-    } satisfies PipelineSwagStats;
+    } satisfies PipelineOrganizerViewData;
 
     return stats;
   }

@@ -12,7 +12,7 @@ import {
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
-  PipelineSwagStats,
+  PipelineOrganizerViewData,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -418,11 +418,14 @@ export class PipelineSubservice {
     return this.pipelineAPISubservice.handleGetPipelineInfo(user, pipelineId);
   }
 
-  public async handleGetSwagStats(
+  public async handleGetOrganizerView(
     pipelineId: string,
     apiKey: string
-  ): Promise<PipelineSwagStats> {
-    return this.pipelineAPISubservice.handleGetSwagStats(pipelineId, apiKey);
+  ): Promise<PipelineOrganizerViewData> {
+    return this.pipelineAPISubservice.handleGetOrganizerView(
+      pipelineId,
+      apiKey
+    );
   }
 
   public async handleListFeed(

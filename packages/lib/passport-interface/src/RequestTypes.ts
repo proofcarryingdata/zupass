@@ -504,12 +504,16 @@ export interface PipelineEdDSATicketZuAuthConfig {
 // could be |'ed with other types of metadata
 export type PipelineZuAuthConfig = PipelineEdDSATicketZuAuthConfig;
 
-export interface PipelineSwagStats {
-  totalTickets: number;
+/**
+ * Data for display to pipeline owners that instead of requiring a
+ * PodBox login requires a PodBox API key to view.
+ */
+export interface PipelineOrganizerViewData {
+  allTickets: number;
   swagClaimed: number;
   checkedIn: number;
 
-  totalTicketsEmails: string[];
+  allTicketsEmails: string[];
   swagClaimedEmails: string[];
   checkedInEmails: string[];
 }

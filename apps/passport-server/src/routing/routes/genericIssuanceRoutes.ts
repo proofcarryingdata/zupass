@@ -134,23 +134,28 @@ export function initGenericIssuanceRoutes(
     res.json(result satisfies PipelineInfoResponseValue);
   });
 
-  app.get("/generic-issuance/stats/:pipelineId/:apiKey", async (req, res) => {
-    checkGenericIssuanceServiceStarted(genericIssuanceService);
-    const pipelineId = checkUrlParam(req, "pipelineId");
-    const apiKey = checkUrlParam(req, "apiKey");
-    const result = await genericIssuanceService.handleGetSwagStats(
-      pipelineId,
-      apiKey
-    );
+  app.get(
+    "/generic-issuance/organizer/:pipelineId/:apiKey",
+    async (req, res) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineId = checkUrlParam(req, "pipelineId");
+      const apiKey = checkUrlParam(req, "apiKey");
+      const result = await genericIssuanceService.handleGetOrganizerView(
+        pipelineId,
+        apiKey
+      );
 
-    let template = (
-      await readFile(path.join(context.resourcesDir, "podbox/stats.hbs"))
-    ).toString();
+      let template = (
+        await readFile(
+          path.join(context.resourcesDir, "podbox/organizer-view.hbs")
+        )
+      ).toString();
 
-    template = template.replace("{{stats}}", JSON.stringify(result));
+      template = template.replace("{{stats}}", JSON.stringify(result));
 
-    res.send(template);
-  });
+      res.send(template);
+    }
+  );
 
   /**
    * Authenticated by PCD so doesn't need auth.
