@@ -98,7 +98,7 @@ export class PipelineAPISubservice {
         await this.pipelineSubservice.ensurePipelineStarted(pipelineId);
 
       if (!PretixPipeline.is(pipeline)) {
-        throw new Error("only PretixPipeline supports swag stats");
+        throw new Error("only PretixPipeline supports organizer view");
       }
 
       return await pipeline.handleGetOrganizerView(apiKey);
