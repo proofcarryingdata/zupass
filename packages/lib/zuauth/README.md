@@ -30,7 +30,7 @@ This will let you call the `zuAuthPopup` function, which starts the authenticati
 
 Because the user’s data is held in browser local storage, we need to open a popup window that can access this data. The user interacts with this popup in order to approve the generation of a proof, and the proof contents are returned to your app.
 
-![An example of an authentication popup being opened by the PoWFaucet app at Devconnect](ZuAuth%20Tutorial%20777392e05ea449c6bf8b5568349023bb/Untitled.png)
+![An example of an authentication popup being opened by the PoWFaucet app at Devconnect](https://0xparc.notion.site/image/https%3A%2F%2Fprod-files-secure.s3.us-west-2.amazonaws.com%2F49789257-8634-4c86-a9e2-dcecb65edf1c%2F28f7f173-df66-4e00-aadc-d9738956634a%2FUntitled.png?table=block&id=e474c4be-2cf4-4416-a9fe-313fc3f6355c&spaceId=49789257-8634-4c86-a9e2-dcecb65edf1c&width=1420&userId=&cache=v2)
 
 An example of an authentication popup being opened by the PoWFaucet app at Devconnect
 
