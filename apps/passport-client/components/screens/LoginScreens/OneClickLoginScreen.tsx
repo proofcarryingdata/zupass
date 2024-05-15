@@ -11,6 +11,14 @@ export function OneClickLoginScreen(): JSX.Element | null {
 
   const self = useSelf();
 
+  const redirectToTargetFolder = useCallback(() => {
+    if (targetFolder) {
+      window.location.hash = `#/?folder=${encodeURIComponent(targetFolder)}`;
+    } else {
+      window.location.hash = "#/";
+    }
+  }, [targetFolder]);
+
   const handleOneClickLogin = useCallback(async () => {
     if (!email || !code) {
       return;
@@ -34,15 +42,28 @@ export function OneClickLoginScreen(): JSX.Element | null {
   }, [dispatch, email, code, targetFolder]);
 
   useEffect(() => {
-    // Redirect to home if already logged in
-    if (self || !email || !code) {
-      window.location.hash = targetFolder
-        ? `#/?folder=${encodeURIComponent(targetFolder)}`
-        : "#/";
+    if (self) {
+      if (email !== self.email) {
+        alert(
+          `You are already logged in as ${self.email}. Please log out and try navigating to the link again.`
+        );
+        window.location.hash = "#/";
+      } else {
+        redirectToTargetFolder();
+      }
+    } else if (!email || !code) {
+      window.location.hash = "#/";
     } else {
       handleOneClickLogin();
     }
-  }, [self, targetFolder, handleOneClickLogin, email, code]);
+  }, [
+    self,
+    targetFolder,
+    handleOneClickLogin,
+    redirectToTargetFolder,
+    email,
+    code
+  ]);
 
   return (
     <>
