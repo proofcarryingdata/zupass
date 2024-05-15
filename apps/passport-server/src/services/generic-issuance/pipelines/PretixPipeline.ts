@@ -457,7 +457,7 @@ export class PretixPipeline implements BasePipeline {
     allTickets.forEach((t) => (allTicketsById[t.id] = t));
     const normalCheckins = allTickets.filter((t) => t.isConsumed);
 
-    const stats = {
+    return {
       eventName: this.definition.options.name ?? "un-named",
       checkedIn: normalCheckins.length,
       swagClaimed: swagCheckins.length,
@@ -473,8 +473,6 @@ export class PretixPipeline implements BasePipeline {
         .map((c) => allTicketsById[c.ticketId]?.email)
         .filter((e) => !!e) as string[]
     } satisfies PipelineOrganizerViewData;
-
-    return stats;
   }
 
   private async getAllManualTickets(): Promise<ManualTicket[]> {
@@ -1771,7 +1769,7 @@ export class PretixPipeline implements BasePipeline {
             ticketId,
             eventId,
             checkerEmail,
-            // @todo: make this generic once we have >1 use-case
+            // @todo: make this generic if/when we have >1 use-case
             ManualCheckinType.SWAG
           );
         }

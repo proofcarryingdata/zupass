@@ -93,7 +93,7 @@ export class PipelineAPISubservice {
     pipelineId: string,
     apiKey: string
   ): Promise<PipelineOrganizerViewData> {
-    return traced(SERVICE_NAME, "handleGetSwagStats", async () => {
+    return traced(SERVICE_NAME, "handleGetOrganizerView", async () => {
       const pipeline =
         await this.pipelineSubservice.ensurePipelineStarted(pipelineId);
 
