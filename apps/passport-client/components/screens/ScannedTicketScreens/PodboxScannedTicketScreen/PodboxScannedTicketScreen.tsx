@@ -40,7 +40,7 @@ import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection"
  * If it succeeds, the check-in form is shown, along with the ticket metadata.
  */
 export function PodboxScannedTicketScreen(): JSX.Element {
-  const { loading } = useLaserScannerKeystrokeInput(true);
+  useLaserScannerKeystrokeInput(true);
   const query = useQuery();
 
   useLoginIfNoSelf(
@@ -52,7 +52,7 @@ export function PodboxScannedTicketScreen(): JSX.Element {
 
   const ticketIds = useTicketDataFromQuery();
 
-  if (loading || ticketIds.state === TicketIdState.Loading) {
+  if (ticketIds.state === TicketIdState.Loading) {
     return (
       <AppContainer bg={"primary"}>
         <CenterColumn w={400}>
