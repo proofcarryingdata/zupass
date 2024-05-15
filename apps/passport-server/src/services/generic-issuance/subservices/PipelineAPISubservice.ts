@@ -101,7 +101,7 @@ export class PipelineAPISubservice {
       }
 
       if (apiKey !== API_KEY) {
-        throw new PCDHTTPError(403);
+        throw new PCDHTTPError(403, "wrong api key");
       }
 
       const pipeline =

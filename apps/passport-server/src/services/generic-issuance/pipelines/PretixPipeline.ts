@@ -124,7 +124,11 @@ export class PretixPipeline implements BasePipeline {
   // check the same ticket in multiple times.
   private pendingCheckIns: Map<
     string,
-    { status: CheckinStatus; timestamp: number }
+    {
+      status: CheckinStatus;
+      timestamp: number;
+      checkinType?: ManualCheckinType;
+    }
   >;
 
   /**
@@ -1734,7 +1738,14 @@ export class PretixPipeline implements BasePipeline {
         if (canCheckInResult === "superuser") {
           return this.checkInPretixTicket(ticketAtom, checkerEmail);
         } else {
-          return this.checkInManualTicket(ticketId, eventId, checkerEmail);
+          // 'policy' case
+          return this.checkInManualTicket(
+            ticketId,
+            eventId,
+            checkerEmail,
+            // @todo: make this generic once we have >1 use-case
+            ManualCheckinType.SWAG
+          );
         }
       } else {
         const manualTicket = await this.getManualTicketById(ticketId);
@@ -1763,7 +1774,8 @@ export class PretixPipeline implements BasePipeline {
   private async checkInManualTicket(
     ticketId: string,
     eventId: string,
-    checkerEmail: string
+    checkerEmail: string,
+    checkinType?: ManualCheckinType
   ): Promise<PodboxTicketActionResponseValue> {
     return traced<PodboxTicketActionResponseValue>(
       LOG_NAME,
@@ -1785,10 +1797,16 @@ export class PretixPipeline implements BasePipeline {
         }
 
         try {
-          await this.checkinDB.checkIn(this.id, ticketId, new Date());
+          await this.checkinDB.checkIn(
+            this.id,
+            ticketId,
+            new Date(),
+            checkinType
+          );
           this.pendingCheckIns.set(ticketId, {
             status: CheckinStatus.Success,
-            timestamp: Date.now()
+            timestamp: Date.now(),
+            checkinType
           });
         } catch (e) {
           logger(
