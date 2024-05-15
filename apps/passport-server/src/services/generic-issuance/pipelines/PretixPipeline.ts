@@ -245,7 +245,9 @@ export class PretixPipeline implements BasePipeline {
   public async start(): Promise<void> {
     // On startup, the pipeline definition may have changed, and manual tickets
     // may have been deleted. If so, clean up any check-ins for those tickets.
-    await this.cleanUpManualCheckins();
+
+    // @todo: turn this back on after eth berlin
+    // await this.cleanUpManualCheckins();
     // Initialize the Semaphore Group provider by loading groups from the DB,
     // if one exists.
     await this.semaphoreGroupProvider?.start();
