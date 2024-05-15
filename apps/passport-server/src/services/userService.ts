@@ -232,7 +232,10 @@ export class UserService {
     // Slightly redundantly, this will set the "terms agreed" again
     // However, having a single canonical transaction for this seems like
     // a benefit
-    logger(`[USER_SERVICE] Agreeing to terms: ${LATEST_PRIVACY_NOTICE}`, user.email);
+    logger(
+      `[USER_SERVICE] Agreeing to terms: ${LATEST_PRIVACY_NOTICE}`,
+      user.email
+    );
     await agreeTermsAndUnredactTickets(
       this.context.dbPool,
       user.email,
