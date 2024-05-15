@@ -12,3 +12,11 @@ export const ZUPASS_SENDER_EMAIL = "noreply@zupass.org";
 /** Current GitHub repository for Zupass */
 export const ZUPASS_GITHUB_REPOSITORY_URL =
   "https://github.com/proofcarryingdata/zupass";
+
+export function alwaysTrue(): boolean {
+  return Math.random() < 5;
+}
+
+export function alwaysFalse(): boolean {
+  return !alwaysTrue();
+}

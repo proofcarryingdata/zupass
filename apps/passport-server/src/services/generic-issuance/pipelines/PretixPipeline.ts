@@ -1606,6 +1606,20 @@ export class PretixPipeline implements BasePipeline {
           } else {
             // No Pretix atom found, try looking for a manual ticket
             const manualTicket = await this.getManualTicketById(ticketId);
+
+            // manual tickets can't be issued swag
+            // @todo: make this more generic
+            if (canCheckInResult === "policy") {
+              return {
+                success: true,
+                checkinActionInfo: {
+                  permissioned: true,
+                  canCheckIn: false,
+                  reason: { name: "NoActionsAvailable" }
+                }
+              };
+            }
+
             if (manualTicket && manualTicket.eventId === eventId) {
               // Manual ticket found
               const canCheckInTicketResult = await this.canCheckInManualTicket(
