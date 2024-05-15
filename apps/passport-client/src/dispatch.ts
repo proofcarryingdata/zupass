@@ -8,9 +8,11 @@ import {
   deserializeStorage,
   Feed,
   FeedSubscriptionManager,
+  getNamedAPIErrorMessage,
   LATEST_PRIVACY_NOTICE,
   NetworkFeedApi,
   requestCreateNewUser,
+  requestDownloadAndDecryptStorage,
   requestLogToServer,
   requestOneClickLogin,
   requestUser,
@@ -340,7 +342,7 @@ async function oneClickLogin(
     encryptionKey
   });
 
-  const newUserResult = await requestOneClickLogin(
+  const oneClickLoginResult = await requestOneClickLogin(
     appConfig.zupassServer,
     email,
     code,
@@ -348,20 +350,56 @@ async function oneClickLogin(
     encryptionKey
   );
 
-  if (newUserResult.success) {
-    return finishAccountCreation(
-      newUserResult.value,
-      state,
-      update,
-      targetFolder
-    );
+  if (oneClickLoginResult.success) {
+    // New user
+    if (oneClickLoginResult.value.isNewUser) {
+      return finishAccountCreation(
+        oneClickLoginResult.value.zupassUser,
+        state,
+        update,
+        targetFolder
+      );
+    }
+
+    // User has encryption key
+    if (oneClickLoginResult.value.encryptionKey) {
+      saveEncryptionKey(oneClickLoginResult.value.encryptionKey);
+      update({
+        encryptionKey: oneClickLoginResult.value.encryptionKey
+      });
+      const storageResult = await requestDownloadAndDecryptStorage(
+        appConfig.zupassServer,
+        oneClickLoginResult.value.encryptionKey
+      );
+      if (storageResult.success) {
+        return loadAfterLogin(
+          oneClickLoginResult.value.encryptionKey,
+          storageResult.value,
+          update
+        );
+      }
+
+      return update({
+        error: {
+          title: "An error occurred while downloading encrypted storage",
+          message: `An error occurred while downloading encrypted storage [
+                ${getNamedAPIErrorMessage(
+                  storageResult.error
+                )}].  If this persists, contact support@zupass.org.`
+        }
+      });
+    }
+
+    // Account has password - direct to enter password
+    window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
+    return;
   }
 
+  // Error - didn't match
   update({
     error: {
-      title: "Account creation failed",
-      message: "Couldn't create an account. " + newUserResult.error,
-      dismissToCurrentPage: true
+      title: "Zupass link failed",
+      message: oneClickLoginResult.error
     }
   });
 }

@@ -1,5 +1,8 @@
 import urlJoin from "url-join";
-import { OneClickLoginRequest, UserResponseValue } from "../RequestTypes";
+import {
+  OneClickLoginRequest,
+  OneClickLoginResponseValue
+} from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
@@ -19,7 +22,7 @@ export async function requestOneClickLogin(
   return httpPostSimple(
     urlJoin(zupassServerUrl, "/account/one-click-login"),
     async (resText) => ({
-      value: JSON.parse(resText) as UserResponseValue,
+      value: JSON.parse(resText) as OneClickLoginResponseValue,
       success: true
     }),
     {
@@ -31,4 +34,4 @@ export async function requestOneClickLogin(
   );
 }
 
-export type LoginResult = APIResult<UserResponseValue>;
+export type LoginResult = APIResult<OneClickLoginResponseValue>;

@@ -643,6 +643,10 @@ export type OneClickLoginRequest = {
   encryptionKey: string;
 };
 
+export type OneClickLoginResponseValue =
+  | { isNewUser: true; zupassUser: ZupassUserJson }
+  | { isNewUser: false; encryptionKey: string | null };
+
 /**
  * Zupass responds with this when you ask it if it is able to
  * issue tickets. Used primarily for testing.

@@ -3,6 +3,7 @@ import {
   AgreeTermsResult,
   ConfirmEmailResponseValue,
   LATEST_PRIVACY_NOTICE,
+  OneClickLoginResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
   VerifyTokenResponseValue,
   ZupassUserJson
@@ -198,16 +199,20 @@ export class UserService {
         code
       );
     if (!valid) {
-      throw new PCDHTTPError(403, "Invalid Zupass link");
+      throw new PCDHTTPError(
+        403,
+        "Invalid Zupass link. Please log in through the home page."
+      );
     }
     const existingUser = await fetchUserByEmail(this.context.dbPool, email);
     if (existingUser) {
-      throw new PCDHTTPError(
-        403,
-        `The email ${email} has already been registered. Please log in instead.`
-      );
+      res.status(200).json({
+        isNewUser: false,
+        encryptionKey: existingUser.encryption_key
+      } satisfies OneClickLoginResponseValue);
+      return;
     }
-    // rate limit
+    // todo: rate limit
     await upsertUser(this.context.dbPool, {
       email,
       commitment,
@@ -221,7 +226,7 @@ export class UserService {
 
     const user = await fetchUserByEmail(this.context.dbPool, email);
     if (!user) {
-      throw new PCDHTTPError(403, "no user with that email exists");
+      throw new PCDHTTPError(403, "No user with that email exists");
     }
 
     // Slightly redundantly, this will set the "terms agreed" again
@@ -237,7 +242,10 @@ export class UserService {
     const userJson = userRowToZupassUserJson(user);
 
     logger(`[USER_SERVICE] logged in a user`, userJson);
-    res.status(200).json(userJson satisfies ZupassUserJson);
+    res.status(200).json({
+      isNewUser: true,
+      zupassUser: userJson
+    } satisfies OneClickLoginResponseValue);
   }
 
   public async handleNewUser(

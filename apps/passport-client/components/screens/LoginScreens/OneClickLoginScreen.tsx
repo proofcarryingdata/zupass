@@ -1,7 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
-import { useDispatch, useQuery } from "../../../src/appHooks";
-import { Button, CenterColumn, H2, TextCenter } from "../../core";
+import { useCallback, useEffect } from "react";
+import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import { MaybeModal } from "../../modals/Modal";
+import { AppContainer } from "../../shared/AppContainer";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
 export function OneClickLoginScreen(): JSX.Element | null {
@@ -10,16 +10,14 @@ export function OneClickLoginScreen(): JSX.Element | null {
   const email = query?.get("email");
   const code = query?.get("code");
   const targetFolder = query?.get("targetFolder");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | undefined>();
+
+  const self = useSelf();
 
   const handleOneClickLogin = useCallback(async () => {
     if (!email || !code) {
-      setError("Email and code are required.");
       return;
     }
     try {
-      setLoading(true);
       await dispatch({
         type: "one-click-login",
         email,
@@ -27,33 +25,27 @@ export function OneClickLoginScreen(): JSX.Element | null {
         targetFolder
       });
     } catch (err) {
-      setError("Failed to login. Please check your credentials and try again.");
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   }, [dispatch, email, code, targetFolder]);
 
   useEffect(() => {
-    handleOneClickLogin();
-  }, [handleOneClickLogin]);
-
-  if (loading) {
-    return <ScreenLoader />;
-  }
+    // Redirect to home if already logged in
+    if (self) {
+      window.location.hash = targetFolder
+        ? `#/?folder=${encodeURIComponent(targetFolder)}`
+        : "#/";
+    } else {
+      handleOneClickLogin();
+    }
+  }, [self, targetFolder, handleOneClickLogin]);
 
   return (
     <>
-      <MaybeModal />
-      <CenterColumn>
-        <H2>One Click Login</H2>
-        {error && (
-          <TextCenter>
-            <p style={{ color: "red" }}>{error}</p>
-          </TextCenter>
-        )}
-        <Button onClick={handleOneClickLogin}>Retry Login</Button>
-      </CenterColumn>
+      <MaybeModal fullScreen />
+      <AppContainer bg="primary">
+        <ScreenLoader />
+      </AppContainer>
     </>
   );
 }
