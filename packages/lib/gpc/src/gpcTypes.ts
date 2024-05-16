@@ -1,4 +1,4 @@
-import { POD, PODEntries, PODName, PODValue } from "@pcd/pod";
+import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
 
 /**
@@ -7,6 +7,12 @@ import { Identity } from "@semaphore-protocol/identity";
  * checked by {@link POD_NAME_REGEX}.
  */
 export type PODEntryIdentifier = `${PODName}.${PODName}`;
+
+/**
+ * String specifying a named tuple in the format `tuple.tupleName`.
+ * `tupleName` should be a valid PODName checked by {@link POD_NAME_REGEX}.
+ */
+export type TupleIdentifier = `tuple.${PODName}`;
 
 /**
  * String specifying a specific GPC circuit, identified by its family name
@@ -108,7 +114,7 @@ export type GPCProofListMembershipConfig = {
    * The entry identifier of the value that should lie in this membership list
    * or a tuple thereof.
    */
-  comparisonIdentifier: PODEntryIdentifier | PODEntryIdentifier[];
+  comparisonIdentifier: PODEntryIdentifier | PODEntryIdentifier[]; //TupleIdentifier;
 };
 
 /**
@@ -155,10 +161,17 @@ export type GPCProofConfig = {
    */
   pods: Record<PODName, GPCProofObjectConfig>;
 
+  // /**
+  //  * Defines named tuples of POD entries. These tuples must be of arity
+  //  * (i.e. size/width) at least 2.
+  //  */
+  // tuples?: Record<TupleIdentifier, PODEntryIdentifier[]>;
+
   /**
-   * Indicates object entry values that ought to lie in some list of valid
-   * values
+   * Characterises named membership lists in terms of POD entry values (or
+   * tuples thereof) that must lie in each list.
    */
+  // membershipLists?: Record<PODName, PODEntryIdentifier | TupleIdentifier>;
   membershipLists?: Record<PODName, GPCProofListMembershipConfig>;
 };
 
@@ -270,8 +283,12 @@ export type GPCProofInputs = {
    */
   owner?: GPCProofOwnerInputs;
 
-  // TODO(POD-P2): List membership configuration
-  // TODO(POD-P2): Tuple configuration
+  /*
+   * Named lists of valid values for each list membership check. These values
+   * may be primitive (i.e. of type PODValue) or tuples (represented as
+   * PODValueTuple = PODValue[]).  Each list must contain at least two elements.
+   */
+  membershipLists?: Record<PODName, PODValue[] | PODValueTuple[]>;
 
   /**
    * If this field is set, the given value will be included in the resulting

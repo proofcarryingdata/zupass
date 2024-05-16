@@ -77,9 +77,9 @@ export function maxTupleArity(
  * Generates part of the signal inputs for MultiTupleModule.
  *
  * Examples:
- * computeTupleIndices(2, 5, [1, 3, 4]) === [[1, 3], [5, 4]]
- * computeTupleIndices(3, 5, [0, 1, 4, 2]) === [[0, 1, 4], [5, 2, 0]]
- * computeTupleIndices(4, 6, [3, 4, 2, 1, 5]) === [[3, 4, 2, 1], [6, 5, 3, 3]]
+ * computeTupleIndicesForTuple(2, 5, [1, 3, 4]) === [[1, 3], [5, 4]]
+ * computeTupleIndicesForTuple(3, 5, [0, 1, 4, 2]) === [[0, 1, 4], [5, 2, 0]]
+ * computeTupleIndicesForTuple(4, 6, [3, 4, 2, 1, 5]) === [[3, 4, 2, 1], [6, 5, 3, 3]]
  *
  * This procedure takes an N-tuple of `indices` (referring
  * to elements of some array of values) and returns its
@@ -99,7 +99,7 @@ export function maxTupleArity(
  * @returns list of index tuples of arity `paramTupleArity` representing the input tuple
  * @throws RangeError if the parameters are not in the proper ranges.
  */
-export function computeTupleIndices(
+export function computeTupleIndicesForTuple(
   paramTupleArity: number,
   firstAvailableTupleIndex: number,
   indices: number[]
@@ -142,6 +142,34 @@ export function computeTupleIndices(
 
   return tupleIndices;
 }
+
+/**
+
+ * Decomposes a sequence of tuples into a chain of tuples of arity
+ * `paramTupleArity`, indexing the tuples starting from
+ * `firstAvailableTupleIndex`.
+ *
+ * Generates part of the signal inputs for MultiTupleModule.
+ *
+ * Example:
+ * computeTupleIndicesForTuples(2, 5, [[1, 3, 4], [0, 2]]) === [[1, 3], [5, 4], [0,2]]
+ *
+ * @param paramTupleArity the arity of the output tuple
+ * @param firstAvailableTupleIndex the index of the first output tuple in the combined array of
+ * entry and tuple value hashes
+ * @param indices the entry value indices forming the input tuple
+ * @returns list of index tuples of arity `paramTupleArity` representing the input tuple
+ * @throws RangeError if the parameters are not in the proper ranges.
+ */
+// export function computeTupleIndicesForTuples(
+//   paramTupleArity: number,
+//   firstAvailableTupleIndex: number,
+//   indices: number[][]
+// ): { tupleIndices: number[][]; hashIndices: number[] } {
+//   const tupleIndices = [];
+//   const hashIndices = [];
+//   let tupleIndex = firstAvailableTupleIndex;
+// }
 
 /**
  * This procedure takes an N-tuple `elements` and computes its 'tuple hash',

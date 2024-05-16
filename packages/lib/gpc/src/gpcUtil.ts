@@ -7,6 +7,7 @@ import {
 import {
   checkPODName,
   getPODValueForCircuit,
+  POD,
   PODName,
   PODValue,
   podValueHash,
@@ -145,6 +146,27 @@ export function splitPODEntryIdentifier(entryIdentifier: PODEntryIdentifier): {
 } {
   const names = checkPODEntryIdentifier(entryIdentifier, entryIdentifier);
   return { objName: names[0], entryName: names[1] };
+}
+
+/**
+ * Resolves a PODEntryIdentifier to its value (if possible) given a record
+ * mapping POD names to PODs.
+ *
+ * @param entryIdentifier the identifier to resolve
+ * @param pods a record mapping POD names to PODs
+ * @returns a POD value if the entry is found and `undefined` otherwise
+ * @throws TypeError if the identifier doesn't match the required format
+ */
+export function resolvePODEntryIdentifier(
+  entryIdentifier: PODEntryIdentifier,
+  pods: Record<PODName, POD>
+): PODValue | undefined {
+  const { objName: podName, entryName: entryName } =
+    splitPODEntryIdentifier(entryIdentifier);
+  const pod = pods[podName];
+  const entryValue = pod?.content?.getValue(entryName);
+
+  return entryValue;
 }
 
 /**

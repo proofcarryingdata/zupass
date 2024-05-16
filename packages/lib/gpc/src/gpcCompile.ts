@@ -7,7 +7,8 @@ import {
   ProtoPODGPCOutputs,
   ProtoPODGPCPublicInputs,
   array2Bits,
-  extendedSignalArray
+  extendedSignalArray,
+  processLists
 } from "@pcd/gpcircuits";
 import {
   POD,
@@ -23,6 +24,7 @@ import {
   GPCBoundConfig,
   GPCProofEntryConfig,
   GPCProofInputs,
+  GPCProofListMembershipConfig,
   GPCProofObjectConfig,
   GPCProofOwnerInputs,
   GPCRevealedClaims,
@@ -188,11 +190,62 @@ export function compileProofConfig(
     entryConstraintMetadata.firstOwnerIndex
   );
 
-  // Create subset of inputs for multituple module padded to max size.
-  const circuitMultiTupleInputs = dummyTuples(circuitDesc);
+  const { family, name, cost, ...circuitParams } = circuitDesc;
+  const listComparisonValueIndices =
+    proofConfig.membershipLists === undefined
+      ? []
+      : Object.keys(proofConfig.membershipLists)
+          .sort()
+          .map((listName) => {
+            const id = (
+              proofConfig.membershipLists as Record<
+                PODName,
+                GPCProofListMembershipConfig
+              >
+            )[listName].comparisonIdentifier;
 
-  // Create subset of inputs for list membership module padded to max size.
-  const circuitListMembershipInputs = dummyListMembership(circuitDesc);
+            const wrappedId: PODEntryIdentifier[] =
+              id.constructor === Array
+                ? (id as PODEntryIdentifier[])
+                : [id as PODEntryIdentifier];
+
+            return wrappedId.map((id) => {
+              const entryIndexLookup = entryMap.get(id);
+              if (entryIndexLookup === undefined) {
+                throw new Error(
+                  `Could not find entry identifier ${id} in entry map.`
+                );
+              }
+              return entryIndexLookup.entryIndex;
+            });
+          });
+  const lists =
+    proofInputs.membershipLists === undefined
+      ? []
+      : Object.keys(proofInputs.membershipLists ?? {})
+          .sort()
+          .map((listName) => {
+            const validValues = (proofInputs.membershipLists ?? {})[listName];
+            const wrappedValidValues =
+              validValues[0].constructor === Array
+                ? (validValues as PODValue[][])
+                : (validValues as PODValue[]).map((value) => [value]);
+
+            return wrappedValidValues;
+          });
+  const { tupleIndices, listComparisonValueIndex, listValidValues } =
+    processLists(circuitParams, listComparisonValueIndices, lists);
+
+  // // Create subset of inputs for multituple module padded to max size.
+  const circuitMultiTupleInputs = { tupleIndices };
+  // const circuitMultiTupleInputs = dummyTuples(circuitDesc);
+
+  // // Create subset of inputs for list membership module padded to max size.
+  const circuitListMembershipInputs = {
+    listComparisonValueIndex,
+    listValidValues
+  };
+  // const circuitListMembershipInputs = dummyListMembership(circuitDesc);
 
   // Create other global inputs.
   const circuitGlobalInputs = compileProofGlobal(proofInputs);

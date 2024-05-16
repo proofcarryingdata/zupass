@@ -5,6 +5,7 @@ import {
 } from "@pcd/gpcircuits";
 import {
   POD,
+  PODValue,
   calcMinMerkleDepthForEntries,
   checkPODName,
   checkPODValue,
@@ -13,23 +14,26 @@ import {
   requireType
 } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
+import { isEqual } from "lodash";
 import {
   GPCBoundConfig,
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofInputs,
+  GPCProofListMembershipConfig,
   GPCProofObjectConfig,
   GPCRevealedClaims,
-  GPCRevealedObjectClaims
+  GPCRevealedObjectClaims,
+  PODEntryIdentifier
 } from "./gpcTypes";
 import {
   DEFAULT_LIST_ELEMENTS,
   DEFAULT_TUPLE_ARITIES,
   GPCRequirements,
   checkPODEntryIdentifier,
-  splitCircuitIdentifier,
-  splitPODEntryIdentifier
+  resolvePODEntryIdentifier,
+  splitCircuitIdentifier
 } from "./gpcUtil";
 
 // TODO(POD-P2): Split out the parts of this which should be public from
@@ -95,12 +99,49 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     );
   }
 
+  if (proofConfig.membershipLists !== undefined) {
+    for (const [listName, listConfig] of Object.entries(
+      proofConfig.membershipLists
+    )) {
+      checkProofListMembershipConfig(listName, listConfig);
+    }
+  }
+
+  const numListElements = Object.fromEntries(
+    Object.keys(proofConfig.membershipLists ?? {}).map((listName) => [
+      listName,
+      2
+    ])
+  );
+
+  const listTupleArities = Object.fromEntries(
+    // Take the alist of [listName, comparisonIdentifier] pairs.
+    Object.entries(proofConfig.membershipLists ?? {})
+      // Unwrap the comparison identifiers
+      .map((pair) => [pair[0], pair[1].comparisonIdentifier])
+      // Filter out those for which comparisonIdentifier is an array.
+      .filter((pair) => pair[1].constructor === Array)
+      // Replace these arrays with their lengths.
+      .map((pair) => [pair[0], pair[1].length])
+      // Append '_tuple' to name.
+      .map((pair) => [pair[0] + "_tuple", pair[1] as number])
+  );
+
+  // These tuple arities should be at least 2.
+  for (const [listName, tupleArity] of Object.entries(listTupleArities)) {
+    if ((tupleArity as number) < 2) {
+      throw new TypeError(
+        `Membership list ${listName} contains invalid tuple (arity = ${tupleArity}).`
+      );
+    }
+  }
+
   return GPCRequirements(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
-    DEFAULT_LIST_ELEMENTS,
-    DEFAULT_TUPLE_ARITIES
+    numListElements,
+    listTupleArities
   );
 }
 
@@ -152,6 +193,32 @@ function checkProofEntryConfig(
   }
 }
 
+function checkProofListMembershipConfig(
+  nameForErrorMessages: string,
+  listConfig: GPCProofListMembershipConfig
+): void {
+  if (
+    listConfig.comparisonIdentifier.constructor === Array &&
+    listConfig.comparisonIdentifier.length < 2
+  ) {
+    throw new TypeError(
+      `Membership list ${nameForErrorMessages} specifies invalid tuple configuration.`
+    );
+  }
+
+  const wrappedIdentifier: PODEntryIdentifier[] =
+    listConfig.comparisonIdentifier.constructor === Array
+      ? (listConfig.comparisonIdentifier as PODEntryIdentifier[])
+      : [listConfig.comparisonIdentifier as PODEntryIdentifier];
+
+  wrappedIdentifier.forEach((identifier) =>
+    checkPODEntryIdentifier(
+      `${nameForErrorMessages}.comparisonIdentifier`,
+      identifier
+    )
+  );
+}
+
 /**
  * Checks the validity of a proof inputs, throwing if they are invalid.
  *
@@ -194,6 +261,32 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     }
   }
 
+  const numListElements = Object.fromEntries(
+    Object.entries(proofInputs.membershipLists ?? {}).map((pair) => [
+      pair[0],
+      pair[1].length
+    ])
+  );
+
+  const listTupleArities = Object.fromEntries(
+    // Take the alist of [listName, comparisonIdentifier] pairs.
+    Object.entries(proofInputs.membershipLists ?? {})
+      // Filter out those for which we have a non-empty two-dimensional array
+      .filter(
+        (pair) =>
+          // Ensure non-emptiness
+          pair[1].length !== 0 &&
+          // Ensure that the first list entry is an array
+          pair[1][0].constructor === Array &&
+          // Ensure it contains at least two entries.
+          pair[1][0].length >= 2
+      )
+      // Replace these arrays with their lengths.
+      .map((pair) => [pair[0], (pair[1][0] as PODValue[]).length])
+      // Append '_tuple' to name.
+      .map((pair) => [pair[0] + "_tuple", pair[1] as number])
+  );
+
   if (proofInputs.watermark !== undefined) {
     checkPODValue("watermark", proofInputs.watermark);
   }
@@ -202,8 +295,8 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     totalObjects,
     totalObjects,
     requiredMerkleDepth,
-    DEFAULT_LIST_ELEMENTS,
-    DEFAULT_TUPLE_ARITIES
+    numListElements,
+    listTupleArities
   );
 }
 
@@ -285,20 +378,20 @@ export function checkProofInputsForConfig(
 
       // Identified equal entry must also exist.
       if (entryConfig.equalsEntry !== undefined) {
-        const { objName: otherPODName, entryName: otherEntryName } =
-          splitPODEntryIdentifier(entryConfig.equalsEntry);
-        const otherPOD = proofInputs.pods[otherPODName];
-        const otherValue = otherPOD?.content?.getValue(otherEntryName);
+        const otherValue = resolvePODEntryIdentifier(
+          entryConfig.equalsEntry,
+          proofInputs.pods
+        );
         if (otherValue === undefined) {
           throw new ReferenceError(
             `Input entry ${objName}.${entryName} should be proved to equal` +
-              ` ${otherPODName}.${otherEntryName} which doesn't exist in input.`
+              ` ${entryConfig.equalsEntry} which doesn't exist in input.`
           );
         }
 
         if (podValueHash(otherValue) !== podValueHash(podValue)) {
           throw new Error(
-            `Input entry ${objName}.${entryName} doesn't equal ${otherPODName}.${otherEntryName}.`
+            `Input entry ${objName}.${entryName} doesn't equal ${entryConfig.equalsEntry}.`
           );
         }
       }
@@ -310,12 +403,99 @@ export function checkProofInputsForConfig(
     throw new Error("Nullifier requires an entry containing owner ID.");
   }
 
-  // TODO(POD-P2): Config and inputs should have same number of lists.
-  // TODO(POD-P2): Config and inputs should have same tuple arities.
+  // Config and input list membership checks should have the same list names.
+  const configListNames = new Set(
+    Object.keys(proofConfig.membershipLists ?? {})
+  );
+  const inputListNames = new Set(
+    Object.keys(proofInputs.membershipLists ?? {})
+  );
+  if (!isEqual(configListNames, inputListNames)) {
+    throw new Error(
+      `Config and input list name mismatch.` +
+        `  Configuration expects list names ${configListNames}.` +
+        `  Input contains ${inputListNames}.`
+    );
+  }
+
+  // The list membership check's input list should be well formed (i.e. contain
+  // at least 2 elements) and the config and input list membership checks should
+  // have the same comparison value types.
+  if (
+    proofConfig.membershipLists !== undefined &&
+    proofInputs.membershipLists !== undefined
+  ) {
+    for (const [listName, listConfig] of Object.entries(
+      proofConfig.membershipLists
+    )) {
+      const inputList = proofInputs.membershipLists[listName];
+      // The list of valid values must contain at least two elements.
+      if (inputList.length < 2) {
+        throw new Error(
+          `Membership list ${listName} does not contain at least two elements.`
+        );
+      }
+      // The entry value identifiers in the membership list config should
+      // exist in the input PODs and the configuration and input list element
+      // types should agree
+      // First deal with the case of tuples.
+      if (listConfig.comparisonIdentifier.constructor === Array) {
+        if (inputList[0].constructor === Array) {
+          const configValueType = (
+            listConfig.comparisonIdentifier as PODEntryIdentifier[]
+          ).map((id: PODEntryIdentifier) => {
+            const entryValue = resolvePODEntryIdentifier(id, proofInputs.pods);
+            if (entryValue === undefined) {
+              throw new ReferenceError(
+                `Configuration for membership list ${listName} contains identifier ${id} which doesn't exist in input.`
+              );
+            }
+            return entryValue.type;
+          });
+
+          for (const tuple of inputList as PODValue[][]) {
+            const inputValueType = tuple.map((value) => value.type);
+
+            if (!isEqual(inputValueType, configValueType)) {
+              throw new TypeError(
+                `Configured membership list ${listName} expects tuples of type ${configValueType} while input list contains a tuple of arity ${inputValueType}`
+              );
+            }
+          }
+        } else {
+          throw new TypeError(
+            `Configured membership list ${listName} expects tuples of arity ${listConfig.comparisonIdentifier.length} while input list contains primitive elements.`
+          );
+        }
+      } else if (inputList[0].constructor === Array) {
+        throw new TypeError(
+          `Configured membership list ${listName} expects primitive elements while input list contains tuples of arity ${inputList[0].length}.`
+        );
+      } else {
+        const configValue = resolvePODEntryIdentifier(
+          listConfig.comparisonIdentifier as PODEntryIdentifier,
+          proofInputs.pods
+        );
+        if (configValue === undefined) {
+          throw new ReferenceError(
+            `Configuration for membership list ${listName} contains identifier ${listConfig.comparisonIdentifier} which doesn't exist in input.`
+          );
+        }
+
+        for (const entryValue of inputList as PODValue[]) {
+          if (entryValue.type !== configValue.type) {
+            throw new TypeError(
+              `Configuration for membership list ${listName} expects elements of type ${configValue.type} while input contains elements of type ${entryValue.type}`
+            );
+          }
+        }
+      }
+    }
+  }
 }
 
 /**
- * Checks the validity of the arguments for verifying a proof.  This will throw
+ * checks the validity of the arguments for verifying a proof.  This will throw
  * if any of the arguments is malformed, or if the different fields do not
  * correctly correspond to each other.
  *
