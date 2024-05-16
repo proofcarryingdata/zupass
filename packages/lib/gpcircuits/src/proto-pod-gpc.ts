@@ -1,7 +1,7 @@
 import { Groth16Proof, groth16 } from "snarkjs";
+import { loadVerificationKey } from "./artifacts";
 import circuitParamJson from "./circuitParameters.json";
 import { CircuitDesc, CircuitSignal } from "./types";
-import { loadVerificationKey } from "./util";
 
 /**
  * Name identifier for the Proto-POD-GPC family of circuits.

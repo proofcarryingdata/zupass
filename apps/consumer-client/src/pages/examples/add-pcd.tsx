@@ -5,6 +5,7 @@ import {
   GroupType
 } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
+import { gpcArtifactDownloadURL } from "@pcd/gpc";
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdAddRequestUrl,
@@ -570,8 +571,11 @@ async function addGPCPCD(
   podFolder: string | undefined
 ): Promise<void> {
   await GPCPCDPackage.init?.({
-    zkArtifactPath:
-      "https://raw.githubusercontent.com/proofcarryingdata/snark-artifacts/artwyman/experimental/packages/proto-pod-gpc"
+    zkArtifactPath: gpcArtifactDownloadURL(
+      "github",
+      "test",
+      "8071d52a0d481c72d4d4045be48e770716b2e919"
+    )
   });
 
   const podPCD = new PODPCD(

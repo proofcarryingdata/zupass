@@ -1,6 +1,7 @@
 import {
   GPCBoundConfig,
   deserializeGPCProofConfig,
+  gpcArtifactDownloadURL,
   gpcBindConfig,
   serializeGPCBoundConfig
 } from "@pcd/gpc";
@@ -249,8 +250,11 @@ async function verifyProof(
 ): Promise<{ valid: boolean; err?: string }> {
   const { init, verify } = GPCPCDPackage;
   await init?.({
-    zkArtifactPath:
-      "https://raw.githubusercontent.com/proofcarryingdata/snark-artifacts/artwyman/experimental/packages/proto-pod-gpc"
+    zkArtifactPath: gpcArtifactDownloadURL(
+      "github",
+      "test",
+      "8071d52a0d481c72d4d4045be48e770716b2e919"
+    )
   });
   const verified = await verify(pcd);
   if (!verified) return { valid: false };

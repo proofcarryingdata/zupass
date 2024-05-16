@@ -1,3 +1,4 @@
+export * from "./artifacts";
 export * from "./entry";
 export * from "./global";
 export * from "./list-membership";

@@ -3,6 +3,7 @@ import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
+import { gpcArtifactDownloadURL } from "@pcd/gpc";
 import { GPCPCDPackage } from "@pcd/gpc-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { MessagePCDPackage } from "@pcd/message-pcd";
@@ -64,8 +65,11 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await PODPCDPackage.init?.({});
   await GPCPCDPackage.init?.({
-    zkArtifactPath:
-      "https://raw.githubusercontent.com/proofcarryingdata/snark-artifacts/artwyman/experimental/packages/proto-pod-gpc"
+    zkArtifactPath: gpcArtifactDownloadURL(
+      "github",
+      "test",
+      "8071d52a0d481c72d4d4045be48e770716b2e919"
+    )
   });
 
   return [

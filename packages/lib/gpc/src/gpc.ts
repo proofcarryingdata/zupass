@@ -1,6 +1,8 @@
 import {
+  PROTO_POD_GPC_FAMILY_NAME,
   ProtoPODGPC,
   ProtoPODGPCCircuitDesc,
+  githubDownloadRootURL,
   gpcArtifactPaths
 } from "@pcd/gpcircuits";
 import { Groth16Proof } from "snarkjs";
@@ -178,4 +180,59 @@ export async function gpcVerify(
     circuitPublicInputs,
     circuitOutputs
   );
+}
+
+/**
+ * Possible sources to download GPC artifacts.
+ */
+export type GPCArtifactSource = "zupass" | "github" | "unpkg";
+
+/**
+ * Stability level of GPC artifacts to use.  Test artifacts are for use
+ * in active development while prod artifacts are officially released.
+ */
+export type GPCArtifactStability = "prod" | "test";
+
+/**
+ * Version specifier for GPC artifacts.  It meaning depends on the source.
+ * It might be the version of an NPM package release (e.g. 1.0.1) or a GitHub
+ * revision identifier (branch, tag, or commit).
+ */
+export type GPCArtifactVersion = string;
+
+/**
+ * Forms a URL for downloading GPC artifacts depending on configuration
+ *
+ * @param source the download source location
+ * @param stability the stability level (test or prod) of artifacts to seek
+ * @param version the version identifier for circuit artifacts
+ * @returns a root URL to download GPC artifacts, as needed for {@link gpcProve}
+ *   or {@link gpcVerify}.
+ */
+export function gpcArtifactDownloadURL(
+  source: GPCArtifactSource,
+  stability: GPCArtifactStability,
+  version?: GPCArtifactVersion
+): string {
+  if (stability !== "test") {
+    // TODO(POD-P1): Implement prod artifact download options.
+    throw new Error("Prod artifact download not yet implemented.");
+  }
+  if (version === undefined || version === "") {
+    // TODO(POD-P2): There should be a default version for prod mode.
+    throw new Error("Artifact version is required in test mode.");
+  }
+
+  switch (source) {
+    case "github":
+      return githubDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
+    case "unpkg":
+      // TODO(POD-P1): Implement NPM package download via unpkg.
+      throw new Error("Unpkg download not yet implemented.");
+    case "zupass":
+      // TODO(POD-P1): Implement NPM package download via unpkg.
+      throw new Error("Unpkg download not yet implemented.");
+    default:
+      throw new Error(`Unknown artifact download source ${source}.`);
+  }
 }
