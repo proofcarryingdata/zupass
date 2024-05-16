@@ -13,6 +13,7 @@ export type ZupollError = {
   loginAs?: {
     title: string;
     configId?: string;
+    ballotURL?: string;
     ballotConfigId?: string;
   };
 };

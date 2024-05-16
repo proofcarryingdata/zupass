@@ -13,6 +13,7 @@ import { Title } from "../../@/components/ui/text";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotPollResponse, PollWithCounts } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
+import { SavedLoginState } from "../../useLoginState";
 import { fmtTimeAgo, fmtTimeFuture } from "../../util";
 import { listBallotPolls } from "../../zupoll-server-api";
 import { DividerWithText } from "../create-ballot/DividerWithText";
@@ -27,7 +28,7 @@ export function BallotScreen({
 }: {
   ballotURL: string;
   loginState: LoginState | undefined;
-  logout: (ballotURL?: string) => void;
+  logout: SavedLoginState["logout"];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -68,9 +69,6 @@ export function BallotScreen({
       }
 
       if (res.status === 403) {
-        // logout(ballotURL);
-        // return;
-
         const resErr = await res.text();
         const resValue = tryParse<{
           configId: string;
@@ -83,6 +81,7 @@ export function BallotScreen({
           loginAs: resValue
             ? {
                 title: `${resValue?.ballotConfigId ?? "Unknown"}`,
+                ballotURL,
                 configId: resValue?.configId,
                 ballotConfigId: resValue?.ballotConfigId
               }
@@ -312,6 +311,7 @@ export function BallotScreen({
 
       <ErrorDialog
         error={error}
+        logout={logout}
         close={() => {
           setError(undefined);
         }}

@@ -2,14 +2,17 @@ import { Dialog, Transition } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Fragment, useRef } from "react";
 import { ZupollError } from "../../../types";
+import { SavedLoginState } from "../../../useLoginState";
 import { Button } from "./button";
 
 export default function ErrorDialog({
   close,
+  logout,
   error
 }: {
   close: () => void;
   error?: ZupollError;
+  logout: SavedLoginState["logout"];
 }) {
   const cancelButtonRef = useRef(null);
 
@@ -83,6 +86,8 @@ export default function ErrorDialog({
                       type="button"
                       onClick={() => {
                         window.location.href = "/";
+
+                        logout(error?.loginAs?.ballotURL);
                       }}
                     >
                       Login
