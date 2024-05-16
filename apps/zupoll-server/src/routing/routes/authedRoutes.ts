@@ -146,6 +146,29 @@ export function initAuthedRoutes(
 
           if (ballot.pipelineId) {
             if (req.pipelineId !== ballot.pipelineId) {
+              const configs = getPodboxConfigs(
+                ZUPASS_CLIENT_URL,
+                ZUPASS_SERVER_URL
+              );
+
+              for (const config of configs) {
+                for (const ballotConfig of config.ballotConfigs ?? []) {
+                  for (const ballotVoterUrl of ballot.voterSemaphoreGroupUrls) {
+                    if (ballotVoterUrl.startsWith(ballotConfig.voterGroupUrl)) {
+                      return res.status(403).json({
+                        configId: config.configCategoryId,
+                        ballotConfigId: ballotConfig.name
+                      });
+                    }
+                  }
+                }
+              }
+
+              return res.status(403).json({
+                configs,
+                ballot
+              });
+
               return res.sendStatus(403);
             }
           }

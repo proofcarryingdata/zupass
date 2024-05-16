@@ -77,6 +77,18 @@ export default function ErrorDialog({
                   </div>
                 </div>
                 <div className="mt-5 sm:mt-4 flex flex-row-reverse gap-2">
+                  {error?.loginAs && (
+                    <Button
+                      variant={"creative"}
+                      type="button"
+                      onClick={() => {
+                        window.location.href = "/";
+                      }}
+                    >
+                      Login
+                    </Button>
+                  )}
+
                   <Button
                     variant={"ghost"}
                     type="button"
@@ -88,7 +100,7 @@ export default function ErrorDialog({
                     Home
                   </Button>
                   <Button
-                    variant={"default"}
+                    variant={error?.loginAs ? "ghost" : "default"}
                     type="button"
                     onClick={() => {
                       window.location.reload();

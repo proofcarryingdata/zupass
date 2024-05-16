@@ -3,6 +3,7 @@
 import ErrorDialog from "@/components/ui/ErrorDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { tryParse } from "@pcd/util";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -67,7 +68,27 @@ export function BallotScreen({
       }
 
       if (res.status === 403) {
-        logout(ballotURL);
+        // logout(ballotURL);
+        // return;
+
+        const resErr = await res.text();
+        const resValue = tryParse<{
+          configId: string;
+          ballotConfigId: string;
+        }>(resErr);
+
+        const err: ZupollError = {
+          title: "Login to view this poll",
+          message: `To view this poll, you should log in via Zupass. Click 'Login' below to continue.`,
+          loginAs: resValue
+            ? {
+                title: `${resValue?.ballotConfigId ?? "Unknown"}`,
+                configId: resValue?.configId,
+                ballotConfigId: resValue?.ballotConfigId
+              }
+            : undefined
+        };
+        setError(err);
         return;
       }
 

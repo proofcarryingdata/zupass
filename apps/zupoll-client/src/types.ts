@@ -9,6 +9,12 @@ export type ZupollError = {
   friendly?: boolean;
   /** Optional stacktrace. */
   stack?: string;
+
+  loginAs?: {
+    title: string;
+    configId?: string;
+    ballotConfigId?: string;
+  };
 };
 
 export enum PCDState {
