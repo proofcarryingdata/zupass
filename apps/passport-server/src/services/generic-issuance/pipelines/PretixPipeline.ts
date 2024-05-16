@@ -2088,7 +2088,7 @@ export class PretixPipeline implements BasePipeline {
       if (checkerTicketCriteria.length === 0) {
         // User can't check anything in, so log and ignore this request.
         logger(
-          `${LOG_TAG} User ${checkerEmail} tried to upload offline check-ins but is not permitted to check in any tickets.`
+          `${LOG_TAG} User ${checkerEmail} tried to upload offline check-ins for pipeline ${this.id} but is not permitted to check in any tickets.`
         );
         return;
       }
@@ -2110,12 +2110,18 @@ export class PretixPipeline implements BasePipeline {
 
       for (const ticketId of ticketIds) {
         const atom = await this.db.loadById(this.id, ticketId);
-        if (atom && atom.timestampConsumed === null) {
-          if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
-            offlineCheckinsToSave.push(ticketId);
+        if (atom) {
+          if (atom.timestampConsumed === null) {
+            if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
+              offlineCheckinsToSave.push(ticketId);
+            } else {
+              logger(
+                `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} on pipeline ${this.id} but is not permitted to do so.`
+              );
+            }
           } else {
             logger(
-              `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} but is not permitted to do so.`
+              `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} on pipeline ${this.id} but it is already checked in.`
             );
           }
         } else {
@@ -2128,10 +2134,14 @@ export class PretixPipeline implements BasePipeline {
               );
               if (manualTicketCheckin === undefined) {
                 offlineCheckinsToSave.push(ticketId);
+              } else {
+                logger(
+                  `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} on pipeline ${this.id} but it is already checked in.`
+                );
               }
             } else {
               logger(
-                `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} but is not permitted to do so.`
+                `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} on pipeline ${this.id} but is not permitted to do so.`
               );
             }
           }
