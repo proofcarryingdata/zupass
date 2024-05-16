@@ -21,7 +21,12 @@ import _ from "lodash";
 import { useEffect, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { ZUPASS_URL } from "../../constants";
+import {
+  GPC_ARTIFACT_SOURCE,
+  GPC_ARTIFACT_STABILITY,
+  GPC_ARTIFACT_VERSION,
+  ZUPASS_URL
+} from "../../constants";
 import { EXAMPLE_GPC_CONFIG } from "../../podExampleConstants";
 
 export default function Page(): JSX.Element {
@@ -251,9 +256,10 @@ async function verifyProof(
   const { init, verify } = GPCPCDPackage;
   await init?.({
     zkArtifactPath: gpcArtifactDownloadURL(
-      "github",
-      "test",
-      "8071d52a0d481c72d4d4045be48e770716b2e919"
+      GPC_ARTIFACT_SOURCE,
+      GPC_ARTIFACT_STABILITY,
+      GPC_ARTIFACT_VERSION,
+      ZUPASS_URL
     )
   });
   const verified = await verify(pcd);

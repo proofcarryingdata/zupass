@@ -33,7 +33,13 @@ import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { EVERYONE_SEMAPHORE_GROUP_URL, ZUPASS_URL } from "../../constants";
+import {
+  EVERYONE_SEMAPHORE_GROUP_URL,
+  GPC_ARTIFACT_SOURCE,
+  GPC_ARTIFACT_STABILITY,
+  GPC_ARTIFACT_VERSION,
+  ZUPASS_URL
+} from "../../constants";
 import {
   EXAMPLE_EDDSA_PRIVATE_KEY,
   EXAMPLE_GPC_CONFIG,
@@ -572,9 +578,10 @@ async function addGPCPCD(
 ): Promise<void> {
   await GPCPCDPackage.init?.({
     zkArtifactPath: gpcArtifactDownloadURL(
-      "github",
-      "test",
-      "8071d52a0d481c72d4d4045be48e770716b2e919"
+      GPC_ARTIFACT_SOURCE,
+      GPC_ARTIFACT_STABILITY,
+      GPC_ARTIFACT_VERSION,
+      ZUPASS_URL
     )
   });
 

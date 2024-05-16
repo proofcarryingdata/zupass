@@ -6,6 +6,7 @@ import {
   gpcArtifactPaths
 } from "@pcd/gpcircuits";
 import { Groth16Proof } from "snarkjs";
+import urljoin from "url-join";
 import {
   checkCircuitRequirements,
   checkProofArgs,
@@ -206,32 +207,40 @@ export type GPCArtifactVersion = string;
  * @param source the download source location
  * @param stability the stability level (test or prod) of artifacts to seek
  * @param version the version identifier for circuit artifacts
+ * @param zupassURL the base URL for Zupass, if used as a download option.
+ *   Can be an empty string to use a relative URL (within the Zupass app).
  * @returns a root URL to download GPC artifacts, as needed for {@link gpcProve}
  *   or {@link gpcVerify}.
  */
 export function gpcArtifactDownloadURL(
   source: GPCArtifactSource,
   stability: GPCArtifactStability,
-  version?: GPCArtifactVersion
+  version: GPCArtifactVersion | undefined,
+  zupassURL: string
 ): string {
-  if (stability !== "test") {
-    // TODO(POD-P1): Implement prod artifact download options.
-    throw new Error("Prod artifact download not yet implemented.");
-  }
-  if (version === undefined || version === "") {
-    // TODO(POD-P2): There should be a default version for prod mode.
+  if (stability === "test" && (version === undefined || version === "")) {
     throw new Error("Artifact version is required in test mode.");
   }
 
   switch (source) {
     case "github":
+      if (stability !== "test") {
+        // TODO(POD-P1): Implement prod artifact download options.
+        throw new Error("GitHub prod artifact download not yet implemented.");
+      }
+      if (version == undefined || version === "") {
+        throw new Error("GitHub artifact download requires a version.");
+      }
       return githubDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
     case "unpkg":
       // TODO(POD-P1): Implement NPM package download via unpkg.
       throw new Error("Unpkg download not yet implemented.");
     case "zupass":
-      // TODO(POD-P1): Implement NPM package download via unpkg.
-      throw new Error("Unpkg download not yet implemented.");
+      return urljoin(
+        zupassURL,
+        stability === "test" ? "artifacts/test" : "artifacts",
+        PROTO_POD_GPC_FAMILY_NAME
+      );
     default:
       throw new Error(`Unknown artifact download source ${source}.`);
   }

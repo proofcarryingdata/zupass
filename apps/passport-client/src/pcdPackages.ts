@@ -64,11 +64,18 @@ async function loadPackages(): Promise<PCDPackage[]> {
   await MessagePCDPackage.init?.({});
 
   await PODPCDPackage.init?.({});
+
+  // TODO(POD-P1): Define these using .env
+  const GPC_ARTIFACT_SOURCE = "zupass";
+  const GPC_ARTIFACT_STABILITY = "test";
+  const GPC_ARTIFACT_VERSION = "8071d52a0d481c72d4d4045be48e770716b2e919";
+
   await GPCPCDPackage.init?.({
     zkArtifactPath: gpcArtifactDownloadURL(
-      "github",
-      "test",
-      "8071d52a0d481c72d4d4045be48e770716b2e919"
+      GPC_ARTIFACT_SOURCE,
+      GPC_ARTIFACT_STABILITY,
+      GPC_ARTIFACT_VERSION,
+      "" /* zupassURL can use a relative URL */
     )
   });
 

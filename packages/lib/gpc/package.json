@@ -32,7 +32,8 @@
     "@pcd/util": "0.5.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "json-bigint": "^1.0.0",
-    "snarkjs": "^0.7.3"
+    "snarkjs": "^0.7.3",
+    "url-join": "^4.0.1"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.11.0",
