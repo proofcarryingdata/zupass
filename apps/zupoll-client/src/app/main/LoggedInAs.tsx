@@ -18,12 +18,16 @@ export function LoggedInAs({
 
   return (
     <div className="flex justify-between items-center w-full">
-      <span className="mr-2 flex flex-row gap-2 justify-center items-center shrink overflow-hidden rounded text-sm bg-green-950/20 px-3 py-1">
-        <FaUserAstronaut className="shrink-0" />
-        <AnimContainer className="shrink overflow-hidden text-ellipsis text-nowrap">
-          {loginState ? <>{loginState.config.name}</> : <span>Logged Out</span>}
-        </AnimContainer>
-      </span>
+      {loginState ? (
+        <span className="mr-2 flex flex-row gap-2 justify-center items-center shrink overflow-hidden rounded text-sm bg-green-950/20 px-3 py-1">
+          <FaUserAstronaut className="shrink-0" />
+          <AnimContainer className="shrink overflow-hidden text-ellipsis text-nowrap">
+            {loginState.config.name}
+          </AnimContainer>
+        </span>
+      ) : (
+        <span></span>
+      )}
 
       <span className="flex flex-row gap-2">
         {showHomeButton && (
