@@ -74,6 +74,7 @@ export function BallotScreen({
         const resValue = tryParse<RedirectConfig>(resErr);
         const err: ZupollError = {
           title: "Login to view this poll",
+          friendly: true,
           message: `To view this poll, you should log in via Zupass. Click 'Login' below to continue.`,
           loginAs: {
             categoryId: resValue?.categoryId,
