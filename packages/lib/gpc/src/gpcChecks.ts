@@ -5,7 +5,6 @@ import {
 } from "@pcd/gpcircuits";
 import {
   POD,
-  PODValue,
   calcMinMerkleDepthForEntries,
   checkPODName,
   checkPODValue,
@@ -21,11 +20,9 @@ import {
   GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofInputs,
-  GPCProofListMembershipConfig,
   GPCProofObjectConfig,
   GPCRevealedClaims,
-  GPCRevealedObjectClaims,
-  PODEntryIdentifier
+  GPCRevealedObjectClaims
 } from "./gpcTypes";
 import {
   DEFAULT_LIST_ELEMENTS,
@@ -33,7 +30,9 @@ import {
   GPCRequirements,
   checkPODEntryIdentifier,
   resolvePODEntryIdentifier,
-  splitCircuitIdentifier
+  resolvePODEntryOrTupleIdentifier,
+  splitCircuitIdentifier,
+  typeOfEntryOrTuple
 } from "./gpcUtil";
 
 // TODO(POD-P2): Split out the parts of this which should be public from
@@ -84,7 +83,6 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   if (Object.keys(proofConfig.pods).length === 0) {
     throw new TypeError("Must prove at least one object.");
   }
-
   let totalObjects = 0;
   let totalEntries = 0;
   let requiredMerkleDepth = 0;
@@ -99,11 +97,27 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     );
   }
 
+  if (proofConfig.tuples !== undefined) {
+    for (const [tupleName, tupleConfig] of Object.entries(proofConfig.tuples)) {
+      if (tupleConfig.length < 2) {
+        throw new TypeError(
+          `Tuple ${tupleName} specifies invalid tuple configuration. Tuples must have arity at least 2.`
+        );
+      }
+
+      for (const entryId of tupleConfig) {
+        checkPODEntryIdentifier(tupleName, entryId);
+      }
+    }
+  }
+
   if (proofConfig.membershipLists !== undefined) {
     for (const [listName, listConfig] of Object.entries(
       proofConfig.membershipLists
     )) {
-      checkProofListMembershipConfig(listName, listConfig);
+      // TODO: checkEntryOrTupleIdentifier? Do we really need
+      // a TupleIdentifier type?
+      checkPODEntryIdentifier(listName, listConfig);
     }
   }
 
@@ -114,34 +128,19 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     ])
   );
 
-  const listTupleArities = Object.fromEntries(
-    // Take the alist of [listName, comparisonIdentifier] pairs.
-    Object.entries(proofConfig.membershipLists ?? {})
-      // Unwrap the comparison identifiers
-      .map((pair) => [pair[0], pair[1].comparisonIdentifier])
-      // Filter out those for which comparisonIdentifier is an array.
-      .filter((pair) => pair[1].constructor === Array)
-      // Replace these arrays with their lengths.
-      .map((pair) => [pair[0], pair[1].length])
-      // Append '_tuple' to name.
-      .map((pair) => [pair[0] + "_tuple", pair[1] as number])
+  const tupleArities = Object.fromEntries(
+    Object.entries(proofConfig.tuples ?? {}).map((pair) => [
+      pair[0],
+      pair[1].length
+    ])
   );
-
-  // These tuple arities should be at least 2.
-  for (const [listName, tupleArity] of Object.entries(listTupleArities)) {
-    if ((tupleArity as number) < 2) {
-      throw new TypeError(
-        `Membership list ${listName} contains invalid tuple (arity = ${tupleArity}).`
-      );
-    }
-  }
 
   return GPCRequirements(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
     numListElements,
-    listTupleArities
+    tupleArities
   );
 }
 
@@ -193,32 +192,6 @@ function checkProofEntryConfig(
   }
 }
 
-function checkProofListMembershipConfig(
-  nameForErrorMessages: string,
-  listConfig: GPCProofListMembershipConfig
-): void {
-  if (
-    listConfig.comparisonIdentifier.constructor === Array &&
-    listConfig.comparisonIdentifier.length < 2
-  ) {
-    throw new TypeError(
-      `Membership list ${nameForErrorMessages} specifies invalid tuple configuration.`
-    );
-  }
-
-  const wrappedIdentifier: PODEntryIdentifier[] =
-    listConfig.comparisonIdentifier.constructor === Array
-      ? (listConfig.comparisonIdentifier as PODEntryIdentifier[])
-      : [listConfig.comparisonIdentifier as PODEntryIdentifier];
-
-  wrappedIdentifier.forEach((identifier) =>
-    checkPODEntryIdentifier(
-      `${nameForErrorMessages}.comparisonIdentifier`,
-      identifier
-    )
-  );
-}
-
 /**
  * Checks the validity of a proof inputs, throwing if they are invalid.
  *
@@ -268,25 +241,6 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     ])
   );
 
-  const listTupleArities = Object.fromEntries(
-    // Take the alist of [listName, comparisonIdentifier] pairs.
-    Object.entries(proofInputs.membershipLists ?? {})
-      // Filter out those for which we have a non-empty two-dimensional array
-      .filter(
-        (pair) =>
-          // Ensure non-emptiness
-          pair[1].length !== 0 &&
-          // Ensure that the first list entry is an array
-          pair[1][0].constructor === Array &&
-          // Ensure it contains at least two entries.
-          pair[1][0].length >= 2
-      )
-      // Replace these arrays with their lengths.
-      .map((pair) => [pair[0], (pair[1][0] as PODValue[]).length])
-      // Append '_tuple' to name.
-      .map((pair) => [pair[0] + "_tuple", pair[1] as number])
-  );
-
   if (proofInputs.watermark !== undefined) {
     checkPODValue("watermark", proofInputs.watermark);
   }
@@ -296,7 +250,7 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     totalObjects,
     requiredMerkleDepth,
     numListElements,
-    listTupleArities
+    {}
   );
 }
 
@@ -425,7 +379,7 @@ export function checkProofInputsForConfig(
     proofConfig.membershipLists !== undefined &&
     proofInputs.membershipLists !== undefined
   ) {
-    for (const [listName, listConfig] of Object.entries(
+    for (const [listName, comparisonId] of Object.entries(
       proofConfig.membershipLists
     )) {
       const inputList = proofInputs.membershipLists[listName];
@@ -437,58 +391,38 @@ export function checkProofInputsForConfig(
       }
       // The entry value identifiers in the membership list config should
       // exist in the input PODs and the configuration and input list element
-      // types should agree
-      // First deal with the case of tuples.
-      if (listConfig.comparisonIdentifier.constructor === Array) {
-        if (inputList[0].constructor === Array) {
-          const configValueType = (
-            listConfig.comparisonIdentifier as PODEntryIdentifier[]
-          ).map((id: PODEntryIdentifier) => {
-            const entryValue = resolvePODEntryIdentifier(id, proofInputs.pods);
-            if (entryValue === undefined) {
-              throw new ReferenceError(
-                `Configuration for membership list ${listName} contains identifier ${id} which doesn't exist in input.`
-              );
-            }
-            return entryValue.type;
-          });
+      // types should agree. Moreover, the comparison value should lie in the
+      // membership list.
+      const comparisonValue = resolvePODEntryOrTupleIdentifier(
+        comparisonId,
+        proofInputs.pods,
+        proofConfig.tuples
+      );
 
-          for (const tuple of inputList as PODValue[][]) {
-            const inputValueType = tuple.map((value) => value.type);
+      if (comparisonValue === undefined) {
+        throw new ReferenceError(
+          `Comparison value with identifier ${comparisonId} should be a member of list ${listName} but it doesn't exist in the proof input.`
+        );
+      }
 
-            if (!isEqual(inputValueType, configValueType)) {
-              throw new TypeError(
-                `Configured membership list ${listName} expects tuples of type ${configValueType} while input list contains a tuple of arity ${inputValueType}`
-              );
-            }
-          }
-        } else {
+      const comparisonType = typeOfEntryOrTuple(comparisonValue);
+
+      for (const element of inputList) {
+        const elementType = typeOfEntryOrTuple(element);
+        if (elementType !== comparisonType) {
           throw new TypeError(
-            `Configured membership list ${listName} expects tuples of arity ${listConfig.comparisonIdentifier.length} while input list contains primitive elements.`
+            `Membership list ${listName} in input contains element of type ${elementType} while comparison value with identifier ${comparisonId} is of type ${comparisonType}.`
           );
         }
-      } else if (inputList[0].constructor === Array) {
-        throw new TypeError(
-          `Configured membership list ${listName} expects primitive elements while input list contains tuples of arity ${inputList[0].length}.`
-        );
-      } else {
-        const configValue = resolvePODEntryIdentifier(
-          listConfig.comparisonIdentifier as PODEntryIdentifier,
-          proofInputs.pods
-        );
-        if (configValue === undefined) {
-          throw new ReferenceError(
-            `Configuration for membership list ${listName} contains identifier ${listConfig.comparisonIdentifier} which doesn't exist in input.`
-          );
-        }
+      }
 
-        for (const entryValue of inputList as PODValue[]) {
-          if (entryValue.type !== configValue.type) {
-            throw new TypeError(
-              `Configuration for membership list ${listName} expects elements of type ${configValue.type} while input contains elements of type ${entryValue.type}`
-            );
-          }
-        }
+      if (
+        inputList.find((element) => isEqual(element, comparisonValue)) ===
+        undefined
+      ) {
+        throw new Error(
+          `Comparison value ${comparisonValue} corresponding to identifier ${comparisonId} is not a member of list ${listName}.`
+        );
       }
     }
   }
@@ -776,6 +710,11 @@ export function mergeRequirements(
   rs1: GPCRequirements,
   rs2: GPCRequirements
 ): GPCRequirements {
+  // Either `rs1` specifies the tuple arities or `rs2`.
+  const tupleArities =
+    Object.keys(rs1.tupleArities).length === 0
+      ? rs2.tupleArities
+      : rs1.tupleArities;
   return GPCRequirements(
     Math.max(rs1.nObjects, rs2.nObjects),
     Math.max(rs1.nEntries, rs2.nEntries),
@@ -786,12 +725,7 @@ export function mergeRequirements(
         Math.max(rs1.nListElements[listName] ?? 0, rs2.nListElements[listName])
       ])
     ),
-    Object.fromEntries(
-      Object.keys(rs2.tupleArities).map((tupleName) => [
-        tupleName,
-        Math.max(rs1.tupleArities[tupleName] ?? 0, rs2.tupleArities[tupleName])
-      ])
-    )
+    tupleArities
   );
 }
 

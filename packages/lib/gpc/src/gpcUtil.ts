@@ -11,6 +11,7 @@ import {
   PODName,
   PODValue,
   podValueHash,
+  PODValueTuple,
   requireType
 } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
@@ -20,7 +21,8 @@ import {
   GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofObjectConfig,
-  PODEntryIdentifier
+  PODEntryIdentifier,
+  TupleIdentifier
 } from "./gpcTypes";
 
 /**
@@ -167,6 +169,48 @@ export function resolvePODEntryIdentifier(
   const entryValue = pod?.content?.getValue(entryName);
 
   return entryValue;
+}
+
+export function resolveTupleIdentifier(
+  tupleIdentifier: TupleIdentifier,
+  pods: Record<PODName, POD>,
+  tuples: Record<TupleIdentifier, PODEntryIdentifier[]>
+): PODValue[] | undefined {
+  const tupleEntries = tuples[tupleIdentifier];
+  const resolution = tupleEntries.map((entryId) =>
+    resolvePODEntryIdentifier(entryId, pods)
+  );
+  return resolution.some((value) => value === undefined)
+    ? undefined
+    : (resolution as PODValue[]);
+}
+
+export function resolvePODEntryOrTupleIdentifier(
+  identifier: PODEntryIdentifier | TupleIdentifier,
+  pods: Record<PODName, POD>,
+  tuples: Record<TupleIdentifier, PODEntryIdentifier[]> | undefined
+): PODValue | PODValueTuple | undefined {
+  return identifier.slice(0, 6) === "tuple."
+    ? ((): PODValue | PODValueTuple | undefined => {
+        if (tuples === undefined) {
+          throw new ReferenceError(
+            `Identifier ${identifier} refers to tuple but proof configuration does not specify any.`
+          );
+        } else {
+          return resolveTupleIdentifier(
+            identifier as TupleIdentifier,
+            pods,
+            tuples
+          );
+        }
+      })()
+    : resolvePODEntryIdentifier(identifier, pods);
+}
+
+export function typeOfEntryOrTuple(
+  value: PODValue | PODValue[]
+): string | string[] {
+  return Array.isArray(value) ? value.map((x) => x.type) : value.type;
 }
 
 /**

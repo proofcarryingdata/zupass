@@ -1,6 +1,6 @@
 import { PODValueTuple, podValueHash } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import { computeTupleIndicesForTuple, hashTuple } from "./multituple";
+import { computeTupleIndices, hashTuple } from "./multituple";
 import { ProtoPODGPCCircuitParams } from "./proto-pod-gpc";
 import { CircuitSignal } from "./types";
 import { extendedSignalArray, padArray } from "./util";
@@ -127,7 +127,7 @@ export function processLists(
  * Processes a single membership list together with the (multi-)index
  * of the entry value (or entry value tuple) that ought to
  * be a member of this list. This is done by means of appropriate
- * applications of {@link hashTuple} and {@link computeTupleIndicesForTuple}.
+ * applications of {@link hashTuple} and {@link computeTupleIndices}.
  * If no tuples are involved, then `listComparisonValueIndex` is a
  * singleton (a list containing a single element) and `list` a list
  * of singletons; the underlying values are hashed as-is rather than
@@ -189,7 +189,7 @@ export function processSingleList(
 
   if (listComparisonValueIndexIsTuple) {
     // Compute the tuple indices corresponding to the comparison value indices.
-    const tupleIndices = computeTupleIndicesForTuple(
+    const tupleIndices = computeTupleIndices(
       params.tupleArity,
       firstAvailableTupleIndex,
       listComparisonValueIndex

@@ -7,13 +7,16 @@ import {
   ProtoPODGPCOutputs,
   ProtoPODGPCPublicInputs,
   array2Bits,
+  computeTupleIndices,
   extendedSignalArray,
-  processLists
+  hashTuple,
+  padArray
 } from "@pcd/gpcircuits";
 import {
   POD,
   PODName,
   PODValue,
+  PODValueTuple,
   decodePublicKey,
   decodeSignature,
   podNameHash,
@@ -24,13 +27,13 @@ import {
   GPCBoundConfig,
   GPCProofEntryConfig,
   GPCProofInputs,
-  GPCProofListMembershipConfig,
   GPCProofObjectConfig,
   GPCProofOwnerInputs,
   GPCRevealedClaims,
   GPCRevealedObjectClaims,
   GPCRevealedOwnerClaims,
-  PODEntryIdentifier
+  PODEntryIdentifier,
+  TupleIdentifier
 } from "./gpcTypes";
 import {
   dummyListMembership,
@@ -62,6 +65,13 @@ type CompilerEntryInfo<ObjInput> = {
   entryIndex: number;
   entryConfig: GPCProofEntryConfig;
 };
+
+/**
+ * Per-entry info extracted by {@link prepCompilerTupleMap}.
+ * Info about the object containing the entry is duplicated here for
+ * quick access.
+ */
+type CompilerTupleInfo = { tupleRef: number; tupleIndices: number[][] };
 
 /**
  * Helper function for the first phase of compiling inputs for prove or verify.
@@ -137,6 +147,88 @@ function prepCompilerMaps<
 }
 
 /**
+ * Helper function for the tuple compilation phase for prove or verify.
+ * Input information is gathered into a map for easy lookup by name when
+ * compiling data that depends on tuples.
+ *
+ * The tuples are sorted by name before they are processed.
+ *
+ * @param config proof config
+ * @param entryMap map for looking up entries by identifier
+ * @param paramMaxEntries maximum number of entries allowed by the chosen
+ * circuit description.
+ * @param paramMaxTuples maximum number of tuples allowed by the chosen
+ * circuit description.
+ * @param paramTupleArity tuple arity used by the chosen circuit description.
+ * @param inputs input object for prove or verify
+ *   (GPCProofInput or GPCRevealedClaims).
+ * @returns maps for looking up objects by name, and entries by identifier.
+ *   See the map value types for what's included.
+ */
+function prepCompilerTupleMap<ObjInput extends POD | GPCRevealedObjectClaims>(
+  config: GPCBoundConfig,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
+  paramMaxEntries: number,
+  paramMaxTuples: number,
+  paramTupleArity: number
+): Map<TupleIdentifier, CompilerTupleInfo> {
+  // And now for the tuple map, which is sorted in alphabetical order and
+  // populated with the corresponding values from entryMap. Note that the index
+  // here will be offset by the maximum number of entries in the circuit itself.
+  const tupleMap = new Map();
+  if (config.tuples !== undefined) {
+    let tupleIndex = paramMaxEntries;
+    const tupleNameOrder: TupleIdentifier[] = Object.keys(
+      config.tuples
+    ).sort() as TupleIdentifier[];
+    for (const tupleName of tupleNameOrder) {
+      const tupleConfig = config.tuples[tupleName];
+      if (tupleConfig === undefined) {
+        throw new Error(`Missing config for tuple ${tupleName}.`);
+      }
+
+      if (tupleConfig.length < 2) {
+        throw new Error(`Arity of tuple ${tupleName} is less than 2.`);
+      }
+
+      const tupleEntryRef: number[] = tupleConfig.map((entryId) => {
+        const entryIdx = entryMap.get(entryId)?.entryIndex;
+
+        if (entryIdx === undefined) {
+          throw new ReferenceError(
+            `Missing entry index for identifier ${entryId} in tuple ${tupleName}.`
+          );
+        }
+
+        return entryIdx;
+      });
+
+      // Encode tuple as sequence of tuples of arity paramTupleArity
+      const tupleIndices = computeTupleIndices(
+        paramTupleArity,
+        tupleIndex,
+        tupleEntryRef
+      );
+
+      tupleIndex += tupleIndices.length;
+
+      tupleMap.set(tupleName, {
+        tupleRef: tupleIndex - 1,
+        tupleIndices
+      });
+    }
+
+    const numTuples = tupleIndex - paramMaxEntries;
+    if (numTuples > paramMaxTuples) {
+      throw new Error(
+        `GPC configuration requires ${numTuples} tuples but the chosen circuit only supports ${paramMaxTuples}.`
+      );
+    }
+  }
+  return tupleMap;
+}
+
+/**
  * Converts a high-level description of a GPC proof to be generated into
  * the specific circuit signals needed to generate the proof with a specific
  * circuit.
@@ -165,6 +257,15 @@ export function compileProofConfig(
     proofInputs
   );
 
+  // Do the same for tuples (if any).
+  const tupleMap = prepCompilerTupleMap(
+    proofConfig,
+    entryMap,
+    circuitDesc.maxEntries,
+    circuitDesc.maxTuples,
+    circuitDesc.tupleArity
+  );
+
   // Create subset of inputs for object modules, padded to max size.
   const circuitObjInputs = combineProofObjects(
     Array.from(objMap.values()).map(compileProofObject),
@@ -190,62 +291,23 @@ export function compileProofConfig(
     entryConstraintMetadata.firstOwnerIndex
   );
 
-  const { family, name, cost, ...circuitParams } = circuitDesc;
-  const listComparisonValueIndices =
-    proofConfig.membershipLists === undefined
-      ? []
-      : Object.keys(proofConfig.membershipLists)
-          .sort()
-          .map((listName) => {
-            const id = (
-              proofConfig.membershipLists as Record<
-                PODName,
-                GPCProofListMembershipConfig
-              >
-            )[listName].comparisonIdentifier;
+  // Create subset of inputs for multituple module padded to max size.
+  const circuitMultiTupleInputs = compileProofMultiTuples(
+    tupleMap,
+    circuitDesc.maxTuples,
+    circuitDesc.tupleArity
+  );
 
-            const wrappedId: PODEntryIdentifier[] =
-              id.constructor === Array
-                ? (id as PODEntryIdentifier[])
-                : [id as PODEntryIdentifier];
-
-            return wrappedId.map((id) => {
-              const entryIndexLookup = entryMap.get(id);
-              if (entryIndexLookup === undefined) {
-                throw new Error(
-                  `Could not find entry identifier ${id} in entry map.`
-                );
-              }
-              return entryIndexLookup.entryIndex;
-            });
-          });
-  const lists =
-    proofInputs.membershipLists === undefined
-      ? []
-      : Object.keys(proofInputs.membershipLists ?? {})
-          .sort()
-          .map((listName) => {
-            const validValues = (proofInputs.membershipLists ?? {})[listName];
-            const wrappedValidValues =
-              validValues[0].constructor === Array
-                ? (validValues as PODValue[][])
-                : (validValues as PODValue[]).map((value) => [value]);
-
-            return wrappedValidValues;
-          });
-  const { tupleIndices, listComparisonValueIndex, listValidValues } =
-    processLists(circuitParams, listComparisonValueIndices, lists);
-
-  // // Create subset of inputs for multituple module padded to max size.
-  const circuitMultiTupleInputs = { tupleIndices };
-  // const circuitMultiTupleInputs = dummyTuples(circuitDesc);
-
-  // // Create subset of inputs for list membership module padded to max size.
-  const circuitListMembershipInputs = {
-    listComparisonValueIndex,
-    listValidValues
-  };
-  // const circuitListMembershipInputs = dummyListMembership(circuitDesc);
+  // Create subset of inputs for list membership module padded to max size.
+  const circuitListMembershipInputs = compileProofListMembership(
+    proofConfig.membershipLists ?? {},
+    proofInputs.membershipLists ?? {},
+    entryMap,
+    tupleMap,
+    circuitDesc.tupleArity,
+    circuitDesc.maxLists,
+    circuitDesc.maxListElements
+  );
 
   // Create other global inputs.
   const circuitGlobalInputs = compileProofGlobal(proofInputs);
@@ -276,6 +338,101 @@ function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
     signatureR8x: signature.R8[0],
     signatureR8y: signature.R8[1],
     signatureS: signature.S
+  };
+}
+
+function compileProofListMembership<
+  ObjInput extends POD | GPCRevealedObjectClaims
+>(
+  listConfig: Record<PODName, PODEntryIdentifier | TupleIdentifier>,
+  listInput: Record<PODName, PODValue[] | PODValueTuple[]>,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
+  tupleMap: Map<TupleIdentifier, CompilerTupleInfo>,
+  paramTupleArity: number,
+  paramMaxLists: number,
+  paramMaxListElements: number
+): {
+  listComparisonValueIndex: CircuitSignal[];
+  listValidValues: CircuitSignal[][];
+} {
+  // Arrange lists alphabetically.
+  const listNameOrder = Object.keys(listConfig).sort();
+
+  // Compile listComparisonValueIndex
+  const unpaddedListComparisonValueIndex = listNameOrder.map((listName) => {
+    const comparisonValueId = listConfig[listName];
+
+    const idx =
+      comparisonValueId.slice(0, 6) === "tuple."
+        ? tupleMap.get(comparisonValueId as TupleIdentifier)?.tupleRef
+        : entryMap.get(comparisonValueId)?.entryIndex;
+
+    if (idx === undefined) {
+      throw new Error(
+        `Missing input for identifier ${comparisonValueId} in membership list ${listName}`
+      );
+    }
+
+    return BigInt(idx);
+  });
+
+  // Compile listValidValues
+  const unpaddedListValidValues = listNameOrder.map((listName) => {
+    const unhashedValues = listInput[listName];
+
+    const unpaddedHashedValues = Array.isArray(unhashedValues[0])
+      ? (unhashedValues as PODValueTuple[]).map((elements) =>
+          hashTuple(paramTupleArity, elements)
+        )
+      : (unhashedValues as PODValue[]).map(podValueHash);
+
+    // Pad the list to its capacity by using the first element of the list, which
+    // is OK because the list is really a set. This also avoids false positives.
+    return padArray(
+      unpaddedHashedValues,
+      paramMaxListElements,
+      unpaddedHashedValues[0]
+    );
+  });
+
+  return {
+    // Pad with index -1 (mod p), which is a reference to the value 0.
+    listComparisonValueIndex: padArray(
+      unpaddedListComparisonValueIndex,
+      paramMaxLists,
+      BABY_JUB_NEGATIVE_ONE
+    ),
+    // Pad with lists of 0s, which amounts to trivially satisfied list membership checks
+    // for those indices used as padding just above.
+    listValidValues: padArray(
+      unpaddedListValidValues,
+      paramMaxLists,
+      padArray([], paramMaxListElements, 0n)
+    )
+  };
+}
+
+function compileProofMultiTuples(
+  tupleMap: Map<TupleIdentifier, CompilerTupleInfo>,
+  paramMaxTuples: number,
+  paramTupleArity: number
+): { tupleIndices: CircuitSignal[][] } {
+  // Concatenate `tupleIndices` field of all tuple map values together and convert
+  // the indices to bigints.
+  const unpaddedTupleIndices = Array.from(tupleMap.values())
+    .map((info) => info.tupleIndices)
+    .flat()
+    .map((tuple) => tuple.map((n) => BigInt(n)));
+
+  return {
+    // Pad the result to length `paramMaxTuples` with tuples of 0s, which
+    // corresponds to choosing the 0th entry value hash. Since these are not
+    // constrained anywhere, there is no effect on the underlying logic.
+    tupleIndices: padArray(
+      unpaddedTupleIndices,
+      paramMaxTuples,
+      padArray([], paramTupleArity, 0n)
+    )
   };
 }
 

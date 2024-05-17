@@ -114,7 +114,7 @@ export type GPCProofListMembershipConfig = {
    * The entry identifier of the value that should lie in this membership list
    * or a tuple thereof.
    */
-  comparisonIdentifier: PODEntryIdentifier | PODEntryIdentifier[]; //TupleIdentifier;
+  comparisonIdentifier: PODEntryIdentifier | TupleIdentifier;
 };
 
 /**
@@ -161,18 +161,17 @@ export type GPCProofConfig = {
    */
   pods: Record<PODName, GPCProofObjectConfig>;
 
-  // /**
-  //  * Defines named tuples of POD entries. These tuples must be of arity
-  //  * (i.e. size/width) at least 2.
-  //  */
-  // tuples?: Record<TupleIdentifier, PODEntryIdentifier[]>;
+  /**
+   * Defines named tuples of POD entries. These tuples must be of arity
+   * (i.e. size/width) at least 2.
+   */
+  tuples?: Record<TupleIdentifier, PODEntryIdentifier[]>;
 
   /**
    * Characterises named membership lists in terms of POD entry values (or
    * tuples thereof) that must lie in each list.
    */
-  // membershipLists?: Record<PODName, PODEntryIdentifier | TupleIdentifier>;
-  membershipLists?: Record<PODName, GPCProofListMembershipConfig>;
+  membershipLists?: Record<PODName, PODEntryIdentifier | TupleIdentifier>;
 };
 
 /**
