@@ -4,7 +4,7 @@ import ErrorDialog from "@/components/ui/ErrorDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { tryParse } from "@pcd/util";
-import { RedirectConfig, findConfigForVoterUrl } from "@pcd/zupoll-shared";
+import { RedirectConfig } from "@pcd/zupoll-shared";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
@@ -15,15 +15,10 @@ import { LOGIN_GROUPS } from "../../api/loginGroups";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotPollResponse, PollWithCounts } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
-import {
-  SavedLoginState,
-  saveLoginStateToLocalStorage,
-  savePreLoginRouteToLocalStorage
-} from "../../useLoginState";
+import { SavedLoginState } from "../../useLoginState";
 import { fmtTimeAgo, fmtTimeFuture } from "../../util";
 import { listBallotPolls } from "../../zupoll-server-api";
 import { DividerWithText } from "../create-ballot/DividerWithText";
-import { redirectForLogin } from "../login/LoginButton";
 import { LoggedInAs } from "../main/LoggedInAs";
 import { BallotPoll } from "./BallotPoll";
 import { getBallotVotes, useBallotVoting, votedOn } from "./useBallotVoting";
@@ -246,10 +241,7 @@ export function BallotScreen({
     return false;
   }, [ballot, loginState]);
 
-  console.log("userHasPermsToVote", userHasPermsToVote);
-
-  const canVote =
-    !votedOn(ballotId) && !expired && !!loginState && userHasPermsToVote;
+  const canVote = !votedOn(ballotId) && !expired;
 
   return (
     <ContentContainer>
@@ -315,7 +307,7 @@ export function BallotScreen({
             </>
           )}
 
-          {(!loginState || !userHasPermsToVote) && (
+          {/* {!loginState && (
             <Button
               variant={"creative"}
               className="w-full"
@@ -337,7 +329,7 @@ export function BallotScreen({
             >
               Log In to Vote
             </Button>
-          )}
+          )} */}
         </div>
       )}
 

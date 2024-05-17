@@ -11,6 +11,7 @@ import {
   PollWithCounts,
   VoteSignal
 } from "../../api/requestTypes";
+import { ZUPASS_CLIENT_URL } from "../../env";
 import { LoginState, PCDState, ZupollError } from "../../types";
 import { openGroupMembershipPopup, removeQueryParameters } from "../../util";
 import { voteBallot } from "../../zupoll-server-api";
@@ -200,13 +201,14 @@ export function useBallotVoting({
   ]);
 
   const createBallotVotePCD = useCallback(async () => {
-    if (!loginState) {
-      onError({
-        title: "Not Logged In",
-        message: "Log in to vote"
-      } satisfies ZupollError);
-      return;
-    }
+    // if (!loginState) {
+    //   onError({
+    //     title: "Not Logged In",
+    //     message: "Log in to vote"
+    //   } satisfies ZupollError);
+    //   return;
+    // }
+
     if (pollToVote.size === 0) {
       onError({
         title: "Empty Ballot",
@@ -245,7 +247,7 @@ export function useBallotVoting({
     );
 
     openGroupMembershipPopup(
-      loginState.config.passportAppUrl,
+      ZUPASS_CLIENT_URL,
       window.location.origin + "/popup",
       ballotVoterSemaphoreGroupUrl,
       "zupoll",
@@ -255,7 +257,6 @@ export function useBallotVoting({
       returnUrl ? returnUrl : undefined
     );
   }, [
-    loginState,
     polls,
     ballotId,
     ballotVoterSemaphoreGroupUrl,

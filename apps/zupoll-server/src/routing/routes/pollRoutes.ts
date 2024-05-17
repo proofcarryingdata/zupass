@@ -19,7 +19,6 @@ import {
   createVote,
   findTgMessages,
   getBallotById,
-  getBallotByIdAndType,
   getPollById,
   getVoteByNullifier,
   saveTgMessage
@@ -259,7 +258,7 @@ export function initPCDRoutes(
         if (isNaN(ballotURL)) {
           throw new Error("Invalid ballot URL.");
         }
-        const ballot = await getBallotByIdAndType(ballotURL, req.authUserType);
+        const ballot = await getBallotById(ballotURL);
         if (ballot === null) {
           throw new Error("Can't find the given ballot.");
         }

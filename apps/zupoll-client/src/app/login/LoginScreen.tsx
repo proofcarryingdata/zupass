@@ -57,6 +57,7 @@ export function LoginScreen({
     );
 
     if (loginConfig) {
+      removeQueryParameters();
       redirectForLogin(loginConfig);
     }
   }, [params]);

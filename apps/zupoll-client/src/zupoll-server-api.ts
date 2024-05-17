@@ -41,8 +41,6 @@ export async function voteBallot(
   request: MultiVoteRequest,
   accessToken: string | undefined
 ): Promise<Response | undefined> {
-  if (!accessToken) return undefined;
-
   const url = urljoin(ZUPOLL_SERVER_URL, `vote-ballot`);
 
   try {
@@ -52,7 +50,11 @@ export async function voteBallot(
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
-        Authorization: `Bearer ${accessToken}`
+        ...(accessToken
+          ? {
+              Authorization: `Bearer ${accessToken}`
+            }
+          : {})
       }
     });
     return await res;

@@ -16,18 +16,15 @@ export function LoggedInAs({
 }) {
   const router = useRouter();
 
-  if (!loginState) {
-    return null;
-  }
-
   return (
     <div className="flex justify-between items-center w-full">
       <span className="mr-2 flex flex-row gap-2 justify-center items-center shrink overflow-hidden rounded text-sm bg-green-950/20 px-3 py-1">
         <FaUserAstronaut className="shrink-0" />
         <AnimContainer className="shrink overflow-hidden text-ellipsis text-nowrap">
-          {loginState.config.name}
+          {loginState ? <>{loginState.config.name}</> : <span>Logged Out</span>}
         </AnimContainer>
       </span>
+
       <span className="flex flex-row gap-2">
         {showHomeButton && (
           <Button
@@ -39,7 +36,7 @@ export function LoggedInAs({
             Home
           </Button>
         )}
-        <LogoutButton logout={logout} />
+        {loginState && <LogoutButton logout={logout} />}
       </span>
     </div>
   );
