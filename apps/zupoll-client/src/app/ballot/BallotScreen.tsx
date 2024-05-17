@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { tryParse } from "@pcd/util";
 import { RedirectConfig, findConfigForVoterUrl } from "@pcd/zupoll-shared";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { ContentContainer } from "../../@/components/ui/Elements";
 import { AppHeader } from "../../@/components/ui/Headers";
@@ -184,15 +184,9 @@ export function BallotScreen({
     }
   }, []);
 
-  const [canVote, setCanVote] = useState<boolean>(true);
   const [pollToVote, setPollToVote] = useState(
     new Map<string, number | undefined>()
   );
-
-  // check voting status
-  useEffect(() => {
-    setCanVote(!votedOn(ballotId) && !expired && !!loginState);
-  }, [expired, ballotId, refresh, loginState]);
 
   // update votes for polls
   const onVoted = (pollId: string, voteIdx: number) => {
@@ -231,6 +225,28 @@ export function BallotScreen({
   });
 
   const isHackathonView = !!polls.find((p) => p.options.length >= 6);
+
+  const userHasPermsToVote = useMemo<boolean>(() => {
+    if (!ballot || !loginState) return false;
+
+    for (const config of LOGIN_GROUPS.flatMap((g) => g.configs)) {
+      for (const ballotConfig of config.ballotConfigs ?? []) {
+        for (const ballotVoterUrl of ballot.voterSemaphoreGroupUrls) {
+          if (
+            ballotVoterUrl.startsWith(ballotConfig.voterGroupUrl) &&
+            loginState.config.name === config.name
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+
+    return false;
+  }, [ballot, loginState]);
+
+  const canVote =
+    !votedOn(ballotId) && !expired && !!loginState && userHasPermsToVote;
 
   return (
     <ContentContainer>
@@ -277,26 +293,28 @@ export function BallotScreen({
             })}
           </div>
 
-          {canVote && !(isHackathonView && polls.length === 1) && (
-            <>
-              <DividerWithText></DividerWithText>
-              <Button
-                variant={"creative"}
-                onClick={createBallotVotePCD}
-                className="w-full"
-                disabled={pollToVote.size !== polls.length}
-              >
-                Submit Votes
-              </Button>
-              <TextContainer className="text-foreground/70 mt-2 text-sm mb-2">
-                If you created or reset your Zupass after this ballot was
-                created you will not be able to vote. This is a security measure
-                designed to prevent double-voting.
-              </TextContainer>
-            </>
-          )}
+          {canVote &&
+            !(isHackathonView && polls.length === 1) &&
+            userHasPermsToVote && (
+              <>
+                <DividerWithText></DividerWithText>
+                <Button
+                  variant={"creative"}
+                  onClick={createBallotVotePCD}
+                  className="w-full"
+                  disabled={pollToVote.size !== polls.length}
+                >
+                  Submit Votes
+                </Button>
+                <TextContainer className="text-foreground/70 mt-2 text-sm mb-2">
+                  If you created or reset your Zupass after this ballot was
+                  created you will not be able to vote. This is a security
+                  measure designed to prevent double-voting.
+                </TextContainer>
+              </>
+            )}
 
-          {!loginState && (
+          {(!loginState || !userHasPermsToVote) && (
             <Button
               variant={"creative"}
               className="w-full"
