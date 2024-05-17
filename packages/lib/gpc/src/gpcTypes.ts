@@ -387,8 +387,12 @@ export type GPCRevealedClaims = {
    */
   owner?: GPCRevealedOwnerClaims;
 
-  // TODO(POD-P2): List membership configuration
-  // TODO(POD-P2): Tuple configuration
+  /*
+   * Named lists of valid values for each list membership check. These values
+   * may be primitive (i.e. of type PODValue) or tuples (represented as
+   * PODValueTuple = PODValue[]).  Each list must contain at least two elements.
+   */
+  membershipLists?: Record<PODName, PODValue[] | PODValueTuple[]>;
 
   /**
    * If this field is set, it matches the corresponding field in

@@ -135,7 +135,8 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             owner: { isRevealed: false, isOwnerID: true }
           }
         }
-      }
+      },
+      membershipLists: { list1: "pod1.E" }
     };
     const proofInputs: GPCProofInputs = {
       pods: { pod1 },
@@ -143,6 +144,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         semaphoreV3: ownerIdentity,
         externalNullifier: { type: "int", value: 42n }
       },
+      membershipLists: { list1: [sampleEntries.F, sampleEntries.E] },
       watermark: { type: "int", value: 1337n }
     };
     const expectedRevealedClaims: GPCRevealedClaims = {
@@ -159,6 +161,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
           ownerIdentity.nullifier
         ])
       },
+      membershipLists: proofInputs.membershipLists,
       watermark: { type: "int", value: 1337n }
     };
 

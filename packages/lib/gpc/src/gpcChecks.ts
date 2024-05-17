@@ -421,7 +421,9 @@ export function checkProofInputsForConfig(
         undefined
       ) {
         throw new Error(
-          `Comparison value ${comparisonValue} corresponding to identifier ${comparisonId} is not a member of list ${listName}.`
+          `Comparison value ${JSON.stringify(
+            comparisonValue
+          )} corresponding to identifier ${comparisonId} is not a member of list ${listName}.`
         );
       }
     }
@@ -429,7 +431,7 @@ export function checkProofInputsForConfig(
 }
 
 /**
- * checks the validity of the arguments for verifying a proof.  This will throw
+ * Checks the validity of the arguments for verifying a proof.  This will throw
  * if any of the arguments is malformed, or if the different fields do not
  * correctly correspond to each other.
  *
@@ -710,7 +712,7 @@ export function mergeRequirements(
   rs1: GPCRequirements,
   rs2: GPCRequirements
 ): GPCRequirements {
-  // Either `rs1` specifies the tuple arities or `rs2`.
+  // Either `rs1` or `rs2` specifies the tuple arities.
   const tupleArities =
     Object.keys(rs1.tupleArities).length === 0
       ? rs2.tupleArities

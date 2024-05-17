@@ -682,6 +682,15 @@ export function compileVerifyConfig(
     GPCRevealedObjectClaims
   >(verifyConfig, verifyRevealed);
 
+  // Do the same for tuples (if any).
+  const tupleMap = prepCompilerTupleMap(
+    verifyConfig,
+    entryMap,
+    circuitDesc.maxEntries,
+    circuitDesc.maxTuples,
+    circuitDesc.tupleArity
+  );
+
   // Create subset of inputs for object modules, padded to max size.
   const circuitObjInputs = combineVerifyObjects(
     Array.from(objMap.values()).map(compileVerifyObject),
@@ -707,10 +716,22 @@ export function compileVerifyConfig(
   );
 
   // Create subset of inputs for multituple module padded to max size.
-  const circuitMultiTupleInputs = dummyTuples(circuitDesc);
+  const circuitMultiTupleInputs = compileProofMultiTuples(
+    tupleMap,
+    circuitDesc.maxTuples,
+    circuitDesc.tupleArity
+  );
 
   // Create subset of inputs for list membership module padded to max size.
-  const circuitListMembershipInputs = dummyListMembership(circuitDesc);
+  const circuitListMembershipInputs = compileProofListMembership(
+    verifyConfig.membershipLists ?? {},
+    verifyRevealed.membershipLists ?? {},
+    entryMap,
+    tupleMap,
+    circuitDesc.tupleArity,
+    circuitDesc.maxLists,
+    circuitDesc.maxListElements
+  );
 
   // Create other global inputs.  Logic shared with compileProofConfig,
   // since all the signals involved are public.
@@ -969,6 +990,9 @@ export function makeRevealedClaims(
             nullifierHash: BigInt(circuitOutputs.ownerRevealedNullifierHash)
           }
         }
+      : {}),
+    ...(proofInputs.membershipLists !== undefined
+      ? { membershipLists: proofInputs.membershipLists }
       : {}),
     ...(proofInputs.watermark !== undefined
       ? { watermark: proofInputs.watermark }

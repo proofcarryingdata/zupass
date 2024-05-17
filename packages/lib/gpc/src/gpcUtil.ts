@@ -30,7 +30,7 @@ import {
  * named circuit.  In addition to filling in the circuit name, canonicalization
  * removes unnecessary differences between identical configs.  Specifically:
  * - Remove unknown fields from config objects.
- * - Put `pods` and `entries` in sorted order for iteration.
+ * - Put `pods`, `entries`, `tuples` and `membershipLists` in sorted order for iteration.
  * - Omit optional fields which are set to their default value.
  *
  * @param proofConfig proof configuration to canonicalize
@@ -62,11 +62,33 @@ export function canonicalizeConfig(
     canonicalPODs[objName] = canonicalizeObjectConfig(objectConfig);
   }
 
+  // Force tuples and membership lists to be sorted by name
+  const tupleConfig = proofConfig.tuples ?? {};
+  const sortedTuples = Object.fromEntries(
+    Object.keys(tupleConfig)
+      .sort()
+      .map((tupleName) => [
+        tupleName,
+        tupleConfig[tupleName as TupleIdentifier]
+      ])
+  );
+
+  const membershipListConfig = proofConfig.membershipLists ?? {};
+  const sortedMembershipLists = Object.fromEntries(
+    Object.keys(membershipListConfig)
+      .sort()
+      .map((listName) => [listName, membershipListConfig[listName]])
+  );
+
   // Forcing circuit name to be present is the only type-level difference
   // between GPCProofConfig and GPCBoundConfig.
   return {
     circuitIdentifier: circuitIdentifier,
-    pods: canonicalPODs
+    pods: canonicalPODs,
+    ...(proofConfig.tuples !== undefined ? { tuples: sortedTuples } : {}),
+    ...(proofConfig.membershipLists !== undefined
+      ? { membershipLists: sortedMembershipLists }
+      : {})
   };
 }
 
