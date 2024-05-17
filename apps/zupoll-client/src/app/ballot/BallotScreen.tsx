@@ -77,14 +77,10 @@ export function BallotScreen({
         const err: ZupollError = {
           title: "Login to view this poll",
           message: `To view this poll, you should log in via Zupass. Click 'Login' below to continue.`,
-          loginAs: resValue
-            ? {
-                title: `${resValue?.configName ?? "Unknown"}`,
-                ballotURL,
-                categoryId: resValue?.categoryId,
-                configName: resValue?.configName
-              }
-            : { title: "test" }
+          loginAs: {
+            categoryId: resValue?.categoryId,
+            configName: resValue?.configName
+          }
         };
         setError(err);
         return;
