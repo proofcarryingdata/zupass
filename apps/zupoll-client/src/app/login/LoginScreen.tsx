@@ -8,15 +8,18 @@ import { useEffect, useState } from "react";
 import { ContentContainer } from "../../@/components/ui/Elements";
 import { LEGACY_LOGIN_CONFIGS } from "../../api/loginGroups";
 import { LoginState, ZupollError } from "../../types";
+import { SavedLoginState } from "../../useLoginState";
 import { removeQueryParameters } from "../../util";
 import { fetchLoginToken } from "../../zupoll-server-api";
 import { GuaranteesElement } from "../main/Guarantees";
 import { LoginWidget } from "./LoginWidget";
 
 export function LoginScreen({
-  onLogin
+  onLogin,
+  logout
 }: {
   onLogin: (loginState: LoginState) => void;
+  logout: SavedLoginState["logout"];
   title: string;
 }) {
   const params = useParams();
@@ -103,7 +106,11 @@ export function LoginScreen({
         </CardContent>
       </Card>
 
-      <ErrorDialog error={error} close={() => setError(undefined)} />
+      <ErrorDialog
+        error={error}
+        close={() => setError(undefined)}
+        logout={logout}
+      />
     </ContentContainer>
   );
 }

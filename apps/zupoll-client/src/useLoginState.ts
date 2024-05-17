@@ -2,7 +2,6 @@ import { LoginConfig } from "@pcd/zupoll-shared";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { LoginState } from "./types";
-import { getLoginRedirectUrl } from "./zupoll-server-api";
 
 const ACCESS_TOKEN_KEY = "access_token";
 const CONFIGURATION_KEY = "configuration";
@@ -72,20 +71,25 @@ export function useSavedLoginState(router: AppRouterInstance): SavedLoginState {
     saveLoginStateToLocalStorage(state);
   }, []);
 
-  const logout = useCallback(
-    (ballotURL?: string) => {
-      replaceLoginState(undefined);
-      (async () => {
-        // If we have a ballot URL, try to find the ballot-specific redirect
-        const redirectUrl = ballotURL
-          ? await getLoginRedirectUrl(ballotURL)
-          : // Otherwise redirect to the regular login page
-            "/";
-        router.push(redirectUrl);
-      })();
+  const logout: SavedLoginState["logout"] = useCallback(
+    (ballotURL?: string, configId?: string, ballotConfigId?: string) => {
+      alert("logout");
+      // replaceLoginState(undefined);
+      saveLoginStateToLocalStorage(undefined);
+
+      setTimeout(() => {
+        const loginUrl = `/#/?ballotURL=${encodeURIComponent(
+          ballotURL ?? ""
+        )}&configId=${encodeURIComponent(
+          configId ?? ""
+        )}&ballotConfigId=${encodeURIComponent(ballotConfigId ?? "")}`;
+        alert(`redirecting to ${loginUrl}`);
+        window.location.href = loginUrl;
+        // router.push(loginUrl);
+      }, 100);
       delete localStorage.preLoginRoute;
     },
-    [replaceLoginState, router]
+    []
   );
 
   const definitelyNotLoggedIn = useMemo(() => {
@@ -106,5 +110,9 @@ export interface SavedLoginState {
   isLoading: boolean;
   definitelyNotLoggedIn: boolean;
   replaceLoginState: (state: LoginState | undefined) => void;
-  logout: (ballotURL?: string) => void;
+  logout: (
+    ballotURL?: string,
+    configId?: string,
+    ballotConfigId?: string
+  ) => void;
 }

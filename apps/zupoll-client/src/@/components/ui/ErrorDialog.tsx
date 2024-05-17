@@ -85,9 +85,19 @@ export default function ErrorDialog({
                       variant={"creative"}
                       type="button"
                       onClick={() => {
-                        window.location.href = "/";
-
-                        logout(error?.loginAs?.ballotURL);
+                        if (
+                          error?.loginAs?.ballotURL &&
+                          error?.loginAs?.configId &&
+                          error?.loginAs?.ballotConfigId
+                        ) {
+                          logout(
+                            error?.loginAs?.ballotURL,
+                            error?.loginAs?.configId,
+                            error?.loginAs?.ballotConfigId
+                          );
+                        } else {
+                          window.location.href = "/";
+                        }
                       }}
                     >
                       Login

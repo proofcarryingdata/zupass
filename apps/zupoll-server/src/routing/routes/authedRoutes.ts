@@ -1,5 +1,4 @@
 import { getPodboxConfigs } from "@pcd/zupoll-shared";
-import { BallotType } from "@prisma/client";
 import express, { NextFunction, Request, Response } from "express";
 import { ApplicationContext } from "../../application";
 import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../../env";
@@ -195,39 +194,6 @@ export function initAuthedRoutes(
       }
     }
   );
-
-  /**
-   * When the client app wants to log the user (back) in, it has to redirect
-   * the user to a login page. We want this to vary depending on the type of
-   * ballot the user was attempting to interact with. The client doesn't have
-   * enough information to do this, so here we have a route for the client to
-   * ask the server where to redirect to in order to log in.
-   */
-  app.get("/login-redirect", async (req: Request, res: Response) => {
-    logger.info("login-redirect");
-
-    const ballotURL = req.query.ballotURL?.toString();
-
-    if (ballotURL) {
-      const ballot = await getBallotById(parseInt(ballotURL));
-
-      if (
-        ballot?.ballotType === BallotType.EDGE_CITY_FEEDBACK ||
-        ballot?.ballotType === BallotType.EDGE_CITY_STRAWPOLL
-      ) {
-        res.json({ url: "/" });
-        return;
-      } else if (
-        ballot?.ballotType === BallotType.ETH_LATAM_FEEDBACK ||
-        ballot?.ballotType === BallotType.ETH_LATAM_STRAWPOLL
-      ) {
-        res.json({ url: "/" });
-        return;
-      }
-    }
-
-    res.json({ url: "/" });
-  });
 
   app.post(
     "/bot-post",
