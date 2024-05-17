@@ -2,7 +2,10 @@ import { Dialog, Transition } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Fragment, useRef } from "react";
 import { ZupollError } from "../../../types";
-import { SavedLoginState } from "../../../useLoginState";
+import {
+  SavedLoginState,
+  savePreLoginRouteToLocalStorage
+} from "../../../useLoginState";
 import { Button } from "./button";
 
 export default function ErrorDialog({
@@ -85,6 +88,8 @@ export default function ErrorDialog({
                       variant={"creative"}
                       type="button"
                       onClick={() => {
+                        savePreLoginRouteToLocalStorage(window.location.href);
+
                         if (
                           error?.loginAs?.ballotURL &&
                           error?.loginAs?.categoryId &&

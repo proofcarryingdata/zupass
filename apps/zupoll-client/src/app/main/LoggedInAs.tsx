@@ -40,7 +40,6 @@ export function LoggedInAs({
           </Button>
         )}
         <LogoutButton logout={logout} />
-        {/* <SettingsDrawer /> */}
       </span>
     </div>
   );

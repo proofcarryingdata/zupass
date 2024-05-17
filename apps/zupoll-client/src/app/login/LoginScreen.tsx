@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { ContentContainer } from "../../@/components/ui/Elements";
 import { LOGIN_GROUPS } from "../../api/loginGroups";
 import { LoginState, ZupollError } from "../../types";
-import { SavedLoginState } from "../../useLoginState";
+import { SavedLoginState, findLoginConfig } from "../../useLoginState";
 import { removeQueryParameters } from "../../util";
 import { fetchLoginToken } from "../../zupoll-server-api";
 import { GuaranteesElement } from "../main/Guarantees";
@@ -50,14 +50,14 @@ export function LoginScreen({
       setLoggingIn(true);
     }
 
-    const configId = url.searchParams.get("configId");
-    const ballotConfigId = url.searchParams.get("ballotConfigId");
-    if (configId && ballotConfigId) {
-      const group = LOGIN_GROUPS.find((g) => g.category === configId);
-      const loginConfig = group?.configs.find((c) => c.name === ballotConfigId);
-      if (loginConfig) {
-        redirectForLogin(loginConfig);
-      }
+    const loginConfig = findLoginConfig(
+      LOGIN_GROUPS,
+      url.searchParams.get("configId") ?? undefined,
+      url.searchParams.get("ballotConfigId") ?? undefined
+    );
+
+    if (loginConfig) {
+      redirectForLogin(loginConfig);
     }
   }, [params]);
 

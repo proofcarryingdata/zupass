@@ -17,6 +17,7 @@ import { BallotPollResponse, PollWithCounts } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
 import {
   SavedLoginState,
+  saveLoginStateToLocalStorage,
   savePreLoginRouteToLocalStorage
 } from "../../useLoginState";
 import { fmtTimeAgo, fmtTimeFuture } from "../../util";
@@ -245,6 +246,8 @@ export function BallotScreen({
     return false;
   }, [ballot, loginState]);
 
+  console.log("userHasPermsToVote", userHasPermsToVote);
+
   const canVote =
     !votedOn(ballotId) && !expired && !!loginState && userHasPermsToVote;
 
@@ -293,39 +296,39 @@ export function BallotScreen({
             })}
           </div>
 
-          {canVote &&
-            !(isHackathonView && polls.length === 1) &&
-            userHasPermsToVote && (
-              <>
-                <DividerWithText></DividerWithText>
-                <Button
-                  variant={"creative"}
-                  onClick={createBallotVotePCD}
-                  className="w-full"
-                  disabled={pollToVote.size !== polls.length}
-                >
-                  Submit Votes
-                </Button>
-                <TextContainer className="text-foreground/70 mt-2 text-sm mb-2">
-                  If you created or reset your Zupass after this ballot was
-                  created you will not be able to vote. This is a security
-                  measure designed to prevent double-voting.
-                </TextContainer>
-              </>
-            )}
+          {canVote && !(isHackathonView && polls.length === 1) && true && (
+            <>
+              <DividerWithText></DividerWithText>
+              <Button
+                variant={"creative"}
+                onClick={createBallotVotePCD}
+                className="w-full"
+                disabled={pollToVote.size !== polls.length}
+              >
+                Submit Votes
+              </Button>
+              <TextContainer className="text-foreground/70 mt-2 text-sm mb-2">
+                If you created or reset your Zupass after this ballot was
+                created you will not be able to vote. This is a security measure
+                designed to prevent double-voting.
+              </TextContainer>
+            </>
+          )}
 
           {(!loginState || !userHasPermsToVote) && (
             <Button
               variant={"creative"}
               className="w-full"
               onClick={() => {
+                savePreLoginRouteToLocalStorage(window.location.href);
+                saveLoginStateToLocalStorage(undefined);
+
                 const loginConfig = findConfigForVoterUrl(
                   LOGIN_GROUPS.flatMap((g) => g.configs),
                   ballot.voterSemaphoreGroupUrls
                 );
 
                 if (loginConfig) {
-                  savePreLoginRouteToLocalStorage(window.location.href);
                   redirectForLogin(loginConfig);
                 } else {
                   window.location.href = "/";

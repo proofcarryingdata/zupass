@@ -50,8 +50,10 @@ export function HomePage() {
           replaceLoginState(state);
           removeQueryParameters();
           setRedirecting(true);
-          window.location.href =
-            getAndDeletePreLoginRouteFromLocalStorage() ?? "/";
+          setTimeout(() => {
+            window.location.href =
+              getAndDeletePreLoginRouteFromLocalStorage() ?? "/";
+          }, 50);
         }}
       />
     );

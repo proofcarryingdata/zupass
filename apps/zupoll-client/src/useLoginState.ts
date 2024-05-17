@@ -78,7 +78,6 @@ export function useSavedLoginState(router: AppRouterInstance): SavedLoginState {
   const logout: SavedLoginState["logout"] = useCallback(
     (ballotURL?: string, configId?: string, ballotConfigId?: string) => {
       saveLoginStateToLocalStorage(undefined);
-      savePreLoginRouteToLocalStorage(window.location.href);
       const loginConfig = findLoginConfig(
         LOGIN_GROUPS,
         configId,
@@ -124,17 +123,21 @@ function getPreloginRouteFromLocalStorage(): string | undefined {
   return localStorage.getItem(PRE_LOGIN_ROUTE_KEY) ?? undefined;
 }
 
+export function clearPreLoginRouteFromLocalStorage(): void {
+  localStorage.removeItem(PRE_LOGIN_ROUTE_KEY);
+}
+
 export function getAndDeletePreLoginRouteFromLocalStorage():
   | string
   | undefined {
-  const url = localStorage.getItem(PRE_LOGIN_ROUTE_KEY);
-  localStorage.removeItem(PRE_LOGIN_ROUTE_KEY);
-  return url ?? undefined;
+  const url = getPreloginRouteFromLocalStorage();
+  clearPreLoginRouteFromLocalStorage();
+  return url;
 }
 
 export function savePreLoginRouteToLocalStorage(url: string | undefined): void {
   if (!url) {
-    localStorage.removeItem(PRE_LOGIN_ROUTE_KEY);
+    clearPreLoginRouteFromLocalStorage();
   } else {
     localStorage.setItem(PRE_LOGIN_ROUTE_KEY, url);
   }
