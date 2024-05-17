@@ -127,7 +127,12 @@ export function initAuthedRoutes(
               AuthType.PODBOX
             ].includes(req.authUserType as any)
           ) {
-            res.sendStatus(403);
+            const redirectInfo = getRedirectInfo(ballot);
+            if (redirectInfo) {
+              res.status(403).json(redirectInfo);
+            } else {
+              res.sendStatus(403);
+            }
             return;
           }
 
@@ -155,8 +160,8 @@ export function initAuthedRoutes(
                   for (const ballotVoterUrl of ballot.voterSemaphoreGroupUrls) {
                     if (ballotVoterUrl.startsWith(ballotConfig.voterGroupUrl)) {
                       return res.status(403).json({
-                        configId: config.configCategoryId,
-                        ballotConfigId: ballotConfig.name
+                        categoryId: config.configCategoryId,
+                        configName: config.name
                       });
                     }
                   }
@@ -167,8 +172,6 @@ export function initAuthedRoutes(
                 configs,
                 ballot
               });
-
-              return res.sendStatus(403);
             }
           }
         }
@@ -231,3 +234,27 @@ export type LoginRequest = {
 export type BallotPollRequest = {
   ballotURL: number;
 };
+
+function getRedirectInfo(
+  ballot: NonNullable<Awaited<ReturnType<typeof getBallotById>>>
+): LoginRedirectInfo | undefined {
+  const configs = getPodboxConfigs(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL);
+
+  for (const config of configs) {
+    for (const ballotConfig of config.ballotConfigs ?? []) {
+      for (const ballotVoterUrl of ballot.voterSemaphoreGroupUrls) {
+        if (ballotVoterUrl.startsWith(ballotConfig.voterGroupUrl)) {
+          return {
+            categoryId: config.configCategoryId,
+            configName: config.name
+          } satisfies LoginRedirectInfo;
+        }
+      }
+    }
+  }
+}
+
+export interface LoginRedirectInfo {
+  categoryId: string;
+  configName: string;
+}

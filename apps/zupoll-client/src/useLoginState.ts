@@ -35,7 +35,9 @@ export function loadLoginStateFromLocalStorage(): LoginState | undefined {
 }
 
 export function clearLoginStateFromLocalStorage(): void {
+  let preloginRoute = getPreloginRouteFromLocalStorage();
   localStorage.clear();
+  savePreLoginRouteToLocalStorage(preloginRoute);
 }
 
 export function saveLoginStateToLocalStorage(
@@ -73,21 +75,17 @@ export function useSavedLoginState(router: AppRouterInstance): SavedLoginState {
 
   const logout: SavedLoginState["logout"] = useCallback(
     (ballotURL?: string, configId?: string, ballotConfigId?: string) => {
-      alert("logout");
-      // replaceLoginState(undefined);
       saveLoginStateToLocalStorage(undefined);
-
       setTimeout(() => {
-        const loginUrl = `/#/?ballotURL=${encodeURIComponent(
-          ballotURL ?? ""
-        )}&configId=${encodeURIComponent(
-          configId ?? ""
-        )}&ballotConfigId=${encodeURIComponent(ballotConfigId ?? "")}`;
-        alert(`redirecting to ${loginUrl}`);
-        window.location.href = loginUrl;
-        // router.push(loginUrl);
-      }, 100);
-      delete localStorage.preLoginRoute;
+        savePreLoginRouteToLocalStorage(window.location.href);
+        window.location.href = `/?${new URLSearchParams(
+          Object.assign(
+            {} as any,
+            ballotConfigId ? { ballotConfigId } : {},
+            configId ? { configId } : {}
+          )
+        )}`;
+      });
     },
     []
   );
@@ -115,4 +113,26 @@ export interface SavedLoginState {
     configId?: string,
     ballotConfigId?: string
   ) => void;
+}
+
+const PRE_LOGIN_ROUTE_KEY = "preLoginRoute";
+
+function getPreloginRouteFromLocalStorage(): string | undefined {
+  return localStorage.getItem(PRE_LOGIN_ROUTE_KEY) ?? undefined;
+}
+
+export function getAndDeletePreLoginRouteFromLocalStorage():
+  | string
+  | undefined {
+  const url = localStorage.getItem(PRE_LOGIN_ROUTE_KEY);
+  localStorage.removeItem(PRE_LOGIN_ROUTE_KEY);
+  return url ?? undefined;
+}
+
+export function savePreLoginRouteToLocalStorage(url: string | undefined): void {
+  if (!url) {
+    localStorage.removeItem(PRE_LOGIN_ROUTE_KEY);
+  } else {
+    localStorage.setItem(PRE_LOGIN_ROUTE_KEY, url);
+  }
 }

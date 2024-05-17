@@ -71,8 +71,8 @@ export function BallotScreen({
       if (res.status === 403) {
         const resErr = await res.text();
         const resValue = tryParse<{
-          configId: string;
-          ballotConfigId: string;
+          categoryId: string;
+          configName: string;
         }>(resErr);
 
         const err: ZupollError = {
@@ -80,10 +80,10 @@ export function BallotScreen({
           message: `To view this poll, you should log in via Zupass. Click 'Login' below to continue.`,
           loginAs: resValue
             ? {
-                title: `${resValue?.ballotConfigId ?? "Unknown"}`,
+                title: `${resValue?.configName ?? "Unknown"}`,
                 ballotURL,
-                configId: resValue?.configId,
-                ballotConfigId: resValue?.ballotConfigId
+                categoryId: resValue?.categoryId,
+                configName: resValue?.configName
               }
             : undefined
         };

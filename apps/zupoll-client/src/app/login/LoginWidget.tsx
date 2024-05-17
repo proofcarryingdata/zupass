@@ -1,11 +1,10 @@
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
-import { LoginCategory, LoginConfig } from "@pcd/zupoll-shared";
+import { LoginCategory } from "@pcd/zupoll-shared";
 import _ from "lodash";
 import { useMemo, useState } from "react";
 import styled from "styled-components";
 import { LOGIN_GROUPS } from "../../api/loginGroups";
-import { LoginState, ZupollError } from "../../types";
 import { LoginActionsForLoginGroup } from "./LoginActionsForLoginGroup";
 import { SelectLoginGroup } from "./SelectLoginGroup";
 
@@ -78,10 +77,7 @@ export function LoggingIn() {
  * Props for {@link LoginWidget}.
  */
 export interface LoginWidgetProps {
-  configs: LoginConfig[];
-  onLogin: (loginState: LoginState) => void;
   loggingIn: boolean;
-  setError: (error?: ZupollError) => void;
   setServerLoading: (loading: boolean) => void;
   serverLoading: boolean;
 }

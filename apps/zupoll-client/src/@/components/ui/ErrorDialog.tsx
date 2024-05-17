@@ -87,13 +87,13 @@ export default function ErrorDialog({
                       onClick={() => {
                         if (
                           error?.loginAs?.ballotURL &&
-                          error?.loginAs?.configId &&
-                          error?.loginAs?.ballotConfigId
+                          error?.loginAs?.categoryId &&
+                          error?.loginAs?.configName
                         ) {
                           logout(
                             error?.loginAs?.ballotURL,
-                            error?.loginAs?.configId,
-                            error?.loginAs?.ballotConfigId
+                            error?.loginAs?.categoryId,
+                            error?.loginAs?.configName
                           );
                         } else {
                           window.location.href = "/";

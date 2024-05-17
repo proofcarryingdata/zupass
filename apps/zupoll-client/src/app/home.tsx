@@ -3,7 +3,10 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { LoginState } from "../types";
-import { useSavedLoginState } from "../useLoginState";
+import {
+  getAndDeletePreLoginRouteFromLocalStorage,
+  useSavedLoginState
+} from "../useLoginState";
 import { removeQueryParameters } from "../util";
 import { LoginScreen } from "./login/LoginScreen";
 import { MainScreen } from "./main/MainScreen";
@@ -44,9 +47,10 @@ export function HomePage() {
         onLogin={(state: LoginState) => {
           replaceLoginState(state);
           removeQueryParameters();
-          const redirectUrl = localStorage.getItem("preLoginRoute") || "/";
-          delete localStorage["preLoginRoute"];
-          router.push(redirectUrl);
+          setTimeout(() => {
+            window.location.href =
+              getAndDeletePreLoginRouteFromLocalStorage() ?? "/";
+          });
         }}
       />
     );
