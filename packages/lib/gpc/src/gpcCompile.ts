@@ -373,7 +373,7 @@ function compileProofListMembership<
     const [elementIdPrefix, _] = checkPODEntryIdentifier(listName, elementId);
 
     const idx =
-      elementIdPrefix === "tuple."
+      elementIdPrefix === "tuple"
         ? tupleMap.get(elementId as TupleIdentifier)?.tupleRef
         : entryMap.get(elementId)?.entryIndex;
 

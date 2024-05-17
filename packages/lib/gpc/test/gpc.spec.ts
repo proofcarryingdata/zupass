@@ -1,5 +1,5 @@
 import { ProtoPODGPC } from "@pcd/gpcircuits";
-import { POD, PODValue } from "@pcd/pod";
+import { POD, PODCryptographicValue, PODValue, PODValueTuple } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -192,7 +192,11 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         pod2: {
           entries: {
             ticketID: { isRevealed: false, equalsEntry: "pod1.otherTicketID" },
-            attendee: { isRevealed: false, isOwnerID: true }
+            attendee: {
+              isRevealed: false,
+              isOwnerID: true,
+              liesInLists: ["goats", "pigs"]
+            }
           }
         },
         pod1: {
@@ -202,6 +206,21 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             owner: { isRevealed: false, isOwnerID: true }
           }
         }
+      },
+      tuples: {
+        tuple1: {
+          entries: ["pod1.G", "pod2.ticketID"],
+          liesInLists: ["list1"]
+        },
+        tuple2: {
+          entries: [
+            "pod2.ticketID",
+            "pod1.otherTicketID",
+            "pod1.G",
+            "pod1.owner"
+          ],
+          liesInLists: ["list2"]
+        }
       }
     };
     const proofInputs: GPCProofInputs = {
@@ -209,6 +228,86 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       owner: {
         semaphoreV3: ownerIdentity,
         externalNullifier
+      },
+      membershipLists: {
+        list1: [[sampleEntries.G, sampleEntries2.ticketID]].concat(
+          [
+            [87, 1],
+            [99, 8],
+            [8273, 0],
+            [0, 0],
+            [12387, 3],
+            [99999, 66],
+            [653, 362374823],
+            [29387, 1236478236],
+            [1238, 9238374],
+            [1, 1],
+            [87, 87]
+          ].map((pair) => [
+            { type: "int", value: BigInt(pair[0]) },
+            { type: "cryptographic", value: BigInt(pair[1]) }
+          ])
+        ),
+        list2: [
+          [129384723n, 123746238746n, 1237n, 18239n],
+          [1283748973n, 0n, 1n, 2n],
+          [9023874n, 8237n, 23674n, 23874n]
+        ]
+          .map(
+            (tuple) =>
+              [
+                { type: "cryptographic", value: tuple[0] },
+                { type: "int", value: tuple[1] },
+                { type: "int", value: tuple[2] },
+                { type: "cryptographic", value: tuple[3] }
+              ] as PODValueTuple
+          )
+          .concat([
+            [
+              sampleEntries2.ticketID,
+              sampleEntries.otherTicketID,
+              sampleEntries.G,
+              sampleEntries.owner
+            ]
+          ]),
+        goats: [
+          0, 7, 87, 11, 2938, 1923483, 123948, 12839428374, 1234,
+          12343487239487, 2, 3
+        ]
+          .map(
+            (value: number) =>
+              [
+                {
+                  type: "cryptographic",
+                  value: BigInt(value)
+                } as PODCryptographicValue
+              ][0]
+          )
+          .concat([sampleEntries2.attendee]),
+        pigs: [
+          28937n,
+          1923847n,
+          1923874293847n,
+          1923819283741928374n,
+          0n,
+          55n,
+          19238471928374n,
+          1n,
+          sampleEntries2.attendee.value,
+          98n,
+          989n,
+          1023948127340918237n,
+          92837498374n,
+          37846773468n
+        ].map(
+          (value: bigint) =>
+            [
+              {
+                type: "cryptographic",
+                value
+              } as PODCryptographicValue
+            ][0]
+        )
       },
       watermark
     };
@@ -229,6 +328,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
           ownerIdentity.nullifier
         ])
       },
+      membershipLists: proofInputs.membershipLists,
       watermark
     };
 

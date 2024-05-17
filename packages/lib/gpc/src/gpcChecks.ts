@@ -108,7 +108,31 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
       }
 
       for (const entryId of tupleConfig.entries) {
-        checkPODEntryIdentifier(tupleName, entryId);
+        // Check that the tuples reference entries included in the config.
+        const [podName, entryName] = checkPODEntryIdentifier(
+          tupleName,
+          entryId
+        );
+        if (podName === "tuple") {
+          throw new ReferenceError(
+            `Tuples may only refer to POD entry identifiers: Tuple ${tupleName} refers to tuple identifier ${entryId}.`
+          );
+        }
+        const pod = proofConfig.pods[podName];
+
+        if (pod === undefined) {
+          throw new ReferenceError(
+            `Tuple ${tupleName} refers to entry ${entryName} in non-existent POD ${podName}.`
+          );
+        }
+
+        const entry = pod.entries[entryName];
+
+        if (entry === undefined) {
+          throw new ReferenceError(
+            `Tuple ${tupleName} refers to non-existent entry ${entryName} in POD ${podName}.`
+          );
+        }
       }
     }
   }
@@ -196,7 +220,6 @@ function checkProofEntryConfig(
   }
 }
 
-// TODO
 export function checkListMembershipInput(
   membershipLists: Record<PODName, PODValue[] | PODValueTuple[]>
 ): Record<PODName, number> {
@@ -436,9 +459,13 @@ export function checkProofInputsForConfig(
 
         for (const element of inputList) {
           const elementType = typeOfEntryOrTuple(element);
-          if (elementType !== comparisonType) {
+          if (!isEqual(elementType, comparisonType)) {
             throw new TypeError(
-              `Membership list ${listName} in input contains element of type ${elementType} while comparison value with identifier ${comparisonId} is of type ${comparisonType}.`
+              `Membership list ${listName} in input contains element of type ${JSON.stringify(
+                elementType
+              )} while comparison value with identifier ${JSON.stringify(
+                comparisonId
+              )} is of type ${JSON.stringify(comparisonType)}.`
             );
           }
         }
@@ -450,7 +477,9 @@ export function checkProofInputsForConfig(
           throw new Error(
             `Comparison value ${JSON.stringify(
               comparisonValue
-            )} corresponding to identifier ${comparisonId} is not a member of list ${listName}.`
+            )} corresponding to identifier ${JSON.stringify(
+              comparisonId
+            )} is not a member of list ${JSON.stringify(listName)}.`
           );
         }
       }
@@ -709,7 +738,9 @@ export function pickCircuitForRequirements(
   }
 
   throw new Error(
-    `There are no circuits with parameters satisfying these requirements: ${circuitReq}`
+    `There are no circuits with parameters satisfying these requirements: ${JSON.stringify(
+      circuitReq
+    )}`
   );
 }
 
