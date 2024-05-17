@@ -20,7 +20,9 @@ import {
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryConfig,
+  GPCProofMembershipListConfig,
   GPCProofObjectConfig,
+  GPCProofTupleConfig,
   PODEntryIdentifier,
   TupleIdentifier
 } from "./gpcTypes";
@@ -62,7 +64,7 @@ export function canonicalizeConfig(
     canonicalPODs[objName] = canonicalizeObjectConfig(objectConfig);
   }
 
-  // Force tuples and membership lists to be sorted by name
+  // Force tuples to be sorted by name
   const tupleConfig = proofConfig.tuples ?? {};
   const sortedTuples = Object.fromEntries(
     Object.keys(tupleConfig)
@@ -73,22 +75,12 @@ export function canonicalizeConfig(
       ])
   );
 
-  const membershipListConfig = proofConfig.membershipLists ?? {};
-  const sortedMembershipLists = Object.fromEntries(
-    Object.keys(membershipListConfig)
-      .sort()
-      .map((listName) => [listName, membershipListConfig[listName]])
-  );
-
   // Forcing circuit name to be present is the only type-level difference
   // between GPCProofConfig and GPCBoundConfig.
   return {
     circuitIdentifier: circuitIdentifier,
     pods: canonicalPODs,
-    ...(proofConfig.tuples !== undefined ? { tuples: sortedTuples } : {}),
-    ...(proofConfig.membershipLists !== undefined
-      ? { membershipLists: sortedMembershipLists }
-      : {})
+    ...(proofConfig.tuples !== undefined ? { tuples: sortedTuples } : {})
   };
 }
 
@@ -118,6 +110,9 @@ function canonicalizeEntryConfig(
     ...(proofEntryConfig.isOwnerID ? { isOwnerID: true } : {}),
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
+      : {}),
+    ...(proofEntryConfig.liesInLists !== undefined
+      ? { liesInLists: proofEntryConfig.liesInLists.sort() }
       : {})
   };
 }
@@ -194,11 +189,11 @@ export function resolvePODEntryIdentifier(
 }
 
 export function resolveTupleIdentifier(
-  tupleIdentifier: TupleIdentifier,
+  tupleIdentifier: PODName,
   pods: Record<PODName, POD>,
-  tuples: Record<TupleIdentifier, PODEntryIdentifier[]>
+  tuples: Record<PODName, GPCProofTupleConfig>
 ): PODValue[] | undefined {
-  const tupleEntries = tuples[tupleIdentifier];
+  const tupleEntries = tuples[tupleIdentifier].entries;
   const resolution = tupleEntries.map((entryId) =>
     resolvePODEntryIdentifier(entryId, pods)
   );
@@ -210,7 +205,7 @@ export function resolveTupleIdentifier(
 export function resolvePODEntryOrTupleIdentifier(
   identifier: PODEntryIdentifier | TupleIdentifier,
   pods: Record<PODName, POD>,
-  tuples: Record<TupleIdentifier, PODEntryIdentifier[]> | undefined
+  tuples: Record<TupleIdentifier, GPCProofTupleConfig> | undefined
 ): PODValue | PODValueTuple | undefined {
   return identifier.slice(0, 6) === "tuple."
     ? ((): PODValue | PODValueTuple | undefined => {
@@ -219,11 +214,7 @@ export function resolvePODEntryOrTupleIdentifier(
             `Identifier ${identifier} refers to tuple but proof configuration does not specify any.`
           );
         } else {
-          return resolveTupleIdentifier(
-            identifier as TupleIdentifier,
-            pods,
-            tuples
-          );
+          return resolveTupleIdentifier(identifier.slice(6), pods, tuples);
         }
       })()
     : resolvePODEntryIdentifier(identifier, pods);
@@ -329,6 +320,12 @@ export type GPCRequirements = {
   merkleMaxDepth: number;
 
   /**
+   * Number of lists to be included in proof.
+   */
+
+  nLists: number;
+
+  /**
    * Number of entries in each membership list to be included in proof.
    */
   nListElements: Record<PODName, number>;
@@ -346,6 +343,7 @@ export function GPCRequirements(
   nObjects: number,
   nEntries: number,
   merkleMaxDepth: number,
+  nLists: number = 0,
   nListElements: Record<PODName, number> = {},
   tupleArities: Record<PODName, number> = {}
 ): GPCRequirements {
@@ -353,9 +351,63 @@ export function GPCRequirements(
     nObjects,
     nEntries,
     merkleMaxDepth,
+    nLists,
     nListElements,
     tupleArities
   };
+}
+
+export function listConfigFromProofConfig(
+  proofConfig: GPCProofConfig
+): GPCProofMembershipListConfig {
+  // Find all [listName, entryID] pairs in proofConfig.pods
+  const entryLists: [PODName, PODEntryIdentifier][] = Object.keys(
+    proofConfig.pods
+  )
+    .map((podName) => {
+      const pod = proofConfig.pods[podName];
+      const listEntryPairs = Object.keys(pod.entries)
+        .map((entryName): [PODName, PODEntryIdentifier][] => {
+          const lists = pod.entries[entryName].liesInLists;
+          return lists === undefined
+            ? []
+            : lists.map((listName): [PODName, PODEntryIdentifier] => [
+                listName,
+                `${podName}.${entryName}`
+              ]);
+        })
+        .flat();
+      return listEntryPairs;
+    })
+    .flat();
+  // Find all [listName, tupleID] pairs in proofConfig.tuples
+  const tupleLists: [PODName, TupleIdentifier][] = Object.keys(
+    proofConfig.tuples ?? {}
+  )
+    .map((tupleName): [PODName, TupleIdentifier][] => {
+      const lists = (proofConfig.tuples ?? {})[tupleName].liesInLists;
+      return lists === undefined
+        ? []
+        : lists.map((listName) => [listName, `tuple.${tupleName}`]);
+    })
+    .flat();
+  // Combine the two and compile config.
+  return entryLists
+    .concat(tupleLists)
+    .reduce(
+      (
+        listConfig: GPCProofMembershipListConfig,
+        listIdPair: [PODName, PODEntryIdentifier]
+      ): GPCProofMembershipListConfig => {
+        const [listName, identifier] = listIdPair;
+        const currentPair = listConfig[listName] ?? [];
+        return {
+          ...listConfig,
+          [listName]: currentPair.concat([identifier])
+        };
+      },
+      {}
+    );
 }
 
 // TODO(POD-P2): Get rid of everything below this line.

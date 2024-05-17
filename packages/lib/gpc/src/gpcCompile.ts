@@ -36,8 +36,8 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
-  dummyListMembership,
-  dummyTuples,
+  checkPODEntryIdentifier,
+  listConfigFromProofConfig,
   makeWatermarkSignal
 } from "./gpcUtil";
 
@@ -178,20 +178,20 @@ function prepCompilerTupleMap<ObjInput extends POD | GPCRevealedObjectClaims>(
   const tupleMap = new Map();
   if (config.tuples !== undefined) {
     let tupleIndex = paramMaxEntries;
-    const tupleNameOrder: TupleIdentifier[] = Object.keys(
+    const tupleNameOrder: PODName[] = Object.keys(
       config.tuples
-    ).sort() as TupleIdentifier[];
+    ).sort() as PODName[];
     for (const tupleName of tupleNameOrder) {
       const tupleConfig = config.tuples[tupleName];
       if (tupleConfig === undefined) {
         throw new Error(`Missing config for tuple ${tupleName}.`);
       }
 
-      if (tupleConfig.length < 2) {
+      if (tupleConfig.entries.length < 2) {
         throw new Error(`Arity of tuple ${tupleName} is less than 2.`);
       }
 
-      const tupleEntryRef: number[] = tupleConfig.map((entryId) => {
+      const tupleEntryRef: number[] = tupleConfig.entries.map((entryId) => {
         const entryIdx = entryMap.get(entryId)?.entryIndex;
 
         if (entryIdx === undefined) {
@@ -212,7 +212,7 @@ function prepCompilerTupleMap<ObjInput extends POD | GPCRevealedObjectClaims>(
 
       tupleIndex += tupleIndices.length;
 
-      tupleMap.set(tupleName, {
+      tupleMap.set(`tuple.${tupleName}`, {
         tupleRef: tupleIndex - 1,
         tupleIndices
       });
@@ -299,8 +299,9 @@ export function compileProofConfig(
   );
 
   // Create subset of inputs for list membership module padded to max size.
+  const listConfig = listConfigFromProofConfig(proofConfig);
   const circuitListMembershipInputs = compileProofListMembership(
-    proofConfig.membershipLists ?? {},
+    listConfig,
     proofInputs.membershipLists ?? {},
     entryMap,
     tupleMap,
@@ -344,7 +345,7 @@ function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
 function compileProofListMembership<
   ObjInput extends POD | GPCRevealedObjectClaims
 >(
-  listConfig: Record<PODName, PODEntryIdentifier | TupleIdentifier>,
+  listConfig: Record<PODName, PODEntryIdentifier[]>,
   listInput: Record<PODName, PODValue[] | PODValueTuple[]>,
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
   tupleMap: Map<TupleIdentifier, CompilerTupleInfo>,
@@ -355,21 +356,30 @@ function compileProofListMembership<
   listComparisonValueIndex: CircuitSignal[];
   listValidValues: CircuitSignal[][];
 } {
-  // Arrange lists alphabetically.
+  // Arrange list names alphabetically.
   const listNameOrder = Object.keys(listConfig).sort();
 
+  // Do the same for the lists of comparison IDs and string them together.
+  const listIdPairs = listNameOrder
+    .map((listName: PODName): [PODName, PODEntryIdentifier][] =>
+      listConfig[listName].sort().map((elementId) => [listName, elementId])
+    )
+    .flat();
+
   // Compile listComparisonValueIndex
-  const unpaddedListComparisonValueIndex = listNameOrder.map((listName) => {
-    const comparisonValueId = listConfig[listName];
+  const unpaddedListComparisonValueIndex = listIdPairs.map((listIdPair) => {
+    const [listName, elementId] = listIdPair;
+
+    const [elementIdPrefix, _] = checkPODEntryIdentifier(listName, elementId);
 
     const idx =
-      comparisonValueId.slice(0, 6) === "tuple."
-        ? tupleMap.get(comparisonValueId as TupleIdentifier)?.tupleRef
-        : entryMap.get(comparisonValueId)?.entryIndex;
+      elementIdPrefix === "tuple."
+        ? tupleMap.get(elementId as TupleIdentifier)?.tupleRef
+        : entryMap.get(elementId)?.entryIndex;
 
     if (idx === undefined) {
       throw new Error(
-        `Missing input for identifier ${comparisonValueId} in membership list ${listName}`
+        `Missing input for identifier ${elementId} in membership list ${listName}`
       );
     }
 
@@ -377,23 +387,25 @@ function compileProofListMembership<
   });
 
   // Compile listValidValues
-  const unpaddedListValidValues = listNameOrder.map((listName) => {
-    const unhashedValues = listInput[listName];
+  const unpaddedListValidValues = listIdPairs
+    .map((pair) => pair[0])
+    .map((listName) => {
+      const unhashedValues = listInput[listName];
 
-    const unpaddedHashedValues = Array.isArray(unhashedValues[0])
-      ? (unhashedValues as PODValueTuple[]).map((elements) =>
-          hashTuple(paramTupleArity, elements)
-        )
-      : (unhashedValues as PODValue[]).map(podValueHash);
+      const unpaddedHashedValues = Array.isArray(unhashedValues[0])
+        ? (unhashedValues as PODValueTuple[]).map((elements) =>
+            hashTuple(paramTupleArity, elements)
+          )
+        : (unhashedValues as PODValue[]).map(podValueHash);
 
-    // Pad the list to its capacity by using the first element of the list, which
-    // is OK because the list is really a set. This also avoids false positives.
-    return padArray(
-      unpaddedHashedValues,
-      paramMaxListElements,
-      unpaddedHashedValues[0]
-    );
-  });
+      // Pad the list to its capacity by using the first element of the list, which
+      // is OK because the list is really a set. This also avoids false positives.
+      return padArray(
+        unpaddedHashedValues,
+        paramMaxListElements,
+        unpaddedHashedValues[0]
+      );
+    });
 
   return {
     // Pad with index -1 (mod p), which is a reference to the value 0.
@@ -723,8 +735,9 @@ export function compileVerifyConfig(
   );
 
   // Create subset of inputs for list membership module padded to max size.
+  const listConfig = listConfigFromProofConfig(verifyConfig);
   const circuitListMembershipInputs = compileProofListMembership(
-    verifyConfig.membershipLists ?? {},
+    listConfig,
     verifyRevealed.membershipLists ?? {},
     entryMap,
     tupleMap,

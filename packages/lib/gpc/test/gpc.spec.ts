@@ -131,12 +131,15 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         pod1: {
           entries: {
             A: { isRevealed: true },
-            E: { isRevealed: false, equalsEntry: "pod1.A" },
+            E: {
+              isRevealed: false,
+              equalsEntry: "pod1.A",
+              liesInLists: ["list1"]
+            },
             owner: { isRevealed: false, isOwnerID: true }
           }
         }
-      },
-      membershipLists: { list1: "pod1.E" }
+      }
     };
     const proofInputs: GPCProofInputs = {
       pods: { pod1 },

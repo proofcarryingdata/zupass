@@ -5,6 +5,9 @@ import {
 } from "@pcd/gpcircuits";
 import {
   POD,
+  PODName,
+  PODValue,
+  PODValueTuple,
   calcMinMerkleDepthForEntries,
   checkPODName,
   checkPODValue,
@@ -25,10 +28,9 @@ import {
   GPCRevealedObjectClaims
 } from "./gpcTypes";
 import {
-  DEFAULT_LIST_ELEMENTS,
-  DEFAULT_TUPLE_ARITIES,
   GPCRequirements,
   checkPODEntryIdentifier,
+  listConfigFromProofConfig,
   resolvePODEntryIdentifier,
   resolvePODEntryOrTupleIdentifier,
   splitCircuitIdentifier,
@@ -99,39 +101,40 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
 
   if (proofConfig.tuples !== undefined) {
     for (const [tupleName, tupleConfig] of Object.entries(proofConfig.tuples)) {
-      if (tupleConfig.length < 2) {
+      if (tupleConfig.entries.length < 2) {
         throw new TypeError(
           `Tuple ${tupleName} specifies invalid tuple configuration. Tuples must have arity at least 2.`
         );
       }
 
-      for (const entryId of tupleConfig) {
+      for (const entryId of tupleConfig.entries) {
         checkPODEntryIdentifier(tupleName, entryId);
       }
     }
   }
 
-  if (proofConfig.membershipLists !== undefined) {
-    for (const [listName, listConfig] of Object.entries(
-      proofConfig.membershipLists
-    )) {
-      // TODO: checkEntryOrTupleIdentifier? Do we really need
-      // a TupleIdentifier type?
-      checkPODEntryIdentifier(listName, listConfig);
+  const listConfig = listConfigFromProofConfig(proofConfig);
+
+  if (Object.keys(listConfig).length > 0) {
+    for (const [listName, elements] of Object.entries(listConfig)) {
+      elements.forEach((identifier) =>
+        checkPODEntryIdentifier(listName, identifier)
+      );
     }
   }
 
+  const numLists = Object.values(listConfig)
+    .map((elements) => elements.length)
+    .reduce((len, multiplicity) => len + multiplicity, 0);
+
   const numListElements = Object.fromEntries(
-    Object.keys(proofConfig.membershipLists ?? {}).map((listName) => [
-      listName,
-      2
-    ])
+    Object.keys(listConfig).map((listName) => [listName, 2])
   );
 
   const tupleArities = Object.fromEntries(
     Object.entries(proofConfig.tuples ?? {}).map((pair) => [
       pair[0],
-      pair[1].length
+      pair[1].entries.length
     ])
   );
 
@@ -139,6 +142,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
+    numLists,
     numListElements,
     tupleArities
   );
@@ -192,6 +196,39 @@ function checkProofEntryConfig(
   }
 }
 
+// TODO
+export function checkListMembershipInput(
+  membershipLists: Record<PODName, PODValue[] | PODValueTuple[]>
+): Record<PODName, number> {
+  const numListElements = Object.fromEntries(
+    Object.entries(membershipLists).map((pair) => [pair[0], pair[1].length])
+  );
+
+  // All lists of valid values must have at least two elements.
+  for (const [listName, listLength] of Object.entries(numListElements)) {
+    if (listLength < 2) {
+      throw new Error(
+        `Membership list ${listName} does not contain at least two elements.`
+      );
+    }
+  }
+
+  // All lists should be type homogeneous.
+  for (const [listName, validValueList] of Object.entries(membershipLists)) {
+    const expectedType = typeOfEntryOrTuple(validValueList[0]);
+    for (const value of validValueList.slice(1)) {
+      const valueType = typeOfEntryOrTuple(value);
+      if (!isEqual(valueType, expectedType)) {
+        throw new TypeError(
+          `Membership list ${listName} in input has a type mismatch: It contains an element of type ${expectedType} and one of type ${valueType}.`
+        );
+      }
+    }
+  }
+
+  return numListElements;
+}
+
 /**
  * Checks the validity of a proof inputs, throwing if they are invalid.
  *
@@ -234,12 +271,10 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     }
   }
 
-  const numListElements = Object.fromEntries(
-    Object.entries(proofInputs.membershipLists ?? {}).map((pair) => [
-      pair[0],
-      pair[1].length
-    ])
-  );
+  const numListElements =
+    proofInputs.membershipLists === undefined
+      ? {}
+      : checkListMembershipInput(proofInputs.membershipLists);
 
   if (proofInputs.watermark !== undefined) {
     checkPODValue("watermark", proofInputs.watermark);
@@ -249,6 +284,7 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     totalObjects,
     totalObjects,
     requiredMerkleDepth,
+    0,
     numListElements,
     {}
   );
@@ -358,73 +394,65 @@ export function checkProofInputsForConfig(
   }
 
   // Config and input list membership checks should have the same list names.
-  const configListNames = new Set(
-    Object.keys(proofConfig.membershipLists ?? {})
-  );
+  const listConfig = listConfigFromProofConfig(proofConfig);
+  const configListNames = new Set(Object.keys(listConfig));
   const inputListNames = new Set(
     Object.keys(proofInputs.membershipLists ?? {})
   );
   if (!isEqual(configListNames, inputListNames)) {
     throw new Error(
       `Config and input list name mismatch.` +
-        `  Configuration expects list names ${configListNames}.` +
-        `  Input contains ${inputListNames}.`
+        `  Configuration expects list names ${JSON.stringify(
+          Array.from(configListNames)
+        )}.` +
+        `  Input contains ${JSON.stringify(Array.from(inputListNames))}.`
     );
   }
 
-  // The list membership check's input list should be well formed (i.e. contain
-  // at least 2 elements) and the config and input list membership checks should
-  // have the same comparison value types.
-  if (
-    proofConfig.membershipLists !== undefined &&
-    proofInputs.membershipLists !== undefined
-  ) {
-    for (const [listName, comparisonId] of Object.entries(
-      proofConfig.membershipLists
-    )) {
-      const inputList = proofInputs.membershipLists[listName];
-      // The list of valid values must contain at least two elements.
-      if (inputList.length < 2) {
-        throw new Error(
-          `Membership list ${listName} does not contain at least two elements.`
+  // The list membership check's input list should be well formed in the sense
+  // that the types of valid list values and comparison values should all match
+  // up.
+  if (proofInputs.membershipLists !== undefined) {
+    for (const [listName, comparisonIds] of Object.entries(listConfig)) {
+      for (const comparisonId of comparisonIds) {
+        const inputList = proofInputs.membershipLists[listName];
+        // The entry value identifiers in the membership list config should
+        // exist in the input PODs and the configuration and input list element
+        // types should agree. Moreover, the comparison value should lie in the
+        // membership list.
+        const comparisonValue = resolvePODEntryOrTupleIdentifier(
+          comparisonId,
+          proofInputs.pods,
+          proofConfig.tuples
         );
-      }
-      // The entry value identifiers in the membership list config should
-      // exist in the input PODs and the configuration and input list element
-      // types should agree. Moreover, the comparison value should lie in the
-      // membership list.
-      const comparisonValue = resolvePODEntryOrTupleIdentifier(
-        comparisonId,
-        proofInputs.pods,
-        proofConfig.tuples
-      );
 
-      if (comparisonValue === undefined) {
-        throw new ReferenceError(
-          `Comparison value with identifier ${comparisonId} should be a member of list ${listName} but it doesn't exist in the proof input.`
-        );
-      }
-
-      const comparisonType = typeOfEntryOrTuple(comparisonValue);
-
-      for (const element of inputList) {
-        const elementType = typeOfEntryOrTuple(element);
-        if (elementType !== comparisonType) {
-          throw new TypeError(
-            `Membership list ${listName} in input contains element of type ${elementType} while comparison value with identifier ${comparisonId} is of type ${comparisonType}.`
+        if (comparisonValue === undefined) {
+          throw new ReferenceError(
+            `Comparison value with identifier ${comparisonId} should be a member of list ${listName} but it doesn't exist in the proof input.`
           );
         }
-      }
 
-      if (
-        inputList.find((element) => isEqual(element, comparisonValue)) ===
-        undefined
-      ) {
-        throw new Error(
-          `Comparison value ${JSON.stringify(
-            comparisonValue
-          )} corresponding to identifier ${comparisonId} is not a member of list ${listName}.`
-        );
+        const comparisonType = typeOfEntryOrTuple(comparisonValue);
+
+        for (const element of inputList) {
+          const elementType = typeOfEntryOrTuple(element);
+          if (elementType !== comparisonType) {
+            throw new TypeError(
+              `Membership list ${listName} in input contains element of type ${elementType} while comparison value with identifier ${comparisonId} is of type ${comparisonType}.`
+            );
+          }
+        }
+
+        if (
+          inputList.find((element) => isEqual(element, comparisonValue)) ===
+          undefined
+        ) {
+          throw new Error(
+            `Comparison value ${JSON.stringify(
+              comparisonValue
+            )} corresponding to identifier ${comparisonId} is not a member of list ${listName}.`
+          );
+        }
       }
     }
   }
@@ -512,6 +540,11 @@ export function checkRevealedClaims(
     );
   }
 
+  const numListElements =
+    revealedClaims.membershipLists === undefined
+      ? {}
+      : checkListMembershipInput(revealedClaims.membershipLists);
+
   if (revealedClaims.watermark !== undefined) {
     checkPODValue("watermark", revealedClaims.watermark);
   }
@@ -520,11 +553,11 @@ export function checkRevealedClaims(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
-    DEFAULT_LIST_ELEMENTS,
-    DEFAULT_TUPLE_ARITIES
+    0,
+    numListElements,
+    {}
   );
 }
-
 function checkRevealedObjectClaims(
   nameForErrorMessages: string,
   objClaims: GPCRevealedObjectClaims
@@ -638,7 +671,23 @@ export function checkVerifyClaimsForConfig(
       }
     }
   }
-  // TODO(POD-P2): List membership claims
+
+  // Config and input list membership checks should have the same list names.
+  const { circuitIdentifier: _, ...proofConfig } = boundConfig;
+  const listConfig = listConfigFromProofConfig(proofConfig);
+  const configListNames = new Set(Object.keys(listConfig));
+  const inputListNames = new Set(
+    Object.keys(revealedClaims.membershipLists ?? {})
+  );
+  if (!isEqual(configListNames, inputListNames)) {
+    throw new Error(
+      `Config and input list name mismatch.` +
+        `  Configuration expects list names ${JSON.stringify(
+          Array.from(configListNames)
+        )}.` +
+        `  Input contains ${JSON.stringify(Array.from(inputListNames))}.`
+    );
+  }
 }
 
 /**
@@ -721,6 +770,7 @@ export function mergeRequirements(
     Math.max(rs1.nObjects, rs2.nObjects),
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
+    Math.max(rs1.nLists, rs2.nLists),
     Object.fromEntries(
       Object.keys(rs2.nListElements).map((listName) => [
         listName,

@@ -69,6 +69,8 @@ export type GPCProofEntryConfig = {
    */
   equalsEntry?: PODEntryIdentifier;
 
+  liesInLists?: PODName[];
+
   // TODO(POD-P3): Constraints on entry values can go here.  Lower/upper bounds,
   // comparison to constant, etc.
   // TODO(POD-P3): Think about where to represent "filtering" inputs in
@@ -103,19 +105,29 @@ export type GPCProofObjectConfig = {
 };
 
 /**
- * GPCProofConfig for a single list membership check, the list itself containing
- * either admissible values for a single object entry or a tuple of admissible
- * values for a tuple of object entries. This configuration specifies the object
- * entry or tuple of object entries that should lie in this list as well as the
- * maximum expected size of this list.
+ * GPCProofConfig for a single tuple, specifying which entries lie in the tuple
+ * and which membership lists the tuple lies in.
  */
-export type GPCProofListMembershipConfig = {
+export type GPCProofTupleConfig = {
   /**
-   * The entry identifier of the value that should lie in this membership list
-   * or a tuple thereof.
+   * Identifiers of the POD entries that form the tuple (in order).
    */
-  comparisonIdentifier: PODEntryIdentifier | TupleIdentifier;
+  entries: PODEntryIdentifier[];
+
+  /**
+   * The lists the tuple must be a member of.
+   */
+  liesInLists?: PODName[];
 };
+
+/**
+ * Configuration for named lists, specifying which entries (or tuple entries)
+ * lie in the list. This is deduced from the proof configuration.
+ */
+export type GPCProofMembershipListConfig = Record<
+  PODName,
+  PODEntryIdentifier[]
+>;
 
 /**
  * Contains the specific constraints to be proven in a GPC proof.  GPC
@@ -162,16 +174,11 @@ export type GPCProofConfig = {
   pods: Record<PODName, GPCProofObjectConfig>;
 
   /**
-   * Defines named tuples of POD entries. These tuples must be of arity
-   * (i.e. size/width) at least 2.
+   * Defines named tuples of POD entries. The tuples' names lie in a separate
+   * namespace and are internally prefixed with 'tuple.'. These tuples must be
+   * of arity (i.e. size/width) at least 2.
    */
-  tuples?: Record<TupleIdentifier, PODEntryIdentifier[]>;
-
-  /**
-   * Characterises named membership lists in terms of POD entry values (or
-   * tuples thereof) that must lie in each list.
-   */
-  membershipLists?: Record<PODName, PODEntryIdentifier | TupleIdentifier>;
+  tuples?: Record<PODName, GPCProofTupleConfig>;
 };
 
 /**
