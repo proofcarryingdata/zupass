@@ -328,6 +328,19 @@ const TextContainer = styled.div`
 `;
 
 function PlaceholderBallot() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setVisible(true);
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  if (!visible) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col space-y-3">
       <Skeleton className="h-16 w-full" />

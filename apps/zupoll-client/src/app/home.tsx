@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { LoginState } from "../types";
 import {
   getAndDeletePreLoginRouteFromLocalStorage,
@@ -14,6 +14,7 @@ import { MainScreen } from "./main/MainScreen";
 export function HomePage() {
   const router = useRouter();
   const query = useSearchParams();
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     // Check if the query parameter exists
@@ -39,7 +40,8 @@ export function HomePage() {
 
   let content = <></>;
 
-  if (!isLoading && !loginState) {
+  if (redirecting) {
+  } else if (!isLoading && !loginState) {
     content = (
       <LoginScreen
         title="This app lets Zupass users vote anonymously."
@@ -47,10 +49,9 @@ export function HomePage() {
         onLogin={(state: LoginState) => {
           replaceLoginState(state);
           removeQueryParameters();
-          setTimeout(() => {
-            window.location.href =
-              getAndDeletePreLoginRouteFromLocalStorage() ?? "/";
-          });
+          setRedirecting(true);
+          window.location.href =
+            getAndDeletePreLoginRouteFromLocalStorage() ?? "/";
         }}
       />
     );
