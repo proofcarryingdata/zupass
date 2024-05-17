@@ -1,1 +1,2 @@
-export * from "./publicKeys";
+export * from "./privateKey";
+export * from "./publicKey";

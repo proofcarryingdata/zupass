@@ -1,25 +1,18 @@
+import { decodePublicKey, encodePublicKey } from "@pcd/eddsa-crypto";
 import { fromHexString, toHexString } from "@pcd/util";
-import { Point } from "@zk-kit/baby-jubjub";
 import {
   Signature,
   derivePublicKey,
-  packPublicKey,
   packSignature,
   signMessage,
-  unpackPublicKey,
   unpackSignature,
   verifySignature
 } from "@zk-kit/eddsa-poseidon";
-import { BigNumber, leBigIntToBuffer, leBufferToBigInt } from "@zk-kit/utils";
 import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import { PODValue } from "./podTypes";
-import {
-  checkPrivateKeyFormat,
-  checkPublicKeyFormat,
-  checkSignatureFormat
-} from "./podUtil";
+import { checkPrivateKeyFormat, checkSignatureFormat } from "./podUtil";
 
 /**
  * Calculates the appropriate hash for a POD value represented as a string,
@@ -95,30 +88,6 @@ export function encodePrivateKey(rawPrivateKey: Uint8Array): string {
  */
 export function decodePrivateKey(privateKey: string): Buffer {
   return fromHexString(checkPrivateKeyFormat(privateKey));
-}
-
-/**
- * Encodes an EdDSA public key into a compact string represenation.  The output
- * is 32 bytes, represented as 64 hex digits.
- */
-export function encodePublicKey(rawPublicKey: Point<BigNumber>): string {
-  return toHexString(leBigIntToBuffer(packPublicKey(rawPublicKey), 32));
-}
-
-/**
- * Decodes a public key packed by {@encodePublicKey}.  The input must be
- * 32 bytes, represented as 64 hex digits.
- *
- * @throws TypeError if the public key format is incorrect.
- */
-export function decodePublicKey(publicKey: string): Point<bigint> {
-  const rawPublicKey = unpackPublicKey(
-    leBufferToBigInt(fromHexString(checkPublicKeyFormat(publicKey)))
-  );
-  if (rawPublicKey === null) {
-    throw new TypeError(`Invalid packed public key point ${publicKey}.`);
-  }
-  return rawPublicKey;
 }
 
 /**

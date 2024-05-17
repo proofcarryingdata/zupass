@@ -27,6 +27,7 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
+    "@pcd/eddsa-crypto": "0.0.1",
     "@pcd/gpcircuits": "0.1.0",
     "@pcd/pod": "0.1.0",
     "@pcd/util": "0.5.0",

@@ -23,7 +23,7 @@
 </p>
 
 | This package defines a PCD designed to verify the authenticity of an event ticket signed using an EdDSA key. It is used in production for Devconnect and Zuconnect events. |
-| ------------------------------------------------------------------------------------------------------------ |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 
 ## 🛠 Install
 
@@ -44,7 +44,7 @@ yarn add @pcd/eddsa-ticket-pcd
 ### Prove
 
 ```javascript
-import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd"
+import { newEdDSAPrivateKey } from "@pcd/eddsa-crypto"
 import { ITicketData, prove } from "@pcd/eddsa-ticket-pcd"
 import { ArgumentTypeName } from "@pcd/pcd-types"
 import { v4 as uuid } from "uuid";
@@ -128,28 +128,28 @@ EdDSATicketPCD {
 In most cases, verifying the validity of the PCD with the 'verify' function is not enough. It may also be necessary to ensure that the parameters of the ticket, such as the productId and eventId, match the expected values, and that the public key of the entity that signed the ticket is indeed the authority for that event.
 
 ```javascript
-import { verify } from "@pcd/eddsa-ticket-pcd"
+import { verify } from "@pcd/eddsa-ticket-pcd";
 
-const isValid = await verify(pcd)
+const isValid = await verify(pcd);
 
-console.log(isValid) // true
+console.log(isValid); // true
 
 // Other possible checks.
-pcd.claim.ticket.productId === expectedProductId
-pcd.claim.ticket.eventId === expectedEventId
-pcd.claim.ticket.eventId === expectedEventId
-pcd.proof.eddsaPCD.claim.publicKey[0] === expectedPublicKey[0]
-pcd.proof.eddsaPCD.claim.publicKey[1] === expectedPublicKey[1]
+pcd.claim.ticket.productId === expectedProductId;
+pcd.claim.ticket.eventId === expectedEventId;
+pcd.claim.ticket.eventId === expectedEventId;
+pcd.proof.eddsaPCD.claim.publicKey[0] === expectedPublicKey[0];
+pcd.proof.eddsaPCD.claim.publicKey[1] === expectedPublicKey[1];
 ```
 
 ### Serialize
 
 ```javascript
-import { serialize } from "@pcd/eddsa-ticket-pcd"
+import { serialize } from "@pcd/eddsa-ticket-pcd";
 
-const serialized = await serialize(pcd)
+const serialized = await serialize(pcd);
 
-console.log(serialized)
+console.log(serialized);
 /*
 {
   type: 'eddsa-ticket-pcd',
@@ -161,11 +161,11 @@ console.log(serialized)
 ### Deserialize
 
 ```javascript
-import { deserialize } from "@pcd/eddsa-ticket-pcd"
+import { deserialize } from "@pcd/eddsa-ticket-pcd";
 
-const deserialized = await deserialize(serialized.pcd)
+const deserialized = await deserialize(serialized.pcd);
 
-console.log(deserialized)
+console.log(deserialized);
 /*
 EdDSATicketPCD {
   type: 'eddsa-ticket-pcd',

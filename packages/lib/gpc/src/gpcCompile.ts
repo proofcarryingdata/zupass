@@ -1,3 +1,4 @@
+import { decodePublicKey } from "@pcd/eddsa-crypto";
 import {
   CircuitSignal,
   EntryModuleInputs,
@@ -17,7 +18,6 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
-  decodePublicKey,
   decodeSignature,
   podNameHash,
   podValueHash

@@ -1,9 +1,9 @@
 import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
-  isEqualEdDSAPublicKey
+  isEqualEdDSAPublicKey,
+  newEdDSAPrivateKey
 } from "@pcd/eddsa-crypto";
-import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   PODBOX_CREDENTIAL_REQUEST,

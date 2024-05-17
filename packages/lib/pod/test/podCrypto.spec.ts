@@ -1,8 +1,10 @@
 import {
-  EdDSAPCDPackage,
+  decodePublicKey,
+  encodePublicKey,
   getEdDSAPublicKey,
   publicKeyToArrayFormat
-} from "@pcd/eddsa-pcd";
+} from "@pcd/eddsa-crypto";
+import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { BABY_JUB_NEGATIVE_ONE, fromHexString } from "@pcd/util";
 import { r as BABY_JUB_MODULUS, Point } from "@zk-kit/baby-jubjub";
@@ -20,10 +22,8 @@ import {
   checkPublicKeyFormat,
   checkSignatureFormat,
   decodePrivateKey,
-  decodePublicKey,
   decodeSignature,
   encodePrivateKey,
-  encodePublicKey,
   encodeSignature,
   podIntHash,
   podMerkleTreeHash,

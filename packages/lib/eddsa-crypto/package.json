@@ -27,6 +27,7 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
+    "@pcd/util": "0.5.0",
     "@zk-kit/baby-jubjub": "1.0.0-beta",
     "@zk-kit/eddsa-poseidon": "1.0.0-beta",
     "@zk-kit/utils": "1.0.0-beta",
