@@ -1,6 +1,8 @@
 import { LoginConfig } from "@pcd/zupoll-shared";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { LOGIN_GROUPS } from "./api/loginGroups";
+import { redirectForLogin } from "./app/login/LoginButton";
 import { LoginState } from "./types";
 
 const ACCESS_TOKEN_KEY = "access_token";
@@ -76,16 +78,14 @@ export function useSavedLoginState(router: AppRouterInstance): SavedLoginState {
   const logout: SavedLoginState["logout"] = useCallback(
     (ballotURL?: string, configId?: string, ballotConfigId?: string) => {
       saveLoginStateToLocalStorage(undefined);
-      setTimeout(() => {
-        savePreLoginRouteToLocalStorage(window.location.href);
-        window.location.href = `/?${new URLSearchParams(
-          Object.assign(
-            {} as any,
-            ballotConfigId ? { ballotConfigId } : {},
-            configId ? { configId } : {}
-          )
-        )}`;
-      });
+      savePreLoginRouteToLocalStorage(window.location.href);
+      const group = LOGIN_GROUPS.find((g) => g.category === configId);
+      const loginConfig = group?.configs.find((c) => c.name === ballotConfigId);
+      if (loginConfig) {
+        redirectForLogin(loginConfig);
+      } else {
+        window.location.href = "/";
+      }
     },
     []
   );
