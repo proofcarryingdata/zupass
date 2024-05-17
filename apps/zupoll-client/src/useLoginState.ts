@@ -39,10 +39,14 @@ export function loadLoginStateFromLocalStorage(): LoginState | undefined {
 export function clearLoginStateFromLocalStorage(): void {
   let preloginRoute = getPreloginRouteFromLocalStorage();
   let pendingVote = localStorage.getItem("pending-vote");
+  let voted = localStorage.getItem("voted");
   localStorage.clear();
   savePreLoginRouteToLocalStorage(preloginRoute);
   if (pendingVote) {
     localStorage.setItem("pending-vote", pendingVote);
+  }
+  if (voted) {
+    localStorage.setItem("voted", voted);
   }
 }
 

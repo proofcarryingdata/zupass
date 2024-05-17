@@ -201,14 +201,6 @@ export function useBallotVoting({
   ]);
 
   const createBallotVotePCD = useCallback(async () => {
-    // if (!loginState) {
-    //   onError({
-    //     title: "Not Logged In",
-    //     message: "Log in to vote"
-    //   } satisfies ZupollError);
-    //   return;
-    // }
-
     if (pollToVote.size === 0) {
       onError({
         title: "Empty Ballot",

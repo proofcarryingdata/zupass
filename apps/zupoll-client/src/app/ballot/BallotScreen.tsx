@@ -6,12 +6,11 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { tryParse } from "@pcd/util";
 import { RedirectConfig } from "@pcd/zupoll-shared";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { ContentContainer } from "../../@/components/ui/Elements";
 import { AppHeader } from "../../@/components/ui/Headers";
 import { Title } from "../../@/components/ui/text";
-import { LOGIN_GROUPS } from "../../api/loginGroups";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotPollResponse, PollWithCounts } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
@@ -73,7 +72,6 @@ export function BallotScreen({
       if (res.status === 403) {
         const resErr = await res.text();
         const resValue = tryParse<RedirectConfig>(resErr);
-
         const err: ZupollError = {
           title: "Login to view this poll",
           message: `To view this poll, you should log in via Zupass. Click 'Login' below to continue.`,
@@ -217,26 +215,6 @@ export function BallotScreen({
   });
 
   const isHackathonView = !!polls.find((p) => p.options.length >= 6);
-
-  const userHasPermsToVote = useMemo<boolean>(() => {
-    if (!ballot || !loginState) return false;
-
-    for (const config of LOGIN_GROUPS.flatMap((g) => g.configs)) {
-      for (const ballotConfig of config.ballotConfigs ?? []) {
-        for (const ballotVoterUrl of ballot.voterSemaphoreGroupUrls) {
-          if (
-            ballotVoterUrl.startsWith(ballotConfig.voterGroupUrl) &&
-            loginState.config.name === config.name
-          ) {
-            return true;
-          }
-        }
-      }
-    }
-
-    return false;
-  }, [ballot, loginState]);
-
   const canVote = !votedOn(ballotId) && !expired;
 
   return (
@@ -284,7 +262,7 @@ export function BallotScreen({
             })}
           </div>
 
-          {canVote && !(isHackathonView && polls.length === 1) && true && (
+          {canVote && !(isHackathonView && polls.length === 1) && (
             <>
               <DividerWithText></DividerWithText>
               <Button
@@ -302,30 +280,6 @@ export function BallotScreen({
               </TextContainer>
             </>
           )}
-
-          {/* {!loginState && (
-            <Button
-              variant={"creative"}
-              className="w-full"
-              onClick={() => {
-                savePreLoginRouteToLocalStorage(window.location.href);
-                saveLoginStateToLocalStorage(undefined);
-
-                const loginConfig = findConfigForVoterUrl(
-                  LOGIN_GROUPS.flatMap((g) => g.configs),
-                  ballot.voterSemaphoreGroupUrls
-                );
-
-                if (loginConfig) {
-                  redirectForLogin(loginConfig);
-                } else {
-                  window.location.href = "/";
-                }
-              }}
-            >
-              Log In to Vote
-            </Button>
-          )} */}
         </div>
       )}
 

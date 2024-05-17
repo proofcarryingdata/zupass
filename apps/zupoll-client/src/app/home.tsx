@@ -41,6 +41,7 @@ export function HomePage() {
   let content = <></>;
 
   if (redirecting) {
+    content = <></>;
   } else if (!isLoading && !loginState) {
     content = (
       <LoginScreen
