@@ -3,7 +3,8 @@ import {
   ProtoPODGPC,
   ProtoPODGPCCircuitDesc,
   githubDownloadRootURL,
-  gpcArtifactPaths
+  gpcArtifactPaths,
+  unpkgDownloadRootURL
 } from "@pcd/gpcircuits";
 import { Groth16Proof } from "snarkjs";
 import urljoin from "url-join";
@@ -205,8 +206,10 @@ export type GPCArtifactVersion = string | undefined;
  * Forms a URL for downloading GPC artifacts depending on configuration
  *
  * @param source the download source location
- * @param stability the stability level (test or prod) of artifacts to seek
- * @param version the version identifier for circuit artifacts
+ * @param stability the stability level (test or prod) of artifacts to seek.
+ *   Ignored in some sources in favor of the version.
+ * @param version the version identifier for circuit artifacts.  Not relevant
+ *   to some sources which host only a single version.
  * @param zupassURL the base URL for Zupass, if used as a download option.
  *   Can be an empty string to use a relative URL (within the Zupass app).
  * @returns a root URL to download GPC artifacts, as needed for {@link gpcProve}
@@ -224,17 +227,26 @@ export function gpcArtifactDownloadURL(
 
   switch (source) {
     case "github":
+      const REPO_NAME = "proofcarryingdata/snark-artifacts";
       if (stability !== "test") {
         // TODO(POD-P1): Implement prod artifact download options.
         throw new Error("GitHub prod artifact download not yet implemented.");
       }
-      if (version == undefined || version === "") {
+      if (version === undefined || version === "") {
         throw new Error("GitHub artifact download requires a version.");
       }
-      return githubDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
+      return githubDownloadRootURL(
+        REPO_NAME,
+        PROTO_POD_GPC_FAMILY_NAME,
+        version
+      );
     case "unpkg":
-      // TODO(POD-P1): Implement NPM package download via unpkg.
-      throw new Error("Unpkg download not yet implemented.");
+      if (version === undefined || version === "") {
+        throw new Error("unpkg artifact download requires a version.");
+      }
+      // stability is intentionally ignored.  NPM version can encode
+      // pre-release status.
+      return unpkgDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
     case "zupass":
       return urljoin(
         zupassURL,

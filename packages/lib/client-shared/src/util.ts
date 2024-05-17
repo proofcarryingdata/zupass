@@ -20,9 +20,9 @@ export function parseGPCArtifactsConfig(
 ): GPCArtifactsConfigEnv {
   console.log("[ART_DBG]", envConfig);
   const defaultConfig = {
-    source: "zupass",
-    stability: "prod",
-    version: undefined
+    source: "unpkg", // ART_DBG: "zupass",
+    stability: "test", // ART_DBG: "prod",
+    version: "0.0.2" // ART_DBG: undefined
   };
   if (
     envConfig === undefined ||

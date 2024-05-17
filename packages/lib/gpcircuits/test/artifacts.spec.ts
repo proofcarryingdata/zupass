@@ -53,11 +53,13 @@ describe("artifact URL helpers should work", function () {
   });
 
   it("githubDownloadRootURL should work", async () => {
-    expect(githubDownloadRootURL("family1", "rev2")).to.eq(
-      "https://raw.githubusercontent.com/proofcarryingdata/snark-artifacts/rev2/packages/family1"
+    expect(githubDownloadRootURL("repo0", "family1", "rev2")).to.eq(
+      "https://raw.githubusercontent.com/repo0/rev2/packages/family1"
     );
-    expect(githubDownloadRootURL("family/path1", "rev/path2")).to.eq(
-      "https://raw.githubusercontent.com/proofcarryingdata/snark-artifacts/rev/path2/packages/family/path1"
+    expect(
+      githubDownloadRootURL("repo/path0", "family/path1", "rev/path2")
+    ).to.eq(
+      "https://raw.githubusercontent.com/repo/path0/rev/path2/packages/family/path1"
     );
   });
 });
