@@ -20,3 +20,23 @@ export function getPodboxConfigs(
     ...ETH_BERLIN_CONFIG
   ];
 }
+
+export interface RedirectConfig {
+  categoryId: string;
+  configName: string;
+}
+
+export function findConfigForVoterUrl(
+  configs: LoginConfig[],
+  voterUrls: string[]
+): LoginConfig | undefined {
+  for (const config of configs.reverse()) {
+    for (const ballotConfig of config.ballotConfigs ?? []) {
+      for (const ballotVoterUrl of voterUrls) {
+        if (ballotVoterUrl.startsWith(ballotConfig.voterGroupUrl)) {
+          return config;
+        }
+      }
+    }
+  }
+}

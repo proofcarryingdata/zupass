@@ -1,4 +1,8 @@
-import { getPodboxConfigs } from "@pcd/zupoll-shared";
+import {
+  RedirectConfig,
+  findConfigForVoterUrl,
+  getPodboxConfigs
+} from "@pcd/zupoll-shared";
 import express, { NextFunction, Request, Response } from "express";
 import { ApplicationContext } from "../../application";
 import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../../env";
@@ -155,17 +159,16 @@ export function initAuthedRoutes(
                 ZUPASS_SERVER_URL
               );
 
-              for (const config of configs) {
-                for (const ballotConfig of config.ballotConfigs ?? []) {
-                  for (const ballotVoterUrl of ballot.voterSemaphoreGroupUrls) {
-                    if (ballotVoterUrl.startsWith(ballotConfig.voterGroupUrl)) {
-                      return res.status(403).json({
-                        categoryId: config.configCategoryId,
-                        configName: config.name
-                      });
-                    }
-                  }
-                }
+              const config = findConfigForVoterUrl(
+                configs,
+                ballot.voterSemaphoreGroupUrls
+              );
+
+              if (config) {
+                return res.status(403).json({
+                  categoryId: config.configCategoryId,
+                  configName: config.name
+                } satisfies RedirectConfig);
               }
 
               return res.status(403).json({
@@ -240,17 +243,16 @@ function getRedirectInfo(
 ): LoginRedirectInfo | undefined {
   const configs = getPodboxConfigs(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL);
 
-  for (const config of configs) {
-    for (const ballotConfig of config.ballotConfigs ?? []) {
-      for (const ballotVoterUrl of ballot.voterSemaphoreGroupUrls) {
-        if (ballotVoterUrl.startsWith(ballotConfig.voterGroupUrl)) {
-          return {
-            categoryId: config.configCategoryId,
-            configName: config.name
-          } satisfies LoginRedirectInfo;
-        }
-      }
-    }
+  const loginConfig = findConfigForVoterUrl(
+    configs,
+    ballot.voterSemaphoreGroupUrls
+  );
+
+  if (loginConfig) {
+    return {
+      categoryId: loginConfig.configCategoryId,
+      configName: loginConfig.name
+    } satisfies LoginRedirectInfo;
   }
 }
 

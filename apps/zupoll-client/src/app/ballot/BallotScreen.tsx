@@ -4,19 +4,25 @@ import ErrorDialog from "@/components/ui/ErrorDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { tryParse } from "@pcd/util";
+import { RedirectConfig, findConfigForVoterUrl } from "@pcd/zupoll-shared";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { ContentContainer } from "../../@/components/ui/Elements";
 import { AppHeader } from "../../@/components/ui/Headers";
 import { Title } from "../../@/components/ui/text";
+import { LOGIN_GROUPS } from "../../api/loginGroups";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotPollResponse, PollWithCounts } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
-import { SavedLoginState } from "../../useLoginState";
+import {
+  SavedLoginState,
+  savePreLoginRouteToLocalStorage
+} from "../../useLoginState";
 import { fmtTimeAgo, fmtTimeFuture } from "../../util";
 import { listBallotPolls } from "../../zupoll-server-api";
 import { DividerWithText } from "../create-ballot/DividerWithText";
+import { redirectForLogin } from "../login/LoginButton";
 import { LoggedInAs } from "../main/LoggedInAs";
 import { BallotPoll } from "./BallotPoll";
 import { getBallotVotes, useBallotVoting, votedOn } from "./useBallotVoting";
@@ -70,10 +76,7 @@ export function BallotScreen({
 
       if (res.status === 403) {
         const resErr = await res.text();
-        const resValue = tryParse<{
-          categoryId: string;
-          configName: string;
-        }>(resErr);
+        const resValue = tryParse<RedirectConfig>(resErr);
 
         const err: ZupollError = {
           title: "Login to view this poll",
@@ -298,7 +301,17 @@ export function BallotScreen({
               variant={"creative"}
               className="w-full"
               onClick={() => {
-                window.location.href = "/";
+                const loginConfig = findConfigForVoterUrl(
+                  LOGIN_GROUPS.flatMap((g) => g.configs),
+                  ballot.voterSemaphoreGroupUrls
+                );
+
+                if (loginConfig) {
+                  savePreLoginRouteToLocalStorage(window.location.href);
+                  redirectForLogin(loginConfig);
+                } else {
+                  window.location.href = "/";
+                }
               }}
             >
               Log In to Vote
