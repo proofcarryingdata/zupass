@@ -1,4 +1,7 @@
 import {
+  GPCArtifactSource,
+  GPCArtifactStability,
+  GPCArtifactVersion,
   GPCBoundConfig,
   deserializeGPCProofConfig,
   gpcArtifactDownloadURL,
@@ -21,12 +24,7 @@ import _ from "lodash";
 import { useEffect, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import {
-  GPC_ARTIFACT_SOURCE,
-  GPC_ARTIFACT_STABILITY,
-  GPC_ARTIFACT_VERSION,
-  ZUPASS_URL
-} from "../../constants";
+import { GPC_ARTIFACT_CONFIG, ZUPASS_URL } from "../../constants";
 import { EXAMPLE_GPC_CONFIG } from "../../podExampleConstants";
 
 export default function Page(): JSX.Element {
@@ -256,9 +254,9 @@ async function verifyProof(
   const { init, verify } = GPCPCDPackage;
   await init?.({
     zkArtifactPath: gpcArtifactDownloadURL(
-      GPC_ARTIFACT_SOURCE,
-      GPC_ARTIFACT_STABILITY,
-      GPC_ARTIFACT_VERSION,
+      GPC_ARTIFACT_CONFIG.source as GPCArtifactSource,
+      GPC_ARTIFACT_CONFIG.stability as GPCArtifactStability,
+      GPC_ARTIFACT_CONFIG.version as GPCArtifactVersion,
       ZUPASS_URL
     )
   });

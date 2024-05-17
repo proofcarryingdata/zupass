@@ -1,9 +1,15 @@
+import { parseGPCArtifactsConfig } from "@pcd/client-shared";
 import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
-import { gpcArtifactDownloadURL } from "@pcd/gpc";
+import {
+  GPCArtifactSource,
+  GPCArtifactStability,
+  GPCArtifactVersion,
+  gpcArtifactDownloadURL
+} from "@pcd/gpc";
 import { GPCPCDPackage } from "@pcd/gpc-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { MessagePCDPackage } from "@pcd/message-pcd";
@@ -57,7 +63,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
   });
 
   await ZKEdDSAFrogPCDPackage.init?.({
-    wasmFilePath: "/artifacts/zk-eddsa-frog-pcd/circuit.wasm",
+    wasmFilePath: "/artifacts/zk-eddsa-frog-pcd/circoncuit.wasm",
     zkeyFilePath: "/artifacts/zk-eddsa-frog-pcd/circuit.zkey"
   });
 
@@ -65,16 +71,14 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await PODPCDPackage.init?.({});
 
-  // TODO(POD-P1): Define these using .env
-  const GPC_ARTIFACT_SOURCE = "zupass";
-  const GPC_ARTIFACT_STABILITY = "test";
-  const GPC_ARTIFACT_VERSION = "8071d52a0d481c72d4d4045be48e770716b2e919";
-
+  const gpcArtifactsConfig = parseGPCArtifactsConfig(
+    process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
+  );
   await GPCPCDPackage.init?.({
     zkArtifactPath: gpcArtifactDownloadURL(
-      GPC_ARTIFACT_SOURCE,
-      GPC_ARTIFACT_STABILITY,
-      GPC_ARTIFACT_VERSION,
+      gpcArtifactsConfig.source as GPCArtifactSource,
+      gpcArtifactsConfig.stability as GPCArtifactStability,
+      gpcArtifactsConfig.version as GPCArtifactVersion,
       "" /* zupassURL can use a relative URL */
     )
   });

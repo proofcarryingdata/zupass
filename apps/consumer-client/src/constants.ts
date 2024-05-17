@@ -1,3 +1,4 @@
+import { parseGPCArtifactsConfig } from "@pcd/client-shared";
 import urljoin from "url-join";
 
 export const PCD_GITHUB_URL = "https://github.com/proofcarryingdata/pcd";
@@ -53,7 +54,6 @@ export const CONSUMER_SERVER_URL = CONSUMER_SERVER_URL_ENV
   ? "https://consumer-server-staging.onrender.com/"
   : "http://localhost:3003/";
 
-// TODO(POD-P1): Define these using .env
-export const GPC_ARTIFACT_SOURCE = "zupass";
-export const GPC_ARTIFACT_STABILITY = "test";
-export const GPC_ARTIFACT_VERSION = "8071d52a0d481c72d4d4045be48e770716b2e919";
+export const GPC_ARTIFACT_CONFIG = parseGPCArtifactsConfig(
+  process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
+);

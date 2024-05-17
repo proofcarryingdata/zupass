@@ -76,6 +76,13 @@ const define = {
           process.env.SHOW_POD_TICKET_PCDS
         )
       }
+    : {}),
+  ...(process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined
+    ? {
+        "process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE": JSON.stringify(
+          process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
+        )
+      }
     : {})
 };
 

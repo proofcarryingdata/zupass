@@ -5,7 +5,12 @@ import {
   GroupType
 } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
-import { gpcArtifactDownloadURL } from "@pcd/gpc";
+import {
+  gpcArtifactDownloadURL,
+  GPCArtifactSource,
+  GPCArtifactStability,
+  GPCArtifactVersion
+} from "@pcd/gpc";
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdAddRequestUrl,
@@ -35,9 +40,7 @@ import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import {
   EVERYONE_SEMAPHORE_GROUP_URL,
-  GPC_ARTIFACT_SOURCE,
-  GPC_ARTIFACT_STABILITY,
-  GPC_ARTIFACT_VERSION,
+  GPC_ARTIFACT_CONFIG,
   ZUPASS_URL
 } from "../../constants";
 import {
@@ -578,9 +581,9 @@ async function addGPCPCD(
 ): Promise<void> {
   await GPCPCDPackage.init?.({
     zkArtifactPath: gpcArtifactDownloadURL(
-      GPC_ARTIFACT_SOURCE,
-      GPC_ARTIFACT_STABILITY,
-      GPC_ARTIFACT_VERSION,
+      GPC_ARTIFACT_CONFIG.source as GPCArtifactSource,
+      GPC_ARTIFACT_CONFIG.stability as GPCArtifactStability,
+      GPC_ARTIFACT_CONFIG.version as GPCArtifactVersion,
       ZUPASS_URL
     )
   });

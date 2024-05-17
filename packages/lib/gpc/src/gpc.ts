@@ -199,7 +199,7 @@ export type GPCArtifactStability = "prod" | "test";
  * It might be the version of an NPM package release (e.g. 1.0.1) or a GitHub
  * revision identifier (branch, tag, or commit).
  */
-export type GPCArtifactVersion = string;
+export type GPCArtifactVersion = string | undefined;
 
 /**
  * Forms a URL for downloading GPC artifacts depending on configuration
@@ -215,7 +215,7 @@ export type GPCArtifactVersion = string;
 export function gpcArtifactDownloadURL(
   source: GPCArtifactSource,
   stability: GPCArtifactStability,
-  version: GPCArtifactVersion | undefined,
+  version: GPCArtifactVersion,
   zupassURL: string
 ): string {
   if (stability === "test" && (version === undefined || version === "")) {
