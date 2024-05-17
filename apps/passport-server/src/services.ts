@@ -53,13 +53,7 @@ export async function startServices(
     semaphoreService,
     apis.devconnectPretixAPIFactory
   );
-  const userService = startUserService(
-    context,
-    semaphoreService,
-    emailTokenService,
-    emailService,
-    rateLimitService
-  );
+
   const e2eeService = startE2EEService(context);
   const metricsService = startMetricsService(context, rollbarService);
   const persistentCacheService = startPersistentCacheService(
@@ -86,6 +80,14 @@ export async function startServices(
     pagerDutyService,
     discordService,
     persistentCacheService
+  );
+  const userService = startUserService(
+    context,
+    semaphoreService,
+    emailTokenService,
+    emailService,
+    rateLimitService,
+    genericIssuanceService
   );
 
   const services: GlobalServices = {
