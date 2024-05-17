@@ -1,4 +1,4 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
 import type { PipelineEdDSATicketZuAuthConfig } from "@pcd/passport-interface";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";

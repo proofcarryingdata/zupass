@@ -1,4 +1,4 @@
-import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { isEqualEdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { PipelineEdDSATicketZuAuthConfig } from "@pcd/passport-interface";
 import {
   ZKEdDSAEventTicketPCD,

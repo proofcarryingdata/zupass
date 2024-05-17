@@ -1,4 +1,4 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 import {
   ActionConfigResponseValue,
   EdgeCityBalance,

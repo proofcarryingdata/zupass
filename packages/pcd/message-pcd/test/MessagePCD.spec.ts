@@ -1,4 +1,4 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";

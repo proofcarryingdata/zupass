@@ -1,4 +1,4 @@
-import type { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { EdDSATicketPCD, ITicketData } from "@pcd/eddsa-ticket-pcd";
 import {
   BigIntArgument,

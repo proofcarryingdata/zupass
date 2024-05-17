@@ -1,5 +1,5 @@
+import { getEdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
-import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";

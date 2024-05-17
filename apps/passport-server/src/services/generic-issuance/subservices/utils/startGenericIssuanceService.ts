@@ -1,4 +1,4 @@
-import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { RollbarService } from "@pcd/server-shared";
 import stytch, { Client } from "stytch";
 import { ILemonadeAPI } from "../../../../apis/lemonade/lemonadeAPI";

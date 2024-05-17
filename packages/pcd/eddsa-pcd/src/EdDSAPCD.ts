@@ -1,16 +1,10 @@
+import { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { PCD, StringArgument, StringArrayArgument } from "@pcd/pcd-types";
 
 /**
  * The globally unique type name of the {@link EdDSAPCD}.
  */
 export const EdDSAPCDTypeName = "eddsa-pcd";
-
-/**
- * An EdDSA public key is represented as a point on the elliptic curve, with each point being
- * a pair of coordinates consisting of hexadecimal strings. The public key is maintained in a standard
- * format and is internally converted to and from the Montgomery format as needed.
- */
-export type EdDSAPublicKey = [string, string] | string;
 
 /**
  * Interface containing the arguments that 3rd parties use to

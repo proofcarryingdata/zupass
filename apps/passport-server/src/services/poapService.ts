@@ -2,7 +2,7 @@ import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
   isEqualEdDSAPublicKey
-} from "@pcd/eddsa-pcd";
+} from "@pcd/eddsa-crypto";
 import { getHash } from "@pcd/passport-crypto";
 import {
   EDGE_CITY_7_DAY_PRODUCT_IDS,

@@ -2,7 +2,7 @@ import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
   isEdDSAPublicKey
-} from "@pcd/eddsa-pcd";
+} from "@pcd/eddsa-crypto";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,

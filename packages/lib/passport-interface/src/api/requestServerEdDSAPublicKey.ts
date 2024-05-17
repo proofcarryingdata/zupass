@@ -1,4 +1,4 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 import urlJoin from "url-join";
 import { APIResult } from "./apiResult";
 import { httpGetSimple } from "./makeRequest";

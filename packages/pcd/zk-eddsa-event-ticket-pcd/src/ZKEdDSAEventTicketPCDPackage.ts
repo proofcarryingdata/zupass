@@ -1,4 +1,4 @@
-import { isEqualEdDSAPublicKey, publicKeyToPoint } from "@pcd/eddsa-pcd";
+import { isEqualEdDSAPublicKey, publicKeyToPoint } from "@pcd/eddsa-crypto";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,

@@ -1,3 +1,4 @@
+import { getEdDSAPublicKey } from "@pcd/eddsa-crypto";
 import {
   Biome,
   EdDSAFrogPCDPackage,
@@ -6,7 +7,6 @@ import {
   Rarity,
   Temperament
 } from "@pcd/eddsa-frog-pcd";
-import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,

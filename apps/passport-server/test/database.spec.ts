@@ -1,9 +1,9 @@
 import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
-  isEqualEdDSAPublicKey,
-  newEdDSAPrivateKey
-} from "@pcd/eddsa-pcd";
+  isEqualEdDSAPublicKey
+} from "@pcd/eddsa-crypto";
+import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import {
   KnownPublicKeyType,
   KnownTicketGroup,

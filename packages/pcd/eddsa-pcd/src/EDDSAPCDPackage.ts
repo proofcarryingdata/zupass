@@ -1,7 +1,7 @@
+import { getEdDSAPublicKey, publicKeyToPoint } from "@pcd/eddsa-crypto";
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
 import {
-  derivePublicKey,
   packSignature,
   signMessage,
   unpackSignature,
@@ -19,10 +19,8 @@ import {
   EdDSAPCDArgs,
   EdDSAPCDClaim,
   EdDSAPCDProof,
-  EdDSAPCDTypeName,
-  EdDSAPublicKey
+  EdDSAPCDTypeName
 } from "./EdDSAPCD";
-import { encodePublicKey, publicKeyToPoint } from "./util/util";
 
 /**
  * Generates a Poseidon hash from an array of bigint values.
@@ -202,20 +200,3 @@ export const EdDSAPCDPackage: PCDPackage<
   serialize,
   deserialize
 };
-
-/**
- * Returns an {@link EdDSAPublicKey} derived from a 32-byte EdDSA private key.
- * The private key must be a hexadecimal string or a Uint8Array typed array.
- * @param privateKey The 32-byte EdDSA private key.
- * @returns The {@link EdDSAPublicKey} extracted from the private key.
- */
-export async function getEdDSAPublicKey(
-  privateKey: string | Uint8Array
-): Promise<EdDSAPublicKey> {
-  if (typeof privateKey === "string") {
-    privateKey = fromHexString(privateKey);
-  }
-
-  const unpackedPublicKey = derivePublicKey(privateKey);
-  return encodePublicKey(unpackedPublicKey);
-}

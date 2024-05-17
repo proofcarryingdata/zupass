@@ -1,4 +1,5 @@
-import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import { getEdDSAPublicKey } from "@pcd/eddsa-crypto";
+import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import { expectIsEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {

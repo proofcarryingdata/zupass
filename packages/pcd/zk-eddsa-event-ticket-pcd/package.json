@@ -33,6 +33,7 @@
     "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-event-ticket-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-event-ticket-pcd && cp -f ./artifacts/circuit.json ./src/circuit.json"
   },
   "dependencies": {
+    "@pcd/eddsa-crypto": "0.0.1",
     "@pcd/eddsa-pcd": "0.6.0",
     "@pcd/eddsa-ticket-pcd": "0.6.0",
     "@pcd/pcd-types": "^0.11.0",

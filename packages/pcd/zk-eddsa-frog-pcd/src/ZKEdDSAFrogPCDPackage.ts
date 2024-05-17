@@ -1,3 +1,4 @@
+import { publicKeyToPoint } from "@pcd/eddsa-crypto";
 import {
   EdDSAFrogPCD,
   EdDSAFrogPCDPackage,
@@ -5,7 +6,6 @@ import {
   IFrogData,
   frogDataToBigInts
 } from "@pcd/eddsa-frog-pcd";
-import { publicKeyToPoint } from "@pcd/eddsa-pcd";
 import {
   ArgumentTypeName,
   DisplayOptions,

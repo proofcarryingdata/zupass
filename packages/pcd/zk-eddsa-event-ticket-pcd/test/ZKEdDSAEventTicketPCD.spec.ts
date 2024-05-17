@@ -1,8 +1,3 @@
-import assert from "assert";
-import { expect } from "chai";
-import * as path from "path";
-import { v4 as uuid } from "uuid";
-
 import {
   EdDSATicketPCDPackage,
   EdDSATicketPCDTypeName,
@@ -17,15 +12,18 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { BABY_JUB_NEGATIVE_ONE, uuidToBigInt } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-
+import assert from "assert";
+import { expect } from "chai";
+import * as path from "path";
+import { v4 as uuid } from "uuid";
 import {
   EdDSATicketFieldsToReveal,
-  snarkInputForValidEventIds,
   VALID_EVENT_IDS_MAX_LEN,
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDClaim,
-  ZKEdDSAEventTicketPCDPackage
+  ZKEdDSAEventTicketPCDPackage,
+  snarkInputForValidEventIds
 } from "../src";
 
 import "mocha";
