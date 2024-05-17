@@ -80,7 +80,7 @@ export function useSavedLoginState(router: AppRouterInstance): SavedLoginState {
   }, []);
 
   const logout: SavedLoginState["logout"] = useCallback(
-    (ballotURL?: string, configId?: string, ballotConfigId?: string) => {
+    (configId?: string, ballotConfigId?: string) => {
       saveLoginStateToLocalStorage(undefined);
       const loginConfig = findLoginConfig(
         LOGIN_GROUPS,
@@ -114,11 +114,7 @@ export interface SavedLoginState {
   isLoading: boolean;
   definitelyNotLoggedIn: boolean;
   replaceLoginState: (state: LoginState | undefined) => void;
-  logout: (
-    ballotURL?: string,
-    configId?: string,
-    ballotConfigId?: string
-  ) => void;
+  logout: (configId?: string, ballotConfigId?: string) => void;
 }
 
 const PRE_LOGIN_ROUTE_KEY = "preLoginRoute";

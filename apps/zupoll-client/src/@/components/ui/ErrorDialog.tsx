@@ -91,12 +91,10 @@ export default function ErrorDialog({
                         savePreLoginRouteToLocalStorage(window.location.href);
 
                         if (
-                          error?.loginAs?.ballotURL &&
                           error?.loginAs?.categoryId &&
                           error?.loginAs?.configName
                         ) {
                           logout(
-                            error?.loginAs?.ballotURL,
                             error?.loginAs?.categoryId,
                             error?.loginAs?.configName
                           );

@@ -84,7 +84,7 @@ export function BallotScreen({
                 categoryId: resValue?.categoryId,
                 configName: resValue?.configName
               }
-            : undefined
+            : { title: "test" }
         };
         setError(err);
         return;
