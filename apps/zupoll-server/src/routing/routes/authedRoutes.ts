@@ -133,7 +133,7 @@ export function initAuthedRoutes(
           ) {
             const redirectInfo = getRedirectInfo(ballot);
             if (redirectInfo) {
-              res.status(403).json(redirectInfo);
+              res.status(403).json(redirectInfo satisfies RedirectConfig);
             } else {
               res.sendStatus(403);
             }
@@ -154,25 +154,15 @@ export function initAuthedRoutes(
 
           if (ballot.pipelineId) {
             if (req.pipelineId !== ballot.pipelineId) {
-              const configs = getPodboxConfigs(
-                ZUPASS_CLIENT_URL,
-                ZUPASS_SERVER_URL
-              );
-
-              const config = findConfigForVoterUrl(
-                configs,
-                ballot.voterSemaphoreGroupUrls
-              );
-
-              if (config) {
-                return res.status(403).json({
-                  categoryId: config.configCategoryId,
-                  configName: config.name
-                } satisfies RedirectConfig);
+              const redirectInfo = getRedirectInfo(ballot);
+              if (redirectInfo) {
+                return res
+                  .status(403)
+                  .json(redirectInfo satisfies RedirectConfig);
               }
 
               return res.status(403).json({
-                configs,
+                configs: getPodboxConfigs(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL),
                 ballot
               });
             }
@@ -240,7 +230,7 @@ export type BallotPollRequest = {
 
 function getRedirectInfo(
   ballot: NonNullable<Awaited<ReturnType<typeof getBallotById>>>
-): LoginRedirectInfo | undefined {
+): RedirectConfig | undefined {
   const configs = getPodboxConfigs(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL);
 
   const loginConfig = findConfigForVoterUrl(
@@ -252,11 +242,6 @@ function getRedirectInfo(
     return {
       categoryId: loginConfig.configCategoryId,
       configName: loginConfig.name
-    } satisfies LoginRedirectInfo;
+    } satisfies RedirectConfig;
   }
-}
-
-export interface LoginRedirectInfo {
-  categoryId: string;
-  configName: string;
 }
