@@ -183,12 +183,21 @@ export function resolvePODEntryIdentifier(
   return entryValue;
 }
 
-export function resolveTupleIdentifier(
-  tupleIdentifier: PODName,
+/**
+ * Resolves a tuple name to its value (if possible) given records
+ * mapping POD names to PODs and tuple names to tuple configurations.
+ *
+ * @param tupleName the identifier to resolve
+ * @param pods a record mapping POD names to PODs
+ * @param tuples a record mapping tuple names to tuple configurations
+ * @returns a tuple of POD values if the entry is found and `undefined` otherwise
+ */
+export function resolveTupleName(
+  tupleName: PODName,
   pods: Record<PODName, POD>,
   tuples: Record<PODName, GPCProofTupleConfig>
-): PODValue[] | undefined {
-  const tupleEntries = tuples[tupleIdentifier].entries;
+): PODValueTuple | undefined {
+  const tupleEntries = tuples[tupleName].entries;
   const resolution = tupleEntries.map((entryId) =>
     resolvePODEntryIdentifier(entryId, pods)
   );
@@ -197,19 +206,35 @@ export function resolveTupleIdentifier(
     : (resolution as PODValue[]);
 }
 
+/**
+ * Resolves a POD entry or tuple identifier to its value (if possible) given
+ * records mapping POD names to PODs and tuple names to tuple configurations.
+ *
+ * @param identifier the identifier to resolve
+ * @param pods a record mapping POD names to PODs
+ * @param tuples a record mapping tuple names to tuple configurations
+ * @returns a POD value or tuple of POD values if the entry is found and
+ * `undefined` otherwise
+ * @throws TypeError if the identifier doesn't match the required format
+ * @throws ReferenceError if there is a reference to a non-existent tuple
+ */
 export function resolvePODEntryOrTupleIdentifier(
   identifier: PODEntryIdentifier | TupleIdentifier,
   pods: Record<PODName, POD>,
   tuples: Record<TupleIdentifier, GPCProofTupleConfig> | undefined
 ): PODValue | PODValueTuple | undefined {
-  return identifier.slice(0, 6) === "tuple."
+  const [entryPrefix, entryName] = checkPODEntryIdentifier(
+    "identifier resolution",
+    identifier
+  );
+  return entryPrefix === "tuple"
     ? ((): PODValue | PODValueTuple | undefined => {
         if (tuples === undefined) {
           throw new ReferenceError(
             `Identifier ${identifier} refers to tuple but proof configuration does not specify any.`
           );
         } else {
-          return resolveTupleIdentifier(identifier.slice(6), pods, tuples);
+          return resolveTupleName(entryName, pods, tuples);
         }
       })()
     : resolvePODEntryIdentifier(identifier, pods);
@@ -364,6 +389,11 @@ export function listConfigFromProofConfig(
       const listEntryPairs = Object.keys(pod.entries)
         .map((entryName): [PODName, PODEntryIdentifier][] => {
           const lists = pod.entries[entryName].liesInLists;
+          if (lists !== undefined && lists.length === 0) {
+            throw new TypeError(
+              `The list of lists of valid values for ${podName}.${entryName} is empty.`
+            );
+          }
           return lists === undefined
             ? []
             : lists.map((listName): [PODName, PODEntryIdentifier] => [
@@ -381,6 +411,13 @@ export function listConfigFromProofConfig(
   )
     .map((tupleName): [PODName, TupleIdentifier][] => {
       const lists = (proofConfig.tuples ?? {})[tupleName].liesInLists;
+      if (lists !== undefined && lists.length === 0) {
+        throw new TypeError(
+          `The list of lists of valid values for tuple.${JSON.stringify(
+            tupleName
+          )} is empty.`
+        );
+      }
       return lists === undefined
         ? []
         : lists.map((listName) => [listName, `tuple.${tupleName}`]);
