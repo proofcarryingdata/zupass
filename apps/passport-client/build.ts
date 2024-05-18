@@ -138,6 +138,7 @@ run(process.argv[2])
 async function run(command: string): Promise<void> {
   compileHtml();
   copyScanditEngine();
+  copyGPCArtifacts();
 
   switch (command) {
     case "build":
@@ -213,4 +214,13 @@ function compileHtml(): void {
   const html = template({});
 
   fs.writeFileSync(path.join("public", "index.html"), html);
+}
+
+function copyGPCArtifacts(): void {
+  // @todo this can be removed if we're sure we don't need Scandit as an option
+  fs.cpSync(
+    path.join("../../node_modules/@pcd/proto-pod-gpc-artifacts"),
+    path.join("public/artifacts/proto-pod-gpc"),
+    { recursive: true }
+  );
 }

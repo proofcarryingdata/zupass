@@ -4765,6 +4765,11 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
+"@pcd/proto-pod-gpc-artifacts@0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.0.2.tgz#5d964b287fb40fd15e4c3dcfd8ba3dd6ce3112d4"
+  integrity sha512-3DcGMtol1ejUTetI1ZgphQ1EUSUN499puzurRtnLlv8hpXES/+L8lcpMQWF89K/bPJJHgyDnK5Qq2zkzrNVpqA==
+
 "@peculiar/asn1-android@^2.3.3":
   version "2.3.6"
   resolved "https://registry.yarnpkg.com/@peculiar/asn1-android/-/asn1-android-2.3.6.tgz#20363c23bc5b9a91f7ffd80d7c3842dccff8c20b"

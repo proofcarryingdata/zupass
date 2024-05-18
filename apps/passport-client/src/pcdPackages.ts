@@ -63,7 +63,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
   });
 
   await ZKEdDSAFrogPCDPackage.init?.({
-    wasmFilePath: "/artifacts/zk-eddsa-frog-pcd/circoncuit.wasm",
+    wasmFilePath: "/artifacts/zk-eddsa-frog-pcd/circuit.wasm",
     zkeyFilePath: "/artifacts/zk-eddsa-frog-pcd/circuit.zkey"
   });
 
