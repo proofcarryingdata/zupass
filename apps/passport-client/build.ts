@@ -217,7 +217,9 @@ function compileHtml(): void {
 }
 
 function copyGPCArtifacts(): void {
-  // @todo this can be removed if we're sure we don't need Scandit as an option
+  fs.rmSync(path.join("public/artifacts/proto-pod-gpc"), {
+    recursive: true
+  });
   fs.cpSync(
     path.join("../../node_modules/@pcd/proto-pod-gpc-artifacts"),
     path.join("public/artifacts/proto-pod-gpc"),

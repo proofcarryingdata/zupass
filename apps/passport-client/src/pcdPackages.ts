@@ -71,15 +71,20 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await PODPCDPackage.init?.({});
 
+  // Environment variable configure how we fetch GPC artifacts, however we
+  // default to fetching from the Zupass server rather than unpkg.
   const gpcArtifactsConfig = parseGPCArtifactsConfig(
-    process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
+    process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined &&
+      process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== ""
+      ? process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
+      : '{"source": "zupass", "stability": "prod", "version": ""}'
   );
   await GPCPCDPackage.init?.({
     zkArtifactPath: gpcArtifactDownloadURL(
       gpcArtifactsConfig.source as GPCArtifactSource,
       gpcArtifactsConfig.stability as GPCArtifactStability,
       gpcArtifactsConfig.version as GPCArtifactVersion,
-      "" /* zupassURL can use a relative URL */
+      "/" /* zupassURL can use a site-relative URL */
     )
   });
 

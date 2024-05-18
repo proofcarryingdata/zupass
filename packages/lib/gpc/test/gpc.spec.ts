@@ -4,10 +4,14 @@ import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import {
+  GPCArtifactSource,
+  GPCArtifactStability,
+  GPCArtifactVersion,
   GPCBoundConfig,
   GPCProofConfig,
   GPCProofInputs,
   GPCRevealedClaims,
+  gpcArtifactDownloadURL,
   gpcProve,
   gpcVerify
 } from "../src";
@@ -21,7 +25,7 @@ import {
   sampleEntries2
 } from "./common";
 
-describe("gpc library (Precompiled Artifacts) should work", async function () {
+describe("gpc library (Compiled test artifacts) should work", async function () {
   function makeMinimalArgs(includeWatermark?: boolean): {
     proofConfig: GPCProofConfig;
     proofInputs: GPCProofInputs;
@@ -440,6 +444,291 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       GPC_TEST_ARTIFACTS_PATH
     );
     expect(isVerified).to.be.false;
+  });
+});
+
+describe("gpcArtifactDownloadURL should work", async function () {
+  it("should work for source=zupass", async function () {
+    const TEST_CASES = [
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: undefined,
+        expected: undefined
+      },
+      {
+        stability: "test",
+        version: "foo",
+        zupassURL: undefined,
+        expected: undefined
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: undefined,
+        expected: undefined
+      },
+      {
+        stability: "prod",
+        version: "foo",
+        zupassURL: undefined,
+        expected: undefined
+      },
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: "/",
+        expected: "/artifacts/test/proto-pod-gpc"
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: "/",
+        expected: "/artifacts/proto-pod-gpc"
+      },
+      {
+        stability: "test",
+        version: "foo",
+        zupassURL: "/",
+        expected: "/artifacts/test/proto-pod-gpc"
+      },
+      {
+        stability: "prod",
+        version: "foo",
+        zupassURL: "/",
+        expected: "/artifacts/proto-pod-gpc"
+      },
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: "",
+        expected: "artifacts/test/proto-pod-gpc"
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: "",
+        expected: "artifacts/proto-pod-gpc"
+      },
+      {
+        stability: "test",
+        version: "foo",
+        zupassURL: "",
+        expected: "artifacts/test/proto-pod-gpc"
+      },
+      {
+        stability: "prod",
+        version: "foo",
+        zupassURL: "",
+        expected: "artifacts/proto-pod-gpc"
+      },
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: "https://zupass.org/artifacts/test/proto-pod-gpc"
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: "https://zupass.org/",
+        expected: "https://zupass.org/artifacts/proto-pod-gpc"
+      },
+      {
+        stability: "test",
+        version: "foo",
+        zupassURL: "https://zupass.org/",
+        expected: "https://zupass.org/artifacts/test/proto-pod-gpc"
+      },
+      {
+        stability: "prod",
+        version: "foo",
+        zupassURL: "https://zupass.org",
+        expected: "https://zupass.org/artifacts/proto-pod-gpc"
+      }
+    ];
+
+    for (const testCase of TEST_CASES) {
+      if (testCase.expected !== undefined) {
+        expect(
+          gpcArtifactDownloadURL(
+            "zupass",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.eq(testCase.expected);
+      } else {
+        expect(() =>
+          gpcArtifactDownloadURL(
+            "zupass",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.throw(Error);
+      }
+    }
+  });
+
+  it("should work for source=github", async function () {
+    const TEST_CASES = [
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: undefined,
+        expected: undefined
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: undefined,
+        expected: undefined
+      },
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: undefined
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: undefined
+      },
+      {
+        stability: "test",
+        version: "foo",
+        zupassURL: undefined,
+        expected:
+          "https://raw.githubusercontent.com/proofcarryingdata/snark-artifacts/foo/packages/proto-pod-gpc"
+      },
+      {
+        stability: "prod",
+        version: "foo",
+        zupassURL: undefined,
+        expected:
+          "https://raw.githubusercontent.com/proofcarryingdata/snark-artifacts/foo/packages/proto-pod-gpc"
+      },
+      {
+        stability: "prod",
+        version: "foo/bar",
+        zupassURL: "https://zupass.org",
+        expected:
+          "https://raw.githubusercontent.com/proofcarryingdata/snark-artifacts/foo/bar/packages/proto-pod-gpc"
+      }
+    ];
+
+    for (const testCase of TEST_CASES) {
+      if (testCase.expected !== undefined) {
+        expect(
+          gpcArtifactDownloadURL(
+            "github",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.eq(testCase.expected);
+      } else {
+        expect(() =>
+          gpcArtifactDownloadURL(
+            "github",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.throw(Error);
+      }
+    }
+  });
+
+  it("should work for source=unpkg", async function () {
+    const TEST_CASES = [
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: undefined,
+        expected: undefined
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: undefined,
+        expected: undefined
+      },
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: undefined
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: undefined
+      },
+      {
+        stability: "test",
+        version: "foo",
+        zupassURL: undefined,
+        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@foo"
+      },
+      {
+        stability: "prod",
+        version: "foo",
+        zupassURL: undefined,
+        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@foo"
+      },
+      {
+        stability: "prod",
+        version: "foo/bar",
+        zupassURL: "https://zupass.org",
+        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@foo/bar"
+      }
+    ];
+
+    for (const testCase of TEST_CASES) {
+      if (testCase.expected !== undefined) {
+        expect(
+          gpcArtifactDownloadURL(
+            "unpkg",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.eq(testCase.expected);
+      } else {
+        expect(() =>
+          gpcArtifactDownloadURL(
+            "unpkg",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.throw(Error);
+      }
+    }
+  });
+
+  it("should throw on missing or invalid source", async function () {
+    expect(() =>
+      gpcArtifactDownloadURL(
+        "wrong" as GPCArtifactSource,
+        "prod",
+        "foo",
+        "https://zupass.org"
+      )
+    ).to.throw(Error);
+    expect(() =>
+      gpcArtifactDownloadURL(
+        undefined as unknown as GPCArtifactSource,
+        "prod",
+        "foo",
+        "https://zupass.org"
+      )
+    ).to.throw(Error);
   });
 });
 

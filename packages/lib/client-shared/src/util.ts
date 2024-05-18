@@ -9,6 +9,11 @@ export type GPCArtifactsConfigEnv = {
 };
 
 /**
+ * The version of the latest supported version of artifacts published on NPM.
+ */
+export const GPC_ARTIFACTS_NPM_VERSION = "0.0.2";
+
+/**
  * Parse configuration overrides for GPC artifact download from a string
  * environment variable, or provides default values if not set.
  *
@@ -19,9 +24,9 @@ export function parseGPCArtifactsConfig(
   envConfig: string | undefined
 ): GPCArtifactsConfigEnv {
   const defaultConfig = {
-    source: "zupass",
+    source: "unpkg",
     stability: "prod",
-    version: undefined
+    version: GPC_ARTIFACTS_NPM_VERSION
   };
   if (
     envConfig === undefined ||

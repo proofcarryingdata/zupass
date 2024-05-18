@@ -211,7 +211,7 @@ export type GPCArtifactVersion = string | undefined;
  * @param version the version identifier for circuit artifacts.  Not relevant
  *   to some sources which host only a single version.
  * @param zupassURL the base URL for Zupass, if used as a download option.
- *   Can be an empty string to use a relative URL (within the Zupass app).
+ *   Can be "" or "/" to use a relative URL (within the Zupass app).
  * @returns a root URL to download GPC artifacts, as needed for {@link gpcProve}
  *   or {@link gpcVerify}.
  */
@@ -219,19 +219,11 @@ export function gpcArtifactDownloadURL(
   source: GPCArtifactSource,
   stability: GPCArtifactStability,
   version: GPCArtifactVersion,
-  zupassURL: string
+  zupassURL?: string
 ): string {
-  if (stability === "test" && (version === undefined || version === "")) {
-    throw new Error("Artifact version is required in test mode.");
-  }
-
   switch (source) {
     case "github":
       const REPO_NAME = "proofcarryingdata/snark-artifacts";
-      if (stability !== "test") {
-        // TODO(POD-P1): Implement prod artifact download options.
-        throw new Error("GitHub prod artifact download not yet implemented.");
-      }
       if (version === undefined || version === "") {
         throw new Error("GitHub artifact download requires a version.");
       }
@@ -248,6 +240,14 @@ export function gpcArtifactDownloadURL(
       // pre-release status.
       return unpkgDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
     case "zupass":
+      // TODO(POD-P3): Do we want to expose source=zupass as a public option?
+      // If so, we need the Zupass server to not set `Access-Control-Allow-Origin: *`,
+      // or migrate to a different hosting option.
+      if (zupassURL === undefined) {
+        throw new Error(
+          'Zupass artifact download requires a server URL.  Try "https://zupass.org".'
+        );
+      }
       return urljoin(
         zupassURL,
         stability === "test" ? "artifacts/test" : "artifacts",

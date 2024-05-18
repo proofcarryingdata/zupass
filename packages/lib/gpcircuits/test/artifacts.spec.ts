@@ -1,7 +1,12 @@
 import { expect } from "chai";
 import "mocha";
 import path from "path";
-import { ProtoPODGPC, githubDownloadRootURL, gpcArtifactPaths } from "../src";
+import {
+  ProtoPODGPC,
+  githubDownloadRootURL,
+  gpcArtifactPaths,
+  unpkgDownloadRootURL
+} from "../src";
 
 describe("artifact URL helpers should work", function () {
   it("gpcArtifactPaths should work for file paths", async () => {
@@ -60,6 +65,12 @@ describe("artifact URL helpers should work", function () {
       githubDownloadRootURL("repo/path0", "family/path1", "rev/path2")
     ).to.eq(
       "https://raw.githubusercontent.com/repo/path0/rev/path2/packages/family/path1"
+    );
+  });
+
+  it("githubDownloadRootURL should work", async () => {
+    expect(unpkgDownloadRootURL("family1", "ver2")).to.eq(
+      "https://unpkg.com/@pcd/family1-artifacts@ver2"
     );
   });
 });
