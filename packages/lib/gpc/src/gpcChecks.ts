@@ -424,8 +424,8 @@ export function checkProofInputsForConfig(
   );
   if (!isEqual(configListNames, inputListNames)) {
     throw new Error(
-      `Config and input list name mismatch.` +
-        `  Configuration expects list names ${JSON.stringify(
+      `Config and input list mismatch.` +
+        `  Configuration expects lists ${JSON.stringify(
           Array.from(configListNames)
         )}.` +
         `  Input contains ${JSON.stringify(Array.from(inputListNames))}.`
@@ -710,8 +710,8 @@ export function checkVerifyClaimsForConfig(
   );
   if (!isEqual(configListNames, inputListNames)) {
     throw new Error(
-      `Config and input list name mismatch.` +
-        `  Configuration expects list names ${JSON.stringify(
+      `Config and input list mismatch.` +
+        `  Configuration expects lists ${JSON.stringify(
           Array.from(configListNames)
         )}.` +
         `  Input contains ${JSON.stringify(Array.from(inputListNames))}.`
