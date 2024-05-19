@@ -8,8 +8,6 @@ import { LoginWidgetProps } from "./LoginWidget";
  */
 export function LoginActionsForLoginGroup({
   group,
-  onLogin,
-  setError,
   setServerLoading,
   serverLoading
 }: LoginGroupProps) {
@@ -20,8 +18,6 @@ export function LoginActionsForLoginGroup({
         return (
           <LoginButton
             key={group.category + loginConfig.name}
-            onLogin={onLogin}
-            onError={setError}
             setServerLoading={setServerLoading}
             serverLoading={serverLoading}
             config={loginConfig}

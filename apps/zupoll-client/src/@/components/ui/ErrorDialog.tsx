@@ -2,14 +2,20 @@ import { Dialog, Transition } from "@headlessui/react";
 import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 import { Fragment, useRef } from "react";
 import { ZupollError } from "../../../types";
+import {
+  SavedLoginState,
+  savePreLoginRouteToLocalStorage
+} from "../../../useLoginState";
 import { Button } from "./button";
 
 export default function ErrorDialog({
   close,
+  logout,
   error
 }: {
   close: () => void;
   error?: ZupollError;
+  logout: SavedLoginState["logout"];
 }) {
   const cancelButtonRef = useRef(null);
 
@@ -77,6 +83,30 @@ export default function ErrorDialog({
                   </div>
                 </div>
                 <div className="mt-5 sm:mt-4 flex flex-row-reverse gap-2">
+                  {error?.loginAs && (
+                    <Button
+                      variant={"creative"}
+                      type="button"
+                      onClick={() => {
+                        savePreLoginRouteToLocalStorage(window.location.href);
+
+                        if (
+                          error?.loginAs?.categoryId &&
+                          error?.loginAs?.configName
+                        ) {
+                          logout(
+                            error?.loginAs?.categoryId,
+                            error?.loginAs?.configName
+                          );
+                        } else {
+                          window.location.href = "/";
+                        }
+                      }}
+                    >
+                      Login
+                    </Button>
+                  )}
+
                   <Button
                     variant={"ghost"}
                     type="button"
@@ -88,7 +118,7 @@ export default function ErrorDialog({
                     Home
                   </Button>
                   <Button
-                    variant={"default"}
+                    variant={error?.loginAs ? "ghost" : "default"}
                     type="button"
                     onClick={() => {
                       window.location.reload();
