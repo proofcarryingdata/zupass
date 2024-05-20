@@ -335,6 +335,7 @@ export function initPCDRoutes(
                 logger.info(`Edited vote msg`, msg);
               }
             } catch (error) {
+              context.rollbarService?.reportError(error);
               logger.error(`GRAMMY ERROR`, error);
             }
           }
@@ -359,12 +360,14 @@ export function initPCDRoutes(
                 logger.info(`Updated DB with RESULTS`);
               }
             } catch (error) {
+              context.rollbarService?.reportError(error);
               logger.error(`GRAMMY ERROR`, error);
             }
           }
         }
         res.json(multiVoteResponse);
       } catch (e) {
+        context.rollbarService?.reportError(e);
         console.error(`[ERROR]`, e);
         next(e);
       }
