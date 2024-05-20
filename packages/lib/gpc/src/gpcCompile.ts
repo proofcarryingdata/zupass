@@ -36,7 +36,8 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
-  checkPODEntryIdentifier,
+  GPCProofMembershipListConfig,
+  isTupleIdentifier,
   listConfigFromProofConfig,
   makeWatermarkSignal
 } from "./gpcUtil";
@@ -68,10 +69,16 @@ type CompilerEntryInfo<ObjInput> = {
 
 /**
  * Per-entry info extracted by {@link prepCompilerTupleMap}.
- * Info about the object containing the entry is duplicated here for
- * quick access.
+ * This info characterises the result of decomposing a given tuple of arbitrary
+ * arity into a sequence of tuples of some fixed arity dictated by the choice of
+ * circuit. The field `tupleIndex` contains the index (in the theoretically
+ * concatenated entry value hash and tuple value hash array) of the hash of this
+ * input tuple, while `tupleIndices` contains a sequence of indices representing
+ * the aforementioned decomposition of this tuple. Thus, for a list membership
+ * check for a tuple value, `tupleIndex` is the required
+ * `listComparisonValueIndex`.
  */
-type CompilerTupleInfo = { tupleRef: number; tupleIndices: number[][] };
+type CompilerTupleInfo = { tupleIndex: number; tupleInputIndices: number[][] };
 
 /**
  * Helper function for the first phase of compiling inputs for prove or verify.
@@ -147,9 +154,9 @@ function prepCompilerMaps<
 }
 
 /**
- * Helper function for the tuple compilation phase for prove or verify.
- * Input information is gathered into a map for easy lookup by name when
- * compiling data that depends on tuples.
+ * Helper function for the tuple compilation phase for prove or verify.  Input
+ * information is gathered into a map for easy lookup by name when compiling
+ * data that depends on tuples. All tuple names are prefixed with "$tuple.".
  *
  * The tuples are sorted by name before they are processed.
  *
@@ -160,10 +167,7 @@ function prepCompilerMaps<
  * @param paramMaxTuples maximum number of tuples allowed by the chosen
  * circuit description.
  * @param paramTupleArity tuple arity used by the chosen circuit description.
- * @param inputs input object for prove or verify
- *   (GPCProofInput or GPCRevealedClaims).
- * @returns maps for looking up objects by name, and entries by identifier.
- *   See the map value types for what's included.
+ * @returns map for looking up tuples by identifier
  */
 function prepCompilerTupleMap<ObjInput extends POD | GPCRevealedObjectClaims>(
   config: GPCBoundConfig,
@@ -212,9 +216,9 @@ function prepCompilerTupleMap<ObjInput extends POD | GPCRevealedObjectClaims>(
 
       tupleIndex += tupleIndices.length;
 
-      tupleMap.set(`tuple.${tupleName}`, {
-        tupleRef: tupleIndex - 1,
-        tupleIndices
+      tupleMap.set(`$tuple.${tupleName}`, {
+        tupleIndex: tupleIndex - 1,
+        tupleInputIndices: tupleIndices
       });
     }
 
@@ -345,7 +349,7 @@ function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
 function compileProofListMembership<
   ObjInput extends POD | GPCRevealedObjectClaims
 >(
-  listConfig: Record<PODName, PODEntryIdentifier[]>,
+  listConfig: GPCProofMembershipListConfig,
   listInput: Record<PODName, PODValue[] | PODValueTuple[]>,
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
   tupleMap: Map<TupleIdentifier, CompilerTupleInfo>,
@@ -360,6 +364,9 @@ function compileProofListMembership<
   const listNameOrder = Object.keys(listConfig).sort();
 
   // Do the same for the lists of comparison IDs and string them together.
+  // This takes into account the possibility where different entry (or tuple)
+  // values must lie in the same list, or the case one entry (or tuple) value
+  // must lie in multiple lists.
   const listIdPairs = listNameOrder
     .map((listName: PODName): [PODName, PODEntryIdentifier][] =>
       listConfig[listName].sort().map((elementId) => [listName, elementId])
@@ -370,12 +377,9 @@ function compileProofListMembership<
   const unpaddedListComparisonValueIndex = listIdPairs.map((listIdPair) => {
     const [listName, elementId] = listIdPair;
 
-    const [elementIdPrefix, _] = checkPODEntryIdentifier(listName, elementId);
-
-    const idx =
-      elementIdPrefix === "tuple"
-        ? tupleMap.get(elementId as TupleIdentifier)?.tupleRef
-        : entryMap.get(elementId)?.entryIndex;
+    const idx = isTupleIdentifier(elementId)
+      ? tupleMap.get(elementId as TupleIdentifier)?.tupleIndex
+      : entryMap.get(elementId)?.entryIndex;
 
     if (idx === undefined) {
       throw new Error(
@@ -432,7 +436,7 @@ function compileProofMultiTuples(
   // Concatenate `tupleIndices` field of all tuple map values together and convert
   // the indices to bigints.
   const unpaddedTupleIndices = Array.from(tupleMap.values())
-    .map((info) => info.tupleIndices)
+    .map((info) => info.tupleInputIndices)
     .flat()
     .map((tuple) => tuple.map((n) => BigInt(n)));
 

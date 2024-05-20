@@ -12,7 +12,7 @@ export type PODEntryIdentifier = `${PODName}.${PODName}`;
  * String specifying a named tuple in the format `tuple.tupleName`.
  * `tupleName` should be a valid PODName checked by {@link POD_NAME_REGEX}.
  */
-export type TupleIdentifier = `tuple.${PODName}`;
+export type TupleIdentifier = `$tuple.${PODName}`;
 
 /**
  * String specifying a specific GPC circuit, identified by its family name
@@ -69,7 +69,18 @@ export type GPCProofEntryConfig = {
    */
   equalsEntry?: PODEntryIdentifier;
 
-  liesInLists?: PODName[];
+  /**
+   * Indicates list(s) in which this entry must lie. An entry value may lie in
+   * one or more membership lists.
+   *
+   * Note that the underlying GPC expects a one-to-one correspondence between
+   * comparison values and lists, i.e. it will only check one value per
+   * list. Thus, if multiple entry values are constrained to be members of some
+   * fixed list, this list will be duplicated for each of these checks,
+   * increasing the circuit size requirements. This should be taken into account
+   * when estimating circuit sizes.
+   */
+  isMemberOf?: PODName | PODName[];
 
   // TODO(POD-P3): Constraints on entry values can go here.  Lower/upper bounds,
   // comparison to constant, etc.
@@ -110,24 +121,18 @@ export type GPCProofObjectConfig = {
  */
 export type GPCProofTupleConfig = {
   /**
-   * Identifiers of the POD entries that form the tuple (in order).
+   * Identifiers of the POD entries that form the tuple (in order). These must
+   * be POD entry identifiers, not tuples.
    */
   entries: PODEntryIdentifier[];
 
   /**
-   * The lists the tuple must be a member of.
+   * Indicates lists in which this entry must lie. A tuple may lie in one or
+   * more lists. See {@link GPCProofEntryConfig} regarding circuit size
+   * considerations.
    */
-  liesInLists?: PODName[];
+  isMemberOf?: PODName | PODName[];
 };
-
-/**
- * Configuration for named lists, specifying which entries (or tuple entries)
- * lie in the list. This is deduced from the proof configuration.
- */
-export type GPCProofMembershipListConfig = Record<
-  PODName,
-  PODEntryIdentifier[]
->;
 
 /**
  * Contains the specific constraints to be proven in a GPC proof.  GPC

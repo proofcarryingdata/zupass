@@ -10,12 +10,12 @@ import {
   requireType
 } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import _ from "lodash";
 import {
   GPCBoundConfig,
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryConfig,
-  GPCProofMembershipListConfig,
   GPCProofObjectConfig,
   GPCProofTupleConfig,
   PODEntryIdentifier,
@@ -59,23 +59,15 @@ export function canonicalizeConfig(
     canonicalPODs[objName] = canonicalizeObjectConfig(objectConfig);
   }
 
-  // Force tuples to be sorted by name
-  const tupleConfig = proofConfig.tuples ?? {};
-  const sortedTuples = Object.fromEntries(
-    Object.keys(tupleConfig)
-      .sort()
-      .map((tupleName) => [
-        tupleName,
-        tupleConfig[tupleName as TupleIdentifier]
-      ])
-  );
+  // Force tuples and their membership lists to be sorted by name
+  const tupleRecord = canonicalizeTupleConfig(proofConfig.tuples ?? {});
 
   // Forcing circuit name to be present is the only type-level difference
   // between GPCProofConfig and GPCBoundConfig.
   return {
     circuitIdentifier: circuitIdentifier,
     pods: canonicalPODs,
-    ...(proofConfig.tuples !== undefined ? { tuples: sortedTuples } : {})
+    ...(proofConfig.tuples !== undefined ? { tuples: tupleRecord } : {})
   };
 }
 
@@ -106,10 +98,39 @@ function canonicalizeEntryConfig(
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
       : {}),
-    ...(proofEntryConfig.liesInLists !== undefined
-      ? { liesInLists: proofEntryConfig.liesInLists.sort() }
+    ...(proofEntryConfig.isMemberOf !== undefined
+      ? {
+          isMemberOf: Array.isArray(proofEntryConfig.isMemberOf)
+            ? proofEntryConfig.isMemberOf.sort()
+            : proofEntryConfig.isMemberOf
+        }
       : {})
   };
+}
+
+function canonicalizeTupleConfig(
+  tupleRecord: Record<PODName, GPCProofTupleConfig>
+): Record<PODName, GPCProofTupleConfig> {
+  const sortedTuples = Object.fromEntries(
+    Object.keys(tupleRecord)
+      .sort()
+      .map((tupleName) => {
+        const tupleConfig = tupleRecord[tupleName as TupleIdentifier];
+
+        return [
+          tupleName,
+          {
+            ...tupleConfig,
+            ...(tupleConfig.isMemberOf === undefined
+              ? {}
+              : Array.isArray(tupleConfig.isMemberOf)
+              ? { isMemberOf: tupleConfig.isMemberOf.sort() }
+              : { isMemberOf: tupleConfig.isMemberOf })
+          }
+        ];
+      })
+  );
+  return sortedTuples;
 }
 
 /**
@@ -133,6 +154,40 @@ export function checkPODEntryIdentifier(
     );
   }
   return [checkPODName(parts[0]), checkPODName(parts[1])];
+}
+
+/**
+ * Checks whether a POD entry identifier exists in the context of tuple checking.
+ *
+ * @param tupleNameForErrorMessages tuple name (provided for error messages)
+ * @param entryIdentifier the identifier to check
+ * @throws ReferenceError if the identifier does not exist or is invalid
+ */
+export function checkPODEntryIdentifierExists(
+  tupleNameForErrorMessages: PODName,
+  entryIdentifier: PODEntryIdentifier,
+  pods: Record<PODName, GPCProofObjectConfig>
+): void {
+  // Check that the tuples reference entries included in the config.
+  const [podName, entryName] = checkPODEntryIdentifier(
+    tupleNameForErrorMessages,
+    entryIdentifier
+  );
+  const pod = pods[podName];
+
+  if (pod === undefined) {
+    throw new ReferenceError(
+      `Tuple ${tupleNameForErrorMessages} refers to entry ${entryName} in non-existent POD ${podName}.`
+    );
+  }
+
+  const entry = pod.entries[entryName];
+
+  if (entry === undefined) {
+    throw new ReferenceError(
+      `Tuple ${tupleNameForErrorMessages} refers to non-existent entry ${entryName} in POD ${podName}.`
+    );
+  }
 }
 
 /**
@@ -184,6 +239,52 @@ export function resolvePODEntryIdentifier(
 }
 
 /**
+ * TupleIdentifier predicate
+ *
+ * @param identifier the identifier to check
+ * @returns an indicator of whether the given identifier is a tuple identifier
+ * @throws TypeError if the format doesn't match
+ */
+export function isTupleIdentifier(
+  identifier: PODEntryIdentifier | TupleIdentifier
+): boolean {
+  const parts = identifier.split(".");
+  if (parts.length !== 2) {
+    throw new TypeError(`Invalid entry or tuple identifier: ${identifier}`);
+  }
+  return parts[0] === "$tuple" && checkPODName(parts[1]) === parts[1];
+}
+
+/**
+ * Checks the format of a tuple identifier, and return a pair consisting of the
+ * tuple prefix and the name of the tuple.
+ *
+ * @param nameForErrorMessages the name for this value, used only for error
+ *   messages.
+ * @param tupleIdentifier the value to check
+ * @returns the two sub-parts of the identifiers
+ * @throws TypeError if the identifier does not match the expected format
+ */
+export function checkTupleIdentifier(
+  nameForErrorMessages: string,
+  tupleIdentifier: TupleIdentifier
+): PODName {
+  requireType(nameForErrorMessages, tupleIdentifier, "string");
+  const parts = tupleIdentifier.split(".");
+  if (parts.length !== 2) {
+    throw new TypeError(
+      `Invalid entry identifier in ${nameForErrorMessages}.  Must have the form "objName.entryName".`
+    );
+  }
+  if (!isTupleIdentifier(tupleIdentifier)) {
+    throw new TypeError(
+      `Invalid tuple identifier in ${nameForErrorMessages}: ${tupleIdentifier}`
+    );
+  }
+  return checkPODName(parts[1]);
+}
+
+/**
  * Resolves a tuple name to its value (if possible) given records
  * mapping POD names to PODs and tuple names to tuple configurations.
  *
@@ -192,16 +293,25 @@ export function resolvePODEntryIdentifier(
  * @param tuples a record mapping tuple names to tuple configurations
  * @returns a tuple of POD values if the entry is found and `undefined` otherwise
  */
-export function resolveTupleName(
-  tupleName: PODName,
+export function resolveTupleIdentifier(
+  tupleIdentifier: TupleIdentifier,
   pods: Record<PODName, POD>,
   tuples: Record<PODName, GPCProofTupleConfig>
 ): PODValueTuple | undefined {
+  const tupleName = tupleIdentifier.slice(7);
   const tupleEntries = tuples[tupleName].entries;
   const resolution = tupleEntries.map((entryId) =>
     resolvePODEntryIdentifier(entryId, pods)
   );
-  return resolution.some((value) => value === undefined)
+  resolution.forEach((value, i) => {
+    if (value === undefined) {
+      throw new ReferenceError(
+        `POD entry value identifier ${tupleEntries[i]} in tuple ${tupleName} does not have a value.`
+      );
+    }
+  });
+
+  return resolution.every((value) => value === undefined)
     ? undefined
     : (resolution as PODValue[]);
 }
@@ -223,18 +333,18 @@ export function resolvePODEntryOrTupleIdentifier(
   pods: Record<PODName, POD>,
   tuples: Record<TupleIdentifier, GPCProofTupleConfig> | undefined
 ): PODValue | PODValueTuple | undefined {
-  const [entryPrefix, entryName] = checkPODEntryIdentifier(
-    "identifier resolution",
-    identifier
-  );
-  return entryPrefix === "tuple"
+  return isTupleIdentifier(identifier)
     ? ((): PODValue | PODValueTuple | undefined => {
         if (tuples === undefined) {
           throw new ReferenceError(
             `Identifier ${identifier} refers to tuple but proof configuration does not specify any.`
           );
         } else {
-          return resolveTupleName(entryName, pods, tuples);
+          return resolveTupleIdentifier(
+            identifier as TupleIdentifier,
+            pods,
+            tuples
+          );
         }
       })()
     : resolvePODEntryIdentifier(identifier, pods);
@@ -363,7 +473,7 @@ export type GPCRequirements = {
   /**
    * Number of entries in each membership list to be included in proof.
    */
-  nListElements: Record<PODName, number>;
+  maxListSize: number;
 
   /**
    * Arities (sizes) of tuples which can included in a proof.
@@ -379,7 +489,7 @@ export function GPCRequirements(
   nEntries: number,
   merkleMaxDepth: number,
   nLists: number = 0,
-  nListElements: Record<PODName, number> = {},
+  maxListSize: number = 0,
   tupleArities: Record<PODName, number> = {}
 ): GPCRequirements {
   return {
@@ -387,16 +497,26 @@ export function GPCRequirements(
     nEntries,
     merkleMaxDepth,
     nLists,
-    nListElements,
+    maxListSize,
     tupleArities
   };
 }
 
 /**
+ * Configuration for named lists, specifying which entries (or tuple entries)
+ * lie in the list. This is deduced from the proof configuration in
+ * {@link listConfigFromProofConfig}.
+ */
+export type GPCProofMembershipListConfig = Record<
+  PODName,
+  (PODEntryIdentifier | TupleIdentifier)[]
+>;
+
+/**
  * Determines the list configuration from the proof configuration.
  *
  * List membership is indicated in each entry or tuple field via the optional
- * property `liesInLists`, which specifies the names of lists it ought to lie in,
+ * property `isMemberOf`, which specifies the names of lists it ought to lie in,
  * the list itself being specified in the proof inputs. This procedure makes
  * this implicit list configuration explicit by forming a record mapping list
  * names to arrays of identifiers, each of which specifies those POD entries or
@@ -405,71 +525,88 @@ export function GPCRequirements(
  * @param proofConfig the proof configuration
  * @returns a record mapping a list name to an array of identifiers representing entries
  * and tuples that lie in that list
- * @throws TypeError if `liesInLists` is empty
+ * @throws TypeError if `isMemberOf` is empty
  */
 export function listConfigFromProofConfig(
   proofConfig: GPCProofConfig
 ): GPCProofMembershipListConfig {
   // Find all [listName, entryID] pairs in proofConfig.pods
-  const entryLists: [PODName, PODEntryIdentifier][] = Object.keys(
-    proofConfig.pods
-  )
-    .map((podName) => {
-      const pod = proofConfig.pods[podName];
-      const listEntryPairs = Object.keys(pod.entries)
-        .map((entryName): [PODName, PODEntryIdentifier][] => {
-          const lists = pod.entries[entryName].liesInLists;
-          if (lists !== undefined && lists.length === 0) {
+  const entryLists: [PODName, PODEntryIdentifier][] = [];
+
+  for (const podName of Object.keys(proofConfig.pods)) {
+    const pod = proofConfig.pods[podName];
+
+    for (const entryName of Object.keys(pod.entries)) {
+      const lists = pod.entries[entryName].isMemberOf;
+
+      if (lists !== undefined) {
+        if (Array.isArray(lists)) {
+          if (lists.length === 0) {
             throw new TypeError(
               `The list of lists of valid values for ${podName}.${entryName} is empty.`
             );
           }
-          return lists === undefined
-            ? []
-            : lists.map((listName): [PODName, PODEntryIdentifier] => [
-                listName,
-                `${podName}.${entryName}`
-              ]);
-        })
-        .flat();
-      return listEntryPairs;
-    })
-    .flat();
+          for (const listName of lists ?? []) {
+            entryLists.push([listName, `${podName}.${entryName}`]);
+          }
+        } else {
+          entryLists.push([lists, `${podName}.${entryName}`]);
+        }
+      }
+    }
+  }
 
   // Find all [listName, tupleID] pairs in proofConfig.tuples
-  const tupleLists: [PODName, TupleIdentifier][] = Object.keys(
-    proofConfig.tuples ?? {}
-  )
-    .map((tupleName): [PODName, TupleIdentifier][] => {
-      const lists = (proofConfig.tuples ?? {})[tupleName].liesInLists;
-      if (lists !== undefined && lists.length === 0) {
-        throw new TypeError(
-          `The list of lists of valid values for tuple.${JSON.stringify(
-            tupleName
-          )} is empty.`
-        );
+  const tupleLists: [PODName, PODEntryIdentifier][] = [];
+
+  for (const tupleName of Object.keys(proofConfig.tuples ?? {})) {
+    const lists = (proofConfig.tuples ?? {})[tupleName].isMemberOf;
+
+    if (lists !== undefined) {
+      if (Array.isArray(lists)) {
+        if (lists.length === 0) {
+          throw new TypeError(
+            `The list of lists of valid values for $tuple.${tupleName} is empty.`
+          );
+        }
+        for (const listName of lists ?? []) {
+          entryLists.push([listName, `$tuple.${tupleName}`]);
+        }
+      } else {
+        entryLists.push([lists, `$tuple.${tupleName}`]);
       }
-      return lists === undefined
-        ? []
-        : lists.map((listName) => [listName, `tuple.${tupleName}`]);
-    })
-    .flat();
+    }
+  }
 
   // Combine the two and compile config.
-  return entryLists
-    .concat(tupleLists)
-    .reduce(
-      (
-        listConfig: GPCProofMembershipListConfig,
-        listIdPair: [PODName, PODEntryIdentifier]
-      ): GPCProofMembershipListConfig => {
-        const [listName, identifier] = listIdPair;
-        const currentPair = listConfig[listName] ?? [];
-        return {
-          ...listConfig,
-          [listName]: currentPair.concat([identifier])
-        };
-      },
-      {}
+  const listConfig: GPCProofMembershipListConfig = {};
+
+  for (const [listName, id] of entryLists.concat(tupleLists)) {
+    if (listConfig[listName] === undefined) {
+      listConfig[listName] = [id];
+    } else {
+      listConfig[listName].push(id);
+    }
+  }
+
+  return listConfig;
+}
+
+export function checkInputListNamesForConfig(
+  listConfig: GPCProofMembershipListConfig,
+  listNames: PODName[]
+): void {
+  // Config and input list membership checks should have the same list names.
+  const configListNames = new Set(Object.keys(listConfig));
+  const inputListNames = new Set(listNames);
+
+  if (!_.isEqual(configListNames, inputListNames)) {
+    throw new Error(
+      `Config and input list mismatch.` +
+        `  Configuration expects lists ${JSON.stringify(
+          Array.from(configListNames)
+        )}.` +
+        `  Input contains ${JSON.stringify(Array.from(inputListNames))}.`
     );
+  }
 }

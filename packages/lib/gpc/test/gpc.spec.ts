@@ -39,7 +39,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
           entries: {
             ticketID: {
               isRevealed: true,
-              ...(includeList ? { liesInLists: ["admissibleTickets"] } : {})
+              ...(includeList ? { isMemberOf: "admissibleTickets" } : {})
             }
           }
         }
@@ -49,9 +49,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             tuples: {
               someTupleName: {
                 entries: ["somePodName.ticketID", "somePodName.ticketID"],
-                ...(includeList
-                  ? { liesInLists: ["admissibleTicketPairs"] }
-                  : {})
+                ...(includeList ? { isMemberOf: "admissibleTicketPairs" } : {})
               }
             }
           }
@@ -72,7 +70,6 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
               ...(includeTuple
                 ? {
                     admissibleTicketPairs: [
-                      [sampleEntries2.ticketID, sampleEntries2.ticketID],
                       [sampleEntries2.ticketID, sampleEntries2.ticketID]
                     ]
                   }
@@ -189,7 +186,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             E: {
               isRevealed: false,
               equalsEntry: "pod1.A",
-              liesInLists: ["list1"]
+              isMemberOf: "list1"
             },
             owner: { isRevealed: false, isOwnerID: true }
           }
@@ -250,7 +247,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             attendee: {
               isRevealed: false,
               isOwnerID: true,
-              liesInLists: ["goats", "pigs"]
+              isMemberOf: ["goats", "pigs"]
             }
           }
         },
@@ -265,7 +262,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       tuples: {
         tuple1: {
           entries: ["pod1.G", "pod2.ticketID"],
-          liesInLists: ["list1"]
+          isMemberOf: "list1"
         },
         tuple2: {
           entries: [
@@ -274,7 +271,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             "pod1.G",
             "pod1.owner"
           ],
-          liesInLists: ["list2"]
+          isMemberOf: "list2"
         }
       }
     };
@@ -435,7 +432,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             pods: {
               somePodName: {
                 entries: {
-                  ticketID: { isRevealed: true, liesInLists: [] }
+                  ticketID: { isRevealed: true, isMemberOf: [] }
                 }
               }
             }
@@ -473,7 +470,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
                 entries: {
                   ticketID: {
                     isRevealed: true,
-                    liesInLists: ["admissibleTickets"]
+                    isMemberOf: ["admissibleTickets"]
                   }
                 }
               }
@@ -484,7 +481,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         );
       },
       "Error",
-      "Membership list admissibleTickets does not contain at least two elements."
+      "Membership list admissibleTickets is empty."
     );
 
     // Config doesn't match input.
@@ -518,7 +515,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
                 entries: {
                   ticketID: {
                     isRevealed: true,
-                    liesInLists: ["admissibleTickets"]
+                    isMemberOf: ["admissibleTickets"]
                   }
                 }
               }
@@ -561,7 +558,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
                 entries: {
                   ticketID: {
                     isRevealed: true,
-                    liesInLists: ["admissibleTickets"]
+                    isMemberOf: ["admissibleTickets"]
                   }
                 }
               }
@@ -581,7 +578,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         );
       },
       "TypeError",
-      "Membership list admissibleTickets in input has a type mismatch: It contains an element of type cryptographic and one of type int."
+      'Membership list admissibleTickets in input contains element of type "int" while comparison value with identifier "somePodName.ticketID" is of type "cryptographic".'
     );
   });
 
@@ -650,26 +647,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         );
       },
       "Error",
-      "Membership list admissibleTickets does not contain at least two elements."
-    );
-
-    await expectAsyncError(
-      async () => {
-        await gpcVerify(
-          proof2,
-          boundConfig2,
-          {
-            ...revealedClaims2,
-            membershipLists: {
-              ...revealedClaims2.membershipLists,
-              admissibleTickets: [sampleEntries2.ticketID, sampleEntries.G]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
-      },
-      "TypeError",
-      "Membership list admissibleTickets in input has a type mismatch: It contains an element of type cryptographic and one of type int."
+      "Membership list admissibleTickets is empty."
     );
 
     // Config doesn't match claims.

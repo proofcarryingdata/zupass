@@ -16,7 +16,7 @@ import {
   requireType
 } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
-import { isEqual } from "lodash";
+import _ from "lodash";
 import {
   GPCBoundConfig,
   GPCIdentifier,
@@ -28,8 +28,12 @@ import {
   GPCRevealedObjectClaims
 } from "./gpcTypes";
 import {
+  GPCProofMembershipListConfig,
   GPCRequirements,
+  checkInputListNamesForConfig,
   checkPODEntryIdentifier,
+  checkPODEntryIdentifierExists,
+  isTupleIdentifier,
   listConfigFromProofConfig,
   resolvePODEntryIdentifier,
   resolvePODEntryOrTupleIdentifier,
@@ -100,60 +104,17 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   }
 
   if (proofConfig.tuples !== undefined) {
-    for (const [tupleName, tupleConfig] of Object.entries(proofConfig.tuples)) {
-      if (tupleConfig.entries.length < 2) {
-        throw new TypeError(
-          `Tuple ${tupleName} specifies invalid tuple configuration. Tuples must have arity at least 2.`
-        );
-      }
-
-      for (const entryId of tupleConfig.entries) {
-        // Check that the tuples reference entries included in the config.
-        const [podName, entryName] = checkPODEntryIdentifier(
-          tupleName,
-          entryId
-        );
-        if (podName === "tuple") {
-          throw new ReferenceError(
-            `Tuples may only refer to POD entry identifiers: Tuple ${tupleName} refers to tuple identifier ${entryId}.`
-          );
-        }
-        const pod = proofConfig.pods[podName];
-
-        if (pod === undefined) {
-          throw new ReferenceError(
-            `Tuple ${tupleName} refers to entry ${entryName} in non-existent POD ${podName}.`
-          );
-        }
-
-        const entry = pod.entries[entryName];
-
-        if (entry === undefined) {
-          throw new ReferenceError(
-            `Tuple ${tupleName} refers to non-existent entry ${entryName} in POD ${podName}.`
-          );
-        }
-      }
-    }
+    checkProofTupleConfig(proofConfig);
   }
 
-  const listConfig = listConfigFromProofConfig(proofConfig);
+  const listConfig: GPCProofMembershipListConfig =
+    checkProofListMembershipConfig(proofConfig);
 
-  if (Object.keys(listConfig).length > 0) {
-    for (const [listName, elements] of Object.entries(listConfig)) {
-      elements.forEach((identifier) =>
-        checkPODEntryIdentifier(listName, identifier)
-      );
-    }
-  }
-
-  const numLists = Object.values(listConfig)
-    .map((elements) => elements.length)
-    .reduce((len, multiplicity) => len + multiplicity, 0);
-
-  const numListElements = Object.fromEntries(
-    Object.keys(listConfig).map((listName) => [listName, 2])
+  const numLists = _.sum(
+    Object.values(listConfig).map((elements) => elements.length)
   );
+
+  const maxListSize = numLists > 0 ? 1 : 0;
 
   const tupleArities = Object.fromEntries(
     Object.entries(proofConfig.tuples ?? {}).map((pair) => [
@@ -167,7 +128,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     totalEntries,
     requiredMerkleDepth,
     numLists,
-    numListElements,
+    maxListSize,
     tupleArities
   );
 }
@@ -220,6 +181,39 @@ function checkProofEntryConfig(
   }
 }
 
+export function checkProofTupleConfig(proofConfig: GPCProofConfig): void {
+  for (const [tupleName, tupleConfig] of Object.entries(
+    proofConfig.tuples ?? {}
+  )) {
+    if (tupleConfig.entries.length < 2) {
+      throw new TypeError(
+        `Tuple ${tupleName} specifies invalid tuple configuration. Tuples must have arity at least 2.`
+      );
+    }
+
+    for (const entryId of tupleConfig.entries) {
+      checkPODEntryIdentifierExists(tupleName, entryId, proofConfig.pods);
+    }
+  }
+}
+
+export function checkProofListMembershipConfig(
+  proofConfig: GPCProofConfig
+): GPCProofMembershipListConfig {
+  const listConfig: GPCProofMembershipListConfig =
+    listConfigFromProofConfig(proofConfig);
+
+  for (const [listName, elements] of Object.entries(listConfig)) {
+    elements.forEach((identifier) => {
+      if (!isTupleIdentifier(identifier)) {
+        checkPODEntryIdentifier(listName, identifier);
+      }
+    });
+  }
+
+  return listConfig;
+}
+
 export function checkListMembershipInput(
   membershipLists: Record<PODName, PODValue[] | PODValueTuple[]>
 ): Record<PODName, number> {
@@ -229,23 +223,8 @@ export function checkListMembershipInput(
 
   // All lists of valid values must have at least two elements.
   for (const [listName, listLength] of Object.entries(numListElements)) {
-    if (listLength < 2) {
-      throw new Error(
-        `Membership list ${listName} does not contain at least two elements.`
-      );
-    }
-  }
-
-  // All lists should be type homogeneous.
-  for (const [listName, validValueList] of Object.entries(membershipLists)) {
-    const expectedType = typeOfEntryOrTuple(validValueList[0]);
-    for (const value of validValueList.slice(1)) {
-      const valueType = typeOfEntryOrTuple(value);
-      if (!isEqual(valueType, expectedType)) {
-        throw new TypeError(
-          `Membership list ${listName} in input has a type mismatch: It contains an element of type ${expectedType} and one of type ${valueType}.`
-        );
-      }
+    if (listLength === 0) {
+      throw new Error(`Membership list ${listName} is empty.`);
     }
   }
 
@@ -299,6 +278,8 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
       ? {}
       : checkListMembershipInput(proofInputs.membershipLists);
 
+  const maxListSize = Math.max(...Object.values(numListElements));
+
   if (proofInputs.watermark !== undefined) {
     checkPODValue("watermark", proofInputs.watermark);
   }
@@ -310,7 +291,7 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     // The number of required lists cannot be properly deduced here, so we
     // return 0.
     0,
-    numListElements,
+    maxListSize,
     // The tuple arities are handled solely in the proof config, hence we return
     // an empty object here.
     {}
@@ -420,21 +401,20 @@ export function checkProofInputsForConfig(
     throw new Error("Nullifier requires an entry containing owner ID.");
   }
 
+  checkProofListMembershipInputsForConfig(proofConfig, proofInputs);
+}
+
+export function checkProofListMembershipInputsForConfig(
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs
+): void {
   // Config and input list membership checks should have the same list names.
-  const listConfig = listConfigFromProofConfig(proofConfig);
-  const configListNames = new Set(Object.keys(listConfig));
-  const inputListNames = new Set(
+  const listConfig: GPCProofMembershipListConfig =
+    listConfigFromProofConfig(proofConfig);
+  checkInputListNamesForConfig(
+    listConfig,
     Object.keys(proofInputs.membershipLists ?? {})
   );
-  if (!isEqual(configListNames, inputListNames)) {
-    throw new Error(
-      `Config and input list mismatch.` +
-        `  Configuration expects lists ${JSON.stringify(
-          Array.from(configListNames)
-        )}.` +
-        `  Input contains ${JSON.stringify(Array.from(inputListNames))}.`
-    );
-  }
 
   // The list membership check's list of valid values should be well formed in
   // the sense that the types of list values and comparison values should match
@@ -462,7 +442,8 @@ export function checkProofInputsForConfig(
 
         for (const element of inputList) {
           const elementType = typeOfEntryOrTuple(element);
-          if (!isEqual(elementType, comparisonType)) {
+
+          if (!_.isEqual(elementType, comparisonType)) {
             throw new TypeError(
               `Membership list ${listName} in input contains element of type ${JSON.stringify(
                 elementType
@@ -475,7 +456,7 @@ export function checkProofInputsForConfig(
 
         // The comparison value should lie in the membership list.
         if (
-          inputList.find((element) => isEqual(element, comparisonValue)) ===
+          inputList.find((element) => _.isEqual(element, comparisonValue)) ===
           undefined
         ) {
           throw new Error(
@@ -578,6 +559,8 @@ export function checkRevealedClaims(
       ? {}
       : checkListMembershipInput(revealedClaims.membershipLists);
 
+  const maxListSize = Math.max(...Object.values(numListElements));
+
   if (revealedClaims.watermark !== undefined) {
     checkPODValue("watermark", revealedClaims.watermark);
   }
@@ -587,7 +570,7 @@ export function checkRevealedClaims(
     totalEntries,
     requiredMerkleDepth,
     0,
-    numListElements,
+    maxListSize,
     {}
   );
 }
@@ -707,21 +690,13 @@ export function checkVerifyClaimsForConfig(
   }
 
   // Config and input list membership checks should have the same list names.
-  const { circuitIdentifier: _, ...proofConfig } = boundConfig;
-  const listConfig = listConfigFromProofConfig(proofConfig);
-  const configListNames = new Set(Object.keys(listConfig));
-  const inputListNames = new Set(
+  const { circuitIdentifier: _circuitId, ...proofConfig } = boundConfig;
+  const listConfig: GPCProofMembershipListConfig =
+    listConfigFromProofConfig(proofConfig);
+  checkInputListNamesForConfig(
+    listConfig,
     Object.keys(revealedClaims.membershipLists ?? {})
   );
-  if (!isEqual(configListNames, inputListNames)) {
-    throw new Error(
-      `Config and input list mismatch.` +
-        `  Configuration expects lists ${JSON.stringify(
-          Array.from(configListNames)
-        )}.` +
-        `  Input contains ${JSON.stringify(Array.from(inputListNames))}.`
-    );
-  }
 }
 
 /**
@@ -778,10 +753,9 @@ export function circuitDescMeetsRequirements(
     circuitDesc.maxObjects >= circuitReq.nObjects &&
     circuitDesc.maxEntries >= circuitReq.nEntries &&
     circuitDesc.merkleMaxDepth >= circuitReq.merkleMaxDepth &&
-    circuitDesc.maxLists >= Object.keys(circuitReq.nListElements).length &&
+    circuitDesc.maxLists >= circuitReq.nLists &&
     // The circuit description should be able to contain the largest of the lists.
-    circuitDesc.maxListElements >=
-      Math.max(...Object.values(circuitReq.nListElements), 0)
+    circuitDesc.maxListElements >= circuitReq.maxListSize
   );
 }
 
@@ -792,27 +766,33 @@ export function circuitDescMeetsRequirements(
  * @param rs1 first set of required sizes
  * @param rs2 second set of required sizes
  * @returns unified (maximum) sizes
+ * @throws Error if the requirements cannot be merged
  */
 export function mergeRequirements(
   rs1: GPCRequirements,
   rs2: GPCRequirements
 ): GPCRequirements {
   // Either `rs1` or `rs2` specifies the tuple arities.
+  if (
+    Object.keys(rs1.tupleArities).length > 0 &&
+    Object.keys(rs2.tupleArities).length > 0
+  ) {
+    throw new Error(
+      `At least one of the tuple arity requirements must be empty.`
+    );
+  }
+
   const tupleArities =
     Object.keys(rs1.tupleArities).length === 0
       ? rs2.tupleArities
       : rs1.tupleArities;
+
   return GPCRequirements(
     Math.max(rs1.nObjects, rs2.nObjects),
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
     Math.max(rs1.nLists, rs2.nLists),
-    Object.fromEntries(
-      Object.keys(rs2.nListElements).map((listName) => [
-        listName,
-        Math.max(rs1.nListElements[listName] ?? 0, rs2.nListElements[listName])
-      ])
-    ),
+    Math.max(rs1.maxListSize, rs2.maxListSize),
     tupleArities
   );
 }
