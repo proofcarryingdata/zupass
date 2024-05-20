@@ -8,6 +8,9 @@
   "include": ["src", "artifacts/*.json"],
   "references": [
     {
+      "path": "../../lib/eddsa-crypto/tsconfig.esm.json"
+    },
+    {
       "path": "../eddsa-pcd/tsconfig.esm.json"
     },
     {

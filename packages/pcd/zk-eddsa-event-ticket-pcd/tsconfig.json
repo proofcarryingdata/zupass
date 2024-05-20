@@ -1,15 +1,28 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": ["src", "test", "artifacts/*.json"],
-  "exclude": ["dist", "build", "node_modules"],
+  "include": [
+    "src",
+    "test",
+    "artifacts/*.json"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
   "compilerOptions": {
     "resolveJsonModule": true,
-    "lib": ["dom"],
+    "lib": [
+      "dom"
+    ],
     "outDir": "dist",
     "declarationDir": "dist/types",
     "rootDir": "."
   },
   "references": [
+    {
+      "path": "../../lib/eddsa-crypto"
+    },
     {
       "path": "../eddsa-pcd"
     },

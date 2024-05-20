@@ -12,6 +12,9 @@
   // References are automatically maintained by `yarn fix-references`
   "references": [
     {
+      "path": "../eddsa-crypto/tsconfig.cjs.json"
+    },
+    {
       "path": "../../pcd/eddsa-pcd/tsconfig.cjs.json"
     },
     {

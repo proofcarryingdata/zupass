@@ -8,6 +8,9 @@
   "include": ["src", "artifacts/*.json"],
   "references": [
     {
+      "path": "../../lib/eddsa-crypto/tsconfig.cjs.json"
+    },
+    {
       "path": "../eddsa-frog-pcd/tsconfig.cjs.json"
     },
     {
