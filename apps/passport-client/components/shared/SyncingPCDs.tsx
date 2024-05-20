@@ -5,7 +5,7 @@ export function SyncingPCDs(): JSX.Element {
   return (
     <SyncingPCDsContainer>
       <div>
-        <ScreenLoader text="Syncing PCDs..." />
+        <ScreenLoader text="Syncing Zupass" />
       </div>
     </SyncingPCDsContainer>
   );

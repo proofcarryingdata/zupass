@@ -38,19 +38,6 @@ export enum LegacyLoginCategoryName {
   Pipeline = "Pipeline"
 }
 
-export interface LoginCategoryGroups {
-  category: LoginCategory;
-}
-
-export const CONFIG_GROUPS: LoginCategoryGroups[] = [
-  { category: LegacyLoginCategoryName.EthLatAm },
-  { category: LegacyLoginCategoryName.Zuzalu },
-  { category: LegacyLoginCategoryName.Zuconnect },
-  { category: LegacyLoginCategoryName.Devconnect },
-  { category: LegacyLoginCategoryName.EdgeCityDenver },
-  { category: LegacyLoginCategoryName.Pipeline }
-];
-
 export type LoginCategory = LegacyLoginCategoryName | string;
 
 export interface LoginConfig {

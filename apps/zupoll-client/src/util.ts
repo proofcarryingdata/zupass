@@ -51,7 +51,7 @@ export function openGroupMembershipPopup(
       }
     },
     {
-      title: "Anon Voting Auth",
+      title: "SIGN IN WITH ZUPASS",
       description: originalSiteName
     }
   );

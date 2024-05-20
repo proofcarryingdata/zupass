@@ -3,6 +3,8 @@
 import ErrorDialog from "@/components/ui/ErrorDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { tryParse } from "@pcd/util";
+import { RedirectConfig } from "@pcd/zupoll-shared";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -12,6 +14,7 @@ import { Title } from "../../@/components/ui/text";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotPollResponse, PollWithCounts } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
+import { SavedLoginState } from "../../useLoginState";
 import { fmtTimeAgo, fmtTimeFuture } from "../../util";
 import { listBallotPolls } from "../../zupoll-server-api";
 import { DividerWithText } from "../create-ballot/DividerWithText";
@@ -26,7 +29,7 @@ export function BallotScreen({
 }: {
   ballotURL: string;
   loginState: LoginState | undefined;
-  logout: (ballotURL?: string) => void;
+  logout: SavedLoginState["logout"];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -67,7 +70,18 @@ export function BallotScreen({
       }
 
       if (res.status === 403) {
-        logout(ballotURL);
+        const resErr = await res.text();
+        const resValue = tryParse<RedirectConfig>(resErr);
+        const err: ZupollError = {
+          title: "Login to view this poll",
+          friendly: true,
+          message: `To view this poll, you should log in via Zupass. Click 'Login' below to continue.`,
+          loginAs: {
+            categoryId: resValue?.categoryId,
+            configName: resValue?.configName
+          }
+        };
+        setError(err);
         return;
       }
 
@@ -161,15 +175,9 @@ export function BallotScreen({
     }
   }, []);
 
-  const [canVote, setCanVote] = useState<boolean>(true);
   const [pollToVote, setPollToVote] = useState(
     new Map<string, number | undefined>()
   );
-
-  // check voting status
-  useEffect(() => {
-    setCanVote(!votedOn(ballotId) && !expired && !!loginState);
-  }, [expired, ballotId, refresh, loginState]);
 
   // update votes for polls
   const onVoted = (pollId: string, voteIdx: number) => {
@@ -208,6 +216,7 @@ export function BallotScreen({
   });
 
   const isHackathonView = !!polls.find((p) => p.options.length >= 6);
+  const canVote = !votedOn(ballotId) && !expired;
 
   return (
     <ContentContainer>
@@ -272,18 +281,6 @@ export function BallotScreen({
               </TextContainer>
             </>
           )}
-
-          {!loginState && (
-            <Button
-              variant={"creative"}
-              className="w-full"
-              onClick={() => {
-                window.location.href = "/";
-              }}
-            >
-              Log In to Vote
-            </Button>
-          )}
         </div>
       )}
 
@@ -291,6 +288,7 @@ export function BallotScreen({
 
       <ErrorDialog
         error={error}
+        logout={logout}
         close={() => {
           setError(undefined);
         }}
@@ -307,6 +305,19 @@ const TextContainer = styled.div`
 `;
 
 function PlaceholderBallot() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setVisible(true);
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  if (!visible) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col space-y-3">
       <Skeleton className="h-16 w-full" />
