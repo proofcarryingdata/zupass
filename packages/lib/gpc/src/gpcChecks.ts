@@ -221,7 +221,7 @@ export function checkListMembershipInput(
     Object.entries(membershipLists).map((pair) => [pair[0], pair[1].length])
   );
 
-  // All lists of valid values must have at least two elements.
+  // All lists of valid values must be non-empty.
   for (const [listName, listLength] of Object.entries(numListElements)) {
     if (listLength === 0) {
       throw new Error(`Membership list ${listName} is empty.`);

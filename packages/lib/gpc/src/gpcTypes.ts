@@ -180,7 +180,7 @@ export type GPCProofConfig = {
 
   /**
    * Defines named tuples of POD entries. The tuples' names lie in a separate
-   * namespace and are internally prefixed with 'tuple.'. These tuples must be
+   * namespace and are internally prefixed with '$tuple.'. These tuples must be
    * of arity (i.e. size/width) at least 2.
    */
   tuples?: Record<PODName, GPCProofTupleConfig>;

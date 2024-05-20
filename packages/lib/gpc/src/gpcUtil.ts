@@ -467,11 +467,10 @@ export type GPCRequirements = {
   /**
    * Number of lists to be included in proof.
    */
-
   nLists: number;
 
   /**
-   * Number of entries in each membership list to be included in proof.
+   * Maximum list size of each list to be included in the proof.
    */
   maxListSize: number;
 
