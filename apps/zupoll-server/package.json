@@ -11,7 +11,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "pre-deploy": "./scripts/pre-deploy.sh",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
-    "test": "ts-mocha --exit test/**/*.spec.ts",
+    "test": "ts-mocha --type-check --exit test/**/*.spec.ts",
     "clean": "rm -rf out node_modules *.tsbuildinfo"
   },
   "dependencies": {
