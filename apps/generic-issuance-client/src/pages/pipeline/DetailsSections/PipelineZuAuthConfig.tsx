@@ -1,6 +1,7 @@
 import { CheckIcon, CopyIcon } from "@chakra-ui/icons";
 import { Button, useToast } from "@chakra-ui/react";
 import { PipelineZuAuthConfig } from "@pcd/passport-interface";
+import _ from "lodash";
 import { ReactNode, useCallback, useState } from "react";
 
 /**
@@ -13,6 +14,8 @@ export function PipelineZuAuthConfigSection({
 }): ReactNode {
   const toast = useToast();
   const [copied, setCopied] = useState<boolean>(false);
+  const [includeProductOptions, setIncludeProductOptions] =
+    useState<boolean>(true);
 
   const copyToClipboard = useCallback(
     (text: string) => {
@@ -43,10 +46,47 @@ export function PipelineZuAuthConfigSection({
     return <div>No ZuAuth configuration available for this pipeline.</div>;
   }
 
-  const json = JSON.stringify(pipelineZuAuthConfig, null, 2);
+  let json: string;
+  /**
+   * If the boolean value `includeProductOptions` is false, we should filter
+   * out the product-specific data from the ZuAuth config.
+   *
+   * We do this by mapping over the config items and returning them without
+   * the product ID or product name fields, then filtering the result for the
+   * remaining unique items. If there's only one event then there will only be
+   * one item, but pipelines can have multiple events.
+   */
+  if (!includeProductOptions) {
+    json = JSON.stringify(
+      _.uniqWith(
+        pipelineZuAuthConfig.map(
+          ({ eventId, eventName, publicKey, pcdType }) =>
+            ({
+              eventId,
+              eventName,
+              publicKey,
+              pcdType
+            }) satisfies PipelineZuAuthConfig
+        ),
+        _.isEqual
+      ),
+      null,
+      2
+    );
+  } else {
+    json = JSON.stringify(pipelineZuAuthConfig, null, 2);
+  }
 
   return (
     <div>
+      <label>
+        Include product options? &nbsp;
+        <input
+          type="checkbox"
+          checked={includeProductOptions}
+          onChange={(ev) => setIncludeProductOptions(ev.target.checked)}
+        />
+      </label>
       <pre
         style={{
           whiteSpace: "pre-wrap",
