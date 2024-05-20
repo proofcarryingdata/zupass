@@ -128,7 +128,7 @@ export function BallotListsForUser({
         }
         title={"Community Polls"}
         loading={loading}
-        description={"Polls created by ETH LatAm attendees"}
+        description={"Polls created by ETH LATAM attendees"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ETH_LATAM_STRAWPOLL}
       />
@@ -139,9 +139,9 @@ export function BallotListsForUser({
             LegacyLoginConfigName.ETH_LATAM_ORGANIZER ||
           loginState.config.name === LegacyLoginConfigName.ETH_LATAM_ATTENDEE
         }
-        title={"Eth LatAm Feedback"}
+        title={"ETH LATAM Feedback"}
         loading={loading}
-        description={"Feedback polls for Eth LatAm"}
+        description={"Feedback polls for ETH LATAM"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ETH_LATAM_FEEDBACK}
       />
