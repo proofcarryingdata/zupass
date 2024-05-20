@@ -1,4 +1,5 @@
-import { POD, decodePublicKey, decodeSignature } from "@pcd/pod";
+import { decodePublicKey } from "@pcd/eddsa-crypto";
+import { POD, decodeSignature } from "@pcd/pod";
 import { WitnessTester } from "circomkit";
 import "mocha";
 import {

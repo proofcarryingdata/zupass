@@ -1,3 +1,4 @@
+import { decodePublicKey } from "@pcd/eddsa-crypto";
 import { verifySignature } from "@zk-kit/eddsa-poseidon";
 import { expect } from "chai";
 import "mocha";
@@ -7,7 +8,6 @@ import {
   PODValue,
   POD_INT_MAX,
   clonePODEntries,
-  decodePublicKey,
   decodeSignature
 } from "../src";
 import {

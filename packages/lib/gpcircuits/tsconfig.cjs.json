@@ -14,6 +14,9 @@
       "path": "../pod/tsconfig.cjs.json"
     },
     {
+      "path": "../eddsa-crypto/tsconfig.cjs.json"
+    },
+    {
       "path": "../util/tsconfig.cjs.json"
     }
   ]
