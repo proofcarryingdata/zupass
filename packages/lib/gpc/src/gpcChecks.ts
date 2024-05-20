@@ -307,8 +307,12 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     totalObjects,
     totalObjects,
     requiredMerkleDepth,
+    // The number of required lists cannot be properly deduced here, so we
+    // return 0.
     0,
     numListElements,
+    // The tuple arities are handled solely in the proof config, hence we return
+    // an empty object here.
     {}
   );
 }
@@ -432,17 +436,16 @@ export function checkProofInputsForConfig(
     );
   }
 
-  // The list membership check's input list should be well formed in the sense
-  // that the types of valid list values and comparison values should all match
+  // The list membership check's list of valid values should be well formed in
+  // the sense that the types of list values and comparison values should match
   // up.
   if (proofInputs.membershipLists !== undefined) {
     for (const [listName, comparisonIds] of Object.entries(listConfig)) {
       for (const comparisonId of comparisonIds) {
         const inputList = proofInputs.membershipLists[listName];
-        // The entry value identifiers in the membership list config should
-        // exist in the input PODs and the configuration and input list element
-        // types should agree. Moreover, the comparison value should lie in the
-        // membership list.
+
+        // The configuration and input list element types should
+        // agree.
         const comparisonValue = resolvePODEntryOrTupleIdentifier(
           comparisonId,
           proofInputs.pods,
@@ -470,6 +473,7 @@ export function checkProofInputsForConfig(
           }
         }
 
+        // The comparison value should lie in the membership list.
         if (
           inputList.find((element) => isEqual(element, comparisonValue)) ===
           undefined
@@ -587,6 +591,7 @@ export function checkRevealedClaims(
     {}
   );
 }
+
 function checkRevealedObjectClaims(
   nameForErrorMessages: string,
   objClaims: GPCRevealedObjectClaims

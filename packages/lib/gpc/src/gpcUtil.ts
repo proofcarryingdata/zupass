@@ -240,6 +240,21 @@ export function resolvePODEntryOrTupleIdentifier(
     : resolvePODEntryIdentifier(identifier, pods);
 }
 
+/**
+ * Determines the type of an entry or tuple value.
+ *
+ * Examples:
+ *
+ * typeOfEntryOrTuple({type: "cryptographic", value: 55n})
+ *  === "cryptographic"
+ *
+ * typeOfEntryOrTuple([{type: "cryptographic", value: 55n},
+ *                     {type: "int", value: 99n})
+ *  === ["cryptographic", "int"]
+ *
+ * @param value a POD value or tuple of POD values
+ * @returns a string or tuple of strings representing the value type
+ */
 export function typeOfEntryOrTuple(
   value: PODValue | PODValue[]
 ): string | string[] {
@@ -357,7 +372,7 @@ export type GPCRequirements = {
 };
 
 /**
- * GPCSizeRequirements constructor.
+ * GPCRequirements constructor.
  */
 export function GPCRequirements(
   nObjects: number,
@@ -377,6 +392,21 @@ export function GPCRequirements(
   };
 }
 
+/**
+ * Determines the list configuration from the proof configuration.
+ *
+ * List membership is indicated in each entry or tuple field via the optional
+ * property `liesInLists`, which specifies the names of lists it ought to lie in,
+ * the list itself being specified in the proof inputs. This procedure makes
+ * this implicit list configuration explicit by forming a record mapping list
+ * names to arrays of identifiers, each of which specifies those POD entries or
+ * tuples that must lie in the list.
+ *
+ * @param proofConfig the proof configuration
+ * @returns a record mapping a list name to an array of identifiers representing entries
+ * and tuples that lie in that list
+ * @throws TypeError if `liesInLists` is empty
+ */
 export function listConfigFromProofConfig(
   proofConfig: GPCProofConfig
 ): GPCProofMembershipListConfig {
@@ -405,6 +435,7 @@ export function listConfigFromProofConfig(
       return listEntryPairs;
     })
     .flat();
+
   // Find all [listName, tupleID] pairs in proofConfig.tuples
   const tupleLists: [PODName, TupleIdentifier][] = Object.keys(
     proofConfig.tuples ?? {}
@@ -423,6 +454,7 @@ export function listConfigFromProofConfig(
         : lists.map((listName) => [listName, `tuple.${tupleName}`]);
     })
     .flat();
+
   // Combine the two and compile config.
   return entryLists
     .concat(tupleLists)
