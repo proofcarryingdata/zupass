@@ -227,9 +227,22 @@ export function checkListMembershipInput(
     }
   }
 
-  // All lists of tuples should be arity homogeneous.
+  // All lists should be width/arity homogeneous.
   for (const [listName, validValueList] of Object.entries(membershipLists)) {
+    // It suffices to check the case where the list contains tuples, since the
+    // type system enforces that the value list cannot contain both PODValue and
+    // PODValue[] elements.
     if (Array.isArray(validValueList[0])) {
+      // First ensure that there are no tuples of arity less than 2.
+      for (const value of validValueList as PODValueTuple[]) {
+        if (value.length < 2) {
+          throw new TypeError(
+            `Membership list ${listName} in input contains an invalid tuple. Tuples must have arity at least 2.`
+          );
+        }
+      }
+
+      // Check arity homogeneity.
       const expectedArity = validValueList[0].length;
       for (const value of validValueList.slice(1)) {
         const valueArity = (value as PODValueTuple).length;
