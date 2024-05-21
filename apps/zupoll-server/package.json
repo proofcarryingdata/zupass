@@ -11,7 +11,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "pre-deploy": "./scripts/pre-deploy.sh",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
-    "test": "ts-mocha --exit test/**/*.spec.ts",
+    "test": "ts-mocha --type-check --exit test/**/*.spec.ts",
     "clean": "rm -rf out node_modules *.tsbuildinfo"
   },
   "dependencies": {
@@ -21,8 +21,8 @@
     "@pcd/pcd-types": "0.11.0",
     "@pcd/semaphore-group-pcd": "0.11.0",
     "@pcd/semaphore-signature-pcd": "0.11.0",
-    "@pcd/util": "^0.5.0",
     "@pcd/server-shared": "0.0.1",
+    "@pcd/util": "^0.5.0",
     "@pcd/zupoll-shared": "0.0.1",
     "@prisma/client": "^4.12.0",
     "cors": "^2.8.5",
@@ -53,6 +53,7 @@
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@pcd/eslint-config-custom": "0.11.0",
     "@pcd/tsconfig": "0.11.0",
+    "@types/assert": "^1.5.10",
     "@types/chai": "^4.3.11",
     "@types/cors": "^2.8.13",
     "@types/email-validator": "^1.0.6",
