@@ -227,7 +227,7 @@ export function checkListMembershipInput(
     }
   }
 
-  // All lists should be arity homogeneous.
+  // All lists of tuples should be arity homogeneous.
   for (const [listName, validValueList] of Object.entries(membershipLists)) {
     if (Array.isArray(validValueList[0])) {
       const expectedArity = validValueList[0].length;
