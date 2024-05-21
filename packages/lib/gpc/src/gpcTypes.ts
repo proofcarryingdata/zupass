@@ -297,7 +297,7 @@ export type GPCProofInputs = {
   /*
    * Named lists of valid values for each list membership check. These values
    * may be primitive (i.e. of type PODValue) or tuples (represented as
-   * PODValueTuple = PODValue[]).  Each list must contain at least two elements.
+   * PODValueTuple = PODValue[]).  Each list must be non-empty.
    */
   membershipLists?: Record<PODName, PODValue[] | PODValueTuple[]>;
 
