@@ -8,15 +8,15 @@ export function makeEthBerlin(
   ZUPASS_CLIENT_URL: string,
   ZUPASS_SERVER_URL: string
 ): LoginConfig[] {
-  const ETH_BERLIN_CONFIG_ID = "ETH Berlin";
-  const ETH_BERLIN_CONFIG_NAME = "ETH Berlin";
+  const ETH_BERLIN_CONFIG_ID = "ETHBerlin";
+  const ETH_BERLIN_CONFIG_NAME = "ETHBerlin";
   const ETH_BERLIN_RESIDENTS_NAME = "Attendee Polls";
   const ETH_BERLIN_RESIDENTS_DESCRIPTION =
-    "Polls created by ETH Berlin Attendees";
+    "Polls created by ETHBerlin Attendees";
   const ETH_BERLIN_ORGANIZER_NAME = "Staff Polls";
-  const ETH_BERLIN_ORGANIZER_DESCRIPTION = "Polls created by ETH Berlin Staff";
+  const ETH_BERLIN_ORGANIZER_DESCRIPTION = "Polls created by ETHBerlin Staff";
   const ETH_BERLIN_DESCRIPTION =
-    "Polls created by ETH Berlin Attendees. Add to the discussion by creating a new Ballot!";
+    "Polls created by ETHBerlin Attendees. Add to the discussion by creating a new Ballot!";
   const ETH_BERLIN_CONFIG_PIPELINE_ID = "e0f80908-4c9e-4bdb-9804-c88e8f64f59b";
   const ETH_BERLIN_CONFIG_SEMA_GROUP_ID =
     "de1ab4fb-8bda-4388-abad-a8c80163cd00";
