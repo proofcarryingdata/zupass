@@ -65,7 +65,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             membershipLists: {
               admissibleTickets: [
                 sampleEntries2.ticketID,
-                sampleEntries2.ticketID
+                sampleEntries.otherTicketID
               ],
               ...(includeTuple
                 ? {
@@ -568,9 +568,11 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             ...proofInputs,
             membershipLists: {
               admissibleTickets: [
-                sampleEntries2.ticketID,
-                sampleEntries.otherTicketID,
-                sampleEntries.G
+                [
+                  sampleEntries2.ticketID,
+                  sampleEntries.otherTicketID,
+                  sampleEntries.G
+                ]
               ]
             }
           },
@@ -578,7 +580,40 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         );
       },
       "TypeError",
-      'Membership list admissibleTickets in input contains element of type "int" while comparison value with identifier "somePodName.ticketID" is of type "cryptographic".'
+      'Membership list admissibleTickets in input contains element of width 3 while comparison value with identifier "somePodName.ticketID" has width 1.'
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          {
+            ...proofConfig,
+            tuples: {
+              tuple1: {
+                entries: ["somePodName.ticketID", "somePodName.ticketID"],
+                isMemberOf: "list1"
+              }
+            }
+          },
+          {
+            ...proofInputs,
+            membershipLists: {
+              list1: [
+                [sampleEntries2.ticketID, sampleEntries2.ticketID],
+                [
+                  sampleEntries2.ticketID,
+                  sampleEntries.G,
+                  sampleEntries.otherTicketID
+                ],
+                [sampleEntries.otherTicketID, sampleEntries.G]
+              ]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "TypeError",
+      "Membership list list1 in input has a type mismatch: It contains a tuple of arity 2 and one of arity 3."
     );
   });
 
@@ -648,6 +683,32 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       },
       "Error",
       "Membership list admissibleTickets is empty."
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcVerify(
+          proof2,
+          boundConfig2,
+          {
+            ...revealedClaims2,
+            membershipLists: {
+              admissibleTicketPairs: [
+                [sampleEntries2.ticketID, sampleEntries2.ticketID],
+                [
+                  sampleEntries2.ticketID,
+                  sampleEntries.G,
+                  sampleEntries.otherTicketID
+                ],
+                [sampleEntries.otherTicketID, sampleEntries.G]
+              ]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "TypeError",
+      "Membership list admissibleTicketPairs in input has a type mismatch: It contains a tuple of arity 2 and one of arity 3."
     );
 
     // Config doesn't match claims.

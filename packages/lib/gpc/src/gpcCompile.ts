@@ -33,6 +33,7 @@ import {
   GPCRevealedObjectClaims,
   GPCRevealedOwnerClaims,
   PODEntryIdentifier,
+  TUPLE_PREFIX,
   TupleIdentifier
 } from "./gpcTypes";
 import {
@@ -73,7 +74,7 @@ type CompilerEntryInfo<ObjInput> = {
  * arity into a sequence of tuples of some fixed arity dictated by the choice of
  * circuit. The field `tupleIndex` contains the index (in the theoretically
  * concatenated entry value hash and tuple value hash array) of the hash of this
- * input tuple, while `tupleIndices` contains a sequence of indices representing
+ * input tuple, while `tupleInputIndices` contains a sequence of indices representing
  * the aforementioned decomposition of this tuple. Thus, for a list membership
  * check for a tuple value, `tupleIndex` is the required
  * `listComparisonValueIndex`.
@@ -156,7 +157,8 @@ function prepCompilerMaps<
 /**
  * Helper function for the tuple compilation phase for prove or verify.  Input
  * information is gathered into a map for easy lookup by name when compiling
- * data that depends on tuples. All tuple names are prefixed with "$tuple.".
+ * data that depends on tuples. All tuple names are prefixed with
+ * "${TUPLE_PREFIX}.".
  *
  * The tuples are sorted by name before they are processed.
  *
@@ -216,7 +218,7 @@ function prepCompilerTupleMap<ObjInput extends POD | GPCRevealedObjectClaims>(
 
       tupleIndex += tupleIndices.length;
 
-      tupleMap.set(`$tuple.${tupleName}`, {
+      tupleMap.set(`${TUPLE_PREFIX}.${tupleName}`, {
         tupleIndex: tupleIndex - 1,
         tupleInputIndices: tupleIndices
       });

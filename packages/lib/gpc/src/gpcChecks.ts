@@ -25,20 +25,19 @@ import {
   GPCProofInputs,
   GPCProofObjectConfig,
   GPCRevealedClaims,
-  GPCRevealedObjectClaims
+  GPCRevealedObjectClaims,
+  PODEntryIdentifier
 } from "./gpcTypes";
 import {
   GPCProofMembershipListConfig,
   GPCRequirements,
-  checkInputListNamesForConfig,
   checkPODEntryIdentifier,
-  checkPODEntryIdentifierExists,
   isTupleIdentifier,
   listConfigFromProofConfig,
   resolvePODEntryIdentifier,
   resolvePODEntryOrTupleIdentifier,
   splitCircuitIdentifier,
-  typeOfEntryOrTuple
+  widthOfEntryOrTuple
 } from "./gpcUtil";
 
 // TODO(POD-P2): Split out the parts of this which should be public from
@@ -225,6 +224,21 @@ export function checkListMembershipInput(
   for (const [listName, listLength] of Object.entries(numListElements)) {
     if (listLength === 0) {
       throw new Error(`Membership list ${listName} is empty.`);
+    }
+  }
+
+  // All lists should be arity homogeneous.
+  for (const [listName, validValueList] of Object.entries(membershipLists)) {
+    if (Array.isArray(validValueList[0])) {
+      const expectedArity = validValueList[0].length;
+      for (const value of validValueList.slice(1)) {
+        const valueArity = (value as PODValueTuple).length;
+        if (valueArity !== expectedArity) {
+          throw new TypeError(
+            `Membership list ${listName} in input has a type mismatch: It contains a tuple of arity ${expectedArity} and one of arity ${valueArity}.`
+          );
+        }
+      }
     }
   }
 
@@ -438,18 +452,19 @@ export function checkProofListMembershipInputsForConfig(
           );
         }
 
-        const comparisonType = typeOfEntryOrTuple(comparisonValue);
+        // The comparison value and list value widths should match up.
+        const comparisonWidth = widthOfEntryOrTuple(comparisonValue);
 
         for (const element of inputList) {
-          const elementType = typeOfEntryOrTuple(element);
+          const elementWidth = widthOfEntryOrTuple(element);
 
-          if (!_.isEqual(elementType, comparisonType)) {
+          if (!_.isEqual(elementWidth, comparisonWidth)) {
             throw new TypeError(
-              `Membership list ${listName} in input contains element of type ${JSON.stringify(
-                elementType
+              `Membership list ${listName} in input contains element of width ${JSON.stringify(
+                elementWidth
               )} while comparison value with identifier ${JSON.stringify(
                 comparisonId
-              )} is of type ${JSON.stringify(comparisonType)}.`
+              )} has width ${JSON.stringify(comparisonWidth)}.`
             );
           }
         }
@@ -469,6 +484,25 @@ export function checkProofListMembershipInputsForConfig(
         }
       }
     }
+  }
+}
+
+export function checkInputListNamesForConfig(
+  listConfig: GPCProofMembershipListConfig,
+  listNames: PODName[]
+): void {
+  // Config and input list membership checks should have the same list names.
+  const configListNames = new Set(Object.keys(listConfig));
+  const inputListNames = new Set(listNames);
+
+  if (!_.isEqual(configListNames, inputListNames)) {
+    throw new Error(
+      `Config and input list mismatch.` +
+        `  Configuration expects lists ${JSON.stringify(
+          Array.from(configListNames)
+        )}.` +
+        `  Input contains ${JSON.stringify(Array.from(inputListNames))}.`
+    );
   }
 }
 
@@ -835,5 +869,39 @@ export function checkCircuitRequirements(
       throw new Error(`No supported circuit meets proof requirements.`);
     }
     return pickedDesc;
+  }
+}
+
+/**
+ * Checks whether a POD entry identifier exists in the context of tuple checking.
+ *
+ * @param tupleNameForErrorMessages tuple name (provided for error messages)
+ * @param entryIdentifier the identifier to check
+ * @throws ReferenceError if the identifier does not exist or is invalid
+ */
+export function checkPODEntryIdentifierExists(
+  tupleNameForErrorMessages: PODName,
+  entryIdentifier: PODEntryIdentifier,
+  pods: Record<PODName, GPCProofObjectConfig>
+): void {
+  // Check that the tuples reference entries included in the config.
+  const [podName, entryName] = checkPODEntryIdentifier(
+    tupleNameForErrorMessages,
+    entryIdentifier
+  );
+  const pod = pods[podName];
+
+  if (pod === undefined) {
+    throw new ReferenceError(
+      `Tuple ${tupleNameForErrorMessages} refers to entry ${entryName} in non-existent POD ${podName}.`
+    );
+  }
+
+  const entry = pod.entries[entryName];
+
+  if (entry === undefined) {
+    throw new ReferenceError(
+      `Tuple ${tupleNameForErrorMessages} refers to non-existent entry ${entryName} in POD ${podName}.`
+    );
   }
 }

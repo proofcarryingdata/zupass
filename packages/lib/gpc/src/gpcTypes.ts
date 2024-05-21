@@ -8,11 +8,16 @@ import { Identity } from "@semaphore-protocol/identity";
  */
 export type PODEntryIdentifier = `${PODName}.${PODName}`;
 
+// Single source of truth for tuple prefix (used internally).
+// This should not be a valid {@link PODName} to avoid name clashes.
+export const TUPLE_PREFIX = "$tuple";
+type TuplePrefix = "$tuple";
+
 /**
  * String specifying a named tuple in the format `tuple.tupleName`.
  * `tupleName` should be a valid PODName checked by {@link POD_NAME_REGEX}.
  */
-export type TupleIdentifier = `$tuple.${PODName}`;
+export type TupleIdentifier = `${TuplePrefix}.${PODName}`;
 
 /**
  * String specifying a specific GPC circuit, identified by its family name

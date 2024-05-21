@@ -19,6 +19,7 @@ import {
   GPCProofObjectConfig,
   GPCProofTupleConfig,
   PODEntryIdentifier,
+  TUPLE_PREFIX,
   TupleIdentifier
 } from "./gpcTypes";
 
@@ -111,7 +112,7 @@ function canonicalizeEntryConfig(
 function canonicalizeTupleConfig(
   tupleRecord: Record<PODName, GPCProofTupleConfig>
 ): Record<PODName, GPCProofTupleConfig> {
-  const sortedTuples = Object.fromEntries(
+  return Object.fromEntries(
     Object.keys(tupleRecord)
       .sort()
       .map((tupleName) => {
@@ -130,7 +131,6 @@ function canonicalizeTupleConfig(
         ];
       })
   );
-  return sortedTuples;
 }
 
 /**
@@ -154,40 +154,6 @@ export function checkPODEntryIdentifier(
     );
   }
   return [checkPODName(parts[0]), checkPODName(parts[1])];
-}
-
-/**
- * Checks whether a POD entry identifier exists in the context of tuple checking.
- *
- * @param tupleNameForErrorMessages tuple name (provided for error messages)
- * @param entryIdentifier the identifier to check
- * @throws ReferenceError if the identifier does not exist or is invalid
- */
-export function checkPODEntryIdentifierExists(
-  tupleNameForErrorMessages: PODName,
-  entryIdentifier: PODEntryIdentifier,
-  pods: Record<PODName, GPCProofObjectConfig>
-): void {
-  // Check that the tuples reference entries included in the config.
-  const [podName, entryName] = checkPODEntryIdentifier(
-    tupleNameForErrorMessages,
-    entryIdentifier
-  );
-  const pod = pods[podName];
-
-  if (pod === undefined) {
-    throw new ReferenceError(
-      `Tuple ${tupleNameForErrorMessages} refers to entry ${entryName} in non-existent POD ${podName}.`
-    );
-  }
-
-  const entry = pod.entries[entryName];
-
-  if (entry === undefined) {
-    throw new ReferenceError(
-      `Tuple ${tupleNameForErrorMessages} refers to non-existent entry ${entryName} in POD ${podName}.`
-    );
-  }
 }
 
 /**
@@ -248,11 +214,7 @@ export function resolvePODEntryIdentifier(
 export function isTupleIdentifier(
   identifier: PODEntryIdentifier | TupleIdentifier
 ): boolean {
-  const parts = identifier.split(".");
-  if (parts.length !== 2) {
-    throw new TypeError(`Invalid entry or tuple identifier: ${identifier}`);
-  }
-  return parts[0] === "$tuple" && checkPODName(parts[1]) === parts[1];
+  return identifier.startsWith(`${TUPLE_PREFIX}.`);
 }
 
 /**
@@ -298,7 +260,7 @@ export function resolveTupleIdentifier(
   pods: Record<PODName, POD>,
   tuples: Record<PODName, GPCProofTupleConfig>
 ): PODValueTuple | undefined {
-  const tupleName = tupleIdentifier.slice(7);
+  const tupleName = tupleIdentifier.slice(`${TUPLE_PREFIX}.`.length);
   const tupleEntries = tuples[tupleName].entries;
   const resolution = tupleEntries.map((entryId) =>
     resolvePODEntryIdentifier(entryId, pods)
@@ -311,9 +273,7 @@ export function resolveTupleIdentifier(
     }
   });
 
-  return resolution.every((value) => value === undefined)
-    ? undefined
-    : (resolution as PODValue[]);
+  return resolution as PODValue[];
 }
 
 /**
@@ -351,24 +311,23 @@ export function resolvePODEntryOrTupleIdentifier(
 }
 
 /**
- * Determines the type of an entry or tuple value.
+ * Determines the arity/width of an entry or tuple value, where entry values
+ * have width 1 by convention.
  *
  * Examples:
  *
- * typeOfEntryOrTuple({type: "cryptographic", value: 55n})
- *  === "cryptographic"
+ * widthOfEntryOrTuple({type: "cryptographic", value: 55n})
+ *  === 1
  *
- * typeOfEntryOrTuple([{type: "cryptographic", value: 55n},
+ * widthOfEntryOrTuple([{type: "cryptographic", value: 55n},
  *                     {type: "int", value: 99n})
- *  === ["cryptographic", "int"]
+ *  === 2
  *
  * @param value a POD value or tuple of POD values
- * @returns a string or tuple of strings representing the value type
+ * @returns the width of the value type
  */
-export function typeOfEntryOrTuple(
-  value: PODValue | PODValue[]
-): string | string[] {
-  return Array.isArray(value) ? value.map((x) => x.type) : value.type;
+export function widthOfEntryOrTuple(value: PODValue | PODValue[]): number {
+  return Array.isArray(value) ? value.length : 1;
 }
 
 /**
@@ -565,14 +524,14 @@ export function listConfigFromProofConfig(
       if (Array.isArray(lists)) {
         if (lists.length === 0) {
           throw new TypeError(
-            `The list of lists of valid values for $tuple.${tupleName} is empty.`
+            `The list of lists of valid values for ${TUPLE_PREFIX}.${tupleName} is empty.`
           );
         }
         for (const listName of lists ?? []) {
-          entryLists.push([listName, `$tuple.${tupleName}`]);
+          entryLists.push([listName, `${TUPLE_PREFIX}.${tupleName}`]);
         }
       } else {
-        entryLists.push([lists, `$tuple.${tupleName}`]);
+        entryLists.push([lists, `${TUPLE_PREFIX}.${tupleName}`]);
       }
     }
   }
@@ -589,23 +548,4 @@ export function listConfigFromProofConfig(
   }
 
   return listConfig;
-}
-
-export function checkInputListNamesForConfig(
-  listConfig: GPCProofMembershipListConfig,
-  listNames: PODName[]
-): void {
-  // Config and input list membership checks should have the same list names.
-  const configListNames = new Set(Object.keys(listConfig));
-  const inputListNames = new Set(listNames);
-
-  if (!_.isEqual(configListNames, inputListNames)) {
-    throw new Error(
-      `Config and input list mismatch.` +
-        `  Configuration expects lists ${JSON.stringify(
-          Array.from(configListNames)
-        )}.` +
-        `  Input contains ${JSON.stringify(Array.from(inputListNames))}.`
-    );
-  }
 }
