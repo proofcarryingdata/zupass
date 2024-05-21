@@ -1,5 +1,5 @@
 import { CheckIcon, CopyIcon } from "@chakra-ui/icons";
-import { Button, useToast } from "@chakra-ui/react";
+import { Button, Spacer, useToast } from "@chakra-ui/react";
 import { PipelineZuAuthConfig } from "@pcd/passport-interface";
 import _ from "lodash";
 import { ReactNode, useCallback, useState } from "react";
@@ -62,10 +62,10 @@ export function PipelineZuAuthConfigSection({
         pipelineZuAuthConfig.map(
           ({ eventId, eventName, publicKey, pcdType }) =>
             ({
-              eventId,
-              eventName,
+              pcdType,
               publicKey,
-              pcdType
+              eventId,
+              eventName
             }) satisfies PipelineZuAuthConfig
         ),
         _.isEqual
@@ -79,14 +79,19 @@ export function PipelineZuAuthConfigSection({
 
   return (
     <div>
-      <label>
-        Include product options? &nbsp;
-        <input
-          type="checkbox"
-          checked={includeProductOptions}
-          onChange={(ev) => setIncludeProductOptions(ev.target.checked)}
-        />
-      </label>
+      <div>
+        <label>
+          Include product options? &nbsp;
+          <input
+            type="checkbox"
+            checked={includeProductOptions}
+            onChange={(ev) => setIncludeProductOptions(ev.target.checked)}
+          />
+        </label>
+      </div>
+      <Spacer h={2} />
+      <hr />
+      <Spacer h={2} />
       <pre
         style={{
           whiteSpace: "pre-wrap",
