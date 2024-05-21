@@ -202,6 +202,11 @@ export async function uploadSerializedStorage(
     return { success: false, error: uploadResult.error };
   } else {
     console.error("[SYNC] failed to upload e2ee storage", uploadResult.error);
+    requestLogToServer(appConfig.zupassServer, "sync-failed", {
+      user: user.uuid,
+      pcdCollectionSize: pcds.size(),
+      storageCipherTextLength: encryptedStorage.ciphertext.length
+    });
     return { success: false, error: uploadResult.error };
   }
 }
