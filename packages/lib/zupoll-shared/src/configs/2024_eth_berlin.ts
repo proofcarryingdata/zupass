@@ -1,8 +1,5 @@
-import _ from "lodash";
-import urljoin from "url-join";
-import { makePodboxGroupUrl } from "../makePodboxGroupUrl";
 import { makePodboxLoginConfigs } from "../makePodboxLoginConfigs";
-import { BallotConfig, BallotType, LoginConfig } from "../types";
+import { LoginConfig } from "../types";
 
 export function makeEthBerlin(
   ZUPASS_CLIENT_URL: string,
@@ -42,39 +39,6 @@ export function makeEthBerlin(
     ETH_BERLIN_MONTH,
     ETH_BERLIN_DAY
   );
-
-  const hackathonVoterGroupId = "ea3c05e7-9924-4889-920e-3830f861e8f0";
-  const hackathonVoterGroupUrl = makePodboxGroupUrl(
-    ZUPASS_SERVER_URL,
-    ETH_BERLIN_CONFIG_PIPELINE_ID,
-    hackathonVoterGroupId
-  );
-  const organizerGroupUrl = makePodboxGroupUrl(
-    ZUPASS_SERVER_URL,
-    ETH_BERLIN_CONFIG_PIPELINE_ID,
-    ETH_BERLIN_CONFIG_ORGANIZER_SEMA_GROUP_ID
-  );
-
-  const hackathonVoterBallotConfig: BallotConfig = {
-    name: "Hackathon",
-    description: "Polls only non-hackers can vote on!",
-    voterGroupId: hackathonVoterGroupId,
-    voterGroupUrl: hackathonVoterGroupUrl,
-    creatorGroupId: ETH_BERLIN_CONFIG_ORGANIZER_SEMA_GROUP_ID,
-    creatorGroupUrl: organizerGroupUrl,
-    passportServerUrl: ZUPASS_SERVER_URL,
-    passportAppUrl: ZUPASS_CLIENT_URL,
-    ballotType: BallotType.PODBOX,
-    latestVoterGroupHashUrl: urljoin(hackathonVoterGroupUrl, "latest-root"),
-    makeHistoricVoterGroupUrl: (hash) => urljoin(hackathonVoterGroupUrl, hash),
-    canCreate: true
-  };
-
-  const forOrganizer = _.clone(hackathonVoterBallotConfig);
-  ETH_BERLIN_CONFIG[0].ballotConfigs?.unshift(forOrganizer);
-  const forResident = _.clone(hackathonVoterBallotConfig);
-  forResident.canCreate = false;
-  ETH_BERLIN_CONFIG[1].ballotConfigs?.unshift(forResident);
 
   return ETH_BERLIN_CONFIG;
 }
