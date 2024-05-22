@@ -8,25 +8,21 @@ import { LoginWidgetProps } from "./LoginWidget";
  */
 export function LoginActionsForLoginGroup({
   group,
-  onLogin,
-  setError,
   setServerLoading,
   serverLoading
 }: LoginGroupProps) {
   return (
-    <div className="flex-grow flex row w-full gap-2 items-center justify-center box-border">
+    <div className="flex-grow flex flex-col-reverse w-full gap-2 items-center justify-center box-border">
       {group.configs.map((loginConfig, i) => {
         const shouldEmphasize = i === group.configs.length - 1;
         return (
           <LoginButton
             key={group.category + loginConfig.name}
-            onLogin={onLogin}
-            onError={setError}
             setServerLoading={setServerLoading}
             serverLoading={serverLoading}
             config={loginConfig}
-            variant={shouldEmphasize ? "default" : "ghost"}
-            className={shouldEmphasize ? "grow" : undefined}
+            variant={shouldEmphasize ? "default" : "outline"}
+            className={"w-full"}
           >
             {loginConfig.buttonName}
           </LoginButton>

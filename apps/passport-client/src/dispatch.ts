@@ -8,10 +8,13 @@ import {
   deserializeStorage,
   Feed,
   FeedSubscriptionManager,
+  getNamedAPIErrorMessage,
   LATEST_PRIVACY_NOTICE,
   NetworkFeedApi,
   requestCreateNewUser,
+  requestDownloadAndDecryptStorage,
   requestLogToServer,
+  requestOneClickLogin,
   requestUser,
   serializeStorage,
   StorageWithRevision,
@@ -86,6 +89,12 @@ export type Action =
       email: string;
       password: string;
       token: string;
+    }
+  | {
+      type: "one-click-login";
+      email: string;
+      code: string;
+      targetFolder: string | undefined | null;
     }
   | {
       type: "set-self";
@@ -198,6 +207,14 @@ export async function dispatch(
         state,
         update
       );
+    case "one-click-login":
+      return oneClickLogin(
+        action.email,
+        action.code,
+        action.targetFolder,
+        state,
+        update
+      );
     case "set-self":
       return setSelf(action.self, state, update);
     case "error":
@@ -295,6 +312,96 @@ async function genPassport(
   window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
 
   update({ pcds });
+}
+
+async function oneClickLogin(
+  email: string,
+  code: string,
+  targetFolder: string | undefined | null,
+  state: AppState,
+  update: ZuUpdate
+): Promise<void> {
+  update({
+    modal: { modalType: "none" }
+  });
+  // Because we skip the genPassword() step of setting the initial PCDs
+  // in the one-click flow, we'll need to do it here.
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+    identity: state.identity
+  });
+  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+
+  await savePCDs(pcds);
+  update({ pcds });
+
+  const crypto = await PCDCrypto.newInstance();
+  const encryptionKey = crypto.generateRandomKey();
+  saveEncryptionKey(encryptionKey);
+
+  update({
+    encryptionKey
+  });
+
+  const oneClickLoginResult = await requestOneClickLogin(
+    appConfig.zupassServer,
+    email,
+    code,
+    state.identity.commitment.toString(),
+    encryptionKey
+  );
+
+  if (oneClickLoginResult.success) {
+    // New user
+    if (oneClickLoginResult.value.isNewUser) {
+      return finishAccountCreation(
+        oneClickLoginResult.value.zupassUser,
+        state,
+        update,
+        targetFolder
+      );
+    }
+
+    // User has encryption key
+    if (oneClickLoginResult.value.encryptionKey) {
+      saveEncryptionKey(oneClickLoginResult.value.encryptionKey);
+      update({
+        encryptionKey: oneClickLoginResult.value.encryptionKey
+      });
+      const storageResult = await requestDownloadAndDecryptStorage(
+        appConfig.zupassServer,
+        oneClickLoginResult.value.encryptionKey
+      );
+      if (storageResult.success) {
+        return loadAfterLogin(
+          oneClickLoginResult.value.encryptionKey,
+          storageResult.value,
+          update
+        );
+      }
+
+      return update({
+        error: {
+          title: "An error occurred while downloading encrypted storage",
+          message: `An error occurred while downloading encrypted storage [
+                ${getNamedAPIErrorMessage(
+                  storageResult.error
+                )}].  If this persists, contact support@zupass.org.`
+        }
+      });
+    }
+
+    // Account has password - direct to enter password
+    window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
+    return;
+  }
+
+  // Error - didn't match
+  update({
+    error: {
+      title: "Zupass error occurred",
+      message: oneClickLoginResult.error
+    }
+  });
 }
 
 async function createNewUserSkipPassword(

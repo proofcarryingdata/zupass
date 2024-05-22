@@ -40,7 +40,11 @@ export function CreateBallotPage() {
               />
               <CreateBallot loginState={loginState} onError={setError} />
             </div>
-            <ErrorDialog error={error} close={() => setError(undefined)} />
+            <ErrorDialog
+              logout={logout}
+              error={error}
+              close={() => setError(undefined)}
+            />
           </ContentContainer>
         </ContentContainer>
       )}

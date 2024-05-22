@@ -19,7 +19,6 @@ import {
   createVote,
   findTgMessages,
   getBallotById,
-  getBallotByIdAndType,
   getPollById,
   getVoteByNullifier,
   saveTgMessage
@@ -259,7 +258,7 @@ export function initPCDRoutes(
         if (isNaN(ballotURL)) {
           throw new Error("Invalid ballot URL.");
         }
-        const ballot = await getBallotByIdAndType(ballotURL, req.authUserType);
+        const ballot = await getBallotById(ballotURL);
         if (ballot === null) {
           throw new Error("Can't find the given ballot.");
         }
@@ -336,38 +335,39 @@ export function initPCDRoutes(
                 logger.info(`Edited vote msg`, msg);
               }
             } catch (error) {
+              context.rollbarService?.reportError(error);
               logger.error(`GRAMMY ERROR`, error);
             }
           }
         } else if (originalBallotMsg?.length > 0) {
           for (const voteMsg of originalBallotMsg) {
-            const msg = await context.bot?.api.sendMessage(
-              voteMsg.chatId.toString(),
-              generatePollHTML(ballot, allVotes),
-              {
-                reply_to_message_id: parseInt(voteMsg.messageId.toString()),
-                parse_mode: "HTML",
-                // disable_web_page_preview: true,
-                reply_markup: new InlineKeyboard().url(
-                  `See more / Vote`,
-                  `${process.env.BOT_ZUPOLL_LINK}?startapp=${ballot.ballotURL}`
-                )
-              }
-            );
-            if (msg) {
-              // eslint-disable-next-line @typescript-eslint/no-unused-vars
-              const { id, messageId, ...resultsMsg } = voteMsg;
-              await saveTgMessage(
-                msg,
-                resultsMsg.ballotId,
-                MessageType.RESULTS
+            try {
+              const msg = await context.bot?.api.sendMessage(
+                voteMsg.chatId.toString(),
+                generatePollHTML(ballot, allVotes),
+                {
+                  reply_to_message_id: parseInt(voteMsg.messageId.toString()),
+                  parse_mode: "HTML",
+                  // disable_web_page_preview: true,
+                  reply_markup: new InlineKeyboard().url(
+                    `See more / Vote`,
+                    `${process.env.BOT_ZUPOLL_LINK}?startapp=${ballot.ballotURL}`
+                  )
+                }
               );
-              logger.info(`Updated DB with RESULTS`);
+              if (msg) {
+                await saveTgMessage(msg, voteMsg.ballotId, MessageType.RESULTS);
+                logger.info(`Updated DB with RESULTS`);
+              }
+            } catch (error) {
+              context.rollbarService?.reportError(error);
+              logger.error(`GRAMMY ERROR`, error);
             }
           }
         }
         res.json(multiVoteResponse);
       } catch (e) {
+        context.rollbarService?.reportError(e);
         console.error(`[ERROR]`, e);
         next(e);
       }

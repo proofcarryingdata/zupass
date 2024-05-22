@@ -9,6 +9,11 @@ export type ZupollError = {
   friendly?: boolean;
   /** Optional stacktrace. */
   stack?: string;
+  /** Optional configuration to include a 'login' button in the error dialog */
+  loginAs?: {
+    categoryId?: string;
+    configName?: string;
+  };
 };
 
 export enum PCDState {

@@ -1844,6 +1844,11 @@ describe("devconnect functionality", function () {
         }
       );
 
+      // Logging in schedules an asynchronous reload, which sometimes occurs
+      // before the subsequent tests, and sometimes does not. To be sure, we
+      // will await the reload here.
+      await application.services.semaphoreService.reload();
+
       expectCurrentSemaphoreToBe(application, {
         p: [],
         r: [],

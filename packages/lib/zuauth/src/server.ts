@@ -39,7 +39,12 @@ export async function authenticate(
   }
 
   const publicKeys = config.map((em) => em.publicKey);
-  const productIds = new Set(config.map((em) => em.productId));
+  const productIds = new Set(
+    // Product ID is optional, so it's important to filter out undefined values
+    config
+      .map((em) => em.productId)
+      .filter((productId) => productId !== undefined)
+  );
 
   if (
     publicKeys.length > 0 &&

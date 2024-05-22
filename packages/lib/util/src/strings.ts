@@ -90,3 +90,11 @@ export function emptyStrToUndefined(
   }
   return inStr;
 }
+
+export function tryParse<T>(str: unknown): T | undefined {
+  try {
+    return JSON.parse(str as string);
+  } catch {
+    return undefined;
+  }
+}

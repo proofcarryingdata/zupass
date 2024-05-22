@@ -15,7 +15,7 @@ import { CreatePost } from "./CreatePost";
 export function CreateBotPostPage() {
   const router = useRouter();
   const [error, setError] = useState<ZupollError>();
-  const { loginState } = useSavedLoginState(router);
+  const { loginState, logout } = useSavedLoginState(router);
 
   // Log them out if they're not in a valid group
   useEffect(() => {
@@ -39,7 +39,11 @@ export function CreateBotPostPage() {
         <ContentContainer>
           <AppHeader />
           <CreatePost onError={setError} loginState={loginState} />
-          <ErrorDialog error={error} close={() => setError(undefined)} />
+          <ErrorDialog
+            error={error}
+            close={() => setError(undefined)}
+            logout={logout}
+          />
         </ContentContainer>
       )}
     </>

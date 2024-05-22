@@ -3,6 +3,7 @@ import {
   AgreeTermsResult,
   ConfirmEmailResponseValue,
   LATEST_PRIVACY_NOTICE,
+  OneClickLoginResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
   VerifyTokenResponseValue,
   ZupassUserJson
@@ -29,6 +30,7 @@ import { logger } from "../util/logger";
 import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
+import { GenericIssuanceService } from "./generic-issuance/GenericIssuanceService";
 import { RateLimitService } from "./rateLimitService";
 import { SemaphoreService } from "./semaphoreService";
 
@@ -46,19 +48,22 @@ export class UserService {
   private readonly emailTokenService: EmailTokenService;
   private readonly emailService: EmailService;
   private readonly rateLimitService: RateLimitService;
+  private readonly genericIssuanceService: GenericIssuanceService | null;
 
   public constructor(
     context: ApplicationContext,
     semaphoreService: SemaphoreService,
     emailTokenService: EmailTokenService,
     emailService: EmailService,
-    rateLimitService: RateLimitService
+    rateLimitService: RateLimitService,
+    genericIssuanceService: GenericIssuanceService | null
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
     this.emailTokenService = emailTokenService;
     this.emailService = emailService;
     this.rateLimitService = rateLimitService;
+    this.genericIssuanceService = genericIssuanceService;
     this.bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
@@ -176,6 +181,74 @@ export class UserService {
           ` Please contact ${ZUPASS_SUPPORT_EMAIL} for further assistance.`
       );
     }
+  }
+
+  public async handleOneClickLogin(
+    email: string,
+    code: string,
+    commitment: string,
+    encryptionKey: string,
+    res: Response
+  ): Promise<void> {
+    if (!this.genericIssuanceService) {
+      throw new PCDHTTPError(500, "Generic issuance service not initialized");
+    }
+    const valid =
+      await this.genericIssuanceService.validateEmailAndPretixOrderCode(
+        email,
+        code
+      );
+    if (!valid) {
+      throw new PCDHTTPError(
+        403,
+        "Invalid Zupass link. Please log in through the home page."
+      );
+    }
+    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
+    if (existingUser) {
+      res.status(200).json({
+        isNewUser: false,
+        encryptionKey: existingUser.encryption_key
+      } satisfies OneClickLoginResponseValue);
+      return;
+    }
+    // todo: rate limit
+    await upsertUser(this.context.dbPool, {
+      email,
+      commitment,
+      encryptionKey,
+      terms_agreed: LATEST_PRIVACY_NOTICE,
+      extra_issuance: false
+    });
+
+    // Reload Merkle trees
+    this.semaphoreService.scheduleReload();
+
+    const user = await fetchUserByEmail(this.context.dbPool, email);
+    if (!user) {
+      throw new PCDHTTPError(403, "No user with that email exists");
+    }
+
+    // Slightly redundantly, this will set the "terms agreed" again
+    // However, having a single canonical transaction for this seems like
+    // a benefit
+    logger(
+      `[USER_SERVICE] Agreeing to terms: ${LATEST_PRIVACY_NOTICE}`,
+      user.email
+    );
+    await agreeTermsAndUnredactTickets(
+      this.context.dbPool,
+      user.email,
+      LATEST_PRIVACY_NOTICE
+    );
+
+    const userJson = userRowToZupassUserJson(user);
+
+    logger(`[USER_SERVICE] logged in a user`, userJson);
+    res.status(200).json({
+      isNewUser: true,
+      zupassUser: userJson
+    } satisfies OneClickLoginResponseValue);
   }
 
   public async handleNewUser(
@@ -425,13 +498,15 @@ export function startUserService(
   semaphoreService: SemaphoreService,
   emailTokenService: EmailTokenService,
   emailService: EmailService,
-  rateLimitService: RateLimitService
+  rateLimitService: RateLimitService,
+  genericIssuanceService: GenericIssuanceService | null
 ): UserService {
   return new UserService(
     context,
     semaphoreService,
     emailTokenService,
     emailService,
-    rateLimitService
+    rateLimitService,
+    genericIssuanceService
   );
 }

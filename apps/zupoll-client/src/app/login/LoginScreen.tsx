@@ -6,17 +6,21 @@ import { LoginConfig } from "@pcd/zupoll-shared";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ContentContainer } from "../../@/components/ui/Elements";
-import { LEGACY_LOGIN_CONFIGS } from "../../api/loginGroups";
+import { LOGIN_GROUPS } from "../../api/loginGroups";
 import { LoginState, ZupollError } from "../../types";
+import { SavedLoginState, findLoginConfig } from "../../useLoginState";
 import { removeQueryParameters } from "../../util";
 import { fetchLoginToken } from "../../zupoll-server-api";
 import { GuaranteesElement } from "../main/Guarantees";
+import { redirectForLogin } from "./LoginButton";
 import { LoginWidget } from "./LoginWidget";
 
 export function LoginScreen({
-  onLogin
+  onLogin,
+  logout
 }: {
   onLogin: (loginState: LoginState) => void;
+  logout: SavedLoginState["logout"];
   title: string;
 }) {
   const params = useParams();
@@ -44,6 +48,17 @@ export function LoginScreen({
       setMyConfig(configObject);
       setMyPcdStr(JSON.stringify(proofObject));
       setLoggingIn(true);
+    }
+
+    const loginConfig = findLoginConfig(
+      LOGIN_GROUPS,
+      url.searchParams.get("configId") ?? undefined,
+      url.searchParams.get("ballotConfigId") ?? undefined
+    );
+
+    if (loginConfig) {
+      removeQueryParameters();
+      redirectForLogin(loginConfig);
     }
   }, [params]);
 
@@ -93,17 +108,18 @@ export function LoginScreen({
       <Card>
         <CardContent className="mt-6">
           <LoginWidget
-            configs={LEGACY_LOGIN_CONFIGS}
-            onLogin={onLogin}
             loggingIn={loggingIn}
-            setError={setError}
             setServerLoading={setServerLoading}
             serverLoading={serverLoading}
           />
         </CardContent>
       </Card>
 
-      <ErrorDialog error={error} close={() => setError(undefined)} />
+      <ErrorDialog
+        error={error}
+        close={() => setError(undefined)}
+        logout={logout}
+      />
     </ContentContainer>
   );
 }
