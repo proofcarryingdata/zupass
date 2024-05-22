@@ -70,17 +70,20 @@ export function CheckInActionSection({
     );
   }
 
-  if (executor.result?.success) {
+  if (executor.result?.success && executor.result?.value.success) {
     return (
       <>
         <StatusContainer size="small">Checked In</StatusContainer>
       </>
     );
-  } else if (executor.result?.error) {
+  } else if (executor.result?.error || executor.result?.value?.error) {
     return (
       <>
         <ErrorContainer>Error Checking Ticket In</ErrorContainer>
-        <div>{executor.result?.error}</div>
+        <div>
+          {executor.result?.error ??
+            executor.result?.value.error?.detailedMessage}
+        </div>
       </>
     );
   }

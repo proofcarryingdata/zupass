@@ -4,7 +4,6 @@ import {
   PodboxOfflineTicket,
   PodboxTicketActionPreCheckResult,
   PodboxTicketActionResult,
-  ZUPASS_CREDENTIAL_REQUEST,
   requestPodboxTicketAction,
   requestPodboxTicketActionPreCheck
 } from "@pcd/passport-interface";
@@ -229,7 +228,7 @@ export async function podboxCheckInWithOffline(
     );
     return await requestPodboxTicketAction(
       urljoin(appConfig.zupassServer, "generic-issuance/api/check-in"),
-      await credentialManager.requestCredential(ZUPASS_CREDENTIAL_REQUEST),
+      await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
       { checkin: true },
       ticketId,
       eventId
