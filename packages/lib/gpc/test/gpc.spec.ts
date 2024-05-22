@@ -607,7 +607,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         );
       },
       "TypeError",
-      "Membership list list1 in input has a type mismatch: It contains a tuple of arity 2 and one of arity 3."
+      "Membership list list1 in input has a type mismatch: It contains an element of width 2 and one of width 3."
     );
 
     await expectAsyncError(
@@ -731,7 +731,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         );
       },
       "TypeError",
-      "Membership list admissibleTicketPairs in input has a type mismatch: It contains a tuple of arity 2 and one of arity 3."
+      "Membership list admissibleTicketPairs in input has a type mismatch: It contains an element of width 2 and one of width 3."
     );
 
     await expectAsyncError(
