@@ -1,5 +1,5 @@
 import { ProtoPODGPC } from "@pcd/gpcircuits";
-import { POD, PODValue } from "@pcd/pod";
+import { POD, PODCryptographicValue, PODValue, PODValueTuple } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -22,7 +22,11 @@ import {
 } from "./common";
 
 describe("gpc library (Precompiled Artifacts) should work", async function () {
-  function makeMinimalArgs(includeWatermark?: boolean): {
+  function makeMinimalArgs(
+    includeWatermark?: boolean,
+    includeList?: boolean,
+    includeTuple?: boolean
+  ): {
     proofConfig: GPCProofConfig;
     proofInputs: GPCProofInputs;
     expectedRevealedClaims: GPCRevealedClaims;
@@ -33,16 +37,46 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       pods: {
         somePodName: {
           entries: {
-            ticketID: { isRevealed: true }
+            ticketID: {
+              isRevealed: true,
+              ...(includeList ? { isMemberOf: "admissibleTickets" } : {})
+            }
           }
         }
-      }
+      },
+      ...(includeTuple
+        ? {
+            tuples: {
+              someTupleName: {
+                entries: ["somePodName.ticketID", "somePodName.ticketID"],
+                ...(includeList ? { isMemberOf: "admissibleTicketPairs" } : {})
+              }
+            }
+          }
+        : {})
     };
     const proofInputs: GPCProofInputs = {
       pods: {
         somePodName: pod2
       },
-      watermark: includeWatermark ? { type: "int", value: 1337n } : undefined
+      watermark: includeWatermark ? { type: "int", value: 1337n } : undefined,
+      ...(includeList
+        ? {
+            membershipLists: {
+              admissibleTickets: [
+                sampleEntries2.ticketID,
+                sampleEntries.otherTicketID
+              ],
+              ...(includeTuple
+                ? {
+                    admissibleTicketPairs: [
+                      [sampleEntries2.ticketID, sampleEntries2.ticketID]
+                    ]
+                  }
+                : {})
+            }
+          }
+        : {})
     };
     const expectedRevealedClaims: GPCRevealedClaims = {
       pods: {
@@ -51,7 +85,25 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
           signerPublicKey: pod2.signerPublicKey
         }
       },
-      ...(includeWatermark ? { watermark: { type: "int", value: 1337n } } : {})
+      ...(includeWatermark ? { watermark: { type: "int", value: 1337n } } : {}),
+      ...(includeList
+        ? {
+            membershipLists: {
+              admissibleTickets: [
+                sampleEntries2.ticketID,
+                sampleEntries2.ticketID
+              ],
+              ...(includeTuple
+                ? {
+                    admissibleTicketPairs: [
+                      [sampleEntries2.ticketID, sampleEntries2.ticketID],
+                      [sampleEntries2.ticketID, sampleEntries2.ticketID]
+                    ]
+                  }
+                : {})
+            }
+          }
+        : {})
     };
     return { proofConfig, proofInputs, expectedRevealedClaims };
   }
@@ -131,7 +183,11 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         pod1: {
           entries: {
             A: { isRevealed: true },
-            E: { isRevealed: false, equalsEntry: "pod1.A" },
+            E: {
+              isRevealed: false,
+              equalsEntry: "pod1.A",
+              isMemberOf: "list1"
+            },
             owner: { isRevealed: false, isOwnerID: true }
           }
         }
@@ -143,6 +199,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         semaphoreV3: ownerIdentity,
         externalNullifier: { type: "int", value: 42n }
       },
+      membershipLists: { list1: [sampleEntries.F, sampleEntries.E] },
       watermark: { type: "int", value: 1337n }
     };
     const expectedRevealedClaims: GPCRevealedClaims = {
@@ -159,6 +216,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
           ownerIdentity.nullifier
         ])
       },
+      membershipLists: proofInputs.membershipLists,
       watermark: { type: "int", value: 1337n }
     };
 
@@ -186,7 +244,11 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
         pod2: {
           entries: {
             ticketID: { isRevealed: false, equalsEntry: "pod1.otherTicketID" },
-            attendee: { isRevealed: false, isOwnerID: true }
+            attendee: {
+              isRevealed: false,
+              isOwnerID: true,
+              isMemberOf: ["goats", "pigs"]
+            }
           }
         },
         pod1: {
@@ -196,6 +258,21 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             owner: { isRevealed: false, isOwnerID: true }
           }
         }
+      },
+      tuples: {
+        tuple1: {
+          entries: ["pod1.G", "pod2.ticketID"],
+          isMemberOf: "list1"
+        },
+        tuple2: {
+          entries: [
+            "pod2.ticketID",
+            "pod1.otherTicketID",
+            "pod1.G",
+            "pod1.owner"
+          ],
+          isMemberOf: "list2"
+        }
       }
     };
     const proofInputs: GPCProofInputs = {
@@ -203,6 +280,80 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       owner: {
         semaphoreV3: ownerIdentity,
         externalNullifier
+      },
+      membershipLists: {
+        list1: [[sampleEntries.G, sampleEntries2.ticketID]].concat(
+          [
+            [87, 1],
+            [99, 8],
+            [8273, 0],
+            [0, 0],
+            [12387, 3],
+            [99999, 66],
+            [653, 362374823],
+            [29387, 1236478236],
+            [1238, 9238374],
+            [1, 1],
+            [87, 87]
+          ].map((pair) => [
+            { type: "int", value: BigInt(pair[0]) },
+            { type: "cryptographic", value: BigInt(pair[1]) }
+          ])
+        ),
+        list2: [
+          [129384723n, 123746238746n, 1237n, 18239n],
+          [1283748973n, 0n, 1n, 2n],
+          [9023874n, 8237n, 23674n, 23874n]
+        ]
+          .map(
+            (tuple) =>
+              [
+                { type: "cryptographic", value: tuple[0] },
+                { type: "int", value: tuple[1] },
+                { type: "int", value: tuple[2] },
+                { type: "cryptographic", value: tuple[3] }
+              ] as PODValueTuple
+          )
+          .concat([
+            [
+              sampleEntries2.ticketID,
+              sampleEntries.otherTicketID,
+              sampleEntries.G,
+              sampleEntries.owner
+            ]
+          ]),
+        goats: [
+          0, 7, 87, 11, 2938, 1923483, 123948, 12839428374, 1234,
+          12343487239487, 2, 3
+        ]
+          .map((value: number) => {
+            return {
+              type: "cryptographic",
+              value: BigInt(value)
+            } as PODCryptographicValue;
+          })
+          .concat([sampleEntries2.attendee]),
+        pigs: [
+          28937n,
+          1923847n,
+          1923874293847n,
+          1923819283741928374n,
+          0n,
+          55n,
+          19238471928374n,
+          1n,
+          sampleEntries2.attendee.value,
+          98n,
+          989n,
+          1023948127340918237n,
+          92837498374n,
+          37846773468n
+        ].map((value: bigint) => {
+          return {
+            type: "cryptographic",
+            value
+          } as PODCryptographicValue;
+        })
       },
       watermark
     };
@@ -223,6 +374,7 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
           ownerIdentity.nullifier
         ])
       },
+      membershipLists: proofInputs.membershipLists,
       watermark
     };
 
@@ -250,6 +402,43 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       "Must prove at least one entry in object"
     );
 
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          {
+            ...proofConfig,
+            tuples: {
+              someTupleName: { entries: [] }
+            }
+          },
+          proofInputs,
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "TypeError",
+      "Tuple someTupleName specifies invalid tuple configuration. Tuples must have arity at least 2."
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          {
+            pods: {
+              somePodName: {
+                entries: {
+                  ticketID: { isRevealed: true, isMemberOf: [] }
+                }
+              }
+            }
+          },
+          proofInputs,
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "TypeError",
+      "The list of lists of valid values for somePodName.ticketID is empty."
+    );
+
     // Input is illegal.
     await expectAsyncError(
       async () => {
@@ -264,6 +453,29 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       },
       "TypeError",
       "Invalid value for entry watermark"
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          {
+            pods: {
+              somePodName: {
+                entries: {
+                  ticketID: {
+                    isRevealed: true,
+                    isMemberOf: ["admissibleTickets"]
+                  }
+                }
+              }
+            }
+          },
+          { ...proofInputs, membershipLists: { admissibleTickets: [] } },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "Error",
+      "Membership list admissibleTickets is empty."
     );
 
     // Config doesn't match input.
@@ -287,15 +499,164 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       "ReferenceError",
       "Configured POD object wrongPODName not provided in inputs"
     );
+
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          {
+            pods: {
+              somePodName: {
+                entries: {
+                  ticketID: {
+                    isRevealed: true,
+                    isMemberOf: ["admissibleTickets"]
+                  }
+                }
+              }
+            }
+          },
+          proofInputs,
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "Error",
+      'Config and input list mismatch.  Configuration expects lists ["admissibleTickets"].  Input contains [].'
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          proofConfig,
+          {
+            ...proofInputs,
+            membershipLists: {
+              admissibleTickets: [
+                sampleEntries2.ticketID,
+                sampleEntries2.ticketID
+              ]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "Error",
+      'Config and input list mismatch.  Configuration expects lists [].  Input contains ["admissibleTickets"].'
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          {
+            pods: {
+              somePodName: {
+                entries: {
+                  ticketID: {
+                    isRevealed: true,
+                    isMemberOf: ["admissibleTickets"]
+                  }
+                }
+              }
+            }
+          },
+          {
+            ...proofInputs,
+            membershipLists: {
+              admissibleTickets: [
+                [
+                  sampleEntries2.ticketID,
+                  sampleEntries.otherTicketID,
+                  sampleEntries.G
+                ]
+              ]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "TypeError",
+      'Membership list admissibleTickets in input contains element of width 3 while comparison value with identifier "somePodName.ticketID" has width 1.'
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          {
+            ...proofConfig,
+            tuples: {
+              tuple1: {
+                entries: ["somePodName.ticketID", "somePodName.ticketID"],
+                isMemberOf: "list1"
+              }
+            }
+          },
+          {
+            ...proofInputs,
+            membershipLists: {
+              list1: [
+                [sampleEntries2.ticketID, sampleEntries2.ticketID],
+                [
+                  sampleEntries2.ticketID,
+                  sampleEntries.G,
+                  sampleEntries.otherTicketID
+                ],
+                [sampleEntries.otherTicketID, sampleEntries.G]
+              ]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "TypeError",
+      "Membership list list1 in input has a type mismatch: It contains a tuple of arity 2 and one of arity 3."
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          {
+            ...proofConfig,
+            tuples: {
+              tuple1: {
+                entries: ["somePodName.ticketID", "somePodName.ticketID"],
+                isMemberOf: "list1"
+              }
+            }
+          },
+          {
+            ...proofInputs,
+            membershipLists: {
+              list1: [
+                [sampleEntries2.ticketID, sampleEntries2.ticketID],
+                [sampleEntries2.ticketID],
+                [sampleEntries.otherTicketID, sampleEntries.G]
+              ]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "TypeError",
+      "Membership list list1 in input contains an invalid tuple. Tuples must have arity at least 2."
+    );
   });
 
   it("verifying should throw on illegal inputs", async function () {
+    // Proof data without lists and tuples
     const { proofConfig, proofInputs } = makeMinimalArgs(true);
     const { proof, boundConfig, revealedClaims } = await gpcProve(
       proofConfig,
       proofInputs,
       GPC_TEST_ARTIFACTS_PATH
     );
+
+    // Proof data with lists and tuples
+    const { proofConfig: proofConfig2, proofInputs: proofInputs2 } =
+      makeMinimalArgs(true, true, true);
+    const {
+      proof: proof2,
+      boundConfig: boundConfig2,
+      revealedClaims: revealedClaims2
+    } = await gpcProve(proofConfig2, proofInputs2, GPC_TEST_ARTIFACTS_PATH);
 
     // Config is illegal.
     await expectAsyncError(
@@ -328,6 +689,73 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       "Invalid value for entry watermark"
     );
 
+    await expectAsyncError(
+      async () => {
+        await gpcVerify(
+          proof2,
+          boundConfig2,
+          {
+            ...revealedClaims2,
+            membershipLists: {
+              ...revealedClaims2.membershipLists,
+              admissibleTickets: []
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "Error",
+      "Membership list admissibleTickets is empty."
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcVerify(
+          proof2,
+          boundConfig2,
+          {
+            ...revealedClaims2,
+            membershipLists: {
+              admissibleTicketPairs: [
+                [sampleEntries2.ticketID, sampleEntries2.ticketID],
+                [
+                  sampleEntries2.ticketID,
+                  sampleEntries.G,
+                  sampleEntries.otherTicketID
+                ],
+                [sampleEntries.otherTicketID, sampleEntries.G]
+              ]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "TypeError",
+      "Membership list admissibleTicketPairs in input has a type mismatch: It contains a tuple of arity 2 and one of arity 3."
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcVerify(
+          proof2,
+          boundConfig2,
+          {
+            ...revealedClaims2,
+            membershipLists: {
+              admissibleTicketPairs: [
+                [sampleEntries2.ticketID, sampleEntries2.ticketID],
+                [sampleEntries2.ticketID],
+                [sampleEntries.otherTicketID, sampleEntries.G]
+              ]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "TypeError",
+      "Membership list admissibleTicketPairs in input contains an invalid tuple. Tuples must have arity at least 2."
+    );
+
     // Config doesn't match claims.
     await expectAsyncError(
       async () => {
@@ -350,15 +778,44 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
       "ReferenceError",
       'Configuration reveals entry "wrongPODName.ticketID" but the POD is not revealed in claims.'
     );
+
+    await expectAsyncError(
+      async () => {
+        await gpcVerify(
+          proof2,
+          boundConfig2,
+          {
+            ...revealedClaims2,
+            membershipLists: {
+              admissibleTicketPairs: (revealedClaims2.membershipLists ?? {})
+                .admissibleTicketPairs as PODValueTuple[]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "Error",
+      'Config and input list mismatch.  Configuration expects lists ["admissibleTickets","admissibleTicketPairs"].  Input contains ["admissibleTicketPairs"].'
+    );
   });
 
   it("should not verify tampered args which pass compiler checks", async function () {
+    // Proof data without lists and tuples
     const { proofConfig, proofInputs } = makeMinimalArgs(true);
     const { proof, boundConfig, revealedClaims } = await gpcProve(
       proofConfig,
       proofInputs,
       GPC_TEST_ARTIFACTS_PATH
     );
+
+    // Proof data with lists and tuples
+    const { proofConfig: proofConfig2, proofInputs: proofInputs2 } =
+      makeMinimalArgs(true, true, true);
+    const {
+      proof: proof2,
+      boundConfig: boundConfig2,
+      revealedClaims: revealedClaims2
+    } = await gpcProve(proofConfig2, proofInputs2, GPC_TEST_ARTIFACTS_PATH);
 
     // Tamper with proof
     let isVerified = await gpcVerify(
@@ -435,6 +892,22 @@ describe("gpc library (Precompiled Artifacts) should work", async function () {
             entries: { ticketID: { type: "cryptographic", value: 111111n } },
             signerPublicKey: revealedClaims.pods.somePodName.signerPublicKey
           }
+        }
+      },
+      GPC_TEST_ARTIFACTS_PATH
+    );
+    expect(isVerified).to.be.false;
+
+    // Tamper with membership list
+    isVerified = await gpcVerify(
+      proof2,
+      boundConfig2,
+      {
+        ...revealedClaims2,
+        membershipLists: {
+          admissibleTicketPairs: (revealedClaims2.membershipLists ?? {})
+            .admissibleTicketPairs as PODValueTuple[],
+          admissibleTickets: [sampleEntries2.ticketID, sampleEntries.owner]
         }
       },
       GPC_TEST_ARTIFACTS_PATH

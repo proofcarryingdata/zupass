@@ -34,5 +34,17 @@
       "tupleArity": 4
     },
     35944
+  ],
+  [
+    {
+      "maxObjects": 3,
+      "maxEntries": 10,
+      "merkleMaxDepth": 8,
+      "maxLists": 4,
+      "maxListElements": 20,
+      "maxTuples": 5,
+      "tupleArity": 2
+    },
+    37125
   ]
 ]
