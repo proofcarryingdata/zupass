@@ -57,6 +57,34 @@ describe("artifact URL helpers should work", function () {
     }
   });
 
+  it("gpcArtifactPaths should allow relative paths with or without leading slash", async () => {
+    const pathsNoSlash = gpcArtifactPaths(
+      "foo/bar",
+      ProtoPODGPC.CIRCUIT_FAMILY[0]
+    );
+    expect(pathsNoSlash.pkeyPath.startsWith("foo/bar")).to.be.true;
+    expect(pathsNoSlash.vkeyPath.startsWith("foo/bar")).to.be.true;
+    expect(pathsNoSlash.wasmPath.startsWith("foo/bar")).to.be.true;
+
+    const pathsWithSlash = gpcArtifactPaths(
+      "/foo/bar",
+      ProtoPODGPC.CIRCUIT_FAMILY[0]
+    );
+    expect(pathsWithSlash.pkeyPath.startsWith("/foo/bar")).to.be.true;
+    expect(pathsWithSlash.vkeyPath.startsWith("/foo/bar")).to.be.true;
+    expect(pathsWithSlash.wasmPath.startsWith("/foo/bar")).to.be.true;
+
+    const pathsSlashRoot = gpcArtifactPaths("/", ProtoPODGPC.CIRCUIT_FAMILY[0]);
+    expect(pathsSlashRoot.pkeyPath.startsWith("/")).to.be.true;
+    expect(pathsSlashRoot.vkeyPath.startsWith("/")).to.be.true;
+    expect(pathsSlashRoot.wasmPath.startsWith("/")).to.be.true;
+
+    const pathsEmptyRoot = gpcArtifactPaths("", ProtoPODGPC.CIRCUIT_FAMILY[0]);
+    expect(pathsEmptyRoot.pkeyPath).to.not.contain("/");
+    expect(pathsEmptyRoot.vkeyPath).to.not.contain("/");
+    expect(pathsEmptyRoot.wasmPath).to.not.contain("/");
+  });
+
   it("githubDownloadRootURL should work", async () => {
     expect(githubDownloadRootURL("repo0", "family1", "rev2")).to.eq(
       "https://raw.githubusercontent.com/repo0/rev2/packages/family1"

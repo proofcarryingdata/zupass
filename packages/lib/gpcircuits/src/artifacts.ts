@@ -1,4 +1,5 @@
 import * as fastfile from "fastfile";
+import urljoin from "url-join";
 import { CircuitArtifactPaths, CircuitDesc } from "./types";
 
 /**
@@ -28,6 +29,9 @@ export async function loadVerificationKey(
     fd = await fastfile.readExisting(vkeyPath);
     const bytes = await fd.read(fd.totalSize);
     return JSON.parse(Buffer.from(bytes).toString("utf8"));
+  } catch (e) {
+    console.warn(`Failed to load verification key from file ${vkeyPath}`, e);
+    throw e;
   } finally {
     if (fd !== undefined) {
       await fd.close();
@@ -48,14 +52,10 @@ export function gpcArtifactPaths(
   root: string,
   cd: CircuitDesc
 ): CircuitArtifactPaths {
-  if (!root.endsWith("/")) {
-    root = root + "/";
-  }
-
   return {
-    wasmPath: root + `${cd.family}_${cd.name}.wasm`,
-    pkeyPath: root + `${cd.family}_${cd.name}-pkey.zkey`,
-    vkeyPath: root + `${cd.family}_${cd.name}-vkey.json`
+    wasmPath: urljoin(root, `${cd.family}_${cd.name}.wasm`),
+    pkeyPath: urljoin(root, `${cd.family}_${cd.name}-pkey.zkey`),
+    vkeyPath: urljoin(root, `${cd.family}_${cd.name}-vkey.json`)
   };
 }
 

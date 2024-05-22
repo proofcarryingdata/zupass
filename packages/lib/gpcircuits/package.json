@@ -36,7 +36,8 @@
   "dependencies": {
     "@pcd/pod": "0.1.0",
     "fastfile": "0.0.20",
-    "snarkjs": "^0.7.3"
+    "snarkjs": "^0.7.3",
+    "url-join": "4.0.1"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.11.0",

@@ -649,25 +649,25 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "test",
         version: undefined,
         zupassURL: undefined,
-        expected: undefined
+        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@0.0.2"
       },
       {
         stability: "prod",
         version: undefined,
         zupassURL: undefined,
-        expected: undefined
+        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@0.0.2"
       },
       {
         stability: "test",
         version: undefined,
         zupassURL: "https://zupass.org",
-        expected: undefined
+        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@0.0.2"
       },
       {
         stability: "prod",
         version: undefined,
         zupassURL: "https://zupass.org",
-        expected: undefined
+        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@0.0.2"
       },
       {
         stability: "test",

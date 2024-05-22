@@ -185,6 +185,19 @@ export async function gpcVerify(
 }
 
 /**
+ * Name of the package on NPM which contains published artifacts for this
+ * GPC family.
+ */
+export const GPC_ARTIFACTS_NPM_PACKAGE_NAME =
+  ProtoPODGPC.ARTIFACTS_NPM_PACKAGE_NAME;
+
+/**
+ * Version of the published artifacts on NPM which are compatible with this
+ * version of the GPC circuits.
+ */
+export const GPC_ARTIFACTS_NPM_VERSION = ProtoPODGPC.ARTIFACTS_NPM_VERSION;
+
+/**
  * Possible sources to download GPC artifacts.
  */
 export type GPCArtifactSource = "zupass" | "github" | "unpkg";
@@ -209,7 +222,9 @@ export type GPCArtifactVersion = string | undefined;
  * @param stability the stability level (test or prod) of artifacts to seek.
  *   Ignored in some sources in favor of the version.
  * @param version the version identifier for circuit artifacts.  Not relevant
- *   to some sources which host only a single version.
+ *   to some sources which host only a single version.  NPM-based sources
+ *   can be given an undefined version and will use the
+ *   {@link GPC_ARTIFACTS_NPM_VERSION} constant.
  * @param zupassURL the base URL for Zupass, if used as a download option.
  *   Can be "" or "/" to use a relative URL (within the Zupass app).
  * @returns a root URL to download GPC artifacts, as needed for {@link gpcProve}
@@ -234,7 +249,7 @@ export function gpcArtifactDownloadURL(
       );
     case "unpkg":
       if (version === undefined || version === "") {
-        throw new Error("unpkg artifact download requires a version.");
+        version = GPC_ARTIFACTS_NPM_VERSION;
       }
       // stability is intentionally ignored.  NPM version can encode
       // pre-release status.

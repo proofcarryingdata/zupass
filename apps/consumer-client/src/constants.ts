@@ -55,5 +55,5 @@ export const CONSUMER_SERVER_URL = CONSUMER_SERVER_URL_ENV
   : "http://localhost:3003/";
 
 export const GPC_ARTIFACT_CONFIG = parseGPCArtifactsConfig(
-  process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
+  sanitizeEnv(process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE)
 );
