@@ -1,5 +1,16 @@
 # @pcd/zuauth
 
+## 1.3.0
+
+### Minor Changes
+
+- Fix snarkjs dependency warning
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.0
+
 ## 1.2.0
 
 ### Minor Changes

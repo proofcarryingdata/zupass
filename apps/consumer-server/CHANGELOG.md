@@ -1,5 +1,13 @@
 # consumer-server
 
+## 0.0.18
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.0
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.0
+
 ## 0.0.17
 
 ### Patch Changes

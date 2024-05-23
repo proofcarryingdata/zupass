@@ -1,5 +1,12 @@
 # @pcd/zk-eddsa-event-ticket-pcd-ui
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.0
+
 ## 0.2.0
 
 ### Minor Changes
