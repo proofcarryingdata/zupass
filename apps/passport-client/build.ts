@@ -76,6 +76,13 @@ const define = {
           process.env.SHOW_POD_TICKET_PCDS
         )
       }
+    : {}),
+  ...(process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined
+    ? {
+        "process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE": JSON.stringify(
+          process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
+        )
+      }
     : {})
 };
 
@@ -131,6 +138,7 @@ run(process.argv[2])
 async function run(command: string): Promise<void> {
   compileHtml();
   copyScanditEngine();
+  copyGPCArtifacts();
 
   switch (command) {
     case "build":
@@ -206,4 +214,16 @@ function compileHtml(): void {
   const html = template({});
 
   fs.writeFileSync(path.join("public", "index.html"), html);
+}
+
+function copyGPCArtifacts(): void {
+  fs.rmSync(path.join("public/artifacts/proto-pod-gpc"), {
+    recursive: true,
+    force: true
+  });
+  fs.cpSync(
+    path.join("../../node_modules/@pcd/proto-pod-gpc-artifacts"),
+    path.join("public/artifacts/proto-pod-gpc"),
+    { recursive: true }
+  );
 }

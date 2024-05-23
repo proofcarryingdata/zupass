@@ -217,6 +217,8 @@
     "MULTI_CHOICE_SCAN_ENABLED",
     "IRON_SESSION_PASSWORD",
     "SHOW_POD_TICKET_PCDS",
+    "GPC_ARTIFACTS_CONFIG_OVERRIDE",
+    "ZUPOLL_API_KEY",
     "//// add env vars above this line ////"
   ]
 }

@@ -63,11 +63,21 @@ export function BallotsForUserSection({
             ballots={ballots}
             filter={(b) =>
               b.ballotType === BallotType.PODBOX &&
-              b.pollsterSemaphoreGroupUrl === c.creatorGroupUrl
+              b.pollsterSemaphoreGroupUrl === c.creatorGroupUrl &&
+              b.voterSemaphoreGroupUrls?.some((url) => {
+                return getGroupFromVoterUrl(url) === c.voterGroupId;
+              })
             }
           />
         );
       })}
     </>
   );
+}
+
+function getGroupFromVoterUrl(voterUrl: string) {
+  const url = new URL(voterUrl);
+  const parts = url.pathname.split("/");
+  const groupIdPart = parts[5];
+  return groupIdPart;
 }

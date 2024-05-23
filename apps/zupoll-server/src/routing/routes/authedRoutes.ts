@@ -1,16 +1,23 @@
 import {
+  BallotType,
   RedirectConfig,
   findConfigForVoterUrl,
   getPodboxConfigs
 } from "@pcd/zupoll-shared";
 import express, { NextFunction, Request, Response } from "express";
+import urljoin from "url-join";
 import { ApplicationContext } from "../../application";
-import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../../env";
+import {
+  ZUPASS_CLIENT_URL,
+  ZUPASS_SERVER_URL,
+  ZUPOLL_API_KEY
+} from "../../env";
 import {
   getBallotById,
   getBallotPolls,
   getBallotsForPipelineId,
-  getBallotsVisibleToUserType
+  getBallotsVisibleToUserType,
+  updateBallotVoterGroup
 } from "../../persistence";
 import {
   authenticateJWT,
@@ -188,6 +195,59 @@ export function initAuthedRoutes(
         logger.error("failed to get ballot", e);
         next(e);
       }
+    }
+  );
+
+  app.get(
+    "/update-root/:ballotUrl/:apiKey",
+    async (req: Request, res: Response) => {
+      if (!ZUPOLL_API_KEY || req.params.apiKey !== ZUPOLL_API_KEY) {
+        return res.status(403).send("invalid api key");
+      }
+
+      const ballot = await getBallotById(parseIntOrThrow(req.params.ballotUrl));
+
+      if (!ballot) {
+        return res.status(404).send("no matching ballot");
+      }
+
+      if (ballot?.ballotType !== BallotType.PODBOX) {
+        return res
+          .status(403)
+          .send("no applicable for non-podbox-backed zupolls");
+      }
+
+      const rootHash = ballot.voterSemaphoreGroupRoots[0];
+      const voterUrl = ballot.voterSemaphoreGroupUrls[0];
+
+      const semaphoreUrl = voterUrl.substring(0, voterUrl.lastIndexOf("/"));
+      const getLatestRootUrl = urljoin(semaphoreUrl, "latest-root");
+
+      const newRootHash = (await (
+        await fetch(getLatestRootUrl)
+      ).json()) as string;
+      const newVoterUrl = urljoin(semaphoreUrl, newRootHash);
+
+      if (rootHash === newRootHash && newVoterUrl === voterUrl) {
+        return res.send("no update needed");
+      }
+
+      await updateBallotVoterGroup(
+        ballot.ballotURL,
+        [newRootHash],
+        [newVoterUrl]
+      );
+
+      res.json({
+        was: {
+          voterUrl,
+          rootHash
+        },
+        is: {
+          newVoterUrl,
+          newRootHash
+        }
+      });
     }
   );
 

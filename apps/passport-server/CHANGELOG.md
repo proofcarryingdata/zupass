@@ -1,5 +1,12 @@
 # passport-server
 
+## 0.0.28
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.0
+
 ## 0.0.27
 
 ### Patch Changes

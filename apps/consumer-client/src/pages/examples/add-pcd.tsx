@@ -5,6 +5,12 @@ import {
   GroupType
 } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
+import {
+  gpcArtifactDownloadURL,
+  GPCArtifactSource,
+  GPCArtifactStability,
+  GPCArtifactVersion
+} from "@pcd/gpc";
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdAddRequestUrl,
@@ -32,7 +38,11 @@ import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { EVERYONE_SEMAPHORE_GROUP_URL, ZUPASS_URL } from "../../constants";
+import {
+  EVERYONE_SEMAPHORE_GROUP_URL,
+  GPC_ARTIFACT_CONFIG,
+  ZUPASS_URL
+} from "../../constants";
 import {
   EXAMPLE_EDDSA_PRIVATE_KEY,
   EXAMPLE_GPC_CONFIG,
@@ -570,7 +580,12 @@ async function addGPCPCD(
   podFolder: string | undefined
 ): Promise<void> {
   await GPCPCDPackage.init?.({
-    zkArtifactPath: ZUPASS_URL + "artifacts/test/proto-pod-gpc"
+    zkArtifactPath: gpcArtifactDownloadURL(
+      GPC_ARTIFACT_CONFIG.source as GPCArtifactSource,
+      GPC_ARTIFACT_CONFIG.stability as GPCArtifactStability,
+      GPC_ARTIFACT_CONFIG.version as GPCArtifactVersion,
+      ZUPASS_URL
+    )
   });
 
   const podPCD = new PODPCD(

@@ -1,4 +1,4 @@
-import { POD, PODEntries, PODName, PODValue } from "@pcd/pod";
+import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
 
 /**
@@ -7,6 +7,17 @@ import { Identity } from "@semaphore-protocol/identity";
  * checked by {@link POD_NAME_REGEX}.
  */
 export type PODEntryIdentifier = `${PODName}.${PODName}`;
+
+// Single source of truth for tuple prefix (used internally).
+// This should not be a valid {@link PODName} to avoid name clashes.
+export const TUPLE_PREFIX = "$tuple";
+type TuplePrefix = "$tuple";
+
+/**
+ * String specifying a named tuple in the format `tuple.tupleName`.
+ * `tupleName` should be a valid PODName checked by {@link POD_NAME_REGEX}.
+ */
+export type TupleIdentifier = `${TuplePrefix}.${PODName}`;
 
 /**
  * String specifying a specific GPC circuit, identified by its family name
@@ -63,6 +74,19 @@ export type GPCProofEntryConfig = {
    */
   equalsEntry?: PODEntryIdentifier;
 
+  /**
+   * Indicates list(s) in which this entry must lie. An entry value may lie in
+   * one or more membership lists.
+   *
+   * Note that the underlying GPC expects a one-to-one correspondence between
+   * comparison values and lists, i.e. it will only check one value per
+   * list. Thus, if multiple entry values are constrained to be members of some
+   * fixed list, this list will be duplicated for each of these checks,
+   * increasing the circuit size requirements. This should be taken into account
+   * when estimating circuit sizes.
+   */
+  isMemberOf?: PODName | PODName[];
+
   // TODO(POD-P3): Constraints on entry values can go here.  Lower/upper bounds,
   // comparison to constant, etc.
   // TODO(POD-P3): Think about where to represent "filtering" inputs in
@@ -94,6 +118,25 @@ export type GPCProofObjectConfig = {
   // public ways.  E.g. requiring a specific signer, which is revealed anyway,
   // so isn't handled by this layer for now, but that could be a convenience
   // feature for use cases where the verifier uses a hard-coded config.
+};
+
+/**
+ * GPCProofConfig for a single tuple, specifying which entries lie in the tuple
+ * and which membership lists the tuple lies in.
+ */
+export type GPCProofTupleConfig = {
+  /**
+   * Identifiers of the POD entries that form the tuple (in order). These must
+   * be POD entry identifiers, not tuples.
+   */
+  entries: PODEntryIdentifier[];
+
+  /**
+   * Indicates lists in which this entry must lie. A tuple may lie in one or
+   * more lists. See {@link GPCProofEntryConfig} regarding circuit size
+   * considerations.
+   */
+  isMemberOf?: PODName | PODName[];
 };
 
 /**
@@ -140,8 +183,12 @@ export type GPCProofConfig = {
    */
   pods: Record<PODName, GPCProofObjectConfig>;
 
-  // TODO(POD-P2): List membership configuration
-  // TODO(POD-P2): Tuple configuration
+  /**
+   * Defines named tuples of POD entries. The tuples' names lie in a separate
+   * namespace and are internally prefixed with '$tuple.'. These tuples must be
+   * of arity (i.e. size/width) at least 2.
+   */
+  tuples?: Record<PODName, GPCProofTupleConfig>;
 };
 
 /**
@@ -252,8 +299,12 @@ export type GPCProofInputs = {
    */
   owner?: GPCProofOwnerInputs;
 
-  // TODO(POD-P2): List membership configuration
-  // TODO(POD-P2): Tuple configuration
+  /*
+   * Named lists of valid values for each list membership check. These values
+   * may be primitive (i.e. of type PODValue) or tuples (represented as
+   * PODValueTuple = PODValue[]).  Each list must be non-empty.
+   */
+  membershipLists?: Record<PODName, PODValue[] | PODValueTuple[]>;
 
   /**
    * If this field is set, the given value will be included in the resulting
@@ -353,8 +404,12 @@ export type GPCRevealedClaims = {
    */
   owner?: GPCRevealedOwnerClaims;
 
-  // TODO(POD-P2): List membership configuration
-  // TODO(POD-P2): Tuple configuration
+  /*
+   * Named lists of valid values for each list membership check. These values
+   * may be primitive (i.e. of type PODValue) or tuples (represented as
+   * PODValueTuple = PODValue[]).  Each list must be non-empty.
+   */
+  membershipLists?: Record<PODName, PODValue[] | PODValueTuple[]>;
 
   /**
    * If this field is set, it matches the corresponding field in

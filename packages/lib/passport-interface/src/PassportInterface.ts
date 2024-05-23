@@ -22,6 +22,7 @@ export interface ProveOptions {
   genericProveScreen?: boolean;
   title?: string;
   description?: string;
+  requesterUrl?: string;
   debug?: boolean;
   proveOnServer?: boolean;
   signIn?: boolean;

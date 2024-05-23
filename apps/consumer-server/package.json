@@ -1,6 +1,6 @@
 {
   "name": "consumer-server",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -8,7 +8,7 @@
     "build": "tsc --noEmit",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
     "lint": "eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "ts-mocha --type-check --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf node_modules tsconfig.tsbuildinfo"
   },
   "dependencies": {
@@ -20,8 +20,8 @@
     "@pcd/passport-interface": "^0.11.0",
     "@pcd/semaphore-signature-pcd": "^0.11.0",
     "@pcd/util": "^0.5.0",
-    "@pcd/zk-eddsa-event-ticket-pcd": "^0.5.0",
-    "@pcd/zuauth": "1.2.0",
+    "@pcd/zk-eddsa-event-ticket-pcd": "^0.6.0",
+    "@pcd/zuauth": "1.3.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "iron-session": "^8.0.1",

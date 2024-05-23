@@ -1,3 +1,5 @@
 # Local-only artifact directory for local testing.
-# TODO(POD-P3): Consider whether to remove this when prod artifacts are in place.
 test
+
+# Artifact directory filled in by copying files from NPM at build time.
+proto-pod-gpc

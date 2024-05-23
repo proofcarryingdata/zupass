@@ -35,6 +35,22 @@ export async function getAllBallotsForAlerts() {
   });
 }
 
+export async function updateBallotVoterGroup(
+  ballotURL: number,
+  roots: string[],
+  urls: string[]
+) {
+  await prisma.ballot.update({
+    where: {
+      ballotURL
+    },
+    data: {
+      voterSemaphoreGroupRoots: roots,
+      voterSemaphoreGroupUrls: urls
+    }
+  });
+}
+
 export async function updateBallotExpiryNotif(
   ballotURL: number,
   expiryNotif: ExpiryNotifStatus
@@ -58,7 +74,9 @@ export async function getBallotsVisibleToUserType(
       ballotURL: true,
       expiry: true,
       ballotType: true,
-      createdAt: true
+      createdAt: true,
+      pollsterSemaphoreGroupUrl: true,
+      voterSemaphoreGroupUrls: true
     },
     orderBy: { expiry: "desc" },
     where: {
@@ -77,7 +95,8 @@ export async function getBallotsForPipelineId(pipelineId: string) {
       expiry: true,
       ballotType: true,
       createdAt: true,
-      pollsterSemaphoreGroupUrl: true
+      pollsterSemaphoreGroupUrl: true,
+      voterSemaphoreGroupUrls: true
     },
     orderBy: { expiry: "desc" },
     where: {

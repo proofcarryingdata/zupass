@@ -1,7 +1,7 @@
 import { Groth16Proof, groth16 } from "snarkjs";
+import { loadVerificationKey } from "./artifacts";
 import circuitParamJson from "./circuitParameters.json";
 import { CircuitDesc, CircuitSignal } from "./types";
-import { loadVerificationKey } from "./util";
 
 /**
  * Name identifier for the Proto-POD-GPC family of circuits.
@@ -526,4 +526,16 @@ export class ProtoPODGPC {
       (pair: [ProtoPODGPCCircuitParams, number]): ProtoPODGPCCircuitDesc =>
         ProtoPODGPC.circuitDescForParams(pair[0], pair[1])
     );
+
+  /**
+   * Name of the package on NPM which contains published artifacts for this
+   * GPC family.
+   */
+  public static ARTIFACTS_NPM_PACKAGE_NAME = "@pcd/proto-pod-gpc-artifacts";
+
+  /**
+   * Version of the published artifacts on NPM which are compatible with this
+   * version of the GPC circuits.
+   */
+  public static ARTIFACTS_NPM_VERSION = "0.0.3";
 }

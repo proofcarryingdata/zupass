@@ -1,6 +1,10 @@
 import {
+  GPCArtifactSource,
+  GPCArtifactStability,
+  GPCArtifactVersion,
   GPCBoundConfig,
   deserializeGPCProofConfig,
+  gpcArtifactDownloadURL,
   gpcBindConfig,
   serializeGPCBoundConfig
 } from "@pcd/gpc";
@@ -20,7 +24,7 @@ import _ from "lodash";
 import { useEffect, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { ZUPASS_URL } from "../../constants";
+import { GPC_ARTIFACT_CONFIG, ZUPASS_URL } from "../../constants";
 import { EXAMPLE_GPC_CONFIG } from "../../podExampleConstants";
 
 export default function Page(): JSX.Element {
@@ -249,7 +253,12 @@ async function verifyProof(
 ): Promise<{ valid: boolean; err?: string }> {
   const { init, verify } = GPCPCDPackage;
   await init?.({
-    zkArtifactPath: ZUPASS_URL + "artifacts/test/proto-pod-gpc"
+    zkArtifactPath: gpcArtifactDownloadURL(
+      GPC_ARTIFACT_CONFIG.source as GPCArtifactSource,
+      GPC_ARTIFACT_CONFIG.stability as GPCArtifactStability,
+      GPC_ARTIFACT_CONFIG.version as GPCArtifactVersion,
+      ZUPASS_URL
+    )
   });
   const verified = await verify(pcd);
   if (!verified) return { valid: false };
