@@ -17,7 +17,8 @@ export function openGroupMembershipPopup(
   originalSiteName: string,
   signal?: string,
   externalNullifier?: string,
-  returnUrl?: string
+  returnUrl?: string,
+  requesterUrl?: string
 ) {
   const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
@@ -52,7 +53,8 @@ export function openGroupMembershipPopup(
     },
     {
       title: "SIGN IN WITH ZUPASS",
-      description: originalSiteName
+      description: originalSiteName,
+      requesterUrl
     }
   );
 
