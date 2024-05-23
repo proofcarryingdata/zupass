@@ -1,10 +1,11 @@
 import {
   GPCProofConfig,
   gpcBindConfig,
+  podMembershipListsToSimplifiedJSON,
   serializeGPCProofConfig
 } from "@pcd/gpc";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { POD, PODEntries, podMembershipListsToSimplifiedJSON } from "@pcd/pod";
+import { POD, PODEntries } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
