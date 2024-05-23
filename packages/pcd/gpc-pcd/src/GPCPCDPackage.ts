@@ -88,6 +88,12 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   if (externalNullifier !== undefined && ownerSemaphorePCD === undefined) {
     throw new Error("External nullifier requires an owner identity PCD.");
   }
+
+  const membershipLists =
+    args.membershipLists.value !== undefined
+      ? args.membershipLists.value
+      : undefined;
+
   const watermark =
     args.watermark.value !== undefined
       ? ({
@@ -108,6 +114,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
             }
           }
         : {}),
+      membershipLists: membershipLists,
       watermark: watermark
     }
   };
@@ -264,6 +271,10 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
         defaultVisible: false,
         description:
           "Your Zupass comes with a primary Semaphore Identity which represents an user in the Semaphore protocol."
+      },
+      membershipLists: {
+        argumentType: ArgumentTypeName.Object,
+        defaultVisible: false
       },
       watermark: {
         argumentType: ArgumentTypeName.String,
