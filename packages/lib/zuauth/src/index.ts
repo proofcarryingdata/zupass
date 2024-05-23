@@ -1,3 +1,4 @@
+import { ETHBERLIN04 } from "./configs/ethberlin";
 import { authenticate } from "./server";
 import {
   ZuAuthArgs,
@@ -6,5 +7,11 @@ import {
   zupassPopupSetup
 } from "./zuauth";
 
-export { authenticate, zuAuthPopup, zuAuthRedirect, zupassPopupSetup };
+export {
+  ETHBERLIN04,
+  authenticate,
+  zuAuthPopup,
+  zuAuthRedirect,
+  zupassPopupSetup
+};
 export type { ZuAuthArgs };
