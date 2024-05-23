@@ -218,7 +218,8 @@ function compileHtml(): void {
 
 function copyGPCArtifacts(): void {
   fs.rmSync(path.join("public/artifacts/proto-pod-gpc"), {
-    recursive: true
+    recursive: true,
+    force: true
   });
   fs.cpSync(
     path.join("../../node_modules/@pcd/proto-pod-gpc-artifacts"),
