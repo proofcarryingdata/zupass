@@ -13,8 +13,9 @@ export function makeEthPrague(
   const ETH_PRAGUE_RESIDENTS_NAME = "Attendee Polls";
   const ETH_PRAGUE_RESIDENTS_DESCRIPTION =
     "Polls created by ETHPrague Attendees";
-  const ETH_PRAGUE_ORGANIZER_NAME = "Staff Polls";
-  const ETH_PRAGUE_ORGANIZER_DESCRIPTION = "Polls created by ETHPrague Staff";
+  const ETH_PRAGUE_ORGANIZER_NAME = "Organizer Polls";
+  const ETH_PRAGUE_ORGANIZER_DESCRIPTION =
+    "Polls created by ETHPrague Organizer";
   const ETH_PRAGUE_DESCRIPTION =
     "Polls created by ETHPrague Attendees. Add to the discussion by creating a new Ballot!";
   const ETH_PRAGUE_CONFIG_PIPELINE_ID = "24ac727d-bc2f-4727-bcfa-b15cf2f7037e";
