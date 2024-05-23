@@ -1,5 +1,11 @@
 # @pcd/zk-eddsa-event-ticket-pcd
 
+## 0.6.0
+
+### Minor Changes
+
+- Fix snarkjs dependency warning
+
 ## 0.5.0
 
 ### Minor Changes
