@@ -6,6 +6,7 @@ import {
   deserializeGPCProofConfig,
   gpcArtifactDownloadURL,
   gpcBindConfig,
+  podMembershipListsFromSimplifiedJSON,
   serializeGPCBoundConfig
 } from "@pcd/gpc";
 import { GPCPCD, GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
@@ -16,7 +17,6 @@ import {
   useZupassPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { podMembershipListsFromSimplifiedJSON } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { emptyStrToUndefined } from "@pcd/util";
