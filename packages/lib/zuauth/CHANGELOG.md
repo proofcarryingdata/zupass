@@ -1,5 +1,11 @@
 # @pcd/zuauth
 
+## 1.3.1
+
+### Patch Changes
+
+- Include ETH Berlin constants
+
 ## 1.3.0
 
 ### Minor Changes
