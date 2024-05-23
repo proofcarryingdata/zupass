@@ -244,8 +244,8 @@ export function initAuthedRoutes(
           rootHash
         },
         is: {
-          latestRootUrl: newVoterUrl,
-          latestRoot: newRootHash
+          newVoterUrl,
+          newRootHash
         }
       });
     }
