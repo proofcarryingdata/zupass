@@ -25,34 +25,34 @@ export const CONSUMER_SERVER_URL_ENV = sanitizeEnv(
 export const ZUPASS_URL = ZUPASS_CLIENT_URL_ENV
   ? ZUPASS_CLIENT_URL_ENV
   : IS_PROD
-    ? "https://zupass.org/"
-    : IS_STAGING
-      ? "https://staging.zupass.org/"
-      : "http://localhost:3000/";
+  ? "https://zupass.org/"
+  : IS_STAGING
+  ? "https://staging.zupass.org/"
+  : "http://localhost:3000/";
 
 export const ZUPASS_SERVER_URL = ZUPASS_SERVER_URL_ENV
   ? ZUPASS_SERVER_URL_ENV
   : IS_PROD
-    ? "https://api.zupass.org/"
-    : IS_STAGING
-      ? "https://api-staging.zupass.org/"
-      : "http://localhost:3002/";
+  ? "https://api.zupass.org/"
+  : IS_STAGING
+  ? "https://api-staging.zupass.org/"
+  : "http://localhost:3002/";
 
 export const EVERYONE_SEMAPHORE_GROUP_URL = ZUPASS_SERVER_URL_ENV
   ? urljoin(ZUPASS_SERVER_URL_ENV, "/semaphore/5")
   : IS_PROD
-    ? "https://api.zupass.org/semaphore/5"
-    : IS_STAGING
-      ? "https://api-staging.zupass.org/semaphore/5"
-      : "http://localhost:3002/semaphore/5";
+  ? "https://api.zupass.org/semaphore/5"
+  : IS_STAGING
+  ? "https://api-staging.zupass.org/semaphore/5"
+  : "http://localhost:3002/semaphore/5";
 
 export const CONSUMER_SERVER_URL = CONSUMER_SERVER_URL_ENV
   ? CONSUMER_SERVER_URL_ENV
   : IS_PROD
-    ? "https://consumer-server.onrender.com/"
-    : IS_STAGING
-      ? "https://consumer-server-staging.onrender.com/"
-      : "http://localhost:3003/";
+  ? "https://consumer-server.onrender.com/"
+  : IS_STAGING
+  ? "https://consumer-server-staging.onrender.com/"
+  : "http://localhost:3003/";
 
 export const GPC_ARTIFACT_CONFIG = parseGPCArtifactsConfig(
   sanitizeEnv(process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE)
