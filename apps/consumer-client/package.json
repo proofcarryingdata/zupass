@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@babel/core": "^7.24.0",
+    "@pcd/client-shared": "0.0.1",
     "@pcd/eddsa-frog-pcd": "0.3.0",
     "@pcd/eddsa-pcd": "0.6.0",
     "@pcd/eddsa-ticket-pcd": "0.6.0",

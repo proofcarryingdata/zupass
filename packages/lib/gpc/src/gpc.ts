@@ -1,9 +1,13 @@
 import {
+  PROTO_POD_GPC_FAMILY_NAME,
   ProtoPODGPC,
   ProtoPODGPCCircuitDesc,
-  gpcArtifactPaths
+  githubDownloadRootURL,
+  gpcArtifactPaths,
+  unpkgDownloadRootURL
 } from "@pcd/gpcircuits";
 import { Groth16Proof } from "snarkjs";
+import urljoin from "url-join";
 import {
   checkCircuitRequirements,
   checkProofArgs,
@@ -178,4 +182,93 @@ export async function gpcVerify(
     circuitPublicInputs,
     circuitOutputs
   );
+}
+
+/**
+ * Name of the package on NPM which contains published artifacts for this
+ * GPC family.
+ */
+export const GPC_ARTIFACTS_NPM_PACKAGE_NAME =
+  ProtoPODGPC.ARTIFACTS_NPM_PACKAGE_NAME;
+
+/**
+ * Version of the published artifacts on NPM which are compatible with this
+ * version of the GPC circuits.
+ */
+export const GPC_ARTIFACTS_NPM_VERSION = ProtoPODGPC.ARTIFACTS_NPM_VERSION;
+
+/**
+ * Possible sources to download GPC artifacts.
+ */
+export type GPCArtifactSource = "zupass" | "github" | "unpkg";
+
+/**
+ * Stability level of GPC artifacts to use.  Test artifacts are for use
+ * in active development while prod artifacts are officially released.
+ */
+export type GPCArtifactStability = "prod" | "test";
+
+/**
+ * Version specifier for GPC artifacts.  It meaning depends on the source.
+ * It might be the version of an NPM package release (e.g. 1.0.1) or a GitHub
+ * revision identifier (branch, tag, or commit).
+ */
+export type GPCArtifactVersion = string | undefined;
+
+/**
+ * Forms a URL for downloading GPC artifacts depending on configuration
+ *
+ * @param source the download source location
+ * @param stability the stability level (test or prod) of artifacts to seek.
+ *   Ignored in some sources in favor of the version.
+ * @param version the version identifier for circuit artifacts.  Not relevant
+ *   to some sources which host only a single version.  NPM-based sources
+ *   can be given an undefined version and will use the
+ *   {@link GPC_ARTIFACTS_NPM_VERSION} constant.
+ * @param zupassURL the base URL for Zupass, if used as a download option.
+ *   Can be "" or "/" to use a relative URL (within the Zupass app).
+ * @returns a root URL to download GPC artifacts, as needed for {@link gpcProve}
+ *   or {@link gpcVerify}.
+ */
+export function gpcArtifactDownloadURL(
+  source: GPCArtifactSource,
+  stability: GPCArtifactStability,
+  version: GPCArtifactVersion,
+  zupassURL?: string
+): string {
+  switch (source) {
+    case "github":
+      const REPO_NAME = "proofcarryingdata/snark-artifacts";
+      if (version === undefined || version === "") {
+        throw new Error("GitHub artifact download requires a version.");
+      }
+      return githubDownloadRootURL(
+        REPO_NAME,
+        PROTO_POD_GPC_FAMILY_NAME,
+        version
+      );
+    case "unpkg":
+      if (version === undefined || version === "") {
+        version = GPC_ARTIFACTS_NPM_VERSION;
+      }
+      // stability is intentionally ignored.  NPM version can encode
+      // pre-release status.
+      return unpkgDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
+    case "zupass":
+      // TODO(POD-P3): Do we want to expose source=zupass as a public option?
+      // If so, we need the Zupass server to not set `Access-Control-Allow-Origin: *`,
+      // or migrate to a different hosting option.
+      if (zupassURL === undefined) {
+        throw new Error(
+          'Zupass artifact download requires a server URL.  Try "https://zupass.org".'
+        );
+      }
+      return urljoin(
+        zupassURL,
+        stability === "test" ? "artifacts/test" : "artifacts",
+        PROTO_POD_GPC_FAMILY_NAME
+      );
+    default:
+      throw new Error(`Unknown artifact download source ${source}.`);
+  }
 }

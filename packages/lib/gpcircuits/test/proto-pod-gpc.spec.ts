@@ -651,7 +651,7 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
   // - Negative testing of invalid inputs.
 });
 
-describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", function () {
+describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", function () {
   function prepGroth16Test(
     params: ProtoPODGPCCircuitParams
   ): CircuitArtifactPaths {

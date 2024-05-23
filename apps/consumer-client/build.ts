@@ -15,7 +15,8 @@ const consumerClientAppOpts: BuildOptions = {
     "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`,
     "process.env.CONSUMER_SERVER_URL": `'${process.env.CONSUMER_SERVER_URL}'`,
     "process.env.ZUPASS_CLIENT_URL_CONSUMER": `'${process.env.ZUPASS_CLIENT_URL_CONSUMER}'`,
-    "process.env.ZUPASS_SERVER_URL_CONSUMER": `'${process.env.ZUPASS_SERVER_URL_CONSUMER}'`
+    "process.env.ZUPASS_SERVER_URL_CONSUMER": `'${process.env.ZUPASS_SERVER_URL_CONSUMER}'`,
+    "process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE": `'${process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE}'`
   },
   entryPoints: ["src/main.tsx"],
   plugins: [
