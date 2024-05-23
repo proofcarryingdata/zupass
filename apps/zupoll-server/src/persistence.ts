@@ -74,7 +74,9 @@ export async function getBallotsVisibleToUserType(
       ballotURL: true,
       expiry: true,
       ballotType: true,
-      createdAt: true
+      createdAt: true,
+      pollsterSemaphoreGroupUrl: true,
+      voterSemaphoreGroupUrls: true
     },
     orderBy: { expiry: "desc" },
     where: {
@@ -93,7 +95,8 @@ export async function getBallotsForPipelineId(pipelineId: string) {
       expiry: true,
       ballotType: true,
       createdAt: true,
-      pollsterSemaphoreGroupUrl: true
+      pollsterSemaphoreGroupUrl: true,
+      voterSemaphoreGroupUrls: true
     },
     orderBy: { expiry: "desc" },
     where: {
