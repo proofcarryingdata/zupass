@@ -20,6 +20,11 @@ export const GPC_TEST_ARTIFACTS_PATH = path.join(
   "../../../lib/gpcircuits/artifacts/test"
 );
 
+export const GPC_NPM_ARTIFACTS_PATH = path.join(
+  __dirname,
+  "../../../../node_modules/@pcd/proto-pod-gpc-artifacts"
+);
+
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
 export const privateKey =
   "0001020304050607080900010203040506070809000102030405060708090001";
@@ -45,11 +50,9 @@ export const sampleEntries = {
 } satisfies PODEntries;
 
 describe("GPCPCD should work", async function () {
-  this.beforeAll(async () => {
-    GPCPCDPackage.init?.({ zkArtifactPath: GPC_TEST_ARTIFACTS_PATH });
-  });
+  async function runGPCPCDTest(artifactsPath: string): Promise<void> {
+    GPCPCDPackage.init?.({ zkArtifactPath: artifactsPath });
 
-  it("GPCPCD should prove and verify", async function () {
     const proofConfig: GPCProofConfig = {
       pods: {
         pod0: {
@@ -116,6 +119,18 @@ describe("GPCPCD should work", async function () {
     const serialized = await GPCPCDPackage.serialize(gpcPCD);
     const deserialized = await GPCPCDPackage.deserialize(serialized.pcd);
     expect(await GPCPCDPackage.verify(deserialized)).to.be.true;
+  }
+
+  it("GPCPCD should prove and verify with test artifacts", async function () {
+    // Confirms that the code in the repo is compatible with circuit
+    // artifacts built from circuits in the repo.
+    await runGPCPCDTest(GPC_TEST_ARTIFACTS_PATH);
+  });
+
+  it("GPCPCD should prove and verify with NPM artifacts", async function () {
+    // Confirms that the code in the repo is compatible with circuit
+    // artifacts released on NPM.
+    await runGPCPCDTest(GPC_NPM_ARTIFACTS_PATH);
   });
 });
 
