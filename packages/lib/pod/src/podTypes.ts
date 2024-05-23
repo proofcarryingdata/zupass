@@ -90,3 +90,8 @@ export type PODValueTuple = PODValue[];
  * ensure all entries are valid.
  */
 export type PODEntries = Record<PODName, PODValue>;
+
+/**
+ * Optional set of lists for checking POD entry (or tuple) value membership.
+ */
+export type PODMembershipLists = Record<PODName, PODValue[] | PODValueTuple[]>;

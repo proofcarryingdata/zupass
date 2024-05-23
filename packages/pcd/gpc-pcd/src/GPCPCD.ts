@@ -1,5 +1,11 @@
 import { GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
-import { PCD, PCDArgument, StringArgument } from "@pcd/pcd-types";
+import {
+  ObjectArgument,
+  PCD,
+  PCDArgument,
+  StringArgument
+} from "@pcd/pcd-types";
+import { PODMembershipLists } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Groth16Proof } from "snarkjs";
@@ -71,6 +77,12 @@ export type GPCPCDArgs = {
    * by the same user, without revealing the user's identity.
    */
   externalNullifier: StringArgument;
+
+  /**
+   * Optional membership lists, if needed by the proof configuration. This is
+   * always revealed.
+   */
+  membershipLists: ObjectArgument<PODMembershipLists>;
 
   /**
    * Optional watermark can be any string.  It will be included (by hash) in the

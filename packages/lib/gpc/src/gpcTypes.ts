@@ -1,4 +1,11 @@
-import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
+import {
+  POD,
+  PODEntries,
+  PODMembershipLists,
+  PODName,
+  PODValue,
+  PODValueTuple
+} from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
 import { Groth16Proof } from "snarkjs";
 
@@ -314,7 +321,7 @@ export type GPCProofInputs = {
    * may be primitive (i.e. of type PODValue) or tuples (represented as
    * PODValueTuple = PODValue[]).  Each list must be non-empty.
    */
-  membershipLists?: Record<PODName, PODValue[] | PODValueTuple[]>;
+  membershipLists?: PODMembershipLists;
 
   /**
    * If this field is set, the given value will be included in the resulting

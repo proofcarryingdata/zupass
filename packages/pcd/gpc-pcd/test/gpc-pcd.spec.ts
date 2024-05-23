@@ -59,9 +59,16 @@ describe("GPCPCD should work", async function () {
           entries: {
             A: { isRevealed: true },
             E: { isRevealed: false, equalsEntry: "pod0.A" },
-            owner: { isRevealed: false, isOwnerID: true }
+            owner: {
+              isRevealed: false,
+              isOwnerID: true,
+              isMemberOf: ["admissibleOwners"]
+            }
           }
         }
+      },
+      tuples: {
+        pair: { entries: ["pod0.A", "pod0.E"], isMemberOf: ["admissiblePairs"] }
       }
     };
 
@@ -93,6 +100,22 @@ describe("GPCPCD should work", async function () {
         value: "some watermark",
         argumentType: ArgumentTypeName.String
       },
+      membershipLists: {
+        value: {
+          admissibleOwners: [
+            sampleEntries.F,
+            sampleEntries.C,
+            sampleEntries.owner
+          ],
+          admissiblePairs: [
+            [sampleEntries.D, sampleEntries.B],
+            [sampleEntries.A, sampleEntries.E],
+            [sampleEntries.owner, sampleEntries.I],
+            [sampleEntries.J, sampleEntries.H]
+          ]
+        },
+        argumentType: ArgumentTypeName.Object
+      },
       id: {
         argumentType: ArgumentTypeName.String,
         value: uuid()
@@ -111,7 +134,7 @@ describe("GPCPCD should work", async function () {
     expect(gpcPCD.claim.revealed.watermark?.value).to.eq("some watermark");
     // TODO(POD-P2): Revisit this when tuples and lists are in the compiler.
     expect(gpcPCD.claim.config.circuitIdentifier).to.eq(
-      "proto-pod-gpc_1o-5e-6md-0x0l-0x0t"
+      "proto-pod-gpc_3o-10e-8md-2x20l-1x4t"
     );
 
     expect(await GPCPCDPackage.verify(gpcPCD)).to.be.true;
