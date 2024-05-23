@@ -35,6 +35,22 @@ export async function getAllBallotsForAlerts() {
   });
 }
 
+export async function updateBallotVoterGroup(
+  ballotURL: number,
+  roots: string[],
+  urls: string[]
+) {
+  await prisma.ballot.update({
+    where: {
+      ballotURL
+    },
+    data: {
+      voterSemaphoreGroupRoots: roots,
+      voterSemaphoreGroupUrls: urls
+    }
+  });
+}
+
 export async function updateBallotExpiryNotif(
   ballotURL: number,
   expiryNotif: ExpiryNotifStatus
