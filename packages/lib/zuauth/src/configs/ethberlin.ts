@@ -1,4 +1,4 @@
-import { PipelineEdDSATicketZuAuthConfig } from "@pcd/passport-interface";
+import type { PipelineEdDSATicketZuAuthConfig } from "@pcd/passport-interface";
 
 export const ETHBERLIN04: PipelineEdDSATicketZuAuthConfig[] = [
   {

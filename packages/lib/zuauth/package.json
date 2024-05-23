@@ -21,6 +21,11 @@
       "types": "./dist/types/src/zuauth.d.ts",
       "import": "./dist/esm/src/zuauth.js",
       "require": "./dist/cjs/src/zuauth.js"
+    },
+    "./configs/ethberlin": {
+      "types": "./dist/types/src/configs/ethberlin.d.ts",
+      "import": "./dist/esm/src/configs/ethberlin.js",
+      "require": "./dist/cjs/src/configs/ethberlin.js"
     }
   },
   "files": [
