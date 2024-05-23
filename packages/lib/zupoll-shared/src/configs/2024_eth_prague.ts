@@ -80,7 +80,7 @@ export function makeEthPrague(
 
   const audienceBallotType: BallotConfig = {
     name: "Audience Polls",
-    description: "Polls for ETHPrague audience members to vote on.",
+    description: "Polls for ETHPrague audience members to vote on",
     voterGroupId: audienceVoterGroupId,
     voterGroupUrl: audienceVoterGroupUrl,
     creatorGroupId: ETH_PRAGUE_CONFIG_ORGANIZER_SEMA_GROUP_ID,
