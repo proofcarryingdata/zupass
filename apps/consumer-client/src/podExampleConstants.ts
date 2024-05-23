@@ -35,9 +35,21 @@ export const EXAMPLE_GPC_CONFIG = `{
         },
         "owner": {
           "isRevealed": false,
-          "isOwnerID": true
+          "isOwnerID": true,
+          "isMemberOf": "admissibleOwners"
         }
       }
     }
   }
+}`;
+
+export const EXAMPLE_MEMBERSHIP_LISTS = `{
+  "admissibleOwners": [
+    3,
+    3472834734,
+    2,
+    9,
+    "something",
+    18711405342588116796533073928767088921854096266145046362753928030796553161041
+  ]
 }`;

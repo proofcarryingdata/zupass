@@ -80,6 +80,16 @@ export type PODValue = PODStringValue | PODCryptographicValue | PODIntValue;
 export type PODValueTuple = PODValue[];
 
 /**
+ * POD raw values are simply unwrapped POD values.
+ */
+export type PODRawValue = string | bigint;
+
+/**
+ * Represents a tuple of POD raw values as an array.
+ */
+export type PODRawValueTuple = PODRawValue[];
+
+/**
  * A set of entries defining a POD, represented in an object.  POD entries
  * are always Merklized in sorted order.  Entries extracted from a `POD`
  * instance will always iterate in sorted order, but inputs used to create

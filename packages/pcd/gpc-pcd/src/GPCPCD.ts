@@ -1,11 +1,5 @@
 import { GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
-import {
-  ObjectArgument,
-  PCD,
-  PCDArgument,
-  StringArgument
-} from "@pcd/pcd-types";
-import { PODMembershipLists } from "@pcd/pod";
+import { PCD, PCDArgument, StringArgument } from "@pcd/pcd-types";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Groth16Proof } from "snarkjs";
@@ -80,9 +74,10 @@ export type GPCPCDArgs = {
 
   /**
    * Optional membership lists, if needed by the proof configuration. This is
-   * always revealed.
+   * always revealed. Taken to be a JSON-serialised string for the same reasons
+   * outlined for `proofConfig` above.
    */
-  membershipLists: ObjectArgument<PODMembershipLists>;
+  membershipLists: StringArgument;
 
   /**
    * Optional watermark can be any string.  It will be included (by hash) in the

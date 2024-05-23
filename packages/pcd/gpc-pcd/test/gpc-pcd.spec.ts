@@ -4,7 +4,7 @@ import {
   serializeGPCProofConfig
 } from "@pcd/gpc";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { POD, PODEntries } from "@pcd/pod";
+import { POD, PODEntries, podMembershipListsToSimplifiedJSON } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
@@ -101,7 +101,7 @@ describe("GPCPCD should work", async function () {
         argumentType: ArgumentTypeName.String
       },
       membershipLists: {
-        value: {
+        value: podMembershipListsToSimplifiedJSON({
           admissibleOwners: [
             sampleEntries.F,
             sampleEntries.C,
@@ -113,8 +113,8 @@ describe("GPCPCD should work", async function () {
             [sampleEntries.owner, sampleEntries.I],
             [sampleEntries.J, sampleEntries.H]
           ]
-        },
-        argumentType: ArgumentTypeName.Object
+        }),
+        argumentType: ArgumentTypeName.String
       },
       id: {
         argumentType: ArgumentTypeName.String,
@@ -132,7 +132,6 @@ describe("GPCPCD should work", async function () {
     expect(gpcPCD.claim.revealed.owner?.externalNullifier).to.not.be.undefined;
     expect(gpcPCD.claim.revealed.owner?.nullifierHash).to.not.be.undefined;
     expect(gpcPCD.claim.revealed.watermark?.value).to.eq("some watermark");
-    // TODO(POD-P2): Revisit this when tuples and lists are in the compiler.
     expect(gpcPCD.claim.config.circuitIdentifier).to.eq(
       "proto-pod-gpc_3o-10e-8md-2x20l-1x4t"
     );

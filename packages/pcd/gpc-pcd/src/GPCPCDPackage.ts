@@ -16,7 +16,7 @@ import {
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { PODStringValue } from "@pcd/pod";
+import { PODStringValue, podMembershipListsFromSimplifiedJSON } from "@pcd/pod";
 import { PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
@@ -114,7 +114,12 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
             }
           }
         : {}),
-      membershipLists: membershipLists,
+      ...(membershipLists !== undefined
+        ? {
+            membershipLists:
+              podMembershipListsFromSimplifiedJSON(membershipLists)
+          }
+        : {}),
       watermark: watermark
     }
   };
@@ -273,7 +278,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
           "Your Zupass comes with a primary Semaphore Identity which represents an user in the Semaphore protocol."
       },
       membershipLists: {
-        argumentType: ArgumentTypeName.Object,
+        argumentType: ArgumentTypeName.String,
         defaultVisible: false
       },
       watermark: {
