@@ -44,7 +44,6 @@
     "javascript-time-ago": "^2.5.9",
     "js-sha256": "^0.11.0",
     "json-stable-stringify": "^1.0.2",
-    "long": "^5.2.3",
     "next": "^14.1.4",
     "next-themes": "^0.3.0",
     "os-browserify": "^0.3.0",
