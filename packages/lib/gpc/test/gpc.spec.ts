@@ -11,6 +11,7 @@ import {
   GPCProofConfig,
   GPCProofInputs,
   GPCRevealedClaims,
+  GPC_ARTIFACTS_NPM_VERSION,
   gpcArtifactDownloadURL,
   gpcProve,
   gpcVerify
@@ -1122,25 +1123,25 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "test",
         version: undefined,
         zupassURL: undefined,
-        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@0.0.2"
+        expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "prod",
         version: undefined,
         zupassURL: undefined,
-        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@0.0.2"
+        expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
         version: undefined,
         zupassURL: "https://zupass.org",
-        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@0.0.2"
+        expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "prod",
         version: undefined,
         zupassURL: "https://zupass.org",
-        expected: "https://unpkg.com/@pcd/proto-pod-gpc-artifacts@0.0.2"
+        expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
