@@ -23,7 +23,8 @@ export function redirectForLogin(config: LoginConfig) {
     undefined,
     undefined,
     window.location.origin +
-      `?config=${encodeURIComponent(stableStringify(config))}`
+      `?config=${encodeURIComponent(stableStringify(config))}`,
+    window.location.origin
   );
 }
 
