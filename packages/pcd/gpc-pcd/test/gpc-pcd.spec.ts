@@ -63,13 +63,13 @@ describe("GPCPCD should work", async function () {
             owner: {
               isRevealed: false,
               isOwnerID: true,
-              isMemberOf: ["admissibleOwners"]
+              isMemberOf: "admissibleOwners"
             }
           }
         }
       },
       tuples: {
-        pair: { entries: ["pod0.A", "pod0.E"], isMemberOf: ["admissiblePairs"] }
+        pair: { entries: ["pod0.A", "pod0.E"], isMemberOf: "admissiblePairs" }
       }
     };
 
