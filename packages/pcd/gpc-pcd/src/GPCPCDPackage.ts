@@ -6,6 +6,7 @@ import {
   deserializeGPCRevealedClaims,
   gpcProve,
   gpcVerify,
+  podMembershipListsFromSimplifiedJSON,
   serializeGPCBoundConfig,
   serializeGPCRevealedClaims
 } from "@pcd/gpc";
@@ -16,7 +17,7 @@ import {
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { PODStringValue, podMembershipListsFromSimplifiedJSON } from "@pcd/pod";
+import { PODStringValue } from "@pcd/pod";
 import { PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";

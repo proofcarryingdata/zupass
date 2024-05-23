@@ -1,7 +1,6 @@
 import JSONBig from "json-bigint";
 import {
   PODEntries,
-  PODMembershipLists,
   PODRawValue,
   PODRawValueTuple,
   PODValue,
@@ -395,40 +394,6 @@ export function podEntriesToSimplifiedJSON(
 }
 
 /**
- * Serializes `PODMembershipLists` to a string in a simplified format optimized
- * for compactness and human readability. The simplified format discards type
- * information.  Calling {@link podMembershipListsFromSimplifiedJSON} will
- * construct `PODMembershipLists` containing the same values, which will behave
- * the same in hashing and circuits, but the type information may not be
- * identical.
- *
- * @param entries the entries to serialize
- * @param space pretty-printing configuration, as defined by the corresponding
- *   argument to JSON.stringify.
- * @returns a string representation
- */
-export function podMembershipListsToSimplifiedJSON(
-  membershipLists: PODMembershipLists,
-  space?: number
-): string {
-  const simplified: Record<string, PODRawValue[] | PODRawValueTuple[]> = {};
-  for (const [name, value] of Object.entries(membershipLists)) {
-    simplified[name] =
-      value.length === 0
-        ? []
-        : Array.isArray(value[0])
-        ? (value as PODValueTuple[]).map((podValueTuple) =>
-            podValueTuple.map(podValueToRawValue)
-          )
-        : (value as PODValue[]).map(podValueToRawValue);
-  }
-  return JSONBig({
-    useNativeBigInt: true,
-    alwaysParseAsBig: true
-  }).stringify(simplified, null, space);
-}
-
-/**
  * Deserializes `PODValue` from the 'raw value' produced by
  * {@link podValueToRawValue}.  Type information is inferred from the values
  * in a way which should preserve hashing and circuit behavior, but isn't
@@ -490,40 +455,4 @@ export function podEntriesFromSimplifiedJSON(
     entries[entryName] = podValueFromRawValue(rawValue);
   }
   return entries;
-}
-
-/**
- * Deserializes `PODMembershipLists` from the simplified format produced by
- * {@link podMembershipListsToSimplifiedJSON}.  Type information is inferred
- * from the values in a way which should preserve hashing and circuit behavior,
- * but isn't guaranteed to be identical to the types before serialization.  For
- * instance, small numbers are always annotated as `int`, rather than
- * `cryptographic`.
- *
- * @param serializedMembershipLists a string representation of `PODMembershipLists`
- * @returns `PODMembershipLists` deserialized from the string
- * @throws if the serialized form is invalid
- */
-export function podMembershipListsFromSimplifiedJSON(
-  simplifiedJSON: string
-): PODMembershipLists {
-  const simplifiedEntries = JSONBig({
-    useNativeBigInt: true,
-    alwaysParseAsBig: true
-  }).parse(simplifiedJSON) as Record<
-    string,
-    PODRawValue[] | PODRawValueTuple[]
-  >;
-  const membershipLists: PODMembershipLists = {};
-  for (const [listName, rawValueList] of Object.entries(simplifiedEntries)) {
-    membershipLists[listName] =
-      rawValueList.length === 0
-        ? []
-        : Array.isArray(rawValueList[0])
-        ? (rawValueList as PODRawValueTuple[]).map((rawValueTuple) =>
-            rawValueTuple.map(podValueFromRawValue)
-          )
-        : (rawValueList as PODRawValue[]).map(podValueFromRawValue);
-  }
-  return membershipLists;
 }
