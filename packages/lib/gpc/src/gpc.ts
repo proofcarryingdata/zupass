@@ -6,7 +6,6 @@ import {
   gpcArtifactPaths,
   unpkgDownloadRootURL
 } from "@pcd/gpcircuits";
-import { Groth16Proof } from "snarkjs";
 import urljoin from "url-join";
 import {
   checkCircuitRequirements,
@@ -21,6 +20,7 @@ import {
 } from "./gpcCompile";
 import {
   GPCBoundConfig,
+  GPCProof,
   GPCProofConfig,
   GPCProofInputs,
   GPCRevealedClaims
@@ -95,7 +95,7 @@ export function gpcBindConfig(proofConfig: GPCProofConfig): {
  * @param pathToArtifacts the path to the root folder where circuit artifacts
  *   can be found.  This may be a URL (in browser) or a filesystem path (in
  *   Node).
- * @returns The groth16 proof, a bound configuration usable for reliable
+ * @returns The Groth16 proof, a bound configuration usable for reliable
  *   verification or future proofs (see {@link GPCBoundConfig}), and the
  *   revealed claims of this proof (see {@link GPCRevealedClaims}).
  * @throws TypeError if any of the arguments is malformed
@@ -106,7 +106,7 @@ export async function gpcProve(
   proofInputs: GPCProofInputs,
   pathToArtifacts: string
 ): Promise<{
-  proof: Groth16Proof;
+  proof: GPCProof;
   boundConfig: GPCBoundConfig;
   revealedClaims: GPCRevealedClaims;
 }> {
@@ -159,7 +159,7 @@ export async function gpcProve(
  * @throws Error if the proof cannot be verified
  */
 export async function gpcVerify(
-  proof: Groth16Proof,
+  proof: GPCProof,
   boundConfig: GPCBoundConfig,
   revealedClaims: GPCRevealedClaims,
   pathToArtifacts: string

@@ -170,6 +170,9 @@
     },
     {
       "path": "packages/ui/zk-eddsa-frog-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "examples/pod-gpc-example/tsconfig.cjs.json"
     }
   ]
 }
