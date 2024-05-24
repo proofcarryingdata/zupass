@@ -10,7 +10,7 @@ import {
   serializeGPCBoundConfig
 } from "@pcd/gpc";
 import { GPCPCD, GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
-import { membershipListsAsSets } from "@pcd/gpc/src/gpcUtil";
+import { membershipListsToSets } from "@pcd/gpc/src/gpcChecks";
 import {
   constructZupassPcdGetRequestUrl,
   openZupassPopup,
@@ -318,10 +318,10 @@ async function verifyProof(
   // Check for equality of membership lists as sets, since the elements are
   // sorted by hash before being fed into circuits.
   const sameMembershipLists = _.isEqual(
-    membershipListsAsSets(pcd.claim.revealed.membershipLists ?? {}),
+    membershipListsToSets(pcd.claim.revealed.membershipLists ?? {}),
     membershipLists === undefined
       ? {}
-      : membershipListsAsSets(
+      : membershipListsToSets(
           podMembershipListsFromSimplifiedJSON(membershipLists)
         )
   );
