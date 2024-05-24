@@ -28,8 +28,7 @@ import {
   GPCProofObjectConfig,
   GPCRevealedClaims,
   GPCRevealedObjectClaims,
-  PODEntryIdentifier,
-  PODMembershipLists
+  PODEntryIdentifier
 } from "./gpcTypes";
 import {
   GPCProofMembershipListConfig,
