@@ -10,6 +10,7 @@ import {
   serializeGPCBoundConfig
 } from "@pcd/gpc";
 import { GPCPCD, GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
+import { membershipListsAsSets } from "@pcd/gpc/src/gpcUtil";
 import {
   constructZupassPcdGetRequestUrl,
   openZupassPopup,
@@ -314,11 +315,15 @@ async function verifyProof(
     return { valid: false, err: "Watermark does not match." };
   }
 
+  // Check for equality of membership lists as sets, since the elements are
+  // sorted by hash before being fed into circuits.
   const sameMembershipLists = _.isEqual(
-    pcd.claim.revealed.membershipLists ?? {},
+    membershipListsAsSets(pcd.claim.revealed.membershipLists ?? {}),
     membershipLists === undefined
       ? {}
-      : podMembershipListsFromSimplifiedJSON(membershipLists)
+      : membershipListsAsSets(
+          podMembershipListsFromSimplifiedJSON(membershipLists)
+        )
   );
   if (!sameMembershipLists) {
     return { valid: false, err: "Membership lists do not match." };

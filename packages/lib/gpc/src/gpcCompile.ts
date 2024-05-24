@@ -392,7 +392,8 @@ function compileProofListMembership<
     return BigInt(idx);
   });
 
-  // Compile listValidValues
+  // Compile listValidValues, making sure to sort the hashed values before
+  // padding.
   const unpaddedListValidValues = listIdPairs
     .map((pair) => pair[0])
     .map((listName) => {
@@ -402,7 +403,7 @@ function compileProofListMembership<
         ? (unhashedValues as PODValueTuple[]).map((elements) =>
             hashTuple(paramTupleArity, elements)
           )
-        : (unhashedValues as PODValue[]).map(podValueHash);
+        : (unhashedValues as PODValue[]).map(podValueHash).sort();
 
       // Pad the list to its capacity by using the first element of the list, which
       // is OK because the list is really a set. This also avoids false positives.
