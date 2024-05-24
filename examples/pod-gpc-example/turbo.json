@@ -10,7 +10,8 @@
     "test": {
       "cache": true,
       "dependsOn": ["build", "^gen-test-artifacts"],
-      "inputs": ["$TURBO_DEFAULT$", "test/**"]
+      "inputs": ["$TURBO_DEFAULT$", "test/**"],
+      "outputMode": "new-only"
     }
   }
 }
