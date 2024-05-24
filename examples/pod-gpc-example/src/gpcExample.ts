@@ -1,28 +1,28 @@
-/*
+/**
  * This file provides example usage of GPC (General Purpose Circuits) libraries
- * to make proofs about PODs (Provable Object Data).
+ * to make proofs about PODs (Provable Object Data).  See podExample.ts for
+ * an intro to the POD datatype used in GPCs.
  *
- * It might eventually turn into tutorials in package docs or sample apps,
- * but for now it's just a preliminary demonstration of what code to use GPCs
- * looks like.  See podExample.ts for an example of how to make POD objects
- * to prove about.
+ * This isn't a fleshed-out sample app, but instead a tutorial structured as
+ * heavily-commented code.  The code below executes, and you can see its output
+ * by running the unit tests in this package via `yarn test`.
  *
  * The code for creating and verifying GPC proofs PODs is found in the @pcd/gpc
  * package.  The @pcd/gpc-pcd package wraps a GPC proof in a way which can be
  * created, transmitted, stored, and displayed in apps like Zupass and
- * Zubox/Podbox which understand many types of PCDs.
+ * Podbox which understand many types of PCDs.
  *
  * All the GPC code is an early prototype, and details are subject to change.
  * Feedback is welcome.
- *
- * -- artwyman
  */
 
 import {
+  GPCProof,
   GPCProofConfig,
   GPCProofInputs,
   deserializeGPCBoundConfig,
   deserializeGPCRevealedClaims,
+  gpcArtifactDownloadURL,
   gpcBindConfig,
   gpcProve,
   gpcVerify,
@@ -38,17 +38,20 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import * as path from "path";
-import { Groth16Proof } from "snarkjs";
 import { v4 as uuid } from "uuid";
 
 /**
  * You can run this example code with this command: yarn test
  */
-export async function gpcDemo(): Promise<void> {
+export async function gpcDemo(): Promise<boolean> {
   console.log("**** GPC Demo ****");
 
-  // First let's create some PODs to prove things about.  This duplicates
-  // many details from the POD demo, so see that file for more details.
+  //////////////////////////////////////////////////////////////////////////////
+  // Prerequisites: First let's create some PODs to prove about.  This
+  // duplicates many steps from the POD demo, so see that file for more detailed
+  // explanatory comments.
+  //////////////////////////////////////////////////////////////////////////////
+
   const privateKey =
     "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
   const semaphoreIdentity = new Identity();
@@ -58,6 +61,7 @@ export async function gpcDemo(): Promise<void> {
       pod_type: { type: "string", value: "item.weapon" },
       itemSet: { type: "string", value: "celestial" },
       attack: { type: "int", value: 7n },
+      weaponType: { type: "string", value: "sword" },
       owner: { type: "cryptographic", value: semaphoreIdentity.commitment }
     } satisfies PODEntries,
     privateKey
@@ -85,16 +89,18 @@ export async function gpcDemo(): Promise<void> {
   // The libraries for proving GPCs are found in the @pcd/gpc package.
   // A lot of documentation can befound on the types in the gpcTypes.ts module.
   // The primary public interface is found in the gpc.ts module.
-  // All the types involved are intended to be immutable, but you can manipulate
-  // them as you wish.
+  // All the types involved are treated as immutable, but you can manipulate
+  // them freely before passing them to library functions.
+  //
   // The purpose of the GPC library is to hide the details of the ZK circuits
   // used to generate and verify proofs.  Proofs can be created using a
-  // high-level configuration, and the library will automatically pick one of
-  // many available circuits from a GPC family which is suitable for the proof.
+  // high-level configuration, and the library will automatically pick a
+  // suitable circuit from many available circuits from a GPC family.
   //////////////////////////////////////////////////////////////////////////////
 
   // A GPCConfig specifies what we want to prove about one or more PODs.  It's
-  // intended to be reusable to generate multiple proofs.
+  // intended to be reusable to generate multiple proofs.  This is a simple
+  // proof of a single POD.
   const simpleProofConfig: GPCProofConfig = {
     pods: {
       // I'm calling this POD "weapon", but that's an arbitray name assigned
@@ -106,21 +112,21 @@ export async function gpcDemo(): Promise<void> {
           attack: { isRevealed: true },
 
           // I'm proving the presence of an entry called "owner".  I'm not
-          // revealing it, but proving that it matches the commitment of my
-          // semaphore identity.
+          // revealing it, but will be proving I own the corresponding
+          // Semaphore identity secrets.
           owner: { isRevealed: false, isOwnerID: true }
         }
       }
     }
   };
 
-  // Note that anything not mentioned in the config isn't being proven.  For
-  // instance, I didn't check the pod_type, so this config could be met by some
-  // other type with a "damage" field.  My POD also may or may not have many
-  // other entries not included in the proof.
+  // Note that anything not mentioned in the config isn't being proven
+  // or revealed.  For instance, I didn't check the `pod_type`, so this config
+  // could be met by some other type with a "damage" field.  My POD also may or
+  // may not have many other entries not included in the proof.
 
   // To generate a proof I need to pair a config with a set of inputs, including
-  // the POD(s) to prove about.  Inputs an also enable extra security features
+  // the POD(s) to prove about.  Inputs can also enable extra security features
   // of the proof.
   const simpleProofInputs: GPCProofInputs = {
     pods: {
@@ -129,8 +135,8 @@ export async function gpcDemo(): Promise<void> {
     },
 
     owner: {
-      // Here I provide my private identity info.  It's not revealed in the
-      // proof, but used to prove the correctness of the "owner" entry as
+      // Here I provide my private identity info.  It's never revealed in the
+      // proof, but used to prove the correctness of the `owner` entry as
       // specified in the config.
       semaphoreV3: semaphoreIdentity,
 
@@ -146,31 +152,44 @@ export async function gpcDemo(): Promise<void> {
     watermark: { type: "int", value: BigInt(Date.now()) }
   };
 
+  //////////////////////////////////////////////////////////////////////////////
   // In order to generate and verify a proof we also need certain binary
   // artifacts (proving key, verification key, and witness generator).
   // These are a part of the GPC library, generated for each of a family
   // of related circuits.
+  // Since artifacts are large, and you only need a few of them to generate or
+  // verify a proof, they are published in a separate NPM package.  You can
+  // either depend on this package directly, or download individual artifact
+  // files from it.
+  //////////////////////////////////////////////////////////////////////////////
+
   // Artifacts can be loaded from a file (in Node) or downloaded from a URL (in
-  // browser).  In this case, these test artifacts can be used so long as
-  // the command `yarn gen-test-artifacts` has been run before.
-  const GPCIRCUITS_PACKAGE_PATH = path.join(
+  // browser).  Here we're using artifacts fetched from NPM as a devDependency.
+  const GPC_ARTIFACTS_PATH = path.join(
     __dirname,
-    "../../../lib/gpcircuits"
+    "../../../node_modules/@pcd/proto-pod-gpc-artifacts"
   );
-  const GPC_TEST_ARTIFACTS_PATH = path.join(
-    GPCIRCUITS_PACKAGE_PATH,
-    "artifacts/test"
-  );
+  console.log("Local artifacts path", GPC_ARTIFACTS_PATH);
+
+  // If this code were running in a browser, we'd need a URL to download
+  // artifacts.  We can get one from the function below, to use in a browser,
+  // or to download separately into your own Node environment.
+  const artifactsURL = gpcArtifactDownloadURL("unpkg", "prod", undefined);
+  console.log("In browser we'd download artifacts from", artifactsURL);
+
+  //////////////////////////////////////////////////////////////////////////////
+  // Let's look at how to generate a proof, and what its outputs mean.
+  //////////////////////////////////////////////////////////////////////////////
 
   // Now that we have all the arguments ready, we can generate a proof.
   const { proof, boundConfig, revealedClaims } = await gpcProve(
     simpleProofConfig,
     simpleProofInputs,
-    GPC_TEST_ARTIFACTS_PATH
+    GPC_ARTIFACTS_PATH
   );
 
-  // The proof object is the mathematical proof of correcntess.  It's just
-  // a bunch of opaque numbers.
+  // The proof object is the mathematical proof of the configured properties.
+  // It's just a bunch of opaque numbers.
   console.log("Proof", proof);
 
   // The bound config is a canonicalized version of our original proof config
@@ -199,6 +218,60 @@ export async function gpcDemo(): Promise<void> {
   // which should be revealed to the verifier.
   console.log("Revealed claims", serializeGPCRevealedClaims(revealedClaims, 2));
 
+  //////////////////////////////////////////////////////////////////////////////
+  // The outputs of proving function are also the inputs to verification.
+  // In many cases, these objects would be transmitted from prover to verifier
+  // via the network.  See below for more details on serialization, but for
+  // now let's look directly at verification.
+  //////////////////////////////////////////////////////////////////////////////
+
+  // With these same 3 inputs (and the ZK artifacts) we can verify the proof.
+  // This includes verifying all the revealed entries, along with the watermark
+  // and nullifier.
+  const isValid = await gpcVerify(
+    proof,
+    boundConfig,
+    revealedClaims,
+    GPC_ARTIFACTS_PATH
+  );
+  if (!isValid) {
+    throw new Error("Proof didn't verify!");
+  }
+
+  // Note that `gpcVerify` only checks that the inputs are valid with
+  // respect to each other.  You still need to check that everything is as
+  // you expect.
+
+  // If the config isn't hard-coded in the verifier, you need to ensure it's
+  // suitable.  The canonicalization which happens in binding means you can
+  // compare bound configs using a simple deep equals.
+  if (!_.isEqual(boundConfig, manualBoundConfig)) {
+    throw new Error("Unexpected configuration.");
+  }
+
+  // Verifiers should also always check that the PODs are signed by a trusted
+  // authority with a known public key.
+  if (revealedClaims.pods.weapon.signerPublicKey !== signerPublicKey) {
+    throw new Error("Unexpected signer.");
+  }
+
+  // Finally the verifier can look at the revealed claims and decide what to do
+  // with them.
+  console.log(
+    "Revealed attack value",
+    revealedClaims.pods.weapon.entries?.attack.value
+  );
+  console.log(
+    "Revealed watermark and nullifier",
+    revealedClaims.owner?.nullifierHash,
+    revealedClaims.watermark?.value
+  );
+
+  //////////////////////////////////////////////////////////////////////////////
+  // The proof outputs can be serialized for transmission between prover and
+  // verifier.
+  //////////////////////////////////////////////////////////////////////////////
+
   // Proof config (bound or unbound) and revealed claims can be serialized.
   // The proof itself is also a simple JSON object.
   // In most cases, they'd be sent from prover to verifier across the network,
@@ -210,55 +283,28 @@ export async function gpcDemo(): Promise<void> {
   // Then the verifier would deserialize the like this.
   // Deserializing also validates their structure, though not (yet) the
   // correctness of the proof.
-  const vProof = JSON.parse(serializedProof) as Groth16Proof;
+  const vProof = JSON.parse(serializedProof) as GPCProof;
   const vConfig = deserializeGPCBoundConfig(serializedConfig);
   const vClaims = deserializeGPCRevealedClaims(serializedClaims);
-
-  // With these same 3 inputs (and the ZK artifacts) we can verify the proof.
-  // This includes verifying all the revealed entries, along with the watermark
-  // and nullifier.
-  const isValid = await gpcVerify(
-    vProof,
-    vConfig,
-    vClaims,
-    GPC_TEST_ARTIFACTS_PATH
-  );
-  if (!isValid) {
-    throw new Error("Proof didn't verify!");
+  if (
+    !_.isEqual(vProof, proof) ||
+    !_.isEqual(vConfig, boundConfig) ||
+    !_.isEqual(vClaims, revealedClaims)
+  ) {
+    throw new Error("Serialization should maintain contents.");
   }
 
-  // Note that `gpcVerify` only checks that the inputs are valid with
-  // respect to each other.  You still need to check that everything is as
-  // you expect.
-  // If the config isn't hard-coded in the verifier, you need to ensure it's
-  // suitable.  The canonicalization which happens in binding means you can
-  // compare bound configs using a simple deep equals.
-  if (!_.isEqual(vConfig, boundConfig)) {
-    throw new Error("Unexpected configuration.");
-  }
-
-  // Verifiers should also always check that the PODs are signed by a trusted
-  // authority with a known public key.
-  if (vClaims.pods.weapon.signerPublicKey !== signerPublicKey) {
-    throw new Error("Unexpected signer.");
-  }
-
-  // Finally the verifier can look at the revealed claims and decide what to do
-  // with them.
-  console.log(
-    "Revealed attack value",
-    vClaims.pods.weapon.entries?.attack.value
-  );
-  console.log(
-    "Revealed watermark and nullifier",
-    vClaims.owner?.nullifierHash,
-    vClaims.watermark?.value
-  );
-
+  //////////////////////////////////////////////////////////////////////////////
   // Here's a more complicated example proving about multiple PODs and more
-  // constraints.
-  // In this case I'm proving I have two items from the same item set, both
-  // of which I own, and I'm revealing their attack and defense stats.
+  // constraints.  This example isn't exhaustive.  Check out the type
+  // documentation for GPCProofConfig to see the current options.  Even more
+  // options will be coming in future.
+  //////////////////////////////////////////////////////////////////////////////
+
+  // For my app logic here, I'm proving I have two items from a matching item
+  // set, that one of them is from an acceptable list of weapon types, and
+  // revealing their attack and defense stats.  For security, I'm proving
+  // that I own both PODs, and attaching a watermark.
   const multiPODProofConfig: GPCProofConfig = {
     pods: {
       weapon: {
@@ -268,7 +314,11 @@ export async function gpcDemo(): Promise<void> {
 
           // The equalsEntry constraint can refer to an entry in another
           // POD by name.
-          itemSet: { isRevealed: false, equalsEntry: "armor.itemSet" }
+          itemSet: { isRevealed: false, equalsEntry: "armor.itemSet" },
+
+          // The isMemberOf configuration proves this entry is one of the
+          // members of a list, specified in the inputs below.
+          weaponType: { isRevealed: false, isMemberOf: "acceptedWeaponTypes" }
         }
       },
       armor: {
@@ -284,6 +334,8 @@ export async function gpcDemo(): Promise<void> {
       }
     }
   };
+
+  // Here I generate the proof and also specify the inputs.
   const {
     proof: multiProof,
     boundConfig: multiBoundConfig,
@@ -292,15 +344,25 @@ export async function gpcDemo(): Promise<void> {
     multiPODProofConfig,
     {
       pods: { weapon: podSword, armor: podShield },
-      owner: { semaphoreV3: semaphoreIdentity }
+      owner: { semaphoreV3: semaphoreIdentity },
+      membershipLists: {
+        acceptedWeaponTypes: [
+          { type: "string", value: "dagger" },
+          { type: "string", value: "mace" },
+          { type: "string", value: "sword" }
+        ]
+      },
+      watermark: { type: "string", value: "matched item check" }
     } satisfies GPCProofInputs,
-    GPC_TEST_ARTIFACTS_PATH
+    GPC_ARTIFACTS_PATH
   );
+
+  // And finally I can verify the proof.
   const multiIsValid = await gpcVerify(
     multiProof,
     multiBoundConfig,
     multiRevealedClaims,
-    GPC_TEST_ARTIFACTS_PATH
+    GPC_ARTIFACTS_PATH
   );
   if (!multiIsValid) {
     throw new Error("Multi-POD proof didn't verify!");
@@ -312,29 +374,31 @@ export async function gpcDemo(): Promise<void> {
   );
 
   //////////////////////////////////////////////////////////////////////////////
-  // A PCD which wraps GPC functionality can be found in teh @pcd/gpc-pcd
-  // package.  This is a generic PCD suitable for hackers and experimenters.
-  // It exposes a lot of details directly in the UI, but allows GPC proofs
-  // to function end-to-end in Zupass.
+  // A PCD which wraps GPC functionality can be found in the @pcd/gpc-pcd
+  // package.  This allows GPC proofs to be generated and verified in Zupass
+  // and other apps which use the PCD SDK.
   //
-  // In future there will be higher-level app-specific wrappers such as a
-  // ZKPODTicketPCD to provide ticket proofs with a user-friendly UI.
+  // GPCPCD is a generic PCD suitable for hackers and experimenters.  It
+  // exposes a lot of details directly in the UI.  Some user scenarios will be
+  // best served by higher-level app-specific wrappers with user-friendly UI,
+  // such as a ZK proof of PODTickets.
   //////////////////////////////////////////////////////////////////////////////
 
   // The GPCPCD package needs to be initialized with the path to find ZK
-  // artifacts.
+  // artifacts, same as was used above.
   await GPCPCDPackage.init?.({
-    zkArtifactPath: GPC_TEST_ARTIFACTS_PATH
+    zkArtifactPath: GPC_ARTIFACTS_PATH
   });
 
-  // POD and Semaphore Identity also need to be wrapped in PCDs at this layer.
+  // POD and Semaphore Identity are also contained in PCDs at this layer.
   const podPCD = new PODPCD(uuid(), podSword);
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
     identity: semaphoreIdentity
   });
 
   // So far, the GPCPCD only supports proving about one POD, and always
-  // names it "pod0" so we need a slightly different config.
+  // names it "pod0" so we need a slightly different config.  More flexibility
+  // will be coming soon.
   const pcdProofConfig: GPCProofConfig = {
     pods: {
       pod0: {
@@ -347,7 +411,9 @@ export async function gpcDemo(): Promise<void> {
   };
 
   // We can make a GPCPCD for the same simple proof config we used above, by
-  // specifying all of the prove arguments in the generic format.
+  // specifying all of the prove arguments.  This generic format is a bit
+  // verbose, but allows proof args to be passed to a Zupass popup to request
+  // any sort of proof.
   const proveArgs: GPCPCDArgs = {
     proofConfig: {
       argumentType: ArgumentTypeName.String,
@@ -391,4 +457,5 @@ export async function gpcDemo(): Promise<void> {
   // consumer-client example in the Zupass repo for more details of that.
 
   console.log("**** End GPC Demo ****");
+  return true;
 }

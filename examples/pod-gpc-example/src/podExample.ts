@@ -1,20 +1,17 @@
-/*
+/**
  * This file provides example usage of POD (Provable Object Data) libraries.
-
- * It might eventually turn into tutorials in package docs or sample apps,
- * but for now it's just a preliminary demonstration of what code to use PODs
- * looks like.  See gpcExmaple.ts for an example of how to make proofs using
- * PODs.
+ *
+ * This isn't a fleshed-out sample app, but instead a tutorial structured as
+ * heavily-commented code.  The code below executes, and you can see its output
+ * by running the unit tests in this package via `yarn test`.
  *
  * The code for creating and manipulating PODs is found in the @pcd/pod package.
  * The @pcd/pod-pcd package wraps a POD in a way which can be created,
- * transmitted, stored, and displayed in apps like Zupass and Zubox/Podbox which
+ * transmitted, stored, and displayed in apps like Zupass and Podbox which
  * understand many types of PCDs.
  *
  * All the POD code is an early prototype, and details are subject to change.
  * Feedback is welcome.
- *
- * -- artwyman
  */
 
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -22,7 +19,6 @@ import {
   POD,
   PODContent,
   PODEntries,
-  PODValue,
   deserializePODEntries,
   podEntriesFromSimplifiedJSON,
   podEntriesToSimplifiedJSON,
@@ -35,16 +31,20 @@ import { v4 as uuid } from "uuid";
 /**
  * You can run this example code with this command: yarn test
  */
-export async function podDemo(): Promise<void> {
+export async function podDemo(): Promise<boolean> {
   console.log("**** POD Demo ****");
 
-  // First let's create some cryptographic data for our POD.
+  //////////////////////////////////////////////////////////////////////////////
+  // Prerequisites: First let's create some cryptographic data for our POD.
+  //////////////////////////////////////////////////////////////////////////////
+
   // Semaphore is the default identity protocol for Zupass.  PODs themselves
   // don't care what you use, but ZK proofs will check POD ownership via
-  // Semaphore V3 by default.  This line creates a new private key.
+  // Semaphore V3 by default.  This line creates a new private identity.
   const semaphoreIdentity = new Identity();
 
-  // The public part of a Semaphore identity is called the commitment.
+  // The public part of a Semaphore identity is called the commitment.  It's
+  // like your Semaphore user ID.
   console.log("Semaphore commitment", semaphoreIdentity.commitment);
 
   // The semaphore private identity is made up of a "trapdoor" and "nullifier".
@@ -59,11 +59,12 @@ export async function podDemo(): Promise<void> {
   // The code is structured in a few layers of wrapping of raw data, which
   // we'll visit bottom-up.  All the types involved are intended to be
   // immutable.
+  //
+  // Starting with the data, a POD is an immutable key-value store hashed and
+  // signed by an issuer.  The key-value entries are represented in Typescript
+  // by the PODEntries type.
   //////////////////////////////////////////////////////////////////////////////
 
-  // A pod is an immutable key-value store containing entries.  These can be
-  // represented in Typescript by the PODEntries type.
-  //
   // Entry names are strings with a limited character set which make convenient
   // to use as variable identifiers.
   //
@@ -78,13 +79,13 @@ export async function podDemo(): Promise<void> {
     // String values can contain any unicode string, not limited to identifiers.
     my_favorite_dessert: { type: "string", value: "Blueberry Pie" },
 
-    // "int"" values are bigints with a range limited to 63-bit unsigned
+    // int values are bigints with a range limited to 63-bit unsigned
     // integers.  Ints will be usable for arithmetic in ZK proofs.
-    // Negative values will be supported in future, and there may be more
-    // integer types with different sizes (like int8 or boolean).
+    // Negative values will be supported in future, as will more integer types
+    // with different sizes (like int8 or boolean).
     someNumber: { type: "int", value: 123n },
 
-    // "cryptographic" is a bigint type for big values like hashes or uniquue
+    // "cryptographic" is a bigint type for values like hashes or uniquue
     // IDs.  Each is a single field element which fits in a circuit signal,
     // meaning an integer mod p for a large (254 bit) prime.
     // In proofs, these values can be compared for equality, but not manipulated
@@ -92,7 +93,8 @@ export async function podDemo(): Promise<void> {
     mySemaphoreID: {
       type: "cryptographic",
 
-      // The public part of a Semaphore identity is called its commitment.
+      // The commitment is the part of a Semaphore identity to include in a POD
+      // to identify a user.
       value: semaphoreIdentity.commitment
     },
 
@@ -106,15 +108,15 @@ export async function podDemo(): Promise<void> {
   };
   console.log("Sample entries", sampleEntries);
 
-  // If you want to build entries incrementally in a mutable object, you can use
-  // a Record type and cast to PODEntries at the end.
-  const buildingEntries: Record<string, PODValue> = {};
-  buildingEntries.entry1 = { type: "string", value: "foo" };
+  // While the POD library doesn't mutate PODEntries, you can mutate the object
+  // in order to build it up incrementally in your code before building a POD.
+  // Once a POD is hashed and signed, the entries won't be able to change.
+  const dynamicEntries: PODEntries = {};
+  dynamicEntries.entry1 = { type: "string", value: "foo" };
   if (sampleEntries.someNumber.value === 7n) {
-    buildingEntries.entry2 = { type: "string", value: "bar" };
+    dynamicEntries.entry2 = { type: "string", value: "bar" };
   }
-  buildingEntries.entry3 = { type: "cryptographic", value: 123n };
-  const dynamicEntries = buildingEntries as PODEntries;
+  dynamicEntries.entry3 = { type: "cryptographic", value: 123n };
   console.log("Dynamic entries", dynamicEntries);
 
   // Inside of a POD is the PODContent class, which forms entries into a
@@ -130,8 +132,8 @@ export async function podDemo(): Promise<void> {
   console.log("PODContent raw value", podContent.getRawValue("someNumer"));
 
   // PODContent can generate Merkle membership proofs which prove that an entry
-  // is contained in a given root.  This is the basis of ZK proofs which
-  // will come later.
+  // is contained in a given root.  This is the basis of the ZK proofs which
+  // can be made using PODs.
   const entryProof = podContent.generateEntryProof("mySemaphoreID");
   console.log("Entry proof", entryProof);
 
@@ -158,9 +160,10 @@ export async function podDemo(): Promise<void> {
   //////////////////////////////////////////////////////////////////////////////
   // POD contents can be serialized to/from strings in JSON, though not directly
   // using JSON.stringify due to the use of bigint (and more non-JSON types in
-  // future).  The formats for doing so are work-in-progress so future
-  // backward-compatibility might not be guaranteed.  I'll present the options
-  // here, which will stabilize based on developer feedback.
+  // future).  The formats for doing so are work-in-progress and may change
+  // with future feedback and features.  Backward-compatibility will be possible
+  // in future, but may require some additional code at this level.  See the
+  // PCD wrappers below which will handle compatibility automatically.
   //////////////////////////////////////////////////////////////////////////////
 
   // PODContent serializes as its entries, since the Merkle Tree can be
@@ -205,14 +208,14 @@ export async function podDemo(): Promise<void> {
     PODContent.fromEntries(entriesFromSimplified).contentID
   );
 
-  // For more things you can do with the @pcd/pod package, check out pod.ts,
-  // podContent.ts, and podUtil.ts.
+  // For more things you can do with the @pcd/pod package, check out the
+  // function documentation in pod.ts, podContent.ts, and podUtil.ts.
 
   //////////////////////////////////////////////////////////////////////////////
   // A POD PCD, found in the @pcd/pod-pcd package, wraps a POD and makes
   // it part of the PCD framework.  This means it can be created,
   // transmitted, stored, and displayed by generic PCD apps like Zupass
-  // and Zubox/Podbox.
+  // and Podbox.
   //////////////////////////////////////////////////////////////////////////////
 
   // In addition to the POD itself, all PCDs have a unique ID, which usually
@@ -234,8 +237,8 @@ export async function podDemo(): Promise<void> {
   console.log("PCD is valid?", await PODPCDPackage.verify(pcd));
 
   // PCDs can also be creatd by the "prove" interface.  This uses a more generic
-  // (and more verbose) argument specification optimized for manipulation by
-  // generic UI.
+  // (and more verbose) argument specification which allows requests to prove
+  // to be transmitted to apps like Zupass.
   const pcd2 = await PODPCDPackage.prove({
     entries: {
       value: sampleEntries,
@@ -264,4 +267,5 @@ export async function podDemo(): Promise<void> {
   // helpers.
 
   console.log("**** End POD Demo ****");
+  return true;
 }
