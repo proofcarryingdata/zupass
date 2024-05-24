@@ -1030,6 +1030,7 @@ export class PretixPipeline implements BasePipeline {
       eventName: this.atomToEventName(atom),
       ticketName: this.atomToTicketName(atom),
       checkerEmail: undefined,
+      ticketSecret: atom.secret,
 
       // signed fields
       ticketId: atom.id,
