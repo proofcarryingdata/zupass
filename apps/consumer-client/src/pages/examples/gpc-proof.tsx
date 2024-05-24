@@ -6,11 +6,11 @@ import {
   deserializeGPCProofConfig,
   gpcArtifactDownloadURL,
   gpcBindConfig,
+  membershipListsToSets,
   podMembershipListsFromSimplifiedJSON,
   serializeGPCBoundConfig
 } from "@pcd/gpc";
 import { GPCPCD, GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
-import { membershipListsToSets } from "@pcd/gpc/src/gpcChecks";
 import {
   constructZupassPcdGetRequestUrl,
   openZupassPopup,

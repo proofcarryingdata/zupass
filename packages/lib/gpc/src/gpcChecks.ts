@@ -924,22 +924,3 @@ export function checkPODEntryIdentifierExists(
     );
   }
 }
-
-/**
- * Converts a record of membership lists to one of membership sets.
- *
- * @param membershipLists the lists to convert
- * @returns a record of membership sets
- */
-export function membershipListsToSets(
-  membershipLists: PODMembershipLists
-): Record<PODName, Set<PODValue> | Set<PODValueTuple>> {
-  return Object.fromEntries(
-    Object.entries(membershipLists).map((pair) => [
-      pair[0],
-      new Set(pair[1] as (PODValue | PODValueTuple)[]) as
-        | Set<PODValue>
-        | Set<PODValueTuple>
-    ])
-  );
-}
