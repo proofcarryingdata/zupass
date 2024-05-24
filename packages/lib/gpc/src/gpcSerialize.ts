@@ -3,8 +3,8 @@ import {
   PODRawValueTuple,
   PODValue,
   PODValueTuple,
-  podValueFromRawValue,
-  podValueToRawValue
+  podValueOrTupleFromRawValue,
+  podValueOrTupleToRawValue
 } from "@pcd/pod";
 import JSONBig from "json-bigint";
 import {
@@ -160,21 +160,11 @@ export function podMembershipListsToSimplifiedJSON(
   membershipLists: PODMembershipLists,
   space?: number
 ): string {
-  const simplified: Record<string, PODRawValue[] | PODRawValueTuple[]> = {};
-  for (const [name, value] of Object.entries(membershipLists)) {
-    simplified[name] =
-      value.length === 0
-        ? []
-        : Array.isArray(value[0])
-        ? (value as PODValueTuple[]).map((podValueTuple) =>
-            podValueTuple.map(podValueToRawValue)
-          )
-        : (value as PODValue[]).map(podValueToRawValue);
+  const simplified: Record<string, (PODRawValue | PODRawValueTuple)[]> = {};
+  for (const [listName, membershipList] of Object.entries(membershipLists)) {
+    simplified[listName] = membershipList.map(podValueOrTupleToRawValue);
   }
-  return JSONBig({
-    useNativeBigInt: true,
-    alwaysParseAsBig: true
-  }).stringify(simplified, null, space);
+  return jsonBigSerializer.stringify(simplified, null, space);
 }
 
 /**
@@ -192,23 +182,15 @@ export function podMembershipListsToSimplifiedJSON(
 export function podMembershipListsFromSimplifiedJSON(
   simplifiedJSON: string
 ): PODMembershipLists {
-  const simplifiedEntries = JSONBig({
-    useNativeBigInt: true,
-    alwaysParseAsBig: true
-  }).parse(simplifiedJSON) as Record<
+  const simplifiedEntries = jsonBigSerializer.parse(simplifiedJSON) as Record<
     string,
     PODRawValue[] | PODRawValueTuple[]
   >;
   const membershipLists: PODMembershipLists = {};
   for (const [listName, rawValueList] of Object.entries(simplifiedEntries)) {
-    membershipLists[listName] =
-      rawValueList.length === 0
-        ? []
-        : Array.isArray(rawValueList[0])
-        ? (rawValueList as PODRawValueTuple[]).map((rawValueTuple) =>
-            rawValueTuple.map(podValueFromRawValue)
-          )
-        : (rawValueList as PODRawValue[]).map(podValueFromRawValue);
+    membershipLists[listName] = rawValueList.map(
+      podValueOrTupleFromRawValue
+    ) as PODValue[] | PODValueTuple[];
   }
   return membershipLists;
 }

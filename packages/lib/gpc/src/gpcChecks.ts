@@ -8,12 +8,12 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
+  applyOrMap,
   calcMinMerkleDepthForEntries,
   checkPODName,
   checkPODValue,
   checkPublicKeyFormat,
   podValueHash,
-  podValueOrTupleToRawValue,
   requireType
 } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
@@ -487,8 +487,8 @@ export function checkProofListMembershipInputsForConfig(
         if (
           inputList.find((element) =>
             _.isEqual(
-              podValueOrTupleToRawValue(element),
-              podValueOrTupleToRawValue(comparisonValue)
+              applyOrMap(podValueHash, element),
+              applyOrMap(podValueHash, comparisonValue)
             )
           ) === undefined
         ) {

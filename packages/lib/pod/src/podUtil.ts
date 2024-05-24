@@ -362,9 +362,7 @@ export function podValueToRawValue(podValue: PODValue): PODRawValue {
 export function podValueOrTupleToRawValue(
   podValue: PODValue | PODValueTuple
 ): PODRawValue | PODRawValueTuple {
-  return Array.isArray(podValue)
-    ? (podValue as PODValueTuple).map(podValueToRawValue)
-    : podValueToRawValue(podValue as PODValue);
+  return applyOrMap(podValueToRawValue, podValue);
 }
 
 /**
@@ -414,6 +412,8 @@ export function podValueFromRawValue(rawValue: PODRawValue): PODValue {
       }
     case "string":
       return { type: "string", value: rawValue };
+    default:
+      throw new Error("Invalid serialised POD value in raw value ${rawValue}.");
   }
 }
 
@@ -427,9 +427,7 @@ export function podValueFromRawValue(rawValue: PODRawValue): PODValue {
 export function podValueOrTupleFromRawValue(
   podRawValue: PODRawValue | PODRawValueTuple
 ): PODValue | PODValueTuple {
-  return Array.isArray(podRawValue)
-    ? (podRawValue as PODRawValueTuple).map(podValueFromRawValue)
-    : podValueFromRawValue(podRawValue as PODRawValue);
+  return applyOrMap(podValueFromRawValue, podRawValue);
 }
 
 /**
@@ -455,4 +453,15 @@ export function podEntriesFromSimplifiedJSON(
     entries[entryName] = podValueFromRawValue(rawValue);
   }
   return entries;
+}
+
+/**
+ * Computation streamliner involving unions of the form A | A[] and functions of the form f: A -> B. It applies f to inputs of type A and maps f over A[] otherwise.
+ *
+ * @param f function to apply to input
+ * @param input input argument
+ * @returns result of appropriate application of function to input
+ */
+export function applyOrMap<A, B>(f: (a: A) => B, input: A | A[]): B | B[] {
+  return Array.isArray(input) ? (input as A[]).map(f) : f(input as A);
 }

@@ -216,7 +216,7 @@ export function openGPCPopup(
     },
     membershipLists: {
       argumentType: ArgumentTypeName.String,
-      value: membershipLists !== undefined ? membershipLists : undefined,
+      value: membershipLists,
       userProvided: false
     },
     watermark: {

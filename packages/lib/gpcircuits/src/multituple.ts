@@ -1,4 +1,4 @@
-import { PODValue, podValueHash } from "@pcd/pod";
+import { PODValue, PODValueTuple, podValueHash } from "@pcd/pod";
 import { tupleHasher } from "./tuple";
 import { CircuitSignal } from "./types";
 import { padArray, toChunks } from "./util";
@@ -158,7 +158,7 @@ export function computeTupleIndices(
  */
 export function hashTuple(
   paramTupleArity: number,
-  elements: PODValue[]
+  elements: PODValueTuple
 ): bigint {
   // Call the multituple hasher.
   const multihash = multiTupleHasher(paramTupleArity, elements);
