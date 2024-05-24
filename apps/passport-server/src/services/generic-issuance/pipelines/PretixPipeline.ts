@@ -1100,11 +1100,11 @@ export class PretixPipeline implements BasePipeline {
     const ticketCopy: Partial<ITicketData> = { ...ticketData };
     // the reason we remove `timestampSigned` from the cache key
     // is that it changes every time we instantiate `ITicketData`
-    // for a particular devconnect ticket, rendering the caching
-    // ineffective.
+    // for a particular ticket, rendering the caching ineffective.
     delete ticketCopy.timestampSigned;
     const hash = await getHash(
       stable_stringify(ticketCopy) +
+        "2" +
         eddsaPrivateKey +
         pipelineId +
         ticketPCDType
