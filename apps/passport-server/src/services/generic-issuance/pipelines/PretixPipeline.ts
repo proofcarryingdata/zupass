@@ -714,11 +714,13 @@ export class PretixPipeline implements BasePipeline {
       );
     }
 
-    if (eventData.checkinLists.length > 1) {
-      errors.push(
-        `Event "${eventData.eventInfo.name.en}" (${eventConfig.genericIssuanceId}) has multiple check-in lists`
-      );
-    }
+    // @todo: we should probably allow for multiple check-in lists, and then
+    // we'd need to handle them here.
+    // if (eventData.checkinLists.length > 1) {
+    //   errors.push(
+    //     `Event "${eventData.eventInfo.name.en}" (${eventConfig.genericIssuanceId}) has multiple check-in lists`
+    //   );
+    // }
 
     if (eventData.checkinLists.length < 1) {
       errors.push(
