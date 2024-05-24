@@ -280,7 +280,9 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
       },
       membershipLists: {
         argumentType: ArgumentTypeName.String,
-        defaultVisible: false
+        defaultVisible: false,
+        description:
+          "Specify the (named) lists for the list memberships specified in the proof configuration."
       },
       watermark: {
         argumentType: ArgumentTypeName.String,

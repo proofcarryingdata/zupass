@@ -27,7 +27,8 @@ export const EXAMPLE_GPC_CONFIG = `{
     "pod0": {
       "entries": {
         "A": {
-          "isRevealed": true
+          "isRevealed": true,
+          "isMemberOf": "admissibleValues"
         },
         "E": {
           "isRevealed": false,
@@ -35,25 +36,24 @@ export const EXAMPLE_GPC_CONFIG = `{
         },
         "owner": {
           "isRevealed": false,
-          "isOwnerID": true,
-          "isMemberOf": "admissibleOwners"
+          "isOwnerID": true
         }
       }
     }
   },
   "tuples": {
     "tuple0": {
-      "entries": ["pod0.A", "pod0.E"],
+      "entries": ["pod0.E", "pod0.owner"],
       "isMemberOf": "admissiblePairs"
     }
   }
 }`;
 
 export const EXAMPLE_MEMBERSHIP_LISTS = `{
-  "admissibleOwners": [
+  "admissibleValues": [
     3,
     3472834734,
-    2,
+    123,
     9,
     "something",
     18711405342588116796533073928767088921854096266145046362753928030796553161041
@@ -61,7 +61,7 @@ export const EXAMPLE_MEMBERSHIP_LISTS = `{
   "admissiblePairs": [
     [0,0],
     [5,6],
-    [123,123],
+    [123,18711405342588116796533073928767088921854096266145046362753928030796553161041],
     ["zero", "zero"],
     [0, "one"]
   ]

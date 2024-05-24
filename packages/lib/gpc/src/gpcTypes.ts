@@ -9,7 +9,11 @@ import { Identity } from "@semaphore-protocol/identity";
 export type PODEntryIdentifier = `${PODName}.${PODName}`;
 
 /**
- * Optional set of lists for checking POD entry (or tuple) value membership.
+ * Optional set of lists for checking POD entry (or tuple) value membership in
+ * the form of a record mapping list names to lists of either POD values or POD
+ * value tuples. Proof configurations with list membership checks refer to these
+ * lists by name, and this record should appear in both the proof inputs and the
+ * revealed claims.
  */
 export type PODMembershipLists = Record<PODName, PODValue[] | PODValueTuple[]>;
 
