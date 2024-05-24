@@ -477,8 +477,8 @@ export function GPCRequirements(
  * lie in the list. This is deduced from the proof configuration in
  * {@link listConfigFromProofConfig}.
  */
-export const MEMBERSHIP = "membership";
-export const NONMEMBERSHIP = "non-membership";
+export const LIST_MEMBERSHIP = "membership";
+export const LIST_NONMEMBERSHIP = "non-membership";
 export type ListMembershipEnum = "membership" | "non-membership";
 export type GPCProofMembershipListConfig = Record<
   PODName,
@@ -521,12 +521,16 @@ export function listConfigFromProofConfig(
             );
           }
           for (const listName of membershipLists ?? []) {
-            entryLists.push([listName, MEMBERSHIP, `${podName}.${entryName}`]);
+            entryLists.push([
+              listName,
+              LIST_MEMBERSHIP,
+              `${podName}.${entryName}`
+            ]);
           }
         } else {
           entryLists.push([
             membershipLists,
-            MEMBERSHIP,
+            LIST_MEMBERSHIP,
             `${podName}.${entryName}`
           ]);
         }
@@ -542,14 +546,14 @@ export function listConfigFromProofConfig(
           for (const listName of nonMembershipLists ?? []) {
             entryLists.push([
               listName,
-              NONMEMBERSHIP,
+              LIST_NONMEMBERSHIP,
               `${podName}.${entryName}`
             ]);
           }
         } else {
           entryLists.push([
             nonMembershipLists,
-            NONMEMBERSHIP,
+            LIST_NONMEMBERSHIP,
             `${podName}.${entryName}`
           ]);
         }
@@ -575,14 +579,14 @@ export function listConfigFromProofConfig(
         for (const listName of membershipLists ?? []) {
           tupleLists.push([
             listName,
-            MEMBERSHIP,
+            LIST_MEMBERSHIP,
             `${TUPLE_PREFIX}.${tupleName}`
           ]);
         }
       } else {
         tupleLists.push([
           membershipLists,
-          MEMBERSHIP,
+          LIST_MEMBERSHIP,
           `${TUPLE_PREFIX}.${tupleName}`
         ]);
       }
@@ -598,14 +602,14 @@ export function listConfigFromProofConfig(
         for (const listName of nonMembershipLists ?? []) {
           tupleLists.push([
             listName,
-            NONMEMBERSHIP,
+            LIST_NONMEMBERSHIP,
             `${TUPLE_PREFIX}.${tupleName}`
           ]);
         }
       } else {
         tupleLists.push([
           nonMembershipLists,
-          NONMEMBERSHIP,
+          LIST_NONMEMBERSHIP,
           `${TUPLE_PREFIX}.${tupleName}`
         ]);
       }

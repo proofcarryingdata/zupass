@@ -33,9 +33,9 @@ import {
 import {
   GPCProofMembershipListConfig,
   GPCRequirements,
+  LIST_MEMBERSHIP,
+  LIST_NONMEMBERSHIP,
   ListMembershipEnum,
-  MEMBERSHIP,
-  NONMEMBERSHIP,
   checkPODEntryIdentifier,
   isTupleIdentifier,
   listConfigFromProofConfig,
@@ -502,7 +502,7 @@ export function checkProofListMembershipInputsForConfig(
           );
 
           if (
-            membershipIndicator === MEMBERSHIP &&
+            membershipIndicator === LIST_MEMBERSHIP &&
             isComparisonValueInList === undefined
           ) {
             throw new Error(
@@ -515,7 +515,7 @@ export function checkProofListMembershipInputsForConfig(
           }
 
           if (
-            membershipIndicator === NONMEMBERSHIP &&
+            membershipIndicator === LIST_NONMEMBERSHIP &&
             isComparisonValueInList !== undefined
           ) {
             throw new Error(

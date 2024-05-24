@@ -38,8 +38,8 @@ import {
 } from "./gpcTypes";
 import {
   GPCProofMembershipListConfig,
+  LIST_MEMBERSHIP,
   ListMembershipEnum,
-  MEMBERSHIP,
   isTupleIdentifier,
   listConfigFromProofConfig,
   makeWatermarkSignal
@@ -413,7 +413,7 @@ function compileProofListMembership<
 
   // Compile listContainsComparisonValue
   const unpaddedListContainsComparisonValue = listIndicatorIdTriples.map(
-    (listIndIdTriple) => (listIndIdTriple[1] === MEMBERSHIP ? 1n : 0n)
+    (listIndIdTriple) => (listIndIdTriple[1] === LIST_MEMBERSHIP ? 1n : 0n)
   );
 
   // Compile listValidValues, making sure to sort the hashed values before
