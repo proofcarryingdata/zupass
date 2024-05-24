@@ -46,6 +46,7 @@ export type ProtoPODGPCInputs = {
 
   // List membership module (1+)
   /*PUB*/ listComparisonValueIndex: CircuitSignal /*MAX_LISTS*/[];
+  /*PUB*/ listContainsComparisonValue: CircuitSignal /*MAX_LISTS*/[];
   /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 
   // Global module (1)
@@ -78,6 +79,7 @@ export type ProtoPODGPCInputNamesType = [
   "ownerIsNullfierHashRevealed",
   "tupleIndices",
   "listComparisonValueIndex",
+  "listContainsComparisonValue",
   "listValidValues",
   "globalWatermark"
 ];
@@ -110,6 +112,7 @@ export type ProtoPODGPCPublicInputs = {
 
   // List membership module (1)
   /*PUB*/ listComparisonValueIndex: CircuitSignal /*MAX_LISTS*/[];
+  /*PUB*/ listContainsComparisonValue: CircuitSignal /*MAX_LISTS*/[];
   /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 
   // Global module (1)
@@ -132,6 +135,7 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "ownerIsNullfierHashRevealed",
   "tupleIndices",
   "listComparisonValueIndex",
+  "listContainsComparisonValue",
   "listValidValues",
   "globalWatermark"
 ];
@@ -349,6 +353,7 @@ export class ProtoPODGPC {
       ownerIsNullfierHashRevealed: allInputs.ownerIsNullfierHashRevealed,
       tupleIndices: allInputs.tupleIndices,
       listComparisonValueIndex: allInputs.listComparisonValueIndex,
+      listContainsComparisonValue: allInputs.listContainsComparisonValue,
       listValidValues: allInputs.listValidValues,
       globalWatermark: allInputs.globalWatermark
     };
@@ -394,6 +399,7 @@ export class ProtoPODGPC {
       inputs.ownerIsNullfierHashRevealed,
       ...inputs.tupleIndices.flat(),
       ...inputs.listComparisonValueIndex,
+      ...inputs.listContainsComparisonValue,
       ...inputs.listValidValues.flat(),
       inputs.globalWatermark
     ].map(BigInt);

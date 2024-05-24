@@ -44,7 +44,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
           entries: {
             ticketID: {
               isRevealed: true,
-              ...(includeList ? { isMemberOf: "admissibleTickets" } : {})
+              ...(includeList ? { isNotMemberOf: "admissibleTickets" } : {})
             }
           }
         }
@@ -68,10 +68,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       ...(includeList
         ? {
             membershipLists: {
-              admissibleTickets: [
-                sampleEntries2.ticketID,
-                sampleEntries.otherTicketID
-              ],
+              admissibleTickets: [sampleEntries2.attendee, sampleEntries.J],
               ...(includeTuple
                 ? {
                     admissibleTicketPairs: [

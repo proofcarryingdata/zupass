@@ -38,6 +38,8 @@ import {
 } from "./gpcTypes";
 import {
   GPCProofMembershipListConfig,
+  ListMembershipEnum,
+  MEMBERSHIP,
   isTupleIdentifier,
   listConfigFromProofConfig,
   makeWatermarkSignal
@@ -360,42 +362,64 @@ function compileProofListMembership<
   paramMaxListElements: number
 ): {
   listComparisonValueIndex: CircuitSignal[];
+  listContainsComparisonValue: CircuitSignal[];
   listValidValues: CircuitSignal[][];
 } {
   // Arrange list names alphabetically.
   const listNameOrder = Object.keys(listConfig).sort();
 
-  // Do the same for the lists of comparison IDs and string them together.
+  // Arrange for membership before non-membership checks and consider the
+  // lists of comparison IDs in alphabetical order, stringing them all together.
   // This takes into account the possibility where different entry (or tuple)
   // values must lie in the same list, or the case one entry (or tuple) value
   // must lie in multiple lists.
-  const listIdPairs = listNameOrder
-    .map((listName: PODName): [PODName, PODEntryIdentifier][] =>
-      listConfig[listName].sort().map((elementId) => [listName, elementId])
+  const listIndicatorIdTriples = listNameOrder.flatMap((listName) =>
+    (Object.keys(listConfig[listName]).sort() as ListMembershipEnum[]).flatMap(
+      (membershipIndicator) =>
+        listConfig[listName][membershipIndicator]
+          .sort()
+          .flatMap((elementId) => [
+            [listName, membershipIndicator, elementId] as [
+              PODName,
+              ListMembershipEnum,
+              PODEntryIdentifier | TupleIdentifier
+            ]
+          ])
     )
-    .flat();
+  );
 
   // Compile listComparisonValueIndex
-  const unpaddedListComparisonValueIndex = listIdPairs.map((listIdPair) => {
-    const [listName, elementId] = listIdPair;
+  const unpaddedListComparisonValueIndex = listIndicatorIdTriples.map(
+    (listIndIdTriple) => {
+      const [listName, _indicator, elementId]: [
+        PODName,
+        ListMembershipEnum,
+        PODEntryIdentifier | TupleIdentifier
+      ] = listIndIdTriple;
 
-    const idx = isTupleIdentifier(elementId)
-      ? tupleMap.get(elementId as TupleIdentifier)?.tupleIndex
-      : entryMap.get(elementId)?.entryIndex;
+      const idx = isTupleIdentifier(elementId)
+        ? tupleMap.get(elementId as TupleIdentifier)?.tupleIndex
+        : entryMap.get(elementId)?.entryIndex;
 
-    if (idx === undefined) {
-      throw new Error(
-        `Missing input for identifier ${elementId} in membership list ${listName}`
-      );
+      if (idx === undefined) {
+        throw new Error(
+          `Missing input for identifier ${elementId} in membership list ${listName}`
+        );
+      }
+
+      return BigInt(idx);
     }
+  );
 
-    return BigInt(idx);
-  });
+  // Compile listContainsComparisonValue
+  const unpaddedListContainsComparisonValue = listIndicatorIdTriples.map(
+    (listIndIdTriple) => (listIndIdTriple[1] === MEMBERSHIP ? 1n : 0n)
+  );
 
   // Compile listValidValues, making sure to sort the hashed values before
   // padding.
-  const unpaddedListValidValues = listIdPairs
-    .map((pair) => pair[0])
+  const unpaddedListValidValues = listIndicatorIdTriples
+    .map((triple) => triple[0])
     .map((listName) => {
       const unhashedValues = listInput[listName];
 
@@ -421,6 +445,13 @@ function compileProofListMembership<
       paramMaxLists,
       BABY_JUB_NEGATIVE_ONE
     ),
+    // Pad with 1s, which amounts to a list membership check for those values corresponding to index
+    // -1 (which corresponds to the value 0).
+    listContainsComparisonValue: padArray(
+      unpaddedListContainsComparisonValue,
+      paramMaxLists,
+      1n
+    ),
     // Pad with lists of 0s, which amounts to trivially satisfied list membership checks
     // for those indices used as padding just above.
     listValidValues: padArray(
@@ -439,8 +470,7 @@ function compileProofMultiTuples(
   // Concatenate `tupleIndices` field of all tuple map values together and convert
   // the indices to bigints.
   const unpaddedTupleIndices = Array.from(tupleMap.values())
-    .map((info) => info.tupleInputIndices)
-    .flat()
+    .flatMap((info) => info.tupleInputIndices)
     .map((tuple) => tuple.map((n) => BigInt(n)));
 
   return {

@@ -96,6 +96,12 @@ export type GPCProofEntryConfig = {
    */
   isMemberOf?: PODName | PODName[];
 
+  /**
+   * Indicates one or omre lists in which this entry must *not* lie. The same
+   * disclaimer above applies regarding the underlying GPC.
+   */
+  isNotMemberOf?: PODName | PODName[];
+
   // TODO(POD-P3): Constraints on entry values can go here.  Lower/upper bounds,
   // comparison to constant, etc.
   // TODO(POD-P3): Think about where to represent "filtering" inputs in
@@ -141,11 +147,16 @@ export type GPCProofTupleConfig = {
   entries: PODEntryIdentifier[];
 
   /**
-   * Indicates lists in which this entry must lie. A tuple may lie in one or
-   * more lists. See {@link GPCProofEntryConfig} regarding circuit size
-   * considerations.
+   * Indicates one or more lists in which this entry must lie. See {@link
+   * GPCProofEntryConfig} regarding circuit size considerations.
    */
   isMemberOf?: PODName | PODName[];
+
+  /**
+   * Indicates one or more lists in which this entry must *not* lie. See {@link
+   * GPCProofEntryConfig} regarding circuit size considerations.
+   */
+  isNotMemberOf?: PODName | PODName[];
 };
 
 /**

@@ -105,6 +105,13 @@ function canonicalizeEntryConfig(
             ? proofEntryConfig.isMemberOf.sort()
             : proofEntryConfig.isMemberOf
         }
+      : {}),
+    ...(proofEntryConfig.isNotMemberOf !== undefined
+      ? {
+          isNotMemberOf: Array.isArray(proofEntryConfig.isNotMemberOf)
+            ? proofEntryConfig.isNotMemberOf.sort()
+            : proofEntryConfig.isNotMemberOf
+        }
       : {})
   };
 }
@@ -126,7 +133,12 @@ function canonicalizeTupleConfig(
               ? {}
               : Array.isArray(tupleConfig.isMemberOf)
               ? { isMemberOf: tupleConfig.isMemberOf.sort() }
-              : { isMemberOf: tupleConfig.isMemberOf })
+              : { isMemberOf: tupleConfig.isMemberOf }),
+            ...(tupleConfig.isNotMemberOf === undefined
+              ? {}
+              : Array.isArray(tupleConfig.isNotMemberOf)
+              ? { isNotMemberOf: tupleConfig.isNotMemberOf.sort() }
+              : { isNotMemberOf: tupleConfig.isNotMemberOf })
           }
         ];
       })
@@ -465,9 +477,12 @@ export function GPCRequirements(
  * lie in the list. This is deduced from the proof configuration in
  * {@link listConfigFromProofConfig}.
  */
+export const MEMBERSHIP = "membership";
+export const NONMEMBERSHIP = "non-membership";
+export type ListMembershipEnum = "membership" | "non-membership";
 export type GPCProofMembershipListConfig = Record<
   PODName,
-  (PODEntryIdentifier | TupleIdentifier)[]
+  Record<ListMembershipEnum, (PODEntryIdentifier | TupleIdentifier)[]>
 >;
 
 /**
@@ -489,49 +504,110 @@ export function listConfigFromProofConfig(
   proofConfig: GPCProofConfig
 ): GPCProofMembershipListConfig {
   // Find all [listName, entryID] pairs in proofConfig.pods
-  const entryLists: [PODName, PODEntryIdentifier][] = [];
+  const entryLists: [PODName, ListMembershipEnum, PODEntryIdentifier][] = [];
 
   for (const podName of Object.keys(proofConfig.pods)) {
     const pod = proofConfig.pods[podName];
 
     for (const entryName of Object.keys(pod.entries)) {
-      const lists = pod.entries[entryName].isMemberOf;
+      const membershipLists = pod.entries[entryName].isMemberOf;
+      const nonMembershipLists = pod.entries[entryName].isNotMemberOf;
 
-      if (lists !== undefined) {
-        if (Array.isArray(lists)) {
-          if (lists.length === 0) {
+      if (membershipLists !== undefined) {
+        if (Array.isArray(membershipLists)) {
+          if (membershipLists.length === 0) {
             throw new TypeError(
               `The list of lists of valid values for ${podName}.${entryName} is empty.`
             );
           }
-          for (const listName of lists ?? []) {
-            entryLists.push([listName, `${podName}.${entryName}`]);
+          for (const listName of membershipLists ?? []) {
+            entryLists.push([listName, MEMBERSHIP, `${podName}.${entryName}`]);
           }
         } else {
-          entryLists.push([lists, `${podName}.${entryName}`]);
+          entryLists.push([
+            membershipLists,
+            MEMBERSHIP,
+            `${podName}.${entryName}`
+          ]);
+        }
+      }
+
+      if (nonMembershipLists !== undefined) {
+        if (Array.isArray(nonMembershipLists)) {
+          if (nonMembershipLists.length === 0) {
+            throw new TypeError(
+              `The list of lists of invalid values for ${podName}.${entryName} is empty.`
+            );
+          }
+          for (const listName of nonMembershipLists ?? []) {
+            entryLists.push([
+              listName,
+              NONMEMBERSHIP,
+              `${podName}.${entryName}`
+            ]);
+          }
+        } else {
+          entryLists.push([
+            nonMembershipLists,
+            NONMEMBERSHIP,
+            `${podName}.${entryName}`
+          ]);
         }
       }
     }
   }
 
   // Find all [listName, tupleID] pairs in proofConfig.tuples
-  const tupleLists: [PODName, PODEntryIdentifier][] = [];
+  const tupleLists: [PODName, ListMembershipEnum, TupleIdentifier][] = [];
 
   for (const tupleName of Object.keys(proofConfig.tuples ?? {})) {
-    const lists = (proofConfig.tuples ?? {})[tupleName].isMemberOf;
+    const membershipLists = (proofConfig.tuples ?? {})[tupleName].isMemberOf;
+    const nonMembershipLists = (proofConfig.tuples ?? {})[tupleName]
+      .isNotMemberOf;
 
-    if (lists !== undefined) {
-      if (Array.isArray(lists)) {
-        if (lists.length === 0) {
+    if (membershipLists !== undefined) {
+      if (Array.isArray(membershipLists)) {
+        if (membershipLists.length === 0) {
           throw new TypeError(
             `The list of lists of valid values for ${TUPLE_PREFIX}.${tupleName} is empty.`
           );
         }
-        for (const listName of lists ?? []) {
-          entryLists.push([listName, `${TUPLE_PREFIX}.${tupleName}`]);
+        for (const listName of membershipLists ?? []) {
+          tupleLists.push([
+            listName,
+            MEMBERSHIP,
+            `${TUPLE_PREFIX}.${tupleName}`
+          ]);
         }
       } else {
-        entryLists.push([lists, `${TUPLE_PREFIX}.${tupleName}`]);
+        tupleLists.push([
+          membershipLists,
+          MEMBERSHIP,
+          `${TUPLE_PREFIX}.${tupleName}`
+        ]);
+      }
+    }
+
+    if (nonMembershipLists !== undefined) {
+      if (Array.isArray(nonMembershipLists)) {
+        if (nonMembershipLists.length === 0) {
+          throw new TypeError(
+            `The list of lists of valid values for ${TUPLE_PREFIX}.${tupleName} is empty.`
+          );
+        }
+        for (const listName of nonMembershipLists ?? []) {
+          tupleLists.push([
+            listName,
+            NONMEMBERSHIP,
+            `${TUPLE_PREFIX}.${tupleName}`
+          ]);
+        }
+      } else {
+        tupleLists.push([
+          nonMembershipLists,
+          NONMEMBERSHIP,
+          `${TUPLE_PREFIX}.${tupleName}`
+        ]);
       }
     }
   }
@@ -539,11 +615,16 @@ export function listConfigFromProofConfig(
   // Combine the two and compile config.
   const listConfig: GPCProofMembershipListConfig = {};
 
-  for (const [listName, id] of entryLists.concat(tupleLists)) {
+  for (const [listName, membershipType, id] of entryLists.concat(tupleLists)) {
     if (listConfig[listName] === undefined) {
-      listConfig[listName] = [id];
+      listConfig[listName] = { [membershipType]: [id] } as Record<
+        ListMembershipEnum,
+        (PODEntryIdentifier | TupleIdentifier)[]
+      >;
+    } else if (listConfig[listName][membershipType] === undefined) {
+      listConfig[listName][membershipType] = [id];
     } else {
-      listConfig[listName].push(id);
+      listConfig[listName][membershipType].push(id);
     }
   }
 

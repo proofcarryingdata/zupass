@@ -33,6 +33,9 @@ import {
 import {
   GPCProofMembershipListConfig,
   GPCRequirements,
+  ListMembershipEnum,
+  MEMBERSHIP,
+  NONMEMBERSHIP,
   checkPODEntryIdentifier,
   isTupleIdentifier,
   listConfigFromProofConfig,
@@ -117,7 +120,9 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     checkProofListMembershipConfig(proofConfig);
 
   const numLists = _.sum(
-    Object.values(listConfig).map((elements) => elements.length)
+    Object.values(listConfig)
+      .flatMap(Object.values)
+      .map((elements) => elements.length)
   );
 
   const maxListSize = numLists > 0 ? 1 : 0;
@@ -209,12 +214,14 @@ export function checkProofListMembershipConfig(
   const listConfig: GPCProofMembershipListConfig =
     listConfigFromProofConfig(proofConfig);
 
-  for (const [listName, elements] of Object.entries(listConfig)) {
-    elements.forEach((identifier) => {
-      if (!isTupleIdentifier(identifier)) {
-        checkPODEntryIdentifier(listName, identifier);
-      }
-    });
+  for (const listName of Object.keys(listConfig)) {
+    for (const elements of Object.values(listConfig[listName])) {
+      elements.forEach((identifier) => {
+        if (!isTupleIdentifier(identifier)) {
+          checkPODEntryIdentifier(listName, identifier);
+        }
+      });
+    }
   }
 
   return listConfig;
@@ -448,57 +455,77 @@ export function checkProofListMembershipInputsForConfig(
   // the sense that the types of list values and comparison values should match
   // up.
   if (proofInputs.membershipLists !== undefined) {
-    for (const [listName, comparisonIds] of Object.entries(listConfig)) {
-      for (const comparisonId of comparisonIds) {
-        const inputList = proofInputs.membershipLists[listName];
+    for (const listName of Object.keys(listConfig)) {
+      for (const membershipIndicator of Object.keys(
+        listConfig[listName]
+      ) as ListMembershipEnum[]) {
+        for (const comparisonId of listConfig[listName][membershipIndicator]) {
+          const inputList = proofInputs.membershipLists[listName];
 
-        // The configuration and input list element types should
-        // agree.
-        const comparisonValue = resolvePODEntryOrTupleIdentifier(
-          comparisonId,
-          proofInputs.pods,
-          proofConfig.tuples
-        );
-
-        if (comparisonValue === undefined) {
-          throw new ReferenceError(
-            `Comparison value with identifier ${comparisonId} should be a member of list ${listName} but it doesn't exist in the proof input.`
+          // The configuration and input list element types should
+          // agree.
+          const comparisonValue = resolvePODEntryOrTupleIdentifier(
+            comparisonId,
+            proofInputs.pods,
+            proofConfig.tuples
           );
-        }
 
-        // The comparison value and list value widths should match up.
-        const comparisonWidth = widthOfEntryOrTuple(comparisonValue);
-
-        for (const element of inputList) {
-          const elementWidth = widthOfEntryOrTuple(element);
-
-          if (!_.isEqual(elementWidth, comparisonWidth)) {
-            throw new TypeError(
-              `Membership list ${listName} in input contains element of width ${elementWidth} while comparison value with identifier ${JSON.stringify(
-                comparisonId
-              )} has width ${comparisonWidth}.`
+          if (comparisonValue === undefined) {
+            throw new ReferenceError(
+              `Comparison value with identifier ${comparisonId} should be a member of list ${listName} but it doesn't exist in the proof input.`
             );
           }
-        }
 
-        // The comparison value should lie in the membership list. We relax the
-        // type checking here to avoid false negatives due to
-        // serialisation-related type discrepancies.
-        if (
-          inputList.find((element) =>
+          // The comparison value and list value widths should match up.
+          const comparisonWidth = widthOfEntryOrTuple(comparisonValue);
+
+          for (const element of inputList) {
+            const elementWidth = widthOfEntryOrTuple(element);
+
+            if (!_.isEqual(elementWidth, comparisonWidth)) {
+              throw new TypeError(
+                `Membership list ${listName} in input contains element of width ${elementWidth} while comparison value with identifier ${JSON.stringify(
+                  comparisonId
+                )} has width ${comparisonWidth}.`
+              );
+            }
+          }
+
+          // The comparison value should be a (non-)member of the list. We relax
+          // the type checking here to avoid false negatives due to
+          // serialisation-related type discrepancies.
+          const isComparisonValueInList = inputList.find((element) =>
             _.isEqual(
               applyOrMap(podValueHash, element),
               applyOrMap(podValueHash, comparisonValue)
             )
-          ) === undefined
-        ) {
-          throw new Error(
-            `Comparison value ${jsonBigSerializer.stringify(
-              comparisonValue
-            )} corresponding to identifier ${JSON.stringify(
-              comparisonId
-            )} is not a member of list ${JSON.stringify(listName)}.`
           );
+
+          if (
+            membershipIndicator === MEMBERSHIP &&
+            isComparisonValueInList === undefined
+          ) {
+            throw new Error(
+              `Comparison value ${jsonBigSerializer.stringify(
+                comparisonValue
+              )} corresponding to identifier ${JSON.stringify(
+                comparisonId
+              )} is not a member of list ${JSON.stringify(listName)}.`
+            );
+          }
+
+          if (
+            membershipIndicator === NONMEMBERSHIP &&
+            isComparisonValueInList !== undefined
+          ) {
+            throw new Error(
+              `Comparison value ${jsonBigSerializer.stringify(
+                comparisonValue
+              )} corresponding to identifier ${JSON.stringify(
+                comparisonId
+              )} is a member of list ${JSON.stringify(listName)}.`
+            );
+          }
         }
       }
     }
