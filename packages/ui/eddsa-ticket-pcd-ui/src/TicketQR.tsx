@@ -83,7 +83,7 @@ export function TicketQR({
         key={pcd.id}
         generateQRPayload={generate}
         maxAgeMs={1000 * 60}
-        uniqueId={pcd.id}
+        uniqueId={undefined}
         fgColor={getQRCodeColorOverride(pcd)}
       />
     );
