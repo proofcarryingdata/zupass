@@ -21,8 +21,8 @@ export const EXAMPLE_POD_CONTENT = `{
 export const EXAMPLE_POD_CONTENT_WITH_DISPLAY = `{
   "zupass_display": "collectable",
   "zupass_image_url": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Felis_catus-cat_on_snow.jpg/358px-Felis_catus-cat_on_snow.jpg",
-  "zupass_title": "title",
-  "zupass_description": "hello",
+  "zupass_title": "friendly kitty",
+  "zupass_description": "friendly kitty says hello",
   "owner": 18711405342588116796533073928767088921854096266145046362753928030796553161041
 }`;
 
