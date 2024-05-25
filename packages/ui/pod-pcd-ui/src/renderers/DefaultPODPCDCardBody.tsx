@@ -20,6 +20,9 @@ export function DefaultPODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
       <HiddenText text={pcd.proof.signature} />
       <label>
         <button
+          style={{
+            marginRight: "8px"
+          }}
           onClick={async (): Promise<void> =>
             setSigStatus(
               (await PODPCDPackage.verify(pcd)) ? "valid ✅" : "invalid ❌"

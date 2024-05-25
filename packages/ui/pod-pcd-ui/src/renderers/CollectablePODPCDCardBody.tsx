@@ -31,9 +31,11 @@ export function CollectablePODPCDCardBody({
   return (
     <Container>
       {parts}
-      <br />
       <label>
         <button
+          style={{
+            marginRight: "8px"
+          }}
           onClick={async (): Promise<void> =>
             setSigStatus(
               (await PODPCDPackage.verify(pcd)) ? "valid ✅" : "invalid ❌"
