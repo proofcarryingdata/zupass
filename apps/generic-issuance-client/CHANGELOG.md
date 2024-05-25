@@ -1,5 +1,12 @@
 # generic-issuance-client
 
+## 0.0.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.11.1
+
 ## 0.0.2
 
 ### Patch Changes
