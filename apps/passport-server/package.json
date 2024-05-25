@@ -1,6 +1,6 @@
 {
   "name": "passport-server",
-  "version": "0.0.28",
+  "version": "0.0.29",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -30,7 +30,7 @@
     "@pcd/email-pcd": "0.6.0",
     "@pcd/message-pcd": "0.1.0",
     "@pcd/passport-crypto": "0.11.0",
-    "@pcd/passport-interface": "0.11.0",
+    "@pcd/passport-interface": "0.11.1",
     "@pcd/pcd-collection": "0.11.0",
     "@pcd/pcd-types": "0.11.0",
     "@pcd/pod": "0.1.0",
