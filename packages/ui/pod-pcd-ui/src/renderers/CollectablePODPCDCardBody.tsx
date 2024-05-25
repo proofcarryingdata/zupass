@@ -1,5 +1,5 @@
+import { PODValue } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
-import { useState } from "react";
 import { Container } from "../CardBody";
 
 export function CollectablePODPCDCardBody({
@@ -7,7 +7,23 @@ export function CollectablePODPCDCardBody({
 }: {
   pcd: PODPCD;
 }): JSX.Element {
-  const [sigStatus, setSigStatus] = useState("unvalidated");
+  const parts: React.ReactNode[] = [];
 
-  return <Container>this is a collectable</Container>;
+  const imageUrlEntry: PODValue | undefined =
+    pcd.claim.entries["zupass_image_url"];
+  if (imageUrlEntry?.type === "string") {
+    parts.push(<img src={imageUrlEntry.value} />);
+  }
+
+  const descriptionEntry: PODValue | undefined =
+    pcd.claim.entries["zupass_description"];
+  if (descriptionEntry?.type === "string") {
+    parts.push(<p>{descriptionEntry.value}</p>);
+  }
+
+  if (parts.length === 0) {
+    parts.push(<p>No content</p>);
+  }
+
+  return <Container>{parts}</Container>;
 }
