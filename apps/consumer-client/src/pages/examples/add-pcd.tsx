@@ -46,6 +46,7 @@ import {
 import {
   EXAMPLE_EDDSA_PRIVATE_KEY,
   EXAMPLE_GPC_CONFIG,
+  EXAMPLE_MEMBERSHIP_LISTS,
   EXAMPLE_OWNER_IDENTITY,
   EXAMPLE_POD_CONTENT
 } from "../../podExampleConstants";
@@ -56,6 +57,9 @@ export default function Page(): JSX.Element {
   const [folder, setFolder] = useState("");
   const [podContent, setPodContent] = useState(EXAMPLE_POD_CONTENT);
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
+  const [membershipLists, setMembershipLists] = useState(
+    EXAMPLE_MEMBERSHIP_LISTS
+  );
   const [podFolder, setPodFolder] = useState("Test PODs");
 
   return (
@@ -158,6 +162,16 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
+        Membership lists:{" "}
+        <textarea
+          cols={40}
+          rows={15}
+          value={membershipLists}
+          onChange={(e): void => {
+            setMembershipLists(e.target.value);
+          }}
+        />
+        <br />
         <label>
           Folder to add POD/GPC to:
           <input
@@ -183,6 +197,7 @@ export default function Page(): JSX.Element {
             addGPCPCD(
               podContent,
               gpcConfig,
+              membershipLists,
               podFolder.length > 0 ? podFolder : undefined
             )
           }
@@ -577,6 +592,7 @@ async function addPODPCD(
 async function addGPCPCD(
   podContent: string,
   gpcConfig: string,
+  membershipLists: string,
   podFolder: string | undefined
 ): Promise<void> {
   await GPCPCDPackage.init?.({
@@ -615,6 +631,10 @@ async function addGPCPCD(
     },
     externalNullifier: {
       value: "example nullifier",
+      argumentType: ArgumentTypeName.String
+    },
+    membershipLists: {
+      value: membershipLists,
       argumentType: ArgumentTypeName.String
     },
     watermark: {

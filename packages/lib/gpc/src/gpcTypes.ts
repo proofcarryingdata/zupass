@@ -9,6 +9,15 @@ import { Groth16Proof } from "snarkjs";
  */
 export type PODEntryIdentifier = `${PODName}.${PODName}`;
 
+/**
+ * Optional set of lists for checking POD entry (or tuple) value membership in
+ * the form of a record mapping list names to lists of either POD values or POD
+ * value tuples. Proof configurations with list membership checks refer to these
+ * lists by name, and this record should appear in both the proof inputs and the
+ * revealed claims.
+ */
+export type PODMembershipLists = Record<PODName, PODValue[] | PODValueTuple[]>;
+
 // Single source of truth for tuple prefix (used internally).
 // This should not be a valid {@link PODName} to avoid name clashes.
 export const TUPLE_PREFIX = "$tuple";
@@ -314,7 +323,7 @@ export type GPCProofInputs = {
    * may be primitive (i.e. of type PODValue) or tuples (represented as
    * PODValueTuple = PODValue[]).  Each list must be non-empty.
    */
-  membershipLists?: Record<PODName, PODValue[] | PODValueTuple[]>;
+  membershipLists?: PODMembershipLists;
 
   /**
    * If this field is set, the given value will be included in the resulting
@@ -419,7 +428,7 @@ export type GPCRevealedClaims = {
    * may be primitive (i.e. of type PODValue) or tuples (represented as
    * PODValueTuple = PODValue[]).  Each list must be non-empty.
    */
-  membershipLists?: Record<PODName, PODValue[] | PODValueTuple[]>;
+  membershipLists?: PODMembershipLists;
 
   /**
    * If this field is set, it matches the corresponding field in
@@ -433,3 +442,22 @@ export type GPCRevealedClaims = {
    */
   watermark?: PODValue;
 };
+
+/**
+ * Converts a record of membership lists to one of membership sets.
+ *
+ * @param membershipLists the lists to convert
+ * @returns a record of membership sets
+ */
+export function membershipListsToSets(
+  membershipLists: PODMembershipLists
+): Record<PODName, Set<PODValue> | Set<PODValueTuple>> {
+  return Object.fromEntries(
+    Object.entries(membershipLists).map((pair) => [
+      pair[0],
+      new Set(pair[1] as (PODValue | PODValueTuple)[]) as
+        | Set<PODValue>
+        | Set<PODValueTuple>
+    ])
+  );
+}

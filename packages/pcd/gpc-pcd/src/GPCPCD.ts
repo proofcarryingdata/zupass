@@ -73,6 +73,13 @@ export type GPCPCDArgs = {
   externalNullifier: StringArgument;
 
   /**
+   * Optional membership lists, if needed by the proof configuration. This is
+   * always revealed. Taken to be a JSON-serialised string for the same reasons
+   * outlined for `proofConfig` above.
+   */
+  membershipLists: StringArgument;
+
+  /**
    * Optional watermark can be any string.  It will be included (by hash) in the
    * proof and cryptographically verified.  This can be used to avoid reuse of
    * the same proof.

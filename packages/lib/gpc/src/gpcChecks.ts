@@ -8,6 +8,7 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
+  applyOrMap,
   calcMinMerkleDepthForEntries,
   checkPODName,
   checkPODValue,
@@ -16,6 +17,7 @@ import {
   requireType
 } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
+import JSONBig from "json-bigint";
 import _ from "lodash";
 import {
   GPCBoundConfig,
@@ -43,6 +45,11 @@ import {
 // TODO(POD-P2): Split out the parts of this which should be public from
 // internal implementation details.  E.g. the returning of ciruit parameters
 // isn't relevant to checking objects after deserialization.
+
+const jsonBigSerializer = JSONBig({
+  useNativeBigInt: true,
+  alwaysParseAsBig: true
+});
 
 /**
  * Checks the validity of the arguments for generating a proof.  This will throw
@@ -467,22 +474,26 @@ export function checkProofListMembershipInputsForConfig(
 
           if (!_.isEqual(elementWidth, comparisonWidth)) {
             throw new TypeError(
-              `Membership list ${listName} in input contains element of width ${JSON.stringify(
-                elementWidth
-              )} while comparison value with identifier ${JSON.stringify(
+              `Membership list ${listName} in input contains element of width ${elementWidth} while comparison value with identifier ${JSON.stringify(
                 comparisonId
-              )} has width ${JSON.stringify(comparisonWidth)}.`
+              )} has width ${comparisonWidth}.`
             );
           }
         }
 
-        // The comparison value should lie in the membership list.
+        // The comparison value should lie in the membership list. We compare
+        // hashes as this reflects how the values will be treated in the
+        // circuit.
         if (
-          inputList.find((element) => _.isEqual(element, comparisonValue)) ===
-          undefined
+          inputList.find((element) =>
+            _.isEqual(
+              applyOrMap(podValueHash, element),
+              applyOrMap(podValueHash, comparisonValue)
+            )
+          ) === undefined
         ) {
           throw new Error(
-            `Comparison value ${JSON.stringify(
+            `Comparison value ${jsonBigSerializer.stringify(
               comparisonValue
             )} corresponding to identifier ${JSON.stringify(
               comparisonId
