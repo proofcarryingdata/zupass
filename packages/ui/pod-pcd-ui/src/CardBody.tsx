@@ -1,7 +1,6 @@
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { PODPCD } from "@pcd/pod-pcd";
-import { useState } from "react";
 import { CollectablePODPCDCardBody } from "./renderers/CollectablePODPCDCardBody";
 import { DefaultPODPCDCardBody } from "./renderers/DefaultPODPCDCardBody";
 
@@ -13,8 +12,6 @@ export const PODPCDUI: PCDUI<PODPCD> = {
  * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
 function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
-  const [sigStatus, setSigStatus] = useState("unvalidated");
-
   let content = <></>;
 
   switch (pcd.claim.entries["zupass_display"].value) {
