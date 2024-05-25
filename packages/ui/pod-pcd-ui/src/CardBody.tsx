@@ -13,7 +13,7 @@ export const PODPCDUI: PCDUI<PODPCD> = {
 function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
   let content = <></>;
 
-  switch (pcd.claim.entries["zupass_display"].value) {
+  switch (pcd.claim.entries["zupass_display"]?.value) {
     case "collectable":
       content = <CollectablePODPCDCardBody pcd={pcd} />;
       break;
