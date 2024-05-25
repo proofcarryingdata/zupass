@@ -491,9 +491,9 @@ export function checkProofListMembershipInputsForConfig(
             }
           }
 
-          // The comparison value should be a (non-)member of the list. We relax
-          // the type checking here to avoid false negatives due to
-          // serialisation-related type discrepancies.
+          // The comparison value should be a (non-)member of the list. We compare
+          // hashes as this reflects how the values will be treated in the
+          // circuit.
           const isComparisonValueInList = inputList.find((element) =>
             _.isEqual(
               applyOrMap(podValueHash, element),

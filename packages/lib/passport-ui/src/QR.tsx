@@ -37,7 +37,7 @@ export function QRDisplayWithRegenerateAndStorage({
 }: {
   generateQRPayload: () => Promise<string>;
   maxAgeMs: number;
-  uniqueId: string;
+  uniqueId?: string;
   loadingLogo?: React.ReactNode;
   loadedLogo?: React.ReactNode;
   fgColor?: string;
@@ -51,9 +51,9 @@ export function QRDisplayWithRegenerateAndStorage({
   const regenerateAfterMs = (maxAgeMs * 2) / 3;
 
   const [savedState, setSavedState] = useState<SavedQRState | undefined>(() => {
-    const savedState = JSON.parse(
-      localStorage[uniqueId] || "{}"
-    ) as Partial<SavedQRState>;
+    const savedState = uniqueId
+      ? (JSON.parse(localStorage[uniqueId] || "{}") as Partial<SavedQRState>)
+      : {};
 
     const { timestamp, payload } = savedState;
 
@@ -75,7 +75,9 @@ export function QRDisplayWithRegenerateAndStorage({
     }
     const newData = await generateQRPayload();
     const newSavedState: SavedQRState = { timestamp, payload: newData };
-    localStorage[uniqueId] = JSON.stringify(newSavedState);
+    if (uniqueId) {
+      localStorage[uniqueId] = JSON.stringify(newSavedState);
+    }
     setSavedState(newSavedState);
   }, [generateQRPayload, regenerateAfterMs, savedState, uniqueId]);
 

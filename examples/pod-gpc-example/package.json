@@ -1,6 +1,6 @@
 {
-  "name": "@pcd/gpc-pcd",
-  "version": "0.0.1",
+  "name": "@pcd/pod-gpc-example",
+  "version": "0.0.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -14,7 +14,6 @@
   },
   "files": [
     "dist",
-    "./CHANGELOG.md",
     "./README.md",
     "./LICENSE"
   ],
@@ -23,25 +22,25 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "ts-mocha --type-check --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/gpc": "0.0.1",
     "@pcd/pcd-types": "0.11.0",
+    "@pcd/pod": "0.1.0",
     "@pcd/pod-pcd": "0.1.0",
+    "@pcd/gpc": "0.0.1",
+    "@pcd/gpc-pcd": "0.0.1",
     "@pcd/semaphore-identity-pcd": "0.11.0",
-    "@pcd/util": "0.5.0",
-    "json-bigint": "^1.0.0",
+    "@semaphore-protocol/identity": "^3.15.2",
+    "lodash": "^4.17.21",
     "snarkjs": "^0.7.4",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.11.0",
     "@pcd/tsconfig": "0.11.0",
-    "@pcd/pod": "0.1.0",
     "@pcd/proto-pod-gpc-artifacts": "0.0.3",
-    "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "eslint": "^8.57.0",
