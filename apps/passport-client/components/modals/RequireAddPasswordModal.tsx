@@ -10,7 +10,7 @@ import {
 import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { BigInput, H2, Spacer } from "../core";
+import { BigInput, CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 import { ScreenLoader } from "../shared/ScreenLoader";
 
@@ -71,28 +71,34 @@ export function RequireAddPasswordModal(): JSX.Element {
 
   return (
     <Container>
-      <H2>Reinforce Your Account</H2>
-      <Spacer h={24} />
-      Before adding this PCD, you will need to upgrade to an
-      end-to-end-encrypted Zupass. To upgrade, please choose a password. Make
-      sure to remember it, otherwise you will lose access to all your PCDs.
-      <Spacer h={24} />
-      <BigInput value={self?.email ?? ""} disabled={true} />
-      <Spacer h={8} />
-      <NewPasswordForm
-        error={error}
-        setError={setError}
-        passwordInputPlaceholder="New password"
-        email={self?.email ?? ""}
-        revealPassword={revealPassword}
-        setRevealPassword={setRevealPassword}
-        submitButtonText="Confirm"
-        password={newPassword}
-        confirmPassword={confirmPassword}
-        setPassword={setNewPassword}
-        setConfirmPassword={setConfirmPassword}
-        onSuccess={onAddPassword}
-      />
+      <CenterColumn>
+        <H2>Reinforce Your Account</H2>
+        <Spacer h={24} />
+        <TextCenter>
+          Before adding this PCD, you will need to upgrade to an
+          end-to-end-encrypted Zupass. To upgrade, please choose a password.
+          Make sure to remember it, otherwise you will lose access to all your
+          PCDs.
+        </TextCenter>
+
+        <Spacer h={24} />
+        <BigInput value={self?.email ?? ""} disabled={true} />
+        <Spacer h={8} />
+        <NewPasswordForm
+          error={error}
+          setError={setError}
+          passwordInputPlaceholder="New password"
+          email={self?.email ?? ""}
+          revealPassword={revealPassword}
+          setRevealPassword={setRevealPassword}
+          submitButtonText="Confirm"
+          password={newPassword}
+          confirmPassword={confirmPassword}
+          setPassword={setNewPassword}
+          setConfirmPassword={setConfirmPassword}
+          onSuccess={onAddPassword}
+        />
+      </CenterColumn>
     </Container>
   );
 }
