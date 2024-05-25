@@ -48,7 +48,8 @@ import {
   EXAMPLE_GPC_CONFIG,
   EXAMPLE_MEMBERSHIP_LISTS,
   EXAMPLE_OWNER_IDENTITY,
-  EXAMPLE_POD_CONTENT
+  EXAMPLE_POD_CONTENT,
+  EXAMPLE_POD_CONTENT_WITH_DISPLAY
 } from "../../podExampleConstants";
 import { sendZupassRequest } from "../../util";
 
@@ -142,7 +143,22 @@ export default function Page(): JSX.Element {
         <button onClick={addEdDSAPCD}>add a new EdDSA signature proof</button>
         <br />
         <br />
-        POD content to sign:{" "}
+        POD content to sign: <br />
+        <button
+          onClick={() => {
+            setPodContent(EXAMPLE_POD_CONTENT);
+          }}
+        >
+          basic example
+        </button>
+        <button
+          onClick={() => {
+            setPodContent(EXAMPLE_POD_CONTENT_WITH_DISPLAY);
+          }}
+        >
+          zupass card example
+        </button>
+        <br />
         <textarea
           cols={40}
           rows={15}
@@ -152,7 +168,7 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
-        GPC Proof config:{" "}
+        GPC Proof config: <br />
         <textarea
           cols={40}
           rows={15}
@@ -162,7 +178,7 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
-        Membership lists:{" "}
+        Membership lists: <br />
         <textarea
           cols={40}
           rows={15}
