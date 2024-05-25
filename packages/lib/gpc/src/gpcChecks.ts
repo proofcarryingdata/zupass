@@ -481,9 +481,9 @@ export function checkProofListMembershipInputsForConfig(
           }
         }
 
-        // The comparison value should lie in the membership list. We relax the
-        // type checking here to avoid false negatives due to
-        // serialisation-related type discrepancies.
+        // The comparison value should lie in the membership list. We compare
+        // hashes as this reflects how the values will be treated in the
+        // circuit.
         if (
           inputList.find((element) =>
             _.isEqual(

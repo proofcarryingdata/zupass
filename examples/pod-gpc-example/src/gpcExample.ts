@@ -431,6 +431,9 @@ export async function gpcDemo(): Promise<boolean> {
       value: "example nullifier",
       argumentType: ArgumentTypeName.String
     },
+    membershipLists: {
+      argumentType: ArgumentTypeName.String
+    },
     watermark: {
       value: "example watermark",
       argumentType: ArgumentTypeName.String
