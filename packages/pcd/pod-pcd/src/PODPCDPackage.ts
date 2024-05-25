@@ -101,7 +101,7 @@ export function getDisplayOptions(
   pcd: PCD<PODPCDClaim, PODPCDProof>
 ): DisplayOptions {
   const titleEntry = pcd.claim.entries["zupass_title"];
-  if (titleEntry?.type === "string") {
+  if (titleEntry?.type === "string" && titleEntry.value.length > 0) {
     return {
       header: titleEntry.value,
       displayName: "pod-" + titleEntry.value
