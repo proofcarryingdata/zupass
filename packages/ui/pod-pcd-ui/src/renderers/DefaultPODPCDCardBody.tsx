@@ -2,7 +2,7 @@ import { FieldLabel, HiddenText, Separator, Spacer } from "@pcd/passport-ui";
 import { podEntriesToSimplifiedJSON } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { useState } from "react";
-import { Container } from "../CardBody";
+import { Container } from "../shared";
 
 export function DefaultPODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
   const [sigStatus, setSigStatus] = useState("unvalidated");

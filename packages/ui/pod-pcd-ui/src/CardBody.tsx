@@ -1,4 +1,3 @@
-import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { PODPCD } from "@pcd/pod-pcd";
 import { CollectablePODPCDCardBody } from "./renderers/CollectablePODPCDCardBody";
@@ -25,9 +24,3 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
 
   return <>{content}</>;
 }
-
-export const Container = styled.div`
-  padding: 16px;
-  overflow: hidden;
-  width: 100%;
-`;

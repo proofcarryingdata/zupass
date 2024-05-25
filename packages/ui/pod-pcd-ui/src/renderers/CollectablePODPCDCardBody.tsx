@@ -1,7 +1,7 @@
 import { PODValue } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { useState } from "react";
-import { Container } from "../CardBody";
+import { Container } from "../shared";
 
 export function CollectablePODPCDCardBody({
   pcd
