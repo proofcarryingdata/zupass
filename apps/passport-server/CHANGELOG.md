@@ -1,5 +1,12 @@
 # passport-server
 
+## 0.0.29
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.11.1
+
 ## 0.0.28
 
 ### Patch Changes
