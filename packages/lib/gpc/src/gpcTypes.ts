@@ -10,11 +10,11 @@ import { Groth16Proof } from "snarkjs";
 export type PODEntryIdentifier = `${PODName}.${PODName}`;
 
 /**
- * Optional set of lists for checking POD entry (or tuple) value membership in
- * the form of a record mapping list names to lists of either POD values or POD
- * value tuples. Proof configurations with list membership checks refer to these
- * lists by name, and this record should appear in both the proof inputs and the
- * revealed claims.
+ * Optional set of lists for checking POD entry (or tuple) value
+ * (non-)membership in the form of a record mapping list names to lists of
+ * either POD values or POD value tuples. Proof configurations with list
+ * membership checks refer to these lists by name, and this record should appear
+ * in both the proof inputs and the revealed claims.
  */
 export type PODMembershipLists = Record<PODName, PODValue[] | PODValueTuple[]>;
 
@@ -330,8 +330,8 @@ export type GPCProofInputs = {
   owner?: GPCProofOwnerInputs;
 
   /*
-   * Named lists of valid values for each list membership check. These values
-   * may be primitive (i.e. of type PODValue) or tuples (represented as
+   * Named lists of valid values for each list (non-)membership check. These
+   * values may be primitive (i.e. of type PODValue) or tuples (represented as
    * PODValueTuple = PODValue[]).  Each list must be non-empty.
    */
   membershipLists?: PODMembershipLists;
@@ -435,8 +435,8 @@ export type GPCRevealedClaims = {
   owner?: GPCRevealedOwnerClaims;
 
   /*
-   * Named lists of valid values for each list membership check. These values
-   * may be primitive (i.e. of type PODValue) or tuples (represented as
+   * Named lists of valid values for each list (non-)membership check. These
+   * values may be primitive (i.e. of type PODValue) or tuples (represented as
    * PODValueTuple = PODValue[]).  Each list must be non-empty.
    */
   membershipLists?: PODMembershipLists;
