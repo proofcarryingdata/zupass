@@ -44,7 +44,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
           entries: {
             ticketID: {
               isRevealed: true,
-              ...(includeList ? { isNotMemberOf: "admissibleTickets" } : {})
+              ...(includeList ? { isNotMemberOf: "inadmissibleTickets" } : {})
             }
           }
         }
@@ -68,7 +68,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       ...(includeList
         ? {
             membershipLists: {
-              admissibleTickets: [sampleEntries2.attendee, sampleEntries.J],
+              inadmissibleTickets: [sampleEntries2.attendee, sampleEntries.J],
               ...(includeTuple
                 ? {
                     admissibleTicketPairs: [
@@ -91,7 +91,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       ...(includeList
         ? {
             membershipLists: {
-              admissibleTickets: [
+              inadmissibleTickets: [
                 sampleEntries2.ticketID,
                 sampleEntries2.ticketID
               ],
@@ -264,7 +264,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       tuples: {
         tuple1: {
           entries: ["pod1.G", "pod2.ticketID"],
-          isMemberOf: "list1"
+          isNotMemberOf: "list1"
         },
         tuple2: {
           entries: [
@@ -284,24 +284,22 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         externalNullifier
       },
       membershipLists: {
-        list1: [[sampleEntries.G, sampleEntries2.ticketID]].concat(
-          [
-            [87, 1],
-            [99, 8],
-            [8273, 0],
-            [0, 0],
-            [12387, 3],
-            [99999, 66],
-            [653, 362374823],
-            [29387, 1236478236],
-            [1238, 9238374],
-            [1, 1],
-            [87, 87]
-          ].map((pair) => [
-            { type: "int", value: BigInt(pair[0]) },
-            { type: "cryptographic", value: BigInt(pair[1]) }
-          ])
-        ),
+        list1: [
+          [87, 1],
+          [99, 8],
+          [8273, 0],
+          [0, 0],
+          [12387, 3],
+          [99999, 66],
+          [653, 362374823],
+          [29387, 1236478236],
+          [1238, 9238374],
+          [1, 1],
+          [87, 87]
+        ].map((pair) => [
+          { type: "int", value: BigInt(pair[0]) },
+          { type: "cryptographic", value: BigInt(pair[1]) }
+        ]) as PODValueTuple[],
         list2: [
           [129384723n, 123746238746n, 1237n, 18239n],
           [1283748973n, 0n, 1n, 2n],
@@ -583,6 +581,38 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       async () => {
         await gpcProve(
           {
+            pods: {
+              somePodName: {
+                entries: {
+                  ticketID: {
+                    isRevealed: true,
+                    isNotMemberOf: "inadmissibleTickets"
+                  }
+                }
+              }
+            }
+          },
+          {
+            ...proofInputs,
+            membershipLists: {
+              inadmissibleTickets: [
+                sampleEntries2.ticketID,
+                sampleEntries.otherTicketID,
+                sampleEntries.G
+              ]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "Error",
+      'Comparison value {"type":"cryptographic","value":999} corresponding to identifier "somePodName.ticketID" is a member of list "inadmissibleTickets".'
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          {
             ...proofConfig,
             tuples: {
               tuple1: {
@@ -700,14 +730,14 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             ...revealedClaims2,
             membershipLists: {
               ...revealedClaims2.membershipLists,
-              admissibleTickets: []
+              inadmissibleTickets: []
             }
           },
           GPC_TEST_ARTIFACTS_PATH
         );
       },
       "Error",
-      "Membership list admissibleTickets is empty."
+      "Membership list inadmissibleTickets is empty."
     );
 
     await expectAsyncError(
@@ -797,7 +827,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         );
       },
       "Error",
-      'Config and input list mismatch.  Configuration expects lists ["admissibleTickets","admissibleTicketPairs"].  Input contains ["admissibleTicketPairs"].'
+      'Config and input list mismatch.  Configuration expects lists ["inadmissibleTickets","admissibleTicketPairs"].  Input contains ["admissibleTicketPairs"].'
     );
   });
 
@@ -909,7 +939,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         membershipLists: {
           admissibleTicketPairs: (revealedClaims2.membershipLists ?? {})
             .admissibleTicketPairs as PODValueTuple[],
-          admissibleTickets: [sampleEntries2.ticketID, sampleEntries.owner]
+          inadmissibleTickets: [sampleEntries2.ticketID, sampleEntries.owner]
         }
       },
       GPC_TEST_ARTIFACTS_PATH
