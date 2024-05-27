@@ -353,7 +353,7 @@ describe("devconnect functionality", function () {
         throw new Error("expected user");
       }
 
-      await sleep(100);
+      await application.services.semaphoreService.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [residentUser.commitment],
@@ -417,6 +417,8 @@ describe("devconnect functionality", function () {
       if (!residentUser || !visitorUser || !organizerUser) {
         throw new Error("expected user");
       }
+
+      await application.services.semaphoreService.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [
@@ -631,6 +633,8 @@ describe("devconnect functionality", function () {
         throw new Error("expected user");
       }
 
+      await application.services.semaphoreService.reload();
+
       expectCurrentSemaphoreToBe(application, {
         p: [
           updatedToOrganizerUser.commitment,
@@ -683,6 +687,8 @@ describe("devconnect functionality", function () {
       ) {
         throw new Error("expected user");
       }
+
+      await application.services.semaphoreService.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [
@@ -737,6 +743,8 @@ describe("devconnect functionality", function () {
         throw new Error("expected user");
       }
 
+      await application.services.semaphoreService.reload();
+
       expectCurrentSemaphoreToBe(application, {
         p: [
           updatedToOrganizerUser.commitment,
@@ -789,6 +797,8 @@ describe("devconnect functionality", function () {
       ) {
         throw new Error("expected user");
       }
+
+      await application.services.semaphoreService.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [],
@@ -1817,6 +1827,7 @@ describe("devconnect functionality", function () {
     "semaphore service should now be aware of the new user" +
       " and their old commitment should have been removed",
     async function () {
+      await application.services.semaphoreService.reload();
       expectCurrentSemaphoreToBe(application, {
         p: [],
         r: [],
