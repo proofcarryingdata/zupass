@@ -362,7 +362,7 @@ function compileProofListMembership<
   paramMaxListElements: number
 ): {
   listComparisonValueIndex: CircuitSignal[];
-  listContainsComparisonValue: CircuitSignal[];
+  listContainsComparisonValue: CircuitSignal;
   listValidValues: CircuitSignal[][];
 } {
   // Arrange list names alphabetically.
@@ -447,10 +447,8 @@ function compileProofListMembership<
     ),
     // Pad with 1s, which amounts to a list membership check for those values corresponding to index
     // -1 (which corresponds to the value 0).
-    listContainsComparisonValue: padArray(
-      unpaddedListContainsComparisonValue,
-      paramMaxLists,
-      1n
+    listContainsComparisonValue: array2Bits(
+      padArray(unpaddedListContainsComparisonValue, paramMaxLists, 1n)
     ),
     // Pad with lists of 0s, which amounts to trivially satisfied list membership checks
     // for those indices used as padding just above.
