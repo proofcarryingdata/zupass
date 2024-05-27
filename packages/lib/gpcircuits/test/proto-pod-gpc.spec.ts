@@ -267,7 +267,7 @@ const sampleInput: ProtoPODGPCInputs = {
 
   // List membership module (1)
   /*PUB*/ listComparisonValueIndex: [10n, 2n],
-  /*PUB*/ listContainsComparisonValue: [1n, 0n],
+  /*PUB*/ listContainsComparisonValue: 1n,
   /*PUB*/ listValidValues: [
     [
       20512592176305604055339687149127083785801266243853050528476250996567095522131n,
@@ -548,10 +548,8 @@ function makeTestSignals(
   const { tupleIndices, listComparisonValueIndex, listValidValues } =
     processLists(params, listComparisonValueIndices, listValidValuess);
 
-  const listContainsComparisonValue = extendedSignalArray(
-    isMember.map(BigInt),
-    params.maxLists,
-    1n
+  const listContainsComparisonValue = array2Bits(
+    extendedSignalArray(isMember.map(BigInt), params.maxLists, 1n)
   );
 
   return {

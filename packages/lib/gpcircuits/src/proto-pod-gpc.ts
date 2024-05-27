@@ -46,7 +46,7 @@ export type ProtoPODGPCInputs = {
 
   // List membership module (1+)
   /*PUB*/ listComparisonValueIndex: CircuitSignal /*MAX_LISTS*/[];
-  /*PUB*/ listContainsComparisonValue: CircuitSignal /*MAX_LISTS*/[];
+  /*PUB*/ listContainsComparisonValue: CircuitSignal;
   /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 
   // Global module (1)
@@ -112,7 +112,7 @@ export type ProtoPODGPCPublicInputs = {
 
   // List membership module (1)
   /*PUB*/ listComparisonValueIndex: CircuitSignal /*MAX_LISTS*/[];
-  /*PUB*/ listContainsComparisonValue: CircuitSignal /*MAX_LISTS*/[];
+  /*PUB*/ listContainsComparisonValue: CircuitSignal;
   /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 
   // Global module (1)
@@ -399,7 +399,7 @@ export class ProtoPODGPC {
       inputs.ownerIsNullfierHashRevealed,
       ...inputs.tupleIndices.flat(),
       ...inputs.listComparisonValueIndex,
-      ...inputs.listContainsComparisonValue,
+      inputs.listContainsComparisonValue,
       ...inputs.listValidValues.flat(),
       inputs.globalWatermark
     ].map(BigInt);
