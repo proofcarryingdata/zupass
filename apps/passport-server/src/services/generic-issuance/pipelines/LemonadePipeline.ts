@@ -43,6 +43,7 @@ import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import stable_stringify from "fast-json-stable-stringify";
+import _ from "lodash";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
 import urljoin from "url-join";
@@ -341,21 +342,7 @@ export class LemonadePipeline implements BasePipeline {
 
                 // Filter the tickets down to configured ticket types
                 if (configuredTicketTypeExternalIds.has(ticket.type_id)) {
-                  // Tickets can appear for users who have been invited to the
-                  // event, but have not registered with Lemonade. Such tickets
-                  // can't be checked in, so we should avoid creating ticket PCDs
-                  // for them. We can detect this by checking for a `user_email`
-                  // value with content.
-                  if (ticket.user_email.length > 0) {
-                    validTickets.push(ticket);
-                  } else {
-                    const message = `ticket owner hasn't created lemonade account ${str(
-                      ticket
-                    )} , pipeline '${this.id}'`;
-                    logs.push(makePLogWarn(message));
-                    logger(`${LOG_TAG} ${message}`);
-                    atomsExpected--;
-                  }
+                  validTickets.push(ticket);
                 } else {
                   const message = `Unsupported ticket type ${
                     ticket.type_title
@@ -396,7 +383,7 @@ export class LemonadePipeline implements BasePipeline {
             (t) =>
               ({
                 id: uuidv5(t._id, eventConfig.genericIssuanceEventId),
-                email: t.user_email.toLowerCase(),
+                email: t.email.toLowerCase(),
                 name:
                   t.user_first_name.length > 0 || t.user_last_name.length > 0
                     ? `${t.user_first_name} ${t.user_last_name}`.trim()
@@ -487,7 +474,7 @@ export class LemonadePipeline implements BasePipeline {
       const data = [];
       for (const atom of await this.db.load(this.id)) {
         data.push({
-          email: atom.email as string,
+          email: atom.email,
           eventId: atom.genericIssuanceEventId,
           productId: atom.genericIssuanceProductId
         });
@@ -749,10 +736,21 @@ export class LemonadePipeline implements BasePipeline {
   ): Promise<EdDSATicketPCD[]> {
     // Load atom-backed tickets
     const relevantTickets = await this.db.loadByEmail(this.id, email);
-    // Convert atoms to ticket data
-    const ticketDatas = relevantTickets.map((t) =>
-      this.atomToTicketData(t, identityCommitment)
+
+    // Load check-in data
+    const checkIns = await this.checkinDB.getByTicketIds(
+      this.id,
+      relevantTickets.map((ticket) => ticket.id)
     );
+    const checkInsById = _.keyBy(checkIns, (checkIn) => checkIn.ticketId);
+
+    // Convert atoms to ticket data
+    const ticketDatas = relevantTickets.map((t) => {
+      if (checkInsById[t.id]) {
+        t.checkinDate = checkInsById[t.id].timestamp;
+      }
+      return this.atomToTicketData(t, identityCommitment);
+    });
     // Load manual tickets from the definition
     const manualTickets = this.getManualTicketsForEmail(email);
     // Convert manual tickets to ticket data and add to array
@@ -1158,10 +1156,6 @@ export class LemonadePipeline implements BasePipeline {
     atom: LemonadeAtom,
     semaphoreId: string
   ): ITicketData {
-    if (!atom.email) {
-      throw new Error(`Atom missing email: ${atom.id} in pipeline ${this.id}`);
-    }
-
     return {
       // unsigned fields
       attendeeName: atom.name,
@@ -1377,7 +1371,7 @@ export class LemonadePipeline implements BasePipeline {
           ticketInfo = {
             eventName: eventConfig.name,
             ticketName: this.lemonadeAtomToTicketName(ticketAtom),
-            attendeeEmail: ticketAtom.email as string,
+            attendeeEmail: ticketAtom.email,
             attendeeName: ticketAtom.name
           };
           notCheckedIn = await this.notCheckedIn(ticketAtom);
@@ -1680,10 +1674,28 @@ export class LemonadePipeline implements BasePipeline {
               );
             }
 
-            // We found a Lemonade atom, so check in with the Lemonade backend
-            return this.lemonadeCheckin(ticketAtom, emailClaim.emailAddress);
+            if (ticketAtom.lemonadeUserId) {
+              // We found a Lemonade atom and account, so check in with the
+              // Lemonade backend
+              return this.lemonadeCheckin(
+                ticketAtom,
+                ticketAtom.lemonadeUserId,
+                emailClaim.emailAddress
+              );
+            } else {
+              return this.checkInManualTicket(
+                {
+                  id: ticketAtom.id,
+                  eventId: ticketAtom.genericIssuanceEventId,
+                  productId: ticketAtom.genericIssuanceProductId,
+                  attendeeName: ticketAtom.name,
+                  attendeeEmail: ticketAtom.email
+                },
+                emailClaim.emailAddress
+              );
+            }
           } else {
-            // No Lemonade atom found, try looking for a manual ticket
+            // No valid Lemonade atom found, try looking for a manual ticket
             const manualTicket = this.getManualTicketById(request.ticketId);
             if (manualTicket && manualTicket.eventId === request.eventId) {
               await this.badgeDB.giveBadges(
@@ -1791,6 +1803,7 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async lemonadeCheckin(
     ticketAtom: LemonadeAtom,
+    userId: string,
     checkerEmail: string
   ): Promise<PodboxTicketActionResponseValue> {
     return traced<PodboxTicketActionResponseValue>(
@@ -1833,7 +1846,7 @@ export class LemonadePipeline implements BasePipeline {
             this.definition.options.backendUrl,
             this.getOAuthCredentials(),
             ticketAtom.lemonadeEventId,
-            ticketAtom.lemonadeUserId
+            userId
           );
           this.pendingCheckIns.set(ticketAtom.id, {
             status: CheckinStatus.Success,
@@ -1949,10 +1962,11 @@ export class LemonadePipeline implements BasePipeline {
  */
 export interface LemonadeAtom extends PipelineAtom {
   name: string;
+  email: string;
   lemonadeEventId: string;
   lemonadeTicketTypeId: string;
   genericIssuanceEventId: string;
   genericIssuanceProductId: string;
-  lemonadeUserId: string;
+  lemonadeUserId: string | undefined;
   checkinDate: Date | null;
 }

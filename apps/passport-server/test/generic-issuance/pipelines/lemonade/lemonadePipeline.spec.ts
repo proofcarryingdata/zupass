@@ -1144,7 +1144,7 @@ describe("generic issuance - LemonadePipeline", function () {
   );
 
   step(
-    "Lemonade tickets without user emails should not be loaded",
+    "Lemonade tickets without user emails should be loaded",
     async function () {
       mockServer.use(
         unregisteredLemonadeUserHandler(lemonadeBackend, lemonadeBackendUrl)
@@ -1157,9 +1157,8 @@ describe("generic issuance - LemonadePipeline", function () {
       expect(pipeline.id).to.eq(edgeCityPipeline.id);
       const runInfo = await pipeline.load();
 
-      // Despite receiving a ticket, the ticket was ignored due to not having
-      // a user email
-      expect(runInfo.atomsLoaded).to.eq(0);
+      // The ticket should be loaded
+      expect(runInfo.atomsLoaded).to.eq(1);
     }
   );
 

@@ -23,28 +23,47 @@ export type LemonadeTicketTypes =
   GetEventTicketTypesResponse["getEventTicketTypes"];
 export type LemonadeTicketType = LemonadeTicketTypes["ticket_types"][number];
 
-export const LemonadeTicketSchema = z.object({
-  _id: z.string().min(1, "_id cannot be empty"),
-  user_id: z.string(),
-  user_email: z.string(),
-  user_name: z.string(),
-  user_first_name: z.string(),
-  user_last_name: z.string(),
-  type_id: z.string(),
-  type_title: z.string(),
-  checkin_date: z.string().transform((arg) => {
-    try {
-      const time = Date.parse(arg);
-      if (!isNaN(time)) {
-        return new Date(time);
-      } else {
+export const LemonadeTicketSchema = z
+  .object({
+    _id: z.string().min(1, "_id cannot be empty"),
+    assigned_email: z.string(),
+    user_id: z
+      .string()
+      .transform((val) =>
+        typeof val === "string" && val.length === 0 ? undefined : val
+      ),
+    user_email: z.string(),
+    user_name: z.string(),
+    user_first_name: z.string(),
+    user_last_name: z.string(),
+    type_id: z.string(),
+    type_title: z.string(),
+    checkin_date: z.string().transform((arg) => {
+      try {
+        const time = Date.parse(arg);
+        if (!isNaN(time)) {
+          return new Date(time);
+        } else {
+          return null;
+        }
+      } catch (e) {
         return null;
       }
-    } catch (e) {
-      return null;
-    }
+    })
   })
-});
+  .transform((val, ctx) => {
+    if (val.user_email.length > 0) {
+      return { ...val, email: val.user_email };
+    } else if (val.assigned_email.length > 0) {
+      return { ...val, email: val.assigned_email };
+    } else {
+      ctx.addIssue({
+        code: "custom",
+        message: "Neither user_email or assigned_email are present"
+      });
+      return z.NEVER;
+    }
+  });
 
 export type LemonadeTicket = z.infer<typeof LemonadeTicketSchema>;
 
