@@ -26,6 +26,11 @@
       "types": "./dist/types/src/configs/ethberlin.d.ts",
       "import": "./dist/esm/src/configs/ethberlin.js",
       "require": "./dist/cjs/src/configs/ethberlin.js"
+    },
+    "./configs/ethprague": {
+      "types": "./dist/types/src/configs/ethprague.d.ts",
+      "import": "./dist/esm/src/configs/ethprague.js",
+      "require": "./dist/cjs/src/configs/ethprague.js"
     }
   },
   "files": [
