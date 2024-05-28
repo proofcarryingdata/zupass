@@ -98,7 +98,7 @@ export type GPCProofEntryConfig = {
   isMemberOf?: PODName | PODName[];
 
   /**
-   * Indicates one or omre lists in which this entry must *not* lie. The same
+   * Indicates one or more lists in which this entry must *not* lie. The same
    * disclaimer above applies regarding the underlying GPC.
    */
   isNotMemberOf?: PODName | PODName[];

@@ -472,7 +472,7 @@ export function checkProofListMembershipInputsForConfig(
 
           if (comparisonValue === undefined) {
             throw new ReferenceError(
-              `Comparison value with identifier ${comparisonId} should be a member of list ${listName} but it doesn't exist in the proof input.`
+              `Comparison value with identifier ${comparisonId} should be compared against the list ${listName} but it doesn't exist in the proof input.`
             );
           }
 

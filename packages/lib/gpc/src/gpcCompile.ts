@@ -378,25 +378,25 @@ function compileProofListMembership<
       (membershipIndicator) =>
         listConfig[listName][membershipIndicator]
           .sort()
-          .flatMap((elementId) => [
-            [listName, membershipIndicator, elementId] as [
+          .flatMap(
+            (
+              elementId
+            ): [
               PODName,
               ListMembershipEnum,
               PODEntryIdentifier | TupleIdentifier
-            ]
-          ])
+            ][] => [[listName, membershipIndicator, elementId]]
+          )
     )
   );
 
   // Compile listComparisonValueIndex
   const unpaddedListComparisonValueIndex = listIndicatorIdTriples.map(
-    (listIndIdTriple) => {
-      const [listName, _indicator, elementId]: [
-        PODName,
-        ListMembershipEnum,
-        PODEntryIdentifier | TupleIdentifier
-      ] = listIndIdTriple;
-
+    ([listName, _indicator, elementId]: [
+      PODName,
+      ListMembershipEnum,
+      PODEntryIdentifier | TupleIdentifier
+    ]) => {
       const idx = isTupleIdentifier(elementId)
         ? tupleMap.get(elementId as TupleIdentifier)?.tupleIndex
         : entryMap.get(elementId)?.entryIndex;
@@ -445,13 +445,14 @@ function compileProofListMembership<
       paramMaxLists,
       BABY_JUB_NEGATIVE_ONE
     ),
-    // Pad with 1s, which amounts to a list membership check for those values corresponding to index
-    // -1 (which corresponds to the value 0).
+    // Pad with 1s, which amounts to a list membership check for those values
+    // corresponding to index -1 (which corresponds to the value 0), cf. the
+    // `listComparisonValueIndex` padding.
     listContainsComparisonValue: array2Bits(
       padArray(unpaddedListContainsComparisonValue, paramMaxLists, 1n)
     ),
-    // Pad with lists of 0s, which amounts to trivially satisfied list membership checks
-    // for those indices used as padding just above.
+    // Pad with lists of 0s, which amounts to trivially satisfied list
+    // membership checks for those indices used as padding just above.
     listValidValues: padArray(
       unpaddedListValidValues,
       paramMaxLists,
