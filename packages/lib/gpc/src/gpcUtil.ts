@@ -480,24 +480,37 @@ export const LIST_MEMBERSHIP: ListMembershipEnum = "membership";
 export const LIST_NONMEMBERSHIP: ListMembershipEnum = "non-membership";
 
 /**
- * Configuration for named lists, specifying which entries (or tuple entries)
- * lie in the list. This is deduced from the proof configuration in
+ * Configuration for named lists arranged by identifier requiring a list
+ * (non-)membership check.
+ *
+ * This is deduced from the proof configuration in
  * {@link listConfigFromProofConfig}.
  */
 export type GPCProofMembershipListConfig = Record<
-  PODName,
-  Record<ListMembershipEnum, (PODEntryIdentifier | TupleIdentifier)[]>
+  PODEntryIdentifier | TupleIdentifier,
+  ListConfig
 >;
+
+/**
+ * List configuration for an individual entry or tuple. This specifies the type
+ * of list membership required for relevant entries (or tuple entries) at the
+ * circuit level as well as the named lists it should be a member of and those
+ * it should not be a member of.
+ */
+export type ListConfig = {
+  type: ListMembershipEnum;
+  isMemberOf: PODName[];
+  isNotMemberOf: PODName[];
+};
 
 /**
  * Determines the list configuration from the proof configuration.
  *
- * List membership is indicated in each entry or tuple field via the optional
- * property `isMemberOf`, which specifies the names of lists it ought to lie in,
+ * List membership or non-membership is indicated in each entry or tuple field via the optional
+ * property `isMemberOf` or `isNotMemberOf`, each of which specifies the names of lists it ought to or ought not lie in,
  * the list itself being specified in the proof inputs. This procedure makes
- * this implicit list configuration explicit by forming a record mapping list
- * names to arrays of identifiers, each of which specifies those POD entries or
- * tuples that must lie in the list.
+ * this implicit list configuration explicit by forming a record mapping entry or tuple identifiers
+ * to their required list configuration (if any).
  *
  * @param proofConfig the proof configuration
  * @returns a record mapping a list name to an array of identifiers representing entries
@@ -507,9 +520,9 @@ export type GPCProofMembershipListConfig = Record<
 export function listConfigFromProofConfig(
   proofConfig: GPCProofConfig
 ): GPCProofMembershipListConfig {
-  // Find all [listName, entryID] pairs in proofConfig.pods
-  const entryLists: [PODName, ListMembershipEnum, PODEntryIdentifier][] = [];
+  const gpcListConfig: GPCProofMembershipListConfig = {};
 
+  // Check entries for membership declarations.
   for (const podName of Object.keys(proofConfig.pods)) {
     const pod = proofConfig.pods[podName];
 
@@ -517,58 +530,30 @@ export function listConfigFromProofConfig(
       const membershipLists = pod.entries[entryName].isMemberOf;
       const nonMembershipLists = pod.entries[entryName].isNotMemberOf;
 
-      for (const listType of [LIST_MEMBERSHIP, LIST_NONMEMBERSHIP]) {
-        const lists =
-          listType === LIST_MEMBERSHIP ? membershipLists : nonMembershipLists;
-
-        addIdentifierToLists(
-          entryLists,
-          lists,
-          listType,
-          `${podName}.${entryName}`
-        );
-      }
+      addIdentifierToListConfig(
+        gpcListConfig,
+        membershipLists,
+        nonMembershipLists,
+        `${podName}.${entryName}`
+      );
     }
   }
 
-  // Find all [listName, tupleID] pairs in proofConfig.tuples
-  const tupleLists: [PODName, ListMembershipEnum, TupleIdentifier][] = [];
-
+  // Do the same for tuples
   for (const tupleName of Object.keys(proofConfig.tuples ?? {})) {
     const membershipLists = (proofConfig.tuples ?? {})[tupleName].isMemberOf;
     const nonMembershipLists = (proofConfig.tuples ?? {})[tupleName]
       .isNotMemberOf;
 
-    for (const listType of [LIST_MEMBERSHIP, LIST_NONMEMBERSHIP]) {
-      const lists =
-        listType === LIST_MEMBERSHIP ? membershipLists : nonMembershipLists;
-
-      addIdentifierToLists(
-        tupleLists,
-        lists,
-        listType,
-        `${TUPLE_PREFIX}.${tupleName}`
-      );
-    }
+    addIdentifierToListConfig(
+      gpcListConfig,
+      membershipLists,
+      nonMembershipLists,
+      `${TUPLE_PREFIX}.${tupleName}`
+    );
   }
 
-  // Combine the two and compile config.
-  const listConfig: GPCProofMembershipListConfig = {};
-
-  for (const [listName, membershipType, id] of entryLists.concat(tupleLists)) {
-    if (listConfig[listName] === undefined) {
-      listConfig[listName] = { [membershipType]: [id] } as Record<
-        ListMembershipEnum,
-        (PODEntryIdentifier | TupleIdentifier)[]
-      >;
-    } else if (listConfig[listName][membershipType] === undefined) {
-      listConfig[listName][membershipType] = [id];
-    } else {
-      listConfig[listName][membershipType].push(id);
-    }
-  }
-
-  return listConfig;
+  return gpcListConfig;
 }
 
 /**
@@ -582,25 +567,50 @@ export function listConfigFromProofConfig(
  * @param identifier the identifier of the entry (or tuple)
  * @throws TypeError if `lists` is empty
  */
-function addIdentifierToLists<IdentifierType extends string>(
-  entryLists: [PODName, ListMembershipEnum, IdentifierType][],
-  lists: string | string[] | undefined,
-  listType: ListMembershipEnum,
-  identifier: IdentifierType
+function addIdentifierToListConfig(
+  gpcListConfig: GPCProofMembershipListConfig,
+  membershipLists: string | string[] | undefined,
+  nonMembershipLists: string | string[] | undefined,
+  identifier: PODEntryIdentifier | TupleIdentifier
 ): void {
-  const validityString = listType === LIST_MEMBERSHIP ? "valid" : "invalid";
-  if (lists !== undefined) {
-    if (Array.isArray(lists)) {
-      if (lists.length === 0) {
-        throw new TypeError(
-          `The list of lists of ${validityString} values for ${identifier} is empty.`
-        );
-      }
-      for (const listName of lists ?? []) {
-        entryLists.push([listName, listType, identifier]);
-      }
-    } else {
-      entryLists.push([lists, listType, identifier]);
-    }
+  // Nothing to do if both membership and non-membership lists are undefined.
+  if (membershipLists === undefined && nonMembershipLists === undefined) {
+    return;
   }
+
+  // Neither 'list' should be empty if undefined
+  if (Array.isArray(nonMembershipLists) && nonMembershipLists.length === 0) {
+    throw new TypeError(
+      `The list of lists of invalid values for ${identifier} is empty.`
+    );
+  }
+
+  if (Array.isArray(membershipLists) && membershipLists.length === 0) {
+    throw new TypeError(
+      `The list of lists of valid values for ${identifier} is empty.`
+    );
+  }
+
+  const membershipType: ListMembershipEnum =
+    membershipLists !== undefined ? LIST_MEMBERSHIP : LIST_NONMEMBERSHIP;
+
+  const elementIntersections =
+    membershipLists === undefined
+      ? []
+      : Array.isArray(membershipLists)
+      ? membershipLists
+      : [membershipLists];
+
+  const elementComplements =
+    nonMembershipLists === undefined
+      ? []
+      : Array.isArray(nonMembershipLists)
+      ? nonMembershipLists
+      : [nonMembershipLists];
+
+  gpcListConfig[identifier] = {
+    type: membershipType,
+    isMemberOf: elementIntersections,
+    isNotMemberOf: elementComplements
+  };
 }
