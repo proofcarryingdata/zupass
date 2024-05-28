@@ -24,6 +24,7 @@
       "ownerIsNullfierHashRevealed",
       "tupleIndices",
       "listComparisonValueIndex",
+      "listContainsComparisonValue",
       "listValidValues",
       "globalWatermark"
     ]
@@ -53,6 +54,7 @@
       "ownerIsNullfierHashRevealed",
       "tupleIndices",
       "listComparisonValueIndex",
+      "listContainsComparisonValue",
       "listValidValues",
       "globalWatermark"
     ]
@@ -82,6 +84,7 @@
       "ownerIsNullfierHashRevealed",
       "tupleIndices",
       "listComparisonValueIndex",
+      "listContainsComparisonValue",
       "listValidValues",
       "globalWatermark"
     ]
@@ -111,6 +114,7 @@
       "ownerIsNullfierHashRevealed",
       "tupleIndices",
       "listComparisonValueIndex",
+      "listContainsComparisonValue",
       "listValidValues",
       "globalWatermark"
     ]
