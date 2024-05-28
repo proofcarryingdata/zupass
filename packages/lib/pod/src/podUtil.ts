@@ -1,7 +1,10 @@
 import JSONBig from "json-bigint";
 import {
   PODEntries,
+  PODRawValue,
+  PODRawValueTuple,
   PODValue,
+  PODValueTuple,
   POD_CRYPTOGRAPHIC_MAX,
   POD_CRYPTOGRAPHIC_MIN,
   POD_INT_MAX,
@@ -147,9 +150,9 @@ export function requireType(
  */
 export function requireValueType(
   nameForErrorMessages: string,
-  value: string | bigint,
+  value: PODRawValue,
   typeName: string
-): string | bigint {
+): PODRawValue {
   requireType(nameForErrorMessages, value, typeName);
   return value;
 }
@@ -338,9 +341,34 @@ export function deserializePODEntries(serializedEntries: string): PODEntries {
 }
 
 /**
+ * Maps a `PODValue` to a raw value for use in simplified JSON
+ * serialisations, which currently amounts to discarding its
+ * type information. See {@link podEntriesToSimplifiedJSON}.
+ *
+ * @param podValue the POD value to serialize
+ * @returns the underlying value
+ */
+export function podValueToRawValue(podValue: PODValue): PODRawValue {
+  return podValue.value;
+}
+
+/**
+ * Maps a `PODValue` or `PODValueTuple` to a `PODRawValue` or `PODRawValueTuple`
+ * for use in simplified JSON serializations.
+ *
+ * @param podValue the POD value to serialize
+ * @returns the underlying value
+ */
+export function podValueOrTupleToRawValue(
+  podValue: PODValue | PODValueTuple
+): PODRawValue | PODRawValueTuple {
+  return applyOrMap(podValueToRawValue, podValue);
+}
+
+/**
  * Serializes `PODEntries` to a string in a simplified format optimized for
  * compactness and human readability.  The simplified format discards type
- * information.  Calling {@link deserializePODEntries} will construct
+ * information.  Calling {@link podEntriesFromSimplifiedJSON} will construct
  * `PODEntries` containing the same values, which will behave the same
  * in hashing and circuits, but the type information may not be identical.
  *
@@ -353,9 +381,9 @@ export function podEntriesToSimplifiedJSON(
   entries: PODEntries,
   space?: number
 ): string {
-  const simplified: Record<string, bigint | string> = {};
+  const simplified: Record<string, PODRawValue> = {};
   for (const [name, value] of Object.entries(entries)) {
-    simplified[name] = value.value;
+    simplified[name] = podValueToRawValue(value);
   }
   return JSONBig({
     useNativeBigInt: true,
@@ -364,8 +392,47 @@ export function podEntriesToSimplifiedJSON(
 }
 
 /**
+ * Deserializes `PODValue` from the 'raw value' produced by
+ * {@link podValueToRawValue}.  Type information is inferred from the values
+ * in a way which should preserve hashing and circuit behavior, but isn't
+ * guaranteed to be identical to the types before serialization.  For instance,
+ * small numbers are always annotated as `int`, rather than `cryptographic`.
+ *
+ * @param rawValue a string or bigint representation of `PODValue`
+ * @returns `PODValue` deserialized from the aforementioned value
+ * @throws if the serialized form is invalid
+ */
+export function podValueFromRawValue(rawValue: PODRawValue): PODValue {
+  switch (typeof rawValue) {
+    case "bigint":
+      if (rawValue > POD_INT_MAX) {
+        return { type: "cryptographic", value: rawValue };
+      } else {
+        return { type: "int", value: rawValue };
+      }
+    case "string":
+      return { type: "string", value: rawValue };
+    default:
+      throw new Error("Invalid serialised POD value in raw value ${rawValue}.");
+  }
+}
+
+/**
+ * Maps a `PODRawValue` or `PODRawValueTuple` to a `PODValue` or `PODValueTuple`
+ * for use in deserialization.
+ *
+ * @param podValue the POD value to serialize
+ * @returns the underlying value
+ */
+export function podValueOrTupleFromRawValue(
+  podRawValue: PODRawValue | PODRawValueTuple
+): PODValue | PODValueTuple {
+  return applyOrMap(podValueFromRawValue, podRawValue);
+}
+
+/**
  * Deserializes `PODEntries` from the simplified format produced by
- * {@link serializePODEntries}.  Type information is inferred from the values
+ * {@link podEntriesToSimplifiedJSON}.  Type information is inferred from the values
  * in a way which should preserve hashing and circuit behavior, but isn't
  * guaranteed to be identical to the types before serialization.  For instance,
  * small numbers are always annotated as `int`, rather than `cryptographic`.
@@ -380,23 +447,21 @@ export function podEntriesFromSimplifiedJSON(
   const simplifiedEntries = JSONBig({
     useNativeBigInt: true,
     alwaysParseAsBig: true
-  }).parse(simplifiedJSON) as Record<string, string | bigint>;
+  }).parse(simplifiedJSON) as Record<string, PODRawValue>;
   const entries: Record<string, PODValue> = {};
   for (const [entryName, rawValue] of Object.entries(simplifiedEntries)) {
-    let entryValue: PODValue;
-    switch (typeof rawValue) {
-      case "bigint":
-        if (rawValue > POD_INT_MAX) {
-          entryValue = { type: "cryptographic", value: rawValue };
-        } else {
-          entryValue = { type: "int", value: rawValue };
-        }
-        break;
-      case "string":
-        entryValue = { type: "string", value: rawValue };
-        break;
-    }
-    entries[entryName] = entryValue;
+    entries[entryName] = podValueFromRawValue(rawValue);
   }
   return entries;
+}
+
+/**
+ * Computation streamliner involving unions of the form A | A[] and functions of the form f: A -> B. It applies f to inputs of type A and maps f over A[] otherwise.
+ *
+ * @param f function to apply to input
+ * @param input input argument
+ * @returns result of appropriate application of function to input
+ */
+export function applyOrMap<A, B>(f: (a: A) => B, input: A | A[]): B | B[] {
+  return Array.isArray(input) ? (input as A[]).map(f) : f(input as A);
 }

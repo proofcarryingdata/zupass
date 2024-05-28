@@ -46,8 +46,10 @@ import {
 import {
   EXAMPLE_EDDSA_PRIVATE_KEY,
   EXAMPLE_GPC_CONFIG,
+  EXAMPLE_MEMBERSHIP_LISTS,
   EXAMPLE_OWNER_IDENTITY,
-  EXAMPLE_POD_CONTENT
+  EXAMPLE_POD_CONTENT,
+  EXAMPLE_POD_CONTENT_WITH_DISPLAY
 } from "../../podExampleConstants";
 import { sendZupassRequest } from "../../util";
 
@@ -56,6 +58,9 @@ export default function Page(): JSX.Element {
   const [folder, setFolder] = useState("");
   const [podContent, setPodContent] = useState(EXAMPLE_POD_CONTENT);
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
+  const [membershipLists, setMembershipLists] = useState(
+    EXAMPLE_MEMBERSHIP_LISTS
+  );
   const [podFolder, setPodFolder] = useState("Test PODs");
 
   return (
@@ -138,7 +143,22 @@ export default function Page(): JSX.Element {
         <button onClick={addEdDSAPCD}>add a new EdDSA signature proof</button>
         <br />
         <br />
-        POD content to sign:{" "}
+        POD content to sign: <br />
+        <button
+          onClick={() => {
+            setPodContent(EXAMPLE_POD_CONTENT);
+          }}
+        >
+          basic example
+        </button>
+        <button
+          onClick={() => {
+            setPodContent(EXAMPLE_POD_CONTENT_WITH_DISPLAY);
+          }}
+        >
+          zupass card example
+        </button>
+        <br />
         <textarea
           cols={40}
           rows={15}
@@ -148,13 +168,23 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
-        GPC Proof config:{" "}
+        GPC Proof config: <br />
         <textarea
           cols={40}
           rows={15}
           value={gpcConfig}
           onChange={(e): void => {
             setGPCConfig(e.target.value);
+          }}
+        />
+        <br />
+        Membership lists: <br />
+        <textarea
+          cols={40}
+          rows={15}
+          value={membershipLists}
+          onChange={(e): void => {
+            setMembershipLists(e.target.value);
           }}
         />
         <br />
@@ -183,6 +213,7 @@ export default function Page(): JSX.Element {
             addGPCPCD(
               podContent,
               gpcConfig,
+              membershipLists,
               podFolder.length > 0 ? podFolder : undefined
             )
           }
@@ -577,6 +608,7 @@ async function addPODPCD(
 async function addGPCPCD(
   podContent: string,
   gpcConfig: string,
+  membershipLists: string,
   podFolder: string | undefined
 ): Promise<void> {
   await GPCPCDPackage.init?.({
@@ -615,6 +647,10 @@ async function addGPCPCD(
     },
     externalNullifier: {
       value: "example nullifier",
+      argumentType: ArgumentTypeName.String
+    },
+    membershipLists: {
+      value: membershipLists,
       argumentType: ArgumentTypeName.String
     },
     watermark: {

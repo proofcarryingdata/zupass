@@ -6,6 +6,8 @@ import {
   deserializeGPCProofConfig,
   gpcArtifactDownloadURL,
   gpcBindConfig,
+  membershipListsToSets,
+  podMembershipListsFromSimplifiedJSON,
   serializeGPCBoundConfig
 } from "@pcd/gpc";
 import { GPCPCD, GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
@@ -25,11 +27,17 @@ import { useEffect, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { GPC_ARTIFACT_CONFIG, ZUPASS_URL } from "../../constants";
-import { EXAMPLE_GPC_CONFIG } from "../../podExampleConstants";
+import {
+  EXAMPLE_GPC_CONFIG,
+  EXAMPLE_MEMBERSHIP_LISTS
+} from "../../podExampleConstants";
 
 export default function Page(): JSX.Element {
   const [externalNullifier, setExternalNullifier] = useState(
     "example external nullifier"
+  );
+  const [membershipLists, setMembershipLists] = useState(
+    EXAMPLE_MEMBERSHIP_LISTS
   );
   const [watermark, setWatermark] = useState("example watermark");
   const [proofConfig, setProofConfig] = useState(EXAMPLE_GPC_CONFIG);
@@ -48,6 +56,7 @@ export default function Page(): JSX.Element {
     pcdStr,
     onVerified,
     proofConfig,
+    emptyStrToUndefined(membershipLists),
     emptyStrToUndefined(watermark),
     emptyStrToUndefined(externalNullifier)
   );
@@ -77,6 +86,7 @@ export default function Page(): JSX.Element {
               ZUPASS_URL,
               window.location.origin + "#/popup",
               proofConfig,
+              emptyStrToUndefined(membershipLists),
               emptyStrToUndefined(watermark),
               emptyStrToUndefined(externalNullifier)
             )
@@ -101,6 +111,14 @@ export default function Page(): JSX.Element {
           value={externalNullifier}
           onChange={(e): void => {
             setExternalNullifier(e.target.value);
+          }}
+        />
+        <br />
+        Membership list(s) (or empty for none):
+        <textarea
+          value={membershipLists}
+          onChange={(e): void => {
+            setMembershipLists(e.target.value);
           }}
         />
         <br />
@@ -159,6 +177,7 @@ export default function Page(): JSX.Element {
  * @param urlToZupassWebsite URL of the Zupass website
  * @param popupUrl Route where the useZupassPopupSetup hook is being served from
  * @param proofConfig Stringified GPCProofConfig
+ * @param membershipLists Stringified PODMembershipLists
  * @param watermark Challenge to watermark this proof to
  * @param externalNullifier Optional unique identifier for this GPCPCD
  */
@@ -166,6 +185,7 @@ export function openGPCPopup(
   urlToZupassWebsite: string,
   popupUrl: string,
   proofConfig: string,
+  membershipLists?: string,
   watermark?: string,
   externalNullifier?: string
 ): void {
@@ -193,6 +213,11 @@ export function openGPCPopup(
     externalNullifier: {
       argumentType: ArgumentTypeName.String,
       value: externalNullifier,
+      userProvided: false
+    },
+    membershipLists: {
+      argumentType: ArgumentTypeName.String,
+      value: membershipLists,
       userProvided: false
     },
     watermark: {
@@ -225,6 +250,7 @@ function useGPCProof(
   pcdStr: string,
   onVerified: (valid: boolean, err: string | undefined) => void,
   proofConfig: string,
+  membershipLists?: string,
   watermark?: string,
   externalNullifier?: string
 ): { pcd: GPCPCD | undefined; error: Error | undefined } {
@@ -233,11 +259,22 @@ function useGPCProof(
 
   useEffect(() => {
     if (gpcPCD) {
-      verifyProof(gpcPCD, proofConfig, watermark, externalNullifier).then(
-        (info) => onVerified(info.valid, info.err)
-      );
+      verifyProof(
+        gpcPCD,
+        proofConfig,
+        membershipLists,
+        watermark,
+        externalNullifier
+      ).then((info) => onVerified(info.valid, info.err));
     }
-  }, [gpcPCD, proofConfig, watermark, externalNullifier, onVerified]);
+  }, [
+    gpcPCD,
+    proofConfig,
+    membershipLists,
+    watermark,
+    externalNullifier,
+    onVerified
+  ]);
 
   return {
     pcd: gpcPCD,
@@ -248,6 +285,7 @@ function useGPCProof(
 async function verifyProof(
   pcd: GPCPCD,
   proofConfig: string,
+  membershipLists?: string,
   watermark?: string,
   externalNullifier?: string
 ): Promise<{ valid: boolean; err?: string }> {
@@ -275,6 +313,20 @@ async function verifyProof(
     (!pcd.claim.revealed.watermark && !watermark);
   if (!sameWatermark) {
     return { valid: false, err: "Watermark does not match." };
+  }
+
+  // Check for equality of membership lists as sets, since the elements are
+  // sorted by hash before being fed into circuits.
+  const sameMembershipLists = _.isEqual(
+    membershipListsToSets(pcd.claim.revealed.membershipLists ?? {}),
+    membershipLists === undefined
+      ? {}
+      : membershipListsToSets(
+          podMembershipListsFromSimplifiedJSON(membershipLists)
+        )
+  );
+  if (!sameMembershipLists) {
+    return { valid: false, err: "Membership lists do not match." };
   }
 
   let localBoundConfig: GPCBoundConfig;

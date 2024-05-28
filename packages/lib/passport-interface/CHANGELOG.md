@@ -1,5 +1,11 @@
 # @pcd/passport-interface
 
+## 0.11.1
+
+### Patch Changes
+
+- Bump passport-interface
+
 ## 0.11.0
 
 ### Minor Changes

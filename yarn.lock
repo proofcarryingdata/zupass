@@ -4773,10 +4773,10 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@pcd/proto-pod-gpc-artifacts@0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.0.3.tgz#88e10f8f79c089ecae0d9cdba1aeaeb970d45faf"
-  integrity sha512-IQ1o6+SAfVlchsdjcDlaunEGagjrXoFZ6ETygZ3vqkxV0IhMsIP++BY54C9podqs1LV3xZsvTQ9CVs1wygx0hw==
+"@pcd/proto-pod-gpc-artifacts@0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.1.0.tgz#d145c880d4ed22efa057ce2698ba0fa907d99dda"
+  integrity sha512-KeGqolY2hKPYiN8KOFggN4ZaV1lq9tAQxS3NZSTS/Yjok5kmmDiUdaQq+mP8HjY5ALHcsm8KVUtwBMG6h0hjrw==
 
 "@peculiar/asn1-android@^2.3.3":
   version "2.3.6"

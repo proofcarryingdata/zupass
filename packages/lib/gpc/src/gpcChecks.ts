@@ -8,6 +8,7 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
+  applyOrMap,
   calcMinMerkleDepthForEntries,
   checkPODName,
   checkPODValue,
@@ -16,6 +17,7 @@ import {
   requireType
 } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
+import JSONBig from "json-bigint";
 import _ from "lodash";
 import {
   GPCBoundConfig,
@@ -31,6 +33,9 @@ import {
 import {
   GPCProofMembershipListConfig,
   GPCRequirements,
+  LIST_MEMBERSHIP,
+  LIST_NONMEMBERSHIP,
+  ListMembershipEnum,
   checkPODEntryIdentifier,
   isTupleIdentifier,
   listConfigFromProofConfig,
@@ -43,6 +48,11 @@ import {
 // TODO(POD-P2): Split out the parts of this which should be public from
 // internal implementation details.  E.g. the returning of ciruit parameters
 // isn't relevant to checking objects after deserialization.
+
+const jsonBigSerializer = JSONBig({
+  useNativeBigInt: true,
+  alwaysParseAsBig: true
+});
 
 /**
  * Checks the validity of the arguments for generating a proof.  This will throw
@@ -110,7 +120,9 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     checkProofListMembershipConfig(proofConfig);
 
   const numLists = _.sum(
-    Object.values(listConfig).map((elements) => elements.length)
+    Object.values(listConfig)
+      .flatMap(Object.values)
+      .map((elements) => elements.length)
   );
 
   const maxListSize = numLists > 0 ? 1 : 0;
@@ -202,12 +214,14 @@ export function checkProofListMembershipConfig(
   const listConfig: GPCProofMembershipListConfig =
     listConfigFromProofConfig(proofConfig);
 
-  for (const [listName, elements] of Object.entries(listConfig)) {
-    elements.forEach((identifier) => {
-      if (!isTupleIdentifier(identifier)) {
-        checkPODEntryIdentifier(listName, identifier);
-      }
-    });
+  for (const listName of Object.keys(listConfig)) {
+    for (const elements of Object.values(listConfig[listName])) {
+      elements.forEach((identifier) => {
+        if (!isTupleIdentifier(identifier)) {
+          checkPODEntryIdentifier(listName, identifier);
+        }
+      });
+    }
   }
 
   return listConfig;
@@ -441,53 +455,77 @@ export function checkProofListMembershipInputsForConfig(
   // the sense that the types of list values and comparison values should match
   // up.
   if (proofInputs.membershipLists !== undefined) {
-    for (const [listName, comparisonIds] of Object.entries(listConfig)) {
-      for (const comparisonId of comparisonIds) {
-        const inputList = proofInputs.membershipLists[listName];
+    for (const listName of Object.keys(listConfig)) {
+      for (const membershipIndicator of Object.keys(
+        listConfig[listName]
+      ) as ListMembershipEnum[]) {
+        for (const comparisonId of listConfig[listName][membershipIndicator]) {
+          const inputList = proofInputs.membershipLists[listName];
 
-        // The configuration and input list element types should
-        // agree.
-        const comparisonValue = resolvePODEntryOrTupleIdentifier(
-          comparisonId,
-          proofInputs.pods,
-          proofConfig.tuples
-        );
-
-        if (comparisonValue === undefined) {
-          throw new ReferenceError(
-            `Comparison value with identifier ${comparisonId} should be a member of list ${listName} but it doesn't exist in the proof input.`
+          // The configuration and input list element types should
+          // agree.
+          const comparisonValue = resolvePODEntryOrTupleIdentifier(
+            comparisonId,
+            proofInputs.pods,
+            proofConfig.tuples
           );
-        }
 
-        // The comparison value and list value widths should match up.
-        const comparisonWidth = widthOfEntryOrTuple(comparisonValue);
-
-        for (const element of inputList) {
-          const elementWidth = widthOfEntryOrTuple(element);
-
-          if (!_.isEqual(elementWidth, comparisonWidth)) {
-            throw new TypeError(
-              `Membership list ${listName} in input contains element of width ${JSON.stringify(
-                elementWidth
-              )} while comparison value with identifier ${JSON.stringify(
-                comparisonId
-              )} has width ${JSON.stringify(comparisonWidth)}.`
+          if (comparisonValue === undefined) {
+            throw new ReferenceError(
+              `Comparison value with identifier ${comparisonId} should be compared against the list ${listName} but it doesn't exist in the proof input.`
             );
           }
-        }
 
-        // The comparison value should lie in the membership list.
-        if (
-          inputList.find((element) => _.isEqual(element, comparisonValue)) ===
-          undefined
-        ) {
-          throw new Error(
-            `Comparison value ${JSON.stringify(
-              comparisonValue
-            )} corresponding to identifier ${JSON.stringify(
-              comparisonId
-            )} is not a member of list ${JSON.stringify(listName)}.`
+          // The comparison value and list value widths should match up.
+          const comparisonWidth = widthOfEntryOrTuple(comparisonValue);
+
+          for (const element of inputList) {
+            const elementWidth = widthOfEntryOrTuple(element);
+
+            if (!_.isEqual(elementWidth, comparisonWidth)) {
+              throw new TypeError(
+                `Membership list ${listName} in input contains element of width ${elementWidth} while comparison value with identifier ${JSON.stringify(
+                  comparisonId
+                )} has width ${comparisonWidth}.`
+              );
+            }
+          }
+
+          // The comparison value should be a (non-)member of the list. We compare
+          // hashes as this reflects how the values will be treated in the
+          // circuit.
+          const isComparisonValueInList = inputList.find((element) =>
+            _.isEqual(
+              applyOrMap(podValueHash, element),
+              applyOrMap(podValueHash, comparisonValue)
+            )
           );
+
+          if (
+            membershipIndicator === LIST_MEMBERSHIP &&
+            isComparisonValueInList === undefined
+          ) {
+            throw new Error(
+              `Comparison value ${jsonBigSerializer.stringify(
+                comparisonValue
+              )} corresponding to identifier ${JSON.stringify(
+                comparisonId
+              )} is not a member of list ${JSON.stringify(listName)}.`
+            );
+          }
+
+          if (
+            membershipIndicator === LIST_NONMEMBERSHIP &&
+            isComparisonValueInList !== undefined
+          ) {
+            throw new Error(
+              `Comparison value ${jsonBigSerializer.stringify(
+                comparisonValue
+              )} corresponding to identifier ${JSON.stringify(
+                comparisonId
+              )} is a member of list ${JSON.stringify(listName)}.`
+            );
+          }
         }
       }
     }

@@ -1,6 +1,6 @@
 {
   "name": "generic-issuance-client",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -19,7 +19,7 @@
     "@emotion/styled": "^11.11.0",
     "@monaco-editor/react": "^4.6.0",
     "@pcd/client-shared": "0.0.1",
-    "@pcd/passport-interface": "0.11.0",
+    "@pcd/passport-interface": "0.11.1",
     "@pcd/util": "0.5.0",
     "@rollbar/react": "^0.11.2",
     "@stytch/react": "^15.0.0",

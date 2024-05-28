@@ -179,21 +179,29 @@ template ProtoPODGPC (
     // to a list of zeroes to match.
     signal input listComparisonValueIndex[MAX_LISTS];
 
+    // Bit-packed indicators of whether the comparison values should
+    // be members of the list.
+    // An entry of the unpacked bit array is equal to 1 if the corresponding
+    // indexin the comparison value array should be a member of the list and
+    // 0 if it shouldn't.
+    signal input listContainsComparisonValue /*MAX_LISTS packed bits*/;
+    signal listContainsComparisonValueBits[MAX_LISTS] <== Num2Bits(MAX_LISTS)(listContainsComparisonValue);
+    
     // List of accepted values for membership checks. Depending on the indices above, these need to
     // match element value hashes, tuple hashes, or a constant value of 0 for disabled checks.
     signal input listValidValues[MAX_LISTS][MAX_LIST_ELEMENTS];
 
-    // Indicators of whether the list membership checks pass.
-    signal isMember[MAX_LISTS];
+    // Result of list membership check.
+    signal membershipCheckResult[MAX_LISTS];
 
     for (var i = 0; i < MAX_LISTS; i++) {
-        isMember[i] <== ListMembershipModule(MAX_LIST_ELEMENTS)(
+        membershipCheckResult[i] <== ListMembershipModule(MAX_LIST_ELEMENTS)(
             MaybeInputSelector(MAX_ENTRIES + MAX_TUPLES)(
                 Append(MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleHashes),
                 listComparisonValueIndex[i]),
             listValidValues[i]);
 
-        isMember[i] === 1;
+        listContainsComparisonValueBits[i] === membershipCheckResult[i];
     }
     
     /*

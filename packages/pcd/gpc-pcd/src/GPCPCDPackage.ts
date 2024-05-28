@@ -6,6 +6,7 @@ import {
   deserializeGPCRevealedClaims,
   gpcProve,
   gpcVerify,
+  podMembershipListsFromSimplifiedJSON,
   serializeGPCBoundConfig,
   serializeGPCRevealedClaims
 } from "@pcd/gpc";
@@ -88,6 +89,12 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   if (externalNullifier !== undefined && ownerSemaphorePCD === undefined) {
     throw new Error("External nullifier requires an owner identity PCD.");
   }
+
+  const membershipLists =
+    args.membershipLists.value !== undefined
+      ? args.membershipLists.value
+      : undefined;
+
   const watermark =
     args.watermark.value !== undefined
       ? ({
@@ -106,6 +113,12 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
               semaphoreV3: ownerSemaphorePCD?.claim?.identity,
               externalNullifier: externalNullifier
             }
+          }
+        : {}),
+      ...(membershipLists !== undefined
+        ? {
+            membershipLists:
+              podMembershipListsFromSimplifiedJSON(membershipLists)
           }
         : {}),
       watermark: watermark
@@ -264,6 +277,12 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
         defaultVisible: false,
         description:
           "Your Zupass comes with a primary Semaphore Identity which represents an user in the Semaphore protocol."
+      },
+      membershipLists: {
+        argumentType: ArgumentTypeName.String,
+        defaultVisible: false,
+        description:
+          "Specify the (named) lists for the list memberships specified in the proof configuration."
       },
       watermark: {
         argumentType: ArgumentTypeName.String,
