@@ -506,16 +506,17 @@ export type ListConfig = {
 /**
  * Determines the list configuration from the proof configuration.
  *
- * List membership or non-membership is indicated in each entry or tuple field via the optional
- * property `isMemberOf` or `isNotMemberOf`, each of which specifies the names of lists it ought to or ought not lie in,
- * the list itself being specified in the proof inputs. This procedure makes
- * this implicit list configuration explicit by forming a record mapping entry or tuple identifiers
+ * List membership or non-membership is indicated in each entry or tuple field
+ * via the optional property `isMemberOf` or `isNotMemberOf`, each of which
+ * specifies the names of lists it ought to or ought not lie in, the list itself
+ * being specified in the proof inputs. This procedure makes this implicit list
+ * configuration explicit by forming a record mapping entry or tuple identifiers
  * to their required list configuration (if any).
  *
  * @param proofConfig the proof configuration
- * @returns a record mapping a list name to an array of identifiers representing entries
- * and tuples that lie in that list
- * @throws TypeError if `isMemberOf` is empty
+ * @returns a record mapping entry or tuple identifiers to their list
+ * configurations
+ * @throws TypeError if `isMemberOf` or `isNotMemberOf` is the empty array
  */
 export function listConfigFromProofConfig(
   proofConfig: GPCProofConfig
@@ -557,15 +558,17 @@ export function listConfigFromProofConfig(
 }
 
 /**
- * Adds (entry or tuple) identifier to an array encapsulating the list
- * membership configuration of a GPC. This is used as part of the list
- * configuration compilation process for its side-effects.
+ * Adds (entry or tuple) identifier and its list config to the list membership
+ * configuration of a GPC. This is used as part of the list configuration
+ * compilation process for its side-effects.
  *
- * @param entryLists an array of triples specifying the list name, its type and the identifiers of entries (or tuples) that should be (non-)members.
- * @param lists a list name (or array of list names) of which the given identifier should be a (non-)member
- * @param listType type of list (membership or non-membership)
+ * @param gpcListConfig list membership configuration of a GPC
+ * @param membershipLists a list name (or array of list names) of which the
+ * given identifier should be a member
+ * @param nonMembershipLists a list name (or array of list names) of which the
+ * given identifier should not be a member
  * @param identifier the identifier of the entry (or tuple)
- * @throws TypeError if `lists` is empty
+ * @throws TypeError if either of the given lists is the empty array
  */
 function addIdentifierToListConfig(
   gpcListConfig: GPCProofMembershipListConfig,
