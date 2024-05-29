@@ -1,5 +1,13 @@
 # zuauth-example
 
+## 0.1.6
+
+### Patch Changes
+
+- ETH Prague configuration
+- Updated dependencies
+  - @pcd/zuauth@1.3.2
+
 ## 0.1.5
 
 ### Patch Changes

@@ -1,4 +1,5 @@
 import { ETHBERLIN04 } from "./configs/ethberlin";
+import { ETHPRAGUE_TICKET } from "./configs/ethprague";
 import { authenticate } from "./server";
 import {
   ZuAuthArgs,
@@ -9,6 +10,7 @@ import {
 
 export {
   ETHBERLIN04,
+  ETHPRAGUE_TICKET,
   authenticate,
   zuAuthPopup,
   zuAuthRedirect,

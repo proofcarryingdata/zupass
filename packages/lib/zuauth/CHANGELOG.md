@@ -1,5 +1,11 @@
 # @pcd/zuauth
 
+## 1.3.2
+
+### Patch Changes
+
+- ETH Prague configuration
+
 ## 1.3.1
 
 ### Patch Changes

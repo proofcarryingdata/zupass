@@ -1,9 +1,9 @@
 import { ZuAuthArgs } from "@pcd/zuauth";
-import { ETHBERLIN04 } from "@pcd/zuauth/configs/ethberlin";
+import { ETHPRAGUE_TICKET } from "@pcd/zuauth/configs/ethprague";
 
 /**
  * ZuAuth configuration.
  * Can be found in Podbox in the "ZuAuth Configuration" section of your
  * pipeline dashboard.
  */
-export const config: ZuAuthArgs["config"] = ETHBERLIN04;
+export const config: ZuAuthArgs["config"] = ETHPRAGUE_TICKET;
