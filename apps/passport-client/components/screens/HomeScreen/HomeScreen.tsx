@@ -124,7 +124,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   const shouldShowFrogCrypto = useMemo(() => {
     const folders = pcdCollection.getAllFolderNames();
     const goodFolders = [
-      "Edge Esmeralda",
+      "Edge City",
       "ETHBerlin 04",
       "ETHPrague",
       "Zuzalu '23",
