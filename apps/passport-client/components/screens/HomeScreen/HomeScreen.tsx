@@ -2,7 +2,7 @@ import {
   EdgeCityFolderName,
   FrogCryptoFolderName
 } from "@pcd/passport-interface";
-import { isRootFolder } from "@pcd/pcd-collection";
+import { isRootFolder, normalizePath } from "@pcd/pcd-collection";
 import React, {
   ReactNode,
   useCallback,
@@ -17,6 +17,7 @@ import {
   useDispatch,
   useFolders,
   useLoadedIssuedPCDs,
+  usePCDCollection,
   useSelf,
   useVisiblePCDsInFolder
 } from "../../../src/appHooks";
@@ -116,9 +117,25 @@ export function HomeScreenImpl(): JSX.Element | null {
     setBrowsingFolder(folder);
   }, []);
 
+  const pcdCollection = usePCDCollection();
   const isRoot = isRootFolder(browsingFolder);
   const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
   const isEdgeCity = isEdgeCityFolder(browsingFolder);
+  const shouldShowFrogCrypto = useMemo(() => {
+    const folders = pcdCollection.getAllFolderNames();
+    const goodFolders = [
+      "Edge City",
+      "ETHBerlin 04",
+      "ETHPrague",
+      "Zuzalu '23",
+      "Devconnect",
+      "ZuConnect"
+    ].map(normalizePath);
+    const hasGoodFolder = folders.map(normalizePath).some((f) => {
+      return goodFolders.some((g) => f.startsWith(g));
+    });
+    return hasGoodFolder;
+  }, [pcdCollection]);
 
   // scroll to top when we navigate to this page
   useLayoutEffect(() => {
@@ -181,7 +198,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                       />
                     );
                   })}
-              {isRoot && (
+              {isRoot && shouldShowFrogCrypto && (
                 <FrogFolder
                   Container={FrogFolderContainer}
                   onFolderClick={onFolderClick}
