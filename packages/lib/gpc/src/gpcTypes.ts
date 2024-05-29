@@ -85,23 +85,14 @@ export type GPCProofEntryConfig = {
   equalsEntry?: PODEntryIdentifier;
 
   /**
-   * Indicates list(s) in which this entry must lie. An entry value may lie in
-   * one or more membership lists.
-   *
-   * Note that the underlying GPC expects a one-to-one correspondence between
-   * comparison values and lists, i.e. it will only check one value per
-   * list. Thus, if multiple entry values are constrained to be members of some
-   * fixed list, this list will be duplicated for each of these checks,
-   * increasing the circuit size requirements. This should be taken into account
-   * when estimating circuit sizes.
+   * Indicates a list in which this entry must lie.
    */
-  isMemberOf?: PODName | PODName[];
+  isMemberOf?: PODName;
 
   /**
-   * Indicates one or more lists in which this entry must *not* lie. The same
-   * disclaimer above applies regarding the underlying GPC.
+   * Indicates a list in which this entry must *not* lie.
    */
-  isNotMemberOf?: PODName | PODName[];
+  isNotMemberOf?: PODName;
 
   // TODO(POD-P3): Constraints on entry values can go here.  Lower/upper bounds,
   // comparison to constant, etc.
@@ -148,16 +139,14 @@ export type GPCProofTupleConfig = {
   entries: PODEntryIdentifier[];
 
   /**
-   * Indicates one or more lists in which this entry must lie. See {@link
-   * GPCProofEntryConfig} regarding circuit size considerations.
+   * Indicates a list in which this entry must lie.
    */
-  isMemberOf?: PODName | PODName[];
+  isMemberOf?: PODName;
 
   /**
-   * Indicates one or more lists in which this entry must *not* lie. See {@link
-   * GPCProofEntryConfig} regarding circuit size considerations.
+   * Indicates a list in which this entry must *not* lie.
    */
-  isNotMemberOf?: PODName | PODName[];
+  isNotMemberOf?: PODName;
 };
 
 /**

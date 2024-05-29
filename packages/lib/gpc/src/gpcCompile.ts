@@ -396,53 +396,20 @@ function compileProofListMembership<
     const idListConfig = listConfig[elementId];
 
     // Resolve lists
-    const membershipLists = idListConfig.isMemberOf.map(
-      (listName) => listInput[listName]
-    );
-    const nonMembershipLists = idListConfig.isNotMemberOf.map(
-      (listName) => listInput[listName]
-    );
+    const list = listInput[idListConfig.listIdentifier];
 
-    // Hash lists
-    const [hashedMembershipLists, hashedNonMembershipLists] = isTupleIdentifier(
-      elementId
-    )
-      ? [
-          (membershipLists as PODValueTuple[][]).map((list) =>
-            list.map((element) => hashTuple(paramTupleArity, element))
-          ),
-          (nonMembershipLists as PODValueTuple[][]).map((list) =>
-            list.map((element) => hashTuple(paramTupleArity, element))
+    // Hash list and sort
+    const hashedList = (
+      isTupleIdentifier(elementId)
+        ? (list as PODValueTuple[]).map((element) =>
+            hashTuple(paramTupleArity, element)
           )
-        ]
-      : [
-          (membershipLists as PODValue[][]).map((list) =>
-            list.map(podValueHash)
-          ),
-          (nonMembershipLists as PODValue[][]).map((list) =>
-            list.map(podValueHash)
-          )
-        ];
-
-    // Reduce lists by taking intersections of membership lists and unions of
-    // non-membership lists (cf. DeMorgan's laws)
-    const hashedMembershipList = _.intersection(...hashedMembershipLists);
-    const hashedNonMembershipList = _.union(...hashedNonMembershipLists);
-
-    // Combine them according to whether we are dealing with a membership or
-    // non-membership check in the circuit.
-    const unpaddedHashedListValues =
-      idListConfig.type === LIST_MEMBERSHIP
-        ? _.difference(hashedMembershipList, hashedNonMembershipList).sort()
-        : hashedNonMembershipList.sort();
+        : (list as PODValue[]).map(podValueHash)
+    ).sort();
 
     // Pad the list to its capacity by using the first element of the list, which
     // is OK because the list is really a set. This also avoids false positives.
-    return padArray(
-      unpaddedHashedListValues,
-      paramMaxListElements,
-      unpaddedHashedListValues[0]
-    );
+    return padArray(hashedList, paramMaxListElements, hashedList[0]);
   });
 
   return {

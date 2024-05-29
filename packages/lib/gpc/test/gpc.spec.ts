@@ -249,7 +249,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             attendee: {
               isRevealed: false,
               isOwnerID: true,
-              isMemberOf: ["goats", "pigs"]
+              isMemberOf: "goats"
             }
           }
         },
@@ -332,28 +332,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
               value: BigInt(value)
             } as PODCryptographicValue;
           })
-          .concat([sampleEntries2.attendee]),
-        pigs: [
-          28937n,
-          1923847n,
-          1923874293847n,
-          1923819283741928374n,
-          0n,
-          55n,
-          19238471928374n,
-          1n,
-          sampleEntries2.attendee.value,
-          98n,
-          989n,
-          1023948127340918237n,
-          92837498374n,
-          37846773468n
-        ].map((value: bigint) => {
-          return {
-            type: "cryptographic",
-            value
-          } as PODCryptographicValue;
-        })
+          .concat([sampleEntries2.attendee])
       },
       watermark
     };
@@ -426,17 +405,27 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             pods: {
               somePodName: {
                 entries: {
-                  ticketID: { isRevealed: true, isMemberOf: [] }
+                  ticketID: {
+                    isRevealed: true,
+                    isMemberOf: "specialTickets",
+                    isNotMemberOf: "inadmissibleTickets"
+                  }
                 }
               }
             }
           },
-          proofInputs,
+          {
+            ...proofInputs,
+            membershipLists: {
+              inadmissibleTickets: [sampleEntries2.attendee, sampleEntries.J],
+              specialTickets: [sampleEntries2.ticketID]
+            }
+          },
           GPC_TEST_ARTIFACTS_PATH
         );
       },
-      "TypeError",
-      "The list of lists of valid values for somePodName.ticketID is empty."
+      "Error",
+      "Both membership and non-membership lists are specified in the configuration of somePodName.ticketID."
     );
 
     // Input is illegal.
@@ -464,7 +453,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
                 entries: {
                   ticketID: {
                     isRevealed: true,
-                    isMemberOf: ["admissibleTickets"]
+                    isMemberOf: "admissibleTickets"
                   }
                 }
               }
@@ -509,7 +498,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
                 entries: {
                   ticketID: {
                     isRevealed: true,
-                    isMemberOf: ["admissibleTickets"]
+                    isMemberOf: "admissibleTickets"
                   }
                 }
               }
@@ -552,7 +541,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
                 entries: {
                   ticketID: {
                     isRevealed: true,
-                    isMemberOf: ["admissibleTickets"]
+                    isMemberOf: "admissibleTickets"
                   }
                 }
               }
@@ -702,6 +691,38 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       },
       "TypeError",
       "Bound config must include circuit identifier"
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcVerify(
+          proof,
+          {
+            ...boundConfig,
+            pods: {
+              somePodName: {
+                entries: {
+                  ticketID: {
+                    isRevealed: true,
+                    isMemberOf: "specialTickets",
+                    isNotMemberOf: "inadmissibleTickets"
+                  }
+                }
+              }
+            }
+          },
+          {
+            ...revealedClaims,
+            membershipLists: {
+              inadmissibleTickets: [sampleEntries2.attendee, sampleEntries.J],
+              specialTickets: [sampleEntries2.ticketID]
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "Error",
+      "Both membership and non-membership lists are specified in the configuration of somePodName.ticketID."
     );
 
     // Claims is illegal.
