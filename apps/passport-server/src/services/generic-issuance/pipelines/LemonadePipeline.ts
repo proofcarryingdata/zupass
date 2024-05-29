@@ -1674,26 +1674,16 @@ export class LemonadePipeline implements BasePipeline {
               );
             }
 
-            if (ticketAtom.lemonadeUserId) {
-              // We found a Lemonade atom and account, so check in with the
-              // Lemonade backend
-              return this.lemonadeCheckin(
-                ticketAtom,
-                ticketAtom.lemonadeUserId,
-                emailClaim.emailAddress
-              );
-            } else {
-              return this.checkInManualTicket(
-                {
-                  id: ticketAtom.id,
-                  eventId: ticketAtom.genericIssuanceEventId,
-                  productId: ticketAtom.genericIssuanceProductId,
-                  attendeeName: ticketAtom.name,
-                  attendeeEmail: ticketAtom.email
-                },
-                emailClaim.emailAddress
-              );
-            }
+            return this.podboxLocalCheckIn(
+              {
+                id: ticketAtom.id,
+                eventId: ticketAtom.genericIssuanceEventId,
+                productId: ticketAtom.genericIssuanceProductId,
+                attendeeName: ticketAtom.name,
+                attendeeEmail: ticketAtom.email
+              },
+              emailClaim.emailAddress
+            );
           } else {
             // No valid Lemonade atom found, try looking for a manual ticket
             const manualTicket = this.getManualTicketById(request.ticketId);
@@ -1706,7 +1696,7 @@ export class LemonadePipeline implements BasePipeline {
               );
 
               // Manual ticket found, check in with the DB
-              return this.checkInManualTicket(
+              return this.podboxLocalCheckIn(
                 manualTicket,
                 emailClaim.emailAddress
               );
@@ -1734,7 +1724,7 @@ export class LemonadePipeline implements BasePipeline {
   /**
    * Checks a manual ticket into the DB.
    */
-  private async checkInManualTicket(
+  private async podboxLocalCheckIn(
     manualTicket: ManualTicket,
     checkerEmail: string
   ): Promise<PodboxTicketActionResponseValue> {

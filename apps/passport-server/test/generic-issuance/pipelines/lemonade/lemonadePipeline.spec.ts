@@ -19,7 +19,7 @@ import {
   serializeSemaphoreGroup
 } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { ONE_DAY_MS, ONE_MINUTE_MS, ONE_SECOND_MS } from "@pcd/util";
+import { ONE_DAY_MS, ONE_MINUTE_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -865,6 +865,10 @@ describe("generic issuance - LemonadePipeline", function () {
     }
   );
 
+  /**
+   * Lemonade check-in is disabled for Edge Esmeralda, so this test is not
+   * relevant.
+   
   step("check-in and remote check-out works in Lemonade", async function () {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelineInstances();
@@ -1072,7 +1076,7 @@ describe("generic issuance - LemonadePipeline", function () {
         expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(true);
       }
     }
-  });
+  });*/
 
   step(
     "Lemonade API will request new token when old one expires",
