@@ -39,7 +39,10 @@ export function TicketQR({
 } & EdDSATicketPCDCardProps): JSX.Element {
   const generate = useCallback(async () => {
     if (
-      pcd.claim.ticket.eventId === "53edb3e7-6733-41e0-a9be-488877c5c572" &&
+      [
+        "53edb3e7-6733-41e0-a9be-488877c5c572", // eth berlin
+        "508313ea-f16b-4729-bdf0-281c64493ca9" //  eth prague
+      ].includes(pcd.claim.ticket.eventId) &&
       pcd.claim.ticket.ticketSecret
     ) {
       return pcd.claim.ticket.ticketSecret;
