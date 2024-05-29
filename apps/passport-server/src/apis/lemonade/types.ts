@@ -26,12 +26,14 @@ export type LemonadeTicketType = LemonadeTicketTypes["ticket_types"][number];
 export const LemonadeTicketSchema = z
   .object({
     _id: z.string().min(1, "_id cannot be empty"),
+    // "Assigned" email is for tickets where the user has no Lemonade account
     assigned_email: z.string(),
     user_id: z
       .string()
       .transform((val) =>
         typeof val === "string" && val.length === 0 ? undefined : val
       ),
+    // "User" email is populated when the user has a Lemonade account
     user_email: z.string(),
     user_name: z.string(),
     user_first_name: z.string(),
@@ -52,11 +54,13 @@ export const LemonadeTicketSchema = z
     })
   })
   .transform((val, ctx) => {
+    // Set a new "email" field using either the assigned or user email.
     if (val.user_email.length > 0) {
       return { ...val, email: val.user_email };
     } else if (val.assigned_email.length > 0) {
       return { ...val, email: val.assigned_email };
     } else {
+      // If neither exist, fail validation.
       ctx.addIssue({
         code: "custom",
         message: "Neither user_email or assigned_email are present"
