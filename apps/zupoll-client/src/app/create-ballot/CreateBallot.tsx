@@ -20,6 +20,7 @@ import {
 } from "../../@/components/ui/select";
 import { Subtitle, Title } from "../../@/components/ui/text";
 import { Poll } from "../../api/prismaTypes";
+import { BallotSignal } from "../../api/requestTypes";
 import { APP_CONFIG } from "../../env";
 import { LoginState, ZupollError } from "../../types";
 import { USE_CREATE_BALLOT_REDIRECT } from "../../util";
@@ -126,6 +127,22 @@ export function CreateBallot({
 
   const setExpiry = useCallback((ms: number) => {
     setBallotExpiry(new Date(getDateString(new Date(Date.now() + ms))));
+  }, []);
+
+  const useLast = useCallback(() => {
+    const ballotSignalString = localStorage.getItem("lastBallotSignal");
+    const ballotPollsString = localStorage.getItem("lastBallotPolls");
+
+    if (ballotSignalString && ballotPollsString) {
+      const ballotSignal = JSON.parse(ballotSignalString) as BallotSignal;
+      setBallotTitle(ballotSignal.ballotTitle);
+      setBallotDescription(ballotSignal.ballotDescription);
+      setBallotExpiry(new Date(ballotSignal.expiry));
+
+      const ballotPolls = JSON.parse(ballotPollsString) as Poll[];
+      console.log({ ballotPolls });
+      setPolls(ballotPolls);
+    }
   }, []);
 
   if (serverLoading) {
@@ -430,6 +447,8 @@ export function CreateBallot({
             </Select>
             <Subtitle>Public Poll</Subtitle>
             <Switch checked={isPublic} onCheckedChange={setIsPublic} />
+            <Subtitle>Use Last</Subtitle>
+            <Button onClick={useLast}>Use Last Poll</Button>
           </div>
         </CardContent>
       </Card>
