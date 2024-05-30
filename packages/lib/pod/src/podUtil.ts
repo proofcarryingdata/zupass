@@ -428,7 +428,7 @@ export function podValueFromRawValue(rawValue: PODRawValue): PODValue {
       const separatorIndex = rawValue.search(/:/);
       const prefix = rawValue.slice(0, separatorIndex);
       const payload = rawValue.slice(separatorIndex + 1);
-      return prefix === EDDSA_PUBKEY_PREFIX
+      return prefix === EDDSA_PUBKEY_PREFIX && payload.match(PUBLIC_KEY_REGEX)
         ? { type: "eddsa-pubkey", value: payload }
         : prefix === "string"
         ? { type: "string", value: payload }
