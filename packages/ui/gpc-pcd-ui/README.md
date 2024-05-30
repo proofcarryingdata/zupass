@@ -17,10 +17,20 @@
     <a href="https://npmjs.org/package/@pcd/gpc-pcd-ui">
         <img alt="Downloads" src="https://img.shields.io/npm/dm/@pcd/gpc-pcd-ui.svg?style=flat-square" />
     </a>
+<br>
+    <a href="https://0xparc.notion.site/POD-GPC-Development-6547d2e60c184ad0984f933672246e0b">
+        <img alt="Developer Site" src="https://img.shields.io/badge/Developer_Site-green.svg?style=flat-square">
+    </a>
+    <a href="https://docs.pcd.team/modules/_pcd_gpc_pcd_ui.html">
+        <img alt="TypeDoc" src="https://img.shields.io/badge/TypeDoc-purple.svg?style=flat-square">
+    </a>
+    <a href="https://github.com/proofcarryingdata/zupass/tree/main/packages/ui/gpc-pcd-ui">
+        <img alt="GitHub" src="https://img.shields.io/badge/GitHub-grey.svg?style=flat-square">
+    </a>
 </p>
 
-# `@pcd/gpc-pcd-ui`
+This package provides React UI for
+[`@pcd/gpc-pcd`](https://github.com/proofcarryingdata/zupass/tree/main/packages/pcd/gpc-pcd).
+See that package for more details on functionality.
 
-UI elements for PCD representating a ZK proof about one more POD (Provable Object Data) objects using a GPC (General Purpose Circuit).
-
-TODO(POD-P3): Detailed description of POD concepts an design.
+For a full introduction, see the [Developer Site](https://0xparc.notion.site/POD-GPC-Development-6547d2e60c184ad0984f933672246e0b).
