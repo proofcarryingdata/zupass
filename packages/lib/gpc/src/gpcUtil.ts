@@ -573,7 +573,9 @@ function addIdentifierToListConfig(
     return;
   }
 
-  // Throw an error of both membership and non-membership and specified, since specifying both is really just a membership requirement, where the list is the set difference of the membership and non-membership lists.
+  // Throw an error of both membership and non-membership and specified, since
+  // specifying both is really just a membership requirement, where the list is
+  // the set difference of the membership and non-membership lists.
   if (
     entryConfig.isMemberOf !== undefined &&
     entryConfig.isNotMemberOf !== undefined

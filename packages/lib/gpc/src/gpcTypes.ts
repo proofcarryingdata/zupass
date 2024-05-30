@@ -12,9 +12,15 @@ export type PODEntryIdentifier = `${PODName}.${PODName}`;
 /**
  * Optional set of lists for checking POD entry (or tuple) value
  * (non-)membership in the form of a record mapping list names to lists of
- * either POD values or POD value tuples. Proof configurations with list
- * membership checks refer to these lists by name, and this record should appear
- * in both the proof inputs and the revealed claims.
+ * either POD values or POD value tuples.
+
+ * Proof configurations with list membership checks refer to these lists by
+ * name, and this record should appear in both the proof inputs and the revealed
+ * claims. Each list must be non-empty, and these lists may be used for multiple
+ * list (non-)membership checks in {@link GPCProofEntryConfig} and
+ * {@link GPCProofTupleConfig}. These lists are duplicated on the circuit level
+ * so that the circuit size is proportional to the number of membership checks
+ * rather than the number of distinct lists.
  */
 export type PODMembershipLists = Record<PODName, PODValue[] | PODValueTuple[]>;
 
@@ -85,12 +91,24 @@ export type GPCProofEntryConfig = {
   equalsEntry?: PODEntryIdentifier;
 
   /**
-   * Indicates a list in which this entry must lie.
+   * Indicates a single list in which this entry must lie, which corresponds to
+   * exactly one list membership check in the circuit. This feature is optional,
+   * and if it is enabled, `isNotMemberOf` must be disabled, since having both
+   * enabled is equivalent to `isMemberOf` being checked for the set-theoretic
+   * difference of the two list. Note that if an inclusion in multiple lists is
+   * to be checked, the set-theoretic intersection of all of these lists can be
+   * formed and used as the single membership list to check.
    */
   isMemberOf?: PODName;
 
   /**
-   * Indicates a list in which this entry must *not* lie.
+   * Indicates a list in which this entry must *not* lie, which corresponds to
+   * exactly one list non-membership check in the circuit. This feature is
+   * optional, and if it is enabled, `isMemberOf` must be disabled, since having
+   * both enabled is equivalent to `isMemberOf` being checked for the
+   * set-theoretic difference of the two lists. Note that if an exclusion from
+   * multiple lists is to be checked, the set-theoretic union of all of these
+   * lists can be formed and used as the single non-membership list to check.
    */
   isNotMemberOf?: PODName;
 
@@ -139,12 +157,14 @@ export type GPCProofTupleConfig = {
   entries: PODEntryIdentifier[];
 
   /**
-   * Indicates a list in which this entry must lie.
+   * Indicates a list in which this entry must lie. The same remarks in
+   * {@link GPCProofEntryConfig} regarding `isMemberOf` apply here.
    */
   isMemberOf?: PODName;
 
   /**
-   * Indicates a list in which this entry must *not* lie.
+   * Indicates a list in which this entry must *not* lie. The same remarks in
+   * {@link GPCProofEntryConfig} regarding `isNotMemberOf` apply here.
    */
   isNotMemberOf?: PODName;
 };
@@ -319,9 +339,12 @@ export type GPCProofInputs = {
   owner?: GPCProofOwnerInputs;
 
   /*
-   * Named lists of valid values for each list (non-)membership check. These
-   * values may be primitive (i.e. of type PODValue) or tuples (represented as
-   * PODValueTuple = PODValue[]).  Each list must be non-empty.
+   * Named lists of valid values for each list (non-)membership check.
+   *
+   * The names assigned here are used to link these lists to their
+   * (non-)membership checks in {@link GPCProofEntryConfig} and {@link
+   * GPCProofTupleConfig}, and their values may be primitive (i.e. of type
+   * PODValue) or tuples (represented as PODValueTuple = PODValue[]).
    */
   membershipLists?: PODMembershipLists;
 
