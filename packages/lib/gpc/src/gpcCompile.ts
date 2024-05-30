@@ -23,6 +23,7 @@ import {
   podValueHash
 } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import _ from "lodash";
 import {
   GPCBoundConfig,
   GPCProofEntryConfig,
@@ -39,7 +40,6 @@ import {
 import {
   GPCProofMembershipListConfig,
   LIST_MEMBERSHIP,
-  ListMembershipEnum,
   isTupleIdentifier,
   listConfigFromProofConfig,
   makeWatermarkSignal
@@ -365,46 +365,20 @@ function compileProofListMembership<
   listContainsComparisonValue: CircuitSignal;
   listValidValues: CircuitSignal[][];
 } {
-  // Arrange list names alphabetically.
-  const listNameOrder = Object.keys(listConfig).sort();
-
-  // Arrange for membership before non-membership checks and consider the
-  // lists of comparison IDs in alphabetical order, stringing them all together.
-  // This takes into account the possibility where different entry (or tuple)
-  // values must lie in the same list, or the case one entry (or tuple) value
-  // must lie in multiple lists.
-  const listIndicatorIdTriples = listNameOrder.flatMap((listName) =>
-    (Object.keys(listConfig[listName]).sort() as ListMembershipEnum[]).flatMap(
-      (membershipIndicator) =>
-        listConfig[listName][membershipIndicator]
-          .sort()
-          .flatMap(
-            (
-              elementId
-            ): [
-              PODName,
-              ListMembershipEnum,
-              PODEntryIdentifier | TupleIdentifier
-            ][] => [[listName, membershipIndicator, elementId]]
-          )
-    )
-  );
+  // Arrange list element identifiers alphabetically.
+  const listElementIdOrder = (
+    Object.keys(listConfig) as (PODEntryIdentifier | TupleIdentifier)[]
+  ).sort();
 
   // Compile listComparisonValueIndex
-  const unpaddedListComparisonValueIndex = listIndicatorIdTriples.map(
-    ([listName, _indicator, elementId]: [
-      PODName,
-      ListMembershipEnum,
-      PODEntryIdentifier | TupleIdentifier
-    ]) => {
+  const unpaddedListComparisonValueIndex = listElementIdOrder.map(
+    (elementId) => {
       const idx = isTupleIdentifier(elementId)
         ? tupleMap.get(elementId as TupleIdentifier)?.tupleIndex
         : entryMap.get(elementId)?.entryIndex;
 
       if (idx === undefined) {
-        throw new Error(
-          `Missing input for identifier ${elementId} in membership list ${listName}`
-        );
+        throw new Error(`Missing input for identifier ${elementId}.`);
       }
 
       return BigInt(idx);
@@ -412,31 +386,31 @@ function compileProofListMembership<
   );
 
   // Compile listContainsComparisonValue
-  const unpaddedListContainsComparisonValue = listIndicatorIdTriples.map(
-    (listIndIdTriple) => (listIndIdTriple[1] === LIST_MEMBERSHIP ? 1n : 0n)
+  const unpaddedListContainsComparisonValue = listElementIdOrder.map(
+    (elementId) => (listConfig[elementId].type === LIST_MEMBERSHIP ? 1n : 0n)
   );
 
   // Compile listValidValues, making sure to sort the hashed values before
   // padding.
-  const unpaddedListValidValues = listIndicatorIdTriples
-    .map((triple) => triple[0])
-    .map((listName) => {
-      const unhashedValues = listInput[listName];
+  const unpaddedListValidValues = listElementIdOrder.map((elementId) => {
+    const idListConfig = listConfig[elementId];
 
-      const unpaddedHashedValues = Array.isArray(unhashedValues[0])
-        ? (unhashedValues as PODValueTuple[]).map((elements) =>
-            hashTuple(paramTupleArity, elements)
+    // Resolve lists
+    const list = listInput[idListConfig.listIdentifier];
+
+    // Hash list and sort
+    const hashedList = (
+      isTupleIdentifier(elementId)
+        ? (list as PODValueTuple[]).map((element) =>
+            hashTuple(paramTupleArity, element)
           )
-        : (unhashedValues as PODValue[]).map(podValueHash).sort();
+        : (list as PODValue[]).map(podValueHash)
+    ).sort();
 
-      // Pad the list to its capacity by using the first element of the list, which
-      // is OK because the list is really a set. This also avoids false positives.
-      return padArray(
-        unpaddedHashedValues,
-        paramMaxListElements,
-        unpaddedHashedValues[0]
-      );
-    });
+    // Pad the list to its capacity by using the first element of the list, which
+    // is OK because the list is really a set. This also avoids false positives.
+    return padArray(hashedList, paramMaxListElements, hashedList[0]);
+  });
 
   return {
     // Pad with index -1 (mod p), which is a reference to the value 0.
