@@ -449,8 +449,6 @@ export class ProtoPODGPC {
     return undefined;
   }
 
-  // TODO(POD-P2): Replace `ProtoPODGPCCircuitParams` with a different type
-  // allowing more flexibility with choices of tuple parameters.
   /**
    * Checks whether a described circuit can meet a required set of parameters.
    * This will be true if each of the circuit's parameters is greater than or
