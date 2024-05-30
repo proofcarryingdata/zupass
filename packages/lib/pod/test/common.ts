@@ -30,18 +30,19 @@ export const sampleEntries1 = {
   H: { type: "int", value: 8n },
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n },
+  publicKey: { type: "eddsa-pubkey", value: expectedPublicKey },
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
 } satisfies PODEntries;
 
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedContentID1 =
-  21748523748810072846647845097417136490972606253431724953054174411568740252986n;
+  12404785626264207783522278176629851913558812302780179622189407657324290448828n;
 
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedSignature1 =
-  "e0031246c8657545c154f407006f6856de2f69acd00f23b637ec23620792f10c7bf70befe45c79acf2a8cbea0eb4ffe1beef30ff23f2623fd5acf51beaa0d905";
+  "64abaf261621e095cda8aaadd6e4bdf6501545e87f6cd923bf7e5e0f7295032b0138ec803350639b0a04de9c26fc2b8232f3f46b5b7486b69e02c4de06398601";
 
 export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },

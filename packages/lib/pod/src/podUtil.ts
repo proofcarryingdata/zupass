@@ -1,5 +1,6 @@
 import JSONBig from "json-bigint";
 import {
+  EDDSA_PUBKEY_PREFIX,
   PODEntries,
   PODRawValue,
   PODRawValueTuple,
@@ -229,6 +230,10 @@ export function checkPODValue(
         POD_INT_MAX
       );
       break;
+    case "eddsa-pubkey":
+      requireValueType(nameForErrorMessages, podValue.value, "string");
+      checkPublicKeyFormat(podValue.value);
+      break;
     default:
       throw new TypeError(
         `POD value ${nameForErrorMessages} has unknown type ${
@@ -349,7 +354,13 @@ export function deserializePODEntries(serializedEntries: string): PODEntries {
  * @returns the underlying value
  */
 export function podValueToRawValue(podValue: PODValue): PODRawValue {
-  return podValue.value;
+  if (podValue.type === "eddsa-pubkey") {
+    return `${EDDSA_PUBKEY_PREFIX}:${podValue.value}`;
+  } else if (podValue.type === "string") {
+    return `string:${podValue.value}`;
+  } else {
+    return podValue.value;
+  }
 }
 
 /**
@@ -411,7 +422,17 @@ export function podValueFromRawValue(rawValue: PODRawValue): PODValue {
         return { type: "int", value: rawValue };
       }
     case "string":
-      return { type: "string", value: rawValue };
+      // Check for a valid prefix. This is required to distinguish between EdDSA
+      // public keys and strings. If there is no (valid) prefix, we assume an
+      // encoded string.
+      const separatorIndex = rawValue.search(/:/);
+      const prefix = rawValue.slice(0, separatorIndex);
+      const payload = rawValue.slice(separatorIndex + 1);
+      return prefix === EDDSA_PUBKEY_PREFIX
+        ? { type: "eddsa-pubkey", value: payload }
+        : prefix === "string"
+        ? { type: "string", value: payload }
+        : { type: "string", value: rawValue };
     default:
       throw new Error("Invalid serialised POD value in raw value ${rawValue}.");
   }

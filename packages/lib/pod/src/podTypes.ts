@@ -69,10 +69,28 @@ export const POD_INT_MIN = 0n;
 export const POD_INT_MAX = (1n << 63n) - 1n;
 
 /**
+ * POD value for EddSA (Baby Jubjub) public keys. Such a value is represented as
+ * a hex string of the (32-byte) compressed form of the key.
+ */
+export type PODEdDSAPublicKeyValue = {
+  type: "eddsa-pubkey";
+  value: string;
+};
+
+/**
+ * A useful identifier for simplified JSON serialisation of EdDSA public keys.
+ */
+export const EDDSA_PUBKEY_PREFIX = "pk";
+
+/**
  * POD values are tagged with their type.  All values contain `type` and `value`
  * fields, which Typescript separates into distinct types for validation.
  */
-export type PODValue = PODStringValue | PODCryptographicValue | PODIntValue;
+export type PODValue =
+  | PODStringValue
+  | PODCryptographicValue
+  | PODIntValue
+  | PODEdDSAPublicKeyValue;
 
 /**
  * Represents a tuple of POD values as an array.
