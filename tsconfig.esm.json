@@ -7,6 +7,9 @@
       "path": "packages/lib/client-shared/tsconfig.esm.json"
     },
     {
+      "path": "packages/lib/eddsa-crypto/tsconfig.esm.json"
+    },
+    {
       "path": "packages/lib/emitter/tsconfig.esm.json"
     },
     {

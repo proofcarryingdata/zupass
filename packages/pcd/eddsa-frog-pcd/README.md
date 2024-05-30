@@ -44,7 +44,7 @@ yarn add @pcd/eddsa-frog-pcd
 ### Prove
 
 ```javascript
-import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd"
+import { newEdDSAPrivateKey } from "@pcd/eddsa-crypto"
 import { IFrogData, prove } from "@pcd/eddsa-frog-pcd"
 import { ArgumentTypeName } from "@pcd/pcd-types"
 import { v4 as uuid } from "uuid";

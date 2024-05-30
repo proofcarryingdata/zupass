@@ -1,5 +1,5 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
-import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-crypto";
 import {
   Credential,
   VerificationError,

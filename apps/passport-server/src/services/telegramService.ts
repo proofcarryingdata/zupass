@@ -4,7 +4,7 @@ import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
   isEqualEdDSAPublicKey
-} from "@pcd/eddsa-pcd";
+} from "@pcd/eddsa-crypto";
 import {
   LEMONADE_EDDSA_PUBKEY,
   NullifierHashPayload,

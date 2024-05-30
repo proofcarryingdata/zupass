@@ -23,6 +23,7 @@
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
     "@opentelemetry/sdk-node": "^0.34.0",
     "@pagerduty/pdjs": "^2.2.4",
+    "@pcd/eddsa-crypto": "0.0.1",
     "@pcd/eddsa-frog-pcd": "0.3.0",
     "@pcd/eddsa-pcd": "0.6.0",
     "@pcd/eddsa-ticket-pcd": "0.6.0",

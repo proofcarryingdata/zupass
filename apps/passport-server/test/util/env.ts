@@ -1,4 +1,4 @@
-import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import { newEdDSAPrivateKey } from "@pcd/eddsa-crypto";
 import NodeRSA from "node-rsa";
 import { EnvironmentVariables } from "../../src/types";
 import { logger } from "../../src/util/logger";

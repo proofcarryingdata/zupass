@@ -26,7 +26,7 @@ function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }): JSX.Element {
       />
       <Spacer h={8} />
       <FieldLabel>EdDSA Public Key</FieldLabel>
-      <HiddenText text={pcd.claim.publicKey.join(",")} />
+      <HiddenText text={pcd.claim.publicKey.toString()} />
     </Container>
   );
 }

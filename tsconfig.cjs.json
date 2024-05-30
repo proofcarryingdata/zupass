@@ -7,6 +7,9 @@
       "path": "packages/lib/client-shared/tsconfig.cjs.json"
     },
     {
+      "path": "packages/lib/eddsa-crypto/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/lib/emitter/tsconfig.cjs.json"
     },
     {

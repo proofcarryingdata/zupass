@@ -44,33 +44,34 @@ yarn add @pcd/eddsa-pcd
 ### Prove
 
 ```javascript
-import { getEdDSAPublicKey, newEdDSAPrivateKey, prove } from "@pcd/eddsa-pcd"
-import { ArgumentTypeName } from "@pcd/pcd-types"
+import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-crypto";
+import { prove } from "@pcd/eddsa-pcd";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 
 // Generate a new EdDSA private key.
-const privateKey = newEdDSAPrivateKey()
+const privateKey = newEdDSAPrivateKey();
 
 // Prepare the message to sign.
 // It must be a list of hexadicimal strings.
-const message = ["0xc", "0x7a", "0x8f"]
+const message = ["0xc", "0x7a", "0x8f"];
 
 // Create a PCD with the required attributes and their types.
 const pcd = await prove({
-    // The id is optional and if you don't pass it a random value will be automatically created.
-    id: {
-        argumentType: ArgumentTypeName.String
-    },
-    message: {
-        argumentType: ArgumentTypeName.StringArray,
-        value: message
-    },
-    privateKey: {
-        argumentType: ArgumentTypeName.String,
-        value: privateKey
-    }
-})
+  // The id is optional and if you don't pass it a random value will be automatically created.
+  id: {
+    argumentType: ArgumentTypeName.String
+  },
+  message: {
+    argumentType: ArgumentTypeName.StringArray,
+    value: message
+  },
+  privateKey: {
+    argumentType: ArgumentTypeName.String,
+    value: privateKey
+  }
+});
 
-console.log(pcd)
+console.log(pcd);
 /*
 EdDSAPCD {
   type: 'eddsa-pcd',
@@ -92,21 +93,21 @@ EdDSAPCD {
 ### Verify
 
 ```javascript
-import { verify } from "@pcd/eddsa-pcd"
+import { verify } from "@pcd/eddsa-pcd";
 
-const isValid = await verify(pcd)
+const isValid = await verify(pcd);
 
-console.log(isValid) // true
+console.log(isValid); // true
 ```
 
 ### Serialize
 
 ```javascript
-import { serialize } from "@pcd/eddsa-pcd"
+import { serialize } from "@pcd/eddsa-pcd";
 
-const serialized = await serialize(pcd)
+const serialized = await serialize(pcd);
 
-console.log(serialized)
+console.log(serialized);
 /*
 {
   type: 'eddsa-pcd',
@@ -118,11 +119,11 @@ console.log(serialized)
 ### Deserialize
 
 ```javascript
-import { deserialize } from "@pcd/eddsa-pcd"
+import { deserialize } from "@pcd/eddsa-pcd";
 
-const deserialized = await deserialize(serialized.pcd)
+const deserialized = await deserialize(serialized.pcd);
 
-console.log(deserialized)
+console.log(deserialized);
 /*
 EdDSAPCD {
   type: 'eddsa-pcd',

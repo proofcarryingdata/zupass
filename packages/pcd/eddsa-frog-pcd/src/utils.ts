@@ -1,4 +1,4 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { numberToBigInt } from "@pcd/util";
 import { EdDSAFrogPCD, IFrogData, Rarity } from "./EdDSAFrogPCD";
 

@@ -1,4 +1,4 @@
-import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-crypto";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,

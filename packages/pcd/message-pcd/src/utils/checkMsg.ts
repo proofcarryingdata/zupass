@@ -1,4 +1,4 @@
-import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { MessagePCD } from "../MessagePCD";
 import { MessagePCDPackage } from "../MessagePCDPackage";
 

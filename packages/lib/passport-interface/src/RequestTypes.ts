@@ -1,4 +1,4 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { EdDSATicketPCD, EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";

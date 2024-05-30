@@ -30,6 +30,9 @@
   },
   "references": [
     {
+      "path": "../../packages/lib/eddsa-crypto"
+    },
+    {
       "path": "../../packages/pcd/eddsa-frog-pcd"
     },
     {

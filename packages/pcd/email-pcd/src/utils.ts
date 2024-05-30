@@ -1,4 +1,4 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 import { EmailPCD } from "./EmailPCD";
 
 export function getEmailAddress(pcd?: EmailPCD): string | undefined {

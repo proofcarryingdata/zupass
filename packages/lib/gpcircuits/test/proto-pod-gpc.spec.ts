@@ -1,10 +1,5 @@
-import {
-  POD,
-  PODContent,
-  PODValue,
-  decodePublicKey,
-  decodeSignature
-} from "@pcd/pod";
+import { decodePublicKey } from "@pcd/eddsa-crypto";
+import { POD, PODContent, PODValue, decodeSignature } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";

@@ -1,10 +1,10 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
-import { EdDSAFrogPCDPackage, IFrogData } from "@pcd/eddsa-frog-pcd";
 import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
   isEqualEdDSAPublicKey
-} from "@pcd/eddsa-pcd";
+} from "@pcd/eddsa-crypto";
+import { EdDSAFrogPCDPackage, IFrogData } from "@pcd/eddsa-frog-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,

@@ -1,3 +1,4 @@
+import { publicKeyToPoint } from "@pcd/eddsa-crypto";
 import {
   EdDSAFrogPCD,
   EdDSAFrogPCDPackage,
@@ -21,10 +22,9 @@ import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
   fromHexString,
   generateSnarkMessageHash,
-  hexToBigInt,
   requireDefinedParameter
 } from "@pcd/util";
-import { Eddsa, buildEddsa } from "circomlibjs";
+import { unpackSignature } from "@zk-kit/eddsa-poseidon";
 import JSONBig from "json-bigint";
 import { Groth16Proof, groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
@@ -84,24 +84,6 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAFrogPCDArgs
   };
 }
 
-let initializedPromise: Promise<void> | undefined;
-let eddsa: Eddsa;
-
-/**
- * A promise designed to make sure that the EdDSA algorithm
- * of the `circomlibjs` package has been properly initialized.
- * It only initializes them once.
- */
-async function ensureEddsaInitialized(): Promise<void> {
-  if (!initializedPromise) {
-    initializedPromise = (async (): Promise<void> => {
-      eddsa = await buildEddsa();
-    })();
-  }
-
-  await initializedPromise;
-}
-
 async function checkProveInputs(args: ZKEdDSAFrogPCDArgs): Promise<{
   frogPCD: EdDSAFrogPCD;
   identityPCD: SemaphoreIdentityPCD;
@@ -153,12 +135,13 @@ function snarkInputForProof(
 ): Record<string, `${number}` | `${number}`[]> {
   const frogAsBigIntArray = frogDataToBigInts(frogPCD.claim.data);
   const signerPubKey = frogPCD.proof.eddsaPCD.claim.publicKey;
+  const signerAsPoint = publicKeyToPoint(signerPubKey);
 
   // Note: unpackSignature leaves the R8 point's coordinates in Montgomery
   // form, which is then reversed by toObject below.
   // This is a reference to Montgomery form of numbers for modular
   // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
-  const rawSig = eddsa.unpackSignature(
+  const rawSig = unpackSignature(
     fromHexString(frogPCD.proof.eddsaPCD.proof.signature)
   );
 
@@ -179,10 +162,10 @@ function snarkInputForProof(
     reservedField3: frogAsBigIntArray[12].toString(),
 
     // Frog signature fields
-    frogSignerPubkeyAx: hexToBigInt(signerPubKey[0]).toString(),
-    frogSignerPubkeyAy: hexToBigInt(signerPubKey[1]).toString(),
-    frogSignatureR8x: eddsa.F.toObject(rawSig.R8[0]).toString(),
-    frogSignatureR8y: eddsa.F.toObject(rawSig.R8[1]).toString(),
+    frogSignerPubkeyAx: signerAsPoint[0].toString(),
+    frogSignerPubkeyAy: signerAsPoint[1].toString(),
+    frogSignatureR8x: rawSig.R8[0].toString(),
+    frogSignatureR8y: rawSig.R8[1].toString(),
     frogSignatureS: rawSig.S.toString(),
 
     // Owner identity secret
@@ -237,8 +220,6 @@ export async function prove(args: ZKEdDSAFrogPCDArgs): Promise<ZKEdDSAFrogPCD> {
     throw new Error("cannot make proof: init has not been called yet");
   }
 
-  await ensureEddsaInitialized();
-
   const { frogPCD, identityPCD, externalNullifier, watermark } =
     await checkProveInputs(args);
 
@@ -267,30 +248,34 @@ export async function verify(pcd: ZKEdDSAFrogPCD): Promise<boolean> {
   // verify() requires dependencies but not artifacts (verification key
   // is available in code as vkey imported above), so doesn't require
   // full package initialization.
-
-  const t = pcd.claim.partialFrog;
-  // Outputs appear in public signals first
-  const publicSignals = [
-    pcd.claim.nullifierHash,
-    t.frogId?.toString() || "0",
-    t.biome?.toString() || "0",
-    t.rarity?.toString() || "0",
-    t.temperament?.toString() || "0",
-    t.jump?.toString() || "0",
-    t.speed?.toString() || "0",
-    t.intelligence?.toString() || "0",
-    t.beauty?.toString() || "0",
-    t.timestampSigned?.toString() || "0",
-    t.ownerSemaphoreId?.toString() || "0",
-    "0",
-    "0",
-    "0",
-    hexToBigInt(pcd.claim.signerPublicKey[0]).toString(),
-    hexToBigInt(pcd.claim.signerPublicKey[1]).toString(),
-    pcd.claim.externalNullifier,
-    pcd.claim.watermark
-  ];
-  return groth16.verify(vkey, publicSignals, pcd.proof);
+  try {
+    const t = pcd.claim.partialFrog;
+    const signerAsPoint = publicKeyToPoint(pcd.claim.signerPublicKey);
+    // Outputs appear in public signals first
+    const publicSignals = [
+      pcd.claim.nullifierHash,
+      t.frogId?.toString() || "0",
+      t.biome?.toString() || "0",
+      t.rarity?.toString() || "0",
+      t.temperament?.toString() || "0",
+      t.jump?.toString() || "0",
+      t.speed?.toString() || "0",
+      t.intelligence?.toString() || "0",
+      t.beauty?.toString() || "0",
+      t.timestampSigned?.toString() || "0",
+      t.ownerSemaphoreId?.toString() || "0",
+      "0",
+      "0",
+      "0",
+      signerAsPoint[0].toString(),
+      signerAsPoint[1].toString(),
+      pcd.claim.externalNullifier,
+      pcd.claim.watermark
+    ];
+    return groth16.verify(vkey, publicSignals, pcd.proof);
+  } catch (_e) {
+    return false;
+  }
 }
 
 /**

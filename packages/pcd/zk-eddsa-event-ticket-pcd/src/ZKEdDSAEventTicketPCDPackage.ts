@@ -1,4 +1,4 @@
-import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { isEqualEdDSAPublicKey, publicKeyToPoint } from "@pcd/eddsa-crypto";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -26,12 +26,11 @@ import {
   decStringToBigIntToUuid,
   fromHexString,
   generateSnarkMessageHash,
-  hexToBigInt,
   numberToBigInt,
   requireDefinedParameter,
   uuidToBigInt
 } from "@pcd/util";
-import { Eddsa, buildEddsa } from "circomlibjs";
+import { unpackSignature } from "@zk-kit/eddsa-poseidon";
 import JSONBig from "json-bigint";
 import { Groth16Proof, groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
@@ -50,8 +49,6 @@ export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
   "dummy-nullifier-for-eddsa-event-ticket-pcds"
 );
 
-let depsInitializedPromise: Promise<void> | undefined;
-let eddsa: Eddsa;
 let savedInitArgs: ZKEdDSAEventTicketPCDInitArgs | undefined = undefined;
 
 /**
@@ -61,23 +58,6 @@ export async function init(args: ZKEdDSAEventTicketPCDInitArgs): Promise<void> {
   savedInitArgs = args;
 }
 
-async function ensureDepsInitialized(): Promise<void> {
-  if (!depsInitializedPromise) {
-    depsInitializedPromise = (async (): Promise<void> => {
-      // TODO: This object is expensive to build, and duplicates some work,
-      // including buiding curves which aren't cached and thus have to be
-      // re-built by groth16.  We need this object only for eddsa.F.toObject
-      // and eddsa.unpackSignature.  To improve performance, we could tweak
-      // circomlibjs and/or zk-kit/groth16 either to expose those functions in a
-      // more limited way, or to cache all the expensive parts which will be
-      // needed later.
-      eddsa = await buildEddsa();
-    })();
-  }
-
-  await depsInitializedPromise;
-}
-
 async function ensureInitialized(): Promise<ZKEdDSAEventTicketPCDInitArgs> {
   if (!savedInitArgs) {
     throw new Error(
@@ -85,7 +65,6 @@ async function ensureInitialized(): Promise<ZKEdDSAEventTicketPCDInitArgs> {
     );
   }
 
-  await ensureDepsInitialized();
   return savedInitArgs;
 }
 
@@ -177,12 +156,9 @@ function snarkInputForProof(
 ): Record<string, `${number}` | `${number}`[]> {
   const ticketAsBigIntArray = ticketDataToBigInts(ticketPCD.claim.ticket);
   const pubKey = ticketPCD.proof.eddsaPCD.claim.publicKey;
+  const signerAsPoint = publicKeyToPoint(pubKey);
 
-  // Note: unpackSignature leaves the R8 point's coordinates in Montgomery
-  // form, which is then reversed by toObject below.
-  // This is a reference to Montgomery form of numbers for modular
-  // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
-  const rawSig = eddsa.unpackSignature(
+  const rawSig = unpackSignature(
     fromHexString(ticketPCD.proof.eddsaPCD.proof.signature)
   );
 
@@ -231,10 +207,10 @@ function snarkInputForProof(
     revealReservedSignedField3: "0",
 
     // Ticket signature fields
-    ticketSignerPubkeyAx: hexToBigInt(pubKey[0]).toString(),
-    ticketSignerPubkeyAy: hexToBigInt(pubKey[1]).toString(),
-    ticketSignatureR8x: eddsa.F.toObject(rawSig.R8[0]).toString(),
-    ticketSignatureR8y: eddsa.F.toObject(rawSig.R8[1]).toString(),
+    ticketSignerPubkeyAx: signerAsPoint[0].toString(),
+    ticketSignerPubkeyAy: signerAsPoint[1].toString(),
+    ticketSignatureR8x: rawSig.R8[0].toString(), //eddsa.F.toObject(rawSig.R8[0]).toString(),
+    ticketSignatureR8y: rawSig.R8[1].toString(), //eddsa.F.toObject(rawSig.R8[1]).toString(),
     ticketSignatureS: rawSig.S.toString(),
 
     // Attendee identity secret
@@ -508,9 +484,10 @@ function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
 
   ret.push(claim.nullifierHash || negOne);
 
+  const signerAsPoint = publicKeyToPoint(claim.signer);
   // Public inputs appear in public signals in declaration order
-  ret.push(hexToBigInt(claim.signer[0]).toString());
-  ret.push(hexToBigInt(claim.signer[1]).toString());
+  ret.push(signerAsPoint[0].toString());
+  ret.push(signerAsPoint[1].toString());
 
   for (const eventId of snarkInputForValidEventIds(claim.validEventIds)) {
     ret.push(eventId);
@@ -535,8 +512,12 @@ export async function verify(pcd: ZKEdDSAEventTicketPCD): Promise<boolean> {
   // is available in code as vkey imported above), so doesn't require
   // full package initialization.
 
-  const publicSignals = publicSignalsFromClaim(pcd.claim);
-  return groth16.verify(vkey, publicSignals, pcd.proof);
+  try {
+    const publicSignals = publicSignalsFromClaim(pcd.claim);
+    return groth16.verify(vkey, publicSignals, pcd.proof);
+  } catch (_e) {
+    return false;
+  }
 }
 
 /**

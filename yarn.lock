@@ -7517,6 +7517,13 @@
   dependencies:
     "@zag-js/dom-query" "0.16.0"
 
+"@zk-kit/baby-jubjub@0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-0.3.0.tgz#78b8d3226670dd02dc8ced713aec64d6bb2a6e62"
+  integrity sha512-mA3/M/+4C2vDtc0SpXf/q/nsvwBh+s42ou176sgDzqIBQD/u/N+LaLGorDh+X5AD3dVMHb8rheFpnnrJmjsqdA==
+  dependencies:
+    "@zk-kit/utils" "0.6.0"
+
 "@zk-kit/baby-jubjub@1.0.0-beta":
   version "1.0.0-beta"
   resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-1.0.0-beta.tgz#35781f5607d28113582cc218c33dee4cc78b9ac5"
@@ -7530,6 +7537,15 @@
   integrity sha512-yVyx9e+iNYuFvOtKt/f4i+QBhey78VM6K6svwqkgqdi55vnz3MRtXn8dqvnKibNAUEBmnjuwe4SDONgeOQpFEw==
   dependencies:
     circomlib "^2.0.5"
+
+"@zk-kit/eddsa-poseidon@0.11.0":
+  version "0.11.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-0.11.0.tgz#f648b50a79ce660df75896d8fafa30c0f6eb9a43"
+  integrity sha512-8XgIVSD+nTnTEjvdrFVvju6lVQ5rxCfkBnf/nCFN/IteiIpYX7LnxrTOV7pIp3RrWL29WuTvNrT8TlBrHRrUFA==
+  dependencies:
+    "@zk-kit/baby-jubjub" "0.3.0"
+    "@zk-kit/utils" "0.8.1"
+    buffer "6.0.3"
 
 "@zk-kit/eddsa-poseidon@1.0.0-beta":
   version "1.0.0-beta"
@@ -7562,6 +7578,20 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@zk-kit/incremental-merkle-tree/-/incremental-merkle-tree-1.1.0.tgz#6b0ccce56f9e05ccf73f7ea4fa746d5ef7d24b1d"
   integrity sha512-WnNR/GQse3lX8zOHMU8zwhgX8u3qPoul8w4GjJ0WDHq+VGJimo7EGheRZ/ILeBQabnlzAerdv3vBqYBehBeoKA==
+
+"@zk-kit/utils@0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-0.6.0.tgz#30124e98df8e29f7af31e19ce4dc6302f178c0a4"
+  integrity sha512-sUF1yVjlGmm7/NIN/+d+N8WOcI77bTzgV5+vZmp/S7lXcy4fmO+5TdHERRsDbs8Ep8K33EOC6V+U+JXzmjSe5A==
+  dependencies:
+    buffer "^6.0.3"
+
+"@zk-kit/utils@0.8.1":
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-0.8.1.tgz#9d358542e6b223dde35f32f3e161d1d3a41b0644"
+  integrity sha512-m5cvnYo5IBZQCO8H5X0Mw3rGRGEoSqlYXVVF1+4M9IT3olDWcJHLPRqtYGF9zNf+vXV/21srpZ0hX3X2Lzp1TQ==
+  dependencies:
+    buffer "^6.0.3"
 
 "@zk-kit/utils@1.0.0-beta":
   version "1.0.0-beta"
@@ -8373,15 +8403,15 @@ bfj@^7.0.2:
     jsonpath "^1.1.1"
     tryer "^1.0.1"
 
-big-integer@^1.6.42, big-integer@^1.6.48:
-  version "1.6.51"
-  resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.51.tgz#0df92a5d9880560d3ff2d5fd20245c889d130686"
-  integrity sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==
-
-big-integer@^1.6.44:
+big-integer@^1.6.42, big-integer@^1.6.44:
   version "1.6.52"
   resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.52.tgz#60a887f3047614a8e1bffe5d7173490a97dc8c85"
   integrity sha512-QxD8cf2eVqJOOz63z6JIN9BzvVs/dlySa5HGSBH5xtR8dPteIRQnBxxKqkNTiT6jbDTF6jAfrd4oMcND9RGbQg==
+
+big-integer@^1.6.48:
+  version "1.6.51"
+  resolved "https://registry.yarnpkg.com/big-integer/-/big-integer-1.6.51.tgz#0df92a5d9880560d3ff2d5fd20245c889d130686"
+  integrity sha512-GPEid2Y9QU1Exl1rpO9B2IPJGHPSupF5GnVIP0blYvNOMer2bTvSWs1jGOUg04hTmu67nmLsQ9TBo1puaotBHg==
 
 bignumber.js@^9.0.0:
   version "9.1.2"
@@ -11787,7 +11817,7 @@ ffjavascript@0.2.56:
     wasmcurves "0.2.0"
     web-worker "^1.2.0"
 
-ffjavascript@0.2.60, ffjavascript@^0.2.38, ffjavascript@^0.2.45, ffjavascript@^0.2.48:
+ffjavascript@0.2.60:
   version "0.2.60"
   resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.60.tgz#4d8ae613d6bf4e98b3cc29ba10c626f5853854cf"
   integrity sha512-T/9bnEL5xAZRDbQoEMf+pM9nrhK+C3JyZNmqiWub26EQorW7Jt+jR54gpqDhceA4Nj0YctPQwYnl8xa52/A26A==
@@ -11796,7 +11826,7 @@ ffjavascript@0.2.60, ffjavascript@^0.2.38, ffjavascript@^0.2.45, ffjavascript@^0
     wasmcurves "0.2.2"
     web-worker "^1.2.0"
 
-ffjavascript@0.2.63, ffjavascript@^0.2.56:
+ffjavascript@0.2.63, ffjavascript@^0.2.38, ffjavascript@^0.2.45, ffjavascript@^0.2.48, ffjavascript@^0.2.56:
   version "0.2.63"
   resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.63.tgz#0c1216a1f123dc9181df69e144473704d2f115eb"
   integrity sha512-dBgdsfGks58b66JnUZeZpGxdMIDQ4QsD3VYlRJyFVrKQHb2kJy4R2gufx5oetrTxXPT+aEjg0dOvOLg1N0on4A==
@@ -21386,10 +21416,15 @@ web-streams-polyfill@^3.0.3:
   resolved "https://registry.yarnpkg.com/web-streams-polyfill/-/web-streams-polyfill-3.2.1.tgz#71c2718c52b45fd49dbeee88634b3a60ceab42a6"
   integrity sha512-e0MO3wdXWKrLbL0DgGnUV7WHVuw9OUvL4hjgnPkIeEvESk74gAITi5G606JtZPp39cd8HA9VQzCIvA49LpPN5Q==
 
-web-worker@1.2.0, web-worker@^1.2.0:
+web-worker@1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/web-worker/-/web-worker-1.2.0.tgz#5d85a04a7fbc1e7db58f66595d7a3ac7c9c180da"
   integrity sha512-PgF341avzqyx60neE9DD+XS26MMNMoUQRz9NOZwW32nPQrF6p77f1htcnjBSEV8BGMKZ16choqUG4hyI0Hx7mA==
+
+web-worker@^1.2.0:
+  version "1.3.0"
+  resolved "https://registry.yarnpkg.com/web-worker/-/web-worker-1.3.0.tgz#e5f2df5c7fe356755a5fb8f8410d4312627e6776"
+  integrity sha512-BSR9wyRsy/KOValMgd5kMyr3JzpdeoR9KVId8u5GVlTTAtNChlsE4yTxeY7zMdNSyOmoKBv8NH2qeRY9Tg+IaA==
 
 web3-bzz@1.10.2:
   version "1.10.2"

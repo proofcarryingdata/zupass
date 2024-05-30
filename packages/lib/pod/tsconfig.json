@@ -22,6 +22,9 @@
   // References are automatically maintained by `yarn fix-references`
   "references": [
     {
+      "path": "../eddsa-crypto"
+    },
+    {
       "path": "../util"
     },
     {

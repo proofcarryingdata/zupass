@@ -1,4 +1,4 @@
-import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { getEdDSAPublicKey } from "@pcd/eddsa-crypto";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,

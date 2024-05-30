@@ -1,4 +1,4 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 import {
   CheckTicketByIdRequest,
   CheckTicketByIdResult,
@@ -71,7 +71,7 @@ export function initPCDIssuanceRoutes(
   app.get("/issue/eddsa-public-key", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.getEdDSAPublicKey();
-    res.send(result satisfies EdDSAPublicKey);
+    res.json(result satisfies EdDSAPublicKey);
   });
 
   /**

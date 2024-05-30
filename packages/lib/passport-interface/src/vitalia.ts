@@ -1,4 +1,4 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import type { EdDSAPublicKey } from "@pcd/eddsa-crypto";
 
 // IDs copied from https://github.com/robknight/zuconnect-badges/blob/19b05e67c3d82dcf066a5e211ca233ca30068dfb/src/pages/api/generate-badge.ts#L11-L12.
 export const VITALIA_EVENT_ID = "9ccc53cb-3b0a-415b-ab0d-76cfa21c72ac";
