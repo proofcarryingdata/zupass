@@ -136,6 +136,11 @@ function canIssueInThisEpoch(
     return false;
   }
 
+  let currentEpochStart = start;
+  while (now > currentEpochStart + autoIssuance.schedule.intervalMs) {
+    currentEpochStart += autoIssuance.schedule.intervalMs;
+  }
+
   const ticketsForUserInEpoch = manualTickets.filter((t) => {
     if (t.attendeeEmail !== email) {
       return false;
@@ -156,10 +161,7 @@ function canIssueInThisEpoch(
       return false;
     }
 
-    return (
-      new Date(t.timeCreated).getTime() >=
-      now - autoIssuance.schedule.intervalMs
-    );
+    return new Date(t.timeCreated).getTime() >= currentEpochStart;
   });
 
   if (ticketsForUserInEpoch.length !== 0) {
