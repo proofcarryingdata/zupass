@@ -123,7 +123,11 @@ export function initGenericIssuanceRoutes(
       }
     }
 
-    const redemptionCounts: Record<string, number> = {};
+    const redemptionCounts: Record<string, number> = {
+      "508b3dc0-864e-4e87-9ce4-5eebbb672362": 2,
+      "508b3dc0-864e-4e87-9ce4-5eebbb67236b": 3,
+      "508b3dc0-864e-4e87-9ce4-5eebbb67236c": 3
+    };
 
     for (const checkin of checkins) {
       if (!checkin.checkerEmail) {
@@ -153,7 +157,7 @@ export function initGenericIssuanceRoutes(
       }
     }
 
-    if (Object.entries(result).length === 0) {
+    if (tickets.atoms.length === 0) {
       res.send("Loading data, refresh in a minute...");
     }
 
