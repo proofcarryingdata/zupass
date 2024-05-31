@@ -35,12 +35,12 @@ import {
   privateKey,
   sampleEntries1,
   sampleEntries2,
-  testPrivateKeys
+  testPrivateKeysAllFormats
 } from "./common";
 
 describe("podUtil input checkers should work", async function () {
   it("checkPrivateKeyFormat should accept valid inputs", function () {
-    for (const testPrivateKey of testPrivateKeys) {
+    for (const testPrivateKey of testPrivateKeysAllFormats) {
       const checked = checkPrivateKeyFormat(testPrivateKey);
       expect(checked).to.eq(testPrivateKey);
     }
@@ -55,7 +55,9 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "hex") as unknown as string
+      Buffer.from(privateKey, "hex") as unknown as string,
+      "=V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs",
+      "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs====="
     ];
     for (const testPrivateKey of badPrivateKeys) {
       const fn = (): void => {

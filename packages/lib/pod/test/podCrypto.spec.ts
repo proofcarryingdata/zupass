@@ -42,6 +42,8 @@ import {
   sampleEntries1,
   testIntsToHash,
   testPrivateKeys,
+  testPrivateKeysAllFormats,
+  testPrivateKeysBase64url,
   testPublicKeysToHash,
   testStringsToHash
 } from "./common";
@@ -180,25 +182,31 @@ describe("podCrypto hashes should work", async function () {
 
 describe("podCrypto encoding/decoding should work", async function () {
   it("should encode and decode a private key", function () {
-    for (const testPrivateKey of testPrivateKeys) {
+    for (let i = 0; i < testPrivateKeysAllFormats.length; i++) {
+      const testPrivateKey = testPrivateKeysAllFormats[i];
       const decoded = decodePrivateKey(testPrivateKey);
       expect(decoded).to.have.length(32);
       const encoded = encodePrivateKey(decoded);
-      expect(encoded).to.have.length(64);
+      expect(encoded).to.have.length(43);
       checkPrivateKeyFormat(encoded);
-      expect(encoded).to.eq(testPrivateKey.toLowerCase());
+      expect(encoded).to.eq(
+        testPrivateKeysBase64url[i % testPrivateKeysBase64url.length]
+      );
     }
   });
 
   it("should encode a private key in Uint8Array format", function () {
-    for (const testPrivateKey of testPrivateKeys) {
+    for (let i = 0; i < testPrivateKeysAllFormats.length; i++) {
+      const testPrivateKey = testPrivateKeysAllFormats[i];
       const decoded = decodePrivateKey(testPrivateKey);
       const asUint8Array = new Uint8Array(decoded.length);
       for (let i = 0; i < decoded.length; i++) {
         asUint8Array[i] = decoded[i];
       }
       const encoded = encodePrivateKey(asUint8Array);
-      expect(encoded).to.eq(testPrivateKey.toLowerCase());
+      expect(encoded).to.eq(
+        testPrivateKeysBase64url[i % testPrivateKeysBase64url.length]
+      );
     }
   });
 
@@ -233,12 +241,17 @@ describe("podCrypto encoding/decoding should work", async function () {
       "00112233445566778899AABBCCDDEEFF00112233445566778899iijjkkllmmnn",
       undefined as unknown as string,
       12345 as unknown as string,
-      12345n as unknown as string
+      12345n as unknown as string,
+      "==abcde123",
+      "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE====="
     ];
     for (const testPrivateKey of badPrivateKeys) {
       expect((): void => {
         decodePrivateKey(testPrivateKey);
-      }).to.throw(TypeError, "Private key should be 32 bytes hex-encoded.");
+      }).to.throw(
+        TypeError,
+        "Private key should be 32 bytes, encoded as hex or Base64."
+      );
     }
   });
 
@@ -439,11 +452,14 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
         n.toString(16).padStart(64, "0")
       );
 
-      const pubFromString = await getEdDSAPublicKey(testPrivateKey);
+      // EdDSAPCD represents private keys in hex, not Base64.
+      const hexPrivateKey = decodePrivateKey(testPrivateKey).toString("hex");
+
+      const pubFromString = await getEdDSAPublicKey(hexPrivateKey);
       expect(pubFromString).to.deep.eq(stringifiedPublicKey);
 
       const pubFromBuffer = await getEdDSAPublicKey(
-        fromHexString(testPrivateKey)
+        fromHexString(hexPrivateKey)
       );
       expect(pubFromBuffer).to.deep.eq(stringifiedPublicKey);
     }
@@ -458,6 +474,9 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
     const pcdMessageNumbers = [0x12345n, 0xdeadbeefn];
     const pcdMessageStrings = pcdMessageNumbers.map((n) => n.toString());
 
+    // EdDSAPCD represents private keys in hex, not Base64.
+    const hexPrivateKey = decodePrivateKey(privateKey).toString("hex");
+
     // Create an EdDSAPCD for comparison
     const pcd = await EdDSAPCDPackage.prove({
       message: {
@@ -465,7 +484,7 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
         argumentType: ArgumentTypeName.StringArray
       },
       privateKey: {
-        value: privateKey,
+        value: hexPrivateKey,
         argumentType: ArgumentTypeName.String
       },
       id: {

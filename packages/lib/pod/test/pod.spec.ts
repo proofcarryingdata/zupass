@@ -125,7 +125,7 @@ describe("POD class should work", async function () {
     };
     expect(fn).to.throw(
       TypeError,
-      "Private key should be 32 bytes hex-encoded."
+      "Private key should be 32 bytes, encoded as hex or Base64."
     );
   });
 

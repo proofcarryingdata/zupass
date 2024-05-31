@@ -16,9 +16,11 @@ import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import { EDDSA_PUBKEY_TYPE_STRING, PODValue } from "./podTypes";
 import {
-  checkPrivateKeyFormat,
+  PRIVATE_KEY_REGEX,
   checkPublicKeyFormat,
-  checkSignatureFormat
+  checkSignatureFormat,
+  decodeBytesAuto,
+  encodeBytes
 } from "./podUtil";
 
 /**
@@ -93,7 +95,7 @@ export function encodePrivateKey(rawPrivateKey: Uint8Array): string {
   if (rawPrivateKey.length !== 32) {
     throw TypeError("Private key must be a 32 bytes.");
   }
-  return toHexString(rawPrivateKey);
+  return encodeBytes(rawPrivateKey);
 }
 
 /**
@@ -103,7 +105,11 @@ export function encodePrivateKey(rawPrivateKey: Uint8Array): string {
  * @throws TypeError if the private key format is incorrect.
  */
 export function decodePrivateKey(privateKey: string): Buffer {
-  return fromHexString(checkPrivateKeyFormat(privateKey));
+  return decodeBytesAuto(
+    privateKey,
+    PRIVATE_KEY_REGEX,
+    "Private key should be 32 bytes, encoded as hex or Base64."
+  );
 }
 
 /**

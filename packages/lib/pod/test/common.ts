@@ -4,8 +4,9 @@ import { Point } from "@zk-kit/baby-jubjub";
 import { PODEntries } from "../src";
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
-export const privateKey =
+export const privateKeyHex =
   "0001020304050607080900010203040506070809000102030405060708090001";
+export const privateKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE";
 
 export const expectedPublicKeyPoint = [
   0x1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2n,
@@ -100,12 +101,12 @@ export const testPublicKeysToHash = [
   "2af47e1aaf8f0450b9fb2e429042708ec7d173c4ac4329747db1063b78db4e0d"
 ];
 
-export const testPrivateKeys = [
-  privateKey,
-  "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff",
-  "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100",
+export const testPrivateKeysHex = [
+  "0001020304050607080900010203040506070809000102030405060708090001", // private key above
+  "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff", // all hex digits
+  "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100", // all hex digits in reverse
 
-  // The remaining keys here are randomly generated.
+  // The remaining keys here are randomly generated (hex).
   "4f70a5bd0e2d2c4fe33f81e1541cd93890e74aea0e45dce15e8279ad00a23fe5",
   "33d640f957657741fc0277b3a8ab7ef22a2f5a6b038d5f40dc298f1a810dcfeb",
   "b0738043cb2f3d98cb5910faf66861a12cd7786e2134faf15ac42f39f2099d4f",
@@ -117,3 +118,80 @@ export const testPrivateKeys = [
   "1957b35254eaba52eec08023e68c9c6149a86010b6e5637366841ff0f9e1071f",
   "57942716300edc442eee29f20d671dc7bc12a3587cf0b879a8f5061e38316ebb"
 ];
+
+// All the same keys above in base64 with padding.
+export const testPrivateKeysBase64pad = [
+  "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE=",
+  "ABEiM0RVZneImaq7zN3u/wARIjNEVWZ3iJmqu8zd7v8=",
+  "/+7dzLuqmYh3ZlVEMyIRAP/u3cy7qpmId2ZVRDMiEQA=",
+  "T3ClvQ4tLE/jP4HhVBzZOJDnSuoORdzhXoJ5rQCiP+U=",
+  "M9ZA+Vdld0H8AnezqKt+8iovWmsDjV9A3CmPGoENz+s=",
+  "sHOAQ8svPZjLWRD69mhhoSzXeG4hNPrxWsQvOfIJnU8=",
+  "QoBZoSREunMghMkvvKHq9pBmN25UX6S6Z4DEFCnSc3A=",
+  "4i+x6+f1MyxlmYgQMlb9v+kUUqwzfrC2A/tg5UdS5KI=",
+  "iWSS2vRAGZzvUKpLs2R6HxLLbOXlON4ivGNU9+eFtAI=",
+  "Kk1flerJ5MHjat/ayTw+fbbZR2wIh8X4T3p6k+e+v6w=",
+  "6NdvoIgadPy31yIqoaxUYTcxSsVZ0/9cEmDR4VHuZvE=",
+  "GVezUlTqulLuwIAj5oycYUmoYBC25WNzZoQf8PnhBx8=",
+  "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs="
+];
+
+// All the same keys above in base64 without padding.
+export const testPrivateKeysBase64 = [
+  "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE",
+  "ABEiM0RVZneImaq7zN3u/wARIjNEVWZ3iJmqu8zd7v8",
+  "/+7dzLuqmYh3ZlVEMyIRAP/u3cy7qpmId2ZVRDMiEQA",
+  "T3ClvQ4tLE/jP4HhVBzZOJDnSuoORdzhXoJ5rQCiP+U",
+  "M9ZA+Vdld0H8AnezqKt+8iovWmsDjV9A3CmPGoENz+s",
+  "sHOAQ8svPZjLWRD69mhhoSzXeG4hNPrxWsQvOfIJnU8",
+  "QoBZoSREunMghMkvvKHq9pBmN25UX6S6Z4DEFCnSc3A",
+  "4i+x6+f1MyxlmYgQMlb9v+kUUqwzfrC2A/tg5UdS5KI",
+  "iWSS2vRAGZzvUKpLs2R6HxLLbOXlON4ivGNU9+eFtAI",
+  "Kk1flerJ5MHjat/ayTw+fbbZR2wIh8X4T3p6k+e+v6w",
+  "6NdvoIgadPy31yIqoaxUYTcxSsVZ0/9cEmDR4VHuZvE",
+  "GVezUlTqulLuwIAj5oycYUmoYBC25WNzZoQf8PnhBx8",
+  "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs"
+];
+
+// All the same keys above in base64url with padding.
+export const testPrivateKeysBase64urlpad = [
+  "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE=",
+  "ABEiM0RVZneImaq7zN3u_wARIjNEVWZ3iJmqu8zd7v8=",
+  "_-7dzLuqmYh3ZlVEMyIRAP_u3cy7qpmId2ZVRDMiEQA=",
+  "T3ClvQ4tLE_jP4HhVBzZOJDnSuoORdzhXoJ5rQCiP-U=",
+  "M9ZA-Vdld0H8AnezqKt-8iovWmsDjV9A3CmPGoENz-s=",
+  "sHOAQ8svPZjLWRD69mhhoSzXeG4hNPrxWsQvOfIJnU8=",
+  "QoBZoSREunMghMkvvKHq9pBmN25UX6S6Z4DEFCnSc3A=",
+  "4i-x6-f1MyxlmYgQMlb9v-kUUqwzfrC2A_tg5UdS5KI=",
+  "iWSS2vRAGZzvUKpLs2R6HxLLbOXlON4ivGNU9-eFtAI=",
+  "Kk1flerJ5MHjat_ayTw-fbbZR2wIh8X4T3p6k-e-v6w=",
+  "6NdvoIgadPy31yIqoaxUYTcxSsVZ0_9cEmDR4VHuZvE=",
+  "GVezUlTqulLuwIAj5oycYUmoYBC25WNzZoQf8PnhBx8=",
+  "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs="
+];
+
+// All the same keys above in base64url without padding.
+export const testPrivateKeysBase64url = [
+  "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE",
+  "ABEiM0RVZneImaq7zN3u_wARIjNEVWZ3iJmqu8zd7v8",
+  "_-7dzLuqmYh3ZlVEMyIRAP_u3cy7qpmId2ZVRDMiEQA",
+  "T3ClvQ4tLE_jP4HhVBzZOJDnSuoORdzhXoJ5rQCiP-U",
+  "M9ZA-Vdld0H8AnezqKt-8iovWmsDjV9A3CmPGoENz-s",
+  "sHOAQ8svPZjLWRD69mhhoSzXeG4hNPrxWsQvOfIJnU8",
+  "QoBZoSREunMghMkvvKHq9pBmN25UX6S6Z4DEFCnSc3A",
+  "4i-x6-f1MyxlmYgQMlb9v-kUUqwzfrC2A_tg5UdS5KI",
+  "iWSS2vRAGZzvUKpLs2R6HxLLbOXlON4ivGNU9-eFtAI",
+  "Kk1flerJ5MHjat_ayTw-fbbZR2wIh8X4T3p6k-e-v6w",
+  "6NdvoIgadPy31yIqoaxUYTcxSsVZ0_9cEmDR4VHuZvE",
+  "GVezUlTqulLuwIAj5oycYUmoYBC25WNzZoQf8PnhBx8",
+  "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs"
+];
+
+export const testPrivateKeys = testPrivateKeysBase64url;
+
+export const testPrivateKeysAllFormats = testPrivateKeysHex.concat(
+  testPrivateKeysBase64pad,
+  testPrivateKeysBase64,
+  testPrivateKeysBase64urlpad,
+  testPrivateKeysBase64url
+);

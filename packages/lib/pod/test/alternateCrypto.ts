@@ -120,10 +120,10 @@ export class AltCryptCircomlibjs {
     root: bigint,
     privateKey: string
   ): { signature: string; publicKey: string } {
-    expect(privateKey).to.have.length(64);
+    expect(privateKey).to.have.length(43);
 
-    // Private key is interpreted as 32-bytes encoded in hex.
-    const altPrivateKey = fromHexString(privateKey);
+    // Private key is interpreted as 32-bytes encoded in base64url.
+    const altPrivateKey = Buffer.from(privateKey, "base64url");
     expect(altPrivateKey).to.have.length(32);
 
     // EdDSAPCD has an extra step where it hashes a list of bigints (the PCD's
