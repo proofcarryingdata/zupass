@@ -40,7 +40,14 @@ export async function saveUserBackup(
     client,
     `INSERT INTO user_backups (uuid, commitment, email, salt, extra_issuance, encryption_key, terms_agreed)
 VALUES ($1, $2, $3, $4, $5, $6, $7)
-ON CONFLICT (email) DO NOTHING
+ON CONFLICT (email) do update set
+uuid = $1,
+commitment = $2,
+salt = $4,
+extra_issuance = $5,
+encryption_key = $6,
+terms_agreed = $7,
+time_updated = now();
   `,
     [
       user.uuid,
