@@ -1692,7 +1692,12 @@ export class PretixPipeline implements BasePipeline {
         }
 
         try {
-          await this.checkinDB.checkIn(this.id, manualTicket.id, new Date());
+          await this.checkinDB.checkIn(
+            this.id,
+            manualTicket.id,
+            new Date(),
+            checkerEmail
+          );
           this.pendingCheckIns.set(manualTicket.id, {
             status: CheckinStatus.Success,
             timestamp: Date.now()
