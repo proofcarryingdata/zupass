@@ -82,6 +82,10 @@ export function initGenericIssuanceRoutes(
     res.json(result satisfies GenericIssuanceSelfResponseValue);
   });
 
+  app.get("/generic-issuance/api/voucher-stats/:key", async (req, res) => {
+    res.send("ok");
+  });
+
   /**
    * Asks the given feed of a given pipeline for {@link PCD}s
    *
