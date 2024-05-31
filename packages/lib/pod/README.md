@@ -18,7 +18,7 @@
         <img alt="Downloads" src="https://img.shields.io/npm/dm/@pcd/pod.svg?style=flat-square" />
     </a>
 <br>
-    <a href="https://0xparc.notion.site/POD-GPC-Development-6547d2e60c184ad0984f933672246e0b">
+    <a href="https://zupass.org/pod-developers">
         <img alt="Developer Site" src="https://img.shields.io/badge/Developer_Site-green.svg?style=flat-square">
     </a>
     <a href="https://github.com/proofcarryingdata/zupass/blob/main/examples/pod-gpc-example/src/podExample.ts#L57">
@@ -33,7 +33,8 @@
 </p>
 
 A library for creating and manipulating objects in the Provable Object Data
-format. For a full introduction, see the [Developer Site](https://0xparc.notion.site/POD-GPC-Development-6547d2e60c184ad0984f933672246e0b).
+format. For a full introduction, see the
+[Developer Site](https://zupass.org/pod-developers).
 
 **POD** is a format enabling any app to flexibly create cryptographic data and
 make zero-knowledge proofs about it. A POD could represent your ticket to an

@@ -219,4 +219,4 @@ This will require some session management in your app, which is out of scope for
 
 # Sample configurations
 
-If you would like to see some configurations you can use with ZuAuth, please visit the documentation page [here](https://0xparc.notion.site/ZuAuth-Tutorial-777392e05ea449c6bf8b5568349023bb?pvs=25#0fb4f5728e5649a9b8681c58d786d467).
+If you would like to see some configurations you can use with ZuAuth, please visit the documentation page [here](https://zupass.org/zuauth?pvs=25#0fb4f5728e5649a9b8681c58d786d467).
