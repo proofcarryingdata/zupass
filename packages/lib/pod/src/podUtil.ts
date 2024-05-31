@@ -62,17 +62,25 @@ export function checkPrivateKeyFormat(privateKey: string): string {
  * Checks that the input matches the proper format for a public key, as given
  * by {@link PUBLIC_KEY_REGEX}.
  *
+ * @param nameForErrorMessages the name of this value, which is used only for
+ *   error messages (not checked for legality).
  * @param publicKey the string to check
  * @returns the unmodified input, for easy chaining
  * @throws TypeError if the format doesn't match
  */
-export function checkPublicKeyFormat(publicKey: string): string {
+export function checkPublicKeyFormat(
+  publicKey: string,
+  nameForErrorMessages?: string
+): string {
   if (
     !publicKey ||
     typeof publicKey !== "string" ||
     !publicKey.match(PUBLIC_KEY_REGEX)
   ) {
-    throw new TypeError("Public key should be 32 bytes hex-encoded.");
+    throw new TypeError(
+      "Public key should be 32 bytes hex-encoded" +
+        (nameForErrorMessages ? ` in ${nameForErrorMessages}.` : ".")
+    );
   }
   return publicKey;
 }
@@ -258,18 +266,7 @@ export function checkPODValue(
       break;
     case EDDSA_PUBKEY_TYPE_STRING:
       requireValueType(nameForErrorMessages, podValue.value, "string");
-      try {
-        checkPublicKeyFormat(podValue.value);
-      } catch (e) {
-        if (
-          e instanceof TypeError &&
-          e.message === "Public key should be 32 bytes hex-encoded."
-        ) {
-          throw new TypeError(
-            `POD value for ${nameForErrorMessages} is not a valid EdDSA public key.`
-          );
-        }
-      }
+      checkPublicKeyFormat(podValue.value, nameForErrorMessages);
       break;
     default:
       throw new TypeError(
@@ -465,13 +462,10 @@ export function podValueFromRawValue(rawValue: PODRawValue): PODValue {
       // Check for a valid prefix. This is required to distinguish between EdDSA
       // public keys and strings. If there is no (valid) prefix, we assume an
       // encoded string.
-      if (rawValue.match(POD_STRING_TYPE_REGEX) !== null) {
-        const separatorIndex = rawValue.search(/:/);
-        const prefix = checkStringEncodedValueType(
-          rawValue,
-          rawValue.slice(0, separatorIndex)
-        );
-        const payload = rawValue.slice(separatorIndex + 1);
+      const regexpMatch = rawValue.match(POD_STRING_TYPE_REGEX);
+      if (regexpMatch !== null) {
+        const prefix = checkStringEncodedValueType(rawValue, regexpMatch[1]);
+        const payload = regexpMatch[2];
         return { type: prefix, value: payload };
       } else {
         return { type: "string", value: rawValue };

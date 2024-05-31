@@ -23,9 +23,10 @@ export type POD_VALUE_STRING_TYPE_IDENTIFIER = "eddsa_pubkey" | "string";
 export const EDDSA_PUBKEY_TYPE_STRING = "eddsa_pubkey";
 
 /**
- * Regex matching legal values for types encoded as strings.
+ * Regex matching legal values for types encoded as strings. This matches
+ * strings of the form `${PODName}:${string}`.
  */
-export const POD_STRING_TYPE_REGEX = new RegExp(/[A-Za-z_]\w*:.*$/);
+export const POD_STRING_TYPE_REGEX = new RegExp(/([A-Za-z_]\w*):(.*)$/);
 
 /**
  * POD value for a user-specififed string.  String values can contain any

@@ -71,6 +71,22 @@ describe("podCrypto hashes should work", async function () {
     }
   });
 
+  it("podEdDSAPublicKeyHash should produce expected results", function () {
+    // Here we check that the public key hash is precisely the Poseidon(2) hash
+    // of the public key point as an array of 2 elements and not the string hash
+    // of the string representation.
+    for (const privateKey of testPrivateKeys) {
+      const publicKeyPt = derivePublicKey(privateKey);
+      const encodedPublicKey = encodePublicKey(publicKeyPt);
+      const expectedHash = poseidon2(publicKeyPt);
+      const unexpectedHash = podStringHash(encodedPublicKey);
+      const computedHash = podEdDSAPublicKeyHash(encodedPublicKey);
+
+      expect(computedHash).to.eq(expectedHash);
+      expect(computedHash).to.not.eq(unexpectedHash);
+    }
+  });
+
   it("podIntHash should produce unique repeatable results", function () {
     const seenHashes = new Set();
     for (const i of testIntsToHash) {

@@ -49,7 +49,7 @@ export type GPCPCDArgs = {
 
   /**
    * POD objects to prove about.  These are not revealed by default, but
-   * a redacted version of their entries will become part of the clais of the
+   * a redacted version of their entries will become part of the claims of the
    * resulting proof PCD, as specified by the proof config.
    *
    * See {@link GPCProofConfig} and {@link GPCRevealedClaims} for more

@@ -40,8 +40,7 @@ export function podIntHash(input: bigint): bigint {
 }
 
 /**
- * Calculates the appropriate hash for a POD value represented as a string-encoded EdDSA public key,
- * which could be one of multiple value types (see {@link podValueHash}).
+ * Calculates the appropriate hash for a POD value represented as a string-encoded EdDSA public key.
  */
 export function podEdDSAPublicKeyHash(input: string): bigint {
   return poseidon2(decodePublicKey(input));
