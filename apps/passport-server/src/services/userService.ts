@@ -291,15 +291,6 @@ export class UserService {
       );
     }
 
-    if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
-      throw new PCDHTTPError(
-        403,
-        autoRegister
-          ? `Invalid link. Please manually create an account with ${email}.`
-          : `Wrong token. If you got more than one email, use the latest one.`
-      );
-    }
-
     const existingUser = await fetchUserByEmail(this.context.dbPool, email);
 
     // Prevent accidental account re-creation/reset for one-click links clicked by existing users
@@ -307,6 +298,15 @@ export class UserService {
       throw new PCDHTTPError(
         403,
         `The email ${email} has already been registered. Please log in instead.`
+      );
+    }
+
+    if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
+      throw new PCDHTTPError(
+        403,
+        autoRegister
+          ? `Invalid link. Please manually create an account with ${email}.`
+          : `Wrong token. If you got more than one email, use the latest one.`
       );
     }
 
