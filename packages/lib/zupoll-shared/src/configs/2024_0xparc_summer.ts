@@ -6,7 +6,7 @@ export function make0xpSummer(
   ZUPASS_SERVER_URL: string
 ): LoginConfig[] {
   const PARC_SUMMER_CONFIG_ID = "0xPARC Summer";
-  const PARC_SUMMER_CONFIG_NAME = "0xPARC Summer Member";
+  const PARC_SUMMER_CONFIG_NAME = "0xPARC Summer";
   const PARC_SUMMER_RESIDENTS_NAME = "All Polls";
   const PARC_SUMMER_RESIDENTS_DESCRIPTION =
     "Polls created by someone at 0xPARC Summer";
