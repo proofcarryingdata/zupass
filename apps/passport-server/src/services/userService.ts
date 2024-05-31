@@ -123,7 +123,10 @@ export class UserService {
     const newEmailToken =
       await this.emailTokenService.saveNewTokenForEmail(email);
     let existingCommitment = await fetchUserByEmail(this.context.dbPool, email);
-    if (existingCommitment?.encryption_key) {
+    if (
+      existingCommitment?.encryption_key &&
+      process.env.DELETE_MISSING_USERS === "true"
+    ) {
       const blobKey = await getHash(existingCommitment.encryption_key);
       const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
       if (!storage) {
@@ -218,7 +221,10 @@ export class UserService {
     }
 
     let existingUser = await fetchUserByEmail(this.context.dbPool, email);
-    if (existingUser?.encryption_key) {
+    if (
+      existingUser?.encryption_key &&
+      process.env.DELETE_MISSING_USERS === "true"
+    ) {
       const blobKey = await getHash(existingUser.encryption_key);
       const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
       if (!storage) {
