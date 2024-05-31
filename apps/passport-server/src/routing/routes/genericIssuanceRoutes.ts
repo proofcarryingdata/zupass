@@ -88,6 +88,13 @@ export function initGenericIssuanceRoutes(
   app.get("/generic-issuance/api/voucher-stats/:key", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
 
+    if (
+      checkUrlParam(req, "key") !== process.env.VOUCHER_API_KEY ||
+      !process.env.VOUCHER_API_KEY
+    ) {
+      throw new PCDHTTPError(401);
+    }
+
     const pragueId = "24ac727d-bc2f-4727-bcfa-b15cf2f7037e";
     const pipeline = (
       await genericIssuanceService.getAllPipelineInstances()
@@ -102,9 +109,9 @@ export function initGenericIssuanceRoutes(
     const checkins = await checkinDb.getByPipelineId(pragueId);
 
     const products: Record<string, string> = {
-      "508b3dc0-864e-4e87-9ce4-5eebbb672362": "VendorA",
-      "508b3dc0-864e-4e87-9ce4-5eebbb67236b": "VendorB",
-      "508b3dc0-864e-4e87-9ce4-5eebbb67236c": "VendorC"
+      "508b3dc0-864e-4e87-9ce4-5eebbb672362": "Vendor A",
+      "508b3dc0-864e-4e87-9ce4-5eebbb67236b": "Vendor B",
+      "508b3dc0-864e-4e87-9ce4-5eebbb67236c": "Vendor C"
     };
 
     const relevantProductIds = new Set(Object.keys(products));
@@ -112,7 +119,7 @@ export function initGenericIssuanceRoutes(
 
     for (const atom of tickets.atoms) {
       if (atom.email && relevantProductIds.has(atom.productId)) {
-        emailToProductMap[atom.email] = atom.productId as string;
+        emailToProductMap[atom.email] = atom.productId;
       }
     }
 
@@ -143,8 +150,6 @@ export function initGenericIssuanceRoutes(
 
       if (products[product]) {
         result[products[product]] = count;
-      } else {
-        result[product] = count;
       }
     }
 
@@ -153,9 +158,9 @@ export function initGenericIssuanceRoutes(
     }
 
     const strResult = Object.entries(result)
-      .map((e) => `<h3>${e[0]}<h3/><p>${e[1]}</p><br/>`)
+      .map((e) => `<h3>${e[0]}</h3><p>${e[1]} redeemed</p>`)
       .join("<br/>");
-    res.json(strResult);
+    res.send(strResult);
   });
 
   /**

@@ -219,6 +219,7 @@
     "SHOW_POD_TICKET_PCDS",
     "GPC_ARTIFACTS_CONFIG_OVERRIDE",
     "ZUPOLL_API_KEY",
+    "VOUCHER_API_KEY",
     "//// add env vars above this line ////"
   ]
 }
