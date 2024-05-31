@@ -221,6 +221,7 @@
     "ZUPOLL_API_KEY",
     "VOUCHER_API_KEY",
     "DELETE_MISSING_USERS",
+    "ONE_CLICK_LOGIN_ENABLED",
     "//// add env vars above this line ////"
   ]
 }

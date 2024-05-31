@@ -42,6 +42,11 @@ export function OneClickLoginScreen(): JSX.Element | null {
   }, [dispatch, email, code, targetFolder]);
 
   useEffect(() => {
+    if (process.env.ONE_CLICK_LOGIN_ENABLED !== "true") {
+      window.location.hash = "#/";
+      return;
+    }
+
     if (self) {
       if (email !== self.email) {
         alert(
