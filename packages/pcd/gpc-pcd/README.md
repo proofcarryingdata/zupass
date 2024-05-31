@@ -32,8 +32,8 @@
     </a>
 </p>
 
-A PCD representating a ZK proof about one more POD (Provable Object Data) objects
-using a GPC (General Purpose Circuit). For a full introduction, see the
+A PCD representating a ZK proof about one or more POD (Provable Object Data)
+objects using a GPC (General Purpose Circuit). For a full introduction, see the
 [Developer Site](https://0xparc.notion.site/POD-GPC-Development-6547d2e60c184ad0984f933672246e0b).
 
 **POD** is a format enabling any app to flexibly create cryptographic data and
