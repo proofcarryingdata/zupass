@@ -1,4 +1,4 @@
-import { HexString } from "@pcd/passport-crypto";
+import { HexString, getHash } from "@pcd/passport-crypto";
 import {
   AgreeTermsResult,
   ConfirmEmailResponseValue,
@@ -18,8 +18,10 @@ import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
+import { fetchEncryptedStorage } from "../database/queries/e2ee";
 import { upsertUser } from "../database/queries/saveUser";
 import {
+  deleteUserByEmail,
   fetchUserByCommitment,
   fetchUserByEmail,
   fetchUserByUUID
@@ -120,11 +122,15 @@ export class UserService {
 
     const newEmailToken =
       await this.emailTokenService.saveNewTokenForEmail(email);
-
-    const existingCommitment = await fetchUserByEmail(
-      this.context.dbPool,
-      email
-    );
+    let existingCommitment = await fetchUserByEmail(this.context.dbPool, email);
+    if (existingCommitment?.encryption_key) {
+      const blobKey = await getHash(existingCommitment.encryption_key);
+      const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
+      if (!storage) {
+        await deleteUserByEmail(this.context.dbPool, existingCommitment.email);
+        existingCommitment = null;
+      }
+    }
 
     if (
       existingCommitment !== null &&
