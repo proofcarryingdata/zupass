@@ -1,0 +1,44 @@
+import { makePodboxLoginConfigs } from "../makePodboxLoginConfigs";
+import { LoginConfig } from "../types";
+
+export function make0xpSummer(
+  ZUPASS_CLIENT_URL: string,
+  ZUPASS_SERVER_URL: string
+): LoginConfig[] {
+  const PARC_SUMMER_CONFIG_ID = "0xPARC Summer";
+  const PARC_SUMMER_CONFIG_NAME = "0xPARC Summer Member";
+  const PARC_SUMMER_RESIDENTS_NAME = "All Polls";
+  const PARC_SUMMER_RESIDENTS_DESCRIPTION =
+    "Polls created by someone at 0xPARC Summer";
+  const PARC_SUMMER_ORGANIZER_NAME = "Admin Polls";
+  const PARC_SUMMER_ORGANIZER_DESCRIPTION =
+    "Polls created by admins of 0xPARC Summer";
+  const PARC_SUMMER_DESCRIPTION =
+    "0xPARC Summer Polls - be excellent to each other";
+  const PARC_SUMMER_CONFIG_PIPELINE_ID = "88b07e3a-e676-4286-8dc9-49b2ffae3f96";
+  const PARC_SUMMER_CONFIG_RESIDENT_SEMA_GROUP_ID =
+    "a04aa4e1-c7c6-4c1e-8ddd-946e5649ca71";
+  const PARC_SUMMER_CONFIG_ORGANIZER_SEMA_GROUP_ID =
+    "bcf5fffe-830a-404b-b80b-a89643963927";
+  const PARC_SUMMER_YEAR = 2024;
+  const PARC_SUMMER_MONTH = 6;
+  const PARC_SUMMER_DAY = 1;
+  const PARC_SUMMER_CONFIG = makePodboxLoginConfigs(
+    ZUPASS_CLIENT_URL,
+    ZUPASS_SERVER_URL,
+    PARC_SUMMER_CONFIG_ID,
+    PARC_SUMMER_DESCRIPTION,
+    PARC_SUMMER_CONFIG_NAME,
+    PARC_SUMMER_RESIDENTS_NAME,
+    PARC_SUMMER_RESIDENTS_DESCRIPTION,
+    PARC_SUMMER_ORGANIZER_NAME,
+    PARC_SUMMER_ORGANIZER_DESCRIPTION,
+    PARC_SUMMER_CONFIG_PIPELINE_ID,
+    PARC_SUMMER_CONFIG_RESIDENT_SEMA_GROUP_ID,
+    PARC_SUMMER_CONFIG_ORGANIZER_SEMA_GROUP_ID,
+    PARC_SUMMER_YEAR,
+    PARC_SUMMER_MONTH,
+    PARC_SUMMER_DAY
+  );
+  return PARC_SUMMER_CONFIG;
+}
