@@ -151,7 +151,11 @@ export function initGenericIssuanceRoutes(
     if (Object.entries(result).length === 0) {
       res.send("Loading data, refresh in a minute...");
     }
-    res.json(result);
+
+    const strResult = Object.entries(result)
+      .map((e) => `<h3>${e[0]}<h3/><p>${e[1]}</p><br/>`)
+      .join("<br/>");
+    res.json(strResult);
   });
 
   /**
