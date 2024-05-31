@@ -12,6 +12,8 @@ import { v4 as uuid } from "uuid";
 dotenv.config();
 
 const define = {
+  "process.env.ONE_CLICK_LOGIN_ENABLED":
+    process.env.ONE_CLICK_LOGIN_ENABLED === "true" ? '"true"' : '"false"',
   "process.env.PASSPORT_SERVER_URL": JSON.stringify(
     process.env.PASSPORT_SERVER_URL || "http://localhost:3002"
   ),
