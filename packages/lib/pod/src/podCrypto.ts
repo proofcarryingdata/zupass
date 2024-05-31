@@ -14,7 +14,7 @@ import { BigNumber, leBigIntToBuffer, leBufferToBigInt } from "@zk-kit/utils";
 import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
-import { PODValue } from "./podTypes";
+import { EDDSA_PUBKEY_TYPE_STRING, PODValue } from "./podTypes";
 import {
   checkPrivateKeyFormat,
   checkPublicKeyFormat,
@@ -40,6 +40,14 @@ export function podIntHash(input: bigint): bigint {
 }
 
 /**
+ * Calculates the appropriate hash for a POD value represented as a string-encoded EdDSA public key,
+ * which could be one of multiple value types (see {@link podValueHash}).
+ */
+export function podEdDSAPublicKeyHash(input: string): bigint {
+  return poseidon2(decodePublicKey(input));
+}
+
+/**
  * Calculates the appropriate hash for a POD entry name.
  */
 export function podNameHash(podName: string): bigint {
@@ -57,8 +65,8 @@ export function podValueHash(podValue: PODValue): bigint {
     case "cryptographic":
       // TODO(POD-P2): Finalize choice of hash for POD cryptographics.
       return podIntHash(podValue.value);
-    case "eddsa-pubkey":
-      return poseidon2(decodePublicKey(podValue.value));
+    case EDDSA_PUBKEY_TYPE_STRING:
+      return podEdDSAPublicKeyHash(podValue.value);
     default:
       throw new TypeError(`Unexpected type in PODValue ${podValue}.`);
   }

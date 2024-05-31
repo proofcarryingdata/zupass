@@ -1,6 +1,6 @@
 import JSONBig from "json-bigint";
 import {
-  EDDSA_PUBKEY_PREFIX,
+  EDDSA_PUBKEY_TYPE_STRING,
   PODEntries,
   PODRawValue,
   PODRawValueTuple,
@@ -10,7 +10,9 @@ import {
   POD_CRYPTOGRAPHIC_MIN,
   POD_INT_MAX,
   POD_INT_MIN,
-  POD_NAME_REGEX
+  POD_NAME_REGEX,
+  POD_STRING_TYPE_REGEX,
+  POD_VALUE_STRING_TYPE_IDENTIFIER
 } from "./podTypes";
 
 // TODO(POD-P3): Decide if these utils should all be published outside
@@ -159,6 +161,29 @@ export function requireValueType(
 }
 
 /**
+ * Checks string-encoded value type prefix for its validity, i.e. that
+ * it is actually of type {@link POD_VALUE_STRING_TYPE_IDENTIFIER}.
+ *
+ * @param nameForErrorMessages the name of the value from which the type name is
+ *   derived, used only for error messages.
+ * @param typePrefix the type prefix to check
+ * @returns the type prefix as the appropriate type
+ * @throws Error if the type prefix is invalid
+ */
+export function checkStringEncodedValueType(
+  nameForErrorMessages: string,
+  typePrefix: string
+): POD_VALUE_STRING_TYPE_IDENTIFIER {
+  if (typePrefix === EDDSA_PUBKEY_TYPE_STRING || typePrefix === "string") {
+    return typePrefix;
+  } else {
+    throw new Error(
+      `Invalid string-encoded value type ${typePrefix} in ${nameForErrorMessages}.`
+    );
+  }
+}
+
+/**
  * Checks that the given value is between the given bounds.  The bounds are
  * both inclusive, so that they can also be legal values in the same bounds.
  *
@@ -203,6 +228,7 @@ export function checkPODValue(
       `POD value for ${nameForErrorMessages} cannot be undefined.`
     );
   }
+
   if (podValue.type === undefined) {
     throw new TypeError(
       `POD value for ${nameForErrorMessages} must have a type.`
@@ -230,9 +256,20 @@ export function checkPODValue(
         POD_INT_MAX
       );
       break;
-    case "eddsa-pubkey":
+    case EDDSA_PUBKEY_TYPE_STRING:
       requireValueType(nameForErrorMessages, podValue.value, "string");
-      checkPublicKeyFormat(podValue.value);
+      try {
+        checkPublicKeyFormat(podValue.value);
+      } catch (e) {
+        if (
+          e instanceof TypeError &&
+          e.message === "Public key should be 32 bytes hex-encoded."
+        ) {
+          throw new TypeError(
+            `POD value for ${nameForErrorMessages} is not a valid EdDSA public key.`
+          );
+        }
+      }
       break;
     default:
       throw new TypeError(
@@ -354,9 +391,12 @@ export function deserializePODEntries(serializedEntries: string): PODEntries {
  * @returns the underlying value
  */
 export function podValueToRawValue(podValue: PODValue): PODRawValue {
-  if (podValue.type === "eddsa-pubkey") {
-    return `${EDDSA_PUBKEY_PREFIX}:${podValue.value}`;
-  } else if (podValue.type === "string") {
+  if (podValue.type === EDDSA_PUBKEY_TYPE_STRING) {
+    return `${EDDSA_PUBKEY_TYPE_STRING}:${podValue.value}`;
+  } else if (
+    podValue.type === "string" &&
+    podValue.value.match(POD_STRING_TYPE_REGEX)
+  ) {
     return `string:${podValue.value}`;
   } else {
     return podValue.value;
@@ -425,14 +465,17 @@ export function podValueFromRawValue(rawValue: PODRawValue): PODValue {
       // Check for a valid prefix. This is required to distinguish between EdDSA
       // public keys and strings. If there is no (valid) prefix, we assume an
       // encoded string.
-      const separatorIndex = rawValue.search(/:/);
-      const prefix = rawValue.slice(0, separatorIndex);
-      const payload = rawValue.slice(separatorIndex + 1);
-      return prefix === EDDSA_PUBKEY_PREFIX && payload.match(PUBLIC_KEY_REGEX)
-        ? { type: "eddsa-pubkey", value: payload }
-        : prefix === "string"
-        ? { type: "string", value: payload }
-        : { type: "string", value: rawValue };
+      if (rawValue.match(POD_STRING_TYPE_REGEX) !== null) {
+        const separatorIndex = rawValue.search(/:/);
+        const prefix = checkStringEncodedValueType(
+          rawValue,
+          rawValue.slice(0, separatorIndex)
+        );
+        const payload = rawValue.slice(separatorIndex + 1);
+        return { type: prefix, value: payload };
+      } else {
+        return { type: "string", value: rawValue };
+      }
     default:
       throw new Error("Invalid serialised POD value in raw value ${rawValue}.");
   }

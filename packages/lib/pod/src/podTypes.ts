@@ -13,6 +13,21 @@ export type PODName = string;
 export const POD_NAME_REGEX = new RegExp(/^[A-Za-z_]\w*$/);
 
 /**
+ * String-encoded POD value type enum.
+ */
+export type POD_VALUE_STRING_TYPE_IDENTIFIER = "eddsa_pubkey" | "string";
+
+/**
+ * Identifier for EdDSA public key string type.
+ */
+export const EDDSA_PUBKEY_TYPE_STRING = "eddsa_pubkey";
+
+/**
+ * Regex matching legal values for types encoded as strings.
+ */
+export const POD_STRING_TYPE_REGEX = new RegExp(/[A-Za-z_]\w*:.*$/);
+
+/**
  * POD value for a user-specififed string.  String values can contain any
  * string.  They are not limited like names.
  */
@@ -69,18 +84,13 @@ export const POD_INT_MIN = 0n;
 export const POD_INT_MAX = (1n << 63n) - 1n;
 
 /**
- * POD value for EddSA (Baby Jubjub) public keys. Such a value is represented as
- * a hex string of the (32-byte) compressed form of the key.
+ * POD value for EdDSA (Baby Jubjub) public keys. Such a value is represented as
+ * a hex string of the (32-byte) encoded form of the key.
  */
 export type PODEdDSAPublicKeyValue = {
-  type: "eddsa-pubkey";
+  type: "eddsa_pubkey";
   value: string;
 };
-
-/**
- * A useful identifier for simplified JSON serialisation of EdDSA public keys.
- */
-export const EDDSA_PUBKEY_PREFIX = "pk";
 
 /**
  * POD values are tagged with their type.  All values contain `type` and `value`
