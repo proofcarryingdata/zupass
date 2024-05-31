@@ -82,6 +82,9 @@ async function setupProveArgs(): Promise<GPCPCDArgs> {
     id: {
       argumentType: ArgumentTypeName.String,
       value: uuid()
+    },
+    membershipLists: {
+      argumentType: ArgumentTypeName.String
     }
   } satisfies GPCPCDArgs;
 }
