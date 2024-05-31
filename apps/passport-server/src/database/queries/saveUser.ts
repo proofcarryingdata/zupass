@@ -9,6 +9,33 @@ export async function saveUserBackup(
 ): Promise<void> {
   logger(`saving user backup: ${JSON.stringify(user)}`);
 
+  // INSERT INTO users (uuid, commitment, email, salt, extra_issuance, encryption_key, terms_agreed, time_created, time_updated)
+  // SELECT uuid, commitment, email, salt, extra_issuance, encryption_key, terms_agreed, time_created, time_updated
+  // FROM user_backups
+  // on conflict (email) do update set
+  // uuid = EXCLUDED.uuid,
+  // commitment = EXCLUDED.commitment,
+  // salt = EXCLUDED.salt,
+  // extra_issuance = EXCLUDED.extra_issuance,
+  // encryption_key = EXCLUDED.encryption_key,
+  // terms_agreed = EXCLUDED.terms_agreed,
+  // time_created = EXCLUDED.time_created,
+  // time_updated = EXCLUDED.time_updated;
+
+  // INSERT INTO users (uuid, commitment, email, salt, extra_issuance, encryption_key, terms_agreed, time_created, time_updated)
+  // SELECT uuid, commitment, email, salt, extra_issuance, encryption_key, terms_agreed, time_created, time_updated
+  // FROM user_backups
+  // where email = 'ivan@0xparc.org'
+  // on conflict (email) do update set
+  // uuid = EXCLUDED.uuid,
+  // commitment = EXCLUDED.commitment,
+  // salt = EXCLUDED.salt,
+  // extra_issuance = EXCLUDED.extra_issuance,
+  // encryption_key = EXCLUDED.encryption_key,
+  // terms_agreed = EXCLUDED.terms_agreed,
+  // time_created = EXCLUDED.time_created,
+  // time_updated = EXCLUDED.time_updated;
+
   await sqlQuery(
     client,
     `INSERT INTO user_backups (uuid, commitment, email, salt, extra_issuance, encryption_key, terms_agreed)
