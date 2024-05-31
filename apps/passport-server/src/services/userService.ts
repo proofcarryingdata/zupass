@@ -210,7 +210,17 @@ export class UserService {
         "Invalid Zupass link. Please log in through the home page."
       );
     }
-    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
+
+    let existingUser = await fetchUserByEmail(this.context.dbPool, email);
+    if (existingUser?.encryption_key) {
+      const blobKey = await getHash(existingUser.encryption_key);
+      const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
+      if (!storage) {
+        await deleteUserByEmail(this.context.dbPool, existingUser.email);
+        existingUser = null;
+      }
+    }
+
     if (existingUser) {
       res.status(200).json({
         isNewUser: false,
