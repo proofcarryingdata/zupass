@@ -1870,8 +1870,18 @@ export class PretixPipeline implements BasePipeline {
     return productConfig;
   }
 
-  public static is(p: Pipeline): p is PretixPipeline {
-    return p.type === PipelineType.Pretix;
+  public async getAllTickets(): Promise<{
+    atoms: PretixAtom[];
+    manual: ManualTicket[];
+  }> {
+    return {
+      atoms: await this.db.load(this.id),
+      manual: this.definition.options.manualTickets ?? []
+    };
+  }
+
+  public static is(p: Pipeline | undefined): p is PretixPipeline {
+    return p?.type === PipelineType.Pretix;
   }
 
   /**

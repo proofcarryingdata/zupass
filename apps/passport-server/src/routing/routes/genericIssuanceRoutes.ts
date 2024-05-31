@@ -23,6 +23,7 @@ import {
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express from "express";
 import urljoin from "url-join";
+import { PipelineCheckinDB } from "../../database/queries/pipelineCheckinDB";
 import { GenericIssuanceService } from "../../services/generic-issuance/GenericIssuanceService";
 import {
   getAllGenericIssuanceHTTPQuery,
@@ -31,8 +32,9 @@ import {
   getPipelineLoadHQuery as getPipelineDataLoadHQuery,
   traceUser
 } from "../../services/generic-issuance/honeycombQueries";
+import { PretixPipeline } from "../../services/generic-issuance/pipelines/PretixPipeline";
 import { createQueryUrl } from "../../services/telemetryService";
-import { GlobalServices } from "../../types";
+import { ApplicationContext, GlobalServices } from "../../types";
 import { IS_PROD } from "../../util/isProd";
 import { logger } from "../../util/logger";
 import { checkBody, checkUrlParam } from "../params";
@@ -40,6 +42,7 @@ import { PCDHTTPError } from "../pcdHttpError";
 
 export function initGenericIssuanceRoutes(
   app: express.Application,
+  context: ApplicationContext,
   { genericIssuanceService }: GlobalServices
 ): void {
   logger("[INIT] initializing generic issuance routes");
@@ -83,7 +86,72 @@ export function initGenericIssuanceRoutes(
   });
 
   app.get("/generic-issuance/api/voucher-stats/:key", async (req, res) => {
-    res.send("ok");
+    checkGenericIssuanceServiceStarted(genericIssuanceService);
+
+    const pragueId = "24ac727d-bc2f-4727-bcfa-b15cf2f7037e";
+    const pipeline = (
+      await genericIssuanceService.getAllPipelineInstances()
+    ).find((p) => p.id === pragueId);
+
+    if (!PretixPipeline.is(pipeline)) {
+      throw new PCDHTTPError(400);
+    }
+
+    const checkinDb = new PipelineCheckinDB(context.dbPool);
+    const tickets = await pipeline.getAllTickets();
+    const checkins = await checkinDb.getByPipelineId(pragueId);
+
+    const products: Record<string, string> = {
+      "508b3dc0-864e-4e87-9ce4-5eebbb672362": "VendorA",
+      "508b3dc0-864e-4e87-9ce4-5eebbb67236b": "VendorB",
+      "508b3dc0-864e-4e87-9ce4-5eebbb67236c": "VendorC"
+    };
+
+    const relevantProductIds = new Set(Object.keys(products));
+    const emailToProductMap: Record<string, string> = {};
+
+    for (const atom of tickets.atoms) {
+      if (atom.email && relevantProductIds.has(atom.productId)) {
+        emailToProductMap[atom.email] = atom.productId as string;
+      }
+    }
+
+    const redemptionCounts: Record<string, number> = {};
+
+    for (const checkin of checkins) {
+      if (!checkin.checkerEmail) {
+        continue;
+      }
+
+      const checkerProduct = emailToProductMap[checkin.checkerEmail];
+
+      if (!checkerProduct) {
+        continue;
+      }
+
+      redemptionCounts[checkerProduct] =
+        redemptionCounts[checkerProduct] !== undefined
+          ? redemptionCounts[checkerProduct] + 1
+          : 1;
+    }
+
+    const result: Record<string, number> = {};
+
+    for (const entry of Object.entries(redemptionCounts)) {
+      const product = entry[0];
+      const count = entry[1];
+
+      if (products[product]) {
+        result[products[product]] = count;
+      } else {
+        result[product] = count;
+      }
+    }
+
+    if (Object.entries(result).length === 0) {
+      res.send("Loading data, refresh in a minute...");
+    }
+    res.json(result);
   });
 
   /**

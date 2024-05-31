@@ -100,7 +100,8 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
     return result.rows.map((row) => {
       return {
         ticketId: row.ticket_id,
-        timestamp: row.checkin_timestamp
+        timestamp: row.checkin_timestamp,
+        checkerEmail: row.checker_email ?? undefined
       } satisfies PipelineCheckin;
     });
   }
@@ -150,4 +151,5 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
 export interface PipelineCheckin {
   ticketId: string;
   timestamp: Date;
+  checkerEmail?: string;
 }
