@@ -20,7 +20,12 @@ export interface IPipelineCheckinDB {
   // Fetch all check-ins for a pipeline
   getByPipelineId(pipelineId: string): Promise<PipelineCheckin[]>;
   // Add a check-in record for a ticket ID
-  checkIn(pipelineId: string, ticketId: string, timestamp: Date): Promise<void>;
+  checkIn(
+    pipelineId: string,
+    ticketId: string,
+    timestamp: Date,
+    checkerEmail: string
+  ): Promise<void>;
   // Delete check-in for a ticket ID
   deleteCheckIn(pipelineId: string, ticketId: string): Promise<number>;
 }
@@ -95,7 +100,8 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
     return result.rows.map((row) => {
       return {
         ticketId: row.ticket_id,
-        timestamp: row.checkin_timestamp
+        timestamp: row.checkin_timestamp,
+        checkerEmail: row.checker_email ?? undefined
       } satisfies PipelineCheckin;
     });
   }
@@ -107,14 +113,15 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
   public async checkIn(
     pipelineId: string,
     ticketId: string,
-    timestamp: Date
+    timestamp: Date,
+    checkerEmail: string
   ): Promise<void> {
     await sqlQuery(
       this.db,
       `
-    INSERT INTO generic_issuance_checkins (pipeline_id, ticket_id, checkin_timestamp) VALUES($1, $2, $3)
+    INSERT INTO generic_issuance_checkins (pipeline_id, ticket_id, checkin_timestamp, checker_email) VALUES($1, $2, $3, $4)
     `,
-      [pipelineId, ticketId, timestamp]
+      [pipelineId, ticketId, timestamp, checkerEmail]
     );
   }
 
@@ -144,4 +151,5 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
 export interface PipelineCheckin {
   ticketId: string;
   timestamp: Date;
+  checkerEmail?: string;
 }

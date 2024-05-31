@@ -1692,7 +1692,12 @@ export class PretixPipeline implements BasePipeline {
         }
 
         try {
-          await this.checkinDB.checkIn(this.id, manualTicket.id, new Date());
+          await this.checkinDB.checkIn(
+            this.id,
+            manualTicket.id,
+            new Date(),
+            checkerEmail
+          );
           this.pendingCheckIns.set(manualTicket.id, {
             status: CheckinStatus.Success,
             timestamp: Date.now()
@@ -1865,8 +1870,18 @@ export class PretixPipeline implements BasePipeline {
     return productConfig;
   }
 
-  public static is(p: Pipeline): p is PretixPipeline {
-    return p.type === PipelineType.Pretix;
+  public async getAllTickets(): Promise<{
+    atoms: PretixAtom[];
+    manual: ManualTicket[];
+  }> {
+    return {
+      atoms: await this.db.load(this.id),
+      manual: this.definition.options.manualTickets ?? []
+    };
+  }
+
+  public static is(p: Pipeline | undefined): p is PretixPipeline {
+    return p?.type === PipelineType.Pretix;
   }
 
   /**
