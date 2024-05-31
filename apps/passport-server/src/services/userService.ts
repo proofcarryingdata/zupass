@@ -127,6 +127,9 @@ export class UserService {
       const blobKey = await getHash(existingCommitment.encryption_key);
       const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
       if (!storage) {
+        logger(
+          `[USER_SERVICE] Deleting user with no storage: ${existingCommitment.email}`
+        );
         await deleteUserByEmail(this.context.dbPool, existingCommitment.email);
         existingCommitment = null;
       }
@@ -216,6 +219,9 @@ export class UserService {
       const blobKey = await getHash(existingUser.encryption_key);
       const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
       if (!storage) {
+        logger(
+          `[USER_SERVICE] Deleting user with no storage: ${existingUser.email}`
+        );
         await deleteUserByEmail(this.context.dbPool, existingUser.email);
         existingUser = null;
       }
