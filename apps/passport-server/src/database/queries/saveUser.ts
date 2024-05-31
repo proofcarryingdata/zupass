@@ -1,6 +1,31 @@
 import { Pool } from "postgres-pool";
 import { logger } from "../../util/logger";
+import { UserRow } from "../models";
 import { sqlQuery } from "../sqlQuery";
+
+export async function saveUserBackup(
+  client: Pool,
+  user: UserRow
+): Promise<void> {
+  logger(`saving user backup: ${JSON.stringify(user)}`);
+
+  await sqlQuery(
+    client,
+    `INSERT INTO user_backups (uuid, commitment, email, salt, extra_issuance, encryption_key, terms_agreed)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+ON CONFLICT (email) DO NOTHING
+  `,
+    [
+      user.uuid,
+      user.commitment,
+      user.email,
+      user.salt,
+      user.extra_issuance,
+      user.encryption_key,
+      user.terms_agreed
+    ]
+  );
+}
 
 /**
  * Saves a new user. If a user with the given email already exists, overwrites their

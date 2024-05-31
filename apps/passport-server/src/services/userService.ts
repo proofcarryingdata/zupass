@@ -19,7 +19,7 @@ import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import { fetchEncryptedStorage } from "../database/queries/e2ee";
-import { upsertUser } from "../database/queries/saveUser";
+import { saveUserBackup, upsertUser } from "../database/queries/saveUser";
 import {
   deleteUserByEmail,
   fetchUserByCommitment,
@@ -128,8 +128,11 @@ export class UserService {
       const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
       if (!storage) {
         logger(
-          `[USER_SERVICE] Deleting user with no storage: ${existingCommitment.email}`
+          `[USER_SERVICE] Deleting user with no storage: ${JSON.stringify(
+            existingCommitment
+          )}`
         );
+        await saveUserBackup(this.context.dbPool, existingCommitment);
         await deleteUserByEmail(this.context.dbPool, existingCommitment.email);
         existingCommitment = null;
       }
@@ -220,8 +223,11 @@ export class UserService {
       const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
       if (!storage) {
         logger(
-          `[USER_SERVICE] Deleting user with no storage: ${existingUser.email}`
+          `[USER_SERVICE] Deleting user with no storage: ${JSON.stringify(
+            existingUser
+          )}`
         );
+        await saveUserBackup(this.context.dbPool, existingUser);
         await deleteUserByEmail(this.context.dbPool, existingUser.email);
         existingUser = null;
       }
