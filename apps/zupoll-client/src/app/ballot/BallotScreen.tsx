@@ -245,7 +245,7 @@ export function BallotScreen({
               return (
                 <BallotPoll
                   isHackathonView={isHackathonView}
-                  thisIsHackathonView={poll.options.length >= 6}
+                  thisIsHackathonView={poll.options.length >= 7}
                   singlePoll={polls.length === 1}
                   key={poll.id}
                   canVote={canVote}
