@@ -1,4 +1,3 @@
-import { make0xPARChq } from "./configs/2024_0xparc_hq";
 import { make0xpSummer } from "./configs/2024_0xparc_summer";
 import { makeEsmeralda } from "./configs/2024_edge_esmeralda";
 import { makeEthBerlin } from "./configs/2024_eth_berlin";
@@ -9,7 +8,7 @@ export function getPodboxConfigs(
   ZUPASS_CLIENT_URL: string,
   ZUPASS_SERVER_URL: string
 ): LoginConfig[] {
-  const PARC_HQ_CONFIG = make0xPARChq(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL);
+  // const PARC_HQ_CONFIG = make0xPARChq(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL);
   const PARC_SUMMER_CONFIG = make0xpSummer(
     ZUPASS_CLIENT_URL,
     ZUPASS_SERVER_URL
@@ -19,7 +18,7 @@ export function getPodboxConfigs(
   const ETH_BERLIN_CONFIG = makeEthBerlin(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL);
 
   return [
-    ...PARC_HQ_CONFIG,
+    // ...PARC_HQ_CONFIG,
     ...PARC_SUMMER_CONFIG,
     ...ESMERALDA_CONFIG,
     ...ETH_PRAGUE_CONFIG,
