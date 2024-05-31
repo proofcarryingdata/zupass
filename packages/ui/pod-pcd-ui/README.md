@@ -17,21 +17,20 @@
     <a href="https://npmjs.org/package/@pcd/pod-pcd-ui">
         <img alt="Downloads" src="https://img.shields.io/npm/dm/@pcd/pod-pcd-ui.svg?style=flat-square" />
     </a>
+<br>
+    <a href="https://0xparc.notion.site/POD-GPC-Development-6547d2e60c184ad0984f933672246e0b">
+        <img alt="Developer Site" src="https://img.shields.io/badge/Developer_Site-green.svg?style=flat-square">
+    </a>
+    <a href="https://docs.pcd.team/modules/_pcd_pod_pcd_ui.html">
+        <img alt="TypeDoc" src="https://img.shields.io/badge/TypeDoc-purple.svg?style=flat-square">
+    </a>
+    <a href="https://github.com/proofcarryingdata/zupass/tree/main/packages/ui/pod-pcd-ui">
+        <img alt="GitHub" src="https://img.shields.io/badge/GitHub-grey.svg?style=flat-square">
+    </a>
 </p>
 
-| This package provides React UI for `@pcd/pod-pcd` |
-| ------------------------------------------------- |
+This package provides React UI for
+[`@pcd/pod-pcd`](https://github.com/proofcarryingdata/zupass/tree/main/packages/pcd/pod-pcd).
+See that package for more details on functionality.
 
-## 🛠 Install
-
-Install the `@pcd/pod-pcd-ui` package with npm:
-
-```bash
-npm i @pcd/pod-pcd-ui
-```
-
-or yarn:
-
-```bash
-yarn add @pcd/pod-pcd-ui
-```
+For a full introduction, see the [Developer Site](https://0xparc.notion.site/POD-GPC-Development-6547d2e60c184ad0984f933672246e0b).

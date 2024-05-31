@@ -199,6 +199,9 @@ export const GPC_ARTIFACTS_NPM_VERSION = ProtoPODGPC.ARTIFACTS_NPM_VERSION;
 
 /**
  * Possible sources to download GPC artifacts.
+ *
+ * Note that the `zupass` source is not currently usable outside of the
+ * Zupass app itself.
  */
 export type GPCArtifactSource = "zupass" | "github" | "unpkg";
 

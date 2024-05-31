@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO(POD-P1): Figure out how to build/distribute artifacts to server for prod
-# TODO(POD-P2): Create and distribute real artifacts after trusted setup
-
 set -ex
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
