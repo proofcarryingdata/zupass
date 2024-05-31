@@ -11,6 +11,7 @@ import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import {
+  EDDSA_PUBKEY_TYPE_STRING,
   PODContent,
   checkPrivateKeyFormat,
   checkPublicKeyFormat,
@@ -21,6 +22,7 @@ import {
   encodePrivateKey,
   encodePublicKey,
   encodeSignature,
+  podEdDSAPublicKeyHash,
   podIntHash,
   podMerkleTreeHash,
   podNameHash,
@@ -40,6 +42,7 @@ import {
   sampleEntries1,
   testIntsToHash,
   testPrivateKeys,
+  testPublicKeysToHash,
   testStringsToHash
 } from "./common";
 
@@ -53,6 +56,34 @@ describe("podCrypto hashes should work", async function () {
 
       const h2 = podStringHash(s);
       expect(h2).to.eq(h);
+    }
+  });
+
+  it("podEdDSAPublicKeyHash should produce unique repeatable results", function () {
+    const seenHashes = new Set();
+    for (const s of testPublicKeysToHash) {
+      const h = podEdDSAPublicKeyHash(s);
+      expect(seenHashes.has(h)).to.be.false;
+      seenHashes.add(h);
+
+      const h2 = podEdDSAPublicKeyHash(s);
+      expect(h2).to.eq(h);
+    }
+  });
+
+  it("podEdDSAPublicKeyHash should produce expected results", function () {
+    // Here we check that the public key hash is precisely the Poseidon(2) hash
+    // of the public key point as an array of 2 elements and not the string hash
+    // of the string representation.
+    for (const privateKey of testPrivateKeys) {
+      const publicKeyPt = derivePublicKey(privateKey);
+      const encodedPublicKey = encodePublicKey(publicKeyPt);
+      const expectedHash = poseidon2(publicKeyPt);
+      const unexpectedHash = podStringHash(encodedPublicKey);
+      const computedHash = podEdDSAPublicKeyHash(encodedPublicKey);
+
+      expect(computedHash).to.eq(expectedHash);
+      expect(computedHash).to.not.eq(unexpectedHash);
     }
   });
 
@@ -97,6 +128,14 @@ describe("podCrypto hashes should work", async function () {
       seenHashes.add(h);
 
       const h2 = podValueHash({ type: "string", value: s });
+      expect(h2).to.eq(h);
+    }
+    for (const s of testPublicKeysToHash) {
+      const h = podValueHash({ type: EDDSA_PUBKEY_TYPE_STRING, value: s });
+      expect(seenHashes.has(h)).to.be.false;
+      seenHashes.add(h);
+
+      const h2 = podValueHash({ type: EDDSA_PUBKEY_TYPE_STRING, value: s });
       expect(h2).to.eq(h);
     }
     for (const i of testIntsToHash) {

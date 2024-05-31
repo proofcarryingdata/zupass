@@ -30,18 +30,19 @@ export const sampleEntries1 = {
   H: { type: "int", value: 8n },
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n },
+  publicKey: { type: "eddsa_pubkey", value: expectedPublicKey },
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
 } satisfies PODEntries;
 
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedContentID1 =
-  21748523748810072846647845097417136490972606253431724953054174411568740252986n;
+  12404785626264207783522278176629851913558812302780179622189407657324290448828n;
 
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedSignature1 =
-  "e0031246c8657545c154f407006f6856de2f69acd00f23b637ec23620792f10c7bf70befe45c79acf2a8cbea0eb4ffe1beef30ff23f2623fd5acf51beaa0d905";
+  "64abaf261621e095cda8aaadd6e4bdf6501545e87f6cd923bf7e5e0f7295032b0138ec803350639b0a04de9c26fc2b8232f3f46b5b7486b69e02c4de06398601";
 
 export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },
@@ -85,6 +86,18 @@ export const testIntsToHash = [
   // Max 256-bit 32-byte integer value (too large for a circuit, but hashable
   // after being reduced mod R).
   0xffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffffn
+];
+
+export const testPublicKeysToHash = [
+  "4f5fb4898c477d8c17227ddd81eb597125e4d437489c01a6085b5db54e053b0a",
+  "09ba237eb49e4552da3bf5260f8ca8a9a9055c41aad47ef564de4bb1a5cba619",
+  "ce1c9c187ad59b5a324020ab503e783bc95bc268cb1b03cb5c7be91f1e4e8917",
+  "c2478aa919f5d09a68fe264d9e980b94872d2472cb53f514bfc1b19f3029741f",
+  "bcac8981e8ee8f5d9206f5b74f67b1ce91c6bc18b81d259c7a9526b251e7a39f",
+  "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
+  "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b",
+  "f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585",
+  "2af47e1aaf8f0450b9fb2e429042708ec7d173c4ac4329747db1063b78db4e0d"
 ];
 
 export const testPrivateKeys = [
