@@ -1,5 +1,11 @@
 # @pcd/zuauth
 
+## 1.3.3
+
+### Patch Changes
+
+- Add Edge Esmeralda config
+
 ## 1.3.2
 
 ### Patch Changes
