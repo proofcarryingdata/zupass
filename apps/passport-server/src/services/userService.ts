@@ -1,4 +1,4 @@
-import { HexString } from "@pcd/passport-crypto";
+import { HexString, getHash } from "@pcd/passport-crypto";
 import {
   AgreeTermsResult,
   ConfirmEmailResponseValue,
@@ -18,8 +18,10 @@ import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
-import { upsertUser } from "../database/queries/saveUser";
+import { fetchEncryptedStorage } from "../database/queries/e2ee";
+import { saveUserBackup, upsertUser } from "../database/queries/saveUser";
 import {
+  deleteUserByEmail,
   fetchUserByCommitment,
   fetchUserByEmail,
   fetchUserByUUID
@@ -120,11 +122,24 @@ export class UserService {
 
     const newEmailToken =
       await this.emailTokenService.saveNewTokenForEmail(email);
-
-    const existingCommitment = await fetchUserByEmail(
-      this.context.dbPool,
-      email
-    );
+    let existingCommitment = await fetchUserByEmail(this.context.dbPool, email);
+    if (
+      existingCommitment?.encryption_key &&
+      process.env.DELETE_MISSING_USERS === "true"
+    ) {
+      const blobKey = await getHash(existingCommitment.encryption_key);
+      const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
+      if (!storage) {
+        logger(
+          `[USER_SERVICE] Deleting user with no storage: ${JSON.stringify(
+            existingCommitment
+          )}`
+        );
+        await saveUserBackup(this.context.dbPool, existingCommitment);
+        await deleteUserByEmail(this.context.dbPool, existingCommitment.email);
+        existingCommitment = null;
+      }
+    }
 
     if (
       existingCommitment !== null &&
@@ -204,7 +219,26 @@ export class UserService {
         "Invalid Zupass link. Please log in through the home page."
       );
     }
-    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
+
+    let existingUser = await fetchUserByEmail(this.context.dbPool, email);
+    if (
+      existingUser?.encryption_key &&
+      process.env.DELETE_MISSING_USERS === "true"
+    ) {
+      const blobKey = await getHash(existingUser.encryption_key);
+      const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
+      if (!storage) {
+        logger(
+          `[USER_SERVICE] Deleting user with no storage: ${JSON.stringify(
+            existingUser
+          )}`
+        );
+        await saveUserBackup(this.context.dbPool, existingUser);
+        await deleteUserByEmail(this.context.dbPool, existingUser.email);
+        existingUser = null;
+      }
+    }
+
     if (existingUser) {
       res.status(200).json({
         isNewUser: false,

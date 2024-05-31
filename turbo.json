@@ -220,6 +220,7 @@
     "GPC_ARTIFACTS_CONFIG_OVERRIDE",
     "ZUPOLL_API_KEY",
     "VOUCHER_API_KEY",
+    "DELETE_MISSING_USERS",
     "//// add env vars above this line ////"
   ]
 }
