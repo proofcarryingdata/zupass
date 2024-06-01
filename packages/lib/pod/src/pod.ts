@@ -51,7 +51,7 @@ export class POD {
   /**
    * The signature of this POD, in a packed string form.  This is an
    * EdDSA-Poseidon signature, with the POD's content ID as the signed message.
-   * The signature is made up of 64 bytes, expressed as 128 hex digits.
+   * The signature is made up of 64 bytes, represented in URL-safe Base64.
    */
   public get signature(): string {
     return this._signature;
@@ -59,8 +59,8 @@ export class POD {
 
   /**
    * The public key of the signer, in a packed string form.  This is
-   * an EdDSA-Poseidon public key made up of 32 bytes, expressed as 64 hex
-   * digits.
+   * an EdDSA-Poseidon public key made up of 32 bytes, represnted in URL-safe
+   * Base64.
    */
   public get signerPublicKey(): string {
     return this._signerPublicKey;
@@ -74,7 +74,7 @@ export class POD {
    * @param entries the contents of the new POD.  These will be Merklized
    *   in order by name, regardless of the order of the input.
    * @param signerPrivateKey the EdDSA private key of the signer, required
-   *   to be 32 bytes, encoded as 64 hex digits.
+   *   to be 32 bytes, encoded as per {@link decodePrivateKey}.
    * @throws if any of the entries aren't legal for inclusion in a POD
    */
   public static sign(entries: PODEntries, signerPrivateKey: string): POD {

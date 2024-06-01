@@ -13,13 +13,15 @@ import {
   Signature as CLSignature,
   buildEddsa as clBuildEddsa
 } from "circomlibjs";
+import { CryptoBytesEncoding } from "../src";
 
 /**
  * This class contains alternate implementations of podCrypto helpers using
  * circomlibjs rather than zk-kit.  These are implemented in a way consistent
  * with the pre-existing EdDSAPCD, using the same circomlibjs library.  Each
  * method of this class should match the behavior of the podCrypto function
- * of the same name.
+ * of the same name, without making use of any functions from podCrypto or
+ * podUtil.
  *
  * The intent is to ensure that we're using these cryptographic libraries in a
  * standard and compatible way, and won't find out later that we're locked into
@@ -72,11 +74,16 @@ export class AltCryptCircomlibjs {
       this.clEddsa.F.fromObject(rawPublicKey[0]),
       this.clEddsa.F.fromObject(rawPublicKey[1])
     ] satisfies CLPoint;
-    return toHexString(this.clEddsa.babyJub.packPoint(clPublicKey));
+    return Buffer.from(this.clEddsa.babyJub.packPoint(clPublicKey)).toString(
+      "base64url"
+    );
   }
 
-  public decodePublicKey(publicKey: string): Point<bigint> {
-    const packedPublicKey = fromHexString(publicKey);
+  public decodePublicKey(
+    publicKey: string,
+    encoding: CryptoBytesEncoding = "base64url"
+  ): Point<bigint> {
+    const packedPublicKey = Buffer.from(publicKey, encoding);
     const clPublicKey = this.clEddsa.babyJub.unpackPoint(packedPublicKey);
     // circomlibjs produces points as buffers in Montgomery form, which
     // toObject converts to bigints in standard form
@@ -136,10 +143,10 @@ export class AltCryptCircomlibjs {
     // Private key is a single EC point, which can be packed into a single
     // field element fitting into 32 bytes (64 hex digits).  Packing converts
     // the value from Montgomery to standard form.
-    const publicKey = toHexString(
+    const publicKey = Buffer.from(
       this.clEddsa.babyJub.packPoint(this.clEddsa.prv2pub(altPrivateKey))
-    );
-    expect(publicKey).to.have.length(64);
+    ).toString("base64url");
+    expect(publicKey).to.have.length(43);
 
     // Private key is an EC point plus a scalar (field element).  The EC point
     // can be packed into a single field element.  That plus the scalar fit in
@@ -166,9 +173,9 @@ export class AltCryptCircomlibjs {
     const altSignature = this.clEddsa.unpackSignature(fromHexString(signature));
 
     // Unpack the public key into an EC point in Montgomery form.
-    expect(publicKey).to.have.length(64);
+    expect(publicKey).to.have.length(43);
     const altPublicKey = this.clEddsa.babyJub.unpackPoint(
-      fromHexString(publicKey)
+      Buffer.from(publicKey, "base64url")
     );
 
     // EdDSAPCD has an extra step where it hashes a list of bigints (the PCD's

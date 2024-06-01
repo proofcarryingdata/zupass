@@ -11,6 +11,7 @@ import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import {
+  CryptoBytesEncoding,
   EDDSA_PUBKEY_TYPE_STRING,
   PODContent,
   checkPrivateKeyFormat,
@@ -43,7 +44,9 @@ import {
   testIntsToHash,
   testPrivateKeys,
   testPrivateKeysAllFormats,
+  testPrivateKeysBase64pad,
   testPrivateKeysBase64url,
+  testPrivateKeysHex,
   testPublicKeysToHash,
   testStringsToHash
 } from "./common";
@@ -210,6 +213,36 @@ describe("podCrypto encoding/decoding should work", async function () {
     }
   });
 
+  it("should encode and decode a private key using any encoding", function () {
+    for (let i = 0; i < testPrivateKeys.length; i++) {
+      const testPrivateKey = testPrivateKeys[i];
+      const decoded = decodePrivateKey(testPrivateKey);
+
+      const encodedHex = encodePrivateKey(decoded, "hex");
+      expect(encodedHex).to.eq(
+        testPrivateKeysHex[i].toLowerCase() // hex encoding normalizes to lowercase
+      );
+      expect(decodePrivateKey(encodedHex)).to.deep.eq(
+        decodePrivateKey(testPrivateKey)
+      );
+      checkPrivateKeyFormat(encodedHex);
+
+      const encodedBase64 = encodePrivateKey(decoded, "base64");
+      expect(encodedBase64).to.eq(testPrivateKeysBase64pad[i]);
+      expect(decodePrivateKey(encodedBase64)).to.deep.eq(
+        decodePrivateKey(testPrivateKey)
+      );
+      checkPrivateKeyFormat(encodedBase64);
+
+      const encodedBase64URL = encodePrivateKey(decoded, "base64url");
+      expect(encodedBase64URL).to.eq(testPrivateKeysBase64url[i]);
+      expect(decodePrivateKey(encodedBase64URL)).to.deep.eq(
+        decodePrivateKey(testPrivateKey)
+      );
+      checkPrivateKeyFormat(encodedBase64URL);
+    }
+  });
+
   it("should not encode a private key of the wrong form", function () {
     const badPrivateBytes = [
       "",
@@ -261,7 +294,7 @@ describe("podCrypto encoding/decoding should work", async function () {
       const rawPublicKey = derivePublicKey(decodedPrivateKey);
 
       const encoded = encodePublicKey(rawPublicKey);
-      expect(encoded).to.have.length(64);
+      expect(encoded).to.have.length(43);
       checkPublicKeyFormat(encoded);
 
       const encodedFromString = encodePublicKey(
@@ -271,6 +304,22 @@ describe("podCrypto encoding/decoding should work", async function () {
 
       const decoded = decodePublicKey(encoded);
       expect(decoded).to.deep.eq(rawPublicKey);
+    }
+  });
+
+  it("should encode and decode a public key using any encoding", function () {
+    for (const testPrivateKey of testPrivateKeys) {
+      const decodedPrivateKey = decodePrivateKey(testPrivateKey);
+      const rawPublicKey = derivePublicKey(decodedPrivateKey);
+
+      for (const encoding of ["hex", "base64", "base64url"]) {
+        const encoded = encodePublicKey(
+          rawPublicKey,
+          encoding as CryptoBytesEncoding
+        );
+        expect(decodePublicKey(encoded)).to.deep.eq(rawPublicKey);
+        checkPublicKeyFormat(encoded);
+      }
     }
   });
 

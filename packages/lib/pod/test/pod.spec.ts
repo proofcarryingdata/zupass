@@ -174,7 +174,7 @@ describe("POD class should work", async function () {
     };
     expect(fn).to.throw(
       TypeError,
-      "Public key should be 32 bytes hex-encoded."
+      "Public key should be 32 bytes, encoded as hex or Base64."
     );
   });
 });

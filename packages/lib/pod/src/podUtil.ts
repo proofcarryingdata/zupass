@@ -82,16 +82,12 @@ export function checkPublicKeyFormat(
   publicKey: string,
   nameForErrorMessages?: string
 ): string {
-  if (
-    !publicKey ||
-    typeof publicKey !== "string" ||
-    !publicKey.match(PUBLIC_KEY_REGEX)
-  ) {
-    throw new TypeError(
-      "Public key should be 32 bytes hex-encoded" +
-        (nameForErrorMessages ? ` in ${nameForErrorMessages}.` : ".")
-    );
-  }
+  decodeBytesAuto(
+    publicKey,
+    PUBLIC_KEY_REGEX,
+    "Public key should be 32 bytes, encoded as hex or Base64" +
+      (nameForErrorMessages ? ` in ${nameForErrorMessages}.` : ".")
+  );
   return publicKey;
 }
 
@@ -566,7 +562,7 @@ export function encodeBytes(
  * @returns decoded bytes, truncated if the input does not properly match the
  *   encoding format
  */
-export function decodeBytes(
+export function decodeBytesRaw(
   encoded: string,
   encoding: CryptoBytesEncoding = "base64url"
 ): Buffer {
@@ -597,13 +593,13 @@ export function decodeBytesAuto(
     //    console.log("decodePrivateKey", matched);
     if (matched !== null) {
       if (matched[3] && matched[3] !== "") {
-        return decodeBytes(encoded, "base64url");
+        return decodeBytesRaw(encoded, "base64url");
       }
       if (matched[2] && matched[2] !== "") {
-        return decodeBytes(encoded, "base64");
+        return decodeBytesRaw(encoded, "base64");
       }
       if (matched[1] && matched[1] !== "") {
-        return decodeBytes(encoded, "hex");
+        return decodeBytesRaw(encoded, "hex");
       }
       // Fallthrough if no group matches.
     }

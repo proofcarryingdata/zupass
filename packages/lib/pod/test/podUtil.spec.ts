@@ -30,6 +30,7 @@ import {
 } from "../src";
 import {
   expectedPublicKey,
+  expectedPublicKeyHex,
   expectedSignature1,
   expectedSignature2,
   privateKey,
@@ -55,7 +56,7 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "hex") as unknown as string,
+      Buffer.from(privateKey, "base64url") as unknown as string,
       "=V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs",
       "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs====="
     ];
@@ -72,8 +73,8 @@ describe("podUtil input checkers should work", async function () {
     // to be points on the curve.
     const testPublicKeys = [
       expectedPublicKey,
-      "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff",
-      "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100"
+      expectedPublicKeyHex,
+      ...testPrivateKeysAllFormats
     ];
     for (const testPublicKey of testPublicKeys) {
       const checked = checkPublicKeyFormat(testPublicKey);
@@ -90,7 +91,9 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "hex") as unknown as string
+      Buffer.from(expectedPublicKey, "base64url") as unknown as string,
+      "=V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs",
+      "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs====="
     ];
     for (const testPublicKey of badPublicKeys) {
       const fn = (): void => {

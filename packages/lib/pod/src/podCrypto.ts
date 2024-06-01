@@ -16,8 +16,9 @@ import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import { EDDSA_PUBKEY_TYPE_STRING, PODValue } from "./podTypes";
 import {
+  CryptoBytesEncoding,
   PRIVATE_KEY_REGEX,
-  checkPublicKeyFormat,
+  PUBLIC_KEY_REGEX,
   checkSignatureFormat,
   decodeBytesAuto,
   encodeBytes
@@ -84,24 +85,30 @@ export function podMerkleTreeHash(left: bigint, right: bigint): bigint {
 
 /**
  * Encodes a private key to a string.  The input must be 32 bytes.  The output
- * is represented as 64 hex digits.
+ * is represented as URL-safe Base64 by default.
  *
+ * @param rawPrivateKey the private key bytes
+ * @param encoding one of the supported encodings to use
  * @throws TypeError if the size of the buffer is incorrect.
  */
-export function encodePrivateKey(rawPrivateKey: Uint8Array): string {
+export function encodePrivateKey(
+  rawPrivateKey: Uint8Array,
+  encoding: CryptoBytesEncoding = "base64url"
+): string {
   if (!((rawPrivateKey as unknown) instanceof Uint8Array)) {
     throw TypeError("Private key must be Buffer or Uint8Array.");
   }
   if (rawPrivateKey.length !== 32) {
     throw TypeError("Private key must be a 32 bytes.");
   }
-  return encodeBytes(rawPrivateKey);
+  return encodeBytes(rawPrivateKey, encoding);
 }
 
 /**
  * Decodes a private key's bytes from a string.  The input must be 32 bytes,
- * expressed as 64 hex digits.
+ * represented as hex, Base64, or URL-safe Base64.  Base64 padding is optional.
  *
+ * @param privateKey the private key string to decode
  * @throws TypeError if the private key format is incorrect.
  */
 export function decodePrivateKey(privateKey: string): Buffer {
@@ -114,21 +121,38 @@ export function decodePrivateKey(privateKey: string): Buffer {
 
 /**
  * Encodes an EdDSA public key into a compact string represenation.  The output
- * is 32 bytes, represented as 64 hex digits.
+ * is 32 bytes, represented as URL-safe Base64 by default.
+ *
+ * @param rawPublicKey the EdDSA public key to encode
+ * @param encoding one of the supported encodings to use
  */
-export function encodePublicKey(rawPublicKey: Point<BigNumber>): string {
-  return toHexString(leBigIntToBuffer(packPublicKey(rawPublicKey), 32));
+export function encodePublicKey(
+  rawPublicKey: Point<BigNumber>,
+  encoding: CryptoBytesEncoding = "base64url"
+): string {
+  return encodeBytes(
+    leBigIntToBuffer(packPublicKey(rawPublicKey), 32),
+    encoding
+  );
 }
 
 /**
  * Decodes a public key packed by {@encodePublicKey}.  The input must be
- * 32 bytes, represented as 64 hex digits.
+ * 32 bytes, represented as hex, Base64, or URL-safe Base64.  Base64 padding is
+ * optional.
  *
+ * @param publicKey the public key string to decode
  * @throws TypeError if the public key format is incorrect.
  */
 export function decodePublicKey(publicKey: string): Point<bigint> {
   const rawPublicKey = unpackPublicKey(
-    leBufferToBigInt(fromHexString(checkPublicKeyFormat(publicKey)))
+    leBufferToBigInt(
+      decodeBytesAuto(
+        publicKey,
+        PUBLIC_KEY_REGEX,
+        "Public key should be 32 bytes, encoded as hex or Base64."
+      )
+    )
   );
   if (rawPublicKey === null) {
     throw new TypeError(`Invalid packed public key point ${publicKey}.`);
@@ -138,7 +162,10 @@ export function decodePublicKey(publicKey: string): Point<bigint> {
 
 /**
  * Encodes an EdDSA signature into a compact string representation.
- * The output is 64 bytes, represented as 128 hex digits.
+ * The output is represented in URL-safe Base64 by default.
+ *
+ * @param rawSignature the EdDSA signature to encode
+ * @param encoding one of the supported encodings to use
  */
 export function encodeSignature(rawSignature: Signature): string {
   return toHexString(packSignature(rawSignature));
@@ -146,8 +173,10 @@ export function encodeSignature(rawSignature: Signature): string {
 
 /**
  * Decodes a signature produced by {@link encodeSignature}.  The input must be
- * 64 bytes, represented as 128 hex digits.
+ * 64 bytes, represented as hex, Base64, or URL-safe Base64.  Base64 padding is
+ * optional.
  *
+ * @param encodedSignature the signature string to decode
  * @throws TypeError if the signature format is incorrect
  */
 export function decodeSignature(encodedSignature: string): Signature<bigint> {
@@ -159,10 +188,9 @@ export function decodeSignature(encodedSignature: string): Signature<bigint> {
  *
  * @param root the root hash (content ID) of the POD.
  * @param privateKey the signer's private key, which is 32 bytes encoded as
- *   64 hex digits.
+ *   per {@link encodePrivateKey}.
  * @returns The signature as well as the signer's public key for inclusion
- *   in the POD.  The signature is 64 bytes encoded as 128 hex digits, while
- *   the public key is 32 bytes encoded as 64 hex digits.
+ *   in the POD.  The signature is 64 bytes represented in URL-safe Base64.
  * @throws TypeError if any of the individual arguments is incorrectly formatted
  */
 export function signPODRoot(
@@ -188,10 +216,10 @@ export function signPODRoot(
  * Verifies the signature of a POD root hash.
  *
  * @param root the root hash (content ID) of the POD.
- * @param signature the signature in packed form, which is 64 bytes expressed
- *   as 128 hex digits.
+ * @param signature the signature in packed form, which is 64 bytes represented
+ *   in URL-safe Base64.
  * @param publicKey the signer's public key in packed form, which is 32 bytes
- *   expressed as 64 hex digits
+ *   represented in URL-safe Base64.
  * @returns `true` if the signature is valid
  * @throws TypeError if any of the individual arguments incorrectly formatted
  */

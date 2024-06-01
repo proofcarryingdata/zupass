@@ -13,8 +13,9 @@ export const expectedPublicKeyPoint = [
   0x1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4n
 ] as Point<bigint>;
 
-export const expectedPublicKey =
+export const expectedPublicKeyHex =
   "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e";
+export const expectedPublicKey = "xDP3ppa3qjpSJO-zmTuvDM2eku7O4MKaP2yCCKnoHZ4";
 
 export const ownerIdentity = new Identity(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
@@ -103,8 +104,9 @@ export const testPublicKeysToHash = [
 
 export const testPrivateKeysHex = [
   "0001020304050607080900010203040506070809000102030405060708090001", // private key above
-  "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff", // all hex digits
-  "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100", // all hex digits in reverse
+
+  "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff", // mixed-case hex digits
+  "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100", // mixed-case hex digits in reverse
 
   // The remaining keys here are randomly generated (hex).
   "4f70a5bd0e2d2c4fe33f81e1541cd93890e74aea0e45dce15e8279ad00a23fe5",
