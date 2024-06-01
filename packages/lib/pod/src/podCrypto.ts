@@ -17,7 +17,9 @@ import { EDDSA_PUBKEY_TYPE_STRING, PODValue } from "./podTypes";
 import {
   CryptoBytesEncoding,
   PRIVATE_KEY_REGEX,
+  PUBLIC_KEY_ENCODING_GROUPS,
   PUBLIC_KEY_REGEX,
+  SIGNATURE_ENCODING_GROUPS,
   SIGNATURE_REGEX,
   decodeBytesAuto,
   encodeBytes
@@ -114,6 +116,7 @@ export function decodePrivateKey(privateKey: string): Buffer {
   return decodeBytesAuto(
     privateKey,
     PRIVATE_KEY_REGEX,
+    PUBLIC_KEY_ENCODING_GROUPS,
     "Private key should be 32 bytes, encoded as hex or Base64."
   );
 }
@@ -149,6 +152,7 @@ export function decodePublicKey(publicKey: string): Point<bigint> {
       decodeBytesAuto(
         publicKey,
         PUBLIC_KEY_REGEX,
+        PUBLIC_KEY_ENCODING_GROUPS,
         "Public key should be 32 bytes, encoded as hex or Base64."
       )
     )
@@ -186,6 +190,7 @@ export function decodeSignature(encodedSignature: string): Signature<bigint> {
     decodeBytesAuto(
       encodedSignature,
       SIGNATURE_REGEX,
+      SIGNATURE_ENCODING_GROUPS,
       "Signature should be 64 bytes, encoded as hex or Base64."
     )
   );
