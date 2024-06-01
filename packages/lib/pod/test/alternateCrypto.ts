@@ -1,8 +1,4 @@
-import {
-  fromHexString,
-  generateSnarkMessageHash,
-  toHexString
-} from "@pcd/util";
+import { generateSnarkMessageHash } from "@pcd/util";
 import { Point } from "@zk-kit/baby-jubjub";
 import { Signature } from "@zk-kit/eddsa-poseidon";
 import { BigNumber } from "@zk-kit/utils";
@@ -104,12 +100,17 @@ export class AltCryptCircomlibjs {
       // circomlibjs wants S (scalar) as bigint in standard form
       S: rawSignature.S
     } satisfies CLSignature;
-    return toHexString(this.clEddsa.packSignature(clSignature));
+    return Buffer.from(this.clEddsa.packSignature(clSignature)).toString(
+      "base64url"
+    );
   }
 
-  public decodeSignature(encodedSignature: string): Signature<bigint> {
+  public decodeSignature(
+    encodedSignature: string,
+    encoding: CryptoBytesEncoding = "base64url"
+  ): Signature<bigint> {
     const clSignature = this.clEddsa.unpackSignature(
-      fromHexString(encodedSignature)
+      Buffer.from(encodedSignature, encoding)
     );
     return {
       // circomlibjs produces R8 (point) as buffers in Montgomery form, which
@@ -152,12 +153,12 @@ export class AltCryptCircomlibjs {
     // can be packed into a single field element.  That plus the scalar fit in
     // 64 bytes (128 hex digits).  Packing converts the value from Montgomery to
     // standard form.
-    const signature = toHexString(
+    const signature = Buffer.from(
       this.clEddsa.packSignature(
         this.clEddsa.signPoseidon(altPrivateKey, altHashedMessage)
       )
-    );
-    expect(signature).to.have.length(128);
+    ).toString("base64url");
+    expect(signature).to.have.length(86);
 
     return { signature, publicKey };
   }
@@ -169,8 +170,10 @@ export class AltCryptCircomlibjs {
   ): boolean {
     // Unpack the signature into 3 numbers (1 EC point, 1 scalar) in Montgomery
     // form.
-    expect(signature).to.have.length(128);
-    const altSignature = this.clEddsa.unpackSignature(fromHexString(signature));
+    expect(signature).to.have.length(86);
+    const altSignature = this.clEddsa.unpackSignature(
+      Buffer.from(signature, "base64url")
+    );
 
     // Unpack the public key into an EC point in Montgomery form.
     expect(publicKey).to.have.length(43);

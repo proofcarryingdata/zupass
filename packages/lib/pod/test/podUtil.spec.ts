@@ -32,7 +32,9 @@ import {
   expectedPublicKey,
   expectedPublicKeyHex,
   expectedSignature1,
+  expectedSignature1Hex,
   expectedSignature2,
+  expectedSignature2Hex,
   privateKey,
   sampleEntries1,
   sampleEntries2,
@@ -109,6 +111,8 @@ describe("podUtil input checkers should work", async function () {
     const testSignatures = [
       expectedSignature1,
       expectedSignature2,
+      expectedSignature1Hex,
+      expectedSignature2Hex,
       "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff",
       "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100"
     ];
@@ -127,7 +131,9 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "hex") as unknown as string
+      Buffer.from(privateKey, "hex") as unknown as string,
+      "=ZKuvJhYh4JXNqKqt1uS99lAVReh_bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm_CuCMvP0a1t0hraeAsTeBjmGAQ",
+      "ZKuvJhYh4JXNqKqt1uS99lAVReh_bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm_CuCMvP0a1t0hraeAsTeBjmGAQ======"
     ];
     for (const testSignature of badSignatures) {
       const fn = (): void => {

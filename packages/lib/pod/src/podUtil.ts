@@ -48,7 +48,7 @@ export const PUBLIC_KEY_REGEX = new RegExp(
  * determine the format, in the order above.
  */
 export const SIGNATURE_REGEX = new RegExp(
-  /^(?:([0-9A-Fa-f]{128})|([A-Za-z0-9+/]{86}(?:==)?)|([A-Za-z0-9_-]{86}(?:==)))$/
+  /^(?:([0-9A-Fa-f]{128})|([A-Za-z0-9+/]{86}(?:==)?)|([A-Za-z0-9_-]{86}(?:==)?))$/
 );
 
 /**
@@ -100,13 +100,11 @@ export function checkPublicKeyFormat(
  * @throws TypeError if the format doesn't match
  */
 export function checkSignatureFormat(signature: string): string {
-  if (
-    !signature ||
-    typeof signature !== "string" ||
-    !signature.match(SIGNATURE_REGEX)
-  ) {
-    throw new TypeError("Signature should be 64 bytes hex-encoded.");
-  }
+  decodeBytesAuto(
+    signature,
+    SIGNATURE_REGEX,
+    "Signature should be 64 bytes, encoded as hex or Base64."
+  );
   return signature;
 }
 

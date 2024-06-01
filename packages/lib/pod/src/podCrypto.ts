@@ -1,4 +1,3 @@
-import { fromHexString, toHexString } from "@pcd/util";
 import { Point } from "@zk-kit/baby-jubjub";
 import {
   Signature,
@@ -19,7 +18,7 @@ import {
   CryptoBytesEncoding,
   PRIVATE_KEY_REGEX,
   PUBLIC_KEY_REGEX,
-  checkSignatureFormat,
+  SIGNATURE_REGEX,
   decodeBytesAuto,
   encodeBytes
 } from "./podUtil";
@@ -167,8 +166,11 @@ export function decodePublicKey(publicKey: string): Point<bigint> {
  * @param rawSignature the EdDSA signature to encode
  * @param encoding one of the supported encodings to use
  */
-export function encodeSignature(rawSignature: Signature): string {
-  return toHexString(packSignature(rawSignature));
+export function encodeSignature(
+  rawSignature: Signature,
+  encoding: CryptoBytesEncoding = "base64url"
+): string {
+  return encodeBytes(packSignature(rawSignature), encoding);
 }
 
 /**
@@ -180,7 +182,13 @@ export function encodeSignature(rawSignature: Signature): string {
  * @throws TypeError if the signature format is incorrect
  */
 export function decodeSignature(encodedSignature: string): Signature<bigint> {
-  return unpackSignature(fromHexString(checkSignatureFormat(encodedSignature)));
+  return unpackSignature(
+    decodeBytesAuto(
+      encodedSignature,
+      SIGNATURE_REGEX,
+      "Signature should be 64 bytes, encoded as hex or Base64."
+    )
+  );
 }
 
 /**

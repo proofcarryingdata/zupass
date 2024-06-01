@@ -37,9 +37,13 @@ import {
   expectedContentID1,
   expectedContentID2,
   expectedPublicKey,
+  expectedPublicKeyHex,
   expectedSignature1,
+  expectedSignature1Hex,
   expectedSignature2,
+  expectedSignature2Hex,
   privateKey,
+  privateKeyHex,
   sampleEntries1,
   testIntsToHash,
   testPrivateKeys,
@@ -359,7 +363,9 @@ describe("podCrypto encoding/decoding should work", async function () {
       "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81fff", // Not on curve: final digits shoudl be d9e not fff
       undefined as unknown as string,
       12345 as unknown as string,
-      12345n as unknown as string
+      12345n as unknown as string,
+      "==abcde123",
+      "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE====="
     ];
     for (const testPublicKey of badPublicKeys) {
       expect((): void => {
@@ -375,7 +381,7 @@ describe("podCrypto encoding/decoding should work", async function () {
         const rawSig = signMessage(decodePrivateKey(testPrivateKey), message);
 
         const encoded = encodeSignature(rawSig);
-        expect(encoded).to.have.length(128);
+        expect(encoded).to.have.length(86);
         checkSignatureFormat(encoded);
 
         const encodedFromString = encodeSignature({
@@ -389,6 +395,22 @@ describe("podCrypto encoding/decoding should work", async function () {
       }
     }
     expect(true).to.be.true;
+  });
+
+  it("should encode and decode a signature using any encoding", function () {
+    for (const testPrivateKey of testPrivateKeys) {
+      const message = podIntHash(testIntsToHash[0]);
+      const rawSig = signMessage(decodePrivateKey(testPrivateKey), message);
+
+      for (const encoding of ["hex", "base64", "base64url"]) {
+        const encoded = encodeSignature(
+          rawSig,
+          encoding as CryptoBytesEncoding
+        );
+        expect(decodeSignature(encoded)).to.deep.eq(rawSig);
+        checkSignatureFormat(encoded);
+      }
+    }
   });
 
   it("should not encode a signature of the wrong form", function () {
@@ -428,13 +450,43 @@ describe("podCrypto encoding/decoding should work", async function () {
       "9ddb5d339c774911a3b4919d6e23e3d1fb6e486a116b187c96fb252b29648fff_09b54198965c357db1913fd82e6ff8b0340219dd6006dc1b32ff07d9d9867004", // Not in curve: last digits of first segment should be 410 not fff
       undefined as unknown as string,
       12345 as unknown as string,
-      12345n as unknown as string
+      12345n as unknown as string,
+      "==abcde123",
+      "ZKuvJhYh4JXNqKqt1uS99lAVReh_bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm_CuCMvP0a1t0hraeAsTeBjmGAQ======"
     ];
     for (const testSig of badSigs) {
       expect((): void => {
         decodeSignature(testSig);
       }).to.throw();
     }
+  });
+
+  it("double-check expected values vs. hex originals", function () {
+    expect(Buffer.from(privateKeyHex, "hex").toString("base64url")).to.eq(
+      privateKey
+    );
+    expect(encodePrivateKey(decodePrivateKey(privateKeyHex))).to.eq(privateKey);
+
+    expect(
+      Buffer.from(expectedPublicKeyHex, "hex").toString("base64url")
+    ).to.eq(expectedPublicKey);
+    expect(encodePublicKey(decodePublicKey(expectedPublicKeyHex))).to.eq(
+      expectedPublicKey
+    );
+
+    expect(
+      Buffer.from(expectedSignature1Hex, "hex").toString("base64url")
+    ).to.eq(expectedSignature1);
+    expect(encodeSignature(decodeSignature(expectedSignature1Hex))).to.eq(
+      expectedSignature1
+    );
+
+    expect(
+      Buffer.from(expectedSignature2Hex, "hex").toString("base64url")
+    ).to.eq(expectedSignature2);
+    expect(encodeSignature(decodeSignature(expectedSignature2Hex))).to.eq(
+      expectedSignature2
+    );
   });
 });
 
@@ -551,14 +603,17 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
       throw new Error("Bad public key point!");
     }
 
-    // EdDSAPCD represents its signatures as an EC point (2 field elements)
+    // EdDSAPCD represents its public keys as an EC point (2 field elements)
     // in an array, with each element being 32 bytes encoded as 64 hex digits.
     const stringifiedPublicKey = unpackedPublicKey.map((n) =>
       n.toString(16).padStart(64, "0")
     );
 
+    // EdDSAPCD represents its signatures in hex, not Base64.
+    const hexSignature = Buffer.from(signature, "base64url").toString("hex");
+
     expect(stringifiedPublicKey).to.deep.eq(pcd.claim.publicKey);
-    expect(signature).to.deep.eq(pcd.proof.signature);
+    expect(hexSignature).to.deep.eq(pcd.proof.signature);
   });
 });
 
