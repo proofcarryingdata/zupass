@@ -28,7 +28,7 @@ export function InvalidUserModal(): JSX.Element {
   return (
     <Container>
       <H2>Invalid Zupass</H2>
-      <Spacer h={24} />
+      <Spacer h={16} />
       <p>Your Zupass is in an invalid state. This can happen when:</p>
       <ul>
         <li>You reset your account on another device.</li>
@@ -53,7 +53,7 @@ export function InvalidUserModal(): JSX.Element {
 }
 
 const Container = styled.div`
-  padding: 24px;
+  padding: 12px;
   p {
     margin-bottom: 8px;
   }
