@@ -10,7 +10,8 @@ import {
   computeTupleIndices,
   extendedSignalArray,
   hashTuple,
-  padArray
+  padArray,
+  paramMaxVirtualEntries
 } from "@pcd/gpcircuits";
 import {
   POD,
@@ -40,6 +41,8 @@ import {
 import {
   GPCProofMembershipListConfig,
   LIST_MEMBERSHIP,
+  dummyVirtualEntryInputs,
+  dummyVirtualEntryOutputs,
   isTupleIdentifier,
   listConfigFromProofConfig,
   makeWatermarkSignal
@@ -176,16 +179,15 @@ function prepCompilerMaps<
 function prepCompilerTupleMap<ObjInput extends POD | GPCRevealedObjectClaims>(
   config: GPCBoundConfig,
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
-  paramMaxEntries: number,
-  paramMaxTuples: number,
-  paramTupleArity: number
+  circuitDesc: ProtoPODGPCCircuitDesc
 ): Map<TupleIdentifier, CompilerTupleInfo> {
   // And now for the tuple map, which is sorted in alphabetical order and
   // populated with the corresponding values from entryMap. Note that the index
   // here will be offset by the maximum number of entries in the circuit itself.
   const tupleMap = new Map();
   if (config.tuples !== undefined) {
-    let tupleIndex = paramMaxEntries;
+    const maxVirtualEntries = paramMaxVirtualEntries(circuitDesc);
+    let tupleIndex = circuitDesc.maxEntries + maxVirtualEntries;
     const tupleNameOrder: PODName[] = Object.keys(
       config.tuples
     ).sort() as PODName[];
@@ -211,9 +213,9 @@ function prepCompilerTupleMap<ObjInput extends POD | GPCRevealedObjectClaims>(
         return entryIdx;
       });
 
-      // Encode tuple as sequence of tuples of arity paramTupleArity
+      // Encode tuple as sequence of tuples of arity circuitDesc.tupleArity
       const tupleIndices = computeTupleIndices(
-        paramTupleArity,
+        circuitDesc.tupleArity,
         tupleIndex,
         tupleEntryRef
       );
@@ -226,10 +228,10 @@ function prepCompilerTupleMap<ObjInput extends POD | GPCRevealedObjectClaims>(
       });
     }
 
-    const numTuples = tupleIndex - paramMaxEntries;
-    if (numTuples > paramMaxTuples) {
+    const numTuples = tupleIndex - (circuitDesc.maxEntries + maxVirtualEntries);
+    if (numTuples > circuitDesc.maxTuples) {
       throw new Error(
-        `GPC configuration requires ${numTuples} tuples but the chosen circuit only supports ${paramMaxTuples}.`
+        `GPC configuration requires ${numTuples} tuples but the chosen circuit only supports ${circuitDesc.maxTuples}.`
       );
     }
   }
@@ -266,13 +268,7 @@ export function compileProofConfig(
   );
 
   // Do the same for tuples (if any).
-  const tupleMap = prepCompilerTupleMap(
-    proofConfig,
-    entryMap,
-    circuitDesc.maxEntries,
-    circuitDesc.maxTuples,
-    circuitDesc.tupleArity
-  );
+  const tupleMap = prepCompilerTupleMap(proofConfig, entryMap, circuitDesc);
 
   // Create subset of inputs for object modules, padded to max size.
   const circuitObjInputs = combineProofObjects(
@@ -291,7 +287,11 @@ export function compileProofConfig(
   // Create subset of inputs for entry comparisons and ownership, which share
   // some of the same circuitry.
   const { circuitEntryConstraintInputs, entryConstraintMetadata } =
-    compileProofEntryConstraints(entryMap, circuitDesc.maxEntries);
+    compileProofEntryConstraints(
+      entryMap,
+      circuitDesc.maxEntries,
+      paramMaxVirtualEntries(circuitDesc)
+    );
 
   // Create subset of inputs for owner module.
   const circuitOwnerInputs = compileProofOwner(
@@ -321,6 +321,10 @@ export function compileProofConfig(
   // Create other global inputs.
   const circuitGlobalInputs = compileProofGlobal(proofInputs);
 
+  // Virtual entry inputs
+  // TODO(POD-P3): Replace this with actual inputs.
+  const circuitVirtualEntryInputs = dummyVirtualEntryInputs(circuitDesc);
+
   // Return all the resulting signals input to the gpcircuits library.
   // The specific return type of each compile phase above lets the TS compiler
   // confirm that all expected fields have been set with the right types (though
@@ -328,6 +332,7 @@ export function compileProofConfig(
   return {
     ...circuitObjInputs,
     ...circuitEntryInputs,
+    ...circuitVirtualEntryInputs,
     ...circuitEntryConstraintInputs,
     ...circuitOwnerInputs,
     ...circuitMultiTupleInputs,
@@ -578,7 +583,8 @@ function combineProofEntries(
 
 function compileProofEntryConstraints(
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<unknown>>,
-  maxEntries: number
+  maxEntries: number,
+  maxVirtualEntries: number
 ): {
   circuitEntryConstraintInputs: {
     entryEqualToOtherEntryByIndex: CircuitSignal[];
@@ -618,7 +624,11 @@ function compileProofEntryConstraints(
 
   // Equality constraints don't have an explicit disabled state, so spare
   // entry slots always compare to themselves, to be a nop.
-  for (let entryIndex = entryMap.size; entryIndex < maxEntries; entryIndex++) {
+  for (
+    let entryIndex = entryMap.size;
+    entryIndex < maxEntries + maxVirtualEntries;
+    entryIndex++
+  ) {
     entryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
   }
 
@@ -705,13 +715,7 @@ export function compileVerifyConfig(
   >(verifyConfig, verifyRevealed);
 
   // Do the same for tuples (if any).
-  const tupleMap = prepCompilerTupleMap(
-    verifyConfig,
-    entryMap,
-    circuitDesc.maxEntries,
-    circuitDesc.maxTuples,
-    circuitDesc.tupleArity
-  );
+  const tupleMap = prepCompilerTupleMap(verifyConfig, entryMap, circuitDesc);
 
   // Create subset of inputs for object modules, padded to max size.
   const circuitObjInputs = combineVerifyObjects(
@@ -729,7 +733,11 @@ export function compileVerifyConfig(
   // some of the same circuitry.  This logic is shared with compileProofConfig,
   // since all the signals involved are public.
   const { circuitEntryConstraintInputs, entryConstraintMetadata } =
-    compileProofEntryConstraints(entryMap, circuitDesc.maxEntries);
+    compileProofEntryConstraints(
+      entryMap,
+      circuitDesc.maxEntries,
+      paramMaxVirtualEntries(circuitDesc)
+    );
 
   // Create subset of inputs and outputs for owner module.
   const { circuitOwnerInputs, circuitOwnerOutputs } = compileVerifyOwner(
@@ -760,6 +768,17 @@ export function compileVerifyConfig(
   // since all the signals involved are public.
   const circuitGlobalInputs = compileProofGlobal(verifyRevealed);
 
+  // Virtual entry inputs
+  // TODO(POD-P3): Replace this with actual inputs.
+  const circuitVirtualEntryInputs = dummyVirtualEntryInputs(circuitDesc);
+
+  // Virtual entry outputs
+  // TODO(POD-P3): Replace this with actual inputs.
+  const circuitVirtualEntryOutputs = dummyVirtualEntryOutputs(
+    circuitDesc,
+    Object.values(verifyRevealed.pods).map((obj) => obj.signerPublicKey)
+  );
+
   // Return all the resulting signals input to the gpcircuits library.
   // The specific return type of each compile phase above lets the TS compiler
   // confirm that all expected fields have been set with the right types (though
@@ -768,6 +787,7 @@ export function compileVerifyConfig(
     circuitPublicInputs: {
       ...circuitObjInputs,
       ...circuitEntryInputs,
+      ...circuitVirtualEntryInputs,
       ...circuitEntryConstraintInputs,
       ...circuitOwnerInputs,
       ...circuitMultiTupleInputs,
@@ -776,6 +796,7 @@ export function compileVerifyConfig(
     },
     circuitOutputs: {
       ...circuitEntryOutputs,
+      ...circuitVirtualEntryOutputs,
       ...circuitOwnerOutputs
     }
   };

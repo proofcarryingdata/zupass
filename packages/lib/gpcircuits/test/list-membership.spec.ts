@@ -11,6 +11,7 @@ import {
   extendedSignalArray,
   hashTuple,
   padArray,
+  paramMaxVirtualEntries,
   processLists,
   processSingleList,
   zipLists
@@ -56,7 +57,12 @@ describe("List membership helpers should work", function () {
       const truncatedList = list1.slice(0, params.maxListElements);
 
       expect(
-        processSingleList(params, 6, listComparisonValueIndex1, truncatedList)
+        processSingleList(
+          params,
+          params.maxEntries + paramMaxVirtualEntries(params),
+          listComparisonValueIndex1,
+          truncatedList
+        )
       ).to.deep.equal({
         tupleIndices: [],
         listComparisonValueIndex: 0,
@@ -245,10 +251,10 @@ describe("List membership helpers should work", function () {
       tupleIndices: [
         [0n, 1n],
         [2n, 3n],
-        [7n, 4n],
-        [8n, 5n]
+        [8n, 4n],
+        [9n, 5n]
       ],
-      listComparisonValueIndex: [6n, 9n, 0n],
+      listComparisonValueIndex: [7n, 10n, 0n],
       listValidValues: listValidValues1
     });
 
@@ -258,10 +264,10 @@ describe("List membership helpers should work", function () {
       tupleIndices: [
         [0n, 1n, 0n],
         [2n, 3n, 4n],
-        [7n, 5n, 2n],
+        [8n, 5n, 2n],
         [0n, 0n, 0n]
       ],
-      listComparisonValueIndex: [6n, 8n, 0n],
+      listComparisonValueIndex: [7n, 9n, 0n],
       listValidValues: listValidValues2
     });
 
@@ -274,7 +280,7 @@ describe("List membership helpers should work", function () {
         [0n, 0n, 0n, 0n],
         [0n, 0n, 0n, 0n]
       ],
-      listComparisonValueIndex: [6n, 7n, 0n],
+      listComparisonValueIndex: [7n, 8n, 0n],
       listValidValues: listValidValues3
     });
   });
