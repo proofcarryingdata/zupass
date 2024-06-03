@@ -13,12 +13,13 @@ import {
 import {
   ArgumentTypeName,
   DisplayOptions,
+  PCDArgument,
   PCDPackage,
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { PODStringValue } from "@pcd/pod";
-import { PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
+import { PODStringValue, POD_NAME_REGEX } from "@pcd/pod";
+import { PODPCD, PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import { v4 as uuid } from "uuid";
@@ -28,7 +29,9 @@ import {
   GPCPCDClaim,
   GPCPCDInitArgs,
   GPCPCDProof,
-  GPCPCDTypeName
+  GPCPCDTypeName,
+  PODPCDArgName,
+  PODPCD_ARG_PREFIX
 } from "./GPCPCD";
 
 let savedInitArgs: GPCPCDInitArgs | undefined = undefined;
@@ -62,13 +65,48 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   }
   const proofConfig = deserializeGPCProofConfig(args.proofConfig.value);
 
-  if (!args.pod.value) {
+  // Filter out PODPCD records.
+  const podRecord = (({
+    proofConfig: _pC,
+    identity: _id,
+    externalNullifier: _eN,
+    membershipLists: _mL,
+    watermark: _w,
+    id: _i,
+    ...podRecord
+  }): Record<PODPCDArgName, PCDArgument<PODPCD>> => podRecord)(args);
+
+  if (Object.keys(podRecord).length === 0) {
     throw new Error("No PODPCD value provided");
   }
-  const podPCD = await PODPCDPackage.deserialize(args.pod.value.pcd);
-  if (!isPODPCD(podPCD)) {
-    throw new Error("Wrong PCD type provided for PODPCD");
-  }
+
+  const pods = Object.fromEntries(
+    await Promise.all(
+      Object.entries(podRecord).map(async ([podName, podPCDArg]) => {
+        const podNameParts = podName.split("_");
+
+        if (podNameParts[0] !== PODPCD_ARG_PREFIX) {
+          throw new Error(`Invalid PODPCD prefix in argument ${podName}`);
+        }
+
+        if (podNameParts[1].match(POD_NAME_REGEX) === null) {
+          throw new Error(`Invalid POD name in PODPCD argument ${podName}`);
+        }
+
+        if (!podPCDArg.value) {
+          throw new Error(`No PODPCD value provided for POD ${podName}`);
+        }
+
+        const podPCD = await PODPCDPackage.deserialize(podPCDArg.value.pcd);
+        if (!isPODPCD(podPCD)) {
+          throw new Error("Wrong PCD type provided for PODPCD");
+        }
+
+        // Strip away prefix
+        return [podNameParts[1], podPCD.pod];
+      })
+    )
+  );
 
   const serializedIdentityPCD = args.identity.value?.pcd;
   if (!serializedIdentityPCD) {
@@ -106,7 +144,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   return {
     proofConfig,
     proofInputs: {
-      pods: { pod0: podPCD.pod },
+      pods,
       ...(ownerSemaphorePCD !== undefined
         ? {
             owner: {
@@ -251,7 +289,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
         argumentType: ArgumentTypeName.String,
         defaultVisible: true
       },
-      pod: {
+      [`${PODPCD_ARG_PREFIX}_pod0`]: {
         argumentType: ArgumentTypeName.PCD,
         description: "Generate a proof for the selected POD object",
         validate(value, _params): boolean {

@@ -30,7 +30,7 @@ import {
   serializeGPCProofConfig,
   serializeGPCRevealedClaims
 } from "@pcd/gpc";
-import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
+import { GPCPCDArgs, GPCPCDPackage, PODPCD_ARG_PREFIX } from "@pcd/gpc-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { POD, PODEntries, podEntriesToSimplifiedJSON } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
@@ -419,7 +419,7 @@ export async function gpcDemo(): Promise<boolean> {
       argumentType: ArgumentTypeName.String,
       value: serializeGPCProofConfig(pcdProofConfig)
     },
-    pod: {
+    [`${PODPCD_ARG_PREFIX}_pod0`]: {
       value: await PODPCDPackage.serialize(podPCD),
       argumentType: ArgumentTypeName.PCD
     },

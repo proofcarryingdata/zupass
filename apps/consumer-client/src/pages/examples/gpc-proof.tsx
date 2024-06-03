@@ -10,7 +10,12 @@ import {
   podMembershipListsFromSimplifiedJSON,
   serializeGPCBoundConfig
 } from "@pcd/gpc";
-import { GPCPCD, GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
+import {
+  GPCPCD,
+  GPCPCDArgs,
+  GPCPCDPackage,
+  PODPCD_ARG_PREFIX
+} from "@pcd/gpc-pcd";
 import {
   constructZupassPcdGetRequestUrl,
   openZupassPopup,
@@ -195,7 +200,7 @@ export function openGPCPopup(
       value: proofConfig,
       userProvided: false
     },
-    pod: {
+    [`${PODPCD_ARG_PREFIX}_pod0`]: {
       argumentType: ArgumentTypeName.PCD,
       pcdType: PODPCDPackage.name,
       value: undefined,

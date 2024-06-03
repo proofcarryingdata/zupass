@@ -11,7 +11,7 @@ import {
   GPCArtifactStability,
   GPCArtifactVersion
 } from "@pcd/gpc";
-import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
+import { GPCPCDArgs, GPCPCDPackage, PODPCD_ARG_PREFIX } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdAddRequestUrl,
   constructZupassPcdProveAndAddRequestUrl,
@@ -637,7 +637,7 @@ async function addGPCPCD(
       argumentType: ArgumentTypeName.String,
       value: gpcConfig
     },
-    pod: {
+    [`${PODPCD_ARG_PREFIX}_pod0`]: {
       value: await PODPCDPackage.serialize(podPCD),
       argumentType: ArgumentTypeName.PCD
     },

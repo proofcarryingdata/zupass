@@ -15,7 +15,9 @@ export const POD_NAME_REGEX = new RegExp(/^[A-Za-z_]\w*$/);
 /**
  * String-encoded POD value type enum.
  */
-export type POD_VALUE_STRING_TYPE_IDENTIFIER = "eddsa_pubkey" | "string";
+export type POD_VALUE_STRING_TYPE_IDENTIFIER =
+  | typeof EDDSA_PUBKEY_TYPE_STRING
+  | "string";
 
 /**
  * Identifier for EdDSA public key string type.

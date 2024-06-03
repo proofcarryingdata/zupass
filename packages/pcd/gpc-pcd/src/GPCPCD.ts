@@ -1,5 +1,6 @@
 import { GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
 import { PCD, PCDArgument, StringArgument } from "@pcd/pcd-types";
+import { PODName } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Groth16Proof } from "snarkjs";
@@ -19,6 +20,16 @@ export type {
  * The globally unique type name of the {@link GPCPCD}.
  */
 export const GPCPCDTypeName = "gpc-pcd";
+
+/**
+ * Argument name type for PODPCD arguments.
+ */
+export type PODPCDArgName = `${typeof PODPCD_ARG_PREFIX}_${PODName}`;
+
+/**
+ * Prefix used for PODPCD argument names in {@link PODPCDArgName}.
+ */
+export const PODPCD_ARG_PREFIX = "podpcd";
 
 /**
  * Interface containing the arguments that 3rd parties use to
@@ -46,17 +57,6 @@ export type GPCPCDArgs = {
   // ObjectArgument is intended to be directly JSON serializable, so can't
   // contain bigints if used for network requests (e.g. ProveAndAdd).  The
   // choice here should be driven by the needs of the Prove screen.
-
-  /**
-   * POD objects to prove about.  These are not revealed by default, but
-   * a redacted version of their entries will become part of the claims of the
-   * resulting proof PCD, as specified by the proof config.
-   *
-   * See {@link GPCProofConfig} and {@link GPCRevealedClaims} for more
-   * information.
-   */
-  pod: PCDArgument<PODPCD>;
-  // TODO(POD-P3): Support more than one POD.
 
   /**
    * Optional secret info identifying the owner of PODs, if needed by the proof
@@ -97,7 +97,15 @@ export type GPCPCDArgs = {
    */
   id?: StringArgument;
   // TODO(POD-P3): Support PODValue of multiple types.
-};
+} /**
+ * POD objects to prove about. Each object is identified by name and prefixed
+ * with {@link PODPCD_ARG_PREFIX} followed by an underscore.  These are not
+ * revealed by default, but a redacted version of their entries will become part
+ * of the claims of the resulting proof PCD, as specified by the proof config.
+ *
+ * See {@link GPCProofConfig} and {@link GPCRevealedClaims} for more
+ * information.
+ */ & Record<PODPCDArgName, PCDArgument<PODPCD>>;
 
 /**
  * Defines the GPCD PCD's claim.  A GPC proofs includes the proof configuration
