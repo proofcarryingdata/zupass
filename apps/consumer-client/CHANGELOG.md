@@ -1,5 +1,22 @@
 # consumer-client
 
+<<<<<<< Updated upstream
+=======
+## 0.0.35
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.4
+
+## 0.0.34
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.3
+
+>>>>>>> Stashed changes
 ## 0.0.33
 
 ### Patch Changes
