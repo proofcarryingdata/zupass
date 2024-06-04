@@ -13,13 +13,12 @@ import {
 import {
   ArgumentTypeName,
   DisplayOptions,
-  PCDArgument,
   PCDPackage,
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { PODStringValue, POD_NAME_REGEX } from "@pcd/pod";
-import { PODPCD, PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
+import { PODStringValue } from "@pcd/pod";
+import { PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import { v4 as uuid } from "uuid";
@@ -30,7 +29,6 @@ import {
   GPCPCDInitArgs,
   GPCPCDProof,
   GPCPCDTypeName,
-  PODPCDArgName,
   PODPCDRecordArg,
   PODPCD_ARG_PREFIX,
   PODPCD_ARG_REGEXP
