@@ -95,7 +95,7 @@ export interface PCDPackage<
    * Given the arguments passed into {@link PCDPackage#prove}, returns options on how
    * to render the Prove Screen for this {@link PCDPackage}.
    */
-  getProveDisplayOptions?: () => ProveDisplayOptions<A>;
+  getProveDisplayOptions?: (initialArgs: A) => ProveDisplayOptions<A>;
 
   /**
    * This is effectively a factory for instances of the {@link PCD} that this {@link PCDPackage}

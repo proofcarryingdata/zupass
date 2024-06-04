@@ -58,7 +58,7 @@ export function PCDArgs<T extends PCDPackage>({
   const [showAll, setShowAll] = useState(false);
   const [visible, hidden] = _.partition(
     Object.entries(args),
-    ([key]) => options?.[key]?.defaultVisible ?? true
+    ([key]) => options?.[key]?.defaultVisible ?? true // ART_DBG: defaultVisble used here
   );
 
   return (
@@ -130,7 +130,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
   const isValid = useCallback(
     <A extends Argument<ArgumentTypeName, unknown>>(value: RawValueType<A>) =>
       (arg.validatorParams &&
-        defaultArg?.validate?.(value, arg.validatorParams)) ??
+        defaultArg?.validate?.(value, arg.validatorParams)) ?? // ART_DBG: validate used here iff validatorParams is present in input args
       true,
     [defaultArg, arg.validatorParams]
   );
@@ -138,7 +138,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
   const props = useMemo<ArgInputProps<typeof arg>>(
     () => ({
       // merge arg with default value
-      arg: { displayName: _.startCase(argName), ...(defaultArg || {}), ...arg },
+      arg: { displayName: _.startCase(argName), ...(defaultArg || {}), ...arg }, // ART_DBG: All other fields of defaultArgs get filled in here, then can be overridden by input args
       argName,
       setArg,
       isValid,

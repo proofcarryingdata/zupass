@@ -244,7 +244,10 @@ export function getDisplayOptions(pcd: GPCPCD): DisplayOptions {
   };
 }
 
-export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
+export function getProveDisplayOptions(
+  initialArgs: GPCPCDArgs
+): ProveDisplayOptions<GPCPCDArgs> {
+  console.log("[ART_DBG]", Object.keys(initialArgs));
   return {
     defaultArgs: {
       proofConfig: {
