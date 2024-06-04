@@ -14,6 +14,8 @@ import {
   ListFeedsResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
+  PipelineSetManualCheckInStateRequest,
+  PipelineSetManualCheckInStateResponse,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -215,6 +217,26 @@ export function initGenericIssuanceRoutes(
     );
     res.json(result satisfies PipelineInfoResponseValue);
   });
+
+  app.post(
+    "/generic-issuance/api/manual-checkin/:pipelineID",
+    async (req, res) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const user = await genericIssuanceService.authSession(req);
+      traceUser(user);
+      const pipelineID = checkUrlParam(req, "pipelineID");
+
+      const reqBody = req.body as PipelineSetManualCheckInStateRequest;
+      const result = await genericIssuanceService.handleSetManualCheckInState(
+        pipelineID,
+        user,
+        reqBody.ticketId,
+        reqBody.checkInState
+      );
+
+      res.json(result satisfies PipelineSetManualCheckInStateResponse);
+    }
+  );
 
   /**
    * Authenticated by PCD so doesn't need auth.

@@ -205,7 +205,9 @@ export class PretixPipeline implements BasePipeline {
             (ev) => ev.genericIssuanceId === eventId
           );
         },
-        preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this)
+        preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this),
+        getManualCheckinSummary: async (): Promise<never[]> => [],
+        userCanCheckIn: async (): Promise<boolean> => false
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,

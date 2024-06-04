@@ -73,6 +73,7 @@ import {
 import {
   CheckinCapability,
   CheckinStatus,
+  PipelineCheckinSummary,
   generateCheckinUrlPath
 } from "../capabilities/CheckinCapability";
 import {
@@ -195,7 +196,9 @@ export class LemonadePipeline implements BasePipeline {
             (ev) => ev.genericIssuanceEventId === eventId
           );
         },
-        preCheck: this.precheckTicketAction.bind(this)
+        preCheck: this.precheckTicketAction.bind(this),
+        getManualCheckinSummary: this.getManualCheckinSummary.bind(this),
+        userCanCheckIn: this.userCanCheckIn.bind(this)
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,
@@ -1179,6 +1182,18 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   /**
+   * Returns true if a user can check tickets in for any event on this pipeline.
+   */
+  private async userCanCheckIn(email: string): Promise<boolean> {
+    for (const event of this.definition.options.events) {
+      if (await this.canCheckInForEvent(event.genericIssuanceEventId, email)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Given an event and a checker email, verifies that the checker has permission to perform
    * check-ins for the event.
    */
@@ -1898,6 +1913,39 @@ export class LemonadePipeline implements BasePipeline {
       );
     }
     return ticketTypeConfig;
+  }
+
+  /**
+   * A summary of data from the manual check-in table.
+   */
+  private async getManualCheckinSummary(): Promise<PipelineCheckinSummary[]> {
+    const results: PipelineCheckinSummary[] = [];
+    const checkIns = await this.checkinDB.getByPipelineId(this.id);
+    const checkInsById = _.keyBy(checkIns, (checkIn) => checkIn.ticketId);
+
+    for (const ticketAtom of await this.db.load(this.id)) {
+      const checkIn = checkInsById[ticketAtom.id];
+      results.push({
+        ticketId: ticketAtom.id,
+        email: ticketAtom.email,
+        timestamp: checkIn ? checkIn.timestamp : undefined,
+        checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
+        checkedIn: !!checkIn
+      });
+    }
+
+    for (const manualTicket of this.definition.options.manualTickets ?? []) {
+      const checkIn = checkInsById[manualTicket.id];
+      results.push({
+        ticketId: manualTicket.id,
+        email: manualTicket.attendeeEmail,
+        timestamp: checkIn ? checkIn.timestamp : undefined,
+        checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
+        checkedIn: !!checkIn
+      });
+    }
+
+    return results;
   }
 
   public static is(p: Pipeline): p is LemonadePipeline {

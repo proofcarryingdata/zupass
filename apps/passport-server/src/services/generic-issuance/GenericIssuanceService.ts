@@ -14,6 +14,7 @@ import {
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue,
+  PipelineSetManualCheckInStateResponse,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -281,6 +282,20 @@ export class GenericIssuanceService {
       pipelineId,
       groupId,
       rootHash
+    );
+  }
+
+  public async handleSetManualCheckInState(
+    pipelineId: string,
+    user: PipelineUser,
+    ticketId: string,
+    checkInState: boolean
+  ): Promise<PipelineSetManualCheckInStateResponse> {
+    return this.pipelineSubservice.handleSetManualCheckInState(
+      pipelineId,
+      user,
+      ticketId,
+      checkInState
     );
   }
 

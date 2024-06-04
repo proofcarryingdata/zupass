@@ -12,6 +12,7 @@ import {
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
+  PipelineSetManualCheckInStateResponse,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -506,6 +507,20 @@ export class PipelineSubservice {
   ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {
     return this.pipelineAPISubservice.handleGetPipelineSemaphoreGroups(
       pipelineId
+    );
+  }
+
+  public async handleSetManualCheckInState(
+    pipelineId: string,
+    user: PipelineUser,
+    ticketId: string,
+    checkInState: boolean
+  ): Promise<PipelineSetManualCheckInStateResponse> {
+    return this.pipelineAPISubservice.handleSetManualCheckInState(
+      pipelineId,
+      user,
+      ticketId,
+      checkInState
     );
   }
 }

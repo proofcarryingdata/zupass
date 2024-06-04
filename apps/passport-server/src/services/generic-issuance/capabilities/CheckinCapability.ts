@@ -1,16 +1,27 @@
 import {
   ActionConfigResponseValue,
+  PipelineSetManualCheckInStateResponse,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue
 } from "@pcd/passport-interface";
 import urljoin from "url-join";
+import { PCDHTTPError } from "../../../routing/pcdHttpError";
+import { Pipeline } from "../pipelines/types";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
 
 export enum CheckinStatus {
   Pending,
   Success
+}
+
+export interface PipelineCheckinSummary {
+  ticketId: string;
+  email: string;
+  timestamp: Date | undefined;
+  checkerEmail: string | undefined;
+  checkedIn: boolean;
 }
 
 /**
@@ -39,6 +50,12 @@ export interface CheckinCapability extends BasePipelineCapability {
   preCheck(
     request: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue>;
+  userCanCheckIn(email: string): Promise<boolean>;
+  setManualCheckInState(
+    ticketId: string,
+    checkInState: boolean
+  ): Promise<PipelineSetManualCheckInStateResponse>;
+  getManualCheckinSummary(): Promise<PipelineCheckinSummary[]>;
 }
 
 export function isCheckinCapability(
@@ -52,4 +69,25 @@ export function generateCheckinUrlPath(): string {
     process.env.PASSPORT_SERVER_URL as string,
     `/generic-issuance/api/check-in`
   );
+}
+
+export function getCheckinCapability(
+  pipeline: Pipeline
+): CheckinCapability | undefined {
+  return pipeline.capabilities.find((c) => isCheckinCapability(c)) as
+    | CheckinCapability
+    | undefined;
+}
+
+export function ensureCheckinCapability(pipeline: Pipeline): CheckinCapability {
+  const cap = getCheckinCapability(pipeline);
+
+  if (!cap) {
+    throw new PCDHTTPError(
+      403,
+      `pipeline ${pipeline.id} does not have a Checkin capability`
+    );
+  }
+
+  return cap;
 }

@@ -492,6 +492,16 @@ export interface PipelineInfoConsumer {
   timeUpdated: string;
 }
 
+export interface PipelineSetManualCheckInStateRequest {
+  jwt: string;
+  ticketId: string;
+  checkInState: boolean;
+}
+
+export interface PipelineSetManualCheckInStateResponse {
+  checkInState: boolean;
+}
+
 export interface PipelineEdDSATicketZuAuthConfig {
   pcdType: typeof EdDSATicketPCDTypeName;
   publicKey: EdDSAPublicKey;
