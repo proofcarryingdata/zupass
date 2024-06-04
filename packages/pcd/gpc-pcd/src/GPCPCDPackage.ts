@@ -86,7 +86,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
         }
 
         // Strip away prefix
-        const podName = prefixedPODName[2];
+        const podName = podNameMatch[2];
 
         if (!podPCDArg.value) {
           throw new Error(`No PODPCD value provided for POD ${podName}`);
