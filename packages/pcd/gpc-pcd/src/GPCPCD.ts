@@ -32,6 +32,13 @@ export type PODPCDArgName = `${typeof PODPCD_ARG_PREFIX}_${PODName}`;
 export const PODPCD_ARG_PREFIX = "podpcd";
 
 /**
+ * Regular expression for `PODPCDArgName` values.
+ */
+export const PODPCD_ARG_REGEXP = new RegExp(
+  String.raw`(${PODPCD_ARG_PREFIX})_([A-Za-z_]\w*)$`
+);
+
+/**
  * Interface containing the arguments that 3rd parties use to
  * initialize this PCD package.
  *
@@ -42,6 +49,18 @@ export const PODPCD_ARG_PREFIX = "podpcd";
 export type GPCPCDInitArgs = {
   zkArtifactPath: string;
 };
+
+/**
+ * POD objects to prove about. Each object is identified by name and prefixed
+ * with `podpcd` (cf. {@link PODPCD_ARG_PREFIX}) followed by an underscore.
+ * These are not revealed by default, but a redacted version of their entries
+ * will become part of the claims of the resulting proof PCD, as specified by
+ * the proof config.
+ *
+ * See {@link GPCProofConfig} and {@link GPCRevealedClaims} for more
+ * information.
+ */
+export type PODPCDRecordArg = Record<PODPCDArgName, PCDArgument<PODPCD>>;
 
 /**
  * Defines the essential parameters required for creating a {@link GPCPCD}.
@@ -97,15 +116,7 @@ export type GPCPCDArgs = {
    */
   id?: StringArgument;
   // TODO(POD-P3): Support PODValue of multiple types.
-} /**
- * POD objects to prove about. Each object is identified by name and prefixed
- * with {@link PODPCD_ARG_PREFIX} followed by an underscore.  These are not
- * revealed by default, but a redacted version of their entries will become part
- * of the claims of the resulting proof PCD, as specified by the proof config.
- *
- * See {@link GPCProofConfig} and {@link GPCRevealedClaims} for more
- * information.
- */ & Record<PODPCDArgName, PCDArgument<PODPCD>>;
+} & PODPCDRecordArg;
 
 /**
  * Defines the GPCD PCD's claim.  A GPC proofs includes the proof configuration

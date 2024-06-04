@@ -31,7 +31,9 @@ import {
   GPCPCDProof,
   GPCPCDTypeName,
   PODPCDArgName,
-  PODPCD_ARG_PREFIX
+  PODPCDRecordArg,
+  PODPCD_ARG_PREFIX,
+  PODPCD_ARG_REGEXP
 } from "./GPCPCD";
 
 let savedInitArgs: GPCPCDInitArgs | undefined = undefined;
@@ -66,15 +68,11 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   const proofConfig = deserializeGPCProofConfig(args.proofConfig.value);
 
   // Filter out PODPCD records.
-  const podRecord = (({
-    proofConfig: _pC,
-    identity: _id,
-    externalNullifier: _eN,
-    membershipLists: _mL,
-    watermark: _w,
-    id: _i,
-    ...podRecord
-  }): Record<PODPCDArgName, PCDArgument<PODPCD>> => podRecord)(args);
+  const podRecord = Object.fromEntries(
+    Object.entries(args).filter(([argName, _arg]) =>
+      argName.startsWith(`${PODPCD_ARG_PREFIX}_`)
+    )
+  ) as PODPCDRecordArg;
 
   if (Object.keys(podRecord).length === 0) {
     throw new Error("No PODPCD value provided");
@@ -82,16 +80,15 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
 
   const pods = Object.fromEntries(
     await Promise.all(
-      Object.entries(podRecord).map(async ([podName, podPCDArg]) => {
-        const podNameParts = podName.split("_");
+      Object.entries(podRecord).map(async ([prefixedPODName, podPCDArg]) => {
+        const podNameMatch = prefixedPODName.match(PODPCD_ARG_REGEXP);
 
-        if (podNameParts[0] !== PODPCD_ARG_PREFIX) {
-          throw new Error(`Invalid PODPCD prefix in argument ${podName}`);
+        if (podNameMatch === null) {
+          throw new Error(`Invalid PODPCD argument name ${prefixedPODName}`);
         }
 
-        if (podNameParts[1].match(POD_NAME_REGEX) === null) {
-          throw new Error(`Invalid POD name in PODPCD argument ${podName}`);
-        }
+        // Strip away prefix
+        const podName = prefixedPODName[2];
 
         if (!podPCDArg.value) {
           throw new Error(`No PODPCD value provided for POD ${podName}`);
@@ -102,8 +99,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
           throw new Error("Wrong PCD type provided for PODPCD");
         }
 
-        // Strip away prefix
-        return [podNameParts[1], podPCD.pod];
+        return [podName, podPCD.pod];
       })
     )
   );
