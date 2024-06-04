@@ -1,7 +1,5 @@
 # consumer-server
 
-<<<<<<< Updated upstream
-=======
 ## 0.0.22
 
 ### Patch Changes
@@ -16,7 +14,6 @@
 - Updated dependencies
   - @pcd/zuauth@1.3.3
 
->>>>>>> Stashed changes
 ## 0.0.20
 
 ### Patch Changes
