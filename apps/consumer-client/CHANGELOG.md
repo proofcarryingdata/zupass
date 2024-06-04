@@ -1,5 +1,12 @@
 # consumer-client
 
+## 0.0.36
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.5
+
 ## 0.0.35
 
 ### Patch Changes
