@@ -30,17 +30,20 @@ import {
 } from "../src";
 import {
   expectedPublicKey,
+  expectedPublicKeyHex,
   expectedSignature1,
+  expectedSignature1Hex,
   expectedSignature2,
+  expectedSignature2Hex,
   privateKey,
   sampleEntries1,
   sampleEntries2,
-  testPrivateKeys
+  testPrivateKeysAllFormats
 } from "./common";
 
 describe("podUtil input checkers should work", async function () {
   it("checkPrivateKeyFormat should accept valid inputs", function () {
-    for (const testPrivateKey of testPrivateKeys) {
+    for (const testPrivateKey of testPrivateKeysAllFormats) {
       const checked = checkPrivateKeyFormat(testPrivateKey);
       expect(checked).to.eq(testPrivateKey);
     }
@@ -55,7 +58,9 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "hex") as unknown as string
+      Buffer.from(privateKey, "base64url") as unknown as string,
+      "=V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs",
+      "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs====="
     ];
     for (const testPrivateKey of badPrivateKeys) {
       const fn = (): void => {
@@ -70,8 +75,8 @@ describe("podUtil input checkers should work", async function () {
     // to be points on the curve.
     const testPublicKeys = [
       expectedPublicKey,
-      "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff",
-      "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100"
+      expectedPublicKeyHex,
+      ...testPrivateKeysAllFormats
     ];
     for (const testPublicKey of testPublicKeys) {
       const checked = checkPublicKeyFormat(testPublicKey);
@@ -88,7 +93,9 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "hex") as unknown as string
+      Buffer.from(expectedPublicKey, "base64url") as unknown as string,
+      "=V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs",
+      "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs====="
     ];
     for (const testPublicKey of badPublicKeys) {
       const fn = (): void => {
@@ -104,6 +111,8 @@ describe("podUtil input checkers should work", async function () {
     const testSignatures = [
       expectedSignature1,
       expectedSignature2,
+      expectedSignature1Hex,
+      expectedSignature2Hex,
       "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff",
       "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100"
     ];
@@ -122,7 +131,9 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "hex") as unknown as string
+      Buffer.from(privateKey, "hex") as unknown as string,
+      "=ZKuvJhYh4JXNqKqt1uS99lAVReh_bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm_CuCMvP0a1t0hraeAsTeBjmGAQ",
+      "ZKuvJhYh4JXNqKqt1uS99lAVReh_bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm_CuCMvP0a1t0hraeAsTeBjmGAQ======"
     ];
     for (const testSignature of badSignatures) {
       const fn = (): void => {

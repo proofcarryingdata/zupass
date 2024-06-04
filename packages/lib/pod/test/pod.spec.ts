@@ -125,7 +125,7 @@ describe("POD class should work", async function () {
     };
     expect(fn).to.throw(
       TypeError,
-      "Private key should be 32 bytes hex-encoded."
+      "Private key should be 32 bytes, encoded as hex or Base64."
     );
   });
 
@@ -162,7 +162,10 @@ describe("POD class should work", async function () {
     const fn = (): void => {
       POD.load(sampleEntries1, "malformed", signedPOD.signerPublicKey);
     };
-    expect(fn).to.throw(TypeError, "Signature should be 64 bytes hex-encoded.");
+    expect(fn).to.throw(
+      TypeError,
+      "Signature should be 64 bytes, encoded as hex or Base64."
+    );
   });
 
   it("should reject malformed public key when loading", function () {
@@ -174,7 +177,7 @@ describe("POD class should work", async function () {
     };
     expect(fn).to.throw(
       TypeError,
-      "Public key should be 32 bytes hex-encoded."
+      "Public key should be 32 bytes, encoded as hex or Base64."
     );
   });
 });
