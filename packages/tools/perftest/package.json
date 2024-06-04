@@ -5,7 +5,8 @@
   "license": "GPL-3.0-or-later",
   "scripts": {
     "start": "yarn ts-node src/index.ts",
-    "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
+    "build": "tsc --noEmit",
+    "lint": "eslint \"**/*.ts{,x}\"",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
