@@ -426,12 +426,12 @@ export function deserializePODEntries(serializedEntries: string): PODEntries {
  */
 export function podValueToRawValue(podValue: PODValue): PODRawValue {
   if (podValue.type === EDDSA_PUBKEY_TYPE_STRING) {
-    return `${EDDSA_PUBKEY_TYPE_STRING}:${podValue.value}`;
+    return `pod_${EDDSA_PUBKEY_TYPE_STRING}:${podValue.value}`;
   } else if (
     podValue.type === "string" &&
     podValue.value.match(POD_STRING_TYPE_REGEX)
   ) {
-    return `string:${podValue.value}`;
+    return `pod_string:${podValue.value}`;
   } else {
     return podValue.value;
   }
