@@ -119,6 +119,7 @@ export type Action =
       type: "load-after-login";
       storage: StorageWithRevision;
       encryptionKey: string;
+      authKey?: string;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
   | { type: "password-change-on-other-tab" }
@@ -224,7 +225,12 @@ export async function dispatch(
     case "reset-passport":
       return resetPassport(state, update);
     case "load-after-login":
-      return loadAfterLogin(action.encryptionKey, action.storage, update);
+      return loadAfterLogin(
+        action.encryptionKey,
+        action.authKey,
+        action.storage,
+        update
+      );
     case "set-modal":
       return update({
         modal: action.modal
@@ -355,6 +361,7 @@ async function oneClickLogin(
     if (oneClickLoginResult.value.isNewUser) {
       return finishAccountCreation(
         oneClickLoginResult.value.zupassUser,
+        oneClickLoginResult.value.authKey,
         state,
         update,
         targetFolder
@@ -374,6 +381,7 @@ async function oneClickLogin(
       if (storageResult.success) {
         return loadAfterLogin(
           oneClickLoginResult.value.encryptionKey,
+          oneClickLoginResult.value.authKey,
           storageResult.value,
           update
         );
@@ -448,6 +456,7 @@ async function createNewUserSkipPassword(
   if (newUserResult.success) {
     return finishAccountCreation(
       newUserResult.value,
+      newUserResult.value.authKey,
       state,
       update,
       targetFolder
@@ -491,7 +500,12 @@ async function createNewUserWithPassword(
   );
 
   if (newUserResult.success) {
-    return finishAccountCreation(newUserResult.value, state, update);
+    return finishAccountCreation(
+      newUserResult.value,
+      newUserResult.value.authKey,
+      state,
+      update
+    );
   }
 
   update({
@@ -509,6 +523,7 @@ async function createNewUserWithPassword(
  */
 async function finishAccountCreation(
   user: User,
+  authKey: string,
   state: AppState,
   update: ZuUpdate,
   targetFolder?: string | null
@@ -531,6 +546,7 @@ async function finishAccountCreation(
     return; // Don't save the bad identity. User must reset account.
   }
 
+  FeedSubscriptionManager.saveAlternateCredential(authKey);
   const subscriptions = new FeedSubscriptionManager(new NetworkFeedApi());
   addZupassProvider(subscriptions);
   const emailSub = await subscriptions.subscribe(
@@ -739,6 +755,7 @@ async function removePCD(
 
 async function loadAfterLogin(
   encryptionKey: string,
+  authKey: string | undefined,
   storage: StorageWithRevision,
   update: ZuUpdate
 ): Promise<void> {
@@ -746,6 +763,8 @@ async function loadAfterLogin(
     storage.storage,
     await getPackages()
   );
+
+  FeedSubscriptionManager.saveAlternateCredential(authKey);
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
   const userResponse = await requestUser(

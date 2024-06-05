@@ -1,3 +1,4 @@
+import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import {
@@ -6,8 +7,15 @@ import {
   PCDCollection,
   PCDPermission
 } from "@pcd/pcd-collection";
-import { ArgsOf, PCDPackage, PCDTypeNameOf } from "@pcd/pcd-types";
-import { isFulfilled } from "@pcd/util";
+import {
+  ArgsOf,
+  PCDPackage,
+  PCDTypeNameOf,
+  SerializedPCD
+} from "@pcd/pcd-types";
+import { POD } from "@pcd/pod";
+import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
+import { isFulfilled, randomUUID } from "@pcd/util";
 import stringify from "fast-json-stable-stringify";
 import { v4 as uuid } from "uuid";
 import { CredentialManagerAPI } from "./CredentialManager";
@@ -222,8 +230,8 @@ export class FeedSubscriptionManager {
     return actions;
   }
 
-  private ALTERNATE_CREDENTIAL_KEY = "zupass_alternate_credential";
-  public saveAlternateCredential(credential: string | undefined): void {
+  private static ALTERNATE_CREDENTIAL_KEY = "authKey";
+  public static saveAlternateCredential(credential: string | undefined): void {
     if (credential === undefined) {
       localStorage?.removeItem(this.ALTERNATE_CREDENTIAL_KEY);
     } else {
@@ -232,7 +240,10 @@ export class FeedSubscriptionManager {
   }
 
   public getSavedAlternateCredential(): string | undefined {
-    return localStorage?.getItem(this.ALTERNATE_CREDENTIAL_KEY) ?? undefined;
+    return (
+      localStorage?.getItem(FeedSubscriptionManager.ALTERNATE_CREDENTIAL_KEY) ??
+      undefined
+    );
   }
 
   private async getAlternateCredentialForFeed(
@@ -249,6 +260,26 @@ export class FeedSubscriptionManager {
 
     return this.getSavedAlternateCredential();
   }
+
+  private async makeAlternateCredentialPCD(
+    authKey: string
+  ): Promise<SerializedPCD> {
+    return await PODPCDPackage.serialize(
+      new PODPCD(
+        randomUUID(),
+        POD.sign(
+          {
+            authKey: {
+              type: "string",
+              value: authKey
+            }
+          },
+          newEdDSAPrivateKey()
+        )
+      )
+    );
+  }
+
   /**
    * Performs the network fetch of a subscription, and inspects the results
    * for validity. The error log for the subscription will be reset and
@@ -261,13 +292,20 @@ export class FeedSubscriptionManager {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {
+      const altCredential =
+        await this.getAlternateCredentialForFeed(subscription);
+
+      const pcdCredential: SerializedPCD | undefined = altCredential
+        ? await this.makeAlternateCredentialPCD(altCredential)
+        : await credentialManager.requestCredential({
+            signatureType: "sempahore-signature-pcd",
+            pcdType: subscription.feed.credentialRequest.pcdType
+          });
+
       const result = await this.api.pollFeed(subscription.providerUrl, {
         feedId: subscription.feed.id,
-        pcd: await credentialManager.requestCredential({
-          signatureType: "sempahore-signature-pcd",
-          pcdType: subscription.feed.credentialRequest.pcdType
-        }),
-        altCredential: await this.getAlternateCredentialForFeed(subscription)
+        pcd: pcdCredential,
+        altCredential
       });
 
       if (!result.success) {

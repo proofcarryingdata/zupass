@@ -611,7 +611,10 @@ export type VerifyTokenRequest = {
  * a password and store their encryption key on our server.
  * {@link VerifyTokenRequest}.
  */
-export type VerifyTokenResponseValue = { encryptionKey: string | null };
+export type VerifyTokenResponseValue = {
+  encryptionKey: string | null;
+  authKey: string | null;
+};
 
 /**
  * Ask the server to log us in using a special login flow designed
@@ -645,8 +648,8 @@ export type OneClickLoginRequest = {
 };
 
 export type OneClickLoginResponseValue =
-  | { isNewUser: true; zupassUser: ZupassUserJson }
-  | { isNewUser: false; encryptionKey: string | null };
+  | { isNewUser: true; zupassUser: ZupassUserJson; authKey: string }
+  | { isNewUser: false; encryptionKey: string | null; authKey: string };
 
 /**
  * Zupass responds with this when you ask it if it is able to
@@ -674,6 +677,11 @@ export type LoadUserError =
  * When you ask Zupass for a user, it will respond with this type.
  */
 export type UserResponseValue = ZupassUserJson;
+
+/**
+ * When you ask Zupass to create a new user, it will respond with this type.
+ */
+export type NewUserResponseValue = ZupassUserJson & { authKey: string };
 
 /**
  * Zupass responds with this when you ask it if it knows of a given

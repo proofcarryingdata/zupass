@@ -49,6 +49,8 @@
     "@pcd/passport-crypto": "0.11.0",
     "@pcd/pcd-collection": "0.11.0",
     "@pcd/pcd-types": "0.11.0",
+    "@pcd/pod": "0.1.0",
+    "@pcd/pod-pcd": "0.1.0",
     "@pcd/semaphore-group-pcd": "0.11.0",
     "@pcd/semaphore-identity-pcd": "0.11.0",
     "@pcd/semaphore-signature-pcd": "0.11.0",

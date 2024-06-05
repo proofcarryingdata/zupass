@@ -32,6 +32,12 @@
       "path": "../pcd-types/tsconfig.cjs.json"
     },
     {
+      "path": "../pod/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/pod-pcd/tsconfig.cjs.json"
+    },
+    {
       "path": "../../pcd/semaphore-group-pcd/tsconfig.cjs.json"
     },
     {

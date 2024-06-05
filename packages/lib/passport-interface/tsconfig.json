@@ -1,9 +1,18 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": ["src", "test"],
-  "exclude": ["dist", "build", "node_modules"],
+  "include": [
+    "src",
+    "test"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
   "compilerOptions": {
-    "lib": ["dom"],
+    "lib": [
+      "dom"
+    ],
     "outDir": "dist",
     "declarationDir": "dist/types",
     "rootDir": "."
@@ -32,6 +41,12 @@
     },
     {
       "path": "../pcd-types"
+    },
+    {
+      "path": "../pod"
+    },
+    {
+      "path": "../../pcd/pod-pcd"
     },
     {
       "path": "../../pcd/semaphore-group-pcd"
