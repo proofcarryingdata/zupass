@@ -264,20 +264,20 @@ export class FeedSubscriptionManager {
   private async makeAlternateCredentialPCD(
     authKey: string
   ): Promise<SerializedPCD> {
-    return await PODPCDPackage.serialize(
-      new PODPCD(
-        randomUUID(),
-        POD.sign(
-          {
-            authKey: {
-              type: "string",
-              value: authKey
-            }
-          },
-          newEdDSAPrivateKey()
-        )
-      )
+    const privateKey = newEdDSAPrivateKey();
+    const pkeyBuffer = Buffer.from(privateKey, "hex");
+    const encodedPkey = pkeyBuffer.toString("base64");
+    const pod = POD.sign(
+      {
+        authKey: {
+          type: "string",
+          value: authKey
+        }
+      },
+      encodedPkey,
+      "base64"
     );
+    return await PODPCDPackage.serialize(new PODPCD(randomUUID(), pod));
   }
 
   /**

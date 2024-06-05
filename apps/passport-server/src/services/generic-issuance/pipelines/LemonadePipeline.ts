@@ -34,6 +34,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { PODPCDTypeName } from "@pcd/pod-pcd";
 import {
   PODTicketPCD,
   PODTicketPCDPackage,
@@ -780,6 +781,10 @@ export class LemonadePipeline implements BasePipeline {
 
       if (!req.pcd) {
         throw new Error("missing credential pcd");
+      }
+
+      if (req.pcd.type === PODPCDTypeName) {
+        throw new Error("POD PCD TYPE");
       }
 
       const { emailClaim } =

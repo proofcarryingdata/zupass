@@ -632,17 +632,19 @@ export function decodeBytesAuto(
   encodingGroups: CryptoBytesEncodingGroups,
   errorMessage?: string
 ): Buffer {
-  //  console.log("decodePrivateKey", encoded, encodingPattern);
   if (encoded && typeof encoded === "string" && encoded !== "") {
     const matched = encoded.match(encodingPattern);
-    //    console.log("decodePrivateKey", matched);
     if (matched !== null) {
       for (const encodingGroup of encodingGroups) {
         if (
           matched[encodingGroup.index] &&
           matched[encodingGroup.index] !== ""
         ) {
-          return decodeBytesRaw(encoded, encodingGroup.encoding);
+          try {
+            return decodeBytesRaw(encoded, encodingGroup.encoding);
+          } catch (e) {
+            console.log(e);
+          }
         }
       }
       // Fallthrough if no group matches.

@@ -208,7 +208,8 @@ export function decodeSignature(encodedSignature: string): Signature<bigint> {
  */
 export function signPODRoot(
   root: bigint,
-  privateKey: string
+  privateKey: string,
+  encoding: CryptoBytesEncoding = "base64url"
 ): { signature: string; publicKey: string } {
   if (typeof root !== "bigint") {
     throw new TypeError("POD root must be a bigint not `${typeof root}`.");
@@ -217,10 +218,10 @@ export function signPODRoot(
   const privateKeyBytes = decodePrivateKey(privateKey);
 
   const unpackedSignature = signMessage(privateKeyBytes, root);
-  const signature = encodeSignature(unpackedSignature);
+  const signature = encodeSignature(unpackedSignature, encoding);
 
   const unpackedPublicKey = derivePublicKey(privateKeyBytes);
-  const publicKey = encodePublicKey(unpackedPublicKey);
+  const publicKey = encodePublicKey(unpackedPublicKey, encoding);
 
   return { signature, publicKey };
 }
