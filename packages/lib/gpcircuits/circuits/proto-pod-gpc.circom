@@ -111,8 +111,9 @@ template ProtoPODGPC (
     }
 
     /*
-     * Virtual entries. These are entries derived from PODs'
-     * cryptographic data, e.g. the signers' public keys.
+     * 1 VirtualEntryModule.
+     * Virtual entries are derived from PODs' cryptographic data,
+     * e.g. the signers' public keys.
      *
      * This block pipes them in and forms signals to be fed into the
      * entry constraint, tuple and list membership modules below, as well
@@ -128,8 +129,10 @@ template ProtoPODGPC (
     // Boolean flags for virtual entry behaviour.
     signal input virtualEntryIsValueHashRevealed /*MAX_VIRTUAL_ENTRIES packed bits*/;
 
+    // Virtual entry value hashes to be computed by virtual entry module
     signal virtualEntryValueHashes[MAX_VIRTUAL_ENTRIES];
-    
+
+    // Virtual entry value is optionally revealed, or set to -1 if not.
     signal output virtualEntryRevealedValueHash[MAX_VIRTUAL_ENTRIES];
 
     (virtualEntryValueHashes, virtualEntryRevealedValueHash)
@@ -158,7 +161,7 @@ template ProtoPODGPC (
     //   entryEqualToOtherEntryIndex[i] = i
     signal input entryEqualToOtherEntryByIndex[TOTAL_ENTRIES];
 
-    // Modules which scale with number of entries.
+    // Modules which scale with number of (non-virtual) entries.
     for (var entryIndex = 0; entryIndex < MAX_ENTRIES; entryIndex++) {
         // Entry module proves that an entry exists within the object's merkle tree.
         entryRevealedValueHash[entryIndex] <== EntryModule(MERKLE_MAX_DEPTH)(
@@ -172,7 +175,8 @@ template ProtoPODGPC (
             proofSiblings <== entryProofSiblings[entryIndex]
                                                                              );
     }
-    
+
+    // Items which scale with the number of total entries (real and virtual).
     for (var entryIndex = 0; entryIndex < TOTAL_ENTRIES; entryIndex++) {
         // EntryConstraint module contains constraints applied to each individual entry.
         EntryConstraintModule(TOTAL_ENTRIES)(

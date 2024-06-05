@@ -31,7 +31,7 @@ describe("Virtual entry module should work", function () {
     const paddedRevealedBits = padArray(
       isValueHashRevealedBits,
       paramMaxObjects,
-      isValueHashRevealedBits[0]
+      0n
     );
 
     const pod0 = POD.sign(sampleEntries, privateKey);
@@ -113,14 +113,17 @@ describe("Virtual entry module should work", function () {
         template: "VirtualEntryModule",
         params: [paramMaxObjects]
       });
+
+      // This procedure recursively generates all tuples of arity `length`
+      // containing elements from `[0n, 1n]`.
       const bitComboGenerator = (
         length: number,
-        seq: bigint[] = []
+        elements: bigint[] = []
       ): bigint[][] =>
         length === 0
-          ? [seq]
+          ? [elements]
           : [0n, 1n].flatMap((b: bigint) =>
-              bitComboGenerator(length - 1, seq.concat([b]))
+              bitComboGenerator(length - 1, elements.concat([b]))
             );
 
       const revealedBitCombos = bitComboGenerator(paramMaxObjects);
