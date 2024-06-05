@@ -222,6 +222,33 @@ export class FeedSubscriptionManager {
     return actions;
   }
 
+  private ALTERNATE_CREDENTIAL_KEY = "zupass_alternate_credential";
+  public saveAlternateCredential(credential: string | undefined): void {
+    if (credential === undefined) {
+      localStorage?.removeItem(this.ALTERNATE_CREDENTIAL_KEY);
+    } else {
+      localStorage?.setItem(this.ALTERNATE_CREDENTIAL_KEY, credential);
+    }
+  }
+
+  public getSavedAlternateCredential(): string | undefined {
+    return localStorage?.getItem(this.ALTERNATE_CREDENTIAL_KEY) ?? undefined;
+  }
+
+  private async getAlternateCredentialForFeed(
+    sub: Subscription
+  ): Promise<string | undefined> {
+    const podboxServerUrl = process.env.PASSPORT_SERVER_URL;
+    if (!podboxServerUrl) {
+      return undefined;
+    }
+
+    if (!sub.providerUrl.startsWith(podboxServerUrl)) {
+      return undefined;
+    }
+
+    return this.getSavedAlternateCredential();
+  }
   /**
    * Performs the network fetch of a subscription, and inspects the results
    * for validity. The error log for the subscription will be reset and
@@ -239,7 +266,8 @@ export class FeedSubscriptionManager {
         pcd: await credentialManager.requestCredential({
           signatureType: "sempahore-signature-pcd",
           pcdType: subscription.feed.credentialRequest.pcdType
-        })
+        }),
+        altCredential: await this.getAlternateCredentialForFeed(subscription)
       });
 
       if (!result.success) {
