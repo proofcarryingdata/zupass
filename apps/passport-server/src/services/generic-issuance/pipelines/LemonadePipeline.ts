@@ -34,7 +34,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { PODPCDTypeName } from "@pcd/pod-pcd";
+import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import {
   PODTicketPCD,
   PODTicketPCDPackage,
@@ -63,7 +63,9 @@ import {
   IBadgeGiftingDB,
   IContactSharingDB
 } from "../../../database/queries/ticketActionDBs";
+import { fetchUserByAuthKey } from "../../../database/queries/users";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
+import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traceFlattenedObject, traced } from "../../telemetryService";
@@ -132,6 +134,7 @@ export class LemonadePipeline implements BasePipeline {
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
   private credentialSubservice: CredentialSubservice;
+  private context: ApplicationContext;
 
   public get id(): string {
     return this.definition.id;
@@ -156,7 +159,8 @@ export class LemonadePipeline implements BasePipeline {
     badgeDB: IBadgeGiftingDB,
     consumerDB: IPipelineConsumerDB,
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
-    credentialSubservice: CredentialSubservice
+    credentialSubservice: CredentialSubservice,
+    context: ApplicationContext
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -166,6 +170,7 @@ export class LemonadePipeline implements BasePipeline {
     this.api = api;
     this.credentialSubservice = credentialSubservice;
     this.loaded = false;
+    this.context = context;
 
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
       this.semaphoreGroupProvider = new SemaphoreGroupProvider(
@@ -784,7 +789,14 @@ export class LemonadePipeline implements BasePipeline {
       }
 
       if (req.pcd.type === PODPCDTypeName) {
-        throw new Error("POD PCD TYPE");
+        const pcd = await PODPCDPackage.deserialize(req.pcd.pcd);
+        const authKeyEntry = pcd.claim.entries["authKey"];
+        if (!authKeyEntry) {
+          throw new Error("auth key pcd missing authKey entry");
+        }
+        const authKey = authKeyEntry.value.toString();
+        const user = await fetchUserByAuthKey(this.context.dbPool, authKey);
+        throw new Error(`POD PCD TYPE ${JSON.stringify(user, null, 2)}`);
       }
 
       const { emailClaim } =

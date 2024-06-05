@@ -135,7 +135,8 @@ export class GenericIssuanceService {
         consumerDB: this.consumerDB,
         manualTicketDB: this.manualTicketDB,
         semaphoreHistoryDB: this.semaphoreHistoryDB,
-        credentialSubservice: this.credentialSubservice
+        credentialSubservice: this.credentialSubservice,
+        context
       } satisfies InstantiatePipelineArgs
     );
   }
