@@ -2,15 +2,7 @@
   "proto-pod-gpc_1o-5e-6md-0x0l-0x0t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [
-      1,
-      5,
-      6,
-      0,
-      0,
-      0,
-      0
-    ],
+    "params": [1, 5, 6, 0, 0, 0, 0],
     "pubs": [
       "entryObjectIndex",
       "entryNameHash",
@@ -31,15 +23,7 @@
   "proto-pod-gpc_3o-10e-8md-1x10l-2x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [
-      3,
-      10,
-      8,
-      1,
-      10,
-      2,
-      2
-    ],
+    "params": [3, 10, 8, 1, 10, 2, 2],
     "pubs": [
       "entryObjectIndex",
       "entryNameHash",
@@ -60,15 +44,7 @@
   "proto-pod-gpc_3o-10e-8md-2x20l-1x4t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [
-      3,
-      10,
-      8,
-      2,
-      20,
-      1,
-      4
-    ],
+    "params": [3, 10, 8, 2, 20, 1, 4],
     "pubs": [
       "entryObjectIndex",
       "entryNameHash",
@@ -89,15 +65,7 @@
   "proto-pod-gpc_3o-10e-8md-4x20l-5x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [
-      3,
-      10,
-      8,
-      4,
-      20,
-      5,
-      2
-    ],
+    "params": [3, 10, 8, 4, 20, 5, 2],
     "pubs": [
       "entryObjectIndex",
       "entryNameHash",

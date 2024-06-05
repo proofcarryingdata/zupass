@@ -9,6 +9,7 @@ include "list-membership.circom";
 include "multituple.circom";
 include "object.circom";
 include "owner.circom";
+include "virtual-entry.circom";
 
 /**
  * This template is the top level of a prototype GPC proof.  Its template parameters are
@@ -74,7 +75,7 @@ template ProtoPODGPC (
             signatureR8x <== objectSignatureR8x[objectIndex],
             signatureR8y <== objectSignatureR8y[objectIndex],
             signatureS <== objectSignatureS[objectIndex]
-        );
+                       );
     }
 
     // TODO(POD-P3): Provide a way to (optionally?) ensure objects are unique
@@ -121,33 +122,25 @@ template ProtoPODGPC (
     // Maximum number of virtual entries.
     var MAX_VIRTUAL_ENTRIES = MAX_OBJECTS;
 
-    // Virtual entry value hashes deduced from cryptographic data. At
-    // the moment, this consists of hashed object signers' public
-    // keys.
-    signal virtualEntryValueHashes[MAX_VIRTUAL_ENTRIES];
-        for (var i = 0; i < MAX_OBJECTS; i++) {
-        virtualEntryValueHashes[i]
-            <== Poseidon(2)([objectSignerPubkeyAx[i], objectSignerPubkeyAy[i]]);
-    }
-    
+    // Total number of entries in the circuit, virtual or otherwise
+    var TOTAL_ENTRIES = MAX_ENTRIES + MAX_VIRTUAL_ENTRIES;
+
     // Boolean flags for virtual entry behaviour.
     signal input virtualEntryIsValueHashRevealed /*MAX_VIRTUAL_ENTRIES packed bits*/;
-    signal virtualEntryIsValueHashRevealedBits[MAX_VIRTUAL_ENTRIES]
-        <== Num2Bits(MAX_VIRTUAL_ENTRIES)(virtualEntryIsValueHashRevealed);
 
-    // Virtual entry value is optionally revealed, or set to -1 if
-    // not.
+    signal virtualEntryValueHashes[MAX_VIRTUAL_ENTRIES];
+    
     signal output virtualEntryRevealedValueHash[MAX_VIRTUAL_ENTRIES];
-    for (var i = 0; i < MAX_VIRTUAL_ENTRIES; i++) {
-        virtualEntryRevealedValueHash[i]
-            <== ValueOrNegativeOne()(
-                virtualEntryValueHashes[i],
-                virtualEntryIsValueHashRevealedBits[i]);
-    }
+
+    (virtualEntryValueHashes, virtualEntryRevealedValueHash)
+        <== VirtualEntryModule(MAX_OBJECTS)(
+            virtualEntryIsValueHashRevealed,
+            objectSignerPubkeyAx,
+            objectSignerPubkeyAy);
 
     // Append virtual entry hashes to entry hashes for use in the
     // entry constraint module.
-    signal entryAndVirtualEntryValueHashes[MAX_ENTRIES + MAX_VIRTUAL_ENTRIES]
+    signal totalEntryValueHashes[TOTAL_ENTRIES]
         <== Append(MAX_ENTRIES, MAX_VIRTUAL_ENTRIES)(
             entryValueHashes,
             virtualEntryValueHashes);
@@ -163,7 +156,7 @@ template ProtoPODGPC (
     // (i - MAX_ENTRIES)th virtual entry.
     // This can be disabled by comparing to self:
     //   entryEqualToOtherEntryIndex[i] = i
-    signal input entryEqualToOtherEntryByIndex[MAX_ENTRIES + MAX_VIRTUAL_ENTRIES];
+    signal input entryEqualToOtherEntryByIndex[TOTAL_ENTRIES];
 
     // Modules which scale with number of entries.
     for (var entryIndex = 0; entryIndex < MAX_ENTRIES; entryIndex++) {
@@ -177,16 +170,16 @@ template ProtoPODGPC (
             proofDepth <== entryProofDepth[entryIndex],
             proofIndex <== entryProofIndex[entryIndex],
             proofSiblings <== entryProofSiblings[entryIndex]
-        );
+                                                                             );
     }
     
-    for (var entryIndex = 0; entryIndex < MAX_ENTRIES + MAX_VIRTUAL_ENTRIES; entryIndex++) {
+    for (var entryIndex = 0; entryIndex < TOTAL_ENTRIES; entryIndex++) {
         // EntryConstraint module contains constraints applied to each individual entry.
-        EntryConstraintModule(MAX_ENTRIES + MAX_VIRTUAL_ENTRIES)(
-            valueHash <== entryAndVirtualEntryValueHashes[entryIndex],
-            entryValueHashes <== entryAndVirtualEntryValueHashes,
+        EntryConstraintModule(TOTAL_ENTRIES)(
+            valueHash <== totalEntryValueHashes[entryIndex],
+            entryValueHashes <== totalEntryValueHashes,
             equalToOtherEntryByIndex <== entryEqualToOtherEntryByIndex[entryIndex]
-        );
+                                                                 );
     }
 
     /*
@@ -211,7 +204,7 @@ template ProtoPODGPC (
         identityCommitment <== InputSelector(MAX_ENTRIES)(entryValue, ownerIsEnabled * ownerEntryIndex),
         externalNullifier <== ownerExternalNullifier,
         isNullfierHashRevealed <== ownerIsNullfierHashRevealed
-    );
+                                                                          );
 
     /*
      * 1 MultiTupleModule with its inputs & outputs.
@@ -221,8 +214,8 @@ template ProtoPODGPC (
     signal input tupleIndices[MAX_TUPLES][TUPLE_ARITY];
 
     // Hashes representing these tuples.
-    signal tupleHashes[MAX_TUPLES] <== MultiTupleModule(MAX_TUPLES, TUPLE_ARITY, MAX_ENTRIES + MAX_VIRTUAL_ENTRIES)(
-        entryAndVirtualEntryValueHashes,
+    signal tupleHashes[MAX_TUPLES] <== MultiTupleModule(MAX_TUPLES, TUPLE_ARITY, TOTAL_ENTRIES)(
+        totalEntryValueHashes,
         tupleIndices);
     
     /*
@@ -253,8 +246,8 @@ template ProtoPODGPC (
 
     for (var i = 0; i < MAX_LISTS; i++) {
         membershipCheckResult[i] <== ListMembershipModule(MAX_LIST_ELEMENTS)(
-            MaybeInputSelector(MAX_ENTRIES + MAX_VIRTUAL_ENTRIES + MAX_TUPLES)(
-                Append(MAX_ENTRIES + MAX_VIRTUAL_ENTRIES, MAX_TUPLES)(entryAndVirtualEntryValueHashes, tupleHashes),
+            MaybeInputSelector(TOTAL_ENTRIES + MAX_TUPLES)(
+                Append(TOTAL_ENTRIES, MAX_TUPLES)(totalEntryValueHashes, tupleHashes),
                 listComparisonValueIndex[i]),
             listValidValues[i]);
 

@@ -322,7 +322,7 @@ export function compileProofConfig(
   const circuitGlobalInputs = compileProofGlobal(proofInputs);
 
   // Virtual entry inputs
-  // TODO(POD-P3): Replace this with actual inputs.
+  // TODO(POD-P2): Replace this with actual inputs.
   const circuitVirtualEntryInputs = dummyVirtualEntryInputs(circuitDesc);
 
   // Return all the resulting signals input to the gpcircuits library.
@@ -769,11 +769,11 @@ export function compileVerifyConfig(
   const circuitGlobalInputs = compileProofGlobal(verifyRevealed);
 
   // Virtual entry inputs
-  // TODO(POD-P3): Replace this with actual inputs.
+  // TODO(POD-P2): Replace this with actual inputs.
   const circuitVirtualEntryInputs = dummyVirtualEntryInputs(circuitDesc);
 
   // Virtual entry outputs
-  // TODO(POD-P3): Replace this with actual inputs.
+  // TODO(POD-P2): Replace this with actual inputs.
   const circuitVirtualEntryOutputs = dummyVirtualEntryOutputs(
     circuitDesc,
     Object.values(verifyRevealed.pods).map((obj) => obj.signerPublicKey)

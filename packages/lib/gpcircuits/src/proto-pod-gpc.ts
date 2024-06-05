@@ -268,9 +268,9 @@ export function arrayToProtoPODGPCCircuitParam(
  * Mapping computing the maximum number of virtual entries from given GPC
  * parameters.
  */
-export function paramMaxVirtualEntries<
-  GPCCircuitConfig extends ProtoPODGPCCircuitParams
->(params: GPCCircuitConfig): number {
+export function paramMaxVirtualEntries(
+  params: ProtoPODGPCCircuitParams
+): number {
   return params.maxObjects;
 }
 
@@ -469,8 +469,6 @@ export class ProtoPODGPC {
     return undefined;
   }
 
-  // TODO(POD-P2): Replace `ProtoPODGPCCircuitParams` with a different type
-  // allowing more flexibility with choices of tuple parameters.
   /**
    * Checks whether a described circuit can meet a required set of parameters.
    * This will be true if each of the circuit's parameters is greater than or
