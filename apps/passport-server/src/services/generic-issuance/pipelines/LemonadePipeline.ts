@@ -788,6 +788,9 @@ export class LemonadePipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
+      let email: string;
+      let semaphoreId: string;
+
       if (req.pcd.type === PODPCDTypeName) {
         const pcd = await PODPCDPackage.deserialize(req.pcd.pcd);
         const authKeyEntry = pcd.claim.entries["authKey"];
@@ -796,17 +799,28 @@ export class LemonadePipeline implements BasePipeline {
         }
         const authKey = authKeyEntry.value.toString();
         const user = await fetchUserByAuthKey(this.context.dbPool, authKey);
-        throw new Error(`POD PCD TYPE ${JSON.stringify(user, null, 2)}`);
+        if (!user) {
+          throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);
+        }
+
+        email = user.email.toLowerCase();
+        semaphoreId = user.commitment;
+      } else {
+        const { emailClaim } =
+          await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+
+        email = emailClaim.emailAddress.toLowerCase();
+        semaphoreId = emailClaim.semaphoreId;
       }
 
-      const { emailClaim } =
-        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+      span?.setAttribute("email", email);
+      span?.setAttribute("semaphore_id", semaphoreId);
 
       // Consumer is validated, so save them in the consumer list
       const didUpdate = await this.consumerDB.save(
         this.id,
-        emailClaim.emailAddress,
-        emailClaim.semaphoreId,
+        email,
+        semaphoreId,
         new Date()
       );
 
@@ -819,14 +833,7 @@ export class LemonadePipeline implements BasePipeline {
         }
       }
 
-      const email = emailClaim.emailAddress.toLowerCase();
-      span?.setAttribute("email", email);
-      span?.setAttribute("semaphore_id", emailClaim.semaphoreId);
-
-      const tickets = await this.getTicketsForEmail(
-        email,
-        emailClaim.semaphoreId
-      );
+      const tickets = await this.getTicketsForEmail(email, semaphoreId);
 
       const ticketActions: PCDAction[] = [];
 
