@@ -1,13 +1,6 @@
 import {
   Button,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   Spacer,
   Table,
   Tbody,
@@ -34,6 +27,7 @@ import {
 import * as React from "react";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
+import { CheckInModal } from "./CheckInModal";
 
 function safeFilterValue(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -188,35 +182,6 @@ const CheckInTable = React.memo(function ({
   );
 });
 
-function CheckInModal({
-  checkingIn,
-  setCheckingIn
-}: {
-  checkingIn: string | undefined;
-  setCheckingIn: (ticketId: string | undefined) => void;
-}): ReactNode {
-  const onClose = useCallback(() => setCheckingIn(undefined), [setCheckingIn]);
-
-  return (
-    <Modal
-      onClose={onClose}
-      isOpen={!!checkingIn}
-      isCentered
-      motionPreset="slideInBottom"
-    >
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Modal Title</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>hi</ModalBody>
-        <ModalFooter>
-          <Button onClick={onClose}>Close</Button>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
-  );
-}
-
 async function getCheckIns(): Promise<PipelineCheckinSummary[]> {
   const result = await requestGenericIssuanceGetManualCheckIns(
     process.env.PASSPORT_SERVER_URL as string,
@@ -245,9 +210,16 @@ export function CheckinListPage(): ReactNode {
     <main>
       <Content>
         <H1>Zupass Check-in</H1>
-        <CheckInModal checkingIn={checkingIn} setCheckingIn={setCheckingIn} />
+
         {query.isSuccess && (
-          <CheckInTable startCheckIn={startCheckIn} checkIns={query.data} />
+          <>
+            <CheckInModal
+              checkingIn={checkingIn}
+              setCheckingIn={setCheckingIn}
+              data={query.data}
+            />
+            <CheckInTable startCheckIn={startCheckIn} checkIns={query.data} />
+          </>
         )}
       </Content>
     </main>
