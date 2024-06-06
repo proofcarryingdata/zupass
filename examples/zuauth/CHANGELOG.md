@@ -1,5 +1,30 @@
 # zuauth-example
 
+## 0.1.9
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.5
+
+# <<<<<<< Updated upstream
+
+## 0.1.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.4
+
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.3
+
+> > > > > > > Stashed changes
+
 ## 0.1.6
 
 ### Patch Changes

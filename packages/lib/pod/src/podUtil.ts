@@ -18,26 +18,68 @@ import {
 // TODO(POD-P3): Decide if these utils should all be published outside
 // of the package, or only a subset.
 
-// TODO(POD-P2): Consider Base64 encoding rather than hex for the formats
-// below.  It would be smaller.
+/**
+ * Private keys are 32 bytes (any arbitrary bytes), represented as hex,
+ * Base64, or URL-safe Base64.  Base64 padding is optional.
+ *
+ * This regex matches any supported format, with match groups usable to
+ * determine the format, in the order above.
+ */
+export const PRIVATE_KEY_REGEX = new RegExp(
+  /^(?:([0-9A-Fa-f]{64})|([A-Za-z0-9+/]{43}=?)|([A-Za-z0-9_-]{43}=?))$/
+);
 
 /**
- * Private keys are 32 bytes (any arbitrary bytes), represented as 64 hex
- * digits.
+ * Description of the match groups in {@link PRIVATE_KEY_REGEX} and how they
+ * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
-const PRIVATE_KEY_REGEX = new RegExp(/^[0-9A-Fa-f]{64}$/);
+export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
+  { index: 3, encoding: "base64url" },
+  { index: 2, encoding: "base64" },
+  { index: 1, encoding: "hex" }
+];
 
 /**
- * Public keys are 32 bytes (a packed elliptic curve point), represented as 64
- * hex digits.
+ * Public keys are 32 bytes (a packed elliptic curve point), represented as hex,
+ * Base64, or URL-safe Base64.  Base64 padding is optional.
+ *
+ * This regex matches any supported format, with match groups usable to
+ * determine the format, in the order above.
  */
-const PUBLIC_KEY_REGEX = new RegExp(/^[0-9A-Fa-f]{64}$/);
+export const PUBLIC_KEY_REGEX = new RegExp(
+  /^(?:([0-9A-Fa-f]{64})|([A-Za-z0-9+/]{43}=?)|([A-Za-z0-9_-]{43}=?))$/
+);
+
+/**
+ * Description of the match groups in {@link PUBLIC_KEY_REGEX} and how they
+ * map to encoding formats, as needed by {@link decodeBytesAuto}.
+ */
+export const PUBLIC_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
+  { index: 3, encoding: "base64url" },
+  { index: 2, encoding: "base64" },
+  { index: 1, encoding: "hex" }
+];
 
 /**
  * Signatures are 64 bytes (one packed elliptic curve point, one scalar),
- * represented as 128 hex digits.
+ * represented as hex, Base64, or URL-safe Base64.  Base64 padding is optional.
+ *
+ * This regex matches any supported format, with match groups usable to
+ * determine the format, in the order above.
  */
-const SIGNATURE_REGEX = new RegExp(/^[0-9A-Fa-f]{128}$/);
+export const SIGNATURE_REGEX = new RegExp(
+  /^(?:([0-9A-Fa-f]{128})|([A-Za-z0-9+/]{86}(?:==)?)|([A-Za-z0-9_-]{86}(?:==)?))$/
+);
+
+/**
+ * Description of the match groups in {@link SIGNATURE_REGEX} and how they
+ * map to encoding formats, as needed by {@link decodeBytesAuto}.
+ */
+export const SIGNATURE_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
+  { index: 3, encoding: "base64url" },
+  { index: 2, encoding: "base64" },
+  { index: 1, encoding: "hex" }
+];
 
 /**
  * Checks that the input matches the proper format for a private key, as given
@@ -48,13 +90,12 @@ const SIGNATURE_REGEX = new RegExp(/^[0-9A-Fa-f]{128}$/);
  * @throws TypeError if the format doesn't match
  */
 export function checkPrivateKeyFormat(privateKey: string): string {
-  if (
-    !privateKey ||
-    typeof privateKey !== "string" ||
-    !privateKey.match(PRIVATE_KEY_REGEX)
-  ) {
-    throw new TypeError("Private key should be 32 bytes hex-encoded.");
-  }
+  decodeBytesAuto(
+    privateKey,
+    PRIVATE_KEY_REGEX,
+    PRIVATE_KEY_ENCODING_GROUPS,
+    "Private key should be 32 bytes, encoded as hex or Base64."
+  );
   return privateKey;
 }
 
@@ -72,16 +113,13 @@ export function checkPublicKeyFormat(
   publicKey: string,
   nameForErrorMessages?: string
 ): string {
-  if (
-    !publicKey ||
-    typeof publicKey !== "string" ||
-    !publicKey.match(PUBLIC_KEY_REGEX)
-  ) {
-    throw new TypeError(
-      "Public key should be 32 bytes hex-encoded" +
-        (nameForErrorMessages ? ` in ${nameForErrorMessages}.` : ".")
-    );
-  }
+  decodeBytesAuto(
+    publicKey,
+    PUBLIC_KEY_REGEX,
+    PUBLIC_KEY_ENCODING_GROUPS,
+    "Public key should be 32 bytes, encoded as hex or Base64" +
+      (nameForErrorMessages ? ` in ${nameForErrorMessages}.` : ".")
+  );
   return publicKey;
 }
 
@@ -94,13 +132,12 @@ export function checkPublicKeyFormat(
  * @throws TypeError if the format doesn't match
  */
 export function checkSignatureFormat(signature: string): string {
-  if (
-    !signature ||
-    typeof signature !== "string" ||
-    !signature.match(SIGNATURE_REGEX)
-  ) {
-    throw new TypeError("Signature should be 64 bytes hex-encoded.");
-  }
+  decodeBytesAuto(
+    signature,
+    SIGNATURE_REGEX,
+    SIGNATURE_ENCODING_GROUPS,
+    "Signature should be 64 bytes, encoded as hex or Base64."
+  );
   return signature;
 }
 
@@ -389,12 +426,12 @@ export function deserializePODEntries(serializedEntries: string): PODEntries {
  */
 export function podValueToRawValue(podValue: PODValue): PODRawValue {
   if (podValue.type === EDDSA_PUBKEY_TYPE_STRING) {
-    return `${EDDSA_PUBKEY_TYPE_STRING}:${podValue.value}`;
+    return `pod_${EDDSA_PUBKEY_TYPE_STRING}:${podValue.value}`;
   } else if (
     podValue.type === "string" &&
     podValue.value.match(POD_STRING_TYPE_REGEX)
   ) {
-    return `string:${podValue.value}`;
+    return `pod_string:${podValue.value}`;
   } else {
     return podValue.value;
   }
@@ -522,4 +559,94 @@ export function podEntriesFromSimplifiedJSON(
  */
 export function applyOrMap<A, B>(f: (a: A) => B, input: A | A[]): B | B[] {
   return Array.isArray(input) ? (input as A[]).map(f) : f(input as A);
+}
+
+/**
+ * Supported encodings for cryptographic bytes (keys, signatures) used in
+ * this library.
+ */
+export type CryptoBytesEncoding = "hex" | "base64" | "base64url";
+
+/**
+ * Description of the match groups in a regex used by {@link decodeBytesAuto}.
+ * If the regex matches, the decoding function will check for a non-empty
+ * match in each listed group number in order, and decode using the specified
+ * encoding.
+ */
+export type CryptoBytesEncodingGroups = {
+  index: number;
+  encoding: CryptoBytesEncoding;
+}[];
+
+/**
+ * Encode cryptographic bytes (keys, signatures) in the given encoding.
+ *
+ * @param bytes raw bytes to encoded
+ * @param encoding one of the supported encoding specifiers.  Default is
+ *   `base64url` which is the shortest.
+ * @returns a string encoding of the bytes
+ */
+export function encodeBytes(
+  bytes: Uint8Array,
+  encoding: CryptoBytesEncoding = "base64url"
+): string {
+  return Buffer.from(bytes).toString(encoding);
+}
+
+/**
+ * Decodes cryptographic bytes (keys, signatures) using the given encoding.
+ * Note that this function doesn't check that the input is actually valid, but
+ * will truncate the output to only the valid prefix of input.
+ *
+ * @param encoded the encoded string
+ * @param encoding one of the supported encoding specifiers.  Default is
+ *   `base64url` which is the shortest.
+ * @returns decoded bytes, truncated if the input does not properly match the
+ *   encoding format
+ */
+export function decodeBytesRaw(
+  encoded: string,
+  encoding: CryptoBytesEncoding = "base64url"
+): Buffer {
+  return Buffer.from(encoded, encoding);
+}
+
+/**
+ * Decodes cryptographic bytes from a string, auto-determining the encoding
+ * based on the input length and character set.
+ *
+ * @param encoded the string-encoded bytesd
+ * @param encodingPattern a regex which matches valid encodings of bytes with
+ *   an expected fixed size.  This pattern is expected to have groups
+ *   separately matching each of the supported encodings.  See
+ *   {@link PRIVATE_KEY_REGEX} for an example.
+ * @param encodingGroups a description of the match groups in the regex,
+ *   in the order they should be checked.
+ * @param errorMessage human-readable message for error thrown if decoding
+ *  fails.
+ * @throws TypeError if the pattern doesn't match
+ */
+export function decodeBytesAuto(
+  encoded: string,
+  encodingPattern: RegExp,
+  encodingGroups: CryptoBytesEncodingGroups,
+  errorMessage?: string
+): Buffer {
+  //  console.log("decodePrivateKey", encoded, encodingPattern);
+  if (encoded && typeof encoded === "string" && encoded !== "") {
+    const matched = encoded.match(encodingPattern);
+    //    console.log("decodePrivateKey", matched);
+    if (matched !== null) {
+      for (const encodingGroup of encodingGroups) {
+        if (
+          matched[encodingGroup.index] &&
+          matched[encodingGroup.index] !== ""
+        ) {
+          return decodeBytesRaw(encoded, encodingGroup.encoding);
+        }
+      }
+      // Fallthrough if no group matches.
+    }
+  }
+  throw new TypeError(errorMessage);
 }

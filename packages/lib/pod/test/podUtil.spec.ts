@@ -2,6 +2,7 @@ import { expect } from "chai";
 import "mocha";
 import {
   EDDSA_PUBKEY_TYPE_STRING,
+  PODEntries,
   PODName,
   PODValue,
   POD_CRYPTOGRAPHIC_MAX,
@@ -30,17 +31,20 @@ import {
 } from "../src";
 import {
   expectedPublicKey,
+  expectedPublicKeyHex,
   expectedSignature1,
+  expectedSignature1Hex,
   expectedSignature2,
+  expectedSignature2Hex,
   privateKey,
   sampleEntries1,
   sampleEntries2,
-  testPrivateKeys
+  testPrivateKeysAllFormats
 } from "./common";
 
 describe("podUtil input checkers should work", async function () {
   it("checkPrivateKeyFormat should accept valid inputs", function () {
-    for (const testPrivateKey of testPrivateKeys) {
+    for (const testPrivateKey of testPrivateKeysAllFormats) {
       const checked = checkPrivateKeyFormat(testPrivateKey);
       expect(checked).to.eq(testPrivateKey);
     }
@@ -55,7 +59,9 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "hex") as unknown as string
+      Buffer.from(privateKey, "base64url") as unknown as string,
+      "=V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs",
+      "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs====="
     ];
     for (const testPrivateKey of badPrivateKeys) {
       const fn = (): void => {
@@ -70,8 +76,8 @@ describe("podUtil input checkers should work", async function () {
     // to be points on the curve.
     const testPublicKeys = [
       expectedPublicKey,
-      "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff",
-      "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100"
+      expectedPublicKeyHex,
+      ...testPrivateKeysAllFormats
     ];
     for (const testPublicKey of testPublicKeys) {
       const checked = checkPublicKeyFormat(testPublicKey);
@@ -88,7 +94,9 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "hex") as unknown as string
+      Buffer.from(expectedPublicKey, "base64url") as unknown as string,
+      "=V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs",
+      "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs====="
     ];
     for (const testPublicKey of badPublicKeys) {
       const fn = (): void => {
@@ -104,6 +112,8 @@ describe("podUtil input checkers should work", async function () {
     const testSignatures = [
       expectedSignature1,
       expectedSignature2,
+      expectedSignature1Hex,
+      expectedSignature2Hex,
       "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff",
       "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100"
     ];
@@ -122,7 +132,9 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "hex") as unknown as string
+      Buffer.from(privateKey, "hex") as unknown as string,
+      "=ZKuvJhYh4JXNqKqt1uS99lAVReh_bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm_CuCMvP0a1t0hraeAsTeBjmGAQ",
+      "ZKuvJhYh4JXNqKqt1uS99lAVReh_bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm_CuCMvP0a1t0hraeAsTeBjmGAQ======"
     ];
     for (const testSignature of badSignatures) {
       const fn = (): void => {
@@ -454,7 +466,25 @@ describe("podUtil serialization should work", async function () {
   });
 
   it("Simplified serialization should round-trip samples with compatible types", function () {
-    for (const testEntries of [sampleEntries1, sampleEntries2]) {
+    const trickyEntries: PODEntries = {
+      url: { type: "string", value: "https://zupass.org/pod" },
+      valid_prefix: { type: "string", value: "pod_string:foo" },
+      invalid_prefix: { type: "string", value: "pod_wrong:foo" },
+      pubkey_hex: {
+        type: "eddsa_pubkey",
+        value:
+          "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+      },
+      pubkey_base64: {
+        type: "eddsa_pubkey",
+        value: "zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+      },
+
+      small_crypto: { type: "cryptographic", value: 3n },
+      large_int: { type: "int", value: POD_INT_MAX }
+    };
+
+    for (const testEntries of [sampleEntries1, sampleEntries2, trickyEntries]) {
       const serialized = podEntriesToSimplifiedJSON(testEntries);
       const deserialized = podEntriesFromSimplifiedJSON(serialized);
 
@@ -481,13 +511,14 @@ describe("podUtil serialization should work", async function () {
       [
         EDDSA_PUBKEY_TYPE_STRING,
         "f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585",
-        `${EDDSA_PUBKEY_TYPE_STRING}:f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585`
+        `pod_${EDDSA_PUBKEY_TYPE_STRING}:f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585`
       ],
       ["string", "hello", "hello"],
       ["string", ":keyword", ":keyword"],
       ["string", "!!:hello", "!!:hello"],
-      ["string", "blah:blah", "string:blah:blah"],
-      ["string", "blah:blah:blah:blah", "string:blah:blah:blah:blah"]
+      ["string", "blah:blah", "blah:blah"],
+      ["string", "blah:blah:blah:blah", "blah:blah:blah:blah"],
+      ["string", "pod_blah:blah", "pod_string:pod_blah:blah"]
     ].map((triple) => {
       return {
         type: triple[0] as POD_VALUE_STRING_TYPE_IDENTIFIER,
@@ -502,11 +533,11 @@ describe("podUtil serialization should work", async function () {
   });
 
   it("Simplified deserialization of string-encoded types should reject invalid inputs", function () {
-    expect(() => podValueFromRawValue("strang:hello")).to.throw(Error);
-    expect(() => podValueFromRawValue("strin:hello")).to.throw(Error);
+    expect(() => podValueFromRawValue("pod_strang:hello")).to.throw(Error);
+    expect(() => podValueFromRawValue("pod_strin:hello")).to.throw(Error);
     expect(() =>
       podValueFromRawValue(
-        "pk:f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f"
+        "pod_pk:f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f"
       )
     ).to.throw(Error);
   });

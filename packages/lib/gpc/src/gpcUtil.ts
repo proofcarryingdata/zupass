@@ -1,12 +1,20 @@
-import { CircuitDesc } from "@pcd/gpcircuits";
 import {
-  checkPODName,
-  getPODValueForCircuit,
+  CircuitDesc,
+  CircuitSignal,
+  ProtoPODGPCCircuitParams,
+  array2Bits,
+  padArray,
+  paramMaxVirtualEntries
+} from "@pcd/gpcircuits";
+import {
+  EDDSA_PUBKEY_TYPE_STRING,
   POD,
   PODName,
   PODValue,
-  podValueHash,
   PODValueTuple,
+  checkPODName,
+  getPODValueForCircuit,
+  podValueHash,
   requireType
 } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
@@ -599,5 +607,41 @@ function addIdentifierToListConfig(
   gpcListConfig[identifier] = {
     type: membershipType,
     listIdentifier
+  };
+}
+
+// TODO(POD-P2): Get rid of everything below this line.
+
+// Returns circuit inputs indicating that all virtual entries (i.e. all signers'
+// public keys) are revealed.
+export function dummyVirtualEntryInputs<
+  GPCCircuitConfig extends ProtoPODGPCCircuitParams
+>(
+  params: GPCCircuitConfig
+): { virtualEntryIsValueHashRevealed: CircuitSignal } {
+  return {
+    virtualEntryIsValueHashRevealed: array2Bits(
+      padArray([], paramMaxVirtualEntries(params), 1n)
+    )
+  };
+}
+
+// Returns circuit outputs revealing all virtual entries (i.e. all signers'
+// public keys).
+export function dummyVirtualEntryOutputs<
+  GPCCircuitConfig extends ProtoPODGPCCircuitParams
+>(
+  params: GPCCircuitConfig,
+  publicKeys: string[]
+): { virtualEntryRevealedValueHash: CircuitSignal[] } {
+  const unpaddedHashes = publicKeys.map((pk) =>
+    podValueHash({ type: EDDSA_PUBKEY_TYPE_STRING, value: pk })
+  );
+  return {
+    virtualEntryRevealedValueHash: padArray(
+      unpaddedHashes,
+      params.maxObjects,
+      unpaddedHashes[0]
+    )
   };
 }

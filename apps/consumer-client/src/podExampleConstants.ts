@@ -2,7 +2,7 @@ import { Identity } from "@semaphore-protocol/identity";
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
 export const EXAMPLE_EDDSA_PRIVATE_KEY =
-  "0001020304050607080900010203040506070809000102030405060708090001";
+  "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 0001020304050607080900010203040506070809000102030405060708090001
 
 export const EXAMPLE_POD_CONTENT = `{
   "A": 123,

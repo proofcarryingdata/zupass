@@ -1,7 +1,10 @@
 import { PODValueTuple, podValueHash } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { computeTupleIndices, hashTuple } from "./multituple";
-import { ProtoPODGPCCircuitParams } from "./proto-pod-gpc";
+import {
+  ProtoPODGPCCircuitParams,
+  paramMaxVirtualEntries
+} from "./proto-pod-gpc";
 import { CircuitSignal } from "./types";
 import { extendedSignalArray, padArray } from "./util";
 
@@ -52,7 +55,8 @@ export function processLists(
     );
   }
 
-  let firstAvailableTupleIndex = params.maxEntries;
+  const maxVirtualEntries = paramMaxVirtualEntries(params);
+  let firstAvailableTupleIndex = params.maxEntries + maxVirtualEntries;
   const unpaddedOutputObject: {
     tupleIndices: CircuitSignal[][];
     listComparisonValueIndices: CircuitSignal[];
@@ -88,7 +92,10 @@ export function processLists(
     firstAvailableTupleIndex += processedList.tupleIndices.length;
 
     // Ensure that we haven't computed too many tuples for the given circuit parameters.
-    if (firstAvailableTupleIndex > params.maxTuples + params.maxEntries) {
+    if (
+      firstAvailableTupleIndex >
+      params.maxTuples + maxVirtualEntries + params.maxEntries
+    ) {
       throw new RangeError(
         `The maximum tuple size parameter (${params.maxTuples}) cannot accommodate the required tuples.`
       );

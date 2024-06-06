@@ -5,11 +5,7 @@ import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { TimerCase } from "../types";
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
-export const privateKey =
-  "0001020304050607080900010203040506070809000102030405060708090001";
-
-export const expectedPublicKey =
-  "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e";
+export const privateKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 0001020304050607080900010203040506070809000102030405060708090001
 
 export const sampleEntries = {
   E: { type: "cryptographic", value: 123n },
