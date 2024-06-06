@@ -23,13 +23,7 @@
   ],
   "references": [
     {
-      "path": "../../packages/lib/client-shared"
-    },
-    {
       "path": "../../packages/lib/passport-interface"
-    },
-    {
-      "path": "../../packages/lib/util"
     }
   ]
 }
