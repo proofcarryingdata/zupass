@@ -8,6 +8,7 @@ import {
   ModalFooter,
   ModalHeader,
   ModalOverlay,
+  Spacer,
   Table,
   Tbody,
   Td,
@@ -19,24 +20,26 @@ import {
   PipelineCheckinSummary,
   requestGenericIssuanceGetManualCheckIns
 } from "@pcd/passport-interface";
+import { useQuery } from "@tanstack/react-query";
 import {
   ColumnDef,
+  ColumnFiltersState,
   SortingState,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
   getSortedRowModel,
   useReactTable
 } from "@tanstack/react-table";
-import {
-  ChangeEvent,
-  ReactNode,
-  useCallback,
-  useEffect,
-  useState
-} from "react";
+import * as React from "react";
+import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 
-function CheckInTable({
+function safeFilterValue(value: unknown): string {
+  return typeof value === "string" ? value : "";
+}
+
+const CheckInTable = React.memo(function ({
   checkIns,
   startCheckIn
 }: {
@@ -46,7 +49,13 @@ function CheckInTable({
   const columns: ColumnDef<PipelineCheckinSummary>[] = [
     {
       header: "Email",
-      accessorKey: "email"
+      accessorKey: "email",
+      filterFn: (row, _columnId, value): boolean => {
+        if (value === "") {
+          return true;
+        }
+        return row.original.email.startsWith(value);
+      }
     },
     {
       header: "Checked in?",
@@ -65,11 +74,13 @@ function CheckInTable({
             </Button>
           );
         }
-      }
+      },
+      enableColumnFilter: false
     },
     {
       header: "Ticket type",
-      accessorKey: "ticketName"
+      accessorKey: "ticketName",
+      enableColumnFilter: false
     },
     {
       header: "Check-in date",
@@ -92,13 +103,19 @@ function CheckInTable({
         return new Intl.DateTimeFormat("en-US", options).format(
           new Date(timestamp)
         );
-      }
+      },
+      enableColumnFilter: false
     },
     {
       header: "Checked in by",
-      accessorKey: "checkerEmail"
+      accessorKey: "checkerEmail",
+      enableColumnFilter: false
     }
   ];
+
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
 
   const [sorting, setSorting] = useState<SortingState>([
     {
@@ -112,14 +129,29 @@ function CheckInTable({
     columns,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(), //client side filtering
     state: {
-      sorting
+      sorting,
+      columnFilters
     },
-    onSortingChange: setSorting
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters
   });
 
   return (
     <>
+      <Spacer h={8} />
+      <label htmlFor="email-filter">
+        Search for email:
+        <Input
+          id="email-filter"
+          onChange={(ev: React.ChangeEvent<HTMLInputElement>) =>
+            table.getColumn("email")?.setFilterValue(ev.target.value)
+          }
+          value={safeFilterValue(table.getColumn("email")?.getFilterValue())}
+        />
+      </label>
+      <Spacer h={8} />
       <Table variant="striped">
         <Thead>
           {table.getHeaderGroups().map((headerGroup) => (
@@ -154,37 +186,58 @@ function CheckInTable({
       </Table>
     </>
   );
+});
+
+function CheckInModal({
+  checkingIn,
+  setCheckingIn
+}: {
+  checkingIn: string | undefined;
+  setCheckingIn: (ticketId: string | undefined) => void;
+}): ReactNode {
+  const onClose = useCallback(() => setCheckingIn(undefined), [setCheckingIn]);
+
+  return (
+    <Modal
+      onClose={onClose}
+      isOpen={!!checkingIn}
+      isCentered
+      motionPreset="slideInBottom"
+    >
+      <ModalOverlay />
+      <ModalContent>
+        <ModalHeader>Modal Title</ModalHeader>
+        <ModalCloseButton />
+        <ModalBody>hi</ModalBody>
+        <ModalFooter>
+          <Button onClick={onClose}>Close</Button>
+        </ModalFooter>
+      </ModalContent>
+    </Modal>
+  );
+}
+
+async function getCheckIns(): Promise<PipelineCheckinSummary[]> {
+  const result = await requestGenericIssuanceGetManualCheckIns(
+    process.env.PASSPORT_SERVER_URL as string,
+    process.env.MANUAL_CHECKIN_PIPELINE_ID as string,
+    process.env.MANUAL_CHECKIN_API_KEY as string
+  );
+
+  if (result.success) {
+    return result.value.checkIns;
+  } else {
+    throw new Error("Could not fetch check-in data");
+  }
 }
 
 export function CheckinListPage(): ReactNode {
-  const [checkIns, setCheckIns] = useState<
-    PipelineCheckinSummary[] | undefined
-  >(undefined);
-
-  useEffect(() => {
-    requestGenericIssuanceGetManualCheckIns(
-      process.env.PASSPORT_SERVER_URL,
-      process.env.MANUAL_CHECKIN_PIPELINE_ID,
-      process.env.MANUAL_CHECKIN_API_KEY
-    ).then((result) => {
-      if (result.success) {
-        setCheckIns(result.value.checkIns);
-      }
-    });
-  }, []);
+  const query = useQuery({ queryKey: ["todos"], queryFn: getCheckIns });
 
   const [checkingIn, setCheckingIn] = useState<string | undefined>(undefined);
-  const onClose = useCallback(() => setCheckingIn(undefined), []);
 
   const startCheckIn = useCallback(
     (ticketId: string) => setCheckingIn(ticketId),
-    []
-  );
-
-  const [search, setSearch] = useState<string>("");
-
-  const handleSearch = useCallback(
-    (event: ChangeEvent<HTMLInputElement>) => setSearch(event.target.value),
     []
   );
 
@@ -192,68 +245,14 @@ export function CheckinListPage(): ReactNode {
     <main>
       <Content>
         <H1>Zupass Check-in</H1>
-        <Modal
-          onClose={onClose}
-          isOpen={!!checkingIn}
-          isCentered
-          motionPreset="slideInBottom"
-        >
-          <ModalOverlay />
-          <ModalContent>
-            <ModalHeader>Modal Title</ModalHeader>
-            <ModalCloseButton />
-            <ModalBody>hi</ModalBody>
-            <ModalFooter>
-              <Button onClick={onClose}>Close</Button>
-            </ModalFooter>
-          </ModalContent>
-        </Modal>
-        <label htmlFor="search">
-          Search for email:
-          <Input
-            id="search"
-            type="text"
-            placeholder="e.g. test@example.com"
-            onChange={handleSearch}
-            value={search}
-          />
-        </label>
-        {checkIns && (
-          <CheckInTable startCheckIn={startCheckIn} checkIns={checkIns} />
+        <CheckInModal checkingIn={checkingIn} setCheckingIn={setCheckingIn} />
+        {query.isSuccess && (
+          <CheckInTable startCheckIn={startCheckIn} checkIns={query.data} />
         )}
       </Content>
     </main>
   );
 }
-
-/*
-
-   <Table colorScheme="whiteAlpha" variant="simple">
-          <Thead>
-            <Tr>
-              <Th>Email</Th>
-              <Th>Checked in?</Th>
-              <Th>Ticket type</Th>
-              <Th>Check-in date</Th>
-              <Th>Checked in by</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {checkIns?.map((checkIn) => {
-              return (
-                <Tr key={checkIn.ticketId}>
-                  <Td>{checkIn.email}</Td>
-                  <Td>{checkIn.checkedIn ? "✅" : "❌"}</Td>
-                  <Td>{checkIn.ticketName}</Td>
-                  <Td>{checkIn.timestamp}</Td>
-                  <Td>{checkIn.checkerEmail}</Td>
-                </Tr>
-              );
-            })}
-          </Tbody>
-        </Table>
-
-        */
 
 const Content = styled.div`
   padding: 32px;
