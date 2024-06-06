@@ -87,6 +87,14 @@ export const EXAMPLE_GPC_CONFIG2 = `{
           "isOwnerID": true
         }
       }
+    },
+    "ticketPOD": {
+      "entries": {
+        "ticketID": {
+          "isRevealed": false,
+          "isMemberOf": "admissibleTickets"
+        }
+      }
     }
   },
   "tuples": {
