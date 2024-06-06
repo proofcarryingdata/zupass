@@ -40,6 +40,7 @@ export * from "./api/requestGenericIssuanceDeletePipeline";
 export * from "./api/requestGenericIssuanceFetchPretixEvents";
 export * from "./api/requestGenericIssuanceFetchPretixProducts";
 export * from "./api/requestGenericIssuanceGetAllUserPipelines";
+export * from "./api/requestGenericIssuanceGetManualCheckIns";
 export * from "./api/requestGenericIssuanceGetPipeline";
 export * from "./api/requestGenericIssuanceHistoricalSemaphoreGroup";
 export * from "./api/requestGenericIssuanceSelf";

@@ -7,6 +7,7 @@ import {
   GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   ListFeedsResponseValue,
+  PipelineGetManualCheckInsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
   PipelineSetManualCheckInStateResponse,
@@ -22,7 +23,10 @@ import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerD
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { logger } from "../../../util/logger";
 import { traceFlattenedObject, traced } from "../../telemetryService";
-import { ensureCheckinCapability, isCheckinCapability } from "../capabilities/CheckinCapability";
+import {
+  ensureCheckinCapability,
+  isCheckinCapability
+} from "../capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
   ensureFeedIssuanceCapability,
@@ -524,7 +528,6 @@ export class PipelineAPISubservice {
 
   public async handleSetManualCheckInState(
     pipelineId: string,
-    user: PipelineUser,
     ticketId: string,
     checkInState: boolean
   ): Promise<PipelineSetManualCheckInStateResponse> {
@@ -537,10 +540,24 @@ export class PipelineAPISubservice {
       tracePipeline(pipelineSlot.definition);
       const checkInCapability = ensureCheckinCapability(pipeline);
 
-      try {
-        checkInCapability.checkin()
-      }
+      checkInCapability.setManualCheckInState(ticketId, checkInState, "manual");
+      return { checkInState };
+    });
+  }
 
+  public async handleGetManualCheckIns(
+    pipelineId: string
+  ): Promise<PipelineGetManualCheckInsResponseValue> {
+    return traced(SERVICE_NAME, "handleGetManualCheckInState", async (span) => {
+      span?.setAttribute("pipeline_id", pipelineId);
+      const pipelineSlot =
+        await this.pipelineSubservice.ensurePipelineSlotExists(pipelineId);
+      const pipeline =
+        await this.pipelineSubservice.ensurePipelineStarted(pipelineId);
+      tracePipeline(pipelineSlot.definition);
+      const checkInCapability = ensureCheckinCapability(pipeline);
+
+      return { checkIns: await checkInCapability.getManualCheckinSummary() };
     });
   }
 }

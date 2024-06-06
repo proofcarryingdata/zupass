@@ -9,6 +9,7 @@ import {
   HydratedPipelineHistoryEntry,
   ListFeedsResponseValue,
   PipelineDefinition,
+  PipelineGetManualCheckInsResponseValue,
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
@@ -512,15 +513,19 @@ export class PipelineSubservice {
 
   public async handleSetManualCheckInState(
     pipelineId: string,
-    user: PipelineUser,
     ticketId: string,
     checkInState: boolean
   ): Promise<PipelineSetManualCheckInStateResponse> {
     return this.pipelineAPISubservice.handleSetManualCheckInState(
       pipelineId,
-      user,
       ticketId,
       checkInState
     );
+  }
+
+  public async handleGetManualCheckIns(
+    pipelineId: string
+  ): Promise<PipelineGetManualCheckInsResponseValue> {
+    return this.pipelineAPISubservice.handleGetManualCheckIns(pipelineId);
   }
 }

@@ -18,10 +18,12 @@ import {
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
+  PipelineCheckinSummary,
   PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
+  PipelineSetManualCheckInStateResponse,
   PipelineType,
   PodboxTicketActionError,
   PodboxTicketActionPreCheckRequest,
@@ -73,7 +75,6 @@ import {
 import {
   CheckinCapability,
   CheckinStatus,
-  PipelineCheckinSummary,
   generateCheckinUrlPath
 } from "../capabilities/CheckinCapability";
 import {
@@ -198,7 +199,8 @@ export class LemonadePipeline implements BasePipeline {
         },
         preCheck: this.precheckTicketAction.bind(this),
         getManualCheckinSummary: this.getManualCheckinSummary.bind(this),
-        userCanCheckIn: this.userCanCheckIn.bind(this)
+        userCanCheckIn: this.userCanCheckIn.bind(this),
+        setManualCheckInState: this.setManualCheckInState.bind(this)
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,
@@ -1927,8 +1929,9 @@ export class LemonadePipeline implements BasePipeline {
       const checkIn = checkInsById[ticketAtom.id];
       results.push({
         ticketId: ticketAtom.id,
+        ticketName: this.lemonadeAtomToTicketName(ticketAtom),
         email: ticketAtom.email,
-        timestamp: checkIn ? checkIn.timestamp : undefined,
+        timestamp: checkIn ? checkIn.timestamp.toISOString() : "",
         checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
         checkedIn: !!checkIn
       });
@@ -1936,16 +1939,46 @@ export class LemonadePipeline implements BasePipeline {
 
     for (const manualTicket of this.definition.options.manualTickets ?? []) {
       const checkIn = checkInsById[manualTicket.id];
+      const event = this.getEventById(manualTicket.eventId);
+      const product = this.getTicketTypeById(event, manualTicket.productId);
       results.push({
         ticketId: manualTicket.id,
+        ticketName: product.name,
         email: manualTicket.attendeeEmail,
-        timestamp: checkIn ? checkIn.timestamp : undefined,
+        timestamp: checkIn ? checkIn.timestamp.toISOString() : "",
         checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
         checkedIn: !!checkIn
       });
     }
 
     return results;
+  }
+
+  private async setManualCheckInState(
+    ticketId: string,
+    checkInState: boolean,
+    checkerEmail: string
+  ): Promise<PipelineSetManualCheckInStateResponse> {
+    const atom = await this.db.loadById(this.id, ticketId);
+    if (!atom) {
+      const manualTicket = (this.definition.options.manualTickets ?? []).find(
+        (m) => m.id === ticketId
+      );
+      if (!manualTicket) {
+        throw new PCDHTTPError(
+          404,
+          `Ticket ${ticketId} does not exist on pipeline ${this.id}`
+        );
+      }
+    }
+
+    if (checkInState) {
+      await this.checkinDB.checkIn(this.id, ticketId, new Date(), checkerEmail);
+    } else {
+      await this.checkinDB.deleteCheckIn(this.id, ticketId);
+    }
+
+    return { checkInState };
   }
 
   public static is(p: Pipeline): p is LemonadePipeline {

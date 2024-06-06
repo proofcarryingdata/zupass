@@ -1,5 +1,6 @@
 import {
   ActionConfigResponseValue,
+  PipelineCheckinSummary,
   PipelineSetManualCheckInStateResponse,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
@@ -14,14 +15,6 @@ import { PipelineCapability } from "./types";
 export enum CheckinStatus {
   Pending,
   Success
-}
-
-export interface PipelineCheckinSummary {
-  ticketId: string;
-  email: string;
-  timestamp: Date | undefined;
-  checkerEmail: string | undefined;
-  checkedIn: boolean;
 }
 
 /**
@@ -53,7 +46,8 @@ export interface CheckinCapability extends BasePipelineCapability {
   userCanCheckIn(email: string): Promise<boolean>;
   setManualCheckInState(
     ticketId: string,
-    checkInState: boolean
+    checkInState: boolean,
+    checkerEmail: string
   ): Promise<PipelineSetManualCheckInStateResponse>;
   getManualCheckinSummary(): Promise<PipelineCheckinSummary[]>;
 }

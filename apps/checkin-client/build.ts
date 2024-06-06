@@ -6,24 +6,13 @@ import fs from "fs";
 
 dotenv.config();
 
-const genericIssuanceClientAppOpts: BuildOptions = {
+const checkinClientAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
   define: {
     "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`,
-    ...(process.env.STYTCH_PUBLIC_TOKEN !== undefined
-      ? {
-          "process.env.STYTCH_PUBLIC_TOKEN": JSON.stringify(
-            process.env.STYTCH_PUBLIC_TOKEN
-          )
-        }
-      : {}),
-    "process.env.GENERIC_ISSUANCE_CLIENT_URL": `'${process.env.GENERIC_ISSUANCE_CLIENT_URL}'`,
     "process.env.PASSPORT_SERVER_URL": JSON.stringify(
       process.env.PASSPORT_SERVER_URL || "http://localhost:3002"
-    ),
-    "process.env.PASSPORT_CLIENT_URL": JSON.stringify(
-      process.env.PASSPORT_CLIENT_URL || "http://localhost:3000"
     ),
     ...(process.env.ROLLBAR_TOKEN !== undefined
       ? {
@@ -37,13 +26,12 @@ const genericIssuanceClientAppOpts: BuildOptions = {
           )
         }
       : {}),
-    ...(process.env.PODBOX_TITLE_TAG !== undefined
-      ? {
-          "process.env.PODBOX_TITLE_TAG": JSON.stringify(
-            process.env.PODBOX_TITLE_TAG
-          )
-        }
-      : {})
+    "process.env.MANUAL_CHECKIN_API_KEY": JSON.stringify(
+      process.env.MANUAL_CHECKIN_API_KEY || ""
+    ),
+    "process.env.MANUAL_CHECKIN_PIPELINE_ID": JSON.stringify(
+      process.env.MANUAL_CHECKIN_PIPELINE_ID || ""
+    )
   },
   entryPoints: ["src/main.tsx"],
   plugins: [
@@ -68,25 +56,25 @@ async function run(command: string): Promise<void> {
   switch (command) {
     case "build":
       const clientRes = await build({
-        ...genericIssuanceClientAppOpts,
+        ...checkinClientAppOpts,
         minify: true
       });
       console.error("Built client");
 
       // Bundle size data for use with https://esbuild.github.io/analyze/
       fs.writeFileSync(
-        `${genericIssuanceClientAppOpts.outdir}/bundle-size.json`,
+        `${checkinClientAppOpts.outdir}/bundle-size.json`,
         JSON.stringify(clientRes.metafile)
       );
 
       break;
     case "dev":
-      const ctx = await context(genericIssuanceClientAppOpts);
+      const ctx = await context(checkinClientAppOpts);
       await ctx.watch();
 
       const options = {
         host: "0.0.0.0",
-        port: 3005,
+        port: 3006,
         servedir: "public"
       };
 

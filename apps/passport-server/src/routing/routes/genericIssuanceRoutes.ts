@@ -12,6 +12,7 @@ import {
   GenericIssuanceUpsertPipelineRequest,
   GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
+  PipelineGetManualCheckInsResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
   PipelineSetManualCheckInStateRequest,
@@ -218,18 +219,41 @@ export function initGenericIssuanceRoutes(
     res.json(result satisfies PipelineInfoResponseValue);
   });
 
-  app.post(
-    "/generic-issuance/api/manual-checkin/:pipelineID",
+  app.get(
+    "/generic-issuance/api/manual-checkin/:pipelineID/:key",
     async (req, res) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authSession(req);
-      traceUser(user);
       const pipelineID = checkUrlParam(req, "pipelineID");
+      if (
+        checkUrlParam(req, "key") !== process.env.MANUAL_CHECKIN_API_KEY ||
+        !process.env.MANUAL_CHECKIN_API_KEY
+      ) {
+        throw new PCDHTTPError(401);
+      }
+
+      const result =
+        await genericIssuanceService.handleGetManualCheckIns(pipelineID);
+
+      res.json(result satisfies PipelineGetManualCheckInsResponseValue);
+    }
+  );
+
+  app.post(
+    "/generic-issuance/api/manual-checkin/:pipelineID/:key",
+    async (req, res) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineID = checkUrlParam(req, "pipelineID");
+
+      if (
+        checkUrlParam(req, "key") !== process.env.MANUAL_CHECKIN_API_KEY ||
+        !process.env.MANUAL_CHECKIN_API_KEY
+      ) {
+        throw new PCDHTTPError(401);
+      }
 
       const reqBody = req.body as PipelineSetManualCheckInStateRequest;
       const result = await genericIssuanceService.handleSetManualCheckInState(
         pipelineID,
-        user,
         reqBody.ticketId,
         reqBody.checkInState
       );

@@ -13,6 +13,7 @@ import {
   GenericPretixProduct,
   ListFeedsResponseValue,
   PipelineDefinition,
+  PipelineGetManualCheckInsResponseValue,
   PipelineInfoResponseValue,
   PipelineSetManualCheckInStateResponse,
   PodboxTicketActionPreCheckRequest,
@@ -287,16 +288,20 @@ export class GenericIssuanceService {
 
   public async handleSetManualCheckInState(
     pipelineId: string,
-    user: PipelineUser,
     ticketId: string,
     checkInState: boolean
   ): Promise<PipelineSetManualCheckInStateResponse> {
     return this.pipelineSubservice.handleSetManualCheckInState(
       pipelineId,
-      user,
       ticketId,
       checkInState
     );
+  }
+
+  public async handleGetManualCheckIns(
+    pipelineId: string
+  ): Promise<PipelineGetManualCheckInsResponseValue> {
+    return this.pipelineSubservice.handleGetManualCheckIns(pipelineId);
   }
 
   public async validateEmailAndPretixOrderCode(

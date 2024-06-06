@@ -22,6 +22,7 @@ import {
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
+  PipelineSetManualCheckInStateResponse,
   PipelineType,
   PipelineZuAuthConfig,
   PodboxTicketActionError,
@@ -207,7 +208,11 @@ export class PretixPipeline implements BasePipeline {
         },
         preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this),
         getManualCheckinSummary: async (): Promise<never[]> => [],
-        userCanCheckIn: async (): Promise<boolean> => false
+        userCanCheckIn: async (): Promise<boolean> => false,
+        setManualCheckInState:
+          (): Promise<PipelineSetManualCheckInStateResponse> => {
+            throw new Error("No implemented");
+          }
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,

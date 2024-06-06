@@ -1,0 +1,45 @@
+{
+  "name": "checkin-client",
+  "version": "0.0.1",
+  "license": "GPL-3.0-or-later",
+  "private": true,
+  "scripts": {
+    "dev": "ts-node build.ts dev",
+    "build": "tsc --noEmit && ts-node build.ts build",
+    "build:production": "NODE_ENV=production yarn build",
+    "build:staging": "NODE_ENV=staging yarn build",
+    "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
+    "clean": "rm -rf node_modules public/js tsconfig.tsbuildinfo"
+  },
+  "dependencies": {
+    "@chakra-ui/icons": "^2.1.1",
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@pcd/passport-interface": "0.11.1",
+    "@tanstack/react-table": "^8.11.8",
+    "dotenv": "^16.4.1",
+    "framer-motion": "^11.2.10",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-icons": "^5.0.1",
+    "rollbar": "^2.26.2",
+    "styled-components": "^5.3.6",
+    "url-join": "4.0.1"
+  },
+  "devDependencies": {
+    "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+    "@types/react": "^18.2.6",
+    "@types/react-dom": "^18.0.7",
+    "@types/styled-components": "^5.1.26",
+    "@types/url-join": "^4.0.3",
+    "@typescript-eslint/eslint-plugin": "^7.4.0",
+    "@typescript-eslint/parser": "^7.4.0",
+    "esbuild": "^0.17.10",
+    "eslint": "8.57.0",
+    "eslint-plugin-react": "^7.32.2",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "typescript": "^5.3.3"
+  }
+}

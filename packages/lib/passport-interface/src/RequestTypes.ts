@@ -493,13 +493,25 @@ export interface PipelineInfoConsumer {
 }
 
 export interface PipelineSetManualCheckInStateRequest {
-  jwt: string;
   ticketId: string;
   checkInState: boolean;
 }
 
 export interface PipelineSetManualCheckInStateResponse {
   checkInState: boolean;
+}
+
+export interface PipelineCheckinSummary {
+  ticketId: string;
+  ticketName: string;
+  email: string;
+  timestamp: string;
+  checkerEmail?: string | undefined;
+  checkedIn: boolean;
+}
+
+export interface PipelineGetManualCheckInsResponseValue {
+  checkIns: PipelineCheckinSummary[];
 }
 
 export interface PipelineEdDSATicketZuAuthConfig {
