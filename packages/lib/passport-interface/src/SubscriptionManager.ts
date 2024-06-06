@@ -228,8 +228,6 @@ export class FeedSubscriptionManager {
 
   private static AUTH_KEY_KEY = "authKey";
   public static saveAuthKey(authKey: string | undefined): void {
-    alert(`saving auth key ${authKey}`);
-
     if (authKey === undefined) {
       localStorage?.removeItem(this.AUTH_KEY_KEY);
     } else {

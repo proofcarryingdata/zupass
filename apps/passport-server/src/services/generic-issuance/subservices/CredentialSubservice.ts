@@ -33,29 +33,31 @@ export class CredentialSubservice {
   /**
    * Verify a credential, ideally using a cached verification.
    */
-  public async verify(credential: Credential): Promise<VerifiedCredential> {
+  public verify(credential: Credential): Promise<VerifiedCredential> {
     if (credential.type === PODPCDTypeName) {
-      if (!this.dbPool) {
-        throw new Error(
-          "missing database pool - can't authenticate authKey PCD"
-        );
-      }
-      const pcd = await PODPCDPackage.deserialize(credential.pcd);
-      const authKeyEntry = pcd.claim.entries["authKey"];
-      if (!authKeyEntry) {
-        throw new Error("auth key pcd missing authKey entry");
-      }
-      const authKey = authKeyEntry.value.toString();
-      const user = await fetchUserByAuthKey(this.dbPool, authKey);
-      if (!user) {
-        throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);
-      }
+      return (async (): Promise<VerifiedCredential> => {
+        if (!this.dbPool) {
+          throw new Error(
+            "missing database pool - can't authenticate authKey PCD"
+          );
+        }
+        const pcd = await PODPCDPackage.deserialize(credential.pcd);
+        const authKeyEntry = pcd.claim.entries["authKey"];
+        if (!authKeyEntry) {
+          throw new Error("auth key pcd missing authKey entry");
+        }
+        const authKey = authKeyEntry.value.toString();
+        const user = await fetchUserByAuthKey(this.dbPool, authKey);
+        if (!user) {
+          throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);
+        }
 
-      return {
-        semaphoreId: user.commitment,
-        email: user.email.toLowerCase(),
-        authKey
-      };
+        return {
+          semaphoreId: user.commitment,
+          email: user.email.toLowerCase(),
+          authKey
+        };
+      })();
     }
 
     const key = JSON.stringify(credential);
