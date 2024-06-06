@@ -1,6 +1,7 @@
 import {
   POD,
   PODContent,
+  PODEntries,
   PODValue,
   decodePublicKey,
   decodeSignature
@@ -14,6 +15,7 @@ import path from "path";
 import { poseidon2 } from "poseidon-lite";
 import {
   CircuitArtifactPaths,
+  CircuitSignal,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
   ProtoPODGPC,
   ProtoPODGPCCircuitParams,
@@ -25,6 +27,7 @@ import {
   extendedSignalArray,
   gpcArtifactPaths,
   maxTupleArity,
+  paramMaxVirtualEntries,
   processLists,
   protoPODGPCCircuitParamArray,
   zipLists
@@ -33,6 +36,7 @@ import {
   circomkit,
   ownerIdentity,
   privateKey,
+  privateKey2,
   sampleEntries,
   sampleEntries2
 } from "./common";
@@ -77,37 +81,37 @@ const sampleInput: ProtoPODGPCInputs = {
   // Object modules [MAX_OBJECTS].
   objectContentID: [
     21748523748810072846647845097417136490972606253431724953054174411568740252986n,
-    8121973595251725959527136190050016648811901981184487048534858036206640503232n,
+    18485219261920225334980553941142386419465309066344414743860287563916451539637n,
     21748523748810072846647845097417136490972606253431724953054174411568740252986n
   ],
   /*PUB*/ objectSignerPubkeyAx: [
     13277427435165878497778222415993513565335242147425444199013288855685581939618n,
-    13277427435165878497778222415993513565335242147425444199013288855685581939618n,
+    12512819142096328672745574748268841190683864664801826114110182444939815508133n,
     13277427435165878497778222415993513565335242147425444199013288855685581939618n
   ],
   /*PUB*/ objectSignerPubkeyAy: [
     13622229784656158136036771217484571176836296686641868549125388198837476602820n,
-    13622229784656158136036771217484571176836296686641868549125388198837476602820n,
+    13076926918448785155412042385132024413480177434239776354704095450497712564228n,
     13622229784656158136036771217484571176836296686641868549125388198837476602820n
   ],
   objectSignatureR8x: [
     6038506024914176555971696239631925145651921744785715063801385744277106829464n,
-    17276140439707741123961012398868155888129331838354509701720066890556333534962n,
+    12917697647737660037968891386003485907424346856851728146060963416647764311563n,
     6038506024914176555971696239631925145651921744785715063801385744277106829464n
   ],
   objectSignatureR8y: [
     5854572179632427711757099340363612268833921239023445778926307643717502239712n,
-    4478813987562354901219305265765871897349665771516714286553596533146368273231n,
+    7738986716904691927169287478392174278377770853335179083699861759935197872715n,
     5854572179632427711757099340363612268833921239023445778926307643717502239712n
   ],
   objectSignatureS: [
     2646080646960744705949380602187314965535331728145240289516670722008150701947n,
-    246689540249778653713276021978600549955626166095777914633374815228939241963n,
+    793969069331474119331332801728102594224728382005232646705773198580972005784n,
     2646080646960744705949380602187314965535331728145240289516670722008150701947n
   ],
 
   // Entry modules [MAX_ENTRIES].
-  /*PUB*/ entryObjectIndex: [0n, 0n, 0n, 0n, 1n, 1n, 0n, 0n, 0n, 0n],
+  /*PUB*/ entryObjectIndex: [0n, 0n, 0n, 0n, 1n, 1n, 1n, 0n, 0n, 0n],
   /*PUB*/ entryNameHash: [
     151251200029686127063327095456320040687905427497336635391695211041155747807n,
     134391921332508560099964544679493715295561887371159641958333364222734962117n,
@@ -115,7 +119,7 @@ const sampleInput: ProtoPODGPCInputs = {
     300288658781160042600136958258128788307343035694769415667235118833120457708n,
     342949817308325102533753023095764481919209045044694155820648303022684782250n,
     53263882652869188233442867997794714745800659178874616674229264640580912587n,
-    151251200029686127063327095456320040687905427497336635391695211041155747807n,
+    426359027531308702550614983347627926388963727464163576225979855755198240161n,
     151251200029686127063327095456320040687905427497336635391695211041155747807n,
     151251200029686127063327095456320040687905427497336635391695211041155747807n,
     151251200029686127063327095456320040687905427497336635391695211041155747807n
@@ -133,9 +137,9 @@ const sampleInput: ProtoPODGPCInputs = {
     0n
   ],
   /*PUB*/ entryIsValueEnabled: 59n,
-  /*PUB*/ entryIsValueHashRevealed: 21n,
-  entryProofDepth: [5n, 3n, 5n, 5n, 3n, 3n, 5n, 5n, 5n, 5n],
-  entryProofIndex: [0n, 6n, 4n, 8n, 0n, 2n, 0n, 0n, 0n, 0n],
+  /*PUB*/ entryIsValueHashRevealed: 85n,
+  entryProofDepth: [5n, 3n, 5n, 5n, 3n, 3n, 3n, 5n, 5n, 5n],
+  entryProofIndex: [0n, 6n, 4n, 8n, 0n, 2n, 4n, 0n, 0n, 0n],
   entryProofSiblings: [
     [
       9904028930859697121695025471312564917337032846528014134060777877259199866166n,
@@ -180,7 +184,7 @@ const sampleInput: ProtoPODGPCInputs = {
     [
       6111114915052368960013028357687874844561982077054171687671655940344165800007n,
       6376514122805686556057022362450217144216155426480889124042640416146259159616n,
-      2720192215416253774358021860068355957407670823856560393117054770965832043978n,
+      2475203300517048003967161333121686502473569082786308968237941737681242578523n,
       0n,
       0n,
       0n,
@@ -190,7 +194,7 @@ const sampleInput: ProtoPODGPCInputs = {
     [
       5537782408586483095179205238470693004605299677776401318528976418642660549437n,
       20773279285022515108170558039293645952057292062999881653725415257517828272020n,
-      2720192215416253774358021860068355957407670823856560393117054770965832043978n,
+      2475203300517048003967161333121686502473569082786308968237941737681242578523n,
       0n,
       0n,
       0n,
@@ -198,11 +202,11 @@ const sampleInput: ProtoPODGPCInputs = {
       0n
     ],
     [
-      9904028930859697121695025471312564917337032846528014134060777877259199866166n,
-      3061484723492332507965148030160360459221544214848710312076669786481227696312n,
-      1034918093316386824116250922167450510848513309806370785803679707656130099343n,
-      1967460137183576823935940165748484233277693357918661365351807577356270673444n,
-      7007943877879558410284399887032121565251848089920956518084084556491129737612n,
+      8093821485214269328389004542394237209037452657522929891144731833981969398000n,
+      2720192215416253774358021860068355957407670823856560393117054770965832043978n,
+      2357819815697692293410511834633713223342983901072503189827144862105057738355n,
+      0n,
+      0n,
       0n,
       0n,
       0n
@@ -238,6 +242,8 @@ const sampleInput: ProtoPODGPCInputs = {
       0n
     ]
   ],
+  // Virtual entry module.
+  virtualEntryIsValueHashRevealed: 5n,
 
   // Entry constraint modules.
   /*PUB*/ entryEqualToOtherEntryByIndex: [
@@ -247,10 +253,13 @@ const sampleInput: ProtoPODGPCInputs = {
     3n,
     1n,
     5n,
+    6n,
     3n,
     3n,
     3n,
-    3n
+    12n,
+    11n,
+    12n
   ],
 
   // Owner module (1)
@@ -266,7 +275,7 @@ const sampleInput: ProtoPODGPCInputs = {
   /*PUB*/ tupleIndices: [[0n, 3n, 4n, 0n]],
 
   // List membership module (1)
-  /*PUB*/ listComparisonValueIndex: [10n, 2n],
+  /*PUB*/ listComparisonValueIndex: [13n, 2n],
   /*PUB*/ listContainsComparisonValue: 1n,
   /*PUB*/ listValidValues: [
     [
@@ -330,10 +339,15 @@ const sampleOutput: ProtoPODGPCOutputs = {
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     6111114915052368960013028357687874844561982077054171687671655940344165800007n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
-    21888242871839275222246405745257275088548364400416034343698204186575808495616n,
+    8093821485214269328389004542394237209037452657522929891144731833981969398000n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
+  ],
+  virtualEntryRevealedValueHash: [
+    8093821485214269328389004542394237209037452657522929891144731833981969398000n,
+    21888242871839275222246405745257275088548364400416034343698204186575808495616n,
+    8093821485214269328389004542394237209037452657522929891144731833981969398000n
   ],
   ownerRevealedNullifierHash:
     1517081033071132720435657432021139876572843496027662548196342287861804968602n
@@ -357,7 +371,10 @@ function makeTestSignals(
   // size.  Test data always includes a max of 2 real objects and 6 entries.
   // Depending on parameters above, some will be left out of the proof, or
   // some proof inputs will remain unused.
-  const testObjects = [sampleEntries, sampleEntries2];
+  const testObjectsWithKeys: [PODEntries, string][] = [
+    [sampleEntries, privateKey],
+    [sampleEntries2, privateKey2]
+  ];
   const testEntries = [
     { name: "A", objectIndex: 0, eqEntryIndex: 3 },
     { name: "owner", objectIndex: 0, eqEntryIndex: undefined },
@@ -371,6 +388,12 @@ function makeTestSignals(
       objectIndex: 1,
       eqEntryIndex: undefined
     });
+    // Public key is constrained to equal POD 0's signer's public key.
+    testEntries.push({
+      name: "pubKey",
+      objectIndex: 1,
+      eqEntryIndex: params.maxEntries
+    });
   }
   const sigOwnerEntryIndex = 1n;
   const hasOwner = params.maxEntries > sigOwnerEntryIndex;
@@ -379,7 +402,7 @@ function makeTestSignals(
   const pods = [];
   const signatures = [];
   const publicKeys = [];
-  for (const inputEntries of testObjects) {
+  for (const [inputEntries, privateKey] of testObjectsWithKeys) {
     const pod = POD.sign(inputEntries, privateKey);
     const verified = pod.verifySignature();
     expect(verified).to.be.true;
@@ -390,14 +413,14 @@ function makeTestSignals(
 
   // Fill in ObjectModule inputs.
   const sigObjectContentID = [];
-  const sigObjectSignerPubkeyAx = [];
-  const sigObjectSignerPubkeyAy = [];
+  const sigObjectSignerPubkeyAx: CircuitSignal[] = [];
+  const sigObjectSignerPubkeyAy: CircuitSignal[] = [];
   const sigObjectSignatureR8x = [];
   const sigObjectSignatureR8y = [];
   const sigObjectSignatureS = [];
   for (let objectIndex = 0; objectIndex < params.maxObjects; objectIndex++) {
     // Unused objects get filled in with the same info as object 0.
-    const isObjectEnabled = objectIndex < testObjects.length;
+    const isObjectEnabled = objectIndex < testObjectsWithKeys.length;
     const i = isObjectEnabled ? objectIndex : 0;
 
     sigObjectContentID.push(pods[i].contentID);
@@ -475,6 +498,29 @@ function makeTestSignals(
       extendedSignalArray(entrySignals.proof.siblings, params.merkleMaxDepth)
     );
   }
+
+  // Virtual entry hash is arbitrarily revealed for even-numbered virtual
+  // entries, which amounts to even-numbered objects.
+  const maxVirtualEntries = paramMaxVirtualEntries(params);
+  const sigVirtualEntryIsValueHashRevealed = sigObjectSignatureS.map((_, i) =>
+    BigInt(1 - (i % 2))
+  );
+  const sigVirtualEntryRevealedValueHash =
+    sigVirtualEntryIsValueHashRevealed.map((indicator, i) =>
+      indicator === 0n
+        ? BABY_JUB_NEGATIVE_ONE
+        : poseidon2([sigObjectSignerPubkeyAx[i], sigObjectSignerPubkeyAy[i]])
+    );
+
+  // Constrain the 0th POD's signer's public key to equal the 2nd one's (if
+  // there is one).  This will be the case due to our padding rule.
+  const sigVirtualEntryEqualToOtherEntryByIndex = Array(maxVirtualEntries)
+    .fill(0)
+    .map((_, i) =>
+      i === 0 && params.maxObjects > 2
+        ? BigInt(params.maxEntries + 2)
+        : BigInt(params.maxEntries + i)
+    );
 
   // A list of pairs of indices and values.
   // The values will be zipped together to form the
@@ -565,7 +611,12 @@ function makeTestSignals(
       entryValue: sigEntryValue,
       entryIsValueEnabled: array2Bits(sigEntryIsValueEnabled),
       entryIsValueHashRevealed: array2Bits(sigEntryIsValueHashRevealed),
-      entryEqualToOtherEntryByIndex: sigEntryEqualToOtherEntryByIndex,
+      virtualEntryIsValueHashRevealed: array2Bits(
+        sigVirtualEntryIsValueHashRevealed
+      ),
+      entryEqualToOtherEntryByIndex: sigEntryEqualToOtherEntryByIndex.concat(
+        sigVirtualEntryEqualToOtherEntryByIndex
+      ),
       entryProofDepth: sigEntryProofDepth,
       entryProofIndex: sigEntryProofIndex,
       entryProofSiblings: sigEntryProofSiblings,
@@ -586,6 +637,7 @@ function makeTestSignals(
     },
     outputs: {
       entryRevealedValueHash: sigEntryRevealedValueHash,
+      virtualEntryRevealedValueHash: sigVirtualEntryRevealedValueHash,
       ownerRevealedNullifierHash:
         isNullifierHashRevealed && params.maxEntries > sigOwnerEntryIndex
           ? poseidon2([42n, ownerIdentity.nullifier])

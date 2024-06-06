@@ -1,4 +1,4 @@
-import { PODEntries } from "@pcd/pod";
+import { EDDSA_PUBKEY_TYPE_STRING, PODEntries } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { Circomkit } from "circomkit";
@@ -14,6 +14,8 @@ export const circomkit = new Circomkit({
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
 export const privateKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 0001020304050607080900010203040506070809000102030405060708090001
+
+export const privateKey2 = "AAEBAQIDBQEGABABAgMEBQYHCAkAAQIDBAUGBAgJAAA"; // hex 0001010102030501060010010203040506070809000102030405060408090000
 
 export const ownerIdentity = new Identity(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
@@ -39,5 +41,9 @@ export const sampleEntries = {
 export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },
   eventID: { type: "cryptographic", value: 456n },
-  ticketID: { type: "cryptographic", value: 999n }
+  ticketID: { type: "cryptographic", value: 999n },
+  pubKey: {
+    type: EDDSA_PUBKEY_TYPE_STRING,
+    value: "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+  }
 } satisfies PODEntries;

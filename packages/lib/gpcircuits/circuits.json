@@ -12,12 +12,11 @@
       0
     ],
     "pubs": [
-      "objectSignerPubkeyAx",
-      "objectSignerPubkeyAy",
       "entryObjectIndex",
       "entryNameHash",
       "entryIsValueEnabled",
       "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
       "entryEqualToOtherEntryByIndex",
       "ownerEntryIndex",
       "ownerExternalNullifier",
@@ -42,12 +41,11 @@
       2
     ],
     "pubs": [
-      "objectSignerPubkeyAx",
-      "objectSignerPubkeyAy",
       "entryObjectIndex",
       "entryNameHash",
       "entryIsValueEnabled",
       "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
       "entryEqualToOtherEntryByIndex",
       "ownerEntryIndex",
       "ownerExternalNullifier",
@@ -72,12 +70,11 @@
       4
     ],
     "pubs": [
-      "objectSignerPubkeyAx",
-      "objectSignerPubkeyAy",
       "entryObjectIndex",
       "entryNameHash",
       "entryIsValueEnabled",
       "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
       "entryEqualToOtherEntryByIndex",
       "ownerEntryIndex",
       "ownerExternalNullifier",
@@ -102,12 +99,11 @@
       2
     ],
     "pubs": [
-      "objectSignerPubkeyAx",
-      "objectSignerPubkeyAy",
       "entryObjectIndex",
       "entryNameHash",
       "entryIsValueEnabled",
       "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
       "entryEqualToOtherEntryByIndex",
       "ownerEntryIndex",
       "ownerExternalNullifier",
