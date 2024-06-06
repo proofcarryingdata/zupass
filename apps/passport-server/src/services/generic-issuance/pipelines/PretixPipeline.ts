@@ -36,6 +36,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import {
   PODTicketPCD,
   PODTicketPCDPackage,
@@ -56,7 +57,9 @@ import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB"
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
+import { fetchUserByAuthKey } from "../../../database/queries/users";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
+import { ApplicationContext } from "../../../types";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
@@ -135,6 +138,7 @@ export class PretixPipeline implements BasePipeline {
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
   private autoIssuanceProvider: AutoIssuanceProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
+  private context: ApplicationContext;
 
   public get id(): string {
     return this.definition.id;
@@ -162,7 +166,8 @@ export class PretixPipeline implements BasePipeline {
     checkinDB: IPipelineCheckinDB,
     consumerDB: IPipelineConsumerDB,
     manualTicketDB: IPipelineManualTicketDB,
-    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
+    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
+    context: ApplicationContext
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -171,6 +176,7 @@ export class PretixPipeline implements BasePipeline {
     this.consumerDB = consumerDB;
     this.manualTicketDB = manualTicketDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
+    this.context = context;
     if (this.definition.options.autoIssuance) {
       this.autoIssuanceProvider = new AutoIssuanceProvider(
         this.id,
@@ -933,22 +939,47 @@ export class PretixPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      const { emailClaim } =
-        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+      let email: string;
+      let semaphoreId: string;
+
+      if (req.pcd.type === PODPCDTypeName) {
+        const pcd = await PODPCDPackage.deserialize(req.pcd.pcd);
+        const authKeyEntry = pcd.claim.entries["authKey"];
+        if (!authKeyEntry) {
+          throw new Error("auth key pcd missing authKey entry");
+        }
+        const authKey = authKeyEntry.value.toString();
+        const user = await fetchUserByAuthKey(this.context.dbPool, authKey);
+        if (!user) {
+          throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);
+        }
+
+        email = user.email.toLowerCase();
+        semaphoreId = user.commitment;
+      } else {
+        const { emailClaim } =
+          await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+
+        email = emailClaim.emailAddress.toLowerCase();
+        semaphoreId = emailClaim.semaphoreId;
+      }
+
+      span?.setAttribute("email", email);
+      span?.setAttribute("semaphore_id", semaphoreId);
 
       const didUpdate = await this.consumerDB.save(
         this.id,
-        emailClaim.emailAddress,
-        emailClaim.semaphoreId,
+        email,
+        semaphoreId,
         new Date()
       );
 
       if (this.autoIssuanceProvider) {
         const newManualTickets =
           await this.autoIssuanceProvider.maybeIssueForUser(
-            emailClaim.emailAddress,
+            email,
             await this.getAllManualTickets(),
-            await this.db.loadByEmail(this.id, emailClaim.emailAddress)
+            await this.db.loadByEmail(this.id, email)
           );
 
         await Promise.allSettled(
@@ -965,14 +996,7 @@ export class PretixPipeline implements BasePipeline {
         }
       }
 
-      const email = emailClaim.emailAddress;
-      span?.setAttribute("email", email);
-      span?.setAttribute("semaphore_id", emailClaim.semaphoreId);
-
-      const tickets = await this.getTicketsForEmail(
-        email,
-        emailClaim.semaphoreId
-      );
+      const tickets = await this.getTicketsForEmail(email, semaphoreId);
 
       span?.setAttribute("pcds_issued", tickets.length);
 

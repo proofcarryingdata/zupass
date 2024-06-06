@@ -91,7 +91,8 @@ export function instantiatePipeline(
         args.checkinDB,
         args.consumerDB,
         args.manualTicketDB,
-        args.semaphoreHistoryDB
+        args.semaphoreHistoryDB,
+        args.context
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(
