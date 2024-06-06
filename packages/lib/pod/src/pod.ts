@@ -3,11 +3,7 @@ import JSONBig from "json-bigint";
 import { PODContent } from "./podContent";
 import { signPODRoot, verifyPODRootSignature } from "./podCrypto";
 import { PODEntries } from "./podTypes";
-import {
-  CryptoBytesEncoding,
-  checkPublicKeyFormat,
-  checkSignatureFormat
-} from "./podUtil";
+import { checkPublicKeyFormat, checkSignatureFormat } from "./podUtil";
 
 /**
  * Class encapsulating a signed POD with functions for common use cases.
@@ -81,16 +77,11 @@ export class POD {
    *   to be 32 bytes, encoded as per {@link decodePrivateKey}.
    * @throws if any of the entries aren't legal for inclusion in a POD
    */
-  public static sign(
-    entries: PODEntries,
-    signerPrivateKey: string,
-    encoding: CryptoBytesEncoding = "base64url"
-  ): POD {
+  public static sign(entries: PODEntries, signerPrivateKey: string): POD {
     const podContent = PODContent.fromEntries(entries);
     const { signature, publicKey } = signPODRoot(
       podContent.contentID,
-      signerPrivateKey,
-      encoding
+      signerPrivateKey
     );
     return new POD(podContent, signature, publicKey);
   }
