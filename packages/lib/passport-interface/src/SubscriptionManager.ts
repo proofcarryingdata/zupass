@@ -13,7 +13,7 @@ import {
   PCDTypeNameOf,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { POD } from "@pcd/pod";
+import { encodePrivateKey, POD } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { isFulfilled, randomUUID } from "@pcd/util";
 import stringify from "fast-json-stable-stringify";
@@ -260,8 +260,7 @@ export class FeedSubscriptionManager {
     authKey: string
   ): Promise<SerializedPCD> {
     const privateKey = newEdDSAPrivateKey();
-    const pkeyBuffer = Buffer.from(privateKey, "hex");
-    const encodedPkey = pkeyBuffer.toString("base64");
+    const encodedPkey = encodePrivateKey(Buffer.from(privateKey, "hex"));
     const pod = POD.sign(
       {
         authKey: {
@@ -269,8 +268,7 @@ export class FeedSubscriptionManager {
           value: authKey
         }
       },
-      encodedPkey,
-      "base64"
+      encodedPkey
     );
     return await PODPCDPackage.serialize(new PODPCD(randomUUID(), pod));
   }
