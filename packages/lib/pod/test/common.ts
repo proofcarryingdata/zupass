@@ -15,7 +15,7 @@ export const expectedPublicKeyPoint = [
 
 export const expectedPublicKeyHex =
   "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e";
-export const expectedPublicKey = "xDP3ppa3qjpSJO-zmTuvDM2eku7O4MKaP2yCCKnoHZ4";
+export const expectedPublicKey = "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4";
 
 export const ownerIdentity = new Identity(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
@@ -46,7 +46,7 @@ export const expectedContentID1 =
 export const expectedSignature1Hex =
   "64abaf261621e095cda8aaadd6e4bdf6501545e87f6cd923bf7e5e0f7295032b0138ec803350639b0a04de9c26fc2b8232f3f46b5b7486b69e02c4de06398601";
 export const expectedSignature1 =
-  "ZKuvJhYh4JXNqKqt1uS99lAVReh_bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm_CuCMvP0a1t0hraeAsTeBjmGAQ";
+  "ZKuvJhYh4JXNqKqt1uS99lAVReh/bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm/CuCMvP0a1t0hraeAsTeBjmGAQ";
 
 export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },
@@ -64,7 +64,7 @@ export const expectedContentID2 =
 export const expectedSignature2Hex =
   "4febca252ff7e55c29bbada47b8b4b32f667e1270eb77f3a9b0f8ee73bebe689eb89d8ff85c4abd22bf32da15ad7f7fbf2c7e7b1d40ade685cb39c990f9f8b00";
 export const expectedSignature2 =
-  "T-vKJS_35Vwpu62ke4tLMvZn4ScOt386mw-O5zvr5onridj_hcSr0ivzLaFa1_f78sfnsdQK3mhcs5yZD5-LAA";
+  "T+vKJS/35Vwpu62ke4tLMvZn4ScOt386mw+O5zvr5onridj/hcSr0ivzLaFa1/f78sfnsdQK3mhcs5yZD5+LAA";
 
 export const testStringsToHash = [
   "",
@@ -159,45 +159,22 @@ export const testPrivateKeysBase64 = [
   "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs"
 ];
 
-// All the same keys above in base64url with padding.
-export const testPrivateKeysBase64urlpad = [
-  "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE=",
-  "ABEiM0RVZneImaq7zN3u_wARIjNEVWZ3iJmqu8zd7v8=",
-  "_-7dzLuqmYh3ZlVEMyIRAP_u3cy7qpmId2ZVRDMiEQA=",
-  "T3ClvQ4tLE_jP4HhVBzZOJDnSuoORdzhXoJ5rQCiP-U=",
-  "M9ZA-Vdld0H8AnezqKt-8iovWmsDjV9A3CmPGoENz-s=",
-  "sHOAQ8svPZjLWRD69mhhoSzXeG4hNPrxWsQvOfIJnU8=",
-  "QoBZoSREunMghMkvvKHq9pBmN25UX6S6Z4DEFCnSc3A=",
-  "4i-x6-f1MyxlmYgQMlb9v-kUUqwzfrC2A_tg5UdS5KI=",
-  "iWSS2vRAGZzvUKpLs2R6HxLLbOXlON4ivGNU9-eFtAI=",
-  "Kk1flerJ5MHjat_ayTw-fbbZR2wIh8X4T3p6k-e-v6w=",
-  "6NdvoIgadPy31yIqoaxUYTcxSsVZ0_9cEmDR4VHuZvE=",
-  "GVezUlTqulLuwIAj5oycYUmoYBC25WNzZoQf8PnhBx8=",
-  "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs="
-];
-
-// All the same keys above in base64url without padding.
-export const testPrivateKeysBase64url = [
-  "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE",
-  "ABEiM0RVZneImaq7zN3u_wARIjNEVWZ3iJmqu8zd7v8",
-  "_-7dzLuqmYh3ZlVEMyIRAP_u3cy7qpmId2ZVRDMiEQA",
-  "T3ClvQ4tLE_jP4HhVBzZOJDnSuoORdzhXoJ5rQCiP-U",
-  "M9ZA-Vdld0H8AnezqKt-8iovWmsDjV9A3CmPGoENz-s",
-  "sHOAQ8svPZjLWRD69mhhoSzXeG4hNPrxWsQvOfIJnU8",
-  "QoBZoSREunMghMkvvKHq9pBmN25UX6S6Z4DEFCnSc3A",
-  "4i-x6-f1MyxlmYgQMlb9v-kUUqwzfrC2A_tg5UdS5KI",
-  "iWSS2vRAGZzvUKpLs2R6HxLLbOXlON4ivGNU9-eFtAI",
-  "Kk1flerJ5MHjat_ayTw-fbbZR2wIh8X4T3p6k-e-v6w",
-  "6NdvoIgadPy31yIqoaxUYTcxSsVZ0_9cEmDR4VHuZvE",
-  "GVezUlTqulLuwIAj5oycYUmoYBC25WNzZoQf8PnhBx8",
-  "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs"
-];
-
-export const testPrivateKeys = testPrivateKeysBase64url;
+export const testPrivateKeys = testPrivateKeysBase64;
 
 export const testPrivateKeysAllFormats = testPrivateKeysHex.concat(
   testPrivateKeysBase64pad,
-  testPrivateKeysBase64,
-  testPrivateKeysBase64urlpad,
-  testPrivateKeysBase64url
+  testPrivateKeysBase64
 );
+
+/**
+ * Strip trailing `=` padding from Base64.
+ *
+ * Intentionally distinct from podUtil's stripBase64Padding, to avoid testing
+ * code against itself.
+ */
+export function stripB64(encoded: string): string {
+  while (encoded.endsWith("=")) {
+    encoded = encoded.slice(0, encoded.length - 1);
+  }
+  return encoded;
+}
