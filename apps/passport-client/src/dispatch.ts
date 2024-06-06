@@ -1000,6 +1000,7 @@ async function doSync(
     !state.loadedIssuedPCDs ||
     (state.completedFirstSync && state.extraSubscriptionFetchRequested)
   ) {
+    // TODO: Updated loading indicator (loading bar?)
     update({ loadingIssuedPCDs: true });
     try {
       console.log("[SYNC] loading issued pcds");
@@ -1047,15 +1048,22 @@ async function doSync(
         }
       }
       console.log("[SYNC] initalized credentialManager", credentialManager);
-      const actions =
-        await state.subscriptions.pollSubscriptions(credentialManager);
+      const actions = await state.subscriptions.pollSubscriptions(
+        credentialManager,
+        async (actions) => {
+          await applyActions(state.pcds, [actions]);
+          await savePCDs(state.pcds);
+          await saveSubscriptions(state.subscriptions);
+        }
+      );
+
       console.log(`[SYNC] fetched ${actions.length} actions`);
 
-      await applyActions(state.pcds, actions);
-      console.log("[SYNC] applied pcd actions");
-      await savePCDs(state.pcds);
-      await saveSubscriptions(state.subscriptions);
-      console.log("[SYNC] saved issued pcds and updated subscriptions");
+      // await applyActions(state.pcds, actions);
+      // console.log("[SYNC] applied pcd actions");
+      // await savePCDs(state.pcds);
+      // await saveSubscriptions(state.subscriptions);
+      // console.log("[SYNC] saved issued pcds and updated subscriptions");
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }
