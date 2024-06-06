@@ -30,7 +30,7 @@ import {
   serializeGPCProofConfig,
   serializeGPCRevealedClaims
 } from "@pcd/gpc";
-import { GPCPCDArgs, GPCPCDPackage, PODPCD_ARG_PREFIX } from "@pcd/gpc-pcd";
+import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { POD, PODEntries, podEntriesToSimplifiedJSON } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
@@ -391,7 +391,8 @@ export async function gpcDemo(): Promise<boolean> {
   });
 
   // POD and Semaphore Identity are also contained in PCDs at this layer.
-  const podPCD = new PODPCD(uuid(), podSword);
+  const swordPODPCD = new PODPCD(uuid(), podSword);
+  const shieldPODPCD = new PODPCD(uuid(), podShield);
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
     identity: semaphoreIdentity
   });
@@ -399,11 +400,18 @@ export async function gpcDemo(): Promise<boolean> {
   // So far, the GPCPCD only supports proving about one POD, and always
   // names it "pod0" so we need a slightly different config.  More flexibility
   // will be coming soon.
+  // The GPCPCD allows us to prove about an arbitrary number of PODs.
   const pcdProofConfig: GPCProofConfig = {
     pods: {
-      pod0: {
+      swordPOD: {
         entries: {
           attack: { isRevealed: true },
+          owner: { isRevealed: false, isOwnerID: true }
+        }
+      },
+      shieldPOD: {
+        entries: {
+          defense: { isRevealed: true },
           owner: { isRevealed: false, isOwnerID: true }
         }
       }
@@ -419,9 +427,18 @@ export async function gpcDemo(): Promise<boolean> {
       argumentType: ArgumentTypeName.String,
       value: serializeGPCProofConfig(pcdProofConfig)
     },
-    [`${PODPCD_ARG_PREFIX}_pod0`]: {
-      value: await PODPCDPackage.serialize(podPCD),
-      argumentType: ArgumentTypeName.PCD
+    pods: {
+      value: {
+        swordPOD: {
+          value: await PODPCDPackage.serialize(swordPODPCD),
+          argumentType: ArgumentTypeName.PCD
+        },
+        shieldPOD: {
+          value: await PODPCDPackage.serialize(shieldPODPCD),
+          argumentType: ArgumentTypeName.PCD
+        }
+      },
+      argumentType: ArgumentTypeName.Record
     },
     identity: {
       value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),

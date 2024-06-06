@@ -256,8 +256,31 @@ export enum ArgumentTypeName {
   Object = "Object",
   StringArray = "StringArray",
   PCD = "PCD",
+  Record = "Record",
   ToggleList = "ToggleList",
   Unknown = "Unknown"
+}
+
+/**
+ * Argument type names other than the record type.
+ */
+export type PrimitiveArgumentTypeName = Exclude<
+  ArgumentTypeName,
+  ArgumentTypeName.Record
+>;
+
+/**
+ * Non-recursive record argument type.
+ */
+export type RecordArgument<
+  S extends string,
+  T extends Argument<PrimitiveArgumentTypeName, unknown>
+> = Argument<ArgumentTypeName.Record, Record<S, T>>;
+export function isRecordArgument<
+  S extends string,
+  T extends Argument<PrimitiveArgumentTypeName, unknown>
+>(arg: Argument<any, unknown>): arg is RecordArgument<S, T> {
+  return arg.argumentType === ArgumentTypeName.Record;
 }
 
 export type StringArgument = Argument<ArgumentTypeName.String, string>;
@@ -369,10 +392,17 @@ export type RawValueType<T extends Argument<any, unknown>> =
     ? U
     : T;
 
-export type ArgumentValidator<T extends Argument<any, unknown>> = (
-  value: RawValueType<T>,
-  params: T["validatorParams"]
-) => boolean;
+/**
+ * Argument validator as a predicate taking both the argument's value and its
+ * validator parameters as inputs. In the case of a record argument, this is a
+ * mapping from record keys to such predicates for the record value type.
+ */
+export type ArgumentValidator<T extends Argument<any, unknown>> =
+  T extends RecordArgument<infer S, infer U>
+    ? (
+        s: S
+      ) => (value: RawValueType<U>, params: U["validatorParams"]) => boolean
+    : (value: RawValueType<T>, params: T["validatorParams"]) => boolean;
 
 /**
  * Enriched Argument for display purposes

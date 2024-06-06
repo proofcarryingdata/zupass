@@ -10,12 +10,7 @@ import {
   podMembershipListsFromSimplifiedJSON,
   serializeGPCBoundConfig
 } from "@pcd/gpc";
-import {
-  GPCPCD,
-  GPCPCDArgs,
-  GPCPCDPackage,
-  PODPCD_ARG_PREFIX
-} from "@pcd/gpc-pcd";
+import { GPCPCD, GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdGetRequestUrl,
   openZupassPopup,
@@ -33,8 +28,8 @@ import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { GPC_ARTIFACT_CONFIG, ZUPASS_URL } from "../../constants";
 import {
-  EXAMPLE_GPC_CONFIG,
-  EXAMPLE_MEMBERSHIP_LISTS
+  EXAMPLE_GPC_CONFIG2,
+  EXAMPLE_MEMBERSHIP_LISTS2
 } from "../../podExampleConstants";
 
 export default function Page(): JSX.Element {
@@ -42,10 +37,10 @@ export default function Page(): JSX.Element {
     "example external nullifier"
   );
   const [membershipLists, setMembershipLists] = useState(
-    EXAMPLE_MEMBERSHIP_LISTS
+    EXAMPLE_MEMBERSHIP_LISTS2
   );
   const [watermark, setWatermark] = useState("example watermark");
-  const [proofConfig, setProofConfig] = useState(EXAMPLE_GPC_CONFIG);
+  const [proofConfig, setProofConfig] = useState(EXAMPLE_GPC_CONFIG2);
 
   // Populate PCD from either client-side or server-side proving using the Zupass popup
   const [pcdStr] = useZupassPopupMessages();
@@ -200,13 +195,26 @@ export function openGPCPopup(
       value: proofConfig,
       userProvided: false
     },
-    [`${PODPCD_ARG_PREFIX}_pod0`]: {
-      argumentType: ArgumentTypeName.PCD,
-      pcdType: PODPCDPackage.name,
-      value: undefined,
-      userProvided: true,
+    pods: {
+      argumentType: ArgumentTypeName.Record,
+      value: {
+        mainstreamPOD: {
+          argumentType: ArgumentTypeName.PCD,
+          pcdType: PODPCDPackage.name,
+          value: undefined,
+          userProvided: true,
+          displayName: "Mainstream POD"
+        },
+        ticketPOD: {
+          argumentType: ArgumentTypeName.PCD,
+          pcdType: PODPCDPackage.name,
+          value: undefined,
+          userProvided: true,
+          displayName: "Ticket POD"
+        }
+      },
       validatorParams: {
-        notFoundMessage: "No eligible PODs found"
+        proofConfig
       }
     },
     identity: {

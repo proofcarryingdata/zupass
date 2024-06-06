@@ -1,5 +1,10 @@
 import { GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
-import { PCD, PCDArgument, StringArgument } from "@pcd/pcd-types";
+import {
+  PCD,
+  PCDArgument,
+  RecordArgument,
+  StringArgument
+} from "@pcd/pcd-types";
 import { PODName } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
@@ -22,23 +27,6 @@ export type {
 export const GPCPCDTypeName = "gpc-pcd";
 
 /**
- * Argument name type for PODPCD arguments.
- */
-export type PODPCDArgName = `${typeof PODPCD_ARG_PREFIX}_${PODName}`;
-
-/**
- * Prefix used for PODPCD argument names in {@link PODPCDArgName}.
- */
-export const PODPCD_ARG_PREFIX = "podpcd";
-
-/**
- * Regular expression for `PODPCDArgName` values.
- */
-export const PODPCD_ARG_REGEXP = new RegExp(
-  String.raw`(${PODPCD_ARG_PREFIX})_([A-Za-z_]\w*)$`
-);
-
-/**
  * Interface containing the arguments that 3rd parties use to
  * initialize this PCD package.
  *
@@ -51,19 +39,17 @@ export type GPCPCDInitArgs = {
 };
 
 /**
- * POD objects to prove about. Each object is identified by name and prefixed
- * with `podpcd` (cf. {@link PODPCD_ARG_PREFIX}) followed by an underscore.
- * These are not revealed by default, but a redacted version of their entries
- * will become part of the claims of the resulting proof PCD, as specified by
- * the proof config.
- *
- * See {@link GPCProofConfig} and {@link GPCRevealedClaims} for more
- * information.
+ * Record argument type encapsulating a record of POD PCD arguments.
  */
-export type PODPCDRecordArg = Record<PODPCDArgName, PCDArgument<PODPCD>>;
+export type PODPCDRecordArg = RecordArgument<
+  PODName,
+  PCDArgument<PODPCD, { notFoundMessage?: string; proofConfig?: string }>
+>;
 
 /**
- * Defines the essential parameters required for creating a {@link GPCPCD}.
+ * Defines the essential parameters required for creating a {@link GPCPCD}. This
+ * includes some fixed arguments as well as a variable number of arguments with
+ * the `podpcd_` prefix defined by the {@link PODPCDRecordArg} type.
  */
 export type GPCPCDArgs = {
   /**
@@ -76,6 +62,17 @@ export type GPCPCDArgs = {
   // ObjectArgument is intended to be directly JSON serializable, so can't
   // contain bigints if used for network requests (e.g. ProveAndAdd).  The
   // choice here should be driven by the needs of the Prove screen.
+
+  /**
+   * POD objects to prove about. Each object is identified by name in the value
+   * underlying this record argument.  These are not revealed by default, but a
+   * redacted version of their entries will become part of the claims of the
+   * resulting proof PCD, as specified by the proof config.
+   *
+   * See {@link GPCProofConfig} and {@link GPCRevealedClaims} for more
+   * information.
+   */
+  pods: PODPCDRecordArg;
 
   /**
    * Optional secret info identifying the owner of PODs, if needed by the proof
@@ -116,7 +113,7 @@ export type GPCPCDArgs = {
    */
   id?: StringArgument;
   // TODO(POD-P3): Support PODValue of multiple types.
-} & PODPCDRecordArg;
+};
 
 /**
  * Defines the GPCD PCD's claim.  A GPC proofs includes the proof configuration

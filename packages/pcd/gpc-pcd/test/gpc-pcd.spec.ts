@@ -14,7 +14,7 @@ import { expect } from "chai";
 import "mocha";
 import path from "path";
 import { v4 as uuid } from "uuid";
-import { GPCPCDArgs, GPCPCDPackage, PODPCD_ARG_PREFIX } from "../src";
+import { GPCPCDArgs, GPCPCDPackage } from "../src";
 
 export const GPC_TEST_ARTIFACTS_PATH = path.join(
   __dirname,
@@ -102,13 +102,18 @@ describe("GPCPCD should work", async function () {
         argumentType: ArgumentTypeName.String,
         value: serializeGPCProofConfig(proofConfig)
       },
-      [`${PODPCD_ARG_PREFIX}_pod0`]: {
-        value: await PODPCDPackage.serialize(podPCD0),
-        argumentType: ArgumentTypeName.PCD
-      },
-      [`${PODPCD_ARG_PREFIX}_ticketPOD`]: {
-        value: await PODPCDPackage.serialize(ticketPODPCD),
-        argumentType: ArgumentTypeName.PCD
+      pods: {
+        value: {
+          pod0: {
+            value: await PODPCDPackage.serialize(podPCD0),
+            argumentType: ArgumentTypeName.PCD
+          },
+          ticketPOD: {
+            value: await PODPCDPackage.serialize(ticketPODPCD),
+            argumentType: ArgumentTypeName.PCD
+          }
+        },
+        argumentType: ArgumentTypeName.Record
       },
       identity: {
         value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),

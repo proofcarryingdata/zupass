@@ -32,7 +32,7 @@ export const EXAMPLE_OWNER_IDENTITY = new Identity(
 
 export const EXAMPLE_GPC_CONFIG = `{
   "pods": {
-    "pod0": {
+    "podZero": {
       "entries": {
         "A": {
           "isRevealed": true,
@@ -43,7 +43,44 @@ export const EXAMPLE_GPC_CONFIG = `{
         },
         "E": {
           "isRevealed": false,
-          "equalsEntry": "pod0.A"
+          "equalsEntry": "podZero.A"
+        },
+        "owner": {
+          "isRevealed": false,
+          "isOwnerID": true
+        }
+      }
+    },
+    "cardPOD": {
+      "entries": {
+        "zupass_title": {
+          "isRevealed": true
+        }
+      }
+    }
+  },
+  "tuples": {
+    "tuple0": {
+      "entries": ["podZero.E", "podZero.C"],
+      "isMemberOf": "admissiblePairs"
+    }
+  }
+}`;
+
+export const EXAMPLE_GPC_CONFIG2 = `{
+  "pods": {
+    "mainstreamPOD": {
+      "entries": {
+        "A": {
+          "isRevealed": true,
+          "isMemberOf": "admissibleValues"
+        },
+        "C": {
+          "isRevealed": false
+        },
+        "E": {
+          "isRevealed": false,
+          "equalsEntry": "mainstreamPOD.A"
         },
         "owner": {
           "isRevealed": false,
@@ -54,7 +91,7 @@ export const EXAMPLE_GPC_CONFIG = `{
   },
   "tuples": {
     "tuple0": {
-      "entries": ["pod0.E", "pod0.C"],
+      "entries": ["mainstreamPOD.E", "mainstreamPOD.C"],
       "isMemberOf": "admissiblePairs"
     }
   }
@@ -75,5 +112,28 @@ export const EXAMPLE_MEMBERSHIP_LISTS = `{
     [123, "hello"],
     ["zero", "zero"],
     [0, "one"]
+  ]
+}`;
+
+export const EXAMPLE_MEMBERSHIP_LISTS2 = `{
+  "admissibleValues": [
+    3,
+    3472834734,
+    123,
+    9,
+    "something",
+    18711405342588116796533073928767088921854096266145046362753928030796553161041
+  ],
+  "admissiblePairs": [
+    [0,0],
+    [5,6],
+    [123, "hello"],
+    ["zero", "zero"],
+    [0, "one"]
+  ],
+  "admissibleTickets": [
+    "hello",
+    0,
+    999
   ]
 }`;

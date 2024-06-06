@@ -11,7 +11,7 @@ import {
   GPCArtifactStability,
   GPCArtifactVersion
 } from "@pcd/gpc";
-import { GPCPCDArgs, GPCPCDPackage, PODPCD_ARG_PREFIX } from "@pcd/gpc-pcd";
+import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdAddRequestUrl,
   constructZupassPcdProveAndAddRequestUrl,
@@ -57,6 +57,9 @@ export default function Page(): JSX.Element {
   const [signedMessage, setSignedMessage] = useState("1");
   const [folder, setFolder] = useState("");
   const [podContent, setPodContent] = useState(EXAMPLE_POD_CONTENT);
+  const [podContent2, setPodContent2] = useState(
+    EXAMPLE_POD_CONTENT_WITH_DISPLAY
+  );
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
   const [membershipLists, setMembershipLists] = useState(
     EXAMPLE_MEMBERSHIP_LISTS
@@ -144,21 +147,6 @@ export default function Page(): JSX.Element {
         <br />
         <br />
         POD content to sign: <br />
-        <button
-          onClick={() => {
-            setPodContent(EXAMPLE_POD_CONTENT);
-          }}
-        >
-          basic example
-        </button>
-        <button
-          onClick={() => {
-            setPodContent(EXAMPLE_POD_CONTENT_WITH_DISPLAY);
-          }}
-        >
-          zupass card example
-        </button>
-        <br />
         <textarea
           cols={40}
           rows={15}
@@ -167,6 +155,31 @@ export default function Page(): JSX.Element {
             setPodContent(e.target.value);
           }}
         />
+        <br />
+        <button
+          onClick={(): Promise<void> =>
+            addPODPCD(podContent, podFolder.length > 0 ? podFolder : undefined)
+          }
+        >
+          add a new POD to Zupass
+        </button>
+        <br />
+        <textarea
+          cols={40}
+          rows={15}
+          value={podContent2}
+          onChange={(e): void => {
+            setPodContent2(e.target.value);
+          }}
+        />
+        <br />
+        <button
+          onClick={(): Promise<void> =>
+            addPODPCD(podContent2, podFolder.length > 0 ? podFolder : undefined)
+          }
+        >
+          add a new POD to Zupass
+        </button>
         <br />
         GPC Proof config: <br />
         <textarea
@@ -203,15 +216,9 @@ export default function Page(): JSX.Element {
         <br />
         <button
           onClick={(): Promise<void> =>
-            addPODPCD(podContent, podFolder.length > 0 ? podFolder : undefined)
-          }
-        >
-          add a new POD to Zupass
-        </button>
-        <button
-          onClick={(): Promise<void> =>
             addGPCPCD(
               podContent,
+              podContent2,
               gpcConfig,
               membershipLists,
               podFolder.length > 0 ? podFolder : undefined
@@ -607,6 +614,7 @@ async function addPODPCD(
 
 async function addGPCPCD(
   podContent: string,
+  podContent2: string,
   gpcConfig: string,
   membershipLists: string,
   podFolder: string | undefined
@@ -620,10 +628,18 @@ async function addGPCPCD(
     )
   });
 
-  const podPCD = new PODPCD(
+  const podZeroPCD = new PODPCD(
     uuid(),
     POD.sign(
       podEntriesFromSimplifiedJSON(podContent),
+      EXAMPLE_EDDSA_PRIVATE_KEY
+    )
+  );
+
+  const cardPODPCD = new PODPCD(
+    uuid(),
+    POD.sign(
+      podEntriesFromSimplifiedJSON(podContent2),
       EXAMPLE_EDDSA_PRIVATE_KEY
     )
   );
@@ -637,9 +653,18 @@ async function addGPCPCD(
       argumentType: ArgumentTypeName.String,
       value: gpcConfig
     },
-    [`${PODPCD_ARG_PREFIX}_pod0`]: {
-      value: await PODPCDPackage.serialize(podPCD),
-      argumentType: ArgumentTypeName.PCD
+    pods: {
+      value: {
+        podZero: {
+          value: await PODPCDPackage.serialize(podZeroPCD),
+          argumentType: ArgumentTypeName.PCD
+        },
+        cardPOD: {
+          value: await PODPCDPackage.serialize(cardPODPCD),
+          argumentType: ArgumentTypeName.PCD
+        }
+      },
+      argumentType: ArgumentTypeName.Record
     },
     identity: {
       value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),
