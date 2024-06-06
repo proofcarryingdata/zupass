@@ -1022,7 +1022,7 @@ async function doSync(
     update({ loadingIssuedPCDs: true });
     try {
       console.log("[SYNC] loading issued pcds");
-      addDefaultSubscriptions(state.subscriptions);
+      await addDefaultSubscriptions(state.subscriptions);
       console.log(
         "[SYNC] active subscriptions",
         state.subscriptions.getActiveSubscriptions()
