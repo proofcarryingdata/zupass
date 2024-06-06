@@ -6,7 +6,11 @@ import {
   VerifiedCredential,
   verifyCredential
 } from "@pcd/passport-interface";
+import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { LRUCache } from "lru-cache";
+import { Pool } from "postgres-pool";
+import { fetchUserByAuthKey } from "../../../database/queries/users";
+import { PCDHTTPError } from "../../../routing/pcdHttpError";
 
 /**
  * Manages server-side verification of credential PCDs.
@@ -18,16 +22,42 @@ import { LRUCache } from "lru-cache";
 export class CredentialSubservice {
   private verificationCache: LRUCache<string, Promise<VerifiedCredential>>;
   private zupassPublicKey: EdDSAPublicKey;
+  private dbPool: Pool | undefined;
 
-  public constructor(zupassPublicKey: EdDSAPublicKey) {
+  public constructor(zupassPublicKey: EdDSAPublicKey, dbPool?: Pool) {
     this.verificationCache = new LRUCache({ max: 1000 });
     this.zupassPublicKey = zupassPublicKey;
+    this.dbPool = dbPool;
   }
 
   /**
    * Verify a credential, ideally using a cached verification.
    */
-  public verify(credential: Credential): Promise<VerifiedCredential> {
+  public async verify(credential: Credential): Promise<VerifiedCredential> {
+    if (credential.type === PODPCDTypeName) {
+      if (!this.dbPool) {
+        throw new Error(
+          "missing database pool - can't authenticate authKey PCD"
+        );
+      }
+      const pcd = await PODPCDPackage.deserialize(credential.pcd);
+      const authKeyEntry = pcd.claim.entries["authKey"];
+      if (!authKeyEntry) {
+        throw new Error("auth key pcd missing authKey entry");
+      }
+      const authKey = authKeyEntry.value.toString();
+      const user = await fetchUserByAuthKey(this.dbPool, authKey);
+      if (!user) {
+        throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);
+      }
+
+      return {
+        semaphoreId: user.commitment,
+        email: user.email.toLowerCase(),
+        authKey
+      };
+    }
+
     const key = JSON.stringify(credential);
     const cached = this.verificationCache.get(key);
     const span = getActiveSpan();
@@ -51,27 +81,26 @@ export class CredentialSubservice {
    */
   public async verifyAndExpectZupassEmail(
     credential: Credential
-  ): Promise<
-    VerifiedCredential &
-      Required<Pick<VerifiedCredential, "emailClaim" | "emailSignatureClaim">>
-  > {
+  ): Promise<VerifiedCredential & Required<Pick<VerifiedCredential, "email">>> {
     const verifiedCredential = await this.verify(credential),
-      { emailClaim, emailSignatureClaim } = verifiedCredential;
+      { email, semaphoreId, authKey, emailPCDSigner } = verifiedCredential;
 
-    if (!emailClaim || !emailSignatureClaim) {
+    if (!email || !semaphoreId) {
       throw new VerificationError("Missing email PCD in credential");
     }
-    if (!this.isZupassPublicKey(emailSignatureClaim.publicKey)) {
+    if (!authKey && !this.isZupassPublicKey(emailPCDSigner)) {
       throw new VerificationError("Email PCD not signed by Zupass");
     }
 
-    return { emailClaim, emailSignatureClaim, ...verifiedCredential };
+    return { ...verifiedCredential, email };
   }
 
   /**
    * Utility function for checking if an EmailPCD was signed by Zupass.
    */
-  private isZupassPublicKey(eddsaPubKey: EdDSAPublicKey): boolean {
-    return isEqualEdDSAPublicKey(eddsaPubKey, this.zupassPublicKey);
+  private isZupassPublicKey(eddsaPubKey: EdDSAPublicKey | undefined): boolean {
+    return (
+      !eddsaPubKey || isEqualEdDSAPublicKey(eddsaPubKey, this.zupassPublicKey)
+    );
   }
 }

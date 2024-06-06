@@ -1,9 +1,8 @@
-import { EdDSAPCDClaim } from "@pcd/eddsa-pcd";
-import { EmailPCD, EmailPCDClaim, EmailPCDPackage } from "@pcd/email-pcd";
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDClaim,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS, ONE_MINUTE_MS } from "@pcd/util";
@@ -46,11 +45,10 @@ export interface CredentialPayload {
  * memory on caching large PCD objects.
  */
 export interface VerifiedCredential {
-  // Every credential has a signature
-  signatureClaim: SemaphoreSignaturePCDClaim;
-  // Not all credentials have Email PCDs, so these claims are optional:
-  emailClaim?: EmailPCDClaim;
-  emailSignatureClaim?: EdDSAPCDClaim;
+  email?: string;
+  semaphoreId: string;
+  emailPCDSigner?: EdDSAPublicKey;
+  authKey?: string;
 }
 
 /**
@@ -135,13 +133,13 @@ export async function verifyCredential(
 
     // Everything passes, return the verified credential with email claims
     return {
-      signatureClaim: pcd.claim,
-      emailClaim: emailPCD.claim,
-      emailSignatureClaim: emailPCD.proof.eddsaPCD.claim
+      email: emailPCD.claim.emailAddress,
+      semaphoreId: emailPCD.claim.semaphoreId,
+      emailPCDSigner: emailPCD.proof.eddsaPCD.claim.publicKey
     };
   } else {
     // Return a verified credential, without email claims since no EmailPCD
     // was present
-    return { signatureClaim: pcd.claim };
+    return { email: undefined, semaphoreId: pcd.claim.identityCommitment };
   }
 }

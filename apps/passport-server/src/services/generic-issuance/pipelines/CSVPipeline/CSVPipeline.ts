@@ -102,10 +102,10 @@ export class CSVPipeline implements BasePipeline {
 
       if (req.pcd) {
         try {
-          const { emailClaim } =
+          const { email, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
-          requesterEmail = emailClaim.emailAddress;
-          requesterSemaphoreId = emailClaim.semaphoreId;
+          requesterEmail = email;
+          requesterSemaphoreId = semaphoreId;
         } catch (e) {
           logger(LOG_TAG, "credential PCD not verified for req", req);
         }

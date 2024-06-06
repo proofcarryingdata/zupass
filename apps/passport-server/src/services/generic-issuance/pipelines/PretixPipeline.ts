@@ -36,7 +36,6 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import {
   PODTicketPCD,
   PODTicketPCDPackage,
@@ -57,7 +56,6 @@ import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB"
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
-import { fetchUserByAuthKey } from "../../../database/queries/users";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
@@ -939,30 +937,8 @@ export class PretixPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      let email: string;
-      let semaphoreId: string;
-
-      if (req.pcd.type === PODPCDTypeName) {
-        const pcd = await PODPCDPackage.deserialize(req.pcd.pcd);
-        const authKeyEntry = pcd.claim.entries["authKey"];
-        if (!authKeyEntry) {
-          throw new Error("auth key pcd missing authKey entry");
-        }
-        const authKey = authKeyEntry.value.toString();
-        const user = await fetchUserByAuthKey(this.context.dbPool, authKey);
-        if (!user) {
-          throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);
-        }
-
-        email = user.email.toLowerCase();
-        semaphoreId = user.commitment;
-      } else {
-        const { emailClaim } =
-          await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
-
-        email = emailClaim.emailAddress.toLowerCase();
-        semaphoreId = emailClaim.semaphoreId;
-      }
+      const { email, semaphoreId } =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
       span?.setAttribute("email", email);
       span?.setAttribute("semaphore_id", semaphoreId);
@@ -1418,18 +1394,15 @@ export class PretixPipeline implements BasePipeline {
         try {
           span?.setAttribute("ticket_id", ticketId);
 
-          const { emailClaim: checkerEmailClaim } =
+          const { email, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
 
-          span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
-          span?.setAttribute(
-            "checked_semaphore_id",
-            checkerEmailClaim.semaphoreId
-          );
+          span?.setAttribute("checker_email", email);
+          span?.setAttribute("checked_semaphore_id", semaphoreId);
 
-          checkerEmail = checkerEmailClaim.emailAddress;
+          checkerEmail = email;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1633,17 +1606,14 @@ export class PretixPipeline implements BasePipeline {
 
       try {
         span?.setAttribute("ticket_id", ticketId);
-        const { emailClaim: checkerEmailClaim } =
+        const { email, semaphoreId } =
           await this.credentialSubservice.verifyAndExpectZupassEmail(
             request.credential
           );
 
-        span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
-        span?.setAttribute(
-          "checked_semaphore_id",
-          checkerEmailClaim.semaphoreId
-        );
-        checkerEmail = checkerEmailClaim.emailAddress;
+        span?.setAttribute("checker_email", email);
+        span?.setAttribute("checked_semaphore_id", semaphoreId);
+        checkerEmail = email;
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);

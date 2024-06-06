@@ -75,17 +75,17 @@ describe("generic issuance - credential subservice", function () {
 
       // Result is a verified credential containing the expected values
       const verifiedCredential = await verifyPromise;
-      expect(verifiedCredential.signatureClaim.identityCommitment).to.eq(
+      expect(verifiedCredential.semaphoreId).to.eq(
         identity.getCommitment().toString()
       );
-      expect(verifiedCredential.emailClaim?.emailAddress).to.eq(emailAddress);
-      expect(verifiedCredential.emailClaim?.semaphoreId).to.eq(
+      expect(verifiedCredential.email).to.eq(emailAddress);
+      expect(verifiedCredential.semaphoreId).to.eq(
         identity.getCommitment().toString()
       );
-      expectToExist(verifiedCredential.emailSignatureClaim);
+      expectToExist(verifiedCredential.emailPCDSigner);
       expect(
         isEqualEdDSAPublicKey(
-          verifiedCredential.emailSignatureClaim.publicKey,
+          verifiedCredential.emailPCDSigner,
           zupassPublicKey
         )
       ).to.be.true;
@@ -110,11 +110,11 @@ describe("generic issuance - credential subservice", function () {
 
       // Result is a verified credential containing the expected values
       const verifiedCredential = await verifyPromise;
-      expect(verifiedCredential.signatureClaim.identityCommitment).to.eq(
+      expect(verifiedCredential.semaphoreId).to.eq(
         identity.getCommitment().toString()
       );
-      expect(verifiedCredential.emailClaim).to.be.undefined;
-      expect(verifiedCredential.emailSignatureClaim).to.be.undefined;
+      expect(verifiedCredential.email).to.be.undefined;
+      expect(verifiedCredential.authKey).to.be.undefined;
 
       // Verifying this with the expectation of a valid email should throw,
       // since the credential does not have an EmailPCD.
@@ -189,7 +189,7 @@ describe("generic issuance - credential subservice", function () {
         // Verify will return a VerifiedCredential containing an
         // emailSignatureClaim
         (await credentialSubservice.verify(notZupassEmailCredential))
-          .emailSignatureClaim?.publicKey as EdDSAPublicKey,
+          .emailPCDSigner as EdDSAPublicKey,
         zupassPublicKey
       )
       // But this is not the Zupass public key!

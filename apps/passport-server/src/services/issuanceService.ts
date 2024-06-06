@@ -56,6 +56,7 @@ import {
   joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import {
   SemaphoreSignaturePCD,
@@ -90,7 +91,10 @@ import {
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
 import { upsertUser } from "../database/queries/saveUser";
-import { fetchUserByCommitment } from "../database/queries/users";
+import {
+  fetchUserByAuthKey,
+  fetchUserByCommitment
+} from "../database/queries/users";
 import {
   fetchZuconnectTicketById,
   fetchZuconnectTicketsByEmail
@@ -621,6 +625,25 @@ export class IssuanceService {
     if (cached) {
       return cached;
     } else {
+      if (credential.type === PODPCDTypeName) {
+        const pcd = await PODPCDPackage.deserialize(credential.pcd);
+        const authKeyEntry = pcd.claim.entries["authKey"];
+        if (!authKeyEntry) {
+          throw new Error("auth key pcd missing authKey entry");
+        }
+        const authKey = authKeyEntry.value.toString();
+        const user = await fetchUserByAuthKey(this.context.dbPool, authKey);
+        if (!user) {
+          throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);
+        }
+
+        return {
+          email: user.email.toLowerCase(),
+          semaphoreId: user.commitment,
+          authKey
+        } satisfies VerifiedCredential;
+      }
+
       const promise = verifyCredential(credential).catch((err) => {
         // If we received an unexpected kind of exception, remove the promise
         // from the cache. Instances of VerificationError indicate that the
@@ -637,16 +660,13 @@ export class IssuanceService {
   }
 
   private async checkUserExists({
-    signatureClaim
+    semaphoreId
   }: VerifiedCredential): Promise<UserRow | null> {
-    const user = await fetchUserByCommitment(
-      this.context.dbPool,
-      signatureClaim.identityCommitment
-    );
+    const user = await fetchUserByCommitment(this.context.dbPool, semaphoreId);
 
     if (user === null) {
       logger(
-        `can't issue PCDs for ${signatureClaim.identityCommitment} because ` +
+        `can't issue PCDs for ${semaphoreId} because ` +
           `we don't have a user with that commitment in the database`
       );
       return null;
@@ -1396,17 +1416,17 @@ export class IssuanceService {
     req: GetOfflineTicketsRequest,
     res: Response
   ): Promise<void> {
-    let signatureClaim;
+    let semaphoreId;
     try {
-      signatureClaim = (await this.verifyCredential(req.checkerProof))
-        .signatureClaim;
+      const verifiedCredential = await this.verifyCredential(req.checkerProof);
+      semaphoreId = verifiedCredential.semaphoreId;
     } catch (_e) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
     const offlineTickets = await fetchOfflineTicketsForChecker(
       this.context.dbPool,
-      signatureClaim.identityCommitment
+      semaphoreId
     );
 
     res.json({
@@ -1418,17 +1438,17 @@ export class IssuanceService {
     req: UploadOfflineCheckinsRequest,
     res: Response
   ): Promise<void> {
-    let signatureClaim;
+    let semaphoreId;
     try {
-      signatureClaim = (await this.verifyCredential(req.checkerProof))
-        .signatureClaim;
+      const verifiedCredential = await this.verifyCredential(req.checkerProof);
+      semaphoreId = verifiedCredential.semaphoreId;
     } catch (_e) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
     await checkInOfflineTickets(
       this.context.dbPool,
-      signatureClaim.identityCommitment,
+      semaphoreId,
       req.checkedOfflineInDevconnectTicketIDs
     );
 

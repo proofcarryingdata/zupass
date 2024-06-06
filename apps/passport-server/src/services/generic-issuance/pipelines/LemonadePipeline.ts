@@ -8,7 +8,6 @@ import {
   isEdDSATicketPCD,
   linkToTicket
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCDClaim } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
@@ -34,7 +33,6 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import {
   PODTicketPCD,
   PODTicketPCDPackage,
@@ -63,7 +61,6 @@ import {
   IBadgeGiftingDB,
   IContactSharingDB
 } from "../../../database/queries/ticketActionDBs";
-import { fetchUserByAuthKey } from "../../../database/queries/users";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
@@ -788,30 +785,8 @@ export class LemonadePipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      let email: string;
-      let semaphoreId: string;
-
-      if (req.pcd.type === PODPCDTypeName) {
-        const pcd = await PODPCDPackage.deserialize(req.pcd.pcd);
-        const authKeyEntry = pcd.claim.entries["authKey"];
-        if (!authKeyEntry) {
-          throw new Error("auth key pcd missing authKey entry");
-        }
-        const authKey = authKeyEntry.value.toString();
-        const user = await fetchUserByAuthKey(this.context.dbPool, authKey);
-        if (!user) {
-          throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);
-        }
-
-        email = user.email.toLowerCase();
-        semaphoreId = user.commitment;
-      } else {
-        const { emailClaim } =
-          await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
-
-        email = emailClaim.emailAddress.toLowerCase();
-        semaphoreId = emailClaim.semaphoreId;
-      }
+      const { email, semaphoreId } =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
       span?.setAttribute("email", email);
       span?.setAttribute("semaphore_id", semaphoreId);
@@ -1362,18 +1337,15 @@ export class LemonadePipeline implements BasePipeline {
         // 1) verify that the requester is who they say they are
         try {
           span?.setAttribute("ticket_id", request.ticketId);
-          const { emailClaim: checkerEmailClaim } =
+          const { email, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
 
-          span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
-          span?.setAttribute(
-            "checked_semaphore_id",
-            checkerEmailClaim.semaphoreId
-          );
+          span?.setAttribute("checker_email", email);
+          span?.setAttribute("checked_semaphore_id", semaphoreId);
 
-          actorEmail = checkerEmailClaim.emailAddress;
+          actorEmail = email;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1548,13 +1520,13 @@ export class LemonadePipeline implements BasePipeline {
       async (span): Promise<PodboxTicketActionResponseValue> => {
         tracePipeline(this.definition);
 
-        let emailClaim: EmailPCDClaim;
+        let email: string;
         try {
-          emailClaim = (
+          const verifiedCredential =
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
-            )
-          ).emailClaim;
+            );
+          email = verifiedCredential.email;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1592,7 +1564,7 @@ export class LemonadePipeline implements BasePipeline {
           const ticketId = request.ticketId;
           const ticket = await this.db.loadById(this.id, ticketId);
           const manualTicket = this.getManualTicketById(ticketId);
-          const scannerEmail = emailClaim.emailAddress;
+          const scannerEmail = email;
           const scaneeEmail = ticket?.email ?? manualTicket?.attendeeEmail;
 
           if (scaneeEmail) {
@@ -1643,10 +1615,7 @@ export class LemonadePipeline implements BasePipeline {
             }
 
             // prevent wrong ppl from issuing wrong badges
-            if (
-              !b.givers?.includes("*") &&
-              !b.givers?.includes(emailClaim.emailAddress)
-            ) {
+            if (!b.givers?.includes("*") && !b.givers?.includes(email)) {
               return false;
             }
 
@@ -1656,7 +1625,7 @@ export class LemonadePipeline implements BasePipeline {
           if (recipientEmail) {
             await this.badgeDB.giveBadges(
               this.id,
-              emailClaim.emailAddress,
+              email,
               recipientEmail,
               allowedBadges
             );
@@ -1692,7 +1661,7 @@ export class LemonadePipeline implements BasePipeline {
             if (ticketAtom.email) {
               await this.badgeDB.giveBadges(
                 this.id,
-                emailClaim.emailAddress,
+                email,
                 ticketAtom.email,
                 autoGrantBadges
               );
@@ -1706,7 +1675,7 @@ export class LemonadePipeline implements BasePipeline {
                 attendeeName: ticketAtom.name,
                 attendeeEmail: ticketAtom.email
               },
-              emailClaim.emailAddress
+              email
             );
           } else {
             // No valid Lemonade atom found, try looking for a manual ticket
@@ -1714,21 +1683,18 @@ export class LemonadePipeline implements BasePipeline {
             if (manualTicket && manualTicket.eventId === request.eventId) {
               await this.badgeDB.giveBadges(
                 this.id,
-                emailClaim.emailAddress,
+                email,
                 manualTicket.attendeeEmail,
                 autoGrantBadges
               );
 
               // Manual ticket found, check in with the DB
-              return this.podboxLocalCheckIn(
-                manualTicket,
-                emailClaim.emailAddress
-              );
+              return this.podboxLocalCheckIn(manualTicket, email);
             } else {
               // Didn't find any matching ticket
               logger(
                 `${LOG_TAG} Could not find ticket ${request.ticketId} ` +
-                  `for event ${request.eventId} for checkin requested by ${emailClaim.emailAddress} ` +
+                  `for event ${request.eventId} for checkin requested by ${email} ` +
                   `on pipeline ${this.id}`
               );
               span?.setAttribute("checkin_error", "InvalidTicket");
