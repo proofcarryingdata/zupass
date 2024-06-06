@@ -1921,37 +1921,40 @@ export class LemonadePipeline implements BasePipeline {
    * A summary of data from the manual check-in table.
    */
   private async getManualCheckinSummary(): Promise<PipelineCheckinSummary[]> {
-    const results: PipelineCheckinSummary[] = [];
-    const checkIns = await this.checkinDB.getByPipelineId(this.id);
-    const checkInsById = _.keyBy(checkIns, (checkIn) => checkIn.ticketId);
+    return traced(LOG_NAME, "getManualCheckinSummary", async (span) => {
+      const results: PipelineCheckinSummary[] = [];
+      const checkIns = await this.checkinDB.getByPipelineId(this.id);
+      const checkInsById = _.keyBy(checkIns, (checkIn) => checkIn.ticketId);
 
-    for (const ticketAtom of await this.db.load(this.id)) {
-      const checkIn = checkInsById[ticketAtom.id];
-      results.push({
-        ticketId: ticketAtom.id,
-        ticketName: this.lemonadeAtomToTicketName(ticketAtom),
-        email: ticketAtom.email,
-        timestamp: checkIn ? checkIn.timestamp.toISOString() : "",
-        checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
-        checkedIn: !!checkIn
-      });
-    }
+      for (const ticketAtom of await this.db.load(this.id)) {
+        const checkIn = checkInsById[ticketAtom.id];
+        results.push({
+          ticketId: ticketAtom.id,
+          ticketName: this.lemonadeAtomToTicketName(ticketAtom),
+          email: ticketAtom.email,
+          timestamp: checkIn ? checkIn.timestamp.toISOString() : "",
+          checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
+          checkedIn: !!checkIn
+        });
+      }
 
-    for (const manualTicket of this.definition.options.manualTickets ?? []) {
-      const checkIn = checkInsById[manualTicket.id];
-      const event = this.getEventById(manualTicket.eventId);
-      const product = this.getTicketTypeById(event, manualTicket.productId);
-      results.push({
-        ticketId: manualTicket.id,
-        ticketName: product.name,
-        email: manualTicket.attendeeEmail,
-        timestamp: checkIn ? checkIn.timestamp.toISOString() : "",
-        checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
-        checkedIn: !!checkIn
-      });
-    }
+      for (const manualTicket of this.definition.options.manualTickets ?? []) {
+        const checkIn = checkInsById[manualTicket.id];
+        const event = this.getEventById(manualTicket.eventId);
+        const product = this.getTicketTypeById(event, manualTicket.productId);
+        results.push({
+          ticketId: manualTicket.id,
+          ticketName: product.name,
+          email: manualTicket.attendeeEmail,
+          timestamp: checkIn ? checkIn.timestamp.toISOString() : "",
+          checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
+          checkedIn: !!checkIn
+        });
+      }
 
-    return results;
+      span?.setAttribute("result_count", results.length);
+      return results;
+    });
   }
 
   private async setManualCheckInState(
@@ -1959,26 +1962,42 @@ export class LemonadePipeline implements BasePipeline {
     checkInState: boolean,
     checkerEmail: string
   ): Promise<PipelineSetManualCheckInStateResponseValue> {
-    const atom = await this.db.loadById(this.id, ticketId);
-    if (!atom) {
-      const manualTicket = (this.definition.options.manualTickets ?? []).find(
-        (m) => m.id === ticketId
-      );
-      if (!manualTicket) {
-        throw new PCDHTTPError(
-          404,
-          `Ticket ${ticketId} does not exist on pipeline ${this.id}`
+    return traced(LOG_NAME, "setManualCheckInState", async (span) => {
+      span?.setAttribute("ticket_id", ticketId);
+      span?.setAttribute("checkin_state", checkInState);
+      span?.setAttribute("checker_email", checkerEmail);
+      const atom = await this.db.loadById(this.id, ticketId);
+      if (!atom) {
+        const manualTicket = (this.definition.options.manualTickets ?? []).find(
+          (m) => m.id === ticketId
         );
+        if (!manualTicket) {
+          throw new PCDHTTPError(
+            404,
+            `Ticket ${ticketId} does not exist on pipeline ${this.id}`
+          );
+        }
       }
-    }
 
-    if (checkInState) {
-      await this.checkinDB.checkIn(this.id, ticketId, new Date(), checkerEmail);
-    } else {
-      await this.checkinDB.deleteCheckIn(this.id, ticketId);
-    }
+      logger(
+        `${LOG_TAG} Setting manual check-in state to ${
+          checkInState ? "checked-in" : "checked-out"
+        } for ticket ${ticketId} on pipeline ${this.id}`
+      );
 
-    return { checkInState };
+      if (checkInState) {
+        await this.checkinDB.checkIn(
+          this.id,
+          ticketId,
+          new Date(),
+          checkerEmail
+        );
+      } else {
+        await this.checkinDB.deleteCheckIn(this.id, ticketId);
+      }
+
+      return { checkInState };
+    });
   }
 
   public static is(p: Pipeline): p is LemonadePipeline {
