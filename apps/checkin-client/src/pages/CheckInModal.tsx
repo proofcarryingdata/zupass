@@ -14,7 +14,7 @@ import {
   requestGenericIssuanceSetManualCheckInState
 } from "@pcd/passport-interface";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { ReactNode, useCallback } from "react";
+import { ReactNode, useCallback, useState } from "react";
 
 export function CheckInModal({
   checkingIn,
@@ -30,6 +30,8 @@ export function CheckInModal({
 
   const client = useQueryClient();
 
+  const [refetching, setRefetching] = useState<boolean>(false);
+
   const mutation = useMutation({
     mutationKey: [checkingIn],
     mutationFn: async ({ ticketId }: { ticketId: string }) => {
@@ -44,10 +46,13 @@ export function CheckInModal({
       if (!result.success) {
         throw new Error("Could not check in ticket");
       }
+
+      setRefetching(true);
     },
     onSuccess: () => {
-      console.log("invalidating");
-      client.invalidateQueries({ queryKey: ["checkIns"] });
+      client
+        .invalidateQueries({ queryKey: ["checkIns"] })
+        .then(() => setRefetching(false));
     }
   });
 
@@ -69,7 +74,7 @@ export function CheckInModal({
           <div>
             <strong>Ticket:</strong> {ticket?.ticketName}
           </div>
-          {mutation.isSuccess && (
+          {mutation.isSuccess && !refetching && (
             <div>
               <strong>Checked in!</strong>
             </div>
@@ -77,9 +82,9 @@ export function CheckInModal({
         </ModalBody>
         <ModalFooter>
           <ButtonGroup>
-            {checkingIn && !mutation.isSuccess && (
+            {checkingIn && (!mutation.isSuccess || refetching) && (
               <Button
-                isLoading={mutation.isPending}
+                isLoading={mutation.isPending || refetching}
                 loadingText="Checking in..."
                 colorScheme="green"
                 onClick={() => mutation.mutate({ ticketId: checkingIn })}
