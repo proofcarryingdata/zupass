@@ -546,7 +546,7 @@ async function finishAccountCreation(
     return; // Don't save the bad identity. User must reset account.
   }
 
-  FeedSubscriptionManager.saveAlternateCredential(authKey);
+  FeedSubscriptionManager.saveAuthKey(authKey);
   const subscriptions = new FeedSubscriptionManager(new NetworkFeedApi());
   addZupassProvider(subscriptions);
   const emailSub = await subscriptions.subscribe(
@@ -764,7 +764,7 @@ async function loadAfterLogin(
     await getPackages()
   );
 
-  FeedSubscriptionManager.saveAlternateCredential(authKey);
+  FeedSubscriptionManager.saveAuthKey(authKey);
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
   const userResponse = await requestUser(

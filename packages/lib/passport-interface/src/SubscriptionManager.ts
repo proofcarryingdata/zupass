@@ -226,23 +226,24 @@ export class FeedSubscriptionManager {
     return actions;
   }
 
-  private static ALTERNATE_CREDENTIAL_KEY = "authKey";
-  public static saveAlternateCredential(credential: string | undefined): void {
-    if (credential === undefined) {
-      localStorage?.removeItem(this.ALTERNATE_CREDENTIAL_KEY);
+  private static AUTH_KEY_KEY = "authKey";
+  public static saveAuthKey(authKey: string | undefined): void {
+    alert(`saving auth key ${authKey}`);
+
+    if (authKey === undefined) {
+      localStorage?.removeItem(this.AUTH_KEY_KEY);
     } else {
-      localStorage?.setItem(this.ALTERNATE_CREDENTIAL_KEY, credential);
+      localStorage?.setItem(this.AUTH_KEY_KEY, authKey);
     }
   }
 
-  public getSavedAlternateCredential(): string | undefined {
+  public getSavedAuthKey(): string | undefined {
     return (
-      localStorage?.getItem(FeedSubscriptionManager.ALTERNATE_CREDENTIAL_KEY) ??
-      undefined
+      localStorage?.getItem(FeedSubscriptionManager.AUTH_KEY_KEY) ?? undefined
     );
   }
 
-  private async getAlternateCredentialForFeed(
+  private async getAuthKeyForFeed(
     sub: Subscription
   ): Promise<string | undefined> {
     const podboxServerUrl = process.env.PASSPORT_SERVER_URL;
@@ -254,7 +255,7 @@ export class FeedSubscriptionManager {
       return undefined;
     }
 
-    return this.getSavedAlternateCredential();
+    return this.getSavedAuthKey();
   }
 
   private async makeAlternateCredentialPCD(
@@ -288,11 +289,10 @@ export class FeedSubscriptionManager {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {
-      const altCredential =
-        await this.getAlternateCredentialForFeed(subscription);
+      const authKey = await this.getAuthKeyForFeed(subscription);
 
-      const pcdCredential: SerializedPCD | undefined = altCredential
-        ? await this.makeAlternateCredentialPCD(altCredential)
+      const pcdCredential: SerializedPCD | undefined = authKey
+        ? await this.makeAlternateCredentialPCD(authKey)
         : await credentialManager.requestCredential({
             signatureType: "sempahore-signature-pcd",
             pcdType: subscription.feed.credentialRequest.pcdType
@@ -300,8 +300,7 @@ export class FeedSubscriptionManager {
 
       const result = await this.api.pollFeed(subscription.providerUrl, {
         feedId: subscription.feed.id,
-        pcd: pcdCredential,
-        altCredential
+        pcd: pcdCredential
       });
 
       if (!result.success) {
