@@ -39,7 +39,8 @@ export type GPCPCDInitArgs = {
 };
 
 /**
- * Record argument type encapsulating a record of POD PCD arguments.
+ * Record argument type encapsulating a record of POD PCD arguments. The POD
+ * names used here must correspond to those used in the proof configuration.
  */
 export type PODPCDRecordArg = RecordArgument<
   PODName,
@@ -47,9 +48,7 @@ export type PODPCDRecordArg = RecordArgument<
 >;
 
 /**
- * Defines the essential parameters required for creating a {@link GPCPCD}. This
- * includes some fixed arguments as well as a variable number of arguments with
- * the `podpcd_` prefix defined by the {@link PODPCDRecordArg} type.
+ * Defines the essential parameters required for creating a {@link GPCPCD}.
  */
 export type GPCPCDArgs = {
   /**

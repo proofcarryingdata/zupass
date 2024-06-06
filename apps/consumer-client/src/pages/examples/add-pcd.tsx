@@ -165,7 +165,7 @@ export default function Page(): JSX.Element {
         </button>
         <br />
         <br />
-        POD content to sign: <br />
+        Zupass card POD example to sign: <br />
         <textarea
           cols={40}
           rows={15}
@@ -658,7 +658,7 @@ async function addGPCPCD(
     },
     pods: {
       value: {
-        podZero: {
+        examplePOD: {
           value: await PODPCDPackage.serialize(podZeroPCD),
           argumentType: ArgumentTypeName.PCD
         },

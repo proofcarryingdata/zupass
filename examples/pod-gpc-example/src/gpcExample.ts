@@ -397,9 +397,6 @@ export async function gpcDemo(): Promise<boolean> {
     identity: semaphoreIdentity
   });
 
-  // So far, the GPCPCD only supports proving about one POD, and always
-  // names it "pod0" so we need a slightly different config.  More flexibility
-  // will be coming soon.
   // The GPCPCD allows us to prove about an arbitrary number of PODs.
   const pcdProofConfig: GPCProofConfig = {
     pods: {

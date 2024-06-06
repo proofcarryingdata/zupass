@@ -17,7 +17,7 @@ import {
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { POD, PODName, PODStringValue, POD_NAME_REGEX } from "@pcd/pod";
+import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
 import { PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
@@ -68,9 +68,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   const pods: Record<PODName, POD> = Object.fromEntries(
     await Promise.all(
       Object.entries(args.pods.value).map(async ([podName, podPCDArg]) => {
-        if (podName.match(POD_NAME_REGEX) === null) {
-          throw new Error(`Invalid POD name ${podName}`);
-        }
+        checkPODName(podName);
 
         if (!podPCDArg.value) {
           throw new Error(`No PODPCD value provided for POD ${podName}`);
@@ -274,39 +272,49 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
       pods: {
         argumentType: ArgumentTypeName.Record,
         description: "Generate a proof for the selected POD object",
-        validate:
-          (podName) =>
-          (podPCD, params): boolean => {
-            if (podPCD.type !== PODPCDTypeName) {
+        validate: (podName, podPCD, params): boolean => {
+          if (podPCD.type !== PODPCDTypeName) {
+            return false;
+          }
+
+          if (params?.proofConfig !== undefined) {
+            const proofConfig = (() => {
+              try {
+                return deserializeGPCProofConfig(params.proofConfig);
+              } catch (e) {
+                if (e instanceof TypeError) {
+                  params.notFoundMessage = e.message;
+                }
+              }
+            })();
+
+            if (proofConfig === undefined) {
               return false;
             }
 
-            if (params?.proofConfig !== undefined) {
-              const proofConfig = deserializeGPCProofConfig(params.proofConfig);
-
-              // POD podName should be present in the config and have all
-              // entries specified there.
-              const podConfig = proofConfig.pods[podName];
-              if (podConfig === undefined) {
-                params.notFoundMessage = `The proof configuration does not contain this POD.`;
-                return false;
-              } else {
-                const entries = Object.keys(podConfig.entries);
-                // Enumerate POD entries
-                const podEntries = podPCD.pod.content.asEntries();
-                // Return true iff all elements of `entries` are keys of `podEntries`
-                return entries.every(
-                  (entryName) => podEntries[entryName] !== undefined
-                );
-              }
+            // POD podName should be present in the config and have all
+            // entries specified there.
+            const podConfig = proofConfig.pods[podName];
+            if (podConfig === undefined) {
+              params.notFoundMessage = `The proof configuration does not contain this POD.`;
+              return false;
+            } else {
+              const entries = Object.keys(podConfig.entries);
+              // Enumerate POD entries
+              const podEntries = podPCD.pod.content.asEntries();
+              // Return true iff all elements of `entries` are keys of `podEntries`
+              return entries.every(
+                (entryName) => podEntries[entryName] !== undefined
+              );
             }
+          }
 
-            // TODO(POD-P3): Use validatorParams to filter by more constraints
-            // not included in config.
-            // E.g. require revealed value to be a specific value, or require
-            // public key to be a specific key.
-            return true;
-          },
+          // TODO(POD-P3): Use validatorParams to filter by more constraints
+          // not included in config.
+          // E.g. require revealed value to be a specific value, or require
+          // public key to be a specific key.
+          return true;
+        },
         validatorParams: {
           notFoundMessage: "You do not have any eligible POD PCDs."
         }

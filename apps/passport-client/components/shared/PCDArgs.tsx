@@ -62,26 +62,43 @@ export function PCDArgs<T extends PCDPackage>({
   // Flatten record arguments (if any), keeping track of the parent argument to
   // properly mutate (cf. `setArg`) as well as inheriting argument fields from
   // the record argument.  Validator parameters are also combined.
-  const flattenedArgs = Object.entries(args).flatMap(([argName, arg]) => {
-    if (isRecordArgument(arg)) {
-      const recordArgPairs = Object.entries(arg.value ?? {});
-      const { value: _v, argumentType: _t, ...recordArgs } = arg;
-      return recordArgPairs.map(([childArgName, childArg]) => [
-        argName,
-        childArgName,
-        {
-          ...recordArgs,
-          ...childArg,
-          validatorParams: {
-            ...(recordArgs.validatorParams ?? {}),
-            ...(childArg.validatorParams ?? {})
-          }
-        }
-      ]);
-    } else {
-      return [[undefined, argName, arg]];
+  type flattenedArgTriple = [
+    string | undefined,
+    string,
+    Argument<PrimitiveArgumentTypeName>
+  ];
+  const flattenedArgs: flattenedArgTriple[] = Object.entries(args).flatMap(
+    ([argName, arg]: [
+      string,
+      Argument<ArgumentTypeName>
+    ]): flattenedArgTriple[] => {
+      if (isRecordArgument(arg)) {
+        const recordArgPairs = Object.entries(arg.value ?? {});
+        const { value: _v, argumentType: _t, ...recordArgs } = arg;
+        return recordArgPairs.map(
+          ([childArgName, childArg]: [
+            string,
+            Argument<PrimitiveArgumentTypeName>
+          ]) => [
+            argName,
+            childArgName,
+            {
+              ...recordArgs,
+              ...childArg,
+              validatorParams: {
+                ...(recordArgs.validatorParams ?? {}),
+                ...(childArg.validatorParams ?? {})
+              }
+            }
+          ]
+        );
+      } else {
+        return [
+          [undefined, argName, arg as Argument<PrimitiveArgumentTypeName>]
+        ];
+      }
     }
-  });
+  );
 
   const [visible, hidden] = _.partition(
     flattenedArgs,
@@ -182,7 +199,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
     <A extends Argument<ArgumentTypeName, unknown>>(value: RawValueType<A>) =>
       (arg.validatorParams &&
         (parentArgName !== undefined
-          ? defaultArg?.validate?.(argName)?.(value, arg.validatorParams)
+          ? defaultArg?.validate?.(argName, value, arg.validatorParams)
           : defaultArg?.validate?.(value, arg.validatorParams))) ??
       true,
     [defaultArg, parentArgName, argName, arg.validatorParams]
