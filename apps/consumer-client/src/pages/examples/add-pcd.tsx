@@ -164,6 +164,8 @@ export default function Page(): JSX.Element {
           add a new POD to Zupass
         </button>
         <br />
+        <br />
+        POD content to sign: <br />
         <textarea
           cols={40}
           rows={15}
@@ -180,6 +182,7 @@ export default function Page(): JSX.Element {
         >
           add a new POD to Zupass
         </button>
+        <br />
         <br />
         GPC Proof config: <br />
         <textarea
