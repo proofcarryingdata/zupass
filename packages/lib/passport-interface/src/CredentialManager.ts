@@ -15,7 +15,6 @@ import { StorageBackedMap } from "./util/StorageBackedMap";
 export interface CredentialManagerAPI {
   canGenerateCredential(req: CredentialRequest): boolean;
   requestCredential(req: CredentialRequest): Promise<SerializedPCD>;
-  prepareCredentials(reqs: CredentialRequest[]): Promise<void>;
 }
 
 export type CredentialCache = Map<string, CacheEntry>;
@@ -62,6 +61,10 @@ export class CredentialManager implements CredentialManagerAPI {
   private readonly identity: Identity;
   private readonly pcds: PCDCollection;
   private readonly cache: CredentialCache;
+  private readonly credentialPromises: Map<
+    CredentialRequest["pcdType"],
+    Promise<SerializedPCD>
+  >;
 
   public constructor(
     identity: Identity,
@@ -71,6 +74,7 @@ export class CredentialManager implements CredentialManagerAPI {
     this.identity = identity;
     this.pcds = pcds;
     this.cache = cache;
+    this.credentialPromises = new Map();
   }
 
   // Can we get a credential containing a given PCD type?
@@ -82,25 +86,6 @@ export class CredentialManager implements CredentialManagerAPI {
     } else {
       // We can't generate credentials containing any other PCD type yet
       return false;
-    }
-  }
-
-  /**
-   * Before doing a parallel fetching of subscriptions, it can be helpful to
-   * prepare the credentials to avoid race conditions.
-   */
-  public async prepareCredentials(reqs: CredentialRequest[]): Promise<void> {
-    for (const req of reqs) {
-      if (!this.getCachedCredential(req.pcdType)) {
-        try {
-          this.setCachedCredential(req, await this.generateCredential(req));
-        } catch (e) {
-          // It can be possible for credential generation to fail if the user
-          // does not have the right kind of PCD. Because we are only
-          // pre-generating credentials here, we don't need to take any action
-          // if a single credential fails to generate.
-        }
-      }
     }
   }
 
@@ -152,10 +137,18 @@ export class CredentialManager implements CredentialManagerAPI {
       return cachedCredential;
     }
 
-    const credential = await this.generateCredential(req);
-    this.setCachedCredential(req, credential);
+    let credentialPromise = this.credentialPromises.get(req.pcdType);
+    if (credentialPromise) {
+      return credentialPromise;
+    }
 
-    return credential;
+    credentialPromise = this.generateCredential(req);
+    credentialPromise.then((credential) => {
+      this.setCachedCredential(req, credential);
+    });
+    this.credentialPromises.set(req.pcdType, credentialPromise);
+
+    return credentialPromise;
   }
 
   /**

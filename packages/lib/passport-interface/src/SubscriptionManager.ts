@@ -187,10 +187,6 @@ export class FeedSubscriptionManager {
   ): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
 
-    await credentialManager.prepareCredentials(
-      this.activeSubscriptions.map((sub) => sub.feed.credentialRequest)
-    );
-
     for (const subscription of this.activeSubscriptions) {
       // Subscriptions which have ceased issuance should not be polled
       if (subscription.ended) {
