@@ -217,7 +217,7 @@ export function HomeScreenImpl(): JSX.Element | null {
               {pcdsInFolder.length > 0 ? (
                 <PCDCardList pcds={pcdsInFolder} />
               ) : loadedIssuedPCDs ? (
-                <NoPcdsContainer>This folder has no PCDs</NoPcdsContainer>
+                <NoPcdsContainer>This folder is empty</NoPcdsContainer>
               ) : (
                 <RippleLoader />
               )}
