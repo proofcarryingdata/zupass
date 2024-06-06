@@ -1,6 +1,7 @@
 pragma circom 2.1.8;
 
 include "circomlib/circuits/gates.circom";
+include "circomlib/circuits/poseidon.circom";
 include "entry.circom";
 include "global.circom";
 include "gpc-util.circom";
@@ -8,6 +9,7 @@ include "list-membership.circom";
 include "multituple.circom";
 include "object.circom";
 include "owner.circom";
+include "virtual-entry.circom";
 
 /**
  * This template is the top level of a prototype GPC proof.  Its template parameters are
@@ -60,7 +62,7 @@ template ProtoPODGPC (
 
     // Signer of each object: EdDSA public key
     signal input objectSignerPubkeyAx[MAX_OBJECTS], objectSignerPubkeyAy[MAX_OBJECTS];
-
+    
     // Signature of each object: EdDSA signaure
     signal input objectSignatureR8x[MAX_OBJECTS], objectSignatureR8y[MAX_OBJECTS], objectSignatureS[MAX_OBJECTS];
 
@@ -73,14 +75,14 @@ template ProtoPODGPC (
             signatureR8x <== objectSignatureR8x[objectIndex],
             signatureR8y <== objectSignatureR8y[objectIndex],
             signatureS <== objectSignatureS[objectIndex]
-        );
+                       );
     }
 
     // TODO(POD-P3): Provide a way to (optionally?) ensure objects are unique
     // (comparing content IDs, or signers, or signatures).
 
     /*
-     * 1+ EntryModule & EntryConstraintModule for each entry.
+     * 1+ EntryModule.
      * Each array corresponds to one input/output for each entry module.  Non-array inputs
      * are packed bits, which will be split between modules within the circuit.
      */
@@ -99,7 +101,7 @@ template ProtoPODGPC (
     // Merkle proof of entry name's membership in the object's Merkle tree.
     signal input entryProofDepth[MAX_ENTRIES], entryProofIndex[MAX_ENTRIES] /*MERKLE_MAX_DEPTH packed bits*/ , entryProofSiblings[MAX_ENTRIES][MERKLE_MAX_DEPTH];
 
-    // Entry value is optionally revealed, or set to -1 if not.
+    // Entry value is optionally revealed by hash, or set to -1 if not.
     signal output entryRevealedValueHash[MAX_ENTRIES];
 
     // Convenience value: entry value hashes are present as first sibling of each entry proof.
@@ -108,11 +110,58 @@ template ProtoPODGPC (
         entryValueHashes[i] <== entryProofSiblings[i][0];
     }
 
-    // Entry can be compared for equality (by hash) to another entry (by index).
-    // This can be disabled by comparing to self: entryEqualToOtherEntryIndex[i] = i
-    signal input entryEqualToOtherEntryByIndex[MAX_ENTRIES];
+    /*
+     * 1 VirtualEntryModule.
+     * Virtual entries are derived from PODs' cryptographic data,
+     * e.g. the signers' public keys.
+     *
+     * This block pipes them in and forms signals to be fed into the
+     * entry constraint, tuple and list membership modules below, as well
+     * as those revealing their hashes where applicable.
+     */
+    
+    // Maximum number of virtual entries.
+    var MAX_VIRTUAL_ENTRIES = MAX_OBJECTS;
 
-    // Modules which scale with number of entries.
+    // Total number of entries in the circuit, virtual or otherwise
+    var TOTAL_ENTRIES = MAX_ENTRIES + MAX_VIRTUAL_ENTRIES;
+
+    // Boolean flags for virtual entry behaviour.
+    signal input virtualEntryIsValueHashRevealed /*MAX_VIRTUAL_ENTRIES packed bits*/;
+
+    // Virtual entry value hashes to be computed by virtual entry module
+    signal virtualEntryValueHashes[MAX_VIRTUAL_ENTRIES];
+
+    // Virtual entry value is optionally revealed by hash, or set to -1 if not.
+    signal output virtualEntryRevealedValueHash[MAX_VIRTUAL_ENTRIES];
+
+    (virtualEntryValueHashes, virtualEntryRevealedValueHash)
+        <== VirtualEntryModule(MAX_OBJECTS)(
+            virtualEntryIsValueHashRevealed,
+            objectSignerPubkeyAx,
+            objectSignerPubkeyAy);
+
+    // Append virtual entry hashes to entry hashes for use in the
+    // entry constraint module.
+    signal totalEntryValueHashes[TOTAL_ENTRIES]
+        <== Append(MAX_ENTRIES, MAX_VIRTUAL_ENTRIES)(
+            entryValueHashes,
+            virtualEntryValueHashes);
+
+    /*
+     * 1 EntryConstraintModule for each entry, virtual or otherwise.
+     */
+    
+    // Entry or virtual entry can be compared for equality (by hash)
+    // to another entry or virtual entry (by index). An index less
+    // than MAX_ENTRIES refers to an entry and an index i in
+    // [MAX_ENTRIES, MAX_ENTRIES + MAX_VIRTUAL_ENTRIES[ refers to the
+    // (i - MAX_ENTRIES)th virtual entry.
+    // This can be disabled by comparing to self:
+    //   entryEqualToOtherEntryIndex[i] = i
+    signal input entryEqualToOtherEntryByIndex[TOTAL_ENTRIES];
+
+    // Modules which scale with number of (non-virtual) entries.
     for (var entryIndex = 0; entryIndex < MAX_ENTRIES; entryIndex++) {
         // Entry module proves that an entry exists within the object's merkle tree.
         entryRevealedValueHash[entryIndex] <== EntryModule(MERKLE_MAX_DEPTH)(
@@ -124,14 +173,17 @@ template ProtoPODGPC (
             proofDepth <== entryProofDepth[entryIndex],
             proofIndex <== entryProofIndex[entryIndex],
             proofSiblings <== entryProofSiblings[entryIndex]
-        );
+                                                                             );
+    }
 
+    // Items which scale with the number of total entries (real and virtual).
+    for (var entryIndex = 0; entryIndex < TOTAL_ENTRIES; entryIndex++) {
         // EntryConstraint module contains constraints applied to each individual entry.
-        EntryConstraintModule(MAX_ENTRIES)(
-            valueHash <== entryProofSiblings[entryIndex][0],
-            entryValueHashes <== entryValueHashes,
+        EntryConstraintModule(TOTAL_ENTRIES)(
+            valueHash <== totalEntryValueHashes[entryIndex],
+            entryValueHashes <== totalEntryValueHashes,
             equalToOtherEntryByIndex <== entryEqualToOtherEntryByIndex[entryIndex]
-        );
+                                                                 );
     }
 
     /*
@@ -156,7 +208,7 @@ template ProtoPODGPC (
         identityCommitment <== InputSelector(MAX_ENTRIES)(entryValue, ownerIsEnabled * ownerEntryIndex),
         externalNullifier <== ownerExternalNullifier,
         isNullfierHashRevealed <== ownerIsNullfierHashRevealed
-    );
+                                                                          );
 
     /*
      * 1 MultiTupleModule with its inputs & outputs.
@@ -166,7 +218,9 @@ template ProtoPODGPC (
     signal input tupleIndices[MAX_TUPLES][TUPLE_ARITY];
 
     // Hashes representing these tuples.
-    signal tupleHashes[MAX_TUPLES] <== MultiTupleModule(MAX_TUPLES, TUPLE_ARITY, MAX_ENTRIES)(entryValueHashes, tupleIndices);
+    signal tupleHashes[MAX_TUPLES] <== MultiTupleModule(MAX_TUPLES, TUPLE_ARITY, TOTAL_ENTRIES)(
+        totalEntryValueHashes,
+        tupleIndices);
     
     /*
      * (MAX_LISTS) ListMembershipModules with their inputs & outputs.
@@ -196,8 +250,8 @@ template ProtoPODGPC (
 
     for (var i = 0; i < MAX_LISTS; i++) {
         membershipCheckResult[i] <== ListMembershipModule(MAX_LIST_ELEMENTS)(
-            MaybeInputSelector(MAX_ENTRIES + MAX_TUPLES)(
-                Append(MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleHashes),
+            MaybeInputSelector(TOTAL_ENTRIES + MAX_TUPLES)(
+                Append(TOTAL_ENTRIES, MAX_TUPLES)(totalEntryValueHashes, tupleHashes),
                 listComparisonValueIndex[i]),
             listValidValues[i]);
 

@@ -9,3 +9,4 @@ export * from "./proto-pod-gpc";
 export * from "./tuple";
 export * from "./types";
 export * from "./util";
+export * from "./virtual-entry";
