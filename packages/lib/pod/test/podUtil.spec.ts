@@ -59,7 +59,7 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(privateKey, "base64url") as unknown as string,
+      Buffer.from(privateKey, "base64") as unknown as string,
       "=V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs",
       "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs====="
     ];
@@ -94,7 +94,7 @@ describe("podUtil input checkers should work", async function () {
       undefined as unknown as string,
       123 as unknown as string,
       123n as unknown as string,
-      Buffer.from(expectedPublicKey, "base64url") as unknown as string,
+      Buffer.from(expectedPublicKey, "base64") as unknown as string,
       "=V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs",
       "V5QnFjAO3EQu7inyDWcdx7wSo1h88Lh5qPUGHjgxbrs====="
     ];
