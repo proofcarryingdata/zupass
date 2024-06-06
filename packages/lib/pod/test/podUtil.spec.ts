@@ -2,6 +2,7 @@ import { expect } from "chai";
 import "mocha";
 import {
   EDDSA_PUBKEY_TYPE_STRING,
+  PODEntries,
   PODName,
   PODValue,
   POD_CRYPTOGRAPHIC_MAX,
@@ -465,7 +466,25 @@ describe("podUtil serialization should work", async function () {
   });
 
   it("Simplified serialization should round-trip samples with compatible types", function () {
-    for (const testEntries of [sampleEntries1, sampleEntries2]) {
+    const trickyEntries: PODEntries = {
+      url: { type: "string", value: "https://zupass.org/pod" },
+      valid_prefix: { type: "string", value: "pod_string:foo" },
+      invalid_prefix: { type: "string", value: "pod_wrong:foo" },
+      pubkey_hex: {
+        type: "eddsa_pubkey",
+        value:
+          "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+      },
+      pubkey_base64: {
+        type: "eddsa_pubkey",
+        value: "zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+      },
+
+      small_crypto: { type: "cryptographic", value: 3n },
+      large_int: { type: "int", value: POD_INT_MAX }
+    };
+
+    for (const testEntries of [sampleEntries1, sampleEntries2, trickyEntries]) {
       const serialized = podEntriesToSimplifiedJSON(testEntries);
       const deserialized = podEntriesFromSimplifiedJSON(serialized);
 
@@ -492,13 +511,14 @@ describe("podUtil serialization should work", async function () {
       [
         EDDSA_PUBKEY_TYPE_STRING,
         "f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585",
-        `${EDDSA_PUBKEY_TYPE_STRING}:f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585`
+        `pod_${EDDSA_PUBKEY_TYPE_STRING}:f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585`
       ],
       ["string", "hello", "hello"],
       ["string", ":keyword", ":keyword"],
       ["string", "!!:hello", "!!:hello"],
-      ["string", "blah:blah", "string:blah:blah"],
-      ["string", "blah:blah:blah:blah", "string:blah:blah:blah:blah"]
+      ["string", "blah:blah", "blah:blah"],
+      ["string", "blah:blah:blah:blah", "blah:blah:blah:blah"],
+      ["string", "pod_blah:blah", "pod_string:pod_blah:blah"]
     ].map((triple) => {
       return {
         type: triple[0] as POD_VALUE_STRING_TYPE_IDENTIFIER,
@@ -513,11 +533,11 @@ describe("podUtil serialization should work", async function () {
   });
 
   it("Simplified deserialization of string-encoded types should reject invalid inputs", function () {
-    expect(() => podValueFromRawValue("strang:hello")).to.throw(Error);
-    expect(() => podValueFromRawValue("strin:hello")).to.throw(Error);
+    expect(() => podValueFromRawValue("pod_strang:hello")).to.throw(Error);
+    expect(() => podValueFromRawValue("pod_strin:hello")).to.throw(Error);
     expect(() =>
       podValueFromRawValue(
-        "pk:f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f"
+        "pod_pk:f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f"
       )
     ).to.throw(Error);
   });

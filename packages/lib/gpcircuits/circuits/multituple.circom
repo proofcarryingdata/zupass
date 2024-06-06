@@ -1,7 +1,5 @@
 pragma circom 2.1.8;
 
-include "circomlib/circuits/poseidon.circom"; // Poseidon hash
-include "gpc-util.circom"; // input selector
 include "tuple.circom"; // tuple hasher
 
 /**
