@@ -101,7 +101,7 @@ template ProtoPODGPC (
     // Merkle proof of entry name's membership in the object's Merkle tree.
     signal input entryProofDepth[MAX_ENTRIES], entryProofIndex[MAX_ENTRIES] /*MERKLE_MAX_DEPTH packed bits*/ , entryProofSiblings[MAX_ENTRIES][MERKLE_MAX_DEPTH];
 
-    // Entry value is optionally revealed, or set to -1 if not.
+    // Entry value is optionally revealed by hash, or set to -1 if not.
     signal output entryRevealedValueHash[MAX_ENTRIES];
 
     // Convenience value: entry value hashes are present as first sibling of each entry proof.
@@ -132,7 +132,7 @@ template ProtoPODGPC (
     // Virtual entry value hashes to be computed by virtual entry module
     signal virtualEntryValueHashes[MAX_VIRTUAL_ENTRIES];
 
-    // Virtual entry value is optionally revealed, or set to -1 if not.
+    // Virtual entry value is optionally revealed by hash, or set to -1 if not.
     signal output virtualEntryRevealedValueHash[MAX_VIRTUAL_ENTRIES];
 
     (virtualEntryValueHashes, virtualEntryRevealedValueHash)
