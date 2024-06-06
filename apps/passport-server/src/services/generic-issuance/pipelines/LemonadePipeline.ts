@@ -23,7 +23,7 @@ import {
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
-  PipelineSetManualCheckInStateResponse,
+  PipelineSetManualCheckInStateResponseValue,
   PipelineType,
   PodboxTicketActionError,
   PodboxTicketActionPreCheckRequest,
@@ -1958,7 +1958,7 @@ export class LemonadePipeline implements BasePipeline {
     ticketId: string,
     checkInState: boolean,
     checkerEmail: string
-  ): Promise<PipelineSetManualCheckInStateResponse> {
+  ): Promise<PipelineSetManualCheckInStateResponseValue> {
     const atom = await this.db.loadById(this.id, ticketId);
     if (!atom) {
       const manualTicket = (this.definition.options.manualTickets ?? []).find(

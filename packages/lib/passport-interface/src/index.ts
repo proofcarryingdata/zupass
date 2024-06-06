@@ -46,6 +46,7 @@ export * from "./api/requestGenericIssuanceHistoricalSemaphoreGroup";
 export * from "./api/requestGenericIssuanceSelf";
 export * from "./api/requestGenericIssuanceSemaphoreGroup";
 export * from "./api/requestGenericIssuanceSemaphoreGroupRoot";
+export * from "./api/requestGenericIssuanceSetManualCheckInState";
 export * from "./api/requestGenericIssuanceUpsertPipeline";
 export * from "./api/requestGenericIssuanceValidSemaphoreGroup";
 export * from "./api/requestIssuanceServiceEnabled";

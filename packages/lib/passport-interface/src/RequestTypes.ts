@@ -497,7 +497,7 @@ export interface PipelineSetManualCheckInStateRequest {
   checkInState: boolean;
 }
 
-export interface PipelineSetManualCheckInStateResponse {
+export interface PipelineSetManualCheckInStateResponseValue {
   checkInState: boolean;
 }
 

@@ -16,7 +16,7 @@ import {
   PipelineInfoRequest,
   PipelineInfoResponseValue,
   PipelineSetManualCheckInStateRequest,
-  PipelineSetManualCheckInStateResponse,
+  PipelineSetManualCheckInStateResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -258,7 +258,7 @@ export function initGenericIssuanceRoutes(
         reqBody.checkInState
       );
 
-      res.json(result satisfies PipelineSetManualCheckInStateResponse);
+      res.json(result satisfies PipelineSetManualCheckInStateResponseValue);
     }
   );
 

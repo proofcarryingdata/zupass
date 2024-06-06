@@ -13,7 +13,7 @@ import {
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
-  PipelineSetManualCheckInStateResponse,
+  PipelineSetManualCheckInStateResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -515,7 +515,7 @@ export class PipelineSubservice {
     pipelineId: string,
     ticketId: string,
     checkInState: boolean
-  ): Promise<PipelineSetManualCheckInStateResponse> {
+  ): Promise<PipelineSetManualCheckInStateResponseValue> {
     return this.pipelineAPISubservice.handleSetManualCheckInState(
       pipelineId,
       ticketId,

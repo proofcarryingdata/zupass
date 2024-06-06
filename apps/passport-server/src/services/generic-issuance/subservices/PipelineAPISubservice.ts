@@ -10,7 +10,7 @@ import {
   PipelineGetManualCheckInsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
-  PipelineSetManualCheckInStateResponse,
+  PipelineSetManualCheckInStateResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -530,7 +530,7 @@ export class PipelineAPISubservice {
     pipelineId: string,
     ticketId: string,
     checkInState: boolean
-  ): Promise<PipelineSetManualCheckInStateResponse> {
+  ): Promise<PipelineSetManualCheckInStateResponseValue> {
     return traced(SERVICE_NAME, "handleSetManualCheckInState", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
       const pipelineSlot =

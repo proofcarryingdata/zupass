@@ -56,7 +56,16 @@ const CheckInTable = React.memo(function ({
       accessorKey: "checkedIn",
       cell: (props): JSX.Element => {
         if (props.row.original.checkedIn) {
-          return <>✅</>;
+          return (
+            <Button
+              disabled={true}
+              colorScheme="orange"
+              style={{ pointerEvents: "none" }}
+              size="sm"
+            >
+              Checked In
+            </Button>
+          );
         } else {
           return (
             <Button
@@ -197,7 +206,7 @@ async function getCheckIns(): Promise<PipelineCheckinSummary[]> {
 }
 
 export function CheckinListPage(): ReactNode {
-  const query = useQuery({ queryKey: ["todos"], queryFn: getCheckIns });
+  const query = useQuery({ queryKey: ["checkIns"], queryFn: getCheckIns });
 
   const [checkingIn, setCheckingIn] = useState<string | undefined>(undefined);
 

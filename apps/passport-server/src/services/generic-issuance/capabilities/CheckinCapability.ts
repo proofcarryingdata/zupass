@@ -1,7 +1,7 @@
 import {
   ActionConfigResponseValue,
   PipelineCheckinSummary,
-  PipelineSetManualCheckInStateResponse,
+  PipelineSetManualCheckInStateResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue
@@ -48,7 +48,7 @@ export interface CheckinCapability extends BasePipelineCapability {
     ticketId: string,
     checkInState: boolean,
     checkerEmail: string
-  ): Promise<PipelineSetManualCheckInStateResponse>;
+  ): Promise<PipelineSetManualCheckInStateResponseValue>;
   getManualCheckinSummary(): Promise<PipelineCheckinSummary[]>;
 }
 
