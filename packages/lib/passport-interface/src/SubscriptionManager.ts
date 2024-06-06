@@ -176,7 +176,7 @@ export class FeedSubscriptionManager {
    */
   public async pollSubscriptions(
     credentialManager: CredentialManagerAPI,
-    onFinish: (actions: SubscriptionActions) => Promise<void>
+    onFinish?: (actions: SubscriptionActions) => Promise<void>
   ): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
 

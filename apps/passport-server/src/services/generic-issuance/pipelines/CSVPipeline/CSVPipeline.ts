@@ -12,7 +12,6 @@ import {
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
-import { sleep } from "@pcd/util";
 import { parse } from "csv-parse";
 import { v4 as uuid } from "uuid";
 import {
@@ -138,9 +137,6 @@ export class CSVPipeline implements BasePipeline {
         pcds.length,
         "PCDs"
       );
-
-      // TODO: Remove
-      await sleep(10_000);
 
       return {
         actions: [
