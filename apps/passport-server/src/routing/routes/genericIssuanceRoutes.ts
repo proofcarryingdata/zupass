@@ -225,6 +225,9 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
       if (pipelineID !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
+        logger(
+          `[ROUTES] Received invalid manual checkin list request for pipeline ${pipelineID}`
+        );
         throw new PCDHTTPError(404);
       }
 
@@ -248,6 +251,9 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
       if (pipelineID !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
+        logger(
+          `[ROUTES] Received invalid manual checkin update request for pipeline ${pipelineID}`
+        );
         throw new PCDHTTPError(404);
       }
 
