@@ -399,7 +399,7 @@ export type RawValueType<T extends Argument<any, unknown>> =
  */
 export type ArgumentValidator<T extends Argument<any, unknown>> =
   T extends RecordArgument<infer S, infer U>
-  ?  (s: S, value: RawValueType<U>, params: U["validatorParams"]) => boolean
+    ? (s: S, value: RawValueType<U>, params: U["validatorParams"]) => boolean
     : (value: RawValueType<T>, params: T["validatorParams"]) => boolean;
 
 /**

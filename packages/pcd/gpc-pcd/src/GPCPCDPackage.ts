@@ -278,7 +278,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
           }
 
           if (params?.proofConfig !== undefined) {
-            const proofConfig = (() => {
+            const proofConfig = ((): GPCProofConfig | undefined => {
               try {
                 return deserializeGPCProofConfig(params.proofConfig);
               } catch (e) {
