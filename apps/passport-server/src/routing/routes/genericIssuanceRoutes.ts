@@ -224,6 +224,10 @@ export function initGenericIssuanceRoutes(
     async (req, res) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
+      if (pipelineID !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
+        throw new PCDHTTPError(404);
+      }
+
       if (
         checkUrlParam(req, "key") !== process.env.MANUAL_CHECKIN_API_KEY ||
         !process.env.MANUAL_CHECKIN_API_KEY
@@ -243,6 +247,9 @@ export function initGenericIssuanceRoutes(
     async (req, res) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
+      if (pipelineID !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
+        throw new PCDHTTPError(404);
+      }
 
       if (
         checkUrlParam(req, "key") !== process.env.MANUAL_CHECKIN_API_KEY ||
