@@ -399,11 +399,11 @@ export type RawValueType<T extends Argument<any, unknown>> =
  * mapping from record keys to such predicates for the record value type.
  */
 export type ArgumentValidator<T extends Argument<any, unknown>> =
-  T extends RecordArgument<infer S, infer U, infer V>
-    ? <W extends U["validatorParams"] & V>(
+  T extends RecordArgument<infer S, infer U>
+    ? (
         s: S,
         value: RawValueType<U>,
-        params: W
+        params: T["validatorParams"] & U["validatorParams"]
       ) => boolean
     : (value: RawValueType<T>, params: T["validatorParams"]) => boolean;
 
