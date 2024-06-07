@@ -1,12 +1,12 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { ObjPCDPackage, ObjPCDTypeName } from "@pcd/obj-pcd";
 import {
   Credential,
   VerificationError,
   VerifiedCredential,
   verifyCredential
 } from "@pcd/passport-interface";
-import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { LRUCache } from "lru-cache";
 import { Pool } from "postgres-pool";
 import { fetchUserByAuthKey } from "../../../database/queries/users";
@@ -34,19 +34,19 @@ export class CredentialSubservice {
    * Verify a credential, ideally using a cached verification.
    */
   public verify(credential: Credential): Promise<VerifiedCredential> {
-    if (credential.type === PODPCDTypeName) {
+    if (credential.type === ObjPCDTypeName) {
       return (async (): Promise<VerifiedCredential> => {
         if (!this.dbPool) {
           throw new Error(
             "missing database pool - can't authenticate authKey PCD"
           );
         }
-        const pcd = await PODPCDPackage.deserialize(credential.pcd);
-        const authKeyEntry = pcd.claim.entries["authKey"];
-        if (!authKeyEntry) {
+        const pcd = await ObjPCDPackage.deserialize(credential.pcd);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const authKey = (pcd.proof.obj as any)["authKey"];
+        if (!authKey) {
           throw new Error("auth key pcd missing authKey entry");
         }
-        const authKey = authKeyEntry.value.toString();
         const user = await fetchUserByAuthKey(this.dbPool, authKey);
         if (!user) {
           throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);

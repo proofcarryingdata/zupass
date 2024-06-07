@@ -12,6 +12,7 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
+import { ObjPCDPackage, ObjPCDTypeName } from "@pcd/obj-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   CheckTicketByIdRequest,
@@ -56,7 +57,6 @@ import {
   joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import {
   SemaphoreSignaturePCD,
@@ -625,13 +625,13 @@ export class IssuanceService {
     if (cached) {
       return cached;
     } else {
-      if (credential.type === PODPCDTypeName) {
-        const pcd = await PODPCDPackage.deserialize(credential.pcd);
-        const authKeyEntry = pcd.claim.entries["authKey"];
-        if (!authKeyEntry) {
+      if (credential.type === ObjPCDTypeName) {
+        const pcd = await ObjPCDPackage.deserialize(credential.pcd);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const authKey = (pcd.proof.obj as any)["authKey"];
+        if (!authKey) {
           throw new Error("auth key pcd missing authKey entry");
         }
-        const authKey = authKeyEntry.value.toString();
         const user = await fetchUserByAuthKey(this.context.dbPool, authKey);
         if (!user) {
           throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);

@@ -1,11 +1,11 @@
-import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import { Emitter } from "@pcd/emitter";
+import { ObjPCD, ObjPCDPackage } from "@pcd/obj-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  matchActionToPermission,
   PCDAction,
   PCDCollection,
-  PCDPermission
+  PCDPermission,
+  matchActionToPermission
 } from "@pcd/pcd-collection";
 import {
   ArgsOf,
@@ -13,8 +13,6 @@ import {
   PCDTypeNameOf,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { encodePrivateKey, POD } from "@pcd/pod";
-import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { isFulfilled, randomUUID } from "@pcd/util";
 import stringify from "fast-json-stable-stringify";
 import { v4 as uuid } from "uuid";
@@ -259,18 +257,9 @@ export class FeedSubscriptionManager {
   private async makeAlternateCredentialPCD(
     authKey: string
   ): Promise<SerializedPCD> {
-    const privateKey = newEdDSAPrivateKey();
-    const encodedPkey = encodePrivateKey(Buffer.from(privateKey, "hex"));
-    const pod = POD.sign(
-      {
-        authKey: {
-          type: "string",
-          value: authKey
-        }
-      },
-      encodedPkey
+    return await ObjPCDPackage.serialize(
+      new ObjPCD(randomUUID(), {}, { obj: { authKey } })
     );
-    return await PODPCDPackage.serialize(new PODPCD(randomUUID(), pod));
   }
 
   /**

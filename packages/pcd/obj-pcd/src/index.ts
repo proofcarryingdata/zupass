@@ -1,3 +1,2 @@
-export default function (): void {
-  // Package typescript goes here
-}
+export * from "./ObjPCD";
+export * from "./ObjPCDPackage";
