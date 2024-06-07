@@ -46,6 +46,7 @@
     "@pcd/eddsa-ticket-pcd": "0.6.0",
     "@pcd/email-pcd": "^0.6.0",
     "@pcd/emitter": "0.5.0",
+    "@pcd/obj-pcd": "0.0.1",
     "@pcd/passport-crypto": "0.11.0",
     "@pcd/pcd-collection": "0.11.0",
     "@pcd/pcd-types": "0.11.0",
