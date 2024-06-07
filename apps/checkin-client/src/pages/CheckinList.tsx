@@ -1,7 +1,12 @@
 import {
+  Alert,
+  AlertDescription,
+  AlertIcon,
+  AlertTitle,
   Button,
   Input,
   Spacer,
+  Spinner,
   Table,
   Tbody,
   Td,
@@ -219,6 +224,32 @@ export function CheckinListPage(): ReactNode {
     <main>
       <Content>
         <H1>Zupass Check-in</H1>
+
+        {query.isFetching && (
+          <>
+            <Spacer h={8} />
+            <Spinner />
+          </>
+        )}
+        {query.isError && (
+          <>
+            <Spacer h={8} />
+            <Alert status="error">
+              <AlertIcon />
+              <AlertTitle>Error fetching check-in data.</AlertTitle>
+              <AlertDescription>
+                Could not fetch check-in data. Please{" "}
+                <span
+                  onClick={() => query.refetch()}
+                  style={{ cursor: "pointer", textDecoration: "underline" }}
+                >
+                  click here
+                </span>{" "}
+                to try again.
+              </AlertDescription>
+            </Alert>
+          </>
+        )}
 
         {query.isSuccess && (
           <>

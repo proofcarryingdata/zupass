@@ -10,14 +10,16 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { CheckinListPage } from "./pages/CheckinList";
 
-const { Button, Modal, Table, Input } = chakraTheme.components;
+const { Button, Modal, Table, Input, Alert, Spinner } = chakraTheme.components;
 
 const theme = extendBaseTheme({
   components: {
     Button,
     Modal,
     Table,
-    Input
+    Input,
+    Alert,
+    Spinner
   }
 });
 
