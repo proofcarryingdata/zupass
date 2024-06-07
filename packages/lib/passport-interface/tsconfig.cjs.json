@@ -23,6 +23,9 @@
       "path": "../emitter/tsconfig.cjs.json"
     },
     {
+      "path": "../../pcd/obj-pcd/tsconfig.cjs.json"
+    },
+    {
       "path": "../passport-crypto/tsconfig.cjs.json"
     },
     {
