@@ -1966,5 +1966,5 @@ export interface PretixAtom extends PipelineAtom {
 
 export function isPretixAtom(atom: PipelineAtom): atom is PretixAtom {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (atom as any).secret !== undefined;
+  return (atom as any).orderCode !== undefined;
 }
