@@ -18,7 +18,7 @@ import {
   SerializedPCD
 } from "@pcd/pcd-types";
 import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
-import { PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
+import { PODPCD, PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import { v4 as uuid } from "uuid";
@@ -28,7 +28,8 @@ import {
   GPCPCDClaim,
   GPCPCDInitArgs,
   GPCPCDProof,
-  GPCPCDTypeName
+  GPCPCDTypeName,
+  PODPCDArgValidatorParams
 } from "./GPCPCD";
 
 let savedInitArgs: GPCPCDInitArgs | undefined = undefined;
@@ -272,24 +273,25 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
       pods: {
         argumentType: ArgumentTypeName.Record,
         description: "Generate a proof for the selected POD object",
-        validate: (podName, podPCD, params): boolean => {
+        validate: (
+          podName: PODName,
+          podPCD: PODPCD,
+          params: PODPCDArgValidatorParams | undefined
+        ): boolean => {
           if (podPCD.type !== PODPCDTypeName) {
             return false;
           }
 
           if (params?.proofConfig !== undefined) {
-            const proofConfig = ((): GPCProofConfig | undefined => {
-              try {
-                return deserializeGPCProofConfig(params.proofConfig);
-              } catch (e) {
-                if (e instanceof TypeError) {
-                  params.notFoundMessage = e.message;
-                }
+            let proofConfig: GPCProofConfig;
+            try {
+              proofConfig = deserializeGPCProofConfig(params.proofConfig);
+            } catch (e) {
+              if (e instanceof TypeError) {
+                params.notFoundMessage = e.message;
+                return false;
               }
-            })();
-
-            if (proofConfig === undefined) {
-              return false;
+              throw e;
             }
 
             // POD podName should be present in the config and have all

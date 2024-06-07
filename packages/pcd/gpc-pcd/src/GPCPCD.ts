@@ -44,8 +44,17 @@ export type GPCPCDInitArgs = {
  */
 export type PODPCDRecordArg = RecordArgument<
   PODName,
-  PCDArgument<PODPCD, { notFoundMessage?: string; proofConfig?: string }>
+  PCDArgument<PODPCD, PODPCDArgValidatorParams>,
+  PODPCDArgValidatorParams
 >;
+
+/**
+ * Validator parameter type for POD PCD arguments.
+ */
+export type PODPCDArgValidatorParams = {
+  notFoundMessage?: string;
+  proofConfig?: string;
+};
 
 /**
  * Defines the essential parameters required for creating a {@link GPCPCD}.
