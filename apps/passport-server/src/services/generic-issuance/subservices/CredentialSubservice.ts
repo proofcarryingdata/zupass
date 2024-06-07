@@ -102,7 +102,7 @@ export class CredentialSubservice {
    */
   private isZupassPublicKey(eddsaPubKey: EdDSAPublicKey | undefined): boolean {
     return (
-      !eddsaPubKey || isEqualEdDSAPublicKey(eddsaPubKey, this.zupassPublicKey)
+      !!eddsaPubKey && isEqualEdDSAPublicKey(eddsaPubKey, this.zupassPublicKey)
     );
   }
 }
