@@ -19,14 +19,14 @@ import {
 // of the package, or only a subset.
 
 /**
- * Private keys are 32 bytes (any arbitrary bytes), represented as hex,
- * Base64, or URL-safe Base64.  Base64 padding is optional.
+ * Private keys are 32 bytes (any arbitrary bytes), represented as Base64 or
+ * hexadecimal
  *
  * This regex matches any supported format, with match groups usable to
  * determine the format, in the order above.
  */
 export const PRIVATE_KEY_REGEX = new RegExp(
-  /^(?:([0-9A-Fa-f]{64})|([A-Za-z0-9+/]{43}=?)|([A-Za-z0-9_-]{43}=?))$/
+  /^(?:([A-Za-z0-9+/]{43}=?)|([0-9A-Fa-f]{64}))$/
 );
 
 /**
@@ -34,20 +34,19 @@ export const PRIVATE_KEY_REGEX = new RegExp(
  * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
 export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
-  { index: 3, encoding: "base64url" },
-  { index: 2, encoding: "base64" },
-  { index: 1, encoding: "hex" }
+  { index: 1, encoding: "base64" },
+  { index: 2, encoding: "hex" }
 ];
 
 /**
- * Public keys are 32 bytes (a packed elliptic curve point), represented as hex,
- * Base64, or URL-safe Base64.  Base64 padding is optional.
+ * Public keys are 32 bytes (a packed elliptic curve point), represented as
+ * Base64 or hexadecimal.  Base64 padding is optional.
  *
  * This regex matches any supported format, with match groups usable to
  * determine the format, in the order above.
  */
 export const PUBLIC_KEY_REGEX = new RegExp(
-  /^(?:([0-9A-Fa-f]{64})|([A-Za-z0-9+/]{43}=?)|([A-Za-z0-9_-]{43}=?))$/
+  /^(?:([A-Za-z0-9+/]{43}=?)|([0-9A-Fa-f]{64}))$/
 );
 
 /**
@@ -55,20 +54,19 @@ export const PUBLIC_KEY_REGEX = new RegExp(
  * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
 export const PUBLIC_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
-  { index: 3, encoding: "base64url" },
-  { index: 2, encoding: "base64" },
-  { index: 1, encoding: "hex" }
+  { index: 1, encoding: "base64" },
+  { index: 2, encoding: "hex" }
 ];
 
 /**
  * Signatures are 64 bytes (one packed elliptic curve point, one scalar),
- * represented as hex, Base64, or URL-safe Base64.  Base64 padding is optional.
+ * represented as Base64 or hexadecimal.  Base64 padding is optional.
  *
  * This regex matches any supported format, with match groups usable to
  * determine the format, in the order above.
  */
 export const SIGNATURE_REGEX = new RegExp(
-  /^(?:([0-9A-Fa-f]{128})|([A-Za-z0-9+/]{86}(?:==)?)|([A-Za-z0-9_-]{86}(?:==)?))$/
+  /^(?:([A-Za-z0-9+/]{86}(?:==)?)|([0-9A-Fa-f]{128}))$/
 );
 
 /**
@@ -76,9 +74,8 @@ export const SIGNATURE_REGEX = new RegExp(
  * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
 export const SIGNATURE_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
-  { index: 3, encoding: "base64url" },
-  { index: 2, encoding: "base64" },
-  { index: 1, encoding: "hex" }
+  { index: 1, encoding: "base64" },
+  { index: 2, encoding: "hex" }
 ];
 
 /**
@@ -565,7 +562,7 @@ export function applyOrMap<A, B>(f: (a: A) => B, input: A | A[]): B | B[] {
  * Supported encodings for cryptographic bytes (keys, signatures) used in
  * this library.
  */
-export type CryptoBytesEncoding = "hex" | "base64" | "base64url";
+export type CryptoBytesEncoding = "hex" | "base64";
 
 /**
  * Description of the match groups in a regex used by {@link decodeBytesAuto}.
@@ -583,14 +580,37 @@ export type CryptoBytesEncodingGroups = {
  *
  * @param bytes raw bytes to encoded
  * @param encoding one of the supported encoding specifiers.  Default is
- *   `base64url` which is the shortest.
+ *   `base64`, and padding is always stripped from base64 encoded output.
  * @returns a string encoding of the bytes
  */
 export function encodeBytes(
   bytes: Uint8Array,
-  encoding: CryptoBytesEncoding = "base64url"
+  encoding: CryptoBytesEncoding = "base64"
 ): string {
-  return Buffer.from(bytes).toString(encoding);
+  const encoded = Buffer.from(bytes).toString(encoding);
+  if (encoding === "base64") {
+    return stripBase64Padding(encoded);
+  }
+  return encoded;
+}
+
+/**
+ * Strips the padding `=` characters from a Base64 encoded string.
+ * The input is assumed to be valid Base64, meaning there should be 0, 1, or 2
+ * padding characters.  If there is no padding, this function returns the input
+ * unmodified.
+ *
+ * @param encoded Base64 encoded string
+ * @returns the same string without padding
+ */
+function stripBase64Padding(encoded: string): string {
+  if (encoded.endsWith("==")) {
+    return encoded.slice(0, encoded.length - 2);
+  } else if (encoded.endsWith("=")) {
+    return encoded.slice(0, encoded.length - 1);
+  } else {
+    return encoded;
+  }
 }
 
 /**
@@ -600,14 +620,15 @@ export function encodeBytes(
  *
  * @param encoded the encoded string
  * @param encoding one of the supported encoding specifiers.  Default is
- *   `base64url` which is the shortest.
+ *   `base64`, and padding is always stripped from base64 encoded output.
  * @returns decoded bytes, truncated if the input does not properly match the
  *   encoding format
  */
 export function decodeBytesRaw(
   encoded: string,
-  encoding: CryptoBytesEncoding = "base64url"
+  encoding: CryptoBytesEncoding = "base64"
 ): Buffer {
+  // Buffer's base64 decoding can accept padded or unpadded strings.
   return Buffer.from(encoded, encoding);
 }
 

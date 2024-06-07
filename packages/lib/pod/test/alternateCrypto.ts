@@ -10,6 +10,7 @@ import {
   buildEddsa as clBuildEddsa
 } from "circomlibjs";
 import { CryptoBytesEncoding } from "../src";
+import { stripB64 } from "./common";
 
 /**
  * This class contains alternate implementations of podCrypto helpers using
@@ -70,14 +71,16 @@ export class AltCryptCircomlibjs {
       this.clEddsa.F.fromObject(rawPublicKey[0]),
       this.clEddsa.F.fromObject(rawPublicKey[1])
     ] satisfies CLPoint;
-    return Buffer.from(this.clEddsa.babyJub.packPoint(clPublicKey)).toString(
-      "base64url"
+    return stripB64(
+      Buffer.from(this.clEddsa.babyJub.packPoint(clPublicKey)).toString(
+        "base64"
+      )
     );
   }
 
   public decodePublicKey(
     publicKey: string,
-    encoding: CryptoBytesEncoding = "base64url"
+    encoding: CryptoBytesEncoding = "base64"
   ): Point<bigint> {
     const packedPublicKey = Buffer.from(publicKey, encoding);
     const clPublicKey = this.clEddsa.babyJub.unpackPoint(packedPublicKey);
@@ -100,14 +103,14 @@ export class AltCryptCircomlibjs {
       // circomlibjs wants S (scalar) as bigint in standard form
       S: rawSignature.S
     } satisfies CLSignature;
-    return Buffer.from(this.clEddsa.packSignature(clSignature)).toString(
-      "base64url"
+    return stripB64(
+      Buffer.from(this.clEddsa.packSignature(clSignature)).toString("base64")
     );
   }
 
   public decodeSignature(
     encodedSignature: string,
-    encoding: CryptoBytesEncoding = "base64url"
+    encoding: CryptoBytesEncoding = "base64"
   ): Signature<bigint> {
     const clSignature = this.clEddsa.unpackSignature(
       Buffer.from(encodedSignature, encoding)
@@ -130,8 +133,8 @@ export class AltCryptCircomlibjs {
   ): { signature: string; publicKey: string } {
     expect(privateKey).to.have.length(43);
 
-    // Private key is interpreted as 32-bytes encoded in base64url.
-    const altPrivateKey = Buffer.from(privateKey, "base64url");
+    // Private key is interpreted as 32-bytes encoded in base64.
+    const altPrivateKey = Buffer.from(privateKey, "base64");
     expect(altPrivateKey).to.have.length(32);
 
     // EdDSAPCD has an extra step where it hashes a list of bigints (the PCD's
@@ -144,20 +147,24 @@ export class AltCryptCircomlibjs {
     // Private key is a single EC point, which can be packed into a single
     // field element fitting into 32 bytes (64 hex digits).  Packing converts
     // the value from Montgomery to standard form.
-    const publicKey = Buffer.from(
-      this.clEddsa.babyJub.packPoint(this.clEddsa.prv2pub(altPrivateKey))
-    ).toString("base64url");
+    const publicKey = stripB64(
+      Buffer.from(
+        this.clEddsa.babyJub.packPoint(this.clEddsa.prv2pub(altPrivateKey))
+      ).toString("base64")
+    );
     expect(publicKey).to.have.length(43);
 
     // Private key is an EC point plus a scalar (field element).  The EC point
     // can be packed into a single field element.  That plus the scalar fit in
     // 64 bytes (128 hex digits).  Packing converts the value from Montgomery to
     // standard form.
-    const signature = Buffer.from(
-      this.clEddsa.packSignature(
-        this.clEddsa.signPoseidon(altPrivateKey, altHashedMessage)
-      )
-    ).toString("base64url");
+    const signature = stripB64(
+      Buffer.from(
+        this.clEddsa.packSignature(
+          this.clEddsa.signPoseidon(altPrivateKey, altHashedMessage)
+        )
+      ).toString("base64")
+    );
     expect(signature).to.have.length(86);
 
     return { signature, publicKey };
@@ -172,13 +179,13 @@ export class AltCryptCircomlibjs {
     // form.
     expect(signature).to.have.length(86);
     const altSignature = this.clEddsa.unpackSignature(
-      Buffer.from(signature, "base64url")
+      Buffer.from(signature, "base64")
     );
 
     // Unpack the public key into an EC point in Montgomery form.
     expect(publicKey).to.have.length(43);
     const altPublicKey = this.clEddsa.babyJub.unpackPoint(
-      Buffer.from(publicKey, "base64url")
+      Buffer.from(publicKey, "base64")
     );
 
     // EdDSAPCD has an extra step where it hashes a list of bigints (the PCD's
