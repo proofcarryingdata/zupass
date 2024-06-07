@@ -4,7 +4,7 @@ import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Hits an endpoint to download a semaphore protocol group.
+ * Sets a ticket's check-in state to the provided boolean value.
  *
  * Never rejects. All information encoded in the resolved response.
  */

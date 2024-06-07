@@ -4,7 +4,8 @@ import { APIResult } from "./apiResult";
 import { httpGetSimple } from "./makeRequest";
 
 /**
- * Hits an endpoint to download a semaphore protocol group.
+ * Retrieves a summary of check-in status for all tickets on a given pipeline.
+ * See {@link PipelineGetManualCheckInsResponseValue}.
  *
  * Never rejects. All information encoded in the resolved response.
  */
