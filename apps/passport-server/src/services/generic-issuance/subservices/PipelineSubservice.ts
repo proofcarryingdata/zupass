@@ -139,7 +139,7 @@ export class PipelineSubservice {
         if (isPretixAtom(a)) {
           return a.email === email && a.orderCode === code;
         } else if (isLemonadeAtom(a)) {
-          return a.email === email && a.lemonadeTicketId === code;
+          return a.email === email && a.id === code;
         }
         return false;
       })
