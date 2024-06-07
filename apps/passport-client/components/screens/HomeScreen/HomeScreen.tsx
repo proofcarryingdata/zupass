@@ -17,9 +17,9 @@ import {
   useDispatch,
   useFolders,
   useLoadedIssuedPCDs,
-  usePCDCollection,
   useSelf,
-  useVisiblePCDsInFolder
+  useVisiblePCDsInFolder,
+  useWrappedPCDCollection
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { isEdgeCityFolder, isFrogCryptoFolder } from "../../../src/util";
@@ -117,12 +117,12 @@ export function HomeScreenImpl(): JSX.Element | null {
     setBrowsingFolder(folder);
   }, []);
 
-  const pcdCollection = usePCDCollection();
+  const pcdCollection = useWrappedPCDCollection();
   const isRoot = isRootFolder(browsingFolder);
   const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
   const isEdgeCity = isEdgeCityFolder(browsingFolder);
   const shouldShowFrogCrypto = useMemo(() => {
-    const folders = pcdCollection.getAllFolderNames();
+    const folders = pcdCollection.value.getAllFolderNames();
     const goodFolders = [
       "Edge City",
       "ETHBerlin 04",

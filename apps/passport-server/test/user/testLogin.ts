@@ -108,6 +108,9 @@ export async function testLogin(
     throw new Error("expected to get a user");
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const newUserResultWoutAuthKey: any = newUserResult.value;
+  delete newUserResultWoutAuthKey.authKey;
   expect(getUserResponse.value).to.deep.eq(newUserResult.value);
 
   return { user: getUserResponse.value, identity };

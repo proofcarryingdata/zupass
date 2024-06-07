@@ -15,6 +15,7 @@ import {
   IBadgeGiftingDB,
   IContactSharingDB
 } from "../../../../database/queries/ticketActionDBs";
+import { ApplicationContext } from "../../../../types";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { traced } from "../../../telemetryService";
 import { tracePipeline } from "../../honeycombQueries";
@@ -47,6 +48,7 @@ export interface InstantiatePipelineArgs {
   manualTicketDB: IPipelineManualTicketDB;
   semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   credentialSubservice: CredentialSubservice;
+  context: ApplicationContext;
 }
 
 /**
@@ -75,7 +77,8 @@ export function instantiatePipeline(
         args.badgeDB,
         args.consumerDB,
         args.semaphoreHistoryDB,
-        args.credentialSubservice
+        args.credentialSubservice,
+        args.context
       );
     } else if (isPretixPipelineDefinition(definition)) {
       pipeline = new PretixPipeline(
@@ -88,7 +91,8 @@ export function instantiatePipeline(
         args.checkinDB,
         args.consumerDB,
         args.manualTicketDB,
-        args.semaphoreHistoryDB
+        args.semaphoreHistoryDB,
+        args.context
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(

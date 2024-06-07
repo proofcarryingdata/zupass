@@ -3,10 +3,10 @@ import {
   AgreeTermsResult,
   ConfirmEmailResponseValue,
   LATEST_PRIVACY_NOTICE,
+  NewUserResponseValue,
   OneClickLoginResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
-  VerifyTokenResponseValue,
-  ZupassUserJson
+  VerifyTokenResponseValue
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -242,7 +242,8 @@ export class UserService {
     if (existingUser) {
       res.status(200).json({
         isNewUser: false,
-        encryptionKey: existingUser.encryption_key
+        encryptionKey: existingUser.encryption_key,
+        authKey: existingUser.auth_key
       } satisfies OneClickLoginResponseValue);
       return;
     }
@@ -281,7 +282,8 @@ export class UserService {
     logger(`[USER_SERVICE] logged in a user`, userJson);
     res.status(200).json({
       isNewUser: true,
-      zupassUser: userJson
+      zupassUser: userJson,
+      authKey: user.auth_key
     } satisfies OneClickLoginResponseValue);
   }
 
@@ -369,9 +371,13 @@ export class UserService {
     );
 
     const userJson = userRowToZupassUserJson(user);
+    const response: NewUserResponseValue = {
+      ...userJson,
+      authKey: user.auth_key
+    };
 
     logger(`[USER_SERVICE] logged in a user`, userJson);
-    res.status(200).json(userJson satisfies ZupassUserJson);
+    res.status(200).json(response);
   }
 
   /**
@@ -516,14 +522,18 @@ export class UserService {
       );
     }
 
-    const encryptionKey = await this.getEncryptionKeyForUser(email);
+    const user = await this.getUserByEmail(email);
+
     // If we return the user's encryption key, change the token so this request
     // can't be replayed.
-    if (encryptionKey) {
+    if (user?.encryption_key) {
       await this.emailTokenService.saveNewTokenForEmail(email);
     }
 
-    return { encryptionKey };
+    return {
+      encryptionKey: user?.encryption_key ?? null,
+      authKey: user?.auth_key ?? null
+    };
   }
 }
 

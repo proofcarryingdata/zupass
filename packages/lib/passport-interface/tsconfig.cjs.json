@@ -23,6 +23,9 @@
       "path": "../emitter/tsconfig.cjs.json"
     },
     {
+      "path": "../../pcd/obj-pcd/tsconfig.cjs.json"
+    },
+    {
       "path": "../passport-crypto/tsconfig.cjs.json"
     },
     {
@@ -30,6 +33,12 @@
     },
     {
       "path": "../pcd-types/tsconfig.cjs.json"
+    },
+    {
+      "path": "../pod/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/pod-pcd/tsconfig.cjs.json"
     },
     {
       "path": "../../pcd/semaphore-group-pcd/tsconfig.cjs.json"

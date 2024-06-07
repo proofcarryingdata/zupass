@@ -58,6 +58,7 @@ import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerD
 import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
+import { ApplicationContext } from "../../../types";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
@@ -136,6 +137,7 @@ export class PretixPipeline implements BasePipeline {
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
   private autoIssuanceProvider: AutoIssuanceProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
+  private context: ApplicationContext;
 
   public get id(): string {
     return this.definition.id;
@@ -163,7 +165,8 @@ export class PretixPipeline implements BasePipeline {
     checkinDB: IPipelineCheckinDB,
     consumerDB: IPipelineConsumerDB,
     manualTicketDB: IPipelineManualTicketDB,
-    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
+    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
+    context: ApplicationContext
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -172,6 +175,7 @@ export class PretixPipeline implements BasePipeline {
     this.consumerDB = consumerDB;
     this.manualTicketDB = manualTicketDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
+    this.context = context;
     if (this.definition.options.autoIssuance) {
       this.autoIssuanceProvider = new AutoIssuanceProvider(
         this.id,
@@ -940,22 +944,25 @@ export class PretixPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      const { emailClaim } =
+      const { email, semaphoreId } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+
+      span?.setAttribute("email", email);
+      span?.setAttribute("semaphore_id", semaphoreId);
 
       const didUpdate = await this.consumerDB.save(
         this.id,
-        emailClaim.emailAddress,
-        emailClaim.semaphoreId,
+        email,
+        semaphoreId,
         new Date()
       );
 
       if (this.autoIssuanceProvider) {
         const newManualTickets =
           await this.autoIssuanceProvider.maybeIssueForUser(
-            emailClaim.emailAddress,
+            email,
             await this.getAllManualTickets(),
-            await this.db.loadByEmail(this.id, emailClaim.emailAddress)
+            await this.db.loadByEmail(this.id, email)
           );
 
         await Promise.allSettled(
@@ -972,14 +979,7 @@ export class PretixPipeline implements BasePipeline {
         }
       }
 
-      const email = emailClaim.emailAddress;
-      span?.setAttribute("email", email);
-      span?.setAttribute("semaphore_id", emailClaim.semaphoreId);
-
-      const tickets = await this.getTicketsForEmail(
-        email,
-        emailClaim.semaphoreId
-      );
+      const tickets = await this.getTicketsForEmail(email, semaphoreId);
 
       span?.setAttribute("pcds_issued", tickets.length);
 
@@ -1401,18 +1401,15 @@ export class PretixPipeline implements BasePipeline {
         try {
           span?.setAttribute("ticket_id", ticketId);
 
-          const { emailClaim: checkerEmailClaim } =
+          const { email, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
 
-          span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
-          span?.setAttribute(
-            "checked_semaphore_id",
-            checkerEmailClaim.semaphoreId
-          );
+          span?.setAttribute("checker_email", email);
+          span?.setAttribute("checked_semaphore_id", semaphoreId);
 
-          checkerEmail = checkerEmailClaim.emailAddress;
+          checkerEmail = email;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1616,17 +1613,14 @@ export class PretixPipeline implements BasePipeline {
 
       try {
         span?.setAttribute("ticket_id", ticketId);
-        const { emailClaim: checkerEmailClaim } =
+        const { email, semaphoreId } =
           await this.credentialSubservice.verifyAndExpectZupassEmail(
             request.credential
           );
 
-        span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
-        span?.setAttribute(
-          "checked_semaphore_id",
-          checkerEmailClaim.semaphoreId
-        );
-        checkerEmail = checkerEmailClaim.emailAddress;
+        span?.setAttribute("checker_email", email);
+        span?.setAttribute("checked_semaphore_id", semaphoreId);
+        checkerEmail = email;
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);

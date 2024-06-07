@@ -115,7 +115,10 @@ export class GenericIssuanceService {
       stytchClient,
       genericIssuanceClientUrl
     );
-    this.credentialSubservice = new CredentialSubservice(zupassPublicKey);
+    this.credentialSubservice = new CredentialSubservice(
+      zupassPublicKey,
+      context.dbPool
+    );
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
@@ -137,7 +140,8 @@ export class GenericIssuanceService {
         consumerDB: this.consumerDB,
         manualTicketDB: this.manualTicketDB,
         semaphoreHistoryDB: this.semaphoreHistoryDB,
-        credentialSubservice: this.credentialSubservice
+        credentialSubservice: this.credentialSubservice,
+        context
       } satisfies InstantiatePipelineArgs
     );
   }

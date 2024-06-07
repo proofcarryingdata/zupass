@@ -23,6 +23,9 @@
       "path": "../emitter/tsconfig.esm.json"
     },
     {
+      "path": "../../pcd/obj-pcd/tsconfig.esm.json"
+    },
+    {
       "path": "../passport-crypto/tsconfig.esm.json"
     },
     {
@@ -30,6 +33,12 @@
     },
     {
       "path": "../pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../pod/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/pod-pcd/tsconfig.esm.json"
     },
     {
       "path": "../../pcd/semaphore-group-pcd/tsconfig.esm.json"
