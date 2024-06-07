@@ -27,20 +27,22 @@ export function InvalidUserModal(): JSX.Element {
 
   return (
     <Container>
-      <H2>Invalid Zupass</H2>
+      <H2>Session Expired</H2>
       <Spacer h={16} />
-      <p>Your Zupass is in an invalid state. This can happen when:</p>
-      <ul>
-        <li>You reset your account on another device.</li>
-        <li>Zupass application state becomes corrupted on this device.</li>
-      </ul>
-      <p>To resolve this, we recommend you either:</p>
+
+      <p>
+        Your session has expired. This can happen when you reset your account on
+        a different device.
+      </p>
+      <Spacer h={16} />
+      <p> To resolve, we recommend you either:</p>
       <ul>
         <li>Reload this page.</li>
         <li>
           Export your account data, log out of this account, and log in again.
         </li>
       </ul>
+      <Spacer h={16} />
       <p>
         If this issue persists, please contact us at <SupportLink />.
       </p>

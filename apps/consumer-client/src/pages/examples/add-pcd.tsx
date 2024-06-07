@@ -56,15 +56,17 @@ import { sendZupassRequest } from "../../util";
 export default function Page(): JSX.Element {
   const [signedMessage, setSignedMessage] = useState("1");
   const [folder, setFolder] = useState("");
-  const [podContent, setPodContent] = useState(EXAMPLE_POD_CONTENT);
-  const [podContent2, setPodContent2] = useState(
+  const [podContent, setPODContent] = useState(EXAMPLE_POD_CONTENT);
+  const [podContent2, setPODContent2] = useState(
     EXAMPLE_POD_CONTENT_WITH_DISPLAY
   );
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
   const [membershipLists, setMembershipLists] = useState(
     EXAMPLE_MEMBERSHIP_LISTS
   );
-  const [podFolder, setPodFolder] = useState("Test PODs");
+  const [podFolder, setPODFolder] = useState("Test PODs");
+  const [podFolder2, setPODFolder2] = useState("Test PODs");
+  const [gpcFolder, setGPCFolder] = useState("Test GPCs");
 
   return (
     <div>
@@ -144,15 +146,19 @@ export default function Page(): JSX.Element {
         <br />
         <br />
         <button onClick={addEdDSAPCD}>add a new EdDSA signature proof</button>
+      </ExampleContainer>
+      <ExampleContainer>
+        POD + GPC Examples
         <br />
         <br />
-        POD content to sign: <br />
+        Example POD content to sign: <br />
+        <br />
         <textarea
           cols={40}
           rows={15}
           value={podContent}
           onChange={(e): void => {
-            setPodContent(e.target.value);
+            setPODContent(e.target.value);
           }}
         />
         <br />
@@ -164,24 +170,54 @@ export default function Page(): JSX.Element {
           add a new POD to Zupass
         </button>
         <br />
+        <label>
+          Folder to add POD to:
+          <input
+            type="text"
+            value={podFolder}
+            placeholder="Enter folder name..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODFolder(e.target.value);
+            }}
+          />
+        </label>
         <br />
-        Zupass card POD example to sign: <br />
+        <br />
+        Card POD content to sign: <br />
+        <br />
         <textarea
           cols={40}
           rows={15}
           value={podContent2}
           onChange={(e): void => {
-            setPodContent2(e.target.value);
+            setPODContent2(e.target.value);
           }}
         />
         <br />
         <button
           onClick={(): Promise<void> =>
-            addPODPCD(podContent2, podFolder.length > 0 ? podFolder : undefined)
+            addPODPCD(
+              podContent2,
+              podFolder2.length > 0 ? podFolder2 : undefined
+            )
           }
         >
           add a new POD to Zupass
         </button>
+        <br />
+        <label>
+          Folder to add POD to:
+          <input
+            type="text"
+            value={podFolder2}
+            placeholder="Enter folder name..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODFolder2(e.target.value);
+            }}
+          />
+        </label>
         <br />
         <br />
         GPC Proof config: <br />
@@ -205,14 +241,14 @@ export default function Page(): JSX.Element {
         />
         <br />
         <label>
-          Folder to add POD/GPC to:
+          Folder to add GPC to:
           <input
             type="text"
-            value={podFolder}
+            value={gpcFolder}
             placeholder="Enter folder name..."
             style={{ marginLeft: "16px" }}
             onChange={(e): void => {
-              setPodFolder(e.target.value);
+              setGPCFolder(e.target.value);
             }}
           />
         </label>
@@ -224,7 +260,7 @@ export default function Page(): JSX.Element {
               podContent2,
               gpcConfig,
               membershipLists,
-              podFolder.length > 0 ? podFolder : undefined
+              gpcFolder.length > 0 ? gpcFolder : undefined
             )
           }
         >
@@ -631,7 +667,7 @@ async function addGPCPCD(
     )
   });
 
-  const podZeroPCD = new PODPCD(
+  const examplePODPCD = new PODPCD(
     uuid(),
     POD.sign(
       podEntriesFromSimplifiedJSON(podContent),
@@ -659,7 +695,7 @@ async function addGPCPCD(
     pods: {
       value: {
         examplePOD: {
-          value: await PODPCDPackage.serialize(podZeroPCD),
+          value: await PODPCDPackage.serialize(examplePODPCD),
           argumentType: ArgumentTypeName.PCD
         },
         cardPOD: {

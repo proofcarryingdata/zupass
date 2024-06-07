@@ -67,44 +67,6 @@ export const EXAMPLE_GPC_CONFIG = `{
   }
 }`;
 
-export const EXAMPLE_GPC_CONFIG2 = `{
-  "pods": {
-    "mainstreamPOD": {
-      "entries": {
-        "A": {
-          "isRevealed": true,
-          "isMemberOf": "admissibleValues"
-        },
-        "C": {
-          "isRevealed": false
-        },
-        "E": {
-          "isRevealed": false,
-          "equalsEntry": "mainstreamPOD.A"
-        },
-        "owner": {
-          "isRevealed": false,
-          "isOwnerID": true
-        }
-      }
-    },
-    "ticketPOD": {
-      "entries": {
-        "ticketID": {
-          "isRevealed": false,
-          "isMemberOf": "admissibleTickets"
-        }
-      }
-    }
-  },
-  "tuples": {
-    "tuple0": {
-      "entries": ["mainstreamPOD.E", "mainstreamPOD.C"],
-      "isMemberOf": "admissiblePairs"
-    }
-  }
-}`;
-
 export const EXAMPLE_MEMBERSHIP_LISTS = `{
   "admissibleValues": [
     3,
@@ -120,28 +82,5 @@ export const EXAMPLE_MEMBERSHIP_LISTS = `{
     [123, "hello"],
     ["zero", "zero"],
     [0, "one"]
-  ]
-}`;
-
-export const EXAMPLE_MEMBERSHIP_LISTS2 = `{
-  "admissibleValues": [
-    3,
-    3472834734,
-    123,
-    9,
-    "something",
-    18711405342588116796533073928767088921854096266145046362753928030796553161041
-  ],
-  "admissiblePairs": [
-    [0,0],
-    [5,6],
-    [123, "hello"],
-    ["zero", "zero"],
-    [0, "one"]
-  ],
-  "admissibleTickets": [
-    "hello",
-    0,
-    999
   ]
 }`;

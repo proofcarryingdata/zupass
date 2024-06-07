@@ -45,11 +45,11 @@ import {
   privateKey,
   privateKeyHex,
   sampleEntries1,
+  stripB64,
   testIntsToHash,
   testPrivateKeys,
   testPrivateKeysAllFormats,
-  testPrivateKeysBase64pad,
-  testPrivateKeysBase64url,
+  testPrivateKeysBase64,
   testPrivateKeysHex,
   testPublicKeysToHash,
   testStringsToHash
@@ -197,7 +197,7 @@ describe("podCrypto encoding/decoding should work", async function () {
       expect(encoded).to.have.length(43);
       checkPrivateKeyFormat(encoded);
       expect(encoded).to.eq(
-        testPrivateKeysBase64url[i % testPrivateKeysBase64url.length]
+        testPrivateKeysBase64[i % testPrivateKeysBase64.length]
       );
     }
   });
@@ -212,7 +212,7 @@ describe("podCrypto encoding/decoding should work", async function () {
       }
       const encoded = encodePrivateKey(asUint8Array);
       expect(encoded).to.eq(
-        testPrivateKeysBase64url[i % testPrivateKeysBase64url.length]
+        testPrivateKeysBase64[i % testPrivateKeysBase64.length]
       );
     }
   });
@@ -232,18 +232,11 @@ describe("podCrypto encoding/decoding should work", async function () {
       checkPrivateKeyFormat(encodedHex);
 
       const encodedBase64 = encodePrivateKey(decoded, "base64");
-      expect(encodedBase64).to.eq(testPrivateKeysBase64pad[i]);
+      expect(encodedBase64).to.eq(testPrivateKeysBase64[i]);
       expect(decodePrivateKey(encodedBase64)).to.deep.eq(
         decodePrivateKey(testPrivateKey)
       );
       checkPrivateKeyFormat(encodedBase64);
-
-      const encodedBase64URL = encodePrivateKey(decoded, "base64url");
-      expect(encodedBase64URL).to.eq(testPrivateKeysBase64url[i]);
-      expect(decodePrivateKey(encodedBase64URL)).to.deep.eq(
-        decodePrivateKey(testPrivateKey)
-      );
-      checkPrivateKeyFormat(encodedBase64URL);
     }
   });
 
@@ -316,7 +309,7 @@ describe("podCrypto encoding/decoding should work", async function () {
       const decodedPrivateKey = decodePrivateKey(testPrivateKey);
       const rawPublicKey = derivePublicKey(decodedPrivateKey);
 
-      for (const encoding of ["hex", "base64", "base64url"]) {
+      for (const encoding of ["hex", "base64"]) {
         const encoded = encodePublicKey(
           rawPublicKey,
           encoding as CryptoBytesEncoding
@@ -402,7 +395,7 @@ describe("podCrypto encoding/decoding should work", async function () {
       const message = podIntHash(testIntsToHash[0]);
       const rawSig = signMessage(decodePrivateKey(testPrivateKey), message);
 
-      for (const encoding of ["hex", "base64", "base64url"]) {
+      for (const encoding of ["hex", "base64"]) {
         const encoded = encodeSignature(
           rawSig,
           encoding as CryptoBytesEncoding
@@ -462,27 +455,27 @@ describe("podCrypto encoding/decoding should work", async function () {
   });
 
   it("double-check expected values vs. hex originals", function () {
-    expect(Buffer.from(privateKeyHex, "hex").toString("base64url")).to.eq(
-      privateKey
-    );
+    expect(
+      stripB64(Buffer.from(privateKeyHex, "hex").toString("base64"))
+    ).to.eq(privateKey);
     expect(encodePrivateKey(decodePrivateKey(privateKeyHex))).to.eq(privateKey);
 
     expect(
-      Buffer.from(expectedPublicKeyHex, "hex").toString("base64url")
+      stripB64(Buffer.from(expectedPublicKeyHex, "hex").toString("base64"))
     ).to.eq(expectedPublicKey);
     expect(encodePublicKey(decodePublicKey(expectedPublicKeyHex))).to.eq(
       expectedPublicKey
     );
 
     expect(
-      Buffer.from(expectedSignature1Hex, "hex").toString("base64url")
+      stripB64(Buffer.from(expectedSignature1Hex, "hex").toString("base64"))
     ).to.eq(expectedSignature1);
     expect(encodeSignature(decodeSignature(expectedSignature1Hex))).to.eq(
       expectedSignature1
     );
 
     expect(
-      Buffer.from(expectedSignature2Hex, "hex").toString("base64url")
+      stripB64(Buffer.from(expectedSignature2Hex, "hex").toString("base64"))
     ).to.eq(expectedSignature2);
     expect(encodeSignature(decodeSignature(expectedSignature2Hex))).to.eq(
       expectedSignature2
@@ -610,7 +603,7 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
     );
 
     // EdDSAPCD represents its signatures in hex, not Base64.
-    const hexSignature = Buffer.from(signature, "base64url").toString("hex");
+    const hexSignature = Buffer.from(signature, "base64").toString("hex");
 
     expect(stringifiedPublicKey).to.deep.eq(pcd.claim.publicKey);
     expect(hexSignature).to.deep.eq(pcd.proof.signature);

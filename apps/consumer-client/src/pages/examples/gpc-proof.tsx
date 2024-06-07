@@ -28,8 +28,8 @@ import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { GPC_ARTIFACT_CONFIG, ZUPASS_URL } from "../../constants";
 import {
-  EXAMPLE_GPC_CONFIG2,
-  EXAMPLE_MEMBERSHIP_LISTS2
+  EXAMPLE_GPC_CONFIG,
+  EXAMPLE_MEMBERSHIP_LISTS
 } from "../../podExampleConstants";
 
 export default function Page(): JSX.Element {
@@ -37,10 +37,10 @@ export default function Page(): JSX.Element {
     "example external nullifier"
   );
   const [membershipLists, setMembershipLists] = useState(
-    EXAMPLE_MEMBERSHIP_LISTS2
+    EXAMPLE_MEMBERSHIP_LISTS
   );
   const [watermark, setWatermark] = useState("example watermark");
-  const [proofConfig, setProofConfig] = useState(EXAMPLE_GPC_CONFIG2);
+  const [proofConfig, setProofConfig] = useState(EXAMPLE_GPC_CONFIG);
 
   // Populate PCD from either client-side or server-side proving using the Zupass popup
   const [pcdStr] = useZupassPopupMessages();
@@ -198,19 +198,19 @@ export function openGPCPopup(
     pods: {
       argumentType: ArgumentTypeName.Record,
       value: {
-        mainstreamPOD: {
+        examplePOD: {
           argumentType: ArgumentTypeName.PCD,
           pcdType: PODPCDPackage.name,
           value: undefined,
           userProvided: true,
-          displayName: "Mainstream POD"
+          displayName: "Example POD"
         },
-        ticketPOD: {
+        cardPOD: {
           argumentType: ArgumentTypeName.PCD,
           pcdType: PODPCDPackage.name,
           value: undefined,
           userProvided: true,
-          displayName: "Ticket POD"
+          displayName: "Card POD"
         }
       },
       validatorParams: {
