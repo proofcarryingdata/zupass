@@ -222,6 +222,8 @@
     "VOUCHER_API_KEY",
     "DELETE_MISSING_USERS",
     "ONE_CLICK_LOGIN_ENABLED",
+    "MANUAL_CHECKIN_API_KEY",
+    "MANUAL_CHECKIN_PIPELINE_ID",
     "//// add env vars above this line ////"
   ]
 }

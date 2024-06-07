@@ -9,9 +9,11 @@ import {
   HydratedPipelineHistoryEntry,
   ListFeedsResponseValue,
   PipelineDefinition,
+  PipelineGetManualCheckInsResponseValue,
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
+  PipelineSetManualCheckInStateResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -516,5 +518,23 @@ export class PipelineSubservice {
     return this.pipelineAPISubservice.handleGetPipelineSemaphoreGroups(
       pipelineId
     );
+  }
+
+  public async handleSetManualCheckInState(
+    pipelineId: string,
+    ticketId: string,
+    checkInState: boolean
+  ): Promise<PipelineSetManualCheckInStateResponseValue> {
+    return this.pipelineAPISubservice.handleSetManualCheckInState(
+      pipelineId,
+      ticketId,
+      checkInState
+    );
+  }
+
+  public async handleGetManualCheckIns(
+    pipelineId: string
+  ): Promise<PipelineGetManualCheckInsResponseValue> {
+    return this.pipelineAPISubservice.handleGetManualCheckIns(pipelineId);
   }
 }
