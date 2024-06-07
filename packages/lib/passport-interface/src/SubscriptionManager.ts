@@ -175,7 +175,8 @@ export class FeedSubscriptionManager {
    * `this.errors` for display to the user.
    */
   public async pollSubscriptions(
-    credentialManager: CredentialManagerAPI
+    credentialManager: CredentialManagerAPI,
+    onFinish?: (actions: SubscriptionActions) => Promise<void>
   ): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
 
@@ -193,7 +194,7 @@ export class FeedSubscriptionManager {
         continue;
       }
       responsePromises.push(
-        this.fetchSingleSubscription(subscription, credentialManager)
+        this.fetchSingleSubscription(subscription, credentialManager, onFinish)
       );
     }
 
@@ -212,11 +213,13 @@ export class FeedSubscriptionManager {
    */
   public async pollSingleSubscription(
     subscription: Subscription,
-    credentialManager: CredentialManagerAPI
+    credentialManager: CredentialManagerAPI,
+    onFinish?: (actions: SubscriptionActions) => Promise<void>
   ): Promise<SubscriptionActions[]> {
     const actions = await this.fetchSingleSubscription(
       subscription,
-      credentialManager
+      credentialManager,
+      onFinish
     );
     this.updatedEmitter.emit();
     return actions;
@@ -229,7 +232,8 @@ export class FeedSubscriptionManager {
    */
   private async fetchSingleSubscription(
     subscription: Subscription,
-    credentialManager: CredentialManagerAPI
+    credentialManager: CredentialManagerAPI,
+    onFinish?: (actions: SubscriptionActions) => Promise<void>
   ): Promise<SubscriptionActions[]> {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
@@ -255,10 +259,13 @@ export class FeedSubscriptionManager {
 
       this.validateActions(subscription, actions);
 
-      responses.push({
-        actions,
-        subscription
-      });
+      const subscriptionActions = { actions, subscription };
+
+      if (onFinish) {
+        await onFinish(subscriptionActions);
+        this.updatedEmitter.emit();
+      }
+      responses.push(subscriptionActions);
     } catch (e) {
       this.setError(subscription.id, {
         type: SubscriptionErrorType.FetchError,
