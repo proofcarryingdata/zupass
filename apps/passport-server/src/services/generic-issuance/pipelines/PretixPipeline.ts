@@ -1963,3 +1963,8 @@ export interface PretixAtom extends PipelineAtom {
   timestampConsumed: Date | null;
   isConsumed: boolean;
 }
+
+export function isPretixAtom(atom: PipelineAtom): atom is PretixAtom {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (atom as any).orderCode !== undefined;
+}

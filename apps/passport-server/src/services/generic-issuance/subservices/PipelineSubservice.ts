@@ -17,6 +17,7 @@ import {
   PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
+  isLemonadePipelineDefinition,
   isPretixPipelineDefinition
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
@@ -37,7 +38,8 @@ import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
 import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
-import { PretixAtom } from "../pipelines/PretixPipeline";
+import { LemonadeAtom, isLemonadeAtom } from "../pipelines/LemonadePipeline";
+import { PretixAtom, isPretixAtom } from "../pipelines/PretixPipeline";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
 import { CredentialSubservice } from "./CredentialSubservice";
@@ -123,15 +125,22 @@ export class PipelineSubservice {
   ): Promise<boolean> {
     // todo: optimized query?
     const definitions = await this.loadPipelineDefinitions();
-    const pretixPipelines = definitions.filter(isPretixPipelineDefinition);
+    const relevantPipelines = definitions.filter(
+      (d) => isPretixPipelineDefinition(d) || isLemonadePipelineDefinition(d)
+    );
     const hasAtom = (
       await Promise.all(
-        pretixPipelines.map((p) => this.pipelineAtomDB.load(p.id))
+        relevantPipelines.map((p) => this.pipelineAtomDB.load(p.id))
       )
     ).some((atoms) =>
-      (atoms as PretixAtom[]).some(
-        (a) => a.email === email && a.orderCode === code
-      )
+      (atoms as Array<PretixAtom | LemonadeAtom>).some((a) => {
+        if (isPretixAtom(a)) {
+          return a.email === email && a.orderCode === code;
+        } else if (isLemonadeAtom(a)) {
+          return a.email === email && a.lemonadeTicketId === code;
+        }
+        return false;
+      })
     );
     return hasAtom;
   }
