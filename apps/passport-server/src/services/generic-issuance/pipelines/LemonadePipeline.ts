@@ -401,7 +401,8 @@ export class LemonadePipeline implements BasePipeline {
                   (ticketType) => ticketType.externalId === t.type_id
                 )?.genericIssuanceProductId as string,
                 lemonadeUserId: t.user_id,
-                checkinDate: t.checkin_date
+                checkinDate: t.checkin_date,
+                lemonadeTicketId: t._id
               }) satisfies LemonadeAtom
           );
         }
@@ -1954,4 +1955,10 @@ export interface LemonadeAtom extends PipelineAtom {
   genericIssuanceProductId: string;
   lemonadeUserId: string | undefined;
   checkinDate: Date | null;
+  lemonadeTicketId: string;
+}
+
+export function isLemonadeAtom(atom: PipelineAtom): atom is LemonadeAtom {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (atom as any).lemonadeEventId !== undefined;
 }
