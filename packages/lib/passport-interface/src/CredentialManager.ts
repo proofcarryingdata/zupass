@@ -63,7 +63,7 @@ export class CredentialManager implements CredentialManagerAPI {
   private readonly cache: CredentialCache;
   private readonly credentialPromises: Map<
     CredentialRequest["pcdType"],
-    Promise<SerializedPCD>
+    { timestamp: number; credential: Promise<SerializedPCD> }
   >;
 
   public constructor(
@@ -137,18 +137,25 @@ export class CredentialManager implements CredentialManagerAPI {
       return cachedCredential;
     }
 
-    let credentialPromise = this.credentialPromises.get(req.pcdType);
+    const credentialPromise = this.credentialPromises.get(req.pcdType);
     if (credentialPromise) {
-      return credentialPromise;
+      if (Date.now() - credentialPromise.timestamp < CACHE_TTL) {
+        return credentialPromise.credential;
+      } else {
+        this.credentialPromises.delete(req.pcdType);
+      }
     }
 
-    credentialPromise = this.generateCredential(req);
-    credentialPromise.then((credential) => {
+    const newPromise = this.generateCredential(req);
+    newPromise.then((credential) => {
       this.setCachedCredential(req, credential);
     });
-    this.credentialPromises.set(req.pcdType, credentialPromise);
+    this.credentialPromises.set(req.pcdType, {
+      credential: newPromise,
+      timestamp: Date.now()
+    });
 
-    return credentialPromise;
+    return newPromise;
   }
 
   /**
