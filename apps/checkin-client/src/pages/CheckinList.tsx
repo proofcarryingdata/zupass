@@ -225,7 +225,7 @@ export function CheckinListPage(): ReactNode {
       <Content>
         <H1>Zupass Check-in</H1>
 
-        {query.isFetching && (
+        {query.isFetching && !query.isRefetching && (
           <>
             <Spacer h={8} />
             <Spinner />

@@ -1,4 +1,6 @@
 import {
+  Alert,
+  AlertDescription,
   Button,
   ButtonGroup,
   Modal,
@@ -7,7 +9,8 @@ import {
   ModalContent,
   ModalFooter,
   ModalHeader,
-  ModalOverlay
+  ModalOverlay,
+  Spacer
 } from "@chakra-ui/react";
 import {
   PipelineCheckinSummary,
@@ -78,6 +81,16 @@ export function CheckInModal({
             <div>
               <strong>Checked in!</strong>
             </div>
+          )}
+          {mutation.isError && (
+            <>
+              <Spacer h={8} />
+              <Alert status="error">
+                <AlertDescription>
+                  Check-in failed. Please try again.
+                </AlertDescription>
+              </Alert>
+            </>
           )}
         </ModalBody>
         <ModalFooter>
