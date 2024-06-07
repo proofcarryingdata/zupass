@@ -41,7 +41,6 @@
       "cache": true
     },
     "dev": {
-      "dependsOn": ["gen-test-artifacts"],
       "cache": false,
       "persistent": true
     }

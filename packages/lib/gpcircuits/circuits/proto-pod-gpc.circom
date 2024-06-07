@@ -267,4 +267,5 @@ template ProtoPODGPC (
 
     // Catch-all for logic global to the circuit, not tied to any of the other modules above.
     GlobalModule()(globalWatermark);
+    globalWatermark === 0;
 }
