@@ -86,7 +86,7 @@ export default function Page(): JSX.Element {
   );
 
   // Populate PCD from either client-side or server-side proving using the Zupass popup
-  const [pcdStr] = useZupassPopupMessages();
+  const [_pcdStr, _pendingPCDStr, multiPCDStr] = useZupassPopupMessages();
 
   const [valid, setValid] = useState<boolean | undefined>();
   const onVerified = (valid: boolean): void => {
@@ -94,7 +94,7 @@ export default function Page(): JSX.Element {
   };
 
   const { pcd } = useZKEdDSAEventTicketProof(
-    pcdStr,
+    multiPCDStr[0] ?? "",
     onVerified,
     fieldsToReveal,
     watermark,
@@ -450,7 +450,8 @@ export function openZKEdDSAEventTicketPopup(
   >(urlToZupassWebsite, popupUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
     genericProveScreen: true,
     title: "ZKEdDSA Proof",
-    description: "zkeddsa ticket pcd request"
+    description: "zkeddsa ticket pcd request",
+    multi: true
   });
 
   openZupassPopup(popupUrl, proofUrl);
