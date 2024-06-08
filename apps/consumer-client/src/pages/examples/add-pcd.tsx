@@ -154,7 +154,7 @@ export default function Page(): JSX.Element {
         Example POD content to sign: <br />
         <br />
         <textarea
-          cols={40}
+          cols={45}
           rows={15}
           value={podContent}
           onChange={(e): void => {
@@ -187,7 +187,7 @@ export default function Page(): JSX.Element {
         Card POD content to sign: <br />
         <br />
         <textarea
-          cols={40}
+          cols={45}
           rows={15}
           value={podContent2}
           onChange={(e): void => {
@@ -222,7 +222,7 @@ export default function Page(): JSX.Element {
         <br />
         GPC Proof config: <br />
         <textarea
-          cols={40}
+          cols={45}
           rows={15}
           value={gpcConfig}
           onChange={(e): void => {
@@ -232,7 +232,7 @@ export default function Page(): JSX.Element {
         <br />
         Membership lists: <br />
         <textarea
-          cols={40}
+          cols={45}
           rows={15}
           value={membershipLists}
           onChange={(e): void => {

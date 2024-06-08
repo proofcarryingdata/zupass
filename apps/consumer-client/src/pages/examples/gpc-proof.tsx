@@ -96,39 +96,51 @@ export default function Page(): JSX.Element {
           Request Zupass GPC Proof
         </button>
         <br />
-        GPC Proof Configuration:
+        GPC Proof Configuration: <br />
         <textarea
           cols={45}
-          rows={12}
+          rows={15}
           value={proofConfig}
           onChange={(e): void => {
             setProofConfig(e.target.value);
           }}
         />
         <br />
-        External Nullifier (or empty for none):
-        <textarea
-          value={externalNullifier}
-          onChange={(e): void => {
-            setExternalNullifier(e.target.value);
-          }}
-        />
-        <br />
         Membership list(s) (or empty for none):
         <textarea
+          cols={45}
+          rows={15}
           value={membershipLists}
           onChange={(e): void => {
             setMembershipLists(e.target.value);
           }}
         />
         <br />
+        <label>
+          External Nullifier (or empty for none):
+          <input
+            type="text"
+            value={externalNullifier}
+            placeholder="<none>"
+            style={{ marginLeft: "16px", width: "200px" }}
+            onChange={(e): void => {
+              setExternalNullifier(e.target.value);
+            }}
+          />
+        </label>
+        <br />
         Watermark (or empty for none):
-        <textarea
-          value={watermark}
-          onChange={(e): void => {
-            setWatermark(e.target.value);
-          }}
-        />
+        <label>
+          <input
+            type="text"
+            value={watermark}
+            placeholder="<none>"
+            style={{ marginLeft: "16px", width: "200px" }}
+            onChange={(e): void => {
+              setWatermark(e.target.value);
+            }}
+          />
+        </label>
         <br />
         {!!pcd && (
           <>
