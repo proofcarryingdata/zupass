@@ -12,6 +12,7 @@ import {
   GPCArtifactVersion
 } from "@pcd/gpc";
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
+import { base64ToHex } from "@pcd/passport-crypto";
 import {
   constructZupassPcdAddRequestUrl,
   constructZupassPcdProveAndAddRequestUrl,
@@ -478,7 +479,8 @@ async function addEdDSAPCD(): Promise<void> {
       privateKey: {
         argumentType: ArgumentTypeName.String,
         userProvided: false,
-        value: EXAMPLE_EDDSA_PRIVATE_KEY
+        // Indicate 32 bytes via padding before converting to hex.
+        value: base64ToHex(EXAMPLE_EDDSA_PRIVATE_KEY + "=")
       },
       id: {
         argumentType: ArgumentTypeName.String,
