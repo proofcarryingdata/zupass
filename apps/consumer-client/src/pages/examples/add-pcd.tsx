@@ -163,7 +163,7 @@ export default function Page(): JSX.Element {
         />
         <br />
         <button
-          onClick={(): Promise<void> =>
+          onClick={() =>
             addPODPCD(podContent, podFolder.length > 0 ? podFolder : undefined)
           }
         >
@@ -196,7 +196,7 @@ export default function Page(): JSX.Element {
         />
         <br />
         <button
-          onClick={(): Promise<void> =>
+          onClick={() =>
             addPODPCD(
               podContent2,
               podFolder2.length > 0 ? podFolder2 : undefined
@@ -703,7 +703,7 @@ async function addGPCPCD(
           argumentType: ArgumentTypeName.PCD
         }
       },
-      argumentType: ArgumentTypeName.Record
+      argumentType: ArgumentTypeName.RecordContainer
     },
     identity: {
       value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),

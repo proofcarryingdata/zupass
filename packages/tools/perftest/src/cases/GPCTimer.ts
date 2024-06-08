@@ -70,7 +70,7 @@ async function setupProveArgs(): Promise<GPCPCDArgs> {
           argumentType: ArgumentTypeName.PCD
         }
       },
-      argumentType: ArgumentTypeName.Record
+      argumentType: ArgumentTypeName.RecordContainer
     },
     identity: {
       value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),

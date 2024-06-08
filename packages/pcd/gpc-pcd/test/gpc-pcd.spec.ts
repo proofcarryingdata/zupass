@@ -112,7 +112,7 @@ describe("GPCPCD should work", async function () {
             argumentType: ArgumentTypeName.PCD
           }
         },
-        argumentType: ArgumentTypeName.Record
+        argumentType: ArgumentTypeName.RecordContainer
       },
       identity: {
         value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),
