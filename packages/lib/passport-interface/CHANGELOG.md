@@ -1,5 +1,27 @@
 # @pcd/passport-interface
 
+## 0.11.2
+
+### Patch Changes
+
+- new package versions
+- Updated dependencies
+  - @pcd/emitter@0.5.1
+  - @pcd/passport-crypto@0.11.1
+  - @pcd/pcd-collection@0.11.1
+  - @pcd/pcd-types@0.11.1
+  - @pcd/pod@0.1.1
+  - @pcd/util@0.5.1
+  - @pcd/eddsa-frog-pcd@0.3.1
+  - @pcd/eddsa-pcd@0.6.1
+  - @pcd/eddsa-ticket-pcd@0.6.1
+  - @pcd/email-pcd@0.6.1
+  - @pcd/obj-pcd@0.0.2
+  - @pcd/pod-pcd@0.1.1
+  - @pcd/semaphore-group-pcd@0.11.1
+  - @pcd/semaphore-identity-pcd@0.11.1
+  - @pcd/semaphore-signature-pcd@0.11.1
+
 ## 0.11.1
 
 ### Patch Changes

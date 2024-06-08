@@ -1,5 +1,13 @@
 # @pcd/passport-ui
 
+## 0.11.1
+
+### Patch Changes
+
+- new package versions
+- Updated dependencies
+  - @pcd/message-pcd@0.1.1
+
 ## 0.11.0
 
 ### Minor Changes

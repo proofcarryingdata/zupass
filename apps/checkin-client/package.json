@@ -1,6 +1,6 @@
 {
   "name": "checkin-client",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -16,7 +16,7 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
-    "@pcd/passport-interface": "0.11.1",
+    "@pcd/passport-interface": "0.11.2",
     "@tanstack/react-query": "^5.40.1",
     "@tanstack/react-table": "^8.11.8",
     "dotenv": "^16.4.1",
