@@ -1,4 +1,9 @@
 import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  EdDSATicketPCDTypeName
+} from "@pcd/eddsa-ticket-pcd";
+import {
   ISSUANCE_STRING,
   PendingPCD,
   ProveOptions,
@@ -16,7 +21,11 @@ import {
   SemaphoreSignaturePCDTypeName
 } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
-import { isZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import {
+  ZKEdDSAEventTicketPCDPackage,
+  isZKEdDSAEventTicketPCDPackage
+} from "@pcd/zk-eddsa-event-ticket-pcd";
+import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
@@ -58,23 +67,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const [error, setError] = useState<string | undefined>();
   const [proving, setProving] = useState(false);
   const pcdPackage = pcds.getPackage<T>(pcdType);
-
-  const _relevantPCDs = useMemo(() => {
-    if (isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
-      const ticketValidation =
-        pcdPackage?.getProveDisplayOptions?.()?.defaultArgs?.["ticket"];
-
-      if (ticketValidation) {
-        const relevantPCDs = pcds.getAll().filter((p) => {
-          const ticketArg = args["ticket"];
-          return ticketValidation.validate(p, ticketArg.validatorParams);
-        });
-
-        console.log(relevantPCDs);
-      }
-    }
-    return [];
-  }, [args, pcdPackage, pcds]);
 
   useEffect(() => {
     setError(undefined);
@@ -133,9 +125,39 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         if (!pcdPackage) {
           throw new Error(`PCD package not found for ${pcdType}`);
         }
-        const pcd = await pcdPackage.prove(args);
-        const serializedPCD = await pcdPackage.serialize(pcd);
-        onProve(undefined, undefined, undefined, [serializedPCD]);
+
+        if (!isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
+          throw new Error("multi-proofs are only available for tickets!");
+        }
+
+        let relevantPCDs = pcds
+          .getAll()
+          .filter((p) => p.type === EdDSATicketPCDTypeName);
+
+        const ticketValidation =
+          pcdPackage?.getProveDisplayOptions?.()?.defaultArgs?.["ticket"];
+        if (ticketValidation) {
+          relevantPCDs = pcds.getAll().filter((p) => {
+            const ticketArg = args["ticket"];
+            return ticketValidation.validate(p, ticketArg.validatorParams);
+          });
+        }
+
+        const result = await Promise.all(
+          relevantPCDs.map(async (t) => {
+            const argsClone = _.clone(args) as ArgsOf<
+              typeof ZKEdDSAEventTicketPCDPackage
+            >;
+            argsClone.ticket.value = await EdDSATicketPCDPackage.serialize(
+              t as EdDSATicketPCD
+            );
+            const pcd = await pcdPackage.prove(args);
+            const serializedPCD = await pcdPackage.serialize(pcd);
+            return serializedPCD;
+          })
+        );
+
+        onProve(undefined, undefined, undefined, result);
       } catch (e) {
         const errorMessage = getErrorMessage(e);
         if (errorMessage.includes(OUTDATED_BROWSER_ERROR_MESSAGE)) {
@@ -169,7 +191,15 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         setProving(false);
       }
     }
-  }, [options, pcdType, args, onProve, pcdPackage]);
+  }, [
+    pcdType,
+    options?.proveOnServer,
+    options?.multi,
+    args,
+    onProve,
+    pcdPackage,
+    pcds
+  ]);
 
   return (
     <Container>
