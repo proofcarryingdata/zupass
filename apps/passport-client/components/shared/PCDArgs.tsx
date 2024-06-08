@@ -41,7 +41,9 @@ import { Caption } from "../core";
 import { Chip, ChipsContainer } from "../core/Chip";
 import Select from "./Select";
 
-// Type used in `PCDArgs` for record-flattening process.
+/**
+ * Type used in `PCDArgs` for record container argument flattening process.
+ */
 type FlattenedArgTriple = [
   string | undefined,
   string,
@@ -66,9 +68,10 @@ export function PCDArgs<T extends PCDPackage>({
 }): JSX.Element {
   const [showAll, setShowAll] = useState(false);
 
-  // Flatten record arguments (if any), keeping track of the parent argument to
-  // properly mutate (cf. `setArg`) as well as inheriting argument fields from
-  // the record argument.  Validator parameters are also combined.
+  // Flatten record container arguments (if any), keeping track of the parent
+  // argument to properly mutate (cf. `setArg`) as well as inheriting argument
+  // fields from the record container argument.  Validator parameters are also
+  // combined.
   const flattenedArgs: FlattenedArgTriple[] = Object.entries(args).flatMap(
     ([argName, arg]: [
       string,
@@ -201,7 +204,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
     [setArgs, parentArgName, argName]
   );
 
-  // Call `validate` appropriately if the argument arises from a record.
+  // Call `validate` appropriately if the argument arises from a record container.
   const isValid = useCallback(
     <A extends Argument<ArgumentTypeName, unknown>>(value: RawValueType<A>) =>
       (arg.validatorParams &&
@@ -213,7 +216,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
   );
 
   const props = useMemo<ArgInputProps<typeof arg>>(() => {
-    // Qualify argument name if it arises from a record
+    // Qualify argument name if it arises from a record container.
     const qualifiedArgName =
       (parentArgName !== undefined ? `${parentArgName}.` : "") + argName;
     return {
@@ -682,7 +685,7 @@ function ArgContainer({
   );
 }
 
-// Omit Records as they should have been flattened out.
+// Omit record containers as they should have been flattened out.
 const argTypeIcons: Record<PrimitiveArgumentTypeName, JSX.Element> = {
   PCD: <GrDocumentLocked />,
   String: <TbLetterT />,
