@@ -153,6 +153,13 @@ export function postSerializedPCDMessage(
   window.postMessage({ encodedPCD: JSON.stringify(serialized) }, "*");
 }
 
+export function postSerializedMultiPCDMessage(
+  window: Window,
+  pcds: SerializedPCD[]
+): void {
+  window.postMessage({ multiplePCDs: JSON.stringify(pcds) }, "*");
+}
+
 export function postPendingPCDMessage(
   window: Window,
   pending: PendingPCD

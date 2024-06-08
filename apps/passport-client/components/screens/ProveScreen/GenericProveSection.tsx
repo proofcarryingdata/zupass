@@ -45,7 +45,8 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   onProve: (
     pcd: PCDOf<T> | undefined,
     serializedPCD: SerializedPCD<PCDOf<T>> | undefined,
-    pendingPCD: PendingPCD | undefined
+    pendingPCD: PendingPCD | undefined,
+    multiplePCDs?: Array<SerializedPCD<PCDOf<T>>>
   ) => void;
   folder?: string;
 }): JSX.Element {
@@ -110,7 +111,25 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       onProve(undefined, undefined, pendingPCDResult.value);
     }
     if (options?.multi) {
-      alert("multi proof");
+      try {
+        if (!pcdPackage) {
+          throw new Error(`PCD package not found for ${pcdType}`);
+        }
+        const pcd = await pcdPackage.prove(args);
+        const serializedPCD = await pcdPackage.serialize(pcd);
+        onProve(undefined, undefined, undefined, [serializedPCD]);
+      } catch (e) {
+        const errorMessage = getErrorMessage(e);
+        if (errorMessage.includes(OUTDATED_BROWSER_ERROR_MESSAGE)) {
+          setError(getOutdatedBrowserErrorMessage());
+        } else {
+          setError(errorMessage);
+        }
+        // NB: Only re-enable the 'Prove' button if there was an error. If
+        // the proving operation succeeded, we want to leave the button
+        // disabled while onProve redirects user.
+        setProving(false);
+      }
     } else {
       try {
         if (!pcdPackage) {

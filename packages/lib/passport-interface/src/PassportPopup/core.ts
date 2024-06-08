@@ -148,6 +148,12 @@ export function receiveZupassPopupMessage(
           pendingPcdStr: ev.data.encodedPendingPCD
         });
         window.removeEventListener("message", receiveMessage);
+      } else if (ev.data.multiplePCDs) {
+        resolve({
+          type: "multi-pcd",
+          pcds: JSON.parse(ev.data.multiplePCDs)
+        });
+        window.removeEventListener("message", receiveMessage);
       }
     };
     window.addEventListener("message", receiveMessage, {

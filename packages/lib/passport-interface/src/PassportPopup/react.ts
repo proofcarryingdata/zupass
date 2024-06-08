@@ -4,7 +4,7 @@ import { receiveZupassPopupMessage, zupassPopupSetup } from "./core";
 export type ReceivedZupassResponse = [
   string, // single PCD serialized to string
   string, // pending PCD (proven on server) serialized to string
-  string[] // multiple PCDs proven at once, all serialized in an array
+  string[] // multiple PCDs proven at once, all serialized to strings in an array
 ];
 
 /**
