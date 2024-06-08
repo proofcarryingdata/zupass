@@ -262,7 +262,7 @@ export enum ArgumentTypeName {
 }
 
 /**
- * Primitive argument type names, i.e. names for rgument types other than the record type.
+ * Primitive argument type names, i.e. names for argument types other than the record container type.
  */
 export type PrimitiveArgumentTypeName = Exclude<
   ArgumentTypeName,
