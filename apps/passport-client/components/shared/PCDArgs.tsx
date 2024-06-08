@@ -21,7 +21,7 @@ import {
   isNumberArgument,
   isObjectArgument,
   isPCDArgument,
-  isRecordArgument,
+  isRecordContainerArgument,
   isRevealListArgument,
   isStringArgument,
   isStringArrayArgument,
@@ -40,6 +40,13 @@ import { usePCDCollection } from "../../src/appHooks";
 import { Caption } from "../core";
 import { Chip, ChipsContainer } from "../core/Chip";
 import Select from "./Select";
+
+// Type used in `PCDArgs` for record-flattening process.
+type FlattenedArgTriple = [
+  string | undefined,
+  string,
+  Argument<PrimitiveArgumentTypeName>
+];
 
 /**
  * Given an {@link Argument}, renders a UI that displays its value.
@@ -62,17 +69,12 @@ export function PCDArgs<T extends PCDPackage>({
   // Flatten record arguments (if any), keeping track of the parent argument to
   // properly mutate (cf. `setArg`) as well as inheriting argument fields from
   // the record argument.  Validator parameters are also combined.
-  type flattenedArgTriple = [
-    string | undefined,
-    string,
-    Argument<PrimitiveArgumentTypeName>
-  ];
-  const flattenedArgs: flattenedArgTriple[] = Object.entries(args).flatMap(
+  const flattenedArgs: FlattenedArgTriple[] = Object.entries(args).flatMap(
     ([argName, arg]: [
       string,
       Argument<ArgumentTypeName>
-    ]): flattenedArgTriple[] => {
-      if (isRecordArgument(arg)) {
+    ]): FlattenedArgTriple[] => {
+      if (isRecordContainerArgument(arg)) {
         const recordArgPairs = Object.entries(arg.value ?? {});
         const { value: _v, argumentType: _t, ...recordArgs } = arg;
         return recordArgPairs.map(
@@ -168,28 +170,33 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
   // Go one level deeper in case the arg arises from a record.
   const setArg = React.useCallback(
     (value: (typeof arg)["value"]) => {
-      setArgs((args) => ({
-        ...args,
-        ...(parentArgName !== undefined
-          ? {
-              [parentArgName]: {
-                ...args[parentArgName],
-                value: {
-                  ...args[parentArgName].value,
-                  [argName]: {
-                    ...args[parentArgName].value[argName],
-                    value
-                  }
+      setArgs((args) => {
+        // If we are dealing with an argument that has not been pulled out of a
+        // record container, mutate `args.argName.value`.
+        if (parentArgName === undefined) {
+          return {
+            ...args,
+            [argName]: {
+              ...args[argName],
+              value
+            }
+          };
+        } /* Else mutate `args.parentArgName.value.argName.value`. */ else {
+          return {
+            ...args,
+            [parentArgName]: {
+              ...args[parentArgName],
+              value: {
+                ...args[parentArgName].value,
+                [argName]: {
+                  ...args[parentArgName].value[argName],
+                  value
                 }
               }
             }
-          : {
-              [argName]: {
-                ...args[argName],
-                value
-              }
-            })
-      }));
+          };
+        }
+      });
     },
     [setArgs, parentArgName, argName]
   );

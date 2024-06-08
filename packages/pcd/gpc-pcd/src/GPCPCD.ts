@@ -2,7 +2,7 @@ import { GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
 import {
   PCD,
   PCDArgument,
-  RecordArgument,
+  RecordContainerArgument,
   StringArgument
 } from "@pcd/pcd-types";
 import { PODName } from "@pcd/pod";
@@ -39,10 +39,11 @@ export type GPCPCDInitArgs = {
 };
 
 /**
- * Record argument type encapsulating a record of POD PCD arguments. The POD
- * names used here must correspond to those used in the proof configuration.
+ * Record container argument type encapsulating a record of POD PCD
+ * arguments. The POD names used here must correspond to those used in the proof
+ * configuration.
  */
-export type PODPCDRecordArg = RecordArgument<
+export type PODPCDRecordArg = RecordContainerArgument<
   PODName,
   PCDArgument<PODPCD, PODPCDArgValidatorParams>,
   PODPCDArgValidatorParams
@@ -73,9 +74,9 @@ export type GPCPCDArgs = {
 
   /**
    * POD objects to prove about. Each object is identified by name in the value
-   * underlying this record argument.  These are not revealed by default, but a
-   * redacted version of their entries will become part of the claims of the
-   * resulting proof PCD, as specified by the proof config.
+   * underlying this record container argument.  These are not revealed by
+   * default, but a redacted version of their entries will become part of the
+   * claims of the resulting proof PCD, as specified by the proof config.
    *
    * See {@link GPCProofConfig} and {@link GPCRevealedClaims} for more
    * information.

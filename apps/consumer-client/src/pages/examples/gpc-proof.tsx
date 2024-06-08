@@ -196,7 +196,7 @@ export function openGPCPopup(
       userProvided: false
     },
     pods: {
-      argumentType: ArgumentTypeName.Record,
+      argumentType: ArgumentTypeName.RecordContainer,
       value: {
         examplePOD: {
           argumentType: ArgumentTypeName.PCD,

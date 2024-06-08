@@ -256,32 +256,33 @@ export enum ArgumentTypeName {
   Object = "Object",
   StringArray = "StringArray",
   PCD = "PCD",
-  Record = "Record",
+  RecordContainer = "RecordContainer",
   ToggleList = "ToggleList",
   Unknown = "Unknown"
 }
 
 /**
- * Argument type names other than the record type.
+ * Primitive argument type names, i.e. names for rgument types other than the record type.
  */
 export type PrimitiveArgumentTypeName = Exclude<
   ArgumentTypeName,
-  ArgumentTypeName.Record
+  ArgumentTypeName.RecordContainer
 >;
 
 /**
- * Non-recursive record argument type.
+ * Non-recursive record container argument type. This should be thought of as a
+ * container of named arguments of a single primitive type.
  */
-export type RecordArgument<
+export type RecordContainerArgument<
   S extends string,
   T extends Argument<PrimitiveArgumentTypeName, unknown>,
   ValidatorParams = Record<string, unknown>
-> = Argument<ArgumentTypeName.Record, Record<S, T>, ValidatorParams>;
-export function isRecordArgument<
+> = Argument<ArgumentTypeName.RecordContainer, Record<S, T>, ValidatorParams>;
+export function isRecordContainerArgument<
   S extends string,
   T extends Argument<PrimitiveArgumentTypeName, unknown>
->(arg: Argument<any, unknown>): arg is RecordArgument<S, T> {
-  return arg.argumentType === ArgumentTypeName.Record;
+>(arg: Argument<any, unknown>): arg is RecordContainerArgument<S, T> {
+  return arg.argumentType === ArgumentTypeName.RecordContainer;
 }
 
 export type StringArgument = Argument<ArgumentTypeName.String, string>;
@@ -399,7 +400,7 @@ export type RawValueType<T extends Argument<any, unknown>> =
  * mapping from record keys to such predicates for the record value type.
  */
 export type ArgumentValidator<T extends Argument<any, unknown>> =
-  T extends RecordArgument<infer S, infer U>
+  T extends RecordContainerArgument<infer S, infer U>
     ? (
         s: S,
         value: RawValueType<U>,

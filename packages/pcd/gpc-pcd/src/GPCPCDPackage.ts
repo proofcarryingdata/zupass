@@ -271,7 +271,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
         defaultVisible: true
       },
       pods: {
-        argumentType: ArgumentTypeName.Record,
+        argumentType: ArgumentTypeName.RecordContainer,
         description: "Generate a proof for the selected POD object",
         validate: (
           podName: PODName,
