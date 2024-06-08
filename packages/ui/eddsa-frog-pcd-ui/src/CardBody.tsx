@@ -9,7 +9,7 @@ import {
 } from "@pcd/eddsa-frog-pcd";
 import {
   ImageZoom,
-  LinkButton,
+  StyledLinkButton,
   encodeQRPayload,
   styled
 } from "@pcd/passport-ui";
@@ -72,20 +72,20 @@ function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
 
   return showPCD ? (
     <Container>
-      <LinkButton onClick={(): void => setShowPCD(false)}>
+      <StyledLinkButton onClick={(): void => setShowPCD(false)}>
         View as frog
-      </LinkButton>
+      </StyledLinkButton>
       <FrogQR pcd={pcd} />
       <CopyFrogPCD pcd={pcd} />
     </Container>
   ) : (
     <Container>
-      <LinkButton
+      <StyledLinkButton
         style={{ textAlign: "center" }}
         onClick={(): void => setShowPCD(true)}
       >
         View as proof&#x2011;carrying data
-      </LinkButton>
+      </StyledLinkButton>
       <ImageZoom
         src={frogData?.imageUrl}
         draggable={false}
@@ -118,9 +118,9 @@ function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
           />
         )}
       </FrogInfo>
-      <LinkButton onClick={(): void => setShowMore(!showMore)}>
+      <StyledLinkButton onClick={(): void => setShowMore(!showMore)}>
         {showMore ? "Collapse" : "See more"}
-      </LinkButton>
+      </StyledLinkButton>
       {showMore && (
         <>
           <Description>{frogData.description}</Description>
@@ -219,9 +219,9 @@ function CopyFrogPCD({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
   }, [pcd]);
 
   return (
-    <LinkButton onClick={onClick}>
+    <StyledLinkButton onClick={onClick}>
       {copied ? "Copied!" : "Copy frog PCD"}
-    </LinkButton>
+    </StyledLinkButton>
   );
 }
 
