@@ -27,7 +27,7 @@ export type PODMembershipLists = Record<PODName, PODValue[] | PODValueTuple[]>;
 // Single source of truth for tuple prefix (used internally).
 // This should not be a valid {@link PODName} to avoid name clashes.
 export const TUPLE_PREFIX = "$tuple";
-type TuplePrefix = "$tuple";
+type TuplePrefix = typeof TUPLE_PREFIX;
 
 /**
  * String specifying a named tuple in the format `tuple.tupleName`.

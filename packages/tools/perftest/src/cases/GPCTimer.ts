@@ -63,9 +63,14 @@ async function setupProveArgs(): Promise<GPCPCDArgs> {
       argumentType: ArgumentTypeName.String,
       value: serializeGPCProofConfig(proofConfig)
     },
-    pod: {
-      value: await PODPCDPackage.serialize(podPCD),
-      argumentType: ArgumentTypeName.PCD
+    pods: {
+      value: {
+        pod0: {
+          value: await PODPCDPackage.serialize(podPCD),
+          argumentType: ArgumentTypeName.PCD
+        }
+      },
+      argumentType: ArgumentTypeName.Record
     },
     identity: {
       value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),

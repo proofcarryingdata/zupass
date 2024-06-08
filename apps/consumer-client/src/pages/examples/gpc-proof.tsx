@@ -195,13 +195,26 @@ export function openGPCPopup(
       value: proofConfig,
       userProvided: false
     },
-    pod: {
-      argumentType: ArgumentTypeName.PCD,
-      pcdType: PODPCDPackage.name,
-      value: undefined,
-      userProvided: true,
+    pods: {
+      argumentType: ArgumentTypeName.Record,
+      value: {
+        examplePOD: {
+          argumentType: ArgumentTypeName.PCD,
+          pcdType: PODPCDPackage.name,
+          value: undefined,
+          userProvided: true,
+          displayName: "Example POD"
+        },
+        cardPOD: {
+          argumentType: ArgumentTypeName.PCD,
+          pcdType: PODPCDPackage.name,
+          value: undefined,
+          userProvided: true,
+          displayName: "Card POD"
+        }
+      },
       validatorParams: {
-        notFoundMessage: "No eligible PODs found"
+        proofConfig
       }
     },
     identity: {

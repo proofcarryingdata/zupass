@@ -57,11 +57,15 @@ export default function Page(): JSX.Element {
   const [signedMessage, setSignedMessage] = useState("1");
   const [folder, setFolder] = useState("");
   const [podContent, setPODContent] = useState(EXAMPLE_POD_CONTENT);
+  const [podContent2, setPODContent2] = useState(
+    EXAMPLE_POD_CONTENT_WITH_DISPLAY
+  );
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
   const [membershipLists, setMembershipLists] = useState(
     EXAMPLE_MEMBERSHIP_LISTS
   );
   const [podFolder, setPODFolder] = useState("Test PODs");
+  const [podFolder2, setPODFolder2] = useState("Test PODs");
   const [gpcFolder, setGPCFolder] = useState("Test GPCs");
 
   return (
@@ -147,21 +151,7 @@ export default function Page(): JSX.Element {
         POD + GPC Examples
         <br />
         <br />
-        POD content to sign: <br />
-        <button
-          onClick={() => {
-            setPODContent(EXAMPLE_POD_CONTENT);
-          }}
-        >
-          basic example
-        </button>
-        <button
-          onClick={() => {
-            setPODContent(EXAMPLE_POD_CONTENT_WITH_DISPLAY);
-          }}
-        >
-          zupass card example
-        </button>
+        Example POD content to sign: <br />
         <br />
         <textarea
           cols={40}
@@ -171,6 +161,14 @@ export default function Page(): JSX.Element {
             setPODContent(e.target.value);
           }}
         />
+        <br />
+        <button
+          onClick={(): Promise<void> =>
+            addPODPCD(podContent, podFolder.length > 0 ? podFolder : undefined)
+          }
+        >
+          add a new POD to Zupass
+        </button>
         <br />
         <label>
           Folder to add POD to:
@@ -184,13 +182,43 @@ export default function Page(): JSX.Element {
             }}
           />
         </label>
+        <br />
+        <br />
+        Card POD content to sign: <br />
+        <br />
+        <textarea
+          cols={40}
+          rows={15}
+          value={podContent2}
+          onChange={(e): void => {
+            setPODContent2(e.target.value);
+          }}
+        />
+        <br />
         <button
           onClick={(): Promise<void> =>
-            addPODPCD(podContent, podFolder.length > 0 ? podFolder : undefined)
+            addPODPCD(
+              podContent2,
+              podFolder2.length > 0 ? podFolder2 : undefined
+            )
           }
         >
           add a new POD to Zupass
         </button>
+        <br />
+        <label>
+          Folder to add POD to:
+          <input
+            type="text"
+            value={podFolder2}
+            placeholder="Enter folder name..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODFolder2(e.target.value);
+            }}
+          />
+        </label>
+        <br />
         <br />
         GPC Proof config: <br />
         <textarea
@@ -229,6 +257,7 @@ export default function Page(): JSX.Element {
           onClick={(): Promise<void> =>
             addGPCPCD(
               podContent,
+              podContent2,
               gpcConfig,
               membershipLists,
               gpcFolder.length > 0 ? gpcFolder : undefined
@@ -624,6 +653,7 @@ async function addPODPCD(
 
 async function addGPCPCD(
   podContent: string,
+  podContent2: string,
   gpcConfig: string,
   membershipLists: string,
   podFolder: string | undefined
@@ -637,10 +667,18 @@ async function addGPCPCD(
     )
   });
 
-  const podPCD = new PODPCD(
+  const examplePODPCD = new PODPCD(
     uuid(),
     POD.sign(
       podEntriesFromSimplifiedJSON(podContent),
+      EXAMPLE_EDDSA_PRIVATE_KEY
+    )
+  );
+
+  const cardPODPCD = new PODPCD(
+    uuid(),
+    POD.sign(
+      podEntriesFromSimplifiedJSON(podContent2),
       EXAMPLE_EDDSA_PRIVATE_KEY
     )
   );
@@ -654,9 +692,18 @@ async function addGPCPCD(
       argumentType: ArgumentTypeName.String,
       value: gpcConfig
     },
-    pod: {
-      value: await PODPCDPackage.serialize(podPCD),
-      argumentType: ArgumentTypeName.PCD
+    pods: {
+      value: {
+        examplePOD: {
+          value: await PODPCDPackage.serialize(examplePODPCD),
+          argumentType: ArgumentTypeName.PCD
+        },
+        cardPOD: {
+          value: await PODPCDPackage.serialize(cardPODPCD),
+          argumentType: ArgumentTypeName.PCD
+        }
+      },
+      argumentType: ArgumentTypeName.Record
     },
     identity: {
       value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),

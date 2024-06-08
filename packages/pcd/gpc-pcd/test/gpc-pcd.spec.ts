@@ -35,7 +35,7 @@ export const ownerIdentity = new Identity(
 
 // 11 entries, max depth 5
 // Defined out of order, but will be sorted by POD construction.
-export const sampleEntries = {
+export const sampleEntries0 = {
   E: { type: "cryptographic", value: 123n },
   F: { type: "cryptographic", value: BABY_JUB_NEGATIVE_ONE },
   C: { type: "string", value: "hello" },
@@ -47,6 +47,12 @@ export const sampleEntries = {
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n },
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
+} satisfies PODEntries;
+
+export const sampleEntries1 = {
+  attendee: { type: "cryptographic", value: ownerIdentity.commitment },
+  eventID: { type: "cryptographic", value: 456n },
+  ticketID: { type: "cryptographic", value: 999n }
 } satisfies PODEntries;
 
 describe("GPCPCD should work", async function () {
@@ -65,6 +71,14 @@ describe("GPCPCD should work", async function () {
               isMemberOf: "admissibleOwners"
             }
           }
+        },
+        ticketPOD: {
+          entries: {
+            ticketID: {
+              isRevealed: false,
+              isMemberOf: "admissibleTickets"
+            }
+          }
         }
       },
       tuples: {
@@ -72,8 +86,11 @@ describe("GPCPCD should work", async function () {
       }
     };
 
-    const pod = POD.sign(sampleEntries, privateKey);
-    const podPCD = new PODPCD(uuid(), pod);
+    const pod0 = POD.sign(sampleEntries0, privateKey);
+    const podPCD0 = new PODPCD(uuid(), pod0);
+
+    const ticketPOD = POD.sign(sampleEntries1, privateKey);
+    const ticketPODPCD = new PODPCD(uuid(), ticketPOD);
 
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
       identity: ownerIdentity
@@ -84,9 +101,18 @@ describe("GPCPCD should work", async function () {
         argumentType: ArgumentTypeName.String,
         value: serializeGPCProofConfig(proofConfig)
       },
-      pod: {
-        value: await PODPCDPackage.serialize(podPCD),
-        argumentType: ArgumentTypeName.PCD
+      pods: {
+        value: {
+          pod0: {
+            value: await PODPCDPackage.serialize(podPCD0),
+            argumentType: ArgumentTypeName.PCD
+          },
+          ticketPOD: {
+            value: await PODPCDPackage.serialize(ticketPODPCD),
+            argumentType: ArgumentTypeName.PCD
+          }
+        },
+        argumentType: ArgumentTypeName.Record
       },
       identity: {
         value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),
@@ -103,15 +129,20 @@ describe("GPCPCD should work", async function () {
       membershipLists: {
         value: podMembershipListsToSimplifiedJSON({
           admissibleOwners: [
-            sampleEntries.F,
-            sampleEntries.C,
-            sampleEntries.owner
+            sampleEntries0.F,
+            sampleEntries0.C,
+            sampleEntries0.owner
           ],
           admissiblePairs: [
-            [sampleEntries.D, sampleEntries.B],
-            [sampleEntries.A, sampleEntries.E],
-            [sampleEntries.owner, sampleEntries.I],
-            [sampleEntries.J, sampleEntries.H]
+            [sampleEntries0.D, sampleEntries0.B],
+            [sampleEntries0.A, sampleEntries0.E],
+            [sampleEntries0.owner, sampleEntries0.I],
+            [sampleEntries0.J, sampleEntries0.H]
+          ],
+          admissibleTickets: [
+            sampleEntries0.C,
+            sampleEntries0.owner,
+            sampleEntries1.ticketID
           ]
         }),
         argumentType: ArgumentTypeName.String
@@ -126,14 +157,14 @@ describe("GPCPCD should work", async function () {
       gpcBindConfig(proofConfig).boundConfig
     );
     expect(gpcPCD.claim.revealed.pods.pod0.signerPublicKey).to.eq(
-      pod.signerPublicKey
+      pod0.signerPublicKey
     );
     expect(gpcPCD.claim.revealed.pods.pod0.entries?.A?.value).to.eq(123n);
     expect(gpcPCD.claim.revealed.owner?.externalNullifier).to.not.be.undefined;
     expect(gpcPCD.claim.revealed.owner?.nullifierHash).to.not.be.undefined;
     expect(gpcPCD.claim.revealed.watermark?.value).to.eq("some watermark");
     expect(gpcPCD.claim.config.circuitIdentifier).to.eq(
-      "proto-pod-gpc_3o-10e-8md-2x20l-1x4t"
+      "proto-pod-gpc_3o-10e-8md-4x20l-5x2t"
     );
 
     expect(await GPCPCDPackage.verify(gpcPCD)).to.be.true;

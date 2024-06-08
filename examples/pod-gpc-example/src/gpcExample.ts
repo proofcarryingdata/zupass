@@ -391,19 +391,24 @@ export async function gpcDemo(): Promise<boolean> {
   });
 
   // POD and Semaphore Identity are also contained in PCDs at this layer.
-  const podPCD = new PODPCD(uuid(), podSword);
+  const swordPODPCD = new PODPCD(uuid(), podSword);
+  const shieldPODPCD = new PODPCD(uuid(), podShield);
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
     identity: semaphoreIdentity
   });
 
-  // So far, the GPCPCD only supports proving about one POD, and always
-  // names it "pod0" so we need a slightly different config.  More flexibility
-  // will be coming soon.
+  // The GPCPCD allows us to prove about an arbitrary number of PODs.
   const pcdProofConfig: GPCProofConfig = {
     pods: {
-      pod0: {
+      swordPOD: {
         entries: {
           attack: { isRevealed: true },
+          owner: { isRevealed: false, isOwnerID: true }
+        }
+      },
+      shieldPOD: {
+        entries: {
+          defense: { isRevealed: true },
           owner: { isRevealed: false, isOwnerID: true }
         }
       }
@@ -419,9 +424,18 @@ export async function gpcDemo(): Promise<boolean> {
       argumentType: ArgumentTypeName.String,
       value: serializeGPCProofConfig(pcdProofConfig)
     },
-    pod: {
-      value: await PODPCDPackage.serialize(podPCD),
-      argumentType: ArgumentTypeName.PCD
+    pods: {
+      value: {
+        swordPOD: {
+          value: await PODPCDPackage.serialize(swordPODPCD),
+          argumentType: ArgumentTypeName.PCD
+        },
+        shieldPOD: {
+          value: await PODPCDPackage.serialize(shieldPODPCD),
+          argumentType: ArgumentTypeName.PCD
+        }
+      },
+      argumentType: ArgumentTypeName.Record
     },
     identity: {
       value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),

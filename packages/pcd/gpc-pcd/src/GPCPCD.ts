@@ -1,5 +1,11 @@
 import { GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
-import { PCD, PCDArgument, StringArgument } from "@pcd/pcd-types";
+import {
+  PCD,
+  PCDArgument,
+  RecordArgument,
+  StringArgument
+} from "@pcd/pcd-types";
+import { PODName } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Groth16Proof } from "snarkjs";
@@ -33,6 +39,24 @@ export type GPCPCDInitArgs = {
 };
 
 /**
+ * Record argument type encapsulating a record of POD PCD arguments. The POD
+ * names used here must correspond to those used in the proof configuration.
+ */
+export type PODPCDRecordArg = RecordArgument<
+  PODName,
+  PCDArgument<PODPCD, PODPCDArgValidatorParams>,
+  PODPCDArgValidatorParams
+>;
+
+/**
+ * Validator parameter type for POD PCD arguments.
+ */
+export type PODPCDArgValidatorParams = {
+  notFoundMessage?: string;
+  proofConfig?: string;
+};
+
+/**
  * Defines the essential parameters required for creating a {@link GPCPCD}.
  */
 export type GPCPCDArgs = {
@@ -48,15 +72,15 @@ export type GPCPCDArgs = {
   // choice here should be driven by the needs of the Prove screen.
 
   /**
-   * POD objects to prove about.  These are not revealed by default, but
-   * a redacted version of their entries will become part of the claims of the
+   * POD objects to prove about. Each object is identified by name in the value
+   * underlying this record argument.  These are not revealed by default, but a
+   * redacted version of their entries will become part of the claims of the
    * resulting proof PCD, as specified by the proof config.
    *
    * See {@link GPCProofConfig} and {@link GPCRevealedClaims} for more
    * information.
    */
-  pod: PCDArgument<PODPCD>;
-  // TODO(POD-P3): Support more than one POD.
+  pods: PODPCDRecordArg;
 
   /**
    * Optional secret info identifying the owner of PODs, if needed by the proof

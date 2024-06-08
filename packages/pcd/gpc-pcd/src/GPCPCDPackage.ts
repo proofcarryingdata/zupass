@@ -17,8 +17,8 @@ import {
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { PODStringValue } from "@pcd/pod";
-import { PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
+import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
+import { PODPCD, PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import { v4 as uuid } from "uuid";
@@ -28,7 +28,8 @@ import {
   GPCPCDClaim,
   GPCPCDInitArgs,
   GPCPCDProof,
-  GPCPCDTypeName
+  GPCPCDTypeName,
+  PODPCDArgValidatorParams
 } from "./GPCPCD";
 
 let savedInitArgs: GPCPCDInitArgs | undefined = undefined;
@@ -62,12 +63,30 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   }
   const proofConfig = deserializeGPCProofConfig(args.proofConfig.value);
 
-  if (!args.pod.value) {
-    throw new Error("No PODPCD value provided");
+  if (!args.pods.value) {
+    throw new Error("No PODs provided");
   }
-  const podPCD = await PODPCDPackage.deserialize(args.pod.value.pcd);
-  if (!isPODPCD(podPCD)) {
-    throw new Error("Wrong PCD type provided for PODPCD");
+  const pods: Record<PODName, POD> = Object.fromEntries(
+    await Promise.all(
+      Object.entries(args.pods.value).map(async ([podName, podPCDArg]) => {
+        checkPODName(podName);
+
+        if (!podPCDArg.value) {
+          throw new Error(`No PODPCD value provided for POD ${podName}`);
+        }
+
+        const podPCD = await PODPCDPackage.deserialize(podPCDArg.value.pcd);
+        if (!isPODPCD(podPCD)) {
+          throw new Error("Wrong PCD type provided for PODPCD ${podName}");
+        }
+
+        return [podName, podPCD.pod];
+      })
+    )
+  );
+
+  if (Object.keys(pods).length === 0) {
+    throw new Error("No PODs provided");
   }
 
   const serializedIdentityPCD = args.identity.value?.pcd;
@@ -106,7 +125,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   return {
     proofConfig,
     proofInputs: {
-      pods: { pod0: podPCD.pod },
+      pods,
       ...(ownerSemaphorePCD !== undefined
         ? {
             owner: {
@@ -251,16 +270,46 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
         argumentType: ArgumentTypeName.String,
         defaultVisible: true
       },
-      pod: {
-        argumentType: ArgumentTypeName.PCD,
+      pods: {
+        argumentType: ArgumentTypeName.Record,
         description: "Generate a proof for the selected POD object",
-        validate(value, _params): boolean {
-          if (value.type !== PODPCDTypeName) {
+        validate: (
+          podName: PODName,
+          podPCD: PODPCD,
+          params: PODPCDArgValidatorParams | undefined
+        ): boolean => {
+          if (podPCD.type !== PODPCDTypeName) {
             return false;
           }
 
-          // TODO(POD-P3): Filter to only PODs which contain the entries
-          // mentioned in config.
+          if (params?.proofConfig !== undefined) {
+            let proofConfig: GPCProofConfig;
+            try {
+              proofConfig = deserializeGPCProofConfig(params.proofConfig);
+            } catch (e) {
+              if (e instanceof TypeError) {
+                params.notFoundMessage = e.message;
+                return false;
+              }
+              throw e;
+            }
+
+            // POD podName should be present in the config and have all
+            // entries specified there.
+            const podConfig = proofConfig.pods[podName];
+            if (podConfig === undefined) {
+              params.notFoundMessage = `The proof configuration does not contain this POD.`;
+              return false;
+            } else {
+              const entries = Object.keys(podConfig.entries);
+              // Enumerate POD entries
+              const podEntries = podPCD.pod.content.asEntries();
+              // Return true iff all elements of `entries` are keys of `podEntries`
+              return entries.every(
+                (entryName) => podEntries[entryName] !== undefined
+              );
+            }
+          }
 
           // TODO(POD-P3): Use validatorParams to filter by more constraints
           // not included in config.

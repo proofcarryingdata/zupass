@@ -11,6 +11,7 @@ import {
   PCD,
   PCDArgument,
   PCDPackage,
+  PrimitiveArgumentTypeName,
   RawValueType,
   StringArgument,
   ToggleList,
@@ -20,6 +21,7 @@ import {
   isNumberArgument,
   isObjectArgument,
   isPCDArgument,
+  isRecordArgument,
   isRevealListArgument,
   isStringArgument,
   isStringArrayArgument,
@@ -56,20 +58,66 @@ export function PCDArgs<T extends PCDPackage>({
   options?: ArgsDisplayOptions<ArgsOf<T>>;
 }): JSX.Element {
   const [showAll, setShowAll] = useState(false);
+
+  // Flatten record arguments (if any), keeping track of the parent argument to
+  // properly mutate (cf. `setArg`) as well as inheriting argument fields from
+  // the record argument.  Validator parameters are also combined.
+  type flattenedArgTriple = [
+    string | undefined,
+    string,
+    Argument<PrimitiveArgumentTypeName>
+  ];
+  const flattenedArgs: flattenedArgTriple[] = Object.entries(args).flatMap(
+    ([argName, arg]: [
+      string,
+      Argument<ArgumentTypeName>
+    ]): flattenedArgTriple[] => {
+      if (isRecordArgument(arg)) {
+        const recordArgPairs = Object.entries(arg.value ?? {});
+        const { value: _v, argumentType: _t, ...recordArgs } = arg;
+        return recordArgPairs.map(
+          ([childArgName, childArg]: [
+            string,
+            Argument<PrimitiveArgumentTypeName>
+          ]) => [
+            argName,
+            childArgName,
+            {
+              ...recordArgs,
+              ...childArg,
+              validatorParams: {
+                ...(recordArgs.validatorParams ?? {}),
+                ...(childArg.validatorParams ?? {})
+              }
+            }
+          ]
+        );
+      } else {
+        return [
+          [undefined, argName, arg as Argument<PrimitiveArgumentTypeName>]
+        ];
+      }
+    }
+  );
+
   const [visible, hidden] = _.partition(
-    Object.entries(args),
-    ([key]) => options?.[key]?.defaultVisible ?? true
+    flattenedArgs,
+    ([parentArgName, argName, arg]) =>
+      arg.defaultVisible ??
+      options?.[parentArgName ?? argName]?.defaultVisible ??
+      true
   );
 
   return (
     <ArgsContainer>
-      {visible.map(([key, value]) => (
+      {visible.map(([parentKey, key, value]) => (
         <ArgInput
-          key={key}
+          key={parentKey !== undefined ? `${parentKey}.${key}` : key}
           argName={key}
+          parentArgName={parentKey}
           arg={value}
           setArgs={setArgs}
-          defaultArg={options?.[key]}
+          defaultArg={options?.[parentKey ?? key]}
         />
       ))}
       {hidden.length > 0 && (
@@ -81,16 +129,17 @@ export function PCDArgs<T extends PCDPackage>({
           </ShowMoreButton>
           {
             /**
-             * NB: we have to render all the hidden inputs so that the
+             * NB: we have to render all the hidden inputs so that
              * any default value can be automatically set.
              */
-            hidden.map(([key, value]) => (
+            hidden.map(([parentKey, key, value]) => (
               <ArgInput
-                key={key}
+                key={parentKey !== undefined ? `${parentKey}.${key}` : key}
                 argName={key}
+                parentArgName={parentKey}
                 arg={value}
                 setArgs={setArgs}
-                defaultArg={options?.[key]}
+                defaultArg={options?.[parentKey ?? key]}
                 hidden={!showAll}
               />
             ))
@@ -104,48 +153,75 @@ export function PCDArgs<T extends PCDPackage>({
 export function ArgInput<T extends PCDPackage, ArgName extends string>({
   arg,
   argName,
+  parentArgName,
   setArgs,
   defaultArg,
   hidden
 }: {
   arg: ArgsOf<T>[ArgName];
   argName: string;
+  parentArgName: string | undefined;
   setArgs: React.Dispatch<React.SetStateAction<ArgsOf<T>>>;
   defaultArg?: DisplayArg<typeof arg>;
   hidden?: boolean;
 }): JSX.Element | undefined {
+  // Go one level deeper in case the arg arises from a record.
   const setArg = React.useCallback(
     (value: (typeof arg)["value"]) => {
       setArgs((args) => ({
         ...args,
-        [argName]: {
-          ...args[argName],
-          value
-        }
+        ...(parentArgName !== undefined
+          ? {
+              [parentArgName]: {
+                ...args[parentArgName],
+                value: {
+                  ...args[parentArgName].value,
+                  [argName]: {
+                    ...args[parentArgName].value[argName],
+                    value
+                  }
+                }
+              }
+            }
+          : {
+              [argName]: {
+                ...args[argName],
+                value
+              }
+            })
       }));
     },
-    [setArgs, argName]
+    [setArgs, parentArgName, argName]
   );
 
+  // Call `validate` appropriately if the argument arises from a record.
   const isValid = useCallback(
     <A extends Argument<ArgumentTypeName, unknown>>(value: RawValueType<A>) =>
       (arg.validatorParams &&
-        defaultArg?.validate?.(value, arg.validatorParams)) ??
+        (parentArgName !== undefined
+          ? defaultArg?.validate?.(argName, value, arg.validatorParams)
+          : defaultArg?.validate?.(value, arg.validatorParams))) ??
       true,
-    [defaultArg, arg.validatorParams]
+    [defaultArg, parentArgName, argName, arg.validatorParams]
   );
 
-  const props = useMemo<ArgInputProps<typeof arg>>(
-    () => ({
+  const props = useMemo<ArgInputProps<typeof arg>>(() => {
+    // Qualify argument name if it arises from a record
+    const qualifiedArgName =
+      (parentArgName !== undefined ? `${parentArgName}.` : "") + argName;
+    return {
       // merge arg with default value
-      arg: { displayName: _.startCase(argName), ...(defaultArg || {}), ...arg },
+      arg: {
+        displayName: _.startCase(qualifiedArgName),
+        ...(defaultArg || {}),
+        ...arg
+      },
       argName,
       setArg,
       isValid,
       hidden
-    }),
-    [defaultArg, arg, argName, setArg, isValid, hidden]
-  );
+    };
+  }, [defaultArg, arg, parentArgName, argName, setArg, isValid, hidden]);
 
   if (isStringArgument(arg)) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -548,7 +624,7 @@ function ArgContainer({
   children,
   end
 }: {
-  arg: Argument<ArgumentTypeName, unknown>;
+  arg: Argument<PrimitiveArgumentTypeName, unknown>;
   hidden?: boolean;
   error?: string;
   children?: React.ReactNode;
@@ -599,7 +675,8 @@ function ArgContainer({
   );
 }
 
-const argTypeIcons: Record<ArgumentTypeName, JSX.Element> = {
+// Omit Records as they should have been flattened out.
+const argTypeIcons: Record<PrimitiveArgumentTypeName, JSX.Element> = {
   PCD: <GrDocumentLocked />,
   String: <TbLetterT />,
   Number: <FaHashtag />,

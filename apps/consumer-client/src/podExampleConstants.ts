@@ -32,7 +32,7 @@ export const EXAMPLE_OWNER_IDENTITY = new Identity(
 
 export const EXAMPLE_GPC_CONFIG = `{
   "pods": {
-    "pod0": {
+    "examplePOD": {
       "entries": {
         "A": {
           "isRevealed": true,
@@ -43,18 +43,25 @@ export const EXAMPLE_GPC_CONFIG = `{
         },
         "E": {
           "isRevealed": false,
-          "equalsEntry": "pod0.A"
+          "equalsEntry": "examplePOD.A"
         },
         "owner": {
           "isRevealed": false,
           "isOwnerID": true
         }
       }
+    },
+    "cardPOD": {
+      "entries": {
+        "zupass_title": {
+          "isRevealed": true
+        }
+      }
     }
   },
   "tuples": {
     "tuple0": {
-      "entries": ["pod0.E", "pod0.C"],
+      "entries": ["examplePOD.E", "examplePOD.C"],
       "isMemberOf": "admissiblePairs"
     }
   }

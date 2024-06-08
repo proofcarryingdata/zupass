@@ -483,9 +483,11 @@ export function GPCRequirements(
 /**
  * Enumerated type for list membership check type.
  */
-export type ListMembershipEnum = "membership" | "non-membership";
-export const LIST_MEMBERSHIP: ListMembershipEnum = "membership";
-export const LIST_NONMEMBERSHIP: ListMembershipEnum = "non-membership";
+export type ListMembershipEnum =
+  | typeof LIST_MEMBERSHIP
+  | typeof LIST_NONMEMBERSHIP;
+export const LIST_MEMBERSHIP = "membership";
+export const LIST_NONMEMBERSHIP = "non-membership";
 
 /**
  * Configuration for named lists arranged by identifier requiring a list
