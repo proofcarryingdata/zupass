@@ -1,3 +1,5 @@
+import { SerializedPCD } from "@pcd/pcd-types";
+
 /*
  * Call this function on a dedicated /popup page in your app to integrate your
  * app with the Zupass proving/auth popup flow. The popup flow is optional,
@@ -119,7 +121,7 @@ export type PopupMessageResult =
       type: "pcd";
       pcdStr: string;
     }
-  | { type: "multi-pcd"; pcds: string[] }
+  | { type: "multi-pcd"; pcds: SerializedPCD[] }
   | {
       // We got a pending PCD back
       type: "pendingPcd";

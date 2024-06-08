@@ -5,7 +5,7 @@ import {
   useSerializedPCD,
   useZupassPopupMessages
 } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { generateSnarkMessageHash } from "@pcd/util";
 import {
@@ -14,7 +14,8 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useMemo, useState } from "react";
+import styled from "styled-components";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { ZUPASS_URL } from "../../constants";
@@ -86,20 +87,7 @@ export default function Page(): JSX.Element {
   );
 
   // Populate PCD from either client-side or server-side proving using the Zupass popup
-  const [_pcdStr, _pendingPCDStr, multiPCDStrs] = useZupassPopupMessages();
-
-  const [valid, setValid] = useState<boolean | undefined>();
-  const onVerified = (valid: boolean): void => {
-    setValid(valid);
-  };
-
-  const { pcd } = useZKEdDSAEventTicketProof(
-    multiPCDStrs[0] ? JSON.stringify(multiPCDStrs[0]) : "",
-    onVerified,
-    fieldsToReveal,
-    watermark,
-    externalNullifier
-  );
+  const [_pcdStr, _pendingPCDStr, multiPCDs] = useZupassPopupMessages();
 
   return (
     <>
@@ -134,7 +122,6 @@ export default function Page(): JSX.Element {
               externalNullifier
             )
           }
-          disabled={valid}
         >
           Request Zupass Event Ticket Proof
         </button>
@@ -292,95 +279,130 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
-        {!!pcd && (
-          <>
-            <p>Got Zupass ZKEdDSA Event Ticket Proof from Zupass</p>
-            <CollapsableCode code={JSON.stringify(pcd, null, 2)} />
-            {valid === undefined && <p>❓ Proof verifying</p>}
-            {valid === false && <p>❌ Proof is invalid</p>}
-            {valid === true && (
-              <>
-                <p>✅ Proof is valid</p>
-                <p>{`Ticket ID: ${
-                  pcd.claim.partialTicket.ticketId !== undefined
-                    ? pcd.claim.partialTicket.ticketId
-                    : "HIDDEN"
-                }`}</p>
-                <p>{`Event ID: ${
-                  pcd.claim.partialTicket.eventId !== undefined
-                    ? pcd.claim.partialTicket.eventId
-                    : "HIDDEN"
-                }`}</p>
-                <p>{`Valid Event IDs: ${
-                  pcd.claim.validEventIds !== undefined
-                    ? "[" + pcd.claim.validEventIds.join(", ") + "]"
-                    : "UNCHECKED"
-                }`}</p>
-                <p>{`Product ID: ${
-                  pcd.claim.partialTicket.productId !== undefined
-                    ? pcd.claim.partialTicket.productId
-                    : "HIDDEN"
-                }`}</p>
-                <p>{`Timestamp Consumed: ${
-                  // timestampConsumed can be 0, which is falsey
-                  // so test for undefined
-                  pcd.claim.partialTicket.timestampConsumed !== undefined
-                    ? pcd.claim.partialTicket.timestampConsumed
-                    : "HIDDEN"
-                }`}</p>
-                <p>{`Timestamp Signed: ${
-                  pcd.claim.partialTicket.timestampSigned !== undefined
-                    ? pcd.claim.partialTicket.timestampSigned
-                    : "HIDDEN"
-                }`}</p>
-                <p>{`Semaphore ID: ${
-                  pcd.claim.partialTicket.attendeeSemaphoreId !== undefined
-                    ? pcd.claim.partialTicket.attendeeSemaphoreId
-                    : "HIDDEN"
-                }`}</p>
-                <p>{`Is Consumed?: ${
-                  // isConsumed can be true, false, or undefined
-                  // undefined means it is not revealed in this PCD
-                  pcd.claim.partialTicket.isConsumed !== undefined
-                    ? pcd.claim.partialTicket.isConsumed
-                    : "HIDDEN"
-                }`}</p>
-                <p>{`Is Revoked?: ${
-                  // isRevoked can be true, false, or undefined
-                  // undefined means it is not revealed in this PCD
-                  pcd.claim.partialTicket.isRevoked !== undefined
-                    ? pcd.claim.partialTicket.isRevoked
-                    : "HIDDEN"
-                }`}</p>
-                <p>{`Attendee Email: ${
-                  // attendeeEmail can be true, false, or undefined
-                  // undefined means it is not revealed in this PCD
-                  pcd.claim.partialTicket.attendeeEmail !== undefined
-                    ? pcd.claim.partialTicket.attendeeEmail
-                    : "HIDDEN"
-                }`}</p>
-                <p>{`Attendee Name: ${
-                  // attendeeName can be true, false, or undefined
-                  // undefined means it is not revealed in this PCD
-                  pcd.claim.partialTicket.attendeeName !== undefined
-                    ? pcd.claim.partialTicket.attendeeName
-                    : "HIDDEN"
-                }`}</p>
-                <p>{`Signer: ${pcd.claim.signer}`}</p>
-                <p>{`Watermark: ${pcd.claim.watermark}`}</p>
-                {pcd.claim.externalNullifier && (
-                  <p>{`External Nullifier: ${pcd.claim.externalNullifier}`}</p>
-                )}
-                {pcd.claim.nullifierHash && (
-                  <p>{`Nullifier Hash: ${pcd.claim.nullifierHash}`}</p>
-                )}
-              </>
-            )}
-          </>
-        )}
-        {valid && <p>Welcome, anon</p>}
+        {multiPCDs.length > 0 && <p>Got {multiPCDs.length} Proofs!</p>}
+        {multiPCDs.map((serPCD) => (
+          <SinglePcdFromMultiPcdProof
+            serializedPCD={serPCD}
+            fieldsToReveal={fieldsToReveal}
+            watermark={watermark}
+            externalNullifier={externalNullifier}
+          />
+        ))}
       </ExampleContainer>
     </>
+  );
+}
+
+function SinglePcdFromMultiPcdProof({
+  fieldsToReveal,
+  watermark,
+  externalNullifier,
+  serializedPCD
+}: {
+  serializedPCD: SerializedPCD<ZKEdDSAEventTicketPCD>;
+  fieldsToReveal: EdDSATicketFieldsToReveal;
+  watermark: bigint;
+  externalNullifier: string;
+}): ReactNode {
+  const [valid, setValid] = useState<boolean | undefined>();
+
+  const { pcd } = useZKEdDSAEventTicketProof(
+    JSON.stringify(serializedPCD),
+    setValid,
+    fieldsToReveal,
+    watermark,
+    externalNullifier
+  );
+
+  if (!pcd) {
+    return <div>unable to deserialize PCD</div>;
+  }
+
+  return (
+    <ReturnedSinglePCDContainer>
+      <p>Got Zupass ZKEdDSA Event Ticket Proof from Zupass</p>
+      <CollapsableCode code={JSON.stringify(pcd, null, 2)} />
+      {valid === undefined && <p>❓ Proof verifying</p>}
+      {valid === false && <p>❌ Proof is invalid</p>}
+      {valid === true && (
+        <>
+          <p>✅ Proof is valid</p>
+          <p>{`Ticket ID: ${
+            pcd.claim.partialTicket.ticketId !== undefined
+              ? pcd.claim.partialTicket.ticketId
+              : "HIDDEN"
+          }`}</p>
+          <p>{`Event ID: ${
+            pcd.claim.partialTicket.eventId !== undefined
+              ? pcd.claim.partialTicket.eventId
+              : "HIDDEN"
+          }`}</p>
+          <p>{`Valid Event IDs: ${
+            pcd.claim.validEventIds !== undefined
+              ? "[" + pcd.claim.validEventIds.join(", ") + "]"
+              : "UNCHECKED"
+          }`}</p>
+          <p>{`Product ID: ${
+            pcd.claim.partialTicket.productId !== undefined
+              ? pcd.claim.partialTicket.productId
+              : "HIDDEN"
+          }`}</p>
+          <p>{`Timestamp Consumed: ${
+            // timestampConsumed can be 0, which is falsey
+            // so test for undefined
+            pcd.claim.partialTicket.timestampConsumed !== undefined
+              ? pcd.claim.partialTicket.timestampConsumed
+              : "HIDDEN"
+          }`}</p>
+          <p>{`Timestamp Signed: ${
+            pcd.claim.partialTicket.timestampSigned !== undefined
+              ? pcd.claim.partialTicket.timestampSigned
+              : "HIDDEN"
+          }`}</p>
+          <p>{`Semaphore ID: ${
+            pcd.claim.partialTicket.attendeeSemaphoreId !== undefined
+              ? pcd.claim.partialTicket.attendeeSemaphoreId
+              : "HIDDEN"
+          }`}</p>
+          <p>{`Is Consumed?: ${
+            // isConsumed can be true, false, or undefined
+            // undefined means it is not revealed in this PCD
+            pcd.claim.partialTicket.isConsumed !== undefined
+              ? pcd.claim.partialTicket.isConsumed
+              : "HIDDEN"
+          }`}</p>
+          <p>{`Is Revoked?: ${
+            // isRevoked can be true, false, or undefined
+            // undefined means it is not revealed in this PCD
+            pcd.claim.partialTicket.isRevoked !== undefined
+              ? pcd.claim.partialTicket.isRevoked
+              : "HIDDEN"
+          }`}</p>
+          <p>{`Attendee Email: ${
+            // attendeeEmail can be true, false, or undefined
+            // undefined means it is not revealed in this PCD
+            pcd.claim.partialTicket.attendeeEmail !== undefined
+              ? pcd.claim.partialTicket.attendeeEmail
+              : "HIDDEN"
+          }`}</p>
+          <p>{`Attendee Name: ${
+            // attendeeName can be true, false, or undefined
+            // undefined means it is not revealed in this PCD
+            pcd.claim.partialTicket.attendeeName !== undefined
+              ? pcd.claim.partialTicket.attendeeName
+              : "HIDDEN"
+          }`}</p>
+          <p>{`Signer: ${pcd.claim.signer}`}</p>
+          <p>{`Watermark: ${pcd.claim.watermark}`}</p>
+          {pcd.claim.externalNullifier && (
+            <p>{`External Nullifier: ${pcd.claim.externalNullifier}`}</p>
+          )}
+          {pcd.claim.nullifierHash && (
+            <p>{`Nullifier Hash: ${pcd.claim.nullifierHash}`}</p>
+          )}
+        </>
+      )}
+    </ReturnedSinglePCDContainer>
   );
 }
 
@@ -542,3 +564,14 @@ async function verifyProof(
 
   return sameExternalNullifier && sameWatermark && samefieldsToReveal;
 }
+
+const ReturnedSinglePCDContainer = styled.div`
+  border: 2px solid white;
+  padding: 8px;
+  border-radius: 8px;
+  background-color: #333;
+  overflow: scroll;
+  max-width: 100%;
+  max-height: 300px;
+  margin-top: 8px;
+`;

@@ -1,10 +1,11 @@
+import { SerializedPCD } from "@pcd/pcd-types";
 import { useEffect, useState } from "react";
 import { receiveZupassPopupMessage, zupassPopupSetup } from "./core";
 
 export type ReceivedZupassResponse = [
   string, // single PCD serialized to string
   string, // pending PCD (proven on server) serialized to string
-  string[] // multiple PCDs proven at once, all serialized to strings in an array
+  SerializedPCD[] // multiple PCDs proven at once, all serialized to strings in an array
 ];
 
 /**
@@ -13,7 +14,7 @@ export type ReceivedZupassResponse = [
  */
 export function useZupassPopupMessages(): ReceivedZupassResponse {
   const [pcdStr, setPCDStr] = useState("");
-  const [multiPcdStrs, setMultiPcdStrs] = useState<string[]>([]);
+  const [multiPcdStrs, setMultiPcdStrs] = useState<SerializedPCD[]>([]);
   const [pendingPCDStr, setPendingPCDStr] = useState("");
 
   // Listen for PCDs coming back from the Zupass popup
