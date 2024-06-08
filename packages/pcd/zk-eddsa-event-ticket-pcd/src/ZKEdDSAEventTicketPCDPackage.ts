@@ -607,3 +607,9 @@ export const ZKEdDSAEventTicketPCDPackage: PCDPackage<
   serialize,
   deserialize
 };
+
+export function isZKEdDSAEventTicketPCDPackage(
+  p: PCDPackage | undefined
+): p is typeof ZKEdDSAEventTicketPCDPackage {
+  return p?.name === ZKEdDSAEventTicketPCDTypeName;
+}

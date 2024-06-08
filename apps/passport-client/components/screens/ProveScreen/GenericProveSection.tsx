@@ -16,6 +16,7 @@ import {
   SemaphoreSignaturePCDTypeName
 } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
+import { isZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
@@ -57,6 +58,23 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const [error, setError] = useState<string | undefined>();
   const [proving, setProving] = useState(false);
   const pcdPackage = pcds.getPackage<T>(pcdType);
+
+  const _relevantPCDs = useMemo(() => {
+    if (isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
+      const ticketValidation =
+        pcdPackage?.getProveDisplayOptions?.()?.defaultArgs?.["ticket"];
+
+      if (ticketValidation) {
+        const relevantPCDs = pcds.getAll().filter((p) => {
+          const ticketArg = args["ticket"];
+          return ticketValidation.validate(p, ticketArg.validatorParams);
+        });
+
+        console.log(relevantPCDs);
+      }
+    }
+    return [];
+  }, [args, pcdPackage, pcds]);
 
   useEffect(() => {
     setError(undefined);
