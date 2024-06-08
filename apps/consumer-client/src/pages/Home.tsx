@@ -35,6 +35,11 @@ function Page(): JSX.Element {
             </Link>
           </li>
           <li>
+            <Link to="/examples/multi-zk-eddsa-event-ticket-proof">
+              Prove and Get multiple ZKEdDSA Event Ticket Proofs from Zupass
+            </Link>
+          </li>
+          <li>
             <Link to="/examples/zuauth">ZuAuth authentication of tickets</Link>
           </li>
           <li>

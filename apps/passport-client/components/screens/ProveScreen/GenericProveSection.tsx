@@ -108,6 +108,9 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       }
 
       onProve(undefined, undefined, pendingPCDResult.value);
+    }
+    if (options?.multi) {
+      alert("multi proof");
     } else {
       try {
         if (!pcdPackage) {
@@ -129,7 +132,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         setProving(false);
       }
     }
-  }, [options?.proveOnServer, pcdType, args, onProve, pcdPackage]);
+  }, [options, pcdType, args, onProve, pcdPackage]);
 
   return (
     <Container>

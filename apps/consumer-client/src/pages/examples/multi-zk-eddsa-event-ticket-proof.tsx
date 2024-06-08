@@ -104,7 +104,7 @@ export default function Page(): JSX.Element {
   return (
     <>
       <HomeLink />
-      <h2>ZKEdDSA Event Ticket Proof</h2>
+      <h2>Multiple ZKEdDSA Event Ticket Proofs</h2>
       <p>
         This page shows a working example of an integration with Zupass which
         requests and verifies that the user has an EdDSA-signed ticket to one of
