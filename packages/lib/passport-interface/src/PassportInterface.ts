@@ -26,6 +26,7 @@ export interface ProveOptions {
   debug?: boolean;
   proveOnServer?: boolean;
   signIn?: boolean;
+  multi?: boolean;
 }
 
 /**

@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { receiveZupassPopupMessage, zupassPopupSetup } from "./core";
 
+export type ReceivedZupassResponse = [
+  string, // single PCD serialized to string
+  string, // pending PCD (proven on server) serialized to string
+  string[] // multiple PCDs proven at once, all serialized in an array
+];
+
 /**
  * React hook that listens for PCDs and PendingPCDs from a Zupass popup window.
  * A thin wrapper around {@link receiveZupassPopupMessage}.
  */
-export function useZupassPopupMessages(): [string, string] {
+export function useZupassPopupMessages(): ReceivedZupassResponse {
   const [pcdStr, setPCDStr] = useState("");
+  const [multiPcdStrs, setMultiPcdStrs] = useState<string[]>([]);
   const [pendingPCDStr, setPendingPCDStr] = useState("");
 
   // Listen for PCDs coming back from the Zupass popup
@@ -17,6 +24,8 @@ export function useZupassPopupMessages(): [string, string] {
         setPCDStr(result.pcdStr);
       } else if (result.type === "pendingPcd") {
         setPendingPCDStr(result.pendingPcdStr);
+      } else if (result.type === "multi-pcd") {
+        setMultiPcdStrs(result.pcds);
       }
     });
     return () => {
@@ -26,7 +35,7 @@ export function useZupassPopupMessages(): [string, string] {
     };
   }, []);
 
-  return [pcdStr, pendingPCDStr];
+  return [pcdStr, pendingPCDStr, multiPcdStrs];
 }
 
 /**

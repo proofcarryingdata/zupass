@@ -119,6 +119,7 @@ export type PopupMessageResult =
       type: "pcd";
       pcdStr: string;
     }
+  | { type: "multi-pcd"; pcds: string[] }
   | {
       // We got a pending PCD back
       type: "pendingPcd";
