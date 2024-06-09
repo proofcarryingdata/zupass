@@ -117,19 +117,11 @@ function getPreferredDisplayFormat(
   return undefined;
 }
 
-let testCounter = 0;
-
 async function verifySignature(pcd: PODPCD): Promise<{
   isValid: boolean;
   errorMessage?: string;
 }> {
   try {
-    const oldCounter = testCounter++;
-    if (oldCounter % 3 === 0) {
-      throw new Error("something went wrong with the signature check");
-    } else if (oldCounter % 3 === 1) {
-      return { isValid: false };
-    }
     const isValid = await PODPCDPackage.verify(pcd);
     return { isValid };
   } catch (e) {
