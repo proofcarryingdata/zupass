@@ -1,10 +1,10 @@
+import { CircleButton } from "@pcd/passport-ui";
 import React, { useCallback } from "react";
 import { IoMdSettings } from "react-icons/io";
 import { MdInfo, MdOutlineQrCodeScanner, MdRssFeed } from "react-icons/md";
 import styled from "styled-components";
 import { useDispatch, useSubscriptions } from "../../src/appHooks";
 import { AppState } from "../../src/state";
-import { CircleButton } from "../core/Button";
 
 export const AppHeader = React.memo(AppHeaderImpl);
 

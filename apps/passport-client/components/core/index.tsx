@@ -1,8 +1,7 @@
-import { Spacer } from "@pcd/passport-ui";
+import { Button, Spacer } from "@pcd/passport-ui";
 import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import styled from "styled-components";
 import { icons } from "../icons";
-import { Button } from "./Button";
 import { BigInput } from "./Input";
 
 export { BigInput, Button, Spacer };

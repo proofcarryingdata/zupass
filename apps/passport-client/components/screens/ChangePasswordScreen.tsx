@@ -1,5 +1,6 @@
 import { HexString, PCDCrypto } from "@pcd/passport-crypto";
 import { requestPasswordSalt } from "@pcd/passport-interface";
+import { LinkButton } from "@pcd/passport-ui";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +16,6 @@ import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
-import { LinkButton } from "../core/Button";
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";

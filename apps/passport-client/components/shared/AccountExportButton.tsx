@@ -1,4 +1,5 @@
 import { serializeStorage } from "@pcd/passport-interface";
+import { LinkButton } from "@pcd/passport-ui";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import {
@@ -6,7 +7,6 @@ import {
   useSelf,
   useSubscriptions
 } from "../../src/appHooks";
-import { LinkButton } from "../core/Button";
 
 export function AccountExportButton(): JSX.Element | null {
   const user = useSelf();

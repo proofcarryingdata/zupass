@@ -1,3 +1,4 @@
+import { CircleButton } from "@pcd/passport-ui";
 import { assertUnreachable } from "@pcd/util";
 import React, { ReactNode, useCallback, useEffect } from "react";
 import { GrClose } from "react-icons/gr";
@@ -5,7 +6,6 @@ import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { useDispatch, useModal } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 import { Spacer } from "../core";
-import { CircleButton } from "../core/Button";
 import { Overscroll } from "../shared/Overscroll";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";

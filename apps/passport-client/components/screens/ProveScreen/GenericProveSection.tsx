@@ -9,6 +9,7 @@ import {
   ProveOptions,
   requestProveOnServer
 } from "@pcd/passport-interface";
+import { ErrorContainer } from "@pcd/passport-ui";
 import {
   ArgsOf,
   PCDOf,
@@ -36,7 +37,6 @@ import { nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { ProgressBar } from "../../core/ProgressBar";
 import { RippleLoader } from "../../core/RippleLoader";
-import { ErrorContainer } from "../../core/error";
 import { PCDArgs } from "../../shared/PCDArgs";
 
 /**
