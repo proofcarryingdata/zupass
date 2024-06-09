@@ -10,7 +10,7 @@
   "main": "./build/main.cjs",
   "module": "./main.js",
   "scripts": {
-    "test": "mocha",
+    "test-old": "mocha",
     "build": "rollup -c rollup.cjs.config.js"
   },
   "bin": {
