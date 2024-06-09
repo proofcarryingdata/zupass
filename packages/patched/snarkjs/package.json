@@ -1,5 +1,5 @@
 {
-  "name": "snarkjs",
+  "name": "@pcd/snarkjs",
   "type": "module",
   "version": "0.7.4",
   "description": "zkSNARKs implementation in JavaScript",

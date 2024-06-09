@@ -1,5 +1,5 @@
 {
-  "name": "circom_runtime",
+  "name": "@pcd/circom_runtime",
   "version": "0.1.25",
   "description": "Circom runtime",
   "type": "module",
