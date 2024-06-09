@@ -1,6 +1,5 @@
 import { PODValue } from "@pcd/pod";
-import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
-import { useState } from "react";
+import { PODPCD } from "@pcd/pod-pcd";
 import { Container } from "../shared";
 
 export function CollectablePODPCDCardBody({
@@ -8,8 +7,6 @@ export function CollectablePODPCDCardBody({
 }: {
   pcd: PODPCD;
 }): JSX.Element {
-  const [sigStatus, setSigStatus] = useState("unvalidated");
-
   const parts: React.ReactNode[] = [];
 
   const imageUrlEntry: PODValue | undefined =
@@ -28,24 +25,5 @@ export function CollectablePODPCDCardBody({
     parts.push(<p>No content</p>);
   }
 
-  return (
-    <Container>
-      {parts}
-      <label>
-        <button
-          style={{
-            marginRight: "8px"
-          }}
-          onClick={async (): Promise<void> =>
-            setSigStatus(
-              (await PODPCDPackage.verify(pcd)) ? "valid ✅" : "invalid ❌"
-            )
-          }
-        >
-          Check
-        </button>
-        Signature is {sigStatus}
-      </label>
-    </Container>
-  );
+  return <Container>{parts}</Container>;
 }
