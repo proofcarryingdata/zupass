@@ -78,10 +78,10 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
         {sigStatus === 0
           ? "Check signature"
           : sigStatus > 0
-          ? "Signature is valid"
+          ? "Valid signature"
           : error !== undefined
           ? "Signature error!"
-          : "Signature invalid!"}
+          : "Bad signature!"}
       </Button>
       {error === undefined ? null : <ErrorContainer>{error}</ErrorContainer>}
     </Container>
