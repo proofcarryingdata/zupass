@@ -34,6 +34,7 @@ import { getOutdatedBrowserErrorMessage } from "../../../src/devconnectUtils";
 import { OUTDATED_BROWSER_ERROR_MESSAGE } from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
 import { Button } from "../../core";
+import { ProgressBar } from "../../core/ProgressBar";
 import { RippleLoader } from "../../core/RippleLoader";
 import { ErrorContainer } from "../../core/error";
 import { PCDArgs } from "../../shared/PCDArgs";
@@ -67,6 +68,8 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const [error, setError] = useState<string | undefined>();
   const [proving, setProving] = useState(false);
   const pcdPackage = pcds.getPackage<T>(pcdType);
+  const [multiProofsCompleted, setMultiProofsCompleted] = useState(0);
+  const [multiProofsQueued, setMultiProofsQueued] = useState(0);
 
   useEffect(() => {
     if (options?.multi && !isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
@@ -148,6 +151,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
           });
         }
 
+        setMultiProofsQueued(relevantPCDs.length);
         const result = await Promise.all(
           relevantPCDs.map(async (t) => {
             const argsClone = _.clone(args) as ArgsOf<
@@ -158,6 +162,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
             );
             const pcd = await pcdPackage.prove(args);
             const serializedPCD = await pcdPackage.serialize(pcd);
+            setMultiProofsCompleted((c) => c + 1);
             return serializedPCD;
           })
         );
@@ -229,7 +234,16 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       {error && <ErrorContainer>{error}</ErrorContainer>}
 
       {proving ? (
-        <RippleLoader />
+        options?.multi ? (
+          <ProgressBar
+            label="Proving"
+            fractionCompleted={
+              multiProofsCompleted / Math.max(1, multiProofsQueued)
+            }
+          />
+        ) : (
+          <RippleLoader />
+        )
       ) : (
         <Button disabled={!isProveReady} onClick={onProveClick}>
           Prove

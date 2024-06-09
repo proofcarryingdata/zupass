@@ -433,6 +433,7 @@ export function openZKEdDSAEventTicketPopup(
       pcdType: EdDSATicketPCDPackage.name,
       value: undefined,
       userProvided: true,
+      displayName: "Ticket(s)",
       validatorParams: {
         eventIds: displayValidEventIds,
         productIds: displayValidProductIds,
