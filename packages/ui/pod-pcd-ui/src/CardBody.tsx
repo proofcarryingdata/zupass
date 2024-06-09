@@ -20,8 +20,10 @@ enum PODDisplayFormat {
  * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
 function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
-  const [sigStatus, setSigStatus] = useState<number>(0);
-  const [error, setError] = useState<string | undefined>();
+  const [sigStatus, setSigStatus] = useState<number>(-1);
+  const [error, setError] = useState<string | undefined>(
+    "some signature failure happened"
+  );
 
   const availableDisplayFormat = getPreferredDisplayFormat(pcd);
   const [displayFormat, setDisplayFormat] = useState<PODDisplayFormat>(
@@ -78,10 +80,10 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
         {sigStatus === 0
           ? "Check signature"
           : sigStatus > 0
-          ? "Signature is valid"
+          ? "Valid signature"
           : error !== undefined
           ? "Signature error!"
-          : "Signature invalid!"}
+          : "Bad signature!"}
       </Button>
       {error === undefined ? null : <ErrorContainer>{error}</ErrorContainer>}
     </Container>
