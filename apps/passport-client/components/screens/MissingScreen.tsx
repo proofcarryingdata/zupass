@@ -1,6 +1,6 @@
+import { LinkButton } from "@pcd/passport-ui";
 import { useLocation } from "react-router-dom";
 import { CenterColumn, H1, Spacer, TextCenter } from "../core";
-import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 
 export function MissingScreen(): JSX.Element {

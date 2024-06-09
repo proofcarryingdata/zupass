@@ -1,10 +1,10 @@
 import { requestFrogCryptoUpdateTelegramHandleSharing } from "@pcd/passport-interface";
+import { BtnBase } from "@pcd/passport-ui";
 import { toast } from "react-hot-toast";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useCredentialManager, useDispatch } from "../../src/appHooks";
 import { H3 } from "../core";
-import { BtnBase } from "../core/Button";
 import { ActionButton } from "../screens/FrogScreens/Button";
 
 export function FrogCryptoUpdateTelegramModal({

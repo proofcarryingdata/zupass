@@ -1,3 +1,4 @@
+export * from "./Button";
 export * from "./Core";
 export * from "./HiddenText";
 export * from "./ImageZoom";

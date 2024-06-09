@@ -1,8 +1,8 @@
+import { LinkButton } from "@pcd/passport-ui";
 import { useCallback } from "react";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
 import { Button, CenterColumn, Spacer, TextCenter } from "../core";
-import { LinkButton } from "../core/Button";
 import { AccountExportButton } from "../shared/AccountExportButton";
 
 export function SettingsModal({

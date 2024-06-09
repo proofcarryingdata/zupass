@@ -1,11 +1,11 @@
 import { EdDSAFrogPCDPackage, isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import { FrogCryptoFolderName } from "@pcd/passport-interface";
+import { BtnBase } from "@pcd/passport-ui";
 import stringify from "fast-json-stable-stringify";
 import { toast } from "react-hot-toast";
 import styled from "styled-components";
 import { useDispatch, usePCDsInFolder } from "../../src/appHooks";
 import { H3 } from "../core";
-import { BtnBase } from "../core/Button";
 import { ActionButton } from "../screens/FrogScreens/Button";
 
 export function FrogCryptoExportPCDsModal(): JSX.Element {
