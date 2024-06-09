@@ -26,6 +26,7 @@ export interface ProveOptions {
   debug?: boolean;
   proveOnServer?: boolean;
   signIn?: boolean;
+  multi?: boolean;
 }
 
 /**
@@ -150,6 +151,13 @@ export function postSerializedPCDMessage(
   serialized: SerializedPCD
 ): void {
   window.postMessage({ encodedPCD: JSON.stringify(serialized) }, "*");
+}
+
+export function postSerializedMultiPCDMessage(
+  window: Window,
+  pcds: SerializedPCD[]
+): void {
+  window.postMessage({ multiplePCDs: JSON.stringify(pcds) }, "*");
 }
 
 export function postPendingPCDMessage(

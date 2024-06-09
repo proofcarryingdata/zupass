@@ -6,6 +6,7 @@ import AddPCD from "./pages/examples/add-pcd";
 import GetWithoutProving from "./pages/examples/get-without-proving";
 import GPCProof from "./pages/examples/gpc-proof";
 import GroupProof from "./pages/examples/group-proof";
+import MultiZkEDdSAEventTicketProof from "./pages/examples/multi-zk-eddsa-event-ticket-proof";
 import SignatureProof from "./pages/examples/signature-proof";
 import ZkEDdSAEventTicketProof from "./pages/examples/zk-eddsa-event-ticket-proof";
 import ZkEDdSAFrogProof from "./pages/examples/zk-eddsa-frog-proof";
@@ -24,6 +25,10 @@ const router = createHashRouter([
   {
     path: "examples/zk-eddsa-event-ticket-proof",
     element: <ZkEDdSAEventTicketProof />
+  },
+  {
+    path: "examples/multi-zk-eddsa-event-ticket-proof",
+    element: <MultiZkEDdSAEventTicketProof />
   },
   {
     path: "examples/zuauth",

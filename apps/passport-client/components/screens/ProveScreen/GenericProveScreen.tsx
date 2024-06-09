@@ -3,6 +3,7 @@ import {
   PCDRequestType,
   PendingPCD,
   postPendingPCDMessage,
+  postSerializedMultiPCDMessage,
   postSerializedPCDMessage
 } from "@pcd/passport-interface";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
@@ -37,7 +38,8 @@ export function GenericProveScreen({
     (
       _pcd: PCD,
       serialized: SerializedPCD | undefined,
-      pendingPCD: PendingPCD | undefined
+      pendingPCD: PendingPCD | undefined,
+      multiplePCDs?: SerializedPCD[]
     ) => {
       if (pendingPCD) {
         if (window.opener && req.postMessage) {
@@ -45,6 +47,12 @@ export function GenericProveScreen({
           window.close();
         }
         safeRedirectPending(req.returnUrl, pendingPCD);
+      } else if (multiplePCDs !== undefined) {
+        if (window.opener && req.postMessage) {
+          postSerializedMultiPCDMessage(window.opener, multiplePCDs);
+          window.close();
+        }
+        safeRedirect(req.returnUrl, undefined, multiplePCDs);
       } else {
         if (window.opener && req.postMessage) {
           if (serialized) {
