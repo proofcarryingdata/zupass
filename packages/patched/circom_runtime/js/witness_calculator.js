@@ -24,11 +24,12 @@ export default async function builder(code, options) {
 
     options = options || {};
 
-    let memorySize = 32767;
+    let memorySize = 5;
     let memory;
     let memoryAllocated = false;
     while (!memoryAllocated){
         try{
+            console.log(`allocating ${memorySize}`)
             memory = new WebAssembly.Memory({initial:memorySize});
             memoryAllocated = true;
         } catch(err){
