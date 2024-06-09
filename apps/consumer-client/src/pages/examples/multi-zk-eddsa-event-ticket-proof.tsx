@@ -86,7 +86,6 @@ export default function Page(): JSX.Element {
     ]
   );
 
-  // Populate PCD from either client-side or server-side proving using the Zupass popup
   const [_pcdStr, _pendingPCDStr, multiPCDs] = useZupassPopupMessages();
 
   return (
@@ -95,8 +94,8 @@ export default function Page(): JSX.Element {
       <h2>Multiple ZKEdDSA Event Ticket Proofs</h2>
       <p>
         This page shows a working example of an integration with Zupass which
-        requests and verifies that the user has an EdDSA-signed ticket to one of
-        a list of valid events.
+        requests and verifies that the user has one or more EdDSA-signed tickets
+        to one of a list of valid events.
       </p>
       <p>
         The underlying PCD that this example uses is{" "}
@@ -123,7 +122,7 @@ export default function Page(): JSX.Element {
             )
           }
         >
-          Request Zupass Event Ticket Proof
+          Request Zupass Event Ticket Proofs
         </button>
         <br />
         Valid event ids, comma separated (or empty for no validation):
