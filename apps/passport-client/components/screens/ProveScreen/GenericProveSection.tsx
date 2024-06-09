@@ -211,6 +211,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         args={args}
         setArgs={setArgs}
         options={pcdPackage?.getProveDisplayOptions?.()?.defaultArgs}
+        proveOptions={options}
       />
 
       {folder && (

@@ -1,3 +1,4 @@
+import { ProveOptions } from "@pcd/passport-interface";
 import {
   ArgsDisplayOptions,
   ArgsOf,
@@ -60,11 +61,13 @@ type FlattenedArgTriple = [
 export function PCDArgs<T extends PCDPackage>({
   args,
   setArgs,
-  options
+  options,
+  proveOptions
 }: {
   args: ArgsOf<T>;
   setArgs: React.Dispatch<React.SetStateAction<ArgsOf<T>>>;
   options?: ArgsDisplayOptions<ArgsOf<T>>;
+  proveOptions?: ProveOptions;
 }): JSX.Element {
   const [showAll, setShowAll] = useState(false);
 
@@ -123,6 +126,7 @@ export function PCDArgs<T extends PCDPackage>({
           arg={value}
           setArgs={setArgs}
           defaultArg={options?.[parentKey ?? key]}
+          proveOptions={proveOptions}
         />
       ))}
       {hidden.length > 0 && (
@@ -146,6 +150,7 @@ export function PCDArgs<T extends PCDPackage>({
                 setArgs={setArgs}
                 defaultArg={options?.[parentKey ?? key]}
                 hidden={!showAll}
+                proveOptions={proveOptions}
               />
             ))
           }
@@ -161,13 +166,15 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
   parentArgName,
   setArgs,
   defaultArg,
-  hidden
+  hidden,
+  proveOptions
 }: {
   arg: ArgsOf<T>[ArgName];
   argName: string;
   parentArgName: string | undefined;
   setArgs: React.Dispatch<React.SetStateAction<ArgsOf<T>>>;
   defaultArg?: DisplayArg<typeof arg>;
+  proveOptions?: ProveOptions;
   hidden?: boolean;
 }): JSX.Element | undefined {
   // Go one level deeper in case the arg arises from a record.
@@ -226,12 +233,22 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
         ...(defaultArg || {}),
         ...arg
       },
+      proveOptions,
       argName,
       setArg,
       isValid,
       hidden
     };
-  }, [defaultArg, arg, parentArgName, argName, setArg, isValid, hidden]);
+  }, [
+    parentArgName,
+    argName,
+    defaultArg,
+    arg,
+    proveOptions,
+    setArg,
+    isValid,
+    hidden
+  ]);
 
   if (isStringArgument(arg)) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -278,6 +295,7 @@ interface ArgInputProps<A extends Argument<ArgumentTypeName, unknown>> {
   argName: string;
   setArg: (value: A["value"]) => void;
   isValid: (arg: RawValueType<A>) => boolean;
+  proveOptions?: ProveOptions;
 }
 
 export function StringArgInput({
@@ -544,6 +562,7 @@ export function PCDArgInput({
   arg,
   setArg,
   isValid,
+  proveOptions,
   ...rest
 }: ArgInputProps<PCDArgument>): JSX.Element {
   const pcdCollection = usePCDCollection();
@@ -604,6 +623,31 @@ export function PCDArgInput({
     }
   }, [arg.value, pcdCollection]);
 
+  if (proveOptions?.multi) {
+    return (
+      <ArgContainer
+        arg={arg}
+        {...rest}
+        error={
+          relevantPCDs.length === 0
+            ? arg.validatorParams?.notFoundMessage ??
+              "You do not have an eligible PCD."
+            : undefined
+        }
+      >
+        <MultiOptionContainer>
+          {options.map((option) => {
+            return (
+              <MultiOptionSingleOption key={option.id}>
+                {option.label}
+              </MultiOptionSingleOption>
+            );
+          })}
+        </MultiOptionContainer>
+      </ArgContainer>
+    );
+  }
+
   return (
     <ArgContainer
       arg={arg}
@@ -626,6 +670,26 @@ export function PCDArgInput({
     </ArgContainer>
   );
 }
+
+const MultiOptionContainer = styled.div`
+  width: 100%;
+  max-height: 200px;
+  overflow-y: scroll;
+  display: flex;
+  justify-content: stretch;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const MultiOptionSingleOption = styled.div`
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  border: 1px solid white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 4px 8px;
+`;
 
 function ArgContainer({
   arg: { argumentType, displayName, description, hideIcon },
