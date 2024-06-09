@@ -69,8 +69,13 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const pcdPackage = pcds.getPackage<T>(pcdType);
 
   useEffect(() => {
+    if (options?.multi && !isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
+      setError("multi-proofs are only supported for ZKEdDSAEventTicketPCD");
+      return;
+    }
+
     setError(undefined);
-  }, [args]);
+  }, [args, options, pcdPackage]);
 
   const isProveReady = useMemo(
     () =>
