@@ -44,6 +44,15 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
       break;
   }
 
+  const sigButtonColor: React.CSSProperties = {};
+  if (sigStatus > 0) {
+    sigButtonColor.color = "white";
+    sigButtonColor.background = "green";
+  } else if (sigStatus < 0) {
+    sigButtonColor.color = "white";
+    sigButtonColor.background = "var(--danger)";
+  }
+
   return (
     <Container>
       {content}
@@ -63,9 +72,7 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
       )}
 
       <Button
-        style={
-          sigStatus === 0 ? "primary" : sigStatus > 0 ? "secondary" : "danger"
-        }
+        style="primary"
         size="small"
         onClick={async (): Promise<void> => {
           setError(undefined);
@@ -73,7 +80,7 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
           setError(sigResult.errorMessage);
           setSigStatus(sigResult.isValid ? 1 : -1);
         }}
-        styles={{ float: "right" }}
+        styles={{ float: "right", ...sigButtonColor }}
       >
         {sigStatus === 0
           ? "Check signature"
