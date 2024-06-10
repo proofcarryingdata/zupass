@@ -8,7 +8,7 @@ import {
   StringArrayArgument
 } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import { Groth16Proof } from "snarkjs";
+import { Groth16Proof } from "@pcd/snarkjs";
 
 export const ZKEdDSAEventTicketPCDTypeName = "zk-eddsa-event-ticket-pcd";
 
