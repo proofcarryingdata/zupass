@@ -1,0 +1,26 @@
+{
+  "extends": ["//"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$", 
+        "config/**", 
+        "scripts/**", 
+        "smart_contract_tests/**", 
+        "src/**", 
+        "templates/**",
+        "test/**",
+        "cli.js",
+        "main.js"
+      ],
+      "outputs": ["build/**"],
+      "cache": true
+    },
+    "test": {
+      "cache": true,
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$"]
+    }
+  }
+}
