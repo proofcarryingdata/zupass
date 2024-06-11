@@ -1,5 +1,11 @@
 # @pcd/zuauth
 
+## 1.4.0
+
+### Minor Changes
+
+- Add `multi` arg to allow for requesting multiple PCDs at once
+
 ## 1.3.6
 
 ### Patch Changes
