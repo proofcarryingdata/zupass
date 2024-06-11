@@ -1,12 +1,11 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".nvmrc"],
       "outputs": [],
-      "cache": true,
-      "dotEnv": [".env"]
+      "cache": true
     },
     "lint": {
       "dependsOn": ["build"],

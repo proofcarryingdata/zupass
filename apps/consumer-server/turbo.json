@@ -1,10 +1,9 @@
 {
   "extends": ["//"],
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "dotEnv": [".env"],
-      "inputs": ["$TURBO_DEFAULT$", "src/**", "test/**"],
+      "inputs": [".env", "$TURBO_DEFAULT$", "src/**", "test/**"],
       "outputs": ["*.tsbuildinfo"],
       "cache": true
     }
