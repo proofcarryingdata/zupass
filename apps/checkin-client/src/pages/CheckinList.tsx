@@ -258,6 +258,14 @@ export function CheckinListPage(): ReactNode {
               setCheckingIn={setCheckingIn}
               data={query.data}
             />
+            <div>
+              <Spacer h={8} />
+              <strong>{query.data.length}</strong> records.{" "}
+              <strong>
+                {query.data.filter((item) => item.checkedIn).length}
+              </strong>{" "}
+              checked in.
+            </div>
             <CheckInTable startCheckIn={startCheckIn} checkIns={query.data} />
           </>
         )}
