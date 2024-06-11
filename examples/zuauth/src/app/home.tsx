@@ -35,7 +35,8 @@ export default function Home() {
             revealAttendeeName: true
           },
           watermark,
-          config: config
+          config: config,
+          multi: true
         });
 
         if (result.type === "pcd") {
@@ -57,6 +58,10 @@ export default function Home() {
         } else if (result.type === "popupClosed") {
           addLog("The popup was closed before a result was received");
           setAuthState("error");
+        } else if (result.type === "multi-pcd") {
+          addLog("The popup was closed before a result was received");
+          setPcdStr(JSON.stringify(result.pcds));
+          setAuthState("authenticated");
         } else {
           addLog(`Unexpected result type from zuAuth: ${result.type}`);
           setAuthState("error");
