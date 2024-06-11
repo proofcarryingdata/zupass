@@ -1,4 +1,10 @@
-import { FieldLabel, HiddenText, Separator, Spacer } from "@pcd/passport-ui";
+import {
+  FieldLabel,
+  HiddenText,
+  Separator,
+  Spacer,
+  TextContainer
+} from "@pcd/passport-ui";
 import { podEntriesToSimplifiedJSON } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { Container } from "../shared";
@@ -12,12 +18,17 @@ export function DefaultPODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
       </p>
       <Separator />
       <FieldLabel>POD Entries</FieldLabel>
-      <pre>{podEntriesToSimplifiedJSON(pcd.claim.entries, 2)}</pre>
+      <TextContainer style={{ overflowX: "auto" }}>
+        <pre>{podEntriesToSimplifiedJSON(pcd.claim.entries, 2)}</pre>
+      </TextContainer>
       <Spacer h={8} />
       <FieldLabel>EdDSA Public Key</FieldLabel>
-      <HiddenText text={pcd.claim.signerPublicKey} />
+      <HiddenText
+        text={pcd.claim.signerPublicKey}
+        style={{ overflowX: "auto" }}
+      />
       <FieldLabel>EdDSA Signature</FieldLabel>
-      <HiddenText text={pcd.proof.signature} />
+      <HiddenText text={pcd.proof.signature} style={{ overflowX: "auto" }} />
     </Container>
   );
 }
