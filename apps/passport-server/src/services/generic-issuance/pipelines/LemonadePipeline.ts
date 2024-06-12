@@ -2011,6 +2011,9 @@ export class LemonadePipeline implements BasePipeline {
       );
     }
 
+    const allAtoms = await this.db.load(this.id);
+    const manualCheckins = await this.getManualCheckinSummary();
+
     logger(email);
 
     return { queued: 0 };
