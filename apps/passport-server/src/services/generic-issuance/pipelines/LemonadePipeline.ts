@@ -2054,6 +2054,8 @@ export class LemonadePipeline implements BasePipeline {
         sentEmails.length
       );
 
+      // TODO: actually send the email using some sort of queue
+
       return { queued: filteredAtoms.length };
     });
   }

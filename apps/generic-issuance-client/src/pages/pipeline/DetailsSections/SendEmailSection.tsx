@@ -6,6 +6,7 @@ import {
   requestGenericIssuanceSendPipelineEmail
 } from "@pcd/passport-interface";
 import { ReactNode, useCallback, useState } from "react";
+import styled from "styled-components";
 import { ZUPASS_SERVER_URL } from "../../../constants";
 import { useJWT } from "../../../helpers/userHooks";
 
@@ -38,11 +39,23 @@ export function SendEmailSection({
 
   return (
     <div>
-      this is the pipeline send section for the pipeline{" "}
       <Button onClick={sendEmail} disabled={sending}>
         {sending ? "Sending..." : "Send Esmeralda One Click Email"}
       </Button>
-      {result ? (result.success ? "success" : "error") : null}
+      {result ? (
+        <ResultContainer>
+          {result.success
+            ? `${result.value.queued} email sends queued`
+            : `emails failed to send: ${result.error}`}
+        </ResultContainer>
+      ) : null}
     </div>
   );
 }
+
+const ResultContainer = styled.div`
+  margin: 4px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.1);
+  border-color: 1px solid rgba(255, 255, 255, 0.1);
+`;

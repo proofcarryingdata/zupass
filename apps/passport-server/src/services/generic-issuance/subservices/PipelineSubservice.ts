@@ -331,11 +331,9 @@ export class PipelineSubservice {
     email: PipelineEmailType
   ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
     const pipelineSlot = await this.getPipelineSlot(pipelineId);
-    const instance = pipelineSlot?.instance;
 
-    if (LemonadePipeline.is(instance)) {
-      const result = await instance.sendPipelineEmail(email);
-      return result;
+    if (LemonadePipeline.is(pipelineSlot?.instance)) {
+      return await pipelineSlot.instance.sendPipelineEmail(email);
     }
 
     throw new PCDHTTPError(400, "only lemonade pipeline can send emails");

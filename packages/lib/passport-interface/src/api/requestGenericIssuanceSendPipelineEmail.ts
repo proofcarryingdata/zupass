@@ -8,7 +8,8 @@ import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Asks the server to get information about the currently logged in user.
+ * Asks the server to send a particular type of email to the users of
+ * the given pipeline. Only Podbox admins can invoke this action.
  *
  * Never rejects. All information encoded in the resolved response.
  */
