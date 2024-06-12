@@ -140,6 +140,7 @@ export class LemonadePipeline implements BasePipeline {
   private credentialSubservice: CredentialSubservice;
   private emailService: EmailService;
   private context: ApplicationContext;
+  private sendingEmail: boolean;
 
   public get id(): string {
     return this.definition.id;
@@ -180,6 +181,7 @@ export class LemonadePipeline implements BasePipeline {
     this.loaded = false;
     this.context = context;
     this.emailService = emailService;
+    this.sendingEmail = false;
 
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
       this.semaphoreGroupProvider = new SemaphoreGroupProvider(
@@ -2009,54 +2011,62 @@ export class LemonadePipeline implements BasePipeline {
     emailType: PipelineEmailType
   ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
     return traced(LOG_NAME, "sendPipelineEmail", async () => {
-      if (this.id !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
-        throw new PCDHTTPError(
-          400,
-          "only the edge esmeralda pipeline can send emails right now"
-        );
+      if (this.sendingEmail) {
+        throw new PCDHTTPError(400, "email send already in progress");
       }
 
-      const allAtoms = await this.db.load(this.id);
-      const manualCheckins = await this.getManualCheckinSummary();
-      const sentEmails = await this.emailDB.getSentEmails(
-        this.id,
-        PipelineEmailType.EsmeraldaOneClick
-      );
-      const encounteredEmails = new Set<string>();
-      const filteredAtoms = allAtoms.filter((a) => {
-        if (manualCheckins.find((c) => c.email === a.email)) {
-          return false;
+      try {
+        if (this.id !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
+          throw new PCDHTTPError(
+            400,
+            "only the edge esmeralda pipeline can send emails right now"
+          );
         }
 
-        if (sentEmails.find((e) => e.emailAddress === a.email)) {
-          return false;
-        }
+        const allAtoms = await this.db.load(this.id);
+        const manualCheckins = await this.getManualCheckinSummary();
+        const sentEmails = await this.emailDB.getSentEmails(
+          this.id,
+          PipelineEmailType.EsmeraldaOneClick
+        );
+        const encounteredEmails = new Set<string>();
+        const filteredAtoms = allAtoms.filter((a) => {
+          if (manualCheckins.find((c) => c.email === a.email)) {
+            return false;
+          }
 
-        if (encounteredEmails.has(a.email)) {
-          return false;
-        }
+          if (sentEmails.find((e) => e.emailAddress === a.email)) {
+            return false;
+          }
 
-        encounteredEmails.add(a.email);
+          if (encounteredEmails.has(a.email)) {
+            return false;
+          }
 
-        return true;
-      });
+          encounteredEmails.add(a.email);
 
-      logger(
-        LOG_TAG,
-        `SEND_PIPELINE_EMAIL`,
-        this.id,
-        emailType,
-        `atom_count:`,
-        allAtoms.length,
-        `manual_checkin_count`,
-        manualCheckins.length,
-        `ssent_emails`,
-        sentEmails.length
-      );
+          return true;
+        });
 
-      // TODO: actually send the email using some sort of queue
+        logger(
+          LOG_TAG,
+          `SEND_PIPELINE_EMAIL`,
+          this.id,
+          emailType,
+          `atom_count:`,
+          allAtoms.length,
+          `manual_checkin_count`,
+          manualCheckins.length,
+          `ssent_emails`,
+          sentEmails.length
+        );
 
-      return { queued: filteredAtoms.length };
+        // TODO: actually send the email using some sort of queue
+
+        return { queued: filteredAtoms.length };
+      } finally {
+        this.sendingEmail = false;
+      }
     });
   }
 
