@@ -15688,6 +15688,11 @@ morgan@^1.10.0:
     on-finished "~2.3.0"
     on-headers "~1.0.2"
 
+mprocs@^0.6.4:
+  version "0.6.4"
+  resolved "https://registry.yarnpkg.com/mprocs/-/mprocs-0.6.4.tgz#7715bc30cf9ddc0ca50cdf451d2a6cb0676fc57e"
+  integrity sha512-Y4eqnAjp3mjy0eT+zPoMQ+P/ISOzjgRG/4kh4I5cRA4Tv0rPxTCBRadn3+j+boMF5id7IoLhrVq9NFWFPuzD9A==
+
 ms@2.0.0:
   version "2.0.0"
   resolved "https://registry.yarnpkg.com/ms/-/ms-2.0.0.tgz#5608aeadfc00be6c2901df5f9861788de0d597c8"
