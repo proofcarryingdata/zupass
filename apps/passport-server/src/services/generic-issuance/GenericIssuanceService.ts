@@ -40,6 +40,10 @@ import {
   PipelineConsumerDB
 } from "../../database/queries/pipelineConsumerDB";
 import {
+  IPipelineEmailDB,
+  PipelineEmailDB
+} from "../../database/queries/pipelineEmailDB";
+import {
   IPipelineManualTicketDB,
   PipelineManualTicketDB
 } from "../../database/queries/pipelineManualTicketDB";
@@ -81,6 +85,7 @@ export class GenericIssuanceService {
   private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
+  private emailDB: IPipelineEmailDB;
   private consumerDB: IPipelineConsumerDB;
   private manualTicketDB: IPipelineManualTicketDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
@@ -114,6 +119,7 @@ export class GenericIssuanceService {
     this.genericPretixAPI = pretixAPI;
     this.contactDB = new ContactSharingDB(this.context.dbPool);
     this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
+    this.emailDB = new PipelineEmailDB(this.context.dbPool);
     this.pipelineAtomDB = new InMemoryPipelineAtomDB();
     this.emailService = emailService;
     this.userSubservice = new UserSubservice(
@@ -142,6 +148,7 @@ export class GenericIssuanceService {
         pipelineAtomDB: this.pipelineAtomDB,
         checkinDB: this.checkinDB,
         contactDB: this.contactDB,
+        emailDB: this.emailDB,
         badgeDB: this.badgeDB,
         consumerDB: this.consumerDB,
         manualTicketDB: this.manualTicketDB,

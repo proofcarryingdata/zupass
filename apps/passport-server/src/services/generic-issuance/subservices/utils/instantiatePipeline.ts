@@ -9,6 +9,7 @@ import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { IPipelineEmailDB } from "../../../../database/queries/pipelineEmailDB";
 import { IPipelineManualTicketDB } from "../../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
@@ -44,6 +45,7 @@ export interface InstantiatePipelineArgs {
   pipelineAtomDB: IPipelineAtomDB;
   checkinDB: IPipelineCheckinDB;
   contactDB: IContactSharingDB;
+  emailDB: IPipelineEmailDB;
   badgeDB: IBadgeGiftingDB;
   consumerDB: IPipelineConsumerDB;
   manualTicketDB: IPipelineManualTicketDB;
@@ -76,6 +78,7 @@ export function instantiatePipeline(
         args.cacheService,
         args.checkinDB,
         args.contactDB,
+        args.emailDB,
         args.badgeDB,
         args.consumerDB,
         args.semaphoreHistoryDB,

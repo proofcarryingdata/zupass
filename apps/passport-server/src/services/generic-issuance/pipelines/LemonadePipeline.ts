@@ -2006,7 +2006,7 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   public async sendPipelineEmail(
-    email: PipelineEmailType
+    emailType: PipelineEmailType
   ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
     if (this.id !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
       throw new PCDHTTPError(
@@ -2021,10 +2021,39 @@ export class LemonadePipeline implements BasePipeline {
       this.id,
       PipelineEmailType.EsmeraldaOneClick
     );
+    const encounteredEmails = new Set<string>();
+    const filteredAtoms = allAtoms.filter((a) => {
+      if (manualCheckins.find((c) => c.email === a.email)) {
+        return false;
+      }
 
-    logger(email);
+      if (sentEmails.find((e) => e.emailAddress === a.email)) {
+        return false;
+      }
 
-    return { queued: 0 };
+      if (encounteredEmails.has(a.email)) {
+        return false;
+      }
+
+      encounteredEmails.add(a.email);
+
+      return true;
+    });
+
+    logger(
+      LOG_TAG,
+      `SEND_PIPELINE_EMAIL`,
+      this.id,
+      emailType,
+      `atom_count:`,
+      allAtoms.length,
+      `manual_checkin_count`,
+      manualCheckins.length,
+      `ssent_emails`,
+      sentEmails.length
+    );
+
+    return { queued: filteredAtoms.length };
   }
 
   /**
