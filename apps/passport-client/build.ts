@@ -58,20 +58,6 @@ const define = {
         )
       }
     : {}),
-  ...(process.env.SCANDIT_LICENSE_KEY !== undefined
-    ? {
-        "process.env.SCANDIT_LICENSE_KEY": JSON.stringify(
-          process.env.SCANDIT_LICENSE_KEY
-        )
-      }
-    : {}),
-  ...(process.env.MULTI_CHOICE_SCAN_ENABLED !== undefined
-    ? {
-        "process.env.MULTI_CHOICE_SCAN_ENABLED": JSON.stringify(
-          process.env.MULTI_CHOICE_SCAN_ENABLED
-        )
-      }
-    : {}),
   ...(process.env.SHOW_POD_TICKET_PCDS !== undefined
     ? {
         "process.env.SHOW_POD_TICKET_PCDS": JSON.stringify(
@@ -139,7 +125,6 @@ run(process.argv[2])
 
 async function run(command: string): Promise<void> {
   compileHtml();
-  copyScanditEngine();
   copyGPCArtifacts();
 
   switch (command) {
@@ -194,17 +179,6 @@ async function run(command: string): Promise<void> {
     default:
       throw new Error(`Unknown command ${command}`);
   }
-}
-
-function copyScanditEngine(): void {
-  // @todo this can be removed if we're sure we don't need Scandit as an option
-  fs.cpSync(
-    path.join(
-      "../../node_modules/scandit-web-datacapture-barcode/build/engine"
-    ),
-    path.join("public/scandit-engine"),
-    { recursive: true }
-  );
 }
 
 function compileHtml(): void {
