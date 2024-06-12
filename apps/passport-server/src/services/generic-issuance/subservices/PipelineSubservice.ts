@@ -5,10 +5,12 @@ import {
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
+  GenericIssuanceSendPipelineEmailResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   HydratedPipelineHistoryEntry,
   ListFeedsResponseValue,
   PipelineDefinition,
+  PipelineEmailType,
   PipelineGetManualCheckInsResponseValue,
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
@@ -318,6 +320,13 @@ export class PipelineSubservice {
    */
   public async clearAtomsForPipeline(pipelineId: string): Promise<void> {
     await this.pipelineAtomDB.clear(pipelineId);
+  }
+
+  public async handleSendPipelineEmail(
+    _pipelineId: string,
+    _email: PipelineEmailType
+  ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
+    return { queued: 0 };
   }
 
   /**

@@ -631,12 +631,27 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
 
-      const reqBody = req.body as GenericIssuanceSendPipelineEmailRequest;
-      logger(reqBody);
+      const pipelineId = checkBody<
+        GenericIssuanceSendPipelineEmailRequest,
+        "pipelineId"
+      >(req, "pipelineId");
+      const email = checkBody<GenericIssuanceSendPipelineEmailRequest, "email">(
+        req,
+        "email"
+      );
 
-      res.json({
-        queued: 0
-      } satisfies GenericIssuanceSendPipelineEmailResponseValue);
+      const user = await genericIssuanceService.authSession(req);
+
+      if (!user.isAdmin) {
+        throw new PCDHTTPError(401, "only admins can send emails to pipelines");
+      }
+
+      const result = await genericIssuanceService.handleSendPipelineEmail(
+        pipelineId,
+        email
+      );
+
+      res.json(result satisfies GenericIssuanceSendPipelineEmailResponseValue);
     }
   );
 }

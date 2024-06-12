@@ -8,11 +8,13 @@ import {
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceSendEmailResponseValue,
+  GenericIssuanceSendPipelineEmailResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   GenericPretixEvent,
   GenericPretixProduct,
   ListFeedsResponseValue,
   PipelineDefinition,
+  PipelineEmailType,
   PipelineGetManualCheckInsResponseValue,
   PipelineInfoResponseValue,
   PipelineSetManualCheckInStateResponseValue,
@@ -324,6 +326,13 @@ export class GenericIssuanceService {
     pipelineId: string
   ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {
     return this.pipelineSubservice.handleGetPipelineSemaphoreGroups(pipelineId);
+  }
+
+  public async handleSendPipelineEmail(
+    pipelineId: string,
+    email: PipelineEmailType
+  ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
+    return this.pipelineSubservice.handleSendPipelineEmail(pipelineId, email);
   }
 
   /**
