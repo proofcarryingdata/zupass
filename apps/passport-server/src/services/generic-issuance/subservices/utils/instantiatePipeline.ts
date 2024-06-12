@@ -16,6 +16,7 @@ import {
   IContactSharingDB
 } from "../../../../database/queries/ticketActionDBs";
 import { ApplicationContext } from "../../../../types";
+import { EmailService } from "../../../emailService";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { traced } from "../../../telemetryService";
 import { tracePipeline } from "../../honeycombQueries";
@@ -48,6 +49,7 @@ export interface InstantiatePipelineArgs {
   manualTicketDB: IPipelineManualTicketDB;
   semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   credentialSubservice: CredentialSubservice;
+  emailService: EmailService;
   context: ApplicationContext;
 }
 
@@ -78,6 +80,7 @@ export function instantiatePipeline(
         args.consumerDB,
         args.semaphoreHistoryDB,
         args.credentialSubservice,
+        args.emailService,
         args.context
       );
     } else if (isPretixPipelineDefinition(definition)) {

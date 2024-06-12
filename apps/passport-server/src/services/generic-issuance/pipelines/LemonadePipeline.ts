@@ -66,6 +66,7 @@ import {
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
+import { EmailService } from "../../emailService";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traceFlattenedObject, traced } from "../../telemetryService";
 import {
@@ -133,6 +134,7 @@ export class LemonadePipeline implements BasePipeline {
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
   private credentialSubservice: CredentialSubservice;
+  private emailService: EmailService;
   private context: ApplicationContext;
 
   public get id(): string {
@@ -159,6 +161,7 @@ export class LemonadePipeline implements BasePipeline {
     consumerDB: IPipelineConsumerDB,
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
     credentialSubservice: CredentialSubservice,
+    emailService: EmailService,
     context: ApplicationContext
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
@@ -170,6 +173,7 @@ export class LemonadePipeline implements BasePipeline {
     this.credentialSubservice = credentialSubservice;
     this.loaded = false;
     this.context = context;
+    this.emailService = emailService;
 
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
       this.semaphoreGroupProvider = new SemaphoreGroupProvider(

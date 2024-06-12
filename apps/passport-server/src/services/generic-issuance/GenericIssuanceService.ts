@@ -54,6 +54,7 @@ import {
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { DiscordService } from "../discordService";
+import { EmailService } from "../emailService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
@@ -86,6 +87,7 @@ export class GenericIssuanceService {
   private pipelineSubservice: PipelineSubservice;
   private userSubservice: UserSubservice;
   private credentialSubservice: CredentialSubservice;
+  private emailService: EmailService;
 
   public constructor(
     context: ApplicationContext,
@@ -98,6 +100,7 @@ export class GenericIssuanceService {
     rollbarService: RollbarService | null,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
+    emailService: EmailService,
     cacheService: PersistentCacheService
   ) {
     this.context = context;
@@ -110,6 +113,7 @@ export class GenericIssuanceService {
     this.contactDB = new ContactSharingDB(this.context.dbPool);
     this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
     this.pipelineAtomDB = new InMemoryPipelineAtomDB();
+    this.emailService = emailService;
     this.userSubservice = new UserSubservice(
       context,
       stytchClient,
@@ -141,6 +145,7 @@ export class GenericIssuanceService {
         manualTicketDB: this.manualTicketDB,
         semaphoreHistoryDB: this.semaphoreHistoryDB,
         credentialSubservice: this.credentialSubservice,
+        emailService,
         context
       } satisfies InstantiatePipelineArgs
     );
