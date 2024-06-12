@@ -60,6 +60,7 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { IPipelineEmailDB } from "../../../database/queries/pipelineEmailDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   IBadgeGiftingDB,
@@ -127,6 +128,7 @@ export class LemonadePipeline implements BasePipeline {
   private db: IPipelineAtomDB<LemonadeAtom>;
   private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
+  private emailDB: IPipelineEmailDB;
   private badgeDB: IBadgeGiftingDB;
   private api: ILemonadeAPI;
   private cacheService: PersistentCacheService;
@@ -159,6 +161,7 @@ export class LemonadePipeline implements BasePipeline {
     cacheService: PersistentCacheService,
     checkinDB: IPipelineCheckinDB,
     contactDB: IContactSharingDB,
+    emailDB: IPipelineEmailDB,
     badgeDB: IBadgeGiftingDB,
     consumerDB: IPipelineConsumerDB,
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
@@ -170,6 +173,7 @@ export class LemonadePipeline implements BasePipeline {
     this.definition = definition;
     this.db = db as IPipelineAtomDB<LemonadeAtom>;
     this.contactDB = contactDB;
+    this.emailDB = emailDB;
     this.badgeDB = badgeDB;
     this.api = api;
     this.credentialSubservice = credentialSubservice;
@@ -2013,6 +2017,10 @@ export class LemonadePipeline implements BasePipeline {
 
     const allAtoms = await this.db.load(this.id);
     const manualCheckins = await this.getManualCheckinSummary();
+    const sentEmails = await this.emailDB.getSentEmails(
+      this.id,
+      PipelineEmailType.EsmeraldaOneClick
+    );
 
     logger(email);
 
