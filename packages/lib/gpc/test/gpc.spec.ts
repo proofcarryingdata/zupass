@@ -1,5 +1,11 @@
 import { ProtoPODGPC } from "@pcd/gpcircuits";
-import { POD, PODCryptographicValue, PODValue, PODValueTuple } from "@pcd/pod";
+import {
+  POD,
+  PODCryptographicValue,
+  PODEdDSAPublicKeyValue,
+  PODValue,
+  PODValueTuple
+} from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -22,6 +28,7 @@ import {
   expectAsyncError,
   ownerIdentity,
   privateKey,
+  privateKey2,
   sampleEntries,
   sampleEntries2
 } from "./common";
@@ -45,6 +52,9 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             ticketID: {
               isRevealed: true,
               ...(includeList ? { isNotMemberOf: "inadmissibleTickets" } : {})
+            },
+            $signerPublicKey: {
+              isRevealed: true
             }
           }
         }
@@ -190,7 +200,11 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
               equalsEntry: "pod1.A",
               isMemberOf: "list1"
             },
-            owner: { isRevealed: false, isOwnerID: true }
+            owner: { isRevealed: false, isOwnerID: true },
+            $signerPublicKey: {
+              isRevealed: false,
+              isMemberOf: "admissiblePubKeys"
+            }
           }
         }
       }
@@ -201,14 +215,22 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         semaphoreV3: ownerIdentity,
         externalNullifier: { type: "int", value: 42n }
       },
-      membershipLists: { list1: [sampleEntries.F, sampleEntries.E] },
+      membershipLists: {
+        list1: [sampleEntries.F, sampleEntries.E],
+        admissiblePubKeys: [
+          "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
+          "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
+          "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b",
+          "f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585",
+          "2af47e1aaf8f0450b9fb2e429042708ec7d173c4ac4329747db1063b78db4e0d"
+        ].map(PODEdDSAPublicKeyValue)
+      },
       watermark: { type: "int", value: 1337n }
     };
     const expectedRevealedClaims: GPCRevealedClaims = {
       pods: {
         pod1: {
-          entries: { A: { type: "int", value: 123n } },
-          signerPublicKey: pod1.signerPublicKey
+          entries: { A: { type: "int", value: 123n } }
         }
       },
       owner: {
@@ -232,7 +254,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
 
   it("should prove and verify a complex case", async function () {
     const pod1 = POD.sign(sampleEntries, privateKey);
-    const pod2 = POD.sign(sampleEntries2, privateKey);
+    const pod2 = POD.sign(sampleEntries2, privateKey2);
     const externalNullifier: PODValue = {
       type: "string",
       value: "nullify me if you dare!"
@@ -274,6 +296,10 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             "pod1.owner"
           ],
           isMemberOf: "list2"
+        },
+        pubKeyPair: {
+          entries: ["pod1.$signerPublicKey", "pod2.$signerPublicKey"],
+          isMemberOf: "admissiblePubKeyPairs"
         }
       }
     };
@@ -332,18 +358,31 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
               value: BigInt(value)
             } as PODCryptographicValue;
           })
-          .concat([sampleEntries2.attendee])
+          .concat([sampleEntries2.attendee]),
+        admissiblePubKeyPairs: [
+          [
+            "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
+            "AXpeCiWvA09yWoqjLs7tiZic3cyCVipmBw0SONbJNyw"
+          ],
+          [
+            "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
+            "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b"
+          ],
+          [
+            "f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585",
+            "2af47e1aaf8f0450b9fb2e429042708ec7d173c4ac4329747db1063b78db4e0d"
+          ]
+        ].map(([key1, key2]) => [
+          PODEdDSAPublicKeyValue(key1),
+          PODEdDSAPublicKeyValue(key2)
+        ])
       },
       watermark
     };
     const expectedRevealedClaims: GPCRevealedClaims = {
       pods: {
         pod1: {
-          entries: { G: { type: "int", value: 7n } },
-          signerPublicKey: pod1.signerPublicKey
-        },
-        pod2: {
-          signerPublicKey: pod2.signerPublicKey
+          entries: { G: { type: "int", value: 7n } }
         }
       },
       owner: {

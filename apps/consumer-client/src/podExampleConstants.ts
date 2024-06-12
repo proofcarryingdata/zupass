@@ -48,6 +48,9 @@ export const EXAMPLE_GPC_CONFIG = `{
         "owner": {
           "isRevealed": false,
           "isOwnerID": true
+        },
+        "$signerPublicKey": {
+          "isRevealed": true
         }
       }
     },

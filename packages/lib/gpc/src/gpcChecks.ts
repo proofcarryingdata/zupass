@@ -8,6 +8,7 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
+  POD_NAME_REGEX,
   applyOrMap,
   calcMinMerkleDepthForEntries,
   checkPODName,
@@ -29,6 +30,7 @@ import {
   GPCRevealedClaims,
   GPCRevealedObjectClaims,
   PODEntryIdentifier,
+  POD_VIRTUAL_NAME_REGEX,
   TupleIdentifier
 } from "./gpcTypes";
 import {
@@ -37,6 +39,7 @@ import {
   LIST_MEMBERSHIP,
   LIST_NONMEMBERSHIP,
   checkPODEntryIdentifier,
+  checkPODEntryName,
   listConfigFromProofConfig,
   resolvePODEntryIdentifier,
   resolvePODEntryOrTupleIdentifier,
@@ -151,7 +154,7 @@ function checkProofObjConfig(
 
   let nEntries = 0;
   for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
-    checkPODName(entryName);
+    checkPODEntryName(entryName);
     checkProofEntryConfig(`${nameForErrorMessages}.${entryName}`, entryConfig);
     nEntries++;
   }
@@ -355,7 +358,11 @@ export function checkProofInputsForConfig(
     // Examine config for each entry.
     for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
       // This named entry should exist in the given POD.
-      const podValue = pod.content.getValue(entryName);
+      const podValue = resolvePODEntryIdentifier(
+        `${objName}.${entryName}`,
+        proofInputs.pods
+      );
+
       if (podValue === undefined) {
         throw new ReferenceError(
           `Configured entry ${objName}.${entryName} doesn't exist in input.`
@@ -364,6 +371,12 @@ export function checkProofInputsForConfig(
 
       // If this entry identifies the owner, we should have a matching Identity.
       if (entryConfig.isOwnerID) {
+        // It is an error for this to be specified for a virtual entry.
+        if (entryName.match(POD_VIRTUAL_NAME_REGEX) !== null) {
+          throw new Error(
+            `The virtual entry ${objName}.${entryName} cannot be the owner ID.`
+          );
+        }
         hasOwnerEntry = true;
         if (proofInputs.owner === undefined) {
           throw new Error(
@@ -647,8 +660,10 @@ function checkRevealedObjectClaims(
     }
   }
 
-  requireType("signerPublicKey", objClaims.signerPublicKey, "string");
-  checkPublicKeyFormat(objClaims.signerPublicKey);
+  if (objClaims.signerPublicKey !== undefined) {
+    requireType("signerPublicKey", objClaims.signerPublicKey, "string");
+    checkPublicKeyFormat(objClaims.signerPublicKey);
+  }
 
   return nEntries;
 }
@@ -669,17 +684,6 @@ export function checkVerifyClaimsForConfig(
   boundConfig: GPCBoundConfig,
   revealedClaims: GPCRevealedClaims
 ): void {
-  // Every configured POD should be revealed, with at least signing key.
-  const nConfiguredObjects = Object.keys(boundConfig.pods).length;
-  const nClaimedObjects = Object.keys(revealedClaims.pods).length;
-  if (nConfiguredObjects !== nClaimedObjects) {
-    throw new Error(
-      `Incorrect number of claimed objects.` +
-        `  Configuration expects ${nConfiguredObjects}.` +
-        `  Claims include ${nClaimedObjects}.`
-    );
-  }
-
   // Each configured entry to be revealed should be revealed in claims.
   for (const [objName, objConfig] of Object.entries(boundConfig.pods)) {
     // Examine config for each revealed entry.
@@ -702,8 +706,14 @@ export function checkVerifyClaimsForConfig(
           );
         }
 
-        // This named entry should exist in the given POD.
-        const revealedValue = objClaims.entries[entryName];
+        // This named entry should exist in the given POD as either a proper
+        // entry or a virtual entry, which is a field of the object itself.
+        const virtualEntryNameMatch = entryName.match(POD_VIRTUAL_NAME_REGEX);
+        // TODO(POD-P3): Modify for other virtual entry types when they are available.
+        const revealedValue =
+          virtualEntryNameMatch === null
+            ? objClaims.entries[entryName]
+            : objClaims[virtualEntryNameMatch[1] as "signerPublicKey"];
         if (revealedValue === undefined) {
           throw new ReferenceError(
             `Configuration reveals entry "${objName}.${entryName}" which` +
@@ -893,7 +903,8 @@ export function checkCircuitRequirements(
 }
 
 /**
- * Checks whether a POD entry identifier exists in the context of tuple checking.
+ * Checks whether a POD entry identifier exists in the proof configuration for
+ * the purpose of tuple checking.
  *
  * @param tupleNameForErrorMessages tuple name (provided for error messages)
  * @param entryIdentifier the identifier to check
@@ -917,11 +928,14 @@ export function checkPODEntryIdentifierExists(
     );
   }
 
-  const entry = pod.entries[entryName];
+  // If the entry name is virtual, it need not be in the proof configuration.
+  if (entryName.match(POD_NAME_REGEX) !== null) {
+    const entry = pod.entries[entryName];
 
-  if (entry === undefined) {
-    throw new ReferenceError(
-      `Tuple ${tupleNameForErrorMessages} refers to non-existent entry ${entryName} in POD ${podName}.`
-    );
+    if (entry === undefined) {
+      throw new ReferenceError(
+        `Tuple ${tupleNameForErrorMessages} refers to non-existent entry ${entryName} in POD ${podName}.`
+      );
+    }
   }
 }

@@ -114,7 +114,12 @@ export async function gpcDemo(): Promise<boolean> {
           // I'm proving the presence of an entry called "owner".  I'm not
           // revealing it, but will be proving I own the corresponding
           // Semaphore identity secrets.
-          owner: { isRevealed: false, isOwnerID: true }
+          owner: { isRevealed: false, isOwnerID: true },
+
+          // I'm declaring that the POD signer's public key should be revealed.
+          $signerPublicKey: {
+            isRevealed: true
+          }
         }
       }
     }

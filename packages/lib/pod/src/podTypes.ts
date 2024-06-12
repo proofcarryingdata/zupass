@@ -92,9 +92,16 @@ export const POD_INT_MAX = (1n << 63n) - 1n;
  * a hex string of the (32-byte) encoded form of the key.
  */
 export type PODEdDSAPublicKeyValue = {
-  type: "eddsa_pubkey";
+  type: typeof EDDSA_PUBKEY_TYPE_STRING;
   value: string;
 };
+
+/**
+ * Type constructor for EdDSA (Baby Jubjub) public keys.
+ */
+export function PODEdDSAPublicKeyValue(value: string): PODEdDSAPublicKeyValue {
+  return { type: EDDSA_PUBKEY_TYPE_STRING, value };
+}
 
 /**
  * POD values are tagged with their type.  All values contain `type` and `value`

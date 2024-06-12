@@ -3,11 +3,30 @@ import { Identity } from "@semaphore-protocol/identity";
 import { Groth16Proof } from "snarkjs";
 
 /**
- * String specifying a named entry in a named object, in the format
- * `objectName.entryName`.  Each of the sub-parts should be a valid PODName,
- * checked by {@link POD_NAME_REGEX}.
+ * String specifying a named entry, virtual or otherwise, in a named object, in
+ * the format `objectName.entryName`.  Each of the sub-parts should be a valid
+ * PODName, checked by {@link POD_NAME_REGEX} or {@link POD_VIRTUAL_NAME_REGEX}.
  */
-export type PODEntryIdentifier = `${PODName}.${PODName}`;
+export type PODEntryIdentifier = `${PODName}.${PODName | PODVirtualEntryName}`;
+
+/**
+ * Regex matching legal qualified names for proper POD entries; these are of the
+ * form `${PODName}.${PODName}`.
+ */
+export const POD_PROPER_ENTRY_IDENTIFIER_REGEX = new RegExp(
+  /([A-Za-z_]\w*)\.([A-Za-z_]\w*)$/
+);
+
+/**
+ * String specifying valid virtual entry name.
+ */
+export type PODVirtualEntryName = "$signerPublicKey";
+
+/**
+ * Regex matching legal names for POD virtual entries. Matches
+ * `PODVirtualEntryName`.
+ */
+export const POD_VIRTUAL_NAME_REGEX = new RegExp(/^\$(signerPublicKey)$/);
 
 /**
  * Optional set of lists for checking POD entry (or tuple) value
@@ -378,10 +397,10 @@ export type GPCRevealedObjectClaims = {
   entries?: PODEntries;
 
   /**
-   * The EdDSA public key of the isuer of this POD.  The proof confirms
-   * that the POD has a valid signature under this key.
+   * Potentially redacted EdDSA public key of the issuer of this POD.  The proof
+   * confirms that the POD has a valid signature under this key.
    */
-  signerPublicKey: string;
+  signerPublicKey?: string;
 };
 
 /**

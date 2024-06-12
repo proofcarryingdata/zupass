@@ -9,9 +9,11 @@ import {
 import {
   EDDSA_PUBKEY_TYPE_STRING,
   POD,
+  PODEdDSAPublicKeyValue,
   PODName,
   PODValue,
   PODValueTuple,
+  POD_NAME_REGEX,
   checkPODName,
   getPODValueForCircuit,
   podValueHash,
@@ -27,6 +29,7 @@ import {
   GPCProofObjectConfig,
   GPCProofTupleConfig,
   PODEntryIdentifier,
+  POD_VIRTUAL_NAME_REGEX,
   TUPLE_PREFIX,
   TupleIdentifier
 } from "./gpcTypes";
@@ -154,6 +157,25 @@ function canonicalizeTupleConfig(
 }
 
 /**
+ * Checks that the input matches the proper format for an entry name, virtual or
+ * ortherwise, as given by {@link POD_NAME_REGEX} and {@link
+ * POD_VIRTUAL_NAME_REGEX}.
+ *
+ * @param name the string to check
+ * @returns the unmodified input, for easy chaining
+ * @throws TypeError if the format doesn't match
+ */
+export function checkPODEntryName(name?: string): string {
+  if (!name) {
+    throw new TypeError("POD entry names cannot be undefined.");
+  } else if (name.match(POD_VIRTUAL_NAME_REGEX) !== null) {
+    return name;
+  } else {
+    return checkPODName(name);
+  }
+}
+
+/**
  * Checks the format of a PODEntryIdentifier, and return its subcomponents.
  *
  * @param nameForErrorMessages the name for this value, used only for error
@@ -173,7 +195,7 @@ export function checkPODEntryIdentifier(
       `Invalid entry identifier in ${nameForErrorMessages}.  Must have the form "objName.entryName".`
     );
   }
-  return [checkPODName(parts[0]), checkPODName(parts[1])];
+  return [checkPODName(parts[0]), checkPODEntryName(parts[1])];
 }
 
 /**
@@ -219,7 +241,14 @@ export function resolvePODEntryIdentifier(
   const { objName: podName, entryName: entryName } =
     splitPODEntryIdentifier(entryIdentifier);
   const pod = pods[podName];
-  const entryValue = pod?.content?.getValue(entryName);
+  const entryValue =
+    entryName.match(POD_NAME_REGEX) !== null
+      ? pod?.content?.getValue(entryName)
+      : // TODO(POD-P3): Modify for other virtual entry types when they are available.
+        ({
+          type: EDDSA_PUBKEY_TYPE_STRING,
+          value: pod?.signerPublicKey
+        } satisfies PODEdDSAPublicKeyValue);
 
   return entryValue;
 }
@@ -233,7 +262,7 @@ export function resolvePODEntryIdentifier(
  */
 export function isTupleIdentifier(
   identifier: PODEntryIdentifier | TupleIdentifier
-): boolean {
+): identifier is TupleIdentifier {
   return identifier.startsWith(`${TUPLE_PREFIX}.`);
 }
 
@@ -607,41 +636,5 @@ function addIdentifierToListConfig(
   gpcListConfig[identifier] = {
     type: membershipType,
     listIdentifier
-  };
-}
-
-// TODO(POD-P2): Get rid of everything below this line.
-
-// Returns circuit inputs indicating that all virtual entries (i.e. all signers'
-// public keys) are revealed.
-export function dummyVirtualEntryInputs<
-  GPCCircuitConfig extends ProtoPODGPCCircuitParams
->(
-  params: GPCCircuitConfig
-): { virtualEntryIsValueHashRevealed: CircuitSignal } {
-  return {
-    virtualEntryIsValueHashRevealed: array2Bits(
-      padArray([], paramMaxVirtualEntries(params), 1n)
-    )
-  };
-}
-
-// Returns circuit outputs revealing all virtual entries (i.e. all signers'
-// public keys).
-export function dummyVirtualEntryOutputs<
-  GPCCircuitConfig extends ProtoPODGPCCircuitParams
->(
-  params: GPCCircuitConfig,
-  publicKeys: string[]
-): { virtualEntryRevealedValueHash: CircuitSignal[] } {
-  const unpaddedHashes = publicKeys.map((pk) =>
-    podValueHash({ type: EDDSA_PUBKEY_TYPE_STRING, value: pk })
-  );
-  return {
-    virtualEntryRevealedValueHash: padArray(
-      unpaddedHashes,
-      params.maxObjects,
-      unpaddedHashes[0]
-    )
   };
 }
