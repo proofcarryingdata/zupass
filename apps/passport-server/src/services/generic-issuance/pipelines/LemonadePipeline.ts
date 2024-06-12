@@ -2008,52 +2008,54 @@ export class LemonadePipeline implements BasePipeline {
   public async sendPipelineEmail(
     emailType: PipelineEmailType
   ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
-    if (this.id !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
-      throw new PCDHTTPError(
-        400,
-        "only the edge esmeralda pipeline can send emails right now"
+    return traced(LOG_NAME, "sendPipelineEmail", async () => {
+      if (this.id !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
+        throw new PCDHTTPError(
+          400,
+          "only the edge esmeralda pipeline can send emails right now"
+        );
+      }
+
+      const allAtoms = await this.db.load(this.id);
+      const manualCheckins = await this.getManualCheckinSummary();
+      const sentEmails = await this.emailDB.getSentEmails(
+        this.id,
+        PipelineEmailType.EsmeraldaOneClick
       );
-    }
+      const encounteredEmails = new Set<string>();
+      const filteredAtoms = allAtoms.filter((a) => {
+        if (manualCheckins.find((c) => c.email === a.email)) {
+          return false;
+        }
 
-    const allAtoms = await this.db.load(this.id);
-    const manualCheckins = await this.getManualCheckinSummary();
-    const sentEmails = await this.emailDB.getSentEmails(
-      this.id,
-      PipelineEmailType.EsmeraldaOneClick
-    );
-    const encounteredEmails = new Set<string>();
-    const filteredAtoms = allAtoms.filter((a) => {
-      if (manualCheckins.find((c) => c.email === a.email)) {
-        return false;
-      }
+        if (sentEmails.find((e) => e.emailAddress === a.email)) {
+          return false;
+        }
 
-      if (sentEmails.find((e) => e.emailAddress === a.email)) {
-        return false;
-      }
+        if (encounteredEmails.has(a.email)) {
+          return false;
+        }
 
-      if (encounteredEmails.has(a.email)) {
-        return false;
-      }
+        encounteredEmails.add(a.email);
 
-      encounteredEmails.add(a.email);
+        return true;
+      });
 
-      return true;
+      logger(
+        LOG_TAG,
+        `SEND_PIPELINE_EMAIL`,
+        this.id,
+        emailType,
+        `atom_count:`,
+        allAtoms.length,
+        `manual_checkin_count`,
+        manualCheckins.length,
+        `ssent_emails`,
+        sentEmails.length
+      );
+
+      return { queued: filteredAtoms.length };
     });
-
-    logger(
-      LOG_TAG,
-      `SEND_PIPELINE_EMAIL`,
-      this.id,
-      emailType,
-      `atom_count:`,
-      allAtoms.length,
-      `manual_checkin_count`,
-      manualCheckins.length,
-      `ssent_emails`,
-      sentEmails.length
-    );
-
-    return { queued: filteredAtoms.length };
   }
 
   /**
