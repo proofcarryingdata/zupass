@@ -42,7 +42,11 @@ import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
 import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
-import { LemonadeAtom, isLemonadeAtom } from "../pipelines/LemonadePipeline";
+import {
+  LemonadeAtom,
+  LemonadePipeline,
+  isLemonadeAtom
+} from "../pipelines/LemonadePipeline";
 import { PretixAtom, isPretixAtom } from "../pipelines/PretixPipeline";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
@@ -323,10 +327,18 @@ export class PipelineSubservice {
   }
 
   public async handleSendPipelineEmail(
-    _pipelineId: string,
-    _email: PipelineEmailType
+    pipelineId: string,
+    email: PipelineEmailType
   ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
-    return { queued: 0 };
+    const pipelineSlot = await this.getPipelineSlot(pipelineId);
+    const instance = pipelineSlot?.instance;
+
+    if (LemonadePipeline.is(instance)) {
+      const result = await instance.sendPipelineEmail(email);
+      return result;
+    }
+
+    throw new PCDHTTPError(400, "only lemonade pipeline can send emails");
   }
 
   /**

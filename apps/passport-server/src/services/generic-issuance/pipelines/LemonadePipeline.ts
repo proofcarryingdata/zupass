@@ -13,12 +13,14 @@ import {
   ActionConfigResponseValue,
   BadgeConfig,
   CONTACT_EVENT_NAME,
+  GenericIssuanceSendPipelineEmailResponseValue,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
   PipelineCheckinSummary,
   PipelineEdDSATicketZuAuthConfig,
+  PipelineEmailType,
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
@@ -1995,8 +1997,23 @@ export class LemonadePipeline implements BasePipeline {
     });
   }
 
-  public static is(p: Pipeline): p is LemonadePipeline {
-    return p.type === PipelineType.Lemonade;
+  public static is(p: Pipeline | undefined): p is LemonadePipeline {
+    return p?.type === PipelineType.Lemonade;
+  }
+
+  public async sendPipelineEmail(
+    email: PipelineEmailType
+  ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
+    if (this.id !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
+      throw new PCDHTTPError(
+        400,
+        "only the edge esmeralda pipeline can send emails right now"
+      );
+    }
+
+    logger(email);
+
+    return { queued: 0 };
   }
 
   /**
