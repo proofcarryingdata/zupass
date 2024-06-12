@@ -19,7 +19,7 @@ export async function requestGenericIssuanceSendPipelineEmail(
   email: PipelineEmailType
 ): Promise<GenericIssuanceSendPipelineEmailResult> {
   return httpPostSimple(
-    urlJoin(zupassServerUrl, "/generic-issuance/api/send-pipeline-email"),
+    urlJoin(zupassServerUrl, "/generic-issuance/api/send-email"),
     async (resText) => {
       return {
         success: true,

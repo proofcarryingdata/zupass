@@ -1,21 +1,24 @@
 import { Button } from "@chakra-ui/react";
 import {
+  GenericIssuanceSendPipelineEmailResult,
+  PipelineDefinition,
   PipelineEmailType,
-  PipelineInfoResponseValue,
   requestGenericIssuanceSendPipelineEmail
 } from "@pcd/passport-interface";
-import { sleep } from "@pcd/util";
 import { ReactNode, useCallback, useState } from "react";
 import { ZUPASS_SERVER_URL } from "../../../constants";
 import { useJWT } from "../../../helpers/userHooks";
 
 export function SendEmailSection({
-  pipelineInfo
+  pipeline
 }: {
-  pipelineInfo: PipelineInfoResponseValue;
+  pipeline: PipelineDefinition;
 }): ReactNode {
   const jwt = useJWT();
   const [sending, setSending] = useState(false);
+  const [result, setResult] = useState<
+    GenericIssuanceSendPipelineEmailResult | undefined
+  >();
   const sendEmail = useCallback(async () => {
     if (!jwt) {
       alert("you need to be logged in to be able to send an email");
@@ -23,14 +26,15 @@ export function SendEmailSection({
     }
 
     setSending(true);
-    requestGenericIssuanceSendPipelineEmail(
+    const result = await requestGenericIssuanceSendPipelineEmail(
       ZUPASS_SERVER_URL,
       jwt,
+      pipeline.id,
       PipelineEmailType.EsmeraldaOneClick
     );
-    await sleep(2000);
+    setResult(result);
     setSending(false);
-  }, [jwt]);
+  }, [jwt, pipeline.id]);
 
   return (
     <div>
@@ -38,6 +42,7 @@ export function SendEmailSection({
       <Button onClick={sendEmail} disabled={sending}>
         {sending ? "Sending..." : "Send Esmeralda One Click Email"}
       </Button>
+      {result ? (result.success ? "success" : "error") : null}
     </div>
   );
 }

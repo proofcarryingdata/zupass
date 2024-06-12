@@ -9,6 +9,8 @@ import {
   GenericIssuanceGetPipelineResponseValue,
   GenericIssuanceSelfResponseValue,
   GenericIssuanceSendEmailResponseValue,
+  GenericIssuanceSendPipelineEmailRequest,
+  GenericIssuanceSendPipelineEmailResponseValue,
   GenericIssuanceUpsertPipelineRequest,
   GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
@@ -621,6 +623,20 @@ export function initGenericIssuanceRoutes(
         );
 
       res.json(result);
+    }
+  );
+
+  app.post(
+    "/generic-issuance/api/send-email",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+
+      const reqBody = req.body as GenericIssuanceSendPipelineEmailRequest;
+      logger(reqBody);
+
+      res.json({
+        queued: 0
+      } satisfies GenericIssuanceSendPipelineEmailResponseValue);
     }
   );
 }

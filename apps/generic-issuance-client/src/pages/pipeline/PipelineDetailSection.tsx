@@ -232,7 +232,7 @@ export function PipelineDetailSection({
               </AccordionButton>
               <AccordionPanel>
                 <SectionContainer>
-                  <SendEmailSection pipelineInfo={pipelineInfo} />
+                  <SendEmailSection pipeline={pipeline} />
                 </SectionContainer>
               </AccordionPanel>
             </AccordionItem>
