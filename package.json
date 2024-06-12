@@ -20,7 +20,7 @@
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "scripts/build.sh",
     "build:packages": "scripts/build.sh --filter=./packages/**/*  --filter=!./apps/*",
-    "dev": "tsx scripts/watch.ts",
+    "dev": "turbo watch dev build",
     "dev:apps": "turbo run dev --parallel --filter=./apps/* --filter=!./apps/anon-message-client --filter=!./apps/anon-message-client --filter=!./apps/kudosbot-client",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn dev",
     "docs": "yarn build && typedoc",
@@ -67,7 +67,6 @@
     "@types/react": "^18.0.22",
     "tsx": "^4.6.2",
     "turbo": "^2.0.3",
-    "turbowatch": "^2.29.4",
     "workspace-tools": "^0.36.4",
     "zx": "^7.2.3"
   },
