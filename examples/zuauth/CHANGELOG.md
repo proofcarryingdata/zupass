@@ -1,5 +1,12 @@
 # zuauth-example
 
+## 0.1.11
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.4.0
+
 ## 0.1.10
 
 ### Patch Changes

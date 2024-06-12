@@ -34,6 +34,7 @@ export interface ZuAuthArgs {
   externalNullifier?: string | bigint;
   proofTitle?: string;
   proofDescription?: string;
+  multi?: boolean;
 }
 
 export interface ZuAuthRedirectArgs extends ZuAuthArgs {
@@ -71,7 +72,8 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     config,
     externalNullifier,
     proofTitle,
-    proofDescription
+    proofDescription,
+    multi
   } = zuAuthArgs;
 
   const eventIds: string[] = [],
@@ -163,7 +165,8 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     {
       genericProveScreen: true,
       title: proofTitle,
-      description: proofDescription
+      description: proofDescription,
+      multi
     },
     true
   );
