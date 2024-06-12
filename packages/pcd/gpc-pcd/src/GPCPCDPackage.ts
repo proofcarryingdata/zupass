@@ -17,7 +17,13 @@ import {
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
+import {
+  POD,
+  PODName,
+  PODStringValue,
+  POD_NAME_REGEX,
+  checkPODName
+} from "@pcd/pod";
 import { PODPCD, PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
@@ -295,13 +301,15 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
             }
 
             // POD podName should be present in the config and have all
-            // entries specified there.
+            // proper entries specified there.
             const podConfig = proofConfig.pods[podName];
             if (podConfig === undefined) {
               params.notFoundMessage = `The proof configuration does not contain this POD.`;
               return false;
             } else {
-              const entries = Object.keys(podConfig.entries);
+              const entries = Object.keys(podConfig.entries).filter(
+                (entryName) => entryName.match(POD_NAME_REGEX) !== null
+              );
               // Enumerate POD entries
               const podEntries = podPCD.pod.content.asEntries();
               // Return true iff all elements of `entries` are keys of `podEntries`
