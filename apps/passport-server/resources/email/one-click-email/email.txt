@@ -1,0 +1,5 @@
+Hi there,
+
+Welcome to Zupass.
+
+This is the one click login email

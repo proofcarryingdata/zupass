@@ -64,6 +64,70 @@ export class EmailService {
       }
     });
   }
+
+  private async composeOneClickLoginEmail(
+    name: string,
+    email: string,
+    oneClickLoginLink: string
+  ): Promise<{ text: string; html: string }> {
+    const textTemplate = (
+      await readFile(
+        path.join(this.context.resourcesDir, "email/one-click-email/email.txt")
+      )
+    ).toString();
+    const htmlTemplate = (
+      await readFile(
+        path.join(this.context.resourcesDir, "email/one-click-email/email.html")
+      )
+    ).toString();
+
+    let text = textTemplate.replace("{{name}}", name);
+    text = textTemplate.replace("{{email}}", email);
+    text = textTemplate.replace("{{oneClickLoginLink}}", oneClickLoginLink);
+
+    let html = htmlTemplate.replace("{{name}}", name);
+    html = textTemplate.replace("{{email}}", email);
+    html = textTemplate.replace("{{oneClickLoginLink}}", oneClickLoginLink);
+
+    return {
+      text,
+      html
+    };
+  }
+
+  public async sendEsmeraldaOneClickEmail(
+    to: string,
+    name: string,
+    email: string,
+    oneClickLoginLink: string
+  ): Promise<void> {
+    return traced("Email", "sendEmail", async (span) => {
+      span?.setAttribute("email", to);
+
+      const msg = {
+        to: to,
+        from: `Zupass <${ZUPASS_SENDER_EMAIL}>`,
+        subject: "Welcome to Zupass",
+        ...(await this.composeOneClickLoginEmail(
+          name,
+          email,
+          oneClickLoginLink
+        ))
+      };
+
+      if (!this.emailAPI) {
+        throw new PCDHTTPError(503, "[EMAIL] no email client");
+      }
+
+      try {
+        this.emailAPI.send(msg);
+      } catch (e) {
+        throw new PCDHTTPError(500, `Email send error, failed to email ${to}`, {
+          cause: e
+        });
+      }
+    });
+  }
 }
 
 export function startEmailService(
