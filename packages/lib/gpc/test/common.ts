@@ -1,5 +1,5 @@
 import { loadCircomkitConfig } from "@pcd/gpcircuits";
-import { PODEdDSAPublicKeyValue, PODEntries } from "@pcd/pod";
+import { PODEntries } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { AssertionError, assert, expect } from "chai";

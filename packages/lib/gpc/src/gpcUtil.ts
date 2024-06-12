@@ -1,11 +1,4 @@
-import {
-  CircuitDesc,
-  CircuitSignal,
-  ProtoPODGPCCircuitParams,
-  array2Bits,
-  padArray,
-  paramMaxVirtualEntries
-} from "@pcd/gpcircuits";
+import { CircuitDesc } from "@pcd/gpcircuits";
 import {
   EDDSA_PUBKEY_TYPE_STRING,
   POD,
