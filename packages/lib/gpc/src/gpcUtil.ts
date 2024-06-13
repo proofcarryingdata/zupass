@@ -276,7 +276,8 @@ export function isVirtualEntryName(
  * POD virtual entry identifier predicate
  *
  * @param entryIdentifier the entry identifier to check
- * @returns an indicator of whether the given entry identifier is a virtual entry identifier
+ * @returns an indicator of whether the given entry identifier is a virtual
+ * entry identifier
  */
 export function isVirtualEntryIdentifier(
   entryIdentifier: PODEntryIdentifier
