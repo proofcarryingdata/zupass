@@ -52,9 +52,6 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             ticketID: {
               isRevealed: true,
               ...(includeList ? { isNotMemberOf: "inadmissibleTickets" } : {})
-            },
-            $signerPublicKey: {
-              isRevealed: true
             }
           }
         }
@@ -188,7 +185,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     }
   });
 
-  it("should prove and verify a typical case", async function () {
+  it("should prove and verify some typical cases", async function () {
     const pod1 = POD.sign(sampleEntries, privateKey);
     const proofConfig: GPCProofConfig = {
       pods: {
@@ -218,7 +215,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       membershipLists: {
         list1: [sampleEntries.F, sampleEntries.E],
         admissiblePubKeys: [
-          "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
+          pod1.signerPublicKey,
           "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
           "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b",
           "f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585",
@@ -244,11 +241,82 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       watermark: { type: "int", value: 1337n }
     };
 
-    const { isVerified } = await gpcProofTest(
+    let { isVerified } = await gpcProofTest(
       proofConfig,
       proofInputs,
       expectedRevealedClaims
     );
+    expect(isVerified).to.be.true;
+
+    // Proof config checking non-virtual entry == virtual entry
+    isVerified = (
+      await gpcProofTest(
+        {
+          pods: {
+            pod1: {
+              entries: {
+                ...proofConfig.pods.pod1.entries,
+                pubKey: {
+                  isRevealed: false,
+                  equalsEntry: "pod1.$signerPublicKey"
+                }
+              }
+            }
+          }
+        },
+        proofInputs,
+        expectedRevealedClaims
+      )
+    ).isVerified;
+    expect(isVerified).to.be.true;
+
+    // Proof config checking virtual entry == non-virtual entry
+    isVerified = (
+      await gpcProofTest(
+        {
+          pods: {
+            pod1: {
+              entries: {
+                ...proofConfig.pods.pod1.entries,
+                $signerPublicKey: {
+                  isRevealed: false,
+                  isMemberOf: "admissiblePubKeys",
+                  equalsEntry: "pod1.pubKey"
+                },
+                pubKey: {
+                  isRevealed: false
+                }
+              }
+            }
+          }
+        },
+        proofInputs,
+        expectedRevealedClaims
+      )
+    ).isVerified;
+    expect(isVerified).to.be.true;
+
+    // Proof config checking virtual entry == virtual entry
+    const pod2 = POD.sign(sampleEntries2, privateKey);
+    isVerified = (
+      await gpcProofTest(
+        {
+          pods: {
+            ...proofConfig.pods,
+            pod2: {
+              entries: {
+                $signerPublicKey: {
+                  isRevealed: false,
+                  equalsEntry: "pod1.$signerPublicKey"
+                }
+              }
+            }
+          }
+        },
+        { ...proofInputs, pods: { pod1, pod2 } },
+        expectedRevealedClaims
+      )
+    ).isVerified;
     expect(isVerified).to.be.true;
   });
 
@@ -272,6 +340,9 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
               isRevealed: false,
               isOwnerID: true,
               isMemberOf: "goats"
+            },
+            $signerPublicKey: {
+              isRevealed: false
             }
           }
         },
@@ -279,7 +350,10 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
           entries: {
             G: { isRevealed: true },
             otherTicketID: { isRevealed: false },
-            owner: { isRevealed: false, isOwnerID: true }
+            owner: { isRevealed: false, isOwnerID: true },
+            $signerPublicKey: {
+              isRevealed: false
+            }
           }
         }
       },
@@ -360,10 +434,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
           })
           .concat([sampleEntries2.attendee]),
         admissiblePubKeyPairs: [
-          [
-            "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
-            "AXpeCiWvA09yWoqjLs7tiZic3cyCVipmBw0SONbJNyw"
-          ],
+          [pod1.signerPublicKey, pod2.signerPublicKey],
           [
             "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
             "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b"
@@ -869,6 +940,28 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       },
       "ReferenceError",
       'Configuration reveals entry "wrongPODName.ticketID" but the POD is not revealed in claims.'
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcVerify(
+          proof,
+          boundConfig,
+          {
+            ...revealedClaims,
+            pods: {
+              ...revealedClaims.pods,
+              wrongPOD: {
+                signerPublicKey:
+                  "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f"
+              }
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "ReferenceError",
+      "Revealed claims contain POD(s) not present in the proof configuration. Revealed claims contain PODs somePodName,wrongPOD while the configuration contains PODs somePodName."
     );
 
     await expectAsyncError(

@@ -301,13 +301,14 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
             }
 
             // POD podName should be present in the config and have all
-            // proper entries specified there.
+            // non-virtual entries specified there.
             const podConfig = proofConfig.pods[podName];
             if (podConfig === undefined) {
               params.notFoundMessage = `The proof configuration does not contain this POD.`;
               return false;
             } else {
               const entries = Object.keys(podConfig.entries).filter(
+                // Entry should not be virtual.
                 (entryName) => entryName.match(POD_NAME_REGEX) !== null
               );
               // Enumerate POD entries

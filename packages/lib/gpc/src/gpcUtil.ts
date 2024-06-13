@@ -1,6 +1,5 @@
 import { CircuitDesc } from "@pcd/gpcircuits";
 import {
-  EDDSA_PUBKEY_TYPE_STRING,
   POD,
   PODEdDSAPublicKeyValue,
   PODName,
@@ -22,6 +21,8 @@ import {
   GPCProofObjectConfig,
   GPCProofTupleConfig,
   PODEntryIdentifier,
+  PODVirtualEntryName,
+  POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX,
   POD_VIRTUAL_NAME_REGEX,
   TUPLE_PREFIX,
   TupleIdentifier
@@ -219,6 +220,27 @@ export function splitPODEntryIdentifier(entryIdentifier: PODEntryIdentifier): {
 }
 
 /**
+ * Resolves a POD entry name to its value (if possible) in a given POD.
+ *
+ * @param entryName the identifier to resolve
+ * @param pod a POD
+ * @returns a POD value if the entry is found and `undefined` otherwise
+ */
+export function resolvePODEntry(
+  entryName: PODName,
+  pod: POD
+): PODValue | undefined {
+  if (entryName.match(POD_NAME_REGEX) !== null) {
+    return pod?.content?.getValue(entryName);
+  }
+
+  // TODO(POD-P3): Modify for other virtual entry types when they are available by including switch statement.
+  return pod?.signerPublicKey !== undefined
+    ? PODEdDSAPublicKeyValue(pod?.signerPublicKey)
+    : undefined;
+}
+
+/**
  * Resolves a PODEntryIdentifier to its value (if possible) given a record
  * mapping POD names to PODs.
  *
@@ -234,16 +256,32 @@ export function resolvePODEntryIdentifier(
   const { objName: podName, entryName: entryName } =
     splitPODEntryIdentifier(entryIdentifier);
   const pod = pods[podName];
-  const entryValue =
-    entryName.match(POD_NAME_REGEX) !== null
-      ? pod?.content?.getValue(entryName)
-      : // TODO(POD-P3): Modify for other virtual entry types when they are available.
-        ({
-          type: EDDSA_PUBKEY_TYPE_STRING,
-          value: pod?.signerPublicKey
-        } satisfies PODEdDSAPublicKeyValue);
 
-  return entryValue;
+  return pod !== undefined ? resolvePODEntry(entryName, pod) : undefined;
+}
+
+/**
+ * POD virtual entry name predicate
+ *
+ * @param entryName the entry name to check
+ * @returns an indicator of whether the given entry name is a virtual entry name
+ */
+export function isVirtualEntryName(
+  entryName: PODName
+): entryName is PODVirtualEntryName {
+  return entryName.match(POD_VIRTUAL_NAME_REGEX) !== null;
+}
+
+/**
+ * POD virtual entry identifier predicate
+ *
+ * @param entryIdentifier the entry identifier to check
+ * @returns an indicator of whether the given entry identifier is a virtual entry identifier
+ */
+export function isVirtualEntryIdentifier(
+  entryIdentifier: PODEntryIdentifier
+): boolean {
+  return entryIdentifier.match(POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX) !== null;
 }
 
 /**
@@ -251,7 +289,6 @@ export function resolvePODEntryIdentifier(
  *
  * @param identifier the identifier to check
  * @returns an indicator of whether the given identifier is a tuple identifier
- * @throws TypeError if the format doesn't match
  */
 export function isTupleIdentifier(
   identifier: PODEntryIdentifier | TupleIdentifier

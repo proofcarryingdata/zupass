@@ -6,15 +6,17 @@ import { Groth16Proof } from "snarkjs";
  * String specifying a named entry, virtual or otherwise, in a named object, in
  * the format `objectName.entryName`.  Each of the sub-parts should be a valid
  * PODName, checked by {@link POD_NAME_REGEX} or {@link POD_VIRTUAL_NAME_REGEX}.
+ *
+ * Examples: "ticket1.eventID", "award.$signerPublicKey"
  */
 export type PODEntryIdentifier = `${PODName}.${PODName | PODVirtualEntryName}`;
 
 /**
- * Regex matching legal qualified names for proper POD entries; these are of the
- * form `${PODName}.${PODName}`.
+ * Regex matching legal entry identifiers for virtual POD entries; these are of
+ * the form `${PODName}.${PODVirtualEntryName}`.
  */
-export const POD_PROPER_ENTRY_IDENTIFIER_REGEX = new RegExp(
-  /([A-Za-z_]\w*)\.([A-Za-z_]\w*)$/
+export const POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX = new RegExp(
+  /([A-Za-z_]\w*)\.\$(signerPublicKey)$/
 );
 
 /**

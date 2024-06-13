@@ -1,5 +1,5 @@
 import { loadCircomkitConfig } from "@pcd/gpcircuits";
-import { PODEntries } from "@pcd/pod";
+import { EDDSA_PUBKEY_TYPE_STRING, PODEntries } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { AssertionError, assert, expect } from "chai";
@@ -44,6 +44,10 @@ export const sampleEntries = {
   H: { type: "int", value: 8n },
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n },
+  pubKey: {
+    type: EDDSA_PUBKEY_TYPE_STRING,
+    value: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+  },
   otherTicketID: { type: "int", value: 999n },
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
 } satisfies PODEntries;

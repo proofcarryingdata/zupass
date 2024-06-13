@@ -153,7 +153,7 @@ describe("GPCPCD should work", async function () {
             sampleEntries1.ticketID
           ],
           admissibleTicketIssuers: [
-            "AXpeCiWvA09yWoqjLs7tiZic3cyCVipmBw0SONbJNyw",
+            ticketPOD.signerPublicKey,
             "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
             "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b"
           ].map(PODEdDSAPublicKeyValue)

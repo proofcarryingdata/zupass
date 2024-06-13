@@ -8,7 +8,6 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
-  POD_NAME_REGEX,
   applyOrMap,
   calcMinMerkleDepthForEntries,
   checkPODName,
@@ -40,13 +39,14 @@ import {
   LIST_NONMEMBERSHIP,
   checkPODEntryIdentifier,
   checkPODEntryName,
+  isVirtualEntryName,
   listConfigFromProofConfig,
+  resolvePODEntry,
   resolvePODEntryIdentifier,
   resolvePODEntryOrTupleIdentifier,
   splitCircuitIdentifier,
   widthOfEntryOrTuple
 } from "./gpcUtil";
-
 // TODO(POD-P2): Split out the parts of this which should be public from
 // internal implementation details.  E.g. the returning of ciruit parameters
 // isn't relevant to checking objects after deserialization.
@@ -358,10 +358,7 @@ export function checkProofInputsForConfig(
     // Examine config for each entry.
     for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
       // This named entry should exist in the given POD.
-      const podValue = resolvePODEntryIdentifier(
-        `${objName}.${entryName}`,
-        proofInputs.pods
-      );
+      const podValue = resolvePODEntry(entryName, pod);
 
       if (podValue === undefined) {
         throw new ReferenceError(
@@ -372,7 +369,7 @@ export function checkProofInputsForConfig(
       // If this entry identifies the owner, we should have a matching Identity.
       if (entryConfig.isOwnerID) {
         // It is an error for this to be specified for a virtual entry.
-        if (entryName.match(POD_VIRTUAL_NAME_REGEX) !== null) {
+        if (isVirtualEntryName(entryName)) {
           throw new Error(
             `The virtual entry ${objName}.${entryName} cannot be the owner ID.`
           );
@@ -706,14 +703,14 @@ export function checkVerifyClaimsForConfig(
           );
         }
 
-        // This named entry should exist in the given POD as either a proper
-        // entry or a virtual entry, which is a field of the object itself.
+        // This named entry should exist in the given POD as either a virtual
+        // or non-virtual entry, which is a field of the object itself.
         const virtualEntryNameMatch = entryName.match(POD_VIRTUAL_NAME_REGEX);
         // TODO(POD-P3): Modify for other virtual entry types when they are available.
         const revealedValue =
           virtualEntryNameMatch === null
             ? objClaims.entries[entryName]
-            : objClaims[virtualEntryNameMatch[1] as "signerPublicKey"];
+            : objClaims.signerPublicKey;
         if (revealedValue === undefined) {
           throw new ReferenceError(
             `Configuration reveals entry "${objName}.${entryName}" which` +
@@ -722,6 +719,16 @@ export function checkVerifyClaimsForConfig(
         }
       }
     }
+  }
+
+  // The revealed claims should not include any PODs not in the config.
+  const revealedObjs = Object.keys(revealedClaims.pods);
+  if (revealedObjs.some((objName) => boundConfig.pods[objName] === undefined)) {
+    throw new ReferenceError(
+      `Revealed claims contain POD(s) not present in the proof configuration. Revealed claims contain PODs ${revealedObjs} while the configuration contains PODs ${Object.keys(
+        boundConfig.pods
+      )}.`
+    );
   }
 
   // Reverse check that each revealed entry and object exists and is revealed
@@ -929,7 +936,7 @@ export function checkPODEntryIdentifierExists(
   }
 
   // If the entry name is virtual, it need not be in the proof configuration.
-  if (entryName.match(POD_NAME_REGEX) !== null) {
+  if (!isVirtualEntryName(entryName)) {
     const entry = pod.entries[entryName];
 
     if (entry === undefined) {

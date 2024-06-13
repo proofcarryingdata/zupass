@@ -19,7 +19,6 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
-  POD_NAME_REGEX,
   decodePublicKey,
   decodeSignature,
   podNameHash,
@@ -37,7 +36,6 @@ import {
   GPCRevealedObjectClaims,
   GPCRevealedOwnerClaims,
   PODEntryIdentifier,
-  POD_PROPER_ENTRY_IDENTIFIER_REGEX,
   POD_VIRTUAL_NAME_REGEX,
   TUPLE_PREFIX,
   TupleIdentifier
@@ -46,6 +44,8 @@ import {
   GPCProofMembershipListConfig,
   LIST_MEMBERSHIP,
   isTupleIdentifier,
+  isVirtualEntryIdentifier,
+  isVirtualEntryName,
   listConfigFromProofConfig,
   makeWatermarkSignal
 } from "./gpcUtil";
@@ -132,13 +132,12 @@ function prepCompilerMaps<
 
     // If the object input is undefined, e.g. if nothing is revealed, add the
     // object name to the map anyway for later reference.
-    objMap.set(
-      objName,
-      objInput === undefined ? undefined : { objConfig, objInput, objIndex }
-    );
+    objMap.set(objName, { objConfig, objInput, objIndex });
 
     // Add virtual entries even if they are not explicitly specified in the
-    // config. They are not revealed by default.
+    // config. By default, they are revealed, though this will be overwritten if
+    // the configuration requires otherwise.
+    //
     // TODO(POD-P3): Modify for other virtual entry types when they are available.
     entryMap.set(`${objName}.$signerPublicKey`, {
       objName,
@@ -147,7 +146,7 @@ function prepCompilerMaps<
       objInput,
       entryName: "$signerPublicKey",
       entryIndex: signerPubKeyEntryIndexOffset + objIndex,
-      entryConfig: { isRevealed: false }
+      entryConfig: { isRevealed: true }
     });
 
     const entryNameOrder = Object.keys(objConfig.entries).sort();
@@ -312,8 +311,7 @@ export function compileProofConfig(
   const circuitEntryInputs = combineProofEntries(
     Array.from(entryMap.entries())
       .filter(
-        ([entryName, _]) =>
-          entryName.match(POD_PROPER_ENTRY_IDENTIFIER_REGEX) !== null
+        ([entryIdentifier, _]) => !isVirtualEntryIdentifier(entryIdentifier)
       )
       .map(([_, e]) => compileProofEntry(e, circuitDesc.merkleMaxDepth)),
     circuitDesc.maxEntries
@@ -580,9 +578,12 @@ function compileProofVirtualEntry<
   const objNames = Array.from(objMap.keys());
   const unpaddedVirtualEntryIsValueHashRevealed = objNames.map((objName) => {
     const entryInfo = entryMap.get(`${objName}.$signerPublicKey`);
-    const isPublicKeyRevealed =
-      entryInfo !== undefined &&
-      (entryInfo.objConfig.entries["$signerPublicKey"]?.isRevealed ?? false);
+    if (entryInfo === undefined) {
+      throw new Error(
+        `Entry ${objName}.$signerPublicKey is missing from entry map.`
+      );
+    }
+    const isPublicKeyRevealed = entryInfo.entryConfig.isRevealed;
     return BigInt(+isPublicKeyRevealed);
   });
 
@@ -791,8 +792,7 @@ export function compileVerifyConfig(
   const { circuitEntryInputs, circuitEntryOutputs } = combineVerifyEntries(
     Array.from(entryMap.entries())
       .filter(
-        ([entryName, _]) =>
-          entryName.match(POD_PROPER_ENTRY_IDENTIFIER_REGEX) !== null
+        ([entryIdentifier, _]) => !isVirtualEntryIdentifier(entryIdentifier)
       )
       .map(([_, e]) => compileVerifyEntry(e)),
     circuitDesc.maxEntries
@@ -990,8 +990,13 @@ function compileVerifyVirtualEntry(
   const objNames = Array.from(objMap.keys());
 
   const unpaddedVirtualEntryRevealedValueHash = objNames.map((objName) => {
-    const maybePublicKeyString = entryMap.get(`${objName}.$signerPublicKey`)
-      ?.objInput?.signerPublicKey;
+    const entryInfo = entryMap.get(`${objName}.$signerPublicKey`);
+    if (entryInfo === undefined) {
+      throw new Error(
+        `Entry ${objName}.$signerPublicKey is missing from entry map.`
+      );
+    }
+    const maybePublicKeyString = entryInfo.objInput?.signerPublicKey;
     return maybePublicKeyString !== undefined
       ? podValueHash(PODEdDSAPublicKeyValue(maybePublicKeyString))
       : BABY_JUB_NEGATIVE_ONE;
@@ -1069,11 +1074,12 @@ export function makeRevealedClaims(
       throw new ReferenceError(`Missing revealed POD ${objName}.`);
     }
     let anyRevealedEntries = false;
-    let revealedPublicKey = false;
+    // Reveal public keys unless configured otherwise.
+    let revealedPublicKey = true;
     const revealedEntries: Record<PODName, PODValue> = {};
     for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
-      if (entryConfig.isRevealed) {
-        if (entryName.match(POD_NAME_REGEX) !== null) {
+      if (!isVirtualEntryName(entryName)) {
+        if (entryConfig.isRevealed) {
           anyRevealedEntries = true;
           const entryValue = pod.content.getValue(entryName);
           if (entryValue === undefined) {
@@ -1082,9 +1088,9 @@ export function makeRevealedClaims(
             );
           }
           revealedEntries[entryName] = entryValue;
-        } else {
-          revealedPublicKey = true;
         }
+      } else if (entryConfig.isRevealed !== undefined) {
+        revealedPublicKey = entryConfig.isRevealed;
       }
     }
     if (anyRevealedEntries || revealedPublicKey) {
