@@ -35,6 +35,14 @@ if (
   alert("FROGCRYPTO_SERVER_URL not set");
 }
 
+if (
+  (!process.env.STRICH_LICENSE_KEY || process.env.STRICH_LICENSE_KEY === "") &&
+  global.window &&
+  !!global.window.alert
+) {
+  alert("STRICH_LICENSE_KEY not set");
+}
+
 export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
   zupassServer: process.env.PASSPORT_SERVER_URL as string,

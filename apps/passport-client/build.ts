@@ -129,6 +129,11 @@ async function run(command: string): Promise<void> {
 
   switch (command) {
     case "build":
+      if (!define["process.env.STRICH_LICENSE_KEY"]) {
+        console.warn(
+          "STRICH_LICENSE_KEY is not defined, fallback QR code reader will be used"
+        );
+      }
       const appRes = await build({ ...appOpts, minify: true });
       console.error("Built client");
 
