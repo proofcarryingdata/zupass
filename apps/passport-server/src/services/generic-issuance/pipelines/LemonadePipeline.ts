@@ -2059,7 +2059,7 @@ export class LemonadePipeline implements BasePipeline {
           allAtoms.length,
           `manual_checkin_count`,
           manualCheckins.length,
-          `ssent_emails`,
+          `sent_emails`,
           sentEmails.length
         );
 

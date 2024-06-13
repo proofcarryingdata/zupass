@@ -1,4 +1,3 @@
-import sendgrid from "@sendgrid/mail";
 import PQueue from "p-queue";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
@@ -25,8 +24,10 @@ const LOG_TAG = `[${LOG_NAME}]`;
 
 export class EmailAPI implements IEmailAPI {
   private readonly sendQueue: PQueue;
+  private readonly outboundAllowList: string[] | undefined;
 
-  public constructor() {
+  public constructor(outboundAllowList?: string[]) {
+    this.outboundAllowList = outboundAllowList;
     this.sendQueue = new PQueue({
       // actual rate limit is 600/minute but we want to be well below that
       // https://www.twilio.com/docs/sendgrid/v2-api/using_the_web_api
@@ -37,20 +38,44 @@ export class EmailAPI implements IEmailAPI {
 
   public async send(params: SendEmailParams): Promise<void> {
     return traced(LOG_NAME, "send", async () => {
-      await this.sendQueue.add(async () => {
-        const message = await sendgrid.send(params);
+      if (
+        this.outboundAllowList &&
+        !this.outboundAllowList.includes(params.to)
+      ) {
         logger(
           LOG_TAG,
-          "Sending email via Sendgrid",
-          JSON.stringify(params),
-          "Sendgrid response was",
-          message
+          `email ${params.to} is not in the outbound allowlist - no-op skipping sending the email`,
+          JSON.stringify(params)
         );
+        return;
+      }
+
+      logger(LOG_TAG, "Sending email via Sendgrid", JSON.stringify(params));
+
+      await this.sendQueue.add(async () => {
+        // const message = await sendgrid.send(params);
+        // logger(
+        //   LOG_TAG,
+        //   "sent API request to sendgrid",
+        //   JSON.stringify(params),
+        //   "sendgrid response was",
+        //   message
+        // );
       });
     });
   }
 }
 
 export async function createEmailAPI(): Promise<IEmailAPI> {
-  return new EmailAPI();
+  const serializedAllowList: string | undefined =
+    process.env.OUTBOUND_ALLOW_LIST;
+  let outboundAllowList: string[] | undefined = undefined;
+
+  try {
+    outboundAllowList = JSON.parse(serializedAllowList ?? "");
+  } catch (e) {
+    //
+  }
+
+  return new EmailAPI(outboundAllowList);
 }
