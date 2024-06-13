@@ -631,6 +631,13 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
 
+      if (process.env.PIPELINE_EMAIL_SEND !== "true") {
+        throw new PCDHTTPError(
+          400,
+          "Pipline email sends are not enabled on this instance of Podbox"
+        );
+      }
+
       const pipelineId = checkBody<
         GenericIssuanceSendPipelineEmailRequest,
         "pipelineId"
