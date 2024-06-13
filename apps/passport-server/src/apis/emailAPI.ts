@@ -1,3 +1,4 @@
+import sendgrid from "@sendgrid/mail";
 import PQueue from "p-queue";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
@@ -37,7 +38,11 @@ export class EmailAPI implements IEmailAPI {
   }
 
   public async send(params: SendEmailParams): Promise<void> {
-    return traced(LOG_NAME, "send", async () => {
+    return traced(LOG_NAME, "send", async (span) => {
+      span?.setAttribute("from", params.from);
+      span?.setAttribute("to", params.to);
+      span?.setAttribute("subject", params.subject);
+
       if (
         this.outboundAllowList &&
         !this.outboundAllowList.includes(params.to)
@@ -47,20 +52,21 @@ export class EmailAPI implements IEmailAPI {
           `email ${params.to} is not in the outbound allowlist - no-op skipping sending the email`,
           JSON.stringify(params)
         );
+        span?.setAttribute("no_op", true);
         return;
       }
 
       logger(LOG_TAG, "Sending email via Sendgrid", JSON.stringify(params));
 
       await this.sendQueue.add(async () => {
-        // const message = await sendgrid.send(params);
-        // logger(
-        //   LOG_TAG,
-        //   "sent API request to sendgrid",
-        //   JSON.stringify(params),
-        //   "sendgrid response was",
-        //   message
-        // );
+        const message = await sendgrid.send(params);
+        logger(
+          LOG_TAG,
+          "sent API request to sendgrid",
+          JSON.stringify(params),
+          "sendgrid response was",
+          message
+        );
       });
     });
   }
@@ -73,6 +79,7 @@ export async function createEmailAPI(): Promise<IEmailAPI> {
 
   try {
     outboundAllowList = JSON.parse(serializedAllowList ?? "");
+    logger(LOG_TAG, `outbound allow list`, JSON.stringify(outboundAllowList));
   } catch (e) {
     //
   }

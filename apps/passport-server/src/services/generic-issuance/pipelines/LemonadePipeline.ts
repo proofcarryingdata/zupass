@@ -2059,8 +2059,10 @@ export class LemonadePipeline implements BasePipeline {
           allAtoms.length,
           `manual_checkin_count`,
           manualCheckins.length,
-          `sent_emails`,
-          sentEmails.length
+          `already_sent_emails`,
+          sentEmails.length,
+          `to_send_emails`,
+          filteredAtoms.length
         );
 
         for (const toSend of filteredAtoms) {
