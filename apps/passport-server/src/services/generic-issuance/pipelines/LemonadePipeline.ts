@@ -2031,13 +2031,11 @@ export class LemonadePipeline implements BasePipeline {
           this.id,
           PipelineEmailType.EsmeraldaOneClick
         );
-        const encounteredEmails = new Set<string>();
+        const encounteredEmails = new Set<string>(
+          sentEmails.map((e) => e.emailAddress)
+        );
         const filteredAtoms = allAtoms.filter((a) => {
           if (manualCheckins.find((c) => c.email === a.email)) {
-            return false;
-          }
-
-          if (sentEmails.find((e) => e.emailAddress === a.email)) {
             return false;
           }
 
@@ -2063,7 +2061,30 @@ export class LemonadePipeline implements BasePipeline {
           sentEmails.length
         );
 
-        // TODO: actually send the email using some sort of queue
+        for (const toSend of filteredAtoms) {
+          // these are deliberately not awaited as we want the http response to the
+          // request to send these emails to return immediately. the emails are sent via
+          // a queue in {@link EmailAPI}
+          try {
+            await this.emailDB.recordEmailSent(
+              this.id,
+              PipelineEmailType.EsmeraldaOneClick,
+              toSend.email
+            );
+            this.emailService.sendEsmeraldaOneClickEmail(
+              toSend.email,
+              `zupass.org/#/one-click-login/${encodeURIComponent(
+                toSend.email
+              )}/${toSend.lemonadeTicketId}/Edge%20Esmeralda`
+            );
+          } catch (e) {
+            logger(
+              LOG_NAME,
+              `failed to send email for address ${toSend.email}`,
+              e
+            );
+          }
+        }
 
         return { queued: filteredAtoms.length };
       } finally {

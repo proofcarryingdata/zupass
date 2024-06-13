@@ -6,6 +6,9 @@ import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { traced } from "./telemetryService";
 
+const LOG_NAME = "EmailService";
+const LOG_TAG = `[${LOG_NAME}]`;
+
 /**
  * Responsible for sending emails to users.
  */
@@ -41,7 +44,7 @@ export class EmailService {
   }
 
   public async sendTokenEmail(to: string, token: string): Promise<void> {
-    return traced("Email", "sendEmail", async (span) => {
+    return traced(LOG_NAME, "sendTokenEmail", async (span) => {
       span?.setAttribute("email", to);
 
       const msg = {
@@ -98,8 +101,9 @@ export class EmailService {
     to: string,
     oneClickLoginLink: string
   ): Promise<void> {
-    return traced("Email", "sendEmail", async (span) => {
+    return traced(LOG_NAME, "sendEsmeraldaOneClickEmail", async (span) => {
       span?.setAttribute("email", to);
+      span?.setAttribute("oneClickLoginLink", oneClickLoginLink);
 
       const msg = {
         to,
