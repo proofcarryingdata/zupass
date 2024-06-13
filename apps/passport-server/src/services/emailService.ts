@@ -45,7 +45,7 @@ export class EmailService {
       span?.setAttribute("email", to);
 
       const msg = {
-        to: to,
+        to,
         from: `Zupass <${ZUPASS_SENDER_EMAIL}>`,
         subject: "Welcome to Zupass",
         ...(await this.composeTokenEmail(token))
@@ -66,8 +66,6 @@ export class EmailService {
   }
 
   private async composeOneClickLoginEmail(
-    name: string,
-    email: string,
     oneClickLoginLink: string
   ): Promise<{ text: string; html: string }> {
     const textTemplate = (
@@ -81,13 +79,14 @@ export class EmailService {
       )
     ).toString();
 
-    let text = textTemplate.replace("{{name}}", name);
-    text = textTemplate.replace("{{email}}", email);
-    text = textTemplate.replace("{{oneClickLoginLink}}", oneClickLoginLink);
-
-    let html = htmlTemplate.replace("{{name}}", name);
-    html = textTemplate.replace("{{email}}", email);
-    html = textTemplate.replace("{{oneClickLoginLink}}", oneClickLoginLink);
+    const text = textTemplate.replace(
+      "{{oneClickLoginLink}}",
+      oneClickLoginLink
+    );
+    const html = htmlTemplate.replace(
+      "{{oneClickLoginLink}}",
+      oneClickLoginLink
+    );
 
     return {
       text,
@@ -97,22 +96,16 @@ export class EmailService {
 
   public async sendEsmeraldaOneClickEmail(
     to: string,
-    name: string,
-    email: string,
     oneClickLoginLink: string
   ): Promise<void> {
     return traced("Email", "sendEmail", async (span) => {
       span?.setAttribute("email", to);
 
       const msg = {
-        to: to,
+        to,
         from: `Zupass <${ZUPASS_SENDER_EMAIL}>`,
-        subject: "Welcome to Zupass",
-        ...(await this.composeOneClickLoginEmail(
-          name,
-          email,
-          oneClickLoginLink
-        ))
+        subject: "Your Edge Esmeralda Ticket & QR Code",
+        ...(await this.composeOneClickLoginEmail(oneClickLoginLink))
       };
 
       if (!this.emailAPI) {

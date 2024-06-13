@@ -2011,11 +2011,13 @@ export class LemonadePipeline implements BasePipeline {
     emailType: PipelineEmailType
   ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
     return traced(LOG_NAME, "sendPipelineEmail", async () => {
-      if (this.sendingEmail) {
-        throw new PCDHTTPError(400, "email send already in progress");
-      }
-
       try {
+        if (this.sendingEmail) {
+          throw new PCDHTTPError(400, "email send already in progress");
+        }
+
+        this.sendingEmail = true;
+
         if (this.id !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
           throw new PCDHTTPError(
             400,
