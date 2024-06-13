@@ -634,7 +634,7 @@ export function initGenericIssuanceRoutes(
       if (process.env.PIPELINE_EMAIL_SEND !== "true") {
         throw new PCDHTTPError(
           400,
-          "Pipline email sends are not enabled on this instance of Podbox"
+          "Pipeline email sends are not enabled on this instance of Podbox"
         );
       }
 

@@ -2055,7 +2055,7 @@ export class LemonadePipeline implements BasePipeline {
           `SEND_PIPELINE_EMAIL`,
           this.id,
           emailType,
-          `atom_count:`,
+          `atom_count`,
           allAtoms.length,
           `manual_checkin_count`,
           manualCheckins.length,
@@ -2066,9 +2066,6 @@ export class LemonadePipeline implements BasePipeline {
         );
 
         for (const toSend of filteredAtoms) {
-          // these are deliberately not awaited as we want the http response to the
-          // request to send these emails to return immediately. the emails are sent via
-          // a queue in {@link EmailAPI}
           try {
             await this.emailDB.recordEmailSent(
               this.id,
@@ -2081,6 +2078,9 @@ export class LemonadePipeline implements BasePipeline {
               throw new Error("missing process.env.PASSPORT_CLIENT_URL");
             }
 
+            // this is deliberately not awaited as we want the http response to the
+            // request to send these emails to return immediately. the emails are sent via
+            // a queue in {@link EmailAPI}
             this.emailService.sendEsmeraldaOneClickEmail(
               toSend.email,
               urljoin(

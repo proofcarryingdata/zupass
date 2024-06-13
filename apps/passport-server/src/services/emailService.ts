@@ -115,7 +115,7 @@ export class EmailService {
 
       const msg = {
         to,
-        from: `Zupass <${ZUPASS_SENDER_EMAIL}>`,
+        from: `Edge Esmeralda <${ZUPASS_SENDER_EMAIL}>`,
         subject: "Your Edge Esmeralda Ticket & QR Code",
         ...(await this.composeOneClickLoginEmail(oneClickLoginLink))
       };
