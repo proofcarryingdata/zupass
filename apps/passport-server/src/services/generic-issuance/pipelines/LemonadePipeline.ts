@@ -2026,24 +2026,26 @@ export class LemonadePipeline implements BasePipeline {
         }
 
         const allAtoms = await this.db.load(this.id);
-        const manualCheckins = await this.getManualCheckinSummary();
+        const manualCheckins = await this.checkinDB.getByPipelineId(this.id);
         const sentEmails = await this.emailDB.getSentEmails(
           this.id,
           PipelineEmailType.EsmeraldaOneClick
         );
         const encounteredEmails = new Set<string>(
-          sentEmails.map((e) => e.emailAddress)
+          sentEmails.map((sentEmail) => sentEmail.emailAddress)
         );
-        const filteredAtoms = allAtoms.filter((a) => {
-          if (manualCheckins.find((c) => c.email === a.email)) {
+        const filteredAtoms = allAtoms.filter((ticket) => {
+          if (
+            manualCheckins.find((checkin) => checkin.ticketId === ticket.id)
+          ) {
             return false;
           }
 
-          if (encounteredEmails.has(a.email)) {
+          if (encounteredEmails.has(ticket.email)) {
             return false;
           }
 
-          encounteredEmails.add(a.email);
+          encounteredEmails.add(ticket.email);
 
           return true;
         });
