@@ -3,8 +3,14 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "src/**", "tsconfig.json", "calcwit.js", "main.js", "rollup.cjs.config.js"],
-      "outputs": ["build/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**",
+        "*.tsconfig.json",
+        "rollup.config.ts",
+        "tsconfig.json"
+      ],
+      "outputs": ["dist/**"],
       "cache": true
     }
   }
