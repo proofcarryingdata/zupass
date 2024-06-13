@@ -30,6 +30,7 @@
         "access": "public"
     },
     "devDependencies": {
+        "@pcd/snarkjs": "0.7.4",
         "@rollup/plugin-commonjs": "^24.1.0",
         "@rollup/plugin-json": "^5.0.1",
         "@rollup/plugin-node-resolve": "^15.0.2",

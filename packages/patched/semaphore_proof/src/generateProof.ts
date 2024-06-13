@@ -1,13 +1,13 @@
-import { BigNumber } from "@ethersproject/bignumber"
-import { BytesLike, Hexable } from "@ethersproject/bytes"
-import { Group } from "@semaphore-protocol/group"
-import type { Identity } from "@semaphore-protocol/identity"
-import { prove } from "@zk-kit/groth16"
-import { MerkleProof } from "@zk-kit/incremental-merkle-tree"
-import type { NumericString } from "snarkjs"
-import hash from "./hash"
-import packProof from "./packProof"
-import { SemaphoreProof, SnarkArtifacts } from "./types"
+import { BigNumber } from "@ethersproject/bignumber";
+import { BytesLike, Hexable } from "@ethersproject/bytes";
+import { prove } from "@pcd/snarkjs";
+import { Group } from "@semaphore-protocol/group";
+import type { Identity } from "@semaphore-protocol/identity";
+import { MerkleProof } from "@zk-kit/incremental-merkle-tree";
+import type { NumericString } from "snarkjs";
+import hash from "./hash";
+import packProof from "./packProof";
+import { SemaphoreProof, SnarkArtifacts } from "./types";
 
 /**
  * Generates a Semaphore proof.

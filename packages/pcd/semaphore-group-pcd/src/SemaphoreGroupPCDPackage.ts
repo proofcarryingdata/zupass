@@ -1,12 +1,12 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
-import { requireDefinedParameter } from "@pcd/util";
 import {
   SemaphoreProof,
   generateProof,
   verifyProof
-} from "@semaphore-protocol/proof";
+} from "@pcd/semaphore-protocol-proof";
+import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
+import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import {
