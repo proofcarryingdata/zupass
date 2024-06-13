@@ -1,5 +1,5 @@
 {
-    "name": "@semaphore-protocol/proof",
+    "name": "@pcd/semaphore-protocol-proof",
     "version": "3.15.2",
     "description": "A library to generate and verify Semaphore proofs.",
     "license": "MIT",
