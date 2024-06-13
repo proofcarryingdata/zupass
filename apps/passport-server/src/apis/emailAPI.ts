@@ -1,5 +1,4 @@
 import sendgrid from "@sendgrid/mail";
-import request from "request";
 import { logger } from "../util/logger";
 
 interface SendEmailParams {
@@ -14,48 +13,25 @@ export interface IEmailAPI {
   send: (args: SendEmailParams) => Promise<void>;
 }
 
-export async function sendgridSendEmail({
-  from,
-  to,
-  subject,
-  text,
-  html
-}: SendEmailParams): Promise<void> {
-  const message = await sendgrid.send({
-    to,
+export class EmailAPI implements IEmailAPI {
+  public async send({
     from,
+    to,
     subject,
     text,
     html
-  });
-  logger("[EMAIL] Sending email via Sendgrid", message);
+  }: SendEmailParams): Promise<void> {
+    const message = await sendgrid.send({
+      to,
+      from,
+      subject,
+      text,
+      html
+    });
+    logger("[EMAIL] Sending email via Sendgrid", message);
+  }
 }
 
-export function mailgunSendEmail({
-  from,
-  to,
-  subject,
-  text,
-  html
-}: SendEmailParams): Promise<void> {
-  return new Promise<void>((resolve, reject) => {
-    request(
-      "https://api.mailgun.net/v3/zupass.org/messages",
-      {
-        headers: {
-          Authorization: `Basic ${process.env.MAILGUN_API_KEY}`
-        },
-        method: "POST",
-        formData: { from, to, subject, text, html }
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (err: any, _res: any, _body: any) => {
-        if (err) {
-          reject(err);
-        } else {
-          resolve();
-        }
-      }
-    );
-  });
+export async function createEmailAPI(): Promise<IEmailAPI> {
+  return new EmailAPI();
 }
