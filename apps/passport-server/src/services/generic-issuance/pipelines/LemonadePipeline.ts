@@ -2075,11 +2075,20 @@ export class LemonadePipeline implements BasePipeline {
               PipelineEmailType.EsmeraldaOneClick,
               toSend.email
             );
+            const passportClientUrl = process.env.PASSPORT_CLIENT_URL;
+
+            if (!passportClientUrl) {
+              throw new Error("missing process.env.PASSPORT_CLIENT_URL");
+            }
+
             this.emailService.sendEsmeraldaOneClickEmail(
               toSend.email,
-              `zupass.org/#/one-click-login/${encodeURIComponent(
-                toSend.email
-              )}/${toSend.lemonadeTicketId}/Edge%20Esmeralda`
+              urljoin(
+                passportClientUrl,
+                `/#/one-click-login/${encodeURIComponent(toSend.email)}/${
+                  toSend.lemonadeTicketId
+                }/Edge%20Esmeralda`
+              )
             );
           } catch (e) {
             logger(
