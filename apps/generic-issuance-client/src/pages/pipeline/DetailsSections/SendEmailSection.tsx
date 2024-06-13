@@ -40,7 +40,7 @@ export function SendEmailSection({
   return (
     <div>
       <Button onClick={sendEmail} disabled={sending}>
-        {sending ? "Sending..." : "Send Esmeralda One Click Email"}
+        {sending ? "Sending..." : "Send new one-click emails"}
       </Button>
       {result ? (
         <ResultContainer>

@@ -4,6 +4,7 @@ import * as path from "path";
 import { IEmailAPI } from "../apis/emailAPI";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
+import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
 
 const LOG_NAME = "EmailService";
@@ -45,6 +46,8 @@ export class EmailService {
 
   public async sendTokenEmail(to: string, token: string): Promise<void> {
     return traced(LOG_NAME, "sendTokenEmail", async (span) => {
+      logger(LOG_TAG, `sendTokenEmail`, JSON.stringify({ to, token }));
+
       span?.setAttribute("email", to);
 
       const msg = {
@@ -102,6 +105,11 @@ export class EmailService {
     oneClickLoginLink: string
   ): Promise<void> {
     return traced(LOG_NAME, "sendEsmeraldaOneClickEmail", async (span) => {
+      logger(
+        LOG_TAG,
+        `sendEsmeraldaOneClickEmail`,
+        JSON.stringify({ to, oneClickLoginLink })
+      );
       span?.setAttribute("email", to);
       span?.setAttribute("oneClickLoginLink", oneClickLoginLink);
 
