@@ -1,7 +1,13 @@
 import { useCallback, useState } from "react";
 import styled from "./StyledWrapper";
 
-export function HiddenText({ text }: { text: string }): JSX.Element {
+export function HiddenText({
+  text,
+  style
+}: {
+  text: string;
+  style?: React.CSSProperties;
+}): JSX.Element {
   const [visible, setVisible] = useState(false);
 
   const onRevealClick = useCallback(() => {
@@ -9,7 +15,7 @@ export function HiddenText({ text }: { text: string }): JSX.Element {
   }, []);
 
   if (visible) {
-    return <TextContainer>{text}</TextContainer>;
+    return <TextContainer style={style}>{text}</TextContainer>;
   }
 
   return (
