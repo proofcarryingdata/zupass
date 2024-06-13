@@ -1,5 +1,5 @@
 {
-    "extends": "./tsconfig.base.json",
+    "extends": "./base.tsconfig.json",
     "compilerOptions": {
         "baseUrl": ".",
         "declarationDir": "dist/types"
