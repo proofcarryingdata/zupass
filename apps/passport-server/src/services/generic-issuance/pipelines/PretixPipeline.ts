@@ -944,6 +944,10 @@ export class PretixPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
+      if (this.definition.options.paused) {
+        return { actions: [] };
+      }
+
       const { email, semaphoreId } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
