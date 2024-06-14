@@ -185,138 +185,135 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     }
   });
 
-  it("should prove and verify some typical cases", async function () {
-    const pod1 = POD.sign(sampleEntries, privateKey);
-    const proofConfig: GPCProofConfig = {
-      pods: {
-        pod1: {
-          entries: {
-            A: { isRevealed: true },
-            E: {
-              isRevealed: false,
-              equalsEntry: "pod1.A",
-              isMemberOf: "list1"
-            },
-            owner: { isRevealed: false, isOwnerID: true },
-            $signerPublicKey: {
-              isRevealed: false,
-              isMemberOf: "admissiblePubKeys"
-            }
-          }
+  const pod1 = POD.sign(sampleEntries, privateKey);
+  const typicalProofConfig: GPCProofConfig = {
+    pods: {
+      pod1: {
+        entries: {
+          A: { isRevealed: true },
+          E: {
+            isRevealed: false,
+            equalsEntry: "pod1.A",
+            isMemberOf: "list1"
+          },
+          owner: { isRevealed: false, isOwnerID: true }
+        },
+        signerPublicKey: {
+          isRevealed: false,
+          isMemberOf: "admissiblePubKeys"
         }
       }
-    };
-    const proofInputs: GPCProofInputs = {
-      pods: { pod1 },
-      owner: {
-        semaphoreV3: ownerIdentity,
-        externalNullifier: { type: "int", value: 42n }
-      },
-      membershipLists: {
-        list1: [sampleEntries.F, sampleEntries.E],
-        admissiblePubKeys: [
-          pod1.signerPublicKey,
-          "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
-          "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b",
-          "f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585",
-          "2af47e1aaf8f0450b9fb2e429042708ec7d173c4ac4329747db1063b78db4e0d"
-        ].map(PODEdDSAPublicKeyValue)
-      },
-      watermark: { type: "int", value: 1337n }
-    };
-    const expectedRevealedClaims: GPCRevealedClaims = {
-      pods: {
-        pod1: {
-          entries: { A: { type: "int", value: 123n } }
-        }
-      },
-      owner: {
-        externalNullifier: { type: "int", value: 42n },
-        nullifierHash: poseidon2([
-          makeWatermarkSignal({ type: "int", value: 42n }),
-          ownerIdentity.nullifier
-        ])
-      },
-      membershipLists: proofInputs.membershipLists,
-      watermark: { type: "int", value: 1337n }
-    };
+    }
+  };
+  const typicalProofInputs: GPCProofInputs = {
+    pods: { pod1 },
+    owner: {
+      semaphoreV3: ownerIdentity,
+      externalNullifier: { type: "int", value: 42n }
+    },
+    membershipLists: {
+      list1: [sampleEntries.F, sampleEntries.E],
+      admissiblePubKeys: [
+        pod1.signerPublicKey,
+        "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
+        "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b",
+        "f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585",
+        "2af47e1aaf8f0450b9fb2e429042708ec7d173c4ac4329747db1063b78db4e0d"
+      ].map(PODEdDSAPublicKeyValue)
+    },
+    watermark: { type: "int", value: 1337n }
+  };
+  const expectedRevealedClaimsForTypicalCase: GPCRevealedClaims = {
+    pods: {
+      pod1: {
+        entries: { A: { type: "int", value: 123n } }
+      }
+    },
+    owner: {
+      externalNullifier: { type: "int", value: 42n },
+      nullifierHash: poseidon2([
+        makeWatermarkSignal({ type: "int", value: 42n }),
+        ownerIdentity.nullifier
+      ])
+    },
+    membershipLists: typicalProofInputs.membershipLists,
+    watermark: { type: "int", value: 1337n }
+  };
 
-    let { isVerified } = await gpcProofTest(
-      proofConfig,
-      proofInputs,
-      expectedRevealedClaims
+  it("should prove and verify a typical case", async function () {
+    const { isVerified } = await gpcProofTest(
+      typicalProofConfig,
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
     );
     expect(isVerified).to.be.true;
+  });
 
-    // Proof config checking non-virtual entry == virtual entry
-    isVerified = (
-      await gpcProofTest(
-        {
-          pods: {
-            pod1: {
-              entries: {
-                ...proofConfig.pods.pod1.entries,
-                pubKey: {
-                  isRevealed: false,
-                  equalsEntry: "pod1.$signerPublicKey"
-                }
+  it("should prove and verify a typical case with an equality check involving a non-virtual entry and a virtual entry in that order", async function () {
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          pod1: {
+            ...typicalProofConfig.pods.pod1,
+            entries: {
+              ...typicalProofConfig.pods.pod1.entries,
+              pubKey: {
+                isRevealed: false,
+                equalsEntry: "pod1.$signerPublicKey"
               }
             }
           }
-        },
-        proofInputs,
-        expectedRevealedClaims
-      )
-    ).isVerified;
+        }
+      },
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
     expect(isVerified).to.be.true;
+  });
 
-    // Proof config checking virtual entry == non-virtual entry
-    isVerified = (
-      await gpcProofTest(
-        {
-          pods: {
-            pod1: {
-              entries: {
-                ...proofConfig.pods.pod1.entries,
-                $signerPublicKey: {
-                  isRevealed: false,
-                  isMemberOf: "admissiblePubKeys",
-                  equalsEntry: "pod1.pubKey"
-                },
-                pubKey: {
-                  isRevealed: false
-                }
+  it("should prove and verify a typical case with an equality check involving a virtual entry and a non-virtual entry in that order", async function () {
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          pod1: {
+            entries: {
+              ...typicalProofConfig.pods.pod1.entries,
+              pubKey: {
+                isRevealed: false
               }
+            },
+            signerPublicKey: {
+              isRevealed: false,
+              isMemberOf: "admissiblePubKeys",
+              equalsEntry: "pod1.pubKey"
             }
           }
-        },
-        proofInputs,
-        expectedRevealedClaims
-      )
-    ).isVerified;
+        }
+      },
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
     expect(isVerified).to.be.true;
+  });
 
-    // Proof config checking virtual entry == virtual entry
+  it("should prove and verify a typical case with an equality check involving two virtual entries", async function () {
     const pod2 = POD.sign(sampleEntries2, privateKey);
-    isVerified = (
-      await gpcProofTest(
-        {
-          pods: {
-            ...proofConfig.pods,
-            pod2: {
-              entries: {
-                $signerPublicKey: {
-                  isRevealed: false,
-                  equalsEntry: "pod1.$signerPublicKey"
-                }
-              }
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          ...typicalProofConfig.pods,
+          pod2: {
+            entries: { attendee: { isRevealed: false } },
+            signerPublicKey: {
+              isRevealed: false,
+              equalsEntry: "pod1.$signerPublicKey"
             }
           }
-        },
-        { ...proofInputs, pods: { pod1, pod2 } },
-        expectedRevealedClaims
-      )
-    ).isVerified;
+        }
+      },
+      { ...typicalProofInputs, pods: { pod1, pod2 } },
+      expectedRevealedClaimsForTypicalCase
+    );
     expect(isVerified).to.be.true;
   });
 
@@ -340,20 +337,20 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
               isRevealed: false,
               isOwnerID: true,
               isMemberOf: "goats"
-            },
-            $signerPublicKey: {
-              isRevealed: false
             }
+          },
+          signerPublicKey: {
+            isRevealed: false
           }
         },
         pod1: {
           entries: {
             G: { isRevealed: true },
             otherTicketID: { isRevealed: false },
-            owner: { isRevealed: false, isOwnerID: true },
-            $signerPublicKey: {
-              isRevealed: false
-            }
+            owner: { isRevealed: false, isOwnerID: true }
+          },
+          signerPublicKey: {
+            isRevealed: false
           }
         }
       },

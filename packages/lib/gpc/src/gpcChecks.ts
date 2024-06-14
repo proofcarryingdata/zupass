@@ -29,7 +29,6 @@ import {
   GPCRevealedClaims,
   GPCRevealedObjectClaims,
   PODEntryIdentifier,
-  POD_VIRTUAL_NAME_REGEX,
   TupleIdentifier
 } from "./gpcTypes";
 import {
@@ -154,7 +153,7 @@ function checkProofObjConfig(
 
   let nEntries = 0;
   for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
-    checkPODEntryName(entryName);
+    checkPODEntryName(entryName, true);
     checkProofEntryConfig(`${nameForErrorMessages}.${entryName}`, entryConfig);
     nEntries++;
   }
@@ -368,12 +367,6 @@ export function checkProofInputsForConfig(
 
       // If this entry identifies the owner, we should have a matching Identity.
       if (entryConfig.isOwnerID) {
-        // It is an error for this to be specified for a virtual entry.
-        if (isVirtualEntryName(entryName)) {
-          throw new Error(
-            `The virtual entry ${objName}.${entryName} cannot be the owner ID.`
-          );
-        }
         hasOwnerEntry = true;
         if (proofInputs.owner === undefined) {
           throw new Error(
@@ -703,20 +696,33 @@ export function checkVerifyClaimsForConfig(
           );
         }
 
-        // This named entry should exist in the given POD as either a virtual
-        // or non-virtual entry, which is a field of the object itself.
-        const virtualEntryNameMatch = entryName.match(POD_VIRTUAL_NAME_REGEX);
-        // TODO(POD-P3): Modify for other virtual entry types when they are available.
-        const revealedValue =
-          virtualEntryNameMatch === null
-            ? objClaims.entries[entryName]
-            : objClaims.signerPublicKey;
+        // This named entry should exist in the given POD.
+        const revealedValue = objClaims.entries[entryName];
         if (revealedValue === undefined) {
           throw new ReferenceError(
             `Configuration reveals entry "${objName}.${entryName}" which` +
               ` doesn't exist in claims.`
           );
         }
+      }
+    }
+
+    // Examine config for signer's public key.
+    if (objConfig.signerPublicKey?.isRevealed ?? true) {
+      // This named object in config should be provided in claims.
+      const objClaims = revealedClaims.pods[objName];
+      if (objClaims === undefined) {
+        throw new ReferenceError(
+          `Configuration reveals signer's public key of object "${objName}" but
+          the POD is not revealed in claims.`
+        );
+      }
+      const revealedSignerKey = objClaims.signerPublicKey;
+      if (revealedSignerKey === undefined) {
+        throw new ReferenceError(
+          `Configuration reveals signer's key of object "${objName}" which` +
+            ` doesn't exist in claims.`
+        );
       }
     }
   }
@@ -731,14 +737,24 @@ export function checkVerifyClaimsForConfig(
     );
   }
 
-  // Reverse check that each revealed entry and object exists and is revealed
-  // in config.
+  // Reverse check that each revealed entry and object exists and is revealed in
+  // config. Object signers' public keys need not be specified in the config if
+  // revealed, though they should be if not.
   for (const [objName, objClaims] of Object.entries(revealedClaims.pods)) {
     const objConfig = boundConfig.pods[objName];
     if (objConfig === undefined) {
       throw new ReferenceError(
         `Claims include object "${objName}" which doesn't exist in config.`
       );
+    }
+    if (objClaims.signerPublicKey === undefined) {
+      const signerPublicKeyConfig = objConfig.signerPublicKey;
+      if (signerPublicKeyConfig === undefined) {
+        throw new ReferenceError(
+          `Claims do not reveal signer' public key of object "${objName}" which
+             doesn't exist in config.`
+        );
+      }
     }
     if (objClaims.entries !== undefined) {
       for (const entryName of Object.keys(objClaims.entries)) {

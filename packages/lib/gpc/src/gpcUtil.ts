@@ -18,6 +18,7 @@ import {
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryConfig,
+  GPCProofGenericEntryConfig,
   GPCProofObjectConfig,
   GPCProofTupleConfig,
   PODEntryIdentifier,
@@ -90,7 +91,10 @@ function canonicalizeObjectConfig(
   }
 
   return {
-    entries: canonicalEntries
+    entries: canonicalEntries,
+    ...(proofObjectConfig.signerPublicKey !== undefined
+      ? { signerPublicKey: proofObjectConfig.signerPublicKey }
+      : {})
   };
 }
 
@@ -106,16 +110,12 @@ function canonicalizeEntryConfig(
       : {}),
     ...(proofEntryConfig.isMemberOf !== undefined
       ? {
-          isMemberOf: Array.isArray(proofEntryConfig.isMemberOf)
-            ? proofEntryConfig.isMemberOf.sort()
-            : proofEntryConfig.isMemberOf
+          isMemberOf: proofEntryConfig.isMemberOf
         }
       : {}),
     ...(proofEntryConfig.isNotMemberOf !== undefined
       ? {
-          isNotMemberOf: Array.isArray(proofEntryConfig.isNotMemberOf)
-            ? proofEntryConfig.isNotMemberOf.sort()
-            : proofEntryConfig.isNotMemberOf
+          isNotMemberOf: proofEntryConfig.isNotMemberOf
         }
       : {})
   };
@@ -136,13 +136,9 @@ function canonicalizeTupleConfig(
             ...tupleConfig,
             ...(tupleConfig.isMemberOf === undefined
               ? {}
-              : Array.isArray(tupleConfig.isMemberOf)
-              ? { isMemberOf: tupleConfig.isMemberOf.sort() }
               : { isMemberOf: tupleConfig.isMemberOf }),
             ...(tupleConfig.isNotMemberOf === undefined
               ? {}
-              : Array.isArray(tupleConfig.isNotMemberOf)
-              ? { isNotMemberOf: tupleConfig.isNotMemberOf.sort() }
               : { isNotMemberOf: tupleConfig.isNotMemberOf })
           }
         ];
@@ -156,13 +152,15 @@ function canonicalizeTupleConfig(
  * POD_VIRTUAL_NAME_REGEX}.
  *
  * @param name the string to check
+ * @param strict indicator or whether this string should name an actual POD
+ * entry
  * @returns the unmodified input, for easy chaining
  * @throws TypeError if the format doesn't match
  */
-export function checkPODEntryName(name?: string): string {
+export function checkPODEntryName(name?: string, strict?: boolean): string {
   if (!name) {
     throw new TypeError("POD entry names cannot be undefined.");
-  } else if (name.match(POD_VIRTUAL_NAME_REGEX) !== null) {
+  } else if (!strict && name.match(POD_VIRTUAL_NAME_REGEX) !== null) {
     return name;
   } else {
     return checkPODName(name);
@@ -267,7 +265,7 @@ export function resolvePODEntryIdentifier(
  * @returns an indicator of whether the given entry name is a virtual entry name
  */
 export function isVirtualEntryName(
-  entryName: PODName
+  entryName: PODName | PODVirtualEntryName
 ): entryName is PODVirtualEntryName {
   return entryName.match(POD_VIRTUAL_NAME_REGEX) !== null;
 }
@@ -591,9 +589,15 @@ export function listConfigFromProofConfig(
 ): GPCProofMembershipListConfig {
   const gpcListConfig: GPCProofMembershipListConfig = {};
 
-  // Check entries for membership declarations.
+  // Check entries and signer's public keys for membership declarations.
   for (const podName of Object.keys(proofConfig.pods)) {
     const pod = proofConfig.pods[podName];
+
+    addIdentifierToListConfig(
+      gpcListConfig,
+      pod.signerPublicKey,
+      `${podName}.$signerPublicKey`
+    );
 
     for (const entryName of Object.keys(pod.entries)) {
       const entryConfig = pod.entries[entryName];
@@ -632,13 +636,13 @@ export function listConfigFromProofConfig(
  */
 function addIdentifierToListConfig(
   gpcListConfig: GPCProofMembershipListConfig,
-  entryConfig: GPCProofEntryConfig | GPCProofTupleConfig,
+  entryConfig: GPCProofGenericEntryConfig | GPCProofTupleConfig | undefined,
   identifier: PODEntryIdentifier | TupleIdentifier
 ): void {
   // Nothing to do if both membership and non-membership lists are undefined.
   if (
-    entryConfig.isMemberOf === undefined &&
-    entryConfig.isNotMemberOf === undefined
+    entryConfig?.isMemberOf === undefined &&
+    entryConfig?.isNotMemberOf === undefined
   ) {
     return;
   }
