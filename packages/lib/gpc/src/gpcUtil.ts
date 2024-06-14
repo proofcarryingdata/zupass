@@ -94,7 +94,7 @@ function canonicalizeObjectConfig(
   // case it will be omitted in the canonicalised config.
   const signerPublicKeyConfig = proofObjectConfig.signerPublicKey;
   const signerPublicKeyHasDefaults =
-    signerPublicKeyConfig == undefined ||
+    signerPublicKeyConfig === undefined ||
     _.isEqual(signerPublicKeyConfig, { isRevealed: true });
 
   return {
