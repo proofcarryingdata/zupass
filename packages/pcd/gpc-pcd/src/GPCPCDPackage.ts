@@ -17,13 +17,7 @@ import {
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import {
-  POD,
-  PODName,
-  PODStringValue,
-  POD_NAME_REGEX,
-  checkPODName
-} from "@pcd/pod";
+import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
 import { PODPCD, PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
