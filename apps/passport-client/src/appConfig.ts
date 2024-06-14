@@ -37,6 +37,7 @@ if (
 
 if (
   (!process.env.STRICH_LICENSE_KEY || process.env.STRICH_LICENSE_KEY === "") &&
+  process.env.NODE_ENV === "production" &&
   global.window &&
   !!global.window.alert
 ) {
