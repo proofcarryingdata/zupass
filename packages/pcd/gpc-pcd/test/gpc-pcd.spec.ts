@@ -70,10 +70,10 @@ describe("GPCPCD should work", async function () {
               isRevealed: false,
               isOwnerID: true,
               isMemberOf: "admissibleOwners"
-            },
-            $signerPublicKey: {
-              isRevealed: true
             }
+          },
+          signerPublicKey: {
+            isRevealed: true
           }
         },
         ticketPOD: {
@@ -81,11 +81,11 @@ describe("GPCPCD should work", async function () {
             ticketID: {
               isRevealed: false,
               isMemberOf: "admissibleTickets"
-            },
-            $signerPublicKey: {
-              isRevealed: false,
-              isMemberOf: "admissibleTicketIssuers"
             }
+          },
+          signerPublicKey: {
+            isRevealed: false,
+            isMemberOf: "admissibleTicketIssuers"
           }
         }
       },

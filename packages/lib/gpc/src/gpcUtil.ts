@@ -186,7 +186,7 @@ export function checkPODEntryName(name?: string, strict?: boolean): string {
 export function checkPODEntryIdentifier(
   nameForErrorMessages: string,
   entryIdentifier: PODEntryIdentifier
-): [PODName, PODName] {
+): [PODName, PODName | PODVirtualEntryName] {
   requireType(nameForErrorMessages, entryIdentifier, "string");
   const parts = entryIdentifier.split(".");
   if (parts.length !== 2) {
@@ -218,7 +218,7 @@ export function makePODEntryIdentifier(
  */
 export function splitPODEntryIdentifier(entryIdentifier: PODEntryIdentifier): {
   objName: PODName;
-  entryName: PODName;
+  entryName: PODName | PODVirtualEntryName;
 } {
   const names = checkPODEntryIdentifier(entryIdentifier, entryIdentifier);
   return { objName: names[0], entryName: names[1] };
@@ -232,7 +232,7 @@ export function splitPODEntryIdentifier(entryIdentifier: PODEntryIdentifier): {
  * @returns a POD value if the entry is found and `undefined` otherwise
  */
 export function resolvePODEntry(
-  entryName: PODName,
+  entryName: PODName | PODVirtualEntryName,
   pod: POD
 ): PODValue | undefined {
   if (entryName.match(POD_NAME_REGEX) !== null) {
@@ -300,35 +300,6 @@ export function isTupleIdentifier(
   identifier: PODEntryIdentifier | TupleIdentifier
 ): identifier is TupleIdentifier {
   return identifier.startsWith(`${TUPLE_PREFIX}.`);
-}
-
-/**
- * Checks the format of a tuple identifier, and return a pair consisting of the
- * tuple prefix and the name of the tuple.
- *
- * @param nameForErrorMessages the name for this value, used only for error
- *   messages.
- * @param tupleIdentifier the value to check
- * @returns the two sub-parts of the identifiers
- * @throws TypeError if the identifier does not match the expected format
- */
-export function checkTupleIdentifier(
-  nameForErrorMessages: string,
-  tupleIdentifier: TupleIdentifier
-): PODName {
-  requireType(nameForErrorMessages, tupleIdentifier, "string");
-  const parts = tupleIdentifier.split(".");
-  if (parts.length !== 2) {
-    throw new TypeError(
-      `Invalid entry identifier in ${nameForErrorMessages}.  Must have the form "objName.entryName".`
-    );
-  }
-  if (!isTupleIdentifier(tupleIdentifier)) {
-    throw new TypeError(
-      `Invalid tuple identifier in ${nameForErrorMessages}: ${tupleIdentifier}`
-    );
-  }
-  return checkPODName(parts[1]);
 }
 
 /**
