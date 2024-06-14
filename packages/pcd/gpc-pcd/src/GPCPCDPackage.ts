@@ -269,63 +269,65 @@ export function getDisplayOptions(pcd: GPCPCD): DisplayOptions {
   };
 }
 
+function validateInputPOD(
+  podName: PODName,
+  podPCD: PODPCD,
+  params: PODPCDArgValidatorParams | undefined
+): boolean {
+  if (podPCD.type !== PODPCDTypeName) {
+    return false;
+  }
+
+  if (params?.proofConfig !== undefined) {
+    let proofConfig: GPCProofConfig;
+    try {
+      proofConfig = deserializeGPCProofConfig(params.proofConfig);
+    } catch (e) {
+      if (e instanceof TypeError) {
+        params.notFoundMessage = e.message;
+        return false;
+      }
+      throw e;
+    }
+
+    // POD podName should be present in the config and have all
+    // entries specified there.
+    const podConfig = proofConfig.pods[podName];
+    if (podConfig === undefined) {
+      params.notFoundMessage = `The proof configuration does not contain this POD.`;
+      return false;
+    } else {
+      const entries = Object.keys(podConfig.entries);
+      // Enumerate POD entries
+      const podEntries = podPCD.pod.content.asEntries();
+      // Return true iff all elements of `entries` are keys of `podEntries`
+      return entries.every((entryName) => podEntries[entryName] !== undefined);
+    }
+  }
+
+  // TODO(POD-P3): Use validatorParams to filter by more constraints
+  // not included in config.
+  // E.g. require revealed value to be a specific value, or require
+  // public key to be a specific key.
+  return true;
+}
+
 export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
   return {
     defaultArgs: {
       proofConfig: {
         argumentType: ArgumentTypeName.String,
-        defaultVisible: true
+        defaultVisible: true,
+        displayName: "Proof Configuration",
+        description: `This specifies what to prove about the inputs, and which
+        parts of the inputs are revealed.`
       },
       pods: {
         argumentType: ArgumentTypeName.RecordContainer,
+        defaultVisible: true,
+        displayName: "POD",
         description: "Generate a proof for the selected POD object",
-        validate: (
-          podName: PODName,
-          podPCD: PODPCD,
-          params: PODPCDArgValidatorParams | undefined
-        ): boolean => {
-          if (podPCD.type !== PODPCDTypeName) {
-            return false;
-          }
-
-          if (params?.proofConfig !== undefined) {
-            let proofConfig: GPCProofConfig;
-            try {
-              proofConfig = deserializeGPCProofConfig(params.proofConfig);
-            } catch (e) {
-              if (e instanceof TypeError) {
-                params.notFoundMessage = e.message;
-                return false;
-              }
-              throw e;
-            }
-
-            // POD podName should be present in the config and have all
-            // non-virtual entries specified there.
-            const podConfig = proofConfig.pods[podName];
-            if (podConfig === undefined) {
-              params.notFoundMessage = `The proof configuration does not contain this POD.`;
-              return false;
-            } else {
-              const entries = Object.keys(podConfig.entries).filter(
-                // Entry should not be virtual.
-                (entryName) => entryName.match(POD_NAME_REGEX) !== null
-              );
-              // Enumerate POD entries
-              const podEntries = podPCD.pod.content.asEntries();
-              // Return true iff all elements of `entries` are keys of `podEntries`
-              return entries.every(
-                (entryName) => podEntries[entryName] !== undefined
-              );
-            }
-          }
-
-          // TODO(POD-P3): Use validatorParams to filter by more constraints
-          // not included in config.
-          // E.g. require revealed value to be a specific value, or require
-          // public key to be a specific key.
-          return true;
-        },
+        validate: validateInputPOD,
         validatorParams: {
           notFoundMessage: "You do not have any eligible POD PCDs."
         }
@@ -333,26 +335,36 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
       identity: {
         argumentType: ArgumentTypeName.PCD,
         defaultVisible: false,
-        description:
-          "Your Zupass comes with a primary Semaphore Identity which represents an user in the Semaphore protocol."
+        displayName: "User Identity",
+        description: `Your identity is used to prove your ownership of PODs.
+        Your Zupass comes with a primary Semaphore Identity which represents a
+        user in the Semaphore protocol.`
       },
       membershipLists: {
         argumentType: ArgumentTypeName.String,
         defaultVisible: false,
-        description:
-          "Specify the (named) lists for the list memberships specified in the proof configuration."
+        description: `These are the the lists of allowed or disallowed values
+        for membership checks in the proof configuration.`
       },
       watermark: {
         argumentType: ArgumentTypeName.String,
-        defaultVisible: false
+        defaultVisible: false,
+        description: `This watermark will be included in the proof.  It can be
+        used tie this proof to a specific purpose.`
       },
       externalNullifier: {
         argumentType: ArgumentTypeName.String,
-        defaultVisible: false
+        defaultVisible: false,
+        description: `This input is combined with your identity to produce a
+        nullifier, which can be used to identify proofs which come from the
+        same user, without deanonymizing the user.`
       },
       id: {
         argumentType: ArgumentTypeName.String,
-        defaultVisible: false
+        defaultVisible: false,
+        description: `Unique identifier for the resulting proof PCD.  This is
+        used to store it in Zupass, but is not a cryptographic part of the
+        proof.`
       }
     }
   };
