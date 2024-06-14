@@ -90,9 +90,16 @@ function canonicalizeObjectConfig(
     canonicalEntries[entryName] = canonicalizeEntryConfig(entryConfig);
   }
 
+  // Check if signer's public key configuration is set to its defaults, in which
+  // case it will be omitted in the canonicalised config.
+  const signerPublicKeyConfig = proofObjectConfig.signerPublicKey;
+  const signerPublicKeyHasDefaults =
+    signerPublicKeyConfig == undefined ||
+    _.isEqual(signerPublicKeyConfig, { isRevealed: true });
+
   return {
     entries: canonicalEntries,
-    ...(proofObjectConfig.signerPublicKey !== undefined
+    ...(!signerPublicKeyHasDefaults
       ? { signerPublicKey: proofObjectConfig.signerPublicKey }
       : {})
   };
