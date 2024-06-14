@@ -331,14 +331,14 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
         defaultVisible: false,
         displayName: "User Identity",
         description: `Your identity is used to prove your ownership of PODs.
-        Your Zupass comes with a primary Semaphore Identity which represents an
+        Your Zupass comes with a primary Semaphore Identity which represents a
         user in the Semaphore protocol.`
       },
       membershipLists: {
         argumentType: ArgumentTypeName.String,
         defaultVisible: false,
-        description: `The (named) lists for the list membership checks
-        specified in the proof configuration.`
+        description: `These are the the lists of allowed or disallowed values
+        for membership checks in the proof configuration.`
       },
       watermark: {
         argumentType: ArgumentTypeName.String,
@@ -350,8 +350,8 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
         argumentType: ArgumentTypeName.String,
         defaultVisible: false,
         description: `This input is combined with your identity to produce a
-        nullifier, which can be used to identify proofs which come from the same
-        user, without deanonymizing the user.`
+        nullifier, which can be used to identify proofs which come from the
+        same user, without deanonymizing the user.`
       },
       id: {
         argumentType: ArgumentTypeName.String,
