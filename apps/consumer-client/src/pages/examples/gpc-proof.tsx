@@ -85,6 +85,8 @@ export default function Page(): JSX.Element {
             openGPCPopup(
               ZUPASS_URL,
               window.location.origin + "#/popup",
+              "Example GPC Proof",
+              "This is a request for a GPC proof from the Zupass example client.",
               proofConfig,
               emptyStrToUndefined(membershipLists),
               emptyStrToUndefined(watermark),
@@ -196,6 +198,8 @@ export default function Page(): JSX.Element {
 export function openGPCPopup(
   urlToZupassWebsite: string,
   popupUrl: string,
+  popupTitle: string,
+  popupDescription: string,
   proofConfig: string,
   membershipLists?: string,
   watermark?: string,
@@ -259,8 +263,8 @@ export function openGPCPopup(
     args,
     {
       genericProveScreen: true,
-      title: "GPC Proof",
-      description: "gpc pcd request"
+      title: popupTitle,
+      description: popupDescription
     }
   );
 
