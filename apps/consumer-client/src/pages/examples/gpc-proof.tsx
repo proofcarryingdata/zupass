@@ -230,7 +230,8 @@ export function openGPCPopup(
         }
       },
       validatorParams: {
-        proofConfig
+        proofConfig,
+        membershipLists
       }
     },
     identity: {

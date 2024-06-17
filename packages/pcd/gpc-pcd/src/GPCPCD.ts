@@ -5,7 +5,7 @@ import {
   RecordContainerArgument,
   StringArgument
 } from "@pcd/pcd-types";
-import { PODName } from "@pcd/pod";
+import { PODEntries, PODName } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Groth16Proof } from "snarkjs";
@@ -50,11 +50,49 @@ export type PODPCDRecordArg = RecordContainerArgument<
 >;
 
 /**
+ * Type encapsulating prescribed values for PODs to be fed into a GPCPCD,
+ * viz. prescribed POD entries and signers' public keys. At least one of
+ * these must be specified for a given POD, else the POD should be omitted
+ * from the record. These values should be revealed by the underlying GPC
+ * and checked elsewhere in the app using this library.
+ */
+export type GPCPCDPrescribedPODValues = Record<
+  PODName,
+  { entries?: PODEntries; signerPublicKey?: string } & (
+    | { entries: PODEntries }
+    | { signerPublicKey: string }
+  )
+>;
+
+/**
  * Validator parameter type for POD PCD arguments.
  */
 export type PODPCDArgValidatorParams = {
+  /**
+   * Message to display if the POD specified in the config does not match any of
+   * the available POD PCDs.
+   */
   notFoundMessage?: string;
+
+  /**
+   * JSON-serialised proof configuration used to narrow down the selection of
+   * POD PCDs.
+   */
   proofConfig?: string;
+
+  /**
+   * Simplified JSON-serialised membership lists to narrow down the selection of
+   * POD PCDs to those satisfying the list membership check specified in the
+   * proof config (if any).
+   */
+  membershipLists?: string;
+
+  /**
+   * JSON-serialised `GPCPCDPrescribedPODValues`.This is used to
+   * narrow down the selection of POD PCDs to those with entries and signers'
+   * public keys matching these prescribed values.
+   */
+  prescribedValues?: string;
 };
 
 /**

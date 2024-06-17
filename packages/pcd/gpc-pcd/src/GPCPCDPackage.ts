@@ -1,6 +1,7 @@
 import {
   GPCProofConfig,
   GPCProofInputs,
+  PODMembershipLists,
   deserializeGPCBoundConfig,
   deserializeGPCProofConfig,
   deserializeGPCRevealedClaims,
@@ -17,7 +18,14 @@ import {
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
+import {
+  POD,
+  PODName,
+  PODStringValue,
+  applyOrMap,
+  checkPODName,
+  podValueHash
+} from "@pcd/pod";
 import { PODPCD, PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
@@ -27,10 +35,12 @@ import {
   GPCPCDArgs,
   GPCPCDClaim,
   GPCPCDInitArgs,
+  GPCPCDPrescribedPODValues,
   GPCPCDProof,
   GPCPCDTypeName,
   PODPCDArgValidatorParams
 } from "./GPCPCD";
+import { gpcPCDPrescribedPODValuesFromSimplifiedJSON } from "./util";
 
 let savedInitArgs: GPCPCDInitArgs | undefined = undefined;
 
@@ -147,7 +157,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
 
 /**
  * Creates a new {@link GPCPCD} by generating an {@link GPCPCDProof}
- * and deriving an {@link GPCPCDClaim} from the given {@link GPCPCDArgs}.
+ * and deriving a {@link GPCPCDClaim} from the given {@link GPCPCDArgs}.
  *
  * This generates a ZK proof using the given config and inputs using a
  * selected circuit from the supported family.
@@ -272,6 +282,7 @@ function validateInputPOD(
     return false;
   }
 
+  // Check POD against proof config if it is given.
   if (params?.proofConfig !== undefined) {
     let proofConfig: GPCProofConfig;
     try {
@@ -290,19 +301,118 @@ function validateInputPOD(
     if (podConfig === undefined) {
       params.notFoundMessage = `The proof configuration does not contain this POD.`;
       return false;
-    } else {
-      const entries = Object.keys(podConfig.entries);
-      // Enumerate POD entries
-      const podEntries = podPCD.pod.content.asEntries();
-      // Return true iff all elements of `entries` are keys of `podEntries`
-      return entries.every((entryName) => podEntries[entryName] !== undefined);
+    }
+    const configEntries = Object.keys(podConfig.entries);
+
+    // Enumerate POD entries
+    const podEntries = podPCD.pod.content.asEntries();
+    // Return false if some entry in the config is not in the POD
+    if (
+      configEntries.some((entryName) => podEntries[entryName] === undefined)
+    ) {
+      return false;
+    }
+
+    // Alist of (entry name, membership list name) pairs.
+    const listMembershipAlist = Object.entries(podConfig.entries).flatMap(
+      ([entryName, entryConfig]) =>
+        entryConfig.isMemberOf !== undefined
+          ? [[entryName, entryConfig.isMemberOf]]
+          : []
+    );
+
+    // If there are list membership checks in the proof config *and* the
+    // serialised lists are passed in as a parameter, check whether any
+    // do not pass.
+    if (
+      listMembershipAlist.length > 0 &&
+      params.membershipLists !== undefined
+    ) {
+      // Deserialise membership Lists.
+      let membershipLists: PODMembershipLists;
+
+      try {
+        membershipLists = podMembershipListsFromSimplifiedJSON(
+          params.membershipLists
+        );
+      } catch (_) {
+        params.notFoundMessage = "Error deserialising membership lists.";
+        return false;
+      }
+
+      if (
+        listMembershipAlist.some(
+          ([entryName, listName]) =>
+            !membershipLists[listName]
+              .map((value) => applyOrMap(podValueHash, value))
+              .includes(podValueHash(podEntries[entryName]))
+        )
+      ) {
+        return false;
+      }
+    }
+
+    // Check for prescribed values.
+    if (params.prescribedValues !== undefined) {
+      let prescribedValues: GPCPCDPrescribedPODValues;
+      try {
+        prescribedValues = gpcPCDPrescribedPODValuesFromSimplifiedJSON(
+          params.prescribedValues
+        );
+      } catch (e) {
+        if (e instanceof TypeError) {
+          params.notFoundMessage = e.message;
+          return false;
+        }
+        throw e;
+      }
+
+      const prescribedValuesForPod = prescribedValues[podName];
+
+      if (prescribedValuesForPod !== undefined) {
+        // Check signer's public key.
+        if (
+          prescribedValuesForPod.signerPublicKey !== undefined &&
+          prescribedValuesForPod.signerPublicKey !== podPCD.pod.signerPublicKey
+        ) {
+          return false;
+        }
+
+        // Check POD for prescribed entries (if any).
+        if (prescribedValuesForPod?.entries !== undefined) {
+          const prescribedEntryAlist = Object.entries(
+            prescribedValuesForPod.entries
+          );
+
+          // Sanity check: All prescribed entry names should appear in the config
+          // and their values should be revealed!
+          for (const [entryName, _] of prescribedEntryAlist) {
+            if (podConfig.entries[entryName] === undefined) {
+              params.notFoundMessage =
+                "Invalid prescribed entry record: Not all entries are present in the proof configuration.";
+              return false;
+            }
+            if (!podConfig.entries[entryName].isRevealed) {
+              params.notFoundMessage =
+                "Prescribed entry is not revealed in proof configuration!";
+              return false;
+            }
+          }
+
+          for (const [entryName, entryValue] of prescribedEntryAlist) {
+            if (
+              podValueHash(podEntries[entryName]) !== podValueHash(entryValue)
+            ) {
+              return false;
+            }
+          }
+        }
+      }
     }
   }
 
   // TODO(POD-P3): Use validatorParams to filter by more constraints
   // not included in config.
-  // E.g. require revealed value to be a specific value, or require
-  // public key to be a specific key.
   return true;
 }
 
