@@ -81,7 +81,9 @@ export async function createEmailAPI(): Promise<IEmailAPI> {
     outboundAllowList = JSON.parse(serializedAllowList ?? "");
     logger(LOG_TAG, `outbound allow list`, JSON.stringify(outboundAllowList));
   } catch (e) {
-    //
+    if (serializedAllowList !== "" && serializedAllowList !== undefined) {
+      logger(LOG_TAG, `failed to parse ${process.env.OUTBOUND_ALLOW_LIST}`, e);
+    }
   }
 
   return new EmailAPI(outboundAllowList);
