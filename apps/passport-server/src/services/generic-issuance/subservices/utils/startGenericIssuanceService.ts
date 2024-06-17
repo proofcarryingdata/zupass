@@ -6,6 +6,7 @@ import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
 import { ApplicationContext } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { DiscordService } from "../../../discordService";
+import { EmailService } from "../../../emailService";
 import { PagerDutyService } from "../../../pagerDutyService";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { GenericIssuanceService } from "../../GenericIssuanceService";
@@ -20,7 +21,8 @@ export async function startGenericIssuanceService(
   genericPretixAPI: IGenericPretixAPI | null,
   pagerDutyService: PagerDutyService | null,
   discordService: DiscordService | null,
-  cacheService: PersistentCacheService | null
+  cacheService: PersistentCacheService | null,
+  emailService: EmailService
 ): Promise<GenericIssuanceService | null> {
   logger("[INIT] attempting to start Generic Issuance service");
 
@@ -119,6 +121,7 @@ export async function startGenericIssuanceService(
     rollbarService,
     pagerDutyService,
     discordService,
+    emailService,
     cacheService
   );
 

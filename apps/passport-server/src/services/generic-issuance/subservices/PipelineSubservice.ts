@@ -5,10 +5,12 @@ import {
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
+  GenericIssuanceSendPipelineEmailResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   HydratedPipelineHistoryEntry,
   ListFeedsResponseValue,
   PipelineDefinition,
+  PipelineEmailType,
   PipelineGetManualCheckInsResponseValue,
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
@@ -40,7 +42,11 @@ import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
 import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
-import { LemonadeAtom, isLemonadeAtom } from "../pipelines/LemonadePipeline";
+import {
+  LemonadeAtom,
+  LemonadePipeline,
+  isLemonadeAtom
+} from "../pipelines/LemonadePipeline";
 import { PretixAtom, isPretixAtom } from "../pipelines/PretixPipeline";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
@@ -318,6 +324,19 @@ export class PipelineSubservice {
    */
   public async clearAtomsForPipeline(pipelineId: string): Promise<void> {
     await this.pipelineAtomDB.clear(pipelineId);
+  }
+
+  public async handleSendPipelineEmail(
+    pipelineId: string,
+    email: PipelineEmailType
+  ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
+    const pipelineSlot = await this.getPipelineSlot(pipelineId);
+
+    if (LemonadePipeline.is(pipelineSlot?.instance)) {
+      return await pipelineSlot.instance.sendPipelineEmail(email);
+    }
+
+    throw new PCDHTTPError(400, "only lemonade pipeline can send emails");
   }
 
   /**

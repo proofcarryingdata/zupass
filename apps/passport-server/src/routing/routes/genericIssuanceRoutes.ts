@@ -9,6 +9,8 @@ import {
   GenericIssuanceGetPipelineResponseValue,
   GenericIssuanceSelfResponseValue,
   GenericIssuanceSendEmailResponseValue,
+  GenericIssuanceSendPipelineEmailRequest,
+  GenericIssuanceSendPipelineEmailResponseValue,
   GenericIssuanceUpsertPipelineRequest,
   GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
@@ -621,6 +623,42 @@ export function initGenericIssuanceRoutes(
         );
 
       res.json(result);
+    }
+  );
+
+  app.post(
+    "/generic-issuance/api/send-email",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+
+      if (process.env.PIPELINE_EMAIL_SEND !== "true") {
+        throw new PCDHTTPError(
+          400,
+          "Pipeline email sends are not enabled on this instance of Podbox"
+        );
+      }
+
+      const pipelineId = checkBody<
+        GenericIssuanceSendPipelineEmailRequest,
+        "pipelineId"
+      >(req, "pipelineId");
+      const email = checkBody<GenericIssuanceSendPipelineEmailRequest, "email">(
+        req,
+        "email"
+      );
+
+      const user = await genericIssuanceService.authSession(req);
+
+      if (!user.isAdmin) {
+        throw new PCDHTTPError(401, "only admins can send emails to pipelines");
+      }
+
+      const result = await genericIssuanceService.handleSendPipelineEmail(
+        pipelineId,
+        email
+      );
+
+      res.json(result satisfies GenericIssuanceSendPipelineEmailResponseValue);
     }
   );
 }

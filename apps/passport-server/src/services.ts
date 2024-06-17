@@ -79,7 +79,8 @@ export async function startServices(
     apis.genericPretixAPI,
     pagerDutyService,
     discordService,
-    persistentCacheService
+    persistentCacheService,
+    emailService
   );
   const userService = startUserService(
     context,

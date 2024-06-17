@@ -40,6 +40,7 @@ import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsS
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 import { PipelineVersionHistorySection } from "./DetailsSections/PipelineVersionHistorySection";
 import { PipelineZuAuthConfigSection } from "./DetailsSections/PipelineZuAuthConfig";
+import { SendEmailSection } from "./DetailsSections/SendEmailSection";
 import { SectionContainer } from "./SectionContainer";
 
 export function PipelineDetailSection({
@@ -221,6 +222,17 @@ export function PipelineDetailSection({
                       </PodLink>
                     </ListItem>
                   </UnorderedList>
+                </SectionContainer>
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <AccordionButton>
+                Email Send&nbsp;<Badge colorScheme="gray">Admin</Badge>
+              </AccordionButton>
+              <AccordionPanel>
+                <SectionContainer>
+                  <SendEmailSection pipeline={pipeline} />
                 </SectionContainer>
               </AccordionPanel>
             </AccordionItem>

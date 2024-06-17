@@ -13,12 +13,14 @@ import {
   ActionConfigResponseValue,
   BadgeConfig,
   CONTACT_EVENT_NAME,
+  GenericIssuanceSendPipelineEmailResponseValue,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
   PipelineCheckinSummary,
   PipelineEdDSATicketZuAuthConfig,
+  PipelineEmailType,
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
@@ -58,6 +60,7 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { IPipelineEmailDB } from "../../../database/queries/pipelineEmailDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   IBadgeGiftingDB,
@@ -66,6 +69,7 @@ import {
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
+import { EmailService } from "../../emailService";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traceFlattenedObject, traced } from "../../telemetryService";
 import {
@@ -124,6 +128,7 @@ export class LemonadePipeline implements BasePipeline {
   private db: IPipelineAtomDB<LemonadeAtom>;
   private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
+  private emailDB: IPipelineEmailDB;
   private badgeDB: IBadgeGiftingDB;
   private api: ILemonadeAPI;
   private cacheService: PersistentCacheService;
@@ -133,7 +138,9 @@ export class LemonadePipeline implements BasePipeline {
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
   private credentialSubservice: CredentialSubservice;
+  private emailService: EmailService;
   private context: ApplicationContext;
+  private sendingEmail: boolean;
 
   public get id(): string {
     return this.definition.id;
@@ -155,21 +162,26 @@ export class LemonadePipeline implements BasePipeline {
     cacheService: PersistentCacheService,
     checkinDB: IPipelineCheckinDB,
     contactDB: IContactSharingDB,
+    emailDB: IPipelineEmailDB,
     badgeDB: IBadgeGiftingDB,
     consumerDB: IPipelineConsumerDB,
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
     credentialSubservice: CredentialSubservice,
+    emailService: EmailService,
     context: ApplicationContext
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<LemonadeAtom>;
     this.contactDB = contactDB;
+    this.emailDB = emailDB;
     this.badgeDB = badgeDB;
     this.api = api;
     this.credentialSubservice = credentialSubservice;
     this.loaded = false;
     this.context = context;
+    this.emailService = emailService;
+    this.sendingEmail = false;
 
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
       this.semaphoreGroupProvider = new SemaphoreGroupProvider(
@@ -1995,8 +2007,107 @@ export class LemonadePipeline implements BasePipeline {
     });
   }
 
-  public static is(p: Pipeline): p is LemonadePipeline {
-    return p.type === PipelineType.Lemonade;
+  public static is(p: Pipeline | undefined): p is LemonadePipeline {
+    return p?.type === PipelineType.Lemonade;
+  }
+
+  public async sendPipelineEmail(
+    emailType: PipelineEmailType
+  ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
+    return traced(LOG_NAME, "sendPipelineEmail", async () => {
+      try {
+        if (this.sendingEmail) {
+          throw new PCDHTTPError(400, "email send already in progress");
+        }
+
+        this.sendingEmail = true;
+
+        if (this.id !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
+          throw new PCDHTTPError(
+            400,
+            "only the edge esmeralda pipeline can send emails right now"
+          );
+        }
+
+        const allAtoms = await this.db.load(this.id);
+        const manualCheckins = await this.checkinDB.getByPipelineId(this.id);
+        const sentEmails = await this.emailDB.getSentEmails(
+          this.id,
+          PipelineEmailType.EsmeraldaOneClick
+        );
+        const encounteredEmails = new Set<string>(
+          sentEmails.map((sentEmail) => sentEmail.emailAddress)
+        );
+        const filteredAtoms = allAtoms.filter((ticket) => {
+          if (
+            manualCheckins.find((checkin) => checkin.ticketId === ticket.id)
+          ) {
+            return false;
+          }
+
+          if (encounteredEmails.has(ticket.email)) {
+            return false;
+          }
+
+          encounteredEmails.add(ticket.email);
+
+          return true;
+        });
+
+        logger(
+          LOG_TAG,
+          `SEND_PIPELINE_EMAIL`,
+          this.id,
+          emailType,
+          `atom_count`,
+          allAtoms.length,
+          `manual_checkin_count`,
+          manualCheckins.length,
+          `already_sent_emails`,
+          sentEmails.length,
+          `to_send_emails`,
+          filteredAtoms.length
+        );
+
+        for (const toSend of filteredAtoms) {
+          try {
+            await this.emailDB.recordEmailSent(
+              this.id,
+              PipelineEmailType.EsmeraldaOneClick,
+              toSend.email
+            );
+            const passportClientUrl = process.env.PASSPORT_CLIENT_URL;
+
+            if (!passportClientUrl) {
+              throw new Error("missing process.env.PASSPORT_CLIENT_URL");
+            }
+
+            // this is deliberately not awaited as we want the http response to the
+            // request to send these emails to return immediately. the emails are sent via
+            // a queue in {@link EmailAPI}
+            this.emailService.sendEsmeraldaOneClickEmail(
+              toSend.email,
+              urljoin(
+                passportClientUrl,
+                `/#/one-click-login/${encodeURIComponent(toSend.email)}/${
+                  toSend.lemonadeTicketId
+                }/Edge%20Esmeralda`
+              )
+            );
+          } catch (e) {
+            logger(
+              LOG_NAME,
+              `failed to send email for address ${toSend.email}`,
+              e
+            );
+          }
+        }
+
+        return { queued: filteredAtoms.length };
+      } finally {
+        this.sendingEmail = false;
+      }
+    });
   }
 
   /**

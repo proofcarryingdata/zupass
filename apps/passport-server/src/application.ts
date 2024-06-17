@@ -5,7 +5,7 @@ import process from "node:process";
 import * as path from "path";
 import urljoin from "url-join";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
-import { IEmailAPI, sendgridSendEmail } from "./apis/emailAPI";
+import { IEmailAPI, createEmailAPI } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { ILemonadeAPI, getLemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import {
@@ -100,7 +100,7 @@ async function getOverridenApis(
       emailAPI = null;
     } else {
       sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
-      emailAPI = { send: sendgridSendEmail };
+      emailAPI = await createEmailAPI();
     }
   }
 
