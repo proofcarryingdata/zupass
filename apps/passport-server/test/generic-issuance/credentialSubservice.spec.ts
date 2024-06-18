@@ -180,10 +180,19 @@ describe("generic issuance - credential subservice", function () {
       }
     }
 
+    for (const [key, credential] of Object.entries(badCredentials)) {
+      try {
+        await credentialSubservice.verifyAndExpectZupassEmail(credential);
+        assert(false, `${key} did not throw exception during verification`);
+      } catch (e) {
+        expect(e instanceof VerificationError).to.be.true;
+      }
+    }
+
     // Calling `verify` on a credential containing an Email PCD not from
-    // Zupass will succeed (assuming credential is otherwise valid).
-    // To check if the Email PCD is from Zupass, call
-    // verifyAndExpectZupassEmail() as shown above
+    // Zupass (without the optional isTrustedEmailPCDSigner) will succeed
+    // (assuming credential is otherwise valid).  To check if the Email PCD is
+    // from Zupass, call verifyAndExpectZupassEmail() as shown above
     expect(
       isEqualEdDSAPublicKey(
         // Verify will return a VerifiedCredential containing an

@@ -82,14 +82,22 @@ export class VerificationError extends Error {}
  * of the signature.
  *
  * This function only proves that the credential is formally valid. It does
- * *not* check if the EmailPCD was signed by Zupass. In both IssuanceService
- * and in CredentialSubservice (part of Podbox), this additional check is
- * performed, because those servies have higher context on what might be a
- * valid signing key (e.g. one specified in an environment variable, which
+ * *not* check if the EmailPCD was signed by Zupass. Callers which depend on
+ * the email address should perform this check using the optional
+ * `isTrustedEmailPCDSigner` argument, or by checking the `emailPCDSigner`
+ * field in the result.  Callers know what might be a valid signing key for
+ * their use case (e.g. one specified in an environment variable, which
  * application code has access to but library code such as this does not).
+ *
+ * @param credential the credential to verify
+ * @param isTrustedEmailPCDSigner is called with the public key of the
+ *  signer of the email PCD (if included) to validate whether it should
+ *  be trusted
+ * @throws VerificationError if the credential is invalid
  */
 export async function verifyCredential(
-  credential: Credential
+  credential: Credential,
+  isTrustedEmailPCDSigner?: (emailPCDSigner: EdDSAPublicKey) => boolean
 ): Promise<VerifiedCredential> {
   if (credential.type !== SemaphoreSignaturePCDPackage.name) {
     throw new VerificationError(`Credential is not a Semaphore Signature PCD`);
@@ -129,6 +137,15 @@ export async function verifyCredential(
       throw new VerificationError(
         `Email PCD and Signature PCD do not have matching identities`
       );
+    }
+
+    // Check whether the email PCD is signed by a trusted issuer, if the
+    // caller provided a function to do so.
+    if (
+      isTrustedEmailPCDSigner !== undefined &&
+      !isTrustedEmailPCDSigner(emailPCD.proof.eddsaPCD.claim.publicKey)
+    ) {
+      throw new VerificationError(`Email PCD not signed by a trusted signer`);
     }
 
     // Everything passes, return the verified credential with email claims

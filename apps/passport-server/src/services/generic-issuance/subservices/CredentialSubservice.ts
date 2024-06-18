@@ -33,7 +33,10 @@ export class CredentialSubservice {
   /**
    * Verify a credential, ideally using a cached verification.
    */
-  public verify(credential: Credential): Promise<VerifiedCredential> {
+  public verify(
+    credential: Credential,
+    isTrustedEmailPCDSigner?: (emailPCDSigner: EdDSAPublicKey) => boolean
+  ): Promise<VerifiedCredential> {
     if (credential.type === ObjPCDTypeName) {
       return (async (): Promise<VerifiedCredential> => {
         if (!this.dbPool) {
@@ -67,10 +70,12 @@ export class CredentialSubservice {
     if (cached) {
       return cached;
     }
-    const promise = verifyCredential(credential).catch((err) => {
-      this.verificationCache.delete(key);
-      throw err;
-    });
+    const promise = verifyCredential(credential, isTrustedEmailPCDSigner).catch(
+      (err) => {
+        this.verificationCache.delete(key);
+        throw err;
+      }
+    );
     this.verificationCache.set(key, promise);
     return promise;
   }
@@ -84,14 +89,19 @@ export class CredentialSubservice {
   public async verifyAndExpectZupassEmail(
     credential: Credential
   ): Promise<VerifiedCredential & Required<Pick<VerifiedCredential, "email">>> {
-    const verifiedCredential = await this.verify(credential),
-      { email, semaphoreId, authKey, emailPCDSigner } = verifiedCredential;
+    const verifiedCredential = await this.verify(
+      credential,
+      (emailPCDSigner: EdDSAPublicKey) => {
+        if (!this.isZupassPublicKey(emailPCDSigner)) {
+          throw new VerificationError("Email PCD not signed by Zupass");
+        }
+        return true;
+      }
+    );
 
+    const { email, semaphoreId } = verifiedCredential;
     if (!email || !semaphoreId) {
       throw new VerificationError("Missing email PCD in credential");
-    }
-    if (!authKey && !this.isZupassPublicKey(emailPCDSigner)) {
-      throw new VerificationError("Email PCD not signed by Zupass");
     }
 
     return { ...verifiedCredential, email };
