@@ -24,11 +24,13 @@ import {
   PODStringValue,
   applyOrMap,
   checkPODName,
+  decodePublicKey,
   podValueHash
 } from "@pcd/pod";
 import { PODPCD, PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
+import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
   GPCPCD,
@@ -373,7 +375,10 @@ function validateInputPOD(
         // Check signer's public key.
         if (
           prescribedValuesForPod.signerPublicKey !== undefined &&
-          prescribedValuesForPod.signerPublicKey !== podPCD.pod.signerPublicKey
+          !_.isEqual(
+            decodePublicKey(prescribedValuesForPod.signerPublicKey),
+            decodePublicKey(podPCD.pod.signerPublicKey)
+          )
         ) {
           return false;
         }

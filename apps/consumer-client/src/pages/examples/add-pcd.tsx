@@ -19,7 +19,12 @@ import {
   useZupassPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { POD, podEntriesFromSimplifiedJSON } from "@pcd/pod";
+import {
+  decodePrivateKey,
+  encodePublicKey,
+  POD,
+  podEntriesFromSimplifiedJSON
+} from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -32,6 +37,7 @@ import {
   generateRegistrationOptions,
   verifyRegistrationResponse
 } from "@simplewebauthn/server";
+import { derivePublicKey } from "@zk-kit/eddsa-poseidon";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { useEffect, useState } from "react";
@@ -45,6 +51,7 @@ import {
 } from "../../constants";
 import {
   EXAMPLE_EDDSA_PRIVATE_KEY,
+  EXAMPLE_EDDSA_PRIVATE_KEY2,
   EXAMPLE_GPC_CONFIG,
   EXAMPLE_MEMBERSHIP_LISTS,
   EXAMPLE_OWNER_IDENTITY,
@@ -60,6 +67,30 @@ export default function Page(): JSX.Element {
   const [podContent2, setPODContent2] = useState(
     EXAMPLE_POD_CONTENT_WITH_DISPLAY
   );
+  const [podPrivateKey, _setPODPrivateKey] = useState(
+    EXAMPLE_EDDSA_PRIVATE_KEY
+  );
+  const [podPublicKey, setPODPublicKey] = useState(
+    encodePublicKey(
+      derivePublicKey(decodePrivateKey(EXAMPLE_EDDSA_PRIVATE_KEY))
+    )
+  );
+  const setPODPrivateKey = (key: string): void => {
+    _setPODPrivateKey(key);
+    setPODPublicKey(encodePublicKey(derivePublicKey(decodePrivateKey(key))));
+  };
+  const [podPrivateKey2, _setPODPrivateKey2] = useState(
+    EXAMPLE_EDDSA_PRIVATE_KEY2
+  );
+  const [podPublicKey2, setPODPublicKey2] = useState(
+    encodePublicKey(
+      derivePublicKey(decodePrivateKey(EXAMPLE_EDDSA_PRIVATE_KEY2))
+    )
+  );
+  const setPODPrivateKey2 = (key: string): void => {
+    _setPODPrivateKey2(key);
+    setPODPublicKey2(encodePublicKey(derivePublicKey(decodePrivateKey(key))));
+  };
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
   const [membershipLists, setMembershipLists] = useState(
     EXAMPLE_MEMBERSHIP_LISTS
@@ -164,11 +195,30 @@ export default function Page(): JSX.Element {
         <br />
         <button
           onClick={() =>
-            addPODPCD(podContent, podFolder.length > 0 ? podFolder : undefined)
+            addPODPCD(
+              podContent,
+              podPrivateKey,
+              podFolder.length > 0 ? podFolder : undefined
+            )
           }
         >
           add a new POD to Zupass
         </button>
+        <br />
+        <label>
+          Private key to sign POD with:
+          <input
+            type="text"
+            value={podPrivateKey}
+            placeholder="Enter private key..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODPrivateKey(e.target.value);
+            }}
+          />
+        </label>
+        <br />
+        Corresponding public key: <small>{podPublicKey}</small>
         <br />
         <label>
           Folder to add POD to:
@@ -199,12 +249,28 @@ export default function Page(): JSX.Element {
           onClick={() =>
             addPODPCD(
               podContent2,
+              podPrivateKey2,
               podFolder2.length > 0 ? podFolder2 : undefined
             )
           }
         >
           add a new POD to Zupass
         </button>
+        <br />
+        <label>
+          Private key to sign POD with:
+          <input
+            type="text"
+            value={podPrivateKey2}
+            placeholder="Enter private key..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODPrivateKey2(e.target.value);
+            }}
+          />
+        </label>
+        <br />
+        Corresponding public key: <small>{podPublicKey2}</small>
         <br />
         <label>
           Folder to add POD to:
@@ -629,14 +695,12 @@ async function addWebAuthnPCD(): Promise<void> {
 
 async function addPODPCD(
   podContent: string,
+  podPrivateKey: string,
   podFolder: string | undefined
 ): Promise<void> {
   const newPOD = new PODPCD(
     uuid(),
-    POD.sign(
-      podEntriesFromSimplifiedJSON(podContent),
-      EXAMPLE_EDDSA_PRIVATE_KEY
-    )
+    POD.sign(podEntriesFromSimplifiedJSON(podContent), podPrivateKey)
   );
 
   const serializedPODPCD = await PODPCDPackage.serialize(newPOD);
@@ -679,7 +743,7 @@ async function addGPCPCD(
     uuid(),
     POD.sign(
       podEntriesFromSimplifiedJSON(podContent2),
-      EXAMPLE_EDDSA_PRIVATE_KEY
+      EXAMPLE_EDDSA_PRIVATE_KEY2
     )
   );
 
