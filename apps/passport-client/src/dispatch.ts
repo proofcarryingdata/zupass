@@ -680,15 +680,17 @@ async function resetPassport(state: AppState, update: ZuUpdate): Promise<void> {
   // Clear in-memory state
   update({
     self: undefined,
+    loggingOut: true,
     modal: {
       modalType: "none"
     }
   });
-  notifyLogoutToOtherTabs();
 
   setTimeout(() => {
     window.location.reload();
   }, 1);
+
+  notifyLogoutToOtherTabs();
 }
 
 async function addPCDs(
