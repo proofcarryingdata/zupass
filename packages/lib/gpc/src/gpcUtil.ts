@@ -18,7 +18,7 @@ import {
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryConfig,
-  GPCProofGenericEntryConfig,
+  GPCProofEntryConfigCommon,
   GPCProofObjectConfig,
   GPCProofTupleConfig,
   PODEntryIdentifier,
@@ -93,19 +93,49 @@ function canonicalizeObjectConfig(
   // Check if signer's public key configuration is set to its defaults, in which
   // case it will be omitted in the canonicalised config.
   const signerPublicKeyConfig = proofObjectConfig.signerPublicKey;
-  const signerPublicKeyHasDefaults =
-    signerPublicKeyConfig === undefined ||
-    _.isEqual(signerPublicKeyConfig, { isRevealed: true });
+  const canonicalizedSignerPublicKeyConfig =
+    signerPublicKeyConfig !== undefined
+      ? canonicalizeSignerPublicKeyConfig(signerPublicKeyConfig)
+      : undefined;
 
   return {
     entries: canonicalEntries,
-    ...(!signerPublicKeyHasDefaults
-      ? { signerPublicKey: proofObjectConfig.signerPublicKey }
+    ...(canonicalizedSignerPublicKeyConfig !== undefined
+      ? { signerPublicKey: canonicalizedSignerPublicKeyConfig }
       : {})
   };
 }
 
-function canonicalizeEntryConfig(
+export function canonicalizeSignerPublicKeyConfig(
+  signerPublicKeyConfig: GPCProofEntryConfigCommon
+): GPCProofEntryConfigCommon | undefined {
+  if (
+    Object.keys(signerPublicKeyConfig).length === 1 &&
+    signerPublicKeyConfig.isRevealed
+  ) {
+    return undefined;
+  } else {
+    // Set optional fields only when they have non-default values.
+    return {
+      isRevealed: signerPublicKeyConfig.isRevealed,
+      ...(signerPublicKeyConfig.equalsEntry !== undefined
+        ? { equalsEntry: signerPublicKeyConfig.equalsEntry }
+        : {}),
+      ...(signerPublicKeyConfig.isMemberOf !== undefined
+        ? {
+            isMemberOf: signerPublicKeyConfig.isMemberOf
+          }
+        : {}),
+      ...(signerPublicKeyConfig.isNotMemberOf !== undefined
+        ? {
+            isNotMemberOf: signerPublicKeyConfig.isNotMemberOf
+          }
+        : {})
+    };
+  }
+}
+
+export function canonicalizeEntryConfig(
   proofEntryConfig: GPCProofEntryConfig
 ): GPCProofEntryConfig {
   // Set optional fields only when they have non-default values.
@@ -614,7 +644,7 @@ export function listConfigFromProofConfig(
  */
 function addIdentifierToListConfig(
   gpcListConfig: GPCProofMembershipListConfig,
-  entryConfig: GPCProofGenericEntryConfig | GPCProofTupleConfig | undefined,
+  entryConfig: GPCProofEntryConfigCommon | GPCProofTupleConfig | undefined,
   identifier: PODEntryIdentifier | TupleIdentifier
 ): void {
   // Nothing to do if both membership and non-membership lists are undefined.

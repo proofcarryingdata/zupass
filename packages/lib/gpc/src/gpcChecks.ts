@@ -157,6 +157,12 @@ function checkProofObjConfig(
     checkProofEntryConfig(`${nameForErrorMessages}.${entryName}`, entryConfig);
     nEntries++;
   }
+  if (objConfig.signerPublicKey !== undefined) {
+    checkProofEntryConfig(
+      `${nameForErrorMessages}.$signerPublicKey`,
+      objConfig.signerPublicKey
+    );
+  }
   return nEntries;
 }
 

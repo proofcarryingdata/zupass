@@ -44,6 +44,7 @@ import {
   LIST_MEMBERSHIP,
   isTupleIdentifier,
   isVirtualEntryIdentifier,
+  isVirtualEntryName,
   listConfigFromProofConfig,
   makeWatermarkSignal
 } from "./gpcUtil";
@@ -658,12 +659,10 @@ function compileProofEntryConstraints(
 } {
   // Deal with equality comparision and POD ownership, which share circuitry.
   let firstOwnerIndex = 0;
-  const entryEqualToOtherEntryByIndex: (bigint | undefined)[] = Array(
-    maxEntries + maxVirtualEntries
-  ).fill(undefined);
+  const entryEqualToOtherEntryByIndex: bigint[] = [];
+  const virtualEntryEqualToOtherEntryByIndex: bigint[] = [];
 
   for (const entryInfo of entryMap.values()) {
-    const entryIndex = entryInfo.entryIndex;
     // An entry is always compared either to the first owner entry (to ensure
     // only one owner), or to another entry specified by config, or to itself
     // in order to make the constraint a nop.
@@ -675,7 +674,7 @@ function compileProofEntryConstraints(
           "Can't use isOwnerID and equalsEntry on the same entry."
         );
       }
-      entryEqualToOtherEntryByIndex[entryIndex] = BigInt(firstOwnerIndex);
+      entryEqualToOtherEntryByIndex.push(BigInt(firstOwnerIndex));
     } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
       const otherEntryInfo = entryMap.get(entryInfo.entryConfig.equalsEntry);
       if (otherEntryInfo === undefined) {
@@ -683,23 +682,39 @@ function compileProofEntryConstraints(
           `Missing entry ${entryInfo.entryConfig.equalsEntry} for equality comparison.`
         );
       }
-      entryEqualToOtherEntryByIndex[entryIndex] = BigInt(
-        otherEntryInfo.entryIndex
-      );
+      (isVirtualEntryName(entryInfo.entryName)
+        ? virtualEntryEqualToOtherEntryByIndex
+        : entryEqualToOtherEntryByIndex
+      ).push(BigInt(otherEntryInfo.entryIndex));
     } else {
-      entryEqualToOtherEntryByIndex[entryIndex] = BigInt(entryInfo.entryIndex);
+      (isVirtualEntryName(entryInfo.entryName)
+        ? virtualEntryEqualToOtherEntryByIndex
+        : entryEqualToOtherEntryByIndex
+      ).push(BigInt(entryInfo.entryIndex));
     }
+  }
+
+  // Equality constraints don't have an explicit disabled state, so spare
+  // entry slots always compare to themselves, to be a nop.
+  for (
+    let entryIndex = entryEqualToOtherEntryByIndex.length;
+    entryIndex < maxEntries;
+    entryIndex++
+  ) {
+    entryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
+  }
+  for (
+    let entryIndex = virtualEntryEqualToOtherEntryByIndex.length;
+    entryIndex < maxVirtualEntries;
+    entryIndex++
+  ) {
+    virtualEntryEqualToOtherEntryByIndex.push(BigInt(maxEntries + entryIndex));
   }
 
   return {
     circuitEntryConstraintInputs: {
-      // Equality constraints don't have an explicit disabled state, so spare
-      // entry slots always compare to themselves, to be a nop.
-      entryEqualToOtherEntryByIndex: entryEqualToOtherEntryByIndex.map(
-        (
-          maybeOtherEntryIndex: bigint | undefined,
-          entryIndex: number
-        ): bigint => maybeOtherEntryIndex ?? BigInt(entryIndex)
+      entryEqualToOtherEntryByIndex: entryEqualToOtherEntryByIndex.concat(
+        virtualEntryEqualToOtherEntryByIndex
       )
     },
     entryConstraintMetadata: { firstOwnerIndex }

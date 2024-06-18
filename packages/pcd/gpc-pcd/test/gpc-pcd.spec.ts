@@ -71,9 +71,6 @@ describe("GPCPCD should work", async function () {
               isOwnerID: true,
               isMemberOf: "admissibleOwners"
             }
-          },
-          signerPublicKey: {
-            isRevealed: true
           }
         },
         ticketPOD: {
@@ -173,6 +170,7 @@ describe("GPCPCD should work", async function () {
       pod0.signerPublicKey
     );
     expect(gpcPCD.claim.revealed.pods.pod0.entries?.A?.value).to.eq(123n);
+    expect(gpcPCD.claim.revealed.pods.ticketPOD).to.be.undefined;
     expect(gpcPCD.claim.revealed.owner?.externalNullifier).to.not.be.undefined;
     expect(gpcPCD.claim.revealed.owner?.nullifierHash).to.not.be.undefined;
     expect(gpcPCD.claim.revealed.watermark?.value).to.eq("some watermark");

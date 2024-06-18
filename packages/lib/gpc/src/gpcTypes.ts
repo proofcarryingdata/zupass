@@ -66,15 +66,15 @@ export type GPCIdentifier = `${string}_${string}`;
  * GPCProofConfig for a single generic POD entry, virtual or otherwise,
  * specifying which features and constraints should be enabled for that entry.
  */
-export type GPCProofGenericEntryConfig = {
+export type GPCProofEntryConfigCommon = {
   /**
    * Indicates whether this entry should be revealed in the proof.  Setting
    * this to `true` will result in the entry's value being included in
    * {@link GPCRevealedClaims}, and its hash being verified in
-   * {@link gpcVerify}. Note that this is optional, and it unspecified
-   * it defaults to true.
+   * {@link gpcVerify}. Note that for signers' public keys, the absence
+   * of a config amounts to setting this to `true`.
    */
-  isRevealed?: boolean;
+  isRevealed: boolean;
 
   /**
    * Indicates that this entry must be equal to another entry.  The other
@@ -129,13 +129,7 @@ export type GPCProofGenericEntryConfig = {
  * GPCProofConfig for a single non-virtual POD entry, specifying which features
  * and constraints should be enabled for that entry.
  */
-export type GPCProofEntryConfig = GPCProofGenericEntryConfig & {
-  /**
-   * Indicates that the entry should or shouldn't be revealed. See {@link
-   * GPCProofGenericEntryConfig} for details.
-   */
-  isRevealed: boolean;
-
+export type GPCProofEntryConfig = GPCProofEntryConfigCommon & {
   /**
    * Indicates that this entry must match the public ID of the owner
    * identity given in {@link GPCProofInputs}.  For Semaphore V3 this is
@@ -178,7 +172,7 @@ export type GPCProofObjectConfig = {
    * be equal to another object's signing key. If this configuration
    * is undefined, the signer's public key will be revealed.
    */
-  signerPublicKey?: GPCProofGenericEntryConfig;
+  signerPublicKey?: GPCProofEntryConfigCommon;
 
   // TODO(POD-P3): Is there anything to configure at this level?  Or can we
   // collapose it?
