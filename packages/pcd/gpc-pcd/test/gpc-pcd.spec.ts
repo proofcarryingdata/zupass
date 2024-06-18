@@ -404,7 +404,7 @@ describe("GPCPCD input POD validator should work", () => {
         signerPublicKey: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
       },
       ticketPOD: {
-        signerPublicKey: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ3"
+        signerPublicKey: "su2CUR47c1us1FwPUN3RNZWzit9nmya2QD60Y/iffxI"
       }
     });
     const params = { proofConfig, prescribedValues };
