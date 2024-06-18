@@ -222,6 +222,8 @@
     "ONE_CLICK_LOGIN_ENABLED",
     "MANUAL_CHECKIN_API_KEY",
     "MANUAL_CHECKIN_PIPELINE_ID",
+    "OUTBOUND_ALLOW_LIST",
+    "PIPELINE_EMAIL_SEND",
     "//// add env vars above this line ////"
   ]
 }

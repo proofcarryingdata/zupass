@@ -32,7 +32,8 @@ import {
 import * as React from "react";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
-import { CheckInModal } from "./CheckInModal";
+import { CSVButton } from "../components/CSVButton";
+import { CheckInModal } from "../components/CheckInModal";
 
 function safeFilterValue(value: unknown): string {
   return typeof value === "string" ? value : "";
@@ -258,6 +259,8 @@ export function CheckinListPage(): ReactNode {
               setCheckingIn={setCheckingIn}
               data={query.data}
             />
+            <Spacer h={4} />
+            <CSVButton checkIns={query.data} />
             <CheckInTable startCheckIn={startCheckIn} checkIns={query.data} />
           </>
         )}

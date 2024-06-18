@@ -9,6 +9,7 @@ import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { IPipelineEmailDB } from "../../../../database/queries/pipelineEmailDB";
 import { IPipelineManualTicketDB } from "../../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
@@ -16,6 +17,7 @@ import {
   IContactSharingDB
 } from "../../../../database/queries/ticketActionDBs";
 import { ApplicationContext } from "../../../../types";
+import { EmailService } from "../../../emailService";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { traced } from "../../../telemetryService";
 import { tracePipeline } from "../../honeycombQueries";
@@ -43,11 +45,13 @@ export interface InstantiatePipelineArgs {
   pipelineAtomDB: IPipelineAtomDB;
   checkinDB: IPipelineCheckinDB;
   contactDB: IContactSharingDB;
+  emailDB: IPipelineEmailDB;
   badgeDB: IBadgeGiftingDB;
   consumerDB: IPipelineConsumerDB;
   manualTicketDB: IPipelineManualTicketDB;
   semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   credentialSubservice: CredentialSubservice;
+  emailService: EmailService;
   context: ApplicationContext;
 }
 
@@ -74,10 +78,12 @@ export function instantiatePipeline(
         args.cacheService,
         args.checkinDB,
         args.contactDB,
+        args.emailDB,
         args.badgeDB,
         args.consumerDB,
         args.semaphoreHistoryDB,
         args.credentialSubservice,
+        args.emailService,
         args.context
       );
     } else if (isPretixPipelineDefinition(definition)) {

@@ -1185,3 +1185,17 @@ export type GenericIssuanceValidSemaphoreGroupResponseValue = {
 };
 
 export type GenericIssuanceSemaphoreGroupRootResponseValue = string;
+
+export const enum PipelineEmailType {
+  EsmeraldaOneClick = "EsmeraldaOneClick"
+}
+
+export type GenericIssuanceSendPipelineEmailRequest = {
+  jwt: string;
+  pipelineId: string;
+  email: PipelineEmailType;
+};
+
+export type GenericIssuanceSendPipelineEmailResponseValue = {
+  queued: number;
+};
