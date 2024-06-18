@@ -43,7 +43,8 @@
     "db:generate": "turbo run db:generate",
     "db:push": "turbo run db:push",
     "pre-deploy": "turbo run pre-deploy",
-    "esmeralda": "yarn workspace passport-server run parse-edge-esmeralda-events"
+    "esmeralda": "yarn workspace passport-server run parse-edge-esmeralda-events",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.6",
@@ -65,6 +66,8 @@
     "@changesets/cli": "^2.26.0",
     "@monorepo-utils/workspaces-to-typescript-project-references": "^2.10.4",
     "@types/react": "^18.0.22",
+    "patch-package": "^8.0.0",
+    "postinstall-postinstall": "^2.1.0",
     "tsx": "^4.6.2",
     "turbo": "^1.13.2",
     "turbowatch": "^2.29.4",
