@@ -44,6 +44,11 @@ export interface AppState {
   // User metadata.
   self?: User;
 
+  // if the client is in the process of logging out,
+  // shows alternate UI on the login page to prevent
+  // user confusion
+  loggingOut?: boolean;
+
   // If set, shows an error popover.
   error?: AppError;
 
