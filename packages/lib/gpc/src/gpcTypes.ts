@@ -64,7 +64,7 @@ export type GPCIdentifier = `${string}_${string}`;
 
 /**
  * GPCProofConfig for a single generic POD entry, virtual or otherwise,
- * specifying which featuers and constraints should be enabled for that entry.
+ * specifying which features and constraints should be enabled for that entry.
  */
 export type GPCProofGenericEntryConfig = {
   /**
@@ -126,7 +126,7 @@ export type GPCProofGenericEntryConfig = {
 };
 
 /**
- * GPCProofConfig for a single non-virtual POD entry, specifying which featuers
+ * GPCProofConfig for a single non-virtual POD entry, specifying which features
  * and constraints should be enabled for that entry.
  */
 export type GPCProofEntryConfig = GPCProofGenericEntryConfig & {
@@ -175,8 +175,8 @@ export type GPCProofObjectConfig = {
   /**
    * The signer's public key of this object to be proven. The GPC can choose
    * to simply reveal it or else hide it but constrain it to lie in a list or
-   * be equal to another object's signer's public key. If this configuration
-   * is unspecified, the signer's public key will be revealed.
+   * be equal to another object's signing key. If this configuration
+   * is undefined, the signer's public key will be revealed.
    */
   signerPublicKey?: GPCProofGenericEntryConfig;
 
