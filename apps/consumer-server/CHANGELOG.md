@@ -1,5 +1,19 @@
 # consumer-server
 
+## 0.0.27
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.4.2
+
+## 0.0.26
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.4.1
+
 ## 0.0.25
 
 ### Patch Changes
