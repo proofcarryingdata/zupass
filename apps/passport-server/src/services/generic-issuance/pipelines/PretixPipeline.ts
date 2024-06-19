@@ -377,7 +377,9 @@ export class PretixPipeline implements BasePipeline {
           );
         }
 
+        await this.db.clear(this.definition.id);
         await this.db.save(this.definition.id, atomsToSave);
+
         logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
 
         const loadEnd = Date.now();

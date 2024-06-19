@@ -164,7 +164,7 @@ export class PipelineExecutorSubservice {
       }
 
       tracePipeline(pipelineSlot.definition);
-      traceUser(pipelineSlot?.owner);
+      traceUser(pipelineSlot.owner);
 
       if (pipelineSlot.instance) {
         logger(
