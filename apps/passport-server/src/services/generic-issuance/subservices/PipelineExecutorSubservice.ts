@@ -183,11 +183,11 @@ export class PipelineExecutorSubservice {
 
       logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
-      pipelineSlot.definition = definition;
       pipelineSlot.instance = await instantiatePipeline(
         definition,
         this.instantiatePipelineArgs
       );
+      pipelineSlot.definition = definition;
 
       await this.performPipelineLoad(pipelineSlot);
     });
