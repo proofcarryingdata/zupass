@@ -1,18 +1,27 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".nvmrc"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".nvmrc"
+      ],
       "outputs": [],
-      "cache": true,
-      "dotEnv": [".env"]
+      "cache": true
     },
     "lint": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "cache": true
     },
     "dev": {
+      "dependsOn": [
+        "^build"
+      ],
       "cache": false,
       "persistent": true
     },
@@ -20,12 +29,20 @@
       "cache": false
     },
     "gen-test-artifacts": {
-      "dependsOn": ["^gen-test-artifacts"],
+      "dependsOn": [
+        "^gen-test-artifacts"
+      ],
       "cache": true
     },
     "test": {
-      "dependsOn": ["^build", "^gen-test-artifacts"],
-      "inputs": ["$TURBO_DEFAULT$", ".mocharc.js"],
+      "dependsOn": [
+        "^build",
+        "^gen-test-artifacts"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".mocharc.js"
+      ],
       "cache": true
     },
     "clean": {
@@ -45,14 +62,24 @@
       "cache": false
     },
     "//#test-typedoc": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "typedoc.json"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "typedoc.json"
+      ],
       "outputs": [],
       "cache": true
     },
     "//#test-generated-package": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "scripts/testTemplatePackage.ts"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "scripts/testTemplatePackage.ts"
+      ],
       "outputs": [],
       "cache": true
     }
