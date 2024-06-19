@@ -77,6 +77,7 @@ export class PipelineExecutorSubservice {
    */
   public async start(startLoadLoop?: boolean): Promise<void> {
     await this.loadAndInstantiatePipelines();
+
     if (startLoadLoop !== false) {
       await this.startPipelineLoadLoop();
     } else {
