@@ -1,9 +1,9 @@
 import { expect } from "chai";
 import JSONBig from "json-bigint";
 import {
-  GPCPCDPrescribedPODValues,
-  gpcPCDPrescribedPODValuesFromSimplifiedJSON,
-  gpcPCDPrescribedPODValuesToSimplifiedJSON
+  PODEntryRecord,
+  podEntryRecordFromSimplifiedJSON,
+  podEntryRecordToSimplifiedJSON
 } from "../src";
 
 const jsonBigSerializer = JSONBig({
@@ -11,112 +11,68 @@ const jsonBigSerializer = JSONBig({
   alwaysParseAsBig: true
 });
 
-describe("GPCPCDPrescribedValues serialisation should work", () => {
+describe("PODEntryRecord serialisation should work", () => {
   it("Should serialise and deserialise empty object", async function () {
-    const serialised = gpcPCDPrescribedPODValuesToSimplifiedJSON({});
+    const serialised = podEntryRecordToSimplifiedJSON({});
     const expectedSerialised = "{}";
-    const deserialised =
-      gpcPCDPrescribedPODValuesFromSimplifiedJSON(serialised);
+    const deserialised = podEntryRecordFromSimplifiedJSON(serialised);
     expect(serialised).to.eq(expectedSerialised);
     expect(deserialised).to.deep.eq({});
   });
 
   it("Should serialise and deserialise record containing typical POD data", () => {
-    const typicalPrescribedValues: GPCPCDPrescribedPODValues = {
+    const typicalPrescribedEntries: PODEntryRecord = {
       pod1: {
-        entries: {
-          ticketID: { type: "int", value: 5558n },
-          eventID: { type: "int", value: 0n }
-        },
-        signerPublicKey: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+        ticketID: { type: "int", value: 5558n },
+        eventID: { type: "int", value: 0n }
       },
       pod2: {
-        entries: {
-          hp: { type: "int", value: 55n }
-        }
-      },
-      pod3: {
-        signerPublicKey: "oyL3ppa3qjpSJO+zmTuvDM2eku7O4KKaP2yCCKnoHZo"
+        hp: { type: "int", value: 55n }
       }
     };
 
-    const serialised = gpcPCDPrescribedPODValuesToSimplifiedJSON(
-      typicalPrescribedValues
-    );
+    const serialised = podEntryRecordToSimplifiedJSON(typicalPrescribedEntries);
 
     const expectedSerialised = jsonBigSerializer.stringify({
       pod1: {
-        entries: {
-          ticketID: 5558n,
-          eventID: 0n
-        },
-        signerPublicKey: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+        ticketID: 5558n,
+        eventID: 0n
       },
       pod2: {
-        entries: {
-          hp: 55n
-        }
-      },
-      pod3: {
-        signerPublicKey: "oyL3ppa3qjpSJO+zmTuvDM2eku7O4KKaP2yCCKnoHZo"
+        hp: 55n
       }
     });
 
-    const deserialised =
-      gpcPCDPrescribedPODValuesFromSimplifiedJSON(serialised);
+    const deserialised = podEntryRecordFromSimplifiedJSON(serialised);
 
     expect(serialised).to.eq(expectedSerialised);
-    expect(deserialised).to.deep.eq(typicalPrescribedValues);
+    expect(deserialised).to.deep.eq(typicalPrescribedEntries);
   });
 
   it("Should fail to deserialise a string not representing an object", () => {
-    expect(() =>
-      gpcPCDPrescribedPODValuesFromSimplifiedJSON(`"hello"`)
-    ).to.throw(TypeError);
+    expect(() => podEntryRecordFromSimplifiedJSON(`"hello"`)).to.throw(
+      TypeError
+    );
   });
 
   it("Should fail to deserialise a record with an invalid POD name", () => {
     expect(() =>
-      gpcPCDPrescribedPODValuesFromSimplifiedJSON(`{
-        "$notPOD": { "entries": { "entry": 5 } }
+      podEntryRecordFromSimplifiedJSON(`{
+        "$notPOD": { "entry": 5 }
       }`)
     ).to.throw(TypeError);
   });
 
   it("Should fail to deserialise a record with a POD with no data", () => {
     expect(() =>
-      gpcPCDPrescribedPODValuesFromSimplifiedJSON(`{ "somePOD": {} }`)
-    ).to.throw(TypeError);
-  });
-
-  it("Should fail to deserialise a record with a POD with an unexpected field", () => {
-    expect(() =>
-      gpcPCDPrescribedPODValuesFromSimplifiedJSON(`{
-        "somePOD": { "privateKey": 0 }
-      }`)
-    ).to.throw(TypeError);
-  });
-
-  it("Should fail to deserialise a record with a POD with an invalid entry field", () => {
-    expect(() =>
-      gpcPCDPrescribedPODValuesFromSimplifiedJSON(`{
-        "somePOD": { "entries": 55 }
-      }`)
+      podEntryRecordFromSimplifiedJSON(`{ "somePOD": {} }`)
     ).to.throw(TypeError);
   });
 
   it("Should fail to deserialise a record with a POD with an invalid raw entry value", () => {
     expect(() =>
-      gpcPCDPrescribedPODValuesFromSimplifiedJSON(`{
-        "somePOD": { "entries": { "entry": {} } }
-      }`)
-    ).to.throw(TypeError);
-  });
-
-  it("Should fail to deserialise a record with a POD with an invalid signer's public key", () => {
-    expect(() =>
-      gpcPCDPrescribedPODValuesFromSimplifiedJSON(`{
-        "somePOD": { "signerPublicKey": "33a" }
+      podEntryRecordFromSimplifiedJSON(`{
+        "somePOD": { "entry": {} }
       }`)
     ).to.throw(TypeError);
   });

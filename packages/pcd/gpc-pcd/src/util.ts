@@ -2,12 +2,11 @@ import {
   PODName,
   PODRawValue,
   POD_NAME_REGEX,
-  checkPublicKeyFormat,
   podValueFromRawValue,
   podValueToRawValue
 } from "@pcd/pod";
 import JSONBig from "json-bigint";
-import { GPCPCDPrescribedPODValues } from "./GPCPCD";
+import { PODEntryRecord } from "./GPCPCD";
 
 const jsonBigSerializer = JSONBig({
   useNativeBigInt: true,
@@ -15,23 +14,23 @@ const jsonBigSerializer = JSONBig({
 });
 
 /**
- * Deserializes `GPCPCDPrescribedPODValues` from the simplified format produced by
- * {@link gpcPCDPrescribedPODValuesToSimplifiedJSON}.  Type information is inferred from
+ * Deserializes `PODEntryRecord` from the simplified format produced by
+ * {@link podEntryRecordToSimplifiedJSON}.  Type information is inferred from
  * the values in a way which should preserve hashing and circuit behavior, but
  * isn't guaranteed to be identical to the types before serialization.  For
  * instance, small numbers are always annotated as `int`, rather than
  * `cryptographic`.
  *
- * @param simplifiedJSON a string representation of `GPCPCDPrescribedPODValues`
- * @returns `GPCPCDPrescribedPODValues` deserialized from the string
+ * @param simplifiedJSON a string representation of `PODEntryRecord`
+ * @returns `PODEntryRecord` deserialized from the string
  * @throws if the serialized form is invalid
  */
-export function gpcPCDPrescribedPODValuesFromSimplifiedJSON(
+export function podEntryRecordFromSimplifiedJSON(
   simplifiedJSON: string
-): GPCPCDPrescribedPODValues {
+): PODEntryRecord {
   const simplifiedValues = jsonBigSerializer.parse(simplifiedJSON) as Record<
     PODName,
-    { entries?: Record<PODName, PODRawValue>; signerPublicKey?: string }
+    Record<PODName, PODRawValue>
   >;
 
   // Check shape of deserialised string.
@@ -45,103 +44,69 @@ export function gpcPCDPrescribedPODValuesFromSimplifiedJSON(
         ) &&
         // For each of its values,
         Object.values(simplifiedValues).every(
-          (podData) =>
-            // we should be dealing with an object
-            typeof podData === "object" &&
-            // containing at least one field,
-            Object.keys(podData).length >= 1 &&
-            // which should be either of 'entries' or 'signerPublicKey',
-            Object.keys(podData).every((key) =>
-              ["entries", "signerPublicKey"].includes(key)
+          (entries) =>
+            // we should be dealing with a non-trivial record mapping POD names
+            // to raw POD values.
+            typeof entries === "object" &&
+            Object.keys(entries).length > 0 &&
+            Object.keys(entries).every(
+              (key) =>
+                typeof key === "string" && key.match(POD_NAME_REGEX) !== null
             ) &&
-            // and the signer's public key is an appropriate string (if
-            // specified),
-            (podData.signerPublicKey === undefined ||
-              (typeof podData.signerPublicKey === "string" &&
-                checkPublicKeyFormat(podData.signerPublicKey) ===
-                  podData.signerPublicKey)) &&
-            // and the entries must form a record mapping strings to raw POD
-            // values.
-            (podData.entries === undefined ||
-              (typeof podData.entries === "object" &&
-                Object.keys(podData.entries).every(
-                  (key) => typeof key === "string"
-                ) &&
-                Object.values(podData.entries).every((value) =>
-                  ["bigint", "string"].includes(typeof value)
-                )))
+            Object.values(entries).every((value) =>
+              ["bigint", "string"].includes(typeof value)
+            )
         )
       )
     )
   ) {
-    throw new TypeError(
-      `Invalid serialised GPCPCDPrescribedPODValues: ${simplifiedJSON}`
-    );
+    throw new TypeError(`Invalid serialised PODEntryRecord: ${simplifiedJSON}`);
   }
 
-  const prescribedValues = Object.fromEntries(
+  const entryRecord: PODEntryRecord = Object.fromEntries(
     Object.entries(simplifiedValues).map(([podName, data]) => [
       podName,
-      {
-        ...(data.entries !== undefined
-          ? {
-              entries: Object.fromEntries(
-                Object.entries(data.entries).map(([entryName, rawValue]) => [
-                  entryName,
-                  podValueFromRawValue(rawValue)
-                ])
-              )
-            }
-          : {}),
-        ...(data.signerPublicKey !== undefined
-          ? { signerPublicKey: data.signerPublicKey }
-          : {})
-      }
+      Object.fromEntries(
+        Object.entries(data).map(([entryName, value]) => [
+          entryName,
+          podValueFromRawValue(value)
+        ])
+      )
     ])
-  ) as GPCPCDPrescribedPODValues;
+  );
 
-  return prescribedValues;
+  return entryRecord;
 }
 
 /**
- * Serializes `GPCPCDPrescribedPODValues` to a string in a simplified format optimized
- * for compactness and human readability.  Calling {@link
- * gpcPCDPrescribedPODValuesFromSimplifiedJSON} will reconstruct
- * `GPCPCDPrescribedPODValues` whose POD values will contain the same values and
- * behave the same in hashing and circuits, but the type information may not be
- * identical.
+ * Serializes `PODEntryRecord` to a string in a simplified format optimized for
+ * compactness and human readability.  Calling {@link
+ * podEntryRecordFromSimplifiedJSON} will reconstruct `PODEntryRecord` whose POD
+ * values will contain the same values and behave the same in hashing and
+ * circuits, but the type information may not be identical.
  *
  * @param toSerialize the prescribed values to serialize
  * @param space pretty-printing configuration, as defined by the corresponding
  *   argument to JSON.stringify.
  * @returns a string representation
  */
-export function gpcPCDPrescribedPODValuesToSimplifiedJSON(
-  toSerialize: GPCPCDPrescribedPODValues,
+export function podEntryRecordToSimplifiedJSON(
+  toSerialize: PODEntryRecord,
   space?: number
 ): string {
-  const simplifiedValues: Record<
+  const simplifiedEntryRecord: Record<
     PODName,
-    { entries?: Record<PODName, PODRawValue>; signerPublicKey?: string }
+    Record<PODName, PODRawValue>
   > = Object.fromEntries(
     Object.entries(toSerialize).map(([podName, data]) => [
       podName,
-      {
-        ...(data.entries !== undefined
-          ? {
-              entries: Object.fromEntries(
-                Object.entries(data.entries).map(([entryName, value]) => [
-                  entryName,
-                  podValueToRawValue(value)
-                ])
-              )
-            }
-          : {}),
-        ...(data.signerPublicKey !== undefined
-          ? { signerPublicKey: data.signerPublicKey }
-          : {})
-      }
+      Object.fromEntries(
+        Object.entries(data).map(([entryName, value]) => [
+          entryName,
+          podValueToRawValue(value)
+        ])
+      )
     ])
   );
-  return jsonBigSerializer.stringify(simplifiedValues, null, space);
+  return jsonBigSerializer.stringify(simplifiedEntryRecord, null, space);
 }

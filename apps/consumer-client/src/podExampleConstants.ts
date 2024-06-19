@@ -87,14 +87,13 @@ export const EXAMPLE_MEMBERSHIP_LISTS = `{
   ]
 }`;
 
-export const EXAMPLE_PRESCRIBED_VALUES = `{
+export const EXAMPLE_PRESCRIBED_ENTRIES = `{
   "examplePOD": {
-    "entries": {
-      "A": 123
-    },
-    "signerPublicKey": "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
-  },
-  "cardPOD": {
-    "signerPublicKey": "su2CUR47c1us1FwPUN3RNZWzit9nmya2QD60Y/iffxI"
+    "A": 123
   }
+}`;
+
+export const EXAMPLE_PRESCRIBED_SIGNER_PUBLIC_KEYS = `{
+  "examplePOD": "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
+  "cardPOD": "su2CUR47c1us1FwPUN3RNZWzit9nmya2QD60Y/iffxI"
 }`;

@@ -14,7 +14,7 @@ import {
   GPCPCD,
   GPCPCDArgs,
   GPCPCDPackage,
-  gpcPCDPrescribedPODValuesFromSimplifiedJSON
+  podEntryRecordFromSimplifiedJSON
 } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdGetRequestUrl,
@@ -36,7 +36,8 @@ import { GPC_ARTIFACT_CONFIG, ZUPASS_URL } from "../../constants";
 import {
   EXAMPLE_GPC_CONFIG,
   EXAMPLE_MEMBERSHIP_LISTS,
-  EXAMPLE_PRESCRIBED_VALUES
+  EXAMPLE_PRESCRIBED_ENTRIES,
+  EXAMPLE_PRESCRIBED_SIGNER_PUBLIC_KEYS
 } from "../../podExampleConstants";
 
 export default function Page(): JSX.Element {
@@ -46,8 +47,11 @@ export default function Page(): JSX.Element {
   const [membershipLists, setMembershipLists] = useState(
     EXAMPLE_MEMBERSHIP_LISTS
   );
-  const [prescribedValues, setPrescribedValues] = useState(
-    EXAMPLE_PRESCRIBED_VALUES
+  const [prescribedEntries, setPrescribedEntries] = useState(
+    EXAMPLE_PRESCRIBED_ENTRIES
+  );
+  const [prescribedSignerPublicKeys, setPrescribedSignerPublicKeys] = useState(
+    EXAMPLE_PRESCRIBED_SIGNER_PUBLIC_KEYS
   );
   const [watermark, setWatermark] = useState("example watermark");
   const [proofConfig, setProofConfig] = useState(EXAMPLE_GPC_CONFIG);
@@ -67,7 +71,8 @@ export default function Page(): JSX.Element {
     onVerified,
     proofConfig,
     emptyStrToUndefined(membershipLists),
-    emptyStrToUndefined(prescribedValues),
+    emptyStrToUndefined(prescribedEntries),
+    emptyStrToUndefined(prescribedSignerPublicKeys),
     emptyStrToUndefined(watermark),
     emptyStrToUndefined(externalNullifier)
   );
@@ -100,7 +105,8 @@ export default function Page(): JSX.Element {
               "This is a request for a GPC proof from the Zupass example client.",
               proofConfig,
               emptyStrToUndefined(membershipLists),
-              emptyStrToUndefined(prescribedValues),
+              emptyStrToUndefined(prescribedEntries),
+              emptyStrToUndefined(prescribedSignerPublicKeys),
               emptyStrToUndefined(watermark),
               emptyStrToUndefined(externalNullifier)
             )
@@ -120,13 +126,23 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
-        Prescribed values (or empty for none):
+        Prescribed entries (or empty for none):
         <textarea
           cols={45}
-          rows={15}
-          value={prescribedValues}
+          rows={5}
+          value={prescribedEntries}
           onChange={(e): void => {
-            setPrescribedValues(e.target.value);
+            setPrescribedEntries(e.target.value);
+          }}
+        />
+        <br />
+        Prescribed signers' public keys (or empty for none):
+        <textarea
+          cols={45}
+          rows={5}
+          value={prescribedSignerPublicKeys}
+          onChange={(e): void => {
+            setPrescribedSignerPublicKeys(e.target.value);
           }}
         />
         <br />
@@ -212,11 +228,11 @@ export default function Page(): JSX.Element {
  *
  * @param urlToZupassWebsite URL of the Zupass website
  * @param popupUrl Route where the useZupassPopupSetup hook is being served from
- * @param proofConfig Stringified GPCProofConfig
- * @param membershipLists Stringified PODMembershipLists
- * @param prescribedValues Stringified GPCPCDPrescribedValues
+ * @param proofConfig Stringified `GPCProofConfig`
+ * @param membershipLists Stringified `PODMembershipLists`
+ * @param prescribedEntries Stringified `PODEntryRecord`
  * @param watermark Challenge to watermark this proof to
- * @param externalNullifier Optional unique identifier for this GPCPCD
+ * @param externalNullifier Optional unique identifier for this `GPCPCD`
  */
 export function openGPCPopup(
   urlToZupassWebsite: string,
@@ -225,7 +241,8 @@ export function openGPCPopup(
   popupDescription: string,
   proofConfig: string,
   membershipLists?: string,
-  prescribedValues?: string,
+  prescribedEntries?: string,
+  prescribedSignerPublicKeys?: string,
   watermark?: string,
   externalNullifier?: string
 ): void {
@@ -256,7 +273,11 @@ export function openGPCPopup(
       validatorParams: {
         proofConfig,
         membershipLists,
-        prescribedValues
+        prescribedEntries,
+        prescribedSignerPublicKeys:
+          prescribedSignerPublicKeys !== undefined
+            ? JSON.parse(prescribedSignerPublicKeys)
+            : undefined
       }
     },
     identity: {
@@ -306,7 +327,8 @@ function useGPCProof(
   onVerified: (valid: boolean, err: string | undefined) => void,
   proofConfig: string,
   membershipLists?: string,
-  prescribedValues?: string,
+  prescribedEntries?: string,
+  prescribedSignerPublicKeys?: string,
   watermark?: string,
   externalNullifier?: string
 ): { pcd: GPCPCD | undefined; error: Error | undefined } {
@@ -319,7 +341,8 @@ function useGPCProof(
         gpcPCD,
         proofConfig,
         membershipLists,
-        prescribedValues,
+        prescribedEntries,
+        prescribedSignerPublicKeys,
         watermark,
         externalNullifier
       ).then((info) => onVerified(info.valid, info.err));
@@ -328,7 +351,8 @@ function useGPCProof(
     gpcPCD,
     proofConfig,
     membershipLists,
-    prescribedValues,
+    prescribedEntries,
+    prescribedSignerPublicKeys,
     watermark,
     externalNullifier,
     onVerified
@@ -344,7 +368,8 @@ async function verifyProof(
   pcd: GPCPCD,
   proofConfig: string,
   membershipLists?: string,
-  prescribedValues?: string,
+  prescribedEntries?: string,
+  prescribedSignerPublicKeys?: string,
   watermark?: string,
   externalNullifier?: string
 ): Promise<{ valid: boolean; err?: string }> {
@@ -388,47 +413,48 @@ async function verifyProof(
     return { valid: false, err: "Membership lists do not match." };
   }
 
-  // Check that revealed values match up with prescribed values.
-  if (prescribedValues !== undefined) {
-    const deserialisedPrescribedValues =
-      gpcPCDPrescribedPODValuesFromSimplifiedJSON(prescribedValues);
+  // Check that revealed entries match up with prescribed entries.
+  if (prescribedEntries !== undefined) {
+    const deserialisedPrescribedEntries =
+      podEntryRecordFromSimplifiedJSON(prescribedEntries);
 
-    for (const [podName, podData] of Object.entries(
-      deserialisedPrescribedValues
+    for (const [podName, podEntries] of Object.entries(
+      deserialisedPrescribedEntries
     )) {
       const revealedPODData = pcd.claim.revealed.pods[podName];
-      if (
-        podData.signerPublicKey !== undefined &&
-        podData.signerPublicKey !== revealedPODData.signerPublicKey
-      ) {
+
+      for (const [entryName, entryValue] of Object.entries(podEntries)) {
+        if (revealedPODData.entries?.[entryName] === undefined) {
+          return {
+            valid: false,
+            err: `Entry ${entryName} of POD ${podName} is undefined while it is prescribed the value ${entryValue}.`
+          };
+        } else if (
+          podValueHash(revealedPODData.entries[entryName]) !==
+          podValueHash(entryValue)
+        ) {
+          return {
+            valid: false,
+            err: `Entry ${entryName} of POD ${podName} has value ${revealedPODData.entries[entryName]} while it is prescribed the value ${entryValue}.`
+          };
+        }
+      }
+    }
+  }
+
+  // Check that revealed signers' public keys match up with prescribed signers' public keys.
+  if (prescribedSignerPublicKeys !== undefined) {
+    const deserialisedPrescribedSignerPublicKeys: Record<string, string> =
+      JSON.parse(prescribedSignerPublicKeys);
+    for (const [podName, signerPublicKey] of Object.entries(
+      deserialisedPrescribedSignerPublicKeys
+    )) {
+      const revealedPODData = pcd.claim.revealed.pods[podName];
+      if (signerPublicKey !== revealedPODData.signerPublicKey) {
         return {
           valid: false,
           err: `Signer's public key for POD ${podName} does not agree with prescribed value.`
         };
-      }
-      if (podData.entries !== undefined) {
-        if (revealedPODData.entries === undefined) {
-          return {
-            valid: false,
-            err: `No POD entries for POD ${podName} are revealed while there are prescribed values for this POD.`
-          };
-        }
-        for (const [entryName, entryValue] of Object.entries(podData.entries)) {
-          if (revealedPODData.entries[entryName] === undefined) {
-            return {
-              valid: false,
-              err: `Entry ${entryName} of POD ${podName} is undefined while it is prescribed the value ${entryValue}.`
-            };
-          } else if (
-            podValueHash(revealedPODData.entries[entryName]) !==
-            podValueHash(entryValue)
-          ) {
-            return {
-              valid: false,
-              err: `Entry ${entryName} of POD ${podName} has value ${revealedPODData.entries[entryName]} while it is prescribed the value ${entryValue}.`
-            };
-          }
-        }
       }
     }
   }
