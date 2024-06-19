@@ -287,39 +287,26 @@ function validateInputPOD(
 
   // Deserialise provided parameters
   let proofConfig: GPCProofConfig | undefined;
+  let membershipLists: PODMembershipLists | undefined;
+  let prescribedEntries: PODEntryRecord | undefined;
+
   try {
     proofConfig =
       params.proofConfig !== undefined
         ? deserializeGPCProofConfig(params.proofConfig)
         : undefined;
-  } catch (e) {
-    if (e instanceof TypeError) {
-      params.notFoundMessage = e.message;
-      return false;
-    }
-    throw e;
-  }
 
-  let membershipLists: PODMembershipLists | undefined;
-
-  try {
     membershipLists =
       params.membershipLists !== undefined
         ? podMembershipListsFromSimplifiedJSON(params.membershipLists)
         : undefined;
-  } catch (_) {
-    params.notFoundMessage = "Error deserialising membership lists.";
-    return false;
-  }
 
-  let prescribedEntries: PODEntryRecord | undefined;
-  try {
     prescribedEntries =
       params.prescribedEntries !== undefined
         ? podEntryRecordFromSimplifiedJSON(params.prescribedEntries)
         : undefined;
   } catch (e) {
-    if (e instanceof TypeError) {
+    if (e instanceof TypeError || e instanceof Error) {
       params.notFoundMessage = e.message;
       return false;
     }
