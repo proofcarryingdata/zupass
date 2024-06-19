@@ -94,7 +94,6 @@ export class GenericIssuanceService {
   private pipelineSubservice: PipelineSubservice;
   private userSubservice: UserSubservice;
   private credentialSubservice: CredentialSubservice;
-  private emailService: EmailService;
 
   public constructor(
     context: ApplicationContext,
@@ -121,7 +120,6 @@ export class GenericIssuanceService {
     this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
     this.emailDB = new PipelineEmailDB(this.context.dbPool);
     this.pipelineAtomDB = new InMemoryPipelineAtomDB();
-    this.emailService = emailService;
     this.userSubservice = new UserSubservice(
       context,
       stytchClient,
