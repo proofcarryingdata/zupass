@@ -16,3 +16,7 @@ export function getOutdatedBrowserErrorMessage(): string {
     : "If you are still having issues, please send an email to support@zupass.org.";
   return outdatedBrowserErrorMessage;
 }
+
+export function getOOMErrorMessage(): string {
+  return `Out of memory! Please try closing the other tabs in your browser and reloading this page to try proving again.`;
+}
