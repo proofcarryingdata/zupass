@@ -6,6 +6,8 @@ import {
   ZKEdDSAEventTicketPCDTypeName
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 
+export class ZuAuthAuthenticationError extends Error {}
+
 /**
  * Authenticates a ticket PCD.
  *
@@ -31,14 +33,15 @@ export async function authenticate(
   const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(serializedPCD.pcd);
 
   if (!(await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
-    throw new Error("ZK ticket PCD is not valid");
+    throw new ZuAuthAuthenticationError("ZK ticket PCD is not valid");
   }
 
   if (pcd.claim.watermark.toString() !== watermark) {
-    throw new Error("PCD watermark doesn't match");
+    throw new ZuAuthAuthenticationError("PCD watermark doesn't match");
   }
 
   const publicKeys = config.map((em) => em.publicKey);
+  const eventIds = new Set(config.map((em) => em.eventId));
   const productIds = new Set(
     // Product ID is optional, so it's important to filter out undefined values
     config
@@ -52,8 +55,18 @@ export async function authenticate(
       isEqualEdDSAPublicKey(pubKey, pcd.claim.signer)
     )
   ) {
-    throw new Error(
+    throw new ZuAuthAuthenticationError(
       "Signing key does not match any of the configured public keys"
+    );
+  }
+
+  if (
+    eventIds.size > 0 &&
+    pcd.claim.partialTicket.eventId &&
+    !eventIds.has(pcd.claim.partialTicket.eventId)
+  ) {
+    throw new ZuAuthAuthenticationError(
+      "Event ID does not match any of the configured event IDs"
     );
   }
 
@@ -62,7 +75,7 @@ export async function authenticate(
     pcd.claim.partialTicket.productId &&
     !productIds.has(pcd.claim.partialTicket.productId)
   ) {
-    throw new Error(
+    throw new ZuAuthAuthenticationError(
       "Product ID does not match any of the configured product IDs"
     );
   }

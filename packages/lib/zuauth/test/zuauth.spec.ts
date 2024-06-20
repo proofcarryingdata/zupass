@@ -19,7 +19,7 @@ import "mocha";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
 import { generateSnarkMessageHash } from "../../util/src/SNARKHelpers";
-import { authenticate } from "../src/server";
+import { ZuAuthAuthenticationError, authenticate } from "../src/server";
 import { constructZkTicketProofUrl } from "../src/zuauth";
 
 async function makeTestTicket(
@@ -159,6 +159,7 @@ describe("zuauth should work", async function () {
   it("should not authenticate PCDs with the wrong public key", async function () {
     const newPrivKey = newEdDSAPrivateKey();
     const publicKey = await getEdDSAPublicKey(newPrivKey);
+    let thrown = false;
 
     try {
       await authenticate(JSON.stringify(serializedZKPCD), watermark, [
@@ -171,15 +172,17 @@ describe("zuauth should work", async function () {
           publicKey
         }
       ]);
-      assert(false, "Should not reach this point due to exception");
     } catch (e) {
-      expect(e).to.exist;
+      expect(e instanceof ZuAuthAuthenticationError).to.be.true;
+      thrown = true;
     }
+    expect(thrown).to.be.true;
   });
 
   it("should not authenticate PCDs with the wrong watermark", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
     const newWatermark = generateSnarkMessageHash("new watermark").toString();
+    let thrown = false;
 
     try {
       await authenticate(JSON.stringify(serializedZKPCD), newWatermark, [
@@ -192,14 +195,16 @@ describe("zuauth should work", async function () {
           publicKey
         }
       ]);
-      assert(false, "Should not reach this point due to exception");
     } catch (e) {
-      expect(e).to.exist;
+      expect(e instanceof ZuAuthAuthenticationError).to.be.true;
+      thrown = true;
     }
+    expect(thrown).to.be.true;
   });
 
   it("should not authenticate PCDs with the wrong event ID", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
+    let thrown = false;
 
     try {
       await authenticate(JSON.stringify(serializedZKPCD), watermark, [
@@ -212,14 +217,16 @@ describe("zuauth should work", async function () {
           publicKey
         }
       ]);
-      assert(false, "Should not reach this point due to exception");
     } catch (e) {
-      expect(e).to.exist;
+      expect(e instanceof ZuAuthAuthenticationError).to.be.true;
+      thrown = true;
     }
+    expect(thrown).to.be.true;
   });
 
   it("should not authenticate PCDs with the wrong product ID", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
+    let thrown = false;
 
     try {
       await authenticate(JSON.stringify(serializedZKPCD), watermark, [
@@ -232,10 +239,11 @@ describe("zuauth should work", async function () {
           publicKey
         }
       ]);
-      assert(false, "Should not reach this point due to exception");
     } catch (e) {
-      expect(e).to.exist;
+      expect(e instanceof ZuAuthAuthenticationError).to.be.true;
+      thrown = true;
     }
+    expect(thrown).to.be.true;
   });
 
   it("should construct URLs for popup windows", async function () {
