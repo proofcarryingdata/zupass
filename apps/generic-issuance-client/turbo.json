@@ -1,10 +1,10 @@
 {
   "extends": ["//"],
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "dotEnv": [".env"],
       "inputs": [
+        ".env",
         "$TURBO_DEFAULT$",
         "public/favicon.svg",
         "public/index.html",
