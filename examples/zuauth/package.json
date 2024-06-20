@@ -11,7 +11,7 @@
   "dependencies": {
     "@pcd/passport-interface": "^0.11.2",
     "@pcd/zuauth": "1.4.2",
-    "iron-session": "^8.0.1",
+    "iron-session": "^8.0.2",
     "next": "^14.1.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
@@ -19,6 +19,7 @@
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.11.1",
     "@pcd/tsconfig": "0.11.1",
+    "@types/cookie": "^0.6.0",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
