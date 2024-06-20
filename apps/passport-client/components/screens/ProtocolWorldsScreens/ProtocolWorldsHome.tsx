@@ -1,3 +1,4 @@
+import { ProtocolWorldsFolderName } from "@pcd/passport-interface";
 import { Separator } from "@pcd/passport-ui";
 import { useEffect } from "react";
 import styled from "styled-components";
@@ -30,8 +31,8 @@ export function ProtocolWorldsHome(): JSX.Element {
       rootStyle.removeProperty("--accent-lite");
     };
   }, []);
-  const foldersInFolder = useFolders("Protocol Worlds");
-  const pcdsInFolder = usePCDsInFolder("Protocol Worlds");
+  const foldersInFolder = useFolders(ProtocolWorldsFolderName);
+  const pcdsInFolder = usePCDsInFolder(ProtocolWorldsFolderName);
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
   return (
     <>
