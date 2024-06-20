@@ -18,5 +18,5 @@ export function getOutdatedBrowserErrorMessage(): string {
 }
 
 export function getOOMErrorMessage(): string {
-  return `Out of memory! Please try closing the other tabs in your browser and reloading this page to try proving again.`;
+  return `Oops! Please try closing the other tabs in your browser and reloading this page to try again.`;
 }
