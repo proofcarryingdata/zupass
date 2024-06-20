@@ -106,6 +106,14 @@ export function isEdgeCityFolder(folderPath: string): boolean {
   return parts.length === 1 && parts[0] === EdgeCityFolderName;
 }
 
+/**
+ * Check if a folder path is the Protocol Worlds folder.
+ */
+export function isProtocolWorldsFolder(folderPath: string): boolean {
+  const parts = splitPath(folderPath);
+  return parts.length === 1 && parts[0] === "Protocol Worlds";
+}
+
 export function bigintToUint8Array(bigint: bigint): Uint8Array {
   const hex = bigint.toString(16).padStart(64, "0");
   const bytes = [];
