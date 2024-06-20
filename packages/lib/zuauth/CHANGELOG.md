@@ -1,5 +1,17 @@
 # @pcd/zuauth
 
+## 1.4.2
+
+### Patch Changes
+
+- fix multi-pcd duplicate issue
+
+## 1.4.1
+
+### Patch Changes
+
+- Upgrade passport-interface version
+
 ## 1.4.0
 
 ### Minor Changes

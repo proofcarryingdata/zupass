@@ -18,9 +18,8 @@ export function PipelineLatestDataSection({
 }): ReactNode {
   const [maximized, setMaximized] = useState(false);
   const stringifiedValue = useMemo(() => {
-    return (
-      latestAtoms?.map((log) => JSON.stringify(log, null, 2)).join("\n\n") ?? ""
-    );
+    if (!latestAtoms) return "";
+    return JSON.stringify(latestAtoms, null, 2);
   }, [latestAtoms]);
 
   if (!latestAtoms || !lastLoad) {

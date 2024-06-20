@@ -23,6 +23,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import {
+  ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage,
   isZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
@@ -152,20 +153,21 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         }
 
         setMultiProofsQueued(relevantPCDs.length);
-        const result = await Promise.all(
-          relevantPCDs.map(async (t) => {
-            const argsClone = _.clone(args) as ArgsOf<
-              typeof ZKEdDSAEventTicketPCDPackage
-            >;
-            argsClone.ticket.value = await EdDSATicketPCDPackage.serialize(
-              t as EdDSATicketPCD
-            );
-            const pcd = await pcdPackage.prove(args);
-            const serializedPCD = await pcdPackage.serialize(pcd);
-            setMultiProofsCompleted((c) => c + 1);
-            return serializedPCD;
-          })
-        );
+
+        const result: SerializedPCD<ZKEdDSAEventTicketPCD>[] = [];
+
+        for (const t of relevantPCDs) {
+          const argsClone = _.clone(args) as ArgsOf<
+            typeof ZKEdDSAEventTicketPCDPackage
+          >;
+          argsClone.ticket.value = await EdDSATicketPCDPackage.serialize(
+            t as EdDSATicketPCD
+          );
+          const pcd = await pcdPackage.prove(argsClone);
+          const serializedPCD = await pcdPackage.serialize(pcd);
+          setMultiProofsCompleted((c) => c + 1);
+          result.push(serializedPCD);
+        }
 
         onProve(undefined, undefined, undefined, result);
       } catch (e) {
