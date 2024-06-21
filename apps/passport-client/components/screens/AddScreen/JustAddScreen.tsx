@@ -1,4 +1,7 @@
-import { PCDAddRequest } from "@pcd/passport-interface";
+import {
+  PCDAddRequest,
+  ProtocolWorldsFolderName
+} from "@pcd/passport-interface";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
@@ -12,6 +15,8 @@ import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { PCDCard } from "../../shared/PCDCard";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
+import { ProtocolWorldsStyling } from "../ProtocolWorldsScreens/ProtocolWorldsStyling";
+import { useTensionConfetti } from "../ProtocolWorldsScreens/useTensionConfetti";
 
 /**
  * Screen that allows the user to respond to a `PCDAddRequest` and add
@@ -26,9 +31,13 @@ export function JustAddScreen({
   const [added, setAdded] = useState(false);
   const { error, pcd } = useDeserialized(request.pcd);
   const syncSettled = useIsSyncSettled();
+  const isProtocolWorlds = request.folder === ProtocolWorldsFolderName;
+  const [ref, setRef] = useState<HTMLElement | null>(null);
+  const confetti = useTensionConfetti(ref);
 
   const onAddClick = useCallback(async () => {
     try {
+      confetti();
       await dispatch({
         type: "add-pcds",
         pcds: [request.pcd],
@@ -38,7 +47,7 @@ export function JustAddScreen({
     } catch (e) {
       await err(dispatch, "Error Adding PCD", getErrorMessage(e));
     }
-  }, [dispatch, request.folder, request.pcd]);
+  }, [confetti, dispatch, request.folder, request.pcd]);
 
   let content;
 
@@ -47,10 +56,12 @@ export function JustAddScreen({
   } else if (!added) {
     content = (
       <>
-        <H2>{"ADD PCD".toUpperCase()}</H2>
+        <H2>
+          {isProtocolWorlds ? "TENSION DISCOVERED" : "ADD PCD".toUpperCase()}
+        </H2>
         <Spacer h={16} />
         {pcd && <PCDCard pcd={pcd} expanded={true} hideRemoveButton={true} />}
-        {request.folder && (
+        {!isProtocolWorlds && request.folder && (
           <div>
             PCD will be added to folder:
             <br /> <strong>{request.folder}</strong>
@@ -58,18 +69,23 @@ export function JustAddScreen({
         )}
         {error && JSON.stringify(error)}
         <Spacer h={16} />
-        <Button onClick={onAddClick}>Add</Button>
+        <Button onClick={onAddClick}>
+          {isProtocolWorlds ? "Collect" : "Add"}
+        </Button>
       </>
     );
+  } else if (isProtocolWorlds) {
+    window.location.href = "#/?folder=Protocol%2520Worlds";
   } else {
     content = <AddedPCD onCloseClick={(): void => window.close()} />;
   }
 
   return (
     <>
+      {isProtocolWorlds && <ProtocolWorldsStyling />}
       <MaybeModal fullScreen isProveOrAddScreen={true} />
       <AppContainer bg="gray">
-        <Container>
+        <Container ref={(r) => setRef(r)}>
           <Spacer h={16} />
           <AppHeader isProveOrAddScreen={true} />
           <Spacer h={16} />

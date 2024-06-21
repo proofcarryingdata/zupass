@@ -77,6 +77,7 @@ export * from "./edgecity";
 export * from "./ethlatam";
 export * from "./genericIssuanceTypes";
 export * from "./genericPretixTypes";
+export * from "./protocolworlds";
 export * from "./util/util";
 export * from "./vitalia";
 export * from "./zuconnect";
