@@ -15,6 +15,7 @@ import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { PCDCard } from "../../shared/PCDCard";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
+import { ProtocolWorldsStyling } from "../ProtocolWorldsScreens/ProtocolWorldsStyling";
 
 /**
  * Screen that allows the user to respond to a `PCDAddRequest` and add
@@ -77,6 +78,7 @@ export function JustAddScreen({
 
   return (
     <>
+      {isProtocolWorlds && <ProtocolWorldsStyling />}
       <MaybeModal fullScreen isProveOrAddScreen={true} />
       <AppContainer bg="gray">
         <Container>
