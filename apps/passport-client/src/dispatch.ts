@@ -60,7 +60,7 @@ import {
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
-import { findUserIdentityPCD, hasSetupPassword } from "./user";
+import { findUserIdentityPCD } from "./user";
 import {
   downloadAndMergeStorage,
   uploadSerializedStorage,
@@ -698,14 +698,6 @@ async function addPCDs(
   upsert?: boolean,
   folder?: string
 ): Promise<void> {
-  // Require user to set up a password before adding PCDs
-  if (state.self && !hasSetupPassword(state.self)) {
-    update({
-      modal: {
-        modalType: "require-add-password"
-      }
-    });
-  }
   const deserializedPCDs = await state.pcds.deserializeAll(pcds);
   state.pcds.addAll(deserializedPCDs, { upsert });
   if (folder !== undefined) {

@@ -1,4 +1,7 @@
-import { PCDAddRequest } from "@pcd/passport-interface";
+import {
+  PCDAddRequest,
+  ProtocolWorldsFolderName
+} from "@pcd/passport-interface";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
@@ -26,6 +29,7 @@ export function JustAddScreen({
   const [added, setAdded] = useState(false);
   const { error, pcd } = useDeserialized(request.pcd);
   const syncSettled = useIsSyncSettled();
+  const isProtocolWorlds = request.folder === ProtocolWorldsFolderName;
 
   const onAddClick = useCallback(async () => {
     try {
@@ -47,10 +51,12 @@ export function JustAddScreen({
   } else if (!added) {
     content = (
       <>
-        <H2>{"ADD PCD".toUpperCase()}</H2>
+        <H2>
+          {isProtocolWorlds ? "TENSION DISCOVERED" : "ADD PCD".toUpperCase()}
+        </H2>
         <Spacer h={16} />
         {pcd && <PCDCard pcd={pcd} expanded={true} hideRemoveButton={true} />}
-        {request.folder && (
+        {!isProtocolWorlds && request.folder && (
           <div>
             PCD will be added to folder:
             <br /> <strong>{request.folder}</strong>
@@ -58,9 +64,13 @@ export function JustAddScreen({
         )}
         {error && JSON.stringify(error)}
         <Spacer h={16} />
-        <Button onClick={onAddClick}>Add</Button>
+        <Button onClick={onAddClick}>
+          {isProtocolWorlds ? "Collect" : "Add"}
+        </Button>
       </>
     );
+  } else if (isProtocolWorlds) {
+    window.location.href = "#/?folder=Protocol%2520Worlds";
   } else {
     content = <AddedPCD onCloseClick={(): void => window.close()} />;
   }
