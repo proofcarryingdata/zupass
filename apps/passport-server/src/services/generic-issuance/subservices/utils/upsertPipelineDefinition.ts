@@ -169,11 +169,6 @@ export async function upsertPipelineDefinition(
       validatedNewDefinition.ownerUserId
     );
   }
-  await pipelineSubservice.saveLoadSummary(
-    validatedNewDefinition.id,
-    undefined
-  );
-  await pipelineSubservice.clearAtomsForPipeline(validatedNewDefinition.id);
 
   // purposely not awaited as this also performs a Pipeline load,
   // which can take an arbitrary amount of time.

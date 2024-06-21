@@ -21,7 +21,7 @@ import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../../core";
 import { icons } from "../../icons";
 import { AppContainer } from "../../shared/AppContainer";
 import {
-  CardContainerExpanded,
+  CardContainer,
   CardHeader,
   CardOutlineExpanded
 } from "../../shared/PCDCard";
@@ -336,7 +336,7 @@ function VerifiedAndKnownTicket({
   eventName: string;
 }): JSX.Element {
   return (
-    <CardContainerExpanded>
+    <CardContainer>
       <CardOutlineExpanded>
         <CardHeader col="var(--accent-lite)">
           <VerifyLine>Verified {eventName} Ticket</VerifyLine>
@@ -348,7 +348,7 @@ function VerifiedAndKnownTicket({
           <VerifyLine>SIGNED BY: {publicKeyName}</VerifyLine>
         </CardHeader>
       </CardOutlineExpanded>
-    </CardContainerExpanded>
+    </CardContainer>
   );
 }
 

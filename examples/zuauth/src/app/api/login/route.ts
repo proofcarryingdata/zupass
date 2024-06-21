@@ -14,6 +14,7 @@ import { NextRequest } from "next/server";
  * event config (public key, event ID, product ID).
  */
 export async function POST(req: NextRequest) {
+  const cookieStore = cookies();
   const body = await req.json();
   if (!body.pcd || !(typeof body.pcd === "string")) {
     console.error(`[ERROR] No PCD specified`);
@@ -21,10 +22,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const session = await getIronSession<SessionData>(
-      cookies() as any,
-      ironOptions
-    );
+    const session = await getIronSession<SessionData>(cookieStore, ironOptions);
     const pcd = await authenticate(body.pcd, session.watermark ?? "", config);
 
     session.user = pcd.claim.partialTicket;

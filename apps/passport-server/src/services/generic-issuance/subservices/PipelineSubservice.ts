@@ -319,13 +319,6 @@ export class PipelineSubservice {
     });
   }
 
-  /**
-   * Deletes all the {@link PipelineAtom}s for a given {@link Pipeline}.
-   */
-  public async clearAtomsForPipeline(pipelineId: string): Promise<void> {
-    await this.pipelineAtomDB.clear(pipelineId);
-  }
-
   public async handleSendPipelineEmail(
     pipelineId: string,
     email: PipelineEmailType

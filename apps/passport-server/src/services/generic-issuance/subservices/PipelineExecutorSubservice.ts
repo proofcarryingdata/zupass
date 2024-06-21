@@ -77,6 +77,7 @@ export class PipelineExecutorSubservice {
    */
   public async start(startLoadLoop?: boolean): Promise<void> {
     await this.loadAndInstantiatePipelines();
+
     if (startLoadLoop !== false) {
       await this.startPipelineLoadLoop();
     } else {
@@ -164,7 +165,7 @@ export class PipelineExecutorSubservice {
       }
 
       tracePipeline(pipelineSlot.definition);
-      traceUser(pipelineSlot?.owner);
+      traceUser(pipelineSlot.owner);
 
       if (pipelineSlot.instance) {
         logger(
@@ -182,11 +183,11 @@ export class PipelineExecutorSubservice {
 
       logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
-      pipelineSlot.definition = definition;
       pipelineSlot.instance = await instantiatePipeline(
         definition,
         this.instantiatePipelineArgs
       );
+      pipelineSlot.definition = definition;
 
       await this.performPipelineLoad(pipelineSlot);
     });

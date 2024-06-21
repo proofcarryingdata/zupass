@@ -1,4 +1,5 @@
 import { PCD } from "@pcd/pcd-types";
+import { sleep } from "@pcd/util";
 import _ from "lodash";
 import { useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
@@ -107,9 +108,24 @@ export function PCDCardList({
     return pcds[0];
   }, [pcds, selectedPCDID]);
 
-  const onClick = useCallback((id: string) => {
-    setSelectedPCDID(id);
-  }, []);
+  const onClick = useCallback(
+    async (id: string, cardContainer: HTMLDivElement | undefined) => {
+      if (selectedPCDID === id) return;
+
+      setSelectedPCDID(id);
+
+      if (cardContainer) {
+        await sleep(0);
+        cardContainer.scrollIntoView({
+          behavior: "instant",
+          block: "start",
+          inline: "nearest"
+        });
+        window.scrollBy(0, -50);
+      }
+    },
+    [selectedPCDID]
+  );
 
   return (
     <Container>
