@@ -314,9 +314,7 @@ export function isVirtualEntryName(
  * @returns an indicator of whether the given entry identifier is a virtual
  * entry identifier
  */
-export function isVirtualEntryIdentifier(
-  entryIdentifier: PODEntryIdentifier
-): boolean {
+export function isVirtualEntryIdentifier(entryIdentifier: string): boolean {
   return entryIdentifier.match(POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX) !== null;
 }
 

@@ -38,6 +38,7 @@ import {
   LIST_NONMEMBERSHIP,
   checkPODEntryIdentifier,
   checkPODEntryName,
+  isVirtualEntryIdentifier,
   isVirtualEntryName,
   listConfigFromProofConfig,
   resolvePODEntry,
@@ -177,6 +178,9 @@ function checkProofEntryConfig(
   );
 
   if (entryConfig.isOwnerID !== undefined) {
+    if (isVirtualEntryIdentifier(nameForErrorMessages)) {
+      throw new Error("Can't use isOwnerID on a virtual entry.");
+    }
     requireType(
       `${nameForErrorMessages}.isOwnerID`,
       entryConfig.isOwnerID,

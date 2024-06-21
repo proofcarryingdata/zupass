@@ -271,7 +271,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     expect(isVerified).to.be.true;
   });
 
-  it("should prove and verify a typical case with an equality check involving a virtual entry and a non-virtual entry in that order", async function () {
+  it("should prove and verify checking equality virtual to non-virtual", async function () {
     const { isVerified } = await gpcProofTest(
       {
         pods: {
@@ -296,7 +296,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     expect(isVerified).to.be.true;
   });
 
-  it("should prove and verify a typical case with an equality check involving two virtual entries", async function () {
+  it("should prove and verify checking equality virtual to virtual", async function () {
     const pod2 = POD.sign(sampleEntries2, privateKey);
     const { isVerified } = await gpcProofTest(
       {
