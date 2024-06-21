@@ -3,11 +3,32 @@ import { Identity } from "@semaphore-protocol/identity";
 import { Groth16Proof } from "snarkjs";
 
 /**
- * String specifying a named entry in a named object, in the format
- * `objectName.entryName`.  Each of the sub-parts should be a valid PODName,
- * checked by {@link POD_NAME_REGEX}.
+ * String specifying a named entry, virtual or otherwise, in a named object, in
+ * the format `objectName.entryName`.  Each of the sub-parts should be a valid
+ * PODName, checked by {@link POD_NAME_REGEX} or {@link POD_VIRTUAL_NAME_REGEX}.
+ *
+ * Examples: "ticket1.eventID", "award.$signerPublicKey"
  */
-export type PODEntryIdentifier = `${PODName}.${PODName}`;
+export type PODEntryIdentifier = `${PODName}.${PODName | PODVirtualEntryName}`;
+
+/**
+ * Regex matching legal entry identifiers for virtual POD entries; these are of
+ * the form `${PODName}.${PODVirtualEntryName}`.
+ */
+export const POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX = new RegExp(
+  /([A-Za-z_]\w*)\.\$(signerPublicKey)$/
+);
+
+/**
+ * String specifying valid virtual entry name.
+ */
+export type PODVirtualEntryName = "$signerPublicKey";
+
+/**
+ * Regex matching legal names for POD virtual entries. Matches
+ * `PODVirtualEntryName`.
+ */
+export const POD_VIRTUAL_NAME_REGEX = new RegExp(/^\$(signerPublicKey)$/);
 
 /**
  * Optional set of lists for checking POD entry (or tuple) value
@@ -42,35 +63,18 @@ export type TupleIdentifier = `${TuplePrefix}.${PODName}`;
 export type GPCIdentifier = `${string}_${string}`;
 
 /**
- * GPCProofConfig for a single POD entry, specifying which featuers and
- * constraints should be enabled for that entry.
+ * GPCProofConfig for a single generic POD entry, virtual or otherwise,
+ * specifying which features and constraints should be enabled for that entry.
  */
-export type GPCProofEntryConfig = {
+export type GPCProofEntryConfigCommon = {
   /**
    * Indicates whether this entry should be revealed in the proof.  Setting
    * this to `true` will result in the entry's value being included in
    * {@link GPCRevealedClaims}, and its hash being verified in
-   * {@link gpcVerify}.
+   * {@link gpcVerify}. Note that for signers' public keys, the absence
+   * of a config amounts to setting this to `true`.
    */
   isRevealed: boolean;
-
-  /**
-   * Indicates that this entry must match the public ID of the owner
-   * identity given in {@link GPCProofInputs}.  For Semaphore V3 this is
-   * the owner's Semaphore commitment (a cryptographic value).
-   *
-   * Comparison in the proof circuit is based on the hash produced by
-   * {@link podValueHash}.  This means values of different types can be
-   * considered equal if they are treated in the same way by circuits.
-   *
-   * If undefined or false, there is no owner-related constraint on this entry.
-   *
-   * This feature cannot be combined with `equalsEntry` on the same entry (since
-   * it shares the same constraints in the circuit).  However since equality
-   * constraints can be specified in either direction, you can still constrain
-   * an owner entry by specifying it on the non-owner entry.
-   */
-  isOwnerID?: boolean;
 
   /**
    * Indicates that this entry must be equal to another entry.  The other
@@ -83,10 +87,11 @@ export type GPCProofEntryConfig = {
    *
    * If undefined, there is no equality constraint.
    *
-   * This feature cannot be combined with `isOwnerID` on the same entry (since
-   * it shares the same constraints in the circuit).  However since equality
-   * constraints can be specified in either direction, you can still constrain
-   * an owner entry by specifying it on the non-owner entry.
+   * For non-virtual entries, this feature cannot be combined with `isOwnerID`
+   * on the same entry (since it shares the same constraints in the circuit).
+   * However since equality constraints can be specified in either direction,
+   * you can still constrain an owner entry by specifying it on the non-owner
+   * entry.
    */
   equalsEntry?: PODEntryIdentifier;
 
@@ -121,6 +126,30 @@ export type GPCProofEntryConfig = {
 };
 
 /**
+ * GPCProofConfig for a single non-virtual POD entry, specifying which features
+ * and constraints should be enabled for that entry.
+ */
+export type GPCProofEntryConfig = GPCProofEntryConfigCommon & {
+  /**
+   * Indicates that this entry must match the public ID of the owner
+   * identity given in {@link GPCProofInputs}.  For Semaphore V3 this is
+   * the owner's Semaphore commitment (a cryptographic value).
+   *
+   * Comparison in the proof circuit is based on the hash produced by
+   * {@link podValueHash}.  This means values of different types can be
+   * considered equal if they are treated in the same way by circuits.
+   *
+   * If undefined or false, there is no owner-related constraint on this entry.
+   *
+   * This feature cannot be combined with `equalsEntry` on the same entry (since
+   * it shares the same constraints in the circuit).  However since equality
+   * constraints can be specified in either direction, you can still constrain
+   * an owner entry by specifying it on the non-owner entry.
+   */
+  isOwnerID?: boolean;
+};
+
+/**
  * GPCProofConfig for a single POD object, specifying which featuers and
  * constraints should be enabled for that object and its entries.
  */
@@ -136,6 +165,14 @@ export type GPCProofObjectConfig = {
    * constrained in other ways based on other parts of this configuration.
    */
   entries: Record<PODName, GPCProofEntryConfig>;
+
+  /**
+   * The signer's public key of this object to be proven. The GPC can choose
+   * to simply reveal it or else hide it but constrain it to lie in a list or
+   * be equal to another object's signing key. If this configuration
+   * is undefined, the signer's public key will be revealed.
+   */
+  signerPublicKey?: GPCProofEntryConfigCommon;
 
   // TODO(POD-P3): Is there anything to configure at this level?  Or can we
   // collapose it?
@@ -378,10 +415,10 @@ export type GPCRevealedObjectClaims = {
   entries?: PODEntries;
 
   /**
-   * The EdDSA public key of the isuer of this POD.  The proof confirms
-   * that the POD has a valid signature under this key.
+   * Potentially redacted EdDSA public key of the issuer of this POD.  The proof
+   * confirms that the POD has a valid signature under this key.
    */
-  signerPublicKey: string;
+  signerPublicKey?: string;
 };
 
 /**

@@ -1,5 +1,11 @@
 import { ProtoPODGPC } from "@pcd/gpcircuits";
-import { POD, PODCryptographicValue, PODValue, PODValueTuple } from "@pcd/pod";
+import {
+  POD,
+  PODCryptographicValue,
+  PODEdDSAPublicKeyValue,
+  PODValue,
+  PODValueTuple
+} from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -22,6 +28,7 @@ import {
   expectAsyncError,
   ownerIdentity,
   privateKey,
+  privateKey2,
   sampleEntries,
   sampleEntries2
 } from "./common";
@@ -178,61 +185,141 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     }
   });
 
-  it("should prove and verify a typical case", async function () {
-    const pod1 = POD.sign(sampleEntries, privateKey);
-    const proofConfig: GPCProofConfig = {
-      pods: {
-        pod1: {
-          entries: {
-            A: { isRevealed: true },
-            E: {
-              isRevealed: false,
-              equalsEntry: "pod1.A",
-              isMemberOf: "list1"
-            },
-            owner: { isRevealed: false, isOwnerID: true }
-          }
+  const pod1 = POD.sign(sampleEntries, privateKey);
+  const typicalProofConfig: GPCProofConfig = {
+    pods: {
+      pod1: {
+        entries: {
+          A: { isRevealed: true },
+          E: {
+            isRevealed: false,
+            equalsEntry: "pod1.A",
+            isMemberOf: "list1"
+          },
+          owner: { isRevealed: false, isOwnerID: true }
+        },
+        signerPublicKey: {
+          isRevealed: false,
+          isMemberOf: "admissiblePubKeys"
         }
       }
-    };
-    const proofInputs: GPCProofInputs = {
-      pods: { pod1 },
-      owner: {
-        semaphoreV3: ownerIdentity,
-        externalNullifier: { type: "int", value: 42n }
-      },
-      membershipLists: { list1: [sampleEntries.F, sampleEntries.E] },
-      watermark: { type: "int", value: 1337n }
-    };
-    const expectedRevealedClaims: GPCRevealedClaims = {
-      pods: {
-        pod1: {
-          entries: { A: { type: "int", value: 123n } },
-          signerPublicKey: pod1.signerPublicKey
+    }
+  };
+  const typicalProofInputs: GPCProofInputs = {
+    pods: { pod1 },
+    owner: {
+      semaphoreV3: ownerIdentity,
+      externalNullifier: { type: "int", value: 42n }
+    },
+    membershipLists: {
+      list1: [sampleEntries.F, sampleEntries.E],
+      admissiblePubKeys: [
+        pod1.signerPublicKey,
+        "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
+        "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b",
+        "f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585",
+        "2af47e1aaf8f0450b9fb2e429042708ec7d173c4ac4329747db1063b78db4e0d"
+      ].map(PODEdDSAPublicKeyValue)
+    },
+    watermark: { type: "int", value: 1337n }
+  };
+  const expectedRevealedClaimsForTypicalCase: GPCRevealedClaims = {
+    pods: {
+      pod1: {
+        entries: { A: { type: "int", value: 123n } }
+      }
+    },
+    owner: {
+      externalNullifier: { type: "int", value: 42n },
+      nullifierHash: poseidon2([
+        makeWatermarkSignal({ type: "int", value: 42n }),
+        ownerIdentity.nullifier
+      ])
+    },
+    membershipLists: typicalProofInputs.membershipLists,
+    watermark: { type: "int", value: 1337n }
+  };
+
+  it("should prove and verify a typical case", async function () {
+    const { isVerified } = await gpcProofTest(
+      typicalProofConfig,
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
+    expect(isVerified).to.be.true;
+  });
+
+  it("should prove and verify checking equality non-virtual to virtual", async function () {
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          pod1: {
+            ...typicalProofConfig.pods.pod1,
+            entries: {
+              ...typicalProofConfig.pods.pod1.entries,
+              pubKey: {
+                isRevealed: false,
+                equalsEntry: "pod1.$signerPublicKey"
+              }
+            }
+          }
         }
       },
-      owner: {
-        externalNullifier: { type: "int", value: 42n },
-        nullifierHash: poseidon2([
-          makeWatermarkSignal({ type: "int", value: 42n }),
-          ownerIdentity.nullifier
-        ])
-      },
-      membershipLists: proofInputs.membershipLists,
-      watermark: { type: "int", value: 1337n }
-    };
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
+    expect(isVerified).to.be.true;
+  });
 
+  it("should prove and verify checking equality virtual to non-virtual", async function () {
     const { isVerified } = await gpcProofTest(
-      proofConfig,
-      proofInputs,
-      expectedRevealedClaims
+      {
+        pods: {
+          pod1: {
+            entries: {
+              ...typicalProofConfig.pods.pod1.entries,
+              pubKey: {
+                isRevealed: false
+              }
+            },
+            signerPublicKey: {
+              isRevealed: false,
+              isMemberOf: "admissiblePubKeys",
+              equalsEntry: "pod1.pubKey"
+            }
+          }
+        }
+      },
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
+    expect(isVerified).to.be.true;
+  });
+
+  it("should prove and verify checking equality virtual to virtual", async function () {
+    const pod2 = POD.sign(sampleEntries2, privateKey);
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          ...typicalProofConfig.pods,
+          pod2: {
+            entries: { attendee: { isRevealed: false } },
+            signerPublicKey: {
+              isRevealed: false,
+              equalsEntry: "pod1.$signerPublicKey"
+            }
+          }
+        }
+      },
+      { ...typicalProofInputs, pods: { pod1, pod2 } },
+      expectedRevealedClaimsForTypicalCase
     );
     expect(isVerified).to.be.true;
   });
 
   it("should prove and verify a complex case", async function () {
     const pod1 = POD.sign(sampleEntries, privateKey);
-    const pod2 = POD.sign(sampleEntries2, privateKey);
+    const pod2 = POD.sign(sampleEntries2, privateKey2);
     const externalNullifier: PODValue = {
       type: "string",
       value: "nullify me if you dare!"
@@ -251,6 +338,9 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
               isOwnerID: true,
               isMemberOf: "goats"
             }
+          },
+          signerPublicKey: {
+            isRevealed: false
           }
         },
         pod1: {
@@ -258,6 +348,9 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             G: { isRevealed: true },
             otherTicketID: { isRevealed: false },
             owner: { isRevealed: false, isOwnerID: true }
+          },
+          signerPublicKey: {
+            isRevealed: false
           }
         }
       },
@@ -274,6 +367,10 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             "pod1.owner"
           ],
           isMemberOf: "list2"
+        },
+        pubKeyPair: {
+          entries: ["pod1.$signerPublicKey", "pod2.$signerPublicKey"],
+          isMemberOf: "admissiblePubKeyPairs"
         }
       }
     };
@@ -332,18 +429,28 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
               value: BigInt(value)
             } as PODCryptographicValue;
           })
-          .concat([sampleEntries2.attendee])
+          .concat([sampleEntries2.attendee]),
+        admissiblePubKeyPairs: [
+          [pod1.signerPublicKey, pod2.signerPublicKey],
+          [
+            "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
+            "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b"
+          ],
+          [
+            "f27205e5ceeaad24025652cc9f6f18cee5897266f8c0aac5b702d48e0dea3585",
+            "2af47e1aaf8f0450b9fb2e429042708ec7d173c4ac4329747db1063b78db4e0d"
+          ]
+        ].map(([key1, key2]) => [
+          PODEdDSAPublicKeyValue(key1),
+          PODEdDSAPublicKeyValue(key2)
+        ])
       },
       watermark
     };
     const expectedRevealedClaims: GPCRevealedClaims = {
       pods: {
         pod1: {
-          entries: { G: { type: "int", value: 7n } },
-          signerPublicKey: pod1.signerPublicKey
-        },
-        pod2: {
-          signerPublicKey: pod2.signerPublicKey
+          entries: { G: { type: "int", value: 7n } }
         }
       },
       owner: {
@@ -830,6 +937,28 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       },
       "ReferenceError",
       'Configuration reveals entry "wrongPODName.ticketID" but the POD is not revealed in claims.'
+    );
+
+    await expectAsyncError(
+      async () => {
+        await gpcVerify(
+          proof,
+          boundConfig,
+          {
+            ...revealedClaims,
+            pods: {
+              ...revealedClaims.pods,
+              wrongPOD: {
+                signerPublicKey:
+                  "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f"
+              }
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "ReferenceError",
+      "Revealed claims contain POD(s) not present in the proof configuration. Revealed claims contain PODs somePodName,wrongPOD while the configuration contains PODs somePodName."
     );
 
     await expectAsyncError(

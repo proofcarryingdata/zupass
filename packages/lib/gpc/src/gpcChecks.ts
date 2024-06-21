@@ -37,13 +37,16 @@ import {
   LIST_MEMBERSHIP,
   LIST_NONMEMBERSHIP,
   checkPODEntryIdentifier,
+  checkPODEntryName,
+  isVirtualEntryIdentifier,
+  isVirtualEntryName,
   listConfigFromProofConfig,
+  resolvePODEntry,
   resolvePODEntryIdentifier,
   resolvePODEntryOrTupleIdentifier,
   splitCircuitIdentifier,
   widthOfEntryOrTuple
 } from "./gpcUtil";
-
 // TODO(POD-P2): Split out the parts of this which should be public from
 // internal implementation details.  E.g. the returning of ciruit parameters
 // isn't relevant to checking objects after deserialization.
@@ -151,9 +154,15 @@ function checkProofObjConfig(
 
   let nEntries = 0;
   for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
-    checkPODName(entryName);
+    checkPODEntryName(entryName, true);
     checkProofEntryConfig(`${nameForErrorMessages}.${entryName}`, entryConfig);
     nEntries++;
+  }
+  if (objConfig.signerPublicKey !== undefined) {
+    checkProofEntryConfig(
+      `${nameForErrorMessages}.$signerPublicKey`,
+      objConfig.signerPublicKey
+    );
   }
   return nEntries;
 }
@@ -169,6 +178,9 @@ function checkProofEntryConfig(
   );
 
   if (entryConfig.isOwnerID !== undefined) {
+    if (isVirtualEntryIdentifier(nameForErrorMessages)) {
+      throw new Error("Can't use isOwnerID on a virtual entry.");
+    }
     requireType(
       `${nameForErrorMessages}.isOwnerID`,
       entryConfig.isOwnerID,
@@ -355,7 +367,8 @@ export function checkProofInputsForConfig(
     // Examine config for each entry.
     for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
       // This named entry should exist in the given POD.
-      const podValue = pod.content.getValue(entryName);
+      const podValue = resolvePODEntry(entryName, pod);
+
       if (podValue === undefined) {
         throw new ReferenceError(
           `Configured entry ${objName}.${entryName} doesn't exist in input.`
@@ -647,8 +660,10 @@ function checkRevealedObjectClaims(
     }
   }
 
-  requireType("signerPublicKey", objClaims.signerPublicKey, "string");
-  checkPublicKeyFormat(objClaims.signerPublicKey);
+  if (objClaims.signerPublicKey !== undefined) {
+    requireType("signerPublicKey", objClaims.signerPublicKey, "string");
+    checkPublicKeyFormat(objClaims.signerPublicKey);
+  }
 
   return nEntries;
 }
@@ -669,17 +684,6 @@ export function checkVerifyClaimsForConfig(
   boundConfig: GPCBoundConfig,
   revealedClaims: GPCRevealedClaims
 ): void {
-  // Every configured POD should be revealed, with at least signing key.
-  const nConfiguredObjects = Object.keys(boundConfig.pods).length;
-  const nClaimedObjects = Object.keys(revealedClaims.pods).length;
-  if (nConfiguredObjects !== nClaimedObjects) {
-    throw new Error(
-      `Incorrect number of claimed objects.` +
-        `  Configuration expects ${nConfiguredObjects}.` +
-        `  Claims include ${nClaimedObjects}.`
-    );
-  }
-
   // Each configured entry to be revealed should be revealed in claims.
   for (const [objName, objConfig] of Object.entries(boundConfig.pods)) {
     // Examine config for each revealed entry.
@@ -712,16 +716,55 @@ export function checkVerifyClaimsForConfig(
         }
       }
     }
+
+    // Examine config for signer's public key.
+    if (objConfig.signerPublicKey?.isRevealed ?? true) {
+      // This named object in config should be provided in claims.
+      const objClaims = revealedClaims.pods[objName];
+      if (objClaims === undefined) {
+        throw new ReferenceError(
+          `Configuration reveals signer's public key of object "${objName}" but
+          the POD is not revealed in claims.`
+        );
+      }
+      const revealedSignerKey = objClaims.signerPublicKey;
+      if (revealedSignerKey === undefined) {
+        throw new ReferenceError(
+          `Configuration reveals signer's key of object "${objName}" which` +
+            ` doesn't exist in claims.`
+        );
+      }
+    }
   }
 
-  // Reverse check that each revealed entry and object exists and is revealed
-  // in config.
+  // The revealed claims should not include any PODs not in the config.
+  const revealedObjs = Object.keys(revealedClaims.pods);
+  if (revealedObjs.some((objName) => boundConfig.pods[objName] === undefined)) {
+    throw new ReferenceError(
+      `Revealed claims contain POD(s) not present in the proof configuration. Revealed claims contain PODs ${revealedObjs} while the configuration contains PODs ${Object.keys(
+        boundConfig.pods
+      )}.`
+    );
+  }
+
+  // Reverse check that each revealed entry and object exists and is revealed in
+  // config. Object signers' public keys need not be specified in the config if
+  // revealed, though they should be if not.
   for (const [objName, objClaims] of Object.entries(revealedClaims.pods)) {
     const objConfig = boundConfig.pods[objName];
     if (objConfig === undefined) {
       throw new ReferenceError(
         `Claims include object "${objName}" which doesn't exist in config.`
       );
+    }
+    if (objClaims.signerPublicKey === undefined) {
+      const signerPublicKeyConfig = objConfig.signerPublicKey;
+      if (signerPublicKeyConfig === undefined) {
+        throw new ReferenceError(
+          `Claims do not reveal signer' public key of object "${objName}" which
+             doesn't exist in config.`
+        );
+      }
     }
     if (objClaims.entries !== undefined) {
       for (const entryName of Object.keys(objClaims.entries)) {
@@ -893,7 +936,8 @@ export function checkCircuitRequirements(
 }
 
 /**
- * Checks whether a POD entry identifier exists in the context of tuple checking.
+ * Checks whether a POD entry identifier exists in the proof configuration for
+ * the purpose of tuple checking.
  *
  * @param tupleNameForErrorMessages tuple name (provided for error messages)
  * @param entryIdentifier the identifier to check
@@ -917,11 +961,14 @@ export function checkPODEntryIdentifierExists(
     );
   }
 
-  const entry = pod.entries[entryName];
+  // If the entry name is virtual, it need not be in the proof configuration.
+  if (!isVirtualEntryName(entryName)) {
+    const entry = pod.entries[entryName];
 
-  if (entry === undefined) {
-    throw new ReferenceError(
-      `Tuple ${tupleNameForErrorMessages} refers to non-existent entry ${entryName} in POD ${podName}.`
-    );
+    if (entry === undefined) {
+      throw new ReferenceError(
+        `Tuple ${tupleNameForErrorMessages} refers to non-existent entry ${entryName} in POD ${podName}.`
+      );
+    }
   }
 }
