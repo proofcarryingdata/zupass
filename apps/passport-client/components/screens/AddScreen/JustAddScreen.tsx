@@ -16,6 +16,7 @@ import { AppHeader } from "../../shared/AppHeader";
 import { PCDCard } from "../../shared/PCDCard";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { ProtocolWorldsStyling } from "../ProtocolWorldsScreens/ProtocolWorldsStyling";
+import { useTensionConfetti } from "../ProtocolWorldsScreens/useTensionConfetti";
 
 /**
  * Screen that allows the user to respond to a `PCDAddRequest` and add
@@ -31,9 +32,12 @@ export function JustAddScreen({
   const { error, pcd } = useDeserialized(request.pcd);
   const syncSettled = useIsSyncSettled();
   const isProtocolWorlds = request.folder === ProtocolWorldsFolderName;
+  const [ref, setRef] = useState<HTMLElement | null>(null);
+  const confetti = useTensionConfetti(ref);
 
   const onAddClick = useCallback(async () => {
     try {
+      confetti();
       await dispatch({
         type: "add-pcds",
         pcds: [request.pcd],
@@ -43,7 +47,7 @@ export function JustAddScreen({
     } catch (e) {
       await err(dispatch, "Error Adding PCD", getErrorMessage(e));
     }
-  }, [dispatch, request.folder, request.pcd]);
+  }, [confetti, dispatch, request.folder, request.pcd]);
 
   let content;
 
@@ -81,7 +85,7 @@ export function JustAddScreen({
       {isProtocolWorlds && <ProtocolWorldsStyling />}
       <MaybeModal fullScreen isProveOrAddScreen={true} />
       <AppContainer bg="gray">
-        <Container>
+        <Container ref={(r) => setRef(r)}>
           <Spacer h={16} />
           <AppHeader isProveOrAddScreen={true} />
           <Spacer h={16} />
