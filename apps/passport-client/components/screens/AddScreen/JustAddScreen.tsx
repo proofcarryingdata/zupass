@@ -60,7 +60,14 @@ export function JustAddScreen({
           {isProtocolWorlds ? "TENSION DISCOVERED" : "ADD PCD".toUpperCase()}
         </H2>
         <Spacer h={16} />
-        {pcd && <PCDCard pcd={pcd} expanded={true} hideRemoveButton={true} />}
+        {pcd && (
+          <PCDCard
+            hidePadding={isProtocolWorlds}
+            pcd={pcd}
+            expanded={true}
+            hideRemoveButton={true}
+          />
+        )}
         {!isProtocolWorlds && request.folder && (
           <div>
             PCD will be added to folder:
