@@ -19,7 +19,12 @@ export function ProtocolWorldsHome(): JSX.Element {
       <ProtocolWorldsStyling />
       {!(foldersInFolder.length === 0) && <Separator />}
       {pcdsInFolder.length > 0 ? (
-        <PCDCardList hideRemoveButton allExpanded pcds={pcdsInFolder} />
+        <PCDCardList
+          hidePadding
+          hideRemoveButton
+          allExpanded
+          pcds={pcdsInFolder}
+        />
       ) : loadedIssuedPCDs ? (
         <NoPcdsContainer>This folder is empty</NoPcdsContainer>
       ) : (
