@@ -33,7 +33,8 @@ export function PCDCardList({
   pcds,
   defaultSortState,
   allExpanded,
-  hideRemoveButton
+  hideRemoveButton,
+  hidePadding
 }: {
   pcds: PCD[];
   /**
@@ -48,6 +49,10 @@ export function PCDCardList({
    * If true, all PCDs will have the remove button hidden.
    */
   hideRemoveButton?: boolean;
+  /**
+   * If true, all PCDs will have padding hidden.
+   */
+  hidePadding?: boolean;
 }): JSX.Element {
   const pcdCollection = usePCDCollection();
   const userIdentityPCD = useUserIdentityPCD();
@@ -139,6 +144,7 @@ export function PCDCardList({
       {sortedPCDs.map((pcd) => (
         <PCDCard
           hideRemoveButton={hideRemoveButton}
+          hidePadding={hidePadding}
           key={pcd.id}
           pcd={pcd}
           isMainIdentity={pcd.id === userIdentityPCDId}

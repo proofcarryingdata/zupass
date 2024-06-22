@@ -28,7 +28,8 @@ function PCDCardImpl({
   expanded,
   onClick,
   hideRemoveButton,
-  hideHeader
+  hideHeader,
+  hidePadding
 }: {
   pcd: PCD;
   expanded?: boolean;
@@ -36,6 +37,7 @@ function PCDCardImpl({
   onClick?: (id: string, cardContainer: HTMLDivElement | undefined) => void;
   hideRemoveButton?: boolean;
   hideHeader?: boolean;
+  hidePadding?: boolean;
 }): JSX.Element {
   const [containerRef, setContainerRef] = useState<HTMLDivElement | undefined>(
     undefined
@@ -62,11 +64,15 @@ function PCDCardImpl({
             </CardHeader>
           )}
           <CardBodyContainer>
-            <CardBody pcd={pcd} isMainIdentity={isMainIdentity} />
+            <CardBody
+              pcd={pcd}
+              isMainIdentity={isMainIdentity}
+              hidePadding={hidePadding}
+            />
             {!hideRemoveButton && (
               <CardFooter pcd={pcd} isMainIdentity={isMainIdentity} />
             )}
-            {hideRemoveButton && <Spacer h={8} />}
+            {hideRemoveButton && !hidePadding && <Spacer h={8} />}
           </CardBodyContainer>
         </CardOutlineExpanded>
       ) : (
@@ -157,7 +163,13 @@ function getUI(
  * of ZK proofs, and can be configured to include different URLs in their QR
  * codes based on the type of ticket provided.
  */
-function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element | null {
+function TicketWrapper({
+  pcd,
+  hidePadding
+}: {
+  pcd: EdDSATicketPCD;
+  hidePadding?: boolean;
+}): JSX.Element | null {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
@@ -199,6 +211,7 @@ function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element | null {
 
   return identityPCD ? (
     <Card
+      hidePadding={hidePadding}
       pcd={pcd}
       identityPCD={identityPCD}
       verifyURL={verifyURL}
@@ -209,10 +222,12 @@ function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element | null {
 
 function CardBody({
   pcd,
-  isMainIdentity
+  isMainIdentity,
+  hidePadding
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
+  hidePadding?: boolean;
 }): JSX.Element {
   const pcdCollection = usePCDCollection();
 
@@ -221,7 +236,7 @@ function CardBody({
   }
   if (pcdCollection.hasPackage(pcd.type)) {
     if (isEdDSATicketPCD(pcd)) {
-      return <TicketWrapper pcd={pcd} />;
+      return <TicketWrapper pcd={pcd} hidePadding={hidePadding} />;
     }
     if (isPODTicketPCD(pcd)) {
       const Component = PODTicketPCDUI.renderCardBody;
