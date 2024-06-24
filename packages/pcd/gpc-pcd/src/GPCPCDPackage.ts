@@ -25,13 +25,13 @@ import { requireDefinedParameter } from "@pcd/util";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
+  FixedPODEntries,
   GPCPCD,
   GPCPCDArgs,
   GPCPCDClaim,
   GPCPCDInitArgs,
   GPCPCDProof,
   GPCPCDTypeName,
-  PODEntryRecord,
   PODPCDArgValidatorParams
 } from "./GPCPCD";
 import { podEntryRecordFromSimplifiedJSON } from "./util";
@@ -41,7 +41,8 @@ import {
   checkPODEntriesAgainstMembershipLists,
   checkPODEntriesAgainstPrescribedEntries,
   checkPODEntriesAgainstProofConfig,
-  checkPrescribedEntriesAgainstProofConfig
+  checkPrescribedEntriesAgainstProofConfig,
+  checkPrescribedSignerPublicKeysAgainstProofConfig
 } from "./validatorChecks";
 
 let savedInitArgs: GPCPCDInitArgs | undefined = undefined;
@@ -288,7 +289,7 @@ function validateInputPOD(
   // Deserialise provided parameters
   let proofConfig: GPCProofConfig | undefined;
   let membershipLists: PODMembershipLists | undefined;
-  let prescribedEntries: PODEntryRecord | undefined;
+  let prescribedEntries: FixedPODEntries | undefined;
 
   try {
     proofConfig =
@@ -317,34 +318,44 @@ function validateInputPOD(
 
   return (
     checkPCDType(podPCD) &&
-    checkPODEntriesAgainstProofConfig(podName, podPCD, proofConfig, params) &&
-    checkPODEntriesAgainstMembershipLists(
-      podName,
-      podPCD,
-      proofConfig,
-      membershipLists
-    ) &&
-    checkPrescribedEntriesAgainstProofConfig(
-      podName,
-      proofConfig,
-      prescribedEntries,
-      params
-    ) &&
-    checkPODEntriesAgainstPrescribedEntries(
-      podName,
-      podPCD,
-      prescribedEntries
-    ) &&
-    checkPODAgainstPrescribedSignerPublicKeys(
-      podName,
-      podPCD,
-      prescribedSignerPublicKeys,
-      params
-    )
+    // Short-circuit if proof config not specified.
+    (proofConfig === undefined ||
+      (checkPODEntriesAgainstProofConfig(
+        podName,
+        podPCD,
+        proofConfig,
+        params
+      ) &&
+        checkPrescribedSignerPublicKeysAgainstProofConfig(
+          podName,
+          proofConfig,
+          prescribedSignerPublicKeys,
+          params
+        ) &&
+        checkPODAgainstPrescribedSignerPublicKeys(
+          podName,
+          podPCD.pod.signerPublicKey,
+          prescribedSignerPublicKeys,
+          params
+        ) &&
+        checkPrescribedEntriesAgainstProofConfig(
+          podName,
+          proofConfig,
+          prescribedEntries,
+          params
+        ) &&
+        checkPODEntriesAgainstPrescribedEntries(
+          podName,
+          podPCD.pod.content.asEntries(),
+          prescribedEntries
+        ) &&
+        checkPODEntriesAgainstMembershipLists(
+          podName,
+          podPCD,
+          proofConfig,
+          membershipLists
+        )))
   );
-
-  // TODO(POD-P3): Use validatorParams to filter by more constraints
-  // not included in config.
 }
 
 export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {

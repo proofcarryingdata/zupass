@@ -6,7 +6,7 @@ import {
   podValueToRawValue
 } from "@pcd/pod";
 import JSONBig from "json-bigint";
-import { PODEntryRecord } from "./GPCPCD";
+import { FixedPODEntries } from "./GPCPCD";
 
 const jsonBigSerializer = JSONBig({
   useNativeBigInt: true,
@@ -27,7 +27,7 @@ const jsonBigSerializer = JSONBig({
  */
 export function podEntryRecordFromSimplifiedJSON(
   simplifiedJSON: string
-): PODEntryRecord {
+): FixedPODEntries {
   const simplifiedValues = jsonBigSerializer.parse(simplifiedJSON) as Record<
     PODName,
     Record<PODName, PODRawValue>
@@ -63,7 +63,7 @@ export function podEntryRecordFromSimplifiedJSON(
     throw new TypeError(`Invalid serialised PODEntryRecord: ${simplifiedJSON}`);
   }
 
-  const entryRecord: PODEntryRecord = Object.fromEntries(
+  const entryRecord: FixedPODEntries = Object.fromEntries(
     Object.entries(simplifiedValues).map(([podName, data]) => [
       podName,
       Object.fromEntries(
@@ -91,7 +91,7 @@ export function podEntryRecordFromSimplifiedJSON(
  * @returns a string representation
  */
 export function podEntryRecordToSimplifiedJSON(
-  toSerialize: PODEntryRecord,
+  toSerialize: FixedPODEntries,
   space?: number
 ): string {
   const simplifiedEntryRecord: Record<

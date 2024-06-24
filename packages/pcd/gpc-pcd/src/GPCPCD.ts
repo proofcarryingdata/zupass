@@ -56,10 +56,10 @@ export type PODPCDRecordArg = RecordContainerArgument<
 export type PODSignerPublicKeys = Record<PODName, string>;
 
 /**
- * Prescribed POD entries. User inputs to a proof will be filtered to only those
- * PODs containing matching values.
+ * Prescribed/Fixed POD entries. User inputs to a proof will be filtered to only
+ * those PODs containing matching values.
  */
-export type PODEntryRecord = Record<PODName, PODEntries>;
+export type FixedPODEntries = Record<PODName, PODEntries>;
 
 /**
  * Validator parameters for POD PCD arguments. These will play a role in
@@ -75,14 +75,16 @@ export type PODPCDArgValidatorParams = {
 
   /**
    * JSON-serialised proof configuration used to narrow down the selection of
-   * POD PCDs. May be deserialised using {@link deserializeGPCProofConfig}.
+   * POD PCDs. This should coincide with the proof config string supplied in the
+   * `GPCPCDArgs`. May be deserialised using {@link deserializeGPCProofConfig}.
    */
   proofConfig?: string;
 
   /**
    * JSON-serialised membership lists to narrow down the selection of POD PCDs
-   * to those satisfying the list membership check specified in the proof config
-   * (if any). May be deserialised using {@link
+   * to those satisfying the list membership check specified in the proof
+   * config. This should coincide with the membership list string supplied in
+   * the `GPCPCDArgs` (if any). May be deserialised using {@link
    * podMembershipListsFromSimplifiedJSON}.
    */
   membershipLists?: string;

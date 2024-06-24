@@ -5,14 +5,15 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { expect } from "chai";
 import "mocha";
 import { v4 as uuid } from "uuid";
-import { PODEntryRecord } from "../src";
+import { FixedPODEntries } from "../src";
 import {
   checkPCDType,
   checkPODAgainstPrescribedSignerPublicKeys,
   checkPODEntriesAgainstMembershipLists,
   checkPODEntriesAgainstPrescribedEntries,
   checkPODEntriesAgainstProofConfig,
-  checkPrescribedEntriesAgainstProofConfig
+  checkPrescribedEntriesAgainstProofConfig,
+  checkPrescribedSignerPublicKeysAgainstProofConfig
 } from "../src/validatorChecks";
 import {
   ownerIdentity,
@@ -65,16 +66,6 @@ describe("PCD type check should work", () => {
 });
 
 describe("POD entry check against proof configuration should work", () => {
-  it("should fail for an undefined proof configuration", () => {
-    const params = { notFoundMessage: undefined };
-    expect(
-      checkPODEntriesAgainstProofConfig("somePOD", podPCD0, undefined, params)
-    ).to.be.false;
-    expect(params.notFoundMessage).to.eq(
-      "The proof configuration has not been passed to the validator!"
-    );
-  });
-
   it("should fail for a proof configuration not containing the named POD", () => {
     const proofConfig = {
       pods: {
@@ -210,7 +201,7 @@ describe("Prescribed entry check against proof configuration should work", () =>
 
   it("should fail if prescribed entries are not in the proof configuration", () => {
     const params = { notFoundMessage: undefined };
-    const prescribedEntries: PODEntryRecord = {
+    const prescribedEntries: FixedPODEntries = {
       pod0: {
         A: { type: "int", value: 123n },
         someEntry: { type: "cryptographic", value: 8n }
@@ -228,13 +219,13 @@ describe("Prescribed entry check against proof configuration should work", () =>
       )
     ).to.be.false;
     expect(params.notFoundMessage).to.eq(
-      "Invalid prescribed entry record: Not all entries are present in the proof configuration."
+      "Invalid prescribed entries: Not all entries are present in the proof configuration."
     );
   });
 
   it("should fail if prescribed entries are not revealed in the proof configuration", () => {
     const params = { notFoundMessage: undefined };
-    const prescribedEntries: PODEntryRecord = {
+    const prescribedEntries: FixedPODEntries = {
       pod0: {
         A: { type: "int", value: 123n },
         owner: { type: "cryptographic", value: 57n }
@@ -258,7 +249,7 @@ describe("Prescribed entry check against proof configuration should work", () =>
 
   it("should pass if all prescribed entries are revealed entries in the proof configuration", () => {
     const params = { notFoundMessage: undefined };
-    const prescribedEntries: PODEntryRecord = {
+    const prescribedEntries: FixedPODEntries = {
       pod0: {
         A: { type: "int", value: 123n }
       },
@@ -286,25 +277,137 @@ describe("Prescribed entry check against proof configuration should work", () =>
   });
 });
 
+describe("Prescribed signer public key check against proof configuration should work", () => {
+  it("should pass if there are no prescribed signer public keys", () => {
+    const params = { notFoundMessage: undefined };
+    expect(
+      checkPrescribedSignerPublicKeysAgainstProofConfig(
+        "pod0",
+        proofConfig,
+        undefined,
+        params
+      )
+    ).to.be.true;
+    expect(params.notFoundMessage).to.be.undefined;
+  });
+
+  it("should fail if POD corresponding to prescribed signer public key is not in the proof configuration", () => {
+    const params = { notFoundMessage: undefined };
+    const prescribedSignerPublicKeys = {
+      somePOD: "su2CUR47c1us1FwPUN3RNZWzit9nmya2QD60Y/iffxI"
+    };
+
+    expect(
+      checkPrescribedSignerPublicKeysAgainstProofConfig(
+        "somePOD",
+        proofConfig,
+        prescribedSignerPublicKeys,
+        params
+      )
+    ).to.be.false;
+    expect(params.notFoundMessage).to.eq(
+      "Invalid prescribed signer public key: Corresponding POD somePOD is not present in the proof configuration."
+    );
+  });
+
+  it("should fail if prescribed signer public keys are not revealed in the proof configuration", () => {
+    const params = { notFoundMessage: undefined };
+    const prescribedSignerPublicKeys = {
+      pod0: "su2CUR47c1us1FwPUN3RNZWzit9nmya2QD60Y/iffxI"
+    };
+    const proofConfig: GPCProofConfig = {
+      pods: {
+        pod0: {
+          entries: {
+            A: { isRevealed: true },
+            E: { isRevealed: false, equalsEntry: "pod0.A" },
+            owner: {
+              isRevealed: false,
+              isOwnerID: true,
+              isMemberOf: "admissibleOwners"
+            }
+          },
+          signerPublicKey: {
+            isRevealed: false,
+            isMemberOf: "someKeyList" // Not strictly necessary for this test,
+            // but it is worth keeping in mind that
+            // this key should be constrained in some
+            // sense!
+          }
+        }
+      }
+    };
+    expect(
+      checkPrescribedSignerPublicKeysAgainstProofConfig(
+        "pod0",
+        proofConfig,
+        prescribedSignerPublicKeys,
+        params
+      )
+    ).to.be.false;
+    expect(params.notFoundMessage).to.eq(
+      "Prescribed signer's public key is not revealed in proof configuration!"
+    );
+  });
+
+  it("should pass if all prescribed signer public keys are revealed in the proof configuration", () => {
+    const params = { notFoundMessage: undefined };
+    const prescribedSignerPublicKeys = {
+      pod0: "su2CUR47c1us1FwPUN3RNZWzit9nmya2QD60Y/iffxI",
+      ticketPOD: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+    };
+    expect(
+      checkPrescribedSignerPublicKeysAgainstProofConfig(
+        "pod0",
+        proofConfig,
+        prescribedSignerPublicKeys,
+        params
+      )
+    ).to.be.true;
+    expect(
+      checkPrescribedSignerPublicKeysAgainstProofConfig(
+        "ticketPOD",
+        proofConfig,
+        prescribedSignerPublicKeys,
+        params
+      )
+    ).to.be.true;
+    expect(params.notFoundMessage).to.be.undefined;
+  });
+});
+
 describe("POD entry check against prescribed entries should work", () => {
   it("should pass if there are no prescribed entries", () => {
-    expect(checkPODEntriesAgainstPrescribedEntries("pod0", podPCD0, undefined))
-      .to.be.true;
+    expect(
+      checkPODEntriesAgainstPrescribedEntries(
+        "pod0",
+        podPCD0.pod.content.asEntries(),
+        undefined
+      )
+    ).to.be.true;
   });
 
   it("should fail if a POD entry disagrees with a prescribed entry", () => {
     expect(
-      checkPODEntriesAgainstPrescribedEntries("pod0", podPCD0, {
-        pod0: { A: { type: "int", value: 132n } }
-      })
+      checkPODEntriesAgainstPrescribedEntries(
+        "pod0",
+        podPCD0.pod.content.asEntries(),
+        {
+          pod0: { A: { type: "int", value: 132n } }
+        }
+      )
     ).to.be.false;
   });
 
   it("should pass if the POD entries agree with the prescribed entries", () => {
     expect(
-      checkPODEntriesAgainstPrescribedEntries("pod0", podPCD0, {
-        pod0: { A: { type: "int", value: 123n } }
-      })
+      checkPODEntriesAgainstPrescribedEntries(
+        "pod0",
+        podPCD0.pod.content.asEntries(),
+        {
+          pod0: { A: { type: "int", value: 123n } }
+        }
+      )
     ).to.be.true;
   });
 });
@@ -315,7 +418,7 @@ describe("POD check against prescribed signers' public keys should work", () => 
     expect(
       checkPODAgainstPrescribedSignerPublicKeys(
         "pod0",
-        podPCD0,
+        podPCD0.pod.signerPublicKey,
         undefined,
         params
       )
@@ -331,7 +434,7 @@ describe("POD check against prescribed signers' public keys should work", () => 
     expect(
       checkPODAgainstPrescribedSignerPublicKeys(
         "pod0",
-        podPCD0,
+        podPCD0.pod.signerPublicKey,
         prescribedSignerPublicKeys,
         params
       )
@@ -347,7 +450,7 @@ describe("POD check against prescribed signers' public keys should work", () => 
     expect(
       checkPODAgainstPrescribedSignerPublicKeys(
         "pod0",
-        podPCD0,
+        podPCD0.pod.signerPublicKey,
         prescribedSignerPublicKeys,
         params
       )
@@ -366,7 +469,7 @@ describe("POD check against prescribed signers' public keys should work", () => 
     expect(
       checkPODAgainstPrescribedSignerPublicKeys(
         "pod0",
-        podPCD0,
+        podPCD0.pod.signerPublicKey,
         prescribedSignerPublicKeys,
         params
       )

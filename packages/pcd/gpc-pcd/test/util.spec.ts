@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import JSONBig from "json-bigint";
 import {
-  PODEntryRecord,
+  FixedPODEntries,
   podEntryRecordFromSimplifiedJSON,
   podEntryRecordToSimplifiedJSON
 } from "../src";
@@ -21,7 +21,7 @@ describe("PODEntryRecord serialisation should work", () => {
   });
 
   it("Should serialise and deserialise record containing typical POD data", () => {
-    const typicalPrescribedEntries: PODEntryRecord = {
+    const typicalPrescribedEntries: FixedPODEntries = {
       pod1: {
         ticketID: { type: "int", value: 5558n },
         eventID: { type: "int", value: 0n }

@@ -3,6 +3,7 @@ import {
   GPCArtifactStability,
   GPCArtifactVersion,
   GPCBoundConfig,
+  GPCProofConfig,
   deserializeGPCProofConfig,
   gpcArtifactDownloadURL,
   gpcBindConfig,
@@ -14,6 +15,10 @@ import {
   GPCPCD,
   GPCPCDArgs,
   GPCPCDPackage,
+  checkPODAgainstPrescribedSignerPublicKeys,
+  checkPODEntriesAgainstPrescribedEntries,
+  checkPrescribedEntriesAgainstProofConfig,
+  checkPrescribedSignerPublicKeysAgainstProofConfig,
   podEntryRecordFromSimplifiedJSON
 } from "@pcd/gpc-pcd";
 import {
@@ -23,7 +28,6 @@ import {
   useZupassPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { podValueHash } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { emptyStrToUndefined } from "@pcd/util";
@@ -126,7 +130,8 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
-        Prescribed entries (or empty for none):
+        Prescribed entries to filter which PODs user can select. These keys must
+        be revealed in the configuration. (Use empty for none.)
         <textarea
           cols={45}
           rows={5}
@@ -136,7 +141,8 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
-        Prescribed signers' public keys (or empty for none):
+        Prescribed public keys to filter which PODs user can select. These keys
+        must be revealed in the configuration. (Use empty for none.)
         <textarea
           cols={45}
           rows={5}
@@ -399,6 +405,19 @@ async function verifyProof(
     return { valid: false, err: "Watermark does not match." };
   }
 
+  let localBoundConfig: GPCBoundConfig;
+  let localProofConfig: GPCProofConfig;
+  try {
+    localProofConfig = deserializeGPCProofConfig(proofConfig);
+    localBoundConfig = gpcBindConfig(localProofConfig).boundConfig;
+  } catch (configError) {
+    return { valid: false, err: "Invalid proof config." };
+  }
+  const sameConfig = _.isEqual(localBoundConfig, pcd.claim.config);
+  if (!sameConfig) {
+    return { valid: false, err: "Config does not match." };
+  }
+
   // Check for equality of membership lists as sets, since the elements are
   // sorted by hash before being fed into circuits.
   const sameMembershipLists = _.isEqual(
@@ -415,29 +434,35 @@ async function verifyProof(
 
   // Check that revealed entries match up with prescribed entries.
   if (prescribedEntries !== undefined) {
+    const params = { notFoundMessage: undefined };
     const deserialisedPrescribedEntries =
       podEntryRecordFromSimplifiedJSON(prescribedEntries);
 
-    for (const [podName, podEntries] of Object.entries(
-      deserialisedPrescribedEntries
-    )) {
+    for (const podName of Object.keys(deserialisedPrescribedEntries)) {
       const revealedPODData = pcd.claim.revealed.pods[podName];
-
-      for (const [entryName, entryValue] of Object.entries(podEntries)) {
-        if (revealedPODData.entries?.[entryName] === undefined) {
-          return {
-            valid: false,
-            err: `Entry ${entryName} of POD ${podName} is undefined while it is prescribed the value ${entryValue}.`
-          };
-        } else if (
-          podValueHash(revealedPODData.entries[entryName]) !==
-          podValueHash(entryValue)
-        ) {
-          return {
-            valid: false,
-            err: `Entry ${entryName} of POD ${podName} has value ${revealedPODData.entries[entryName]} while it is prescribed the value ${entryValue}.`
-          };
-        }
+      if (
+        !checkPrescribedEntriesAgainstProofConfig(
+          podName,
+          localProofConfig,
+          deserialisedPrescribedEntries,
+          params
+        )
+      ) {
+        return {
+          valid: false,
+          err: params.notFoundMessage
+        };
+      } else if (
+        !checkPODEntriesAgainstPrescribedEntries(
+          podName,
+          revealedPODData.entries ?? {},
+          deserialisedPrescribedEntries
+        )
+      ) {
+        return {
+          valid: false,
+          err: "Prescribed entries do not agree with revealed entries."
+        };
       }
     }
   }
@@ -446,30 +471,43 @@ async function verifyProof(
   if (prescribedSignerPublicKeys !== undefined) {
     const deserialisedPrescribedSignerPublicKeys: Record<string, string> =
       JSON.parse(prescribedSignerPublicKeys);
-    for (const [podName, signerPublicKey] of Object.entries(
-      deserialisedPrescribedSignerPublicKeys
-    )) {
-      const revealedPODData = pcd.claim.revealed.pods[podName];
-      if (signerPublicKey !== revealedPODData.signerPublicKey) {
+    for (const podName of Object.keys(deserialisedPrescribedSignerPublicKeys)) {
+      const revealedSignerPublicKey =
+        pcd.claim.revealed.pods[podName]?.signerPublicKey;
+      const params = { notFoundMessage: undefined };
+      if (
+        !checkPrescribedSignerPublicKeysAgainstProofConfig(
+          podName,
+          localProofConfig,
+          deserialisedPrescribedSignerPublicKeys,
+          params
+        )
+      ) {
         return {
           valid: false,
-          err: `Signer's public key for POD ${podName} does not agree with prescribed value.`
+          err: params.notFoundMessage
+        };
+      } else if (revealedSignerPublicKey === undefined) {
+        return {
+          valid: false,
+          err: "Signer's public key for POD ${podName} is prescribed but not revealed."
+        };
+      } else if (
+        !checkPODAgainstPrescribedSignerPublicKeys(
+          podName,
+          revealedSignerPublicKey,
+          deserialisedPrescribedSignerPublicKeys,
+          params
+        )
+      ) {
+        return {
+          valid: false,
+          err:
+            params.notFoundMessage ??
+            `Signer's public key for POD ${podName} does not agree with prescribed value.`
         };
       }
     }
-  }
-
-  let localBoundConfig: GPCBoundConfig;
-  try {
-    localBoundConfig = gpcBindConfig(
-      deserializeGPCProofConfig(proofConfig)
-    ).boundConfig;
-  } catch (configError) {
-    return { valid: false, err: "Invalid proof config." };
-  }
-  const sameConfig = _.isEqual(localBoundConfig, pcd.claim.config);
-  if (!sameConfig) {
-    return { valid: false, err: "Config does not match." };
   }
 
   return { valid: true };

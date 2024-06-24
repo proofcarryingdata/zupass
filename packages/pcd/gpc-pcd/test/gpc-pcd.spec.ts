@@ -255,6 +255,10 @@ describe("GPCPCD input POD validator should work", () => {
     expect(validateInputPOD("pod0", podPCD0, undefined)).to.be.true;
   });
 
+  it("Should validate an input POD given no proof configuration", () => {
+    expect(validateInputPOD("pod0", podPCD0, {})).to.be.true;
+  });
+
   it("Should validate input PODs containing entries in a given proof configuration", () => {
     const params = { proofConfig };
     expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
