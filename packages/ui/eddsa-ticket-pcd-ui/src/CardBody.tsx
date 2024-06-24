@@ -30,6 +30,8 @@ export interface EdDSATicketPCDCardProps {
   // "ZK mode" will then be enabled, allowing the user to switch to using the
   // `verifyURL` with a ZK proof of their ticket as the payload.
   idBasedVerifyURL?: string;
+  // If true, hides the visual padding around the image
+  hidePadding?: boolean;
 }
 
 export const EdDSATicketPCDUI: PCDUI<EdDSATicketPCD, EdDSATicketPCDCardProps> =
@@ -42,7 +44,8 @@ function EdDSATicketPCDCardBody({
   pcd,
   identityPCD,
   verifyURL,
-  idBasedVerifyURL
+  idBasedVerifyURL,
+  hidePadding
 }: {
   pcd: EdDSATicketPCD;
 } & EdDSATicketPCDCardProps): JSX.Element {
@@ -61,7 +64,7 @@ function EdDSATicketPCDCardBody({
     <Container padding={!hasImage}>
       {hasImage && (
         <TicketInfo>
-          <TicketImage pcd={pcd} />
+          <TicketImage hidePadding={hidePadding} pcd={pcd} />
           <span>{ticketData?.attendeeName}</span>
           <span>{ticketData?.attendeeEmail}</span>
         </TicketInfo>
@@ -96,8 +99,15 @@ function EdDSATicketPCDCardBody({
   );
 }
 
-function TicketImage({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
+function TicketImage({
+  pcd,
+  hidePadding
+}: {
+  pcd: EdDSATicketPCD;
+  hidePadding?: boolean;
+}): JSX.Element {
   const { imageUrl, imageAltText } = pcd.claim.ticket;
+  if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
   return (
     <div style={{ padding: "8px" }}>
       <img src={imageUrl} alt={imageAltText} />

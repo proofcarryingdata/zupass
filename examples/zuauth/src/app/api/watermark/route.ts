@@ -10,11 +10,9 @@ import { cookies } from "next/headers";
  * created for our use, and is not being re-used.
  */
 export async function GET() {
+  const cookieStore = cookies();
   try {
-    const session = await getIronSession<SessionData>(
-      cookies() as any,
-      ironOptions
-    );
+    const session = await getIronSession<SessionData>(cookieStore, ironOptions);
     session.watermark = hexToBigInt(
       toHexString(getRandomValues(30))
     ).toString();

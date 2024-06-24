@@ -22,7 +22,11 @@ import {
   useWrappedPCDCollection
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
-import { isEdgeCityFolder, isFrogCryptoFolder } from "../../../src/util";
+import {
+  isEdgeCityFolder,
+  isFrogCryptoFolder,
+  isProtocolWorldsFolder
+} from "../../../src/util";
 import { Button, Placeholder, Spacer } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { MaybeModal } from "../../modals/Modal";
@@ -33,6 +37,7 @@ import { PCDCardList } from "../../shared/PCDCardList";
 import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
 import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
+import { ProtocolWorldsHome } from "../ProtocolWorldsScreens/ProtocolWorldsHome";
 import {
   FolderCard,
   FolderDetails,
@@ -121,6 +126,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   const isRoot = isRootFolder(browsingFolder);
   const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
   const isEdgeCity = isEdgeCityFolder(browsingFolder);
+  const isProtocolWorlds = isProtocolWorldsFolder(browsingFolder);
   const shouldShowFrogCrypto = useMemo(() => {
     const folders = pcdCollection.value.getAllFolderNames();
     const goodFolders = [
@@ -209,6 +215,8 @@ export function HomeScreenImpl(): JSX.Element | null {
 
           {isFrogCrypto ? (
             <FrogCryptoHomeSection />
+          ) : isProtocolWorlds ? (
+            <ProtocolWorldsHome />
           ) : isEdgeCity ? (
             <EdgeCityHome />
           ) : (

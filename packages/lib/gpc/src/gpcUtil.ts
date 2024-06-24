@@ -1,17 +1,11 @@
+import { CircuitDesc } from "@pcd/gpcircuits";
 import {
-  CircuitDesc,
-  CircuitSignal,
-  ProtoPODGPCCircuitParams,
-  array2Bits,
-  padArray,
-  paramMaxVirtualEntries
-} from "@pcd/gpcircuits";
-import {
-  EDDSA_PUBKEY_TYPE_STRING,
   POD,
+  PODEdDSAPublicKeyValue,
   PODName,
   PODValue,
   PODValueTuple,
+  POD_NAME_REGEX,
   checkPODName,
   getPODValueForCircuit,
   podValueHash,
@@ -24,9 +18,13 @@ import {
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryConfig,
+  GPCProofEntryConfigCommon,
   GPCProofObjectConfig,
   GPCProofTupleConfig,
   PODEntryIdentifier,
+  PODVirtualEntryName,
+  POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX,
+  POD_VIRTUAL_NAME_REGEX,
   TUPLE_PREFIX,
   TupleIdentifier
 } from "./gpcTypes";
@@ -92,12 +90,52 @@ function canonicalizeObjectConfig(
     canonicalEntries[entryName] = canonicalizeEntryConfig(entryConfig);
   }
 
+  // Check if signer's public key configuration is set to its defaults, in which
+  // case it will be omitted in the canonicalised config.
+  const signerPublicKeyConfig = proofObjectConfig.signerPublicKey;
+  const canonicalizedSignerPublicKeyConfig =
+    signerPublicKeyConfig !== undefined
+      ? canonicalizeSignerPublicKeyConfig(signerPublicKeyConfig)
+      : undefined;
+
   return {
-    entries: canonicalEntries
+    entries: canonicalEntries,
+    ...(canonicalizedSignerPublicKeyConfig !== undefined
+      ? { signerPublicKey: canonicalizedSignerPublicKeyConfig }
+      : {})
   };
 }
 
-function canonicalizeEntryConfig(
+export function canonicalizeSignerPublicKeyConfig(
+  signerPublicKeyConfig: GPCProofEntryConfigCommon
+): GPCProofEntryConfigCommon | undefined {
+  if (
+    Object.keys(signerPublicKeyConfig).length === 1 &&
+    signerPublicKeyConfig.isRevealed
+  ) {
+    return undefined;
+  } else {
+    // Set optional fields only when they have non-default values.
+    return {
+      isRevealed: signerPublicKeyConfig.isRevealed,
+      ...(signerPublicKeyConfig.equalsEntry !== undefined
+        ? { equalsEntry: signerPublicKeyConfig.equalsEntry }
+        : {}),
+      ...(signerPublicKeyConfig.isMemberOf !== undefined
+        ? {
+            isMemberOf: signerPublicKeyConfig.isMemberOf
+          }
+        : {}),
+      ...(signerPublicKeyConfig.isNotMemberOf !== undefined
+        ? {
+            isNotMemberOf: signerPublicKeyConfig.isNotMemberOf
+          }
+        : {})
+    };
+  }
+}
+
+export function canonicalizeEntryConfig(
   proofEntryConfig: GPCProofEntryConfig
 ): GPCProofEntryConfig {
   // Set optional fields only when they have non-default values.
@@ -109,16 +147,12 @@ function canonicalizeEntryConfig(
       : {}),
     ...(proofEntryConfig.isMemberOf !== undefined
       ? {
-          isMemberOf: Array.isArray(proofEntryConfig.isMemberOf)
-            ? proofEntryConfig.isMemberOf.sort()
-            : proofEntryConfig.isMemberOf
+          isMemberOf: proofEntryConfig.isMemberOf
         }
       : {}),
     ...(proofEntryConfig.isNotMemberOf !== undefined
       ? {
-          isNotMemberOf: Array.isArray(proofEntryConfig.isNotMemberOf)
-            ? proofEntryConfig.isNotMemberOf.sort()
-            : proofEntryConfig.isNotMemberOf
+          isNotMemberOf: proofEntryConfig.isNotMemberOf
         }
       : {})
   };
@@ -139,18 +173,35 @@ function canonicalizeTupleConfig(
             ...tupleConfig,
             ...(tupleConfig.isMemberOf === undefined
               ? {}
-              : Array.isArray(tupleConfig.isMemberOf)
-              ? { isMemberOf: tupleConfig.isMemberOf.sort() }
               : { isMemberOf: tupleConfig.isMemberOf }),
             ...(tupleConfig.isNotMemberOf === undefined
               ? {}
-              : Array.isArray(tupleConfig.isNotMemberOf)
-              ? { isNotMemberOf: tupleConfig.isNotMemberOf.sort() }
               : { isNotMemberOf: tupleConfig.isNotMemberOf })
           }
         ];
       })
   );
+}
+
+/**
+ * Checks that the input matches the proper format for an entry name, virtual or
+ * ortherwise, as given by {@link POD_NAME_REGEX} and {@link
+ * POD_VIRTUAL_NAME_REGEX}.
+ *
+ * @param name the string to check
+ * @param strict indicator or whether this string should name an actual POD
+ * entry
+ * @returns the unmodified input, for easy chaining
+ * @throws TypeError if the format doesn't match
+ */
+export function checkPODEntryName(name?: string, strict?: boolean): string {
+  if (!name) {
+    throw new TypeError("POD entry names cannot be undefined.");
+  } else if (!strict && name.match(POD_VIRTUAL_NAME_REGEX) !== null) {
+    return name;
+  } else {
+    return checkPODName(name);
+  }
 }
 
 /**
@@ -165,7 +216,7 @@ function canonicalizeTupleConfig(
 export function checkPODEntryIdentifier(
   nameForErrorMessages: string,
   entryIdentifier: PODEntryIdentifier
-): [PODName, PODName] {
+): [PODName, PODName | PODVirtualEntryName] {
   requireType(nameForErrorMessages, entryIdentifier, "string");
   const parts = entryIdentifier.split(".");
   if (parts.length !== 2) {
@@ -173,7 +224,7 @@ export function checkPODEntryIdentifier(
       `Invalid entry identifier in ${nameForErrorMessages}.  Must have the form "objName.entryName".`
     );
   }
-  return [checkPODName(parts[0]), checkPODName(parts[1])];
+  return [checkPODName(parts[0]), checkPODEntryName(parts[1])];
 }
 
 /**
@@ -197,10 +248,31 @@ export function makePODEntryIdentifier(
  */
 export function splitPODEntryIdentifier(entryIdentifier: PODEntryIdentifier): {
   objName: PODName;
-  entryName: PODName;
+  entryName: PODName | PODVirtualEntryName;
 } {
   const names = checkPODEntryIdentifier(entryIdentifier, entryIdentifier);
   return { objName: names[0], entryName: names[1] };
+}
+
+/**
+ * Resolves a POD entry name to its value (if possible) in a given POD.
+ *
+ * @param entryName the identifier to resolve
+ * @param pod a POD
+ * @returns a POD value if the entry is found and `undefined` otherwise
+ */
+export function resolvePODEntry(
+  entryName: PODName | PODVirtualEntryName,
+  pod: POD
+): PODValue | undefined {
+  if (entryName.match(POD_NAME_REGEX) !== null) {
+    return pod?.content?.getValue(entryName);
+  }
+
+  // TODO(POD-P3): Modify for other virtual entry types when they are available by including switch statement.
+  return pod?.signerPublicKey !== undefined
+    ? PODEdDSAPublicKeyValue(pod?.signerPublicKey)
+    : undefined;
 }
 
 /**
@@ -219,9 +291,31 @@ export function resolvePODEntryIdentifier(
   const { objName: podName, entryName: entryName } =
     splitPODEntryIdentifier(entryIdentifier);
   const pod = pods[podName];
-  const entryValue = pod?.content?.getValue(entryName);
 
-  return entryValue;
+  return pod !== undefined ? resolvePODEntry(entryName, pod) : undefined;
+}
+
+/**
+ * POD virtual entry name predicate
+ *
+ * @param entryName the entry name to check
+ * @returns an indicator of whether the given entry name is a virtual entry name
+ */
+export function isVirtualEntryName(
+  entryName: PODName | PODVirtualEntryName
+): entryName is PODVirtualEntryName {
+  return entryName.match(POD_VIRTUAL_NAME_REGEX) !== null;
+}
+
+/**
+ * POD virtual entry identifier predicate
+ *
+ * @param entryIdentifier the entry identifier to check
+ * @returns an indicator of whether the given entry identifier is a virtual
+ * entry identifier
+ */
+export function isVirtualEntryIdentifier(entryIdentifier: string): boolean {
+  return entryIdentifier.match(POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX) !== null;
 }
 
 /**
@@ -229,41 +323,11 @@ export function resolvePODEntryIdentifier(
  *
  * @param identifier the identifier to check
  * @returns an indicator of whether the given identifier is a tuple identifier
- * @throws TypeError if the format doesn't match
  */
 export function isTupleIdentifier(
   identifier: PODEntryIdentifier | TupleIdentifier
-): boolean {
+): identifier is TupleIdentifier {
   return identifier.startsWith(`${TUPLE_PREFIX}.`);
-}
-
-/**
- * Checks the format of a tuple identifier, and return a pair consisting of the
- * tuple prefix and the name of the tuple.
- *
- * @param nameForErrorMessages the name for this value, used only for error
- *   messages.
- * @param tupleIdentifier the value to check
- * @returns the two sub-parts of the identifiers
- * @throws TypeError if the identifier does not match the expected format
- */
-export function checkTupleIdentifier(
-  nameForErrorMessages: string,
-  tupleIdentifier: TupleIdentifier
-): PODName {
-  requireType(nameForErrorMessages, tupleIdentifier, "string");
-  const parts = tupleIdentifier.split(".");
-  if (parts.length !== 2) {
-    throw new TypeError(
-      `Invalid entry identifier in ${nameForErrorMessages}.  Must have the form "objName.entryName".`
-    );
-  }
-  if (!isTupleIdentifier(tupleIdentifier)) {
-    throw new TypeError(
-      `Invalid tuple identifier in ${nameForErrorMessages}: ${tupleIdentifier}`
-    );
-  }
-  return checkPODName(parts[1]);
 }
 
 /**
@@ -531,9 +595,15 @@ export function listConfigFromProofConfig(
 ): GPCProofMembershipListConfig {
   const gpcListConfig: GPCProofMembershipListConfig = {};
 
-  // Check entries for membership declarations.
+  // Check entries and signer's public keys for membership declarations.
   for (const podName of Object.keys(proofConfig.pods)) {
     const pod = proofConfig.pods[podName];
+
+    addIdentifierToListConfig(
+      gpcListConfig,
+      pod.signerPublicKey,
+      `${podName}.$signerPublicKey`
+    );
 
     for (const entryName of Object.keys(pod.entries)) {
       const entryConfig = pod.entries[entryName];
@@ -572,13 +642,13 @@ export function listConfigFromProofConfig(
  */
 function addIdentifierToListConfig(
   gpcListConfig: GPCProofMembershipListConfig,
-  entryConfig: GPCProofEntryConfig | GPCProofTupleConfig,
+  entryConfig: GPCProofEntryConfigCommon | GPCProofTupleConfig | undefined,
   identifier: PODEntryIdentifier | TupleIdentifier
 ): void {
   // Nothing to do if both membership and non-membership lists are undefined.
   if (
-    entryConfig.isMemberOf === undefined &&
-    entryConfig.isNotMemberOf === undefined
+    entryConfig?.isMemberOf === undefined &&
+    entryConfig?.isNotMemberOf === undefined
   ) {
     return;
   }
@@ -607,41 +677,5 @@ function addIdentifierToListConfig(
   gpcListConfig[identifier] = {
     type: membershipType,
     listIdentifier
-  };
-}
-
-// TODO(POD-P2): Get rid of everything below this line.
-
-// Returns circuit inputs indicating that all virtual entries (i.e. all signers'
-// public keys) are revealed.
-export function dummyVirtualEntryInputs<
-  GPCCircuitConfig extends ProtoPODGPCCircuitParams
->(
-  params: GPCCircuitConfig
-): { virtualEntryIsValueHashRevealed: CircuitSignal } {
-  return {
-    virtualEntryIsValueHashRevealed: array2Bits(
-      padArray([], paramMaxVirtualEntries(params), 1n)
-    )
-  };
-}
-
-// Returns circuit outputs revealing all virtual entries (i.e. all signers'
-// public keys).
-export function dummyVirtualEntryOutputs<
-  GPCCircuitConfig extends ProtoPODGPCCircuitParams
->(
-  params: GPCCircuitConfig,
-  publicKeys: string[]
-): { virtualEntryRevealedValueHash: CircuitSignal[] } {
-  const unpaddedHashes = publicKeys.map((pk) =>
-    podValueHash({ type: EDDSA_PUBKEY_TYPE_STRING, value: pk })
-  );
-  return {
-    virtualEntryRevealedValueHash: padArray(
-      unpaddedHashes,
-      params.maxObjects,
-      unpaddedHashes[0]
-    )
   };
 }

@@ -1,6 +1,7 @@
 import {
   EdgeCityFolderName,
-  FrogCryptoFolderName
+  FrogCryptoFolderName,
+  ProtocolWorldsFolderName
 } from "@pcd/passport-interface";
 import { splitPath } from "@pcd/pcd-collection";
 import { sleep } from "@pcd/util";
@@ -104,6 +105,14 @@ export function isFrogCryptoFolder(folderPath: string): boolean {
 export function isEdgeCityFolder(folderPath: string): boolean {
   const parts = splitPath(folderPath);
   return parts.length === 1 && parts[0] === EdgeCityFolderName;
+}
+
+/**
+ * Check if a folder path is the Protocol Worlds folder.
+ */
+export function isProtocolWorldsFolder(folderPath: string): boolean {
+  const parts = splitPath(folderPath);
+  return parts.length === 1 && parts[0] === ProtocolWorldsFolderName;
 }
 
 export function bigintToUint8Array(bigint: bigint): Uint8Array {

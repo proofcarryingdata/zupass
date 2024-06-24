@@ -32,8 +32,14 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { usePCDCollection } from "../../../src/appHooks";
-import { getOutdatedBrowserErrorMessage } from "../../../src/devconnectUtils";
-import { OUTDATED_BROWSER_ERROR_MESSAGE } from "../../../src/sharedConstants";
+import {
+  getOOMErrorMessage,
+  getOutdatedBrowserErrorMessage
+} from "../../../src/devconnectUtils";
+import {
+  OOM_ERROR_MESSAGE,
+  OUTDATED_BROWSER_ERROR_MESSAGE
+} from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { ProgressBar } from "../../core/ProgressBar";
@@ -172,7 +178,9 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         onProve(undefined, undefined, undefined, result);
       } catch (e) {
         const errorMessage = getErrorMessage(e);
-        if (errorMessage.includes(OUTDATED_BROWSER_ERROR_MESSAGE)) {
+        if (errorMessage.includes(OOM_ERROR_MESSAGE)) {
+          setError(getOOMErrorMessage());
+        } else if (errorMessage.includes(OUTDATED_BROWSER_ERROR_MESSAGE)) {
           setError(getOutdatedBrowserErrorMessage());
         } else {
           setError(errorMessage);

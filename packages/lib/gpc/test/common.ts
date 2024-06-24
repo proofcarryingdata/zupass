@@ -1,5 +1,5 @@
 import { loadCircomkitConfig } from "@pcd/gpcircuits";
-import { PODEntries } from "@pcd/pod";
+import { EDDSA_PUBKEY_TYPE_STRING, PODEntries } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { AssertionError, assert, expect } from "chai";
@@ -25,6 +25,7 @@ export const GPC_TEST_ARTIFACTS_PATH = path.join(
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
 export const privateKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 0001020304050607080900010203040506070809000102030405060708090001
+export const privateKey2 = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAQFBggIAAA"; // hex 0001020304050607080900010203040506070809000102030404050608080000
 
 export const ownerIdentity = new Identity(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
@@ -43,6 +44,10 @@ export const sampleEntries = {
   H: { type: "int", value: 8n },
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n },
+  pubKey: {
+    type: EDDSA_PUBKEY_TYPE_STRING,
+    value: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+  },
   otherTicketID: { type: "int", value: 999n },
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
 } satisfies PODEntries;

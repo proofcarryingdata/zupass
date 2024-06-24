@@ -5,7 +5,7 @@ import {
   serializeGPCProofConfig
 } from "@pcd/gpc";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { POD } from "@pcd/pod";
+import { POD, PODEdDSAPublicKeyValue } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { expect } from "chai";
@@ -21,6 +21,7 @@ import {
 import {
   ownerIdentity,
   privateKey,
+  privateKey2,
   sampleEntries0,
   sampleEntries1
 } from "./common";
@@ -58,6 +59,10 @@ describe("GPCPCD should work", async function () {
               isRevealed: false,
               isMemberOf: "admissibleTickets"
             }
+          },
+          signerPublicKey: {
+            isRevealed: false,
+            isMemberOf: "admissibleTicketIssuers"
           }
         }
       },
@@ -69,7 +74,7 @@ describe("GPCPCD should work", async function () {
     const pod0 = POD.sign(sampleEntries0, privateKey);
     const podPCD0 = new PODPCD(uuid(), pod0);
 
-    const ticketPOD = POD.sign(sampleEntries1, privateKey);
+    const ticketPOD = POD.sign(sampleEntries1, privateKey2);
     const ticketPODPCD = new PODPCD(uuid(), ticketPOD);
 
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
@@ -123,7 +128,12 @@ describe("GPCPCD should work", async function () {
             sampleEntries0.C,
             sampleEntries0.owner,
             sampleEntries1.ticketID
-          ]
+          ],
+          admissibleTicketIssuers: [
+            ticketPOD.signerPublicKey,
+            "f71b62538fbc40df0d5e5b2034641ae437bdbf06012779590099456cf25b5f8f",
+            "755224af31d5b5e47cc6ca8827b8bf9d2ceba48bf439907abaade0a3269d561b"
+          ].map(PODEdDSAPublicKeyValue)
         }),
         argumentType: ArgumentTypeName.String
       },
@@ -140,6 +150,7 @@ describe("GPCPCD should work", async function () {
       pod0.signerPublicKey
     );
     expect(gpcPCD.claim.revealed.pods.pod0.entries?.A?.value).to.eq(123n);
+    expect(gpcPCD.claim.revealed.pods.ticketPOD).to.be.undefined;
     expect(gpcPCD.claim.revealed.owner?.externalNullifier).to.not.be.undefined;
     expect(gpcPCD.claim.revealed.owner?.nullifierHash).to.not.be.undefined;
     expect(gpcPCD.claim.revealed.watermark?.value).to.eq("some watermark");

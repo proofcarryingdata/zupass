@@ -6,12 +6,7 @@ import {
 } from "@pcd/passport-interface";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import {
-  useDispatch,
-  useLoginIfNoSelf,
-  useRequirePassword,
-  useSelf
-} from "../../../src/appHooks";
+import { useDispatch, useLoginIfNoSelf, useSelf } from "../../../src/appHooks";
 import { validateRequest } from "../../../src/passportRequest";
 import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
@@ -27,7 +22,6 @@ import { ProveAndAddScreen } from "./ProveAndAddScreen";
  */
 export function AddScreen(): JSX.Element | null {
   useSyncE2EEStorage();
-  useRequirePassword();
   const dispatch = useDispatch();
   const self = useSelf();
   const location = useLocation();
