@@ -131,7 +131,10 @@ export class PipelineExecutorSubservice {
    *
    * tl;dr syncs db <-> pipeline in memory representation
    */
-  public async restartPipeline(pipelineId: string): Promise<void> {
+  public async restartPipeline(
+    pipelineId: string,
+    dontLoad?: boolean
+  ): Promise<void> {
     return traced(SERVICE_NAME, "restartPipeline", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
       const definition =
@@ -189,7 +192,9 @@ export class PipelineExecutorSubservice {
       );
       pipelineSlot.definition = definition;
 
-      await this.performPipelineLoad(pipelineSlot);
+      if (dontLoad !== true) {
+        await this.performPipelineLoad(pipelineSlot);
+      }
     });
   }
 
@@ -324,6 +329,7 @@ export class PipelineExecutorSubservice {
    */
   private async startPipelineLoadLoop(): Promise<void> {
     try {
+      // for each running pipeline, call its 'load' function
       await this.performAllPipelineLoads();
     } catch (e) {
       setError(e);
@@ -338,6 +344,16 @@ export class PipelineExecutorSubservice {
         PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS / 1000
       ),
       "s from now"
+    );
+
+    // for each pipeline slot, reload its definition from the database,
+    // and re-instantiate the pipeline. do NOT call the pipeline's 'load'
+    // function - that will be done the next time `startPipelineLoadLoop`
+    // is called.
+    await Promise.allSettled(
+      this.pipelineSlots
+        .slice()
+        .map((s) => this.restartPipeline(s.definition.id, true))
     );
 
     this.nextLoadTimeout = setTimeout(() => {
