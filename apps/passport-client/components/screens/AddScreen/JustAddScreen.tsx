@@ -54,9 +54,9 @@ export function JustAddScreen({
       if (isProtocolWorlds) {
         confetti();
         await requestLogToServer(appConfig.zupassServer, "added-tension", {
-          commitment: self.commitment,
+          commitment: self.commitment.toString(),
           email: self.email,
-          pcd,
+          pcd: request.pcd,
           tension: (pcd as EdDSATicketPCD)?.claim?.ticket?.eventName
         });
       }
