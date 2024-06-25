@@ -8,7 +8,7 @@ import {
   useStrichSDKState
 } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
-import { maybeRedirect } from "../../src/util";
+import { isProtocolWorldsUrl, maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
 import { ReactQrReaderScanner } from "../core/scanners/ReactQRReaderScanner";
 import { StrichScanner } from "../core/scanners/StrichScanner";
@@ -28,6 +28,10 @@ export function ScanScreen(): JSX.Element {
   const onResult = useCallback(
     (result: string): void => {
       console.log(`Got result, considering redirect`, result);
+      if (isProtocolWorldsUrl(result)) {
+        window.location.href = result;
+        return;
+      }
       const newLoc = maybeRedirect(result);
       if (newLoc) {
         // Instantly remove any error toasts
