@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -8,12 +8,13 @@ import {
   useStrichSDKState
 } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
-import { maybeRedirect } from "../../src/util";
+import { isProtocolWorldsUrl, maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
 import { ReactQrReaderScanner } from "../core/scanners/ReactQRReaderScanner";
 import { StrichScanner } from "../core/scanners/StrichScanner";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
+import { ScreenLoader } from "../shared/ScreenLoader";
 import {
   Back,
   Home
@@ -24,10 +25,17 @@ export function ScanScreen(): JSX.Element {
   const usingLaserScanner = loadUsingLaserScanner();
   useLaserScannerKeystrokeInput();
   const nav = useNavigate();
+  const [isRedirectingProtocolWorlds, setRedirectingProtocolWorlds] =
+    useState(false);
 
   const onResult = useCallback(
     (result: string): void => {
       console.log(`Got result, considering redirect`, result);
+      if (isProtocolWorldsUrl(result)) {
+        window.location.href = result;
+        setRedirectingProtocolWorlds(true);
+        return;
+      }
       const newLoc = maybeRedirect(result);
       if (newLoc) {
         // Instantly remove any error toasts
@@ -52,6 +60,14 @@ export function ScanScreen(): JSX.Element {
       dispatch({ type: "initialize-strich" });
     }
   }, [dispatch, sdkState]);
+
+  if (isRedirectingProtocolWorlds) {
+    return (
+      <AppContainer bg="gray">
+        <ScreenLoader text="Discovering something new.." />
+      </AppContainer>
+    );
+  }
 
   return (
     <AppContainer bg="gray">

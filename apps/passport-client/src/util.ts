@@ -57,6 +57,10 @@ export function randomEmail(): string {
   return uuid().slice(0, 8) + "@test.com";
 }
 
+export function isProtocolWorldsUrl(text: string): boolean {
+  return text.startsWith("https://qrco.de/bfA");
+}
+
 function getVerifyUrlPrefixes(): string[] {
   return [
     `${window.location.origin}/#/verify`,
