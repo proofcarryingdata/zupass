@@ -167,6 +167,7 @@ ticket: ${ticketName.label}`
               options={eventNames}
               value={eventName}
               onChange={(newValue) => setEventName(newValue)}
+              isClearable={true}
             />
           </FormControl>
           <FormControl mb={2}>
@@ -175,6 +176,7 @@ ticket: ${ticketName.label}`
               options={ticketNames}
               value={ticketName}
               onChange={(newValue) => setTicketName(newValue)}
+              isClearable={true}
             />
           </FormControl>
           <FormControl mb={2}>
@@ -207,6 +209,7 @@ ticket: ${ticketName.label}`
           <FormControl mb={2}>
             <FormLabel>Image URL</FormLabel>
             <CreatableSelect
+              isClearable={true}
               options={imageUrls}
               value={imageUrl}
               onChange={(newValue) => setImageUrl(newValue)}
