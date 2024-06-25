@@ -5,7 +5,7 @@ import {
   RecordContainerArgument,
   StringArgument
 } from "@pcd/pcd-types";
-import { PODName } from "@pcd/pod";
+import { PODEntries, PODName } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Groth16Proof } from "snarkjs";
@@ -50,11 +50,59 @@ export type PODPCDRecordArg = RecordContainerArgument<
 >;
 
 /**
- * Validator parameter type for POD PCD arguments.
+ * Prescribed signers' public keys for PODs. User inputs to a proof will be
+ * filtered to only those PODs containing matching values.
+ */
+export type PODSignerPublicKeys = Record<PODName, string>;
+
+/**
+ * Prescribed/Fixed POD entries. User inputs to a proof will be filtered to only
+ * those PODs containing matching values.
+ */
+export type FixedPODEntries = Record<PODName, PODEntries>;
+
+/**
+ * Validator parameters for POD PCD arguments. These will play a role in
+ * filtering the selection of PODs available for a user to choose for their
+ * proof.
  */
 export type PODPCDArgValidatorParams = {
+  /**
+   * Message to display if the POD specified in the config does not match any of
+   * the available POD PCDs.
+   */
   notFoundMessage?: string;
+
+  /**
+   * JSON-serialised proof configuration used to narrow down the selection of
+   * POD PCDs. This should coincide with the proof config string supplied in the
+   * `GPCPCDArgs`. May be deserialised using {@link deserializeGPCProofConfig}.
+   */
   proofConfig?: string;
+
+  /**
+   * JSON-serialised membership lists to narrow down the selection of POD PCDs
+   * to those satisfying the list membership check specified in the proof
+   * config. This should coincide with the membership list string supplied in
+   * the `GPCPCDArgs` (if any). May be deserialised using {@link
+   * podMembershipListsFromSimplifiedJSON}.
+   */
+  membershipLists?: string;
+
+  /**
+   * JSON-serialised `PODEntries`.This is used to narrow down the selection of
+   * POD PCDs to those with entries matching these prescribed values. May be
+   * deserialised using {@link podEntryRecordFromSimplifiedJSON}.
+   */
+  prescribedEntries?: string;
+
+  /**
+   * Record of prescribed signers' public keys. This is used to narrow down the
+   * selection of POD PCDs to those with signers' public keys matching these
+   * prescribed values. May be serialised and deserialised using {@link
+   * JSON.stringify} and {@link JSON.parse}.
+   */
+  prescribedSignerPublicKeys?: PODSignerPublicKeys;
 };
 
 /**

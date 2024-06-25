@@ -1,6 +1,7 @@
 import {
   GPCProofConfig,
   GPCProofInputs,
+  PODMembershipLists,
   deserializeGPCBoundConfig,
   deserializeGPCProofConfig,
   deserializeGPCRevealedClaims,
@@ -18,11 +19,13 @@ import {
   SerializedPCD
 } from "@pcd/pcd-types";
 import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
-import { PODPCD, PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
+import { PODPCD, PODPCDPackage, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
+import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
+  FixedPODEntries,
   GPCPCD,
   GPCPCDArgs,
   GPCPCDClaim,
@@ -31,6 +34,16 @@ import {
   GPCPCDTypeName,
   PODPCDArgValidatorParams
 } from "./GPCPCD";
+import { podEntryRecordFromSimplifiedJSON } from "./util";
+import {
+  checkPCDType,
+  checkPODAgainstPrescribedSignerPublicKeys,
+  checkPODEntriesAgainstMembershipLists,
+  checkPODEntriesAgainstPrescribedEntries,
+  checkPODEntriesAgainstProofConfig,
+  checkPrescribedEntriesAgainstProofConfig,
+  checkPrescribedSignerPublicKeysAgainstProofConfig
+} from "./validatorChecks";
 
 let savedInitArgs: GPCPCDInitArgs | undefined = undefined;
 
@@ -147,7 +160,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
 
 /**
  * Creates a new {@link GPCPCD} by generating an {@link GPCPCDProof}
- * and deriving an {@link GPCPCDClaim} from the given {@link GPCPCDArgs}.
+ * and deriving a {@link GPCPCDClaim} from the given {@link GPCPCDArgs}.
  *
  * This generates a ZK proof using the given config and inputs using a
  * selected circuit from the supported family.
@@ -268,42 +281,81 @@ function validateInputPOD(
   podPCD: PODPCD,
   params: PODPCDArgValidatorParams | undefined
 ): boolean {
-  if (podPCD.type !== PODPCDTypeName) {
-    return false;
+  // Bypass checks if there is nothing to work with.
+  if (params === undefined) {
+    return true;
   }
 
-  if (params?.proofConfig !== undefined) {
-    let proofConfig: GPCProofConfig;
-    try {
-      proofConfig = deserializeGPCProofConfig(params.proofConfig);
-    } catch (e) {
-      if (e instanceof TypeError) {
-        params.notFoundMessage = e.message;
-        return false;
-      }
-      throw e;
-    }
+  // Deserialise provided parameters
+  let proofConfig: GPCProofConfig | undefined;
+  let membershipLists: PODMembershipLists | undefined;
+  let prescribedEntries: FixedPODEntries | undefined;
 
-    // POD podName should be present in the config and have all
-    // entries specified there.
-    const podConfig = proofConfig.pods[podName];
-    if (podConfig === undefined) {
-      params.notFoundMessage = `The proof configuration does not contain this POD.`;
+  try {
+    proofConfig =
+      params.proofConfig !== undefined
+        ? deserializeGPCProofConfig(params.proofConfig)
+        : undefined;
+
+    membershipLists =
+      params.membershipLists !== undefined
+        ? podMembershipListsFromSimplifiedJSON(params.membershipLists)
+        : undefined;
+
+    prescribedEntries =
+      params.prescribedEntries !== undefined
+        ? podEntryRecordFromSimplifiedJSON(params.prescribedEntries)
+        : undefined;
+  } catch (e) {
+    if (e instanceof TypeError || e instanceof Error) {
+      params.notFoundMessage = e.message;
       return false;
-    } else {
-      const entries = Object.keys(podConfig.entries);
-      // Enumerate POD entries
-      const podEntries = podPCD.pod.content.asEntries();
-      // Return true iff all elements of `entries` are keys of `podEntries`
-      return entries.every((entryName) => podEntries[entryName] !== undefined);
     }
+    throw e;
   }
 
-  // TODO(POD-P3): Use validatorParams to filter by more constraints
-  // not included in config.
-  // E.g. require revealed value to be a specific value, or require
-  // public key to be a specific key.
-  return true;
+  const prescribedSignerPublicKeys = params.prescribedSignerPublicKeys;
+
+  return (
+    checkPCDType(podPCD) &&
+    // Short-circuit if proof config not specified.
+    (proofConfig === undefined ||
+      (checkPODEntriesAgainstProofConfig(
+        podName,
+        podPCD,
+        proofConfig,
+        params
+      ) &&
+        checkPrescribedSignerPublicKeysAgainstProofConfig(
+          podName,
+          proofConfig,
+          prescribedSignerPublicKeys,
+          params
+        ) &&
+        checkPODAgainstPrescribedSignerPublicKeys(
+          podName,
+          podPCD.pod.signerPublicKey,
+          prescribedSignerPublicKeys,
+          params
+        ) &&
+        checkPrescribedEntriesAgainstProofConfig(
+          podName,
+          proofConfig,
+          prescribedEntries,
+          params
+        ) &&
+        checkPODEntriesAgainstPrescribedEntries(
+          podName,
+          podPCD.pod.content.asEntries(),
+          prescribedEntries
+        ) &&
+        checkPODEntriesAgainstMembershipLists(
+          podName,
+          podPCD,
+          proofConfig,
+          membershipLists
+        )))
+  );
 }
 
 export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {

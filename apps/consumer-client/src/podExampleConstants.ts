@@ -3,6 +3,8 @@ import { Identity } from "@semaphore-protocol/identity";
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
 export const EXAMPLE_EDDSA_PRIVATE_KEY =
   "0001020304050607080900010203040506070809000102030405060708090001"; // base64 AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE=
+export const EXAMPLE_EDDSA_PRIVATE_KEY2 =
+  "0001020304050607080900010203040506070809000102030405060708090000"; // base64 AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAA=
 
 export const EXAMPLE_POD_CONTENT = `{
   "A": 123,
@@ -83,4 +85,15 @@ export const EXAMPLE_MEMBERSHIP_LISTS = `{
     ["zero", "zero"],
     [0, "one"]
   ]
+}`;
+
+export const EXAMPLE_PRESCRIBED_ENTRIES = `{
+  "examplePOD": {
+    "A": 123
+  }
+}`;
+
+export const EXAMPLE_PRESCRIBED_SIGNER_PUBLIC_KEYS = `{
+  "examplePOD": "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
+  "cardPOD": "su2CUR47c1us1FwPUN3RNZWzit9nmya2QD60Y/iffxI"
 }`;
