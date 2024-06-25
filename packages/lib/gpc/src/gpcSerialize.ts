@@ -175,7 +175,7 @@ export function podMembershipListsToSimplifiedJSON(
  * instance, small numbers are always annotated as `int`, rather than
  * `cryptographic`.
  *
- * @param serializedMembershipLists a string representation of `PODMembershipLists`
+ * @param simplifiedJSON a string representation of `PODMembershipLists`
  * @returns `PODMembershipLists` deserialized from the string
  * @throws if the serialized form is invalid
  */
