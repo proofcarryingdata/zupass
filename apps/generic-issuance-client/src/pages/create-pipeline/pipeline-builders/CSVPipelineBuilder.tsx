@@ -135,7 +135,39 @@ export default function CSVPipelineBuilder(
                     name: feedOptions.feedFolder,
                     csv,
                     feedOptions,
-                    outputType
+                    outputType,
+                    match:
+                      outputType === CSVPipelineOutputType.POD
+                        ? { type: "email", inputField: "email" }
+                        : undefined,
+                    podOutput:
+                      outputType === CSVPipelineOutputType.POD
+                        ? {
+                            owner: {
+                              type: "cryptographic",
+                              source: { type: "credentialSemaphoreID" }
+                            },
+                            zupass_title: {
+                              type: "string",
+                              source: { type: "input", name: "title" }
+                            },
+                            zupass_description: {
+                              type: "string",
+                              source: { type: "input", name: "description" }
+                            },
+                            zupass_image_url: {
+                              type: "string",
+                              source: { type: "input", name: "imageUrl" }
+                            },
+                            zupass_display: {
+                              type: "string",
+                              source: {
+                                type: "configured",
+                                value: "collectable"
+                              }
+                            }
+                          }
+                        : undefined
                   }
                 } satisfies Partial<CSVPipelineDefinition>)
               )

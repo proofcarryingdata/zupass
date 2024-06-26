@@ -499,12 +499,46 @@ export enum CSVPipelineOutputType {
    */
   Message = "EdDSAMessage",
   Ticket = "EdDSATicket",
-  PODTicket = "PODTicketPCD"
+  PODTicket = "PODTicketPCD",
+  POD = "PODPCD"
 }
+
+const CSVPipelinePODEntrySchema = z.object({
+  type: z.enum(["string", "int", "cryptographic"]).optional(),
+  source: z.discriminatedUnion("type", [
+    z.object({ type: z.literal("input"), name: z.string() }),
+    z.object({ type: z.literal("credentialSemaphoreID") }),
+    z.object({ type: z.literal("credentialEmail") }),
+    z.object({ type: z.literal("configured"), value: z.string() })
+  ])
+});
+
+export type CSVPipelinePODEntry = z.infer<typeof CSVPipelinePODEntrySchema>;
+export type CSVPipelinePODEntryOptions = Record<string, CSVPipelinePODEntry>;
+
+const MatchOptionSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("semaphoreID"), inputField: z.string() }),
+  z.object({ type: z.literal("email"), inputField: z.string() })
+]);
+
+export type CSVPipelineMatchConfig = z.infer<typeof MatchOptionSchema>;
 
 const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   csv: z.string(),
   outputType: z.nativeEnum(CSVPipelineOutputType).optional(),
+  // For generic POD output, we don't know the format of the input CSV in
+  // advance, so we need to be able to configure which field from the input
+  // CSV to use for matching against the user's Semaphore ID/email.
+  match: MatchOptionSchema.optional(),
+  // For generic POD output, we want to be able to choose the field names,
+  // types, and so on. If "POD" output type is selected, use this
+  // configuration to do that mapping.
+  /**
+   * @TODO Refactor this into a new pipeline that does not have so much cruft
+   * (PODTicketPCD issuance, Message PCDs). Generic POD issuance deserves to be
+   * done properly, and hacking around that other stuff will become painful.
+   */
+  podOutput: z.record(z.string(), CSVPipelinePODEntrySchema).optional(),
   feedOptions: FeedIssuanceOptionsSchema,
   issueToUnmatchedEmail: z.boolean().optional(),
   semaphoreGroupName: z.string().optional()

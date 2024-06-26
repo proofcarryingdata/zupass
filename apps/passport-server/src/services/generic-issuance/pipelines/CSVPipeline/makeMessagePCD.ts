@@ -13,7 +13,7 @@ import { traced } from "../../../telemetryService";
  * - `message`: markdown-formatted announcement. can include images, links, etc.
  */
 export async function makeMessagePCD(
-  csvRow: string[],
+  csvRow: Record<string, string>,
   eddsaPrivateKey: string
 ): Promise<SerializedPCD> {
   return traced("", "makeMarkdownPCD", async () => {
@@ -29,8 +29,8 @@ export async function makeMessagePCD(
       message: {
         argumentType: ArgumentTypeName.Object,
         value: {
-          displayName: csvRow[0],
-          mdBody: csvRow[1]
+          displayName: csvRow.Title,
+          mdBody: csvRow.Message
         }
       }
     });

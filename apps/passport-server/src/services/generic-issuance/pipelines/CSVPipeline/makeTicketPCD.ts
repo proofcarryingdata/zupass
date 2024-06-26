@@ -10,7 +10,7 @@ import { traced } from "../../../telemetryService";
 
 export function summarizeEventAndProductIds(
   pipelineId: string,
-  ticketRows: string[][]
+  ticketRows: Record<string, string>[]
 ): string {
   const tickets = ticketRows
     .map((r) => rowToTicket(r, "", pipelineId))
@@ -29,17 +29,17 @@ export function summarizeEventAndProductIds(
 }
 
 export function rowToTicket(
-  row: string[],
+  row: Record<string, string>,
   attendeeSemaphoreId: string,
   pipelineId: string
 ): ITicketData | undefined {
   try {
-    const eventName: string = row[0];
-    const ticketName: string = row[1];
-    const attendeeName: string = row[2];
-    const attendeeEmail: string = row[3];
-    const imageUrl: string = row[4];
-    const id: string = row[5] ?? "";
+    const eventName: string = row.eventName;
+    const ticketName: string = row.ticketName;
+    const attendeeName: string = row.attendeeName;
+    const attendeeEmail: string = row.attendeeEmail;
+    const imageUrl: string = row.imageUrl;
+    const id: string = row.id ?? "";
 
     const eventId: string = uuidv5(`${eventName}-${ticketName}`, pipelineId);
     const productId: string = uuidv5(`product-${eventId}`, pipelineId);
@@ -81,7 +81,7 @@ export function rowToTicket(
 }
 
 export async function makeTicketPCD(
-  inputRow: string[],
+  inputRow: Record<string, string>,
   eddsaPrivateKey: string,
   requesterEmail: string | undefined,
   requesterSemaphoreId: string | undefined,

@@ -1,7 +1,9 @@
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CSVPipelineDefinition,
+  CSVPipelineMatchConfig,
   CSVPipelineOutputType,
+  CSVPipelinePODEntryOptions,
   PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
@@ -14,6 +16,7 @@ import {
 import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { assertUnreachable } from "@pcd/util";
 import { parse } from "csv-parse";
 import PQueue from "p-queue";
 import { v4 as uuid, v5 as uuidv5 } from "uuid";
@@ -40,6 +43,7 @@ import { CredentialSubservice } from "../../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline, Pipeline } from "../types";
+import { makeGenericPODPCD } from "./makeGenericPODPCD";
 import { makeMessagePCD } from "./makeMessagePCD";
 import { makePODTicketPCD } from "./makePODTicketPCD";
 import {
@@ -52,7 +56,7 @@ const LOG_NAME = "CSVPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
 
 export interface CSVAtom extends PipelineAtom {
-  row: string[];
+  row: Record<string, string>;
 }
 
 export class CSVPipeline implements BasePipeline {
@@ -66,6 +70,8 @@ export class CSVPipeline implements BasePipeline {
   private semaphoreGroupProvider?: SemaphoreGroupProvider;
   private consumerDB: IPipelineConsumerDB;
   private semaphoreUpdateQueue: PQueue;
+
+  private titleRow: string[] = [];
 
   public get id(): string {
     return this.definition.id;
@@ -183,6 +189,11 @@ export class CSVPipeline implements BasePipeline {
         }
       }
 
+      const columnMapping = new Map<string, number>();
+      for (let i = 0; i < this.titleRow.length; i++) {
+        columnMapping.set(this.titleRow[i], i);
+      }
+
       // TODO: cache these
       const somePCDs = await Promise.all(
         atoms.map(async (atom: CSVAtom) =>
@@ -195,7 +206,10 @@ export class CSVPipeline implements BasePipeline {
               eddsaPrivateKey: this.eddsaPrivateKey,
               pipelineId: this.id,
               issueToUnmatchedEmail:
-                this.definition.options.issueToUnmatchedEmail
+                this.definition.options.issueToUnmatchedEmail,
+              columnMapping,
+              podOutput: this.definition.options.podOutput,
+              matchConfig: this.definition.options.match
             }
           )
         )
@@ -238,8 +252,6 @@ export class CSVPipeline implements BasePipeline {
 
       try {
         const parsedCSV = await parseCSV(this.definition.options.csv);
-        const titleRow = parsedCSV.shift();
-        logs.push(makePLogInfo(`skipped title row '${titleRow}'`));
         const atoms = parsedCSV.map((row) => {
           return {
             id: uuid(),
@@ -418,13 +430,13 @@ export class CSVPipeline implements BasePipeline {
   }
 }
 
-export function parseCSV(csv: string): Promise<string[][]> {
+export function parseCSV(csv: string): Promise<Record<string, string>[]> {
   return traced("parseCSV", "parseCSV", async (span) => {
-    return new Promise<string[][]>((resolve, reject) => {
+    return new Promise<Record<string, string>[]>((resolve, reject) => {
       span?.setAttribute("text_length", csv.length);
 
-      const parser = parse();
-      const records: string[][] = [];
+      const parser = parse({ columns: true });
+      const records: Record<string, string>[] = [];
 
       parser.on("readable", function () {
         let record;
@@ -450,7 +462,7 @@ export function parseCSV(csv: string): Promise<string[][]> {
 }
 
 export async function makeCSVPCD(
-  inputRow: string[],
+  inputRow: Record<string, string>,
   type: CSVPipelineOutputType,
   opts: {
     requesterEmail?: string;
@@ -458,6 +470,9 @@ export async function makeCSVPCD(
     eddsaPrivateKey: string;
     pipelineId: string;
     issueToUnmatchedEmail?: boolean;
+    podOutput?: CSVPipelinePODEntryOptions;
+    matchConfig?: CSVPipelineMatchConfig;
+    columnMapping: Map<string, number>;
   }
 ): Promise<SerializedPCD | undefined> {
   return traced("makeCSVPCD", "makeCSVPCD", async (span) => {
@@ -484,10 +499,25 @@ export async function makeCSVPCD(
           opts.pipelineId,
           opts.issueToUnmatchedEmail
         );
+      case CSVPipelineOutputType.POD:
+        if (!opts.podOutput) {
+          throw new Error("Missing POD output configuration");
+        }
+
+        return makeGenericPODPCD(
+          inputRow,
+          opts.eddsaPrivateKey,
+          opts.requesterEmail,
+          opts.requesterSemaphoreId,
+          opts.pipelineId,
+          opts.issueToUnmatchedEmail,
+          opts.podOutput,
+          opts.matchConfig
+        );
       default:
         // will not compile in case we add a new output type
         // if you've added another type, plz add an impl here XD
-        return null as never;
+        assertUnreachable(type);
     }
   });
 }
