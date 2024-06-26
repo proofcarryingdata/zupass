@@ -7,8 +7,8 @@ export function kvGet(db: Pool, key: string): Promise<unknown | undefined> {
   );
 }
 
-export function kvGetByPrefix(db: Pool, key: string): Promise<unknown[]> {
-  return sqlQuery(db, `select v from kv where k like $1;`, [`${key}%`]).then(
+export function kvGetByPrefix(db: Pool, prefix: string): Promise<unknown[]> {
+  return sqlQuery(db, `select v from kv where k like $1;`, [`${prefix}%`]).then(
     (res) => res.rows.map((row) => row.v)
   );
 }

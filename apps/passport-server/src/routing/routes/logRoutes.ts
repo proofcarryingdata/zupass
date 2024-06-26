@@ -25,10 +25,12 @@ export function initLogRoutes(
         const user = await services.userService.getUserByCommitment(commitment);
         const email = user?.email;
 
-        await kvSet(context.dbPool, `protocol_worlds_score:${email}`, {
-          email,
-          score
-        });
+        if (email) {
+          await kvSet(context.dbPool, `protocol_worlds_score:${email}`, {
+            email,
+            score
+          });
+        }
       }
 
       const flattenedBody = flatten({ client: req.body }) as Record<
