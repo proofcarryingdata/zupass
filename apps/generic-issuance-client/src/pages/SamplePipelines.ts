@@ -81,7 +81,8 @@ export const SAMPLE_CSV_PODS = `
 
 email,title,description,imageUrl
 mail@robknight.org.uk,Testing,A test POD,https://images.unsplash.com/photo-1495615080073-6b89c9839ce0?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
-
+richard@0xparc.org,Testing,A test POD,https://images.unsplash.com/photo-1495615080073-6b89c9839ce0?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+ivan@0xparc.org,Testing,A test POD,https://images.unsplash.com/photo-1495615080073-6b89c9839ce0?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
 
 `
   .split("\n")
