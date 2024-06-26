@@ -14,7 +14,8 @@ import {
 import { Maximizer } from "../../../components/Maximizer";
 import { useViewingPipelineDefinition } from "../../../helpers/Context";
 import { stringifyAndFormat } from "../../../helpers/util";
-import { CSVPreview, PreviewType } from "./CSVPreview";
+import { PreviewType } from "./CSVPreview";
+import { CSVPreviewWrapper } from "./CSVPreviewWrapper";
 import { PipelineActions } from "./PipelineActions";
 import { SinglePipelineTable } from "./SinglePipelineTable";
 
@@ -72,7 +73,7 @@ export function PipelineEditSection({
           maximized={editorMaximized}
           setMaximized={setEditorMaximized}
         >
-          <Tabs style={{ height: "100%" }}>
+          <Tabs isLazy style={{ height: "100%" }}>
             {isCSVPipelineDefinition(pipeline) && (
               <TabList>
                 <Tab>Configuration</Tab>
@@ -113,9 +114,9 @@ export function PipelineEditSection({
               </TabPanel>
               {isCSVPipelineDefinition(pipeline) && (
                 <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
-                  <CSVPreview
+                  <CSVPreviewWrapper
                     previewType={PreviewType.CSVSheet}
-                    csv={pipeline.options.csv}
+                    pipelineDefinitionText={editorValue}
                     onChange={(newCsv: string) => {
                       try {
                         const pipelineContent = JSON.parse(editorValue);
