@@ -10,11 +10,6 @@ export function initMiscRoutes(
 ): void {
   logger("[INIT] initializing misc routes");
 
-  /**
-   * Lets the Zupass client log stuff to honeycomb.
-   *
-   * @todo rate limit this.
-   */
   app.get(
     "/misc/protocol-worlds-scoreboard",
     async (req: Request, res: Response) => {
