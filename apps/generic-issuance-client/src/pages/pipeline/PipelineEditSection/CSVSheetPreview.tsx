@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState } from "react";
 // eslint-disable-next-line import/no-named-as-default
 import { stringify } from "csv-stringify/sync";
-import { Mode, Spreadsheet } from "react-spreadsheet";
+import { Matrix, Mode, Spreadsheet } from "react-spreadsheet";
 import styled from "styled-components";
 import { parseCSV } from "./parseCSV";
 
@@ -30,7 +30,7 @@ export function CSVSheetPreview({
       });
   }, [csv]);
 
-  const [data, setData] = useState<{ value: string }[][]>([]);
+  const [data, setData] = useState<Matrix<{ value: string }>>([]);
 
   if (parseError) {
     return <Container>{parseError.message}</Container>;
@@ -48,15 +48,17 @@ export function CSVSheetPreview({
                 // does not get lost. The data in the table does not include
                 // this row, so we have to manually include it from the initial
                 // parse of the CSV file.
-                [parsed[0], ...data.map((row) => row.map(({ value }) => value))]
+                [
+                  parsed[0],
+                  ...data.map((row) => row.map((cell) => cell?.value ?? ""))
+                ]
               );
               onChange(newCsv);
             }
           }
         }}
         onChange={(data): void => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setData(data as any);
+          setData(data);
         }}
         darkMode={true}
         data={data}
