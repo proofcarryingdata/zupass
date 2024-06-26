@@ -23,7 +23,36 @@ export function initMiscRoutes(
         "protocol_worlds_score:"
       )) as Array<{ email: string; score: number }>;
 
-      res.send(scores);
+      scores.sort((a, b) => b.score - a.score);
+
+      res.send(`
+        <html>
+          <head>
+            <title>Protocol Worlds Scoreboard</title>
+            <style>
+              table { border-collapse: collapse; }
+              th, td { border: 1px solid black; padding: 5px; }
+            </style>
+          </head>
+          <body>
+            <h1>Protocol Worlds Scoreboard</h1>
+            <table>
+              <tr><th>Rank</th><th>Email</th><th>Score</th></tr>
+              ${scores
+                .map(
+                  (score, index) => `
+                <tr>
+                  <td>${index + 1}</td>
+                  <td>${score.email}</td>
+                  <td>${score.score}</td>
+                </tr>
+              `
+                )
+                .join("")}
+            </table>
+          </body>
+        </html>
+      `);
     }
   );
 }
