@@ -4,7 +4,7 @@ import { traced } from "../../../telemetryService";
 import { rowToTicket } from "./makeTicketPCD";
 
 export async function makePODTicketPCD(
-  inputRow: string[],
+  inputRow: Record<string, string>,
   eddsaPrivateKey: string,
   requesterEmail: string | undefined,
   requesterSemaphoreId: string | undefined,

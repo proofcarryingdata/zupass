@@ -77,6 +77,17 @@ America,GA,Richard,richard@pcd.team,https://upload.wikimedia.org/wikipedia/commo
   .filter((l) => l.length > 0)
   .join("\n");
 
+export const SAMPLE_CSV_PODS = `
+
+email,title,description,imageUrl
+mail@robknight.org.uk,Testing,A test POD,https://images.unsplash.com/photo-1495615080073-6b89c9839ce0?q=80&w=400&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D
+
+
+`
+  .split("\n")
+  .filter((l) => l.length > 0)
+  .join("\n");
+
 export function getSampleCSVData(
   outputType = CSVPipelineOutputType.Message
 ): string {
@@ -86,6 +97,8 @@ export function getSampleCSVData(
     case CSVPipelineOutputType.Ticket:
     case CSVPipelineOutputType.PODTicket:
       return SAMPLE_CSV_EDDSA_TICKET;
+    case CSVPipelineOutputType.POD:
+      return SAMPLE_CSV_PODS;
     default:
       return "not implemented";
   }
@@ -100,6 +113,8 @@ export function getSampleFeedOptions(
     case CSVPipelineOutputType.Ticket:
     case CSVPipelineOutputType.PODTicket:
       return TICKET_FEED_OPTS;
+    case CSVPipelineOutputType.POD:
+      return POD_FEED_OPTS;
     default:
       throw new Error("not implemented");
   }
@@ -117,6 +132,13 @@ export const TICKET_FEED_OPTS = {
   feedDisplayName: "eth_denver_tickets.csv",
   feedDescription: "eth_denver_tickets",
   feedFolder: "EthDenver"
+} satisfies FeedIssuanceOptions;
+
+export const POD_FEED_OPTS = {
+  feedId: "0",
+  feedDisplayName: "pods.csv",
+  feedDescription: "CSV pods",
+  feedFolder: "CSV PODs"
 } satisfies FeedIssuanceOptions;
 
 export const SAMPLE_CSV_PIPELINE = JSON.stringify(
