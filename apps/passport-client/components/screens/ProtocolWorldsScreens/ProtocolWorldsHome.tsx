@@ -1,10 +1,16 @@
-import { ProtocolWorldsFolderName } from "@pcd/passport-interface";
+import {
+  ProtocolWorldsFolderName,
+  requestLogToServer
+} from "@pcd/passport-interface";
 import { Separator } from "@pcd/passport-ui";
+import { useEffect } from "react";
 import styled from "styled-components";
+import { appConfig } from "../../../src/appConfig";
 import {
   useFolders,
   useLoadedIssuedPCDs,
-  usePCDsInFolder
+  usePCDsInFolder,
+  useSelf
 } from "../../../src/appHooks";
 import { RippleLoader } from "../../core/RippleLoader";
 import { PCDCardList } from "../../shared/PCDCardList";
@@ -14,6 +20,15 @@ export function ProtocolWorldsHome(): JSX.Element {
   const foldersInFolder = useFolders(ProtocolWorldsFolderName);
   const pcdsInFolder = usePCDsInFolder(ProtocolWorldsFolderName);
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
+  const self = useSelf();
+
+  useEffect(() => {
+    requestLogToServer(appConfig.zupassServer, "protocol_worlds_score", {
+      score: pcdsInFolder.length,
+      commitment: self?.commitment
+    });
+  }, [pcdsInFolder, self]);
+
   return (
     <>
       <ProtocolWorldsStyling />
