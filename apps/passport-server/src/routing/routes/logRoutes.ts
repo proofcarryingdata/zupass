@@ -13,6 +13,11 @@ export function initLogRoutes(app: express.Application): void {
    */
   app.post("/client-log", (req: Request, res: Response) => {
     traced("ClientLog", "log", async (span) => {
+      if (req.body.name === "protocol_worlds_score") {
+        const score = req.body.score;
+        const commitment = req.body.commitment;
+      }
+
       const flattenedBody = flatten({ client: req.body }) as Record<
         string,
         string | number
