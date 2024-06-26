@@ -58,8 +58,6 @@ export class CSVPipeline implements BasePipeline {
   private definition: CSVPipelineDefinition;
   private credentialSubservice: CredentialSubservice;
 
-  private titleRow: string[] = [];
-
   public get id(): string {
     return this.definition.id;
   }
@@ -117,11 +115,6 @@ export class CSVPipeline implements BasePipeline {
         }
       }
 
-      const columnMapping = new Map<string, number>();
-      for (let i = 0; i < this.titleRow.length; i++) {
-        columnMapping.set(this.titleRow[i], i);
-      }
-
       // TODO: cache these
       const somePCDs = await Promise.all(
         atoms.map(async (atom: CSVAtom) =>
@@ -135,7 +128,6 @@ export class CSVPipeline implements BasePipeline {
               pipelineId: this.id,
               issueToUnmatchedEmail:
                 this.definition.options.issueToUnmatchedEmail,
-              columnMapping,
               podOutput: this.definition.options.podOutput,
               matchConfig: this.definition.options.match
             }
@@ -336,7 +328,6 @@ export async function makeCSVPCD(
     issueToUnmatchedEmail?: boolean;
     podOutput?: CSVPipelinePODEntryOptions;
     matchConfig?: CSVPipelineMatchConfig;
-    columnMapping: Map<string, number>;
   }
 ): Promise<SerializedPCD | undefined> {
   return traced("makeCSVPCD", "makeCSVPCD", async (span) => {

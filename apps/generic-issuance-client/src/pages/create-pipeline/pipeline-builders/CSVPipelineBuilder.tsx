@@ -139,12 +139,21 @@ export default function CSVPipelineBuilder(
                     podOutput:
                       outputType === CSVPipelineOutputType.POD
                         ? {
+                            /**
+                             * The keys used here are the names of POD entries,
+                             * and are arbitrary. Fields can be freely added,
+                             * removed, and renamed.
+                             */
                             owner: {
                               type: "cryptographic",
+                              // Shows how a value can be sourced from the
+                              // user's auth credential.
                               source: { type: "credentialSemaphoreID" }
                             },
                             zupass_title: {
                               type: "string",
+                              // Shows how a value can be sourced from the CSV
+                              // input.
                               source: { type: "input", name: "title" }
                             },
                             zupass_description: {
@@ -157,6 +166,8 @@ export default function CSVPipelineBuilder(
                             },
                             zupass_display: {
                               type: "string",
+                              // Shows how a value can be specified in
+                              // configuration.
                               source: {
                                 type: "configured",
                                 value: "collectable"
