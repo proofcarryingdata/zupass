@@ -232,8 +232,6 @@ template ProtoPODGPC (
 
     // Extract the corresponding entry value and run a bounds check on
     // it.
-    //
-    // TODO: Do we want to constrain these values to be enabled?
     signal boundsCheckValues[MAX_BOUNDS_CHECKS];
     for (var i = 0; i < MAX_BOUNDS_CHECKS; i++) {
     boundsCheckValues[i]
