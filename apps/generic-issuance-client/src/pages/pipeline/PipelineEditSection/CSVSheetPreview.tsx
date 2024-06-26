@@ -1,11 +1,17 @@
-import { ReactNode, useEffect, useMemo, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 // eslint-disable-next-line import/no-named-as-default
-import Spreadsheet from "react-spreadsheet";
+import { stringify } from "csv-stringify/sync";
+import { Mode, Spreadsheet } from "react-spreadsheet";
 import styled from "styled-components";
 import { parseCSV } from "./parseCSV";
 
-export function CSVSheetPreview({ csv }: { csv: string }): ReactNode {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function CSVSheetPreview({
+  csv,
+  onChange
+}: {
+  csv: string;
+  onChange?: (newCsv: string) => void;
+}): ReactNode {
   const [parsed, setParsed] = useState<string[][]>([]);
   const [parseError, setParseError] = useState<Error>();
 
@@ -14,6 +20,9 @@ export function CSVSheetPreview({ csv }: { csv: string }): ReactNode {
       .then((parsed) => {
         setParsed(parsed);
         setParseError(undefined);
+        const copy = [...parsed];
+        copy.shift();
+        setData(copy.map((row) => row.map((value) => ({ value }))));
       })
       .catch((e) => {
         setParsed([]);
@@ -21,11 +30,7 @@ export function CSVSheetPreview({ csv }: { csv: string }): ReactNode {
       });
   }, [csv]);
 
-  const data: Array<Array<{ value: string }>> = useMemo(() => {
-    const copy = [...parsed];
-    copy.shift();
-    return copy.map((row) => row.map((value) => ({ value })));
-  }, [parsed]);
+  const [data, setData] = useState<{ value: string }[][]>([]);
 
   if (parseError) {
     return <Container>{parseError.message}</Container>;
@@ -34,9 +39,24 @@ export function CSVSheetPreview({ csv }: { csv: string }): ReactNode {
   return (
     <Container>
       <Spreadsheet
-        onChange={(_data: unknown): void => {
+        onModeChange={(mode: Mode) => {
+          if (mode === "view") {
+            // commit data
+            if (onChange) {
+              const newCsv = stringify(
+                // This is ugly but is necessary to ensure that the header row
+                // does not get lost. The data in the table does not include
+                // this row, so we have to manually include it from the initial
+                // parse of the CSV file.
+                [parsed[0], ...data.map((row) => row.map(({ value }) => value))]
+              );
+              onChange(newCsv);
+            }
+          }
+        }}
+        onChange={(data): void => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          setParsed([...parsed]);
+          setData(data as any);
         }}
         darkMode={true}
         data={data}
@@ -50,7 +70,7 @@ export function CSVSheetPreview({ csv }: { csv: string }): ReactNode {
 const clr = `rgba(47,55,70,1)`;
 
 const Container = styled.div`
-  padding: 16px;
+  padding: 16px 0px;
   border-radius: 4px;
   box-sizing: border-box;
   overflow: hidden;
@@ -63,6 +83,16 @@ const Container = styled.div`
     background-color: ${clr};
 
     table {
+      .Spreadsheet__header {
+        min-width: 3em;
+      }
+
+      .Spreadsheet__data-viewer {
+        padding: 0px;
+        white-space: normal;
+        word-break: normal;
+      }
+
       td {
         padding: 8px;
       }

@@ -1,8 +1,9 @@
-import { Box } from "@chakra-ui/react";
+import { Box, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import {
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
-  PipelineInfoResponseValue
+  PipelineInfoResponseValue,
+  isCSVPipelineDefinition
 } from "@pcd/passport-interface";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
@@ -13,6 +14,7 @@ import {
 import { Maximizer } from "../../../components/Maximizer";
 import { useViewingPipelineDefinition } from "../../../helpers/Context";
 import { stringifyAndFormat } from "../../../helpers/util";
+import { CSVPreview, PreviewType } from "./CSVPreview";
 import { PipelineActions } from "./PipelineActions";
 import { SinglePipelineTable } from "./SinglePipelineTable";
 
@@ -70,30 +72,68 @@ export function PipelineEditSection({
           maximized={editorMaximized}
           setMaximized={setEditorMaximized}
         >
-          <FancyEditor
-            dark
-            value={editorValue}
-            setValue={setEditorValue}
-            readonly={(ownedBySomeoneElse && !isAdminView) || !!historyEntry}
-            ref={editorRef}
-            editorStyle={{
-              width: editorMaximized ? "100%" : "100%",
-              height: editorMaximized ? "100vh" : "100%"
-            }}
-            containerStyle={
-              editorMaximized ? { border: "none", borderRadius: 0 } : undefined
-            }
-            editorOptions={
-              editorMaximized
-                ? {
-                    minimap: {
-                      enabled: true
-                    }
+          <Tabs style={{ height: "100%" }}>
+            {isCSVPipelineDefinition(pipeline) && (
+              <TabList>
+                <Tab>Configuration</Tab>
+                <Tab>Data</Tab>
+              </TabList>
+            )}
+
+            <TabPanels style={{ height: "100%", overflow: "hidden" }}>
+              <TabPanel style={{ height: "100%" }}>
+                <FancyEditor
+                  dark
+                  value={editorValue}
+                  setValue={setEditorValue}
+                  readonly={
+                    (ownedBySomeoneElse && !isAdminView) || !!historyEntry
                   }
-                : undefined
-            }
-            language="json"
-          />
+                  ref={editorRef}
+                  editorStyle={{
+                    width: editorMaximized ? "100%" : "100%",
+                    height: editorMaximized ? "100vh" : "100%"
+                  }}
+                  containerStyle={
+                    editorMaximized
+                      ? { border: "none", borderRadius: 0 }
+                      : undefined
+                  }
+                  editorOptions={
+                    editorMaximized
+                      ? {
+                          minimap: {
+                            enabled: true
+                          }
+                        }
+                      : undefined
+                  }
+                  language="json"
+                />
+              </TabPanel>
+              {isCSVPipelineDefinition(pipeline) && (
+                <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
+                  <CSVPreview
+                    previewType={PreviewType.CSVSheet}
+                    csv={pipeline.options.csv}
+                    onChange={(newCsv: string) => {
+                      try {
+                        const pipelineContent = JSON.parse(editorValue);
+                        if (pipelineContent) {
+                          pipelineContent.options.csv = newCsv;
+                          setEditorValue(
+                            JSON.stringify(pipelineContent, null, 2)
+                          );
+                        }
+                      } catch (e) {
+                        console.log(e);
+                      }
+                    }}
+                  />
+                </TabPanel>
+              )}
+            </TabPanels>
+          </Tabs>
         </Maximizer>
       </div>
 
