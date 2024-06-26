@@ -84,7 +84,8 @@ export function AddDataModal({
     email.length > 0 &&
     validateEmail(email) &&
     !!eventName &&
-    !!ticketName;
+    !!ticketName &&
+    !!imageUrl;
 
   const addTicket = useCallback(async () => {
     if (!eventName || !ticketName || !name || !email || !imageUrl) {
