@@ -2,7 +2,7 @@ import { Alert, AlertIcon } from "@chakra-ui/react";
 import { ReactNode } from "react";
 import { CSVPreview, PreviewType } from "./CSVPreview";
 
-export function CSVPreviewWrapper({
+export function CSVPreviewEditWrapper({
   pipelineDefinitionText,
   previewType,
   onChange

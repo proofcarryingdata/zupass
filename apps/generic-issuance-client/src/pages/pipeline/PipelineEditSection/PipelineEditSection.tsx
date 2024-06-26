@@ -15,7 +15,7 @@ import { Maximizer } from "../../../components/Maximizer";
 import { useViewingPipelineDefinition } from "../../../helpers/Context";
 import { stringifyAndFormat } from "../../../helpers/util";
 import { PreviewType } from "./CSVPreview";
-import { CSVPreviewWrapper } from "./CSVPreviewWrapper";
+import { CSVPreviewEditWrapper } from "./CSVPreviewEditWrapper";
 import { PipelineActions } from "./PipelineActions";
 import { SinglePipelineTable } from "./SinglePipelineTable";
 
@@ -114,7 +114,7 @@ export function PipelineEditSection({
               </TabPanel>
               {isCSVPipelineDefinition(pipeline) && (
                 <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
-                  <CSVPreviewWrapper
+                  <CSVPreviewEditWrapper
                     previewType={PreviewType.CSVSheet}
                     pipelineDefinitionText={editorValue}
                     onChange={(newCsv: string) => {
