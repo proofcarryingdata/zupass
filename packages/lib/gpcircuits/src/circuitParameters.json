@@ -4,6 +4,7 @@
       "maxObjects": 1,
       "maxEntries": 5,
       "merkleMaxDepth": 6,
+      "maxBoundsChecks": 0,
       "maxLists": 0,
       "maxListElements": 0,
       "maxTuples": 0,
@@ -16,35 +17,38 @@
       "maxObjects": 3,
       "maxEntries": 10,
       "merkleMaxDepth": 8,
+      "maxBoundsChecks": 2,
       "maxLists": 1,
       "maxListElements": 10,
       "maxTuples": 2,
       "tupleArity": 2
     },
-    36977
+    37283
   ],
   [
     {
       "maxObjects": 3,
       "maxEntries": 10,
       "merkleMaxDepth": 8,
+      "maxBoundsChecks": 4,
       "maxLists": 2,
       "maxListElements": 20,
       "maxTuples": 1,
       "tupleArity": 4
     },
-    36850
+    37462
   ],
   [
     {
       "maxObjects": 3,
       "maxEntries": 10,
       "merkleMaxDepth": 8,
+      "maxBoundsChecks": 4,
       "maxLists": 4,
       "maxListElements": 20,
       "maxTuples": 5,
       "tupleArity": 2
     },
-    38085
+    38697
   ]
 ]

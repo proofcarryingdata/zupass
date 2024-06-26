@@ -121,6 +121,9 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   const listConfig: GPCProofMembershipListConfig =
     listConfigFromProofConfig(proofConfig);
 
+  // TODO(POD-P2): Replace this with actual value.
+  const nBoundsChecks = 0;
+
   const numLists = Object.keys(listConfig).length;
 
   const maxListSize = numLists > 0 ? 1 : 0;
@@ -136,6 +139,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
+    nBoundsChecks,
     numLists,
     maxListSize,
     tupleArities
@@ -296,6 +300,9 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     }
   }
 
+  // TODO(POD-P2): Replace this with actual value.
+  const nBoundsChecks = 0;
+
   const numListElements =
     proofInputs.membershipLists === undefined
       ? {}
@@ -311,6 +318,7 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     totalObjects,
     totalObjects,
     requiredMerkleDepth,
+    nBoundsChecks,
     // The number of required lists cannot be properly deduced here, so we
     // return 0.
     0,
@@ -621,6 +629,9 @@ export function checkRevealedClaims(
     );
   }
 
+  // TODO(POD-P2): Replace this with actual value.
+  const nBoundsChecks = 0;
+
   const numListElements =
     revealedClaims.membershipLists === undefined
       ? {}
@@ -636,6 +647,7 @@ export function checkRevealedClaims(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
+    nBoundsChecks,
     0,
     maxListSize,
     {}
@@ -850,6 +862,7 @@ export function circuitDescMeetsRequirements(
     circuitDesc.maxObjects >= circuitReq.nObjects &&
     circuitDesc.maxEntries >= circuitReq.nEntries &&
     circuitDesc.merkleMaxDepth >= circuitReq.merkleMaxDepth &&
+    circuitDesc.maxBoundsChecks >= circuitReq.nBoundsChecks &&
     circuitDesc.maxLists >= circuitReq.nLists &&
     // The circuit description should be able to contain the largest of the lists.
     circuitDesc.maxListElements >= circuitReq.maxListSize
@@ -888,6 +901,7 @@ export function mergeRequirements(
     Math.max(rs1.nObjects, rs2.nObjects),
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
+    Math.max(rs1.nBoundsChecks, rs2.nBoundsChecks),
     Math.max(rs1.nLists, rs2.nLists),
     Math.max(rs1.maxListSize, rs2.maxListSize),
     tupleArities

@@ -2,6 +2,7 @@ pragma circom 2.1.8;
 
 include "circomlib/circuits/gates.circom";
 include "circomlib/circuits/poseidon.circom";
+include "bounds.circom";
 include "entry.circom";
 include "global.circom";
 include "gpc-util.circom";
@@ -37,6 +38,9 @@ template ProtoPODGPC (
     // inclusive upper bound on the proofDepth input.
     MERKLE_MAX_DEPTH,
 
+    // Max number of bounds checks on entry values.
+    MAX_BOUNDS_CHECKS,
+    
     // Indicates the number of ListMembership modules included in this GPC,
     // setting the largest number of distinct membership lists for (tuples of)
     // entry values which can be checked.
@@ -210,6 +214,38 @@ template ProtoPODGPC (
         isNullfierHashRevealed <== ownerIsNullfierHashRevealed
                                                                           );
 
+    
+    /*
+     * 1 BoundsCheckModule with its inputs & outputs
+     */
+    
+    // Array of indices of entries whose values will be
+    // bounds-checked. This should be padded with -1 if necessary,
+    // which refers to the value 0.
+    signal input boundsCheckEntryIndices[MAX_BOUNDS_CHECKS];
+
+    // Array of bounds, where the ith element represents the closed
+    // interval that the value of the entry with index
+    // `comparisonEntryIndices[i]` should lie in. This should be
+    // padded with [0, (1 << 64) - 1] if necessary.
+    signal input boundsCheckBounds[MAX_BOUNDS_CHECKS][2];
+
+    // Extract the corresponding entry value and run a bounds check on
+    // it.
+    //
+    // TODO: Do we want to constrain these values to be enabled?
+    signal boundsCheckValues[MAX_BOUNDS_CHECKS];
+    for (var i = 0; i < MAX_BOUNDS_CHECKS; i++) {
+    boundsCheckValues[i]
+        <== MaybeInputSelector(MAX_ENTRIES)(
+            entryValue,
+            boundsCheckEntryIndices[i]);
+    }
+    BoundsCheckModule(MAX_BOUNDS_CHECKS)(
+        boundsCheckValues,
+        boundsCheckBounds);
+
+    
     /*
      * 1 MultiTupleModule with its inputs & outputs.
      */
