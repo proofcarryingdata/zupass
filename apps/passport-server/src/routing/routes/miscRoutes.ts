@@ -16,11 +16,11 @@ export function initMiscRoutes(
    * @todo rate limit this.
    */
   app.get(
-    "/misc/protocol-worlds-score",
+    "/misc/protocol-worlds-scoreboard",
     async (req: Request, res: Response) => {
       const scores = (await kvGetByPrefix(
         context.dbPool,
-        "protocol-worlds-score:"
+        "protocol_worlds_score:"
       )) as Array<{ email: string; score: number }>;
 
       res.send(scores);
