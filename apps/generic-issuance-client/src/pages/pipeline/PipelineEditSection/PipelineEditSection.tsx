@@ -15,6 +15,8 @@ import {
 import { Maximizer } from "../../../components/Maximizer";
 import { useViewingPipelineDefinition } from "../../../helpers/Context";
 import { stringifyAndFormat } from "../../../helpers/util";
+import { CSVPODOutputs } from "./CSVPODOutputs";
+import { CSVPODRecipients } from "./CSVPODRecipients";
 import { PreviewType } from "./CSVPreview";
 import { CSVPreviewEditWrapper } from "./CSVPreviewEditWrapper";
 import { PipelineActions } from "./PipelineActions";
@@ -77,42 +79,14 @@ export function PipelineEditSection({
           <Tabs isLazy style={{ height: "100%" }}>
             {isCSVPipelineDefinition(pipeline) && (
               <TabList>
-                <Tab>Configuration</Tab>
-                <Tab>Data</Tab>
+                <Tab>Sources</Tab>
+                <Tab>Outputs</Tab>
+                <Tab>Recipients</Tab>
+                {isAdminView && <Tab>Configuration</Tab>}
               </TabList>
             )}
 
             <TabPanels style={{ height: "100%", overflow: "hidden" }}>
-              <TabPanel style={{ height: "100%" }}>
-                <FancyEditor
-                  dark
-                  value={editorValue}
-                  setValue={setEditorValue}
-                  readonly={
-                    (ownedBySomeoneElse && !isAdminView) || !!historyEntry
-                  }
-                  ref={editorRef}
-                  editorStyle={{
-                    width: editorMaximized ? "100%" : "100%",
-                    height: editorMaximized ? "100vh" : "100%"
-                  }}
-                  containerStyle={
-                    editorMaximized
-                      ? { border: "none", borderRadius: 0 }
-                      : undefined
-                  }
-                  editorOptions={
-                    editorMaximized
-                      ? {
-                          minimap: {
-                            enabled: true
-                          }
-                        }
-                      : undefined
-                  }
-                  language="json"
-                />
-              </TabPanel>
               {isCSVPipelineDefinition(pipeline) && (
                 <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
                   <CSVPreviewEditWrapper
@@ -140,6 +114,65 @@ export function PipelineEditSection({
                         );
                       }
                     }}
+                  />
+                </TabPanel>
+              )}
+              {isCSVPipelineDefinition(pipeline) && (
+                <TabPanel
+                  style={{
+                    height: "100%",
+                    overflowY: "scroll"
+                  }}
+                >
+                  <CSVPODOutputs
+                    definition={editorValue}
+                    onChange={setEditorValue}
+                  />
+                </TabPanel>
+              )}
+              {isCSVPipelineDefinition(pipeline) && (
+                <TabPanel
+                  style={{
+                    height: "100%",
+                    overflowY: "scroll"
+                  }}
+                >
+                  <CSVPODRecipients
+                    definition={editorValue}
+                    onChange={setEditorValue}
+                  />
+                </TabPanel>
+              )}
+
+              {isAdminView && (
+                <TabPanel style={{ height: "100%" }}>
+                  <FancyEditor
+                    dark
+                    value={editorValue}
+                    setValue={setEditorValue}
+                    readonly={
+                      (ownedBySomeoneElse && !isAdminView) || !!historyEntry
+                    }
+                    ref={editorRef}
+                    editorStyle={{
+                      width: editorMaximized ? "100%" : "100%",
+                      height: editorMaximized ? "100vh" : "100%"
+                    }}
+                    containerStyle={
+                      editorMaximized
+                        ? { border: "none", borderRadius: 0 }
+                        : undefined
+                    }
+                    editorOptions={
+                      editorMaximized
+                        ? {
+                            minimap: {
+                              enabled: true
+                            }
+                          }
+                        : undefined
+                    }
+                    language="json"
                   />
                 </TabPanel>
               )}

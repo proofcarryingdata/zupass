@@ -156,6 +156,7 @@ export const TwoColumns = styled.div`
 
   .details-col {
     flex-grow: 1;
+    min-width: 300px;
     overflow-y: scroll;
     flex-basis: 500px;
     padding-bottom: 128px;
