@@ -5,6 +5,7 @@ import {
   PipelineInfoResponseValue,
   isCSVPipelineDefinition
 } from "@pcd/passport-interface";
+import { getErrorMessage } from "@pcd/util";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import {
@@ -127,7 +128,16 @@ export function PipelineEditSection({
                           );
                         }
                       } catch (e) {
-                        console.log(e);
+                        // We should only have caught an exception here if the
+                        // JSON.parse() above failed.
+                        // But, if the JSON string in `editorValue` doesn't
+                        // parse then we would not be showing the CSV editor.
+                        // Errors here might happen if we change something
+                        // about how the `editorValue` text is managed.
+                        console.error(
+                          "Error when updating CSV data: ",
+                          getErrorMessage(e)
+                        );
                       }
                     }}
                   />
