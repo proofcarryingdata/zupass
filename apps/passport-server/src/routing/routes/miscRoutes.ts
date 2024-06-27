@@ -58,12 +58,15 @@ export function initMiscRoutes(
               tr:last-child td:last-child {
                 border-bottom-right-radius: 10px;
               }
+              a {
+                color: white;
+              }
               th, td { border: 1px solid white; padding: 12px; }
             </style>
           </head>
           <body>
-            <h2>Protocol Worlds</h2>
-            <h3>Tensions Leaderboard</h3>
+            <h2>Protocol Worlds Leaderboard</h2>
+            <h3>If you don't see your email, please refresh the <a target="_blank" href="https://zupass.org/#/?folder=Protocol%2520Worlds">Protocol Worlds folder</a>.</h3>
             <table>
               <tr><th>Rank</th><th>Email</th><th>Score</th></tr>
               ${scores
