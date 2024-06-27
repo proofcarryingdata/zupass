@@ -151,7 +151,7 @@ export const TwoColumns = styled.div`
     height: 100%;
     max-height: 100%;
     overflow: hidden;
-    padding-bottom: 32px;
+    padding-bottom: 16px;
   }
 
   .details-col {
