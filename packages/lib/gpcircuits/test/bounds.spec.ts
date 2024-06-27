@@ -11,7 +11,7 @@ function inInterval(input: bigint, bounds: bigint[]): boolean {
 }
 
 // 'Critical intervals' are those intervals of field elements which are larger
-// than `nBits` bits yet still satisfy the constraints of the `InInterval`
+// than `nBits` bits yet still satisfy the constraints of the `BoundsCheckModule`
 // circuit for given bounds [a,b].  These are the intervals [1 << nBits, 1 <<
 // nBits + a - 1] and [p - (1 << nBits) + b + 1, p-1], where p is the field
 // modulus. This procedure returns these as an array of closed intervals, where

@@ -216,7 +216,7 @@ template ProtoPODGPC (
 
     
     /*
-     * (MAX_BOUNDS_CHECKS) BoundsCheckModule with its inputs & outputs
+     * (MAX_BOUNDS_CHECKS) BoundsCheckModules with their inputs & outputs
      */
     
     // Array of indices of entries whose values will be
