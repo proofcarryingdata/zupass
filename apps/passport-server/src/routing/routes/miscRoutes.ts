@@ -1,3 +1,4 @@
+import { bigIntToPseudonymName } from "@pcd/util";
 import express, { Request, Response } from "express";
 import { kvGetByPrefix } from "../../database/queries/kv";
 import { ApplicationContext, GlobalServices } from "../../types";
@@ -66,15 +67,17 @@ export function initMiscRoutes(
           </head>
           <body>
             <h2>Protocol Worlds Leaderboard</h2>
-            <h3>If you don't see your email, please refresh the <a target="_blank" href="https://zupass.org/#/?folder=Protocol%2520Worlds">Protocol Worlds folder</a>.</h3>
+            <h3>View your tensions in the <a target="_blank" href="https://zupass.org/#/?folder=Protocol%2520Worlds">Protocol Worlds folder</a>.</h3>
             <table>
-              <tr><th>Rank</th><th>Email</th><th>Score</th></tr>
+              <tr><th>Rank</th><th>Pseudonym</th><th>Score</th></tr>
               ${scores
                 .map(
                   (score, index) => `
                 <tr>
                   <td>${index + 1}</td>
-                  <td>${score.email}</td>
+                  <td>${bigIntToPseudonymName(
+                    emailToPseudonym(score.email)
+                  )}</td>
                   <td>${score.score}</td>
                 </tr>
               `
@@ -86,4 +89,12 @@ export function initMiscRoutes(
       `);
     }
   );
+}
+
+function emailToPseudonym(email: string): bigint {
+  let bigIntValue = BigInt(0);
+  for (let i = 0; i < email.length; i++) {
+    bigIntValue = (bigIntValue << BigInt(16)) + BigInt(email.charCodeAt(i));
+  }
+  return bigIntValue;
 }
