@@ -1,4 +1,4 @@
-import { bigIntToPseudonymName } from "@pcd/util";
+import { bigintToPseudonymNumber, emailToBigint } from "@pcd/util";
 import express, { Request, Response } from "express";
 import { kvGetByPrefix } from "../../database/queries/kv";
 import { ApplicationContext, GlobalServices } from "../../types";
@@ -75,8 +75,8 @@ export function initMiscRoutes(
                   (score, index) => `
                 <tr>
                   <td>${index + 1}</td>
-                  <td>${bigIntToPseudonymName(
-                    emailToPseudonym(score.email)
+                  <td>${bigintToPseudonymNumber(
+                    emailToBigint(score.email)
                   )}</td>
                   <td>${score.score}</td>
                 </tr>
@@ -89,12 +89,4 @@ export function initMiscRoutes(
       `);
     }
   );
-}
-
-function emailToPseudonym(email: string): bigint {
-  let bigIntValue = BigInt(0);
-  for (let i = 0; i < email.length; i++) {
-    bigIntValue = (bigIntValue << BigInt(16)) + BigInt(email.charCodeAt(i));
-  }
-  return bigIntValue;
 }
