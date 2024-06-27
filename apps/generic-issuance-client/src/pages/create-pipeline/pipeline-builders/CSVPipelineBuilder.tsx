@@ -64,7 +64,11 @@ export default function CSVPipelineBuilder(
                 />
               )}
               {previewType !== undefined && (
-                <CSVPreview csv={csv} previewType={previewType} />
+                <CSVPreview
+                  csv={csv}
+                  previewType={previewType}
+                  onChange={setCsv}
+                />
               )}
             </Box>
           </Card>

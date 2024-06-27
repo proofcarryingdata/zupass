@@ -1,9 +1,11 @@
-import { Box } from "@chakra-ui/react";
+import { Box, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import {
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
-  PipelineInfoResponseValue
+  PipelineInfoResponseValue,
+  isCSVPipelineDefinition
 } from "@pcd/passport-interface";
+import { getErrorMessage } from "@pcd/util";
 import { ReactNode, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import {
@@ -13,6 +15,8 @@ import {
 import { Maximizer } from "../../../components/Maximizer";
 import { useViewingPipelineDefinition } from "../../../helpers/Context";
 import { stringifyAndFormat } from "../../../helpers/util";
+import { PreviewType } from "./CSVPreview";
+import { CSVPreviewEditWrapper } from "./CSVPreviewEditWrapper";
 import { PipelineActions } from "./PipelineActions";
 import { SinglePipelineTable } from "./SinglePipelineTable";
 
@@ -70,30 +74,77 @@ export function PipelineEditSection({
           maximized={editorMaximized}
           setMaximized={setEditorMaximized}
         >
-          <FancyEditor
-            dark
-            value={editorValue}
-            setValue={setEditorValue}
-            readonly={(ownedBySomeoneElse && !isAdminView) || !!historyEntry}
-            ref={editorRef}
-            editorStyle={{
-              width: editorMaximized ? "100%" : "100%",
-              height: editorMaximized ? "100vh" : "100%"
-            }}
-            containerStyle={
-              editorMaximized ? { border: "none", borderRadius: 0 } : undefined
-            }
-            editorOptions={
-              editorMaximized
-                ? {
-                    minimap: {
-                      enabled: true
-                    }
+          <Tabs isLazy style={{ height: "100%" }}>
+            {isCSVPipelineDefinition(pipeline) && (
+              <TabList>
+                <Tab>Configuration</Tab>
+                <Tab>Data</Tab>
+              </TabList>
+            )}
+
+            <TabPanels style={{ height: "100%", overflow: "hidden" }}>
+              <TabPanel style={{ height: "100%" }}>
+                <FancyEditor
+                  dark
+                  value={editorValue}
+                  setValue={setEditorValue}
+                  readonly={
+                    (ownedBySomeoneElse && !isAdminView) || !!historyEntry
                   }
-                : undefined
-            }
-            language="json"
-          />
+                  ref={editorRef}
+                  editorStyle={{
+                    width: editorMaximized ? "100%" : "100%",
+                    height: editorMaximized ? "100vh" : "100%"
+                  }}
+                  containerStyle={
+                    editorMaximized
+                      ? { border: "none", borderRadius: 0 }
+                      : undefined
+                  }
+                  editorOptions={
+                    editorMaximized
+                      ? {
+                          minimap: {
+                            enabled: true
+                          }
+                        }
+                      : undefined
+                  }
+                  language="json"
+                />
+              </TabPanel>
+              {isCSVPipelineDefinition(pipeline) && (
+                <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
+                  <CSVPreviewEditWrapper
+                    previewType={PreviewType.CSVSheet}
+                    pipelineDefinitionText={editorValue}
+                    onChange={(newCsv: string) => {
+                      try {
+                        const pipelineContent = JSON.parse(editorValue);
+                        if (pipelineContent) {
+                          pipelineContent.options.csv = newCsv;
+                          setEditorValue(
+                            JSON.stringify(pipelineContent, null, 2)
+                          );
+                        }
+                      } catch (e) {
+                        // We should only have caught an exception here if the
+                        // JSON.parse() above failed.
+                        // But, if the JSON string in `editorValue` doesn't
+                        // parse then we would not be showing the CSV editor.
+                        // Errors here might happen if we change something
+                        // about how the `editorValue` text is managed.
+                        console.error(
+                          "Error when updating CSV data: ",
+                          getErrorMessage(e)
+                        );
+                      }
+                    }}
+                  />
+                </TabPanel>
+              )}
+            </TabPanels>
+          </Tabs>
         </Maximizer>
       </div>
 
