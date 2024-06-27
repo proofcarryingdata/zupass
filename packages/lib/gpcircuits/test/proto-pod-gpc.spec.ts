@@ -281,12 +281,8 @@ const sampleInput: ProtoPODGPCInputs = {
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
   ],
-  /*PUB*/ boundsCheckBounds: [
-    [10n, 132n],
-    [0n, 0n],
-    [0n, 0n],
-    [0n, 0n]
-  ],
+  /*PUB*/ boundsCheckMinValues: [10n, 0n, 0n, 0n],
+  /*PUB*/ boundsCheckMaxValues: [132n, 0n, 0n, 0n],
 
   // Tuple module (1)
   /*PUB*/ tupleIndices: [[0n, 3n, 4n, 0n]],
@@ -540,14 +536,14 @@ function makeTestSignals(
     );
 
   // Constrain entry 0 (sampleEntries.A) to lie in the interval [10n, 132n]
-  const boundsCheckEntryIndices =
+  const [boundsCheckEntryIndices, boundsCheckMinValues, boundsCheckMaxValues] =
     params.maxBoundsChecks === 0
-      ? []
-      : padArray([0n], params.maxBoundsChecks, BABY_JUB_NEGATIVE_ONE);
-  const boundsCheckBounds =
-    params.maxBoundsChecks === 0
-      ? []
-      : padArray([[10n, 132n]], params.maxBoundsChecks, [0n, 0n]);
+      ? [[], [], []]
+      : [
+          padArray([0n], params.maxBoundsChecks, BABY_JUB_NEGATIVE_ONE),
+          padArray([10n], params.maxBoundsChecks, 0n),
+          padArray([132n], params.maxBoundsChecks, 0n)
+        ];
 
   // A list of pairs of indices and values.
   // The values will be zipped together to form the
@@ -657,7 +653,8 @@ function makeTestSignals(
       ownerExternalNullifier: 42n,
       ownerIsNullfierHashRevealed: isNullifierHashRevealed ? 1n : 0n,
       boundsCheckEntryIndices,
-      boundsCheckBounds,
+      boundsCheckMinValues,
+      boundsCheckMaxValues,
       tupleIndices,
       listComparisonValueIndex,
       listContainsComparisonValue,

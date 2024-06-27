@@ -698,7 +698,8 @@ function addIdentifierToListConfig(
 // lies in [0, 0].
 export function dummyBoundsCheckInputs(params: ProtoPODGPCCircuitParams): {
   boundsCheckEntryIndices: CircuitSignal[];
-  boundsCheckBounds: CircuitSignal[][];
+  boundsCheckMinValues: CircuitSignal[];
+  boundsCheckMaxValues: CircuitSignal[];
 } {
   return {
     boundsCheckEntryIndices: padArray(
@@ -706,6 +707,7 @@ export function dummyBoundsCheckInputs(params: ProtoPODGPCCircuitParams): {
       params.maxBoundsChecks,
       BABY_JUB_NEGATIVE_ONE
     ),
-    boundsCheckBounds: padArray([], params.maxBoundsChecks, [0n, 0n])
+    boundsCheckMinValues: padArray([], params.maxBoundsChecks, 0n),
+    boundsCheckMaxValues: padArray([], params.maxBoundsChecks, 0n)
   };
 }

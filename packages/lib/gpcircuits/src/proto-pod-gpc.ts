@@ -46,7 +46,8 @@ export type ProtoPODGPCInputs = {
 
   // Bounds check module (1)
   /*PUB*/ boundsCheckEntryIndices: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
-  /*PUB*/ boundsCheckBounds: CircuitSignal /*MAX_BOUNDS_CHECKS*/[] /*2*/[];
+  /*PUB*/ boundsCheckMinValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
+  /*PUB*/ boundsCheckMaxValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
 
   // MultiTuple module (1)
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
@@ -86,7 +87,8 @@ export type ProtoPODGPCInputNamesType = [
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
   "boundsCheckEntryIndices",
-  "boundsCheckBounds",
+  "boundsCheckMinValues",
+  "boundsCheckMaxValues",
   "tupleIndices",
   "listComparisonValueIndex",
   "listContainsComparisonValue",
@@ -118,7 +120,8 @@ export type ProtoPODGPCPublicInputs = {
 
   // Bounds check module (1)
   /*PUB*/ boundsCheckEntryIndices: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
-  /*PUB*/ boundsCheckBounds: CircuitSignal /*MAX_BOUNDS_CHECKS*/[] /*2*/[];
+  /*PUB*/ boundsCheckMinValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
+  /*PUB*/ boundsCheckMaxValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
 
   // Tuple module (1)
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
@@ -146,7 +149,8 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
   "boundsCheckEntryIndices",
-  "boundsCheckBounds",
+  "boundsCheckMinValues",
+  "boundsCheckMaxValues",
   "tupleIndices",
   "listComparisonValueIndex",
   "listContainsComparisonValue",
@@ -388,7 +392,8 @@ export class ProtoPODGPC {
       ownerExternalNullifier: allInputs.ownerExternalNullifier,
       ownerIsNullfierHashRevealed: allInputs.ownerIsNullfierHashRevealed,
       boundsCheckEntryIndices: allInputs.boundsCheckEntryIndices,
-      boundsCheckBounds: allInputs.boundsCheckBounds,
+      boundsCheckMinValues: allInputs.boundsCheckMinValues,
+      boundsCheckMaxValues: allInputs.boundsCheckMaxValues,
       tupleIndices: allInputs.tupleIndices,
       listComparisonValueIndex: allInputs.listComparisonValueIndex,
       listContainsComparisonValue: allInputs.listContainsComparisonValue,
@@ -441,7 +446,8 @@ export class ProtoPODGPC {
       inputs.ownerExternalNullifier,
       inputs.ownerIsNullfierHashRevealed,
       ...inputs.boundsCheckEntryIndices,
-      ...inputs.boundsCheckBounds.flat(),
+      ...inputs.boundsCheckMinValues.flat(),
+      ...inputs.boundsCheckMaxValues.flat(),
       ...inputs.tupleIndices.flat(),
       ...inputs.listComparisonValueIndex,
       inputs.listContainsComparisonValue,

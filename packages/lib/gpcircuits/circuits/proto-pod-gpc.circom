@@ -216,7 +216,7 @@ template ProtoPODGPC (
 
     
     /*
-     * 1 BoundsCheckModule with its inputs & outputs
+     * (MAX_BOUNDS_CHECKS) BoundsCheckModule with its inputs & outputs
      */
     
     // Array of indices of entries whose values will be
@@ -224,25 +224,29 @@ template ProtoPODGPC (
     // which refers to the value 0.
     signal input boundsCheckEntryIndices[MAX_BOUNDS_CHECKS];
 
-    // Array of bounds, where the ith element represents the closed
-    // interval that the value of the entry with index
-    // `comparisonEntryIndices[i]` should lie in. This should be
-    // padded with [0, (1 << 64) - 1] if necessary.
-    signal input boundsCheckBounds[MAX_BOUNDS_CHECKS][2];
+    // Arrays of (inclusive) 64-bit unsigned integer bounds, where the
+    // ith element represents the closed interval that the value of
+    // the entry with index `comparisonEntryIndices[i]` should lie
+    // in. Note that these bounds are not constrained here; since they
+    // are public inputs, they should be checked externally, cf. the
+    // notes preceding `BoundsCheckModule`. These arrays should be
+    // padded with 0s if necessary.
+    signal input boundsCheckMinValues[MAX_BOUNDS_CHECKS];
+    signal input boundsCheckMaxValues[MAX_BOUNDS_CHECKS];
 
     // Extract the corresponding entry value and run a bounds check on
     // it.
-    signal boundsCheckValues[MAX_BOUNDS_CHECKS];
+    signal boundsChecks[MAX_BOUNDS_CHECKS];
     for (var i = 0; i < MAX_BOUNDS_CHECKS; i++) {
-    boundsCheckValues[i]
-        <== MaybeInputSelector(MAX_ENTRIES)(
-            entryValue,
-            boundsCheckEntryIndices[i]);
+        boundsChecks[i] <==
+            BoundsCheckModule(64)(
+                MaybeInputSelector(MAX_ENTRIES)(
+                    entryValue,
+                    boundsCheckEntryIndices[i]),
+                boundsCheckMinValues[i],
+                boundsCheckMaxValues[i]);
+        boundsChecks[i] === 1;
     }
-    BoundsCheckModule(MAX_BOUNDS_CHECKS)(
-        boundsCheckValues,
-        boundsCheckBounds);
-
     
     /*
      * 1 MultiTupleModule with its inputs & outputs.
