@@ -25,12 +25,45 @@ export function initMiscRoutes(
           <head>
             <title>Protocol Worlds Scoreboard</title>
             <style>
-              table { border-collapse: collapse; }
-              th, td { border: 1px solid black; padding: 5px; }
+              body { 
+                font-family: Menlo, monospace;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-top: 100px;
+                flex-direction: column;
+                background-color: #19473f;
+                color: white;
+              }
+              h2 {
+                margin-bottom: 12px;
+              }
+              table { 
+                margin-top: 8px;
+                border-collapse: separate;
+                border-spacing: 0;
+                background-color: #206b5e;
+                border-radius: 10px;
+                overflow: hidden;
+              }
+              th:first-child {
+                border-top-left-radius: 10px;
+              }
+              th:last-child {
+                border-top-right-radius: 10px;
+              }
+              tr:last-child td:first-child {
+                border-bottom-left-radius: 10px;
+              }
+              tr:last-child td:last-child {
+                border-bottom-right-radius: 10px;
+              }
+              th, td { border: 1px solid white; padding: 12px; }
             </style>
           </head>
           <body>
-            <h1>Protocol Worlds Scoreboard</h1>
+            <h2>Protocol Worlds</h2>
+            <h3>Tensions Leaderboard</h3>
             <table>
               <tr><th>Rank</th><th>Email</th><th>Score</th></tr>
               ${scores
