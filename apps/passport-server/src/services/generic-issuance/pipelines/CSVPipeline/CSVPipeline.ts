@@ -244,6 +244,30 @@ export class CSVPipeline implements BasePipeline {
 
       try {
         const parsedCSV = await parseCSV(this.definition.options.csv);
+        if (this.definition.options.outputType === CSVPipelineOutputType.POD) {
+          const columns = new Set(Object.keys(parsedCSV[0]));
+          for (const [key, entry] of Object.entries(
+            this.definition.options.podOutput ?? {}
+          )) {
+            if (
+              entry.source.type === "input" &&
+              !columns.has(entry.source.name)
+            ) {
+              throw new Error(
+                `POD entry "${key}" required input column "${entry.source.name}" but this was not found in CSV input data`
+              );
+            }
+          }
+          if (
+            this.definition.options.match?.inputField &&
+            !columns.has(this.definition.options.match?.inputField)
+          ) {
+            throw new Error(
+              `Feed credential should match column "${this.definition.options.match?.inputField}" but this was not found in CSV input data`
+            );
+          }
+        }
+
         const atoms = parsedCSV.map((row) => {
           return {
             id: uuid(),
