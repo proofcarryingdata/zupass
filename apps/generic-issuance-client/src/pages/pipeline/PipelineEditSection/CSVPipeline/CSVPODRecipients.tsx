@@ -1,4 +1,4 @@
-import { Alert, AlertIcon, Select } from "@chakra-ui/react";
+import { Alert, AlertIcon, HStack, Select } from "@chakra-ui/react";
 import {
   CSVPipelineDefinition,
   PipelineDefinition,
@@ -7,7 +7,6 @@ import {
 } from "@pcd/passport-interface";
 import { parse } from "csv-parse/sync";
 import { ReactNode, useCallback, useMemo } from "react";
-import styled from "styled-components";
 
 function ValidatedRecipients({
   definition,
@@ -49,7 +48,7 @@ function ValidatedRecipients({
   );
 
   return (
-    <Match>
+    <HStack spacing={3}>
       <div>Match</div>
       <div>
         <Select
@@ -80,7 +79,7 @@ function ValidatedRecipients({
           })}
         </Select>
       </div>
-    </Match>
+    </HStack>
   );
 }
 
@@ -116,10 +115,3 @@ export function CSVPODRecipients({
     />
   );
 }
-
-const Match = styled.div`
-  display: flex;
-  flex: 1 1 auto;
-  align-items: center;
-  column-gap: 8px;
-`;

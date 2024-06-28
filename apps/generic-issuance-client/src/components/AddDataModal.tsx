@@ -19,7 +19,7 @@ import { stringify as stringifyCSV } from "csv-stringify/sync";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import { savePipeline } from "../helpers/Mutations";
 import { useJWT } from "../helpers/userHooks";
-import { syncParseCSV } from "../pages/pipeline/PipelineEditSection/parseCSV";
+import { syncParseCSV } from "../pages/pipeline/PipelineEditSection/CSVPipeline/parseCSV";
 
 type Option = {
   label: string;

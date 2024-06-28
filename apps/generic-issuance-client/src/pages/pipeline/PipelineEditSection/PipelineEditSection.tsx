@@ -1,5 +1,6 @@
 import { Box, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import {
+  CSVPipelineOutputType,
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue,
@@ -15,10 +16,11 @@ import {
 import { Maximizer } from "../../../components/Maximizer";
 import { useViewingPipelineDefinition } from "../../../helpers/Context";
 import { stringifyAndFormat } from "../../../helpers/util";
-import { CSVPODOutputs } from "./CSVPODOutputs";
-import { CSVPODRecipients } from "./CSVPODRecipients";
-import { PreviewType } from "./CSVPreview";
-import { CSVPreviewEditWrapper } from "./CSVPreviewEditWrapper";
+import { CSVPODFeed } from "./CSVPipeline/CSVPODFeed";
+import { CSVPODOutputs } from "./CSVPipeline/CSVPODOutputs";
+import { CSVPODRecipients } from "./CSVPipeline/CSVPODRecipients";
+import { PreviewType } from "./CSVPipeline/CSVPreview";
+import { CSVPreviewEditWrapper } from "./CSVPipeline/CSVPreviewEditWrapper";
 import { PipelineActions } from "./PipelineActions";
 import { SinglePipelineTable } from "./SinglePipelineTable";
 
@@ -79,9 +81,14 @@ export function PipelineEditSection({
           <Tabs isLazy style={{ height: "100%" }}>
             {isCSVPipelineDefinition(pipeline) && (
               <TabList>
-                <Tab>Sources</Tab>
-                <Tab>Outputs</Tab>
-                <Tab>Recipients</Tab>
+                <Tab>Inputs</Tab>
+                <Tab>Feed</Tab>
+                {pipeline.options.outputType === CSVPipelineOutputType.POD && (
+                  <Tab>Outputs</Tab>
+                )}
+                {pipeline.options.outputType === CSVPipelineOutputType.POD && (
+                  <Tab>Recipients</Tab>
+                )}
                 {isAdminView && <Tab>Configuration</Tab>}
               </TabList>
             )}
@@ -118,31 +125,41 @@ export function PipelineEditSection({
                 </TabPanel>
               )}
               {isCSVPipelineDefinition(pipeline) && (
-                <TabPanel
-                  style={{
-                    height: "100%",
-                    overflowY: "scroll"
-                  }}
-                >
-                  <CSVPODOutputs
+                <TabPanel>
+                  <CSVPODFeed
                     definition={editorValue}
                     onChange={setEditorValue}
                   />
                 </TabPanel>
               )}
-              {isCSVPipelineDefinition(pipeline) && (
-                <TabPanel
-                  style={{
-                    height: "100%",
-                    overflowY: "scroll"
-                  }}
-                >
-                  <CSVPODRecipients
-                    definition={editorValue}
-                    onChange={setEditorValue}
-                  />
-                </TabPanel>
-              )}
+              {isCSVPipelineDefinition(pipeline) &&
+                pipeline.options.outputType === CSVPipelineOutputType.POD && (
+                  <TabPanel
+                    style={{
+                      height: "100%",
+                      overflowY: "scroll"
+                    }}
+                  >
+                    <CSVPODOutputs
+                      definition={editorValue}
+                      onChange={setEditorValue}
+                    />
+                  </TabPanel>
+                )}
+              {isCSVPipelineDefinition(pipeline) &&
+                pipeline.options.outputType === CSVPipelineOutputType.POD && (
+                  <TabPanel
+                    style={{
+                      height: "100%",
+                      overflowY: "scroll"
+                    }}
+                  >
+                    <CSVPODRecipients
+                      definition={editorValue}
+                      onChange={setEditorValue}
+                    />
+                  </TabPanel>
+                )}
 
               {isAdminView && (
                 <TabPanel style={{ height: "100%" }}>

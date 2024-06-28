@@ -11,7 +11,7 @@ import { getSampleCSVData, getSampleFeedOptions } from "../../SamplePipelines";
 import {
   CSVPreview,
   PreviewType
-} from "../../pipeline/PipelineEditSection/CSVPreview";
+} from "../../pipeline/PipelineEditSection/CSVPipeline/CSVPreview";
 import { TwoColumns } from "../../pipeline/PipelinePage";
 import { FeedOptions } from "./FeedOptions";
 
