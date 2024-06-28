@@ -1,11 +1,17 @@
 import { sha256 } from "js-sha256";
 
 /**
+ * Baby Jubjub prime, i.e. the order of the Baby Jubjub base field, which is the
+ * order of the BN254 scalar field.
+ */
+export const BABY_JUB_PRIME = BigInt(
+  "21888242871839275222246405745257275088548364400416034343698204186575808495617"
+);
+
+/**
  * Encoding of -1 in a Baby Jubjub field element (as p-1).
  */
-export const BABY_JUB_NEGATIVE_ONE = BigInt(
-  "21888242871839275222246405745257275088548364400416034343698204186575808495616"
-);
+export const BABY_JUB_NEGATIVE_ONE = BABY_JUB_PRIME - 1n;
 
 /**
  * Determines whether a given number (as decimal string) represents -1,

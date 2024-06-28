@@ -1,4 +1,4 @@
-import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import { BABY_JUB_PRIME as p } from "@pcd/util";
 import { WitnessTester } from "circomkit";
 import "mocha";
 import {
@@ -6,9 +6,6 @@ import {
   BoundsCheckModuleOutputNamesType
 } from "../src";
 import { circomkit } from "./common";
-
-// Order of the BN254 scalar field.
-const p = BABY_JUB_NEGATIVE_ONE + 1n;
 
 function inInterval(input: bigint, bounds: bigint[]): boolean {
   return bounds[0] <= input && input <= bounds[1];
