@@ -225,12 +225,12 @@ template ProtoPODGPC (
     signal input boundsCheckEntryIndices[MAX_BOUNDS_CHECKS];
 
     // Arrays of (inclusive) 64-bit unsigned integer bounds, where the
-    // ith element represents the closed interval that the value of
-    // the entry with index `comparisonEntryIndices[i]` should lie
-    // in. Note that these bounds are not constrained here; since they
-    // are public inputs, they should be checked externally, cf. the
-    // notes preceding `BoundsCheckModule`. These arrays should be
-    // padded with 0s if necessary.
+    // ith element of each array specifies the minimum or maximum
+    // value that the ith value being checked can take. Note that
+    // these bounds are not constrained here; since they are public
+    // inputs, they should be checked externally, cf. the notes
+    // preceding `BoundsCheckModule`. These arrays should be padded
+    // with 0s if necessary.
     signal input boundsCheckMinValues[MAX_BOUNDS_CHECKS];
     signal input boundsCheckMaxValues[MAX_BOUNDS_CHECKS];
 

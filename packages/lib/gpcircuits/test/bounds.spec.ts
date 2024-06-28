@@ -1,3 +1,4 @@
+import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { WitnessTester } from "circomkit";
 import "mocha";
 import {
@@ -5,6 +6,9 @@ import {
   BoundsCheckModuleOutputNamesType
 } from "../src";
 import { circomkit } from "./common";
+
+// Order of the BN254 scalar field.
+const p = BABY_JUB_NEGATIVE_ONE + 1n;
 
 function inInterval(input: bigint, bounds: bigint[]): boolean {
   return bounds[0] <= input && input <= bounds[1];
@@ -23,246 +27,137 @@ function criticalIntervals(
   if (
     bounds.some((bound) => !inInterval(bound, [0n, (1n << BigInt(nBits)) - 1n]))
   ) {
-    throw new TypeError("Invalid bounds");
+    throw new RangeError("Invalid bounds");
   }
   const [a, b] = bounds;
   return (
     [
       [1n << BigInt(nBits), (1n << BigInt(nBits)) + a - 1n],
-      [
-        21888242871839275222246405745257275088548364400416034343698204186575808495617n -
-          (1n << BigInt(nBits)) +
-          b +
-          1n,
-        21888242871839275222246405745257275088548364400416034343698204186575808495616n
-      ]
+      [p - (1n << BigInt(nBits)) + b + 1n, p - 1n]
     ] as [bigint, bigint][]
   ).filter(([c, d]) => d - c >= 0);
 }
 
-// The complement interval of [0, 1 << n[ ∪ critical interval.
+// The complement interval of [0, (1 << nBits) - 1] ∪ critical interval.
 function complementInterval(
   bounds: [bigint, bigint],
   nBits: number
 ): [bigint, bigint] {
   if (bounds.some((bound) => !inInterval(bound, [0n, 1n << BigInt(nBits)]))) {
-    throw new TypeError("Invalid bounds");
+    throw new RangeError("Invalid bounds");
   }
   const [a, b] = bounds;
   const c = (1n << BigInt(nBits)) + a;
-  const d =
-    21888242871839275222246405745257275088548364400416034343698204186575808495617n -
-    (1n << BigInt(nBits)) +
-    b;
+  const d = p - (1n << BigInt(nBits)) + b;
   return [c, d];
 }
 
-describe("bounds.BoundsCheckModule should work for intervals with 64-bit unsigned integer bounds", function () {
-  const sampleIntervals: [bigint, bigint][] = [
-    [0n, 0n],
-    [0n, 1n << 4n],
-    [1n << 5n, 1n << 29n],
-    [1n << 4n, 1n << 31n],
-    [0n, (1n << 64n) - 1n]
-  ];
+for (const nBits of [32, 64, 96, 128, 252]) {
+  describe(
+    "bounds.BoundsCheckModule should work for intervals with " +
+      nBits +
+      "-bit unsigned integer bounds",
+    function () {
+      const twoToTheNBits = 1n << BigInt(nBits);
+      const sampleIntervals: [bigint, bigint][] = [
+        [0n, 0n],
+        [3n, twoToTheNBits / 5n],
+        [twoToTheNBits / 5n - 1n, (2n * twoToTheNBits) / 5n],
+        [(2n * twoToTheNBits) / 5n - 5n, (3n * twoToTheNBits) / 5n],
+        [(3n * twoToTheNBits) / 5n - 4n, (4n * twoToTheNBits) / 5n],
+        [0n, twoToTheNBits - 1n]
+      ];
 
-  const sampleValues = [0n, 1n << 5n, 1n << 16n, 1n << 30n, (1n << 64n) - 1n];
+      let circuit: WitnessTester<
+        BoundsCheckModuleInputNamesType,
+        BoundsCheckModuleOutputNamesType
+      >;
 
-  let circuit: WitnessTester<
-    BoundsCheckModuleInputNamesType,
-    BoundsCheckModuleOutputNamesType
-  >;
-
-  this.beforeAll(async () => {
-    circuit = await circomkit.WitnessTester("BoundsCheckModule", {
-      file: "bounds",
-      template: "BoundsCheckModule",
-      params: [64]
-    });
-  });
-
-  it("should yield expected output for 64-bit unsigned values and bounds", async () => {
-    for (const comparisonValue of sampleValues) {
-      for (const [minValue, maxValue] of sampleIntervals) {
-        await circuit.expectPass(
-          { comparisonValue, minValue, maxValue },
-          { out: BigInt(+inInterval(comparisonValue, [minValue, maxValue])) }
-        );
-      }
-    }
-  });
-
-  it("should yield false for large field elements lying in a critical interval", async () => {
-    for (const [minValue, maxValue] of sampleIntervals) {
-      for (const comparisonValue of criticalIntervals(
-        [minValue, maxValue],
-        64
-      ).flat()) {
-        await circuit.expectPass(
-          { comparisonValue, minValue, maxValue },
-          { out: 0n }
-        );
-      }
-    }
-  });
-
-  it("should fail for other field elements", async () => {
-    for (const [minValue, maxValue] of sampleIntervals) {
-      const sampleComplementInterval = complementInterval(
-        [minValue, maxValue],
-        64
-      );
-      for (const comparisonValue of sampleComplementInterval.concat([
-        (sampleComplementInterval[0] + sampleComplementInterval[1]) / 2n
-      ])) {
-        await circuit.expectFail({
-          comparisonValue,
-          minValue,
-          maxValue
+      this.beforeAll(async () => {
+        circuit = await circomkit.WitnessTester("BoundsCheckModule", {
+          file: "bounds",
+          template: "BoundsCheckModule",
+          params: [nBits]
         });
-      }
+      });
+
+      it(`should yield expected output for ${nBits}-bit unsigned values and bounds`, async () => {
+        const sampleValues = sampleIntervals.flatMap(([a, b]) => [
+          a,
+          b,
+          (a + b) / 2n,
+          (2n * a + b) / 3n,
+          (a + 2n * b) / 3n,
+          (a - 1n + twoToTheNBits) % twoToTheNBits, // Additional term to ensure nonnegativity.
+          (a + 1n) % twoToTheNBits,
+          (b - 1n + twoToTheNBits) % twoToTheNBits, // Additional term to ensure nonnegativity.
+          (b + 1n) % twoToTheNBits
+        ]);
+
+        for (const comparisonValue of sampleValues) {
+          for (const [minValue, maxValue] of sampleIntervals) {
+            await circuit.expectPass(
+              { comparisonValue, minValue, maxValue },
+              {
+                out: BigInt(+inInterval(comparisonValue, [minValue, maxValue]))
+              }
+            );
+          }
+        }
+      });
+
+      it("should yield false for large field elements lying in a critical interval", async () => {
+        for (const [minValue, maxValue] of sampleIntervals) {
+          for (const comparisonValue of criticalIntervals(
+            [minValue, maxValue],
+            nBits
+          ).flat()) {
+            await circuit.expectPass(
+              { comparisonValue, minValue, maxValue },
+              { out: 0n }
+            );
+          }
+        }
+      });
+
+      it("should fail for elements of the complement interval", async () => {
+        for (const [minValue, maxValue] of sampleIntervals) {
+          const sampleComplementInterval = complementInterval(
+            [minValue, maxValue],
+            nBits
+          );
+          for (const comparisonValue of sampleComplementInterval.concat([
+            sampleComplementInterval[0] + 1n,
+            (sampleComplementInterval[0] + sampleComplementInterval[1]) / 2n,
+            sampleComplementInterval[1] - 1n
+          ])) {
+            await circuit.expectFail({
+              comparisonValue,
+              minValue,
+              maxValue
+            });
+          }
+        }
+      });
+
+      it("should pass for elements just outside of the complement interval", async () => {
+        for (const [minValue, maxValue] of sampleIntervals) {
+          const sampleComplementInterval = complementInterval(
+            [minValue, maxValue],
+            nBits
+          );
+          for (const comparisonValue of [
+            (sampleComplementInterval[0] - 1n) % p,
+            (sampleComplementInterval[1] + 1n) % p
+          ]) {
+            await circuit.expectPass({
+              comparisonValue,
+              minValue,
+              maxValue
+            });
+          }
+        }
+      });
     }
-  });
-});
-
-describe("bounds.BoundsCheckModule should work for intervals with 128-bit unsigned integer bounds", function () {
-  const sampleIntervals: [bigint, bigint][] = [
-    [0n, 0n],
-    [0n, 1n << 8n],
-    [1n << 15n, 1n << 64n],
-    [1n << 20n, 1n << 96n],
-    [0n, (1n << 128n) - 1n]
-  ];
-
-  const sampleValues = [0n, 1n << 5n, 1n << 16n, 1n << 90n, (1n << 128n) - 1n];
-
-  let circuit: WitnessTester<
-    BoundsCheckModuleInputNamesType,
-    BoundsCheckModuleOutputNamesType
-  >;
-
-  this.beforeAll(async () => {
-    circuit = await circomkit.WitnessTester("BoundsCheckModule", {
-      file: "bounds",
-      template: "BoundsCheckModule",
-      params: [128]
-    });
-  });
-
-  it("should yield expected output for 128-bit unsigned values and bounds", async () => {
-    for (const comparisonValue of sampleValues) {
-      for (const [minValue, maxValue] of sampleIntervals) {
-        await circuit.expectPass(
-          { comparisonValue, minValue, maxValue },
-          { out: BigInt(+inInterval(comparisonValue, [minValue, maxValue])) }
-        );
-      }
-    }
-  });
-
-  it("should yield false for large field elements lying in a critical interval", async () => {
-    for (const [minValue, maxValue] of sampleIntervals) {
-      for (const comparisonValue of criticalIntervals(
-        [minValue, maxValue],
-        128
-      ).flat()) {
-        await circuit.expectPass(
-          { comparisonValue, minValue, maxValue },
-          { out: 0n }
-        );
-      }
-    }
-  });
-
-  it("should fail for other field elements", async () => {
-    for (const [minValue, maxValue] of sampleIntervals) {
-      const sampleComplementInterval = complementInterval(
-        [minValue, maxValue],
-        128
-      );
-      for (const comparisonValue of sampleComplementInterval.concat([
-        (sampleComplementInterval[0] + sampleComplementInterval[1]) / 2n
-      ])) {
-        await circuit.expectFail({
-          comparisonValue,
-          minValue,
-          maxValue
-        });
-      }
-    }
-  });
-});
-
-describe("bounds.BoundsCheckModule should work for intervals with 252-bit unsigned integer bounds", function () {
-  const sampleIntervals: [bigint, bigint][] = [
-    [0n, 0n],
-    [0n, 1n << 97n],
-    [1n << 30n, 1n << 100n],
-    [1n << 80n, 1n << 220n],
-    [0n, (1n << 252n) - 1n]
-  ];
-
-  const sampleValues = [
-    0n,
-    1n << 64n,
-    1n << 96n,
-    1n << 200n,
-    (1n << 128n) - 1n
-  ];
-
-  let circuit: WitnessTester<
-    BoundsCheckModuleInputNamesType,
-    BoundsCheckModuleOutputNamesType
-  >;
-
-  this.beforeAll(async () => {
-    circuit = await circomkit.WitnessTester("BoundsCheckModule", {
-      file: "bounds",
-      template: "BoundsCheckModule",
-      params: [252]
-    });
-  });
-
-  it("should yield expected output for 252-bit unsigned values and bounds", async () => {
-    for (const comparisonValue of sampleValues) {
-      for (const [minValue, maxValue] of sampleIntervals) {
-        await circuit.expectPass(
-          { comparisonValue, minValue, maxValue },
-          { out: BigInt(+inInterval(comparisonValue, [minValue, maxValue])) }
-        );
-      }
-    }
-  });
-
-  it("should yield false for large field elements lying in a critical interval", async () => {
-    for (const [minValue, maxValue] of sampleIntervals) {
-      for (const comparisonValue of criticalIntervals(
-        [minValue, maxValue],
-        252
-      ).flat()) {
-        await circuit.expectPass(
-          { comparisonValue, minValue, maxValue },
-          { out: 0n }
-        );
-      }
-    }
-  });
-
-  it("should fail for other field elements", async () => {
-    for (const [minValue, maxValue] of sampleIntervals) {
-      const sampleComplementInterval = complementInterval(
-        [minValue, maxValue],
-        252
-      );
-      for (const comparisonValue of sampleComplementInterval.concat([
-        (sampleComplementInterval[0] + sampleComplementInterval[1]) / 2n
-      ])) {
-        await circuit.expectFail({
-          comparisonValue,
-          minValue,
-          maxValue
-        });
-      }
-    }
-  });
-});
+  );
+}
