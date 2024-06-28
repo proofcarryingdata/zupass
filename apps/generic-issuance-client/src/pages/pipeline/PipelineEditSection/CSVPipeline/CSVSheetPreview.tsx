@@ -88,13 +88,8 @@ export function CSVSheetPreview({
             doUpdate(data);
           }
         }}
-        onBlur={() => doUpdate(data)}
         onChange={(data): void => {
-          setData(data);
-          if (updateTimeout) {
-            clearTimeout(updateTimeout);
-          }
-          setUpdateTimeout(setTimeout(() => doUpdate(data), 500));
+          doUpdate(data);
         }}
         darkMode={true}
         data={data}
