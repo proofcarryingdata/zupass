@@ -1,6 +1,6 @@
 import { ReactNode, useCallback, useEffect, useState } from "react";
 // eslint-disable-next-line import/no-named-as-default
-import { Button } from "@chakra-ui/react";
+import { Button, VStack } from "@chakra-ui/react";
 import { stringify } from "csv-stringify/sync";
 import { Matrix, Mode, Spreadsheet } from "react-spreadsheet";
 import styled from "styled-components";
@@ -76,6 +76,21 @@ export function CSVSheetPreview({
     }
   }, [onChange, parsed]);
 
+  const addColumn = useCallback(() => {
+    if (onChange) {
+      const name = prompt("Enter the name for the new column", "newColumn");
+      if (!name) {
+        return;
+      }
+      const newCsv = stringify(
+        parsed.map((row, index) => {
+          return [...row, index === 0 ? name : ""];
+        })
+      );
+      onChange(newCsv);
+    }
+  }, [onChange, parsed]);
+
   if (parseError) {
     return <Container>{parseError.message}</Container>;
   }
@@ -96,11 +111,14 @@ export function CSVSheetPreview({
         columnLabels={parsed[0]}
         className={"sheet"}
       />
-      <div>
+      <VStack spacing={2} alignItems={"start"}>
         <Button onClick={addRow} colorScheme="blue">
           Add row
         </Button>
-      </div>
+        <Button onClick={addColumn} colorScheme="blue">
+          Add column
+        </Button>
+      </VStack>
     </Container>
   );
 }
@@ -114,6 +132,7 @@ const Container = styled.div`
   overflow: hidden;
   overflow-y: scroll;
   overflow-x: scroll;
+  text-align: left;
   height: 100%;
   width: 100%;
 
