@@ -75,7 +75,6 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
         style="primary"
         size="small"
         onClick={async (): Promise<void> => {
-          setError(undefined);
           const sigResult = await verifySignature(pcd);
           setError(sigResult.errorMessage);
           setSigStatus(sigResult.isValid ? 1 : -1);
