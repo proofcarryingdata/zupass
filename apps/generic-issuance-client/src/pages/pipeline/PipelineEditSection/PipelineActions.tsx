@@ -1,13 +1,16 @@
 import { Button, HStack } from "@chakra-ui/react";
 import {
   BasePipelineOptions,
+  CSVPipelineOutputType,
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
-  PipelineInfoResponseValue
+  PipelineInfoResponseValue,
+  isCSVPipelineDefinition
 } from "@pcd/passport-interface";
 import _ from "lodash";
-import React, { ReactNode, useCallback } from "react";
+import React, { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
+import { AddDataModal } from "../../../components/AddDataModal";
 import {
   useGIContext,
   useViewingPipelineDefinition
@@ -255,6 +258,15 @@ export function PipelineActions({
     }
   }, [pipeline, setActionInProgress, userJWT]);
 
+  const [addingTicket, setAddingTicket] = useState(false);
+  const onAddTicketClose = useCallback(() => {
+    setAddingTicket(false);
+  }, []);
+
+  const onAddTicketOpen = useCallback(() => {
+    setAddingTicket(true);
+  }, []);
+
   if (!(isAdminView || !ownedBySomeoneElse)) {
     return null;
   }
@@ -262,6 +274,25 @@ export function PipelineActions({
   return (
     <Container>
       <HStack minWidth="fit-content" flexWrap={"wrap"}>
+        {isCSVPipelineDefinition(pipeline) &&
+          (pipeline.options.outputType === CSVPipelineOutputType.PODTicket ||
+            pipeline.options.outputType === CSVPipelineOutputType.Ticket) && (
+            <>
+              <AddDataModal
+                addingData={addingTicket}
+                pipeline={pipeline}
+                onClose={onAddTicketClose}
+              />
+              <Button
+                size="sm"
+                onClick={onAddTicketOpen}
+                isDisabled={hasEdits}
+                colorScheme="blue"
+              >
+                Add Ticket
+              </Button>
+            </>
+          )}
         <Button size="sm" onClick={(): void => setEditorMaximized(true)}>
           Maximize
         </Button>

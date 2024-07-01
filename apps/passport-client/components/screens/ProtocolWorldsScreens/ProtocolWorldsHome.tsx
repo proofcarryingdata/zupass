@@ -1,30 +1,63 @@
-import { ProtocolWorldsFolderName } from "@pcd/passport-interface";
-import { Separator } from "@pcd/passport-ui";
-import styled from "styled-components";
 import {
-  useFolders,
+  ProtocolWorldsFolderName,
+  requestLogToServer
+} from "@pcd/passport-interface";
+import { Separator, Spacer } from "@pcd/passport-ui";
+import { bigintToPseudonymNumber, emailToBigint } from "@pcd/util";
+import { useEffect } from "react";
+import styled from "styled-components";
+import { appConfig } from "../../../src/appConfig";
+import {
   useLoadedIssuedPCDs,
-  usePCDsInFolder
+  usePCDsInFolder,
+  useSelf
 } from "../../../src/appHooks";
+import { TextCenter } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { ProtocolWorldsStyling } from "./ProtocolWorldsStyling";
 
 export function ProtocolWorldsHome(): JSX.Element {
-  const foldersInFolder = useFolders(ProtocolWorldsFolderName);
   const pcdsInFolder = usePCDsInFolder(ProtocolWorldsFolderName);
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
+  const self = useSelf();
+
+  useEffect(() => {
+    requestLogToServer(appConfig.zupassServer, "protocol_worlds_score", {
+      score: pcdsInFolder.length,
+      commitment: self?.commitment
+    });
+  }, [pcdsInFolder, self]);
+
+  if (!self) {
+    return <></>;
+  }
+
   return (
     <>
       <ProtocolWorldsStyling />
-      {!(foldersInFolder.length === 0) && <Separator />}
       {pcdsInFolder.length > 0 ? (
-        <PCDCardList
-          hidePadding
-          hideRemoveButton
-          allExpanded
-          pcds={pcdsInFolder}
-        />
+        <>
+          <Spacer h={24} />
+          <TextCenter style={{ fontFamily: "monospace" }}>
+            <p>{bigintToPseudonymNumber(emailToBigint(self?.email))}</p>
+            {/* <p>Score: {pcdsInFolder.length}</p> */}
+            <p style={{ textDecoration: "underline" }}>
+              <a target="_blank" href="https://zupass.org/tensions">
+                Go to leaderboard
+              </a>
+            </p>
+          </TextCenter>
+          <Spacer h={24} />
+          <Separator />
+          <Spacer h={24} />
+          <PCDCardList
+            hidePadding
+            hideRemoveButton
+            allExpanded
+            pcds={pcdsInFolder}
+          />
+        </>
       ) : loadedIssuedPCDs ? (
         <NoPcdsContainer>This folder is empty</NoPcdsContainer>
       ) : (

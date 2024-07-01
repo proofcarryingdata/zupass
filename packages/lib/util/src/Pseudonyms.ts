@@ -58,7 +58,19 @@ export function bigIntToPseudonymName(input: bigint): string {
   return Object.keys(PSEUDONYM_TO_EMOJI)[key];
 }
 
+export function bigintToPseudonymNumber(input: bigint): string {
+  return `${bigIntToPseudonymName(input)} #${input % 10000n}`;
+}
+
 /** Converts a given number, such as a nullifier hash, to a pseudonym. */
 export function bigintToPseudonym(input: bigint): string {
   return `${bigIntToPseudonymEmoji(input)} ${bigIntToPseudonymName(input)}`;
+}
+
+export function emailToBigint(email: string): bigint {
+  let bigIntValue = BigInt(0);
+  for (let i = 0; i < email.length; i++) {
+    bigIntValue = (bigIntValue << BigInt(16)) + BigInt(email.charCodeAt(i));
+  }
+  return bigIntValue;
 }

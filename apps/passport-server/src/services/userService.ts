@@ -427,6 +427,22 @@ export class UserService {
   }
 
   /**
+   * Returns either the user, or null if no user with the given commitment can be found.
+   */
+  public async getUserByCommitment(
+    commitment: string
+  ): Promise<UserRow | null> {
+    const user = await fetchUserByCommitment(this.context.dbPool, commitment);
+
+    if (!user) {
+      logger("[SEMA] no user with that commitment exists");
+      return null;
+    }
+
+    return user;
+  }
+
+  /**
    * Updates the version of the legal terms the user agrees to
    */
   public async handleAgreeTerms(

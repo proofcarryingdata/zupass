@@ -5,16 +5,26 @@ import {
   serializeGPCProofConfig
 } from "@pcd/gpc";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { POD, PODEdDSAPublicKeyValue, PODEntries } from "@pcd/pod";
+import { POD, PODEdDSAPublicKeyValue } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import path from "path";
 import { v4 as uuid } from "uuid";
-import { GPCPCDArgs, GPCPCDPackage } from "../src";
+import {
+  GPCPCDArgs,
+  GPCPCDPackage,
+  getProveDisplayOptions,
+  podEntryRecordToSimplifiedJSON
+} from "../src";
+import {
+  ownerIdentity,
+  privateKey,
+  privateKey2,
+  sampleEntries0,
+  sampleEntries1
+} from "./common";
 
 export const GPC_TEST_ARTIFACTS_PATH = path.join(
   __dirname,
@@ -25,36 +35,6 @@ export const GPC_NPM_ARTIFACTS_PATH = path.join(
   __dirname,
   "../../../../node_modules/@pcd/proto-pod-gpc-artifacts"
 );
-
-// Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
-export const privateKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 0001020304050607080900010203040506070809000102030405060708090001
-export const privateKey2 = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAQFBggIAAA"; // hex 0001020304050607080900010203040506070809000102030404050608080000
-
-export const ownerIdentity = new Identity(
-  '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
-);
-
-// 11 entries, max depth 5
-// Defined out of order, but will be sorted by POD construction.
-export const sampleEntries0 = {
-  E: { type: "cryptographic", value: 123n },
-  F: { type: "cryptographic", value: BABY_JUB_NEGATIVE_ONE },
-  C: { type: "string", value: "hello" },
-  D: { type: "string", value: "foobar" },
-  A: { type: "int", value: 123n },
-  B: { type: "int", value: 321n },
-  G: { type: "int", value: 7n },
-  H: { type: "int", value: 8n },
-  I: { type: "int", value: 9n },
-  J: { type: "int", value: 10n },
-  owner: { type: "cryptographic", value: ownerIdentity.commitment }
-} satisfies PODEntries;
-
-export const sampleEntries1 = {
-  attendee: { type: "cryptographic", value: ownerIdentity.commitment },
-  eventID: { type: "cryptographic", value: 456n },
-  ticketID: { type: "cryptographic", value: 999n }
-} satisfies PODEntries;
 
 describe("GPCPCD should work", async function () {
   async function runGPCPCDTest(artifactsPath: string): Promise<void> {
@@ -195,6 +175,218 @@ describe("GPCPCD should work", async function () {
     // Confirms that the code in the repo is compatible with circuit
     // artifacts released on NPM.
     await runGPCPCDTest(GPC_NPM_ARTIFACTS_PATH);
+  });
+});
+
+describe("GPCPCD input POD validator should work", () => {
+  const pod0 = POD.sign(sampleEntries0, privateKey);
+  const podPCD0 = new PODPCD(uuid(), pod0);
+
+  const ticketPOD = POD.sign(sampleEntries1, privateKey);
+  const ticketPODPCD = new PODPCD(uuid(), ticketPOD);
+
+  const proofConfig = serializeGPCProofConfig({
+    pods: {
+      pod0: {
+        entries: {
+          A: { isRevealed: true },
+          H: { isRevealed: true },
+          E: { isRevealed: false, equalsEntry: "pod0.A" },
+          owner: {
+            isRevealed: false,
+            isOwnerID: true,
+            isMemberOf: "admissibleOwners"
+          }
+        }
+      },
+      ticketPOD: {
+        entries: {
+          eventID: {
+            isRevealed: true
+          },
+          ticketID: {
+            isRevealed: false,
+            isMemberOf: "admissibleTickets"
+          }
+        }
+      }
+    },
+    tuples: {
+      pair: { entries: ["pod0.A", "pod0.E"], isMemberOf: "admissiblePairs" }
+    }
+  });
+
+  const unserialisedMembershipLists = {
+    admissibleOwners: [
+      sampleEntries0.F,
+      sampleEntries0.C,
+      sampleEntries0.owner
+    ],
+    admissiblePairs: [
+      [sampleEntries0.D, sampleEntries0.B],
+      [sampleEntries0.A, sampleEntries0.E],
+      [sampleEntries0.owner, sampleEntries0.I],
+      [sampleEntries0.J, sampleEntries0.H]
+    ],
+    admissibleTickets: [
+      sampleEntries0.C,
+      sampleEntries0.owner,
+      sampleEntries1.ticketID
+    ]
+  };
+
+  const membershipLists = podMembershipListsToSimplifiedJSON(
+    unserialisedMembershipLists
+  );
+
+  const defaultArgs = getProveDisplayOptions().defaultArgs;
+
+  if (defaultArgs === undefined) {
+    throw new ReferenceError("Default arguments are undefined.");
+  }
+
+  const validateInputPOD = defaultArgs.pods.validate;
+
+  if (validateInputPOD === undefined) {
+    throw new ReferenceError("Input POD validator is undefined.");
+  }
+
+  it("Should validate an input POD given no parameters", () => {
+    expect(validateInputPOD("pod0", podPCD0, undefined)).to.be.true;
+  });
+
+  it("Should validate an input POD given no proof configuration", () => {
+    expect(validateInputPOD("pod0", podPCD0, {})).to.be.true;
+  });
+
+  it("Should validate input PODs containing entries in a given proof configuration", () => {
+    const params = { proofConfig };
+    expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
+    expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
+  });
+
+  it("Should validate input PODs with prescribed entries", () => {
+    const prescribedEntries = podEntryRecordToSimplifiedJSON({
+      pod0: {
+        A: { type: "int", value: 123n },
+        H: { type: "cryptographic", value: 8n }
+      },
+      ticketPOD: {
+        eventID: { type: "cryptographic", value: 456n }
+      }
+    });
+    const params = { proofConfig, prescribedEntries };
+    expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
+    expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
+  });
+
+  it("Should validate input PODs with prescribed signers' public keys", () => {
+    const prescribedSignerPublicKeys = {
+      pod0: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
+      ticketPOD: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+    };
+    const params = { proofConfig, prescribedSignerPublicKeys };
+    expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
+    expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
+  });
+
+  it("Should validate input PODs with entries lying in membership lists", () => {
+    const params = { proofConfig, membershipLists };
+    expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
+    expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
+  });
+
+  it("Should validate input PODs with prescribed entries, signers' public keys and list membership requirements", () => {
+    const prescribedEntries = podEntryRecordToSimplifiedJSON({
+      pod0: {
+        A: { type: "int", value: 123n },
+        H: { type: "cryptographic", value: 8n }
+      },
+      ticketPOD: {
+        eventID: { type: "cryptographic", value: 456n }
+      }
+    });
+    const prescribedSignerPublicKeys = {
+      pod0: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
+      ticketPOD: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+    };
+    const params = {
+      proofConfig,
+      membershipLists,
+      prescribedEntries,
+      prescribedSignerPublicKeys
+    };
+    expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
+    expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
+  });
+
+  it("Should not validate an input POD lacking entries in a given proof configuration", () => {
+    const proofConfig = serializeGPCProofConfig({
+      pods: {
+        pod0: {
+          entries: {
+            A: { isRevealed: true },
+            Example: { isRevealed: false, equalsEntry: "pod0.A" },
+            owner: {
+              isRevealed: false,
+              isOwnerID: true,
+              isMemberOf: "admissibleOwners"
+            }
+          }
+        },
+        ticketPOD: {
+          entries: {
+            ticketID: {
+              isRevealed: false,
+              isMemberOf: "admissibleTickets"
+            }
+          }
+        }
+      },
+      tuples: {
+        pair: {
+          entries: ["pod0.A", "pod0.Example"],
+          isMemberOf: "admissiblePairs"
+        }
+      }
+    });
+    expect(validateInputPOD("pod0", podPCD0, { proofConfig })).to.be.false;
+    expect(validateInputPOD("ticketPOD", ticketPODPCD, { proofConfig })).to.be
+      .true;
+  });
+
+  it("Should not validate an input POD violating a list membership requirement", () => {
+    const membershipLists = podMembershipListsToSimplifiedJSON({
+      ...unserialisedMembershipLists,
+      admissibleOwners: [sampleEntries0.C, sampleEntries0.A]
+    });
+    const params = { proofConfig, membershipLists };
+    expect(validateInputPOD("pod0", podPCD0, params)).to.be.false;
+  });
+
+  it("Should not validate an input POD violating a prescribed entry value", () => {
+    const prescribedEntries = podEntryRecordToSimplifiedJSON({
+      pod0: {
+        A: { type: "int", value: 0n },
+        H: { type: "cryptographic", value: 8n }
+      },
+      ticketPOD: {
+        eventID: { type: "cryptographic", value: 456n }
+      }
+    });
+    const params = { proofConfig, prescribedEntries };
+    expect(validateInputPOD("pod0", podPCD0, params)).to.be.false;
+    expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
+  });
+
+  it("Should not validate an input POD violating a prescribed signer's public key", () => {
+    const prescribedSignerPublicKeys = {
+      pod0: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
+      ticketPOD: "su2CUR47c1us1FwPUN3RNZWzit9nmya2QD60Y/iffxI"
+    };
+    const params = { proofConfig, prescribedSignerPublicKeys };
+    expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
+    expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.false;
   });
 });
 
