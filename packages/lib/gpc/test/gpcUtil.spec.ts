@@ -1,7 +1,12 @@
 import { expect } from "chai";
 import "mocha";
-import { GPCProofEntryConfig, GPCProofEntryConfigCommon } from "../src";
 import {
+  GPCProofConfig,
+  GPCProofEntryConfig,
+  GPCProofEntryConfigCommon
+} from "../src";
+import {
+  boundsCheckConfigFromProofConfig,
   canonicalizeEntryConfig,
   canonicalizeSignerPublicKeyConfig
 } from "../src/gpcUtil";
@@ -78,6 +83,68 @@ describe("Object signer's public key configuration canonicalization should work"
     };
 
     expect(canonicalizedConfig).to.deep.eq(expectedCanonicalizedConfig);
+  });
+});
+
+describe("Bounds check configuration derivation works as expected", () => {
+  it("should work as expected on a proof configuration without bounds checks", () => {
+    const proofConfig: GPCProofConfig = {
+      pods: {
+        somePod: {
+          entries: {
+            A: {
+              isRevealed: true
+            }
+          }
+        }
+      }
+    };
+    const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
+    expect(boundsCheckConfig).to.deep.eq({});
+  });
+  it("should work as expected on a proof configuration with bounds checks", () => {
+    const proofConfig: GPCProofConfig = {
+      pods: {
+        somePod: {
+          entries: {
+            A: {
+              isRevealed: false, // Not relevant, but bounds checks make the
+              // most sense when the entry is *not* revealed!
+              minValue: 0n
+            },
+            B: {
+              isRevealed: false,
+              maxValue: 87n
+            },
+            C: {
+              isRevealed: true
+            }
+          }
+        },
+        someOtherPod: {
+          entries: {
+            D: {
+              isRevealed: false,
+              minValue: 5n,
+              maxValue: 25n
+            }
+          }
+        }
+      }
+    };
+    const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
+    expect(boundsCheckConfig).to.deep.eq({
+      "somePod.A": {
+        minValue: 0n
+      },
+      "somePod.B": {
+        maxValue: 87n
+      },
+      "someOtherPod.D": {
+        minValue: 5n,
+        maxValue: 25n
+      }
+    });
   });
 });
 // TODO(POD-P3): More tests

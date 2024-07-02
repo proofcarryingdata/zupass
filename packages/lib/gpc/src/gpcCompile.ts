@@ -19,6 +19,8 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
+  POD_INT_MAX,
+  POD_INT_MIN,
   decodePublicKey,
   decodeSignature,
   podNameHash,
@@ -40,9 +42,10 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
+  GPCProofBoundsCheckConfig,
   GPCProofMembershipListConfig,
   LIST_MEMBERSHIP,
-  dummyBoundsCheckInputs,
+  boundsCheckConfigFromProofConfig,
   isTupleIdentifier,
   isVirtualEntryIdentifier,
   isVirtualEntryName,
@@ -320,8 +323,12 @@ export function compileProofConfig(
   );
 
   // Create bounds check inputs
-  // TODO(POD-P2): Replace this with actual inputs.
-  const circuitBoundsCheckInputs = dummyBoundsCheckInputs(circuitDesc);
+  const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
+  const circuitBoundsCheckInputs = compileProofBoundsChecks(
+    boundsCheckConfig,
+    entryMap,
+    circuitDesc.maxBoundsChecks
+  );
 
   // Create subset of inputs for multituple module padded to max size.
   const circuitMultiTupleInputs = compileProofMultiTuples(
@@ -384,6 +391,71 @@ function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
     signatureR8x: signature.R8[0],
     signatureR8y: signature.R8[1],
     signatureS: signature.S
+  };
+}
+
+function compileProofBoundsChecks<
+  ObjInput extends POD | GPCRevealedObjectClaims
+>(
+  boundsCheckConfig: GPCProofBoundsCheckConfig,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
+  paramBoundsChecks: number
+): {
+  boundsCheckEntryIndices: CircuitSignal[];
+  boundsCheckMinValues: CircuitSignal[];
+  boundsCheckMaxValues: CircuitSignal[];
+} {
+  // Arrange POD entry identifiers alphabetically
+  const boundsCheckIdOrder = Object.keys(
+    boundsCheckConfig
+  ).sort() as PODEntryIdentifier[];
+
+  // Compile entry indices
+  const unpaddedBoundsCheckEntryIndices = boundsCheckIdOrder.map((entryId) => {
+    const idx = entryMap.get(entryId)?.entryIndex;
+
+    if (idx === undefined) {
+      throw new Error(`Missing input for identifier ${entryId}.`);
+    }
+
+    return BigInt(idx);
+  });
+
+  // Compile minimum values, replacing missing lower bounds with the smallest
+  // possible lower bound.
+  const unpaddedBoundsCheckMinValues = boundsCheckIdOrder.map(
+    (entryId) => boundsCheckConfig[entryId]?.minValue ?? POD_INT_MIN
+  );
+
+  // Compile maximum values, replacing missing upper bounds with the greatest
+  // possible upper bound.
+  const unpaddedBoundsCheckMaxValues = boundsCheckIdOrder.map(
+    (entryId) => boundsCheckConfig[entryId]?.maxValue ?? POD_INT_MAX
+  );
+
+  // Return with padding.
+  return {
+    // Pad with index -1 (mod p), which is a reference to the value 0.
+    boundsCheckEntryIndices: padArray(
+      unpaddedBoundsCheckEntryIndices,
+      paramBoundsChecks,
+      BABY_JUB_NEGATIVE_ONE
+    ),
+    // Pad with 0s, which amounts to a lower bound of 0 for those padded entries
+    // with value 0.
+    boundsCheckMinValues: padArray(
+      unpaddedBoundsCheckMinValues,
+      paramBoundsChecks,
+      0n
+    ),
+    // Pad with 0s, which amounts to an upper bound of 0 for those padded
+    // entries
+    // with value 0.
+    boundsCheckMaxValues: padArray(
+      unpaddedBoundsCheckMaxValues,
+      paramBoundsChecks,
+      0n
+    )
   };
 }
 
@@ -542,9 +614,12 @@ function compileProofEntry(
     entryInfo.entryName
   );
 
-  // Plaintext value is only enabled if it is needed by some other
-  // configured constraint, which for now is only the owner commitment.
-  const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
+  // Plaintext value is only enabled if it is needed by some other configured
+  // constraint, which for now is only the owner commitment and bounds checks.
+  const isValueEnabled =
+    !!entryInfo.entryConfig.isOwnerID ||
+    !!entryInfo.entryConfig.minValue ||
+    !!entryInfo.entryConfig.maxValue;
   let entryValue = BABY_JUB_NEGATIVE_ONE;
   if (isValueEnabled) {
     if (entrySignals.value === undefined) {
@@ -831,8 +906,12 @@ export function compileVerifyConfig(
   );
 
   // Create bounds check inputs
-  // TODO(POD-P2): Replace this with actual inputs.
-  const circuitBoundsCheckInputs = dummyBoundsCheckInputs(circuitDesc);
+  const boundsCheckConfig = boundsCheckConfigFromProofConfig(verifyConfig);
+  const circuitBoundsCheckInputs = compileProofBoundsChecks(
+    boundsCheckConfig,
+    entryMap,
+    circuitDesc.maxBoundsChecks
+  );
 
   // Create subset of inputs for multituple module padded to max size.
   const circuitMultiTupleInputs = compileProofMultiTuples(
@@ -908,9 +987,12 @@ type CompilerVerifyEntryOutputs = {
 function compileVerifyEntry(
   entryInfo: CompilerEntryInfo<GPCRevealedObjectClaims>
 ): { inputs: CompilerVerifyEntryInputs; outputs: CompilerVerifyEntryOutputs } {
-  // Plaintext value is only enabled if it is needed by some other
-  // configured constraint, which for now is only the owner commitment.
-  const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
+  // Plaintext value is only enabled if it is needed by some other configured
+  // constraint, which for now is only the owner commitment and bounds checks.
+  const isValueEnabled =
+    !!entryInfo.entryConfig.isOwnerID ||
+    !!entryInfo.entryConfig.minValue ||
+    !!entryInfo.entryConfig.maxValue;
 
   // Fetch the entry value, if it's configured to be revealed.
   let revealedEntryValue: PODValue | undefined = undefined;

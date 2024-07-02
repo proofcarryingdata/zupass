@@ -10,6 +10,8 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
+  POD_INT_MAX,
+  POD_INT_MIN,
   POD_NAME_REGEX,
   checkPODName,
   getPODValueForCircuit,
@@ -149,6 +151,14 @@ export function canonicalizeEntryConfig(
     ...(proofEntryConfig.isOwnerID ? { isOwnerID: true } : {}),
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
+      : {}),
+    ...(proofEntryConfig.minValue !== undefined &&
+    proofEntryConfig.minValue !== POD_INT_MIN
+      ? { minValue: proofEntryConfig.minValue }
+      : {}),
+    ...(proofEntryConfig.maxValue !== undefined &&
+    proofEntryConfig.maxValue !== POD_INT_MAX
+      ? { maxValue: proofEntryConfig.maxValue }
       : {}),
     ...(proofEntryConfig.isMemberOf !== undefined
       ? {
@@ -566,6 +576,18 @@ export const LIST_MEMBERSHIP = "membership";
 export const LIST_NONMEMBERSHIP = "non-membership";
 
 /**
+ * Configuration for bounds checks arranged by entry identifier requiring a
+ * bounds check.
+ *
+ * This is deduced from the proof configuration in
+ * {@link boundsCheckConfigFromProofConfig}.
+ */
+export type GPCProofBoundsCheckConfig = Record<
+  PODEntryIdentifier,
+  BoundsConfig
+>;
+
+/**
  * Configuration for named lists arranged by identifier requiring a list
  * (non-)membership check.
  *
@@ -578,6 +600,12 @@ export type GPCProofMembershipListConfig = Record<
 >;
 
 /**
+ * Bounds check configuration for an individual entry. This specifies the bounds
+ * check required for relevant entries at the circuit level.
+ */
+export type BoundsConfig = { minValue?: bigint; maxValue?: bigint };
+
+/**
  * List configuration for an individual entry or tuple. This specifies the type
  * of list membership required for relevant entries (or tuple entries) at the
  * circuit level as well as the named list it should be a (non-)member of.
@@ -586,6 +614,44 @@ export type ListConfig = {
   type: ListMembershipEnum;
   listIdentifier: PODName;
 };
+
+/**
+ * Determines the bounds check configuration from the proof configuration.
+ *
+ * Bounds checks are indicated in each entry field via the optional property
+ * `minValue` and/or `maxValue`, each of which specifies a (public) constant
+ * bound. This procedure singles out and arranges these bounds check
+ * configurations by entry identifier.
+ *
+ * @param proofConfig the proof configuration
+ * @returns a record mapping entry identifiers to their bounds check
+ * configurations
+ */
+export function boundsCheckConfigFromProofConfig(
+  proofConfig: GPCProofConfig
+): GPCProofBoundsCheckConfig {
+  return Object.fromEntries(
+    Object.entries(proofConfig.pods).flatMap(([podName, podConfig]) =>
+      Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) =>
+        entryConfig.minValue === undefined && entryConfig.maxValue === undefined
+          ? []
+          : [
+              [
+                `${podName}.${entryName}`,
+                {
+                  ...(entryConfig.minValue !== undefined
+                    ? { minValue: entryConfig.minValue }
+                    : {}),
+                  ...(entryConfig.maxValue !== undefined
+                    ? { maxValue: entryConfig.maxValue }
+                    : {})
+                }
+              ]
+            ]
+      )
+    )
+  );
+}
 
 /**
  * Determines the list configuration from the proof configuration.

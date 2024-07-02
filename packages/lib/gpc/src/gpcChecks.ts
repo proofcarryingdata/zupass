@@ -8,6 +8,8 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
+  POD_INT_MAX,
+  POD_INT_MIN,
   applyOrMap,
   calcMinMerkleDepthForEntries,
   checkPODName,
@@ -103,15 +105,17 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   let totalObjects = 0;
   let totalEntries = 0;
   let requiredMerkleDepth = 0;
+  let totalBoundsChecks = 0;
   for (const [objName, objConfig] of Object.entries(proofConfig.pods)) {
     checkPODName(objName);
-    const nEntries = checkProofObjConfig(objName, objConfig);
+    const { nEntries, nBoundsChecks } = checkProofObjConfig(objName, objConfig);
     totalObjects++;
     totalEntries += nEntries;
     requiredMerkleDepth = Math.max(
       requiredMerkleDepth,
       calcMinMerkleDepthForEntries(nEntries)
     );
+    totalBoundsChecks += nBoundsChecks;
   }
 
   if (proofConfig.tuples !== undefined) {
@@ -120,9 +124,6 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
 
   const listConfig: GPCProofMembershipListConfig =
     listConfigFromProofConfig(proofConfig);
-
-  // TODO(POD-P2): Replace this with actual value.
-  const nBoundsChecks = 0;
 
   const numLists = Object.keys(listConfig).length;
 
@@ -139,7 +140,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
-    nBoundsChecks,
+    totalBoundsChecks,
     numLists,
     maxListSize,
     tupleArities
@@ -149,7 +150,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
 function checkProofObjConfig(
   nameForErrorMessages: string,
   objConfig: GPCProofObjectConfig
-): number {
+): { nEntries: number; nBoundsChecks: number } {
   if (Object.keys(objConfig.entries).length === 0) {
     throw new TypeError(
       `Must prove at least one entry in object "${nameForErrorMessages}".`
@@ -157,10 +158,15 @@ function checkProofObjConfig(
   }
 
   let nEntries = 0;
+  let nBoundsChecks = 0;
   for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
     checkPODEntryName(entryName, true);
-    checkProofEntryConfig(`${nameForErrorMessages}.${entryName}`, entryConfig);
+    const { hasBoundsCheck } = checkProofEntryConfig(
+      `${nameForErrorMessages}.${entryName}`,
+      entryConfig
+    );
     nEntries++;
+    nBoundsChecks += +hasBoundsCheck;
   }
   if (objConfig.signerPublicKey !== undefined) {
     checkProofEntryConfig(
@@ -168,13 +174,13 @@ function checkProofObjConfig(
       objConfig.signerPublicKey
     );
   }
-  return nEntries;
+  return { nEntries, nBoundsChecks };
 }
 
-function checkProofEntryConfig(
+export function checkProofEntryConfig(
   nameForErrorMessages: string,
   entryConfig: GPCProofEntryConfig
-): void {
+): { hasBoundsCheck: boolean } {
   requireType(
     `${nameForErrorMessages}.isValueRevealed`,
     entryConfig.isRevealed,
@@ -201,6 +207,33 @@ function checkProofEntryConfig(
       entryConfig.equalsEntry
     );
   }
+
+  const hasBoundsCheck = (
+    [
+      ["Minimum value", entryConfig.minValue],
+      ["Maximum value", entryConfig.maxValue]
+    ] as [string, bigint][]
+  ).reduce((hasBoundsCheck, [boundType, bound]) => {
+    const isBoundDefined = bound !== undefined;
+    if (isBoundDefined && (bound < POD_INT_MIN || bound > POD_INT_MAX)) {
+      throw new RangeError(
+        `${boundType} of entry ${nameForErrorMessages} lies outside admissible bounds ([${POD_INT_MIN}, ${POD_INT_MAX}]).`
+      );
+    }
+    return hasBoundsCheck || isBoundDefined;
+  }, false);
+
+  if (
+    entryConfig.minValue !== undefined &&
+    entryConfig.maxValue !== undefined &&
+    entryConfig.maxValue < entryConfig.minValue
+  ) {
+    throw new Error(
+      "Minimum value for entry ${nameForErrorMesages} must be less than or equal to its maximum value."
+    );
+  }
+
+  return { hasBoundsCheck };
 }
 
 export function checkProofTupleConfig(proofConfig: GPCProofConfig): void {
@@ -300,9 +333,6 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     }
   }
 
-  // TODO(POD-P2): Replace this with actual value.
-  const nBoundsChecks = 0;
-
   const numListElements =
     proofInputs.membershipLists === undefined
       ? {}
@@ -318,7 +348,9 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     totalObjects,
     totalObjects,
     requiredMerkleDepth,
-    nBoundsChecks,
+    // The bounds checks are handled solely in the proof config, hence we return
+    // 0 here.
+    0,
     // The number of required lists cannot be properly deduced here, so we
     // return 0.
     0,
@@ -425,6 +457,13 @@ export function checkProofInputsForConfig(
           );
         }
       }
+
+      // Check bounds for entry
+      checkProofBoundsCheckInputsForConfig(
+        `${objName}.${entryName}`,
+        entryConfig,
+        podValue
+      );
     }
   }
   // Check that nullifier isn't requested if it's not linked to anything.
@@ -434,6 +473,39 @@ export function checkProofInputsForConfig(
   }
 
   checkProofListMembershipInputsForConfig(proofConfig, proofInputs);
+}
+
+export function checkProofBoundsCheckInputsForConfig(
+  entryName: PODEntryIdentifier,
+  entryConfig: GPCProofEntryConfig,
+  entryValue: PODValue
+): void {
+  if (
+    entryConfig.minValue !== undefined ||
+    entryConfig.maxValue !== undefined
+  ) {
+    if (entryValue.type !== "int") {
+      throw new TypeError(
+        `Proof configuration for entry ${entryName} has bounds check but entry value is not of type "int".`
+      );
+    }
+    if (
+      entryConfig.minValue !== undefined &&
+      entryValue.value < entryConfig.minValue
+    ) {
+      throw new RangeError(
+        `Entry ${entryName} is less than its prescribed minimum value ${entryConfig.minValue}.`
+      );
+    }
+    if (
+      entryConfig.maxValue !== undefined &&
+      entryValue.value > entryConfig.maxValue
+    ) {
+      throw new RangeError(
+        `Entry ${entryName} is greater than its prescribed maximum value ${entryConfig.maxValue}.`
+      );
+    }
+  }
 }
 
 export function checkProofListMembershipInputsForConfig(
@@ -726,6 +798,14 @@ export function checkVerifyClaimsForConfig(
               ` doesn't exist in claims.`
           );
         }
+
+        // This named entry should satisfy the bounds set out in the proof
+        // configuration (if any).
+        checkProofBoundsCheckInputsForConfig(
+          `${objName}.${entryName}`,
+          entryConfig,
+          revealedValue
+        );
       }
     }
 

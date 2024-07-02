@@ -2,8 +2,8 @@ import { expect } from "chai";
 import JSONBig from "json-bigint";
 import {
   FixedPODEntries,
-  podEntryRecordFromSimplifiedJSON,
-  podEntryRecordToSimplifiedJSON
+  fixedPODEntriesFromSimplifiedJSON,
+  fixedPODEntriesToSimplifiedJSON
 } from "../src";
 
 const jsonBigSerializer = JSONBig({
@@ -13,9 +13,9 @@ const jsonBigSerializer = JSONBig({
 
 describe("PODEntryRecord serialisation should work", () => {
   it("Should serialise and deserialise empty object", async function () {
-    const serialised = podEntryRecordToSimplifiedJSON({});
+    const serialised = fixedPODEntriesToSimplifiedJSON({});
     const expectedSerialised = "{}";
-    const deserialised = podEntryRecordFromSimplifiedJSON(serialised);
+    const deserialised = fixedPODEntriesFromSimplifiedJSON(serialised);
     expect(serialised).to.eq(expectedSerialised);
     expect(deserialised).to.deep.eq({});
   });
@@ -31,7 +31,9 @@ describe("PODEntryRecord serialisation should work", () => {
       }
     };
 
-    const serialised = podEntryRecordToSimplifiedJSON(typicalPrescribedEntries);
+    const serialised = fixedPODEntriesToSimplifiedJSON(
+      typicalPrescribedEntries
+    );
 
     const expectedSerialised = jsonBigSerializer.stringify({
       pod1: {
@@ -43,21 +45,21 @@ describe("PODEntryRecord serialisation should work", () => {
       }
     });
 
-    const deserialised = podEntryRecordFromSimplifiedJSON(serialised);
+    const deserialised = fixedPODEntriesFromSimplifiedJSON(serialised);
 
     expect(serialised).to.eq(expectedSerialised);
     expect(deserialised).to.deep.eq(typicalPrescribedEntries);
   });
 
   it("Should fail to deserialise a string not representing an object", () => {
-    expect(() => podEntryRecordFromSimplifiedJSON(`"hello"`)).to.throw(
+    expect(() => fixedPODEntriesFromSimplifiedJSON(`"hello"`)).to.throw(
       TypeError
     );
   });
 
   it("Should fail to deserialise a record with an invalid POD name", () => {
     expect(() =>
-      podEntryRecordFromSimplifiedJSON(`{
+      fixedPODEntriesFromSimplifiedJSON(`{
         "$notPOD": { "entry": 5 }
       }`)
     ).to.throw(TypeError);
@@ -65,13 +67,13 @@ describe("PODEntryRecord serialisation should work", () => {
 
   it("Should fail to deserialise a record with a POD with no data", () => {
     expect(() =>
-      podEntryRecordFromSimplifiedJSON(`{ "somePOD": {} }`)
+      fixedPODEntriesFromSimplifiedJSON(`{ "somePOD": {} }`)
     ).to.throw(TypeError);
   });
 
   it("Should fail to deserialise a record with a POD with an invalid raw entry value", () => {
     expect(() =>
-      podEntryRecordFromSimplifiedJSON(`{
+      fixedPODEntriesFromSimplifiedJSON(`{
         "somePOD": { "entry": {} }
       }`)
     ).to.throw(TypeError);

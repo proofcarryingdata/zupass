@@ -141,7 +141,6 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     expect(boundConfig).to.deep.eq(manuallyBoundConfig);
 
     expect(revealedClaims).to.deep.eq(expectedRevealedClaims);
-
     const isVerified = await gpcVerify(
       proof,
       boundConfig,
@@ -317,6 +316,73 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     expect(isVerified).to.be.true;
   });
 
+  it("should prove and verify lower bound check", async function () {
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          pod1: {
+            ...typicalProofConfig.pods.pod1,
+            entries: {
+              ...typicalProofConfig.pods.pod1.entries,
+              G: {
+                isRevealed: false,
+                minValue: 3n
+              }
+            }
+          }
+        }
+      },
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
+    expect(isVerified).to.be.true;
+  });
+
+  it("should prove and verify upper bound check", async function () {
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          pod1: {
+            ...typicalProofConfig.pods.pod1,
+            entries: {
+              ...typicalProofConfig.pods.pod1.entries,
+              G: {
+                isRevealed: false,
+                maxValue: 256n
+              }
+            }
+          }
+        }
+      },
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
+    expect(isVerified).to.be.true;
+  });
+
+  it("should prove and verify both upper and lower bounds checks", async function () {
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          pod1: {
+            ...typicalProofConfig.pods.pod1,
+            entries: {
+              ...typicalProofConfig.pods.pod1.entries,
+              G: {
+                isRevealed: false,
+                minValue: 3n,
+                maxValue: 256n
+              }
+            }
+          }
+        }
+      },
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
+    expect(isVerified).to.be.true;
+  });
+
   it("should prove and verify a complex case", async function () {
     const pod1 = POD.sign(sampleEntries, privateKey);
     const pod2 = POD.sign(sampleEntries2, privateKey2);
@@ -345,7 +411,8 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         },
         pod1: {
           entries: {
-            G: { isRevealed: true },
+            A: { isRevealed: false, minValue: 100n, maxValue: 132n },
+            G: { isRevealed: true, maxValue: 30n },
             otherTicketID: { isRevealed: false },
             owner: { isRevealed: false, isOwnerID: true }
           },

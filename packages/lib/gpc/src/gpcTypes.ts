@@ -131,6 +131,20 @@ export type GPCProofEntryConfigCommon = {
  */
 export type GPCProofEntryConfig = GPCProofEntryConfigCommon & {
   /**
+   * Indicates the minimum value this entry can take. This should be an unsigned
+   * 64-bit integer value and will be revealed by virtue of its inclusion in the
+   * proof configuration.
+   */
+  minValue?: bigint;
+
+  /**
+   * Indicates the maximum value this entry can take. This should be an unsigned
+   * 64-bit integer value and will be revealed by virtue of its inclusion in the
+   * proof configuration.
+   */
+  maxValue?: bigint;
+
+  /**
    * Indicates that this entry must match the public ID of the owner
    * identity given in {@link GPCProofInputs}.  For Semaphore V3 this is
    * the owner's Semaphore commitment (a cryptographic value).

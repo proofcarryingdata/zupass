@@ -47,6 +47,11 @@ export const EXAMPLE_GPC_CONFIG = `{
           "isRevealed": false,
           "equalsEntry": "examplePOD.A"
         },
+        "F": {
+          "isRevealed": false,
+          "minValue": 38,
+          "maxValue": 5000000000
+        },
         "owner": {
           "isRevealed": false,
           "isOwnerID": true
