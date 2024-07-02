@@ -1,11 +1,12 @@
 {
-  "proto-pod-gpc_1o-5e-6md-0x0l-0x0t": {
+  "proto-pod-gpc_1o-5e-6md-0bc-0x0l-0x0t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       1,
       5,
       6,
+      0,
       0,
       0,
       0,
@@ -21,6 +22,9 @@
       "ownerEntryIndex",
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
+      "boundsCheckEntryIndices",
+      "boundsCheckMinValues",
+      "boundsCheckMaxValues",
       "tupleIndices",
       "listComparisonValueIndex",
       "listContainsComparisonValue",
@@ -28,13 +32,14 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-1x10l-2x2t": {
+  "proto-pod-gpc_3o-10e-8md-2bc-1x10l-2x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       3,
       10,
       8,
+      2,
       1,
       10,
       2,
@@ -50,6 +55,9 @@
       "ownerEntryIndex",
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
+      "boundsCheckEntryIndices",
+      "boundsCheckMinValues",
+      "boundsCheckMaxValues",
       "tupleIndices",
       "listComparisonValueIndex",
       "listContainsComparisonValue",
@@ -57,13 +65,14 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-2x20l-1x4t": {
+  "proto-pod-gpc_3o-10e-8md-4bc-2x20l-1x4t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       3,
       10,
       8,
+      4,
       2,
       20,
       1,
@@ -79,6 +88,9 @@
       "ownerEntryIndex",
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
+      "boundsCheckEntryIndices",
+      "boundsCheckMinValues",
+      "boundsCheckMaxValues",
       "tupleIndices",
       "listComparisonValueIndex",
       "listContainsComparisonValue",
@@ -86,13 +98,14 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-4x20l-5x2t": {
+  "proto-pod-gpc_3o-10e-8md-4bc-4x20l-5x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       3,
       10,
       8,
+      4,
       4,
       20,
       5,
@@ -108,6 +121,9 @@
       "ownerEntryIndex",
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
+      "boundsCheckEntryIndices",
+      "boundsCheckMinValues",
+      "boundsCheckMaxValues",
       "tupleIndices",
       "listComparisonValueIndex",
       "listContainsComparisonValue",

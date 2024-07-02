@@ -1,4 +1,9 @@
-import { CircuitDesc } from "@pcd/gpcircuits";
+import {
+  CircuitDesc,
+  CircuitSignal,
+  ProtoPODGPCCircuitParams,
+  padArray
+} from "@pcd/gpcircuits";
 import {
   POD,
   PODEdDSAPublicKeyValue,
@@ -508,6 +513,11 @@ export type GPCRequirements = {
   merkleMaxDepth: number;
 
   /**
+   * Number of bounds checks required for the proof.
+   */
+  nBoundsChecks: number;
+
+  /**
    * Number of lists to be included in proof.
    */
   nLists: number;
@@ -530,6 +540,7 @@ export function GPCRequirements(
   nObjects: number,
   nEntries: number,
   merkleMaxDepth: number,
+  nBoundsChecks: number = 0,
   nLists: number = 0,
   maxListSize: number = 0,
   tupleArities: Record<PODName, number> = {}
@@ -538,6 +549,7 @@ export function GPCRequirements(
     nObjects,
     nEntries,
     merkleMaxDepth,
+    nBoundsChecks,
     nLists,
     maxListSize,
     tupleArities
@@ -677,5 +689,25 @@ function addIdentifierToListConfig(
   gpcListConfig[identifier] = {
     type: membershipType,
     listIdentifier
+  };
+}
+
+// TODO(POD-P2): Get rid of everything below this line.
+
+// Dummy bounds check inputs. Checks that entry with index -1 (i.e. the value 0)
+// lies in [0, 0].
+export function dummyBoundsCheckInputs(params: ProtoPODGPCCircuitParams): {
+  boundsCheckEntryIndices: CircuitSignal[];
+  boundsCheckMinValues: CircuitSignal[];
+  boundsCheckMaxValues: CircuitSignal[];
+} {
+  return {
+    boundsCheckEntryIndices: padArray(
+      [],
+      params.maxBoundsChecks,
+      BABY_JUB_NEGATIVE_ONE
+    ),
+    boundsCheckMinValues: padArray([], params.maxBoundsChecks, 0n),
+    boundsCheckMaxValues: padArray([], params.maxBoundsChecks, 0n)
   };
 }

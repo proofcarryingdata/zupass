@@ -42,6 +42,7 @@ import {
 import {
   GPCProofMembershipListConfig,
   LIST_MEMBERSHIP,
+  dummyBoundsCheckInputs,
   isTupleIdentifier,
   isVirtualEntryIdentifier,
   isVirtualEntryName,
@@ -318,6 +319,10 @@ export function compileProofConfig(
     entryConstraintMetadata.firstOwnerIndex
   );
 
+  // Create bounds check inputs
+  // TODO(POD-P2): Replace this with actual inputs.
+  const circuitBoundsCheckInputs = dummyBoundsCheckInputs(circuitDesc);
+
   // Create subset of inputs for multituple module padded to max size.
   const circuitMultiTupleInputs = compileProofMultiTuples(
     tupleMap,
@@ -357,6 +362,7 @@ export function compileProofConfig(
     ...circuitVirtualEntryInputs,
     ...circuitEntryConstraintInputs,
     ...circuitOwnerInputs,
+    ...circuitBoundsCheckInputs,
     ...circuitMultiTupleInputs,
     ...circuitListMembershipInputs,
     ...circuitGlobalInputs
@@ -824,6 +830,10 @@ export function compileVerifyConfig(
     entryConstraintMetadata.firstOwnerIndex
   );
 
+  // Create bounds check inputs
+  // TODO(POD-P2): Replace this with actual inputs.
+  const circuitBoundsCheckInputs = dummyBoundsCheckInputs(circuitDesc);
+
   // Create subset of inputs for multituple module padded to max size.
   const circuitMultiTupleInputs = compileProofMultiTuples(
     tupleMap,
@@ -871,6 +881,7 @@ export function compileVerifyConfig(
       ...circuitVirtualEntryInputs,
       ...circuitEntryConstraintInputs,
       ...circuitOwnerInputs,
+      ...circuitBoundsCheckInputs,
       ...circuitMultiTupleInputs,
       ...circuitListMembershipInputs,
       ...circuitGlobalInputs

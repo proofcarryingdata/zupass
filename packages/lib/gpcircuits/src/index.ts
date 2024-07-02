@@ -1,4 +1,5 @@
 export * from "./artifacts";
+export * from "./bounds";
 export * from "./entry";
 export * from "./global";
 export * from "./list-membership";

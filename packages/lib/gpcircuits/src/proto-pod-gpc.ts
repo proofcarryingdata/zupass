@@ -44,6 +44,11 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
   /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
 
+  // Bounds check module (1)
+  /*PUB*/ boundsCheckEntryIndices: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
+  /*PUB*/ boundsCheckMinValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
+  /*PUB*/ boundsCheckMaxValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
+
   // MultiTuple module (1)
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
 
@@ -81,6 +86,9 @@ export type ProtoPODGPCInputNamesType = [
   "ownerSemaphoreV3IdentityTrapdoor",
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
+  "boundsCheckEntryIndices",
+  "boundsCheckMinValues",
+  "boundsCheckMaxValues",
   "tupleIndices",
   "listComparisonValueIndex",
   "listContainsComparisonValue",
@@ -110,6 +118,11 @@ export type ProtoPODGPCPublicInputs = {
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
   /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
 
+  // Bounds check module (1)
+  /*PUB*/ boundsCheckEntryIndices: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
+  /*PUB*/ boundsCheckMinValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
+  /*PUB*/ boundsCheckMaxValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
+
   // Tuple module (1)
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
 
@@ -135,6 +148,9 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "ownerEntryIndex",
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
+  "boundsCheckEntryIndices",
+  "boundsCheckMinValues",
+  "boundsCheckMaxValues",
   "tupleIndices",
   "listComparisonValueIndex",
   "listContainsComparisonValue",
@@ -182,6 +198,11 @@ export type ProtoPODGPCCircuitParams = {
   merkleMaxDepth: number;
 
   /**
+   * Number of bounds checks.
+   */
+  maxBoundsChecks: number;
+
+  /**
    * Number of membership lists
    */
   maxLists: number;
@@ -210,6 +231,7 @@ export function ProtoPODGPCCircuitParams(
   maxObjects: number,
   maxEntries: number,
   merkleMaxDepth: number,
+  maxBoundsChecks: number,
   maxLists: number,
   maxListElements: number,
   maxTuples: number,
@@ -219,6 +241,7 @@ export function ProtoPODGPCCircuitParams(
     maxObjects,
     maxEntries,
     merkleMaxDepth,
+    maxBoundsChecks,
     maxLists,
     maxListElements,
     maxTuples,
@@ -238,6 +261,7 @@ export function protoPODGPCCircuitParamArray(
     params.maxObjects,
     params.maxEntries,
     params.merkleMaxDepth,
+    params.maxBoundsChecks,
     params.maxLists,
     params.maxListElements,
     params.maxTuples,
@@ -260,7 +284,8 @@ export function arrayToProtoPODGPCCircuitParam(
     params[3],
     params[4],
     params[5],
-    params[6]
+    params[6],
+    params[7]
   );
 }
 
@@ -366,6 +391,9 @@ export class ProtoPODGPC {
       ownerEntryIndex: allInputs.ownerEntryIndex,
       ownerExternalNullifier: allInputs.ownerExternalNullifier,
       ownerIsNullfierHashRevealed: allInputs.ownerIsNullfierHashRevealed,
+      boundsCheckEntryIndices: allInputs.boundsCheckEntryIndices,
+      boundsCheckMinValues: allInputs.boundsCheckMinValues,
+      boundsCheckMaxValues: allInputs.boundsCheckMaxValues,
       tupleIndices: allInputs.tupleIndices,
       listComparisonValueIndex: allInputs.listComparisonValueIndex,
       listContainsComparisonValue: allInputs.listContainsComparisonValue,
@@ -417,6 +445,9 @@ export class ProtoPODGPC {
       inputs.ownerEntryIndex,
       inputs.ownerExternalNullifier,
       inputs.ownerIsNullfierHashRevealed,
+      ...inputs.boundsCheckEntryIndices,
+      ...inputs.boundsCheckMinValues.flat(),
+      ...inputs.boundsCheckMaxValues.flat(),
       ...inputs.tupleIndices.flat(),
       ...inputs.listComparisonValueIndex,
       inputs.listContainsComparisonValue,
@@ -486,6 +517,7 @@ export class ProtoPODGPC {
       circuitDesc.maxObjects >= requiredParams.maxObjects &&
       circuitDesc.maxEntries >= requiredParams.maxEntries &&
       circuitDesc.merkleMaxDepth >= requiredParams.merkleMaxDepth &&
+      circuitDesc.maxBoundsChecks >= requiredParams.maxBoundsChecks &&
       circuitDesc.maxLists >= requiredParams.maxLists &&
       circuitDesc.maxListElements >= requiredParams.maxListElements &&
       circuitDesc.maxTuples >= requiredParams.maxTuples &&
@@ -516,7 +548,7 @@ export class ProtoPODGPC {
    * Generates a circuit name based on parameters.
    */
   public static circuitNameForParams(params: ProtoPODGPCCircuitParams): string {
-    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md-${params.maxLists}x${params.maxListElements}l-${params.maxTuples}x${params.tupleArity}t`;
+    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md-${params.maxBoundsChecks}bc-${params.maxLists}x${params.maxListElements}l-${params.maxTuples}x${params.tupleArity}t`;
   }
 
   private static circuitDescForParams(
@@ -561,5 +593,5 @@ export class ProtoPODGPC {
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.2.0";
+  public static ARTIFACTS_NPM_VERSION = "0.3.0";
 }

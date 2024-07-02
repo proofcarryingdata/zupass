@@ -2,6 +2,7 @@ pragma circom 2.1.8;
 
 include "circomlib/circuits/gates.circom";
 include "circomlib/circuits/poseidon.circom";
+include "bounds.circom";
 include "entry.circom";
 include "global.circom";
 include "gpc-util.circom";
@@ -37,6 +38,9 @@ template ProtoPODGPC (
     // inclusive upper bound on the proofDepth input.
     MERKLE_MAX_DEPTH,
 
+    // Max number of bounds checks on entry values.
+    MAX_BOUNDS_CHECKS,
+    
     // Indicates the number of ListMembership modules included in this GPC,
     // setting the largest number of distinct membership lists for (tuples of)
     // entry values which can be checked.
@@ -210,6 +214,40 @@ template ProtoPODGPC (
         isNullfierHashRevealed <== ownerIsNullfierHashRevealed
                                                                           );
 
+    
+    /*
+     * (MAX_BOUNDS_CHECKS) BoundsCheckModules with their inputs & outputs
+     */
+    
+    // Array of indices of entries whose values will be
+    // bounds-checked. This should be padded with -1 if necessary,
+    // which refers to the value 0.
+    signal input boundsCheckEntryIndices[MAX_BOUNDS_CHECKS];
+
+    // Arrays of (inclusive) 64-bit unsigned integer bounds, where the
+    // ith element of each array specifies the minimum or maximum
+    // value that the ith value being checked can take. Note that
+    // these bounds are not constrained here; since they are public
+    // inputs, they should be checked externally, cf. the notes
+    // preceding `BoundsCheckModule`. These arrays should be padded
+    // with 0s if necessary.
+    signal input boundsCheckMinValues[MAX_BOUNDS_CHECKS];
+    signal input boundsCheckMaxValues[MAX_BOUNDS_CHECKS];
+
+    // Extract the corresponding entry value and run a bounds check on
+    // it.
+    signal boundsChecks[MAX_BOUNDS_CHECKS];
+    for (var i = 0; i < MAX_BOUNDS_CHECKS; i++) {
+        boundsChecks[i] <==
+            BoundsCheckModule(64)(
+                MaybeInputSelector(MAX_ENTRIES)(
+                    entryValue,
+                    boundsCheckEntryIndices[i]),
+                boundsCheckMinValues[i],
+                boundsCheckMaxValues[i]);
+        boundsChecks[i] === 1;
+    }
+    
     /*
      * 1 MultiTupleModule with its inputs & outputs.
      */
