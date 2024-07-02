@@ -52,8 +52,7 @@ export async function gpcDemo(): Promise<boolean> {
   // explanatory comments.
   //////////////////////////////////////////////////////////////////////////////
 
-  const privateKey =
-    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+  const privateKey = "ASNFZ4mrze8BI0VniavN7wEjRWeJq83vASNFZ4mrze8";
   const semaphoreIdentity = new Identity();
   console.log("Semaphore commitment", semaphoreIdentity.commitment);
   const podSword = POD.sign(
