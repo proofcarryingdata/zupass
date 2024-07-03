@@ -56,7 +56,7 @@ const revealedFields: Record<
  */
 export async function authenticate(
   pcdStr: string,
-  { watermark, config, fieldsToReveal }: ZuAuthArgs
+  { watermark, config, fieldsToReveal, externalNullifier }: ZuAuthArgs
 ): Promise<ZKEdDSAEventTicketPCD> {
   const serializedPCD = JSON.parse(pcdStr);
   if (serializedPCD.type !== ZKEdDSAEventTicketPCDTypeName) {
@@ -71,6 +71,10 @@ export async function authenticate(
 
   if (pcd.claim.watermark.toString() !== watermark) {
     throw new ZuAuthAuthenticationError("PCD watermark does not match");
+  }
+
+  if (pcd.claim.externalNullifier?.toString() !== externalNullifier) {
+    throw new ZuAuthAuthenticationError("External nullfier does not match");
   }
 
   // For each of the fields configured to be revealed, check that the claim
