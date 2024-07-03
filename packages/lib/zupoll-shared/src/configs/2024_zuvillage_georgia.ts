@@ -17,8 +17,8 @@ export function makeZuvillageGeorgia(
   const ZUVILLAGE_GEORGIA_CONFIG_SEMA_GROUP_ID =
     "7ce6f74a-1383-57be-a77a-d4fc04e02f45";
   const ZUVILLAGE_GEORGIA_YEAR = 2024;
-  const ZUVILLAGE_GEORGIA_MONTH = 7;
-  const ZUVILLAGE_GEORGIA_DAY = 20;
+  const ZUVILLAGE_GEORGIA_MONTH = 5;
+  const ZUVILLAGE_GEORGIA_DAY = 1;
   // Only one config
   const ZUVILLAGE_GEORGIA_CONFIG = makePodboxLoginConfigSingleGroup(
     ZUPASS_CLIENT_URL,
