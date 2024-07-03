@@ -15,7 +15,7 @@ import {
   serializeStorage
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { PCD } from "@pcd/pcd-types";
+import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";
@@ -150,7 +150,8 @@ export async function uploadSerializedStorage(
   pcds: PCDCollection,
   serializedStorage: SyncedEncryptedStorage,
   storageHash: string,
-  knownRevision?: string
+  knownRevision?: string,
+  credential?: SerializedPCD
 ): Promise<UploadStorageResult> {
   if (
     !validateAndLogRunningAppState(
@@ -182,7 +183,8 @@ export async function uploadSerializedStorage(
     appConfig.zupassServer,
     blobKey,
     encryptedStorage,
-    knownRevision
+    knownRevision,
+    credential
   );
 
   if (uploadResult.success) {

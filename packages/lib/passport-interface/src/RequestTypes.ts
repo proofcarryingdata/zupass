@@ -90,6 +90,8 @@ export interface UploadEncryptedStorageRequest {
    * existing revision.
    */
   knownRevision?: string;
+
+  pcd?: SerializedPCD;
 }
 
 /**

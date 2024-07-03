@@ -1102,13 +1102,24 @@ async function doSync(
 
   if (state.serverStorageHash !== appStorage.storageHash) {
     console.log("[SYNC] sync action: upload");
+
+    const credentialManager = new CredentialManager(
+      state.identity,
+      state.pcds,
+      state.credentialCache
+    );
+    const credential = await credentialManager.requestCredential({
+      signatureType: "sempahore-signature-pcd"
+    });
+
     const upRes = await uploadSerializedStorage(
       state.self,
       state.identity,
       state.pcds,
       appStorage.serializedStorage,
       appStorage.storageHash,
-      state.serverStorageRevision
+      state.serverStorageRevision,
+      credential
     );
     if (upRes.success) {
       return {
