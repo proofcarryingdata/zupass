@@ -1457,7 +1457,7 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
     }
   });
 
-  await sleep(10000);
+  await sleep(2000);
 
   const credentialManager = new CredentialManager(
     state.identity,

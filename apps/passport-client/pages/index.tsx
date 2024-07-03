@@ -307,16 +307,16 @@ function RouterImpl(): JSX.Element {
 
   if (isDeletingAccount) {
     return (
-      <>
+      <AppContainer bg="primary">
         <Spacer h={64} />
         <TextCenter>
           <H1>ZUPASS</H1>
           <Spacer h={24} />
-          Deleting your account...
+          Deleting your Account
           <Spacer h={8} />
           <RippleLoader />
         </TextCenter>
-      </>
+      </AppContainer>
     );
   }
 

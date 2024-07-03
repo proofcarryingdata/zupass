@@ -50,7 +50,7 @@ export function SettingsModal({
 
         <Spacer h={16} />
 
-        {!isProveOrAddScreen && (
+        {!isProveOrAddScreen && !showAdvanced && (
           <>
             <LinkButton
               $primary={true}
@@ -79,17 +79,18 @@ export function SettingsModal({
           </>
         )}
 
-        <Button onClick={logout} style="danger">
-          Log Out
-        </Button>
+        {!showAdvanced && (
+          <Button onClick={logout} style="danger">
+            Log Out
+          </Button>
+        )}
 
         {!isProveOrAddScreen &&
           (showAdvanced ? (
             <>
-              <Spacer h={12} />
-              <TextButton onClick={() => setShowAdvanced(!showAdvanced)}>
-                Hide Advanced
-              </TextButton>
+              <Button onClick={() => setShowAdvanced(!showAdvanced)}>
+                Back
+              </Button>
               <Spacer h={12} />
               <Button
                 onClick={deleteAccount}
@@ -109,7 +110,7 @@ export function SettingsModal({
             <>
               <Spacer h={12} />
               <TextButton onClick={() => setShowAdvanced(!showAdvanced)}>
-                Advanced
+                Delete Account
               </TextButton>
             </>
           ))}
