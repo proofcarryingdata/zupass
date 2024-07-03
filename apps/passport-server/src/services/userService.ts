@@ -448,6 +448,7 @@ export class UserService {
     const pcd = await SemaphoreSignaturePCDPackage.deserialize(
       serializedPCD.pcd
     );
+
     if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
       throw new Error("Invalid signature");
     }

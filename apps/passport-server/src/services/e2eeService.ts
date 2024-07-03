@@ -5,6 +5,7 @@ import {
   UploadEncryptedStorageRequest,
   UploadEncryptedStorageResponseValue
 } from "@pcd/passport-interface";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Response } from "express";
 import {
   UpdateEncryptedStorageResult,
@@ -88,6 +89,14 @@ export class E2EEService {
 
     if (!request.blobKey || !request.encryptedBlob) {
       throw new PCDHTTPError(400, "Missing request fields");
+    }
+
+    let commitment: string | undefined = undefined;
+    if (request.pcd?.pcd) {
+      const pcd = await SemaphoreSignaturePCDPackage.deserialize(
+        request.pcd?.pcd
+      );
+      commitment = pcd.claim.identityCommitment;
     }
 
     let resultRevision = undefined;
