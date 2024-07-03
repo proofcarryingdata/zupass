@@ -9,6 +9,7 @@ import {
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
+  EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage,
   ZKEdDSAEventTicketPCDTypeName
@@ -45,7 +46,11 @@ async function makeTestTicket(
 async function makeZKTicketPCD(
   ticketPCD: EdDSATicketPCD,
   identity: Identity,
-  watermark: string
+  watermark: string,
+  fieldsToReveal: EdDSATicketFieldsToReveal = {
+    revealEventId: true,
+    revealProductId: true
+  }
 ): Promise<ZKEdDSAEventTicketPCD> {
   const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(ticketPCD);
   const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
@@ -64,10 +69,7 @@ async function makeZKTicketPCD(
       argumentType: ArgumentTypeName.PCD
     },
     fieldsToReveal: {
-      value: {
-        revealEventId: true,
-        revealProductId: true
-      },
+      value: fieldsToReveal,
       argumentType: ArgumentTypeName.ToggleList
     },
     validEventIds: {
@@ -119,6 +121,7 @@ describe("zuauth should work", async function () {
   const watermark = generateSnarkMessageHash("watermark").toString();
   let zkPCD: ZKEdDSAEventTicketPCD;
   let serializedZKPCD: SerializedPCD<ZKEdDSAEventTicketPCD>;
+  let ticketPCD: EdDSATicketPCD;
 
   this.beforeAll(async () => {
     await EdDSATicketPCDPackage.init?.({});
@@ -127,7 +130,7 @@ describe("zuauth should work", async function () {
       wasmFilePath
     });
 
-    const ticketPCD = await makeTestTicket(privKey, testTicket);
+    ticketPCD = await makeTestTicket(privKey, testTicket);
 
     zkPCD = await makeZKTicketPCD(ticketPCD, identity, watermark);
     serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
@@ -136,10 +139,13 @@ describe("zuauth should work", async function () {
   it("should authenticate PCDs with correct settings", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
 
-    const resultPCD = await authenticate(
-      JSON.stringify(serializedZKPCD),
+    const resultPCD = await authenticate(JSON.stringify(serializedZKPCD), {
       watermark,
-      [
+      fieldsToReveal: {
+        revealEventId: true,
+        revealProductId: true
+      },
+      config: [
         {
           eventId: testTicket.eventId,
           eventName: testTicket.eventName,
@@ -149,7 +155,7 @@ describe("zuauth should work", async function () {
           publicKey
         }
       ]
-    );
+    });
 
     expect(resultPCD.type).to.eq(ZKEdDSAEventTicketPCDTypeName);
     expect(resultPCD.claim.partialTicket.eventId).to.eq(testTicket.eventId);
@@ -162,18 +168,28 @@ describe("zuauth should work", async function () {
     let thrown = false;
 
     try {
-      await authenticate(JSON.stringify(serializedZKPCD), watermark, [
-        {
-          eventId: testTicket.eventId,
-          eventName: testTicket.eventName,
-          productId: testTicket.productId,
-          productName: testTicket.ticketName,
-          pcdType: EdDSATicketPCDTypeName,
-          publicKey
-        }
-      ]);
+      await authenticate(JSON.stringify(serializedZKPCD), {
+        watermark,
+        fieldsToReveal: {
+          revealEventId: true,
+          revealProductId: true
+        },
+        config: [
+          {
+            eventId: testTicket.eventId,
+            eventName: testTicket.eventName,
+            productId: testTicket.productId,
+            productName: testTicket.ticketName,
+            pcdType: EdDSATicketPCDTypeName,
+            publicKey
+          }
+        ]
+      });
     } catch (e) {
       expect(e instanceof ZuAuthAuthenticationError).to.be.true;
+      expect((e as ZuAuthAuthenticationError).message).to.eq(
+        "Signing key does not match any of the configured public keys"
+      );
       thrown = true;
     }
     expect(thrown).to.be.true;
@@ -185,18 +201,28 @@ describe("zuauth should work", async function () {
     let thrown = false;
 
     try {
-      await authenticate(JSON.stringify(serializedZKPCD), newWatermark, [
-        {
-          eventId: testTicket.eventId,
-          eventName: testTicket.eventName,
-          productId: testTicket.productId,
-          productName: testTicket.ticketName,
-          pcdType: EdDSATicketPCDTypeName,
-          publicKey
-        }
-      ]);
+      await authenticate(JSON.stringify(serializedZKPCD), {
+        watermark: newWatermark,
+        fieldsToReveal: {
+          revealEventId: true,
+          revealProductId: true
+        },
+        config: [
+          {
+            eventId: testTicket.eventId,
+            eventName: testTicket.eventName,
+            productId: testTicket.productId,
+            productName: testTicket.ticketName,
+            pcdType: EdDSATicketPCDTypeName,
+            publicKey
+          }
+        ]
+      });
     } catch (e) {
       expect(e instanceof ZuAuthAuthenticationError).to.be.true;
+      expect((e as ZuAuthAuthenticationError).message).to.eq(
+        "PCD watermark does not match"
+      );
       thrown = true;
     }
     expect(thrown).to.be.true;
@@ -207,18 +233,28 @@ describe("zuauth should work", async function () {
     let thrown = false;
 
     try {
-      await authenticate(JSON.stringify(serializedZKPCD), watermark, [
-        {
-          eventId: uuid(),
-          eventName: testTicket.eventName,
-          productId: testTicket.productId,
-          productName: testTicket.ticketName,
-          pcdType: EdDSATicketPCDTypeName,
-          publicKey
-        }
-      ]);
+      await authenticate(JSON.stringify(serializedZKPCD), {
+        watermark,
+        fieldsToReveal: {
+          revealEventId: true,
+          revealProductId: true
+        },
+        config: [
+          {
+            eventId: uuid(),
+            eventName: testTicket.eventName,
+            productId: testTicket.productId,
+            productName: testTicket.ticketName,
+            pcdType: EdDSATicketPCDTypeName,
+            publicKey
+          }
+        ]
+      });
     } catch (e) {
       expect(e instanceof ZuAuthAuthenticationError).to.be.true;
+      expect((e as ZuAuthAuthenticationError).message).to.eq(
+        "Event ID does not match any of the configured event IDs"
+      );
       thrown = true;
     }
     expect(thrown).to.be.true;
@@ -229,18 +265,118 @@ describe("zuauth should work", async function () {
     let thrown = false;
 
     try {
-      await authenticate(JSON.stringify(serializedZKPCD), watermark, [
-        {
-          eventId: testTicket.eventId,
-          eventName: testTicket.eventName,
-          productId: uuid(),
-          productName: testTicket.ticketName,
-          pcdType: EdDSATicketPCDTypeName,
-          publicKey
-        }
-      ]);
+      await authenticate(JSON.stringify(serializedZKPCD), {
+        watermark,
+        fieldsToReveal: {
+          revealEventId: true,
+          revealProductId: true
+        },
+        config: [
+          {
+            eventId: testTicket.eventId,
+            eventName: testTicket.eventName,
+            productId: uuid(),
+            productName: testTicket.ticketName,
+            pcdType: EdDSATicketPCDTypeName,
+            publicKey
+          }
+        ]
+      });
     } catch (e) {
       expect(e instanceof ZuAuthAuthenticationError).to.be.true;
+      expect((e as ZuAuthAuthenticationError).message).to.eq(
+        "Product ID does not match any of the configured product IDs"
+      );
+      thrown = true;
+    }
+    expect(thrown).to.be.true;
+  });
+
+  it("should not authenticate a PCD which should have a revealed event ID but does not", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+    let thrown = false;
+
+    // Proving operation which happens on the client-side.
+    const zkPCDWithoutRevealedEventId = await makeZKTicketPCD(
+      ticketPCD,
+      identity,
+      watermark,
+      { revealEventId: false, revealProductId: true }
+    );
+
+    const serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(
+      zkPCDWithoutRevealedEventId
+    );
+
+    try {
+      await authenticate(JSON.stringify(serializedZKPCD), {
+        watermark,
+        fieldsToReveal: {
+          // Here the "server-side" config does not match the client.
+          revealEventId: true,
+          revealProductId: true
+        },
+        config: [
+          {
+            eventId: uuid(),
+            eventName: testTicket.eventName,
+            productId: testTicket.productId,
+            productName: testTicket.ticketName,
+            pcdType: EdDSATicketPCDTypeName,
+            publicKey
+          }
+        ]
+      });
+    } catch (e) {
+      expect(e instanceof ZuAuthAuthenticationError).to.be.true;
+      expect((e as ZuAuthAuthenticationError).message).to.eq(
+        `Field "eventId" is undefined and should have a revealed value`
+      );
+      thrown = true;
+    }
+    expect(thrown).to.be.true;
+  });
+
+  it("should not authenticate a PCD which should have a revealed product ID but does not", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+    let thrown = false;
+
+    // Proving operation which happens on the client-side.
+    const zkPCDWithoutRevealedEventId = await makeZKTicketPCD(
+      ticketPCD,
+      identity,
+      watermark,
+      { revealEventId: true, revealProductId: false }
+    );
+
+    const serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(
+      zkPCDWithoutRevealedEventId
+    );
+
+    try {
+      await authenticate(JSON.stringify(serializedZKPCD), {
+        watermark,
+        fieldsToReveal: {
+          // Here the "server-side" config does not match the client.
+          revealEventId: true,
+          revealProductId: true
+        },
+        config: [
+          {
+            eventId: uuid(),
+            eventName: testTicket.eventName,
+            productId: testTicket.productId,
+            productName: testTicket.ticketName,
+            pcdType: EdDSATicketPCDTypeName,
+            publicKey
+          }
+        ]
+      });
+    } catch (e) {
+      expect(e instanceof ZuAuthAuthenticationError).to.be.true;
+      expect((e as ZuAuthAuthenticationError).message).to.eq(
+        `Field "productId" is undefined and should have a revealed value`
+      );
       thrown = true;
     }
     expect(thrown).to.be.true;
@@ -261,12 +397,15 @@ describe("zuauth should work", async function () {
           productName: "GA"
         }
       ],
-      fieldsToReveal: {},
+      fieldsToReveal: {
+        revealEventId: true,
+        revealProductId: true
+      },
       watermark: "12345"
     });
 
     expect(url).to.eq(
-      "https://zupass.org#/prove?request=%7B%22type%22%3A%22Get%22%2C%22returnUrl%22%3A%22%22%2C%22args%22%3A%7B%22ticket%22%3A%7B%22argumentType%22%3A%22PCD%22%2C%22pcdType%22%3A%22eddsa-ticket-pcd%22%2C%22userProvided%22%3Atrue%2C%22validatorParams%22%3A%7B%22eventIds%22%3A%5B%22536c96f5-feb8-4938-bcac-47d4e13847c6%22%5D%2C%22productIds%22%3A%5B%229e39949c-b468-4c7e-a6a2-7735521f0bda%22%5D%2C%22publicKeys%22%3A%5B%5B%221d47687549cb273b6fed3493de5a954920dd0403f8c7eb67c2ff72a26fa4ab62%22%2C%221144ef5d44e2d8972d7ade8138629ebefb094025ebb4df00ed02e22d9b68e665%22%5D%5D%2C%22notFoundMessage%22%3A%22No%20eligible%20PCDs%20found%22%7D%7D%2C%22identity%22%3A%7B%22argumentType%22%3A%22PCD%22%2C%22pcdType%22%3A%22semaphore-identity-pcd%22%2C%22userProvided%22%3Atrue%7D%2C%22validEventIds%22%3A%7B%22argumentType%22%3A%22StringArray%22%2C%22value%22%3A%5B%22536c96f5-feb8-4938-bcac-47d4e13847c6%22%5D%2C%22userProvided%22%3Afalse%7D%2C%22fieldsToReveal%22%3A%7B%22argumentType%22%3A%22ToggleList%22%2C%22value%22%3A%7B%7D%2C%22userProvided%22%3Afalse%7D%2C%22watermark%22%3A%7B%22argumentType%22%3A%22BigInt%22%2C%22value%22%3A%2212345%22%2C%22userProvided%22%3Afalse%7D%2C%22externalNullifier%22%3A%7B%22argumentType%22%3A%22BigInt%22%2C%22value%22%3A%2212345%22%2C%22userProvided%22%3Afalse%7D%7D%2C%22pcdType%22%3A%22zk-eddsa-event-ticket-pcd%22%2C%22options%22%3A%7B%22genericProveScreen%22%3Atrue%7D%2C%22postMessage%22%3Atrue%7D"
+      "https://zupass.org#/prove?request=%7B%22type%22%3A%22Get%22%2C%22returnUrl%22%3A%22%22%2C%22args%22%3A%7B%22ticket%22%3A%7B%22argumentType%22%3A%22PCD%22%2C%22pcdType%22%3A%22eddsa-ticket-pcd%22%2C%22userProvided%22%3Atrue%2C%22validatorParams%22%3A%7B%22eventIds%22%3A%5B%22536c96f5-feb8-4938-bcac-47d4e13847c6%22%5D%2C%22productIds%22%3A%5B%229e39949c-b468-4c7e-a6a2-7735521f0bda%22%5D%2C%22publicKeys%22%3A%5B%5B%221d47687549cb273b6fed3493de5a954920dd0403f8c7eb67c2ff72a26fa4ab62%22%2C%221144ef5d44e2d8972d7ade8138629ebefb094025ebb4df00ed02e22d9b68e665%22%5D%5D%2C%22notFoundMessage%22%3A%22No%20eligible%20PCDs%20found%22%7D%7D%2C%22identity%22%3A%7B%22argumentType%22%3A%22PCD%22%2C%22pcdType%22%3A%22semaphore-identity-pcd%22%2C%22userProvided%22%3Atrue%7D%2C%22validEventIds%22%3A%7B%22argumentType%22%3A%22StringArray%22%2C%22userProvided%22%3Afalse%7D%2C%22fieldsToReveal%22%3A%7B%22argumentType%22%3A%22ToggleList%22%2C%22value%22%3A%7B%22revealEventId%22%3Atrue%2C%22revealProductId%22%3Atrue%7D%2C%22userProvided%22%3Afalse%7D%2C%22watermark%22%3A%7B%22argumentType%22%3A%22BigInt%22%2C%22value%22%3A%2212345%22%2C%22userProvided%22%3Afalse%7D%2C%22externalNullifier%22%3A%7B%22argumentType%22%3A%22BigInt%22%2C%22value%22%3A%2212345%22%2C%22userProvided%22%3Afalse%7D%7D%2C%22pcdType%22%3A%22zk-eddsa-event-ticket-pcd%22%2C%22options%22%3A%7B%22genericProveScreen%22%3Atrue%7D%2C%22postMessage%22%3Atrue%7D"
     );
   });
 

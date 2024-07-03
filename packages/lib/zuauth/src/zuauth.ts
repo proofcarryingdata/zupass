@@ -114,6 +114,18 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     publicKeys.push(em.publicKey);
   }
 
+  if (eventIds.length > 0 && !fieldsToReveal.revealEventId) {
+    throw new Error(
+      "When event IDs are specified for authentication, the event ID field must be revealed"
+    );
+  }
+
+  if (productIds.length > 0 && !fieldsToReveal.revealProductId) {
+    throw new Error(
+      "When product IDs are specified for authentication, the product ID field must be revealed"
+    );
+  }
+
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
       argumentType: ArgumentTypeName.PCD,
@@ -135,8 +147,7 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     },
     validEventIds: {
       argumentType: ArgumentTypeName.StringArray,
-      value:
-        eventIds.length !== 0 && eventIds.length <= 20 ? eventIds : undefined,
+      value: undefined,
       userProvided: false
     },
     fieldsToReveal: {

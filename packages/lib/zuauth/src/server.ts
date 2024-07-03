@@ -1,12 +1,46 @@
 import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { PipelineEdDSATicketZuAuthConfig } from "@pcd/passport-interface";
+import { ITicketData } from "@pcd/eddsa-ticket-pcd";
 import {
+  EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage,
   ZKEdDSAEventTicketPCDTypeName
 } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { ZuAuthArgs } from ".";
 
 export class ZuAuthAuthenticationError extends Error {}
+
+/**
+ * Check if a given field is defined.
+ */
+function checkIsDefined<T>(
+  field: T | undefined,
+  fieldName: string
+): field is T {
+  if (field === undefined || field === null) {
+    throw new ZuAuthAuthenticationError(
+      `Field "${fieldName}" is undefined and should have a revealed value`
+    );
+  }
+  return true;
+}
+
+const revealedFields: Record<
+  keyof EdDSATicketFieldsToReveal,
+  keyof ITicketData
+> = {
+  revealAttendeeEmail: "attendeeEmail",
+  revealAttendeeName: "attendeeName",
+  revealAttendeeSemaphoreId: "attendeeSemaphoreId",
+  revealEventId: "eventId",
+  revealIsConsumed: "isConsumed",
+  revealIsRevoked: "isRevoked",
+  revealProductId: "productId",
+  revealTicketCategory: "ticketCategory",
+  revealTicketId: "ticketId",
+  revealTimestampConsumed: "timestampConsumed",
+  revealTimestampSigned: "timestampSigned"
+} as const;
 
 /**
  * Authenticates a ticket PCD.
@@ -22,8 +56,7 @@ export class ZuAuthAuthenticationError extends Error {}
  */
 export async function authenticate(
   pcdStr: string,
-  watermark: string,
-  config: PipelineEdDSATicketZuAuthConfig[]
+  { watermark, config, fieldsToReveal }: ZuAuthArgs
 ): Promise<ZKEdDSAEventTicketPCD> {
   const serializedPCD = JSON.parse(pcdStr);
   if (serializedPCD.type !== ZKEdDSAEventTicketPCDTypeName) {
@@ -37,7 +70,15 @@ export async function authenticate(
   }
 
   if (pcd.claim.watermark.toString() !== watermark) {
-    throw new ZuAuthAuthenticationError("PCD watermark doesn't match");
+    throw new ZuAuthAuthenticationError("PCD watermark does not match");
+  }
+
+  // For each of the fields configured to be revealed, check that the claim
+  // contains values.
+  for (const [revealedField, fieldName] of Object.entries(revealedFields)) {
+    if (fieldsToReveal[revealedField as keyof EdDSATicketFieldsToReveal]) {
+      checkIsDefined(pcd.claim.partialTicket[fieldName], fieldName);
+    }
   }
 
   const publicKeys = config.map((em) => em.publicKey);
@@ -62,7 +103,8 @@ export async function authenticate(
 
   if (
     eventIds.size > 0 &&
-    pcd.claim.partialTicket.eventId &&
+    fieldsToReveal.revealEventId === true &&
+    checkIsDefined<string>(pcd.claim.partialTicket.eventId, "eventId") &&
     !eventIds.has(pcd.claim.partialTicket.eventId)
   ) {
     throw new ZuAuthAuthenticationError(
@@ -73,6 +115,7 @@ export async function authenticate(
   if (
     productIds.size > 0 &&
     pcd.claim.partialTicket.productId &&
+    checkIsDefined<string>(pcd.claim.partialTicket.productId, "productId") &&
     !productIds.has(pcd.claim.partialTicket.productId)
   ) {
     throw new ZuAuthAuthenticationError(
