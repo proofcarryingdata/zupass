@@ -72,6 +72,13 @@ import {
   saveOfflineTickets,
   saveUsingLaserScanner
 } from "../src/localstorage";
+import init, {
+  state0_bindgen,
+  state1_bindgen,
+  state2_bindgen,
+  state3_bindgen,
+  state4_bindgen
+} from "../src/mp-psi";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
@@ -431,6 +438,51 @@ const AppStateProvider: React.FC<AppStateProviderProps> = ({
   useEffect(() => {
     stateEmitter.emit(state);
   }, [state, lastDiff]);
+
+  useEffect(() => {
+    function isEqual(a: Uint32Array, b: Uint32Array): boolean {
+      if (a.length !== b.length) {
+        return false
+      }
+      for (let i = 0; i < a.length; i++) {
+        if (a[i] !== b[i]) {
+          return false
+        }
+      }
+      return true
+    }
+
+    init().then(() => {
+      const state0 = state0_bindgen();
+      const bit_vector_a = new Uint32Array([0, 1, 0, 0, 1, 0, 1, 0, 1, 1]);
+      const state1 = state1_bindgen(state0.message_a_to_b, bit_vector_a);
+      const bit_vector_b = new Uint32Array([1, 1, 1, 1, 1, 0, 1, 0, 0, 0]);
+      // On A's side
+      const state2 = state2_bindgen(
+        state0.private_output_a,
+        state0.public_output_a,
+        state1.message_b_to_a,
+        bit_vector_b
+      );
+      // On B's side
+      const state3 = state3_bindgen(
+        state1.private_output_b,
+        state1.public_output_b,
+        state2.message_a_to_b
+      );
+      const psi_output_a = state4_bindgen(
+        state2.public_output_a,
+        state3.message_b_to_a
+      );
+      const psi_output_b = state3.psi_output;
+      console.log(
+        `psi output ${
+         isEqual(psi_output_a, psi_output_b) ? "succeeded" : "failed"
+        }`
+      );
+      console.log({ psi_output_a, psi_output_b, state1, state2, state3 });
+    });
+  });
 
   const actionDispatch = useCallback(
     (action: Action): Promise<void> => {
