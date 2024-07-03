@@ -28,9 +28,9 @@ export function SettingsModal({
 
   const deleteAccount = useCallback(() => {
     if (window.confirm("Are you sure you want to delete your account?")) {
-      alert("DELETE ACCOUNT");
+      dispatch({ type: "delete-account" });
     }
-  }, []);
+  }, [dispatch]);
 
   return (
     <>
