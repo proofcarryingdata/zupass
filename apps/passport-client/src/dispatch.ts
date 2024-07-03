@@ -970,6 +970,10 @@ async function doSync(
     console.log("[SYNC] userInvalid=true, exiting sync");
     return undefined;
   }
+  if (state.loggingOut || state.deletingAccount) {
+    console.log("[SYNC] logging out or deleting account, exiting sync");
+    return undefined;
+  }
 
   // If we haven't downloaded from storage, do that first.  After that we'll
   // download again when requested to poll, but only after the first full sync
