@@ -157,6 +157,23 @@ export const LinkButton = styled(Link)<{ $primary?: boolean }>`
   `}
 `;
 
+export const TextButton = styled.span`
+  color: var(--bg-dark-primary) !important;
+  display: block;
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+
+  color: #ededed !important;
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    text-decoration: underline;
+    color: #fff !important;
+  }
+`;
+
 export const CircleButton = styled.button<{
   diameter: number;
   padding: number;
