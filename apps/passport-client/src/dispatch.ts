@@ -303,7 +303,6 @@ export async function dispatch(
       return initializeStrich(state, update);
     case "delete-account":
       return deleteAccount(state, update);
-      break;
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -675,7 +674,7 @@ function clearError(state: AppState, update: ZuUpdate): void {
 }
 
 async function resetPassport(state: AppState, update: ZuUpdate): Promise<void> {
-  await requestLogToServer(appConfig.zupassServer, "logout", {
+  requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
     email: state.self?.email,
     commitment: state.self?.commitment
@@ -1437,12 +1436,13 @@ async function initializeStrich(
 
 async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   update({
-    loggingOut: true,
     deletingAccount: true,
     modal: {
       modalType: "none"
     }
   });
+
+  await sleep(10000);
 
   const credentialManager = new CredentialManager(
     state.identity,
@@ -1457,7 +1457,8 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   const res = await requestDeleteAccount(appConfig.zupassServer, { pcd });
 
   if (res.success) {
-    await resetPassport(state, update);
+    resetPassport(state, update);
+    update({ deletingAccount: false });
   } else {
     alert(`Error deleting account: ${res.error}`);
   }

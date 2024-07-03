@@ -22,6 +22,7 @@ import {
   SupportLink,
   TextCenter
 } from "../components/core";
+import { RippleLoader } from "../components/core/RippleLoader";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
@@ -59,7 +60,7 @@ import {
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { appConfig } from "../src/appConfig";
-import { useStateContext } from "../src/appHooks";
+import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
@@ -301,6 +302,23 @@ const Router = React.memo(RouterImpl);
 
 function RouterImpl(): JSX.Element {
   useTsParticles();
+
+  const isDeletingAccount = useIsDeletingAccount();
+
+  if (isDeletingAccount) {
+    return (
+      <>
+        <Spacer h={64} />
+        <TextCenter>
+          <H1>ZUPASS</H1>
+          <Spacer h={24} />
+          Deleting your account...
+          <Spacer h={8} />
+          <RippleLoader />
+        </TextCenter>
+      </>
+    );
+  }
 
   return (
     <HashRouter>
