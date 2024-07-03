@@ -104,14 +104,16 @@ export class E2EEService {
       resultRevision = await setEncryptedStorage(
         this.context.dbPool,
         request.blobKey,
-        request.encryptedBlob
+        request.encryptedBlob,
+        commitment
       );
     } else {
       const updateResult = await updateEncryptedStorage(
         this.context.dbPool,
         request.blobKey,
         request.encryptedBlob,
-        request.knownRevision
+        request.knownRevision,
+        commitment
       );
       resultRevision = this.checkUpdateResult(
         request.blobKey,

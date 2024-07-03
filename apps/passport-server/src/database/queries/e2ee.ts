@@ -96,7 +96,7 @@ export async function updateEncryptedStorage(
   const updateResult = await sqlQuery(
     dbPool,
     `UPDATE e2ee
-    SET encrypted_blob = $2, revision = revision + 1, commitment = $4
+    SET encrypted_blob = $2, revision = revision + 1, commitment = $4, time_updated = now()
     WHERE blob_key = $1 AND revision = $3
     RETURNING revision`,
     [blobKey, encryptedBlob, knownRevision, commitment ?? null]
@@ -125,7 +125,8 @@ export async function rekeyEncryptedStorage(
   uuid: string,
   newSalt: string,
   encryptedBlob: string,
-  knownRevision?: string
+  knownRevision?: string,
+  commitment?: string
 ): Promise<UpdateEncryptedStorageResult> {
   const newRevision = await sqlTransaction<string | undefined>(
     dbPool,
@@ -140,18 +141,24 @@ export async function rekeyEncryptedStorage(
         // See https://www.postgresql.org/docs/9.3/transaction-iso.html
         updateResult = await txClient.query(
           `UPDATE e2ee
-          SET blob_key = $2, encrypted_blob = $3, revision = revision + 1
+          SET blob_key = $2, encrypted_blob = $3, revision = revision + 1, time_updated = now(), commitment = $5
           WHERE blob_key = $1 AND revision = $4
           RETURNING revision`,
-          [oldBlobKey, newBlobKey, encryptedBlob, knownRevision]
+          [
+            oldBlobKey,
+            newBlobKey,
+            encryptedBlob,
+            knownRevision,
+            commitment ?? null
+          ]
         );
       } else {
         updateResult = await txClient.query(
           `UPDATE e2ee
-          SET blob_key = $2, encrypted_blob = $3, revision = revision + 1
+          SET blob_key = $2, encrypted_blob = $3, revision = revision + 1, time_updated = now(), commitment = $4
           WHERE blob_key = $1
           RETURNING revision`,
-          [oldBlobKey, newBlobKey, encryptedBlob]
+          [oldBlobKey, newBlobKey, encryptedBlob, commitment ?? null]
         );
       }
 
