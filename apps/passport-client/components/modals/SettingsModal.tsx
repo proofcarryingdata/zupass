@@ -2,7 +2,7 @@ import { LinkButton, TextButton } from "@pcd/passport-ui";
 import { useCallback, useState } from "react";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
-import { Button, CenterColumn, Spacer, TextCenter } from "../core";
+import { BigInput, Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { AccountExportButton } from "../shared/AccountExportButton";
 
 export function SettingsModal({
@@ -13,8 +13,8 @@ export function SettingsModal({
   const dispatch = useDispatch();
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
-
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState("");
 
   const closeModal = useCallback(() => {
     dispatch({ type: "set-modal", modal: { modalType: "none" } });
@@ -27,8 +27,15 @@ export function SettingsModal({
   }, [dispatch]);
 
   const deleteAccount = useCallback(() => {
-    if (window.confirm("Are you sure you want to delete your account?")) {
+    if (
+      window.confirm(
+        "Are you sure you want to delete your account? This action cannot be undone."
+      ) &&
+      window.confirm("Are you really sure?")
+    ) {
       dispatch({ type: "delete-account" });
+    } else {
+      setDeleteMessage("");
     }
   }, [dispatch]);
 
@@ -84,9 +91,19 @@ export function SettingsModal({
                 Hide Advanced
               </TextButton>
               <Spacer h={12} />
-              <Button onClick={deleteAccount} style="danger">
+              <Button
+                onClick={deleteAccount}
+                style="danger"
+                disabled={deleteMessage !== "delete me"}
+              >
                 Delete Account
               </Button>
+              <Spacer h={12} />
+              <BigInput
+                placeholder="type 'delete me' to delete"
+                value={deleteMessage}
+                onChange={(e) => setDeleteMessage(e.target.value)}
+              />
             </>
           ) : (
             <>
