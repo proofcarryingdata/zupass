@@ -18,7 +18,10 @@ import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
-import { fetchEncryptedStorage } from "../database/queries/e2ee";
+import {
+  deleteE2EEByCommitment,
+  fetchEncryptedStorage
+} from "../database/queries/e2ee";
 import { saveUserBackup, upsertUser } from "../database/queries/saveUser";
 import {
   deleteUserByEmail,
@@ -463,6 +466,7 @@ export class UserService {
     }
 
     await deleteUserByEmail(this.context.dbPool, user.email);
+    await deleteE2EEByCommitment(this.context.dbPool, user.commitment);
   }
 
   /**

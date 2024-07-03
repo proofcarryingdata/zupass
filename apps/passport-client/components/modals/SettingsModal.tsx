@@ -83,7 +83,7 @@ export function SettingsModal({
               <TextButton onClick={() => setShowAdvanced(!showAdvanced)}>
                 Hide Advanced
               </TextButton>
-              <Spacer h={8} />
+              <Spacer h={12} />
               <Button onClick={deleteAccount} style="danger">
                 Delete Account
               </Button>
