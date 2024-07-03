@@ -289,6 +289,10 @@ export class SemaphoreGroupProvider {
     for (const groupConfig of this.groupConfigs) {
       const matchingEmails = ticketDataList
         .filter((ticketData) => {
+          // If no criteria are specified, match all tickets
+          if (groupConfig.memberCriteria.length === 0) {
+            return true;
+          }
           // See if the ticket matches any of the criteria for group membership
           for (const ticketSpec of groupConfig.memberCriteria) {
             if (

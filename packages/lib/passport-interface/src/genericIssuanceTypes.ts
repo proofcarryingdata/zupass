@@ -506,7 +506,8 @@ const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   csv: z.string(),
   outputType: z.nativeEnum(CSVPipelineOutputType).optional(),
   feedOptions: FeedIssuanceOptionsSchema,
-  issueToUnmatchedEmail: z.boolean().optional()
+  issueToUnmatchedEmail: z.boolean().optional(),
+  semaphoreGroupName: z.string().optional()
 });
 
 export type CSVPipelineOptions = z.infer<typeof CSVPipelineOptionsSchema>;
