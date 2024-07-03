@@ -776,6 +776,10 @@ export interface AgreeTermsRequest {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
+export interface DeleteAccountRequest {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
 /**
  * After the user agrees to the terms, respond with the terms version recorded.
  */

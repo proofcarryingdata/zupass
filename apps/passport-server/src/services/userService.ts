@@ -442,6 +442,28 @@ export class UserService {
     return user;
   }
 
+  public async handleDeleteAccount(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<void> {
+    const pcd = await SemaphoreSignaturePCDPackage.deserialize(
+      serializedPCD.pcd
+    );
+    if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
+      throw new Error("Invalid signature");
+    }
+
+    const user = await fetchUserByCommitment(
+      this.context.dbPool,
+      pcd.claim.identityCommitment
+    );
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await deleteUserByEmail(this.context.dbPool, user.email);
+  }
+
   /**
    * Updates the version of the legal terms the user agrees to
    */
