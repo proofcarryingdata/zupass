@@ -12,6 +12,7 @@ import {
   LATEST_PRIVACY_NOTICE,
   NetworkFeedApi,
   requestCreateNewUser,
+  requestDeleteAccount,
   requestDownloadAndDecryptStorage,
   requestLogToServer,
   requestOneClickLogin,
@@ -169,7 +170,8 @@ export type Action =
     }
   | {
       type: "initialize-strich";
-    };
+    }
+  | { type: "delete-account" };
 
 export type StateContextValue = {
   getState: GetState;
@@ -299,6 +301,9 @@ export async function dispatch(
       );
     case "initialize-strich":
       return initializeStrich(state, update);
+    case "delete-account":
+      return deleteAccount(state, update);
+      break;
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -1427,5 +1432,33 @@ async function initializeStrich(
     }
   } catch (e) {
     update({ strichSDKstate: "error" });
+  }
+}
+
+async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
+  update({
+    loggingOut: true,
+    deletingAccount: true,
+    modal: {
+      modalType: "none"
+    }
+  });
+
+  const credentialManager = new CredentialManager(
+    state.identity,
+    state.pcds,
+    state.credentialCache
+  );
+
+  const pcd = await credentialManager.requestCredential({
+    signatureType: "sempahore-signature-pcd"
+  });
+
+  const res = await requestDeleteAccount(appConfig.zupassServer, { pcd });
+
+  if (res.success) {
+    await resetPassport(state, update);
+  } else {
+    alert(`Error deleting account: ${res.error}`);
   }
 }
