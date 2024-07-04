@@ -36,6 +36,7 @@ import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
 import { GenericIssuanceService } from "./generic-issuance/GenericIssuanceService";
+import { CredentialSubservice } from "./generic-issuance/subservices/CredentialSubservice";
 import { RateLimitService } from "./rateLimitService";
 import { SemaphoreService } from "./semaphoreService";
 
@@ -54,6 +55,7 @@ export class UserService {
   private readonly emailService: EmailService;
   private readonly rateLimitService: RateLimitService;
   private readonly genericIssuanceService: GenericIssuanceService | null;
+  private readonly credentialSubservice: CredentialSubservice;
 
   public constructor(
     context: ApplicationContext,
@@ -61,7 +63,8 @@ export class UserService {
     emailTokenService: EmailTokenService,
     emailService: EmailService,
     rateLimitService: RateLimitService,
-    genericIssuanceService: GenericIssuanceService | null
+    genericIssuanceService: GenericIssuanceService | null,
+    credentialSubservice: CredentialSubservice
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
@@ -69,6 +72,7 @@ export class UserService {
     this.emailService = emailService;
     this.rateLimitService = rateLimitService;
     this.genericIssuanceService = genericIssuanceService;
+    this.credentialSubservice = credentialSubservice;
     this.bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
@@ -586,7 +590,8 @@ export function startUserService(
   emailTokenService: EmailTokenService,
   emailService: EmailService,
   rateLimitService: RateLimitService,
-  genericIssuanceService: GenericIssuanceService | null
+  genericIssuanceService: GenericIssuanceService | null,
+  credentialSubservice: CredentialSubservice
 ): UserService {
   return new UserService(
     context,
@@ -594,6 +599,7 @@ export function startUserService(
     emailTokenService,
     emailService,
     rateLimitService,
-    genericIssuanceService
+    genericIssuanceService,
+    credentialSubservice
   );
 }

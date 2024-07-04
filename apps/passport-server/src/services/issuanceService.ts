@@ -1581,7 +1581,7 @@ export function loadRSAPrivateKey(): NodeRSA | null {
   return null;
 }
 
-function loadEdDSAPrivateKey(): string | null {
+export function loadEdDSAPrivateKey(): string | null {
   const pkeyEnv = process.env.SERVER_EDDSA_PRIVATE_KEY;
 
   if (!pkeyEnv) {

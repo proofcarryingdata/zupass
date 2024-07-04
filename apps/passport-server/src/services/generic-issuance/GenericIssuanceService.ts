@@ -107,7 +107,8 @@ export class GenericIssuanceService {
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     emailService: EmailService,
-    cacheService: PersistentCacheService
+    cacheService: PersistentCacheService,
+    credentialSubservice: CredentialSubservice
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
@@ -125,10 +126,7 @@ export class GenericIssuanceService {
       stytchClient,
       genericIssuanceClientUrl
     );
-    this.credentialSubservice = new CredentialSubservice(
-      zupassPublicKey,
-      context.dbPool
-    );
+    this.credentialSubservice = credentialSubservice;
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
