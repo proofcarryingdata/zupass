@@ -4,7 +4,8 @@ import {
   PODCryptographicValue,
   PODEdDSAPublicKeyValue,
   PODValue,
-  PODValueTuple
+  PODValueTuple,
+  POD_INT_MIN
 } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
@@ -316,7 +317,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     expect(isVerified).to.be.true;
   });
 
-  it("should prove and verify lower bound check", async function () {
+  it("should prove and verify bounds checks", async function () {
     const { isVerified } = await gpcProofTest(
       {
         pods: {
@@ -326,52 +327,10 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
               ...typicalProofConfig.pods.pod1.entries,
               G: {
                 isRevealed: false,
-                minValue: 3n
-              }
-            }
-          }
-        }
-      },
-      typicalProofInputs,
-      expectedRevealedClaimsForTypicalCase
-    );
-    expect(isVerified).to.be.true;
-  });
-
-  it("should prove and verify upper bound check", async function () {
-    const { isVerified } = await gpcProofTest(
-      {
-        pods: {
-          pod1: {
-            ...typicalProofConfig.pods.pod1,
-            entries: {
-              ...typicalProofConfig.pods.pod1.entries,
-              G: {
-                isRevealed: false,
-                maxValue: 256n
-              }
-            }
-          }
-        }
-      },
-      typicalProofInputs,
-      expectedRevealedClaimsForTypicalCase
-    );
-    expect(isVerified).to.be.true;
-  });
-
-  it("should prove and verify both upper and lower bounds checks", async function () {
-    const { isVerified } = await gpcProofTest(
-      {
-        pods: {
-          pod1: {
-            ...typicalProofConfig.pods.pod1,
-            entries: {
-              ...typicalProofConfig.pods.pod1.entries,
-              G: {
-                isRevealed: false,
-                minValue: 3n,
-                maxValue: 256n
+                inRange: {
+                  min: 3n,
+                  max: 256n
+                }
               }
             }
           }
@@ -411,8 +370,8 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         },
         pod1: {
           entries: {
-            A: { isRevealed: false, minValue: 100n, maxValue: 132n },
-            G: { isRevealed: true, maxValue: 30n },
+            A: { isRevealed: false, inRange: { min: 100n, max: 132n } },
+            G: { isRevealed: true, inRange: { min: POD_INT_MIN, max: 30n } },
             otherTicketID: { isRevealed: false },
             owner: { isRevealed: false, isOwnerID: true }
           },

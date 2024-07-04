@@ -1,5 +1,5 @@
 import { GPCProofConfig, serializeGPCProofConfig } from "@pcd/gpc";
-import { POD } from "@pcd/pod";
+import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { expect } from "chai";
@@ -110,9 +110,9 @@ describe("POD entry check against proof configuration should work", () => {
 
   it("should pass for a named POD containing a named entry satisfying prescribed bounds", () => {
     for (const boundsCheckConfig of [
-      { minValue: 0n },
-      { maxValue: 124n },
-      { minValue: 0n, maxValue: 124n }
+      { inRange: { min: 0n, max: POD_INT_MAX } },
+      { inRange: { min: POD_INT_MIN, max: 124n } },
+      { inRange: { min: 0n, max: 124n } }
     ]) {
       const proofConfig: GPCProofConfig = {
         pods: {
@@ -140,10 +140,10 @@ describe("POD entry check against proof configuration should work", () => {
 
   it("should fail for a named POD containing a named entry not satisfying prescribed bounds", () => {
     for (const boundsCheckConfig of [
-      { minValue: 124n },
-      { maxValue: 122n },
-      { minValue: 0n, maxValue: 122n },
-      { minValue: 124n, maxValue: 256n }
+      { inRange: { min: 124n, max: POD_INT_MAX } },
+      { inRange: { min: POD_INT_MIN, max: 122n } },
+      { inRange: { min: 0n, max: 122n } },
+      { inRange: { min: 124n, max: 256n } }
     ]) {
       const proofConfig: GPCProofConfig = {
         pods: {
@@ -168,9 +168,9 @@ describe("POD entry check against proof configuration should work", () => {
 
   it("should fail for a named POD containing a named non-int entry that should satisfy given bounds", () => {
     for (const boundsCheckConfig of [
-      { minValue: 0n },
-      { maxValue: 124n },
-      { minValue: 0n, maxValue: 124n }
+      { inRange: { min: 0n, max: POD_INT_MAX } },
+      { inRange: { min: POD_INT_MIN, max: 124n } },
+      { inRange: { min: 0n, max: 124n } }
     ]) {
       const proofConfig: GPCProofConfig = {
         pods: {

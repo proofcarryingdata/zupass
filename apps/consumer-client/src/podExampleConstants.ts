@@ -49,8 +49,10 @@ export const EXAMPLE_GPC_CONFIG = `{
         },
         "F": {
           "isRevealed": false,
-          "minValue": 38,
-          "maxValue": 5000000000
+          "inRange": {
+            "min": 38,
+            "max": 5000000000
+          }
         },
         "owner": {
           "isRevealed": false,

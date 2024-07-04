@@ -46,12 +46,10 @@ export function checkPODEntriesAgainstProofConfig(
   if (
     Object.entries(podConfig.entries).some(
       ([entryName, entryConfig]) =>
-        (entryConfig.minValue !== undefined &&
-          (podEntries[entryName].type !== "int" ||
-            (podEntries[entryName].value as bigint) < entryConfig.minValue)) ||
-        (entryConfig.maxValue !== undefined &&
-          (podEntries[entryName].type !== "int" ||
-            (podEntries[entryName].value as bigint) > entryConfig.maxValue))
+        entryConfig.inRange !== undefined &&
+        (podEntries[entryName].type !== "int" ||
+          (podEntries[entryName].value as bigint) < entryConfig.inRange.min ||
+          (podEntries[entryName].value as bigint) > entryConfig.inRange.max)
     )
   ) {
     return false;

@@ -131,18 +131,12 @@ export type GPCProofEntryConfigCommon = {
  */
 export type GPCProofEntryConfig = GPCProofEntryConfigCommon & {
   /**
-   * Indicates the minimum value this entry can take. This should be an unsigned
-   * 64-bit integer value and will be revealed by virtue of its inclusion in the
-   * proof configuration.
+   * Indicates the range/interval/bounds within which this entry should
+   * lie. Both (inclusive) bounds must be specified, and they should be
+   * unsigned 63-bit integer values. They will always be revealed by virtue of
+   * their inclusion in the proof configuration.
    */
-  minValue?: bigint;
-
-  /**
-   * Indicates the maximum value this entry can take. This should be an unsigned
-   * 64-bit integer value and will be revealed by virtue of its inclusion in the
-   * proof configuration.
-   */
-  maxValue?: bigint;
+  inRange?: { min: bigint; max: bigint };
 
   /**
    * Indicates that this entry must match the public ID of the owner

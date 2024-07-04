@@ -19,8 +19,6 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
-  POD_INT_MAX,
-  POD_INT_MIN,
   decodePublicKey,
   decodeSignature,
   podNameHash,
@@ -406,16 +404,26 @@ function compileProofBoundsChecks<
   boundsCheckMaxValues: CircuitSignal[];
 } {
   // Arrange POD entry identifiers alphabetically
-  const boundsCheckIdOrder = Object.keys(
-    boundsCheckConfig
-  ).sort() as PODEntryIdentifier[];
+  const boundsCheckIdOrder = (
+    Object.keys(boundsCheckConfig) as PODEntryIdentifier[]
+  ).sort((id1: PODEntryIdentifier, id2: PODEntryIdentifier): number => {
+    const [podName1, entryName1] = id1.split(".");
+    const [podName2, entryName2] = id2.split(".");
+    if (podName1 < podName2) {
+      return -1;
+    } else if (podName1 > podName2) {
+      return 1;
+    } else {
+      return entryName1 < entryName2 ? -1 : entryName1 > entryName2 ? 1 : 0;
+    }
+  });
 
   // Compile entry indices
   const unpaddedBoundsCheckEntryIndices = boundsCheckIdOrder.map((entryId) => {
     const idx = entryMap.get(entryId)?.entryIndex;
 
     if (idx === undefined) {
-      throw new Error(`Missing input for identifier ${entryId}.`);
+      throw new ReferenceError(`Missing input for identifier ${entryId}.`);
     }
 
     return BigInt(idx);
@@ -424,13 +432,13 @@ function compileProofBoundsChecks<
   // Compile minimum values, replacing missing lower bounds with the smallest
   // possible lower bound.
   const unpaddedBoundsCheckMinValues = boundsCheckIdOrder.map(
-    (entryId) => boundsCheckConfig[entryId]?.minValue ?? POD_INT_MIN
+    (entryId) => boundsCheckConfig[entryId].minValue
   );
 
   // Compile maximum values, replacing missing upper bounds with the greatest
   // possible upper bound.
   const unpaddedBoundsCheckMaxValues = boundsCheckIdOrder.map(
-    (entryId) => boundsCheckConfig[entryId]?.maxValue ?? POD_INT_MAX
+    (entryId) => boundsCheckConfig[entryId].maxValue
   );
 
   // Return with padding.
@@ -449,8 +457,7 @@ function compileProofBoundsChecks<
       0n
     ),
     // Pad with 0s, which amounts to an upper bound of 0 for those padded
-    // entries
-    // with value 0.
+    // entries with value 0.
     boundsCheckMaxValues: padArray(
       unpaddedBoundsCheckMaxValues,
       paramBoundsChecks,
@@ -617,9 +624,7 @@ function compileProofEntry(
   // Plaintext value is only enabled if it is needed by some other configured
   // constraint, which for now is only the owner commitment and bounds checks.
   const isValueEnabled =
-    !!entryInfo.entryConfig.isOwnerID ||
-    !!entryInfo.entryConfig.minValue ||
-    !!entryInfo.entryConfig.maxValue;
+    !!entryInfo.entryConfig.isOwnerID || !!entryInfo.entryConfig.inRange;
   let entryValue = BABY_JUB_NEGATIVE_ONE;
   if (isValueEnabled) {
     if (entrySignals.value === undefined) {
@@ -990,9 +995,7 @@ function compileVerifyEntry(
   // Plaintext value is only enabled if it is needed by some other configured
   // constraint, which for now is only the owner commitment and bounds checks.
   const isValueEnabled =
-    !!entryInfo.entryConfig.isOwnerID ||
-    !!entryInfo.entryConfig.minValue ||
-    !!entryInfo.entryConfig.maxValue;
+    !!entryInfo.entryConfig.isOwnerID || !!entryInfo.entryConfig.inRange;
 
   // Fetch the entry value, if it's configured to be revealed.
   let revealedEntryValue: PODValue | undefined = undefined;

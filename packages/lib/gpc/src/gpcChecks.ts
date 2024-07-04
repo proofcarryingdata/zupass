@@ -208,29 +208,24 @@ export function checkProofEntryConfig(
     );
   }
 
-  const hasBoundsCheck = (
-    [
-      ["Minimum value", entryConfig.minValue],
-      ["Maximum value", entryConfig.maxValue]
-    ] as [string, bigint][]
-  ).reduce((hasBoundsCheck, [boundType, bound]) => {
-    const isBoundDefined = bound !== undefined;
-    if (isBoundDefined && (bound < POD_INT_MIN || bound > POD_INT_MAX)) {
+  const hasBoundsCheck = entryConfig.inRange !== undefined;
+
+  if (entryConfig.inRange !== undefined) {
+    if (entryConfig.inRange.min < POD_INT_MIN) {
       throw new RangeError(
-        `${boundType} of entry ${nameForErrorMessages} lies outside admissible bounds ([${POD_INT_MIN}, ${POD_INT_MAX}]).`
+        `Minimum value of entry ${nameForErrorMessages} is less than smallest admissible value ${POD_INT_MIN}.`
       );
     }
-    return hasBoundsCheck || isBoundDefined;
-  }, false);
-
-  if (
-    entryConfig.minValue !== undefined &&
-    entryConfig.maxValue !== undefined &&
-    entryConfig.maxValue < entryConfig.minValue
-  ) {
-    throw new Error(
-      "Minimum value for entry ${nameForErrorMesages} must be less than or equal to its maximum value."
-    );
+    if (entryConfig.inRange.max > POD_INT_MAX) {
+      throw new RangeError(
+        `Maximum value of entry ${nameForErrorMessages} is greater than largest admissible ${POD_INT_MAX}.`
+      );
+    }
+    if (entryConfig.inRange.max < entryConfig.inRange.min) {
+      throw new Error(
+        "Minimum value for entry ${nameForErrorMesages} must be less than or equal to its maximum value."
+      );
+    }
   }
 
   return { hasBoundsCheck };
@@ -480,29 +475,20 @@ export function checkProofBoundsCheckInputsForConfig(
   entryConfig: GPCProofEntryConfig,
   entryValue: PODValue
 ): void {
-  if (
-    entryConfig.minValue !== undefined ||
-    entryConfig.maxValue !== undefined
-  ) {
+  if (entryConfig.inRange !== undefined) {
     if (entryValue.type !== "int") {
       throw new TypeError(
         `Proof configuration for entry ${entryName} has bounds check but entry value is not of type "int".`
       );
     }
-    if (
-      entryConfig.minValue !== undefined &&
-      entryValue.value < entryConfig.minValue
-    ) {
+    if (entryValue.value < entryConfig.inRange.min) {
       throw new RangeError(
-        `Entry ${entryName} is less than its prescribed minimum value ${entryConfig.minValue}.`
+        `Entry ${entryName} is less than its prescribed minimum value ${entryConfig.inRange.min}.`
       );
     }
-    if (
-      entryConfig.maxValue !== undefined &&
-      entryValue.value > entryConfig.maxValue
-    ) {
+    if (entryValue.value > entryConfig.inRange.max) {
       throw new RangeError(
-        `Entry ${entryName} is greater than its prescribed maximum value ${entryConfig.maxValue}.`
+        `Entry ${entryName} is greater than its prescribed maximum value ${entryConfig.inRange.max}.`
       );
     }
   }

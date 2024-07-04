@@ -1,3 +1,4 @@
+import { POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
 import {
@@ -110,11 +111,11 @@ describe("Bounds check configuration derivation works as expected", () => {
             A: {
               isRevealed: false, // Not relevant, but bounds checks make the
               // most sense when the entry is *not* revealed!
-              minValue: 0n
+              inRange: { min: 0n, max: POD_INT_MAX }
             },
             B: {
               isRevealed: false,
-              maxValue: 87n
+              inRange: { min: POD_INT_MIN, max: 87n }
             },
             C: {
               isRevealed: true
@@ -125,8 +126,7 @@ describe("Bounds check configuration derivation works as expected", () => {
           entries: {
             D: {
               isRevealed: false,
-              minValue: 5n,
-              maxValue: 25n
+              inRange: { min: 5n, max: 25n }
             }
           }
         }
@@ -135,9 +135,11 @@ describe("Bounds check configuration derivation works as expected", () => {
     const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
     expect(boundsCheckConfig).to.deep.eq({
       "somePod.A": {
-        minValue: 0n
+        minValue: 0n,
+        maxValue: POD_INT_MAX
       },
       "somePod.B": {
+        minValue: POD_INT_MIN,
         maxValue: 87n
       },
       "someOtherPod.D": {

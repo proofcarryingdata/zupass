@@ -10,8 +10,6 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
-  POD_INT_MAX,
-  POD_INT_MIN,
   POD_NAME_REGEX,
   checkPODName,
   getPODValueForCircuit,
@@ -152,13 +150,13 @@ export function canonicalizeEntryConfig(
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
       : {}),
-    ...(proofEntryConfig.minValue !== undefined &&
-    proofEntryConfig.minValue !== POD_INT_MIN
-      ? { minValue: proofEntryConfig.minValue }
-      : {}),
-    ...(proofEntryConfig.maxValue !== undefined &&
-    proofEntryConfig.maxValue !== POD_INT_MAX
-      ? { maxValue: proofEntryConfig.maxValue }
+    ...(proofEntryConfig.inRange !== undefined
+      ? {
+          inRange: {
+            min: proofEntryConfig.inRange.min,
+            max: proofEntryConfig.inRange.max
+          }
+        }
       : {}),
     ...(proofEntryConfig.isMemberOf !== undefined
       ? {
@@ -603,7 +601,7 @@ export type GPCProofMembershipListConfig = Record<
  * Bounds check configuration for an individual entry. This specifies the bounds
  * check required for relevant entries at the circuit level.
  */
-export type BoundsConfig = { minValue?: bigint; maxValue?: bigint };
+export type BoundsConfig = { minValue: bigint; maxValue: bigint };
 
 /**
  * List configuration for an individual entry or tuple. This specifies the type
@@ -633,18 +631,14 @@ export function boundsCheckConfigFromProofConfig(
   return Object.fromEntries(
     Object.entries(proofConfig.pods).flatMap(([podName, podConfig]) =>
       Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) =>
-        entryConfig.minValue === undefined && entryConfig.maxValue === undefined
+        entryConfig.inRange === undefined
           ? []
           : [
               [
                 `${podName}.${entryName}`,
                 {
-                  ...(entryConfig.minValue !== undefined
-                    ? { minValue: entryConfig.minValue }
-                    : {}),
-                  ...(entryConfig.maxValue !== undefined
-                    ? { maxValue: entryConfig.maxValue }
-                    : {})
+                  minValue: entryConfig.inRange.min,
+                  maxValue: entryConfig.inRange.max
                 }
               ]
             ]
