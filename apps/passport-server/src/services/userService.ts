@@ -452,17 +452,16 @@ export class UserService {
   public async handleDeleteAccount(
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<void> {
-    const pcd = await SemaphoreSignaturePCDPackage.deserialize(
-      serializedPCD.pcd
-    );
+    const verifyResult =
+      await this.credentialSubservice.tryVerify(serializedPCD);
 
-    if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
-      throw new Error("Invalid signature");
+    if (!verifyResult) {
+      throw new PCDHTTPError(400, "Invalid signature");
     }
 
     const user = await fetchUserByCommitment(
       this.context.dbPool,
-      pcd.claim.identityCommitment
+      verifyResult.semaphoreId
     );
 
     if (!user) {
