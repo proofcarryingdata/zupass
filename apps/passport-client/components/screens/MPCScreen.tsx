@@ -1,6 +1,7 @@
 // let localStream = null;
 // let remoteStream = null;
 
+import { QRDisplayWithRegenerateAndStorage } from "@pcd/passport-ui";
 import { useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import init, {
@@ -14,6 +15,7 @@ import { PeerConnection } from "../../src/webRTC";
 import { Button, H1, Spacer, TextCenter } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
+import { ScreenLoader } from "../shared/ScreenLoader";
 
 function randomBitVector(length: number): number[] {
   const arr = [];
@@ -42,6 +44,7 @@ export default function MPCScreen(): JSX.Element {
   const [query] = useSearchParams();
   const target = query.get("target");
   const [id, setId] = useState("");
+  const [isLoading, setLoading] = useState(false);
   // const [bits] = useState(randomBitVector(1000, 10));
   const [bits] = useState(randomBitVector(10));
   const [connected, setConnected] = useState(false);
@@ -57,6 +60,7 @@ export default function MPCScreen(): JSX.Element {
 
   async function startSession(): Promise<void> {
     if (id) return;
+    setLoading(true);
     await init();
     console.log("4");
     const peerId = await PeerConnection.startPeerSession();
@@ -126,11 +130,16 @@ export default function MPCScreen(): JSX.Element {
         }
       });
     });
+    if (target) {
+      await startTarget();
+    } else {
+      setLoading(false);
+    }
   }
 
   async function startTarget(): Promise<void> {
     console.log("startTarget", { bits, target, prevState, connected, id });
-    if (connected || !id) return;
+    if (connected) return;
     if (target) {
       // Peer A
       await PeerConnection.connectPeer(target);
@@ -193,9 +202,7 @@ export default function MPCScreen(): JSX.Element {
           }
         }
       });
-      console.log("added onConnectionReceiveData");
       setConnected(true);
-      console.log("sending connection", state0);
       await sendConnectionChunked(
         target,
         {
@@ -206,7 +213,7 @@ export default function MPCScreen(): JSX.Element {
       );
       // prevState.current = ({ key: 0, value: state0 });
 
-      console.log("sent connection");
+      setLoading(false);
     }
   }
 
@@ -217,12 +224,21 @@ export default function MPCScreen(): JSX.Element {
   // }
 
   const targetUrl = `${window.location.origin}/#/mpc?target=${id}`;
+  if (isLoading) {
+    return <ScreenLoader />;
+  }
 
   return (
     <AppContainer bg="gray">
       <H1>MPC STUFF</H1>
       <Spacer h={24} />
-      {!id && <Button onClick={startSession}>Start Session</Button>}
+      {target && <TextCenter>Starting an MPC with {target}</TextCenter>}
+      <Spacer h={24} />
+      {!id && (
+        <Button onClick={startSession}>
+          Start {target ? "MPC" : "Session"}
+        </Button>
+      )}
       {id && (
         <>
           <TextCenter>My WebRTC ID: {id}</TextCenter>
@@ -230,22 +246,38 @@ export default function MPCScreen(): JSX.Element {
           <Spacer h={24} />
         </>
       )}
-      {target && !connected && <button onClick={startTarget}>Connect</button>}
 
-      {connected ? (
-        psi ? (
-          <TextCenter>Done! {psi}</TextCenter>
+      {id &&
+        (connected ? (
+          psi ? (
+            <TextCenter>Done! {psi}</TextCenter>
+          ) : (
+            <RippleLoader />
+          )
         ) : (
-          <RippleLoader />
-        )
-      ) : (
-        <TextCenter>
-          <a href={targetUrl}>Connection URL</a>{" "}
-          <span onClick={() => navigator.clipboard.writeText(targetUrl)}>
-            Copy
-          </span>
-        </TextCenter>
-      )}
+          <>
+            <TextCenter>
+              <a href={targetUrl}>Connection URL</a>{" "}
+              <span
+                style={{ cursor: "pointer" }}
+                onClick={() => navigator.clipboard.writeText(targetUrl)}
+              >
+                Copy
+              </span>
+            </TextCenter>
+            <Spacer h={32} />
+            <div style={{ width: "75%", background: "white" }}>
+              <QRDisplayWithRegenerateAndStorage
+                // fgColor="#fcd270"
+                // fgColor="white"
+                // bgColor="white"
+                key={targetUrl}
+                maxAgeMs={1000 * 60}
+                generateQRPayload={async (): Promise<string> => targetUrl}
+              />
+            </div>
+          </>
+        ))}
     </AppContainer>
   );
 }
