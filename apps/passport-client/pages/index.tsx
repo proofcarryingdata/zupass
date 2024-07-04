@@ -41,6 +41,7 @@ import { NewPassportScreen } from "../components/screens/LoginScreens/NewPasspor
 import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
+import MPCScreen from "../components/screens/MPCScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
@@ -315,6 +316,7 @@ function RouterImpl(): JSX.Element {
         <Route path="/">
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
+          <Route path="mpc" element={<MPCScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route
             path="login-interstitial"
@@ -442,14 +444,14 @@ const AppStateProvider: React.FC<AppStateProviderProps> = ({
   useEffect(() => {
     function isEqual(a: Uint32Array, b: Uint32Array): boolean {
       if (a.length !== b.length) {
-        return false
+        return false;
       }
       for (let i = 0; i < a.length; i++) {
         if (a[i] !== b[i]) {
-          return false
+          return false;
         }
       }
-      return true
+      return true;
     }
 
     init().then(() => {
@@ -470,19 +472,19 @@ const AppStateProvider: React.FC<AppStateProviderProps> = ({
         state1.public_output_b,
         state2.message_a_to_b
       );
-      const psi_output_a = state4_bindgen(
+      const _psi_output_a = state4_bindgen(
         state2.public_output_a,
         state3.message_b_to_a
       );
-      const psi_output_b = state3.psi_output;
-      console.log(
-        `psi output ${
-         isEqual(psi_output_a, psi_output_b) ? "succeeded" : "failed"
-        }`
-      );
-      console.log({ psi_output_a, psi_output_b, state1, state2, state3 });
+      const _psi_output_b = state3.psi_output;
+      // console.log(
+      //   `psi output ${
+      //     isEqual(psi_output_a, psi_output_b) ? "succeeded" : "failed"
+      //   }`
+      // );
+      // console.log({ psi_output_a, psi_output_b, state1, state2, state3 });
     });
-  });
+  }, []);
 
   const actionDispatch = useCallback(
     (action: Action): Promise<void> => {
