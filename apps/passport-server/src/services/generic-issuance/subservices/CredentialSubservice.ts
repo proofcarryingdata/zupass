@@ -35,6 +35,12 @@ export class CredentialSubservice {
     this.dbPool = dbPool;
   }
 
+  public tryVerify(
+    credential: Credential
+  ): Promise<VerifiedCredential | undefined> {
+    return this.verify(credential).catch(() => undefined);
+  }
+
   /**
    * Verify a credential, ideally using a cached verification.
    */

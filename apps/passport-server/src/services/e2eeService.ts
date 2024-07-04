@@ -5,7 +5,8 @@ import {
   UploadEncryptedStorageRequest,
   UploadEncryptedStorageResponseValue
 } from "@pcd/passport-interface";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Response } from "express";
 import {
   UpdateEncryptedStorageResult,
@@ -18,6 +19,7 @@ import { fetchUserByUUID } from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { CredentialSubservice } from "./generic-issuance/subservices/CredentialSubservice";
 
 /**
  * Responsible for storing an retrieving end to end encrypted
@@ -25,9 +27,14 @@ import { logger } from "../util/logger";
  */
 export class E2EEService {
   private readonly context: ApplicationContext;
+  private readonly credentialSubservice: CredentialSubservice;
 
-  public constructor(context: ApplicationContext) {
+  public constructor(
+    context: ApplicationContext,
+    credentialsubservice: CredentialSubservice
+  ) {
     this.context = context;
+    this.credentialSubservice = credentialsubservice;
   }
 
   public async handleLoad(
@@ -93,10 +100,15 @@ export class E2EEService {
 
     let commitment: string | undefined = undefined;
     if (request.pcd?.pcd) {
-      const pcd = await SemaphoreSignaturePCDPackage.deserialize(
-        request.pcd?.pcd
+      const verifyResult = await this.credentialSubservice.tryVerify(
+        request.pcd as SerializedPCD<SemaphoreSignaturePCD>
       );
-      commitment = pcd.claim.identityCommitment;
+
+      if (!verifyResult) {
+        throw new PCDHTTPError(400, "Invalid signature");
+      }
+
+      commitment = verifyResult.semaphoreId;
     }
 
     let resultRevision = undefined;
@@ -214,6 +226,9 @@ export class E2EEService {
   }
 }
 
-export function startE2EEService(context: ApplicationContext): E2EEService {
-  return new E2EEService(context);
+export function startE2EEService(
+  context: ApplicationContext,
+  credentialSubservice: CredentialSubservice
+): E2EEService {
+  return new E2EEService(context, credentialSubservice);
 }

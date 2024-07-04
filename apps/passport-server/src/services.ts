@@ -38,6 +38,7 @@ export async function startServices(
     rollbarService,
     discordService
   );
+  const credentialSubservice = await startCredentialSubservice(context.dbPool);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
   const emailTokenService = startEmailTokenService(context);
@@ -55,7 +56,7 @@ export async function startServices(
     apis.devconnectPretixAPIFactory
   );
 
-  const e2eeService = startE2EEService(context);
+  const e2eeService = startE2EEService(context, credentialSubservice);
   const metricsService = startMetricsService(context, rollbarService);
   const persistentCacheService = startPersistentCacheService(
     context.dbPool,
@@ -73,7 +74,6 @@ export async function startServices(
     issuanceService
   );
   const poapService = startPoapService(context, rollbarService);
-  const credentialSubservice = await startCredentialSubservice(context.dbPool);
   const genericIssuanceService = await startGenericIssuanceService(
     context,
     rollbarService,
