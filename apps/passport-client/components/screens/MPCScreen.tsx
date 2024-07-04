@@ -232,6 +232,8 @@ export default function MPCScreen(): JSX.Element {
     <AppContainer bg="gray">
       <H1>MPC STUFF</H1>
       <Spacer h={24} />
+      <TextCenter>My private bits: {bits}</TextCenter>
+      <Spacer h={24} />
       {target && <TextCenter>Starting an MPC with {target}</TextCenter>}
       <Spacer h={24} />
       {!id && (
@@ -242,7 +244,6 @@ export default function MPCScreen(): JSX.Element {
       {id && (
         <>
           <TextCenter>My WebRTC ID: {id}</TextCenter>
-          <TextCenter>My private bits: {bits}</TextCenter>
           <Spacer h={24} />
         </>
       )}

@@ -65,6 +65,8 @@ function getVerifyUrlPrefixes(): string[] {
   return [
     `${window.location.origin}/#/verify`,
     `${window.location.origin}#/verify`,
+    `${window.location.origin}/#/mpc`,
+    `${window.location.origin}#/mpc`,
     `${window.location.origin}/#/checkin`,
     `${window.location.origin}#/checkin`,
     `${window.location.origin}/#/checkin-by-id`,
