@@ -41,6 +41,7 @@ import { NewPassportScreen } from "../components/screens/LoginScreens/NewPasspor
 import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
+import LoversScreen from "../components/screens/LoversScreen";
 import MPCScreen from "../components/screens/MPCScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
@@ -317,6 +318,7 @@ function RouterImpl(): JSX.Element {
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
           <Route path="mpc" element={<MPCScreen />} />
+          <Route path="lovers" element={<LoversScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route
             path="login-interstitial"

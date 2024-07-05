@@ -17,14 +17,6 @@ import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
 import { ScreenLoader } from "../shared/ScreenLoader";
 
-function randomBitVector(length: number): number[] {
-  const arr = [];
-  for (let i = 0; i < length; i++) {
-    arr.push(Math.round(Math.random()));
-  }
-  return arr;
-}
-
 async function sendConnectionChunked(
   id: string,
   data: { state: 0 | 1 | 2 | 3; message: object },
@@ -40,13 +32,18 @@ async function sendConnectionChunked(
   }
 }
 
-export default function MPCScreen(): JSX.Element {
+export default function LoversScreen(): JSX.Element {
   const [query] = useSearchParams();
   const target = query.get("target");
   const [id, setId] = useState("");
   const [isLoading, setLoading] = useState(false);
   // const [bits] = useState(randomBitVector(1000, 10));
-  const [bits] = useState(randomBitVector(10));
+  const [bits, setBits] = useState([0]);
+  const handleBitsChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ): void => {
+    setBits([parseInt(event.target.value)]);
+  };
   const [connected, setConnected] = useState(false);
   const prevState = useRef<{
     key: 0 | 1 | 2;
@@ -223,35 +220,54 @@ export default function MPCScreen(): JSX.Element {
   //   return <ScreenLoader />;
   // }
 
-  const targetUrl = `${window.location.origin}/#/mpc?target=${id}`;
+  const targetUrl = `${window.location.origin}/#/lovers?target=${id}`;
   if (isLoading) {
     return <ScreenLoader />;
   }
 
   return (
     <AppContainer bg="gray">
-      <H1>MPC STUFF</H1>
+      <H1>FRIEND OR LOVE?</H1>
       <Spacer h={24} />
-      <TextCenter>My private bits: {bits}</TextCenter>
-      <Spacer h={24} />
-      {target && <TextCenter>Starting an MPC with {target}</TextCenter>}
-      <Spacer h={24} />
-      {!id && (
-        <Button onClick={startSession}>
-          Start {target ? "MPC" : "Session"}
-        </Button>
+      {!psi && target && (
+        <TextCenter>Someone wants to know if u are</TextCenter>
       )}
-      {id && (
+      {!connected && (
         <>
-          <TextCenter>My WebRTC ID: {id}</TextCenter>
-          <Spacer h={24} />
+          <div>
+            <label>
+              <input
+                type="radio"
+                value="0"
+                disabled={!!id}
+                checked={bits[0] === 0}
+                onChange={handleBitsChange}
+              />
+              FRIENDS
+            </label>
+          </div>
+          <div>
+            <label>
+              <input
+                type="radio"
+                value="1"
+                disabled={!!id}
+                checked={bits[0] === 1}
+                onChange={handleBitsChange}
+              />
+              LOVERS
+            </label>
+          </div>
         </>
       )}
+      <Spacer h={24} />
+      <Spacer h={24} />
+      {!id && <Button onClick={startSession}>HBU?</Button>}
 
       {id &&
         (connected ? (
           psi ? (
-            <TextCenter>Done! {psi}</TextCenter>
+            <TextCenter>U ARE {psi[0] ? "LOVERS" : "FRIENDS"}!</TextCenter>
           ) : (
             <RippleLoader />
           )
