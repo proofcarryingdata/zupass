@@ -324,6 +324,14 @@ export default function LoversScreen(): JSX.Element {
             </div>
           </>
         ))}
+      {psi && (
+        <div style={{ marginTop: 36 }}>
+          Source:{" "}
+          <a target="_blank" href="https://www.youtube.com/watch?v=PzcDqegGoKI">
+            2PC is for lovers (Barry)
+          </a>
+        </div>
+      )}
     </AppContainer>
   );
 }
