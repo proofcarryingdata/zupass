@@ -1,4 +1,6 @@
 import { HexString, PCDCrypto } from "@pcd/passport-crypto";
+import { SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Dispatcher, ZuUpdate } from "./dispatch";
 import { updateBlobKeyForEncryptedStorage } from "./useSyncE2EEStorage";
 
@@ -25,16 +27,19 @@ export const setPassword = async (
   currentEncryptionKey: HexString,
   knownServerStorageRevision: string | undefined,
   dispatch: Dispatcher,
-  update: ZuUpdate
+  update: ZuUpdate,
+  credential?: SerializedPCD<SemaphoreSignaturePCD>
 ): Promise<void> => {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: newEncryptionKey } =
     await crypto.generateSaltAndEncryptionKey(newPassword);
+
   const res = await updateBlobKeyForEncryptedStorage(
     currentEncryptionKey,
     newEncryptionKey,
     newSalt,
-    knownServerStorageRevision
+    knownServerStorageRevision,
+    credential
   );
 
   if (!res.success) {

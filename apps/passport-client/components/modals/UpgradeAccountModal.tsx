@@ -1,3 +1,4 @@
+import { CredentialManager } from "@pcd/passport-interface";
 import { getErrorMessage, sleep } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
@@ -5,6 +6,7 @@ import {
   useDispatch,
   useSelf,
   useServerStorageRevision,
+  useStateContext,
   useUpdate
 } from "../../src/appHooks";
 import { loadEncryptionKey } from "../../src/localstorage";
@@ -25,7 +27,7 @@ export function UpgradeAccountModal(): JSX.Element | null {
   const update = useUpdate();
   const self = useSelf();
   const serverStorageRevision = useServerStorageRevision();
-
+  const stateContext = useStateContext();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
@@ -40,12 +42,22 @@ export function UpgradeAccountModal(): JSX.Element | null {
       if (!currentEncryptionKey) {
         throw new Error("Could not load encryption key");
       }
+
+      const { pcds, identity, credentialCache } = stateContext.getState();
+      const credentialManager = new CredentialManager(
+        identity,
+        pcds,
+        credentialCache
+      );
       await setPassword(
         newPassword,
         currentEncryptionKey,
         serverStorageRevision,
         dispatch,
-        update
+        update,
+        await credentialManager.requestCredential({
+          signatureType: "sempahore-signature-pcd"
+        })
       );
 
       dispatch({

@@ -184,6 +184,17 @@ export class E2EEService {
       throw new PCDHTTPError(400, "Missing request fields");
     }
 
+    let commitment: string | undefined = undefined;
+    if (request.pcd) {
+      const verification = await this.credentialSubservice.tryVerify(
+        request.pcd
+      );
+      if (!verification) {
+        throw new PCDHTTPError(400, "Invalid signature");
+      }
+      commitment = verification.semaphoreId;
+    }
+
     // Validate user.  User must exist, and new salt must be different.
     const user = await fetchUserByUUID(this.context.dbPool, request.uuid);
     if (!user) {
@@ -215,7 +226,8 @@ export class E2EEService {
       request.uuid,
       request.newSalt,
       request.encryptedBlob,
-      request.knownRevision
+      request.knownRevision,
+      commitment
     );
     this.setRekeyResult(
       request.oldBlobKey,

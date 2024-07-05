@@ -183,6 +183,12 @@ export interface ChangeBlobKeyRequest {
    * existing revision.
    */
   knownRevision?: string;
+
+  /**
+   * Signature PCD by the user who is changing the blob key.  This is used to
+   * associate the e2ee storage with the user's identity.
+   */
+  pcd?: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
 /**
