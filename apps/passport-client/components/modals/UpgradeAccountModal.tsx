@@ -75,7 +75,14 @@ export function UpgradeAccountModal(): JSX.Element | null {
     } finally {
       setLoading(false);
     }
-  }, [loading, newPassword, serverStorageRevision, dispatch, update]);
+  }, [
+    loading,
+    stateContext,
+    newPassword,
+    serverStorageRevision,
+    dispatch,
+    update
+  ]);
 
   useEffect(() => {
     if (!self) {
