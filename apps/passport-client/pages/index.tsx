@@ -53,6 +53,7 @@ import { SecondPartyTicketVerifyScreen } from "../components/screens/ScannedTick
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
+import ZooScreen from "../components/screens/ZooScreen";
 import {
   AppContainer,
   Background,
@@ -312,6 +313,7 @@ function RouterImpl(): JSX.Element {
           <Route index element={<HomeScreen />} />
           <Route path="mpc" element={<MPCScreen />} />
           <Route path="lovers" element={<LoversScreen />} />
+          <Route path="zoo" element={<ZooScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route
             path="login-interstitial"
