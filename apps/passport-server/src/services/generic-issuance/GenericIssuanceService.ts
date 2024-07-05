@@ -15,9 +15,7 @@ import {
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineEmailType,
-  PipelineGetManualCheckInsResponseValue,
   PipelineInfoResponseValue,
-  PipelineSetManualCheckInStateResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -300,24 +298,6 @@ export class GenericIssuanceService {
       groupId,
       rootHash
     );
-  }
-
-  public async handleSetManualCheckInState(
-    pipelineId: string,
-    ticketId: string,
-    checkInState: boolean
-  ): Promise<PipelineSetManualCheckInStateResponseValue> {
-    return this.pipelineSubservice.handleSetManualCheckInState(
-      pipelineId,
-      ticketId,
-      checkInState
-    );
-  }
-
-  public async handleGetManualCheckIns(
-    pipelineId: string
-  ): Promise<PipelineGetManualCheckInsResponseValue> {
-    return this.pipelineSubservice.handleGetManualCheckIns(pipelineId);
   }
 
   public async validateEmailAndPretixOrderCode(
