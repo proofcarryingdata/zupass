@@ -210,7 +210,7 @@ export function checkProofEntryConfig(
 
   const hasBoundsCheck = entryConfig.inRange !== undefined;
 
-  if (entryConfig.inRange !== undefined) {
+  if (hasBoundsCheck) {
     if (entryConfig.inRange.min < POD_INT_MIN) {
       throw new RangeError(
         `Minimum value of entry ${nameForErrorMessages} is less than smallest admissible value ${POD_INT_MIN}.`
