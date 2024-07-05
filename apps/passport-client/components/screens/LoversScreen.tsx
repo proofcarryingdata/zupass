@@ -1,8 +1,13 @@
 // let localStream = null;
 // let remoteStream = null;
 
-import { QRDisplayWithRegenerateAndStorage } from "@pcd/passport-ui";
+import {
+  CircleButton,
+  QRDisplayWithRegenerateAndStorage
+} from "@pcd/passport-ui";
 import { useRef, useState } from "react";
+import toast from "react-hot-toast";
+import { FaRegCopy } from "react-icons/fa";
 import { useSearchParams } from "react-router-dom";
 import init, {
   state0_bindgen,
@@ -228,37 +233,45 @@ export default function LoversScreen(): JSX.Element {
   return (
     <AppContainer bg="gray">
       <H1>FRIEND OR LOVE?</H1>
-      <Spacer h={24} />
-      {!psi && target && (
-        <TextCenter>Someone wants to know if u are</TextCenter>
-      )}
-      {!connected && (
-        <>
+      {!id &&
+        (target ? (
+          <TextCenter style={{ marginTop: 24 }}>
+            Someone wants to know ur feelings towards them
+          </TextCenter>
+        ) : (
+          <TextCenter style={{ marginTop: 24 }}>
+            Show this to someone that u
+          </TextCenter>
+        ))}
+      {!id && (
+        <div style={{ marginTop: 24 }}>
           <div>
-            <label>
+            <label style={{ display: "flex", alignItems: "center" }}>
               <input
                 type="radio"
                 value="0"
                 disabled={!!id}
                 checked={bits[0] === 0}
                 onChange={handleBitsChange}
+                style={{ marginRight: "8px" }}
               />
-              FRIENDS
+              <span>LIKE&nbsp;&nbsp;👍</span>
             </label>
           </div>
           <div>
-            <label>
+            <label style={{ display: "flex", alignItems: "center" }}>
               <input
                 type="radio"
                 value="1"
                 disabled={!!id}
                 checked={bits[0] === 1}
                 onChange={handleBitsChange}
+                style={{ marginRight: "8px" }}
               />
-              LOVERS
+              <span>LOVE&nbsp;&nbsp;❤️</span>
             </label>
           </div>
-        </>
+        </div>
       )}
       <Spacer h={24} />
       <Spacer h={24} />
@@ -267,27 +280,43 @@ export default function LoversScreen(): JSX.Element {
       {id &&
         (connected ? (
           psi ? (
-            <TextCenter>U ARE {psi[0] ? "LOVERS" : "FRIENDS"}!</TextCenter>
+            <TextCenter>
+              U ARE {psi[0] ? "SOULMATES ❤️" : "FRIENDS 😁"}
+            </TextCenter>
           ) : (
             <RippleLoader />
           )
         ) : (
           <>
-            <TextCenter>
-              <a href={targetUrl}>Connection URL</a>{" "}
-              <span
-                style={{ cursor: "pointer" }}
-                onClick={() => navigator.clipboard.writeText(targetUrl)}
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                color: "white"
+              }}
+            >
+              <a
+                style={{ color: "white", textDecoration: "underline" }}
+                href={targetUrl}
               >
-                Copy
-              </span>
-            </TextCenter>
+                Connection URL
+              </a>{" "}
+              <CircleButton
+                diameter={20}
+                padding={16}
+                onClick={async () => {
+                  await navigator.clipboard.writeText(targetUrl);
+                  toast("Copied URL", {
+                    icon: "👍"
+                  });
+                }}
+              >
+                <FaRegCopy color="white" />
+              </CircleButton>
+            </div>
             <Spacer h={32} />
             <div style={{ width: "75%", background: "white" }}>
               <QRDisplayWithRegenerateAndStorage
-                // fgColor="#fcd270"
-                // fgColor="white"
-                // bgColor="white"
                 key={targetUrl}
                 maxAgeMs={1000 * 60}
                 generateQRPayload={async (): Promise<string> => targetUrl}
