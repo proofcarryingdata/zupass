@@ -60,7 +60,9 @@ export async function authenticate(
 ): Promise<ZKEdDSAEventTicketPCD> {
   const serializedPCD = JSON.parse(pcdStr);
   if (serializedPCD.type !== ZKEdDSAEventTicketPCDTypeName) {
-    throw new Error("PCD is malformed or of the incorrect type");
+    throw new ZuAuthAuthenticationError(
+      "PCD is malformed or of the incorrect type"
+    );
   }
 
   const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(serializedPCD.pcd);
@@ -69,12 +71,28 @@ export async function authenticate(
     throw new ZuAuthAuthenticationError("ZK ticket PCD is not valid");
   }
 
-  if (pcd.claim.watermark.toString() !== watermark) {
-    throw new ZuAuthAuthenticationError("PCD watermark does not match");
+  // Check if the external nullifier matches
+  if (externalNullifier !== undefined) {
+    if (pcd.claim.externalNullifier === undefined) {
+      throw new ZuAuthAuthenticationError(
+        "PCD is missing external nullifier when one was provided"
+      );
+    }
+    if (
+      pcd.claim.externalNullifier.toString() !== externalNullifier.toString()
+    ) {
+      throw new ZuAuthAuthenticationError(
+        "External nullifier does not match the provided value"
+      );
+    }
+  } else if (pcd.claim.externalNullifier !== undefined) {
+    throw new ZuAuthAuthenticationError(
+      "PCD contains an external nullifier when none was provided"
+    );
   }
 
-  if (pcd.claim.externalNullifier?.toString() !== externalNullifier) {
-    throw new ZuAuthAuthenticationError("External nullfier does not match");
+  if (pcd.claim.watermark !== watermark.toString()) {
+    throw new ZuAuthAuthenticationError("PCD watermark does not match");
   }
 
   // For each of the fields configured to be revealed, check that the claim
