@@ -746,7 +746,8 @@ function addIdentifierToListConfig(
  *
  * @param id1 POD entry identifier to compare
  * @param id2 POD entry identifier to compare
- * @returns -1, 0 or 1 according to whether `id1` should precede or succeed `id2`.
+ * @returns -1, 0 or 1 according to whether `id1` should precede, be considered
+ * equal to, or succeed `id2`.
  */
 export function podEntryIdentifierCompare(
   id1: PODEntryIdentifier,
