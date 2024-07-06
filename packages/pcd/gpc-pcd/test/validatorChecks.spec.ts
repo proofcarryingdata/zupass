@@ -1,5 +1,5 @@
 import { GPCProofConfig, serializeGPCProofConfig } from "@pcd/gpc";
-import { POD } from "@pcd/pod";
+import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { expect } from "chai";
@@ -106,6 +106,95 @@ describe("POD entry check against proof configuration should work", () => {
       checkPODEntriesAgainstProofConfig("pod0", podPCD0, proofConfig, params)
     ).to.be.false;
     expect(params.notFoundMessage).to.be.undefined;
+  });
+
+  it("should pass for a named POD containing a named entry satisfying prescribed bounds", () => {
+    for (const boundsCheckConfig of [
+      { inRange: { min: 0n, max: POD_INT_MAX } },
+      { inRange: { min: POD_INT_MIN, max: 124n } },
+      { inRange: { min: 0n, max: 124n } }
+    ]) {
+      const proofConfig: GPCProofConfig = {
+        pods: {
+          pod0: {
+            entries: {
+              A: { isRevealed: true, ...boundsCheckConfig },
+              E: {
+                isRevealed: false,
+                equalsEntry: "pod0.A"
+              }
+            }
+          }
+        }
+      };
+      const params = {
+        proofConfig: serializeGPCProofConfig(proofConfig),
+        notFoundMessage: undefined
+      };
+      expect(
+        checkPODEntriesAgainstProofConfig("pod0", podPCD0, proofConfig, params)
+      ).to.be.true;
+      expect(params.notFoundMessage).to.be.undefined;
+    }
+  });
+
+  it("should fail for a named POD containing a named entry not satisfying prescribed bounds", () => {
+    for (const boundsCheckConfig of [
+      { inRange: { min: 124n, max: POD_INT_MAX } },
+      { inRange: { min: POD_INT_MIN, max: 122n } },
+      { inRange: { min: 0n, max: 122n } },
+      { inRange: { min: 124n, max: 256n } }
+    ]) {
+      const proofConfig: GPCProofConfig = {
+        pods: {
+          pod0: {
+            entries: {
+              A: { isRevealed: true, ...boundsCheckConfig },
+              E: { isRevealed: false, equalsEntry: "pod0.A" }
+            }
+          }
+        }
+      };
+      const params = {
+        proofConfig: serializeGPCProofConfig(proofConfig),
+        notFoundMessage: undefined
+      };
+      expect(
+        checkPODEntriesAgainstProofConfig("pod0", podPCD0, proofConfig, params)
+      ).to.be.false;
+      expect(params.notFoundMessage).to.be.undefined;
+    }
+  });
+
+  it("should fail for a named POD containing a named non-int entry that should satisfy given bounds", () => {
+    for (const boundsCheckConfig of [
+      { inRange: { min: 0n, max: POD_INT_MAX } },
+      { inRange: { min: POD_INT_MIN, max: 124n } },
+      { inRange: { min: 0n, max: 124n } }
+    ]) {
+      const proofConfig: GPCProofConfig = {
+        pods: {
+          pod0: {
+            entries: {
+              A: { isRevealed: true },
+              E: {
+                isRevealed: false,
+                equalsEntry: "pod0.A",
+                ...boundsCheckConfig
+              }
+            }
+          }
+        }
+      };
+      const params = {
+        proofConfig: serializeGPCProofConfig(proofConfig),
+        notFoundMessage: undefined
+      };
+      expect(
+        checkPODEntriesAgainstProofConfig("pod0", podPCD0, proofConfig, params)
+      ).to.be.false;
+      expect(params.notFoundMessage).to.be.undefined;
+    }
   });
 
   it("should pass for a named POD containing all entries in the proof configuration", () => {

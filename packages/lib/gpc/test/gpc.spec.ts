@@ -4,7 +4,8 @@ import {
   PODCryptographicValue,
   PODEdDSAPublicKeyValue,
   PODValue,
-  PODValueTuple
+  PODValueTuple,
+  POD_INT_MIN
 } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
@@ -141,7 +142,6 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     expect(boundConfig).to.deep.eq(manuallyBoundConfig);
 
     expect(revealedClaims).to.deep.eq(expectedRevealedClaims);
-
     const isVerified = await gpcVerify(
       proof,
       boundConfig,
@@ -317,6 +317,31 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     expect(isVerified).to.be.true;
   });
 
+  it("should prove and verify bounds checks", async function () {
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          pod1: {
+            ...typicalProofConfig.pods.pod1,
+            entries: {
+              ...typicalProofConfig.pods.pod1.entries,
+              G: {
+                isRevealed: false,
+                inRange: {
+                  min: 3n,
+                  max: 256n
+                }
+              }
+            }
+          }
+        }
+      },
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
+    expect(isVerified).to.be.true;
+  });
+
   it("should prove and verify a complex case", async function () {
     const pod1 = POD.sign(sampleEntries, privateKey);
     const pod2 = POD.sign(sampleEntries2, privateKey2);
@@ -345,7 +370,8 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         },
         pod1: {
           entries: {
-            G: { isRevealed: true },
+            A: { isRevealed: false, inRange: { min: 100n, max: 132n } },
+            G: { isRevealed: true, inRange: { min: POD_INT_MIN, max: 30n } },
             otherTicketID: { isRevealed: false },
             owner: { isRevealed: false, isOwnerID: true }
           },

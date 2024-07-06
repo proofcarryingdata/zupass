@@ -34,7 +34,7 @@ import {
   GPCPCDTypeName,
   PODPCDArgValidatorParams
 } from "./GPCPCD";
-import { podEntryRecordFromSimplifiedJSON } from "./util";
+import { fixedPODEntriesFromSimplifiedJSON } from "./util";
 import {
   checkPCDType,
   checkPODAgainstPrescribedSignerPublicKeys,
@@ -304,7 +304,7 @@ function validateInputPOD(
 
     prescribedEntries =
       params.prescribedEntries !== undefined
-        ? podEntryRecordFromSimplifiedJSON(params.prescribedEntries)
+        ? fixedPODEntriesFromSimplifiedJSON(params.prescribedEntries)
         : undefined;
   } catch (e) {
     if (e instanceof TypeError || e instanceof Error) {
