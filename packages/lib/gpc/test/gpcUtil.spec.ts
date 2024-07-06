@@ -135,16 +135,16 @@ describe("Bounds check configuration derivation works as expected", () => {
     const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
     expect(boundsCheckConfig).to.deep.eq({
       "somePod.A": {
-        minValue: 0n,
-        maxValue: POD_INT_MAX
+        min: 0n,
+        max: POD_INT_MAX
       },
       "somePod.B": {
-        minValue: POD_INT_MIN,
-        maxValue: 87n
+        min: POD_INT_MIN,
+        max: 87n
       },
       "someOtherPod.D": {
-        minValue: 5n,
-        maxValue: 25n
+        min: 5n,
+        max: 25n
       }
     });
   });

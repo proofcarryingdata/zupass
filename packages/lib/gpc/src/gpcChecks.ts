@@ -34,6 +34,7 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
+  BoundsConfig,
   GPCProofMembershipListConfig,
   GPCRequirements,
   LIST_MEMBERSHIP,
@@ -211,17 +212,18 @@ export function checkProofEntryConfig(
   const hasBoundsCheck = entryConfig.inRange !== undefined;
 
   if (hasBoundsCheck) {
-    if (entryConfig.inRange.min < POD_INT_MIN) {
+    const inRange = entryConfig.inRange as BoundsConfig;
+    if (inRange.min < POD_INT_MIN) {
       throw new RangeError(
         `Minimum value of entry ${nameForErrorMessages} is less than smallest admissible value ${POD_INT_MIN}.`
       );
     }
-    if (entryConfig.inRange.max > POD_INT_MAX) {
+    if (inRange.max > POD_INT_MAX) {
       throw new RangeError(
         `Maximum value of entry ${nameForErrorMessages} is greater than largest admissible ${POD_INT_MAX}.`
       );
     }
-    if (entryConfig.inRange.max < entryConfig.inRange.min) {
+    if (inRange.max < inRange.min) {
       throw new Error(
         "Minimum value for entry ${nameForErrorMesages} must be less than or equal to its maximum value."
       );

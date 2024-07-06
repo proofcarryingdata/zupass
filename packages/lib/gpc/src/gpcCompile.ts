@@ -28,6 +28,7 @@ import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import _ from "lodash";
 import {
   GPCBoundConfig,
+  GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofInputs,
   GPCProofObjectConfig,
@@ -40,7 +41,6 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
-  GPCProofBoundsCheckConfig,
   GPCProofMembershipListConfig,
   LIST_MEMBERSHIP,
   boundsCheckConfigFromProofConfig,
@@ -48,7 +48,8 @@ import {
   isVirtualEntryIdentifier,
   isVirtualEntryName,
   listConfigFromProofConfig,
-  makeWatermarkSignal
+  makeWatermarkSignal,
+  podEntryIdentifierCompare
 } from "./gpcUtil";
 
 /**
@@ -321,9 +322,8 @@ export function compileProofConfig(
   );
 
   // Create bounds check inputs
-  const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
   const circuitBoundsCheckInputs = compileProofBoundsChecks(
-    boundsCheckConfig,
+    proofConfig,
     entryMap,
     circuitDesc.maxBoundsChecks
   );
@@ -395,7 +395,7 @@ function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
 function compileProofBoundsChecks<
   ObjInput extends POD | GPCRevealedObjectClaims
 >(
-  boundsCheckConfig: GPCProofBoundsCheckConfig,
+  proofConfig: GPCProofConfig,
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
   paramBoundsChecks: number
 ): {
@@ -403,20 +403,11 @@ function compileProofBoundsChecks<
   boundsCheckMinValues: CircuitSignal[];
   boundsCheckMaxValues: CircuitSignal[];
 } {
-  // Arrange POD entry identifiers alphabetically
+  const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
+  // Arrange POD entry identifiers according to {@link podEntryIdentifierCompare}.
   const boundsCheckIdOrder = (
     Object.keys(boundsCheckConfig) as PODEntryIdentifier[]
-  ).sort((id1: PODEntryIdentifier, id2: PODEntryIdentifier): number => {
-    const [podName1, entryName1] = id1.split(".");
-    const [podName2, entryName2] = id2.split(".");
-    if (podName1 < podName2) {
-      return -1;
-    } else if (podName1 > podName2) {
-      return 1;
-    } else {
-      return entryName1 < entryName2 ? -1 : entryName1 > entryName2 ? 1 : 0;
-    }
-  });
+  ).sort(podEntryIdentifierCompare);
 
   // Compile entry indices
   const unpaddedBoundsCheckEntryIndices = boundsCheckIdOrder.map((entryId) => {
@@ -429,16 +420,14 @@ function compileProofBoundsChecks<
     return BigInt(idx);
   });
 
-  // Compile minimum values, replacing missing lower bounds with the smallest
-  // possible lower bound.
+  // Compile minimum values.
   const unpaddedBoundsCheckMinValues = boundsCheckIdOrder.map(
-    (entryId) => boundsCheckConfig[entryId].minValue
+    (entryId) => boundsCheckConfig[entryId].min
   );
 
-  // Compile maximum values, replacing missing upper bounds with the greatest
-  // possible upper bound.
+  // Compile maximum values.
   const unpaddedBoundsCheckMaxValues = boundsCheckIdOrder.map(
-    (entryId) => boundsCheckConfig[entryId].maxValue
+    (entryId) => boundsCheckConfig[entryId].max
   );
 
   // Return with padding.
@@ -911,9 +900,8 @@ export function compileVerifyConfig(
   );
 
   // Create bounds check inputs
-  const boundsCheckConfig = boundsCheckConfigFromProofConfig(verifyConfig);
   const circuitBoundsCheckInputs = compileProofBoundsChecks(
-    boundsCheckConfig,
+    verifyConfig,
     entryMap,
     circuitDesc.maxBoundsChecks
   );

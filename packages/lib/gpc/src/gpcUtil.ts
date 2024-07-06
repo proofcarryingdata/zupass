@@ -1,9 +1,4 @@
-import {
-  CircuitDesc,
-  CircuitSignal,
-  ProtoPODGPCCircuitParams,
-  padArray
-} from "@pcd/gpcircuits";
+import { CircuitDesc } from "@pcd/gpcircuits";
 import {
   POD,
   PODEdDSAPublicKeyValue,
@@ -601,7 +596,7 @@ export type GPCProofMembershipListConfig = Record<
  * Bounds check configuration for an individual entry. This specifies the bounds
  * check required for relevant entries at the circuit level.
  */
-export type BoundsConfig = { minValue: bigint; maxValue: bigint };
+export type BoundsConfig = { min: bigint; max: bigint };
 
 /**
  * List configuration for an individual entry or tuple. This specifies the type
@@ -617,9 +612,9 @@ export type ListConfig = {
  * Determines the bounds check configuration from the proof configuration.
  *
  * Bounds checks are indicated in each entry field via the optional property
- * `minValue` and/or `maxValue`, each of which specifies a (public) constant
- * bound. This procedure singles out and arranges these bounds check
- * configurations by entry identifier.
+ * `inRange`, which specifies (public) constant upper and lower bounds. This
+ * procedure singles out and arranges these bounds check configurations by entry
+ * identifier.
  *
  * @param proofConfig the proof configuration
  * @returns a record mapping entry identifiers to their bounds check
@@ -633,15 +628,7 @@ export function boundsCheckConfigFromProofConfig(
       Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) =>
         entryConfig.inRange === undefined
           ? []
-          : [
-              [
-                `${podName}.${entryName}`,
-                {
-                  minValue: entryConfig.inRange.min,
-                  maxValue: entryConfig.inRange.max
-                }
-              ]
-            ]
+          : [[`${podName}.${entryName}`, entryConfig.inRange]]
       )
     )
   );
@@ -752,22 +739,28 @@ function addIdentifierToListConfig(
   };
 }
 
-// TODO(POD-P2): Get rid of everything below this line.
-
-// Dummy bounds check inputs. Checks that entry with index -1 (i.e. the value 0)
-// lies in [0, 0].
-export function dummyBoundsCheckInputs(params: ProtoPODGPCCircuitParams): {
-  boundsCheckEntryIndices: CircuitSignal[];
-  boundsCheckMinValues: CircuitSignal[];
-  boundsCheckMaxValues: CircuitSignal[];
-} {
-  return {
-    boundsCheckEntryIndices: padArray(
-      [],
-      params.maxBoundsChecks,
-      BABY_JUB_NEGATIVE_ONE
-    ),
-    boundsCheckMinValues: padArray([], params.maxBoundsChecks, 0n),
-    boundsCheckMaxValues: padArray([], params.maxBoundsChecks, 0n)
-  };
+/**
+ * Compares two POD entry identifiers according to the rule that they should be
+ * arranged by POD name first then entry name with the usual rules for
+ * string sorting.
+ *
+ * @param id1 POD entry identifier to compare
+ * @param id2 POD entry identifier to compare
+ * @returns -1, 0 or 1 according to whether `id1` should precede or succeed `id2`.
+ */
+export function podEntryIdentifierCompare(
+  id1: PODEntryIdentifier,
+  id2: PODEntryIdentifier
+): number {
+  const { objName: podName1, entryName: entryName1 } =
+    splitPODEntryIdentifier(id1);
+  const { objName: podName2, entryName: entryName2 } =
+    splitPODEntryIdentifier(id2);
+  if (podName1 < podName2) {
+    return -1;
+  } else if (podName1 > podName2) {
+    return 1;
+  } else {
+    return entryName1 < entryName2 ? -1 : entryName1 > entryName2 ? 1 : 0;
+  }
 }
