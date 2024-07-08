@@ -54,6 +54,7 @@ export interface PCDAddRequest extends PCDRequest {
   type: PCDRequestType.Add;
   pcd: SerializedPCD;
   folder?: string;
+  redirectToFolder?: boolean;
 }
 
 export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
@@ -107,14 +108,16 @@ export function constructZupassPcdAddRequestUrl(
   returnUrl: string,
   pcd: SerializedPCD,
   folder?: string,
-  postMessage: boolean = false
+  postMessage: boolean = false,
+  redirectToFolder?: boolean
 ): string {
   const req: PCDAddRequest = {
     type: PCDRequestType.Add,
     returnUrl: returnUrl,
     pcd,
     folder,
-    postMessage
+    postMessage,
+    redirectToFolder
   };
   const eqReq = encodeURIComponent(JSON.stringify(req));
   return `${zupassClientUrl}#/add?request=${eqReq}`;
