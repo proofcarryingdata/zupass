@@ -107,7 +107,13 @@ export function JustAddScreen({
       </>
     );
   } else if (isProtocolWorlds) {
-    window.location.href = "#/?folder=Protocol%2520Worlds";
+    window.location.hash = "#/?folder=Protocol%2520Worlds";
+  } else if (request.redirectToFolder) {
+    if (request.folder) {
+      window.location.hash = `#/?folder=${encodeURIComponent(request.folder)}`;
+    } else {
+      window.location.hash = "#/";
+    }
   } else {
     content = <AddedPCD onCloseClick={(): void => window.close()} />;
   }

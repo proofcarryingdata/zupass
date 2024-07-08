@@ -254,7 +254,19 @@ export default function Page(): JSX.Element {
             )
           }
         >
-          add a new POD to Zupass
+          add a new POD to Zupass (popup)
+        </button>
+        <button
+          onClick={() =>
+            addPODPCD(
+              podContent2,
+              podPrivateKey2,
+              podFolder2.length > 0 ? podFolder2 : undefined,
+              true
+            )
+          }
+        >
+          add a new POD to Zupass (redirect)
         </button>
         <br />
         <label>
@@ -696,7 +708,8 @@ async function addWebAuthnPCD(): Promise<void> {
 async function addPODPCD(
   podContent: string,
   podPrivateKey: string,
-  podFolder: string | undefined
+  podFolder: string | undefined,
+  redirectToFolder?: boolean
 ): Promise<void> {
   const newPOD = new PODPCD(
     uuid(),
@@ -709,10 +722,16 @@ async function addPODPCD(
     ZUPASS_URL,
     window.location.origin + "#/popup",
     serializedPODPCD,
-    podFolder
+    podFolder,
+    false,
+    redirectToFolder
   );
 
-  sendZupassRequest(url);
+  if (redirectToFolder) {
+    open(url);
+  } else {
+    sendZupassRequest(url);
+  }
 }
 
 async function addGPCPCD(
