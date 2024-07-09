@@ -52,6 +52,15 @@ export function expectFalse(value: boolean): asserts value is false {
 }
 
 /**
+ * Use in place of `expect(value).to.exist`
+ */
+export function expectDefined<T>(value: T | undefined): asserts value is T {
+  if (value === undefined) {
+    throw new Error("Expected value to be defined");
+  }
+}
+
+/**
  * Timeout objects contain cyclical references, so we want to filter them out
  * when stringifying to JSON. However, Timeout objects are a weird NodeJS thing
  * and the class isn't importable, so we can't use instanceof to detect them.
