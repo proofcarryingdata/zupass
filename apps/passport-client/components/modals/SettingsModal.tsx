@@ -1,8 +1,8 @@
-import { LinkButton } from "@pcd/passport-ui";
-import { useCallback } from "react";
+import { LinkButton, TextButton } from "@pcd/passport-ui";
+import { useCallback, useState } from "react";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
-import { Button, CenterColumn, Spacer, TextCenter } from "../core";
+import { BigInput, Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { AccountExportButton } from "../shared/AccountExportButton";
 
 export function SettingsModal({
@@ -13,14 +13,29 @@ export function SettingsModal({
   const dispatch = useDispatch();
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
+  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [deleteMessage, setDeleteMessage] = useState("");
 
-  const close = useCallback(() => {
+  const closeModal = useCallback(() => {
     dispatch({ type: "set-modal", modal: { modalType: "none" } });
   }, [dispatch]);
 
-  const clearZupass = useCallback(() => {
+  const logout = useCallback(() => {
     if (window.confirm("Are you sure you want to log out?")) {
       dispatch({ type: "reset-passport" });
+    }
+  }, [dispatch]);
+
+  const deleteAccount = useCallback(() => {
+    if (
+      window.confirm(
+        "Are you sure you want to delete your account? This action cannot be undone."
+      ) &&
+      window.confirm("Are you really sure?")
+    ) {
+      dispatch({ type: "delete-account" });
+    } else {
+      setDeleteMessage("");
     }
   }, [dispatch]);
 
@@ -32,8 +47,10 @@ export function SettingsModal({
       <Spacer h={16} />
       <CenterColumn>
         <TextCenter>{self?.email}</TextCenter>
+
         <Spacer h={16} />
-        {!isProveOrAddScreen && (
+
+        {!isProveOrAddScreen && !showAdvanced && (
           <>
             <LinkButton
               $primary={true}
@@ -45,22 +62,59 @@ export function SettingsModal({
               Scan Ticket
             </LinkButton>
             <Spacer h={16} />
-            <LinkButton $primary={true} to="/change-password" onClick={close}>
+            <LinkButton
+              $primary={true}
+              to="/change-password"
+              onClick={closeModal}
+            >
               {hasSetupPassword ? "Change" : "Add"} Password
             </LinkButton>
             <Spacer h={16} />
             <AccountExportButton />
             <Spacer h={16} />
-            <LinkButton $primary={true} to="/import" onClick={close}>
+            <LinkButton $primary={true} to="/import" onClick={closeModal}>
               Import
             </LinkButton>
             <Spacer h={16} />
           </>
         )}
 
-        <Button onClick={clearZupass} style="danger">
-          Log Out
-        </Button>
+        {!showAdvanced && (
+          <Button onClick={logout} style="danger">
+            Log Out
+          </Button>
+        )}
+
+        {!isProveOrAddScreen &&
+          (showAdvanced ? (
+            <>
+              <Button onClick={() => setShowAdvanced(!showAdvanced)}>
+                Back
+              </Button>
+              <Spacer h={12} />
+              <Button
+                onClick={deleteAccount}
+                style="danger"
+                disabled={deleteMessage !== "delete me"}
+              >
+                Delete Account
+              </Button>
+              <Spacer h={12} />
+              <BigInput
+                placeholder="type 'delete me' to delete"
+                value={deleteMessage}
+                onChange={(e) => setDeleteMessage(e.target.value)}
+              />
+            </>
+          ) : (
+            <>
+              <Spacer h={12} />
+              <TextButton onClick={() => setShowAdvanced(!showAdvanced)}>
+                Delete Account
+              </TextButton>
+            </>
+          ))}
+
         <Spacer h={48} />
       </CenterColumn>
     </>

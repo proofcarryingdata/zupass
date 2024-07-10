@@ -49,6 +49,11 @@ export interface AppState {
   // user confusion
   loggingOut?: boolean;
 
+  // if the client is in the process of deleting their account,
+  // shows alternate UI in passport to prevent user interaction
+  // until the operatoin is complete or fails
+  deletingAccount?: boolean;
+
   // If set, shows an error popover.
   error?: AppError;
 

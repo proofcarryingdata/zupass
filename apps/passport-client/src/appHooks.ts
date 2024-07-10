@@ -180,6 +180,10 @@ export function useIsLoggedIn(): boolean {
   return useSelector<boolean>((s) => s.self !== undefined, []);
 }
 
+export function useIsDeletingAccount(): boolean {
+  return useSelector<boolean>((s) => !!s.deletingAccount, []);
+}
+
 export function useResolvingSubscriptionId(): string | undefined {
   return useSelector<string | undefined>((s) => s.resolvingSubscriptionId);
 }

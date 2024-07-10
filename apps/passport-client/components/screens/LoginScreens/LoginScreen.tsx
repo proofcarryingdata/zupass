@@ -141,7 +141,7 @@ export function LoginScreen(): JSX.Element {
           <TextCenter>
             <H1>ZUPASS</H1>
             <Spacer h={24} />
-            Logging you out...
+            Logging you Out
             <Spacer h={8} />
             <RippleLoader />
           </TextCenter>

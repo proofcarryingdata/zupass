@@ -1,4 +1,6 @@
 import { EncryptedPacket } from "@pcd/passport-crypto";
+import { SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
   ChangeBlobKeyError,
@@ -23,7 +25,8 @@ export async function requestChangeBlobKey(
   uuid: string,
   newSalt: string,
   encryptedStorage: EncryptedPacket,
-  knownRevision?: string
+  knownRevision?: string,
+  credential?: SerializedPCD<SemaphoreSignaturePCD>
 ): Promise<ChangeBlobKeyResult> {
   return httpPost<ChangeBlobKeyResult>(
     urlJoin(zupassServerUrl, `/sync/v3/changeBlobKey`),
@@ -40,7 +43,8 @@ export async function requestChangeBlobKey(
       newSalt,
       encryptedBlob: JSON.stringify(encryptedStorage),
       uuid,
-      knownRevision
+      knownRevision,
+      pcd: credential
     } satisfies ChangeBlobKeyRequest
   );
 }

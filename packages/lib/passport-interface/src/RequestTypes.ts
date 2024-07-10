@@ -90,6 +90,8 @@ export interface UploadEncryptedStorageRequest {
    * existing revision.
    */
   knownRevision?: string;
+
+  pcd?: SerializedPCD;
 }
 
 /**
@@ -181,6 +183,12 @@ export interface ChangeBlobKeyRequest {
    * existing revision.
    */
   knownRevision?: string;
+
+  /**
+   * Signature PCD by the user who is changing the blob key.  This is used to
+   * associate the e2ee storage with the user's identity.
+   */
+  pcd?: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
 /**
@@ -773,6 +781,10 @@ export interface AgreeTermsPayload {
  * When a user agrees to new legal terms, they send us a signed proof.
  */
 export interface AgreeTermsRequest {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+export interface DeleteAccountRequest {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
 }
 

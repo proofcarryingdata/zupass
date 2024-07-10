@@ -27,6 +27,7 @@ export * from "./api/requestCheckInById";
 export * from "./api/requestCheckTicketById";
 export * from "./api/requestConfirmationEmail";
 export * from "./api/requestCreateNewUser";
+export * from "./api/requestDeleteAccount";
 export * from "./api/requestDownloadAndDecryptStorage";
 export * from "./api/requestEdgeCityBalances";
 export * from "./api/requestEncryptedStorage";

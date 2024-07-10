@@ -16,6 +16,7 @@ import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { FrogcryptoService } from "./services/frogcryptoService";
 import { GenericIssuanceService } from "./services/generic-issuance/GenericIssuanceService";
+import { CredentialSubservice } from "./services/generic-issuance/subservices/CredentialSubservice";
 import { IssuanceService } from "./services/issuanceService";
 import { MetricsService } from "./services/metricsService";
 import { MultiProcessService } from "./services/multiProcessService";
@@ -57,6 +58,7 @@ export interface GlobalServices {
   rateLimitService: RateLimitService;
   genericIssuanceService: GenericIssuanceService | null;
   pagerDutyService: PagerDutyService | null;
+  credentialSubservice: CredentialSubservice;
 }
 
 export interface Zupass {
