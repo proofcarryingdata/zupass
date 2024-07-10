@@ -2,12 +2,12 @@ pragma circom 2.1.8;
 
 include "circomlib/circuits/gates.circom";
 include "circomlib/circuits/poseidon.circom";
-include "bounds.circom";
 include "entry.circom";
 include "global.circom";
 include "gpc-util.circom";
 include "list-membership.circom";
 include "multituple.circom";
+include "numeric-value.circom";
 include "object.circom";
 include "owner.circom";
 include "virtual-entry.circom";
@@ -38,8 +38,8 @@ template ProtoPODGPC (
     // inclusive upper bound on the proofDepth input.
     MERKLE_MAX_DEPTH,
 
-    // Max number of bounds checks on entry values.
-    MAX_BOUNDS_CHECKS,
+    // Max number of numeric values.
+    MAX_NUMERIC_VALUES,
     
     // Indicates the number of ListMembership modules included in this GPC,
     // setting the largest number of distinct membership lists for (tuples of)
@@ -95,11 +95,10 @@ template ProtoPODGPC (
     signal input entryObjectIndex[MAX_ENTRIES];
 
     // Entry name (by hash) and value.  Value's hash is implicitly included as 1st sibling.
-    signal input entryNameHash[MAX_ENTRIES], entryValue[MAX_ENTRIES];
+    signal input entryNameHash[MAX_ENTRIES];
     
     // Boolean flags for entry value behavior.
-    signal input entryIsValueEnabled /*MAX_ENTRIES packed bits*/, entryIsValueHashRevealed /*MAX_ENTRIES packed bits*/;
-    signal entryIsValueEnabledBits[MAX_ENTRIES] <== Num2Bits(MAX_ENTRIES)(entryIsValueEnabled);
+    signal input entryIsValueHashRevealed /*MAX_ENTRIES packed bits*/;
     signal entryIsValueHashRevealedBits[MAX_ENTRIES] <== Num2Bits(MAX_ENTRIES)(entryIsValueHashRevealed);
 
     // Merkle proof of entry name's membership in the object's Merkle tree.
@@ -172,8 +171,6 @@ template ProtoPODGPC (
             objectContentID <== InputSelector(MAX_OBJECTS)(objectContentID, entryObjectIndex[entryIndex]),
             nameHash <== entryNameHash[entryIndex],
             isValueHashRevealed <== entryIsValueHashRevealedBits[entryIndex],
-            value <== entryValue[entryIndex],
-            isValueEnabled <== entryIsValueEnabledBits[entryIndex],
             proofDepth <== entryProofDepth[entryIndex],
             proofIndex <== entryProofIndex[entryIndex],
             proofSiblings <== entryProofSiblings[entryIndex]
@@ -209,43 +206,45 @@ template ProtoPODGPC (
         enabled <== ownerIsEnabled,
         identityNullifier <== ownerSemaphoreV3IdentityNullifier,
         identityTrapdoor <== ownerSemaphoreV3IdentityTrapdoor,
-        identityCommitment <== InputSelector(MAX_ENTRIES)(entryValue, ownerIsEnabled * ownerEntryIndex),
+        identityCommitmentHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, ownerIsEnabled * ownerEntryIndex),
         externalNullifier <== ownerExternalNullifier,
         isNullfierHashRevealed <== ownerIsNullfierHashRevealed
                                                                           );
 
     
     /*
-     * (MAX_BOUNDS_CHECKS) BoundsCheckModules with their inputs & outputs
+     * (MAX_NUMERIC_VALUES) NumericValueModules with their inputs
      */
-    
-    // Array of indices of entries whose values will be
-    // bounds-checked. This should be padded with -1 if necessary,
-    // which refers to the value 0.
-    signal input boundsCheckEntryIndices[MAX_BOUNDS_CHECKS];
 
+    // Array of numeric values as well as an array of indices of
+    // entries to which they correspond. These will be checked for
+    // consistency in the numeric value module. These should be
+    // padded with 0s and -1s respectively if necessary.
+    signal input numericValues[MAX_NUMERIC_VALUES];
+    signal input numericValueEntryIndices[MAX_NUMERIC_VALUES];
+    
     // Arrays of (inclusive) 64-bit unsigned integer bounds, where the
     // ith element of each array specifies the minimum or maximum
     // value that the ith value being checked can take. Note that
     // these bounds are not constrained here; since they are public
-    // inputs, they should be checked externally, cf. the notes
-    // preceding `BoundsCheckModule`. These arrays should be padded
-    // with 0s if necessary.
-    signal input boundsCheckMinValues[MAX_BOUNDS_CHECKS];
-    signal input boundsCheckMaxValues[MAX_BOUNDS_CHECKS];
-
-    // Extract the corresponding entry value and run a bounds check on
-    // it.
-    signal boundsChecks[MAX_BOUNDS_CHECKS];
-    for (var i = 0; i < MAX_BOUNDS_CHECKS; i++) {
-        boundsChecks[i] <==
-            BoundsCheckModule(64)(
-                MaybeInputSelector(MAX_ENTRIES)(
-                    entryValue,
-                    boundsCheckEntryIndices[i]),
-                boundsCheckMinValues[i],
-                boundsCheckMaxValues[i]);
-        boundsChecks[i] === 1;
+    // inputs, they should be checked externally. These arrays should
+    // be padded with 0s if necessary.
+    signal input numericMinValues[MAX_NUMERIC_VALUES];
+    signal input numericMaxValues[MAX_NUMERIC_VALUES];
+    
+    for (var i = 0; i < MAX_NUMERIC_VALUES; i++) {
+        NumericValueModule()(
+            // Disable value hash check if index is -1.
+            NOT()(
+                IsZero()(numericValueEntryIndices[i] + 1)
+                  ),
+            numericValues[i],
+            MaybeInputSelector(MAX_ENTRIES)(
+                entryValueHashes,
+                numericValueEntryIndices[i]
+                                            ),
+            numericMinValues[i],
+            numericMaxValues[i]);
     }
     
     /*

@@ -7,8 +7,6 @@ export type EntryModuleInputs = {
   proofDepth: CircuitSignal;
   proofIndex: CircuitSignal;
   proofSiblings: CircuitSignal[];
-  value: CircuitSignal;
-  isValueEnabled: CircuitSignal;
 };
 
 export type EntryModuleInputNamesType = [
@@ -17,9 +15,7 @@ export type EntryModuleInputNamesType = [
   "isValueHashRevealed",
   "proofDepth",
   "proofIndex",
-  "proofSiblings",
-  "value",
-  "isValueEnabled"
+  "proofSiblings"
 ];
 
 export type EntryModuleOutputs = { revealedValueHash: CircuitSignal };

@@ -12,6 +12,6 @@ export type BoundsCheckModuleInputNamesType = [
   "maxValue"
 ];
 
-export type BoundsCheckModuleOutputs = Record<string, never>;
+export type BoundsCheckModuleOutputs = { out: CircuitSignal };
 
-export type BoundsCheckModuleOutputNamesType = [];
+export type BoundsCheckModuleOutputNamesType = ["out"];

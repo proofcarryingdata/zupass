@@ -106,7 +106,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   let totalObjects = 0;
   let totalEntries = 0;
   let requiredMerkleDepth = 0;
-  let totalBoundsChecks = 0;
+  let totalNumericValues = 0;
   for (const [objName, objConfig] of Object.entries(proofConfig.pods)) {
     checkPODName(objName);
     const { nEntries, nBoundsChecks } = checkProofObjConfig(objName, objConfig);
@@ -116,7 +116,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
       requiredMerkleDepth,
       calcMinMerkleDepthForEntries(nEntries)
     );
-    totalBoundsChecks += nBoundsChecks;
+    totalNumericValues += nBoundsChecks;
   }
 
   if (proofConfig.tuples !== undefined) {
@@ -141,7 +141,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
-    totalBoundsChecks,
+    totalNumericValues,
     numLists,
     maxListSize,
     tupleArities
@@ -345,8 +345,8 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     totalObjects,
     totalObjects,
     requiredMerkleDepth,
-    // The bounds checks are handled solely in the proof config, hence we return
-    // 0 here.
+    // Numeric values (bounds checks) are handled solely in the proof config,
+    // hence we return 0 here.
     0,
     // The number of required lists cannot be properly deduced here, so we
     // return 0.
@@ -689,9 +689,6 @@ export function checkRevealedClaims(
     );
   }
 
-  // TODO(POD-P2): Replace this with actual value.
-  const nBoundsChecks = 0;
-
   const numListElements =
     revealedClaims.membershipLists === undefined
       ? {}
@@ -707,7 +704,7 @@ export function checkRevealedClaims(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
-    nBoundsChecks,
+    0,
     0,
     maxListSize,
     {}
@@ -930,7 +927,7 @@ export function circuitDescMeetsRequirements(
     circuitDesc.maxObjects >= circuitReq.nObjects &&
     circuitDesc.maxEntries >= circuitReq.nEntries &&
     circuitDesc.merkleMaxDepth >= circuitReq.merkleMaxDepth &&
-    circuitDesc.maxBoundsChecks >= circuitReq.nBoundsChecks &&
+    circuitDesc.maxNumericValues >= circuitReq.nNumericValues &&
     circuitDesc.maxLists >= circuitReq.nLists &&
     // The circuit description should be able to contain the largest of the lists.
     circuitDesc.maxListElements >= circuitReq.maxListSize
@@ -969,7 +966,7 @@ export function mergeRequirements(
     Math.max(rs1.nObjects, rs2.nObjects),
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
-    Math.max(rs1.nBoundsChecks, rs2.nBoundsChecks),
+    Math.max(rs1.nNumericValues, rs2.nNumericValues),
     Math.max(rs1.nLists, rs2.nLists),
     Math.max(rs1.maxListSize, rs2.maxListSize),
     tupleArities
