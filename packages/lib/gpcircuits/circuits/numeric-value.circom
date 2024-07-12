@@ -4,16 +4,17 @@ include "circomlib/circuits/poseidon.circom";
 include "bounds.circom";
 
 /**
- * Module constraining a single entry value of POD object. It proves that
+ * Module constraining a single entry value of POD object. It proves
+ * that the numeric value corresponds to the value hash and that
  * numeric properties such as upper and lower bounds hold.
  *
  * This module has an explicit enable flag. If it is disabled, the bounds
  * check parameters should take on their default values, viz. 0 and 0.
  */
 template NumericValueModule() {
-    // Boolean flag for the value check. This will be deduced from the
-    // entry index passed to the ProtoPODGPC circuit and thus checked
-    // externally.
+    // Boolean flag for the value check. Booleanness will be deduced
+    // from the entry index passed to the ProtoPODGPC circuit and thus
+    // checked externally.
     signal input isEnabled;
     
     // Value to check.

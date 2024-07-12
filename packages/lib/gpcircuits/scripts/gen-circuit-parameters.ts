@@ -19,9 +19,19 @@ import { MAX_PARALLEL_PROMISES, clearDir } from "./util";
 const CIRCUIT_PARAMETERS = [
   {
     maxObjects: 1,
+    maxEntries: 1,
+    merkleMaxDepth: 5,
+    maxNumericValues: 0,
+    maxLists: 0,
+    maxListElements: 0,
+    maxTuples: 0,
+    tupleArity: 0
+  },
+  {
+    maxObjects: 1,
     maxEntries: 5,
     merkleMaxDepth: 6,
-    maxNumericValues: 0,
+    maxNumericValues: 2,
     maxLists: 0,
     maxListElements: 0,
     maxTuples: 0,
