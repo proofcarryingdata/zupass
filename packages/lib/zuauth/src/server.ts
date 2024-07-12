@@ -112,6 +112,26 @@ export async function authenticate(
       .filter((productId) => productId !== undefined)
   );
 
+  if (eventIds.size > 0 && eventIds.size <= 20) {
+    if (pcd.claim.validEventIds === undefined) {
+      throw new ZuAuthAuthenticationError("validEventIds is not defined");
+    }
+    if (
+      pcd.claim.validEventIds.length !== eventIds.size ||
+      pcd.claim.validEventIds.some((eventId) => !eventIds.has(eventId))
+    ) {
+      throw new ZuAuthAuthenticationError(
+        "validEventIds does not match configured event IDs"
+      );
+    }
+  }
+
+  if (eventIds.size > 20 && pcd.claim.validEventIds !== undefined) {
+    throw new ZuAuthAuthenticationError(
+      "validEventIds is defined but there are too many event IDs configured"
+    );
+  }
+
   if (
     publicKeys.length > 0 &&
     !publicKeys.find((pubKey) =>

@@ -49,10 +49,8 @@ async function makeZKTicketPCD(
   ticketPCD: EdDSATicketPCD,
   identity: Identity,
   watermark: string,
-  fieldsToReveal: EdDSATicketFieldsToReveal = {
-    revealEventId: true,
-    revealProductId: true
-  }
+  fieldsToReveal: EdDSATicketFieldsToReveal,
+  validEventIds: string[] | undefined
 ): Promise<ZKEdDSAEventTicketPCD> {
   const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(ticketPCD);
   const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
@@ -75,7 +73,7 @@ async function makeZKTicketPCD(
       argumentType: ArgumentTypeName.ToggleList
     },
     validEventIds: {
-      value: [ticketPCD.claim.ticket.eventId],
+      value: validEventIds,
       argumentType: ArgumentTypeName.StringArray
     },
     externalNullifier: {
@@ -135,7 +133,16 @@ describe("zuauth should work", async function () {
 
     ticketPCD = await makeTestTicket(privKey, testTicket);
 
-    zkPCD = await makeZKTicketPCD(ticketPCD, identity, watermark);
+    zkPCD = await makeZKTicketPCD(
+      ticketPCD,
+      identity,
+      watermark,
+      {
+        revealEventId: true,
+        revealProductId: true
+      },
+      [ticketPCD.claim.ticket.eventId]
+    );
     serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
   });
 
@@ -169,7 +176,7 @@ describe("zuauth should work", async function () {
     const newPrivKey = newEdDSAPrivateKey();
     const publicKey = await getEdDSAPublicKey(newPrivKey);
 
-    expect(
+    await expect(
       authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
@@ -197,7 +204,7 @@ describe("zuauth should work", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
     const newWatermark = generateSnarkMessageHash("new watermark").toString();
 
-    expect(
+    await expect(
       authenticate(JSON.stringify(serializedZKPCD), {
         watermark: newWatermark,
         fieldsToReveal: {
@@ -224,7 +231,7 @@ describe("zuauth should work", async function () {
   it("should not authenticate PCDs with the wrong event ID", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
 
-    expect(
+    await expect(
       authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
@@ -244,14 +251,14 @@ describe("zuauth should work", async function () {
       })
     ).to.be.rejectedWith(
       ZuAuthAuthenticationError,
-      "Event ID does not match any of the configured event IDs"
+      "validEventIds does not match configured event IDs"
     );
   });
 
   it("should not authenticate PCDs with the wrong product ID", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
 
-    expect(
+    await expect(
       authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
@@ -283,14 +290,15 @@ describe("zuauth should work", async function () {
       ticketPCD,
       identity,
       watermark,
-      { revealEventId: false, revealProductId: true }
+      { revealEventId: false, revealProductId: true },
+      [ticketPCD.claim.ticket.eventId]
     );
 
     const serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(
       zkPCDWithoutRevealedEventId
     );
 
-    expect(
+    await expect(
       authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
@@ -315,6 +323,149 @@ describe("zuauth should work", async function () {
     );
   });
 
+  it("should not authenticate a PCD which should have <= 20 valid event IDs but has more", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+
+    // This config does not match the config used to generate the PCD
+    // Specifically, it has > 20 event IDs, but the PCD was generated with
+    // a validEventIds array containing fewer than 20.
+    const badConfig: PipelineZuAuthConfig[] = [];
+    for (let i = 0; i < 21; i++) {
+      badConfig.push({
+        eventId: uuid(),
+        eventName: "Test event",
+        pcdType: "eddsa-ticket-pcd",
+        publicKey
+      });
+    }
+
+    await expect(
+      authenticate(JSON.stringify(serializedZKPCD), {
+        watermark,
+        fieldsToReveal: {
+          revealEventId: false,
+          revealProductId: true
+        },
+        config: badConfig
+      })
+    ).to.be.rejectedWith(
+      ZuAuthAuthenticationError,
+      "validEventIds is defined but there are too many event IDs configured"
+    );
+  });
+
+  it("should require validEventIds if there are <= 20 event IDs configured", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+
+    // Proving operation which happens on the client-side.
+    const zkPCDWithoutValidEventIds = await makeZKTicketPCD(
+      ticketPCD,
+      identity,
+      watermark,
+      { revealEventId: false, revealProductId: false },
+      // validEventIds is undefined
+      // This should only happen when proving is done with > 20 event IDs
+      undefined
+    );
+    const serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(
+      zkPCDWithoutValidEventIds
+    );
+
+    await expect(
+      authenticate(JSON.stringify(serializedZKPCD), {
+        watermark,
+        fieldsToReveal: {
+          revealEventId: false,
+          revealProductId: false
+        },
+        config: [
+          {
+            // Here there is only one event ID
+            // So `authenticate` will fail as validEventIds is missing
+            eventId: uuid(),
+            eventName: testTicket.eventName,
+            productId: testTicket.productId,
+            productName: testTicket.ticketName,
+            pcdType: EdDSATicketPCDTypeName,
+            publicKey
+          }
+        ]
+      })
+    ).to.be.rejectedWith(
+      ZuAuthAuthenticationError,
+      "validEventIds is not defined"
+    );
+  });
+
+  it("should not authenticate a PCD which has validEventIds that do not match configured event IDs", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+
+    await expect(
+      authenticate(JSON.stringify(serializedZKPCD), {
+        watermark,
+        fieldsToReveal: {
+          revealEventId: false,
+          revealProductId: false
+        },
+        config: [
+          {
+            eventId: uuid(),
+            eventName: testTicket.eventName,
+            productId: testTicket.productId,
+            productName: testTicket.ticketName,
+            pcdType: EdDSATicketPCDTypeName,
+            publicKey
+          }
+        ]
+      })
+    ).to.be.rejectedWith(
+      ZuAuthAuthenticationError,
+      "validEventIds does not match configured event IDs"
+    );
+  });
+
+  it("should not authenticate a PCD has > 20 event IDs but none matching the revealed event ID", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+
+    // Proving operation which happens on the client-side.
+    const zkPCDWithoutValidEventIds = await makeZKTicketPCD(
+      ticketPCD,
+      identity,
+      watermark,
+      { revealEventId: true },
+      // validEventIds is undefined
+      // This should only happen when proving is done with > 20 event IDs
+      undefined
+    );
+    const serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(
+      zkPCDWithoutValidEventIds
+    );
+
+    // Create random event IDs that don't match the PCD
+    const config: PipelineZuAuthConfig[] = [];
+    for (let i = 0; i < 21; i++) {
+      config.push({
+        eventId: uuid(),
+        eventName: "Test event",
+        pcdType: "eddsa-ticket-pcd",
+        publicKey
+      });
+    }
+
+    await expect(
+      authenticate(JSON.stringify(serializedZKPCD), {
+        watermark,
+        fieldsToReveal: {
+          revealEventId: true
+        },
+        config
+      })
+    ).to.be.rejectedWith(
+      ZuAuthAuthenticationError,
+      "Event ID does not match any of the configured event IDs"
+    );
+  });
+
   it("should not authenticate a PCD which should have a revealed product ID but does not", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
 
@@ -323,14 +474,15 @@ describe("zuauth should work", async function () {
       ticketPCD,
       identity,
       watermark,
-      { revealEventId: true, revealProductId: false }
+      { revealEventId: true, revealProductId: false },
+      [ticketPCD.claim.ticket.eventId]
     );
 
     const serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(
       zkPCDWithoutRevealedProductId
     );
 
-    expect(
+    await expect(
       authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
