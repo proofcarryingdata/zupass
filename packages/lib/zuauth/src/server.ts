@@ -85,13 +85,7 @@ const revealedFields: Record<
  */
 export async function authenticate(
   pcdStr: string,
-  {
-    watermark,
-    config,
-    fieldsToReveal,
-    externalNullifier,
-    checkEventIdWithoutRevealing = false
-  }: ZuAuthArgs
+  { watermark, config, fieldsToReveal, externalNullifier }: ZuAuthArgs
 ): Promise<ZKEdDSAEventTicketPCD> {
   /**
    * Check to see if our inputs are valid, beginning with the PCD.
@@ -153,44 +147,6 @@ export async function authenticate(
       checkIsDefined(pcd.claim.partialTicket[fieldName], fieldName);
     } else {
       checkIsUndefined(pcd.claim.partialTicket[fieldName], fieldName);
-    }
-  }
-
-  /**
-   * If {@link checkEventWithoutRevealing} is set to true, then the claim
-   * should also include `validEventIds`, and these should match the events
-   * contained in the configuration. There should also be a maximum of 20
-   * configured events.
-   */
-  if (checkEventIdWithoutRevealing) {
-    if (pcd.claim.validEventIds === undefined) {
-      throw new ZuAuthAuthenticationError(
-        "checkEventIdWithoutRevealing is enabled but validEventIds is not defined"
-      );
-    }
-    const eventIds = new Set(config.map((em) => em.eventId));
-    if (eventIds.size > 20) {
-      throw new ZuAuthAuthenticationError(
-        "checkEventIdWithoutRevealing is enabled but there are too many event IDs configured (maximum 20)"
-      );
-    }
-    if (
-      pcd.claim.validEventIds.length !== config.length ||
-      pcd.claim.validEventIds.some((eventId) => !eventIds.has(eventId))
-    ) {
-      throw new ZuAuthAuthenticationError(
-        "validEventIds does not match configured event IDs"
-      );
-    }
-  } else {
-    /**
-     * If {@link checkEventWithoutRevealing} is false, `validEventIds` should
-     * not be set.
-     */
-    if (pcd.claim.validEventIds) {
-      throw new ZuAuthAuthenticationError(
-        "validEventIds is defined but checkEventIdWithoutRevealing is not enabled"
-      );
     }
   }
 

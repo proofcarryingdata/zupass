@@ -35,7 +35,6 @@ export interface ZuAuthArgs {
   proofTitle?: string;
   proofDescription?: string;
   multi?: boolean;
-  checkEventIdWithoutRevealing?: boolean;
 }
 
 export interface ZuAuthRedirectArgs extends ZuAuthArgs {
@@ -74,8 +73,7 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     externalNullifier,
     proofTitle,
     proofDescription,
-    multi,
-    checkEventIdWithoutRevealing = false
+    multi
   } = zuAuthArgs;
 
   const eventIds: string[] = [],
@@ -116,22 +114,8 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     publicKeys.push(em.publicKey);
   }
 
-  if (eventIds.length > 20 && checkEventIdWithoutRevealing) {
-    throw new Error(
-      "Cannot check more than 20 event IDs without revealing the event ID field"
-    );
-  }
-
-  if (checkEventIdWithoutRevealing && fieldsToReveal.revealEventId) {
-    throw new Error(
-      "checkEventIdWithoutRevealing is enabled but the event ID field is being revealed"
-    );
-  }
-
-  if (!checkEventIdWithoutRevealing && !fieldsToReveal.revealEventId) {
-    throw new Error(
-      "Either the event ID field should be revealed, or checkEventIdWithoutRevealing should be enabled"
-    );
+  if (!fieldsToReveal.revealEventId) {
+    throw new Error("The event ID must be revealed for authentication");
   }
 
   if (productIds.length > 0 && !fieldsToReveal.revealProductId) {
@@ -161,7 +145,7 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     },
     validEventIds: {
       argumentType: ArgumentTypeName.StringArray,
-      value: checkEventIdWithoutRevealing ? eventIds : undefined,
+      value: undefined,
       userProvided: false
     },
     fieldsToReveal: {
