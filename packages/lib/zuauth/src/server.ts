@@ -68,7 +68,13 @@ const revealedFields: Record<
  */
 export async function authenticate(
   pcdStr: string,
-  { watermark, config, fieldsToReveal, externalNullifier }: ZuAuthArgs
+  {
+    watermark,
+    config,
+    fieldsToReveal,
+    externalNullifier,
+    checkEventIdWithoutRevealing = false
+  }: ZuAuthArgs
 ): Promise<ZKEdDSAEventTicketPCD> {
   const serializedPCD = JSON.parse(pcdStr);
   if (serializedPCD.type !== ZKEdDSAEventTicketPCDTypeName) {
@@ -117,6 +123,10 @@ export async function authenticate(
     }
   }
 
+  if (config.length === 0) {
+    throw new ZuAuthAuthenticationError("Configuration is empty");
+  }
+
   const publicKeys = config.map((em) => em.publicKey);
   const eventIds = new Set(config.map((em) => em.eventId));
   const productIds = new Set(
@@ -126,9 +136,16 @@ export async function authenticate(
       .filter((productId) => productId !== undefined)
   );
 
-  if (eventIds.size > 0 && eventIds.size <= 20) {
+  if (checkEventIdWithoutRevealing) {
     if (pcd.claim.validEventIds === undefined) {
-      throw new ZuAuthAuthenticationError("validEventIds is not defined");
+      throw new ZuAuthAuthenticationError(
+        "checkEventIdWithoutRevealing is enabled but validEventIds is not defined"
+      );
+    }
+    if (eventIds.size > 20) {
+      throw new ZuAuthAuthenticationError(
+        "checkEventIdWithoutRevealing is enabled but there are too many event IDs configured (maximum 20)"
+      );
     }
     if (
       pcd.claim.validEventIds.length !== eventIds.size ||
@@ -138,12 +155,12 @@ export async function authenticate(
         "validEventIds does not match configured event IDs"
       );
     }
-  }
-
-  if (eventIds.size > 20 && pcd.claim.validEventIds !== undefined) {
-    throw new ZuAuthAuthenticationError(
-      "validEventIds is defined but there are too many event IDs configured"
-    );
+  } else {
+    if (pcd.claim.validEventIds) {
+      throw new ZuAuthAuthenticationError(
+        "validEventIds is defined but checkEventIdWithoutRevealing is not enabled"
+      );
+    }
   }
 
   if (
