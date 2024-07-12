@@ -65,7 +65,7 @@ export function zuAuthRedirect(args: ZuAuthRedirectArgs): void {
  */
 export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
   const {
-    zupassUrl = "https://zupass.org",
+    zupassUrl = "https://zupass.org/",
     returnUrl,
     fieldsToReveal,
     watermark,
@@ -114,9 +114,9 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     publicKeys.push(em.publicKey);
   }
 
-  if (eventIds.length > 0 && !fieldsToReveal.revealEventId) {
+  if (eventIds.length > 20 && !fieldsToReveal.revealEventId) {
     throw new Error(
-      "When event IDs are specified for authentication, the event ID field must be revealed"
+      "Cannot check more than 20 event IDs without revealing the event ID field"
     );
   }
 
@@ -147,7 +147,7 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     },
     validEventIds: {
       argumentType: ArgumentTypeName.StringArray,
-      value: undefined,
+      value: eventIds,
       userProvided: false
     },
     fieldsToReveal: {
