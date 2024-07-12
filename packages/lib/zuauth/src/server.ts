@@ -10,8 +10,6 @@ import {
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { ZuAuthArgs } from ".";
 
-export class ZuAuthAuthenticationError extends Error {}
-
 /**
  * Check if a given field is defined.
  */
@@ -20,7 +18,7 @@ function checkIsDefined<T>(
   fieldName: string
 ): field is T {
   if (field === undefined || field === null) {
-    throw new ZuAuthAuthenticationError(
+    throw new Error(
       `Field "${fieldName}" is undefined and should have a revealed value`
     );
   }
@@ -32,7 +30,7 @@ function checkIsDefined<T>(
  */
 function checkIsUndefined(field: unknown, fieldName: string): boolean {
   if (field !== undefined) {
-    throw new ZuAuthAuthenticationError(
+    throw new Error(
       `Field "${fieldName}" is defined and should not have a revealed value`
     );
   }
@@ -92,22 +90,20 @@ export async function authenticate(
    */
   const serializedPCD = JSON.parse(pcdStr);
   if (serializedPCD.type !== ZKEdDSAEventTicketPCDTypeName) {
-    throw new ZuAuthAuthenticationError(
-      "PCD is malformed or of the incorrect type"
-    );
+    throw new Error("PCD is malformed or of the incorrect type");
   }
 
   const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(serializedPCD.pcd);
 
   if (!(await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
-    throw new ZuAuthAuthenticationError("ZK ticket PCD is not valid");
+    throw new Error("ZK ticket PCD is not valid");
   }
 
   /**
    * The configuration array must not be empty.
    */
   if (config.length === 0) {
-    throw new ZuAuthAuthenticationError("Configuration is empty");
+    throw new Error("Configuration is empty");
   }
 
   /**
@@ -115,25 +111,23 @@ export async function authenticate(
    */
   if (externalNullifier !== undefined) {
     if (pcd.claim.externalNullifier === undefined) {
-      throw new ZuAuthAuthenticationError(
+      throw new Error(
         "PCD is missing external nullifier when one was provided"
       );
     }
     if (
       pcd.claim.externalNullifier.toString() !== externalNullifier.toString()
     ) {
-      throw new ZuAuthAuthenticationError(
-        "External nullifier does not match the provided value"
-      );
+      throw new Error("External nullifier does not match the provided value");
     }
   } else if (pcd.claim.externalNullifier !== undefined) {
-    throw new ZuAuthAuthenticationError(
+    throw new Error(
       "PCD contains an external nullifier when none was provided"
     );
   }
 
   if (pcd.claim.watermark !== watermark.toString()) {
-    throw new ZuAuthAuthenticationError("PCD watermark does not match");
+    throw new Error("PCD watermark does not match");
   }
 
   /**
@@ -164,9 +158,7 @@ export async function authenticate(
   }
 
   if (!match) {
-    throw new ZuAuthAuthenticationError(
-      "PCD does not match any of the configured patterns"
-    );
+    throw new Error("PCD does not match any of the configured patterns");
   }
 
   return pcd;

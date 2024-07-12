@@ -21,7 +21,7 @@ import "mocha";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
 import { generateSnarkMessageHash } from "../../util/src/SNARKHelpers";
-import { ZuAuthAuthenticationError, authenticate } from "../src/server";
+import { authenticate } from "../src/server";
 import { constructZkTicketProofUrl } from "../src/zuauth";
 
 async function makeTestTicket(
@@ -198,7 +198,6 @@ describe("zuauth should work", async function () {
         ]
       })
     ).to.be.rejectedWith(
-      ZuAuthAuthenticationError,
       'Field "productId" is defined and should not have a revealed value'
     );
   });
@@ -225,10 +224,7 @@ describe("zuauth should work", async function () {
           }
         ]
       })
-    ).to.be.rejectedWith(
-      ZuAuthAuthenticationError,
-      "PCD does not match any of the configured patterns"
-    );
+    ).to.be.rejectedWith("PCD does not match any of the configured patterns");
   });
 
   it("should not authenticate PCDs with the wrong watermark", async function () {
@@ -253,10 +249,7 @@ describe("zuauth should work", async function () {
           }
         ]
       })
-    ).to.be.rejectedWith(
-      ZuAuthAuthenticationError,
-      "PCD watermark does not match"
-    );
+    ).to.be.rejectedWith("PCD watermark does not match");
   });
 
   it("should not authenticate PCDs with the wrong event ID", async function () {
@@ -280,10 +273,7 @@ describe("zuauth should work", async function () {
           }
         ]
       })
-    ).to.be.rejectedWith(
-      ZuAuthAuthenticationError,
-      "PCD does not match any of the configured patterns"
-    );
+    ).to.be.rejectedWith("PCD does not match any of the configured patterns");
   });
 
   it("should not authenticate PCDs with the wrong product ID", async function () {
@@ -307,10 +297,7 @@ describe("zuauth should work", async function () {
           }
         ]
       })
-    ).to.be.rejectedWith(
-      ZuAuthAuthenticationError,
-      "PCD does not match any of the configured patterns"
-    );
+    ).to.be.rejectedWith("PCD does not match any of the configured patterns");
   });
 
   it("should not authenticate a PCD which should have a revealed event ID but does not", async function () {
@@ -349,7 +336,6 @@ describe("zuauth should work", async function () {
         ]
       })
     ).to.be.rejectedWith(
-      ZuAuthAuthenticationError,
       `Field "eventId" is undefined and should have a revealed value`
     );
   });
@@ -390,7 +376,6 @@ describe("zuauth should work", async function () {
         ]
       })
     ).to.be.rejectedWith(
-      ZuAuthAuthenticationError,
       'Field "productId" is undefined and should have a revealed value'
     );
   });
