@@ -39,6 +39,9 @@ function checkIsUndefined(field: unknown, fieldName: string): boolean {
   return true;
 }
 
+/**
+ * Check if an individual configuration matches the claim from the PCD.
+ */
 function claimMatchesConfiguration(
   claim: ZKEdDSAEventTicketPCDClaim,
   config: PipelineZuAuthConfig
@@ -90,6 +93,9 @@ export async function authenticate(
     checkEventIdWithoutRevealing = false
   }: ZuAuthArgs
 ): Promise<ZKEdDSAEventTicketPCD> {
+  /**
+   * Check to see if our inputs are valid, beginning with the PCD.
+   */
   const serializedPCD = JSON.parse(pcdStr);
   if (serializedPCD.type !== ZKEdDSAEventTicketPCDTypeName) {
     throw new ZuAuthAuthenticationError(
@@ -103,7 +109,16 @@ export async function authenticate(
     throw new ZuAuthAuthenticationError("ZK ticket PCD is not valid");
   }
 
-  // Check if the external nullifier matches
+  /**
+   * The configuration array must not be empty.
+   */
+  if (config.length === 0) {
+    throw new ZuAuthAuthenticationError("Configuration is empty");
+  }
+
+  /**
+   * Check if the external nullifier matches the configuration.
+   */
   if (externalNullifier !== undefined) {
     if (pcd.claim.externalNullifier === undefined) {
       throw new ZuAuthAuthenticationError(
@@ -127,8 +142,12 @@ export async function authenticate(
     throw new ZuAuthAuthenticationError("PCD watermark does not match");
   }
 
-  // For each of the fields configured to be revealed, check that the claim
-  // contains values.
+  /**
+   * Check that the revealed fields in the PCD match the expectations set out
+   * in {@link revealedFields}. This is to ensure the consistency between the
+   * configuration passed to this function, and the configuration used on the
+   * client-side when generating the PCD.
+   */
   for (const [revealedField, fieldName] of Object.entries(revealedFields)) {
     if (fieldsToReveal[revealedField as keyof EdDSATicketFieldsToReveal]) {
       checkIsDefined(pcd.claim.partialTicket[fieldName], fieldName);
@@ -137,32 +156,37 @@ export async function authenticate(
     }
   }
 
-  if (config.length === 0) {
-    throw new ZuAuthAuthenticationError("Configuration is empty");
-  }
-
+  /**
+   * If {@link checkEventWithoutRevealing} is set to true, then the claim
+   * should also include `validEventIds`, and these should match the events
+   * contained in the configuration. There should also be a maximum of 20
+   * configured events.
+   */
   if (checkEventIdWithoutRevealing) {
     if (pcd.claim.validEventIds === undefined) {
       throw new ZuAuthAuthenticationError(
         "checkEventIdWithoutRevealing is enabled but validEventIds is not defined"
       );
     }
-    if (config.length > 20) {
+    const eventIds = new Set(config.map((em) => em.eventId));
+    if (eventIds.size > 20) {
       throw new ZuAuthAuthenticationError(
         "checkEventIdWithoutRevealing is enabled but there are too many event IDs configured (maximum 20)"
       );
     }
     if (
       pcd.claim.validEventIds.length !== config.length ||
-      pcd.claim.validEventIds.some(
-        (eventId) => !config.find((em) => em.eventId === eventId)
-      )
+      pcd.claim.validEventIds.some((eventId) => !eventIds.has(eventId))
     ) {
       throw new ZuAuthAuthenticationError(
         "validEventIds does not match configured event IDs"
       );
     }
   } else {
+    /**
+     * If {@link checkEventWithoutRevealing} is false, `validEventIds` should
+     * not be set.
+     */
     if (pcd.claim.validEventIds) {
       throw new ZuAuthAuthenticationError(
         "validEventIds is defined but checkEventIdWithoutRevealing is not enabled"
@@ -170,6 +194,10 @@ export async function authenticate(
     }
   }
 
+  /**
+   * Our inputs are formally valid. Now we check to see if any of the
+   * configuration patterns match the claim in the PCD.
+   */
   let match = false;
 
   for (const em of config) {
