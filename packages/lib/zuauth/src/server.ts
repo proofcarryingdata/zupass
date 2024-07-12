@@ -1,8 +1,10 @@
 import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { ITicketData } from "@pcd/eddsa-ticket-pcd";
+import { PipelineZuAuthConfig } from "@pcd/passport-interface";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCD,
+  ZKEdDSAEventTicketPCDClaim,
   ZKEdDSAEventTicketPCDPackage,
   ZKEdDSAEventTicketPCDTypeName
 } from "@pcd/zk-eddsa-event-ticket-pcd";
@@ -35,6 +37,18 @@ function checkIsUndefined(field: unknown, fieldName: string): boolean {
     );
   }
   return true;
+}
+
+function claimMatchesConfiguration(
+  claim: ZKEdDSAEventTicketPCDClaim,
+  config: PipelineZuAuthConfig
+): boolean {
+  return (
+    isEqualEdDSAPublicKey(claim.signer, config.publicKey) &&
+    claim.partialTicket.eventId === config.eventId &&
+    !!config.productId &&
+    claim.partialTicket.productId === config.productId
+  );
 }
 
 const revealedFields: Record<
@@ -127,29 +141,22 @@ export async function authenticate(
     throw new ZuAuthAuthenticationError("Configuration is empty");
   }
 
-  const publicKeys = config.map((em) => em.publicKey);
-  const eventIds = new Set(config.map((em) => em.eventId));
-  const productIds = new Set(
-    // Product ID is optional, so it's important to filter out undefined values
-    config
-      .map((em) => em.productId)
-      .filter((productId) => productId !== undefined)
-  );
-
   if (checkEventIdWithoutRevealing) {
     if (pcd.claim.validEventIds === undefined) {
       throw new ZuAuthAuthenticationError(
         "checkEventIdWithoutRevealing is enabled but validEventIds is not defined"
       );
     }
-    if (eventIds.size > 20) {
+    if (config.length > 20) {
       throw new ZuAuthAuthenticationError(
         "checkEventIdWithoutRevealing is enabled but there are too many event IDs configured (maximum 20)"
       );
     }
     if (
-      pcd.claim.validEventIds.length !== eventIds.size ||
-      pcd.claim.validEventIds.some((eventId) => !eventIds.has(eventId))
+      pcd.claim.validEventIds.length !== config.length ||
+      pcd.claim.validEventIds.some(
+        (eventId) => !config.find((em) => em.eventId === eventId)
+      )
     ) {
       throw new ZuAuthAuthenticationError(
         "validEventIds does not match configured event IDs"
@@ -163,36 +170,18 @@ export async function authenticate(
     }
   }
 
-  if (
-    publicKeys.length > 0 &&
-    !publicKeys.find((pubKey) =>
-      isEqualEdDSAPublicKey(pubKey, pcd.claim.signer)
-    )
-  ) {
-    throw new ZuAuthAuthenticationError(
-      "Signing key does not match any of the configured public keys"
-    );
+  let match = false;
+
+  for (const em of config) {
+    if (claimMatchesConfiguration(pcd.claim, em)) {
+      match = true;
+      break;
+    }
   }
 
-  if (
-    eventIds.size > 0 &&
-    fieldsToReveal.revealEventId === true &&
-    checkIsDefined<string>(pcd.claim.partialTicket.eventId, "eventId") &&
-    !eventIds.has(pcd.claim.partialTicket.eventId)
-  ) {
+  if (!match) {
     throw new ZuAuthAuthenticationError(
-      "Event ID does not match any of the configured event IDs"
-    );
-  }
-
-  if (
-    productIds.size > 0 &&
-    pcd.claim.partialTicket.productId &&
-    checkIsDefined<string>(pcd.claim.partialTicket.productId, "productId") &&
-    !productIds.has(pcd.claim.partialTicket.productId)
-  ) {
-    throw new ZuAuthAuthenticationError(
-      "Product ID does not match any of the configured product IDs"
+      "PCD does not match any of the configured patterns"
     );
   }
 

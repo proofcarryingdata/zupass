@@ -243,7 +243,7 @@ describe("zuauth should work", async function () {
       })
     ).to.be.rejectedWith(
       ZuAuthAuthenticationError,
-      "Signing key does not match any of the configured public keys"
+      "PCD does not match any of the configured patterns"
     );
   });
 
@@ -298,7 +298,7 @@ describe("zuauth should work", async function () {
       })
     ).to.be.rejectedWith(
       ZuAuthAuthenticationError,
-      "Event ID does not match any of the configured event IDs"
+      "PCD does not match any of the configured patterns"
     );
   });
 
@@ -325,7 +325,7 @@ describe("zuauth should work", async function () {
       })
     ).to.be.rejectedWith(
       ZuAuthAuthenticationError,
-      "Product ID does not match any of the configured product IDs"
+      "PCD does not match any of the configured patterns"
     );
   });
 
@@ -500,7 +500,7 @@ describe("zuauth should work", async function () {
       })
     ).to.be.rejectedWith(
       ZuAuthAuthenticationError,
-      "Event ID does not match any of the configured event IDs"
+      "PCD does not match any of the configured patterns"
     );
   });
 
