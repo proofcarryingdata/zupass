@@ -118,8 +118,8 @@ describe("zuauth should work", async function () {
   const privKey = newEdDSAPrivateKey();
 
   const watermark = generateSnarkMessageHash("watermark").toString();
-  let zkPCDWithRevealedEventId: ZKEdDSAEventTicketPCD;
-  let serializedZKPCDWithRevealedEventId: SerializedPCD<ZKEdDSAEventTicketPCD>;
+  let zkPCD: ZKEdDSAEventTicketPCD;
+  let serializedZKPCD: SerializedPCD<ZKEdDSAEventTicketPCD>;
   let ticketPCD: EdDSATicketPCD;
 
   this.beforeAll(async () => {
@@ -132,7 +132,7 @@ describe("zuauth should work", async function () {
 
     ticketPCD = await makeTestTicket(privKey, testTicket);
 
-    zkPCDWithRevealedEventId = await makeZKTicketPCD(
+    zkPCD = await makeZKTicketPCD(
       ticketPCD,
       identity,
       watermark,
@@ -142,33 +142,29 @@ describe("zuauth should work", async function () {
       },
       undefined
     );
-    serializedZKPCDWithRevealedEventId =
-      await ZKEdDSAEventTicketPCDPackage.serialize(zkPCDWithRevealedEventId);
+    serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
   });
 
   it("should authenticate PCDs with correct settings", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
 
-    const resultPCD = await authenticate(
-      JSON.stringify(serializedZKPCDWithRevealedEventId),
-      {
-        watermark,
-        fieldsToReveal: {
-          revealEventId: true,
-          revealProductId: true
-        },
-        config: [
-          {
-            eventId: testTicket.eventId,
-            eventName: testTicket.eventName,
-            productId: testTicket.productId,
-            productName: testTicket.ticketName,
-            pcdType: EdDSATicketPCDTypeName,
-            publicKey
-          }
-        ]
-      }
-    );
+    const resultPCD = await authenticate(JSON.stringify(serializedZKPCD), {
+      watermark,
+      fieldsToReveal: {
+        revealEventId: true,
+        revealProductId: true
+      },
+      config: [
+        {
+          eventId: testTicket.eventId,
+          eventName: testTicket.eventName,
+          productId: testTicket.productId,
+          productName: testTicket.ticketName,
+          pcdType: EdDSATicketPCDTypeName,
+          publicKey
+        }
+      ]
+    });
 
     expect(resultPCD.type).to.eq(ZKEdDSAEventTicketPCDTypeName);
     expect(resultPCD.claim.partialTicket.eventId).to.eq(testTicket.eventId);
@@ -179,7 +175,7 @@ describe("zuauth should work", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
 
     await expect(
-      authenticate(JSON.stringify(serializedZKPCDWithRevealedEventId), {
+      authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
           revealEventId: true,
@@ -207,7 +203,7 @@ describe("zuauth should work", async function () {
     const publicKey = await getEdDSAPublicKey(newPrivKey);
 
     await expect(
-      authenticate(JSON.stringify(serializedZKPCDWithRevealedEventId), {
+      authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
           revealEventId: true,
@@ -232,7 +228,7 @@ describe("zuauth should work", async function () {
     const newWatermark = generateSnarkMessageHash("new watermark").toString();
 
     await expect(
-      authenticate(JSON.stringify(serializedZKPCDWithRevealedEventId), {
+      authenticate(JSON.stringify(serializedZKPCD), {
         watermark: newWatermark,
         fieldsToReveal: {
           revealEventId: true,
@@ -256,7 +252,7 @@ describe("zuauth should work", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
 
     await expect(
-      authenticate(JSON.stringify(serializedZKPCDWithRevealedEventId), {
+      authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
           revealEventId: true,
@@ -280,7 +276,7 @@ describe("zuauth should work", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
 
     await expect(
-      authenticate(JSON.stringify(serializedZKPCDWithRevealedEventId), {
+      authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
           revealEventId: true,
