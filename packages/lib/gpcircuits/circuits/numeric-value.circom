@@ -32,6 +32,6 @@ template NumericValueModule() {
     signal input maxValue;
 
     // Check that minValue <= numericValue <= maxValue.
-    signal boundsCheck <== BoundsCheckModule(64)(numericValue, minValue, maxValue);
+    signal boundsCheck <== BoundsCheckModule(63)(numericValue, minValue, maxValue);
     boundsCheck === 1;
 }

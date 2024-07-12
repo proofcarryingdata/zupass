@@ -28,7 +28,7 @@ template OwnerModuleSemaphoreV3 () {
     // Private secrets of owner's Semaphore V3 identity kept hidden and verified.
     signal input identityNullifier, identityTrapdoor;
 
-    // Hash of owner's identity commitment (public) to be verified.
+    // Value hash of owner's identity commitment (public) to be verified.
     signal input identityCommitmentHash;
 
     // Verify semaphore private secrets match the commitment in the POD by

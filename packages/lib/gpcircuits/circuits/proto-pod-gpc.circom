@@ -223,7 +223,7 @@ template ProtoPODGPC (
     signal input numericValues[MAX_NUMERIC_VALUES];
     signal input numericValueEntryIndices[MAX_NUMERIC_VALUES];
     
-    // Arrays of (inclusive) 64-bit unsigned integer bounds, where the
+    // Arrays of (inclusive) 63-bit unsigned integer bounds, where the
     // ith element of each array specifies the minimum or maximum
     // value that the ith value being checked can take. Note that
     // these bounds are not constrained here; since they are public
