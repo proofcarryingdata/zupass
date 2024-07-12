@@ -25,6 +25,18 @@ function checkIsDefined<T>(
   return true;
 }
 
+/**
+ * Check if a given field is undefined.
+ */
+function checkIsUndefined(field: unknown, fieldName: string): boolean {
+  if (field !== undefined) {
+    throw new ZuAuthAuthenticationError(
+      `Field "${fieldName}" is defined and should not have a revealed value`
+    );
+  }
+  return true;
+}
+
 const revealedFields: Record<
   keyof EdDSATicketFieldsToReveal,
   keyof ITicketData
@@ -100,6 +112,8 @@ export async function authenticate(
   for (const [revealedField, fieldName] of Object.entries(revealedFields)) {
     if (fieldsToReveal[revealedField as keyof EdDSATicketFieldsToReveal]) {
       checkIsDefined(pcd.claim.partialTicket[fieldName], fieldName);
+    } else {
+      checkIsUndefined(pcd.claim.partialTicket[fieldName], fieldName);
     }
   }
 

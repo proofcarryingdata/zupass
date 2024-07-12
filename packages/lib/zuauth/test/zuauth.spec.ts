@@ -172,6 +172,34 @@ describe("zuauth should work", async function () {
     expect(resultPCD.claim.partialTicket.productId).to.eq(testTicket.productId);
   });
 
+  it("should not authenticate PCD where fields are unexpectedly revealed", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+
+    await expect(
+      authenticate(JSON.stringify(serializedZKPCD), {
+        watermark,
+        fieldsToReveal: {
+          revealEventId: true,
+          // Product ID is revealed in the PCD but should not be
+          revealProductId: false
+        },
+        config: [
+          {
+            eventId: testTicket.eventId,
+            eventName: testTicket.eventName,
+            productId: testTicket.productId,
+            productName: testTicket.ticketName,
+            pcdType: EdDSATicketPCDTypeName,
+            publicKey
+          }
+        ]
+      })
+    ).to.be.rejectedWith(
+      ZuAuthAuthenticationError,
+      'Field "productId" is defined and should not have a revealed value'
+    );
+  });
+
   it("should not authenticate PCDs with the wrong public key", async function () {
     const newPrivKey = newEdDSAPrivateKey();
     const publicKey = await getEdDSAPublicKey(newPrivKey);
@@ -343,7 +371,7 @@ describe("zuauth should work", async function () {
       authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
-          revealEventId: false,
+          revealEventId: true,
           revealProductId: true
         },
         config: badConfig
@@ -404,8 +432,8 @@ describe("zuauth should work", async function () {
       authenticate(JSON.stringify(serializedZKPCD), {
         watermark,
         fieldsToReveal: {
-          revealEventId: false,
-          revealProductId: false
+          revealEventId: true,
+          revealProductId: true
         },
         config: [
           {
