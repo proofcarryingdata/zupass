@@ -116,7 +116,7 @@
     "@types/zxcvbn": "^4.4.4",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
-    "@pcd/proto-pod-gpc-artifacts": "0.3.0",
+    "@pcd/proto-pod-gpc-artifacts": "0.4.0",
     "esbuild": "^0.17.10",
     "esbuild-visualizer": "^0.4.1",
     "eslint": "8.57.0",
