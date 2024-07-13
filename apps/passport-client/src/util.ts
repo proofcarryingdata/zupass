@@ -63,6 +63,8 @@ export function isProtocolWorldsUrl(text: string): boolean {
 
 function getVerifyUrlPrefixes(): string[] {
   return [
+    `${window.location.origin}/#/add`,
+    `${window.location.origin}#/add`,
     `${window.location.origin}/#/verify`,
     `${window.location.origin}#/verify`,
     `${window.location.origin}/#/checkin`,
