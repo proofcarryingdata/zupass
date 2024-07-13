@@ -24,8 +24,6 @@ export type ProtoPODGPCInputs = {
   // Entry modules [MAX_ENTRIES].
   /*PUB*/ entryObjectIndex: CircuitSignal /*MAX_ENTRIES*/[];
   /*PUB*/ entryNameHash: CircuitSignal /*MAX_ENTRIES*/[];
-  entryValue: CircuitSignal /*MAX_ENTRIES*/[];
-  /*PUB*/ entryIsValueEnabled: CircuitSignal /*MAX_ENTRIES packed bits*/;
   /*PUB*/ entryIsValueHashRevealed: CircuitSignal /*MAX_ENTRIES packed bits*/;
   entryProofDepth: CircuitSignal /*MAX_ENTRIES*/[];
   entryProofIndex: CircuitSignal /*MAX_ENTRIES*/[] /*MERKLE_MAX_DEPTH packed bits*/;
@@ -44,10 +42,11 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
   /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
 
-  // Bounds check module (1)
-  /*PUB*/ boundsCheckEntryIndices: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
-  /*PUB*/ boundsCheckMinValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
-  /*PUB*/ boundsCheckMaxValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
+  // Numeric value modules [MAX_NUMERIC_VALUES].
+  numericValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
+  /*PUB*/ numericValueEntryIndices: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
+  /*PUB*/ numericMinValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
+  /*PUB*/ numericMaxValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
 
   // MultiTuple module (1)
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
@@ -73,8 +72,6 @@ export type ProtoPODGPCInputNamesType = [
   "objectSignatureS",
   "entryObjectIndex",
   "entryNameHash",
-  "entryValue",
-  "entryIsValueEnabled",
   "entryIsValueHashRevealed",
   "entryProofDepth",
   "entryProofIndex",
@@ -86,9 +83,10 @@ export type ProtoPODGPCInputNamesType = [
   "ownerSemaphoreV3IdentityTrapdoor",
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
-  "boundsCheckEntryIndices",
-  "boundsCheckMinValues",
-  "boundsCheckMaxValues",
+  "numericValues",
+  "numericValueEntryIndices",
+  "numericMinValues",
+  "numericMaxValues",
   "tupleIndices",
   "listComparisonValueIndex",
   "listContainsComparisonValue",
@@ -104,7 +102,6 @@ export type ProtoPODGPCPublicInputs = {
   // Entry modules [MAX_ENTRIES].
   /*PUB*/ entryObjectIndex: CircuitSignal /*MAX_ENTRIES*/[];
   /*PUB*/ entryNameHash: CircuitSignal /*MAX_ENTRIES*/[];
-  /*PUB*/ entryIsValueEnabled: CircuitSignal /*MAX_ENTRIES packed bits*/;
   /*PUB*/ entryIsValueHashRevealed: CircuitSignal /*MAX_ENTRIES packed bits*/;
 
   // Virtual entry module [MAX_VIRTUAL_ENTRIES].
@@ -119,9 +116,9 @@ export type ProtoPODGPCPublicInputs = {
   /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
 
   // Bounds check module (1)
-  /*PUB*/ boundsCheckEntryIndices: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
-  /*PUB*/ boundsCheckMinValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
-  /*PUB*/ boundsCheckMaxValues: CircuitSignal /*MAX_BOUNDS_CHECKS*/[];
+  /*PUB*/ numericValueEntryIndices: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
+  /*PUB*/ numericMinValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
+  /*PUB*/ numericMaxValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
 
   // Tuple module (1)
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
@@ -141,16 +138,15 @@ export type ProtoPODGPCPublicInputs = {
 export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "entryObjectIndex",
   "entryNameHash",
-  "entryIsValueEnabled",
   "entryIsValueHashRevealed",
   "virtualEntryIsValueHashRevealed",
   "entryEqualToOtherEntryByIndex",
   "ownerEntryIndex",
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
-  "boundsCheckEntryIndices",
-  "boundsCheckMinValues",
-  "boundsCheckMaxValues",
+  "numericValueEntryIndices",
+  "numericMinValues",
+  "numericMaxValues",
   "tupleIndices",
   "listComparisonValueIndex",
   "listContainsComparisonValue",
@@ -198,12 +194,12 @@ export type ProtoPODGPCCircuitParams = {
   merkleMaxDepth: number;
 
   /**
-   * Number of bounds checks.
+   * Number of numeric values.
    */
-  maxBoundsChecks: number;
+  maxNumericValues: number;
 
   /**
-   * Number of membership lists
+   * Number of membership lists.
    */
   maxLists: number;
 
@@ -231,7 +227,7 @@ export function ProtoPODGPCCircuitParams(
   maxObjects: number,
   maxEntries: number,
   merkleMaxDepth: number,
-  maxBoundsChecks: number,
+  maxNumericValues: number,
   maxLists: number,
   maxListElements: number,
   maxTuples: number,
@@ -241,7 +237,7 @@ export function ProtoPODGPCCircuitParams(
     maxObjects,
     maxEntries,
     merkleMaxDepth,
-    maxBoundsChecks,
+    maxNumericValues,
     maxLists,
     maxListElements,
     maxTuples,
@@ -261,7 +257,7 @@ export function protoPODGPCCircuitParamArray(
     params.maxObjects,
     params.maxEntries,
     params.merkleMaxDepth,
-    params.maxBoundsChecks,
+    params.maxNumericValues,
     params.maxLists,
     params.maxListElements,
     params.maxTuples,
@@ -383,7 +379,6 @@ export class ProtoPODGPC {
     return {
       entryObjectIndex: allInputs.entryObjectIndex,
       entryNameHash: allInputs.entryNameHash,
-      entryIsValueEnabled: allInputs.entryIsValueEnabled,
       entryIsValueHashRevealed: allInputs.entryIsValueHashRevealed,
       virtualEntryIsValueHashRevealed:
         allInputs.virtualEntryIsValueHashRevealed,
@@ -391,9 +386,9 @@ export class ProtoPODGPC {
       ownerEntryIndex: allInputs.ownerEntryIndex,
       ownerExternalNullifier: allInputs.ownerExternalNullifier,
       ownerIsNullfierHashRevealed: allInputs.ownerIsNullfierHashRevealed,
-      boundsCheckEntryIndices: allInputs.boundsCheckEntryIndices,
-      boundsCheckMinValues: allInputs.boundsCheckMinValues,
-      boundsCheckMaxValues: allInputs.boundsCheckMaxValues,
+      numericValueEntryIndices: allInputs.numericValueEntryIndices,
+      numericMinValues: allInputs.numericMinValues,
+      numericMaxValues: allInputs.numericMaxValues,
       tupleIndices: allInputs.tupleIndices,
       listComparisonValueIndex: allInputs.listComparisonValueIndex,
       listContainsComparisonValue: allInputs.listContainsComparisonValue,
@@ -438,16 +433,15 @@ export class ProtoPODGPC {
       outputs.ownerRevealedNullifierHash,
       ...inputs.entryObjectIndex,
       ...inputs.entryNameHash,
-      inputs.entryIsValueEnabled,
       inputs.entryIsValueHashRevealed,
       inputs.virtualEntryIsValueHashRevealed,
       ...inputs.entryEqualToOtherEntryByIndex,
       inputs.ownerEntryIndex,
       inputs.ownerExternalNullifier,
       inputs.ownerIsNullfierHashRevealed,
-      ...inputs.boundsCheckEntryIndices,
-      ...inputs.boundsCheckMinValues.flat(),
-      ...inputs.boundsCheckMaxValues.flat(),
+      ...inputs.numericValueEntryIndices,
+      ...inputs.numericMinValues,
+      ...inputs.numericMaxValues,
       ...inputs.tupleIndices.flat(),
       ...inputs.listComparisonValueIndex,
       inputs.listContainsComparisonValue,
@@ -517,7 +511,7 @@ export class ProtoPODGPC {
       circuitDesc.maxObjects >= requiredParams.maxObjects &&
       circuitDesc.maxEntries >= requiredParams.maxEntries &&
       circuitDesc.merkleMaxDepth >= requiredParams.merkleMaxDepth &&
-      circuitDesc.maxBoundsChecks >= requiredParams.maxBoundsChecks &&
+      circuitDesc.maxNumericValues >= requiredParams.maxNumericValues &&
       circuitDesc.maxLists >= requiredParams.maxLists &&
       circuitDesc.maxListElements >= requiredParams.maxListElements &&
       circuitDesc.maxTuples >= requiredParams.maxTuples &&
@@ -548,7 +542,7 @@ export class ProtoPODGPC {
    * Generates a circuit name based on parameters.
    */
   public static circuitNameForParams(params: ProtoPODGPCCircuitParams): string {
-    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md-${params.maxBoundsChecks}bc-${params.maxLists}x${params.maxListElements}l-${params.maxTuples}x${params.tupleArity}t`;
+    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md-${params.maxNumericValues}nv-${params.maxLists}x${params.maxListElements}l-${params.maxTuples}x${params.tupleArity}t`;
   }
 
   private static circuitDescForParams(
@@ -593,5 +587,5 @@ export class ProtoPODGPC {
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.3.0";
+  public static ARTIFACTS_NPM_VERSION = "0.4.0";
 }

@@ -321,11 +321,11 @@ export function compileProofConfig(
     entryConstraintMetadata.firstOwnerIndex
   );
 
-  // Create bounds check inputs
-  const circuitBoundsCheckInputs = compileProofBoundsChecks(
+  // Create numeric value module inputs.
+  const circuitNumericValueInputs = compileProofNumericValues(
     proofConfig,
     entryMap,
-    circuitDesc.maxBoundsChecks
+    circuitDesc.maxNumericValues
   );
 
   // Create subset of inputs for multituple module padded to max size.
@@ -367,7 +367,7 @@ export function compileProofConfig(
     ...circuitVirtualEntryInputs,
     ...circuitEntryConstraintInputs,
     ...circuitOwnerInputs,
-    ...circuitBoundsCheckInputs,
+    ...circuitNumericValueInputs,
     ...circuitMultiTupleInputs,
     ...circuitListMembershipInputs,
     ...circuitGlobalInputs
@@ -392,66 +392,110 @@ function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
   };
 }
 
-function compileProofBoundsChecks<
+function compileProofNumericValues(
+  proofConfig: GPCProofConfig,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<POD>>,
+  paramNumericValues: number
+): {
+  numericValues: CircuitSignal[];
+  numericValueEntryIndices: CircuitSignal[];
+  numericMinValues: CircuitSignal[];
+  numericMaxValues: CircuitSignal[];
+} {
+  const {
+    numericValueIdOrder,
+    numericValueEntryIndices,
+    numericMinValues,
+    numericMaxValues
+  } = compileCommonNumericValues(proofConfig, entryMap, paramNumericValues);
+
+  // Compile numeric entry values.
+  const unpaddedNumericValues: bigint[] = numericValueIdOrder.map((entryId) => {
+    const entryName = entryMap.get(entryId)?.entryName;
+    if (entryName === undefined) {
+      throw new ReferenceError(`Missing entry name for identifier ${entryId}.`);
+    }
+
+    const entryValue = entryMap
+      .get(entryId)
+      ?.objInput?.content.getValue(entryName);
+
+    if (entryValue?.type !== "int") {
+      throw new TypeError("Type of value of entry ${entryId} must be 'int'.");
+    }
+
+    return entryValue.value;
+  });
+
+  return {
+    // Pad with 0s.
+    numericValues: padArray(unpaddedNumericValues, paramNumericValues, 0n),
+    numericValueEntryIndices,
+    numericMinValues,
+    numericMaxValues
+  };
+}
+
+function compileCommonNumericValues<
   ObjInput extends POD | GPCRevealedObjectClaims
 >(
   proofConfig: GPCProofConfig,
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
-  paramBoundsChecks: number
+  paramNumericValues: number
 ): {
-  boundsCheckEntryIndices: CircuitSignal[];
-  boundsCheckMinValues: CircuitSignal[];
-  boundsCheckMaxValues: CircuitSignal[];
+  numericValueIdOrder: PODEntryIdentifier[];
+  numericValueEntryIndices: CircuitSignal[];
+  numericMinValues: CircuitSignal[];
+  numericMaxValues: CircuitSignal[];
 } {
   const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
+
   // Arrange POD entry identifiers according to {@link podEntryIdentifierCompare}.
-  const boundsCheckIdOrder = (
+  const numericValueIdOrder = (
     Object.keys(boundsCheckConfig) as PODEntryIdentifier[]
   ).sort(podEntryIdentifierCompare);
 
   // Compile entry indices
-  const unpaddedBoundsCheckEntryIndices = boundsCheckIdOrder.map((entryId) => {
-    const idx = entryMap.get(entryId)?.entryIndex;
+  const unpaddedNumericValueEntryIndices = numericValueIdOrder.map(
+    (entryId) => {
+      const idx = entryMap.get(entryId)?.entryIndex;
 
-    if (idx === undefined) {
-      throw new ReferenceError(`Missing input for identifier ${entryId}.`);
+      if (idx === undefined) {
+        throw new ReferenceError(`Missing input for identifier ${entryId}.`);
+      }
+
+      return BigInt(idx);
     }
-
-    return BigInt(idx);
-  });
+  );
 
   // Compile minimum values.
-  const unpaddedBoundsCheckMinValues = boundsCheckIdOrder.map(
+  const unpaddedNumericMinValues = numericValueIdOrder.map(
     (entryId) => boundsCheckConfig[entryId].min
   );
 
   // Compile maximum values.
-  const unpaddedBoundsCheckMaxValues = boundsCheckIdOrder.map(
+  const unpaddedNumericMaxValues = numericValueIdOrder.map(
     (entryId) => boundsCheckConfig[entryId].max
   );
 
-  // Return with padding.
   return {
+    numericValueIdOrder,
     // Pad with index -1 (mod p), which is a reference to the value 0.
-    boundsCheckEntryIndices: padArray(
-      unpaddedBoundsCheckEntryIndices,
-      paramBoundsChecks,
+    numericValueEntryIndices: padArray(
+      unpaddedNumericValueEntryIndices,
+      paramNumericValues,
       BABY_JUB_NEGATIVE_ONE
     ),
     // Pad with 0s, which amounts to a lower bound of 0 for those padded entries
     // with value 0.
-    boundsCheckMinValues: padArray(
-      unpaddedBoundsCheckMinValues,
-      paramBoundsChecks,
+    numericMinValues: padArray(
+      unpaddedNumericMinValues,
+      paramNumericValues,
       0n
     ),
     // Pad with 0s, which amounts to an upper bound of 0 for those padded
     // entries with value 0.
-    boundsCheckMaxValues: padArray(
-      unpaddedBoundsCheckMaxValues,
-      paramBoundsChecks,
-      0n
-    )
+    numericMaxValues: padArray(unpaddedNumericMaxValues, paramNumericValues, 0n)
   };
 }
 
@@ -610,18 +654,6 @@ function compileProofEntry(
     entryInfo.entryName
   );
 
-  // Plaintext value is only enabled if it is needed by some other configured
-  // constraint, which for now is only the owner commitment and bounds checks.
-  const isValueEnabled =
-    !!entryInfo.entryConfig.isOwnerID || !!entryInfo.entryConfig.inRange;
-  let entryValue = BABY_JUB_NEGATIVE_ONE;
-  if (isValueEnabled) {
-    if (entrySignals.value === undefined) {
-      throw new Error("Numeric entry value is unavailable when required.");
-    }
-    entryValue = entrySignals.value;
-  }
-
   return {
     objectIndex: BigInt(entryInfo.objIndex),
     nameHash: entrySignals.nameHash,
@@ -631,9 +663,7 @@ function compileProofEntry(
     proofSiblings: extendedSignalArray(
       entrySignals.proof.siblings,
       merkleMaxDepth
-    ),
-    value: entryValue,
-    isValueEnabled: isValueEnabled ? 1n : 0n
+    )
   };
 }
 
@@ -675,8 +705,6 @@ function combineProofEntries(
 ): {
   entryObjectIndex: CircuitSignal /*MAX_ENTRIES*/[];
   entryNameHash: CircuitSignal /*MAX_ENTRIES*/[];
-  entryValue: CircuitSignal /*MAX_ENTRIES*/[];
-  entryIsValueEnabled: CircuitSignal /*MAX_ENTRIES packed bits*/;
   entryIsValueHashRevealed: CircuitSignal /*MAX_ENTRIES packed bits*/;
   entryProofDepth: CircuitSignal /*MAX_ENTRIES*/[];
   entryProofIndex: CircuitSignal /*MAX_ENTRIES*/[] /*MERKLE_MAX_DEPTH packed bits*/;
@@ -695,9 +723,7 @@ function combineProofEntries(
       isValueHashRevealed: 0n,
       proofDepth: allEntryInputs[0].proofDepth,
       proofIndex: allEntryInputs[0].proofIndex,
-      proofSiblings: [...allEntryInputs[0].proofSiblings],
-      value: 0n,
-      isValueEnabled: 0n
+      proofSiblings: [...allEntryInputs[0].proofSiblings]
     });
   }
 
@@ -707,10 +733,6 @@ function combineProofEntries(
     // ContentID holding index is a lie, but it allows reusing the inputs type.
     entryObjectIndex: allEntryInputs.map((e) => e.objectIndex),
     entryNameHash: allEntryInputs.map((e) => e.nameHash),
-    entryValue: allEntryInputs.map((e) => e.value),
-    entryIsValueEnabled: array2Bits(
-      allEntryInputs.map((e) => e.isValueEnabled)
-    ),
     entryIsValueHashRevealed: array2Bits(
       allEntryInputs.map((e) => e.isValueHashRevealed)
     ),
@@ -899,12 +921,13 @@ export function compileVerifyConfig(
     entryConstraintMetadata.firstOwnerIndex
   );
 
-  // Create bounds check inputs
-  const circuitBoundsCheckInputs = compileProofBoundsChecks(
-    verifyConfig,
-    entryMap,
-    circuitDesc.maxBoundsChecks
-  );
+  // Create numeric value module inputs
+  const { numericValueIdOrder: _, ...circuitNumericValueInputs } =
+    compileCommonNumericValues(
+      verifyConfig,
+      entryMap,
+      circuitDesc.maxNumericValues
+    );
 
   // Create subset of inputs for multituple module padded to max size.
   const circuitMultiTupleInputs = compileProofMultiTuples(
@@ -953,7 +976,7 @@ export function compileVerifyConfig(
       ...circuitVirtualEntryInputs,
       ...circuitEntryConstraintInputs,
       ...circuitOwnerInputs,
-      ...circuitBoundsCheckInputs,
+      ...circuitNumericValueInputs,
       ...circuitMultiTupleInputs,
       ...circuitListMembershipInputs,
       ...circuitGlobalInputs
@@ -969,7 +992,6 @@ export function compileVerifyConfig(
 type CompilerVerifyEntryInputs = {
   objectIndex: CircuitSignal;
   nameHash: CircuitSignal;
-  isValueEnabled: CircuitSignal;
   isValueHashRevealed: CircuitSignal;
 };
 
@@ -980,11 +1002,6 @@ type CompilerVerifyEntryOutputs = {
 function compileVerifyEntry(
   entryInfo: CompilerEntryInfo<GPCRevealedObjectClaims>
 ): { inputs: CompilerVerifyEntryInputs; outputs: CompilerVerifyEntryOutputs } {
-  // Plaintext value is only enabled if it is needed by some other configured
-  // constraint, which for now is only the owner commitment and bounds checks.
-  const isValueEnabled =
-    !!entryInfo.entryConfig.isOwnerID || !!entryInfo.entryConfig.inRange;
-
   // Fetch the entry value, if it's configured to be revealed.
   let revealedEntryValue: PODValue | undefined = undefined;
   if (entryInfo.entryConfig.isRevealed) {
@@ -1003,7 +1020,6 @@ function compileVerifyEntry(
     inputs: {
       objectIndex: BigInt(entryInfo.objIndex),
       nameHash: podNameHash(entryInfo.entryName),
-      isValueEnabled: isValueEnabled ? 1n : 0n,
       isValueHashRevealed: entryInfo.entryConfig.isRevealed ? 1n : 0n
     },
     outputs: {
@@ -1025,7 +1041,6 @@ function combineVerifyEntries(
   circuitEntryInputs: {
     entryObjectIndex: CircuitSignal[];
     entryNameHash: CircuitSignal[];
-    entryIsValueEnabled: CircuitSignal;
     entryIsValueHashRevealed: CircuitSignal;
   };
   circuitEntryOutputs: {
@@ -1042,7 +1057,6 @@ function combineVerifyEntries(
       inputs: {
         objectIndex: allEntryInputsOutputs[0].inputs.objectIndex,
         nameHash: allEntryInputsOutputs[0].inputs.nameHash,
-        isValueEnabled: 0n,
         isValueHashRevealed: 0n
       },
       outputs: {
@@ -1059,9 +1073,6 @@ function combineVerifyEntries(
         (io) => io.inputs.objectIndex
       ),
       entryNameHash: allEntryInputsOutputs.map((io) => io.inputs.nameHash),
-      entryIsValueEnabled: array2Bits(
-        allEntryInputsOutputs.map((io) => io.inputs.isValueEnabled)
-      ),
       entryIsValueHashRevealed: array2Bits(
         allEntryInputsOutputs.map((io) => io.inputs.isValueHashRevealed)
       )

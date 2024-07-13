@@ -516,9 +516,9 @@ export type GPCRequirements = {
   merkleMaxDepth: number;
 
   /**
-   * Number of bounds checks required for the proof.
+   * Number of numeric values (bounds checks) required for the proof.
    */
-  nBoundsChecks: number;
+  nNumericValues: number;
 
   /**
    * Number of lists to be included in proof.
@@ -543,7 +543,7 @@ export function GPCRequirements(
   nObjects: number,
   nEntries: number,
   merkleMaxDepth: number,
-  nBoundsChecks: number = 0,
+  nNumericValues: number = 0,
   nLists: number = 0,
   maxListSize: number = 0,
   tupleArities: Record<PODName, number> = {}
@@ -552,7 +552,7 @@ export function GPCRequirements(
     nObjects,
     nEntries,
     merkleMaxDepth,
-    nBoundsChecks,
+    nNumericValues,
     nLists,
     maxListSize,
     tupleArities
