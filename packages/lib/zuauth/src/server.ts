@@ -19,7 +19,7 @@ function checkIsDefined<T>(
 ): field is T {
   if (field === undefined || field === null) {
     throw new Error(
-      `Field "${fieldName}" is undefined and should have a revealed value`
+      `Field "${fieldName}" is undefined but should have a value`
     );
   }
   return true;
@@ -31,7 +31,7 @@ function checkIsDefined<T>(
 function checkIsUndefined(field: unknown, fieldName: string): boolean {
   if (field !== undefined) {
     throw new Error(
-      `Field "${fieldName}" is defined and should not have a revealed value`
+      `Field "${fieldName}" is defined but should not have a value`
     );
   }
   return true;
@@ -129,6 +129,8 @@ export async function authenticate(
   if (pcd.claim.watermark !== watermark.toString()) {
     throw new Error("PCD watermark does not match");
   }
+
+  checkIsUndefined(pcd.claim.validEventIds, "validEventIds");
 
   /**
    * Check that the revealed fields in the PCD match the expectations set out
