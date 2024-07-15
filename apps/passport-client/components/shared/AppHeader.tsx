@@ -3,7 +3,7 @@ import React, { useCallback } from "react";
 import { IoMdSettings } from "react-icons/io";
 import { MdInfo, MdOutlineQrCodeScanner, MdRssFeed } from "react-icons/md";
 import styled from "styled-components";
-import { useDispatch, useSubscriptions } from "../../src/appHooks";
+import { useDispatch, useSelf, useSubscriptions } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 
 export const AppHeader = React.memo(AppHeaderImpl);
@@ -18,6 +18,7 @@ function AppHeaderImpl({
   isProveOrAddScreen?: boolean;
 }): JSX.Element {
   const dispatch = useDispatch();
+  const self = useSelf();
 
   const setModal = useCallback(
     (modal: AppState["modal"]) =>
@@ -43,6 +44,10 @@ function AppHeaderImpl({
     []
   );
   const subscriptions = useSubscriptions();
+
+  if (!self) {
+    return <AppHeaderWrap>{children}</AppHeaderWrap>;
+  }
 
   return (
     <AppHeaderWrap>

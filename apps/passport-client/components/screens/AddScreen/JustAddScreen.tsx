@@ -5,13 +5,18 @@ import {
   requestLogToServer
 } from "@pcd/passport-interface";
 import { getErrorMessage } from "@pcd/util";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useIsSyncSettled, useSelf } from "../../../src/appHooks";
+import {
+  clearAllPendingRequests,
+  pendingRequestKeys
+} from "../../../src/sessionStorage";
 import { useDeserialized } from "../../../src/useDeserialized";
 import { err } from "../../../src/util";
 import { Button, H2, Spacer } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
 import { MaybeModal } from "../../modals/Modal";
 import { AddedPCD } from "../../shared/AddedPCD";
 import { AppContainer } from "../../shared/AppContainer";
@@ -26,9 +31,11 @@ import { useTensionConfetti } from "../ProtocolWorldsScreens/useTensionConfetti"
  * a PCD into their wallet without proving it.
  */
 export function JustAddScreen({
-  request
+  request,
+  autoAdd
 }: {
   request: PCDAddRequest;
+  autoAdd: boolean; // Automatically add item on load
 }): JSX.Element {
   const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
@@ -38,14 +45,23 @@ export function JustAddScreen({
   const isProtocolWorlds = request.folder === ProtocolWorldsFolderName;
   const [ref, setRef] = useState<HTMLElement | null>(null);
   const confetti = useTensionConfetti(ref);
+  const hasAutoAdded = useRef(false);
 
   const onAddClick = useCallback(async () => {
+    // If not logged in, direct user to log in
+    if (!self) {
+      clearAllPendingRequests();
+      const stringifiedRequest = JSON.stringify(request ?? "");
+
+      sessionStorage.setItem(pendingRequestKeys.add, stringifiedRequest);
+      window.location.href = `/#/login?redirectedFromAction=true&${
+        pendingRequestKeys.add
+      }=${encodeURIComponent(stringifiedRequest)}`;
+      return;
+    }
     try {
       // This is mostly for typechecking and should never throw
       // because <AddScreen /> checks if the user is logged in
-      if (!self) {
-        throw new Error("User must be logged in");
-      }
       await dispatch({
         type: "add-pcds",
         pcds: [request.pcd],
@@ -64,26 +80,23 @@ export function JustAddScreen({
     } catch (e) {
       await err(dispatch, "Error Adding PCD", getErrorMessage(e));
     }
-  }, [
-    confetti,
-    dispatch,
-    request.folder,
-    request.pcd,
-    self,
-    pcd,
-    isProtocolWorlds
-  ]);
+  }, [confetti, dispatch, self, pcd, isProtocolWorlds, request]);
+
+  useEffect(() => {
+    if (autoAdd && !hasAutoAdded.current) {
+      onAddClick();
+      hasAutoAdded.current = true;
+    }
+  }, [autoAdd, onAddClick]);
 
   let content;
 
-  if (!syncSettled) {
+  if (self && !syncSettled) {
     return <SyncingPCDs />;
   } else if (!added) {
     content = (
       <>
-        <H2>
-          {isProtocolWorlds ? "TENSION DISCOVERED" : "ADD PCD".toUpperCase()}
-        </H2>
+        {isProtocolWorlds && <H2>{"TENSION DISCOVERED".toUpperCase()}</H2>}
         <Spacer h={16} />
         {pcd && (
           <PCDCard
@@ -95,7 +108,7 @@ export function JustAddScreen({
         )}
         {!isProtocolWorlds && request.folder && (
           <div>
-            PCD will be added to folder:
+            This item will be added to folder:
             <br /> <strong>{request.folder}</strong>
           </div>
         )}
@@ -114,6 +127,8 @@ export function JustAddScreen({
     } else {
       window.location.hash = "#/";
     }
+  } else if (autoAdd) {
+    content = <RippleLoader />;
   } else {
     content = <AddedPCD onCloseClick={(): void => window.close()} />;
   }
