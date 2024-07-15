@@ -194,7 +194,7 @@ describe("zuauth should work", async function () {
         ]
       })
     ).to.be.rejectedWith(
-      'Field "productId" is defined and should not have a revealed value'
+      'Field "productId" is defined but should not have a value'
     );
   });
 
@@ -332,7 +332,7 @@ describe("zuauth should work", async function () {
         ]
       })
     ).to.be.rejectedWith(
-      `Field "eventId" is undefined and should have a revealed value`
+      `Field "eventId" is undefined but should have a value`
     );
   });
 
@@ -372,7 +372,7 @@ describe("zuauth should work", async function () {
         ]
       })
     ).to.be.rejectedWith(
-      'Field "productId" is undefined and should have a revealed value'
+      'Field "productId" is undefined but should have a value'
     );
   });
 
