@@ -61,7 +61,7 @@ describe("input loading", function () {
         last_name: "Doe",
         email: "john.doe@example.com",
         birthday: new Date("1980-01-01"),
-        high_score: 100
+        high_score: 100n
       },
       {
         id: "f1304eac-e462-4d8f-b704-9e7aed2e0618",
@@ -69,12 +69,12 @@ describe("input loading", function () {
         last_name: "Doe",
         email: "jane.doe@example.com",
         birthday: new Date("1980-01-02"),
-        high_score: 200
+        high_score: 200n
       }
     ]);
   });
 
-  step("invalid inputs will cause errors", async function () {
+  step("invalid integer inputs will cause errors", async function () {
     const inputOptions: PODPipelineCSVInput = {
       name: "test_input",
       type: PODPipelineInputType.CSV,
@@ -89,11 +89,36 @@ describe("input loading", function () {
       JSON.stringify(
         [
           {
-            code: "invalid_type",
-            expected: "integer",
-            received: "float",
-            message: "Expected integer, received float",
+            code: "custom",
+            message: "Invalid BigInt value",
+            fatal: true,
             path: ["age"]
+          }
+        ],
+        null,
+        2
+      )
+    );
+  });
+
+  step("invalid date inputs will cause errors", async function () {
+    const inputOptions: PODPipelineCSVInput = {
+      name: "test_input",
+      type: PODPipelineInputType.CSV,
+      csv: "name, birthday\nJohn, foo\nJane, 1980-01-02",
+      columns: {
+        name: { type: PODPipelineInputFieldType.String },
+        birthday: { type: PODPipelineInputFieldType.Date }
+      }
+    };
+
+    expect(() => new CSVInput(inputOptions)).to.throw(
+      JSON.stringify(
+        [
+          {
+            code: "invalid_date",
+            path: ["birthday"],
+            message: "Invalid date"
           }
         ],
         null,

@@ -7,6 +7,22 @@ import { parse } from "csv-parse/sync";
 import { z } from "zod";
 import { Input, InputRow, InputValue } from "./Input";
 
+const datelike = z.union([z.number(), z.string(), z.date()]);
+const datelikeToDate = datelike.pipe(z.coerce.date());
+
+const safeBigInt = z.union([z.string(), z.number()]).transform((val, ctx) => {
+  try {
+    return BigInt(val);
+  } catch (error) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Invalid BigInt value",
+      fatal: true
+    });
+    return z.NEVER;
+  }
+});
+
 export class CSVInput implements Input {
   private data: Record<string, InputValue>[] = [];
 
@@ -18,11 +34,15 @@ export class CSVInput implements Input {
           column.type === PODPipelineInputFieldType.String
             ? z.string()
             : column.type === PODPipelineInputFieldType.Integer
-            ? z.coerce.number().int().positive()
+            ? safeBigInt.refine(
+                (arg: bigint) => arg >= 0n,
+                "Integers must not be negative"
+              )
             : column.type === PODPipelineInputFieldType.Boolean
-            ? z.coerce.boolean()
+            ? // @todo this is way too permissive
+              z.coerce.boolean()
             : column.type === PODPipelineInputFieldType.Date
-            ? z.coerce.date()
+            ? datelikeToDate
             : column.type === PODPipelineInputFieldType.UUID
             ? z.string().uuid()
             : assertUnreachable(column.type)

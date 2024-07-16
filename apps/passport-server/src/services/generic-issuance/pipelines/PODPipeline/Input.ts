@@ -1,4 +1,4 @@
-export type InputValue = string | number | boolean | Date;
+export type InputValue = string | bigint | boolean | Date;
 export type InputRow = Record<string, InputValue>;
 
 export interface Input {
