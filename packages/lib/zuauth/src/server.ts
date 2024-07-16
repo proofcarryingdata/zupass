@@ -47,8 +47,8 @@ function claimMatchesConfiguration(
   return (
     isEqualEdDSAPublicKey(claim.signer, config.publicKey) &&
     claim.partialTicket.eventId === config.eventId &&
-    !!config.productId &&
-    claim.partialTicket.productId === config.productId
+    (config.productId === undefined ||
+      claim.partialTicket.productId === config.productId)
   );
 }
 

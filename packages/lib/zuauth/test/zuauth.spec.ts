@@ -171,6 +171,30 @@ describe("zuauth should work", async function () {
     expect(resultPCD.claim.partialTicket.productId).to.eq(testTicket.productId);
   });
 
+  it("should authenticate PCDs without product ID in configuration", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+
+    const resultPCD = await authenticate(JSON.stringify(serializedZKPCD), {
+      watermark,
+      fieldsToReveal: {
+        revealEventId: true,
+        revealProductId: true
+      },
+      config: [
+        {
+          eventId: testTicket.eventId,
+          eventName: testTicket.eventName,
+          pcdType: EdDSATicketPCDTypeName,
+          publicKey
+        }
+      ]
+    });
+
+    expect(resultPCD.type).to.eq(ZKEdDSAEventTicketPCDTypeName);
+    expect(resultPCD.claim.partialTicket.eventId).to.eq(testTicket.eventId);
+    expect(resultPCD.claim.partialTicket.productId).to.eq(testTicket.productId);
+  });
+
   it("should not authenticate PCD where fields are unexpectedly revealed", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
 
