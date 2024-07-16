@@ -530,6 +530,10 @@ export function isCSVPipelineDefinition(
   return d.type === PipelineType.CSV;
 }
 
+/**
+ * POD Pipeline.
+ */
+
 export enum PODPipelineInputType {
   CSV = "CSV"
 }
@@ -647,6 +651,12 @@ const PODPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
 
 export type PODPipelineOptions = z.infer<typeof PODPipelineOptionsSchema>;
 export type PODPipelineDefinition = z.infer<typeof PODPipelineDefinitionSchema>;
+
+export function isPODPipelineDefinition(
+  d: PipelineDefinition
+): d is PODPipelineDefinition {
+  return d.type === PipelineType.POD;
+}
 
 /**
  * This item is exported so that we can use it for validation on generic issuance server.

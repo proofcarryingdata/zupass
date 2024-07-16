@@ -12,6 +12,7 @@ import { useJWT } from "../../helpers/userHooks";
 import { SAMPLE_LEMONADE_PIPELINE } from "../SamplePipelines";
 import CSVPipelineBuilder from "./pipeline-builders/CSVPipelineBuilder";
 import LemonadePipelineBuilder from "./pipeline-builders/LemonadePipelineBuilder";
+import PODPipelineBuilder from "./pipeline-builders/PODPipelineBuilder";
 import PretixPipelineBuilder from "./pipeline-builders/PretixPipelineBuilder";
 import RawJSONPipelineBuilder from "./pipeline-builders/RawJSONPipelineBuilder";
 
@@ -140,6 +141,10 @@ export default function CreatePipelinePage(): ReactNode {
               onCreate={onCreateClick}
               initialValue={SAMPLE_LEMONADE_PIPELINE}
             />
+          )}
+
+          {selectedPipelineType === PipelineType.POD && (
+            <PODPipelineBuilder onCreate={onCreateClick} />
           )}
         </Stack>
       </PageContent>

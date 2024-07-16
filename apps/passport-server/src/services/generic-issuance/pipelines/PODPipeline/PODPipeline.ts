@@ -17,10 +17,12 @@ import {
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
 import { logger } from "../../../../util/logger";
-import { traced } from "../../../telemetryService";
+import { setError, traced } from "../../../telemetryService";
 import { SemaphoreGroupProvider } from "../../SemaphoreGroupProvider";
 import { tracePipeline } from "../../honeycombQueries";
 import { CredentialSubservice } from "../../subservices/CredentialSubservice";
+import { BasePipelineCapability } from "../../types";
+import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline } from "../types";
 import { CSVInput } from "./CSVInput";
 import { Column, Input, InputRow } from "./Input";
@@ -44,22 +46,26 @@ export interface PODAtom extends PipelineAtom {
 
 export class PODPipeline implements BasePipeline {
   public type = PipelineType.POD;
-  public capabilities = [];
+  public capabilities: BasePipelineCapability[] = [];
 
   private eddsaPrivateKey: string;
-  private db: IPipelineAtomDB<PODAtom>;
+  private db: IPipelineAtomDB<PipelineAtom>;
   private definition: PODPipelineDefinition;
   private credentialSubservice: CredentialSubservice;
   private semaphoreGroupProvider?: SemaphoreGroupProvider;
   private consumerDB: IPipelineConsumerDB;
 
+  public get id(): string {
+    return this.definition.id;
+  }
+
   public constructor(
     eddsaPrivateKey: string,
     definition: PODPipelineDefinition,
-    db: IPipelineAtomDB<PODAtom>,
+    db: IPipelineAtomDB<PipelineAtom>,
     credentialSubservice: CredentialSubservice,
-    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
-    consumerDB: IPipelineConsumerDB
+    consumerDB: IPipelineConsumerDB,
+    _semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -70,30 +76,75 @@ export class PODPipeline implements BasePipeline {
   }
 
   public async load(): Promise<PipelineLoadSummary> {
-    return traced(LOG_NAME, "load", async (_span) => {
+    return traced(LOG_NAME, "load", async (span) => {
       tracePipeline(this.definition);
       logger(LOG_TAG, "load", this.definition.id, this.definition.type);
 
       const start = new Date();
-      const input = PODPipeline.loadInput(this.definition);
-      const atoms = PODPipeline.createAtoms(
-        input,
-        this.definition.options.outputs,
-        this.definition.id
-      );
-
       const logs: PipelineLog[] = [];
 
-      const end = new Date();
+      logger(
+        LOG_TAG,
+        `loading for pipeline id ${this.definition.id} with type ${this.definition.type}`
+      );
+      logs.push(
+        makePLogInfo(`loading data for pipeline '${this.definition.id}'`)
+      );
 
-      return {
-        lastRunStartTimestamp: start.toISOString(),
-        lastRunEndTimestamp: end.toISOString(),
-        latestLogs: logs,
-        atomsLoaded: atoms.length,
-        atomsExpected: 0,
-        success: true
-      } satisfies PipelineLoadSummary;
+      try {
+        const input = PODPipeline.loadInput(this.definition);
+        logs.push(
+          makePLogInfo(
+            `input columns: ${Object.keys(input.getColumns()).join(", ")}`
+          )
+        );
+        logs.push(makePLogInfo(`loaded ${input.getRows().length} rows`));
+
+        const atoms = PODPipeline.createAtoms(
+          input,
+          this.definition.options.outputs,
+          this.definition.id
+        );
+
+        await this.db.clear(this.definition.id);
+        logs.push(makePLogInfo(`cleared old data`));
+        await this.db.save(this.definition.id, atoms);
+        logs.push(makePLogInfo(`saved parsed data: ${atoms.length} entries`));
+        span?.setAttribute("atom_count", atoms.length);
+
+        const end = new Date();
+
+        logs.push(
+          makePLogInfo(`load finished in ${end.getTime() - start.getTime()}ms`)
+        );
+
+        return {
+          lastRunStartTimestamp: start.toISOString(),
+          lastRunEndTimestamp: end.toISOString(),
+          latestLogs: logs,
+          atomsLoaded: atoms.length,
+          atomsExpected: atoms.length,
+          success: true
+        } satisfies PipelineLoadSummary;
+      } catch (e) {
+        setError(e, span);
+        logs.push(makePLogErr(`failed to load input: ${e}`));
+        logs.push(makePLogErr(`input was ${this.definition.options.input}`));
+
+        const end = new Date();
+        logs.push(
+          makePLogInfo(`load finished in ${end.getTime() - start.getTime()}ms`)
+        );
+
+        return {
+          atomsLoaded: 0,
+          atomsExpected: 0,
+          lastRunEndTimestamp: end.toISOString(),
+          lastRunStartTimestamp: start.toISOString(),
+          latestLogs: logs,
+          success: false
+        } satisfies PipelineLoadSummary;
+      }
     });
   }
 

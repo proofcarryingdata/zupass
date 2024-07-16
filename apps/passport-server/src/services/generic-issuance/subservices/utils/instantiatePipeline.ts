@@ -2,6 +2,7 @@ import {
   PipelineDefinition,
   isCSVPipelineDefinition,
   isLemonadePipelineDefinition,
+  isPODPipelineDefinition,
   isPretixPipelineDefinition
 } from "@pcd/passport-interface";
 import { ILemonadeAPI } from "../../../../apis/lemonade/lemonadeAPI";
@@ -23,6 +24,7 @@ import { traced } from "../../../telemetryService";
 import { tracePipeline } from "../../honeycombQueries";
 import { CSVPipeline } from "../../pipelines/CSVPipeline/CSVPipeline";
 import { LemonadePipeline } from "../../pipelines/LemonadePipeline";
+import { PODPipeline } from "../../pipelines/PODPipeline/PODPipeline";
 import { PretixPipeline } from "../../pipelines/PretixPipeline";
 import { Pipeline } from "../../pipelines/types";
 import { CredentialSubservice } from "../CredentialSubservice";
@@ -102,6 +104,15 @@ export function instantiatePipeline(
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(
+        args.eddsaPrivateKey,
+        definition,
+        args.pipelineAtomDB,
+        args.credentialSubservice,
+        args.consumerDB,
+        args.semaphoreHistoryDB
+      );
+    } else if (isPODPipelineDefinition(definition)) {
+      pipeline = new PODPipeline(
         args.eddsaPrivateKey,
         definition,
         args.pipelineAtomDB,
