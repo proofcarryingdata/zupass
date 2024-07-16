@@ -6,6 +6,7 @@ import {
   PipelineType
 } from "@pcd/passport-interface";
 import { PODEntries } from "@pcd/pod";
+import { assertUnreachable } from "@pcd/util";
 import {
   IPipelineAtomDB,
   PipelineAtom
@@ -66,7 +67,7 @@ export class PODPipeline implements BasePipeline {
       logger(LOG_TAG, "load", this.definition.id, this.definition.type);
 
       const start = new Date();
-      const inputs = PODPipeline.loadInputs(this.definition);
+      const input = PODPipeline.loadInput(this.definition);
 
       const logs: PipelineLog[] = [];
 
@@ -91,25 +92,29 @@ export class PODPipeline implements BasePipeline {
     logger(`Stopping POD Pipeline ${this.definition.id}`);
   }
 
-  public static loadInputs(
-    definition: PODPipelineDefinition
-  ): Map<string, Input> {
-    const inputs: Map<string, Input> = new Map();
-    for (const input of definition.options.inputs) {
-      if (input.type === PODPipelineInputType.CSV) {
-        const csvInput = new CSVInput(input);
-        inputs.set(input.name, csvInput);
-      }
+  /**
+   *
+   * @param definition
+   * @returns
+   */
+  public static loadInput(definition: PODPipelineDefinition): Input {
+    switch (definition.options.input.type) {
+      case PODPipelineInputType.CSV:
+        return new CSVInput(definition.options.input);
+      default:
+        assertUnreachable(definition.options.input.type);
+        throw new Error(
+          `Unsupported input type: ${definition.options.input.type}`
+        );
     }
-    return inputs;
   }
 
-  // public static createAtoms(
-  //   inputs: Map<string, Input>,
-  //   outputs: PODPipelineOutput[]
-  // ): PODAtom[] {
-  //   return [];
-  // }
+  public static createAtoms(
+    inputs: Map<string, Input>,
+    outputs: PODPipelineOutput[]
+  ): PODAtom[] {
+    return [];
+  }
 
   public static uniqueIds(definition: PODPipelineDefinition): string[] {
     return [definition.id];

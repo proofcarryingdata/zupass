@@ -17,7 +17,6 @@ describe("input loading", function () {
 
   step("CSV input can be loaded", async function () {
     const inputOptions: PODPipelineCSVInput = {
-      name: "test_input",
       type: PODPipelineInputType.CSV,
       csv: "first_name,last_name,email\nJohn,Doe,john.doe@example.com\nJane,Doe,jane.doe@example.com",
       columns: {
@@ -38,7 +37,6 @@ describe("input loading", function () {
 
   step("CSV inputs with more complex types can be loaded", async function () {
     const inputOptions: PODPipelineCSVInput = {
-      name: "test_input",
       type: PODPipelineInputType.CSV,
       csv: "id,first_name,last_name,email,birthday,high_score\n768dab50-2dea-4fd7-86bd-212f091b7867,John,Doe,john.doe@example.com,1980-01-01,100\nf1304eac-e462-4d8f-b704-9e7aed2e0618,Jane,Doe,jane.doe@example.com,1980-01-02,200",
       columns: {
@@ -76,7 +74,6 @@ describe("input loading", function () {
 
   step("invalid integer inputs will cause errors", async function () {
     const inputOptions: PODPipelineCSVInput = {
-      name: "test_input",
       type: PODPipelineInputType.CSV,
       csv: "name, age\nJohn, 31.45\nJane, 42",
       columns: {
@@ -103,7 +100,6 @@ describe("input loading", function () {
 
   step("invalid date inputs will cause errors", async function () {
     const inputOptions: PODPipelineCSVInput = {
-      name: "test_input",
       type: PODPipelineInputType.CSV,
       csv: "name, birthday\nJohn, foo\nJane, 1980-01-02",
       columns: {

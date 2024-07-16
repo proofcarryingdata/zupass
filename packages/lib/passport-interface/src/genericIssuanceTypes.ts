@@ -554,7 +554,6 @@ export type PODPipelineInputRow = z.infer<typeof PODPipelineInputRowSchema>;
 
 const PODPipelineBaseInputSchema = z.object({
   type: z.nativeEnum(PODPipelineInputType),
-  name: z.string(),
   columns: PODPipelineInputRowSchema
 });
 
@@ -605,7 +604,7 @@ const PODPipelineOutputSchema = z.object({
 export type PODPipelineOutput = z.infer<typeof PODPipelineOutputSchema>;
 
 const PODPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
-  inputs: z.array(PODPipelineInputSchema),
+  input: PODPipelineInputSchema,
   outputs: z.record(z.string(), PODPipelineOutputSchema)
 });
 
