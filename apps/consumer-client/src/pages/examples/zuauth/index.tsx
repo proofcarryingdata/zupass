@@ -70,7 +70,9 @@ export default function ZuAuth(): JSX.Element {
       });
 
       if (result.type === "pcd") {
-        setAuthenticated(await serverLogin(result.pcdStr, config));
+        setAuthenticated(
+          await serverLogin(result.pcdStr, config, fieldsToReveal)
+        );
       }
     })();
   }, [fieldsToReveal, configString]);

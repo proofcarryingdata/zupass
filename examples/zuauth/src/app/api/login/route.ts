@@ -23,7 +23,16 @@ export async function POST(req: NextRequest) {
 
   try {
     const session = await getIronSession<SessionData>(cookieStore, ironOptions);
-    const pcd = await authenticate(body.pcd, session.watermark ?? "", config);
+    const pcd = await authenticate(body.pcd, {
+      watermark: session.watermark ?? "",
+      config,
+      fieldsToReveal: {
+        revealAttendeeEmail: true,
+        revealAttendeeName: true,
+        revealEventId: true,
+        revealProductId: true
+      }
+    });
 
     session.user = pcd.claim.partialTicket;
     await session.save();
