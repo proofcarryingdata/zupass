@@ -1,3 +1,4 @@
+import { getErrorMessage } from "@pcd/util";
 import { z } from "zod";
 
 /**
@@ -576,7 +577,7 @@ export enum PODPipelinePCDTypes {
 }
 
 const PODPipelinePODEntrySchema = z.object({
-  type: z.enum(["string", "int", "cryptographic"]).optional(),
+  type: z.enum(["string", "int", "cryptographic"]),
   source: z.discriminatedUnion("type", [
     z.object({ type: z.literal("input"), name: z.string() }),
     z.object({ type: z.literal("credentialSemaphoreID") }),
@@ -597,15 +598,42 @@ const PODPipelineOutputMatchSchema = z.discriminatedUnion("type", [
 
 const PODPipelineOutputSchema = z.object({
   pcdType: z.nativeEnum(PODPipelinePCDTypes),
+  /**
+   * @todo verify that all input-derived entries have matching columns and
+   * possibly that column types match entry types
+   */
   entries: PODPipelinePODEntriesSchema,
-  match: PODPipelineOutputMatchSchema.optional()
+  match: PODPipelineOutputMatchSchema
 });
 
 export type PODPipelineOutput = z.infer<typeof PODPipelineOutputSchema>;
 
+export function validatePODPipelineOptions(options: PODPipelineOptions): void {
+  for (const [outputName, output] of Object.entries(options.outputs)) {
+    for (const entry of Object.values(output.entries)) {
+      if (entry.source.type === "input") {
+        if (!options.input.columns[entry.source.name]) {
+          throw new Error(
+            `Output ${outputName} has an input column ${entry.source.name} that does not exist in the input`
+          );
+        }
+      }
+    }
+  }
+}
+
 const PODPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   input: PODPipelineInputSchema,
   outputs: z.record(z.string(), PODPipelineOutputSchema)
+}).superRefine((val, ctx) => {
+  try {
+    validatePODPipelineOptions(val);
+  } catch (e) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: getErrorMessage(e)
+    });
+  }
 });
 
 const PODPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({

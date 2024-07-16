@@ -1,12 +1,14 @@
 import {
   PODPipelineDefinition,
   PODPipelineInputType,
+  PODPipelineOutput,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType
 } from "@pcd/passport-interface";
 import { PODEntries } from "@pcd/pod";
 import { assertUnreachable } from "@pcd/util";
+import { v5 as uuidv5 } from "uuid";
 import {
   IPipelineAtomDB,
   PipelineAtom
@@ -20,7 +22,7 @@ import { tracePipeline } from "../../honeycombQueries";
 import { CredentialSubservice } from "../../subservices/CredentialSubservice";
 import { BasePipeline } from "../types";
 import { CSVInput } from "./CSVInput";
-import { Input } from "./Input";
+import { Input, InputRow } from "./Input";
 
 const LOG_NAME = "PODPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
@@ -30,6 +32,11 @@ export interface PODAtom extends PipelineAtom {
    * @todo matchType should be an enum
    */
   matchTo: { entry: string; matchType: string };
+  /**
+   * @todo if we can look up output configuration via output ID, do we need
+   * the matchType above? Alternatively, if we can just add these things to the
+   * atom, what about pcdType?
+   */
   outputId: string;
   entries: PODEntries;
 }
@@ -68,6 +75,11 @@ export class PODPipeline implements BasePipeline {
 
       const start = new Date();
       const input = PODPipeline.loadInput(this.definition);
+      const atoms = await PODPipeline.createAtoms(
+        input,
+        this.definition.options.outputs,
+        this.definition.id
+      );
 
       const logs: PipelineLog[] = [];
 
@@ -77,7 +89,7 @@ export class PODPipeline implements BasePipeline {
         lastRunStartTimestamp: start.toISOString(),
         lastRunEndTimestamp: end.toISOString(),
         latestLogs: logs,
-        atomsLoaded: 0,
+        atomsLoaded: atoms.length,
         atomsExpected: 0,
         success: true
       } satisfies PipelineLoadSummary;
@@ -102,18 +114,88 @@ export class PODPipeline implements BasePipeline {
       case PODPipelineInputType.CSV:
         return new CSVInput(definition.options.input);
       default:
-        assertUnreachable(definition.options.input.type);
-        throw new Error(
-          `Unsupported input type: ${definition.options.input.type}`
+        assertUnreachable(
+          definition.options.input.type,
+          `Unrecognized input type: ${definition.options.input.type}`
         );
     }
   }
 
-  public static createAtoms(
-    inputs: Map<string, Input>,
-    outputs: PODPipelineOutput[]
-  ): PODAtom[] {
-    return [];
+  public static async createAtoms(
+    input: Input,
+    outputs: Record<string, PODPipelineOutput>,
+    pipelineId: string
+  ): Promise<PODAtom[]> {
+    const atoms: PODAtom[] = [];
+    const rows = await input.getRows();
+
+    for (const row of rows) {
+      for (const [outputId, output] of Object.entries(outputs)) {
+        const atom = PODPipeline.inputRowToAtom(
+          row,
+          output,
+          outputId,
+          pipelineId
+        );
+        atoms.push(atom);
+      }
+    }
+
+    return atoms;
+  }
+
+  public static inputRowToAtom(
+    row: InputRow,
+    output: PODPipelineOutput,
+    outputId: string,
+    pipelineId: string
+  ): PODAtom {
+    const entries: PODEntries = {};
+    for (const [key, entry] of Object.entries(output.entries)) {
+      const source = entry.source;
+      if (source.type === "input") {
+        const value = row[source.name];
+        if (entry.type === "string") {
+          entries[key] = {
+            type: "string",
+            value: value.toString()
+          };
+        } else if (entry.type === "cryptographic") {
+          entries[key] = {
+            type: "cryptographic",
+            value: BigInt(value instanceof Date ? value.getTime() : value)
+          };
+        } else if (entry.type === "int") {
+          entries[key] = {
+            type: "int",
+            value: BigInt(value instanceof Date ? value.getTime() : value)
+          };
+        }
+      } else if (source.type === "configured") {
+        entries[key] = {
+          // @todo non-string configured values
+          type: "string",
+          value: source.value
+        };
+      } else if (
+        source.type === "credentialSemaphoreID" ||
+        source.type === "credentialEmail"
+      ) {
+        // These values are not present during loading and so cannot be
+        // populated in the Atom.
+        continue;
+      } else {
+        assertUnreachable(source);
+      }
+    }
+
+    const id = uuidv5(JSON.stringify(entries), pipelineId);
+    const matchTo = {
+      entry: output.match.inputField,
+      matchType: output.match.type
+    };
+
+    return { entries, outputId, id, matchTo };
   }
 
   public static uniqueIds(definition: PODPipelineDefinition): string[] {

@@ -51,6 +51,7 @@ export class CSVInput implements Input {
     );
 
     const data: unknown[] = parse(csv, { columns: Object.keys(columns) });
+    // @todo check header fields match column names
     data.shift();
     for (const row of data) {
       // This will throw if the row is not valid
