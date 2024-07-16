@@ -5,12 +5,12 @@ import {
 import { assertUnreachable } from "@pcd/util";
 import { parse } from "csv-parse/sync";
 import { z } from "zod";
-import { Input, InputRow, InputValue } from "./Input";
+import { Column, Input, InputRow, InputValue, TemplatedColumn } from "./Input";
 
 const datelike = z.union([z.number(), z.string(), z.date()]);
 const datelikeToDate = datelike.pipe(z.coerce.date());
 
-const safeBigInt = z.union([z.string(), z.number()]).transform((val, ctx) => {
+const safeBigInt = z.string().transform((val, ctx) => {
   try {
     return BigInt(val);
   } catch (error) {
@@ -25,8 +25,15 @@ const safeBigInt = z.union([z.string(), z.number()]).transform((val, ctx) => {
 
 export class CSVInput implements Input {
   private data: Record<string, InputValue>[] = [];
+  private columns: Record<string, Column>;
 
   public constructor({ csv, columns }: PODPipelineCSVInput) {
+    this.columns = Object.fromEntries(
+      Object.entries(columns).map(([name, { type }]) => [
+        name,
+        new TemplatedColumn(name, type)
+      ])
+    );
     const rowSchema = z.object(
       Object.fromEntries(
         Object.entries(columns).map(([key, column]) => [
@@ -59,7 +66,11 @@ export class CSVInput implements Input {
     }
   }
 
-  public async getRows(): Promise<InputRow[]> {
+  public getRows(): InputRow[] {
     return this.data;
+  }
+
+  public getColumns(): Record<string, Column> {
+    return this.columns;
   }
 }

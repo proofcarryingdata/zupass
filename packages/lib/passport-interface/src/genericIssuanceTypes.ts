@@ -546,17 +546,21 @@ const PODPipelineInputFieldSchema = z.object({
   type: z.nativeEnum(PODPipelineInputFieldType)
 });
 
-const PODPipelineInputRowSchema = z.record(
+const PODPipelineInputColumnsSchema = z.record(
   z.string(),
   PODPipelineInputFieldSchema
 );
 
-export type PODPipelineInputRow = z.infer<typeof PODPipelineInputRowSchema>;
+export type PODPipelineInputColumns = z.infer<
+  typeof PODPipelineInputColumnsSchema
+>;
 
 const PODPipelineBaseInputSchema = z.object({
   type: z.nativeEnum(PODPipelineInputType),
-  columns: PODPipelineInputRowSchema
+  columns: PODPipelineInputColumnsSchema
 });
+
+export type PODPipelineBaseInput = z.infer<typeof PODPipelineBaseInputSchema>;
 
 export type PODPipelineInputField = z.infer<typeof PODPipelineInputFieldSchema>;
 

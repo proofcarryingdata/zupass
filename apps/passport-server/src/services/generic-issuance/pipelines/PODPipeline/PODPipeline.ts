@@ -1,13 +1,14 @@
 import {
   PODPipelineDefinition,
+  PODPipelineInputFieldType,
   PODPipelineInputType,
   PODPipelineOutput,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType
 } from "@pcd/passport-interface";
-import { PODEntries } from "@pcd/pod";
-import { assertUnreachable } from "@pcd/util";
+import { PODEntries, serializePODEntries } from "@pcd/pod";
+import { assertUnreachable, uuidToBigInt } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import {
   IPipelineAtomDB,
@@ -22,7 +23,7 @@ import { tracePipeline } from "../../honeycombQueries";
 import { CredentialSubservice } from "../../subservices/CredentialSubservice";
 import { BasePipeline } from "../types";
 import { CSVInput } from "./CSVInput";
-import { Input, InputRow } from "./Input";
+import { Column, Input, InputRow } from "./Input";
 
 const LOG_NAME = "PODPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
@@ -75,7 +76,7 @@ export class PODPipeline implements BasePipeline {
 
       const start = new Date();
       const input = PODPipeline.loadInput(this.definition);
-      const atoms = await PODPipeline.createAtoms(
+      const atoms = PODPipeline.createAtoms(
         input,
         this.definition.options.outputs,
         this.definition.id
@@ -121,17 +122,18 @@ export class PODPipeline implements BasePipeline {
     }
   }
 
-  public static async createAtoms(
+  public static createAtoms(
     input: Input,
     outputs: Record<string, PODPipelineOutput>,
     pipelineId: string
-  ): Promise<PODAtom[]> {
+  ): PODAtom[] {
     const atoms: PODAtom[] = [];
-    const rows = await input.getRows();
+    const rows = input.getRows();
 
     for (const row of rows) {
       for (const [outputId, output] of Object.entries(outputs)) {
-        const atom = PODPipeline.inputRowToAtom(
+        const atom = PODPipeline.atomize(
+          input.getColumns(),
           row,
           output,
           outputId,
@@ -144,7 +146,8 @@ export class PODPipeline implements BasePipeline {
     return atoms;
   }
 
-  public static inputRowToAtom(
+  public static atomize(
+    columns: Record<string, Column>,
     row: InputRow,
     output: PODPipelineOutput,
     outputId: string,
@@ -153,23 +156,81 @@ export class PODPipeline implements BasePipeline {
     const entries: PODEntries = {};
     for (const [key, entry] of Object.entries(output.entries)) {
       const source = entry.source;
+
       if (source.type === "input") {
-        const value = row[source.name];
+        const column = columns[source.name];
         if (entry.type === "string") {
-          entries[key] = {
-            type: "string",
-            value: value.toString()
-          };
+          // Dates require special conversion to strings as the default
+          // string conversion is affected by locale settings.
+          if (column.is(PODPipelineInputFieldType.Date)) {
+            entries[key] = {
+              type: "string",
+              value: column.getValue(row).toISOString()
+            };
+          } else {
+            entries[key] = {
+              type: "string",
+              value: column.getValue(row).toString()
+            };
+          }
         } else if (entry.type === "cryptographic") {
-          entries[key] = {
-            type: "cryptographic",
-            value: BigInt(value instanceof Date ? value.getTime() : value)
-          };
+          if (column.is(PODPipelineInputFieldType.Integer)) {
+            entries[key] = {
+              type: "cryptographic",
+              value: column.getValue(row)
+            };
+          } else if (column.is(PODPipelineInputFieldType.Date)) {
+            entries[key] = {
+              type: "cryptographic",
+              value: BigInt(column.getValue(row).getTime())
+            };
+          } else if (column.is(PODPipelineInputFieldType.Boolean)) {
+            entries[key] = {
+              type: "cryptographic",
+              value: BigInt(column.getValue(row))
+            };
+          } else if (column.is(PODPipelineInputFieldType.UUID)) {
+            entries[key] = {
+              type: "cryptographic",
+              value: uuidToBigInt(column.getValue(row))
+            };
+          } else {
+            throw new Error(
+              `Could not map column ${key} from input type ${column.type} to POD type ${entry.type}`
+            );
+          }
         } else if (entry.type === "int") {
-          entries[key] = {
-            type: "int",
-            value: BigInt(value instanceof Date ? value.getTime() : value)
-          };
+          // These mappings are the same as those for "cryptographic"
+          if (column.is(PODPipelineInputFieldType.Integer)) {
+            entries[key] = {
+              type: "int",
+              value: column.getValue(row)
+            };
+          } else if (column.is(PODPipelineInputFieldType.Date)) {
+            entries[key] = {
+              type: "int",
+              value: BigInt(column.getValue(row).getTime())
+            };
+          } else if (column.is(PODPipelineInputFieldType.Boolean)) {
+            entries[key] = {
+              type: "int",
+              value: BigInt(column.getValue(row))
+            };
+          } else if (column.is(PODPipelineInputFieldType.UUID)) {
+            entries[key] = {
+              type: "int",
+              value: uuidToBigInt(column.getValue(row))
+            };
+          } else {
+            throw new Error(
+              `Could not map column ${key} from input type ${column.type} to POD value type ${entry.type}`
+            );
+          }
+        } else {
+          assertUnreachable(
+            entry.type,
+            `Unsupported POD value type ${entry.type}`
+          );
         }
       } else if (source.type === "configured") {
         entries[key] = {
@@ -189,7 +250,7 @@ export class PODPipeline implements BasePipeline {
       }
     }
 
-    const id = uuidv5(JSON.stringify(entries), pipelineId);
+    const id = uuidv5(serializePODEntries(entries), pipelineId);
     const matchTo = {
       entry: output.match.inputField,
       matchType: output.match.type
