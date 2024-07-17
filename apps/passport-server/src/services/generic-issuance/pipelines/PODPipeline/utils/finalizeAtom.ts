@@ -1,4 +1,7 @@
-import { PODPipelineOutput, VerifiedCredential } from "@pcd/passport-interface";
+import {
+  PODPipelineOutput,
+  VerifiedCredentialWithEmail
+} from "@pcd/passport-interface";
 import { PODEntries } from "@pcd/pod";
 import { PODAtom } from "../PODPipeline";
 
@@ -18,7 +21,7 @@ import { PODAtom } from "../PODPipeline";
 export function finalizeAtom(
   atom: PODAtom,
   output: PODPipelineOutput,
-  credential: VerifiedCredential & Required<Pick<VerifiedCredential, "email">>
+  credential: VerifiedCredentialWithEmail
 ): PODEntries {
   const newEntries: PODEntries = {};
 

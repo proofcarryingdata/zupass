@@ -9,7 +9,8 @@ import {
   PipelineLog,
   PipelineType,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  VerifiedCredentialWithEmail
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -177,6 +178,40 @@ export class PODPipeline implements BasePipeline {
     logger(`Stopping POD Pipeline ${this.definition.id}`);
   }
 
+  /**
+   * Loads the atoms that match the given credential.
+   *
+   * @param credential The credential to match against
+   * @returns The atoms that match the given credential
+   */
+  private async loadMatchingAtoms({
+    email,
+    semaphoreId
+  }: VerifiedCredentialWithEmail): Promise<PODAtom[]> {
+    const atoms = await this.db.load(this.id);
+    const matchingAtoms: PODAtom[] = [];
+
+    for (const atom of atoms) {
+      if (atom.matchTo.matchType === "email") {
+        if (
+          atom.entries[atom.matchTo.entry].value.toString().toLowerCase() ===
+          email.toLowerCase()
+        ) {
+          matchingAtoms.push(atom);
+        }
+      } else if (atom.matchTo.matchType === "semaphoreID") {
+        if (
+          atom.entries[atom.matchTo.entry].value.toString() ===
+          semaphoreId.toString()
+        ) {
+          matchingAtoms.push(atom);
+        }
+      }
+    }
+
+    return matchingAtoms;
+  }
+
   private async feedIssue(
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
@@ -204,26 +239,7 @@ export class PODPipeline implements BasePipeline {
         new Date()
       );
 
-      const atoms = await this.db.load(this.id);
-      const atomsToIssue: PODAtom[] = [];
-
-      for (const atom of atoms) {
-        if (atom.matchTo.matchType === "email") {
-          if (
-            atom.entries[atom.matchTo.entry].value.toString().toLowerCase() ===
-            email.toLowerCase()
-          ) {
-            atomsToIssue.push(atom);
-          }
-        } else if (atom.matchTo.matchType === "semaphoreID") {
-          if (
-            atom.entries[atom.matchTo.entry].value.toString() ===
-            semaphoreId.toString()
-          ) {
-            atomsToIssue.push(atom);
-          }
-        }
-      }
+      const atomsToIssue = await this.loadMatchingAtoms(credential);
 
       const serializedPCDs = await Promise.all(
         atomsToIssue.map(async (atom) => {
