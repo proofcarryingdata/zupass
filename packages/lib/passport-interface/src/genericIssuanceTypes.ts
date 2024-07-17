@@ -604,6 +604,10 @@ const PODPipelineOutputMatchSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("email"), inputField: z.string() })
 ]);
 
+export type PODPipelineOutputMatch = z.infer<
+  typeof PODPipelineOutputMatchSchema
+>;
+
 const PODPipelineOutputSchema = z.object({
   pcdType: z.nativeEnum(PODPipelinePCDTypes),
   /**

@@ -7,11 +7,17 @@ import {
   PODPipelineInputFieldType,
   PODPipelineInputType,
   PODPipelineOutput,
+  PODPipelineOutputMatch,
   PipelineLoadSummary,
   PipelineLog,
-  PipelineType
+  PipelineType,
+  PollFeedRequest,
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { PODEntries, serializePODEntries } from "@pcd/pod";
+import { PODPCDPackage } from "@pcd/pod-pcd";
 import { assertUnreachable, uuidToBigInt } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import {
@@ -23,20 +29,23 @@ import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipeli
 import { logger } from "../../../../util/logger";
 import { setError, traced } from "../../../telemetryService";
 import { SemaphoreGroupProvider } from "../../SemaphoreGroupProvider";
+import {
+  FeedIssuanceCapability,
+  makeGenericIssuanceFeedUrl
+} from "../../capabilities/FeedIssuanceCapability";
+import { PipelineCapability } from "../../capabilities/types";
 import { tracePipeline } from "../../honeycombQueries";
 import { CredentialSubservice } from "../../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline } from "../types";
+import { finalizeAtom } from "./utils/finalizeAtom";
 
 const LOG_NAME = "PODPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
 
 export interface PODAtom extends PipelineAtom {
-  /**
-   * @todo matchType should be an enum
-   */
-  matchTo: { entry: string; matchType: string };
+  matchTo: { entry: string; matchType: PODPipelineOutputMatch["type"] };
   /**
    * @todo if we can look up output configuration via output ID, do we need
    * the matchType above? Alternatively, if we can just add these things to the
@@ -48,10 +57,10 @@ export interface PODAtom extends PipelineAtom {
 
 export class PODPipeline implements BasePipeline {
   public type = PipelineType.POD;
-  public capabilities: BasePipelineCapability[] = [];
+  public capabilities: BasePipelineCapability[];
 
   private eddsaPrivateKey: string;
-  private db: IPipelineAtomDB<PipelineAtom>;
+  private db: IPipelineAtomDB<PODAtom>;
   private definition: PODPipelineDefinition;
   private credentialSubservice: CredentialSubservice;
   private semaphoreGroupProvider?: SemaphoreGroupProvider;
@@ -64,17 +73,29 @@ export class PODPipeline implements BasePipeline {
   public constructor(
     eddsaPrivateKey: string,
     definition: PODPipelineDefinition,
-    db: IPipelineAtomDB<PipelineAtom>,
+    db: IPipelineAtomDB,
     credentialSubservice: CredentialSubservice,
     consumerDB: IPipelineConsumerDB,
     _semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
-    this.db = db;
+    this.db = db as IPipelineAtomDB<PODAtom>;
     this.credentialSubservice = credentialSubservice;
     //  this.semaphoreGroupProvider = new SemaphoreGroupProvider(semaphoreHistoryDB);
     this.consumerDB = consumerDB;
+    this.capabilities = [
+      {
+        issue: this.feedIssue.bind(this),
+        options: this.definition.options.feedOptions,
+        type: PipelineCapability.FeedIssuance,
+        feedUrl: makeGenericIssuanceFeedUrl(
+          this.id,
+          this.definition.options.feedOptions.feedId
+        ),
+        getZuAuthConfig: async () => []
+      } satisfies FeedIssuanceCapability
+    ] as unknown as BasePipelineCapability[];
   }
 
   public async load(): Promise<PipelineLoadSummary> {
@@ -158,11 +179,99 @@ export class PODPipeline implements BasePipeline {
     logger(`Stopping POD Pipeline ${this.definition.id}`);
   }
 
-  /**
-   *
-   * @param definition
-   * @returns
-   */
+  private async feedIssue(
+    req: PollFeedRequest
+  ): Promise<PollFeedResponseValue> {
+    return traced(LOG_NAME, "feedIssue", async (span) => {
+      if (!req.pcd) {
+        throw new Error("missing credential pcd");
+      }
+
+      if (this.definition.options.paused) {
+        return { actions: [] };
+      }
+
+      const credential =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+      const { email, semaphoreId } = credential;
+
+      span?.setAttribute("email", email);
+      span?.setAttribute("semaphore_id", semaphoreId);
+
+      // Consumer is validated, so save them in the consumer list
+      const didUpdate = await this.consumerDB.save(
+        this.id,
+        email,
+        semaphoreId,
+        new Date()
+      );
+
+      const atoms = await this.db.load(this.id);
+      const atomsToIssue: PODAtom[] = [];
+
+      for (const atom of atoms) {
+        if (atom.matchTo.matchType === "email") {
+          if (
+            atom.entries[atom.matchTo.entry].value.toString().toLowerCase() ===
+            email.toLowerCase()
+          ) {
+            atomsToIssue.push(atom);
+          }
+        } else if (atom.matchTo.matchType === "semaphoreID") {
+          if (
+            atom.entries[atom.matchTo.entry].value.toString() ===
+            semaphoreId.toString()
+          ) {
+            atomsToIssue.push(atom);
+          }
+        }
+      }
+
+      const serializedPCDs = await Promise.all(
+        atomsToIssue.map(async (atom) => {
+          const entries = finalizeAtom(
+            atom,
+            this.definition.options.outputs[atom.outputId],
+            credential
+          );
+
+          const pcd = await PODPCDPackage.prove({
+            entries: {
+              value: entries,
+              argumentType: ArgumentTypeName.Object
+            },
+            privateKey: {
+              value: this.eddsaPrivateKey,
+              argumentType: ArgumentTypeName.String
+            },
+            id: {
+              value: uuidv5(serializePODEntries(entries), this.id),
+              argumentType: ArgumentTypeName.String
+            }
+          });
+
+          return PODPCDPackage.serialize(pcd);
+        })
+      );
+
+      const actions: PCDAction[] = [];
+
+      actions.push({
+        type: PCDActionType.DeleteFolder,
+        folder: this.definition.options.feedOptions.feedFolder,
+        recursive: true
+      });
+
+      actions.push({
+        type: PCDActionType.ReplaceInFolder,
+        folder: this.definition.options.feedOptions.feedFolder,
+        pcds: serializedPCDs
+      });
+
+      return { actions };
+    });
+  }
+
   public static loadInput(definition: PODPipelineDefinition): Input {
     switch (definition.options.input.type) {
       case PODPipelineInputType.CSV:

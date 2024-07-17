@@ -19,6 +19,7 @@ import { stringifyAndFormat } from "../../../helpers/util";
 import { PreviewType } from "./CSVPreview";
 import { CSVPreviewEditWrapper } from "./CSVPreviewEditWrapper";
 import { PODFeed } from "./PODPipeline/PODFeed";
+import { PODOutputs } from "./PODPipeline/PODOutputs";
 import { PODSheetPreviewEditWrapper } from "./PODPipeline/PODSheetPreviewEditWrapper";
 import { PipelineActions } from "./PipelineActions";
 import { SinglePipelineTable } from "./SinglePipelineTable";
@@ -87,6 +88,7 @@ export function PipelineEditSection({
             {isPODPipelineDefinition(pipeline) && (
               <TabList>
                 <Tab>Data</Tab>
+                <Tab>Outputs</Tab>
                 <Tab>Feed</Tab>
                 {isAdminView && <Tab>Configuration</Tab>}
               </TabList>
@@ -154,6 +156,14 @@ export function PipelineEditSection({
                 </TabPanel>
               )}
 
+              {isPODPipelineDefinition(pipeline) && (
+                <TabPanel>
+                  <PODOutputs
+                    definition={editorValue}
+                    onChange={setEditorValue}
+                  />
+                </TabPanel>
+              )}
               {isPODPipelineDefinition(pipeline) && (
                 <TabPanel>
                   <PODFeed definition={editorValue} onChange={setEditorValue} />

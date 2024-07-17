@@ -1,9 +1,9 @@
 import {
+  CSVInput,
   PODPipelineCSVInput,
   PODPipelineInputFieldType,
   PODPipelineInputType
 } from "@pcd/passport-interface";
-import { CSVInput } from "@pcd/passport-interface/src/PODPipeline/CSVInput";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "mocha";
@@ -29,7 +29,7 @@ describe("input loading", function () {
     let input!: CSVInput;
     expect(() => (input = new CSVInput(inputOptions))).to.not.throw();
     expectToExist(input);
-    await expect(input.getRows()).to.eventually.eql([
+    expect(input.getRows()).to.eql([
       { first_name: "John", last_name: "Doe", email: "john.doe@example.com" },
       { first_name: "Jane", last_name: "Doe", email: "jane.doe@example.com" }
     ]);
@@ -52,7 +52,7 @@ describe("input loading", function () {
     let input!: CSVInput;
     expect(() => (input = new CSVInput(inputOptions))).to.not.throw();
     expectToExist(input);
-    await expect(input.getRows()).to.eventually.eql([
+    expect(input.getRows()).to.eql([
       {
         id: "768dab50-2dea-4fd7-86bd-212f091b7867",
         first_name: "John",

@@ -1,11 +1,11 @@
 import {
+  CSVInput,
   PODPipelineInputFieldType,
   PODPipelineInputType,
   PODPipelineOptions,
   PODPipelinePCDTypes,
   validatePODPipelineOptions
 } from "@pcd/passport-interface";
-import { CSVInput } from "@pcd/passport-interface/src/PODPipeline/CSVInput";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "mocha";
