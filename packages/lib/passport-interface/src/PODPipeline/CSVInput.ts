@@ -1,10 +1,10 @@
-import {
-  PODPipelineCSVInput,
-  PODPipelineInputFieldType
-} from "@pcd/passport-interface";
 import { assertUnreachable } from "@pcd/util";
 import { parse } from "csv-parse/sync";
 import { z } from "zod";
+import {
+  PODPipelineCSVInput,
+  PODPipelineInputFieldType
+} from "../genericIssuanceTypes";
 import { Column, Input, InputRow, InputValue, TemplatedColumn } from "./Input";
 
 const datelike = z.union([z.number(), z.string(), z.date()]);

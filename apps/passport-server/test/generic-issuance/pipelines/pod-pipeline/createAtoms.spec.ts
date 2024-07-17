@@ -5,12 +5,12 @@ import {
   PODPipelinePCDTypes,
   validatePODPipelineOptions
 } from "@pcd/passport-interface";
+import { CSVInput } from "@pcd/passport-interface/src/PODPipeline/CSVInput";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "mocha";
 import { step } from "mocha-steps";
 import { v4 as uuidv4 } from "uuid";
-import { CSVInput } from "../../../../src/services/generic-issuance/pipelines/PODPipeline/CSVInput";
 import { PODPipeline } from "../../../../src/services/generic-issuance/pipelines/PODPipeline/PODPipeline";
 import { expectToExist } from "../../../util/util";
 

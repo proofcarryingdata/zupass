@@ -1,4 +1,8 @@
 import {
+  CSVInput,
+  Column,
+  Input,
+  InputRow,
   PODPipelineDefinition,
   PODPipelineInputFieldType,
   PODPipelineInputType,
@@ -24,8 +28,6 @@ import { CredentialSubservice } from "../../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline } from "../types";
-import { CSVInput } from "./CSVInput";
-import { Column, Input, InputRow } from "./Input";
 
 const LOG_NAME = "PODPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;

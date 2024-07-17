@@ -1,4 +1,4 @@
-import { PODPipelineInputFieldType } from "@pcd/passport-interface";
+import { PODPipelineInputFieldType } from "../genericIssuanceTypes";
 
 type FieldTypeToValue<T extends PODPipelineInputFieldType> =
   T extends PODPipelineInputFieldType.String

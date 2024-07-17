@@ -3,11 +3,11 @@ import {
   PODPipelineInputFieldType,
   PODPipelineInputType
 } from "@pcd/passport-interface";
+import { CSVInput } from "@pcd/passport-interface/src/PODPipeline/CSVInput";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "mocha";
 import { step } from "mocha-steps";
-import { CSVInput } from "../../../../src/services/generic-issuance/pipelines/PODPipeline/CSVInput";
 import { expectToExist } from "../../../util/util";
 
 describe("input loading", function () {
