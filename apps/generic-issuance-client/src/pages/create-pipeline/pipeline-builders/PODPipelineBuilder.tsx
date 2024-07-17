@@ -114,7 +114,13 @@ export default function PODPipelineBuilder(
                       csv,
                       columns: {}
                     },
-                    outputs: {}
+                    outputs: {},
+                    feedOptions: {
+                      feedId: "feedId",
+                      feedDisplayName: "feedDisplayName",
+                      feedDescription: "feedDescription",
+                      feedFolder: "feedFolder"
+                    }
                   }
                 } satisfies Partial<PODPipelineDefinition>)
               )

@@ -50,6 +50,12 @@ describe("atom creation", function () {
             inputField: "email"
           }
         }
+      },
+      feedOptions: {
+        feedId: "feedId",
+        feedDisplayName: "feedDisplayName",
+        feedDescription: "feedDescription",
+        feedFolder: "feedFolder"
       }
     };
 
@@ -129,6 +135,12 @@ describe("atom creation", function () {
             inputField: "email"
           }
         }
+      },
+      feedOptions: {
+        feedId: "feedId",
+        feedDisplayName: "feedDisplayName",
+        feedDescription: "feedDescription",
+        feedFolder: "feedFolder"
       }
     };
 

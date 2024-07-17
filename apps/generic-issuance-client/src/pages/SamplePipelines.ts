@@ -3,10 +3,6 @@ import {
   CSVPipelineOutputType,
   FeedIssuanceOptions,
   LemonadePipelineDefinition,
-  PODPipelineDefinition,
-  PODPipelineInputFieldType,
-  PODPipelineInputType,
-  PODPipelinePCDTypes,
   PipelineType
 } from "@pcd/passport-interface";
 
@@ -135,44 +131,6 @@ export const SAMPLE_CSV_PIPELINE = JSON.stringify(
       feedOptions: TICKET_FEED_OPTS
     }
   } satisfies Partial<CSVPipelineDefinition>,
-  null,
-  2
-);
-
-export const SAMPLE_POD_PIPELINE = JSON.stringify(
-  {
-    type: PipelineType.POD,
-    timeCreated: new Date().toISOString(),
-    timeUpdated: new Date().toISOString(),
-    editorUserIds: [],
-    options: {
-      input: {
-        type: PODPipelineInputType.CSV,
-        csv: "email,title, message\nmail@robknight.org.uk,hello, world",
-        columns: {
-          email: { type: PODPipelineInputFieldType.String },
-          title: { type: PODPipelineInputFieldType.String },
-          message: { type: PODPipelineInputFieldType.String }
-        }
-      },
-      outputs: {
-        output1: {
-          entries: {
-            title: { type: "string", source: { type: "input", name: "title" } },
-            message: {
-              type: "string",
-              source: { type: "input", name: "message" }
-            }
-          },
-          pcdType: PODPipelinePCDTypes.PODPCD,
-          match: {
-            type: "email",
-            inputField: "email"
-          }
-        }
-      }
-    }
-  } satisfies Partial<PODPipelineDefinition>,
   null,
   2
 );

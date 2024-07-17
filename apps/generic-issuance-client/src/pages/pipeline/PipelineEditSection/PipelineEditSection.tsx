@@ -3,7 +3,8 @@ import {
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue,
-  isCSVPipelineDefinition
+  isCSVPipelineDefinition,
+  isPODPipelineDefinition
 } from "@pcd/passport-interface";
 import { getErrorMessage } from "@pcd/util";
 import { ReactNode, useEffect, useRef, useState } from "react";
@@ -17,6 +18,8 @@ import { useViewingPipelineDefinition } from "../../../helpers/Context";
 import { stringifyAndFormat } from "../../../helpers/util";
 import { PreviewType } from "./CSVPreview";
 import { CSVPreviewEditWrapper } from "./CSVPreviewEditWrapper";
+import { PODFeed } from "./PODPipeline/PODFeed";
+import { PODSheetPreviewEditWrapper } from "./PODPipeline/PODSheetPreviewEditWrapper";
 import { PipelineActions } from "./PipelineActions";
 import { SinglePipelineTable } from "./SinglePipelineTable";
 
@@ -77,42 +80,19 @@ export function PipelineEditSection({
           <Tabs isLazy style={{ height: "100%" }}>
             {isCSVPipelineDefinition(pipeline) && (
               <TabList>
-                <Tab>Configuration</Tab>
                 <Tab>Data</Tab>
+                {isAdminView && <Tab>Configuration</Tab>}
+              </TabList>
+            )}
+            {isPODPipelineDefinition(pipeline) && (
+              <TabList>
+                <Tab>Data</Tab>
+                <Tab>Feed</Tab>
+                {isAdminView && <Tab>Configuration</Tab>}
               </TabList>
             )}
 
             <TabPanels style={{ height: "100%", overflow: "hidden" }}>
-              <TabPanel style={{ height: "100%" }}>
-                <FancyEditor
-                  dark
-                  value={editorValue}
-                  setValue={setEditorValue}
-                  readonly={
-                    (ownedBySomeoneElse && !isAdminView) || !!historyEntry
-                  }
-                  ref={editorRef}
-                  editorStyle={{
-                    width: editorMaximized ? "100%" : "100%",
-                    height: editorMaximized ? "100vh" : "100%"
-                  }}
-                  containerStyle={
-                    editorMaximized
-                      ? { border: "none", borderRadius: 0 }
-                      : undefined
-                  }
-                  editorOptions={
-                    editorMaximized
-                      ? {
-                          minimap: {
-                            enabled: true
-                          }
-                        }
-                      : undefined
-                  }
-                  language="json"
-                />
-              </TabPanel>
               {isCSVPipelineDefinition(pipeline) && (
                 <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
                   <CSVPreviewEditWrapper
@@ -143,6 +123,73 @@ export function PipelineEditSection({
                   />
                 </TabPanel>
               )}
+
+              {isPODPipelineDefinition(pipeline) && (
+                <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
+                  <PODSheetPreviewEditWrapper
+                    pipelineDefinitionText={editorValue}
+                    onChange={(newCsv: string) => {
+                      try {
+                        const pipelineContent = JSON.parse(editorValue);
+                        if (pipelineContent) {
+                          pipelineContent.options.csv = newCsv;
+                          setEditorValue(
+                            JSON.stringify(pipelineContent, null, 2)
+                          );
+                        }
+                      } catch (e) {
+                        // We should only have caught an exception here if the
+                        // JSON.parse() above failed.
+                        // But, if the JSON string in `editorValue` doesn't
+                        // parse then we would not be showing the CSV editor.
+                        // Errors here might happen if we change something
+                        // about how the `editorValue` text is managed.
+                        console.error(
+                          "Error when updating CSV data: ",
+                          getErrorMessage(e)
+                        );
+                      }
+                    }}
+                  />
+                </TabPanel>
+              )}
+
+              {isPODPipelineDefinition(pipeline) && (
+                <TabPanel>
+                  <PODFeed definition={editorValue} onChange={setEditorValue} />
+                </TabPanel>
+              )}
+
+              <TabPanel style={{ height: "100%" }}>
+                <FancyEditor
+                  dark
+                  value={editorValue}
+                  setValue={setEditorValue}
+                  readonly={
+                    (ownedBySomeoneElse && !isAdminView) || !!historyEntry
+                  }
+                  ref={editorRef}
+                  editorStyle={{
+                    width: editorMaximized ? "100%" : "100%",
+                    height: editorMaximized ? "100vh" : "100%"
+                  }}
+                  containerStyle={
+                    editorMaximized
+                      ? { border: "none", borderRadius: 0 }
+                      : undefined
+                  }
+                  editorOptions={
+                    editorMaximized
+                      ? {
+                          minimap: {
+                            enabled: true
+                          }
+                        }
+                      : undefined
+                  }
+                  language="json"
+                />
+              </TabPanel>
             </TabPanels>
           </Tabs>
         </Maximizer>
