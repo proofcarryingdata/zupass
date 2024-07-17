@@ -58,6 +58,6 @@ export class InMemoryPipelineAtomDB implements IPipelineAtomDB {
       return [];
     }
     const values = Object.values(pipelineData);
-    return values.filter((v) => v.email === email);
+    return values.filter((v) => v.email?.toLowerCase() === email.toLowerCase());
   }
 }
