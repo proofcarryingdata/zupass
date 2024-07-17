@@ -8,7 +8,7 @@ import { ReactNode } from "react";
 import { BsTicketPerforatedFill } from "react-icons/bs";
 import { FaCheck, FaHourglassHalf, FaRegPauseCircle } from "react-icons/fa";
 import { FaFileCsv } from "react-icons/fa6";
-import { GiCutLemon } from "react-icons/gi";
+import { GiCutLemon, GiSauropodHead } from "react-icons/gi";
 import { MdError } from "react-icons/md";
 import { timeAgo } from "../helpers/util";
 import { PipelineStateDisplay } from "../pages/dashboard/PipelineTable";
@@ -55,6 +55,8 @@ export function pipelineTypeColor(type?: PipelineType): string {
       return "yellow";
     case PipelineType.Pretix:
       return "purple";
+    case PipelineType.POD:
+      return "teal";
     default:
       // compile-time error for when not all cases are covered
       console.warn(`pipelineTypeColor invalid - '${type}'`);
@@ -70,6 +72,8 @@ export function pipelineTypeIcon(type: PipelineType): ReactNode {
       return <GiCutLemon />;
     case PipelineType.Pretix:
       return <BsTicketPerforatedFill />;
+    case PipelineType.POD:
+      return <GiSauropodHead />;
     default:
       console.warn(`pipelineTypeIcon invalid - '${type}'`);
       return null;
