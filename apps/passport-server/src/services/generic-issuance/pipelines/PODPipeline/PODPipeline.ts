@@ -1,3 +1,4 @@
+import { getHash } from "@pcd/passport-crypto";
 import {
   CSVInput,
   Input,
@@ -13,7 +14,7 @@ import {
   VerifiedCredentialWithEmail
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { PODEntries, serializePODEntries } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { assertUnreachable } from "@pcd/util";
@@ -25,6 +26,7 @@ import {
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
 import { logger } from "../../../../util/logger";
+import { PersistentCacheService } from "../../../persistentCacheService";
 import { setError, traced } from "../../../telemetryService";
 import { SemaphoreGroupProvider } from "../../SemaphoreGroupProvider";
 import {
@@ -64,6 +66,7 @@ export class PODPipeline implements BasePipeline {
   private credentialSubservice: CredentialSubservice;
   private semaphoreGroupProvider?: SemaphoreGroupProvider;
   private consumerDB: IPipelineConsumerDB;
+  private cacheService: PersistentCacheService;
 
   public get id(): string {
     return this.definition.id;
@@ -75,7 +78,8 @@ export class PODPipeline implements BasePipeline {
     db: IPipelineAtomDB,
     credentialSubservice: CredentialSubservice,
     consumerDB: IPipelineConsumerDB,
-    _semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
+    _semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
+    cacheService: PersistentCacheService
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -83,6 +87,7 @@ export class PODPipeline implements BasePipeline {
     this.credentialSubservice = credentialSubservice;
     //  this.semaphoreGroupProvider = new SemaphoreGroupProvider(semaphoreHistoryDB);
     this.consumerDB = consumerDB;
+    this.cacheService = cacheService;
     this.capabilities = [
       {
         issue: this.feedIssue.bind(this),
@@ -114,7 +119,7 @@ export class PODPipeline implements BasePipeline {
       );
 
       try {
-        const input = PODPipeline.loadInput(this.definition);
+        const input = PODPipeline.loadInputFromDefinition(this.definition);
         logs.push(
           makePLogInfo(
             `input columns: ${Object.keys(input.getColumns()).join(", ")}`
@@ -212,6 +217,44 @@ export class PODPipeline implements BasePipeline {
     return matchingAtoms;
   }
 
+  /**
+   * Get a cached PCD for the given ID. IDs are derived from the POD
+   * entries and pipeline ID. We also want to ensure that the POD was signed
+   * with the current EdDSA private key, so we include that in the cache key.
+   *
+   * @param id The id of the PCD to get
+   * @returns The cached PCD, or undefined if it is not cached
+   */
+  private async getCachedPCD(id: string): Promise<SerializedPCD | undefined> {
+    const key = await getHash(`${id}${this.eddsaPrivateKey}`);
+    const cacheEntry = await this.cacheService.getValue(key);
+    if (cacheEntry) {
+      return JSON.parse(cacheEntry.cache_value);
+    }
+    return undefined;
+  }
+
+  /**
+   * Store a serialized PCD in the cache.
+   *
+   * @param id The id of the PCD to store
+   * @param serializedPCD The PCD to store
+   */
+  private async storeCachedPCD(
+    id: string,
+    serializedPCD: SerializedPCD
+  ): Promise<void> {
+    const key = await getHash(`${id}${this.eddsaPrivateKey}`);
+    await this.cacheService.setValue(key, JSON.stringify(serializedPCD));
+  }
+
+  /**
+   * Return a response to the feed issuance request. This takes the form of
+   * an array of PCD actions that will be applied to the user's PCD collection.
+   *
+   * @param req The request for feed issuance
+   * @returns The response to the feed issuance request
+   */
   private async feedIssue(
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
@@ -243,12 +286,23 @@ export class PODPipeline implements BasePipeline {
 
       const serializedPCDs = await Promise.all(
         atomsToIssue.map(async (atom) => {
+          // Get the final POD entries from the atom, output configuration,
+          // and credential
           const entries = finalizeAtom(
             atom,
             this.definition.options.outputs[atom.outputId],
             credential
           );
 
+          const id = uuidv5(serializePODEntries(entries), this.id);
+
+          let serializedPCD = await this.getCachedPCD(id);
+          if (serializedPCD) {
+            return serializedPCD;
+          }
+
+          // Create a PODPCD
+          // @todo handle wrapper PCD outputs
           const pcd = await PODPCDPackage.prove({
             entries: {
               value: entries,
@@ -259,12 +313,15 @@ export class PODPipeline implements BasePipeline {
               argumentType: ArgumentTypeName.String
             },
             id: {
-              value: uuidv5(serializePODEntries(entries), this.id),
+              value: id,
               argumentType: ArgumentTypeName.String
             }
           });
 
-          return PODPCDPackage.serialize(pcd);
+          serializedPCD = await PODPCDPackage.serialize(pcd);
+          await this.storeCachedPCD(id, serializedPCD);
+
+          return serializedPCD;
         })
       );
 
@@ -286,7 +343,17 @@ export class PODPipeline implements BasePipeline {
     });
   }
 
-  public static loadInput(definition: PODPipelineDefinition): Input {
+  /**
+   * Loads an Input object from the given PODPipelineDefinition.
+   * As of now, there's only one input type: CSV. In this case, return a
+   * CSVInput object.
+   *
+   * @param definition The PODPipelineDefinition to load the input from
+   * @returns The input object
+   */
+  public static loadInputFromDefinition(
+    definition: PODPipelineDefinition
+  ): Input {
     switch (definition.options.input.type) {
       case PODPipelineInputType.CSV:
         return new CSVInput(definition.options.input);
@@ -298,6 +365,20 @@ export class PODPipeline implements BasePipeline {
     }
   }
 
+  /**
+   * Creates atoms from the given input and outputs.
+   * Technically it is possible to configure multiple outputs, but the Podbox
+   * UI is restricted to the common case of a single output.
+   *
+   * The resulting atoms contain only data derived from the Input (e.g. a
+   * CSV file) and do not contain issuance-time data derived from the user's
+   * credential, which is a common way of including a Semaphore ID in a POD.
+   *
+   * @param input The input to create atoms from
+   * @param outputs The outputs to create atoms from
+   * @param pipelineId The id of the pipeline to create atoms from
+   * @returns The atoms created from the given input and outputs
+   */
   public static createAtoms(
     input: Input,
     outputs: Record<string, PODPipelineOutput>,
@@ -306,6 +387,7 @@ export class PODPipeline implements BasePipeline {
     const atoms: PODAtom[] = [];
     const rows = input.getRows();
 
+    // For each row in the input, create one of each configured output.
     for (const row of rows) {
       for (const [outputId, output] of Object.entries(outputs)) {
         const atom = atomize(

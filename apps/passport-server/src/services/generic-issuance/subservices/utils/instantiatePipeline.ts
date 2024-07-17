@@ -118,7 +118,8 @@ export function instantiatePipeline(
         args.pipelineAtomDB,
         args.credentialSubservice,
         args.consumerDB,
-        args.semaphoreHistoryDB
+        args.semaphoreHistoryDB,
+        args.cacheService
       );
     }
 
