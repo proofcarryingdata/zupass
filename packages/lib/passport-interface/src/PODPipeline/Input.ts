@@ -26,7 +26,7 @@ export type InputRow = TemplatedInputRow<
 export type InputValue = string | bigint | boolean | Date;
 
 interface TemplatedInput<T extends Record<string, PODPipelineInputFieldType>> {
-  getColumns(): Record<string, Column>;
+  getColumns(): Record<string, InputColumn>;
   getRows(): TemplatedInputRow<T>[];
 }
 
@@ -54,4 +54,4 @@ export class TemplatedColumn<T extends PODPipelineInputFieldType> {
   }
 }
 
-export type Column = TemplatedColumn<PODPipelineInputFieldType>;
+export type InputColumn = TemplatedColumn<PODPipelineInputFieldType>;

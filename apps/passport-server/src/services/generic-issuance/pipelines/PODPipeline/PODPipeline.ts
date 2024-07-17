@@ -1,10 +1,7 @@
 import {
   CSVInput,
-  Column,
   Input,
-  InputRow,
   PODPipelineDefinition,
-  PODPipelineInputFieldType,
   PODPipelineInputType,
   PODPipelineOutput,
   PODPipelineOutputMatch,
@@ -18,7 +15,7 @@ import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { PODEntries, serializePODEntries } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
-import { assertUnreachable, uuidToBigInt } from "@pcd/util";
+import { assertUnreachable } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import {
   IPipelineAtomDB,
@@ -39,6 +36,7 @@ import { CredentialSubservice } from "../../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline } from "../types";
+import { atomize } from "./utils/atomize";
 import { finalizeAtom } from "./utils/finalizeAtom";
 
 const LOG_NAME = "PODPipeline";
@@ -294,7 +292,7 @@ export class PODPipeline implements BasePipeline {
 
     for (const row of rows) {
       for (const [outputId, output] of Object.entries(outputs)) {
-        const atom = PODPipeline.atomize(
+        const atom = atomize(
           input.getColumns(),
           row,
           output,
@@ -306,119 +304,6 @@ export class PODPipeline implements BasePipeline {
     }
 
     return atoms;
-  }
-
-  public static atomize(
-    columns: Record<string, Column>,
-    row: InputRow,
-    output: PODPipelineOutput,
-    outputId: string,
-    pipelineId: string
-  ): PODAtom {
-    const entries: PODEntries = {};
-    for (const [key, entry] of Object.entries(output.entries)) {
-      const source = entry.source;
-
-      if (source.type === "input") {
-        const column = columns[source.name];
-        if (entry.type === "string") {
-          // Dates require special conversion to strings as the default
-          // string conversion is affected by locale settings.
-          if (column.is(PODPipelineInputFieldType.Date)) {
-            entries[key] = {
-              type: "string",
-              value: column.getValue(row).toISOString()
-            };
-          } else {
-            entries[key] = {
-              type: "string",
-              value: column.getValue(row).toString()
-            };
-          }
-        } else if (entry.type === "cryptographic") {
-          if (column.is(PODPipelineInputFieldType.Integer)) {
-            entries[key] = {
-              type: "cryptographic",
-              value: column.getValue(row)
-            };
-          } else if (column.is(PODPipelineInputFieldType.Date)) {
-            entries[key] = {
-              type: "cryptographic",
-              value: BigInt(column.getValue(row).getTime())
-            };
-          } else if (column.is(PODPipelineInputFieldType.Boolean)) {
-            entries[key] = {
-              type: "cryptographic",
-              value: BigInt(column.getValue(row))
-            };
-          } else if (column.is(PODPipelineInputFieldType.UUID)) {
-            entries[key] = {
-              type: "cryptographic",
-              value: uuidToBigInt(column.getValue(row))
-            };
-          } else {
-            throw new Error(
-              `Could not map column ${key} from input type ${column.type} to POD type ${entry.type}`
-            );
-          }
-        } else if (entry.type === "int") {
-          // These mappings are the same as those for "cryptographic"
-          if (column.is(PODPipelineInputFieldType.Integer)) {
-            entries[key] = {
-              type: "int",
-              value: column.getValue(row)
-            };
-          } else if (column.is(PODPipelineInputFieldType.Date)) {
-            entries[key] = {
-              type: "int",
-              value: BigInt(column.getValue(row).getTime())
-            };
-          } else if (column.is(PODPipelineInputFieldType.Boolean)) {
-            entries[key] = {
-              type: "int",
-              value: BigInt(column.getValue(row))
-            };
-          } else if (column.is(PODPipelineInputFieldType.UUID)) {
-            entries[key] = {
-              type: "int",
-              value: uuidToBigInt(column.getValue(row))
-            };
-          } else {
-            throw new Error(
-              `Could not map column ${key} from input type ${column.type} to POD value type ${entry.type}`
-            );
-          }
-        } else {
-          assertUnreachable(
-            entry.type,
-            `Unsupported POD value type ${entry.type}`
-          );
-        }
-      } else if (source.type === "configured") {
-        entries[key] = {
-          // @todo non-string configured values
-          type: "string",
-          value: source.value
-        };
-      } else if (
-        source.type === "credentialSemaphoreID" ||
-        source.type === "credentialEmail"
-      ) {
-        // These values are not present during loading and so cannot be
-        // populated in the Atom.
-        continue;
-      } else {
-        assertUnreachable(source);
-      }
-    }
-
-    const id = uuidv5(serializePODEntries(entries), pipelineId);
-    const matchTo = {
-      entry: output.match.inputField,
-      matchType: output.match.type
-    };
-
-    return { entries, outputId, id, matchTo };
   }
 
   public static uniqueIds(definition: PODPipelineDefinition): string[] {

@@ -5,7 +5,13 @@ import {
   PODPipelineCSVInput,
   PODPipelineInputFieldType
 } from "../genericIssuanceTypes";
-import { Column, Input, InputRow, InputValue, TemplatedColumn } from "./Input";
+import {
+  Input,
+  InputColumn,
+  InputRow,
+  InputValue,
+  TemplatedColumn
+} from "./Input";
 
 const datelike = z.union([z.number(), z.string(), z.date()]);
 const datelikeToDate = datelike.pipe(z.coerce.date());
@@ -25,7 +31,7 @@ const safeBigInt = z.string().transform((val, ctx) => {
 
 export class CSVInput implements Input {
   private data: Record<string, InputValue>[] = [];
-  private columns: Record<string, Column>;
+  private columns: Record<string, InputColumn>;
 
   public constructor({ csv, columns }: PODPipelineCSVInput) {
     this.columns = Object.fromEntries(
@@ -70,7 +76,7 @@ export class CSVInput implements Input {
     return this.data;
   }
 
-  public getColumns(): Record<string, Column> {
+  public getColumns(): Record<string, InputColumn> {
     return this.columns;
   }
 }
