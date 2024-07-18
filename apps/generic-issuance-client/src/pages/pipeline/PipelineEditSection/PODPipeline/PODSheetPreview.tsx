@@ -1,15 +1,7 @@
 import { ChevronDownIcon, PlusSquareIcon } from "@chakra-ui/icons";
 import {
-  AlertDialog,
-  AlertDialogBody,
-  AlertDialogContent,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogOverlay,
   Box,
   Button,
-  FormControl,
-  FormLabel,
   Icon,
   Input,
   InputProps,
@@ -18,15 +10,7 @@ import {
   MenuDivider,
   MenuItem,
   MenuList,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   Portal,
-  Select,
   UseMenuItemProps,
   VStack,
   useDisclosure,
@@ -41,13 +25,7 @@ import {
   PODPipelineInputType
 } from "@pcd/passport-interface";
 import { stringify } from "csv-stringify/sync";
-import React, {
-  ReactNode,
-  useCallback,
-  useEffect,
-  useMemo,
-  useState
-} from "react";
+import React, { ReactNode, useCallback, useMemo, useState } from "react";
 import {
   MdCheckCircleOutline,
   MdDateRange,
@@ -61,6 +39,8 @@ import styled from "styled-components";
 import { BooleanEditor, BooleanViewer } from "./cells/BooleanCell";
 import { DateEditor, DateViewer } from "./cells/DateCell";
 import { IntegerEditor, IntegerViewer } from "./cells/IntegerCell";
+import { AddColumnModal } from "./modals/AddColumnModal";
+import { DeleteColumnDialog } from "./modals/DeleteColumnDialog";
 
 const COLUMN_DEFAULTS = {
   [PODPipelineInputFieldType.String]: "",
@@ -90,126 +70,6 @@ const COLUMN_CELLS = {
 type HeaderRowProps = React.PropsWithChildren & {
   onAddColumn: () => void;
 };
-
-function DeleteColumnDialog({
-  isOpen,
-  onClose,
-  onDelete,
-  name
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  onDelete: () => void;
-  name: string;
-}): ReactNode {
-  const cancelRef = React.useRef<HTMLButtonElement>(null);
-  return (
-    <AlertDialog
-      isOpen={isOpen}
-      leastDestructiveRef={cancelRef}
-      onClose={onClose}
-    >
-      <AlertDialogOverlay>
-        <AlertDialogContent>
-          <AlertDialogHeader fontSize="lg" fontWeight="bold">
-            Delete Column
-          </AlertDialogHeader>
-
-          <AlertDialogBody>
-            Are you sure? This will delete all data in the{" "}
-            <strong>{name}</strong> column.
-          </AlertDialogBody>
-
-          <AlertDialogFooter>
-            <Button ref={cancelRef} onClick={onClose}>
-              Cancel
-            </Button>
-            <Button colorScheme="red" onClick={onDelete} ml={3}>
-              Delete
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialogOverlay>
-    </AlertDialog>
-  );
-}
-
-function AddColumnModal({
-  onAddColumn,
-  isOpen,
-  onClose,
-  columns
-}: {
-  onAddColumn: (name: string, type: PODPipelineInputFieldType) => void;
-  isOpen: boolean;
-  onClose: () => void;
-  columns: Record<string, InputColumn>;
-}): ReactNode {
-  const [name, setName] = useState("");
-  const [type, setType] = useState<PODPipelineInputFieldType | undefined>();
-  useEffect(() => {
-    setName("");
-    setType(undefined);
-  }, [isOpen]);
-  const columnNames = useMemo(() => new Set(Object.keys(columns)), [columns]);
-  const invalidInput =
-    name === "" || type === undefined || columnNames.has(name);
-  return (
-    <>
-      <Modal isOpen={isOpen} onClose={onClose}>
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Modal Title</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <VStack spacing={2}>
-              <FormControl>
-                <FormLabel>Name</FormLabel>
-                <Input
-                  placeholder="Enter the name for the new column"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </FormControl>
-              <FormControl>
-                <FormLabel>Type</FormLabel>
-                <Select
-                  placeholder="Select the type for the new column"
-                  value={type}
-                  onChange={(e) =>
-                    setType(e.target.value as PODPipelineInputFieldType)
-                  }
-                >
-                  <option value="string">String</option>
-                  <option value="integer">Integer</option>
-                  <option value="boolean">Boolean</option>
-                  <option value="date">Date</option>
-                  <option value="uuid">UUID</option>
-                </Select>
-              </FormControl>
-            </VStack>
-          </ModalBody>
-
-          <ModalFooter>
-            <Button
-              colorScheme={invalidInput ? "gray" : "blue"}
-              mr={3}
-              disabled={invalidInput}
-              onClick={() => {
-                if (!invalidInput) onAddColumn(name, type);
-              }}
-            >
-              Add Column
-            </Button>
-            <Button variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </>
-  );
-}
 
 function HeaderRow(props: HeaderRowProps): ReactNode {
   const { onAddColumn, ...rowProps } = props;
