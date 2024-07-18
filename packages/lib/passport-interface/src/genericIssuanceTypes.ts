@@ -596,6 +596,8 @@ const PODPipelinePODEntrySchema = z.object({
   ])
 });
 
+export type PODPipelinePODEntry = z.infer<typeof PODPipelinePODEntrySchema>;
+
 const PODPipelinePODEntriesSchema = z.record(
   z.string(),
   PODPipelinePODEntrySchema

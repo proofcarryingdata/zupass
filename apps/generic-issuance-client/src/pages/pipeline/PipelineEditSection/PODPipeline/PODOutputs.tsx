@@ -22,12 +22,13 @@ import {
   Tr
 } from "@chakra-ui/react";
 import {
+  CSVInput,
   PODPipelineDefinition,
+  PODPipelinePODEntry,
   PipelineDefinition,
   PipelineDefinitionSchema,
   PipelineType
 } from "@pcd/passport-interface";
-import { parse } from "csv-parse/sync";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
 
@@ -100,20 +101,19 @@ function AddConfiguredValueModal({
 function ValidatedOutputs({
   name,
   definition,
-  onChange
+  onChange,
+  csvInput
 }: {
   name: string;
   definition: PODPipelineDefinition;
-  onChange?: (newDefinition: PODPipelineDefinition) => void;
+  onChange: (newDefinition: PODPipelineDefinition) => void;
+  csvInput: CSVInput;
 }): ReactNode {
   const { outputs } = definition.options;
   const output = outputs[name];
 
-  const parsedCSV = parse(definition.options.input.csv, { columns: true });
-  const columns = useMemo(
-    () => (parsedCSV.length > 0 ? Object.keys(parsedCSV[0]) : []),
-    [parsedCSV]
-  );
+  const columns = Object.keys(csvInput.getColumns());
+
   const entries = Object.entries(output.entries ?? []);
   const entryObj = Object.fromEntries(entries);
 
@@ -200,6 +200,15 @@ function ValidatedOutputs({
     [definition, name, onChange]
   );
 
+  const changeType = useCallback(
+    (key: string, type: PODPipelinePODEntry["type"]) => {
+      const newDefinition = structuredClone(definition);
+      newDefinition.options.outputs[name].entries[key].type = type;
+      onChange?.(newDefinition);
+    },
+    [definition, name, onChange]
+  );
+
   return (
     <Outputs>
       <AddConfiguredValueModal
@@ -269,7 +278,22 @@ function ValidatedOutputs({
                       </option>
                     </Select>
                   </Td>
-                  <Td>{entry.type ?? "string"}</Td>
+                  <Td>
+                    <Select
+                      value={entry.type ?? "string"}
+                      onChange={(ev) =>
+                        changeType(
+                          key,
+                          // "string" | "cryptographic" | "int"
+                          ev.target.value as PODPipelinePODEntry["type"]
+                        )
+                      }
+                    >
+                      <option value="string">String</option>
+                      <option value="cryptographic">Cryptographic</option>
+                      <option value="int">Integer</option>
+                    </Select>
+                  </Td>
                 </Tr>
               );
             })}
@@ -285,6 +309,33 @@ function ValidatedOutputs({
         </Table>
       )}
     </Outputs>
+  );
+}
+
+function PODOutputsList({
+  definition,
+  onChange
+}: {
+  definition: PODPipelineDefinition;
+  onChange: (newDefinition: string) => void;
+}): ReactNode {
+  const csvInput = useMemo(() => {
+    return new CSVInput(definition.options.input);
+  }, [definition]);
+
+  return (
+    <>
+      {Object.keys(definition.options.outputs).map((name) => (
+        <ValidatedOutputs
+          name={name}
+          csvInput={csvInput}
+          definition={definition}
+          onChange={(definition) =>
+            onChange(JSON.stringify(definition, null, 2))
+          }
+        />
+      ))}
+    </>
   );
 }
 
@@ -313,21 +364,7 @@ export function PODOutputs({
     );
   }
 
-  const validDefinition: PODPipelineDefinition = parsed;
-
-  return (
-    <>
-      {Object.keys(validDefinition.options.outputs).map((name) => (
-        <ValidatedOutputs
-          name={name}
-          definition={validDefinition}
-          onChange={(definition) =>
-            onChange(JSON.stringify(definition, null, 2))
-          }
-        />
-      ))}
-    </>
-  );
+  return <PODOutputsList definition={parsed} onChange={onChange} />;
 }
 
 const OutputItem = styled.div``;
