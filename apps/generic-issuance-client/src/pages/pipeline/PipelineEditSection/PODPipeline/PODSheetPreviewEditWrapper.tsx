@@ -1,4 +1,10 @@
 import { Alert, AlertIcon } from "@chakra-ui/react";
+import {
+  CSVInput,
+  PODPipelineInput,
+  PipelineDefinitionSchema,
+  PipelineType
+} from "@pcd/passport-interface";
 import { ReactNode } from "react";
 import { PODSheetPreview } from "./PODSheetPreview";
 
@@ -7,13 +13,19 @@ export function PODSheetPreviewEditWrapper({
   onChange
 }: {
   pipelineDefinitionText: string;
-  onChange?: (newCsv: string) => void;
+  onChange: (newInput: PODPipelineInput) => void;
 }): ReactNode {
-  let csv: string = "";
   let error = false;
+  let csvInput: CSVInput | undefined = undefined;
   try {
-    const data = JSON.parse(pipelineDefinitionText);
-    csv = data.options.input.csv;
+    const parsed = PipelineDefinitionSchema.parse(
+      JSON.parse(pipelineDefinitionText)
+    );
+    if (parsed.type === PipelineType.POD) {
+      csvInput = new CSVInput(parsed.options.input);
+    } else {
+      error = true;
+    }
   } catch (e) {
     error = true;
   }
@@ -28,5 +40,7 @@ export function PODSheetPreviewEditWrapper({
     );
   }
 
-  return <PODSheetPreview csv={csv} onChange={onChange} />;
+  return (
+    csvInput && <PODSheetPreview csvInput={csvInput} onChange={onChange} />
+  );
 }

@@ -160,7 +160,7 @@ function ValidatedOutputs({
       //  newDefinition.options.podOutput = { ...podOutput, [key]: entry };
       onChange?.(newDefinition);
     },
-    [definition, entryObj, onChange, output]
+    [definition, entryObj, onChange]
   );
 
   const [addingConfiguredValueForKey, setAddingConfiguredValueForKey] =
@@ -189,7 +189,7 @@ function ValidatedOutputs({
       [key]: { type: "string", source: { type: "input", name: columns[0] } }
     };
     onChange?.(newDefinition);
-  }, [columns, definition, onChange]);
+  }, [columns, definition, name, onChange]);
 
   const removeEntry = useCallback(
     (key: string) => {
@@ -197,7 +197,7 @@ function ValidatedOutputs({
       delete newDefinition.options.outputs[name].entries?.[key];
       onChange?.(newDefinition);
     },
-    [definition, onChange]
+    [definition, name, onChange]
   );
 
   return (
@@ -256,6 +256,7 @@ function ValidatedOutputs({
                       {sources.map(([source, label]) => {
                         return (
                           <option
+                            key={source}
                             value={source}
                             selected={source === selectedSource}
                           >
@@ -292,7 +293,7 @@ export function PODOutputs({
   onChange
 }: {
   definition: string;
-  onChange?: (newDefinition: string) => void;
+  onChange: (newDefinition: string) => void;
 }): ReactNode {
   let error = false;
   let parsed: PipelineDefinition | undefined;
@@ -302,7 +303,7 @@ export function PODOutputs({
     error = true;
   }
 
-  if (error || parsed?.type !== PipelineType.POD) {
+  if (!parsed || error || parsed?.type !== PipelineType.POD) {
     return (
       <Alert status="error">
         <AlertIcon />
@@ -312,14 +313,16 @@ export function PODOutputs({
     );
   }
 
+  const validDefinition: PODPipelineDefinition = parsed;
+
   return (
     <>
-      {Object.keys(parsed.options.outputs).map((name) => (
+      {Object.keys(validDefinition.options.outputs).map((name) => (
         <ValidatedOutputs
           name={name}
-          definition={parsed}
+          definition={validDefinition}
           onChange={(definition) =>
-            onChange?.(JSON.stringify(definition, null, 2))
+            onChange(JSON.stringify(definition, null, 2))
           }
         />
       ))}

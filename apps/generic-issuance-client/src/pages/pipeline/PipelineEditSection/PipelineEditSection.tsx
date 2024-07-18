@@ -1,6 +1,7 @@
 import { Box, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import {
   GenericIssuanceSelfResponseValue,
+  PODPipelineInput,
   PipelineDefinition,
   PipelineInfoResponseValue,
   isCSVPipelineDefinition,
@@ -130,11 +131,11 @@ export function PipelineEditSection({
                 <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
                   <PODSheetPreviewEditWrapper
                     pipelineDefinitionText={editorValue}
-                    onChange={(newCsv: string) => {
+                    onChange={(newInput: PODPipelineInput) => {
                       try {
                         const pipelineContent = JSON.parse(editorValue);
                         if (pipelineContent) {
-                          pipelineContent.options.csv = newCsv;
+                          pipelineContent.options.input = newInput;
                           setEditorValue(
                             JSON.stringify(pipelineContent, null, 2)
                           );
@@ -147,7 +148,7 @@ export function PipelineEditSection({
                         // Errors here might happen if we change something
                         // about how the `editorValue` text is managed.
                         console.error(
-                          "Error when updating CSV data: ",
+                          "Error when updating input data: ",
                           getErrorMessage(e)
                         );
                       }

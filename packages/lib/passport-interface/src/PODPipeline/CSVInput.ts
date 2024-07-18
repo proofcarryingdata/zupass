@@ -16,6 +16,20 @@ import {
 const datelike = z.union([z.number(), z.string(), z.date()]);
 const datelikeToDate = datelike.pipe(z.coerce.date());
 
+const booleanLike = z.union([z.boolean(), z.string(), z.number()]);
+const booleanValidator = booleanLike.transform((val, ctx) => {
+  if (typeof val === "boolean") return val;
+  if (typeof val === "number") return val !== 0;
+  const normalized = val.toLowerCase().trim();
+  if (["true", "t", "yes", "y", "1"].includes(normalized)) return true;
+  if (["false", "f", "no", "n", "0", ""].includes(normalized)) return false;
+  ctx.addIssue({
+    code: z.ZodIssueCode.custom,
+    message: "Invalid boolean value"
+  });
+  return z.NEVER;
+});
+
 const safeBigInt = z.string().transform((val, ctx) => {
   try {
     return BigInt(val);
@@ -52,8 +66,7 @@ export class CSVInput implements Input {
                 "Integers must not be negative"
               )
             : column.type === PODPipelineInputFieldType.Boolean
-            ? // @todo this is way too permissive
-              z.coerce.boolean()
+            ? booleanValidator
             : column.type === PODPipelineInputFieldType.Date
             ? datelikeToDate
             : column.type === PODPipelineInputFieldType.UUID

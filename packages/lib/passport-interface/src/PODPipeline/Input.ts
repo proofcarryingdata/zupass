@@ -34,7 +34,7 @@ export type Input = TemplatedInput<Record<string, PODPipelineInputFieldType>>;
 
 export class TemplatedColumn<T extends PODPipelineInputFieldType> {
   public readonly type: T;
-  public readonly name: string;
+  private readonly name: string;
 
   public constructor(name: string, type: T) {
     this.name = name;

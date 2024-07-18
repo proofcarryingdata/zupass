@@ -8,7 +8,7 @@ import { ReactNode } from "react";
 import { BsTicketPerforatedFill } from "react-icons/bs";
 import { FaCheck, FaHourglassHalf, FaRegPauseCircle } from "react-icons/fa";
 import { FaFileCsv } from "react-icons/fa6";
-import { GiCutLemon, GiSauropodHead } from "react-icons/gi";
+import { GiCutLemon, GiPeas } from "react-icons/gi";
 import { MdError } from "react-icons/md";
 import { timeAgo } from "../helpers/util";
 import { PipelineStateDisplay } from "../pages/dashboard/PipelineTable";
@@ -73,7 +73,7 @@ export function pipelineTypeIcon(type: PipelineType): ReactNode {
     case PipelineType.Pretix:
       return <BsTicketPerforatedFill />;
     case PipelineType.POD:
-      return <GiSauropodHead />;
+      return <GiPeas />;
     default:
       console.warn(`pipelineTypeIcon invalid - '${type}'`);
       return null;

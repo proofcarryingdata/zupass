@@ -579,6 +579,8 @@ const PODPipelineInputSchema = z.discriminatedUnion("type", [
   PODPipelineCSVInputSchema
 ]);
 
+export type PODPipelineInput = z.infer<typeof PODPipelineInputSchema>;
+
 export enum PODPipelinePCDTypes {
   PODPCD = "PODPCD",
   PODTicketPCD = "PODTicketPCD"
