@@ -48,7 +48,14 @@ import React, {
   useMemo,
   useState
 } from "react";
-import { MdDeleteOutline } from "react-icons/md";
+import {
+  MdCheckCircleOutline,
+  MdDateRange,
+  MdDeleteOutline,
+  MdKey,
+  MdNumbers,
+  MdShortText
+} from "react-icons/md";
 import { Matrix, Mode, Spreadsheet } from "react-spreadsheet";
 import styled from "styled-components";
 import { BooleanEditor, BooleanViewer } from "./cells/BooleanCell";
@@ -247,20 +254,41 @@ function MenuInput(props: UseMenuItemProps & InputProps): ReactNode {
 }
 
 function ColumnIndicator({
-  columnNames,
+  columns,
   column,
   label,
   onDelete
 }: {
-  columnNames: string[];
+  columns: Record<string, InputColumn>;
   column: number;
   label?: React.ReactNode | null;
   onDelete: (name: string) => void;
 }): ReactNode {
+  const columnNames = useMemo(() => Object.keys(columns), [columns]);
+  const icon = useMemo(() => {
+    const type = columns[columnNames[column]].type;
+    switch (type) {
+      case PODPipelineInputFieldType.String:
+        return <Icon as={MdShortText} w={4} h={4} />;
+      case PODPipelineInputFieldType.Integer:
+        return <Icon as={MdNumbers} w={4} h={4} />;
+      case PODPipelineInputFieldType.Boolean:
+        return <Icon as={MdCheckCircleOutline} w={4} h={4} />;
+      case PODPipelineInputFieldType.Date:
+        return <Icon as={MdDateRange} w={4} h={4} />;
+      case PODPipelineInputFieldType.UUID:
+        return <Icon as={MdKey} w={4} h={4} />;
+    }
+  }, [columns, column, columnNames]);
   return (
     <th>
       <Menu>
-        <MenuButton w="100%" as={Button} rightIcon={<ChevronDownIcon />}>
+        <MenuButton
+          w="100%"
+          as={Button}
+          leftIcon={icon}
+          rightIcon={<ChevronDownIcon />}
+        >
           {label ?? columnNames[column]}
         </MenuButton>
         <Portal>
@@ -450,7 +478,7 @@ export function PODSheetPreview({
     (props: { column: number; label?: React.ReactNode | null }) => {
       return (
         <ColumnIndicator
-          columnNames={Object.keys(columns)}
+          columns={columns}
           onDelete={onDeleteColumn}
           {...props}
         />
