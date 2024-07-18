@@ -6,6 +6,7 @@ import {
   PODPipelineInputType,
   PODPipelineOutput,
   PODPipelineOutputMatch,
+  PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
@@ -97,7 +98,9 @@ export class PODPipeline implements BasePipeline {
           this.id,
           this.definition.options.feedOptions.feedId
         ),
-        getZuAuthConfig: async () => []
+        getZuAuthConfig: async (): Promise<
+          PipelineEdDSATicketZuAuthConfig[]
+        > => []
       } satisfies FeedIssuanceCapability
     ] as unknown as BasePipelineCapability[];
   }
@@ -281,6 +284,9 @@ export class PODPipeline implements BasePipeline {
         semaphoreId,
         new Date()
       );
+      if (didUpdate) {
+        this.consumerDB.save(this.id, email, semaphoreId, new Date());
+      }
 
       const atomsToIssue = await this.loadMatchingAtoms(credential);
 
