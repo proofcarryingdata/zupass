@@ -8,7 +8,13 @@ import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
-import { useDispatch, useIsSyncSettled, useSelf } from "../../../src/appHooks";
+import {
+  useCredentialManager,
+  useDispatch,
+  useIsSyncSettled,
+  useSelf
+} from "../../../src/appHooks";
+import { mintPODPCD } from "../../../src/mintUtils";
 import {
   clearAllPendingRequests,
   pendingRequestKeys
@@ -40,8 +46,14 @@ export function JustAddScreen({
   const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
   const { error, pcd } = useDeserialized(request.pcd);
+  console.log("Error: ", error);
   const syncSettled = useIsSyncSettled();
   const self = useSelf();
+  const isMintable =
+    request.pcd.type === "pod-pcd" && request.mintUrl !== undefined;
+  const semaphoreSignaturePCD = useCredentialManager().requestCredential({
+    signatureType: "sempahore-signature-pcd"
+  });
   const isProtocolWorlds = request.folder === ProtocolWorldsFolderName;
   const [ref, setRef] = useState<HTMLElement | null>(null);
   const confetti = useTensionConfetti(ref);
@@ -59,12 +71,23 @@ export function JustAddScreen({
       }=${encodeURIComponent(stringifiedRequest)}`;
       return;
     }
+
     try {
       // This is mostly for typechecking and should never throw
       // because <AddScreen /> checks if the user is logged in
+
+      // If the (POD)PCD is mintable, mint it first.
+      const maybeSerialisedMintedPCD = isMintable
+        ? await mintPODPCD(
+            request.mintUrl as string,
+            request.pcd,
+            await semaphoreSignaturePCD
+          )
+        : request.pcd;
+
       await dispatch({
         type: "add-pcds",
-        pcds: [request.pcd],
+        pcds: [maybeSerialisedMintedPCD],
         folder: request.folder
       });
       if (isProtocolWorlds) {
@@ -80,7 +103,16 @@ export function JustAddScreen({
     } catch (e) {
       await err(dispatch, "Error Adding PCD", getErrorMessage(e));
     }
-  }, [confetti, dispatch, self, pcd, isProtocolWorlds, request]);
+  }, [
+    confetti,
+    dispatch,
+    self,
+    pcd,
+    isMintable,
+    isProtocolWorlds,
+    request,
+    semaphoreSignaturePCD
+  ]);
 
   useEffect(() => {
     if (autoAdd && !hasAutoAdded.current) {
@@ -115,7 +147,7 @@ export function JustAddScreen({
         {error && JSON.stringify(error)}
         <Spacer h={16} />
         <Button onClick={onAddClick}>
-          {isProtocolWorlds ? "Collect" : "Add"}
+          {isProtocolWorlds ? "Collect" : isMintable ? "Mint" : "Add"}
         </Button>
       </>
     );

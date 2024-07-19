@@ -14,6 +14,7 @@ import {
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdAddRequestUrl,
+  constructZupassPcdMintRequestUrl,
   constructZupassPcdProveAndAddRequestUrl,
   openSignedZuzaluSignInPopup,
   useZupassPopupMessages
@@ -91,6 +92,9 @@ export default function Page(): JSX.Element {
     _setPODPrivateKey2(key);
     setPODPublicKey2(encodePublicKey(derivePublicKey(decodePrivateKey(key))));
   };
+  const [podMintUrl, setPODMintUrl] = useState(
+    "http://localhost:4000/api/mintPOD"
+  );
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
   const [membershipLists, setMembershipLists] = useState(
     EXAMPLE_MEMBERSHIP_LISTS
@@ -234,7 +238,7 @@ export default function Page(): JSX.Element {
         </label>
         <br />
         <br />
-        Card POD content to sign: <br />
+        Card POD content to sign and/or mint: <br />
         <br />
         <textarea
           cols={45}
@@ -269,6 +273,19 @@ export default function Page(): JSX.Element {
           add a new POD to Zupass (redirect)
         </button>
         <br />
+        <button
+          onClick={() =>
+            mintPODPCD(
+              podMintUrl,
+              podContent2,
+              podPrivateKey2,
+              podFolder2.length > 0 ? podFolder2 : undefined
+            )
+          }
+        >
+          mint a new POD in Zupass (popup)
+        </button>
+        <br />
         <label>
           Private key to sign POD with:
           <input
@@ -293,6 +310,19 @@ export default function Page(): JSX.Element {
             style={{ marginLeft: "16px" }}
             onChange={(e): void => {
               setPODFolder2(e.target.value);
+            }}
+          />
+        </label>
+        <br />
+        <label>
+          Mint URL:
+          <input
+            type="text"
+            value={podMintUrl}
+            placeholder="Enter mint URL..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODMintUrl(e.target.value);
             }}
           />
         </label>
@@ -720,6 +750,37 @@ async function addPODPCD(
 
   const url = constructZupassPcdAddRequestUrl(
     ZUPASS_URL,
+    window.location.origin + "#/popup",
+    serializedPODPCD,
+    podFolder,
+    false,
+    redirectToFolder
+  );
+
+  if (redirectToFolder) {
+    open(url);
+  } else {
+    sendZupassRequest(url);
+  }
+}
+
+async function mintPODPCD(
+  mintUrl: string,
+  podContent: string,
+  podPrivateKey: string,
+  podFolder: string | undefined,
+  redirectToFolder?: boolean
+): Promise<void> {
+  const newPOD = new PODPCD(
+    uuid(),
+    POD.sign(podEntriesFromSimplifiedJSON(podContent), podPrivateKey)
+  );
+
+  const serializedPODPCD = await PODPCDPackage.serialize(newPOD);
+
+  const url = constructZupassPcdMintRequestUrl(
+    ZUPASS_URL,
+    mintUrl,
     window.location.origin + "#/popup",
     serializedPODPCD,
     podFolder,
