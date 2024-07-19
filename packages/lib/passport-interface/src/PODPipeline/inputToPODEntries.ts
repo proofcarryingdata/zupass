@@ -4,19 +4,23 @@ import {
   PODPipelineInputFieldType,
   PODPipelinePODEntry
 } from "../genericIssuanceTypes";
-import { FieldTypeToValue, TemplatedColumn } from "./Input";
+import { FieldTypeToJavaScriptType, TemplatedColumn } from "./Input";
 
 /**
  * Conversions for converting input values to POD values.
  * If no valid conversion exists, the conversion is set to undefined.
  * This conversion happens *after* the raw values from the CSV file are
  * coerced to the correct type by the CSVInput class.
+ *
+ * This maps from supported POD value types (not all value types are supported
+ * yet) to the input types that can be converted to them. Input types are
+ * described by {@link PODPipelineInputFieldType}.
  */
-export const conversions: Record<
+const conversions: Record<
   PODPipelinePODEntry["type"],
   {
     [K in PODPipelineInputFieldType]:
-      | ((value: FieldTypeToValue<K>) => PODValue)
+      | ((value: FieldTypeToJavaScriptType<K>) => PODValue)
       | undefined;
   }
 > = {
@@ -102,6 +106,6 @@ export function getInputToPODValueConverter<
 >(
   column: TemplatedColumn<T>,
   podValueType: PODPipelinePODEntry["type"]
-): ((value: FieldTypeToValue<T>) => PODValue) | undefined {
+): ((value: FieldTypeToJavaScriptType<T>) => PODValue) | undefined {
   return conversions[podValueType]?.[column.type];
 }

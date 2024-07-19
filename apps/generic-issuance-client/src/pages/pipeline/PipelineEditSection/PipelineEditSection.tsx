@@ -79,7 +79,10 @@ export function PipelineEditSection({
           maximized={editorMaximized}
           setMaximized={setEditorMaximized}
         >
-          <Tabs isLazy style={{ height: "100%" }}>
+          <Tabs
+            isLazy
+            style={{ display: "flex", flexDirection: "column", height: "100%" }}
+          >
             {isCSVPipelineDefinition(pipeline) && (
               <TabList>
                 <Tab>Data</Tab>
@@ -158,7 +161,7 @@ export function PipelineEditSection({
               )}
 
               {isPODPipelineDefinition(pipeline) && (
-                <TabPanel>
+                <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
                   <PODOutputs
                     definition={editorValue}
                     onChange={setEditorValue}
@@ -166,7 +169,7 @@ export function PipelineEditSection({
                 </TabPanel>
               )}
               {isPODPipelineDefinition(pipeline) && (
-                <TabPanel>
+                <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
                   <PODFeed definition={editorValue} onChange={setEditorValue} />
                 </TabPanel>
               )}

@@ -1,6 +1,6 @@
 import { PODPipelineInputFieldType } from "../genericIssuanceTypes";
 
-export type FieldTypeToValue<T extends PODPipelineInputFieldType> =
+export type FieldTypeToJavaScriptType<T extends PODPipelineInputFieldType> =
   T extends PODPipelineInputFieldType.String
     ? string
     : T extends PODPipelineInputFieldType.Date
@@ -16,7 +16,7 @@ export type FieldTypeToValue<T extends PODPipelineInputFieldType> =
 export type TemplatedInputRow<
   T extends Record<string, PODPipelineInputFieldType>
 > = {
-  [K in keyof T]: FieldTypeToValue<T[K]>;
+  [K in keyof T]: FieldTypeToJavaScriptType<T[K]>;
 };
 
 export type InputRow = TemplatedInputRow<
@@ -47,8 +47,8 @@ export class TemplatedColumn<T extends PODPipelineInputFieldType> {
 
   public getValue<
     R extends TemplatedInputRow<Record<string, PODPipelineInputFieldType>>
-  >(row: R): FieldTypeToValue<T> {
-    return row[this.name] as FieldTypeToValue<T>;
+  >(row: R): FieldTypeToJavaScriptType<T> {
+    return row[this.name] as FieldTypeToJavaScriptType<T>;
   }
 
   public is<T extends PODPipelineInputFieldType>(

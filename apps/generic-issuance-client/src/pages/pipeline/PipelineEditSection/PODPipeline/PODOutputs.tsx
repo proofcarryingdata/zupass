@@ -27,10 +27,48 @@ import {
   PODPipelinePODEntry,
   PipelineDefinition,
   PipelineDefinitionSchema,
-  PipelineType
+  PipelineType,
+  getInputToPODValueConverter
 } from "@pcd/passport-interface";
+import { POD_NAME_REGEX } from "@pcd/pod";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
+
+function EditableName({
+  name,
+  onChange,
+  validate
+}: {
+  name: string;
+  onChange: (newName: string) => void;
+  validate: (newName: string) => boolean;
+}): ReactNode {
+  const [editedName, setEditedName] = useState<string>(name);
+  const isValid = validate(editedName);
+
+  const finish = useCallback(() => {
+    if (isValid) {
+      onChange(editedName);
+    } else {
+      setEditedName(name);
+    }
+  }, [editedName, isValid, name, onChange]);
+
+  return (
+    <Input
+      color={!isValid ? "red" : undefined}
+      isInvalid={!isValid}
+      value={editedName}
+      onChange={(e) => setEditedName(e.target.value)}
+      onBlur={() => finish()}
+      onSubmit={() => {
+        if (isValid) {
+          finish();
+        }
+      }}
+    />
+  );
+}
 
 function AddConfiguredValueModal({
   isOpen,
@@ -136,31 +174,39 @@ function ValidatedOutputs({
   const changeSource = useCallback(
     async (key: string, source: string) => {
       const entry = structuredClone(entryObj[key]);
-      // At some point in the future we will need to support more flexible
-      // types. For now, we only support strings, except for Semaphore IDs.
-      // Support for non-string data will depend on a solution to parsing or
-      // coercion.
-      entry.type =
-        source === "credentialSemaphoreID" ? "cryptographic" : "string";
-
       if (source.startsWith("input:")) {
         entry.source = { type: "input", name: source.substring(6) };
+        const existingType = entry.type;
+        // Output entries have configured types. If the existing type for this
+        // output is still valid for the changed input source, do nothing, but
+        // otherwise default to string type.
+        if (
+          !getInputToPODValueConverter(
+            csvInput.getColumns()[entry.source.name],
+            existingType
+          )
+        ) {
+          entry.type = "string";
+        }
       } else if (source.startsWith("configured:")) {
         entry.source = { type: "configured", value: source.substring(11) };
+        entry.type = "string";
       } else if (source === "credentialEmail") {
         entry.source.type = source;
+        entry.type = "string";
       } else if (source === "credentialSemaphoreID") {
         entry.source.type = source;
+        entry.type = "cryptographic";
       } else if (source === "new") {
         setAddingConfiguredValueForKey(key);
         return;
       }
 
       const newDefinition = structuredClone(definition);
-      //  newDefinition.options.podOutput = { ...podOutput, [key]: entry };
-      onChange?.(newDefinition);
+      newDefinition.options.outputs[name].entries[key] = entry;
+      onChange(newDefinition);
     },
-    [definition, entryObj, onChange]
+    [csvInput, definition, entryObj, name, onChange]
   );
 
   const [addingConfiguredValueForKey, setAddingConfiguredValueForKey] =
@@ -188,14 +234,14 @@ function ValidatedOutputs({
       ...newDefinition.options.outputs[name].entries,
       [key]: { type: "string", source: { type: "input", name: columns[0] } }
     };
-    onChange?.(newDefinition);
+    onChange(newDefinition);
   }, [columns, definition, name, onChange]);
 
   const removeEntry = useCallback(
     (key: string) => {
       const newDefinition = structuredClone(definition);
       delete newDefinition.options.outputs[name].entries?.[key];
-      onChange?.(newDefinition);
+      onChange(newDefinition);
     },
     [definition, name, onChange]
   );
@@ -204,7 +250,20 @@ function ValidatedOutputs({
     (key: string, type: PODPipelinePODEntry["type"]) => {
       const newDefinition = structuredClone(definition);
       newDefinition.options.outputs[name].entries[key].type = type;
-      onChange?.(newDefinition);
+      onChange(newDefinition);
+    },
+    [definition, name, onChange]
+  );
+
+  const changeName = useCallback(
+    (key: string, newName: string) => {
+      const newDefinition = structuredClone(definition);
+      newDefinition.options.outputs[name].entries = Object.fromEntries(
+        Object.entries(newDefinition.options.outputs[name].entries).map(
+          ([k, v]) => [k === key ? newName : k, v]
+        )
+      );
+      onChange(newDefinition);
     },
     [definition, name, onChange]
   );
@@ -252,7 +311,20 @@ function ValidatedOutputs({
                   <Td>
                     <OutputItem>
                       <FormControl>
-                        <Input type="text" value={key} />
+                        <EditableName
+                          name={key}
+                          onChange={(newName: string) => {
+                            changeName(key, newName);
+                          }}
+                          validate={(newName: string) => {
+                            return (
+                              POD_NAME_REGEX.test(newName) &&
+                              !Object.keys(output.entries).some(
+                                (k) => k !== key && k === newName
+                              )
+                            );
+                          }}
+                        />
                       </FormControl>
                     </OutputItem>
                   </Td>
@@ -280,7 +352,7 @@ function ValidatedOutputs({
                   </Td>
                   <Td>
                     <Select
-                      value={entry.type ?? "string"}
+                      value={entry.type}
                       onChange={(ev) =>
                         changeType(
                           key,
@@ -289,9 +361,45 @@ function ValidatedOutputs({
                         )
                       }
                     >
-                      <option value="string">String</option>
-                      <option value="cryptographic">Cryptographic</option>
-                      <option value="int">Integer</option>
+                      {
+                        // For a given source type, some outputs may not be
+                        // available. For input sources, we only allow outputs
+                        // that can be converted from the input type. For
+                        // configured values and credential emails, only strings
+                        // are allowed (though non-string configured values
+                        // should be supported in future).
+                        (
+                          [
+                            ["String", "string"],
+                            ["Cryptographic", "cryptographic"],
+                            ["Integer", "int"]
+                          ] satisfies [string, PODPipelinePODEntry["type"]][]
+                        )
+                          .map(([label, value]) => {
+                            if (entry.source.type === "input") {
+                              if (
+                                !getInputToPODValueConverter(
+                                  csvInput.getColumns()[entry.source.name],
+                                  value
+                                )
+                              ) {
+                                return null;
+                              }
+                            } else if (entry.source.type === "configured") {
+                              if (value !== "string") {
+                                return null;
+                              }
+                            } else if (
+                              entry.source.type === "credentialEmail"
+                            ) {
+                              if (value !== "string") {
+                                return null;
+                              }
+                            }
+                            return <option value={value}>{label}</option>;
+                          })
+                          .filter((val) => !!val)
+                      }
                     </Select>
                   </Td>
                 </Tr>
