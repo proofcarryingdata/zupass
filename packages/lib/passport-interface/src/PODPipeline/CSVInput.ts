@@ -76,9 +76,19 @@ export class CSVInput implements Input {
       )
     );
 
-    const data: unknown[] = parse(csv, { columns: Object.keys(columns) });
-    // @todo check header fields match column names
-    data.shift();
+    const columnNames = Object.keys(columns);
+    const data: unknown[] = parse(csv, { columns: columnNames });
+    const header = data.shift();
+    // The first row of a CSV file should be the header, which
+    // should match the column names in the pipeline configuration
+    if (
+      !(header instanceof Object) ||
+      Object.values(header).length !== columnNames.length ||
+      !Object.values(header).every((name, index) => name === columnNames[index])
+    ) {
+      throw new Error("CSV header does not match configured columns");
+    }
+
     for (const row of data) {
       // This will throw if the row is not valid
       this.data.push(rowSchema.parse(row));

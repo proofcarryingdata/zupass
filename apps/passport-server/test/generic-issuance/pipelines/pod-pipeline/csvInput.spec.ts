@@ -75,7 +75,7 @@ describe("input loading", function () {
   step("invalid integer inputs will cause errors", async function () {
     const inputOptions: PODPipelineCSVInput = {
       type: PODPipelineInputType.CSV,
-      csv: "name, age\nJohn, 31.45\nJane, 42",
+      csv: "name,age\nJohn, 31.45\nJane, 42",
       columns: {
         name: { type: PODPipelineInputFieldType.String },
         age: { type: PODPipelineInputFieldType.Integer }
@@ -101,7 +101,7 @@ describe("input loading", function () {
   step("invalid date inputs will cause errors", async function () {
     const inputOptions: PODPipelineCSVInput = {
       type: PODPipelineInputType.CSV,
-      csv: "name, birthday\nJohn, foo\nJane, 1980-01-02",
+      csv: "name,birthday\nJohn, foo\nJane, 1980-01-02",
       columns: {
         name: { type: PODPipelineInputFieldType.String },
         birthday: { type: PODPipelineInputFieldType.Date }
