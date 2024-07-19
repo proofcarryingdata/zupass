@@ -29,6 +29,9 @@
       "path": "../../packages/lib/passport-interface"
     },
     {
+      "path": "../../packages/lib/pod"
+    },
+    {
       "path": "../../packages/lib/util"
     }
   ]
