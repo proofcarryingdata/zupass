@@ -7,15 +7,13 @@ import {
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "mocha";
-import { step } from "mocha-steps";
-import { expectToExist } from "../../../util/util";
 
 describe("input loading", function () {
   this.beforeAll(() => {
     use(chaiAsPromised);
   });
 
-  step("CSV input can be loaded", async function () {
+  it("CSV input can be loaded", async function () {
     const inputOptions: PODPipelineCSVInput = {
       type: PODPipelineInputType.CSV,
       csv: "first_name,last_name,email\nJohn,Doe,john.doe@example.com\nJane,Doe,jane.doe@example.com",
@@ -28,14 +26,14 @@ describe("input loading", function () {
 
     let input!: CSVInput;
     expect(() => (input = new CSVInput(inputOptions))).to.not.throw();
-    expectToExist(input);
+    expect(input).to.exist;
     expect(input.getRows()).to.eql([
       { first_name: "John", last_name: "Doe", email: "john.doe@example.com" },
       { first_name: "Jane", last_name: "Doe", email: "jane.doe@example.com" }
     ]);
   });
 
-  step("CSV inputs with more complex types can be loaded", async function () {
+  it("CSV inputs with more complex types can be loaded", async function () {
     const inputOptions: PODPipelineCSVInput = {
       type: PODPipelineInputType.CSV,
       csv: "id,first_name,last_name,email,birthday,high_score\n768dab50-2dea-4fd7-86bd-212f091b7867,John,Doe,john.doe@example.com,1980-01-01,100\nf1304eac-e462-4d8f-b704-9e7aed2e0618,Jane,Doe,jane.doe@example.com,1980-01-02,200",
@@ -51,7 +49,7 @@ describe("input loading", function () {
 
     let input!: CSVInput;
     expect(() => (input = new CSVInput(inputOptions))).to.not.throw();
-    expectToExist(input);
+    expect(input).to.exist;
     expect(input.getRows()).to.eql([
       {
         id: "768dab50-2dea-4fd7-86bd-212f091b7867",
@@ -72,7 +70,7 @@ describe("input loading", function () {
     ]);
   });
 
-  step("invalid integer inputs will cause errors", async function () {
+  it("invalid integer inputs will cause errors", async function () {
     const inputOptions: PODPipelineCSVInput = {
       type: PODPipelineInputType.CSV,
       csv: "name,age\nJohn, 31.45\nJane, 42",
@@ -98,7 +96,7 @@ describe("input loading", function () {
     );
   });
 
-  step("invalid date inputs will cause errors", async function () {
+  it("invalid date inputs will cause errors", async function () {
     const inputOptions: PODPipelineCSVInput = {
       type: PODPipelineInputType.CSV,
       csv: "name,birthday\nJohn, foo\nJane, 1980-01-02",

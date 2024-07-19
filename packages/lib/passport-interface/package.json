@@ -73,6 +73,7 @@
     "@types/url-join": "4.0.1",
     "@types/uuid": "^9.0.0",
     "chai": "^4.3.7",
+    "chai-as-promised": "^7.1.1",
     "eslint": "^8.57.0",
     "mocha": "^10.2.0",
     "mockdate": "^3.0.5",
