@@ -42,6 +42,9 @@ import { IntegerEditor, IntegerViewer } from "./cells/IntegerCell";
 import { AddColumnModal } from "./modals/AddColumnModal";
 import { DeleteColumnDialog } from "./modals/DeleteColumnDialog";
 
+/**
+ * Default values for new cells in columns of specific types
+ */
 const COLUMN_DEFAULTS = {
   [PODPipelineInputFieldType.String]: "",
   [PODPipelineInputFieldType.Integer]: "0",
@@ -50,6 +53,9 @@ const COLUMN_DEFAULTS = {
   [PODPipelineInputFieldType.UUID]: ""
 };
 
+/**
+ * Viewer and editor components for each type of cell
+ */
 const COLUMN_CELLS = {
   [PODPipelineInputFieldType.Integer]: {
     DataViewer: IntegerViewer,
@@ -63,6 +69,7 @@ const COLUMN_CELLS = {
     DataViewer: DateViewer,
     DataEditor: DateEditor
   },
+  // For UUIDs and strings, use the default editor
   [PODPipelineInputFieldType.UUID]: {},
   [PODPipelineInputFieldType.String]: {}
 };
@@ -125,6 +132,7 @@ function ColumnIndicator({
   onDelete: (name: string) => void;
 }): ReactNode {
   const columnNames = useMemo(() => Object.keys(columns), [columns]);
+  // Select an icon for the column based on the column's data type
   const icon = useMemo(() => {
     const type = columns[columnNames[column]].type;
     switch (type) {

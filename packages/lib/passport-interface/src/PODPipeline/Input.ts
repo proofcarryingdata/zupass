@@ -1,6 +1,6 @@
 import { PODPipelineInputFieldType } from "../genericIssuanceTypes";
 
-type FieldTypeToValue<T extends PODPipelineInputFieldType> =
+export type FieldTypeToValue<T extends PODPipelineInputFieldType> =
   T extends PODPipelineInputFieldType.String
     ? string
     : T extends PODPipelineInputFieldType.Date
@@ -39,6 +39,10 @@ export class TemplatedColumn<T extends PODPipelineInputFieldType> {
   public constructor(name: string, type: T) {
     this.name = name;
     this.type = type;
+  }
+
+  public getName(): string {
+    return this.name;
   }
 
   public getValue<

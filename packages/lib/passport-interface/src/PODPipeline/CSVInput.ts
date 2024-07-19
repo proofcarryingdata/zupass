@@ -12,36 +12,7 @@ import {
   InputValue,
   TemplatedColumn
 } from "./Input";
-
-const datelike = z.union([z.number(), z.string(), z.date()]);
-const datelikeToDate = datelike.pipe(z.coerce.date());
-
-const booleanLike = z.union([z.boolean(), z.string(), z.number()]);
-const booleanValidator = booleanLike.transform((val, ctx) => {
-  if (typeof val === "boolean") return val;
-  if (typeof val === "number") return val !== 0;
-  const normalized = val.toLowerCase().trim();
-  if (["true", "t", "yes", "y", "1"].includes(normalized)) return true;
-  if (["false", "f", "no", "n", "0", ""].includes(normalized)) return false;
-  ctx.addIssue({
-    code: z.ZodIssueCode.custom,
-    message: "Invalid boolean value"
-  });
-  return z.NEVER;
-});
-
-const safeBigInt = z.string().transform((val, ctx) => {
-  try {
-    return BigInt(val);
-  } catch (error) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      message: "Invalid BigInt value",
-      fatal: true
-    });
-    return z.NEVER;
-  }
-});
+import { inputToBigInt, inputToBoolean, inputToDate } from "./coercion";
 
 export class CSVInput implements Input {
   private data: Record<string, InputValue>[] = [];
@@ -61,14 +32,14 @@ export class CSVInput implements Input {
           column.type === PODPipelineInputFieldType.String
             ? z.string()
             : column.type === PODPipelineInputFieldType.Integer
-            ? safeBigInt.refine(
+            ? inputToBigInt.refine(
                 (arg: bigint) => arg >= 0n,
                 "Integers must not be negative"
               )
             : column.type === PODPipelineInputFieldType.Boolean
-            ? booleanValidator
+            ? inputToBoolean
             : column.type === PODPipelineInputFieldType.Date
-            ? datelikeToDate
+            ? inputToDate
             : column.type === PODPipelineInputFieldType.UUID
             ? z.string().uuid()
             : assertUnreachable(column.type)

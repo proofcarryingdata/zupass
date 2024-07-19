@@ -1,11 +1,11 @@
 import {
   InputColumn,
   InputRow,
-  PODPipelineInputFieldType,
-  PODPipelineOutput
+  PODPipelineOutput,
+  getInputToPODValueConverter
 } from "@pcd/passport-interface";
 import { PODEntries, serializePODEntries } from "@pcd/pod";
-import { assertUnreachable, uuidToBigInt } from "@pcd/util";
+import { assertUnreachable } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import { PODAtom } from "../PODPipeline";
 
@@ -31,82 +31,19 @@ export function atomize(
   const entries: PODEntries = {};
   for (const [key, entry] of Object.entries(output.entries)) {
     const source = entry.source;
-
     if (source.type === "input") {
       const column = columns[source.name];
-      if (entry.type === "string") {
-        // Dates require special conversion to strings as the default
-        // string conversion is affected by locale settings.
-        if (column.is(PODPipelineInputFieldType.Date)) {
-          entries[key] = {
-            type: "string",
-            value: column.getValue(row).toISOString()
-          };
-        } else {
-          entries[key] = {
-            type: "string",
-            value: column.getValue(row).toString()
-          };
-        }
-      } else if (entry.type === "cryptographic") {
-        if (column.is(PODPipelineInputFieldType.Integer)) {
-          entries[key] = {
-            type: "cryptographic",
-            value: column.getValue(row)
-          };
-        } else if (column.is(PODPipelineInputFieldType.Date)) {
-          entries[key] = {
-            type: "cryptographic",
-            value: BigInt(column.getValue(row).getTime())
-          };
-        } else if (column.is(PODPipelineInputFieldType.Boolean)) {
-          entries[key] = {
-            type: "cryptographic",
-            value: BigInt(column.getValue(row))
-          };
-        } else if (column.is(PODPipelineInputFieldType.UUID)) {
-          entries[key] = {
-            type: "cryptographic",
-            value: uuidToBigInt(column.getValue(row))
-          };
-        } else {
-          throw new Error(
-            `Could not map column ${key} from input type ${column.type} to POD type ${entry.type}`
-          );
-        }
-      } else if (entry.type === "int") {
-        // These mappings are the same as those for "cryptographic"
-        if (column.is(PODPipelineInputFieldType.Integer)) {
-          entries[key] = {
-            type: "int",
-            value: column.getValue(row)
-          };
-        } else if (column.is(PODPipelineInputFieldType.Date)) {
-          entries[key] = {
-            type: "int",
-            value: BigInt(column.getValue(row).getTime())
-          };
-        } else if (column.is(PODPipelineInputFieldType.Boolean)) {
-          entries[key] = {
-            type: "int",
-            value: BigInt(column.getValue(row))
-          };
-        } else if (column.is(PODPipelineInputFieldType.UUID)) {
-          entries[key] = {
-            type: "int",
-            value: uuidToBigInt(column.getValue(row))
-          };
-        } else {
-          throw new Error(
-            `Could not map column ${key} from input type ${column.type} to POD value type ${entry.type}`
-          );
-        }
-      } else {
-        assertUnreachable(
-          entry.type,
-          `Unsupported POD value type ${entry.type}`
+      /**
+       * See {@link getInputToPODValueConverter} for detail on how this
+       * conversion is done.
+       */
+      const converter = getInputToPODValueConverter(column, entry.type);
+      if (!converter) {
+        throw new Error(
+          `No converter for input ${source.name} of type ${column.type} to POD value ${key} of type ${entry.type}`
         );
       }
+      entries[key] = converter(column.getValue(row));
     } else if (source.type === "configured") {
       entries[key] = {
         // @todo non-string configured values
