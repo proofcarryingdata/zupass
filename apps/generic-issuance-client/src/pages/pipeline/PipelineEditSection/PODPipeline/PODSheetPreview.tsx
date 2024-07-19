@@ -14,7 +14,8 @@ import {
   UseMenuItemProps,
   VStack,
   useDisclosure,
-  useMenuItem
+  useMenuItem,
+  useToast
 } from "@chakra-ui/react";
 import {
   CSVInput,
@@ -25,7 +26,13 @@ import {
   PODPipelineInputType
 } from "@pcd/passport-interface";
 import { stringify } from "csv-stringify/sync";
-import React, { ReactNode, useCallback, useMemo, useState } from "react";
+import React, {
+  ReactNode,
+  useCallback,
+  useMemo,
+  useReducer,
+  useState
+} from "react";
 import {
   MdCheckCircleOutline,
   MdDateRange,
@@ -200,6 +207,8 @@ export function PODSheetPreview({
   onChange: (newInput: PODPipelineInput) => void;
 }): ReactNode {
   const columns = useMemo(() => csvInput.getColumns(), [csvInput]);
+  const [version, forceReset] = useReducer((prev: number) => prev + 1, 0);
+  const toast = useToast();
   const data = useMemo(
     () =>
       csvInput.getRows().map((row) =>
@@ -208,44 +217,54 @@ export function PODSheetPreview({
           ...COLUMN_CELLS[columns[columnName].type]
         }))
       ),
-    [csvInput, columns]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [csvInput, columns, version]
   );
-
-  const [updateTimeout, setUpdateTimeout] = useState<
-    NodeJS.Timeout | undefined
-  >(undefined);
 
   const doUpdate = useCallback(
     (data: Matrix<{ value: InputValue }>) => {
-      // commit data
-      if (onChange) {
-        const filteredData = data.filter((row) => {
-          return !row.every(
-            (cell) => cell === undefined || cell.value === undefined
-          );
-        });
-        if (filteredData.length === 0) {
-          filteredData.push(
-            Object.keys(csvInput.getColumns()).map(() => ({ value: "" }))
-          );
-        }
-        const newCsv = stringify([
-          // Add in a header row
-          Object.keys(csvInput.getColumns()),
-          // Take the remaining data from the spreadsheet
-          ...filteredData.map((row) => row.map((cell) => cell?.value ?? ""))
-        ]);
-        const newInput = {
-          type: PODPipelineInputType.CSV,
-          columns: csvInput.getColumns(),
-          csv: newCsv
-        } satisfies PODPipelineInput;
-        onChange(newInput);
+      // Data in the react-spreadsheet component has changed, so we should try
+      // to commit this to the definition.
+      const filteredData = data.filter((row) => {
+        return !row.every(
+          (cell) => cell === undefined || cell.value === undefined
+        );
+      });
+      if (filteredData.length === 0) {
+        filteredData.push(
+          Object.keys(csvInput.getColumns()).map(() => ({ value: "" }))
+        );
       }
-      clearTimeout(updateTimeout);
-      setUpdateTimeout(undefined);
+      const newCsv = stringify([
+        // Add in a header row
+        Object.keys(csvInput.getColumns()),
+        // Take the remaining data from the spreadsheet
+        ...filteredData.map((row) => row.map((cell) => cell?.value ?? ""))
+      ]);
+
+      const newInput = {
+        type: PODPipelineInputType.CSV,
+        columns: csvInput.getColumns(),
+        csv: newCsv
+      } satisfies PODPipelineInput;
+
+      try {
+        // Will throw if new data is invalid
+        new CSVInput(newInput);
+        onChange(newInput);
+      } catch (e) {
+        // Forcibly reset to previous state
+        forceReset();
+        toast({
+          title: "Error",
+          description: "Invalid input entered",
+          status: "error",
+          isClosable: true,
+          position: "top"
+        });
+      }
     },
-    [onChange, updateTimeout, csvInput]
+    [csvInput, onChange, toast]
   );
 
   const addRow = useCallback(() => {
