@@ -249,11 +249,20 @@ export function PODSheetPreview({
   );
 
   const addRow = useCallback(() => {
-    // if (onChange) {
-    //   const newCsv = stringify([...parsed, parsed[0].map(() => "")]);
-    //   onChange(newCsv);
-    // }
-  }, []);
+    const newCsv = stringify([
+      [...Object.keys(csvInput.getColumns())],
+      ...csvInput.getRows().map((row) => [...Object.values(row)]),
+      Object.values(csvInput.getColumns()).map(
+        (col) => COLUMN_DEFAULTS[col.type]
+      )
+    ]);
+    const newInput = {
+      csv: newCsv,
+      columns: csvInput.getColumns(),
+      type: PODPipelineInputType.CSV
+    } satisfies PODPipelineInput;
+    onChange(newInput);
+  }, [csvInput, onChange]);
 
   const {
     isOpen: isAddColumnModalOpen,
