@@ -14,7 +14,7 @@ function SemaphoreIdentityCardBody({
   return (
     <Container>
       <p>
-        This PCD represents a Sempahore Identity, which can be used to send
+        This PCD represents a Semaphore Identity, which can be used to send
         anonymous group signals, log into websites, etc.
       </p>
       <Separator />

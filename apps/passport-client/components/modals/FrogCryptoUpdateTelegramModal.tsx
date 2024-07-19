@@ -60,7 +60,7 @@ export function FrogCryptoUpdateTelegramModal({
               appConfig.zupassServer,
               {
                 pcd: await credentialManager.requestCredential({
-                  signatureType: "sempahore-signature-pcd"
+                  signatureType: "semaphore-signature-pcd"
                 }),
                 reveal: !revealed
               }

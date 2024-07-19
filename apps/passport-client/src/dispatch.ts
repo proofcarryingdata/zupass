@@ -1109,7 +1109,7 @@ async function doSync(
       state.credentialCache
     );
     const credential = await credentialManager.requestCredential({
-      signatureType: "sempahore-signature-pcd"
+      signatureType: "semaphore-signature-pcd"
     });
 
     const upRes = await uploadSerializedStorage(
@@ -1466,7 +1466,7 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   );
 
   const pcd = await credentialManager.requestCredential({
-    signatureType: "sempahore-signature-pcd"
+    signatureType: "semaphore-signature-pcd"
   });
 
   const res = await requestDeleteAccount(appConfig.zupassServer, { pcd });

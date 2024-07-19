@@ -231,7 +231,7 @@ export class PipelineAPISubservice {
               }
             ],
             credentialRequest: {
-              signatureType: "sempahore-signature-pcd",
+              signatureType: "semaphore-signature-pcd",
               pcdType: "email-pcd"
             }
           } satisfies Feed
@@ -467,7 +467,7 @@ export class PipelineAPISubservice {
 
   /**
    * Returns whether the given @param rootHash is a valid root hash of the given
-   * Sempahore group at some point in time.
+   * Semaphore group at some point in time.
    */
   public async handleGetValidSemaphoreGroup(
     pipelineId: string,

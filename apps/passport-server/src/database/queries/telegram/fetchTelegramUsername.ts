@@ -3,7 +3,7 @@ import { sqlQuery } from "../../sqlQuery";
 
 export async function fetchTelegramUsernameFromSemaphoreId(
   client: Pool,
-  sempahoreId: string
+  semaphoreId: string
 ): Promise<string | null> {
   const result = await sqlQuery(
     client,
@@ -11,7 +11,7 @@ export async function fetchTelegramUsernameFromSemaphoreId(
     select telegram_username from telegram_bot_conversations
     where semaphore_id = $1
     `,
-    [sempahoreId]
+    [semaphoreId]
   );
   if (result.rowCount === 0) {
     return null;

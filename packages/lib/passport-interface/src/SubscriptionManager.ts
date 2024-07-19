@@ -283,7 +283,7 @@ export class FeedSubscriptionManager {
       const pcdCredential: SerializedPCD | undefined = authKey
         ? await this.makeAlternateCredentialPCD(authKey)
         : await credentialManager.requestCredential({
-            signatureType: "sempahore-signature-pcd",
+            signatureType: "semaphore-signature-pcd",
             pcdType: subscription.feed.credentialRequest.pcdType
           });
 
@@ -587,7 +587,7 @@ export class FeedSubscriptionManager {
             description: sub.feed.description,
             permissions: sub.feed.permissions,
             credentialRequest: {
-              signatureType: "sempahore-signature-pcd",
+              signatureType: "semaphore-signature-pcd",
               ...(sub.feed.credentialType === "email-pcd"
                 ? { pcdType: sub.feed.credentialType }
                 : {})
@@ -678,7 +678,7 @@ export interface SubscriptionProvider {
 // The configuration of the credential required by a feed server
 export interface CredentialRequest {
   // Can be extended as more signature types are supported
-  signatureType: "sempahore-signature-pcd";
+  signatureType: "semaphore-signature-pcd";
   // Can be extended as more PCD types are supported
   // Including a PCD in the credential is optional. We might also want to
   // query on more than just type of PCD in future.

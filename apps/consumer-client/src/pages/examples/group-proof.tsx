@@ -60,7 +60,7 @@ export default function Page(): JSX.Element {
       </p>
       <p>
         The underlying PCD that this example uses is{" "}
-        <code>SempahoreGroupPCD</code>. You can find more documentation
+        <code>SemaphoreGroupPCD</code>. You can find more documentation
         regarding this PCD{" "}
         <CodeLink file="/tree/main/packages/semaphore-group-pcd">
           here on GitHub

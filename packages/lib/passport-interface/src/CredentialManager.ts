@@ -36,11 +36,11 @@ const CACHE_TTL = ONE_HOUR_MS;
  */
 export const PODBOX_CREDENTIAL_REQUEST: CredentialRequest = {
   pcdType: "email-pcd",
-  signatureType: "sempahore-signature-pcd"
+  signatureType: "semaphore-signature-pcd"
 };
 
 export const ZUPASS_CREDENTIAL_REQUEST: CredentialRequest = {
-  signatureType: "sempahore-signature-pcd"
+  signatureType: "semaphore-signature-pcd"
 };
 
 // Creates an in-memory cache with a TTL of one hour.

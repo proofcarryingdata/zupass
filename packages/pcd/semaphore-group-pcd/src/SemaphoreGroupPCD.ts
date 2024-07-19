@@ -10,7 +10,7 @@ import { SerializedSemaphoreGroup } from "./SerializedSemaphoreGroup";
 
 export const SemaphoreGroupPCDTypeName = "semaphore-group-signal";
 
-export interface SempahoreGroupPCDInitArgs {
+export interface SemaphoreGroupPCDInitArgs {
   // TODO: how do we distribute these in-package, so that consumers
   // of the package don't have to copy-paste these artifacts?
   // TODO: how do we account for different versions of the same type

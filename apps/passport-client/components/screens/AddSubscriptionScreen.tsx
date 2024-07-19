@@ -389,7 +389,7 @@ function SubscribeSection({
 
   // Check that we can actually generate the credential that the feed wants
   const missingCredentialPCD = !credentialManager.canGenerateCredential({
-    signatureType: "sempahore-signature-pcd",
+    signatureType: "semaphore-signature-pcd",
     pcdType: info.credentialRequest.pcdType
   });
 
