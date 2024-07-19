@@ -93,7 +93,7 @@ export default function Page(): JSX.Element {
     setPODPublicKey2(encodePublicKey(derivePublicKey(decodePrivateKey(key))));
   };
   const [podMintUrl, setPODMintUrl] = useState(
-    "http://localhost:4000/api/mintPOD"
+    `${process.env.CONSUMER_SERVER_URL}:4000/api/mintPOD`
   );
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
   const [membershipLists, setMembershipLists] = useState(
