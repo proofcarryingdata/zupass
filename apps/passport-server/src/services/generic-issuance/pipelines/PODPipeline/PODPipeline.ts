@@ -25,11 +25,9 @@ import {
   PipelineAtom
 } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
-import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
 import { logger } from "../../../../util/logger";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { setError, traced } from "../../../telemetryService";
-import { SemaphoreGroupProvider } from "../../SemaphoreGroupProvider";
 import {
   FeedIssuanceCapability,
   makeGenericIssuanceFeedUrl
@@ -65,7 +63,6 @@ export class PODPipeline implements BasePipeline {
   private db: IPipelineAtomDB<PODAtom>;
   private definition: PODPipelineDefinition;
   private credentialSubservice: CredentialSubservice;
-  private semaphoreGroupProvider?: SemaphoreGroupProvider;
   private consumerDB: IPipelineConsumerDB;
   private cacheService: PersistentCacheService;
 
@@ -83,7 +80,6 @@ export class PODPipeline implements BasePipeline {
     db: IPipelineAtomDB,
     credentialSubservice: CredentialSubservice,
     consumerDB: IPipelineConsumerDB,
-    _semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
     cacheService: PersistentCacheService
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
@@ -140,6 +136,12 @@ export class PODPipeline implements BasePipeline {
           this.definition.id
         );
 
+        // @todo because this code is async, it may end up being interleaved
+        // with issuance requests at run-time. This may result in code
+        // requesting PCDs that - temporarily - do not exist because the atom
+        // DB has not been repopulated.
+        // A long-term solution might involve locking the pipeline or the DB,
+        // or refactoring so that this scenario cannot arise.
         await this.db.clear(this.definition.id);
         logs.push(makePLogInfo(`cleared old data`));
         await this.db.save(this.definition.id, atoms);

@@ -170,22 +170,6 @@ function ColumnIndicator({
           <MenuList>
             <MenuInput value={columnNames[column]} />
             <MenuDivider />
-            {/* <MenuGroup title="Data Type">
-              <MenuItem icon={<Icon as={MdShortText} w={4} h={4} />}>
-                Text
-              </MenuItem>
-              <MenuItem icon={<Icon as={MdNumbers} w={4} h={4} />}>
-                Integer
-              </MenuItem>
-              <MenuItem icon={<Icon as={MdCheckCircleOutline} w={4} h={4} />}>
-                Boolean
-              </MenuItem>
-              <MenuItem icon={<Icon as={MdDateRange} w={4} h={4} />}>
-                Date
-              </MenuItem>
-              <MenuItem icon={<Icon as={MdKey} w={4} h={4} />}>UUID</MenuItem>
-            </MenuGroup>
-            <MenuDivider /> */}
             <MenuItem
               icon={<Icon as={MdDeleteOutline} w={4} h={4} />}
               onClick={() => onDelete(columnNames[column])}
