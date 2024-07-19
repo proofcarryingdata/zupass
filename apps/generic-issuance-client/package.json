@@ -20,6 +20,7 @@
     "@monaco-editor/react": "^4.6.0",
     "@pcd/client-shared": "0.0.2",
     "@pcd/passport-interface": "0.11.2",
+    "@pcd/pod": "0.1.1",
     "@pcd/util": "0.5.1",
     "@rollbar/react": "^0.11.2",
     "@stytch/react": "^15.0.0",

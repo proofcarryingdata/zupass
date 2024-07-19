@@ -2,18 +2,12 @@ import {
   Alert,
   AlertIcon,
   Button,
-  ButtonGroup,
   FormControl,
-  FormLabel,
+  HStack,
+  Heading,
   Input,
-  Modal,
-  ModalBody,
-  ModalCloseButton,
-  ModalContent,
-  ModalFooter,
-  ModalHeader,
-  ModalOverlay,
   Select,
+  Spacer,
   Table,
   Tbody,
   Td,
@@ -33,6 +27,7 @@ import {
 import { POD_NAME_REGEX } from "@pcd/pod";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
+import { AddConfiguredValueModal } from "./modals/AddConfiguredValueModal";
 
 function EditableName({
   name,
@@ -70,69 +65,80 @@ function EditableName({
   );
 }
 
-function AddConfiguredValueModal({
-  isOpen,
-  onCancel,
-  onSubmit
+function ValidatedRecipients({
+  definition,
+  csvInput,
+  outputName,
+  onChange
 }: {
-  isOpen: boolean;
-  onCancel: () => void;
-  onSubmit: (value: string) => Promise<void>;
+  definition: PODPipelineDefinition;
+  csvInput: CSVInput;
+  outputName: string;
+  onChange: (newDefinition: PODPipelineDefinition) => void;
 }): ReactNode {
-  const [value, setValue] = useState<string>("");
-  const [inProgress, setInProgress] = useState<boolean>(false);
+  const setMatchType = useCallback(
+    (type: string) => {
+      const newDefinition = structuredClone(definition);
+      newDefinition.options.outputs[outputName].match = {
+        type: type as "email" | "semaphoreID",
+        inputField:
+          newDefinition.options.outputs[outputName].match?.inputField ?? ""
+      };
 
-  const triggerClose = useCallback(() => {
-    onCancel();
-    setValue("");
-  }, [onCancel]);
+      onChange?.(newDefinition);
+    },
+    [definition, onChange, outputName]
+  );
 
-  const submit = useCallback(async () => {
-    setInProgress(true);
-    await onSubmit(value);
-    setValue("");
-    setInProgress(false);
-  }, [onSubmit, value]);
+  const setMatchInputField = useCallback(
+    (inputField: string) => {
+      const newDefinition = structuredClone(definition);
+      newDefinition.options.outputs[outputName].match = {
+        type: newDefinition.options.outputs[outputName].match?.type ?? "email",
+        inputField
+      };
+
+      onChange?.(newDefinition);
+    },
+    [definition, onChange, outputName]
+  );
 
   return (
-    <Modal
-      onClose={triggerClose}
-      isOpen={isOpen}
-      isCentered
-      motionPreset="slideInBottom"
-    >
-      <ModalOverlay />
-      <ModalContent>
-        <ModalHeader>Add Configured Value</ModalHeader>
-        <ModalCloseButton />
-        <ModalBody>
-          <FormControl mb={2}>
-            <FormLabel>Configured Value</FormLabel>
-            <Input
-              autoFocus={true}
-              value={value}
-              onChange={(e): void => setValue(e.target.value)}
-              placeholder="Enter value"
-              type="text"
-              width="sm"
-              maxW={"100%"}
-            />
-          </FormControl>
-        </ModalBody>
-        <ModalFooter>
-          <ButtonGroup>
-            <Button
-              onClick={submit}
-              colorScheme="blue"
-              isDisabled={inProgress || value.length === 0}
-            >
-              Add
-            </Button>
-            <Button onClick={triggerClose}>Cancel</Button>
-          </ButtonGroup>
-        </ModalFooter>
-      </ModalContent>
-    </Modal>
+    <HStack spacing={3}>
+      <div>Match</div>
+      <div>
+        <Select
+          value={definition.options.outputs[outputName].match?.type}
+          onChange={(ev) => setMatchType(ev.target.value)}
+        >
+          <option value="email">Zupass Email</option>
+          <option value="semaphoreID">Semaphore ID</option>
+        </Select>
+      </div>
+      <div>to</div>
+      <div>
+        <Select
+          value={definition.options.outputs[outputName].match?.inputField}
+          onChange={(ev) => setMatchInputField(ev.target.value)}
+        >
+          <option disabled>-</option>
+          {Object.keys(csvInput.getColumns()).map((column) => {
+            return (
+              <option
+                key={column}
+                selected={
+                  definition.options.outputs[outputName].match?.inputField ===
+                  column
+                }
+                value={column}
+              >
+                Data: {column}
+              </option>
+            );
+          })}
+        </Select>
+      </div>
+    </HStack>
   );
 }
 
@@ -275,6 +281,8 @@ function ValidatedOutputs({
         onSubmit={addConfiguredValue}
         onCancel={() => setAddingConfiguredValueForKey(undefined)}
       />
+      <Heading size="md">POD Output</Heading>
+      <Spacer h={2} />
       {output && (
         <Table size="sm" variant="simple">
           <Thead>
@@ -309,24 +317,22 @@ function ValidatedOutputs({
                     </span>
                   </Td>
                   <Td>
-                    <OutputItem>
-                      <FormControl>
-                        <EditableName
-                          name={key}
-                          onChange={(newName: string) => {
-                            changeName(key, newName);
-                          }}
-                          validate={(newName: string) => {
-                            return (
-                              POD_NAME_REGEX.test(newName) &&
-                              !Object.keys(output.entries).some(
-                                (k) => k !== key && k === newName
-                              )
-                            );
-                          }}
-                        />
-                      </FormControl>
-                    </OutputItem>
+                    <FormControl>
+                      <EditableName
+                        name={key}
+                        onChange={(newName: string) => {
+                          changeName(key, newName);
+                        }}
+                        validate={(newName: string) => {
+                          return (
+                            POD_NAME_REGEX.test(newName) &&
+                            !Object.keys(output.entries).some(
+                              (k) => k !== key && k === newName
+                            )
+                          );
+                        }}
+                      />
+                    </FormControl>
                   </Td>
                   <Td>
                     <Select
@@ -408,7 +414,7 @@ function ValidatedOutputs({
             <Tr>
               <Td padding={0}></Td>
               <Td colSpan={3}>
-                <Button onClick={addNewEntry} colorScheme="blue">
+                <Button onClick={addNewEntry} colorScheme="blue" size="sm">
                   Add new
                 </Button>
               </Td>
@@ -416,6 +422,16 @@ function ValidatedOutputs({
           </Tbody>
         </Table>
       )}
+
+      <Heading size="sm" my="16px">
+        Recipients
+      </Heading>
+      <ValidatedRecipients
+        definition={definition}
+        onChange={onChange}
+        csvInput={csvInput}
+        outputName={name}
+      />
     </Outputs>
   );
 }
@@ -475,7 +491,6 @@ export function PODOutputs({
   return <PODOutputsList definition={parsed} onChange={onChange} />;
 }
 
-const OutputItem = styled.div``;
 const Outputs = styled.div`
   padding-bottom: 20px;
 `;
