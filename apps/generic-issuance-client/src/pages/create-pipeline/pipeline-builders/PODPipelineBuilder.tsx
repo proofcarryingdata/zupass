@@ -1,17 +1,16 @@
-import { Box, Button, Card, HStack } from "@chakra-ui/react";
+import { Box, Button, Card } from "@chakra-ui/react";
 import {
+  CSVInput,
   FeedIssuanceOptions,
   PODPipelineDefinition,
+  PODPipelineInput,
+  PODPipelineInputFieldType,
   PODPipelineInputType,
   PipelineType
 } from "@pcd/passport-interface";
-import { ReactNode, useState } from "react";
-import { FancyEditor } from "../../../components/FancyEditor";
+import { ReactNode, useMemo, useState } from "react";
 import { DEFAULT_FEED_OPTIONS } from "../../SamplePipelines";
-import {
-  CSVPreview,
-  PreviewType
-} from "../../pipeline/PipelineEditSection/CSVPreview";
+import { PODSheetPreview } from "../../pipeline/PipelineEditSection/PODPipeline/PODSheetPreview";
 import { TwoColumns } from "../../pipeline/PipelinePage";
 import { FeedOptions } from "./FeedOptions";
 
@@ -22,15 +21,41 @@ interface PODPipelineBuilderProps {
 export default function PODPipelineBuilder(
   props: PODPipelineBuilderProps
 ): ReactNode {
-  const [csv, setCsv] = useState(
-    "email,title, message\nmail@robknight.org.uk,hello, world"
-  );
+  const [definition, setDefinition] = useState<
+    Omit<PODPipelineDefinition, "id" | "ownerUserId">
+  >({
+    type: PipelineType.POD,
+    timeCreated: new Date().toISOString(),
+    timeUpdated: new Date().toISOString(),
+    editorUserIds: [],
+    options: {
+      input: {
+        type: PODPipelineInputType.CSV,
+        csv: "email,title,message\ntest@example.com,hello,world",
+        columns: {
+          email: { type: PODPipelineInputFieldType.String },
+          title: { type: PODPipelineInputFieldType.String },
+          message: { type: PODPipelineInputFieldType.String }
+        }
+      },
+      outputs: {},
+      feedOptions: DEFAULT_FEED_OPTIONS
+    }
+  });
+
+  const csvInput = useMemo(() => {
+    return new CSVInput(definition.options.input);
+  }, [definition.options.input]);
+
+  const changeInput = (newInput: PODPipelineInput): void => {
+    setDefinition((prev) => ({
+      ...prev,
+      options: { ...prev.options, input: newInput }
+    }));
+  };
+
   const [feedOptions, setFeedOptions] =
     useState<FeedIssuanceOptions>(DEFAULT_FEED_OPTIONS);
-
-  const [previewType, setPreviewType] = useState<PreviewType | undefined>(
-    undefined
-  );
 
   return (
     <>
@@ -48,44 +73,9 @@ export default function PODPipelineBuilder(
         >
           <Card overflow="hidden" width="fit-content">
             <Box maxW="800px" minW="800px" height="500px">
-              {previewType === undefined && (
-                <FancyEditor
-                  editorStyle={{ height: "500px", width: "800px" }}
-                  dark
-                  value={csv}
-                  setValue={setCsv}
-                />
-              )}
-              {previewType !== undefined && (
-                <CSVPreview
-                  csv={csv}
-                  previewType={previewType}
-                  onChange={setCsv}
-                />
-              )}
+              <PODSheetPreview csvInput={csvInput} onChange={changeInput} />
             </Box>
           </Card>
-          <HStack mt={2} minWidth="fit-content" width="fit-content">
-            <Button
-              flexShrink={0}
-              disabled={previewType === undefined}
-              colorScheme={previewType === undefined ? "blue" : undefined}
-              onClick={(): void => setPreviewType(undefined)}
-            >
-              CSV
-            </Button>
-
-            <Button
-              flexShrink={0}
-              disabled={previewType === PreviewType.CSVSheet}
-              colorScheme={
-                previewType === PreviewType.CSVSheet ? "blue" : undefined
-              }
-              onClick={(): void => setPreviewType(PreviewType.CSVSheet)}
-            >
-              Preview
-            </Button>
-          </HStack>
         </div>
         <div
           className="col2"
@@ -102,28 +92,7 @@ export default function PODPipelineBuilder(
             maxW="100px"
             colorScheme="green"
             onClick={(): Promise<void> =>
-              props.onCreate(
-                JSON.stringify({
-                  type: PipelineType.POD,
-                  timeCreated: new Date().toISOString(),
-                  timeUpdated: new Date().toISOString(),
-                  editorUserIds: [],
-                  options: {
-                    input: {
-                      type: PODPipelineInputType.CSV,
-                      csv,
-                      columns: {}
-                    },
-                    outputs: {},
-                    feedOptions: {
-                      feedId: "feedId",
-                      feedDisplayName: "feedDisplayName",
-                      feedDescription: "feedDescription",
-                      feedFolder: "feedFolder"
-                    }
-                  }
-                } satisfies Partial<PODPipelineDefinition>)
-              )
+              props.onCreate(JSON.stringify(definition))
             }
           >
             Create

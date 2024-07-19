@@ -399,7 +399,11 @@ export function PODSheetPreview({
         className={"sheet"}
       />
       <VStack spacing={2} alignItems={"start"}>
-        <Button onClick={addRow} colorScheme="blue">
+        <Button
+          onClick={addRow}
+          leftIcon={<Icon as={PlusSquareIcon} w={4} h={4} />}
+          colorScheme="blue"
+        >
           Add row
         </Button>
       </VStack>
