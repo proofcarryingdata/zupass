@@ -73,6 +73,10 @@ export class PODPipeline implements BasePipeline {
     return this.definition.id;
   }
 
+  public get feedCapability(): FeedIssuanceCapability {
+    return this.capabilities[0] as FeedIssuanceCapability;
+  }
+
   public constructor(
     eddsaPrivateKey: string,
     definition: PODPipelineDefinition,
@@ -408,6 +412,10 @@ export class PODPipeline implements BasePipeline {
     }
 
     return atoms;
+  }
+
+  public static is(pipeline: BasePipeline): pipeline is PODPipeline {
+    return pipeline.type === PipelineType.POD;
   }
 
   public static uniqueIds(definition: PODPipelineDefinition): string[] {
