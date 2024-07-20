@@ -42,14 +42,9 @@ export default function PODPipelineBuilder(
       outputs: {
         pod1: {
           pcdType: PODPipelinePCDTypes.PODPCD,
-          entries: {
-            email: {
-              type: "string",
-              source: {
-                type: "input",
-                name: "email"
-              }
-            }
+          entries: {},
+          match: {
+            type: "none"
           }
         }
       },
