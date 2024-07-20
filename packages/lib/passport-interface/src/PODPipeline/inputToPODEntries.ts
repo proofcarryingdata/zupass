@@ -63,12 +63,9 @@ const conversions: Record<
       type: "int",
       value: BigInt(value)
     }),
-    // UUIDs have a special conversion to a bigint.
-    [PODPipelineInputFieldType.UUID]: (value) => ({
-      type: "int",
-      value: uuidToBigInt(value)
-    }),
-    // Strings cannot be integers
+    // UUIDs are too big to fit into a 63-bit integer.
+    [PODPipelineInputFieldType.UUID]: undefined,
+    // Strings cannot be integers.
     [PODPipelineInputFieldType.String]: undefined
   },
   cryptographic: {
@@ -85,6 +82,8 @@ const conversions: Record<
       type: "int",
       value: BigInt(value)
     }),
+    // UUIDs have a special conversion function, as used for converting ticket
+    // IDs to bigints in our earlier code.
     [PODPipelineInputFieldType.UUID]: (value) => ({
       type: "int",
       value: uuidToBigInt(value)
