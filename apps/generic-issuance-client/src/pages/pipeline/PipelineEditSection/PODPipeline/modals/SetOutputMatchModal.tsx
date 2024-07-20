@@ -100,9 +100,18 @@ export function SetOutputMatchModal({
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Add Configured Value</ModalHeader>
+        <ModalHeader>Choose PCD Recipients</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
+          <Alert status="info" mb="16px" fontSize="sm">
+            <AlertIcon />
+            <AlertDescription>
+              PCDs can be issued to recipients based on a match between a field
+              from their authentication credential and an entry in the POD.
+              Select the authentication credential field and the matching POD
+              entry below.
+            </AlertDescription>
+          </Alert>
           <HStack spacing={3}>
             <div>Filter</div>
             <div>
@@ -150,8 +159,8 @@ export function SetOutputMatchModal({
               <AlertIcon />
               <AlertDescription>
                 {match.type === "email"
-                  ? "Zupass Email can only be matched with 'string' entries, but none are configured"
-                  : "Semaphore ID can only be matched with 'cryptographic' entries, but none are configured"}
+                  ? "Zupass Email can only be matched with 'string' entries, but no such entries are configured."
+                  : "Semaphore ID can only be matched with 'cryptographic' entries, but no such entries are configured."}
               </AlertDescription>
             </Alert>
           )}
