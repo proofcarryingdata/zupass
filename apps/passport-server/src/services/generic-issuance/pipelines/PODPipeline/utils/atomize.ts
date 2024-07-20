@@ -63,10 +63,6 @@ export function atomize(
   }
 
   const id = uuidv5(serializePODEntries(entries), pipelineId);
-  const matchTo = {
-    entry: output.match.inputField,
-    matchType: output.match.type
-  };
 
-  return { entries, outputId, id, matchTo };
+  return { entries, outputId, id, matchTo: output.match };
 }

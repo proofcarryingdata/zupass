@@ -3,7 +3,6 @@ import {
   AlertIcon,
   Button,
   FormControl,
-  HStack,
   Heading,
   Input,
   Select,
@@ -11,13 +10,16 @@ import {
   Table,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
-  Tr
+  Tr,
+  useDisclosure
 } from "@chakra-ui/react";
 import {
   CSVInput,
   PODPipelineDefinition,
+  PODPipelineOutputMatch,
   PODPipelinePODEntry,
   PipelineDefinition,
   PipelineDefinitionSchema,
@@ -28,6 +30,7 @@ import { POD_NAME_REGEX } from "@pcd/pod";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
 import { AddConfiguredValueModal } from "./modals/AddConfiguredValueModal";
+import { SetOutputMatchModal } from "./modals/SetOutputMatchModal";
 
 function EditableName({
   name,
@@ -65,83 +68,6 @@ function EditableName({
   );
 }
 
-function ValidatedRecipients({
-  definition,
-  csvInput,
-  outputName,
-  onChange
-}: {
-  definition: PODPipelineDefinition;
-  csvInput: CSVInput;
-  outputName: string;
-  onChange: (newDefinition: PODPipelineDefinition) => void;
-}): ReactNode {
-  const setMatchType = useCallback(
-    (type: string) => {
-      const newDefinition = structuredClone(definition);
-      newDefinition.options.outputs[outputName].match = {
-        type: type as "email" | "semaphoreID",
-        inputField:
-          newDefinition.options.outputs[outputName].match?.inputField ?? ""
-      };
-
-      onChange?.(newDefinition);
-    },
-    [definition, onChange, outputName]
-  );
-
-  const setMatchInputField = useCallback(
-    (inputField: string) => {
-      const newDefinition = structuredClone(definition);
-      newDefinition.options.outputs[outputName].match = {
-        type: newDefinition.options.outputs[outputName].match?.type ?? "email",
-        inputField
-      };
-
-      onChange?.(newDefinition);
-    },
-    [definition, onChange, outputName]
-  );
-
-  return (
-    <HStack spacing={3}>
-      <div>Match</div>
-      <div>
-        <Select
-          value={definition.options.outputs[outputName].match?.type}
-          onChange={(ev) => setMatchType(ev.target.value)}
-        >
-          <option value="email">Zupass Email</option>
-          <option value="semaphoreID">Semaphore ID</option>
-        </Select>
-      </div>
-      <div>to</div>
-      <div>
-        <Select
-          value={definition.options.outputs[outputName].match?.inputField}
-          onChange={(ev) => setMatchInputField(ev.target.value)}
-        >
-          <option disabled>-</option>
-          {Object.keys(csvInput.getColumns()).map((column) => {
-            return (
-              <option
-                key={column}
-                selected={
-                  definition.options.outputs[outputName].match?.inputField ===
-                  column
-                }
-                value={column}
-              >
-                Data: {column}
-              </option>
-            );
-          })}
-        </Select>
-      </div>
-    </HStack>
-  );
-}
-
 function ValidatedOutputs({
   name,
   definition,
@@ -160,6 +86,12 @@ function ValidatedOutputs({
 
   const entries = Object.entries(output.entries ?? []);
   const entryObj = Object.fromEntries(entries);
+
+  const {
+    isOpen: isSetOutputMatchModalOpen,
+    onOpen: openSetOutputMatchModal,
+    onClose: closeSetOutputMatchModal
+  } = useDisclosure();
 
   const sources = [
     ["credentialEmail", "Zupass Email"],
@@ -274,6 +206,16 @@ function ValidatedOutputs({
     [definition, name, onChange]
   );
 
+  const changeMatch = useCallback(
+    (match: PODPipelineOutputMatch) => {
+      const newDefinition = structuredClone(definition);
+      newDefinition.options.outputs[name].match = match;
+      onChange(newDefinition);
+      closeSetOutputMatchModal();
+    },
+    [definition, name, onChange, closeSetOutputMatchModal]
+  );
+
   return (
     <Outputs>
       <AddConfiguredValueModal
@@ -342,18 +284,12 @@ function ValidatedOutputs({
                       <option>-</option>
                       {sources.map(([source, label]) => {
                         return (
-                          <option
-                            key={source}
-                            value={source}
-                            selected={source === selectedSource}
-                          >
+                          <option key={source} value={source}>
                             {label}
                           </option>
                         );
                       })}
-                      <option value="new" selected={false}>
-                        Add new configured value
-                      </option>
+                      <option value="new">Add new configured value</option>
                     </Select>
                   </Td>
                   <Td>
@@ -402,7 +338,11 @@ function ValidatedOutputs({
                                 return null;
                               }
                             }
-                            return <option value={value}>{label}</option>;
+                            return (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            );
                           })
                           .filter((val) => !!val)
                       }
@@ -426,11 +366,29 @@ function ValidatedOutputs({
       <Heading size="sm" my="16px">
         Recipients
       </Heading>
-      <ValidatedRecipients
-        definition={definition}
-        onChange={onChange}
-        csvInput={csvInput}
-        outputName={name}
+      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        <Text fontSize="sm">
+          {output.match.type === "none" ? (
+            "All users will receive all PCDs issued by this pipeline."
+          ) : (
+            <>
+              PCDs will be issued to users whose{" "}
+              {output.match.type === "email" ? "email" : "Semaphore ID"} matches
+              the entry <strong>{output.match.entry}</strong>.
+            </>
+          )}
+        </Text>
+
+        <Button size="sm" onClick={openSetOutputMatchModal}>
+          Edit
+        </Button>
+      </div>
+      <SetOutputMatchModal
+        isOpen={isSetOutputMatchModalOpen}
+        onCancel={closeSetOutputMatchModal}
+        onChange={changeMatch}
+        output={output}
+        entries={entryObj}
       />
     </Outputs>
   );
@@ -451,6 +409,7 @@ function PODOutputsList({
     <>
       {Object.keys(definition.options.outputs).map((name) => (
         <ValidatedOutputs
+          key={name}
           name={name}
           csvInput={csvInput}
           definition={definition}

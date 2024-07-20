@@ -66,7 +66,7 @@ export function setupTestPODPipelineDefinition(
           pcdType: PODPipelinePCDTypes.PODPCD,
           match: {
             type: "email",
-            inputField: "email"
+            entry: "email"
           }
         }
       },

@@ -603,9 +603,12 @@ const PODPipelinePODEntriesSchema = z.record(
   PODPipelinePODEntrySchema
 );
 
-const PODPipelineOutputMatchSchema = z.discriminatedUnion("type", [
-  z.object({ type: z.literal("semaphoreID"), inputField: z.string() }),
-  z.object({ type: z.literal("email"), inputField: z.string() })
+export type PODPipelinePODEntries = z.infer<typeof PODPipelinePODEntriesSchema>;
+
+export const PODPipelineOutputMatchSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("semaphoreID"), entry: z.string() }),
+  z.object({ type: z.literal("email"), entry: z.string() }),
+  z.object({ type: z.literal("none") })
 ]);
 
 export type PODPipelineOutputMatch = z.infer<

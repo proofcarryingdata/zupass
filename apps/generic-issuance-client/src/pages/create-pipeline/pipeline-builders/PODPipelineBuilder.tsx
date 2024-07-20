@@ -6,6 +6,7 @@ import {
   PODPipelineInput,
   PODPipelineInputFieldType,
   PODPipelineInputType,
+  PODPipelinePCDTypes,
   PipelineType
 } from "@pcd/passport-interface";
 import { ReactNode, useMemo, useState } from "react";
@@ -38,7 +39,20 @@ export default function PODPipelineBuilder(
           message: { type: PODPipelineInputFieldType.String }
         }
       },
-      outputs: {},
+      outputs: {
+        pod1: {
+          pcdType: PODPipelinePCDTypes.PODPCD,
+          entries: {
+            email: {
+              type: "string",
+              source: {
+                type: "input",
+                name: "email"
+              }
+            }
+          }
+        }
+      },
       feedOptions: DEFAULT_FEED_OPTIONS
     }
   });

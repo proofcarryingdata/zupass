@@ -45,7 +45,7 @@ const LOG_NAME = "PODPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
 
 export interface PODAtom extends PipelineAtom {
-  matchTo: { entry: string; matchType: PODPipelineOutputMatch["type"] };
+  matchTo: PODPipelineOutputMatch;
   /**
    * @todo if we can look up output configuration via output ID, do we need
    * the matchType above? Alternatively, if we can just add these things to the
@@ -206,14 +206,17 @@ export class PODPipeline implements BasePipeline {
     const matchingAtoms: PODAtom[] = [];
 
     for (const atom of atoms) {
-      if (atom.matchTo.matchType === "email") {
+      if (atom.matchTo.type === "none") {
+        // No filter, so all atoms match to all credentials
+        matchingAtoms.push(atom);
+      } else if (atom.matchTo.type === "email") {
         if (
           atom.entries[atom.matchTo.entry].value.toString().toLowerCase() ===
           email.toLowerCase()
         ) {
           matchingAtoms.push(atom);
         }
-      } else if (atom.matchTo.matchType === "semaphoreID") {
+      } else if (atom.matchTo.type === "semaphoreID") {
         if (
           atom.entries[atom.matchTo.entry].value.toString() ===
           semaphoreId.toString()

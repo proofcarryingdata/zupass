@@ -47,7 +47,7 @@ describe("atom creation", function () {
           pcdType: PODPipelinePCDTypes.PODPCD,
           match: {
             type: "email",
-            inputField: "email"
+            entry: "email"
           }
         }
       },
@@ -132,7 +132,7 @@ describe("atom creation", function () {
           pcdType: PODPipelinePCDTypes.PODPCD,
           match: {
             type: "email",
-            inputField: "email"
+            entry: "email"
           }
         }
       },
