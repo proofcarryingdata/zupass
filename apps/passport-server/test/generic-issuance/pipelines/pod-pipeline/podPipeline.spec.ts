@@ -5,6 +5,7 @@ import {
 } from "@pcd/passport-interface";
 import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
 import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
+import { uuidToBigInt } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -283,6 +284,7 @@ describe("generic issuance - PODPipeline", function () {
         birthday: ["int", BigInt(new Date("1980-01-01").getTime())],
         is_approved: ["int", BigInt(true)]
       });
+
       const secondPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[1].pcd);
       expectPODEntries(secondPCD.claim.entries, {
         id: ["string", "f1304eac-e462-4d8f-b704-9e7aed2e0618"],
@@ -371,6 +373,7 @@ describe("generic issuance - PODPipeline", function () {
         birthday: ["int", BigInt(new Date("1980-01-01").getTime())],
         is_approved: ["int", BigInt(true)]
       });
+
       const secondPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[1].pcd);
       expectPODEntries(secondPCD.claim.entries, {
         id: ["string", "b8fb8ad1-6a28-4626-9e31-267580a40134"],
@@ -383,6 +386,97 @@ describe("generic issuance - PODPipeline", function () {
       });
     }
   );
+
+  /**
+   * Outputs can be configured to convert inputs into different types. For
+   * example, a date input could be presented as a string, or as an int, and a
+   * UUID could be output as a string or as a "cryptographic" type.
+   *
+   * This test reconfigures the output type for birthday, high_score, id,
+   * and is_approved, and verifies that the user receives the PCDs with these
+   * new types.
+   */
+  step("Output type can be re-configured", async function () {
+    await updateAndRestartPipeline(
+      giBackend,
+      giService,
+      adminGIUserId,
+      (definition: PODPipelineDefinition) => {
+        // Change the output type for birthday, high_score, and id
+        // Birthday derives from a date input
+        definition.options.outputs["output1"].entries["birthday"].type =
+          "string";
+        // High score derives from an int input
+        definition.options.outputs["output1"].entries["high_score"].type =
+          "string";
+        // ID derives from a UUID input
+        definition.options.outputs["output1"].entries["id"].type =
+          "cryptographic";
+        // is_approved derives from a boolean input
+        definition.options.outputs["output1"].entries["is_approved"].type =
+          "string";
+      }
+    );
+
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelineInstances();
+    expectLength(pipelines, 1);
+    const podPipeline = pipelines.find(PODPipeline.is);
+    expectToExist(podPipeline);
+    const loadRes = await podPipeline.load();
+    expectTrue(loadRes.success);
+    expect(loadRes.atomsLoaded).to.eq(3);
+
+    const feedRes = await requestPODFeed(
+      podPipeline.feedCapability.feedUrl,
+      podPipeline.feedCapability.options.feedId,
+      await makeTestCredential(
+        johnDoeUserIdentity,
+        PODBOX_CREDENTIAL_REQUEST,
+        // User email as present in the CSV input
+        "john.doe@example.com",
+        testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
+      )
+    );
+    expectTrue(feedRes.success);
+    expectLength(feedRes.value.actions, 2);
+    const pcdsAction = feedRes.value.actions[1];
+    expectIsReplaceInFolderAction(pcdsAction);
+    // User receives two PCDs
+    expectLength(pcdsAction.pcds, 2);
+    expect(pcdsAction.pcds[0].type).to.eq(PODPCDTypeName);
+    expect(pcdsAction.folder).to.eq(
+      podPipeline.feedCapability.options.feedFolder
+    );
+
+    const firstPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[0].pcd);
+    expectPODEntries(firstPCD.claim.entries, {
+      id: [
+        "cryptographic",
+        uuidToBigInt("768dab50-2dea-4fd7-86bd-212f091b7867")
+      ],
+      first_name: ["string", "John"],
+      last_name: ["string", "Doe"],
+      email: ["string", "john.doe@example.com"],
+      high_score: ["string", "30"],
+      birthday: ["string", new Date("1980-01-01").toISOString()],
+      is_approved: ["string", "true"]
+    });
+
+    const secondPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[1].pcd);
+    expectPODEntries(secondPCD.claim.entries, {
+      id: [
+        "cryptographic",
+        uuidToBigInt("b8fb8ad1-6a28-4626-9e31-267580a40134")
+      ],
+      first_name: ["string", "John"],
+      last_name: ["string", "Doe"],
+      email: ["string", "john.doe@example.com"],
+      high_score: ["string", "3000"],
+      birthday: ["string", new Date("1981-12-01").toISOString()],
+      is_approved: ["string", "true"]
+    });
+  });
 
   this.afterAll(async () => {
     await stopApplication(giBackend);

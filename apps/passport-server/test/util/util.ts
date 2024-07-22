@@ -62,24 +62,31 @@ export function expectDefined<T>(value: T | undefined): asserts value is T {
 }
 
 /**
+ * For terser test entries, this type lets us specify a PODValue as a tuple
+ * rather than an object, without losing type-safety.
+ */
+type PODValueTuple = {
+  [K in PODValue["type"]]: [K, Extract<PODValue, { type: K }>["value"]];
+}[PODValue["type"]];
+
+/**
  * Use to check if a given value equals some POD value
  */
 export function expectPODValue(
   valueToTest: PODValue,
-  type: PODValue["type"],
-  value: PODValue["value"],
+  expected: PODValueTuple,
   name?: string
 ): void {
   expect(
     valueToTest.type,
     name &&
-      `expected type of ${name} to equal '${type}', got '${valueToTest.type}'`
-  ).to.eq(type);
+      `expected type of ${name} to equal '${expected[0]}', got '${valueToTest.type}'`
+  ).to.eq(expected[0]);
   expect(
     valueToTest.value,
     name &&
-      `expected value of ${name} to equal '${value}', got '${valueToTest.value}'`
-  ).to.eq(value);
+      `expected value of ${name} to equal '${expected[1]}', got '${valueToTest.value}'`
+  ).to.eq(expected[1]);
 }
 
 /**
@@ -87,13 +94,13 @@ export function expectPODValue(
  */
 export function expectPODEntries(
   entries: PODEntries,
-  expectedEntries: Record<string, [PODValue["type"], PODValue["value"]]>
+  expectedEntries: Record<string, PODValueTuple>
 ): void {
   expect(Object.keys(entries).sort()).to.eql(
     Object.keys(expectedEntries).sort()
   );
   for (const [key, value] of Object.entries(expectedEntries)) {
-    expectPODValue(entries[key], ...value, key);
+    expectPODValue(entries[key], value, key);
   }
 }
 

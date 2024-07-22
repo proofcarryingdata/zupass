@@ -69,23 +69,22 @@ const conversions: Record<
     [PODPipelineInputFieldType.String]: undefined
   },
   cryptographic: {
-    // Identical to "int" conversions.
     [PODPipelineInputFieldType.Integer]: (value) => ({
-      type: "int",
+      type: "cryptographic",
       value: value
     }),
     [PODPipelineInputFieldType.Date]: (value) => ({
-      type: "int",
+      type: "cryptographic",
       value: BigInt(value.getTime())
     }),
     [PODPipelineInputFieldType.Boolean]: (value) => ({
-      type: "int",
+      type: "cryptographic",
       value: BigInt(value)
     }),
     // UUIDs have a special conversion function, as used for converting ticket
     // IDs to bigints in our earlier code.
     [PODPipelineInputFieldType.UUID]: (value) => ({
-      type: "int",
+      type: "cryptographic",
       value: uuidToBigInt(value)
     }),
     [PODPipelineInputFieldType.String]: undefined
