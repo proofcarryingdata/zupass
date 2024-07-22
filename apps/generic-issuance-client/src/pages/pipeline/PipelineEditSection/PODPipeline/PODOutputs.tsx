@@ -1,6 +1,4 @@
 import {
-  Alert,
-  AlertIcon,
   Button,
   FormControl,
   Heading,
@@ -22,9 +20,6 @@ import {
   PODPipelineDefinition,
   PODPipelineOutputMatch,
   PODPipelinePODEntry,
-  PipelineDefinition,
-  PipelineDefinitionSchema,
-  PipelineType,
   getInputToPODValueConverter
 } from "@pcd/passport-interface";
 import { POD_NAME_REGEX } from "@pcd/pod";
@@ -396,7 +391,7 @@ function ValidatedOutputs({
   );
 }
 
-function PODOutputsList({
+export function PODOutputs({
   definition,
   dispatch
 }: {
@@ -420,34 +415,6 @@ function PODOutputsList({
       ))}
     </>
   );
-}
-
-export function PODOutputs({
-  definition,
-  dispatch
-}: {
-  definition: string;
-  dispatch: Dispatch<PODPipelineEditAction>;
-}): ReactNode {
-  let error = false;
-  let parsed: PipelineDefinition | undefined;
-  try {
-    parsed = PipelineDefinitionSchema.parse(JSON.parse(definition));
-  } catch (e) {
-    error = true;
-  }
-
-  if (!parsed || error || parsed?.type !== PipelineType.POD) {
-    return (
-      <Alert status="error">
-        <AlertIcon />
-        The pipeline is not configured correctly. Switch back to Configuration
-        view to ensure that the configuration is valid.
-      </Alert>
-    );
-  }
-
-  return <PODOutputsList definition={parsed} dispatch={dispatch} />;
 }
 
 const Outputs = styled.div`

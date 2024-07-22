@@ -1,21 +1,9 @@
-import {
-  Alert,
-  AlertIcon,
-  FormControl,
-  FormLabel,
-  Input,
-  VStack
-} from "@chakra-ui/react";
-import {
-  PODPipelineDefinition,
-  PipelineDefinition,
-  PipelineDefinitionSchema,
-  PipelineType
-} from "@pcd/passport-interface";
+import { FormControl, FormLabel, Input, VStack } from "@chakra-ui/react";
+import { PODPipelineDefinition } from "@pcd/passport-interface";
 import { Dispatch, ReactNode, useCallback } from "react";
 import { PODPipelineEditAction, PODPipelineEditActionType } from "./state";
 
-function ValidatedFeedConfig({
+export function PODFeed({
   definition,
   dispatch
 }: {
@@ -73,32 +61,4 @@ function ValidatedFeedConfig({
       </FormControl>
     </VStack>
   );
-}
-
-export function PODFeed({
-  definition,
-  dispatch
-}: {
-  definition: string;
-  dispatch: Dispatch<PODPipelineEditAction>;
-}): ReactNode {
-  let error = false;
-  let parsed: PipelineDefinition | undefined;
-  try {
-    parsed = PipelineDefinitionSchema.parse(JSON.parse(definition));
-  } catch (e) {
-    error = true;
-  }
-
-  if (error || parsed?.type !== PipelineType.POD) {
-    return (
-      <Alert status="error">
-        <AlertIcon />
-        The pipeline is not configured correctly. Switch back to Configuration
-        view to ensure that the configuration is valid.
-      </Alert>
-    );
-  }
-
-  return <ValidatedFeedConfig definition={parsed} dispatch={dispatch} />;
 }

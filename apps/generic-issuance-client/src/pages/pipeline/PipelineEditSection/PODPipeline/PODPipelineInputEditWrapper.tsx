@@ -1,47 +1,19 @@
-import { Alert, AlertIcon } from "@chakra-ui/react";
-import {
-  CSVInput,
-  PODPipelineDefinition,
-  PipelineDefinitionSchema,
-  PipelineType
-} from "@pcd/passport-interface";
-import { ReactNode } from "react";
+import { CSVInput, PODPipelineDefinition } from "@pcd/passport-interface";
+import { ReactNode, useMemo } from "react";
 import { PODPipelineInputEdit } from "./PODPipelineInputEdit";
 import { PODPipelineEditAction } from "./state";
 
 export function PODPipelineInputEditWrapper({
-  pipelineDefinitionText,
-  dispatch
+  dispatch,
+  definition
 }: {
-  pipelineDefinitionText: string;
   dispatch: React.Dispatch<PODPipelineEditAction>;
+  definition: PODPipelineDefinition;
 }): ReactNode {
-  let error = false;
-  let csvInput: CSVInput | undefined = undefined;
-  let definition: PODPipelineDefinition | undefined = undefined;
-  try {
-    const parsed = PipelineDefinitionSchema.parse(
-      JSON.parse(pipelineDefinitionText)
-    );
-    if (parsed.type === PipelineType.POD) {
-      definition = parsed;
-      csvInput = new CSVInput(definition.options.input);
-    } else {
-      error = true;
-    }
-  } catch (e) {
-    error = true;
-  }
-
-  if (error) {
-    return (
-      <Alert status="error">
-        <AlertIcon />
-        The pipeline is not configured correctly. Switch back to Configuration
-        view to ensure that the configuration is valid.
-      </Alert>
-    );
-  }
+  const csvInput = useMemo(
+    () => new CSVInput(definition.options.input),
+    [definition.options.input]
+  );
 
   return (
     csvInput &&
