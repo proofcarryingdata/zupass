@@ -43,7 +43,7 @@ export function SubscriptionsScreen(): JSX.Element {
           <p>
             To create your own PCD feed, you can either implement, host, and
             maintain your own{" "}
-            <a href="https://github.com/proofcarryingdata/zupass/tree/main/examples/zupass-feed-server">
+            <a href="https://github.com/proofcarryingdata/zupass/tree/main/test-packaging/zupass-feed-server">
               feed server
             </a>
             .
