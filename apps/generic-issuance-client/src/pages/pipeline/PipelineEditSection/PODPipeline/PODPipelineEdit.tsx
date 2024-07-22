@@ -5,13 +5,13 @@ import { FancyEditor } from "../../../../components/FancyEditor";
 import { PODFeed } from "./PODFeed";
 import { PODOutputs } from "./PODOutputs";
 import { PODPipelineInputEditWrapper } from "./PODPipelineInputEditWrapper";
-import { Just, Maybe, MaybeType, Nothing, pipelineEditReducer } from "./state";
+import { pipelineEditReducer } from "./state";
 
-function safeJSONParse(value: string): Maybe<PODPipelineDefinition> {
+function safeJSONParse(value: string): PODPipelineDefinition | undefined {
   try {
-    return Just(JSON.parse(value));
+    return JSON.parse(value);
   } catch (e) {
-    return Nothing();
+    return undefined;
   }
 }
 
@@ -30,8 +30,8 @@ export function PODPipelineEdit({
   );
 
   useEffect(() => {
-    if (parsed.type === MaybeType.Just) {
-      setEditorValue(JSON.stringify(parsed.value, null, 2));
+    if (parsed) {
+      setEditorValue(JSON.stringify(parsed, null, 2));
     }
   }, [parsed, setEditorValue]);
 

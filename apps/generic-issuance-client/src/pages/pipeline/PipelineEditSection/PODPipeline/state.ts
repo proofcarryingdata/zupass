@@ -23,40 +23,13 @@ import { assertUnreachable } from "@pcd/util";
 /**
  * This file contains the state management for the POD Pipeline.
  *
- * The state is a Maybe<PODPipelineDefinition>. The Maybe type is used to
- * represent the possibility of a PODPipelineDefinition being undefined in
- * cases where the JSON is corrupted (e.g. due to admin edits).
+ * The state is a PODPipelineDefinition, which may be undefined if the JSON for
+ * the POD Pipeline is invalid (e.g. if the user pasted invalid JSON into the
+ * editor).
  *
  * The state is managed by a reducer. The reducer is used to update the state
  * based on the user's actions.
  */
-
-export enum MaybeType {
-  Just = "MaybeType_Just",
-  Nothing = "MaybeType_Nothing"
-}
-
-interface Just<T>
-  extends Readonly<{
-    type: typeof MaybeType.Just;
-    value: T;
-  }> {}
-
-interface Nothing
-  extends Readonly<{
-    type: typeof MaybeType.Nothing;
-  }> {}
-
-export type Maybe<T> = Just<T> | Nothing;
-
-export const Nothing = (): Nothing => ({
-  type: MaybeType.Nothing
-});
-
-export const Just = <T>(value: T): Just<T> => ({
-  type: MaybeType.Just,
-  value
-});
 
 /**
  * The actions that the user can take while editing the POD Pipeline.
@@ -147,78 +120,66 @@ export type PODPipelineEditAction =
  * @returns The new state of the POD Pipeline.
  */
 export function pipelineEditReducer(
-  state: Maybe<PODPipelineDefinition>,
+  state: PODPipelineDefinition | undefined,
   action: PODPipelineEditAction
-): Maybe<PODPipelineDefinition> {
-  if (state.type === MaybeType.Nothing) {
-    return state;
+): PODPipelineDefinition | undefined {
+  if (state === undefined) {
+    return undefined;
   }
 
   switch (action.type) {
     case PODPipelineEditActionType.AddInputColumn:
-      return Just(addInputColumn(state.value, action.name, action.columnType));
+      return addInputColumn(state, action.name, action.columnType);
     case PODPipelineEditActionType.DeleteInputColumn:
-      return Just(deleteInputColumn(state.value, action.name));
+      return deleteInputColumn(state, action.name);
     case PODPipelineEditActionType.RenameInputColumn:
-      return Just(renameInputColumn(state.value, action.name, action.newName));
+      return renameInputColumn(state, action.name, action.newName);
     case PODPipelineEditActionType.UpdateInputCell:
-      return Just(
-        updateInputCell(
-          state.value,
-          action.rowIndex,
-          action.columnName,
-          action.value
-        )
+      return updateInputCell(
+        state,
+        action.rowIndex,
+        action.columnName,
+        action.value
       );
     case PODPipelineEditActionType.UpdateFeedOptions:
-      return Just({
-        ...state.value,
+      return {
+        ...state,
         options: {
-          ...state.value.options,
+          ...state.options,
           feedOptions: action.feedOptions
         }
-      });
+      };
     case PODPipelineEditActionType.AddInputRow:
-      return Just(addInputRow(state.value));
+      return addInputRow(state);
     case PODPipelineEditActionType.AddOutputEntry:
-      return Just(addOutputEntry(state.value, action.outputName));
+      return addOutputEntry(state, action.outputName);
     case PODPipelineEditActionType.DeleteOutputEntry:
-      return Just(
-        deleteOutputEntry(state.value, action.outputName, action.key)
-      );
+      return deleteOutputEntry(state, action.outputName, action.key);
     case PODPipelineEditActionType.ChangeOutputEntryType:
-      return Just(
-        changeOutputEntryType(
-          state.value,
-          action.outputName,
-          action.key,
-          action.newType
-        )
+      return changeOutputEntryType(
+        state,
+        action.outputName,
+        action.key,
+        action.newType
       );
     case PODPipelineEditActionType.ChangeOutputEntryName:
-      return Just(
-        changeOutputEntryName(
-          state.value,
-          action.outputName,
-          action.key,
-          action.newName
-        )
+      return changeOutputEntryName(
+        state,
+        action.outputName,
+        action.key,
+        action.newName
       );
     case PODPipelineEditActionType.ChangeOutputMatch:
-      return Just(
-        changeOutputMatch(state.value, action.outputName, action.match)
-      );
+      return changeOutputMatch(state, action.outputName, action.match);
     case PODPipelineEditActionType.ChangeOutputEntry:
-      return Just(
-        changeOutputEntry(
-          state.value,
-          action.outputName,
-          action.key,
-          action.entry
-        )
+      return changeOutputEntry(
+        state,
+        action.outputName,
+        action.key,
+        action.entry
       );
     case PODPipelineEditActionType.SetFeedOptions:
-      return Just(setFeedOptions(state.value, action.feedOptions));
+      return setFeedOptions(state, action.feedOptions);
     default:
       assertUnreachable(action);
   }

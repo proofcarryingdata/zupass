@@ -10,11 +10,7 @@ import {
 } from "@pcd/passport-interface";
 import { ReactNode, useEffect, useMemo, useReducer, useState } from "react";
 import { PODPipelineInputEdit } from "../../pipeline/PipelineEditSection/PODPipeline/PODPipelineInputEdit";
-import {
-  Just,
-  MaybeType,
-  pipelineEditReducer
-} from "../../pipeline/PipelineEditSection/PODPipeline/state";
+import { pipelineEditReducer } from "../../pipeline/PipelineEditSection/PODPipeline/state";
 import { TwoColumns } from "../../pipeline/PipelinePage";
 import { FeedOptions } from "./FeedOptions";
 
@@ -64,12 +60,12 @@ export default function PODPipelineBuilder(
 
   const [maybeDefinition, dispatch] = useReducer(
     pipelineEditReducer,
-    Just(initialDefinition)
+    initialDefinition
   );
 
   useEffect(() => {
-    if (maybeDefinition.type === MaybeType.Just) {
-      setDefinition(maybeDefinition.value);
+    if (maybeDefinition) {
+      setDefinition(maybeDefinition);
     }
   }, [maybeDefinition]);
 
