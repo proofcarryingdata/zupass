@@ -7,6 +7,7 @@ export * from "./FrogCrypto";
 export * from "./PODPipeline/CSVInput";
 export * from "./PODPipeline/Input";
 export * from "./PODPipeline/inputToPODEntries";
+export * from "./PODPipeline/updates";
 export * from "./PassportInterface";
 export * from "./PassportPopup/core";
 export * from "./PassportPopup/react";

@@ -14,25 +14,15 @@ import {
   UseMenuItemProps,
   VStack,
   useDisclosure,
-  useMenuItem,
-  useToast
+  useMenuItem
 } from "@chakra-ui/react";
 import {
   CSVInput,
   InputColumn,
   InputValue,
-  PODPipelineInput,
-  PODPipelineInputFieldType,
-  PODPipelineInputType
+  PODPipelineInputFieldType
 } from "@pcd/passport-interface";
-import { stringify } from "csv-stringify/sync";
-import React, {
-  ReactNode,
-  useCallback,
-  useMemo,
-  useReducer,
-  useState
-} from "react";
+import React, { ReactNode, useCallback, useMemo, useState } from "react";
 import {
   MdCheckCircleOutline,
   MdDateRange,
@@ -41,24 +31,17 @@ import {
   MdNumbers,
   MdShortText
 } from "react-icons/md";
-import { Matrix, Mode, Spreadsheet } from "react-spreadsheet";
+import { Point, Spreadsheet } from "react-spreadsheet";
 import styled from "styled-components";
+import {
+  PODPipelineEditAction,
+  PODPipelineEditActionType
+} from "./PODPipelineEdit";
 import { BooleanEditor, BooleanViewer } from "./cells/BooleanCell";
 import { DateEditor, DateViewer } from "./cells/DateCell";
 import { IntegerEditor, IntegerViewer } from "./cells/IntegerCell";
 import { AddColumnModal } from "./modals/AddColumnModal";
 import { DeleteColumnDialog } from "./modals/DeleteColumnDialog";
-
-/**
- * Default values for new cells in columns of specific types
- */
-const COLUMN_DEFAULTS = {
-  [PODPipelineInputFieldType.String]: "",
-  [PODPipelineInputFieldType.Integer]: "0",
-  [PODPipelineInputFieldType.Boolean]: "false",
-  [PODPipelineInputFieldType.Date]: "",
-  [PODPipelineInputFieldType.UUID]: ""
-};
 
 /**
  * Viewer and editor components for each type of cell
@@ -108,12 +91,43 @@ function Row(props: React.PropsWithChildren): ReactNode {
   );
 }
 
-function MenuInput(props: UseMenuItemProps & InputProps): ReactNode {
-  const { role, ...rest } = useMenuItem(props);
+type MenuInputProps = Omit<UseMenuItemProps & InputProps, "onChange"> & {
+  value: string;
+  onChange: (value: string) => void;
+  validate: (value: string) => boolean;
+};
+
+function MenuInput({
+  onChange,
+  value,
+  validate,
+  ...rest
+}: MenuInputProps): ReactNode {
+  const { role } = useMenuItem(rest);
   const navigationKeys = ["ArrowUp", "ArrowDown", "Escape"];
+  const [localValue, setLocalValue] = useState(value);
+  const [isValid, setIsValid] = useState(validate(value));
+
+  const onLocalChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setLocalValue(e.target.value);
+      setIsValid(validate(e.target.value));
+    },
+    [validate]
+  );
+  const onBlur = useCallback(() => {
+    if (isValid) {
+      onChange(localValue);
+    }
+  }, [localValue, onChange, isValid]);
   return (
     <Box px="3" py="1" role={role}>
       <Input
+        value={localValue}
+        onChange={onLocalChange}
+        onBlur={onBlur}
+        isInvalid={!isValid}
+        colorScheme={isValid ? undefined : "red"}
         placeholder="Enter value"
         size="md"
         {...rest}
@@ -131,12 +145,14 @@ function ColumnIndicator({
   columns,
   column,
   label,
-  onDelete
+  onDelete,
+  onChangeColumnName
 }: {
   columns: Record<string, InputColumn>;
   column: number;
   label?: React.ReactNode | null;
   onDelete: (name: string) => void;
+  onChangeColumnName: (name: string) => void;
 }): ReactNode {
   const columnNames = useMemo(() => Object.keys(columns), [columns]);
   // Select an icon for the column based on the column's data type
@@ -155,6 +171,17 @@ function ColumnIndicator({
         return <Icon as={MdKey} w={4} h={4} />;
     }
   }, [columns, column, columnNames]);
+
+  const validateColumnName = useCallback(
+    (name: string) => {
+      return (
+        name !== "" &&
+        (!columnNames.includes(name) || name === columnNames[column])
+      );
+    },
+    [columnNames, column]
+  );
+
   return (
     <th>
       <Menu>
@@ -168,7 +195,11 @@ function ColumnIndicator({
         </MenuButton>
         <Portal>
           <MenuList>
-            <MenuInput value={columnNames[column]} />
+            <MenuInput
+              value={columnNames[column]}
+              onChange={onChangeColumnName}
+              validate={validateColumnName}
+            />
             <MenuDivider />
             <MenuItem
               icon={<Icon as={MdDeleteOutline} w={4} h={4} />}
@@ -183,16 +214,14 @@ function ColumnIndicator({
   );
 }
 
-export function PODSheetPreview({
+export function PODPipelineInputEdit({
   csvInput,
-  onChange
+  dispatch
 }: {
   csvInput: CSVInput;
-  onChange: (newInput: PODPipelineInput) => void;
+  dispatch: React.Dispatch<PODPipelineEditAction>;
 }): ReactNode {
   const columns = useMemo(() => csvInput.getColumns(), [csvInput]);
-  const [version, forceReset] = useReducer((prev: number) => prev + 1, 0);
-  const toast = useToast();
   const data = useMemo(
     () =>
       csvInput.getRows().map((row) =>
@@ -201,71 +230,14 @@ export function PODSheetPreview({
           ...COLUMN_CELLS[columns[columnName].type]
         }))
       ),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [csvInput, columns, version]
-  );
-
-  const doUpdate = useCallback(
-    (data: Matrix<{ value: InputValue }>) => {
-      // Data in the react-spreadsheet component has changed, so we should try
-      // to commit this to the definition.
-      const filteredData = data.filter((row) => {
-        return !row.every(
-          (cell) => cell === undefined || cell.value === undefined
-        );
-      });
-      if (filteredData.length === 0) {
-        filteredData.push(
-          Object.keys(csvInput.getColumns()).map(() => ({ value: "" }))
-        );
-      }
-      const newCsv = stringify([
-        // Add in a header row
-        Object.keys(csvInput.getColumns()),
-        // Take the remaining data from the spreadsheet
-        ...filteredData.map((row) => row.map((cell) => cell?.value ?? ""))
-      ]);
-
-      const newInput = {
-        type: PODPipelineInputType.CSV,
-        columns: csvInput.getColumns(),
-        csv: newCsv
-      } satisfies PODPipelineInput;
-
-      try {
-        // Will throw if new data is invalid
-        new CSVInput(newInput);
-        onChange(newInput);
-      } catch (e) {
-        // Forcibly reset to previous state
-        forceReset();
-        toast({
-          title: "Error",
-          description: "Invalid input entered",
-          status: "error",
-          isClosable: true,
-          position: "top"
-        });
-      }
-    },
-    [csvInput, onChange, toast]
+    [csvInput, columns]
   );
 
   const addRow = useCallback(() => {
-    const newCsv = stringify([
-      [...Object.keys(csvInput.getColumns())],
-      ...csvInput.getRows().map((row) => [...Object.values(row)]),
-      Object.values(csvInput.getColumns()).map(
-        (col) => COLUMN_DEFAULTS[col.type]
-      )
-    ]);
-    const newInput = {
-      csv: newCsv,
-      columns: csvInput.getColumns(),
-      type: PODPipelineInputType.CSV
-    } satisfies PODPipelineInput;
-    onChange(newInput);
-  }, [csvInput, onChange]);
+    dispatch({
+      type: PODPipelineEditActionType.AddInputRow
+    });
+  }, [dispatch]);
 
   const {
     isOpen: isAddColumnModalOpen,
@@ -281,32 +253,14 @@ export function PODSheetPreview({
 
   const addColumn = useCallback(
     (name: string, type: PODPipelineInputFieldType) => {
-      const defaultValue = COLUMN_DEFAULTS[type];
-      const newCsv = stringify([
-        [...Object.keys(csvInput.getColumns()), name],
-        ...csvInput
-          .getRows()
-          .map((row) => [...Object.values(row), defaultValue])
-      ]);
-      const newInput = {
-        type: PODPipelineInputType.CSV,
-        columns: {
-          // Map from InputColumn objects to the type required by the pipeline
-          // configuration format
-          ...Object.fromEntries(
-            Object.entries(csvInput.getColumns()).map(([key, { type }]) => [
-              key,
-              { type }
-            ])
-          ),
-          [name]: { type }
-        },
-        csv: newCsv
-      } satisfies PODPipelineInput;
-      onChange(newInput);
+      dispatch({
+        type: PODPipelineEditActionType.AddInputColumn,
+        name,
+        columnType: type
+      });
       closeAddColumnModal();
     },
-    [csvInput, onChange, closeAddColumnModal]
+    [dispatch, closeAddColumnModal]
   );
 
   const CustomHeaderRow = useCallback(
@@ -327,32 +281,24 @@ export function PODSheetPreview({
   );
 
   const onDeleteColumnConfirmed = useCallback(() => {
-    const name = columnToDeleteName;
-    const keys = Object.keys(csvInput.getColumns());
-    const index = keys.indexOf(name);
-    const newCsv = stringify([
-      keys.filter((key) => key !== name),
-      ...csvInput
-        .getRows()
-        .map((row) => Object.values(row).filter((_value, i) => i !== index))
-    ]);
-    const newInput = {
-      type: PODPipelineInputType.CSV,
-      columns: {
-        // Map from InputColumn objects to the type required by the pipeline
-        // configuration format
-        ...Object.fromEntries(
-          Object.entries(csvInput.getColumns())
-            .filter(([key]) => key !== name)
-            .map(([key, { type }]) => [key, { type }])
-        )
-      },
-      csv: newCsv
-    } satisfies PODPipelineInput;
-    onChange(newInput);
+    dispatch({
+      type: PODPipelineEditActionType.DeleteInputColumn,
+      name: columnToDeleteName
+    });
     setColumnToDeleteName("");
     closeDeleteColumnModal();
-  }, [closeDeleteColumnModal, columnToDeleteName, csvInput, onChange]);
+  }, [closeDeleteColumnModal, columnToDeleteName, dispatch]);
+
+  const onChangeColumnName = useCallback(
+    (name: string, column: number) => {
+      dispatch({
+        type: PODPipelineEditActionType.RenameInputColumn,
+        name: Object.keys(columns)[column],
+        newName: name
+      });
+    },
+    [columns, dispatch]
+  );
 
   const CustomColumnIndicator = useCallback(
     (props: { column: number; label?: React.ReactNode | null }) => {
@@ -360,11 +306,36 @@ export function PODSheetPreview({
         <ColumnIndicator
           columns={columns}
           onDelete={onDeleteColumn}
+          onChangeColumnName={(name) => onChangeColumnName(name, props.column)}
           {...props}
         />
       );
     },
-    [columns, onDeleteColumn]
+    [columns, onChangeColumnName, onDeleteColumn]
+  );
+
+  const updateCell = useCallback(
+    (
+      prevCell: { value: InputValue } | null,
+      nextCell: { value: InputValue } | null,
+      coords: Point | null
+    ) => {
+      if (coords && nextCell) {
+        const row = csvInput.getRows()[coords.row];
+        if (row) {
+          const column = Object.values(columns)[coords.column];
+          if (column && column.getValue(row) !== nextCell.value) {
+            dispatch({
+              type: PODPipelineEditActionType.UpdateInputCell,
+              rowIndex: coords.row,
+              columnName: column.getName(),
+              value: nextCell.value
+            });
+          }
+        }
+      }
+    },
+    [columns, csvInput, dispatch]
   );
 
   return (
@@ -382,14 +353,10 @@ export function PODSheetPreview({
         columns={csvInput.getColumns()}
       />
       <Spreadsheet
-        onModeChange={(mode: Mode) => {
-          if (mode === "view") {
-            doUpdate(data);
-          }
-        }}
-        onChange={(data): void => {
-          doUpdate(data);
-        }}
+        // onChange={(data): void => {
+        //   setData(data);
+        // }}
+        onCellCommit={updateCell}
         ColumnIndicator={CustomColumnIndicator}
         HeaderRow={CustomHeaderRow}
         Row={Row}

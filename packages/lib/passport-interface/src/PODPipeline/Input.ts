@@ -74,3 +74,5 @@ export class TemplatedColumn<T extends PODPipelineInputFieldType> {
 }
 
 export type InputColumn = TemplatedColumn<PODPipelineInputFieldType>;
+export type InferColumnValueType<T extends InputColumn> =
+  T extends TemplatedColumn<infer U> ? FieldTypeToJavaScriptType<U> : never;

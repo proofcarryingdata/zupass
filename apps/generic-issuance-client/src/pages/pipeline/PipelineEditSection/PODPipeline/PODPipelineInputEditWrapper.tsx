@@ -1,28 +1,31 @@
 import { Alert, AlertIcon } from "@chakra-ui/react";
 import {
   CSVInput,
-  PODPipelineInput,
+  PODPipelineDefinition,
   PipelineDefinitionSchema,
   PipelineType
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
-import { PODSheetPreview } from "./PODSheetPreview";
+import { PODPipelineEditAction } from "./PODPipelineEdit";
+import { PODPipelineInputEdit } from "./PODPipelineInputEdit";
 
-export function PODSheetPreviewEditWrapper({
+export function PODPipelineInputEditWrapper({
   pipelineDefinitionText,
-  onChange
+  dispatch
 }: {
   pipelineDefinitionText: string;
-  onChange: (newInput: PODPipelineInput) => void;
+  dispatch: React.Dispatch<PODPipelineEditAction>;
 }): ReactNode {
   let error = false;
   let csvInput: CSVInput | undefined = undefined;
+  let definition: PODPipelineDefinition | undefined = undefined;
   try {
     const parsed = PipelineDefinitionSchema.parse(
       JSON.parse(pipelineDefinitionText)
     );
     if (parsed.type === PipelineType.POD) {
-      csvInput = new CSVInput(parsed.options.input);
+      definition = parsed;
+      csvInput = new CSVInput(definition.options.input);
     } else {
       error = true;
     }
@@ -41,6 +44,9 @@ export function PODSheetPreviewEditWrapper({
   }
 
   return (
-    csvInput && <PODSheetPreview csvInput={csvInput} onChange={onChange} />
+    csvInput &&
+    definition && (
+      <PODPipelineInputEdit csvInput={csvInput} dispatch={dispatch} />
+    )
   );
 }

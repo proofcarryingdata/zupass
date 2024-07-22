@@ -11,7 +11,7 @@ import {
 } from "@pcd/passport-interface";
 import { ReactNode, useMemo, useState } from "react";
 import { DEFAULT_FEED_OPTIONS } from "../../SamplePipelines";
-import { PODSheetPreview } from "../../pipeline/PipelineEditSection/PODPipeline/PODSheetPreview";
+import { PODPipelineInputEdit } from "../../pipeline/PipelineEditSection/PODPipeline/PODPipelineInputEdit";
 import { TwoColumns } from "../../pipeline/PipelinePage";
 import { FeedOptions } from "./FeedOptions";
 
@@ -82,7 +82,10 @@ export default function PODPipelineBuilder(
         >
           <Card overflow="hidden" width="fit-content">
             <Box maxW="800px" minW="800px" height="500px">
-              <PODSheetPreview csvInput={csvInput} onChange={changeInput} />
+              <PODPipelineInputEdit
+                csvInput={csvInput}
+                onChange={changeInput}
+              />
             </Box>
           </Card>
         </div>

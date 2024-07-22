@@ -16,6 +16,7 @@ import {
   Tr,
   useDisclosure
 } from "@chakra-ui/react";
+
 import {
   CSVInput,
   PODPipelineDefinition,
@@ -27,8 +28,12 @@ import {
   getInputToPODValueConverter
 } from "@pcd/passport-interface";
 import { POD_NAME_REGEX } from "@pcd/pod";
-import { ReactNode, useCallback, useMemo, useState } from "react";
+import { Dispatch, ReactNode, useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
+import {
+  PODPipelineEditAction,
+  PODPipelineEditActionType
+} from "./PODPipelineEdit";
 import { AddConfiguredValueModal } from "./modals/AddConfiguredValueModal";
 import { SetOutputMatchModal } from "./modals/SetOutputMatchModal";
 
@@ -71,13 +76,13 @@ function EditableName({
 function ValidatedOutputs({
   name,
   definition,
-  onChange,
+  dispatch,
   csvInput
 }: {
   name: string;
   definition: PODPipelineDefinition;
-  onChange: (newDefinition: PODPipelineDefinition) => void;
   csvInput: CSVInput;
+  dispatch: Dispatch<PODPipelineEditAction>;
 }): ReactNode {
   const { outputs } = definition.options;
   const output = outputs[name];
@@ -110,7 +115,7 @@ function ValidatedOutputs({
   ];
 
   const changeSource = useCallback(
-    async (key: string, source: string) => {
+    (key: string, source: string) => {
       const entry = structuredClone(entryObj[key]);
       if (source.startsWith("input:")) {
         entry.source = { type: "input", name: source.substring(6) };
@@ -140,11 +145,14 @@ function ValidatedOutputs({
         return;
       }
 
-      const newDefinition = structuredClone(definition);
-      newDefinition.options.outputs[name].entries[key] = entry;
-      onChange(newDefinition);
+      dispatch({
+        type: PODPipelineEditActionType.ChangeOutputEntry,
+        outputName: name,
+        key,
+        entry
+      });
     },
-    [csvInput, definition, entryObj, name, onChange]
+    [csvInput, dispatch, entryObj, name]
   );
 
   const [addingConfiguredValueForKey, setAddingConfiguredValueForKey] =
@@ -152,7 +160,7 @@ function ValidatedOutputs({
   const addConfiguredValue = useCallback(
     async (value: string) => {
       if (addingConfiguredValueForKey) {
-        await changeSource(addingConfiguredValueForKey, `configured:${value}`);
+        changeSource(addingConfiguredValueForKey, `configured:${value}`);
         setAddingConfiguredValueForKey(undefined);
       }
     },
@@ -160,60 +168,57 @@ function ValidatedOutputs({
   );
 
   const addNewEntry = useCallback(() => {
-    const newDefinition = structuredClone(definition);
-    let key = "new_entry";
-    let retries = 0;
-    while (key in (newDefinition.options.outputs[name].entries ?? {})) {
-      retries++;
-      key = `new_entry_${retries}`;
-    }
-
-    newDefinition.options.outputs[name].entries = {
-      ...newDefinition.options.outputs[name].entries,
-      [key]: { type: "string", source: { type: "input", name: columns[0] } }
-    };
-    onChange(newDefinition);
-  }, [columns, definition, name, onChange]);
+    dispatch({
+      type: PODPipelineEditActionType.AddOutputEntry,
+      outputName: name
+    });
+  }, [dispatch, name]);
 
   const removeEntry = useCallback(
     (key: string) => {
-      const newDefinition = structuredClone(definition);
-      delete newDefinition.options.outputs[name].entries?.[key];
-      onChange(newDefinition);
+      dispatch({
+        type: PODPipelineEditActionType.DeleteOutputEntry,
+        outputName: name,
+        key
+      });
     },
-    [definition, name, onChange]
+    [dispatch, name]
   );
 
   const changeType = useCallback(
     (key: string, type: PODPipelinePODEntry["type"]) => {
-      const newDefinition = structuredClone(definition);
-      newDefinition.options.outputs[name].entries[key].type = type;
-      onChange(newDefinition);
+      dispatch({
+        type: PODPipelineEditActionType.ChangeOutputEntryType,
+        outputName: name,
+        key,
+        newType: type
+      });
     },
-    [definition, name, onChange]
+    [dispatch, name]
   );
 
   const changeName = useCallback(
     (key: string, newName: string) => {
-      const newDefinition = structuredClone(definition);
-      newDefinition.options.outputs[name].entries = Object.fromEntries(
-        Object.entries(newDefinition.options.outputs[name].entries).map(
-          ([k, v]) => [k === key ? newName : k, v]
-        )
-      );
-      onChange(newDefinition);
+      dispatch({
+        type: PODPipelineEditActionType.ChangeOutputEntryName,
+        outputName: name,
+        key,
+        newName
+      });
     },
-    [definition, name, onChange]
+    [dispatch, name]
   );
 
   const changeMatch = useCallback(
     (match: PODPipelineOutputMatch) => {
-      const newDefinition = structuredClone(definition);
-      newDefinition.options.outputs[name].match = match;
-      onChange(newDefinition);
+      dispatch({
+        type: PODPipelineEditActionType.ChangeOutputMatch,
+        outputName: name,
+        match
+      });
       closeSetOutputMatchModal();
     },
-    [definition, name, onChange, closeSetOutputMatchModal]
+    [dispatch, name, closeSetOutputMatchModal]
   );
 
   return (
@@ -396,13 +401,13 @@ function ValidatedOutputs({
 
 function PODOutputsList({
   definition,
-  onChange
+  dispatch
 }: {
   definition: PODPipelineDefinition;
-  onChange: (newDefinition: string) => void;
+  dispatch: Dispatch<PODPipelineEditAction>;
 }): ReactNode {
   const csvInput = useMemo(() => {
-    return new CSVInput(definition.options.input);
+    return CSVInput.fromConfiguration(definition.options.input);
   }, [definition]);
 
   return (
@@ -413,9 +418,7 @@ function PODOutputsList({
           name={name}
           csvInput={csvInput}
           definition={definition}
-          onChange={(definition) =>
-            onChange(JSON.stringify(definition, null, 2))
-          }
+          dispatch={dispatch}
         />
       ))}
     </>
@@ -424,10 +427,10 @@ function PODOutputsList({
 
 export function PODOutputs({
   definition,
-  onChange
+  dispatch
 }: {
   definition: string;
-  onChange: (newDefinition: string) => void;
+  dispatch: Dispatch<PODPipelineEditAction>;
 }): ReactNode {
   let error = false;
   let parsed: PipelineDefinition | undefined;
@@ -447,7 +450,7 @@ export function PODOutputs({
     );
   }
 
-  return <PODOutputsList definition={parsed} onChange={onChange} />;
+  return <PODOutputsList definition={parsed} dispatch={dispatch} />;
 }
 
 const Outputs = styled.div`

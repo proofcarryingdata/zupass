@@ -1,7 +1,6 @@
 import { Box, Tab, TabList, TabPanel, TabPanels, Tabs } from "@chakra-ui/react";
 import {
   GenericIssuanceSelfResponseValue,
-  PODPipelineInput,
   PipelineDefinition,
   PipelineInfoResponseValue,
   isCSVPipelineDefinition,
@@ -19,9 +18,7 @@ import { useViewingPipelineDefinition } from "../../../helpers/Context";
 import { stringifyAndFormat } from "../../../helpers/util";
 import { PreviewType } from "./CSVPreview";
 import { CSVPreviewEditWrapper } from "./CSVPreviewEditWrapper";
-import { PODFeed } from "./PODPipeline/PODFeed";
-import { PODOutputs } from "./PODPipeline/PODOutputs";
-import { PODSheetPreviewEditWrapper } from "./PODPipeline/PODSheetPreviewEditWrapper";
+import { PODPipelineEdit } from "./PODPipeline/PODPipelineEdit";
 import { PipelineActions } from "./PipelineActions";
 import { SinglePipelineTable } from "./SinglePipelineTable";
 
@@ -79,133 +76,99 @@ export function PipelineEditSection({
           maximized={editorMaximized}
           setMaximized={setEditorMaximized}
         >
-          <Tabs
-            isLazy
-            style={{ display: "flex", flexDirection: "column", height: "100%" }}
-          >
-            {isCSVPipelineDefinition(pipeline) && (
-              <TabList>
-                <Tab>Data</Tab>
-                {isAdminView && <Tab>Configuration</Tab>}
-              </TabList>
-            )}
-            {isPODPipelineDefinition(pipeline) && (
-              <TabList>
-                <Tab>Data</Tab>
-                <Tab>Outputs</Tab>
-                <Tab>Feed</Tab>
-                {isAdminView && <Tab>Configuration</Tab>}
-              </TabList>
-            )}
-
-            <TabPanels style={{ height: "100%", overflow: "hidden" }}>
+          {isPODPipelineDefinition(pipeline) ? (
+            <PODPipelineEdit
+              {...{
+                isAdminView,
+                ownedBySomeoneElse,
+                historyEntry,
+                editorValue,
+                setEditorValue,
+                editorRef,
+                editorMaximized
+              }}
+            />
+          ) : (
+            <Tabs
+              isLazy
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                height: "100%"
+              }}
+            >
               {isCSVPipelineDefinition(pipeline) && (
-                <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
-                  <CSVPreviewEditWrapper
-                    previewType={PreviewType.CSVSheet}
-                    pipelineDefinitionText={editorValue}
-                    onChange={(newCsv: string) => {
-                      try {
-                        const pipelineContent = JSON.parse(editorValue);
-                        if (pipelineContent) {
-                          pipelineContent.options.csv = newCsv;
-                          setEditorValue(
-                            JSON.stringify(pipelineContent, null, 2)
-                          );
-                        }
-                      } catch (e) {
-                        // We should only have caught an exception here if the
-                        // JSON.parse() above failed.
-                        // But, if the JSON string in `editorValue` doesn't
-                        // parse then we would not be showing the CSV editor.
-                        // Errors here might happen if we change something
-                        // about how the `editorValue` text is managed.
-                        console.error(
-                          "Error when updating CSV data: ",
-                          getErrorMessage(e)
-                        );
-                      }
-                    }}
-                  />
-                </TabPanel>
+                <TabList>
+                  <Tab>Data</Tab>
+                  {isAdminView && <Tab>Configuration</Tab>}
+                </TabList>
               )}
 
-              {isPODPipelineDefinition(pipeline) && (
-                <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
-                  <PODSheetPreviewEditWrapper
-                    pipelineDefinitionText={editorValue}
-                    onChange={(newInput: PODPipelineInput) => {
-                      try {
-                        const pipelineContent = JSON.parse(editorValue);
-                        if (pipelineContent) {
-                          pipelineContent.options.input = newInput;
-                          setEditorValue(
-                            JSON.stringify(pipelineContent, null, 2)
-                          );
-                        }
-                      } catch (e) {
-                        // We should only have caught an exception here if the
-                        // JSON.parse() above failed.
-                        // But, if the JSON string in `editorValue` doesn't
-                        // parse then we would not be showing the CSV editor.
-                        // Errors here might happen if we change something
-                        // about how the `editorValue` text is managed.
-                        console.error(
-                          "Error when updating input data: ",
-                          getErrorMessage(e)
-                        );
-                      }
-                    }}
-                  />
-                </TabPanel>
-              )}
-
-              {isPODPipelineDefinition(pipeline) && (
-                <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
-                  <PODOutputs
-                    definition={editorValue}
-                    onChange={setEditorValue}
-                  />
-                </TabPanel>
-              )}
-              {isPODPipelineDefinition(pipeline) && (
-                <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
-                  <PODFeed definition={editorValue} onChange={setEditorValue} />
-                </TabPanel>
-              )}
-
-              <TabPanel style={{ height: "100%" }}>
-                <FancyEditor
-                  dark
-                  value={editorValue}
-                  setValue={setEditorValue}
-                  readonly={
-                    (ownedBySomeoneElse && !isAdminView) || !!historyEntry
-                  }
-                  ref={editorRef}
-                  editorStyle={{
-                    width: editorMaximized ? "100%" : "100%",
-                    height: editorMaximized ? "100vh" : "100%"
-                  }}
-                  containerStyle={
-                    editorMaximized
-                      ? { border: "none", borderRadius: 0 }
-                      : undefined
-                  }
-                  editorOptions={
-                    editorMaximized
-                      ? {
-                          minimap: {
-                            enabled: true
+              <TabPanels style={{ height: "100%", overflow: "hidden" }}>
+                {isCSVPipelineDefinition(pipeline) && (
+                  <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
+                    <CSVPreviewEditWrapper
+                      previewType={PreviewType.CSVSheet}
+                      pipelineDefinitionText={editorValue}
+                      onChange={(newCsv: string) => {
+                        try {
+                          const pipelineContent = JSON.parse(editorValue);
+                          if (pipelineContent) {
+                            pipelineContent.options.csv = newCsv;
+                            setEditorValue(
+                              JSON.stringify(pipelineContent, null, 2)
+                            );
                           }
+                        } catch (e) {
+                          // We should only have caught an exception here if the
+                          // JSON.parse() above failed.
+                          // But, if the JSON string in `editorValue` doesn't
+                          // parse then we would not be showing the CSV editor.
+                          // Errors here might happen if we change something
+                          // about how the `editorValue` text is managed.
+                          console.error(
+                            "Error when updating CSV data: ",
+                            getErrorMessage(e)
+                          );
                         }
-                      : undefined
-                  }
-                  language="json"
-                />
-              </TabPanel>
-            </TabPanels>
-          </Tabs>
+                      }}
+                    />
+                  </TabPanel>
+                )}
+
+                <TabPanel style={{ height: "100%" }}>
+                  <FancyEditor
+                    dark
+                    value={editorValue}
+                    setValue={setEditorValue}
+                    readonly={
+                      (ownedBySomeoneElse && !isAdminView) || !!historyEntry
+                    }
+                    ref={editorRef}
+                    editorStyle={{
+                      width: editorMaximized ? "100%" : "100%",
+                      height: editorMaximized ? "100vh" : "100%"
+                    }}
+                    containerStyle={
+                      editorMaximized
+                        ? { border: "none", borderRadius: 0 }
+                        : undefined
+                    }
+                    editorOptions={
+                      editorMaximized
+                        ? {
+                            minimap: {
+                              enabled: true
+                            }
+                          }
+                        : undefined
+                    }
+                    language="json"
+                  />
+                </TabPanel>
+              </TabPanels>
+            </Tabs>
+          )}
         </Maximizer>
       </div>
 

@@ -12,24 +12,32 @@ import {
   PipelineDefinitionSchema,
   PipelineType
 } from "@pcd/passport-interface";
-import { ReactNode, useCallback } from "react";
+import { Dispatch, ReactNode, useCallback } from "react";
+import {
+  PODPipelineEditAction,
+  PODPipelineEditActionType
+} from "./PODPipelineEdit";
 
 function ValidatedFeedConfig({
   definition,
-  onChange
+  dispatch
 }: {
   definition: PODPipelineDefinition;
-  onChange?: (definition: PODPipelineDefinition) => void;
+  dispatch: Dispatch<PODPipelineEditAction>;
 }): ReactNode {
   const feedOptions = definition.options.feedOptions;
 
   const onChangeField = useCallback(
     (value: string, field: string) => {
-      const newDefinition = structuredClone(definition);
-      newDefinition.options.feedOptions[field] = value;
-      onChange?.(newDefinition);
+      dispatch({
+        type: PODPipelineEditActionType.SetFeedOptions,
+        feedOptions: {
+          ...feedOptions,
+          [field]: value
+        }
+      });
     },
-    [definition, onChange]
+    [feedOptions, dispatch]
   );
 
   return (
@@ -72,10 +80,10 @@ function ValidatedFeedConfig({
 
 export function PODFeed({
   definition,
-  onChange
+  dispatch
 }: {
   definition: string;
-  onChange?: (newDefinition: string) => void;
+  dispatch: Dispatch<PODPipelineEditAction>;
 }): ReactNode {
   let error = false;
   let parsed: PipelineDefinition | undefined;
@@ -95,10 +103,5 @@ export function PODFeed({
     );
   }
 
-  return (
-    <ValidatedFeedConfig
-      definition={parsed}
-      onChange={(definition) => onChange?.(JSON.stringify(definition, null, 2))}
-    />
-  );
+  return <ValidatedFeedConfig definition={parsed} dispatch={dispatch} />;
 }

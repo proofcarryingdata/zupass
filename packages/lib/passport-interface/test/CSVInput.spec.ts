@@ -1,12 +1,12 @@
-import {
-  CSVInput,
-  PODPipelineCSVInput,
-  PODPipelineInputFieldType,
-  PODPipelineInputType
-} from "@pcd/passport-interface";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "mocha";
+import { CSVInput } from "../src/PODPipeline/CSVInput";
+import {
+  PODPipelineCSVInput,
+  PODPipelineInputFieldType,
+  PODPipelineInputType
+} from "../src/genericIssuanceTypes";
 
 describe("input loading", function () {
   this.beforeAll(() => {
@@ -25,7 +25,9 @@ describe("input loading", function () {
     };
 
     let input!: CSVInput;
-    expect(() => (input = new CSVInput(inputOptions))).to.not.throw();
+    expect(
+      () => (input = CSVInput.fromConfiguration(inputOptions))
+    ).to.not.throw();
     expect(input).to.exist;
     expect(input.getRows()).to.eql([
       { first_name: "John", last_name: "Doe", email: "john.doe@example.com" },
@@ -48,7 +50,9 @@ describe("input loading", function () {
     };
 
     let input!: CSVInput;
-    expect(() => (input = new CSVInput(inputOptions))).to.not.throw();
+    expect(
+      () => (input = CSVInput.fromConfiguration(inputOptions))
+    ).to.not.throw();
     expect(input).to.exist;
     expect(input.getRows()).to.eql([
       {
@@ -80,7 +84,7 @@ describe("input loading", function () {
       }
     };
 
-    expect(() => new CSVInput(inputOptions)).to.throw(
+    expect(() => CSVInput.fromConfiguration(inputOptions)).to.throw(
       JSON.stringify(
         [
           {
@@ -106,7 +110,7 @@ describe("input loading", function () {
       }
     };
 
-    expect(() => new CSVInput(inputOptions)).to.throw(
+    expect(() => CSVInput.fromConfiguration(inputOptions)).to.throw(
       JSON.stringify(
         [
           {

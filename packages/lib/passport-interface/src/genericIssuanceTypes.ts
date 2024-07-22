@@ -656,7 +656,7 @@ const PODPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   }
 });
 
-const PODPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
+export const PODPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
   type: z.literal(PipelineType.POD),
   options: PODPipelineOptionsSchema
 });
