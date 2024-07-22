@@ -1,3 +1,4 @@
+import { PODEntries, PODValue } from "@pcd/pod";
 import { expect } from "chai";
 import JSONBig from "json-bigint";
 import _ from "lodash";
@@ -57,6 +58,42 @@ export function expectFalse(value: boolean): asserts value is false {
 export function expectDefined<T>(value: T | undefined): asserts value is T {
   if (value === undefined) {
     throw new Error("Expected value to be defined");
+  }
+}
+
+/**
+ * Use to check if a given value equals some POD value
+ */
+export function expectPODValue(
+  valueToTest: PODValue,
+  type: PODValue["type"],
+  value: PODValue["value"],
+  name?: string
+): void {
+  expect(
+    valueToTest.type,
+    name &&
+      `expected type of ${name} to equal '${type}', got '${valueToTest.type}'`
+  ).to.eq(type);
+  expect(
+    valueToTest.value,
+    name &&
+      `expected value of ${name} to equal '${value}', got '${valueToTest.value}'`
+  ).to.eq(value);
+}
+
+/**
+ * Use to check if a given POD claim's entries match some expected entries
+ */
+export function expectPODEntries(
+  entries: PODEntries,
+  expectedEntries: Record<string, [PODValue["type"], PODValue["value"]]>
+): void {
+  expect(Object.keys(entries).sort()).to.eql(
+    Object.keys(expectedEntries).sort()
+  );
+  for (const [key, value] of Object.entries(expectedEntries)) {
+    expectPODValue(entries[key], ...value, key);
   }
 }
 

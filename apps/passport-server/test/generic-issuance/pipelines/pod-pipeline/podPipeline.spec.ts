@@ -4,7 +4,7 @@ import {
   PODPipelineDefinition
 } from "@pcd/passport-interface";
 import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
-import { PODPCDTypeName } from "@pcd/pod-pcd";
+import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -20,7 +20,12 @@ import { PipelineUser } from "../../../../src/services/generic-issuance/pipeline
 import { Zupass } from "../../../../src/types";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
-import { expectLength, expectToExist, expectTrue } from "../../../util/util";
+import {
+  expectLength,
+  expectPODEntries,
+  expectToExist,
+  expectTrue
+} from "../../../util/util";
 import { assertUserMatches, makeTestCredential } from "../../util";
 import {
   requestPODFeed,
@@ -159,9 +164,16 @@ describe("generic issuance - PODPipeline", function () {
     expectIsReplaceInFolderAction(pcdsAction);
     expectLength(pcdsAction.pcds, 1);
     expect(pcdsAction.pcds[0].type).to.eq(PODPCDTypeName);
-    expect(pcdsAction.folder).to.eq(
-      podPipeline.feedCapability.options.feedFolder
-    );
+    const pcd = await PODPCDPackage.deserialize(pcdsAction.pcds[0].pcd);
+    expectPODEntries(pcd.claim.entries, {
+      id: ["string", "768dab50-2dea-4fd7-86bd-212f091b7867"],
+      first_name: ["string", "John"],
+      last_name: ["string", "Doe"],
+      email: ["string", "john.doe@example.com"],
+      high_score: ["int", 30n],
+      birthday: ["int", BigInt(new Date("1980-01-01").getTime())],
+      is_approved: ["int", BigInt(true)]
+    });
   });
 
   /**
@@ -261,6 +273,27 @@ describe("generic issuance - PODPipeline", function () {
         podPipeline.feedCapability.options.feedFolder
       );
 
+      const firstPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[0].pcd);
+      expectPODEntries(firstPCD.claim.entries, {
+        id: ["string", "768dab50-2dea-4fd7-86bd-212f091b7867"],
+        first_name: ["string", "John"],
+        last_name: ["string", "Doe"],
+        email: ["string", "john.doe@example.com"],
+        high_score: ["int", 30n],
+        birthday: ["int", BigInt(new Date("1980-01-01").getTime())],
+        is_approved: ["int", BigInt(true)]
+      });
+      const secondPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[1].pcd);
+      expectPODEntries(secondPCD.claim.entries, {
+        id: ["string", "f1304eac-e462-4d8f-b704-9e7aed2e0618"],
+        first_name: ["string", "Jane"],
+        last_name: ["string", "Doe"],
+        email: ["string", "jane.doe@example.com"],
+        high_score: ["int", 25n],
+        birthday: ["int", BigInt(new Date("1985-02-02").getTime())],
+        is_approved: ["int", BigInt(false)]
+      });
+
       // Restore original configuration
       await updateAndRestartPipeline(
         giBackend,
@@ -328,6 +361,26 @@ describe("generic issuance - PODPipeline", function () {
       expect(pcdsAction.folder).to.eq(
         podPipeline.feedCapability.options.feedFolder
       );
+      const firstPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[0].pcd);
+      expectPODEntries(firstPCD.claim.entries, {
+        id: ["string", "768dab50-2dea-4fd7-86bd-212f091b7867"],
+        first_name: ["string", "John"],
+        last_name: ["string", "Doe"],
+        email: ["string", "john.doe@example.com"],
+        high_score: ["int", 30n],
+        birthday: ["int", BigInt(new Date("1980-01-01").getTime())],
+        is_approved: ["int", BigInt(true)]
+      });
+      const secondPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[1].pcd);
+      expectPODEntries(secondPCD.claim.entries, {
+        id: ["string", "b8fb8ad1-6a28-4626-9e31-267580a40134"],
+        first_name: ["string", "John"],
+        last_name: ["string", "Doe"],
+        email: ["string", "john.doe@example.com"],
+        high_score: ["int", 3000n],
+        birthday: ["int", BigInt(new Date("1981-12-01").getTime())],
+        is_approved: ["int", BigInt(true)]
+      });
     }
   );
 
