@@ -1,4 +1,3 @@
-import { PODEntries, PODValue } from "@pcd/pod";
 import { expect } from "chai";
 import JSONBig from "json-bigint";
 import _ from "lodash";
@@ -49,58 +48,6 @@ export function expectTrue(value: boolean): asserts value is true {
 export function expectFalse(value: boolean): asserts value is false {
   if (value !== false) {
     throw new Error("Expected value to be false");
-  }
-}
-
-/**
- * Use in place of `expect(value).to.exist`
- */
-export function expectDefined<T>(value: T | undefined): asserts value is T {
-  if (value === undefined) {
-    throw new Error("Expected value to be defined");
-  }
-}
-
-/**
- * For terser test entries, this type lets us specify a PODValue as a tuple
- * rather than an object, without losing type-safety.
- */
-type PODValueTuple = {
-  [K in PODValue["type"]]: [K, Extract<PODValue, { type: K }>["value"]];
-}[PODValue["type"]];
-
-/**
- * Use to check if a given value equals some POD value
- */
-export function expectPODValue(
-  valueToTest: PODValue,
-  expected: PODValueTuple,
-  name?: string
-): void {
-  expect(
-    valueToTest.type,
-    name &&
-      `expected type of ${name} to equal '${expected[0]}', got '${valueToTest.type}'`
-  ).to.eq(expected[0]);
-  expect(
-    valueToTest.value,
-    name &&
-      `expected value of ${name} to equal '${expected[1]}', got '${valueToTest.value}'`
-  ).to.eq(expected[1]);
-}
-
-/**
- * Use to check if a given POD claim's entries match some expected entries
- */
-export function expectPODEntries(
-  entries: PODEntries,
-  expectedEntries: Record<string, PODValueTuple>
-): void {
-  expect(Object.keys(entries).sort()).to.eql(
-    Object.keys(expectedEntries).sort()
-  );
-  for (const [key, value] of Object.entries(expectedEntries)) {
-    expectPODValue(entries[key], value, key);
   }
 }
 

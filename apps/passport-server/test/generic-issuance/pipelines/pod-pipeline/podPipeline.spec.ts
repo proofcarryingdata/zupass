@@ -4,7 +4,7 @@ import {
   PODPipelineDefinition
 } from "@pcd/passport-interface";
 import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
-import { PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
+import { PODEntries, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { uuidToBigInt } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -21,12 +21,7 @@ import { PipelineUser } from "../../../../src/services/generic-issuance/pipeline
 import { Zupass } from "../../../../src/types";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
-import {
-  expectLength,
-  expectPODEntries,
-  expectToExist,
-  expectTrue
-} from "../../../util/util";
+import { expectLength, expectToExist, expectTrue } from "../../../util/util";
 import { assertUserMatches, makeTestCredential } from "../../util";
 import {
   requestPODFeed,
@@ -166,15 +161,21 @@ describe("generic issuance - PODPipeline", function () {
     expectLength(pcdsAction.pcds, 1);
     expect(pcdsAction.pcds[0].type).to.eq(PODPCDTypeName);
     const pcd = await PODPCDPackage.deserialize(pcdsAction.pcds[0].pcd);
-    expectPODEntries(pcd.claim.entries, {
-      id: ["string", "768dab50-2dea-4fd7-86bd-212f091b7867"],
-      first_name: ["string", "John"],
-      last_name: ["string", "Doe"],
-      email: ["string", "john.doe@example.com"],
-      high_score: ["int", 30n],
-      birthday: ["int", BigInt(new Date("1980-01-01").getTime())],
-      is_approved: ["int", BigInt(true)]
-    });
+    expect(pcd.claim.entries).to.eql({
+      id: {
+        type: "string",
+        value: "768dab50-2dea-4fd7-86bd-212f091b7867"
+      },
+      first_name: { type: "string", value: "John" },
+      last_name: { type: "string", value: "Doe" },
+      email: { type: "string", value: "john.doe@example.com" },
+      high_score: { type: "int", value: 30n },
+      birthday: {
+        type: "int",
+        value: BigInt(new Date("1980-01-01").getTime())
+      },
+      is_approved: { type: "int", value: BigInt(true) }
+    } satisfies PODEntries);
   });
 
   /**
@@ -275,26 +276,38 @@ describe("generic issuance - PODPipeline", function () {
       );
 
       const firstPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[0].pcd);
-      expectPODEntries(firstPCD.claim.entries, {
-        id: ["string", "768dab50-2dea-4fd7-86bd-212f091b7867"],
-        first_name: ["string", "John"],
-        last_name: ["string", "Doe"],
-        email: ["string", "john.doe@example.com"],
-        high_score: ["int", 30n],
-        birthday: ["int", BigInt(new Date("1980-01-01").getTime())],
-        is_approved: ["int", BigInt(true)]
-      });
+      expect(firstPCD.claim.entries).to.eql({
+        id: {
+          type: "string",
+          value: "768dab50-2dea-4fd7-86bd-212f091b7867"
+        },
+        first_name: { type: "string", value: "John" },
+        last_name: { type: "string", value: "Doe" },
+        email: { type: "string", value: "john.doe@example.com" },
+        high_score: { type: "int", value: 30n },
+        birthday: {
+          type: "int",
+          value: BigInt(new Date("1980-01-01").getTime())
+        },
+        is_approved: { type: "int", value: BigInt(true) }
+      } satisfies PODEntries);
 
       const secondPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[1].pcd);
-      expectPODEntries(secondPCD.claim.entries, {
-        id: ["string", "f1304eac-e462-4d8f-b704-9e7aed2e0618"],
-        first_name: ["string", "Jane"],
-        last_name: ["string", "Doe"],
-        email: ["string", "jane.doe@example.com"],
-        high_score: ["int", 25n],
-        birthday: ["int", BigInt(new Date("1985-02-02").getTime())],
-        is_approved: ["int", BigInt(false)]
-      });
+      expect(secondPCD.claim.entries).to.eql({
+        id: {
+          type: "string",
+          value: "f1304eac-e462-4d8f-b704-9e7aed2e0618"
+        },
+        first_name: { type: "string", value: "Jane" },
+        last_name: { type: "string", value: "Doe" },
+        email: { type: "string", value: "jane.doe@example.com" },
+        high_score: { type: "int", value: 25n },
+        birthday: {
+          type: "int",
+          value: BigInt(new Date("1985-02-02").getTime())
+        },
+        is_approved: { type: "int", value: BigInt(false) }
+      } satisfies PODEntries);
 
       // Restore original configuration
       await updateAndRestartPipeline(
@@ -364,26 +377,38 @@ describe("generic issuance - PODPipeline", function () {
         podPipeline.feedCapability.options.feedFolder
       );
       const firstPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[0].pcd);
-      expectPODEntries(firstPCD.claim.entries, {
-        id: ["string", "768dab50-2dea-4fd7-86bd-212f091b7867"],
-        first_name: ["string", "John"],
-        last_name: ["string", "Doe"],
-        email: ["string", "john.doe@example.com"],
-        high_score: ["int", 30n],
-        birthday: ["int", BigInt(new Date("1980-01-01").getTime())],
-        is_approved: ["int", BigInt(true)]
-      });
+      expect(firstPCD.claim.entries).to.eql({
+        id: {
+          type: "string",
+          value: "768dab50-2dea-4fd7-86bd-212f091b7867"
+        },
+        first_name: { type: "string", value: "John" },
+        last_name: { type: "string", value: "Doe" },
+        email: { type: "string", value: "john.doe@example.com" },
+        high_score: { type: "int", value: 30n },
+        birthday: {
+          type: "int",
+          value: BigInt(new Date("1980-01-01").getTime())
+        },
+        is_approved: { type: "int", value: BigInt(true) }
+      } satisfies PODEntries);
 
       const secondPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[1].pcd);
-      expectPODEntries(secondPCD.claim.entries, {
-        id: ["string", "b8fb8ad1-6a28-4626-9e31-267580a40134"],
-        first_name: ["string", "John"],
-        last_name: ["string", "Doe"],
-        email: ["string", "john.doe@example.com"],
-        high_score: ["int", 3000n],
-        birthday: ["int", BigInt(new Date("1981-12-01").getTime())],
-        is_approved: ["int", BigInt(true)]
-      });
+      expect(secondPCD.claim.entries).to.eql({
+        id: {
+          type: "string",
+          value: "b8fb8ad1-6a28-4626-9e31-267580a40134"
+        },
+        first_name: { type: "string", value: "John" },
+        last_name: { type: "string", value: "Doe" },
+        email: { type: "string", value: "john.doe@example.com" },
+        high_score: { type: "int", value: 3000n },
+        birthday: {
+          type: "int",
+          value: BigInt(new Date("1981-12-01").getTime())
+        },
+        is_approved: { type: "int", value: BigInt(true) }
+      } satisfies PODEntries);
     }
   );
 
@@ -450,32 +475,32 @@ describe("generic issuance - PODPipeline", function () {
     );
 
     const firstPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[0].pcd);
-    expectPODEntries(firstPCD.claim.entries, {
-      id: [
-        "cryptographic",
-        uuidToBigInt("768dab50-2dea-4fd7-86bd-212f091b7867")
-      ],
-      first_name: ["string", "John"],
-      last_name: ["string", "Doe"],
-      email: ["string", "john.doe@example.com"],
-      high_score: ["string", "30"],
-      birthday: ["string", new Date("1980-01-01").toISOString()],
-      is_approved: ["string", "true"]
-    });
+    expect(firstPCD.claim.entries).to.eql({
+      id: {
+        type: "cryptographic",
+        value: uuidToBigInt("768dab50-2dea-4fd7-86bd-212f091b7867")
+      },
+      first_name: { type: "string", value: "John" },
+      last_name: { type: "string", value: "Doe" },
+      email: { type: "string", value: "john.doe@example.com" },
+      high_score: { type: "string", value: "30" },
+      birthday: { type: "string", value: new Date("1980-01-01").toISOString() },
+      is_approved: { type: "string", value: "true" }
+    } satisfies PODEntries);
 
     const secondPCD = await PODPCDPackage.deserialize(pcdsAction.pcds[1].pcd);
-    expectPODEntries(secondPCD.claim.entries, {
-      id: [
-        "cryptographic",
-        uuidToBigInt("b8fb8ad1-6a28-4626-9e31-267580a40134")
-      ],
-      first_name: ["string", "John"],
-      last_name: ["string", "Doe"],
-      email: ["string", "john.doe@example.com"],
-      high_score: ["string", "3000"],
-      birthday: ["string", new Date("1981-12-01").toISOString()],
-      is_approved: ["string", "true"]
-    });
+    expect(secondPCD.claim.entries).to.eql({
+      id: {
+        type: "cryptographic",
+        value: uuidToBigInt("b8fb8ad1-6a28-4626-9e31-267580a40134")
+      },
+      first_name: { type: "string", value: "John" },
+      last_name: { type: "string", value: "Doe" },
+      email: { type: "string", value: "john.doe@example.com" },
+      high_score: { type: "string", value: "3000" },
+      birthday: { type: "string", value: new Date("1981-12-01").toISOString() },
+      is_approved: { type: "string", value: "true" }
+    } satisfies PODEntries);
   });
 
   this.afterAll(async () => {
