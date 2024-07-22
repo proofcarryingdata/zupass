@@ -1,3 +1,5 @@
+import { Options, Input as StringifyInput } from "csv-stringify/.";
+import { stringify } from "csv-stringify/sync";
 import {
   FeedIssuanceOptions,
   PODPipelineDefinition,
@@ -5,8 +7,32 @@ import {
   PODPipelineOutputMatch,
   PODPipelinePODEntry
 } from "../genericIssuanceTypes";
-import { CSVInput, stringifyCSV } from "./CSVInput";
+import { CSVInput } from "./CSVInput";
 import { InputValue } from "./Input";
+
+/**
+ * Stringifies the input into a CSV string.
+ *
+ * This is a thin wrapper around `csv-stringify` with some additional options.
+ * It's important to note that CSVInput can't be stringified directly, and
+ * instead we need to transform the data slightly before stringifying. The
+ * code that does this is contained to this file.
+ *
+ * @param input - The input to stringify.
+ * @param options - The options to use for stringifying.
+ * @returns The stringified input.
+ */
+function stringifyCSV(
+  input: StringifyInput,
+  options?: Options | undefined
+): string {
+  return stringify(input, {
+    ...options,
+    cast: {
+      date: (value: Date) => value.toISOString()
+    }
+  });
+}
 
 /**
  * Default values for new cells in columns of specific types

@@ -6,6 +6,8 @@ import { CSVInput } from "../src/PODPipeline/CSVInput";
 import {
   addInputColumn,
   addOutputEntry,
+  changeOutputEntryName,
+  changeOutputEntryType,
   deleteInputColumn,
   deleteOutputEntry,
   renameInputColumn,
@@ -144,8 +146,40 @@ describe("PODPipelineDefinition updates", () => {
 
   it("can delete output entries", () => {
     const definition1 = addOutputEntry(sampleDefinition, "output1");
+    expect(definition1.options.outputs.output1.entries.new_entry).to.exist;
     const definition2 = deleteOutputEntry(definition1, "output1", "new_entry");
     expect(definition2.options.outputs.output1.entries.new_entry).to.not.exist;
+    expect(PODPipelineDefinitionSchema.safeParse(definition2).success).to.be
+      .true;
+  });
+
+  it("can change output entry type", () => {
+    const definition1 = addOutputEntry(sampleDefinition, "output1");
+    expect(definition1.options.outputs.output1.entries.new_entry).to.exist;
+    const definition2 = changeOutputEntryType(
+      definition1,
+      "output1",
+      "new_entry",
+      "int"
+    );
+    expect(definition2.options.outputs.output1.entries.new_entry.type).to.equal(
+      "int"
+    );
+    expect(PODPipelineDefinitionSchema.safeParse(definition2).success).to.be
+      .true;
+  });
+
+  it("can change output entry name", () => {
+    const definition1 = addOutputEntry(sampleDefinition, "output1");
+    expect(definition1.options.outputs.output1.entries.new_entry).to.exist;
+    const definition2 = changeOutputEntryName(
+      definition1,
+      "output1",
+      "new_entry",
+      "new_name"
+    );
+    expect(definition2.options.outputs.output1.entries.new_entry).to.not.exist;
+    expect(definition2.options.outputs.output1.entries.new_name).to.exist;
     expect(PODPipelineDefinitionSchema.safeParse(definition2).success).to.be
       .true;
   });

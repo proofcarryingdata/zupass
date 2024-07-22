@@ -1,10 +1,5 @@
 import { assertUnreachable } from "@pcd/util";
 import { parse } from "csv-parse/sync";
-import {
-  Options,
-  Input as StringifyInput,
-  stringify
-} from "csv-stringify/sync";
 import { z } from "zod";
 import {
   PODPipelineCSVInput,
@@ -97,16 +92,4 @@ export class CSVInput implements Input {
   static fromConfiguration(config: PODPipelineCSVInput): CSVInput {
     return new CSVInput(config);
   }
-}
-
-export function stringifyCSV(
-  input: StringifyInput,
-  options?: Options | undefined
-): string {
-  return stringify(input, {
-    ...options,
-    cast: {
-      date: (value: Date) => value.toISOString()
-    }
-  });
 }

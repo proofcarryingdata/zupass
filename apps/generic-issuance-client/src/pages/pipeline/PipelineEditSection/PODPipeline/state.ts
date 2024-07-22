@@ -20,6 +20,17 @@ import {
 } from "@pcd/passport-interface";
 import { assertUnreachable } from "@pcd/util";
 
+/**
+ * This file contains the state management for the POD Pipeline.
+ *
+ * The state is a Maybe<PODPipelineDefinition>. The Maybe type is used to
+ * represent the possibility of a PODPipelineDefinition being undefined in
+ * cases where the JSON is corrupted (e.g. due to admin edits).
+ *
+ * The state is managed by a reducer. The reducer is used to update the state
+ * based on the user's actions.
+ */
+
 export enum MaybeType {
   Just = "MaybeType_Just",
   Nothing = "MaybeType_Nothing"
@@ -47,6 +58,9 @@ export const Just = <T>(value: T): Just<T> => ({
   value
 });
 
+/**
+ * The actions that the user can take while editing the POD Pipeline.
+ */
 export enum PODPipelineEditActionType {
   AddInputColumn = "addInputColumn",
   DeleteInputColumn = "deleteInputColumn",
@@ -125,6 +139,13 @@ export type PODPipelineEditAction =
       feedOptions: FeedIssuanceOptions;
     };
 
+/**
+ * The reducer for the POD Pipeline.
+ *
+ * @param state - The current state of the POD Pipeline.
+ * @param action - The action to be taken.
+ * @returns The new state of the POD Pipeline.
+ */
 export function pipelineEditReducer(
   state: Maybe<PODPipelineDefinition>,
   action: PODPipelineEditAction
