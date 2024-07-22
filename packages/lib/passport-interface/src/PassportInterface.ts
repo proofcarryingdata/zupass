@@ -53,6 +53,7 @@ export interface PCDGetWithoutProvingRequest extends PCDRequest {
 export interface PCDAddRequest extends PCDRequest {
   type: PCDRequestType.Add;
   pcd: SerializedPCD;
+  mintUrl?: string;
   folder?: string;
   redirectToFolder?: boolean;
 }
@@ -113,7 +114,29 @@ export function constructZupassPcdAddRequestUrl(
 ): string {
   const req: PCDAddRequest = {
     type: PCDRequestType.Add,
-    returnUrl: returnUrl,
+    returnUrl,
+    pcd,
+    folder,
+    postMessage,
+    redirectToFolder
+  };
+  const eqReq = encodeURIComponent(JSON.stringify(req));
+  return `${zupassClientUrl}#/add?request=${eqReq}`;
+}
+
+export function constructZupassPcdMintRequestUrl(
+  zupassClientUrl: string,
+  mintUrl: string,
+  returnUrl: string,
+  pcd: SerializedPCD,
+  folder?: string,
+  postMessage: boolean = false,
+  redirectToFolder?: boolean
+): string {
+  const req: PCDAddRequest = {
+    type: PCDRequestType.Add,
+    mintUrl,
+    returnUrl,
     pcd,
     folder,
     postMessage,
