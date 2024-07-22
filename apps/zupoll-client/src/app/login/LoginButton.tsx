@@ -3,18 +3,29 @@ import { LoginConfig } from "@pcd/zupoll-shared";
 import stableStringify from "json-stable-stringify";
 import React from "react";
 import { Button, ButtonProps } from "../../@/components/ui/button";
-import { LoginState, ZupollError } from "../../types";
 import { openGroupMembershipPopup } from "../../util";
 
 export interface LoginButtonProps {
-  onLogin: (loginState: LoginState) => void;
-  onError: (error: ZupollError) => void;
   serverLoading: boolean;
   setServerLoading: (loading: boolean) => void;
   config: LoginConfig;
   variant?: ButtonProps["variant"];
   className?: string;
   children?: React.ReactNode[] | React.ReactNode | null;
+}
+
+export function redirectForLogin(config: LoginConfig) {
+  openGroupMembershipPopup(
+    config.passportAppUrl,
+    window.location.origin + "/popup",
+    config.groupUrl,
+    "zupoll",
+    undefined,
+    undefined,
+    window.location.origin +
+      `?config=${encodeURIComponent(stableStringify(config))}`,
+    window.location.origin
+  );
 }
 
 /**
@@ -29,8 +40,6 @@ export const LoginButton = React.forwardRef<
   LoginButtonProps
 >(function (
   {
-    onLogin,
-    onError,
     serverLoading,
     setServerLoading,
     children,
@@ -46,16 +55,7 @@ export const LoginButton = React.forwardRef<
       variant={variant}
       onClick={() => {
         setServerLoading(true);
-        openGroupMembershipPopup(
-          config.passportAppUrl,
-          window.location.origin + "/popup",
-          config.groupUrl,
-          "zupoll",
-          undefined,
-          undefined,
-          window.location.origin +
-            `?config=${encodeURIComponent(stableStringify(config))}`
-        );
+        redirectForLogin(config);
       }}
       disabled={serverLoading}
       className={cn(className)}

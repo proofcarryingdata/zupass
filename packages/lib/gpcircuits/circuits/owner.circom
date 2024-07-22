@@ -28,8 +28,8 @@ template OwnerModuleSemaphoreV3 () {
     // Private secrets of owner's Semaphore V3 identity kept hidden and verified.
     signal input identityNullifier, identityTrapdoor;
 
-    // Owner's identity commitment (public) to be verified.
-    signal input identityCommitment;
+    // Value hash of owner's identity commitment (public) to be verified.
+    signal input identityCommitmentHash;
 
     // Verify semaphore private secrets match the commitment in the POD by
     // re-generating the public commitment to compare.
@@ -38,7 +38,9 @@ template OwnerModuleSemaphoreV3 () {
         identityTrapdoor
     ]);
     signal semaIDCommitment <== Poseidon(1)([semaSecretHash]);
-    (identityCommitment - semaIDCommitment) * enabled === 0;
+    signal semaIDCommitmentHash <== Poseidon(1)([semaIDCommitment]);
+
+    (identityCommitmentHash - semaIDCommitmentHash) * enabled === 0;
 
     // External nullifier, used to tie together nullifiers within a single category. 
     signal input externalNullifier;

@@ -158,7 +158,17 @@ export function SemaphoreGroupProveScreen({
   }
 
   if (!proving || error) {
-    lines.push(<BackButton />);
+    lines.push(
+      <BackButton
+        onClick={
+          req.options?.requesterUrl
+            ? (): void => {
+                window.location.href = req.options?.requesterUrl as string;
+              }
+            : undefined
+        }
+      />
+    );
   }
 
   return (

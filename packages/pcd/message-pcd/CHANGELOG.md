@@ -1,5 +1,15 @@
 # @pcd/message-pcd
 
+## 0.1.1
+
+### Patch Changes
+
+- new package versions
+- Updated dependencies
+  - @pcd/pcd-types@0.11.1
+  - @pcd/eddsa-pcd@0.6.1
+  - @pcd/semaphore-signature-pcd@0.11.1
+
 ## 0.1.0
 
 ### Minor Changes

@@ -1,3 +1,4 @@
+import { CircleButton } from "@pcd/passport-ui";
 import { assertUnreachable } from "@pcd/util";
 import React, { ReactNode, useCallback, useEffect } from "react";
 import { GrClose } from "react-icons/gr";
@@ -5,7 +6,6 @@ import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { useDispatch, useModal } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 import { Spacer } from "../core";
-import { CircleButton } from "../core/Button";
 import { Overscroll } from "../shared/Overscroll";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";
@@ -145,7 +145,7 @@ export function Modal(props: {
             <GrClose style={{ height: "20px", width: "20px", color: "#fff" }} />
           </CircleButton>
         )}
-        <Spacer h={32} />
+        <Spacer h={16} />
         {props.children}
       </ModalWrap>
     </ModalBg>
@@ -168,7 +168,7 @@ const ModalBg = styled.div<{ $fullScreen?: boolean }>`
     $fullScreen
       ? css``
       : css`
-          padding: 32px;
+          padding: 16px 32px;
         `}
 `;
 
@@ -180,7 +180,7 @@ const ModalWrap = styled.div<{ fullScreen?: boolean }>`
   );
   width: 100%;
   max-width: 420px;
-  margin: 64px auto;
+  margin: 8px auto;
   min-height: 480px;
   padding: ${(props): string => (props.fullScreen ? "0" : "12px")};
   border-radius: 12px;

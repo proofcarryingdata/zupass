@@ -2,7 +2,7 @@ import {
   EdgeCityFolderName,
   FrogCryptoFolderName
 } from "@pcd/passport-interface";
-import { isRootFolder } from "@pcd/pcd-collection";
+import { isRootFolder, normalizePath } from "@pcd/pcd-collection";
 import React, {
   ReactNode,
   useCallback,
@@ -18,10 +18,15 @@ import {
   useFolders,
   useLoadedIssuedPCDs,
   useSelf,
-  useVisiblePCDsInFolder
+  useVisiblePCDsInFolder,
+  useWrappedPCDCollection
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
-import { isEdgeCityFolder, isFrogCryptoFolder } from "../../../src/util";
+import {
+  isEdgeCityFolder,
+  isFrogCryptoFolder,
+  isProtocolWorldsFolder
+} from "../../../src/util";
 import { Button, Placeholder, Spacer } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { MaybeModal } from "../../modals/Modal";
@@ -32,6 +37,7 @@ import { PCDCardList } from "../../shared/PCDCardList";
 import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
 import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
+import { ProtocolWorldsHome } from "../ProtocolWorldsScreens/ProtocolWorldsHome";
 import {
   FolderCard,
   FolderDetails,
@@ -116,9 +122,26 @@ export function HomeScreenImpl(): JSX.Element | null {
     setBrowsingFolder(folder);
   }, []);
 
+  const pcdCollection = useWrappedPCDCollection();
   const isRoot = isRootFolder(browsingFolder);
   const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
   const isEdgeCity = isEdgeCityFolder(browsingFolder);
+  const isProtocolWorlds = isProtocolWorldsFolder(browsingFolder);
+  const shouldShowFrogCrypto = useMemo(() => {
+    const folders = pcdCollection.value.getAllFolderNames();
+    const goodFolders = [
+      "Edge City",
+      "ETHBerlin 04",
+      "ETHPrague",
+      "Zuzalu '23",
+      "Devconnect",
+      "ZuConnect"
+    ].map(normalizePath);
+    const hasGoodFolder = folders.map(normalizePath).some((f) => {
+      return goodFolders.some((g) => f.startsWith(g));
+    });
+    return hasGoodFolder;
+  }, [pcdCollection]);
 
   // scroll to top when we navigate to this page
   useLayoutEffect(() => {
@@ -181,7 +204,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                       />
                     );
                   })}
-              {isRoot && (
+              {isRoot && shouldShowFrogCrypto && (
                 <FrogFolder
                   Container={FrogFolderContainer}
                   onFolderClick={onFolderClick}
@@ -192,15 +215,17 @@ export function HomeScreenImpl(): JSX.Element | null {
 
           {isFrogCrypto ? (
             <FrogCryptoHomeSection />
+          ) : isProtocolWorlds ? (
+            <ProtocolWorldsHome />
           ) : isEdgeCity ? (
             <EdgeCityHome />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
               {pcdsInFolder.length > 0 ? (
-                <PCDCardList pcds={pcdsInFolder} />
+                <PCDCardList allExpanded pcds={pcdsInFolder} />
               ) : loadedIssuedPCDs ? (
-                <NoPcdsContainer>This folder has no PCDs</NoPcdsContainer>
+                <NoPcdsContainer>This folder is empty</NoPcdsContainer>
               ) : (
                 <RippleLoader />
               )}

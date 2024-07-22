@@ -1,5 +1,14 @@
 # @pcd/semaphore-identity-pcd
 
+## 0.11.1
+
+### Patch Changes
+
+- new package versions
+- Updated dependencies
+  - @pcd/pcd-types@0.11.1
+  - @pcd/util@0.5.1
+
 ## 0.11.0
 
 ### Minor Changes

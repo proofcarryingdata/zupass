@@ -1,3 +1,4 @@
+import { ProveOptions } from "@pcd/passport-interface";
 import {
   ArgsDisplayOptions,
   ArgsOf,
@@ -11,6 +12,7 @@ import {
   PCD,
   PCDArgument,
   PCDPackage,
+  PrimitiveArgumentTypeName,
   RawValueType,
   StringArgument,
   ToggleList,
@@ -20,6 +22,7 @@ import {
   isNumberArgument,
   isObjectArgument,
   isPCDArgument,
+  isRecordContainerArgument,
   isRevealListArgument,
   isStringArgument,
   isStringArrayArgument,
@@ -40,6 +43,15 @@ import { Chip, ChipsContainer } from "../core/Chip";
 import Select from "./Select";
 
 /**
+ * Type used in `PCDArgs` for record container argument flattening process.
+ */
+type FlattenedArgTriple = [
+  string | undefined,
+  string,
+  Argument<PrimitiveArgumentTypeName>
+];
+
+/**
  * Given an {@link Argument}, renders a UI that displays its value.
  * If the user must supply this value, allows the user to input it.
  * If the value is loaded from the internet, loads it. Contains
@@ -49,27 +61,72 @@ import Select from "./Select";
 export function PCDArgs<T extends PCDPackage>({
   args,
   setArgs,
-  options
+  options,
+  proveOptions
 }: {
   args: ArgsOf<T>;
   setArgs: React.Dispatch<React.SetStateAction<ArgsOf<T>>>;
   options?: ArgsDisplayOptions<ArgsOf<T>>;
+  proveOptions?: ProveOptions;
 }): JSX.Element {
   const [showAll, setShowAll] = useState(false);
+
+  // Flatten record container arguments (if any), keeping track of the parent
+  // argument to properly mutate (cf. `setArg`) as well as inheriting argument
+  // fields from the record container argument.  Validator parameters are also
+  // combined.
+  const flattenedArgs: FlattenedArgTriple[] = Object.entries(args).flatMap(
+    ([argName, arg]: [
+      string,
+      Argument<ArgumentTypeName>
+    ]): FlattenedArgTriple[] => {
+      if (isRecordContainerArgument(arg)) {
+        const recordArgPairs = Object.entries(arg.value ?? {});
+        const { value: _v, argumentType: _t, ...recordArgs } = arg;
+        return recordArgPairs.map(
+          ([childArgName, childArg]: [
+            string,
+            Argument<PrimitiveArgumentTypeName>
+          ]) => [
+            argName,
+            childArgName,
+            {
+              ...recordArgs,
+              ...childArg,
+              validatorParams: {
+                ...(recordArgs.validatorParams ?? {}),
+                ...(childArg.validatorParams ?? {})
+              }
+            }
+          ]
+        );
+      } else {
+        return [
+          [undefined, argName, arg as Argument<PrimitiveArgumentTypeName>]
+        ];
+      }
+    }
+  );
+
   const [visible, hidden] = _.partition(
-    Object.entries(args),
-    ([key]) => options?.[key]?.defaultVisible ?? true
+    flattenedArgs,
+    ([parentArgName, argName, arg]) =>
+      arg.defaultVisible ??
+      options?.[parentArgName ?? argName]?.defaultVisible ??
+      true
   );
 
   return (
     <ArgsContainer>
-      {visible.map(([key, value]) => (
+      {visible.map(([parentKey, key, value]) => (
         <ArgInput
-          key={key}
+          key={parentKey !== undefined ? `${parentKey}.${key}` : key}
           argName={key}
+          parentArgName={parentKey}
           arg={value}
           setArgs={setArgs}
-          defaultArg={options?.[key]}
+          defaultArg={options?.[parentKey ?? key]}
+          proveOptions={proveOptions}
         />
       ))}
       {hidden.length > 0 && (
@@ -81,17 +138,19 @@ export function PCDArgs<T extends PCDPackage>({
           </ShowMoreButton>
           {
             /**
-             * NB: we have to render all the hidden inputs so that the
+             * NB: we have to render all the hidden inputs so that
              * any default value can be automatically set.
              */
-            hidden.map(([key, value]) => (
+            hidden.map(([parentKey, key, value]) => (
               <ArgInput
-                key={key}
+                key={parentKey !== undefined ? `${parentKey}.${key}` : key}
                 argName={key}
+                parentArgName={parentKey}
                 arg={value}
                 setArgs={setArgs}
-                defaultArg={options?.[key]}
+                defaultArg={options?.[parentKey ?? key]}
                 hidden={!showAll}
+                proveOptions={proveOptions}
               />
             ))
           }
@@ -104,48 +163,92 @@ export function PCDArgs<T extends PCDPackage>({
 export function ArgInput<T extends PCDPackage, ArgName extends string>({
   arg,
   argName,
+  parentArgName,
   setArgs,
   defaultArg,
-  hidden
+  hidden,
+  proveOptions
 }: {
   arg: ArgsOf<T>[ArgName];
   argName: string;
+  parentArgName: string | undefined;
   setArgs: React.Dispatch<React.SetStateAction<ArgsOf<T>>>;
   defaultArg?: DisplayArg<typeof arg>;
+  proveOptions?: ProveOptions;
   hidden?: boolean;
 }): JSX.Element | undefined {
+  // Go one level deeper in case the arg arises from a record.
   const setArg = React.useCallback(
     (value: (typeof arg)["value"]) => {
-      setArgs((args) => ({
-        ...args,
-        [argName]: {
-          ...args[argName],
-          value
+      setArgs((args) => {
+        // If we are dealing with an argument that has not been pulled out of a
+        // record container, mutate `args.argName.value`.
+        if (parentArgName === undefined) {
+          return {
+            ...args,
+            [argName]: {
+              ...args[argName],
+              value
+            }
+          };
+        } /* Else mutate `args.parentArgName.value.argName.value`. */ else {
+          return {
+            ...args,
+            [parentArgName]: {
+              ...args[parentArgName],
+              value: {
+                ...args[parentArgName].value,
+                [argName]: {
+                  ...args[parentArgName].value[argName],
+                  value
+                }
+              }
+            }
+          };
         }
-      }));
+      });
     },
-    [setArgs, argName]
+    [setArgs, parentArgName, argName]
   );
 
+  // Call `validate` appropriately if the argument arises from a record container.
   const isValid = useCallback(
     <A extends Argument<ArgumentTypeName, unknown>>(value: RawValueType<A>) =>
       (arg.validatorParams &&
-        defaultArg?.validate?.(value, arg.validatorParams)) ??
+        (parentArgName !== undefined
+          ? defaultArg?.validate?.(argName, value, arg.validatorParams)
+          : defaultArg?.validate?.(value, arg.validatorParams))) ??
       true,
-    [defaultArg, arg.validatorParams]
+    [defaultArg, parentArgName, argName, arg.validatorParams]
   );
 
-  const props = useMemo<ArgInputProps<typeof arg>>(
-    () => ({
+  const props = useMemo<ArgInputProps<typeof arg>>(() => {
+    // Qualify argument name if it arises from a record container.
+    const qualifiedArgName =
+      (parentArgName !== undefined ? `${parentArgName}.` : "") + argName;
+    return {
       // merge arg with default value
-      arg: { displayName: _.startCase(argName), ...(defaultArg || {}), ...arg },
+      arg: {
+        displayName: _.startCase(qualifiedArgName),
+        ...(defaultArg || {}),
+        ...arg
+      },
+      proveOptions,
       argName,
       setArg,
       isValid,
       hidden
-    }),
-    [defaultArg, arg, argName, setArg, isValid, hidden]
-  );
+    };
+  }, [
+    parentArgName,
+    argName,
+    defaultArg,
+    arg,
+    proveOptions,
+    setArg,
+    isValid,
+    hidden
+  ]);
 
   if (isStringArgument(arg)) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -192,6 +295,7 @@ interface ArgInputProps<A extends Argument<ArgumentTypeName, unknown>> {
   argName: string;
   setArg: (value: A["value"]) => void;
   isValid: (arg: RawValueType<A>) => boolean;
+  proveOptions?: ProveOptions;
 }
 
 export function StringArgInput({
@@ -458,6 +562,7 @@ export function PCDArgInput({
   arg,
   setArg,
   isValid,
+  proveOptions,
   ...rest
 }: ArgInputProps<PCDArgument>): JSX.Element {
   const pcdCollection = usePCDCollection();
@@ -518,6 +623,31 @@ export function PCDArgInput({
     }
   }, [arg.value, pcdCollection]);
 
+  if (proveOptions?.multi) {
+    return (
+      <ArgContainer
+        arg={arg}
+        {...rest}
+        error={
+          relevantPCDs.length === 0
+            ? arg.validatorParams?.notFoundMessage ??
+              "You do not have an eligible PCD."
+            : undefined
+        }
+      >
+        <MultiOptionContainer>
+          {options.map((option) => {
+            return (
+              <MultiOptionSingleOption key={option.id}>
+                {option.label}
+              </MultiOptionSingleOption>
+            );
+          })}
+        </MultiOptionContainer>
+      </ArgContainer>
+    );
+  }
+
   return (
     <ArgContainer
       arg={arg}
@@ -541,6 +671,26 @@ export function PCDArgInput({
   );
 }
 
+const MultiOptionContainer = styled.div`
+  width: 100%;
+  max-height: 200px;
+  overflow-y: scroll;
+  display: flex;
+  justify-content: stretch;
+  align-items: stretch;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+const MultiOptionSingleOption = styled.div`
+  background-color: rgba(0, 0, 0, 0.3);
+  border-radius: 4px;
+  border: 1px solid white;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 4px 8px;
+`;
+
 function ArgContainer({
   arg: { argumentType, displayName, description, hideIcon },
   hidden,
@@ -548,7 +698,7 @@ function ArgContainer({
   children,
   end
 }: {
-  arg: Argument<ArgumentTypeName, unknown>;
+  arg: Argument<PrimitiveArgumentTypeName, unknown>;
   hidden?: boolean;
   error?: string;
   children?: React.ReactNode;
@@ -599,7 +749,8 @@ function ArgContainer({
   );
 }
 
-const argTypeIcons: Record<ArgumentTypeName, JSX.Element> = {
+// Omit record containers as they should have been flattened out.
+const argTypeIcons: Record<PrimitiveArgumentTypeName, JSX.Element> = {
   PCD: <GrDocumentLocked />,
   String: <TbLetterT />,
   Number: <FaHashtag />,

@@ -80,3 +80,5 @@ export function warnIfEnvMissing(
   }
   return value;
 }
+
+export const ZUPOLL_API_KEY = process.env.ZUPOLL_API_KEY;

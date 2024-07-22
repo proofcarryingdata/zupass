@@ -19,7 +19,7 @@ import {
   serializeSemaphoreGroup
 } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { ONE_DAY_MS, ONE_MINUTE_MS, ONE_SECOND_MS } from "@pcd/util";
+import { ONE_DAY_MS, ONE_MINUTE_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -865,6 +865,10 @@ describe("generic issuance - LemonadePipeline", function () {
     }
   );
 
+  /**
+   * Lemonade check-in is disabled for Edge Esmeralda, so this test is not
+   * relevant.
+   
   step("check-in and remote check-out works in Lemonade", async function () {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelineInstances();
@@ -1072,7 +1076,7 @@ describe("generic issuance - LemonadePipeline", function () {
         expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(true);
       }
     }
-  });
+  });*/
 
   step(
     "Lemonade API will request new token when old one expires",
@@ -1144,7 +1148,7 @@ describe("generic issuance - LemonadePipeline", function () {
   );
 
   step(
-    "Lemonade tickets without user emails should not be loaded",
+    "Lemonade tickets without user emails should be loaded",
     async function () {
       mockServer.use(
         unregisteredLemonadeUserHandler(lemonadeBackend, lemonadeBackendUrl)
@@ -1157,9 +1161,8 @@ describe("generic issuance - LemonadePipeline", function () {
       expect(pipeline.id).to.eq(edgeCityPipeline.id);
       const runInfo = await pipeline.load();
 
-      // Despite receiving a ticket, the ticket was ignored due to not having
-      // a user email
-      expect(runInfo.atomsLoaded).to.eq(0);
+      // The ticket should be loaded
+      expect(runInfo.atomsLoaded).to.eq(1);
     }
   );
 

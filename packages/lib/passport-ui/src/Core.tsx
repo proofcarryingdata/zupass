@@ -4,8 +4,8 @@ export function Spacer({
   w,
   h
 }: {
-  w?: 4 | 8 | 16 | 24 | 32 | 48 | 64;
-  h?: 4 | 8 | 16 | 24 | 32 | 48 | 64 | 96 | 128 | 256 | 512 | 1024;
+  w?: 4 | 8 | 12 | 16 | 24 | 32 | 48 | 64;
+  h?: 4 | 8 | 12 | 16 | 24 | 32 | 48 | 64 | 96 | 128 | 256 | 512 | 1024;
 }): JSX.Element {
   const width = w && `${w}px`;
   const height = h && `${h}px`;
@@ -26,7 +26,7 @@ export const FieldLabel = styled.span`
   font-weight: bold;
 `;
 
-export const LinkButton = styled.a`
+export const StyledLinkButton = styled.a`
   color: #e6a50f;
   cursor: pointer;
   text-decoration: none;

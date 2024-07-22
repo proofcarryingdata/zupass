@@ -2,8 +2,13 @@ import { PCDProveAndAddRequest } from "@pcd/passport-interface";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
-import { useDispatch, useIsSyncSettled } from "../../../src/appHooks";
+import {
+  useDispatch,
+  useIsSyncSettled,
+  useLoginIfNoSelf
+} from "../../../src/appHooks";
 import { safeRedirect } from "../../../src/passportRequest";
+import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { H2, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AddedPCD } from "../../shared/AddedPCD";
@@ -26,6 +31,8 @@ export function ProveAndAddScreen({
   const [serializedPCD, setSerializedPCD] = useState<
     SerializedPCD | undefined
   >();
+
+  useLoginIfNoSelf(pendingRequestKeys.add, request);
 
   const onProve = useCallback(
     async (_: PCD | undefined, serializedPCD: SerializedPCD | undefined) => {

@@ -11,6 +11,8 @@ import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import {
+  CryptoBytesEncoding,
+  EDDSA_PUBKEY_TYPE_STRING,
   PODContent,
   checkPrivateKeyFormat,
   checkPublicKeyFormat,
@@ -21,6 +23,7 @@ import {
   encodePrivateKey,
   encodePublicKey,
   encodeSignature,
+  podEdDSAPublicKeyHash,
   podIntHash,
   podMerkleTreeHash,
   podNameHash,
@@ -34,12 +37,21 @@ import {
   expectedContentID1,
   expectedContentID2,
   expectedPublicKey,
+  expectedPublicKeyHex,
   expectedSignature1,
+  expectedSignature1Hex,
   expectedSignature2,
+  expectedSignature2Hex,
   privateKey,
+  privateKeyHex,
   sampleEntries1,
+  stripB64,
   testIntsToHash,
   testPrivateKeys,
+  testPrivateKeysAllFormats,
+  testPrivateKeysBase64,
+  testPrivateKeysHex,
+  testPublicKeysToHash,
   testStringsToHash
 } from "./common";
 
@@ -53,6 +65,34 @@ describe("podCrypto hashes should work", async function () {
 
       const h2 = podStringHash(s);
       expect(h2).to.eq(h);
+    }
+  });
+
+  it("podEdDSAPublicKeyHash should produce unique repeatable results", function () {
+    const seenHashes = new Set();
+    for (const s of testPublicKeysToHash) {
+      const h = podEdDSAPublicKeyHash(s);
+      expect(seenHashes.has(h)).to.be.false;
+      seenHashes.add(h);
+
+      const h2 = podEdDSAPublicKeyHash(s);
+      expect(h2).to.eq(h);
+    }
+  });
+
+  it("podEdDSAPublicKeyHash should produce expected results", function () {
+    // Here we check that the public key hash is precisely the Poseidon(2) hash
+    // of the public key point as an array of 2 elements and not the string hash
+    // of the string representation.
+    for (const privateKey of testPrivateKeys) {
+      const publicKeyPt = derivePublicKey(privateKey);
+      const encodedPublicKey = encodePublicKey(publicKeyPt);
+      const expectedHash = poseidon2(publicKeyPt);
+      const unexpectedHash = podStringHash(encodedPublicKey);
+      const computedHash = podEdDSAPublicKeyHash(encodedPublicKey);
+
+      expect(computedHash).to.eq(expectedHash);
+      expect(computedHash).to.not.eq(unexpectedHash);
     }
   });
 
@@ -99,6 +139,14 @@ describe("podCrypto hashes should work", async function () {
       const h2 = podValueHash({ type: "string", value: s });
       expect(h2).to.eq(h);
     }
+    for (const s of testPublicKeysToHash) {
+      const h = podValueHash({ type: EDDSA_PUBKEY_TYPE_STRING, value: s });
+      expect(seenHashes.has(h)).to.be.false;
+      seenHashes.add(h);
+
+      const h2 = podValueHash({ type: EDDSA_PUBKEY_TYPE_STRING, value: s });
+      expect(h2).to.eq(h);
+    }
     for (const i of testIntsToHash) {
       const h = podValueHash({ type: "cryptographic", value: i });
       expect(seenHashes.has(h)).to.be.false;
@@ -141,25 +189,54 @@ describe("podCrypto hashes should work", async function () {
 
 describe("podCrypto encoding/decoding should work", async function () {
   it("should encode and decode a private key", function () {
-    for (const testPrivateKey of testPrivateKeys) {
+    for (let i = 0; i < testPrivateKeysAllFormats.length; i++) {
+      const testPrivateKey = testPrivateKeysAllFormats[i];
       const decoded = decodePrivateKey(testPrivateKey);
       expect(decoded).to.have.length(32);
       const encoded = encodePrivateKey(decoded);
-      expect(encoded).to.have.length(64);
+      expect(encoded).to.have.length(43);
       checkPrivateKeyFormat(encoded);
-      expect(encoded).to.eq(testPrivateKey.toLowerCase());
+      expect(encoded).to.eq(
+        testPrivateKeysBase64[i % testPrivateKeysBase64.length]
+      );
     }
   });
 
   it("should encode a private key in Uint8Array format", function () {
-    for (const testPrivateKey of testPrivateKeys) {
+    for (let i = 0; i < testPrivateKeysAllFormats.length; i++) {
+      const testPrivateKey = testPrivateKeysAllFormats[i];
       const decoded = decodePrivateKey(testPrivateKey);
       const asUint8Array = new Uint8Array(decoded.length);
       for (let i = 0; i < decoded.length; i++) {
         asUint8Array[i] = decoded[i];
       }
       const encoded = encodePrivateKey(asUint8Array);
-      expect(encoded).to.eq(testPrivateKey.toLowerCase());
+      expect(encoded).to.eq(
+        testPrivateKeysBase64[i % testPrivateKeysBase64.length]
+      );
+    }
+  });
+
+  it("should encode and decode a private key using any encoding", function () {
+    for (let i = 0; i < testPrivateKeys.length; i++) {
+      const testPrivateKey = testPrivateKeys[i];
+      const decoded = decodePrivateKey(testPrivateKey);
+
+      const encodedHex = encodePrivateKey(decoded, "hex");
+      expect(encodedHex).to.eq(
+        testPrivateKeysHex[i].toLowerCase() // hex encoding normalizes to lowercase
+      );
+      expect(decodePrivateKey(encodedHex)).to.deep.eq(
+        decodePrivateKey(testPrivateKey)
+      );
+      checkPrivateKeyFormat(encodedHex);
+
+      const encodedBase64 = encodePrivateKey(decoded, "base64");
+      expect(encodedBase64).to.eq(testPrivateKeysBase64[i]);
+      expect(decodePrivateKey(encodedBase64)).to.deep.eq(
+        decodePrivateKey(testPrivateKey)
+      );
+      checkPrivateKeyFormat(encodedBase64);
     }
   });
 
@@ -194,12 +271,17 @@ describe("podCrypto encoding/decoding should work", async function () {
       "00112233445566778899AABBCCDDEEFF00112233445566778899iijjkkllmmnn",
       undefined as unknown as string,
       12345 as unknown as string,
-      12345n as unknown as string
+      12345n as unknown as string,
+      "==abcde123",
+      "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE====="
     ];
     for (const testPrivateKey of badPrivateKeys) {
       expect((): void => {
         decodePrivateKey(testPrivateKey);
-      }).to.throw(TypeError, "Private key should be 32 bytes hex-encoded.");
+      }).to.throw(
+        TypeError,
+        "Private key should be 32 bytes, encoded as hex or Base64."
+      );
     }
   });
 
@@ -209,7 +291,7 @@ describe("podCrypto encoding/decoding should work", async function () {
       const rawPublicKey = derivePublicKey(decodedPrivateKey);
 
       const encoded = encodePublicKey(rawPublicKey);
-      expect(encoded).to.have.length(64);
+      expect(encoded).to.have.length(43);
       checkPublicKeyFormat(encoded);
 
       const encodedFromString = encodePublicKey(
@@ -219,6 +301,22 @@ describe("podCrypto encoding/decoding should work", async function () {
 
       const decoded = decodePublicKey(encoded);
       expect(decoded).to.deep.eq(rawPublicKey);
+    }
+  });
+
+  it("should encode and decode a public key using any encoding", function () {
+    for (const testPrivateKey of testPrivateKeys) {
+      const decodedPrivateKey = decodePrivateKey(testPrivateKey);
+      const rawPublicKey = derivePublicKey(decodedPrivateKey);
+
+      for (const encoding of ["hex", "base64"]) {
+        const encoded = encodePublicKey(
+          rawPublicKey,
+          encoding as CryptoBytesEncoding
+        );
+        expect(decodePublicKey(encoded)).to.deep.eq(rawPublicKey);
+        checkPublicKeyFormat(encoded);
+      }
     }
   });
 
@@ -258,7 +356,9 @@ describe("podCrypto encoding/decoding should work", async function () {
       "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81fff", // Not on curve: final digits shoudl be d9e not fff
       undefined as unknown as string,
       12345 as unknown as string,
-      12345n as unknown as string
+      12345n as unknown as string,
+      "==abcde123",
+      "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE====="
     ];
     for (const testPublicKey of badPublicKeys) {
       expect((): void => {
@@ -274,7 +374,7 @@ describe("podCrypto encoding/decoding should work", async function () {
         const rawSig = signMessage(decodePrivateKey(testPrivateKey), message);
 
         const encoded = encodeSignature(rawSig);
-        expect(encoded).to.have.length(128);
+        expect(encoded).to.have.length(86);
         checkSignatureFormat(encoded);
 
         const encodedFromString = encodeSignature({
@@ -288,6 +388,22 @@ describe("podCrypto encoding/decoding should work", async function () {
       }
     }
     expect(true).to.be.true;
+  });
+
+  it("should encode and decode a signature using any encoding", function () {
+    for (const testPrivateKey of testPrivateKeys) {
+      const message = podIntHash(testIntsToHash[0]);
+      const rawSig = signMessage(decodePrivateKey(testPrivateKey), message);
+
+      for (const encoding of ["hex", "base64"]) {
+        const encoded = encodeSignature(
+          rawSig,
+          encoding as CryptoBytesEncoding
+        );
+        expect(decodeSignature(encoded)).to.deep.eq(rawSig);
+        checkSignatureFormat(encoded);
+      }
+    }
   });
 
   it("should not encode a signature of the wrong form", function () {
@@ -327,13 +443,43 @@ describe("podCrypto encoding/decoding should work", async function () {
       "9ddb5d339c774911a3b4919d6e23e3d1fb6e486a116b187c96fb252b29648fff_09b54198965c357db1913fd82e6ff8b0340219dd6006dc1b32ff07d9d9867004", // Not in curve: last digits of first segment should be 410 not fff
       undefined as unknown as string,
       12345 as unknown as string,
-      12345n as unknown as string
+      12345n as unknown as string,
+      "==abcde123",
+      "ZKuvJhYh4JXNqKqt1uS99lAVReh_bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm_CuCMvP0a1t0hraeAsTeBjmGAQ======"
     ];
     for (const testSig of badSigs) {
       expect((): void => {
         decodeSignature(testSig);
       }).to.throw();
     }
+  });
+
+  it("double-check expected values vs. hex originals", function () {
+    expect(
+      stripB64(Buffer.from(privateKeyHex, "hex").toString("base64"))
+    ).to.eq(privateKey);
+    expect(encodePrivateKey(decodePrivateKey(privateKeyHex))).to.eq(privateKey);
+
+    expect(
+      stripB64(Buffer.from(expectedPublicKeyHex, "hex").toString("base64"))
+    ).to.eq(expectedPublicKey);
+    expect(encodePublicKey(decodePublicKey(expectedPublicKeyHex))).to.eq(
+      expectedPublicKey
+    );
+
+    expect(
+      stripB64(Buffer.from(expectedSignature1Hex, "hex").toString("base64"))
+    ).to.eq(expectedSignature1);
+    expect(encodeSignature(decodeSignature(expectedSignature1Hex))).to.eq(
+      expectedSignature1
+    );
+
+    expect(
+      stripB64(Buffer.from(expectedSignature2Hex, "hex").toString("base64"))
+    ).to.eq(expectedSignature2);
+    expect(encodeSignature(decodeSignature(expectedSignature2Hex))).to.eq(
+      expectedSignature2
+    );
   });
 });
 
@@ -400,11 +546,14 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
         n.toString(16).padStart(64, "0")
       );
 
-      const pubFromString = await getEdDSAPublicKey(testPrivateKey);
+      // EdDSAPCD represents private keys in hex, not Base64.
+      const hexPrivateKey = decodePrivateKey(testPrivateKey).toString("hex");
+
+      const pubFromString = await getEdDSAPublicKey(hexPrivateKey);
       expect(pubFromString).to.deep.eq(stringifiedPublicKey);
 
       const pubFromBuffer = await getEdDSAPublicKey(
-        fromHexString(testPrivateKey)
+        fromHexString(hexPrivateKey)
       );
       expect(pubFromBuffer).to.deep.eq(stringifiedPublicKey);
     }
@@ -419,6 +568,9 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
     const pcdMessageNumbers = [0x12345n, 0xdeadbeefn];
     const pcdMessageStrings = pcdMessageNumbers.map((n) => n.toString());
 
+    // EdDSAPCD represents private keys in hex, not Base64.
+    const hexPrivateKey = decodePrivateKey(privateKey).toString("hex");
+
     // Create an EdDSAPCD for comparison
     const pcd = await EdDSAPCDPackage.prove({
       message: {
@@ -426,7 +578,7 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
         argumentType: ArgumentTypeName.StringArray
       },
       privateKey: {
-        value: privateKey,
+        value: hexPrivateKey,
         argumentType: ArgumentTypeName.String
       },
       id: {
@@ -444,14 +596,17 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
       throw new Error("Bad public key point!");
     }
 
-    // EdDSAPCD represents its signatures as an EC point (2 field elements)
+    // EdDSAPCD represents its public keys as an EC point (2 field elements)
     // in an array, with each element being 32 bytes encoded as 64 hex digits.
     const stringifiedPublicKey = unpackedPublicKey.map((n) =>
       n.toString(16).padStart(64, "0")
     );
 
+    // EdDSAPCD represents its signatures in hex, not Base64.
+    const hexSignature = Buffer.from(signature, "base64").toString("hex");
+
     expect(stringifiedPublicKey).to.deep.eq(pcd.claim.publicKey);
-    expect(signature).to.deep.eq(pcd.proof.signature);
+    expect(hexSignature).to.deep.eq(pcd.proof.signature);
   });
 });
 

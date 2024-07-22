@@ -1,5 +1,16 @@
 # @pcd/pod-pcd-ui
 
+## 0.1.1
+
+### Patch Changes
+
+- new package versions
+- Updated dependencies
+  - @pcd/passport-ui@0.11.1
+  - @pcd/pcd-types@0.11.1
+  - @pcd/pod@0.1.1
+  - @pcd/pod-pcd@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes

@@ -38,7 +38,15 @@ export function TicketQR({
   zk: boolean;
 } & EdDSATicketPCDCardProps): JSX.Element {
   const generate = useCallback(async () => {
-    if (idBasedVerifyURL && !zk) {
+    if (
+      [
+        "53edb3e7-6733-41e0-a9be-488877c5c572", // eth berlin
+        "508313ea-f16b-4729-bdf0-281c64493ca9" //  eth prague
+      ].includes(pcd.claim.ticket.eventId) &&
+      pcd.claim.ticket.ticketSecret
+    ) {
+      return pcd.claim.ticket.ticketSecret;
+    } else if (idBasedVerifyURL && !zk) {
       return linkToTicket(
         idBasedVerifyURL,
         pcd.claim.ticket.ticketId,
@@ -78,7 +86,7 @@ export function TicketQR({
         key={pcd.id}
         generateQRPayload={generate}
         maxAgeMs={1000 * 60}
-        uniqueId={pcd.id}
+        uniqueId={undefined}
         fgColor={getQRCodeColorOverride(pcd)}
       />
     );

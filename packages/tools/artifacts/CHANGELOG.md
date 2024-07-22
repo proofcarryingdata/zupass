@@ -1,5 +1,11 @@
 # @pcd/util
 
+## 0.4.1
+
+### Patch Changes
+
+- new package versions
+
 ## 0.4.0
 
 ### Minor Changes

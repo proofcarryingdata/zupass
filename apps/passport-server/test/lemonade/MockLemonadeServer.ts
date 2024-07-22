@@ -9,6 +9,9 @@ import {
 } from "../../src/apis/lemonade/types";
 import { LemonadeDataMocker } from "./LemonadeDataMocker";
 
+// Email field is created during parsing and is not present in the back-end
+export type LemonadeBackendTicket = Omit<LemonadeTicket, "email">;
+
 export function loadApolloErrorMessages(): void {
   // Apollo client doesn't load error messages by default so we have to call this
   loadDevMessages();
@@ -33,7 +36,7 @@ function checkEventId(
   }
 }
 
-function stringifyTickets(tickets: LemonadeTicket[]): string {
+function stringifyTickets(tickets: LemonadeBackendTicket[]): string {
   return csv_stringify(tickets, {
     header: true,
     cast: {
@@ -154,12 +157,11 @@ export function unregisteredLemonadeUserHandler(
         ).values()
       ][0];
       // Represents a ticket that has been invited to an event, but the invitee
-      // has not yet registered with Lemonade. We skip these tickets in the
-      // pipeline, because they cannot be checked in as they do not have user
-      // IDs.
-      const tickets: LemonadeTicket[] = [
+      // has not yet registered with Lemonade. This ticket will still work.
+      const tickets: LemonadeBackendTicket[] = [
         {
           _id: randomUUID(),
+          assigned_email: "unregistered@example.com",
           user_email: "",
           user_name: "",
           user_first_name: "Invited",

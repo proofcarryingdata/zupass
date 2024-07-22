@@ -1,4 +1,5 @@
 import { PCD } from "@pcd/pcd-types";
+import { sleep } from "@pcd/util";
 import _ from "lodash";
 import { useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
@@ -32,7 +33,8 @@ export function PCDCardList({
   pcds,
   defaultSortState,
   allExpanded,
-  hideRemoveButton
+  hideRemoveButton,
+  hidePadding
 }: {
   pcds: PCD[];
   /**
@@ -47,6 +49,10 @@ export function PCDCardList({
    * If true, all PCDs will have the remove button hidden.
    */
   hideRemoveButton?: boolean;
+  /**
+   * If true, all PCDs will have padding hidden.
+   */
+  hidePadding?: boolean;
 }): JSX.Element {
   const pcdCollection = usePCDCollection();
   const userIdentityPCD = useUserIdentityPCD();
@@ -107,9 +113,24 @@ export function PCDCardList({
     return pcds[0];
   }, [pcds, selectedPCDID]);
 
-  const onClick = useCallback((id: string) => {
-    setSelectedPCDID(id);
-  }, []);
+  const onClick = useCallback(
+    async (id: string, cardContainer: HTMLDivElement | undefined) => {
+      if (selectedPCDID === id) return;
+
+      setSelectedPCDID(id);
+
+      if (cardContainer) {
+        await sleep(0);
+        cardContainer.scrollIntoView({
+          behavior: "instant",
+          block: "start",
+          inline: "nearest"
+        });
+        window.scrollBy(0, -50);
+      }
+    },
+    [selectedPCDID]
+  );
 
   return (
     <Container>
@@ -123,6 +144,7 @@ export function PCDCardList({
       {sortedPCDs.map((pcd) => (
         <PCDCard
           hideRemoveButton={hideRemoveButton}
+          hidePadding={hidePadding}
           key={pcd.id}
           pcd={pcd}
           isMainIdentity={pcd.id === userIdentityPCDId}

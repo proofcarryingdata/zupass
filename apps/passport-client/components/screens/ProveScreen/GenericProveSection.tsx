@@ -1,9 +1,15 @@
 import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  EdDSATicketPCDTypeName
+} from "@pcd/eddsa-ticket-pcd";
+import {
   ISSUANCE_STRING,
   PendingPCD,
   ProveOptions,
   requestProveOnServer
 } from "@pcd/passport-interface";
+import { ErrorContainer } from "@pcd/passport-ui";
 import {
   ArgsOf,
   PCDOf,
@@ -16,16 +22,28 @@ import {
   SemaphoreSignaturePCDTypeName
 } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
+import {
+  ZKEdDSAEventTicketPCD,
+  ZKEdDSAEventTicketPCDPackage,
+  isZKEdDSAEventTicketPCDPackage
+} from "@pcd/zk-eddsa-event-ticket-pcd";
+import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { usePCDCollection } from "../../../src/appHooks";
-import { getOutdatedBrowserErrorMessage } from "../../../src/devconnectUtils";
-import { OUTDATED_BROWSER_ERROR_MESSAGE } from "../../../src/sharedConstants";
+import {
+  getOOMErrorMessage,
+  getOutdatedBrowserErrorMessage
+} from "../../../src/devconnectUtils";
+import {
+  OOM_ERROR_MESSAGE,
+  OUTDATED_BROWSER_ERROR_MESSAGE
+} from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
 import { Button } from "../../core";
+import { ProgressBar } from "../../core/ProgressBar";
 import { RippleLoader } from "../../core/RippleLoader";
-import { ErrorContainer } from "../../core/error";
 import { PCDArgs } from "../../shared/PCDArgs";
 
 /**
@@ -45,7 +63,8 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   onProve: (
     pcd: PCDOf<T> | undefined,
     serializedPCD: SerializedPCD<PCDOf<T>> | undefined,
-    pendingPCD: PendingPCD | undefined
+    pendingPCD: PendingPCD | undefined,
+    multiplePCDs?: Array<SerializedPCD<PCDOf<T>>>
   ) => void;
   folder?: string;
 }): JSX.Element {
@@ -56,10 +75,17 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const [error, setError] = useState<string | undefined>();
   const [proving, setProving] = useState(false);
   const pcdPackage = pcds.getPackage<T>(pcdType);
+  const [multiProofsCompleted, setMultiProofsCompleted] = useState(0);
+  const [multiProofsQueued, setMultiProofsQueued] = useState(0);
 
   useEffect(() => {
+    if (options?.multi && !isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
+      setError("multi-proofs are only supported for ZKEdDSAEventTicketPCD");
+      return;
+    }
+
     setError(undefined);
-  }, [args]);
+  }, [args, options, pcdPackage]);
 
   const isProveReady = useMemo(
     () =>
@@ -108,6 +134,62 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       }
 
       onProve(undefined, undefined, pendingPCDResult.value);
+    }
+    if (options?.multi) {
+      try {
+        if (!pcdPackage) {
+          throw new Error(`PCD package not found for ${pcdType}`);
+        }
+
+        if (!isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
+          throw new Error("multi-proofs are only available for tickets!");
+        }
+
+        let relevantPCDs = pcds
+          .getAll()
+          .filter((p) => p.type === EdDSATicketPCDTypeName);
+
+        const ticketValidation =
+          pcdPackage?.getProveDisplayOptions?.()?.defaultArgs?.["ticket"];
+        if (ticketValidation) {
+          relevantPCDs = pcds.getAll().filter((p) => {
+            const ticketArg = args["ticket"];
+            return ticketValidation.validate(p, ticketArg.validatorParams);
+          });
+        }
+
+        setMultiProofsQueued(relevantPCDs.length);
+
+        const result: SerializedPCD<ZKEdDSAEventTicketPCD>[] = [];
+
+        for (const t of relevantPCDs) {
+          const argsClone = _.clone(args) as ArgsOf<
+            typeof ZKEdDSAEventTicketPCDPackage
+          >;
+          argsClone.ticket.value = await EdDSATicketPCDPackage.serialize(
+            t as EdDSATicketPCD
+          );
+          const pcd = await pcdPackage.prove(argsClone);
+          const serializedPCD = await pcdPackage.serialize(pcd);
+          setMultiProofsCompleted((c) => c + 1);
+          result.push(serializedPCD);
+        }
+
+        onProve(undefined, undefined, undefined, result);
+      } catch (e) {
+        const errorMessage = getErrorMessage(e);
+        if (errorMessage.includes(OOM_ERROR_MESSAGE)) {
+          setError(getOOMErrorMessage());
+        } else if (errorMessage.includes(OUTDATED_BROWSER_ERROR_MESSAGE)) {
+          setError(getOutdatedBrowserErrorMessage());
+        } else {
+          setError(errorMessage);
+        }
+        // NB: Only re-enable the 'Prove' button if there was an error. If
+        // the proving operation succeeded, we want to leave the button
+        // disabled while onProve redirects user.
+        setProving(false);
+      }
     } else {
       try {
         if (!pcdPackage) {
@@ -129,7 +211,15 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         setProving(false);
       }
     }
-  }, [options?.proveOnServer, pcdType, args, onProve, pcdPackage]);
+  }, [
+    pcdType,
+    options?.proveOnServer,
+    options?.multi,
+    args,
+    onProve,
+    pcdPackage,
+    pcds
+  ]);
 
   return (
     <Container>
@@ -141,6 +231,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         args={args}
         setArgs={setArgs}
         options={pcdPackage?.getProveDisplayOptions?.()?.defaultArgs}
+        proveOptions={options}
       />
 
       {folder && (
@@ -153,7 +244,16 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       {error && <ErrorContainer>{error}</ErrorContainer>}
 
       {proving ? (
-        <RippleLoader />
+        options?.multi ? (
+          <ProgressBar
+            label="Proving"
+            fractionCompleted={
+              multiProofsCompleted / Math.max(1, multiProofsQueued)
+            }
+          />
+        ) : (
+          <RippleLoader />
+        )
       ) : (
         <Button disabled={!isProveReady} onClick={onProveClick}>
           Prove

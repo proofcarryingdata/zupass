@@ -1,5 +1,4 @@
-import { Spacer } from "@pcd/passport-ui";
-import { ErrorMessage } from "../core/error";
+import { ErrorMessage, Spacer } from "@pcd/passport-ui";
 
 export function InlineError({ error }: { error?: string }): JSX.Element {
   return (

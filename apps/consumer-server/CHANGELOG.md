@@ -1,5 +1,82 @@
 # consumer-server
 
+## 0.0.27
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.4.2
+
+## 0.0.26
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.4.1
+
+## 0.0.25
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.4.0
+
+## 0.0.24
+
+### Patch Changes
+
+- new package versions
+- Updated dependencies
+  - @pcd/passport-interface@0.11.2
+  - @pcd/util@0.5.1
+  - @pcd/zuauth@1.3.6
+  - @pcd/eddsa-ticket-pcd@0.6.1
+  - @pcd/semaphore-signature-pcd@0.11.1
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.1
+
+## 0.0.23
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.5
+
+## 0.0.22
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.4
+
+## 0.0.21
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.3
+
+## 0.0.20
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.2
+
+## 0.0.19
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.1
+
+## 0.0.18
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zuauth@1.3.0
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.0
+
 ## 0.0.17
 
 ### Patch Changes

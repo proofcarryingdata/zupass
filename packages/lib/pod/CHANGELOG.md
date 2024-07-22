@@ -1,5 +1,13 @@
 # @pcd/pod
 
+## 0.1.1
+
+### Patch Changes
+
+- new package versions
+- Updated dependencies
+  - @pcd/util@0.5.1
+
 ## 0.1.0
 
 ### Minor Changes

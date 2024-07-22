@@ -4,7 +4,7 @@ export type OwnerModuleSemaphoreV3Inputs = {
   enabled: CircuitSignal;
   identityNullifier: CircuitSignal;
   identityTrapdoor: CircuitSignal;
-  identityCommitment: CircuitSignal;
+  identityCommitmentHash: CircuitSignal;
   externalNullifier: CircuitSignal;
   isNullfierHashRevealed: CircuitSignal;
 };
@@ -13,7 +13,7 @@ export type OwnerModuleSemaphoreV3nputNamesType = [
   "enabled",
   "identityNullifier",
   "identityTrapdoor",
-  "identityCommitment",
+  "identityCommitmentHash",
   "externalNullifier",
   "isNullfierHashRevealed"
 ];

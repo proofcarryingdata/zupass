@@ -19,6 +19,9 @@ import {
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import { Groth16Proof, groth16 } from "@pcd/snarkjs";
 import {
   BABY_JUB_NEGATIVE_ONE,
   babyJubIsNegativeOne,
@@ -33,7 +36,6 @@ import {
 } from "@pcd/util";
 import { Eddsa, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
-import { Groth16Proof, groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import {
@@ -607,3 +609,9 @@ export const ZKEdDSAEventTicketPCDPackage: PCDPackage<
   serialize,
   deserialize
 };
+
+export function isZKEdDSAEventTicketPCDPackage(
+  p: PCDPackage | undefined
+): p is typeof ZKEdDSAEventTicketPCDPackage {
+  return p?.name === ZKEdDSAEventTicketPCDTypeName;
+}

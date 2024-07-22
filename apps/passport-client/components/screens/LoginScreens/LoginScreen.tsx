@@ -8,7 +8,12 @@ import {
   useState
 } from "react";
 import { appConfig } from "../../../src/appConfig";
-import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
+import {
+  useDispatch,
+  useQuery,
+  useSelf,
+  useStateContext
+} from "../../../src/appHooks";
 import {
   pendingRequestKeys,
   setPendingAddRequest,
@@ -28,11 +33,13 @@ import {
   Spacer,
   TextCenter
 } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
 import { InlineError } from "../../shared/InlineError";
 
 export function LoginScreen(): JSX.Element {
   const dispatch = useDispatch();
+  const state = useStateContext().getState();
   const [error, setError] = useState<string | undefined>();
   const query = useQuery();
   const redirectedFromAction = query?.get("redirectedFromAction") === "true";
@@ -129,13 +136,23 @@ export function LoginScreen(): JSX.Element {
   return (
     <AppContainer bg="primary">
       <Spacer h={64} />
-      {redirectedFromAction ? (
+      {state.loggingOut ? (
+        <>
+          <TextCenter>
+            <H1>ZUPASS</H1>
+            <Spacer h={24} />
+            Logging you Out
+            <Spacer h={8} />
+            <RippleLoader />
+          </TextCenter>
+        </>
+      ) : redirectedFromAction ? (
         <>
           <TextCenter>
             <H2>ZUPASS</H2>
             <Spacer h={24} />
-            To complete this request, you need to either log into your existing
-            Zupass account, or create a new one.
+            To complete this request, please login or register with your email
+            below.
           </TextCenter>
         </>
       ) : (
@@ -149,30 +166,32 @@ export function LoginScreen(): JSX.Element {
         </>
       )}
 
-      <Spacer h={24} />
-
-      <CenterColumn>
-        <form onSubmit={onGenPass}>
-          <BigInput
-            autoCapitalize="off"
-            autoCorrect="off"
-            type="text"
-            autoFocus
-            placeholder="email address"
-            value={email}
-            onChange={useCallback(
-              (e: ChangeEvent<HTMLInputElement>) => setEmail(e.target.value),
-              [setEmail]
-            )}
-          />
-          <InlineError error={error} />
-          <Spacer h={8} />
-          <Button style="primary" type="submit">
-            Continue
-          </Button>
-        </form>
-      </CenterColumn>
-      <Spacer h={64} />
+      {!state.loggingOut && (
+        <>
+          <Spacer h={24} />
+          <CenterColumn>
+            <form onSubmit={onGenPass}>
+              <BigInput
+                autoCapitalize="off"
+                autoCorrect="off"
+                type="text"
+                autoFocus
+                placeholder="email address"
+                value={email}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setEmail(e.target.value)
+                }
+              />
+              <InlineError error={error} />
+              <Spacer h={8} />
+              <Button style="primary" type="submit">
+                Continue
+              </Button>
+            </form>
+          </CenterColumn>
+          <Spacer h={64} />
+        </>
+      )}
     </AppContainer>
   );
 }

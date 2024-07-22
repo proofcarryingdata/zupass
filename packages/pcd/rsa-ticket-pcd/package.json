@@ -1,6 +1,6 @@
 {
   "name": "@pcd/rsa-ticket-pcd",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -27,20 +27,20 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.11.0",
-    "@pcd/rsa-pcd": "0.6.0",
+    "@pcd/pcd-types": "0.11.1",
+    "@pcd/rsa-pcd": "0.6.1",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "node-rsa": "^1.1.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.0",
-    "@pcd/tsconfig": "0.11.0",
+    "@pcd/eslint-config-custom": "0.11.1",
+    "@pcd/tsconfig": "0.11.1",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/node-rsa": "^1.1.1",

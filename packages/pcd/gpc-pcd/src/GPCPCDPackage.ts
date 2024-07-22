@@ -1,11 +1,13 @@
 import {
   GPCProofConfig,
   GPCProofInputs,
+  PODMembershipLists,
   deserializeGPCBoundConfig,
   deserializeGPCProofConfig,
   deserializeGPCRevealedClaims,
   gpcProve,
   gpcVerify,
+  podMembershipListsFromSimplifiedJSON,
   serializeGPCBoundConfig,
   serializeGPCRevealedClaims
 } from "@pcd/gpc";
@@ -16,19 +18,32 @@ import {
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { PODStringValue } from "@pcd/pod";
-import { PODPCDPackage, PODPCDTypeName, isPODPCD } from "@pcd/pod-pcd";
+import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
+import { PODPCD, PODPCDPackage, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
+import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
+  FixedPODEntries,
   GPCPCD,
   GPCPCDArgs,
   GPCPCDClaim,
   GPCPCDInitArgs,
   GPCPCDProof,
-  GPCPCDTypeName
+  GPCPCDTypeName,
+  PODPCDArgValidatorParams
 } from "./GPCPCD";
+import { fixedPODEntriesFromSimplifiedJSON } from "./util";
+import {
+  checkPCDType,
+  checkPODAgainstPrescribedSignerPublicKeys,
+  checkPODEntriesAgainstMembershipLists,
+  checkPODEntriesAgainstPrescribedEntries,
+  checkPODEntriesAgainstProofConfig,
+  checkPrescribedEntriesAgainstProofConfig,
+  checkPrescribedSignerPublicKeysAgainstProofConfig
+} from "./validatorChecks";
 
 let savedInitArgs: GPCPCDInitArgs | undefined = undefined;
 
@@ -61,12 +76,30 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   }
   const proofConfig = deserializeGPCProofConfig(args.proofConfig.value);
 
-  if (!args.pod.value) {
-    throw new Error("No PODPCD value provided");
+  if (!args.pods.value) {
+    throw new Error("No PODs provided");
   }
-  const podPCD = await PODPCDPackage.deserialize(args.pod.value.pcd);
-  if (!isPODPCD(podPCD)) {
-    throw new Error("Wrong PCD type provided for PODPCD");
+  const pods: Record<PODName, POD> = Object.fromEntries(
+    await Promise.all(
+      Object.entries(args.pods.value).map(async ([podName, podPCDArg]) => {
+        checkPODName(podName);
+
+        if (!podPCDArg.value) {
+          throw new Error(`No PODPCD value provided for POD ${podName}`);
+        }
+
+        const podPCD = await PODPCDPackage.deserialize(podPCDArg.value.pcd);
+        if (!isPODPCD(podPCD)) {
+          throw new Error("Wrong PCD type provided for PODPCD ${podName}");
+        }
+
+        return [podName, podPCD.pod];
+      })
+    )
+  );
+
+  if (Object.keys(pods).length === 0) {
+    throw new Error("No PODs provided");
   }
 
   const serializedIdentityPCD = args.identity.value?.pcd;
@@ -88,6 +121,12 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   if (externalNullifier !== undefined && ownerSemaphorePCD === undefined) {
     throw new Error("External nullifier requires an owner identity PCD.");
   }
+
+  const membershipLists =
+    args.membershipLists.value !== undefined
+      ? args.membershipLists.value
+      : undefined;
+
   const watermark =
     args.watermark.value !== undefined
       ? ({
@@ -99,13 +138,19 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   return {
     proofConfig,
     proofInputs: {
-      pods: { pod0: podPCD.pod },
+      pods,
       ...(ownerSemaphorePCD !== undefined
         ? {
             owner: {
               semaphoreV3: ownerSemaphorePCD?.claim?.identity,
               externalNullifier: externalNullifier
             }
+          }
+        : {}),
+      ...(membershipLists !== undefined
+        ? {
+            membershipLists:
+              podMembershipListsFromSimplifiedJSON(membershipLists)
           }
         : {}),
       watermark: watermark
@@ -115,7 +160,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
 
 /**
  * Creates a new {@link GPCPCD} by generating an {@link GPCPCDProof}
- * and deriving an {@link GPCPCDClaim} from the given {@link GPCPCDArgs}.
+ * and deriving a {@link GPCPCDClaim} from the given {@link GPCPCDArgs}.
  *
  * This generates a ZK proof using the given config and inputs using a
  * selected circuit from the supported family.
@@ -231,30 +276,104 @@ export function getDisplayOptions(pcd: GPCPCD): DisplayOptions {
   };
 }
 
+function validateInputPOD(
+  podName: PODName,
+  podPCD: PODPCD,
+  params: PODPCDArgValidatorParams | undefined
+): boolean {
+  // Bypass checks if there is nothing to work with.
+  if (params === undefined) {
+    return true;
+  }
+
+  // Deserialise provided parameters
+  let proofConfig: GPCProofConfig | undefined;
+  let membershipLists: PODMembershipLists | undefined;
+  let prescribedEntries: FixedPODEntries | undefined;
+
+  try {
+    proofConfig =
+      params.proofConfig !== undefined
+        ? deserializeGPCProofConfig(params.proofConfig)
+        : undefined;
+
+    membershipLists =
+      params.membershipLists !== undefined
+        ? podMembershipListsFromSimplifiedJSON(params.membershipLists)
+        : undefined;
+
+    prescribedEntries =
+      params.prescribedEntries !== undefined
+        ? fixedPODEntriesFromSimplifiedJSON(params.prescribedEntries)
+        : undefined;
+  } catch (e) {
+    if (e instanceof TypeError || e instanceof Error) {
+      params.notFoundMessage = e.message;
+      return false;
+    }
+    throw e;
+  }
+
+  const prescribedSignerPublicKeys = params.prescribedSignerPublicKeys;
+
+  return (
+    checkPCDType(podPCD) &&
+    // Short-circuit if proof config not specified.
+    (proofConfig === undefined ||
+      (checkPODEntriesAgainstProofConfig(
+        podName,
+        podPCD,
+        proofConfig,
+        params
+      ) &&
+        checkPrescribedSignerPublicKeysAgainstProofConfig(
+          podName,
+          proofConfig,
+          prescribedSignerPublicKeys,
+          params
+        ) &&
+        checkPODAgainstPrescribedSignerPublicKeys(
+          podName,
+          podPCD.pod.signerPublicKey,
+          prescribedSignerPublicKeys,
+          params
+        ) &&
+        checkPrescribedEntriesAgainstProofConfig(
+          podName,
+          proofConfig,
+          prescribedEntries,
+          params
+        ) &&
+        checkPODEntriesAgainstPrescribedEntries(
+          podName,
+          podPCD.pod.content.asEntries(),
+          prescribedEntries
+        ) &&
+        checkPODEntriesAgainstMembershipLists(
+          podName,
+          podPCD,
+          proofConfig,
+          membershipLists
+        )))
+  );
+}
+
 export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
   return {
     defaultArgs: {
       proofConfig: {
         argumentType: ArgumentTypeName.String,
-        defaultVisible: true
+        defaultVisible: true,
+        displayName: "Proof Configuration",
+        description: `This specifies what to prove about the inputs, and which
+        parts of the inputs are revealed.`
       },
-      pod: {
-        argumentType: ArgumentTypeName.PCD,
+      pods: {
+        argumentType: ArgumentTypeName.RecordContainer,
+        defaultVisible: true,
+        displayName: "POD",
         description: "Generate a proof for the selected POD object",
-        validate(value, _params): boolean {
-          if (value.type !== PODPCDTypeName) {
-            return false;
-          }
-
-          // TODO(POD-P3): Filter to only PODs which contain the entries
-          // mentioned in config.
-
-          // TODO(POD-P3): Use validatorParams to filter by more constraints
-          // not included in config.
-          // E.g. require revealed value to be a specific value, or require
-          // public key to be a specific key.
-          return true;
-        },
+        validate: validateInputPOD,
         validatorParams: {
           notFoundMessage: "You do not have any eligible POD PCDs."
         }
@@ -262,20 +381,36 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
       identity: {
         argumentType: ArgumentTypeName.PCD,
         defaultVisible: false,
-        description:
-          "Your Zupass comes with a primary Semaphore Identity which represents an user in the Semaphore protocol."
+        displayName: "User Identity",
+        description: `Your identity is used to prove your ownership of PODs.
+        Your Zupass comes with a primary Semaphore Identity which represents a
+        user in the Semaphore protocol.`
+      },
+      membershipLists: {
+        argumentType: ArgumentTypeName.String,
+        defaultVisible: false,
+        description: `These are the the lists of allowed or disallowed values
+        for membership checks in the proof configuration.`
       },
       watermark: {
         argumentType: ArgumentTypeName.String,
-        defaultVisible: false
+        defaultVisible: false,
+        description: `This watermark will be included in the proof.  It can be
+        used tie this proof to a specific purpose.`
       },
       externalNullifier: {
         argumentType: ArgumentTypeName.String,
-        defaultVisible: false
+        defaultVisible: false,
+        description: `This input is combined with your identity to produce a
+        nullifier, which can be used to identify proofs which come from the
+        same user, without deanonymizing the user.`
       },
       id: {
         argumentType: ArgumentTypeName.String,
-        defaultVisible: false
+        defaultVisible: false,
+        description: `Unique identifier for the resulting proof PCD.  This is
+        used to store it in Zupass, but is not a cryptographic part of the
+        proof.`
       }
     }
   };

@@ -4,7 +4,7 @@ import {
   requestFrogCryptoDeleteFrogs,
   requestFrogCryptoUpdateFrogs
 } from "@pcd/passport-interface";
-import { Separator } from "@pcd/passport-ui";
+import { ErrorMessage, Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { getErrorMessage } from "@pcd/util";
 import _ from "lodash";
@@ -16,7 +16,6 @@ import Table from "react-table-lite";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { useCredentialManager } from "../../../src/appHooks";
-import { ErrorMessage } from "../../core/error";
 import { useAdminError } from "./useAdminError";
 
 export function ManageFrogsSection(): JSX.Element {

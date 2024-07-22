@@ -5,7 +5,7 @@ import {
   requestVerifyTicket,
   requestVerifyTicketById
 } from "@pcd/passport-interface";
-import { decodeQRPayload } from "@pcd/passport-ui";
+import { LinkButton, decodeQRPayload } from "@pcd/passport-ui";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
@@ -18,11 +18,10 @@ import {
 } from "../../../src/appHooks";
 import { devconnectCheckByIdWithOffline } from "../../../src/checkin";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../../core";
-import { LinkButton } from "../../core/Button";
 import { icons } from "../../icons";
 import { AppContainer } from "../../shared/AppContainer";
 import {
-  CardContainerExpanded,
+  CardContainer,
   CardHeader,
   CardOutlineExpanded
 } from "../../shared/PCDCard";
@@ -337,7 +336,7 @@ function VerifiedAndKnownTicket({
   eventName: string;
 }): JSX.Element {
   return (
-    <CardContainerExpanded>
+    <CardContainer>
       <CardOutlineExpanded>
         <CardHeader col="var(--accent-lite)">
           <VerifyLine>Verified {eventName} Ticket</VerifyLine>
@@ -349,7 +348,7 @@ function VerifiedAndKnownTicket({
           <VerifyLine>SIGNED BY: {publicKeyName}</VerifyLine>
         </CardHeader>
       </CardOutlineExpanded>
-    </CardContainerExpanded>
+    </CardContainer>
   );
 }
 

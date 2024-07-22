@@ -17,7 +17,8 @@ export function openGroupMembershipPopup(
   originalSiteName: string,
   signal?: string,
   externalNullifier?: string,
-  returnUrl?: string
+  returnUrl?: string,
+  requesterUrl?: string
 ) {
   const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
@@ -51,8 +52,9 @@ export function openGroupMembershipPopup(
       }
     },
     {
-      title: "Anon Voting Auth",
-      description: originalSiteName
+      title: "SIGN IN WITH ZUPASS",
+      description: originalSiteName,
+      requesterUrl
     }
   );
 

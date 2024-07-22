@@ -1,5 +1,9 @@
 import { HexString, PCDCrypto } from "@pcd/passport-crypto";
-import { requestPasswordSalt } from "@pcd/passport-interface";
+import {
+  CredentialManager,
+  requestPasswordSalt
+} from "@pcd/passport-interface";
+import { LinkButton } from "@pcd/passport-ui";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,13 +13,13 @@ import {
   useHasSetupPassword,
   useSelf,
   useServerStorageRevision,
+  useStateContext,
   useUpdate
 } from "../../src/appHooks";
 import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
-import { LinkButton } from "../core/Button";
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
@@ -32,6 +36,7 @@ export function ChangePasswordScreen(): JSX.Element | null {
   // otherwise we may show the invalid copy on the "finished" screen
   // after a password is set for the first time.
   const [isChangePassword] = useState(hasSetupPassword);
+  const stateContext = useStateContext();
   const dispatch = useDispatch();
   const update = useUpdate();
   const navigate = useNavigate();
@@ -72,12 +77,23 @@ export function ChangePasswordScreen(): JSX.Element | null {
           saltResult.value as string
         );
       }
+
+      const { pcds, identity, credentialCache } = stateContext.getState();
+      const credentialManager = new CredentialManager(
+        identity,
+        pcds,
+        credentialCache
+      );
+
       await setPassword(
         newPassword,
         currentEncryptionKey,
         serverStorageRevision,
         dispatch,
-        update
+        update,
+        await credentialManager.requestCredential({
+          signatureType: "sempahore-signature-pcd"
+        })
       );
 
       setFinished(true);
@@ -92,6 +108,7 @@ export function ChangePasswordScreen(): JSX.Element | null {
     loading,
     self,
     isChangePassword,
+    stateContext,
     newPassword,
     serverStorageRevision,
     dispatch,

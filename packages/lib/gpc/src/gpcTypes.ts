@@ -1,12 +1,60 @@
-import { POD, PODEntries, PODName, PODValue } from "@pcd/pod";
+import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
+import { Groth16Proof } from "snarkjs";
 
 /**
- * String specifying a named entry in a named object, in the format
- * `objectName.entryName`.  Each of the sub-parts should be a valid PODName,
- * checked by {@link POD_NAME_REGEX}.
+ * String specifying a named entry, virtual or otherwise, in a named object, in
+ * the format `objectName.entryName`.  Each of the sub-parts should be a valid
+ * PODName, checked by {@link POD_NAME_REGEX} or {@link POD_VIRTUAL_NAME_REGEX}.
+ *
+ * Examples: "ticket1.eventID", "award.$signerPublicKey"
  */
-export type PODEntryIdentifier = `${PODName}.${PODName}`;
+export type PODEntryIdentifier = `${PODName}.${PODName | PODVirtualEntryName}`;
+
+/**
+ * Regex matching legal entry identifiers for virtual POD entries; these are of
+ * the form `${PODName}.${PODVirtualEntryName}`.
+ */
+export const POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX = new RegExp(
+  /([A-Za-z_]\w*)\.\$(signerPublicKey)$/
+);
+
+/**
+ * String specifying valid virtual entry name.
+ */
+export type PODVirtualEntryName = "$signerPublicKey";
+
+/**
+ * Regex matching legal names for POD virtual entries. Matches
+ * `PODVirtualEntryName`.
+ */
+export const POD_VIRTUAL_NAME_REGEX = new RegExp(/^\$(signerPublicKey)$/);
+
+/**
+ * Optional set of lists for checking POD entry (or tuple) value
+ * (non-)membership in the form of a record mapping list names to lists of
+ * either POD values or POD value tuples.
+
+ * Proof configurations with list membership checks refer to these lists by
+ * name, and this record should appear in both the proof inputs and the revealed
+ * claims. Each list must be non-empty, and these lists may be used for multiple
+ * list (non-)membership checks in {@link GPCProofEntryConfig} and
+ * {@link GPCProofTupleConfig}. These lists are duplicated on the circuit level
+ * so that the circuit size is proportional to the number of membership checks
+ * rather than the number of distinct lists.
+ */
+export type PODMembershipLists = Record<PODName, PODValue[] | PODValueTuple[]>;
+
+// Single source of truth for tuple prefix (used internally).
+// This should not be a valid {@link PODName} to avoid name clashes.
+export const TUPLE_PREFIX = "$tuple";
+type TuplePrefix = typeof TUPLE_PREFIX;
+
+/**
+ * String specifying a named tuple in the format `tuple.tupleName`.
+ * `tupleName` should be a valid PODName checked by {@link POD_NAME_REGEX}.
+ */
+export type TupleIdentifier = `${TuplePrefix}.${PODName}`;
 
 /**
  * String specifying a specific GPC circuit, identified by its family name
@@ -15,17 +63,80 @@ export type PODEntryIdentifier = `${PODName}.${PODName}`;
 export type GPCIdentifier = `${string}_${string}`;
 
 /**
- * GPCProofConfig for a single POD entry, specifying which featuers and
- * constraints should be enabled for that entry.
+ * GPCProofConfig for a single generic POD entry, virtual or otherwise,
+ * specifying which features and constraints should be enabled for that entry.
  */
-export type GPCProofEntryConfig = {
+export type GPCProofEntryConfigCommon = {
   /**
    * Indicates whether this entry should be revealed in the proof.  Setting
    * this to `true` will result in the entry's value being included in
    * {@link GPCRevealedClaims}, and its hash being verified in
-   * {@link gpcVerify}.
+   * {@link gpcVerify}. Note that for signers' public keys, the absence
+   * of a config amounts to setting this to `true`.
    */
   isRevealed: boolean;
+
+  /**
+   * Indicates that this entry must be equal to another entry.  The other
+   * entry is specified by a 2-part {@link PODEntryIdentifier} string
+   * used to find the entry in one of the pods in {@link GPCProofInputs}.
+   *
+   * Comparison in the proof circuit is based on the hash produced by
+   * {@link podValueHash}.  This means values of different types can be
+   * considered equal if they are treated in the same way by circuits.
+   *
+   * If undefined, there is no equality constraint.
+   *
+   * For non-virtual entries, this feature cannot be combined with `isOwnerID`
+   * on the same entry (since it shares the same constraints in the circuit).
+   * However since equality constraints can be specified in either direction,
+   * you can still constrain an owner entry by specifying it on the non-owner
+   * entry.
+   */
+  equalsEntry?: PODEntryIdentifier;
+
+  /**
+   * Indicates a single list in which this entry must lie, which corresponds to
+   * exactly one list membership check in the circuit. This feature is optional,
+   * and if it is enabled, `isNotMemberOf` must be disabled, since having both
+   * enabled is equivalent to `isMemberOf` being checked for the set-theoretic
+   * difference of the two list. Note that if an inclusion in multiple lists is
+   * to be checked, the set-theoretic intersection of all of these lists can be
+   * formed and used as the single membership list to check.
+   */
+  isMemberOf?: PODName;
+
+  /**
+   * Indicates a list in which this entry must *not* lie, which corresponds to
+   * exactly one list non-membership check in the circuit. This feature is
+   * optional, and if it is enabled, `isMemberOf` must be disabled, since having
+   * both enabled is equivalent to `isMemberOf` being checked for the
+   * set-theoretic difference of the two lists. Note that if an exclusion from
+   * multiple lists is to be checked, the set-theoretic union of all of these
+   * lists can be formed and used as the single non-membership list to check.
+   */
+  isNotMemberOf?: PODName;
+
+  // TODO(POD-P3): Constraints on entry values can go here.  Lower/upper bounds,
+  // comparison to constant, etc.
+  // TODO(POD-P3): Think about where to represent "filtering" inputs in
+  // public ways.  E.g. comparison to a constant requires revealing anyway,
+  // so isn't handled by this layer for now, but that could be a convenience
+  // feature for use cases where the verifier uses a hard-coded config.
+};
+
+/**
+ * GPCProofConfig for a single non-virtual POD entry, specifying which features
+ * and constraints should be enabled for that entry.
+ */
+export type GPCProofEntryConfig = GPCProofEntryConfigCommon & {
+  /**
+   * Indicates the range/interval/bounds within which this entry should
+   * lie. Both (inclusive) bounds must be specified, and they should be
+   * unsigned 63-bit integer values. They will always be revealed by virtue of
+   * their inclusion in the proof configuration.
+   */
+  inRange?: { min: bigint; max: bigint };
 
   /**
    * Indicates that this entry must match the public ID of the owner
@@ -44,31 +155,6 @@ export type GPCProofEntryConfig = {
    * an owner entry by specifying it on the non-owner entry.
    */
   isOwnerID?: boolean;
-
-  /**
-   * Indicates that this entry must be equal to another entry.  The other
-   * entry is specified by a 2-part {@link PODEntryIdentifier} string
-   * used to find the entry in one of the pods in {@link GPCProofInputs}.
-   *
-   * Comparison in the proof circuit is based on the hash produced by
-   * {@link podValueHash}.  This means values of different types can be
-   * considered equal if they are treated in the same way by circuits.
-   *
-   * If undefined, there is no equality constraint.
-   *
-   * This feature cannot be combined with `isOwnerID` on the same entry (since
-   * it shares the same constraints in the circuit).  However since equality
-   * constraints can be specified in either direction, you can still constrain
-   * an owner entry by specifying it on the non-owner entry.
-   */
-  equalsEntry?: PODEntryIdentifier;
-
-  // TODO(POD-P3): Constraints on entry values can go here.  Lower/upper bounds,
-  // comparison to constant, etc.
-  // TODO(POD-P3): Think about where to represent "filtering" inputs in
-  // public ways.  E.g. comparison to a constant requires revealing anyway,
-  // so isn't handled by this layer for now, but that could be a convenience
-  // feature for use cases where the verifier uses a hard-coded config.
 };
 
 /**
@@ -88,12 +174,44 @@ export type GPCProofObjectConfig = {
    */
   entries: Record<PODName, GPCProofEntryConfig>;
 
+  /**
+   * The signer's public key of this object to be proven. The GPC can choose
+   * to simply reveal it or else hide it but constrain it to lie in a list or
+   * be equal to another object's signing key. If this configuration
+   * is undefined, the signer's public key will be revealed.
+   */
+  signerPublicKey?: GPCProofEntryConfigCommon;
+
   // TODO(POD-P3): Is there anything to configure at this level?  Or can we
   // collapose it?
   // TODO(POD-P3): Think about where to represent "filtering" inputs in
   // public ways.  E.g. requiring a specific signer, which is revealed anyway,
   // so isn't handled by this layer for now, but that could be a convenience
   // feature for use cases where the verifier uses a hard-coded config.
+};
+
+/**
+ * GPCProofConfig for a single tuple, specifying which entries lie in the tuple
+ * and which membership lists the tuple lies in.
+ */
+export type GPCProofTupleConfig = {
+  /**
+   * Identifiers of the POD entries that form the tuple (in order). These must
+   * be POD entry identifiers, not tuples.
+   */
+  entries: PODEntryIdentifier[];
+
+  /**
+   * Indicates a list in which this entry must lie. The same remarks in
+   * {@link GPCProofEntryConfig} regarding `isMemberOf` apply here.
+   */
+  isMemberOf?: PODName;
+
+  /**
+   * Indicates a list in which this entry must *not* lie. The same remarks in
+   * {@link GPCProofEntryConfig} regarding `isNotMemberOf` apply here.
+   */
+  isNotMemberOf?: PODName;
 };
 
 /**
@@ -139,6 +257,13 @@ export type GPCProofConfig = {
    * for configuration.
    */
   pods: Record<PODName, GPCProofObjectConfig>;
+
+  /**
+   * Defines named tuples of POD entries. The tuples' names lie in a separate
+   * namespace and are internally prefixed with '$tuple.'. These tuples must be
+   * of arity (i.e. size/width) at least 2.
+   */
+  tuples?: Record<PODName, GPCProofTupleConfig>;
 };
 
 /**
@@ -181,6 +306,15 @@ export type GPCBoundConfig = GPCProofConfig & {
    */
   circuitIdentifier: GPCIdentifier;
 };
+
+/**
+ * Mathematical proof generated by {@link gpcProve}.  This this should be
+ * treated as an opaque object.  It is serializable directly as JSON.
+ *
+ * Currently this is always a Groth16 proof as generated by SnarkJS, but that
+ * is subject to change if different proving systems are supported in future.
+ */
+export type GPCProof = Groth16Proof;
 
 /**
  * Optional part of {@link GPCProofInputs} relating to an owner's identity.
@@ -249,6 +383,16 @@ export type GPCProofInputs = {
    */
   owner?: GPCProofOwnerInputs;
 
+  /*
+   * Named lists of valid values for each list (non-)membership check.
+   *
+   * The names assigned here are used to link these lists to their
+   * (non-)membership checks in {@link GPCProofEntryConfig} and {@link
+   * GPCProofTupleConfig}, and their values may be primitive (i.e. of type
+   * PODValue) or tuples (represented as PODValueTuple = PODValue[]).
+   */
+  membershipLists?: PODMembershipLists;
+
   /**
    * If this field is set, the given value will be included in the resulting
    * proof.  This allows identifying a proof as tied to a specific use case, to
@@ -279,10 +423,10 @@ export type GPCRevealedObjectClaims = {
   entries?: PODEntries;
 
   /**
-   * The EdDSA public key of the isuer of this POD.  The proof confirms
-   * that the POD has a valid signature under this key.
+   * Potentially redacted EdDSA public key of the issuer of this POD.  The proof
+   * confirms that the POD has a valid signature under this key.
    */
-  signerPublicKey: string;
+  signerPublicKey?: string;
 };
 
 /**
@@ -336,7 +480,7 @@ export type GPCRevealedClaims = {
   pods: Record<PODName, GPCRevealedObjectClaims>;
 
   /**
-   * Revelaed information about the owner specified in the proof, if any.
+   * Revealed information about the owner specified in the proof, if any.
    *
    * The owner's identity is never directly revealed.  Instead if a nullifier
    * was calcluated, the information required to interpret it is included here.
@@ -346,6 +490,13 @@ export type GPCRevealedClaims = {
    * absence of this field is unaffected by the entry configuration.
    */
   owner?: GPCRevealedOwnerClaims;
+
+  /*
+   * Named lists of valid values for each list (non-)membership check. These
+   * values may be primitive (i.e. of type PODValue) or tuples (represented as
+   * PODValueTuple = PODValue[]).  Each list must be non-empty.
+   */
+  membershipLists?: PODMembershipLists;
 
   /**
    * If this field is set, it matches the corresponding field in
@@ -359,3 +510,22 @@ export type GPCRevealedClaims = {
    */
   watermark?: PODValue;
 };
+
+/**
+ * Converts a record of membership lists to one of membership sets.
+ *
+ * @param membershipLists the lists to convert
+ * @returns a record of membership sets
+ */
+export function membershipListsToSets(
+  membershipLists: PODMembershipLists
+): Record<PODName, Set<PODValue> | Set<PODValueTuple>> {
+  return Object.fromEntries(
+    Object.entries(membershipLists).map((pair) => [
+      pair[0],
+      new Set(pair[1] as (PODValue | PODValueTuple)[]) as
+        | Set<PODValue>
+        | Set<PODValueTuple>
+    ])
+  );
+}

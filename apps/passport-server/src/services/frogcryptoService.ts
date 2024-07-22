@@ -390,9 +390,9 @@ export class FrogcryptoService {
     credential: Credential
   ): Promise<string> {
     try {
-      const { signatureClaim } =
+      const { semaphoreId } =
         await this.issuanceService.verifyCredential(credential);
-      return signatureClaim.identityCommitment;
+      return semaphoreId;
     } catch (e) {
       throw new PCDHTTPError(400, "invalid credential");
     }

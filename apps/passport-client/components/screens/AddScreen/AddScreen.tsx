@@ -6,14 +6,8 @@ import {
 } from "@pcd/passport-interface";
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import {
-  useDispatch,
-  useLoginIfNoSelf,
-  useRequirePassword,
-  useSelf
-} from "../../../src/appHooks";
+import { useDispatch } from "../../../src/appHooks";
 import { validateRequest } from "../../../src/passportRequest";
-import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { AppContainer } from "../../shared/AppContainer";
@@ -27,25 +21,18 @@ import { ProveAndAddScreen } from "./ProveAndAddScreen";
  */
 export function AddScreen(): JSX.Element | null {
   useSyncE2EEStorage();
-  useRequirePassword();
   const dispatch = useDispatch();
-  const self = useSelf();
   const location = useLocation();
   const params = new URLSearchParams(location.search);
   const request = validateRequest(params);
-  const screen = getScreen(request);
+  const autoAdd = params.get("autoAdd") === "true";
+  const screen = getScreen(request, autoAdd);
 
   useEffect(() => {
     if (screen === null) {
       err(dispatch, "Unsupported request", `Expected a PCD ADD request`);
     }
   }, [dispatch, screen]);
-
-  useLoginIfNoSelf(pendingRequestKeys.add, request);
-
-  if (!self) {
-    return null;
-  }
 
   if (!screen) {
     // Need AppContainer to display error
@@ -54,12 +41,14 @@ export function AddScreen(): JSX.Element | null {
   return screen;
 }
 
-function getScreen(request: PCDRequest): JSX.Element | null {
+function getScreen(request: PCDRequest, autoAdd: boolean): JSX.Element | null {
   switch (request.type) {
     case PCDRequestType.ProveAndAdd:
       return <ProveAndAddScreen request={request as PCDProveAndAddRequest} />;
     case PCDRequestType.Add:
-      return <JustAddScreen request={request as PCDAddRequest} />;
+      return (
+        <JustAddScreen autoAdd={autoAdd} request={request as PCDAddRequest} />
+      );
     default:
       return null;
   }

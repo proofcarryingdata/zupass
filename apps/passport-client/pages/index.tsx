@@ -22,6 +22,7 @@ import {
   SupportLink,
   TextCenter
 } from "../components/core";
+import { RippleLoader } from "../components/core/RippleLoader";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
@@ -38,6 +39,7 @@ import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreateP
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
+import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
@@ -58,7 +60,7 @@ import {
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { appConfig } from "../src/appConfig";
-import { useStateContext } from "../src/appHooks";
+import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
@@ -301,6 +303,23 @@ const Router = React.memo(RouterImpl);
 function RouterImpl(): JSX.Element {
   useTsParticles();
 
+  const isDeletingAccount = useIsDeletingAccount();
+
+  if (isDeletingAccount) {
+    return (
+      <AppContainer bg="primary">
+        <Spacer h={64} />
+        <TextCenter>
+          <H1>ZUPASS</H1>
+          <Spacer h={24} />
+          Deleting your Account
+          <Spacer h={8} />
+          <RippleLoader />
+        </TextCenter>
+      </AppContainer>
+    );
+  }
+
   return (
     <HashRouter>
       <Routes>
@@ -320,6 +339,10 @@ function RouterImpl(): JSX.Element {
           <Route path="privacy-notice" element={<PrivacyNoticeScreen />} />
           <Route path="create-password" element={<CreatePasswordScreen />} />
           <Route path="change-password" element={<ChangePasswordScreen />} />
+          <Route
+            path="one-click-login/:email/:code/:targetFolder"
+            element={<OneClickLoginScreen />}
+          />
           <Route
             path="enter-confirmation-code"
             element={<EnterConfirmationCodeScreen />}

@@ -4,7 +4,7 @@
 {{! configuration to reflect the build/test configuration of your package }}
 {
   "extends": ["//"],
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "src/**", "test/**"],

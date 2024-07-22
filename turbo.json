@@ -1,18 +1,27 @@
 {
   "$schema": "https://turbo.build/schema.json",
-  "pipeline": {
+  "tasks": {
     "build": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", ".nvmrc"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".nvmrc"
+      ],
       "outputs": [],
-      "cache": true,
-      "dotEnv": [".env"]
+      "cache": true
     },
     "lint": {
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "cache": true
     },
     "dev": {
+      "dependsOn": [
+        "^build"
+      ],
       "cache": false,
       "persistent": true
     },
@@ -20,12 +29,20 @@
       "cache": false
     },
     "gen-test-artifacts": {
-      "dependsOn": ["^gen-test-artifacts"],
+      "dependsOn": [
+        "^gen-test-artifacts"
+      ],
       "cache": true
     },
     "test": {
-      "dependsOn": ["^build", "^gen-test-artifacts"],
-      "inputs": ["$TURBO_DEFAULT$", ".mocharc.js"],
+      "dependsOn": [
+        "^build",
+        "^gen-test-artifacts"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".mocharc.js"
+      ],
       "cache": true
     },
     "clean": {
@@ -45,14 +62,24 @@
       "cache": false
     },
     "//#test-typedoc": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "typedoc.json"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "typedoc.json"
+      ],
       "outputs": [],
       "cache": true
     },
     "//#test-generated-package": {
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "scripts/testTemplatePackage.ts"],
+      "dependsOn": [
+        "^build"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "scripts/testTemplatePackage.ts"
+      ],
       "outputs": [],
       "cache": true
     }
@@ -213,10 +240,17 @@
     "NEXT_ROLLBAR_ACCESS_TOKEN",
     "NEXT_ROLLBAR_ENVIRONMENT_NAME",
     "STRICH_LICENSE_KEY",
-    "SCANDIT_LICENSE_KEY",
-    "MULTI_CHOICE_SCAN_ENABLED",
     "IRON_SESSION_PASSWORD",
     "SHOW_POD_TICKET_PCDS",
+    "GPC_ARTIFACTS_CONFIG_OVERRIDE",
+    "ZUPOLL_API_KEY",
+    "VOUCHER_API_KEY",
+    "DELETE_MISSING_USERS",
+    "ONE_CLICK_LOGIN_ENABLED",
+    "MANUAL_CHECKIN_API_KEY",
+    "MANUAL_CHECKIN_PIPELINE_ID",
+    "OUTBOUND_ALLOW_LIST",
+    "PIPELINE_EMAIL_SEND",
     "//// add env vars above this line ////"
   ]
 }

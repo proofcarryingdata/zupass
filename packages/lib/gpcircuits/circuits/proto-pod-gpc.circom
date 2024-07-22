@@ -1,13 +1,16 @@
 pragma circom 2.1.8;
 
 include "circomlib/circuits/gates.circom";
+include "circomlib/circuits/poseidon.circom";
 include "entry.circom";
 include "global.circom";
 include "gpc-util.circom";
 include "list-membership.circom";
 include "multituple.circom";
+include "numeric-value.circom";
 include "object.circom";
 include "owner.circom";
+include "virtual-entry.circom";
 
 /**
  * This template is the top level of a prototype GPC proof.  Its template parameters are
@@ -35,6 +38,9 @@ template ProtoPODGPC (
     // inclusive upper bound on the proofDepth input.
     MERKLE_MAX_DEPTH,
 
+    // Max number of numeric values.
+    MAX_NUMERIC_VALUES,
+    
     // Indicates the number of ListMembership modules included in this GPC,
     // setting the largest number of distinct membership lists for (tuples of)
     // entry values which can be checked.
@@ -60,7 +66,7 @@ template ProtoPODGPC (
 
     // Signer of each object: EdDSA public key
     signal input objectSignerPubkeyAx[MAX_OBJECTS], objectSignerPubkeyAy[MAX_OBJECTS];
-
+    
     // Signature of each object: EdDSA signaure
     signal input objectSignatureR8x[MAX_OBJECTS], objectSignatureR8y[MAX_OBJECTS], objectSignatureS[MAX_OBJECTS];
 
@@ -73,14 +79,14 @@ template ProtoPODGPC (
             signatureR8x <== objectSignatureR8x[objectIndex],
             signatureR8y <== objectSignatureR8y[objectIndex],
             signatureS <== objectSignatureS[objectIndex]
-        );
+                       );
     }
 
     // TODO(POD-P3): Provide a way to (optionally?) ensure objects are unique
     // (comparing content IDs, or signers, or signatures).
 
     /*
-     * 1+ EntryModule & EntryConstraintModule for each entry.
+     * 1+ EntryModule.
      * Each array corresponds to one input/output for each entry module.  Non-array inputs
      * are packed bits, which will be split between modules within the circuit.
      */
@@ -89,17 +95,16 @@ template ProtoPODGPC (
     signal input entryObjectIndex[MAX_ENTRIES];
 
     // Entry name (by hash) and value.  Value's hash is implicitly included as 1st sibling.
-    signal input entryNameHash[MAX_ENTRIES], entryValue[MAX_ENTRIES];
+    signal input entryNameHash[MAX_ENTRIES];
     
     // Boolean flags for entry value behavior.
-    signal input entryIsValueEnabled /*MAX_ENTRIES packed bits*/, entryIsValueHashRevealed /*MAX_ENTRIES packed bits*/;
-    signal entryIsValueEnabledBits[MAX_ENTRIES] <== Num2Bits(MAX_ENTRIES)(entryIsValueEnabled);
+    signal input entryIsValueHashRevealed /*MAX_ENTRIES packed bits*/;
     signal entryIsValueHashRevealedBits[MAX_ENTRIES] <== Num2Bits(MAX_ENTRIES)(entryIsValueHashRevealed);
 
     // Merkle proof of entry name's membership in the object's Merkle tree.
     signal input entryProofDepth[MAX_ENTRIES], entryProofIndex[MAX_ENTRIES] /*MERKLE_MAX_DEPTH packed bits*/ , entryProofSiblings[MAX_ENTRIES][MERKLE_MAX_DEPTH];
 
-    // Entry value is optionally revealed, or set to -1 if not.
+    // Entry value is optionally revealed by hash, or set to -1 if not.
     signal output entryRevealedValueHash[MAX_ENTRIES];
 
     // Convenience value: entry value hashes are present as first sibling of each entry proof.
@@ -108,30 +113,78 @@ template ProtoPODGPC (
         entryValueHashes[i] <== entryProofSiblings[i][0];
     }
 
-    // Entry can be compared for equality (by hash) to another entry (by index).
-    // This can be disabled by comparing to self: entryEqualToOtherEntryIndex[i] = i
-    signal input entryEqualToOtherEntryByIndex[MAX_ENTRIES];
+    /*
+     * 1 VirtualEntryModule.
+     * Virtual entries are derived from PODs' cryptographic data,
+     * e.g. the signers' public keys.
+     *
+     * This block pipes them in and forms signals to be fed into the
+     * entry constraint, tuple and list membership modules below, as well
+     * as those revealing their hashes where applicable.
+     */
+    
+    // Maximum number of virtual entries.
+    var MAX_VIRTUAL_ENTRIES = MAX_OBJECTS;
 
-    // Modules which scale with number of entries.
+    // Total number of entries in the circuit, virtual or otherwise
+    var TOTAL_ENTRIES = MAX_ENTRIES + MAX_VIRTUAL_ENTRIES;
+
+    // Boolean flags for virtual entry behaviour.
+    signal input virtualEntryIsValueHashRevealed /*MAX_VIRTUAL_ENTRIES packed bits*/;
+
+    // Virtual entry value hashes to be computed by virtual entry module
+    signal virtualEntryValueHashes[MAX_VIRTUAL_ENTRIES];
+
+    // Virtual entry value is optionally revealed by hash, or set to -1 if not.
+    signal output virtualEntryRevealedValueHash[MAX_VIRTUAL_ENTRIES];
+
+    (virtualEntryValueHashes, virtualEntryRevealedValueHash)
+        <== VirtualEntryModule(MAX_OBJECTS)(
+            virtualEntryIsValueHashRevealed,
+            objectSignerPubkeyAx,
+            objectSignerPubkeyAy);
+
+    // Append virtual entry hashes to entry hashes for use in the
+    // entry constraint module.
+    signal totalEntryValueHashes[TOTAL_ENTRIES]
+        <== Append(MAX_ENTRIES, MAX_VIRTUAL_ENTRIES)(
+            entryValueHashes,
+            virtualEntryValueHashes);
+
+    /*
+     * 1 EntryConstraintModule for each entry, virtual or otherwise.
+     */
+    
+    // Entry or virtual entry can be compared for equality (by hash)
+    // to another entry or virtual entry (by index). An index less
+    // than MAX_ENTRIES refers to an entry and an index i in
+    // [MAX_ENTRIES, MAX_ENTRIES + MAX_VIRTUAL_ENTRIES[ refers to the
+    // (i - MAX_ENTRIES)th virtual entry.
+    // This can be disabled by comparing to self:
+    //   entryEqualToOtherEntryIndex[i] = i
+    signal input entryEqualToOtherEntryByIndex[TOTAL_ENTRIES];
+
+    // Modules which scale with number of (non-virtual) entries.
     for (var entryIndex = 0; entryIndex < MAX_ENTRIES; entryIndex++) {
         // Entry module proves that an entry exists within the object's merkle tree.
         entryRevealedValueHash[entryIndex] <== EntryModule(MERKLE_MAX_DEPTH)(
             objectContentID <== InputSelector(MAX_OBJECTS)(objectContentID, entryObjectIndex[entryIndex]),
             nameHash <== entryNameHash[entryIndex],
             isValueHashRevealed <== entryIsValueHashRevealedBits[entryIndex],
-            value <== entryValue[entryIndex],
-            isValueEnabled <== entryIsValueEnabledBits[entryIndex],
             proofDepth <== entryProofDepth[entryIndex],
             proofIndex <== entryProofIndex[entryIndex],
             proofSiblings <== entryProofSiblings[entryIndex]
-        );
+                                                                             );
+    }
 
+    // Items which scale with the number of total entries (real and virtual).
+    for (var entryIndex = 0; entryIndex < TOTAL_ENTRIES; entryIndex++) {
         // EntryConstraint module contains constraints applied to each individual entry.
-        EntryConstraintModule(MAX_ENTRIES)(
-            valueHash <== entryProofSiblings[entryIndex][0],
-            entryValueHashes <== entryValueHashes,
+        EntryConstraintModule(TOTAL_ENTRIES)(
+            valueHash <== totalEntryValueHashes[entryIndex],
+            entryValueHashes <== totalEntryValueHashes,
             equalToOtherEntryByIndex <== entryEqualToOtherEntryByIndex[entryIndex]
-        );
+                                                                 );
     }
 
     /*
@@ -153,11 +206,47 @@ template ProtoPODGPC (
         enabled <== ownerIsEnabled,
         identityNullifier <== ownerSemaphoreV3IdentityNullifier,
         identityTrapdoor <== ownerSemaphoreV3IdentityTrapdoor,
-        identityCommitment <== InputSelector(MAX_ENTRIES)(entryValue, ownerIsEnabled * ownerEntryIndex),
+        identityCommitmentHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, ownerIsEnabled * ownerEntryIndex),
         externalNullifier <== ownerExternalNullifier,
         isNullfierHashRevealed <== ownerIsNullfierHashRevealed
-    );
+                                                                          );
 
+    
+    /*
+     * (MAX_NUMERIC_VALUES) NumericValueModules with their inputs
+     */
+
+    // Array of numeric values as well as an array of indices of
+    // entries to which they correspond. These will be checked for
+    // consistency in the numeric value module. These should be
+    // padded with 0s and -1s respectively if necessary.
+    signal input numericValues[MAX_NUMERIC_VALUES];
+    signal input numericValueEntryIndices[MAX_NUMERIC_VALUES];
+    
+    // Arrays of (inclusive) 63-bit unsigned integer bounds, where the
+    // ith element of each array specifies the minimum or maximum
+    // value that the ith value being checked can take. Note that
+    // these bounds are not constrained here; since they are public
+    // inputs, they should be checked externally. These arrays should
+    // be padded with 0s if necessary.
+    signal input numericMinValues[MAX_NUMERIC_VALUES];
+    signal input numericMaxValues[MAX_NUMERIC_VALUES];
+    
+    for (var i = 0; i < MAX_NUMERIC_VALUES; i++) {
+        NumericValueModule()(
+            // Disable value hash check if index is -1.
+            NOT()(
+                IsZero()(numericValueEntryIndices[i] + 1)
+                  ),
+            numericValues[i],
+            MaybeInputSelector(MAX_ENTRIES)(
+                entryValueHashes,
+                numericValueEntryIndices[i]
+                                            ),
+            numericMinValues[i],
+            numericMaxValues[i]);
+    }
+    
     /*
      * 1 MultiTupleModule with its inputs & outputs.
      */
@@ -166,7 +255,9 @@ template ProtoPODGPC (
     signal input tupleIndices[MAX_TUPLES][TUPLE_ARITY];
 
     // Hashes representing these tuples.
-    signal tupleHashes[MAX_TUPLES] <== MultiTupleModule(MAX_TUPLES, TUPLE_ARITY, MAX_ENTRIES)(entryValueHashes, tupleIndices);
+    signal tupleHashes[MAX_TUPLES] <== MultiTupleModule(MAX_TUPLES, TUPLE_ARITY, TOTAL_ENTRIES)(
+        totalEntryValueHashes,
+        tupleIndices);
     
     /*
      * (MAX_LISTS) ListMembershipModules with their inputs & outputs.
@@ -179,21 +270,29 @@ template ProtoPODGPC (
     // to a list of zeroes to match.
     signal input listComparisonValueIndex[MAX_LISTS];
 
+    // Bit-packed indicators of whether the comparison values should
+    // be members of the list.
+    // An entry of the unpacked bit array is equal to 1 if the corresponding
+    // indexin the comparison value array should be a member of the list and
+    // 0 if it shouldn't.
+    signal input listContainsComparisonValue /*MAX_LISTS packed bits*/;
+    signal listContainsComparisonValueBits[MAX_LISTS] <== Num2Bits(MAX_LISTS)(listContainsComparisonValue);
+    
     // List of accepted values for membership checks. Depending on the indices above, these need to
     // match element value hashes, tuple hashes, or a constant value of 0 for disabled checks.
     signal input listValidValues[MAX_LISTS][MAX_LIST_ELEMENTS];
 
-    // Indicators of whether the list membership checks pass.
-    signal isMember[MAX_LISTS];
+    // Result of list membership check.
+    signal membershipCheckResult[MAX_LISTS];
 
     for (var i = 0; i < MAX_LISTS; i++) {
-        isMember[i] <== ListMembershipModule(MAX_LIST_ELEMENTS)(
-            MaybeInputSelector(MAX_ENTRIES + MAX_TUPLES)(
-                Append(MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleHashes),
+        membershipCheckResult[i] <== ListMembershipModule(MAX_LIST_ELEMENTS)(
+            MaybeInputSelector(TOTAL_ENTRIES + MAX_TUPLES)(
+                Append(TOTAL_ENTRIES, MAX_TUPLES)(totalEntryValueHashes, tupleHashes),
                 listComparisonValueIndex[i]),
             listValidValues[i]);
 
-        isMember[i] === 1;
+        listContainsComparisonValueBits[i] === membershipCheckResult[i];
     }
     
     /*

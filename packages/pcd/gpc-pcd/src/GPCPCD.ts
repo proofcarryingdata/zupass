@@ -1,5 +1,11 @@
 import { GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
-import { PCD, PCDArgument, StringArgument } from "@pcd/pcd-types";
+import {
+  PCD,
+  PCDArgument,
+  RecordContainerArgument,
+  StringArgument
+} from "@pcd/pcd-types";
+import { PODEntries, PODName } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Groth16Proof } from "snarkjs";
@@ -33,6 +39,73 @@ export type GPCPCDInitArgs = {
 };
 
 /**
+ * Record container argument type encapsulating a record of POD PCD
+ * arguments. The POD names used here must correspond to those used in the proof
+ * configuration.
+ */
+export type PODPCDRecordArg = RecordContainerArgument<
+  PODName,
+  PCDArgument<PODPCD, PODPCDArgValidatorParams>,
+  PODPCDArgValidatorParams
+>;
+
+/**
+ * Prescribed signers' public keys for PODs. User inputs to a proof will be
+ * filtered to only those PODs containing matching values.
+ */
+export type PODSignerPublicKeys = Record<PODName, string>;
+
+/**
+ * Prescribed/Fixed POD entries. User inputs to a proof will be filtered to only
+ * those PODs containing matching values.
+ */
+export type FixedPODEntries = Record<PODName, PODEntries>;
+
+/**
+ * Validator parameters for POD PCD arguments. These will play a role in
+ * filtering the selection of PODs available for a user to choose for their
+ * proof.
+ */
+export type PODPCDArgValidatorParams = {
+  /**
+   * Message to display if the POD specified in the config does not match any of
+   * the available POD PCDs.
+   */
+  notFoundMessage?: string;
+
+  /**
+   * JSON-serialised proof configuration used to narrow down the selection of
+   * POD PCDs. This should coincide with the proof config string supplied in the
+   * `GPCPCDArgs`. May be deserialised using {@link deserializeGPCProofConfig}.
+   */
+  proofConfig?: string;
+
+  /**
+   * JSON-serialised membership lists to narrow down the selection of POD PCDs
+   * to those satisfying the list membership check specified in the proof
+   * config. This should coincide with the membership list string supplied in
+   * the `GPCPCDArgs` (if any). May be deserialised using {@link
+   * podMembershipListsFromSimplifiedJSON}.
+   */
+  membershipLists?: string;
+
+  /**
+   * JSON-serialised `PODEntries`.This is used to narrow down the selection of
+   * POD PCDs to those with entries matching these prescribed values. May be
+   * deserialised using {@link podEntryRecordFromSimplifiedJSON}.
+   */
+  prescribedEntries?: string;
+
+  /**
+   * Record of prescribed signers' public keys. This is used to narrow down the
+   * selection of POD PCDs to those with signers' public keys matching these
+   * prescribed values. May be serialised and deserialised using {@link
+   * JSON.stringify} and {@link JSON.parse}.
+   */
+  prescribedSignerPublicKeys?: PODSignerPublicKeys;
+};
+
+/**
  * Defines the essential parameters required for creating a {@link GPCPCD}.
  */
 export type GPCPCDArgs = {
@@ -48,15 +121,15 @@ export type GPCPCDArgs = {
   // choice here should be driven by the needs of the Prove screen.
 
   /**
-   * POD objects to prove about.  These are not revealed by default, but
-   * a redacted version of their entries will become part of the clais of the
-   * resulting proof PCD, as specified by the proof config.
+   * POD objects to prove about. Each object is identified by name in the value
+   * underlying this record container argument.  These are not revealed by
+   * default, but a redacted version of their entries will become part of the
+   * claims of the resulting proof PCD, as specified by the proof config.
    *
    * See {@link GPCProofConfig} and {@link GPCRevealedClaims} for more
    * information.
    */
-  pod: PCDArgument<PODPCD>;
-  // TODO(POD-P3): Support more than one POD.
+  pods: PODPCDRecordArg;
 
   /**
    * Optional secret info identifying the owner of PODs, if needed by the proof
@@ -71,6 +144,13 @@ export type GPCPCDArgs = {
    * by the same user, without revealing the user's identity.
    */
   externalNullifier: StringArgument;
+
+  /**
+   * Optional membership lists, if needed by the proof configuration. This is
+   * always revealed. Taken to be a JSON-serialised string for the same reasons
+   * outlined for `proofConfig` above.
+   */
+  membershipLists: StringArgument;
 
   /**
    * Optional watermark can be any string.  It will be included (by hash) in the

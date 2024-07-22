@@ -1,7 +1,7 @@
 {
   "name": "@pcd/zupoll-shared",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -23,7 +23,7 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
@@ -31,8 +31,8 @@
     "url-join": "^4.0.1"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.0",
-    "@pcd/tsconfig": "0.11.0",
+    "@pcd/eslint-config-custom": "0.11.1",
+    "@pcd/tsconfig": "0.11.1",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/url-join": "^4.0.3",

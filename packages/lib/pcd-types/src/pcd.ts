@@ -256,8 +256,33 @@ export enum ArgumentTypeName {
   Object = "Object",
   StringArray = "StringArray",
   PCD = "PCD",
+  RecordContainer = "RecordContainer",
   ToggleList = "ToggleList",
   Unknown = "Unknown"
+}
+
+/**
+ * Primitive argument type names, i.e. names for argument types other than the record container type.
+ */
+export type PrimitiveArgumentTypeName = Exclude<
+  ArgumentTypeName,
+  ArgumentTypeName.RecordContainer
+>;
+
+/**
+ * Non-recursive record container argument type. This should be thought of as a
+ * container of named arguments of a single primitive type.
+ */
+export type RecordContainerArgument<
+  S extends string,
+  T extends Argument<PrimitiveArgumentTypeName, unknown>,
+  ValidatorParams = Record<string, unknown>
+> = Argument<ArgumentTypeName.RecordContainer, Record<S, T>, ValidatorParams>;
+export function isRecordContainerArgument<
+  S extends string,
+  T extends Argument<PrimitiveArgumentTypeName, unknown>
+>(arg: Argument<any, unknown>): arg is RecordContainerArgument<S, T> {
+  return arg.argumentType === ArgumentTypeName.RecordContainer;
 }
 
 export type StringArgument = Argument<ArgumentTypeName.String, string>;
@@ -369,10 +394,19 @@ export type RawValueType<T extends Argument<any, unknown>> =
     ? U
     : T;
 
-export type ArgumentValidator<T extends Argument<any, unknown>> = (
-  value: RawValueType<T>,
-  params: T["validatorParams"]
-) => boolean;
+/**
+ * Argument validator as a predicate taking both the argument's value and its
+ * validator parameters as inputs. In the case of a record argument, this is a
+ * mapping from record keys to such predicates for the record value type.
+ */
+export type ArgumentValidator<T extends Argument<any, unknown>> =
+  T extends RecordContainerArgument<infer S, infer U>
+    ? (
+        s: S,
+        value: RawValueType<U>,
+        params: T["validatorParams"] & U["validatorParams"]
+      ) => boolean
+    : (value: RawValueType<T>, params: T["validatorParams"]) => boolean;
 
 /**
  * Enriched Argument for display purposes

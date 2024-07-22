@@ -17,14 +17,112 @@
     <a href="https://npmjs.org/package/@pcd/gpc">
         <img alt="Downloads" src="https://img.shields.io/npm/dm/@pcd/gpc.svg?style=flat-square" />
     </a>
+<br>
+    <a href="https://zupass.org/pod-developers">
+        <img alt="Developer Site" src="https://img.shields.io/badge/Developer_Site-green.svg?style=flat-square">
+    </a>
+    <a href="https://github.com/proofcarryingdata/zupass/blob/main/examples/pod-gpc-example/src/gpcExample.ts#L88">
+        <img alt="Tutorial Code" src="https://img.shields.io/badge/Tutorial_Code-blue.svg?style=flat-square">
+    </a>
+    <a href="https://docs.pcd.team/modules/_pcd_gpc.html">
+        <img alt="TypeDoc" src="https://img.shields.io/badge/TypeDoc-purple.svg?style=flat-square">
+    </a>
+    <a href="https://github.com/proofcarryingdata/zupass/tree/main/packages/lib/gpc">
+        <img alt="GitHub" src="https://img.shields.io/badge/GitHub-grey.svg?style=flat-square">
+    </a>
 </p>
 
-# `@pcd/gpc`
+A library for creating and verifying zero-knowledge proofs using General Purpose
+Circuits. For a full introduction, see the
+[Developer Site](https://zupass.org/pod-developers).
 
-Library for configuration and use of GPCs (General Purpose Circuits) on POD
-(Provable Object Data).
+**POD** is a format enabling any app to flexibly create cryptographic data and
+make zero-knowledge proofs about it. A POD could represent your ticket to an
+event, a secure message, a collectible badge, or an item in a role-playing game.
+Using PODs, developers can create ZK-enabled apps without the effort and risk of
+developing their own cryptography.
 
-TODO(POD-P3): Detailed description of the GPC concept and design.
+ZK proofs about PODs use General Purpose Circuits (**GPC**) which can prove many
+different things about a POD without revealing it all. GPCs use human-readable
+configuration and pre-compiled circuits so no knowledge of circuit programming
+is required.
 
-TODO(POD-P3): Introduction to the circuits and helper Typescript code
-in this package, with an example.
+PODs and GPCs can be used in Zupass, or in your own apps without Zupass.
+
+## What is a GPC?
+
+GPCs allow ZK proofs to be created from a simple proof configuration. You can
+configure your proofs using a human-readable (JSON) format, which is used to
+generate the specific circuit inputs needed for the proof.
+
+```TypeScript
+const weaponProofConfig: GPCProofConfig = {
+  pods: {
+    weapon: {
+      entries: {
+        attack: { isRevealed: true },
+        weaponType: { isRevealed: false, isMemberOf: "favoriteWeapons" },
+        owner: { isRevealed: false, isOwnerID: true }
+      }
+    }
+  }
+};
+```
+
+The GPC library has a family of pre-compiled ZK circuits with different sizes
+and capabilities. It will automatically select the right circuit to satisfy the
+needs of each proof at run-time. No setup is required, and you don’t need any
+knowledge of circuit programming (circom, halo2, noir, etc).
+
+GPCs can prove properties of one POD or several PODs together. PODs can be
+proven to be owned by the prover, using their Semaphore identity. A GPC can
+constrain as many named entries as needed, whether revealed or not. For example,
+a proof might constraint two entries to be equal, constrain a third entry to be
+in a list of valid values, and reveal the value of a fourth entry.
+
+## Entry Points
+
+- The [`GPCProofConfig`](https://docs.pcd.team/types/_pcd_gpc.GPCProofConfig.html)
+  type configures a proof. Start there to learn what properties you can
+  prove about a POD.
+- The [`gpcProve`](https://docs.pcd.team/functions/_pcd_gpc.gpcProve.html) and
+  [`gpcVerify`](https://docs.pcd.team/functions/_pcd_gpc.gpcVerify.html)
+  functions allow you to generate and validate GPC proofs.
+- The [`gpcArtifactDownloadURL`](https://docs.pcd.team/functions/_pcd_gpc.gpcArtifactDownloadURL.html)
+  function can help you find the right place to download the necessary binary
+  artifacts (proving key, verification key, witness generator) to perform
+  proof calculations.
+
+For more details on usage, check out the
+[tutorial code](https://github.com/proofcarryingdata/zupass/blob/main/examples/pod-gpc-example/src/gpcExample.ts#L88).
+
+## Related Packages
+
+- For information about making POD objects, see the
+  [`@pcd/pod`](https://github.com/proofcarryingdata/zupass/tree/main/packages/lib/pod)
+  package.
+
+- To interact with GPC proofs in the Zupass app, see the
+  [`@pcd/gpc-pcd`](https://github.com/proofcarryingdata/zupass/tree/main/packages/pcd/gpc-pcd)
+  package.
+
+- To find the binaries required to prove and verify, see the
+  [`@pcd/proto-pod-gpc-artifacts`](https://github.com/proofcarryingdata/snark-artifacts/tree/pre-release/packages/proto-pod-gpc)
+  package. Since these artifacts are large and numerous, you generally
+  won't want to depend on this package directly.
+
+## Stability and Security
+
+POD and GPC libraries are experimental and subject to change. We encourage devs
+to try them out and use them for apps, but maybe don’t rely on them for the most
+sensitive use cases yet.
+
+GPC proofs are considered ephemeral (for now), primarily intended for
+transactional use cases. Saved proofs may not be verifiable with future
+versions of code. Library interfaces may also change. Any breaking changes will
+be reflected in the NPM versions using standard semantic versioning.
+
+These libraries should not be considered secure enough for highly-sensitive use
+cases yet. The circuits are experimental and have not been audited. The
+proving/verification keys were generated in good faith by a single author, but
+are not the result of a distributed trusted setup ceremony.

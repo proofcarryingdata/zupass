@@ -39,9 +39,8 @@ export function BallotListsForUser({
         visible={
           loginState.config.name === LegacyLoginConfigName.ZUZALU_ORGANIZER
         }
-        title={"Zuzalu Organizer Polls"}
+        title={"Advisory Polls"}
         loading={loading}
-        description={"Polls visible and voteable only by Zuzalu Organizers"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ORGANIZERONLY}
       />
@@ -51,9 +50,8 @@ export function BallotListsForUser({
           loginState.config.name === LegacyLoginConfigName.ZUZALU_ORGANIZER ||
           loginState.config.name === LegacyLoginConfigName.ZUZALU_PARTICIPANT
         }
-        title={"Organizer Polls"}
+        title={"Advisory Polls"}
         loading={loading}
-        description={"Official community polls from Zuzalu Organizers"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ADVISORYVOTE}
       />
@@ -130,7 +128,7 @@ export function BallotListsForUser({
         }
         title={"Community Polls"}
         loading={loading}
-        description={"Polls created by ETH LatAm attendees"}
+        description={"Polls created by ETH LATAM attendees"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ETH_LATAM_STRAWPOLL}
       />
@@ -141,9 +139,9 @@ export function BallotListsForUser({
             LegacyLoginConfigName.ETH_LATAM_ORGANIZER ||
           loginState.config.name === LegacyLoginConfigName.ETH_LATAM_ATTENDEE
         }
-        title={"Eth LatAm Feedback"}
+        title={"ETH LATAM Feedback"}
         loading={loading}
-        description={"Feedback polls for Eth LatAm"}
+        description={"Feedback polls for ETH LATAM"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ETH_LATAM_FEEDBACK}
       />

@@ -1,25 +1,32 @@
+import { CircuitDesc } from "@pcd/gpcircuits";
 import {
-  CircuitDesc,
-  CircuitSignal,
-  padArray,
-  ProtoPODGPCCircuitDesc
-} from "@pcd/gpcircuits";
-import {
+  POD,
+  PODEdDSAPublicKeyValue,
   PODName,
   PODValue,
+  PODValueTuple,
+  POD_NAME_REGEX,
   checkPODName,
   getPODValueForCircuit,
   podValueHash,
   requireType
 } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import _ from "lodash";
 import {
   GPCBoundConfig,
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryConfig,
+  GPCProofEntryConfigCommon,
   GPCProofObjectConfig,
-  PODEntryIdentifier
+  GPCProofTupleConfig,
+  PODEntryIdentifier,
+  PODVirtualEntryName,
+  POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX,
+  POD_VIRTUAL_NAME_REGEX,
+  TUPLE_PREFIX,
+  TupleIdentifier
 } from "./gpcTypes";
 
 /**
@@ -27,7 +34,7 @@ import {
  * named circuit.  In addition to filling in the circuit name, canonicalization
  * removes unnecessary differences between identical configs.  Specifically:
  * - Remove unknown fields from config objects.
- * - Put `pods` and `entries` in sorted order for iteration.
+ * - Put `pods`, `entries`, `tuples` and `membershipLists` in sorted order for iteration.
  * - Omit optional fields which are set to their default value.
  *
  * @param proofConfig proof configuration to canonicalize
@@ -59,11 +66,15 @@ export function canonicalizeConfig(
     canonicalPODs[objName] = canonicalizeObjectConfig(objectConfig);
   }
 
+  // Force tuples and their membership lists to be sorted by name
+  const tupleRecord = canonicalizeTupleConfig(proofConfig.tuples ?? {});
+
   // Forcing circuit name to be present is the only type-level difference
   // between GPCProofConfig and GPCBoundConfig.
   return {
     circuitIdentifier: circuitIdentifier,
-    pods: canonicalPODs
+    pods: canonicalPODs,
+    ...(proofConfig.tuples !== undefined ? { tuples: tupleRecord } : {})
   };
 }
 
@@ -79,12 +90,52 @@ function canonicalizeObjectConfig(
     canonicalEntries[entryName] = canonicalizeEntryConfig(entryConfig);
   }
 
+  // Check if signer's public key configuration is set to its defaults, in which
+  // case it will be omitted in the canonicalised config.
+  const signerPublicKeyConfig = proofObjectConfig.signerPublicKey;
+  const canonicalizedSignerPublicKeyConfig =
+    signerPublicKeyConfig !== undefined
+      ? canonicalizeSignerPublicKeyConfig(signerPublicKeyConfig)
+      : undefined;
+
   return {
-    entries: canonicalEntries
+    entries: canonicalEntries,
+    ...(canonicalizedSignerPublicKeyConfig !== undefined
+      ? { signerPublicKey: canonicalizedSignerPublicKeyConfig }
+      : {})
   };
 }
 
-function canonicalizeEntryConfig(
+export function canonicalizeSignerPublicKeyConfig(
+  signerPublicKeyConfig: GPCProofEntryConfigCommon
+): GPCProofEntryConfigCommon | undefined {
+  if (
+    Object.keys(signerPublicKeyConfig).length === 1 &&
+    signerPublicKeyConfig.isRevealed
+  ) {
+    return undefined;
+  } else {
+    // Set optional fields only when they have non-default values.
+    return {
+      isRevealed: signerPublicKeyConfig.isRevealed,
+      ...(signerPublicKeyConfig.equalsEntry !== undefined
+        ? { equalsEntry: signerPublicKeyConfig.equalsEntry }
+        : {}),
+      ...(signerPublicKeyConfig.isMemberOf !== undefined
+        ? {
+            isMemberOf: signerPublicKeyConfig.isMemberOf
+          }
+        : {}),
+      ...(signerPublicKeyConfig.isNotMemberOf !== undefined
+        ? {
+            isNotMemberOf: signerPublicKeyConfig.isNotMemberOf
+          }
+        : {})
+    };
+  }
+}
+
+export function canonicalizeEntryConfig(
   proofEntryConfig: GPCProofEntryConfig
 ): GPCProofEntryConfig {
   // Set optional fields only when they have non-default values.
@@ -93,8 +144,72 @@ function canonicalizeEntryConfig(
     ...(proofEntryConfig.isOwnerID ? { isOwnerID: true } : {}),
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
+      : {}),
+    ...(proofEntryConfig.inRange !== undefined
+      ? {
+          inRange: {
+            min: proofEntryConfig.inRange.min,
+            max: proofEntryConfig.inRange.max
+          }
+        }
+      : {}),
+    ...(proofEntryConfig.isMemberOf !== undefined
+      ? {
+          isMemberOf: proofEntryConfig.isMemberOf
+        }
+      : {}),
+    ...(proofEntryConfig.isNotMemberOf !== undefined
+      ? {
+          isNotMemberOf: proofEntryConfig.isNotMemberOf
+        }
       : {})
   };
+}
+
+function canonicalizeTupleConfig(
+  tupleRecord: Record<PODName, GPCProofTupleConfig>
+): Record<PODName, GPCProofTupleConfig> {
+  return Object.fromEntries(
+    Object.keys(tupleRecord)
+      .sort()
+      .map((tupleName) => {
+        const tupleConfig = tupleRecord[tupleName as TupleIdentifier];
+
+        return [
+          tupleName,
+          {
+            ...tupleConfig,
+            ...(tupleConfig.isMemberOf === undefined
+              ? {}
+              : { isMemberOf: tupleConfig.isMemberOf }),
+            ...(tupleConfig.isNotMemberOf === undefined
+              ? {}
+              : { isNotMemberOf: tupleConfig.isNotMemberOf })
+          }
+        ];
+      })
+  );
+}
+
+/**
+ * Checks that the input matches the proper format for an entry name, virtual or
+ * ortherwise, as given by {@link POD_NAME_REGEX} and {@link
+ * POD_VIRTUAL_NAME_REGEX}.
+ *
+ * @param name the string to check
+ * @param strict indicator or whether this string should name an actual POD
+ * entry
+ * @returns the unmodified input, for easy chaining
+ * @throws TypeError if the format doesn't match
+ */
+export function checkPODEntryName(name?: string, strict?: boolean): string {
+  if (!name) {
+    throw new TypeError("POD entry names cannot be undefined.");
+  } else if (!strict && name.match(POD_VIRTUAL_NAME_REGEX) !== null) {
+    return name;
+  } else {
+    return checkPODName(name);
+  }
 }
 
 /**
@@ -109,7 +224,7 @@ function canonicalizeEntryConfig(
 export function checkPODEntryIdentifier(
   nameForErrorMessages: string,
   entryIdentifier: PODEntryIdentifier
-): [PODName, PODName] {
+): [PODName, PODName | PODVirtualEntryName] {
   requireType(nameForErrorMessages, entryIdentifier, "string");
   const parts = entryIdentifier.split(".");
   if (parts.length !== 2) {
@@ -117,7 +232,7 @@ export function checkPODEntryIdentifier(
       `Invalid entry identifier in ${nameForErrorMessages}.  Must have the form "objName.entryName".`
     );
   }
-  return [checkPODName(parts[0]), checkPODName(parts[1])];
+  return [checkPODName(parts[0]), checkPODEntryName(parts[1])];
 }
 
 /**
@@ -141,10 +256,170 @@ export function makePODEntryIdentifier(
  */
 export function splitPODEntryIdentifier(entryIdentifier: PODEntryIdentifier): {
   objName: PODName;
-  entryName: PODName;
+  entryName: PODName | PODVirtualEntryName;
 } {
   const names = checkPODEntryIdentifier(entryIdentifier, entryIdentifier);
   return { objName: names[0], entryName: names[1] };
+}
+
+/**
+ * Resolves a POD entry name to its value (if possible) in a given POD.
+ *
+ * @param entryName the identifier to resolve
+ * @param pod a POD
+ * @returns a POD value if the entry is found and `undefined` otherwise
+ */
+export function resolvePODEntry(
+  entryName: PODName | PODVirtualEntryName,
+  pod: POD
+): PODValue | undefined {
+  if (entryName.match(POD_NAME_REGEX) !== null) {
+    return pod?.content?.getValue(entryName);
+  }
+
+  // TODO(POD-P3): Modify for other virtual entry types when they are available by including switch statement.
+  return pod?.signerPublicKey !== undefined
+    ? PODEdDSAPublicKeyValue(pod?.signerPublicKey)
+    : undefined;
+}
+
+/**
+ * Resolves a PODEntryIdentifier to its value (if possible) given a record
+ * mapping POD names to PODs.
+ *
+ * @param entryIdentifier the identifier to resolve
+ * @param pods a record mapping POD names to PODs
+ * @returns a POD value if the entry is found and `undefined` otherwise
+ * @throws TypeError if the identifier doesn't match the required format
+ */
+export function resolvePODEntryIdentifier(
+  entryIdentifier: PODEntryIdentifier,
+  pods: Record<PODName, POD>
+): PODValue | undefined {
+  const { objName: podName, entryName: entryName } =
+    splitPODEntryIdentifier(entryIdentifier);
+  const pod = pods[podName];
+
+  return pod !== undefined ? resolvePODEntry(entryName, pod) : undefined;
+}
+
+/**
+ * POD virtual entry name predicate
+ *
+ * @param entryName the entry name to check
+ * @returns an indicator of whether the given entry name is a virtual entry name
+ */
+export function isVirtualEntryName(
+  entryName: PODName | PODVirtualEntryName
+): entryName is PODVirtualEntryName {
+  return entryName.match(POD_VIRTUAL_NAME_REGEX) !== null;
+}
+
+/**
+ * POD virtual entry identifier predicate
+ *
+ * @param entryIdentifier the entry identifier to check
+ * @returns an indicator of whether the given entry identifier is a virtual
+ * entry identifier
+ */
+export function isVirtualEntryIdentifier(entryIdentifier: string): boolean {
+  return entryIdentifier.match(POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX) !== null;
+}
+
+/**
+ * TupleIdentifier predicate
+ *
+ * @param identifier the identifier to check
+ * @returns an indicator of whether the given identifier is a tuple identifier
+ */
+export function isTupleIdentifier(
+  identifier: PODEntryIdentifier | TupleIdentifier
+): identifier is TupleIdentifier {
+  return identifier.startsWith(`${TUPLE_PREFIX}.`);
+}
+
+/**
+ * Resolves a tuple name to its value (if possible) given records
+ * mapping POD names to PODs and tuple names to tuple configurations.
+ *
+ * @param tupleName the identifier to resolve
+ * @param pods a record mapping POD names to PODs
+ * @param tuples a record mapping tuple names to tuple configurations
+ * @returns a tuple of POD values if the entry is found and `undefined` otherwise
+ */
+export function resolveTupleIdentifier(
+  tupleIdentifier: TupleIdentifier,
+  pods: Record<PODName, POD>,
+  tuples: Record<PODName, GPCProofTupleConfig>
+): PODValueTuple | undefined {
+  const tupleName = tupleIdentifier.slice(`${TUPLE_PREFIX}.`.length);
+  const tupleEntries = tuples[tupleName].entries;
+  const resolution = tupleEntries.map((entryId) =>
+    resolvePODEntryIdentifier(entryId, pods)
+  );
+  resolution.forEach((value, i) => {
+    if (value === undefined) {
+      throw new ReferenceError(
+        `POD entry value identifier ${tupleEntries[i]} in tuple ${tupleName} does not have a value.`
+      );
+    }
+  });
+
+  return resolution as PODValue[];
+}
+
+/**
+ * Resolves a POD entry or tuple identifier to its value (if possible) given
+ * records mapping POD names to PODs and tuple names to tuple configurations.
+ *
+ * @param identifier the identifier to resolve
+ * @param pods a record mapping POD names to PODs
+ * @param tuples a record mapping tuple names to tuple configurations
+ * @returns a POD value or tuple of POD values if the entry is found and
+ * `undefined` otherwise
+ * @throws TypeError if the identifier doesn't match the required format
+ * @throws ReferenceError if there is a reference to a non-existent tuple
+ */
+export function resolvePODEntryOrTupleIdentifier(
+  identifier: PODEntryIdentifier | TupleIdentifier,
+  pods: Record<PODName, POD>,
+  tuples: Record<TupleIdentifier, GPCProofTupleConfig> | undefined
+): PODValue | PODValueTuple | undefined {
+  return isTupleIdentifier(identifier)
+    ? ((): PODValue | PODValueTuple | undefined => {
+        if (tuples === undefined) {
+          throw new ReferenceError(
+            `Identifier ${identifier} refers to tuple but proof configuration does not specify any.`
+          );
+        } else {
+          return resolveTupleIdentifier(
+            identifier as TupleIdentifier,
+            pods,
+            tuples
+          );
+        }
+      })()
+    : resolvePODEntryIdentifier(identifier, pods);
+}
+
+/**
+ * Determines the arity/width of an entry or tuple value, where entry values
+ * have width 1 by convention.
+ *
+ * Examples:
+ *
+ * widthOfEntryOrTuple({type: "cryptographic", value: 55n})
+ *  === 1
+ *
+ * widthOfEntryOrTuple([{type: "cryptographic", value: 55n},
+ *                     {type: "int", value: 99n})
+ *  === 2
+ *
+ * @param value a POD value or tuple of POD values
+ * @returns the width of the value type
+ */
+export function widthOfEntryOrTuple(value: PODValue | PODValue[]): number {
+  return Array.isArray(value) ? value.length : 1;
 }
 
 /**
@@ -215,49 +490,279 @@ export function makeWatermarkSignal(podValue: PODValue | undefined): bigint {
   return getPODValueForCircuit(podValue) ?? podValueHash(podValue);
 }
 
-// TODO(POD-P2): Get rid of everything below this line.
+/**
+ * General-purpose circuit requirements for a given proof.
+ * These values will be appropriately checked against the circuits at our
+ * disposal in order to accommodate all of the proof requirements. For the
+ * objects, entries, Merkle tree depth and membership list sizes, this amounts
+ * to picking the circuit description whose corresponding parameters exceed
+ * these numbers, while the choice of tuple parameters is more involved.
+ */
+export type GPCRequirements = {
+  /**
+   * Number of POD objects which can be included in a proof.
+   */
+  nObjects: number;
 
-// Stopgap until membership list compilation is ready.
-export const DEFAULT_MAX_LISTS = 1;
-export const DEFAULT_MAX_LIST_ELEMENTS = 1;
-export const DEFAULT_MAX_TUPLES = 1;
-export const DEFAULT_TUPLE_ARITY = 2;
+  /**
+   * Number of POD entries which can be included in a proof.
+   */
+  nEntries: number;
 
-// Returns default values for the input to the (multi)tuple module, viz.
-// an array of tuples of 0, which corresponds to choosing the 0th entry
-// value hash. Since these are not constrained anywhere (i.e. not in the
-// list membership check, cf. below), there is no effect on the underlying
-// logic.
-export function dummyTuples(circuitDesc: ProtoPODGPCCircuitDesc): {
-  tupleIndices: CircuitSignal[][];
-} {
+  /**
+   * Depth of POD merkle tree in the largest POD which can be included in a
+   * proof.  Max entries in any object is 2^(depth-1).
+   */
+  merkleMaxDepth: number;
+
+  /**
+   * Number of numeric values (bounds checks) required for the proof.
+   */
+  nNumericValues: number;
+
+  /**
+   * Number of lists to be included in proof.
+   */
+  nLists: number;
+
+  /**
+   * Maximum list size of each list to be included in the proof.
+   */
+  maxListSize: number;
+
+  /**
+   * Arities (sizes) of tuples which can included in a proof.
+   */
+  tupleArities: Record<PODName, number>;
+};
+
+/**
+ * GPCRequirements constructor.
+ */
+export function GPCRequirements(
+  nObjects: number,
+  nEntries: number,
+  merkleMaxDepth: number,
+  nNumericValues: number = 0,
+  nLists: number = 0,
+  maxListSize: number = 0,
+  tupleArities: Record<PODName, number> = {}
+): GPCRequirements {
   return {
-    tupleIndices: padArray(
-      [],
-      circuitDesc.maxTuples,
-      padArray([], circuitDesc.tupleArity, 0n)
-    )
+    nObjects,
+    nEntries,
+    merkleMaxDepth,
+    nNumericValues,
+    nLists,
+    maxListSize,
+    tupleArities
   };
 }
 
-// Returns default values for the inputs to the list membership module, viz.
-// a comparison value index of -1, which is a reference to the value 0, and
-// a list of valid values consisting of zeroes. This results in the list
-// membership check being trivially satisfied.
-export function dummyListMembership(circuitDesc: ProtoPODGPCCircuitDesc): {
-  listComparisonValueIndex: CircuitSignal[];
-  listValidValues: CircuitSignal[][];
-} {
-  return {
-    listComparisonValueIndex: padArray(
-      [],
-      circuitDesc.maxLists,
-      BABY_JUB_NEGATIVE_ONE
-    ),
-    listValidValues: padArray(
-      [],
-      circuitDesc.maxLists,
-      padArray([], circuitDesc.maxListElements, 0n)
+/**
+ * Enumerated type for list membership check type.
+ */
+export type ListMembershipEnum =
+  | typeof LIST_MEMBERSHIP
+  | typeof LIST_NONMEMBERSHIP;
+export const LIST_MEMBERSHIP = "membership";
+export const LIST_NONMEMBERSHIP = "non-membership";
+
+/**
+ * Configuration for bounds checks arranged by entry identifier requiring a
+ * bounds check.
+ *
+ * This is deduced from the proof configuration in
+ * {@link boundsCheckConfigFromProofConfig}.
+ */
+export type GPCProofBoundsCheckConfig = Record<
+  PODEntryIdentifier,
+  BoundsConfig
+>;
+
+/**
+ * Configuration for named lists arranged by identifier requiring a list
+ * (non-)membership check.
+ *
+ * This is deduced from the proof configuration in
+ * {@link listConfigFromProofConfig}.
+ */
+export type GPCProofMembershipListConfig = Record<
+  PODEntryIdentifier | TupleIdentifier,
+  ListConfig
+>;
+
+/**
+ * Bounds check configuration for an individual entry. This specifies the bounds
+ * check required for relevant entries at the circuit level.
+ */
+export type BoundsConfig = { min: bigint; max: bigint };
+
+/**
+ * List configuration for an individual entry or tuple. This specifies the type
+ * of list membership required for relevant entries (or tuple entries) at the
+ * circuit level as well as the named list it should be a (non-)member of.
+ */
+export type ListConfig = {
+  type: ListMembershipEnum;
+  listIdentifier: PODName;
+};
+
+/**
+ * Determines the bounds check configuration from the proof configuration.
+ *
+ * Bounds checks are indicated in each entry field via the optional property
+ * `inRange`, which specifies (public) constant upper and lower bounds. This
+ * procedure singles out and arranges these bounds check configurations by entry
+ * identifier.
+ *
+ * @param proofConfig the proof configuration
+ * @returns a record mapping entry identifiers to their bounds check
+ * configurations
+ */
+export function boundsCheckConfigFromProofConfig(
+  proofConfig: GPCProofConfig
+): GPCProofBoundsCheckConfig {
+  return Object.fromEntries(
+    Object.entries(proofConfig.pods).flatMap(([podName, podConfig]) =>
+      Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) =>
+        entryConfig.inRange === undefined
+          ? []
+          : [[`${podName}.${entryName}`, entryConfig.inRange]]
+      )
     )
+  );
+}
+
+/**
+ * Determines the list configuration from the proof configuration.
+ *
+ * List membership or non-membership is indicated in each entry or tuple field
+ * via the optional property `isMemberOf` or `isNotMemberOf`, each of which
+ * specifies the name of a list it ought to or ought not lie in, the list itself
+ * being specified in the proof inputs. This procedure singles out and arranges
+ * these list membership configurations by identifier.
+ *
+ * @param proofConfig the proof configuration
+ * @returns a record mapping entry or tuple identifiers to their list
+ * configurations
+ * @throws TypeError if both membership and non-membership are specified for a
+ * given entry
+ */
+export function listConfigFromProofConfig(
+  proofConfig: GPCProofConfig
+): GPCProofMembershipListConfig {
+  const gpcListConfig: GPCProofMembershipListConfig = {};
+
+  // Check entries and signer's public keys for membership declarations.
+  for (const podName of Object.keys(proofConfig.pods)) {
+    const pod = proofConfig.pods[podName];
+
+    addIdentifierToListConfig(
+      gpcListConfig,
+      pod.signerPublicKey,
+      `${podName}.$signerPublicKey`
+    );
+
+    for (const entryName of Object.keys(pod.entries)) {
+      const entryConfig = pod.entries[entryName];
+
+      addIdentifierToListConfig(
+        gpcListConfig,
+        entryConfig,
+        `${podName}.${entryName}`
+      );
+    }
+  }
+
+  // Do the same for tuples
+  for (const tupleName of Object.keys(proofConfig.tuples ?? {})) {
+    const tupleConfig = (proofConfig.tuples ?? {})[tupleName];
+
+    addIdentifierToListConfig(
+      gpcListConfig,
+      tupleConfig,
+      `${TUPLE_PREFIX}.${tupleName}`
+    );
+  }
+
+  return gpcListConfig;
+}
+
+/**
+ * Adds (entry or tuple) identifier and its list config to the list membership
+ * configuration of a GPC. This is used as part of the list configuration
+ * compilation process for its side-effects.
+ *
+ * @param gpcListConfig list membership configuration of a GPC
+ * @param entryConfig GPC proof entry or tuple configuration
+ * @param identifier the identifier of the entry (or tuple)
+ * @throws TypeError if both membership and non-membership are specified
+ */
+function addIdentifierToListConfig(
+  gpcListConfig: GPCProofMembershipListConfig,
+  entryConfig: GPCProofEntryConfigCommon | GPCProofTupleConfig | undefined,
+  identifier: PODEntryIdentifier | TupleIdentifier
+): void {
+  // Nothing to do if both membership and non-membership lists are undefined.
+  if (
+    entryConfig?.isMemberOf === undefined &&
+    entryConfig?.isNotMemberOf === undefined
+  ) {
+    return;
+  }
+
+  // Throw an error of both membership and non-membership and specified, since
+  // specifying both is really just a membership requirement, where the list is
+  // the set difference of the membership and non-membership lists.
+  if (
+    entryConfig.isMemberOf !== undefined &&
+    entryConfig.isNotMemberOf !== undefined
+  ) {
+    throw new Error(
+      `Both membership and non-membership lists are specified in the configuration of ${identifier}.`
+    );
+  }
+
+  const membershipType: ListMembershipEnum =
+    entryConfig.isMemberOf !== undefined ? LIST_MEMBERSHIP : LIST_NONMEMBERSHIP;
+
+  const listIdentifier: PODName = (
+    membershipType === LIST_MEMBERSHIP
+      ? entryConfig.isMemberOf
+      : entryConfig.isNotMemberOf
+  ) as PODName;
+
+  gpcListConfig[identifier] = {
+    type: membershipType,
+    listIdentifier
   };
+}
+
+/**
+ * Compares two POD entry identifiers according to the rule that they should be
+ * arranged by POD name first then entry name with the usual rules for
+ * lexicographic string sorting.
+ *
+ * @param id1 POD entry identifier to compare
+ * @param id2 POD entry identifier to compare
+ * @returns -1, 0 or 1 according to whether `id1` should precede, be considered
+ * equal to, or succeed `id2`.
+ * @throws TypeError if an identifier doesn't match the required format
+ */
+export function podEntryIdentifierCompare(
+  id1: PODEntryIdentifier,
+  id2: PODEntryIdentifier
+): number {
+  const { objName: podName1, entryName: entryName1 } =
+    splitPODEntryIdentifier(id1);
+  const { objName: podName2, entryName: entryName2 } =
+    splitPODEntryIdentifier(id2);
+  if (podName1 < podName2) {
+    return -1;
+  } else if (podName1 > podName2) {
+    return 1;
+  } else {
+    return entryName1 < entryName2 ? -1 : entryName1 > entryName2 ? 1 : 0;
+  }
 }

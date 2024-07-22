@@ -99,7 +99,10 @@ export async function makeTicketPCD(
       return undefined;
     }
 
-    if (!issueToUnmatchedEmail && ticket.attendeeEmail !== requesterEmail) {
+    if (
+      !issueToUnmatchedEmail &&
+      ticket.attendeeEmail.toLowerCase() !== requesterEmail.toLowerCase()
+    ) {
       return undefined;
     }
 

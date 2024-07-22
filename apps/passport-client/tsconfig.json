@@ -62,6 +62,9 @@
       "path": "../../packages/ui/ethereum-ownership-pcd-ui"
     },
     {
+      "path": "../../packages/lib/gpc"
+    },
+    {
       "path": "../../packages/pcd/gpc-pcd"
     },
     {
@@ -78,6 +81,9 @@
     },
     {
       "path": "../../packages/ui/message-pcd-ui"
+    },
+    {
+      "path": "../../packages/pcd/obj-pcd"
     },
     {
       "path": "../../packages/lib/passport-crypto"

@@ -90,6 +90,8 @@ export interface UploadEncryptedStorageRequest {
    * existing revision.
    */
   knownRevision?: string;
+
+  pcd?: SerializedPCD;
 }
 
 /**
@@ -181,6 +183,12 @@ export interface ChangeBlobKeyRequest {
    * existing revision.
    */
   knownRevision?: string;
+
+  /**
+   * Signature PCD by the user who is changing the blob key.  This is used to
+   * associate the e2ee storage with the user's identity.
+   */
+  pcd?: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
 /**
@@ -492,6 +500,28 @@ export interface PipelineInfoConsumer {
   timeUpdated: string;
 }
 
+export interface PipelineSetManualCheckInStateRequest {
+  ticketId: string;
+  checkInState: boolean;
+}
+
+export interface PipelineSetManualCheckInStateResponseValue {
+  checkInState: boolean;
+}
+
+export interface PipelineCheckinSummary {
+  ticketId: string;
+  ticketName: string;
+  email: string;
+  timestamp: string;
+  checkerEmail?: string | undefined;
+  checkedIn: boolean;
+}
+
+export interface PipelineGetManualCheckInsResponseValue {
+  checkIns: PipelineCheckinSummary[];
+}
+
 export interface PipelineEdDSATicketZuAuthConfig {
   pcdType: typeof EdDSATicketPCDTypeName;
   publicKey: EdDSAPublicKey;
@@ -610,7 +640,10 @@ export type VerifyTokenRequest = {
  * a password and store their encryption key on our server.
  * {@link VerifyTokenRequest}.
  */
-export type VerifyTokenResponseValue = { encryptionKey: string | null };
+export type VerifyTokenResponseValue = {
+  encryptionKey: string | null;
+  authKey: string | null;
+};
 
 /**
  * Ask the server to log us in using a special login flow designed
@@ -635,6 +668,17 @@ export type CreateNewUserRequest = {
   encryptionKey: string | undefined;
   autoRegister?: boolean;
 };
+
+export type OneClickLoginRequest = {
+  email: string;
+  code: string;
+  commitment: string;
+  encryptionKey: string;
+};
+
+export type OneClickLoginResponseValue =
+  | { isNewUser: true; zupassUser: ZupassUserJson; authKey: string }
+  | { isNewUser: false; encryptionKey: string | null; authKey: string };
 
 /**
  * Zupass responds with this when you ask it if it is able to
@@ -662,6 +706,11 @@ export type LoadUserError =
  * When you ask Zupass for a user, it will respond with this type.
  */
 export type UserResponseValue = ZupassUserJson;
+
+/**
+ * When you ask Zupass to create a new user, it will respond with this type.
+ */
+export type NewUserResponseValue = ZupassUserJson & { authKey: string };
 
 /**
  * Zupass responds with this when you ask it if it knows of a given
@@ -732,6 +781,10 @@ export interface AgreeTermsPayload {
  * When a user agrees to new legal terms, they send us a signed proof.
  */
 export interface AgreeTermsRequest {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+export interface DeleteAccountRequest {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
@@ -1144,3 +1197,17 @@ export type GenericIssuanceValidSemaphoreGroupResponseValue = {
 };
 
 export type GenericIssuanceSemaphoreGroupRootResponseValue = string;
+
+export const enum PipelineEmailType {
+  EsmeraldaOneClick = "EsmeraldaOneClick"
+}
+
+export type GenericIssuanceSendPipelineEmailRequest = {
+  jwt: string;
+  pipelineId: string;
+  email: PipelineEmailType;
+};
+
+export type GenericIssuanceSendPipelineEmailResponseValue = {
+  queued: number;
+};

@@ -51,8 +51,6 @@ export type PODEntryCircuitSignals = {
  * to produce a root hash called the Content ID, which is then signed.  To
  * create a POD, use one of the static factory methods of this class.
  *
- * TODO(POD-P3): Pointer to more detailed documention elsewhere.
- *
  * `PODContent` instances are usually contained in a signed `POD` instance.
  */
 export class PODContent {

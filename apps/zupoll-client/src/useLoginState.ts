@@ -1,13 +1,14 @@
 import { LoginConfig } from "@pcd/zupoll-shared";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { LOGIN_GROUPS, LoginGroup } from "./api/loginGroups";
+import { redirectForLogin } from "./app/login/LoginButton";
 import { LoginState } from "./types";
-import { getLoginRedirectUrl } from "./zupoll-server-api";
 
 const ACCESS_TOKEN_KEY = "access_token";
 const CONFIGURATION_KEY = "configuration";
 const STATE_VERSION_KEY = "state_version";
-const LATEST_STATE_VERSION = "5";
+const LATEST_STATE_VERSION = "6";
 
 export function loadLoginStateFromLocalStorage(): LoginState | undefined {
   const savedToken: string | undefined = localStorage[ACCESS_TOKEN_KEY];
@@ -36,7 +37,17 @@ export function loadLoginStateFromLocalStorage(): LoginState | undefined {
 }
 
 export function clearLoginStateFromLocalStorage(): void {
+  let preloginRoute = getPreloginRouteFromLocalStorage();
+  let pendingVote = localStorage.getItem("pending-vote");
+  let voted = localStorage.getItem("voted");
   localStorage.clear();
+  savePreLoginRouteToLocalStorage(preloginRoute);
+  if (pendingVote) {
+    localStorage.setItem("pending-vote", pendingVote);
+  }
+  if (voted) {
+    localStorage.setItem("voted", voted);
+  }
 }
 
 export function saveLoginStateToLocalStorage(
@@ -72,20 +83,21 @@ export function useSavedLoginState(router: AppRouterInstance): SavedLoginState {
     saveLoginStateToLocalStorage(state);
   }, []);
 
-  const logout = useCallback(
-    (ballotURL?: string) => {
-      replaceLoginState(undefined);
-      (async () => {
-        // If we have a ballot URL, try to find the ballot-specific redirect
-        const redirectUrl = ballotURL
-          ? await getLoginRedirectUrl(ballotURL)
-          : // Otherwise redirect to the regular login page
-            "/";
-        router.push(redirectUrl);
-      })();
-      delete localStorage.preLoginRoute;
+  const logout: SavedLoginState["logout"] = useCallback(
+    (configId?: string, ballotConfigId?: string) => {
+      saveLoginStateToLocalStorage(undefined);
+      const loginConfig = findLoginConfig(
+        LOGIN_GROUPS,
+        configId,
+        ballotConfigId
+      );
+      if (loginConfig) {
+        redirectForLogin(loginConfig);
+      } else {
+        window.location.href = "/";
+      }
     },
-    [replaceLoginState, router]
+    []
   );
 
   const definitelyNotLoggedIn = useMemo(() => {
@@ -106,5 +118,41 @@ export interface SavedLoginState {
   isLoading: boolean;
   definitelyNotLoggedIn: boolean;
   replaceLoginState: (state: LoginState | undefined) => void;
-  logout: (ballotURL?: string) => void;
+  logout: (configId?: string, ballotConfigId?: string) => void;
+}
+
+const PRE_LOGIN_ROUTE_KEY = "preLoginRoute";
+
+function getPreloginRouteFromLocalStorage(): string | undefined {
+  return localStorage.getItem(PRE_LOGIN_ROUTE_KEY) ?? undefined;
+}
+
+export function clearPreLoginRouteFromLocalStorage(): void {
+  localStorage.removeItem(PRE_LOGIN_ROUTE_KEY);
+}
+
+export function getAndDeletePreLoginRouteFromLocalStorage():
+  | string
+  | undefined {
+  const url = getPreloginRouteFromLocalStorage();
+  clearPreLoginRouteFromLocalStorage();
+  return url;
+}
+
+export function savePreLoginRouteToLocalStorage(url: string | undefined): void {
+  if (!url) {
+    clearPreLoginRouteFromLocalStorage();
+  } else {
+    localStorage.setItem(PRE_LOGIN_ROUTE_KEY, url);
+  }
+}
+
+export function findLoginConfig(
+  groups: LoginGroup[],
+  configId?: string,
+  ballotConfigId?: string
+) {
+  const group = groups.find((g) => g.category === configId);
+  const loginConfig = group?.configs.find((c) => c.name === ballotConfigId);
+  return loginConfig;
 }

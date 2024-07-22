@@ -32,7 +32,9 @@ export function LoginInterstitialScreen(): JSX.Element {
             console.log("Redirecting to add screen");
             const encReq = encodeURIComponent(pendingRequest.value);
             clearAllPendingRequests();
-            navigate("/add?request=" + encReq, { replace: true });
+            navigate("/add?request=" + encReq + "&autoAdd=true", {
+              replace: true
+            });
             break;
           }
           case "halo": {

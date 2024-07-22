@@ -1,54 +1,137 @@
-import {
-  FieldLabel,
-  HiddenText,
-  Separator,
-  Spacer,
-  styled
-} from "@pcd/passport-ui";
+import { Button, ErrorContainer, Separator } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
-import { podEntriesToSimplifiedJSON } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
+import { getErrorMessage } from "@pcd/util";
 import { useState } from "react";
+import { CollectablePODPCDCardBody } from "./renderers/CollectablePODPCDCardBody";
+import { DefaultPODPCDCardBody } from "./renderers/DefaultPODPCDCardBody";
+import { Container } from "./shared";
 
 export const PODPCDUI: PCDUI<PODPCD> = {
   renderCardBody: PODPCDCardBody
 };
 
+enum PODDisplayFormat {
+  POD = "pod",
+  Collectable = "collectable"
+}
+
 /**
  * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
 function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
-  const [sigStatus, setSigStatus] = useState("unvalidated");
+  const [sigStatus, setSigStatus] = useState<number>(0);
+  const [error, setError] = useState<string | undefined>();
+
+  const availableDisplayFormat = getPreferredDisplayFormat(pcd);
+  const [displayFormat, setDisplayFormat] = useState<PODDisplayFormat>(
+    availableDisplayFormat || PODDisplayFormat.POD
+  );
+  const otherDisplayFormat =
+    displayFormat === PODDisplayFormat.POD
+      ? availableDisplayFormat
+      : PODDisplayFormat.POD;
+
+  let content = <></>;
+  switch (displayFormat) {
+    case PODDisplayFormat.Collectable:
+      content = <CollectablePODPCDCardBody pcd={pcd} />;
+      break;
+    case PODDisplayFormat.POD:
+    // Fallthrough
+    default:
+      content = <DefaultPODPCDCardBody pcd={pcd} />;
+      break;
+  }
+
+  const sigButtonColor: React.CSSProperties = {};
+  if (sigStatus > 0) {
+    sigButtonColor.color = "white";
+    sigButtonColor.background = "green";
+  } else if (sigStatus < 0) {
+    sigButtonColor.color = "white";
+    sigButtonColor.background = "var(--danger)";
+  }
 
   return (
     <Container>
-      <p>This PCD represents a signed POD (Provable Object Data)</p>
+      {content}
+
       <Separator />
-      <FieldLabel>POD Entries</FieldLabel>
-      <pre>{podEntriesToSimplifiedJSON(pcd.claim.entries, 2)}</pre>
-      <Spacer h={8} />
-      <FieldLabel>EdDSA Public Key</FieldLabel>
-      <HiddenText text={pcd.claim.signerPublicKey} />
-      <FieldLabel>EdDSA Signature</FieldLabel>
-      <HiddenText text={pcd.proof.signature} />
-      <label>
-        <button
+      {otherDisplayFormat === undefined ? null : (
+        <Button
+          style="secondary"
+          size="small"
           onClick={async (): Promise<void> =>
-            setSigStatus(
-              (await PODPCDPackage.verify(pcd)) ? "valid ✅" : "invalid ❌"
-            )
+            setDisplayFormat(otherDisplayFormat || "pod")
           }
+          styles={{ float: "left" }}
         >
-          Check
-        </button>
-        Signature is {sigStatus}
-      </label>
+          View as {getFormatDisplayName(otherDisplayFormat)}
+        </Button>
+      )}
+
+      <Button
+        style="primary"
+        size="small"
+        onClick={async (): Promise<void> => {
+          setError(undefined);
+          const sigResult = await verifySignature(pcd);
+          setError(sigResult.errorMessage);
+          setSigStatus(sigResult.isValid ? 1 : -1);
+        }}
+        styles={{ float: "right", ...sigButtonColor }}
+      >
+        {sigStatus === 0
+          ? "Check signature"
+          : sigStatus > 0
+          ? "Valid signature"
+          : error !== undefined
+          ? "Signature error!"
+          : "Bad signature!"}
+      </Button>
+      {error === undefined ? null : <ErrorContainer>{error}</ErrorContainer>}
     </Container>
   );
 }
 
-const Container = styled.div`
-  padding: 16px;
-  overflow: hidden;
-  width: 100%;
-`;
+function getFormatDisplayName(displayFormat: PODDisplayFormat): string {
+  switch (displayFormat) {
+    case PODDisplayFormat.POD:
+      return "POD";
+    case PODDisplayFormat.Collectable:
+      return "Card";
+  }
+}
+
+function getPreferredDisplayFormat(
+  podpcd: PODPCD
+): PODDisplayFormat | undefined {
+  const displayEntry = podpcd.claim.entries["zupass_display"]?.value;
+  if (
+    displayEntry !== undefined &&
+    typeof displayEntry === "string" &&
+    displayEntry !== PODDisplayFormat.POD
+  ) {
+    if (
+      Object.values(PODDisplayFormat).indexOf(
+        displayEntry as PODDisplayFormat
+      ) !== -1
+    ) {
+      return displayEntry as PODDisplayFormat;
+    }
+  }
+  return undefined;
+}
+
+async function verifySignature(pcd: PODPCD): Promise<{
+  isValid: boolean;
+  errorMessage?: string;
+}> {
+  try {
+    const isValid = await PODPCDPackage.verify(pcd);
+    return { isValid };
+  } catch (e) {
+    return { isValid: false, errorMessage: getErrorMessage(e) };
+  }
+}

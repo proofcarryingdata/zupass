@@ -91,6 +91,7 @@ export function MainScreen({
 
         <ErrorDialog
           error={error}
+          logout={logout}
           close={() => {
             setError(undefined);
             router.push("/");

@@ -1,3 +1,4 @@
+import { parseGPCArtifactsConfig } from "@pcd/client-shared";
 import urljoin from "url-join";
 
 export const PCD_GITHUB_URL = "https://github.com/proofcarryingdata/pcd";
@@ -52,3 +53,7 @@ export const CONSUMER_SERVER_URL = CONSUMER_SERVER_URL_ENV
   : IS_STAGING
   ? "https://consumer-server-staging.onrender.com/"
   : "http://localhost:3003/";
+
+export const GPC_ARTIFACT_CONFIG = parseGPCArtifactsConfig(
+  sanitizeEnv(process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE)
+);

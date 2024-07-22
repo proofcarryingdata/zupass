@@ -40,7 +40,8 @@ import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsS
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 import { PipelineVersionHistorySection } from "./DetailsSections/PipelineVersionHistorySection";
 import { PipelineZuAuthConfigSection } from "./DetailsSections/PipelineZuAuthConfig";
-import { SectionContainer } from "./SectionContainer";
+import { SendEmailSection } from "./DetailsSections/SendEmailSection";
+import { CappedSectionContainer, SectionContainer } from "./SectionContainer";
 
 export function PipelineDetailSection({
   pipelineInfo,
@@ -106,11 +107,11 @@ export function PipelineDetailSection({
         <AccordionItem>
           <AccordionButton>Feed Subscribers</AccordionButton>
           <AccordionPanel>
-            <SectionContainer>
+            <CappedSectionContainer>
               <PipelineLatestConsumersSection
                 latestConsumers={pipelineInfo.latestConsumers}
               />
-            </SectionContainer>
+            </CappedSectionContainer>
           </AccordionPanel>
         </AccordionItem>
 
@@ -128,11 +129,11 @@ export function PipelineDetailSection({
         <AccordionItem>
           <AccordionButton>ZuAuth Config</AccordionButton>
           <AccordionPanel>
-            <SectionContainer>
+            <CappedSectionContainer>
               <PipelineZuAuthConfigSection
                 pipelineZuAuthConfig={pipelineInfo.zuAuthConfig}
               />
-            </SectionContainer>
+            </CappedSectionContainer>
           </AccordionPanel>
         </AccordionItem>
 
@@ -156,9 +157,9 @@ export function PipelineDetailSection({
         <AccordionItem>
           <AccordionButton>Version History</AccordionButton>
           <AccordionPanel>
-            <SectionContainer>
+            <CappedSectionContainer>
               <PipelineVersionHistorySection pipelineInfo={pipelineInfo} />
-            </SectionContainer>
+            </CappedSectionContainer>
           </AccordionPanel>
         </AccordionItem>
 
@@ -187,12 +188,12 @@ export function PipelineDetailSection({
                   <Badge colorScheme="gray">Admin</Badge>
                 </AccordionButton>
                 <AccordionPanel>
-                  <SectionContainer>
+                  <CappedSectionContainer>
                     <PipelineDisplayManualTicketsSection
                       pipeline={pipeline}
                       isAdminView={isAdminView}
                     />
-                  </SectionContainer>
+                  </CappedSectionContainer>
                 </AccordionPanel>
               </AccordionItem>
             )}
@@ -221,6 +222,17 @@ export function PipelineDetailSection({
                       </PodLink>
                     </ListItem>
                   </UnorderedList>
+                </SectionContainer>
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <AccordionButton>
+                Email Send&nbsp;<Badge colorScheme="gray">Admin</Badge>
+              </AccordionButton>
+              <AccordionPanel>
+                <SectionContainer>
+                  <SendEmailSection pipeline={pipeline} />
                 </SectionContainer>
               </AccordionPanel>
             </AccordionItem>

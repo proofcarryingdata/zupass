@@ -20,3 +20,5 @@ export const ECD_2024_END = Date.parse("March 4, 2024, 00:00:00 UTC-7");
 
 export const OUTDATED_BROWSER_ERROR_MESSAGE =
   "SecurityError: The operation is insecure";
+
+export const OOM_ERROR_MESSAGE = "Out of memory";

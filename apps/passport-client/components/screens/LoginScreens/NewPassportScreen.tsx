@@ -6,13 +6,13 @@ import {
   requestPasswordSalt,
   requestVerifyToken
 } from "@pcd/passport-interface";
-import { ZUPASS_SENDER_EMAIL, getErrorMessage } from "@pcd/util";
+import { Button, LinkButton } from "@pcd/passport-ui";
+import { ZUPASS_SENDER_EMAIL, getErrorMessage, sleep } from "@pcd/util";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useIdentity, useQuery } from "../../../src/appHooks";
 import { err } from "../../../src/util";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
-import { Button, LinkButton } from "../../core/Button";
 import { ConfirmationCodeInput } from "../../core/Input";
 import { AppContainer } from "../../shared/AppContainer";
 import { InlineError } from "../../shared/InlineError";
@@ -94,9 +94,14 @@ function SendEmailVerification({ email }: { email: string }): JSX.Element {
               );
             }
           } else {
-            window.location.hash = `#/privacy-notice?email=${encodeURIComponent(
-              email
-            )}&token=${encodeURIComponent(token)}`;
+            await sleep();
+            await dispatch({
+              type: "create-user-skip-password",
+              email,
+              token,
+              targetFolder: undefined,
+              autoRegister: false
+            });
           }
         } catch (e) {
           setError(

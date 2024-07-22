@@ -1,6 +1,6 @@
 import { HexString } from "@pcd/passport-crypto";
 import urlJoin from "url-join";
-import { CreateNewUserRequest, UserResponseValue } from "../RequestTypes";
+import { CreateNewUserRequest, NewUserResponseValue } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
@@ -22,7 +22,7 @@ export async function requestCreateNewUser(
   return httpPostSimple(
     urlJoin(zupassServerUrl, "/account/new-participant"),
     async (resText) => ({
-      value: JSON.parse(resText) as UserResponseValue,
+      value: JSON.parse(resText) as NewUserResponseValue,
       success: true
     }),
     {
@@ -36,4 +36,4 @@ export async function requestCreateNewUser(
   );
 }
 
-export type NewUserResult = APIResult<UserResponseValue>;
+export type NewUserResult = APIResult<NewUserResponseValue>;

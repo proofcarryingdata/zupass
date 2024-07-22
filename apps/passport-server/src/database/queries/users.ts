@@ -20,7 +20,7 @@ export async function fetchUserByEmail(
 }
 
 /**
- * Fetches the user row corresponding to a particular email from the database.
+ * Fetches the user row corresponding to a particular uuid from the database.
  */
 export async function fetchUserByUUID(
   client: Pool,
@@ -29,6 +29,22 @@ export async function fetchUserByUUID(
   const result = await sqlQuery(client, `select * from users where uuid = $1`, [
     uuid
   ]);
+
+  return result.rows[0] || null;
+}
+
+/**
+ * Fetches the user row corresponding to a particular auth_key from the database.
+ */
+export async function fetchUserByAuthKey(
+  client: Pool,
+  authKey: string
+): Promise<UserRow | null> {
+  const result = await sqlQuery(
+    client,
+    `select * from users where auth_key = $1`,
+    [authKey]
+  );
 
   return result.rows[0] || null;
 }

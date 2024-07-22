@@ -21,15 +21,27 @@ const CIRCUIT_PARAMETERS = [
     maxObjects: 1,
     maxEntries: 1,
     merkleMaxDepth: 5,
-    maxLists: 1,
-    maxListElements: 10,
-    maxTuples: 2,
-    tupleArity: 2
+    maxNumericValues: 0,
+    maxLists: 0,
+    maxListElements: 0,
+    maxTuples: 0,
+    tupleArity: 0
   },
   {
     maxObjects: 1,
     maxEntries: 5,
     merkleMaxDepth: 6,
+    maxNumericValues: 2,
+    maxLists: 0,
+    maxListElements: 0,
+    maxTuples: 0,
+    tupleArity: 0
+  },
+  {
+    maxObjects: 3,
+    maxEntries: 10,
+    merkleMaxDepth: 8,
+    maxNumericValues: 2,
     maxLists: 1,
     maxListElements: 10,
     maxTuples: 2,
@@ -39,19 +51,21 @@ const CIRCUIT_PARAMETERS = [
     maxObjects: 3,
     maxEntries: 10,
     merkleMaxDepth: 8,
-    maxLists: 1,
-    maxListElements: 10,
-    maxTuples: 2,
-    tupleArity: 2
-  },
-  {
-    maxObjects: 3,
-    maxEntries: 10,
-    merkleMaxDepth: 8,
+    maxNumericValues: 4,
     maxLists: 2,
     maxListElements: 20,
     maxTuples: 1,
     tupleArity: 4
+  },
+  {
+    maxObjects: 3,
+    maxEntries: 10,
+    merkleMaxDepth: 8,
+    maxNumericValues: 4,
+    maxLists: 4,
+    maxListElements: 20,
+    maxTuples: 5,
+    tupleArity: 2
   }
 ];
 

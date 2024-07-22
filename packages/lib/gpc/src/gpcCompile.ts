@@ -7,20 +7,28 @@ import {
   ProtoPODGPCOutputs,
   ProtoPODGPCPublicInputs,
   array2Bits,
-  extendedSignalArray
+  computeTupleIndices,
+  extendedSignalArray,
+  hashTuple,
+  padArray,
+  paramMaxVirtualEntries
 } from "@pcd/gpcircuits";
 import {
   POD,
+  PODEdDSAPublicKeyValue,
   PODName,
   PODValue,
+  PODValueTuple,
   decodePublicKey,
   decodeSignature,
   podNameHash,
   podValueHash
 } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import _ from "lodash";
 import {
   GPCBoundConfig,
+  GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofInputs,
   GPCProofObjectConfig,
@@ -28,12 +36,20 @@ import {
   GPCRevealedClaims,
   GPCRevealedObjectClaims,
   GPCRevealedOwnerClaims,
-  PODEntryIdentifier
+  PODEntryIdentifier,
+  TUPLE_PREFIX,
+  TupleIdentifier
 } from "./gpcTypes";
 import {
-  dummyListMembership,
-  dummyTuples,
-  makeWatermarkSignal
+  GPCProofMembershipListConfig,
+  LIST_MEMBERSHIP,
+  boundsCheckConfigFromProofConfig,
+  isTupleIdentifier,
+  isVirtualEntryIdentifier,
+  isVirtualEntryName,
+  listConfigFromProofConfig,
+  makeWatermarkSignal,
+  podEntryIdentifierCompare
 } from "./gpcUtil";
 
 /**
@@ -43,7 +59,7 @@ type CompilerObjInfo<ObjInput> = {
   objName: PODName;
   objIndex: number;
   objConfig: GPCProofObjectConfig;
-  objInput: ObjInput;
+  objInput: ObjInput | undefined;
 };
 
 /**
@@ -55,11 +71,24 @@ type CompilerEntryInfo<ObjInput> = {
   objName: PODName;
   objIndex: number;
   objConfig: GPCProofObjectConfig;
-  objInput: ObjInput;
+  objInput: ObjInput | undefined;
   entryName: PODEntryIdentifier;
   entryIndex: number;
   entryConfig: GPCProofEntryConfig;
 };
+
+/**
+ * Per-entry info extracted by {@link prepCompilerTupleMap}.
+ * This info characterises the result of decomposing a given tuple of arbitrary
+ * arity into a sequence of tuples of some fixed arity dictated by the choice of
+ * circuit. The field `tupleIndex` contains the index (in the theoretically
+ * concatenated entry value hash and tuple value hash array) of the hash of this
+ * input tuple, while `tupleInputIndices` contains a sequence of indices representing
+ * the aforementioned decomposition of this tuple. Thus, for a list membership
+ * check for a tuple value, `tupleIndex` is the required
+ * `listComparisonValueIndex`.
+ */
+type CompilerTupleInfo = { tupleIndex: number; tupleInputIndices: number[][] };
 
 /**
  * Helper function for the first phase of compiling inputs for prove or verify.
@@ -81,6 +110,7 @@ function prepCompilerMaps<
   ProofInput extends GPCProofInputs | GPCRevealedClaims,
   ObjInput extends POD | GPCRevealedObjectClaims
 >(
+  circuitDesc: ProtoPODGPCCircuitDesc,
   config: GPCBoundConfig,
   inputs: ProofInput
 ): {
@@ -93,6 +123,7 @@ function prepCompilerMaps<
   const entryMap = new Map();
   let objIndex = 0;
   let entryIndex = 0;
+  const signerPubKeyEntryIndexOffset = circuitDesc.maxEntries;
   const objNameOrder = Object.keys(config.pods).sort();
   for (const objName of objNameOrder) {
     const objConfig = config.pods[objName];
@@ -100,11 +131,24 @@ function prepCompilerMaps<
       throw new Error(`Missing config for object ${objName}.`);
     }
     const objInput = inputs.pods[objName];
-    if (objInput === undefined) {
-      throw new Error(`Missing input for object ${objName}.`);
-    }
 
+    // If the object input is undefined, e.g. if nothing is revealed, add the
+    // object name to the map anyway for later reference.
     objMap.set(objName, { objConfig, objInput, objIndex });
+
+    // Add virtual entries even if they are not explicitly specified in the
+    // config. Unless specified otherwise, they are revealed.
+    //
+    // TODO(POD-P3): Modify for other virtual entry types when they are available.
+    entryMap.set(`${objName}.$signerPublicKey`, {
+      objName,
+      objIndex,
+      objConfig,
+      objInput,
+      entryName: "$signerPublicKey",
+      entryIndex: signerPubKeyEntryIndexOffset + objIndex,
+      entryConfig: { isRevealed: objConfig.signerPublicKey?.isRevealed ?? true }
+    });
 
     const entryNameOrder = Object.keys(objConfig.entries).sort();
     for (const entryName of entryNameOrder) {
@@ -135,6 +179,85 @@ function prepCompilerMaps<
 }
 
 /**
+ * Helper function for the tuple compilation phase for prove or verify.  Input
+ * information is gathered into a map for easy lookup by name when compiling
+ * data that depends on tuples. All tuple names are prefixed with
+ * "${TUPLE_PREFIX}.".
+ *
+ * The tuples are sorted by name before they are processed.
+ *
+ * @param config proof config
+ * @param entryMap map for looking up entries by identifier
+ * @param paramMaxEntries maximum number of entries allowed by the chosen
+ * circuit description.
+ * @param paramMaxTuples maximum number of tuples allowed by the chosen
+ * circuit description.
+ * @param paramTupleArity tuple arity used by the chosen circuit description.
+ * @returns map for looking up tuples by identifier
+ */
+function prepCompilerTupleMap<ObjInput extends POD | GPCRevealedObjectClaims>(
+  config: GPCBoundConfig,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
+  circuitDesc: ProtoPODGPCCircuitDesc
+): Map<TupleIdentifier, CompilerTupleInfo> {
+  // And now for the tuple map, which is sorted in alphabetical order and
+  // populated with the corresponding values from entryMap. Note that the index
+  // here will be offset by the maximum number of entries in the circuit itself.
+  const tupleMap = new Map();
+  if (config.tuples !== undefined) {
+    const maxVirtualEntries = paramMaxVirtualEntries(circuitDesc);
+    let tupleIndex = circuitDesc.maxEntries + maxVirtualEntries;
+    const tupleNameOrder: PODName[] = Object.keys(
+      config.tuples
+    ).sort() as PODName[];
+    for (const tupleName of tupleNameOrder) {
+      const tupleConfig = config.tuples[tupleName];
+      if (tupleConfig === undefined) {
+        throw new Error(`Missing config for tuple ${tupleName}.`);
+      }
+
+      if (tupleConfig.entries.length < 2) {
+        throw new Error(`Arity of tuple ${tupleName} is less than 2.`);
+      }
+
+      const tupleEntryRef: number[] = tupleConfig.entries.map((entryId) => {
+        const entryIdx = entryMap.get(entryId)?.entryIndex;
+
+        if (entryIdx === undefined) {
+          throw new ReferenceError(
+            `Missing entry index for identifier ${entryId} in tuple ${tupleName}.`
+          );
+        }
+
+        return entryIdx;
+      });
+
+      // Encode tuple as sequence of tuples of arity circuitDesc.tupleArity
+      const tupleIndices = computeTupleIndices(
+        circuitDesc.tupleArity,
+        tupleIndex,
+        tupleEntryRef
+      );
+
+      tupleIndex += tupleIndices.length;
+
+      tupleMap.set(`${TUPLE_PREFIX}.${tupleName}`, {
+        tupleIndex: tupleIndex - 1,
+        tupleInputIndices: tupleIndices
+      });
+    }
+
+    const numTuples = tupleIndex - (circuitDesc.maxEntries + maxVirtualEntries);
+    if (numTuples > circuitDesc.maxTuples) {
+      throw new Error(
+        `GPC configuration requires ${numTuples} tuples but the chosen circuit only supports ${circuitDesc.maxTuples}.`
+      );
+    }
+  }
+  return tupleMap;
+}
+
+/**
  * Converts a high-level description of a GPC proof to be generated into
  * the specific circuit signals needed to generate the proof with a specific
  * circuit.
@@ -159,9 +282,13 @@ export function compileProofConfig(
 ): ProtoPODGPCInputs {
   // Put the objects and entries in order, in maps for easy lookups.
   const { objMap, entryMap } = prepCompilerMaps<GPCProofInputs, POD>(
+    circuitDesc,
     proofConfig,
     proofInputs
   );
+
+  // Do the same for tuples (if any).
+  const tupleMap = prepCompilerTupleMap(proofConfig, entryMap, circuitDesc);
 
   // Create subset of inputs for object modules, padded to max size.
   const circuitObjInputs = combineProofObjects(
@@ -171,16 +298,22 @@ export function compileProofConfig(
 
   // Create subset of inputs for entry modules, padded to max size.
   const circuitEntryInputs = combineProofEntries(
-    Array.from(entryMap.values()).map((e) =>
-      compileProofEntry(e, circuitDesc.merkleMaxDepth)
-    ),
+    Array.from(entryMap.entries())
+      .filter(
+        ([entryIdentifier, _]) => !isVirtualEntryIdentifier(entryIdentifier)
+      )
+      .map(([_, e]) => compileProofEntry(e, circuitDesc.merkleMaxDepth)),
     circuitDesc.maxEntries
   );
 
   // Create subset of inputs for entry comparisons and ownership, which share
   // some of the same circuitry.
   const { circuitEntryConstraintInputs, entryConstraintMetadata } =
-    compileProofEntryConstraints(entryMap, circuitDesc.maxEntries);
+    compileProofEntryConstraints(
+      entryMap,
+      circuitDesc.maxEntries,
+      paramMaxVirtualEntries(circuitDesc)
+    );
 
   // Create subset of inputs for owner module.
   const circuitOwnerInputs = compileProofOwner(
@@ -188,14 +321,41 @@ export function compileProofConfig(
     entryConstraintMetadata.firstOwnerIndex
   );
 
+  // Create numeric value module inputs.
+  const circuitNumericValueInputs = compileProofNumericValues(
+    proofConfig,
+    entryMap,
+    circuitDesc.maxNumericValues
+  );
+
   // Create subset of inputs for multituple module padded to max size.
-  const circuitMultiTupleInputs = dummyTuples(circuitDesc);
+  const circuitMultiTupleInputs = compileProofMultiTuples(
+    tupleMap,
+    circuitDesc.maxTuples,
+    circuitDesc.tupleArity
+  );
 
   // Create subset of inputs for list membership module padded to max size.
-  const circuitListMembershipInputs = dummyListMembership(circuitDesc);
+  const listConfig = listConfigFromProofConfig(proofConfig);
+  const circuitListMembershipInputs = compileProofListMembership(
+    listConfig,
+    proofInputs.membershipLists ?? {},
+    entryMap,
+    tupleMap,
+    circuitDesc.tupleArity,
+    circuitDesc.maxLists,
+    circuitDesc.maxListElements
+  );
 
   // Create other global inputs.
   const circuitGlobalInputs = compileProofGlobal(proofInputs);
+
+  // Virtual entry inputs
+  const circuitVirtualEntryInputs = compileProofVirtualEntry(
+    circuitDesc,
+    objMap,
+    entryMap
+  );
 
   // Return all the resulting signals input to the gpcircuits library.
   // The specific return type of each compile phase above lets the TS compiler
@@ -204,8 +364,10 @@ export function compileProofConfig(
   return {
     ...circuitObjInputs,
     ...circuitEntryInputs,
+    ...circuitVirtualEntryInputs,
     ...circuitEntryConstraintInputs,
     ...circuitOwnerInputs,
+    ...circuitNumericValueInputs,
     ...circuitMultiTupleInputs,
     ...circuitListMembershipInputs,
     ...circuitGlobalInputs
@@ -213,6 +375,10 @@ export function compileProofConfig(
 }
 
 function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
+  if (objInfo.objInput === undefined) {
+    throw new Error(`Object input for object ${objInfo.objName} is undefined.`);
+  }
+
   const publicKey = decodePublicKey(objInfo.objInput.signerPublicKey);
   const signature = decodeSignature(objInfo.objInput.signature);
 
@@ -223,6 +389,221 @@ function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
     signatureR8x: signature.R8[0],
     signatureR8y: signature.R8[1],
     signatureS: signature.S
+  };
+}
+
+function compileProofNumericValues(
+  proofConfig: GPCProofConfig,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<POD>>,
+  paramNumericValues: number
+): {
+  numericValues: CircuitSignal[];
+  numericValueEntryIndices: CircuitSignal[];
+  numericMinValues: CircuitSignal[];
+  numericMaxValues: CircuitSignal[];
+} {
+  const {
+    numericValueIdOrder,
+    numericValueEntryIndices,
+    numericMinValues,
+    numericMaxValues
+  } = compileCommonNumericValues(proofConfig, entryMap, paramNumericValues);
+
+  // Compile numeric entry values.
+  const unpaddedNumericValues: bigint[] = numericValueIdOrder.map((entryId) => {
+    const entryName = entryMap.get(entryId)?.entryName;
+    if (entryName === undefined) {
+      throw new ReferenceError(`Missing entry name for identifier ${entryId}.`);
+    }
+
+    const entryValue = entryMap
+      .get(entryId)
+      ?.objInput?.content.getValue(entryName);
+
+    if (entryValue?.type !== "int") {
+      throw new TypeError("Type of value of entry ${entryId} must be 'int'.");
+    }
+
+    return entryValue.value;
+  });
+
+  return {
+    // Pad with 0s.
+    numericValues: padArray(unpaddedNumericValues, paramNumericValues, 0n),
+    numericValueEntryIndices,
+    numericMinValues,
+    numericMaxValues
+  };
+}
+
+function compileCommonNumericValues<
+  ObjInput extends POD | GPCRevealedObjectClaims
+>(
+  proofConfig: GPCProofConfig,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
+  paramNumericValues: number
+): {
+  numericValueIdOrder: PODEntryIdentifier[];
+  numericValueEntryIndices: CircuitSignal[];
+  numericMinValues: CircuitSignal[];
+  numericMaxValues: CircuitSignal[];
+} {
+  const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
+
+  // Arrange POD entry identifiers according to {@link podEntryIdentifierCompare}.
+  const numericValueIdOrder = (
+    Object.keys(boundsCheckConfig) as PODEntryIdentifier[]
+  ).sort(podEntryIdentifierCompare);
+
+  // Compile entry indices
+  const unpaddedNumericValueEntryIndices = numericValueIdOrder.map(
+    (entryId) => {
+      const idx = entryMap.get(entryId)?.entryIndex;
+
+      if (idx === undefined) {
+        throw new ReferenceError(`Missing input for identifier ${entryId}.`);
+      }
+
+      return BigInt(idx);
+    }
+  );
+
+  // Compile minimum values.
+  const unpaddedNumericMinValues = numericValueIdOrder.map(
+    (entryId) => boundsCheckConfig[entryId].min
+  );
+
+  // Compile maximum values.
+  const unpaddedNumericMaxValues = numericValueIdOrder.map(
+    (entryId) => boundsCheckConfig[entryId].max
+  );
+
+  return {
+    numericValueIdOrder,
+    // Pad with index -1 (mod p), which is a reference to the value 0.
+    numericValueEntryIndices: padArray(
+      unpaddedNumericValueEntryIndices,
+      paramNumericValues,
+      BABY_JUB_NEGATIVE_ONE
+    ),
+    // Pad with 0s, which amounts to a lower bound of 0 for those padded entries
+    // with value 0.
+    numericMinValues: padArray(
+      unpaddedNumericMinValues,
+      paramNumericValues,
+      0n
+    ),
+    // Pad with 0s, which amounts to an upper bound of 0 for those padded
+    // entries with value 0.
+    numericMaxValues: padArray(unpaddedNumericMaxValues, paramNumericValues, 0n)
+  };
+}
+
+function compileProofListMembership<
+  ObjInput extends POD | GPCRevealedObjectClaims
+>(
+  listConfig: GPCProofMembershipListConfig,
+  listInput: Record<PODName, PODValue[] | PODValueTuple[]>,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
+  tupleMap: Map<TupleIdentifier, CompilerTupleInfo>,
+  paramTupleArity: number,
+  paramMaxLists: number,
+  paramMaxListElements: number
+): {
+  listComparisonValueIndex: CircuitSignal[];
+  listContainsComparisonValue: CircuitSignal;
+  listValidValues: CircuitSignal[][];
+} {
+  // Arrange list element identifiers alphabetically.
+  const listElementIdOrder = (
+    Object.keys(listConfig) as (PODEntryIdentifier | TupleIdentifier)[]
+  ).sort();
+
+  // Compile listComparisonValueIndex
+  const unpaddedListComparisonValueIndex = listElementIdOrder.map(
+    (elementId) => {
+      const idx = isTupleIdentifier(elementId)
+        ? tupleMap.get(elementId as TupleIdentifier)?.tupleIndex
+        : entryMap.get(elementId)?.entryIndex;
+
+      if (idx === undefined) {
+        throw new Error(`Missing input for identifier ${elementId}.`);
+      }
+
+      return BigInt(idx);
+    }
+  );
+
+  // Compile listContainsComparisonValue
+  const unpaddedListContainsComparisonValue = listElementIdOrder.map(
+    (elementId) => (listConfig[elementId].type === LIST_MEMBERSHIP ? 1n : 0n)
+  );
+
+  // Compile listValidValues, making sure to sort the hashed values before
+  // padding.
+  const unpaddedListValidValues = listElementIdOrder.map((elementId) => {
+    const idListConfig = listConfig[elementId];
+
+    // Resolve lists
+    const list = listInput[idListConfig.listIdentifier];
+
+    // Hash list and sort
+    const hashedList = (
+      isTupleIdentifier(elementId)
+        ? (list as PODValueTuple[]).map((element) =>
+            hashTuple(paramTupleArity, element)
+          )
+        : (list as PODValue[]).map(podValueHash)
+    ).sort();
+
+    // Pad the list to its capacity by using the first element of the list, which
+    // is OK because the list is really a set. This also avoids false positives.
+    return padArray(hashedList, paramMaxListElements, hashedList[0]);
+  });
+
+  return {
+    // Pad with index -1 (mod p), which is a reference to the value 0.
+    listComparisonValueIndex: padArray(
+      unpaddedListComparisonValueIndex,
+      paramMaxLists,
+      BABY_JUB_NEGATIVE_ONE
+    ),
+    // Pad with 1s, which amounts to a list membership check for those values
+    // corresponding to index -1 (which corresponds to the value 0), cf. the
+    // `listComparisonValueIndex` padding.
+    listContainsComparisonValue: array2Bits(
+      padArray(unpaddedListContainsComparisonValue, paramMaxLists, 1n)
+    ),
+    // Pad with lists of 0s, which amounts to trivially satisfied list
+    // membership checks for those indices used as padding just above.
+    listValidValues: padArray(
+      unpaddedListValidValues,
+      paramMaxLists,
+      padArray([], paramMaxListElements, 0n)
+    )
+  };
+}
+
+function compileProofMultiTuples(
+  tupleMap: Map<TupleIdentifier, CompilerTupleInfo>,
+  paramMaxTuples: number,
+  paramTupleArity: number
+): { tupleIndices: CircuitSignal[][] } {
+  // Concatenate `tupleIndices` field of all tuple map values together and convert
+  // the indices to bigints.
+  const unpaddedTupleIndices = Array.from(tupleMap.values())
+    .flatMap((info) => info.tupleInputIndices)
+    .map((tuple) => tuple.map((n) => BigInt(n)));
+
+  return {
+    // Pad the result to length `paramMaxTuples` with tuples of 0s, which
+    // corresponds to choosing the 0th entry value hash. Since these are not
+    // constrained anywhere, there is no effect on the underlying logic.
+    tupleIndices: padArray(
+      unpaddedTupleIndices,
+      paramMaxTuples,
+      padArray([], paramTupleArity, 0n)
+    )
   };
 }
 
@@ -263,20 +644,15 @@ function compileProofEntry(
   entryInfo: CompilerEntryInfo<POD>,
   merkleMaxDepth: number
 ): EntryModuleCompilerInputs {
+  if (entryInfo.objInput === undefined) {
+    throw new Error(
+      `Object input for object ${entryInfo.objName} is undefined.`
+    );
+  }
+
   const entrySignals = entryInfo.objInput.content.generateEntryCircuitSignals(
     entryInfo.entryName
   );
-
-  // Plaintext value is only enabled if it is needed by some other
-  // configured constraint, which for now is only the owner commitment.
-  const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
-  let entryValue = BABY_JUB_NEGATIVE_ONE;
-  if (isValueEnabled) {
-    if (entrySignals.value === undefined) {
-      throw new Error("Numeric entry value is unavailable when required.");
-    }
-    entryValue = entrySignals.value;
-  }
 
   return {
     objectIndex: BigInt(entryInfo.objIndex),
@@ -287,9 +663,39 @@ function compileProofEntry(
     proofSiblings: extendedSignalArray(
       entrySignals.proof.siblings,
       merkleMaxDepth
-    ),
-    value: entryValue,
-    isValueEnabled: isValueEnabled ? 1n : 0n
+    )
+  };
+}
+
+function compileProofVirtualEntry<
+  ObjInput extends POD | GPCRevealedObjectClaims
+>(
+  circuitDesc: ProtoPODGPCCircuitDesc,
+  objMap: Map<PODName, CompilerObjInfo<ObjInput>>,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>
+): {
+  virtualEntryIsValueHashRevealed: CircuitSignal;
+} {
+  const objNames = Array.from(objMap.keys());
+  const unpaddedVirtualEntryIsValueHashRevealed = objNames.map((objName) => {
+    const entryInfo = entryMap.get(`${objName}.$signerPublicKey`);
+    if (entryInfo === undefined) {
+      throw new Error(
+        `Entry ${objName}.$signerPublicKey is missing from entry map.`
+      );
+    }
+    const isPublicKeyRevealed = entryInfo.entryConfig.isRevealed;
+    return BigInt(+isPublicKeyRevealed);
+  });
+
+  return {
+    virtualEntryIsValueHashRevealed: array2Bits(
+      padArray(
+        unpaddedVirtualEntryIsValueHashRevealed,
+        circuitDesc.maxObjects,
+        0n
+      )
+    )
   };
 }
 
@@ -299,8 +705,6 @@ function combineProofEntries(
 ): {
   entryObjectIndex: CircuitSignal /*MAX_ENTRIES*/[];
   entryNameHash: CircuitSignal /*MAX_ENTRIES*/[];
-  entryValue: CircuitSignal /*MAX_ENTRIES*/[];
-  entryIsValueEnabled: CircuitSignal /*MAX_ENTRIES packed bits*/;
   entryIsValueHashRevealed: CircuitSignal /*MAX_ENTRIES packed bits*/;
   entryProofDepth: CircuitSignal /*MAX_ENTRIES*/[];
   entryProofIndex: CircuitSignal /*MAX_ENTRIES*/[] /*MERKLE_MAX_DEPTH packed bits*/;
@@ -319,9 +723,7 @@ function combineProofEntries(
       isValueHashRevealed: 0n,
       proofDepth: allEntryInputs[0].proofDepth,
       proofIndex: allEntryInputs[0].proofIndex,
-      proofSiblings: [...allEntryInputs[0].proofSiblings],
-      value: 0n,
-      isValueEnabled: 0n
+      proofSiblings: [...allEntryInputs[0].proofSiblings]
     });
   }
 
@@ -331,10 +733,6 @@ function combineProofEntries(
     // ContentID holding index is a lie, but it allows reusing the inputs type.
     entryObjectIndex: allEntryInputs.map((e) => e.objectIndex),
     entryNameHash: allEntryInputs.map((e) => e.nameHash),
-    entryValue: allEntryInputs.map((e) => e.value),
-    entryIsValueEnabled: array2Bits(
-      allEntryInputs.map((e) => e.isValueEnabled)
-    ),
     entryIsValueHashRevealed: array2Bits(
       allEntryInputs.map((e) => e.isValueHashRevealed)
     ),
@@ -346,7 +744,8 @@ function combineProofEntries(
 
 function compileProofEntryConstraints(
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<unknown>>,
-  maxEntries: number
+  maxEntries: number,
+  maxVirtualEntries: number
 ): {
   circuitEntryConstraintInputs: {
     entryEqualToOtherEntryByIndex: CircuitSignal[];
@@ -358,6 +757,8 @@ function compileProofEntryConstraints(
   // Deal with equality comparision and POD ownership, which share circuitry.
   let firstOwnerIndex = 0;
   const entryEqualToOtherEntryByIndex: bigint[] = [];
+  const virtualEntryEqualToOtherEntryByIndex: bigint[] = [];
+
   for (const entryInfo of entryMap.values()) {
     // An entry is always compared either to the first owner entry (to ensure
     // only one owner), or to another entry specified by config, or to itself
@@ -378,21 +779,40 @@ function compileProofEntryConstraints(
           `Missing entry ${entryInfo.entryConfig.equalsEntry} for equality comparison.`
         );
       }
-      entryEqualToOtherEntryByIndex.push(BigInt(otherEntryInfo.entryIndex));
+      (isVirtualEntryName(entryInfo.entryName)
+        ? virtualEntryEqualToOtherEntryByIndex
+        : entryEqualToOtherEntryByIndex
+      ).push(BigInt(otherEntryInfo.entryIndex));
     } else {
-      entryEqualToOtherEntryByIndex.push(BigInt(entryInfo.entryIndex));
+      (isVirtualEntryName(entryInfo.entryName)
+        ? virtualEntryEqualToOtherEntryByIndex
+        : entryEqualToOtherEntryByIndex
+      ).push(BigInt(entryInfo.entryIndex));
     }
   }
 
   // Equality constraints don't have an explicit disabled state, so spare
   // entry slots always compare to themselves, to be a nop.
-  for (let entryIndex = entryMap.size; entryIndex < maxEntries; entryIndex++) {
+  for (
+    let entryIndex = entryEqualToOtherEntryByIndex.length;
+    entryIndex < maxEntries;
+    entryIndex++
+  ) {
     entryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
+  }
+  for (
+    let entryIndex = virtualEntryEqualToOtherEntryByIndex.length;
+    entryIndex < maxVirtualEntries;
+    entryIndex++
+  ) {
+    virtualEntryEqualToOtherEntryByIndex.push(BigInt(maxEntries + entryIndex));
   }
 
   return {
     circuitEntryConstraintInputs: {
-      entryEqualToOtherEntryByIndex
+      entryEqualToOtherEntryByIndex: entryEqualToOtherEntryByIndex.concat(
+        virtualEntryEqualToOtherEntryByIndex
+      )
     },
     entryConstraintMetadata: { firstOwnerIndex }
   };
@@ -470,17 +890,18 @@ export function compileVerifyConfig(
   const { objMap, entryMap } = prepCompilerMaps<
     GPCRevealedClaims,
     GPCRevealedObjectClaims
-  >(verifyConfig, verifyRevealed);
+  >(circuitDesc, verifyConfig, verifyRevealed);
 
-  // Create subset of inputs for object modules, padded to max size.
-  const circuitObjInputs = combineVerifyObjects(
-    Array.from(objMap.values()).map(compileVerifyObject),
-    circuitDesc.maxObjects
-  );
+  // Do the same for tuples (if any).
+  const tupleMap = prepCompilerTupleMap(verifyConfig, entryMap, circuitDesc);
 
   // Create subset of inputs and outputs for entry modules, padded to max size.
   const { circuitEntryInputs, circuitEntryOutputs } = combineVerifyEntries(
-    Array.from(entryMap.values()).map(compileVerifyEntry),
+    Array.from(entryMap.entries())
+      .filter(
+        ([entryIdentifier, _]) => !isVirtualEntryIdentifier(entryIdentifier)
+      )
+      .map(([_, e]) => compileVerifyEntry(e)),
     circuitDesc.maxEntries
   );
 
@@ -488,7 +909,11 @@ export function compileVerifyConfig(
   // some of the same circuitry.  This logic is shared with compileProofConfig,
   // since all the signals involved are public.
   const { circuitEntryConstraintInputs, entryConstraintMetadata } =
-    compileProofEntryConstraints(entryMap, circuitDesc.maxEntries);
+    compileProofEntryConstraints(
+      entryMap,
+      circuitDesc.maxEntries,
+      paramMaxVirtualEntries(circuitDesc)
+    );
 
   // Create subset of inputs and outputs for owner module.
   const { circuitOwnerInputs, circuitOwnerOutputs } = compileVerifyOwner(
@@ -496,15 +921,50 @@ export function compileVerifyConfig(
     entryConstraintMetadata.firstOwnerIndex
   );
 
+  // Create numeric value module inputs
+  const { numericValueIdOrder: _, ...circuitNumericValueInputs } =
+    compileCommonNumericValues(
+      verifyConfig,
+      entryMap,
+      circuitDesc.maxNumericValues
+    );
+
   // Create subset of inputs for multituple module padded to max size.
-  const circuitMultiTupleInputs = dummyTuples(circuitDesc);
+  const circuitMultiTupleInputs = compileProofMultiTuples(
+    tupleMap,
+    circuitDesc.maxTuples,
+    circuitDesc.tupleArity
+  );
 
   // Create subset of inputs for list membership module padded to max size.
-  const circuitListMembershipInputs = dummyListMembership(circuitDesc);
+  const listConfig = listConfigFromProofConfig(verifyConfig);
+  const circuitListMembershipInputs = compileProofListMembership(
+    listConfig,
+    verifyRevealed.membershipLists ?? {},
+    entryMap,
+    tupleMap,
+    circuitDesc.tupleArity,
+    circuitDesc.maxLists,
+    circuitDesc.maxListElements
+  );
 
   // Create other global inputs.  Logic shared with compileProofConfig,
   // since all the signals involved are public.
   const circuitGlobalInputs = compileProofGlobal(verifyRevealed);
+
+  // Virtual entry inputs
+  const circuitVirtualEntryInputs = compileProofVirtualEntry(
+    circuitDesc,
+    objMap,
+    entryMap
+  );
+
+  // Virtual entry outputs
+  const circuitVirtualEntryOutputs = compileVerifyVirtualEntry(
+    circuitDesc,
+    objMap,
+    entryMap
+  );
 
   // Return all the resulting signals input to the gpcircuits library.
   // The specific return type of each compile phase above lets the TS compiler
@@ -512,59 +972,26 @@ export function compileVerifyConfig(
   // not their array sizes).
   return {
     circuitPublicInputs: {
-      ...circuitObjInputs,
       ...circuitEntryInputs,
+      ...circuitVirtualEntryInputs,
       ...circuitEntryConstraintInputs,
       ...circuitOwnerInputs,
+      ...circuitNumericValueInputs,
       ...circuitMultiTupleInputs,
       ...circuitListMembershipInputs,
       ...circuitGlobalInputs
     },
     circuitOutputs: {
       ...circuitEntryOutputs,
+      ...circuitVirtualEntryOutputs,
       ...circuitOwnerOutputs
     }
-  };
-}
-
-type CompilerVerifyObjectInputs = {
-  signerPubkeyAx: CircuitSignal;
-  signerPubkeyAy: CircuitSignal;
-};
-
-function compileVerifyObject(
-  objInfo: CompilerObjInfo<GPCRevealedObjectClaims>
-): CompilerVerifyObjectInputs {
-  const publicKey = decodePublicKey(objInfo.objInput.signerPublicKey);
-  return {
-    signerPubkeyAx: publicKey[0],
-    signerPubkeyAy: publicKey[1]
-  };
-}
-
-function combineVerifyObjects(
-  allObjInputs: CompilerVerifyObjectInputs[],
-  maxObjects: number
-): {
-  objectSignerPubkeyAx: CircuitSignal[];
-  objectSignerPubkeyAy: CircuitSignal[];
-} {
-  // Object modules don't have an explicit disabled state, so spare object
-  // slots get filled in with copies of Object 0.
-  for (let objIndex = allObjInputs.length; objIndex < maxObjects; objIndex++) {
-    allObjInputs.push({ ...allObjInputs[0] });
-  }
-
-  return {
-    objectSignerPubkeyAx: allObjInputs.map((o) => o.signerPubkeyAx),
-    objectSignerPubkeyAy: allObjInputs.map((o) => o.signerPubkeyAy)
   };
 }
 
 type CompilerVerifyEntryInputs = {
   objectIndex: CircuitSignal;
   nameHash: CircuitSignal;
-  isValueEnabled: CircuitSignal;
   isValueHashRevealed: CircuitSignal;
 };
 
@@ -575,14 +1002,10 @@ type CompilerVerifyEntryOutputs = {
 function compileVerifyEntry(
   entryInfo: CompilerEntryInfo<GPCRevealedObjectClaims>
 ): { inputs: CompilerVerifyEntryInputs; outputs: CompilerVerifyEntryOutputs } {
-  // Plaintext value is only enabled if it is needed by some other
-  // configured constraint, which for now is only the owner commitment.
-  const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
-
   // Fetch the entry value, if it's configured to be revealed.
   let revealedEntryValue: PODValue | undefined = undefined;
   if (entryInfo.entryConfig.isRevealed) {
-    if (entryInfo.objInput.entries === undefined) {
+    if (entryInfo.objInput?.entries === undefined) {
       throw new Error("Missing revealed entries.");
     }
     revealedEntryValue = entryInfo.objInput.entries[entryInfo.entryName];
@@ -597,7 +1020,6 @@ function compileVerifyEntry(
     inputs: {
       objectIndex: BigInt(entryInfo.objIndex),
       nameHash: podNameHash(entryInfo.entryName),
-      isValueEnabled: isValueEnabled ? 1n : 0n,
       isValueHashRevealed: entryInfo.entryConfig.isRevealed ? 1n : 0n
     },
     outputs: {
@@ -619,7 +1041,6 @@ function combineVerifyEntries(
   circuitEntryInputs: {
     entryObjectIndex: CircuitSignal[];
     entryNameHash: CircuitSignal[];
-    entryIsValueEnabled: CircuitSignal;
     entryIsValueHashRevealed: CircuitSignal;
   };
   circuitEntryOutputs: {
@@ -636,7 +1057,6 @@ function combineVerifyEntries(
       inputs: {
         objectIndex: allEntryInputsOutputs[0].inputs.objectIndex,
         nameHash: allEntryInputsOutputs[0].inputs.nameHash,
-        isValueEnabled: 0n,
         isValueHashRevealed: 0n
       },
       outputs: {
@@ -653,9 +1073,6 @@ function combineVerifyEntries(
         (io) => io.inputs.objectIndex
       ),
       entryNameHash: allEntryInputsOutputs.map((io) => io.inputs.nameHash),
-      entryIsValueEnabled: array2Bits(
-        allEntryInputsOutputs.map((io) => io.inputs.isValueEnabled)
-      ),
       entryIsValueHashRevealed: array2Bits(
         allEntryInputsOutputs.map((io) => io.inputs.isValueHashRevealed)
       )
@@ -665,6 +1082,37 @@ function combineVerifyEntries(
         (io) => io.outputs.revealedValueHash
       )
     }
+  };
+}
+
+function compileVerifyVirtualEntry(
+  circuitDesc: ProtoPODGPCCircuitDesc,
+  objMap: Map<PODName, CompilerObjInfo<GPCRevealedObjectClaims>>,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<GPCRevealedObjectClaims>>
+): {
+  virtualEntryRevealedValueHash: CircuitSignal[];
+} {
+  const objNames = Array.from(objMap.keys());
+
+  const unpaddedVirtualEntryRevealedValueHash = objNames.map((objName) => {
+    const entryInfo = entryMap.get(`${objName}.$signerPublicKey`);
+    if (entryInfo === undefined) {
+      throw new Error(
+        `Entry ${objName}.$signerPublicKey is missing from entry map.`
+      );
+    }
+    const maybePublicKeyString = entryInfo.objInput?.signerPublicKey;
+    return maybePublicKeyString !== undefined
+      ? podValueHash(PODEdDSAPublicKeyValue(maybePublicKeyString))
+      : BABY_JUB_NEGATIVE_ONE;
+  });
+
+  return {
+    virtualEntryRevealedValueHash: padArray(
+      unpaddedVirtualEntryRevealedValueHash,
+      circuitDesc.maxObjects,
+      BABY_JUB_NEGATIVE_ONE
+    )
   };
 }
 
@@ -731,6 +1179,8 @@ export function makeRevealedClaims(
       throw new ReferenceError(`Missing revealed POD ${objName}.`);
     }
     let anyRevealedEntries = false;
+    // Unless specified otherwise, reveal signer's public key by default.
+    let revealedSignerPublicKey = true;
     const revealedEntries: Record<PODName, PODValue> = {};
     for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
       if (entryConfig.isRevealed) {
@@ -744,10 +1194,17 @@ export function makeRevealedClaims(
         revealedEntries[entryName] = entryValue;
       }
     }
-    revealedObjects[objName] = {
-      ...(anyRevealedEntries ? { entries: revealedEntries } : {}),
-      signerPublicKey: pod.signerPublicKey
-    };
+    if (objConfig.signerPublicKey?.isRevealed !== undefined) {
+      revealedSignerPublicKey = objConfig.signerPublicKey.isRevealed;
+    }
+    if (anyRevealedEntries || revealedSignerPublicKey) {
+      revealedObjects[objName] = {
+        ...(anyRevealedEntries ? { entries: revealedEntries } : {}),
+        ...(revealedSignerPublicKey
+          ? { signerPublicKey: pod.signerPublicKey }
+          : {})
+      };
+    }
   }
 
   return {
@@ -759,6 +1216,9 @@ export function makeRevealedClaims(
             nullifierHash: BigInt(circuitOutputs.ownerRevealedNullifierHash)
           }
         }
+      : {}),
+    ...(proofInputs.membershipLists !== undefined
+      ? { membershipLists: proofInputs.membershipLists }
       : {}),
     ...(proofInputs.watermark !== undefined
       ? { watermark: proofInputs.watermark }

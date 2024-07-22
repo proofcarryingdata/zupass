@@ -103,10 +103,12 @@ export class LemonadeAccount {
     }
     const user = this.users.get(userId) as LemonadeUser;
     const ticket: LemonadeTicket = {
+      email: user.email,
       _id: randomUUID(),
       type_id: ticketTypeId,
       type_title: this.ticketTypes.get(eventId)?.get(ticketTypeId)
         ?.title as string,
+      assigned_email: "",
       user_id: userId,
       user_email: user.email,
       user_name: userName,
@@ -258,7 +260,7 @@ export class LemonadeDataMocker {
     for (const account of this.accounts.values()) {
       for (const [eventId, eventTickets] of account.getTickets().entries()) {
         for (const ticket of eventTickets.values()) {
-          account.setCheckin(eventId, ticket.user_id, null, true);
+          account.setCheckin(eventId, ticket.user_id as string, null, true);
         }
       }
     }

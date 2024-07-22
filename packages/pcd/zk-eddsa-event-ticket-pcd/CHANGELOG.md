@@ -1,5 +1,24 @@
 # @pcd/zk-eddsa-event-ticket-pcd
 
+## 0.6.1
+
+### Patch Changes
+
+- new package versions
+- Updated dependencies
+  - @pcd/pcd-types@0.11.1
+  - @pcd/util@0.5.1
+  - @pcd/eddsa-pcd@0.6.1
+  - @pcd/eddsa-ticket-pcd@0.6.1
+  - @pcd/semaphore-identity-pcd@0.11.1
+  - @pcd/semaphore-signature-pcd@0.11.1
+
+## 0.6.0
+
+### Minor Changes
+
+- Fix snarkjs dependency warning
+
 ## 0.5.0
 
 ### Minor Changes

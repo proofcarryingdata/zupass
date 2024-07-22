@@ -5,15 +5,27 @@ import {
   GroupType
 } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
+import {
+  gpcArtifactDownloadURL,
+  GPCArtifactSource,
+  GPCArtifactStability,
+  GPCArtifactVersion
+} from "@pcd/gpc";
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdAddRequestUrl,
+  constructZupassPcdMintRequestUrl,
   constructZupassPcdProveAndAddRequestUrl,
   openSignedZuzaluSignInPopup,
   useZupassPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { POD, podEntriesFromSimplifiedJSON } from "@pcd/pod";
+import {
+  decodePrivateKey,
+  encodePublicKey,
+  POD,
+  podEntriesFromSimplifiedJSON
+} from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -26,27 +38,70 @@ import {
   generateRegistrationOptions,
   verifyRegistrationResponse
 } from "@simplewebauthn/server";
+import { derivePublicKey } from "@zk-kit/eddsa-poseidon";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { useEffect, useState } from "react";
 import { v4 as uuid } from "uuid";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
-import { EVERYONE_SEMAPHORE_GROUP_URL, ZUPASS_URL } from "../../constants";
+import {
+  EVERYONE_SEMAPHORE_GROUP_URL,
+  GPC_ARTIFACT_CONFIG,
+  ZUPASS_URL
+} from "../../constants";
 import {
   EXAMPLE_EDDSA_PRIVATE_KEY,
+  EXAMPLE_EDDSA_PRIVATE_KEY2,
   EXAMPLE_GPC_CONFIG,
+  EXAMPLE_MEMBERSHIP_LISTS,
   EXAMPLE_OWNER_IDENTITY,
-  EXAMPLE_POD_CONTENT
+  EXAMPLE_POD_CONTENT,
+  EXAMPLE_POD_CONTENT_WITH_DISPLAY
 } from "../../podExampleConstants";
 import { sendZupassRequest } from "../../util";
 
 export default function Page(): JSX.Element {
   const [signedMessage, setSignedMessage] = useState("1");
   const [folder, setFolder] = useState("");
-  const [podContent, setPodContent] = useState(EXAMPLE_POD_CONTENT);
+  const [podContent, setPODContent] = useState(EXAMPLE_POD_CONTENT);
+  const [podContent2, setPODContent2] = useState(
+    EXAMPLE_POD_CONTENT_WITH_DISPLAY
+  );
+  const [podPrivateKey, _setPODPrivateKey] = useState(
+    EXAMPLE_EDDSA_PRIVATE_KEY
+  );
+  const [podPublicKey, setPODPublicKey] = useState(
+    encodePublicKey(
+      derivePublicKey(decodePrivateKey(EXAMPLE_EDDSA_PRIVATE_KEY))
+    )
+  );
+  const setPODPrivateKey = (key: string): void => {
+    _setPODPrivateKey(key);
+    setPODPublicKey(encodePublicKey(derivePublicKey(decodePrivateKey(key))));
+  };
+  const [podPrivateKey2, _setPODPrivateKey2] = useState(
+    EXAMPLE_EDDSA_PRIVATE_KEY2
+  );
+  const [podPublicKey2, setPODPublicKey2] = useState(
+    encodePublicKey(
+      derivePublicKey(decodePrivateKey(EXAMPLE_EDDSA_PRIVATE_KEY2))
+    )
+  );
+  const setPODPrivateKey2 = (key: string): void => {
+    _setPODPrivateKey2(key);
+    setPODPublicKey2(encodePublicKey(derivePublicKey(decodePrivateKey(key))));
+  };
+  const [podMintUrl, setPODMintUrl] = useState(
+    `${process.env.CONSUMER_SERVER_URL}:4000/api/mintPOD`
+  );
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
-  const [podFolder, setPodFolder] = useState("Test PODs");
+  const [membershipLists, setMembershipLists] = useState(
+    EXAMPLE_MEMBERSHIP_LISTS
+  );
+  const [podFolder, setPODFolder] = useState("Test PODs");
+  const [podFolder2, setPODFolder2] = useState("Test PODs");
+  const [gpcFolder, setGPCFolder] = useState("Test GPCs");
 
   return (
     <div>
@@ -126,21 +181,156 @@ export default function Page(): JSX.Element {
         <br />
         <br />
         <button onClick={addEdDSAPCD}>add a new EdDSA signature proof</button>
+      </ExampleContainer>
+      <ExampleContainer>
+        POD + GPC Examples
         <br />
         <br />
-        POD content to sign:{" "}
+        Example POD content to sign: <br />
+        <br />
         <textarea
-          cols={40}
+          cols={45}
           rows={15}
           value={podContent}
           onChange={(e): void => {
-            setPodContent(e.target.value);
+            setPODContent(e.target.value);
           }}
         />
         <br />
-        GPC Proof config:{" "}
+        <button
+          onClick={() =>
+            addPODPCD(
+              podContent,
+              podPrivateKey,
+              podFolder.length > 0 ? podFolder : undefined
+            )
+          }
+        >
+          add a new POD to Zupass
+        </button>
+        <br />
+        <label>
+          Private key to sign POD with:
+          <input
+            type="text"
+            value={podPrivateKey}
+            placeholder="Enter private key..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODPrivateKey(e.target.value);
+            }}
+          />
+        </label>
+        <br />
+        Corresponding public key: <small>{podPublicKey}</small>
+        <br />
+        <label>
+          Folder to add POD to:
+          <input
+            type="text"
+            value={podFolder}
+            placeholder="Enter folder name..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODFolder(e.target.value);
+            }}
+          />
+        </label>
+        <br />
+        <br />
+        Card POD content to sign and/or mint: <br />
+        <br />
         <textarea
-          cols={40}
+          cols={45}
+          rows={15}
+          value={podContent2}
+          onChange={(e): void => {
+            setPODContent2(e.target.value);
+          }}
+        />
+        <br />
+        <button
+          onClick={() =>
+            addPODPCD(
+              podContent2,
+              podPrivateKey2,
+              podFolder2.length > 0 ? podFolder2 : undefined
+            )
+          }
+        >
+          add a new POD to Zupass (popup)
+        </button>
+        <button
+          onClick={() =>
+            addPODPCD(
+              podContent2,
+              podPrivateKey2,
+              podFolder2.length > 0 ? podFolder2 : undefined,
+              true
+            )
+          }
+        >
+          add a new POD to Zupass (redirect)
+        </button>
+        <br />
+        <button
+          onClick={() =>
+            mintPODPCD(
+              podMintUrl,
+              podContent2,
+              podPrivateKey2,
+              podFolder2.length > 0 ? podFolder2 : undefined
+            )
+          }
+        >
+          mint a new POD in Zupass (popup)
+        </button>
+        <br />
+        <label>
+          Private key to sign POD with:
+          <input
+            type="text"
+            value={podPrivateKey2}
+            placeholder="Enter private key..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODPrivateKey2(e.target.value);
+            }}
+          />
+        </label>
+        <br />
+        Corresponding public key: <small>{podPublicKey2}</small>
+        <br />
+        <label>
+          Folder to add POD to:
+          <input
+            type="text"
+            value={podFolder2}
+            placeholder="Enter folder name..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODFolder2(e.target.value);
+            }}
+          />
+        </label>
+        <br />
+        <label>
+          Mint URL:
+          <input
+            type="text"
+            value={podMintUrl}
+            placeholder="Enter mint URL..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPODMintUrl(e.target.value);
+            }}
+          />
+        </label>
+        <br />
+        <br />
+        GPC Proof config: <br />
+        <textarea
+          cols={45}
           rows={15}
           value={gpcConfig}
           onChange={(e): void => {
@@ -148,32 +338,37 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
+        Membership lists: <br />
+        <textarea
+          cols={45}
+          rows={15}
+          value={membershipLists}
+          onChange={(e): void => {
+            setMembershipLists(e.target.value);
+          }}
+        />
+        <br />
         <label>
-          Folder to add POD/GPC to:
+          Folder to add GPC to:
           <input
             type="text"
-            value={podFolder}
+            value={gpcFolder}
             placeholder="Enter folder name..."
             style={{ marginLeft: "16px" }}
             onChange={(e): void => {
-              setPodFolder(e.target.value);
+              setGPCFolder(e.target.value);
             }}
           />
         </label>
         <br />
         <button
           onClick={(): Promise<void> =>
-            addPODPCD(podContent, podFolder.length > 0 ? podFolder : undefined)
-          }
-        >
-          add a new POD to Zupass
-        </button>
-        <button
-          onClick={(): Promise<void> =>
             addGPCPCD(
               podContent,
+              podContent2,
               gpcConfig,
-              podFolder.length > 0 ? podFolder : undefined
+              membershipLists,
+              gpcFolder.length > 0 ? gpcFolder : undefined
             )
           }
         >
@@ -542,14 +737,13 @@ async function addWebAuthnPCD(): Promise<void> {
 
 async function addPODPCD(
   podContent: string,
-  podFolder: string | undefined
+  podPrivateKey: string,
+  podFolder: string | undefined,
+  redirectToFolder?: boolean
 ): Promise<void> {
   const newPOD = new PODPCD(
     uuid(),
-    POD.sign(
-      podEntriesFromSimplifiedJSON(podContent),
-      EXAMPLE_EDDSA_PRIVATE_KEY
-    )
+    POD.sign(podEntriesFromSimplifiedJSON(podContent), podPrivateKey)
   );
 
   const serializedPODPCD = await PODPCDPackage.serialize(newPOD);
@@ -558,26 +752,78 @@ async function addPODPCD(
     ZUPASS_URL,
     window.location.origin + "#/popup",
     serializedPODPCD,
-    podFolder
+    podFolder,
+    false,
+    redirectToFolder
   );
 
-  sendZupassRequest(url);
+  if (redirectToFolder) {
+    open(url);
+  } else {
+    sendZupassRequest(url);
+  }
+}
+
+async function mintPODPCD(
+  mintUrl: string,
+  podContent: string,
+  podPrivateKey: string,
+  podFolder: string | undefined,
+  redirectToFolder?: boolean
+): Promise<void> {
+  const newPOD = new PODPCD(
+    uuid(),
+    POD.sign(podEntriesFromSimplifiedJSON(podContent), podPrivateKey)
+  );
+
+  const serializedPODPCD = await PODPCDPackage.serialize(newPOD);
+
+  const url = constructZupassPcdMintRequestUrl(
+    ZUPASS_URL,
+    mintUrl,
+    window.location.origin + "#/popup",
+    serializedPODPCD,
+    podFolder,
+    false,
+    redirectToFolder
+  );
+
+  if (redirectToFolder) {
+    open(url);
+  } else {
+    sendZupassRequest(url);
+  }
 }
 
 async function addGPCPCD(
   podContent: string,
+  podContent2: string,
   gpcConfig: string,
+  membershipLists: string,
   podFolder: string | undefined
 ): Promise<void> {
   await GPCPCDPackage.init?.({
-    zkArtifactPath: ZUPASS_URL + "artifacts/test/proto-pod-gpc"
+    zkArtifactPath: gpcArtifactDownloadURL(
+      GPC_ARTIFACT_CONFIG.source as GPCArtifactSource,
+      GPC_ARTIFACT_CONFIG.stability as GPCArtifactStability,
+      GPC_ARTIFACT_CONFIG.version as GPCArtifactVersion,
+      ZUPASS_URL
+    )
   });
 
-  const podPCD = new PODPCD(
+  const examplePODPCD = new PODPCD(
     uuid(),
     POD.sign(
       podEntriesFromSimplifiedJSON(podContent),
       EXAMPLE_EDDSA_PRIVATE_KEY
+    )
+  );
+
+  const cardPODPCD = new PODPCD(
+    uuid(),
+    POD.sign(
+      podEntriesFromSimplifiedJSON(podContent2),
+      EXAMPLE_EDDSA_PRIVATE_KEY2
     )
   );
 
@@ -590,9 +836,18 @@ async function addGPCPCD(
       argumentType: ArgumentTypeName.String,
       value: gpcConfig
     },
-    pod: {
-      value: await PODPCDPackage.serialize(podPCD),
-      argumentType: ArgumentTypeName.PCD
+    pods: {
+      value: {
+        examplePOD: {
+          value: await PODPCDPackage.serialize(examplePODPCD),
+          argumentType: ArgumentTypeName.PCD
+        },
+        cardPOD: {
+          value: await PODPCDPackage.serialize(cardPODPCD),
+          argumentType: ArgumentTypeName.PCD
+        }
+      },
+      argumentType: ArgumentTypeName.RecordContainer
     },
     identity: {
       value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),
@@ -600,6 +855,10 @@ async function addGPCPCD(
     },
     externalNullifier: {
       value: "example nullifier",
+      argumentType: ArgumentTypeName.String
+    },
+    membershipLists: {
+      value: membershipLists,
       argumentType: ArgumentTypeName.String
     },
     watermark: {

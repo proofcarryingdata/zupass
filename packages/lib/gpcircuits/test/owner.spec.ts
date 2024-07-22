@@ -2,6 +2,7 @@ import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
+import { poseidon1 } from "poseidon-lite";
 import {
   CircuitSignal,
   OwnerModuleSemaphoreV3Inputs,
@@ -30,7 +31,7 @@ describe("owner.OwnerModuleSemaphoreV3 should work", function () {
         enabled: isEnabled ? 1n : 0n,
         identityNullifier: ownerIdentity.nullifier,
         identityTrapdoor: ownerIdentity.trapdoor,
-        identityCommitment: ownerIdentity.commitment,
+        identityCommitmentHash: poseidon1([ownerIdentity.commitment]),
         externalNullifier: 42n,
         isNullfierHashRevealed: isNullfierHashRevealed ? 1n : 0n
       },
@@ -49,8 +50,8 @@ describe("owner.OwnerModuleSemaphoreV3 should work", function () {
       99353161014976810914716773124042455250852206298527174581112949561812190422n,
     identityTrapdoor:
       329061722381819402313027227353491409557029289040211387019699013780657641967n,
-    identityCommitment:
-      18711405342588116796533073928767088921854096266145046362753928030796553161041n,
+    identityCommitmentHash:
+      6111114915052368960013028357687874844561982077054171687671655940344165800007n,
     externalNullifier: 42n,
     isNullfierHashRevealed: 1n
   };

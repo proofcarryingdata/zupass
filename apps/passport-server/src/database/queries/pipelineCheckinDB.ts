@@ -13,10 +13,19 @@ export interface IPipelineCheckinDB {
     pipelineId: string,
     ticketId: string
   ): Promise<PipelineCheckin | undefined>;
+  getByTicketIds(
+    pipelineId: string,
+    ticketIds: string[]
+  ): Promise<PipelineCheckin[]>;
   // Fetch all check-ins for a pipeline
   getByPipelineId(pipelineId: string): Promise<PipelineCheckin[]>;
   // Add a check-in record for a ticket ID
-  checkIn(pipelineId: string, ticketId: string, timestamp: Date): Promise<void>;
+  checkIn(
+    pipelineId: string,
+    ticketId: string,
+    timestamp: Date,
+    checkerEmail: string
+  ): Promise<void>;
   // Delete check-in for a ticket ID
   deleteCheckIn(pipelineId: string, ticketId: string): Promise<number>;
 }
@@ -52,8 +61,30 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
       return {
         ticketId: result.rows[0].ticket_id,
         timestamp: result.rows[0].checkin_timestamp
-      };
+      } satisfies PipelineCheckin;
     }
+  }
+
+  /**
+   * Retrieves check-ins for multiple tickets on a single pipeline.
+   */
+  public async getByTicketIds(
+    pipelineId: string,
+    ticketIds: string[]
+  ): Promise<PipelineCheckin[]> {
+    const result = await sqlQuery(
+      this.db,
+      `SELECT * FROM generic_issuance_checkins WHERE pipeline_id = $1 AND ticket_id = ANY($2)`,
+      [pipelineId, ticketIds]
+    );
+
+    return result.rows.map(
+      (row) =>
+        ({
+          ticketId: row.ticket_id,
+          timestamp: row.checkin_timestamp
+        }) satisfies PipelineCheckin
+    );
   }
 
   /**
@@ -69,7 +100,8 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
     return result.rows.map((row) => {
       return {
         ticketId: row.ticket_id,
-        timestamp: row.checkin_timestamp
+        timestamp: row.checkin_timestamp,
+        checkerEmail: row.checker_email ?? undefined
       } satisfies PipelineCheckin;
     });
   }
@@ -81,14 +113,15 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
   public async checkIn(
     pipelineId: string,
     ticketId: string,
-    timestamp: Date
+    timestamp: Date,
+    checkerEmail: string
   ): Promise<void> {
     await sqlQuery(
       this.db,
       `
-    INSERT INTO generic_issuance_checkins (pipeline_id, ticket_id, checkin_timestamp) VALUES($1, $2, $3)
+    INSERT INTO generic_issuance_checkins (pipeline_id, ticket_id, checkin_timestamp, checker_email) VALUES($1, $2, $3, $4)
     `,
-      [pipelineId, ticketId, timestamp]
+      [pipelineId, ticketId, timestamp, checkerEmail]
     );
   }
 
@@ -118,4 +151,5 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
 export interface PipelineCheckin {
   ticketId: string;
   timestamp: Date;
+  checkerEmail?: string;
 }

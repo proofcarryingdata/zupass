@@ -6,6 +6,7 @@ import {
   requestProveOnServer,
   SignInMessagePayload
 } from "@pcd/passport-interface";
+import { ErrorContainer } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
@@ -24,7 +25,6 @@ import {
 } from "../../../src/passportRequest";
 import { getHost, getOrigin, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
-import { ErrorContainer } from "../../core/error";
 import { RippleLoader } from "../../core/RippleLoader";
 
 export function SemaphoreSignatureProveScreen({

@@ -17,6 +17,7 @@ import { initFrogcryptoRoutes } from "./routes/frogcryptoRoutes";
 import { initGenericIssuanceRoutes } from "./routes/genericIssuanceRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
+import { initMiscRoutes } from "./routes/miscRoutes";
 import { initPCDIssuanceRoutes } from "./routes/pcdIssuanceRoutes";
 import { initPoapRoutes } from "./routes/poapRoutes";
 import { initProvingRoutes } from "./routes/provingRoutes";
@@ -169,8 +170,9 @@ function initAllRoutes(
   initTelegramRoutes(app, context, globalServices);
   initFrogcryptoRoutes(app, context, globalServices);
   initPoapRoutes(app, context, globalServices);
-  initLogRoutes(app);
-  initGenericIssuanceRoutes(app, globalServices);
+  initLogRoutes(app, context, globalServices);
+  initMiscRoutes(app, context, globalServices);
+  initGenericIssuanceRoutes(app, context, globalServices);
 }
 
 export function stopHttpServer(app: Zupass): Promise<void> {

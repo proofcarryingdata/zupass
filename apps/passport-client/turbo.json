@@ -1,10 +1,10 @@
 {
   "extends": ["//"],
-  "pipeline": {
+  "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "dotEnv": [".env"],
       "inputs": [
+        ".env",
         "$TURBO_DEFAULT$",
         "components/**",
         "pages/**",
@@ -37,11 +37,10 @@
       "dependsOn": ["^gen-test-artifacts"],
       "inputs": ["../../packages/lib/gpcircuits/artifacts/**"],
       "outputs": ["public/artifacts/test/proto-pod-gpc/**"],
-      "outputMode": "new-only",
+      "outputLogs": "new-only",
       "cache": true
     },
     "dev": {
-      "dependsOn": ["gen-test-artifacts"],
       "cache": false,
       "persistent": true
     }

@@ -27,11 +27,11 @@ export function login(
         return;
       }
 
-      const pcd = await authenticate(
-        req.body.pcd,
-        session.watermark,
-        req.body.config
-      );
+      const pcd = await authenticate(req.body.pcd, {
+        watermark: session.watermark,
+        config: req.body.config,
+        fieldsToReveal: req.body.fieldsToReveal
+      });
 
       session.ticket = pcd.claim.partialTicket;
 

@@ -147,6 +147,7 @@ export const TwoColumns = styled.div`
   }
 
   .editor-col {
+    flex-grow: 1;
     height: 100%;
     max-height: 100%;
     overflow: hidden;

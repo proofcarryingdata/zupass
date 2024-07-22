@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pod",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -23,11 +23,11 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/util": "0.5.0",
+    "@pcd/util": "0.5.1",
     "@zk-kit/baby-jubjub": "1.0.0-beta",
     "@zk-kit/eddsa-poseidon": "1.0.0-beta",
     "@zk-kit/imt": "2.0.0-beta.4",
@@ -37,10 +37,10 @@
     "poseidon-lite": "^0.2.0"
   },
   "devDependencies": {
-    "@pcd/eddsa-pcd": "0.6.0",
-    "@pcd/eslint-config-custom": "0.11.0",
-    "@pcd/pcd-types": "0.11.0",
-    "@pcd/tsconfig": "0.11.0",
+    "@pcd/eddsa-pcd": "0.6.1",
+    "@pcd/eslint-config-custom": "0.11.1",
+    "@pcd/pcd-types": "0.11.1",
+    "@pcd/tsconfig": "0.11.1",
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",

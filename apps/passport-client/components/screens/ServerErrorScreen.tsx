@@ -1,6 +1,6 @@
+import { LinkButton } from "@pcd/passport-ui";
 import { useSearchParams } from "react-router-dom";
 import { CenterColumn, H1, Spacer, SupportLink, TextCenter } from "../core";
-import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 
 /**

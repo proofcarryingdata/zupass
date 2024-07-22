@@ -3,10 +3,12 @@ import { CSVSheetPreview } from "./CSVSheetPreview";
 
 export function CSVPreview({
   csv,
-  previewType
+  previewType,
+  onChange
 }: {
   csv: string;
   previewType?: PreviewType;
+  onChange?: (newCsv: string) => void;
 }): ReactNode {
   if (!previewType) {
     return null;
@@ -14,7 +16,7 @@ export function CSVPreview({
 
   switch (previewType) {
     case PreviewType.CSVSheet:
-      return <CSVSheetPreview csv={csv} />;
+      return <CSVSheetPreview csv={csv} onChange={onChange} />;
     default:
       return null as never;
   }

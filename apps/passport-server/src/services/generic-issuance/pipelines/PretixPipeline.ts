@@ -22,6 +22,7 @@ import {
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
+  PipelineSetManualCheckInStateResponseValue,
   PipelineType,
   PipelineZuAuthConfig,
   PodboxTicketActionError,
@@ -57,6 +58,7 @@ import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerD
 import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
+import { ApplicationContext } from "../../../types";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
@@ -135,6 +137,7 @@ export class PretixPipeline implements BasePipeline {
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
   private autoIssuanceProvider: AutoIssuanceProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
+  private context: ApplicationContext;
 
   public get id(): string {
     return this.definition.id;
@@ -162,7 +165,8 @@ export class PretixPipeline implements BasePipeline {
     checkinDB: IPipelineCheckinDB,
     consumerDB: IPipelineConsumerDB,
     manualTicketDB: IPipelineManualTicketDB,
-    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
+    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
+    context: ApplicationContext
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -171,6 +175,7 @@ export class PretixPipeline implements BasePipeline {
     this.consumerDB = consumerDB;
     this.manualTicketDB = manualTicketDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
+    this.context = context;
     if (this.definition.options.autoIssuance) {
       this.autoIssuanceProvider = new AutoIssuanceProvider(
         this.id,
@@ -205,7 +210,13 @@ export class PretixPipeline implements BasePipeline {
             (ev) => ev.genericIssuanceId === eventId
           );
         },
-        preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this)
+        preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this),
+        getManualCheckinSummary: async (): Promise<never[]> => [],
+        userCanCheckIn: async (): Promise<boolean> => false,
+        setManualCheckInState:
+          (): Promise<PipelineSetManualCheckInStateResponseValue> => {
+            throw new Error("No implemented");
+          }
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,
@@ -342,7 +353,8 @@ export class PretixPipeline implements BasePipeline {
             id: uuidv5(ticket.position_id, ticket.event.genericIssuanceId),
             secret: ticket.secret,
             timestampConsumed: ticket.pretix_checkin_timestamp,
-            isConsumed: !!ticket.pretix_checkin_timestamp
+            isConsumed: !!ticket.pretix_checkin_timestamp,
+            orderCode: ticket.order_code
           };
         });
         this.loaded = true;
@@ -365,7 +377,9 @@ export class PretixPipeline implements BasePipeline {
           );
         }
 
+        await this.db.clear(this.definition.id);
         await this.db.save(this.definition.id, atomsToSave);
+
         logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
 
         const loadEnd = Date.now();
@@ -713,11 +727,13 @@ export class PretixPipeline implements BasePipeline {
       );
     }
 
-    if (eventData.checkinLists.length > 1) {
-      errors.push(
-        `Event "${eventData.eventInfo.name.en}" (${eventConfig.genericIssuanceId}) has multiple check-in lists`
-      );
-    }
+    // @todo: we should probably allow for multiple check-in lists, and then
+    // we'd need to handle them here.
+    // if (eventData.checkinLists.length > 1) {
+    //   errors.push(
+    //     `Event "${eventData.eventInfo.name.en}" (${eventConfig.genericIssuanceId}) has multiple check-in lists`
+    //   );
+    // }
 
     if (eventData.checkinLists.length < 1) {
       errors.push(
@@ -827,7 +843,8 @@ export class PretixPipeline implements BasePipeline {
             is_consumed: pretix_checkin_timestamp !== null,
             position_id: id.toString(),
             secret,
-            pretix_checkin_timestamp
+            pretix_checkin_timestamp,
+            order_code: order.code
           });
         }
       }
@@ -870,7 +887,7 @@ export class PretixPipeline implements BasePipeline {
     email: string
   ): Promise<ManualTicket[]> {
     return (await this.getAllManualTickets()).filter((manualTicket) => {
-      return manualTicket.attendeeEmail.toLowerCase() === email;
+      return manualTicket.attendeeEmail.toLowerCase() === email.toLowerCase();
     });
   }
 
@@ -929,22 +946,29 @@ export class PretixPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      const { emailClaim } =
+      if (this.definition.options.paused) {
+        return { actions: [] };
+      }
+
+      const { email, semaphoreId } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+
+      span?.setAttribute("email", email);
+      span?.setAttribute("semaphore_id", semaphoreId);
 
       const didUpdate = await this.consumerDB.save(
         this.id,
-        emailClaim.emailAddress,
-        emailClaim.semaphoreId,
+        email,
+        semaphoreId,
         new Date()
       );
 
       if (this.autoIssuanceProvider) {
         const newManualTickets =
           await this.autoIssuanceProvider.maybeIssueForUser(
-            emailClaim.emailAddress,
+            email,
             await this.getAllManualTickets(),
-            await this.db.loadByEmail(this.id, emailClaim.emailAddress)
+            await this.db.loadByEmail(this.id, email)
           );
 
         await Promise.allSettled(
@@ -961,14 +985,7 @@ export class PretixPipeline implements BasePipeline {
         }
       }
 
-      const email = emailClaim.emailAddress;
-      span?.setAttribute("email", email);
-      span?.setAttribute("semaphore_id", emailClaim.semaphoreId);
-
-      const tickets = await this.getTicketsForEmail(
-        email,
-        emailClaim.semaphoreId
-      );
+      const tickets = await this.getTicketsForEmail(email, semaphoreId);
 
       span?.setAttribute("pcds_issued", tickets.length);
 
@@ -1026,6 +1043,7 @@ export class PretixPipeline implements BasePipeline {
       eventName: this.atomToEventName(atom),
       ticketName: this.atomToTicketName(atom),
       checkerEmail: undefined,
+      ticketSecret: atom.secret,
 
       // signed fields
       ticketId: atom.id,
@@ -1095,11 +1113,11 @@ export class PretixPipeline implements BasePipeline {
     const ticketCopy: Partial<ITicketData> = { ...ticketData };
     // the reason we remove `timestampSigned` from the cache key
     // is that it changes every time we instantiate `ITicketData`
-    // for a particular devconnect ticket, rendering the caching
-    // ineffective.
+    // for a particular ticket, rendering the caching ineffective.
     delete ticketCopy.timestampSigned;
     const hash = await getHash(
       stable_stringify(ticketCopy) +
+        "2" +
         eddsaPrivateKey +
         pipelineId +
         ticketPCDType
@@ -1389,18 +1407,15 @@ export class PretixPipeline implements BasePipeline {
         try {
           span?.setAttribute("ticket_id", ticketId);
 
-          const { emailClaim: checkerEmailClaim } =
+          const { email, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
 
-          span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
-          span?.setAttribute(
-            "checked_semaphore_id",
-            checkerEmailClaim.semaphoreId
-          );
+          span?.setAttribute("checker_email", email);
+          span?.setAttribute("checked_semaphore_id", semaphoreId);
 
-          checkerEmail = checkerEmailClaim.emailAddress;
+          checkerEmail = email;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1604,17 +1619,14 @@ export class PretixPipeline implements BasePipeline {
 
       try {
         span?.setAttribute("ticket_id", ticketId);
-        const { emailClaim: checkerEmailClaim } =
+        const { email, semaphoreId } =
           await this.credentialSubservice.verifyAndExpectZupassEmail(
             request.credential
           );
 
-        span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
-        span?.setAttribute(
-          "checked_semaphore_id",
-          checkerEmailClaim.semaphoreId
-        );
-        checkerEmail = checkerEmailClaim.emailAddress;
+        span?.setAttribute("checker_email", email);
+        span?.setAttribute("checked_semaphore_id", semaphoreId);
+        checkerEmail = email;
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);
@@ -1687,7 +1699,12 @@ export class PretixPipeline implements BasePipeline {
         }
 
         try {
-          await this.checkinDB.checkIn(this.id, manualTicket.id, new Date());
+          await this.checkinDB.checkIn(
+            this.id,
+            manualTicket.id,
+            new Date(),
+            checkerEmail
+          );
           this.pendingCheckIns.set(manualTicket.id, {
             status: CheckinStatus.Success,
             timestamp: Date.now()
@@ -1860,8 +1877,18 @@ export class PretixPipeline implements BasePipeline {
     return productConfig;
   }
 
-  public static is(p: Pipeline): p is PretixPipeline {
-    return p.type === PipelineType.Pretix;
+  public async getAllTickets(): Promise<{
+    atoms: PretixAtom[];
+    manual: ManualTicket[];
+  }> {
+    return {
+      atoms: await this.db.load(this.id),
+      manual: this.definition.options.manualTickets ?? []
+    };
+  }
+
+  public static is(p: Pipeline | undefined): p is PretixPipeline {
+    return p?.type === PipelineType.Pretix;
   }
 
   /**
@@ -1929,6 +1956,7 @@ export interface PretixTicket {
   event: PretixEventConfig;
   is_consumed: boolean;
   secret: string;
+  order_code: string;
   position_id: string;
   pretix_checkin_timestamp: Date | null;
 }
@@ -1937,7 +1965,13 @@ export interface PretixAtom extends PipelineAtom {
   name: string;
   eventId: string; // UUID
   productId: string; // UUID
+  orderCode: string;
   secret: string;
   timestampConsumed: Date | null;
   isConsumed: boolean;
+}
+
+export function isPretixAtom(atom: PipelineAtom): atom is PretixAtom {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (atom as any).orderCode !== undefined;
 }

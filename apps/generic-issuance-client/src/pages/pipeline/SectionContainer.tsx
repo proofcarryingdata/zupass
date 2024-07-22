@@ -9,3 +9,8 @@ export const SectionContainer = styled.div`
   display: block;
   overflow-x: hidden;
 `;
+
+export const CappedSectionContainer = styled(SectionContainer)`
+  max-height: 500px;
+  overflow-y: scroll;
+`;

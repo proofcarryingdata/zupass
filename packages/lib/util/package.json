@@ -1,6 +1,6 @@
 {
   "name": "@pcd/util",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -22,7 +22,7 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
@@ -33,8 +33,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.0",
-    "@pcd/tsconfig": "0.11.0",
+    "@pcd/eslint-config-custom": "0.11.1",
+    "@pcd/tsconfig": "0.11.1",
     "@types/chai": "^4.3.5",
     "@types/email-validator": "^1.0.6",
     "@types/mocha": "^10.0.1",

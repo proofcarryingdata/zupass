@@ -1,3 +1,4 @@
+import { CredentialManager } from "@pcd/passport-interface";
 import { getErrorMessage, sleep } from "@pcd/util";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
@@ -5,12 +6,13 @@ import {
   useDispatch,
   useSelf,
   useServerStorageRevision,
+  useStateContext,
   useUpdate
 } from "../../src/appHooks";
 import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { BigInput, H2, Spacer } from "../core";
+import { BigInput, CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 import { ScreenLoader } from "../shared/ScreenLoader";
 
@@ -25,7 +27,7 @@ export function RequireAddPasswordModal(): JSX.Element {
   const update = useUpdate();
   const self = useSelf();
   const serverStorageRevision = useServerStorageRevision();
-
+  const stateContext = useStateContext();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
@@ -40,12 +42,22 @@ export function RequireAddPasswordModal(): JSX.Element {
       if (!currentEncryptionKey) {
         throw new Error("Could not load encryption key");
       }
+
+      const { pcds, identity, credentialCache } = stateContext.getState();
+      const credentialManager = new CredentialManager(
+        identity,
+        pcds,
+        credentialCache
+      );
       await setPassword(
         newPassword,
         currentEncryptionKey,
         serverStorageRevision,
         dispatch,
-        update
+        update,
+        await credentialManager.requestCredential({
+          signatureType: "sempahore-signature-pcd"
+        })
       );
 
       dispatch({
@@ -63,7 +75,14 @@ export function RequireAddPasswordModal(): JSX.Element {
     } finally {
       setLoading(false);
     }
-  }, [loading, newPassword, serverStorageRevision, dispatch, update]);
+  }, [
+    loading,
+    stateContext,
+    newPassword,
+    serverStorageRevision,
+    dispatch,
+    update
+  ]);
 
   if (loading) {
     return <ScreenLoader text="Adding your password..." />;
@@ -71,28 +90,34 @@ export function RequireAddPasswordModal(): JSX.Element {
 
   return (
     <Container>
-      <H2>Reinforce Your Account</H2>
-      <Spacer h={24} />
-      Before adding this PCD, you will need to upgrade to an
-      end-to-end-encrypted Zupass. To upgrade, please choose a password. Make
-      sure to remember it, otherwise you will lose access to all your PCDs.
-      <Spacer h={24} />
-      <BigInput value={self?.email ?? ""} disabled={true} />
-      <Spacer h={8} />
-      <NewPasswordForm
-        error={error}
-        setError={setError}
-        passwordInputPlaceholder="New password"
-        email={self?.email ?? ""}
-        revealPassword={revealPassword}
-        setRevealPassword={setRevealPassword}
-        submitButtonText="Confirm"
-        password={newPassword}
-        confirmPassword={confirmPassword}
-        setPassword={setNewPassword}
-        setConfirmPassword={setConfirmPassword}
-        onSuccess={onAddPassword}
-      />
+      <CenterColumn>
+        <H2>Reinforce Your Account</H2>
+        <Spacer h={24} />
+        <TextCenter>
+          Before adding this PCD, you will need to upgrade to an
+          end-to-end-encrypted Zupass. To upgrade, please choose a password.
+          Make sure to remember it, otherwise you will lose access to all your
+          PCDs.
+        </TextCenter>
+
+        <Spacer h={24} />
+        <BigInput value={self?.email ?? ""} disabled={true} />
+        <Spacer h={8} />
+        <NewPasswordForm
+          error={error}
+          setError={setError}
+          passwordInputPlaceholder="New password"
+          email={self?.email ?? ""}
+          revealPassword={revealPassword}
+          setRevealPassword={setRevealPassword}
+          submitButtonText="Confirm"
+          password={newPassword}
+          confirmPassword={confirmPassword}
+          setPassword={setNewPassword}
+          setConfirmPassword={setConfirmPassword}
+          onSuccess={onAddPassword}
+        />
+      </CenterColumn>
     </Container>
   );
 }

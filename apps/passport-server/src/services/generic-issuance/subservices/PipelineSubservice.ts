@@ -5,10 +5,12 @@ import {
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
+  GenericIssuanceSendPipelineEmailResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   HydratedPipelineHistoryEntry,
   ListFeedsResponseValue,
   PipelineDefinition,
+  PipelineEmailType,
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
@@ -16,7 +18,9 @@ import {
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  isLemonadePipelineDefinition,
+  isPretixPipelineDefinition
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { str } from "@pcd/util";
@@ -36,6 +40,12 @@ import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
 import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
+import {
+  LemonadeAtom,
+  LemonadePipeline,
+  isLemonadeAtom
+} from "../pipelines/LemonadePipeline";
+import { PretixAtom, isPretixAtom } from "../pipelines/PretixPipeline";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
 import { CredentialSubservice } from "./CredentialSubservice";
@@ -113,6 +123,32 @@ export class PipelineSubservice {
    */
   public async getPipelineAtoms(pipelineId: string): Promise<PipelineAtom[]> {
     return this.pipelineAtomDB.load(pipelineId);
+  }
+
+  public async validateEmailAndPretixOrderCode(
+    email: string,
+    code: string
+  ): Promise<boolean> {
+    // todo: optimized query?
+    const definitions = await this.loadPipelineDefinitions();
+    const relevantPipelines = definitions.filter(
+      (d) => isPretixPipelineDefinition(d) || isLemonadePipelineDefinition(d)
+    );
+    const hasAtom = (
+      await Promise.all(
+        relevantPipelines.map((p) => this.pipelineAtomDB.load(p.id))
+      )
+    ).some((atoms) =>
+      (atoms as Array<PretixAtom | LemonadeAtom>).some((a) => {
+        if (isPretixAtom(a)) {
+          return a.email === email && a.orderCode === code;
+        } else if (isLemonadeAtom(a)) {
+          return a.email === email && a.lemonadeTicketId === code;
+        }
+        return false;
+      })
+    );
+    return hasAtom;
   }
 
   /**
@@ -281,11 +317,17 @@ export class PipelineSubservice {
     });
   }
 
-  /**
-   * Deletes all the {@link PipelineAtom}s for a given {@link Pipeline}.
-   */
-  public async clearAtomsForPipeline(pipelineId: string): Promise<void> {
-    await this.pipelineAtomDB.clear(pipelineId);
+  public async handleSendPipelineEmail(
+    pipelineId: string,
+    email: PipelineEmailType
+  ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
+    const pipelineSlot = await this.getPipelineSlot(pipelineId);
+
+    if (LemonadePipeline.is(pipelineSlot?.instance)) {
+      return await pipelineSlot.instance.sendPipelineEmail(email);
+    }
+
+    throw new PCDHTTPError(400, "only lemonade pipeline can send emails");
   }
 
   /**

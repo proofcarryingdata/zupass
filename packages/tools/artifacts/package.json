@@ -1,7 +1,7 @@
 {
   "name": "@pcd/artifacts",
   "type": "module",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "A command line utility designed to manage PCD artifacts.",
   "license": "GPL-3.0-or-later",
   "bin": {
@@ -27,10 +27,10 @@
     "js-logger": "^1.6.1",
     "log-symbols": "^5.1.0",
     "ora": "^7.0.1",
-    "snarkjs": "^0.7.3"
+    "snarkjs": "^0.7.4"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.0",
+    "@pcd/eslint-config-custom": "0.11.1",
     "eslint": "^8.57.0"
   },
   "publishConfig": {

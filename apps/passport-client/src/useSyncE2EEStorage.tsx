@@ -15,7 +15,8 @@ import {
   serializeStorage
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { PCD } from "@pcd/pcd-types";
+import { PCD, SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";
@@ -47,7 +48,8 @@ export async function updateBlobKeyForEncryptedStorage(
   oldEncryptionKey: string,
   newEncryptionKey: string,
   newSalt: string,
-  knownServerStorageRevision?: string
+  knownServerStorageRevision?: string,
+  credential?: SerializedPCD<SemaphoreSignaturePCD>
 ): Promise<UpdateBlobKeyResult> {
   const oldUser = loadSelf();
   const newUser = { ...oldUser, salt: newSalt } as ZupassUserJson;
@@ -74,7 +76,8 @@ export async function updateBlobKeyForEncryptedStorage(
     newUser.uuid,
     newSalt,
     encryptedStorage,
-    knownServerStorageRevision
+    knownServerStorageRevision,
+    credential
   );
   if (changeResult.success) {
     console.log(
@@ -150,7 +153,8 @@ export async function uploadSerializedStorage(
   pcds: PCDCollection,
   serializedStorage: SyncedEncryptedStorage,
   storageHash: string,
-  knownRevision?: string
+  knownRevision?: string,
+  credential?: SerializedPCD
 ): Promise<UploadStorageResult> {
   if (
     !validateAndLogRunningAppState(
@@ -182,7 +186,8 @@ export async function uploadSerializedStorage(
     appConfig.zupassServer,
     blobKey,
     encryptedStorage,
-    knownRevision
+    knownRevision,
+    credential
   );
 
   if (uploadResult.success) {
@@ -202,6 +207,11 @@ export async function uploadSerializedStorage(
     return { success: false, error: uploadResult.error };
   } else {
     console.error("[SYNC] failed to upload e2ee storage", uploadResult.error);
+    requestLogToServer(appConfig.zupassServer, "sync-failed", {
+      user: user.uuid,
+      pcdCollectionSize: pcds.size(),
+      storageCipherTextLength: encryptedStorage.ciphertext.length
+    });
     return { success: false, error: uploadResult.error };
   }
 }

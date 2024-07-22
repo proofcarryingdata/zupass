@@ -5,6 +5,7 @@ import {
   PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
+  PipelineSemaphoreGroupInfo,
   PipelineType,
   PipelineZuAuthConfig,
   PollFeedRequest,
@@ -12,18 +13,27 @@ import {
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
+import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { parse } from "csv-parse";
-import { v4 as uuid } from "uuid";
+import PQueue from "p-queue";
+import { v4 as uuid, v5 as uuidv5 } from "uuid";
 import {
   IPipelineAtomDB,
   PipelineAtom
 } from "../../../../database/queries/pipelineAtomDB";
+import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
 import { logger } from "../../../../util/logger";
 import { setError, traced } from "../../../telemetryService";
+import {
+  SemaphoreGroupProvider,
+  SemaphoreGroupTicketInfo
+} from "../../SemaphoreGroupProvider";
 import {
   FeedIssuanceCapability,
   makeGenericIssuanceFeedUrl
 } from "../../capabilities/FeedIssuanceCapability";
+import { SemaphoreGroupCapability } from "../../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../../capabilities/types";
 import { tracePipeline } from "../../honeycombQueries";
 import { CredentialSubservice } from "../../subservices/CredentialSubservice";
@@ -53,6 +63,9 @@ export class CSVPipeline implements BasePipeline {
   private db: IPipelineAtomDB<CSVAtom>;
   private definition: CSVPipelineDefinition;
   private credentialSubservice: CredentialSubservice;
+  private semaphoreGroupProvider?: SemaphoreGroupProvider;
+  private consumerDB: IPipelineConsumerDB;
+  private semaphoreUpdateQueue: PQueue;
 
   public get id(): string {
     return this.definition.id;
@@ -66,7 +79,9 @@ export class CSVPipeline implements BasePipeline {
     eddsaPrivateKey: string,
     definition: CSVPipelineDefinition,
     db: IPipelineAtomDB,
-    credentialSubservice: CredentialSubservice
+    credentialSubservice: CredentialSubservice,
+    consumerDB: IPipelineConsumerDB,
+    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -81,9 +96,50 @@ export class CSVPipeline implements BasePipeline {
         ),
         options: this.definition.options.feedOptions,
         getZuAuthConfig: this.getZuAuthConfig.bind(this)
-      } satisfies FeedIssuanceCapability
+      } satisfies FeedIssuanceCapability,
+      {
+        type: PipelineCapability.SemaphoreGroup,
+        getSerializedLatestGroup: async (
+          groupId: string
+        ): Promise<SerializedSemaphoreGroup | undefined> => {
+          return this.semaphoreGroupProvider?.getSerializedLatestGroup(groupId);
+        },
+        getLatestGroupRoot: async (
+          groupId: string
+        ): Promise<string | undefined> => {
+          return this.semaphoreGroupProvider?.getLatestGroupRoot(groupId);
+        },
+        getSerializedHistoricalGroup: async (
+          groupId: string,
+          rootHash: string
+        ): Promise<SerializedSemaphoreGroup | undefined> => {
+          return this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
+            groupId,
+            rootHash
+          );
+        },
+        getSupportedGroups: (): PipelineSemaphoreGroupInfo[] => {
+          return this.semaphoreGroupProvider?.getSupportedGroups() ?? [];
+        }
+      } satisfies SemaphoreGroupCapability
     ] as unknown as BasePipelineCapability[];
     this.credentialSubservice = credentialSubservice;
+    this.consumerDB = consumerDB;
+    if (definition.options.semaphoreGroupName) {
+      this.semaphoreGroupProvider = new SemaphoreGroupProvider(
+        this.id,
+        [
+          {
+            name: definition.options.semaphoreGroupName,
+            groupId: uuidv5(this.id, this.id),
+            memberCriteria: []
+          }
+        ],
+        consumerDB,
+        semaphoreHistoryDB
+      );
+    }
+    this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
   }
 
   private async issue(req: PollFeedRequest): Promise<PollFeedResponseValue> {
@@ -102,10 +158,26 @@ export class CSVPipeline implements BasePipeline {
 
       if (req.pcd) {
         try {
-          const { emailClaim } =
+          const { email, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
-          requesterEmail = emailClaim.emailAddress;
-          requesterSemaphoreId = emailClaim.semaphoreId;
+          requesterEmail = email;
+          requesterSemaphoreId = semaphoreId;
+          // Consumer is validated, so save them in the consumer list
+          const didUpdate = await this.consumerDB.save(
+            this.id,
+            email,
+            semaphoreId,
+            new Date()
+          );
+
+          if (this.definition.options.semaphoreGroupName) {
+            // If the user's Semaphore commitment has changed, `didUpdate` will be
+            // true, and we need to update the Semaphore groups
+            if (didUpdate) {
+              span?.setAttribute("semaphore_groups_updated", true);
+              await this.triggerSemaphoreGroupUpdate();
+            }
+          }
         } catch (e) {
           logger(LOG_TAG, "credential PCD not verified for req", req);
         }
@@ -205,7 +277,8 @@ export class CSVPipeline implements BasePipeline {
           lastRunEndTimestamp: end.toISOString(),
           lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,
-          success: true
+          success: true,
+          semaphoreGroups: this.semaphoreGroupProvider?.getSupportedGroups()
         } satisfies PipelineLoadSummary;
       } catch (e) {
         setError(e, span);
@@ -231,6 +304,9 @@ export class CSVPipeline implements BasePipeline {
 
   public async start(): Promise<void> {
     logger(LOG_TAG, `starting csv pipeline`);
+    // Initialize the Semaphore Group provider by loading groups from the DB,
+    // if one exists.
+    await this.semaphoreGroupProvider?.start();
   }
 
   public async stop(): Promise<void> {
@@ -270,6 +346,66 @@ export class CSVPipeline implements BasePipeline {
       }
     }
     return Object.values(uniqueProductMetadata);
+  }
+
+  /**
+   * Collects data that is require for Semaphore groups to update.
+   * Returns an array of { eventId, productId, email } objects, which the
+   * SemaphoreGroupProvider will use to look up Semaphore IDs and match them
+   * to configured Semaphore groups.
+   * In practice, CSV pipelines do not currently support Semaphore groups that
+   * are filtered by event ID or product ID, but this data is required by the
+   * SemaphoreGroupProvider class.
+   */
+  private async semaphoreGroupData(): Promise<SemaphoreGroupTicketInfo[]> {
+    return traced(LOG_NAME, "semaphoreGroupData", async (span) => {
+      const data = [];
+      if (
+        this.definition.options.outputType === CSVPipelineOutputType.Ticket ||
+        this.definition.options.outputType === CSVPipelineOutputType.PODTicket
+      ) {
+        for (const atom of await this.db.load(this.id)) {
+          // We can use a dummy Semaphore ID here because we only care about
+          // the event ID and product ID for the ticket.
+          const ticket = rowToTicket(atom.row, "0", this.id);
+          if (ticket) {
+            data.push({
+              email: ticket.attendeeEmail,
+              eventId: ticket.eventId,
+              productId: ticket.productId
+            });
+          }
+        }
+      }
+
+      span?.setAttribute("ticket_data_length", data.length);
+      return data;
+    });
+  }
+
+  /**
+   * Tell the Semaphore group provider to update memberships.
+   * Marked as public so that it can be called from tests, but otherwise should
+   * not be called from outside the class.
+   */
+  public async triggerSemaphoreGroupUpdate(): Promise<void> {
+    return traced(LOG_NAME, "triggerSemaphoreGroupUpdate", async (_span) => {
+      tracePipeline(this.definition);
+      // Whenever an update is triggered, we want to make sure that the
+      // fetching of data and the actual update are atomic.
+      // If there were two concurrenct updates, it might be possible for them
+      // to use slightly different data sets, but send them to the `update`
+      // method in the wrong order, producing unexpected outcomes. Although the
+      // group diffing mechanism would eventually cause the group to converge
+      // on the correct membership, we can avoid any temporary inconsistency by
+      // queuing update requests.
+      // By returning this promise, we allow the caller to await on the update
+      // having been processed.
+      return this.semaphoreUpdateQueue.add(async () => {
+        const data = await this.semaphoreGroupData();
+        await this.semaphoreGroupProvider?.update(data);
+      });
+    });
   }
 
   /**

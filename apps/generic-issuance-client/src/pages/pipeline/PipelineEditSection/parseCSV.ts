@@ -1,4 +1,5 @@
 import { parse } from "csv-parse";
+import { parse as syncParse } from "csv-parse/sync";
 
 export function parseCSV(csv: string): Promise<string[][]> {
   return new Promise<string[][]>((resolve, reject) => {
@@ -23,4 +24,8 @@ export function parseCSV(csv: string): Promise<string[][]> {
     parser.write(csv);
     parser.end();
   });
+}
+
+export function syncParseCSV(csv: string): string[][] {
+  return syncParse(csv);
 }

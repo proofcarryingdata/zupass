@@ -8,11 +8,13 @@ import {
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceSendEmailResponseValue,
+  GenericIssuanceSendPipelineEmailResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   GenericPretixEvent,
   GenericPretixProduct,
   ListFeedsResponseValue,
   PipelineDefinition,
+  PipelineEmailType,
   PipelineInfoResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
@@ -36,6 +38,10 @@ import {
   PipelineConsumerDB
 } from "../../database/queries/pipelineConsumerDB";
 import {
+  IPipelineEmailDB,
+  PipelineEmailDB
+} from "../../database/queries/pipelineEmailDB";
+import {
   IPipelineManualTicketDB,
   PipelineManualTicketDB
 } from "../../database/queries/pipelineManualTicketDB";
@@ -52,6 +58,7 @@ import {
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { DiscordService } from "../discordService";
+import { EmailService } from "../emailService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
@@ -76,6 +83,7 @@ export class GenericIssuanceService {
   private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
+  private emailDB: IPipelineEmailDB;
   private consumerDB: IPipelineConsumerDB;
   private manualTicketDB: IPipelineManualTicketDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
@@ -96,7 +104,9 @@ export class GenericIssuanceService {
     rollbarService: RollbarService | null,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
-    cacheService: PersistentCacheService
+    emailService: EmailService,
+    cacheService: PersistentCacheService,
+    credentialSubservice: CredentialSubservice
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
@@ -107,13 +117,14 @@ export class GenericIssuanceService {
     this.genericPretixAPI = pretixAPI;
     this.contactDB = new ContactSharingDB(this.context.dbPool);
     this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
+    this.emailDB = new PipelineEmailDB(this.context.dbPool);
     this.pipelineAtomDB = new InMemoryPipelineAtomDB();
     this.userSubservice = new UserSubservice(
       context,
       stytchClient,
       genericIssuanceClientUrl
     );
-    this.credentialSubservice = new CredentialSubservice(zupassPublicKey);
+    this.credentialSubservice = credentialSubservice;
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
@@ -131,11 +142,14 @@ export class GenericIssuanceService {
         pipelineAtomDB: this.pipelineAtomDB,
         checkinDB: this.checkinDB,
         contactDB: this.contactDB,
+        emailDB: this.emailDB,
         badgeDB: this.badgeDB,
         consumerDB: this.consumerDB,
         manualTicketDB: this.manualTicketDB,
         semaphoreHistoryDB: this.semaphoreHistoryDB,
-        credentialSubservice: this.credentialSubservice
+        credentialSubservice: this.credentialSubservice,
+        emailService,
+        context
       } satisfies InstantiatePipelineArgs
     );
   }
@@ -284,10 +298,24 @@ export class GenericIssuanceService {
     );
   }
 
+  public async validateEmailAndPretixOrderCode(
+    email: string,
+    code: string
+  ): Promise<boolean> {
+    return this.pipelineSubservice.validateEmailAndPretixOrderCode(email, code);
+  }
+
   public async handleGetPipelineSemaphoreGroups(
     pipelineId: string
   ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {
     return this.pipelineSubservice.handleGetPipelineSemaphoreGroups(pipelineId);
+  }
+
+  public async handleSendPipelineEmail(
+    pipelineId: string,
+    email: PipelineEmailType
+  ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
+    return this.pipelineSubservice.handleSendPipelineEmail(pipelineId, email);
   }
 
   /**

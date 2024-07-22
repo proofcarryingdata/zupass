@@ -1,13 +1,19 @@
 import { Emitter } from "@pcd/emitter";
+import { ObjPCD, ObjPCDPackage } from "@pcd/obj-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  matchActionToPermission,
   PCDAction,
   PCDCollection,
-  PCDPermission
+  PCDPermission,
+  matchActionToPermission
 } from "@pcd/pcd-collection";
-import { ArgsOf, PCDPackage, PCDTypeNameOf } from "@pcd/pcd-types";
-import { isFulfilled } from "@pcd/util";
+import {
+  ArgsOf,
+  PCDPackage,
+  PCDTypeNameOf,
+  SerializedPCD
+} from "@pcd/pcd-types";
+import { isFulfilled, randomUUID } from "@pcd/util";
 import stringify from "fast-json-stable-stringify";
 import { v4 as uuid } from "uuid";
 import { CredentialManagerAPI } from "./CredentialManager";
@@ -175,13 +181,10 @@ export class FeedSubscriptionManager {
    * `this.errors` for display to the user.
    */
   public async pollSubscriptions(
-    credentialManager: CredentialManagerAPI
+    credentialManager: CredentialManagerAPI,
+    onFinish?: (actions: SubscriptionActions) => Promise<void>
   ): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
-
-    await credentialManager.prepareCredentials(
-      this.activeSubscriptions.map((sub) => sub.feed.credentialRequest)
-    );
 
     for (const subscription of this.activeSubscriptions) {
       // Subscriptions which have ceased issuance should not be polled
@@ -193,7 +196,7 @@ export class FeedSubscriptionManager {
         continue;
       }
       responsePromises.push(
-        this.fetchSingleSubscription(subscription, credentialManager)
+        this.fetchSingleSubscription(subscription, credentialManager, onFinish)
       );
     }
 
@@ -212,14 +215,54 @@ export class FeedSubscriptionManager {
    */
   public async pollSingleSubscription(
     subscription: Subscription,
-    credentialManager: CredentialManagerAPI
+    credentialManager: CredentialManagerAPI,
+    onFinish?: (actions: SubscriptionActions) => Promise<void>
   ): Promise<SubscriptionActions[]> {
     const actions = await this.fetchSingleSubscription(
       subscription,
-      credentialManager
+      credentialManager,
+      onFinish
     );
     this.updatedEmitter.emit();
     return actions;
+  }
+
+  private static AUTH_KEY_KEY = "authKey";
+  public static saveAuthKey(authKey: string | undefined): void {
+    if (authKey === undefined) {
+      localStorage?.removeItem(this.AUTH_KEY_KEY);
+    } else {
+      localStorage?.setItem(this.AUTH_KEY_KEY, authKey);
+    }
+  }
+
+  public getSavedAuthKey(): string | undefined {
+    return (
+      localStorage?.getItem(FeedSubscriptionManager.AUTH_KEY_KEY) ?? undefined
+    );
+  }
+
+  private async getAuthKeyForFeed(
+    sub: Subscription
+  ): Promise<string | undefined> {
+    const podboxServerUrl = process.env.PASSPORT_SERVER_URL;
+    if (!podboxServerUrl) {
+      return undefined;
+    }
+
+    if (!sub.providerUrl.startsWith(podboxServerUrl)) {
+      return undefined;
+    }
+
+    return this.getSavedAuthKey();
+  }
+
+  private async makeAlternateCredentialPCD(
+    authKey: string
+  ): Promise<SerializedPCD> {
+    return await ObjPCDPackage.serialize(
+      new ObjPCD(randomUUID(), {}, { obj: { authKey } })
+    );
   }
 
   /**
@@ -229,17 +272,24 @@ export class FeedSubscriptionManager {
    */
   private async fetchSingleSubscription(
     subscription: Subscription,
-    credentialManager: CredentialManagerAPI
+    credentialManager: CredentialManagerAPI,
+    onFinish?: (actions: SubscriptionActions) => Promise<void>
   ): Promise<SubscriptionActions[]> {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {
+      const authKey = await this.getAuthKeyForFeed(subscription);
+
+      const pcdCredential: SerializedPCD | undefined = authKey
+        ? await this.makeAlternateCredentialPCD(authKey)
+        : await credentialManager.requestCredential({
+            signatureType: "sempahore-signature-pcd",
+            pcdType: subscription.feed.credentialRequest.pcdType
+          });
+
       const result = await this.api.pollFeed(subscription.providerUrl, {
         feedId: subscription.feed.id,
-        pcd: await credentialManager.requestCredential({
-          signatureType: "sempahore-signature-pcd",
-          pcdType: subscription.feed.credentialRequest.pcdType
-        })
+        pcd: pcdCredential
       });
 
       if (!result.success) {
@@ -255,10 +305,13 @@ export class FeedSubscriptionManager {
 
       this.validateActions(subscription, actions);
 
-      responses.push({
-        actions,
-        subscription
-      });
+      const subscriptionActions = { actions, subscription };
+
+      if (onFinish) {
+        await onFinish(subscriptionActions);
+        this.updatedEmitter.emit();
+      }
+      responses.push(subscriptionActions);
     } catch (e) {
       this.setError(subscription.id, {
         type: SubscriptionErrorType.FetchError,

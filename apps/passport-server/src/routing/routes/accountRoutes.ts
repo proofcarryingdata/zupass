@@ -2,6 +2,8 @@ import {
   AgreeTermsRequest,
   ConfirmEmailRequest,
   CreateNewUserRequest,
+  DeleteAccountRequest,
+  OneClickLoginRequest,
   SaltResponseValue,
   VerifyTokenRequest
 } from "@pcd/passport-interface";
@@ -83,6 +85,27 @@ export function initAccountRoutes(
     const result = await userService.handleVerifyToken(token, email);
 
     res.status(200).json(result);
+  });
+
+  app.post("/account/one-click-login", async (req: Request, res: Response) => {
+    const email = checkBody<OneClickLoginRequest, "email">(req, "email");
+    const code = checkBody<OneClickLoginRequest, "code">(req, "code");
+    const commitment = checkBody<OneClickLoginRequest, "commitment">(
+      req,
+      "commitment"
+    );
+    const encryptionKey = checkBody<OneClickLoginRequest, "encryptionKey">(
+      req,
+      "encryptionKey"
+    );
+
+    await userService.handleOneClickLogin(
+      email,
+      code,
+      commitment,
+      encryptionKey,
+      res
+    );
   });
 
   /**
@@ -169,5 +192,11 @@ export function initAccountRoutes(
    */
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
     await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
+  });
+
+  app.post("/account/delete", async (req: Request, res: Response) => {
+    const pcd = checkBody<DeleteAccountRequest, "pcd">(req, "pcd");
+    await userService.handleDeleteAccount(pcd);
+    res.sendStatus(200);
   });
 }

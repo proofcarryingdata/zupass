@@ -1,11 +1,12 @@
-import { HexString } from "@pcd/passport-crypto";
+import { HexString, getHash } from "@pcd/passport-crypto";
 import {
   AgreeTermsResult,
   ConfirmEmailResponseValue,
   LATEST_PRIVACY_NOTICE,
+  NewUserResponseValue,
+  OneClickLoginResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
-  VerifyTokenResponseValue,
-  ZupassUserJson
+  VerifyTokenResponseValue
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -17,8 +18,13 @@ import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
-import { upsertUser } from "../database/queries/saveUser";
 import {
+  deleteE2EEByCommitment,
+  fetchEncryptedStorage
+} from "../database/queries/e2ee";
+import { saveUserBackup, upsertUser } from "../database/queries/saveUser";
+import {
+  deleteUserByEmail,
   fetchUserByCommitment,
   fetchUserByEmail,
   fetchUserByUUID
@@ -29,6 +35,8 @@ import { logger } from "../util/logger";
 import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
+import { GenericIssuanceService } from "./generic-issuance/GenericIssuanceService";
+import { CredentialSubservice } from "./generic-issuance/subservices/CredentialSubservice";
 import { RateLimitService } from "./rateLimitService";
 import { SemaphoreService } from "./semaphoreService";
 
@@ -46,19 +54,25 @@ export class UserService {
   private readonly emailTokenService: EmailTokenService;
   private readonly emailService: EmailService;
   private readonly rateLimitService: RateLimitService;
+  private readonly genericIssuanceService: GenericIssuanceService | null;
+  private readonly credentialSubservice: CredentialSubservice;
 
   public constructor(
     context: ApplicationContext,
     semaphoreService: SemaphoreService,
     emailTokenService: EmailTokenService,
     emailService: EmailService,
-    rateLimitService: RateLimitService
+    rateLimitService: RateLimitService,
+    genericIssuanceService: GenericIssuanceService | null,
+    credentialSubservice: CredentialSubservice
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
     this.emailTokenService = emailTokenService;
     this.emailService = emailService;
     this.rateLimitService = rateLimitService;
+    this.genericIssuanceService = genericIssuanceService;
+    this.credentialSubservice = credentialSubservice;
     this.bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
@@ -115,11 +129,24 @@ export class UserService {
 
     const newEmailToken =
       await this.emailTokenService.saveNewTokenForEmail(email);
-
-    const existingCommitment = await fetchUserByEmail(
-      this.context.dbPool,
-      email
-    );
+    let existingCommitment = await fetchUserByEmail(this.context.dbPool, email);
+    if (
+      existingCommitment?.encryption_key &&
+      process.env.DELETE_MISSING_USERS === "true"
+    ) {
+      const blobKey = await getHash(existingCommitment.encryption_key);
+      const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
+      if (!storage) {
+        logger(
+          `[USER_SERVICE] Deleting user with no storage: ${JSON.stringify(
+            existingCommitment
+          )}`
+        );
+        await saveUserBackup(this.context.dbPool, existingCommitment);
+        await deleteUserByEmail(this.context.dbPool, existingCommitment.email);
+        existingCommitment = null;
+      }
+    }
 
     if (
       existingCommitment !== null &&
@@ -176,6 +203,95 @@ export class UserService {
           ` Please contact ${ZUPASS_SUPPORT_EMAIL} for further assistance.`
       );
     }
+  }
+
+  public async handleOneClickLogin(
+    email: string,
+    code: string,
+    commitment: string,
+    encryptionKey: string,
+    res: Response
+  ): Promise<void> {
+    if (!this.genericIssuanceService) {
+      throw new PCDHTTPError(500, "Generic issuance service not initialized");
+    }
+    const valid =
+      await this.genericIssuanceService.validateEmailAndPretixOrderCode(
+        email,
+        code
+      );
+    if (!valid) {
+      throw new PCDHTTPError(
+        403,
+        "Invalid Zupass link. Please log in through the home page."
+      );
+    }
+
+    let existingUser = await fetchUserByEmail(this.context.dbPool, email);
+    if (
+      existingUser?.encryption_key &&
+      process.env.DELETE_MISSING_USERS === "true"
+    ) {
+      const blobKey = await getHash(existingUser.encryption_key);
+      const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
+      if (!storage) {
+        logger(
+          `[USER_SERVICE] Deleting user with no storage: ${JSON.stringify(
+            existingUser
+          )}`
+        );
+        await saveUserBackup(this.context.dbPool, existingUser);
+        await deleteUserByEmail(this.context.dbPool, existingUser.email);
+        existingUser = null;
+      }
+    }
+
+    if (existingUser) {
+      res.status(200).json({
+        isNewUser: false,
+        encryptionKey: existingUser.encryption_key,
+        authKey: existingUser.auth_key
+      } satisfies OneClickLoginResponseValue);
+      return;
+    }
+    // todo: rate limit
+    await upsertUser(this.context.dbPool, {
+      email,
+      commitment,
+      encryptionKey,
+      terms_agreed: LATEST_PRIVACY_NOTICE,
+      extra_issuance: false
+    });
+
+    // Reload Merkle trees
+    this.semaphoreService.scheduleReload();
+
+    const user = await fetchUserByEmail(this.context.dbPool, email);
+    if (!user) {
+      throw new PCDHTTPError(403, "No user with that email exists");
+    }
+
+    // Slightly redundantly, this will set the "terms agreed" again
+    // However, having a single canonical transaction for this seems like
+    // a benefit
+    logger(
+      `[USER_SERVICE] Agreeing to terms: ${LATEST_PRIVACY_NOTICE}`,
+      user.email
+    );
+    await agreeTermsAndUnredactTickets(
+      this.context.dbPool,
+      user.email,
+      LATEST_PRIVACY_NOTICE
+    );
+
+    const userJson = userRowToZupassUserJson(user);
+
+    logger(`[USER_SERVICE] logged in a user`, userJson);
+    res.status(200).json({
+      isNewUser: true,
+      zupassUser: userJson,
+      authKey: user.auth_key
+    } satisfies OneClickLoginResponseValue);
   }
 
   public async handleNewUser(
@@ -262,9 +378,13 @@ export class UserService {
     );
 
     const userJson = userRowToZupassUserJson(user);
+    const response: NewUserResponseValue = {
+      ...userJson,
+      authKey: user.auth_key
+    };
 
     logger(`[USER_SERVICE] logged in a user`, userJson);
-    res.status(200).json(userJson satisfies ZupassUserJson);
+    res.status(200).json(response);
   }
 
   /**
@@ -311,6 +431,45 @@ export class UserService {
     }
 
     return user;
+  }
+
+  /**
+   * Returns either the user, or null if no user with the given commitment can be found.
+   */
+  public async getUserByCommitment(
+    commitment: string
+  ): Promise<UserRow | null> {
+    const user = await fetchUserByCommitment(this.context.dbPool, commitment);
+
+    if (!user) {
+      logger("[SEMA] no user with that commitment exists");
+      return null;
+    }
+
+    return user;
+  }
+
+  public async handleDeleteAccount(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<void> {
+    const verifyResult =
+      await this.credentialSubservice.tryVerify(serializedPCD);
+
+    if (!verifyResult) {
+      throw new PCDHTTPError(400, "Invalid signature");
+    }
+
+    const user = await fetchUserByCommitment(
+      this.context.dbPool,
+      verifyResult.semaphoreId
+    );
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await deleteUserByEmail(this.context.dbPool, user.email);
+    await deleteE2EEByCommitment(this.context.dbPool, user.commitment);
   }
 
   /**
@@ -409,14 +568,18 @@ export class UserService {
       );
     }
 
-    const encryptionKey = await this.getEncryptionKeyForUser(email);
+    const user = await this.getUserByEmail(email);
+
     // If we return the user's encryption key, change the token so this request
     // can't be replayed.
-    if (encryptionKey) {
+    if (user?.encryption_key) {
       await this.emailTokenService.saveNewTokenForEmail(email);
     }
 
-    return { encryptionKey };
+    return {
+      encryptionKey: user?.encryption_key ?? null,
+      authKey: user?.auth_key ?? null
+    };
   }
 }
 
@@ -425,13 +588,17 @@ export function startUserService(
   semaphoreService: SemaphoreService,
   emailTokenService: EmailTokenService,
   emailService: EmailService,
-  rateLimitService: RateLimitService
+  rateLimitService: RateLimitService,
+  genericIssuanceService: GenericIssuanceService | null,
+  credentialSubservice: CredentialSubservice
 ): UserService {
   return new UserService(
     context,
     semaphoreService,
     emailTokenService,
     emailService,
-    rateLimitService
+    rateLimitService,
+    genericIssuanceService,
+    credentialSubservice
   );
 }

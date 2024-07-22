@@ -32,7 +32,9 @@ export default function Home() {
           zupassUrl: process.env.NEXT_PUBLIC_ZUPASS_SERVER_URL as string,
           fieldsToReveal: {
             revealAttendeeEmail: true,
-            revealAttendeeName: true
+            revealAttendeeName: true,
+            revealEventId: true,
+            revealProductId: true
           },
           watermark,
           config: config

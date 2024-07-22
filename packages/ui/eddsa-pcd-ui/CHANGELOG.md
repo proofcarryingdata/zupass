@@ -1,5 +1,15 @@
 # @pcd/eddsa-pcd-ui
 
+## 0.2.1
+
+### Patch Changes
+
+- new package versions
+- Updated dependencies
+  - @pcd/passport-ui@0.11.1
+  - @pcd/pcd-types@0.11.1
+  - @pcd/eddsa-pcd@0.6.1
+
 ## 0.2.0
 
 ### Minor Changes

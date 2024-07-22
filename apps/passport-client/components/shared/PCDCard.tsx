@@ -7,7 +7,7 @@ import { EdDSATicketPCDUI } from "@pcd/eddsa-ticket-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { PODTicketPCDUI } from "@pcd/pod-ticket-pcd-ui";
-import { memo, useCallback, useContext, useMemo } from "react";
+import { memo, useCallback, useContext, useMemo, useState } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
@@ -28,24 +28,35 @@ function PCDCardImpl({
   expanded,
   onClick,
   hideRemoveButton,
-  hideHeader
+  hideHeader,
+  hidePadding
 }: {
   pcd: PCD;
   expanded?: boolean;
   isMainIdentity?: boolean;
-  onClick?: (id: string) => void;
+  onClick?: (id: string, cardContainer: HTMLDivElement | undefined) => void;
   hideRemoveButton?: boolean;
   hideHeader?: boolean;
+  hidePadding?: boolean;
 }): JSX.Element {
+  const [containerRef, setContainerRef] = useState<HTMLDivElement | undefined>(
+    undefined
+  );
+
   const clickHandler = useCallback(() => {
-    onClick?.(pcd.id);
-  }, [onClick, pcd.id]);
+    onClick?.(pcd.id, containerRef);
+  }, [containerRef, onClick, pcd.id]);
 
   isMainIdentity = isMainIdentity ?? false;
 
-  if (expanded) {
-    return (
-      <CardContainerExpanded>
+  return (
+    <CardContainer
+      ref={(e) => setContainerRef(e ?? undefined)}
+      key={pcd.id}
+      onClick={clickHandler}
+      style={!expanded ? { padding: "8px 12px", cursor: "pointer" } : {}}
+    >
+      {expanded ? (
         <CardOutlineExpanded>
           {!hideHeader && (
             <CardHeader isMainIdentity={isMainIdentity}>
@@ -53,25 +64,25 @@ function PCDCardImpl({
             </CardHeader>
           )}
           <CardBodyContainer>
-            <CardBody pcd={pcd} isMainIdentity={isMainIdentity} />
+            <CardBody
+              pcd={pcd}
+              isMainIdentity={isMainIdentity}
+              hidePadding={hidePadding}
+            />
             {!hideRemoveButton && (
               <CardFooter pcd={pcd} isMainIdentity={isMainIdentity} />
             )}
-            {hideRemoveButton && <Spacer h={8} />}
+            {hideRemoveButton && !hidePadding && <Spacer h={8} />}
           </CardBodyContainer>
         </CardOutlineExpanded>
-      </CardContainerExpanded>
-    );
-  }
-
-  return (
-    <CardContainerCollapsed onClick={clickHandler}>
-      <CardOutlineCollapsed>
-        <CardHeaderCollapsed>
-          <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
-        </CardHeaderCollapsed>
-      </CardOutlineCollapsed>
-    </CardContainerCollapsed>
+      ) : (
+        <CardOutlineCollapsed>
+          <CardHeaderCollapsed>
+            <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
+          </CardHeaderCollapsed>
+        </CardOutlineCollapsed>
+      )}
+    </CardContainer>
   );
 }
 
@@ -152,7 +163,13 @@ function getUI(
  * of ZK proofs, and can be configured to include different URLs in their QR
  * codes based on the type of ticket provided.
  */
-function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element | null {
+function TicketWrapper({
+  pcd,
+  hidePadding
+}: {
+  pcd: EdDSATicketPCD;
+  hidePadding?: boolean;
+}): JSX.Element | null {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
@@ -194,6 +211,7 @@ function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element | null {
 
   return identityPCD ? (
     <Card
+      hidePadding={hidePadding}
       pcd={pcd}
       identityPCD={identityPCD}
       verifyURL={verifyURL}
@@ -204,10 +222,12 @@ function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element | null {
 
 function CardBody({
   pcd,
-  isMainIdentity
+  isMainIdentity,
+  hidePadding
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
+  hidePadding?: boolean;
 }): JSX.Element {
   const pcdCollection = usePCDCollection();
 
@@ -216,7 +236,7 @@ function CardBody({
   }
   if (pcdCollection.hasPackage(pcd.type)) {
     if (isEdDSATicketPCD(pcd)) {
-      return <TicketWrapper pcd={pcd} />;
+      return <TicketWrapper pcd={pcd} hidePadding={hidePadding} />;
     }
     if (isPODTicketPCD(pcd)) {
       const Component = PODTicketPCDUI.renderCardBody;
@@ -247,14 +267,9 @@ function CardBody({
   );
 }
 
-export const CardContainerExpanded = styled.div`
+export const CardContainer = styled.div`
   width: 100%;
   padding: 8px;
-`;
-
-const CardContainerCollapsed = styled(CardContainerExpanded)`
-  cursor: pointer;
-  padding: 12px 8px;
 `;
 
 export const CardOutlineExpanded = styled.div`

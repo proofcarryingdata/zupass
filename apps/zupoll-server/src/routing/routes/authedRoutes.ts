@@ -1,13 +1,23 @@
-import { getPodboxConfigs } from "@pcd/zupoll-shared";
-import { BallotType } from "@prisma/client";
+import {
+  BallotType,
+  RedirectConfig,
+  findConfigForVoterUrl,
+  getPodboxConfigs
+} from "@pcd/zupoll-shared";
 import express, { NextFunction, Request, Response } from "express";
+import urljoin from "url-join";
 import { ApplicationContext } from "../../application";
-import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../../env";
+import {
+  ZUPASS_CLIENT_URL,
+  ZUPASS_SERVER_URL,
+  ZUPOLL_API_KEY
+} from "../../env";
 import {
   getBallotById,
   getBallotPolls,
   getBallotsForPipelineId,
-  getBallotsVisibleToUserType
+  getBallotsVisibleToUserType,
+  updateBallotVoterGroup
 } from "../../persistence";
 import {
   authenticateJWT,
@@ -128,7 +138,12 @@ export function initAuthedRoutes(
               AuthType.PODBOX
             ].includes(req.authUserType as any)
           ) {
-            res.sendStatus(403);
+            const redirectInfo = getRedirectInfo(ballot);
+            if (redirectInfo) {
+              res.status(403).json(redirectInfo satisfies RedirectConfig);
+            } else {
+              res.sendStatus(403);
+            }
             return;
           }
 
@@ -146,7 +161,17 @@ export function initAuthedRoutes(
 
           if (ballot.pipelineId) {
             if (req.pipelineId !== ballot.pipelineId) {
-              return res.sendStatus(403);
+              const redirectInfo = getRedirectInfo(ballot);
+              if (redirectInfo) {
+                return res
+                  .status(403)
+                  .json(redirectInfo satisfies RedirectConfig);
+              }
+
+              return res.status(403).json({
+                configs: getPodboxConfigs(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL),
+                ballot
+              });
             }
           }
         }
@@ -173,38 +198,58 @@ export function initAuthedRoutes(
     }
   );
 
-  /**
-   * When the client app wants to log the user (back) in, it has to redirect
-   * the user to a login page. We want this to vary depending on the type of
-   * ballot the user was attempting to interact with. The client doesn't have
-   * enough information to do this, so here we have a route for the client to
-   * ask the server where to redirect to in order to log in.
-   */
-  app.get("/login-redirect", async (req: Request, res: Response) => {
-    logger.info("login-redirect");
-
-    const ballotURL = req.query.ballotURL?.toString();
-
-    if (ballotURL) {
-      const ballot = await getBallotById(parseInt(ballotURL));
-
-      if (
-        ballot?.ballotType === BallotType.EDGE_CITY_FEEDBACK ||
-        ballot?.ballotType === BallotType.EDGE_CITY_STRAWPOLL
-      ) {
-        res.json({ url: "/" });
-        return;
-      } else if (
-        ballot?.ballotType === BallotType.ETH_LATAM_FEEDBACK ||
-        ballot?.ballotType === BallotType.ETH_LATAM_STRAWPOLL
-      ) {
-        res.json({ url: "/" });
-        return;
+  app.get(
+    "/update-root/:ballotUrl/:apiKey",
+    async (req: Request, res: Response) => {
+      if (!ZUPOLL_API_KEY || req.params.apiKey !== ZUPOLL_API_KEY) {
+        return res.status(403).send("invalid api key");
       }
-    }
 
-    res.json({ url: "/" });
-  });
+      const ballot = await getBallotById(parseIntOrThrow(req.params.ballotUrl));
+
+      if (!ballot) {
+        return res.status(404).send("no matching ballot");
+      }
+
+      if (ballot?.ballotType !== BallotType.PODBOX) {
+        return res
+          .status(403)
+          .send("no applicable for non-podbox-backed zupolls");
+      }
+
+      const rootHash = ballot.voterSemaphoreGroupRoots[0];
+      const voterUrl = ballot.voterSemaphoreGroupUrls[0];
+
+      const semaphoreUrl = voterUrl.substring(0, voterUrl.lastIndexOf("/"));
+      const getLatestRootUrl = urljoin(semaphoreUrl, "latest-root");
+
+      const newRootHash = (await (
+        await fetch(getLatestRootUrl)
+      ).json()) as string;
+      const newVoterUrl = urljoin(semaphoreUrl, newRootHash);
+
+      if (rootHash === newRootHash && newVoterUrl === voterUrl) {
+        return res.send("no update needed");
+      }
+
+      await updateBallotVoterGroup(
+        ballot.ballotURL,
+        [newRootHash],
+        [newVoterUrl]
+      );
+
+      res.json({
+        was: {
+          voterUrl,
+          rootHash
+        },
+        is: {
+          newVoterUrl,
+          newRootHash
+        }
+      });
+    }
+  );
 
   app.post(
     "/bot-post",
@@ -242,3 +287,21 @@ export type LoginRequest = {
 export type BallotPollRequest = {
   ballotURL: number;
 };
+
+function getRedirectInfo(
+  ballot: NonNullable<Awaited<ReturnType<typeof getBallotById>>>
+): RedirectConfig | undefined {
+  const configs = getPodboxConfigs(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL);
+
+  const loginConfig = findConfigForVoterUrl(
+    configs,
+    ballot.voterSemaphoreGroupUrls
+  );
+
+  if (loginConfig) {
+    return {
+      categoryId: loginConfig.configCategoryId,
+      configName: loginConfig.name
+    } satisfies RedirectConfig;
+  }
+}

@@ -1,18 +1,19 @@
+import { PODValue, podValueHash } from "@pcd/pod";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
-import { PODValue, podValueHash } from "@pcd/pod";
 import {
-  extendedSignalArray,
   ListMembershipModuleInputNamesType,
   ListMembershipModuleInputs,
   ListMembershipModuleOutputNamesType,
   ListMembershipModuleOutputs,
+  ProtoPODGPC,
+  extendedSignalArray,
+  hashTuple,
   padArray,
+  paramMaxVirtualEntries,
   processLists,
   processSingleList,
-  ProtoPODGPC,
-  hashTuple,
   zipLists
 } from "../src";
 import { circomkit } from "./common";
@@ -22,6 +23,7 @@ describe("List membership helpers should work", function () {
     ...ProtoPODGPC.CIRCUIT_PARAMETERS[0][0],
     maxEntries: 6,
     tupleArity: 2,
+    maxLists: 3,
     maxListElements: 10,
     maxTuples: 4
   };
@@ -47,16 +49,25 @@ describe("List membership helpers should work", function () {
     const list2 = list1.map((x) => x.concat(x));
     const listComparisonValueIndex2 = [0, 2];
 
+    // Restrict attention to those parameters allowing a list membership check.
     for (const params of ProtoPODGPC.CIRCUIT_PARAMETERS.map(
       (pair) => pair[0]
-    )) {
+    ).filter((params) => params.maxListElements > 0)) {
+      // Truncate list if necessary.
+      const truncatedList = list1.slice(0, params.maxListElements);
+
       expect(
-        processSingleList(params, 6, listComparisonValueIndex1, list1)
+        processSingleList(
+          params,
+          params.maxEntries + paramMaxVirtualEntries(params),
+          listComparisonValueIndex1,
+          truncatedList
+        )
       ).to.deep.equal({
         tupleIndices: [],
         listComparisonValueIndex: 0,
         listValidValues: padArray(
-          list1.map((x) => podValueHash(x[0])),
+          truncatedList.map((x) => podValueHash(x[0])),
           params.maxListElements,
           podValueHash(list1[0][0])
         )
@@ -82,7 +93,7 @@ describe("List membership helpers should work", function () {
       listComparisonValueIndex: 6,
       listValidValues: padArray(
         list2.map((x) => hashTuple(params2.tupleArity, x)),
-        params1.maxListElements,
+        params2.maxListElements,
         hashTuple(params2.tupleArity, list2[0])
       )
     });
@@ -240,10 +251,10 @@ describe("List membership helpers should work", function () {
       tupleIndices: [
         [0n, 1n],
         [2n, 3n],
-        [7n, 4n],
-        [8n, 5n]
+        [8n, 4n],
+        [9n, 5n]
       ],
-      listComparisonValueIndex: [6n, 9n, 0n],
+      listComparisonValueIndex: [7n, 10n, 0n],
       listValidValues: listValidValues1
     });
 
@@ -253,10 +264,10 @@ describe("List membership helpers should work", function () {
       tupleIndices: [
         [0n, 1n, 0n],
         [2n, 3n, 4n],
-        [7n, 5n, 2n],
+        [8n, 5n, 2n],
         [0n, 0n, 0n]
       ],
-      listComparisonValueIndex: [6n, 8n, 0n],
+      listComparisonValueIndex: [7n, 9n, 0n],
       listValidValues: listValidValues2
     });
 
@@ -269,7 +280,7 @@ describe("List membership helpers should work", function () {
         [0n, 0n, 0n, 0n],
         [0n, 0n, 0n, 0n]
       ],
-      listComparisonValueIndex: [6n, 7n, 0n],
+      listComparisonValueIndex: [7n, 8n, 0n],
       listValidValues: listValidValues3
     });
   });
