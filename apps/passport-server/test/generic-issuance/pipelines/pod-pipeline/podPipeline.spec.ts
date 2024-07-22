@@ -128,6 +128,10 @@ describe("generic issuance - PODPipeline", function () {
     );
   });
 
+  /**
+   * Basic end-to-end test showing that the pipeline loads successfully and
+   * that PCDs can be successfully requested from a feed.
+   */
   step("PODPipeline loads and serves feed request", async function () {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelineInstances();
@@ -136,12 +140,15 @@ describe("generic issuance - PODPipeline", function () {
     expectToExist(podPipeline);
     const loadRes = await podPipeline.load();
     expectTrue(loadRes.success);
+    expect(loadRes.atomsLoaded).to.eq(2);
+
     const feedRes = await requestPODFeed(
       podPipeline.feedCapability.feedUrl,
       podPipeline.feedCapability.options.feedId,
       await makeTestCredential(
         johnDoeUserIdentity,
         PODBOX_CREDENTIAL_REQUEST,
+        // User email is present in the CSV input
         "john.doe@example.com",
         testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
       )
@@ -157,6 +164,10 @@ describe("generic issuance - PODPipeline", function () {
     );
   });
 
+  /**
+   * This test polls the feed with a user account whose email does not match
+   * any of the emails in the CSV file. The result is an empty feed.
+   */
   step("User with no PODs receives an empty feed", async function () {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelineInstances();
@@ -165,6 +176,8 @@ describe("generic issuance - PODPipeline", function () {
     expectToExist(podPipeline);
     const loadRes = await podPipeline.load();
     expectTrue(loadRes.success);
+    expect(loadRes.atomsLoaded).to.eq(2);
+
     const feedRes = await requestPODFeed(
       podPipeline.feedCapability.feedUrl,
       podPipeline.feedCapability.options.feedId,
@@ -188,6 +201,18 @@ describe("generic issuance - PODPipeline", function () {
     );
   });
 
+  /**
+   * Feed outputs can be configured with a "match" filter. If the match type is
+   * set to "none", then all PCDs on the pipeline will be served to any user
+   * that requests a feed. If the match type is set to "email", then only PCDs
+   * with an email address that matches the user's email address will be
+   * served.
+   *
+   * This test sets the match type to "none" and verifies that the user
+   * receives both of the PCDs available on this pipeline (there being two
+   * input rows in the CSV file by default, see
+   * {@link setupTestPODPipelineDefinition}).
+   */
   step(
     "Feed can be configured to allow PCDs to be served to any user",
     async function () {
@@ -210,6 +235,8 @@ describe("generic issuance - PODPipeline", function () {
       expectToExist(podPipeline);
       const loadRes = await podPipeline.load();
       expectTrue(loadRes.success);
+      expect(loadRes.atomsLoaded).to.eq(2);
+
       const feedRes = await requestPODFeed(
         podPipeline.feedCapability.feedUrl,
         podPipeline.feedCapability.options.feedId,
@@ -249,14 +276,60 @@ describe("generic issuance - PODPipeline", function () {
     }
   );
 
-  step("Authenticated Generic Issuance Endpoints", async () => {
-    expectToExist(giService);
-    const pipelines = await giService.getAllPipelineInstances();
-    expectToExist(pipelines);
-    expectLength(pipelines, 1);
-    const podPipeline = pipelines.find(PODPipeline.is);
-    expectToExist(podPipeline);
-  });
+  /**
+   * Output PCDs can be issued to users with matching email addresses. If
+   * the user's email matches more than one row in the input CSV, then all
+   * matching PCDs will be issued to the user.
+   */
+  step(
+    "Multiple PCDs can be served to a user who appears multiple times in the input",
+    async function () {
+      await updateAndRestartPipeline(
+        giBackend,
+        giService,
+        adminGIUserId,
+        (definition: PODPipelineDefinition) => {
+          // existing csv: "id,first_name,last_name,email,high_score,birthday,is_approved\n768dab50-2dea-4fd7-86bd-212f091b7867,John,Doe,john.doe@example.com,30,1980-01-01,true\nf1304eac-e462-4d8f-b704-9e7aed2e0618,Jane,Doe,jane.doe@example.com,25,1985-02-02,true\n"
+          // Add another row, using the same email previously present, but
+          // with a different high_score and birthday
+          definition.options.input.csv =
+            definition.options.input.csv +
+            "\nb8fb8ad1-6a28-4626-9e31-267580a40134,John,Doe,john.doe@example.com,3000,1981-12-01,true";
+        }
+      );
+
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelineInstances();
+      expectLength(pipelines, 1);
+      const podPipeline = pipelines.find(PODPipeline.is);
+      expectToExist(podPipeline);
+      const loadRes = await podPipeline.load();
+      expectTrue(loadRes.success);
+      expect(loadRes.atomsLoaded).to.eq(3);
+
+      const feedRes = await requestPODFeed(
+        podPipeline.feedCapability.feedUrl,
+        podPipeline.feedCapability.options.feedId,
+        await makeTestCredential(
+          johnDoeUserIdentity,
+          PODBOX_CREDENTIAL_REQUEST,
+          // User email as present in the CSV input
+          "john.doe@example.com",
+          testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
+        )
+      );
+      expectTrue(feedRes.success);
+      expectLength(feedRes.value.actions, 2);
+      const pcdsAction = feedRes.value.actions[1];
+      expectIsReplaceInFolderAction(pcdsAction);
+      // User receives two PCDs
+      expectLength(pcdsAction.pcds, 2);
+      expect(pcdsAction.pcds[0].type).to.eq(PODPCDTypeName);
+      expect(pcdsAction.folder).to.eq(
+        podPipeline.feedCapability.options.feedFolder
+      );
+    }
+  );
 
   this.afterAll(async () => {
     await stopApplication(giBackend);
