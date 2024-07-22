@@ -13,10 +13,7 @@ import {
   PipelineType
 } from "@pcd/passport-interface";
 import { Dispatch, ReactNode, useCallback } from "react";
-import {
-  PODPipelineEditAction,
-  PODPipelineEditActionType
-} from "./PODPipelineEdit";
+import { PODPipelineEditAction, PODPipelineEditActionType } from "./state";
 
 function ValidatedFeedConfig({
   definition,

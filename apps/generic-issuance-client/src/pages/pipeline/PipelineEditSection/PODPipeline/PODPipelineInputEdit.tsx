@@ -33,15 +33,12 @@ import {
 } from "react-icons/md";
 import { Point, Spreadsheet } from "react-spreadsheet";
 import styled from "styled-components";
-import {
-  PODPipelineEditAction,
-  PODPipelineEditActionType
-} from "./PODPipelineEdit";
 import { BooleanEditor, BooleanViewer } from "./cells/BooleanCell";
 import { DateEditor, DateViewer } from "./cells/DateCell";
 import { IntegerEditor, IntegerViewer } from "./cells/IntegerCell";
 import { AddColumnModal } from "./modals/AddColumnModal";
 import { DeleteColumnDialog } from "./modals/DeleteColumnDialog";
+import { PODPipelineEditAction, PODPipelineEditActionType } from "./state";
 
 /**
  * Viewer and editor components for each type of cell
@@ -353,9 +350,6 @@ export function PODPipelineInputEdit({
         columns={csvInput.getColumns()}
       />
       <Spreadsheet
-        // onChange={(data): void => {
-        //   setData(data);
-        // }}
         onCellCommit={updateCell}
         ColumnIndicator={CustomColumnIndicator}
         HeaderRow={CustomHeaderRow}

@@ -6,8 +6,8 @@ import {
   PipelineType
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
-import { PODPipelineEditAction } from "./PODPipelineEdit";
 import { PODPipelineInputEdit } from "./PODPipelineInputEdit";
+import { PODPipelineEditAction } from "./state";
 
 export function PODPipelineInputEditWrapper({
   pipelineDefinitionText,

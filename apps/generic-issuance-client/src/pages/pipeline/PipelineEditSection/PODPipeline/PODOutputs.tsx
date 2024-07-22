@@ -30,12 +30,9 @@ import {
 import { POD_NAME_REGEX } from "@pcd/pod";
 import { Dispatch, ReactNode, useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
-import {
-  PODPipelineEditAction,
-  PODPipelineEditActionType
-} from "./PODPipelineEdit";
 import { AddConfiguredValueModal } from "./modals/AddConfiguredValueModal";
 import { SetOutputMatchModal } from "./modals/SetOutputMatchModal";
+import { PODPipelineEditAction, PODPipelineEditActionType } from "./state";
 
 function EditableName({
   name,

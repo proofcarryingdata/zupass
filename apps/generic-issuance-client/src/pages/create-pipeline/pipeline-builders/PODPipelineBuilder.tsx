@@ -3,15 +3,18 @@ import {
   CSVInput,
   FeedIssuanceOptions,
   PODPipelineDefinition,
-  PODPipelineInput,
   PODPipelineInputFieldType,
   PODPipelineInputType,
   PODPipelinePCDTypes,
   PipelineType
 } from "@pcd/passport-interface";
-import { ReactNode, useMemo, useState } from "react";
-import { DEFAULT_FEED_OPTIONS } from "../../SamplePipelines";
+import { ReactNode, useEffect, useMemo, useReducer, useState } from "react";
 import { PODPipelineInputEdit } from "../../pipeline/PipelineEditSection/PODPipeline/PODPipelineInputEdit";
+import {
+  Just,
+  MaybeType,
+  pipelineEditReducer
+} from "../../pipeline/PipelineEditSection/PODPipeline/state";
 import { TwoColumns } from "../../pipeline/PipelinePage";
 import { FeedOptions } from "./FeedOptions";
 
@@ -22,9 +25,9 @@ interface PODPipelineBuilderProps {
 export default function PODPipelineBuilder(
   props: PODPipelineBuilderProps
 ): ReactNode {
-  const [definition, setDefinition] = useState<
-    Omit<PODPipelineDefinition, "id" | "ownerUserId">
-  >({
+  const initialDefinition: PODPipelineDefinition = {
+    id: "",
+    ownerUserId: "",
     type: PipelineType.POD,
     timeCreated: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
@@ -48,23 +51,35 @@ export default function PODPipelineBuilder(
           }
         }
       },
-      feedOptions: DEFAULT_FEED_OPTIONS
+      feedOptions: {
+        feedDisplayName: "POD Pipeline",
+        feedFolder: "PODs",
+        feedDescription: "New POD Pipeline",
+        feedId: "default-feed"
+      }
     }
-  });
+  };
+
+  const [definition, setDefinition] = useState(initialDefinition);
+
+  const [maybeDefinition, dispatch] = useReducer(
+    pipelineEditReducer,
+    Just(initialDefinition)
+  );
+
+  useEffect(() => {
+    if (maybeDefinition.type === MaybeType.Just) {
+      setDefinition(maybeDefinition.value);
+    }
+  }, [maybeDefinition]);
 
   const csvInput = useMemo(() => {
     return new CSVInput(definition.options.input);
   }, [definition.options.input]);
 
-  const changeInput = (newInput: PODPipelineInput): void => {
-    setDefinition((prev) => ({
-      ...prev,
-      options: { ...prev.options, input: newInput }
-    }));
-  };
-
-  const [feedOptions, setFeedOptions] =
-    useState<FeedIssuanceOptions>(DEFAULT_FEED_OPTIONS);
+  const [feedOptions, setFeedOptions] = useState<FeedIssuanceOptions>(
+    definition.options.feedOptions
+  );
 
   return (
     <>
@@ -82,10 +97,7 @@ export default function PODPipelineBuilder(
         >
           <Card overflow="hidden" width="fit-content">
             <Box maxW="800px" minW="800px" height="500px">
-              <PODPipelineInputEdit
-                csvInput={csvInput}
-                onChange={changeInput}
-              />
+              <PODPipelineInputEdit csvInput={csvInput} dispatch={dispatch} />
             </Box>
           </Card>
         </div>
@@ -103,9 +115,25 @@ export default function PODPipelineBuilder(
             width="100px"
             maxW="100px"
             colorScheme="green"
-            onClick={(): Promise<void> =>
-              props.onCreate(JSON.stringify(definition))
-            }
+            onClick={(): Promise<void> => {
+              // Because we're sticking to the PODPipelineDefinition type, we
+              // have used an "id" and "ownerUserId" field that we don't want
+              // to include in the final definition. Remove them before
+              // submitting the definition to the server.
+              const simplifiedDefinition: Partial<PODPipelineDefinition> =
+                structuredClone({
+                  ...definition,
+                  timeCreated: new Date().toISOString(),
+                  timeUpdated: new Date().toISOString(),
+                  options: {
+                    ...definition.options,
+                    name: definition.options.feedOptions.feedDisplayName
+                  }
+                });
+              delete simplifiedDefinition.id;
+              delete simplifiedDefinition.ownerUserId;
+              return props.onCreate(JSON.stringify(simplifiedDefinition));
+            }}
           >
             Create
           </Button>

@@ -5,7 +5,9 @@ import { v4 as uuidv4 } from "uuid";
 import { CSVInput } from "../src/PODPipeline/CSVInput";
 import {
   addInputColumn,
+  addOutputEntry,
   deleteInputColumn,
+  deleteOutputEntry,
   renameInputColumn,
   updateInputCell
 } from "../src/PODPipeline/updates";
@@ -130,6 +132,21 @@ describe("PODPipelineDefinition updates", () => {
     const parsedCSV = CSVInput.fromConfiguration(definition.options.input);
     expect(parsedCSV.getRows()[0].first_name).to.equal("Jeff");
     expect(PODPipelineDefinitionSchema.safeParse(definition).success).to.be
+      .true;
+  });
+
+  it("can add output entries", () => {
+    const definition = addOutputEntry(sampleDefinition, "output1");
+    expect(definition.options.outputs.output1.entries.new_entry).to.exist;
+    expect(PODPipelineDefinitionSchema.safeParse(definition).success).to.be
+      .true;
+  });
+
+  it("can delete output entries", () => {
+    const definition1 = addOutputEntry(sampleDefinition, "output1");
+    const definition2 = deleteOutputEntry(definition1, "output1", "new_entry");
+    expect(definition2.options.outputs.output1.entries.new_entry).to.not.exist;
+    expect(PODPipelineDefinitionSchema.safeParse(definition2).success).to.be
       .true;
   });
 });
