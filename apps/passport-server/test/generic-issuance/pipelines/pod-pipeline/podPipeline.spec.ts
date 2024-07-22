@@ -1,10 +1,7 @@
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
-  Credential,
   PODBOX_CREDENTIAL_REQUEST,
-  PODPipelineDefinition,
-  PollFeedResult,
-  requestPollFeed
+  PODPipelineDefinition
 } from "@pcd/passport-interface";
 import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
 import { PODPCDTypeName } from "@pcd/pod-pcd";
@@ -25,7 +22,11 @@ import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
 import { expectLength, expectToExist, expectTrue } from "../../../util/util";
 import { assertUserMatches, makeTestCredential } from "../../util";
-import { setupTestPODPipelineDefinition } from "./setupTestPODPipelineDefinition";
+import {
+  requestPODFeed,
+  setupTestPODPipelineDefinition,
+  updateAndRestartPipeline
+} from "./utils";
 
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link PODPipeline}.
@@ -44,6 +45,9 @@ describe("generic issuance - PODPipeline", function () {
     setupTestPODPipelineDefinition(adminGIUserId);
 
   const pipelineDefinitions = [podPipeline];
+
+  const johnDoeUserIdentity = new Identity();
+  const unknownUserIdentity = new Identity();
 
   /**
    * Sets up a Zupass/Generic issuance backend with one pipelines:
@@ -124,7 +128,7 @@ describe("generic issuance - PODPipeline", function () {
     );
   });
 
-  step("PODPipeline", async function () {
+  step("PODPipeline loads and serves feed request", async function () {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelineInstances();
     expectLength(pipelines, 1);
@@ -132,12 +136,11 @@ describe("generic issuance - PODPipeline", function () {
     expectToExist(podPipeline);
     const loadRes = await podPipeline.load();
     expectTrue(loadRes.success);
-    const identity = new Identity();
     const feedRes = await requestPODFeed(
       podPipeline.feedCapability.feedUrl,
       podPipeline.feedCapability.options.feedId,
       await makeTestCredential(
-        identity,
+        johnDoeUserIdentity,
         PODBOX_CREDENTIAL_REQUEST,
         "john.doe@example.com",
         testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
@@ -154,6 +157,98 @@ describe("generic issuance - PODPipeline", function () {
     );
   });
 
+  step("User with no PODs receives an empty feed", async function () {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelineInstances();
+    expectLength(pipelines, 1);
+    const podPipeline = pipelines.find(PODPipeline.is);
+    expectToExist(podPipeline);
+    const loadRes = await podPipeline.load();
+    expectTrue(loadRes.success);
+    const feedRes = await requestPODFeed(
+      podPipeline.feedCapability.feedUrl,
+      podPipeline.feedCapability.options.feedId,
+      await makeTestCredential(
+        unknownUserIdentity,
+        PODBOX_CREDENTIAL_REQUEST,
+        "unknown@example.com",
+        testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
+      )
+    );
+    // Will still receive two actions, Delete and ReplaceInFolder, but the
+    // ReplaceInFolder action will have no PCDs.
+    expectTrue(feedRes.success);
+    expectLength(feedRes.value.actions, 2);
+    const pcdsAction = feedRes.value.actions[1];
+    expectIsReplaceInFolderAction(pcdsAction);
+    // Zero PCDs received
+    expectLength(pcdsAction.pcds, 0);
+    expect(pcdsAction.folder).to.eq(
+      podPipeline.feedCapability.options.feedFolder
+    );
+  });
+
+  step(
+    "Feed can be configured to allow PCDs to be served to any user",
+    async function () {
+      expectToExist(giService);
+
+      await updateAndRestartPipeline(
+        giBackend,
+        giService,
+        adminGIUserId,
+        (definition: PODPipelineDefinition) => {
+          definition.options.outputs["output1"].match = {
+            type: "none"
+          };
+        }
+      );
+
+      const pipelines = await giService.getAllPipelineInstances();
+      expectLength(pipelines, 1);
+      const podPipeline = pipelines.find(PODPipeline.is);
+      expectToExist(podPipeline);
+      const loadRes = await podPipeline.load();
+      expectTrue(loadRes.success);
+      const feedRes = await requestPODFeed(
+        podPipeline.feedCapability.feedUrl,
+        podPipeline.feedCapability.options.feedId,
+        await makeTestCredential(
+          unknownUserIdentity,
+          PODBOX_CREDENTIAL_REQUEST,
+          "unknown@example.com",
+          testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
+        )
+      );
+      // Will still receive two actions, Delete and ReplaceInFolder, but the
+      // ReplaceInFolder action will have no PCDs.
+      expectTrue(feedRes.success);
+      expectLength(feedRes.value.actions, 2);
+      const pcdsAction = feedRes.value.actions[1];
+      expectIsReplaceInFolderAction(pcdsAction);
+      // Two PCDs received
+      expectLength(pcdsAction.pcds, 2);
+      expect(pcdsAction.pcds[0].type).to.eq(PODPCDTypeName);
+      expect(pcdsAction.pcds[1].type).to.eq(PODPCDTypeName);
+      expect(pcdsAction.folder).to.eq(
+        podPipeline.feedCapability.options.feedFolder
+      );
+
+      // Restore original configuration
+      await updateAndRestartPipeline(
+        giBackend,
+        giService,
+        adminGIUserId,
+        (definition: PODPipelineDefinition) => {
+          definition.options.outputs["output1"].match = {
+            type: "email",
+            entry: "email"
+          };
+        }
+      );
+    }
+  );
+
   step("Authenticated Generic Issuance Endpoints", async () => {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelineInstances();
@@ -167,11 +262,3 @@ describe("generic issuance - PODPipeline", function () {
     await stopApplication(giBackend);
   });
 });
-
-async function requestPODFeed(
-  url: string,
-  feedId: string,
-  credential: Credential
-): Promise<PollFeedResult> {
-  return requestPollFeed(url, { feedId, pcd: credential });
-}
