@@ -47,7 +47,8 @@ export enum PODPipelineEditActionType {
   ChangeOutputEntryName = "changeOutputEntryName",
   ChangeOutputMatch = "changeOutputMatch",
   ChangeOutputEntry = "changeOutputEntry",
-  SetFeedOptions = "setFeedOptions"
+  SetFeedOptions = "setFeedOptions",
+  Reset = "reset"
 }
 
 export type PODPipelineEditAction =
@@ -115,6 +116,10 @@ export type PODPipelineEditAction =
   | {
       type: PODPipelineEditActionType.SetFeedOptions;
       feedOptions: FeedIssuanceOptions;
+    }
+  | {
+      type: PODPipelineEditActionType.Reset;
+      newVersion: PODPipelineDefinition | undefined;
     };
 
 /**
@@ -131,7 +136,6 @@ export function pipelineEditReducer(
   if (state === undefined) {
     return undefined;
   }
-
   switch (action.type) {
     case PODPipelineEditActionType.AddInputColumn:
       return addInputColumn(
@@ -190,6 +194,8 @@ export function pipelineEditReducer(
       );
     case PODPipelineEditActionType.SetFeedOptions:
       return setFeedOptions(state, action.feedOptions);
+    case PODPipelineEditActionType.Reset:
+      return action.newVersion;
     default:
       assertUnreachable(action);
   }

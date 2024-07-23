@@ -54,6 +54,8 @@ function parsedCSVToMatrix(
   const configuredColumnTypes = Object.values(options.input.columns).map(
     (column) => column.type
   );
+  // Remove the header row
+  parsed.shift();
   return parsed.map((row) =>
     row.map((cell, index) => ({
       value: cell,

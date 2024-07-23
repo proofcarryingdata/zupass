@@ -42,7 +42,9 @@ function stringifyCSV(
  * @returns The parsed CSV data.
  */
 export function parseCSV(options: PODPipelineOptions): string[][] {
-  const parsed = parse(options.input.csv, { skipEmptyLines: true });
+  const parsed = parse(options.input.csv, {
+    skipEmptyLines: true
+  });
 
   const configuredColumns = Object.keys(options.input.columns);
   const columnHeaders: string[] = parsed[0];
@@ -50,9 +52,11 @@ export function parseCSV(options: PODPipelineOptions): string[][] {
     configuredColumns.map((column) => [column, columnHeaders.indexOf(column)])
   );
 
-  return parsed.map((row: string[]) =>
-    configuredColumns.map((column) => row[columnIndices[column]] ?? "")
-  );
+  return parsed
+    .map((row: string[]) =>
+      configuredColumns.map((column) => row[columnIndices[column]] ?? "")
+    )
+    .filter((row: string[]) => row.some((value) => value !== ""));
 }
 
 /**

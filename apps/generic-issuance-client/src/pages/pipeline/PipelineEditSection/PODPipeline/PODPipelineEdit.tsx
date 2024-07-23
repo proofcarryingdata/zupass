@@ -12,18 +12,17 @@ import {
   PODPipelineDefinition,
   PODPipelineDefinitionSchema
 } from "@pcd/passport-interface";
-import { ReactNode, useEffect, useReducer } from "react";
+import { ReactNode, useEffect, useReducer, useRef } from "react";
 import { FancyEditor } from "../../../../components/FancyEditor";
 import { PODFeed } from "./PODFeed";
 import { PODOutputs } from "./PODOutputs";
 import { PODPipelineInputEdit } from "./PODPipelineInputEdit";
-import { pipelineEditReducer } from "./state";
+import { PODPipelineEditActionType, pipelineEditReducer } from "./state";
 
 function safeJSONParse(value: string): PODPipelineDefinition | undefined {
   try {
     return PODPipelineDefinitionSchema.parse(JSON.parse(value));
   } catch (e) {
-    console.log(e);
     return undefined;
   }
 }
@@ -65,14 +64,42 @@ export function PODPipelineEdit({
   editorRef,
   editorMaximized
 }): ReactNode {
+  // Set up the reducer to manage state for the pipeline editing components.
+  // Unlike the admin "Editor" view, these components work with a parsed
+  // representation of the pipeline definition.
   const [parsed, dispatch] = useReducer(
     pipelineEditReducer,
-    safeJSONParse(editorValue)
+    // Parse the definition from the editor value
+    editorValue,
+    safeJSONParse
   );
 
+  // Now we have to keep both the parsed definition and editor value in sync.
+  // First, store a Ref to the latest editor value.
+  const editorValueRef = useRef(editorValue);
+
+  // If the editor value changes, update the ref and try to parse the new value.
+  // If the parse is successful, dispatch an action to update the state.
+  useEffect(() => {
+    if (editorValue !== editorValueRef.current) {
+      editorValueRef.current = editorValue;
+      const newParsed = safeJSONParse(editorValue);
+      dispatch({
+        type: PODPipelineEditActionType.Reset,
+        newVersion: newParsed
+      });
+    }
+  }, [editorValue, dispatch]);
+
+  // In reverse, if the parsed definition changes, update the editor value.
+  // We avoid an infinite loop because we track the editor value in a ref,
+  // and since the editor value is a string, the comparison has value
+  // semantics.
   useEffect(() => {
     if (parsed) {
-      setEditorValue(JSON.stringify(parsed, null, 2));
+      const newValue = JSON.stringify(parsed, null, 2);
+      editorValueRef.current = newValue;
+      setEditorValue(newValue);
     }
   }, [parsed, setEditorValue]);
 
