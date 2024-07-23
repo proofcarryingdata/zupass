@@ -63,12 +63,16 @@ const conversions: Record<
       type: "int",
       value: BigInt(value)
     }),
-    // UUIDs are too big to fit into a 63-bit integer.
+    // UUIDs are too big to fit into a POD integer.
     [PODPipelineInputFieldType.UUID]: undefined,
     // Strings cannot be integers.
     [PODPipelineInputFieldType.String]: undefined
   },
   cryptographic: {
+    // We can directly convert integers to "cryptographic" values.
+    // Integers are constrained by the bounds of the POD integer type.
+    // Not clear if there's a use-case for CSV uploads containing cryptographic
+    // values, which would require another field type to be added.
     [PODPipelineInputFieldType.Integer]: (value) => ({
       type: "cryptographic",
       value: value

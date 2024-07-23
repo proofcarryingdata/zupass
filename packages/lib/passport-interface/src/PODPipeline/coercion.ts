@@ -1,3 +1,4 @@
+import { POD_INT_MAX, POD_INT_MIN, checkBigintBounds } from "@pcd/pod";
 import { SafeParseReturnType, z } from "zod";
 import { PODPipelineInputFieldType } from "../genericIssuanceTypes";
 import { FieldTypeToJavaScriptType } from "./Input";
@@ -60,9 +61,20 @@ type Coercers = {
 // Set up a mapping from field types to Zod parsers.
 export const coercions: Coercers = {
   [PODPipelineInputFieldType.String]: z.string().safeParse,
+  // We use a custom parser for integers because we want to ensure that
+  // the value is within the bounds of a POD integer.
   [PODPipelineInputFieldType.Integer]: inputToBigInt.refine(
-    (arg: bigint) => arg >= 0n,
-    "Integers must not be negative"
+    (arg: bigint) => {
+      try {
+        checkBigintBounds("integer", arg, POD_INT_MIN, POD_INT_MAX);
+        return true;
+      } catch (error) {
+        return false;
+      }
+    },
+    {
+      message: "Integer must be between POD_INT_MIN and POD_INT_MAX, inclusive"
+    }
   ).safeParse,
   [PODPipelineInputFieldType.Date]: inputToDate.safeParse,
   [PODPipelineInputFieldType.Boolean]: inputToBoolean.safeParse,
