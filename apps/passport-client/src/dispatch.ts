@@ -1069,16 +1069,24 @@ async function doSync(
         }
       }
       console.log("[SYNC] initalized credentialManager", credentialManager);
-      const actions = await state.subscriptions.pollSubscriptions(
+      const stats = { nActions: 0, nFeeds: 0 };
+      const subscriptionActions = await state.subscriptions.pollSubscriptions(
         credentialManager,
         async (actions) => {
           await applyActions(state.pcds, [actions]);
           await savePCDs(state.pcds);
           await saveSubscriptions(state.subscriptions);
+          stats.nActions += actions.actions.length;
+          stats.nFeeds++;
         }
       );
 
-      console.log(`[SYNC] Applied ${actions.length} actions`);
+      console.log(
+        `[SYNC] Applied ${stats.nActions} actions from ` +
+          `${subscriptionActions.length}/${
+            state.subscriptions.getActiveSubscriptions().length
+          } feeds`
+      );
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }
