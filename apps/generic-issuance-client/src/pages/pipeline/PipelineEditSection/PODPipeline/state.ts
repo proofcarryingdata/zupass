@@ -55,12 +55,18 @@ export type PODPipelineEditAction =
       type: PODPipelineEditActionType.AddInputColumn;
       name: string;
       columnType: PODPipelineInputFieldType;
+      csvData: string[][];
     }
-  | { type: PODPipelineEditActionType.DeleteInputColumn; name: string }
+  | {
+      type: PODPipelineEditActionType.DeleteInputColumn;
+      name: string;
+      csvData: string[][];
+    }
   | {
       type: PODPipelineEditActionType.RenameInputColumn;
       name: string;
       newName: string;
+      csvData: string[][];
     }
   | {
       type: PODPipelineEditActionType.UpdateFeedOptions;
@@ -72,6 +78,7 @@ export type PODPipelineEditAction =
     }
   | {
       type: PODPipelineEditActionType.AddInputRow;
+      csvData: string[][];
     }
   | {
       type: PODPipelineEditActionType.AddOutputEntry;
@@ -125,15 +132,23 @@ export function pipelineEditReducer(
     return undefined;
   }
 
-  console.log(action);
-
   switch (action.type) {
     case PODPipelineEditActionType.AddInputColumn:
-      return addInputColumn(state, action.name, action.columnType);
+      return addInputColumn(
+        state,
+        action.name,
+        action.columnType,
+        action.csvData
+      );
     case PODPipelineEditActionType.DeleteInputColumn:
-      return deleteInputColumn(state, action.name);
+      return deleteInputColumn(state, action.name, action.csvData);
     case PODPipelineEditActionType.RenameInputColumn:
-      return renameInputColumn(state, action.name, action.newName);
+      return renameInputColumn(
+        state,
+        action.name,
+        action.newName,
+        action.csvData
+      );
     case PODPipelineEditActionType.UpdateFeedOptions:
       return {
         ...state,
@@ -143,7 +158,7 @@ export function pipelineEditReducer(
         }
       };
     case PODPipelineEditActionType.AddInputRow:
-      return addInputRow(state);
+      return addInputRow(state, action.csvData);
     case PODPipelineEditActionType.UpdateInputCSV:
       return updateInputCSV(state, action.data);
     case PODPipelineEditActionType.AddOutputEntry:

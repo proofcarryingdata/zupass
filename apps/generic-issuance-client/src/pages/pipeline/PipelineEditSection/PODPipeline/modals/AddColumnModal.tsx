@@ -13,22 +13,19 @@ import {
   Select,
   VStack
 } from "@chakra-ui/react";
-import {
-  InputColumn,
-  PODPipelineInputFieldType
-} from "@pcd/passport-interface";
+import { PODPipelineInputFieldType } from "@pcd/passport-interface";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 
 export function AddColumnModal({
   onAddColumn,
   isOpen,
   onClose,
-  columns
+  columnNames
 }: {
   onAddColumn: (name: string, type: PODPipelineInputFieldType) => void;
   isOpen: boolean;
   onClose: () => void;
-  columns: Record<string, InputColumn>;
+  columnNames: string[];
 }): ReactNode {
   const [name, setName] = useState("");
   const [type, setType] = useState<PODPipelineInputFieldType | undefined>();
@@ -36,9 +33,9 @@ export function AddColumnModal({
     setName("");
     setType(undefined);
   }, [isOpen]);
-  const columnNames = useMemo(() => new Set(Object.keys(columns)), [columns]);
+  const columnNameSet = useMemo(() => new Set(columnNames), [columnNames]);
   const invalidInput =
-    name === "" || type === undefined || columnNames.has(name);
+    name === "" || type === undefined || columnNameSet.has(name);
   return (
     <>
       <Modal isOpen={isOpen} onClose={onClose}>

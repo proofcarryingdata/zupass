@@ -16,7 +16,7 @@ import { ReactNode, useEffect, useReducer } from "react";
 import { FancyEditor } from "../../../../components/FancyEditor";
 import { PODFeed } from "./PODFeed";
 import { PODOutputs } from "./PODOutputs";
-import { PODPipelineInputEditWrapper } from "./PODPipelineInputEditWrapper";
+import { PODPipelineInputEdit } from "./PODPipelineInputEdit";
 import { pipelineEditReducer } from "./state";
 
 function safeJSONParse(value: string): PODPipelineDefinition | undefined {
@@ -91,10 +91,7 @@ export function PODPipelineEdit({
       <TabPanels style={{ height: "100%", overflow: "hidden" }}>
         <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
           {parsed ? (
-            <PODPipelineInputEditWrapper
-              dispatch={dispatch}
-              definition={parsed}
-            />
+            <PODPipelineInputEdit dispatch={dispatch} definition={parsed} />
           ) : (
             <ErrorTab isAdminView={isAdminView} />
           )}

@@ -3,12 +3,14 @@ import { Button, Icon, VStack, useDisclosure } from "@chakra-ui/react";
 import {
   PODPipelineDefinition,
   PODPipelineInputFieldType,
-  updateInputCSV
+  PODPipelineOptions,
+  parseCSV
 } from "@pcd/passport-interface";
-import { parse } from "csv-parse/sync";
 import React, { ReactNode, useCallback, useMemo, useState } from "react";
-import { Spreadsheet } from "react-spreadsheet";
+import { CellBase, Matrix, Spreadsheet } from "react-spreadsheet";
 import styled from "styled-components";
+import { AddColumnModal } from "./modals/AddColumnModal";
+import { DeleteColumnDialog } from "./modals/DeleteColumnDialog";
 import { ColumnIndicator } from "./sheet/ColumnIndicator";
 import { HeaderRow, Row } from "./sheet/Rows";
 import { BooleanEditor, BooleanViewer } from "./sheet/cells/BooleanCell";
@@ -45,6 +47,21 @@ const COLUMN_CELLS = {
   }
 };
 
+function parsedCSVToMatrix(
+  parsed: string[][],
+  options: PODPipelineOptions
+): Matrix<CellBase<string>> {
+  const configuredColumnTypes = Object.values(options.input.columns).map(
+    (column) => column.type
+  );
+  return parsed.map((row) =>
+    row.map((cell, index) => ({
+      value: cell,
+      ...COLUMN_CELLS[configuredColumnTypes[index]].DataViewer
+    }))
+  );
+}
+
 export function PODPipelineInputEdit({
   dispatch,
   definition
@@ -53,24 +70,20 @@ export function PODPipelineInputEdit({
   definition: PODPipelineDefinition;
 }): ReactNode {
   const columns = useMemo(() => definition.options.input.columns, [definition]);
-  const data = useMemo(() => {
-    const parsed = parse(definition.options.input.csv, {});
-    console.log(parsed);
-    parsed.shift();
-    const columnNames = Object.keys(columns);
-    const maxCols = columnNames.length;
-    return parsed.map((row: unknown[]) =>
-      row.slice(0, maxCols).map((value, index) => ({
-        value,
-        ...COLUMN_CELLS[columns[columnNames[index]].type]
-      }))
-    );
-  }, [definition.options.input.csv, columns]);
+  const data = useMemo(
+    () => parseCSV(definition.options),
+    [definition.options]
+  );
+  const spreadsheetData = useMemo(
+    () => parsedCSVToMatrix(data, definition.options),
+    [data, definition.options]
+  );
   const addRow = useCallback(() => {
     dispatch({
-      type: PODPipelineEditActionType.AddInputRow
+      type: PODPipelineEditActionType.AddInputRow,
+      csvData: data
     });
-  }, [dispatch]);
+  }, [dispatch, data]);
 
   const {
     isOpen: isAddColumnModalOpen,
@@ -89,11 +102,12 @@ export function PODPipelineInputEdit({
       dispatch({
         type: PODPipelineEditActionType.AddInputColumn,
         name,
-        columnType: type
+        columnType: type,
+        csvData: data
       });
       closeAddColumnModal();
     },
-    [dispatch, closeAddColumnModal]
+    [dispatch, data, closeAddColumnModal]
   );
 
   const CustomHeaderRow = useCallback(
@@ -116,21 +130,23 @@ export function PODPipelineInputEdit({
   const onDeleteColumnConfirmed = useCallback(() => {
     dispatch({
       type: PODPipelineEditActionType.DeleteInputColumn,
-      name: columnToDeleteName
+      name: columnToDeleteName,
+      csvData: data
     });
     setColumnToDeleteName("");
     closeDeleteColumnModal();
-  }, [closeDeleteColumnModal, columnToDeleteName, dispatch]);
+  }, [closeDeleteColumnModal, columnToDeleteName, data, dispatch]);
 
   const onChangeColumnName = useCallback(
     (name: string, column: number) => {
       dispatch({
         type: PODPipelineEditActionType.RenameInputColumn,
         name: Object.keys(columns)[column],
-        newName: name
+        newName: name,
+        csvData: data
       });
     },
-    [columns, dispatch]
+    [columns, data, dispatch]
   );
 
   const CustomColumnIndicator = useCallback(
@@ -147,50 +163,9 @@ export function PODPipelineInputEdit({
     [columns, onChangeColumnName, onDeleteColumn]
   );
 
-  // const updateCell = useCallback(
-  //   (
-  //     prevCell: { value: InputValue } | null,
-  //     nextCell: { value: InputValue } | null,
-  //     coords: Point | null
-  //   ) => {
-  //     if (coords && nextCell) {
-  //       const row = csvInput.getRows()[coords.row];
-  //       if (row) {
-  //         const column = Object.values(columns)[coords.column];
-  //         if (column) {
-  //           const cell = column.getValue(row);
-  //           const value = cell.valid ? cell.value : cell.input;
-  //           const nextValue = nextCell.value
-  //             ? nextCell.value.valid
-  //               ? nextCell.value.value
-  //               : nextCell.value.input
-  //             : "";
-  //           console.log({
-  //             value,
-  //             nextValue,
-  //             column,
-  //             coords,
-  //             prevCell,
-  //             nextCell
-  //           });
-  //           if (value !== nextValue) {
-  //             dispatch({
-  //               type: PODPipelineEditActionType.UpdateInputCell,
-  //               rowIndex: coords.row,
-  //               columnName: column.getName(),
-  //               value: nextValue
-  //             });
-  //           }
-  //         }
-  //       }
-  //     }
-  //   },
-  //   [columns, csvInput, dispatch]
-  // );
-
   return (
     <Container>
-      {/* <DeleteColumnDialog
+      <DeleteColumnDialog
         isOpen={isDeleteColumnModalOpen}
         onClose={closeDeleteColumnModal}
         onDelete={onDeleteColumnConfirmed}
@@ -200,27 +175,20 @@ export function PODPipelineInputEdit({
         isOpen={isAddColumnModalOpen}
         onClose={closeAddColumnModal}
         onAddColumn={addColumn}
-        columns={csvInput.getColumns()}
-      /> */}
+        columnNames={Object.keys(columns)}
+      />
       <Spreadsheet
-        // onCellCommit={updateCell}
         ColumnIndicator={CustomColumnIndicator}
         HeaderRow={CustomHeaderRow}
         Row={Row}
         darkMode={true}
-        data={data}
+        data={spreadsheetData}
         columnLabels={Object.keys(columns)}
         className={"sheet"}
         onChange={(data) => {
-          console.log(
-            updateInputCSV(
-              definition,
-              data.map((row) => row.map((cell) => cell?.value))
-            )
-          );
           dispatch({
             type: PODPipelineEditActionType.UpdateInputCSV,
-            data: data.map((row) => row.map((cell) => cell?.value))
+            data: data.map((row) => row.map((cell) => cell?.value ?? ""))
           });
         }}
       />

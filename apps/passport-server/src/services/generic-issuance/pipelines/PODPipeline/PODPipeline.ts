@@ -123,6 +123,7 @@ export class PODPipeline implements BasePipeline {
 
       try {
         const input = PODPipeline.loadInputFromDefinition(this.definition);
+
         logs.push(
           makePLogInfo(
             `input columns: ${Object.keys(input.getColumns()).join(", ")}`

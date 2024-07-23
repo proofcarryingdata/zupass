@@ -37,7 +37,7 @@ export function atomize(
        * See {@link getInputToPODValueConverter} for detail on how this
        * conversion is done.
        */
-      const converter = getInputToPODValueConverter(column, entry.type);
+      const converter = getInputToPODValueConverter(column.type, entry.type);
       if (!converter) {
         throw new Error(
           `No converter for input ${source.name} of type ${column.type} to POD value ${key} of type ${entry.type}`

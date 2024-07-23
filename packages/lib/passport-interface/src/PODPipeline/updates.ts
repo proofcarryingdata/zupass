@@ -1,13 +1,14 @@
+import { parse } from "csv-parse/sync";
 import { Options, Input as StringifyInput } from "csv-stringify/.";
 import { stringify } from "csv-stringify/sync";
 import {
   FeedIssuanceOptions,
   PODPipelineDefinition,
   PODPipelineInputFieldType,
+  PODPipelineOptions,
   PODPipelineOutputMatch,
   PODPipelinePODEntry
 } from "../genericIssuanceTypes";
-import { CSVInput } from "./CSVInput";
 import { InputValue } from "./Input";
 
 /**
@@ -35,6 +36,27 @@ function stringifyCSV(
 }
 
 /**
+ * Parses the CSV string into a 2D array of strings.
+ *
+ * @param options The options to use for parsing.
+ * @returns The parsed CSV data.
+ */
+export function parseCSV(options: PODPipelineOptions): string[][] {
+  const parsed = parse(options.input.csv, { skipEmptyLines: true });
+
+  const configuredColumns = Object.keys(options.input.columns);
+  const columnHeaders: string[] = parsed[0];
+
+  const columnIndices = Object.fromEntries(
+    configuredColumns.map((column) => [column, columnHeaders.indexOf(column)])
+  );
+
+  return parsed.map((row: string[]) =>
+    configuredColumns.map((column) => row[columnIndices[column]] ?? "")
+  );
+}
+
+/**
  * Default values for new cells in columns of specific types
  */
 const COLUMN_DEFAULTS = {
@@ -58,7 +80,8 @@ const COLUMN_DEFAULTS = {
 export function renameInputColumn(
   definition: PODPipelineDefinition,
   oldName: string,
-  newName: string
+  newName: string,
+  csvData: string[][]
 ): PODPipelineDefinition {
   const newDefinition = structuredClone(definition);
 
@@ -73,13 +96,10 @@ export function renameInputColumn(
   delete newDefinition.options.input.columns[oldName];
 
   // Update the CSV to reflect the renaming
-  const csvInput = CSVInput.fromConfiguration(definition.options.input);
-  const newCsv = stringifyCSV([
-    Object.keys(csvInput.getColumns()).map((key) =>
-      key === oldName ? newName : key
-    ),
-    ...csvInput.toPlainRows()
-  ]);
+  const [header, ...rest] = csvData;
+  const newHeader = header.map((name) => (name === oldName ? newName : name));
+
+  const newCsv = stringifyCSV([newHeader, ...rest]);
   newDefinition.options.input.csv = newCsv;
 
   // Update the outputs to reflect the renaming
@@ -114,7 +134,8 @@ export function renameInputColumn(
 export function addInputColumn(
   definition: PODPipelineDefinition,
   name: string,
-  type: PODPipelineInputFieldType
+  type: PODPipelineInputFieldType,
+  csvData: string[][]
 ): PODPipelineDefinition {
   const newDefinition = structuredClone(definition);
   newDefinition.options.input = {
@@ -122,11 +143,10 @@ export function addInputColumn(
     columns: { ...newDefinition.options.input.columns, [name]: { type } }
   };
 
-  const csvInput = CSVInput.fromConfiguration(definition.options.input);
   const defaultValue = COLUMN_DEFAULTS[type];
   newDefinition.options.input.csv = stringifyCSV([
-    [...Object.keys(csvInput.getColumns()), name],
-    ...csvInput.toPlainRows().map((row) => [...row, defaultValue])
+    [...Object.keys(newDefinition.options.input.columns), name],
+    ...csvData.map((row) => [...row, defaultValue])
   ]);
 
   return newDefinition;
@@ -141,19 +161,18 @@ export function addInputColumn(
  */
 export function deleteInputColumn(
   definition: PODPipelineDefinition,
-  name: string
+  name: string,
+  csvData: string[][]
 ): PODPipelineDefinition {
   const newDefinition = structuredClone(definition);
   delete newDefinition.options.input.columns[name];
 
-  const csvInput = CSVInput.fromConfiguration(definition.options.input);
-  const keys = Object.keys(csvInput.getColumns());
+  const keys = Object.keys(newDefinition.options.input.columns);
   const index = keys.indexOf(name);
   const newCsv = stringifyCSV([
     keys.filter((key) => key !== name),
-    ...csvInput.toPlainRows().map((row) => {
-      row.splice(index, 1);
-      return row;
+    ...csvData.map((row) => {
+      return row.slice().splice(index, 1);
     })
   ]);
   newDefinition.options.input.csv = newCsv;
@@ -180,66 +199,34 @@ export function deleteInputColumn(
 }
 
 /**
- * Updates a cell in the input CSV of a PODPipelineDefinition.
- *
- * @param definition The PODPipelineDefinition to update.
- * @param rowNumber The row number of the cell to update.
- * @param column The column name of the cell to update.
- * @param value The new value for the cell.
- * @returns The updated PODPipelineDefinition.
- */
-export function updateInputCell(
-  definition: PODPipelineDefinition,
-  rowNumber: number,
-  column: string,
-  value: InputValue
-): PODPipelineDefinition {
-  const newDefinition = structuredClone(definition);
-  const csvInput = CSVInput.fromConfiguration(definition.options.input);
-  const columnIndex = Object.keys(csvInput.getColumns()).indexOf(column);
-  console.log(columnIndex);
-  console.log([
-    Object.keys(csvInput.getColumns()),
-    ...csvInput.toPlainRows().map((row, index) => {
-      if (index === rowNumber) {
-        return row.map((cell, i) => (i === columnIndex ? value : cell));
-      }
-      return row;
-    })
-  ]);
-  const newCsv = stringifyCSV([
-    Object.keys(csvInput.getColumns()),
-    ...csvInput.toPlainRows().map((row, index) => {
-      if (index === rowNumber) {
-        return row.map((cell, i) => (i === columnIndex ? value : cell));
-      }
-      return row;
-    })
-  ]);
-  newDefinition.options.input.csv = newCsv;
-  return newDefinition;
-}
-
-/**
  * Adds a row to the input CSV of a PODPipelineDefinition.
  *
  * @param definition The PODPipelineDefinition to update.
  * @returns The updated PODPipelineDefinition.
  */
 export function addInputRow(
-  definition: PODPipelineDefinition
+  definition: PODPipelineDefinition,
+  csvData: string[][]
 ): PODPipelineDefinition {
   const newDefinition = structuredClone(definition);
-  const csvInput = CSVInput.fromConfiguration(definition.options.input);
   const newCsv = stringifyCSV([
-    Object.keys(csvInput.getColumns()),
-    ...csvInput.toPlainRows(),
-    Object.values(csvInput.getColumns()).map((col) => COLUMN_DEFAULTS[col.type])
+    Object.keys(newDefinition.options.input.columns),
+    ...csvData,
+    Object.values(newDefinition.options.input.columns).map(
+      (col) => COLUMN_DEFAULTS[col.type]
+    )
   ]);
   newDefinition.options.input.csv = newCsv;
   return newDefinition;
 }
 
+/**
+ * Updates the input CSV of a PODPipelineDefinition.
+ *
+ * @param definition The PODPipelineDefinition to update.
+ * @param data The new data for the input CSV.
+ * @returns The updated PODPipelineDefinition.
+ */
 export function updateInputCSV(
   definition: PODPipelineDefinition,
   data: InputValue[][]

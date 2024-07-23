@@ -16,14 +16,13 @@ import {
 } from "@chakra-ui/react";
 
 import {
-  CSVInput,
   PODPipelineDefinition,
   PODPipelineOutputMatch,
   PODPipelinePODEntry,
   getInputToPODValueConverter
 } from "@pcd/passport-interface";
 import { POD_NAME_REGEX } from "@pcd/pod";
-import { Dispatch, ReactNode, useCallback, useMemo, useState } from "react";
+import { Dispatch, ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { AddConfiguredValueModal } from "./modals/AddConfiguredValueModal";
 import { SetOutputMatchModal } from "./modals/SetOutputMatchModal";
@@ -68,18 +67,16 @@ function EditableName({
 function ValidatedOutputs({
   name,
   definition,
-  dispatch,
-  csvInput
+  dispatch
 }: {
   name: string;
   definition: PODPipelineDefinition;
-  csvInput: CSVInput;
   dispatch: Dispatch<PODPipelineEditAction>;
 }): ReactNode {
   const { outputs } = definition.options;
   const output = outputs[name];
 
-  const columns = Object.keys(csvInput.getColumns());
+  const columns = Object.keys(definition.options.input.columns);
 
   const entries = Object.entries(output.entries ?? []);
   const entryObj = Object.fromEntries(entries);
@@ -117,7 +114,7 @@ function ValidatedOutputs({
         // otherwise default to string type.
         if (
           !getInputToPODValueConverter(
-            csvInput.getColumns()[entry.source.name],
+            definition.options.input.columns[entry.source.name].type,
             existingType
           )
         ) {
@@ -144,7 +141,7 @@ function ValidatedOutputs({
         entry
       });
     },
-    [csvInput, dispatch, entryObj, name]
+    [definition.options.input.columns, dispatch, entryObj, name]
   );
 
   const [addingConfiguredValueForKey, setAddingConfiguredValueForKey] =
@@ -318,7 +315,9 @@ function ValidatedOutputs({
                             if (entry.source.type === "input") {
                               if (
                                 !getInputToPODValueConverter(
-                                  csvInput.getColumns()[entry.source.name],
+                                  definition.options.input.columns[
+                                    entry.source.name
+                                  ].type,
                                   value
                                 )
                               ) {
@@ -398,17 +397,12 @@ export function PODOutputs({
   definition: PODPipelineDefinition;
   dispatch: Dispatch<PODPipelineEditAction>;
 }): ReactNode {
-  const csvInput = useMemo(() => {
-    return CSVInput.fromConfiguration(definition.options.input);
-  }, [definition]);
-
   return (
     <>
       {Object.keys(definition.options.outputs).map((name) => (
         <ValidatedOutputs
           key={name}
           name={name}
-          csvInput={csvInput}
           definition={definition}
           dispatch={dispatch}
         />

@@ -1,6 +1,5 @@
 import { Box, Button, Card } from "@chakra-ui/react";
 import {
-  CSVInput,
   FeedIssuanceOptions,
   PODPipelineDefinition,
   PODPipelineInputFieldType,
@@ -8,7 +7,7 @@ import {
   PODPipelinePCDTypes,
   PipelineType
 } from "@pcd/passport-interface";
-import { ReactNode, useEffect, useMemo, useReducer, useState } from "react";
+import { ReactNode, useEffect, useReducer, useState } from "react";
 import { PODPipelineInputEdit } from "../../pipeline/PipelineEditSection/PODPipeline/PODPipelineInputEdit";
 import { pipelineEditReducer } from "../../pipeline/PipelineEditSection/PODPipeline/state";
 import { TwoColumns } from "../../pipeline/PipelinePage";
@@ -69,10 +68,6 @@ export default function PODPipelineBuilder(
     }
   }, [maybeDefinition]);
 
-  const csvInput = useMemo(() => {
-    return new CSVInput(definition.options.input);
-  }, [definition.options.input]);
-
   const [feedOptions, setFeedOptions] = useState<FeedIssuanceOptions>(
     definition.options.feedOptions
   );
@@ -93,7 +88,10 @@ export default function PODPipelineBuilder(
         >
           <Card overflow="hidden" width="fit-content">
             <Box maxW="800px" minW="800px" height="500px">
-              <PODPipelineInputEdit csvInput={csvInput} dispatch={dispatch} />
+              <PODPipelineInputEdit
+                definition={definition}
+                dispatch={dispatch}
+              />
             </Box>
           </Card>
         </div>

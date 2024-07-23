@@ -2,7 +2,6 @@ import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "mocha";
 import { v4 as uuidv4 } from "uuid";
-import { CSVInput } from "../src/PODPipeline/CSVInput";
 import {
   addInputColumn,
   addOutputEntry,
@@ -10,8 +9,8 @@ import {
   changeOutputEntryType,
   deleteInputColumn,
   deleteOutputEntry,
-  renameInputColumn,
-  updateInputCell
+  parseCSV,
+  renameInputColumn
 } from "../src/PODPipeline/updates";
 import {
   PODPipelineDefinition,
@@ -98,7 +97,8 @@ describe("PODPipelineDefinition updates", () => {
     const definition = renameInputColumn(
       sampleDefinition,
       "first_name",
-      "firstName"
+      "firstName",
+      parseCSV(sampleDefinition.options)
     );
     expect(definition.options.input.columns.first_name).to.not.exist;
     expect(definition.options.input.columns.firstName).to.exist;
@@ -110,7 +110,8 @@ describe("PODPipelineDefinition updates", () => {
     const definition = addInputColumn(
       sampleDefinition,
       "new_column",
-      PODPipelineInputFieldType.String
+      PODPipelineInputFieldType.String,
+      parseCSV(sampleDefinition.options)
     );
     expect(definition.options.input.columns.new_column).to.exist;
     expect(PODPipelineDefinitionSchema.safeParse(definition).success).to.be
@@ -118,24 +119,12 @@ describe("PODPipelineDefinition updates", () => {
   });
 
   it("can delete input columns", () => {
-    const definition = deleteInputColumn(sampleDefinition, "first_name");
-    expect(definition.options.input.columns.first_name).to.not.exist;
-    expect(PODPipelineDefinitionSchema.safeParse(definition).success).to.be
-      .true;
-  });
-
-  it("can update input cells", () => {
-    const definition = updateInputCell(
+    const definition = deleteInputColumn(
       sampleDefinition,
-      0,
       "first_name",
-      "Jeff"
+      parseCSV(sampleDefinition.options)
     );
-    const parsedCSV = CSVInput.fromConfiguration(definition.options.input);
-    expect(parsedCSV.getRows()[0].first_name).to.eql({
-      valid: true,
-      value: "Jeff"
-    });
+    expect(definition.options.input.columns.first_name).to.not.exist;
     expect(PODPipelineDefinitionSchema.safeParse(definition).success).to.be
       .true;
   });

@@ -4,7 +4,7 @@ import {
   PODPipelineInputFieldType,
   PODPipelinePODEntry
 } from "../genericIssuanceTypes";
-import { FieldTypeToJavaScriptType, TemplatedColumn } from "./Input";
+import { FieldTypeToJavaScriptType } from "./Input";
 
 /**
  * Conversions for converting input values to POD values.
@@ -95,15 +95,15 @@ const conversions: Record<
  * Get a function that converts an input value to a POD value.
  * If no conversion is possible, the function returns undefined.
  *
- * @param column The column to convert.
+ * @param inputType The input type to convert.
  * @param podValueType The type of POD value to convert to.
  * @returns A function that converts an input value to a POD value, or undefined if no conversion is possible.
  */
 export function getInputToPODValueConverter<
   T extends PODPipelineInputFieldType
 >(
-  column: TemplatedColumn<T>,
+  inputType: T,
   podValueType: PODPipelinePODEntry["type"]
 ): ((value: FieldTypeToJavaScriptType<T>) => PODValue) | undefined {
-  return conversions[podValueType]?.[column.type];
+  return conversions[podValueType]?.[inputType];
 }
