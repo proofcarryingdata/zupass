@@ -3,7 +3,6 @@ import { ZodIssue } from "zod";
 import { PODPipelineCSVInput } from "../genericIssuanceTypes";
 import {
   Input,
-  InputCell,
   InputColumn,
   InputRow,
   InputValue,
@@ -27,12 +26,11 @@ interface ParseError {
  * data type, and the cells in that column will be parsed into the appropriate
  * data, if possible. If the data cannot be parsed, an exception will be thrown
  * on construction of the CSVInput. As such, if you have a CSVInput instance
- * then you can be sure that the data in it is strongly typed.
+ * then you can be sure that the data in it is strongly typed and valid.
  */
 export class CSVInput implements Input {
-  private data: Record<string, InputCell<InputValue>>[] = [];
+  private data: Record<string, InputValue>[] = [];
   private columns: Record<string, InputColumn>;
-  private errors: ParseError[] = [];
 
   constructor({ csv, columns }: PODPipelineCSVInput) {
     this.columns = Object.fromEntries(
@@ -59,40 +57,39 @@ export class CSVInput implements Input {
     if (
       !(header instanceof Object) ||
       Object.values(header).length !== columnNames.length ||
-      !Object.values(header).every((name, index) => name === columnNames[index])
+      !Object.values(header).every((name) => columnNames.includes(name))
     ) {
       throw new Error("CSV header does not match configured columns");
     }
 
     let rowIndex = 0;
+    const errors: ParseError[] = [];
     for (const row of data) {
       this.data.push(
         Object.fromEntries(
           Object.entries(row).map(([key, value]) => {
             const parsed = coerce[key](value);
             if (parsed.success) {
-              return [key, { valid: true, value: parsed.data }];
+              return [key, parsed.data];
             }
-            this.errors.push({
+            errors.push({
               row: rowIndex,
               column: key,
               value,
               errors: parsed.error.errors
             });
-            return [key, { valid: false, input: value }];
+            // This data is invalid, but since we're going to throw an
+            // exception this will never be made visible to the caller.
+            return [key, ""];
           })
         )
       );
       rowIndex++;
     }
-  }
 
-  public isValid(): boolean {
-    return this.errors.length === 0;
-  }
-
-  public getErrors(): ParseError[] {
-    return this.errors;
+    if (errors.length) {
+      throw new CSVInputError(errors);
+    }
   }
 
   public getRows(): InputRow[] {
@@ -103,18 +100,13 @@ export class CSVInput implements Input {
     return this.columns;
   }
 
-  public toPlainRows(): InputValue[][] {
-    return this.data.map((row) =>
-      Object.values(row).map((cell) => {
-        if (cell.valid) {
-          return cell.value;
-        }
-        return cell.input;
-      })
-    );
-  }
-
   static fromConfiguration(config: PODPipelineCSVInput): CSVInput {
     return new CSVInput(config);
+  }
+}
+
+export class CSVInputError extends Error {
+  constructor(public errors: ParseError[]) {
+    super(`CSVInputError: ${errors.length} error(s) during parsing`);
   }
 }

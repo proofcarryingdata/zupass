@@ -44,12 +44,7 @@ export function atomize(
         );
       }
       const cell = column.getValue(row);
-      if (!cell.valid) {
-        throw new Error(
-          `Invalid input value for column ${source.name} of type ${column.type}`
-        );
-      }
-      entries[key] = converter(cell.value);
+      entries[key] = converter(cell);
     } else if (source.type === "configured") {
       entries[key] = {
         // @todo non-string configured values

@@ -2,6 +2,17 @@ import { SafeParseReturnType, z } from "zod";
 import { PODPipelineInputFieldType } from "../genericIssuanceTypes";
 import { FieldTypeToJavaScriptType } from "./Input";
 
+/**
+ * These coercions are used to convert input values from a CSV document into
+ * the types that we use in the POD pipeline.
+ *
+ * These types will subsequently be converted into {@link PODValue}s, but
+ * the coercions are separate to allow for easier testing.
+ *
+ * See {@link getInputToPODValueConverter} to see how coerced values are
+ * converted into {@link PODValue}s.
+ */
+
 // Zod will coerce many kinds of things to Dates, including nulls. This
 // two-step coercion first ensures that we have either a string or a date,
 // and only then will it attempt to coerce the data into a Date object.
@@ -46,6 +57,7 @@ type Coercers = {
   ) => SafeParseReturnType<unknown, FieldTypeToJavaScriptType<K>>;
 };
 
+// Set up a mapping from field types to Zod parsers.
 export const coercions: Coercers = {
   [PODPipelineInputFieldType.String]: z.string().safeParse,
   [PODPipelineInputFieldType.Integer]: inputToBigInt.refine(

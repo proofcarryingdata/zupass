@@ -46,7 +46,6 @@ export function parseCSV(options: PODPipelineOptions): string[][] {
 
   const configuredColumns = Object.keys(options.input.columns);
   const columnHeaders: string[] = parsed[0];
-
   const columnIndices = Object.fromEntries(
     configuredColumns.map((column) => [column, columnHeaders.indexOf(column)])
   );

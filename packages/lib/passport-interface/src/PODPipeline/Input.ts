@@ -24,14 +24,11 @@ type ColumnSpec = Record<string, PODPipelineInputFieldType>;
 // matched to a column key, and where value in the cell for a given key has the
 // JavaScript type equivalent to the column's PODPipelineInputFieldType value.
 export type TemplatedInputRow<T extends ColumnSpec> = {
-  [K in keyof T]: InputCell<FieldTypeToJavaScriptType<T[K]>>;
+  [K in keyof T]: FieldTypeToJavaScriptType<T[K]>;
 };
 
 export type InputRow = TemplatedInputRow<ColumnSpec>;
 export type InputValue = FieldTypeToJavaScriptType<PODPipelineInputFieldType>;
-export type InputCell<T> =
-  | { valid: true; value: T }
-  | { valid: false; input: string };
 
 /**
  * Abstract base interface for all inputs to the pipeline.
@@ -65,8 +62,8 @@ export class TemplatedColumn<T extends PODPipelineInputFieldType> {
 
   public getValue<
     R extends TemplatedInputRow<Record<string, PODPipelineInputFieldType>>
-  >(row: R): InputCell<FieldTypeToJavaScriptType<T>> {
-    return row[this.name] as InputCell<FieldTypeToJavaScriptType<T>>;
+  >(row: R): FieldTypeToJavaScriptType<T> {
+    return row[this.name] as FieldTypeToJavaScriptType<T>;
   }
 
   public is<T extends PODPipelineInputFieldType>(
