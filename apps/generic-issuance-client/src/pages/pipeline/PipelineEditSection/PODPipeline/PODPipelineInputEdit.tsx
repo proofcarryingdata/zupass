@@ -1,43 +1,21 @@
-import { ChevronDownIcon, PlusSquareIcon } from "@chakra-ui/icons";
+import { PlusSquareIcon } from "@chakra-ui/icons";
+import { Button, Icon, VStack, useDisclosure } from "@chakra-ui/react";
 import {
-  Box,
-  Button,
-  Icon,
-  Input,
-  InputProps,
-  Menu,
-  MenuButton,
-  MenuDivider,
-  MenuItem,
-  MenuList,
-  Portal,
-  UseMenuItemProps,
-  VStack,
-  useDisclosure,
-  useMenuItem
-} from "@chakra-ui/react";
-import {
-  CSVInput,
-  InputColumn,
-  InputValue,
-  PODPipelineInputFieldType
+  PODPipelineDefinition,
+  PODPipelineInputFieldType,
+  updateInputCSV
 } from "@pcd/passport-interface";
+import { parse } from "csv-parse/sync";
 import React, { ReactNode, useCallback, useMemo, useState } from "react";
-import {
-  MdCheckCircleOutline,
-  MdDateRange,
-  MdDeleteOutline,
-  MdKey,
-  MdNumbers,
-  MdShortText
-} from "react-icons/md";
-import { Point, Spreadsheet } from "react-spreadsheet";
+import { Spreadsheet } from "react-spreadsheet";
 import styled from "styled-components";
-import { BooleanEditor, BooleanViewer } from "./cells/BooleanCell";
-import { DateEditor, DateViewer } from "./cells/DateCell";
-import { IntegerEditor, IntegerViewer } from "./cells/IntegerCell";
-import { AddColumnModal } from "./modals/AddColumnModal";
-import { DeleteColumnDialog } from "./modals/DeleteColumnDialog";
+import { ColumnIndicator } from "./sheet/ColumnIndicator";
+import { HeaderRow, Row } from "./sheet/Rows";
+import { BooleanEditor, BooleanViewer } from "./sheet/cells/BooleanCell";
+import { DateEditor, DateViewer } from "./sheet/cells/DateCell";
+import { IntegerEditor, IntegerViewer } from "./sheet/cells/IntegerCell";
+import { StringEditor, StringViewer } from "./sheet/cells/StringCell";
+import { UUIDEditor, UUIDViewer } from "./sheet/cells/UUIDCell";
 import { PODPipelineEditAction, PODPipelineEditActionType } from "./state";
 
 /**
@@ -56,180 +34,38 @@ const COLUMN_CELLS = {
     DataViewer: DateViewer,
     DataEditor: DateEditor
   },
-  // For UUIDs and strings, use the default editor
-  [PODPipelineInputFieldType.UUID]: {},
-  [PODPipelineInputFieldType.String]: {}
+  // For UUIDs and strings, use the string editor
+  [PODPipelineInputFieldType.UUID]: {
+    DataViewer: UUIDViewer,
+    DataEditor: UUIDEditor
+  },
+  [PODPipelineInputFieldType.String]: {
+    DataViewer: StringViewer,
+    DataEditor: StringEditor
+  }
 };
-
-type HeaderRowProps = React.PropsWithChildren & {
-  onAddColumn: () => void;
-};
-
-function HeaderRow(props: HeaderRowProps): ReactNode {
-  const { onAddColumn, ...rowProps } = props;
-  return (
-    <tr {...rowProps}>
-      {props.children}
-      <th>
-        <Button onClick={onAddColumn}>
-          <PlusSquareIcon />
-        </Button>
-      </th>
-    </tr>
-  );
-}
-
-function Row(props: React.PropsWithChildren): ReactNode {
-  return (
-    <tr {...props}>
-      {props.children}
-      <td></td>
-    </tr>
-  );
-}
-
-type MenuInputProps = Omit<UseMenuItemProps & InputProps, "onChange"> & {
-  value: string;
-  onChange: (value: string) => void;
-  validate: (value: string) => boolean;
-};
-
-function MenuInput({
-  onChange,
-  value,
-  validate,
-  ...rest
-}: MenuInputProps): ReactNode {
-  const { role } = useMenuItem(rest);
-  const navigationKeys = ["ArrowUp", "ArrowDown", "Escape"];
-  const [localValue, setLocalValue] = useState(value);
-  const [isValid, setIsValid] = useState(validate(value));
-
-  const onLocalChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocalValue(e.target.value);
-      setIsValid(validate(e.target.value));
-    },
-    [validate]
-  );
-  const onBlur = useCallback(() => {
-    if (isValid) {
-      onChange(localValue);
-    }
-  }, [localValue, onChange, isValid]);
-  return (
-    <Box px="3" py="1" role={role}>
-      <Input
-        value={localValue}
-        onChange={onLocalChange}
-        onBlur={onBlur}
-        isInvalid={!isValid}
-        colorScheme={isValid ? undefined : "red"}
-        placeholder="Enter value"
-        size="md"
-        {...rest}
-        onKeyDown={(e) => {
-          if (!navigationKeys.includes(e.key)) {
-            e.stopPropagation();
-          }
-        }}
-      />
-    </Box>
-  );
-}
-
-function ColumnIndicator({
-  columns,
-  column,
-  label,
-  onDelete,
-  onChangeColumnName
-}: {
-  columns: Record<string, InputColumn>;
-  column: number;
-  label?: React.ReactNode | null;
-  onDelete: (name: string) => void;
-  onChangeColumnName: (name: string) => void;
-}): ReactNode {
-  const columnNames = useMemo(() => Object.keys(columns), [columns]);
-  // Select an icon for the column based on the column's data type
-  const icon = useMemo(() => {
-    const type = columns[columnNames[column]].type;
-    switch (type) {
-      case PODPipelineInputFieldType.String:
-        return <Icon as={MdShortText} w={4} h={4} />;
-      case PODPipelineInputFieldType.Integer:
-        return <Icon as={MdNumbers} w={4} h={4} />;
-      case PODPipelineInputFieldType.Boolean:
-        return <Icon as={MdCheckCircleOutline} w={4} h={4} />;
-      case PODPipelineInputFieldType.Date:
-        return <Icon as={MdDateRange} w={4} h={4} />;
-      case PODPipelineInputFieldType.UUID:
-        return <Icon as={MdKey} w={4} h={4} />;
-    }
-  }, [columns, column, columnNames]);
-
-  const validateColumnName = useCallback(
-    (name: string) => {
-      return (
-        name !== "" &&
-        (!columnNames.includes(name) || name === columnNames[column])
-      );
-    },
-    [columnNames, column]
-  );
-
-  return (
-    <th>
-      <Menu>
-        <MenuButton
-          w="100%"
-          as={Button}
-          leftIcon={icon}
-          rightIcon={<ChevronDownIcon />}
-        >
-          {label ?? columnNames[column]}
-        </MenuButton>
-        <Portal>
-          <MenuList>
-            <MenuInput
-              value={columnNames[column]}
-              onChange={onChangeColumnName}
-              validate={validateColumnName}
-            />
-            <MenuDivider />
-            <MenuItem
-              icon={<Icon as={MdDeleteOutline} w={4} h={4} />}
-              onClick={() => onDelete(columnNames[column])}
-            >
-              Delete Column
-            </MenuItem>
-          </MenuList>
-        </Portal>
-      </Menu>
-    </th>
-  );
-}
 
 export function PODPipelineInputEdit({
-  csvInput,
-  dispatch
+  dispatch,
+  definition
 }: {
-  csvInput: CSVInput;
   dispatch: React.Dispatch<PODPipelineEditAction>;
+  definition: PODPipelineDefinition;
 }): ReactNode {
-  const columns = useMemo(() => csvInput.getColumns(), [csvInput]);
-  const data = useMemo(
-    () =>
-      csvInput.getRows().map((row) =>
-        Object.entries(row).map(([columnName, value]) => ({
-          value: value,
-          ...COLUMN_CELLS[columns[columnName].type]
-        }))
-      ),
-    [csvInput, columns]
-  );
-
+  const columns = useMemo(() => definition.options.input.columns, [definition]);
+  const data = useMemo(() => {
+    const parsed = parse(definition.options.input.csv, {});
+    console.log(parsed);
+    parsed.shift();
+    const columnNames = Object.keys(columns);
+    const maxCols = columnNames.length;
+    return parsed.map((row: unknown[]) =>
+      row.slice(0, maxCols).map((value, index) => ({
+        value,
+        ...COLUMN_CELLS[columns[columnNames[index]].type]
+      }))
+    );
+  }, [definition.options.input.csv, columns]);
   const addRow = useCallback(() => {
     dispatch({
       type: PODPipelineEditActionType.AddInputRow
@@ -311,33 +147,50 @@ export function PODPipelineInputEdit({
     [columns, onChangeColumnName, onDeleteColumn]
   );
 
-  const updateCell = useCallback(
-    (
-      prevCell: { value: InputValue } | null,
-      nextCell: { value: InputValue } | null,
-      coords: Point | null
-    ) => {
-      if (coords && nextCell) {
-        const row = csvInput.getRows()[coords.row];
-        if (row) {
-          const column = Object.values(columns)[coords.column];
-          if (column && column.getValue(row) !== nextCell.value) {
-            dispatch({
-              type: PODPipelineEditActionType.UpdateInputCell,
-              rowIndex: coords.row,
-              columnName: column.getName(),
-              value: nextCell.value
-            });
-          }
-        }
-      }
-    },
-    [columns, csvInput, dispatch]
-  );
+  // const updateCell = useCallback(
+  //   (
+  //     prevCell: { value: InputValue } | null,
+  //     nextCell: { value: InputValue } | null,
+  //     coords: Point | null
+  //   ) => {
+  //     if (coords && nextCell) {
+  //       const row = csvInput.getRows()[coords.row];
+  //       if (row) {
+  //         const column = Object.values(columns)[coords.column];
+  //         if (column) {
+  //           const cell = column.getValue(row);
+  //           const value = cell.valid ? cell.value : cell.input;
+  //           const nextValue = nextCell.value
+  //             ? nextCell.value.valid
+  //               ? nextCell.value.value
+  //               : nextCell.value.input
+  //             : "";
+  //           console.log({
+  //             value,
+  //             nextValue,
+  //             column,
+  //             coords,
+  //             prevCell,
+  //             nextCell
+  //           });
+  //           if (value !== nextValue) {
+  //             dispatch({
+  //               type: PODPipelineEditActionType.UpdateInputCell,
+  //               rowIndex: coords.row,
+  //               columnName: column.getName(),
+  //               value: nextValue
+  //             });
+  //           }
+  //         }
+  //       }
+  //     }
+  //   },
+  //   [columns, csvInput, dispatch]
+  // );
 
   return (
     <Container>
-      <DeleteColumnDialog
+      {/* <DeleteColumnDialog
         isOpen={isDeleteColumnModalOpen}
         onClose={closeDeleteColumnModal}
         onDelete={onDeleteColumnConfirmed}
@@ -348,9 +201,9 @@ export function PODPipelineInputEdit({
         onClose={closeAddColumnModal}
         onAddColumn={addColumn}
         columns={csvInput.getColumns()}
-      />
+      /> */}
       <Spreadsheet
-        onCellCommit={updateCell}
+        // onCellCommit={updateCell}
         ColumnIndicator={CustomColumnIndicator}
         HeaderRow={CustomHeaderRow}
         Row={Row}
@@ -358,6 +211,18 @@ export function PODPipelineInputEdit({
         data={data}
         columnLabels={Object.keys(columns)}
         className={"sheet"}
+        onChange={(data) => {
+          console.log(
+            updateInputCSV(
+              definition,
+              data.map((row) => row.map((cell) => cell?.value))
+            )
+          );
+          dispatch({
+            type: PODPipelineEditActionType.UpdateInputCSV,
+            data: data.map((row) => row.map((cell) => cell?.value))
+          });
+        }}
       />
       <VStack spacing={2} alignItems={"start"}>
         <Button
@@ -393,14 +258,26 @@ const Container = styled.div`
         min-width: 3em;
       }
 
+      input.Spreadsheet__data-editor--invalid {
+        color: rgb(90, 27, 35, 1);
+      }
+
       .Spreadsheet__data-viewer {
-        padding: 0px;
+        padding: 8px;
         white-space: normal;
         word-break: normal;
       }
 
       td {
-        padding: 8px;
+        padding: 0px;
+      }
+
+      td:has(.Spreadsheet__data-viewer--invalid) {
+        background-color: rgb(90, 27, 35, 1);
+      }
+
+      th {
+        padding: 0px;
       }
     }
   }

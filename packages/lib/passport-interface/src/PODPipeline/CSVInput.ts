@@ -1,18 +1,22 @@
-import { assertUnreachable } from "@pcd/util";
 import { parse } from "csv-parse/sync";
-import { z } from "zod";
-import {
-  PODPipelineCSVInput,
-  PODPipelineInputFieldType
-} from "../genericIssuanceTypes";
+import { ZodIssue } from "zod";
+import { PODPipelineCSVInput } from "../genericIssuanceTypes";
 import {
   Input,
+  InputCell,
   InputColumn,
   InputRow,
   InputValue,
   TemplatedColumn
 } from "./Input";
-import { inputToBigInt, inputToBoolean, inputToDate } from "./coercion";
+import { coercions } from "./coercion";
+
+interface ParseError {
+  row: number;
+  column: string;
+  value: string;
+  errors: ZodIssue[];
+}
 
 /**
  * Implements the `Input` interface and provides structured access to data from
@@ -26,8 +30,9 @@ import { inputToBigInt, inputToBoolean, inputToDate } from "./coercion";
  * then you can be sure that the data in it is strongly typed.
  */
 export class CSVInput implements Input {
-  private data: Record<string, InputValue>[] = [];
+  private data: Record<string, InputCell<InputValue>>[] = [];
   private columns: Record<string, InputColumn>;
+  private errors: ParseError[] = [];
 
   constructor({ csv, columns }: PODPipelineCSVInput) {
     this.columns = Object.fromEntries(
@@ -36,34 +41,18 @@ export class CSVInput implements Input {
         new TemplatedColumn(name, type)
       ])
     );
-    // Construct a Zod schema for the data rows, based on the column
-    // configuration.
-    // In some cases we can use pre-built Zod parses (e.g. z.string()) and in
-    // other cases we have specially-configured ones, e.g. for BigInts.
-    const rowSchema = z.object(
-      Object.fromEntries(
-        Object.entries(columns).map(([key, column]) => [
-          key,
-          column.type === PODPipelineInputFieldType.String
-            ? z.string()
-            : column.type === PODPipelineInputFieldType.Integer
-            ? inputToBigInt.refine(
-                (arg: bigint) => arg >= 0n,
-                "Integers must not be negative"
-              )
-            : column.type === PODPipelineInputFieldType.Boolean
-            ? inputToBoolean
-            : column.type === PODPipelineInputFieldType.Date
-            ? inputToDate
-            : column.type === PODPipelineInputFieldType.UUID
-            ? z.string().uuid()
-            : assertUnreachable(column.type)
-        ])
-      )
+
+    // Map our pre-configured column types to the appropriate coercion
+    // function.
+    const coerce = Object.fromEntries(
+      Object.entries(columns).map(([key, column]) => [
+        key,
+        coercions[column.type]
+      ])
     );
 
     const columnNames = Object.keys(columns);
-    const data: unknown[] = parse(csv, { columns: columnNames });
+    const data: Record<string, string>[] = parse(csv, { columns: columnNames });
     const header = data.shift();
     // The first row of a CSV file should be the header, which
     // should match the column names in the pipeline configuration
@@ -75,10 +64,35 @@ export class CSVInput implements Input {
       throw new Error("CSV header does not match configured columns");
     }
 
+    let rowIndex = 0;
     for (const row of data) {
-      // This will throw if the row is not valid
-      this.data.push(rowSchema.parse(row));
+      this.data.push(
+        Object.fromEntries(
+          Object.entries(row).map(([key, value]) => {
+            const parsed = coerce[key](value);
+            if (parsed.success) {
+              return [key, { valid: true, value: parsed.data }];
+            }
+            this.errors.push({
+              row: rowIndex,
+              column: key,
+              value,
+              errors: parsed.error.errors
+            });
+            return [key, { valid: false, input: value }];
+          })
+        )
+      );
+      rowIndex++;
     }
+  }
+
+  public isValid(): boolean {
+    return this.errors.length === 0;
+  }
+
+  public getErrors(): ParseError[] {
+    return this.errors;
   }
 
   public getRows(): InputRow[] {
@@ -87,6 +101,17 @@ export class CSVInput implements Input {
 
   public getColumns(): Record<string, InputColumn> {
     return this.columns;
+  }
+
+  public toPlainRows(): InputValue[][] {
+    return this.data.map((row) =>
+      Object.values(row).map((cell) => {
+        if (cell.valid) {
+          return cell.value;
+        }
+        return cell.input;
+      })
+    );
   }
 
   static fromConfiguration(config: PODPipelineCSVInput): CSVInput {

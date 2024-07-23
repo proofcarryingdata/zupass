@@ -41,8 +41,8 @@ const COLUMN_DEFAULTS = {
   [PODPipelineInputFieldType.String]: "",
   [PODPipelineInputFieldType.Integer]: "0",
   [PODPipelineInputFieldType.Boolean]: "false",
-  [PODPipelineInputFieldType.Date]: "",
-  [PODPipelineInputFieldType.UUID]: ""
+  [PODPipelineInputFieldType.Date]: "1970-01-01",
+  [PODPipelineInputFieldType.UUID]: "00000000-0000-0000-0000-000000000000"
 };
 
 /**
@@ -78,7 +78,7 @@ export function renameInputColumn(
     Object.keys(csvInput.getColumns()).map((key) =>
       key === oldName ? newName : key
     ),
-    ...csvInput.getRows().map(Object.values)
+    ...csvInput.toPlainRows()
   ]);
   newDefinition.options.input.csv = newCsv;
 
@@ -126,7 +126,7 @@ export function addInputColumn(
   const defaultValue = COLUMN_DEFAULTS[type];
   newDefinition.options.input.csv = stringifyCSV([
     [...Object.keys(csvInput.getColumns()), name],
-    ...csvInput.getRows().map((row) => [...Object.values(row), defaultValue])
+    ...csvInput.toPlainRows().map((row) => [...row, defaultValue])
   ]);
 
   return newDefinition;
@@ -151,9 +151,10 @@ export function deleteInputColumn(
   const index = keys.indexOf(name);
   const newCsv = stringifyCSV([
     keys.filter((key) => key !== name),
-    ...csvInput
-      .getRows()
-      .map((row) => Object.values(row).filter((_value, i) => i !== index))
+    ...csvInput.toPlainRows().map((row) => {
+      row.splice(index, 1);
+      return row;
+    })
   ]);
   newDefinition.options.input.csv = newCsv;
 
@@ -195,13 +196,24 @@ export function updateInputCell(
 ): PODPipelineDefinition {
   const newDefinition = structuredClone(definition);
   const csvInput = CSVInput.fromConfiguration(definition.options.input);
+  const columnIndex = Object.keys(csvInput.getColumns()).indexOf(column);
+  console.log(columnIndex);
+  console.log([
+    Object.keys(csvInput.getColumns()),
+    ...csvInput.toPlainRows().map((row, index) => {
+      if (index === rowNumber) {
+        return row.map((cell, i) => (i === columnIndex ? value : cell));
+      }
+      return row;
+    })
+  ]);
   const newCsv = stringifyCSV([
     Object.keys(csvInput.getColumns()),
-    ...csvInput.getRows().map((row, index) => {
+    ...csvInput.toPlainRows().map((row, index) => {
       if (index === rowNumber) {
-        return Object.values({ ...row, [column]: value });
+        return row.map((cell, i) => (i === columnIndex ? value : cell));
       }
-      return Object.values(row);
+      return row;
     })
   ]);
   newDefinition.options.input.csv = newCsv;
@@ -221,8 +233,30 @@ export function addInputRow(
   const csvInput = CSVInput.fromConfiguration(definition.options.input);
   const newCsv = stringifyCSV([
     Object.keys(csvInput.getColumns()),
-    ...csvInput.getRows().map((row) => [...Object.values(row)]),
+    ...csvInput.toPlainRows(),
     Object.values(csvInput.getColumns()).map((col) => COLUMN_DEFAULTS[col.type])
+  ]);
+  newDefinition.options.input.csv = newCsv;
+  return newDefinition;
+}
+
+export function updateInputCSV(
+  definition: PODPipelineDefinition,
+  data: InputValue[][]
+): PODPipelineDefinition {
+  const newDefinition = structuredClone(definition);
+  const newCsv = stringifyCSV([
+    Object.keys(definition.options.input.columns),
+    ...data.map((row) => {
+      return Object.values(definition.options.input.columns).map(
+        ({ type }, index) => {
+          if (index < row.length) {
+            return row[index] ?? COLUMN_DEFAULTS[type];
+          }
+          return COLUMN_DEFAULTS[type];
+        }
+      );
+    })
   ]);
   newDefinition.options.input.csv = newCsv;
   return newDefinition;

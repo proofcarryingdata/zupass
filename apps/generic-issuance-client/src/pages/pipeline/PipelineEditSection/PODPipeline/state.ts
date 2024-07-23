@@ -16,7 +16,7 @@ import {
   deleteOutputEntry,
   renameInputColumn,
   setFeedOptions,
-  updateInputCell
+  updateInputCSV
 } from "@pcd/passport-interface";
 import { assertUnreachable } from "@pcd/util";
 
@@ -39,8 +39,8 @@ export enum PODPipelineEditActionType {
   DeleteInputColumn = "deleteInputColumn",
   RenameInputColumn = "renameInputColumn",
   UpdateFeedOptions = "updateFeedOptions",
-  UpdateInputCell = "updateInputCell",
   AddInputRow = "addInputRow",
+  UpdateInputCSV = "updateInputCSV",
   AddOutputEntry = "addOutputEntry",
   DeleteOutputEntry = "deleteOutputEntry",
   ChangeOutputEntryType = "changeOutputEntryType",
@@ -67,10 +67,8 @@ export type PODPipelineEditAction =
       feedOptions: FeedIssuanceOptions;
     }
   | {
-      type: PODPipelineEditActionType.UpdateInputCell;
-      rowIndex: number;
-      columnName: string;
-      value: InputValue;
+      type: PODPipelineEditActionType.UpdateInputCSV;
+      data: InputValue[][];
     }
   | {
       type: PODPipelineEditActionType.AddInputRow;
@@ -127,6 +125,8 @@ export function pipelineEditReducer(
     return undefined;
   }
 
+  console.log(action);
+
   switch (action.type) {
     case PODPipelineEditActionType.AddInputColumn:
       return addInputColumn(state, action.name, action.columnType);
@@ -134,13 +134,6 @@ export function pipelineEditReducer(
       return deleteInputColumn(state, action.name);
     case PODPipelineEditActionType.RenameInputColumn:
       return renameInputColumn(state, action.name, action.newName);
-    case PODPipelineEditActionType.UpdateInputCell:
-      return updateInputCell(
-        state,
-        action.rowIndex,
-        action.columnName,
-        action.value
-      );
     case PODPipelineEditActionType.UpdateFeedOptions:
       return {
         ...state,
@@ -151,6 +144,8 @@ export function pipelineEditReducer(
       };
     case PODPipelineEditActionType.AddInputRow:
       return addInputRow(state);
+    case PODPipelineEditActionType.UpdateInputCSV:
+      return updateInputCSV(state, action.data);
     case PODPipelineEditActionType.AddOutputEntry:
       return addOutputEntry(state, action.outputName);
     case PODPipelineEditActionType.DeleteOutputEntry:

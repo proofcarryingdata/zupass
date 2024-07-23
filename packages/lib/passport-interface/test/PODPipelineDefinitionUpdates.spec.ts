@@ -132,7 +132,10 @@ describe("PODPipelineDefinition updates", () => {
       "Jeff"
     );
     const parsedCSV = CSVInput.fromConfiguration(definition.options.input);
-    expect(parsedCSV.getRows()[0].first_name).to.equal("Jeff");
+    expect(parsedCSV.getRows()[0].first_name).to.eql({
+      valid: true,
+      value: "Jeff"
+    });
     expect(PODPipelineDefinitionSchema.safeParse(definition).success).to.be
       .true;
   });

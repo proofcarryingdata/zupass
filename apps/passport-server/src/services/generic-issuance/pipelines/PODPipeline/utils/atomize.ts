@@ -43,7 +43,13 @@ export function atomize(
           `No converter for input ${source.name} of type ${column.type} to POD value ${key} of type ${entry.type}`
         );
       }
-      entries[key] = converter(column.getValue(row));
+      const cell = column.getValue(row);
+      if (!cell.valid) {
+        throw new Error(
+          `Invalid input value for column ${source.name} of type ${column.type}`
+        );
+      }
+      entries[key] = converter(cell.value);
     } else if (source.type === "configured") {
       entries[key] = {
         // @todo non-string configured values
