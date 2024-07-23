@@ -16,14 +16,17 @@ import { FieldTypeToJavaScriptType } from "./Input";
  * yet) to the input types that can be converted to them. Input types are
  * described by {@link PODPipelineInputFieldType}.
  */
-const conversions: Record<
-  PODPipelinePODEntry["type"],
-  {
-    [K in PODPipelineInputFieldType]:
-      | ((value: FieldTypeToJavaScriptType<K>) => PODValue)
-      | undefined;
-  }
-> = {
+type SupportedPODValueType = Exclude<PODValue["type"], "eddsa_pubkey">;
+
+type Conversions = {
+  [P in SupportedPODValueType]: {
+    [T in PODPipelineInputFieldType]?: (
+      input: FieldTypeToJavaScriptType<T>
+    ) => PODValue;
+  };
+};
+
+const PODValueConversions: Conversions = {
   // String conversions are simple, anything can be made into a string.
   string: {
     [PODPipelineInputFieldType.String]: (value) => ({
@@ -93,7 +96,7 @@ const conversions: Record<
     }),
     [PODPipelineInputFieldType.String]: undefined
   }
-};
+} as const;
 
 /**
  * Get a function that converts an input value to a POD value.
@@ -109,5 +112,5 @@ export function getInputToPODValueConverter<
   inputType: T,
   podValueType: PODPipelinePODEntry["type"]
 ): ((value: FieldTypeToJavaScriptType<T>) => PODValue) | undefined {
-  return conversions[podValueType]?.[inputType];
+  return PODValueConversions[podValueType]?.[inputType];
 }
