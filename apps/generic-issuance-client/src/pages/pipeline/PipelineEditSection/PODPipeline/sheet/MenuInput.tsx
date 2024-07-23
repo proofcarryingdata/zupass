@@ -11,6 +11,9 @@ type MenuInputProps = Omit<
   validate: (value: string) => boolean;
 };
 
+/**
+ * In-line editor that can appear in pop-up menus.
+ */
 export function MenuInput({
   onChange,
   value,

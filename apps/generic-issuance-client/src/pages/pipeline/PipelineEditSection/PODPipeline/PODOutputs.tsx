@@ -64,7 +64,7 @@ function EditableName({
   );
 }
 
-function ValidatedOutputs({
+function PODOutput({
   name,
   definition,
   dispatch
@@ -78,8 +78,8 @@ function ValidatedOutputs({
 
   const columns = Object.keys(definition.options.input.columns);
 
-  const entries = Object.entries(output.entries ?? []);
-  const entryObj = Object.fromEntries(entries);
+  const outputEntries = Object.entries(output.entries ?? []);
+  const outputEntryMap = Object.fromEntries(outputEntries);
 
   const {
     isOpen: isSetOutputMatchModalOpen,
@@ -91,7 +91,7 @@ function ValidatedOutputs({
     ["credentialEmail", "Zupass Email"],
     ["credentialSemaphoreID", "Semaphore ID"],
     ...columns.map((col) => [`input:${col}`, `Data: ${col}`]),
-    ...entries.flatMap(([_, entry]) =>
+    ...outputEntries.flatMap(([_, entry]) =>
       entry.source.type === "configured"
         ? [
             [
@@ -103,9 +103,10 @@ function ValidatedOutputs({
     )
   ];
 
+  // Change the source of an output, e.g. from one input field to another
   const changeSource = useCallback(
     (key: string, source: string) => {
-      const entry = structuredClone(entryObj[key]);
+      const entry = structuredClone(outputEntryMap[key]);
       if (source.startsWith("input:")) {
         entry.source = { type: "input", name: source.substring(6) };
         const existingType = entry.type;
@@ -141,7 +142,7 @@ function ValidatedOutputs({
         entry
       });
     },
-    [definition.options.input.columns, dispatch, entryObj, name]
+    [definition.options.input.columns, dispatch, outputEntryMap, name]
   );
 
   const [addingConfiguredValueForKey, setAddingConfiguredValueForKey] =
@@ -384,7 +385,7 @@ function ValidatedOutputs({
         onCancel={closeSetOutputMatchModal}
         onChange={changeMatch}
         output={output}
-        entries={entryObj}
+        entries={outputEntryMap}
       />
     </Outputs>
   );
@@ -400,7 +401,7 @@ export function PODOutputs({
   return (
     <>
       {Object.keys(definition.options.outputs).map((name) => (
-        <ValidatedOutputs
+        <PODOutput
           key={name}
           name={name}
           definition={definition}

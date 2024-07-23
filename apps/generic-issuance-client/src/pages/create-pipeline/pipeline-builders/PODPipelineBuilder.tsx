@@ -7,9 +7,12 @@ import {
   PODPipelinePCDTypes,
   PipelineType
 } from "@pcd/passport-interface";
-import { ReactNode, useEffect, useReducer, useState } from "react";
+import { ReactNode, useCallback, useEffect, useReducer, useState } from "react";
 import { PODPipelineInputEdit } from "../../pipeline/PipelineEditSection/PODPipeline/PODPipelineInputEdit";
-import { pipelineEditReducer } from "../../pipeline/PipelineEditSection/PODPipeline/state";
+import {
+  PODPipelineEditActionType,
+  pipelineEditReducer
+} from "../../pipeline/PipelineEditSection/PODPipeline/state";
 import { TwoColumns } from "../../pipeline/PipelinePage";
 import { FeedOptions } from "./FeedOptions";
 
@@ -68,8 +71,14 @@ export default function PODPipelineBuilder(
     }
   }, [maybeDefinition]);
 
-  const [feedOptions, setFeedOptions] = useState<FeedIssuanceOptions>(
-    definition.options.feedOptions
+  const setFeedOptions = useCallback(
+    (feedOptions: FeedIssuanceOptions): void => {
+      dispatch({
+        type: PODPipelineEditActionType.SetFeedOptions,
+        feedOptions
+      });
+    },
+    [dispatch]
   );
 
   return (
@@ -100,7 +109,7 @@ export default function PODPipelineBuilder(
           style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}
         >
           <FeedOptions
-            feedOptions={feedOptions}
+            feedOptions={definition.options.feedOptions}
             setFeedOptions={setFeedOptions}
           />
 

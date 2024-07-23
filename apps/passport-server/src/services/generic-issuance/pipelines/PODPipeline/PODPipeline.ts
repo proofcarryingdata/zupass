@@ -46,11 +46,6 @@ const LOG_TAG = `[${LOG_NAME}]`;
 
 export interface PODAtom extends PipelineAtom {
   matchTo: PODPipelineOutputMatch;
-  /**
-   * @todo if we can look up output configuration via output ID, do we need
-   * the matchType above? Alternatively, if we can just add these things to the
-   * atom, what about pcdType?
-   */
   outputId: string;
   entries: PODEntries;
 }
@@ -86,7 +81,6 @@ export class PODPipeline implements BasePipeline {
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PODAtom>;
     this.credentialSubservice = credentialSubservice;
-    //  this.semaphoreGroupProvider = new SemaphoreGroupProvider(semaphoreHistoryDB);
     this.consumerDB = consumerDB;
     this.cacheService = cacheService;
     this.capabilities = [
@@ -105,6 +99,15 @@ export class PODPipeline implements BasePipeline {
     ] as unknown as BasePipelineCapability[];
   }
 
+  /**
+   * Load the POD pipeline.
+   *
+   * Begins by loading input data from the definition, then creates atoms from
+   * the input and outputs. Finally saves those atoms and returns summary
+   * information.
+   *
+   * @returns A summary of the load operation
+   */
   public async load(): Promise<PipelineLoadSummary> {
     return traced(LOG_NAME, "load", async (span) => {
       tracePipeline(this.definition);
@@ -420,6 +423,12 @@ export class PODPipeline implements BasePipeline {
     return atoms;
   }
 
+  /**
+   * Check if the given pipeline is a POD pipeline.
+   *
+   * @param pipeline The pipeline to check
+   * @returns True if the given pipeline is a POD pipeline
+   */
   public static is(pipeline: BasePipeline): pipeline is PODPipeline {
     return pipeline.type === PipelineType.POD;
   }

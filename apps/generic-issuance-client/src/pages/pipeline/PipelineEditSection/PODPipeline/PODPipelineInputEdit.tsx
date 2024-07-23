@@ -36,7 +36,6 @@ const COLUMN_CELLS = {
     DataViewer: DateViewer,
     DataEditor: DateEditor
   },
-  // For UUIDs and strings, use the string editor
   [PODPipelineInputFieldType.UUID]: {
     DataViewer: UUIDViewer,
     DataEditor: UUIDEditor
@@ -47,6 +46,12 @@ const COLUMN_CELLS = {
   }
 };
 
+/**
+ * Convert the parsed CSV to a matrix of cells for use by react-spreadsheet.
+ * @param parsed The parsed CSV
+ * @param options The pipeline options
+ * @returns The matrix of cells
+ */
 function parsedCSVToMatrix(
   parsed: string[][],
   options: PODPipelineOptions
@@ -80,6 +85,7 @@ export function PODPipelineInputEdit({
     () => parsedCSVToMatrix(data, definition.options),
     [data, definition.options]
   );
+
   const addRow = useCallback(() => {
     dispatch({
       type: PODPipelineEditActionType.AddInputRow,
@@ -112,13 +118,6 @@ export function PODPipelineInputEdit({
     [dispatch, data, closeAddColumnModal]
   );
 
-  const CustomHeaderRow = useCallback(
-    (props: React.PropsWithChildren) => {
-      return <HeaderRow {...props} onAddColumn={openAddColumnModal} />;
-    },
-    [openAddColumnModal]
-  );
-
   const [columnToDeleteName, setColumnToDeleteName] = useState<string>("");
 
   const onDeleteColumn = useCallback(
@@ -149,6 +148,13 @@ export function PODPipelineInputEdit({
       });
     },
     [columns, data, dispatch]
+  );
+
+  const CustomHeaderRow = useCallback(
+    (props: React.PropsWithChildren) => {
+      return <HeaderRow {...props} onAddColumn={openAddColumnModal} />;
+    },
+    [openAddColumnModal]
   );
 
   const CustomColumnIndicator = useCallback(

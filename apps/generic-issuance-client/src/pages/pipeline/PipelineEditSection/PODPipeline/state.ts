@@ -51,6 +51,9 @@ export enum PODPipelineEditActionType {
   Reset = "reset"
 }
 
+/**
+ * Action definitions including parameters.
+ */
 export type PODPipelineEditAction =
   | {
       type: PODPipelineEditActionType.AddInputColumn;

@@ -21,6 +21,10 @@ import {
 } from "react-icons/md";
 import { MenuInput } from "./MenuInput";
 
+/**
+ * The "Column Indicator" - the heading which appears at the top of columns
+ * in the spreadsheet view.
+ */
 export function ColumnIndicator({
   columns,
   column,

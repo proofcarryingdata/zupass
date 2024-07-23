@@ -33,7 +33,7 @@ function safeJSONParse(value: string): PODPipelineDefinition | undefined {
  * If the user is an admin, they can switch back to configuration view to fix
  * the issue. If the user is not an admin, they can contact support to resolve
  * the issue. Because these errors result from a failure to parse the JSON,
- * there is no way for a non-admin user to resolve the issue.
+ * there is no way for a non-admin user to take any action directly.
  */
 function ErrorTab({ isAdminView }: { isAdminView: boolean }): ReactNode {
   return (
@@ -65,8 +65,8 @@ export function PODPipelineEdit({
   editorMaximized
 }): ReactNode {
   // Set up the reducer to manage state for the pipeline editing components.
-  // Unlike the admin "Editor" view, these components work with a parsed
-  // representation of the pipeline definition.
+  // Unlike the admin-only editor view, these components work with a parsed
+  // representation of the pipeline definition rather than raw JSON.
   const [parsed, dispatch] = useReducer(
     pipelineEditReducer,
     // Parse the definition from the editor value
@@ -91,10 +91,12 @@ export function PODPipelineEdit({
     }
   }, [editorValue, dispatch]);
 
-  // In reverse, if the parsed definition changes, update the editor value.
-  // We avoid an infinite loop because we track the editor value in a ref,
-  // and since the editor value is a string, the comparison has value
-  // semantics.
+  // If the parsed definition changes, update the editor value.
+  // There is a risk of looping here, which is why we use a Ref to track the
+  // editor value. If we update the editor value here, we do so only after
+  // storing that value in the Ref, which means that when the previous effect
+  // fires again, it will not dispatch a state update, because the editor value
+  // will be the same as the one stored in the Ref.
   useEffect(() => {
     if (parsed) {
       const newValue = JSON.stringify(parsed, null, 2);
@@ -118,7 +120,7 @@ export function PODPipelineEdit({
       <TabPanels style={{ height: "100%", overflow: "hidden" }}>
         <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
           {parsed ? (
-            <PODPipelineInputEdit dispatch={dispatch} definition={parsed} />
+            <PODPipelineInputEdit definition={parsed} dispatch={dispatch} />
           ) : (
             <ErrorTab isAdminView={isAdminView} />
           )}
@@ -139,8 +141,8 @@ export function PODPipelineEdit({
           )}
         </TabPanel>
 
-        <TabPanel style={{ height: "100%" }}>
-          {isAdminView && (
+        {isAdminView && (
+          <TabPanel style={{ height: "100%" }}>
             <FancyEditor
               dark
               value={editorValue}
@@ -167,8 +169,8 @@ export function PODPipelineEdit({
               }
               language="json"
             />
-          )}
-        </TabPanel>
+          </TabPanel>
+        )}
       </TabPanels>
     </Tabs>
   );
