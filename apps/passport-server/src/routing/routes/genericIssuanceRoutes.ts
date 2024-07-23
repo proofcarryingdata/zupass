@@ -14,11 +14,8 @@ import {
   GenericIssuanceUpsertPipelineRequest,
   GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
-  PipelineGetManualCheckInsResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
-  PipelineSetManualCheckInStateRequest,
-  PipelineSetManualCheckInStateResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -220,62 +217,6 @@ export function initGenericIssuanceRoutes(
     );
     res.json(result satisfies PipelineInfoResponseValue);
   });
-
-  app.get(
-    "/generic-issuance/api/manual-checkin/:pipelineID/:key",
-    async (req, res) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const pipelineID = checkUrlParam(req, "pipelineID");
-      if (pipelineID !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
-        logger(
-          `[ROUTES] Received invalid manual checkin list request for pipeline ${pipelineID}`
-        );
-        throw new PCDHTTPError(404);
-      }
-
-      if (
-        checkUrlParam(req, "key") !== process.env.MANUAL_CHECKIN_API_KEY ||
-        !process.env.MANUAL_CHECKIN_API_KEY
-      ) {
-        throw new PCDHTTPError(401);
-      }
-
-      const result =
-        await genericIssuanceService.handleGetManualCheckIns(pipelineID);
-
-      res.json(result satisfies PipelineGetManualCheckInsResponseValue);
-    }
-  );
-
-  app.post(
-    "/generic-issuance/api/manual-checkin/:pipelineID/:key",
-    async (req, res) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const pipelineID = checkUrlParam(req, "pipelineID");
-      if (pipelineID !== "c00d3470-7ff8-4060-adc1-e9487d607d42") {
-        logger(
-          `[ROUTES] Received invalid manual checkin update request for pipeline ${pipelineID}`
-        );
-        throw new PCDHTTPError(404);
-      }
-
-      if (
-        checkUrlParam(req, "key") !== process.env.MANUAL_CHECKIN_API_KEY ||
-        !process.env.MANUAL_CHECKIN_API_KEY
-      ) {
-        throw new PCDHTTPError(401);
-      }
-
-      const reqBody = req.body as PipelineSetManualCheckInStateRequest;
-      const result = await genericIssuanceService.handleSetManualCheckInState(
-        pipelineID,
-        reqBody.ticketId,
-        reqBody.checkInState
-      );
-
-      res.json(result satisfies PipelineSetManualCheckInStateResponseValue);
-    }
-  );
 
   /**
    * Authenticated by PCD so doesn't need auth.

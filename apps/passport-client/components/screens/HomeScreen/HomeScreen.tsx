@@ -223,7 +223,7 @@ export function HomeScreenImpl(): JSX.Element | null {
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
               {pcdsInFolder.length > 0 ? (
-                <PCDCardList pcds={pcdsInFolder} />
+                <PCDCardList allExpanded pcds={pcdsInFolder} />
               ) : loadedIssuedPCDs ? (
                 <NoPcdsContainer>This folder is empty</NoPcdsContainer>
               ) : (
