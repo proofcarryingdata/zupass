@@ -167,9 +167,7 @@ export function HomeScreenImpl(): JSX.Element | null {
       <AppContainer bg="gray">
         <Spacer h={24} />
         <AppHeader isEdgeCity={isEdgeCity} />
-        <Spacer h={24} />
         <Placeholder minH={540}>
-          <LoadingIssuedPCDs />
           {/* {isRoot && (
             <div className="font-bold text-3xl mb-4 text-center">My Events</div>
           )} */}
@@ -226,7 +224,7 @@ export function HomeScreenImpl(): JSX.Element | null {
             <EdgeCityHome />
           ) : (
             <>
-              {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
+              {/* {!(foldersInFolder.length === 0 && isRoot) && <Separator />} */}
               {pcdsInFolder.length > 0 ? (
                 <PCDCardList
                   allExpanded
@@ -251,9 +249,11 @@ export function HomeScreenImpl(): JSX.Element | null {
                   </RemoveAllContainer>
                 </>
               )} */}
+              <LoadingIssuedPCDs />
             </>
           )}
         </Placeholder>
+
         <Spacer h={24} />
       </AppContainer>
     </>

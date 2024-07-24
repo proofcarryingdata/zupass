@@ -1,10 +1,8 @@
-import { CircleButton } from "@pcd/passport-ui";
 import React, { useCallback } from "react";
-import { IoMdSettings } from "react-icons/io";
-import { MdInfo } from "react-icons/md";
 import styled from "styled-components";
 import { useDispatch, useSelf, useSubscriptions } from "../../src/appHooks";
 import { AppState } from "../../src/state";
+import { cn } from "../../src/util";
 
 export const AppHeader = React.memo(AppHeaderImpl);
 
@@ -51,9 +49,6 @@ function AppHeaderImpl({
 
   return (
     <AppHeaderWrap>
-      <CircleButton diameter={34} padding={8} onClick={openInfo}>
-        <MdInfo size={34} color={isEdgeCity ? "white" : "var(--accent-lite)"} />
-      </CircleButton>
       {children}
       {!isProveOrAddScreen && (
         <>
@@ -76,13 +71,30 @@ function AppHeaderImpl({
           </CircleButton> */}
         </>
       )}
-
-      <CircleButton diameter={34} padding={8} onClick={openSettings}>
-        <IoMdSettings
-          size={34}
-          color={isEdgeCity ? "white" : "var(--accent-lite)"}
-        />
-      </CircleButton>
+      <div className="flex flex-row gap-2 w-full">
+        <div
+          className={cn(
+            "flex flex-row justify-center items-center flex-grow text-center",
+            "bg-blue-700 py-2 px-4 cursor-pointer hover:bg-blue-600  transition-all duration-100",
+            "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
+            "border-none text-lg"
+          )}
+          onClick={openInfo}
+        >
+          More Info
+        </div>
+        <div
+          className={cn(
+            "flex flex-row justify-center items-center flex-grow text-center",
+            "bg-blue-700 py-2 px-4 cursor-pointer hover:bg-blue-600  transition-all duration-100",
+            "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
+            "border-none text-lg"
+          )}
+          onClick={openSettings}
+        >
+          Settings
+        </div>
+      </div>
     </AppHeaderWrap>
   );
 }
@@ -94,6 +106,7 @@ const AppHeaderWrap = styled.div`
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  margin-bottom: 0.75rem;
 `;
 
 const ErrorDot = styled.div`
