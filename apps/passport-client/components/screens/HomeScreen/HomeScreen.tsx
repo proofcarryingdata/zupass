@@ -140,7 +140,7 @@ export function HomeScreenImpl(): JSX.Element | null {
     const hasGoodFolder = folders.map(normalizePath).some((f) => {
       return goodFolders.some((g) => f.startsWith(g));
     });
-    return hasGoodFolder;
+    return hasGoodFolder && false;
   }, [pcdCollection]);
 
   // scroll to top when we navigate to this page
@@ -170,7 +170,7 @@ export function HomeScreenImpl(): JSX.Element | null {
         <Placeholder minH={540}>
           <LoadingIssuedPCDs />
           {!(foldersInFolder.length === 0 && isRoot) && (
-            <FolderExplorerContainer>
+            <FolderExplorerContainer className="flex flex-col gap-3">
               {!isRoot && (
                 <FolderDetails
                   noChildFolders={isEdgeCity || foldersInFolder.length === 0}
@@ -188,16 +188,16 @@ export function HomeScreenImpl(): JSX.Element | null {
                   .map((folder) => {
                     return (
                       <FolderCard
-                        style={
-                          isEdgeCityFolder(folder)
-                            ? {
-                                fontFamily: "PressStart2P",
-                                textTransform: "uppercase",
-                                // TODO: other colors?
-                                animation: "color-change 1s infinite"
-                              }
-                            : undefined
-                        }
+                        // style={
+                        //   isEdgeCityFolder(folder)
+                        //     ? {
+                        //         fontFamily: "PressStart2P",
+                        //         textTransform: "uppercase",
+                        //         // TODO: other colors?
+                        //         animation: "color-change 1s infinite"
+                        //       }
+                        //     : undefined
+                        // }
                         key={folder}
                         onFolderClick={onFolderClick}
                         folder={folder}
@@ -223,7 +223,10 @@ export function HomeScreenImpl(): JSX.Element | null {
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
               {pcdsInFolder.length > 0 ? (
-                <PCDCardList allExpanded pcds={pcdsInFolder} />
+                <PCDCardList
+                  allExpanded
+                  pcds={pcdsInFolder.filter((_) => !isRoot)}
+                />
               ) : loadedIssuedPCDs ? (
                 <NoPcdsContainer>This folder is empty</NoPcdsContainer>
               ) : (
@@ -280,9 +283,8 @@ const NoPcdsContainer = styled.div`
 const Separator = styled.div`
   width: 100%;
   height: 1px;
-  margin-top: 32px;
-  margin-bottom: 32px;
-  background-color: grey;
+  margin-top: 12px;
+  margin-bottom: 12px;
   user-select: none;
 `;
 

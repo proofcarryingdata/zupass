@@ -1,8 +1,7 @@
 import { getNameFromPath, getParentFolder } from "@pcd/pcd-collection";
 import { CSSProperties, useCallback } from "react";
-import { FaFolderOpen } from "react-icons/fa6";
-import { PiArrowBendLeftUpBold } from "react-icons/pi";
 import styled from "styled-components";
+import { cn } from "../../../src/util";
 
 export function FolderCard({
   folder,
@@ -18,15 +17,22 @@ export function FolderCard({
   }, [folder, onFolderClick]);
 
   return (
-    <FolderEntryContainer style={style} onClick={onClick}>
-      <FaFolderOpen size={18} />
+    <FolderEntryContainer
+      style={style}
+      onClick={onClick}
+      className={cn(
+        "bg-green-700 py-2 px-4 cursor-pointer hover:bg-green-600  transition-all duration-100",
+        "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
+        "border-none text-lg"
+      )}
+    >
       {getNameFromPath(folder)}
     </FolderEntryContainer>
   );
 }
 
 export const FolderExplorerContainer = styled.div`
-  border-radius: 12px;
+  /* border-radius: 12px;
   border: 1px solid grey;
   background: var(--primary-dark);
   overflow: hidden;
@@ -35,11 +41,11 @@ export const FolderExplorerContainer = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: stretch;
-  flex-direction: column;
+  flex-direction: column; */
 `;
 
 export const FolderHeader = styled.div`
-  box-sizing: border-box;
+  /* box-sizing: border-box;
   display: flex;
   justify-content: center;
   align-items: flex-start;
@@ -72,11 +78,11 @@ export const FolderHeader = styled.div`
     display: inline-block;
     padding-top: 16px;
     padding-left: 12px;
-  }
+  } */
 `;
 
 export const FolderEntryContainer = styled.div`
-  user-select: none;
+  /* user-select: none;
   padding: 12px 16px;
   padding-left: 24px;
 
@@ -94,7 +100,7 @@ export const FolderEntryContainer = styled.div`
 
   &:hover {
     background: var(--primary-lite);
-  }
+  } */
 `;
 
 export function FolderDetails({
@@ -114,14 +120,15 @@ export function FolderDetails({
 
   return (
     <FolderHeader
+      className={cn(
+        "bg-green-700 py-2 px-4 cursor-pointer hover:bg-green-600  transition-all duration-100",
+        "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
+        "border-none text-lg"
+      )}
       onClick={onUpOneClick}
       style={noChildFolders ? { borderBottom: "none" } : undefined}
     >
-      <span className="btn">
-        <PiArrowBendLeftUpBold size={18} />
-      </span>
-
-      <span className="name">{displayFolder ?? folder}</span>
+      Back
     </FolderHeader>
   );
 }

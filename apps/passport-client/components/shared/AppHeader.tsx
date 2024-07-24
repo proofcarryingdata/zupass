@@ -1,7 +1,7 @@
 import { CircleButton } from "@pcd/passport-ui";
 import React, { useCallback } from "react";
 import { IoMdSettings } from "react-icons/io";
-import { MdInfo, MdOutlineQrCodeScanner, MdRssFeed } from "react-icons/md";
+import { MdInfo } from "react-icons/md";
 import styled from "styled-components";
 import { useDispatch, useSelf, useSubscriptions } from "../../src/appHooks";
 import { AppState } from "../../src/state";
@@ -57,7 +57,7 @@ function AppHeaderImpl({
       {children}
       {!isProveOrAddScreen && (
         <>
-          <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
+          {/* <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
             {subscriptions.value.getAllErrors().size > 0 && (
               <ErrorDotContainer>
                 <ErrorDot />
@@ -67,13 +67,13 @@ function AppHeaderImpl({
               size={34}
               color={isEdgeCity ? "white" : "var(--accent-lite)"}
             />
-          </CircleButton>
-          <CircleButton diameter={34} padding={8} onClick={openScanner}>
+          </CircleButton> */}
+          {/* <CircleButton diameter={34} padding={8} onClick={openScanner}>
             <MdOutlineQrCodeScanner
               size={34}
               color={isEdgeCity ? "white" : "var(--accent-lite)"}
             />
-          </CircleButton>
+          </CircleButton> */}
         </>
       )}
 
