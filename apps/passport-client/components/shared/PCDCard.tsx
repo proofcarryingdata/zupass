@@ -57,7 +57,9 @@ function PCDCardImpl({
       style={!expanded ? { padding: "8px 12px", cursor: "pointer" } : {}}
     >
       {expanded ? (
-        <CardOutlineExpanded className={"border-4 border-blue-950 rounded-lg"}>
+        <CardOutlineExpanded
+          className={"border-4 border-blue-950 rounded-lg shadow-lg"}
+        >
           {!hideHeader && (
             <CardHeader
               isMainIdentity={isMainIdentity}

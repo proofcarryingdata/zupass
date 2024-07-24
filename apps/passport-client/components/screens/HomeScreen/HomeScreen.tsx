@@ -44,6 +44,7 @@ import {
   FolderEntryContainer,
   FolderExplorerContainer
 } from "./Folder";
+import { isEvent } from "./utils";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
 
@@ -187,6 +188,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                     // /FrogCrypto is a special and rendered by <FrogFolder />
                     (folder) => folder !== FrogCryptoFolderName
                   )
+                  .filter(isEvent)
                   .sort((a, b) => a.localeCompare(b))
                   .map((folder) => {
                     return (

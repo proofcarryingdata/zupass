@@ -3,7 +3,7 @@ import { CSSProperties, useCallback } from "react";
 import styled from "styled-components";
 import { usePCDsInFolder } from "../../../src/appHooks";
 import { cn } from "../../../src/util";
-import { EVENT_DATES } from "./utils";
+import { EVENTS } from "./utils";
 
 export function FolderCard({
   folder,
@@ -20,8 +20,9 @@ export function FolderCard({
 
   const pcds = usePCDsInFolder(folder);
 
-  const startDate = EVENT_DATES[folder]?.start;
-  const endDate = EVENT_DATES[folder]?.end;
+  const startDate = EVENTS[folder]?.start;
+  const endDate = EVENTS[folder]?.end;
+  const img = EVENTS[folder]?.image;
 
   let dateStr = null;
 
@@ -34,21 +35,33 @@ export function FolderCard({
       style={style}
       onClick={onClick}
       className={cn(
+        "flex flex-row gap-2",
         "bg-green-700 py-2 px-4 cursor-pointer hover:bg-green-600  transition-all duration-100",
         "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
         "border-none text-lg"
       )}
     >
-      {getNameFromPath(folder)}
-      <div className="font-normal text-sm">
-        {pcds.length} ticket{pcds.length > 1 ? "s" : ""}
-        {dateStr && (
-          <span>
-            {" · "}
-            {dateStr}
-          </span>
-        )}
+      <div className="flex-grow">
+        {getNameFromPath(folder)}
+        <div className="font-normal text-sm">
+          {pcds.length} ticket{pcds.length > 1 ? "s" : ""}
+          {dateStr && (
+            <span>
+              {" · "}
+              {dateStr}
+            </span>
+          )}
+        </div>
       </div>
+      {img && (
+        <div
+          className="w-[100px] rounded"
+          style={{
+            backgroundImage: `url(${img})`,
+            backgroundSize: "cover"
+          }}
+        ></div>
+      )}
     </FolderEntryContainer>
   );
 }
