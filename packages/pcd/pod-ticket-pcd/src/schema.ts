@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TicketCategory } from "./PODTicketPCD";
-import { canBeBigInt, cryptographic } from "./utils";
+import { canBeBigInt, cryptographic, dataToPodEntries } from "./data";
 
 export const TicketDataSchema = z.object({
   eventName: z.string(),
@@ -20,5 +20,7 @@ export const TicketDataSchema = z.object({
   attendeeName: z.string(),
   attendeeEmail: z.string()
 });
+
+export { dataToPodEntries };
 
 export type IPODTicketData = z.infer<typeof TicketDataSchema>;

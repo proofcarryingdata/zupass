@@ -115,6 +115,9 @@
       "path": "packages/pcd/zk-eddsa-frog-pcd/tsconfig.cjs.json"
     },
     {
+      "path": "packages/pcd/zk-pod-ticket-pcd/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/ui/eddsa-frog-pcd-ui/tsconfig.cjs.json"
     },
     {

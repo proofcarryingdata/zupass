@@ -10,6 +10,7 @@ import MultiZkEDdSAEventTicketProof from "./pages/examples/multi-zk-eddsa-event-
 import SignatureProof from "./pages/examples/signature-proof";
 import ZkEDdSAEventTicketProof from "./pages/examples/zk-eddsa-event-ticket-proof";
 import ZkEDdSAFrogProof from "./pages/examples/zk-eddsa-frog-proof";
+import ZkPODTicketProof from "./pages/examples/zk-pod-ticket-proof";
 import ZuAuth from "./pages/examples/zuauth";
 import Home from "./pages/Home";
 import ZupassPopupRedirect from "./pages/popup";
@@ -29,6 +30,10 @@ const router = createHashRouter([
   {
     path: "examples/multi-zk-eddsa-event-ticket-proof",
     element: <MultiZkEDdSAEventTicketProof />
+  },
+  {
+    path: "examples/zk-pod-ticket-proof",
+    element: <ZkPODTicketProof />
   },
   {
     path: "examples/zuauth",

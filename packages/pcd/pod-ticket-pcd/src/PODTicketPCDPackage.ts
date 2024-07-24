@@ -1,7 +1,8 @@
-import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { POD } from "@pcd/pod";
 import { requireDefinedParameter } from "@pcd/util";
 import { v4 as uuid } from "uuid";
+import { dataToPodEntries } from "./data";
 import {
   PODTicketPCD,
   PODTicketPCDArgs,
@@ -9,8 +10,8 @@ import {
   PODTicketPCDProof,
   PODTicketPCDTypeName
 } from "./PODTicketPCD";
-import { IPODTicketData, TicketDataSchema } from "./schema";
-import { dataToPodEntries } from "./utils";
+import { TicketDataSchema } from "./schema";
+import { podTicketPCDToPOD } from "./utils";
 
 /**
  * Creates a new {@link PODTicketPCD} by generating an {@link PODTicketPCDProof}
@@ -24,9 +25,12 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
   if (!args.ticket.value) {
     throw new Error("missing ticket value");
   }
+
+  const ticketData = TicketDataSchema.parse(args.ticket.value);
+
   const pod = POD.sign(
     dataToPodEntries<PODTicketPCDClaim["ticket"]>(
-      args.ticket.value,
+      ticketData,
       TicketDataSchema,
       TicketDataSchema.shape
     ),
@@ -43,27 +47,12 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
 }
 
 /**
- * Verifies a POD Ticket PCD by checking that its {@link PODTicketPCDClaim} corresponds to
- * its {@link PODTicketPCDProof}. If they match, the function returns true, otherwise false.
- * In most cases, verifying the validity of the PCD with this function is not enough.
- * It may also be necessary to ensure that the parameters of the ticket, such as the
- * productId and eventId, match the expected values, and that the public key of the
- * entity that signed the ticket is indeed the authority for that event.
+ * Verifies a POD Ticket PCD by converting it to a PODPCD and verifying it.
  */
 export async function verify(pcd: PODTicketPCD): Promise<boolean> {
   try {
-    const loadedPOD = POD.load(
-      dataToPodEntries<IPODTicketData>(
-        pcd.claim.ticket,
-        TicketDataSchema,
-        TicketDataSchema.shape
-      ),
-      pcd.proof.signature,
-      pcd.claim.signerPublicKey
-    );
-    return (
-      loadedPOD.signature === pcd.proof.signature && loadedPOD.verifySignature()
-    );
+    // Convert this PCD to POD format for verification
+    return podTicketPCDToPOD(pcd).verifySignature();
   } catch (e) {
     console.error("Verifying invalid POD data:", e);
     return false;
@@ -140,7 +129,9 @@ export function ticketDisplayName(
  * @param pcd The POD Ticket PCD instance.
  * @returns The information to be displayed, specifically `header` and `displayName`.
  */
-export function getDisplayOptions(pcd: PODTicketPCD): DisplayOptions {
+export function getDisplayOptions(
+  pcd: PCD<PODTicketPCDClaim, PODTicketPCDProof>
+): DisplayOptions {
   const ticketData = pcd.claim.ticket;
   if (!ticketData) {
     return {

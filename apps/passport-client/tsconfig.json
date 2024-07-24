@@ -165,6 +165,9 @@
     },
     {
       "path": "../../packages/ui/zk-eddsa-frog-pcd-ui"
+    },
+    {
+      "path": "../../packages/pcd/zk-pod-ticket-pcd"
     }
   ]
 }
