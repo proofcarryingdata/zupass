@@ -55,7 +55,7 @@ export function FolderCard({
       </div>
       {img && (
         <div
-          className="w-[100px] rounded"
+          className="w-[100px] rounded-sm border-2 border-green-800 shadow"
           style={{
             backgroundImage: `url(${img})`,
             backgroundSize: "cover"
