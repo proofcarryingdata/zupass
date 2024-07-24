@@ -3,6 +3,7 @@ import { CSSProperties, useCallback } from "react";
 import styled from "styled-components";
 import { usePCDsInFolder } from "../../../src/appHooks";
 import { cn } from "../../../src/util";
+import { EVENT_DATES } from "./utils";
 
 export function FolderCard({
   folder,
@@ -19,6 +20,15 @@ export function FolderCard({
 
   const pcds = usePCDsInFolder(folder);
 
+  const startDate = EVENT_DATES[folder]?.start;
+  const endDate = EVENT_DATES[folder]?.end;
+
+  let dateStr = null;
+
+  if (startDate && endDate) {
+    dateStr = `${new Date(startDate).toLocaleDateString()}`;
+  }
+
   return (
     <FolderEntryContainer
       style={style}
@@ -32,6 +42,12 @@ export function FolderCard({
       {getNameFromPath(folder)}
       <div className="font-normal text-sm">
         {pcds.length} ticket{pcds.length > 1 ? "s" : ""}
+        {dateStr && (
+          <span>
+            {" · "}
+            {dateStr}
+          </span>
+        )}
       </div>
     </FolderEntryContainer>
   );

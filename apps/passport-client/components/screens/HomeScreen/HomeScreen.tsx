@@ -169,6 +169,9 @@ export function HomeScreenImpl(): JSX.Element | null {
         <Spacer h={24} />
         <Placeholder minH={540}>
           <LoadingIssuedPCDs />
+          {isRoot && (
+            <div className="font-bold text-3xl mb-4 text-center">My Events</div>
+          )}
           {!(foldersInFolder.length === 0 && isRoot) && (
             <FolderExplorerContainer className="flex flex-col gap-3">
               {!isRoot && (
