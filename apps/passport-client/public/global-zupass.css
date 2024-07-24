@@ -238,3 +238,7 @@ img {
     opacity: 0;
   }
 }
+
+svg {
+  display: inline-block;
+}
