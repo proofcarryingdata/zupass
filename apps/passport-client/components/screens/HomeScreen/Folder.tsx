@@ -5,6 +5,33 @@ import { usePCDsInFolder } from "../../../src/appHooks";
 import { cn } from "../../../src/util";
 import { EVENTS } from "./utils";
 
+export function FolderEventInfo({
+  folder
+}: {
+  folder: string;
+}): React.ReactNode {
+  const event = EVENTS[folder];
+
+  if (!event) {
+    return null;
+  }
+
+  return (
+    <div className="flex flex-col overflow-hidden w-full rounded shadow border-2 border-black mt-[0.75rem]">
+      <div
+        className="flex w-full h-[200px] "
+        style={{
+          backgroundImage: `url(${event.image})`,
+          backgroundSize: "cover"
+        }}
+      ></div>
+      <div className="font-bold text-xl w-full bg-green-800 px-4 py-2 rounded">
+        {folder}
+      </div>
+    </div>
+  );
+}
+
 export function FolderCard({
   folder,
   onFolderClick,

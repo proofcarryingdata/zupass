@@ -42,6 +42,7 @@ import {
   FolderCard,
   FolderDetails,
   FolderEntryContainer,
+  FolderEventInfo,
   FolderExplorerContainer
 } from "./Folder";
 import { isEvent } from "./utils";
@@ -214,6 +215,10 @@ export function HomeScreenImpl(): JSX.Element | null {
                 />
               )}
             </FolderExplorerContainer>
+          )}
+
+          {isEvent(browsingFolder) && (
+            <FolderEventInfo folder={browsingFolder} />
           )}
 
           {isFrogCrypto ? (
