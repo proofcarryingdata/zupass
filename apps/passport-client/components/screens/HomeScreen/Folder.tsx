@@ -1,6 +1,7 @@
 import { getNameFromPath, getParentFolder } from "@pcd/pcd-collection";
 import { CSSProperties, useCallback } from "react";
 import styled from "styled-components";
+import { usePCDsInFolder } from "../../../src/appHooks";
 import { cn } from "../../../src/util";
 
 export function FolderCard({
@@ -16,6 +17,8 @@ export function FolderCard({
     onFolderClick(folder);
   }, [folder, onFolderClick]);
 
+  const pcds = usePCDsInFolder(folder);
+
   return (
     <FolderEntryContainer
       style={style}
@@ -27,6 +30,9 @@ export function FolderCard({
       )}
     >
       {getNameFromPath(folder)}
+      <div className="font-normal text-sm">
+        {pcds.length} ticket{pcds.length > 1 ? "s" : ""}
+      </div>
     </FolderEntryContainer>
   );
 }
