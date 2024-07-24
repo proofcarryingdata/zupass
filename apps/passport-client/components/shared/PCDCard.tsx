@@ -13,7 +13,7 @@ import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
 import { pcdRenderers } from "../../src/pcdRenderers";
 import { usePackage } from "../../src/usePackage";
-import { Button, H4, Spacer, TextCenter } from "../core";
+import { H4, Spacer, TextCenter } from "../core";
 import { MainIdentityCard } from "./MainIdentityCard";
 
 export const PCDCard = memo(PCDCardImpl);
@@ -57,9 +57,12 @@ function PCDCardImpl({
       style={!expanded ? { padding: "8px 12px", cursor: "pointer" } : {}}
     >
       {expanded ? (
-        <CardOutlineExpanded>
+        <CardOutlineExpanded className={"border-4 border-blue-950 rounded-lg"}>
           {!hideHeader && (
-            <CardHeader isMainIdentity={isMainIdentity}>
+            <CardHeader
+              isMainIdentity={isMainIdentity}
+              className="bg-blue-700 select-none"
+            >
               <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
             </CardHeader>
           )}
@@ -103,6 +106,15 @@ function HeaderContent({
 
   const ui = pcdPackage ? getUI(pcdPackage.name) : undefined;
 
+  if (isEdDSATicketPCD(pcd)) {
+    return (
+      <div>
+        <div className="font-bold text-xl">{pcd.claim.ticket.eventName}</div>
+        <div className="text-base">{pcd.claim.ticket.ticketName}</div>
+      </div>
+    );
+  }
+
   let header = null;
   if (isMainIdentity) {
     header = <>ZUPASS IDENTITY</>;
@@ -140,13 +152,15 @@ function CardFooterImpl({
     return null;
   }
 
-  return (
-    <FooterContainer>
-      <Button style="danger" size="small" onClick={onRemoveClick}>
-        Remove
-      </Button>
-    </FooterContainer>
-  );
+  return null;
+
+  // return (
+  //   <FooterContainer>
+  //     <Button style="danger" size="small" onClick={onRemoveClick}>
+  //       Remove
+  //     </Button>
+  //   </FooterContainer>
+  // );
 }
 
 function getUI(

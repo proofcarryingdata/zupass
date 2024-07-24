@@ -134,13 +134,13 @@ export function PCDCardList({
 
   return (
     <Container>
-      {sortablePCDs.length > 1 && (
+      {/* {sortablePCDs.length > 1 && (
         <ToolBar
           sortOptions={sortOptions}
           sortState={sortState}
           onSortStateChange={setSortState}
         />
-      )}
+      )} */}
       {sortedPCDs.map((pcd) => (
         <PCDCard
           hideRemoveButton={hideRemoveButton}

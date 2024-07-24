@@ -27,7 +27,7 @@ import {
   isFrogCryptoFolder,
   isProtocolWorldsFolder
 } from "../../../src/util";
-import { Button, Placeholder, Spacer } from "../../core";
+import { Placeholder, Spacer } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
@@ -169,9 +169,9 @@ export function HomeScreenImpl(): JSX.Element | null {
         <Spacer h={24} />
         <Placeholder minH={540}>
           <LoadingIssuedPCDs />
-          {isRoot && (
+          {/* {isRoot && (
             <div className="font-bold text-3xl mb-4 text-center">My Events</div>
-          )}
+          )} */}
           {!(foldersInFolder.length === 0 && isRoot) && (
             <FolderExplorerContainer className="flex flex-col gap-3">
               {!isRoot && (
@@ -235,7 +235,7 @@ export function HomeScreenImpl(): JSX.Element | null {
               ) : (
                 <RippleLoader />
               )}
-              {pcdsInFolder.length > 1 && !isRoot && (
+              {/* {pcdsInFolder.length > 1 && !isRoot && (
                 <>
                   <Spacer h={16} />
                   <RemoveAllContainer>
@@ -248,7 +248,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                     </Button>
                   </RemoveAllContainer>
                 </>
-              )}
+              )} */}
             </>
           )}
         </Placeholder>
