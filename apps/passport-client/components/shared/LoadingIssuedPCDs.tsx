@@ -26,7 +26,7 @@ export function LoadingIssuedPCDs(): JSX.Element | null {
 
   return (
     <Container
-      className="w-full rounded bg-gray-500 py-2 px-4 text-white text-lg font-bold mt-[0.75rem]"
+      className="w-full rounded bg-gray-500 py-2 px-4 text-white text-lg font-bold "
       style={hiding ? { opacity: 0 } : { opacity: 1 }}
     >
       <div>Loading Tickets</div>
@@ -35,22 +35,22 @@ export function LoadingIssuedPCDs(): JSX.Element | null {
 }
 
 const Container = styled.div`
-  user-select: none;
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-  animation: fade 500ms ease-in-out infinite;
-  transition: all ${HIDE_DELAY_MS}ms;
-
   @keyframes fade {
     0%,
     100% {
       background-color: rgba(0, 0, 0, 1);
     }
     50% {
-      background-color: rgba(0, 0, 0, 0.8);
+      background-color: rgba(0, 0, 0, 0.5);
     }
   }
+
+  user-select: none;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  animation: fade 200ms ease-in-out infinite;
+  transition: all ${HIDE_DELAY_MS}ms;
 `;
