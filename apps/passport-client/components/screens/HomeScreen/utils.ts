@@ -11,7 +11,12 @@ export interface EventInfo {
 }
 
 export const EVENTS: Record<string, EventInfo> = {
-  "ETH Berlin 04": { start: "2023-04-01", end: "2023-04-03" },
+  "ETH Berlin 04": {
+    start: "2023-04-01",
+    end: "2023-04-03",
+    image:
+      "https://ethberlin.org/static/ligi-mask-2cf891892bc3a7e7b3fa7d18d27edf9c.jpg"
+  },
   "0xPARC Summer '24": { start: "2023-05-15", end: "2023-05-18" },
   "Edge Esmeralda": {
     start: "2023-06-10",
@@ -63,7 +68,16 @@ export async function initTestData(state: AppState): Promise<void> {
   }
 
   const testData = {
-    tickets: ["Devcon", "Devcon", "Devcon/ProgCrypto", "Devcon/ProgCrypto"]
+    tickets: [
+      "Devcon",
+      "Devcon",
+      "Devcon/ProgCrypto",
+      "Devcon/ProgCrypto",
+      "EthDenver",
+      "Edge City",
+      "ETH Berlin 04",
+      "ETH Prague 2024"
+    ]
   } as const;
 
   const pcds = state.pcds;
