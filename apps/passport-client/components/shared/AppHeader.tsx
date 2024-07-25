@@ -74,9 +74,9 @@ function AppHeaderImpl({
       <div className="flex flex-row gap-2 w-full">
         <div
           className={cn(
-            "border-4 border-blue-950",
+            "border-4 border-cyan-950",
             "flex flex-row justify-center items-center flex-grow text-center",
-            "bg-blue-700 py-2 px-4 cursor-pointer hover:bg-blue-600  transition-all duration-100",
+            "bg-cyan-700 py-2 px-4 cursor-pointer hover:bg-cyan-600  transition-all duration-100",
             "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
             "text-lg"
           )}
@@ -86,9 +86,9 @@ function AppHeaderImpl({
         </div>
         <div
           className={cn(
-            "border-4 border-blue-950",
+            "border-4 border-cyan-950",
             "flex flex-row justify-center items-center flex-grow text-center",
-            "bg-blue-700 py-2 px-4 cursor-pointer hover:bg-blue-600  transition-all duration-100",
+            "bg-cyan-700 py-2 px-4 cursor-pointer hover:bg-cyan-600  transition-all duration-100",
             "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
             "text-lg"
           )}

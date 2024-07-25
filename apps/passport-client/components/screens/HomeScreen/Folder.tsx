@@ -27,7 +27,7 @@ export function FolderEventInfo({
   }
 
   return (
-    <div className="flex flex-col overflow-hidden w-full rounded shadow border-4 border-blue-950 select-none">
+    <div className="flex flex-col overflow-hidden w-full rounded shadow border-4 border-cyan-950 select-none">
       <div
         className="flex w-full h-[200px] "
         style={{
@@ -35,7 +35,7 @@ export function FolderEventInfo({
           backgroundSize: "cover"
         }}
       ></div>
-      <div className="font-bold text-xl w-full bg-blue-700 px-4 py-2">
+      <div className="font-bold text-xl w-full bg-cyan-700 px-4 py-2 border-t-4 border-cyan-950">
         {getNameFromPath(folder)}
         <span className="text-sm font-normal">
           {" · "}
@@ -200,8 +200,8 @@ export function FolderDetails({
   return (
     <FolderHeader
       className={cn(
-        "border-4 border-blue-950",
-        "bg-blue-700 py-2 px-4 cursor-pointer hover:bg-blue-600  transition-all duration-100 text-center",
+        "border-4 border-cyan-950",
+        "bg-cyan-700 py-2 px-4 cursor-pointer hover:bg-cyan-600  transition-all duration-100 text-center",
         "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
         "text-lg"
       )}

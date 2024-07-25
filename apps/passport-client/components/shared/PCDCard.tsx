@@ -58,12 +58,12 @@ function PCDCardImpl({
     >
       {expanded ? (
         <CardOutlineExpanded
-          className={"border-4 border-blue-950 rounded-lg shadow-lg"}
+          className={"border-4 border-cyan-950 rounded-lg shadow-lg"}
         >
           {!hideHeader && (
             <CardHeader
               isMainIdentity={isMainIdentity}
-              className="bg-blue-700 select-none"
+              className="bg-cyan-700 select-none"
             >
               <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
             </CardHeader>

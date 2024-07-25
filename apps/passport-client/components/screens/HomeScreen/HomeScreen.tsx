@@ -23,6 +23,7 @@ import {
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import {
+  cn,
   isEdgeCityFolder,
   isFrogCryptoFolder,
   isProtocolWorldsFolder
@@ -226,6 +227,24 @@ export function HomeScreenImpl(): JSX.Element | null {
                       />
                     );
                   })}
+              {isRoot && !isOther && (
+                <>
+                  <div
+                    className={cn(
+                      "border-4 border-cyan-950",
+                      "text-center",
+                      "bg-cyan-700 py-2 px-4 cursor-pointer hover:bg-cyan-600  transition-all duration-100",
+                      "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
+                      "text-lg"
+                    )}
+                    onClick={() => {
+                      window.location.href = "#/other";
+                    }}
+                  >
+                    Your Other Data
+                  </div>
+                </>
+              )}
               {isRoot && shouldShowFrogCrypto && (
                 <FrogFolder
                   Container={FrogFolderContainer}
