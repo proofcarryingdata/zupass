@@ -51,6 +51,7 @@ function PCDCardImpl({
 
   return (
     <CardContainer
+      className="select-none"
       ref={(e) => setContainerRef(e ?? undefined)}
       key={pcd.id}
       onClick={clickHandler}

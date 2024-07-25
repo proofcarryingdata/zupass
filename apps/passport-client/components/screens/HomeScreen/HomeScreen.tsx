@@ -265,6 +265,7 @@ export function HomeScreenImpl(): JSX.Element | null {
               {/* {!(foldersInFolder.length === 0 && isRoot) && <Separator />} */}
               {pcdsInFolder.length > 0 ? (
                 <PCDCardList
+                  key={browsingFolder + isRoot + isOther}
                   allExpanded
                   pcds={pcdsInFolder.filter((_) => !isRoot)}
                 />
