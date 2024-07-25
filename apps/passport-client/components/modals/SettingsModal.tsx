@@ -1,6 +1,7 @@
 import { LinkButton, TextButton } from "@pcd/passport-ui";
 import { useCallback, useState } from "react";
 import { IoSettingsOutline } from "react-icons/io5";
+import { useLocalStorage } from "usehooks-ts";
 import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
 import { BigInput, Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { AccountExportButton } from "../shared/AccountExportButton";
@@ -25,6 +26,11 @@ export function SettingsModal({
       dispatch({ type: "reset-passport" });
     }
   }, [dispatch]);
+
+  const [justDevcon, setJustDevcon] = useLocalStorage("justDevcon", false);
+  const toggleJustDevcon = useCallback(() => {
+    setJustDevcon((prev) => !prev);
+  }, [setJustDevcon]);
 
   const deleteAccount = useCallback(() => {
     if (
@@ -80,9 +86,15 @@ export function SettingsModal({
         )}
 
         {!showAdvanced && (
-          <Button onClick={logout} style="danger">
-            Log Out
-          </Button>
+          <>
+            <Button onClick={logout} style="danger">
+              Log Out
+            </Button>
+            <Spacer h={16} />
+            <Button onClick={toggleJustDevcon}>
+              {justDevcon ? "Showing Just Devcon" : "Showing Everything"}
+            </Button>
+          </>
         )}
 
         {!isProveOrAddScreen &&

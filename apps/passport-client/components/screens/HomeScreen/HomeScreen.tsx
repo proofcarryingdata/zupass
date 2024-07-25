@@ -14,6 +14,7 @@ import React, {
 } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import styled, { CSSProperties } from "styled-components";
+import { useLocalStorage } from "usehooks-ts";
 import {
   useDispatch,
   useFolders,
@@ -67,6 +68,7 @@ export function HomeScreenImpl(): JSX.Element | null {
     }
   }, []);
 
+  const [justDevcon, setJustDevcon] = useLocalStorage("justDevcon", false);
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();
@@ -181,6 +183,7 @@ export function HomeScreenImpl(): JSX.Element | null {
         (folder) => folder !== FrogCryptoFolderName
       )
       .filter((f) => (isOther ? !isEvent(f) : isEvent(f)))
+      .filter((f) => isOther || !justDevcon || f === "Devcon")
       .sort((a, b) => {
         const eventA = EVENTS[a];
         const eventB = EVENTS[b];
@@ -193,7 +196,7 @@ export function HomeScreenImpl(): JSX.Element | null {
       });
 
     return showingFolders;
-  }, [foldersInFolder, isOther]);
+  }, [foldersInFolder, isOther, justDevcon]);
 
   if (!self) return null;
 
@@ -217,7 +220,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                   window.location.href = "#/";
                 }}
               />
-              <div className="h-[0.75rem]"></div>
+              {/* <div className="h-[0.75rem]"></div> */}
             </>
           )}
 
