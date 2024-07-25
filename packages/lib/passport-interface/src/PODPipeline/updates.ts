@@ -42,9 +42,7 @@ function stringifyCSV(
  * @returns The parsed CSV data.
  */
 export function parseCSV(options: PODPipelineOptions): string[][] {
-  const parsed = parse(options.input.csv, {
-    skipEmptyLines: true
-  });
+  const parsed = parse(options.input.csv, {});
 
   const configuredColumns = Object.keys(options.input.columns);
   const columnHeaders: string[] = parsed[0];
@@ -52,11 +50,9 @@ export function parseCSV(options: PODPipelineOptions): string[][] {
     configuredColumns.map((column) => [column, columnHeaders.indexOf(column)])
   );
 
-  return parsed
-    .map((row: string[]) =>
-      configuredColumns.map((column) => row[columnIndices[column]] ?? "")
-    )
-    .filter((row: string[]) => row.some((value) => value !== ""));
+  return parsed.map((row: string[]) =>
+    configuredColumns.map((column) => row[columnIndices[column]] ?? "")
+  );
 }
 
 /**
@@ -212,6 +208,7 @@ export function addInputRow(
   csvData: string[][]
 ): PODPipelineDefinition {
   const newDefinition = structuredClone(definition);
+  console.log(definition.options.input.csv);
   const newCsv = stringifyCSV([
     Object.keys(newDefinition.options.input.columns),
     ...csvData,
@@ -219,6 +216,7 @@ export function addInputRow(
       (col) => COLUMN_DEFAULTS[col.type]
     )
   ]);
+  console.log(newCsv);
   newDefinition.options.input.csv = newCsv;
   return newDefinition;
 }
