@@ -27,7 +27,7 @@ export function FolderEventInfo({
   }
 
   return (
-    <div className="flex flex-col overflow-hidden w-full rounded shadow border-4 border-black select-none">
+    <div className="flex flex-col overflow-hidden w-full rounded shadow border-4 border-blue-950 select-none">
       <div
         className="flex w-full h-[200px] "
         style={{
