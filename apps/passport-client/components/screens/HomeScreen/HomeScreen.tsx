@@ -11,7 +11,7 @@ import React, {
   useMemo,
   useState
 } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import styled, { CSSProperties } from "styled-components";
 import {
   useDispatch,
@@ -60,6 +60,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
+  const isOther = useLocation().pathname.startsWith("/other");
 
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultBrowsingFolder = useMemo(() => {
@@ -167,8 +168,21 @@ export function HomeScreenImpl(): JSX.Element | null {
       <MaybeModal />
       <AppContainer bg="gray">
         <Spacer h={24} />
-        {isRoot && <AppHeader isEdgeCity={isEdgeCity} />}
+        {isRoot && !isOther && <AppHeader isEdgeCity={isEdgeCity} />}
         <Placeholder minH={540}>
+          {isRoot && isOther && (
+            <>
+              <FolderDetails
+                noChildFolders={isEdgeCity || foldersInFolder.length === 0}
+                folder={browsingFolder}
+                onFolderClick={() => {
+                  window.location.href = "#/";
+                }}
+              />
+              <div className="h-[0.75rem]"></div>
+            </>
+          )}
+
           {/* {isRoot && (
             <div className="font-bold text-3xl mb-4 text-center">My Events</div>
           )} */}
@@ -191,7 +205,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                     // FrogCrypto is a special and rendered by <FrogFolder />
                     (folder) => folder !== FrogCryptoFolderName
                   )
-                  .filter(isEvent)
+                  .filter((f) => (isOther ? !isEvent(f) : isEvent(f)))
                   .sort((a, b) => a.localeCompare(b))
                   .map((folder) => {
                     return (

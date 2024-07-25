@@ -326,6 +326,7 @@ function RouterImpl(): JSX.Element {
         <Route path="/">
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
+          <Route path="other" element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route
             path="login-interstitial"
