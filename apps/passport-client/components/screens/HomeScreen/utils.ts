@@ -24,14 +24,18 @@ export const EVENTS: Record<string, EventInfo> = {
     image:
       "https://cdn.prod.website-files.com/65e8d8e39d148666896efd73/65e8d9c0db3e30b4fd35b335_kuri%201-c.png"
   },
-  "ETH Prague 2024": { start: "2023-07-22", end: "2023-07-25" },
+  "ETH Prague 2024": {
+    start: "2023-07-22",
+    end: "2023-07-25",
+    image:
+      "https://lp-cms-production.imgix.net/2023-08/PRAGUE-GettyImages-1182432355.jpg?w=1920&h=640&fit=crop&crop=faces%2Cedges&auto=format&q=75"
+  },
   "ETH LATAM SPS": {
     start: "2023-08-05",
     end: "2023-08-07",
     image:
       "https://www.state.gov/wp-content/uploads/2023/07/shutterstock_671409553v2.jpg"
   },
-  "ETH Berlin 09": { start: "2023-09-18", end: "2023-09-21" },
   "Edge City": {
     start: "2023-10-18",
     end: "2023-10-21",
