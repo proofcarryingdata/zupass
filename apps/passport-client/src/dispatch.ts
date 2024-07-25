@@ -519,6 +519,7 @@ async function createNewUserWithPassword(
       dismissToCurrentPage: true
     }
   });
+
   notifyLoginToOtherTabs();
 }
 

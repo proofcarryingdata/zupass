@@ -9,6 +9,7 @@ import React, {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState
 } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -18,6 +19,7 @@ import {
   useFolders,
   useLoadedIssuedPCDs,
   useSelf,
+  useStateContext,
   useVisiblePCDsInFolder,
   useWrappedPCDCollection
 } from "../../../src/appHooks";
@@ -46,7 +48,7 @@ import {
   FolderEventInfo,
   FolderExplorerContainer
 } from "./Folder";
-import { isEvent } from "./utils";
+import { initTestData, isEvent } from "./utils";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
 
@@ -56,6 +58,15 @@ const FOLDER_QUERY_PARAM = "folder";
  * Show the user their Zupass, an overview of cards / PCDs.
  */
 export function HomeScreenImpl(): JSX.Element | null {
+  const state = useStateContext().getState();
+  const stateHolder = useRef(state);
+
+  useEffect(() => {
+    if (stateHolder.current) {
+      initTestData(stateHolder.current);
+    }
+  }, []);
+
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();
