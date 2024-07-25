@@ -48,7 +48,7 @@ import {
   FolderEventInfo,
   FolderExplorerContainer
 } from "./Folder";
-import { initTestData, isEvent } from "./utils";
+import { EVENTS, initTestData, isEvent } from "./utils";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
 
@@ -173,6 +173,28 @@ export function HomeScreenImpl(): JSX.Element | null {
     }
   }, [browsingFolder, dispatch]);
 
+  const [showOlder, setShowOlder] = useState(false);
+  const displayingFolders = useMemo(() => {
+    const showingFolders = foldersInFolder
+      .filter(
+        // FrogCrypto is a special and rendered by <FrogFolder />
+        (folder) => folder !== FrogCryptoFolderName
+      )
+      .filter((f) => (isOther ? !isEvent(f) : isEvent(f)))
+      .sort((a, b) => {
+        const eventA = EVENTS[a];
+        const eventB = EVENTS[b];
+
+        if (eventA && eventB) {
+          return eventB.start.localeCompare(eventA.start);
+        }
+
+        return a.localeCompare(b);
+      });
+
+    return showingFolders;
+  }, [foldersInFolder, isOther]);
+
   if (!self) return null;
 
   return (
@@ -215,33 +237,50 @@ export function HomeScreenImpl(): JSX.Element | null {
                 <FolderEventInfo folder={browsingFolder} />
               )}
 
-              {!isEdgeCity &&
-                foldersInFolder
-                  .filter(
-                    // FrogCrypto is a special and rendered by <FrogFolder />
-                    (folder) => folder !== FrogCryptoFolderName
-                  )
-                  .filter((f) => (isOther ? !isEvent(f) : isEvent(f)))
-                  .sort((a, b) => a.localeCompare(b))
-                  .map((folder) => {
+              {!isEdgeCity && (
+                <>
+                  {displayingFolders.slice(0, 5).map((folder) => {
                     return (
                       <FolderCard
-                        // style={
-                        //   isEdgeCityFolder(folder)
-                        //     ? {
-                        //         fontFamily: "PressStart2P",
-                        //         textTransform: "uppercase",
-                        //         // TODO: other colors?
-                        //         animation: "color-change 1s infinite"
-                        //       }
-                        //     : undefined
-                        // }
                         key={folder}
                         onFolderClick={onFolderClick}
                         folder={folder}
                       />
                     );
                   })}
+                  {showOlder && displayingFolders.length > 5 && (
+                    <>
+                      {displayingFolders.slice(5).map((folder) => {
+                        return (
+                          <FolderCard
+                            key={folder}
+                            onFolderClick={onFolderClick}
+                            folder={folder}
+                          />
+                        );
+                      })}
+                    </>
+                  )}
+                  {displayingFolders.length > 5 && (
+                    <>
+                      <div
+                        className={cn(
+                          "border-4 border-cyan-950",
+                          "text-center",
+                          "bg-cyan-700 py-2 px-4 cursor-pointer hover:bg-cyan-600  transition-all duration-100",
+                          "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
+                          "text-lg"
+                        )}
+                        onClick={() => {
+                          setShowOlder((show) => !show);
+                        }}
+                      >
+                        {showOlder ? "Hide Older Events" : "Show Older Events"}
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
               {isRoot && !isOther && (
                 <>
                   <div

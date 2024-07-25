@@ -61,14 +61,14 @@ export const EVENTS: Record<string, EventInfo> = {
       "https://online.york.ac.uk/wp-content/uploads/2023/10/Cryptography.jpg"
   },
   "Old Event 1": {
-    start: "2023-11-12",
-    end: "2023-11-12",
+    start: "2022-11-12",
+    end: "2022-11-12",
     image:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Burg_Hohenzollern_ak.jpg/640px-Burg_Hohenzollern_ak.jpg"
   },
   "Old Event 2": {
-    start: "2023-9-12",
-    end: "2023-9-12",
+    start: "2022-9-12",
+    end: "2022-9-12",
     image:
       "https://cdn1.epicgames.com/ue/product/Screenshot/1-1920x1080-44e1108ee2deef769c9dde9c957c1087.jpg?resize=1&w=1920"
   }
