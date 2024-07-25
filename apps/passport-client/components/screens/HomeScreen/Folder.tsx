@@ -12,12 +12,22 @@ export function FolderEventInfo({
 }): React.ReactNode {
   const event = EVENTS[folder];
 
+  const startDate = event?.start;
+  const endDate = event?.end;
+  const pcds = usePCDsInFolder(folder, true);
+
+  let dateStr = null;
+
+  if (startDate && endDate) {
+    dateStr = `${new Date(startDate).toLocaleDateString()}`;
+  }
+
   if (!event) {
     return null;
   }
 
   return (
-    <div className="flex flex-col overflow-hidden w-full rounded shadow border-2 border-black mt-[0.75rem]">
+    <div className="flex flex-col overflow-hidden w-full rounded shadow border-4 border-black select-none">
       <div
         className="flex w-full h-[200px] "
         style={{
@@ -25,8 +35,14 @@ export function FolderEventInfo({
           backgroundSize: "cover"
         }}
       ></div>
-      <div className="font-bold text-xl w-full bg-green-800 px-4 py-2 rounded">
+      <div className="font-bold text-xl w-full bg-blue-700 px-4 py-2">
         {getNameFromPath(folder)}
+        <span className="text-sm font-normal">
+          {" · "}
+          {dateStr}
+          {" · "}
+          {pcds.length} ticket{pcds.length > 1 ? "s" : ""}
+        </span>
       </div>
     </div>
   );
@@ -45,7 +61,7 @@ export function FolderCard({
     onFolderClick(folder);
   }, [folder, onFolderClick]);
 
-  const pcds = usePCDsInFolder(folder);
+  const pcds = usePCDsInFolder(folder, true);
 
   const startDate = EVENTS[folder]?.start;
   const endDate = EVENTS[folder]?.end;
@@ -62,10 +78,11 @@ export function FolderCard({
       style={style}
       onClick={onClick}
       className={cn(
+        "border-4 border-green-950",
         "flex flex-row gap-2",
         "bg-green-700 py-2 px-4 cursor-pointer hover:bg-green-600  transition-all duration-100",
         "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
-        "border-none text-lg"
+        "text-lg"
       )}
     >
       <div className="flex-grow">
@@ -183,12 +200,12 @@ export function FolderDetails({
   return (
     <FolderHeader
       className={cn(
-        "bg-blue-700 py-2 px-4 cursor-pointer hover:bg-blue-600  transition-all duration-100",
+        "border-4 border-blue-950",
+        "bg-blue-700 py-2 px-4 cursor-pointer hover:bg-blue-600  transition-all duration-100 text-center",
         "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
-        "border-none text-lg"
+        "text-lg"
       )}
       onClick={onUpOneClick}
-      style={noChildFolders ? { borderBottom: "none" } : undefined}
     >
       Back
     </FolderHeader>

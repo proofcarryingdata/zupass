@@ -261,7 +261,7 @@ export class PCDCollection {
     )?.[1];
   }
 
-  public getAllPCDsInFolder(folder: string): PCD[] {
+  public getAllPCDsInFolder(folder: string, recursive = false): PCD[] {
     if (isRootFolder(folder)) {
       const pcdIdsInFolders = new Set([...Object.keys(this.folders)]);
       const pcdsNotInFolders = this.pcds.filter(
@@ -273,6 +273,13 @@ export class PCDCollection {
     const pcdIds = Object.entries(this.folders)
       .filter(([_pcdId, f]) => f === folder)
       .map(([pcdId, _f]) => pcdId);
+
+    if (recursive) {
+      const subFolders = this.getFoldersInFolder(folder);
+      for (const sub of subFolders) {
+        pcdIds.push(...this.getAllPCDsInFolder(sub, true).map((p) => p.id));
+      }
+    }
 
     return this.getByIds(pcdIds);
   }

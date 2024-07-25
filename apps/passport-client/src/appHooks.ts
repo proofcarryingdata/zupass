@@ -64,9 +64,9 @@ export function usePCDs(): PCD[] {
   return [...pcds.getAll()];
 }
 
-export function usePCDsInFolder(folder: string): PCD[] {
+export function usePCDsInFolder(folder: string, recursive = false): PCD[] {
   const pcds = usePCDCollection();
-  return [...pcds.getAllPCDsInFolder(folder)];
+  return [...pcds.getAllPCDsInFolder(folder, recursive)];
 }
 
 export function useVisiblePCDsInFolder(folder: string): PCD[] {

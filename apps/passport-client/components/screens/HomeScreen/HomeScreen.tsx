@@ -167,7 +167,7 @@ export function HomeScreenImpl(): JSX.Element | null {
       <MaybeModal />
       <AppContainer bg="gray">
         <Spacer h={24} />
-        <AppHeader isEdgeCity={isEdgeCity} />
+        {isRoot && <AppHeader isEdgeCity={isEdgeCity} />}
         <Placeholder minH={540}>
           {/* {isRoot && (
             <div className="font-bold text-3xl mb-4 text-center">My Events</div>
@@ -181,10 +181,14 @@ export function HomeScreenImpl(): JSX.Element | null {
                   onFolderClick={onFolderClick}
                 />
               )}
+              {isEvent(browsingFolder) && (
+                <FolderEventInfo folder={browsingFolder} />
+              )}
+
               {!isEdgeCity &&
                 foldersInFolder
                   .filter(
-                    // /FrogCrypto is a special and rendered by <FrogFolder />
+                    // FrogCrypto is a special and rendered by <FrogFolder />
                     (folder) => folder !== FrogCryptoFolderName
                   )
                   .filter(isEvent)
@@ -215,10 +219,6 @@ export function HomeScreenImpl(): JSX.Element | null {
                 />
               )}
             </FolderExplorerContainer>
-          )}
-
-          {isEvent(browsingFolder) && (
-            <FolderEventInfo folder={browsingFolder} />
           )}
 
           {isFrogCrypto ? (
