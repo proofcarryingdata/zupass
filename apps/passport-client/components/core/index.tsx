@@ -92,9 +92,18 @@ export const PreWrap = styled.pre`
   overflow: hidden;
 `;
 
-export function ZuLogo(): JSX.Element {
+export function ZuLogo(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  props: React.HTMLAttributes<HTMLImageElement> & any
+): JSX.Element {
   return (
-    <img draggable="false" src={icons.logo} width="160px" height="155px" />
+    <img
+      draggable="false"
+      src={icons.logo}
+      width="160px"
+      height="155px"
+      {...props}
+    />
   );
 }
 

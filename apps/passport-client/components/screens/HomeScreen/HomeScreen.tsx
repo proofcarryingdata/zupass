@@ -30,7 +30,7 @@ import {
   isFrogCryptoFolder,
   isProtocolWorldsFolder
 } from "../../../src/util";
-import { Placeholder, Spacer } from "../../core";
+import { H1, Placeholder, Spacer, ZuLogo } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
@@ -180,6 +180,10 @@ export function HomeScreenImpl(): JSX.Element | null {
       <MaybeModal />
       <AppContainer bg="gray">
         <Spacer h={24} />
+        <div className="flex-row flex align-center items-center gap-3">
+          <ZuLogo width="48px" /> <H1 className="">Zupass</H1>
+        </div>
+        <Spacer h={24} />
         {isRoot && !isOther && <AppHeader isEdgeCity={isEdgeCity} />}
         <Placeholder minH={540}>
           {isRoot && isOther && (
@@ -252,7 +256,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                       window.location.href = "#/other";
                     }}
                   >
-                    Your Other Data
+                    Other Data
                   </div>
                 </>
               )}
@@ -278,7 +282,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                 <PCDCardList
                   key={browsingFolder + isRoot + isOther}
                   allExpanded
-                  pcds={pcdsInFolder.filter((_) => !isRoot)}
+                  pcds={pcdsInFolder.filter((_) => !isRoot || isOther)}
                 />
               ) : loadedIssuedPCDs ? (
                 <NoPcdsContainer>This folder is empty</NoPcdsContainer>

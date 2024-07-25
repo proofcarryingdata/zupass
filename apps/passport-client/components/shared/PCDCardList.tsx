@@ -159,7 +159,7 @@ export function PCDCardList({
       )}
 
       {sortedPCDs.length > 1 && (
-        <div className="flex flex-row gap-4 ">
+        <div className="flex flex-row gap-4 mb-[0.75rem]">
           <div
             className={cn(
               "border-4 border-cyan-950 flex-grow",
@@ -169,7 +169,7 @@ export function PCDCardList({
               "text-lg"
             )}
             onClick={() => {
-              setIdx((idx + 1) % sortedPCDs.length);
+              setIdx((idx - 1 + sortedPCDs.length) % sortedPCDs.length);
             }}
           >
             Prev
@@ -188,7 +188,7 @@ export function PCDCardList({
               "text-lg"
             )}
             onClick={() => {
-              setIdx((idx - 1 + sortedPCDs.length) % sortedPCDs.length);
+              setIdx((idx + 1) % sortedPCDs.length);
             }}
           >
             Next
@@ -253,6 +253,7 @@ function SortIcon({ sortOrder }: { sortOrder?: "asc" | "desc" }): JSX.Element {
 
 const Container = styled.div`
   padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 8px;
