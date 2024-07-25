@@ -26,7 +26,7 @@ export function FolderEventInfo({
         }}
       ></div>
       <div className="font-bold text-xl w-full bg-green-800 px-4 py-2 rounded">
-        {folder}
+        {getNameFromPath(folder)}
       </div>
     </div>
   );
