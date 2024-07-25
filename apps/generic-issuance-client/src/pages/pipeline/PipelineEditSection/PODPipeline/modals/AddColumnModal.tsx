@@ -75,9 +75,9 @@ export function AddColumnModal({
 
           <ModalFooter>
             <Button
-              colorScheme={invalidInput ? "gray" : "blue"}
+              colorScheme="blue"
               mr={3}
-              disabled={invalidInput}
+              isDisabled={invalidInput}
               onClick={() => {
                 if (!invalidInput) onAddColumn(name, type);
               }}

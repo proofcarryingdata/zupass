@@ -1,13 +1,20 @@
 import { PlusSquareIcon } from "@chakra-ui/icons";
-import { Button, Icon, VStack, useDisclosure } from "@chakra-ui/react";
+import { Button, HStack, Icon, useDisclosure, VStack } from "@chakra-ui/react";
 import {
+  parseCSV,
   PODPipelineDefinition,
   PODPipelineInputFieldType,
-  PODPipelineOptions,
-  parseCSV
+  PODPipelineOptions
 } from "@pcd/passport-interface";
 import React, { ReactNode, useCallback, useMemo, useState } from "react";
-import { CellBase, Matrix, Spreadsheet } from "react-spreadsheet";
+import { MdDeleteOutline } from "react-icons/md";
+import {
+  CellBase,
+  Matrix,
+  RangeSelection,
+  Selection,
+  Spreadsheet
+} from "react-spreadsheet";
 import styled from "styled-components";
 import { AddColumnModal } from "./modals/AddColumnModal";
 import { DeleteColumnDialog } from "./modals/DeleteColumnDialog";
@@ -86,12 +93,32 @@ export function PODPipelineInputEdit({
     [data, definition.options]
   );
 
+  const [selection, setSelection] = useState<Selection | undefined>();
+  const singleRowSelection = useMemo(() => {
+    if (selection) {
+      return selection instanceof RangeSelection
+        ? selection.range.start.row === selection.range.end.row
+        : false;
+    }
+  }, [selection]);
+
   const addRow = useCallback(() => {
     dispatch({
       type: PODPipelineEditActionType.AddInputRow,
       csvData: data
     });
   }, [dispatch, data]);
+
+  const deleteRow = useCallback(() => {
+    if (!selection || !(selection instanceof RangeSelection)) {
+      return;
+    }
+    dispatch({
+      type: PODPipelineEditActionType.DeleteInputRow,
+      rowIndex: selection.range.start.row,
+      csvData: data
+    });
+  }, [dispatch, data, selection]);
 
   const {
     isOpen: isAddColumnModalOpen,
@@ -185,29 +212,42 @@ export function PODPipelineInputEdit({
         onAddColumn={addColumn}
         columnNames={Object.keys(columns)}
       />
-      <Spreadsheet
-        ColumnIndicator={CustomColumnIndicator}
-        HeaderRow={CustomHeaderRow}
-        Row={Row}
-        darkMode={true}
-        data={spreadsheetData}
-        columnLabels={Object.keys(columns)}
-        className={"sheet"}
-        onChange={(data) => {
-          dispatch({
-            type: PODPipelineEditActionType.UpdateInputCSV,
-            data: data.map((row) => row.map((cell) => cell?.value ?? ""))
-          });
-        }}
-      />
-      <VStack spacing={2} alignItems={"start"}>
-        <Button
-          onClick={addRow}
-          leftIcon={<Icon as={PlusSquareIcon} w={4} h={4} />}
-          colorScheme="blue"
-        >
-          Add row
-        </Button>
+      <VStack spacing={4} alignItems={"start"}>
+        <Spreadsheet
+          ColumnIndicator={CustomColumnIndicator}
+          HeaderRow={CustomHeaderRow}
+          Row={Row}
+          darkMode={true}
+          data={spreadsheetData}
+          columnLabels={Object.keys(columns)}
+          className={"sheet"}
+          onChange={(data) => {
+            dispatch({
+              type: PODPipelineEditActionType.UpdateInputCSV,
+              data: data.map((row) => row.map((cell) => cell?.value ?? ""))
+            });
+          }}
+          onSelect={(selection) => {
+            window.setTimeout(() => setSelection(selection), 100);
+          }}
+        />
+        <HStack spacing={4} alignItems={"start"}>
+          <Button
+            onClick={addRow}
+            leftIcon={<Icon as={PlusSquareIcon} w={4} h={4} />}
+            colorScheme="blue"
+          >
+            Add row
+          </Button>
+          <Button
+            isDisabled={!singleRowSelection}
+            onClick={deleteRow}
+            leftIcon={<Icon as={MdDeleteOutline} w={4} h={4} />}
+            colorScheme="blue"
+          >
+            Delete row
+          </Button>
+        </HStack>
       </VStack>
     </Container>
   );

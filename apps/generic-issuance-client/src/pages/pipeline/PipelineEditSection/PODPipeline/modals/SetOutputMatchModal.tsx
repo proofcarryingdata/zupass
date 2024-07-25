@@ -167,11 +167,7 @@ export function SetOutputMatchModal({
         </ModalBody>
         <ModalFooter>
           <ButtonGroup>
-            <Button
-              onClick={submit}
-              colorScheme={isValid ? "blue" : "gray"}
-              disabled={!isValid}
-            >
+            <Button onClick={submit} colorScheme="blue" isDisabled={!isValid}>
               Save
             </Button>
             <Button onClick={triggerClose}>Cancel</Button>

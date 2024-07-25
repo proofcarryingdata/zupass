@@ -13,6 +13,7 @@ import {
   changeOutputEntryType,
   changeOutputMatch,
   deleteInputColumn,
+  deleteInputRow,
   deleteOutputEntry,
   renameInputColumn,
   setFeedOptions,
@@ -40,6 +41,7 @@ export enum PODPipelineEditActionType {
   RenameInputColumn = "renameInputColumn",
   UpdateFeedOptions = "updateFeedOptions",
   AddInputRow = "addInputRow",
+  DeleteInputRow = "deleteInputRow",
   UpdateInputCSV = "updateInputCSV",
   AddOutputEntry = "addOutputEntry",
   DeleteOutputEntry = "deleteOutputEntry",
@@ -82,6 +84,11 @@ export type PODPipelineEditAction =
     }
   | {
       type: PODPipelineEditActionType.AddInputRow;
+      csvData: string[][];
+    }
+  | {
+      type: PODPipelineEditActionType.DeleteInputRow;
+      rowIndex: number;
       csvData: string[][];
     }
   | {
@@ -166,6 +173,8 @@ export function pipelineEditReducer(
       };
     case PODPipelineEditActionType.AddInputRow:
       return addInputRow(state, action.csvData);
+    case PODPipelineEditActionType.DeleteInputRow:
+      return deleteInputRow(state, action.rowIndex, action.csvData);
     case PODPipelineEditActionType.UpdateInputCSV:
       return updateInputCSV(state, action.data);
     case PODPipelineEditActionType.AddOutputEntry:

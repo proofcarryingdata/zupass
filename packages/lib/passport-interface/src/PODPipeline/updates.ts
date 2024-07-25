@@ -208,7 +208,6 @@ export function addInputRow(
   csvData: string[][]
 ): PODPipelineDefinition {
   const newDefinition = structuredClone(definition);
-  console.log(definition.options.input.csv);
   const newCsv = stringifyCSV([
     Object.keys(newDefinition.options.input.columns),
     ...csvData,
@@ -216,7 +215,28 @@ export function addInputRow(
       (col) => COLUMN_DEFAULTS[col.type]
     )
   ]);
-  console.log(newCsv);
+  newDefinition.options.input.csv = newCsv;
+  return newDefinition;
+}
+
+/**
+ * Deletes a row from the input CSV of a PODPipelineDefinition.
+ *
+ * @param definition The PODPipelineDefinition to update.
+ * @param rowIndex The index of the row to delete.
+ * @param csvData The current CSV data.
+ * @returns The updated PODPipelineDefinition.
+ */
+export function deleteInputRow(
+  definition: PODPipelineDefinition,
+  rowIndex: number,
+  csvData: string[][]
+): PODPipelineDefinition {
+  const newDefinition = structuredClone(definition);
+  const newCsv = stringifyCSV([
+    Object.keys(newDefinition.options.input.columns),
+    ...csvData.slice(0, rowIndex).concat(csvData.slice(rowIndex + 1))
+  ]);
   newDefinition.options.input.csv = newCsv;
   return newDefinition;
 }
