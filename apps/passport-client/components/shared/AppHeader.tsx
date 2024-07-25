@@ -1,4 +1,5 @@
 import React, { useCallback } from "react";
+import { FaCog, FaInfoCircle } from "react-icons/fa";
 import styled from "styled-components";
 import { useDispatch, useSelf, useSubscriptions } from "../../src/appHooks";
 import { AppState } from "../../src/state";
@@ -82,7 +83,7 @@ function AppHeaderImpl({
           )}
           onClick={openInfo}
         >
-          More Info
+          <FaInfoCircle size={24} />
         </div>
         <div
           className={cn(
@@ -94,7 +95,7 @@ function AppHeaderImpl({
           )}
           onClick={openSettings}
         >
-          Settings
+          <FaCog size={24} />
         </div>
       </div>
     </AppHeaderWrap>

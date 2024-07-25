@@ -220,7 +220,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                   window.location.href = "#/";
                 }}
               />
-              {/* <div className="h-[0.75rem]"></div> */}
+              <div className="h-[0.75rem]"></div>
             </>
           )}
 
@@ -349,7 +349,7 @@ export function HomeScreenImpl(): JSX.Element | null {
             </>
           )}
           {loadedIssuedPCDs && (
-            <div className="text-center font-sm text-gray-300 mt-[0.75rem]">
+            <div className="text-center font-sm text-gray-300 mt-[0.75rem] select-none hover:underline cursor-pointer">
               Don't see your tickets?
             </div>
           )}

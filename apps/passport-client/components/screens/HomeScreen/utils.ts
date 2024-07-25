@@ -36,12 +36,12 @@ export const EVENTS: Record<string, EventInfo> = {
     image:
       "https://www.state.gov/wp-content/uploads/2023/07/shutterstock_671409553v2.jpg"
   },
-  "Edge City": {
-    start: "2023-10-18",
-    end: "2023-10-21",
-    image:
-      "https://cdn.prod.website-files.com/65b2cb5abdecf7cd7747e170/65c139390d09b586db66b032_bg-image_v01.png"
-  },
+  // "Edge City": {
+  //   start: "2023-10-18",
+  //   end: "2023-10-21",
+  //   image:
+  //     "https://cdn.prod.website-files.com/65b2cb5abdecf7cd7747e170/65c139390d09b586db66b032_bg-image_v01.png"
+  // },
   EthDenver: {
     start: "2023-11-18",
     end: "2023-11-21",
