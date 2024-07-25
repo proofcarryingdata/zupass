@@ -285,7 +285,6 @@ function CardBody({
 
 export const CardContainer = styled.div`
   width: 100%;
-  padding: 8px;
 `;
 
 export const CardOutlineExpanded = styled.div`

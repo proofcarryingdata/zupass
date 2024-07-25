@@ -209,6 +209,7 @@ function SortIcon({ sortOrder }: { sortOrder?: "asc" | "desc" }): JSX.Element {
 }
 
 const Container = styled.div`
+  padding-top: 0.75rem;
   display: flex;
   flex-direction: column;
   gap: 8px;
