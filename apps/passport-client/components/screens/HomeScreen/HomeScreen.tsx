@@ -348,6 +348,11 @@ export function HomeScreenImpl(): JSX.Element | null {
               <LoadingIssuedPCDs />
             </>
           )}
+          {loadedIssuedPCDs && (
+            <div className="text-center font-sm text-gray-300 mt-[0.75rem]">
+              Don't see your tickets?
+            </div>
+          )}
         </Placeholder>
 
         <Spacer h={24} />

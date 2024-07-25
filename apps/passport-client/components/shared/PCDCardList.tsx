@@ -136,6 +136,8 @@ export function PCDCardList({
   const [idx, setIdx] = useState(0);
   const pcd = sortedPCDs[idx];
 
+  if (!pcd) return null;
+
   return (
     <Container>
       {/* {sortablePCDs.length > 1 && (

@@ -26,7 +26,7 @@ export function LoadingIssuedPCDs(): JSX.Element | null {
 
   return (
     <Container
-      className="w-full rounded bg-gray-500 py-2 px-4 text-white text-lg font-bold "
+      className="w-full rounded bg-gray-500 py-2 px-4 text-white text-lg font-bold mt-[0.75rem]"
       style={hiding ? { opacity: 0 } : { opacity: 1 }}
     >
       <div>Loading Tickets</div>
