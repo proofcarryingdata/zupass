@@ -1,3 +1,9 @@
+import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
+import { EdDSATicketPCDPackage, TicketCategory } from "@pcd/eddsa-ticket-pcd";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { randomUUID } from "@pcd/util";
+import { AppState } from "../../../src/state";
+
 export interface EventInfo {
   start: string;
   end: string;
@@ -32,9 +38,82 @@ export const EVENTS: Record<string, EventInfo> = {
     end: "2023-11-21",
     image:
       "https://upload.wikimedia.org/wikipedia/commons/thumb/4/46/Denver_Skyline_in_Winter.JPG/800px-Denver_Skyline_in_Winter.JPG"
+  },
+  Devcon: {
+    start: "2024-11-12",
+    end: "2024-11-15",
+    image:
+      "https://devcon.org/_next/image/?url=/_next/static/media/backdrop.f0972b01.png&w=3840&q=75"
+  },
+  "Devcon/ProgCrypto": {
+    start: "2024-11-12",
+    end: "2024-11-12",
+    image:
+      "https://online.york.ac.uk/wp-content/uploads/2023/10/Cryptography.jpg"
   }
 };
 
 export function isEvent(folder: string): folder is keyof typeof EVENTS {
   return EVENTS[folder] !== undefined;
+}
+
+export async function initTestData(state: AppState): Promise<void> {
+  if (!state.self) {
+    return;
+  }
+
+  const testData = {
+    tickets: ["Devcon", "Devcon", "Devcon/ProgCrypto", "Devcon/ProgCrypto"]
+  } as const;
+
+  const pcds = state.pcds;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  (window as any)["appstate"] = state;
+
+  if (state.pcds.getAllFolderNames().includes("Devcon")) {
+    return;
+  }
+
+  const pkey = newEdDSAPrivateKey();
+
+  for (const [i, ticket] of testData.tickets.entries()) {
+    const eventName = ticket;
+    const ticketName = "GA";
+    const ticketId = randomUUID();
+    const eventId = randomUUID();
+    const productId = randomUUID();
+
+    const pcd = await EdDSATicketPCDPackage.prove({
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: ticketId
+      },
+      privateKey: {
+        argumentType: ArgumentTypeName.String,
+        value: pkey
+      },
+      ticket: {
+        argumentType: ArgumentTypeName.Object,
+        value: {
+          eventName: eventName,
+          ticketName: ticketName,
+          checkerEmail: undefined,
+          eventId,
+          productId,
+          ticketId,
+          timestampConsumed: 0,
+          timestampSigned: Date.now(),
+          attendeeSemaphoreId: state.identity.commitment.toString(),
+          isConsumed: false,
+          isRevoked: false,
+          ticketCategory: TicketCategory.Generic,
+          attendeeName: "",
+          attendeeEmail: state.self?.email ?? "test@test.com"
+        }
+      }
+    });
+
+    pcds.add(pcd, { upsert: true });
+    pcds.setFolder(pcd.id, ticket);
+  }
 }
