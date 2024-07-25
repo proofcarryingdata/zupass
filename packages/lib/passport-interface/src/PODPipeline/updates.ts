@@ -144,7 +144,7 @@ export function addInputColumn(
 
   const defaultValue = COLUMN_DEFAULTS[type];
   newDefinition.options.input.csv = stringifyCSV([
-    [...Object.keys(newDefinition.options.input.columns), name],
+    [...Object.keys(definition.options.input.columns), name],
     ...csvData.map((row) => [...row, defaultValue])
   ]);
 
@@ -166,12 +166,14 @@ export function deleteInputColumn(
   const newDefinition = structuredClone(definition);
   delete newDefinition.options.input.columns[name];
 
-  const keys = Object.keys(newDefinition.options.input.columns);
+  const keys = Object.keys(definition.options.input.columns);
   const index = keys.indexOf(name);
   const newCsv = stringifyCSV([
     keys.filter((key) => key !== name),
     ...csvData.map((row) => {
-      return row.slice().splice(index, 1);
+      const newRow = row.slice();
+      newRow.splice(index, 1);
+      return newRow;
     })
   ]);
   newDefinition.options.input.csv = newCsv;
