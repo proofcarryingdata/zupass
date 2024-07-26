@@ -1,13 +1,23 @@
 import { Spacer, styled } from "@pcd/passport-ui";
 import { ReactNode } from "react";
+import { createGlobalStyle } from "styled-components";
 import { NewButton } from "../../NewButton";
 import { H1, Placeholder } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 
+const OverrideStyles = createGlobalStyle`
+  html {
+    background-color: black !important;
+    background-image: url("https://as1.ftcdn.net/v2/jpg/02/22/42/62/1000_F_222426277_KXFzXYBaKkFjHDEDkESWh830L9Wc4XyE.jpg") !important;
+    background-repeat: repeat;
+  }
+`;
+
 export function DuckScreen(): ReactNode {
   return (
     <>
+      <OverrideStyles />
       <MaybeModal />
       <AppContainer bg="gray">
         <Spacer h={24} />
@@ -16,7 +26,7 @@ export function DuckScreen(): ReactNode {
             src="https://i.pinimg.com/originals/0a/d5/11/0ad5112cb48a2e9199174b0211412c64.jpg"
             width="48px"
           ></img>
-          <H1 className="">Duckpass</H1>
+          <H1 className="font-bold text-green-500">Duckpass</H1>
         </div>
         <Spacer h={24} />
         <Placeholder minH={540}>
@@ -38,7 +48,7 @@ export function DuckScreen(): ReactNode {
             <NewButton>Sync Your Duck</NewButton>
             <textarea
               placeholder="don't you want your duck to say something neat?"
-              className="p-2 text-black 2-full border-black border-4 h-[200px] outline-none focus:ring-2 focus:ring-offset-4 focus:ring-white ring-opacity-60 ring-offset-[#19473f] transition-all duration-200"
+              className="rounded-lg p-2 text-black 2-full border-black border-4 h-[200px] outline-none focus:ring-2 focus:ring-offset-4 focus:ring-white ring-opacity-60 ring-offset-[#19473f] transition-all duration-200"
             ></textarea>
             <NewButton>Set Duck Message</NewButton>
           </div>
