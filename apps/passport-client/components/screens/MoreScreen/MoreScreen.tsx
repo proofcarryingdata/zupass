@@ -8,41 +8,35 @@ import { AppContainer } from "../../shared/AppContainer";
 
 interface SubPage {
   image: string;
-  title: string;
+  title?: string;
   pageLink: string;
 }
 
 export function MoreScreen(): ReactNode {
   const subPages: SubPage[] = [
     {
-      image:
-        "https://static.vecteezy.com/system/resources/thumbnails/024/743/322/small/duck-seamless-pattern-rubber-ducky-isolated-cartoon-illustration-bird-bath-shower-repeat-wallpaper-tile-background-gift-wrap-paper-yellow-vector.jpg",
-      title: "DUCK",
+      image: "https://i.imgur.com/8uWVBl6.png",
       pageLink: "#/duck"
     },
     {
-      image:
-        "https://preview.redd.it/anyone-interested-in-making-the-animation-for-the-matrix-v0-4904jjjxjlja1.png?width=640&crop=smart&auto=webp&s=eafccbed81c07b01744f999e730b89623a47d379",
-      title: "FHE",
+      image: "https://i.imgur.com/dPHJPtO.png",
       pageLink: "#/fhe"
     },
     {
-      image:
-        "https://media.istockphoto.com/id/1264809053/photo/pea-pods-on-a-background-of-green-leaves-and-dill.jpg?s=612x612&w=0&k=20&c=x1d_bOMJF5HT47nxX9EPoK_tlizTpV1LrRDsd3pRYiM=",
-      title: "POD",
+      image: "https://i.imgur.com/W9LVI5D.png",
       pageLink: "#/pod"
     },
     {
-      image:
-        "https://engineering.fb.com/wp-content/uploads/2019/05/SecHero.jpg",
-      title: "ZK",
+      image: "https://i.imgur.com/1fr57wQ.png",
       pageLink: "#/zk"
     },
     {
-      image:
-        "https://engineering.fb.com/wp-content/uploads/2019/05/SecHero.jpg",
-      title: "0xPARC",
+      image: "https://i.imgur.com/5wnnlmb.png",
       pageLink: "#/0xparc"
+    },
+    {
+      image: "https://i.imgur.com/jrsV7Vr.png",
+      pageLink: "https://github.com/proofcarryingdata/zupass"
     }
   ];
 
@@ -77,9 +71,11 @@ export function MoreScreen(): ReactNode {
                   backgroundSize: "cover"
                 }}
               >
-                <span className="bg-black rounded-xl px-2 py-1 border-white border-4">
-                  {page.title}
-                </span>
+                {page.title && (
+                  <span className="bg-black rounded-xl px-2 py-1 border-white border-4">
+                    {page.title}
+                  </span>
+                )}
               </div>
             ))}
           </div>
@@ -92,6 +88,6 @@ export function MoreScreen(): ReactNode {
 
 const squareStyle = cn(
   "rounded",
-  "font-bold text-xl active:scale-[1.01] hover:translate-y-[-1px] active:translate-y-[2px] transition-all duration-200 select-none",
+  "font-bold text-xl active:scale-[1.05] hover:translate-y-[-3px] active:translate-y-[4px] transition-all duration-200 select-none",
   "bg-red-500 p-4 aspect-square border-4 border-black cursor-pointer"
 );
