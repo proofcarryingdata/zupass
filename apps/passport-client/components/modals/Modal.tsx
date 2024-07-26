@@ -13,6 +13,7 @@ import { FrogCryptoExportPCDsModal } from "./FrogCryptoExportPCDsModal";
 import { FrogCryptoUpdateTelegramModal } from "./FrogCryptoUpdateTelegramModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
+import { NoTicketsModal } from "./NoTicketsModal";
 import { PrivacyNoticeModal } from "./PrivacyNoticeModal";
 import { RequireAddPasswordModal } from "./RequireAddPasswordModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
@@ -97,6 +98,8 @@ function getModalBody(
       return <AnotherDeviceChangedPasswordModal />;
     case "changed-password":
       return <ChangedPasswordModal />;
+    case "no-tickets":
+      return <NoTicketsModal />;
     case "resolve-subscription-error":
       return <ResolveSubscriptionErrorModal />;
     case "upgrade-account-modal":

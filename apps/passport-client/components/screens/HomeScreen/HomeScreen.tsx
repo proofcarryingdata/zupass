@@ -349,7 +349,15 @@ export function HomeScreenImpl(): JSX.Element | null {
             </>
           )}
           {loadedIssuedPCDs && (
-            <div className="text-center font-sm text-gray-300 mt-[0.75rem] select-none hover:underline cursor-pointer">
+            <div
+              onClick={() => {
+                dispatch({
+                  type: "set-modal",
+                  modal: { modalType: "no-tickets" }
+                });
+              }}
+              className="text-center font-sm text-gray-300 mt-[0.75rem] select-none hover:underline cursor-pointer"
+            >
               Don't see your tickets?
             </div>
           )}
