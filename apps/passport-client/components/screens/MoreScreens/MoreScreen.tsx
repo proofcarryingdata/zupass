@@ -12,34 +12,34 @@ interface SubPage {
   pageLink: string;
 }
 
-export function MoreScreen(): ReactNode {
-  const subPages: SubPage[] = [
-    {
-      image: "https://i.imgur.com/8uWVBl6.png",
-      pageLink: "#/duck"
-    },
-    {
-      image: "https://i.imgur.com/dPHJPtO.png",
-      pageLink: "#/fhe"
-    },
-    {
-      image: "https://i.imgur.com/W9LVI5D.png",
-      pageLink: "#/pod"
-    },
-    {
-      image: "https://i.imgur.com/1fr57wQ.png",
-      pageLink: "#/zk"
-    },
-    {
-      image: "https://i.imgur.com/5wnnlmb.png",
-      pageLink: "#/0xparc"
-    },
-    {
-      image: "https://i.imgur.com/jrsV7Vr.png",
-      pageLink: "https://github.com/proofcarryingdata/zupass"
-    }
-  ];
+export const subPages: SubPage[] = [
+  {
+    image: "https://i.imgur.com/8uWVBl6.png",
+    pageLink: "#/duck"
+  },
+  {
+    image: "https://i.imgur.com/dPHJPtO.png",
+    pageLink: "#/fhe"
+  },
+  {
+    image: "https://i.imgur.com/W9LVI5D.png",
+    pageLink: "#/pod"
+  },
+  {
+    image: "https://i.imgur.com/1fr57wQ.png",
+    pageLink: "#/zk"
+  },
+  {
+    image: "https://i.imgur.com/5wnnlmb.png",
+    pageLink: "#/0xparc"
+  },
+  {
+    image: "https://i.imgur.com/jrsV7Vr.png",
+    pageLink: "https://github.com/proofcarryingdata/zupass"
+  }
+];
 
+export function MoreScreen(): ReactNode {
   return (
     <>
       <MaybeModal />

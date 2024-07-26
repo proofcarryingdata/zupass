@@ -43,7 +43,12 @@ import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClick
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
-import { MoreScreen } from "../components/screens/MoreScreen/MoreScreen";
+import { ParcScreen } from "../components/screens/MoreScreens/0xPARCScreen";
+import { DuckScreen } from "../components/screens/MoreScreens/DuckScreen";
+import { FHEScreen } from "../components/screens/MoreScreens/FHEScreen";
+import { MoreScreen } from "../components/screens/MoreScreens/MoreScreen";
+import { PODScreen } from "../components/screens/MoreScreens/PODScreen";
+import { ZKScreen } from "../components/screens/MoreScreens/ZKScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
@@ -327,7 +332,14 @@ function RouterImpl(): JSX.Element {
         <Route path="/">
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
-          <Route path="other" element={<HomeScreen />} />
+
+          <Route path="other" element={<MoreScreen />} />
+          <Route path="duck" element={<DuckScreen />} />
+          <Route path="fhe" element={<FHEScreen />} />
+          <Route path="pod" element={<PODScreen />} />
+          <Route path="zk" element={<ZKScreen />} />
+          <Route path="0xparc" element={<ParcScreen />} />
+
           <Route path="more" element={<MoreScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route
