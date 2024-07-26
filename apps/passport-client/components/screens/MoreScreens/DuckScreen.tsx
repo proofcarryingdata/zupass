@@ -8,7 +8,6 @@ import { AppContainer } from "../../shared/AppContainer";
 
 const OverrideStyles = createGlobalStyle`
   html {
-    background-color: black !important;
     background-image: url("https://as1.ftcdn.net/v2/jpg/02/22/42/62/1000_F_222426277_KXFzXYBaKkFjHDEDkESWh830L9Wc4XyE.jpg") !important;
     background-repeat: repeat;
   }
