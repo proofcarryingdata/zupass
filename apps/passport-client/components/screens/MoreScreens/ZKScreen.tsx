@@ -14,6 +14,7 @@ export interface ZKState {
   id: string;
   description: string;
   actions?: ZKAction[];
+  image?: string;
 }
 
 interface ZKComponentProps {
@@ -29,6 +30,9 @@ export const ZKComponent: React.FC<ZKComponentProps> = ({
 }) => {
   return (
     <div className="border-4 border-black bg-white p-4 text-black mt-2 rounded-lg">
+      <div className="mb-2 rounded-lg bg-black/5 border-2 border-black overflow-hidden">
+        <img src={currentState.image} />
+      </div>
       <div className="mb-2">{currentState.description}</div>
       {currentState.actions && currentState.actions.length > 0 && (
         <div className="flex flex-col gap-2 ">
@@ -68,7 +72,9 @@ const states: ZKState[] = [
         title: "What's ZK?",
         to: "zk-intro"
       }
-    ]
+    ],
+    image:
+      "https://miro.medium.com/v2/resize:fit:1400/1*yxf5aQNPsJFi2Zdc8z779A.png"
   },
   {
     id: "zk-intro",
@@ -83,7 +89,9 @@ const states: ZKState[] = [
         title: "Who invented this?",
         to: "zk-history"
       }
-    ]
+    ],
+    image:
+      "https://fortris.com/images/posts/public-private-key-pair-encryption.png"
   },
   {
     id: "zk-history",
@@ -98,7 +106,9 @@ const states: ZKState[] = [
         title: "Go back to start",
         to: "start"
       }
-    ]
+    ],
+    image:
+      "https://dartmouthv2.blob.core.windows.net/dartmouth19851201thumbnails/Spreads/0x600/34.jpg"
   },
   {
     id: "zk-1",
@@ -117,7 +127,9 @@ const states: ZKState[] = [
         title: "Is it really secure?",
         to: "zk-security"
       }
-    ]
+    ],
+    image:
+      "https://as1.ftcdn.net/v2/jpg/01/01/37/56/1000_F_101375677_JXcF15Xl1iVm8XadnmXE5aNcaowH4QKD.jpg"
   },
   {
     id: "zk-2",
@@ -136,7 +148,9 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-1"
       }
-    ]
+    ],
+    image:
+      "https://media-cldnry.s-nbcnews.com/image/upload/newscms/2020_35/3407006/200824-election-vote-se-11335a.jpg"
   },
   {
     id: "zk-3",
@@ -155,7 +169,9 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-2"
       }
-    ]
+    ],
+    image:
+      "https://media.istockphoto.com/id/536754333/vector/very-complicated-math-formula-on-blackboard.jpg?s=612x612&w=0&k=20&c=_ynD7iJIaB4nDY9TLw55A_jnV0143Z3rLwFyaI-Yd3o="
   },
   {
     id: "zk-math",
@@ -170,7 +186,8 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-3"
       }
-    ]
+    ],
+    image: "https://i.sstatic.net/ygncy.png"
   },
   {
     id: "zk-4",
@@ -189,7 +206,9 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-3"
       }
-    ]
+    ],
+    image:
+      "https://static.vecteezy.com/system/resources/previews/028/297/543/original/lock-cyber-security-padlock-with-keyhole-icon-made-with-binary-code-protect-and-security-or-safe-concept-information-privacy-digital-code-matrix-background-with-digits-1-0-illustration-vector.jpg"
   },
   {
     id: "zk-5",
@@ -208,7 +227,9 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-4"
       }
-    ]
+    ],
+    image:
+      "https://media.wired.com/photos/5d6707951fc4060009324c3c/16:9/w_2400,h_1350,c_limit/know%20it%20all%20-%20blockchain%20voting-01.png"
   },
   {
     id: "zk-example",
@@ -227,7 +248,9 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-1"
       }
-    ]
+    ],
+    image:
+      "https://mp4media.gannett-cdn.com/28911775001/28911775001_6065814968001_6065816430001-vs.jpg?pubId=28911775001&width=660&height=371&format=pjpg&auto=webp"
   },
   {
     id: "zk-example-2",
@@ -242,7 +265,8 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-example"
       }
-    ]
+    ],
+    image: "https://m.media-amazon.com/images/I/A10AA0IDSaL.jpg"
   },
   {
     id: "zk-security",
@@ -257,7 +281,9 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-1"
       }
-    ]
+    ],
+    image:
+      "https://cdn.thisiswhyimbroke.com/thumb/labyrinth-door-lock_400x333.jpg"
   },
   {
     id: "zk-applications",
@@ -272,7 +298,9 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-2"
       }
-    ]
+    ],
+    image:
+      "https://www.shutterstock.com/image-vector/nft-icon-set-collection-payment-600nw-2152769519.jpg"
   },
   {
     id: "zk-zupass",
@@ -287,7 +315,8 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-4"
       }
-    ]
+    ],
+    image: "https://www.omnibasis.com/images/digitalid/omnibasis-digitalid.png"
   },
   {
     id: "zk-crypto",
@@ -302,7 +331,9 @@ const states: ZKState[] = [
         title: "Go back",
         to: "zk-5"
       }
-    ]
+    ],
+    image:
+      "https://www.researchgate.net/publication/334361184/figure/fig1/AS:778957762871296@1562729411007/Bitcoin-transaction-scheme-2.png"
   },
   {
     id: "zk-end",
@@ -317,7 +348,9 @@ const states: ZKState[] = [
         title: "Learn more about ZK",
         to: "zk-resources"
       }
-    ]
+    ],
+    image:
+      "https://c8.alamy.com/comp/KX4J51/bitcoin-in-college-alumni-hat-cartoon-digital-currency-gold-cryptocurrency-KX4J51.jpg"
   },
   {
     id: "zk-resources",
@@ -328,7 +361,9 @@ const states: ZKState[] = [
         title: "Thanks! Start over",
         to: "start"
       }
-    ]
+    ],
+    image:
+      "https://usethebitcoin.com/wp-content/uploads/2024/07/Cryptocurrency-Books.png"
   }
 ];
 
