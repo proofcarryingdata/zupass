@@ -105,10 +105,7 @@ export function PODScreen(): ReactNode {
       <AppContainer bg="gray">
         <Spacer h={24} />
         <div className="flex-row flex align-center items-center gap-3">
-          <H1 className="">
-            POD PASS POD PASS POD PASS POD PASS POD PASS POD PASSPOD PASS POD
-            PASS POD PASS
-          </H1>
+          <H1 className="">PODPASS</H1>
         </div>
         <Spacer h={24} />
         <Placeholder minH={540}>

@@ -28,10 +28,10 @@ export const ZKComponent: React.FC<ZKComponentProps> = ({
   allZKStates
 }) => {
   return (
-    <div className="border-4 border-black bg-white p-4 text-black mt-2">
+    <div className="border-4 border-black bg-white p-4 text-black mt-2 rounded-lg">
       <div className="mb-2">{currentState.description}</div>
       {currentState.actions && currentState.actions.length > 0 && (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-2 ">
           {currentState.actions.map((action, index) => (
             <NewButton
               className="text-white"

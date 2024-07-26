@@ -1,5 +1,5 @@
 import { Spacer } from "@pcd/passport-ui";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { cn } from "../../../src/util";
 import { NewButton } from "../../NewButton";
 import { H1, Placeholder, ZuLogo } from "../../core";
@@ -40,6 +40,25 @@ export const subPages: SubPage[] = [
 ];
 
 export function MoreScreen(): ReactNode {
+  useEffect(() => {
+    // Set CSS variables on the html element to change into dark mode.
+    const rootStyle = document.documentElement.style;
+    rootStyle.setProperty("--bg-dark-primary", "#38891d");
+    rootStyle.setProperty("--bg-lite-primary", "#38891d");
+    rootStyle.setProperty("--primary-dark", "#38891d");
+    rootStyle.setProperty("--accent-dark", "white");
+    rootStyle.setProperty("--accent-lite", "white");
+
+    return () => {
+      rootStyle.removeProperty("--bg-dark-primary");
+      rootStyle.removeProperty("--bg-lite-primary");
+      rootStyle.removeProperty("--primary-dark");
+      rootStyle.removeProperty("--accent-dark");
+      rootStyle.removeProperty("--accent-lite");
+      rootStyle.removeProperty("background");
+    };
+  }, []);
+
   return (
     <>
       <MaybeModal />
