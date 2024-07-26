@@ -1,12 +1,12 @@
-import { expect, use } from "chai";
-import chaiAsPromised from "chai-as-promised";
-import "mocha";
-import { CSVInput, CSVInputError } from "../src/PODPipeline/CSVInput";
 import {
   PODPipelineCSVInput,
   PODPipelineInputFieldType,
   PODPipelineInputType
-} from "../src/genericIssuanceTypes";
+} from "@pcd/passport-interface";
+import { expect, use } from "chai";
+import chaiAsPromised from "chai-as-promised";
+import "mocha";
+import { CSVInput, CSVInputError } from "../src/PODPipeline/CSVInput";
 
 describe("input loading", function () {
   this.beforeAll(() => {

@@ -1,3 +1,11 @@
+import {
+  PODPipelineDefinition,
+  PODPipelineDefinitionSchema,
+  PODPipelineInputFieldType,
+  PODPipelineInputType,
+  PODPipelinePCDTypes,
+  PipelineType
+} from "@pcd/passport-interface";
 import { expect, use } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "mocha";
@@ -12,14 +20,6 @@ import {
   parseCSV,
   renameInputColumn
 } from "../src/PODPipeline/updates";
-import {
-  PODPipelineDefinition,
-  PODPipelineDefinitionSchema,
-  PODPipelineInputFieldType,
-  PODPipelineInputType,
-  PODPipelinePCDTypes,
-  PipelineType
-} from "../src/genericIssuanceTypes";
 
 use(chaiAsPromised);
 

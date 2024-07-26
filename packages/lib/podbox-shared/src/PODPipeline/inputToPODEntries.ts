@@ -1,9 +1,9 @@
-import { PODValue } from "@pcd/pod";
-import { uuidToBigInt } from "@pcd/util";
 import {
   PODPipelineInputFieldType,
   PODPipelinePODEntry
-} from "../genericIssuanceTypes";
+} from "@pcd/passport-interface";
+import { PODValue } from "@pcd/pod";
+import { uuidToBigInt } from "@pcd/util";
 import { FieldTypeToJavaScriptType } from "./Input";
 
 /**

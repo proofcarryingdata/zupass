@@ -1,10 +1,12 @@
 import {
   FeedIssuanceOptions,
-  InputValue,
   PODPipelineDefinition,
   PODPipelineInputFieldType,
   PODPipelineOutputMatch,
-  PODPipelinePODEntry,
+  PODPipelinePODEntry
+} from "@pcd/passport-interface";
+import {
+  InputValue,
   addInputColumn,
   addInputRow,
   addOutputEntry,
@@ -18,7 +20,7 @@ import {
   renameInputColumn,
   setFeedOptions,
   updateInputCSV
-} from "@pcd/passport-interface";
+} from "@pcd/podbox-shared";
 import { assertUnreachable } from "@pcd/util";
 
 /**

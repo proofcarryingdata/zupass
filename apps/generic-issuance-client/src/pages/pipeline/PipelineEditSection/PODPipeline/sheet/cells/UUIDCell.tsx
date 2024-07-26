@@ -1,4 +1,5 @@
-import { PODPipelineInputFieldType, coercions } from "@pcd/passport-interface";
+import { PODPipelineInputFieldType } from "@pcd/passport-interface";
+import { coercions } from "@pcd/podbox-shared";
 import * as React from "react";
 import {
   CellBase,

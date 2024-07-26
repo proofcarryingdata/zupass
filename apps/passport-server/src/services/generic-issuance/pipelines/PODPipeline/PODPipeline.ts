@@ -1,7 +1,5 @@
 import { getHash } from "@pcd/passport-crypto";
 import {
-  CSVInput,
-  Input,
   PODPipelineDefinition,
   PODPipelineInputType,
   PODPipelineOutput,
@@ -18,6 +16,7 @@ import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { PODEntries, serializePODEntries } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
+import { CSVInput, Input } from "@pcd/podbox-shared";
 import { assertUnreachable } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import {

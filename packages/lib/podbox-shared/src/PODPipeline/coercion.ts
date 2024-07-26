@@ -1,6 +1,6 @@
+import { PODPipelineInputFieldType } from "@pcd/passport-interface";
 import { POD_INT_MAX, POD_INT_MIN, checkBigintBounds } from "@pcd/pod";
 import { SafeParseReturnType, z } from "zod";
-import { PODPipelineInputFieldType } from "../genericIssuanceTypes";
 import { FieldTypeToJavaScriptType } from "./Input";
 
 /**

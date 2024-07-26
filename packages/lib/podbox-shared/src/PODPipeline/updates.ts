@@ -1,6 +1,3 @@
-import { parse } from "csv-parse/sync";
-import { Options, Input as StringifyInput } from "csv-stringify/.";
-import { stringify } from "csv-stringify/sync";
 import {
   FeedIssuanceOptions,
   PODPipelineDefinition,
@@ -8,7 +5,10 @@ import {
   PODPipelineOptions,
   PODPipelineOutputMatch,
   PODPipelinePODEntry
-} from "../genericIssuanceTypes";
+} from "@pcd/passport-interface";
+import { parse } from "csv-parse/sync";
+import { Options, Input as StringifyInput } from "csv-stringify";
+import { stringify } from "csv-stringify/sync";
 import { InputValue } from "./Input";
 
 /**

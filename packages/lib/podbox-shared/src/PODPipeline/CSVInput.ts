@@ -1,6 +1,6 @@
+import { PODPipelineCSVInput } from "@pcd/passport-interface";
 import { parse } from "csv-parse/sync";
 import { ZodIssue } from "zod";
-import { PODPipelineCSVInput } from "../genericIssuanceTypes";
 import {
   Input,
   InputColumn,

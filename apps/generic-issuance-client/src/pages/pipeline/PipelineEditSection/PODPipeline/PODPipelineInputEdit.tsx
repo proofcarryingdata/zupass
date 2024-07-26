@@ -1,11 +1,11 @@
 import { PlusSquareIcon } from "@chakra-ui/icons";
 import { Button, HStack, Icon, useDisclosure, VStack } from "@chakra-ui/react";
 import {
-  parseCSV,
   PODPipelineDefinition,
   PODPipelineInputFieldType,
   PODPipelineOptions
 } from "@pcd/passport-interface";
+import { parseCSV } from "@pcd/podbox-shared";
 import React, { ReactNode, useCallback, useMemo, useState } from "react";
 import { MdDeleteOutline } from "react-icons/md";
 import {

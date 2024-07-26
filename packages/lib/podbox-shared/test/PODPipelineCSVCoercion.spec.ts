@@ -1,7 +1,7 @@
+import { PODPipelineInputFieldType } from "@pcd/passport-interface";
 import { assert, expect } from "chai";
 import "mocha";
 import { coercions } from "../src/PODPipeline/coercion";
-import { PODPipelineInputFieldType } from "../src/genericIssuanceTypes";
 
 describe("PODPipelineDefinition updates", () => {
   it("can coerce strings to UUIDs", () => {

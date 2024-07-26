@@ -1,10 +1,10 @@
+import { PODPipelineOutput } from "@pcd/passport-interface";
+import { PODEntries, serializePODEntries } from "@pcd/pod";
 import {
   InputColumn,
   InputRow,
-  PODPipelineOutput,
   getInputToPODValueConverter
-} from "@pcd/passport-interface";
-import { PODEntries, serializePODEntries } from "@pcd/pod";
+} from "@pcd/podbox-shared";
 import { assertUnreachable } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import { PODAtom } from "../PODPipeline";

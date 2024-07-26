@@ -1,4 +1,4 @@
-import { PODPipelineInputFieldType } from "../genericIssuanceTypes";
+import { PODPipelineInputFieldType } from "@pcd/passport-interface";
 
 // Map the PODPipelineInputFieldType enum to JavaScript types
 // This is used to map between column definitions (which contain the enum) and

@@ -34,6 +34,9 @@
       "path": "packages/lib/pod/tsconfig.esm.json"
     },
     {
+      "path": "packages/lib/podbox-shared/tsconfig.esm.json"
+    },
+    {
       "path": "packages/lib/server-shared/tsconfig.esm.json"
     },
     {

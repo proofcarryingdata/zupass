@@ -18,10 +18,10 @@ import {
 import {
   PODPipelineDefinition,
   PODPipelineOutputMatch,
-  PODPipelinePODEntry,
-  getInputToPODValueConverter
+  PODPipelinePODEntry
 } from "@pcd/passport-interface";
 import { POD_NAME_REGEX } from "@pcd/pod";
+import { getInputToPODValueConverter } from "@pcd/podbox-shared";
 import { Dispatch, ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { AddConfiguredValueModal } from "./modals/AddConfiguredValueModal";

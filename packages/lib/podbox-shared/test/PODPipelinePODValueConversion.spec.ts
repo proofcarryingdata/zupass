@@ -1,9 +1,9 @@
+import { PODPipelineInputFieldType } from "@pcd/passport-interface";
 import { uuidToBigInt } from "@pcd/util";
 import { assert, expect } from "chai";
 import "mocha";
 import { v4 as uuidv4 } from "uuid";
 import { getInputToPODValueConverter } from "../src/PODPipeline/inputToPODEntries";
-import { PODPipelineInputFieldType } from "../src/genericIssuanceTypes";
 
 describe("PODPipelineDefinition updates", () => {
   it("can convert string input fields to POD strings", () => {
