@@ -73,6 +73,56 @@ export function FolderCard({
     dateStr = `${new Date(startDate).toLocaleDateString()}`;
   }
 
+  if (folder === "Devcon") {
+    return (
+      <FolderEntryContainer
+        style={style}
+        onClick={onClick}
+        className={cn(
+          "border-4 border-purple-600 h-[150px] relative",
+          "bg-purple-700 py-2 px-4 cursor-pointer hover:bg-purple-600  transition-all duration-100",
+          "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
+          "text-lg"
+        )}
+      >
+        {img && (
+          <div
+            style={{
+              backgroundImage: `url(${img})`,
+              backgroundSize: "cover",
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%"
+            }}
+          ></div>
+        )}
+        <div
+          className="flex-grow p-4"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%"
+          }}
+        >
+          {getNameFromPath(folder)}
+          <div className="font-normal text-sm">
+            {pcds.length} ticket{pcds.length > 1 ? "s" : ""}
+            {dateStr && (
+              <span>
+                {" · "}
+                {dateStr}
+              </span>
+            )}
+          </div>
+        </div>
+      </FolderEntryContainer>
+    );
+  }
+
   return (
     <FolderEntryContainer
       style={style}
