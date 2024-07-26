@@ -6,7 +6,48 @@ import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 
 const Notes = [
-  { title: "Zero Knowledge Proofs", url: "https://0xparc.org/notes/zkp" }
+  {
+    title: "Levelled Fully Homomorphic Encryption from Learning with Errors",
+    url: "https://notes.0xparc.org/notes/levelled-fhe-from-lwe"
+  },
+  {
+    title: "Public-key Cryptography from Learning with Errors",
+    url: "https://notes.0xparc.org/notes/public-key-cryptography-from-lwe"
+  },
+  {
+    title: "PCP -- Probabilistically Checkable Proofs",
+    url: "https://notes.0xparc.org/notes/pcp-overview"
+  },
+  {
+    title: "The sum-check protocol",
+    url: "https://notes.0xparc.org/notes/sum-check"
+  },
+  {
+    title: "Low-degree testing",
+    url: "https://notes.0xparc.org/notes/low-degree-testing"
+  },
+  { title: "Quad-SAT", url: "https://notes.0xparc.org/notes/quad-sat" },
+  {
+    title: "PCP -- A Toy Protocol",
+    url: "https://notes.0xparc.org/notes/toy-pcp"
+  },
+  {
+    title:
+      "Reducing the number of phone books in PCP (smart random linear combinations)",
+    url: "https://notes.0xparc.org/notes/pcp-linear-combination"
+  },
+  {
+    title: "(DRAFT) Garbled Circuits for Three-Party Computation",
+    url: "https://notes.0xparc.org/notes/garbled-circuits-three-party"
+  },
+  {
+    title: "[DRAFT] Garbled Circuits: Commutative Encryption Protocol",
+    url: "https://notes.0xparc.org/notes/garbled-circuits-commutative-encryption"
+  },
+  {
+    title: "Motivating Garbled Circuits",
+    url: "https://notes.0xparc.org/notes/motivating-garbled-circuits"
+  }
 ];
 
 const BlogPosts = [
@@ -85,7 +126,7 @@ export function ParcScreen(): ReactNode {
             {(isBlog ? BlogPosts : Notes).map((post, i) => (
               <NewButton
                 variant="blackWhite"
-                className="overflow-hidden text-ellipsis whitespace-nowrap"
+                className="overflow-hidden text-ellipsis whitespace-nowrap justify-start text-left"
                 key={i}
                 onClick={() => window.open(post.url, "_blank")}
               >
