@@ -8,8 +8,7 @@ import { AppContainer } from "../../shared/AppContainer";
 
 interface SubPage {
   image: string;
-  title?: string;
-  pageLink: string;
+  pageLink?: string;
 }
 
 export const subPages: SubPage[] = [
@@ -36,6 +35,9 @@ export const subPages: SubPage[] = [
   {
     image: "https://i.imgur.com/jrsV7Vr.png",
     pageLink: "https://github.com/proofcarryingdata/zupass"
+  },
+  {
+    image: "https://i.imgur.com/BRuo1WA.png"
   }
 ];
 
@@ -78,24 +80,20 @@ export function MoreScreen(): ReactNode {
           </NewButton>
 
           <div className="grid grid-cols-2 gap-4 mt-[0.75rem] w-full">
-            {subPages.map((page) => (
+            {subPages.map((page, i) => (
               <div
-                key={page.title}
+                key={i}
                 className={squareStyle}
                 onClick={() => {
-                  window.location.href = page.pageLink;
+                  if (page.pageLink) {
+                    window.location.href = page.pageLink;
+                  }
                 }}
                 style={{
                   backgroundImage: `url('${page.image}')`,
                   backgroundSize: "cover"
                 }}
-              >
-                {page.title && (
-                  <span className="bg-black rounded-xl px-2 py-1 border-white border-4">
-                    {page.title}
-                  </span>
-                )}
-              </div>
+              ></div>
             ))}
           </div>
         </Placeholder>

@@ -148,18 +148,6 @@ export function PCDCardList({
         />
       )} */}
 
-      {pcd && (
-        <PCDCard
-          hideRemoveButton={hideRemoveButton}
-          hidePadding={hidePadding}
-          key={pcd.id}
-          pcd={pcd}
-          isMainIdentity={pcd.id === userIdentityPCDId}
-          onClick={allExpanded ? undefined : onClick}
-          expanded={allExpanded || pcd.id === selectedPCD?.id}
-        />
-      )}
-
       {sortedPCDs.length > 1 && (
         <div className="flex flex-row gap-4 mb-[0.75rem]">
           <div
@@ -196,6 +184,18 @@ export function PCDCardList({
             Next
           </div>
         </div>
+      )}
+
+      {pcd && (
+        <PCDCard
+          hideRemoveButton={hideRemoveButton}
+          hidePadding={hidePadding}
+          key={pcd.id}
+          pcd={pcd}
+          isMainIdentity={pcd.id === userIdentityPCDId}
+          onClick={allExpanded ? undefined : onClick}
+          expanded={allExpanded || pcd.id === selectedPCD?.id}
+        />
       )}
     </Container>
   );
