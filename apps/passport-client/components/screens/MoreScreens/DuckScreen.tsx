@@ -1,6 +1,7 @@
 import { Spacer, styled } from "@pcd/passport-ui";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { createGlobalStyle } from "styled-components";
+import { useLocalStorage } from "usehooks-ts";
 import { NewButton } from "../../NewButton";
 import { H1, Placeholder } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -14,6 +15,11 @@ const OverrideStyles = createGlobalStyle`
 `;
 
 export function DuckScreen(): ReactNode {
+  const [message, setMessage] = useLocalStorage("duck-message", "", {
+    initializeWithValue: true
+  });
+  const [text, setText] = useState("");
+
   return (
     <>
       <OverrideStyles />
@@ -38,18 +44,28 @@ export function DuckScreen(): ReactNode {
               Back
             </NewButton>
             <Clickable
-              className="w-full h-[200px] border-black border-4 rounded-lg"
+              className="w-full h-[200px] border-black border-4 rounded-lg relative"
               style={{
                 backgroundImage: `url('https://cdn.britannica.com/92/100692-050-5B69B59B/Mallard.jpg')`,
                 backgroundSize: "cover"
               }}
-            ></Clickable>
+            >
+              {message && (
+                <RainbowSpan className="rounded-lg m-2 p-2 inline-block">
+                  {message}
+                </RainbowSpan>
+              )}
+            </Clickable>
             <NewButton>Sync Your Duck</NewButton>
             <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
               placeholder="don't you want your duck to say something neat?"
               className="rounded-lg p-2 text-black 2-full border-black border-4 h-[200px] outline-none focus:ring-2 focus:ring-offset-4 focus:ring-white ring-opacity-60 ring-offset-[#19473f] transition-all duration-200"
             ></textarea>
-            <NewButton>Set Duck Message</NewButton>
+            <NewButton onClick={() => setMessage(text)}>
+              Set Duck Message
+            </NewButton>
           </div>
         </Placeholder>
         <Spacer h={24} />
@@ -69,4 +85,64 @@ export const Clickable = styled.div`
   &:active {
     transform: scale(1.015) translateY(4px);
   }
+`;
+
+const RainbowSpan = styled.span`
+  display: inline-block;
+  animation:
+    rainbow-rotate 2s linear infinite,
+    wobble 1s ease-in-out infinite,
+    pulse 0.5s ease-in-out infinite;
+
+  @keyframes rainbow-rotate {
+    0% {
+      background-color: red;
+    }
+    14% {
+      background-color: orange;
+    }
+    28% {
+      background-color: yellow;
+    }
+    42% {
+      background-color: green;
+    }
+    57% {
+      background-color: blue;
+    }
+    71% {
+      background-color: indigo;
+    }
+    85% {
+      background-color: violet;
+    }
+    100% {
+      background-color: red;
+    }
+  }
+
+  @keyframes wobble {
+    0%,
+    100% {
+      transform: rotate(-3deg);
+    }
+    50% {
+      transform: rotate(3deg);
+    }
+  }
+
+  @keyframes pulse {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
+    }
+  }
+
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: white;
+  font-weight: bold;
 `;
