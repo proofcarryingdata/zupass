@@ -19,7 +19,7 @@ export function DuckScreen(): ReactNode {
           <div className="flex flex-col gap-2">
             <NewButton
               onClick={() => {
-                window.location.href = "#/other";
+                window.location.href = "#/more";
               }}
             >
               Back

@@ -18,7 +18,7 @@ export function FHEScreen(): ReactNode {
         <Placeholder minH={540}>
           <NewButton
             onClick={() => {
-              window.location.href = "#/other";
+              window.location.href = "#/more";
             }}
           >
             Back

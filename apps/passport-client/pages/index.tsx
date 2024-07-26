@@ -333,14 +333,15 @@ function RouterImpl(): JSX.Element {
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
 
-          <Route path="other" element={<MoreScreen />} />
+          <Route path="other" element={<HomeScreen />} />
+
+          <Route path="more" element={<MoreScreen />} />
           <Route path="duck" element={<DuckScreen />} />
           <Route path="fhe" element={<FHEScreen />} />
           <Route path="pod" element={<PODScreen />} />
           <Route path="zk" element={<ZKScreen />} />
           <Route path="0xparc" element={<ParcScreen />} />
 
-          <Route path="more" element={<MoreScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route
             path="login-interstitial"
