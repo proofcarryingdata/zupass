@@ -1,4 +1,4 @@
-import { Spacer } from "@pcd/passport-ui";
+import { Spacer, styled } from "@pcd/passport-ui";
 import { ReactNode } from "react";
 import { NewButton } from "../../NewButton";
 import { H1, Placeholder, ZuLogo } from "../../core";
@@ -16,17 +16,44 @@ export function DuckScreen(): ReactNode {
         </div>
         <Spacer h={24} />
         <Placeholder minH={540}>
-          <NewButton
-            onClick={() => {
-              window.location.href = "#/other";
-            }}
-          >
-            Back
-          </NewButton>
-          Duck
+          <div className="flex flex-col gap-2">
+            <NewButton
+              onClick={() => {
+                window.location.href = "#/other";
+              }}
+            >
+              Back
+            </NewButton>
+            <Clickable
+              className="w-full h-[200px] border-black border-4 rounded-lg"
+              style={{
+                backgroundImage: `url('https://cdn.britannica.com/92/100692-050-5B69B59B/Mallard.jpg')`,
+                backgroundSize: "cover"
+              }}
+            ></Clickable>
+            <NewButton>Sync Your Duck</NewButton>
+            <textarea
+              placeholder="don't you want your duck to say something neat?"
+              className="p-2 text-black 2-full border-black border-4 h-[200px] outline-none focus:ring-2 focus:ring-offset-4 focus:ring-white ring-opacity-60 ring-offset-[#19473f] transition-all duration-200"
+            ></textarea>
+            <NewButton>Set Duck Message</NewButton>
+          </div>
         </Placeholder>
         <Spacer h={24} />
       </AppContainer>
     </>
   );
 }
+
+export const Clickable = styled.div`
+  transition: 150ms;
+  cursor: pointer;
+
+  &:hover {
+    transform: scale(1.01) translateY(-2px);
+  }
+
+  &:active {
+    transform: scale(1.015) translateY(4px);
+  }
+`;
