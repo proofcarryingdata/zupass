@@ -7,7 +7,7 @@ interface NewButtonProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 export function NewButton({
-  variant = "cyan",
+  variant = "green",
   ...props
 }: NewButtonProps): JSX.Element {
   const variantStyles: Record<ButtonVariant, string> = {
@@ -15,7 +15,7 @@ export function NewButton({
     blackWhite:
       "border-black bg-white hover:bg-gray-100 text-black ring-offset-black",
     green:
-      "border-green-950 bg-green-700 hover:bg-green-600 ring-offset-[#1f4d3f]",
+      "border-green-950 bg-[#206b5e] hover:bg-green-600 ring-offset-[#1f4d3f]",
     purple:
       "border-purple-950 bg-purple-700 hover:bg-purple-600 ring-offset-[#3f1f4d]"
   };
@@ -27,7 +27,7 @@ export function NewButton({
         "border-4",
         "text-center",
         "py-2 px-4 cursor-pointer transition-all duration-100",
-        "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60",
+        "rounded-lg font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60",
         "text-lg",
         variantStyles[variant],
         props.className
