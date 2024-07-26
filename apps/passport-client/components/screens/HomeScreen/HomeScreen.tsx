@@ -31,6 +31,7 @@ import {
   isFrogCryptoFolder,
   isProtocolWorldsFolder
 } from "../../../src/util";
+import { NewButton } from "../../NewButton";
 import { H1, Placeholder, Spacer, ZuLogo } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { MaybeModal } from "../../modals/Modal";
@@ -211,6 +212,16 @@ export function HomeScreenImpl(): JSX.Element | null {
         <Spacer h={24} />
         {isRoot && !isOther && <AppHeader isEdgeCity={isEdgeCity} />}
         <Placeholder minH={540}>
+          {isRoot && !isOther && (
+            <NewButton
+              style={{ marginBottom: "0.75rem" }}
+              onClick={() => {
+                window.location.href = "#/more";
+              }}
+            >
+              More Cryptography
+            </NewButton>
+          )}
           {isRoot && isOther && (
             <>
               <FolderDetails

@@ -134,6 +134,6 @@ export function uint8arrayToBigint(uint8Array: Uint8Array): bigint {
   return BigInt("0x" + Buffer.from(uint8Array).toString("hex"));
 }
 
-export function cn(...classNames: string[]): string {
+export function cn(...classNames: (string | undefined)[]): string {
   return classNames.filter(Boolean).join(" ");
 }

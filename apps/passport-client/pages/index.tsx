@@ -43,6 +43,7 @@ import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClick
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
+import { MoreScreen } from "../components/screens/MoreScreen/MoreScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
@@ -327,6 +328,7 @@ function RouterImpl(): JSX.Element {
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
           <Route path="other" element={<HomeScreen />} />
+          <Route path="more" element={<MoreScreen />} />
           <Route path="login" element={<LoginScreen />} />
           <Route
             path="login-interstitial"
