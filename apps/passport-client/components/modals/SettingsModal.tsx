@@ -2,8 +2,14 @@ import { LinkButton, TextButton } from "@pcd/passport-ui";
 import { useCallback, useState } from "react";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useLocalStorage } from "usehooks-ts";
-import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
+import {
+  useDispatch,
+  useHasSetupPassword,
+  useSelf,
+  useStateContext
+} from "../../src/appHooks";
 import { BigInput, Button, CenterColumn, Spacer, TextCenter } from "../core";
+import { initTestData } from "../screens/HomeScreen/utils";
 import { AccountExportButton } from "../shared/AccountExportButton";
 
 export function SettingsModal({
@@ -13,9 +19,11 @@ export function SettingsModal({
 }): JSX.Element {
   const dispatch = useDispatch();
   const self = useSelf();
+  const state = useStateContext().getState();
   const hasSetupPassword = useHasSetupPassword();
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState("");
+  const [added, setAdded] = useState(false);
 
   const closeModal = useCallback(() => {
     dispatch({ type: "set-modal", modal: { modalType: "none" } });
@@ -31,6 +39,11 @@ export function SettingsModal({
   const toggleJustDevcon = useCallback(() => {
     setJustDevcon((prev) => !prev);
   }, [setJustDevcon]);
+
+  const onAddTestData = useCallback(() => {
+    setAdded(true);
+    initTestData(state, true);
+  }, [state]);
 
   const deleteAccount = useCallback(() => {
     if (
@@ -93,6 +106,10 @@ export function SettingsModal({
             <Spacer h={16} />
             <Button onClick={toggleJustDevcon}>
               {justDevcon ? "Showing Just Devcon" : "Showing Everything"}
+            </Button>
+            <Spacer h={16} />
+            <Button onClick={onAddTestData} disabled={added}>
+              {added ? "Added" : "Add Test Data"}
             </Button>
           </>
         )}

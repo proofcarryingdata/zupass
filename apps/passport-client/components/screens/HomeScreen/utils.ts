@@ -82,7 +82,10 @@ export function isEvent(folder: string): folder is keyof typeof EVENTS {
   return EVENTS[folder] !== undefined;
 }
 
-export async function initTestData(state: AppState): Promise<void> {
+export async function initTestData(
+  state: AppState,
+  force = false
+): Promise<void> {
   if (!state.self) {
     return;
   }
@@ -107,7 +110,7 @@ export async function initTestData(state: AppState): Promise<void> {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (window as any)["appstate"] = state;
 
-  if (state.pcds.getAllFolderNames().includes("Devcon")) {
+  if (state.pcds.getAllFolderNames().includes("Devcon") && !force) {
     return;
   }
 
