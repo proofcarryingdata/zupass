@@ -40,9 +40,22 @@ export function checkPODEntriesAgainstProofConfig(
   // Return false if some entry in the config is not in the POD
   if (configEntries.some((entryName) => podEntries[entryName] === undefined)) {
     return false;
-  } else {
-    return true;
   }
+
+  // Return false if bounds checks specified in the config are not satisfied.
+  if (
+    Object.entries(podConfig.entries).some(
+      ([entryName, entryConfig]) =>
+        entryConfig.inRange !== undefined &&
+        (podEntries[entryName].type !== "int" ||
+          (podEntries[entryName].value as bigint) < entryConfig.inRange.min ||
+          (podEntries[entryName].value as bigint) > entryConfig.inRange.max)
+    )
+  ) {
+    return false;
+  }
+
+  return true;
 }
 
 export function checkPODEntriesAgainstMembershipLists(

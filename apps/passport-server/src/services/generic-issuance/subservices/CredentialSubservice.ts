@@ -1,5 +1,9 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
-import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSAPublicKey,
+  getEdDSAPublicKey,
+  isEqualEdDSAPublicKey
+} from "@pcd/eddsa-pcd";
 import { ObjPCDPackage, ObjPCDTypeName } from "@pcd/obj-pcd";
 import {
   Credential,
@@ -11,6 +15,7 @@ import { LRUCache } from "lru-cache";
 import { Pool } from "postgres-pool";
 import { fetchUserByAuthKey } from "../../../database/queries/users";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
+import { loadEdDSAPrivateKey } from "../../issuanceService";
 
 /**
  * Manages server-side verification of credential PCDs.
@@ -28,6 +33,12 @@ export class CredentialSubservice {
     this.verificationCache = new LRUCache({ max: 1000 });
     this.zupassPublicKey = zupassPublicKey;
     this.dbPool = dbPool;
+  }
+
+  public tryVerify(
+    credential: Credential
+  ): Promise<VerifiedCredential | undefined> {
+    return this.verify(credential).catch(() => undefined);
   }
 
   /**
@@ -105,4 +116,18 @@ export class CredentialSubservice {
       !!eddsaPubKey && isEqualEdDSAPublicKey(eddsaPubKey, this.zupassPublicKey)
     );
   }
+}
+
+export async function startCredentialSubservice(
+  dbPool: Pool
+): Promise<CredentialSubservice> {
+  const zupassEddsaKey = loadEdDSAPrivateKey();
+
+  if (!zupassEddsaKey) {
+    throw new Error("Missing environment variable SERVER_EDDSA_PRIVATE_KEY");
+  }
+
+  const zupassPublicKey = await getEdDSAPublicKey(zupassEddsaKey);
+
+  return new CredentialSubservice(zupassPublicKey, dbPool);
 }

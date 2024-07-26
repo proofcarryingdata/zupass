@@ -26,8 +26,7 @@ describe("entry.EntryModule should work", function () {
   function makeTestSignals(
     entryName: string,
     merkleDepth: number,
-    isValueHashRevealed: boolean,
-    isValueEnabled: boolean
+    isValueHashRevealed: boolean
   ): {
     inputs: EntryModuleInputs;
     outputs: EntryModuleOutputs;
@@ -51,9 +50,7 @@ describe("entry.EntryModule should work", function () {
         proofSiblings: extendedSignalArray(
           entrySignals.proof.siblings,
           merkleDepth
-        ),
-        value: entrySignals.value !== undefined ? entrySignals.value : 0n,
-        isValueEnabled: isValueEnabled ? 1n : 0n
+        )
       },
       outputs: {
         revealedValueHash: isValueHashRevealed
@@ -82,9 +79,7 @@ describe("entry.EntryModule should work", function () {
       0n,
       0n,
       0n
-    ],
-    value: 123n,
-    isValueEnabled: 1n
+    ]
   };
 
   const sampleOutput: EntryModuleOutputs = {
@@ -108,32 +103,14 @@ describe("entry.EntryModule should work", function () {
     let { inputs, outputs } = makeTestSignals(
       "A",
       MERKLE_MAX_DEPTH,
-      true, // isValueHashRevealed
-      true // isValueHashEnabled
+      true // isValueHashRevealed
     );
     await circuit.expectPass(inputs, outputs);
 
     ({ inputs, outputs } = makeTestSignals(
       "A",
       MERKLE_MAX_DEPTH,
-      false, // isValueHashRevealed
-      true // isValueHashEnabled
-    ));
-    await circuit.expectPass(inputs, outputs);
-
-    ({ inputs, outputs } = makeTestSignals(
-      "A",
-      MERKLE_MAX_DEPTH,
-      true, // isValueHashRevealed
-      false // isValueHashEnabled
-    ));
-    await circuit.expectPass(inputs, outputs);
-
-    ({ inputs, outputs } = makeTestSignals(
-      "A",
-      MERKLE_MAX_DEPTH,
-      false, // isValueHashRevealed
-      false // isValueHashEnabled
+      false // isValueHashRevealed
     ));
     await circuit.expectPass(inputs, outputs);
   });
@@ -143,8 +120,7 @@ describe("entry.EntryModule should work", function () {
       const { inputs, outputs } = makeTestSignals(
         entryName,
         MERKLE_MAX_DEPTH,
-        false, // isValueHashRevealed
-        false // isValueHashEnabled
+        false // isValueHashRevealed
       );
       await circuit.expectPass(inputs, outputs);
     }
@@ -155,8 +131,7 @@ describe("entry.EntryModule should work", function () {
       const { inputs, outputs } = makeTestSignals(
         "A",
         merkleDepth,
-        true, // isValueHashRevealed
-        true // isValueHashEnabled
+        true // isValueHashRevealed
       );
       const altCircuit = await circomkit.WitnessTester("EntryModule", {
         file: "entry",
@@ -187,10 +162,6 @@ describe("entry.EntryModule should work", function () {
         expect(badOutput.revealedValueHash).to.not.eq(
           sampleOutput.revealedValueHash
         );
-      } else if (inputName === "isValueEnabled") {
-        // isValueEnabled isn't directly constrained by the circuit, and
-        // actually works fine with any value other than 0 treated as true.
-        await circuit.expectPass(badInput, sampleOutput);
       } else {
         await circuit.expectFail(badInput);
       }

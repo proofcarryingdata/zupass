@@ -141,7 +141,7 @@ export function LoginScreen(): JSX.Element {
           <TextCenter>
             <H1>ZUPASS</H1>
             <Spacer h={24} />
-            Logging you out...
+            Logging you Out
             <Spacer h={8} />
             <RippleLoader />
           </TextCenter>
@@ -151,8 +151,8 @@ export function LoginScreen(): JSX.Element {
           <TextCenter>
             <H2>ZUPASS</H2>
             <Spacer h={24} />
-            To complete this request, you need to either log into your existing
-            Zupass account, or create a new one.
+            To complete this request, please login or register with your email
+            below.
           </TextCenter>
         </>
       ) : (

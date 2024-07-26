@@ -5,6 +5,8 @@ import {
   UploadEncryptedStorageRequest,
   UploadEncryptedStorageResponseValue
 } from "@pcd/passport-interface";
+import { SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Response } from "express";
 import {
   UpdateEncryptedStorageResult,
@@ -17,6 +19,7 @@ import { fetchUserByUUID } from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { CredentialSubservice } from "./generic-issuance/subservices/CredentialSubservice";
 
 /**
  * Responsible for storing an retrieving end to end encrypted
@@ -24,9 +27,14 @@ import { logger } from "../util/logger";
  */
 export class E2EEService {
   private readonly context: ApplicationContext;
+  private readonly credentialSubservice: CredentialSubservice;
 
-  public constructor(context: ApplicationContext) {
+  public constructor(
+    context: ApplicationContext,
+    credentialsubservice: CredentialSubservice
+  ) {
     this.context = context;
+    this.credentialSubservice = credentialsubservice;
   }
 
   public async handleLoad(
@@ -90,19 +98,34 @@ export class E2EEService {
       throw new PCDHTTPError(400, "Missing request fields");
     }
 
+    let commitment: string | undefined = undefined;
+    if (request.pcd?.pcd) {
+      const verifyResult = await this.credentialSubservice.tryVerify(
+        request.pcd as SerializedPCD<SemaphoreSignaturePCD>
+      );
+
+      if (!verifyResult) {
+        throw new PCDHTTPError(400, "Invalid signature");
+      }
+
+      commitment = verifyResult.semaphoreId;
+    }
+
     let resultRevision = undefined;
     if (request.knownRevision === undefined) {
       resultRevision = await setEncryptedStorage(
         this.context.dbPool,
         request.blobKey,
-        request.encryptedBlob
+        request.encryptedBlob,
+        commitment
       );
     } else {
       const updateResult = await updateEncryptedStorage(
         this.context.dbPool,
         request.blobKey,
         request.encryptedBlob,
-        request.knownRevision
+        request.knownRevision,
+        commitment
       );
       resultRevision = this.checkUpdateResult(
         request.blobKey,
@@ -161,6 +184,17 @@ export class E2EEService {
       throw new PCDHTTPError(400, "Missing request fields");
     }
 
+    let commitment: string | undefined = undefined;
+    if (request.pcd) {
+      const verification = await this.credentialSubservice.tryVerify(
+        request.pcd
+      );
+      if (!verification) {
+        throw new PCDHTTPError(400, "Invalid signature");
+      }
+      commitment = verification.semaphoreId;
+    }
+
     // Validate user.  User must exist, and new salt must be different.
     const user = await fetchUserByUUID(this.context.dbPool, request.uuid);
     if (!user) {
@@ -192,7 +226,8 @@ export class E2EEService {
       request.uuid,
       request.newSalt,
       request.encryptedBlob,
-      request.knownRevision
+      request.knownRevision,
+      commitment
     );
     this.setRekeyResult(
       request.oldBlobKey,
@@ -203,6 +238,9 @@ export class E2EEService {
   }
 }
 
-export function startE2EEService(context: ApplicationContext): E2EEService {
-  return new E2EEService(context);
+export function startE2EEService(
+  context: ApplicationContext,
+  credentialSubservice: CredentialSubservice
+): E2EEService {
+  return new E2EEService(context, credentialSubservice);
 }

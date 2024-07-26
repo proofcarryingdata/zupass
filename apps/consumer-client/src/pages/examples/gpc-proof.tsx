@@ -19,7 +19,7 @@ import {
   checkPODEntriesAgainstPrescribedEntries,
   checkPrescribedEntriesAgainstProofConfig,
   checkPrescribedSignerPublicKeysAgainstProofConfig,
-  podEntryRecordFromSimplifiedJSON
+  fixedPODEntriesFromSimplifiedJSON
 } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdGetRequestUrl,
@@ -436,7 +436,7 @@ async function verifyProof(
   if (prescribedEntries !== undefined) {
     const params = { notFoundMessage: undefined };
     const deserialisedPrescribedEntries =
-      podEntryRecordFromSimplifiedJSON(prescribedEntries);
+      fixedPODEntriesFromSimplifiedJSON(prescribedEntries);
 
     for (const podName of Object.keys(deserialisedPrescribedEntries)) {
       const revealedPODData = pcd.claim.revealed.pods[podName];

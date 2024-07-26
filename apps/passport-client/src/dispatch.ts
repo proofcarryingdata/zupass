@@ -12,6 +12,7 @@ import {
   LATEST_PRIVACY_NOTICE,
   NetworkFeedApi,
   requestCreateNewUser,
+  requestDeleteAccount,
   requestDownloadAndDecryptStorage,
   requestLogToServer,
   requestOneClickLogin,
@@ -169,7 +170,8 @@ export type Action =
     }
   | {
       type: "initialize-strich";
-    };
+    }
+  | { type: "delete-account" };
 
 export type StateContextValue = {
   getState: GetState;
@@ -299,6 +301,8 @@ export async function dispatch(
       );
     case "initialize-strich":
       return initializeStrich(state, update);
+    case "delete-account":
+      return deleteAccount(state, update);
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -670,7 +674,7 @@ function clearError(state: AppState, update: ZuUpdate): void {
 }
 
 async function resetPassport(state: AppState, update: ZuUpdate): Promise<void> {
-  await requestLogToServer(appConfig.zupassServer, "logout", {
+  requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
     email: state.self?.email,
     commitment: state.self?.commitment
@@ -966,6 +970,10 @@ async function doSync(
     console.log("[SYNC] userInvalid=true, exiting sync");
     return undefined;
   }
+  if (state.loggingOut || state.deletingAccount) {
+    console.log("[SYNC] logging out or deleting account, exiting sync");
+    return undefined;
+  }
 
   // If we haven't downloaded from storage, do that first.  After that we'll
   // download again when requested to poll, but only after the first full sync
@@ -1061,16 +1069,24 @@ async function doSync(
         }
       }
       console.log("[SYNC] initalized credentialManager", credentialManager);
-      const actions = await state.subscriptions.pollSubscriptions(
+      const stats = { nActions: 0, nFeeds: 0 };
+      const subscriptionActions = await state.subscriptions.pollSubscriptions(
         credentialManager,
         async (actions) => {
           await applyActions(state.pcds, [actions]);
           await savePCDs(state.pcds);
           await saveSubscriptions(state.subscriptions);
+          stats.nActions += actions.actions.length;
+          stats.nFeeds++;
         }
       );
 
-      console.log(`[SYNC] Applied ${actions.length} actions`);
+      console.log(
+        `[SYNC] Applied ${stats.nActions} actions from ` +
+          `${subscriptionActions.length}/${
+            state.subscriptions.getActiveSubscriptions().length
+          } feeds`
+      );
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }
@@ -1094,13 +1110,24 @@ async function doSync(
 
   if (state.serverStorageHash !== appStorage.storageHash) {
     console.log("[SYNC] sync action: upload");
+
+    const credentialManager = new CredentialManager(
+      state.identity,
+      state.pcds,
+      state.credentialCache
+    );
+    const credential = await credentialManager.requestCredential({
+      signatureType: "sempahore-signature-pcd"
+    });
+
     const upRes = await uploadSerializedStorage(
       state.self,
       state.identity,
       state.pcds,
       appStorage.serializedStorage,
       appStorage.storageHash,
-      state.serverStorageRevision
+      state.serverStorageRevision,
+      credential
     );
     if (upRes.success) {
       return {
@@ -1427,5 +1454,35 @@ async function initializeStrich(
     }
   } catch (e) {
     update({ strichSDKstate: "error" });
+  }
+}
+
+async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
+  update({
+    deletingAccount: true,
+    modal: {
+      modalType: "none"
+    }
+  });
+
+  await sleep(2000);
+
+  const credentialManager = new CredentialManager(
+    state.identity,
+    state.pcds,
+    state.credentialCache
+  );
+
+  const pcd = await credentialManager.requestCredential({
+    signatureType: "sempahore-signature-pcd"
+  });
+
+  const res = await requestDeleteAccount(appConfig.zupassServer, { pcd });
+
+  if (res.success) {
+    resetPassport(state, update);
+    update({ deletingAccount: false });
+  } else {
+    alert(`Error deleting account: ${res.error}`);
   }
 }

@@ -14,18 +14,17 @@ const jsonBigSerializer = JSONBig({
 });
 
 /**
- * Deserializes `PODEntryRecord` from the simplified format produced by
- * {@link podEntryRecordToSimplifiedJSON}.  Type information is inferred from
- * the values in a way which should preserve hashing and circuit behavior, but
- * isn't guaranteed to be identical to the types before serialization.  For
- * instance, small numbers are always annotated as `int`, rather than
- * `cryptographic`.
+ * Deserializes `FixedPODEntries` from the simplified format produced by {@link
+ * podEntryRecordToSimplifiedJSON}.  Type information is inferred from the
+ * values in a way which should preserve hashing and circuit behavior, but isn't
+ * guaranteed to be identical to the types before serialization.  For instance,
+ * small numbers are always annotated as `int`, rather than `cryptographic`.
  *
- * @param simplifiedJSON a string representation of `PODEntryRecord`
- * @returns `PODEntryRecord` deserialized from the string
+ * @param simplifiedJSON a string representation of `FixedPODEntries`
+ * @returns `FixedPODEntries` deserialized from the string
  * @throws if the serialized form is invalid
  */
-export function podEntryRecordFromSimplifiedJSON(
+export function fixedPODEntriesFromSimplifiedJSON(
   simplifiedJSON: string
 ): FixedPODEntries {
   const simplifiedValues = jsonBigSerializer.parse(simplifiedJSON) as Record<
@@ -60,7 +59,9 @@ export function podEntryRecordFromSimplifiedJSON(
       )
     )
   ) {
-    throw new TypeError(`Invalid serialised PODEntryRecord: ${simplifiedJSON}`);
+    throw new TypeError(
+      `Invalid serialised FixedPODEntries: ${simplifiedJSON}`
+    );
   }
 
   const entryRecord: FixedPODEntries = Object.fromEntries(
@@ -79,9 +80,9 @@ export function podEntryRecordFromSimplifiedJSON(
 }
 
 /**
- * Serializes `PODEntryRecord` to a string in a simplified format optimized for
+ * Serializes `FixedPODEntries` to a string in a simplified format optimized for
  * compactness and human readability.  Calling {@link
- * podEntryRecordFromSimplifiedJSON} will reconstruct `PODEntryRecord` whose POD
+ * podEntryRecordFromSimplifiedJSON} will reconstruct `FixedPODEntries` whose POD
  * values will contain the same values and behave the same in hashing and
  * circuits, but the type information may not be identical.
  *
@@ -90,7 +91,7 @@ export function podEntryRecordFromSimplifiedJSON(
  *   argument to JSON.stringify.
  * @returns a string representation
  */
-export function podEntryRecordToSimplifiedJSON(
+export function fixedPODEntriesToSimplifiedJSON(
   toSerialize: FixedPODEntries,
   space?: number
 ): string {

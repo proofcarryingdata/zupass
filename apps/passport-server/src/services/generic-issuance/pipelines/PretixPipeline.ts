@@ -887,7 +887,7 @@ export class PretixPipeline implements BasePipeline {
     email: string
   ): Promise<ManualTicket[]> {
     return (await this.getAllManualTickets()).filter((manualTicket) => {
-      return manualTicket.attendeeEmail.toLowerCase() === email;
+      return manualTicket.attendeeEmail.toLowerCase() === email.toLowerCase();
     });
   }
 

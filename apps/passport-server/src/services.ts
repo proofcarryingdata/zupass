@@ -4,6 +4,7 @@ import { startE2EEService } from "./services/e2eeService";
 import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
 import { startFrogcryptoService } from "./services/frogcryptoService";
+import { startCredentialSubservice } from "./services/generic-issuance/subservices/CredentialSubservice";
 import { startGenericIssuanceService } from "./services/generic-issuance/subservices/utils/startGenericIssuanceService";
 import { startIssuanceService } from "./services/issuanceService";
 import { startMetricsService } from "./services/metricsService";
@@ -37,6 +38,7 @@ export async function startServices(
     rollbarService,
     discordService
   );
+  const credentialSubservice = await startCredentialSubservice(context.dbPool);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
   const emailTokenService = startEmailTokenService(context);
@@ -54,7 +56,7 @@ export async function startServices(
     apis.devconnectPretixAPIFactory
   );
 
-  const e2eeService = startE2EEService(context);
+  const e2eeService = startE2EEService(context, credentialSubservice);
   const metricsService = startMetricsService(context, rollbarService);
   const persistentCacheService = startPersistentCacheService(
     context.dbPool,
@@ -80,7 +82,8 @@ export async function startServices(
     pagerDutyService,
     discordService,
     persistentCacheService,
-    emailService
+    emailService,
+    credentialSubservice
   );
   const userService = startUserService(
     context,
@@ -88,7 +91,8 @@ export async function startServices(
     emailTokenService,
     emailService,
     rateLimitService,
-    genericIssuanceService
+    genericIssuanceService,
+    credentialSubservice
   );
 
   const services: GlobalServices = {
@@ -110,7 +114,8 @@ export async function startServices(
     multiprocessService,
     rateLimitService,
     genericIssuanceService,
-    pagerDutyService
+    pagerDutyService,
+    credentialSubservice
   };
 
   return services;

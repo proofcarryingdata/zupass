@@ -65,7 +65,7 @@ export function zuAuthRedirect(args: ZuAuthRedirectArgs): void {
  */
 export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
   const {
-    zupassUrl = "https://zupass.org",
+    zupassUrl = "https://zupass.org/",
     returnUrl,
     fieldsToReveal,
     watermark,
@@ -114,6 +114,16 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     publicKeys.push(em.publicKey);
   }
 
+  if (!fieldsToReveal.revealEventId) {
+    throw new Error("The event ID must be revealed for authentication");
+  }
+
+  if (productIds.length > 0 && !fieldsToReveal.revealProductId) {
+    throw new Error(
+      "When product IDs are specified for authentication, the product ID field must be revealed"
+    );
+  }
+
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
       argumentType: ArgumentTypeName.PCD,
@@ -135,8 +145,7 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     },
     validEventIds: {
       argumentType: ArgumentTypeName.StringArray,
-      value:
-        eventIds.length !== 0 && eventIds.length <= 20 ? eventIds : undefined,
+      value: undefined,
       userProvided: false
     },
     fieldsToReveal: {

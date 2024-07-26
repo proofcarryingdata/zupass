@@ -131,6 +131,14 @@ export type GPCProofEntryConfigCommon = {
  */
 export type GPCProofEntryConfig = GPCProofEntryConfigCommon & {
   /**
+   * Indicates the range/interval/bounds within which this entry should
+   * lie. Both (inclusive) bounds must be specified, and they should be
+   * unsigned 63-bit integer values. They will always be revealed by virtue of
+   * their inclusion in the proof configuration.
+   */
+  inRange?: { min: bigint; max: bigint };
+
+  /**
    * Indicates that this entry must match the public ID of the owner
    * identity given in {@link GPCProofInputs}.  For Semaphore V3 this is
    * the owner's Semaphore commitment (a cryptographic value).

@@ -45,14 +45,6 @@ template EntryModule (
     );
     objectContentID === proofRoot;
 
-    // Value is optional, used only if valueEnabled boolean is 1.
-    signal input value, isValueEnabled;
-    // Checked by Num2Bits externally: isValueEnabled * (isValueEnabled - 1) === 0;
-
-    // Verify value's hash appears as first sibling.
-    signal calculatedValueHash <== Poseidon(1)([value]);
-    (calculatedValueHash - proofSiblings[0]) * isValueEnabled === 0;
-
     // Revealed value hash output gets hash or -1 depending on configuration.
     signal output revealedValueHash <== ValueOrNegativeOne()(proofSiblings[0], isValueHashRevealed);
 }

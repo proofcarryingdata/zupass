@@ -2,6 +2,7 @@ import { make0xpSummer } from "./configs/2024_0xparc_summer";
 import { makeEsmeralda } from "./configs/2024_edge_esmeralda";
 import { makeEthBerlin } from "./configs/2024_eth_berlin";
 import { makeEthPrague } from "./configs/2024_eth_prague";
+import { makeZuvillageGeorgia } from "./configs/2024_zuvillage_georgia";
 import { LoginConfig } from "./types";
 
 export function getPodboxConfigs(
@@ -16,13 +17,18 @@ export function getPodboxConfigs(
   const ESMERALDA_CONFIG = makeEsmeralda(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL);
   const ETH_PRAGUE_CONFIG = makeEthPrague(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL);
   const ETH_BERLIN_CONFIG = makeEthBerlin(ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL);
+  const ZUVILLAGE_GEORGIA_CONFIG = makeZuvillageGeorgia(
+    ZUPASS_CLIENT_URL,
+    ZUPASS_SERVER_URL
+  );
 
   return [
     // ...PARC_HQ_CONFIG,
     ...PARC_SUMMER_CONFIG,
     ...ESMERALDA_CONFIG,
     ...ETH_PRAGUE_CONFIG,
-    ...ETH_BERLIN_CONFIG
+    ...ETH_BERLIN_CONFIG,
+    ...ZUVILLAGE_GEORGIA_CONFIG
   ];
 }
 

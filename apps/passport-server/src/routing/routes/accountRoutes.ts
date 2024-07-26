@@ -2,6 +2,7 @@ import {
   AgreeTermsRequest,
   ConfirmEmailRequest,
   CreateNewUserRequest,
+  DeleteAccountRequest,
   OneClickLoginRequest,
   SaltResponseValue,
   VerifyTokenRequest
@@ -191,5 +192,11 @@ export function initAccountRoutes(
    */
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
     await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
+  });
+
+  app.post("/account/delete", async (req: Request, res: Response) => {
+    const pcd = checkBody<DeleteAccountRequest, "pcd">(req, "pcd");
+    await userService.handleDeleteAccount(pcd);
+    res.sendStatus(200);
   });
 }

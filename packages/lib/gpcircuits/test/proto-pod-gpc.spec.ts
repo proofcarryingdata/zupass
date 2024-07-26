@@ -27,6 +27,7 @@ import {
   extendedSignalArray,
   gpcArtifactPaths,
   maxTupleArity,
+  padArray,
   paramMaxVirtualEntries,
   processLists,
   protoPODGPCCircuitParamArray,
@@ -44,6 +45,7 @@ import {
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
 const MERKLE_MAX_DEPTH = 8;
+const MAX_NUMERIC_VALUES = 4;
 const MAX_LISTS = 2;
 const MAX_LIST_ENTRIES = 20;
 const MAX_TUPLES = 1;
@@ -53,6 +55,7 @@ const GPC_PARAMS = ProtoPODGPCCircuitParams(
   MAX_OBJECTS,
   MAX_ENTRIES,
   MERKLE_MAX_DEPTH,
+  MAX_NUMERIC_VALUES,
   MAX_LISTS,
   MAX_LIST_ENTRIES,
   MAX_TUPLES,
@@ -124,19 +127,6 @@ const sampleInput: ProtoPODGPCInputs = {
     151251200029686127063327095456320040687905427497336635391695211041155747807n,
     151251200029686127063327095456320040687905427497336635391695211041155747807n
   ],
-  entryValue: [
-    123n,
-    18711405342588116796533073928767088921854096266145046362753928030796553161041n,
-    0n,
-    123n,
-    18711405342588116796533073928767088921854096266145046362753928030796553161041n,
-    456n,
-    0n,
-    0n,
-    0n,
-    0n
-  ],
-  /*PUB*/ entryIsValueEnabled: 59n,
   /*PUB*/ entryIsValueHashRevealed: 85n,
   entryProofDepth: [5n, 3n, 5n, 5n, 3n, 3n, 3n, 5n, 5n, 5n],
   entryProofIndex: [0n, 6n, 4n, 8n, 0n, 2n, 4n, 0n, 0n, 0n],
@@ -270,6 +260,17 @@ const sampleInput: ProtoPODGPCInputs = {
     329061722381819402313027227353491409557029289040211387019699013780657641967n,
   /*PUB*/ ownerExternalNullifier: 42n,
   /*PUB*/ ownerIsNullfierHashRevealed: 1n,
+
+  // Numeric value module (MAX_NUMERIC_VALUES)
+  numericValues: [123n, 0n, 0n, 0n],
+  /*PUB*/ numericValueEntryIndices: [
+    0n,
+    21888242871839275222246405745257275088548364400416034343698204186575808495616n,
+    21888242871839275222246405745257275088548364400416034343698204186575808495616n,
+    21888242871839275222246405745257275088548364400416034343698204186575808495616n
+  ],
+  /*PUB*/ numericMinValues: [10n, 0n, 0n, 0n],
+  /*PUB*/ numericMaxValues: [132n, 0n, 0n, 0n],
 
   // Tuple module (1)
   /*PUB*/ tupleIndices: [[0n, 3n, 4n, 0n]],
@@ -435,7 +436,6 @@ function makeTestSignals(
   const sigEntryObjectIndex = [];
   const sigEntryNameHash = [];
   const sigEntryValue = [];
-  const sigEntryIsValueEnabled: bigint[] = [];
   const sigEntryIsValueHashRevealed = [];
   const sigEntryRevealedValueHash = [];
   const sigEntryEqualToOtherEntryByIndex = [];
@@ -464,14 +464,12 @@ function makeTestSignals(
     const entryValueHash = entrySignals.valueHash;
     if (!isEntryEnabled) {
       sigEntryValue.push(0n);
-      sigEntryIsValueEnabled.push(0n);
       sigEntryIsValueHashRevealed.push(0n);
       sigEntryRevealedValueHash.push(BABY_JUB_NEGATIVE_ONE);
     } else {
       sigEntryValue.push(
         entrySignals.value !== undefined ? entrySignals.value : 0n
       );
-      sigEntryIsValueEnabled.push(entrySignals.value !== undefined ? 1n : 0n);
       sigEntryIsValueHashRevealed.push(isValueHashRevealed ? 1n : 0n);
       sigEntryRevealedValueHash.push(
         isValueHashRevealed ? entryValueHash : BABY_JUB_NEGATIVE_ONE
@@ -521,6 +519,22 @@ function makeTestSignals(
         ? BigInt(params.maxEntries + 2)
         : BigInt(params.maxEntries + i)
     );
+
+  // Constrain entry 0 (sampleEntries.A) to lie in the interval [10n, 132n]
+  const [
+    numericValues,
+    numericValueEntryIndices,
+    numericMinValues,
+    numericMaxValues
+  ] =
+    params.maxNumericValues === 0
+      ? [[], [], [], []]
+      : [
+          padArray([sigEntryValue[0]], params.maxNumericValues, 0n),
+          padArray([0n], params.maxNumericValues, BABY_JUB_NEGATIVE_ONE),
+          padArray([10n], params.maxNumericValues, 0n),
+          padArray([132n], params.maxNumericValues, 0n)
+        ];
 
   // A list of pairs of indices and values.
   // The values will be zipped together to form the
@@ -608,8 +622,6 @@ function makeTestSignals(
       objectSignatureS: sigObjectSignatureS,
       entryObjectIndex: sigEntryObjectIndex,
       entryNameHash: sigEntryNameHash,
-      entryValue: sigEntryValue,
-      entryIsValueEnabled: array2Bits(sigEntryIsValueEnabled),
       entryIsValueHashRevealed: array2Bits(sigEntryIsValueHashRevealed),
       virtualEntryIsValueHashRevealed: array2Bits(
         sigVirtualEntryIsValueHashRevealed
@@ -629,10 +641,14 @@ function makeTestSignals(
         : BABY_JUB_NEGATIVE_ONE,
       ownerExternalNullifier: 42n,
       ownerIsNullfierHashRevealed: isNullifierHashRevealed ? 1n : 0n,
-      tupleIndices: tupleIndices,
-      listComparisonValueIndex: listComparisonValueIndex,
-      listContainsComparisonValue: listContainsComparisonValue,
-      listValidValues: listValidValues,
+      numericValues,
+      numericValueEntryIndices,
+      numericMinValues,
+      numericMaxValues,
+      tupleIndices,
+      listComparisonValueIndex,
+      listContainsComparisonValue,
+      listValidValues,
       globalWatermark: 1337n
     },
     outputs: {

@@ -18,7 +18,10 @@ import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
-import { fetchEncryptedStorage } from "../database/queries/e2ee";
+import {
+  deleteE2EEByCommitment,
+  fetchEncryptedStorage
+} from "../database/queries/e2ee";
 import { saveUserBackup, upsertUser } from "../database/queries/saveUser";
 import {
   deleteUserByEmail,
@@ -33,6 +36,7 @@ import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
 import { GenericIssuanceService } from "./generic-issuance/GenericIssuanceService";
+import { CredentialSubservice } from "./generic-issuance/subservices/CredentialSubservice";
 import { RateLimitService } from "./rateLimitService";
 import { SemaphoreService } from "./semaphoreService";
 
@@ -51,6 +55,7 @@ export class UserService {
   private readonly emailService: EmailService;
   private readonly rateLimitService: RateLimitService;
   private readonly genericIssuanceService: GenericIssuanceService | null;
+  private readonly credentialSubservice: CredentialSubservice;
 
   public constructor(
     context: ApplicationContext,
@@ -58,7 +63,8 @@ export class UserService {
     emailTokenService: EmailTokenService,
     emailService: EmailService,
     rateLimitService: RateLimitService,
-    genericIssuanceService: GenericIssuanceService | null
+    genericIssuanceService: GenericIssuanceService | null,
+    credentialSubservice: CredentialSubservice
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
@@ -66,6 +72,7 @@ export class UserService {
     this.emailService = emailService;
     this.rateLimitService = rateLimitService;
     this.genericIssuanceService = genericIssuanceService;
+    this.credentialSubservice = credentialSubservice;
     this.bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
@@ -442,6 +449,29 @@ export class UserService {
     return user;
   }
 
+  public async handleDeleteAccount(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<void> {
+    const verifyResult =
+      await this.credentialSubservice.tryVerify(serializedPCD);
+
+    if (!verifyResult) {
+      throw new PCDHTTPError(400, "Invalid signature");
+    }
+
+    const user = await fetchUserByCommitment(
+      this.context.dbPool,
+      verifyResult.semaphoreId
+    );
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    await deleteUserByEmail(this.context.dbPool, user.email);
+    await deleteE2EEByCommitment(this.context.dbPool, user.commitment);
+  }
+
   /**
    * Updates the version of the legal terms the user agrees to
    */
@@ -559,7 +589,8 @@ export function startUserService(
   emailTokenService: EmailTokenService,
   emailService: EmailService,
   rateLimitService: RateLimitService,
-  genericIssuanceService: GenericIssuanceService | null
+  genericIssuanceService: GenericIssuanceService | null,
+  credentialSubservice: CredentialSubservice
 ): UserService {
   return new UserService(
     context,
@@ -567,6 +598,7 @@ export function startUserService(
     emailTokenService,
     emailService,
     rateLimitService,
-    genericIssuanceService
+    genericIssuanceService,
+    credentialSubservice
   );
 }

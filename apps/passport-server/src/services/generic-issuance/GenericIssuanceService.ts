@@ -15,9 +15,7 @@ import {
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineEmailType,
-  PipelineGetManualCheckInsResponseValue,
   PipelineInfoResponseValue,
-  PipelineSetManualCheckInStateResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -107,7 +105,8 @@ export class GenericIssuanceService {
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     emailService: EmailService,
-    cacheService: PersistentCacheService
+    cacheService: PersistentCacheService,
+    credentialSubservice: CredentialSubservice
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
@@ -125,10 +124,7 @@ export class GenericIssuanceService {
       stytchClient,
       genericIssuanceClientUrl
     );
-    this.credentialSubservice = new CredentialSubservice(
-      zupassPublicKey,
-      context.dbPool
-    );
+    this.credentialSubservice = credentialSubservice;
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
@@ -300,24 +296,6 @@ export class GenericIssuanceService {
       groupId,
       rootHash
     );
-  }
-
-  public async handleSetManualCheckInState(
-    pipelineId: string,
-    ticketId: string,
-    checkInState: boolean
-  ): Promise<PipelineSetManualCheckInStateResponseValue> {
-    return this.pipelineSubservice.handleSetManualCheckInState(
-      pipelineId,
-      ticketId,
-      checkInState
-    );
-  }
-
-  public async handleGetManualCheckIns(
-    pipelineId: string
-  ): Promise<PipelineGetManualCheckInsResponseValue> {
-    return this.pipelineSubservice.handleGetManualCheckIns(pipelineId);
   }
 
   public async validateEmailAndPretixOrderCode(

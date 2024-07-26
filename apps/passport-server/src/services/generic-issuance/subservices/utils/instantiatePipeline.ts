@@ -105,7 +105,9 @@ export function instantiatePipeline(
         args.eddsaPrivateKey,
         definition,
         args.pipelineAtomDB,
-        args.credentialSubservice
+        args.credentialSubservice,
+        args.consumerDB,
+        args.semaphoreHistoryDB
       );
     }
 

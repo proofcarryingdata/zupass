@@ -145,6 +145,14 @@ export function canonicalizeEntryConfig(
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
       : {}),
+    ...(proofEntryConfig.inRange !== undefined
+      ? {
+          inRange: {
+            min: proofEntryConfig.inRange.min,
+            max: proofEntryConfig.inRange.max
+          }
+        }
+      : {}),
     ...(proofEntryConfig.isMemberOf !== undefined
       ? {
           isMemberOf: proofEntryConfig.isMemberOf
@@ -508,6 +516,11 @@ export type GPCRequirements = {
   merkleMaxDepth: number;
 
   /**
+   * Number of numeric values (bounds checks) required for the proof.
+   */
+  nNumericValues: number;
+
+  /**
    * Number of lists to be included in proof.
    */
   nLists: number;
@@ -530,6 +543,7 @@ export function GPCRequirements(
   nObjects: number,
   nEntries: number,
   merkleMaxDepth: number,
+  nNumericValues: number = 0,
   nLists: number = 0,
   maxListSize: number = 0,
   tupleArities: Record<PODName, number> = {}
@@ -538,6 +552,7 @@ export function GPCRequirements(
     nObjects,
     nEntries,
     merkleMaxDepth,
+    nNumericValues,
     nLists,
     maxListSize,
     tupleArities
@@ -554,6 +569,18 @@ export const LIST_MEMBERSHIP = "membership";
 export const LIST_NONMEMBERSHIP = "non-membership";
 
 /**
+ * Configuration for bounds checks arranged by entry identifier requiring a
+ * bounds check.
+ *
+ * This is deduced from the proof configuration in
+ * {@link boundsCheckConfigFromProofConfig}.
+ */
+export type GPCProofBoundsCheckConfig = Record<
+  PODEntryIdentifier,
+  BoundsConfig
+>;
+
+/**
  * Configuration for named lists arranged by identifier requiring a list
  * (non-)membership check.
  *
@@ -566,6 +593,12 @@ export type GPCProofMembershipListConfig = Record<
 >;
 
 /**
+ * Bounds check configuration for an individual entry. This specifies the bounds
+ * check required for relevant entries at the circuit level.
+ */
+export type BoundsConfig = { min: bigint; max: bigint };
+
+/**
  * List configuration for an individual entry or tuple. This specifies the type
  * of list membership required for relevant entries (or tuple entries) at the
  * circuit level as well as the named list it should be a (non-)member of.
@@ -574,6 +607,32 @@ export type ListConfig = {
   type: ListMembershipEnum;
   listIdentifier: PODName;
 };
+
+/**
+ * Determines the bounds check configuration from the proof configuration.
+ *
+ * Bounds checks are indicated in each entry field via the optional property
+ * `inRange`, which specifies (public) constant upper and lower bounds. This
+ * procedure singles out and arranges these bounds check configurations by entry
+ * identifier.
+ *
+ * @param proofConfig the proof configuration
+ * @returns a record mapping entry identifiers to their bounds check
+ * configurations
+ */
+export function boundsCheckConfigFromProofConfig(
+  proofConfig: GPCProofConfig
+): GPCProofBoundsCheckConfig {
+  return Object.fromEntries(
+    Object.entries(proofConfig.pods).flatMap(([podName, podConfig]) =>
+      Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) =>
+        entryConfig.inRange === undefined
+          ? []
+          : [[`${podName}.${entryName}`, entryConfig.inRange]]
+      )
+    )
+  );
+}
 
 /**
  * Determines the list configuration from the proof configuration.
@@ -678,4 +737,32 @@ function addIdentifierToListConfig(
     type: membershipType,
     listIdentifier
   };
+}
+
+/**
+ * Compares two POD entry identifiers according to the rule that they should be
+ * arranged by POD name first then entry name with the usual rules for
+ * lexicographic string sorting.
+ *
+ * @param id1 POD entry identifier to compare
+ * @param id2 POD entry identifier to compare
+ * @returns -1, 0 or 1 according to whether `id1` should precede, be considered
+ * equal to, or succeed `id2`.
+ * @throws TypeError if an identifier doesn't match the required format
+ */
+export function podEntryIdentifierCompare(
+  id1: PODEntryIdentifier,
+  id2: PODEntryIdentifier
+): number {
+  const { objName: podName1, entryName: entryName1 } =
+    splitPODEntryIdentifier(id1);
+  const { objName: podName2, entryName: entryName2 } =
+    splitPODEntryIdentifier(id2);
+  if (podName1 < podName2) {
+    return -1;
+  } else if (podName1 > podName2) {
+    return 1;
+  } else {
+    return entryName1 < entryName2 ? -1 : entryName1 > entryName2 ? 1 : 0;
+  }
 }

@@ -1,7 +1,13 @@
+import { POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
-import { GPCProofEntryConfig, GPCProofEntryConfigCommon } from "../src";
 import {
+  GPCProofConfig,
+  GPCProofEntryConfig,
+  GPCProofEntryConfigCommon
+} from "../src";
+import {
+  boundsCheckConfigFromProofConfig,
   canonicalizeEntryConfig,
   canonicalizeSignerPublicKeyConfig
 } from "../src/gpcUtil";
@@ -78,6 +84,69 @@ describe("Object signer's public key configuration canonicalization should work"
     };
 
     expect(canonicalizedConfig).to.deep.eq(expectedCanonicalizedConfig);
+  });
+});
+
+describe("Bounds check configuration derivation works as expected", () => {
+  it("should work as expected on a proof configuration without bounds checks", () => {
+    const proofConfig: GPCProofConfig = {
+      pods: {
+        somePod: {
+          entries: {
+            A: {
+              isRevealed: true
+            }
+          }
+        }
+      }
+    };
+    const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
+    expect(boundsCheckConfig).to.deep.eq({});
+  });
+  it("should work as expected on a proof configuration with bounds checks", () => {
+    const proofConfig: GPCProofConfig = {
+      pods: {
+        somePod: {
+          entries: {
+            A: {
+              isRevealed: false, // Not relevant, but bounds checks make the
+              // most sense when the entry is *not* revealed!
+              inRange: { min: 0n, max: POD_INT_MAX }
+            },
+            B: {
+              isRevealed: false,
+              inRange: { min: POD_INT_MIN, max: 87n }
+            },
+            C: {
+              isRevealed: true
+            }
+          }
+        },
+        someOtherPod: {
+          entries: {
+            D: {
+              isRevealed: false,
+              inRange: { min: 5n, max: 25n }
+            }
+          }
+        }
+      }
+    };
+    const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
+    expect(boundsCheckConfig).to.deep.eq({
+      "somePod.A": {
+        min: 0n,
+        max: POD_INT_MAX
+      },
+      "somePod.B": {
+        min: POD_INT_MIN,
+        max: 87n
+      },
+      "someOtherPod.D": {
+        min: 5n,
+        max: 25n
+      }
+    });
   });
 });
 // TODO(POD-P3): More tests

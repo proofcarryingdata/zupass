@@ -138,9 +138,8 @@ export async function podDemo(): Promise<boolean> {
   console.log("Entry proof", entryProof);
 
   // PODs are signed using EdDSA signatures, which are easy to check in a
-  // ZK circuit.  Our EdDSA private keys can be any 32 bytes encoded as hex.
-  const privateKey =
-    "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
+  // ZK circuit.  Our private keys can be any 32 bytes encoded as Base64 or hex.
+  const privateKey = "ASNFZ4mrze8BI0VniavN7wEjRWeJq83vASNFZ4mrze8";
 
   // Signing a POD is usually performed in a single step like this.  No need
   // to go through the PODContent class.

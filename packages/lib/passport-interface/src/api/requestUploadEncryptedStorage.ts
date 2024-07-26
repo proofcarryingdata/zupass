@@ -1,4 +1,5 @@
 import { EncryptedPacket } from "@pcd/passport-crypto";
+import { SerializedPCD } from "@pcd/pcd-types";
 import urlJoin from "url-join";
 import {
   UploadEncryptedStorageRequest,
@@ -17,7 +18,8 @@ export async function requestUploadEncryptedStorage(
   zupassServerUrl: string,
   blobKey: string,
   encryptedStorage: EncryptedPacket,
-  knownRevision?: string
+  knownRevision?: string,
+  pcd?: SerializedPCD
 ): Promise<UploadEncryptedStorageResult> {
   return httpPost<UploadEncryptedStorageResult>(
     urlJoin(zupassServerUrl, `/sync/v3/save`),
@@ -31,7 +33,8 @@ export async function requestUploadEncryptedStorage(
     {
       blobKey,
       encryptedBlob: JSON.stringify(encryptedStorage),
-      knownRevision
+      knownRevision,
+      pcd
     } satisfies UploadEncryptedStorageRequest
   );
 }

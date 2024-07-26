@@ -8,6 +8,8 @@ import {
   PODName,
   PODValue,
   PODValueTuple,
+  POD_INT_MAX,
+  POD_INT_MIN,
   applyOrMap,
   calcMinMerkleDepthForEntries,
   checkPODName,
@@ -32,6 +34,7 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
+  BoundsConfig,
   GPCProofMembershipListConfig,
   GPCRequirements,
   LIST_MEMBERSHIP,
@@ -103,15 +106,17 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   let totalObjects = 0;
   let totalEntries = 0;
   let requiredMerkleDepth = 0;
+  let totalNumericValues = 0;
   for (const [objName, objConfig] of Object.entries(proofConfig.pods)) {
     checkPODName(objName);
-    const nEntries = checkProofObjConfig(objName, objConfig);
+    const { nEntries, nBoundsChecks } = checkProofObjConfig(objName, objConfig);
     totalObjects++;
     totalEntries += nEntries;
     requiredMerkleDepth = Math.max(
       requiredMerkleDepth,
       calcMinMerkleDepthForEntries(nEntries)
     );
+    totalNumericValues += nBoundsChecks;
   }
 
   if (proofConfig.tuples !== undefined) {
@@ -136,6 +141,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
+    totalNumericValues,
     numLists,
     maxListSize,
     tupleArities
@@ -145,7 +151,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
 function checkProofObjConfig(
   nameForErrorMessages: string,
   objConfig: GPCProofObjectConfig
-): number {
+): { nEntries: number; nBoundsChecks: number } {
   if (Object.keys(objConfig.entries).length === 0) {
     throw new TypeError(
       `Must prove at least one entry in object "${nameForErrorMessages}".`
@@ -153,10 +159,15 @@ function checkProofObjConfig(
   }
 
   let nEntries = 0;
+  let nBoundsChecks = 0;
   for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
     checkPODEntryName(entryName, true);
-    checkProofEntryConfig(`${nameForErrorMessages}.${entryName}`, entryConfig);
+    const { hasBoundsCheck } = checkProofEntryConfig(
+      `${nameForErrorMessages}.${entryName}`,
+      entryConfig
+    );
     nEntries++;
+    nBoundsChecks += +hasBoundsCheck;
   }
   if (objConfig.signerPublicKey !== undefined) {
     checkProofEntryConfig(
@@ -164,13 +175,13 @@ function checkProofObjConfig(
       objConfig.signerPublicKey
     );
   }
-  return nEntries;
+  return { nEntries, nBoundsChecks };
 }
 
-function checkProofEntryConfig(
+export function checkProofEntryConfig(
   nameForErrorMessages: string,
   entryConfig: GPCProofEntryConfig
-): void {
+): { hasBoundsCheck: boolean } {
   requireType(
     `${nameForErrorMessages}.isValueRevealed`,
     entryConfig.isRevealed,
@@ -197,6 +208,29 @@ function checkProofEntryConfig(
       entryConfig.equalsEntry
     );
   }
+
+  const hasBoundsCheck = entryConfig.inRange !== undefined;
+
+  if (hasBoundsCheck) {
+    const inRange = entryConfig.inRange as BoundsConfig;
+    if (inRange.min < POD_INT_MIN) {
+      throw new RangeError(
+        `Minimum value of entry ${nameForErrorMessages} is less than smallest admissible value ${POD_INT_MIN}.`
+      );
+    }
+    if (inRange.max > POD_INT_MAX) {
+      throw new RangeError(
+        `Maximum value of entry ${nameForErrorMessages} is greater than largest admissible ${POD_INT_MAX}.`
+      );
+    }
+    if (inRange.max < inRange.min) {
+      throw new Error(
+        "Minimum value for entry ${nameForErrorMesages} must be less than or equal to its maximum value."
+      );
+    }
+  }
+
+  return { hasBoundsCheck };
 }
 
 export function checkProofTupleConfig(proofConfig: GPCProofConfig): void {
@@ -311,6 +345,9 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     totalObjects,
     totalObjects,
     requiredMerkleDepth,
+    // Numeric values (bounds checks) are handled solely in the proof config,
+    // hence we return 0 here.
+    0,
     // The number of required lists cannot be properly deduced here, so we
     // return 0.
     0,
@@ -417,6 +454,13 @@ export function checkProofInputsForConfig(
           );
         }
       }
+
+      // Check bounds for entry
+      checkProofBoundsCheckInputsForConfig(
+        `${objName}.${entryName}`,
+        entryConfig,
+        podValue
+      );
     }
   }
   // Check that nullifier isn't requested if it's not linked to anything.
@@ -426,6 +470,30 @@ export function checkProofInputsForConfig(
   }
 
   checkProofListMembershipInputsForConfig(proofConfig, proofInputs);
+}
+
+export function checkProofBoundsCheckInputsForConfig(
+  entryName: PODEntryIdentifier,
+  entryConfig: GPCProofEntryConfig,
+  entryValue: PODValue
+): void {
+  if (entryConfig.inRange !== undefined) {
+    if (entryValue.type !== "int") {
+      throw new TypeError(
+        `Proof configuration for entry ${entryName} has bounds check but entry value is not of type "int".`
+      );
+    }
+    if (entryValue.value < entryConfig.inRange.min) {
+      throw new RangeError(
+        `Entry ${entryName} is less than its prescribed minimum value ${entryConfig.inRange.min}.`
+      );
+    }
+    if (entryValue.value > entryConfig.inRange.max) {
+      throw new RangeError(
+        `Entry ${entryName} is greater than its prescribed maximum value ${entryConfig.inRange.max}.`
+      );
+    }
+  }
 }
 
 export function checkProofListMembershipInputsForConfig(
@@ -637,6 +705,7 @@ export function checkRevealedClaims(
     totalEntries,
     requiredMerkleDepth,
     0,
+    0,
     maxListSize,
     {}
   );
@@ -714,6 +783,14 @@ export function checkVerifyClaimsForConfig(
               ` doesn't exist in claims.`
           );
         }
+
+        // This named entry should satisfy the bounds set out in the proof
+        // configuration (if any).
+        checkProofBoundsCheckInputsForConfig(
+          `${objName}.${entryName}`,
+          entryConfig,
+          revealedValue
+        );
       }
     }
 
@@ -850,6 +927,7 @@ export function circuitDescMeetsRequirements(
     circuitDesc.maxObjects >= circuitReq.nObjects &&
     circuitDesc.maxEntries >= circuitReq.nEntries &&
     circuitDesc.merkleMaxDepth >= circuitReq.merkleMaxDepth &&
+    circuitDesc.maxNumericValues >= circuitReq.nNumericValues &&
     circuitDesc.maxLists >= circuitReq.nLists &&
     // The circuit description should be able to contain the largest of the lists.
     circuitDesc.maxListElements >= circuitReq.maxListSize
@@ -888,6 +966,7 @@ export function mergeRequirements(
     Math.max(rs1.nObjects, rs2.nObjects),
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
+    Math.max(rs1.nNumericValues, rs2.nNumericValues),
     Math.max(rs1.nLists, rs2.nLists),
     Math.max(rs1.maxListSize, rs2.maxListSize),
     tupleArities
