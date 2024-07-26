@@ -4,12 +4,92 @@ import { Spacer } from "@pcd/passport-ui";
 import { POD, podEntriesFromSimplifiedJSON } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { randomUUID } from "@pcd/util";
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useSelf } from "../../../src/appHooks";
 import { NewButton } from "../../NewButton";
-import { BigInput, H1, Placeholder, ZuLogo } from "../../core";
+import { BigInput, H1, Placeholder } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
+
+const PODAnimation: React.FC = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const requestRef = useRef<number>();
+  const startTimeRef = useRef<number>();
+
+  const animate = useCallback((time: number) => {
+    if (!startTimeRef.current) {
+      startTimeRef.current = time;
+    }
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const elapsed = (time - startTimeRef.current) % 2000; // Loop every 2 seconds
+    const duration = 2000; // 2 seconds for the entire animation cycle
+
+    // Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Set text properties
+    ctx.font = "bold 48px Arial";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // Calculate opacity
+    let opacity = 1;
+    if (elapsed < duration / 2) {
+      // Fade in
+      opacity = Math.min(1, elapsed / (duration / 4));
+    } else {
+      // Fade out
+      opacity = Math.max(0, 1 - (elapsed - duration / 2) / (duration / 4));
+    }
+
+    // Set color with opacity
+    ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
+
+    // Draw text
+    const text = "POD";
+    const x = Math.random() * canvas.width;
+    const y = Math.random() * canvas.height;
+    ctx.fillText(text, x, y);
+
+    requestRef.current = requestAnimationFrame(animate);
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (canvas) {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    requestRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (requestRef.current) {
+        cancelAnimationFrame(requestRef.current);
+      }
+    };
+  }, [animate]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      style={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100%",
+        height: "100%",
+        zIndex: 9999,
+        pointerEvents: "none"
+      }}
+    />
+  );
+};
 
 export function PODScreen(): ReactNode {
   const self = useSelf();
@@ -68,8 +148,10 @@ export function PODScreen(): ReactNode {
       <AppContainer bg="gray">
         <Spacer h={24} />
         <div className="flex-row flex align-center items-center gap-3">
-          <ZuLogo width="48px" />{" "}
-          <H1 className="">POD PASS POD PASS POD PASS</H1>
+          <H1 className="">
+            POD PASS POD PASS POD PASS POD PASS POD PASS POD PASSPOD PASS POD
+            PASS POD PASS
+          </H1>
         </div>
         <Spacer h={24} />
         <Placeholder minH={540}>
@@ -103,6 +185,7 @@ export function PODScreen(): ReactNode {
         </Placeholder>
         <Spacer h={24} />
       </AppContainer>
+      <PODAnimation />
     </>
   );
 }
