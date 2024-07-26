@@ -11,6 +11,25 @@ const OverrideStyles = createGlobalStyle`
   html {
     background-image: url("https://as1.ftcdn.net/v2/jpg/02/22/42/62/1000_F_222426277_KXFzXYBaKkFjHDEDkESWh830L9Wc4XyE.jpg") !important;
     background-repeat: repeat;
+    animation: circleMove 10s linear infinite;
+  }
+
+  @keyframes circleMove {
+    0% {
+      background-position: 0% 0%;
+    }
+    25% {
+      background-position: 5% 5%;
+    }
+    50% {
+      background-position: 0% 10%;
+    }
+    75% {
+      background-position: -5% 5%;
+    }
+    100% {
+      background-position: 0% 0%;
+    }
   }
 `;
 
