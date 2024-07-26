@@ -1,6 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Spacer } from "@pcd/passport-ui";
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { MeshTransmissionMaterial, Text } from "@react-three/drei";
+import { Canvas, useFrame } from "@react-three/fiber";
+import React, { ReactNode, useEffect, useRef, useState } from "react";
 import { createGlobalStyle } from "styled-components";
+import { Euler } from "three";
 import { NewButton } from "../../NewButton";
 import { H1, Placeholder } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
@@ -146,10 +150,103 @@ export function FHEScreen(): ReactNode {
               <p>FHE</p>
               <p>IN A BOX!!!!</p>
             </div>
+
+            <div className="w-full h-[400px] bg-black border-white border-4 rounded-lg ">
+              <Canvas className="w-full h-full">
+                <FHEAnimation />
+              </Canvas>
+            </div>
           </div>
         </Placeholder>
         <Spacer h={24} />
       </AppContainer>
     </>
+  );
+}
+
+const FHEAnimation: React.FC = (): ReactNode => {
+  const [rotation, setRotation] = useState([0, 0, 0]);
+
+  const speed = 0.05;
+
+  useFrame(() => {
+    setRotation([
+      rotation[0] + speed,
+      rotation[1] + speed,
+      rotation[2] + speed
+    ]);
+  });
+
+  return (
+    <>
+      <ambientLight intensity={5} />
+      <pointLight position={[10, 10, 10]} intensity={10000} />
+      <pointLight position={[-10, -10, -10]} intensity={5} />
+      <mesh rotation={new Euler(...rotation)}>
+        <boxGeometry args={[1, 1, 1]} />
+        <meshStandardMaterial color="green" roughness={0.5} metalness={0.5} />
+      </mesh>
+      <Ring
+        text={"FHEFHEFHEFHEFHEFHEFHEFHEFHEFHEFHEFHE"}
+        radius={2}
+        height={100}
+        segments={50}
+      />
+    </>
+  );
+};
+
+interface Props {
+  text: string;
+  radius: number;
+  height: number;
+  segments: number;
+}
+
+export function Ring({ text, radius, height, segments }: Props): ReactNode {
+  const ref = useRef<any>();
+
+  // Rotate the text
+  useFrame(() => {
+    ref.current.rotation.y += 0.01;
+    ref.current.rotation.x += 0.01;
+    ref.current.rotation.z += 0.01;
+  });
+
+  // Calculate positions for text
+  const textPositions: { x: number; z: number }[] = [];
+  const angleStep = (2 * Math.PI) / text.length;
+  for (let i = 0; i < text.length; i++) {
+    const angle = i * angleStep;
+    const x = radius * Math.cos(angle);
+    const z = radius * Math.sin(angle);
+    textPositions.push({ x, z });
+  }
+
+  return (
+    <group ref={ref}>
+      <mesh>
+        <cylinderGeometry args={[radius, radius, height, segments]} />
+        <MeshTransmissionMaterial
+          backside
+          backsideThickness={5}
+          thickness={2}
+        />
+      </mesh>
+      {text.split("").map((char: string, index: number) => (
+        <Text
+          key={index}
+          position={[textPositions[index].x, 0, textPositions[index].z]}
+          rotation={[0, -angleStep * index + Math.PI / 2, 0]}
+          fontSize={0.3}
+          lineHeight={1}
+          letterSpacing={0.02}
+          color="white"
+          textAlign="center"
+        >
+          {char}
+        </Text>
+      ))}
+    </group>
   );
 }
