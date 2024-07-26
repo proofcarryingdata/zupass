@@ -1,8 +1,7 @@
 import { User } from "@pcd/passport-interface";
-import Avatar from "boring-avatars";
+import { QRDisplay } from "@pcd/passport-ui";
 import styled from "styled-components";
 import { useSelf } from "../../src/appHooks";
-import { Spacer, TextCenter } from "../core";
 
 export function MainIdentityCard({ user }: { user?: User }): JSX.Element {
   const self = useSelf();
@@ -10,17 +9,7 @@ export function MainIdentityCard({ user }: { user?: User }): JSX.Element {
 
   return (
     <CardBody>
-      <Spacer h={24} />
-      <TextCenter>
-        <Avatar
-          size={300}
-          variant="bauhaus"
-          name={actualUser?.uuid ?? "no name"}
-          square={false}
-          colors={["#FFAD08", "#EDD75A", "#b7ddb4", "#0C8F8F", "#445056"]}
-        />
-      </TextCenter>
-      <Spacer h={16} />
+      <QRDisplay saved={false} value={actualUser?.commitment}></QRDisplay>
     </CardBody>
   );
 }
@@ -28,4 +17,5 @@ export function MainIdentityCard({ user }: { user?: User }): JSX.Element {
 const CardBody = styled.div`
   color: var(--primary-dark);
   background: var(--primary-darker);
+  background: white;
 `;

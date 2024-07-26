@@ -1,7 +1,7 @@
 import { Spacer, styled } from "@pcd/passport-ui";
 import { ReactNode } from "react";
 import { NewButton } from "../../NewButton";
-import { H1, Placeholder, ZuLogo } from "../../core";
+import { H1, Placeholder } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 
@@ -12,7 +12,11 @@ export function DuckScreen(): ReactNode {
       <AppContainer bg="gray">
         <Spacer h={24} />
         <div className="flex-row flex align-center items-center gap-3">
-          <ZuLogo width="48px" /> <H1 className="">Zupass</H1>
+          <img
+            src="https://i.pinimg.com/originals/0a/d5/11/0ad5112cb48a2e9199174b0211412c64.jpg"
+            width="48px"
+          ></img>
+          <H1 className="">Duckpass</H1>
         </div>
         <Spacer h={24} />
         <Placeholder minH={540}>
