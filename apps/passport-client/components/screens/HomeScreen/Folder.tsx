@@ -3,6 +3,7 @@ import { CSSProperties, useCallback } from "react";
 import styled from "styled-components";
 import { usePCDsInFolder } from "../../../src/appHooks";
 import { cn } from "../../../src/util";
+import { NewButton } from "../../NewButton";
 import { EVENTS } from "./utils";
 
 export function FolderEventInfo({
@@ -126,18 +127,17 @@ export function FolderCard({
   }
 
   return (
-    <FolderEntryContainer
+    <NewButton
       style={style}
       onClick={onClick}
       className={cn(
-        "border-4 border-green-950",
         "flex flex-row gap-2",
         "bg-green-700 py-2 px-4 cursor-pointer hover:bg-green-600  transition-all duration-100",
         "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
         "text-lg"
       )}
     >
-      <div className="flex-grow">
+      <div className="flex-grow inline-block" style={{ textAlign: "left" }}>
         {getNameFromPath(folder)}
         <div className="font-normal text-sm">
           {pcds.length} ticket{pcds.length > 1 ? "s" : ""}
@@ -158,7 +158,7 @@ export function FolderCard({
           }}
         ></div>
       )}
-    </FolderEntryContainer>
+    </NewButton>
   );
 }
 
