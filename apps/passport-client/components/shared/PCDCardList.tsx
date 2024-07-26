@@ -54,7 +54,7 @@ export function PCDCardList({
    * If true, all PCDs will have padding hidden.
    */
   hidePadding?: boolean;
-}): JSX.Element {
+}): React.ReactNode {
   const pcdCollection = usePCDCollection();
   const userIdentityPCD = useUserIdentityPCD();
   const userIdentityPCDId = userIdentityPCD?.id;

@@ -75,51 +75,53 @@ export function FolderCard({
 
   if (folder === "Devcon") {
     return (
-      <FolderEntryContainer
-        style={style}
-        onClick={onClick}
-        className={cn(
-          "border-4 border-purple-600 h-[150px] relative",
-          "bg-purple-700 py-2 px-4 cursor-pointer hover:bg-purple-600  transition-all duration-100",
-          "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
-          "text-lg"
-        )}
-      >
-        {img && (
+      <AnimatedContainer>
+        <FolderEntryContainer
+          style={style}
+          onClick={onClick}
+          className={cn(
+            "border-4 border-purple-600 h-[150px] relative",
+            "bg-purple-700 py-2 px-4 cursor-pointer hover:bg-purple-600  transition-all duration-100",
+            "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
+            "text-lg"
+          )}
+        >
+          {img && (
+            <div
+              style={{
+                backgroundImage: `url(${img})`,
+                backgroundSize: "cover",
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%"
+              }}
+            ></div>
+          )}
           <div
+            className="flex-grow p-4"
             style={{
-              backgroundImage: `url(${img})`,
-              backgroundSize: "cover",
               position: "absolute",
               top: 0,
               left: 0,
               width: "100%",
               height: "100%"
             }}
-          ></div>
-        )}
-        <div
-          className="flex-grow p-4"
-          style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            width: "100%",
-            height: "100%"
-          }}
-        >
-          {getNameFromPath(folder)}
-          <div className="font-normal text-sm">
-            {pcds.length} ticket{pcds.length > 1 ? "s" : ""}
-            {dateStr && (
-              <span>
-                {" · "}
-                {dateStr}
-              </span>
-            )}
+          >
+            {getNameFromPath(folder)}
+            <div className="font-normal text-sm">
+              {pcds.length} ticket{pcds.length > 1 ? "s" : ""}
+              {dateStr && (
+                <span>
+                  {" · "}
+                  {dateStr}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
-      </FolderEntryContainer>
+        </FolderEntryContainer>
+      </AnimatedContainer>
     );
   }
 
@@ -230,6 +232,19 @@ export const FolderEntryContainer = styled.div`
   &:hover {
     background: var(--primary-lite);
   } */
+`;
+
+const AnimatedContainer = styled.div`
+  @keyframes bobAndGrow {
+    0%,
+    100% {
+      transform: translateY(0) scale(1);
+    }
+    50% {
+      transform: translateY(-2.5px) scale(1.01);
+    }
+  }
+  animation: bobAndGrow 1s ease-in-out infinite;
 `;
 
 export function FolderDetails({
