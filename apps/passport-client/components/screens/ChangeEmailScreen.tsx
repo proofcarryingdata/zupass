@@ -13,9 +13,7 @@ import {
   useDispatch,
   usePCDCollection,
   useSelf,
-  useServerStorageRevision,
-  useStateContext,
-  useUpdate
+  useStateContext
 } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import {
@@ -34,10 +32,8 @@ import { AppContainer } from "../shared/AppContainer";
 export function ChangeEmailScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   const self = useSelf();
-  const serverStorageRevision = useServerStorageRevision();
   const stateContext = useStateContext();
   const dispatch = useDispatch();
-  const update = useUpdate();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [newEmail, setNewEmail] = useState("");
