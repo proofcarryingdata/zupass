@@ -1,6 +1,7 @@
 import {
   PODPipelineInputFieldType,
-  PODPipelinePODEntry
+  PODPipelinePODEntry,
+  PODPipelineSupportedPODValueTypes
 } from "@pcd/passport-interface";
 import { PODValue } from "@pcd/pod";
 import { uuidToBigInt } from "@pcd/util";
@@ -16,7 +17,7 @@ import { FieldTypeToJavaScriptType } from "./Input";
  * yet) to the input types that can be converted to them. Input types are
  * described by {@link PODPipelineInputFieldType}.
  */
-type SupportedPODValueType = Exclude<PODValue["type"], "eddsa_pubkey">;
+type SupportedPODValueType = PODPipelineSupportedPODValueTypes;
 
 type Conversions = {
   [P in SupportedPODValueType]: {

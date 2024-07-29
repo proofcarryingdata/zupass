@@ -18,7 +18,8 @@ import {
 import {
   PODPipelineDefinition,
   PODPipelineOutputMatch,
-  PODPipelinePODEntry
+  PODPipelinePODEntry,
+  PODPipelineSupportedPODValueTypes
 } from "@pcd/passport-interface";
 import { POD_NAME_REGEX } from "@pcd/pod";
 import { getInputToPODValueConverter } from "@pcd/podbox-shared";
@@ -105,7 +106,7 @@ function PODOutput({
 
   // Change the source of an output, e.g. from one input field to another
   const changeSource = useCallback(
-    (key: string, source: string) => {
+    (key: string, source: string, type?: PODPipelineSupportedPODValueTypes) => {
       const entry = structuredClone(outputEntryMap[key]);
       if (source.startsWith("input:")) {
         entry.source = { type: "input", name: source.substring(6) };
@@ -123,7 +124,7 @@ function PODOutput({
         }
       } else if (source.startsWith("configured:")) {
         entry.source = { type: "configured", value: source.substring(11) };
-        entry.type = "string";
+        entry.type = type ?? "string";
       } else if (source === "credentialEmail") {
         entry.source.type = source;
         entry.type = "string";
@@ -148,9 +149,9 @@ function PODOutput({
   const [addingConfiguredValueForKey, setAddingConfiguredValueForKey] =
     useState<string | undefined>(undefined);
   const addConfiguredValue = useCallback(
-    async (value: string) => {
+    async (value: string, type: PODPipelineSupportedPODValueTypes) => {
       if (addingConfiguredValueForKey) {
-        changeSource(addingConfiguredValueForKey, `configured:${value}`);
+        changeSource(addingConfiguredValueForKey, `configured:${value}`, type);
         setAddingConfiguredValueForKey(undefined);
       }
     },
@@ -325,7 +326,7 @@ function PODOutput({
                                 return null;
                               }
                             } else if (entry.source.type === "configured") {
-                              if (value !== "string") {
+                              if (value !== entry.type) {
                                 return null;
                               }
                             } else if (

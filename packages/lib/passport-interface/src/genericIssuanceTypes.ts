@@ -586,13 +586,26 @@ export enum PODPipelinePCDTypes {
   PODTicketPCD = "PODTicketPCD"
 }
 
+const PODPipelineSupportedPODValueTypes = z.enum([
+  "string",
+  "int",
+  "cryptographic"
+]);
+
+export type PODPipelineSupportedPODValueTypes = z.infer<
+  typeof PODPipelineSupportedPODValueTypes
+>;
+
 const PODPipelinePODEntrySchema = z.object({
-  type: z.enum(["string", "int", "cryptographic"]),
+  type: PODPipelineSupportedPODValueTypes,
   source: z.discriminatedUnion("type", [
     z.object({ type: z.literal("input"), name: z.string() }),
     z.object({ type: z.literal("credentialSemaphoreID") }),
     z.object({ type: z.literal("credentialEmail") }),
-    z.object({ type: z.literal("configured"), value: z.string() })
+    z.object({
+      type: z.literal("configured"),
+      value: z.string()
+    })
   ])
 });
 

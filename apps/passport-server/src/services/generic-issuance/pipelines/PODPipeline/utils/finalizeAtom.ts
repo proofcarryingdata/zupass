@@ -27,10 +27,22 @@ export function finalizeAtom(
 
   for (const [name, entry] of Object.entries(output.entries)) {
     if (entry.source.type === "configured") {
-      newEntries[name] = {
-        type: "string",
-        value: entry.source.value
-      };
+      if (entry.type === "string") {
+        newEntries[name] = {
+          type: "string",
+          value: entry.source.value
+        };
+      } else if (entry.type === "int") {
+        newEntries[name] = {
+          type: "int",
+          value: BigInt(entry.source.value)
+        };
+      } else if (entry.type === "cryptographic") {
+        newEntries[name] = {
+          type: "cryptographic",
+          value: BigInt(entry.source.value)
+        };
+      }
     } else if (entry.source.type === "credentialSemaphoreID") {
       newEntries[name] = {
         type: "cryptographic",
