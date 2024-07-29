@@ -23,6 +23,7 @@ import {
   TextCenter
 } from "../components/core";
 import { RippleLoader } from "../components/core/RippleLoader";
+import { AddEmailScreen } from "../components/screens/AddEmailScreen";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangeEmailScreen } from "../components/screens/ChangeEmailScreen";
@@ -46,6 +47,7 @@ import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExist
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
+import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { DevconnectCheckinByIdScreen } from "../components/screens/ScannedTicketScreens/DevconnectCheckinByIdScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
@@ -341,6 +343,8 @@ function RouterImpl(): JSX.Element {
           <Route path="create-password" element={<CreatePasswordScreen />} />
           <Route path="change-password" element={<ChangePasswordScreen />} />
           <Route path="change-email" element={<ChangeEmailScreen />} />
+          <Route path="add-email" element={<AddEmailScreen />} />
+          <Route path="remove-email" element={<RemoveEmailScreen />} />
           <Route
             path="one-click-login/:email/:code/:targetFolder"
             element={<OneClickLoginScreen />}
