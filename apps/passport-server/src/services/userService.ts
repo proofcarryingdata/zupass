@@ -581,6 +581,56 @@ export class UserService {
       authKey: user?.auth_key ?? null
     };
   }
+
+  public async handleChangeEmail(
+    currentEmail: string,
+    newEmail: string,
+    pcd: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<{ success: boolean; error?: string }> {
+    if (!validateEmail(newEmail)) {
+      return { success: false, error: "Invalid email format" };
+    }
+
+    const existingUser = await this.getUserByEmail(newEmail);
+    if (existingUser) {
+      return { success: false, error: "Email already in use" };
+    }
+
+    // Verify the PCD
+    let semaphoreSignaturePCD: SemaphoreSignaturePCD;
+    try {
+      semaphoreSignaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+        pcd.pcd
+      );
+      const validPCD = await SemaphoreSignaturePCDPackage.verify(
+        semaphoreSignaturePCD
+      );
+      if (!validPCD) {
+        return { success: false, error: "Invalid PCD" };
+      }
+    } catch (error) {
+      return { success: false, error: "Error verifying PCD" };
+    }
+
+    // Get the current user
+    const currentUser = await this.getUserByEmail(currentEmail);
+    if (!currentUser) {
+      return { success: false, error: "Current user not found" };
+    }
+
+    // Update the user's email
+    try {
+      await upsertUser(this.context.dbPool, {
+        ...currentUser,
+        email: newEmail
+      });
+
+      return { success: true };
+    } catch (error) {
+      logger("[UserService] Error changing email", error);
+      return { success: false, error: "Error updating email" };
+    }
+  }
 }
 
 export function startUserService(

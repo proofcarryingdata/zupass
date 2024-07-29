@@ -1211,3 +1211,29 @@ export type GenericIssuanceSendPipelineEmailRequest = {
 export type GenericIssuanceSendPipelineEmailResponseValue = {
   queued: number;
 };
+
+/**
+ * Request to change a user's email address.
+ */
+export interface ChangeUserEmailRequest {
+  /**
+   * The user's current email address.
+   */
+  currentEmail: string;
+
+  /**
+   * The new email address the user wants to change to.
+   */
+  newEmail: string;
+
+  /**
+   * A semaphore signature from the user, used to verify their identity.
+   */
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+/**
+ * Response to a request to change a user's email address.
+ * The operation either succeeds (with no return value) or fails with an error.
+ */
+export type ChangeUserEmailResponseValue = undefined;

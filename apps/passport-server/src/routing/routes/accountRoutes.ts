@@ -1,5 +1,6 @@
 import {
   AgreeTermsRequest,
+  ChangeUserEmailRequest,
   ConfirmEmailRequest,
   CreateNewUserRequest,
   DeleteAccountRequest,
@@ -198,5 +199,32 @@ export function initAccountRoutes(
     const pcd = checkBody<DeleteAccountRequest, "pcd">(req, "pcd");
     await userService.handleDeleteAccount(pcd);
     res.sendStatus(200);
+  });
+
+  /**
+   * Changes a user's email address.
+   */
+  app.post("/account/change-email", async (req: Request, res: Response) => {
+    const currentEmail = checkBody<ChangeUserEmailRequest, "currentEmail">(
+      req,
+      "currentEmail"
+    );
+    const newEmail = checkBody<ChangeUserEmailRequest, "newEmail">(
+      req,
+      "newEmail"
+    );
+    const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
+
+    const result = await userService.handleChangeEmail(
+      currentEmail,
+      newEmail,
+      pcd
+    );
+
+    if (result.success) {
+      res.sendStatus(200);
+    } else {
+      res.status(400).send(result.error);
+    }
   });
 }
