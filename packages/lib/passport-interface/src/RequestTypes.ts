@@ -1237,8 +1237,37 @@ export interface ChangeUserEmailRequest {
   confirmationCode?: string;
 }
 
-/**
- * Response to a request to change a user's email address.
- * The operation either succeeds (with no return value) or fails with an error.
- */
 export type ChangeUserEmailResponseValue = undefined;
+
+export interface AddUserEmailRequest {
+  /**
+   * The new email address the user wants to add.
+   */
+  newEmail: string;
+
+  /**
+   * A semaphore signature from the user, used to verify their identity.
+   */
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * An optional confirmation code for additional verification.
+   */
+  confirmationCode?: string;
+}
+
+export type AddUserEmailResponseValue = undefined;
+
+export interface RemoveUserEmailRequest {
+  /**
+   * The email address the user wants to remove.
+   */
+  emailToRemove: string;
+
+  /**
+   * A semaphore signature from the user, used to verify their identity.
+   */
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+export type RemoveUserEmailResponseValue = undefined;
