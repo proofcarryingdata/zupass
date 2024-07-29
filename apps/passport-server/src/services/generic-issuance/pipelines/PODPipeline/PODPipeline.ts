@@ -290,15 +290,7 @@ export class PODPipeline implements BasePipeline {
       span?.setAttribute("semaphore_id", semaphoreId);
 
       // Consumer is validated, so save them in the consumer list
-      const didUpdate = await this.consumerDB.save(
-        this.id,
-        email,
-        semaphoreId,
-        new Date()
-      );
-      if (didUpdate) {
-        this.consumerDB.save(this.id, email, semaphoreId, new Date());
-      }
+      await this.consumerDB.save(this.id, email, semaphoreId, new Date());
 
       const atomsToIssue = await this.loadMatchingAtoms(credential);
 
