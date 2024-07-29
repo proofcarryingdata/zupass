@@ -214,11 +214,16 @@ export function initAccountRoutes(
       "newEmail"
     );
     const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
+    const confirmationCode = checkBody<
+      ChangeUserEmailRequest,
+      "confirmationCode"
+    >(req, "confirmationCode");
 
     const result = await userService.handleChangeEmail(
       currentEmail,
       newEmail,
-      pcd
+      pcd,
+      confirmationCode
     );
 
     if (result.success) {

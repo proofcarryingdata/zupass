@@ -1230,6 +1230,11 @@ export interface ChangeUserEmailRequest {
    * A semaphore signature from the user, used to verify their identity.
    */
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * An optional confirmation code for additional verification.
+   */
+  confirmationCode?: string;
 }
 
 /**

@@ -21,7 +21,8 @@ export async function changeUserEmail(
   zupassServerUrl: string,
   currentEmail: string,
   newEmail: string,
-  pcd: SerializedPCD<SemaphoreSignaturePCD>
+  pcd: SerializedPCD<SemaphoreSignaturePCD>,
+  confirmationCode?: string
 ): Promise<ChangeUserEmailResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, "/account/change-email"),
@@ -32,7 +33,8 @@ export async function changeUserEmail(
     {
       currentEmail,
       newEmail,
-      pcd
+      pcd,
+      confirmationCode
     } satisfies ChangeUserEmailRequest
   );
 }

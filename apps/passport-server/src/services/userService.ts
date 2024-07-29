@@ -585,7 +585,8 @@ export class UserService {
   public async handleChangeEmail(
     currentEmail: string,
     newEmail: string,
-    pcd: SerializedPCD<SemaphoreSignaturePCD>
+    pcd: SerializedPCD<SemaphoreSignaturePCD>,
+    confirmationCode: string
   ): Promise<{ success: boolean; error?: string }> {
     if (!validateEmail(newEmail)) {
       return { success: false, error: "Invalid email format" };
