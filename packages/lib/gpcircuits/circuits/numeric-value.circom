@@ -34,7 +34,8 @@ template NumericValueModule() {
 
     // Absolute value of minimum value of a 64-bit signed integer.
     // This will be added to all values fed into the bounds check
-    // module to convert them to 64-bit unsigned integers.
+    // module to convert them to 64-bit unsigned integers while
+    // preserving order.
     var ABS_POD_INT_MIN = 1 << 63;
     
     // Check that minValue <= numericValue <= maxValue.
