@@ -15,6 +15,7 @@ import { httpPostSimple } from "./makeRequest";
  * @param currentEmail The user's current email address
  * @param newEmail The new email address the user wants to change to
  * @param pcd A semaphore signature from the user, used to verify their identity
+ * @param confirmationCode An optional confirmation code for additional verification
  * @returns A promise that resolves to an APIResult containing undefined for success or an error message
  */
 export async function changeUserEmail(
