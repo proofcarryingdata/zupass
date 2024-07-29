@@ -25,6 +25,7 @@ import {
 import { RippleLoader } from "../components/core/RippleLoader";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
+import { ChangeEmailScreen } from "../components/screens/ChangeEmailScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
@@ -339,6 +340,7 @@ function RouterImpl(): JSX.Element {
           <Route path="privacy-notice" element={<PrivacyNoticeScreen />} />
           <Route path="create-password" element={<CreatePasswordScreen />} />
           <Route path="change-password" element={<ChangePasswordScreen />} />
+          <Route path="change-email" element={<ChangeEmailScreen />} />
           <Route
             path="one-click-login/:email/:code/:targetFolder"
             element={<OneClickLoginScreen />}
