@@ -586,7 +586,7 @@ export class UserService {
     currentEmail: string,
     newEmail: string,
     pcd: SerializedPCD<SemaphoreSignaturePCD>,
-    confirmationCode: string
+    confirmationCode?: string
   ): Promise<{ success: boolean; error?: string }> {
     if (!validateEmail(newEmail)) {
       return { success: false, error: "Invalid email format" };
@@ -617,6 +617,27 @@ export class UserService {
     const currentUser = await this.getUserByEmail(currentEmail);
     if (!currentUser) {
       return { success: false, error: "Current user not found" };
+    }
+
+    // Check confirmation code or send a new one
+    if (confirmationCode) {
+      const isCodeValid = await this.emailTokenService.checkTokenCorrect(
+        newEmail,
+        confirmationCode
+      );
+      if (!isCodeValid) {
+        return { success: false, error: "Invalid confirmation code" };
+      }
+    } else {
+      // Generate and send a new confirmation code
+      const newConfirmationCode =
+        await this.emailTokenService.saveNewTokenForEmail(newEmail);
+      await this.emailService.sendTokenEmail(newEmail, newConfirmationCode);
+      return {
+        success: false,
+        error:
+          "Confirmation code sent to new email. Please confirm to complete the change."
+      };
     }
 
     // Update the user's email
