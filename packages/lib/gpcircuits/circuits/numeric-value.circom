@@ -31,15 +31,17 @@ template NumericValueModule() {
     // Bounds check parameters.
     signal input minValue;
     signal input maxValue;
-    var TWO_TO_THE_63 = 1 << 63;
+
+    // Absolute value of minimum value of a 64-bit signed integer.
+    // This will be added to all values fed into the bounds check
+    // module to convert them to 64-bit unsigned integers.
+    var ABS_POD_INT_MIN = 1 << 63;
     
     // Check that minValue <= numericValue <= maxValue.
-    // Note that we add 2^63 to all values to convert them to 64-bit
-    // unsigned integers.
     signal boundsCheck <== BoundsCheckModule(64)(
-        numericValue + TWO_TO_THE_63,
-        minValue + TWO_TO_THE_63,
-        maxValue + TWO_TO_THE_63
+        numericValue + ABS_POD_INT_MIN,
+        minValue + ABS_POD_INT_MIN,
+        maxValue + ABS_POD_INT_MIN
                                                  );
     boundsCheck === 1;
 }
