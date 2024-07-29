@@ -306,6 +306,7 @@ describe("podUtil input checkers should work", async function () {
       { type: "cryptographic", value: 123n },
       { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MIN },
       { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MAX },
+      { type: "int", value: -1n },
       { type: "int", value: 0n },
       { type: "int", value: 123n },
       { type: "int", value: POD_INT_MIN },
@@ -340,7 +341,6 @@ describe("podUtil input checkers should work", async function () {
       { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MAX + 1n },
       { type: "int", value: "hello" },
       { type: "int", value: 123 },
-      { type: "int", value: -1n },
       { type: "int", value: POD_INT_MIN - 1n },
       { type: "int", value: POD_INT_MAX + 1n }
     ] as (undefined | PODValue)[];

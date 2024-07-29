@@ -23,7 +23,7 @@
       "maxTuples": 0,
       "tupleArity": 0
     },
-    13569
+    13573
   ],
   [
     {
@@ -36,7 +36,7 @@
       "maxTuples": 2,
       "tupleArity": 2
     },
-    35774
+    35778
   ],
   [
     {
@@ -49,7 +49,7 @@
       "maxTuples": 1,
       "tupleArity": 4
     },
-    36381
+    36389
   ],
   [
     {
@@ -62,6 +62,6 @@
       "maxTuples": 5,
       "tupleArity": 2
     },
-    37616
+    37624
   ]
 ]

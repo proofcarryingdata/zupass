@@ -133,7 +133,7 @@ export type GPCProofEntryConfig = GPCProofEntryConfigCommon & {
   /**
    * Indicates the range/interval/bounds within which this entry should
    * lie. Both (inclusive) bounds must be specified, and they should be
-   * unsigned 63-bit integer values. They will always be revealed by virtue of
+   * signed 64-bit integer values. They will always be revealed by virtue of
    * their inclusion in the proof configuration.
    */
   inRange?: { min: bigint; max: bigint };

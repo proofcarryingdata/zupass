@@ -260,7 +260,6 @@ describe("PODContent class should work", async function () {
       { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MAX + 1n },
       { type: "int", value: "hello" },
       { type: "int", value: 123 },
-      { type: "int", value: -1n },
       { type: "int", value: POD_INT_MIN - 1n },
       { type: "int", value: POD_INT_MAX + 1n }
     ] as PODValue[];

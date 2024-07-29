@@ -65,8 +65,7 @@ export const POD_CRYPTOGRAPHIC_MAX = BabyJubjubR - 1n;
  * arithmatic manipulation.  The constants POD_INT_MIN and POD_INT_MAX specify
  * the legal range.
  *
- * `int` values are currently 63-bit unsigned values, but will probably become
- * signed values in a future update.
+ * `int` values are currently 64-bit signed values.
  */
 export type PODIntValue = {
   type: "int";
@@ -74,13 +73,12 @@ export type PODIntValue = {
 };
 
 // TODO(POD-P3): Decide on default int bounds and sign for POD.
-// These values limit ints to 63 bits unsigned, to leave room if we
-// decide on 64-bit signed later.
+// These values limit ints to 64 bits signed.
 
 /**
  * Minimum legal value of an `int` entry value.
  */
-export const POD_INT_MIN = 0n;
+export const POD_INT_MIN = -(1n << 63n);
 
 /**
  * Maximum legal value of an `int` entry value.
