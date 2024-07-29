@@ -573,6 +573,7 @@ export interface ZupassUserJson {
   uuid: string;
   commitment: string;
   email: string;
+  emails?: string[];
   salt: string | null;
   terms_agreed: number;
 }
