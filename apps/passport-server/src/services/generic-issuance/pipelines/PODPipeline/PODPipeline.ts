@@ -18,6 +18,7 @@ import { PODEntries, serializePODEntries } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { CSVInput, Input } from "@pcd/podbox-shared";
 import { assertUnreachable } from "@pcd/util";
+import PQueue from "p-queue";
 import { v5 as uuidv5 } from "uuid";
 import {
   IPipelineAtomDB,
@@ -59,6 +60,7 @@ export class PODPipeline implements BasePipeline {
   private credentialSubservice: CredentialSubservice;
   private consumerDB: IPipelineConsumerDB;
   private cacheService: PersistentCacheService;
+  private dbQueue: PQueue;
 
   public get id(): string {
     return this.definition.id;
@@ -96,6 +98,7 @@ export class PODPipeline implements BasePipeline {
         > => []
       } satisfies FeedIssuanceCapability
     ] as unknown as BasePipelineCapability[];
+    this.dbQueue = new PQueue({ concurrency: 1 });
   }
 
   /**
@@ -139,16 +142,22 @@ export class PODPipeline implements BasePipeline {
           this.definition.id
         );
 
-        // @todo because this code is async, it may end up being interleaved
-        // with issuance requests at run-time. This may result in code
-        // requesting PCDs that - temporarily - do not exist because the atom
-        // DB has not been repopulated.
-        // A long-term solution might involve locking the pipeline or the DB,
-        // or refactoring so that this scenario cannot arise.
-        await this.db.clear(this.definition.id);
-        logs.push(makePLogInfo(`cleared old data`));
-        await this.db.save(this.definition.id, atoms);
-        logs.push(makePLogInfo(`saved parsed data: ${atoms.length} entries`));
+        /**
+         * Atomically clear and save the Atom DB for this pipeline.
+         */
+        await this.dbQueue.add(
+          async () => {
+            await this.db.clear(this.definition.id);
+            logs.push(makePLogInfo(`cleared old data`));
+            await this.db.save(this.definition.id, atoms);
+            logs.push(
+              makePLogInfo(`saved parsed data: ${atoms.length} entries`)
+            );
+          },
+          // High priority means that this will
+          { priority: 10 }
+        );
+
         span?.setAttribute("atom_count", atoms.length);
 
         const end = new Date();
@@ -205,7 +214,9 @@ export class PODPipeline implements BasePipeline {
     email,
     semaphoreId
   }: VerifiedCredentialWithEmail): Promise<PODAtom[]> {
-    const atoms = await this.db.load(this.id);
+    // Use the queue to ensure that we are not interleaving with the DB
+    // clear/save operation in load().
+    const atoms = await this.dbQueue.add(() => this.db.load(this.id));
     const matchingAtoms: PODAtom[] = [];
 
     for (const atom of atoms) {
