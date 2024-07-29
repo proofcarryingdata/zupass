@@ -14,6 +14,7 @@ export function SettingsModal({
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showEmailOptions, setShowEmailOptions] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState("");
 
   const closeModal = useCallback(() => {
@@ -50,7 +51,7 @@ export function SettingsModal({
 
         <Spacer h={16} />
 
-        {!isProveOrAddScreen && !showAdvanced && (
+        {!isProveOrAddScreen && !showAdvanced && !showEmailOptions && (
           <>
             <LinkButton
               $primary={true}
@@ -70,6 +71,10 @@ export function SettingsModal({
               {hasSetupPassword ? "Change" : "Add"} Password
             </LinkButton>
             <Spacer h={16} />
+            <Button onClick={() => setShowEmailOptions(true)}>
+              Email Options
+            </Button>
+            <Spacer h={16} />
             <AccountExportButton />
             <Spacer h={16} />
             <LinkButton $primary={true} to="/import" onClick={closeModal}>
@@ -79,13 +84,33 @@ export function SettingsModal({
           </>
         )}
 
-        {!showAdvanced && (
+        {showEmailOptions && (
+          <>
+            <LinkButton $primary={true} to="/change-email" onClick={closeModal}>
+              Change Email
+            </LinkButton>
+            <Spacer h={16} />
+            <LinkButton $primary={true} to="/add-email" onClick={closeModal}>
+              Add Email
+            </LinkButton>
+            <Spacer h={16} />
+            <LinkButton $primary={true} to="/remove-email" onClick={closeModal}>
+              Remove Email
+            </LinkButton>
+            <Spacer h={16} />
+            <Button onClick={() => setShowEmailOptions(false)}>Back</Button>
+            <Spacer h={16} />
+          </>
+        )}
+
+        {!showAdvanced && !showEmailOptions && (
           <Button onClick={logout} style="danger">
             Log Out
           </Button>
         )}
 
         {!isProveOrAddScreen &&
+          !showEmailOptions &&
           (showAdvanced ? (
             <>
               <Button onClick={() => setShowAdvanced(!showAdvanced)}>
