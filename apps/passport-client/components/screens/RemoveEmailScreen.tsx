@@ -20,6 +20,7 @@ import { Button, CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
+import Select from "../shared/Select";
 
 export function RemoveEmailScreen(): JSX.Element | null {
   useSyncE2EEStorage();
@@ -28,7 +29,7 @@ export function RemoveEmailScreen(): JSX.Element | null {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [emailToRemove, setEmailToRemove] = useState("");
+  const [emailToRemove, setEmailToRemove] = useState<string | null>(null);
   const [error, setError] = useState<string | undefined>();
   const [finished, setFinished] = useState(false);
   const pcds = usePCDCollection();
@@ -78,7 +79,7 @@ export function RemoveEmailScreen(): JSX.Element | null {
         type: "set-self",
         self: {
           ...self,
-          emails: self.emails.filter((e) => e !== emailToRemove)
+          emails: (self.emails ?? []).filter((e) => e !== emailToRemove)
         }
       });
 
@@ -129,15 +130,9 @@ export function RemoveEmailScreen(): JSX.Element | null {
         <Spacer h={24} />
         <Select
           value={emailToRemove}
-          onChange={(e) => setEmailToRemove(e.target.value)}
-        >
-          <option value="">Select an email to remove</option>
-          {self.emails.map((email) => (
-            <option key={email} value={email}>
-              {email}
-            </option>
-          ))}
-        </Select>
+          onChange={setEmailToRemove}
+          options={self.emails ?? []}
+        />
         <Spacer h={16} />
         <Button onClick={onRemoveEmail} disabled={!emailToRemove}>
           Remove Email

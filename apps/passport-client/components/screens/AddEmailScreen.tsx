@@ -130,7 +130,7 @@ export function AddEmailScreen(): JSX.Element | null {
       // Update local state
       dispatch({
         type: "set-self",
-        self: { ...self, emails: [...self.emails, newEmail] }
+        self: { ...self, emails: [...(self.emails ?? []), newEmail] }
       });
 
       setFinished(true);
