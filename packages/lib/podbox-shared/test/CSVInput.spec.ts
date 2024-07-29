@@ -53,7 +53,7 @@ describe("input loading", function () {
         last_name: { type: PODPipelineInputFieldType.String },
         email: { type: PODPipelineInputFieldType.String },
         birthday: { type: PODPipelineInputFieldType.Date },
-        high_score: { type: PODPipelineInputFieldType.Integer }
+        high_score: { type: PODPipelineInputFieldType.Int }
       }
     };
 
@@ -88,7 +88,7 @@ describe("input loading", function () {
       csv: ["name,age", "John,31.45", "Jane, 42"].join("\n"),
       columns: {
         name: { type: PODPipelineInputFieldType.String },
-        age: { type: PODPipelineInputFieldType.Integer }
+        age: { type: PODPipelineInputFieldType.Int }
       }
     };
 
@@ -182,7 +182,7 @@ describe("input loading", function () {
         id: { type: PODPipelineInputFieldType.UUID },
         name: { type: PODPipelineInputFieldType.String },
         birthday: { type: PODPipelineInputFieldType.Date },
-        high_score: { type: PODPipelineInputFieldType.Integer }
+        high_score: { type: PODPipelineInputFieldType.Int }
       }
     };
 
@@ -234,7 +234,7 @@ describe("input loading", function () {
         name: { type: PODPipelineInputFieldType.String },
         // Renamed column which does not match the CSV header
         joining_date: { type: PODPipelineInputFieldType.Date },
-        high_score: { type: PODPipelineInputFieldType.Integer }
+        high_score: { type: PODPipelineInputFieldType.Int }
       }
     };
 

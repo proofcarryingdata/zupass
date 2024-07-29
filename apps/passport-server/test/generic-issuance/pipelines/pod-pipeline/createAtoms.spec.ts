@@ -95,7 +95,7 @@ describe("atom creation", function () {
           first_name: { type: PODPipelineInputFieldType.String },
           last_name: { type: PODPipelineInputFieldType.String },
           email: { type: PODPipelineInputFieldType.String },
-          high_score: { type: PODPipelineInputFieldType.Integer },
+          high_score: { type: PODPipelineInputFieldType.Int },
           birthday: { type: PODPipelineInputFieldType.Date },
           is_approved: { type: PODPipelineInputFieldType.Boolean }
         }

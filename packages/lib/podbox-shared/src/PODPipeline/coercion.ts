@@ -1,5 +1,11 @@
 import { PODPipelineInputFieldType } from "@pcd/passport-interface";
-import { POD_INT_MAX, POD_INT_MIN, checkBigintBounds } from "@pcd/pod";
+import {
+  POD_CRYPTOGRAPHIC_MAX,
+  POD_CRYPTOGRAPHIC_MIN,
+  POD_INT_MAX,
+  POD_INT_MIN,
+  checkBigintBounds
+} from "@pcd/pod";
 import { SafeParseReturnType, z } from "zod";
 import { FieldTypeToJavaScriptType } from "./Input";
 
@@ -63,10 +69,10 @@ export const coercions: Coercers = {
   [PODPipelineInputFieldType.String]: z.string().safeParse,
   // We use a custom parser for integers because we want to ensure that
   // the value is within the bounds of a POD integer.
-  [PODPipelineInputFieldType.Integer]: inputToBigInt.refine(
+  [PODPipelineInputFieldType.Int]: inputToBigInt.refine(
     (arg: bigint) => {
       try {
-        checkBigintBounds("integer", arg, POD_INT_MIN, POD_INT_MAX);
+        checkBigintBounds("int", arg, POD_INT_MIN, POD_INT_MAX);
         return true;
       } catch (error) {
         return false;
@@ -76,7 +82,28 @@ export const coercions: Coercers = {
       message: "Integer must be between POD_INT_MIN and POD_INT_MAX, inclusive"
     }
   ).safeParse,
+  [PODPipelineInputFieldType.Cryptographic]: inputToBigInt.refine(
+    (arg: bigint) => {
+      try {
+        checkBigintBounds(
+          "cryptographic",
+          arg,
+          POD_CRYPTOGRAPHIC_MIN,
+          POD_CRYPTOGRAPHIC_MAX
+        );
+        return true;
+      } catch (error) {
+        return false;
+      }
+    },
+    {
+      message:
+        "Cryptographic number must be between POD_CRYPTOGRAPHIC_MIN and POD_CRYPTOGRAPHIC_MAX, inclusive"
+    }
+  ).safeParse,
   [PODPipelineInputFieldType.Date]: inputToDate.safeParse,
   [PODPipelineInputFieldType.Boolean]: inputToBoolean.safeParse,
-  [PODPipelineInputFieldType.UUID]: z.string().uuid().safeParse
+  // Since UUIDs may be hashed when treated as strings, we want them to be
+  // normalized to lowercase to prevent issues with case sensitivity.
+  [PODPipelineInputFieldType.UUID]: z.string().uuid().toLowerCase().safeParse
 };

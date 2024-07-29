@@ -58,9 +58,10 @@ export function parseCSV(options: PODPipelineOptions): string[][] {
 /**
  * Default values for new cells in columns of specific types
  */
-const COLUMN_DEFAULTS = {
+const COLUMN_DEFAULTS: { [key in PODPipelineInputFieldType]: string } = {
   [PODPipelineInputFieldType.String]: "",
-  [PODPipelineInputFieldType.Integer]: "0",
+  [PODPipelineInputFieldType.Int]: "0",
+  [PODPipelineInputFieldType.Cryptographic]: "0",
   [PODPipelineInputFieldType.Boolean]: "false",
   [PODPipelineInputFieldType.Date]: "1970-01-01",
   [PODPipelineInputFieldType.UUID]: "00000000-0000-0000-0000-000000000000"

@@ -10,6 +10,8 @@ import React, { ReactNode, useCallback, useMemo, useState } from "react";
 import { MdDeleteOutline } from "react-icons/md";
 import {
   CellBase,
+  DataEditorComponent,
+  DataViewerComponent,
   Matrix,
   RangeSelection,
   Selection,
@@ -21,6 +23,10 @@ import { DeleteColumnDialog } from "./modals/DeleteColumnDialog";
 import { ColumnIndicator } from "./sheet/ColumnIndicator";
 import { HeaderRow, Row } from "./sheet/Rows";
 import { BooleanEditor, BooleanViewer } from "./sheet/cells/BooleanCell";
+import {
+  CryptographicEditor,
+  CryptographicViewer
+} from "./sheet/cells/CryptographicCell";
 import { DateEditor, DateViewer } from "./sheet/cells/DateCell";
 import { IntegerEditor, IntegerViewer } from "./sheet/cells/IntegerCell";
 import { StringEditor, StringViewer } from "./sheet/cells/StringCell";
@@ -30,10 +36,19 @@ import { PODPipelineEditAction, PODPipelineEditActionType } from "./state";
 /**
  * Viewer and editor components for each type of cell
  */
-const COLUMN_CELLS = {
-  [PODPipelineInputFieldType.Integer]: {
+const COLUMN_CELLS: {
+  [key in PODPipelineInputFieldType]: {
+    DataViewer: DataViewerComponent<CellBase>;
+    DataEditor: DataEditorComponent<CellBase>;
+  };
+} = {
+  [PODPipelineInputFieldType.Int]: {
     DataViewer: IntegerViewer,
     DataEditor: IntegerEditor
+  },
+  [PODPipelineInputFieldType.Cryptographic]: {
+    DataViewer: CryptographicViewer,
+    DataEditor: CryptographicEditor
   },
   [PODPipelineInputFieldType.Boolean]: {
     DataViewer: BooleanViewer,

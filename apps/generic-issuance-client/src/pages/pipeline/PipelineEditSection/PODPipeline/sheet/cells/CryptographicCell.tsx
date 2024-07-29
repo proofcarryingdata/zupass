@@ -9,9 +9,9 @@ import {
 
 type Cell = CellBase<bigint | string | undefined>;
 
-export const IntegerViewer: DataViewerComponent<Cell> = ({ cell }) => {
+export const CryptographicViewer: DataViewerComponent<Cell> = ({ cell }) => {
   const value = cell?.value || "";
-  const parsed = coercions[PODPipelineInputFieldType.Int](value);
+  const parsed = coercions[PODPipelineInputFieldType.Cryptographic](value);
 
   return (
     <div
@@ -25,7 +25,7 @@ export const IntegerViewer: DataViewerComponent<Cell> = ({ cell }) => {
   );
 };
 
-export const IntegerEditor: DataEditorComponent<Cell> = ({
+export const CryptographicEditor: DataEditorComponent<Cell> = ({
   cell,
   onChange
 }) => {
@@ -40,7 +40,7 @@ export const IntegerEditor: DataEditorComponent<Cell> = ({
   );
 
   const value = cell?.value || "";
-  const parsed = coercions[PODPipelineInputFieldType.Int](value);
+  const parsed = coercions[PODPipelineInputFieldType.Cryptographic](value);
 
   return (
     <div className="Spreadsheet__data-editor">

@@ -10,6 +10,7 @@ import {
   Portal
 } from "@chakra-ui/react";
 import { PODPipelineInputFieldType } from "@pcd/passport-interface";
+import { assertUnreachable } from "@pcd/util";
 import { ReactNode, useCallback, useMemo } from "react";
 import {
   MdCheckCircleOutline,
@@ -50,14 +51,18 @@ export function ColumnIndicator({
     switch (type) {
       case PODPipelineInputFieldType.String:
         return <Icon as={MdShortText} w={4} h={4} />;
-      case PODPipelineInputFieldType.Integer:
+      case PODPipelineInputFieldType.Int:
         return <Icon as={MdNumbers} w={4} h={4} />;
+      case PODPipelineInputFieldType.Cryptographic:
+        return <Icon as={MdKey} w={4} h={4} />;
       case PODPipelineInputFieldType.Boolean:
         return <Icon as={MdCheckCircleOutline} w={4} h={4} />;
       case PODPipelineInputFieldType.Date:
         return <Icon as={MdDateRange} w={4} h={4} />;
       case PODPipelineInputFieldType.UUID:
         return <Icon as={MdKey} w={4} h={4} />;
+      default:
+        assertUnreachable(type);
     }
   }, [columns, column, columnNames]);
 

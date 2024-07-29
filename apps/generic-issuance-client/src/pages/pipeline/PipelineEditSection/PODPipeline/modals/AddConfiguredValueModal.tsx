@@ -49,9 +49,9 @@ export function AddConfiguredValueModal({
     if (type === "string") {
       return coercions.string(value).success;
     } else if (type === "int") {
-      return coercions.integer(value).success;
+      return coercions.int(value).success;
     } else if (type === "cryptographic") {
-      return coercions.integer(value).success;
+      return coercions.cryptographic(value).success;
     }
     return false;
   }, [type, value]);

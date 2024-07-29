@@ -64,7 +64,8 @@ export function AddColumnModal({
                   }
                 >
                   <option value="string">String</option>
-                  <option value="integer">Integer</option>
+                  <option value="int">Integer</option>
+                  <option value="cryptographic">Cryptographic</option>
                   <option value="boolean">Boolean</option>
                   <option value="date">Date</option>
                   <option value="uuid">UUID</option>

@@ -1,9 +1,15 @@
 import { PODPipelineInputFieldType } from "@pcd/passport-interface";
+import {
+  POD_CRYPTOGRAPHIC_MAX,
+  POD_CRYPTOGRAPHIC_MIN,
+  POD_INT_MAX,
+  POD_INT_MIN
+} from "@pcd/pod";
 import { assert, expect } from "chai";
 import "mocha";
 import { coercions } from "../src/PODPipeline/coercion";
 
-describe("PODPipelineDefinition updates", () => {
+describe("PODPipeline input type coercions", () => {
   it("can coerce strings to UUIDs", () => {
     const uuid = "123e4567-e89b-12d3-a456-426655440000";
     const result = coercions[PODPipelineInputFieldType.UUID](uuid);
@@ -24,6 +30,26 @@ describe("PODPipelineDefinition updates", () => {
         path: []
       }
     ]);
+  });
+
+  it("will normalize UUIDs to lowercase", () => {
+    {
+      const uuid = "123e4567-e89b-12d3-a456-426655440000";
+      const result = coercions[PODPipelineInputFieldType.UUID](uuid);
+      assert(result.success === true);
+      // The parsed UUID is the same as the original string
+      expect(result.data).to.eql("123e4567-e89b-12d3-a456-426655440000");
+    }
+    {
+      const uuid = "123E4567-E89B-12D3-A456-426655440000";
+      const result = coercions[PODPipelineInputFieldType.UUID](uuid);
+      assert(result.success === true);
+      // The parsed UUID is not the same as the original string
+      expect(result.data).to.not.eql("123E4567-E89B-12D3-A456-426655440000");
+      expect(result.data.toLowerCase()).to.eql(
+        "123e4567-e89b-12d3-a456-426655440000"
+      );
+    }
   });
 
   it("can coerce strings to booleans", () => {
@@ -68,14 +94,14 @@ describe("PODPipelineDefinition updates", () => {
     ]);
   });
 
-  it("can coerce strings to numbers", () => {
-    const result = coercions[PODPipelineInputFieldType.Integer]("123");
+  it("can coerce strings to integers", () => {
+    const result = coercions[PODPipelineInputFieldType.Int]("123");
     assert(result.success === true);
     expect(result.data).to.eql(123n);
   });
 
   it("will reject non-numeric strings", () => {
-    const result = coercions[PODPipelineInputFieldType.Integer]("not a number");
+    const result = coercions[PODPipelineInputFieldType.Int]("not a number");
     assert(result.success === false);
     expect(result.error.errors).to.eql([
       { code: "custom", message: "Invalid BigInt value", path: [], fatal: true }
@@ -84,8 +110,8 @@ describe("PODPipelineDefinition updates", () => {
 
   it("will reject out-of-bounds integers", () => {
     {
-      const result = coercions[PODPipelineInputFieldType.Integer](
-        (BigInt(1) << BigInt(64)).toString()
+      const result = coercions[PODPipelineInputFieldType.Int](
+        (POD_INT_MAX + 1n).toString()
       );
       assert(result.success === false);
       expect(result.error.errors).to.eql([
@@ -98,8 +124,8 @@ describe("PODPipelineDefinition updates", () => {
       ]);
     }
     {
-      const result = coercions[PODPipelineInputFieldType.Integer](
-        BigInt(-1).toString()
+      const result = coercions[PODPipelineInputFieldType.Int](
+        (POD_INT_MIN - 1n).toString()
       );
       assert(result.success === false);
       expect(result.error.errors).to.eql([
@@ -107,6 +133,51 @@ describe("PODPipelineDefinition updates", () => {
           code: "custom",
           message:
             "Integer must be between POD_INT_MIN and POD_INT_MAX, inclusive",
+          path: []
+        }
+      ]);
+    }
+  });
+
+  it("can coerce strings to cryptographic numbers", () => {
+    const result = coercions[PODPipelineInputFieldType.Cryptographic]("123");
+    assert(result.success === true);
+    expect(result.data).to.eql(123n);
+  });
+
+  it("can coerce strings to cryptographic numbers when such numbers would be out-of-bounds as integers", () => {
+    const result = coercions[PODPipelineInputFieldType.Cryptographic](
+      (POD_INT_MAX + 1n).toString()
+    );
+    assert(result.success === true);
+    expect(result.data).to.eql(POD_INT_MAX + 1n);
+  });
+
+  it("will reject out-of-bounds cryptographic numbers", () => {
+    {
+      const result = coercions[PODPipelineInputFieldType.Cryptographic](
+        (POD_CRYPTOGRAPHIC_MAX + 1n).toString()
+      );
+      assert(result.success === false);
+      expect(result.error.errors).to.eql([
+        {
+          code: "custom",
+          message:
+            "Cryptographic number must be between POD_CRYPTOGRAPHIC_MIN and POD_CRYPTOGRAPHIC_MAX, inclusive",
+          path: []
+        }
+      ]);
+    }
+    {
+      const result = coercions[PODPipelineInputFieldType.Cryptographic](
+        (POD_CRYPTOGRAPHIC_MIN - 1n).toString()
+      );
+      assert(result.success === false);
+      expect(result.error.errors).to.eql([
+        {
+          code: "custom",
+          message:
+            "Cryptographic number must be between POD_CRYPTOGRAPHIC_MIN and POD_CRYPTOGRAPHIC_MAX, inclusive",
           path: []
         }
       ]);

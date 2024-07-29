@@ -34,7 +34,11 @@ const PODValueConversions: Conversions = {
       type: "string",
       value: value
     }),
-    [PODPipelineInputFieldType.Integer]: (value) => ({
+    [PODPipelineInputFieldType.Int]: (value) => ({
+      type: "string",
+      value: value.toString()
+    }),
+    [PODPipelineInputFieldType.Cryptographic]: (value) => ({
       type: "string",
       value: value.toString()
     }),
@@ -55,7 +59,7 @@ const PODValueConversions: Conversions = {
     // Most things can be integers, except strings.
     // If the input data contains numeric strings, then the input data should
     // be typed as an integer!
-    [PODPipelineInputFieldType.Integer]: (value) => ({
+    [PODPipelineInputFieldType.Int]: (value) => ({
       type: "int",
       value: value
     }),
@@ -70,14 +74,20 @@ const PODValueConversions: Conversions = {
     // UUIDs are too big to fit into a POD integer.
     [PODPipelineInputFieldType.UUID]: undefined,
     // Strings cannot be integers.
-    [PODPipelineInputFieldType.String]: undefined
+    [PODPipelineInputFieldType.String]: undefined,
+    // Cryptographic values do not respect the same bounds as ints
+    [PODPipelineInputFieldType.Cryptographic]: undefined
   },
   cryptographic: {
     // We can directly convert integers to "cryptographic" values.
     // Integers are constrained by the bounds of the POD integer type.
     // Not clear if there's a use-case for CSV uploads containing cryptographic
     // values, which would require another field type to be added.
-    [PODPipelineInputFieldType.Integer]: (value) => ({
+    [PODPipelineInputFieldType.Int]: (value) => ({
+      type: "cryptographic",
+      value: value
+    }),
+    [PODPipelineInputFieldType.Cryptographic]: (value) => ({
       type: "cryptographic",
       value: value
     }),

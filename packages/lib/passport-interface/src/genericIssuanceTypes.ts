@@ -540,10 +540,11 @@ export enum PODPipelineInputType {
 
 export enum PODPipelineInputFieldType {
   String = "string",
-  Integer = "integer",
+  Int = "int",
   Date = "date",
   Boolean = "boolean",
-  UUID = "uuid"
+  UUID = "uuid",
+  Cryptographic = "cryptographic"
 }
 
 const PODPipelineInputFieldSchema = z.object({

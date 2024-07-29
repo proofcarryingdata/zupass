@@ -1,11 +1,12 @@
 import { PODPipelineInputFieldType } from "@pcd/passport-interface";
+import { POD_CRYPTOGRAPHIC_MAX } from "@pcd/pod";
 import { uuidToBigInt } from "@pcd/util";
 import { assert, expect } from "chai";
 import "mocha";
 import { v4 as uuidv4 } from "uuid";
 import { getInputToPODValueConverter } from "../src/PODPipeline/inputToPODEntries";
 
-describe("PODPipelineDefinition updates", () => {
+describe("PODPipeline POD value conversions", () => {
   it("can convert string input fields to POD strings", () => {
     const converter = getInputToPODValueConverter(
       PODPipelineInputFieldType.String,
@@ -21,7 +22,7 @@ describe("PODPipelineDefinition updates", () => {
 
   it("can convert integer input fields to POD strings", () => {
     const converter = getInputToPODValueConverter(
-      PODPipelineInputFieldType.Integer,
+      PODPipelineInputFieldType.Int,
       "string"
     );
     assert(converter);
@@ -29,6 +30,19 @@ describe("PODPipelineDefinition updates", () => {
     expect(result).to.eql({
       type: "string",
       value: "500"
+    });
+  });
+
+  it("can convert cryptographic input fields to POD strings", () => {
+    const converter = getInputToPODValueConverter(
+      PODPipelineInputFieldType.Cryptographic,
+      "string"
+    );
+    assert(converter);
+    const result = converter(POD_CRYPTOGRAPHIC_MAX);
+    expect(result).to.eql({
+      type: "string",
+      value: POD_CRYPTOGRAPHIC_MAX.toString()
     });
   });
 
@@ -74,7 +88,7 @@ describe("PODPipelineDefinition updates", () => {
 
   it("can convert integer fields to POD integers", () => {
     const converter = getInputToPODValueConverter(
-      PODPipelineInputFieldType.Integer,
+      PODPipelineInputFieldType.Int,
       "int"
     );
     assert(converter);
@@ -113,7 +127,20 @@ describe("PODPipelineDefinition updates", () => {
 
   it("can convert integer fields to POD cryptographics", () => {
     const converter = getInputToPODValueConverter(
-      PODPipelineInputFieldType.Integer,
+      PODPipelineInputFieldType.Int,
+      "cryptographic"
+    );
+    assert(converter);
+    const result = converter(500n);
+    expect(result).to.eql({
+      type: "cryptographic",
+      value: 500n
+    });
+  });
+
+  it("can convert cryptographic fields to POD cryptographics", () => {
+    const converter = getInputToPODValueConverter(
+      PODPipelineInputFieldType.Cryptographic,
       "cryptographic"
     );
     assert(converter);
@@ -161,6 +188,20 @@ describe("PODPipelineDefinition updates", () => {
     expect(result).to.eql({
       type: "cryptographic",
       value: uuidToBigInt(uuid)
+    });
+  });
+
+  it("can convert UUID fields to POD strings", () => {
+    const converter = getInputToPODValueConverter(
+      PODPipelineInputFieldType.UUID,
+      "string"
+    );
+    assert(converter);
+    const uuid = uuidv4();
+    const result = converter(uuid);
+    expect(result).to.eql({
+      type: "string",
+      value: uuid
     });
   });
 });

@@ -12,7 +12,9 @@ export type FieldTypeToJavaScriptType<T extends PODPipelineInputFieldType> =
     ? string
     : T extends PODPipelineInputFieldType.Boolean
     ? boolean
-    : T extends PODPipelineInputFieldType.Integer
+    : T extends PODPipelineInputFieldType.Int
+    ? bigint
+    : T extends PODPipelineInputFieldType.Cryptographic
     ? bigint
     : never;
 
