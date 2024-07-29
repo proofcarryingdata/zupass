@@ -144,7 +144,7 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
 export interface UserRow {
   uuid: string;
   commitment: string;
-  email: string;
+  emails: string[];
   salt: string | null;
   encryption_key: string | null;
   terms_agreed: number;
