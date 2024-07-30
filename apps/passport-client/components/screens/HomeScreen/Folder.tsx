@@ -28,7 +28,7 @@ export function FolderEventInfo({
   }
 
   return (
-    <div className="flex flex-col overflow-hidden w-full rounded shadow border-4 border-cyan-950 select-none">
+    <div className="flex flex-col overflow-hidden w-full rounded shadow border-4 border-green-950 select-none">
       <div
         className="flex w-full h-[200px] "
         style={{
@@ -36,7 +36,7 @@ export function FolderEventInfo({
           backgroundSize: "cover"
         }}
       ></div>
-      <div className="font-bold text-xl w-full bg-cyan-700 px-4 py-2 border-t-4 border-cyan-950">
+      <div className="font-bold text-xl w-full bg-[#206b5e] px-4 py-2 border-t-4 border-green-950">
         {getNameFromPath(folder)}
         <span className="text-sm font-normal">
           {" · "}
@@ -130,12 +130,7 @@ export function FolderCard({
     <NewButton
       style={style}
       onClick={onClick}
-      className={cn(
-        "flex flex-row gap-2",
-        "bg-green-700 py-2 px-4 cursor-pointer hover:bg-green-600  transition-all duration-100",
-        "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
-        "text-lg"
-      )}
+      className={cn("flex flex-row gap-2")}
     >
       <div className="flex-grow inline-block" style={{ textAlign: "left" }}>
         {getNameFromPath(folder)}
@@ -263,16 +258,8 @@ export function FolderDetails({
   }, [folder, onFolderClick]);
 
   return (
-    <FolderHeader
-      className={cn(
-        "border-4 border-cyan-950",
-        "bg-cyan-700 py-2 px-4 cursor-pointer hover:bg-cyan-600  transition-all duration-100 text-center",
-        "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
-        "text-lg"
-      )}
-      onClick={onUpOneClick}
-    >
+    <NewButton className={cn()} onClick={onUpOneClick}>
       Back
-    </FolderHeader>
+    </NewButton>
   );
 }

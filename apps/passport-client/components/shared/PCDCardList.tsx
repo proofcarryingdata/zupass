@@ -4,7 +4,7 @@ import _ from "lodash";
 import { useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
-import { cn } from "../../src/util";
+import { NewButton } from "../NewButton";
 import { PCDCard } from "./PCDCard";
 
 type Sortable<T = unknown> = {
@@ -150,39 +150,27 @@ export function PCDCardList({
 
       {sortedPCDs.length > 1 && (
         <div className="flex flex-row gap-4 mb-[0.75rem]">
-          <div
-            className={cn(
-              "border-4 border-cyan-950 flex-grow",
-              "text-center",
-              "bg-cyan-700 py-2 px-4 cursor-pointer hover:bg-cyan-600  transition-all duration-100",
-              "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
-              "text-lg"
-            )}
+          <NewButton
+            className="flex-grow"
             onClick={() => {
               setIdx((idx - 1 + sortedPCDs.length) % sortedPCDs.length);
             }}
           >
             Prev
-          </div>
+          </NewButton>
           <div className="flex flex-row items-center justify-center w-1/5">
             <div className="inline-block text-center">
               {idx + 1}/{sortedPCDs.length}
             </div>
           </div>
-          <div
-            className={cn(
-              "border-4 border-cyan-950 flex-grow",
-              "text-center",
-              "bg-cyan-700 py-2 px-4 cursor-pointer hover:bg-cyan-600  transition-all duration-100",
-              "rounded font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
-              "text-lg"
-            )}
+          <NewButton
+            className="flex-grow"
             onClick={() => {
               setIdx((idx + 1) % sortedPCDs.length);
             }}
           >
             Next
-          </div>
+          </NewButton>
         </div>
       )}
 
