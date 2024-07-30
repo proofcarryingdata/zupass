@@ -505,7 +505,8 @@ describe("database reads and writes", function () {
     const commitment = new Identity().commitment.toString();
     const uuid = await upsertUser(db, {
       commitment,
-      email,
+      uuid: randomUUID(),
+      emails: [email],
       terms_agreed: LATEST_PRIVACY_NOTICE,
       extra_issuance: false
     });
@@ -517,7 +518,7 @@ describe("database reads and writes", function () {
       throw new Error("expected to be able to fetch an inserted commitment");
     }
     expect(insertedCommitment.commitment).to.eq(commitment);
-    expect(insertedCommitment.email).to.eq(email);
+    expect(insertedCommitment.emails).to.deep.eq([email]);
     expect(insertedCommitment.uuid).to.eq(uuid);
 
     expect(await fetchUserByCommitment(db, commitment)).to.deep.eq(
