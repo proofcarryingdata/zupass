@@ -93,9 +93,15 @@ export function SettingsModal({
 
         {showEmailOptions && (
           <>
-            <LinkButton $primary={true} to="/change-email" onClick={closeModal}>
-              Change Email
-            </LinkButton>
+            {self && self.emails.length === 1 && (
+              <LinkButton
+                $primary={true}
+                to="/change-email"
+                onClick={closeModal}
+              >
+                Change Email
+              </LinkButton>
+            )}
             <Spacer h={16} />
             <LinkButton $primary={true} to="/add-email" onClick={closeModal}>
               Add Email
