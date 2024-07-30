@@ -1212,6 +1212,12 @@ export type GenericIssuanceSendPipelineEmailResponseValue = {
   queued: number;
 };
 
+export enum EmailUpdateError {
+  EmailAlreadyRegistered = "EmailAlreadyRegistered",
+  CantDeleteOnlyEmail = "CantDeleteOnlyEmail",
+  Unknown = "Unknown"
+}
+
 /**
  * Request to change a user's email address.
  */

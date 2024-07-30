@@ -659,14 +659,14 @@ export class UserService {
     newEmail: string,
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode: string
-  ): Promise<{ success: boolean; value?: any; error?: string }> {
+  ): Promise<string[]> {
     if (!validateEmail(newEmail)) {
-      return { success: false, error: "Invalid email format" };
+      throw new Error("Invalid email format");
     }
 
     const existingUser = await this.getUserByEmail(newEmail);
     if (existingUser) {
-      return { success: false, error: "Email already in use" };
+      throw new Error("Email already in use");
     }
 
     // Verify the PCD
@@ -675,10 +675,10 @@ export class UserService {
       pcd = await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd);
       const validPCD = await SemaphoreSignaturePCDPackage.verify(pcd);
       if (!validPCD) {
-        return { success: false, error: "Invalid PCD" };
+        throw new Error("Invalid PCD");
       }
     } catch (error) {
-      return { success: false, error: "Error verifying PCD" };
+      throw new Error("Error verifying PCD");
     }
 
     // Get the current user
@@ -686,7 +686,7 @@ export class UserService {
       pcd.claim.identityCommitment
     );
     if (!currentUser) {
-      return { success: false, error: "Current user not found" };
+      throw new Error("Current user not found");
     }
 
     // Check confirmation code
@@ -695,7 +695,7 @@ export class UserService {
       confirmationCode
     );
     if (!isCodeValid) {
-      return { success: false, error: "Invalid confirmation code" };
+      throw new Error("Invalid confirmation code");
     }
 
     // Add the new email to the user's emails
@@ -706,27 +706,26 @@ export class UserService {
         emails: updatedEmails
       });
 
-      return { success: true, value: { emails: updatedEmails } };
+      return updatedEmails;
     } catch (error) {
       logger("[UserService] Error adding email", error);
-      return { success: false, error: "Error updating user emails" };
+      throw new Error("Error updating user emails");
     }
   }
 
   public async handleDeleteEmail(
     emailToRemove: string,
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<{ success: boolean; value?: any; error?: string }> {
-    // Verify the PCD
+  ): Promise<string[]> {
     let pcd: SemaphoreSignaturePCD;
     try {
       pcd = await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd);
       const validPCD = await SemaphoreSignaturePCDPackage.verify(pcd);
       if (!validPCD) {
-        return { success: false, error: "Invalid PCD" };
+        throw new Error("Invalid PCD");
       }
     } catch (error) {
-      return { success: false, error: "Error verifying PCD" };
+      throw new Error("Error verifying PCD");
     }
 
     // Get the current user
@@ -734,17 +733,17 @@ export class UserService {
       pcd.claim.identityCommitment
     );
     if (!currentUser) {
-      return { success: false, error: "Current user not found" };
+      throw new Error("Current user not found");
     }
 
     // Check if the email exists in the user's emails
     if (!currentUser.emails.includes(emailToRemove)) {
-      return { success: false, error: "Email not found for this user" };
+      throw new Error("Email not found for this user");
     }
 
     // Ensure the user has at least one email after removal
     if (currentUser.emails.length === 1) {
-      return { success: false, error: "Cannot remove the only email address" };
+      throw new Error("Cannot remove the only email address");
     }
 
     // Remove the email from the user's emails
@@ -757,10 +756,10 @@ export class UserService {
         emails: updatedEmails
       });
 
-      return { success: true, value: { emails: updatedEmails } };
+      return updatedEmails;
     } catch (error) {
       logger("[UserService] Error removing email", error);
-      return { success: false, error: "Error updating user emails" };
+      throw new Error("Error updating user emails");
     }
   }
 }

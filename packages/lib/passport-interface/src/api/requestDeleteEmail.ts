@@ -2,29 +2,31 @@ import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
+  EmailUpdateError,
   RemoveUserEmailRequest,
   RemoveUserEmailResponseValue
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+import { httpPost } from "./makeRequest";
 
-/**
- * Sends a request to the server to delete an email address from a user's account.
- *
- * @param zupassServerUrl The base URL of the Zupass server
- * @param emailToRemove The email address to be deleted from the account
- * @param pcd A semaphore signature from the user, used to verify their identity
- * @returns A promise that resolves to an APIResult containing undefined for success or an error message
- */
 export async function deleteUserEmail(
   zupassServerUrl: string,
   emailToRemove: string,
   pcd: SerializedPCD<SemaphoreSignaturePCD>
 ): Promise<DeleteUserEmailResult> {
-  return httpPostSimple(
+  return httpPost<DeleteUserEmailResult>(
     urlJoin(zupassServerUrl, "/account/delete-email"),
-    async (resText) => ({ value: JSON.parse(resText), success: true }),
-
+    {
+      onValue: async (resText) => ({
+        value: JSON.parse(resText),
+        success: true
+      }),
+      onError: async (resText, code) => ({
+        error: resText as EmailUpdateError,
+        success: false,
+        code
+      })
+    },
     {
       emailToRemove,
       pcd
@@ -32,4 +34,7 @@ export async function deleteUserEmail(
   );
 }
 
-export type DeleteUserEmailResult = APIResult<RemoveUserEmailResponseValue>;
+export type DeleteUserEmailResult = APIResult<
+  RemoveUserEmailResponseValue,
+  EmailUpdateError
+>;

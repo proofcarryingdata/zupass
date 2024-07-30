@@ -3,10 +3,11 @@ import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
   AddUserEmailRequest,
-  AddUserEmailResponseValue
+  AddUserEmailResponseValue,
+  EmailUpdateError
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+import { httpPost } from "./makeRequest";
 
 /**
  * Sends a request to the server to add a new email address to a user's account.
@@ -23,9 +24,19 @@ export async function addUserEmail(
   pcd: SerializedPCD<SemaphoreSignaturePCD>,
   confirmationCode?: string
 ): Promise<AddUserEmailResult> {
-  return httpPostSimple(
+  return httpPost<AddUserEmailResult>(
     urlJoin(zupassServerUrl, "/account/add-email"),
-    async (resText) => ({ value: JSON.parse(resText), success: true }),
+    {
+      onValue: async (resText) => ({
+        value: JSON.parse(resText),
+        success: true
+      }),
+      onError: async (resText, code) => ({
+        error: resText as EmailUpdateError,
+        success: false,
+        code
+      })
+    },
     {
       newEmail,
       pcd,
@@ -34,4 +45,7 @@ export async function addUserEmail(
   );
 }
 
-export type AddUserEmailResult = APIResult<AddUserEmailResponseValue>;
+export type AddUserEmailResult = APIResult<
+  AddUserEmailResponseValue,
+  EmailUpdateError
+>;

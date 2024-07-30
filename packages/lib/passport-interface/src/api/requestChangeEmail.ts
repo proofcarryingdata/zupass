@@ -3,21 +3,12 @@ import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
   ChangeUserEmailRequest,
-  ChangeUserEmailResponseValue
+  ChangeUserEmailResponseValue,
+  EmailUpdateError
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+import { httpPost } from "./makeRequest";
 
-/**
- * Sends a request to the server to change a user's email address.
- *
- * @param zupassServerUrl The base URL of the Zupass server
- * @param currentEmail The user's current email address
- * @param newEmail The new email address the user wants to change to
- * @param pcd A semaphore signature from the user, used to verify their identity
- * @param confirmationCode An optional confirmation code for additional verification
- * @returns A promise that resolves to an APIResult containing undefined for success or an error message
- */
 export async function changeUserEmail(
   zupassServerUrl: string,
   currentEmail: string,
@@ -25,9 +16,19 @@ export async function changeUserEmail(
   pcd: SerializedPCD<SemaphoreSignaturePCD>,
   confirmationCode?: string
 ): Promise<ChangeUserEmailResult> {
-  return httpPostSimple(
+  return httpPost<ChangeUserEmailResult>(
     urlJoin(zupassServerUrl, "/account/change-email"),
-    async (resText) => ({ value: JSON.parse(resText), success: true }),
+    {
+      onValue: async (resText) => ({
+        value: JSON.parse(resText),
+        success: true
+      }),
+      onError: async (resText, code) => ({
+        error: resText as EmailUpdateError,
+        success: false,
+        code
+      })
+    },
     {
       currentEmail,
       newEmail,
@@ -37,4 +38,7 @@ export async function changeUserEmail(
   );
 }
 
-export type ChangeUserEmailResult = APIResult<ChangeUserEmailResponseValue>;
+export type ChangeUserEmailResult = APIResult<
+  ChangeUserEmailResponseValue,
+  EmailUpdateError
+>;
