@@ -1,5 +1,4 @@
 import { getHash } from "@pcd/passport-crypto";
-import { UNREDACT_TICKETS_TERMS_VERSION } from "@pcd/passport-interface";
 import { normalizeEmail } from "@pcd/util";
 import _ from "lodash";
 import { Pool } from "postgres-pool";
@@ -48,7 +47,6 @@ import {
   softDeletePretixItemInfo,
   updatePretixItemsInfo
 } from "../../database/queries/pretixItemInfo";
-import { fetchUsersByMinimumAgreedTerms } from "../../database/queries/users";
 import {
   mostRecentCheckinEvent,
   pretixRedactedTicketsDifferent,
@@ -410,13 +408,13 @@ export class OrganizerSync {
       const approvedLegalTermsEmails: Set<string> = new Set();
 
       if (this.enableRedaction) {
-        const usersApprovingPII = await fetchUsersByMinimumAgreedTerms(
-          this.db,
-          UNREDACT_TICKETS_TERMS_VERSION
-        );
-        for (const user of usersApprovingPII) {
-          approvedLegalTermsEmails.add(user.email);
-        }
+        // const usersApprovingPII = await fetchUsersByMinimumAgreedTerms(
+        //   this.db,
+        //   UNREDACT_TICKETS_TERMS_VERSION
+        // );
+        // // for (const user of usersApprovingPII) {
+        // //   approvedLegalTermsEmails.add(user.email);
+        // // }
       }
 
       const settings = await this.pretixAPI.fetchEventSettings(
