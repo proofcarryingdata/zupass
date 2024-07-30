@@ -28,6 +28,33 @@ left join users u on u.email = p.email;`
 }
 
 /**
+ * Fetch a particular user that has a Zuzalu ticket. Works even in the case
+ * that this user hasn't logged into Zupass.
+ */
+export async function fetchZuzaluUser(
+  client: Pool,
+  email: string
+): Promise<ZuzaluUser | LoggedInZuzaluUser | null> {
+  const result = await sqlQuery(
+    client,
+    `\
+select 
+    p.email as email,
+    p.name as name,
+    p.role as role,
+    p.order_id as order_id,
+    u.commitment as commitment,
+    u.uuid as uuid,
+    p.visitor_date_ranges as visitor_date_ranges
+from zuzalu_pretix_tickets p
+left join users u on u.email = p.email
+where p.email = $1;`,
+    [email]
+  );
+  return result.rows[0] || null;
+}
+
+/**
  * Fetch a particular user that has both logged into Zupass and also
  * holds a Zuzalu ticket.
  */
@@ -35,14 +62,13 @@ export async function fetchLoggedInZuzaluUser(
   client: Pool,
   params: { uuid: string }
 ): Promise<LoggedInZuzaluUser | null> {
-  // TODO: fix this
   const result = await sqlQuery(
     client,
     `\
 select 
     u.uuid,
     u.commitment,
-    u.emails,
+    p.email,
     p.name,
     p.role,
     p.order_id,
