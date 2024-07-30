@@ -1,10 +1,12 @@
 import {
+  AddUserEmailRequest,
   AgreeTermsRequest,
   ChangeUserEmailRequest,
   ConfirmEmailRequest,
   CreateNewUserRequest,
   DeleteAccountRequest,
   OneClickLoginRequest,
+  RemoveUserEmailRequest,
   SaltResponseValue,
   VerifyTokenRequest
 } from "@pcd/passport-interface";
@@ -201,6 +203,51 @@ export function initAccountRoutes(
     res.sendStatus(200);
   });
 
+  /**
+   * Adds a new email address to a user's account.
+   */
+  app.post("/account/add-email", async (req: Request, res: Response) => {
+    const newEmail = checkBody<AddUserEmailRequest, "newEmail">(
+      req,
+      "newEmail"
+    );
+    const pcd = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
+    const confirmationCode = checkBody<AddUserEmailRequest, "confirmationCode">(
+      req,
+      "confirmationCode"
+    );
+
+    const result = await userService.handleAddEmail(
+      newEmail,
+      pcd,
+      confirmationCode
+    );
+
+    if (result.success) {
+      res.status(200).json(result.value);
+    } else {
+      res.status(400).send(result.error);
+    }
+  });
+
+  /**
+   * Deletes an email address from a user's account.
+   */
+  app.post("/account/delete-email", async (req: Request, res: Response) => {
+    const emailToRemove = checkBody<RemoveUserEmailRequest, "emailToRemove">(
+      req,
+      "emailToRemove"
+    );
+    const pcd = checkBody<RemoveUserEmailRequest, "pcd">(req, "pcd");
+
+    const result = await userService.handleDeleteEmail(emailToRemove, pcd);
+
+    if (result.success) {
+      res.status(200).json(result.value);
+    } else {
+      res.status(400).send(result.error);
+    }
+  });
   /**
    * Changes a user's email address.
    */
