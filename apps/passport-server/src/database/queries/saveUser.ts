@@ -1,5 +1,4 @@
 import { Pool } from "postgres-pool";
-import { logger } from "../../util/logger";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
 /**
@@ -18,6 +17,10 @@ export async function upsertUser(
     emails: string[];
   }
 ): Promise<string> {
+  if (params.emails.length === 0) {
+    throw new Error("users must have at least one email address");
+  }
+
   return sqlTransaction(client, "save user", async (client) => {
     const {
       commitment,
@@ -29,9 +32,7 @@ export async function upsertUser(
       emails
     } = params;
 
-    logger(`Saving user ${JSON.stringify(params, null, 2)}`);
-
-    const insertResult = await sqlQuery(
+    const upsertUserResult = await sqlQuery(
       client,
       `\
 INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance)
@@ -50,27 +51,25 @@ returning *`,
       ]
     );
 
+    const user = upsertUserResult.rows[0];
+    if (!user) {
+      throw new Error(`Failed to save user.`);
+    }
+
     // Update the user's associated emails
     await sqlQuery(client, `DELETE FROM user_emails WHERE user_id = $1`, [
       uuid
     ]);
 
-    if (emails.length > 0) {
-      const emailValues = emails
-        .map((_, index) => `($1, $${index + 2})`)
-        .join(", ");
-      await sqlQuery(
-        client,
-        `INSERT INTO user_emails (user_id, email) VALUES ${emailValues}`,
-        [uuid, ...emails]
-      );
-    }
+    const emailValues = emails
+      .map((_, index) => `($1, $${index + 2})`)
+      .join(", ");
 
-    const user = insertResult.rows[0];
-
-    if (!user) {
-      throw new Error(`Failed to save user.`);
-    }
+    await sqlQuery(
+      client,
+      `INSERT INTO user_emails (user_id, email) VALUES ${emailValues}`,
+      [uuid, ...emails]
+    );
 
     return uuid;
   });
