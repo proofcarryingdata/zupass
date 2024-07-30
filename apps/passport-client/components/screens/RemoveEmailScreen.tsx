@@ -98,6 +98,18 @@ export function RemoveEmailScreen(): JSX.Element | null {
         <TextCenter>Removing email...</TextCenter>
       </>
     );
+  } else if (finished) {
+    content = (
+      <TextCenter>
+        <H2>Email Removed</H2>
+        <Spacer h={24} />
+        You've successfully removed the email address.
+        <Spacer h={24} />
+        <LinkButton to={"/"} $primary={true}>
+          Done
+        </LinkButton>
+      </TextCenter>
+    );
   } else if (self.emails.length === 1) {
     content = (
       <TextCenter>
@@ -108,18 +120,6 @@ export function RemoveEmailScreen(): JSX.Element | null {
         <Spacer h={24} />
         <LinkButton to={"/"} $primary={true}>
           Back
-        </LinkButton>
-      </TextCenter>
-    );
-  } else if (finished) {
-    content = (
-      <TextCenter>
-        <H2>Email Removed</H2>
-        <Spacer h={24} />
-        You've successfully removed the email address.
-        <Spacer h={24} />
-        <LinkButton to={"/"} $primary={true}>
-          Done
         </LinkButton>
       </TextCenter>
     );
