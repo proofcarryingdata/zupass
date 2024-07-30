@@ -111,7 +111,10 @@ export function ChangeEmailScreen(): JSX.Element | null {
       }
 
       // Update local state
-      dispatch({ type: "set-self", self: { ...self, email: newEmail } });
+      dispatch({
+        type: "set-self",
+        self: { ...self, emails: result.value.newEmailList }
+      });
 
       // Upload E2EE storage
       // await update();
