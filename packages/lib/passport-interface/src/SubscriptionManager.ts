@@ -259,10 +259,12 @@ export class FeedSubscriptionManager {
 
   private async makeAlternateCredentialPCD(
     authKey: string
-  ): Promise<SerializedPCD> {
-    return await ObjPCDPackage.serialize(
-      new ObjPCD(randomUUID(), {}, { obj: { authKey } })
-    );
+  ): Promise<SerializedPCD[]> {
+    return [
+      await ObjPCDPackage.serialize(
+        new ObjPCD(randomUUID(), {}, { obj: { authKey } })
+      )
+    ];
   }
 
   /**
@@ -280,28 +282,39 @@ export class FeedSubscriptionManager {
     try {
       const authKey = await this.getAuthKeyForFeed(subscription);
 
-      const pcdCredential: SerializedPCD | undefined = authKey
+      const pcdCredentials: SerializedPCD[] | undefined = authKey
         ? await this.makeAlternateCredentialPCD(authKey)
         : await credentialManager.requestCredentials({
             signatureType: "sempahore-signature-pcd",
             pcdType: subscription.feed.credentialRequest.pcdType
           });
 
-      const result = await this.api.pollFeed(subscription.providerUrl, {
-        feedId: subscription.feed.id,
-        pcd: pcdCredential
-      });
+      const results = await Promise.all(
+        pcdCredentials.map((credential) => {
+          return this.api.pollFeed(subscription.providerUrl, {
+            feedId: subscription.feed.id,
+            pcd: credential
+          });
+        })
+      );
 
-      if (!result.success) {
-        if (result.code === 410) {
-          this.flagSubscriptionAsEnded(subscription.id, result.error);
-          return responses;
+      // TODO: implement error handling
+
+      // if (!results.success) {
+      //   if (results.code === 410) {
+      //     this.flagSubscriptionAsEnded(subscription.id, results.error);
+      //     return responses;
+      //   }
+
+      //   throw new Error(results.error);
+      // }
+
+      const actions = results.flatMap((r) => {
+        if (r.success) {
+          return r.value.actions;
         }
-
-        throw new Error(result.error);
-      }
-
-      const { actions } = result.value;
+        return [];
+      });
 
       this.validateActions(subscription, actions);
 
