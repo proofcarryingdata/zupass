@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { EdDSAFrogPCDPackage, IFrogData } from "@pcd/eddsa-frog-pcd";
 import {
@@ -75,14 +76,12 @@ import {
   DevconnectPretixTicketDBWithEmailAndItem,
   UserRow
 } from "../database/models";
-import { checkInOfflineTickets } from "../database/multitableQueries/checkInOfflineTickets";
 import { fetchOfflineTicketsForChecker } from "../database/multitableQueries/fetchOfflineTickets";
 import {
   fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEmail,
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
-import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import {
   fetchKnownPublicKeys,
   fetchKnownTicketByEventAndProductId,
@@ -455,18 +454,18 @@ export class IssuanceService {
         signaturePCD.claim.identityCommitment
       )) as UserRow;
 
-      const successfullyConsumed = await consumeDevconnectPretixTicket(
-        this.context.dbPool,
-        ticketData.ticketId ?? "",
-        checker.email
-      );
+      // const successfullyConsumed = await consumeDevconnectPretixTicket(
+      //   this.context.dbPool,
+      //   ticketData.ticketId ?? "",
+      //   checker.email
+      // );
 
-      if (successfullyConsumed) {
-        return {
-          value: undefined,
-          success: true
-        };
-      }
+      // if (successfullyConsumed) {
+      //   return {
+      //     value: undefined,
+      //     success: true
+      //   };
+      // }
 
       return {
         error: {
@@ -549,7 +548,7 @@ export class IssuanceService {
       const checkerSuperUserPermissions =
         await fetchDevconnectSuperusersForEmail(
           this.context.dbPool,
-          checker.email
+          "checker.email"
         );
 
       const relevantSuperUserPermission = checkerSuperUserPermissions.find(
@@ -638,7 +637,7 @@ export class IssuanceService {
         }
 
         return {
-          email: user.email.toLowerCase(),
+          email: "user.email".toLowerCase(),
           semaphoreId: user.commitment,
           authKey
         } satisfies VerifiedCredential;
@@ -686,7 +685,7 @@ export class IssuanceService {
       "issueDevconnectPretixTicketPCDs",
       async (span) => {
         const commitmentRow = await this.checkUserExists(credential);
-        const email = commitmentRow?.email;
+        const email = "commitmentRow?.email";
         if (commitmentRow) {
           span?.setAttribute(
             "commitment",
@@ -977,7 +976,7 @@ export class IssuanceService {
       "issueDevconnectPretixTicketPCDs",
       async (span) => {
         const commitmentRow = await this.checkUserExists(credential);
-        const email = commitmentRow?.email;
+        const email = "commitmentRow?.email";
         if (commitmentRow) {
           span?.setAttribute(
             "commitment",
@@ -1035,7 +1034,7 @@ export class IssuanceService {
       }
 
       const commitmentRow = await this.checkUserExists(credential);
-      const email = commitmentRow?.email;
+      const email = "commitmentRow?.email";
       if (commitmentRow) {
         span?.setAttribute(
           "commitment",
@@ -1104,7 +1103,7 @@ export class IssuanceService {
           return [];
         }
         const user = await this.checkUserExists(credential);
-        const email = user?.email;
+        const email = "user?.email";
         if (user) {
           span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
         }
@@ -1446,11 +1445,11 @@ export class IssuanceService {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
-    await checkInOfflineTickets(
-      this.context.dbPool,
-      semaphoreId,
-      req.checkedOfflineInDevconnectTicketIDs
-    );
+    // await checkInOfflineTickets(
+    //   this.context.dbPool,
+    //   semaphoreId,
+    //   req.checkedOfflineInDevconnectTicketIDs
+    // );
 
     res.json({} satisfies UploadOfflineCheckinsResponseValue);
   }
