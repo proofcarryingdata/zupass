@@ -52,6 +52,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
 
   const onSendConfirmationCode = useCallback(async () => {
     if (loading || !self) return;
+
     if (!validate(newEmail)) {
       setError("Please enter a valid email address.");
       return;
