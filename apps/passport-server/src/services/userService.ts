@@ -7,6 +7,7 @@ import {
   LATEST_PRIVACY_NOTICE,
   NewUserResponseValue,
   OneClickLoginResponseValue,
+  RemoveUserEmailResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
   VerifiedCredential,
   VerifyTokenResponseValue
@@ -16,7 +17,11 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { ZUPASS_SUPPORT_EMAIL, validateEmail } from "@pcd/util";
+import {
+  ZUPASS_SUPPORT_EMAIL,
+  getErrorMessage,
+  validateEmail
+} from "@pcd/util";
 import { randomUUID } from "crypto";
 import { Response } from "express";
 import { z } from "zod";
@@ -652,9 +657,56 @@ export class UserService {
         emails: newEmailList
       });
 
-      return { newEmailList };
+      return { newEmailList, sentToken: false };
     } catch {
       throw new PCDHTTPError(400, EmailUpdateError.Unknown);
+    }
+  }
+
+  public async handleRemoveUserEmail(
+    emailToRemove: string,
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<RemoveUserEmailResponseValue> {
+    let credential: VerifiedCredential;
+    try {
+      const verifiedCredential =
+        await this.credentialSubservice.tryVerify(serializedPCD);
+      if (!verifiedCredential) {
+        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+      }
+      credential = verifiedCredential;
+    } catch (error) {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+    }
+
+    const currentUser = await this.getUserByCommitment(credential.semaphoreId);
+    if (!currentUser) {
+      throw new PCDHTTPError(400, EmailUpdateError.UserNotFound);
+    }
+
+    if (!currentUser.emails.includes(emailToRemove)) {
+      throw new PCDHTTPError(
+        400,
+        EmailUpdateError.EmailNotAssociatedWithThisAccount
+      );
+    }
+
+    if (currentUser.emails.length === 1) {
+      throw new PCDHTTPError(400, EmailUpdateError.CantDeleteOnlyEmail);
+    }
+
+    const newEmailList = currentUser.emails.filter(
+      (email) => email !== emailToRemove
+    );
+
+    try {
+      await upsertUser(this.context.dbPool, {
+        ...currentUser,
+        emails: newEmailList
+      });
+      return { newEmailList };
+    } catch (e) {
+      throw new PCDHTTPError(400, getErrorMessage(e));
     }
   }
 
@@ -727,56 +779,6 @@ export class UserService {
     } catch (error) {
       logger("[UserService] Error changing email", error);
       return { success: false, error: "Error updating email" };
-    }
-  }
-
-  public async handleRemoveUserEmail(
-    emailToRemove: string,
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<string[]> {
-    let pcd: SemaphoreSignaturePCD;
-    try {
-      pcd = await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd);
-      const validPCD = await SemaphoreSignaturePCDPackage.verify(pcd);
-      if (!validPCD) {
-        throw new Error("Invalid PCD");
-      }
-    } catch (error) {
-      throw new Error("Error verifying PCD");
-    }
-
-    // Get the current user
-    const currentUser = await this.getUserByCommitment(
-      pcd.claim.identityCommitment
-    );
-    if (!currentUser) {
-      throw new Error("Current user not found");
-    }
-
-    // Check if the email exists in the user's emails
-    if (!currentUser.emails.includes(emailToRemove)) {
-      throw new Error("Email not found for this user");
-    }
-
-    // Ensure the user has at least one email after removal
-    if (currentUser.emails.length === 1) {
-      throw new Error("Cannot remove the only email address");
-    }
-
-    // Remove the email from the user's emails
-    try {
-      const updatedEmails = currentUser.emails.filter(
-        (email) => email !== emailToRemove
-      );
-      await upsertUser(this.context.dbPool, {
-        ...currentUser,
-        emails: updatedEmails
-      });
-
-      return updatedEmails;
-    } catch (error) {
-      logger("[UserService] Error removing email", error);
-      throw new Error("Error updating user emails");
     }
   }
 }

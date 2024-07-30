@@ -1218,6 +1218,8 @@ export enum EmailUpdateError {
   EmailAlreadyRegistered = "EmailAlreadyRegistered",
   CantDeleteOnlyEmail = "CantDeleteOnlyEmail",
   EmailAlreadyAdded = "EmailAlreadyAdded",
+  EmailNotAssociatedWithThisAccount = "EmailNotAssociatedWithThisAccount",
+  UserNotFound = "UserNotFound",
   InvalidInput = "InvalidInput",
   Unknown = "Unknown"
 }
