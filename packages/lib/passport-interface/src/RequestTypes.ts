@@ -572,8 +572,7 @@ export interface PollFeedResponseValue {
 export interface ZupassUserJson {
   uuid: string;
   commitment: string;
-  email: string;
-  emails?: string[];
+  emails: string[];
   salt: string | null;
   terms_agreed: number;
 }
