@@ -137,7 +137,8 @@ describe("database reads and writes", function () {
       const newIdentity = new Identity();
       const newCommitment = newIdentity.commitment.toString();
       const newUuid = await upsertUser(db, {
-        email: testTicket.email,
+        uuid: randomUUID(),
+        emails: [testTicket.email],
         commitment: newCommitment,
         terms_agreed: LATEST_PRIVACY_NOTICE,
         extra_issuance: false

@@ -53,6 +53,7 @@ export interface ZuzaluUser extends ZuzaluPretixTicket {
   uuid: string | null;
   time_created: Date;
   time_updated: Date;
+  emails: string[];
 }
 
 export interface DevconnectPretixTicket {
