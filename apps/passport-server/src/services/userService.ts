@@ -14,6 +14,7 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { ZUPASS_SUPPORT_EMAIL, validateEmail } from "@pcd/util";
+import { randomUUID } from "crypto";
 import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
@@ -254,7 +255,8 @@ export class UserService {
     }
     // todo: rate limit
     await upsertUser(this.context.dbPool, {
-      email,
+      uuid: randomUUID(),
+      emails: [email],
       commitment,
       encryptionKey,
       terms_agreed: LATEST_PRIVACY_NOTICE,
@@ -343,7 +345,8 @@ export class UserService {
 
     logger(`[USER_SERVICE] Saving commitment: ${commitment}`);
     await upsertUser(this.context.dbPool, {
-      email,
+      uuid: existingUser ? existingUser.uuid : randomUUID(),
+      emails: existingUser ? existingUser.emails : [email],
       commitment,
       salt,
       encryptionKey,
@@ -642,7 +645,7 @@ export class UserService {
     try {
       await upsertUser(this.context.dbPool, {
         ...currentUser,
-        email: newEmail
+        emails: [newEmail]
       });
 
       return { success: true };
