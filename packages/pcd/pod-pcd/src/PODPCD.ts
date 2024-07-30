@@ -133,7 +133,3 @@ export class PODPCD implements PCD<PODPCDClaim, PODPCDProof> {
 export function isPODPCD(pcd: PCD): pcd is PODPCD {
   return pcd.type === PODPCDTypeName;
 }
-
-export interface PODWrapperPCD {
-  toPODPCD(): PODPCD;
-}

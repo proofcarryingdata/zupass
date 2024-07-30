@@ -55,6 +55,13 @@ const DEFAULT_ENTRIES_CONFIG: RevealedEntries = {
   }
 };
 
+/**
+ * Convert a key from the {@link PODTicketFieldsToReveal} object to a key in the
+ * {@link RevealedEntries} object.
+ *
+ * @param key - The key to convert.
+ * @returns The converted key.
+ */
 function revealedFieldKeyToEntryName(
   key: keyof PODTicketFieldsToReveal
 ): RevealableTicketField {
@@ -83,6 +90,14 @@ function entriesFromPattern(
   return idPatternEntries;
 }
 
+/**
+ * Add the revealed entries from the {@link PODTicketFieldsToReveal} object to
+ * the {@link RevealedEntries} object.
+ *
+ * @param revealedEntries - The revealed entries.
+ * @param revealedFields - The revealed fields.
+ * @returns The updated revealed entries.
+ */
 function addRevealedEntriesFromRevealedFields(
   revealedEntries: RevealedEntries,
   revealedFields: PODTicketFieldsToReveal
@@ -152,6 +167,12 @@ function makeGPCConfig({
   } satisfies GPCProofConfig;
 }
 
+/**
+ * Convert a {@link PODEntries} to a {@link Partial<IPODTicketData>}.
+ *
+ * @param entries - The entries to convert.
+ * @returns The converted entries.
+ */
 export function podEntriesToPartialTicketData(
   entries: PODEntries
 ): Partial<IPODTicketData> {
