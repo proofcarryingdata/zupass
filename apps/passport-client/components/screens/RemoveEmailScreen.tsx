@@ -98,6 +98,19 @@ export function RemoveEmailScreen(): JSX.Element | null {
         <TextCenter>Removing email...</TextCenter>
       </>
     );
+  } else if (self.emails.length === 1) {
+    content = (
+      <TextCenter>
+        <H2>Can't Remove Email</H2>
+        <Spacer h={24} />
+        You cannot remove the only email associated with your account. If you'd
+        like to delete your account you can do so via the settings pane.
+        <Spacer h={24} />
+        <LinkButton to={"/"} $primary={true}>
+          Back
+        </LinkButton>
+      </TextCenter>
+    );
   } else if (finished) {
     content = (
       <TextCenter>
