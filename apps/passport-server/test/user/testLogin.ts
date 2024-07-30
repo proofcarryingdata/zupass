@@ -97,7 +97,7 @@ export async function testLogin(
   expect(newUserResult.value).to.haveOwnProperty("email");
   expect(newUserResult.success).to.eq(true);
   expect(newUserResult.value.commitment).to.eq(commitment);
-  expect(newUserResult.value.email).to.eq(email);
+  expect(newUserResult.value.emails).to.deep.eq([email]);
 
   const getUserResponse = await requestUser(
     application.expressContext.localEndpoint,

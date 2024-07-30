@@ -1,4 +1,5 @@
 import { LATEST_PRIVACY_NOTICE } from "@pcd/passport-interface";
+import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
