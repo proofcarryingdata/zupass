@@ -22,7 +22,7 @@ import {
   deleteE2EEByCommitment,
   fetchEncryptedStorage
 } from "../database/queries/e2ee";
-import { saveUserBackup, upsertUser } from "../database/queries/saveUser";
+import { upsertUser } from "../database/queries/saveUser";
 import {
   deleteUserByUUID,
   fetchUserByCommitment,
@@ -142,7 +142,6 @@ export class UserService {
             existingCommitment
           )}`
         );
-        await saveUserBackup(this.context.dbPool, existingCommitment);
         await deleteUserByUUID(this.context.dbPool, existingCommitment.uuid);
         existingCommitment = null;
       }
@@ -240,7 +239,6 @@ export class UserService {
             existingUser
           )}`
         );
-        await saveUserBackup(this.context.dbPool, existingUser);
         await deleteUserByUUID(this.context.dbPool, existingUser.uuid);
         existingUser = null;
       }
