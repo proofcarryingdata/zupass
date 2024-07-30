@@ -13,9 +13,9 @@ export async function fetchUserByEmail(
   const result = await sqlQuery(
     client,
     `SELECT u.*, array_agg(ue.email) as emails FROM users u
-     JOIN user_emails ue ON u.id = ue.user_id
+     JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE ue.email = $1
-     GROUP BY u.id`,
+     GROUP BY u.uuid`,
     [email]
   );
 
@@ -33,9 +33,9 @@ export async function fetchUserByUUID(
     client,
     `SELECT u.*, array_agg(ue.email) as emails 
      FROM users u
-     LEFT JOIN user_emails ue ON u.id = ue.user_id
-     WHERE u.id = $1
-     GROUP BY u.id`,
+     LEFT JOIN user_emails ue ON u.uuid = ue.user_id
+     WHERE u.uuid = $1
+     GROUP BY u.uuid`,
     [uuid]
   );
 
@@ -53,9 +53,9 @@ export async function fetchUserByAuthKey(
     client,
     `SELECT u.*, array_agg(ue.email) as emails 
      FROM users u
-     LEFT JOIN user_emails ue ON u.id = ue.user_id
+     LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.auth_key = $1
-     GROUP BY u.id`,
+     GROUP BY u.uuid`,
     [authKey]
   );
 
@@ -70,8 +70,8 @@ export async function fetchAllUsers(client: Pool): Promise<UserRow[]> {
     client,
     `SELECT u.*, array_agg(ue.email) as emails 
      FROM users u
-     LEFT JOIN user_emails ue ON u.id = ue.user_id
-     GROUP BY u.id`
+     LEFT JOIN user_emails ue ON u.uuid = ue.user_id
+     GROUP BY u.uuid`
   );
   return result.rows;
 }
@@ -87,7 +87,7 @@ export async function deleteUserByEmail(
 ): Promise<void> {
   await sqlQuery(
     client,
-    `DELETE FROM users WHERE id IN (
+    `DELETE FROM users WHERE uuid IN (
       SELECT user_id FROM user_emails WHERE email = $1
     )`,
     [email]
@@ -125,9 +125,9 @@ export async function fetchUserByCommitment(
     client,
     `SELECT u.*, array_agg(ue.email) as emails 
      FROM users u
-     LEFT JOIN user_emails ue ON u.id = ue.user_id
+     LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.commitment = $1
-     GROUP BY u.id`,
+     GROUP BY u.uuid`,
     [commitment]
   );
 
@@ -149,9 +149,9 @@ export async function fetchUsersByMinimumAgreedTerms(
     client,
     `SELECT u.*, array_agg(ue.email) as emails 
      FROM users u
-     LEFT JOIN user_emails ue ON u.id = ue.user_id
+     LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.terms_agreed >= $1
-     GROUP BY u.id`,
+     GROUP BY u.uuid`,
     [version]
   );
 
@@ -169,10 +169,10 @@ export async function fetchAllUsersWithDevconnectTickets(
     `
     SELECT DISTINCT u.*, array_agg(ue.email) as emails 
     FROM users u
-    INNER JOIN user_emails ue ON u.id = ue.user_id
+    INNER JOIN user_emails ue ON u.uuid = ue.user_id
     INNER JOIN devconnect_pretix_tickets t ON ue.email = t.email
     WHERE t.is_deleted = false
-    GROUP BY u.id
+    GROUP BY u.uuid
     `
   );
 
@@ -190,13 +190,13 @@ export async function fetchAllUsersWithDevconnectSuperuserTickets(
     `
     SELECT DISTINCT u.*, array_agg(ue.email) as emails 
     FROM users u
-    INNER JOIN user_emails ue ON u.id = ue.user_id
+    INNER JOIN user_emails ue ON u.uuid = ue.user_id
     INNER JOIN devconnect_pretix_tickets t ON ue.email = t.email
     INNER JOIN devconnect_pretix_items_info i ON t.devconnect_pretix_items_info_id = i.id
     INNER JOIN devconnect_pretix_events_info e ON i.devconnect_pretix_events_info_id = e.id
     INNER JOIN pretix_events_config ec ON e.pretix_events_config_id = ec.id
     WHERE t.is_deleted = false AND i.item_id = ANY(ec.superuser_item_ids)
-    GROUP BY u.id
+    GROUP BY u.uuid
     `
   );
 
