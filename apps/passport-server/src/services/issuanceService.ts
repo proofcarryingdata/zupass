@@ -971,30 +971,23 @@ export class IssuanceService {
   private async issueEmailPCDs(
     credential: VerifiedCredential
   ): Promise<EmailPCD[]> {
-    return traced(
-      "IssuanceService",
-      "issueDevconnectPretixTicketPCDs",
-      async (span) => {
-        const commitmentRow = await this.checkUserExists(credential);
-        const email = "commitmentRow?.email";
-        if (commitmentRow) {
-          span?.setAttribute(
-            "commitment",
-            commitmentRow?.commitment?.toString() ?? ""
-          );
-        }
-        if (email) {
-          span?.setAttribute("email", email);
-        }
+    return traced("IssuanceService", "issueEmailPCDs", async (span) => {
+      const user = await this.checkUserExists(credential);
 
-        if (!commitmentRow || !email) {
-          return [];
-        }
+      if (!user) {
+        return [];
+      }
 
-        const stableId = "attested-email-" + email;
+      span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
 
-        return [
-          await EmailPCDPackage.prove({
+      if (user) {
+        span?.setAttribute("emails", user.emails);
+      }
+
+      return Promise.all(
+        user.emails.map((email) => {
+          const stableId = "attested-email-" + email;
+          return EmailPCDPackage.prove({
             privateKey: {
               value: this.eddsaPrivateKey,
               argumentType: ArgumentTypeName.String
@@ -1008,13 +1001,13 @@ export class IssuanceService {
               argumentType: ArgumentTypeName.String
             },
             semaphoreId: {
-              value: commitmentRow.commitment,
+              value: user.commitment,
               argumentType: ArgumentTypeName.String
             }
-          })
-        ];
-      }
-    );
+          });
+        })
+      );
+    });
   }
 
   private async issueZuzaluTicketPCDs(
