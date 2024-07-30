@@ -113,14 +113,15 @@ export function ChangeEmailScreen(): JSX.Element | null {
         throw new Error(result.error);
       }
 
-      // Update local state
+      if (!result.value.newEmailList) {
+        setError("couldn't change email, plz try again later");
+        return;
+      }
+
       dispatch({
         type: "set-self",
         self: { ...self, emails: result.value.newEmailList }
       });
-
-      // Upload E2EE storage
-      // await update();
 
       setFinished(true);
       setLoading(false);

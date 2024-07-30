@@ -2,6 +2,7 @@ import { HexString, getHash } from "@pcd/passport-crypto";
 import {
   AddUserEmailResponseValue,
   AgreeTermsResult,
+  ChangeUserEmailResponseValue,
   ConfirmEmailResponseValue,
   EmailUpdateError,
   LATEST_PRIVACY_NOTICE,
@@ -715,70 +716,77 @@ export class UserService {
     newEmail: string,
     pcd: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
-  ): Promise<{ success: boolean; error?: string }> {
+  ): Promise<ChangeUserEmailResponseValue> {
     if (!validateEmail(newEmail)) {
-      return { success: false, error: "Invalid email format" };
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
     }
 
-    const existingUser = await this.getUserByEmail(newEmail);
-    if (existingUser) {
-      return { success: false, error: "Email already in use" };
+    const maybeUserAlreadyOwningNewEmail = await this.getUserByEmail(newEmail);
+    if (maybeUserAlreadyOwningNewEmail) {
+      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
     }
 
-    // Verify the PCD
-    let semaphoreSignaturePCD: SemaphoreSignaturePCD;
+    const requestingUser = await this.getUserByEmail(currentEmail);
+    if (!requestingUser) {
+      throw new PCDHTTPError(404, EmailUpdateError.UserNotFound);
+    }
+
+    let credential: VerifiedCredential;
     try {
-      semaphoreSignaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-        pcd.pcd
-      );
-      const validPCD = await SemaphoreSignaturePCDPackage.verify(
-        semaphoreSignaturePCD
-      );
-      if (!validPCD) {
-        return { success: false, error: "Invalid PCD" };
+      const verifiedCredential = await this.credentialSubservice.tryVerify(pcd);
+      if (!verifiedCredential) {
+        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
       }
-    } catch (error) {
-      return { success: false, error: "Error verifying PCD" };
+      credential = verifiedCredential;
+
+      if (credential.semaphoreId !== requestingUser.commitment) {
+        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+      }
+    } catch {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
-    // Get the current user
-    const currentUser = await this.getUserByEmail(currentEmail);
-    if (!currentUser) {
-      return { success: false, error: "Current user not found" };
-    }
-
-    // Check confirmation code or send a new one
-    if (confirmationCode) {
-      const isCodeValid = await this.emailTokenService.checkTokenCorrect(
-        newEmail,
-        confirmationCode
-      );
-      if (!isCodeValid) {
-        return { success: false, error: "Invalid confirmation code" };
-      }
-    } else {
-      // Generate and send a new confirmation code
-      const newConfirmationCode =
+    if (!confirmationCode) {
+      const newToken =
         await this.emailTokenService.saveNewTokenForEmail(newEmail);
-      await this.emailService.sendTokenEmail(newEmail, newConfirmationCode);
-      return {
-        success: false,
-        error:
-          "Confirmation code sent to new email. Please confirm to complete the change."
-      };
+
+      if (this.bypassEmail) {
+        logger("[DEV] Bypassing email, returning token", newToken);
+        return { sentToken: true, token: newToken };
+      }
+
+      await this.emailService.sendTokenEmail(newEmail, newToken);
+
+      return { sentToken: true };
     }
 
-    // Update the user's email
+    const isCodeValid = await this.emailTokenService.checkTokenCorrect(
+      newEmail,
+      confirmationCode
+    );
+
+    if (!isCodeValid) {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidConfirmationCode);
+    }
+
+    if (requestingUser.emails.length !== 1) {
+      throw new PCDHTTPError(
+        400,
+        EmailUpdateError.CantChangeWhenMultipleEmails
+      );
+    }
+
     try {
+      const newEmailList = [newEmail];
+
       await upsertUser(this.context.dbPool, {
-        ...currentUser,
-        emails: [newEmail]
+        ...requestingUser,
+        emails: newEmailList
       });
 
-      return { success: true };
-    } catch (error) {
-      logger("[UserService] Error changing email", error);
-      return { success: false, error: "Error updating email" };
+      return { sentToken: false, newEmailList };
+    } catch (e) {
+      throw new PCDHTTPError(500, getErrorMessage(e));
     }
   }
 }

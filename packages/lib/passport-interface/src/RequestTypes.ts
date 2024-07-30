@@ -1217,6 +1217,7 @@ export enum EmailUpdateError {
   InvalidConfirmationCode = "InvalidConfirmationCode",
   EmailAlreadyRegistered = "EmailAlreadyRegistered",
   CantDeleteOnlyEmail = "CantDeleteOnlyEmail",
+  CantChangeWhenMultipleEmails = "CantChangeWhenMultipleEmails",
   EmailAlreadyAdded = "EmailAlreadyAdded",
   EmailNotAssociatedWithThisAccount = "EmailNotAssociatedWithThisAccount",
   UserNotFound = "UserNotFound",
@@ -1274,9 +1275,13 @@ export interface ChangeUserEmailRequest {
   confirmationCode?: string;
 }
 
-export type ChangeUserEmailResponseValue = {
-  newEmailList: string[];
-};
+export type ChangeUserEmailResponseValue =
+  | {
+      sentToken: false;
+      token?: never;
+      newEmailList: string[];
+    }
+  | { sentToken: true; token?: string; newEmailList?: never };
 
 export interface RemoveUserEmailRequest {
   /**

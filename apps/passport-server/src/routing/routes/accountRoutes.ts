@@ -251,10 +251,7 @@ export function initAccountRoutes(
       "newEmail"
     );
     const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
-    const confirmationCode = checkBody<
-      ChangeUserEmailRequest,
-      "confirmationCode"
-    >(req, "confirmationCode");
+    const confirmationCode = req.body.confirmationCode as string | undefined;
 
     const result = await userService.handleChangeUserEmail(
       currentEmail,
@@ -263,10 +260,6 @@ export function initAccountRoutes(
       confirmationCode
     );
 
-    if (result.success) {
-      res.sendStatus(200);
-    } else {
-      res.status(400).send(result.error);
-    }
+    res.status(200).send(result);
   });
 }
