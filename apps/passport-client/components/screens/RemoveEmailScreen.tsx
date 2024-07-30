@@ -1,6 +1,6 @@
 import {
   CredentialManager,
-  RemoveUserEmailRequest
+  requestRemoveUserEmail
 } from "@pcd/passport-interface";
 import { LinkButton } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -56,30 +56,21 @@ export function RemoveEmailScreen(): JSX.Element | null {
           signatureType: "sempahore-signature-pcd"
         });
 
-      const response = await fetch(
-        `${appConfig.zupassServer}/account/remove-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            emailToRemove,
-            pcd
-          } as RemoveUserEmailRequest)
-        }
+      const response = await requestRemoveUserEmail(
+        appConfig.zupassServer,
+        emailToRemove,
+        pcd
       );
 
-      if (!response.ok) {
-        throw new Error(await response.text());
+      if (!response.success) {
+        throw new Error(response.error);
       }
 
-      // Update local state
       dispatch({
         type: "set-self",
         self: {
           ...self,
-          emails: (self.emails ?? []).filter((e) => e !== emailToRemove)
+          emails: response.value.newEmailList
         }
       });
 
