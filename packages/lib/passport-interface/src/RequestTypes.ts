@@ -1242,9 +1242,10 @@ export interface AddUserEmailRequest {
 export type AddUserEmailResponseValue =
   | {
       sentToken?: never;
+      token?: string;
       newEmailList: string[];
     }
-  | { sentToken: true; newEmailList?: never };
+  | { sentToken: true; token?: string; newEmailList?: never };
 
 /**
  * Request to change a user's email address.

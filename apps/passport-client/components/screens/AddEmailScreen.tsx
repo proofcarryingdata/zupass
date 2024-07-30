@@ -1,6 +1,6 @@
 import {
-  AddUserEmailRequest,
-  CredentialManager
+  CredentialManager,
+  requestAddUserEmail
 } from "@pcd/passport-interface";
 import { LinkButton } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -37,7 +37,9 @@ export function AddEmailScreen(): JSX.Element | null {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [newEmail, setNewEmail] = useState("");
-  const [confirmationCode, setConfirmationCode] = useState("");
+  const [confirmationCode, setConfirmationCode] = useState<
+    string | undefined
+  >();
   const [error, setError] = useState<string | undefined>();
   const [finished, setFinished] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
@@ -65,22 +67,18 @@ export function AddEmailScreen(): JSX.Element | null {
           signatureType: "sempahore-signature-pcd"
         });
 
-      const response = await fetch(
-        `${appConfig.zupassServer}/account/add-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            newEmail,
-            pcd
-          } as AddUserEmailRequest)
-        }
+      const response = await requestAddUserEmail(
+        appConfig.zupassServer,
+        newEmail,
+        pcd
       );
 
-      if (!response.ok) {
-        throw new Error(await response.text());
+      if (response.success) {
+        if (response.value.token) {
+          setConfirmationCode(response.value.token);
+        }
+      } else {
+        setError(response.error);
       }
 
       setCodeSent(true);
@@ -95,6 +93,7 @@ export function AddEmailScreen(): JSX.Element | null {
   const onAddEmail = useCallback(async () => {
     if (loading || !self) return;
     setLoading(true);
+
     try {
       const { identity, credentialCache } = stateContext.getState();
       const credentialManager = new CredentialManager(
@@ -108,23 +107,18 @@ export function AddEmailScreen(): JSX.Element | null {
           signatureType: "sempahore-signature-pcd"
         });
 
-      const response = await fetch(
-        `${appConfig.zupassServer}/account/add-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            newEmail,
-            pcd,
-            confirmationCode
-          } as AddUserEmailRequest)
-        }
+      const response = await requestAddUserEmail(
+        appConfig.zupassServer,
+        newEmail,
+        pcd,
+        confirmationCode
       );
 
-      if (!response.ok) {
-        throw new Error(await response.text());
+      console.log("RESRES", response);
+
+      if (!response.success) {
+        alert(JSON.stringify(response, null, 2));
+        return;
       }
 
       // Update local state

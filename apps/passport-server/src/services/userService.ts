@@ -618,9 +618,15 @@ export class UserService {
     }
 
     if (!confirmationCode) {
-      const confirmationToken =
+      const newToken =
         await this.emailTokenService.saveNewTokenForEmail(emailToAdd);
-      await this.emailService.sendTokenEmail(emailToAdd, confirmationToken);
+
+      if (this.bypassEmail) {
+        logger("[DEV] Bypassing email, returning token", newToken);
+        return { sentToken: true, token: newToken };
+      }
+
+      await this.emailService.sendTokenEmail(emailToAdd, newToken);
 
       return { sentToken: true };
     }
