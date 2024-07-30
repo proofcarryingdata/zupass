@@ -131,11 +131,11 @@ export function EdgeCityHome(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (!scores.length || !self?.email) {
+    if (!scores.length || !self?.emails?.[0]) {
       setScore(undefined);
       return;
     }
-    const emailHash = `0x${sha256(`edgecity${self.email}`)}`;
+    const emailHash = `0x${sha256(`edgecity${self.emails?.[0]}`)}`;
     setScore(scores.find((s) => s.email_hash === emailHash));
   }, [scores, self]);
 

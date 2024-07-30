@@ -61,9 +61,9 @@ export function CreatePasswordScreen(): JSX.Element | null {
     if (self) {
       // Present alert if we had tried to auto-register with a different
       // email than the currently logged-in email.
-      if (autoRegister && email !== self.email) {
+      if (autoRegister && email !== self.emails?.[0]) {
         alert(
-          `You are already logged in as ${self.email}. Please log out and try navigating to the link again.`
+          `You are already logged in as ${self.emails?.[0]}. Please log out and try navigating to the link again.`
         );
       }
 
