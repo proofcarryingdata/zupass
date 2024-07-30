@@ -95,6 +95,18 @@ export async function deleteUserByEmail(
 }
 
 /**
+ * Deletes a user by their UUID. This also logs them out on the client-side, when the client
+ * next tries to refresh the user, which happens every page reload, and also
+ * on an interval.
+ */
+export async function deleteUserByUUID(
+  client: Pool,
+  uuid: string
+): Promise<void> {
+  await sqlQuery(client, `DELETE FROM users WHERE uuid = $1`, [uuid]);
+}
+
+/**
  * Fetches the quantity of users.
  */
 export async function fetchUserCount(client: Pool): Promise<number> {

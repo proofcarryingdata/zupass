@@ -68,7 +68,6 @@ time_updated = now();
 export async function upsertUser(
   client: Pool,
   params: {
-    email: string;
     commitment: string;
     salt?: string | null;
     encryptionKey?: string;
@@ -76,20 +75,10 @@ export async function upsertUser(
     extra_issuance: boolean;
   }
 ): Promise<string> {
-  const {
-    email,
-    commitment,
-    salt,
-    encryptionKey,
-    terms_agreed,
-    extra_issuance
-  } = params;
+  const { commitment, salt, encryptionKey, terms_agreed, extra_issuance } =
+    params;
 
-  logger(
-    `Saving user email=${email} commitment=${commitment} ` +
-      `salt=${salt} encryption_key=${encryptionKey} ` +
-      `terms_agreed=${terms_agreed} extra_issuance=${extra_issuance}`
-  );
+  logger(`Saving user ${JSON.stringify(params, null, 2)}`);
 
   const insertResult = await sqlQuery(
     client,

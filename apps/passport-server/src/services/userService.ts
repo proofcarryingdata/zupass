@@ -24,7 +24,7 @@ import {
 } from "../database/queries/e2ee";
 import { saveUserBackup, upsertUser } from "../database/queries/saveUser";
 import {
-  deleteUserByEmail,
+  deleteUserByUUID,
   fetchUserByCommitment,
   fetchUserByEmail,
   fetchUserByUUID
@@ -143,7 +143,7 @@ export class UserService {
           )}`
         );
         await saveUserBackup(this.context.dbPool, existingCommitment);
-        await deleteUserByEmail(this.context.dbPool, existingCommitment.email);
+        await deleteUserByUUID(this.context.dbPool, existingCommitment.uuid);
         existingCommitment = null;
       }
     }
@@ -241,7 +241,7 @@ export class UserService {
           )}`
         );
         await saveUserBackup(this.context.dbPool, existingUser);
-        await deleteUserByEmail(this.context.dbPool, existingUser.email);
+        await deleteUserByUUID(this.context.dbPool, existingUser.uuid);
         existingUser = null;
       }
     }
@@ -276,11 +276,11 @@ export class UserService {
     // a benefit
     logger(
       `[USER_SERVICE] Agreeing to terms: ${LATEST_PRIVACY_NOTICE}`,
-      user.email
+      user.uuid
     );
     await agreeTermsAndUnredactTickets(
       this.context.dbPool,
-      user.email,
+      user.uuid,
       LATEST_PRIVACY_NOTICE
     );
 
@@ -370,10 +370,10 @@ export class UserService {
     // Slightly redundantly, this will set the "terms agreed" again
     // However, having a single canonical transaction for this seems like
     // a benefit
-    logger(`[USER_SERVICE] Unredacting tickets for email`, user.email);
+    logger(`[USER_SERVICE] Unredacting tickets for email`, user.uuid);
     await agreeTermsAndUnredactTickets(
       this.context.dbPool,
-      user.email,
+      user.uuid,
       LATEST_PRIVACY_NOTICE
     );
 
@@ -468,7 +468,7 @@ export class UserService {
       throw new Error("User not found");
     }
 
-    await deleteUserByEmail(this.context.dbPool, user.email);
+    await deleteUserByUUID(this.context.dbPool, user.uuid);
     await deleteE2EEByCommitment(this.context.dbPool, user.commitment);
   }
 
@@ -519,17 +519,17 @@ export class UserService {
     ) {
       logger(
         `[USER_SERVICE] Unredacting tickets for email due to accepting version ${payload.version} of legal terms`,
-        user.email
+        user.uuid
       );
       await agreeTermsAndUnredactTickets(
         this.context.dbPool,
-        user.email,
+        user.uuid,
         payload.version
       );
     } else {
       logger(
         `[USER_SERVICE] Updating user to version ${payload.version} of legal terms`,
-        user.email
+        user.uuid
       );
       await upsertUser(this.context.dbPool, {
         ...user,
