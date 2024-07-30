@@ -23,10 +23,8 @@ export async function deleteUserEmail(
 ): Promise<DeleteUserEmailResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, "/account/delete-email"),
-    async (resText) =>
-      resText === "OK"
-        ? { value: undefined, success: true }
-        : { value: undefined, success: false, error: resText },
+    async (resText) => ({ value: JSON.parse(resText), success: true }),
+
     {
       emailToRemove,
       pcd

@@ -27,10 +27,7 @@ export async function changeUserEmail(
 ): Promise<ChangeUserEmailResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, "/account/change-email"),
-    async (resText) =>
-      resText === "OK"
-        ? { value: undefined, success: true }
-        : { value: undefined, success: false, error: resText },
+    async (resText) => ({ value: JSON.parse(resText), success: true }),
     {
       currentEmail,
       newEmail,

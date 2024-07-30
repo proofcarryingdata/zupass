@@ -25,10 +25,7 @@ export async function addUserEmail(
 ): Promise<AddUserEmailResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, "/account/add-email"),
-    async (resText) =>
-      resText === "OK"
-        ? { value: undefined, success: true }
-        : { value: undefined, success: false, error: resText },
+    async (resText) => ({ value: JSON.parse(resText), success: true }),
     {
       newEmail,
       pcd,

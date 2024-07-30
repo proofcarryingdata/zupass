@@ -1,7 +1,4 @@
-import {
-  ChangeUserEmailRequest,
-  CredentialManager
-} from "@pcd/passport-interface";
+import { changeUserEmail, CredentialManager } from "@pcd/passport-interface";
 import { LinkButton } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
@@ -65,23 +62,15 @@ export function ChangeEmailScreen(): JSX.Element | null {
           signatureType: "sempahore-signature-pcd"
         });
 
-      const response = await fetch(
-        `${appConfig.zupassServer}/account/change-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            currentEmail: self.email,
-            newEmail,
-            pcd
-          } as ChangeUserEmailRequest)
-        }
+      const result = await changeUserEmail(
+        appConfig.zupassServer,
+        self.emails[0], // Assuming the first email is the current one
+        newEmail,
+        pcd
       );
 
-      if (!response.ok) {
-        throw new Error(await response.text());
+      if (!result.success) {
+        throw new Error(result.error);
       }
 
       setCodeSent(true);
@@ -109,24 +98,16 @@ export function ChangeEmailScreen(): JSX.Element | null {
           signatureType: "sempahore-signature-pcd"
         });
 
-      const response = await fetch(
-        `${appConfig.zupassServer}/account/change-email`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({
-            currentEmail: self.email,
-            newEmail,
-            pcd,
-            confirmationCode
-          } as ChangeUserEmailRequest)
-        }
+      const result = await changeUserEmail(
+        appConfig.zupassServer,
+        self.emails[0], // Assuming the first email is the current one
+        newEmail,
+        pcd,
+        confirmationCode
       );
 
-      if (!response.ok) {
-        throw new Error(await response.text());
+      if (!result.success) {
+        throw new Error(result.error);
       }
 
       // Update local state

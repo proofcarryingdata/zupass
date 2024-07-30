@@ -1237,7 +1237,9 @@ export interface ChangeUserEmailRequest {
   confirmationCode?: string;
 }
 
-export type ChangeUserEmailResponseValue = undefined;
+export type ChangeUserEmailResponseValue = {
+  newEmailList: string[];
+};
 
 export interface AddUserEmailRequest {
   /**
@@ -1256,7 +1258,9 @@ export interface AddUserEmailRequest {
   confirmationCode?: string;
 }
 
-export type AddUserEmailResponseValue = undefined;
+export type AddUserEmailResponseValue = {
+  newEmailList: string[];
+};
 
 export interface RemoveUserEmailRequest {
   /**
@@ -1270,4 +1274,6 @@ export interface RemoveUserEmailRequest {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
 }
 
-export type RemoveUserEmailResponseValue = undefined;
+export type RemoveUserEmailResponseValue = {
+  newEmailList: string[];
+};
