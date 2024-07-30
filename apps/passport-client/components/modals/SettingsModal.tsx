@@ -101,10 +101,18 @@ export function SettingsModal({
               Add Email
             </LinkButton>
             <Spacer h={16} />
-            <LinkButton $primary={true} to="/remove-email" onClick={closeModal}>
-              Remove Email
-            </LinkButton>
-            <Spacer h={16} />
+            {self && self.emails.length > 1 && (
+              <>
+                <LinkButton
+                  $primary={true}
+                  to="/remove-email"
+                  onClick={closeModal}
+                >
+                  Remove Email
+                </LinkButton>
+                <Spacer h={16} />
+              </>
+            )}
             <Button onClick={() => setShowEmailOptions(false)}>Back</Button>
             <Spacer h={16} />
           </>
