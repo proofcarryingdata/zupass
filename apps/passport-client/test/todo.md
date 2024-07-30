@@ -1,5 +1,21 @@
 # todo
 
+- everywhere in the UI that displays a single email, make it display multiple
+  - in the modals that ask you to add/change password
+  - top of settings modal
+  - add subscriptions screen
+- conclusively remove dead code that is incompatible with the updated model
+  - offline ticket code
+  - ticket redaction code
+- make sure `saveUser.tsx` is doing the right thing
+- make sure all the database queries that return a user join on the new email<->user table
+- figure out wtf is going on with the old zupass user data model and update it to be compat.
+- implement backend routes for all three of {change, update, delete} email
+- figure out how to make `CredentialSubservice` compatible with this new paradigm
+- go through `userService` and make sure everything is coherent
+- fix existing tests
+- make sure that you can log in to an account that has multiple email addresses with any of the email addresses
+  - make sure that the `salt` api returns the right salt if you send it any of the email addresses associated with the account
 - make the various email-updating server routes return an 'already registered' error
   - pipe it through to the frontend, suggest the user logs in and exports + deletes their data
 - add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
