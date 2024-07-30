@@ -199,7 +199,7 @@ export async function makeTestCredential(
       new PCDCollection([EmailPCDPackage], [emailPCD]),
       new Map()
     );
-    return credentialManager.requestCredential(request);
+    return credentialManager.requestCredentials(request);
   } else {
     // No Email PCD required here
     const credentialManager = new CredentialManager(
@@ -207,7 +207,7 @@ export async function makeTestCredential(
       new PCDCollection([], []),
       new Map()
     );
-    return credentialManager.requestCredential(request);
+    return credentialManager.requestCredentials(request);
   }
 }
 

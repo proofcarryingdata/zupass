@@ -228,7 +228,7 @@ export function useUserFeedState(subscriptions: Subscription[]): {
   );
   const refreshUserState = useCallback(async () => {
     try {
-      const pcd = await credentialManager.requestCredential({
+      const pcd = await credentialManager.requestCredentials({
         signatureType: "sempahore-signature-pcd"
       });
 

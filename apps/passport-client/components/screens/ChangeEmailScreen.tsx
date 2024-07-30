@@ -68,7 +68,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
       );
 
       const pcd: SerializedPCD<SemaphoreSignaturePCD> =
-        await credentialManager.requestCredential({
+        await credentialManager.requestCredentials({
           signatureType: "sempahore-signature-pcd"
         });
 
@@ -110,7 +110,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
       );
 
       const pcd: SerializedPCD<SemaphoreSignaturePCD> =
-        await credentialManager.requestCredential({
+        await credentialManager.requestCredentials({
           signatureType: "sempahore-signature-pcd"
         });
 

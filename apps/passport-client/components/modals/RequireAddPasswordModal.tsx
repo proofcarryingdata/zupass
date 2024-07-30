@@ -55,7 +55,7 @@ export function RequireAddPasswordModal(): JSX.Element {
         serverStorageRevision,
         dispatch,
         update,
-        await credentialManager.requestCredential({
+        await credentialManager.requestCredentials({
           signatureType: "sempahore-signature-pcd"
         })
       );

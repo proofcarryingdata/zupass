@@ -59,7 +59,7 @@ export function FrogCryptoUpdateTelegramModal({
             await requestFrogCryptoUpdateTelegramHandleSharing(
               appConfig.zupassServer,
               {
-                pcd: await credentialManager.requestCredential({
+                pcd: await credentialManager.requestCredentials({
                   signatureType: "sempahore-signature-pcd"
                 }),
                 reveal: !revealed

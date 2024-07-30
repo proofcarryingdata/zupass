@@ -54,7 +54,7 @@ export function usePreCheckTicket(
 
       const preCheckTicketResult = await requestPodboxTicketActionPreCheck(
         urljoin(appConfig.zupassServer, "generic-issuance/api/pre-check"),
-        await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
+        await credentialManager.requestCredentials(PODBOX_CREDENTIAL_REQUEST),
         { checkin: true },
         ticketId,
         eventId

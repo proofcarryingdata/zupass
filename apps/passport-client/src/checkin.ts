@@ -148,7 +148,7 @@ export async function devconnectCheckByIdWithOffline(
     );
     return await requestCheckTicketById(appConfig.zupassServer, {
       ticketId,
-      signature: await credentialManager.requestCredential(
+      signature: await credentialManager.requestCredentials(
         ZUPASS_CREDENTIAL_REQUEST
       )
     });
@@ -191,7 +191,7 @@ export async function devconnectCheckInByIdWithOffline(
     );
     return await requestCheckInById(appConfig.zupassServer, {
       ticketId,
-      checkerProof: await credentialManager.requestCredential(
+      checkerProof: await credentialManager.requestCredentials(
         ZUPASS_CREDENTIAL_REQUEST
       )
     });

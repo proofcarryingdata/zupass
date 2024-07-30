@@ -55,7 +55,7 @@ export function UpgradeAccountModal(): JSX.Element | null {
         serverStorageRevision,
         dispatch,
         update,
-        await credentialManager.requestCredential({
+        await credentialManager.requestCredentials({
           signatureType: "sempahore-signature-pcd"
         })
       );
