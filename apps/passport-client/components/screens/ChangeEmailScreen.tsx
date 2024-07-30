@@ -73,7 +73,12 @@ export function ChangeEmailScreen(): JSX.Element | null {
       );
 
       if (!result.success) {
-        throw new Error(result.error);
+        setError(result.error);
+        return;
+      }
+
+      if (result.value.token) {
+        setConfirmationCode(result.value.token);
       }
 
       setCodeSent(true);
