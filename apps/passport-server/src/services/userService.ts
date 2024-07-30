@@ -1,11 +1,14 @@
 import { HexString, getHash } from "@pcd/passport-crypto";
 import {
+  AddUserEmailResponseValue,
   AgreeTermsResult,
   ConfirmEmailResponseValue,
+  EmailUpdateError,
   LATEST_PRIVACY_NOTICE,
   NewUserResponseValue,
   OneClickLoginResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
+  VerifiedCredential,
   VerifyTokenResponseValue
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -583,6 +586,72 @@ export class UserService {
     };
   }
 
+  public async handleAddUserEmail(
+    emailToAdd: string,
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
+    confirmationCode?: string
+  ): Promise<AddUserEmailResponseValue> {
+    if (!validateEmail(emailToAdd)) {
+      throw new Error(EmailUpdateError.InvalidInput);
+    }
+
+    const existingUser = await this.getUserByEmail(emailToAdd);
+    if (existingUser) {
+      throw new Error(EmailUpdateError.EmailAlreadyRegistered);
+    }
+
+    let credential: VerifiedCredential;
+    try {
+      const verifiedCredential =
+        await this.credentialSubservice.tryVerify(serializedPCD);
+      if (!verifiedCredential) {
+        throw new Error(EmailUpdateError.InvalidCredential);
+      }
+      credential = verifiedCredential;
+    } catch (error) {
+      throw new Error(EmailUpdateError.InvalidCredential);
+    }
+
+    const currentUser = await this.getUserByCommitment(credential.semaphoreId);
+    if (!currentUser) {
+      throw new Error(EmailUpdateError.Unknown);
+    }
+
+    if (!confirmationCode) {
+      const confirmationToken =
+        await this.emailTokenService.saveNewTokenForEmail(emailToAdd);
+      await this.emailService.sendTokenEmail(emailToAdd, confirmationToken);
+
+      return { sentToken: true };
+    }
+
+    const isCodeValid = await this.emailTokenService.checkTokenCorrect(
+      emailToAdd,
+      confirmationCode
+    );
+
+    if (!isCodeValid) {
+      throw new Error(EmailUpdateError.InvalidConfirmationCode);
+    }
+
+    if (currentUser.emails.includes(emailToAdd)) {
+      throw new Error(EmailUpdateError.EmailAlreadyAdded);
+    }
+
+    try {
+      const newEmailList = [...currentUser.emails, emailToAdd];
+
+      await upsertUser(this.context.dbPool, {
+        ...currentUser,
+        emails: newEmailList
+      });
+
+      return { newEmailList };
+    } catch {
+      throw new Error(EmailUpdateError.Unknown);
+    }
+  }
+
   public async handleChangeUserEmail(
     currentEmail: string,
     newEmail: string,
@@ -652,64 +721,6 @@ export class UserService {
     } catch (error) {
       logger("[UserService] Error changing email", error);
       return { success: false, error: "Error updating email" };
-    }
-  }
-
-  public async handleAddUserEmail(
-    emailToAdd: string,
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
-    confirmationCode?: string
-  ): Promise<string[]> {
-    if (!validateEmail(emailToAdd)) {
-      throw new Error("Invalid email format");
-    }
-
-    const existingUser = await this.getUserByEmail(emailToAdd);
-    if (existingUser) {
-      throw new Error("Email already in use");
-    }
-
-    // Verify the PCD
-    let pcd: SemaphoreSignaturePCD;
-    try {
-      pcd = await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd);
-      const validPCD = await SemaphoreSignaturePCDPackage.verify(pcd);
-      if (!validPCD) {
-        throw new Error("Invalid PCD");
-      }
-    } catch (error) {
-      throw new Error("Error verifying PCD");
-    }
-
-    // Get the current user
-    const currentUser = await this.getUserByCommitment(
-      pcd.claim.identityCommitment
-    );
-    if (!currentUser) {
-      throw new Error("Current user not found");
-    }
-
-    // Check confirmation code
-    const isCodeValid = await this.emailTokenService.checkTokenCorrect(
-      emailToAdd,
-      confirmationCode
-    );
-    if (!isCodeValid) {
-      throw new Error("Invalid confirmation code");
-    }
-
-    // Add the new email to the user's emails
-    try {
-      const updatedEmails = [...currentUser.emails, emailToAdd];
-      await upsertUser(this.context.dbPool, {
-        ...currentUser,
-        emails: updatedEmails
-      });
-
-      return updatedEmails;
-    } catch (error) {
-      logger("[UserService] Error adding email", error);
-      throw new Error("Error updating user emails");
     }
   }
 

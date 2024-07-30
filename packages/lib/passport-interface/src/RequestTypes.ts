@@ -1213,10 +1213,38 @@ export type GenericIssuanceSendPipelineEmailResponseValue = {
 };
 
 export enum EmailUpdateError {
+  InvalidCredential = "InvalidCredential",
+  InvalidConfirmationCode = "InvalidConfirmationCode",
   EmailAlreadyRegistered = "EmailAlreadyRegistered",
   CantDeleteOnlyEmail = "CantDeleteOnlyEmail",
+  EmailAlreadyAdded = "EmailAlreadyAdded",
+  InvalidInput = "InvalidInput",
   Unknown = "Unknown"
 }
+
+export interface AddUserEmailRequest {
+  /**
+   * The new email address the user wants to add.
+   */
+  newEmail: string;
+
+  /**
+   * A semaphore signature from the user, used to verify their identity.
+   */
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * An optional confirmation code for additional verification.
+   */
+  confirmationCode?: string;
+}
+
+export type AddUserEmailResponseValue =
+  | {
+      sentToken?: never;
+      newEmailList: string[];
+    }
+  | { sentToken: true; newEmailList?: never };
 
 /**
  * Request to change a user's email address.
@@ -1244,27 +1272,6 @@ export interface ChangeUserEmailRequest {
 }
 
 export type ChangeUserEmailResponseValue = {
-  newEmailList: string[];
-};
-
-export interface AddUserEmailRequest {
-  /**
-   * The new email address the user wants to add.
-   */
-  newEmail: string;
-
-  /**
-   * A semaphore signature from the user, used to verify their identity.
-   */
-  pcd: SerializedPCD<SemaphoreSignaturePCD>;
-
-  /**
-   * An optional confirmation code for additional verification.
-   */
-  confirmationCode?: string;
-}
-
-export type AddUserEmailResponseValue = {
   newEmailList: string[];
 };
 

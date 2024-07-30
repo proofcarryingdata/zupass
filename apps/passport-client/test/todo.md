@@ -32,6 +32,7 @@
   - button to add an email
   - if you have more than one email, add button to remove any of the emails
   - if you have only one one email, add button to change your email
+- add logging everywhere that is appropriate
 - fix existing tests
 - tests?
 
