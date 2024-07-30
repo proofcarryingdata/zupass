@@ -212,10 +212,7 @@ export function initAccountRoutes(
       "newEmail"
     );
     const pcd = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
-    const confirmationCode = checkBody<AddUserEmailRequest, "confirmationCode">(
-      req,
-      "confirmationCode"
-    );
+    const confirmationCode = req.body.confirmationCode as string | undefined;
 
     const result = await userService.handleAddUserEmail(
       newEmail,
@@ -223,15 +220,11 @@ export function initAccountRoutes(
       confirmationCode
     );
 
-    if (result.success) {
-      res.status(200).json(result.value);
-    } else {
-      res.status(400).send(result.error);
-    }
+    res.status(200).json(result);
   });
 
   /**
-   * Deletes an email address from a user's account.
+   * Removes an email address from a user's account.
    */
   app.post("/account/delete-email", async (req: Request, res: Response) => {
     const emailToRemove = checkBody<RemoveUserEmailRequest, "emailToRemove">(
@@ -242,12 +235,9 @@ export function initAccountRoutes(
 
     const result = await userService.handleRemoveUserEmail(emailToRemove, pcd);
 
-    if (result.success) {
-      res.status(200).json(result.value);
-    } else {
-      res.status(400).send(result.error);
-    }
+    res.status(200).json(result);
   });
+
   /**
    * Changes a user's email address.
    */
