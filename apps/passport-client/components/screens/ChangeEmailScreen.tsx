@@ -2,10 +2,11 @@ import {
   CredentialManager,
   requestChangeUserEmail
 } from "@pcd/passport-interface";
-import { LinkButton } from "@pcd/passport-ui";
+import { ErrorMessage, LinkButton } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
+import { validate } from "email-validator";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
@@ -49,8 +50,13 @@ export function ChangeEmailScreen(): JSX.Element | null {
     }
   }, [self, navigate]);
 
-  const sendConfirmationCode = useCallback(async () => {
+  const onSendConfirmationCode = useCallback(async () => {
     if (loading || !self) return;
+    if (!validate(newEmail)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+
     setLoading(true);
     try {
       const { identity, credentialCache } = stateContext.getState();
@@ -74,6 +80,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
 
       if (!result.success) {
         setError(result.error);
+        setLoading(false);
         return;
       }
 
@@ -183,7 +190,20 @@ export function ChangeEmailScreen(): JSX.Element | null {
         />
         <Spacer h={16} />
         {!codeSent ? (
-          <Button onClick={sendConfirmationCode}>Send Confirmation Code</Button>
+          <>
+            {error && (
+              <>
+                <ErrorMessage>{error}</ErrorMessage>
+                <Spacer h={16} />
+              </>
+            )}
+            <Button
+              disabled={newEmail.length === 0}
+              onClick={onSendConfirmationCode}
+            >
+              Send Confirmation Code
+            </Button>
+          </>
         ) : (
           <>
             <BigInput
@@ -193,12 +213,6 @@ export function ChangeEmailScreen(): JSX.Element | null {
             />
             <Spacer h={16} />
             <Button onClick={onChangeEmail}>Change Email</Button>
-          </>
-        )}
-        {error && (
-          <>
-            <Spacer h={16} />
-            <TextCenter style={{ color: "red" }}>{error}</TextCenter>
           </>
         )}
         <Spacer h={24} />
