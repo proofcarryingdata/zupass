@@ -1,15 +1,10 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   OfflineDevconnectTicket,
   OfflineTickets
 } from "@pcd/passport-interface";
-import _ from "lodash";
 import { Pool } from "postgres-pool";
 import { DevconnectPretixTicketDBWithEmailAndItem } from "../models";
-import {
-  fetchDevconnectPretixTicketsByEvent,
-  fetchDevconnectSuperusersForEmail
-} from "../queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
-import { fetchUserByCommitment } from "../queries/users";
 
 /**
  * Fetches the relevant tickets for the given user. Relevant tickets are
@@ -40,29 +35,30 @@ async function fetchOfflineDevconnectTickets(
   dbPool: Pool,
   userCommitment: string
 ): Promise<OfflineDevconnectTicket[]> {
-  const user = await fetchUserByCommitment(dbPool, userCommitment);
-  if (!user) {
-    throw new Error(`no user found for commitment ${userCommitment}`);
-  }
+  return [];
+  // const user = await fetchUserByCommitment(dbPool, userCommitment);
+  // if (!user) {
+  //   throw new Error(`no user found for commitment ${userCommitment}`);
+  // }
 
-  const superuserTickets = await fetchDevconnectSuperusersForEmail(
-    dbPool,
-    user.email
-  );
+  // const superuserTickets = await fetchDevconnectSuperusersForEmail(
+  //   dbPool,
+  //   user.email
+  // );
 
-  const devconnectEventIds = superuserTickets.map(
-    (t) => t.pretix_events_config_id
-  );
+  // const devconnectEventIds = superuserTickets.map(
+  //   (t) => t.pretix_events_config_id
+  // );
 
-  const tickets = _.flatten(
-    await Promise.all(
-      devconnectEventIds.map((id) =>
-        fetchDevconnectPretixTicketsByEvent(dbPool, id)
-      )
-    )
-  ).map(devconnectTicketToOfflineTicket);
+  // const tickets = _.flatten(
+  //   await Promise.all(
+  //     devconnectEventIds.map((id) =>
+  //       fetchDevconnectPretixTicketsByEvent(dbPool, id)
+  //     )
+  //   )
+  // ).map(devconnectTicketToOfflineTicket);
 
-  return tickets;
+  // return tickets;
 }
 
 function devconnectTicketToOfflineTicket(
