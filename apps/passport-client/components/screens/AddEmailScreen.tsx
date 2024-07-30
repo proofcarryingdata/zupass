@@ -2,10 +2,11 @@ import {
   CredentialManager,
   requestAddUserEmail
 } from "@pcd/passport-interface";
-import { LinkButton } from "@pcd/passport-ui";
+import { ErrorMessage, LinkButton } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
+import { validate } from "email-validator";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
@@ -53,8 +54,16 @@ export function AddEmailScreen(): JSX.Element | null {
 
   const sendConfirmationCode = useCallback(async () => {
     if (loading || !self) return;
-    setLoading(true);
+
+    if (!validate(newEmail)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    setError("");
+
     try {
+      setLoading(true);
       const { identity, credentialCache } = stateContext.getState();
       const credentialManager = new CredentialManager(
         identity,
@@ -79,6 +88,7 @@ export function AddEmailScreen(): JSX.Element | null {
         }
       } else {
         setError(response.error);
+        setLoading(false);
       }
 
       setCodeSent(true);
@@ -93,6 +103,7 @@ export function AddEmailScreen(): JSX.Element | null {
   const onAddEmail = useCallback(async () => {
     if (loading || !self) return;
     setLoading(true);
+    setError("");
 
     try {
       const { identity, credentialCache } = stateContext.getState();
@@ -114,10 +125,9 @@ export function AddEmailScreen(): JSX.Element | null {
         confirmationCode
       );
 
-      console.log("RESRES", response);
-
       if (!response.success) {
         setError(response.error);
+        setLoading(false);
         return;
       }
 
@@ -132,12 +142,9 @@ export function AddEmailScreen(): JSX.Element | null {
         );
       }
 
-      // Update local state
-
       setFinished(true);
       setLoading(false);
     } catch (e) {
-      console.log("error adding email", e);
       setLoading(false);
       setError(getErrorMessage(e));
     }
@@ -185,11 +192,14 @@ export function AddEmailScreen(): JSX.Element | null {
         <BigInput
           placeholder="New email address"
           value={newEmail}
+          disabled={codeSent}
           onChange={(e) => setNewEmail(e.target.value)}
         />
         <Spacer h={16} />
         {!codeSent ? (
-          <Button onClick={sendConfirmationCode}>Send Confirmation Code</Button>
+          <Button disabled={newEmail === ""} onClick={sendConfirmationCode}>
+            Get Confirmation Code
+          </Button>
         ) : (
           <>
             <BigInput
@@ -204,7 +214,7 @@ export function AddEmailScreen(): JSX.Element | null {
         {error && (
           <>
             <Spacer h={16} />
-            <TextCenter style={{ color: "red" }}>{error}</TextCenter>
+            <ErrorMessage>{error}</ErrorMessage>
           </>
         )}
         <Spacer h={24} />
