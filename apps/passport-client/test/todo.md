@@ -1,12 +1,9 @@
 # todo
 
-- implement backend routes for all three of {change, update, delete} email
 - make the various email-updating server routes return an 'already registered' error
   - pipe it through to the frontend, suggest the user logs in and exports + deletes their data
-- make sure `saveUser.tsx` is doing the right thing
 - make sure all the database queries that return a user join on the new email<->user table
 - figure out wtf is going on with the old zupass user data model and update it to be compat.
-- go through `userService` and make sure everything is coherent
 - figure out how to make `CredentialSubservice` compatible with this new paradigm
 - make the server return multiple email PCDs if you have multiple emails
 - make use of all the email pcds you get for polling feeds
@@ -35,6 +32,12 @@
 - add logging everywhere that is appropriate
 - fix existing tests
 - tests?
+
+# done
+
+- implement backend routes for all three of {change, update, delete} email
+- make sure `saveUser.tsx` is doing the right thing
+- go through `userService` and make sure everything is coherent
 
 # won't do
 
