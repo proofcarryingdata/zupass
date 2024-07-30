@@ -48,12 +48,7 @@ export function SettingsModal({
       <Spacer h={16} />
       <CenterColumn>
         <TextCenter>
-          {self?.emails?.map((e) => (
-            <>
-              {e}
-              <br />
-            </>
-          ))}
+          {self?.emails?.map((e) => <div key={e}>{e}</div>)}
         </TextCenter>
 
         <Spacer h={16} />
@@ -93,18 +88,22 @@ export function SettingsModal({
 
         {showEmailOptions && (
           <>
-            {self && self.emails.length === 1 && (
-              <LinkButton
-                $primary={true}
-                to="/change-email"
-                onClick={closeModal}
-              >
-                Change Email
-              </LinkButton>
-            )}
+            <Button onClick={() => setShowEmailOptions(false)}>Back</Button>
             <Spacer h={16} />
+            {self && self.emails.length === 1 && (
+              <>
+                <LinkButton
+                  $primary={true}
+                  to="/change-email"
+                  onClick={closeModal}
+                >
+                  Change Email
+                </LinkButton>
+                <Spacer h={16} />
+              </>
+            )}
             <LinkButton $primary={true} to="/add-email" onClick={closeModal}>
-              Add Email
+              Add an Email
             </LinkButton>
             <Spacer h={16} />
             {self && self.emails.length > 1 && (
@@ -114,13 +113,11 @@ export function SettingsModal({
                   to="/remove-email"
                   onClick={closeModal}
                 >
-                  Remove Email
+                  Remove an Email
                 </LinkButton>
                 <Spacer h={16} />
               </>
             )}
-            <Button onClick={() => setShowEmailOptions(false)}>Back</Button>
-            <Spacer h={16} />
           </>
         )}
 
