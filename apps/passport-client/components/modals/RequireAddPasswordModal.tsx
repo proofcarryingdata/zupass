@@ -101,13 +101,13 @@ export function RequireAddPasswordModal(): JSX.Element {
         </TextCenter>
 
         <Spacer h={24} />
-        <BigInput value={self?.email ?? ""} disabled={true} />
+        <BigInput value={self?.emails?.[0] ?? ""} disabled={true} />
         <Spacer h={8} />
         <NewPasswordForm
           error={error}
           setError={setError}
           passwordInputPlaceholder="New password"
-          email={self?.email ?? ""}
+          email={self?.emails?.[0] ?? ""}
           revealPassword={revealPassword}
           setRevealPassword={setRevealPassword}
           submitButtonText="Confirm"

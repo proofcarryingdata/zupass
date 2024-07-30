@@ -106,13 +106,13 @@ export function UpgradeAccountModal(): JSX.Element | null {
       you must choose a password. Make sure to remember it, otherwise you will
       lose access to all your PCDs.
       <Spacer h={24} />
-      <BigInput value={self.email} disabled={true} />
+      <BigInput value={self.emails?.[0]} disabled={true} />
       <Spacer h={8} />
       <NewPasswordForm
         error={error}
         setError={setError}
         passwordInputPlaceholder="New password"
-        email={self.email}
+        email={self.emails?.[0]}
         revealPassword={revealPassword}
         setRevealPassword={setRevealPassword}
         submitButtonText="Confirm"

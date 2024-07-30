@@ -118,8 +118,9 @@ export function AddSubscriptionScreen(): JSX.Element | null {
     } else {
       if (
         suggestedEmail &&
-        self.email.trim().toLocaleLowerCase() !==
-          suggestedEmail.trim().toLocaleLowerCase()
+        !self.emails
+          .map((e) => e.trim().toLocaleLowerCase())
+          .includes(suggestedEmail?.trim().toLocaleLowerCase())
       ) {
         // User is logged in, but they probably got this subscription link from an email for a different address
         setMismatchedEmails(true);
@@ -192,14 +193,15 @@ export function AddSubscriptionScreen(): JSX.Element | null {
           {mismatchedEmails && (
             <MismatchedEmailWarning>
               <p>
-                Your email is <strong>{self.email}</strong> but the subscription
-                link was sent to <strong>{suggestedEmail}</strong>.
+                Your emails are <strong>{self.emails.join(", ")}</strong> but
+                the subscription link was sent to{" "}
+                <strong>{suggestedEmail}</strong>.
               </p>
               <p>
                 This may mean that you cannot receive the expected PCDs. You may
                 be able to contact the issuer to change the email address to{" "}
-                <strong>{self.email}</strong>, or sign up for a new Zupass
-                account with <strong>{suggestedEmail}</strong>.
+                <strong>{self.emails.join(", ")}</strong>, or sign up for a new
+                Zupass account with <strong>{suggestedEmail}</strong>.
               </p>
             </MismatchedEmailWarning>
           )}

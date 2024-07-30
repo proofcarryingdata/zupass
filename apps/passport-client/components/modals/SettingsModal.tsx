@@ -47,7 +47,14 @@ export function SettingsModal({
       </TextCenter>
       <Spacer h={16} />
       <CenterColumn>
-        <TextCenter>{self?.email}</TextCenter>
+        <TextCenter>
+          {self?.emails?.map((e) => (
+            <>
+              {e}
+              <br />
+            </>
+          ))}
+        </TextCenter>
 
         <Spacer h={16} />
 
