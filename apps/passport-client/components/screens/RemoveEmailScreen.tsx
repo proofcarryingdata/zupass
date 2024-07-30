@@ -29,7 +29,7 @@ export function RemoveEmailScreen(): JSX.Element | null {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [emailToRemove, setEmailToRemove] = useState<string | null>(null);
+  const [emailToRemove, setEmailToRemove] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [finished, setFinished] = useState(false);
   const pcds = usePCDCollection();
@@ -129,9 +129,13 @@ export function RemoveEmailScreen(): JSX.Element | null {
         </TextCenter>
         <Spacer h={24} />
         <Select
-          value={emailToRemove}
-          onChange={setEmailToRemove}
-          options={self.emails ?? []}
+          value={
+            emailToRemove
+              ? { id: emailToRemove, label: emailToRemove }
+              : undefined
+          }
+          onChange={(v) => setEmailToRemove(v?.id)}
+          options={self.emails.map((e) => ({ id: e, label: e }))}
         />
         <Spacer h={16} />
         <Button onClick={onRemoveEmail} disabled={!emailToRemove}>

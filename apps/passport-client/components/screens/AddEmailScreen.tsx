@@ -117,15 +117,22 @@ export function AddEmailScreen(): JSX.Element | null {
       console.log("RESRES", response);
 
       if (!response.success) {
-        alert(JSON.stringify(response, null, 2));
+        setError(response.error);
         return;
       }
 
+      if (response.value.newEmailList) {
+        dispatch({
+          type: "set-self",
+          self: { ...self, emails: response.value.newEmailList }
+        });
+      } else {
+        setError(
+          `Couldn't add '${newEmail}', please wait and try again later.`
+        );
+      }
+
       // Update local state
-      dispatch({
-        type: "set-self",
-        self: { ...self, emails: [...(self.emails ?? []), newEmail] }
-      });
 
       setFinished(true);
       setLoading(false);

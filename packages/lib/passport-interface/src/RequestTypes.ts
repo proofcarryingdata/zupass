@@ -1241,8 +1241,8 @@ export interface AddUserEmailRequest {
 
 export type AddUserEmailResponseValue =
   | {
-      sentToken?: never;
-      token?: string;
+      sentToken: false;
+      token?: never;
       newEmailList: string[];
     }
   | { sentToken: true; token?: string; newEmailList?: never };
