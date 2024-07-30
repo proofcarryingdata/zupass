@@ -631,7 +631,7 @@ async function setSelf(
       {
         oldSalt: state.self.salt,
         newSalt: self.salt,
-        email: self.email
+        emails: self.emails
       }
     );
   } else if (
@@ -676,7 +676,7 @@ function clearError(state: AppState, update: ZuUpdate): void {
 async function resetPassport(state: AppState, update: ZuUpdate): Promise<void> {
   requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
-    email: state.self?.email,
+    emails: state.self?.emails,
     commitment: state.self?.commitment
   });
   // Clear saved state.
