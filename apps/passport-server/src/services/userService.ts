@@ -583,7 +583,7 @@ export class UserService {
     };
   }
 
-  public async handleChangeEmail(
+  public async handleChangeUserEmail(
     currentEmail: string,
     newEmail: string,
     pcd: SerializedPCD<SemaphoreSignaturePCD>,
@@ -655,16 +655,16 @@ export class UserService {
     }
   }
 
-  public async handleAddEmail(
-    newEmail: string,
+  public async handleAddUserEmail(
+    emailToAdd: string,
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
-    confirmationCode: string
+    confirmationCode?: string
   ): Promise<string[]> {
-    if (!validateEmail(newEmail)) {
+    if (!validateEmail(emailToAdd)) {
       throw new Error("Invalid email format");
     }
 
-    const existingUser = await this.getUserByEmail(newEmail);
+    const existingUser = await this.getUserByEmail(emailToAdd);
     if (existingUser) {
       throw new Error("Email already in use");
     }
@@ -691,7 +691,7 @@ export class UserService {
 
     // Check confirmation code
     const isCodeValid = await this.emailTokenService.checkTokenCorrect(
-      newEmail,
+      emailToAdd,
       confirmationCode
     );
     if (!isCodeValid) {
@@ -700,7 +700,7 @@ export class UserService {
 
     // Add the new email to the user's emails
     try {
-      const updatedEmails = [...currentUser.emails, newEmail];
+      const updatedEmails = [...currentUser.emails, emailToAdd];
       await upsertUser(this.context.dbPool, {
         ...currentUser,
         emails: updatedEmails
@@ -713,7 +713,7 @@ export class UserService {
     }
   }
 
-  public async handleDeleteEmail(
+  public async handleRemoveUserEmail(
     emailToRemove: string,
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<string[]> {

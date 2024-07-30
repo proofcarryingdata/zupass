@@ -18,7 +18,7 @@ import { httpPost } from "./makeRequest";
  * @param pcd A semaphore signature from the user, used to verify their identity
  * @returns A promise that resolves to an APIResult containing undefined for success or an error message
  */
-export async function addUserEmail(
+export async function requestAddUserEmail(
   zupassServerUrl: string,
   newEmail: string,
   pcd: SerializedPCD<SemaphoreSignaturePCD>,

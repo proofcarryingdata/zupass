@@ -217,7 +217,7 @@ export function initAccountRoutes(
       "confirmationCode"
     );
 
-    const result = await userService.handleAddEmail(
+    const result = await userService.handleAddUserEmail(
       newEmail,
       pcd,
       confirmationCode
@@ -240,7 +240,7 @@ export function initAccountRoutes(
     );
     const pcd = checkBody<RemoveUserEmailRequest, "pcd">(req, "pcd");
 
-    const result = await userService.handleDeleteEmail(emailToRemove, pcd);
+    const result = await userService.handleRemoveUserEmail(emailToRemove, pcd);
 
     if (result.success) {
       res.status(200).json(result.value);
@@ -266,7 +266,7 @@ export function initAccountRoutes(
       "confirmationCode"
     >(req, "confirmationCode");
 
-    const result = await userService.handleChangeEmail(
+    const result = await userService.handleChangeUserEmail(
       currentEmail,
       newEmail,
       pcd,

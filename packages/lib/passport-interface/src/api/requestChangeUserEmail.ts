@@ -2,20 +2,22 @@ import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
-  EmailUpdateError,
-  RemoveUserEmailRequest,
-  RemoveUserEmailResponseValue
+  ChangeUserEmailRequest,
+  ChangeUserEmailResponseValue,
+  EmailUpdateError
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPost } from "./makeRequest";
 
-export async function deleteUserEmail(
+export async function requestChangeUserEmail(
   zupassServerUrl: string,
-  emailToRemove: string,
-  pcd: SerializedPCD<SemaphoreSignaturePCD>
-): Promise<DeleteUserEmailResult> {
-  return httpPost<DeleteUserEmailResult>(
-    urlJoin(zupassServerUrl, "/account/delete-email"),
+  currentEmail: string,
+  newEmail: string,
+  pcd: SerializedPCD<SemaphoreSignaturePCD>,
+  confirmationCode?: string
+): Promise<ChangeUserEmailResult> {
+  return httpPost<ChangeUserEmailResult>(
+    urlJoin(zupassServerUrl, "/account/change-email"),
     {
       onValue: async (resText) => ({
         value: JSON.parse(resText),
@@ -28,13 +30,15 @@ export async function deleteUserEmail(
       })
     },
     {
-      emailToRemove,
-      pcd
-    } satisfies RemoveUserEmailRequest
+      currentEmail,
+      newEmail,
+      pcd,
+      confirmationCode
+    } satisfies ChangeUserEmailRequest
   );
 }
 
-export type DeleteUserEmailResult = APIResult<
-  RemoveUserEmailResponseValue,
+export type ChangeUserEmailResult = APIResult<
+  ChangeUserEmailResponseValue,
   EmailUpdateError
 >;

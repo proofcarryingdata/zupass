@@ -1,4 +1,7 @@
-import { changeUserEmail, CredentialManager } from "@pcd/passport-interface";
+import {
+  CredentialManager,
+  requestChangeUserEmail
+} from "@pcd/passport-interface";
 import { LinkButton } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
@@ -62,7 +65,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
           signatureType: "sempahore-signature-pcd"
         });
 
-      const result = await changeUserEmail(
+      const result = await requestChangeUserEmail(
         appConfig.zupassServer,
         self.emails[0], // Assuming the first email is the current one
         newEmail,
@@ -98,7 +101,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
           signatureType: "sempahore-signature-pcd"
         });
 
-      const result = await changeUserEmail(
+      const result = await requestChangeUserEmail(
         appConfig.zupassServer,
         self.emails[0], // Assuming the first email is the current one
         newEmail,
