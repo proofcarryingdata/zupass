@@ -68,6 +68,7 @@ time_updated = now();
 export async function upsertUser(
   client: Pool,
   params: {
+    uuid: string;
     commitment: string;
     salt?: string | null;
     encryptionKey?: string;
@@ -75,20 +76,26 @@ export async function upsertUser(
     extra_issuance: boolean;
   }
 ): Promise<string> {
-  const { commitment, salt, encryptionKey, terms_agreed, extra_issuance } =
-    params;
+  const {
+    commitment,
+    salt,
+    encryptionKey,
+    terms_agreed,
+    extra_issuance,
+    uuid
+  } = params;
 
   logger(`Saving user ${JSON.stringify(params, null, 2)}`);
 
   const insertResult = await sqlQuery(
     client,
     `\
-INSERT INTO users (uuid, email, commitment, salt, encryption_key, terms_agreed, extra_issuance)
-VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)
-ON CONFLICT (email) DO UPDATE SET 
+INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance)
+VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (uuid) DO UPDATE SET 
 commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7`,
     [
-      email,
+      uuid,
       commitment,
       salt,
       encryptionKey,
@@ -111,9 +118,5 @@ WHERE email = $1 AND commitment = $2`,
     );
   }
 
-  const stat = insertResult.rowCount === 1 ? "NEW" : "EXISTING";
-  logger(
-    `Saved. email=${email} commitment=${commitment} salt=${salt} encryption_key=${encryptionKey} has ${stat} uuid=${uuid}`
-  );
   return uuid;
 }
