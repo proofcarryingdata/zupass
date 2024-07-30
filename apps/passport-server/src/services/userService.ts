@@ -592,12 +592,12 @@ export class UserService {
     confirmationCode?: string
   ): Promise<AddUserEmailResponseValue> {
     if (!validateEmail(emailToAdd)) {
-      throw new Error(EmailUpdateError.InvalidInput);
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
     }
 
     const existingUser = await this.getUserByEmail(emailToAdd);
     if (existingUser) {
-      throw new Error(EmailUpdateError.EmailAlreadyRegistered);
+      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
     }
 
     let credential: VerifiedCredential;
@@ -605,16 +605,16 @@ export class UserService {
       const verifiedCredential =
         await this.credentialSubservice.tryVerify(serializedPCD);
       if (!verifiedCredential) {
-        throw new Error(EmailUpdateError.InvalidCredential);
+        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
       }
       credential = verifiedCredential;
     } catch (error) {
-      throw new Error(EmailUpdateError.InvalidCredential);
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
     const currentUser = await this.getUserByCommitment(credential.semaphoreId);
     if (!currentUser) {
-      throw new Error(EmailUpdateError.Unknown);
+      throw new PCDHTTPError(400, EmailUpdateError.Unknown);
     }
 
     if (!confirmationCode) {
@@ -631,11 +631,11 @@ export class UserService {
     );
 
     if (!isCodeValid) {
-      throw new Error(EmailUpdateError.InvalidConfirmationCode);
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidConfirmationCode);
     }
 
     if (currentUser.emails.includes(emailToAdd)) {
-      throw new Error(EmailUpdateError.EmailAlreadyAdded);
+      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyAdded);
     }
 
     try {
@@ -648,7 +648,7 @@ export class UserService {
 
       return { newEmailList };
     } catch {
-      throw new Error(EmailUpdateError.Unknown);
+      throw new PCDHTTPError(400, EmailUpdateError.Unknown);
     }
   }
 
