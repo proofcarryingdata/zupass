@@ -1,6 +1,18 @@
 import { z } from "zod";
 import { TicketCategory } from "./PODTicketPCD";
-import { canBeBigInt, cryptographic, dataToPodEntries } from "./data";
+
+/**
+ * Validator that ensures that a value can really be transformed into a BigInt.
+ * Only relevant for strings which may contain non-numeric values.
+ */
+export function canBeBigInt(a: string): boolean {
+  try {
+    BigInt(a);
+  } catch (_err) {
+    return false;
+  }
+  return true;
+}
 
 export const TicketDataSchema = z.object({
   eventName: z.string(),
@@ -13,14 +25,12 @@ export const TicketDataSchema = z.object({
   productId: z.string().uuid(),
   timestampConsumed: z.number().int().nonnegative(),
   timestampSigned: z.number().int().nonnegative(),
-  attendeeSemaphoreId: z.string().refine(canBeBigInt).transform(cryptographic),
+  attendeeSemaphoreId: z.string().refine(canBeBigInt),
   isConsumed: z.boolean(),
   isRevoked: z.boolean(),
   ticketCategory: z.nativeEnum(TicketCategory),
   attendeeName: z.string(),
   attendeeEmail: z.string()
 });
-
-export { dataToPodEntries };
 
 export type IPODTicketData = z.infer<typeof TicketDataSchema>;

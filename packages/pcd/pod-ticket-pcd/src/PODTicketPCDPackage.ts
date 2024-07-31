@@ -2,7 +2,6 @@ import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { POD } from "@pcd/pod";
 import { requireDefinedParameter } from "@pcd/util";
 import { v4 as uuid } from "uuid";
-import { dataToPodEntries } from "./data";
 import {
   PODTicketPCD,
   PODTicketPCDArgs,
@@ -11,7 +10,11 @@ import {
   PODTicketPCDTypeName
 } from "./PODTicketPCD";
 import { TicketDataSchema } from "./schema";
-import { podTicketPCDToPOD } from "./utils";
+import {
+  checkTicketData,
+  podTicketPCDToPOD,
+  ticketDataToPODEntries
+} from "./utils";
 
 /**
  * Creates a new {@link PODTicketPCD} by generating an {@link PODTicketPCDProof}
@@ -26,14 +29,11 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
     throw new Error("missing ticket value");
   }
 
-  const ticketData = TicketDataSchema.parse(args.ticket.value);
+  // Will throw if the ticket data is invalid
+  const ticketData = checkTicketData(args.ticket.value);
 
   const pod = POD.sign(
-    dataToPodEntries<PODTicketPCDClaim["ticket"]>(
-      ticketData,
-      TicketDataSchema,
-      TicketDataSchema.shape
-    ),
+    ticketDataToPODEntries(ticketData),
     args.privateKey.value
   );
 
@@ -41,7 +41,7 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
 
   return new PODTicketPCD(
     id,
-    { ticket: args.ticket.value, signerPublicKey: pod.signerPublicKey },
+    { ticket: ticketData, signerPublicKey: pod.signerPublicKey },
     { signature: pod.signature }
   );
 }

@@ -6,16 +6,10 @@ import {
   GPCRevealedClaims,
   PODMembershipLists
 } from "@pcd/gpc";
+import { checkPublicKeyFormat, PODEntries, PODValue } from "@pcd/pod";
 import {
-  checkPublicKeyFormat,
-  PODEdDSAPublicKeyValue,
-  PODEntries,
-  PODStringValue,
-  PODValue
-} from "@pcd/pod";
-import {
-  dataToPodEntries,
   IPODTicketData,
+  MapTicketDataToPODEntries,
   TicketDataSchema
 } from "@pcd/pod-ticket-pcd";
 import _ from "lodash";
@@ -26,6 +20,7 @@ import {
   ZKPODTicketPCDArgs,
   ZKPODTicketPCDClaim
 } from "./ZKPODTicketPCD";
+import { entriesFromPattern, patternsToPODValueTuples } from "./ticketPatterns";
 
 type RemoveRevealPrefix<T extends string> = T extends `reveal${infer R}`
   ? Uncapitalize<R>
@@ -67,27 +62,6 @@ function revealedFieldKeyToEntryName(
 ): RevealableTicketField {
   return (key.charAt(6).toLowerCase() +
     key.replace(/^reveal/, "").slice(1)) as RevealableTicketField;
-}
-
-function entriesFromPattern(
-  patterns: TicketMatchPatterns
-): `${string}.${string}`[] {
-  const idPatternEntries: `${string}.${string}`[] = [];
-
-  if (patterns.length > 0) {
-    idPatternEntries.push("ticketPOD.$signerPublicKey");
-    if (patterns[0].events && patterns[0].events.length > 0) {
-      idPatternEntries.push("ticketPOD.eventId");
-      if (
-        patterns[0].events[0].products &&
-        patterns[0].events[0].products.length > 0
-      ) {
-        idPatternEntries.push("ticketPOD.productId");
-      }
-    }
-  }
-
-  return idPatternEntries;
 }
 
 /**
@@ -183,6 +157,27 @@ export function podEntriesToPartialTicketData(
   );
 }
 
+function isMapTicketDataToPODEntriesKey(
+  key: string
+): key is keyof typeof MapTicketDataToPODEntries {
+  return key in MapTicketDataToPODEntries;
+}
+
+function partialTicketDataToPODEntries(
+  data: Partial<IPODTicketData>
+): PODEntries | undefined {
+  const result: PODEntries = {};
+  for (const [key, value] of Object.entries(data)) {
+    if (!isMapTicketDataToPODEntriesKey(key)) {
+      throw new Error(`Invalid key: ${key}`);
+    }
+    const mapper = MapTicketDataToPODEntries[key];
+    // @ts-expect-error TypeScript can't infer that the value type matches the mapper input
+    result[key] = mapper(value);
+  }
+  return Object.keys(result).length > 0 ? result : undefined;
+}
+
 /**
  * Makes a GPC config from ZKPODTicketPCDArgs.
  *
@@ -214,51 +209,6 @@ export function compareProofConfigWithBoundConfig(
 }
 
 /**
- * A tuple representing an admissible pattern for the ticket.
- * These patterns are hierarchical, in the sense that one signing key can have
- * many event IDs, and each event ID can have many product IDs. However, for
- * use with GPC, we flatten these into tuples.
- */
-type AdmissibleTuple =
-  // Match on signing  key, event ID, product ID
-  | [PODEdDSAPublicKeyValue, PODStringValue, PODStringValue]
-  // Match on signing key, event ID
-  | [PODEdDSAPublicKeyValue, PODStringValue];
-
-/**
- * Convert a {@link TicketMatchPatterns} into an array of {@link AdmissibleTuple}.
- * As a generator function, it yields one tuple at a time, and should generally
- * be used in a `for...of` loop or with a function like `Array.from`.
- *
- * @param value The patterns to convert
- * @returns An array of tuples
- */
-export function* patternsToPODValueTuples(
-  value: TicketMatchPatterns
-): Generator<AdmissibleTuple> {
-  for (const pattern of value) {
-    if (pattern.events) {
-      for (const event of pattern.events) {
-        if (event.products) {
-          for (const product of event.products) {
-            yield [
-              PODEdDSAPublicKeyValue(pattern.signerPublicKey),
-              { type: "string", value: event.id },
-              { type: "string", value: product.id }
-            ];
-          }
-        } else {
-          yield [
-            PODEdDSAPublicKeyValue(pattern.signerPublicKey),
-            { type: "string", value: event.id }
-          ];
-        }
-      }
-    }
-  }
-}
-
-/**
  * Convert a ZKPODTicketPCDClaim into GPCRevealedClaims.
  *
  * @param claim - The claim to convert.
@@ -270,11 +220,7 @@ export function claimToGPCRevealedClaims(
   return {
     pods: {
       ticketPOD: {
-        entries: dataToPodEntries(
-          claim.partialTicket,
-          TicketDataSchema.partial(),
-          TicketDataSchema.partial().shape
-        ),
+        entries: partialTicketDataToPODEntries(claim.partialTicket),
         signerPublicKey: claim.signerPublicKey
       }
     },

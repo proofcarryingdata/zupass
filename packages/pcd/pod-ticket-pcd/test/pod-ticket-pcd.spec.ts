@@ -2,7 +2,13 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
 import { v4 as uuid } from "uuid";
-import { PODTicketPCD, PODTicketPCDPackage, TicketCategory } from "../src";
+import {
+  PODEntriesToTicketData,
+  PODTicketPCD,
+  PODTicketPCDPackage,
+  podTicketPCDToPOD,
+  TicketCategory
+} from "../src";
 import { IPODTicketData } from "../src/schema";
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
@@ -10,27 +16,29 @@ const prvKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 00010203040
 
 export const expectedPublicKey = "xDP3ppa3qjpSJO-zmTuvDM2eku7O4MKaP2yCCKnoHZ4";
 
+const ticketData: IPODTicketData = {
+  attendeeName: "test name",
+  attendeeEmail: "user@test.com",
+  eventName: "event",
+  ticketName: "ticket",
+  checkerEmail: "checker@test.com",
+  ticketId: uuid(),
+  eventId: uuid(),
+  productId: uuid(),
+  timestampConsumed: Date.now(),
+  timestampSigned: Date.now(),
+  attendeeSemaphoreId: "12345",
+  isConsumed: false,
+  isRevoked: false,
+  ticketCategory: TicketCategory.Devconnect,
+  imageUrl: undefined
+  // imageAltText is omitted as it is optional
+};
+
 describe("PODTicketPCD should work", function () {
   let ticket: PODTicketPCD;
 
   this.beforeAll(async () => {
-    const ticketData: IPODTicketData = {
-      attendeeName: "test name",
-      attendeeEmail: "user@test.com",
-      eventName: "event",
-      ticketName: "ticket",
-      checkerEmail: "checker@test.com",
-      ticketId: uuid(),
-      eventId: uuid(),
-      productId: uuid(),
-      timestampConsumed: Date.now(),
-      timestampSigned: Date.now(),
-      attendeeSemaphoreId: "12345",
-      isConsumed: false,
-      isRevoked: false,
-      ticketCategory: TicketCategory.Devconnect
-    };
-
     ticket = await PODTicketPCDPackage.prove({
       ticket: {
         value: ticketData,
@@ -116,6 +124,21 @@ describe("PODTicketPCD should work", function () {
     expect(deserialized.proof).to.deep.eq(deserialized.proof);
     expect(deserialized.type).to.eq(deserialized.type);
     expect(deserialized.id).to.eq(deserialized.id);
+  });
+
+  it("should be possible to convert a PODTicketPCD to a POD", async function () {
+    const pod = podTicketPCDToPOD(ticket);
+    expect(pod.signature).to.eq(ticket.proof.signature);
+    expect(pod.signerPublicKey).to.eq(ticket.claim.signerPublicKey);
+    expect(Object.entries(pod.content.asEntries()).length).to.eq(
+      Object.entries(ticket.claim.ticket).length
+    );
+  });
+
+  it("should be possible to convert PODEntries to a PODTicketData object", async function () {
+    const pod = podTicketPCDToPOD(ticket);
+    const ticketData = PODEntriesToTicketData(pod.content.asEntries());
+    expect(ticketData).to.deep.eq(ticket.claim.ticket);
   });
 
   // @todo test deserialization of a hard-coded serialized PCD, to catch

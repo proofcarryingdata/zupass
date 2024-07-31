@@ -13,7 +13,11 @@ import { expect } from "chai";
 import "mocha";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
-import { init, prove } from "../src/ZKPODTicketPCDPackage";
+import {
+  init,
+  prove,
+  ZKPODTicketPCDPackage
+} from "../src/ZKPODTicketPCDPackage";
 
 export const GPC_TEST_ARTIFACTS_PATH = path.join(
   __dirname,
@@ -125,5 +129,7 @@ describe("zk-pod-ticket-pcd should work", async function () {
     expect(zkTicket).to.exist;
     expect(zkTicket.claim.watermark.value).to.equal("0");
     expect(zkTicket.claim.externalNullifier.value).to.equal("0");
+
+    expect(await ZKPODTicketPCDPackage.verify(zkTicket)).to.equal(true);
   });
 });
