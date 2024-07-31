@@ -25,7 +25,17 @@ export const subPages: SubPage[] = [
   },
   {
     image: "https://i.imgur.com/placeholder3.png",
-    title: "Cursive",
+    title: "ZK Talks",
+    pageLink: ""
+  },
+  {
+    image: "https://i.imgur.com/placeholder3.png",
+    title: "ZK Social Graph",
+    pageLink: ""
+  },
+  {
+    image: "https://i.imgur.com/placeholder3.png",
+    title: "Backpocket",
     pageLink: "https://zksummit.cursive.team/"
   },
   {
