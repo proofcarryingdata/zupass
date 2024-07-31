@@ -12,6 +12,7 @@ import {
   MapTicketDataToPODEntries,
   TicketDataSchema
 } from "@pcd/pod-ticket-pcd";
+import JSONBig from "json-bigint";
 import _ from "lodash";
 import { validate as validateUUID } from "uuid";
 import {
@@ -275,6 +276,54 @@ export function makeProofRequest(args: ZKPODTicketPCDArgs): ProofRequest {
     },
     watermark: { type: "string", value: args.watermark.value ?? "0" }
   };
+}
+
+/**
+ * Check that the claim is valid for the proof request.
+ *
+ * @param claim - The claim to check.
+ * @param proofRequest - The proof request to check against.
+ */
+export function checkClaimAgainstProofRequest(
+  claim: ZKPODTicketPCDClaim,
+  proofRequest: ProofRequest
+): void {
+  if (
+    !compareProofConfigWithBoundConfig(proofRequest.proofConfig, claim.config)
+  ) {
+    throw new Error("GPC config does not match expected configuration");
+  }
+
+  const revealedClaims = claimToGPCRevealedClaims(claim);
+
+  if (
+    !_.isEqual(revealedClaims.membershipLists, proofRequest.membershipLists)
+  ) {
+    throw new Error("Unequal membership lists");
+  }
+
+  const stringify = JSONBig({ useNativeBigInt: true }).stringify;
+
+  if (
+    !_.isEqual(
+      revealedClaims.owner?.externalNullifier,
+      proofRequest.externalNullifier
+    )
+  ) {
+    throw new Error(
+      `Unequal external nullifiers: ${stringify(
+        revealedClaims.owner?.externalNullifier
+      )} !== ${stringify(proofRequest.externalNullifier)}`
+    );
+  }
+
+  if (!_.isEqual(revealedClaims.watermark, proofRequest.watermark)) {
+    throw new Error(
+      `Unequal watermarks: ${stringify(
+        revealedClaims.watermark
+      )} !== ${stringify(proofRequest.watermark)}`
+    );
+  }
 }
 
 /**

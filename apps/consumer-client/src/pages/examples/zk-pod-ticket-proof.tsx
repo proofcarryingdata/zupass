@@ -10,9 +10,8 @@ import { PODTicketPCDPackage } from "@pcd/pod-ticket-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { generateSnarkMessageHash } from "@pcd/util";
 import {
+  checkClaimAgainstProofRequest,
   checkTicketPatterns,
-  claimToGPCRevealedClaims,
-  compareProofConfigWithBoundConfig,
   makeProofRequest,
   PODTicketFieldsToReveal,
   ProofRequest,
@@ -22,7 +21,6 @@ import {
   ZKPODTicketPCDPackage
 } from "@pcd/zk-pod-ticket-pcd";
 import JSONBig from "json-bigint";
-import _ from "lodash";
 import { useEffect, useMemo, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
@@ -512,45 +510,10 @@ async function verifyProof(
     return false;
   }
 
-  if (
-    !compareProofConfigWithBoundConfig(
-      proofRequest.proofConfig,
-      pcd.claim.config
-    )
-  ) {
-    console.error("GPC config does not match expected configuration");
-    return false;
-  }
-
-  const revealedClaims = claimToGPCRevealedClaims(pcd.claim);
-
-  if (
-    !_.isEqual(revealedClaims.membershipLists, proofRequest.membershipLists)
-  ) {
-    console.error("Unequal membership lists");
-    return false;
-  }
-
-  if (
-    !_.isEqual(
-      revealedClaims.owner?.externalNullifier,
-      proofRequest.externalNullifier
-    )
-  ) {
-    console.error(
-      `Unequal external nullifiers: ${JSONBig.stringify(
-        revealedClaims.owner?.externalNullifier
-      )} !== ${JSONBig.stringify(proofRequest.externalNullifier)}`
-    );
-    return false;
-  }
-
-  if (!_.isEqual(revealedClaims.watermark, proofRequest.watermark)) {
-    console.error(
-      `Unequal watermarks: ${JSONBig.stringify(
-        revealedClaims.watermark
-      )} !== ${JSONBig.stringify(proofRequest.watermark)}`
-    );
+  try {
+    checkClaimAgainstProofRequest(pcd.claim, proofRequest);
+  } catch (e) {
+    console.error("Proof is not valid:", e);
     return false;
   }
 
