@@ -7,11 +7,12 @@ import { sqlQuery, sqlTransaction } from "../sqlQuery";
  */
 export async function upsertUser(
   client: Pool,
+  // this is a partial UserRow
   params: {
     uuid: string;
     commitment: string;
     salt?: string | null;
-    encryptionKey?: string;
+    encryption_key?: string | null;
     terms_agreed: number;
     extra_issuance: boolean;
     emails: string[];
@@ -25,7 +26,7 @@ export async function upsertUser(
     const {
       commitment,
       salt,
-      encryptionKey,
+      encryption_key,
       terms_agreed,
       extra_issuance,
       uuid,
@@ -44,7 +45,7 @@ returning *`,
         uuid,
         commitment,
         salt,
-        encryptionKey,
+        encryption_key,
         terms_agreed,
         extra_issuance,
         new Date()

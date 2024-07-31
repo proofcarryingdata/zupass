@@ -10,7 +10,6 @@ import {
   createCredentialPayload
 } from "./Credential";
 import { CredentialRequest } from "./SubscriptionManager";
-import { StorageBackedMap } from "./util/StorageBackedMap";
 
 export interface CredentialManagerAPI {
   canGenerateCredential(req: CredentialRequest): boolean;
@@ -51,7 +50,8 @@ export function createCredentialCache(): CredentialCache {
 
 // Creates an in-memory cache with a TTL of one hour, backed by localStorage
 export function createStorageBackedCredentialCache(): CredentialCache {
-  return new StorageBackedMap("credential-cache-2");
+  return new Map();
+  // return new StorageBackedMap("credential-cache-2");
 }
 
 /**

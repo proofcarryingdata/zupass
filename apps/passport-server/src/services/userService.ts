@@ -267,7 +267,7 @@ export class UserService {
       uuid: randomUUID(),
       emails: [email],
       commitment,
-      encryptionKey,
+      encryption_key: encryptionKey,
       terms_agreed: LATEST_PRIVACY_NOTICE,
       extra_issuance: false
     });
@@ -358,7 +358,7 @@ export class UserService {
       emails: existingUser ? existingUser.emails : [email],
       commitment,
       salt,
-      encryptionKey,
+      encryption_key: encryptionKey,
       // If the user already exists, then they're accessing this via the
       // "forgot password" flow, and not the registration flow in which they
       // are prompted to agree to the latest legal terms. In this case,

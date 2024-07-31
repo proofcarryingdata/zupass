@@ -280,7 +280,7 @@ export class FeedSubscriptionManager {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {
-      const authKey = await this.getAuthKeyForFeed(subscription);
+      const authKey = undefined; //await this.getAuthKeyForFeed(subscription);
 
       const pcdCredentials: SerializedPCD[] | undefined = authKey
         ? await this.makeAlternateCredentialPCD(authKey)
