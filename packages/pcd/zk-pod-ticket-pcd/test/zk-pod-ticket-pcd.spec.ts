@@ -14,6 +14,11 @@ import "mocha";
 import path from "path";
 import { v4 as uuidv4 } from "uuid";
 import {
+  checkClaimAgainstProofRequest,
+  makeProofRequest,
+  ZKPODTicketPCDArgs
+} from "../src";
+import {
   init,
   prove,
   ZKPODTicketPCDPackage
@@ -91,7 +96,7 @@ describe("zk-pod-ticket-pcd should work", async function () {
 
     const pubKey = ticket.claim.signerPublicKey;
 
-    const zkTicket = await prove({
+    const proveArgs: ZKPODTicketPCDArgs = {
       ticket: {
         argumentType: ArgumentTypeName.PCD,
         value: serializedTicket,
@@ -124,12 +129,17 @@ describe("zk-pod-ticket-pcd should work", async function () {
         argumentType: ArgumentTypeName.String,
         value: "0"
       }
-    });
+    };
+
+    const zkTicket = await prove(proveArgs);
 
     expect(zkTicket).to.exist;
     expect(zkTicket.claim.watermark.value).to.equal("0");
     expect(zkTicket.claim.externalNullifier.value).to.equal("0");
 
     expect(await ZKPODTicketPCDPackage.verify(zkTicket)).to.equal(true);
+    expect(
+      checkClaimAgainstProofRequest(zkTicket.claim, makeProofRequest(proveArgs))
+    ).to.not.throw;
   });
 });
