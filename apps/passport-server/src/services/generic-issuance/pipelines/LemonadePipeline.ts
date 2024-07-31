@@ -834,7 +834,9 @@ export class LemonadePipeline implements BasePipeline {
 
       const ticketActions: PCDAction[] = [];
 
-      if (this.loaded) {
+      // If the Atom DB is not empty, i.e. if we have loaded atoms for this pipeline
+      // at least once since the server started, delete the folder.
+      if ((await this.db.load(this.id)).length > 0) {
         ticketActions.push({
           type: PCDActionType.DeleteFolder,
           folder: this.definition.options.feedOptions.feedFolder,
