@@ -48,11 +48,21 @@ export default function Page(): JSX.Element {
     useState(false);
 
   const [patternsText, setPatternsText] = useState<string>(
-    JSON.stringify([
-      {
-        signerPublicKey: "ZeZomy3iAu0A37TrJUAJ+76eYjiB3notl9jiRF3vRJE"
-      }
-    ])
+    JSON.stringify(
+      [
+        {
+          signerPublicKey: "ZeZomy3iAu0A37TrJUAJ+76eYjiB3notl9jiRF3vRJE",
+          events: [
+            {
+              id: "283c1893-404c-5c59-b135-b49a2c8c83ae",
+              productIds: ["8573eaa3-bcf1-5c7b-8a3b-6a682dee3c8f"]
+            }
+          ]
+        }
+      ] satisfies TicketMatchPatterns,
+      null,
+      2
+    )
   );
 
   const patterns = useMemo(() => {
@@ -157,9 +167,11 @@ export default function Page(): JSX.Element {
           Request Zupass Event Ticket Proof
         </button>
         <br />
-        Valid event ids, comma separated (or empty for no validation):
+        Ticket patterns, a hierarchical JSON structure representing the signing
+        key, event id, and product id:
+        <br />
         <textarea
-          cols={45}
+          cols={72}
           rows={12}
           value={patternsText}
           onChange={(e): void => setPatternsText(e.target.value)}

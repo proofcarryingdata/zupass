@@ -102,7 +102,7 @@ describe("zk-pod-ticket-pcd should work", async function () {
               events: [
                 {
                   id: ticketData.eventId,
-                  products: [{ id: ticketData.productId }]
+                  productIds: [ticketData.productId]
                 }
               ]
             }

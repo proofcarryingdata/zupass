@@ -208,9 +208,9 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKPODTicketPCDArgs
                   if (event.id !== value.claim.ticket.eventId) {
                     return false;
                   }
-                  if (event.products) {
-                    for (const product of event.products) {
-                      if (product.id !== value.claim.ticket.productId) {
+                  if (event.productIds) {
+                    for (const productId of event.productIds) {
+                      if (productId !== value.claim.ticket.productId) {
                         return false;
                       }
                     }

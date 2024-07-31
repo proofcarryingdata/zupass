@@ -18,8 +18,8 @@ export function entriesFromPattern(
     if (patterns[0].events && patterns[0].events.length > 0) {
       idPatternEntries.push("ticketPOD.eventId");
       if (
-        patterns[0].events[0].products &&
-        patterns[0].events[0].products.length > 0
+        patterns[0].events[0].productIds &&
+        patterns[0].events[0].productIds.length > 0
       ) {
         idPatternEntries.push("ticketPOD.productId");
       }
@@ -55,12 +55,12 @@ export function* patternsToPODValueTuples(
   for (const pattern of value) {
     if (pattern.events) {
       for (const event of pattern.events) {
-        if (event.products) {
-          for (const product of event.products) {
+        if (event.productIds) {
+          for (const productId of event.productIds) {
             yield [
               PODEdDSAPublicKeyValue(pattern.signerPublicKey),
               { type: "string", value: event.id },
-              { type: "string", value: product.id }
+              { type: "string", value: productId }
             ];
           }
         } else {

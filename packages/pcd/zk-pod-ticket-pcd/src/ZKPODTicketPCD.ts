@@ -55,11 +55,11 @@ export type TicketMatchPatterns =
     }[]
   | {
       signerPublicKey: string;
-      events: { id: string; products?: undefined }[];
+      events: { id: string; productIds: undefined }[];
     }[]
   | {
       signerPublicKey: string;
-      events: { id: string; products: { id: string }[] }[];
+      events: { id: string; productIds: string[] }[];
     }[];
 
 /**

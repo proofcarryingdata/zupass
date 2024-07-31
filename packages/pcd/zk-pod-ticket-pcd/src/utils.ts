@@ -352,15 +352,12 @@ export function checkTicketPatterns(patterns: TicketMatchPatterns): void {
         if (!validateUUID(event.id)) {
           throw new Error("Event ID must be a valid UUID");
         }
-        if (event.products) {
-          if (!Array.isArray(event.products)) {
-            throw new Error("Products must be an array");
+        if (event.productIds) {
+          if (!Array.isArray(event.productIds)) {
+            throw new Error("Product IDs must be an array");
           }
-          for (const product of event.products) {
-            if (!product.id) {
-              throw new Error("Product ID is required");
-            }
-            if (!validateUUID(product.id)) {
+          for (const productId of event.productIds) {
+            if (!validateUUID(productId)) {
               throw new Error("Product ID must be a valid UUID");
             }
           }
