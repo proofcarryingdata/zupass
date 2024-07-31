@@ -309,12 +309,15 @@ export class FeedSubscriptionManager {
       //   throw new Error(results.error);
       // }
 
-      const actions = results.flatMap((r) => {
-        if (r.success) {
-          return r.value.actions;
-        }
-        return [];
-      });
+      const actions = results
+        .flatMap((r) => {
+          if (r.success) {
+            return r.value.actions;
+          }
+          return [];
+        })
+        // TODO: coalesce deletions to occur first
+        .filter((a) => a.type !== "DeleteFolder_action");
 
       this.validateActions(subscription, actions);
 
