@@ -67,10 +67,11 @@ export function ChangeEmailScreen(): JSX.Element | null {
         credentialCache
       );
 
-      const pcd: SerializedPCD<SemaphoreSignaturePCD> =
+      const pcd: SerializedPCD<SemaphoreSignaturePCD> = (
         await credentialManager.requestCredentials({
           signatureType: "sempahore-signature-pcd"
-        });
+        })
+      )[0];
 
       const result = await requestChangeUserEmail(
         appConfig.zupassServer,
@@ -109,10 +110,11 @@ export function ChangeEmailScreen(): JSX.Element | null {
         credentialCache
       );
 
-      const pcd: SerializedPCD<SemaphoreSignaturePCD> =
+      const pcd: SerializedPCD<SemaphoreSignaturePCD> = (
         await credentialManager.requestCredentials({
           signatureType: "sempahore-signature-pcd"
-        });
+        })
+      )[0];
 
       const result = await requestChangeUserEmail(
         appConfig.zupassServer,

@@ -111,9 +111,11 @@ function useFeeds(): {
   const [pcd, setPcd] = useState<SerializedPCD>();
   useEffect(() => {
     const fetchPcd = async (): Promise<void> => {
-      const pcd = await credentialManager.requestCredentials({
-        signatureType: "sempahore-signature-pcd"
-      });
+      const pcd = (
+        await credentialManager.requestCredentials({
+          signatureType: "sempahore-signature-pcd"
+        })
+      )[0];
       setPcd(pcd);
     };
     fetchPcd();

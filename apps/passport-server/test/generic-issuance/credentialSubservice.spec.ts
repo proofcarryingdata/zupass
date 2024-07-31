@@ -22,7 +22,7 @@ import { overrideEnvironment, testingEnv } from "../util/env";
 import { startTestingApp } from "../util/startTestingApplication";
 import { expectToExist } from "../util/util";
 import {
-  makeTestCredential,
+  makeTestCredentials,
   proveEmailPCD,
   signCredentialPayload
 } from "./util";
@@ -61,7 +61,7 @@ describe("generic issuance - credential subservice", function () {
     const identity = new Identity();
     const emailAddress = "test@example.com";
     {
-      const credential = await makeTestCredential(
+      const credentials = await makeTestCredentials(
         identity,
         PODBOX_CREDENTIAL_REQUEST,
         emailAddress,
@@ -69,8 +69,8 @@ describe("generic issuance - credential subservice", function () {
       );
 
       // Same promise will be returned for the same input
-      const verifyPromise = credentialSubservice.verify(credential);
-      const secondPromise = credentialSubservice.verify(credential);
+      const verifyPromise = credentialSubservice.verify(credentials[0]);
+      const secondPromise = credentialSubservice.verify(credentials[0]);
       expect(verifyPromise).to.eq(secondPromise);
 
       // Result is a verified credential containing the expected values
@@ -93,19 +93,19 @@ describe("generic issuance - credential subservice", function () {
       // Verifying this with the expectation of a valid email should produce
       // the same result, as the credential has a valid EmailPCD.
       const verifiedCredentialWithEmail =
-        await credentialSubservice.verifyAndExpectZupassEmail(credential);
+        await credentialSubservice.verifyAndExpectZupassEmail(credentials[0]);
       expect(verifiedCredentialWithEmail).to.deep.eq(verifiedCredential);
     }
     {
-      const credential = await makeTestCredential(
+      const credential = await makeTestCredentials(
         identity,
         // Credentials for Zupass feeds do not include Email PCDs
         ZUPASS_CREDENTIAL_REQUEST
       );
 
       // Same promise will be returned for the same input
-      const verifyPromise = credentialSubservice.verify(credential);
-      const secondPromise = credentialSubservice.verify(credential);
+      const verifyPromise = credentialSubservice.verify(credential[0]);
+      const secondPromise = credentialSubservice.verify(credential[0]);
       expect(verifyPromise).to.eq(secondPromise);
 
       // Result is a verified credential containing the expected values
@@ -119,7 +119,7 @@ describe("generic issuance - credential subservice", function () {
       // Verifying this with the expectation of a valid email should throw,
       // since the credential does not have an EmailPCD.
       try {
-        await credentialSubservice.verifyAndExpectZupassEmail(credential);
+        await credentialSubservice.verifyAndExpectZupassEmail(credential[0]);
         assert(false); // Should not reach here due to thrown exception
       } catch (e) {
         expect(e instanceof VerificationError).to.be.true;

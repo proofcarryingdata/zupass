@@ -51,10 +51,11 @@ export function RemoveEmailScreen(): JSX.Element | null {
         credentialCache
       );
 
-      const pcd: SerializedPCD<SemaphoreSignaturePCD> =
+      const pcd: SerializedPCD<SemaphoreSignaturePCD> = (
         await credentialManager.requestCredentials({
           signatureType: "sempahore-signature-pcd"
-        });
+        })
+      )[0];
 
       const response = await requestRemoveUserEmail(
         appConfig.zupassServer,

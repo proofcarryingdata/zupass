@@ -75,7 +75,7 @@ export function JustAddScreen({
         ? await mintPODPCD(
             request.mintUrl as string,
             request.pcd,
-            await semaphoreSignaturePCD
+            (await semaphoreSignaturePCD)[0]
           )
         : request.pcd;
 

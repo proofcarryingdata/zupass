@@ -85,7 +85,7 @@ export async function requestCheckInPipelineTicket(
   checkerIdentity: Identity,
   ticket: EdDSATicketPCD
 ): Promise<PodboxTicketActionResult> {
-  const ticketCheckerFeedCredential = await makeTestCredential(
+  const ticketCheckerFeedCredentials = await makeTestCredentials(
     checkerIdentity,
     PODBOX_CREDENTIAL_REQUEST,
     checkerEmail,
@@ -94,7 +94,7 @@ export async function requestCheckInPipelineTicket(
 
   return requestPodboxTicketAction(
     checkinRoute,
-    ticketCheckerFeedCredential,
+    ticketCheckerFeedCredentials[0],
     {
       checkin: true
     },
@@ -156,12 +156,14 @@ export async function requestTicketsFromPipeline(
 ): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
   const ticketPCDResponse = await requestPollFeed(feedUrl, {
     feedId: feedId,
-    pcd: await makeTestCredential(
-      identity,
-      PODBOX_CREDENTIAL_REQUEST,
-      email,
-      zupassEddsaPrivateKey
-    )
+    pcd: (
+      await makeTestCredentials(
+        identity,
+        PODBOX_CREDENTIAL_REQUEST,
+        email,
+        zupassEddsaPrivateKey
+      )
+    )[0]
   });
 
   return getTicketsFromFeedResponse(expectedFolder, ticketPCDResponse);
@@ -174,12 +176,12 @@ export async function requestTicketsFromPipeline(
  * Uses {@link testCredentialCache} to avoid regenerating the same credential
  * repeately.
  */
-export async function makeTestCredential(
+export async function makeTestCredentials(
   identity: Identity,
   request: CredentialRequest,
   email?: string,
   zupassEddsaPrivateKey?: string
-): Promise<Credential> {
+): Promise<Credential[]> {
   if (request.pcdType === "email-pcd") {
     if (!email || !zupassEddsaPrivateKey) {
       throw new Error(
@@ -215,7 +217,7 @@ export async function makeTestCredential(
  * Sign a credential payload.
  * Only use this to generate "incorrect" credentials, such as those containing
  * invalid PCDs, expired timestamps, and so on, otherwise use
- * {@link makeTestCredential} above.
+ * {@link makeTestCredentials} above.
  */
 export async function signCredentialPayload(
   identity: Identity,

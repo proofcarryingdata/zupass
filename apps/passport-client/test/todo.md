@@ -31,6 +31,7 @@
   - if you have only one one email, add button to change your email
 - add logging everywhere that is appropriate
 - fix existing tests
+- BUST THE CREDENTIAL CACHE TO SUPPORT NEW SCHEMA OF CACHE ENTRY
 - tests?
 
 # done

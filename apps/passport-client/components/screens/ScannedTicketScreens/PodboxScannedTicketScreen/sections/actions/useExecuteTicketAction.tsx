@@ -45,7 +45,9 @@ export function useExecuteTicketAction({
 
     const checkinResult = await requestPodboxTicketAction(
       urljoin(appConfig.zupassServer, "generic-issuance/api/check-in"),
-      await credentialManager.requestCredentials(PODBOX_CREDENTIAL_REQUEST),
+      (
+        await credentialManager.requestCredentials(PODBOX_CREDENTIAL_REQUEST)
+      )[0],
       action,
       ticketId,
       eventId

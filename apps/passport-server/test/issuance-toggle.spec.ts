@@ -13,7 +13,7 @@ import { stopApplication } from "../src/application";
 import { upsertUser } from "../src/database/queries/saveUser";
 import { fetchUserByEmail } from "../src/database/queries/users";
 import { Zupass } from "../src/types";
-import { makeTestCredential } from "./generic-issuance/util";
+import { makeTestCredentials } from "./generic-issuance/util";
 import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -61,10 +61,9 @@ describe("ticket issuance cutoff date should work", function () {
       const feedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeTestCredential(
-            userIdentity,
-            ZUPASS_CREDENTIAL_REQUEST
-          ),
+          pcd: (
+            await makeTestCredentials(userIdentity, ZUPASS_CREDENTIAL_REQUEST)
+          )[0],
           feedId: ZupassFeedIds.Devconnect
         }
       );
@@ -83,10 +82,9 @@ describe("ticket issuance cutoff date should work", function () {
       const feedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeTestCredential(
-            userIdentity,
-            ZUPASS_CREDENTIAL_REQUEST
-          ),
+          pcd: (
+            await makeTestCredentials(userIdentity, ZUPASS_CREDENTIAL_REQUEST)
+          )[0],
           feedId: ZupassFeedIds.Devconnect
         }
       );
@@ -120,10 +118,9 @@ describe("ticket issuance cutoff date should work", function () {
       const firstFeedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeTestCredential(
-            userIdentity,
-            ZUPASS_CREDENTIAL_REQUEST
-          ),
+          pcd: (
+            await makeTestCredentials(userIdentity, ZUPASS_CREDENTIAL_REQUEST)
+          )[0],
           feedId: ZupassFeedIds.Devconnect
         }
       );
@@ -135,10 +132,9 @@ describe("ticket issuance cutoff date should work", function () {
       const secondFeedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeTestCredential(
-            userIdentity,
-            ZUPASS_CREDENTIAL_REQUEST
-          ),
+          pcd: (
+            await makeTestCredentials(userIdentity, ZUPASS_CREDENTIAL_REQUEST)
+          )[0],
           feedId: ZupassFeedIds.Devconnect
         }
       );

@@ -214,9 +214,11 @@ function useBackgroundJobs(): void {
           {
             checkedOfflineInDevconnectTicketIDs:
               state.checkedinOfflineDevconnectTickets.map((t) => t.id),
-            checkerProof: await credentialManager.requestCredentials(
-              ZUPASS_CREDENTIAL_REQUEST
-            )
+            checkerProof: (
+              await credentialManager.requestCredentials(
+                ZUPASS_CREDENTIAL_REQUEST
+              )
+            )[0]
           }
         );
 
@@ -231,9 +233,11 @@ function useBackgroundJobs(): void {
       const offlineTicketsResult = await requestOfflineTickets(
         appConfig.zupassServer,
         {
-          checkerProof: await credentialManager.requestCredentials(
-            ZUPASS_CREDENTIAL_REQUEST
-          )
+          checkerProof: (
+            await credentialManager.requestCredentials(
+              ZUPASS_CREDENTIAL_REQUEST
+            )
+          )[0]
         }
       );
 
