@@ -39,6 +39,12 @@ export function checkTicketData(data: unknown): IPODTicketData {
 /**
  * Convert PODEntries to ticket data.
  *
+ * This isn't currently used anywhere, but might be useful for PODBox.
+ * It depends on {@link MapPODEntriesToTicketData}, which *is* used by
+ * ZKPODTicketPCD, see {@link partialPODEntriesToPartialTicketData}. This
+ * version is convenient for testing because it will attempt to build a full
+ * ticket data object, thus validating all relevant entries.
+ *
  * @param entries - The PODEntries to convert
  * @returns The ticket data
  */

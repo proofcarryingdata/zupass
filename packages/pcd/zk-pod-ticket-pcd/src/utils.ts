@@ -175,6 +175,11 @@ export function partialPODEntriesToPartialTicketData(
   const dataEntries = [];
   for (const [key, value] of Object.entries(entries)) {
     const mapper = MapPODEntriesToTicketData[key as keyof IPODTicketData];
+    // When doing a similar operation to this in PODTicketPCD, we would expect
+    // to find additional POD entries due to the extraEntries field.
+    // However, our proofs here never refer to those additional entries as they
+    // are not included in the "revealed fields". Therefore we should never
+    // expect to see a key here which is not part of the standard ticket data.
     if (mapper === undefined) {
       throw new Error(`Unexpected key in PODEntries: ${key}`);
     }
