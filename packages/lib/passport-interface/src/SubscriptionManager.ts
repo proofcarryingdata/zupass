@@ -309,19 +309,33 @@ export class FeedSubscriptionManager {
       //   throw new Error(results.error);
       // }
 
-      const actions = results
-        .flatMap((r) => {
-          if (r.success) {
-            return r.value.actions;
+      const actions = results.flatMap((r) => {
+        if (r.success) {
+          return r.value.actions;
+        }
+        return [];
+      });
+
+      let filteredActions = [];
+      const seen = new Set<string>();
+
+      for (const action of actions) {
+        if (action.type === "DeleteFolder_action") {
+          const key = action.folder;
+          if (seen.has(key)) {
+            continue;
+          } else {
+            seen.add(key);
+            filteredActions.push(action);
           }
-          return [];
-        })
-        // TODO: coalesce deletions to occur first
-        .filter((a) => a.type !== "DeleteFolder_action");
+        } else {
+          filteredActions.push(action);
+        }
+      }
 
-      this.validateActions(subscription, actions);
+      this.validateActions(subscription, filteredActions);
 
-      const subscriptionActions = { actions, subscription };
+      const subscriptionActions = { actions: filteredActions, subscription };
 
       if (onFinish) {
         await onFinish(subscriptionActions);
