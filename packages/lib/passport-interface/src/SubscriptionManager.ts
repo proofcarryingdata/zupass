@@ -316,7 +316,7 @@ export class FeedSubscriptionManager {
         return [];
       });
 
-      let filteredActions = [];
+      const filteredActions = [];
       const seen = new Set<string>();
 
       for (const action of actions) {
