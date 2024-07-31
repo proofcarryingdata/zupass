@@ -16,6 +16,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   checkClaimAgainstProofRequest,
   makeProofRequest,
+  ZKPODTicketPCD,
   ZKPODTicketPCDArgs
 } from "../src";
 import {
@@ -56,6 +57,8 @@ describe("zk-pod-ticket-pcd should work", async function () {
   this.beforeAll(async function () {
     await init({ zkArtifactPath: GPC_NPM_ARTIFACTS_PATH });
   });
+
+  let zkTicketPCD: ZKPODTicketPCD;
 
   it("zk-pod-ticket-pcd should do something", async function () {
     const ticketData: IPODTicketData = {
@@ -135,15 +138,29 @@ describe("zk-pod-ticket-pcd should work", async function () {
       }
     };
 
-    const zkTicket = await prove(proveArgs);
+    zkTicketPCD = await prove(proveArgs);
 
-    expect(zkTicket).to.exist;
-    expect(zkTicket.claim.watermark.value).to.equal("0");
-    expect(zkTicket.claim.externalNullifier.value).to.equal("0");
+    expect(zkTicketPCD).to.exist;
+    expect(zkTicketPCD.claim.watermark.value).to.equal("0");
+    expect(zkTicketPCD.claim.externalNullifier.value).to.equal("0");
 
-    expect(await ZKPODTicketPCDPackage.verify(zkTicket)).to.equal(true);
+    expect(await ZKPODTicketPCDPackage.verify(zkTicketPCD)).to.equal(true);
     expect(
-      checkClaimAgainstProofRequest(zkTicket.claim, makeProofRequest(proveArgs))
+      checkClaimAgainstProofRequest(
+        zkTicketPCD.claim,
+        makeProofRequest(proveArgs)
+      )
     ).to.not.throw;
+  });
+
+  it("should be possible to serialize and deserialize the pcd", async function () {
+    const serialized = await ZKPODTicketPCDPackage.serialize(zkTicketPCD);
+    const deserialized = await ZKPODTicketPCDPackage.deserialize(
+      serialized.pcd
+    );
+    expect(deserialized.claim).to.deep.eq(zkTicketPCD.claim);
+    expect(deserialized.proof).to.deep.eq(zkTicketPCD.proof);
+    expect(deserialized.type).to.eq(zkTicketPCD.type);
+    expect(deserialized.id).to.eq(zkTicketPCD.id);
   });
 });

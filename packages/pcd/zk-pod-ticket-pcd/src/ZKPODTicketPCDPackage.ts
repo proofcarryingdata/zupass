@@ -11,6 +11,7 @@ import {
   PODTicketPCDTypeName
 } from "@pcd/pod-ticket-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -162,9 +163,16 @@ export async function verify(pcd: ZKPODTicketPCD): Promise<boolean> {
 async function serialize(
   pcd: ZKPODTicketPCD
 ): Promise<SerializedPCD<ZKPODTicketPCD>> {
+  const serializedTicketData = JSON.stringify(pcd.claim.partialTicket);
   return {
     type: ZKPODTicketPCDTypeName,
-    pcd: JSONBig({ useNativeBigInt: true }).stringify(pcd)
+    pcd: JSONBig({ useNativeBigInt: true }).stringify({
+      ...pcd,
+      claim: {
+        ...pcd.claim,
+        partialTicket: serializedTicketData
+      }
+    })
   };
 }
 
@@ -175,10 +183,29 @@ async function serialize(
  * @returns The deserialized ZKPODTicketPCD.
  */
 async function deserialize(serialized: string): Promise<ZKPODTicketPCD> {
-  const { id, claim, proof } = JSONBig({ useNativeBigInt: true }).parse(
-    serialized
+  const deserialized = JSONBig({ useNativeBigInt: true }).parse(serialized);
+  const { id, claim, proof } = deserialized;
+  const partialTicket = JSON.parse(claim.partialTicket);
+
+  requireDefinedParameter(partialTicket, "partialTicket");
+  requireDefinedParameter(deserialized.id, "id");
+  requireDefinedParameter(deserialized.claim, "claim");
+  requireDefinedParameter(
+    deserialized.claim.signerPublicKey,
+    "signerPublicKey"
   );
-  return new ZKPODTicketPCD(id, claim, proof);
+  requireDefinedParameter(deserialized.claim.ticketPatterns, "ticketPatterns");
+  requireDefinedParameter(deserialized.claim.watermark, "watermark");
+  requireDefinedParameter(
+    deserialized.claim.externalNullifier,
+    "externalNullifier"
+  );
+  requireDefinedParameter(deserialized.claim.nullifierHash, "nullifierHash");
+  requireDefinedParameter(deserialized.claim.config, "config");
+  requireDefinedParameter(deserialized.proof, "proof");
+  requireDefinedParameter(deserialized.proof.groth16Proof, "groth16Proof");
+
+  return new ZKPODTicketPCD(id, { ...claim, partialTicket }, proof);
 }
 
 /**
