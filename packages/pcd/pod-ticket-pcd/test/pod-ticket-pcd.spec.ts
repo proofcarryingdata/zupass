@@ -1,4 +1,5 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { PODEntries } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
 import { v4 as uuid } from "uuid";
@@ -35,6 +36,13 @@ const ticketData: IPODTicketData = {
   // imageAltText is omitted as it is optional
 };
 
+const extraEntries: PODEntries = {
+  isVIP: {
+    type: "int",
+    value: 1n
+  }
+};
+
 describe("PODTicketPCD should work", function () {
   let ticket: PODTicketPCD;
 
@@ -42,6 +50,10 @@ describe("PODTicketPCD should work", function () {
     ticket = await PODTicketPCDPackage.prove({
       ticket: {
         value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
+      extraEntries: {
+        value: extraEntries,
         argumentType: ArgumentTypeName.Object
       },
       privateKey: {
@@ -112,8 +124,24 @@ describe("PODTicketPCD should work", function () {
     };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
+    // Adding an extra entry
+    ticket.claim.extraEntries = {
+      ...ticket.claim.extraEntries,
+      badEntry: {
+        type: "string",
+        value: "bad"
+      }
+    };
+    expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
+
+    // Removing extra entries
+    ticket.claim.extraEntries = {};
+    expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
+
     // Just to show that the original data definitely still works
     ticket.claim.ticket = { ...originalTicketData };
+    ticket.claim.extraEntries = extraEntries;
+
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.true;
   });
 
@@ -131,7 +159,7 @@ describe("PODTicketPCD should work", function () {
     expect(pod.signature).to.eq(ticket.proof.signature);
     expect(pod.signerPublicKey).to.eq(ticket.claim.signerPublicKey);
     expect(Object.entries(pod.content.asEntries()).length).to.eq(
-      Object.entries(ticket.claim.ticket).length
+      Object.entries(ticket.claim.ticket).length + 1 // +1 for extraEntries
     );
   });
 

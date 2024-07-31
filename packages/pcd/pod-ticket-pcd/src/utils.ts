@@ -10,7 +10,7 @@ import { IPODTicketData, TicketDataSchema } from "./schema";
  */
 export function podTicketPCDToPOD(pcd: PODTicketPCD): POD {
   return POD.load(
-    ticketDataToPODEntries(pcd.claim.ticket),
+    { ...ticketDataToPODEntries(pcd.claim.ticket), ...pcd.claim.extraEntries },
     pcd.proof.signature,
     pcd.claim.signerPublicKey
   );
@@ -47,7 +47,8 @@ export function PODEntriesToTicketData(entries: PODEntries): IPODTicketData {
   for (const [key, value] of Object.entries(entries)) {
     const mapper = MapPODEntriesToTicketData[key as keyof IPODTicketData];
     if (mapper === undefined) {
-      throw new Error(`Invalid key: ${key}`);
+      // An unrecognized key could be an "extra" entry, so just skip it
+      continue;
     }
     dataEntries.push([key, mapper(value)]);
   }

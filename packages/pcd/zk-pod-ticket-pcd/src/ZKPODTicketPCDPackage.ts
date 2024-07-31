@@ -24,7 +24,7 @@ import {
 import {
   claimToGPCRevealedClaims,
   makeProofRequest,
-  podEntriesToPartialTicketData
+  partialPODEntriesToPartialTicketData
 } from "./utils";
 
 let savedInitArgs: ZKPODTicketPCDInitArgs | undefined = undefined;
@@ -130,7 +130,7 @@ export async function prove(args: ZKPODTicketPCDArgs): Promise<ZKPODTicketPCD> {
       signerPublicKey,
       nullifierHash: gpcProof.revealedClaims.owner.nullifierHash,
       partialTicket: revealedTicketPOD.entries
-        ? podEntriesToPartialTicketData(revealedTicketPOD.entries)
+        ? partialPODEntriesToPartialTicketData(revealedTicketPOD.entries)
         : {}
     },
     { groth16Proof: gpcProof.proof }

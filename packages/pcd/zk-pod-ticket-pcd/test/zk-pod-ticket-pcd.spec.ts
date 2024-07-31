@@ -88,6 +88,10 @@ describe("zk-pod-ticket-pcd should work", async function () {
       id: {
         argumentType: ArgumentTypeName.String,
         value: id
+      },
+      extraEntries: {
+        argumentType: ArgumentTypeName.Object,
+        value: {}
       }
     });
 

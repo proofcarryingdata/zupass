@@ -1,6 +1,7 @@
 import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { POD } from "@pcd/pod";
+import { POD, PODEntries } from "@pcd/pod";
 import { requireDefinedParameter } from "@pcd/util";
+import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import {
   PODTicketPCD,
@@ -9,9 +10,9 @@ import {
   PODTicketPCDProof,
   PODTicketPCDTypeName
 } from "./PODTicketPCD";
-import { TicketDataSchema } from "./schema";
 import {
   checkTicketData,
+  MapTicketDataToPODEntries,
   podTicketPCDToPOD,
   ticketDataToPODEntries
 } from "./utils";
@@ -32,16 +33,24 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
   // Will throw if the ticket data is invalid
   const ticketData = checkTicketData(args.ticket.value);
 
-  const pod = POD.sign(
-    ticketDataToPODEntries(ticketData),
-    args.privateKey.value
-  );
+  // Ensure that extra entries do not clash with reserved keys
+  const extraEntries: PODEntries = {};
+  for (const [key, value] of Object.entries(args.extraEntries.value ?? {})) {
+    if (key in MapTicketDataToPODEntries) {
+      throw new Error(`cannot override reserved key: ${key}`);
+    }
+    extraEntries[key] = value;
+  }
+
+  const entries = { ...ticketDataToPODEntries(ticketData), ...extraEntries };
+
+  const pod = POD.sign(entries, args.privateKey.value);
 
   const id = args.id.value ?? uuid();
 
   return new PODTicketPCD(
     id,
-    { ticket: ticketData, signerPublicKey: pod.signerPublicKey },
+    { ticket: ticketData, signerPublicKey: pod.signerPublicKey, extraEntries },
     { signature: pod.signature }
   );
 }
@@ -67,11 +76,15 @@ export async function verify(pcd: PODTicketPCD): Promise<boolean> {
 export async function serialize(
   pcd: PODTicketPCD
 ): Promise<SerializedPCD<PODTicketPCD>> {
+  const serializedExtraEntries = JSONBig({
+    useNativeBigInt: true,
+    alwaysParseAsBig: true
+  }).stringify(pcd.claim.extraEntries);
   return {
     type: PODTicketPCDTypeName,
     pcd: JSON.stringify({
       id: pcd.id,
-      claim: pcd.claim,
+      claim: { ...pcd.claim, extraEntries: serializedExtraEntries },
       proof: pcd.proof
     })
   } as SerializedPCD<PODTicketPCD>;
@@ -84,17 +97,23 @@ export async function serialize(
  */
 export async function deserialize(serialized: string): Promise<PODTicketPCD> {
   const deserialized = JSON.parse(serialized) as PODTicketPCD;
+  const deserializedExtraEntries = JSONBig({
+    useNativeBigInt: true,
+    alwaysParseAsBig: true
+  }).parse(deserialized.claim.extraEntries as unknown as string);
+  deserialized.claim.extraEntries = deserializedExtraEntries;
 
   requireDefinedParameter(deserialized.id, "id");
   requireDefinedParameter(deserialized.claim, "claim");
   requireDefinedParameter(deserialized.claim.ticket, "ticket");
+  requireDefinedParameter(deserialized.claim.extraEntries, "extraEntries");
   requireDefinedParameter(
     deserialized.claim.signerPublicKey,
     "signerPublicKey"
   );
   requireDefinedParameter(deserialized.proof, "proof");
   requireDefinedParameter(deserialized.proof.signature, "signature");
-  TicketDataSchema.parse(deserialized.claim.ticket);
+  checkTicketData(deserialized.claim.ticket);
 
   return new PODTicketPCD(
     deserialized.id,

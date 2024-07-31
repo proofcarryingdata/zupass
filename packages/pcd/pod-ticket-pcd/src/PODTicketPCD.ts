@@ -1,5 +1,5 @@
 import { ObjectArgument, PCD, StringArgument } from "@pcd/pcd-types";
-import type { PODPCDProof } from "@pcd/pod-pcd";
+import type { PODEntries, PODPCDProof } from "@pcd/pod-pcd";
 import type { IPODTicketData } from "./schema";
 
 /**
@@ -34,6 +34,11 @@ export type PODTicketPCDArgs = {
   ticket: ObjectArgument<IPODTicketData>;
 
   /**
+   * Extra {@link PODEntries} to be included in the POD.
+   */
+  extraEntries: ObjectArgument<PODEntries>;
+
+  /**
    * A string that uniquely identifies an {@link PODTicketPCD}. If this argument is not specified a random
    * id will be generated.
    */
@@ -46,6 +51,7 @@ export type PODTicketPCDArgs = {
  */
 export interface PODTicketPCDClaim {
   ticket: IPODTicketData;
+  extraEntries: PODEntries;
   signerPublicKey: string;
 }
 

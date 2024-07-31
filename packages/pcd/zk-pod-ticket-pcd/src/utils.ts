@@ -9,6 +9,7 @@ import {
 import { checkPublicKeyFormat, PODEntries, PODValue } from "@pcd/pod";
 import {
   IPODTicketData,
+  MapPODEntriesToTicketData,
   MapTicketDataToPODEntries,
   TicketDataSchema
 } from "@pcd/pod-ticket-pcd";
@@ -143,27 +144,63 @@ function makeGPCConfig({
 }
 
 /**
+ * Check that the ticket data is valid.
+ *
+ * @param data - The ticket data to check
+ * @returns The ticket data
+ */
+export function checkPartialTicketData(data: unknown): Partial<IPODTicketData> {
+  if (typeof data !== "object" || data === null) {
+    throw new Error("Invalid ticket data");
+  }
+  // Remove undefined values. Zod will permit optional fields to have undefined
+  // values, but we never want data contained in a claim to have undefined
+  // values as this means that serialization and de-serialization to and from
+  // JSON will result in an object with different keys present.
+  const definedData = Object.fromEntries(
+    Object.entries(data).filter(([_key, value]) => value !== undefined)
+  );
+  return TicketDataSchema.partial().parse(definedData);
+}
+
+/**
  * Convert a {@link PODEntries} to a {@link Partial<IPODTicketData>}.
  *
  * @param entries - The entries to convert.
  * @returns The converted entries.
  */
-export function podEntriesToPartialTicketData(
+export function partialPODEntriesToPartialTicketData(
   entries: PODEntries
 ): Partial<IPODTicketData> {
-  return TicketDataSchema.partial().parse(
-    Object.fromEntries(
-      Object.entries(entries).map(([key, entry]) => [key, entry.value])
-    )
-  );
+  const dataEntries = [];
+  for (const [key, value] of Object.entries(entries)) {
+    const mapper = MapPODEntriesToTicketData[key as keyof IPODTicketData];
+    if (mapper === undefined) {
+      throw new Error(`Unexpected key in PODEntries: ${key}`);
+    }
+    dataEntries.push([key, mapper(value)]);
+  }
+  return checkPartialTicketData(Object.fromEntries(dataEntries));
 }
 
+/**
+ * Check if a key is a valid key for the {@link MapTicketDataToPODEntries} object.
+ *
+ * @param key - The key to check.
+ * @returns Whether the key is valid.
+ */
 function isMapTicketDataToPODEntriesKey(
   key: string
 ): key is keyof typeof MapTicketDataToPODEntries {
   return key in MapTicketDataToPODEntries;
 }
 
+/**
+ * Convert a {@link Partial<IPODTicketData>} to a {@link PODEntries}.
+ *
+ * @param data - The data to convert.
+ * @returns The converted data.
+ */
 function partialTicketDataToPODEntries(
   data: Partial<IPODTicketData>
 ): PODEntries | undefined {
