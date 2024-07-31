@@ -685,7 +685,7 @@ export class IssuanceService {
       "issueDevconnectPretixTicketPCDs",
       async (span) => {
         const commitmentRow = await this.checkUserExists(credential);
-        const email = "commitmentRow?.email";
+        const email = commitmentRow?.emails?.[0];
         if (commitmentRow) {
           span?.setAttribute(
             "commitment",
@@ -1027,7 +1027,7 @@ export class IssuanceService {
       }
 
       const commitmentRow = await this.checkUserExists(credential);
-      const email = "commitmentRow?.email";
+      const email = commitmentRow?.emails?.[0];
       if (commitmentRow) {
         span?.setAttribute(
           "commitment",
