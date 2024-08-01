@@ -109,8 +109,8 @@ export function array2Bits(boolArray: CircuitSignal[]): bigint {
 }
 
 /**
- * Zips up a an array of arrays, i.e. forms pairs, triples, ... from
- * a list of two, three, ... lists.
+ * Zips up an array of arrays, i.e. forms pairs, triples, ... from a
+ * list of two, three, ... lists.
  * Examples:
  * zipLists([[1, 2, 3], [4, 5, 6]]) === [[1,4], [2, 5], [3, 6]],
  * zipLists([[99, 976], [3, 2], [4, 7]]) === [[99, 3, 4], [976, 2, 7]].
@@ -182,4 +182,14 @@ export function loadCircomkitConfig(
     ),
     gpcircuitsPackagePath
   ) as Partial<CircomkitConfig>;
+}
+
+/**
+ * Computes the 0-residue of a circuit signal `x` modulo `n`. Necessary because
+ * the `%` operator preserves sign.
+ */
+export function zeroResidueMod(x: CircuitSignal, n: bigint): bigint {
+  const xAsBigint: bigint = typeof x === "string" ? BigInt(x) : x;
+
+  return (n + (xAsBigint % n)) % n;
 }

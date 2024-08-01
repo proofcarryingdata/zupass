@@ -1,7 +1,9 @@
+import { BABY_JUB_PRIME } from "@pcd/util";
 import { Groth16Proof, groth16 } from "snarkjs";
 import { loadVerificationKey } from "./artifacts";
 import circuitParamJson from "./circuitParameters.json";
 import { CircuitDesc, CircuitSignal } from "./types";
+import { zeroResidueMod } from "./util";
 
 /**
  * Name identifier for the Proto-POD-GPC family of circuits.
@@ -440,8 +442,12 @@ export class ProtoPODGPC {
       inputs.ownerExternalNullifier,
       inputs.ownerIsNullfierHashRevealed,
       ...inputs.numericValueEntryIndices,
-      ...inputs.numericMinValues,
-      ...inputs.numericMaxValues,
+      ...inputs.numericMinValues.map((value) =>
+        zeroResidueMod(value, BABY_JUB_PRIME)
+      ),
+      ...inputs.numericMaxValues.map((value) =>
+        zeroResidueMod(value, BABY_JUB_PRIME)
+      ),
       ...inputs.tupleIndices.flat(),
       ...inputs.listComparisonValueIndex,
       inputs.listContainsComparisonValue,

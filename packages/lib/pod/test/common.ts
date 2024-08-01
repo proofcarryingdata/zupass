@@ -22,7 +22,7 @@ export const ownerIdentity = new Identity(
 );
 
 export const sampleEntries1 = {
-  E: { type: "cryptographic", value: 123n },
+  E: { type: "int", value: -123n },
   F: { type: "cryptographic", value: BABY_JUB_NEGATIVE_ONE },
   C: { type: "string", value: "hello" },
   D: { type: "string", value: "foobar" },
@@ -39,14 +39,14 @@ export const sampleEntries1 = {
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedContentID1 =
-  12404785626264207783522278176629851913558812302780179622189407657324290448828n;
+  18003549444852780886592139349318927700964545643704389119309344945101355208480n;
 
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedSignature1Hex =
-  "64abaf261621e095cda8aaadd6e4bdf6501545e87f6cd923bf7e5e0f7295032b0138ec803350639b0a04de9c26fc2b8232f3f46b5b7486b69e02c4de06398601";
+  "269de2d8f9e74682c29953f380ce81a30721838e23cf77cab8c40fcd742a5b2e23ccf169671d8ac0bb9a21869e61b77b021e05bac121b76561b157f723cd4002";
 export const expectedSignature1 =
-  "ZKuvJhYh4JXNqKqt1uS99lAVReh/bNkjv35eD3KVAysBOOyAM1BjmwoE3pwm/CuCMvP0a1t0hraeAsTeBjmGAQ";
+  "Jp3i2PnnRoLCmVPzgM6Bowchg44jz3fKuMQPzXQqWy4jzPFpZx2KwLuaIYaeYbd7Ah4FusEht2VhsVf3I81AAg";
 
 export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },
