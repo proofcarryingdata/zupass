@@ -1,5 +1,10 @@
 import { PODPipelineOutput } from "@pcd/passport-interface";
-import { PODEntries, serializePODEntries } from "@pcd/pod";
+import {
+  PODContent,
+  PODEntries,
+  PODValue,
+  serializePODEntries
+} from "@pcd/pod";
 import {
   InputColumn,
   InputRow,
@@ -75,7 +80,12 @@ export function atomize(
     }
   }
 
-  const id = uuidv5(serializePODEntries(entries), pipelineId);
+  // PODContent will sort the entry keys. We could duplicate that logic here
+  // but using PODContent ensures that we remain up-to-date with any logic that
+  // POD uses for sorting and validating entries and their keys.
+  const sortedEntries = PODContent.fromEntries(entries).asEntries();
+
+  const id = uuidv5(serializePODEntries(sortedEntries), pipelineId);
 
   return { entries, outputId, id, matchTo: output.match };
 }

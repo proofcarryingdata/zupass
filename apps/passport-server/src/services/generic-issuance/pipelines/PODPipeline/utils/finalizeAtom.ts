@@ -2,7 +2,7 @@ import {
   PODPipelineOutput,
   VerifiedCredentialWithEmail
 } from "@pcd/passport-interface";
-import { PODEntries } from "@pcd/pod";
+import { PODContent, PODEntries, PODValue } from "@pcd/pod";
 import { PODAtom } from "../PODPipeline";
 
 /**
@@ -45,5 +45,13 @@ export function finalizeAtom(
     }
   }
 
-  return { ...atom.entries, ...newEntries };
+  // PODContent will sort the entry keys. We could duplicate that logic here
+  // but using PODContent ensures that we remain up-to-date with any logic that
+  // POD uses for sorting and validating entries and their keys.
+  const sortedEntries = PODContent.fromEntries({
+    ...atom.entries,
+    ...newEntries
+  }).asEntries();
+
+  return sortedEntries;
 }
