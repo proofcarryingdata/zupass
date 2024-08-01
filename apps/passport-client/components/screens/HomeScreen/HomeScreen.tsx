@@ -218,7 +218,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                 window.location.href = "#/more";
               }}
             >
-              More Cryptography
+              More ZApps
             </NewButton>
           )}
           {isRoot && isOther && (
