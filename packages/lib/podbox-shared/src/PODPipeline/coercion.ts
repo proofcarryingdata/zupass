@@ -4,8 +4,10 @@ import {
   POD_CRYPTOGRAPHIC_MIN,
   POD_INT_MAX,
   POD_INT_MIN,
-  checkBigintBounds
+  checkBigintBounds,
+  checkPublicKeyFormat
 } from "@pcd/pod";
+import { getErrorMessage } from "@pcd/util";
 import { SafeParseReturnType, z } from "zod";
 import { FieldTypeToJavaScriptType } from "./Input";
 
@@ -105,5 +107,17 @@ export const coercions: Coercers = {
   [PODPipelineInputFieldType.Boolean]: inputToBoolean.safeParse,
   // Since UUIDs may be hashed when treated as strings, we want them to be
   // normalized to lowercase to prevent issues with case sensitivity.
-  [PODPipelineInputFieldType.UUID]: z.string().uuid().toLowerCase().safeParse
+  [PODPipelineInputFieldType.UUID]: z.string().uuid().toLowerCase().safeParse,
+  [PODPipelineInputFieldType.EdDSAPubKey]: z
+    .string()
+    .superRefine((val, ctx) => {
+      try {
+        checkPublicKeyFormat(val);
+      } catch (error) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Invalid EdDSA public key: ${getErrorMessage(error)}`
+        });
+      }
+    }).safeParse
 };

@@ -544,7 +544,8 @@ export enum PODPipelineInputFieldType {
   Date = "date",
   Boolean = "boolean",
   UUID = "uuid",
-  Cryptographic = "cryptographic"
+  Cryptographic = "cryptographic",
+  EdDSAPubKey = "eddsa_pubkey"
 }
 
 const PODPipelineInputFieldSchema = z.object({
@@ -590,7 +591,8 @@ export enum PODPipelinePCDTypes {
 const PODPipelineSupportedPODValueTypes = z.enum([
   "string",
   "int",
-  "cryptographic"
+  "cryptographic",
+  "eddsa_pubkey"
 ]);
 
 export type PODPipelineSupportedPODValueTypes = z.infer<
@@ -603,6 +605,7 @@ const PODPipelinePODEntrySchema = z.object({
     z.object({ type: z.literal("input"), name: z.string() }),
     z.object({ type: z.literal("credentialSemaphoreID") }),
     z.object({ type: z.literal("credentialEmail") }),
+    z.object({ type: z.literal("signerPublicKey") }),
     z.object({
       type: z.literal("configured"),
       value: z.string()

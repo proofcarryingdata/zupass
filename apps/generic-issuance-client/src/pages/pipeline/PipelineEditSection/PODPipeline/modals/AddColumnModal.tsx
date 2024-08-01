@@ -69,6 +69,7 @@ export function AddColumnModal({
                   <option value="boolean">Boolean</option>
                   <option value="date">Date</option>
                   <option value="uuid">UUID</option>
+                  <option value="eddsa_pubkey">EdDSA Public Key</option>
                 </Select>
               </FormControl>
             </VStack>

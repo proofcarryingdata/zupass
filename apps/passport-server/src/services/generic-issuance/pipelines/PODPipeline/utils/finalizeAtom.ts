@@ -21,38 +21,27 @@ import { PODAtom } from "../PODPipeline";
 export function finalizeAtom(
   atom: PODAtom,
   output: PODPipelineOutput,
-  credential: VerifiedCredentialWithEmail
+  credential: VerifiedCredentialWithEmail,
+  signerPublicKey: string
 ): PODEntries {
   const newEntries: PODEntries = {};
 
   for (const [name, entry] of Object.entries(output.entries)) {
-    if (entry.source.type === "configured") {
-      if (entry.type === "string") {
-        newEntries[name] = {
-          type: "string",
-          value: entry.source.value
-        };
-      } else if (entry.type === "int") {
-        newEntries[name] = {
-          type: "int",
-          value: BigInt(entry.source.value)
-        };
-      } else if (entry.type === "cryptographic") {
-        newEntries[name] = {
-          type: "cryptographic",
-          value: BigInt(entry.source.value)
-        };
-      }
-    } else if (entry.source.type === "credentialSemaphoreID") {
+    if (entry.source.type === "credentialSemaphoreID") {
       newEntries[name] = {
         type: "cryptographic",
         value: BigInt(credential.semaphoreId)
-      };
+      } satisfies PODValue;
     } else if (entry.source.type === "credentialEmail") {
       newEntries[name] = {
         type: "string",
         value: credential.email
-      };
+      } satisfies PODValue;
+    } else if (entry.source.type === "signerPublicKey") {
+      newEntries[name] = {
+        type: "eddsa_pubkey",
+        value: signerPublicKey
+      } satisfies PODValue;
     }
   }
 

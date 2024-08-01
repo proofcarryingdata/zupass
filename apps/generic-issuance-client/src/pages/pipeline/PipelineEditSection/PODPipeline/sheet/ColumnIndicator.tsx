@@ -18,7 +18,8 @@ import {
   MdDeleteOutline,
   MdKey,
   MdNumbers,
-  MdShortText
+  MdShortText,
+  MdWorkspacePremium
 } from "react-icons/md";
 import { MenuInput } from "./MenuInput";
 
@@ -60,6 +61,8 @@ export function ColumnIndicator({
       case PODPipelineInputFieldType.Date:
         return <Icon as={MdDateRange} w={4} h={4} />;
       case PODPipelineInputFieldType.UUID:
+        return <Icon as={MdWorkspacePremium} w={4} h={4} />;
+      case PODPipelineInputFieldType.EdDSAPubKey:
         return <Icon as={MdKey} w={4} h={4} />;
       default:
         assertUnreachable(type);

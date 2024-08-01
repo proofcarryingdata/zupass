@@ -46,14 +46,26 @@ export function atomize(
       const cell = column.getValue(row);
       entries[key] = converter(cell);
     } else if (source.type === "configured") {
-      entries[key] = {
-        // @todo non-string configured values
-        type: "string",
-        value: source.value
-      };
+      if (entry.type === "string") {
+        entries[key] = {
+          type: "string",
+          value: source.value
+        } satisfies PODValue;
+      } else if (entry.type === "int") {
+        entries[key] = {
+          type: "int",
+          value: BigInt(source.value)
+        } satisfies PODValue;
+      } else if (entry.type === "cryptographic") {
+        entries[key] = {
+          type: "cryptographic",
+          value: BigInt(source.value)
+        } satisfies PODValue;
+      }
     } else if (
       source.type === "credentialSemaphoreID" ||
-      source.type === "credentialEmail"
+      source.type === "credentialEmail" ||
+      source.type === "signerPublicKey"
     ) {
       // These values are not present during loading and so cannot be
       // populated in the Atom.

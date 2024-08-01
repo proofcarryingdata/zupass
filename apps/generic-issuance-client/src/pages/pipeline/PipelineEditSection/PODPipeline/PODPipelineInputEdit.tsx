@@ -28,6 +28,10 @@ import {
   CryptographicViewer
 } from "./sheet/cells/CryptographicCell";
 import { DateEditor, DateViewer } from "./sheet/cells/DateCell";
+import {
+  EdDSAPubKeyEditor,
+  EdDSAPubKeyViewer
+} from "./sheet/cells/EdDSAPubKeyCell";
 import { IntegerEditor, IntegerViewer } from "./sheet/cells/IntegerCell";
 import { StringEditor, StringViewer } from "./sheet/cells/StringCell";
 import { UUIDEditor, UUIDViewer } from "./sheet/cells/UUIDCell";
@@ -65,6 +69,10 @@ const COLUMN_CELLS: {
   [PODPipelineInputFieldType.String]: {
     DataViewer: StringViewer,
     DataEditor: StringEditor
+  },
+  [PODPipelineInputFieldType.EdDSAPubKey]: {
+    DataViewer: EdDSAPubKeyViewer,
+    DataEditor: EdDSAPubKeyEditor
   }
 };
 
@@ -86,7 +94,7 @@ function parsedCSVToMatrix(
   return parsed.map((row) =>
     row.map((cell, index) => ({
       value: cell,
-      ...COLUMN_CELLS[configuredColumnTypes[index]].DataViewer
+      ...COLUMN_CELLS[configuredColumnTypes[index]]
     }))
   );
 }

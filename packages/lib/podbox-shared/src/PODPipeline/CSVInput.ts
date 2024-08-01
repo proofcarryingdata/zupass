@@ -107,6 +107,21 @@ export class CSVInput implements Input {
 
 export class CSVInputError extends Error {
   constructor(public errors: ParseError[]) {
-    super(`CSVInputError: ${errors.length} error(s) during parsing`);
+    super(
+      `CSVInputError: ${
+        errors.length
+      } error(s) during parsing.\nErrors (max 10 shown):\n${errors
+        .slice(0, 10)
+        .map(
+          (error) =>
+            `Row ${error.row}, Column ${error.column}: ${
+              error.value
+            }, ${error.errors.map((e) => e.message).join(", ")}`
+        )
+        .join("\n")}`
+    );
+  }
+  public getErrors(): ParseError[] {
+    return this.errors;
   }
 }

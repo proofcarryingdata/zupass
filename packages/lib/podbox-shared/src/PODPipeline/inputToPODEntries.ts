@@ -106,6 +106,18 @@ const PODValueConversions: Conversions = {
       value: uuidToBigInt(value)
     }),
     [PODPipelineInputFieldType.String]: undefined
+  },
+  eddsa_pubkey: {
+    // EdDSA public keys are always represented as strings
+    [PODPipelineInputFieldType.String]: (value) => ({
+      type: "eddsa_pubkey",
+      value: value
+    }),
+    [PODPipelineInputFieldType.Int]: undefined,
+    [PODPipelineInputFieldType.Cryptographic]: undefined,
+    [PODPipelineInputFieldType.Date]: undefined,
+    [PODPipelineInputFieldType.Boolean]: undefined,
+    [PODPipelineInputFieldType.UUID]: undefined
   }
 } as const;
 

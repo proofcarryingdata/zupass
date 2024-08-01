@@ -3,20 +3,16 @@ import { PODPipelineInputFieldType } from "@pcd/passport-interface";
 // Map the PODPipelineInputFieldType enum to JavaScript types
 // This is used to map between column definitions (which contain the enum) and
 // data rows, which contain values of the matching type.
-export type FieldTypeToJavaScriptType<T extends PODPipelineInputFieldType> =
-  T extends PODPipelineInputFieldType.String
-    ? string
-    : T extends PODPipelineInputFieldType.Date
-    ? Date
-    : T extends PODPipelineInputFieldType.UUID
-    ? string
-    : T extends PODPipelineInputFieldType.Boolean
-    ? boolean
-    : T extends PODPipelineInputFieldType.Int
-    ? bigint
-    : T extends PODPipelineInputFieldType.Cryptographic
-    ? bigint
-    : never;
+// export type FieldTypeToJavaScriptType<T extends PODPipelineInputFieldType> =
+export type FieldTypeToJavaScriptType<T extends PODPipelineInputFieldType> = {
+  [PODPipelineInputFieldType.String]: string;
+  [PODPipelineInputFieldType.Date]: Date;
+  [PODPipelineInputFieldType.UUID]: string;
+  [PODPipelineInputFieldType.Boolean]: boolean;
+  [PODPipelineInputFieldType.Int]: bigint;
+  [PODPipelineInputFieldType.Cryptographic]: bigint;
+  [PODPipelineInputFieldType.EdDSAPubKey]: string;
+}[T];
 
 // Specifies a generic column, with a string key and a data type in the
 // PODPipelineInputFieldType enum

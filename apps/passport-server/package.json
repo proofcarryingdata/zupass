@@ -53,6 +53,7 @@
     "@sendgrid/mail": "^7.7.0",
     "@types/lodash": "^4.14.191",
     "@types/pg": "^8.6.6",
+    "@zk-kit/eddsa-poseidon": "1.0.0-beta",
     "async-lock": "^1.4.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",

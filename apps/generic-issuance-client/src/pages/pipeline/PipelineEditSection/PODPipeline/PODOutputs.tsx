@@ -238,6 +238,8 @@ function PODOutput({
                   ? "credentialEmail"
                   : entry.source.type === "credentialSemaphoreID"
                   ? "credentialSemaphoreID"
+                  : entry.source.type === "signerPublicKey"
+                  ? "signerPublicKey"
                   : entry.source.type === "configured"
                   ? `configured:${entry.source.value}`
                   : `input:${entry.source.name}`;
@@ -294,7 +296,7 @@ function PODOutput({
                       onChange={(ev) =>
                         changeType(
                           key,
-                          // "string" | "cryptographic" | "int"
+                          // "string" | "cryptographic" | "int" | "eddsa_pubkey"
                           ev.target.value as PODPipelinePODEntry["type"]
                         )
                       }
@@ -310,7 +312,8 @@ function PODOutput({
                           [
                             ["String", "string"],
                             ["Cryptographic", "cryptographic"],
-                            ["Integer", "int"]
+                            ["Integer", "int"],
+                            ["Public Key", "eddsa_pubkey"]
                           ] satisfies [string, PODPipelinePODEntry["type"]][]
                         )
                           .map(([label, value]) => {

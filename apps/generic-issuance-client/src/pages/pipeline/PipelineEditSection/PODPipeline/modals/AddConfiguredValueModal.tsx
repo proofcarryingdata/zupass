@@ -29,9 +29,9 @@ export function AddConfiguredValueModal({
 }): ReactNode {
   const [value, setValue] = useState<string>("");
   const [inProgress, setInProgress] = useState<boolean>(false);
-  const [type, setType] = useState<"string" | "int" | "cryptographic">(
-    "string"
-  );
+  const [type, setType] = useState<
+    "string" | "int" | "cryptographic" | "eddsa_pubkey"
+  >("string");
 
   const triggerClose = useCallback(() => {
     onCancel();
@@ -97,6 +97,7 @@ export function AddConfiguredValueModal({
               <option value="string">String</option>
               <option value="int">Integer</option>
               <option value="cryptographic">Cryptographic</option>
+              <option value="eddsa_pubkey">EdDSA Public Key</option>
             </Select>
           </FormControl>
         </ModalBody>
