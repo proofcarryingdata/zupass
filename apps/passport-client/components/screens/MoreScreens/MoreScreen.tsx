@@ -19,14 +19,14 @@ export const subPages: SubPage[] = [
     pageLink: "https://zupoll.org/"
   },
   {
-    image: "https://i.imgur.com/placeholder2.png",
-    title: "ZuKat",
-    pageLink: "https://t.me/zucat_bot?start=-1002035758802"
-  },
-  {
     image: "https://i.imgur.com/placeholder3.png",
     title: "Meerkat",
     pageLink: ""
+  },
+  {
+    image: "https://i.imgur.com/placeholder2.png",
+    title: "ZuKat",
+    pageLink: "https://t.me/zucat_bot?start=-1002035758802"
   },
   {
     image: "https://i.imgur.com/placeholder3.png",
