@@ -20,12 +20,12 @@ export const subPages: SubPage[] = [
   },
   {
     image: "https://i.imgur.com/placeholder2.png",
-    title: "Telegram",
+    title: "ZuKat",
     pageLink: "https://t.me/zucat_bot?start=-1002035758802"
   },
   {
     image: "https://i.imgur.com/placeholder3.png",
-    title: "ZK Talks",
+    title: "Meerkat",
     pageLink: ""
   },
   {
@@ -40,7 +40,7 @@ export const subPages: SubPage[] = [
   },
   {
     image: "https://i.imgur.com/8uWVBl6.png",
-    title: "Duck Breeding",
+    title: "Duck Stuff",
     pageLink: "https://random-d.uk/"
   }
 ];
@@ -48,8 +48,18 @@ export const subPages: SubPage[] = [
 export function MoreScreen(): ReactNode {
   const [selectedPage, setSelectedPage] = useState<string | undefined>();
 
-  const handleButtonClick = (pageLink: string | undefined): void => {
-    setSelectedPage(pageLink);
+  const handleButtonClick = (
+    pageLink: string | undefined,
+    title: string
+  ): void => {
+    if (
+      pageLink === "https://t.me/zucat_bot?start=-1002035758802" ||
+      title === "ZuKat"
+    ) {
+      window.open(pageLink, "_blank");
+    } else {
+      setSelectedPage(pageLink);
+    }
   };
 
   const handleBackClick = (): void => {
@@ -84,7 +94,7 @@ export function MoreScreen(): ReactNode {
                 <NewButton
                   key={i}
                   className={squareStyle}
-                  onClick={() => handleButtonClick(page.pageLink)}
+                  onClick={() => handleButtonClick(page.pageLink, page.title)}
                 >
                   {page.title}
                 </NewButton>
