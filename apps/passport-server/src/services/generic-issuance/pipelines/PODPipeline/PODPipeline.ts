@@ -231,10 +231,13 @@ export class PODPipeline implements BasePipeline {
           matchingAtoms.push(atom);
         }
       } else if (atom.matchTo.type === "semaphoreID") {
-        if (
-          atom.entries[atom.matchTo.entry].value.toString() ===
-          semaphoreId.toString()
-        ) {
+        // semaphoreId is a string representation of a Semaphore commitment, as
+        // retrieved from the user's credential, which is a
+        // SemaphoreSignaturePCD.
+        // However, in PODs we use bigints (the POD "cryptographic" type) for
+        // this, so it's necessary to convert the value to a string for
+        // comparison.
+        if (atom.entries[atom.matchTo.entry].value.toString() === semaphoreId) {
           matchingAtoms.push(atom);
         }
       }
