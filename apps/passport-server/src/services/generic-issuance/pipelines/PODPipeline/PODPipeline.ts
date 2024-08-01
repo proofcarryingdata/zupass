@@ -154,7 +154,8 @@ export class PODPipeline implements BasePipeline {
               makePLogInfo(`saved parsed data: ${atoms.length} entries`)
             );
           },
-          // High priority means that this will
+          // High priority means that this will run before any other DB access,
+          // including reads.
           { priority: 10 }
         );
 
