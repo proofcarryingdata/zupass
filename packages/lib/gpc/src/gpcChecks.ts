@@ -1000,8 +1000,11 @@ export function checkCircuitRequirements(
       throw new Error(`Unknown circuit name: "${circuitIdentifier}"`);
     }
     if (!circuitDescMeetsRequirements(foundDesc, requiredParameters)) {
+      console.log({ foundDesc, requiredParameters });
       throw new Error(
-        `Specified circuit "${circuitIdentifier}" does not meet proof requirements.`
+        `Specified circuit "${circuitIdentifier}" does not meet proof requirements: ${JSON.stringify(
+          requiredParameters
+        )}`
       );
     }
     return foundDesc;

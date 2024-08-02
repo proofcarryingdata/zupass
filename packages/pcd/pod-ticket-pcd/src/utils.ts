@@ -138,7 +138,7 @@ export const MapTicketDataToPODEntries: {
     value: BigInt(value ? 1 : 0)
   }),
   ticketCategory: (value) => ({
-    type: "int",
+    type: "cryptographic",
     value: BigInt(value)
   }),
   // Optional values

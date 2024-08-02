@@ -24,9 +24,9 @@ import {
 } from "../src";
 import { ZKPODTicketPCDPackage } from "../src/ZKPODTicketPCDPackage";
 
-const GPC_NPM_ARTIFACTS_PATH = path.join(
+export const GPC_TEST_ARTIFACTS_PATH = path.join(
   __dirname,
-  "../../../../node_modules/@pcd/proto-pod-gpc-artifacts"
+  "../../../lib/gpcircuits/artifacts/test"
 );
 
 const identity1 = new Identity(
@@ -86,7 +86,7 @@ function makeProveArgs(
 
 describe("zk-pod-ticket-pcd should work", async function () {
   await ZKPODTicketPCDPackage.init?.({
-    zkArtifactPath: GPC_NPM_ARTIFACTS_PATH
+    zkArtifactPath: GPC_TEST_ARTIFACTS_PATH
   });
 
   let zkTicketPCD: ZKPODTicketPCD;
@@ -177,16 +177,7 @@ describe("zk-pod-ticket-pcd should work", async function () {
       serializedIdentity,
       {
         revealAttendeeEmail: true,
-        revealAttendeeName: true,
-        revealProductId: true,
-        revealTimestampConsumed: true,
-        revealTimestampSigned: true,
-        revealIsConsumed: true,
-        revealIsRevoked: true,
-        revealTicketCategory: true,
-        revealTicketId: true
-        // revealEventId: true
-        // revealAttendeeSemaphoreId: true
+        revealAttendeeName: true
       },
       [matchBySignerPublicKeyEventIdAndProductId]
     );
@@ -204,8 +195,89 @@ describe("zk-pod-ticket-pcd should work", async function () {
     expect(zkTicketPCD.claim.partialTicket.attendeeName).to.equal(
       ticketData.attendeeName
     );
-    expect(zkTicketPCD.claim.partialTicket.productId).to.equal(
-      ticketData.productId
+
+    expect(await ZKPODTicketPCDPackage.verify(zkTicketPCD)).to.equal(true);
+    expect(
+      checkClaimAgainstProofRequest(
+        zkTicketPCD.claim,
+        makeProofRequest(proveArgs)
+      )
+    ).to.not.throw;
+    expect(zkTicketPCD.claim.config.circuitIdentifier).to.equal(
+      // This is the smaller of the two circuit identifiers, which is used here
+      // because we are only using 5 entries: the two revealed fields, plus
+      // the mandatory Semaphore ID, event ID, and product ID.
+      "proto-pod-gpc_1o-5e-5md-0nv-1x200l-1x3t"
+    );
+  });
+
+  it("should reveal all of the fields", async function () {
+    const serializedTicket = await PODTicketPCDPackage.serialize(ticketPCD);
+    const serializedIdentity = await makeSerializedIdentityPCD(identity1);
+
+    const pubKey = ticketPCD.claim.signerPublicKey;
+
+    const proveArgs: ZKPODTicketPCDArgs = {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        value: serializedTicket,
+        validatorParams: {
+          ticketPatterns: [
+            {
+              signerPublicKey: pubKey,
+              events: [
+                {
+                  id: ticketData.eventId,
+                  productIds: [ticketData.productId]
+                }
+              ]
+            }
+          ],
+          notFoundMessage: "Not found"
+        }
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: serializedIdentity
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: {
+          revealAttendeeEmail: true,
+          revealAttendeeName: true,
+          revealTimestampConsumed: true,
+          revealTimestampSigned: true,
+          revealIsConsumed: true,
+          revealIsRevoked: true,
+          revealEventId: true,
+          revealProductId: true,
+          revealTicketId: true,
+          revealTicketCategory: true,
+          revealAttendeeSemaphoreId: true
+        }
+      },
+      revealSignerPublicKey: {
+        argumentType: ArgumentTypeName.Boolean,
+        value: true
+      },
+      watermark: { argumentType: ArgumentTypeName.String, value: "0" },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.String,
+        value: "0"
+      }
+    };
+
+    zkTicketPCD = await ZKPODTicketPCDPackage.prove(proveArgs);
+
+    expect(zkTicketPCD).to.exist;
+    expect(zkTicketPCD.claim.watermark.value).to.equal("0");
+    expect(zkTicketPCD.claim.externalNullifier.value).to.equal("0");
+    expect(zkTicketPCD.claim.signerPublicKey).to.equal(pubKey);
+    expect(zkTicketPCD.claim.partialTicket.attendeeEmail).to.equal(
+      ticketData.attendeeEmail
+    );
+    expect(zkTicketPCD.claim.partialTicket.attendeeName).to.equal(
+      ticketData.attendeeName
     );
     expect(zkTicketPCD.claim.partialTicket.timestampConsumed).to.equal(
       ticketData.timestampConsumed
@@ -219,14 +291,17 @@ describe("zk-pod-ticket-pcd should work", async function () {
     expect(zkTicketPCD.claim.partialTicket.isRevoked).to.equal(
       ticketData.isRevoked
     );
-    expect(zkTicketPCD.claim.partialTicket.ticketCategory).to.equal(
-      ticketData.ticketCategory
+    expect(zkTicketPCD.claim.partialTicket.eventId).to.equal(
+      ticketData.eventId
+    );
+    expect(zkTicketPCD.claim.partialTicket.productId).to.equal(
+      ticketData.productId
     );
     expect(zkTicketPCD.claim.partialTicket.ticketId).to.equal(
       ticketData.ticketId
     );
-    expect(zkTicketPCD.claim.partialTicket.eventId).to.equal(
-      ticketData.eventId
+    expect(zkTicketPCD.claim.partialTicket.ticketCategory).to.equal(
+      ticketData.ticketCategory
     );
     expect(zkTicketPCD.claim.partialTicket.attendeeSemaphoreId).to.equal(
       ticketData.attendeeSemaphoreId
@@ -239,6 +314,10 @@ describe("zk-pod-ticket-pcd should work", async function () {
         makeProofRequest(proveArgs)
       )
     ).to.not.throw;
+    expect(zkTicketPCD.claim.config.circuitIdentifier).to.equal(
+      // This is the larger of the two circuit identifiers.
+      "proto-pod-gpc_1o-11e-5md-0nv-1x200l-1x3t"
+    );
   });
 
   it("should be possible to serialize and deserialize the pcd", async function () {

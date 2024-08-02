@@ -19,9 +19,9 @@ import { Identity } from "@semaphore-protocol/identity";
 import * as path from "path";
 import { TimerCase } from "../types";
 
-const GPC_NPM_ARTIFACTS_PATH = path.join(
+export const GPC_TEST_ARTIFACTS_PATH = path.join(
   __dirname,
-  "../../../../../node_modules/@pcd/proto-pod-gpc-artifacts"
+  "../../../../lib/gpcircuits/artifacts/test"
 );
 
 async function setupProveArgs(): Promise<ZKPODTicketPCDArgs> {
@@ -145,7 +145,7 @@ export class ZKPODTicketProveCase extends TimerCase {
 
   async init(): Promise<void> {
     await ZKPODTicketPCDPackage.init?.({
-      zkArtifactPath: GPC_NPM_ARTIFACTS_PATH
+      zkArtifactPath: GPC_TEST_ARTIFACTS_PATH
     });
   }
 
@@ -177,7 +177,7 @@ export class ZKPODTicketVerifyCase extends TimerCase {
 
   async init(): Promise<void> {
     await ZKPODTicketPCDPackage.init?.({
-      zkArtifactPath: GPC_NPM_ARTIFACTS_PATH
+      zkArtifactPath: GPC_TEST_ARTIFACTS_PATH
     });
   }
 

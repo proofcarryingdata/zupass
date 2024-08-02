@@ -121,7 +121,13 @@ function makeGPCConfig({
     fieldsToReveal
   );
 
+  const circuitIdentifier =
+    Object.keys(entryConfig).length > 5
+      ? "proto-pod-gpc_1o-11e-5md-0nv-1x200l-1x3t"
+      : "proto-pod-gpc_1o-5e-5md-0nv-1x200l-1x3t";
+
   return {
+    circuitIdentifier,
     pods: {
       ticketPOD: {
         entries: entryConfig,
