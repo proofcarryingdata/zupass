@@ -93,12 +93,11 @@ export function checkOptionalUrlParam(
  */
 export function checkBody<T, U extends keyof T>(
   req: Request,
-  name: U,
-  allowUndefined = false
+  name: U
 ): NonNullable<T[U]> {
   const value = req.body[name];
 
-  if (!allowUndefined && (value === null || value === undefined)) {
+  if (value === null || value === undefined) {
     throw new PCDHTTPError(
       400,
       `missing required request body field: '${String(name)}' - was ${value}`
