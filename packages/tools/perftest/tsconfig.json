@@ -42,6 +42,9 @@
       "path": "../../pcd/pod-pcd"
     },
     {
+      "path": "../../pcd/pod-ticket-pcd"
+    },
+    {
       "path": "../../pcd/semaphore-identity-pcd"
     },
     {
@@ -52,6 +55,9 @@
     },
     {
       "path": "../../pcd/zk-eddsa-event-ticket-pcd"
+    },
+    {
+      "path": "../../pcd/zk-pod-ticket-pcd"
     }
   ]
 }
