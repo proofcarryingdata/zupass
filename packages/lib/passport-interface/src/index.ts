@@ -37,8 +37,6 @@ export * from "./api/requestIssuanceServiceEnabled";
 export * from "./api/requestKnownTickets";
 export * from "./api/requestListFeeds";
 export * from "./api/requestLogToServer";
-export * from "./api/requestOfflineTickets";
-export * from "./api/requestOfflineTicketsCheckin";
 export * from "./api/requestOneClickLogin";
 export * from "./api/requestPasswordSalt";
 export * from "./api/requestPipelineInfo";
