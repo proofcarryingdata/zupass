@@ -36,8 +36,6 @@ import {
   UploadOfflineCheckinsResponseValue,
   VerificationError,
   VerifiedCredential,
-  VerifyTicketByIdRequest,
-  VerifyTicketByIdResult,
   VerifyTicketRequest,
   VerifyTicketResult,
   ZUCONNECT_23_DAY_PASS_PRODUCT_ID,
@@ -47,7 +45,6 @@ import {
   ZUZALU_23_RESIDENT_PRODUCT_ID,
   ZUZALU_23_VISITOR_PRODUCT_ID,
   ZupassFeedIds,
-  ZuzaluUserRole,
   verifyCredential,
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
@@ -94,11 +91,8 @@ import {
   fetchUserByAuthKey,
   fetchUserByCommitment
 } from "../database/queries/users";
-import {
-  fetchZuconnectTicketById,
-  fetchZuconnectTicketsByEmail
-} from "../database/queries/zuconnect/fetchZuconnectTickets";
-import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
+import { fetchAllUsersWithZuzaluTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -1026,40 +1020,42 @@ export class IssuanceService {
         return [];
       }
 
-      const commitmentRow = await this.checkUserExists(credential);
-      const email = commitmentRow?.emails?.[0];
-      if (commitmentRow) {
-        span?.setAttribute(
-          "commitment",
-          commitmentRow?.commitment?.toString() ?? ""
-        );
+      const user = await this.checkUserExists(credential);
+      const email = user?.emails?.[0];
+      if (user) {
+        span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
       }
       if (email) {
         span?.setAttribute("email", email);
       }
 
-      if (!commitmentRow || !email) {
+      if (!user || !email) {
         return [];
       }
 
-      const user = await fetchLoggedInZuzaluUser(this.context.dbPool, {
-        uuid: commitmentRow.uuid
-      });
+      const allUsersAndTickets = await fetchAllUsersWithZuzaluTickets(
+        this.context.dbPool
+      );
+      const zuzaluTickets = allUsersAndTickets.find((u) => u.uuid === user.uuid)
+        ?.zuzaluTickets;
+      if (!zuzaluTickets) {
+        return [];
+      }
 
       const tickets = [];
 
-      if (user) {
+      for (const ticket of zuzaluTickets) {
         tickets.push(
           await this.getOrGenerateTicket({
             attendeeSemaphoreId: user.commitment,
             eventName: "Zuzalu (March - May 2023)",
             checkerEmail: undefined,
             ticketId: user.uuid,
-            ticketName: user.role.toString(),
-            attendeeName: user.name,
-            attendeeEmail: user.email,
+            ticketName: ticket.role.toString(),
+            attendeeName: ticket.name,
+            attendeeEmail: ticket.email,
             eventId: ZUZALU_23_EVENT_ID,
-            productId: zuzaluRoleToProductId(user.role),
+            productId: zuzaluRoleToProductId(ticket.role),
             timestampSigned: Date.now(),
             timestampConsumed: 0,
             isConsumed: false,
@@ -1269,81 +1265,6 @@ export class IssuanceService {
     }
   }
 
-  /**
-   * Only Zuzalu '23 and Zuconnect '23 tickets support this verification
-   * mechanism, which exists to support short verification URLs for small
-   * QR codes, and relies on server-side knowledge of ticket details.
-   */
-  private async verifyZuconnect23OrZuzalu23TicketById(
-    ticketId: string,
-    timestamp: string
-  ): Promise<VerifyTicketByIdResult> {
-    if (Date.now() - parseInt(timestamp) > ONE_HOUR_MS * 4) {
-      return {
-        success: true,
-        value: {
-          verified: false,
-          message: "Timestamp has expired."
-        }
-      };
-    }
-
-    const zuconnectTicket = await fetchZuconnectTicketById(
-      this.context.dbPool,
-      ticketId
-    );
-
-    if (zuconnectTicket) {
-      return {
-        success: true,
-        value: {
-          verified: true,
-          group: KnownTicketGroup.Zuconnect23,
-          publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-          productId: zuconnectTicket.product_id,
-          ticketName:
-            zuconnectTicket.product_id === ZUCONNECT_23_DAY_PASS_PRODUCT_ID
-              ? zuconnectTicket.extra_info.join("\n")
-              : zuconnectProductIdToName(zuconnectTicket.product_id),
-          eventName: "ZuConnect '23"
-        }
-      };
-    } else {
-      const zuzaluTicket = await fetchLoggedInZuzaluUser(this.context.dbPool, {
-        uuid: ticketId
-      });
-
-      if (zuzaluTicket) {
-        return {
-          success: true,
-          value: {
-            verified: true,
-            group: KnownTicketGroup.Zuzalu23,
-            publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-            productId:
-              zuzaluTicket.role === ZuzaluUserRole.Visitor
-                ? ZUZALU_23_VISITOR_PRODUCT_ID
-                : zuzaluTicket.role === ZuzaluUserRole.Organizer
-                ? ZUZALU_23_ORGANIZER_PRODUCT_ID
-                : ZUZALU_23_RESIDENT_PRODUCT_ID,
-            ticketName:
-              zuzaluTicket.role === ZuzaluUserRole.Visitor
-                ? "Visitor"
-                : zuzaluTicket.role === ZuzaluUserRole.Organizer
-                ? "Organizer"
-                : "Resident",
-            eventName: "Zuzalu '23"
-          }
-        };
-      }
-    }
-
-    return {
-      success: false,
-      error: "Could not verify ticket."
-    };
-  }
-
   public async handleVerifyTicketRequest(
     req: VerifyTicketRequest
   ): Promise<VerifyTicketResult> {
@@ -1355,15 +1276,6 @@ export class IssuanceService {
         cause: e
       });
     }
-  }
-
-  public async handleVerifyTicketByIdRequest(
-    req: VerifyTicketByIdRequest
-  ): Promise<VerifyTicketByIdResult> {
-    return this.verifyZuconnect23OrZuzalu23TicketById(
-      req.ticketId,
-      req.timestamp
-    );
   }
 
   /**
