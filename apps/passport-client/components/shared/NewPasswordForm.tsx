@@ -8,7 +8,7 @@ import { InlineError } from "./InlineError";
 import { PasswordInput } from "./PasswordInput";
 
 interface NewPasswordForm {
-  email: string; // As a hidden element for autofill
+  emails: string[]; // As a hidden element for autofill
   password: string;
   setPassword: Dispatch<SetStateAction<string>>;
   confirmPassword: string;
@@ -24,7 +24,7 @@ interface NewPasswordForm {
 }
 
 export function NewPasswordForm({
-  email,
+  emails,
   password,
   setPassword,
   confirmPassword,
@@ -71,7 +71,7 @@ export function NewPasswordForm({
   return (
     <form>
       {/* For password manager autofill */}
-      <input hidden readOnly value={email} />
+      <input hidden readOnly value={emails[0]} />
       <PasswordInput
         value={password}
         setValue={(value): void => {

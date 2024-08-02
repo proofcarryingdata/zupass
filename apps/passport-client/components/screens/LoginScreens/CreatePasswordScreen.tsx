@@ -202,7 +202,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
             error={error}
             setError={setError}
             autoFocus
-            email={email}
+            emails={[email]}
             password={password}
             confirmPassword={confirmPassword}
             setPassword={setPassword}

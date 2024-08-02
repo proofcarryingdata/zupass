@@ -179,7 +179,7 @@ export function ChangePasswordScreen(): JSX.Element | null {
           passwordInputPlaceholder={
             isChangePassword ? "New password" : "Password"
           }
-          email={self.emails[0]}
+          emails={self.emails}
           revealPassword={revealPassword}
           setRevealPassword={setRevealPassword}
           submitButtonText="Confirm"
