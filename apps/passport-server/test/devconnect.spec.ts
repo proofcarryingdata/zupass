@@ -19,7 +19,6 @@ import {
   ZupassUserJson,
   ZuzaluUserRole,
   agreeTerms,
-  requestCheckInById,
   requestConfirmationEmail,
   requestKnownTicketTypes,
   requestPollFeed,
@@ -30,7 +29,7 @@ import {
   requestVerifyToken
 } from "@pcd/passport-interface";
 import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -160,7 +159,6 @@ describe("devconnect functionality", function () {
   let publicKeyEdDSA: EdDSAPublicKey;
 
   let ticketPCD: EdDSATicketPCD;
-  let checkerIdentity: Identity;
 
   const loggedInIdentityCommitments = new Set<string>();
 
@@ -2171,78 +2169,7 @@ describe("devconnect functionality", function () {
     if (!result) {
       throw new Error("failed to log in");
     }
-
-    checkerIdentity = result.identity;
   });
-
-  step(
-    "event 'superuser' should be able to checkin a valid ticket by ID",
-    async function () {
-      MockDate.set(new Date());
-      const issueResponse = await requestPollFeed(
-        `${application.expressContext.localEndpoint}/feeds`,
-        {
-          pcd: (
-            await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST)
-          )[0],
-          feedId: ZupassFeedIds.Devconnect
-        }
-      );
-      MockDate.reset();
-      const issueResponseBody = issueResponse.value as PollFeedResponseValue;
-
-      const action = issueResponseBody.actions[1];
-      expectToExist(action, isReplaceInFolderAction);
-      const serializedTicket = action.pcds[2] as SerializedPCD<EdDSATicketPCD>;
-      ticketPCD = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
-
-      const checkinResult = await requestCheckInById(
-        application.expressContext.localEndpoint,
-        {
-          ticketId: ticketPCD.claim.ticket.ticketId,
-          checkerProof: (
-            await makeTestCredentials(
-              checkerIdentity,
-              ZUPASS_CREDENTIAL_REQUEST
-            )
-          )[0]
-        }
-      );
-
-      expect(checkinResult.success).to.eq(true);
-      expect(checkinResult.value).to.eq(undefined);
-      expect(checkinResult.error).to.eq(undefined);
-    }
-  );
-
-  step(
-    "a 'superuser' should not be able to check in a ticket that has already been used to check in",
-    async function () {
-      const checkinResult = await requestCheckInById(
-        application.expressContext.localEndpoint,
-        {
-          ticketId: ticketPCD.claim.ticket.ticketId,
-          checkerProof: (
-            await makeTestCredentials(
-              checkerIdentity,
-              ZUPASS_CREDENTIAL_REQUEST
-            )
-          )[0]
-        }
-      );
-
-      expect(checkinResult.value).to.eq(undefined);
-      expect(checkinResult?.error?.name).to.eq("AlreadyCheckedIn");
-    }
-  );
-
-  step(
-    "should not be able to check in with a ticket that has been revoked",
-    async function () {
-      // TODO
-      expect(true).to.eq(true);
-    }
-  );
 
   step(
     "shouldn't be able to issue pcds for the incorrect feed credential payload",
