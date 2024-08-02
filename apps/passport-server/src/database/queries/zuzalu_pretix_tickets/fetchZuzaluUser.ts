@@ -59,6 +59,22 @@ group by u.uuid;`
 }
 
 /**
+ * Just gets all the Zuzalu pretix tickets, not associating them with
+ * Zupass users in any way.
+ */
+export async function fetchAllZuzaluPretixTickets(
+  client: Pool
+): Promise<ZuzaluPretixTicket[]> {
+  const result = await sqlQuery(
+    client,
+    `\
+select * from zuzalu_pretix_tickets;`
+  );
+
+  return result.rows;
+}
+
+/**
  * Fetch all users that have a Zuzalu ticket on pretix, even if they haven't
  * logged into Zupass.
  */
