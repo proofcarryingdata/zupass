@@ -92,18 +92,17 @@ export function renameInputColumn(
   // Rename the column
   newDefinition.options.input = {
     ...newDefinition.options.input,
-    columns: {
-      ...newDefinition.options.input.columns,
-      [newName]: newDefinition.options.input.columns[oldName]
-    }
+    columns: Object.fromEntries(
+      Object.entries(newDefinition.options.input.columns).map(
+        ([key, value]) => [key === oldName ? newName : key, value]
+      )
+    )
   };
-  delete newDefinition.options.input.columns[oldName];
 
   // Update the CSV to reflect the renaming
-  const [header, ...rest] = csvData;
-  const newHeader = header.map((name) => (name === oldName ? newName : name));
+  const newHeader = Object.keys(newDefinition.options.input.columns);
 
-  const newCsv = stringifyCSV([newHeader, ...rest]);
+  const newCsv = stringifyCSV([newHeader, ...csvData]);
   newDefinition.options.input.csv = newCsv;
 
   // Update the outputs to reflect the renaming

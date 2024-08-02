@@ -17,12 +17,14 @@ import {
 
 import {
   PODPipelineDefinition,
+  PODPipelineInputFieldType,
   PODPipelineOutputMatch,
   PODPipelinePODEntry,
   PODPipelineSupportedPODValueTypes
 } from "@pcd/passport-interface";
 import { POD_NAME_REGEX } from "@pcd/pod";
 import { getInputToPODValueConverter } from "@pcd/podbox-shared";
+import { assertUnreachable } from "@pcd/util";
 import { Dispatch, ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { AddConfiguredValueModal } from "./modals/AddConfiguredValueModal";
@@ -111,17 +113,39 @@ function PODOutput({
       const entry = structuredClone(outputEntryMap[key]);
       if (source.startsWith("input:")) {
         entry.source = { type: "input", name: source.substring(6) };
-        const existingType = entry.type;
-        // Output entries have configured types. If the existing type for this
-        // output is still valid for the changed input source, do nothing, but
-        // otherwise default to string type.
-        if (
-          !getInputToPODValueConverter(
-            definition.options.input.columns[entry.source.name].type,
-            existingType
-          )
-        ) {
+        const inputType =
+          definition.options.input.columns[entry.source.name].type;
+        // Assign a sensible default output type given the input.
+        // Some limited reconfiguration is available for some types.
+        switch (inputType) {
+          case PODPipelineInputFieldType.String:
+            entry.type = "string";
+            break;
+          case PODPipelineInputFieldType.Int:
+            entry.type = "int";
+            break;
+          case PODPipelineInputFieldType.Cryptographic:
+            entry.type = "cryptographic";
+            break;
+          case PODPipelineInputFieldType.EdDSAPubKey:
+            entry.type = "eddsa_pubkey";
+            break;
+          case PODPipelineInputFieldType.Boolean:
+            entry.type = "int";
+            break;
+          case PODPipelineInputFieldType.Date:
+            entry.type = "int";
+            break;
+          case PODPipelineInputFieldType.UUID:
+            entry.type = "string";
+            break;
+          default:
+            assertUnreachable(inputType);
+        }
+        if (inputType === PODPipelineInputFieldType.String) {
           entry.type = "string";
+        } else if (inputType === PODPipelineInputFieldType.Int) {
+          entry.type = "int";
         }
       } else if (source.startsWith("configured:")) {
         entry.source = { type: "configured", value: source.substring(11) };
