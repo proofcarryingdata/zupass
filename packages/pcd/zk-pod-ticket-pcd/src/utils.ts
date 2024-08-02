@@ -257,7 +257,7 @@ export function compareProofConfigWithBoundConfig(
  * @param claim - The claim to convert.
  * @returns The converted claim.
  */
-export function claimToGPCRevealedClaims(
+export function zkPODTicketClaimToGPCRevealedClaims(
   claim: ZKPODTicketPCDClaim
 ): GPCRevealedClaims {
   return {
@@ -336,7 +336,7 @@ export function checkClaimAgainstProofRequest(
     throw new Error("GPC config does not match expected configuration");
   }
 
-  const revealedClaims = claimToGPCRevealedClaims(claim);
+  const revealedClaims = zkPODTicketClaimToGPCRevealedClaims(claim);
 
   if (
     !_.isEqual(revealedClaims.membershipLists, proofRequest.membershipLists)

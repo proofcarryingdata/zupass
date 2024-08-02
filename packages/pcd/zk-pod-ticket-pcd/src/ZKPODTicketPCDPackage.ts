@@ -23,9 +23,9 @@ import {
   ZKPODTicketPCDTypeName
 } from "./ZKPODTicketPCD";
 import {
-  claimToGPCRevealedClaims,
   makeProofRequest,
-  partialPODEntriesToPartialTicketData
+  partialPODEntriesToPartialTicketData,
+  zkPODTicketClaimToGPCRevealedClaims
 } from "./utils";
 
 let savedInitArgs: ZKPODTicketPCDInitArgs | undefined = undefined;
@@ -149,7 +149,7 @@ export async function verify(pcd: ZKPODTicketPCD): Promise<boolean> {
   return gpcVerify(
     pcd.proof.groth16Proof,
     pcd.claim.config,
-    claimToGPCRevealedClaims(pcd.claim),
+    zkPODTicketClaimToGPCRevealedClaims(pcd.claim),
     zkArtifactPath
   );
 }
