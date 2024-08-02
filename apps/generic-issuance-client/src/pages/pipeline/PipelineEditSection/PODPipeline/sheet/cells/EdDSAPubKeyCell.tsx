@@ -12,7 +12,6 @@ type Cell = CellBase<string | undefined>;
 export const EdDSAPubKeyViewer: DataViewerComponent<Cell> = ({ cell }) => {
   const value = cell?.value || "";
   const parsed = coercions[PODPipelineInputFieldType.EdDSAPubKey](value);
-  console.log("parsed", parsed);
   return (
     <div
       className={`Spreadsheet__data-viewer ${
@@ -41,7 +40,6 @@ export const EdDSAPubKeyEditor: DataEditorComponent<Cell> = ({
 
   const value = cell?.value || "";
   const parsed = coercions[PODPipelineInputFieldType.EdDSAPubKey](value);
-  console.log("parsed", parsed);
 
   return (
     <div className="Spreadsheet__data-editor">
@@ -51,7 +49,6 @@ export const EdDSAPubKeyEditor: DataEditorComponent<Cell> = ({
         onChange={handleChange}
         value={value}
         style={{
-          color: "green",
           backgroundColor: parsed.success ? "inherit" : "rgb(90, 27, 35, 1)"
         }}
       />

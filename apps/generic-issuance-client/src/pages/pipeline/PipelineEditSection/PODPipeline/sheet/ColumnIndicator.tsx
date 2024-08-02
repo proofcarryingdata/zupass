@@ -55,7 +55,7 @@ export function ColumnIndicator({
       case PODPipelineInputFieldType.Int:
         return <Icon as={MdNumbers} w={4} h={4} />;
       case PODPipelineInputFieldType.Cryptographic:
-        return <Icon as={MdKey} w={4} h={4} />;
+        return <Icon as={MdNumbers} w={4} h={4} />;
       case PODPipelineInputFieldType.Boolean:
         return <Icon as={MdCheckCircleOutline} w={4} h={4} />;
       case PODPipelineInputFieldType.Date:

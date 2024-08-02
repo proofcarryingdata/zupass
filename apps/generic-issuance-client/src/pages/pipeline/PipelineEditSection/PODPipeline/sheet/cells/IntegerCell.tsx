@@ -20,7 +20,7 @@ export const IntegerViewer: DataViewerComponent<Cell> = ({ cell }) => {
       }`}
       style={{ pointerEvents: "none", textAlign: "right" }}
     >
-      {cell?.toString()}
+      {value.toString()}
     </div>
   );
 };

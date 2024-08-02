@@ -18,7 +18,7 @@ export const BooleanViewer: DataViewerComponent<Cell> = ({ cell }) => {
         parsed.success ? "" : "Spreadsheet__data-viewer--invalid"
       }`}
     >
-      {cell?.value ? "true" : "false"}
+      {value}
     </div>
   );
 };

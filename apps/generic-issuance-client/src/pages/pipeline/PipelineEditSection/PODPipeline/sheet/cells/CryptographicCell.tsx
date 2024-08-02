@@ -20,7 +20,7 @@ export const CryptographicViewer: DataViewerComponent<Cell> = ({ cell }) => {
       }`}
       style={{ pointerEvents: "none", textAlign: "right" }}
     >
-      {cell?.toString()}
+      {value.toString()}
     </div>
   );
 };

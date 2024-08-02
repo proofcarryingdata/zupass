@@ -1,8 +1,8 @@
 import {
   FeedIssuanceOptions,
   PODPipelineDefinition,
+  PODPipelineInputColumns,
   PODPipelineInputFieldType,
-  PODPipelineOptions,
   PODPipelineOutputMatch,
   PODPipelinePODEntry
 } from "@pcd/passport-interface";
@@ -41,10 +41,13 @@ function stringifyCSV(
  * @param options The options to use for parsing.
  * @returns The parsed CSV data.
  */
-export function parseCSV(options: PODPipelineOptions): string[][] {
-  const parsed = parse(options.input.csv, {});
+export function parseCSV(
+  csv: string,
+  columns: PODPipelineInputColumns
+): string[][] {
+  const parsed = parse(csv, {});
 
-  const configuredColumns = Object.keys(options.input.columns);
+  const configuredColumns = Object.keys(columns);
   const columnHeaders: string[] = parsed[0];
   const columnIndices = Object.fromEntries(
     configuredColumns.map((column) => [column, columnHeaders.indexOf(column)])
@@ -256,7 +259,6 @@ export function updateInputCSV(
   definition: PODPipelineDefinition,
   data: InputValue[][]
 ): PODPipelineDefinition {
-  const newDefinition = structuredClone(definition);
   const newCsv = stringifyCSV([
     Object.keys(definition.options.input.columns),
     ...data.map((row) => {
@@ -270,6 +272,10 @@ export function updateInputCSV(
       );
     })
   ]);
+  if (newCsv === definition.options.input.csv) {
+    return definition;
+  }
+  const newDefinition = structuredClone(definition);
   newDefinition.options.input.csv = newCsv;
   return newDefinition;
 }

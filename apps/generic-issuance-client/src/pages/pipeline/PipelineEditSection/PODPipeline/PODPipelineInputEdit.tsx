@@ -108,8 +108,8 @@ export function PODPipelineInputEdit({
 }): ReactNode {
   const columns = useMemo(() => definition.options.input.columns, [definition]);
   const data = useMemo(
-    () => parseCSV(definition.options),
-    [definition.options]
+    () => parseCSV(definition.options.input.csv, columns),
+    [definition.options.input.csv, columns]
   );
   const spreadsheetData = useMemo(
     () => parsedCSVToMatrix(data, definition.options),
@@ -259,6 +259,7 @@ export function PODPipelineInputEdit({
             onClick={addRow}
             leftIcon={<Icon as={PlusSquareIcon} w={4} h={4} />}
             colorScheme="blue"
+            size="sm"
           >
             Add row
           </Button>
@@ -267,6 +268,7 @@ export function PODPipelineInputEdit({
             onClick={deleteRow}
             leftIcon={<Icon as={MdDeleteOutline} w={4} h={4} />}
             colorScheme="blue"
+            size="sm"
           >
             Delete row
           </Button>
