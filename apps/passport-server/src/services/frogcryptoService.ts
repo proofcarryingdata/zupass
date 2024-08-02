@@ -409,7 +409,7 @@ export class FrogcryptoService {
     if (!user) {
       throw new PCDHTTPError(400, "invalid PCD");
     }
-    if (_.intersection(this.adminUsers, user.emails)) {
+    if (!_.intersection(this.adminUsers, user.emails)) {
       throw new PCDHTTPError(403, "not authorized");
     }
   }
