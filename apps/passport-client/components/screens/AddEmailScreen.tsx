@@ -29,6 +29,7 @@ import {
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
+import { Spinner } from "../shared/Spinner";
 
 export function AddEmailScreen(): JSX.Element | null {
   useSyncE2EEStorage();
@@ -61,9 +62,9 @@ export function AddEmailScreen(): JSX.Element | null {
     }
 
     setError("");
+    setLoading(true);
 
     try {
-      setLoading(true);
       const { identity, credentialCache } = stateContext.getState();
       const credentialManager = new CredentialManager(
         identity,
@@ -83,10 +84,8 @@ export function AddEmailScreen(): JSX.Element | null {
         pcd
       );
 
-      if (response.success) {
-        if (response.value.token) {
-          setConfirmationCode(response.value.token);
-        }
+      if (response.success && response.value.token) {
+        setConfirmationCode(response.value.token);
       } else {
         setError(response.error);
         setLoading(false);
@@ -95,7 +94,6 @@ export function AddEmailScreen(): JSX.Element | null {
       setCodeSent(true);
       setLoading(false);
     } catch (e) {
-      console.log("error sending confirmation code", e);
       setLoading(false);
       setError(getErrorMessage(e));
     }
@@ -103,6 +101,7 @@ export function AddEmailScreen(): JSX.Element | null {
 
   const onAddEmail = useCallback(async () => {
     if (loading || !self) return;
+
     setLoading(true);
     setError("");
 
@@ -136,7 +135,7 @@ export function AddEmailScreen(): JSX.Element | null {
       if (response.value.newEmailList) {
         dispatch({
           type: "set-self",
-          self: { ...self, emails: response.value.newEmailList }
+          self: { ...self, emails: [...response.value.newEmailList] }
         });
       } else {
         setError(
@@ -164,9 +163,12 @@ export function AddEmailScreen(): JSX.Element | null {
         <Spacer h={128} />
         <RippleLoader />
         <Spacer h={24} />
-        <TextCenter>
-          {codeSent ? "Adding your email..." : "Sending confirmation code..."}
-        </TextCenter>
+        <Spinner
+          text={
+            codeSent ? "Adding your email..." : "Sending confirmation code..."
+          }
+          show={true}
+        />
       </>
     );
   } else if (finished) {
