@@ -1,6 +1,62 @@
 import { Pool } from "postgres-pool";
-import { LoggedInZuzaluUser, ZuzaluUser } from "../../models";
+import {
+  LoggedInZuzaluUser,
+  UserRow,
+  ZuzaluPretixTicket,
+  ZuzaluUser
+} from "../../models";
 import { sqlQuery } from "../../sqlQuery";
+
+export type UserWithZuzaluTickets = UserRow & {
+  zuzaluTickets: ZuzaluPretixTicket[];
+};
+
+/**
+ * For each user with a Zuzalu pretix ticket, return the user, along with
+ * an array of their Zuzalu pretix tickets.
+ */
+export async function fetchAllUsersWithZuzaluTickets(
+  client: Pool
+): Promise<UserWithZuzaluTickets[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    select
+u.*,
+array_agg(distinct ue.email) as emails,
+array_agg(zpt.name) as names,
+array_agg(zpt.email) as ticket_emails,
+array_agg(zpt.order_id) as ticket_order_id,
+array_agg(zpt.role) as ticket_role,
+array_agg(zpt.visitor_date_ranges) as ticket_visitor_date_ranges
+from
+users u
+inner join user_emails ue on u.uuid = ue.user_id
+inner join zuzalu_pretix_tickets zpt on ue.email = zpt.email
+group by u.uuid;`
+  );
+
+  const usersWithTickets: UserWithZuzaluTickets[] = [];
+
+  for (const row of result.rows) {
+    const user: UserRow = row;
+    const zuzaluTickets: ZuzaluPretixTicket[] = [];
+
+    for (let i = 0; i < row.names.length; i++) {
+      zuzaluTickets.push({
+        email: row.ticket_emails[i],
+        name: row.names[i],
+        order_id: row.ticket_order_id[i],
+        role: row.ticket_role[i],
+        visitor_date_ranges: row.ticket_visitor_date_ranges[i]
+      } satisfies ZuzaluPretixTicket);
+    }
+
+    usersWithTickets.push({ ...user, zuzaluTickets });
+  }
+
+  return usersWithTickets;
+}
 
 /**
  * Fetch all users that have a Zuzalu ticket on pretix, even if they haven't
@@ -68,13 +124,14 @@ export async function fetchLoggedInZuzaluUser(
 select 
     u.uuid,
     u.commitment,
-    p.email,
+    array_agg(ue.email) as emails,
     p.name,
     p.role,
     p.order_id,
     p.visitor_date_ranges as visitor_date_ranges
 from users u
-join zuzalu_pretix_tickets p on u.email=p.email
+left join user_emails ue on u.uuid = ue.user_id
+join zuzalu_pretix_tickets p on u.email=ue.email
 left join email_tokens e on p.email = e.email
 where u.uuid = $1;`,
     [params.uuid]
