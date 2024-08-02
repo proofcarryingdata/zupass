@@ -1,4 +1,3 @@
-
 CREATE TABLE user_emails (
     user_id UUID NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
