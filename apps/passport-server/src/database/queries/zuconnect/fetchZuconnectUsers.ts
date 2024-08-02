@@ -2,32 +2,56 @@ import { Pool } from "postgres-pool";
 import { UserRow, ZuconnectTicketDB } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
-// TODO
+export type ZuconnectTicketInfo = Pick<
+  ZuconnectTicketDB,
+  "attendee_email" | "attendee_name" | "product_id" | "id"
+>;
+
+export type LoggedInZuconnectUser = UserRow & {
+  zuconnectTickets: ZuconnectTicketInfo[];
+};
+
 /**
  * Fetches all logged-in users with a non-deleted Zuconnect ticket.
  */
 export async function fetchAllLoggedInZuconnectUsers(
   client: Pool
-): Promise<
-  (Pick<
-    ZuconnectTicketDB,
-    "attendee_email" | "attendee_name" | "product_id" | "id"
-  > &
-    UserRow)[]
-> {
+): Promise<LoggedInZuconnectUser[]> {
   const result = await sqlQuery(
     client,
     `\
-    SELECT 
+SELECT 
         u.*,
-        t.attendee_email,
-        t.attendee_name,
-        t.product_id,
-        t.id
+        array_agg(ue.email) as emails,
+        array_agg(t.attendee_email) as attendee_emails,
+        array_agg(t.attendee_name) as attendee_names,
+        array_agg(t.product_id) as attendee_product_ids,
+        array_agg(t.id) as attendee_ticket_ids
     FROM zuconnect_tickets t
-    JOIN users u ON u.email = t.attendee_email
-    LEFT JOIN email_tokens e ON u.email = e.email
-    WHERE t.is_deleted = FALSE`
+    LEFT JOIN user_emails ue on ue.email = t.attendee_email
+    LEFT JOIN users u ON u.uuid = ue.user_id
+    LEFT JOIN email_tokens e ON ue.email = e.email
+    WHERE t.is_deleted = false
+    group by u.uuid;`
   );
-  return result.rows;
+
+  const usersWithTickets: LoggedInZuconnectUser[] = [];
+
+  for (const row of result.rows) {
+    const user: UserRow = row;
+    const zuconnectTickets: ZuconnectTicketInfo[] = [];
+
+    for (let i = 0; i < row.names.length; i++) {
+      zuconnectTickets.push({
+        attendee_email: row.attendee_emails[i],
+        attendee_name: row.attendee_names[i],
+        id: row.attendee_names[i],
+        product_id: row.attendee_product_ids[i]
+      } satisfies ZuconnectTicketInfo);
+    }
+
+    usersWithTickets.push({ ...user, zuconnectTickets });
+  }
+
+  return usersWithTickets;
 }

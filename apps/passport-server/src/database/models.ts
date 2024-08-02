@@ -272,6 +272,7 @@ export interface ZuconnectTicketDB {
   is_deleted: boolean;
   is_mock_ticket: boolean;
   extra_info: string[];
+  emails: string[];
 }
 
 export interface LinkedPretixTelegramEvent {

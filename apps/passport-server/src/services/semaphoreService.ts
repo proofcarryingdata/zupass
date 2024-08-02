@@ -345,12 +345,12 @@ export class SemaphoreService {
 
       const zuconnectUsers = await fetchAllLoggedInZuconnectUsers(this.dbPool);
       // Give Zuconnect users roles equivalent to Zuzalu roles
-      const zuconnectUsersWithZuzaluRoles = zuconnectUsers.map((user) => {
-        return {
-          email: user.attendee_email,
-          role: zuconnectProductIdToZuzaluRole(user.product_id),
+      const zuconnectUsersWithZuzaluRoles = zuconnectUsers.flatMap((user) => {
+        return user.zuconnectTickets.map((t) => ({
+          email: t.attendee_email,
+          role: zuconnectProductIdToZuzaluRole(t.product_id),
           commitment: user.commitment
-        };
+        }));
       });
 
       const users = zuzaluUsers
