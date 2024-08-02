@@ -2,6 +2,7 @@ import { Pool } from "postgres-pool";
 import { UserRow, ZuconnectTicketDB } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
+// TODO
 /**
  * Fetches all logged-in users with a non-deleted Zuconnect ticket.
  */

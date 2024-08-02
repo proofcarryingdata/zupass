@@ -14,7 +14,10 @@ import {
   fetchAllUsersWithDevconnectTickets
 } from "../database/queries/users";
 import { fetchAllLoggedInZuconnectUsers } from "../database/queries/zuconnect/fetchZuconnectUsers";
-import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import {
+  fetchAllUsersWithZuzaluTickets,
+  UserWithZuzaluTickets
+} from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -337,8 +340,9 @@ export class SemaphoreService {
 
   private async reloadZuzaluGroups(): Promise<void> {
     return traced("Semaphore", "reloadZuzaluGroups", async (span) => {
-      const zuzaluUsers: LoggedInZuzaluOrZuconnectUser[] =
-        await fetchAllLoggedInZuzaluUsers(this.dbPool);
+      const zuzaluUsers: UserWithZuzaluTickets[] =
+        await fetchAllUsersWithZuzaluTickets(this.dbPool);
+
       const zuconnectUsers = await fetchAllLoggedInZuconnectUsers(this.dbPool);
       // Give Zuconnect users roles equivalent to Zuzalu roles
       const zuconnectUsersWithZuzaluRoles = zuconnectUsers.map((user) => {
@@ -349,7 +353,15 @@ export class SemaphoreService {
         };
       });
 
-      const users = zuzaluUsers.concat(zuconnectUsersWithZuzaluRoles);
+      const users = zuzaluUsers
+        .flatMap((u) =>
+          u.zuzaluTickets.map((t) => ({
+            email: t.email,
+            role: t.role as ZuzaluUserRole,
+            commitment: u.commitment
+          }))
+        )
+        .concat(zuconnectUsersWithZuzaluRoles);
 
       span?.setAttribute("users", users.length);
       logger(`[SEMA] Rebuilding groups, ${users.length} total users.`);
