@@ -1,11 +1,5 @@
 import { RollbarProvider } from "@pcd/client-shared";
 import {
-  CredentialManager,
-  ZUPASS_CREDENTIAL_REQUEST,
-  requestOfflineTickets,
-  requestOfflineTicketsCheckin
-} from "@pcd/passport-interface";
-import {
   getErrorMessage,
   isLocalStorageAvailable,
   isWebAssemblySupported
@@ -49,7 +43,6 @@ import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
-import { DevconnectCheckinByIdScreen } from "../components/screens/ScannedTicketScreens/DevconnectCheckinByIdScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
@@ -70,11 +63,7 @@ import {
 import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import { loadInitialState } from "../src/loadInitialState";
-import {
-  saveCheckedInOfflineTickets,
-  saveOfflineTickets,
-  saveUsingLaserScanner
-} from "../src/localstorage";
+import { saveUsingLaserScanner } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
@@ -190,71 +179,12 @@ function useBackgroundJobs(): void {
       }
     };
 
-    const startJobSyncOfflineCheckins = async (): Promise<void> => {
-      await jobSyncOfflineCheckins();
-      setInterval(jobSyncOfflineCheckins, 1000 * 60);
-    };
-
-    const jobSyncOfflineCheckins = async (): Promise<void> => {
-      const state = getState();
-      if (!state.self || state.offline) {
-        return;
-      }
-
-      const credentialManager = new CredentialManager(
-        getState().identity,
-        getState().pcds,
-        getState().credentialCache
-      );
-
-      if (state.checkedinOfflineDevconnectTickets.length > 0) {
-        const checkinOfflineTicketsResult = await requestOfflineTicketsCheckin(
-          appConfig.zupassServer,
-          {
-            checkedOfflineInDevconnectTicketIDs:
-              state.checkedinOfflineDevconnectTickets.map((t) => t.id),
-            checkerProof: (
-              await credentialManager.requestCredentials(
-                ZUPASS_CREDENTIAL_REQUEST
-              )
-            )[0]
-          }
-        );
-
-        if (checkinOfflineTicketsResult.success) {
-          update({
-            checkedinOfflineDevconnectTickets: []
-          });
-          saveCheckedInOfflineTickets(undefined);
-        }
-      }
-
-      const offlineTicketsResult = await requestOfflineTickets(
-        appConfig.zupassServer,
-        {
-          checkerProof: (
-            await credentialManager.requestCredentials(
-              ZUPASS_CREDENTIAL_REQUEST
-            )
-          )[0]
-        }
-      );
-
-      if (offlineTicketsResult.success) {
-        update({
-          offlineTickets: offlineTicketsResult.value.offlineTickets
-        });
-        saveOfflineTickets(offlineTicketsResult.value.offlineTickets);
-      }
-    };
-
     const startBackgroundJobs = (): void => {
       console.log("[JOB] Starting background jobs...");
       document.addEventListener("visibilitychange", () => {
         setupPolling();
       });
       setupPolling();
-      startJobSyncOfflineCheckins();
       jobCheckConnectivity();
     };
 
@@ -365,12 +295,6 @@ function RouterImpl(): JSX.Element {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          {/* This route is used to check in a Devconnect ticket with only
-              the ticket ID in the parameters */}
-          <Route
-            path="checkin-by-id"
-            element={<DevconnectCheckinByIdScreen />}
-          />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />

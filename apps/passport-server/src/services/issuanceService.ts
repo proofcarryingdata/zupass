@@ -22,8 +22,6 @@ import {
   CheckTicketInByIdResult,
   Credential,
   FeedHost,
-  GetOfflineTicketsRequest,
-  GetOfflineTicketsResponseValue,
   KnownPublicKeyType,
   KnownTicketGroup,
   KnownTicketTypesResult,
@@ -32,8 +30,6 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
-  UploadOfflineCheckinsRequest,
-  UploadOfflineCheckinsResponseValue,
   VerificationError,
   VerifiedCredential,
   VerifyTicketRequest,
@@ -63,7 +59,6 @@ import {
 import { RollbarService } from "@pcd/server-shared";
 import { ONE_HOUR_MS, getErrorMessage } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Response } from "express";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
@@ -73,7 +68,6 @@ import {
   DevconnectPretixTicketDBWithEmailAndItem,
   UserRow
 } from "../database/models";
-import { fetchOfflineTicketsForChecker } from "../database/multitableQueries/fetchOfflineTickets";
 import {
   fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEmail,
@@ -1314,49 +1308,6 @@ export class IssuanceService {
         })
       }
     };
-  }
-
-  public async handleGetOfflineTickets(
-    req: GetOfflineTicketsRequest,
-    res: Response
-  ): Promise<void> {
-    let semaphoreId;
-    try {
-      const verifiedCredential = await this.verifyCredential(req.checkerProof);
-      semaphoreId = verifiedCredential.semaphoreId;
-    } catch (_e) {
-      throw new PCDHTTPError(403, "invalid proof");
-    }
-
-    const offlineTickets = await fetchOfflineTicketsForChecker(
-      this.context.dbPool,
-      semaphoreId
-    );
-
-    res.json({
-      offlineTickets
-    } satisfies GetOfflineTicketsResponseValue);
-  }
-
-  public async handleUploadOfflineCheckins(
-    req: UploadOfflineCheckinsRequest,
-    res: Response
-  ): Promise<void> {
-    let semaphoreId;
-    try {
-      const verifiedCredential = await this.verifyCredential(req.checkerProof);
-      semaphoreId = verifiedCredential.semaphoreId;
-    } catch (_e) {
-      throw new PCDHTTPError(403, "invalid proof");
-    }
-
-    // await checkInOfflineTickets(
-    //   this.context.dbPool,
-    //   semaphoreId,
-    //   req.checkedOfflineInDevconnectTicketIDs
-    // );
-
-    res.json({} satisfies UploadOfflineCheckinsResponseValue);
   }
 }
 

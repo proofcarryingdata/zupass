@@ -4,14 +4,12 @@ import {
   CheckTicketByIdResult,
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
-  GetOfflineTicketsRequest,
   IssuanceEnabledResponseValue,
   KnownTicketTypesResult,
   ListFeedsRequest,
   ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
-  UploadOfflineCheckinsRequest,
   VerifyTicketRequest,
   VerifyTicketResult
 } from "@pcd/passport-interface";
@@ -138,33 +136,6 @@ export function initPCDIssuanceRoutes(
     );
     return res.json(result satisfies VerifyTicketResult);
   });
-
-  /**
-   * Downloads relevant tickets for offline verification/checkin from the
-   * perspective of the user hitting this route.
-   */
-  app.post("/issue/offline-tickets", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
-    await issuanceService.handleGetOfflineTickets(
-      req.body as GetOfflineTicketsRequest,
-      res
-    );
-  });
-
-  /**
-   * Attempts to bulk-check-in tickets that were checked in by a user
-   * in offline mode.
-   */
-  app.post(
-    "/issue/checkin-offline-tickets",
-    async (req: Request, res: Response) => {
-      checkIssuanceServiceStarted(issuanceService);
-      await issuanceService.handleUploadOfflineCheckins(
-        req.body as UploadOfflineCheckinsRequest,
-        res
-      );
-    }
-  );
 
   app.get("/issue/known-ticket-types", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
