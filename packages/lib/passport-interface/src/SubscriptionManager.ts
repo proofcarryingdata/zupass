@@ -298,16 +298,15 @@ export class FeedSubscriptionManager {
         })
       );
 
-      // TODO: implement error handling
+      const failure = results.find((r) => !r.success);
+      if (failure?.success === false) {
+        if (failure.code === 410) {
+          this.flagSubscriptionAsEnded(subscription.id, failure.error);
+          return responses;
+        }
 
-      // if (!results.success) {
-      //   if (results.code === 410) {
-      //     this.flagSubscriptionAsEnded(subscription.id, results.error);
-      //     return responses;
-      //   }
-
-      //   throw new Error(results.error);
-      // }
+        throw new Error(failure.error);
+      }
 
       const actions = results.flatMap((r) => {
         if (r.success) {
