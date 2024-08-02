@@ -193,15 +193,30 @@ export function AddSubscriptionScreen(): JSX.Element | null {
           {mismatchedEmails && (
             <MismatchedEmailWarning>
               <p>
-                Your emails are <strong>{self.emails.join(", ")}</strong> but
-                the subscription link was sent to{" "}
-                <strong>{suggestedEmail}</strong>.
+                Your
+                {self.emails.length === 1 ? (
+                  <>
+                    email is <strong>{self.emails[0]}</strong>
+                  </>
+                ) : (
+                  <>
+                    emails are{" "}
+                    {self.emails.map((e, i) => (
+                      <React.Fragment key={e}>
+                        <strong>{e}</strong>
+                        {i !== self.emails.length - 1 && ", "}
+                      </React.Fragment>
+                    ))}
+                  </>
+                )}{" "}
+                but the subscription link was sent to{" "}
+                <strong>{suggestedEmail}</strong>, which doesn't belong to this
+                account.
               </p>
               <p>
-                This may mean that you cannot receive the expected PCDs. You may
-                be able to contact the issuer to change the email address to{" "}
-                <strong>{self.emails.join(", ")}</strong>, or sign up for a new
-                Zupass account with <strong>{suggestedEmail}</strong>.
+                This may mean that you cannot receive the expected PCDs. If you
+                own <strong>{suggestedEmail}</strong> you can add it to your
+                Zupass account in the Settings.
               </p>
             </MismatchedEmailWarning>
           )}
