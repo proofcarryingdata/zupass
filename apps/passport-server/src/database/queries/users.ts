@@ -31,7 +31,7 @@ export async function fetchUserByUUID(
 ): Promise<UserRow | null> {
   const result = await sqlQuery(
     client,
-    `SELECT u.*, array_agg(ue.email) as emails 
+    `SELECT u.*, array_agg(ue.email) as emails
      FROM users u
      LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.uuid = $1
@@ -51,7 +51,7 @@ export async function fetchUserByAuthKey(
 ): Promise<UserRow | null> {
   const result = await sqlQuery(
     client,
-    `SELECT u.*, array_agg(ue.email) as emails 
+    `SELECT u.*, array_agg(ue.email) as emails
      FROM users u
      LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.auth_key = $1
@@ -68,7 +68,7 @@ export async function fetchUserByAuthKey(
 export async function fetchAllUsers(client: Pool): Promise<UserRow[]> {
   const result = await sqlQuery(
     client,
-    `SELECT u.*, array_agg(ue.email) as emails 
+    `SELECT u.*, array_agg(ue.email) as emails
      FROM users u
      LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      GROUP BY u.uuid`
@@ -123,7 +123,7 @@ export async function fetchUserByCommitment(
 ): Promise<UserRow | null> {
   const result = await sqlQuery(
     client,
-    `SELECT u.*, array_agg(ue.email) as emails 
+    `SELECT u.*, array_agg(ue.email) as emails
      FROM users u
      LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.commitment = $1
@@ -147,7 +147,7 @@ export async function fetchUsersByMinimumAgreedTerms(
 ): Promise<UserRow[]> {
   const result = await sqlQuery(
     client,
-    `SELECT u.*, array_agg(ue.email) as emails 
+    `SELECT u.*, array_agg(ue.email) as emails
      FROM users u
      LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.terms_agreed >= $1
@@ -167,7 +167,7 @@ export async function fetchAllUsersWithDevconnectTickets(
   const result = await sqlQuery(
     client,
     `
-    SELECT DISTINCT u.*, array_agg(ue.email) as emails 
+    SELECT u.*, array_agg(ue.email) as emails
     FROM users u
     INNER JOIN user_emails ue ON u.uuid = ue.user_id
     INNER JOIN devconnect_pretix_tickets t ON ue.email = t.email
@@ -188,7 +188,7 @@ export async function fetchAllUsersWithDevconnectSuperuserTickets(
   const result = await sqlQuery(
     client,
     `
-    SELECT DISTINCT u.*, array_agg(ue.email) as emails 
+    SELECT u.*, array_agg(ue.email) as emails
     FROM users u
     INNER JOIN user_emails ue ON u.uuid = ue.user_id
     INNER JOIN devconnect_pretix_tickets t ON ue.email = t.email
