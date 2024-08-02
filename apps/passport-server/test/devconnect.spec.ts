@@ -12,11 +12,11 @@ import {
   KnownTicketTypesResult,
   LATEST_PRIVACY_NOTICE,
   PollFeedResponseValue,
-  User,
   ZUPASS_CREDENTIAL_REQUEST,
   ZUZALU_23_EVENT_ID,
   ZUZALU_23_RESIDENT_PRODUCT_ID,
   ZupassFeedIds,
+  ZupassUserJson,
   ZuzaluUserRole,
   agreeTerms,
   requestCheckInById,
@@ -27,7 +27,6 @@ import {
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey,
   requestVerifyTicket,
-  requestVerifyTicketById,
   requestVerifyToken
 } from "@pcd/passport-interface";
 import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
@@ -58,8 +57,7 @@ import { getZuzaluPretixConfig } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import {
   DevconnectPretixTicket,
-  DevconnectPretixTicketWithCheckin,
-  LoggedInZuzaluUser
+  DevconnectPretixTicketWithCheckin
 } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
@@ -83,8 +81,9 @@ import {
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import {
-  fetchAllZuzaluUsers,
-  fetchZuzaluUser
+  UserWithZuzaluTickets,
+  fetchAllUsersWithZuzaluTickets,
+  fetchAllZuzaluPretixTickets
 } from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { sqlQuery } from "../src/database/sqlQuery";
 import {
@@ -151,10 +150,10 @@ describe("devconnect functionality", function () {
   let eventBConfigId: string;
   let eventCConfigId: string;
 
-  let residentUser: User | undefined;
-  let visitorUser: User | undefined;
-  let organizerUser: User | undefined;
-  let updatedToOrganizerUser: User | undefined;
+  let residentUser: ZupassUserJson | undefined;
+  let visitorUser: ZupassUserJson | undefined;
+  let organizerUser: ZupassUserJson | undefined;
+  let updatedToOrganizerUser: ZupassUserJson | undefined;
 
   let identity: Identity;
   let publicKeyRSA: NodeRSA;
@@ -324,7 +323,7 @@ describe("devconnect functionality", function () {
   );
 
   step("logging in as a zuzalu resident should work", async function () {
-    const ticketHolders = await fetchAllZuzaluUsers(db);
+    const ticketHolders = await fetchAllZuzaluPretixTickets(db);
     const resident = ticketHolders.find(
       (t) => t.role === ZuzaluUserRole.Resident
     );
@@ -377,7 +376,7 @@ describe("devconnect functionality", function () {
   step(
     "logging in with the remaining two users should work",
     async function () {
-      const ticketHolders = await fetchAllZuzaluUsers(db);
+      const ticketHolders = await fetchAllZuzaluPretixTickets(db);
       const visitor = ticketHolders.find(
         (t) => t.role === ZuzaluUserRole.Visitor
       );
@@ -439,23 +438,6 @@ describe("devconnect functionality", function () {
       });
     }
   );
-
-  step("should verify zuzalu tickets by ID", async () => {
-    const response = await requestVerifyTicketById(
-      application.expressContext.localEndpoint,
-      {
-        ticketId: residentUser?.uuid as string,
-        timestamp: Date.now().toString()
-      }
-    );
-
-    expect(response?.success).to.be.true;
-    expect(response?.value?.verified).to.be.true;
-    if (response.value?.verified) {
-      expect(response.value.group).eq(KnownTicketGroup.Zuzalu23);
-      expect(response.value.productId).eq(ZUZALU_23_RESIDENT_PRODUCT_ID);
-    }
-  });
 
   step(
     "after more users log in, historic semaphore groups also get updated",
@@ -593,11 +575,17 @@ describe("devconnect functionality", function () {
     async function () {
       const residents = pretixMocker.getResidentsOrOrganizers(false);
       const firstResident = residents[0];
-      const userBefore = await fetchZuzaluUser(db, firstResident.email);
+      const allUsersBefore = await fetchAllUsersWithZuzaluTickets(db);
+      const userBefore = allUsersBefore.find((u) =>
+        u.emails.includes(firstResident.email)
+      );
+      const ticketBefore = userBefore?.zuzaluTickets[0];
+      expectToExist(ticketBefore);
+      expect(userBefore?.zuzaluTickets?.length).to.eq(1);
       if (!firstResident || !userBefore) {
         throw new Error("expected there to be at least one mocked user");
       }
-      expect(userBefore.role).to.eq(ZuzaluUserRole.Resident);
+      expect(ticketBefore.role).to.eq(ZuzaluUserRole.Resident);
       pretixMocker.removeResidentOrOrganizer(firstResident.code);
       const newOrganizer = pretixMocker.addResidentOrOrganizer(true);
       pretixMocker.updateResidentOrOrganizer(newOrganizer.code, (o) => {
@@ -611,12 +599,17 @@ describe("devconnect functionality", function () {
       }
       pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
       await pretixService.trySync();
-      const userAfter = await fetchZuzaluUser(db, firstResident.email);
+      const allUsersAfter = await fetchAllUsersWithZuzaluTickets(db);
+      const userAfter = allUsersAfter.find((u) =>
+        u.emails.includes(firstResident.email)
+      );
+      const ticketAfter = userAfter?.zuzaluTickets[0];
+      expectToExist(ticketAfter);
       if (!userAfter) {
         throw new Error("expected to be able to get user");
       }
-      expect(userAfter.role).to.eq(ZuzaluUserRole.Organizer);
-      updatedToOrganizerUser = userAfter as LoggedInZuzaluUser;
+      expect(ticketAfter.role).to.eq(ZuzaluUserRole.Organizer);
+      updatedToOrganizerUser = userAfter as UserWithZuzaluTickets;
     }
   );
 
@@ -770,7 +763,7 @@ describe("devconnect functionality", function () {
     "replace zuzalu pretix api and sync should cause all users to be removed from " +
       "their role-specific semaphore groups, but they should remain signed in",
     async function () {
-      const oldTicketHolders = await fetchAllZuzaluUsers(db);
+      const oldTicketHolders = await fetchAllZuzaluPretixTickets(db);
 
       const newAPI = newMockZuzaluPretixAPI();
       if (!newAPI) {
@@ -782,7 +775,7 @@ describe("devconnect functionality", function () {
 
       await sleep(100);
 
-      const newTicketHolders = await fetchAllZuzaluUsers(db);
+      const newTicketHolders = await fetchAllZuzaluPretixTickets(db);
 
       const oldEmails = new Set(...oldTicketHolders.map((t) => t.email));
       const newEmails = new Set(...newTicketHolders.map((t) => t.email));
