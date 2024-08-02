@@ -29,6 +29,7 @@ import {
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
+import { Spinner } from "../shared/Spinner";
 
 export function ChangeEmailScreen(): JSX.Element | null {
   useSyncE2EEStorage();
@@ -59,16 +60,15 @@ export function ChangeEmailScreen(): JSX.Element | null {
     }
 
     setLoading(true);
-    try {
-      const { identity, credentialCache } = stateContext.getState();
-      const credentialManager = new CredentialManager(
-        identity,
-        pcds,
-        credentialCache
-      );
+    setError("");
 
+    try {
       const pcd: SerializedPCD<SemaphoreSignaturePCD> = (
-        await credentialManager.requestCredentials({
+        await new CredentialManager(
+          stateContext.getState().identity,
+          pcds,
+          stateContext.getState().credentialCache
+        ).requestCredentials({
           signatureType: "sempahore-signature-pcd"
         })
       )[0];
@@ -93,7 +93,6 @@ export function ChangeEmailScreen(): JSX.Element | null {
       setCodeSent(true);
       setLoading(false);
     } catch (e) {
-      console.log("error sending confirmation code", e);
       setLoading(false);
       setError(getErrorMessage(e));
     }
@@ -101,17 +100,17 @@ export function ChangeEmailScreen(): JSX.Element | null {
 
   const onChangeEmail = useCallback(async () => {
     if (loading || !self) return;
-    setLoading(true);
-    try {
-      const { identity, credentialCache } = stateContext.getState();
-      const credentialManager = new CredentialManager(
-        identity,
-        pcds,
-        credentialCache
-      );
 
+    setLoading(true);
+    setError("");
+
+    try {
       const pcd: SerializedPCD<SemaphoreSignaturePCD> = (
-        await credentialManager.requestCredentials({
+        await new CredentialManager(
+          stateContext.getState().identity,
+          pcds,
+          stateContext.getState().credentialCache
+        ).requestCredentials({
           signatureType: "sempahore-signature-pcd"
         })
       )[0];
@@ -125,11 +124,14 @@ export function ChangeEmailScreen(): JSX.Element | null {
       );
 
       if (!result.success) {
-        throw new Error(result.error);
+        setError(result.error);
+        setLoading(false);
+        return;
       }
 
       if (!result.value.newEmailList) {
         setError("couldn't change email, plz try again later");
+        setLoading(false);
         return;
       }
 
@@ -141,7 +143,6 @@ export function ChangeEmailScreen(): JSX.Element | null {
       setFinished(true);
       setLoading(false);
     } catch (e) {
-      console.log("error changing email", e);
       setLoading(false);
       setError(getErrorMessage(e));
     }
@@ -159,9 +160,12 @@ export function ChangeEmailScreen(): JSX.Element | null {
         <Spacer h={128} />
         <RippleLoader />
         <Spacer h={24} />
-        <TextCenter>
-          {codeSent ? "Changing your email..." : "Sending confirmation code..."}
-        </TextCenter>
+        <Spinner
+          text={
+            codeSent ? "Changing your email..." : "Sending confirmation code..."
+          }
+          show={true}
+        />
       </>
     );
   } else if (finished) {
