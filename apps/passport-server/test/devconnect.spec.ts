@@ -5,7 +5,6 @@ import {
   ITicketData,
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
-import { getHash } from "@pcd/passport-crypto";
 import {
   CredentialPayload,
   KnownTicketGroup,
@@ -46,7 +45,6 @@ import {
 } from "../src/apis/devconnect/devconnectPretixAPI";
 import {
   DevconnectPretixConfig,
-  DevconnectPretixOrganizerConfig,
   getDevconnectPretixConfig
 } from "../src/apis/devconnect/organizer";
 import { IEmailAPI } from "../src/apis/emailAPI";
@@ -57,7 +55,6 @@ import {
   DevconnectPretixTicketWithCheckin
 } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
-import { fetchDevconnectPretixRedactedTicketsByHashedEmail } from "../src/database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
   fetchAllNonDeletedDevconnectPretixTickets,
   fetchDevconnectPretixTicketByTicketId,
@@ -79,7 +76,6 @@ import {
   fetchAllUsersWithZuzaluTickets,
   fetchAllZuzaluPretixTickets
 } from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
-import { sqlQuery } from "../src/database/sqlQuery";
 import {
   OrganizerSync,
   PRETIX_CHECKER,
@@ -1081,8 +1077,7 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.context.dbPool,
-      false
+      application.context.dbPool
     );
 
     expect(await os.run()).to.not.throw;
@@ -1126,8 +1121,7 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.context.dbPool,
-      false
+      application.context.dbPool
     );
 
     // Because we're not patching the data from Pretix, default responses
@@ -1220,8 +1214,7 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.context.dbPool,
-      false
+      application.context.dbPool
     );
     expect(await os.run()).to.not.throw;
 
@@ -1302,8 +1295,7 @@ describe("devconnect functionality", function () {
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        false
+        application.context.dbPool
       );
 
       let receivedCheckIn = false;
@@ -2246,8 +2238,7 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 3 }),
-      application.context.dbPool,
-      false
+      application.context.dbPool
     );
 
     let requests = 0;
@@ -2286,8 +2277,7 @@ describe("devconnect functionality", function () {
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        false
+        application.context.dbPool
       );
 
       let requests = 0;
@@ -2338,8 +2328,7 @@ describe("devconnect functionality", function () {
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        false
+        application.context.dbPool
       );
 
       let error: SyncFailureError | null = null;
@@ -2388,8 +2377,7 @@ describe("devconnect functionality", function () {
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        false
+        application.context.dbPool
       );
 
       let error: SyncFailureError | null = null;
@@ -2438,8 +2426,7 @@ describe("devconnect functionality", function () {
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        false
+        application.context.dbPool
       );
 
       let error: SyncFailureError | null = null;
@@ -2630,52 +2617,6 @@ describe("devconnect functionality", function () {
     // The type-checker wants to know about this too
     if (result.success === true) {
       expect(result.value?.verified).to.be.false;
-    }
-  });
-
-  step("should redact tickets during sync", async () => {
-    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
-    const organizer = devconnectPretixAPIConfigFromDB
-      ?.organizers[0] as DevconnectPretixOrganizerConfig;
-    const orgUrl = organizer.orgURL;
-
-    // Pick an event where we will consume all of the tickets
-    const eventID = organizer.events[0].eventID;
-    const eventConfigID = organizer.events[0].id;
-    const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
-    // Set up a sync manager for a single organizer
-    const os = new OrganizerSync(
-      organizer,
-      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.context.dbPool,
-      // Enable redaction
-      true
-    );
-
-    // Set up the case where nobody has not agreed to legal terms
-    await sqlQuery(db, "UPDATE users SET terms_agreed = 0");
-
-    // Remove synced tickets from previous tests
-    await sqlQuery(db, "DELETE FROM devconnect_pretix_tickets");
-
-    await os.run();
-
-    const tickets = await fetchDevconnectPretixTicketsByEvent(
-      db,
-      eventConfigID
-    );
-    expect(tickets.length).to.eq(0);
-    const ordersForEvent = org.ordersByEventID.get(
-      eventID
-    ) as DevconnectPretixOrder[];
-
-    for (const order of ordersForEvent) {
-      const redactedTickets =
-        await fetchDevconnectPretixRedactedTicketsByHashedEmail(
-          db,
-          await getHash(order.email)
-        );
-      expect(redactedTickets.length > 0).to.be.true;
     }
   });
 

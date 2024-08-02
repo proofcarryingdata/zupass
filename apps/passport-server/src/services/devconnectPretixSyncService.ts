@@ -120,10 +120,6 @@ export class DevconnectPretixSyncService {
     const removedOrgIds = [...previousOrgIds].filter((x) => !orgIds.has(x));
     const newOrgIds = [...orgIds].filter((x) => !previousOrgIds.has(x));
 
-    // If the environment variable is set to TRUE, we will enable ticket
-    // redaction
-    const ticketRedaction = process.env.DEVCONNECT_REDACTION === "true";
-
     // Make sure we have an OrganizerSync for any new organizers.
     // This is also how initial OrganizerSyncs are created.
     for (const id of newOrgIds) {
@@ -133,8 +129,7 @@ export class DevconnectPretixSyncService {
       const org = new OrganizerSync(
         config,
         await this.pretixAPIFactory(),
-        this.db,
-        ticketRedaction
+        this.db
       );
       this.organizers.set(id, org);
     }

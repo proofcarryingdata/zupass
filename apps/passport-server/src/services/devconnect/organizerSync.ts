@@ -1,6 +1,5 @@
 import { getHash } from "@pcd/passport-crypto";
 import { normalizeEmail } from "@pcd/util";
-import _ from "lodash";
 import { Pool } from "postgres-pool";
 import {
   DevconnectPretixCategory,
@@ -25,11 +24,6 @@ import {
   PretixItemInfo
 } from "../../database/models";
 import {
-  deleteDevconnectPretixRedactedTickets,
-  fetchDevconnectPretixRedactedTicketsByEvent,
-  upsertDevconnectPretixRedactedTicket
-} from "../../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
-import {
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectTicketsAwaitingSync
 } from "../../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
@@ -49,7 +43,6 @@ import {
 } from "../../database/queries/pretixItemInfo";
 import {
   mostRecentCheckinEvent,
-  pretixRedactedTicketsDifferent,
   pretixTicketsDifferent
 } from "../../util/devconnectTicket";
 import { logger } from "../../util/logger";
@@ -101,7 +94,6 @@ export class OrganizerSync {
   private pretixAPI: IDevconnectPretixAPI;
   private db: Pool;
   private _isRunning: boolean;
-  private readonly enableRedaction: boolean;
 
   public get isRunning(): boolean {
     return this._isRunning;
@@ -110,14 +102,12 @@ export class OrganizerSync {
   public constructor(
     organizer: DevconnectPretixOrganizerConfig,
     pretixAPI: IDevconnectPretixAPI,
-    db: Pool,
-    enableRedaction: boolean
+    db: Pool
   ) {
     this.organizer = organizer;
     this.pretixAPI = pretixAPI;
     this.db = db;
     this._isRunning = false;
-    this.enableRedaction = enableRedaction;
   }
 
   // Conduct a single sync run
@@ -407,16 +397,6 @@ export class OrganizerSync {
       const { eventID } = event;
       const approvedLegalTermsEmails: Set<string> = new Set();
 
-      if (this.enableRedaction) {
-        // const usersApprovingPII = await fetchUsersByMinimumAgreedTerms(
-        //   this.db,
-        //   UNREDACT_TICKETS_TERMS_VERSION
-        // );
-        // // for (const user of usersApprovingPII) {
-        // //   approvedLegalTermsEmails.add(user.email);
-        // // }
-      }
-
       const settings = await this.pretixAPI.fetchEventSettings(
         orgURL,
         token,
@@ -466,13 +446,7 @@ export class OrganizerSync {
   ): Promise<void> {
     return traced(NAME, "saveEvent", async (span) => {
       try {
-        const {
-          eventInfo,
-          items,
-          tickets,
-          checkinLists,
-          approvedLegalTermsEmails
-        } = eventData;
+        const { eventInfo, items, tickets, checkinLists } = eventData;
 
         span?.setAttribute("org_url", organizer.orgURL);
         span?.setAttribute("ticket_count", tickets.length);
@@ -486,12 +460,7 @@ export class OrganizerSync {
           checkinLists[0].id.toString()
         );
         await this.syncItemInfos(organizer, event, items);
-        await this.syncTickets(
-          organizer,
-          event,
-          tickets,
-          approvedLegalTermsEmails
-        );
+        await this.syncTickets(organizer, event, tickets);
       } catch (e) {
         logger("[DEVCONNECT PRETIX] Sync aborted due to errors", e);
         setError(e, span);
@@ -772,8 +741,7 @@ export class OrganizerSync {
   private async syncTickets(
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig,
-    pretixOrders: DevconnectPretixOrder[],
-    approvedLegalTermsEmails: Set<string>
+    pretixOrders: DevconnectPretixOrder[]
   ): Promise<void> {
     return traced(NAME, "syncTickets", async (span) => {
       span?.setAttribute("org_url", organizer.orgURL);
@@ -802,30 +770,8 @@ export class OrganizerSync {
           eventInfo,
           pretixOrders,
           updatedItemsInfo,
-          eventConfigID,
-          approvedLegalTermsEmails
+          eventConfigID
         );
-
-        let approvedTickets: DevconnectPretixTicket[] = [];
-        let ticketsToRedact: DevconnectPretixTicket[] = [];
-        let redactedTicketsInDB: DevconnectPretixRedactedTicket[] = [];
-
-        if (this.enableRedaction) {
-          const groupedTickets = _.groupBy(ticketsFromPretix, (ticket) =>
-            approvedLegalTermsEmails.has(ticket.email) ? "approved" : "redacted"
-          );
-
-          approvedTickets = groupedTickets.approved ?? [];
-          ticketsToRedact = groupedTickets.redacted ?? [];
-
-          redactedTicketsInDB =
-            await fetchDevconnectPretixRedactedTicketsByEvent(
-              this.db,
-              eventConfigID
-            );
-        } else {
-          approvedTickets = ticketsFromPretix;
-        }
 
         const existingTickets = await fetchDevconnectPretixTicketsByEvent(
           this.db,
@@ -843,7 +789,7 @@ export class OrganizerSync {
 
         const changes = compareArrays(
           existingTickets,
-          approvedTickets,
+          ticketsFromPretix,
           "position_id",
           pretixTicketsDifferent
         );
@@ -904,53 +850,6 @@ export class OrganizerSync {
           await softDeleteDevconnectPretixTicket(this.db, removedTicket);
         }
 
-        if (this.enableRedaction) {
-          // Step 4 of saving: save redacted tickets
-          // Grouping by position ID is safe here because all of these tickets
-          // belong to the same event, and position ID is locally unique.
-          const redactedTickets = await Promise.all(
-            ticketsToRedact.map(this.prepareRedactedTicket)
-          );
-
-          const redactionChanges =
-            compareArrays<DevconnectPretixRedactedTicket>(
-              redactedTicketsInDB,
-              redactedTickets,
-              "position_id",
-              pretixRedactedTicketsDifferent
-            );
-
-          for (const redactedTicket of [
-            ...redactionChanges.new,
-            ...redactionChanges.updated
-          ]) {
-            await upsertDevconnectPretixRedactedTicket(this.db, redactedTicket);
-          }
-
-          if (redactionChanges.removed.length > 0) {
-            // Passing in an empty array is harmless, but we can avoid the
-            // call if it's not neeeded
-            await deleteDevconnectPretixRedactedTickets(
-              this.db,
-              eventConfigID,
-              redactionChanges.removed.map((t) => t.position_id)
-            );
-          }
-
-          span?.setAttribute(
-            "redactedTicketsInserted",
-            redactionChanges.new.length
-          );
-          span?.setAttribute(
-            "redactedTicketsUpdated",
-            redactionChanges.updated.length
-          );
-          span?.setAttribute(
-            "redactedTicketsDeleted",
-            redactionChanges.removed.length
-          );
-        }
-
         span?.setAttribute("ticketsInserted", changes.new.length);
         span?.setAttribute("ticketsUpdated", changes.updated.length);
         span?.setAttribute("ticketsDeleted", changes.removed.length);
@@ -982,8 +881,7 @@ export class OrganizerSync {
     eventInfo: PretixEventInfo,
     orders: DevconnectPretixOrder[],
     itemsInfo: PretixItemInfo[],
-    eventConfigID: string,
-    approvedLegalTermsEmails: Set<string>
+    eventConfigID: string
   ): Promise<DevconnectPretixTicket[]> {
     // Go through all orders and aggregate all item IDs under
     // the same (email, event_id, organizer_url) tuple. Since we're
@@ -1009,28 +907,14 @@ export class OrganizerSync {
         if (existingItem) {
           // Try getting email from response to question; otherwise, default to email of purchaser
           if (!attendee_email) {
-            if (
-              this.enableRedaction &&
-              !approvedLegalTermsEmails.has(order.email)
-            ) {
-              logger(
-                `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
-                JSON.stringify({
-                  orderCode: order.code,
-                  positionID: positionid,
-                  orderEmail: await getHash(order.email)
-                })
-              );
-            } else {
-              logger(
-                `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
-                JSON.stringify({
-                  orderCode: order.code,
-                  positionID: positionid,
-                  orderEmail: order.email
-                })
-              );
-            }
+            logger(
+              `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
+              JSON.stringify({
+                orderCode: order.code,
+                positionID: positionid,
+                orderEmail: order.email
+              })
+            );
           }
           const email = normalizeEmail(attendee_email || order.email);
 
