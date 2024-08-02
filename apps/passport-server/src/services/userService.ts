@@ -605,8 +605,8 @@ export class UserService {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
     }
 
-    const existingUser = await this.getUserByEmail(emailToAdd);
-    if (existingUser) {
+    const maybeExistingUserOfNewEmail = await this.getUserByEmail(emailToAdd);
+    if (maybeExistingUserOfNewEmail) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
     }
 
@@ -618,12 +618,14 @@ export class UserService {
         throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
       }
       credential = verifiedCredential;
-    } catch (error) {
+    } catch {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
-    const currentUser = await this.getUserByCommitment(credential.semaphoreId);
-    if (!currentUser) {
+    const requestingUser = await this.getUserByCommitment(
+      credential.semaphoreId
+    );
+    if (!requestingUser) {
       throw new PCDHTTPError(400, EmailUpdateError.Unknown);
     }
 
@@ -645,20 +647,19 @@ export class UserService {
       emailToAdd,
       confirmationCode
     );
-
     if (!isCodeValid) {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidConfirmationCode);
     }
 
-    if (currentUser.emails.includes(emailToAdd)) {
+    if (requestingUser.emails.includes(emailToAdd)) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyAdded);
     }
 
     try {
-      const newEmailList = [...currentUser.emails, emailToAdd];
+      const newEmailList = [...requestingUser.emails, emailToAdd];
 
       await upsertUser(this.context.dbPool, {
-        ...currentUser,
+        ...requestingUser,
         emails: newEmailList
       });
 
@@ -684,29 +685,31 @@ export class UserService {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
-    const currentUser = await this.getUserByCommitment(credential.semaphoreId);
-    if (!currentUser) {
+    const requestingUser = await this.getUserByCommitment(
+      credential.semaphoreId
+    );
+    if (!requestingUser) {
       throw new PCDHTTPError(400, EmailUpdateError.UserNotFound);
     }
 
-    if (!currentUser.emails.includes(emailToRemove)) {
+    if (!requestingUser.emails.includes(emailToRemove)) {
       throw new PCDHTTPError(
         400,
         EmailUpdateError.EmailNotAssociatedWithThisAccount
       );
     }
 
-    if (currentUser.emails.length === 1) {
+    if (requestingUser.emails.length === 1) {
       throw new PCDHTTPError(400, EmailUpdateError.CantDeleteOnlyEmail);
     }
 
-    const newEmailList = currentUser.emails.filter(
+    const newEmailList = requestingUser.emails.filter(
       (email) => email !== emailToRemove
     );
 
     try {
       await upsertUser(this.context.dbPool, {
-        ...currentUser,
+        ...requestingUser,
         emails: newEmailList
       });
       return { newEmailList };
@@ -729,14 +732,9 @@ export class UserService {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
     }
 
-    const maybeUserAlreadyOwningNewEmail = await this.getUserByEmail(newEmail);
-    if (maybeUserAlreadyOwningNewEmail) {
+    const maybeExistingUserOfNewEmail = await this.getUserByEmail(newEmail);
+    if (maybeExistingUserOfNewEmail) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
-    }
-
-    const requestingUser = await this.getUserByEmail(currentEmail);
-    if (!requestingUser) {
-      throw new PCDHTTPError(404, EmailUpdateError.UserNotFound);
     }
 
     let credential: VerifiedCredential;
@@ -746,12 +744,15 @@ export class UserService {
         throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
       }
       credential = verifiedCredential;
-
-      if (credential.semaphoreId !== requestingUser.commitment) {
-        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
-      }
     } catch {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+    }
+
+    const requestingUser = await this.getUserByCommitment(
+      credential.semaphoreId
+    );
+    if (!requestingUser) {
+      throw new PCDHTTPError(404, EmailUpdateError.UserNotFound);
     }
 
     if (!confirmationCode) {
@@ -792,7 +793,7 @@ export class UserService {
         emails: newEmailList
       });
 
-      return { sentToken: false, newEmailList };
+      return { newEmailList, sentToken: false };
     } catch (e) {
       throw new PCDHTTPError(500, getErrorMessage(e));
     }

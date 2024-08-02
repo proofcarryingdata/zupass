@@ -207,10 +207,9 @@ export function initAccountRoutes(
    * Adds a new email address to a user's account.
    */
   app.post("/account/add-email", async (req: Request, res: Response) => {
-    const newEmail = checkBody<AddUserEmailRequest, "newEmail">(
-      req,
-      "newEmail"
-    );
+    const newEmail = checkBody<AddUserEmailRequest, "newEmail">(req, "newEmail")
+      .trim()
+      .toLocaleLowerCase();
     const pcd = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
     const confirmationCode = req.body.confirmationCode as string | undefined;
 
@@ -230,7 +229,9 @@ export function initAccountRoutes(
     const emailToRemove = checkBody<RemoveUserEmailRequest, "emailToRemove">(
       req,
       "emailToRemove"
-    );
+    )
+      .trim()
+      .toLocaleLowerCase();
     const pcd = checkBody<RemoveUserEmailRequest, "pcd">(req, "pcd");
 
     const result = await userService.handleRemoveUserEmail(emailToRemove, pcd);
@@ -245,11 +246,15 @@ export function initAccountRoutes(
     const currentEmail = checkBody<ChangeUserEmailRequest, "currentEmail">(
       req,
       "currentEmail"
-    );
+    )
+      .trim()
+      .toLocaleLowerCase();
     const newEmail = checkBody<ChangeUserEmailRequest, "newEmail">(
       req,
       "newEmail"
-    );
+    )
+      .trim()
+      .toLocaleLowerCase();
     const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
     const confirmationCode = req.body.confirmationCode as string | undefined;
 
