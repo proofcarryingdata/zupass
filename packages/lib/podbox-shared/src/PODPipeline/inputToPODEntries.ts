@@ -53,6 +53,10 @@ const PODValueConversions: Conversions = {
     [PODPipelineInputFieldType.UUID]: (value) => ({
       type: "string",
       value: value
+    }),
+    [PODPipelineInputFieldType.EdDSAPubKey]: (value) => ({
+      type: "string",
+      value: value
     })
   },
   int: {
@@ -76,7 +80,8 @@ const PODValueConversions: Conversions = {
     // Strings cannot be integers.
     [PODPipelineInputFieldType.String]: undefined,
     // Cryptographic values do not respect the same bounds as ints
-    [PODPipelineInputFieldType.Cryptographic]: undefined
+    [PODPipelineInputFieldType.Cryptographic]: undefined,
+    [PODPipelineInputFieldType.EdDSAPubKey]: undefined
   },
   cryptographic: {
     // We can directly convert integers to "cryptographic" values.
@@ -105,19 +110,21 @@ const PODValueConversions: Conversions = {
       type: "cryptographic",
       value: uuidToBigInt(value)
     }),
-    [PODPipelineInputFieldType.String]: undefined
+    [PODPipelineInputFieldType.String]: undefined,
+    [PODPipelineInputFieldType.EdDSAPubKey]: undefined
   },
   eddsa_pubkey: {
     // EdDSA public keys are always represented as strings
-    [PODPipelineInputFieldType.String]: (value) => ({
-      type: "eddsa_pubkey",
-      value: value
-    }),
+    [PODPipelineInputFieldType.String]: undefined,
     [PODPipelineInputFieldType.Int]: undefined,
     [PODPipelineInputFieldType.Cryptographic]: undefined,
     [PODPipelineInputFieldType.Date]: undefined,
     [PODPipelineInputFieldType.Boolean]: undefined,
-    [PODPipelineInputFieldType.UUID]: undefined
+    [PODPipelineInputFieldType.UUID]: undefined,
+    [PODPipelineInputFieldType.EdDSAPubKey]: (value) => ({
+      type: "eddsa_pubkey",
+      value: value
+    })
   }
 } as const;
 

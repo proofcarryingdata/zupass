@@ -91,6 +91,7 @@ function PODOutput({
   const sources = [
     ["credentialEmail", "Zupass Email"],
     ["credentialSemaphoreID", "Semaphore ID"],
+    ["signerPublicKey", "Signer Public Key"],
     ...columns.map((col) => [`input:${col}`, `Data: ${col}`]),
     ...outputEntries.flatMap(([_, entry]) =>
       entry.source.type === "configured"
@@ -131,6 +132,9 @@ function PODOutput({
       } else if (source === "credentialSemaphoreID") {
         entry.source.type = source;
         entry.type = "cryptographic";
+      } else if (source === "signerPublicKey") {
+        entry.source.type = source;
+        entry.type = "eddsa_pubkey";
       } else if (source === "new") {
         setAddingConfiguredValueForKey(key);
         return;
@@ -333,9 +337,24 @@ function PODOutput({
                                 return null;
                               }
                             } else if (
+                              entry.source.type === "credentialSemaphoreID"
+                            ) {
+                              if (
+                                value !== "cryptographic" &&
+                                value !== "string"
+                              ) {
+                                return null;
+                              }
+                            } else if (
                               entry.source.type === "credentialEmail"
                             ) {
                               if (value !== "string") {
+                                return null;
+                              }
+                            } else if (
+                              entry.source.type === "signerPublicKey"
+                            ) {
+                              if (value !== "eddsa_pubkey") {
                                 return null;
                               }
                             }
