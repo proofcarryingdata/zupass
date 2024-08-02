@@ -1,6 +1,7 @@
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import {
   IPODTicketData,
+  PODTicketPCD,
   PODTicketPCDPackage,
   TicketCategory
 } from "@pcd/pod-ticket-pcd";
@@ -16,6 +17,8 @@ import { v4 as uuidv4 } from "uuid";
 import {
   checkClaimAgainstProofRequest,
   makeProofRequest,
+  PODTicketFieldsToReveal,
+  TicketMatchPatterns,
   ZKPODTicketPCD,
   ZKPODTicketPCDArgs
 } from "../src";
@@ -42,6 +45,43 @@ async function makeSerializedIdentityPCD(
   });
 
   return await SemaphoreIdentityPCDPackage.serialize(identityPCD);
+}
+
+function makeProveArgs(
+  serializedTicket: SerializedPCD<PODTicketPCD>,
+  serializedIdentity: SerializedPCD<SemaphoreIdentityPCD>,
+  fieldsToReveal: PODTicketFieldsToReveal,
+  ticketPatterns: TicketMatchPatterns,
+  watermark: string = "watermark",
+  externalNullifier: string = "externalNullifier"
+): ZKPODTicketPCDArgs {
+  return {
+    ticket: {
+      argumentType: ArgumentTypeName.PCD,
+      value: serializedTicket,
+      validatorParams: {
+        ticketPatterns,
+        notFoundMessage: "Not found"
+      }
+    },
+    identity: {
+      argumentType: ArgumentTypeName.PCD,
+      value: serializedIdentity
+    },
+    fieldsToReveal: {
+      argumentType: ArgumentTypeName.ToggleList,
+      value: fieldsToReveal
+    },
+    revealSignerPublicKey: {
+      argumentType: ArgumentTypeName.Boolean,
+      value: true
+    },
+    watermark: { argumentType: ArgumentTypeName.String, value: watermark },
+    externalNullifier: {
+      argumentType: ArgumentTypeName.String,
+      value: externalNullifier
+    }
+  };
 }
 
 describe("zk-pod-ticket-pcd should work", async function () {
@@ -86,52 +126,35 @@ describe("zk-pod-ticket-pcd should work", async function () {
     }
   });
 
+  const pubKey = ticketPCD.claim.signerPublicKey;
+
+  const matchBySignerPublicKeyEventIdAndProductId = {
+    signerPublicKey: pubKey,
+    events: [
+      {
+        id: ticketData.eventId,
+        productIds: [ticketData.productId]
+      }
+    ]
+  };
+
   it("should work with a valid ticket", async function () {
     const serializedTicket = await PODTicketPCDPackage.serialize(ticketPCD);
     const serializedIdentity = await makeSerializedIdentityPCD(identity1);
 
     const pubKey = ticketPCD.claim.signerPublicKey;
 
-    const proveArgs: ZKPODTicketPCDArgs = {
-      ticket: {
-        argumentType: ArgumentTypeName.PCD,
-        value: serializedTicket,
-        validatorParams: {
-          ticketPatterns: [
-            {
-              signerPublicKey: pubKey,
-              events: [
-                {
-                  id: ticketData.eventId,
-                  productIds: [ticketData.productId]
-                }
-              ]
-            }
-          ],
-          notFoundMessage: "Not found"
-        }
-      },
-      identity: {
-        argumentType: ArgumentTypeName.PCD,
-        value: serializedIdentity
-      },
-      fieldsToReveal: { argumentType: ArgumentTypeName.ToggleList, value: {} },
-      revealSignerPublicKey: {
-        argumentType: ArgumentTypeName.Boolean,
-        value: true
-      },
-      watermark: { argumentType: ArgumentTypeName.String, value: "0" },
-      externalNullifier: {
-        argumentType: ArgumentTypeName.String,
-        value: "0"
-      }
-    };
+    const proveArgs = makeProveArgs(serializedTicket, serializedIdentity, {}, [
+      matchBySignerPublicKeyEventIdAndProductId
+    ]);
 
     zkTicketPCD = await ZKPODTicketPCDPackage.prove(proveArgs);
 
     expect(zkTicketPCD).to.exist;
-    expect(zkTicketPCD.claim.watermark.value).to.equal("0");
-    expect(zkTicketPCD.claim.externalNullifier.value).to.equal("0");
+    expect(zkTicketPCD.claim.watermark.value).to.equal("watermark");
+    expect(zkTicketPCD.claim.externalNullifier.value).to.equal(
+      "externalNullifier"
+    );
     expect(zkTicketPCD.claim.signerPublicKey).to.equal(pubKey);
 
     expect(await ZKPODTicketPCDPackage.verify(zkTicketPCD)).to.equal(true);
@@ -149,58 +172,64 @@ describe("zk-pod-ticket-pcd should work", async function () {
 
     const pubKey = ticketPCD.claim.signerPublicKey;
 
-    const proveArgs: ZKPODTicketPCDArgs = {
-      ticket: {
-        argumentType: ArgumentTypeName.PCD,
-        value: serializedTicket,
-        validatorParams: {
-          ticketPatterns: [
-            {
-              signerPublicKey: pubKey,
-              events: [
-                {
-                  id: ticketData.eventId,
-                  productIds: [ticketData.productId]
-                }
-              ]
-            }
-          ],
-          notFoundMessage: "Not found"
-        }
+    const proveArgs = makeProveArgs(
+      serializedTicket,
+      serializedIdentity,
+      {
+        revealAttendeeEmail: true,
+        revealAttendeeName: true,
+        revealProductId: true,
+        revealTimestampConsumed: true,
+        revealTimestampSigned: true,
+        revealIsConsumed: true,
+        revealIsRevoked: true,
+        revealTicketCategory: true,
+        revealTicketId: true
+        // revealEventId: true
+        // revealAttendeeSemaphoreId: true
       },
-      identity: {
-        argumentType: ArgumentTypeName.PCD,
-        value: serializedIdentity
-      },
-      fieldsToReveal: {
-        argumentType: ArgumentTypeName.ToggleList,
-        value: {
-          revealAttendeeEmail: true,
-          revealAttendeeName: true
-        }
-      },
-      revealSignerPublicKey: {
-        argumentType: ArgumentTypeName.Boolean,
-        value: true
-      },
-      watermark: { argumentType: ArgumentTypeName.String, value: "0" },
-      externalNullifier: {
-        argumentType: ArgumentTypeName.String,
-        value: "0"
-      }
-    };
-
+      [matchBySignerPublicKeyEventIdAndProductId]
+    );
     zkTicketPCD = await ZKPODTicketPCDPackage.prove(proveArgs);
 
     expect(zkTicketPCD).to.exist;
-    expect(zkTicketPCD.claim.watermark.value).to.equal("0");
-    expect(zkTicketPCD.claim.externalNullifier.value).to.equal("0");
+    expect(zkTicketPCD.claim.watermark.value).to.equal("watermark");
+    expect(zkTicketPCD.claim.externalNullifier.value).to.equal(
+      "externalNullifier"
+    );
     expect(zkTicketPCD.claim.signerPublicKey).to.equal(pubKey);
     expect(zkTicketPCD.claim.partialTicket.attendeeEmail).to.equal(
       ticketData.attendeeEmail
     );
     expect(zkTicketPCD.claim.partialTicket.attendeeName).to.equal(
       ticketData.attendeeName
+    );
+    expect(zkTicketPCD.claim.partialTicket.productId).to.equal(
+      ticketData.productId
+    );
+    expect(zkTicketPCD.claim.partialTicket.timestampConsumed).to.equal(
+      ticketData.timestampConsumed
+    );
+    expect(zkTicketPCD.claim.partialTicket.timestampSigned).to.equal(
+      ticketData.timestampSigned
+    );
+    expect(zkTicketPCD.claim.partialTicket.isConsumed).to.equal(
+      ticketData.isConsumed
+    );
+    expect(zkTicketPCD.claim.partialTicket.isRevoked).to.equal(
+      ticketData.isRevoked
+    );
+    expect(zkTicketPCD.claim.partialTicket.ticketCategory).to.equal(
+      ticketData.ticketCategory
+    );
+    expect(zkTicketPCD.claim.partialTicket.ticketId).to.equal(
+      ticketData.ticketId
+    );
+    expect(zkTicketPCD.claim.partialTicket.eventId).to.equal(
+      ticketData.eventId
+    );
+    expect(zkTicketPCD.claim.partialTicket.attendeeSemaphoreId).to.equal(
+      ticketData.attendeeSemaphoreId
     );
 
     expect(await ZKPODTicketPCDPackage.verify(zkTicketPCD)).to.equal(true);
