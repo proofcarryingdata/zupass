@@ -218,7 +218,7 @@ export class UserService {
     email: string,
     code: string,
     commitment: string,
-    encryptionKey: string,
+    encryption_key: string,
     res: Response
   ): Promise<void> {
     if (!this.genericIssuanceService) {
@@ -267,7 +267,7 @@ export class UserService {
       uuid: randomUUID(),
       emails: [email],
       commitment,
-      encryption_key: encryptionKey,
+      encryption_key,
       terms_agreed: LATEST_PRIVACY_NOTICE,
       extra_issuance: false
     });
@@ -308,7 +308,7 @@ export class UserService {
     email: string,
     commitment: string,
     salt: string | undefined,
-    encryptionKey: string | undefined,
+    encryption_key: string | undefined,
     autoRegister: boolean | undefined,
     res: Response
   ): Promise<void> {
@@ -320,7 +320,7 @@ export class UserService {
       })}`
     );
 
-    if ((!salt && !encryptionKey) || (salt && encryptionKey)) {
+    if ((!salt && !encryption_key) || (salt && encryption_key)) {
       throw new PCDHTTPError(
         400,
         "Must have exactly either salt or encryptionKey, but not both or none."
@@ -358,7 +358,7 @@ export class UserService {
       emails: existingUser ? existingUser.emails : [email],
       commitment,
       salt,
-      encryption_key: encryptionKey,
+      encryption_key,
       // If the user already exists, then they're accessing this via the
       // "forgot password" flow, and not the registration flow in which they
       // are prompted to agree to the latest legal terms. In this case,
@@ -592,6 +592,10 @@ export class UserService {
     };
   }
 
+  /**
+   * If `confirmationCode` is `undefined`, sends a confirmation email and
+   * exits without any updates to the user.
+   */
   public async handleAddUserEmail(
     emailToAdd: string,
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
@@ -711,6 +715,10 @@ export class UserService {
     }
   }
 
+  /**
+   * If `confirmationCode` is `undefined`, sends a confirmation email and
+   * exits without any updates to the user.
+   */
   public async handleChangeUserEmail(
     currentEmail: string,
     newEmail: string,
