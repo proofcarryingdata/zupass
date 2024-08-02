@@ -54,15 +54,13 @@ import {
 import { upsertUser } from "../src/database/queries/saveUser";
 import {
   deleteUserByEmail,
-  fetchAllUsers,
   fetchUserByCommitment,
   fetchUserByEmail
 } from "../src/database/queries/users";
 import { deleteZuzaluTicket } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import {
-  fetchAllLoggedInZuzaluUsers,
-  fetchLoggedInZuzaluUser,
-  fetchZuzaluUser
+  fetchAllUsersWithZuzaluTickets,
+  fetchAllZuzaluPretixTickets
 } from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { updateZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
@@ -114,7 +112,10 @@ describe("database reads and writes", function () {
 
     await insertZuzaluPretixTicket(db, testTicket);
 
-    const insertedUser = await fetchZuzaluUser(db, testTicket.email);
+    const allZuzaluUsers = await fetchAllZuzaluPretixTickets(db);
+    const insertedUser = allZuzaluUsers.find(
+      (u) => u.email === testTicket.email
+    );
     if (!insertedUser) {
       throw new Error("user didn't insert properly");
     }
@@ -126,8 +127,6 @@ describe("database reads and writes", function () {
     expect(insertedUser.visitor_date_ranges).to.deep.eq(
       testTicket.visitor_date_ranges
     );
-    expect(insertedUser.uuid).to.be.null;
-    expect(insertedUser.commitment).to.be.null;
   });
 
   step(
@@ -144,46 +143,28 @@ describe("database reads and writes", function () {
         extra_issuance: false
       });
 
-      const loggedinUser = await fetchLoggedInZuzaluUser(db, { uuid: newUuid });
+      let allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(db);
+      const loggedinUser = allZuzaluUsers.find((u) => u.uuid === newUuid);
       if (!loggedinUser) {
         throw new Error("user didn't insert properly");
       }
+      const ticket = loggedinUser.zuzaluTickets[0];
+      expect(loggedinUser.zuzaluTickets.length).to.eq(1);
+      expectToExist(ticket);
 
       expect(loggedinUser).to.not.eq(null);
-      expect(loggedinUser.email).to.eq(testTicket.email);
-      expect(loggedinUser.name).to.eq(testTicket.name);
-      expect(loggedinUser.order_id).to.eq(testTicket.order_id);
-      expect(loggedinUser.role).to.eq(testTicket.role);
-      expect(loggedinUser.visitor_date_ranges).to.deep.eq(
+      expect(ticket.email).to.eq(testTicket.email);
+      expect(ticket.name).to.eq(testTicket.name);
+      expect(ticket.order_id).to.eq(testTicket.order_id);
+      expect(ticket.role).to.eq(testTicket.role);
+      expect(ticket.visitor_date_ranges).to.deep.eq(
         testTicket.visitor_date_ranges
       );
       expect(loggedinUser.uuid).to.eq(newUuid);
       expect(loggedinUser.commitment).to.eq(newCommitment);
 
-      const allZuzaluUsers = await fetchAllLoggedInZuzaluUsers(db);
+      allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(db);
       expect(allZuzaluUsers).to.deep.eq([loggedinUser]);
-
-      expect(await fetchZuzaluUser(db, testTicket.email)).to.deep.eq(
-        await fetchLoggedInZuzaluUser(db, { uuid: loggedinUser.uuid })
-      );
-    }
-  );
-
-  step(
-    "able to fetch commitment separately from logged in user",
-    async function () {
-      const loggedinUser = await fetchZuzaluUser(db, testTicket.email);
-      const commitment = await fetchUserByEmail(db, testTicket.email);
-
-      if (!loggedinUser || !commitment) {
-        throw new Error("couldn't find user or commitment");
-      }
-
-      expect(loggedinUser.commitment).to.eq(commitment.commitment);
-      // expect(loggedinUser.email).to.eq(commitment.email);
-
-      const allUsers = await fetchAllUsers(db);
-      expect(allUsers).to.deep.eq([commitment]);
     }
   );
 
@@ -200,36 +181,49 @@ describe("database reads and writes", function () {
 
     await updateZuzaluPretixTicket(db, update);
 
-    const updatedUser = await fetchZuzaluUser(db, testTicket.email);
+    const allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(db);
+    const updatedUser = allZuzaluUsers.find((u) =>
+      u.emails.includes(update.email)
+    );
     if (!updatedUser) {
       throw new Error("not able to get user for email");
     }
-
-    expect(updatedUser.email).to.eq(testTicket.email);
-    expect(updatedUser.role).to.eq(update.role);
-    expect(updatedUser.visitor_date_ranges).to.deep.eq(
+    const updatedTicket = updatedUser.zuzaluTickets[0];
+    expect(updatedUser.zuzaluTickets.length).to.eq(1);
+    expectToExist(updatedTicket);
+    expect(updatedTicket.email).to.eq(testTicket.email);
+    expect(updatedTicket.role).to.eq(update.role);
+    expect(updatedTicket.visitor_date_ranges).to.deep.eq(
       update.visitor_date_ranges
     );
     expect(update.role).to.not.eq(testTicket.role);
   });
 
   step("deleting a logged in zuzalu ticket should work", async function () {
-    const loggedinUser = await fetchZuzaluUser(db, testTicket.email);
-    if (!loggedinUser || !loggedinUser.uuid) {
+    let allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(db);
+    let user = allZuzaluUsers.find((u) => u.emails.includes(testTicket.email));
+    if (!user) {
       throw new Error("expected there to be a logged in user");
     }
     await deleteZuzaluTicket(db, testTicket.email);
-    expect(await fetchZuzaluUser(db, testTicket.email)).to.eq(null);
-    expect(
-      await fetchLoggedInZuzaluUser(db, { uuid: loggedinUser.uuid })
-    ).to.eq(null);
+
+    allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(db);
+    user = allZuzaluUsers.find((u) => u.emails.includes(testTicket.email));
+
+    expect(user).to.eq(undefined);
   });
 
   step("deleting a non logged in user should work", async function () {
     await insertZuzaluPretixTicket(db, testTicket);
-    expect(await fetchZuzaluUser(db, testTicket.email)).to.not.eq(null);
+    let allZuzaluTickets = await fetchAllZuzaluPretixTickets(db);
+    expect(
+      allZuzaluTickets.find((t) => t.email === testTicket.email)
+    ).to.not.eq(undefined);
     await deleteZuzaluTicket(db, testTicket.email);
-    expect(await fetchZuzaluUser(db, testTicket.email)).to.eq(null);
+    allZuzaluTickets = await fetchAllZuzaluPretixTickets(db);
+    expect(allZuzaluTickets.find((t) => t.email === testTicket.email)).to.eq(
+      null
+    );
   });
 
   step("e2ee should work", async function () {
