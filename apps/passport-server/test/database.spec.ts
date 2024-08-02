@@ -222,7 +222,7 @@ describe("database reads and writes", function () {
     await deleteZuzaluTicket(db, testTicket.email);
     allZuzaluTickets = await fetchAllZuzaluPretixTickets(db);
     expect(allZuzaluTickets.find((t) => t.email === testTicket.email)).to.eq(
-      null
+      undefined
     );
   });
 
