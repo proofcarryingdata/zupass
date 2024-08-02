@@ -12,8 +12,6 @@ import {
   PollFeedRequest,
   PollFeedResponseValue,
   UploadOfflineCheckinsRequest,
-  VerifyTicketByIdRequest,
-  VerifyTicketByIdResult,
   VerifyTicketRequest,
   VerifyTicketResult
 } from "@pcd/passport-interface";
@@ -140,20 +138,6 @@ export function initPCDIssuanceRoutes(
     );
     return res.json(result satisfies VerifyTicketResult);
   });
-
-  /**
-   * As above, but using only the ticket ID.
-   */
-  app.post(
-    "/issue/verify-ticket-by-id",
-    async (req: Request, res: Response) => {
-      checkIssuanceServiceStarted(issuanceService);
-      const result = await issuanceService.handleVerifyTicketByIdRequest(
-        req.body as VerifyTicketByIdRequest
-      );
-      return res.json(result satisfies VerifyTicketByIdResult);
-    }
-  );
 
   /**
    * Downloads relevant tickets for offline verification/checkin from the
