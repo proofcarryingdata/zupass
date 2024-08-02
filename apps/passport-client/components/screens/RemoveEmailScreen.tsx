@@ -3,8 +3,6 @@ import {
   requestRemoveUserEmail
 } from "@pcd/passport-interface";
 import { LinkButton } from "@pcd/passport-ui";
-import { SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -42,17 +40,17 @@ export function RemoveEmailScreen(): JSX.Element | null {
 
   const onRemoveEmail = useCallback(async () => {
     if (loading || !self || !emailToRemove) return;
-    setLoading(true);
-    try {
-      const { identity, credentialCache } = stateContext.getState();
-      const credentialManager = new CredentialManager(
-        identity,
-        pcds,
-        credentialCache
-      );
 
-      const pcd: SerializedPCD<SemaphoreSignaturePCD> = (
-        await credentialManager.requestCredentials({
+    setLoading(true);
+    setError("");
+
+    try {
+      const credential = (
+        await new CredentialManager(
+          stateContext.getState().identity,
+          pcds,
+          stateContext.getState().credentialCache
+        ).requestCredentials({
           signatureType: "sempahore-signature-pcd"
         })
       )[0];
@@ -60,11 +58,13 @@ export function RemoveEmailScreen(): JSX.Element | null {
       const response = await requestRemoveUserEmail(
         appConfig.zupassServer,
         emailToRemove,
-        pcd
+        credential
       );
 
       if (!response.success) {
-        throw new Error(response.error);
+        setLoading(false);
+        setError(response.error);
+        return;
       }
 
       dispatch({
@@ -78,7 +78,6 @@ export function RemoveEmailScreen(): JSX.Element | null {
       setFinished(true);
       setLoading(false);
     } catch (e) {
-      console.log("error removing email", e);
       setLoading(false);
       setError(getErrorMessage(e));
     }

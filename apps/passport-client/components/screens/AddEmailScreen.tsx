@@ -3,8 +3,6 @@ import {
   requestAddUserEmail
 } from "@pcd/passport-interface";
 import { ErrorMessage, LinkButton } from "@pcd/passport-ui";
-import { SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { validate } from "email-validator";
 import { useCallback, useEffect, useState } from "react";
@@ -65,15 +63,12 @@ export function AddEmailScreen(): JSX.Element | null {
     setLoading(true);
 
     try {
-      const { identity, credentialCache } = stateContext.getState();
-      const credentialManager = new CredentialManager(
-        identity,
-        pcds,
-        credentialCache
-      );
-
-      const pcd: SerializedPCD<SemaphoreSignaturePCD> = (
-        await credentialManager.requestCredentials({
+      const credential = (
+        await new CredentialManager(
+          stateContext.getState().identity,
+          pcds,
+          stateContext.getState().credentialCache
+        ).requestCredentials({
           signatureType: "sempahore-signature-pcd"
         })
       )[0];
@@ -81,7 +76,7 @@ export function AddEmailScreen(): JSX.Element | null {
       const response = await requestAddUserEmail(
         appConfig.zupassServer,
         newEmail,
-        pcd
+        credential
       );
 
       if (response.success && response.value.token) {
@@ -106,15 +101,12 @@ export function AddEmailScreen(): JSX.Element | null {
     setError("");
 
     try {
-      const { identity, credentialCache } = stateContext.getState();
-      const credentialManager = new CredentialManager(
-        identity,
-        pcds,
-        credentialCache
-      );
-
-      const pcd: SerializedPCD<SemaphoreSignaturePCD> = (
-        await credentialManager.requestCredentials({
+      const credential = (
+        await new CredentialManager(
+          stateContext.getState().identity,
+          pcds,
+          stateContext.getState().credentialCache
+        ).requestCredentials({
           signatureType: "sempahore-signature-pcd"
         })
       )[0];
@@ -122,7 +114,7 @@ export function AddEmailScreen(): JSX.Element | null {
       const response = await requestAddUserEmail(
         appConfig.zupassServer,
         newEmail,
-        pcd,
+        credential,
         confirmationCode
       );
 

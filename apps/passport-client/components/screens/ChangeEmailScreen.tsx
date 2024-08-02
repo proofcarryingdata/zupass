@@ -3,8 +3,6 @@ import {
   requestChangeUserEmail
 } from "@pcd/passport-interface";
 import { ErrorMessage, LinkButton } from "@pcd/passport-ui";
-import { SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { validate } from "email-validator";
 import { useCallback, useEffect, useState } from "react";
@@ -63,7 +61,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
     setError("");
 
     try {
-      const pcd: SerializedPCD<SemaphoreSignaturePCD> = (
+      const credential = (
         await new CredentialManager(
           stateContext.getState().identity,
           pcds,
@@ -75,9 +73,9 @@ export function ChangeEmailScreen(): JSX.Element | null {
 
       const result = await requestChangeUserEmail(
         appConfig.zupassServer,
-        self.emails[0], // Assuming the first email is the current one
+        self.emails[0],
         newEmail,
-        pcd
+        credential
       );
 
       if (!result.success) {
@@ -105,7 +103,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
     setError("");
 
     try {
-      const pcd: SerializedPCD<SemaphoreSignaturePCD> = (
+      const credential = (
         await new CredentialManager(
           stateContext.getState().identity,
           pcds,
@@ -117,9 +115,9 @@ export function ChangeEmailScreen(): JSX.Element | null {
 
       const result = await requestChangeUserEmail(
         appConfig.zupassServer,
-        self.emails[0], // Assuming the first email is the current one
+        self.emails[0],
         newEmail,
-        pcd,
+        credential,
         confirmationCode
       );
 

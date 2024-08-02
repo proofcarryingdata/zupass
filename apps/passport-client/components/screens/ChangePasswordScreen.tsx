@@ -64,6 +64,8 @@ export function ChangePasswordScreen(): JSX.Element | null {
       } else {
         const saltResult = await requestPasswordSalt(
           appConfig.zupassServer,
+          // any email associated with this account will return the right salt
+          // so we just use the first one
           self.emails[0]
         );
 
