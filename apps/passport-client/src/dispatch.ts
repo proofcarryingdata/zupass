@@ -1116,9 +1116,11 @@ async function doSync(
       state.pcds,
       state.credentialCache
     );
-    const credential = await credentialManager.requestCredentials({
-      signatureType: "sempahore-signature-pcd"
-    });
+    const credential = (
+      await credentialManager.requestCredentials({
+        signatureType: "sempahore-signature-pcd"
+      })
+    )[0];
 
     const upRes = await uploadSerializedStorage(
       state.self,
@@ -1127,8 +1129,9 @@ async function doSync(
       appStorage.serializedStorage,
       appStorage.storageHash,
       state.serverStorageRevision,
-      credential[0]
+      credential
     );
+
     if (upRes.success) {
       return {
         serverStorageRevision: upRes.value.revision,
