@@ -98,7 +98,10 @@ describe("PODPipelineDefinition updates", () => {
       sampleDefinition,
       "first_name",
       "firstName",
-      parseCSV(sampleDefinition.options)
+      parseCSV(
+        sampleDefinition.options.input.csv,
+        sampleDefinition.options.input.columns
+      )
     );
     expect(definition.options.input.columns.first_name).to.not.exist;
     expect(definition.options.input.columns.firstName).to.exist;
@@ -111,7 +114,10 @@ describe("PODPipelineDefinition updates", () => {
       sampleDefinition,
       "new_column",
       PODPipelineInputFieldType.String,
-      parseCSV(sampleDefinition.options)
+      parseCSV(
+        sampleDefinition.options.input.csv,
+        sampleDefinition.options.input.columns
+      )
     );
     expect(definition.options.input.columns.new_column).to.exist;
     expect(PODPipelineDefinitionSchema.safeParse(definition).success).to.be
@@ -122,7 +128,10 @@ describe("PODPipelineDefinition updates", () => {
     const definition = deleteInputColumn(
       sampleDefinition,
       "first_name",
-      parseCSV(sampleDefinition.options)
+      parseCSV(
+        sampleDefinition.options.input.csv,
+        sampleDefinition.options.input.columns
+      )
     );
     expect(definition.options.input.columns.first_name).to.not.exist;
     expect(PODPipelineDefinitionSchema.safeParse(definition).success).to.be
