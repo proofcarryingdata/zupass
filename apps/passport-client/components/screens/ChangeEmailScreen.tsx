@@ -131,9 +131,12 @@ export function ChangeEmailScreen(): JSX.Element | null {
         return;
       }
 
-      dispatch({
+      await dispatch({
         type: "set-self",
         self: { ...self, emails: result.value.newEmailList }
+      });
+      stateContext.update({
+        extraSubscriptionFetchRequested: true
       });
 
       setFinished(true);

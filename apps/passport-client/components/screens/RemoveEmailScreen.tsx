@@ -67,12 +67,15 @@ export function RemoveEmailScreen(): JSX.Element | null {
         return;
       }
 
-      dispatch({
+      await dispatch({
         type: "set-self",
         self: {
           ...self,
           emails: response.value.newEmailList
         }
+      });
+      stateContext.update({
+        extraSubscriptionFetchRequested: true
       });
 
       setFinished(true);

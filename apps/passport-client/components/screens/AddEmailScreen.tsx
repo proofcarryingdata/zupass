@@ -125,9 +125,12 @@ export function AddEmailScreen(): JSX.Element | null {
       }
 
       if (response.value.newEmailList) {
-        dispatch({
+        await dispatch({
           type: "set-self",
           self: { ...self, emails: [...response.value.newEmailList] }
+        });
+        stateContext.update({
+          extraSubscriptionFetchRequested: true
         });
       } else {
         setError(
