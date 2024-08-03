@@ -1226,9 +1226,6 @@ export enum EmailUpdateError {
 }
 
 export interface AddUserEmailRequest {
-  /**
-   * The new email address the user wants to add.
-   */
   newEmail: string;
 
   /**
@@ -1237,7 +1234,7 @@ export interface AddUserEmailRequest {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
 
   /**
-   * An optional confirmation code for additional verification.
+   * If absent, requests a confirmation code; if present, redeems it.
    */
   confirmationCode?: string;
 }
@@ -1250,18 +1247,7 @@ export type AddUserEmailResponseValue =
     }
   | { sentToken: true; token?: string; newEmailList?: never };
 
-/**
- * Request to change a user's email address.
- */
 export interface ChangeUserEmailRequest {
-  /**
-   * The user's current email address.
-   */
-  currentEmail: string;
-
-  /**
-   * The new email address the user wants to change to.
-   */
   newEmail: string;
 
   /**
@@ -1270,7 +1256,7 @@ export interface ChangeUserEmailRequest {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
 
   /**
-   * An optional confirmation code for additional verification.
+   * If absent, requests a confirmation code; if present, redeems it.
    */
   confirmationCode?: string;
 }
@@ -1284,9 +1270,6 @@ export type ChangeUserEmailResponseValue =
   | { sentToken: true; token?: string; newEmailList?: never };
 
 export interface RemoveUserEmailRequest {
-  /**
-   * The email address the user wants to remove.
-   */
   emailToRemove: string;
 
   /**
