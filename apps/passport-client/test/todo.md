@@ -9,6 +9,7 @@
 - add logging everywhere that is appropriate
 - what do we do with tickets associated with an email that was just removed?
 - need to warn people about potentially destructive actions, and confirm befre executing them
+- limit max quantity of emails an account can have.
 - tests?
 
 # done
