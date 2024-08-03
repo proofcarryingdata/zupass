@@ -723,7 +723,6 @@ export class UserService {
    * exits without any updates to the user.
    */
   public async handleChangeUserEmail(
-    currentEmail: string,
     newEmail: string,
     pcd: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string

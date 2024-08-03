@@ -243,12 +243,6 @@ export function initAccountRoutes(
    * Changes a user's email address.
    */
   app.post("/account/change-email", async (req: Request, res: Response) => {
-    const currentEmail = checkBody<ChangeUserEmailRequest, "currentEmail">(
-      req,
-      "currentEmail"
-    )
-      .trim()
-      .toLocaleLowerCase();
     const newEmail = checkBody<ChangeUserEmailRequest, "newEmail">(
       req,
       "newEmail"
@@ -259,7 +253,6 @@ export function initAccountRoutes(
     const confirmationCode = req.body.confirmationCode as string | undefined;
 
     const result = await userService.handleChangeUserEmail(
-      currentEmail,
       newEmail,
       pcd,
       confirmationCode

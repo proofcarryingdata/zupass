@@ -12,16 +12,15 @@ import { httpPost } from "./makeRequest";
 /**
  * Sends a request to the server to add a new email address to a user's account.
  *
- * @param zupassServerUrl The base URL of the Zupass server
- * @param currentEmail The user's current primary email address
- * @param newEmail The new email address to be added to the account
- * @param pcd A semaphore signature from the user, used to verify their identity
- * @returns A promise that resolves to an APIResult containing undefined for success or an error message
+ * Never rejects. All information encoded in the resolved response.
  */
 export async function requestAddUserEmail(
   zupassServerUrl: string,
   newEmail: string,
   pcd: SerializedPCD<SemaphoreSignaturePCD>,
+  /**
+   * If absent, requests a confirmation code; if present redeems it and performs the update.
+   */
   confirmationCode?: string
 ): Promise<AddUserEmailResult> {
   return httpPost<AddUserEmailResult>(
