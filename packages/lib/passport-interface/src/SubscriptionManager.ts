@@ -173,6 +173,16 @@ export class FeedSubscriptionManager {
     });
   }
 
+  public async pollEmailSubscription(
+    zupassFeedUrl: string,
+    credentialManager: CredentialManagerAPI,
+    onFinish?: (actions: SubscriptionActions) => Promise<void>
+  ): Promise<SubscriptionActions[]> {
+    return this.pollSubscriptions(credentialManager, onFinish, [
+      this.findSubscription(zupassFeedUrl, ZupassFeedIds.Email)?.id
+    ]);
+  }
+
   /**
    * This "refreshes" a feed. Existing feed errors are cleared, and new
    * ones may be detected.
@@ -182,11 +192,14 @@ export class FeedSubscriptionManager {
    */
   public async pollSubscriptions(
     credentialManager: CredentialManagerAPI,
-    onFinish?: (actions: SubscriptionActions) => Promise<void>
+    onFinish?: (actions: SubscriptionActions) => Promise<void>,
+    idsToPoll?: Array<string | undefined>
   ): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
 
-    for (const subscription of this.activeSubscriptions) {
+    for (const subscription of this.activeSubscriptions.filter(
+      (s) => !idsToPoll || idsToPoll.includes(s.id)
+    )) {
       // Subscriptions which have ceased issuance should not be polled
       if (subscription.ended) {
         continue;
