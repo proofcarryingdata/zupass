@@ -4,14 +4,14 @@
 - specific email copy for 'adding new email address' action with verification code
 - add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
 - add logging everywhere that is appropriate
-- BUST THE CREDENTIAL CACHE TO SUPPORT NEW SCHEMA OF CACHE ENTRY
-  - make sure adding a new email also busts the cache
 - tests?
-- update the state management to perform a migration from user's field `email` to `emails`
-- when 'extra fetch' is requested, make sure the email feed is hit first.
 
 # done
 
+- update the state management to perform a migration from user's field `email` to `emails`
+- when 'extra fetch' is requested, make sure the email feed is hit first.
+- BUST THE CREDENTIAL CACHE TO SUPPORT NEW SCHEMA OF CACHE ENTRY
+  - make sure adding a new email also busts the cache
 - make the client poll all feeds immediately after user changes anything about their email list
 - new users<->emails datamodel in database
 - update all the backend logic to becompatible with multi-email users
