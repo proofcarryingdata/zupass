@@ -315,9 +315,14 @@ export class FeedSubscriptionManager {
         return [];
       });
 
+      // in the case that we're requesting from the same feed
+      // multiple times using two different email credentials,
+      // the result of one of the requests would overwrite the
+      // result of the other request, given both have a 'delete'
+      // action. thus, we coalesce equivalent delete folder actions
+      // into the the first occurrence of a deletion for each folder.
       const filteredActions = [];
       const seen = new Set<string>();
-
       for (const action of actions) {
         if (action.type === "DeleteFolder_action") {
           const key = action.folder;
