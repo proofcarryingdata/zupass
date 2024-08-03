@@ -170,7 +170,7 @@ function initAllRoutes(
   initTelegramRoutes(app, context, globalServices);
   initFrogcryptoRoutes(app, context, globalServices);
   initPoapRoutes(app, context, globalServices);
-  initLogRoutes(app, context, globalServices);
+  initLogRoutes(app);
   initMiscRoutes(app, context, globalServices);
   initGenericIssuanceRoutes(app, context, globalServices);
 }

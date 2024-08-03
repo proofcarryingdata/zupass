@@ -1,14 +1,9 @@
 import express, { Request, Response } from "express";
 import { flatten } from "flat";
 import { traced } from "../../services/telemetryService";
-import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 
-export function initLogRoutes(
-  app: express.Application,
-  _context: ApplicationContext,
-  _services: GlobalServices
-): void {
+export function initLogRoutes(app: express.Application): void {
   logger("[INIT] initializing log routes");
 
   /**
