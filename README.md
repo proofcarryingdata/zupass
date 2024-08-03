@@ -57,7 +57,7 @@ The PCD SDK is a framework for developing applications that use PCDs for the pro
 
 ### Requirements
 
-`passport-server` uses Postgres, and requires Postgres 15 or higher.
+`passport-server` uses Postgres, and requires Postgres 15 or higher. 
 
 ### Environment Variables
 
@@ -77,10 +77,8 @@ In the root of this project, execute the following to start the servers and stat
 # installs dependencies for all apps and packages in this repository
 yarn
 
-# starts local Postgres - you must have Postgres installed for this
-# to work properly. in case you want to restart a Postgres instance
-# you previously started in this project, you can also run the command
-# yarn localdb:restart
+# starts a dockerized local Postgres database on port 5432. 
+#  If you want to restart the instance you also can use yarn localdb:restart
 yarn localdb:init && yarn localdb:up
 
 # starts all the applications contained in the `/apps` directory of the
