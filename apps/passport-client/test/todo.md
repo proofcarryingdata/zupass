@@ -1,7 +1,9 @@
 # todo
 
-- render english errors for email actions
+- copy that communicates how to 'merge'
+- display your current emails in all the screens that let you edit your email addresses
 - specific email copy for 'adding new email address' action with verification code
+- render english errors for email actions
 - add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
 - add logging everywhere that is appropriate
 - tests?
