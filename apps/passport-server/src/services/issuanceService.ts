@@ -73,6 +73,7 @@ import {
   fetchDevconnectPretixTicketsByEmail,
   fetchDevconnectSuperusersForEmail
 } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import {
   fetchKnownPublicKeys,
   fetchKnownTicketByEventAndProductId,
@@ -442,18 +443,18 @@ export class IssuanceService {
         signaturePCD.claim.identityCommitment
       )) as UserRow;
 
-      // const successfullyConsumed = await consumeDevconnectPretixTicket(
-      //   this.context.dbPool,
-      //   ticketData.ticketId ?? "",
-      //   checker.email
-      // );
+      const successfullyConsumed = await consumeDevconnectPretixTicket(
+        this.context.dbPool,
+        ticketData.ticketId ?? "",
+        checker.emails[0]
+      );
 
-      // if (successfullyConsumed) {
-      //   return {
-      //     value: undefined,
-      //     success: true
-      //   };
-      // }
+      if (successfullyConsumed) {
+        return {
+          value: undefined,
+          success: true
+        };
+      }
 
       return {
         error: {
