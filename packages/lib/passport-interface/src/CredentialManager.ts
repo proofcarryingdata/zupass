@@ -1,3 +1,4 @@
+import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -10,6 +11,7 @@ import {
   createCredentialPayload
 } from "./Credential";
 import { CredentialRequest } from "./SubscriptionManager";
+import { StorageBackedMap } from "./util/StorageBackedMap";
 
 export interface CredentialManagerAPI {
   canGenerateCredential(req: CredentialRequest): boolean;
@@ -22,6 +24,7 @@ interface CacheEntry {
   timestamp: number;
   value: SerializedPCD[];
   request: CredentialRequest;
+  cacheId: string;
 }
 
 const CACHE_TTL = ONE_HOUR_MS;
@@ -50,8 +53,7 @@ export function createCredentialCache(): CredentialCache {
 
 // Creates an in-memory cache with a TTL of one hour, backed by localStorage
 export function createStorageBackedCredentialCache(): CredentialCache {
-  return new Map();
-  // return new StorageBackedMap("credential-cache-2");
+  return new StorageBackedMap("credential-cache-multi-email");
 }
 
 /**
@@ -63,7 +65,7 @@ export class CredentialManager implements CredentialManagerAPI {
   private readonly cache: CredentialCache;
   private readonly credentialPromises: Map<
     CredentialRequest["pcdType"],
-    { timestamp: number; credential: Promise<SerializedPCD[]> }
+    { timestamp: number; credential: Promise<SerializedPCD[]>; cacheId: string }
   >;
 
   public constructor(
@@ -90,11 +92,14 @@ export class CredentialManager implements CredentialManagerAPI {
   }
 
   // Get a credential from the local cache, if it exists
-  private getCachedCredentials(type?: string): SerializedPCD[] | undefined {
+  private getCachedCredentials(
+    type: string | undefined,
+    cacheId: string
+  ): SerializedPCD[] | undefined {
     const cacheKey = type ?? "none";
     const res = this.cache.get(cacheKey);
     if (res) {
-      if (Date.now() - res.timestamp < CACHE_TTL) {
+      if (Date.now() - res.timestamp < CACHE_TTL && res.cacheId === cacheId) {
         return res.value;
       } else {
         this.cache.delete(cacheKey);
@@ -103,13 +108,27 @@ export class CredentialManager implements CredentialManagerAPI {
     return undefined;
   }
 
+  private getCurrentCacheId(): string {
+    return (this.pcds.getPCDsByType(EmailPCDTypeName) as EmailPCD[])
+      .map((p) => p.claim.emailAddress)
+      .join(":");
+  }
+
   // Adds a credential to the cache
   private setCachedCredentials(
     request: CredentialRequest,
     value: SerializedPCD[]
   ): void {
     const cacheKey = request.pcdType ?? "none";
-    this.cache.set(cacheKey, { value, timestamp: Date.now(), request });
+    const cacheId = this.getCurrentCacheId();
+
+    this.cache.set(cacheKey, {
+      value,
+      timestamp: Date.now(),
+      request,
+      cacheId
+    });
+
     // This can happen asynchronously, so don't await on the promise
     this.purgeExpiredCredentials();
   }
@@ -132,13 +151,19 @@ export class CredentialManager implements CredentialManagerAPI {
   public async requestCredentials(
     req: CredentialRequest
   ): Promise<SerializedPCD[]> {
-    const cachedCredential = this.getCachedCredentials(req.pcdType);
+    const cachedCredential = this.getCachedCredentials(
+      req.pcdType,
+      this.getCurrentCacheId()
+    );
     if (cachedCredential) {
       return cachedCredential;
     }
 
     const credentialPromise = this.credentialPromises.get(req.pcdType);
-    if (credentialPromise) {
+    if (
+      credentialPromise &&
+      credentialPromise.cacheId === this.getCurrentCacheId()
+    ) {
       if (Date.now() - credentialPromise.timestamp < CACHE_TTL) {
         return credentialPromise.credential;
       } else {
@@ -152,7 +177,8 @@ export class CredentialManager implements CredentialManagerAPI {
     });
     this.credentialPromises.set(req.pcdType, {
       credential: newPromise,
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      cacheId: this.getCurrentCacheId()
     });
 
     return newPromise;
