@@ -37,6 +37,9 @@
     },
     {
       "path": "../../lib/pcd-types"
+    },
+    {
+      "path": "../../lib/util"
     }
   ]
 }
