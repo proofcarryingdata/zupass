@@ -1,0 +1,27 @@
+{
+  "ts-node": {
+    // these options are overrides used only by ts-node
+    // same as the --compilerOptions flag and the TS_NODE_COMPILER_OPTIONS environment variable
+    "compilerOptions": {
+      "module": "commonjs"
+    }
+  },
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "downlevelIteration": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
+    "module": "ES2015",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "sourceMap": true,
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+  ],
+  "exclude": ["node_modules"]
+}

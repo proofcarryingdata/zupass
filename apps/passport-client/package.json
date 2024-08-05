@@ -63,6 +63,7 @@
     "@pcd/zk-eddsa-event-ticket-pcd-ui": "0.2.5",
     "@pcd/zk-eddsa-frog-pcd": "0.3.4",
     "@pcd/zk-eddsa-frog-pcd-ui": "0.2.4",
+    "@pcd/zupass-client": "0.0.1",
     "@pixelverse/strichjs-sdk": "^1.4.6",
     "@rollbar/react": "^0.11.1",
     "@semaphore-protocol/identity": "^3.15.2",
@@ -104,7 +105,12 @@
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
+<<<<<<< HEAD
     "@pcd/eslint-config-custom": "0.11.4",
+=======
+    "@pcd/eslint-config-custom": "0.11.1",
+    "@pcd/proto-pod-gpc-artifacts": "0.4.0",
+>>>>>>> 07775c233 (WIP)
     "@types/chai": "^4.3.11",
     "@types/email-validator": "^1.0.6",
     "@types/express": "^4.17.17",
@@ -116,7 +122,10 @@
     "@types/zxcvbn": "^4.4.4",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
+<<<<<<< HEAD
     "@pcd/proto-pod-gpc-artifacts": "0.5.0",
+=======
+>>>>>>> 07775c233 (WIP)
     "esbuild": "^0.17.10",
     "esbuild-visualizer": "^0.4.1",
     "eslint": "8.57.0",
