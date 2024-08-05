@@ -27,7 +27,6 @@ import {
 import { RippleLoader } from "../core/RippleLoader";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
-import { Spinner } from "../shared/Spinner";
 
 export function ChangeEmailScreen(): JSX.Element | null {
   useSyncE2EEStorage();
@@ -159,12 +158,9 @@ export function ChangeEmailScreen(): JSX.Element | null {
         <Spacer h={128} />
         <RippleLoader />
         <Spacer h={24} />
-        <Spinner
-          text={
-            codeSent ? "Changing your email..." : "Sending confirmation code..."
-          }
-          show={true}
-        />
+        <TextCenter>
+          {codeSent ? "Changing your email..." : "Sending confirmation code..."}
+        </TextCenter>
       </>
     );
   } else if (finished) {

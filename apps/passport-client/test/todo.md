@@ -2,7 +2,6 @@
 
 - copy that communicates how to 'merge'
 - display your current emails in all the screens that let you edit your email addresses
-- loading spinner on change email pages is horizontal not vertical - fix
 - render english errors for email actions
 - add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
 - add logging everywhere that is appropriate
@@ -12,6 +11,7 @@
 
 # done
 
+- loading spinner on change email pages is horizontal not vertical - fix
 - limit max quantity of emails an account can have.
 - update the state management to perform a migration from user's field `email` to `emails`
 - when 'extra fetch' is requested, make sure the email feed is hit first.
