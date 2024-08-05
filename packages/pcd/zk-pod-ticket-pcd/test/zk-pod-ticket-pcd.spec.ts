@@ -1,4 +1,5 @@
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { PUBLIC_KEY_REGEX } from "@pcd/pod";
 import {
   IPODTicketData,
   PODTicketPCD,
@@ -10,9 +11,11 @@ import {
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { expect } from "chai";
+import { expect, use } from "chai";
+import chaiAsPromised from "chai-as-promised";
 import "mocha";
 import path from "path";
+import RandExp from "randexp";
 import { v4 as uuidv4 } from "uuid";
 import {
   checkClaimAgainstProofRequest,
@@ -85,6 +88,7 @@ function makeProveArgs(
 }
 
 describe("zk-pod-ticket-pcd should work", async function () {
+  use(chaiAsPromised);
   await ZKPODTicketPCDPackage.init?.({
     zkArtifactPath: GPC_TEST_ARTIFACTS_PATH
   });
@@ -317,6 +321,158 @@ describe("zk-pod-ticket-pcd should work", async function () {
     expect(zkTicketPCD.claim.config.circuitIdentifier).to.equal(
       // This is the larger of the two circuit identifiers.
       "proto-pod-gpc_1o-11e-5md-0nv-1x200l-1x3t"
+    );
+  });
+
+  it("should not make a proof for a ticket without a matching product ID", async function () {
+    const serializedTicket = await PODTicketPCDPackage.serialize(ticketPCD);
+    const serializedIdentity = await makeSerializedIdentityPCD(identity1);
+
+    const pubKey = ticketPCD.claim.signerPublicKey;
+    const nonMatchingProductId = uuidv4();
+
+    const proveArgs: ZKPODTicketPCDArgs = {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        value: serializedTicket,
+        validatorParams: {
+          ticketPatterns: [
+            {
+              signerPublicKey: pubKey,
+              events: [
+                {
+                  id: ticketData.eventId,
+                  // Non-matching product ID
+                  productIds: [nonMatchingProductId]
+                }
+              ]
+            }
+          ],
+          notFoundMessage: "Not found"
+        }
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: serializedIdentity
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: {}
+      },
+      revealSignerPublicKey: {
+        argumentType: ArgumentTypeName.Boolean,
+        value: true
+      },
+      watermark: { argumentType: ArgumentTypeName.String, value: "0" },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.String,
+        value: "0"
+      }
+    };
+
+    expect(ZKPODTicketPCDPackage.prove(proveArgs)).to.eventually.throw(
+      `Error: Comparison value [{"type":"eddsa_pubkey","value":"${pubKey}"},{"type":"string","value":"${ticketData.eventId}"},{"type":"string","value":"${nonMatchingProductId}"}] corresponding to identifier "$tuple.idPatterns" is not a member of list "admissiblePatterns".`
+    );
+  });
+
+  it("should not make a proof for a ticket without a matching event ID", async function () {
+    const serializedTicket = await PODTicketPCDPackage.serialize(ticketPCD);
+    const serializedIdentity = await makeSerializedIdentityPCD(identity1);
+
+    const pubKey = ticketPCD.claim.signerPublicKey;
+    const nonMatchingEventId = uuidv4();
+
+    const proveArgs: ZKPODTicketPCDArgs = {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        value: serializedTicket,
+        validatorParams: {
+          ticketPatterns: [
+            {
+              signerPublicKey: pubKey,
+              events: [
+                {
+                  // Non-matching event ID
+                  id: nonMatchingEventId,
+                  productIds: [ticketData.productId]
+                }
+              ]
+            }
+          ],
+          notFoundMessage: "Not found"
+        }
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: serializedIdentity
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: {}
+      },
+      revealSignerPublicKey: {
+        argumentType: ArgumentTypeName.Boolean,
+        value: true
+      },
+      watermark: { argumentType: ArgumentTypeName.String, value: "0" },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.String,
+        value: "0"
+      }
+    };
+
+    expect(ZKPODTicketPCDPackage.prove(proveArgs)).to.eventually.throw(
+      `Error: Comparison value [{"type":"eddsa_pubkey","value":"${pubKey}"},{"type":"string","value":"${nonMatchingEventId}"},{"type":"string","value":"${ticketData.productId}"}] corresponding to identifier "$tuple.idPatterns" is not a member of list "admissiblePatterns".`
+    );
+  });
+
+  it("should not make a proof for a ticket without a matching public key", async function () {
+    const serializedTicket = await PODTicketPCDPackage.serialize(ticketPCD);
+    const serializedIdentity = await makeSerializedIdentityPCD(identity1);
+
+    const nonMatchingPubKey = new RandExp(PUBLIC_KEY_REGEX).gen();
+
+    const proveArgs: ZKPODTicketPCDArgs = {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        value: serializedTicket,
+        validatorParams: {
+          ticketPatterns: [
+            {
+              // Non-matching public key
+              signerPublicKey: nonMatchingPubKey,
+              events: [
+                {
+                  id: ticketData.eventId,
+                  productIds: [ticketData.productId]
+                }
+              ]
+            }
+          ],
+          notFoundMessage: "Not found"
+        }
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: serializedIdentity
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: {}
+      },
+      revealSignerPublicKey: {
+        argumentType: ArgumentTypeName.Boolean,
+        value: true
+      },
+      watermark: { argumentType: ArgumentTypeName.String, value: "0" },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.String,
+        value: "0"
+      }
+    };
+
+    expect(ZKPODTicketPCDPackage.prove(proveArgs)).to.eventually.throw(
+      `Error: Comparison value [{"type":"eddsa_pubkey","value":"${nonMatchingPubKey}"},{"type":"string","value":"${ticketData.eventId}"},{"type":"string","value":"${ticketData.productId}"}] corresponding to identifier "$tuple.idPatterns" is not a member of list "admissiblePatterns".`
     );
   });
 
