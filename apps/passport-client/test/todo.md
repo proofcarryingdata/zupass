@@ -2,18 +2,17 @@
 
 - copy that communicates how to 'merge'
 - display your current emails in all the screens that let you edit your email addresses
-- specific email copy for 'adding new email address' action with verification code
 - loading spinner on change email pages is horizontal not vertical - fix
 - render english errors for email actions
 - add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
 - add logging everywhere that is appropriate
 - what do we do with tickets associated with an email that was just removed?
 - need to warn people about potentially destructive actions, and confirm befre executing them
-- limit max quantity of emails an account can have.
 - tests?
 
 # done
 
+- limit max quantity of emails an account can have.
 - update the state management to perform a migration from user's field `email` to `emails`
 - when 'extra fetch' is requested, make sure the email feed is hit first.
 - BUST THE CREDENTIAL CACHE TO SUPPORT NEW SCHEMA OF CACHE ENTRY
@@ -44,3 +43,4 @@
 # won't do
 
 - multiple semaphore identities.
+- specific email copy for 'adding new email address' action with verification code

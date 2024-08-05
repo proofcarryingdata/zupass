@@ -59,6 +59,7 @@ const AgreedTermsSchema = z.object({
  */
 export class UserService {
   public readonly bypassEmail: boolean;
+  private static readonly MAX_USER_EMAIL_ADDRESES = 6;
   private readonly context: ApplicationContext;
   private readonly semaphoreService: SemaphoreService;
   private readonly emailTokenService: EmailTokenService;
@@ -653,6 +654,13 @@ export class UserService {
 
     if (requestingUser.emails.includes(emailToAdd)) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyAdded);
+    }
+
+    if (
+      requestingUser.emails.length + 1 >=
+      UserService.MAX_USER_EMAIL_ADDRESES
+    ) {
+      throw new PCDHTTPError(400, EmailUpdateError.TooManyEmails);
     }
 
     try {

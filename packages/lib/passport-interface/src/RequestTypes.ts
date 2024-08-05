@@ -1222,6 +1222,7 @@ export enum EmailUpdateError {
   EmailNotAssociatedWithThisAccount = "EmailNotAssociatedWithThisAccount",
   UserNotFound = "UserNotFound",
   InvalidInput = "InvalidInput",
+  TooManyEmails = "TooManyEmails",
   Unknown = "Unknown"
 }
 
