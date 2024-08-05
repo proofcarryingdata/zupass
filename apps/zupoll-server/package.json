@@ -12,7 +12,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "pre-deploy": "./scripts/pre-deploy.sh",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
-    "test": "ts-mocha --type-check --exit test/**/*.spec.ts",
+    "test": "mocha --exit test/**/*.spec.ts",
     "clean": "rm -rf out node_modules *.tsbuildinfo"
   },
   "dependencies": {
@@ -83,7 +83,6 @@
     "express": "^4.18.2",
     "mocha": "^10.2.0",
     "prisma": "^4.12.0",
-    "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.1",
     "tsparticles-plugin-emitters": "^2.12.0",
     "typescript": "^5.3.3"

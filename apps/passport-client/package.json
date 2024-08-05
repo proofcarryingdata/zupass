@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && ts-node build.ts build",
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --type-check --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "mocha --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico tsconfig.tsbuildinfo && yarn clean-test-artifacts",
     "gen-test-artifacts": "scripts/copy-test-artifacts.sh",
     "clean-test-artifacts": "rm -rf public/artifacts/test",
@@ -124,7 +124,6 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "express": "^4.18.2",
     "mocha": "^10.2.0",
-    "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.2",
     "tsparticles-plugin-emitters": "^2.12.0",
     "typescript": "^5.3.3"

@@ -10,8 +10,8 @@
     "dev": "yarn tsc -p ./tsconfig.json && concurrently -r \"yarn start:dev\" \"yarn dev:worker\"",
     "start": "NODE_OPTIONS=${NODE_OPTIONS:---max_old_space_size=4096} NODE_ENV=production PORT=8080 node -r source-map-support/register build/src/main.js",
     "lint": "eslint \"**/*.ts{,x}\"",
-    "test:single-threaded": "ts-mocha --type-check --require test/globalhooks.ts --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
-    "test": "ts-mocha --type-check --parallel --require test/globalhooks.ts --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test:single-threaded": "mocha --require test/globalhooks.ts --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "mocha --parallel --require test/globalhooks.ts --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "scratch": "ts-node-dev -T scripts/scratch.ts",
     "clean": "rm -rf node_modules ./build",
     "parse-edge-esmeralda-events": "yarn scratch parse-edge-esmeralda-events"
@@ -128,7 +128,6 @@
     "nodemon": "^3.0.1",
     "pgtools": "^1.0.0",
     "telegram": "^2.18.26",
-    "ts-mocha": "^10.0.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3",
     "yargs": "^17.7.2"

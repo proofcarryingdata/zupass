@@ -22,7 +22,7 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
@@ -46,7 +46,6 @@
     "eslint": "^8.57.0",
     "mocha": "^10.2.0",
     "node-rsa": "^1.1.1",
-    "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"
   },
   "publishConfig": {
