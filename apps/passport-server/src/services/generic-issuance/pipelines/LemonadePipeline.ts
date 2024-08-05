@@ -132,7 +132,6 @@ export class LemonadePipeline implements BasePipeline {
   private badgeDB: IBadgeGiftingDB;
   private api: ILemonadeAPI;
   private cacheService: PersistentCacheService;
-  private loaded: boolean;
   private consumerDB: IPipelineConsumerDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
@@ -178,7 +177,6 @@ export class LemonadePipeline implements BasePipeline {
     this.badgeDB = badgeDB;
     this.api = api;
     this.credentialSubservice = credentialSubservice;
-    this.loaded = false;
     this.context = context;
     this.emailService = emailService;
     this.sendingEmail = false;
@@ -387,7 +385,7 @@ export class LemonadePipeline implements BasePipeline {
               makePLogInfo(`loaded ${validTickets.length} valid tickets`)
             );
 
-            this.loaded = true;
+            await this.db.markAsLoaded(this.id);
 
             return {
               eventConfig,
@@ -834,9 +832,7 @@ export class LemonadePipeline implements BasePipeline {
 
       const ticketActions: PCDAction[] = [];
 
-      // If the Atom DB is not empty, i.e. if we have loaded atoms for this pipeline
-      // at least once since the server started, delete the folder.
-      if ((await this.db.load(this.id)).length > 0) {
+      if (await this.db.hasLoaded(this.id)) {
         ticketActions.push({
           type: PCDActionType.DeleteFolder,
           folder: this.definition.options.feedOptions.feedFolder,

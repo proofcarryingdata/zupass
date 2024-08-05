@@ -113,7 +113,6 @@ export class PretixPipeline implements BasePipeline {
   private definition: PretixPipelineDefinition;
   private cacheService: PersistentCacheService;
   private credentialSubservice: CredentialSubservice;
-  private loaded: boolean;
 
   // Pending check-ins are check-ins which have either completed (and have
   // succeeded) or are in-progress, but which are not yet reflected in the data
@@ -246,7 +245,6 @@ export class PretixPipeline implements BasePipeline {
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
     this.cacheService = cacheService;
-    this.loaded = false;
     this.checkinDB = checkinDB;
     this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
     this.credentialSubservice = credentialSubservice;
@@ -357,7 +355,8 @@ export class PretixPipeline implements BasePipeline {
             orderCode: ticket.order_code
           };
         });
-        this.loaded = true;
+
+        await this.db.markAsLoaded(this.id);
 
         logger(
           LOG_TAG,
@@ -991,9 +990,7 @@ export class PretixPipeline implements BasePipeline {
 
       const actions: PCDAction[] = [];
 
-      // If the Atom DB is not empty, i.e. if we have loaded atoms for this pipeline
-      // at least once since the server started, delete the folder.
-      if ((await this.db.load(this.id)).length > 0) {
+      if (await this.db.hasLoaded(this.id)) {
         actions.push({
           type: PCDActionType.DeleteFolder,
           folder: this.definition.options.feedOptions.feedFolder,
