@@ -169,7 +169,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
       <TextCenter>
         <H2>Changed Email</H2>
         <Spacer h={24} />
-        You've changed your email successfully.
+        You've successfully changed your email to '{self.emails[0]}'.
         <Spacer h={24} />
         <LinkButton to={"/"} $primary={true}>
           Done
@@ -184,6 +184,18 @@ export function ChangeEmailScreen(): JSX.Element | null {
           <Spacer h={24} />
           Enter your new email address. We'll send a confirmation code to verify
           it.
+          <Spacer h={8} />
+          {self.emails.length === 1 ? (
+            <>
+              Your current account email is{" "}
+              {self.emails.map((e) => `'${e}'`).join(", ")}
+            </>
+          ) : (
+            <>
+              Your current emails are{" "}
+              {self.emails.map((e) => `'${e}'`).join(", ")}
+            </>
+          )}
         </TextCenter>
         <Spacer h={24} />
         <BigInput

@@ -169,6 +169,18 @@ export function AddEmailScreen(): JSX.Element | null {
         <H2>Added Email</H2>
         <Spacer h={24} />
         You've added a new email successfully.
+        <Spacer h={8} />
+        {self.emails.length === 1 ? (
+          <>
+            Your current account email is{" "}
+            {self.emails.map((e) => `'${e}'`).join(", ")}
+          </>
+        ) : (
+          <>
+            Your current emails are{" "}
+            {self.emails.map((e) => `'${e}'`).join(", ")}
+          </>
+        )}
         <Spacer h={24} />
         <LinkButton to={"/"} $primary={true}>
           Done
@@ -183,6 +195,8 @@ export function AddEmailScreen(): JSX.Element | null {
           <Spacer h={24} />
           Enter a new email address to add to your account. We'll send a
           confirmation code to verify it.
+          <Spacer h={8} />
+          Your current email is {self.emails.map((e) => `'${e}'`).join(", ")}
         </TextCenter>
         <Spacer h={24} />
         <BigInput

@@ -108,6 +108,18 @@ export function RemoveEmailScreen(): JSX.Element | null {
         <H2>Email Removed</H2>
         <Spacer h={24} />
         You've successfully removed the email address.
+        <Spacer h={8} />
+        {self.emails.length === 1 ? (
+          <>
+            Your current account email is{" "}
+            {self.emails.map((e) => `'${e}'`).join(", ")}
+          </>
+        ) : (
+          <>
+            Your current emails are{" "}
+            {self.emails.map((e) => `'${e}'`).join(", ")}
+          </>
+        )}
         <Spacer h={24} />
         <LinkButton to={"/"} $primary={true}>
           Done

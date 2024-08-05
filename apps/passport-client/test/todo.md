@@ -1,7 +1,6 @@
 # todo
 
 - copy that communicates how to 'merge'
-- display your current emails in all the screens that let you edit your email addresses
 - add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
 - add logging everywhere that is appropriate
 - what do we do with tickets associated with an email that was just removed?
@@ -10,6 +9,7 @@
 
 # done
 
+- display your current emails in all the screens that let you edit your email addresses
 - render english errors for email actions
 - loading spinner on change email pages is horizontal not vertical - fix
 - limit max quantity of emails an account can have.
