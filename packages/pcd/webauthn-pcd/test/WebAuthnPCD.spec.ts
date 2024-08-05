@@ -1,6 +1,7 @@
 import { VerifyAuthenticationResponseOpts } from "@simplewebauthn/server";
 import assert from "assert";
-import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src/index.js";
+// eslint-disable-next-line require-extensions/require-index
+import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src";
 
 const args: WebAuthnPCDArgs = {
   challenge: "valid_challenge",
