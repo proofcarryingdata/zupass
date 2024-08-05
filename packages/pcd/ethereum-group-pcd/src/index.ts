@@ -1,2 +1,2 @@
-export * from "./EthereumGroupPCD";
-export * from "./EthereumGroupPCDPackage";
+export * from "./EthereumGroupPCD.js";
+export * from "./EthereumGroupPCDPackage.js";

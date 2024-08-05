@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { PendingPCD, PendingPCDStatus } from "./PendingPCDUtils";
-import { requestServerProofStatus } from "./api/requestServerProofStatus";
+import { PendingPCD, PendingPCDStatus } from "./PendingPCDUtils.js";
+import { requestServerProofStatus } from "./api/requestServerProofStatus.js";
 
 /**
  * React hook that pings server on status of a PendingPCD. Returns a serialized

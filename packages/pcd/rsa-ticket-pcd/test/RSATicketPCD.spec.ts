@@ -3,7 +3,7 @@ import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
-import { RSATicketPCD, RSATicketPCDPackage } from "../src";
+import { RSATicketPCD, RSATicketPCDPackage } from "../src/index.js";
 
 describe("RSA Ticket PCD should work", function () {
   const key = new NodeRSA({ b: 2048 });

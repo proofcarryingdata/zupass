@@ -1,8 +1,8 @@
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import urljoin from "url-join";
-import { GenericIssuanceSemaphoreGroupResponseValue } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { GenericIssuanceSemaphoreGroupResponseValue } from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpGetSimple } from "./makeRequest.js";
 
 /**
  * Hits an endpoint to download a semaphore protocol group.

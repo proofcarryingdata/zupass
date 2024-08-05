@@ -1,2 +1,2 @@
-export * from "./SemaphoreIdentityPCD";
-export * from "./SemaphoreIdentityPCDPackage";
+export * from "./SemaphoreIdentityPCD.js";
+export * from "./SemaphoreIdentityPCDPackage.js";

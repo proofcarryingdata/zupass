@@ -3,9 +3,9 @@ import {
   CheckTicketInByIdError,
   CheckTicketInByIdRequest,
   CheckTicketInByIdResponseValue
-} from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpPost } from "./makeRequest";
+} from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpPost } from "./makeRequest.js";
 
 /**
  * Tries to check the user in. This is called by the Zupass client when

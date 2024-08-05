@@ -1,7 +1,7 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
-import { EdDSAPCD, EdDSAPCDPackage, prove, verify } from "../src";
+import { EdDSAPCD, EdDSAPCDPackage, prove, verify } from "../src/index.js";
 
 describe("eddsa-pcd should work", function () {
   let pcd: EdDSAPCD;

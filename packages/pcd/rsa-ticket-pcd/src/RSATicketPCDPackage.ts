@@ -9,8 +9,8 @@ import {
   RSATicketPCDInitArgs,
   RSATicketPCDProof,
   RSATicketPCDTypeName
-} from "./RSATicketPCD";
-import { getTicketData } from "./utils";
+} from "./RSATicketPCD.js";
+import { getTicketData } from "./utils.js";
 
 export let initArgs: RSATicketPCDInitArgs;
 

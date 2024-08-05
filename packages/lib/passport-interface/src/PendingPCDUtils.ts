@@ -1,5 +1,5 @@
 import { sha256 } from "js-sha256";
-import { ServerProofRequest } from "./RequestTypes";
+import { ServerProofRequest } from "./RequestTypes.js";
 
 export function hashProveRequest(req: ServerProofRequest): string {
   const reqString = JSON.stringify(req);

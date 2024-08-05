@@ -1,9 +1,9 @@
-import { make0xpSummer } from "./configs/2024_0xparc_summer";
-import { makeEsmeralda } from "./configs/2024_edge_esmeralda";
-import { makeEthBerlin } from "./configs/2024_eth_berlin";
-import { makeEthPrague } from "./configs/2024_eth_prague";
-import { makeZuvillageGeorgia } from "./configs/2024_zuvillage_georgia";
-import { LoginConfig } from "./types";
+import { make0xpSummer } from "./configs/2024_0xparc_summer.js";
+import { makeEsmeralda } from "./configs/2024_edge_esmeralda.js";
+import { makeEthBerlin } from "./configs/2024_eth_berlin.js";
+import { makeEthPrague } from "./configs/2024_eth_prague.js";
+import { makeZuvillageGeorgia } from "./configs/2024_zuvillage_georgia.js";
+import { LoginConfig } from "./types.js";
 
 export function getPodboxConfigs(
   ZUPASS_CLIENT_URL: string,

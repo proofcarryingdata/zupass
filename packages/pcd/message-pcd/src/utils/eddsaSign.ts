@@ -1,9 +1,9 @@
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { v4 as uuid } from "uuid";
-import { Message } from "../Message";
-import { MessagePCD, MessageProof } from "../MessagePCD";
-import { bigintifyMsg } from "./serialization";
+import { Message } from "../Message.js";
+import { MessagePCD, MessageProof } from "../MessagePCD.js";
+import { bigintifyMsg } from "./serialization.js";
 
 /**
  * Given a {@link Message} to sign, and an EdDSAPrivateKey, returns a

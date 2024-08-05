@@ -12,7 +12,7 @@ import {
   IFrogData,
   Rarity,
   Temperament
-} from "../src";
+} from "../src/index.js";
 
 describe("EdDSA frog should work", function () {
   let frog: EdDSAFrogPCD;

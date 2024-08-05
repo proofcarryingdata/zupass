@@ -1,7 +1,7 @@
 import { PODValue, PODValueTuple, podValueHash } from "@pcd/pod";
-import { tupleHasher } from "./tuple";
-import { CircuitSignal } from "./types";
-import { padArray, toChunks } from "./util";
+import { tupleHasher } from "./tuple.js";
+import { CircuitSignal } from "./types.js";
+import { padArray, toChunks } from "./util.js";
 
 export type MultiTupleModuleInputs = {
   tupleElements: CircuitSignal[];

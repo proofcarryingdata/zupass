@@ -4,7 +4,7 @@ import assert from "assert";
 import {
   deserializeSemaphoreGroup,
   serializeSemaphoreGroup
-} from "../src/SerializedSemaphoreGroup";
+} from "../src/SerializedSemaphoreGroup.js";
 
 describe("Serializing Semaphore groups", function () {
   it("should serialize and deserialize properly", async function () {

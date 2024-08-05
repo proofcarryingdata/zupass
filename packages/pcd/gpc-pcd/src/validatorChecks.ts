@@ -12,7 +12,7 @@ import {
   FixedPODEntries,
   PODPCDArgValidatorParams,
   PODSignerPublicKeys
-} from "./GPCPCD";
+} from "./GPCPCD.js";
 
 export function checkPCDType(podPCD: PODPCD): boolean {
   return podPCD.type === PODPCDTypeName;

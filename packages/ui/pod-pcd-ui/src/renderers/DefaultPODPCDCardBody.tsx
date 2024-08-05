@@ -7,7 +7,7 @@ import {
 } from "@pcd/passport-ui";
 import { podEntriesToSimplifiedJSON } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
-import { Container } from "../shared";
+import { Container } from "../shared.js";
 
 export function DefaultPODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
   return (

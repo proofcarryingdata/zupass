@@ -1,6 +1,6 @@
 import { ObjectArgument, PCD, StringArgument } from "@pcd/pcd-types";
 import type { PODPCDProof } from "@pcd/pod-pcd";
-import type { IPODTicketData } from "./schema";
+import type { IPODTicketData } from "./schema.js";
 
 /**
  * The globally unique type name of the {@link PODTicketPCD}.

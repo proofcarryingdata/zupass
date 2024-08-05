@@ -1,6 +1,6 @@
 import { PODValue } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
-import { Container } from "../shared";
+import { Container } from "../shared.js";
 
 export function CollectablePODPCDCardBody({
   pcd

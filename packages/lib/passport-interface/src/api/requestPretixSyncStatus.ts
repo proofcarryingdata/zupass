@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
-import { PretixSyncStatusResponseValue } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { PretixSyncStatusResponseValue } from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpGetSimple } from "./makeRequest.js";
 
 /**
  * Asks the server whether its Devconnect or Zuzalu pretix sync

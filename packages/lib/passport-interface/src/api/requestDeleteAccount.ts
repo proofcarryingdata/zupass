@@ -1,7 +1,7 @@
 import urljoin from "url-join";
-import { DeleteAccountRequest } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+import { DeleteAccountRequest } from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpPostSimple } from "./makeRequest.js";
 
 /**
  * Asks the server to delete the user's account, and all data associated with

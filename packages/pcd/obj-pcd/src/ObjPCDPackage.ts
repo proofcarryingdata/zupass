@@ -8,7 +8,7 @@ import {
   ObjPCDClaim,
   ObjPCDProof,
   ObjPCDTypeName
-} from "./ObjPCD";
+} from "./ObjPCD.js";
 
 export async function prove(args: ObjPCDArgs): Promise<ObjPCD> {
   const id = typeof args.id.value === "string" ? args.id.value : uuid();

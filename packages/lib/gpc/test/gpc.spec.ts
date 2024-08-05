@@ -22,8 +22,8 @@ import {
   gpcArtifactDownloadURL,
   gpcProve,
   gpcVerify
-} from "../src";
-import { makeCircuitIdentifier, makeWatermarkSignal } from "../src/gpcUtil";
+} from "../src/index.js";
+import { makeCircuitIdentifier, makeWatermarkSignal } from "../src/gpcUtil.js";
 import {
   GPC_TEST_ARTIFACTS_PATH,
   expectAsyncError,
@@ -32,7 +32,7 @@ import {
   privateKey2,
   sampleEntries,
   sampleEntries2
-} from "./common";
+} from "./common.js";
 
 describe("gpc library (Compiled test artifacts) should work", async function () {
   function makeMinimalArgs(

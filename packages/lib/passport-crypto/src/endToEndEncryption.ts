@@ -1,5 +1,5 @@
-import { PCDCrypto } from "./passportCrypto";
-import { EncryptedPacket } from "./types";
+import { PCDCrypto } from "./passportCrypto.js";
+import { EncryptedPacket } from "./types.js";
 
 const cryptoPromise = PCDCrypto.newInstance();
 

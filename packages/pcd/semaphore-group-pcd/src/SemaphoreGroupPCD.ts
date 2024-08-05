@@ -6,7 +6,7 @@ import {
 } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { PackedProof } from "@semaphore-protocol/proof";
-import { SerializedSemaphoreGroup } from "./SerializedSemaphoreGroup";
+import { SerializedSemaphoreGroup } from "./SerializedSemaphoreGroup.js";
 
 export const SemaphoreGroupPCDTypeName = "semaphore-group-signal";
 

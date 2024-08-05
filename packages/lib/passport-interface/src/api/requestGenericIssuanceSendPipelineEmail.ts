@@ -3,9 +3,9 @@ import {
   GenericIssuanceSendPipelineEmailRequest,
   GenericIssuanceSendPipelineEmailResponseValue,
   PipelineEmailType
-} from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+} from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpPostSimple } from "./makeRequest.js";
 
 /**
  * Asks the server to send a particular type of email to the users of

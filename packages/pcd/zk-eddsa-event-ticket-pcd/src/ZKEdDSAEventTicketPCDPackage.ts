@@ -46,7 +46,7 @@ import {
   ZKEdDSAEventTicketPCDClaim,
   ZKEdDSAEventTicketPCDInitArgs,
   ZKEdDSAEventTicketPCDTypeName
-} from "./ZKEdDSAEventTicketPCD";
+} from "./ZKEdDSAEventTicketPCD.js";
 
 export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
   "dummy-nullifier-for-eddsa-event-ticket-pcds"

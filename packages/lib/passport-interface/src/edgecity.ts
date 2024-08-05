@@ -1,4 +1,4 @@
-import { BadgeConfig } from "./genericIssuanceTypes";
+import { BadgeConfig } from "./genericIssuanceTypes.js";
 
 export const EDGE_CITY_EVENT_ID = "7eb74440-1891-4cd5-a351-b24a5b03e669";
 export const EDGE_CITY_GA_PRODUCT_ID = "e1dc58c3-2089-4c17-b282-bc37ddbb30b0";

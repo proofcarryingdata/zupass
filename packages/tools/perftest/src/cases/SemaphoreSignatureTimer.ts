@@ -7,7 +7,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import * as path from "path";
-import { TimerCase } from "../types";
+import { TimerCase } from "../types.js";
 
 const zkeyFilePath = path.join(
   __dirname,

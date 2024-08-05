@@ -4,8 +4,8 @@ import chai, { expect } from "chai";
 import chaiAsPromised from "chai-as-promised";
 import "mocha";
 import { v4 as uuid } from "uuid";
-import { MessagePCDPackage } from "../src";
-import { checkMsg } from "../src/utils/checkMsg";
+import { MessagePCDPackage } from "../src/index.js";
+import { checkMsg } from "../src/utils/checkMsg.js";
 
 chai.use(chaiAsPromised);
 

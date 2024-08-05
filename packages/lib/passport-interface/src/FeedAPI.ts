@@ -1,6 +1,6 @@
-import { PollFeedRequest } from "./RequestTypes";
-import { ListFeedsResult, requestListFeeds } from "./api/requestListFeeds";
-import { PollFeedResult, requestPollFeed } from "./api/requestPollFeed";
+import { PollFeedRequest } from "./RequestTypes.js";
+import { ListFeedsResult, requestListFeeds } from "./api/requestListFeeds.js";
+import { PollFeedResult, requestPollFeed } from "./api/requestPollFeed.js";
 
 export interface IFeedApi {
   pollFeed(

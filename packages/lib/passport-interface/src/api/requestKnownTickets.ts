@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
-import { KnownTicketTypesResponseValue } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { KnownTicketTypesResponseValue } from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpGetSimple } from "./makeRequest.js";
 
 /**
  * Asks the server for a list of known ticket types.

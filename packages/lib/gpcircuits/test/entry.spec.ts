@@ -12,8 +12,8 @@ import {
   EntryModuleOutputNamesType,
   EntryModuleOutputs,
   extendedSignalArray
-} from "../src";
-import { circomkit, privateKey, sampleEntries } from "./common";
+} from "../src/index.js";
+import { circomkit, privateKey, sampleEntries } from "./common.js";
 
 describe("entry.EntryModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.

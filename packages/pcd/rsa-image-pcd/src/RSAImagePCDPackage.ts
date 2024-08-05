@@ -13,7 +13,7 @@ import {
   RSAImagePCDClaim,
   RSAImagePCDProof,
   RSAImagePCDTypeName
-} from "./RSAImagePCD";
+} from "./RSAImagePCD.js";
 
 export async function prove(args: RSAImagePCDArgs): Promise<RSAImagePCD> {
   if (args.url.value === undefined || args.url.value === "") {

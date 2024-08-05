@@ -4,9 +4,9 @@ import urlJoin from "url-join";
 import {
   UploadEncryptedStorageRequest,
   UploadEncryptedStorageResponseValue
-} from "../RequestTypes";
-import { APIResult, NamedAPIError, onNamedAPIError } from "./apiResult";
-import { httpPost } from "./makeRequest";
+} from "../RequestTypes.js";
+import { APIResult, NamedAPIError, onNamedAPIError } from "./apiResult.js";
+import { httpPost } from "./makeRequest.js";
 
 /**
  * Asks to upload an e2ee encrypted blob to the Zupass server. The server

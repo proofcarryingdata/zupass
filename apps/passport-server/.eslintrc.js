@@ -23,7 +23,9 @@ module.exports = {
         name: "fetch",
         message: "Use instrumentedFetch instead"
       }
-    ]
+    ],
+    "require-extensions/require-extensions": "off",
+    "require-extensions/require-index": "off"
   },
   overrides: [
     {

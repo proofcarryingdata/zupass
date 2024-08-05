@@ -1,7 +1,7 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import urlJoin from "url-join";
-import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { APIResult } from "./apiResult.js";
+import { httpGetSimple } from "./makeRequest.js";
 
 /**
  * Asks the Zupass server for its EdDSA public key, which can be

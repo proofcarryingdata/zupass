@@ -9,7 +9,7 @@ import {
   SemaphoreIdentityPCDClaim,
   SemaphoreIdentityPCDProof,
   SemaphoreIdentityPCDTypeName
-} from "./SemaphoreIdentityPCD";
+} from "./SemaphoreIdentityPCD.js";
 
 export async function prove(
   args: SemaphoreIdentityPCDArgs

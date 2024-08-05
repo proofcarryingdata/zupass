@@ -14,8 +14,8 @@ import {
   EdDSAFrogPCDClaim,
   EdDSAFrogPCDProof,
   EdDSAFrogPCDTypeName
-} from "./EdDSAFrogPCD";
-import { frogDataToBigInts, getEdDSAFrogData } from "./utils";
+} from "./EdDSAFrogPCD.js";
+import { frogDataToBigInts, getEdDSAFrogData } from "./utils.js";
 
 /**
  * Creates a new {@link EdDSAFrogPCD} by generating an {@link EdDSAFrogPCDProof}

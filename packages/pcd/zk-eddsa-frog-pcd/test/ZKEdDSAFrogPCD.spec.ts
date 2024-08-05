@@ -24,7 +24,7 @@ import {
   ZKEdDSAFrogPCDArgs,
   ZKEdDSAFrogPCDClaim,
   ZKEdDSAFrogPCDPackage
-} from "../src";
+} from "../src/index.js";
 
 const zkeyFilePath = path.join(__dirname, `../artifacts/circuit.zkey`);
 const wasmFilePath = path.join(__dirname, `../artifacts/circuit.wasm`);

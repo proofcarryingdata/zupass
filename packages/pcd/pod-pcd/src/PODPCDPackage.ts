@@ -10,7 +10,7 @@ import {
   PODPCDInitArgs,
   PODPCDProof,
   PODPCDTypeName
-} from "./PODPCD";
+} from "./PODPCD.js";
 
 /**
  * Creates a new {@link PODPCD} by generating an {@link PODPCDProof}

@@ -1,6 +1,6 @@
 import assert from "assert";
-import { passportDecrypt, passportEncrypt } from "../src/endToEndEncryption";
-import { PCDCrypto } from "../src/passportCrypto";
+import { passportDecrypt, passportEncrypt } from "../src/endToEndEncryption.js";
+import { PCDCrypto } from "../src/passportCrypto.js";
 
 describe("Passport encryption", function () {
   it("Encryption and decryption works properly", async function () {

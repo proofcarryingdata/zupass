@@ -15,7 +15,7 @@ import {
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { useCallback, useState } from "react";
-import { TicketQR } from "./TicketQR";
+import { TicketQR } from "./TicketQR.js";
 
 export interface EdDSATicketPCDCardProps {
   // The user's Semaphore identity is necessary for generating a ZK proof from

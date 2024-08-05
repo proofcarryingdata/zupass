@@ -1,2 +1,2 @@
-export * from "./EthereumOwnershipPCD";
-export * from "./EthereumOwnershipPCDPackage";
+export * from "./EthereumOwnershipPCD.js";
+export * from "./EthereumOwnershipPCDPackage.js";

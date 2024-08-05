@@ -20,9 +20,9 @@ import chaiAsPromised from "chai-as-promised";
 import "mocha";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
-import { generateSnarkMessageHash } from "../../util/src/SNARKHelpers";
-import { authenticate } from "../src/server";
-import { constructZkTicketProofUrl } from "../src/zuauth";
+import { generateSnarkMessageHash } from "../../util/src/SNARKHelpers.js";
+import { authenticate } from "../src/server.js";
+import { constructZkTicketProofUrl } from "../src/zuauth.js";
 
 async function makeTestTicket(
   privateKey: string,

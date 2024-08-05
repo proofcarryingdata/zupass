@@ -1,3 +1,3 @@
-export * from "./SemaphoreGroupPCD";
-export * from "./SemaphoreGroupPCDPackage";
-export * from "./SerializedSemaphoreGroup";
+export * from "./SemaphoreGroupPCD.js";
+export * from "./SemaphoreGroupPCDPackage.js";
+export * from "./SerializedSemaphoreGroup.js";

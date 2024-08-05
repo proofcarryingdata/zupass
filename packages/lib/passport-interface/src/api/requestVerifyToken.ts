@@ -1,7 +1,10 @@
 import urlJoin from "url-join";
-import { VerifyTokenRequest, VerifyTokenResponseValue } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+import {
+  VerifyTokenRequest,
+  VerifyTokenResponseValue
+} from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpPostSimple } from "./makeRequest.js";
 
 /**
  * Asks the server to verify the given email login token.

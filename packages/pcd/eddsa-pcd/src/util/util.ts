@@ -1,5 +1,5 @@
 import { getRandomValues, toHexString } from "@pcd/util";
-import { EdDSAPublicKey } from "../EdDSAPCD";
+import { EdDSAPublicKey } from "../EdDSAPCD.js";
 
 /**
  * Creates a new EdDSA private key generating a cryptographically strong random 32-byte value.

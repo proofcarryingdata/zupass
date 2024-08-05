@@ -4,8 +4,8 @@ import "mocha";
 import {
   NumericValueModuleInputNamesType,
   NumericValueModuleOutputNamesType
-} from "../src";
-import { circomkit } from "./common";
+} from "../src/index.js";
+import { circomkit } from "./common.js";
 
 describe("numeric-value.NumericValueModule should work", async function () {
   let circuit: WitnessTester<

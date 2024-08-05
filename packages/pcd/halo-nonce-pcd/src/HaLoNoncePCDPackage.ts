@@ -9,7 +9,7 @@ import {
   HaLoNoncePCDClaim,
   HaLoNoncePCDProof,
   HaLoNoncePCDTypeName
-} from "./HaLoNoncePCD";
+} from "./HaLoNoncePCD.js";
 
 const secp256k1 = new ec("secp256k1");
 

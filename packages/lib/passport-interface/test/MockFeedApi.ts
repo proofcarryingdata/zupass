@@ -11,13 +11,13 @@ import {
   PollFeedRequest,
   PollFeedResponseValue,
   PollFeedResult
-} from "../src";
+} from "../src/index.js";
 import {
   Credential,
   CredentialPayload,
   verifyCredential
-} from "../src/Credential";
-import { IFeedApi } from "../src/FeedAPI";
+} from "../src/Credential.js";
+import { IFeedApi } from "../src/FeedAPI.js";
 
 class MockFeedError extends Error {
   public code: number;

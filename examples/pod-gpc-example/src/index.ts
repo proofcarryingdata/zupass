@@ -1,2 +1,2 @@
-export * from "./gpcExample";
-export * from "./podExample";
+export * from "./gpcExample.js";
+export * from "./podExample.js";

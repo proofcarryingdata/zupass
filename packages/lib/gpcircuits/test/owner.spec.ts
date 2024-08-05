@@ -9,8 +9,8 @@ import {
   OwnerModuleSemaphoreV3OutputNamesType,
   OwnerModuleSemaphoreV3Outputs,
   OwnerModuleSemaphoreV3nputNamesType
-} from "../src";
-import { circomkit, ownerIdentity } from "./common";
+} from "../src/index.js";
+import { circomkit, ownerIdentity } from "./common.js";
 
 describe("owner.OwnerModuleSemaphoreV3 should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.

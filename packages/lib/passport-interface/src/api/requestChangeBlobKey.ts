@@ -6,9 +6,9 @@ import {
   ChangeBlobKeyError,
   ChangeBlobKeyRequest,
   ChangeBlobKeyResponseValue
-} from "../RequestTypes";
-import { APIResult, onNamedAPIError } from "./apiResult";
-import { httpPost } from "./makeRequest";
+} from "../RequestTypes.js";
+import { APIResult, onNamedAPIError } from "./apiResult.js";
+import { httpPost } from "./makeRequest.js";
 
 /**
  * Updates the blob key that encrypts a user's storage and updates the salt used to

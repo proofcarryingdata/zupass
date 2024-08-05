@@ -4,14 +4,14 @@ import {
   passportDecrypt
 } from "@pcd/passport-crypto";
 import { getErrorMessage } from "@pcd/util";
-import { SyncedEncryptedStorage } from "../EncryptedStorage";
+import { SyncedEncryptedStorage } from "../EncryptedStorage.js";
 import {
   APIResult,
   ERROR_NAME_BAD_RESPONSE,
   ERROR_NAME_UNKNOWN,
   NamedAPIError
-} from "./apiResult";
-import { requestEncryptedStorage } from "./requestEncryptedStorage";
+} from "./apiResult.js";
+import { requestEncryptedStorage } from "./requestEncryptedStorage.js";
 
 export type StorageWithRevision = {
   storage: SyncedEncryptedStorage;

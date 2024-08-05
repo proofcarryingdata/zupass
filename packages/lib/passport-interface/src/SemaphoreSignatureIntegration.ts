@@ -5,9 +5,9 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { useEffect } from "react";
-import { constructZupassPcdGetRequestUrl } from "./PassportInterface";
-import { openZupassPopup } from "./PassportPopup/core";
-import { useSerializedPCD } from "./SerializedPCDIntegration";
+import { constructZupassPcdGetRequestUrl } from "./PassportInterface.js";
+import { openZupassPopup } from "./PassportPopup/core.js";
+import { useSerializedPCD } from "./SerializedPCDIntegration.js";
 
 /**
  * Opens a Zupass popup to generate a Semaphore signature proof.

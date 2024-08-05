@@ -1,8 +1,8 @@
 import { HexString } from "@pcd/passport-crypto";
 import urlJoin from "url-join";
-import { CreateNewUserRequest, NewUserResponseValue } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+import { CreateNewUserRequest, NewUserResponseValue } from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpPostSimple } from "./makeRequest.js";
 
 /**
  * Once the user has verified their token, they can create a new

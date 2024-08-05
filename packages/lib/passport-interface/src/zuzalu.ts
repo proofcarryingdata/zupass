@@ -1,4 +1,4 @@
-import { ZupassUserJson } from "./RequestTypes";
+import { ZupassUserJson } from "./RequestTypes.js";
 
 export type User = ZupassUserJson;
 

@@ -16,8 +16,8 @@ import {
   SemaphoreGroupPCDProof,
   SemaphoreGroupPCDTypeName,
   SempahoreGroupPCDInitArgs
-} from "./SemaphoreGroupPCD";
-import { deserializeSemaphoreGroup } from "./SerializedSemaphoreGroup";
+} from "./SemaphoreGroupPCD.js";
+import { deserializeSemaphoreGroup } from "./SerializedSemaphoreGroup.js";
 
 let initArgs: SempahoreGroupPCDInitArgs | undefined = undefined;
 

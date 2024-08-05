@@ -6,7 +6,7 @@ import {
   podValueToRawValue
 } from "@pcd/pod";
 import JSONBig from "json-bigint";
-import { FixedPODEntries } from "./GPCPCD";
+import { FixedPODEntries } from "./GPCPCD.js";
 
 const jsonBigSerializer = JSONBig({
   useNativeBigInt: true,

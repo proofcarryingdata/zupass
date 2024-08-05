@@ -1,12 +1,12 @@
 import urlJoin from "url-join";
-import { Credential } from "../Credential";
+import { Credential } from "../Credential.js";
 import {
   ActionConfigResponseValue,
   PodboxTicketActionPreCheckRequest
-} from "../RequestTypes";
-import { PodboxTicketAction } from "../TicketAction";
-import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+} from "../RequestTypes.js";
+import { PodboxTicketAction } from "../TicketAction.js";
+import { APIResult } from "./apiResult.js";
+import { httpPostSimple } from "./makeRequest.js";
 
 /**
  * Prior to performing an action such as check-in on a ticket, retrieve a list

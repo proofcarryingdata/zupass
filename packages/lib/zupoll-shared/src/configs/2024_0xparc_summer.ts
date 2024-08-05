@@ -1,5 +1,5 @@
-import { makePodboxLoginConfigs } from "../makePodboxLoginConfigs";
-import { LoginConfig } from "../types";
+import { makePodboxLoginConfigs } from "../makePodboxLoginConfigs.js";
+import { LoginConfig } from "../types.js";
 
 export function make0xpSummer(
   ZUPASS_CLIENT_URL: string,

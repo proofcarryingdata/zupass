@@ -16,9 +16,9 @@ import {
 import { isFulfilled, randomUUID } from "@pcd/util";
 import stringify from "fast-json-stable-stringify";
 import { v4 as uuid } from "uuid";
-import { CredentialManagerAPI } from "./CredentialManager";
-import { IFeedApi } from "./FeedAPI";
-import { ListFeedsResponseValue } from "./RequestTypes";
+import { CredentialManagerAPI } from "./CredentialManager.js";
+import { IFeedApi } from "./FeedAPI.js";
+import { ListFeedsResponseValue } from "./RequestTypes.js";
 
 export const enum ZupassFeedIds {
   Devconnect = "1",

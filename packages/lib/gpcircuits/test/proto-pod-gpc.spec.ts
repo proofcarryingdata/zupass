@@ -32,7 +32,7 @@ import {
   processLists,
   protoPODGPCCircuitParamArray,
   zipLists
-} from "../src";
+} from "../src/index.js";
 import {
   circomkit,
   ownerIdentity,
@@ -40,7 +40,7 @@ import {
   privateKey2,
   sampleEntries,
   sampleEntries2
-} from "./common";
+} from "./common.js";
 
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;

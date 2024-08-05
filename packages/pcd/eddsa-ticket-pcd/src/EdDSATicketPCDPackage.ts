@@ -14,8 +14,8 @@ import {
   EdDSATicketPCDClaim,
   EdDSATicketPCDProof,
   EdDSATicketPCDTypeName
-} from "./EdDSATicketPCD";
-import { getEdDSATicketData, ticketDataToBigInts } from "./utils";
+} from "./EdDSATicketPCD.js";
+import { getEdDSATicketData, ticketDataToBigInts } from "./utils.js";
 
 /**
  * Creates a new {@link EdDSATicketPCD} by generating an {@link EdDSATicketPCDProof}

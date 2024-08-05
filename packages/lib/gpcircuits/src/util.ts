@@ -1,7 +1,7 @@
 import { CircomkitConfig } from "circomkit";
 import { PathLike } from "fs";
 import path from "path";
-import { CircuitSignal } from "./types";
+import { CircuitSignal } from "./types.js";
 
 /**
  * Splits an array `arr` into chunks of size

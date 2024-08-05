@@ -1,4 +1,4 @@
-import { APIResult } from "../api/apiResult";
+import { APIResult } from "../api/apiResult.js";
 
 /**
  * Returns the first error from a list of {@link APIResult}s.

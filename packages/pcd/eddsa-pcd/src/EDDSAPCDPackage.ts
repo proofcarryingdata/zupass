@@ -10,7 +10,7 @@ import {
   EdDSAPCDProof,
   EdDSAPCDTypeName,
   EdDSAPublicKey
-} from "./EdDSAPCD";
+} from "./EdDSAPCD.js";
 
 let initializedPromise: Promise<void> | undefined;
 let eddsa: Eddsa;

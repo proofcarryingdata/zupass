@@ -15,8 +15,8 @@ import {
   processLists,
   processSingleList,
   zipLists
-} from "../src";
-import { circomkit } from "./common";
+} from "../src/index.js";
+import { circomkit } from "./common.js";
 
 describe("List membership helpers should work", function () {
   const params1 = {

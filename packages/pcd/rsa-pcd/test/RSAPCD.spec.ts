@@ -3,7 +3,7 @@ import { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
 import { v4 as uuid } from "uuid";
-import { RSAPCD, RSAPCDPackage } from "../src";
+import { RSAPCD, RSAPCDPackage } from "../src/index.js";
 
 async function copyPcd(pcd: RSAPCD): Promise<RSAPCD> {
   return RSAPCDPackage.deserialize((await RSAPCDPackage.serialize(pcd)).pcd);

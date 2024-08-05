@@ -1,7 +1,7 @@
 import urljoin from "url-join";
-import { PipelineGetManualCheckInsResponseValue } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { PipelineGetManualCheckInsResponseValue } from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpGetSimple } from "./makeRequest.js";
 
 /**
  * Retrieves a summary of check-in status for all tickets on a given pipeline.

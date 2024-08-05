@@ -17,14 +17,14 @@ import {
   GPCPCDPackage,
   fixedPODEntriesToSimplifiedJSON,
   getProveDisplayOptions
-} from "../src";
+} from "../src/index.js";
 import {
   ownerIdentity,
   privateKey,
   privateKey2,
   sampleEntries0,
   sampleEntries1
-} from "./common";
+} from "./common.js";
 
 export const GPC_TEST_ARTIFACTS_PATH = path.join(
   __dirname,

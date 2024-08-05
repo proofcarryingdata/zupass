@@ -2,9 +2,9 @@ import urlJoin from "url-join";
 import {
   FrogCryptoShareTelegramHandleRequest,
   FrogCryptoShareTelegramHandleResponseValue
-} from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+} from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpPostSimple } from "./makeRequest.js";
 
 /**
  * Update the Telegram handle sharing status of a user.

@@ -1,2 +1,2 @@
-export * from "./WebAuthnPCD";
-export * from "./WebAuthnPCDPackage";
+export * from "./WebAuthnPCD.js";
+export * from "./WebAuthnPCDPackage.js";

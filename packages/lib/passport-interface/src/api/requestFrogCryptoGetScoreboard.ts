@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
-import { FrogCryptoScore } from "../FrogCrypto";
-import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { FrogCryptoScore } from "../FrogCrypto.js";
+import { APIResult } from "./apiResult.js";
+import { httpGetSimple } from "./makeRequest.js";
 
 export async function requestFrogCryptoGetScoreboard(
   zupassServerUrl: string

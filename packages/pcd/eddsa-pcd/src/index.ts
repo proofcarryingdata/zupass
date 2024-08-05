@@ -1,3 +1,3 @@
-export * from "./EDDSAPCDPackage";
-export * from "./EdDSAPCD";
-export * from "./util/util";
+export * from "./EDDSAPCDPackage.js";
+export * from "./EdDSAPCD.js";
+export * from "./util/util.js";

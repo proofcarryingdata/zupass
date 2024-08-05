@@ -2,7 +2,7 @@
 
 import { program } from "commander";
 import logSymbols from "log-symbols";
-import "./timer";
+import "./timer.js";
 
 program
   .name("pcd-perftest")

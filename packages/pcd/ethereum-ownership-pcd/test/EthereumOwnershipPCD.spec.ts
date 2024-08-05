@@ -9,7 +9,7 @@ import assert from "assert";
 import { ethers } from "ethers";
 import "mocha";
 import * as path from "path";
-import { EthereumOwnershipPCDPackage } from "../src";
+import { EthereumOwnershipPCDPackage } from "../src/index.js";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");

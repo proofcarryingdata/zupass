@@ -6,11 +6,11 @@ import {
 } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
-import { GPCProofEntryConfig } from "../src";
+import { GPCProofEntryConfig } from "../src/index.js";
 import {
   checkProofBoundsCheckInputsForConfig,
   checkProofEntryConfig
-} from "../src/gpcChecks";
+} from "../src/gpcChecks.js";
 
 describe("Proof entry config check should work", () => {
   it("should pass for a minimal entry configuration", () => {

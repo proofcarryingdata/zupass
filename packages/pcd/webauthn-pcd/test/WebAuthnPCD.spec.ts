@@ -1,6 +1,6 @@
 import { VerifyAuthenticationResponseOpts } from "@simplewebauthn/server";
 import assert from "assert";
-import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src/index";
+import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src/index.js";
 
 const args: WebAuthnPCDArgs = {
   challenge: "valid_challenge",

@@ -7,7 +7,7 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { v4 as uuid } from "uuid";
-import { TimerCase } from "../types";
+import { TimerCase } from "../types.js";
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
 export const prvKey =

@@ -5,7 +5,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { expect } from "chai";
 import "mocha";
 import { v4 as uuid } from "uuid";
-import { FixedPODEntries } from "../src";
+import { FixedPODEntries } from "../src/index.js";
 import {
   checkPCDType,
   checkPODAgainstPrescribedSignerPublicKeys,
@@ -14,13 +14,13 @@ import {
   checkPODEntriesAgainstProofConfig,
   checkPrescribedEntriesAgainstProofConfig,
   checkPrescribedSignerPublicKeysAgainstProofConfig
-} from "../src/validatorChecks";
+} from "../src/validatorChecks.js";
 import {
   ownerIdentity,
   privateKey,
   sampleEntries0,
   sampleEntries1
-} from "./common";
+} from "./common.js";
 
 const pod0 = POD.sign(sampleEntries0, privateKey);
 const podPCD0 = new PODPCD(uuid(), pod0);

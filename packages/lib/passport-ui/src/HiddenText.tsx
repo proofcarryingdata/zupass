@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import styled from "./StyledWrapper";
+import styled from "./StyledWrapper.js";
 
 export function HiddenText({
   text,

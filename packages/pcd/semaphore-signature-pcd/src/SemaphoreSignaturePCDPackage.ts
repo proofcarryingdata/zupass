@@ -16,7 +16,7 @@ import {
   SemaphoreSignaturePCDInitArgs,
   SemaphoreSignaturePCDProof,
   SemaphoreSignaturePCDTypeName
-} from "./SemaphoreSignaturePCD";
+} from "./SemaphoreSignaturePCD.js";
 
 /**
  * All signature PCDs are 'namespaced' to this pseudo-random nullifier,

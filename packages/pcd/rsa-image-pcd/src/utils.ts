@@ -1,5 +1,5 @@
 import NodeRSA from "node-rsa";
-import { RSAImagePCD } from "./RSAImagePCD";
+import { RSAImagePCD } from "./RSAImagePCD.js";
 
 export function getPublicKey(pcd?: RSAImagePCD): NodeRSA | undefined {
   const encodedPublicKey = pcd?.proof?.rsaPCD?.proof?.publicKey;

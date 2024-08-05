@@ -1,7 +1,7 @@
 import urljoin from "url-join";
-import { GenericIssuancePipelineSemaphoreGroupsResponseValue } from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { GenericIssuancePipelineSemaphoreGroupsResponseValue } from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpGetSimple } from "./makeRequest.js";
 
 /**
  * Returns details of the Semaphore Groups offered by a pipeline.

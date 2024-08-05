@@ -39,7 +39,7 @@ import {
   PODEntryIdentifier,
   TUPLE_PREFIX,
   TupleIdentifier
-} from "./gpcTypes";
+} from "./gpcTypes.js";
 import {
   GPCProofMembershipListConfig,
   LIST_MEMBERSHIP,
@@ -50,7 +50,7 @@ import {
   listConfigFromProofConfig,
   makeWatermarkSignal,
   podEntryIdentifierCompare
-} from "./gpcUtil";
+} from "./gpcUtil.js";
 
 /**
  * Per-object info extracted by {@link prepCompilerMaps}.

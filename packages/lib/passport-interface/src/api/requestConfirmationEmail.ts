@@ -2,9 +2,9 @@ import urlJoin from "url-join";
 import {
   ConfirmEmailRequest,
   ConfirmEmailResponseValue
-} from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+} from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpPostSimple } from "./makeRequest.js";
 
 /**
  * Asks the server to send the given email address a confirmation email

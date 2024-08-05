@@ -1,19 +1,19 @@
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
-import { Message } from "./Message";
+import { Message } from "./Message.js";
 import {
   Args,
   MessagePCD,
   MessagePCDTypeName,
   MessageProof
-} from "./MessagePCD";
-import { eddsaSign } from "./utils/eddsaSign";
+} from "./MessagePCD.js";
+import { eddsaSign } from "./utils/eddsaSign.js";
 import {
   MsgAsInt,
   bigintifyMsg,
   parseBigintifiedMsg
-} from "./utils/serialization";
+} from "./utils/serialization.js";
 
 export async function prove(args: Args): Promise<MessagePCD> {
   if (args.message.value === undefined) {

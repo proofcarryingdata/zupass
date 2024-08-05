@@ -31,8 +31,8 @@ import {
   podValueHash,
   signPODRoot,
   verifyPODRootSignature
-} from "../src";
-import { AltCryptCircomlibjs } from "./alternateCrypto";
+} from "../src/index.js";
+import { AltCryptCircomlibjs } from "./alternateCrypto.js";
 import {
   expectedContentID1,
   expectedContentID2,
@@ -53,7 +53,7 @@ import {
   testPrivateKeysHex,
   testPublicKeysToHash,
   testStringsToHash
-} from "./common";
+} from "./common.js";
 
 describe("podCrypto hashes should work", async function () {
   it("podStringHash should produce unique repeatable results", function () {

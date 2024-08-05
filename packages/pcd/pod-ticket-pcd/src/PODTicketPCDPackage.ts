@@ -8,9 +8,9 @@ import {
   PODTicketPCDClaim,
   PODTicketPCDProof,
   PODTicketPCDTypeName
-} from "./PODTicketPCD";
-import { IPODTicketData, TicketDataSchema } from "./schema";
-import { dataToPodEntries } from "./utils";
+} from "./PODTicketPCD.js";
+import { IPODTicketData, TicketDataSchema } from "./schema.js";
+import { dataToPodEntries } from "./utils.js";
 
 /**
  * Creates a new {@link PODTicketPCD} by generating an {@link PODTicketPCDProof}

@@ -7,7 +7,7 @@ import {
   EdDSATicketPCDPackage,
   ITicketData,
   TicketCategory
-} from "../src";
+} from "../src/index.js";
 
 describe("EdDSA ticket should work", function () {
   let ticket: EdDSATicketPCD;

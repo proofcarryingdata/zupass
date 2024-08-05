@@ -1,7 +1,7 @@
 import { LeanIMT, LeanIMTMerkleProof } from "@zk-kit/imt";
 import assert from "assert";
-import { podMerkleTreeHash, podNameHash, podValueHash } from "./podCrypto";
-import { PODEntries, PODName, PODValue } from "./podTypes";
+import { podMerkleTreeHash, podNameHash, podValueHash } from "./podCrypto.js";
+import { PODEntries, PODName, PODValue } from "./podTypes.js";
 import {
   checkPODName,
   checkPODValue,
@@ -10,7 +10,7 @@ import {
   deserializePODEntries,
   getPODValueForCircuit,
   serializePODEntries
-} from "./podUtil";
+} from "./podUtil.js";
 
 type PODEntryInfo = { index: number; value: PODValue };
 type PODMap = Map<PODName, PODEntryInfo>;

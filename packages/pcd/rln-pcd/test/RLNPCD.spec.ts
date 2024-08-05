@@ -6,7 +6,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import "mocha";
 import * as path from "path";
-import { RLNPCDArgs, RLNPCDPackage } from "../src";
+import { RLNPCDArgs, RLNPCDPackage } from "../src/index.js";
 
 const TREE_DEPTH = 16;
 

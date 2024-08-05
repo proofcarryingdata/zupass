@@ -1,7 +1,7 @@
 import { Biome, EdDSAFrogPCDPackage, Rarity } from "@pcd/eddsa-frog-pcd";
 import _ from "lodash";
 import { z } from "zod";
-import { Feed } from "./SubscriptionManager";
+import { Feed } from "./SubscriptionManager.js";
 
 /**
  * Number of free rolls that a user globally

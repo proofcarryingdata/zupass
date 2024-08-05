@@ -6,8 +6,11 @@ import assert from "assert";
 import { expect } from "chai";
 import "mocha";
 import * as path from "path";
-import { SemaphoreGroupPCDArgs, SemaphoreGroupPCDPackage } from "../src";
-import { serializeSemaphoreGroup } from "../src/SerializedSemaphoreGroup";
+import {
+  SemaphoreGroupPCDArgs,
+  SemaphoreGroupPCDPackage
+} from "../src/index.js";
+import { serializeSemaphoreGroup } from "../src/SerializedSemaphoreGroup.js";
 
 const zkeyFilePath = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath = path.join(__dirname, "../artifacts/16.wasm");

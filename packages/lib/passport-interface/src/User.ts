@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { requestUser } from "./api/requestUser";
-import { User } from "./zuzalu";
+import { requestUser } from "./api/requestUser.js";
+import { User } from "./zuzalu.js";
 
 export function useFetchUser(
   zupassServerUrl: string,

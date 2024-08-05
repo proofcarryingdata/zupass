@@ -32,8 +32,8 @@ import {
   GPCPCDProof,
   GPCPCDTypeName,
   PODPCDArgValidatorParams
-} from "./GPCPCD";
-import { fixedPODEntriesFromSimplifiedJSON } from "./util";
+} from "./GPCPCD.js";
+import { fixedPODEntriesFromSimplifiedJSON } from "./util.js";
 import {
   checkPCDType,
   checkPODAgainstPrescribedSignerPublicKeys,
@@ -42,7 +42,7 @@ import {
   checkPODEntriesAgainstProofConfig,
   checkPrescribedEntriesAgainstProofConfig,
   checkPrescribedSignerPublicKeysAgainstProofConfig
-} from "./validatorChecks";
+} from "./validatorChecks.js";
 
 let savedInitArgs: GPCPCDInitArgs | undefined = undefined;
 

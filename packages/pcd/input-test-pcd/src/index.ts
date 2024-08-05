@@ -1,2 +1,2 @@
-export * from "./InputTestPCD";
-export * from "./InputTestPCDPackage";
+export * from "./InputTestPCD.js";
+export * from "./InputTestPCDPackage.js";

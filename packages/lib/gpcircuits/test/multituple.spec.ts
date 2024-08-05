@@ -16,8 +16,8 @@ import {
   padArray,
   requiredNumTuples,
   tupleHasher
-} from "../src";
-import { circomkit } from "./common";
+} from "../src/index.js";
+import { circomkit } from "./common.js";
 
 describe("MultiTuple helpers should work", function () {
   it("should compute the right number of required tuples for different input tuple arities", () => {

@@ -2,9 +2,9 @@ import urlJoin from "url-join";
 import {
   FrogCryptoUpdateFeedsRequest,
   FrogCryptoUpdateFeedsResponseValue
-} from "../RequestTypes";
-import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+} from "../RequestTypes.js";
+import { APIResult } from "./apiResult.js";
+import { httpPostSimple } from "./makeRequest.js";
 
 /**
  * Get data for all the feeds. Optionally upload new feeds or update existing feeds.

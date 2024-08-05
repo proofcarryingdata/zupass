@@ -21,7 +21,7 @@ import {
 import { useCallback } from "react";
 import { VscLoading } from "react-icons/vsc";
 import urlJoin from "url-join";
-import { EdDSATicketPCDCardProps } from "./CardBody";
+import { EdDSATicketPCDCardProps } from "./CardBody.js";
 
 function makeVerifyLink(baseUrl: string, qrPayload: string): string {
   return urlJoin(baseUrl, `?pcd=${encodeURIComponent(qrPayload)}`);

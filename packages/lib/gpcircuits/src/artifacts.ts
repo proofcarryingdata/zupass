@@ -1,6 +1,6 @@
 import * as fastfile from "fastfile";
 import urljoin from "url-join";
-import { CircuitArtifactPaths, CircuitDesc } from "./types";
+import { CircuitArtifactPaths, CircuitDesc } from "./types.js";
 
 /**
  * Represents a pre-loaded verification key to be passed to SnarkJS, as loaded

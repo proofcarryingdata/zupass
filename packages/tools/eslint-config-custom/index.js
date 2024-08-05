@@ -5,10 +5,17 @@ module.exports = {
     "prettier",
     "plugin:@typescript-eslint/recommended",
     "plugin:import/recommended",
-    "plugin:import/typescript"
+    "plugin:import/typescript",
+    "plugin:require-extensions/recommended"
   ],
   parser: "@typescript-eslint/parser",
-  plugins: ["@typescript-eslint", "react", "react-hooks", "prettier"],
+  plugins: [
+    "@typescript-eslint",
+    "react",
+    "react-hooks",
+    "prettier",
+    "require-extensions"
+  ],
   ignorePatterns: ["*.d.ts"],
   rules: {
     "no-case-declarations": "off",

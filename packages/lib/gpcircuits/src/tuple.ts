@@ -2,7 +2,7 @@ import { poseidon2 } from "poseidon-lite/poseidon2";
 import { poseidon3 } from "poseidon-lite/poseidon3";
 import { poseidon4 } from "poseidon-lite/poseidon4";
 
-import { CircuitSignal } from "./types";
+import { CircuitSignal } from "./types.js";
 
 // We restrict attention to smaller tuple sizes for simplicity, i.e.
 // arities 2, 3 and 4.
