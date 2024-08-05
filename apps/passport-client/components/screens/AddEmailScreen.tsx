@@ -14,6 +14,7 @@ import {
   useSelf,
   useStateContext
 } from "../../src/appHooks";
+import { getEmailUpdateErrorMessage } from "../../src/errorMessage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import {
   BigInput,
@@ -54,7 +55,7 @@ export function AddEmailScreen(): JSX.Element | null {
     if (loading || !self) return;
 
     if (!validate(newEmail)) {
-      setError("Please enter a valid email address");
+      setError("Please enter a valid email address.");
       return;
     }
 
@@ -81,7 +82,7 @@ export function AddEmailScreen(): JSX.Element | null {
       if (response.success && response.value.token) {
         setConfirmationCode(response.value.token);
       } else {
-        setError(response.error);
+        setError(getEmailUpdateErrorMessage(response.error));
         setLoading(false);
       }
 
@@ -89,7 +90,7 @@ export function AddEmailScreen(): JSX.Element | null {
       setLoading(false);
     } catch (e) {
       setLoading(false);
-      setError(getErrorMessage(e));
+      setError(getEmailUpdateErrorMessage(getErrorMessage(e)));
     }
   }, [loading, self, stateContext, pcds, newEmail]);
 
@@ -118,7 +119,7 @@ export function AddEmailScreen(): JSX.Element | null {
       );
 
       if (!response.success) {
-        setError(response.error);
+        setError(getEmailUpdateErrorMessage(response.error));
         setLoading(false);
         return;
       }
@@ -141,7 +142,7 @@ export function AddEmailScreen(): JSX.Element | null {
       setLoading(false);
     } catch (e) {
       setLoading(false);
-      setError(getErrorMessage(e));
+      setError(getEmailUpdateErrorMessage(getErrorMessage(e)));
     }
   }, [loading, self, stateContext, pcds, newEmail, confirmationCode, dispatch]);
 

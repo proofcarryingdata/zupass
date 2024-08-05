@@ -14,6 +14,7 @@ import {
   useSelf,
   useStateContext
 } from "../../src/appHooks";
+import { getEmailUpdateErrorMessage } from "../../src/errorMessage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import {
   BigInput,
@@ -77,7 +78,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
       );
 
       if (!result.success) {
-        setError(result.error);
+        setError(getEmailUpdateErrorMessage(result.error));
         setLoading(false);
         return;
       }
@@ -90,7 +91,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
       setLoading(false);
     } catch (e) {
       setLoading(false);
-      setError(getErrorMessage(e));
+      setError(getEmailUpdateErrorMessage(getErrorMessage(e)));
     }
   }, [loading, self, stateContext, pcds, newEmail]);
 
@@ -119,13 +120,13 @@ export function ChangeEmailScreen(): JSX.Element | null {
       );
 
       if (!result.success) {
-        setError(result.error);
+        setError(getEmailUpdateErrorMessage(result.error));
         setLoading(false);
         return;
       }
 
       if (!result.value.newEmailList) {
-        setError("couldn't change email, plz try again later");
+        setError("Couldn't change email, please try again later.");
         setLoading(false);
         return;
       }
@@ -142,7 +143,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
       setLoading(false);
     } catch (e) {
       setLoading(false);
-      setError(getErrorMessage(e));
+      setError(getEmailUpdateErrorMessage(getErrorMessage(e)));
     }
   }, [loading, self, stateContext, pcds, newEmail, confirmationCode, dispatch]);
 

@@ -13,6 +13,7 @@ import {
   useSelf,
   useStateContext
 } from "../../src/appHooks";
+import { getEmailUpdateErrorMessage } from "../../src/errorMessage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Button, CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
@@ -63,7 +64,7 @@ export function RemoveEmailScreen(): JSX.Element | null {
 
       if (!response.success) {
         setLoading(false);
-        setError(response.error);
+        setError(getEmailUpdateErrorMessage(response.error));
         return;
       }
 
@@ -82,7 +83,7 @@ export function RemoveEmailScreen(): JSX.Element | null {
       setLoading(false);
     } catch (e) {
       setLoading(false);
-      setError(getErrorMessage(e));
+      setError(getEmailUpdateErrorMessage(getErrorMessage(e)));
     }
   }, [loading, self, stateContext, pcds, emailToRemove, dispatch]);
 
