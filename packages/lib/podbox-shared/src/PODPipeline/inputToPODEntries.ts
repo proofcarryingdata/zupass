@@ -60,9 +60,7 @@ const PODValueConversions: Conversions = {
     })
   },
   int: {
-    // Most things can be integers, except strings.
-    // If the input data contains numeric strings, then the input data should
-    // be typed as an integer!
+    // Integers, dates, and booleans can be typed as integers.
     [PODPipelineInputFieldType.Int]: (value) => ({
       type: "int",
       value: value
@@ -84,10 +82,7 @@ const PODValueConversions: Conversions = {
     [PODPipelineInputFieldType.EdDSAPubKey]: undefined
   },
   cryptographic: {
-    // We can directly convert integers to "cryptographic" values.
-    // Integers are constrained by the bounds of the POD integer type.
-    // Not clear if there's a use-case for CSV uploads containing cryptographic
-    // values, which would require another field type to be added.
+    // Cryptographic values are less restricted than integers.
     [PODPipelineInputFieldType.Int]: (value) => ({
       type: "cryptographic",
       value: value
