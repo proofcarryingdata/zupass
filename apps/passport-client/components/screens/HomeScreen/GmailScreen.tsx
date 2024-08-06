@@ -4,9 +4,11 @@ import {
   createColumnHelper,
   flexRender,
   getCoreRowModel,
+  getSortedRowModel,
+  SortingState,
   useReactTable
 } from "@tanstack/react-table";
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { usePCDCollection } from "../../../src/appHooks";
 import { cn } from "../../../src/util";
 
@@ -78,10 +80,17 @@ export function GmailScreenImpl(): JSX.Element | null {
     [pcds]
   );
 
+  const [sorting, setSorting] = useState<SortingState>([]); // can set initial sorting state here
+
   const table = useReactTable<Row>({
     data,
     columns,
-    getCoreRowModel: getCoreRowModel()
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    state: {
+      sorting
+    },
+    onSortingChange: setSorting
   });
 
   return (
@@ -93,7 +102,7 @@ export function GmailScreenImpl(): JSX.Element | null {
               {headerGroup.headers.map((header) => (
                 <th
                   onClick={() => {
-                    table.setSorting(() => [{ id: header.id, desc: true }]);
+                    header.column.toggleSorting();
                   }}
                   className="border-2 border-[#1a574d] cursor-pointer"
                   key={header.id}
