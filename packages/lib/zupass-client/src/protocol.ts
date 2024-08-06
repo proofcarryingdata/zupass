@@ -2,14 +2,16 @@ import { z } from "zod";
 import { ZappSchema } from "./zapp";
 
 export enum WindowMessageType {
-  ZUPASS_CLIENT_CONNECT = "zupass-client-connect",
-  ZUPASS_CLIENT_READY = "zupass-client-ready"
+  ZUPASS_CLIENT_CONNECT = "zupass-client-connect"
 }
 
 export enum RPCMessageType {
   ZUPASS_CLIENT_INVOKE = "zupass-client-invoke",
   ZUPASS_CLIENT_INVOKE_RESULT = "zupass-client-invoke-result",
-  ZUPASS_CLIENT_INVOKE_ERROR = "zupass-client-invoke-error"
+  ZUPASS_CLIENT_INVOKE_ERROR = "zupass-client-invoke-error",
+  ZUPASS_CLIENT_READY = "zupass-client-ready",
+  ZUPASS_CLIENT_SHOW = "zupass-client-show",
+  ZUPASS_CLIENT_HIDE = "zupass-client-hide"
 }
 
 export const RPCMessageSchema = z.discriminatedUnion("type", [
@@ -28,6 +30,15 @@ export const RPCMessageSchema = z.discriminatedUnion("type", [
     type: z.literal(RPCMessageType.ZUPASS_CLIENT_INVOKE_ERROR),
     error: z.string(),
     serial: z.number()
+  }),
+  z.object({
+    type: z.literal(RPCMessageType.ZUPASS_CLIENT_READY)
+  }),
+  z.object({
+    type: z.literal(RPCMessageType.ZUPASS_CLIENT_SHOW)
+  }),
+  z.object({
+    type: z.literal(RPCMessageType.ZUPASS_CLIENT_HIDE)
   })
 ]);
 
@@ -35,9 +46,6 @@ export const WindowMessageSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal(WindowMessageType.ZUPASS_CLIENT_CONNECT),
     zapp: ZappSchema
-  }),
-  z.object({
-    type: z.literal(WindowMessageType.ZUPASS_CLIENT_READY)
   })
 ]);
 

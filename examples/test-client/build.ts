@@ -1,5 +1,5 @@
-//import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
-//import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
+import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
 import fs from "fs";
@@ -13,7 +13,13 @@ const testClientAppOpts: BuildOptions = {
     "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`
   },
   entryPoints: ["src/main.tsx"],
-  plugins: [],
+  plugins: [
+    NodeModulesPolyfillPlugin(),
+    NodeGlobalsPolyfillPlugin({
+      process: true,
+      buffer: true
+    })
+  ],
   loader: {
     ".svg": "dataurl"
   },

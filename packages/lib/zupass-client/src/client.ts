@@ -1,5 +1,11 @@
 import { ZupassAPI } from "./api";
-import { postWindowMessage, WindowMessageType } from "./protocol";
+import {
+  postWindowMessage,
+  RPCMessage,
+  RPCMessageSchema,
+  RPCMessageType,
+  WindowMessageType
+} from "./protocol";
 import { createAPIClient } from "./proxy";
 import { ZupassAPISchema } from "./schema";
 import { Zapp } from "./zapp";
@@ -25,12 +31,53 @@ export function connect(
   // Will throw if the URL is invalid
   const normalizedUrl = new URL(zupassUrl);
 
-  const shadow = element.attachShadow({ mode: "closed" });
+  const dialog = document.createElement("dialog");
+  dialog.style.borderWidth = "0px";
+  dialog.style.borderRadius = "16px";
+  dialog.style.padding = "0px";
+  dialog.style.backgroundColor = "#19473f";
+  dialog.style.width = "90vw";
+  dialog.style.maxWidth = "600px";
+  dialog.style.height = "90vh";
+  dialog.classList.add("zupass-dialog");
+  dialog.addEventListener("click", (e) => {
+    const dialogDimensions = dialog.getBoundingClientRect();
+    if (
+      e.clientX < dialogDimensions.left ||
+      e.clientX > dialogDimensions.right ||
+      e.clientY < dialogDimensions.top ||
+      e.clientY > dialogDimensions.bottom
+    ) {
+      dialog.close();
+    }
+  });
+
+  const style = document.createElement("style");
+  style.textContent = `.zupass-dialog::backdrop {
+  position: fixed;
+  top: 0px;
+  right: 0px;
+  bottom: 0px;
+  left: 0px;
+  background: rgba(0, 0, 0, 0.3);;
+  }`;
+  dialog.appendChild(style);
+
+  const container = document.createElement("div");
+  container.style.width = "100%";
+  container.style.height = "100%";
+  dialog.appendChild(container);
+  const shadow = container.attachShadow({ mode: "open" });
+
+  element.appendChild(dialog);
   const iframe = document.createElement("iframe");
   const sandboxAttr = document.createAttribute("sandbox");
   sandboxAttr.value =
-    "allow-same-origin allow-scripts allow-popups allow-modals";
+    "allow-same-origin allow-scripts allow-popups allow-modals allow-forms";
   iframe.attributes.setNamedItem(sandboxAttr);
+  iframe.style.borderWidth = "0px";
+  iframe.style.width = "100%";
+  iframe.style.height = "100%";
   iframe.src = zupassUrl;
 
   return new Promise<ZupassAPI>((resolve, _reject) => {
@@ -38,17 +85,16 @@ export function connect(
      * @todo timeout?
      * @todo iframe loads are fake, maybe poll to see if contentwindow exists?
      */
-    iframe.addEventListener("load", () => {
+    iframe.addEventListener("load", async () => {
       const chan = new MessageChannel();
       chan.port2.start();
-      chan.port2.addEventListener(
-        "message",
-        (ev: MessageEvent) => {
-          if (ev.data.type === "zupass-client-ready") {
-            const handle = createAPIClient(
-              ZupassAPISchema,
-              ZupassAPISchema.shape
-            );
+
+      const main = function* (): Generator<undefined, void, RPCMessage> {
+        let handle: ZupassAPI | undefined;
+        while (true) {
+          const event = yield;
+          if (event.type === RPCMessageType.ZUPASS_CLIENT_READY) {
+            handle = createAPIClient(ZupassAPISchema, ZupassAPISchema.shape);
             clients.set(handle, {
               element,
               zapp,
@@ -56,29 +102,64 @@ export function connect(
               serial: 0,
               pending: {}
             });
-            chan.port2.addEventListener("message", (ev: MessageEvent) => {
-              if (ev.data.type === "zupass-client-invoke-result") {
-                console.log(ev.data);
-                clients
-                  .get(handle)
-                  ?.pending[ev.data.serial]?.resolve(ev.data.result);
-              }
-            });
             resolve(handle);
+            break;
+          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
+            dialog.showModal();
+            // iframe.style.display = "block";
+          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
+            dialog.close();
           }
-        },
-        { once: true }
-      );
+        }
+
+        while (true) {
+          const event = yield;
+          console.log(`RECEIVED ${event.type}`);
+          if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_RESULT) {
+            clients.get(handle)?.pending[event.serial]?.resolve(event.result);
+          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_ERROR) {
+            clients
+              .get(handle)
+              ?.pending[event.serial]?.reject(new Error(event.error));
+          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
+            console.log("show");
+            dialog.showModal();
+          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
+            dialog.close();
+          }
+        }
+      };
+
+      const eventLoop = main();
+      eventLoop.next();
+
+      chan.port2.addEventListener("message", (ev: MessageEvent) => {
+        const msg = RPCMessageSchema.safeParse(ev.data);
+        if (msg.success) {
+          eventLoop.next(msg.data);
+        } else {
+          console.log("Got unexpected message: ", ev);
+        }
+      });
+
       if (iframe.contentWindow) {
+        // @todo Blink (and maybe Webkit) will discard messages if there's no
+        // handler yet, so we need to wait a bit and/or retry until Zupass is
+        // ready
+        await new Promise<void>((resolve) => {
+          window.setTimeout(() => resolve(), 1000);
+        });
         postWindowMessage(
           iframe.contentWindow,
           {
             type: WindowMessageType.ZUPASS_CLIENT_CONNECT,
             zapp
           },
-          normalizedUrl.origin,
+          "*",
           [chan.port1]
         );
+      } else {
+        console.log("no content window!");
       }
     });
     shadow.appendChild(iframe);
