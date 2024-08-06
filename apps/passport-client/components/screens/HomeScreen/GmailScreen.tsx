@@ -20,18 +20,18 @@ const columns = [
   }),
   columnHelper.accessor("name", {
     header: "name",
-    cell: (info) => info.getValue(),
-    maxSize: 200
+    cell: (info) => info.getValue()
   }),
   columnHelper.accessor("pcd.id", {
     header: "id",
-    cell: (info) => info.getValue(),
-    size: 200,
-    maxSize: 200
+    cell: (info) => <span className="font-mono">{info.getValue()}</span>,
+    size: 100,
+    maxSize: 150
   }),
   columnHelper.accessor("type", {
     header: "type",
-    cell: (info) => info.getValue()
+    cell: (info) => <span className="font-mono">{info.getValue()}</span>,
+    maxSize: 120
   })
 ];
 
@@ -59,7 +59,7 @@ function PCDtoRow(pcds: PCDCollection, pcd: PCD): Row | undefined {
     pcd,
     name: options.header,
     type: pcd.type,
-    folder: pcds.getFolderOfPCD(pcd.id)
+    folder: pcds.getFolderOfPCD(pcd.id) ?? "/"
   };
 }
 
@@ -123,7 +123,7 @@ export function GmailScreenImpl(): JSX.Element | null {
                       overflow: "hidden"
                     }
                   }}
-                  className="bg-green-600 text-ellipsis whitespace-nowrap"
+                  className="bg-green-600 text-ellipsis whitespace-nowrap px-2"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
