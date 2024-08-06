@@ -12,6 +12,7 @@ import React, { ReactNode, useMemo, useState } from "react";
 import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { usePCDCollection } from "../../../src/appHooks";
 import { cn } from "../../../src/util";
+import { NewInput } from "../../NewInput";
 
 export const GmailScreen = React.memo(GmailScreenImpl);
 
@@ -46,8 +47,8 @@ const StarToggle = ({
 const columnHelper = createColumnHelper<Row>();
 const columns = [
   columnHelper.display({
-    header: "folder",
-    cell: (info) => (
+    header: "controls",
+    cell: () => (
       <div
         onClick={(e) => {
           e.stopPropagation();
@@ -116,6 +117,52 @@ function PCDtoRow(pcds: PCDCollection, pcd: PCD): Row | undefined {
  */
 export function GmailScreenImpl(): JSX.Element | null {
   const pcds = usePCDCollection();
+
+  return (
+    <div className="bg-[#206b5e] h-[100vh]">
+      <div className="w-full flex flex-col gap-2">
+        <div className="flex flex-row overflow-hidden">
+          <div className="max-w-[300px]">
+            <PCDSidebar pcds={pcds} />
+          </div>
+          <div className="flex-grow p-2 flex flex-col gap-4">
+            <PCDSearch pcds={pcds} />
+            <PCDTable pcds={pcds} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function PCDSidebar({ pcds }: { pcds: PCDCollection }): ReactNode {
+  const folders = pcds.getAllFolderNames();
+
+  return (
+    <div className="w-full h-full p-2 select-none flex flex-col gap-1">
+      {folders.map((f) => (
+        <div
+          className={cn(
+            "bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87]",
+            "cursor-pointer px-2 py-1 rounded"
+          )}
+        >
+          {f}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function PCDSearch({ pcds }: { pcds: PCDCollection }): ReactNode {
+  return (
+    <div>
+      <NewInput placeholder="Search" />
+    </div>
+  );
+}
+
+export function PCDTable({ pcds }: { pcds: PCDCollection }): ReactNode {
   const data: Row[] = useMemo(
     () =>
       pcds
@@ -139,73 +186,71 @@ export function GmailScreenImpl(): JSX.Element | null {
   });
 
   return (
-    <div className="bg-[#206b5e] w-full h-[100vh]">
-      <table className="w-full select-none">
-        <thead className="">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  onClick={() => {
-                    header.column.toggleSorting();
-                  }}
-                  className="border-2 border-[#1a574d] cursor-pointer"
-                  key={header.id}
-                  style={{
-                    width: `${header.getSize()}px`,
-                    maxWidth: `${header.column.columnDef.maxSize}px`,
-                    minWidth: `${header.column.columnDef.minSize}px`
-                  }}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody className="bg-green-800">
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className={cn(
-                "cursor-pointer bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87] border-2 border-[#1a574d] hover:shadow"
-              )}
-              style={{
-                transition: "background-color 100ms",
-                borderLeft: "none",
-                borderRight: "none"
-              }}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td
-                  onClick={() => {
-                    window.location.href = `/#/pcd?id=${encodeURIComponent(
-                      row.original.pcd.id
-                    )}`;
-                  }}
-                  {...{
-                    key: cell.id,
-                    style: {
-                      width: cell.column.getSize(),
-                      maxWidth: `${cell.column.columnDef.maxSize}px`,
-                      minWidth: `${cell.column.columnDef.minSize}px`,
-                      overflow: "hidden"
-                    }
-                  }}
-                  className="text-ellipsis whitespace-nowrap px-2 border-2 border-[#1a574d]"
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <table className="w-full select-none">
+      <thead className="">
+        {table.getHeaderGroups().map((headerGroup) => (
+          <tr key={headerGroup.id}>
+            {headerGroup.headers.map((header) => (
+              <th
+                onClick={() => {
+                  header.column.toggleSorting();
+                }}
+                className="border-2 border-[#1a574d] cursor-pointer"
+                key={header.id}
+                style={{
+                  width: `${header.getSize()}px`,
+                  maxWidth: `${header.column.columnDef.maxSize}px`,
+                  minWidth: `${header.column.columnDef.minSize}px`
+                }}
+              >
+                {header.isPlaceholder
+                  ? null
+                  : flexRender(
+                      header.column.columnDef.header,
+                      header.getContext()
+                    )}
+              </th>
+            ))}
+          </tr>
+        ))}
+      </thead>
+      <tbody className="bg-green-800">
+        {table.getRowModel().rows.map((row) => (
+          <tr
+            key={row.id}
+            className={cn(
+              "cursor-pointer bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87] border-2 border-[#1a574d] hover:shadow"
+            )}
+            style={{
+              transition: "background-color 100ms",
+              borderLeft: "none",
+              borderRight: "none"
+            }}
+          >
+            {row.getVisibleCells().map((cell) => (
+              <td
+                onClick={() => {
+                  window.location.href = `/#/pcd?id=${encodeURIComponent(
+                    row.original.pcd.id
+                  )}`;
+                }}
+                {...{
+                  key: cell.id,
+                  style: {
+                    width: cell.column.getSize(),
+                    maxWidth: `${cell.column.columnDef.maxSize}px`,
+                    minWidth: `${cell.column.columnDef.minSize}px`,
+                    overflow: "hidden"
+                  }
+                }}
+                className="text-ellipsis whitespace-nowrap px-2 border-2 border-[#1a574d]"
+              >
+                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+              </td>
+            ))}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
