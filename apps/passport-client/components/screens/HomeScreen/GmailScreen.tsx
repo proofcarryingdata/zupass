@@ -1,3 +1,4 @@
+import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import {
   createColumnHelper,
@@ -13,31 +14,56 @@ export const GmailScreen = React.memo(GmailScreenImpl);
 const columnHelper = createColumnHelper<Row>();
 
 const columns = [
-  columnHelper.accessor("id", {
+  columnHelper.accessor("name", {
+    header: "name",
+    cell: (info) => info.getValue()
+  }),
+  columnHelper.accessor("pcd.id", {
+    header: "id",
     cell: (info) => info.getValue()
   })
 ];
 
 interface Row {
-  id: string;
   pcd: PCD;
+  name: string | undefined;
+}
+
+function PCDtoRow(pcds: PCDCollection, pcd: PCD): Row | undefined {
+  const pack = pcds.getPackage(pcd.type);
+
+  if (!pack) {
+    return undefined;
+  }
+
+  if (!pack.getDisplayOptions) {
+    return undefined;
+  }
+
+  const options = pack.getDisplayOptions(pcd);
+
+  return {
+    pcd,
+    name: options.header
+  };
 }
 
 /**
  * Show the user their Zupass, an overview of cards / PCDs.
  */
 export function GmailScreenImpl(): JSX.Element | null {
-  const pcds = usePCDCollection().getAll();
-  const rows: Row[] = useMemo(
+  const pcds = usePCDCollection();
+  const data: Row[] = useMemo(
     () =>
-      pcds.map((pcd) => {
-        return { pcd, id: pcd.id };
-      }),
+      pcds
+        .getAll()
+        .map((pcd) => PCDtoRow(pcds, pcd))
+        .filter((row) => !!row),
     [pcds]
   );
 
   const table = useReactTable<Row>({
-    data: rows,
+    data,
     columns,
     getCoreRowModel: getCoreRowModel()
   });
