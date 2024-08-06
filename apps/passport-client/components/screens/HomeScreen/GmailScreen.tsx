@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-table";
 import React, { useMemo } from "react";
 import { usePCDCollection } from "../../../src/appHooks";
+import { cn } from "../../../src/util";
 
 export const GmailScreen = React.memo(GmailScreenImpl);
 
@@ -85,7 +86,7 @@ export function GmailScreenImpl(): JSX.Element | null {
 
   return (
     <div className="p-2 bg-green-950 w-full">
-      <table className="bg-green-900 w-full">
+      <table className="bg-green-900 w-full select-none">
         <thead className="bg-green-800">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
@@ -111,7 +112,13 @@ export function GmailScreenImpl(): JSX.Element | null {
         </thead>
         <tbody className="bg-green-800">
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id} className="bg-green-700">
+            <tr
+              key={row.id}
+              className={cn(
+                " cursor-pointer bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87]"
+              )}
+              style={{ transition: "background-color 100ms" }}
+            >
               {row.getVisibleCells().map((cell) => (
                 <td
                   {...{
@@ -123,7 +130,7 @@ export function GmailScreenImpl(): JSX.Element | null {
                       overflow: "hidden"
                     }
                   }}
-                  className="bg-green-600 text-ellipsis whitespace-nowrap px-2"
+                  className="text-ellipsis whitespace-nowrap px-2"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
