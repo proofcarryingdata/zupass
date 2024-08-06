@@ -31,6 +31,7 @@ import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManager
 import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
+import { GmailScreen } from "../components/screens/HomeScreen/GmailScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
 import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
@@ -333,7 +334,7 @@ function RouterImpl(): JSX.Element {
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
 
-          <Route path="other" element={<HomeScreen />} />
+          <Route path="other" element={<GmailScreen />} />
 
           <Route path="more" element={<MoreScreen />} />
           <Route path="duck" element={<DuckScreen />} />
