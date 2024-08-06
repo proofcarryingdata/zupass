@@ -14,6 +14,10 @@ export const GmailScreen = React.memo(GmailScreenImpl);
 const columnHelper = createColumnHelper<Row>();
 
 const columns = [
+  columnHelper.accessor("folder", {
+    header: "folder",
+    cell: (info) => info.getValue()
+  }),
   columnHelper.accessor("name", {
     header: "name",
     cell: (info) => info.getValue(),
@@ -35,6 +39,7 @@ interface Row {
   pcd: PCD;
   name: string | undefined;
   type: string;
+  folder: string;
 }
 
 function PCDtoRow(pcds: PCDCollection, pcd: PCD): Row | undefined {
@@ -53,7 +58,8 @@ function PCDtoRow(pcds: PCDCollection, pcd: PCD): Row | undefined {
   return {
     pcd,
     name: options.header,
-    type: pcd.type
+    type: pcd.type,
+    folder: pcds.getFolderOfPCD(pcd.id)
   };
 }
 
