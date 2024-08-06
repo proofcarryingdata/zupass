@@ -16,10 +16,17 @@ const columnHelper = createColumnHelper<Row>();
 const columns = [
   columnHelper.accessor("name", {
     header: "name",
-    cell: (info) => info.getValue()
+    cell: (info) => info.getValue(),
+    maxSize: 200
   }),
   columnHelper.accessor("pcd.id", {
     header: "id",
+    cell: (info) => info.getValue(),
+    size: 200,
+    maxSize: 200
+  }),
+  columnHelper.accessor("type", {
+    header: "type",
     cell: (info) => info.getValue()
   })
 ];
@@ -27,6 +34,7 @@ const columns = [
 interface Row {
   pcd: PCD;
   name: string | undefined;
+  type: string;
 }
 
 function PCDtoRow(pcds: PCDCollection, pcd: PCD): Row | undefined {
@@ -44,7 +52,8 @@ function PCDtoRow(pcds: PCDCollection, pcd: PCD): Row | undefined {
 
   return {
     pcd,
-    name: options.header
+    name: options.header,
+    type: pcd.type
   };
 }
 
@@ -75,7 +84,14 @@ export function GmailScreenImpl(): JSX.Element | null {
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
-                <th key={header.id}>
+                <th
+                  key={header.id}
+                  style={{
+                    width: `${header.getSize()}px`,
+                    maxWidth: `${header.column.columnDef.maxSize}px`,
+                    minWidth: `${header.column.columnDef.minSize}px`
+                  }}
+                >
                   {header.isPlaceholder
                     ? null
                     : flexRender(
@@ -91,7 +107,18 @@ export function GmailScreenImpl(): JSX.Element | null {
           {table.getRowModel().rows.map((row) => (
             <tr key={row.id} className="bg-green-700">
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id} className="bg-green-600">
+                <td
+                  {...{
+                    key: cell.id,
+                    style: {
+                      width: cell.column.getSize(),
+                      maxWidth: `${cell.column.columnDef.maxSize}px`,
+                      minWidth: `${cell.column.columnDef.minSize}px`,
+                      overflow: "hidden"
+                    }
+                  }}
+                  className="bg-green-600 text-ellipsis whitespace-nowrap"
+                >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
