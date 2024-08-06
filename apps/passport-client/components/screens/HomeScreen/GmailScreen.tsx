@@ -85,9 +85,9 @@ export function GmailScreenImpl(): JSX.Element | null {
   });
 
   return (
-    <div className="p-2 bg-green-950 w-full">
-      <table className="bg-green-900 w-full select-none">
-        <thead className="bg-green-800">
+    <div className="bg-[#206b5e] w-full">
+      <table className="w-full select-none">
+        <thead className="">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
@@ -115,9 +115,13 @@ export function GmailScreenImpl(): JSX.Element | null {
             <tr
               key={row.id}
               className={cn(
-                " cursor-pointer bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87]"
+                "cursor-pointer bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87] border-2 border-[#1a574d] hover:shadow"
               )}
-              style={{ transition: "background-color 100ms" }}
+              style={{
+                transition: "background-color 100ms",
+                borderLeft: "none",
+                borderRight: "none"
+              }}
             >
               {row.getVisibleCells().map((cell) => (
                 <td
