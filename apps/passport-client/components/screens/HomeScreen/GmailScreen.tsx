@@ -85,13 +85,14 @@ export function GmailScreenImpl(): JSX.Element | null {
   });
 
   return (
-    <div className="bg-[#206b5e] w-full">
+    <div className="bg-[#206b5e] w-full h-[100vh] p-8">
       <table className="w-full select-none">
         <thead className="">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <th
+                  className="border-2 border-[#1a574d]"
                   key={header.id}
                   style={{
                     width: `${header.getSize()}px`,
@@ -134,7 +135,7 @@ export function GmailScreenImpl(): JSX.Element | null {
                       overflow: "hidden"
                     }
                   }}
-                  className="text-ellipsis whitespace-nowrap px-2"
+                  className="text-ellipsis whitespace-nowrap px-2 border-2 border-[#1a574d]"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
