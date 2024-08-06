@@ -1,5 +1,5 @@
 import { PCD } from "@pcd/pcd-types";
-import React, { useMemo } from "react";
+import React, { ReactNode, useMemo } from "react";
 import { usePCDCollection } from "../../../src/appHooks";
 import { NewButton } from "../../NewButton";
 import { PCDCard } from "../../shared/PCDCard";
@@ -42,3 +42,7 @@ export function PCDScreenImpl(): JSX.Element | null {
     </div>
   );
 }
+
+const PCDDetails = ({ pcd }: { pcd: PCD }): ReactNode => {
+  return <div>details</div>;
+};
