@@ -158,19 +158,4 @@ export function GmailScreenImpl(): JSX.Element | null {
       </table>
     </div>
   );
-
-  // return (
-  //   <div>
-  //     {Object.entries(pcds.folders).map(([pcdId, folder], i) => (
-  //       <div
-  //         key={i}
-  //         className="max-w-[100%] overflow-hidden whitespace-nowrap text-ellipsis p-1 px-3"
-  //       >
-  //         {folder} - {pcdId}
-  //       </div>
-  //     ))}
-  //   </div>
-  // );
 }
-
-/////////////////////////////
