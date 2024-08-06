@@ -704,7 +704,6 @@ async function addPCDs(
   upsert?: boolean,
   folder?: string
 ): Promise<void> {
-  console.log("addPCDs", pcds);
   const deserializedPCDs = await state.pcds.deserializeAll(pcds);
   state.pcds.addAll(deserializedPCDs, { upsert });
   if (folder !== undefined) {
