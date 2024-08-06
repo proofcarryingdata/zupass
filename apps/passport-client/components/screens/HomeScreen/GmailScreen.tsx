@@ -85,14 +85,17 @@ export function GmailScreenImpl(): JSX.Element | null {
   });
 
   return (
-    <div className="bg-[#206b5e] w-full h-[100vh] p-8">
+    <div className="bg-[#206b5e] w-full h-[100vh]">
       <table className="w-full select-none">
         <thead className="">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <th
-                  className="border-2 border-[#1a574d]"
+                  onClick={() => {
+                    table.setSorting(() => [{ id: header.id, desc: true }]);
+                  }}
+                  className="border-2 border-[#1a574d] cursor-pointer"
                   key={header.id}
                   style={{
                     width: `${header.getSize()}px`,
