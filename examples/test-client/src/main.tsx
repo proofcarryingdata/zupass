@@ -1,8 +1,13 @@
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { PODPCDPackage } from "@pcd/pod-pcd";
 import { connect, ZupassAPI, ZupassFolderContent } from "@pcd/zupass-client";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
 
 const ZUPASS_URL = "http://localhost:3000";
+// For convenience; in the real world key management is more difficult.
+const MAGIC_PRIVATE_KEY =
+  "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff";
 
 const zapp = {
   name: "test-client",
@@ -10,31 +15,40 @@ const zapp = {
 };
 
 export default function Main() {
-  const [zupass, setClient] = useState<ZupassAPI | null>(null);
+  const [zupass, setZupass] = useState<ZupassAPI | null>(null);
   const [list, setList] = useState<ZupassFolderContent[]>([]);
+  const [pcd, setPCD] = useState("");
+
   return (
     <div>
       <h1>TEST CLIENT</h1>
-      <div style={{ display: "none" }} id="zupass"></div>
-      <button
-        onClick={() => {
-          const p = connect(
-            zapp,
-            document.querySelector("#zupass"),
-            ZUPASS_URL
-          );
-          console.log(p);
-          p.then((client) => setClient(client));
-        }}
-      >
-        Connect to Zupass
-      </button>
+      <div id="zupass"></div>
+      {!zupass ? (
+        <button
+          onClick={() => {
+            const p = connect(
+              zapp,
+              document.querySelector("#zupass"),
+              ZUPASS_URL
+            );
+            p.then((client) => setZupass(client));
+          }}
+        >
+          Connect to Zupass
+        </button>
+      ) : (
+        <div>Connected!</div>
+      )}
       {zupass && (
         <div>
           <button
             onClick={async () => {
-              const folderList = await zupass.fs.list("/");
-              setList(folderList);
+              try {
+                const folderList = await zupass.fs.list("/");
+                setList(folderList);
+              } catch (e) {
+                console.log(e);
+              }
             }}
           >
             List root folder
@@ -45,11 +59,53 @@ export default function Main() {
         <div>
           {list.map((item) => (
             <div key={item.type === "folder" ? item.name : item.id}>
-              {item.type === "folder"
-                ? `Folder: ${item.name}`
-                : `PCD: ${item.id} (${item.pcdType})`}
+              {item.type === "folder" ? (
+                `Folder: ${item.name}`
+              ) : (
+                <div
+                  style={{ cursor: "pointer" }}
+                  onClick={async () => {
+                    const pcd = await zupass.fs.get(item.id);
+                    setPCD(JSON.stringify(pcd, null, 2));
+                  }}
+                >
+                  PCD: ${item.id} (${item.pcdType})
+                </div>
+              )}
             </div>
           ))}
+        </div>
+      )}
+      {pcd.length > 0 && <div>{pcd}</div>}
+      {zupass && (
+        <div>
+          <button
+            onClick={async () => {
+              const name = window.prompt("PCD name?");
+              const pod = await PODPCDPackage.prove({
+                entries: {
+                  argumentType: ArgumentTypeName.Object,
+                  value: {
+                    name: {
+                      type: "string",
+                      value: name
+                    }
+                  }
+                },
+                privateKey: {
+                  argumentType: ArgumentTypeName.String,
+                  value: MAGIC_PRIVATE_KEY
+                },
+                id: {
+                  argumentType: ArgumentTypeName.String,
+                  value: undefined
+                }
+              });
+              await zupass.fs.put("Test", await PODPCDPackage.serialize(pod));
+            }}
+          >
+            Add PCD
+          </button>
         </div>
       )}
     </div>

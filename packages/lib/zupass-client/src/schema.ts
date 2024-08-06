@@ -2,6 +2,7 @@ import { z } from "zod";
 import { ZupassAPI } from "./api";
 
 export const ZupassAPISchema = z.object({
+  _version: z.literal("1"),
   fs: z.object({
     list: z
       .function()

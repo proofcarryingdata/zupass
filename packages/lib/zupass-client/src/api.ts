@@ -19,5 +19,6 @@ export interface ZupassFileSystem {
 }
 
 export interface ZupassAPI {
+  _version: "1";
   fs: ZupassFileSystem;
 }
