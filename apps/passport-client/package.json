@@ -70,6 +70,7 @@
     "@react-three/fiber": "^8.16.8",
     "@rollbar/react": "^0.11.1",
     "@semaphore-protocol/identity": "^3.15.2",
+    "@tanstack/react-table": "^8.20.1",
     "@types/three": "^0.167.0",
     "boring-avatars": "^1.10.1",
     "broadcast-channel": "^5.3.0",
