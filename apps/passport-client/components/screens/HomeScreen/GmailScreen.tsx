@@ -8,15 +8,59 @@ import {
   SortingState,
   useReactTable
 } from "@tanstack/react-table";
-import React, { useMemo, useState } from "react";
+import React, { ReactNode, useMemo, useState } from "react";
+import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { usePCDCollection } from "../../../src/appHooks";
 import { cn } from "../../../src/util";
 
 export const GmailScreen = React.memo(GmailScreenImpl);
 
-const columnHelper = createColumnHelper<Row>();
+const StarToggle = ({
+  initialState = false,
+  onToggle
+}: {
+  initialState?: boolean;
+  onToggle?: (isStarred: boolean) => void;
+}): ReactNode => {
+  const [isStarred, setIsStarred] = useState(initialState);
 
+  const handleToggle = (): void => {
+    const newState = !isStarred;
+    setIsStarred(newState);
+    if (onToggle) {
+      onToggle(newState);
+    }
+  };
+
+  return (
+    <button onClick={handleToggle} className="focus:outline-none">
+      {isStarred ? (
+        <AiFillStar className="text-yellow-400 text-xl" />
+      ) : (
+        <AiOutlineStar className="text-gray-400 text-xl hover:text-yellow-400" />
+      )}
+    </button>
+  );
+};
+
+const columnHelper = createColumnHelper<Row>();
 const columns = [
+  columnHelper.display({
+    header: "folder",
+    cell: (info) => (
+      <div
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+      >
+        <StarToggle />
+      </div>
+    ),
+    maxSize: 50,
+    minSize: 0,
+    size: 20
+  }),
   columnHelper.accessor("folder", {
     header: "folder",
     cell: (info) => info.getValue()
