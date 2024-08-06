@@ -53,6 +53,7 @@ const columns = [
           e.stopPropagation();
           e.preventDefault();
         }}
+        className="flex flex-row content-center items-center"
       >
         <StarToggle />
       </div>
