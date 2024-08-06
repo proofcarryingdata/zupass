@@ -138,6 +138,11 @@ export function GmailScreenImpl(): JSX.Element | null {
             >
               {row.getVisibleCells().map((cell) => (
                 <td
+                  onClick={() => {
+                    window.location.href = `/#/pcd?id=${encodeURIComponent(
+                      row.original.pcd.id
+                    )}`;
+                  }}
                   {...{
                     key: cell.id,
                     style: {

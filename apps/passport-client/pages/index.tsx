@@ -33,6 +33,7 @@ import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProving
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { GmailScreen } from "../components/screens/HomeScreen/GmailScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
+import { PCDScreen } from "../components/screens/HomeScreen/PCDScreen";
 import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
@@ -335,6 +336,7 @@ function RouterImpl(): JSX.Element {
           <Route index element={<HomeScreen />} />
 
           <Route path="other" element={<GmailScreen />} />
+          <Route path="pcd" element={<PCDScreen />} />
 
           <Route path="more" element={<MoreScreen />} />
           <Route path="duck" element={<DuckScreen />} />
