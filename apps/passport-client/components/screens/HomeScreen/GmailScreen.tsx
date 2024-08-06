@@ -69,9 +69,9 @@ export function GmailScreenImpl(): JSX.Element | null {
   });
 
   return (
-    <div className="p-2">
-      <table>
-        <thead>
+    <div className="p-2 bg-green-950 w-full">
+      <table className="bg-green-900 w-full">
+        <thead className="bg-green-800">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
@@ -87,11 +87,11 @@ export function GmailScreenImpl(): JSX.Element | null {
             </tr>
           ))}
         </thead>
-        <tbody>
+        <tbody className="bg-green-800">
           {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
+            <tr key={row.id} className="bg-green-700">
               {row.getVisibleCells().map((cell) => (
-                <td key={cell.id}>
+                <td key={cell.id} className="bg-green-600">
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
               ))}
