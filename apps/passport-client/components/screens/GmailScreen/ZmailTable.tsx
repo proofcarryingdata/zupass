@@ -10,7 +10,6 @@ import {
 } from "@tanstack/react-table";
 import { ReactNode, useMemo, useState } from "react";
 import { cn } from "../../../src/util";
-import { StarToggle } from "./StarToggle";
 import { useZmailContext } from "./ZmailContext";
 
 export function ZmailTable(): ReactNode {
@@ -148,23 +147,23 @@ export function PCDtoRow(pcds: PCDCollection, pcd: PCD): ZmailRow | undefined {
 
 const columnHelper = createColumnHelper<ZmailRow>();
 const columns = [
-  columnHelper.display({
-    header: "controls",
-    cell: () => (
-      <div
-        onClick={(e) => {
-          e.stopPropagation();
-          e.preventDefault();
-        }}
-        className="flex flex-row content-center items-center"
-      >
-        <StarToggle />
-      </div>
-    ),
-    maxSize: 50,
-    minSize: 0,
-    size: 20
-  }),
+  // columnHelper.display({
+  //   header: "controls",
+  //   cell: () => (
+  //     <div
+  //       onClick={(e) => {
+  //         e.stopPropagation();
+  //         e.preventDefault();
+  //       }}
+  //       className="flex flex-row content-center items-center"
+  //     >
+  //       <StarToggle />
+  //     </div>
+  //   ),
+  //   maxSize: 50,
+  //   minSize: 0,
+  //   size: 20
+  // }),
   columnHelper.accessor("folder", {
     header: "folder",
     cell: (info) => info.getValue()

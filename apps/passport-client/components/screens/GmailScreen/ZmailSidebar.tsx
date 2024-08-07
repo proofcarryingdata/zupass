@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { cn } from "../../../src/util";
 import { useZmailContext } from "./ZmailContext";
 import { folderNameToFilterId, isFolderFilterId } from "./ZmailFilter";
@@ -6,10 +6,13 @@ import { folderNameToFilterId, isFolderFilterId } from "./ZmailFilter";
 export function ZmailSidebar(): ReactNode {
   const ctx = useZmailContext();
   const folders = ctx.pcds.getAllFolderNames();
+  const sortedFolders = useMemo(() => {
+    return folders.sort();
+  }, [folders]);
 
   return (
     <div className="w-full h-full p-2 select-none flex flex-col gap-1">
-      {folders.map((f) => (
+      {sortedFolders.map((f) => (
         <div
           onClick={() => {
             let filters = ctx.filters;
