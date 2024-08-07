@@ -8,7 +8,7 @@ import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import path from "path";
 import { v4 as uuid } from "uuid";
-import { TimerCase } from "../types.js";
+import { TimerCase } from "../types";
 
 export const GPC_TEST_ARTIFACTS_PATH = path.join(
   __dirname,

@@ -12,7 +12,7 @@ import {
   joinPath,
   normalizePath,
   splitPath
-} from "../src/util.js";
+} from "../src/util";
 
 describe("Folder manipulation", async function () {
   it("getFoldersInFolder", async function () {

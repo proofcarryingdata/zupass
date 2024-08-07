@@ -13,7 +13,7 @@ import { BigNumber, leBigIntToBuffer, leBufferToBigInt } from "@zk-kit/utils";
 import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
-import { EDDSA_PUBKEY_TYPE_STRING, PODValue } from "./podTypes.js";
+import { EDDSA_PUBKEY_TYPE_STRING, PODValue } from "./podTypes";
 import {
   CryptoBytesEncoding,
   PRIVATE_KEY_REGEX,
@@ -23,7 +23,7 @@ import {
   SIGNATURE_REGEX,
   decodeBytesAuto,
   encodeBytes
-} from "./podUtil.js";
+} from "./podUtil";
 
 /**
  * Calculates the appropriate hash for a POD value represented as a string,

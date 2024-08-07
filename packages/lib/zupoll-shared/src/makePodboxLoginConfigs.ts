@@ -1,6 +1,6 @@
 import urljoin from "url-join";
-import { makePodboxGroupUrl } from "./makePodboxGroupUrl.js";
-import { BallotType, LoginConfig } from "./types.js";
+import { makePodboxGroupUrl } from "./makePodboxGroupUrl";
+import { BallotType, LoginConfig } from "./types";
 
 export function makePodboxLoginConfigSingleGroup(
   ZUPASS_CLIENT_URL: string,

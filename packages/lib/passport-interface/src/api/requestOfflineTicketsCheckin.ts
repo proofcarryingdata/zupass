@@ -2,9 +2,9 @@ import urlJoin from "url-join";
 import {
   UploadOfflineCheckinsRequest,
   UploadOfflineCheckinsResponseValue
-} from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+} from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Never rejects. All information encoded in the resolved response.

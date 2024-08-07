@@ -12,24 +12,24 @@ import {
   checkProofArgs,
   checkProofConfig,
   checkVerifyArgs
-} from "./gpcChecks.js";
+} from "./gpcChecks";
 import {
   compileProofConfig,
   compileVerifyConfig,
   makeRevealedClaims
-} from "./gpcCompile.js";
+} from "./gpcCompile";
 import {
   GPCBoundConfig,
   GPCProof,
   GPCProofConfig,
   GPCProofInputs,
   GPCRevealedClaims
-} from "./gpcTypes.js";
+} from "./gpcTypes";
 import {
   GPCRequirements,
   canonicalizeConfig,
   makeCircuitIdentifier
-} from "./gpcUtil.js";
+} from "./gpcUtil";
 
 function bindConfigWithRequirements(
   proofConfig: GPCProofConfig,

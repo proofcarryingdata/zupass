@@ -35,7 +35,7 @@ import {
   ZKEdDSAFrogPCDClaim,
   ZKEdDSAFrogPCDInitArgs,
   ZKEdDSAFrogPCDTypeName
-} from "./ZKEdDSAFrogPCD.js";
+} from "./ZKEdDSAFrogPCD";
 
 /*
  * This external nullifier will be used if one is not provided.

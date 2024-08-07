@@ -8,18 +8,18 @@ import logSymbols from "log-symbols";
 import {
   EdDSATicketProveCase,
   EdDSATicketVerifyCase
-} from "./cases/EdDSATicketTimer.js";
-import { GPCPCDProveCase, GPCPCDVerifyCase } from "./cases/GPCTimer.js";
-import { PODProveCase, PODVerifyCase } from "./cases/PODTimer.js";
+} from "./cases/EdDSATicketTimer";
+import { GPCPCDProveCase, GPCPCDVerifyCase } from "./cases/GPCTimer";
+import { PODProveCase, PODVerifyCase } from "./cases/PODTimer";
 import {
   SemaphoreSignatureProveCase,
   SemaphoreSignatureVerifyCase
-} from "./cases/SemaphoreSignatureTimer.js";
+} from "./cases/SemaphoreSignatureTimer";
 import {
   ZKEdDSAEventTicketProveCase,
   ZKEdDSAEventTicketVerifyCase
-} from "./cases/ZKEdDSAEventTicketTimer.js";
-import { TimerCase } from "./types.js";
+} from "./cases/ZKEdDSAEventTicketTimer";
+import { TimerCase } from "./types";
 
 const TIME_TEST_CONFIGS: Record<string, Record<string, () => TimerCase>> = {
   [EdDSATicketPCDPackage.name]: {

@@ -5,12 +5,12 @@ import {
   GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofEntryConfigCommon
-} from "../src/index.js";
+} from "../src";
 import {
   boundsCheckConfigFromProofConfig,
   canonicalizeEntryConfig,
   canonicalizeSignerPublicKeyConfig
-} from "../src/gpcUtil.js";
+} from "../src/gpcUtil";
 
 describe("Object entry configuration canonicalization should work", () => {
   it("should work as expected on a typical POD entry configuration with isOwnerID = false", () => {

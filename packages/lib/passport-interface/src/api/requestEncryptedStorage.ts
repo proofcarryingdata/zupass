@@ -2,9 +2,9 @@ import urlJoin from "url-join";
 import {
   DownloadEncryptedStorageRequest,
   DownloadEncryptedStorageResponseValue
-} from "../RequestTypes.js";
-import { APIResult, NamedAPIError, onNamedAPIError } from "./apiResult.js";
-import { httpGet } from "./makeRequest.js";
+} from "../RequestTypes";
+import { APIResult, NamedAPIError, onNamedAPIError } from "./apiResult";
+import { httpGet } from "./makeRequest";
 
 /**
  * Downloads, but does not decrypt, a user's end-to-end encrypted backup

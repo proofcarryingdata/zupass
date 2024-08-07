@@ -8,10 +8,10 @@ import {
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { generateSnarkMessageHash } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
-import { requestSemaphoreGroup } from "./api/requestSemaphoreGroup.js";
-import { constructZupassPcdGetRequestUrl } from "./PassportInterface.js";
-import { openZupassPopup } from "./PassportPopup/core.js";
-import { useSerializedPCD } from "./SerializedPCDIntegration.js";
+import { requestSemaphoreGroup } from "./api/requestSemaphoreGroup";
+import { constructZupassPcdGetRequestUrl } from "./PassportInterface";
+import { openZupassPopup } from "./PassportPopup/core";
+import { useSerializedPCD } from "./SerializedPCDIntegration";
 
 /**
  * Opens a Zupass popup to generate a Zuzalu membership proof.

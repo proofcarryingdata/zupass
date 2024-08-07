@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
-import { IssuanceEnabledResponseValue } from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpGetSimple } from "./makeRequest.js";
+import { IssuanceEnabledResponseValue } from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpGetSimple } from "./makeRequest";
 
 /**
  * Asks the Zupass server whether or not it has feeds that can server

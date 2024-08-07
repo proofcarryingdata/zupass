@@ -6,9 +6,9 @@ import {
   AgreeTermsPayload,
   AgreeTermsRequest,
   AgreeToTermsResponseValue
-} from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+} from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Agrees to a given version of the legal terms.

@@ -1,2 +1,2 @@
-export * from "./PODPCD.js";
-export * from "./PODPCDPackage.js";
+export * from "./PODPCD";
+export * from "./PODPCDPackage";

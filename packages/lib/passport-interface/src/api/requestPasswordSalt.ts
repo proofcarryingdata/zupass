@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
-import { SaltRequest, SaltResponseValue } from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpGetSimple } from "./makeRequest.js";
+import { SaltRequest, SaltResponseValue } from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpGetSimple } from "./makeRequest";
 
 /**
  * Asks the server for the password salt of a particular email address.

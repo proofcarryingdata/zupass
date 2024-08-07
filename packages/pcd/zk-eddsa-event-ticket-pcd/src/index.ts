@@ -1,2 +1,2 @@
-export * from "./ZKEdDSAEventTicketPCD.js";
-export * from "./ZKEdDSAEventTicketPCDPackage.js";
+export * from "./ZKEdDSAEventTicketPCD";
+export * from "./ZKEdDSAEventTicketPCDPackage";

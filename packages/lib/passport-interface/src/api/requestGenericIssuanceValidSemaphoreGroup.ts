@@ -1,7 +1,7 @@
 import urljoin from "url-join";
-import { GenericIssuanceValidSemaphoreGroupResponseValue } from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpGetSimple } from "./makeRequest.js";
+import { GenericIssuanceValidSemaphoreGroupResponseValue } from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpGetSimple } from "./makeRequest";
 
 /**
  * Returns true if the root hash has ever existed for a group, false otherwise.

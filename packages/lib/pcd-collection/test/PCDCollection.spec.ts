@@ -4,7 +4,7 @@ import chai, { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
 import { v4 as uuid } from "uuid";
-import { PCDCollection } from "../src/index.js";
+import { PCDCollection } from "../src";
 
 import chaiSpies from "chai-spies";
 

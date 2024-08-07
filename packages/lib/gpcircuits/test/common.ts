@@ -4,7 +4,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
-import { loadCircomkitConfig } from "../src/index.js";
+import { loadCircomkitConfig } from "../src";
 
 // eslint-disable-next-line import/prefer-default-export
 export const circomkit = new Circomkit({

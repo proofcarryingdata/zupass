@@ -1,2 +1,2 @@
-export * from "./RollbarProvider.js";
-export * from "./util.js";
+export * from "./RollbarProvider";
+export * from "./util";

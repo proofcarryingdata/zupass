@@ -1,3 +1,3 @@
-export * from "./RSAImagePCD.js";
-export * from "./RSAImagePCDPackage.js";
-export * from "./utils.js";
+export * from "./RSAImagePCD";
+export * from "./RSAImagePCDPackage";
+export * from "./utils";

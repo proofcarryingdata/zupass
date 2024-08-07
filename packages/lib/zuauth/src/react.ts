@@ -1,6 +1,6 @@
 import { PopupActionResult } from "@pcd/passport-interface/PassportPopup/core";
 import { useEffect, useState } from "react";
-import { ZuAuthArgs, zuAuthPopup } from "./index.js";
+import { ZuAuthArgs, zuAuthPopup } from "./index";
 
 type ZuAuthReactResult = PopupActionResult | { type: "loading" };
 

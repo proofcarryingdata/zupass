@@ -1,7 +1,7 @@
 import { getErrorMessage, sleep } from "@pcd/util";
 import urlJoin from "url-join";
-import { APIResult, GetResultValue, ResultMapper } from "./apiResult.js";
-import { POST } from "./constants.js";
+import { APIResult, GetResultValue, ResultMapper } from "./apiResult";
+import { POST } from "./constants";
 
 /**
  * Wrapper of {@link httpRequest} that sends a GET request.

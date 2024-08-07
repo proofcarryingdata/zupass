@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
-import { EdgeCityBalance } from "../edgecity.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+import { EdgeCityBalance } from "../edgecity";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 export async function requestEdgeCityBalances(
   zupassServerUrl: string

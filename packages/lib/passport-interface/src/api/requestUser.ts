@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
-import { LoadUserError, UserResponseValue } from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpGet } from "./makeRequest.js";
+import { LoadUserError, UserResponseValue } from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpGet } from "./makeRequest";
 
 /**
  * Asks the Zupass server for a particular user by their unique id.

@@ -2,9 +2,9 @@ import urlJoin from "url-join";
 import {
   GenericIssuanceFetchPretixProductsRequest,
   GenericIssuanceFetchPretixProductsResponseValue
-} from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+} from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Asks the server to fetch the Pretix products for the given organizer URL and API token.

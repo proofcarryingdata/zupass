@@ -1,12 +1,12 @@
 import urlJoin from "url-join";
-import { Credential } from "../Credential.js";
+import { Credential } from "../Credential";
 import {
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue
-} from "../RequestTypes.js";
-import { PodboxTicketAction } from "../TicketAction.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+} from "../RequestTypes";
+import { PodboxTicketAction } from "../TicketAction";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Asks the server to perform an action in relation to a ticket issued by

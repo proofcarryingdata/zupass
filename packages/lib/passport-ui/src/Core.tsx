@@ -1,4 +1,4 @@
-import styled from "./StyledWrapper.js";
+import styled from "./StyledWrapper";
 
 export function Spacer({
   w,

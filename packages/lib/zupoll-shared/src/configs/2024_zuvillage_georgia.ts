@@ -1,5 +1,5 @@
-import { makePodboxLoginConfigSingleGroup } from "../makePodboxLoginConfigs.js";
-import { LoginConfig } from "../types.js";
+import { makePodboxLoginConfigSingleGroup } from "../makePodboxLoginConfigs";
+import { LoginConfig } from "../types";
 
 export function makeZuvillageGeorgia(
   ZUPASS_CLIENT_URL: string,

@@ -1,2 +1,2 @@
-export * from "./podboxLoginConfigs.js";
-export * from "./types.js";
+export * from "./podboxLoginConfigs";
+export * from "./types";

@@ -1,7 +1,7 @@
-import { getSodium, Sodium } from "./libsodium.js";
-import { Base64String, HexString, Utf8String } from "./types.js";
-import * as utils from "./utils.js";
-import { arrayBufferToHexString } from "./utils.js";
+import { getSodium, Sodium } from "./libsodium";
+import { Base64String, HexString, Utf8String } from "./types";
+import * as utils from "./utils";
+import { arrayBufferToHexString } from "./utils";
 
 /**
  * This class contains cryptographic primitives that are used by the PCD

@@ -15,7 +15,7 @@ import {
   ReplaceInFolderAction,
   ReplaceInFolderPermission,
   isFolderAncestor
-} from "../src/index.js";
+} from "../src";
 
 async function newPCD(id?: string): Promise<RSAPCD> {
   id = id ?? uuid();

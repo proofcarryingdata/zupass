@@ -1,4 +1,4 @@
-import { CircuitSignal } from "./types.js";
+import { CircuitSignal } from "./types";
 
 export type OwnerModuleSemaphoreV3Inputs = {
   enabled: CircuitSignal;

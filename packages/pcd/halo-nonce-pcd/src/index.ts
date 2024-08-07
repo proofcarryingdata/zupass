@@ -1,2 +1,2 @@
-export * from "./HaLoNoncePCD.js";
-export * from "./HaLoNoncePCDPackage.js";
+export * from "./HaLoNoncePCD";
+export * from "./HaLoNoncePCDPackage";

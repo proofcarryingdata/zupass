@@ -7,7 +7,7 @@ import {
   InputTestPCDClaim,
   InputTestPCDProof,
   InputTestPCDTypeName
-} from "./InputTestPCD.js";
+} from "./InputTestPCD";
 
 export async function prove(_args: InputTestPCDArgs): Promise<InputTestPCD> {
   return new InputTestPCD(uuid(), {});

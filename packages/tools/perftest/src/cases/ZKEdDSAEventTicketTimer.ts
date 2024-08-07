@@ -18,7 +18,7 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
-import { TimerCase } from "../types.js";
+import { TimerCase } from "../types";
 
 const zkeyFilePath = path.join(
   __dirname,

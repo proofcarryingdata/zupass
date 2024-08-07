@@ -14,7 +14,7 @@ import {
   WebAuthnPCDClaim,
   WebAuthnPCDProof,
   WebAuthnPCDTypeName
-} from "./WebAuthnPCD.js";
+} from "./WebAuthnPCD";
 
 export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
   const authenticationOptions = await generateAuthenticationOptions({

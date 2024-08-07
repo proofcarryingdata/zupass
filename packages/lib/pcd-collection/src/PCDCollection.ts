@@ -11,7 +11,7 @@ import {
   isAppendToFolderAction,
   isDeleteFolderAction,
   isReplaceInFolderAction
-} from "./actions.js";
+} from "./actions";
 import {
   AppendToFolderPermission,
   DeleteFolderPermission,
@@ -20,8 +20,8 @@ import {
   isAppendToFolderPermission,
   isDeleteFolderPermission,
   isReplaceInFolderPermission
-} from "./permissions.js";
-import { getFoldersInFolder, isFolderAncestor, isRootFolder } from "./util.js";
+} from "./permissions";
+import { getFoldersInFolder, isFolderAncestor, isRootFolder } from "./util";
 
 export type MatchingActionPermission =
   | { permission: ReplaceInFolderPermission; action: ReplaceInFolderAction }

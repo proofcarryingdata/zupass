@@ -11,13 +11,13 @@ import {
   checkBoundConfig,
   checkProofConfig,
   checkRevealedClaims
-} from "./gpcChecks.js";
+} from "./gpcChecks";
 import {
   GPCBoundConfig,
   GPCProofConfig,
   GPCRevealedClaims,
   PODMembershipLists
-} from "./gpcTypes.js";
+} from "./gpcTypes";
 
 const jsonBigSerializer = JSONBig({
   useNativeBigInt: true,

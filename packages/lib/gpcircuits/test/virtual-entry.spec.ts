@@ -11,8 +11,8 @@ import {
   VirtualEntryModuleOutputs,
   array2Bits,
   padArray
-} from "../src/index.js";
-import { circomkit, privateKey, privateKey2, sampleEntries } from "./common.js";
+} from "../src";
+import { circomkit, privateKey, privateKey2, sampleEntries } from "./common";
 
 describe("Virtual entry module should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.

@@ -1,4 +1,4 @@
-import { ZuzaluUserRole } from "./zuzalu.js";
+import { ZuzaluUserRole } from "./zuzalu";
 
 /**
  * These are the "ticket names" we get back from the Tripsha API.

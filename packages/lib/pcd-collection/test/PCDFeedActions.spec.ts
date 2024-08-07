@@ -11,7 +11,7 @@ import {
   PCDCollection,
   PCDPermission,
   PCDPermissionType
-} from "../src/index.js";
+} from "../src";
 
 async function newPCD(id?: string): Promise<RSAPCD> {
   id = id ?? uuid();

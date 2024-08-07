@@ -1,5 +1,5 @@
 import nodeCrypto from "crypto";
-import { isBrowser, isNode } from "./Environment.js";
+import { isBrowser, isNode } from "./Environment";
 
 // The 'crypto' variable provides access to the functions defined
 // in the standard Web Crypto API (https://www.w3.org/TR/WebCryptoAPI).

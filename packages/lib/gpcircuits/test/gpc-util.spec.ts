@@ -1,7 +1,7 @@
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { WitnessTester } from "circomkit";
 import "mocha";
-import { circomkit } from "./common.js";
+import { circomkit } from "./common";
 
 describe("gpc-util.ValueOrNegativeOne should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.

@@ -2,9 +2,9 @@ import { getHash } from "@pcd/passport-crypto";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import stringify from "fast-json-stable-stringify";
-import { NetworkFeedApi } from "./FeedAPI.js";
-import { FeedSubscriptionManager } from "./SubscriptionManager.js";
-import { User } from "./zuzalu.js";
+import { NetworkFeedApi } from "./FeedAPI";
+import { FeedSubscriptionManager } from "./SubscriptionManager";
+import { User } from "./zuzalu";
 
 export interface SyncedEncryptedStorageV1 {
   self: User;

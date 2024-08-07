@@ -10,12 +10,12 @@ import path from "path";
 import {
   CredentialManager,
   createCredentialCache
-} from "../src/CredentialManager.js";
+} from "../src/CredentialManager";
 import {
   FeedSubscriptionManager,
   applyActions
-} from "../src/SubscriptionManager.js";
-import { MockFeedApi } from "./MockFeedApi.js";
+} from "../src/SubscriptionManager";
+import { MockFeedApi } from "./MockFeedApi";
 
 const identity = new Identity();
 

@@ -3,9 +3,9 @@ import {
   CheckTicketByIdRequest,
   CheckTicketByIdResponseValue,
   TicketError
-} from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpPost } from "./makeRequest.js";
+} from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpPost } from "./makeRequest";
 
 /**
  * For Devconnect tickets, pre-check a ticket before attempting check-in.

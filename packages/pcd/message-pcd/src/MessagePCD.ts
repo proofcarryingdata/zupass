@@ -1,6 +1,6 @@
 import { EdDSAPCD } from "@pcd/eddsa-pcd";
 import { ObjectArgument, PCD, StringArgument } from "@pcd/pcd-types";
-import { Message } from "./Message.js";
+import { Message } from "./Message";
 
 export const MessagePCDTypeName = "message-pcd";
 

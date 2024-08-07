@@ -1,5 +1,5 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { EmailPCD } from "./EmailPCD.js";
+import { EmailPCD } from "./EmailPCD";
 
 export function getEmailAddress(pcd?: EmailPCD): string | undefined {
   return pcd?.claim?.emailAddress;

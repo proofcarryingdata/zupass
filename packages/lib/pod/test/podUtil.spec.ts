@@ -28,7 +28,7 @@ import {
   podValueToRawValue,
   requireValueType,
   serializePODEntries
-} from "../src/index.js";
+} from "../src";
 import {
   expectedPublicKey,
   expectedPublicKeyHex,
@@ -40,7 +40,7 @@ import {
   sampleEntries1,
   sampleEntries2,
   testPrivateKeysAllFormats
-} from "./common.js";
+} from "./common";
 
 describe("podUtil input checkers should work", async function () {
   it("checkPrivateKeyFormat should accept valid inputs", function () {

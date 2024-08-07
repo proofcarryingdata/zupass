@@ -3,8 +3,8 @@ import "mocha";
 import {
   GlobalModuleInputNamesType,
   GlobalModuleOutputNamesType
-} from "../src/index.js";
-import { circomkit } from "./common.js";
+} from "../src";
+import { circomkit } from "./common";
 
 describe("global.GlobalModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.

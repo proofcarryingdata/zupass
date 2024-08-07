@@ -2,7 +2,7 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import assert from "assert";
 import "mocha";
-import { HaLoNoncePCDArgs, HaLoNoncePCDPackage } from "../src/index.js";
+import { HaLoNoncePCDArgs, HaLoNoncePCDPackage } from "../src";
 
 describe("halo nonce PCD should work", function () {
   /**

@@ -1,5 +1,5 @@
 import urlJoin from "url-join";
-import { POST } from "./constants.js";
+import { POST } from "./constants";
 
 /**
  * Uploads a client-side-generated object to honeycomb. Used for

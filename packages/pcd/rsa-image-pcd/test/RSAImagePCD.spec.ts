@@ -2,7 +2,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
-import { RSAImagePCD, RSAImagePCDPackage } from "../src/index.js";
+import { RSAImagePCD, RSAImagePCDPackage } from "../src";
 
 describe("RSA Image PCD should work", function () {
   const key = new NodeRSA({ b: 2048 });

@@ -1,8 +1,8 @@
 import urlJoin from "url-join";
-import { PendingPCD } from "../PendingPCDUtils.js";
-import { ServerProofRequest } from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+import { PendingPCD } from "../PendingPCDUtils";
+import { ServerProofRequest } from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Asks the server to prove a PCD asynchronously. Returns a

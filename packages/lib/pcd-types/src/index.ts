@@ -1,1 +1,1 @@
-export * from "./pcd.js";
+export * from "./pcd";

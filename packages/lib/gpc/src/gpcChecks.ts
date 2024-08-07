@@ -32,7 +32,7 @@ import {
   GPCRevealedObjectClaims,
   PODEntryIdentifier,
   TupleIdentifier
-} from "./gpcTypes.js";
+} from "./gpcTypes";
 import {
   BoundsConfig,
   GPCProofMembershipListConfig,
@@ -49,7 +49,7 @@ import {
   resolvePODEntryOrTupleIdentifier,
   splitCircuitIdentifier,
   widthOfEntryOrTuple
-} from "./gpcUtil.js";
+} from "./gpcUtil";
 // TODO(POD-P2): Split out the parts of this which should be public from
 // internal implementation details.  E.g. the returning of ciruit parameters
 // isn't relevant to checking objects after deserialization.

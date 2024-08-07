@@ -1,8 +1,8 @@
 import _ from "lodash";
 import urljoin from "url-join";
-import { makePodboxGroupUrl } from "../makePodboxGroupUrl.js";
-import { makePodboxLoginConfigs } from "../makePodboxLoginConfigs.js";
-import { BallotConfig, BallotType, LoginConfig } from "../types.js";
+import { makePodboxGroupUrl } from "../makePodboxGroupUrl";
+import { makePodboxLoginConfigs } from "../makePodboxLoginConfigs";
+import { BallotConfig, BallotType, LoginConfig } from "../types";
 
 export function makeEthPrague(
   ZUPASS_CLIENT_URL: string,

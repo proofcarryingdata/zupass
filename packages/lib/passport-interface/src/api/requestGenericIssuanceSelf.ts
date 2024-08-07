@@ -2,9 +2,9 @@ import urlJoin from "url-join";
 import {
   GenericIssuanceSelfRequest,
   GenericIssuanceSelfResponseValue
-} from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+} from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Asks the server to get information about the currently logged in user.

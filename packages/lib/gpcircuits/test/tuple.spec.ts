@@ -4,8 +4,8 @@ import {
   tupleHasher,
   TupleHasherInputNamesType,
   TupleHasherOutputNamesType
-} from "../src/index.js";
-import { circomkit } from "./common.js";
+} from "../src";
+import { circomkit } from "./common";
 
 describe("tuple.TupleHasher should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.

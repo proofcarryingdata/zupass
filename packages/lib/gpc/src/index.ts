@@ -1,3 +1,3 @@
-export * from "./gpc.js";
-export * from "./gpcSerialize.js";
-export * from "./gpcTypes.js";
+export * from "./gpc";
+export * from "./gpcSerialize";
+export * from "./gpcTypes";

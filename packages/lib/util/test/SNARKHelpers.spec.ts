@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { BABY_JUB_NEGATIVE_ONE, babyJubIsNegativeOne } from "../src/index.js";
+import { BABY_JUB_NEGATIVE_ONE, babyJubIsNegativeOne } from "../src";
 
 describe("SNARKHelpers should work", async function () {
   it("BabyJubNegativeOne values should work", function () {

@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import "mocha";
-import { flattenObject } from "../src/index.js";
+import { flattenObject } from "../src";
 
 describe("various utils functions should work", async function () {
   it("flattenObject should work", function () {

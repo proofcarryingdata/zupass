@@ -4,7 +4,7 @@ import {
   FixedPODEntries,
   fixedPODEntriesFromSimplifiedJSON,
   fixedPODEntriesToSimplifiedJSON
-} from "../src/index.js";
+} from "../src";
 
 const jsonBigSerializer = JSONBig({
   useNativeBigInt: true,

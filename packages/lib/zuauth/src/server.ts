@@ -8,7 +8,7 @@ import {
   ZKEdDSAEventTicketPCDPackage,
   ZKEdDSAEventTicketPCDTypeName
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { ZuAuthArgs } from "./index.js";
+import { ZuAuthArgs } from ".";
 
 /**
  * Check if a given field is defined.

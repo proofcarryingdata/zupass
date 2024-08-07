@@ -8,9 +8,9 @@ import path from "path";
 import {
   CredentialManager,
   createCredentialCache
-} from "../src/CredentialManager.js";
-import { FeedSubscriptionManager } from "../src/SubscriptionManager.js";
-import { MockFeedApi } from "./MockFeedApi.js";
+} from "../src/CredentialManager";
+import { FeedSubscriptionManager } from "../src/SubscriptionManager";
+import { MockFeedApi } from "./MockFeedApi";
 
 const identity = new Identity();
 

@@ -1,7 +1,7 @@
 import urljoin from "url-join";
-import { GenericIssuanceSemaphoreGroupRootResponseValue } from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpGetSimple } from "./makeRequest.js";
+import { GenericIssuanceSemaphoreGroupRootResponseValue } from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpGetSimple } from "./makeRequest";
 
 /**
  * Returns the latest root hash for a group.

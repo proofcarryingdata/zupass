@@ -8,9 +8,9 @@ import {
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
   ProtoPODGPC,
   protoPODGPCCircuitParamArray
-} from "../src/proto-pod-gpc.js";
-import { batchPromise } from "../src/util.js";
-import { MAX_PARALLEL_PROMISES, clearDir } from "./util.js";
+} from "../src/proto-pod-gpc";
+import { batchPromise } from "../src/util";
+import { MAX_PARALLEL_PROMISES, clearDir } from "./util";
 
 // !!! SINGLE SOURCE OF TRUTH !!!
 // IF YOU CHANGE THIS, MAKE SURE TO RUN

@@ -1,2 +1,2 @@
-export * from "./PODTicketPCD.js";
-export * from "./PODTicketPCDPackage.js";
+export * from "./PODTicketPCD";
+export * from "./PODTicketPCDPackage";

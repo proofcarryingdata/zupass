@@ -4,8 +4,8 @@ import "mocha";
 import {
   BoundsCheckModuleInputNamesType,
   BoundsCheckModuleOutputNamesType
-} from "../src/index.js";
-import { circomkit } from "./common.js";
+} from "../src";
+import { circomkit } from "./common";
 
 function inInterval(input: bigint, bounds: bigint[]): boolean {
   return bounds[0] <= input && input <= bounds[1];

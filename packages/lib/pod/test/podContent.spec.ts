@@ -15,13 +15,13 @@ import {
   isPODNumericValue,
   podNameHash,
   podValueHash
-} from "../src/index.js";
+} from "../src";
 import {
   expectedContentID1,
   expectedContentID2,
   sampleEntries1,
   sampleEntries2
-} from "./common.js";
+} from "./common";
 
 describe("PODContent class should work", async function () {
   const expectedCount1 = Object.entries(sampleEntries1).length;

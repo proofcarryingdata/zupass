@@ -1,2 +1,2 @@
-export * from "./RLNPCD.js";
-export * from "./RLNPCDPackage.js";
+export * from "./RLNPCD";
+export * from "./RLNPCDPackage";

@@ -1,6 +1,6 @@
 import urlJoin from "url-join";
-import { APIResult } from "./apiResult.js";
-import { httpGetSimple } from "./makeRequest.js";
+import { APIResult } from "./apiResult";
+import { httpGetSimple } from "./makeRequest";
 
 /**
  * Asks the Zupass server for its RSA public key, which can be

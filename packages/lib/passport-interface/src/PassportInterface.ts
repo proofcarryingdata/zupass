@@ -1,5 +1,5 @@
 import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { PendingPCD } from "./PendingPCDUtils.js";
+import { PendingPCD } from "./PendingPCDUtils";
 
 export enum PCDRequestType {
   Get = "Get",

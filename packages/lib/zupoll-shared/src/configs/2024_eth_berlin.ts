@@ -1,5 +1,5 @@
-import { makePodboxLoginConfigs } from "../makePodboxLoginConfigs.js";
-import { LoginConfig } from "../types.js";
+import { makePodboxLoginConfigs } from "../makePodboxLoginConfigs";
+import { LoginConfig } from "../types";
 
 export function makeEthBerlin(
   ZUPASS_CLIENT_URL: string,

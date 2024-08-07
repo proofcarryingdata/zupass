@@ -1,7 +1,7 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
-import { EmailPCD, EmailPCDPackage } from "../src/index.js";
+import { EmailPCD, EmailPCDPackage } from "../src";
 
 describe("EdDSA attested email should work", function () {
   let emailPCD: EmailPCD;

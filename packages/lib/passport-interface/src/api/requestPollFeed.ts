@@ -1,6 +1,6 @@
-import { PollFeedRequest, PollFeedResponseValue } from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+import { PollFeedRequest, PollFeedResponseValue } from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Asks a feed for new PCDs.

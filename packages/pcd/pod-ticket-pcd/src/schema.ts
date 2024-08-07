@@ -1,6 +1,6 @@
 import { z } from "zod";
-import { TicketCategory } from "./PODTicketPCD.js";
-import { canBeBigInt, cryptographic } from "./utils.js";
+import { TicketCategory } from "./PODTicketPCD";
+import { canBeBigInt, cryptographic } from "./utils";
 
 export const TicketDataSchema = z.object({
   eventName: z.string(),

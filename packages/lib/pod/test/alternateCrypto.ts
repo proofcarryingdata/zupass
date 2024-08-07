@@ -9,8 +9,8 @@ import {
   Signature as CLSignature,
   buildEddsa as clBuildEddsa
 } from "circomlibjs";
-import { CryptoBytesEncoding } from "../src/index.js";
-import { stripB64 } from "./common.js";
+import { CryptoBytesEncoding } from "../src";
+import { stripB64 } from "./common";
 
 /**
  * This class contains alternate implementations of podCrypto helpers using

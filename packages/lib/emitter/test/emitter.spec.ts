@@ -1,7 +1,7 @@
 import chai, { expect } from "chai";
 import spies from "chai-spies";
 import "mocha";
-import { Emitter } from "../src/index.js";
+import { Emitter } from "../src";
 
 chai.use(spies);
 

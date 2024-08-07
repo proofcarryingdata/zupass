@@ -1,5 +1,5 @@
 import { PCDPermissionType } from "@pcd/pcd-collection";
-import { Feed, ZupassFeedIds } from "./SubscriptionManager.js";
+import { Feed, ZupassFeedIds } from "./SubscriptionManager";
 
 export const zupassDefaultSubscriptions: Record<
   ZupassFeedIds.Email | ZupassFeedIds.Zuzalu_23 | ZupassFeedIds.Zuconnect_23,

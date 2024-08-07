@@ -14,7 +14,7 @@ import {
   RLNPCDProof,
   RLNPCDTypeName,
   checkClaimProofMatching
-} from "./RLNPCD.js";
+} from "./RLNPCD";
 
 let initArgs: RLNPCDInitArgs | undefined = undefined;
 

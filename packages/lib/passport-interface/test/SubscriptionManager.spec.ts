@@ -8,13 +8,13 @@ import MockDate from "mockdate";
 import {
   CredentialManager,
   createCredentialCache
-} from "../src/CredentialManager.js";
+} from "../src/CredentialManager";
 import {
   Feed,
   FeedSubscriptionManager,
   SubscriptionErrorType
-} from "../src/SubscriptionManager.js";
-import { MockFeedApi } from "./MockFeedApi.js";
+} from "../src/SubscriptionManager";
+import { MockFeedApi } from "./MockFeedApi";
 
 describe("Subscription Manager", async function () {
   const mockFeedApi = new MockFeedApi();

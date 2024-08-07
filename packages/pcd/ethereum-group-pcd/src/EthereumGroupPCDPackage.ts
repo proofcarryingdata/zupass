@@ -28,7 +28,7 @@ import {
   EthereumGroupPCDProof,
   EthereumGroupPCDTypeName,
   GroupType
-} from "./EthereumGroupPCD.js";
+} from "./EthereumGroupPCD";
 
 let addrMembershipConfig: ProverConfig;
 let pubkeyMembershipConfig: ProverConfig;

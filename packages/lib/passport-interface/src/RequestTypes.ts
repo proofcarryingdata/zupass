@@ -4,27 +4,24 @@ import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
-import { Credential } from "./Credential.js";
+import { Credential } from "./Credential";
 import {
   DexFrog,
   FrogCryptoDbFeedData,
   FrogCryptoFrogData,
   FrogCryptoScore
-} from "./FrogCrypto.js";
-import { PendingPCDStatus } from "./PendingPCDUtils.js";
-import { Feed } from "./SubscriptionManager.js";
-import { PodboxTicketAction } from "./TicketAction.js";
-import { NamedAPIError } from "./api/apiResult.js";
+} from "./FrogCrypto";
+import { PendingPCDStatus } from "./PendingPCDUtils";
+import { Feed } from "./SubscriptionManager";
+import { PodboxTicketAction } from "./TicketAction";
+import { NamedAPIError } from "./api/apiResult";
 import {
   ActionScreenConfig,
   BadgeConfig,
   HydratedPipelineHistoryEntry,
   PipelineDefinition
-} from "./genericIssuanceTypes.js";
-import {
-  GenericPretixEvent,
-  GenericPretixProduct
-} from "./genericPretixTypes.js";
+} from "./genericIssuanceTypes";
+import { GenericPretixEvent, GenericPretixProduct } from "./genericPretixTypes";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}

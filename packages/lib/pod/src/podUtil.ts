@@ -13,7 +13,7 @@ import {
   POD_NAME_REGEX,
   POD_STRING_TYPE_REGEX,
   POD_VALUE_STRING_TYPE_IDENTIFIER
-} from "./podTypes.js";
+} from "./podTypes";
 
 // TODO(POD-P3): Decide if these utils should all be published outside
 // of the package, or only a subset.

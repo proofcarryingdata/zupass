@@ -1,2 +1,2 @@
-export * from "./SemaphoreSignaturePCD.js";
-export * from "./SemaphoreSignaturePCDPackage.js";
+export * from "./SemaphoreSignaturePCD";
+export * from "./SemaphoreSignaturePCDPackage";

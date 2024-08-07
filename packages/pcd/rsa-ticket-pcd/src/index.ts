@@ -1,3 +1,3 @@
-export * from "./RSATicketPCD.js";
-export * from "./RSATicketPCDPackage.js";
-export * from "./utils.js";
+export * from "./RSATicketPCD";
+export * from "./RSATicketPCDPackage";
+export * from "./utils";

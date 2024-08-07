@@ -1,10 +1,7 @@
 import urlJoin from "url-join";
-import {
-  ProofStatusRequest,
-  ProofStatusResponseValue
-} from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpGetSimple } from "./makeRequest.js";
+import { ProofStatusRequest, ProofStatusResponseValue } from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpGetSimple } from "./makeRequest";
 
 /**
  * Asks the Zupass server about the status of particular pending PCD proof.

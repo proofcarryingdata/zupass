@@ -9,7 +9,7 @@ import {
   clonePODEntries,
   decodePublicKey,
   decodeSignature
-} from "../src/index.js";
+} from "../src";
 import {
   expectedContentID1,
   expectedContentID2,
@@ -20,7 +20,7 @@ import {
   privateKey,
   sampleEntries1,
   sampleEntries2
-} from "./common.js";
+} from "./common";
 
 describe("POD class should work", async function () {
   it("should sign and verify samples", function () {

@@ -15,7 +15,7 @@ import {
   EmailPCDClaim,
   EmailPCDProof,
   EmailPCDTypeName
-} from "./EmailPCD.js";
+} from "./EmailPCD";
 
 export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
   if (!args.privateKey.value) {

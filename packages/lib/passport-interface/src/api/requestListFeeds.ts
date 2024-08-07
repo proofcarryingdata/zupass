@@ -1,6 +1,6 @@
-import { ListFeedsResponseValue } from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpGetSimple } from "./makeRequest.js";
+import { ListFeedsResponseValue } from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpGetSimple } from "./makeRequest";
 
 /**
  * Asks a feed provider for the list of feeds that they are hosting.

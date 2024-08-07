@@ -1,7 +1,7 @@
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import { expect } from "chai";
-import { SemaphoreIdentityPCDPackage } from "../src/index.js";
+import { SemaphoreIdentityPCDPackage } from "../src";
 
 describe("Semaphore Identity PCD", function () {
   it("should be instantiatable", async function () {

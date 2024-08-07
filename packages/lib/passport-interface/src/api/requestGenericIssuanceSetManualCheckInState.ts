@@ -1,7 +1,7 @@
 import urljoin from "url-join";
-import { PipelineSetManualCheckInStateResponseValue } from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+import { PipelineSetManualCheckInStateResponseValue } from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Sets a ticket's check-in state to the provided boolean value.

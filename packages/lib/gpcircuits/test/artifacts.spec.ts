@@ -6,7 +6,7 @@ import {
   githubDownloadRootURL,
   gpcArtifactPaths,
   unpkgDownloadRootURL
-} from "../src/index.js";
+} from "../src";
 
 describe("artifact URL helpers should work", function () {
   it("gpcArtifactPaths should work for file paths", async () => {

@@ -1,1 +1,1 @@
-export * from "./MessagePCDCard.js";
+export * from "./MessagePCDCard";

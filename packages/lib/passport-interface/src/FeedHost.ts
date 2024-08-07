@@ -4,8 +4,8 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue
-} from "./RequestTypes.js";
-import { Feed } from "./SubscriptionManager.js";
+} from "./RequestTypes";
+import { Feed } from "./SubscriptionManager";
 
 export interface HostedFeed<IFeed extends Feed = Feed> {
   feed: IFeed;

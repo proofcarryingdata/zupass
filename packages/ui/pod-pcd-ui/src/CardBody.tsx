@@ -3,9 +3,9 @@ import { PCDUI } from "@pcd/pcd-types";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { useState } from "react";
-import { CollectablePODPCDCardBody } from "./renderers/CollectablePODPCDCardBody.js";
-import { DefaultPODPCDCardBody } from "./renderers/DefaultPODPCDCardBody.js";
-import { Container } from "./shared.js";
+import { CollectablePODPCDCardBody } from "./renderers/CollectablePODPCDCardBody";
+import { DefaultPODPCDCardBody } from "./renderers/DefaultPODPCDCardBody";
+import { Container } from "./shared";
 
 export const PODPCDUI: PCDUI<PODPCD> = {
   renderCardBody: PODPCDCardBody

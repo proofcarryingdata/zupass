@@ -2,12 +2,8 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
 import { v4 as uuid } from "uuid";
-import {
-  PODTicketPCD,
-  PODTicketPCDPackage,
-  TicketCategory
-} from "../src/index.js";
-import { IPODTicketData } from "../src/schema.js";
+import { PODTicketPCD, PODTicketPCDPackage, TicketCategory } from "../src";
+import { IPODTicketData } from "../src/schema";
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
 const prvKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 0001020304050607080900010203040506070809000102030405060708090001

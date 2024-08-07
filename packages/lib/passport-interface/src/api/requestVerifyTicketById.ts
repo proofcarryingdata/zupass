@@ -2,9 +2,9 @@ import urlJoin from "url-join";
 import {
   VerifyTicketByIdRequest,
   VerifyTicketByIdResponseValue
-} from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+} from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Similar to {@link requestVerifyTicket}, but instead of taking a whole PCD,

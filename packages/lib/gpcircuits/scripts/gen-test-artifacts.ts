@@ -4,8 +4,8 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import circomkitJson from "../circomkit.json";
 import circuitsJson from "../circuits.json";
-import { batchPromise } from "../src/util.js";
-import { MAX_PARALLEL_PROMISES, clearDir } from "./util.js";
+import { batchPromise } from "../src/util";
+import { MAX_PARALLEL_PROMISES, clearDir } from "./util";
 
 const projectDir = path.join(__dirname, "..");
 const artifactDir = path.join(projectDir, "artifacts");

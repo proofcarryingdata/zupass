@@ -27,7 +27,7 @@ import {
   POD_VIRTUAL_NAME_REGEX,
   TUPLE_PREFIX,
   TupleIdentifier
-} from "./gpcTypes.js";
+} from "./gpcTypes";
 
 /**
  * Converts a proof config into a canonical form which is bound to a specific

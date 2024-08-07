@@ -9,7 +9,7 @@ import {
   RSAPCDClaim,
   RSAPCDProof,
   RSAPCDTypeName
-} from "./RSAPCD.js";
+} from "./RSAPCD";
 
 export async function prove(args: RSAPCDArgs): Promise<RSAPCD> {
   if (args.privateKey.value === undefined || args.privateKey.value === "") {

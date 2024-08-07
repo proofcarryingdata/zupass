@@ -1,7 +1,7 @@
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { Point } from "@zk-kit/baby-jubjub";
-import { PODEntries } from "../src/index.js";
+import { PODEntries } from "../src";
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
 export const privateKeyHex =

@@ -1,2 +1,2 @@
-export * from "./ZKEdDSAFrogPCD.js";
-export * from "./ZKEdDSAFrogPCDPackage.js";
+export * from "./ZKEdDSAFrogPCD";
+export * from "./ZKEdDSAFrogPCDPackage";

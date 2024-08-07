@@ -8,9 +8,9 @@ import {
   Credential,
   CredentialPayload,
   createCredentialPayload
-} from "./Credential.js";
-import { CredentialRequest } from "./SubscriptionManager.js";
-import { StorageBackedMap } from "./util/StorageBackedMap.js";
+} from "./Credential";
+import { CredentialRequest } from "./SubscriptionManager";
+import { StorageBackedMap } from "./util/StorageBackedMap";
 
 export interface CredentialManagerAPI {
   canGenerateCredential(req: CredentialRequest): boolean;

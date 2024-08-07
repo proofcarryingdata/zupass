@@ -1,6 +1,6 @@
 import { SerializedPCD } from "@pcd/pcd-types";
 import { useEffect, useState } from "react";
-import { receiveZupassPopupMessage, zupassPopupSetup } from "./core.js";
+import { receiveZupassPopupMessage, zupassPopupSetup } from "./core";
 
 export type ReceivedZupassResponse = [
   string, // single PCD serialized to string

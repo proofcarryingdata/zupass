@@ -26,7 +26,7 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDClaim,
   ZKEdDSAEventTicketPCDPackage
-} from "../src/index.js";
+} from "../src";
 
 import "mocha";
 

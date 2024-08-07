@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
-import { gpcDemo } from "../src/index.js";
-import { podDemo } from "../src/podExample.js";
+import { gpcDemo } from "../src";
+import { podDemo } from "../src/podExample";
 
 describe("pod-gpc-example should work", async function () {
   it("POD Demo", async function () {

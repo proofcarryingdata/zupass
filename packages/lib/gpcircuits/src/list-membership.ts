@@ -1,12 +1,12 @@
 import { PODValueTuple, podValueHash } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import { computeTupleIndices, hashTuple } from "./multituple.js";
+import { computeTupleIndices, hashTuple } from "./multituple";
 import {
   ProtoPODGPCCircuitParams,
   paramMaxVirtualEntries
-} from "./proto-pod-gpc.js";
-import { CircuitSignal } from "./types.js";
-import { extendedSignalArray, padArray } from "./util.js";
+} from "./proto-pod-gpc";
+import { CircuitSignal } from "./types";
+import { extendedSignalArray, padArray } from "./util";
 
 export type ListMembershipModuleInputs = {
   comparisonValue: CircuitSignal;

@@ -2,9 +2,9 @@ import urlJoin from "url-join";
 import {
   OneClickLoginRequest,
   OneClickLoginResponseValue
-} from "../RequestTypes.js";
-import { APIResult } from "./apiResult.js";
-import { httpPostSimple } from "./makeRequest.js";
+} from "../RequestTypes";
+import { APIResult } from "./apiResult";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * This function allows a user to log in with a one-click login process.

@@ -20,7 +20,7 @@ import {
   EthereumOwnershipPCDInitArgs,
   EthereumOwnershipPCDProof,
   EthereumOwnershipPCDTypeName
-} from "./EthereumOwnershipPCD.js";
+} from "./EthereumOwnershipPCD";
 
 export async function init(args: EthereumOwnershipPCDInitArgs): Promise<void> {
   return SemaphoreSignaturePCDPackage.init?.(args);

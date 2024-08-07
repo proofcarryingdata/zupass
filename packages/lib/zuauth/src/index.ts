@@ -1,14 +1,14 @@
-import { PARC_SUMMER } from "./configs/0xPARC_Summer.js";
-import { ESMERALDA_TICKET } from "./configs/esmeralda.js";
-import { ETHBERLIN04 } from "./configs/ethberlin.js";
-import { ETHPRAGUE_TICKET } from "./configs/ethprague.js";
-import { authenticate } from "./server.js";
+import { PARC_SUMMER } from "./configs/0xPARC_Summer";
+import { ESMERALDA_TICKET } from "./configs/esmeralda";
+import { ETHBERLIN04 } from "./configs/ethberlin";
+import { ETHPRAGUE_TICKET } from "./configs/ethprague";
+import { authenticate } from "./server";
 import {
   ZuAuthArgs,
   zuAuthPopup,
   zuAuthRedirect,
   zupassPopupSetup
-} from "./zuauth.js";
+} from "./zuauth";
 
 export {
   ESMERALDA_TICKET,
