@@ -8,14 +8,13 @@ import {
 } from "@simplewebauthn/server";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-// eslint-disable-next-line require-extensions/require-extensions
 import {
   WebAuthnPCD,
   WebAuthnPCDArgs,
   WebAuthnPCDClaim,
   WebAuthnPCDProof,
   WebAuthnPCDTypeName
-} from "./WebAuthnPCD";
+} from "./WebAuthnPCD.js";
 
 export async function prove(args: WebAuthnPCDArgs): Promise<WebAuthnPCD> {
   const authenticationOptions = await generateAuthenticationOptions({
