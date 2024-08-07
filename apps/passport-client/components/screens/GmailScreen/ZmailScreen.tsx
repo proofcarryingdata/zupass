@@ -44,7 +44,7 @@ export function ZmailScreenImpl(): JSX.Element | null {
             <div className="max-w-[300px]">
               <ZmailSidebar />
             </div>
-            <div className="flex-grow p-2 flex flex-col gap-4">
+            <div className="flex-grow flex flex-col gap-4 p-4">
               <ZmailTable />
             </div>
           </div>
