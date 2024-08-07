@@ -105,6 +105,8 @@ export class PODGetMerkleTreeCase extends TimerCase {
   async op(_: number): Promise<void> {
     const podContent = PODContent.fromEntries(sampleEntries);
     // Ensure that we use the contentID somehow
-    console.log(podContent.contentID);
+    if (podContent.contentID === undefined) {
+      throw new Error("Missing contentID");
+    }
   }
 }
