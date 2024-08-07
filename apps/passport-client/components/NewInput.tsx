@@ -15,7 +15,7 @@ export function NewInput({
     blackWhite:
       "border-black bg-white hover:bg-gray-100 text-black ring-offset-black",
     green:
-      "border-green-950 bg-[#206b5e] hover:bg-[#1b8473] ring-offset-[#1f4d3f]",
+      "border-green-950 bg-[#2a8a7a] hover:bg-[#1b8473] ring-offset-[#1f4d3f]",
     purple:
       "border-purple-950 bg-purple-700 hover:bg-purple-600 ring-offset-[#3f1f4d]"
   };
@@ -28,7 +28,7 @@ export function NewInput({
         "border-4",
         "py-2 px-4 cursor-pointer transition-all duration-100",
         "rounded-lg font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60",
-        "text-lg",
+        "text-lg placeholder-white",
         variantStyles[variant],
         props.className
       )}
