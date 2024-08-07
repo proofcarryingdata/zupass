@@ -53,6 +53,7 @@ export interface ZuzaluUser extends ZuzaluPretixTicket {
   uuid: string | null;
   time_created: Date;
   time_updated: Date;
+  emails: string[];
 }
 
 export interface DevconnectPretixTicket {
@@ -144,7 +145,7 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
 export interface UserRow {
   uuid: string;
   commitment: string;
-  email: string;
+  emails: string[];
   salt: string | null;
   encryption_key: string | null;
   terms_agreed: number;
@@ -271,6 +272,7 @@ export interface ZuconnectTicketDB {
   is_deleted: boolean;
   is_mock_ticket: boolean;
   extra_info: string[];
+  emails: string[];
 }
 
 export interface LinkedPretixTelegramEvent {

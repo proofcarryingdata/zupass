@@ -8,7 +8,7 @@ import {
 } from "../apis/zuzaluPretixAPI";
 import { ZuzaluPretixTicket } from "../database/models";
 import { deleteZuzaluTicket } from "../database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
-import { fetchAllZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import { fetchAllZuzaluPretixTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { updateZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
 import { ApplicationContext } from "../types";
@@ -146,7 +146,7 @@ export class ZuzaluPretixSyncService {
   ): Promise<void> {
     return traced(SERVICE_NAME_FOR_TRACING, "saveTickets", async (span) => {
       const pretixTicketsAsMap = ticketsToMapByEmail(pretixTickets);
-      const existingTickets = await fetchAllZuzaluUsers(dbClient);
+      const existingTickets = await fetchAllZuzaluPretixTickets(dbClient);
       const existingTicketsByEmail = ticketsToMapByEmail(existingTickets);
       const newTickets = pretixTickets.filter(
         (p) => !existingTicketsByEmail.has(p.email)

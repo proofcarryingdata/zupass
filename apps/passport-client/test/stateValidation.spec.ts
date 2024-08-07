@@ -124,7 +124,7 @@ describe("validateAppState", async function () {
   it("logged in ; no errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
-      email: randomEmail(),
+      emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
@@ -175,7 +175,7 @@ describe("validateAppState", async function () {
   it("logged in ; empty pcd collection ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
-      email: randomEmail(),
+      emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
@@ -194,7 +194,7 @@ describe("validateAppState", async function () {
   it("logged in ; missing pcd collection ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
-      email: randomEmail(),
+      emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
@@ -214,7 +214,7 @@ describe("validateAppState", async function () {
   it("logged in ; missing identity ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
-      email: randomEmail(),
+      emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
@@ -235,7 +235,7 @@ describe("validateAppState", async function () {
   it("logged in ; self missing commitment ; errors", async function () {
     const self: ZupassUserJson = {
       // Missing commitment field
-      email: randomEmail(),
+      emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
@@ -256,7 +256,7 @@ describe("validateAppState", async function () {
   it("logged in ; self commitment wrong ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity2.commitment.toString(),
-      email: randomEmail(),
+      emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
@@ -280,7 +280,7 @@ describe("validateAppState", async function () {
   it("logged in ; pcd collection identity wrong ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
-      email: randomEmail(),
+      emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
@@ -304,7 +304,7 @@ describe("validateAppState", async function () {
   it("logged in ; appState identity wrong ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
-      email: randomEmail(),
+      emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
@@ -328,7 +328,7 @@ describe("validateAppState", async function () {
   it("logged in ; all identities mistmatched ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
-      email: randomEmail(),
+      emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()

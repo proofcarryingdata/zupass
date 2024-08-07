@@ -572,7 +572,7 @@ export interface PollFeedResponseValue {
 export interface ZupassUserJson {
   uuid: string;
   commitment: string;
-  email: string;
+  emails: string[];
   salt: string | null;
   terms_agreed: number;
 }
@@ -1210,4 +1210,75 @@ export type GenericIssuanceSendPipelineEmailRequest = {
 
 export type GenericIssuanceSendPipelineEmailResponseValue = {
   queued: number;
+};
+
+export enum EmailUpdateError {
+  InvalidCredential = "InvalidCredential",
+  InvalidConfirmationCode = "InvalidConfirmationCode",
+  EmailAlreadyRegistered = "EmailAlreadyRegistered",
+  CantDeleteOnlyEmail = "CantDeleteOnlyEmail",
+  CantChangeWhenMultipleEmails = "CantChangeWhenMultipleEmails",
+  EmailAlreadyAdded = "EmailAlreadyAdded",
+  EmailNotAssociatedWithThisAccount = "EmailNotAssociatedWithThisAccount",
+  UserNotFound = "UserNotFound",
+  InvalidInput = "InvalidInput",
+  TooManyEmails = "TooManyEmails",
+  Unknown = "Unknown"
+}
+
+export interface AddUserEmailRequest {
+  newEmail: string;
+
+  /**
+   * A semaphore signature from the user, used to verify their identity.
+   */
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * If absent, requests a confirmation code; if present, redeems it.
+   */
+  confirmationCode?: string;
+}
+
+export type AddUserEmailResponseValue =
+  | {
+      sentToken: false;
+      token?: never;
+      newEmailList: string[];
+    }
+  | { sentToken: true; token?: string; newEmailList?: never };
+
+export interface ChangeUserEmailRequest {
+  newEmail: string;
+
+  /**
+   * A semaphore signature from the user, used to verify their identity.
+   */
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * If absent, requests a confirmation code; if present, redeems it.
+   */
+  confirmationCode?: string;
+}
+
+export type ChangeUserEmailResponseValue =
+  | {
+      sentToken: false;
+      token?: never;
+      newEmailList: string[];
+    }
+  | { sentToken: true; token?: string; newEmailList?: never };
+
+export interface RemoveUserEmailRequest {
+  emailToRemove: string;
+
+  /**
+   * A semaphore signature from the user, used to verify their identity.
+   */
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+export type RemoveUserEmailResponseValue = {
+  newEmailList: string[];
 };

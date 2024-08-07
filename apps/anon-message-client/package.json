@@ -1,6 +1,7 @@
 {
   "name": "anon-message-client",
   "version": "0.1.10",
+  "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
     "dev": "NODE_ENV=development nodemon dev.ts",

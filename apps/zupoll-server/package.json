@@ -1,6 +1,7 @@
 {
   "name": "zupoll-server",
   "version": "0.0.3",
+  "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
     "build": "turbo run db:generate && tsc --noEmit",

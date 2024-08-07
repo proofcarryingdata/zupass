@@ -40,7 +40,7 @@ export function ProtocolWorldsHome(): JSX.Element {
         <>
           <Spacer h={24} />
           <TextCenter style={{ fontFamily: "monospace" }}>
-            <p>{bigintToPseudonymNumber(emailToBigint(self?.email))}</p>
+            <p>{bigintToPseudonymNumber(emailToBigint(self?.emails?.[0]))}</p>
             {/* <p>Score: {pcdsInFolder.length}</p> */}
             <p style={{ textDecoration: "underline" }}>
               <a target="_blank" href="https://zupass.org/tensions">

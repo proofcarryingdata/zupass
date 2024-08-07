@@ -22,6 +22,7 @@ export function SettingsModal({
   const state = useStateContext().getState();
   const hasSetupPassword = useHasSetupPassword();
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showEmailOptions, setShowEmailOptions] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState("");
   const [added, setAdded] = useState(false);
 
@@ -35,7 +36,7 @@ export function SettingsModal({
     }
   }, [dispatch]);
 
-  const [justDevcon, setJustDevcon] = useLocalStorage("justDevcon", false);
+  const [_justDevcon, setJustDevcon] = useLocalStorage("justDevcon", true);
   const toggleJustDevcon = useCallback(() => {
     setJustDevcon((prev) => !prev);
   }, [setJustDevcon]);
@@ -65,11 +66,13 @@ export function SettingsModal({
       </TextCenter>
       <Spacer h={16} />
       <CenterColumn>
-        <TextCenter>{self?.email}</TextCenter>
+        <TextCenter>
+          {self?.emails?.map((e) => <div key={e}>{e}</div>)}
+        </TextCenter>
 
         <Spacer h={16} />
 
-        {!isProveOrAddScreen && !showAdvanced && (
+        {!isProveOrAddScreen && !showAdvanced && !showEmailOptions && (
           <>
             <LinkButton
               $primary={true}
@@ -89,6 +92,10 @@ export function SettingsModal({
               {hasSetupPassword ? "Change" : "Add"} Password
             </LinkButton>
             <Spacer h={16} />
+            <Button onClick={() => setShowEmailOptions(true)}>
+              Email Options
+            </Button>
+            <Spacer h={16} />
             <AccountExportButton />
             <Spacer h={16} />
             <LinkButton $primary={true} to="/import" onClick={closeModal}>
@@ -98,23 +105,49 @@ export function SettingsModal({
           </>
         )}
 
-        {!showAdvanced && (
+        {showEmailOptions && (
           <>
-            <Button onClick={logout} style="danger">
-              Log Out
-            </Button>
+            <Button onClick={() => setShowEmailOptions(false)}>Back</Button>
             <Spacer h={16} />
-            <Button onClick={toggleJustDevcon}>
-              {justDevcon ? "Showing Just Devcon" : "Showing Everything"}
-            </Button>
+            {self && self.emails.length === 1 && (
+              <>
+                <LinkButton
+                  $primary={true}
+                  to="/change-email"
+                  onClick={closeModal}
+                >
+                  Change Email
+                </LinkButton>
+                <Spacer h={16} />
+              </>
+            )}
+            <LinkButton $primary={true} to="/add-email" onClick={closeModal}>
+              Add an Email
+            </LinkButton>
             <Spacer h={16} />
-            <Button onClick={onAddTestData} disabled={added}>
-              {added ? "Added" : "Add Test Data"}
-            </Button>
+            {self && self.emails.length > 1 && (
+              <>
+                <LinkButton
+                  $primary={true}
+                  to="/remove-email"
+                  onClick={closeModal}
+                >
+                  Remove an Email
+                </LinkButton>
+                <Spacer h={16} />
+              </>
+            )}
           </>
         )}
 
+        {!showAdvanced && !showEmailOptions && (
+          <Button onClick={logout} style="danger">
+            Log Out
+          </Button>
+        )}
+
         {!isProveOrAddScreen &&
+          !showEmailOptions &&
           (showAdvanced ? (
             <>
               <Button onClick={() => setShowAdvanced(!showAdvanced)}>
