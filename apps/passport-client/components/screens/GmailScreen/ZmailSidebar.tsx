@@ -11,7 +11,7 @@ export function ZmailSidebar(): ReactNode {
   }, [folders]);
 
   return (
-    <div className="w-full h-full p-4 select-none flex flex-col gap-1">
+    <div className="h-full p-4 select-none flex flex-col gap-1 w-[200px]">
       {sortedFolders.map((f) => (
         <div
           onClick={() => {

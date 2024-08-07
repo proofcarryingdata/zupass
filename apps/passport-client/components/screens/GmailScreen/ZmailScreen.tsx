@@ -25,7 +25,7 @@ export function ZmailScreenImpl(): JSX.Element | null {
   return (
     <ZmailContext.Provider value={ctx}>
       <div className="bg-[#206b5e] h-[100vh]">
-        <div className="flex flex-row p-4 gap-4">
+        <div className="flex flex-row p-4 gap-4 w-[200px]">
           <NewButton
             className="flex flex-row items-center justify-center gap-4"
             onClick={() => {
