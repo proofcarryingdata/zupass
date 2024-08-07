@@ -135,7 +135,8 @@ export function HomeScreenImpl(): JSX.Element | null {
       "ETHPrague",
       "Zuzalu '23",
       "Devconnect",
-      "ZuConnect"
+      "ZuConnect",
+      "0xPARC Summer '24"
     ].map(normalizePath);
     const hasGoodFolder = folders.map(normalizePath).some((f) => {
       return goodFolders.some((g) => f.startsWith(g));
