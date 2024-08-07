@@ -8,12 +8,38 @@ import {
   SortingState,
   useReactTable
 } from "@tanstack/react-table";
-import { fuzzy } from "fast-fuzzy";
-import React, { Dispatch, ReactNode, useMemo, useState } from "react";
+import * as fuzzy from "fuzzy";
+import React, {
+  createContext,
+  ReactNode,
+  useContext,
+  useMemo,
+  useState
+} from "react";
 import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { usePCDCollection } from "../../../src/appHooks";
 import { cn } from "../../../src/util";
+import { icons } from "../../icons";
+import { NewButton } from "../../NewButton";
 import { NewInput } from "../../NewInput";
+
+interface GmailScreenContextValue {
+  pcds: PCDCollection;
+  searchTerm: string;
+  filters: PCDFilter[];
+  update: (update: Partial<GmailScreenContextValue>) => void;
+}
+
+const GmailContext = createContext<GmailScreenContextValue>({
+  pcds: new PCDCollection([]),
+  searchTerm: "",
+  filters: [],
+  update: () => {}
+});
+
+function useGmailContext(): GmailScreenContextValue {
+  return useContext(GmailContext);
+}
 
 export const GmailScreen = React.memo(GmailScreenImpl);
 
@@ -117,34 +143,48 @@ function PCDtoRow(pcds: PCDCollection, pcd: PCD): Row | undefined {
  */
 export function GmailScreenImpl(): JSX.Element | null {
   const pcds = usePCDCollection();
+  const [contextValue, setContextValue] = useState<GmailScreenContextValue>({
+    pcds,
+    filters: [],
+    searchTerm: "",
+    update: () => {}
+  });
+  contextValue.update = useMemo(() => {
+    return (update: Partial<GmailScreenContextValue>) => {
+      setContextValue({ ...contextValue, ...update });
+    };
+  }, [contextValue]);
+
   const [pcdFilters, setPCDFilters] = useState<PCDFilter[]>([]);
 
   return (
-    <div className="bg-[#206b5e] h-[100vh]">
-      <div className="w-full flex flex-col gap-2">
-        <div className="flex flex-row overflow-hidden">
-          <div className="max-w-[300px]">
-            <PCDSidebar
-              pcds={pcds}
-              pcdFilters={pcdFilters}
-              setPCDFilters={setPCDFilters}
-            />
-          </div>
-          <div className="flex-grow p-2 flex flex-col gap-4">
-            <PCDSearch
-              pcds={pcds}
-              pcdFilters={pcdFilters}
-              setPCDFilters={setPCDFilters}
-            />
-            <PCDTable
-              pcds={pcds}
-              pcdFilters={pcdFilters}
-              setPCDFilters={setPCDFilters}
-            />
+    <GmailContext.Provider value={contextValue}>
+      <div className="bg-[#206b5e] h-[100vh]">
+        <div className="w-full flex flex-col gap-2">
+          <div className="flex flex-row overflow-hidden">
+            <div className="max-w-[300px]">
+              <PCDSidebar
+                pcds={pcds}
+                pcdFilters={pcdFilters}
+                setPCDFilters={setPCDFilters}
+              />
+            </div>
+            <div className="flex-grow p-2 flex flex-col gap-4">
+              <PCDSearch
+                pcds={pcds}
+                pcdFilters={pcdFilters}
+                setPCDFilters={setPCDFilters}
+              />
+              <PCDTable
+                pcds={pcds}
+                pcdFilters={pcdFilters}
+                setPCDFilters={setPCDFilters}
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </GmailContext.Provider>
   );
 }
 
@@ -156,45 +196,42 @@ function isFolderFilterId(filterId: string): boolean {
   return filterId.startsWith("f_");
 }
 
-export function PCDSidebar({
-  pcds,
-  pcdFilters,
-  setPCDFilters
-}: {
-  pcds: PCDCollection;
-  pcdFilters: PCDFilter[];
-  setPCDFilters: Dispatch<React.SetStateAction<PCDFilter[]>>;
-}): ReactNode {
-  const folders = pcds.getAllFolderNames();
+export function PCDSidebar(): ReactNode {
+  const ctx = useGmailContext();
+  const folders = ctx.pcds.getAllFolderNames();
 
   return (
     <div className="w-full h-full p-2 select-none flex flex-col gap-1">
+      <NewButton className="flex flex-row items-center justify-center gap-2">
+        <img draggable="false" src={icons.logo} width="50px" height="25px" />
+        <span>Zupass</span>
+      </NewButton>
+      <span className="underline">folders</span>
       {folders.map((f) => (
         <div
           onClick={() => {
-            setPCDFilters((filters) => {
-              if (
-                filters.find((filter) => filter.id === folderNameToFilterId(f))
-              ) {
-                filters = filters.filter(
-                  (filter) => filter.id !== folderNameToFilterId(f)
-                );
-              } else {
-                filters = filters.filter((f) => !isFolderFilterId(f.id));
-                filters.push({
-                  filter: (pcd, pcds) => {
-                    return pcds.getFolderOfPCD(pcd.id) === f;
-                  },
-                  id: folderNameToFilterId(f)
-                });
-              }
-              return [...filters];
-            });
+            let filters = ctx.filters;
+            if (
+              filters.find((filter) => filter.id === folderNameToFilterId(f))
+            ) {
+              filters = filters.filter(
+                (filter) => filter.id !== folderNameToFilterId(f)
+              );
+            } else {
+              filters = filters.filter((f) => !isFolderFilterId(f.id));
+              filters.push({
+                filter: (pcd, pcds) => {
+                  return pcds.getFolderOfPCD(pcd.id) === f;
+                },
+                id: folderNameToFilterId(f)
+              });
+            }
+            ctx.update({ filters });
           }}
           className={cn(
             "bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87]",
             "cursor-pointer px-2 py-1 rounded transition-colors duration-100",
-            pcdFilters.find((filter) => filter.id === folderNameToFilterId(f))
+            ctx.filters.find((filter) => filter.id === folderNameToFilterId(f))
               ? "bg-red-500 hover:bg-red-600"
               : ""
           )}
@@ -210,51 +247,40 @@ export function isSearchFilterId(filterId: string): boolean {
   return filterId.startsWith("s_");
 }
 
-export function PCDSearch({
-  pcds,
-  pcdFilters,
-  setPCDFilters
-}: {
-  pcds: PCDCollection;
-  pcdFilters: PCDFilter[];
-  setPCDFilters: Dispatch<React.SetStateAction<PCDFilter[]>>;
-}): ReactNode {
-  const [term, setTerm] = useState("");
+export function PCDSearch(): ReactNode {
+  const ctx = useGmailContext();
 
   return (
     <div>
       <NewInput
         placeholder="Search"
-        value={term}
+        value={ctx.searchTerm}
         onChange={(e) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const newValue = e.target.value;
 
-          setPCDFilters((filters) => {
-            filters = filters.filter((filter) => !isSearchFilterId(filter.id));
+          const filters = ctx.filters.filter(
+            (filter) => !isSearchFilterId(filter.id)
+          );
 
-            if (newValue !== "") {
-              filters.push({
-                filter: (pcd, pcds) => {
-                  const row = PCDtoRow(pcds, pcd);
-                  const name = row?.name;
+          if (newValue !== "") {
+            filters.push({
+              filter: (pcd, pcds) => {
+                const row = PCDtoRow(pcds, pcd);
+                const name = row?.name;
 
-                  // eslint-disable-next-line eqeqeq
-                  if (name == null) {
-                    return false;
-                  }
+                // eslint-disable-next-line eqeqeq
+                if (name == null) {
+                  return false;
+                }
 
-                  const match = fuzzy(newValue, name);
-                  return match > 0.5;
-                },
-                id: "s_"
-              });
-            }
+                return fuzzy.test(newValue, name);
+              },
+              id: "s_"
+            });
+          }
 
-            return [...filters];
-          });
-
-          setTerm(newValue);
+          ctx.update({ filters, searchTerm: newValue });
         }}
       />
     </div>
@@ -266,30 +292,24 @@ export type PCDFilter = {
   id: string;
 };
 
-export function PCDTable({
-  pcds,
-  pcdFilters,
-  setPCDFilters
-}: {
-  pcds: PCDCollection;
-  pcdFilters: PCDFilter[];
-  setPCDFilters: Dispatch<React.SetStateAction<PCDFilter[]>>;
-}): ReactNode {
+export function PCDTable(): ReactNode {
+  const ctx = useGmailContext();
+
   const data: Row[] = useMemo(
     () =>
-      pcds
+      ctx.pcds
         .getAll()
         .filter((pcd) => {
-          for (const filter of pcdFilters) {
-            if (!filter.filter(pcd, pcds)) {
+          for (const filter of ctx.filters) {
+            if (!filter.filter(pcd, ctx.pcds)) {
               return false;
             }
           }
           return true;
         })
-        .map((pcd) => PCDtoRow(pcds, pcd))
+        .map((pcd) => PCDtoRow(ctx.pcds, pcd))
         .filter((row) => !!row),
-    [pcdFilters, pcds]
+    [ctx.filters, ctx.pcds]
   );
 
   const [sorting, setSorting] = useState<SortingState>([]); // can set initial sorting state here
