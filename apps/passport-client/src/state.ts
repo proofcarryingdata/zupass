@@ -34,6 +34,7 @@ export interface AppState {
     | { modalType: "require-add-password" }
     | { modalType: "privacy-notice" }
     | { modalType: "none" }
+    | { modalType: "no-tickets" }
     | {
         modalType: "frogcrypto-update-telegram";
         revealed: boolean;

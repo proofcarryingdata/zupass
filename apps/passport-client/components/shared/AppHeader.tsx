@@ -1,10 +1,10 @@
-import { CircleButton } from "@pcd/passport-ui";
 import React, { useCallback } from "react";
-import { IoMdSettings } from "react-icons/io";
-import { MdInfo, MdOutlineQrCodeScanner, MdRssFeed } from "react-icons/md";
+import { FaCog, FaInfoCircle } from "react-icons/fa";
 import styled from "styled-components";
 import { useDispatch, useSelf, useSubscriptions } from "../../src/appHooks";
 import { AppState } from "../../src/state";
+import { cn } from "../../src/util";
+import { NewButton } from "../NewButton";
 
 export const AppHeader = React.memo(AppHeaderImpl);
 
@@ -51,13 +51,10 @@ function AppHeaderImpl({
 
   return (
     <AppHeaderWrap>
-      <CircleButton diameter={34} padding={8} onClick={openInfo}>
-        <MdInfo size={34} color={isEdgeCity ? "white" : "var(--accent-lite)"} />
-      </CircleButton>
       {children}
       {!isProveOrAddScreen && (
         <>
-          <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
+          {/* <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
             {subscriptions.value.getAllErrors().size > 0 && (
               <ErrorDotContainer>
                 <ErrorDot />
@@ -67,22 +64,33 @@ function AppHeaderImpl({
               size={34}
               color={isEdgeCity ? "white" : "var(--accent-lite)"}
             />
-          </CircleButton>
-          <CircleButton diameter={34} padding={8} onClick={openScanner}>
+          </CircleButton> */}
+          {/* <CircleButton diameter={34} padding={8} onClick={openScanner}>
             <MdOutlineQrCodeScanner
               size={34}
               color={isEdgeCity ? "white" : "var(--accent-lite)"}
             />
-          </CircleButton>
+          </CircleButton> */}
         </>
       )}
-
-      <CircleButton diameter={34} padding={8} onClick={openSettings}>
-        <IoMdSettings
-          size={34}
-          color={isEdgeCity ? "white" : "var(--accent-lite)"}
-        />
-      </CircleButton>
+      <div className="flex flex-row gap-2 w-full">
+        <NewButton
+          className={cn(
+            "flex flex-row justify-center items-center flex-grow text-center"
+          )}
+          onClick={openInfo}
+        >
+          <FaInfoCircle size={24} />
+        </NewButton>
+        <NewButton
+          className={cn(
+            "flex flex-row justify-center items-center flex-grow text-center"
+          )}
+          onClick={openSettings}
+        >
+          <FaCog size={24} />
+        </NewButton>
+      </div>
     </AppHeaderWrap>
   );
 }
@@ -94,6 +102,7 @@ const AppHeaderWrap = styled.div`
   justify-content: space-between;
   align-items: center;
   gap: 16px;
+  margin-bottom: 0.75rem;
 `;
 
 const ErrorDot = styled.div`

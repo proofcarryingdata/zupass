@@ -1,4 +1,3 @@
-import { CircleButton } from "@pcd/passport-ui";
 import { assertUnreachable } from "@pcd/util";
 import React, { ReactNode, useCallback, useEffect } from "react";
 import { GrClose } from "react-icons/gr";
@@ -6,6 +5,7 @@ import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { useDispatch, useModal } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 import { Spacer } from "../core";
+import { MyCircleButton } from "../core/MyCircleButton";
 import { Overscroll } from "../shared/Overscroll";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";
@@ -13,6 +13,7 @@ import { FrogCryptoExportPCDsModal } from "./FrogCryptoExportPCDsModal";
 import { FrogCryptoUpdateTelegramModal } from "./FrogCryptoUpdateTelegramModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
+import { NoTicketsModal } from "./NoTicketsModal";
 import { PrivacyNoticeModal } from "./PrivacyNoticeModal";
 import { RequireAddPasswordModal } from "./RequireAddPasswordModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
@@ -97,6 +98,8 @@ function getModalBody(
       return <AnotherDeviceChangedPasswordModal />;
     case "changed-password":
       return <ChangedPasswordModal />;
+    case "no-tickets":
+      return <NoTicketsModal />;
     case "resolve-subscription-error":
       return <ResolveSubscriptionErrorModal />;
     case "upgrade-account-modal":
@@ -141,9 +144,9 @@ export function Modal(props: {
     <ModalBg onClick={props.onClose} $fullScreen={props.fullScreen}>
       <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
         {props.onClose && (
-          <CircleButton diameter={20} padding={16} onClick={props.onClose}>
+          <MyCircleButton diameter={20} padding={16} onClick={props.onClose}>
             <GrClose style={{ height: "20px", width: "20px", color: "#fff" }} />
-          </CircleButton>
+          </MyCircleButton>
         )}
         <Spacer h={16} />
         {props.children}

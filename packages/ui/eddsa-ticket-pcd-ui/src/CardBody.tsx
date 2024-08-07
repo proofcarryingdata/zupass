@@ -7,7 +7,6 @@ import {
 import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import {
   FlattenSimpleInterpolation,
-  Spacer,
   ToggleSwitch,
   css,
   styled
@@ -65,8 +64,17 @@ function EdDSATicketPCDCardBody({
       {hasImage && (
         <TicketInfo>
           <TicketImage hidePadding={hidePadding} pcd={pcd} />
-          <span>{ticketData?.attendeeName}</span>
-          <span>{ticketData?.attendeeEmail}</span>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center"
+            }}
+          >
+            <span>{ticketData?.attendeeName}</span>
+            <span>{ticketData?.attendeeEmail}</span>
+          </div>
         </TicketInfo>
       )}
       {!hasImage && (
@@ -78,15 +86,28 @@ function EdDSATicketPCDCardBody({
             idBasedVerifyURL={idBasedVerifyURL}
             zk={zk}
           />
-          <Spacer h={8} />
-          {ticketData?.attendeeName && (
+          {/* <Spacer h={8} /> */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "space-between",
+              alignItems: "center",
+              width: "100%",
+              padding: "4px 8px",
+              fontWeight: "bold",
+              paddingBottom: "12px"
+            }}
+          >
+            {ticketData?.attendeeName && (
+              <RedactedText redacted={redact}>
+                {ticketData?.attendeeName}
+              </RedactedText>
+            )}
             <RedactedText redacted={redact}>
-              {ticketData?.attendeeName}
+              {ticketData?.attendeeEmail}
             </RedactedText>
-          )}
-          <RedactedText redacted={redact}>
-            {ticketData?.attendeeEmail}
-          </RedactedText>
+          </div>
           {/* TODO: Turn on ZK mode when we have an end-to-end story for it. */}
           {false && (
             <ZKMode>
@@ -133,7 +154,7 @@ const Container = styled.span<{ padding: boolean }>`
   ${({ padding }): FlattenSimpleInterpolation =>
     padding
       ? css`
-          padding: 16px;
+          /* padding: 16px; */
         `
       : css``}
   overflow: hidden;
@@ -141,7 +162,6 @@ const Container = styled.span<{ padding: boolean }>`
 `;
 
 const TicketInfo = styled.div`
-  margin-top: 8px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -172,11 +192,9 @@ const RedactedText = styled.div<{ redacted: boolean }>`
         `
       : css``}
 
-  margin-bottom: 4px;
-  padding: 2px;
-  width: 300px;
+  /* width: 300px; */
   position: relative;
-  text-align: center;
+  /* text-align: center; */
   transition-property: color, background-color;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   /* Same duration as the toggle slide */

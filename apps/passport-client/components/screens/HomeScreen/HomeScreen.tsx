@@ -9,15 +9,18 @@ import React, {
   useEffect,
   useLayoutEffect,
   useMemo,
+  useRef,
   useState
 } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import styled, { CSSProperties } from "styled-components";
+import { useLocalStorage } from "usehooks-ts";
 import {
   useDispatch,
   useFolders,
   useLoadedIssuedPCDs,
   useSelf,
+  useStateContext,
   useVisiblePCDsInFolder,
   useWrappedPCDCollection
 } from "../../../src/appHooks";
@@ -27,7 +30,8 @@ import {
   isFrogCryptoFolder,
   isProtocolWorldsFolder
 } from "../../../src/util";
-import { Button, Placeholder, Spacer } from "../../core";
+import { NewButton } from "../../NewButton";
+import { H1, Placeholder, Spacer, ZuLogo } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
@@ -42,8 +46,10 @@ import {
   FolderCard,
   FolderDetails,
   FolderEntryContainer,
+  FolderEventInfo,
   FolderExplorerContainer
 } from "./Folder";
+import { EVENTS, initTestData, isEvent } from "./utils";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
 
@@ -53,11 +59,22 @@ const FOLDER_QUERY_PARAM = "folder";
  * Show the user their Zupass, an overview of cards / PCDs.
  */
 export function HomeScreenImpl(): JSX.Element | null {
+  const state = useStateContext().getState();
+  const stateHolder = useRef(state);
+
+  useEffect(() => {
+    if (stateHolder.current) {
+      initTestData(stateHolder.current);
+    }
+  }, []);
+
+  const [justDevcon, setJustDevcon] = useLocalStorage("justDevcon", false);
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
+  const isOther = useLocation().pathname.startsWith("/other");
 
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultBrowsingFolder = useMemo(() => {
@@ -141,7 +158,7 @@ export function HomeScreenImpl(): JSX.Element | null {
     const hasGoodFolder = folders.map(normalizePath).some((f) => {
       return goodFolders.some((g) => f.startsWith(g));
     });
-    return hasGoodFolder;
+    return hasGoodFolder && false;
   }, [pcdCollection]);
 
   // scroll to top when we navigate to this page
@@ -159,6 +176,29 @@ export function HomeScreenImpl(): JSX.Element | null {
     }
   }, [browsingFolder, dispatch]);
 
+  const [showOlder, setShowOlder] = useState(false);
+  const displayingFolders = useMemo(() => {
+    const showingFolders = foldersInFolder
+      .filter(
+        // FrogCrypto is a special and rendered by <FrogFolder />
+        (folder) => folder !== FrogCryptoFolderName
+      )
+      .filter((f) => (isOther ? !isEvent(f) : isEvent(f)))
+      .filter((f) => isOther || !justDevcon || f === "Devcon")
+      .sort((a, b) => {
+        const eventA = EVENTS[a];
+        const eventB = EVENTS[b];
+
+        if (eventA && eventB) {
+          return eventB.start.localeCompare(eventA.start);
+        }
+
+        return a.localeCompare(b);
+      });
+
+    return showingFolders;
+  }, [foldersInFolder, isOther, justDevcon]);
+
   if (!self) return null;
 
   return (
@@ -166,12 +206,40 @@ export function HomeScreenImpl(): JSX.Element | null {
       <MaybeModal />
       <AppContainer bg="gray">
         <Spacer h={24} />
-        <AppHeader isEdgeCity={isEdgeCity} />
+        <div className="flex-row flex align-center items-center gap-3">
+          <ZuLogo width="48px" /> <H1 className="">Zupass</H1>
+        </div>
         <Spacer h={24} />
+        {isRoot && !isOther && <AppHeader isEdgeCity={isEdgeCity} />}
         <Placeholder minH={540}>
-          <LoadingIssuedPCDs />
+          {isRoot && !isOther && (
+            <NewButton
+              style={{ marginBottom: "0.75rem" }}
+              onClick={() => {
+                window.location.href = "#/more";
+              }}
+            >
+              More Cryptography
+            </NewButton>
+          )}
+          {isRoot && isOther && (
+            <>
+              <FolderDetails
+                noChildFolders={isEdgeCity || foldersInFolder.length === 0}
+                folder={browsingFolder}
+                onFolderClick={() => {
+                  window.location.href = "#/";
+                }}
+              />
+              <div className="h-[0.75rem]"></div>
+            </>
+          )}
+
+          {/* {isRoot && (
+            <div className="font-bold text-3xl mb-4 text-center">My Events</div>
+          )} */}
           {!(foldersInFolder.length === 0 && isRoot) && (
-            <FolderExplorerContainer>
+            <FolderExplorerContainer className="flex flex-col gap-3">
               {!isRoot && (
                 <FolderDetails
                   noChildFolders={isEdgeCity || foldersInFolder.length === 0}
@@ -179,32 +247,58 @@ export function HomeScreenImpl(): JSX.Element | null {
                   onFolderClick={onFolderClick}
                 />
               )}
-              {!isEdgeCity &&
-                foldersInFolder
-                  .filter(
-                    // /FrogCrypto is a special and rendered by <FrogFolder />
-                    (folder) => folder !== FrogCryptoFolderName
-                  )
-                  .sort((a, b) => a.localeCompare(b))
-                  .map((folder) => {
+              {isEvent(browsingFolder) && (
+                <FolderEventInfo folder={browsingFolder} />
+              )}
+
+              {!isEdgeCity && (
+                <>
+                  {displayingFolders.slice(0, 5).map((folder) => {
                     return (
                       <FolderCard
-                        style={
-                          isEdgeCityFolder(folder)
-                            ? {
-                                fontFamily: "PressStart2P",
-                                textTransform: "uppercase",
-                                // TODO: other colors?
-                                animation: "color-change 1s infinite"
-                              }
-                            : undefined
-                        }
                         key={folder}
                         onFolderClick={onFolderClick}
                         folder={folder}
                       />
                     );
                   })}
+                  {showOlder && displayingFolders.length > 5 && (
+                    <>
+                      {displayingFolders.slice(5).map((folder) => {
+                        return (
+                          <FolderCard
+                            key={folder}
+                            onFolderClick={onFolderClick}
+                            folder={folder}
+                          />
+                        );
+                      })}
+                    </>
+                  )}
+                  {displayingFolders.length > 5 && (
+                    <>
+                      <NewButton
+                        onClick={() => {
+                          setShowOlder((show) => !show);
+                        }}
+                      >
+                        {showOlder ? "Hide Older Events" : "Show Older Events"}
+                      </NewButton>
+                    </>
+                  )}
+                </>
+              )}
+              {isRoot && !isOther && (
+                <>
+                  <NewButton
+                    onClick={() => {
+                      window.location.href = "#/other";
+                    }}
+                  >
+                    Other Data
+                  </NewButton>
+                </>
+              )}
               {isRoot && shouldShowFrogCrypto && (
                 <FrogFolder
                   Container={FrogFolderContainer}
@@ -222,15 +316,19 @@ export function HomeScreenImpl(): JSX.Element | null {
             <EdgeCityHome />
           ) : (
             <>
-              {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
+              {/* {!(foldersInFolder.length === 0 && isRoot) && <Separator />} */}
               {pcdsInFolder.length > 0 ? (
-                <PCDCardList allExpanded pcds={pcdsInFolder} />
+                <PCDCardList
+                  key={browsingFolder + isRoot + isOther}
+                  allExpanded
+                  pcds={pcdsInFolder.filter((_) => !isRoot || isOther)}
+                />
               ) : loadedIssuedPCDs ? (
                 <NoPcdsContainer>This folder is empty</NoPcdsContainer>
               ) : (
                 <RippleLoader />
               )}
-              {pcdsInFolder.length > 1 && !isRoot && (
+              {/* {pcdsInFolder.length > 1 && !isRoot && (
                 <>
                   <Spacer h={16} />
                   <RemoveAllContainer>
@@ -243,10 +341,25 @@ export function HomeScreenImpl(): JSX.Element | null {
                     </Button>
                   </RemoveAllContainer>
                 </>
-              )}
+              )} */}
+              <LoadingIssuedPCDs />
             </>
           )}
+          {loadedIssuedPCDs && (
+            <div
+              onClick={() => {
+                dispatch({
+                  type: "set-modal",
+                  modal: { modalType: "no-tickets" }
+                });
+              }}
+              className="text-center font-sm text-gray-300 mt-[0.75rem] select-none hover:underline cursor-pointer"
+            >
+              Don't see your tickets?
+            </div>
+          )}
         </Placeholder>
+
         <Spacer h={24} />
       </AppContainer>
     </>
@@ -281,9 +394,8 @@ const NoPcdsContainer = styled.div`
 const Separator = styled.div`
   width: 100%;
   height: 1px;
-  margin-top: 32px;
-  margin-bottom: 32px;
-  background-color: grey;
+  margin-top: 12px;
+  margin-bottom: 12px;
   user-select: none;
 `;
 

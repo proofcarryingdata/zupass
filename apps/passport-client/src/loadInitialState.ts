@@ -1,5 +1,6 @@
 import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
+import { initTestData } from "../components/screens/HomeScreen/utils";
 import {
   loadCheckedInOfflineDevconnectTickets,
   loadEncryptionKey,
@@ -69,6 +70,8 @@ export async function loadInitialState(): Promise<AppState> {
     state.userInvalid = true;
     state.modal = { modalType: "invalid-participant" };
   }
+
+  await initTestData(state);
 
   return state;
 }

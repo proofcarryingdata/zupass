@@ -1,0 +1,46 @@
+# todo
+
+- better 'input' element throughout the app
+- update the landing page to be more 'fun'
+- other data -> a 'non-ticketing' view of the app - it shows all PCDs
+  - like email client?
+  - table view
+    - sort / filter / search / flatten (don't show folders)
+    - star/favorite
+    - gmail inspire
+    - labels?
+    - pcd metadata
+      - time created
+    - seen/unseen
+    - specific-pcd screen
+      - next/prev buttons?
+    - 'note'
+- devcon screen
+  - link to frogs
+  - link to ducks
+- what do I do with the zupass identity?
+- make tickets look more special / different from everything other than tickets
+- rename 'more cryptography' to 'zapps', move to top row
+- convert all buttons in the app to be the new buttons
+- convert modals to be AWESOME
+- better loading spinner
+- rather than 'next/prev' go back to list view
+- progcrypto a separate folder from devcon rather than a folder inside of it
+- mockup of the zapp screen that shows up when you click on a particular zapp
+  - how to make it feel more like a browser?
+- duck leaderboard zapp
+- label that says '1 ticket' should be broken down by type of thing that is in the folder
+- fix how zuzalu tickets look
+- better dropdown selector for the app that fits in with the rest of the buttons
+- better zupass logo and icon
+- duck collection screen
+- zapps
+  - Zupoll
+  - ZK Talks
+  - Anon-aadhar
+  - zkPassport
+  - Cursive
+- go through all the proving and misc. screens
+  - buttons, dropdowns, spacing
+
+# done

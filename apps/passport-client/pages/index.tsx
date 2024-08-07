@@ -30,6 +30,8 @@ import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirma
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
+import { ZmailPCDScreen } from "../components/screens/GmailScreen/ZmailPCDScreen";
+import { ZmailScreen } from "../components/screens/GmailScreen/ZmailScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
 import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
@@ -43,6 +45,12 @@ import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClick
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
+import { ParcScreen } from "../components/screens/MoreScreens/0xPARCScreen";
+import { DuckScreen } from "../components/screens/MoreScreens/DuckScreen";
+import { FHEScreen } from "../components/screens/MoreScreens/FHEScreen";
+import { MoreScreen } from "../components/screens/MoreScreens/MoreScreen";
+import { PODScreen } from "../components/screens/MoreScreens/PODScreen";
+import { ZKScreen } from "../components/screens/MoreScreens/ZKScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
@@ -326,6 +334,17 @@ function RouterImpl(): JSX.Element {
         <Route path="/">
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
+
+          <Route path="other" element={<ZmailScreen />} />
+          <Route path="pcd" element={<ZmailPCDScreen />} />
+
+          <Route path="more" element={<MoreScreen />} />
+          <Route path="duck" element={<DuckScreen />} />
+          <Route path="fhe" element={<FHEScreen />} />
+          <Route path="pod" element={<PODScreen />} />
+          <Route path="zk" element={<ZKScreen />} />
+          <Route path="0xparc" element={<ParcScreen />} />
+
           <Route path="login" element={<LoginScreen />} />
           <Route
             path="login-interstitial"
