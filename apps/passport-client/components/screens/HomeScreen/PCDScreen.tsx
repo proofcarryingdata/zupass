@@ -1,6 +1,7 @@
 import { PCD } from "@pcd/pcd-types";
 import React, { ReactNode, useMemo } from "react";
 import { usePCDCollection } from "../../../src/appHooks";
+import { icons } from "../../icons";
 import { NewButton } from "../../NewButton";
 import { PCDCard } from "../../shared/PCDCard";
 
@@ -20,14 +21,15 @@ export function PCDScreenImpl(): JSX.Element | null {
 
   return (
     <div className="w-[100vw] h-[100vh] flex flex-col">
-      <div className="w-full bg-red-200">
+      <div className="inline-block bg-red-200">
         <NewButton
-          className="w-40"
+          className="flex flex-row items-center justify-center gap-2 w-auto"
           onClick={() => {
             window.location.href = "/#/other";
           }}
         >
-          Back
+          <img draggable="false" src={icons.logo} width="50px" height="25px" />
+          <span>Zupass</span>
         </NewButton>
       </div>
 
