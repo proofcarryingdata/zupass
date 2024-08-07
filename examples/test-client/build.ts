@@ -2,6 +2,7 @@ import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfil
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
 import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
+import { tailwindPlugin } from "esbuild-plugin-tailwindcss";
 import fs from "fs";
 
 dotenv.config();
@@ -14,6 +15,7 @@ const testClientAppOpts: BuildOptions = {
   },
   entryPoints: ["src/main.tsx"],
   plugins: [
+    tailwindPlugin(),
     NodeModulesPolyfillPlugin(),
     NodeGlobalsPolyfillPlugin({
       process: true,

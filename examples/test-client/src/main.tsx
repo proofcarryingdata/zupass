@@ -3,6 +3,8 @@ import { PODPCDPackage } from "@pcd/pod-pcd";
 import { connect, ZupassAPI, ZupassFolderContent } from "@pcd/zupass-client";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
+import "../styles/index.css";
+import { Button } from "./components/Button";
 
 const ZUPASS_URL = "http://localhost:3000";
 // For convenience; in the real world key management is more difficult.
@@ -18,24 +20,30 @@ export default function Main() {
   const [zupass, setZupass] = useState<ZupassAPI | null>(null);
   const [list, setList] = useState<ZupassFolderContent[]>([]);
   const [pcd, setPCD] = useState("");
+  const [connecting, setConnecting] = useState(false);
 
   return (
-    <div>
-      <h1>TEST CLIENT</h1>
+    <div className="container mx-auto my-8">
+      <h1 className="text-2xl font-bold my-4">TEST CLIENT</h1>
       <div id="zupass"></div>
       {!zupass ? (
-        <button
+        <Button
+          loading={connecting}
           onClick={() => {
             const p = connect(
               zapp,
               document.querySelector("#zupass"),
               ZUPASS_URL
             );
-            p.then((client) => setZupass(client));
+            setConnecting(true);
+            p.then((client) => {
+              setZupass(client);
+              setConnecting(false);
+            });
           }}
         >
           Connect to Zupass
-        </button>
+        </Button>
       ) : (
         <div>Connected!</div>
       )}
