@@ -1,4 +1,4 @@
-import { LeanIMT, LeanIMTMerkleProof } from "@zk-kit/imt";
+import { LeanIMT, LeanIMTMerkleProof } from "@zk-kit/lean-imt";
 import assert from "assert";
 import { podMerkleTreeHash, podNameHash, podValueHash } from "./podCrypto";
 import { PODEntries, PODName, PODValue } from "./podTypes";

@@ -7554,13 +7554,6 @@
   dependencies:
     "@zag-js/dom-query" "0.16.0"
 
-"@zk-kit/baby-jubjub@1.0.0-beta":
-  version "1.0.0-beta"
-  resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-1.0.0-beta.tgz#35781f5607d28113582cc218c33dee4cc78b9ac5"
-  integrity sha512-frJtw6XCObIhsZrJ3cWMzGt426U0++OIW7rUwAJ2dHL6wkELiehVTyBSsiPQZzT6A8XZYqsgleLvwGrf2UE0KA==
-  dependencies:
-    "@zk-kit/utils" "1.0.0-beta"
-
 "@zk-kit/baby-jubjub@1.0.1":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-1.0.1.tgz#58a90224f44134cc396880d7fc5d0abcdc068f00"
@@ -7575,16 +7568,7 @@
   dependencies:
     circomlib "^2.0.5"
 
-"@zk-kit/eddsa-poseidon@1.0.0-beta":
-  version "1.0.0-beta"
-  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-1.0.0-beta.tgz#5402ce7db3b4271e4b07fd1cc23e7ab919c7e057"
-  integrity sha512-MDkOBB7FB3Zi1rM9U3us+nDxkeT8RA2/qZMYzqcpC0yMbT5+/zkML5kGyJo2CS7O0k0oakNKqKdU5HUx1K7aVQ==
-  dependencies:
-    "@zk-kit/baby-jubjub" "1.0.0-beta"
-    "@zk-kit/utils" "1.0.0-beta.4"
-    buffer "6.0.3"
-
-"@zk-kit/eddsa-poseidon@^1.0.2":
+"@zk-kit/eddsa-poseidon@1.0.2":
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-1.0.2.tgz#36d40ade309d7d64f3642fa57d54db3a8c3c4860"
   integrity sha512-3ON/6LFHjSqrK+ndIYPJoevzXUkqNGrpVHgfZbYX6x1CoCHHxQG83HH7EBhdWRQsMjcIiw5GVL8h6Xa6irNOYw==
@@ -7601,11 +7585,6 @@
     circom_runtime "0.1.24"
     ffjavascript "0.2.60"
 
-"@zk-kit/imt@2.0.0-beta.4":
-  version "2.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@zk-kit/imt/-/imt-2.0.0-beta.4.tgz#35bc4e3dfac7fa78d7b82f4227d6ed59b8e85222"
-  integrity sha512-JIPH8s/cjxDqfkKIZK7JFtynxU2CDSdIrrVb4/QHqO1a4pELLuaGdpRvLvQPgvNpUg9yP3DaFXwicWxBSXkA1A==
-
 "@zk-kit/incremental-merkle-tree@0.4.3", "@zk-kit/incremental-merkle-tree@^0.4.3":
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/@zk-kit/incremental-merkle-tree/-/incremental-merkle-tree-0.4.3.tgz#197f72102d35dd9c546a6a432896d6d6f6de05f4"
@@ -7616,6 +7595,13 @@
   resolved "https://registry.yarnpkg.com/@zk-kit/incremental-merkle-tree/-/incremental-merkle-tree-1.1.0.tgz#6b0ccce56f9e05ccf73f7ea4fa746d5ef7d24b1d"
   integrity sha512-WnNR/GQse3lX8zOHMU8zwhgX8u3qPoul8w4GjJ0WDHq+VGJimo7EGheRZ/ILeBQabnlzAerdv3vBqYBehBeoKA==
 
+"@zk-kit/lean-imt@2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@zk-kit/lean-imt/-/lean-imt-2.0.1.tgz#78af48b384b083e4a3f003036a40a4ea3cb102c0"
+  integrity sha512-yc0rh9BCY6VvvKrZUNejfucuWscy1iRb9JrppuJktsiA9HcEukB3oX9CB7N/CUmCtqzmdwybet6N2aglGL/SUQ==
+  dependencies:
+    "@zk-kit/utils" "1.0.0"
+
 "@zk-kit/utils@1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.0.0.tgz#db1af01a4e60f5290734a26c2fd9e863bff049e3"
@@ -7623,17 +7609,10 @@
   dependencies:
     buffer "^6.0.3"
 
-"@zk-kit/utils@1.0.0-beta":
-  version "1.0.0-beta"
-  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.0.0-beta.tgz#aacbdc39b193560bdcaad34038f22402d742bc30"
-  integrity sha512-9ihWoFFnsxvVsvr/EpxdxXs1WgZuay/ZUWBNvX8oA9/TB/PiB31tpZV93jkH+JG6C2wcDPinNSLkq3qwtYMAQg==
-  dependencies:
-    buffer "^6.0.3"
-
-"@zk-kit/utils@1.0.0-beta.4":
-  version "1.0.0-beta.4"
-  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.0.0-beta.4.tgz#3811d2c77279eea8ca07084ba2c7d5147adc8560"
-  integrity sha512-MwsiIykjq02JlyZyv2bGraB9cV0ZC7bJz74DEDT7rwoxl1UBAVk6uiZ10fj1qCcfoLO+1wpwo5viHPPWYOW8Hg==
+"@zk-kit/utils@1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.2.0.tgz#7f5dfadb9512f1a090639c912395a6684b560ba2"
+  integrity sha512-Ut9zfnlBVpopZG/s600Ds/FPSWXiPhO4q8949kmXTzwDXytjnvFbDZIFdWqE/lA7/NZjvykiTnnVwmanMxv2+w==
   dependencies:
     buffer "^6.0.3"
 
