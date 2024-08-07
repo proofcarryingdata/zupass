@@ -202,7 +202,15 @@ export function PCDSidebar(): ReactNode {
 
   return (
     <div className="w-full h-full p-2 select-none flex flex-col gap-1">
-      <NewButton className="flex flex-row items-center justify-center gap-2">
+      <NewButton
+        className="flex flex-row items-center justify-center gap-2"
+        onClick={() => {
+          ctx.update({
+            filters: [],
+            searchTerm: ""
+          });
+        }}
+      >
         <img draggable="false" src={icons.logo} width="50px" height="25px" />
         <span>Zupass</span>
       </NewButton>
