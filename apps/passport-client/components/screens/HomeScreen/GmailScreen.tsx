@@ -8,6 +8,7 @@ import {
   SortingState,
   useReactTable
 } from "@tanstack/react-table";
+import { fuzzy } from "fast-fuzzy";
 import React, { Dispatch, ReactNode, useMemo, useState } from "react";
 import { AiFillStar, AiOutlineStar } from "react-icons/ai";
 import { usePCDCollection } from "../../../src/appHooks";
@@ -205,6 +206,10 @@ export function PCDSidebar({
   );
 }
 
+export function isSearchFilterId(filterId: string): boolean {
+  return filterId.startsWith("s_");
+}
+
 export function PCDSearch({
   pcds,
   pcdFilters,
@@ -214,9 +219,44 @@ export function PCDSearch({
   pcdFilters: PCDFilter[];
   setPCDFilters: Dispatch<React.SetStateAction<PCDFilter[]>>;
 }): ReactNode {
+  const [term, setTerm] = useState("");
+
   return (
     <div>
-      <NewInput placeholder="Search" />
+      <NewInput
+        placeholder="Search"
+        value={term}
+        onChange={(e) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const newValue = e.target.value;
+
+          setPCDFilters((filters) => {
+            filters = filters.filter((filter) => !isSearchFilterId(filter.id));
+
+            if (newValue !== "") {
+              filters.push({
+                filter: (pcd, pcds) => {
+                  const row = PCDtoRow(pcds, pcd);
+                  const name = row?.name;
+
+                  // eslint-disable-next-line eqeqeq
+                  if (name == null) {
+                    return false;
+                  }
+
+                  const match = fuzzy(newValue, name);
+                  return match > 0.5;
+                },
+                id: "s_"
+              });
+            }
+
+            return [...filters];
+          });
+
+          setTerm(newValue);
+        }}
+      />
     </div>
   );
 }

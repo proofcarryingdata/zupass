@@ -2,7 +2,7 @@ import { cn } from "../src/util";
 
 type ButtonVariant = "cyan" | "blackWhite" | "green" | "purple";
 
-interface NewInputProps extends React.HTMLAttributes<HTMLDivElement> {
+interface NewInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   variant?: ButtonVariant;
 }
 
