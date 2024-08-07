@@ -1,7 +1,5 @@
 import { ReactNode } from "react";
 import { cn } from "../../../src/util";
-import { icons } from "../../icons";
-import { NewButton } from "../../NewButton";
 import { useZmailContext } from "./ZmailContext";
 import { folderNameToFilterId, isFolderFilterId } from "./ZmailFilter";
 
@@ -11,19 +9,6 @@ export function ZmailSidebar(): ReactNode {
 
   return (
     <div className="w-full h-full p-2 select-none flex flex-col gap-1">
-      <NewButton
-        className="flex flex-row items-center justify-center gap-2"
-        onClick={() => {
-          ctx.update({
-            filters: [],
-            searchTerm: ""
-          });
-        }}
-      >
-        <img draggable="false" src={icons.logo} width="50px" height="25px" />
-        <span>Zupass</span>
-      </NewButton>
-      <span className="underline">folders</span>
       {folders.map((f) => (
         <div
           onClick={() => {
