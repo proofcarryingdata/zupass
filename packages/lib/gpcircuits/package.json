@@ -26,7 +26,7 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "test": "mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau && yarn clean-test-artifacts",
     "gen-circuit-parameters": "npx tsx scripts/gen-circuit-parameters.ts",
     "gen-test-artifacts": "npx tsx scripts/gen-test-artifacts.ts",
@@ -53,6 +53,7 @@
     "lodash": "^4.17.21",
     "mocha": "^10.2.0",
     "poseidon-lite": "^0.2.0",
+    "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"
   },
   "publishConfig": {

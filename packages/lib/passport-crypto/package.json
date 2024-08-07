@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "test": "mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
@@ -37,6 +37,7 @@
     "@types/react": "^18.0.22",
     "eslint": "^8.57.0",
     "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"
   },
   "browser": {

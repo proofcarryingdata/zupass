@@ -4,6 +4,5 @@ module.exports = {
   forbidPending: true,
   failZero: true,
   bail: true,
-  timeout: "120000",
-  "node-option": ["import=tsx"]
+  timeout: "120000"
 };

@@ -8,7 +8,7 @@
     "build": "tsc --noEmit",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
     "lint": "eslint \"**/*.ts{,x}\"",
-    "test": "mocha --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "ts-mocha --type-check --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf node_modules tsconfig.tsbuildinfo"
   },
   "dependencies": {
@@ -40,6 +40,7 @@
     "dotenv": "^16.0.3",
     "eslint": "8.57.0",
     "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.3.3"
   }

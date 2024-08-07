@@ -54,6 +54,5 @@
   },
   "[ignore]": {
     "editor.defaultFormatter": "foxundermoon.shell-format"
-  },
-  "typescript.preferences.importModuleSpecifierEnding": "js"
+  }
 }
