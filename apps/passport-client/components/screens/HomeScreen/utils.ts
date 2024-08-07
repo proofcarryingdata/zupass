@@ -148,7 +148,7 @@ export async function initTestData(
           isRevoked: false,
           ticketCategory: TicketCategory.Generic,
           attendeeName: "",
-          attendeeEmail: state.self?.email ?? "test@test.com"
+          attendeeEmail: "test@test.com"
         }
       }
     });

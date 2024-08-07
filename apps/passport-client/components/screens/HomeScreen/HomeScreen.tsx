@@ -68,7 +68,7 @@ export function HomeScreenImpl(): JSX.Element | null {
     }
   }, []);
 
-  const [justDevcon, setJustDevcon] = useLocalStorage("justDevcon", false);
+  const [justDevcon, setJustDevcon] = useLocalStorage("justDevcon", true);
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();

@@ -30,7 +30,7 @@ export function NoTicketsModal(): JSX.Element {
         logged in with the correct email address.
       </p>
       <Spacer h={16} />
-      <p>You are currently logged in as "{self?.email}".</p>
+      <p>You are currently logged in.</p>
       <Spacer h={16} />
       <p>
         If this issue persists, please contact us at <SupportLink />. If you are
