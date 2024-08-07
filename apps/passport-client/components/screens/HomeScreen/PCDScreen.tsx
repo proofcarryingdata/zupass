@@ -32,7 +32,7 @@ export function PCDScreenImpl(): JSX.Element | null {
       </div>
 
       <div className="w-full h-full flex flex-row">
-        <div className="w-[25%] flex flex-col items-center justify-start pt-[100px]">
+        <div className="w-[25%] flex flex-col items-center justify-start pt-[100px] flex-shrink-0">
           <div className="w-[300px] inline-block">
             <PCDCard pcd={pcd} expanded={true} />
           </div>
