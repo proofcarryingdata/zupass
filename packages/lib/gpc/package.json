@@ -21,6 +21,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit test/**/*.spec.ts",
@@ -43,6 +44,7 @@
     "@types/mocha": "^10.0.1",
     "circomkit": "^0.0.24",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",
     "poseidon-lite": "^0.2.0",
     "ts-mocha": "^10.0.0",
