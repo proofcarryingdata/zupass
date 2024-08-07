@@ -25,9 +25,9 @@ export function ZmailScreenImpl(): JSX.Element | null {
   return (
     <ZmailContext.Provider value={ctx}>
       <div className="bg-[#206b5e] h-[100vh]">
-        <div className="flex flex-row p-2 gap-2">
+        <div className="flex flex-row p-4 gap-4">
           <NewButton
-            className="flex flex-row items-center justify-center gap-2"
+            className="flex flex-row items-center justify-center gap-4"
             onClick={() => {
               ctx.update({
                 filters: [],
@@ -39,7 +39,7 @@ export function ZmailScreenImpl(): JSX.Element | null {
           </NewButton>
           <ZmailSearch />
         </div>
-        <div className="w-full flex flex-col gap-2">
+        <div className="w-full flex flex-col gap-4">
           <div className="flex flex-row overflow-hidden">
             <div className="max-w-[300px]">
               <ZmailSidebar />

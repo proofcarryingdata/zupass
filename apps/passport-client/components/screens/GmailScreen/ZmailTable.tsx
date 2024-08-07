@@ -47,72 +47,74 @@ export function ZmailTable(): ReactNode {
   });
 
   return (
-    <table className="w-full select-none">
-      <thead className="">
-        {table.getHeaderGroups().map((headerGroup) => (
-          <tr key={headerGroup.id}>
-            {headerGroup.headers.map((header) => (
-              <th
-                onClick={() => {
-                  header.column.toggleSorting();
-                }}
-                className="border-2 border-[#1a574d] cursor-pointer"
-                key={header.id}
-                style={{
-                  width: `${header.getSize()}px`,
-                  maxWidth: `${header.column.columnDef.maxSize}px`,
-                  minWidth: `${header.column.columnDef.minSize}px`
-                }}
-              >
-                {header.isPlaceholder
-                  ? null
-                  : flexRender(
-                      header.column.columnDef.header,
-                      header.getContext()
-                    )}
-              </th>
-            ))}
-          </tr>
-        ))}
-      </thead>
-      <tbody className="bg-green-800">
-        {table.getRowModel().rows.map((row) => (
-          <tr
-            key={row.id}
-            className={cn(
-              "cursor-pointer bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87] border-2 border-[#1a574d] hover:shadow"
-            )}
-            style={{
-              transition: "background-color 100ms",
-              borderLeft: "none",
-              borderRight: "none"
-            }}
-          >
-            {row.getVisibleCells().map((cell) => (
-              <td
-                onClick={() => {
-                  window.location.href = `/#/pcd?id=${encodeURIComponent(
-                    row.original.pcd.id
-                  )}`;
-                }}
-                {...{
-                  key: cell.id,
-                  style: {
-                    width: cell.column.getSize(),
-                    maxWidth: `${cell.column.columnDef.maxSize}px`,
-                    minWidth: `${cell.column.columnDef.minSize}px`,
-                    overflow: "hidden"
-                  }
-                }}
-                className="text-ellipsis whitespace-nowrap px-2 border-2 border-[#1a574d]"
-              >
-                {flexRender(cell.column.columnDef.cell, cell.getContext())}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="border-2 border-[#1a574d] w-full rounded overflow-hidden">
+      <table className="w-full select-none">
+        <thead className="">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <th
+                  onClick={() => {
+                    header.column.toggleSorting();
+                  }}
+                  className="border-2 border-[#1a574d] cursor-pointer"
+                  key={header.id}
+                  style={{
+                    width: `${header.getSize()}px`,
+                    maxWidth: `${header.column.columnDef.maxSize}px`,
+                    minWidth: `${header.column.columnDef.minSize}px`
+                  }}
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody className="bg-green-800">
+          {table.getRowModel().rows.map((row) => (
+            <tr
+              key={row.id}
+              className={cn(
+                "cursor-pointer bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87] border-2 border-[#1a574d] hover:shadow"
+              )}
+              style={{
+                transition: "background-color 100ms",
+                borderLeft: "none",
+                borderRight: "none"
+              }}
+            >
+              {row.getVisibleCells().map((cell) => (
+                <td
+                  onClick={() => {
+                    window.location.href = `/#/pcd?id=${encodeURIComponent(
+                      row.original.pcd.id
+                    )}`;
+                  }}
+                  {...{
+                    key: cell.id,
+                    style: {
+                      width: cell.column.getSize(),
+                      maxWidth: `${cell.column.columnDef.maxSize}px`,
+                      minWidth: `${cell.column.columnDef.minSize}px`,
+                      overflow: "hidden"
+                    }
+                  }}
+                  className="text-ellipsis whitespace-nowrap px-2 border-2 border-[#1a574d]"
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
