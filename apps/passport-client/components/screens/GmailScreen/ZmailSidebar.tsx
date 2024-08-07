@@ -34,7 +34,7 @@ export function ZmailSidebar(): ReactNode {
             "bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87]",
             "cursor-pointer px-2 py-1 rounded transition-colors duration-100",
             ctx.filters.find((filter) => filter.id === folderNameToFilterId(f))
-              ? "bg-red-500 hover:bg-red-600"
+              ? "bg-[#1a574d] hover:[#154940]"
               : ""
           )}
         >
