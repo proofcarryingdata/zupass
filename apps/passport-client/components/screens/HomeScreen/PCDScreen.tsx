@@ -1,7 +1,6 @@
 import { PCD } from "@pcd/pcd-types";
-import React, { ReactNode, useMemo } from "react";
+import React, { useMemo } from "react";
 import { usePCDCollection } from "../../../src/appHooks";
-import { icons } from "../../icons";
 import { NewButton } from "../../NewButton";
 import { PCDCard } from "../../shared/PCDCard";
 
@@ -20,31 +19,26 @@ export function PCDScreenImpl(): JSX.Element | null {
   }
 
   return (
-    <div className="w-[100vw] h-[100vh] flex flex-col">
-      <div className="inline-block bg-red-200">
+    <div className="w-[100vw] h-[100vh] flex flex-col bg-[#206b5e] ">
+      <div className="inline-block p-4">
         <NewButton
-          className="flex flex-row items-center justify-center gap-2 w-auto"
+          className="inline-block"
           onClick={() => {
             window.location.href = "/#/other";
           }}
         >
-          <img draggable="false" src={icons.logo} width="50px" height="25px" />
-          <span>Zupass</span>
+          Zmail
         </NewButton>
       </div>
 
       <div className="w-full h-full flex flex-row">
-        <div className="w-[50%] bg-red-300 flex items-center justify-center">
-          <div className="w-[300px]">
+        <div className="w-[25%] flex flex-col items-center justify-start pt-[100px]">
+          <div className="w-[300px] inline-block">
             <PCDCard pcd={pcd} expanded={true} />
           </div>
         </div>
-        <div className="w-[50%] bg-red-400"> {id}</div>
+        <div className="flex-grow bg-red-400"> {id}</div>
       </div>
     </div>
   );
 }
-
-const PCDDetails = ({ pcd }: { pcd: PCD }): ReactNode => {
-  return <div>details</div>;
-};
