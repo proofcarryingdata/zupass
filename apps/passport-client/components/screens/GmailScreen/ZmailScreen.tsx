@@ -27,7 +27,7 @@ export function ZmailScreenImpl(): JSX.Element | null {
       <div className="bg-[#206b5e] h-[100vh]">
         <div className="flex flex-row p-4 gap-4 w-[200px]">
           <NewButton
-            className="flex flex-row items-center justify-center gap-4"
+            className="flex flex-row items-center justify-center gap-4 mr-[95px]"
             onClick={() => {
               ctx.update({
                 filters: [],

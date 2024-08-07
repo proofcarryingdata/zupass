@@ -4,9 +4,9 @@ import { usePCDCollection } from "../../../src/appHooks";
 import { NewButton } from "../../NewButton";
 import { PCDCard } from "../../shared/PCDCard";
 
-export const PCDScreen = React.memo(PCDScreenImpl);
+export const ZmailPCDScreen = React.memo(ZmailPCDScreenImpl);
 
-export function PCDScreenImpl(): JSX.Element | null {
+export function ZmailPCDScreenImpl(): JSX.Element | null {
   const pcds = usePCDCollection();
   const id = new URLSearchParams(window.location.hash.split("?")[1]).get("id");
   const pcd: PCD | undefined = useMemo(() => {
@@ -31,12 +31,7 @@ export function PCDScreenImpl(): JSX.Element | null {
         </NewButton>
       </div>
       <div className="w-full h-full flex flex-row">
-        <div className="w-[25%] flex flex-col items-center justify-start flex-shrink-0">
-          <div className="w-[300px] inline-block">
-            <PCDCard pcd={pcd} expanded={true} />
-          </div>
-        </div>
-        <div className="flex-grow">
+        <div className="flex-grow p-4">
           <p className="m-2">
             Lorem Ipsum is simply dummy text of the printing and typesetting
             industry. Lorem Ipsum has been the industry's standard dummy text
@@ -62,6 +57,12 @@ export function PCDScreenImpl(): JSX.Element | null {
             Renaissance. The first line of Lorem Ipsum, "Lorem ipsum dolor sit
             amet..", comes from a line in section 1.10.32.
           </p>
+        </div>
+
+        <div className="flex flex-col items-center justify-start flex-shrink-0 p-4">
+          <div className="w-[300px] min-w-[300px] inline-block">
+            <PCDCard pcd={pcd} expanded={true} />
+          </div>
         </div>
       </div>
     </div>

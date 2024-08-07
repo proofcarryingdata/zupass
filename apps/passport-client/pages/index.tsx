@@ -30,10 +30,10 @@ import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirma
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
+import { ZmailPCDScreen } from "../components/screens/GmailScreen/ZmailPCDScreen";
 import { ZmailScreen } from "../components/screens/GmailScreen/ZmailScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
-import { PCDScreen } from "../components/screens/HomeScreen/PCDScreen";
 import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
@@ -336,7 +336,7 @@ function RouterImpl(): JSX.Element {
           <Route index element={<HomeScreen />} />
 
           <Route path="other" element={<ZmailScreen />} />
-          <Route path="pcd" element={<PCDScreen />} />
+          <Route path="pcd" element={<ZmailPCDScreen />} />
 
           <Route path="more" element={<MoreScreen />} />
           <Route path="duck" element={<DuckScreen />} />

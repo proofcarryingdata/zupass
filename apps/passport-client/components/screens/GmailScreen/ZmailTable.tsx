@@ -104,7 +104,7 @@ export function ZmailTable(): ReactNode {
                       overflow: "hidden"
                     }
                   }}
-                  className="text-ellipsis whitespace-nowrap px-2 border-2 border-[#1a574d]"
+                  className="text-ellipsis whitespace-nowrap px-2 border-2 border-[#1a574d] py-1"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
