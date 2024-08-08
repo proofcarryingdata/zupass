@@ -1,4 +1,4 @@
-import { LinkButton, TextButton } from "@pcd/passport-ui";
+import { TextButton } from "@pcd/passport-ui";
 import { useCallback, useState } from "react";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useLocalStorage } from "usehooks-ts";
@@ -9,6 +9,7 @@ import {
   useStateContext
 } from "../../src/appHooks";
 import { BigInput, Button, CenterColumn, Spacer, TextCenter } from "../core";
+import { NewButton } from "../NewButton";
 import { initTestData } from "../screens/HomeScreen/utils";
 import { AccountExportButton } from "../shared/AccountExportButton";
 
@@ -71,46 +72,49 @@ export function SettingsModal({
 
         {!isProveOrAddScreen && !showAdvanced && (
           <>
-            <LinkButton
-              $primary={true}
-              to="/scan"
+            <NewButton
               onClick={(): void => {
                 dispatch({ type: "set-modal", modal: { modalType: "none" } });
+                window.location.href = "/scan";
               }}
             >
               Scan Ticket
-            </LinkButton>
+            </NewButton>
             <Spacer h={16} />
-            <LinkButton
-              $primary={true}
-              to="/change-password"
-              onClick={closeModal}
+            <NewButton
+              onClick={() => {
+                closeModal();
+                window.location.href = "/#/change-password";
+              }}
             >
               {hasSetupPassword ? "Change" : "Add"} Password
-            </LinkButton>
+            </NewButton>
             <Spacer h={16} />
             <AccountExportButton />
             <Spacer h={16} />
-            <LinkButton $primary={true} to="/import" onClick={closeModal}>
+            <NewButton
+              onClick={() => {
+                closeModal();
+                window.location.href = "/#/import";
+              }}
+            >
               Import
-            </LinkButton>
+            </NewButton>
             <Spacer h={16} />
           </>
         )}
 
         {!showAdvanced && (
           <>
-            <Button onClick={logout} style="danger">
-              Log Out
-            </Button>
+            <NewButton onClick={logout}>Log Out</NewButton>
             <Spacer h={16} />
-            <Button onClick={toggleJustDevcon}>
+            <NewButton onClick={toggleJustDevcon}>
               {justDevcon ? "Showing Just Devcon" : "Showing Everything"}
-            </Button>
+            </NewButton>
             <Spacer h={16} />
-            <Button onClick={onAddTestData} disabled={added}>
+            <NewButton onClick={onAddTestData} disabled={added}>
               {added ? "Added" : "Add Test Data"}
-            </Button>
+            </NewButton>
           </>
         )}
 

@@ -1,12 +1,13 @@
 import { serializeStorage } from "@pcd/passport-interface";
-import { LinkButton } from "@pcd/passport-ui";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { Link } from "react-router-dom";
 import {
   usePCDCollection,
   useSelf,
   useSubscriptions
 } from "../../src/appHooks";
+import { NewButton } from "../NewButton";
 
 export function AccountExportButton(): JSX.Element | null {
   const user = useSelf();
@@ -43,13 +44,8 @@ export function AccountExportButton(): JSX.Element | null {
   }, [pcds, setUrl, subscriptions, user]);
 
   return url ? (
-    <LinkButton
-      $primary={true}
-      download={`zupass-${hash}.json`}
-      to={url}
-      onClick={showToast}
-    >
-      Export
-    </LinkButton>
+    <Link to={url} download={`zupass-${hash}.json`}>
+      <NewButton onClick={showToast}>Export</NewButton>
+    </Link>
   ) : null;
 }

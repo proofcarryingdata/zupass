@@ -1,8 +1,13 @@
+import { ButtonHTMLAttributes, DetailedHTMLProps } from "react";
 import { cn } from "../src/util";
 
 type ButtonVariant = "cyan" | "blackWhite" | "green" | "purple";
 
-interface NewButtonProps extends React.HTMLAttributes<HTMLDivElement> {
+interface NewButtonProps
+  extends DetailedHTMLProps<
+    ButtonHTMLAttributes<HTMLButtonElement>,
+    HTMLButtonElement
+  > {
   variant?: ButtonVariant;
 }
 
@@ -21,10 +26,11 @@ export function NewButton({
   };
 
   return (
-    <div
+    <button
       {...props}
       className={cn(
-        "whitespace-nowrap",
+        "text-white",
+        "whitespace-nowrap w-full",
         "border-4",
         "text-center",
         "py-2 px-4 cursor-pointer transition-all duration-100",
@@ -34,5 +40,13 @@ export function NewButton({
         props.className
       )}
     />
+  );
+}
+
+export function NewLinkButton({
+  ...props
+}: NewButtonProps & { to: string }): JSX.Element {
+  return (
+    <NewButton {...props} onClick={() => (window.location.href = props.to)} />
   );
 }
