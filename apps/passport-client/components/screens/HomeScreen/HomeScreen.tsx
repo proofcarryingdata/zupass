@@ -204,7 +204,7 @@ export function HomeScreenImpl(): JSX.Element | null {
     <>
       <MaybeModal />
       <AppContainer bg="gray">
-        <div className="flex-row flex align-center items-center gap-3 select-none mb-2">
+        <div className="flex-row flex align-center items-center gap-3 select-none">
           <ZupassTitle>Zupass</ZupassTitle>
         </div>
         {isRoot && !isOther && <AppHeader isEdgeCity={isEdgeCity} />}
@@ -268,6 +268,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                   {displayingFolders.length > 5 && (
                     <>
                       <NewButton
+                        variant="gray"
                         onClick={() => {
                           setShowOlder((show) => !show);
                         }}
@@ -281,6 +282,7 @@ export function HomeScreenImpl(): JSX.Element | null {
               {isRoot && !isOther && (
                 <>
                   <NewButton
+                    variant="gray"
                     onClick={() => {
                       window.location.href = "#/other";
                     }}
@@ -342,7 +344,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                   modal: { modalType: "no-tickets" }
                 });
               }}
-              className="text-center font-sm text-gray-300 mt-[0.75rem] select-none hover:underline cursor-pointer"
+              className="text-center font-sm text-gray-300 select-none hover:underline cursor-pointer"
             >
               Don't see your tickets?
             </div>

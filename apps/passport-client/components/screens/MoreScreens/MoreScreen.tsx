@@ -70,11 +70,9 @@ export function MoreScreen(): ReactNode {
     <>
       <MaybeModal />
       <AppContainer bg="gray">
-        <Spacer h={24} />
         <div className="flex-row flex align-center items-center gap-3">
           <ZupassTitle>Zupass</ZupassTitle>
         </div>
-        <Spacer h={24} />
         <Placeholder minH={540}>
           <NewButton
             className="w-full"

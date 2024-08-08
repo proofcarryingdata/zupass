@@ -6,11 +6,13 @@ import { Spinner } from "./Spinner";
 export function LoadingIssuedPCDs(): JSX.Element | null {
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
   const [style, setStyle] = useState({});
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (loadedIssuedPCDs) {
+      setLoading(false);
       setStyle({
-        backgroundColor: "rgba(93, 211, 125, 0.4)"
+        // backgroundColor: "rgba(50, 226, 97, 0.8)"
       });
       setTimeout(() => {
         setStyle({
@@ -19,8 +21,8 @@ export function LoadingIssuedPCDs(): JSX.Element | null {
           margin: "0px !important",
           marginBottom: "0px",
           fontSize: "0.1em !important",
-          padding: "0px",
-          backgroundColor: "rgba(93, 211, 125, 0.4)"
+          padding: "0px"
+          // backgroundColor: "rgba(50, 226, 97, 0.8)"
         });
       }, 1500);
     }
@@ -39,7 +41,7 @@ export function LoadingIssuedPCDs(): JSX.Element | null {
     >
       <Spinner
         text={loadedIssuedPCDs ? "Loaded Tickets" : "Loading Tickets"}
-        show={!loadedIssuedPCDs}
+        show={loading}
       />
     </Container>
   );
@@ -53,7 +55,7 @@ const Container = styled.div`
   justify-content: center;
   align-items: center;
   height: 50px;
-  background-color: rgba(0, 0, 0, 0.2);
+  background-color: rgba(0, 0, 0, 0.3);
   font-size: 1em;
   transition: all 200ms ease-in-out;
 `;
