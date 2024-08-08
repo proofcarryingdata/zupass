@@ -135,16 +135,75 @@ describe("Bounds check configuration derivation works as expected", () => {
     const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
     expect(boundsCheckConfig).to.deep.eq({
       "somePod.A": {
-        min: 0n,
-        max: POD_INT_MAX
+        inRange: {
+          min: 0n,
+          max: POD_INT_MAX
+        }
       },
       "somePod.B": {
-        min: POD_INT_MIN,
-        max: 87n
+        inRange: {
+          min: POD_INT_MIN,
+          max: 87n
+        }
       },
       "someOtherPod.D": {
-        min: 5n,
-        max: 25n
+        inRange: {
+          min: 5n,
+          max: 25n
+        }
+      }
+    });
+  });
+  it("should work as expected on a proof configuration with bounds checks", () => {
+    const proofConfig: GPCProofConfig = {
+      pods: {
+        somePod: {
+          entries: {
+            A: {
+              isRevealed: false, // Not relevant, but bounds checks make the
+              // most sense when the entry is *not* revealed!
+              inRange: { min: 0n, max: POD_INT_MAX }
+            },
+            B: {
+              isRevealed: false,
+              inRange: { min: POD_INT_MIN, max: 87n },
+              notInRange: { min: 100n, max: 500n }
+            },
+            C: {
+              isRevealed: true
+            }
+          }
+        },
+        someOtherPod: {
+          entries: {
+            D: {
+              isRevealed: false,
+              notInRange: { min: 0n, max: 4n }
+            }
+          }
+        }
+      }
+    };
+    const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
+    expect(boundsCheckConfig).to.deep.eq({
+      "somePod.A": {
+        inRange: {
+          min: 0n,
+          max: POD_INT_MAX
+        }
+      },
+      "somePod.B": {
+        inRange: {
+          min: POD_INT_MIN,
+          max: 87n
+        },
+        notInRange: { min: 100n, max: 500n }
+      },
+      "someOtherPod.D": {
+        notInRange: {
+          min: 0n,
+          max: 4n
+        }
       }
     });
   });
