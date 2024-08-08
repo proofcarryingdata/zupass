@@ -1,32 +1,41 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useLoadedIssuedPCDs } from "../../src/appHooks";
 import { Spinner } from "./Spinner";
 
 export function LoadingIssuedPCDs(): JSX.Element | null {
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
-  const [style, setStyle] = useState({});
-  const [loading, setLoading] = useState(true);
+  const [alreadyLoaded] = useState(loadedIssuedPCDs);
+
+  const [showLoading, setShowLoading] = useState(true);
+
+  const hiddenStyle = useMemo(() => {
+    return {
+      opacity: 0,
+      height: "0px",
+      margin: "0px !important",
+      marginBottom: "0px",
+      fontSize: "0.1em !important",
+      padding: "0px"
+    };
+  }, []);
+
+  const [style, setStyle] = useState<React.CSSProperties>({});
 
   useEffect(() => {
     if (loadedIssuedPCDs) {
-      setLoading(false);
-      setStyle({
-        // backgroundColor: "rgba(50, 226, 97, 0.8)"
-      });
       setTimeout(() => {
-        setStyle({
-          opacity: 0,
-          height: "0px",
-          margin: "0px !important",
-          marginBottom: "0px",
-          fontSize: "0.1em !important",
-          padding: "0px"
-          // backgroundColor: "rgba(50, 226, 97, 0.8)"
-        });
+        setShowLoading(false);
+        setTimeout(() => {
+          setStyle(hiddenStyle);
+        }, 500);
       }, 1500);
     }
-  }, [loadedIssuedPCDs]);
+  }, [hiddenStyle, loadedIssuedPCDs]);
+
+  if (alreadyLoaded) {
+    return null;
+  }
 
   return (
     <Container
@@ -40,8 +49,8 @@ export function LoadingIssuedPCDs(): JSX.Element | null {
       }}
     >
       <Spinner
-        text={loadedIssuedPCDs ? "Loaded Tickets" : "Loading Tickets"}
-        show={loading}
+        text={!showLoading ? "Loaded Tickets" : "Loading Tickets"}
+        show={showLoading}
       />
     </Container>
   );
