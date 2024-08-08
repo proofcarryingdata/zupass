@@ -287,7 +287,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                       window.location.href = "#/other";
                     }}
                   >
-                    Other Data
+                    Zmail
                   </NewButton>
                 </>
               )}
