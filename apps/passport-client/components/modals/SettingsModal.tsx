@@ -5,9 +5,11 @@ import { useLocalStorage } from "usehooks-ts";
 import {
   useDispatch,
   useHasSetupPassword,
+  usePCDCollection,
   useSelf,
   useStateContext
 } from "../../src/appHooks";
+import { savePCDs } from "../../src/localstorage";
 import { BigInput, Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { NewButton } from "../NewButton";
 import { initTestData } from "../screens/HomeScreen/utils";
@@ -25,6 +27,7 @@ export function SettingsModal({
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [deleteMessage, setDeleteMessage] = useState("");
   const [added, setAdded] = useState(false);
+  const pcds = usePCDCollection();
 
   const closeModal = useCallback(() => {
     dispatch({ type: "set-modal", modal: { modalType: "none" } });
@@ -123,6 +126,18 @@ export function SettingsModal({
               disabled={added}
             >
               {added ? "Added" : "Add Test Data"}
+            </NewButton>
+            <Spacer h={16} />
+            <NewButton
+              className="w-full"
+              onClick={async () => {
+                pcds.meta = {};
+                await savePCDs(pcds);
+                window.location.reload();
+              }}
+              disabled={added}
+            >
+              Reset Metadata
             </NewButton>
           </>
         )}
