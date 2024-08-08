@@ -68,6 +68,10 @@ export function matchActionToPermission(
   return null;
 }
 
+export interface PCDMetadata {
+  viewed?: boolean;
+}
+
 /**
  * This class represents all the PCDs a user may have, and also
  * contains references to all the relevant {@link PCDPackage}s,
@@ -84,15 +88,18 @@ export class PCDCollection {
   private packages: PCDPackage[];
   private pcds: PCD<unknown, unknown>[];
   public folders: Record<string, string>; // pcd id -> folder
+  public meta: Record<string, PCDMetadata>; // pcd id -> metadata
 
   public constructor(
     packages: PCDPackage[],
     pcds?: PCD[],
-    folders?: Record<string, string>
+    folders?: Record<string, string>,
+    meta?: Record<string, PCDMetadata>
   ) {
     this.packages = packages;
     this.pcds = pcds ?? [];
     this.folders = folders ?? {};
+    this.meta = meta ?? {};
     this.changeEmitter = new Emitter();
   }
 
@@ -339,7 +346,8 @@ export class PCDCollection {
   public async serializeCollection(): Promise<string> {
     return stringify({
       pcds: await Promise.all(this.pcds.map(this.serialize.bind(this))),
-      folders: this.folders
+      folders: this.folders,
+      meta: this.meta
     } satisfies SerializedPCDCollection);
   }
 
@@ -366,6 +374,9 @@ export class PCDCollection {
     this.pcds = this.pcds.filter((pcd) => pcd.id !== pcdId);
     this.folders = Object.fromEntries(
       Object.entries(this.folders).filter(([id]) => id !== pcdId)
+    );
+    this.meta = Object.fromEntries(
+      Object.entries(this.meta).filter(([id]) => id !== pcdId)
     );
     this.emitChange();
   }
@@ -418,7 +429,7 @@ export class PCDCollection {
 
   /**
    * Generates a unique hash based on the contents. This hash changes whenever
-   * the set of pcds, or the contents of the pcds changes.
+   * the set of pcds, folders, or metadatas change.
    */
   public async getHash(): Promise<string> {
     const allSerialized = await this.serializeCollection();
@@ -428,6 +439,20 @@ export class PCDCollection {
 
   public getById(id: string): PCD | undefined {
     return this.pcds.find((pcd) => pcd.id === id);
+  }
+
+  public getMetaById(id: string): PCDMetadata | undefined {
+    return this.meta[id];
+  }
+
+  public updateMetaById(id: string, update: Partial<PCDMetadata>): void {
+    if (!this.getById(id)) {
+      return;
+    }
+
+    const existingMeta = this.meta[id] ?? {};
+    this.meta[id] = { ...existingMeta, ...update };
+    this.emitChange();
   }
 
   public hasPCDWithId(id: string): boolean {
@@ -449,16 +474,19 @@ export class PCDCollection {
     serialized: string
   ): Promise<PCDCollection> {
     const parsed = JSON.parse(serialized) as Partial<SerializedPCDCollection>;
-    const collection = new PCDCollection(packages, []);
 
     const serializedPcdsList = parsed.pcds ?? [];
     const parsedFolders = parsed.folders ?? {};
+    const parsedMetas = parsed.meta ?? {};
+
+    const collection = new PCDCollection(packages, []);
 
     const pcds: PCD[] = await Promise.all(
       serializedPcdsList.map(collection.deserialize.bind(collection))
     );
     collection.addAll(pcds, { upsert: true });
     collection.folders = parsedFolders;
+    collection.meta = parsedMetas;
 
     return collection;
   }
@@ -491,6 +519,8 @@ export class PCDCollection {
         this.setFolder(pcd.id, other.folders[pcd.id]);
       }
     }
+
+    // TODO: implement metadata merge
   }
 }
 
@@ -502,4 +532,5 @@ export class PCDCollection {
 export interface SerializedPCDCollection {
   pcds: SerializedPCD[];
   folders: Record<string, string>;
+  meta: Record<string, PCDMetadata>;
 }

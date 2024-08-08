@@ -27,7 +27,7 @@ export function ZmailTable(): ReactNode {
           return true;
         })
         .map((pcd) => PCDtoRow(ctx.pcds, pcd))
-        .filter((row) => !!row),
+        .filter((row) => !!row) as ZmailRow[],
     [ctx.filters, ctx.pcds]
   );
 
