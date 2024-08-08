@@ -40,11 +40,11 @@ export function ZmailSidebar(): ReactNode {
             }}
             className={cn(
               "bg-[#206b5e] border-2 box-border border-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87]",
-              "cursor-pointer px-2 py-1 rounded transition-colors duration-100 active:border-[#aaa]",
+              "cursor-pointer px-2 py-1 rounded transition-colors duration-100 active:border-[#eee]",
               ctx.filters.find(
                 (filter) => filter.id === folderNameToFilterId(f)
               )
-                ? "bg-[#1b8473] hover:[#154940] text-white border-[#aaa]"
+                ? "bg-[#1b8473] hover:[#154940] text-white border-[#eee]"
                 : ""
             )}
           >

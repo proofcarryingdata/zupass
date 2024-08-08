@@ -46,7 +46,15 @@ export function ZmailTable(): ReactNode {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="h-3 bg-gray-300 flex-shrink-0"></div>
+      <div className="min-h-3 bg-gray-300 flex-shrink-0 text-black">
+        <div className="m-2">
+          {ctx.filters.length > 0 && (
+            <>
+              {data.length} matching POD{data.length > 1 ? "s" : ""}
+            </>
+          )}
+        </div>
+      </div>
 
       <div className="w-full text-black flex flex-col flex-grow overflow-y-scroll">
         {table.getRowModel().rows.map((row) => (

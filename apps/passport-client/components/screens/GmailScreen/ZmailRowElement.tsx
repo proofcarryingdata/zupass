@@ -16,7 +16,7 @@ export function ZmailRowElement({ row }: { row: Row<ZmailRow> }): ReactNode {
     >
       <span
         className={cn(
-          "flex-grow",
+          "flex-grow pr-2",
           row.original.meta?.viewed ? "" : "font-bold"
         )}
       >
