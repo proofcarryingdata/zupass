@@ -5,7 +5,6 @@ import { CenterColumn, Spacer, SupportLink, TextCenter } from "../core";
 export function InfoModal(): JSX.Element {
   return (
     <div>
-      <Spacer h={32} />
       <TextCenter>
         <a target="_blank" href={ZUPASS_GITHUB_REPOSITORY_URL}>
           <FaGithub style={{ width: "34px", height: "34px", fill: "#fff" }} />

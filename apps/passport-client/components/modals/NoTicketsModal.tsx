@@ -37,13 +37,14 @@ export function NoTicketsModal(): JSX.Element {
         currently at an event and attempting to check in, please find us at the
         help desk.
       </p>
-      <Spacer h={16} />
     </Container>
   );
 }
 
 const Container = styled.div`
-  padding: 12px;
+  padding: 24px;
+  padding-bottom: 0;
+
   p {
     margin-bottom: 8px;
   }

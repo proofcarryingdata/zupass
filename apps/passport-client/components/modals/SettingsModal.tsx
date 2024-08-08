@@ -143,8 +143,6 @@ export function SettingsModal({
               </TextButton>
             </>
           ))}
-
-        <Spacer h={48} />
       </CenterColumn>
     </>
   );

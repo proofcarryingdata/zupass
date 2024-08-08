@@ -124,4 +124,5 @@ export function RequireAddPasswordModal(): JSX.Element {
 
 const Container = styled.div`
   padding: 32px;
+  padding-bottom: 0;
 `;

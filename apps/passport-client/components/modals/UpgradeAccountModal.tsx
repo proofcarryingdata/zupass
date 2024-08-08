@@ -128,4 +128,5 @@ export function UpgradeAccountModal(): JSX.Element | null {
 
 const Container = styled.div`
   padding: 32px;
+  padding-bottom: 0;
 `;

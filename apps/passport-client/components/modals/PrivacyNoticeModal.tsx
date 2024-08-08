@@ -52,5 +52,6 @@ export function PrivacyNoticeModal(): JSX.Element {
 }
 
 const Container = styled.div`
-  padding: 24px;
+  padding: 32px;
+  padding-bottom: 0;
 `;

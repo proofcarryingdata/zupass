@@ -4,7 +4,6 @@ import { GrClose } from "react-icons/gr";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { useDispatch, useModal } from "../../src/appHooks";
 import { AppState } from "../../src/state";
-import { Spacer } from "../core";
 import { MyCircleButton } from "../core/MyCircleButton";
 import { Overscroll } from "../shared/Overscroll";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
@@ -142,13 +141,16 @@ export function Modal(props: {
 
   return (
     <ModalBg onClick={props.onClose} $fullScreen={props.fullScreen}>
-      <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
+      <ModalWrap
+        fullScreen={props.fullScreen}
+        onClick={ignore}
+        className="border-4"
+      >
         {props.onClose && (
           <MyCircleButton diameter={20} padding={16} onClick={props.onClose}>
             <GrClose style={{ height: "20px", width: "20px", color: "#fff" }} />
           </MyCircleButton>
         )}
-        <Spacer h={16} />
         {props.children}
       </ModalWrap>
     </ModalBg>
@@ -178,18 +180,16 @@ const ModalBg = styled.div<{ $fullScreen?: boolean }>`
 `;
 
 const ModalWrap = styled.div<{ fullScreen?: boolean }>`
-  background: radial-gradient(
-    circle,
-    var(--bg-lite-primary),
-    var(--bg-dark-primary)
-  );
+  background: var(--bg-dark-primary);
   width: 100%;
   max-width: 420px;
   margin: 8px auto;
   max-height: 100%;
   overflow-y: scroll;
   padding: ${(props): string => (props.fullScreen ? "0" : "12px")};
-  border-radius: 12px;
+  border-radius: 8px;
+  padding-bottom: 64px;
+  border-color: #297266;
 
   ${({ fullScreen }): FlattenSimpleInterpolation =>
     fullScreen

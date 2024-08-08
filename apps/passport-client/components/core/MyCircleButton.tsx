@@ -19,7 +19,7 @@ export function MyCircleButton({
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "transition-all duration-200",
+        "transition-all duration-200 p-4",
         "active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]"
       )}
     >
