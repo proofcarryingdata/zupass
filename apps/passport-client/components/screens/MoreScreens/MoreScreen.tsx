@@ -108,7 +108,3 @@ export function MoreScreen(): ReactNode {
 }
 
 const squareStyle = cn();
-// "rounded-lg",
-// "font-bold text-xl active:scale-[1.05] hover:translate-y-[-3px] active:translate-y-[4px] transition-all duration-200 select-none",
-// "bg-red-500 p-4 aspect-square border-8 border-black cursor-pointer hover:border-[#31992b]",
-// "overflow-hidden"

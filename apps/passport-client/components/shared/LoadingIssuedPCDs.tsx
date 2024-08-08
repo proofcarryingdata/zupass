@@ -10,14 +10,19 @@ export function LoadingIssuedPCDs(): JSX.Element | null {
   useEffect(() => {
     if (loadedIssuedPCDs) {
       setStyle({
-        opacity: 0,
-        height: "0px",
-        margin: "0px !important",
-        marginBottom: "0px",
-        fontSize: "0.1em !important",
-        padding: "0px",
-        transition: "all 200ms ease-in-out"
+        backgroundColor: "rgba(93, 211, 125, 0.4)"
       });
+      setTimeout(() => {
+        setStyle({
+          opacity: 0,
+          height: "0px",
+          margin: "0px !important",
+          marginBottom: "0px",
+          fontSize: "0.1em !important",
+          padding: "0px",
+          backgroundColor: "rgba(93, 211, 125, 0.4)"
+        });
+      }, 1500);
     }
   }, [loadedIssuedPCDs]);
 
@@ -50,4 +55,5 @@ const Container = styled.div`
   height: 50px;
   background-color: rgba(0, 0, 0, 0.2);
   font-size: 1em;
+  transition: all 200ms ease-in-out;
 `;
