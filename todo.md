@@ -1,7 +1,6 @@
 # todo
 
 - better 'input' element throughout the app
-- update the landing page to be more 'fun'
 - other data -> a 'non-ticketing' view of the app - it shows all PCDs
   - like email client?
   - table view
@@ -22,6 +21,7 @@
 - make tickets look more special / different from everything other than tickets
 - rename 'more cryptography' to 'zapps', move to top row
 - convert all buttons in the app to be the new buttons
+- update the landing page to be more 'fun'
 - convert modals to be AWESOME
 - better loading spinner
 - rather than 'next/prev' go back to list view

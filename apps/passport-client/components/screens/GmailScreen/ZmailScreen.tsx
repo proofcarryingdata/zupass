@@ -25,20 +25,30 @@ export function ZmailScreenImpl(): JSX.Element | null {
   return (
     <ZmailContext.Provider value={ctx}>
       <div className="bg-[#206b5e] h-[100vh]">
-        <div className="flex flex-row p-4 gap-4 w-[200px]">
+        <div className="flex flex-row p-4 gap-4 justify-between">
+          <div className="flex flex-row items-center justify-center gap-4">
+            <NewButton
+              onClick={() => {
+                ctx.update({
+                  filters: [],
+                  searchTerm: ""
+                });
+              }}
+            >
+              Zmail
+            </NewButton>
+            <ZmailSearch />
+          </div>
+
           <NewButton
-            className="flex flex-row items-center justify-center gap-4 mr-[95px]"
             onClick={() => {
-              ctx.update({
-                filters: [],
-                searchTerm: ""
-              });
+              window.location.href = "/#/";
             }}
           >
-            <span>Zmail</span>
+            Back to Zupass
           </NewButton>
-          <ZmailSearch />
         </div>
+
         <div className="w-full flex flex-col gap-4">
           <div className="flex flex-row overflow-hidden">
             <div className="max-w-[300px]">
