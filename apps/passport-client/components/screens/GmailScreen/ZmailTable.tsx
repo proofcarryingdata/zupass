@@ -46,13 +46,13 @@ export function ZmailTable(): ReactNode {
 
   return (
     <div className="w-full text-black flex flex-col h-full">
-      <div className="h-3 bg-gray-300"></div>
+      <div className="h-3 bg-gray-300 flex-shrink-0"></div>
       <div className="flex-grow overflow-y-scroll">
         {table.getRowModel().rows.map((row) => (
           <ZmailRowElement row={row} />
         ))}
       </div>
-      <div className="h-3 bg-gray-200"></div>
+      <div className="h-3 bg-gray-200 flex-shrink-0"></div>
     </div>
   );
 }
@@ -87,23 +87,6 @@ export function PCDtoRow(pcds: PCDCollection, pcd: PCD): ZmailRow | undefined {
 
 const columnHelper = createColumnHelper<ZmailRow>();
 const columns = [
-  // columnHelper.display({
-  //   header: "controls",
-  //   cell: () => (
-  //     <div
-  //       onClick={(e) => {
-  //         e.stopPropagation();
-  //         e.preventDefault();
-  //       }}
-  //       className="flex flex-row content-center items-center"
-  //     >
-  //       <StarToggle />
-  //     </div>
-  //   ),
-  //   maxSize: 50,
-  //   minSize: 0,
-  //   size: 20
-  // }),
   columnHelper.accessor("name", {
     header: "name",
     cell: (info) => info.getValue()

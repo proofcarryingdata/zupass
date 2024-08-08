@@ -335,7 +335,7 @@ function RouterImpl(): JSX.Element {
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
 
-          <Route path="other" element={<ZmailScreen />} />
+          <Route path="zmail" element={<ZmailScreen />} />
           <Route path="pcd" element={<ZmailPCDScreen />} />
 
           <Route path="more" element={<MoreScreen />} />

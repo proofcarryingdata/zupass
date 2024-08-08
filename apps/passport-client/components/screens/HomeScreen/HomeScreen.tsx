@@ -74,7 +74,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
-  const isOther = useLocation().pathname.startsWith("/other");
+  const isOther = useLocation().pathname.startsWith("/zmail");
 
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultBrowsingFolder = useMemo(() => {
@@ -284,7 +284,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                   <NewButton
                     variant="gray"
                     onClick={() => {
-                      window.location.href = "#/other";
+                      window.location.href = "#/zmail";
                     }}
                   >
                     Zmail

@@ -24,7 +24,7 @@ export function ZmailPCDScreenImpl(): JSX.Element | null {
         <NewButton
           className="inline-block"
           onClick={() => {
-            window.location.href = "/#/other";
+            window.location.href = "/#/zmail";
           }}
         >
           Zmail
