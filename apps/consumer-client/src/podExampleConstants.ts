@@ -58,7 +58,7 @@ export const EXAMPLE_GPC_CONFIG = `{
         },
         "owner": {
           "isRevealed": false,
-          "isOwnerID": true
+          "isOwnerID": "SemaphoreV3"
         }
       }
     },
