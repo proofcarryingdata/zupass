@@ -18,6 +18,7 @@ export function ZmailSidebar(): ReactNode {
       <div className="select-none flex flex-col gap-1 flex-grow overflow-y-scroll">
         {sortedFolders.map((f) => (
           <div
+            key={f}
             onClick={() => {
               let filters = ctx.filters;
               if (

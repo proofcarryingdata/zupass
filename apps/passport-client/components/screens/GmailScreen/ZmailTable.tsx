@@ -1,4 +1,4 @@
-import { PCDCollection } from "@pcd/pcd-collection";
+import { PCDCollection, PCDMetadata } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import {
   createColumnHelper,
@@ -47,7 +47,7 @@ export function ZmailTable(): ReactNode {
   return (
     <div className="w-full text-black flex flex-col flex-grow overflow-y-scroll">
       {table.getRowModel().rows.map((row) => (
-        <ZmailRowElement row={row} />
+        <ZmailRowElement key={row.id} row={row} />
       ))}
     </div>
   );
@@ -58,6 +58,7 @@ export interface ZmailRow {
   name: string | undefined;
   type: string;
   folder: string;
+  meta?: PCDMetadata;
 }
 
 export function PCDtoRow(pcds: PCDCollection, pcd: PCD): ZmailRow | undefined {
@@ -77,7 +78,8 @@ export function PCDtoRow(pcds: PCDCollection, pcd: PCD): ZmailRow | undefined {
     pcd,
     name: options.header,
     type: pcd.type,
-    folder: pcds.getFolderOfPCD(pcd.id) ?? "/"
+    folder: pcds.getFolderOfPCD(pcd.id) ?? "/",
+    meta: pcds.getMetaById(pcd.id)
   };
 }
 
