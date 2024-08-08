@@ -45,10 +45,15 @@ export function ZmailTable(): ReactNode {
   });
 
   return (
-    <div className="w-full text-black flex flex-col flex-grow overflow-y-scroll">
-      {table.getRowModel().rows.map((row) => (
-        <ZmailRowElement key={row.id} row={row} />
-      ))}
+    <div className="h-full flex flex-col">
+      <div className="h-3 bg-gray-300 flex-shrink-0"></div>
+
+      <div className="w-full text-black flex flex-col flex-grow overflow-y-scroll">
+        {table.getRowModel().rows.map((row) => (
+          <ZmailRowElement key={row.id} row={row} />
+        ))}
+      </div>
+      <div className="h-3 bg-gray-300 flex-shrink-0"></div>
     </div>
   );
 }
