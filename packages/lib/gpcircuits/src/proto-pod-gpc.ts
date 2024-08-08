@@ -424,6 +424,10 @@ export class ProtoPODGPC {
   /**
    * Creates a set of public signals for verification, given public inputs
    * and outputs of a circuit.
+   *
+   * Some values are replaced with their 0-residues modulo `BABY_JUB_PRIME` to
+   * agree with the values returned by the Groth16 prover, which are always
+   * normalised this way.
    */
   public static makePublicSignals(
     inputs: ProtoPODGPCPublicInputs,
