@@ -372,6 +372,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
           entries: {
             A: { isRevealed: false, inRange: { min: 100n, max: 132n } },
             G: { isRevealed: true, inRange: { min: POD_INT_MIN, max: 30n } },
+            K: { isRevealed: false, inRange: { min: -10n, max: 0n } },
             otherTicketID: { isRevealed: false },
             owner: { isRevealed: false, isOwnerID: true }
           },
