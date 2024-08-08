@@ -69,6 +69,7 @@
     "@types/react": "^18.2.0",
     "chai-as-promised": "^7.1.1",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3",
