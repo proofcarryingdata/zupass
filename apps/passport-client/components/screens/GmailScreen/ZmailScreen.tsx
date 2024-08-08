@@ -27,24 +27,22 @@ export function ZmailScreenImpl(): JSX.Element | null {
       <div className="h-[100vh] max-h-[100vh] overflow-hidden flex flex-col">
         {/* header */}
         <div className="flex flex-row justify-between px-4 pt-4">
-          <div className="flex flex-row items-center justify-center gap-4">
-            <ZupassTitle
-              className="w-[300px] box-border px-4"
-              style={{ fontSize: "2.5em" }}
+          <ZupassTitle
+            className="w-[300px] box-border px-4"
+            style={{ fontSize: "2.5em", lineHeight: "1.5em" }}
+          >
+            <span
+              className="cursor-pointer"
+              onClick={() => {
+                ctx.update({
+                  filters: [],
+                  searchTerm: ""
+                });
+              }}
             >
-              <span
-                className="cursor-pointer"
-                onClick={() => {
-                  ctx.update({
-                    filters: [],
-                    searchTerm: ""
-                  });
-                }}
-              >
-                Zmail
-              </span>
-            </ZupassTitle>
-          </div>
+              Zmail
+            </span>
+          </ZupassTitle>
 
           <NewButton
             className="inline-block"
@@ -61,8 +59,8 @@ export function ZmailScreenImpl(): JSX.Element | null {
           <div className="w-[300px] flex-shrink-0 box-border h-full">
             <ZmailSidebar />
           </div>
-          <div className="flex-grow flex flex-col gap-4 p-4 h-full">
-            <div className="h-full bg-green-50 overflow-y-scroll rounded-lg p-4">
+          <div className="flex-grow flex flex-col gap-4 p-4 pl-0 h-full">
+            <div className="h-full bg-white overflow-hidden rounded-lg">
               <ZmailTable />
             </div>
           </div>

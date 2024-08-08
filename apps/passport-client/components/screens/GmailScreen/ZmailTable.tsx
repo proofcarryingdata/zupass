@@ -2,15 +2,14 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import {
   createColumnHelper,
-  flexRender,
   getCoreRowModel,
   getSortedRowModel,
   SortingState,
   useReactTable
 } from "@tanstack/react-table";
 import { ReactNode, useMemo, useState } from "react";
-import { cn } from "../../../src/util";
 import { useZmailContext } from "./ZmailContext";
+import { ZmailRowElement } from "./ZmailRowElement";
 
 export function ZmailTable(): ReactNode {
   const ctx = useZmailContext();
@@ -46,76 +45,19 @@ export function ZmailTable(): ReactNode {
   });
 
   return (
-    <div className="w-full text-black">
-      <table className="w-full select-none">
-        <thead className="">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  onClick={() => {
-                    header.column.toggleSorting();
-                  }}
-                  className="cursor-pointer"
-                  key={header.id}
-                  style={{
-                    width: `${header.getSize()}px`,
-                    maxWidth: `${header.column.columnDef.maxSize}px`,
-                    minWidth: `${header.column.columnDef.minSize}px`
-                  }}
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className={cn("cursor-pointer")}
-              style={{
-                transition: "background-color 100ms",
-                borderLeft: "none",
-                borderRight: "none"
-              }}
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td
-                  onClick={() => {
-                    window.location.href = `/#/pcd?id=${encodeURIComponent(
-                      row.original.pcd.id
-                    )}`;
-                  }}
-                  {...{
-                    key: cell.id,
-                    style: {
-                      width: cell.column.getSize(),
-                      maxWidth: `${cell.column.columnDef.maxSize}px`,
-                      minWidth: `${cell.column.columnDef.minSize}px`,
-                      overflow: "hidden"
-                    }
-                  }}
-                  className="text-ellipsis whitespace-nowrap"
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="w-full text-black flex flex-col h-full">
+      <div className="h-3 bg-gray-300"></div>
+      <div className="flex-grow overflow-y-scroll">
+        {table.getRowModel().rows.map((row) => (
+          <ZmailRowElement row={row} />
+        ))}
+      </div>
+      <div className="h-3 bg-gray-200"></div>
     </div>
   );
 }
 
-interface ZmailRow {
+export interface ZmailRow {
   pcd: PCD;
   name: string | undefined;
   type: string;
