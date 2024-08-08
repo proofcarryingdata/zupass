@@ -1,5 +1,7 @@
 import React, { useMemo, useState } from "react";
-import { usePCDCollection } from "../../../src/appHooks";
+import { FaCog } from "react-icons/fa";
+import { useDispatch, usePCDCollection } from "../../../src/appHooks";
+import { MaybeModal } from "../../modals/Modal";
 import { NewButton } from "../../NewButton";
 import { ZupassTitle } from "../HomeScreen/HomeScreen";
 import { ZmailContext, ZmailScreenContextValue } from "./ZmailContext";
@@ -10,6 +12,7 @@ import { ZmailTable } from "./ZmailTable";
 export const ZmailScreen = React.memo(ZmailScreenImpl);
 
 export function ZmailScreenImpl(): JSX.Element | null {
+  const dispatch = useDispatch();
   const pcds = usePCDCollection();
   const [ctx, setCtx] = useState<ZmailScreenContextValue>({
     pcds,
@@ -25,6 +28,7 @@ export function ZmailScreenImpl(): JSX.Element | null {
 
   return (
     <ZmailContext.Provider value={ctx}>
+      <MaybeModal />
       <div className="h-[100vh] max-h-[100vh] overflow-hidden flex flex-col">
         {/* header */}
         <div className="flex flex-row justify-between px-4 pt-4">
@@ -46,14 +50,29 @@ export function ZmailScreenImpl(): JSX.Element | null {
             </span>
           </ZupassTitle>
 
-          <NewButton
-            className="inline-block"
-            onClick={() => {
-              window.location.href = "/#/";
-            }}
-          >
-            Back to Zupass
-          </NewButton>
+          <div className="flex flex-row gap-2">
+            <NewButton
+              className="inline-block"
+              onClick={() => {
+                window.location.href = "/#/";
+              }}
+            >
+              Back to Zupass
+            </NewButton>
+            <NewButton
+              className="flex flex-row justify-center items-center flex-grow text-center flex-shrink"
+              onClick={() =>
+                dispatch({
+                  type: "set-modal",
+                  modal: {
+                    modalType: "settings"
+                  }
+                })
+              }
+            >
+              <FaCog size={24} />
+            </NewButton>
+          </div>
         </div>
 
         {/* content */}
