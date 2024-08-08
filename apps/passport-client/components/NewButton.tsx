@@ -30,7 +30,7 @@ export function NewButton({
       {...props}
       className={cn(
         "text-white",
-        "whitespace-nowrap w-full",
+        "whitespace-nowrap block",
         "border-4",
         "text-center",
         "py-2 px-4 cursor-pointer transition-all duration-100",

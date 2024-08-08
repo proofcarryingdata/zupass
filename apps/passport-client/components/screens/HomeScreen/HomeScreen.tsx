@@ -393,7 +393,7 @@ const RemoveAllContainer = styled.div`
   align-items: center;
 `;
 
-const ZupassTitle = styled.span`
+export const ZupassTitle = styled.span`
   font-family: "Passion One";
   font-size: 4em;
 `;

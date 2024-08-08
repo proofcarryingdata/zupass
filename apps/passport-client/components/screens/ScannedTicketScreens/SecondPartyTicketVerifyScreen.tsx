@@ -19,6 +19,7 @@ import {
 import { devconnectCheckByIdWithOffline } from "../../../src/checkin";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../../core";
 import { icons } from "../../icons";
+import { NewButton } from "../../NewButton";
 import { AppContainer } from "../../shared/AppContainer";
 import {
   CardContainer,
@@ -296,7 +297,13 @@ export function SecondPartyTicketVerifyScreen(): JSX.Element {
       <CenterColumn w={280}>
         <LinkButton to="/scan">Verify another</LinkButton>
         <Spacer h={8} />
-        <LinkButton to="/">Back to Zupass</LinkButton>
+        <NewButton
+          onClick={() => {
+            window.location.href = "/#/";
+          }}
+        >
+          Back to Zupass
+        </NewButton>
         <Spacer h={24} />
       </CenterColumn>
     </AppContainer>

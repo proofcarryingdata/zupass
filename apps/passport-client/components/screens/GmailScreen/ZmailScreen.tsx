@@ -41,6 +41,7 @@ export function ZmailScreenImpl(): JSX.Element | null {
           </div>
 
           <NewButton
+            className="inline-block"
             onClick={() => {
               window.location.href = "/#/";
             }}
