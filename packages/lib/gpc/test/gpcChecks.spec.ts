@@ -17,7 +17,7 @@ describe("Proof entry config check should work", () => {
     const entryName = "somePOD.someEntry";
     const entryConfig = { isRevealed: false };
     expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
-      hasBoundsCheck: false
+      nBoundsChecks: 0
     });
   });
 
@@ -27,10 +27,11 @@ describe("Proof entry config check should work", () => {
       isRevealed: false,
       isMemberOf: "someList",
       inRange: { min: 0n, max: 10n },
+      notInRange: { min: POD_INT_MIN, max: -1n },
       equalsEntry: "someOtherPOD.someOtherEntry"
     };
     expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
-      hasBoundsCheck: true
+      nBoundsChecks: 2
     });
   });
 
@@ -39,8 +40,8 @@ describe("Proof entry config check should work", () => {
   it("should pass for an entry configuration with bounds checks within the appropriate range", () => {
     for (const boundsCheckConfig of [
       { inRange: { min: 3n, max: POD_INT_MAX } },
-      { inRange: { min: POD_INT_MIN, max: 100n } },
-      { inRange: { min: 3n, max: 100n } }
+      { notInRange: { min: POD_INT_MIN, max: 100n } },
+      { inRange: { min: 3n, max: 100n }, notInRange: { min: 204n, max: 900n } }
     ]) {
       const entryName = "somePOD.someEntry";
       const entryConfig = { isRevealed: false };
@@ -49,7 +50,7 @@ describe("Proof entry config check should work", () => {
           ...entryConfig,
           ...boundsCheckConfig
         })
-      ).to.deep.equal({ hasBoundsCheck: true });
+      ).to.deep.equal({ nBoundsChecks: Object.keys(boundsCheckConfig).length });
     }
   });
 
@@ -57,9 +58,24 @@ describe("Proof entry config check should work", () => {
     for (const boundsCheckConfig of [
       { inRange: { min: POD_INT_MIN - 1n, max: POD_INT_MAX } },
       { inRange: { min: POD_INT_MIN, max: POD_INT_MAX + 1n } },
-      { inRange: { min: POD_INT_MIN - 1n, max: 100n } },
-      { inRange: { min: 3n, max: POD_INT_MAX + 1n } },
-      { inRange: { min: POD_INT_MIN, max: POD_INT_MAX + 1n } }
+      { notInRange: { min: POD_INT_MIN - 1n, max: POD_INT_MAX } },
+      { notInRange: { min: POD_INT_MIN, max: POD_INT_MAX + 1n } },
+      {
+        inRange: { min: POD_INT_MIN - 1n, max: 100n },
+        notInRange: { min: 0n, max: 50n }
+      },
+      {
+        notInRange: { min: POD_INT_MIN - 1n, max: 100n },
+        inRange: { min: 300n, max: POD_INT_MAX }
+      },
+      {
+        notInRange: { min: 10n, max: 55n },
+        inRange: { min: 3n, max: POD_INT_MAX + 1n }
+      },
+      {
+        notInRange: { min: 3n, max: POD_INT_MAX + 1n },
+        inRange: { min: 0n, max: 1n }
+      }
     ]) {
       const entryName = "somePOD.someEntry";
       const entryConfig = { isRevealed: false };
@@ -89,7 +105,11 @@ describe("Proof config check against input for bounds checks should work", () =>
       { inRange: { min: POD_INT_MIN, max: 25n } },
       { inRange: { min: POD_INT_MIN, max: 100n } },
       { inRange: { min: 25n, max: 25n } },
-      { inRange: { min: 3n, max: 100n } }
+      { inRange: { min: 3n, max: 100n } },
+      { notInRange: { min: 26n, max: POD_INT_MAX } },
+      { notInRange: { min: POD_INT_MIN, max: 24n } },
+      { inRange: { min: 0n, max: 100n }, notInRange: { min: 26n, max: 40n } },
+      { inRange: { min: 0n, max: 100n }, notInRange: { min: 5n, max: 24n } }
     ]) {
       const entryName = "somePOD.someEntry";
       const entryConfig = { isRevealed: false };
@@ -108,7 +128,11 @@ describe("Proof config check against input for bounds checks should work", () =>
       { inRange: { min: 38n, max: POD_INT_MAX } },
       { inRange: { min: POD_INT_MIN, max: 20n } },
       { inRange: { min: 3n, max: 24n } },
-      { inRange: { min: 26n, max: 100n } }
+      { inRange: { min: 26n, max: 100n } },
+      { notInRange: { min: 25n, max: 25n } },
+      { notInRange: { min: POD_INT_MIN, max: 30n } },
+      { notInRange: { min: 24n, max: POD_INT_MAX } },
+      { inRange: { min: 0n, max: 100n }, notInRange: { min: 24n, max: 26n } }
     ]) {
       const entryName = "somePOD.someEntry";
       const entryConfig = { isRevealed: false };
@@ -131,7 +155,11 @@ describe("Proof config check against input for bounds checks should work", () =>
       for (const boundsCheckConfig of [
         { inRange: { min: 3n, max: POD_INT_MAX } },
         { inRange: { min: POD_INT_MIN, max: 100n } },
-        { inRange: { min: 3n, max: 100n } }
+        { inRange: { min: 3n, max: 100n } },
+        { notInRange: { min: 3n, max: POD_INT_MAX } },
+        { notInRange: { min: POD_INT_MIN, max: 100n } },
+        { notInRange: { min: 3n, max: 100n } },
+        { inRange: { min: 0n, max: 100n }, notInRange: { min: 26n, max: 40n } }
       ]) {
         const entryName = "somePOD.someEntry";
         const entryConfig = { isRevealed: false };

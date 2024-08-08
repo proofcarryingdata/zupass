@@ -17,6 +17,7 @@ import {
   GPCBoundConfig,
   GPCIdentifier,
   GPCProofConfig,
+  GPCProofEntryBoundsCheckConfig,
   GPCProofEntryConfig,
   GPCProofEntryConfigCommon,
   GPCProofObjectConfig,
@@ -150,6 +151,14 @@ export function canonicalizeEntryConfig(
           inRange: {
             min: proofEntryConfig.inRange.min,
             max: proofEntryConfig.inRange.max
+          }
+        }
+      : {}),
+    ...(proofEntryConfig.notInRange !== undefined
+      ? {
+          notInRange: {
+            min: proofEntryConfig.notInRange.min,
+            max: proofEntryConfig.notInRange.max
           }
         }
       : {}),
@@ -577,7 +586,7 @@ export const LIST_NONMEMBERSHIP = "non-membership";
  */
 export type GPCProofBoundsCheckConfig = Record<
   PODEntryIdentifier,
-  BoundsConfig
+  GPCProofEntryBoundsCheckConfig
 >;
 
 /**
@@ -593,10 +602,9 @@ export type GPCProofMembershipListConfig = Record<
 >;
 
 /**
- * Bounds check configuration for an individual entry. This specifies the bounds
- * check required for relevant entries at the circuit level.
+ * Convenient type for closed intervals used in (out of) bounds/range checks.
  */
-export type BoundsConfig = { min: bigint; max: bigint };
+export type ClosedInterval = { min: bigint; max: bigint };
 
 /**
  * List configuration for an individual entry or tuple. This specifies the type
@@ -625,11 +633,24 @@ export function boundsCheckConfigFromProofConfig(
 ): GPCProofBoundsCheckConfig {
   return Object.fromEntries(
     Object.entries(proofConfig.pods).flatMap(([podName, podConfig]) =>
-      Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) =>
-        entryConfig.inRange === undefined
+      Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) => {
+        const hasRangeCheck = entryConfig.inRange !== undefined;
+        const hasOutOfRangeCheck = entryConfig.notInRange !== undefined;
+
+        return !(hasRangeCheck || hasOutOfRangeCheck)
           ? []
-          : [[`${podName}.${entryName}`, entryConfig.inRange]]
-      )
+          : [
+              [
+                `${podName}.${entryName}`,
+                {
+                  ...(hasRangeCheck ? { inRange: entryConfig.inRange } : {}),
+                  ...(hasOutOfRangeCheck
+                    ? { notInRange: entryConfig.notInRange }
+                    : {})
+                }
+              ]
+            ];
+      })
     )
   );
 }

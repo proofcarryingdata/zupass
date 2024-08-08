@@ -34,7 +34,7 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
-  BoundsConfig,
+  ClosedInterval,
   GPCProofMembershipListConfig,
   GPCRequirements,
   LIST_MEMBERSHIP,
@@ -162,12 +162,12 @@ function checkProofObjConfig(
   let nBoundsChecks = 0;
   for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
     checkPODEntryName(entryName, true);
-    const { hasBoundsCheck } = checkProofEntryConfig(
+    const { nBoundsChecks: nEntryBoundsChecks } = checkProofEntryConfig(
       `${nameForErrorMessages}.${entryName}`,
       entryConfig
     );
     nEntries++;
-    nBoundsChecks += +hasBoundsCheck;
+    nBoundsChecks += nEntryBoundsChecks;
   }
   if (objConfig.signerPublicKey !== undefined) {
     checkProofEntryConfig(
@@ -181,7 +181,7 @@ function checkProofObjConfig(
 export function checkProofEntryConfig(
   nameForErrorMessages: string,
   entryConfig: GPCProofEntryConfig
-): { hasBoundsCheck: boolean } {
+): { nBoundsChecks: number } {
   requireType(
     `${nameForErrorMessages}.isValueRevealed`,
     entryConfig.isRevealed,
@@ -209,28 +209,33 @@ export function checkProofEntryConfig(
     );
   }
 
-  const hasBoundsCheck = entryConfig.inRange !== undefined;
+  let nBoundsChecks = 0;
 
-  if (hasBoundsCheck) {
-    const inRange = entryConfig.inRange as BoundsConfig;
-    if (inRange.min < POD_INT_MIN) {
-      throw new RangeError(
-        `Minimum value of entry ${nameForErrorMessages} is less than smallest admissible value ${POD_INT_MIN}.`
-      );
-    }
-    if (inRange.max > POD_INT_MAX) {
-      throw new RangeError(
-        `Maximum value of entry ${nameForErrorMessages} is greater than largest admissible ${POD_INT_MAX}.`
-      );
-    }
-    if (inRange.max < inRange.min) {
-      throw new Error(
-        "Minimum value for entry ${nameForErrorMesages} must be less than or equal to its maximum value."
-      );
+  for (const [checkType, inRange] of [
+    ["bounds check", entryConfig.inRange],
+    ["out of bounds check", entryConfig.notInRange]
+  ] as [string, ClosedInterval][]) {
+    if (inRange !== undefined) {
+      if (inRange.min < POD_INT_MIN) {
+        throw new RangeError(
+          `Minimum value of ${checkType} for entry ${nameForErrorMessages} is less than smallest admissible value ${POD_INT_MIN}.`
+        );
+      }
+      if (inRange.max > POD_INT_MAX) {
+        throw new RangeError(
+          `Maximum value of ${checkType} for entry ${nameForErrorMessages} is greater than largest admissible ${POD_INT_MAX}.`
+        );
+      }
+      if (inRange.max < inRange.min) {
+        throw new Error(
+          "Minimum value of ${checkType} for entry ${nameForErrorMesages} must be less than or equal to its maximum value."
+        );
+      }
+      nBoundsChecks += 1;
     }
   }
 
-  return { hasBoundsCheck };
+  return { nBoundsChecks };
 }
 
 export function checkProofTupleConfig(proofConfig: GPCProofConfig): void {
@@ -491,6 +496,21 @@ export function checkProofBoundsCheckInputsForConfig(
     if (entryValue.value > entryConfig.inRange.max) {
       throw new RangeError(
         `Entry ${entryName} is greater than its prescribed maximum value ${entryConfig.inRange.max}.`
+      );
+    }
+  }
+  if (entryConfig.notInRange !== undefined) {
+    if (entryValue.type !== "int") {
+      throw new TypeError(
+        `Proof configuration for entry ${entryName} has out of bounds check but entry value is not of type "int".`
+      );
+    }
+    if (
+      entryConfig.notInRange.min <= entryValue.value &&
+      entryValue.value <= entryConfig.notInRange.max
+    ) {
+      throw new RangeError(
+        `Entry ${entryName} does not lie outside of the interval [${entryConfig.notInRange.min},${entryConfig.notInRange.max}].`
       );
     }
   }

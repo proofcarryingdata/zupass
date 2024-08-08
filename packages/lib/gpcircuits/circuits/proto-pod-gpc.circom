@@ -222,6 +222,12 @@ template ProtoPODGPC (
     // padded with 0s and -1s respectively if necessary.
     signal input numericValues[MAX_NUMERIC_VALUES];
     signal input numericValueEntryIndices[MAX_NUMERIC_VALUES];
+
+    // Bit-packed indicators of whether the corresponding numeric
+    // values should lie within the corresponding bounds.
+    signal input numericValueInRange;
+    signal numericValueInRangeBits[MAX_NUMERIC_VALUES]
+        <== Num2Bits(MAX_NUMERIC_VALUES)(numericValueInRange);
     
     // Arrays of (inclusive) 64-bit signed integer bounds, where the
     // ith element of each array specifies the minimum or maximum
@@ -231,20 +237,26 @@ template ProtoPODGPC (
     // be padded with 0s if necessary.
     signal input numericMinValues[MAX_NUMERIC_VALUES];
     signal input numericMaxValues[MAX_NUMERIC_VALUES];
+
+    // Output of numeric value module (bounds check).
+    signal numericValueBoundsCheck[MAX_NUMERIC_VALUES];
     
     for (var i = 0; i < MAX_NUMERIC_VALUES; i++) {
-        NumericValueModule()(
-            // Disable value hash check if index is -1.
-            NOT()(
-                IsZero()(numericValueEntryIndices[i] + 1)
-                  ),
-            numericValues[i],
-            MaybeInputSelector(MAX_ENTRIES)(
-                entryValueHashes,
-                numericValueEntryIndices[i]
-                                            ),
-            numericMinValues[i],
-            numericMaxValues[i]);
+        numericValueBoundsCheck[i]
+            <== NumericValueModule()(
+                // Disable value hash check if index is -1.
+                NOT()(
+                    IsZero()(numericValueEntryIndices[i] + 1)
+                      ),
+                numericValues[i],
+                MaybeInputSelector(MAX_ENTRIES)(
+                    entryValueHashes,
+                    numericValueEntryIndices[i]
+                                                ),
+                numericMinValues[i],
+                numericMaxValues[i]);
+
+        numericValueInRangeBits[i] === numericValueBoundsCheck[i];
     }
     
     /*
@@ -273,7 +285,7 @@ template ProtoPODGPC (
     // Bit-packed indicators of whether the comparison values should
     // be members of the list.
     // An entry of the unpacked bit array is equal to 1 if the corresponding
-    // indexin the comparison value array should be a member of the list and
+    // index in the comparison value array should be a member of the list and
     // 0 if it shouldn't.
     signal input listContainsComparisonValue /*MAX_LISTS packed bits*/;
     signal listContainsComparisonValueBits[MAX_LISTS] <== Num2Bits(MAX_LISTS)(listContainsComparisonValue);
