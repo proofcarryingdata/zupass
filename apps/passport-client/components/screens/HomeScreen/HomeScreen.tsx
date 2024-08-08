@@ -211,16 +211,6 @@ export function HomeScreenImpl(): JSX.Element | null {
         <Spacer h={24} />
         {isRoot && !isOther && <AppHeader isEdgeCity={isEdgeCity} />}
         <Placeholder minH={540}>
-          {isRoot && !isOther && (
-            <NewButton
-              style={{ marginBottom: "0.75rem" }}
-              onClick={() => {
-                window.location.href = "#/more";
-              }}
-            >
-              More Cryptography
-            </NewButton>
-          )}
           {isRoot && isOther && (
             <>
               <FolderDetails
@@ -281,7 +271,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                           setShowOlder((show) => !show);
                         }}
                       >
-                        {showOlder ? "Hide Older Events" : "Show Older Events"}
+                        {showOlder ? "Hide Older Events" : "Older Events"}
                       </NewButton>
                     </>
                   )}

@@ -76,15 +76,23 @@ function AppHeaderImpl({
       <div className="flex flex-row gap-2 w-full">
         <NewButton
           className={cn(
-            "flex flex-row justify-center items-center flex-grow text-center"
+            "flex flex-row justify-center items-center flex-grow text-center flex-shrink"
           )}
           onClick={openInfo}
         >
           <FaInfoCircle size={24} />
         </NewButton>
         <NewButton
+          className="flex-grow"
+          onClick={() => {
+            window.location.href = "#/more";
+          }}
+        >
+          ZAPPS
+        </NewButton>
+        <NewButton
           className={cn(
-            "flex flex-row justify-center items-center flex-grow text-center"
+            "flex flex-row justify-center items-center flex-grow text-center flex-shrink"
           )}
           onClick={openSettings}
         >

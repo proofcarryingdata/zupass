@@ -82,7 +82,7 @@ export function FolderCard({
           onClick={onClick}
           className={cn(
             "border-4 border-purple-600 h-[150px] relative overflow-hidden",
-            "bg-purple-700 py-2 px-4 cursor-pointer hover:bg-purple-600  hover:border-white hover:border-6 transition-all duration-100",
+            "bg-purple-700 py-2 px-4 cursor-pointer hover:bg-purple-600  hover:border-purple-400 hover:border-6 transition-all duration-100",
             "rounded-lg font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60 ring-offset-[#19473f]",
             "text-lg"
           )}
