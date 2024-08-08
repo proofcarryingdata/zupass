@@ -45,7 +45,9 @@ export function AccountExportButton(): JSX.Element | null {
 
   return url ? (
     <Link to={url} download={`zupass-${hash}.json`}>
-      <NewButton onClick={showToast}>Export</NewButton>
+      <NewButton className="w-full" onClick={showToast}>
+        Export
+      </NewButton>
     </Link>
   ) : null;
 }

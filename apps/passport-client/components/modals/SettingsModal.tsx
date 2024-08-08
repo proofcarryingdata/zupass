@@ -73,6 +73,7 @@ export function SettingsModal({
         {!isProveOrAddScreen && !showAdvanced && (
           <>
             <NewButton
+              className="w-full"
               onClick={(): void => {
                 dispatch({ type: "set-modal", modal: { modalType: "none" } });
                 window.location.href = "/scan";
@@ -82,6 +83,7 @@ export function SettingsModal({
             </NewButton>
             <Spacer h={16} />
             <NewButton
+              className="w-full"
               onClick={() => {
                 closeModal();
                 window.location.href = "/#/change-password";
@@ -93,6 +95,7 @@ export function SettingsModal({
             <AccountExportButton />
             <Spacer h={16} />
             <NewButton
+              className="w-full"
               onClick={() => {
                 closeModal();
                 window.location.href = "/#/import";
@@ -106,13 +109,19 @@ export function SettingsModal({
 
         {!showAdvanced && (
           <>
-            <NewButton onClick={logout}>Log Out</NewButton>
+            <NewButton className="w-full" onClick={logout}>
+              Log Out
+            </NewButton>
             <Spacer h={16} />
-            <NewButton onClick={toggleJustDevcon}>
+            <NewButton className="w-full" onClick={toggleJustDevcon}>
               {justDevcon ? "Showing Just Devcon" : "Showing Everything"}
             </NewButton>
             <Spacer h={16} />
-            <NewButton onClick={onAddTestData} disabled={added}>
+            <NewButton
+              className="w-full"
+              onClick={onAddTestData}
+              disabled={added}
+            >
               {added ? "Added" : "Add Test Data"}
             </NewButton>
           </>

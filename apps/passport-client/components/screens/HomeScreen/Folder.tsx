@@ -28,15 +28,15 @@ export function FolderEventInfo({
   }
 
   return (
-    <div className="flex flex-col overflow-hidden w-full rounded shadow border-4 border-green-950 select-none">
-      <div
+    <div className="flex flex-col overflow-hidden w-full rounded-lg shadow border-4 border-green-950 select-none">
+      {/* <div
         className="flex w-full h-[200px] "
         style={{
           backgroundImage: `url(${event.image})`,
           backgroundSize: "cover"
         }}
-      ></div>
-      <div className="font-bold text-xl w-full bg-[#206b5e] px-4 py-2 border-t-4 border-green-950">
+      ></div> */}
+      <div className="font-bold text-xl w-full bg-[#206b5e] px-4 py-2 ">
         {getNameFromPath(folder)}
         <span className="text-sm font-normal">
           {" · "}
