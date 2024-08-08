@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo } from "react";
-import { usePCDCollection } from "../../../src/appHooks";
+import { usePCDCollection, useStateContext } from "../../../src/appHooks";
 import { PCDCard } from "../../shared/PCDCard";
 import { useZmailContext } from "./ZmailContext";
 
 export const ZmailPCDScreen = React.memo(ZmailPCDScreenImpl);
 
 export function ZmailPCDScreenImpl(): JSX.Element | null {
+  const { dispatch } = useStateContext();
   const pcds = usePCDCollection();
   const ctx = useZmailContext();
 
@@ -20,9 +21,13 @@ export function ZmailPCDScreenImpl(): JSX.Element | null {
     if (meta?.viewed) {
       console.log("already viewed");
     } else {
-      pcds.updateMetaById(pcd?.id, { viewed: true });
+      dispatch({
+        type: "update-pcd-meta",
+        pcdId: pcd.id,
+        pcdMeta: { viewed: true }
+      });
     }
-  }, [meta?.viewed, pcd, pcds]);
+  }, [dispatch, meta?.viewed, pcd, pcds]);
 
   if (!pcd) {
     return <>no pcd with that id found</>;

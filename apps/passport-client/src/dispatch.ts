@@ -23,7 +23,7 @@ import {
   zupassDefaultSubscriptions,
   ZupassFeedIds
 } from "@pcd/passport-interface";
-import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
+import { PCDCollection, PCDMetadata, PCDPermission } from "@pcd/pcd-collection";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
@@ -129,6 +129,11 @@ export type Action =
       pcds: SerializedPCD[];
       upsert?: boolean;
       folder?: string;
+    }
+  | {
+      type: "update-pcd-meta";
+      pcdId: string;
+      pcdMeta: Partial<PCDMetadata>;
     }
   | { type: "remove-pcd"; id: string }
   | { type: "remove-all-pcds-in-folder"; folder: string }
@@ -246,6 +251,8 @@ export async function dispatch(
         state,
         update
       );
+    case "update-pcd-meta":
+      return updatePCDMeta(state, update, action.pcdId, action.pcdMeta);
     case "add-pcds":
       return addPCDs(state, update, action.pcds, action.upsert, action.folder);
     case "remove-pcd":
@@ -713,6 +720,17 @@ async function addPCDs(
       folder
     );
   }
+  await savePCDs(state.pcds);
+  update({ pcds: state.pcds });
+}
+
+async function updatePCDMeta(
+  state: AppState,
+  update: ZuUpdate,
+  pcdId: string,
+  pcdMeta: Partial<PCDMetadata>
+): Promise<void> {
+  state.pcds.updateMetaById(pcdId, pcdMeta);
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
 }
@@ -1393,7 +1411,8 @@ async function mergeImport(
   const pcds = new PCDCollection(
     packages,
     state.pcds.getAll(),
-    state.pcds.folders
+    state.pcds.folders,
+    state.pcds.meta
   );
 
   try {
