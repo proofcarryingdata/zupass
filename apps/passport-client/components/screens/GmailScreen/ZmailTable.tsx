@@ -46,7 +46,7 @@ export function ZmailTable(): ReactNode {
   });
 
   return (
-    <div className="border-2 border-white w-full rounded overflow-hidden">
+    <div className="w-full text-black">
       <table className="w-full select-none">
         <thead className="">
           {table.getHeaderGroups().map((headerGroup) => (
@@ -56,7 +56,7 @@ export function ZmailTable(): ReactNode {
                   onClick={() => {
                     header.column.toggleSorting();
                   }}
-                  className="border-2 border-white cursor-pointer"
+                  className="cursor-pointer"
                   key={header.id}
                   style={{
                     width: `${header.getSize()}px`,
@@ -102,7 +102,7 @@ export function ZmailTable(): ReactNode {
                       overflow: "hidden"
                     }
                   }}
-                  className="text-ellipsis whitespace-nowrap border-2 border-white"
+                  className="text-ellipsis whitespace-nowrap"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
@@ -162,12 +162,12 @@ const columns = [
   //   minSize: 0,
   //   size: 20
   // }),
-  columnHelper.accessor("folder", {
-    header: "folder",
-    cell: (info) => info.getValue()
-  }),
   columnHelper.accessor("name", {
     header: "name",
+    cell: (info) => info.getValue()
+  }),
+  columnHelper.accessor("folder", {
+    header: "folder",
     cell: (info) => info.getValue()
   }),
   columnHelper.accessor("pcd.id", {

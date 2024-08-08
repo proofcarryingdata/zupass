@@ -61,8 +61,10 @@ export function ZmailScreenImpl(): JSX.Element | null {
           <div className="w-[300px] flex-shrink-0 box-border h-full">
             <ZmailSidebar />
           </div>
-          <div className="flex-grow flex flex-col gap-4 p-4">
-            <ZmailTable />
+          <div className="flex-grow flex flex-col gap-4 p-4 h-full">
+            <div className="h-full bg-green-50 overflow-y-scroll rounded-lg p-4">
+              <ZmailTable />
+            </div>
           </div>
         </div>
       </div>
