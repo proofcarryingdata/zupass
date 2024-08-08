@@ -1,14 +1,16 @@
 import { PCD } from "@pcd/pcd-types";
 import React, { useMemo } from "react";
 import { usePCDCollection } from "../../../src/appHooks";
-import { NewButton } from "../../NewButton";
 import { PCDCard } from "../../shared/PCDCard";
+import { useZmailContext } from "./ZmailContext";
 
 export const ZmailPCDScreen = React.memo(ZmailPCDScreenImpl);
 
 export function ZmailPCDScreenImpl(): JSX.Element | null {
   const pcds = usePCDCollection();
-  const id = new URLSearchParams(window.location.hash.split("?")[1]).get("id");
+  const ctx = useZmailContext();
+
+  const id = ctx.viewingPCDID;
   const pcd: PCD | undefined = useMemo(() => {
     if (!id) return undefined;
     return pcds.getById(id);
@@ -19,17 +21,7 @@ export function ZmailPCDScreenImpl(): JSX.Element | null {
   }
 
   return (
-    <div className="w-[100vw] h-[100vh] flex flex-col bg-[#206b5e] gap-4">
-      <div className="inline-block p-4">
-        <NewButton
-          className="inline-block"
-          onClick={() => {
-            window.location.href = "/#/zmail";
-          }}
-        >
-          Zmail
-        </NewButton>
-      </div>
+    <div className="w-full text-black flex flex-col flex-grow overflow-y-scroll">
       <div className="w-full h-full flex flex-row">
         <div className="flex-grow p-4">
           <p className="m-2">

@@ -3,6 +3,7 @@ import { usePCDCollection } from "../../../src/appHooks";
 import { NewButton } from "../../NewButton";
 import { ZupassTitle } from "../HomeScreen/HomeScreen";
 import { ZmailContext, ZmailScreenContextValue } from "./ZmailContext";
+import { ZmailPCDScreenImpl } from "./ZmailPCDScreen";
 import { ZmailSidebar } from "./ZmailSidebar";
 import { ZmailTable } from "./ZmailTable";
 
@@ -36,7 +37,8 @@ export function ZmailScreenImpl(): JSX.Element | null {
               onClick={() => {
                 ctx.update({
                   filters: [],
-                  searchTerm: ""
+                  searchTerm: "",
+                  viewingPCDID: undefined
                 });
               }}
             >
@@ -60,8 +62,10 @@ export function ZmailScreenImpl(): JSX.Element | null {
             <ZmailSidebar />
           </div>
           <div className="flex-grow flex flex-col gap-4 p-4 pl-0 h-full">
-            <div className="h-full bg-white overflow-hidden rounded-lg">
-              <ZmailTable />
+            <div className="h-full bg-white overflow-hidden rounded-lg flex flex-col">
+              <div className="h-3 bg-gray-300 flex-shrink-0"></div>
+              {ctx.viewingPCDID ? <ZmailPCDScreenImpl /> : <ZmailTable />}
+              <div className="h-3 bg-gray-300 flex-shrink-0"></div>
             </div>
           </div>
         </div>

@@ -6,6 +6,7 @@ export interface ZmailScreenContextValue {
   pcds: PCDCollection;
   searchTerm: string;
   filters: ZmailFilter[];
+  viewingPCDID?: string;
   update: (update: Partial<ZmailScreenContextValue>) => void;
 }
 
@@ -13,6 +14,7 @@ export const ZmailContext = createContext<ZmailScreenContextValue>({
   pcds: new PCDCollection([]),
   searchTerm: "",
   filters: [],
+  viewingPCDID: undefined,
   update: () => {}
 });
 
