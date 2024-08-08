@@ -24,6 +24,7 @@ export function NewButton({
     <div
       {...props}
       className={cn(
+        "whitespace-nowrap",
         "border-4",
         "text-center",
         "py-2 px-4 cursor-pointer transition-all duration-100",
