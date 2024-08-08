@@ -75,6 +75,12 @@ export const EVENTS: Record<string, EventInfo> = {
     end: "2022-9-12",
     image:
       "https://cdn1.epicgames.com/ue/product/Screenshot/1-1920x1080-44e1108ee2deef769c9dde9c957c1087.jpg?resize=1&w=1920"
+  },
+  ProgCrypto: {
+    start: "2024-11-13",
+    end: "2024-11-13",
+    image:
+      "https://cdn1.epicgames.com/ue/product/Screenshot/1-1920x1080-44e1108ee2deef769c9dde9c957c1087.jpg?resize=1&w=1920"
   }
 };
 
@@ -94,8 +100,8 @@ export async function initTestData(
     tickets: [
       "Devcon",
       "Devcon",
-      "Devcon/ProgCrypto",
-      "Devcon/ProgCrypto",
+      "ProgCrypto",
+      "ProgCrypto",
       "EthDenver",
       "Edge City",
       "ETH Berlin 04",
