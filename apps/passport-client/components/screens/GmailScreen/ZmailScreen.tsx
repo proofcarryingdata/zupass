@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { usePCDCollection } from "../../../src/appHooks";
 import { NewButton } from "../../NewButton";
+import { ZupassTitle } from "../HomeScreen/HomeScreen";
 import { ZmailContext, ZmailScreenContextValue } from "./ZmailContext";
 import { ZmailSearch } from "./ZmailSearch";
 import { ZmailSidebar } from "./ZmailSidebar";
@@ -27,7 +28,9 @@ export function ZmailScreenImpl(): JSX.Element | null {
       <div className="bg-[#206b5e] h-[100vh]">
         <div className="flex flex-row p-4 gap-4 justify-between">
           <div className="flex flex-row items-center justify-center gap-4">
-            <NewButton
+            <ZupassTitle
+              className="mx-4 cursor-pointer"
+              style={{ fontSize: "2em" }}
               onClick={() => {
                 ctx.update({
                   filters: [],
@@ -36,7 +39,7 @@ export function ZmailScreenImpl(): JSX.Element | null {
               }}
             >
               Zmail
-            </NewButton>
+            </ZupassTitle>
             <ZmailSearch />
           </div>
 
