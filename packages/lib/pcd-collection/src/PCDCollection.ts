@@ -520,7 +520,10 @@ export class PCDCollection {
       }
     }
 
-    // TODO: implement metadata merge
+    // TODO: implement better metadata merge
+    for (const [pcdId, meta] of Object.entries(other.meta ?? {})) {
+      this.updateMetaById(pcdId, meta);
+    }
   }
 }
 
