@@ -68,18 +68,23 @@ export function ZmailScreenImpl(): JSX.Element | null {
                 {ctx.viewingPCDID && (
                   <>
                     <div
-                      className="bg-red-500 flex items-center justify-center"
+                      onClick={() => {
+                        ctx.update({
+                          viewingPCDID: undefined
+                        });
+                      }}
+                      className="flex items-center justify-center text-gray-600 hover:bg-gray-400 cursor-pointer m-2 active:bg-gray-500 transition-colors duration-200 active:text-white"
                       style={{
                         borderRadius: "50%",
-                        width: "30px",
-                        minWidth: "30px",
-                        maxWidth: "30px",
-                        height: "30px",
-                        minHeight: "30px",
-                        maxHeight: "30px"
+                        width: "28px",
+                        minWidth: "28px",
+                        maxWidth: "28px",
+                        height: "28px",
+                        minHeight: "28px",
+                        maxHeight: "28px"
                       }}
                     >
-                      <FaArrowLeft />
+                      <FaArrowLeft size={12} />
                     </div>
                   </>
                 )}
