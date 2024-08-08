@@ -4,7 +4,6 @@ import _ from "lodash";
 import { useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
-import { NewButton } from "../NewButton";
 import { PCDCard } from "./PCDCard";
 
 type Sortable<T = unknown> = {
@@ -133,48 +132,9 @@ export function PCDCardList({
     [selectedPCDID]
   );
 
-  const [idx, setIdx] = useState(0);
-  const pcd = sortedPCDs[idx];
-
-  if (!pcd) return null;
-
   return (
     <Container>
-      {/* {sortablePCDs.length > 1 && (
-        <ToolBar
-          sortOptions={sortOptions}
-          sortState={sortState}
-          onSortStateChange={setSortState}
-        />
-      )} */}
-
-      {sortedPCDs.length > 1 && (
-        <div className="flex flex-row gap-4 mb-[0.75rem]">
-          <NewButton
-            className="flex-grow"
-            onClick={() => {
-              setIdx((idx - 1 + sortedPCDs.length) % sortedPCDs.length);
-            }}
-          >
-            Prev
-          </NewButton>
-          <div className="flex flex-row items-center justify-center w-1/5">
-            <div className="inline-block text-center">
-              {idx + 1}/{sortedPCDs.length}
-            </div>
-          </div>
-          <NewButton
-            className="flex-grow"
-            onClick={() => {
-              setIdx((idx + 1) % sortedPCDs.length);
-            }}
-          >
-            Next
-          </NewButton>
-        </div>
-      )}
-
-      {pcd && (
+      {pcds.map((pcd) => (
         <PCDCard
           hideRemoveButton={hideRemoveButton}
           hidePadding={hidePadding}
@@ -184,7 +144,7 @@ export function PCDCardList({
           onClick={allExpanded ? undefined : onClick}
           expanded={allExpanded || pcd.id === selectedPCD?.id}
         />
-      )}
+      ))}
     </Container>
   );
 }
@@ -246,7 +206,7 @@ const Container = styled.div`
   padding-bottom: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 `;
 
 const ToolBarContainer = styled.div`
