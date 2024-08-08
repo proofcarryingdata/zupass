@@ -31,7 +31,7 @@ import {
   isProtocolWorldsFolder
 } from "../../../src/util";
 import { NewButton } from "../../NewButton";
-import { H1, Placeholder, Spacer, ZuLogo } from "../../core";
+import { Placeholder, Spacer } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
@@ -204,11 +204,9 @@ export function HomeScreenImpl(): JSX.Element | null {
     <>
       <MaybeModal />
       <AppContainer bg="gray">
-        <Spacer h={24} />
-        <div className="flex-row flex align-center items-center gap-3">
-          <ZuLogo width="48px" /> <H1 className="">Zupass</H1>
+        <div className="flex-row flex align-center items-center gap-3 select-none mb-2">
+          <ZupassTitle>Zupass</ZupassTitle>
         </div>
-        <Spacer h={24} />
         {isRoot && !isOther && <AppHeader isEdgeCity={isEdgeCity} />}
         <Placeholder minH={540}>
           {isRoot && isOther && (
@@ -393,4 +391,9 @@ const RemoveAllContainer = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: center;
+`;
+
+const ZupassTitle = styled.span`
+  font-family: "Passion One";
+  font-size: 4em;
 `;
