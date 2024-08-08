@@ -166,6 +166,8 @@ const ModalBg = styled.div<{ $fullScreen?: boolean }>`
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 9999;
+  width: 100vw;
+  height: 100vh;
 
   ${({ $fullScreen }: { $fullScreen?: boolean }): FlattenSimpleInterpolation =>
     $fullScreen
@@ -184,7 +186,8 @@ const ModalWrap = styled.div<{ fullScreen?: boolean }>`
   width: 100%;
   max-width: 420px;
   margin: 8px auto;
-  min-height: 480px;
+  max-height: 100%;
+  overflow-y: scroll;
   padding: ${(props): string => (props.fullScreen ? "0" : "12px")};
   border-radius: 12px;
 
