@@ -70,6 +70,7 @@ export function matchActionToPermission(
 
 export interface PCDMetadata {
   viewed?: boolean;
+  updatedTimestamp?: string;
 }
 
 /**
@@ -402,6 +403,9 @@ export class PCDCollection {
       }
 
       currentMap.set(id, pcd);
+      const newTimestamp =
+        this.getMetaById(id)?.updatedTimestamp ?? new Date().toISOString();
+      this.updateMetaById(id, { updatedTimestamp: newTimestamp });
     }
 
     this.pcds = Array.from(currentMap.values());
