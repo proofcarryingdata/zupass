@@ -45,7 +45,7 @@ async function setupProveArgs(): Promise<GPCPCDArgs> {
         entries: {
           A: { isRevealed: true },
           E: { isRevealed: false, equalsEntry: "pod0.A" },
-          owner: { isRevealed: false, isOwnerID: true }
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" }
         }
       }
     }

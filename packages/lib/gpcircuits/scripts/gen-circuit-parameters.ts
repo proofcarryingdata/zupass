@@ -25,7 +25,9 @@ const CIRCUIT_PARAMETERS = [
     maxLists: 0,
     maxListElements: 0,
     maxTuples: 0,
-    tupleArity: 0
+    tupleArity: 0,
+    includeOwnerV3: true,
+    includeOwnerV4: true
   },
   {
     maxObjects: 1,
@@ -35,7 +37,9 @@ const CIRCUIT_PARAMETERS = [
     maxLists: 0,
     maxListElements: 0,
     maxTuples: 0,
-    tupleArity: 0
+    tupleArity: 0,
+    includeOwnerV3: true,
+    includeOwnerV4: true
   },
   {
     maxObjects: 3,
@@ -45,7 +49,9 @@ const CIRCUIT_PARAMETERS = [
     maxLists: 1,
     maxListElements: 10,
     maxTuples: 2,
-    tupleArity: 2
+    tupleArity: 2,
+    includeOwnerV3: true,
+    includeOwnerV4: true
   },
   {
     maxObjects: 3,
@@ -55,7 +61,9 @@ const CIRCUIT_PARAMETERS = [
     maxLists: 2,
     maxListElements: 20,
     maxTuples: 1,
-    tupleArity: 4
+    tupleArity: 4,
+    includeOwnerV3: true,
+    includeOwnerV4: true
   },
   {
     maxObjects: 3,
@@ -65,7 +73,9 @@ const CIRCUIT_PARAMETERS = [
     maxLists: 4,
     maxListElements: 20,
     maxTuples: 5,
-    tupleArity: 2
+    tupleArity: 2,
+    includeOwnerV3: true,
+    includeOwnerV4: true
   }
 ];
 
