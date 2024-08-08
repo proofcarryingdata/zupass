@@ -7,6 +7,7 @@ export * from "./multituple";
 export * from "./numeric-value";
 export * from "./object";
 export * from "./owner";
+export * from "./ownerV4";
 export * from "./proto-pod-gpc";
 export * from "./tuple";
 export * from "./types";

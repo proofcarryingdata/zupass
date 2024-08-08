@@ -19,6 +19,7 @@ import {
   requireType
 } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
+import { Identity as IdentityV4 } from "@semaphore-protocol/identity-v4";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import {
@@ -31,6 +32,8 @@ import {
   GPCRevealedClaims,
   GPCRevealedObjectClaims,
   PODEntryIdentifier,
+  SEMAPHORE_V3,
+  SEMAPHORE_V4,
   TupleIdentifier
 } from "./gpcTypes";
 import {
@@ -107,9 +110,12 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   let totalEntries = 0;
   let requiredMerkleDepth = 0;
   let totalNumericValues = 0;
+  let includeOwnerV3 = false;
+  let includeOwnerV4 = false;
   for (const [objName, objConfig] of Object.entries(proofConfig.pods)) {
     checkPODName(objName);
-    const { nEntries, nBoundsChecks } = checkProofObjConfig(objName, objConfig);
+    const { nEntries, nBoundsChecks, hasOwnerV3, hasOwnerV4 } =
+      checkProofObjConfig(objName, objConfig);
     totalObjects++;
     totalEntries += nEntries;
     requiredMerkleDepth = Math.max(
@@ -117,6 +123,8 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
       calcMinMerkleDepthForEntries(nEntries)
     );
     totalNumericValues += nBoundsChecks;
+    includeOwnerV3 ||= hasOwnerV3;
+    includeOwnerV4 ||= hasOwnerV4;
   }
 
   if (proofConfig.tuples !== undefined) {
@@ -151,7 +159,12 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
 function checkProofObjConfig(
   nameForErrorMessages: string,
   objConfig: GPCProofObjectConfig
-): { nEntries: number; nBoundsChecks: number } {
+): {
+  nEntries: number;
+  nBoundsChecks: number;
+  hasOwnerV3: boolean;
+  hasOwnerV4: boolean;
+} {
   if (Object.keys(objConfig.entries).length === 0) {
     throw new TypeError(
       `Must prove at least one entry in object "${nameForErrorMessages}".`
@@ -160,14 +173,19 @@ function checkProofObjConfig(
 
   let nEntries = 0;
   let nBoundsChecks = 0;
+  let hasOwnerV3 = false;
+  let hasOwnerV4 = false;
   for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
     checkPODEntryName(entryName, true);
-    const { hasBoundsCheck } = checkProofEntryConfig(
-      `${nameForErrorMessages}.${entryName}`,
-      entryConfig
-    );
+    const { hasBoundsCheck, hasOwnerV3Check, hasOwnerV4Check } =
+      checkProofEntryConfig(
+        `${nameForErrorMessages}.${entryName}`,
+        entryConfig
+      );
     nEntries++;
     nBoundsChecks += +hasBoundsCheck;
+    hasOwnerV3 ||= hasOwnerV3Check;
+    hasOwnerV4 ||= hasOwnerV4Check;
   }
   if (objConfig.signerPublicKey !== undefined) {
     checkProofEntryConfig(
@@ -175,13 +193,17 @@ function checkProofObjConfig(
       objConfig.signerPublicKey
     );
   }
-  return { nEntries, nBoundsChecks };
+  return { nEntries, nBoundsChecks, hasOwnerV3, hasOwnerV4 };
 }
 
 export function checkProofEntryConfig(
   nameForErrorMessages: string,
   entryConfig: GPCProofEntryConfig
-): { hasBoundsCheck: boolean } {
+): {
+  hasBoundsCheck: boolean;
+  hasOwnerV3Check: boolean;
+  hasOwnerV4Check: boolean;
+} {
   requireType(
     `${nameForErrorMessages}.isValueRevealed`,
     entryConfig.isRevealed,
@@ -192,11 +214,11 @@ export function checkProofEntryConfig(
     if (isVirtualEntryIdentifier(nameForErrorMessages)) {
       throw new Error("Can't use isOwnerID on a virtual entry.");
     }
-    requireType(
-      `${nameForErrorMessages}.isOwnerID`,
-      entryConfig.isOwnerID,
-      "boolean"
-    );
+
+    if (![SEMAPHORE_V3, SEMAPHORE_V4].includes(entryConfig.isOwnerID)) {
+      throw new TypeError(`Invalid owner ID type ${entryConfig.isOwnerID}.`);
+    }
+
     if (entryConfig.equalsEntry !== undefined) {
       throw new Error("Can't use isOwnerID and equalsEntry on the same entry.");
     }
@@ -230,7 +252,10 @@ export function checkProofEntryConfig(
     }
   }
 
-  return { hasBoundsCheck };
+  const hasOwnerV3Check = entryConfig.isOwnerID === SEMAPHORE_V3;
+  const hasOwnerV4Check = entryConfig.isOwnerID === SEMAPHORE_V4;
+
+  return { hasBoundsCheck, hasOwnerV3Check, hasOwnerV4Check };
 }
 
 export function checkProofTupleConfig(proofConfig: GPCProofConfig): void {
@@ -315,18 +340,35 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
   }
 
   if (proofInputs.owner !== undefined) {
-    requireType(`owner.SemaphoreV3`, proofInputs.owner.semaphoreV3, "object");
-    if (!(proofInputs.owner.semaphoreV3 instanceof Identity)) {
-      throw new TypeError(
-        `owner.semaphoreV3 must be a SemaphoreV3 Identity object.`
-      );
+    if (proofInputs.owner.semaphoreV3 !== undefined) {
+      requireType(`owner.SemaphoreV3`, proofInputs.owner.semaphoreV3, "object");
+      if (!(proofInputs.owner.semaphoreV3 instanceof Identity)) {
+        throw new TypeError(
+          `owner.semaphoreV3 must be a SemaphoreV3 Identity object.`
+        );
+      }
+    }
+
+    if (proofInputs.owner.semaphoreV4 !== undefined) {
+      requireType(`owner.SemaphoreV4`, proofInputs.owner.semaphoreV4, "object");
+      if (!(proofInputs.owner.semaphoreV4 instanceof IdentityV4)) {
+        throw new TypeError(
+          `owner.semaphoreV4 must be a SemaphoreV4 Identity object.`
+        );
+      }
     }
 
     if (proofInputs.owner.externalNullifier !== undefined) {
-      checkPODValue(
-        "owner.externalNullifier",
-        proofInputs.owner.externalNullifier
-      );
+      if (Object.keys(proofInputs.owner).length === 1) {
+        throw new Error(
+          `An external nullifier cannot be specified without an accompanying identity object.`
+        );
+      } else {
+        checkPODValue(
+          "owner.externalNullifier",
+          proofInputs.owner.externalNullifier
+        );
+      }
     }
   }
 
@@ -413,21 +455,37 @@ export function checkProofInputsForConfig(
       }
 
       // If this entry identifies the owner, we should have a matching Identity.
-      if (entryConfig.isOwnerID) {
+      if (entryConfig.isOwnerID !== undefined) {
         hasOwnerEntry = true;
-        if (proofInputs.owner === undefined) {
+        if (
+          proofInputs.owner?.semaphoreV3 === undefined &&
+          proofInputs.owner?.semaphoreV4 === undefined
+        ) {
           throw new Error(
             "Proof configuration expects owner, but no owner identity given."
           );
         }
-        if (podValue.value !== proofInputs.owner.semaphoreV3.commitment) {
-          throw new Error(
-            `Configured owner commitment in POD doesn't match given Identity.`
-          );
+
+        for (const [ownerIDType, ownerCommitment] of [
+          [SEMAPHORE_V3, proofInputs.owner.semaphoreV3?.commitment],
+          [SEMAPHORE_V4, proofInputs.owner.semaphoreV4?.commitment]
+        ]) {
+          if (entryConfig.isOwnerID === ownerIDType) {
+            if (ownerCommitment === undefined) {
+              throw new ReferenceError(
+                `Configured owner commitment in POD references missing identity.`
+              );
+            } else if (podValue.value !== ownerCommitment) {
+              throw new Error(
+                `Configured owner commitment in POD doesn't match given identity.`
+              );
+            } else {
+              break;
+            }
+          }
         }
 
-        // Owner commitment value must be a cryptographic number, so that its
-        // plaintext value can be included in the circuit.
+        // Owner commitment value must be a cryptographic number.
         if (podValue.type !== "cryptographic") {
           throw new Error(
             "Owner identity commitment must be of cryptographic type."
@@ -682,11 +740,19 @@ export function checkRevealedClaims(
       "owner.externalNullifier",
       revealedClaims.owner.externalNullifier
     );
-    requireType(
-      "owner.nullifierHash",
-      revealedClaims.owner.nullifierHash,
-      "bigint"
-    );
+    if ("nullifierHash" in revealedClaims.owner) {
+      requireType(
+        "owner.nullifierHash",
+        revealedClaims.owner.nullifierHash,
+        "bigint"
+      );
+    } else {
+      requireType(
+        "owner.nullifierHashV4",
+        revealedClaims.owner.nullifierHashV4,
+        "bigint"
+      );
+    }
   }
 
   const numListElements =
@@ -930,7 +996,11 @@ export function circuitDescMeetsRequirements(
     circuitDesc.maxNumericValues >= circuitReq.nNumericValues &&
     circuitDesc.maxLists >= circuitReq.nLists &&
     // The circuit description should be able to contain the largest of the lists.
-    circuitDesc.maxListElements >= circuitReq.maxListSize
+    circuitDesc.maxListElements >= circuitReq.maxListSize &&
+    // If we require an owner module, the circuit had better include it, else
+    // it does not matter.
+    (circuitDesc.includeOwnerV3 || !circuitReq.includeOwnerV3) &&
+    (circuitDesc.includeOwnerV4 || !circuitReq.includeOwnerV4)
   );
 }
 
@@ -969,7 +1039,9 @@ export function mergeRequirements(
     Math.max(rs1.nNumericValues, rs2.nNumericValues),
     Math.max(rs1.nLists, rs2.nLists),
     Math.max(rs1.maxListSize, rs2.maxListSize),
-    tupleArities
+    tupleArities,
+    rs1.includeOwnerV3 || rs2.includeOwnerV3,
+    rs1.includeOwnerV4 || rs2.includeOwnerV4
   );
 }
 

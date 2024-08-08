@@ -5,66 +5,63 @@ import "mocha";
 import { poseidon1 } from "poseidon-lite";
 import {
   CircuitSignal,
-  OwnerModuleSemaphoreV3InputNamesType,
-  OwnerModuleSemaphoreV3Inputs,
-  OwnerModuleSemaphoreV3OutputNamesType,
-  OwnerModuleSemaphoreV3Outputs
+  OwnerModuleSemaphoreV4Inputs,
+  OwnerModuleSemaphoreV4OutputNamesType,
+  OwnerModuleSemaphoreV4Outputs,
+  OwnerModuleSemaphoreV4nputNamesType
 } from "../src";
-import { circomkit, ownerIdentity } from "./common";
+import { circomkit, ownerIdentityV4 } from "./common";
 
-describe("owner.OwnerModuleSemaphoreV3 should work", function () {
+describe("owner.OwnerModuleSemaphoreV4 should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
   let circuit: WitnessTester<
-    OwnerModuleSemaphoreV3InputNamesType,
-    OwnerModuleSemaphoreV3OutputNamesType
+    OwnerModuleSemaphoreV4nputNamesType,
+    OwnerModuleSemaphoreV4OutputNamesType
   >;
 
   function makeTestSignals(
     isEnabled: boolean,
     isNullifierHashRevealed: boolean
   ): {
-    inputs: OwnerModuleSemaphoreV3Inputs;
-    outputs: OwnerModuleSemaphoreV3Outputs;
+    inputs: OwnerModuleSemaphoreV4Inputs;
+    outputs: OwnerModuleSemaphoreV4Outputs;
   } {
     return {
       inputs: {
         enabled: isEnabled ? 1n : 0n,
-        identityNullifier: ownerIdentity.nullifier,
-        identityTrapdoor: ownerIdentity.trapdoor,
-        identityCommitmentHash: poseidon1([ownerIdentity.commitment]),
+        secretScalar: ownerIdentityV4.secretScalar,
+        identityCommitmentHash: poseidon1([ownerIdentityV4.commitment]),
         externalNullifier: 42n,
         isNullifierHashRevealed: isNullifierHashRevealed ? 1n : 0n
       },
       outputs: {
         revealedNullifierHash:
           isEnabled && isNullifierHashRevealed
-            ? 1517081033071132720435657432021139876572843496027662548196342287861804968602n
+            ? 894567425121403332266040643563918773524317789061280615331238253663051803519n
             : BABY_JUB_NEGATIVE_ONE
       }
     };
   }
 
-  const sampleInput: OwnerModuleSemaphoreV3Inputs = {
+  const sampleInput: OwnerModuleSemaphoreV4Inputs = {
     enabled: 1n,
-    identityNullifier:
-      99353161014976810914716773124042455250852206298527174581112949561812190422n,
-    identityTrapdoor:
-      329061722381819402313027227353491409557029289040211387019699013780657641967n,
+    secretScalar:
+      1066921846450608811029566588127247112676112021489928135893407497485658369605n,
     identityCommitmentHash:
-      6111114915052368960013028357687874844561982077054171687671655940344165800007n,
+      10822224854462305974571008723353998025009741997958237435994986683037289495571n,
     externalNullifier: 42n,
     isNullifierHashRevealed: 1n
   };
 
-  const sampleOutput: OwnerModuleSemaphoreV3Outputs = {
+  const sampleOutput: OwnerModuleSemaphoreV4Outputs = {
     revealedNullifierHash:
-      1517081033071132720435657432021139876572843496027662548196342287861804968602n
+      894567425121403332266040643563918773524317789061280615331238253663051803519n
   };
 
   this.beforeAll(async () => {
-    circuit = await circomkit.WitnessTester("OwnerModuleSemaphoreV3", {
-      file: "owner",
-      template: "OwnerModuleSemaphoreV3"
+    circuit = await circomkit.WitnessTester("OwnerModuleSemaphoreV4", {
+      file: "ownerV4",
+      template: "OwnerModuleSemaphoreV4"
     });
   });
 

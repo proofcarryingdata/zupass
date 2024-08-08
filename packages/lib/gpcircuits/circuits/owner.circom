@@ -50,10 +50,10 @@ template OwnerModuleSemaphoreV3 () {
 
     // Input specifies whether to reveal the nullifier hash, which can be used to tie together
     // different proofs from the same semaphore ID.
-    signal input isNullfierHashRevealed;
-    // Checked by Num2Bits externally: isNullfierHashRevealed * (1 - isNullfierHashRevealed) === 0;
+    signal input isNullifierHashRevealed;
+    // Checked by Num2Bits externally: isNullifierHashRevealed * (1 - isNullifierHashRevealed) === 0;
 
     // Revealed nullifier gets either the value or -1 based on configuration.
-    signal shouldRevealNullifierHash <== isNullfierHashRevealed * enabled;
+    signal shouldRevealNullifierHash <== isNullifierHashRevealed * enabled;
     signal output revealedNullifierHash <== ValueOrNegativeOne()(nullifierHash, shouldRevealNullifierHash);
 }
