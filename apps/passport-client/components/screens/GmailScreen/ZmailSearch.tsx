@@ -10,6 +10,7 @@ export function ZmailSearch(): ReactNode {
 
   return (
     <NewInput
+      className="w-full box-border flex-shrink-0"
       placeholder="Search"
       value={ctx.searchTerm}
       onChange={(e) => {

@@ -46,7 +46,7 @@ export function ZmailTable(): ReactNode {
   });
 
   return (
-    <div className="border-2 border-[#1a574d] w-full rounded overflow-hidden">
+    <div className="border-2 border-white w-full rounded overflow-hidden">
       <table className="w-full select-none">
         <thead className="">
           {table.getHeaderGroups().map((headerGroup) => (
@@ -56,7 +56,7 @@ export function ZmailTable(): ReactNode {
                   onClick={() => {
                     header.column.toggleSorting();
                   }}
-                  className="border-2 border-[#1a574d] cursor-pointer"
+                  className="border-2 border-white cursor-pointer"
                   key={header.id}
                   style={{
                     width: `${header.getSize()}px`,
@@ -75,13 +75,11 @@ export function ZmailTable(): ReactNode {
             </tr>
           ))}
         </thead>
-        <tbody className="bg-green-800">
+        <tbody>
           {table.getRowModel().rows.map((row) => (
             <tr
               key={row.id}
-              className={cn(
-                "cursor-pointer bg-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87] border-2 border-[#1a574d] hover:shadow"
-              )}
+              className={cn("cursor-pointer")}
               style={{
                 transition: "background-color 100ms",
                 borderLeft: "none",
@@ -104,7 +102,7 @@ export function ZmailTable(): ReactNode {
                       overflow: "hidden"
                     }
                   }}
-                  className="text-ellipsis whitespace-nowrap px-2 border-2 border-[#1a574d] py-1"
+                  className="text-ellipsis whitespace-nowrap border-2 border-white"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>

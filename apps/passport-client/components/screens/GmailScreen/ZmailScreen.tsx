@@ -3,7 +3,6 @@ import { usePCDCollection } from "../../../src/appHooks";
 import { NewButton } from "../../NewButton";
 import { ZupassTitle } from "../HomeScreen/HomeScreen";
 import { ZmailContext, ZmailScreenContextValue } from "./ZmailContext";
-import { ZmailSearch } from "./ZmailSearch";
 import { ZmailSidebar } from "./ZmailSidebar";
 import { ZmailTable } from "./ZmailTable";
 
@@ -25,22 +24,26 @@ export function ZmailScreenImpl(): JSX.Element | null {
 
   return (
     <ZmailContext.Provider value={ctx}>
-      <div className="bg-[#206b5e] h-[100vh]">
-        <div className="flex flex-row p-4 gap-4 justify-between">
+      <div className="h-[100vh] max-h-[100vh] overflow-hidden flex flex-col">
+        {/* header */}
+        <div className="flex flex-row justify-between px-4 pt-4">
           <div className="flex flex-row items-center justify-center gap-4">
             <ZupassTitle
-              className="mx-4 cursor-pointer"
-              style={{ fontSize: "2em" }}
-              onClick={() => {
-                ctx.update({
-                  filters: [],
-                  searchTerm: ""
-                });
-              }}
+              className="w-[300px] box-border px-4"
+              style={{ fontSize: "2.5em" }}
             >
-              Zmail
+              <span
+                className="cursor-pointer"
+                onClick={() => {
+                  ctx.update({
+                    filters: [],
+                    searchTerm: ""
+                  });
+                }}
+              >
+                Zmail
+              </span>
             </ZupassTitle>
-            <ZmailSearch />
           </div>
 
           <NewButton
@@ -53,14 +56,13 @@ export function ZmailScreenImpl(): JSX.Element | null {
           </NewButton>
         </div>
 
-        <div className="w-full flex flex-col gap-4">
-          <div className="flex flex-row overflow-hidden">
-            <div className="max-w-[300px]">
-              <ZmailSidebar />
-            </div>
-            <div className="flex-grow flex flex-col gap-4 p-4">
-              <ZmailTable />
-            </div>
+        {/* content */}
+        <div className="flex flex-row flex-grow overflow-hidden">
+          <div className="w-[300px] flex-shrink-0 box-border h-full">
+            <ZmailSidebar />
+          </div>
+          <div className="flex-grow flex flex-col gap-4 p-4">
+            <ZmailTable />
           </div>
         </div>
       </div>
