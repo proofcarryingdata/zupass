@@ -27,6 +27,8 @@ export function FolderEventInfo({
     return null;
   }
 
+  return null;
+
   return (
     <div className="flex flex-col overflow-hidden w-full rounded-lg shadow border-4 border-green-950 select-none">
       {/* <div
@@ -146,7 +148,7 @@ export function FolderCard({
       </div>
       {img && (
         <div
-          className="w-[100px] rounded-sm border-2 border-green-800 shadow"
+          className="w-[100px] rounded-lg overflow-hidden shadow"
           style={{
             backgroundImage: `url(${img})`,
             backgroundSize: "cover"
