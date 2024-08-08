@@ -2,9 +2,10 @@ import { Spacer } from "@pcd/passport-ui";
 import { ReactNode } from "react";
 import { cn } from "../../../src/util";
 import { NewButton } from "../../NewButton";
-import { H1, Placeholder, ZuLogo } from "../../core";
+import { Placeholder } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
+import { ZupassTitle } from "../HomeScreen/HomeScreen";
 
 interface SubPage {
   image: string;
@@ -71,11 +72,12 @@ export function MoreScreen(): ReactNode {
       <AppContainer bg="gray">
         <Spacer h={24} />
         <div className="flex-row flex align-center items-center gap-3">
-          <ZuLogo width="48px" /> <H1 className="">Zupass</H1>
+          <ZupassTitle>Zupass</ZupassTitle>
         </div>
         <Spacer h={24} />
         <Placeholder minH={540}>
           <NewButton
+            className="w-full"
             onClick={() => {
               window.location.href = "#/";
             }}
@@ -105,9 +107,8 @@ export function MoreScreen(): ReactNode {
   );
 }
 
-const squareStyle =
-  cn();
-  // "rounded-lg",
-  // "font-bold text-xl active:scale-[1.05] hover:translate-y-[-3px] active:translate-y-[4px] transition-all duration-200 select-none",
-  // "bg-red-500 p-4 aspect-square border-8 border-black cursor-pointer hover:border-[#31992b]",
-  // "overflow-hidden"
+const squareStyle = cn();
+// "rounded-lg",
+// "font-bold text-xl active:scale-[1.05] hover:translate-y-[-3px] active:translate-y-[4px] transition-all duration-200 select-none",
+// "bg-red-500 p-4 aspect-square border-8 border-black cursor-pointer hover:border-[#31992b]",
+// "overflow-hidden"
