@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { FaArrowLeft } from "react-icons/fa";
 import { usePCDCollection } from "../../../src/appHooks";
 import { NewButton } from "../../NewButton";
 import { ZupassTitle } from "../HomeScreen/HomeScreen";
@@ -63,8 +64,28 @@ export function ZmailScreenImpl(): JSX.Element | null {
           </div>
           <div className="flex-grow flex flex-col gap-4 p-4 pl-0 h-full">
             <div className="h-full bg-white overflow-hidden rounded-lg flex flex-col">
-              <div className="h-3 bg-gray-300 flex-shrink-0"></div>
+              <div className="min-h-3 bg-gray-300 flex-shrink-0">
+                {ctx.viewingPCDID && (
+                  <>
+                    <div
+                      className="bg-red-500 flex items-center justify-center"
+                      style={{
+                        borderRadius: "50%",
+                        width: "30px",
+                        minWidth: "30px",
+                        maxWidth: "30px",
+                        height: "30px",
+                        minHeight: "30px",
+                        maxHeight: "30px"
+                      }}
+                    >
+                      <FaArrowLeft />
+                    </div>
+                  </>
+                )}
+              </div>
               {ctx.viewingPCDID ? <ZmailPCDScreenImpl /> : <ZmailTable />}
+
               <div className="h-3 bg-gray-300 flex-shrink-0"></div>
             </div>
           </div>
