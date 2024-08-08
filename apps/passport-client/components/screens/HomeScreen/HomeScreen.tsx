@@ -208,6 +208,9 @@ export function HomeScreenImpl(): JSX.Element | null {
           <ZupassTitle>Zupass</ZupassTitle>
         </div>
         {isRoot && !isOther && <AppHeader isEdgeCity={isEdgeCity} />}
+
+        <LoadingIssuedPCDs />
+
         <Placeholder minH={540}>
           {isRoot && isOther && (
             <>
@@ -329,7 +332,6 @@ export function HomeScreenImpl(): JSX.Element | null {
                   </RemoveAllContainer>
                 </>
               )} */}
-              <LoadingIssuedPCDs />
             </>
           )}
           {loadedIssuedPCDs && (
