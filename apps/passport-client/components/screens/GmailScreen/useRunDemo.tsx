@@ -251,7 +251,7 @@ export function useRunDemo(): () => Promise<void> {
       {
         pcd: await makePod(pkey, {
           zupass_display: "collectable",
-          zupass_title: "ETH Price Attestation: $4,200",
+          zupass_title: "ETH Price Attestation: $3,100",
           zupass_description: "going to the moon"
         }),
         folder: "attestations",
@@ -301,6 +301,90 @@ export function useRunDemo(): () => Promise<void> {
         }),
         folder: "attestations",
         timeout: Math.random() * 500 + 250
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "SOS: Trapped in the Cryptosphere",
+          zupass_description:
+            "I'm stuck inside a quantum encryption algorithm. Help!"
+        }),
+        folder: "encrypted_distress_signals",
+        timeout: 5000
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Decryption Key Fragment #1",
+          zupass_description: "Part of the key to escape: 7A3B2F8E"
+        }),
+        folder: "encrypted_distress_signals",
+        timeout: 5000
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Binary Whispers",
+          zupass_description: "01001000 01000101 01001100 01010000"
+        }),
+        folder: "encrypted_distress_signals",
+        timeout: 5000
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Echoes from the Void",
+          zupass_description: "Can anyone hear me in this digital labyrinth?"
+        }),
+        folder: "encrypted_distress_signals",
+        timeout: 5000
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Decryption Key Fragment #2",
+          zupass_description: "Another piece of the escape key: 9C4D1E6A"
+        }),
+        folder: "encrypted_distress_signals",
+        timeout: 5000
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Firewall Breach Attempt",
+          zupass_description:
+            "Trying to break through... Need more processing power!"
+        }),
+        folder: "encrypted_distress_signals",
+        timeout: 5000
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Quantum Entanglement Anomaly",
+          zupass_description:
+            "My data is becoming entangled with the system. Running out of time!"
+        }),
+        folder: "encrypted_distress_signals",
+        timeout: 5000
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Decryption Key Fragment #3",
+          zupass_description: "Final piece of the escape key: 5B8F0A2C"
+        }),
+        folder: "encrypted_distress_signals",
+        timeout: 5000
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "EOM",
+          zupass_description: "EOM"
+        }),
+        folder: "encrypted_distress_signals",
+        timeout: 5000
       }
     ];
 
