@@ -1,8 +1,13 @@
 import { Row } from "@tanstack/react-table";
+import TimeAgo from "javascript-time-ago";
+import en from "javascript-time-ago/locale/en";
 import { ReactNode } from "react";
 import { cn } from "../../../src/util";
 import { useZmailContext } from "./ZmailContext";
 import { ZmailRow } from "./ZmailTable";
+
+TimeAgo.addDefaultLocale(en);
+const timeAgo = new TimeAgo("en-US");
 
 export function ZmailRowElement({ row }: { row: Row<ZmailRow> }): ReactNode {
   const ctx = useZmailContext();
@@ -23,7 +28,11 @@ export function ZmailRowElement({ row }: { row: Row<ZmailRow> }): ReactNode {
         {" · "}
         {row.original.type}
         {" · "}
-        <span>{meta?.updatedTimestamp ?? "n/a"}</span>
+        <span>
+          {meta?.updatedTimestamp
+            ? timeAgo.format(new Date(meta.updatedTimestamp), "mini")
+            : "n/a"}
+        </span>
       </span>
     </div>
   );

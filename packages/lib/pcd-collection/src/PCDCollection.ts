@@ -403,12 +403,15 @@ export class PCDCollection {
       }
 
       currentMap.set(id, pcd);
-      const newTimestamp =
-        this.getMetaById(id)?.updatedTimestamp ?? new Date().toISOString();
-      this.updateMetaById(id, { updatedTimestamp: newTimestamp });
     }
 
     this.pcds = Array.from(currentMap.values());
+
+    for (const pcd of pcds) {
+      const newTimestamp =
+        this.getMetaById(pcd.id)?.updatedTimestamp ?? new Date().toISOString();
+      this.updateMetaById(pcd.id, { updatedTimestamp: newTimestamp });
+    }
 
     this.emitChange();
   }
