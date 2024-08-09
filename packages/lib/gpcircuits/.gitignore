@@ -4,4 +4,5 @@
 dist
 ptau
 circuits/test
+circuits/main
 artifacts/test

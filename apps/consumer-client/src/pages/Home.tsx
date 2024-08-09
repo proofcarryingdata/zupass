@@ -40,6 +40,11 @@ function Page(): JSX.Element {
             </Link>
           </li>
           <li>
+            <Link to="/examples/zk-pod-ticket-proof">
+              Prove and Get a ZKPODTicket Proof from Zupass
+            </Link>
+          </li>
+          <li>
             <Link to="/examples/zuauth">ZuAuth authentication of tickets</Link>
           </li>
           <li>

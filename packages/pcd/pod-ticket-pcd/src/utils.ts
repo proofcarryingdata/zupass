@@ -1,117 +1,215 @@
-import { PODEntries } from "@pcd/pod";
-import { ZodRawShape, ZodSchema } from "zod";
+import { POD, PODEntries, PODValue } from "@pcd/pod";
+import { PODTicketPCD } from "./PODTicketPCD";
+import { IPODTicketData, TicketDataSchema } from "./schema";
 
 /**
- * Utility functions for converting data described by a Zod schema to
- * {@link PODEntries}. This ought to find a home in another package.
+ * Convert a PODTicketPCD to a POD.
+ *
+ * @param pcd - The PODTicketPCD to convert
+ * @returns The POD
  */
-
-type PotentialBigInt = string | number | bigint | boolean;
-
-/**
- * A no-op "transform" which we can use to flag that a data type ought to be
- * treated as a POD "cryptographic" value.
- */
-export function cryptographic<T extends PotentialBigInt>(a: T): T {
-  return a;
+export function podTicketPCDToPOD(pcd: PODTicketPCD): POD {
+  return POD.load(
+    { ...ticketDataToPODEntries(pcd.claim.ticket), ...pcd.claim.extraEntries },
+    pcd.proof.signature,
+    pcd.claim.signerPublicKey
+  );
 }
 
 /**
- * Validator that ensures that a value can really be transformed into a BigInt.
- * Only relevant for strings which may contain non-numeric values.
+ * Check that the ticket data is valid.
+ *
+ * @param data - The ticket data to check
+ * @returns The ticket data
  */
-export function canBeBigInt(a: PotentialBigInt): boolean {
-  try {
-    BigInt(a);
-  } catch (_err) {
-    return false;
+export function checkTicketData(data: unknown): IPODTicketData {
+  if (typeof data !== "object" || data === null) {
+    throw new Error("Invalid ticket data");
   }
-  return true;
+  // Remove undefined values. Zod will permit optional fields to have undefined
+  // values, but we never want data contained in a claim to have undefined
+  // values as this means that serialization and de-serialization to and from
+  // JSON will result in an object with different keys present.
+  const definedData = Object.fromEntries(
+    Object.entries(data).filter(([_key, value]) => value !== undefined)
+  );
+  return TicketDataSchema.parse(definedData);
 }
 
 /**
- * The types of Zod field that can be turned into POD values.
+ * Convert PODEntries to ticket data.
+ *
+ * This isn't currently used anywhere, but might be useful for PODBox.
+ * It depends on {@link MapPODEntriesToTicketData}, which *is* used by
+ * ZKPODTicketPCD, see {@link partialPODEntriesToPartialTicketData}. This
+ * version is convenient for testing because it will attempt to build a full
+ * ticket data object, thus validating all relevant entries.
+ *
+ * @param entries - The PODEntries to convert
+ * @returns The ticket data
  */
-const supportedFieldTypes = [
-  "ZodString",
-  "ZodNativeEnum",
-  "ZodNumber",
-  "ZodBoolean",
-  "ZodOptional",
-  "ZodEffects"
-] as const;
+export function PODEntriesToTicketData(entries: PODEntries): IPODTicketData {
+  const dataEntries = [];
+  for (const [key, value] of Object.entries(entries)) {
+    const mapper = MapPODEntriesToTicketData[key as keyof IPODTicketData];
+    if (mapper === undefined) {
+      // An unrecognized key could be an "extra" entry, so just skip it
+      continue;
+    }
+    dataEntries.push([key, mapper(value)]);
+  }
+  return checkTicketData(Object.fromEntries(dataEntries));
+}
+
+export const MapPODEntriesToTicketData: {
+  [key in keyof IPODTicketData]: (
+    value: PODValue
+  ) => Required<IPODTicketData>[key];
+} = {
+  attendeeName: (value) => value.value.toString(),
+  attendeeEmail: (value) => value.value.toString(),
+  attendeeSemaphoreId: (value) => value.value.toString(),
+  eventName: (value) => value.value.toString(),
+  ticketName: (value) => value.value.toString(),
+  ticketId: (value) => value.value.toString(),
+  eventId: (value) => value.value.toString(),
+  productId: (value) => value.value.toString(),
+  timestampConsumed: (value) => Number(value.value),
+  timestampSigned: (value) => Number(value.value),
+  isConsumed: (value) => value.value.toString() === "1",
+  isRevoked: (value) => value.value.toString() === "1",
+  ticketCategory: (value) => Number(value.value),
+  checkerEmail: (value) => value.value.toString(),
+  imageUrl: (value) => value.value.toString(),
+  imageAltText: (value) => value.value.toString()
+};
+
+export const MapTicketDataToPODEntries: {
+  [key in keyof Required<IPODTicketData>]: (
+    value: Required<IPODTicketData>[key]
+  ) => PODValue;
+} = {
+  attendeeName: (value) => ({
+    type: "string",
+    value
+  }),
+  attendeeEmail: (value) => ({
+    type: "string",
+    value
+  }),
+  attendeeSemaphoreId: (value) => ({
+    type: "cryptographic",
+    value: BigInt(value)
+  }),
+  eventName: (value) => ({
+    type: "string",
+    value
+  }),
+  ticketName: (value) => ({
+    type: "string",
+    value
+  }),
+  ticketId: (value) => ({
+    type: "string",
+    value
+  }),
+  eventId: (value) => ({
+    type: "string",
+    value
+  }),
+  productId: (value) => ({
+    type: "string",
+    value
+  }),
+  timestampConsumed: (value) => ({
+    type: "int",
+    value: BigInt(value)
+  }),
+  timestampSigned: (value) => ({
+    type: "int",
+    value: BigInt(value)
+  }),
+  isConsumed: (value) => ({
+    type: "int",
+    value: BigInt(value ? 1 : 0)
+  }),
+  isRevoked: (value) => ({
+    type: "int",
+    value: BigInt(value ? 1 : 0)
+  }),
+  ticketCategory: (value) => ({
+    type: "cryptographic",
+    value: BigInt(value)
+  }),
+  // Optional values
+  checkerEmail: (value) => ({
+    type: "string",
+    value
+  }),
+  imageUrl: (value) => ({
+    type: "string",
+    value
+  }),
+  imageAltText: (value) => ({
+    type: "string",
+    value
+  })
+};
 
 /**
- * Turns data into PODEntries, assuming that the data has a Zod schema.
- * Supports only schemas containing the field types listed in
- * {@link supportedFieldTypes}.
+ * Convert a PODTicketPCD to PODEntries.
+ * Does not check that the PODValues are valid, as this will be done in
+ * POD.sign() or PODContent.fromEntries().
+ *
+ * Data should generally first be checked with {@link checkTicketData} to
+ * ensure that it is valid.
+ *
+ * @param data - Ticket data in JS object form
+ * @returns The PODEntries
  */
-export function dataToPodEntries<T>(
-  rawData: T,
-  schema: ZodSchema,
-  shape: ZodRawShape
-): PODEntries {
-  // First, make sure that the schema can parse the data.
-  // Will throw an exception if not.
-  const data = schema.parse(rawData);
-  const entries: PODEntries = {};
+export function ticketDataToPODEntries(data: IPODTicketData): PODEntries {
+  return {
+    attendeeName: MapTicketDataToPODEntries.attendeeName(data.attendeeName),
+    attendeeEmail: MapTicketDataToPODEntries.attendeeEmail(data.attendeeEmail),
+    attendeeSemaphoreId: MapTicketDataToPODEntries.attendeeSemaphoreId(
+      data.attendeeSemaphoreId
+    ),
+    eventName: MapTicketDataToPODEntries.eventName(data.eventName),
+    ticketName: MapTicketDataToPODEntries.ticketName(data.ticketName),
+    ticketId: MapTicketDataToPODEntries.ticketId(data.ticketId),
+    eventId: MapTicketDataToPODEntries.eventId(data.eventId),
+    productId: MapTicketDataToPODEntries.productId(data.productId),
+    timestampConsumed: MapTicketDataToPODEntries.timestampConsumed(
+      data.timestampConsumed
+    ),
 
-  // Iterate over the schema-described fields. We can be confident that the
-  // data object contains these fields, due to having parsed correctly.
-  for (const [key, field] of Object.entries(shape)) {
-    let typeName = field._def["typeName"];
-    // Optional fields wrap other field types. For instance, an Optional that
-    // wraps a String is either a String or missing entirely.
-    if (typeName === "ZodOptional") {
-      // If there's no value for this field, don't add an entry for it.
-      if (!data[key]) {
-        continue;
-      } else {
-        typeName = field._def.innerType._def.typeName;
-      }
-    }
-    if (!supportedFieldTypes.includes(typeName)) {
-      throw new Error(`Unsupported field type: ${typeName} for key ${key}`);
-    }
-    // Convert the fields into POD entries based on their Zod type.
-    switch (typeName) {
-      case "ZodString":
-        entries[key] = {
-          // Strings become values without any changes.
-          value: data[key],
-          type: "string"
-        };
-        break;
-      case "ZodNativeEnum":
-      case "ZodNumber":
-        entries[key] = {
-          // NativeEnums and Numbers are numeric, and become BigInts.
-          value: BigInt(data[key]),
-          type: "int"
-        };
-        break;
-      case "ZodBoolean":
-        entries[key] = {
-          // Booleans become either 1n (true) or 0n (false).
-          value: data[key] ? 1n : 0n,
-          type: "int"
-        };
-        break;
-      case "ZodEffects":
-        // "ZodEffects" is a field with a transform attached.
-        // Right now we only support the "cryptographic" transform, which
-        // indicates that this should become a "cryptographic" POD value.
-        if (field._def.effect.transform === cryptographic) {
-          entries[key] = {
-            // Cryptographic values are always BigInts.
-            value: BigInt(data[key]),
-            type: "cryptographic"
-          };
-        } else {
-          throw new Error(`Unrecognized transform on key ${key}`);
+    timestampSigned: MapTicketDataToPODEntries.timestampSigned(
+      data.timestampSigned
+    ),
+    isConsumed: MapTicketDataToPODEntries.isConsumed(data.isConsumed),
+    isRevoked: MapTicketDataToPODEntries.isRevoked(data.isRevoked),
+    ticketCategory: MapTicketDataToPODEntries.ticketCategory(
+      data.ticketCategory
+    ),
+    // Optional values
+    ...(data.checkerEmail
+      ? {
+          checkerEmail: MapTicketDataToPODEntries.checkerEmail(
+            data.checkerEmail
+          )
         }
-        break;
-    }
-  }
-  return entries;
+      : {}),
+    ...(data.imageUrl
+      ? {
+          imageUrl: MapTicketDataToPODEntries.imageUrl(data.imageUrl)
+        }
+      : {}),
+    ...(data.imageAltText
+      ? {
+          imageAltText: MapTicketDataToPODEntries.imageAltText(
+            data.imageAltText
+          )
+        }
+      : {})
+  } satisfies { [key in keyof IPODTicketData]: PODValue };
 }

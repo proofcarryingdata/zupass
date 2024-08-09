@@ -66,6 +66,28 @@ const CIRCUIT_PARAMETERS = [
     maxListElements: 20,
     maxTuples: 5,
     tupleArity: 2
+  },
+  {
+    // ZKPODTicketPCD standard circuit
+    maxObjects: 1,
+    maxEntries: 5,
+    merkleMaxDepth: 5,
+    maxNumericValues: 0,
+    maxLists: 1,
+    maxListElements: 200,
+    maxTuples: 1,
+    tupleArity: 3
+  },
+  {
+    // ZKPODTicketPCD large circuit
+    maxObjects: 1,
+    maxEntries: 11,
+    merkleMaxDepth: 5,
+    maxNumericValues: 0,
+    maxLists: 1,
+    maxListElements: 200,
+    maxTuples: 1,
+    tupleArity: 3
   }
 ];
 

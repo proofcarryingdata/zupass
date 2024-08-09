@@ -3,6 +3,7 @@ import { GPCPCDPackage } from "@pcd/gpc-pcd";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { ZKPODTicketPCDPackage } from "@pcd/zk-pod-ticket-pcd";
 import { program } from "commander";
 import logSymbols from "log-symbols";
 import {
@@ -23,6 +24,10 @@ import {
   ZKEdDSAEventTicketProveCase,
   ZKEdDSAEventTicketVerifyCase
 } from "./cases/ZKEdDSAEventTicketTimer";
+import {
+  ZKPODTicketProveCase,
+  ZKPODTicketVerifyCase
+} from "./cases/ZKPODTicketTimer";
 import { TimerCase } from "./types";
 
 const TIME_TEST_CONFIGS: Record<string, Record<string, () => TimerCase>> = {
@@ -46,6 +51,10 @@ const TIME_TEST_CONFIGS: Record<string, Record<string, () => TimerCase>> = {
   [GPCPCDPackage.name]: {
     prove: () => new GPCPCDProveCase(),
     verify: () => new GPCPCDVerifyCase()
+  },
+  [ZKPODTicketPCDPackage.name]: {
+    prove: () => new ZKPODTicketProveCase(),
+    verify: () => new ZKPODTicketVerifyCase()
   }
 };
 

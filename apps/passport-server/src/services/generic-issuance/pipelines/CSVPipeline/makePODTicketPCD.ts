@@ -41,6 +41,10 @@ export async function makePODTicketPCD(
       ticket: {
         value: ticket,
         argumentType: ArgumentTypeName.Object
+      },
+      extraEntries: {
+        value: {},
+        argumentType: ArgumentTypeName.Object
       }
     });
 

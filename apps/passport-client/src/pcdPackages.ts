@@ -24,6 +24,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { ZKEdDSAFrogPCDPackage } from "@pcd/zk-eddsa-frog-pcd";
+import { ZKPODTicketPCDPackage } from "@pcd/zk-pod-ticket-pcd";
 import { makeEncodedVerifyLink } from "./qr";
 
 let pcdPackages: Promise<PCDPackage[]> | undefined;
@@ -88,6 +89,15 @@ async function loadPackages(): Promise<PCDPackage[]> {
     )
   });
 
+  await ZKPODTicketPCDPackage.init?.({
+    zkArtifactPath: gpcArtifactDownloadURL(
+      gpcArtifactsConfig.source as GPCArtifactSource,
+      gpcArtifactsConfig.stability as GPCArtifactStability,
+      gpcArtifactsConfig.version as GPCArtifactVersion,
+      "/" /* zupassURL can use a site-relative URL */
+    )
+  });
+
   return [
     SemaphoreGroupPCDPackage,
     SemaphoreIdentityPCDPackage,
@@ -106,6 +116,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     MessagePCDPackage,
     PODPCDPackage,
     PODTicketPCDPackage,
-    GPCPCDPackage
+    GPCPCDPackage,
+    ZKPODTicketPCDPackage
   ];
 }

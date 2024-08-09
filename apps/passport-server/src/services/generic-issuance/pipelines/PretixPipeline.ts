@@ -1215,6 +1215,10 @@ export class PretixPipeline implements BasePipeline {
         value: ticketData,
         argumentType: ArgumentTypeName.Object
       },
+      extraEntries: {
+        value: {},
+        argumentType: ArgumentTypeName.Object
+      },
       privateKey: {
         value: eddsaPrivateKey,
         argumentType: ArgumentTypeName.String
