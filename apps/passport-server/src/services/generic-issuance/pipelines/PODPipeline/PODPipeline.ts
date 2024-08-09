@@ -61,7 +61,6 @@ export class PODPipeline implements BasePipeline {
   private consumerDB: IPipelineConsumerDB;
   private cacheService: PersistentCacheService;
   private dbQueue: PQueue;
-  private loaded: boolean;
 
   public get id(): string {
     return this.definition.id;
@@ -100,7 +99,6 @@ export class PODPipeline implements BasePipeline {
       } satisfies FeedIssuanceCapability
     ] as unknown as BasePipelineCapability[];
     this.dbQueue = new PQueue({ concurrency: 1 });
-    this.loaded = false;
   }
 
   /**
@@ -168,8 +166,6 @@ export class PODPipeline implements BasePipeline {
         logs.push(
           makePLogInfo(`load finished in ${end.getTime() - start.getTime()}ms`)
         );
-
-        this.loaded = true;
 
         return {
           lastRunStartTimestamp: start.toISOString(),
@@ -305,7 +301,10 @@ export class PODPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      if (this.definition.options.paused || !this.loaded) {
+      if (
+        this.definition.options.paused ||
+        (await this.db.load(this.id)).length === 0
+      ) {
         return { actions: [] };
       }
 
