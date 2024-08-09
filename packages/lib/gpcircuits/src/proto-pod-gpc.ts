@@ -47,6 +47,7 @@ export type ProtoPODGPCInputs = {
   // Numeric value modules [MAX_NUMERIC_VALUES].
   numericValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
   /*PUB*/ numericValueEntryIndices: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
+  /*PUB*/ numericValueInRange: CircuitSignal /*MAX_NUMERIC_VALUES packed bits*/;
   /*PUB*/ numericMinValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
   /*PUB*/ numericMaxValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
 
@@ -87,6 +88,7 @@ export type ProtoPODGPCInputNamesType = [
   "ownerIsNullfierHashRevealed",
   "numericValues",
   "numericValueEntryIndices",
+  "numericValueInRange",
   "numericMinValues",
   "numericMaxValues",
   "tupleIndices",
@@ -119,6 +121,7 @@ export type ProtoPODGPCPublicInputs = {
 
   // Bounds check module (1)
   /*PUB*/ numericValueEntryIndices: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
+  /*PUB*/ numericValueInRange: CircuitSignal /*MAX_NUMERIC_VALUES packed bits*/;
   /*PUB*/ numericMinValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
   /*PUB*/ numericMaxValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
 
@@ -147,6 +150,7 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
   "numericValueEntryIndices",
+  "numericValueInRange",
   "numericMinValues",
   "numericMaxValues",
   "tupleIndices",
@@ -389,6 +393,7 @@ export class ProtoPODGPC {
       ownerExternalNullifier: allInputs.ownerExternalNullifier,
       ownerIsNullfierHashRevealed: allInputs.ownerIsNullfierHashRevealed,
       numericValueEntryIndices: allInputs.numericValueEntryIndices,
+      numericValueInRange: allInputs.numericValueInRange,
       numericMinValues: allInputs.numericMinValues,
       numericMaxValues: allInputs.numericMaxValues,
       tupleIndices: allInputs.tupleIndices,
@@ -446,6 +451,7 @@ export class ProtoPODGPC {
       inputs.ownerExternalNullifier,
       inputs.ownerIsNullfierHashRevealed,
       ...inputs.numericValueEntryIndices,
+      inputs.numericValueInRange,
       ...inputs.numericMinValues.map((value) =>
         zeroResidueMod(value, BABY_JUB_PRIME)
       ),
