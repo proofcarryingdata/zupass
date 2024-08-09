@@ -2,6 +2,7 @@ import React, { useEffect, useMemo } from "react";
 import { usePCDCollection, useStateContext } from "../../../src/appHooks";
 import { PCDCard } from "../../shared/PCDCard";
 import { BackButton } from "./BackButton";
+import { TrashButton } from "./TrashButton";
 import { useZmailContext } from "./ZmailContext";
 
 export const ZmailPCDScreen = React.memo(ZmailPCDScreenImpl);
@@ -36,16 +37,23 @@ export function ZmailPCDScreenImpl(): JSX.Element | null {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="min-h-3 bg-gray-300 flex-shrink-0">
-        {ctx.viewingPCDID && (
-          <BackButton
-            onClick={() => {
-              ctx.update({
-                viewingPCDID: undefined
-              });
-            }}
-          />
-        )}
+      <div className="min-h-3 bg-gray-300 flex-shrink-0 flex flex-row justify-between items-center">
+        <BackButton
+          onClick={() => {
+            ctx.update({
+              viewingPCDID: undefined
+            });
+          }}
+        />
+
+        <TrashButton
+          onClick={async () => {
+            await dispatch({ type: "remove-pcd", id: pcd.id });
+            ctx.update({
+              viewingPCDID: undefined
+            });
+          }}
+        />
       </div>
       <div className="w-full text-black flex flex-col flex-grow overflow-y-scroll">
         <div className="w-full h-full flex flex-row">
