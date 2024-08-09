@@ -5,6 +5,7 @@ import { useDispatch, usePCDCollection, useSelf } from "../../../src/appHooks";
 import { MaybeModal } from "../../modals/Modal";
 import { NewButton } from "../../NewButton";
 import { ZupassTitle } from "../HomeScreen/HomeScreen";
+import { useRunDemo } from "./useRunDemo";
 import { ZmailContext, ZmailScreenContextValue } from "./ZmailContext";
 import { ZmailPCDScreenImpl } from "./ZmailPCDScreen";
 import { ZmailPopover } from "./ZmailPopover";
@@ -36,6 +37,8 @@ export function ZmailScreenImpl(): JSX.Element | null {
       navigate("/login", { replace: true });
     }
   });
+
+  const runDemo = useRunDemo();
 
   return (
     <ZmailContext.Provider value={ctx}>
@@ -99,6 +102,12 @@ export function ZmailScreenImpl(): JSX.Element | null {
         </div>
       </div>
       <ZmailPopover />
+      <div
+        onClick={runDemo}
+        className="absolute bottom-0 left-0 text-transparent hover:bg-red-500 cursor-pointer hover:text-black p-2"
+      >
+        run demo
+      </div>
     </ZmailContext.Provider>
   );
 }
