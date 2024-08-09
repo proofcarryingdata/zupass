@@ -1,6 +1,6 @@
 {
   "name": "anon-message-client",
-  "version": "0.1.10",
+  "version": "0.1.12",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -11,12 +11,12 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pcd/eddsa-ticket-pcd": "0.6.1",
-    "@pcd/passport-interface": "^0.11.2",
-    "@pcd/pcd-types": "0.11.1",
-    "@pcd/semaphore-identity-pcd": "0.11.1",
-    "@pcd/util": "^0.5.1",
-    "@pcd/zk-eddsa-event-ticket-pcd": "0.6.1",
+    "@pcd/eddsa-ticket-pcd": "0.6.3",
+    "@pcd/passport-interface": "^0.11.4",
+    "@pcd/pcd-types": "0.11.3",
+    "@pcd/semaphore-identity-pcd": "0.11.3",
+    "@pcd/util": "^0.5.2",
+    "@pcd/zk-eddsa-event-ticket-pcd": "0.6.3",
     "@types/node": "20.4.10",
     "@types/react": "18.2.20",
     "@types/react-dom": "18.2.7",
@@ -31,7 +31,7 @@
     "typescript": "5.3.3"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.1",
+    "@pcd/eslint-config-custom": "0.11.3",
     "eslint": "8.57.0",
     "nodemon": "^3.0.1",
     "ts-node": "^10.9.2"

@@ -1,5 +1,22 @@
 # @pcd/halo-nonce-pcd
 
+## 0.7.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.3
+
+## 0.7.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.2
+  - @pcd/util@0.5.2
+
 ## 0.7.1
 
 ### Patch Changes

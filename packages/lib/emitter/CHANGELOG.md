@@ -1,5 +1,17 @@
 # @pcd/emitter
 
+## 0.5.3
+
+### Patch Changes
+
+- Fix ESM import paths
+
+## 0.5.2
+
+### Patch Changes
+
+- Fix ESM import paths
+
 ## 0.5.1
 
 ### Patch Changes

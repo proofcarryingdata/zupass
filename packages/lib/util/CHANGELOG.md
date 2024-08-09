@@ -1,5 +1,11 @@
 # @pcd/util
 
+## 0.5.2
+
+### Patch Changes
+
+- Fix ESM import paths
+
 ## 0.5.1
 
 ### Patch Changes

@@ -1,5 +1,48 @@
 # @pcd/passport-interface
 
+## 0.11.4
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/semaphore-signature-pcd@0.11.3
+  - @pcd/semaphore-identity-pcd@0.11.3
+  - @pcd/semaphore-group-pcd@0.11.3
+  - @pcd/eddsa-ticket-pcd@0.6.3
+  - @pcd/passport-crypto@0.11.3
+  - @pcd/pcd-collection@0.11.3
+  - @pcd/eddsa-frog-pcd@0.3.3
+  - @pcd/pcd-types@0.11.3
+  - @pcd/eddsa-pcd@0.6.3
+  - @pcd/email-pcd@0.6.3
+  - @pcd/emitter@0.5.3
+  - @pcd/obj-pcd@0.0.4
+  - @pcd/pod-pcd@0.1.3
+  - @pcd/pod@0.1.3
+
+## 0.11.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/emitter@0.5.2
+  - @pcd/passport-crypto@0.11.2
+  - @pcd/pcd-collection@0.11.2
+  - @pcd/pcd-types@0.11.2
+  - @pcd/pod@0.1.2
+  - @pcd/util@0.5.2
+  - @pcd/eddsa-frog-pcd@0.3.2
+  - @pcd/eddsa-pcd@0.6.2
+  - @pcd/eddsa-ticket-pcd@0.6.2
+  - @pcd/email-pcd@0.6.2
+  - @pcd/obj-pcd@0.0.3
+  - @pcd/pod-pcd@0.1.2
+  - @pcd/semaphore-group-pcd@0.11.2
+  - @pcd/semaphore-identity-pcd@0.11.2
+  - @pcd/semaphore-signature-pcd@0.11.2
+
 ## 0.11.2
 
 ### Patch Changes

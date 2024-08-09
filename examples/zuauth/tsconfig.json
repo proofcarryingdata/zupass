@@ -41,10 +41,10 @@
   // References are automatically maintained by `yarn fix-references`
   "references": [
     {
-      "path": "../../packages/lib/passport-interface"
+      "path": "../../packages/lib/util"
     },
     {
-      "path": "../../packages/lib/util"
+      "path": "../../packages/lib/passport-interface"
     },
     {
       "path": "../../packages/lib/zuauth"
