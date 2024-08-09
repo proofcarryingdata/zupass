@@ -87,7 +87,8 @@ const sampleDefinition: PODPipelineDefinition = {
       feedId: "feedId",
       feedDisplayName: "feedDisplayName",
       feedDescription: "feedDescription",
-      feedFolder: "feedFolder"
+      feedFolder: "feedFolder",
+      feedType: "deleteAndReplace"
     }
   }
 };
