@@ -991,7 +991,9 @@ export class PretixPipeline implements BasePipeline {
 
       const actions: PCDAction[] = [];
 
-      if (this.loaded) {
+      // If the Atom DB is not empty, i.e. if we have loaded atoms for this pipeline
+      // at least once since the server started, delete the folder.
+      if ((await this.db.load(this.id)).length > 0) {
         actions.push({
           type: PCDActionType.DeleteFolder,
           folder: this.definition.options.feedOptions.feedFolder,
