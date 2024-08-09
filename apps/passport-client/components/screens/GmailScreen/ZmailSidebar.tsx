@@ -48,10 +48,10 @@ export function ZmailSidebar(): ReactNode {
               key={f}
               onClick={() => onClick(f)}
               onMouseEnter={() => {
-                ctx.update({ hoveringPCDID: f });
+                ctx.update({ hoveringFolder: f, hoveringPCDID: undefined });
               }}
               onMouseLeave={() => {
-                ctx.update({ hoveringPCDID: undefined });
+                ctx.update({ hoveringFolder: undefined });
               }}
               className={cn(
                 "bg-[#206b5e] border-2 box-border border-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87]",

@@ -69,7 +69,7 @@ export function ZmailTable(): ReactNode {
 
       <div className="w-full text-black flex flex-col flex-grow overflow-y-scroll">
         {table.getRowModel().rows.map((row) => (
-          <ZmailRowElement key={row.id} row={row} />
+          <ZmailRowElement key={row.id} row={row.original} />
         ))}
       </div>
       <div className="h-3 bg-gray-300 flex-shrink-0"></div>
