@@ -1,11 +1,16 @@
 import { HexString, getHash } from "@pcd/passport-crypto";
 import {
+  AddUserEmailResponseValue,
   AgreeTermsResult,
+  ChangeUserEmailResponseValue,
   ConfirmEmailResponseValue,
+  EmailUpdateError,
   LATEST_PRIVACY_NOTICE,
   NewUserResponseValue,
   OneClickLoginResponseValue,
+  RemoveUserEmailResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
+  VerifiedCredential,
   VerifyTokenResponseValue
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -13,7 +18,12 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { ZUPASS_SUPPORT_EMAIL, validateEmail } from "@pcd/util";
+import {
+  ZUPASS_SUPPORT_EMAIL,
+  getErrorMessage,
+  validateEmail
+} from "@pcd/util";
+import { randomUUID } from "crypto";
 import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
@@ -22,9 +32,9 @@ import {
   deleteE2EEByCommitment,
   fetchEncryptedStorage
 } from "../database/queries/e2ee";
-import { saveUserBackup, upsertUser } from "../database/queries/saveUser";
+import { upsertUser } from "../database/queries/saveUser";
 import {
-  deleteUserByEmail,
+  deleteUserByUUID,
   fetchUserByCommitment,
   fetchUserByEmail,
   fetchUserByUUID
@@ -49,6 +59,7 @@ const AgreedTermsSchema = z.object({
  */
 export class UserService {
   public readonly bypassEmail: boolean;
+  private static readonly MAX_USER_EMAIL_ADDRESES = 6;
   private readonly context: ApplicationContext;
   private readonly semaphoreService: SemaphoreService;
   private readonly emailTokenService: EmailTokenService;
@@ -142,8 +153,7 @@ export class UserService {
             existingCommitment
           )}`
         );
-        await saveUserBackup(this.context.dbPool, existingCommitment);
-        await deleteUserByEmail(this.context.dbPool, existingCommitment.email);
+        await deleteUserByUUID(this.context.dbPool, existingCommitment.uuid);
         existingCommitment = null;
       }
     }
@@ -209,7 +219,7 @@ export class UserService {
     email: string,
     code: string,
     commitment: string,
-    encryptionKey: string,
+    encryption_key: string,
     res: Response
   ): Promise<void> {
     if (!this.genericIssuanceService) {
@@ -240,8 +250,7 @@ export class UserService {
             existingUser
           )}`
         );
-        await saveUserBackup(this.context.dbPool, existingUser);
-        await deleteUserByEmail(this.context.dbPool, existingUser.email);
+        await deleteUserByUUID(this.context.dbPool, existingUser.uuid);
         existingUser = null;
       }
     }
@@ -256,9 +265,10 @@ export class UserService {
     }
     // todo: rate limit
     await upsertUser(this.context.dbPool, {
-      email,
+      uuid: randomUUID(),
+      emails: [email],
       commitment,
-      encryptionKey,
+      encryption_key,
       terms_agreed: LATEST_PRIVACY_NOTICE,
       extra_issuance: false
     });
@@ -276,11 +286,11 @@ export class UserService {
     // a benefit
     logger(
       `[USER_SERVICE] Agreeing to terms: ${LATEST_PRIVACY_NOTICE}`,
-      user.email
+      user.uuid
     );
     await agreeTermsAndUnredactTickets(
       this.context.dbPool,
-      user.email,
+      user.uuid,
       LATEST_PRIVACY_NOTICE
     );
 
@@ -299,7 +309,7 @@ export class UserService {
     email: string,
     commitment: string,
     salt: string | undefined,
-    encryptionKey: string | undefined,
+    encryption_key: string | undefined,
     autoRegister: boolean | undefined,
     res: Response
   ): Promise<void> {
@@ -311,7 +321,7 @@ export class UserService {
       })}`
     );
 
-    if ((!salt && !encryptionKey) || (salt && encryptionKey)) {
+    if ((!salt && !encryption_key) || (salt && encryption_key)) {
       throw new PCDHTTPError(
         400,
         "Must have exactly either salt or encryptionKey, but not both or none."
@@ -345,10 +355,11 @@ export class UserService {
 
     logger(`[USER_SERVICE] Saving commitment: ${commitment}`);
     await upsertUser(this.context.dbPool, {
-      email,
+      uuid: existingUser ? existingUser.uuid : randomUUID(),
+      emails: existingUser ? existingUser.emails : [email],
       commitment,
       salt,
-      encryptionKey,
+      encryption_key,
       // If the user already exists, then they're accessing this via the
       // "forgot password" flow, and not the registration flow in which they
       // are prompted to agree to the latest legal terms. In this case,
@@ -370,10 +381,10 @@ export class UserService {
     // Slightly redundantly, this will set the "terms agreed" again
     // However, having a single canonical transaction for this seems like
     // a benefit
-    logger(`[USER_SERVICE] Unredacting tickets for email`, user.email);
+    logger(`[USER_SERVICE] Unredacting tickets for email`, user.uuid);
     await agreeTermsAndUnredactTickets(
       this.context.dbPool,
-      user.email,
+      user.uuid,
       LATEST_PRIVACY_NOTICE
     );
 
@@ -468,7 +479,7 @@ export class UserService {
       throw new Error("User not found");
     }
 
-    await deleteUserByEmail(this.context.dbPool, user.email);
+    await deleteUserByUUID(this.context.dbPool, user.uuid);
     await deleteE2EEByCommitment(this.context.dbPool, user.commitment);
   }
 
@@ -519,17 +530,17 @@ export class UserService {
     ) {
       logger(
         `[USER_SERVICE] Unredacting tickets for email due to accepting version ${payload.version} of legal terms`,
-        user.email
+        user.uuid
       );
       await agreeTermsAndUnredactTickets(
         this.context.dbPool,
-        user.email,
+        user.uuid,
         payload.version
       );
     } else {
       logger(
         `[USER_SERVICE] Updating user to version ${payload.version} of legal terms`,
-        user.email
+        user.uuid
       );
       await upsertUser(this.context.dbPool, {
         ...user,
@@ -580,6 +591,219 @@ export class UserService {
       encryptionKey: user?.encryption_key ?? null,
       authKey: user?.auth_key ?? null
     };
+  }
+
+  /**
+   * If `confirmationCode` is `undefined`, sends a confirmation email and
+   * exits without any updates to the user.
+   */
+  public async handleAddUserEmail(
+    emailToAdd: string,
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
+    confirmationCode?: string
+  ): Promise<AddUserEmailResponseValue> {
+    if (!validateEmail(emailToAdd)) {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
+    }
+
+    const maybeExistingUserOfNewEmail = await this.getUserByEmail(emailToAdd);
+    if (maybeExistingUserOfNewEmail) {
+      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
+    }
+
+    let credential: VerifiedCredential;
+    try {
+      const verifiedCredential =
+        await this.credentialSubservice.tryVerify(serializedPCD);
+      if (!verifiedCredential) {
+        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+      }
+      credential = verifiedCredential;
+    } catch {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+    }
+
+    const requestingUser = await this.getUserByCommitment(
+      credential.semaphoreId
+    );
+    if (!requestingUser) {
+      throw new PCDHTTPError(400, EmailUpdateError.Unknown);
+    }
+
+    if (!confirmationCode) {
+      const newToken =
+        await this.emailTokenService.saveNewTokenForEmail(emailToAdd);
+
+      if (this.bypassEmail) {
+        logger("[DEV] Bypassing email, returning token", newToken);
+        return { sentToken: true, token: newToken };
+      }
+
+      await this.emailService.sendTokenEmail(emailToAdd, newToken);
+
+      return { sentToken: true };
+    }
+
+    const isCodeValid = await this.emailTokenService.checkTokenCorrect(
+      emailToAdd,
+      confirmationCode
+    );
+    if (!isCodeValid) {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidConfirmationCode);
+    }
+
+    if (requestingUser.emails.includes(emailToAdd)) {
+      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyAdded);
+    }
+
+    if (
+      requestingUser.emails.length + 1 >=
+      UserService.MAX_USER_EMAIL_ADDRESES
+    ) {
+      throw new PCDHTTPError(400, EmailUpdateError.TooManyEmails);
+    }
+
+    try {
+      const newEmailList = [...requestingUser.emails, emailToAdd];
+
+      await upsertUser(this.context.dbPool, {
+        ...requestingUser,
+        emails: newEmailList
+      });
+
+      return { newEmailList, sentToken: false };
+    } catch {
+      throw new PCDHTTPError(400, EmailUpdateError.Unknown);
+    }
+  }
+
+  public async handleRemoveUserEmail(
+    emailToRemove: string,
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<RemoveUserEmailResponseValue> {
+    let credential: VerifiedCredential;
+    try {
+      const verifiedCredential =
+        await this.credentialSubservice.tryVerify(serializedPCD);
+      if (!verifiedCredential) {
+        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+      }
+      credential = verifiedCredential;
+    } catch (error) {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+    }
+
+    const requestingUser = await this.getUserByCommitment(
+      credential.semaphoreId
+    );
+    if (!requestingUser) {
+      throw new PCDHTTPError(400, EmailUpdateError.UserNotFound);
+    }
+
+    if (!requestingUser.emails.includes(emailToRemove)) {
+      throw new PCDHTTPError(
+        400,
+        EmailUpdateError.EmailNotAssociatedWithThisAccount
+      );
+    }
+
+    if (requestingUser.emails.length === 1) {
+      throw new PCDHTTPError(400, EmailUpdateError.CantDeleteOnlyEmail);
+    }
+
+    const newEmailList = requestingUser.emails.filter(
+      (email) => email !== emailToRemove
+    );
+
+    try {
+      await upsertUser(this.context.dbPool, {
+        ...requestingUser,
+        emails: newEmailList
+      });
+      return { newEmailList };
+    } catch (e) {
+      throw new PCDHTTPError(400, getErrorMessage(e));
+    }
+  }
+
+  /**
+   * If `confirmationCode` is `undefined`, sends a confirmation email and
+   * exits without any updates to the user.
+   */
+  public async handleChangeUserEmail(
+    newEmail: string,
+    pcd: SerializedPCD<SemaphoreSignaturePCD>,
+    confirmationCode?: string
+  ): Promise<ChangeUserEmailResponseValue> {
+    if (!validateEmail(newEmail)) {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
+    }
+
+    const maybeExistingUserOfNewEmail = await this.getUserByEmail(newEmail);
+    if (maybeExistingUserOfNewEmail) {
+      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
+    }
+
+    let credential: VerifiedCredential;
+    try {
+      const verifiedCredential = await this.credentialSubservice.tryVerify(pcd);
+      if (!verifiedCredential) {
+        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+      }
+      credential = verifiedCredential;
+    } catch {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+    }
+
+    const requestingUser = await this.getUserByCommitment(
+      credential.semaphoreId
+    );
+    if (!requestingUser) {
+      throw new PCDHTTPError(404, EmailUpdateError.UserNotFound);
+    }
+
+    if (!confirmationCode) {
+      const newToken =
+        await this.emailTokenService.saveNewTokenForEmail(newEmail);
+
+      if (this.bypassEmail) {
+        logger("[DEV] Bypassing email, returning token", newToken);
+        return { sentToken: true, token: newToken };
+      }
+
+      await this.emailService.sendTokenEmail(newEmail, newToken);
+
+      return { sentToken: true };
+    }
+
+    const isCodeValid = await this.emailTokenService.checkTokenCorrect(
+      newEmail,
+      confirmationCode
+    );
+
+    if (!isCodeValid) {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidConfirmationCode);
+    }
+
+    if (requestingUser.emails.length !== 1) {
+      throw new PCDHTTPError(
+        400,
+        EmailUpdateError.CantChangeWhenMultipleEmails
+      );
+    }
+
+    try {
+      const newEmailList = [newEmail];
+
+      await upsertUser(this.context.dbPool, {
+        ...requestingUser,
+        emails: newEmailList
+      });
+
+      return { newEmailList, sentToken: false };
+    } catch (e) {
+      throw new PCDHTTPError(500, getErrorMessage(e));
+    }
   }
 }
 

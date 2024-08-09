@@ -50,7 +50,7 @@ export function userRowToZupassUserJson(user: UserRow): ZupassUserJson {
     {
       uuid: user.uuid,
       commitment: user.commitment,
-      email: user.email,
+      emails: user.emails,
       salt: user.salt,
       terms_agreed: user.terms_agreed
     } satisfies ZupassUserJson,

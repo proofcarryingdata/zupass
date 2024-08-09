@@ -1,4 +1,5 @@
 import { LATEST_PRIVACY_NOTICE } from "@pcd/passport-interface";
+import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -132,7 +133,8 @@ describe("telegram bot functionality", function () {
     const newIdentity = new Identity();
     const newCommitment = newIdentity.commitment.toString();
     const uuid = await upsertUser(db, {
-      email: "ivan@0xparc.org",
+      uuid: randomUUID(),
+      emails: ["ivan@0xparc.org"],
       commitment: newCommitment,
       terms_agreed: LATEST_PRIVACY_NOTICE,
       extra_issuance: false

@@ -1,9 +1,12 @@
 import {
+  AddUserEmailRequest,
   AgreeTermsRequest,
+  ChangeUserEmailRequest,
   ConfirmEmailRequest,
   CreateNewUserRequest,
   DeleteAccountRequest,
   OneClickLoginRequest,
+  RemoveUserEmailRequest,
   SaltResponseValue,
   VerifyTokenRequest
 } from "@pcd/passport-interface";
@@ -198,5 +201,63 @@ export function initAccountRoutes(
     const pcd = checkBody<DeleteAccountRequest, "pcd">(req, "pcd");
     await userService.handleDeleteAccount(pcd);
     res.sendStatus(200);
+  });
+
+  /**
+   * Adds a new email address to a user's account.
+   */
+  app.post("/account/add-email", async (req: Request, res: Response) => {
+    const newEmail = checkBody<AddUserEmailRequest, "newEmail">(req, "newEmail")
+      .trim()
+      .toLocaleLowerCase();
+    const pcd = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
+    const confirmationCode = req.body.confirmationCode as string | undefined;
+
+    const result = await userService.handleAddUserEmail(
+      newEmail,
+      pcd,
+      confirmationCode
+    );
+
+    res.status(200).json(result);
+  });
+
+  /**
+   * Removes an email address from a user's account.
+   */
+  app.post("/account/delete-email", async (req: Request, res: Response) => {
+    const emailToRemove = checkBody<RemoveUserEmailRequest, "emailToRemove">(
+      req,
+      "emailToRemove"
+    )
+      .trim()
+      .toLocaleLowerCase();
+    const pcd = checkBody<RemoveUserEmailRequest, "pcd">(req, "pcd");
+
+    const result = await userService.handleRemoveUserEmail(emailToRemove, pcd);
+
+    res.status(200).json(result);
+  });
+
+  /**
+   * Changes a user's email address.
+   */
+  app.post("/account/change-email", async (req: Request, res: Response) => {
+    const newEmail = checkBody<ChangeUserEmailRequest, "newEmail">(
+      req,
+      "newEmail"
+    )
+      .trim()
+      .toLocaleLowerCase();
+    const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
+    const confirmationCode = req.body.confirmationCode as string | undefined;
+
+    const result = await userService.handleChangeUserEmail(
+      newEmail,
+      pcd,
+      confirmationCode
+    );
+
+    res.status(200).send(result);
   });
 }

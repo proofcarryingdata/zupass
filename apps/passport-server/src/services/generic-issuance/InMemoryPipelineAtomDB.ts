@@ -10,9 +10,19 @@ import {
  *   or postgres.
  */
 export class InMemoryPipelineAtomDB implements IPipelineAtomDB {
+  private readonly loadedFlags: Record<string, boolean> = {};
+
   public data: {
     [pipelineId: string]: { [atomId: string]: PipelineAtom };
   } = {};
+
+  public async markAsLoaded(pipelineId: string): Promise<void> {
+    this.loadedFlags[pipelineId] = true;
+  }
+
+  public async hasLoaded(pipelineId: string): Promise<boolean> {
+    return !!this.loadedFlags[pipelineId];
+  }
 
   public async clear(pipelineID: string): Promise<void> {
     this.data[pipelineID] = {};

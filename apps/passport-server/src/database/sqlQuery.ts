@@ -90,7 +90,7 @@ async function execTransactionWithRetry<T>(
       // particular client: https://node-postgres.com/features/transactions
       const txClient = await pool.connect();
       try {
-        await txClient.query("BEGIN");
+        await txClient.query("BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE");
         const result = await txn(txClient);
         await txClient.query("COMMIT");
         return result;

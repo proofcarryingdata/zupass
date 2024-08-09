@@ -66,7 +66,7 @@ export class CredentialSubservice {
 
         return {
           semaphoreId: user.commitment,
-          email: user.email.toLowerCase(),
+          email: user.emails[0]?.toLowerCase(),
           authKey
         };
       })();

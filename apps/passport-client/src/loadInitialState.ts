@@ -24,6 +24,15 @@ export async function loadInitialState(): Promise<AppState> {
   }
 
   const self = loadSelf();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const singleEmail = (self as any)?.email as string | undefined;
+  if (singleEmail && self) {
+    self.emails = [singleEmail];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    delete (self as any).email;
+  }
+
   const pcds = await loadPCDs(self);
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
