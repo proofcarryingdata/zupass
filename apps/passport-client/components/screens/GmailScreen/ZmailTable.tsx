@@ -58,7 +58,7 @@ export function ZmailTable(): ReactNode {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="min-h-3 bg-gray-300 flex-shrink-0 text-black flex flex-row gap-2 items-center">
+      <div className="min-h-3 bg-gray-300 flex-shrink-0 text-black flex flex-row gap-1 items-center">
         {ctx.filters.length > 0 && (
           <>
             <BackButton
