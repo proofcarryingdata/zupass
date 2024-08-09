@@ -1,6 +1,7 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { FaCog } from "react-icons/fa";
-import { useDispatch, usePCDCollection } from "../../../src/appHooks";
+import { useNavigate } from "react-router-dom";
+import { useDispatch, usePCDCollection, useSelf } from "../../../src/appHooks";
 import { MaybeModal } from "../../modals/Modal";
 import { NewButton } from "../../NewButton";
 import { ZupassTitle } from "../HomeScreen/HomeScreen";
@@ -14,6 +15,8 @@ export const ZmailScreen = React.memo(ZmailScreenImpl);
 export function ZmailScreenImpl(): JSX.Element | null {
   const dispatch = useDispatch();
   const pcds = usePCDCollection();
+  const navigate = useNavigate();
+  const self = useSelf();
   const [ctx, setCtx] = useState<ZmailScreenContextValue>({
     pcds,
     filters: [],
@@ -25,6 +28,13 @@ export function ZmailScreenImpl(): JSX.Element | null {
       setCtx({ ...ctx, ...update });
     };
   }, [ctx]);
+
+  useEffect(() => {
+    if (!self) {
+      console.log("Redirecting to login screen");
+      navigate("/login", { replace: true });
+    }
+  });
 
   return (
     <ZmailContext.Provider value={ctx}>
