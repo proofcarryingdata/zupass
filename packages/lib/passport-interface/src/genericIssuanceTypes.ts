@@ -657,12 +657,18 @@ export function validatePODPipelineOptions(options: PODPipelineOptions): void {
   }
 }
 
+const PODPipelineFeedOptionsSchema = FeedIssuanceOptionsSchema.extend({
+  feedType: z.enum(["deleteAndReplace", "replace"])
+});
+
+export type PODPipelineFeedOptions = z.infer<
+  typeof PODPipelineFeedOptionsSchema
+>;
+
 const PODPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   input: PODPipelineInputSchema,
   outputs: z.record(z.string(), PODPipelineOutputSchema),
-  feedOptions: FeedIssuanceOptionsSchema.extend({
-    feedType: z.enum(["deleteAndReplace", "replace"])
-  })
+  feedOptions: PODPipelineFeedOptionsSchema
 }).superRefine((val, ctx) => {
   try {
     validatePODPipelineOptions(val);

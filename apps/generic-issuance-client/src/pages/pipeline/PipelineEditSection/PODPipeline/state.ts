@@ -1,6 +1,6 @@
 import {
-  FeedIssuanceOptions,
   PODPipelineDefinition,
+  PODPipelineFeedOptions,
   PODPipelineInputFieldType,
   PODPipelineOutputMatch,
   PODPipelinePODEntry
@@ -78,7 +78,7 @@ export type PODPipelineEditAction =
     }
   | {
       type: PODPipelineEditActionType.UpdateFeedOptions;
-      feedOptions: FeedIssuanceOptions;
+      feedOptions: PODPipelineFeedOptions;
     }
   | {
       type: PODPipelineEditActionType.UpdateInputCSV;
@@ -127,7 +127,7 @@ export type PODPipelineEditAction =
     }
   | {
       type: PODPipelineEditActionType.SetFeedOptions;
-      feedOptions: FeedIssuanceOptions;
+      feedOptions: PODPipelineFeedOptions;
     }
   | {
       type: PODPipelineEditActionType.Reset;

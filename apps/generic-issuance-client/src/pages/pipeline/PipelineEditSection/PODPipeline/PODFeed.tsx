@@ -1,4 +1,10 @@
-import { FormControl, FormLabel, Input, VStack } from "@chakra-ui/react";
+import {
+  FormControl,
+  FormLabel,
+  Input,
+  Select,
+  VStack
+} from "@chakra-ui/react";
 import { PODPipelineDefinition } from "@pcd/passport-interface";
 import { Dispatch, ReactNode, useCallback } from "react";
 import { PODPipelineEditAction, PODPipelineEditActionType } from "./state";
@@ -58,6 +64,16 @@ export function PODFeed({
           value={feedOptions.feedId}
           onChange={(ev) => onChangeField(ev.target.value, "feedDisplayName")}
         />
+      </FormControl>
+      <FormControl>
+        <FormLabel>Feed type</FormLabel>
+        <Select
+          onChange={(ev) => onChangeField(ev.target.value, "feedType")}
+          value={feedOptions.feedType}
+        >
+          <option value="deleteAndReplace">Delete and Replace</option>
+          <option value="replace">Replace</option>
+        </Select>
       </FormControl>
     </VStack>
   );

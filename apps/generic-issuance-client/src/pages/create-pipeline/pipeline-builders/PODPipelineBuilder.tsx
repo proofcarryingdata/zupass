@@ -76,7 +76,7 @@ export default function PODPipelineBuilder(
     (feedOptions: FeedIssuanceOptions): void => {
       dispatch({
         type: PODPipelineEditActionType.SetFeedOptions,
-        feedOptions
+        feedOptions: { ...feedOptions, feedType: "deleteAndReplace" }
       });
     },
     [dispatch]

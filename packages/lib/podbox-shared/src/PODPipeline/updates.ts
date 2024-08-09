@@ -1,6 +1,6 @@
 import {
-  FeedIssuanceOptions,
   PODPipelineDefinition,
+  PODPipelineFeedOptions,
   PODPipelineInputColumns,
   PODPipelineInputFieldType,
   PODPipelineOutputMatch,
@@ -424,7 +424,7 @@ export function changeOutputEntry(
  */
 export function setFeedOptions(
   definition: PODPipelineDefinition,
-  feedOptions: FeedIssuanceOptions
+  feedOptions: PODPipelineFeedOptions
 ): PODPipelineDefinition {
   const newDefinition = structuredClone(definition);
   newDefinition.options.feedOptions = feedOptions;
