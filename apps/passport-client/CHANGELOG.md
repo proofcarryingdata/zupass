@@ -1,5 +1,110 @@
 # passport-client
 
+## 0.0.32
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zk-eddsa-event-ticket-pcd-ui@0.2.4
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.3
+  - @pcd/semaphore-signature-pcd-ui@0.2.3
+  - @pcd/ethereum-ownership-pcd-ui@0.2.3
+  - @pcd/semaphore-identity-pcd-ui@0.2.3
+  - @pcd/semaphore-signature-pcd@0.11.3
+  - @pcd/ethereum-ownership-pcd@0.11.3
+  - @pcd/semaphore-identity-pcd@0.11.3
+  - @pcd/semaphore-group-pcd-ui@0.2.3
+  - @pcd/semaphore-group-pcd@0.11.3
+  - @pcd/zk-eddsa-frog-pcd-ui@0.2.3
+  - @pcd/passport-interface@0.11.4
+  - @pcd/eddsa-ticket-pcd-ui@0.2.4
+  - @pcd/zk-eddsa-frog-pcd@0.3.3
+  - @pcd/eddsa-ticket-pcd@0.6.3
+  - @pcd/eddsa-frog-pcd-ui@0.2.3
+  - @pcd/halo-nonce-pcd-ui@0.2.3
+  - @pcd/pod-ticket-pcd-ui@0.1.3
+  - @pcd/rsa-ticket-pcd-ui@0.2.3
+  - @pcd/passport-crypto@0.11.3
+  - @pcd/rsa-image-pcd-ui@0.2.3
+  - @pcd/pcd-collection@0.11.3
+  - @pcd/eddsa-frog-pcd@0.3.3
+  - @pcd/halo-nonce-pcd@0.7.3
+  - @pcd/pod-ticket-pcd@0.1.3
+  - @pcd/rsa-ticket-pcd@0.6.3
+  - @pcd/client-shared@0.0.4
+  - @pcd/rsa-image-pcd@0.5.3
+  - @pcd/message-pcd-ui@0.1.3
+  - @pcd/passport-ui@0.11.3
+  - @pcd/message-pcd@0.1.3
+  - @pcd/eddsa-pcd-ui@0.2.3
+  - @pcd/email-pcd-ui@0.2.3
+  - @pcd/pcd-types@0.11.3
+  - @pcd/eddsa-pcd@0.6.3
+  - @pcd/email-pcd@0.6.3
+  - @pcd/gpc-pcd-ui@0.0.4
+  - @pcd/pod-pcd-ui@0.1.3
+  - @pcd/rsa-pcd-ui@0.2.3
+  - @pcd/emitter@0.5.3
+  - @pcd/gpc-pcd@0.0.4
+  - @pcd/obj-pcd@0.0.4
+  - @pcd/pod-pcd@0.1.3
+  - @pcd/rsa-pcd@0.6.3
+  - @pcd/gpc@0.0.4
+  - @pcd/pod@0.1.3
+
+## 0.0.31
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/client-shared@0.0.3
+  - @pcd/emitter@0.5.2
+  - @pcd/gpc@0.0.3
+  - @pcd/passport-crypto@0.11.2
+  - @pcd/passport-interface@0.11.3
+  - @pcd/passport-ui@0.11.2
+  - @pcd/pcd-collection@0.11.2
+  - @pcd/pcd-types@0.11.2
+  - @pcd/pod@0.1.2
+  - @pcd/util@0.5.2
+  - @pcd/eddsa-frog-pcd@0.3.2
+  - @pcd/eddsa-pcd@0.6.2
+  - @pcd/eddsa-ticket-pcd@0.6.2
+  - @pcd/email-pcd@0.6.2
+  - @pcd/ethereum-ownership-pcd@0.11.2
+  - @pcd/gpc-pcd@0.0.3
+  - @pcd/halo-nonce-pcd@0.7.2
+  - @pcd/message-pcd@0.1.2
+  - @pcd/obj-pcd@0.0.3
+  - @pcd/pod-pcd@0.1.2
+  - @pcd/pod-ticket-pcd@0.1.2
+  - @pcd/rsa-image-pcd@0.5.2
+  - @pcd/rsa-pcd@0.6.2
+  - @pcd/rsa-ticket-pcd@0.6.2
+  - @pcd/semaphore-group-pcd@0.11.2
+  - @pcd/semaphore-identity-pcd@0.11.2
+  - @pcd/semaphore-signature-pcd@0.11.2
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.2
+  - @pcd/zk-eddsa-frog-pcd@0.3.2
+  - @pcd/eddsa-frog-pcd-ui@0.2.2
+  - @pcd/eddsa-pcd-ui@0.2.2
+  - @pcd/eddsa-ticket-pcd-ui@0.2.3
+  - @pcd/email-pcd-ui@0.2.2
+  - @pcd/ethereum-ownership-pcd-ui@0.2.2
+  - @pcd/gpc-pcd-ui@0.0.3
+  - @pcd/halo-nonce-pcd-ui@0.2.2
+  - @pcd/message-pcd-ui@0.1.2
+  - @pcd/pod-pcd-ui@0.1.2
+  - @pcd/pod-ticket-pcd-ui@0.1.2
+  - @pcd/rsa-image-pcd-ui@0.2.2
+  - @pcd/rsa-pcd-ui@0.2.2
+  - @pcd/rsa-ticket-pcd-ui@0.2.2
+  - @pcd/semaphore-group-pcd-ui@0.2.2
+  - @pcd/semaphore-identity-pcd-ui@0.2.2
+  - @pcd/semaphore-signature-pcd-ui@0.2.2
+  - @pcd/zk-eddsa-event-ticket-pcd-ui@0.2.3
+  - @pcd/zk-eddsa-frog-pcd-ui@0.2.2
+
 ## 0.0.30
 
 ### Patch Changes

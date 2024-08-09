@@ -1,5 +1,24 @@
 # @pcd/gpcircuits
 
+## 0.0.4
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/gpcircuits@0.1.3
+  - @pcd/pod@0.1.3
+
+## 0.0.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/gpcircuits@0.1.2
+  - @pcd/pod@0.1.2
+  - @pcd/util@0.5.2
+
 ## 0.0.2
 
 ### Patch Changes
