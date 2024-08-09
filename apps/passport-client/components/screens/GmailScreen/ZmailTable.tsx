@@ -14,22 +14,33 @@ import { ZmailRowElement } from "./ZmailRowElement";
 export function ZmailTable(): ReactNode {
   const ctx = useZmailContext();
 
-  const data: ZmailRow[] = useMemo(
-    () =>
-      ctx.pcds
-        .getAll()
-        .filter((pcd) => {
-          for (const filter of ctx.filters) {
-            if (!filter.filter(pcd, ctx.pcds)) {
-              return false;
-            }
+  const data: ZmailRow[] = useMemo(() => {
+    const list = ctx.pcds
+      .getAll()
+      .filter((pcd) => {
+        for (const filter of ctx.filters) {
+          if (!filter.filter(pcd, ctx.pcds)) {
+            return false;
           }
-          return true;
-        })
-        .map((pcd) => PCDtoRow(ctx.pcds, pcd))
-        .filter((row) => !!row) as ZmailRow[],
-    [ctx.filters, ctx.pcds]
-  );
+        }
+        return true;
+      })
+      .map((pcd) => PCDtoRow(ctx.pcds, pcd))
+      .filter((row) => !!row) as ZmailRow[];
+
+    list.sort((a, b) => {
+      if (a.meta?.updatedTimestamp && b.meta?.updatedTimestamp) {
+        return (
+          new Date(b.meta.updatedTimestamp).getTime() -
+          new Date(a.meta.updatedTimestamp).getTime()
+        );
+      }
+      if (a.meta?.updatedTimestamp) return -1;
+      if (b.meta?.updatedTimestamp) return 1;
+      return 0;
+    });
+    return list;
+  }, [ctx.filters, ctx.pcds]);
 
   const [sorting, setSorting] = useState<SortingState>([]); // can set initial sorting state here
 
