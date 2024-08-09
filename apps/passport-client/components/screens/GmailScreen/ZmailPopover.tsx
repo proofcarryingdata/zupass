@@ -54,14 +54,15 @@ export function ZmailPopover(): ReactNode {
     return () => window.removeEventListener("mousemove", onMouseMove);
   }, [containerRef]);
 
+  let content: ReactNode;
+
   if (!ctx.hoveringPCDID) {
-    return null;
-  }
-
-  const pcd = pcds.getById(ctx.hoveringPCDID);
-
-  if (!pcd) {
-    return null;
+    content = null;
+  } else {
+    const pcd = pcds.getById(ctx.hoveringPCDID);
+    if (pcd) {
+      content = <PCDCard pcd={pcd} expanded={true} />;
+    }
   }
 
   return (
@@ -71,7 +72,7 @@ export function ZmailPopover(): ReactNode {
         style={{ display: "none" }}
         ref={(e) => setContainerRef(e ?? undefined)}
       >
-        <PCDCard pcd={pcd} expanded={true} />
+        {content}
       </div>
     </div>
   );
