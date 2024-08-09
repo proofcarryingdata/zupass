@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from "react";
-import { FaArrowLeft } from "react-icons/fa";
 import { usePCDCollection, useStateContext } from "../../../src/appHooks";
 import { PCDCard } from "../../shared/PCDCard";
+import { BackButton } from "./BackButton";
 import { useZmailContext } from "./ZmailContext";
 
 export const ZmailPCDScreen = React.memo(ZmailPCDScreenImpl);
@@ -38,27 +38,13 @@ export function ZmailPCDScreenImpl(): JSX.Element | null {
     <div className="h-full flex flex-col">
       <div className="min-h-3 bg-gray-300 flex-shrink-0">
         {ctx.viewingPCDID && (
-          <>
-            <div
-              onClick={() => {
-                ctx.update({
-                  viewingPCDID: undefined
-                });
-              }}
-              className="flex items-center justify-center text-gray-600 hover:bg-gray-400 cursor-pointer m-2 active:bg-gray-500 transition-colors duration-200 active:text-white"
-              style={{
-                borderRadius: "50%",
-                width: "28px",
-                minWidth: "28px",
-                maxWidth: "28px",
-                height: "28px",
-                minHeight: "28px",
-                maxHeight: "28px"
-              }}
-            >
-              <FaArrowLeft size={12} />
-            </div>
-          </>
+          <BackButton
+            onClick={() => {
+              ctx.update({
+                viewingPCDID: undefined
+              });
+            }}
+          />
         )}
       </div>
       <div className="w-full text-black flex flex-col flex-grow overflow-y-scroll">

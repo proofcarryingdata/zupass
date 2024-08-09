@@ -8,6 +8,7 @@ import {
   useReactTable
 } from "@tanstack/react-table";
 import { ReactNode, useMemo, useState } from "react";
+import { BackButton } from "./BackButton";
 import { useZmailContext } from "./ZmailContext";
 import { ZmailRowElement } from "./ZmailRowElement";
 
@@ -57,14 +58,22 @@ export function ZmailTable(): ReactNode {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="min-h-3 bg-gray-300 flex-shrink-0 text-black">
-        <div className="m-2 mx-4">
-          {ctx.filters.length > 0 && (
-            <>
+      <div className="min-h-3 bg-gray-300 flex-shrink-0 text-black flex flex-row gap-2 items-center">
+        {ctx.filters.length > 0 && (
+          <>
+            <BackButton
+              onClick={() => {
+                ctx.update({
+                  filters: [],
+                  searchTerm: ""
+                });
+              }}
+            />
+            <span>
               {data.length} matching POD{data.length > 1 ? "s" : ""}
-            </>
-          )}
-        </div>
+            </span>
+          </>
+        )}
       </div>
 
       <div className="w-full text-black flex flex-col flex-grow overflow-y-scroll">
