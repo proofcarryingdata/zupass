@@ -69,8 +69,7 @@ export function atomize(
       }
     } else if (
       source.type === "credentialSemaphoreID" ||
-      source.type === "credentialEmail" ||
-      source.type === "signerPublicKey"
+      source.type === "credentialEmail"
     ) {
       // These values are not present during loading and so cannot be
       // populated in the Atom.

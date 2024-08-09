@@ -156,9 +156,6 @@ function PODOutput({
       } else if (source === "credentialSemaphoreID") {
         entry.source.type = source;
         entry.type = "cryptographic";
-      } else if (source === "signerPublicKey") {
-        entry.source.type = source;
-        entry.type = "eddsa_pubkey";
       } else if (source === "new") {
         setAddingConfiguredValueForKey(key);
         return;
@@ -266,8 +263,6 @@ function PODOutput({
                   ? "credentialEmail"
                   : entry.source.type === "credentialSemaphoreID"
                   ? "credentialSemaphoreID"
-                  : entry.source.type === "signerPublicKey"
-                  ? "signerPublicKey"
                   : entry.source.type === "configured"
                   ? `configured:${entry.source.value}`
                   : `input:${entry.source.name}`;
@@ -373,12 +368,6 @@ function PODOutput({
                               entry.source.type === "credentialEmail"
                             ) {
                               if (value !== "string") {
-                                return null;
-                              }
-                            } else if (
-                              entry.source.type === "signerPublicKey"
-                            ) {
-                              if (value !== "eddsa_pubkey") {
                                 return null;
                               }
                             }

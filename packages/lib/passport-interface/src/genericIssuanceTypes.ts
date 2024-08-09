@@ -605,7 +605,6 @@ const PODPipelinePODEntrySchema = z.object({
     z.object({ type: z.literal("input"), name: z.string() }),
     z.object({ type: z.literal("credentialSemaphoreID") }),
     z.object({ type: z.literal("credentialEmail") }),
-    z.object({ type: z.literal("signerPublicKey") }),
     z.object({
       type: z.literal("configured"),
       value: z.string()

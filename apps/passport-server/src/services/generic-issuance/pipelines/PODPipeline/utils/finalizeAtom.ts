@@ -21,8 +21,7 @@ import { PODAtom } from "../PODPipeline";
 export function finalizeAtom(
   atom: PODAtom,
   output: PODPipelineOutput,
-  credential: VerifiedCredentialWithEmail,
-  signerPublicKey: string
+  credential: VerifiedCredentialWithEmail
 ): PODEntries {
   const newEntries: PODEntries = {};
 
@@ -36,11 +35,6 @@ export function finalizeAtom(
       newEntries[name] = {
         type: "string",
         value: credential.email
-      } satisfies PODValue;
-    } else if (entry.source.type === "signerPublicKey") {
-      newEntries[name] = {
-        type: "eddsa_pubkey",
-        value: signerPublicKey
       } satisfies PODValue;
     }
   }

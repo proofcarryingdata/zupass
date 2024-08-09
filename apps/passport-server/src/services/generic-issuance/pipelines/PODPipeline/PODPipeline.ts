@@ -14,16 +14,10 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import {
-  decodePrivateKey,
-  encodePublicKey,
-  PODEntries,
-  serializePODEntries
-} from "@pcd/pod";
+import { PODEntries, serializePODEntries } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { CSVInput, Input } from "@pcd/podbox-shared";
 import { assertUnreachable } from "@pcd/util";
-import { derivePublicKey } from "@zk-kit/eddsa-poseidon";
 import PQueue from "p-queue";
 import { v5 as uuidv5 } from "uuid";
 import {
@@ -61,7 +55,6 @@ export class PODPipeline implements BasePipeline {
   public capabilities: BasePipelineCapability[];
 
   private eddsaPrivateKey: string;
-  private eddsaPublicKey: string;
   private db: IPipelineAtomDB<PODAtom>;
   private definition: PODPipelineDefinition;
   private credentialSubservice: CredentialSubservice;
@@ -87,9 +80,6 @@ export class PODPipeline implements BasePipeline {
     cacheService: PersistentCacheService
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
-    const privateKeyBytes = decodePrivateKey(eddsaPrivateKey);
-    const unpackedPublicKey = derivePublicKey(privateKeyBytes);
-    this.eddsaPublicKey = encodePublicKey(unpackedPublicKey);
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PODAtom>;
     this.credentialSubservice = credentialSubservice;
@@ -338,8 +328,7 @@ export class PODPipeline implements BasePipeline {
           const entries = finalizeAtom(
             atom,
             this.definition.options.outputs[atom.outputId],
-            credential,
-            this.eddsaPublicKey
+            credential
           );
 
           const id = uuidv5(serializePODEntries(entries), this.id);
