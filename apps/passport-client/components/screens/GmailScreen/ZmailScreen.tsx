@@ -7,6 +7,7 @@ import { NewButton } from "../../NewButton";
 import { ZupassTitle } from "../HomeScreen/HomeScreen";
 import { ZmailContext, ZmailScreenContextValue } from "./ZmailContext";
 import { ZmailPCDScreenImpl } from "./ZmailPCDScreen";
+import { ZmailPopover } from "./ZmailPopover";
 import { ZmailSidebar } from "./ZmailSidebar";
 import { ZmailTable } from "./ZmailTable";
 
@@ -97,6 +98,7 @@ export function ZmailScreenImpl(): JSX.Element | null {
           </div>
         </div>
       </div>
+      <ZmailPopover />
     </ZmailContext.Provider>
   );
 }
