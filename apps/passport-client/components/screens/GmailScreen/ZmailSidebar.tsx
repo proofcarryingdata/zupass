@@ -29,6 +29,7 @@ export function ZmailSidebar(): ReactNode {
       }
       ctx.update({
         filters,
+        searchTerm: "",
         viewingPCDID: undefined,
         hoveringFolder: undefined
       });
