@@ -24,18 +24,13 @@ import {
   setPendingViewFrogCryptoRequest,
   setPendingViewSubscriptionsRequest
 } from "../../../src/sessionStorage";
-import {
-  BigInput,
-  Button,
-  CenterColumn,
-  H1,
-  H2,
-  Spacer,
-  TextCenter
-} from "../../core";
+import { CenterColumn, Spacer, TextCenter } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
+import { NewButton } from "../../NewButton";
+import { NewInput } from "../../NewInput";
 import { AppContainer } from "../../shared/AppContainer";
 import { InlineError } from "../../shared/InlineError";
+import { ZupassTitle } from "../HomeScreen/HomeScreen";
 
 export function LoginScreen(): JSX.Element {
   const dispatch = useDispatch();
@@ -139,8 +134,8 @@ export function LoginScreen(): JSX.Element {
       {state.loggingOut ? (
         <>
           <TextCenter>
-            <H1>ZUPASS</H1>
-            <Spacer h={24} />
+            <ZupassTitle>ZUPASS</ZupassTitle>
+            <Spacer h={8} />
             Logging you Out
             <Spacer h={8} />
             <RippleLoader />
@@ -149,8 +144,8 @@ export function LoginScreen(): JSX.Element {
       ) : redirectedFromAction ? (
         <>
           <TextCenter>
-            <H2>ZUPASS</H2>
-            <Spacer h={24} />
+            <ZupassTitle>ZUPASS</ZupassTitle>
+            <Spacer h={8} />
             To complete this request, please login or register with your email
             below.
           </TextCenter>
@@ -158,8 +153,8 @@ export function LoginScreen(): JSX.Element {
       ) : (
         <>
           <TextCenter>
-            <H1>ZUPASS</H1>
-            <Spacer h={24} />
+            <ZupassTitle>ZUPASS</ZupassTitle>
+            <Spacer h={8} />
             This is an experimental personal cryptography manager, powered by
             Zero-Knowledge.
           </TextCenter>
@@ -171,7 +166,8 @@ export function LoginScreen(): JSX.Element {
           <Spacer h={24} />
           <CenterColumn>
             <form onSubmit={onGenPass}>
-              <BigInput
+              <NewInput
+                className="w-full text-center"
                 autoCapitalize="off"
                 autoCorrect="off"
                 type="text"
@@ -183,10 +179,10 @@ export function LoginScreen(): JSX.Element {
                 }
               />
               <InlineError error={error} />
-              <Spacer h={8} />
-              <Button style="primary" type="submit">
+              <Spacer h={16} />
+              <NewButton type="submit" className="w-full">
                 Continue
-              </Button>
+              </NewButton>
             </form>
           </CenterColumn>
           <Spacer h={64} />
