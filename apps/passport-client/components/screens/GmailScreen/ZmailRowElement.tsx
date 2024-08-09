@@ -27,8 +27,7 @@ export function ZmailRowElement({ row }: { row: Row<ZmailRow> }): ReactNode {
         <span className="italic">{row.original.folder}</span>
         {" · "}
         {row.original.type}
-        {" · "}
-        <span>
+        <span className="w-20 inline-block text-right">
           {meta?.updatedTimestamp
             ? timeAgo.format(new Date(meta.updatedTimestamp), "mini")
             : "n/a"}

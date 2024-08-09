@@ -58,7 +58,7 @@ export function ZmailTable(): ReactNode {
   return (
     <div className="h-full flex flex-col">
       <div className="min-h-3 bg-gray-300 flex-shrink-0 text-black">
-        <div className="m-2">
+        <div className="m-2 mx-4">
           {ctx.filters.length > 0 && (
             <>
               {data.length} matching POD{data.length > 1 ? "s" : ""}
