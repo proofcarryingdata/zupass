@@ -41,7 +41,8 @@ export function ZmailTable(): ReactNode {
       return 0;
     });
     return list;
-  }, [ctx.filters, ctx.pcds]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ctx.filters, ctx.pcds, ctx.pcds.getAll()]);
 
   const [sorting, setSorting] = useState<SortingState>([]); // can set initial sorting state here
 
