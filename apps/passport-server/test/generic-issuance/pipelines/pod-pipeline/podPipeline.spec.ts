@@ -503,6 +503,49 @@ describe("generic issuance - PODPipeline", function () {
     } satisfies PODEntries);
   });
 
+  step("Feed type can be reconfigured to skip deletion", async function () {
+    await updateAndRestartPipeline(
+      giBackend,
+      giService,
+      adminGIUserId,
+      (definition: PODPipelineDefinition) => {
+        definition.options.feedOptions.feedType = "replace";
+      }
+    );
+
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelineInstances();
+    expectLength(pipelines, 1);
+    const podPipeline = pipelines.find(PODPipeline.is);
+    expectToExist(podPipeline);
+    const loadRes = await podPipeline.load();
+    expectTrue(loadRes.success);
+    expect(loadRes.atomsLoaded).to.eq(3);
+
+    const feedRes = await requestPODFeed(
+      podPipeline.feedCapability.feedUrl,
+      podPipeline.feedCapability.options.feedId,
+      await makeTestCredential(
+        johnDoeUserIdentity,
+        PODBOX_CREDENTIAL_REQUEST,
+        // User email as present in the CSV input
+        "john.doe@example.com",
+        testingEnv.SERVER_EDDSA_PRIVATE_KEY as string
+      )
+    );
+    expectTrue(feedRes.success);
+    // There will be no delete action, as distinct from all previous tests
+    expectLength(feedRes.value.actions, 1);
+    const pcdsAction = feedRes.value.actions[0];
+    expectIsReplaceInFolderAction(pcdsAction);
+    // User receives two PCDs
+    expectLength(pcdsAction.pcds, 2);
+    expect(pcdsAction.pcds[0].type).to.eq(PODPCDTypeName);
+    expect(pcdsAction.folder).to.eq(
+      podPipeline.feedCapability.options.feedFolder
+    );
+  });
+
   this.afterAll(async () => {
     await stopApplication(giBackend);
   });

@@ -82,7 +82,8 @@ export function setupTestPODPipelineDefinition(
         feedId: "feedId",
         feedDisplayName: "feedDisplayName",
         feedDescription: "feedDescription",
-        feedFolder: "feedFolder"
+        feedFolder: "feedFolder",
+        feedType: "deleteAndReplace"
       }
     }
   } satisfies PODPipelineDefinition;

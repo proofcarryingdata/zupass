@@ -318,7 +318,10 @@ export class PODPipeline implements BasePipeline {
       // Consumer is validated, so save them in the consumer list
       await this.consumerDB.save(this.id, email, semaphoreId, new Date());
 
-      const atomsToIssue = await this.loadMatchingAtoms(credential);
+      // PODs must have entries
+      const atomsToIssue = (await this.loadMatchingAtoms(credential)).filter(
+        (atom) => Object.keys(atom.entries).length > 0
+      );
 
       const serializedPCDs = await Promise.all(
         atomsToIssue.map(async (atom) => {
@@ -363,11 +366,13 @@ export class PODPipeline implements BasePipeline {
 
       const actions: PCDAction[] = [];
 
-      actions.push({
-        type: PCDActionType.DeleteFolder,
-        folder: this.definition.options.feedOptions.feedFolder,
-        recursive: true
-      });
+      if (this.definition.options.feedOptions.feedType === "deleteAndReplace") {
+        actions.push({
+          type: PCDActionType.DeleteFolder,
+          folder: this.definition.options.feedOptions.feedFolder,
+          recursive: true
+        });
+      }
 
       actions.push({
         type: PCDActionType.ReplaceInFolder,

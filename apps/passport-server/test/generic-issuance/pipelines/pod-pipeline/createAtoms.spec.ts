@@ -55,7 +55,8 @@ describe("atom creation", function () {
         feedId: "feedId",
         feedDisplayName: "feedDisplayName",
         feedDescription: "feedDescription",
-        feedFolder: "feedFolder"
+        feedFolder: "feedFolder",
+        feedType: "deleteAndReplace"
       }
     };
 
@@ -140,7 +141,8 @@ describe("atom creation", function () {
         feedId: "feedId",
         feedDisplayName: "feedDisplayName",
         feedDescription: "feedDescription",
-        feedFolder: "feedFolder"
+        feedFolder: "feedFolder",
+        feedType: "deleteAndReplace"
       }
     };
 

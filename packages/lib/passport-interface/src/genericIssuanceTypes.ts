@@ -660,7 +660,9 @@ export function validatePODPipelineOptions(options: PODPipelineOptions): void {
 const PODPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   input: PODPipelineInputSchema,
   outputs: z.record(z.string(), PODPipelineOutputSchema),
-  feedOptions: FeedIssuanceOptionsSchema
+  feedOptions: FeedIssuanceOptionsSchema.extend({
+    feedType: z.enum(["deleteAndReplace", "replace"])
+  })
 }).superRefine((val, ctx) => {
   try {
     validatePODPipelineOptions(val);

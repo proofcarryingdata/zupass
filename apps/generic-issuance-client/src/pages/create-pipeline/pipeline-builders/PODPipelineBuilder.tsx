@@ -53,7 +53,8 @@ export default function PODPipelineBuilder(
         feedDisplayName: "POD Pipeline",
         feedFolder: "PODs",
         feedDescription: "New POD Pipeline",
-        feedId: "default-feed"
+        feedId: "default-feed",
+        feedType: "deleteAndReplace"
       }
     }
   };
