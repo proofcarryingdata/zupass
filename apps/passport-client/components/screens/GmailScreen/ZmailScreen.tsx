@@ -47,7 +47,7 @@ export function ZmailScreenImpl(): JSX.Element | null {
             style={{ fontSize: "2.5em", lineHeight: "1.5em" }}
           >
             <span
-              className="cursor-pointer"
+              className="cursor-pointer transition-colors duration-100 hover:bg-[rgba(0,0,0,0.1)] rounded-lg px-2 py-1 active:bg-[rgba(0,0,0,0.3)] select-none"
               onClick={() => {
                 ctx.update({
                   filters: [],
