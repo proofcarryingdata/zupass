@@ -66,6 +66,9 @@
       "path": "../../packages/lib/pod"
     },
     {
+      "path": "../../packages/lib/podbox-shared"
+    },
+    {
       "path": "../../packages/pcd/pod-pcd"
     },
     {

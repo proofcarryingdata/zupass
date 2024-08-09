@@ -49,9 +49,6 @@
       "path": "../pod"
     },
     {
-      "path": "../../pcd/pod-pcd"
-    },
-    {
       "path": "../../pcd/semaphore-group-pcd"
     },
     {

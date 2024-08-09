@@ -1,6 +1,5 @@
-import { ReactNode, useEffect, useState } from "react";
-// eslint-disable-next-line import/no-named-as-default
 import { stringify } from "csv-stringify/sync";
+import { ReactNode, useEffect, useState } from "react";
 import { Matrix, Mode, Spreadsheet } from "react-spreadsheet";
 import styled from "styled-components";
 import { parseCSV } from "./parseCSV";
