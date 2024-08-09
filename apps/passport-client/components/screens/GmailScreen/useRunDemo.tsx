@@ -89,10 +89,10 @@ export function useRunDemo(): () => Promise<void> {
     console.log(`demo contains ${tasks.length} tasks`);
     for (let i = 0; i < tasks.length; i++) {
       const task = tasks[i];
-      await sleep(task.timeout);
       state.getState().pcds.add(task.pcd);
       state.getState().pcds.setFolder(task.pcd.id, task.folder);
       await savePCDs(state.getState().pcds);
+      await sleep(task.timeout);
     }
   };
 }

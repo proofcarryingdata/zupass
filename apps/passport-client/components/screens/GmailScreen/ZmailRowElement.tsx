@@ -1,6 +1,6 @@
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { cn } from "../../../src/util";
 import { useZmailContext } from "./ZmailContext";
 import { ZmailRow } from "./ZmailTable";
@@ -11,6 +11,20 @@ const timeAgo = new TimeAgo("en-US");
 export function ZmailRowElement({ row }: { row: ZmailRow }): ReactNode {
   const ctx = useZmailContext();
   const meta = row.meta;
+  const [timestampRef, setTimestampRef] = useState<
+    HTMLSpanElement | undefined
+  >();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (!timestampRef) return;
+
+      timestampRef.innerText = meta?.updatedTimestamp
+        ? timeAgo.format(new Date(meta.updatedTimestamp), "mini")
+        : "n/a";
+    }, 50);
+    return () => clearInterval(interval);
+  });
 
   return (
     <div
@@ -35,7 +49,10 @@ export function ZmailRowElement({ row }: { row: ZmailRow }): ReactNode {
         <span className="italic">{row.folder}</span>
         {" · "}
         {row.type}
-        <span className="w-20 inline-block text-right">
+        <span
+          className="w-20 inline-block text-right"
+          ref={(e) => setTimestampRef(e ?? undefined)}
+        >
           {meta?.updatedTimestamp
             ? timeAgo.format(new Date(meta.updatedTimestamp), "mini")
             : "n/a"}
