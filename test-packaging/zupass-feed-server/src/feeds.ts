@@ -52,7 +52,7 @@ export async function initFeedHost() {
             ];
           }),
           credentialRequest: {
-            signatureType: "sempahore-signature-pcd",
+            signatureType: "semaphore-signature-pcd",
             pcdType: "email-pcd"
           }
         },

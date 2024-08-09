@@ -213,7 +213,7 @@ export class IssuanceService {
             description: "Get your Devconnect tickets here!",
             partialArgs: undefined,
             credentialRequest: {
-              signatureType: "sempahore-signature-pcd"
+              signatureType: "semaphore-signature-pcd"
             },
             permissions: [
               {
@@ -262,7 +262,7 @@ export class IssuanceService {
             inputPCDType: undefined,
             partialArgs: undefined,
             credentialRequest: {
-              signatureType: "sempahore-signature-pcd"
+              signatureType: "semaphore-signature-pcd"
             },
             permissions: [
               {

@@ -14,7 +14,7 @@ export const zupassDefaultSubscriptions: Record<
       "used to request PCDs from other PCD feeds.",
     partialArgs: undefined,
     credentialRequest: {
-      signatureType: "sempahore-signature-pcd"
+      signatureType: "semaphore-signature-pcd"
     },
     permissions: [
       {
@@ -34,7 +34,7 @@ export const zupassDefaultSubscriptions: Record<
     description: "EdDSATicketPCDs representing Zuzalu Tickets.",
     partialArgs: undefined,
     credentialRequest: {
-      signatureType: "sempahore-signature-pcd"
+      signatureType: "semaphore-signature-pcd"
     },
     permissions: [
       {
@@ -54,7 +54,7 @@ export const zupassDefaultSubscriptions: Record<
     description: "EdDSATicketPCDs representing Zuconnect Tickets.",
     partialArgs: undefined,
     credentialRequest: {
-      signatureType: "sempahore-signature-pcd"
+      signatureType: "semaphore-signature-pcd"
     },
     permissions: [
       {

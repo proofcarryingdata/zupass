@@ -64,7 +64,7 @@ export class MockFeedApi implements IFeedApi {
                 inputPCDType: undefined,
                 partialArgs: undefined,
                 credentialRequest: {
-                  signatureType: "sempahore-signature-pcd"
+                  signatureType: "semaphore-signature-pcd"
                 }
               },
 
@@ -113,7 +113,7 @@ export class MockFeedApi implements IFeedApi {
                 inputPCDType: undefined,
                 partialArgs: undefined,
                 credentialRequest: {
-                  signatureType: "sempahore-signature-pcd"
+                  signatureType: "semaphore-signature-pcd"
                 }
               },
               handleRequest: async (
@@ -157,7 +157,7 @@ export class MockFeedApi implements IFeedApi {
                 partialArgs: undefined,
                 credentialRequest: {
                   pcdType: "email-pcd",
-                  signatureType: "sempahore-signature-pcd"
+                  signatureType: "semaphore-signature-pcd"
                 }
               },
 

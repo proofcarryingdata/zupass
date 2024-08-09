@@ -854,7 +854,7 @@ export class PretixPipeline implements BasePipeline {
 
   private async manualTicketToTicketData(
     manualTicket: ManualTicket,
-    sempahoreId: string
+    semaphoreId: string
   ): Promise<ITicketData> {
     const event = this.getEventById(manualTicket.eventId);
     const product = this.getProductById(event, manualTicket.productId);
@@ -870,7 +870,7 @@ export class PretixPipeline implements BasePipeline {
       productId: manualTicket.productId,
       attendeeEmail: manualTicket.attendeeEmail,
       attendeeName: manualTicket.attendeeName,
-      attendeeSemaphoreId: sempahoreId,
+      attendeeSemaphoreId: semaphoreId,
       imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
       isConsumed: checkIn ? true : false,
       isRevoked: false,

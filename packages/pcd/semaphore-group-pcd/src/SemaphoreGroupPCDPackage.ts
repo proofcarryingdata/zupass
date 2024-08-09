@@ -13,15 +13,15 @@ import {
   SemaphoreGroupPCD,
   SemaphoreGroupPCDArgs,
   SemaphoreGroupPCDClaim,
+  SemaphoreGroupPCDInitArgs,
   SemaphoreGroupPCDProof,
-  SemaphoreGroupPCDTypeName,
-  SempahoreGroupPCDInitArgs
+  SemaphoreGroupPCDTypeName
 } from "./SemaphoreGroupPCD";
 import { deserializeSemaphoreGroup } from "./SerializedSemaphoreGroup";
 
-let initArgs: SempahoreGroupPCDInitArgs | undefined = undefined;
+let initArgs: SemaphoreGroupPCDInitArgs | undefined = undefined;
 
-export async function init(args: SempahoreGroupPCDInitArgs): Promise<void> {
+export async function init(args: SemaphoreGroupPCDInitArgs): Promise<void> {
   initArgs = args;
 }
 
@@ -144,7 +144,7 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
   SemaphoreGroupPCDClaim,
   SemaphoreGroupPCDProof,
   SemaphoreGroupPCDArgs,
-  SempahoreGroupPCDInitArgs
+  SemaphoreGroupPCDInitArgs
 > = {
   name: SemaphoreGroupPCDTypeName,
   getDisplayOptions,

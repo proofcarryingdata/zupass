@@ -47,7 +47,7 @@ describe("Subscription Manager", async function () {
         inputPCDType: undefined,
         partialArgs: undefined,
         credentialRequest: {
-          signatureType: "sempahore-signature-pcd"
+          signatureType: "semaphore-signature-pcd"
         }
       });
     }
@@ -122,7 +122,7 @@ describe("Subscription Manager", async function () {
       inputPCDType: undefined,
       partialArgs: undefined,
       credentialRequest: {
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "semaphore-signature-pcd"
       }
     };
 
@@ -169,7 +169,7 @@ describe("Subscription Manager", async function () {
       inputPCDType: undefined,
       partialArgs: undefined,
       credentialRequest: {
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "semaphore-signature-pcd"
       }
     };
 
@@ -213,7 +213,7 @@ describe("Subscription Manager", async function () {
       inputPCDType: undefined,
       partialArgs: undefined,
       credentialRequest: {
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "semaphore-signature-pcd"
       }
     };
 

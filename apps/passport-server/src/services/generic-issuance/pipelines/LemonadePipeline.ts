@@ -567,7 +567,7 @@ export class LemonadePipeline implements BasePipeline {
 
   private async manualTicketToTicketData(
     manualTicket: ManualTicket,
-    sempahoreId: string
+    semaphoreId: string
   ): Promise<ITicketData> {
     const event = this.getEventById(manualTicket.eventId);
     const product = this.getTicketTypeById(event, manualTicket.productId);
@@ -583,7 +583,7 @@ export class LemonadePipeline implements BasePipeline {
       productId: manualTicket.productId,
       attendeeEmail: manualTicket.attendeeEmail,
       attendeeName: manualTicket.attendeeName,
-      attendeeSemaphoreId: sempahoreId,
+      attendeeSemaphoreId: semaphoreId,
       isConsumed: checkIn ? true : false,
       isRevoked: false,
       timestampSigned: Date.now(),

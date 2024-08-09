@@ -112,7 +112,7 @@ function useFeeds(): {
   useEffect(() => {
     const fetchPcd = async (): Promise<void> => {
       const pcd = await credentialManager.requestCredential({
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "semaphore-signature-pcd"
       });
       setPcd(pcd);
     };

@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { bigintToUint8Array, uint8arrayToBigint } from "../../../src/util";
 
 export function useUsernameGenerator():
-  | ((sempahoreId: string, lowercase?: boolean) => string)
+  | ((semaphoreId: string, lowercase?: boolean) => string)
   | null {
   const [pcdCrypto, setPCDCrypto] = useState<PCDCrypto | null>(null);
   useEffect(() => {
@@ -12,7 +12,7 @@ export function useUsernameGenerator():
   }, []);
 
   const generator = useCallback(
-    (sempahoreId: string, lowercase = false) => {
+    (semaphoreId: string, lowercase = false) => {
       try {
         if (!pcdCrypto) {
           throw new Error("pcdCrypto is not initialized");
@@ -20,7 +20,7 @@ export function useUsernameGenerator():
 
         const randomBytes = pcdCrypto.randombytesDeterministic(
           32,
-          bigintToUint8Array(BigInt(sempahoreId))
+          bigintToUint8Array(BigInt(semaphoreId))
         );
         if (randomBytes === null) {
           throw new Error("Could not generate random data");

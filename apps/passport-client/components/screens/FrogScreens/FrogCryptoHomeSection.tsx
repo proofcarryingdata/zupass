@@ -229,7 +229,7 @@ export function useUserFeedState(subscriptions: Subscription[]): {
   const refreshUserState = useCallback(async () => {
     try {
       const pcd = await credentialManager.requestCredential({
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "semaphore-signature-pcd"
       });
 
       const state = await requestFrogCryptoGetUserState(
