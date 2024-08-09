@@ -3,12 +3,11 @@ import {
   EdDSATicketPCDPackage,
   ITicketData
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   FeedHost,
   PollFeedRequest,
   PollFeedResponseValue,
-  verifyFeedCredential
+  verifyCredential
 } from "@pcd/passport-interface";
 import {
   DeleteFolderPermission,
@@ -19,10 +18,8 @@ import {
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import _ from "lodash";
 import path from "path";
 import { Ticket, loadTickets } from "./config";
-import { ZUPASS_PUBLIC_KEY } from "./main";
 
 const fullPath = path.join(__dirname, "../artifacts/");
 SemaphoreSignaturePCDPackage.init?.({
@@ -65,21 +62,11 @@ export async function initFeedHost() {
           if (req.pcd === undefined) {
             throw new Error(`Missing credential`);
           }
-          const { payload } = await verifyFeedCredential(req.pcd);
-
-          if (payload?.pcd && payload.pcd.type === EmailPCDPackage.name) {
-            const pcd = await EmailPCDPackage.deserialize(payload?.pcd.pcd);
-            const verified =
-              (await EmailPCDPackage.verify(pcd)) &&
-              _.isEqual(pcd.proof.eddsaPCD.claim.publicKey, ZUPASS_PUBLIC_KEY);
-            if (verified) {
-              return {
-                actions: await feedActionsForEmail(
-                  pcd.claim.emailAddress,
-                  pcd.claim.semaphoreId
-                )
-              };
-            }
+          const { email, semaphoreId } = await verifyCredential(req.pcd);
+          if (email) {
+            return {
+              actions: await feedActionsForEmail(email, semaphoreId)
+            };
           }
           return { actions: [] };
         }

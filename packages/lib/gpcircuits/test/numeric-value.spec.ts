@@ -23,9 +23,12 @@ describe("numeric-value.NumericValueModule should work", async function () {
 
   const sampleValueHashPairs = [
     POD_INT_MIN,
+    0n,
     3n,
+    -3n,
     256n,
     (1n << 32n) + 7n,
+    -(1n << 32n),
     POD_INT_MAX
   ].map((value) => [value, podValueHash({ type: "int", value })]);
 

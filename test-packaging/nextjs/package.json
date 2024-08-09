@@ -9,9 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pcd/eddsa-ticket-pcd": "^0.5.0",
-    "@pcd/passport-interface": "^0.10.0",
-    "@pcd/zk-eddsa-event-ticket-pcd": "^0.4.0",
+    "@pcd/eddsa-ticket-pcd": "*",
+    "@pcd/passport-interface": "*",
+    "@pcd/zk-eddsa-event-ticket-pcd": "*",
     "next": "14.0.3",
     "react": "^18",
     "react-dom": "^18"
