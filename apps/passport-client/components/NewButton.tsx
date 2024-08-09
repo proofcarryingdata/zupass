@@ -35,7 +35,7 @@ export function NewButton({
         "border-4",
         "text-center",
         "py-2 px-4 cursor-pointer transition-all duration-100",
-        "rounded-lg font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60",
+        "rounded-xl font-bold shadow-lg select-none active:ring-2 active:ring-offset-4 active:ring-white ring-opacity-60",
         "text-lg",
         variantStyles[variant],
         props.className

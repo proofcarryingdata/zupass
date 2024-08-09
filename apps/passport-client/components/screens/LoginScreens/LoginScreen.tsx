@@ -179,7 +179,7 @@ export function LoginScreen(): JSX.Element {
                 }
               />
               <InlineError error={error} />
-              <Spacer h={16} />
+              <Spacer h={8} />
               <NewButton type="submit" className="w-full">
                 Continue
               </NewButton>
