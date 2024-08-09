@@ -49,7 +49,6 @@ export function useRunDemo(): () => Promise<void> {
   const pkey = newEdDSAPrivateKey();
 
   return async () => {
-    alert("running demo");
     const tasks: DemoPCDTask[] = [
       {
         pcd: await makePod(pkey, {
@@ -57,7 +56,7 @@ export function useRunDemo(): () => Promise<void> {
           content: "welcome to zupass"
         }),
         folder: "announcements",
-        timeout: 1000
+        timeout: 2000
       },
       {
         pcd: await makePod(pkey, {
@@ -65,7 +64,7 @@ export function useRunDemo(): () => Promise<void> {
           content: "this is zmail"
         }),
         folder: "announcements",
-        timeout: 1000
+        timeout: 3000
       },
       {
         pcd: await makePod(pkey, {
@@ -73,7 +72,7 @@ export function useRunDemo(): () => Promise<void> {
           content: "you can use it to look at your PODs"
         }),
         folder: "announcements",
-        timeout: 1000
+        timeout: 4000
       },
       {
         pcd: await makePod(pkey, {
@@ -81,7 +80,7 @@ export function useRunDemo(): () => Promise<void> {
           content: "xD"
         }),
         folder: "announcements",
-        timeout: 1000
+        timeout: 2000
       },
       {
         pcd: await makePod(pkey, {
@@ -93,7 +92,7 @@ export function useRunDemo(): () => Promise<void> {
           content: "xD"
         }),
         folder: "kitties",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -104,7 +103,7 @@ export function useRunDemo(): () => Promise<void> {
             "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bc/Juvenile_Ragdoll.jpg/1200px-Juvenile_Ragdoll.jpg"
         }),
         folder: "kitties",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -115,7 +114,7 @@ export function useRunDemo(): () => Promise<void> {
           zupass_image_url: "https://i.imgur.com/tYJPcBO.jpeg"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -125,7 +124,7 @@ export function useRunDemo(): () => Promise<void> {
           zupass_image_url: "https://i.redd.it/zdo10qa8e85b1.jpg"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -136,7 +135,7 @@ export function useRunDemo(): () => Promise<void> {
             "https://content.instructables.com/F6O/PDL9/IBJ769QN/F6OPDL9IBJ769QN.jpg?auto=webp&frame=1&width=320&md=1c8c0ceb8ed7e7ba611ef1cd5365bfe9"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -148,7 +147,7 @@ export function useRunDemo(): () => Promise<void> {
             "https://www.photomural.com/media/catalog/product/cache/2/thumbnail/9df78eab33525d08d6e5fb8d27136e95/I/A/IADX10-065.jpg"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -159,7 +158,7 @@ export function useRunDemo(): () => Promise<void> {
             "https://i0.wp.com/post.healthline.com/wp-content/uploads/2020/01/Runner-training-on-running-track-1296x728-header-1296x728.jpg?w=1155&h=1528"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -171,7 +170,7 @@ export function useRunDemo(): () => Promise<void> {
             "https://i0.wp.com/dropofdisney.com/wp-content/uploads/2023/02/IMG_1707-2.jpg?fit=2500%2C2500&ssl=1"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -182,7 +181,7 @@ export function useRunDemo(): () => Promise<void> {
             "https://www.thespruce.com/thmb/W0ZgVN7zCzyweXRgcJ21vNVxmGA=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/GettyImages-BB9905-006-d4cc008f1ba74651bd6f9b3deb39ab86.jpg"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -193,7 +192,7 @@ export function useRunDemo(): () => Promise<void> {
             "https://bestfriendspetcare.com/wp-content/uploads/2020/06/puppy-play-group-beagle.jpg"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -204,7 +203,7 @@ export function useRunDemo(): () => Promise<void> {
             "https://yummydinobuddies.com/app/uploads/2021/09/22693_3D_21oz_DinoTheOriginal_M37_P1929004_Horiz-610x555.jpg"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -216,7 +215,7 @@ export function useRunDemo(): () => Promise<void> {
             "https://kenzierenee.wordpress.com/wp-content/uploads/2012/08/2-bookworm.jpg"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -227,7 +226,7 @@ export function useRunDemo(): () => Promise<void> {
             "https://hips.hearstapps.com/hmg-prod/images/claude-monets-house-and-gardens-in-giverny-france-news-photo-1042013294-1562610151.jpg"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
       },
       {
         pcd: await makePod(pkey, {
@@ -238,10 +237,72 @@ export function useRunDemo(): () => Promise<void> {
             "https://www.rainbowsymphony.com/cdn/shop/articles/fully-double-rainbow-909264_850x.jpg?v=1692384969"
         }),
         folder: "tweets",
-        timeout: 1000
+        timeout: Math.random() * 500 + 250
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "ETH Price Attestation: $4,200",
+          zupass_description: "going to the moon"
+        }),
+        folder: "attestations",
+        timeout: Math.random() * 500 + 250
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "ETH Price Attestation: $4,200",
+          zupass_description: "going to the moon"
+        }),
+        folder: "attestations",
+        timeout: Math.random() * 500 + 250
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Weather Attestation: 72°F and Sunny",
+          zupass_description: "Perfect day for a picnic!"
+        }),
+        folder: "attestations",
+        timeout: Math.random() * 500 + 250
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Breaking News: Water Found on Mars",
+          zupass_description: "Scientists confirm large ice deposits"
+        }),
+        folder: "attestations",
+        timeout: Math.random() * 500 + 250
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Stock Market Attestation: S&P 500 Hits Record High",
+          zupass_description: "Bulls are running wild on Wall Street"
+        }),
+        folder: "attestations",
+        timeout: Math.random() * 500 + 250
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Sports Update: Underdog Team Wins Championship",
+          zupass_description: "Cinderella story comes true in overtime thriller"
+        }),
+        folder: "attestations",
+        timeout: Math.random() * 500 + 250
+      },
+      {
+        pcd: await makePod(pkey, {
+          zupass_display: "collectable",
+          zupass_title: "Tech News: Quantum Computer Breaks Encryption Record",
+          zupass_description: "Cybersecurity experts urge immediate action"
+        }),
+        folder: "attestations",
+        timeout: Math.random() * 500 + 250
       }
     ];
-    alert("generated tasks");
 
     console.log(`demo contains ${tasks.length} tasks`);
     for (let i = 0; i < tasks.length; i++) {
