@@ -14,9 +14,40 @@ export function ZmailPopover(): ReactNode {
     const onMouseMove = (e: MouseEvent): void => {
       if (!containerRef) return;
 
+      const sw = window.innerWidth;
+      const sh = window.innerHeight;
+
+      const r = containerRef.getBoundingClientRect();
+
       containerRef.style.display = "initial";
-      containerRef.style.top = e.clientY + 20 + "px";
-      containerRef.style.left = e.clientX + 20 + "px";
+
+      // Calculate positions
+      let left = e.clientX + 20;
+      let top = e.clientY + 20;
+
+      const margin = 20; // Minimum distance from screen edges
+
+      // Adjust horizontal position if it overflows
+      if (left + r.width > sw - margin) {
+        left = Math.max(margin, e.clientX - 20 - r.width);
+      }
+
+      // Adjust vertical position if it overflows
+      if (top + r.height > sh - margin) {
+        top = Math.max(margin, e.clientY - 20 - r.height);
+      }
+
+      // Ensure left and top are at least 20px from edges
+      left = Math.max(margin, Math.min(sw - r.width - margin, left));
+      top = Math.max(margin, Math.min(sh - r.height - margin, top));
+
+      // Apply the calculated positions
+      containerRef.style.left = `${left}px`;
+      containerRef.style.top = `${top}px`;
+
+      // Clear other positioning styles
+      containerRef.style.right = "";
+      containerRef.style.bottom = "";
     };
 
     window.addEventListener("mousemove", onMouseMove);

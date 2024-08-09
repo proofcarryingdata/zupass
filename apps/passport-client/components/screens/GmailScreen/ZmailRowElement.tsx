@@ -16,7 +16,10 @@ export function ZmailRowElement({ row }: { row: Row<ZmailRow> }): ReactNode {
   return (
     <div
       onClick={() => {
-        ctx.update({ viewingPCDID: row.original.pcd.id });
+        ctx.update({
+          viewingPCDID: row.original.pcd.id,
+          hoveringPCDID: undefined
+        });
       }}
       onMouseEnter={() => {
         ctx.update({ hoveringPCDID: row.original.pcd.id });
