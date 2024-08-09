@@ -36,7 +36,7 @@ export function ZmailSearch(): ReactNode {
           });
         }
 
-        ctx.update({ filters, searchTerm: newValue });
+        ctx.update({ filters, searchTerm: newValue, viewingPCDID: undefined });
       }}
     />
   );

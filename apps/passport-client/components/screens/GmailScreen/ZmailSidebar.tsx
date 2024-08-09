@@ -36,7 +36,7 @@ export function ZmailSidebar(): ReactNode {
                   id: folderNameToFilterId(f)
                 });
               }
-              ctx.update({ filters });
+              ctx.update({ filters, viewingPCDID: undefined });
             }}
             className={cn(
               "bg-[#206b5e] border-2 box-border border-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87]",
