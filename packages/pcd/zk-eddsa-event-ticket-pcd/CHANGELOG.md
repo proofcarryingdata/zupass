@@ -1,5 +1,32 @@
 # @pcd/zk-eddsa-event-ticket-pcd
 
+## 0.6.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/semaphore-signature-pcd@0.11.3
+  - @pcd/semaphore-identity-pcd@0.11.3
+  - @pcd/eddsa-ticket-pcd@0.6.3
+  - @pcd/snarkjs@0.7.6
+  - @pcd/pcd-types@0.11.3
+  - @pcd/eddsa-pcd@0.6.3
+
+## 0.6.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.2
+  - @pcd/util@0.5.2
+  - @pcd/snarkjs@0.7.5
+  - @pcd/eddsa-pcd@0.6.2
+  - @pcd/eddsa-ticket-pcd@0.6.2
+  - @pcd/semaphore-identity-pcd@0.11.2
+  - @pcd/semaphore-signature-pcd@0.11.2
+
 ## 0.6.1
 
 ### Patch Changes

@@ -1,5 +1,24 @@
 # @pcd/eddsa-ticket-pcd
 
+## 0.6.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.3
+  - @pcd/eddsa-pcd@0.6.3
+
+## 0.6.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.2
+  - @pcd/util@0.5.2
+  - @pcd/eddsa-pcd@0.6.2
+
 ## 0.6.1
 
 ### Patch Changes

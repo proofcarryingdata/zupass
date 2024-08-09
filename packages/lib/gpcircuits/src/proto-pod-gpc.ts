@@ -1,7 +1,9 @@
+import { BABY_JUB_PRIME } from "@pcd/util";
 import { Groth16Proof, groth16 } from "snarkjs";
 import { loadVerificationKey } from "./artifacts";
 import circuitParamJson from "./circuitParameters.json";
 import { CircuitDesc, CircuitSignal } from "./types";
+import { zeroResidueMod } from "./util";
 
 /**
  * Name identifier for the Proto-POD-GPC family of circuits.
@@ -422,6 +424,10 @@ export class ProtoPODGPC {
   /**
    * Creates a set of public signals for verification, given public inputs
    * and outputs of a circuit.
+   *
+   * Some values are replaced with their 0-residues modulo `BABY_JUB_PRIME` to
+   * agree with the values returned by the Groth16 prover, which are always
+   * normalised this way.
    */
   public static makePublicSignals(
     inputs: ProtoPODGPCPublicInputs,
@@ -440,8 +446,12 @@ export class ProtoPODGPC {
       inputs.ownerExternalNullifier,
       inputs.ownerIsNullfierHashRevealed,
       ...inputs.numericValueEntryIndices,
-      ...inputs.numericMinValues,
-      ...inputs.numericMaxValues,
+      ...inputs.numericMinValues.map((value) =>
+        zeroResidueMod(value, BABY_JUB_PRIME)
+      ),
+      ...inputs.numericMaxValues.map((value) =>
+        zeroResidueMod(value, BABY_JUB_PRIME)
+      ),
       ...inputs.tupleIndices.flat(),
       ...inputs.listComparisonValueIndex,
       inputs.listContainsComparisonValue,
@@ -587,5 +597,5 @@ export class ProtoPODGPC {
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.4.0";
+  public static ARTIFACTS_NPM_VERSION = "0.5.0";
 }

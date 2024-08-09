@@ -1,5 +1,30 @@
 # @pcd/zk-eddsa-frog-pcd
 
+## 0.3.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/semaphore-signature-pcd@0.11.3
+  - @pcd/semaphore-identity-pcd@0.11.3
+  - @pcd/eddsa-frog-pcd@0.3.3
+  - @pcd/pcd-types@0.11.3
+  - @pcd/eddsa-pcd@0.6.3
+
+## 0.3.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.2
+  - @pcd/util@0.5.2
+  - @pcd/eddsa-frog-pcd@0.3.2
+  - @pcd/eddsa-pcd@0.6.2
+  - @pcd/semaphore-identity-pcd@0.11.2
+  - @pcd/semaphore-signature-pcd@0.11.2
+
 ## 0.3.1
 
 ### Patch Changes

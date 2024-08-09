@@ -51,6 +51,9 @@ export interface VerifiedCredential {
   authKey?: string;
 }
 
+export type VerifiedCredentialWithEmail = VerifiedCredential &
+  Required<Pick<VerifiedCredential, "email">>;
+
 /**
  * Creates a feed credential payload with timestamp.
  */

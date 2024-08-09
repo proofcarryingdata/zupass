@@ -11,7 +11,11 @@ import {
   EdDSATicketVerifyCase
 } from "./cases/EdDSATicketTimer";
 import { GPCPCDProveCase, GPCPCDVerifyCase } from "./cases/GPCTimer";
-import { PODProveCase, PODVerifyCase } from "./cases/PODTimer";
+import {
+  PODGetMerkleTreeCase,
+  PODProveCase,
+  PODVerifyCase
+} from "./cases/PODTimer";
 import {
   SemaphoreSignatureProveCase,
   SemaphoreSignatureVerifyCase
@@ -33,7 +37,8 @@ const TIME_TEST_CONFIGS: Record<string, Record<string, () => TimerCase>> = {
   },
   [PODPCDPackage.name]: {
     prove: () => new PODProveCase(),
-    verify: () => new PODVerifyCase()
+    verify: () => new PODVerifyCase(),
+    contentID: () => new PODGetMerkleTreeCase()
   },
   [SemaphoreSignaturePCDPackage.name]: {
     prove: () => new SemaphoreSignatureProveCase(),

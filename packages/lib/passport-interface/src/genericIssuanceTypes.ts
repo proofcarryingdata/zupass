@@ -1,3 +1,4 @@
+import { getErrorMessage } from "@pcd/util";
 import { z } from "zod";
 
 /**
@@ -6,7 +7,8 @@ import { z } from "zod";
 export enum PipelineType {
   Lemonade = "Lemonade",
   Pretix = "Pretix",
-  CSV = "CSV"
+  CSV = "CSV",
+  POD = "POD"
 }
 
 export enum IncidentPolicy {
@@ -529,12 +531,177 @@ export function isCSVPipelineDefinition(
 }
 
 /**
+ * POD Pipeline.
+ */
+
+export enum PODPipelineInputType {
+  CSV = "CSV"
+}
+
+export enum PODPipelineInputFieldType {
+  String = "string",
+  Int = "int",
+  Date = "date",
+  Boolean = "boolean",
+  UUID = "uuid",
+  Cryptographic = "cryptographic",
+  EdDSAPubKey = "eddsa_pubkey"
+}
+
+const PODPipelineInputFieldSchema = z.object({
+  type: z.nativeEnum(PODPipelineInputFieldType)
+});
+
+const PODPipelineInputColumnsSchema = z.record(
+  z.string(),
+  PODPipelineInputFieldSchema
+);
+
+export type PODPipelineInputColumns = z.infer<
+  typeof PODPipelineInputColumnsSchema
+>;
+
+const PODPipelineBaseInputSchema = z.object({
+  type: z.nativeEnum(PODPipelineInputType),
+  columns: PODPipelineInputColumnsSchema
+});
+
+export type PODPipelineBaseInput = z.infer<typeof PODPipelineBaseInputSchema>;
+
+export type PODPipelineInputField = z.infer<typeof PODPipelineInputFieldSchema>;
+
+const PODPipelineCSVInputSchema = PODPipelineBaseInputSchema.extend({
+  type: z.literal(PODPipelineInputType.CSV),
+  csv: z.string()
+});
+
+export type PODPipelineCSVInput = z.infer<typeof PODPipelineCSVInputSchema>;
+
+const PODPipelineInputSchema = z.discriminatedUnion("type", [
+  PODPipelineCSVInputSchema
+]);
+
+export type PODPipelineInput = z.infer<typeof PODPipelineInputSchema>;
+
+export enum PODPipelinePCDTypes {
+  PODPCD = "PODPCD",
+  PODTicketPCD = "PODTicketPCD"
+}
+
+const PODPipelineSupportedPODValueTypes = z.enum([
+  "string",
+  "int",
+  "cryptographic",
+  "eddsa_pubkey"
+]);
+
+export type PODPipelineSupportedPODValueTypes = z.infer<
+  typeof PODPipelineSupportedPODValueTypes
+>;
+
+const PODPipelinePODEntrySchema = z.object({
+  type: PODPipelineSupportedPODValueTypes,
+  source: z.discriminatedUnion("type", [
+    z.object({ type: z.literal("input"), name: z.string() }),
+    z.object({ type: z.literal("credentialSemaphoreID") }),
+    z.object({ type: z.literal("credentialEmail") }),
+    z.object({
+      type: z.literal("configured"),
+      value: z.string()
+    })
+  ])
+});
+
+export type PODPipelinePODEntry = z.infer<typeof PODPipelinePODEntrySchema>;
+
+const PODPipelinePODEntriesSchema = z.record(
+  z.string(),
+  PODPipelinePODEntrySchema
+);
+
+export type PODPipelinePODEntries = z.infer<typeof PODPipelinePODEntriesSchema>;
+
+export const PODPipelineOutputMatchSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("semaphoreID"), entry: z.string() }),
+  z.object({ type: z.literal("email"), entry: z.string() }),
+  z.object({ type: z.literal("none") })
+]);
+
+export type PODPipelineOutputMatch = z.infer<
+  typeof PODPipelineOutputMatchSchema
+>;
+
+const PODPipelineOutputSchema = z.object({
+  pcdType: z.nativeEnum(PODPipelinePCDTypes),
+  /**
+   * @todo verify that all input-derived entries have matching columns and
+   * possibly that column types match entry types
+   */
+  entries: PODPipelinePODEntriesSchema,
+  match: PODPipelineOutputMatchSchema
+});
+
+export type PODPipelineOutput = z.infer<typeof PODPipelineOutputSchema>;
+
+export function validatePODPipelineOptions(options: PODPipelineOptions): void {
+  for (const [outputName, output] of Object.entries(options.outputs)) {
+    for (const entry of Object.values(output.entries)) {
+      if (entry.source.type === "input") {
+        if (!options.input.columns[entry.source.name]) {
+          throw new Error(
+            `Output ${outputName} has an input column ${entry.source.name} that does not exist in the input`
+          );
+        }
+      }
+    }
+  }
+}
+
+const PODPipelineFeedOptionsSchema = FeedIssuanceOptionsSchema.extend({
+  feedType: z.enum(["deleteAndReplace", "replace"])
+});
+
+export type PODPipelineFeedOptions = z.infer<
+  typeof PODPipelineFeedOptionsSchema
+>;
+
+const PODPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
+  input: PODPipelineInputSchema,
+  outputs: z.record(z.string(), PODPipelineOutputSchema),
+  feedOptions: PODPipelineFeedOptionsSchema
+}).superRefine((val, ctx) => {
+  try {
+    validatePODPipelineOptions(val);
+  } catch (e) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: getErrorMessage(e)
+    });
+  }
+});
+
+export const PODPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
+  type: z.literal(PipelineType.POD),
+  options: PODPipelineOptionsSchema
+});
+
+export type PODPipelineOptions = z.infer<typeof PODPipelineOptionsSchema>;
+export type PODPipelineDefinition = z.infer<typeof PODPipelineDefinitionSchema>;
+
+export function isPODPipelineDefinition(
+  d: PipelineDefinition
+): d is PODPipelineDefinition {
+  return d.type === PipelineType.POD;
+}
+
+/**
  * This item is exported so that we can use it for validation on generic issuance server.
  */
 export const PipelineDefinitionSchema = z.discriminatedUnion("type", [
   LemonadePipelineDefinitionSchema,
   PretixPipelineDefinitionSchema,
-  CSVPipelineDefinitionSchema
+  CSVPipelineDefinitionSchema,
+  PODPipelineDefinitionSchema
 ]);
 
 /**

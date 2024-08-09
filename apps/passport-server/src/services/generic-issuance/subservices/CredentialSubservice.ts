@@ -9,6 +9,7 @@ import {
   Credential,
   VerificationError,
   VerifiedCredential,
+  VerifiedCredentialWithEmail,
   verifyCredential
 } from "@pcd/passport-interface";
 import { LRUCache } from "lru-cache";
@@ -94,7 +95,7 @@ export class CredentialSubservice {
    */
   public async verifyAndExpectZupassEmail(
     credential: Credential
-  ): Promise<VerifiedCredential & Required<Pick<VerifiedCredential, "email">>> {
+  ): Promise<VerifiedCredentialWithEmail> {
     const verifiedCredential = await this.verify(credential),
       { email, semaphoreId, authKey, emailPCDSigner } = verifiedCredential;
 

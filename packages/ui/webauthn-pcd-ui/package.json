@@ -1,6 +1,6 @@
 {
   "name": "@pcd/webauthn-pcd-ui",
-  "version": "0.2.1",
+  "version": "0.2.3",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -20,21 +20,23 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/webauthn-pcd": "0.11.1",
-    "@pcd/passport-ui": "0.11.1",
-    "@pcd/pcd-types": "0.11.1"
+    "@pcd/webauthn-pcd": "0.11.3",
+    "@pcd/passport-ui": "0.11.3",
+    "@pcd/pcd-types": "0.11.3"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.1",
-    "@pcd/tsconfig": "0.11.1",
+    "@pcd/eslint-config-custom": "0.11.3",
+    "@pcd/tsconfig": "0.11.3",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "typescript": "^5.3.3"
   },
   "publishConfig": {

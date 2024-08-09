@@ -1,7 +1,7 @@
 {
   "name": "@pcd/zuauth",
   "private": false,
-  "version": "1.4.2",
+  "version": "1.4.4",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -52,16 +52,16 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/eddsa-pcd": "^0.6.1",
-    "@pcd/eddsa-ticket-pcd": "^0.6.1",
-    "@pcd/passport-interface": "^0.11.2",
-    "@pcd/pcd-types": "^0.11.1",
-    "@pcd/semaphore-identity-pcd": "^0.11.1",
-    "@pcd/zk-eddsa-event-ticket-pcd": "^0.6.1"
+    "@pcd/eddsa-pcd": "^0.6.3",
+    "@pcd/eddsa-ticket-pcd": "^0.6.3",
+    "@pcd/passport-interface": "^0.11.4",
+    "@pcd/pcd-types": "^0.11.3",
+    "@pcd/semaphore-identity-pcd": "^0.11.3",
+    "@pcd/zk-eddsa-event-ticket-pcd": "^0.6.3"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.1",
-    "@pcd/tsconfig": "0.11.1",
+    "@pcd/eslint-config-custom": "0.11.3",
+    "@pcd/tsconfig": "0.11.3",
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",
     "@types/chai-as-promised": "^7.1.5",
@@ -69,6 +69,7 @@
     "@types/react": "^18.2.0",
     "chai-as-promised": "^7.1.1",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3",

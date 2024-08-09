@@ -1,5 +1,5 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { POD } from "@pcd/pod";
+import { POD, PODContent } from "@pcd/pod";
 import { PODEntries, PODPCD, PODPCDArgs, PODPCDPackage } from "@pcd/pod-pcd";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { TimerCase } from "../types";
@@ -37,7 +37,7 @@ export const proveArgs: PODPCDArgs = {
 
 export class PODProveCase extends TimerCase {
   constructor() {
-    super("eddsa-ticket-pcd.prove");
+    super("pod-pcd.prove");
   }
 
   async init(): Promise<void> {
@@ -56,7 +56,7 @@ export class PODVerifyCase extends TimerCase {
   pcds: PODPCD[];
 
   constructor() {
-    super("eddsa-ticket-pcd.verify");
+    super("pod-pcd.verify");
     this.pcds = [];
   }
 
@@ -88,5 +88,25 @@ export class PODVerifyCase extends TimerCase {
       throw new Error("Missing PCD.  Skipped setup?");
     }
     await PODPCDPackage.verify(this.pcds[iteration]);
+  }
+}
+
+export class PODGetMerkleTreeCase extends TimerCase {
+  constructor() {
+    super("pod-pcd.getMerkleTree");
+  }
+
+  async init(): Promise<void> {
+    await PODPCDPackage.init?.({});
+  }
+
+  async setup(_: number): Promise<void> {}
+
+  async op(_: number): Promise<void> {
+    const podContent = PODContent.fromEntries(sampleEntries);
+    // Ensure that we use the contentID somehow
+    if (podContent.contentID === undefined) {
+      throw new Error("Missing contentID");
+    }
   }
 }

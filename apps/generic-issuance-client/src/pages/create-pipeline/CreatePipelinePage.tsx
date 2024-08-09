@@ -1,6 +1,6 @@
 import { Heading, Select, Stack } from "@chakra-ui/react";
 import { PipelineType } from "@pcd/passport-interface";
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useMemo, useState } from "react";
 import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { pipelineDetailPagePath } from "../../components/PipelineDisplayUtils";
@@ -12,6 +12,7 @@ import { useJWT } from "../../helpers/userHooks";
 import { SAMPLE_LEMONADE_PIPELINE } from "../SamplePipelines";
 import CSVPipelineBuilder from "./pipeline-builders/CSVPipelineBuilder";
 import LemonadePipelineBuilder from "./pipeline-builders/LemonadePipelineBuilder";
+import PODPipelineBuilder from "./pipeline-builders/PODPipelineBuilder";
 import PretixPipelineBuilder from "./pipeline-builders/PretixPipelineBuilder";
 import RawJSONPipelineBuilder from "./pipeline-builders/RawJSONPipelineBuilder";
 
@@ -56,7 +57,7 @@ export default function CreatePipelinePage(): ReactNode {
    * Complete set of pipeline types can be found in {@link PipelineType}.
    */
   const NON_ADMIN_PIPELINE_TYPES: ClientPipelineType[] = useMemo(
-    () => [PipelineType.CSV],
+    () => [PipelineType.CSV, PipelineType.POD],
     []
   );
 
@@ -65,10 +66,9 @@ export default function CreatePipelinePage(): ReactNode {
       ClientPipelineType,
       string
     ][];
-
     optionEntries.push(["JSON", "JSON"]);
 
-    if (!user?.value?.isAdmin) {
+    if (!isAdminView) {
       optionEntries = optionEntries.filter(([k]) => {
         return NON_ADMIN_PIPELINE_TYPES.includes(k);
       });
@@ -79,13 +79,7 @@ export default function CreatePipelinePage(): ReactNode {
         pipeline type: {v}
       </option>
     ));
-  }, [NON_ADMIN_PIPELINE_TYPES, user?.value?.isAdmin]);
-
-  useEffect(() => {
-    if (!isAdminView && selectedPipelineType !== PipelineType.CSV) {
-      setSelectedPipelineType(PipelineType.CSV);
-    }
-  }, [isAdminView, selectedPipelineType]);
+  }, [NON_ADMIN_PIPELINE_TYPES, isAdminView]);
 
   if (isUploadingPipeline) {
     return (
@@ -107,21 +101,19 @@ export default function CreatePipelinePage(): ReactNode {
 
       <PageContent style={{ padding: "16px" }}>
         <Stack gap={2}>
-          {isAdminView && (
-            <Select
-              bg="rgba(29,29,29,1)"
-              width="100%"
-              value={selectedPipelineType ?? ""}
-              onChange={(event): void => {
-                setSelectedPipelineType(event.target.value as PipelineType);
-              }}
-            >
-              <option value="" disabled>
-                Select your pipeline type...
-              </option>
-              {options}
-            </Select>
-          )}
+          <Select
+            bg="rgba(29,29,29,1)"
+            width="100%"
+            value={selectedPipelineType ?? ""}
+            onChange={(event): void => {
+              setSelectedPipelineType(event.target.value as PipelineType);
+            }}
+          >
+            <option value="" disabled>
+              Select your pipeline type...
+            </option>
+            {options}
+          </Select>
 
           {selectedPipelineType === PipelineType.Pretix && (
             <PretixPipelineBuilder onCreate={onCreateClick} />
@@ -140,6 +132,10 @@ export default function CreatePipelinePage(): ReactNode {
               onCreate={onCreateClick}
               initialValue={SAMPLE_LEMONADE_PIPELINE}
             />
+          )}
+
+          {selectedPipelineType === PipelineType.POD && (
+            <PODPipelineBuilder onCreate={onCreateClick} />
           )}
         </Stack>
       </PageContent>

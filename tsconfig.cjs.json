@@ -34,6 +34,9 @@
       "path": "packages/lib/pod/tsconfig.cjs.json"
     },
     {
+      "path": "packages/lib/podbox-shared/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/lib/server-shared/tsconfig.cjs.json"
     },
     {

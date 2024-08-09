@@ -23,6 +23,7 @@ export const sampleEntries0 = {
   H: { type: "int", value: 8n },
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n },
+  K: { type: "int", value: -5n },
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
 } satisfies PODEntries;
 

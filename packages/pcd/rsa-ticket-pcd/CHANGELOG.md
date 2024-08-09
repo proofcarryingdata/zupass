@@ -1,5 +1,23 @@
 # @pcd/rsa-ticket-pcd
 
+## 0.6.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.3
+  - @pcd/rsa-pcd@0.6.3
+
+## 0.6.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.2
+  - @pcd/rsa-pcd@0.6.2
+
 ## 0.6.1
 
 ### Patch Changes

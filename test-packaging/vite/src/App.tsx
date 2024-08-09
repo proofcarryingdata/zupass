@@ -1,9 +1,7 @@
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
-import {
-  openZupassPopup,
-  useZupassPopupMessages
-} from "@pcd/passport-interface/PassportPopup";
+import { openZupassPopup } from "@pcd/passport-interface/PassportPopup/core";
+import { useZupassPopupMessages } from "@pcd/passport-interface/PassportPopup/react";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/SemaphoreIdentityPCD";
 import {

@@ -1,5 +1,19 @@
 # @pcd/pod
 
+## 0.1.3
+
+### Patch Changes
+
+- Fix ESM import paths
+
+## 0.1.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/util@0.5.2
+
 ## 0.1.1
 
 ### Patch Changes

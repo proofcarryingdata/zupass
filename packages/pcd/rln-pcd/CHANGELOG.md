@@ -1,5 +1,26 @@
 # @pcd/rln-pcd
 
+## 0.10.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.11.3
+  - @pcd/semaphore-group-pcd@0.11.3
+  - @pcd/pcd-types@0.11.3
+
+## 0.10.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.2
+  - @pcd/util@0.5.2
+  - @pcd/semaphore-group-pcd@0.11.2
+  - @pcd/semaphore-identity-pcd@0.11.2
+
 ## 0.10.1
 
 ### Patch Changes

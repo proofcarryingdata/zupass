@@ -1,6 +1,6 @@
 {
   "name": "@pcd/webauthn-pcd",
-  "version": "0.11.1",
+  "version": "0.11.3",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -25,15 +25,16 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "jest",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/passport-crypto": "0.11.1",
-    "@pcd/pcd-types": "0.11.1",
-    "@pcd/util": "0.5.1",
+    "@pcd/passport-crypto": "0.11.3",
+    "@pcd/pcd-types": "0.11.3",
+    "@pcd/util": "0.5.2",
     "@simplewebauthn/browser": "^7.2.0",
     "@simplewebauthn/server": "^7.2.0",
     "@simplewebauthn/typescript-types": "^7.0.0",
@@ -42,11 +43,12 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.1",
-    "@pcd/tsconfig": "0.11.1",
+    "@pcd/eslint-config-custom": "0.11.3",
+    "@pcd/tsconfig": "0.11.3",
     "@types/jest": "^29.5.0",
     "@types/json-bigint": "^1.0.1",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "jest": "^29.5.0",
     "ts-jest": "^29.1.0"
   },

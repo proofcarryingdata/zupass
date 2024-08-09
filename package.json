@@ -24,7 +24,7 @@
     "dev:apps": "turbo run dev --parallel --filter=./apps/* --filter=!./apps/anon-message-client --filter=!./apps/anon-message-client --filter=!./apps/kudosbot-client",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn dev",
     "docs": "yarn build && typedoc",
-    "lint": "turbo run lint",
+    "lint": "turbo run lint --concurrency=4",
     "test": "turbo run test --concurrency=1",
     "test:ci": "turbo run test",
     "gen-test-artifacts": "turbo run gen-test-artifacts",

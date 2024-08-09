@@ -1,5 +1,25 @@
 # @pcd/eddsa-pcd-ui
 
+## 0.2.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/passport-ui@0.11.3
+  - @pcd/pcd-types@0.11.3
+  - @pcd/eddsa-pcd@0.6.3
+
+## 0.2.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/passport-ui@0.11.2
+  - @pcd/pcd-types@0.11.2
+  - @pcd/eddsa-pcd@0.6.2
+
 ## 0.2.1
 
 ### Patch Changes

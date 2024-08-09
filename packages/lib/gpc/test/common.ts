@@ -44,6 +44,7 @@ export const sampleEntries = {
   H: { type: "int", value: 8n },
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n },
+  K: { type: "int", value: -5n },
   pubKey: {
     type: EDDSA_PUBKEY_TYPE_STRING,
     value: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
