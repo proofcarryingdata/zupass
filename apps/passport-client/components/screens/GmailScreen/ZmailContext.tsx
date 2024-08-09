@@ -8,6 +8,7 @@ export interface ZmailScreenContextValue {
   filters: ZmailFilter[];
   viewingPCDID?: string;
   hoveringPCDID?: string;
+  hoveringFolder?: string;
   update: (update: Partial<ZmailScreenContextValue>) => void;
 }
 
@@ -17,6 +18,7 @@ export const ZmailContext = createContext<ZmailScreenContextValue>({
   filters: [],
   viewingPCDID: undefined,
   hoveringPCDID: undefined,
+  hoveringFolder: undefined,
   update: () => {}
 });
 

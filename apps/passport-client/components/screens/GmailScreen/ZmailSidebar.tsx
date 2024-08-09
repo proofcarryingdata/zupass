@@ -27,7 +27,11 @@ export function ZmailSidebar(): ReactNode {
           id: folderNameToFilterId(f)
         });
       }
-      ctx.update({ filters, viewingPCDID: undefined });
+      ctx.update({
+        filters,
+        viewingPCDID: undefined,
+        hoveringFolder: undefined
+      });
     },
     [ctx]
   );
@@ -43,6 +47,12 @@ export function ZmailSidebar(): ReactNode {
             <div
               key={f}
               onClick={() => onClick(f)}
+              onMouseEnter={() => {
+                ctx.update({ hoveringPCDID: f });
+              }}
+              onMouseLeave={() => {
+                ctx.update({ hoveringPCDID: undefined });
+              }}
               className={cn(
                 "bg-[#206b5e] border-2 box-border border-[#206b5e] hover:bg-[#1b8473] active:bg-[#239b87]",
                 "cursor-pointer px-2 py-1 rounded transition-colors duration-100 active:border-[#eee]",
@@ -55,7 +65,7 @@ export function ZmailSidebar(): ReactNode {
             >
               <div className="flex flex-row justify-between items-center w-full">
                 <span>{f}</span>
-                <span>{pcdsInFolder.length}</span>
+                <span className="opacity-80">{pcdsInFolder.length}</span>
               </div>
             </div>
           );
