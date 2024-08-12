@@ -7,10 +7,17 @@ import fs from "fs";
 
 dotenv.config();
 
+const define = {
+  "process.env.ZUPASS_URL": JSON.stringify(
+    process.env.ZUPASS_URL || "http://localhost:3000"
+  )
+};
+
 const testClientAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
   define: {
+    ...define,
     "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`
   },
   entryPoints: ["src/main.tsx"],

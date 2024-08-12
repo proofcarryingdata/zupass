@@ -6,7 +6,7 @@ import { createRoot } from "react-dom/client";
 import "../styles/index.css";
 import { Button } from "./components/Button";
 
-const ZUPASS_URL = "http://localhost:3000";
+const ZUPASS_URL = process.env.ZUPASS_URL;
 // For convenience; in the real world key management is more difficult.
 const MAGIC_PRIVATE_KEY =
   "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff";
