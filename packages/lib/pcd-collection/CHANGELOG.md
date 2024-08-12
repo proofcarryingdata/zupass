@@ -1,5 +1,16 @@
 # @pcd/pcd-types
 
+## 0.11.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/emitter@0.5.4
+  - @pcd/passport-crypto@0.11.4
+  - @pcd/pcd-types@0.11.4
+  - @pcd/semaphore-identity-pcd@0.11.4
+
 ## 0.11.3
 
 ### Patch Changes

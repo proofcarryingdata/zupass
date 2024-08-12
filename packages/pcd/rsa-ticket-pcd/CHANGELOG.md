@@ -1,5 +1,14 @@
 # @pcd/rsa-ticket-pcd
 
+## 0.6.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/pcd-types@0.11.4
+  - @pcd/rsa-pcd@0.6.4
+
 ## 0.6.3
 
 ### Patch Changes

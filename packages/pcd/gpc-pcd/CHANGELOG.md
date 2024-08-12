@@ -1,5 +1,17 @@
 # @pcd/gpc-pcd
 
+## 0.0.5
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/gpc@0.0.5
+  - @pcd/pcd-types@0.11.4
+  - @pcd/util@0.5.3
+  - @pcd/pod-pcd@0.1.4
+  - @pcd/semaphore-identity-pcd@0.11.4
+
 ## 0.0.4
 
 ### Patch Changes

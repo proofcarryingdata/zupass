@@ -1,6 +1,6 @@
 {
   "name": "@pcd/halo-nonce-pcd",
-  "version": "0.7.3",
+  "version": "0.7.4",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -32,15 +32,15 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.11.3",
-    "@pcd/util": "0.5.2",
+    "@pcd/pcd-types": "0.11.4",
+    "@pcd/util": "0.5.3",
     "elliptic": "^6.5.4",
     "js-sha256": "^0.10.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.3",
-    "@pcd/tsconfig": "0.11.3",
+    "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/tsconfig": "0.11.4",
     "@types/elliptic": "^6.4.14",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",

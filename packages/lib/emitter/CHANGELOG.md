@@ -1,5 +1,11 @@
 # @pcd/emitter
 
+## 0.5.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+
 ## 0.5.3
 
 ### Patch Changes

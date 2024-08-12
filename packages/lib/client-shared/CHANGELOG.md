@@ -1,5 +1,11 @@
 # @pcd/client-shared
 
+## 0.0.5
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+
 ## 0.0.4
 
 ### Patch Changes

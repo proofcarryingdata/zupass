@@ -1,5 +1,18 @@
 # @pcd/gpc-pcd-ui
 
+## 0.0.5
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/gpc@0.0.5
+  - @pcd/passport-ui@0.11.4
+  - @pcd/pcd-types@0.11.4
+  - @pcd/pod@0.1.4
+  - @pcd/util@0.5.3
+  - @pcd/gpc-pcd@0.0.5
+
 ## 0.0.4
 
 ### Patch Changes

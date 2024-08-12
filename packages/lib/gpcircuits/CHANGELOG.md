@@ -1,5 +1,13 @@
 # @pcd/gpcircuits
 
+## 0.1.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/pod@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes
