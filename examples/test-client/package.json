@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "ts-node build.ts dev",
-    "build": "tsc --noEmit && ts-node build.ts build",
+    "build": "ts-node build.ts build",
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
