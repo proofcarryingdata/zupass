@@ -1,5 +1,3 @@
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { PODPCDPackage } from "@pcd/pod-pcd";
 import { connect, ZupassAPI, ZupassFolderContent } from "@pcd/zupass-client";
 import { useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -85,37 +83,6 @@ export default function Main() {
         </div>
       )}
       {pcd.length > 0 && <div>{pcd}</div>}
-      {zupass && (
-        <div>
-          <button
-            onClick={async () => {
-              const name = window.prompt("PCD name?");
-              const pod = await PODPCDPackage.prove({
-                entries: {
-                  argumentType: ArgumentTypeName.Object,
-                  value: {
-                    name: {
-                      type: "string",
-                      value: name
-                    }
-                  }
-                },
-                privateKey: {
-                  argumentType: ArgumentTypeName.String,
-                  value: MAGIC_PRIVATE_KEY
-                },
-                id: {
-                  argumentType: ArgumentTypeName.String,
-                  value: undefined
-                }
-              });
-              await zupass.fs.put("Test", await PODPCDPackage.serialize(pod));
-            }}
-          >
-            Add PCD
-          </button>
-        </div>
-      )}
     </div>
   );
 }
