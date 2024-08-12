@@ -622,7 +622,8 @@ export type ListConfig = {
  * Bounds checks are indicated in each entry field via the optional property
  * `inRange`, which specifies (public) constant upper and lower bounds. This
  * procedure singles out and arranges these bounds check configurations by entry
- * identifier.
+ * identifier. It also simplifies bounds checks in cases where the inequalities
+ * underlying the bounds checks reduce to a single interval membership check.
  *
  * @param proofConfig the proof configuration
  * @returns a record mapping entry identifiers to their bounds check
@@ -634,19 +635,42 @@ export function boundsCheckConfigFromProofConfig(
   return Object.fromEntries(
     Object.entries(proofConfig.pods).flatMap(([podName, podConfig]) =>
       Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) => {
-        const hasRangeCheck = entryConfig.inRange !== undefined;
-        const hasOutOfRangeCheck = entryConfig.notInRange !== undefined;
-
-        return !(hasRangeCheck || hasOutOfRangeCheck)
+        return !(entryConfig.inRange || entryConfig.notInRange)
           ? []
           : [
               [
                 `${podName}.${entryName}`,
                 {
-                  ...(hasRangeCheck ? { inRange: entryConfig.inRange } : {}),
-                  ...(hasOutOfRangeCheck
+                  ...(!entryConfig.inRange
                     ? { notInRange: entryConfig.notInRange }
-                    : {})
+                    : !entryConfig.notInRange
+                    ? { inRange: entryConfig.inRange }
+                    : entryConfig.notInRange.min > entryConfig.inRange.min &&
+                      entryConfig.notInRange.max >= entryConfig.inRange.max
+                    ? {
+                        inRange: {
+                          min: entryConfig.inRange.min,
+                          max: _.min([
+                            entryConfig.notInRange.min - 1n,
+                            entryConfig.inRange.max
+                          ]) as bigint
+                        }
+                      }
+                    : entryConfig.notInRange.min <= entryConfig.inRange.min &&
+                      entryConfig.notInRange.max < entryConfig.inRange.max
+                    ? {
+                        inRange: {
+                          min: _.max([
+                            entryConfig.notInRange.max + 1n,
+                            entryConfig.inRange.min
+                          ]) as bigint,
+                          max: entryConfig.inRange.max
+                        }
+                      }
+                    : {
+                        inRange: entryConfig.inRange,
+                        notInRange: entryConfig.notInRange
+                      })
                 }
               ]
             ];

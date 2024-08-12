@@ -17,7 +17,7 @@ export type NumericValueModuleInputNamesType = [
 ];
 
 export type NumericValueModuleOutputs = {
-  boundsCheck: CircuitSignal;
+  isInBounds: CircuitSignal;
 };
 
-export type NumericValueModuleOutputNamesType = ["boundsCheck"];
+export type NumericValueModuleOutputNamesType = ["isInBounds"];

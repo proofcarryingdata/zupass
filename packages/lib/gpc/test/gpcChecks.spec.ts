@@ -6,9 +6,10 @@ import {
 } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
-import { GPCProofEntryConfig } from "../src";
+import { GPCProofEntryBoundsCheckConfig, GPCProofEntryConfig } from "../src";
 import {
   checkProofBoundsCheckInputsForConfig,
+  checkProofEntryBoundsCheckConfig,
   checkProofEntryConfig
 } from "../src/gpcChecks";
 
@@ -26,35 +27,60 @@ describe("Proof entry config check should work", () => {
     const entryConfig: GPCProofEntryConfig = {
       isRevealed: false,
       isMemberOf: "someList",
-      inRange: { min: 0n, max: 10n },
-      notInRange: { min: POD_INT_MIN, max: -1n },
+      inRange: { min: 0n, max: 100n },
+      notInRange: { min: 10n, max: 30n },
       equalsEntry: "someOtherPOD.someOtherEntry"
     };
     expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
       nBoundsChecks: 2
     });
   });
+});
 
-  // TODO(POD-P3): Test other aspects of this check
+// TODO(POD-P3): Test other aspects of this check
 
-  it("should pass for an entry configuration with bounds checks within the appropriate range", () => {
-    for (const boundsCheckConfig of [
-      { inRange: { min: 3n, max: POD_INT_MAX } },
-      { notInRange: { min: POD_INT_MIN, max: 100n } },
-      { inRange: { min: 3n, max: 100n }, notInRange: { min: 204n, max: 900n } }
-    ]) {
+describe("Entry bounds check config check should work", () => {
+  it("should pass for bounds checks within the appropriate range", () => {
+    for (const [boundsCheckConfig, nBoundsChecks] of [
+      [{ inRange: { min: 3n, max: POD_INT_MAX } }, 1],
+      [{ notInRange: { min: POD_INT_MIN, max: 100n } }, 1],
+      [
+        {
+          inRange: { min: 3n, max: 100n },
+          notInRange: { min: 204n, max: 900n }
+        },
+        1
+      ],
+      [
+        {
+          inRange: { min: -1000n, max: 1000n },
+          notInRange: { min: 0n, max: 10n }
+        },
+        2
+      ],
+      [
+        {
+          inRange: { min: 0n, max: 10n },
+          notInRange: { min: 5n, max: 100n }
+        },
+        1
+      ],
+      [
+        {
+          inRange: { min: 0n, max: 10n },
+          notInRange: { min: -5n, max: 5n }
+        },
+        1
+      ]
+    ] satisfies [GPCProofEntryBoundsCheckConfig, number][]) {
       const entryName = "somePOD.someEntry";
-      const entryConfig = { isRevealed: false };
       expect(
-        checkProofEntryConfig(entryName, {
-          ...entryConfig,
-          ...boundsCheckConfig
-        })
-      ).to.deep.equal({ nBoundsChecks: Object.keys(boundsCheckConfig).length });
+        checkProofEntryBoundsCheckConfig(entryName, boundsCheckConfig)
+      ).to.equal(nBoundsChecks);
     }
   });
 
-  it("should fail for an entry configuration with bounds checks outside of the appropriate range", () => {
+  it("should fail for bounds checks outside of the appropriate range", () => {
     for (const boundsCheckConfig of [
       { inRange: { min: POD_INT_MIN - 1n, max: POD_INT_MAX } },
       { inRange: { min: POD_INT_MIN, max: POD_INT_MAX + 1n } },
@@ -78,13 +104,28 @@ describe("Proof entry config check should work", () => {
       }
     ]) {
       const entryName = "somePOD.someEntry";
-      const entryConfig = { isRevealed: false };
       expect(() =>
-        checkProofEntryConfig(entryName, {
-          ...entryConfig,
-          ...boundsCheckConfig
-        })
+        checkProofEntryBoundsCheckConfig(entryName, boundsCheckConfig)
       ).to.throw(RangeError);
+    }
+  });
+
+  it("should fail for incompatible bounds checks", () => {
+    for (const boundsCheckConfig of [
+      { inRange: { min: 0n, max: 10n }, notInRange: { min: 0n, max: 10n } },
+      {
+        inRange: { min: -50n, max: 0n },
+        notInRange: { min: POD_INT_MIN, max: 100n }
+      },
+      {
+        inRange: { min: -100n, max: 100n },
+        notInRange: { min: POD_INT_MIN, max: POD_INT_MAX }
+      }
+    ]) {
+      const entryName = "somePOD.someEntry";
+      expect(() =>
+        checkProofEntryBoundsCheckConfig(entryName, boundsCheckConfig)
+      ).to.throw(Error);
     }
   });
 });

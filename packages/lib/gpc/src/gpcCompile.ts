@@ -482,11 +482,10 @@ function compileCommonNumericValues<
     const inRange = boundsCheckConfig[entryId].inRange;
     const notInRange = boundsCheckConfig[entryId].notInRange;
 
-    return (
-      inRange ? [[BigInt(idx), 1n, inRange.min, inRange.max]] : []
-    ).concat(
-      notInRange ? [[BigInt(idx), 0n, notInRange.min, notInRange.max]] : []
-    );
+    return [
+      ...(inRange ? [[BigInt(idx), 1n, inRange.min, inRange.max]] : []),
+      ...(notInRange ? [[BigInt(idx), 0n, notInRange.min, notInRange.max]] : [])
+    ];
   });
 
   return {

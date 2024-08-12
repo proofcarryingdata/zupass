@@ -40,7 +40,7 @@ template NumericValueModule() {
     
     // Check that minValue <= numericValue <= maxValue and return the
     // result.
-    signal output boundsCheck <== BoundsCheckModule(64)(
+    signal output isInBounds <== BoundsCheckModule(64)(
         numericValue + ABS_POD_INT_MIN,
         minValue + ABS_POD_INT_MIN,
         maxValue + ABS_POD_INT_MIN

@@ -50,7 +50,7 @@ describe("numeric-value.NumericValueModule should work", async function () {
           maxValue
         };
 
-        await circuit.expectPass(sampleInputInRange, { boundsCheck: 1n });
+        await circuit.expectPass(sampleInputInRange, { isInBounds: 1n });
 
         if (minValue < value) {
           const sampleInputLeftOfRange = {
@@ -58,7 +58,7 @@ describe("numeric-value.NumericValueModule should work", async function () {
             minValue: POD_INT_MIN,
             maxValue: minValue
           };
-          await circuit.expectPass(sampleInputLeftOfRange, { boundsCheck: 0n });
+          await circuit.expectPass(sampleInputLeftOfRange, { isInBounds: 0n });
         }
 
         if (maxValue > value) {
@@ -68,7 +68,7 @@ describe("numeric-value.NumericValueModule should work", async function () {
             maxValue: POD_INT_MAX
           };
           await circuit.expectPass(sampleInputRightOfRange, {
-            boundsCheck: 0n
+            isInBounds: 0n
           });
         }
       }
@@ -85,7 +85,7 @@ describe("numeric-value.NumericValueModule should work", async function () {
     };
 
     const sampleOutput = {
-      boundsCheck: 1n
+      isInBounds: 1n
     };
 
     await circuit.expectPass(sampleInput, sampleOutput);

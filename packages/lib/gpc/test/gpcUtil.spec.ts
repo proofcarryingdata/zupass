@@ -103,7 +103,7 @@ describe("Bounds check configuration derivation works as expected", () => {
     const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
     expect(boundsCheckConfig).to.deep.eq({});
   });
-  it("should work as expected on a proof configuration with bounds checks", () => {
+  it("should work as expected on a proof configuration with simple bounds checks", () => {
     const proofConfig: GPCProofConfig = {
       pods: {
         somePod: {
@@ -115,7 +115,7 @@ describe("Bounds check configuration derivation works as expected", () => {
             },
             B: {
               isRevealed: false,
-              inRange: { min: POD_INT_MIN, max: 87n }
+              notInRange: { min: POD_INT_MIN, max: 87n }
             },
             C: {
               isRevealed: true
@@ -141,7 +141,7 @@ describe("Bounds check configuration derivation works as expected", () => {
         }
       },
       "somePod.B": {
-        inRange: {
+        notInRange: {
           min: POD_INT_MIN,
           max: 87n
         }
@@ -154,23 +154,34 @@ describe("Bounds check configuration derivation works as expected", () => {
       }
     });
   });
-  it("should work as expected on a proof configuration with bounds checks", () => {
+  it("should work as expected on a proof configuration with more complex bounds checks", () => {
     const proofConfig: GPCProofConfig = {
       pods: {
         somePod: {
           entries: {
             A: {
-              isRevealed: false, // Not relevant, but bounds checks make the
-              // most sense when the entry is *not* revealed!
-              inRange: { min: 0n, max: POD_INT_MAX }
+              isRevealed: false,
+              inRange: { min: 0n, max: 24n },
+              notInRange: { min: 25n, max: 30n }
             },
             B: {
               isRevealed: false,
-              inRange: { min: POD_INT_MIN, max: 87n },
-              notInRange: { min: 100n, max: 500n }
+              inRange: { min: 0n, max: 24n },
+              notInRange: { min: 24n, max: 500n }
             },
             C: {
-              isRevealed: true
+              isRevealed: true,
+              inRange: { min: 0n, max: 24n },
+              notInRange: { min: -10n, max: -1n }
+            },
+            D: {
+              isRevealed: false,
+              inRange: { min: 0n, max: 24n },
+              notInRange: { min: -10n, max: 0n }
+            },
+            E: {
+              isRevealed: false,
+              inRange: { min: 0n, max: 24n }
             }
           }
         },
@@ -178,7 +189,17 @@ describe("Bounds check configuration derivation works as expected", () => {
           entries: {
             D: {
               isRevealed: false,
-              notInRange: { min: 0n, max: 4n }
+              inRange: { min: 0n, max: 30n },
+              notInRange: { min: -10n, max: 4n }
+            },
+            E: {
+              isRevealed: false,
+              inRange: { min: -1000n, max: 20n },
+              notInRange: { min: -5n, max: 4n }
+            },
+            F: {
+              isRevealed: false,
+              notInRange: { min: 100n, max: 200n }
             }
           }
         }
@@ -189,21 +210,45 @@ describe("Bounds check configuration derivation works as expected", () => {
       "somePod.A": {
         inRange: {
           min: 0n,
-          max: POD_INT_MAX
+          max: 24n
         }
       },
       "somePod.B": {
         inRange: {
-          min: POD_INT_MIN,
-          max: 87n
-        },
-        notInRange: { min: 100n, max: 500n }
+          min: 0n,
+          max: 23n
+        }
+      },
+      "somePod.C": {
+        inRange: {
+          min: 0n,
+          max: 24n
+        }
+      },
+      "somePod.D": {
+        inRange: {
+          min: 1n,
+          max: 24n
+        }
+      },
+      "somePod.E": {
+        inRange: {
+          min: 0n,
+          max: 24n
+        }
       },
       "someOtherPod.D": {
-        notInRange: {
-          min: 0n,
-          max: 4n
+        inRange: {
+          min: 5n,
+          max: 30n
         }
+      },
+      "someOtherPod.E": {
+        inRange: { min: -1000n, max: 20n },
+        notInRange: { min: -5n, max: 4n }
+      },
+      "someOtherPod.F": {
+        notInRange: { min: 100n, max: 200n }
       }
     });
   });
