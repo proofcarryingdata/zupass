@@ -54,7 +54,7 @@
     "fix-esm-import-path": "^1.10.0",
     "lodash": "^4.17.21",
     "mocha": "^10.2.0",
-    "poseidon-lite": "^0.2.0",
+    "poseidon-lite": "^0.2.1",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"
   },
