@@ -1,5 +1,15 @@
 # @pcd/zk-eddsa-event-ticket-pcd-ui
 
+## 0.2.5
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/passport-ui@0.11.4
+  - @pcd/pcd-types@0.11.4
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.4
+
 ## 0.2.4
 
 ### Patch Changes

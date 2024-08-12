@@ -1,5 +1,36 @@
 # passport-server
 
+## 0.0.33
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-crypto@0.11.4
+  - @pcd/passport-interface@0.11.5
+  - @pcd/pcd-collection@0.11.4
+  - @pcd/pcd-types@0.11.4
+  - @pcd/pod@0.1.4
+  - @pcd/podbox-shared@0.0.2
+  - @pcd/server-shared@0.0.5
+  - @pcd/util@0.5.3
+  - @pcd/eddsa-frog-pcd@0.3.4
+  - @pcd/eddsa-pcd@0.6.4
+  - @pcd/eddsa-ticket-pcd@0.6.4
+  - @pcd/email-pcd@0.6.4
+  - @pcd/message-pcd@0.1.4
+  - @pcd/obj-pcd@0.0.5
+  - @pcd/pod-pcd@0.1.4
+  - @pcd/pod-ticket-pcd@0.1.4
+  - @pcd/rln-pcd@0.10.4
+  - @pcd/rsa-image-pcd@0.5.4
+  - @pcd/rsa-pcd@0.6.4
+  - @pcd/rsa-ticket-pcd@0.6.4
+  - @pcd/semaphore-group-pcd@0.11.4
+  - @pcd/semaphore-identity-pcd@0.11.4
+  - @pcd/semaphore-signature-pcd@0.11.4
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.4
+  - @pcd/zk-eddsa-frog-pcd@0.3.4
+
 ## 0.0.32
 
 ### Patch Changes

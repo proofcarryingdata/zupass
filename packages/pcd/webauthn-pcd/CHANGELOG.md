@@ -1,5 +1,15 @@
 # @pcd/webauthn-pcd
 
+## 0.11.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/passport-crypto@0.11.4
+  - @pcd/pcd-types@0.11.4
+  - @pcd/util@0.5.3
+
 ## 0.11.3
 
 ### Patch Changes

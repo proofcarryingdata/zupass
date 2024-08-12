@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pcd-collection",
-  "version": "0.11.3",
+  "version": "0.11.4",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -27,19 +27,19 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/emitter": "0.5.3",
-    "@pcd/passport-crypto": "0.11.3",
-    "@pcd/pcd-types": "0.11.3",
-    "@pcd/semaphore-identity-pcd": "0.11.3",
+    "@pcd/emitter": "0.5.4",
+    "@pcd/passport-crypto": "0.11.4",
+    "@pcd/pcd-types": "0.11.4",
+    "@pcd/semaphore-identity-pcd": "0.11.4",
     "chai": "^4.3.7",
     "fast-json-stable-stringify": "^2.1.0",
     "lodash": "^4.17.21",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.3",
-    "@pcd/rsa-pcd": "0.6.3",
-    "@pcd/tsconfig": "0.11.3",
+    "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/rsa-pcd": "0.6.4",
+    "@pcd/tsconfig": "0.11.4",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.2",

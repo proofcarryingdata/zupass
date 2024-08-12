@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.11.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+
 ## 0.11.3
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @pcd/halo-nonce-pcd
 
+## 0.7.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/pcd-types@0.11.4
+  - @pcd/util@0.5.3
+
 ## 0.7.3
 
 ### Patch Changes

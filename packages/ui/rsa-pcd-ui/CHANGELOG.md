@@ -1,5 +1,15 @@
 # @pcd/rsa-pcd-ui
 
+## 0.2.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/passport-ui@0.11.4
+  - @pcd/pcd-types@0.11.4
+  - @pcd/rsa-pcd@0.6.4
+
 ## 0.2.3
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @pcd/message-pcd-ui
 
+## 0.1.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/passport-ui@0.11.4
+  - @pcd/pcd-types@0.11.4
+  - @pcd/message-pcd@0.1.4
+
 ## 0.1.3
 
 ### Patch Changes

@@ -1,5 +1,16 @@
 # @pcd/ethereum-group-pcd
 
+## 0.5.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/pcd-types@0.11.4
+  - @pcd/util@0.5.3
+  - @pcd/semaphore-identity-pcd@0.11.4
+  - @pcd/semaphore-signature-pcd@0.11.4
+
 ## 0.5.3
 
 ### Patch Changes
