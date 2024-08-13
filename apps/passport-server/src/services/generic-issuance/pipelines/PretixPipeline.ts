@@ -949,26 +949,38 @@ export class PretixPipeline implements BasePipeline {
         return { actions: [] };
       }
 
-      const { email, semaphoreId } =
+      const { emails, semaphoreId } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-      span?.setAttribute("email", email);
+      span?.setAttribute("email", emails.map((e) => e.email).join(","));
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      const didUpdate = await this.consumerDB.save(
-        this.id,
-        email,
-        semaphoreId,
-        new Date()
-      );
+      let didUpdate = false;
 
-      if (this.autoIssuanceProvider) {
-        const newManualTickets =
-          await this.autoIssuanceProvider.maybeIssueForUser(
-            email,
-            await this.getAllManualTickets(),
-            await this.db.loadByEmail(this.id, email)
-          );
+      for (const e of emails) {
+        didUpdate =
+          didUpdate ||
+          (await this.consumerDB.save(
+            this.id,
+            e.email,
+            semaphoreId,
+            new Date()
+          ));
+      }
+
+      const provider = this.autoIssuanceProvider;
+      if (provider) {
+        const newManualTickets = (
+          await Promise.all(
+            emails.map(async (e) =>
+              provider.maybeIssueForUser(
+                e.email,
+                await this.getAllManualTickets(),
+                await this.db.loadByEmail(this.id, e.email)
+              )
+            )
+          )
+        ).flat();
 
         await Promise.allSettled(
           newManualTickets.map((t) => this.manualTicketDB.save(this.id, t))
@@ -984,7 +996,11 @@ export class PretixPipeline implements BasePipeline {
         }
       }
 
-      const tickets = await this.getTicketsForEmail(email, semaphoreId);
+      const tickets = (
+        await Promise.all(
+          emails.map((e) => this.getTicketsForEmail(e.email, semaphoreId))
+        )
+      ).flat();
 
       span?.setAttribute("pcds_issued", tickets.length);
 
