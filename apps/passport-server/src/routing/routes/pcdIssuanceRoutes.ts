@@ -1,9 +1,5 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
-  CheckTicketByIdRequest,
-  CheckTicketByIdResult,
-  CheckTicketInByIdRequest,
-  CheckTicketInByIdResult,
   IssuanceEnabledResponseValue,
   KnownTicketTypesResult,
   ListFeedsRequest,
@@ -101,26 +97,6 @@ export function initPCDIssuanceRoutes(
       throw new PCDHTTPError(404);
     }
     res.json(await issuanceService.handleListSingleFeedRequest({ feedId }));
-  });
-
-  app.post("/issue/check-ticket-by-id", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleDevconnectCheckTicketByIdRequest(
-      req.body as CheckTicketByIdRequest
-    );
-    res.json(result satisfies CheckTicketByIdResult);
-  });
-
-  /**
-   * Works similarly to /issue/check-in, but instead of receiving a PCD
-   * it receives a ticket ID and attempts to check in with it.
-   */
-  app.post("/issue/check-in-by-id", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleDevconnectCheckInByIdRequest(
-      req.body as CheckTicketInByIdRequest
-    );
-    res.json(result satisfies CheckTicketInByIdResult);
   });
 
   /**

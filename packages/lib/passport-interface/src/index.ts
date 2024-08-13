@@ -5,8 +5,6 @@ export * from "./api/requestAddUserEmail";
 export * from "./api/requestAgreeTerms";
 export * from "./api/requestChangeBlobKey";
 export * from "./api/requestChangeUserEmail";
-export * from "./api/requestCheckInById";
-export * from "./api/requestCheckTicketById";
 export * from "./api/requestConfirmationEmail";
 export * from "./api/requestCreateNewUser";
 export * from "./api/requestDeleteAccount";
