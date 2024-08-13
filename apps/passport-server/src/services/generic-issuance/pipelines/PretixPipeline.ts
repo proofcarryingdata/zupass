@@ -1253,7 +1253,7 @@ export class PretixPipeline implements BasePipeline {
   private async canCheckInForEvent(
     eventId: string,
     productId: string,
-    checkerEmail: string
+    checkerEmails: string[]
   ): Promise<true | PodboxTicketActionError> {
     const eventConfig = this.definition.options.events.find(
       (e) => e.genericIssuanceId === eventId
@@ -1263,9 +1263,16 @@ export class PretixPipeline implements BasePipeline {
       return { name: "InvalidTicket" };
     }
 
-    const realCheckerTickets = await this.db.loadByEmail(this.id, checkerEmail);
-    const manualCheckerTickets =
-      await this.getManualTicketsForEmail(checkerEmail);
+    const realCheckerTickets = (
+      await Promise.all(
+        checkerEmails.map((e) => this.db.loadByEmail(this.id, e))
+      )
+    ).flat();
+    const manualCheckerTickets = (
+      await Promise.all(
+        checkerEmails.map((e) => this.getManualTicketsForEmail(e))
+      )
+    ).flat();
 
     // Collect all of the product IDs that the checker owns for this event
     const checkerProductIds: string[] = [];
@@ -1410,7 +1417,7 @@ export class PretixPipeline implements BasePipeline {
       async (span): Promise<ActionConfigResponseValue> => {
         tracePipeline(this.definition);
 
-        let checkerEmail: string;
+        let checkerEmails: string[];
         const { eventId, ticketId } = request;
 
         // This method can only be used to pre-check for check-ins.
@@ -1422,15 +1429,18 @@ export class PretixPipeline implements BasePipeline {
         try {
           span?.setAttribute("ticket_id", ticketId);
 
-          const { email, semaphoreId } =
+          const { emails, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
 
-          span?.setAttribute("checker_email", email);
+          span?.setAttribute(
+            "checker_email",
+            emails.map((e) => e.email).join(",")
+          );
           span?.setAttribute("checked_semaphore_id", semaphoreId);
 
-          checkerEmail = email;
+          checkerEmails = emails.map((e) => e.email);
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1458,7 +1468,7 @@ export class PretixPipeline implements BasePipeline {
           const canCheckInResult = await this.canCheckInForEvent(
             eventId,
             checkinInProductId,
-            checkerEmail
+            checkerEmails
           );
 
           if (canCheckInResult !== true) {
@@ -1579,7 +1589,9 @@ export class PretixPipeline implements BasePipeline {
           }
         } catch (e) {
           logger(
-            `${LOG_TAG} Error when finding ticket ${ticketId} for checkin by ${checkerEmail} on pipeline ${this.id}`,
+            `${LOG_TAG} Error when finding ticket ${ticketId} for checkin by ${JSON.stringify(
+              checkerEmails
+            )} on pipeline ${this.id}`,
             e
           );
           setError(e);
@@ -1595,7 +1607,9 @@ export class PretixPipeline implements BasePipeline {
         }
         // Didn't find any matching ticket
         logger(
-          `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${checkerEmail} on pipeline ${this.id}`
+          `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${JSON.stringify(
+            checkerEmails
+          )} on pipeline ${this.id}`
         );
         span?.setAttribute("checkin_error", "InvalidTicket");
         return {
@@ -1629,19 +1643,22 @@ export class PretixPipeline implements BasePipeline {
         )}`
       );
 
-      let checkerEmail: string;
+      let checkerEmails: string[];
       const { ticketId, eventId } = request;
 
       try {
         span?.setAttribute("ticket_id", ticketId);
-        const { email, semaphoreId } =
+        const { emails, semaphoreId } =
           await this.credentialSubservice.verifyAndExpectZupassEmail(
             request.credential
           );
 
-        span?.setAttribute("checker_email", email);
+        span?.setAttribute(
+          "checker_email",
+          emails.map((e) => e.email).join(",")
+        );
         span?.setAttribute("checked_semaphore_id", semaphoreId);
-        checkerEmail = email;
+        checkerEmails = emails.map((e) => e.email);
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);
@@ -1659,7 +1676,7 @@ export class PretixPipeline implements BasePipeline {
       const canCheckInResult = await this.canCheckInForEvent(
         eventId,
         checkinInProductId,
-        checkerEmail
+        checkerEmails
       );
 
       if (canCheckInResult !== true) {
@@ -1669,16 +1686,18 @@ export class PretixPipeline implements BasePipeline {
       // First see if we have an atom which matches the ticket ID
       const ticketAtom = await this.db.loadById(this.id, ticketId);
       if (ticketAtom && ticketAtom.eventId === eventId) {
-        return this.checkInPretixTicket(ticketAtom, checkerEmail);
+        return this.checkInPretixTicket(ticketAtom, checkerEmails[0]);
       } else {
         const manualTicket = await this.getManualTicketById(ticketId);
         if (manualTicket && manualTicket.eventId === eventId) {
           // Manual ticket found, check in with the DB
-          return this.checkInManualTicket(manualTicket, checkerEmail);
+          return this.checkInManualTicket(manualTicket, checkerEmails[0]);
         } else {
           // Didn't find any matching ticket
           logger(
-            `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${checkerEmail} on pipeline ${this.id}`
+            `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${JSON.stringify(
+              checkerEmails
+            )} on pipeline ${this.id}`
           );
           span?.setAttribute("checkin_error", "InvalidTicket");
           return { success: false, error: { name: "InvalidTicket" } };
