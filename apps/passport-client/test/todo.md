@@ -1,6 +1,5 @@
 # todo
 
-- clean up old 'credential-cache'
 - fix table join from `left join` to just `join`
 - fix nested `retry` logic in `saveUser`
 - turn off turning off eslint in issuance service
@@ -23,6 +22,7 @@
 
 # done
 
+- clean up old 'credential-cache'
 - 'change' route should take in 'old email'
 - make loading 'self' safe via the `loadSelf` function
 - fix incorrect error message in `AddEmailScreen`
