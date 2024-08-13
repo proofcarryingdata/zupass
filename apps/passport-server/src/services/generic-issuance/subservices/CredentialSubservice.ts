@@ -94,18 +94,27 @@ export class CredentialSubservice {
    */
   public async verifyAndExpectZupassEmail(
     credential: Credential
-  ): Promise<VerifiedCredential & Required<Pick<VerifiedCredential, "email">>> {
-    const verifiedCredential = await this.verify(credential),
-      { email, semaphoreId, authKey, emailPCDSigner } = verifiedCredential;
+  ): Promise<
+    VerifiedCredential & Required<Pick<VerifiedCredential, "emails">>
+  > {
+    const verifiedCredential = await this.verify(credential);
 
-    if (!email || !semaphoreId) {
-      throw new VerificationError("Missing email PCD in credential");
-    }
-    if (!authKey && !this.isZupassPublicKey(emailPCDSigner)) {
-      throw new VerificationError("Email PCD not signed by Zupass");
+    if (!verifiedCredential.emails || verifiedCredential.emails.length === 0) {
+      throw new VerificationError("Missing Email PCDs");
     }
 
-    return { ...verifiedCredential, email };
+    for (const signedEmail of verifiedCredential.emails) {
+      const { email, semaphoreId, signer } = signedEmail;
+
+      if (!email || !semaphoreId) {
+        throw new VerificationError("Missing email PCD in credential");
+      }
+      if (!verifiedCredential.authKey && !this.isZupassPublicKey(signer)) {
+        throw new VerificationError("Email PCD not signed by Zupass");
+      }
+    }
+
+    return { ...verifiedCredential, emails: verifiedCredential.emails };
   }
 
   /**
