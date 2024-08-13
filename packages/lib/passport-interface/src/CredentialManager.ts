@@ -82,7 +82,9 @@ export class CredentialManager implements CredentialManagerAPI {
   }
 
   private updateStorageRepresentation(): void {
-    localStorage.removeItem("credential-cache");
+    // if (global.localStorage) {
+    //   global?.localStorage?.removeItem?.("credential-cache");
+    // }
   }
 
   // Can we get a credential containing a given PCD type?
