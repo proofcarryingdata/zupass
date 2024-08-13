@@ -1,5 +1,8 @@
 # todo
 
+- change the credential thing such that the email credential type includes multiple emails
+  - this will trickle out into the credential manager and all the invocation of get credential
+- make `CredentialSubservice` compatible with email credentials that contain multiple emails
 - consider RMW race condition
 - consider `ZupassUserJson` being incompatible in the new version
 - turn off old auth key feature.
@@ -7,8 +10,6 @@
 - add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
 - what do we do with tickets associated with an email that was just removed?
 - need to warn people about potentially destructive actions, and confirm befre executing them
-- change the credential thing such that the email credential type includes multiple emails
-  - this will trickle out into the credential manager and all the invocation of get credential
 - fix problem where too many fields are returned from `fetchZuconnect` and `fetchZuzalu` - users
 - stable order for user email addresses
 - consider what's happening with zuzalu tickets
