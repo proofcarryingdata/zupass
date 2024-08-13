@@ -534,9 +534,7 @@ describe("frogcrypto functionality", function () {
     const response = await requestPollFeed(
       `${application.expressContext.localEndpoint}/frogcrypto/feeds`,
       {
-        pcd: (
-          await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST)
-        )[0],
+        pcd: await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST),
         feedId: feed.id
       }
     );
@@ -551,9 +549,7 @@ describe("frogcrypto functionality", function () {
     return requestFrogCryptoGetUserState(
       application.expressContext.localEndpoint,
       {
-        pcd: (
-          await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST)
-        )[0],
+        pcd: await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST),
         feedIds
       }
     );
@@ -565,9 +561,7 @@ describe("frogcrypto functionality", function () {
     return requestFrogCryptoUpdateTelegramHandleSharing(
       application.expressContext.localEndpoint,
       {
-        pcd: (
-          await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST)
-        )[0],
+        pcd: await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST),
         reveal: shareTelegramHandle
       }
     );

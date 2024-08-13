@@ -15,7 +15,7 @@ import { StorageBackedMap } from "./util/StorageBackedMap";
 
 export interface CredentialManagerAPI {
   canGenerateCredential(req: CredentialRequest): boolean;
-  requestCredentials(req: CredentialRequest): Promise<SerializedPCD>;
+  requestCredential(req: CredentialRequest): Promise<SerializedPCD>;
 }
 
 export type CredentialCache = Map<string, CacheEntry>;
@@ -53,7 +53,7 @@ export function createCredentialCache(): CredentialCache {
 
 // Creates an in-memory cache with a TTL of one hour, backed by localStorage
 export function createStorageBackedCredentialCache(): CredentialCache {
-  return new StorageBackedMap("credential-cache-multi-email");
+  return new StorageBackedMap("credential-cache-multi");
 }
 
 /**
@@ -156,7 +156,7 @@ export class CredentialManager implements CredentialManagerAPI {
   /**
    * Returns a requested credential, either from the cache or by generating it.
    */
-  public async requestCredentials(
+  public async requestCredential(
     req: CredentialRequest
   ): Promise<SerializedPCD> {
     const cachedCredential = this.getCachedCredentials(

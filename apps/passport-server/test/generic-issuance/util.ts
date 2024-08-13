@@ -94,7 +94,7 @@ export async function requestCheckInPipelineTicket(
 
   return requestPodboxTicketAction(
     checkinRoute,
-    ticketCheckerFeedCredentials[0],
+    ticketCheckerFeedCredentials,
     {
       checkin: true
     },
@@ -156,14 +156,12 @@ export async function requestTicketsFromPipeline(
 ): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
   const ticketPCDResponse = await requestPollFeed(feedUrl, {
     feedId: feedId,
-    pcd: (
-      await makeTestCredentials(
-        identity,
-        PODBOX_CREDENTIAL_REQUEST,
-        email,
-        zupassEddsaPrivateKey
-      )
-    )[0]
+    pcd: await makeTestCredentials(
+      identity,
+      PODBOX_CREDENTIAL_REQUEST,
+      email,
+      zupassEddsaPrivateKey
+    )
   });
 
   return getTicketsFromFeedResponse(expectedFolder, ticketPCDResponse);
@@ -181,7 +179,7 @@ export async function makeTestCredentials(
   request: CredentialRequest,
   email?: string,
   zupassEddsaPrivateKey?: string
-): Promise<Credential[]> {
+): Promise<Credential> {
   if (request.pcdType === "email-pcd") {
     if (!email || !zupassEddsaPrivateKey) {
       throw new Error(
@@ -201,7 +199,7 @@ export async function makeTestCredentials(
       new PCDCollection([EmailPCDPackage], [emailPCD]),
       new Map()
     );
-    return credentialManager.requestCredentials(request);
+    return credentialManager.requestCredential(request);
   } else {
     // No Email PCD required here
     const credentialManager = new CredentialManager(
@@ -209,7 +207,7 @@ export async function makeTestCredentials(
       new PCDCollection([], []),
       new Map()
     );
-    return credentialManager.requestCredentials(request);
+    return credentialManager.requestCredential(request);
   }
 }
 

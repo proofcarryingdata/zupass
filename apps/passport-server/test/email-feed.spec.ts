@@ -60,9 +60,7 @@ describe("attested email feed functionality", function () {
       const pollFeedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: (
-            await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST)
-          )[0],
+          pcd: await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST),
           feedId: ZupassFeedIds.Email
         }
       );

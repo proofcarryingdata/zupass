@@ -46,15 +46,13 @@ export function RemoveEmailScreen(): JSX.Element | null {
     setError("");
 
     try {
-      const credential = (
-        await new CredentialManager(
-          stateContext.getState().identity,
-          pcds,
-          stateContext.getState().credentialCache
-        ).requestCredentials({
-          signatureType: "sempahore-signature-pcd"
-        })
-      )[0];
+      const credential = await new CredentialManager(
+        stateContext.getState().identity,
+        pcds,
+        stateContext.getState().credentialCache
+      ).requestCredential({
+        signatureType: "sempahore-signature-pcd"
+      });
 
       const response = await requestRemoveUserEmail(
         appConfig.zupassServer,

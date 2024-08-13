@@ -91,9 +91,7 @@ describe("zuzalu-specific zupass functionality", function () {
       const response = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: (
-            await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST)
-          )[0],
+          pcd: await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST),
           feedId: ZupassFeedIds.Zuzalu_23
         }
       );

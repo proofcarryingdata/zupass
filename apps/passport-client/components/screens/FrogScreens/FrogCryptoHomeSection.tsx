@@ -228,11 +228,9 @@ export function useUserFeedState(subscriptions: Subscription[]): {
   );
   const refreshUserState = useCallback(async () => {
     try {
-      const pcd = (
-        await credentialManager.requestCredentials({
-          signatureType: "sempahore-signature-pcd"
-        })
-      )[0];
+      const pcd = await credentialManager.requestCredential({
+        signatureType: "sempahore-signature-pcd"
+      });
 
       const state = await requestFrogCryptoGetUserState(
         appConfig.zupassServer,
