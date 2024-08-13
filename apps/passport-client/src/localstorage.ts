@@ -144,7 +144,17 @@ export function loadEncryptionKey(): string | undefined {
 export function loadSelf(): User | undefined {
   const self = window.localStorage["self"];
   if (self && self !== "") {
-    return JSON.parse(self);
+    const parsedSelf = JSON.parse(self);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const singleEmail = (parsedSelf as any)?.email as string | undefined;
+    if (singleEmail && parsedSelf) {
+      parsedSelf.emails = [singleEmail];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (parsedSelf as any).email;
+    }
+
+    return parsedSelf;
   }
 }
 

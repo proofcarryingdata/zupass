@@ -1,7 +1,5 @@
 # todo
 
-- make loading 'self' safe via the `loadSelf` function
-  - this will trickle out into the credential manager and all the invocation of get credential
 - 'change' route should take in 'old email'
 - clean up old 'credential-cache'
 - fix table join from `left join` to just `join`
@@ -17,6 +15,7 @@
 - what do we do with tickets associated with an email that was just removed?
 - need to warn people about potentially destructive actions, and confirm befre executing them
 - change the credential thing such that the email credential type includes multiple emails
+  - this will trickle out into the credential manager and all the invocation of get credential
 - fix problem where too many fields are returned from `fetchZuconnect` and `fetchZuzalu` - users
 - stable order for user email addresses
 - tests?
@@ -25,6 +24,7 @@
 
 # done
 
+- make loading 'self' safe via the `loadSelf` function
 - fix incorrect error message in `AddEmailScreen`
 - display your current emails in all the screens that let you edit your email addresses
 - render english errors for email actions
