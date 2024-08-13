@@ -22,56 +22,66 @@ export async function upsertUser(
     throw new Error("users must have at least one email address");
   }
 
-  return sqlTransaction(client, "save user", async (client) => {
-    const {
-      commitment,
-      salt,
-      encryption_key,
-      terms_agreed,
-      extra_issuance,
-      uuid,
-      emails
-    } = params;
-
-    const upsertUserResult = await sqlQuery(
-      client,
-      `\
-INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance)
-VALUES ($1, $2, $3, $4, $5, $6)
-ON CONFLICT (uuid) DO UPDATE SET 
-commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7
-returning *`,
-      [
-        uuid,
+  return sqlTransaction(
+    client,
+    "save user",
+    async (client) => {
+      const {
         commitment,
         salt,
         encryption_key,
         terms_agreed,
         extra_issuance,
-        new Date()
-      ]
-    );
+        uuid,
+        emails
+      } = params;
 
-    const user = upsertUserResult.rows[0];
-    if (!user) {
-      throw new Error(`Failed to save user.`);
-    }
+      const upsertUserResult = await sqlQuery(
+        client,
+        `\
+INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance)
+VALUES ($1, $2, $3, $4, $5, $6)
+ON CONFLICT (uuid) DO UPDATE SET 
+commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7
+returning *`,
+        [
+          uuid,
+          commitment,
+          salt,
+          encryption_key,
+          terms_agreed,
+          extra_issuance,
+          new Date()
+        ],
+        0
+      );
 
-    // Update the user's associated emails
-    await sqlQuery(client, `DELETE FROM user_emails WHERE user_id = $1`, [
-      uuid
-    ]);
+      const user = upsertUserResult.rows[0];
+      if (!user) {
+        throw new Error(`Failed to save user.`);
+      }
 
-    const emailValues = emails
-      .map((_, index) => `($1, $${index + 2})`)
-      .join(", ");
+      // Update the user's associated emails
+      await sqlQuery(
+        client,
+        `DELETE FROM user_emails WHERE user_id = $1`,
+        [uuid],
+        0
+      );
 
-    await sqlQuery(
-      client,
-      `INSERT INTO user_emails (user_id, email) VALUES ${emailValues}`,
-      [uuid, ...emails]
-    );
+      const emailValues = emails
+        .map((_, index) => `($1, $${index + 2})`)
+        .join(", ");
 
-    return uuid;
-  });
+      await sqlQuery(
+        client,
+        `INSERT INTO user_emails (user_id, email) VALUES ${emailValues}`,
+        [uuid, ...emails],
+        0
+      );
+
+      return uuid;
+    },
+    3
+  );
 }

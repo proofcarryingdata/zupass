@@ -13,12 +13,13 @@ export function sqlQuery(
   pool: Pool | PoolClient,
   query: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  args?: any[]
+  args?: any[],
+  maxRetries: number = 3
 ): Promise<QueryResult> {
   return traced("DB", "query", async (span) => {
     span?.setAttribute("query", query);
     try {
-      return await execQueryWithRetry(pool, query, args);
+      return await execQueryWithRetry(pool, query, args, maxRetries);
     } catch (e) {
       span?.setAttribute("error", e + "");
 
@@ -36,7 +37,8 @@ async function execQueryWithRetry(
   pool: Pool | PoolClient,
   query: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  args?: any[]
+  args?: any[],
+  maxRetries?: number
 ): Promise<QueryResult> {
   return execWithRetry(
     () => {
@@ -48,7 +50,7 @@ async function execQueryWithRetry(
       const errorMessage = getErrorMessage(e);
       return errorMessage.includes("Connection terminated unexpectedly");
     },
-    3
+    maxRetries ?? 3
   );
 }
 
@@ -61,12 +63,13 @@ async function execQueryWithRetry(
 export function sqlTransaction<T>(
   pool: Pool,
   txn_desc: string,
-  txn: (client: PoolClient) => Promise<T>
+  txn: (client: PoolClient) => Promise<T>,
+  maxRetries?: number
 ): Promise<T> {
   return traced("DB", "transaction", async (span) => {
     span?.setAttribute("txn", txn_desc);
     try {
-      return await execTransactionWithRetry(pool, txn);
+      return await execTransactionWithRetry(pool, txn, maxRetries);
     } catch (e) {
       span?.setAttribute("error", e + "");
 
@@ -82,7 +85,8 @@ export function sqlTransaction<T>(
 
 async function execTransactionWithRetry<T>(
   pool: Pool,
-  txn: (client: PoolClient) => Promise<T>
+  txn: (client: PoolClient) => Promise<T>,
+  maxRetries?: number
 ): Promise<T> {
   return execWithRetry(
     async () => {
@@ -109,6 +113,6 @@ async function execTransactionWithRetry<T>(
       const errorMessage = getErrorMessage(e);
       return errorMessage.includes("Connection terminated unexpectedly");
     },
-    3
+    maxRetries ?? 3
   );
 }

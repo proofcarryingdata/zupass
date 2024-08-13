@@ -1,6 +1,5 @@
 # todo
 
-- fix nested `retry` logic in `saveUser`
 - turn off turning off eslint in issuance service
 - remove devconnect code from `issuanceService`
 - consider what's happening with zuzalu tickets
@@ -21,6 +20,7 @@
 
 # done
 
+- fix nested `retry` logic in `saveUser`
 - fix table join from `left join` to just `join`
 - clean up old 'credential-cache'
 - 'change' route should take in 'old email'
