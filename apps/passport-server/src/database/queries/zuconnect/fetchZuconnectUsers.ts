@@ -28,9 +28,9 @@ SELECT
         array_agg(t.product_id) as attendee_product_ids,
         array_agg(t.id) as attendee_ticket_ids
     FROM zuconnect_tickets t
-    LEFT JOIN user_emails ue on ue.email = t.attendee_email
-    LEFT JOIN users u ON u.uuid = ue.user_id
-    LEFT JOIN email_tokens e ON ue.email = e.email
+    JOIN user_emails ue on ue.email = t.attendee_email
+    JOIN users u ON u.uuid = ue.user_id
+    JOIN email_tokens e ON ue.email = e.email
     WHERE t.is_deleted = false
     group by u.uuid;`
   );
