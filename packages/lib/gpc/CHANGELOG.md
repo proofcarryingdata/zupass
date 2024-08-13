@@ -1,5 +1,14 @@
 # @pcd/gpcircuits
 
+## 0.0.6
+
+### Patch Changes
+
+- Upgrade dependency on poseidon-lite
+- Updated dependencies
+  - @pcd/gpcircuits@0.1.5
+  - @pcd/pod@0.1.5
+
 ## 0.0.5
 
 ### Patch Changes

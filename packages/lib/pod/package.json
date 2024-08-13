@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pod",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",

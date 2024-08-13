@@ -1,6 +1,6 @@
 {
   "name": "@pcd/gpcircuits",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -35,7 +35,7 @@
     "copy-test-to-snark-artifacts": "./scripts/copy-test-to-snark-artifacts.sh"
   },
   "dependencies": {
-    "@pcd/pod": "0.1.4",
+    "@pcd/pod": "0.1.5",
     "fastfile": "0.0.20",
     "snarkjs": "^0.7.4",
     "url-join": "4.0.1"
