@@ -1,6 +1,5 @@
 # todo
 
-- fix incorrect error message
 - make error message for when an email already exists in the user table actually communicate that to the user
 - make error for when an email is already owned by YOU
 - make loading 'self' safe via the `loadSelf` function
@@ -26,6 +25,7 @@
 
 # done
 
+- fix incorrect error message in `AddEmailScreen`
 - display your current emails in all the screens that let you edit your email addresses
 - render english errors for email actions
 - loading spinner on change email pages is horizontal not vertical - fix

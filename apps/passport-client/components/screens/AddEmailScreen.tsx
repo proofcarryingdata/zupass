@@ -81,7 +81,7 @@ export function AddEmailScreen(): JSX.Element | null {
 
       if (response.success && response.value.token) {
         setConfirmationCode(response.value.token);
-      } else {
+      } else if (!response.success) {
         setError(getEmailUpdateErrorMessage(response.error));
         setLoading(false);
       }
