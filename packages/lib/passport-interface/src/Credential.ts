@@ -24,6 +24,7 @@ export type Credential = SerializedPCD<SemaphoreSignaturePCD>;
 export interface CredentialPayload {
   // The only type of PCD that can appear here is EmailPCD.
   pcd?: SerializedPCD<EmailPCD>;
+  pcds?: SerializedPCD<EmailPCD>[];
   timestamp: number;
 }
 
