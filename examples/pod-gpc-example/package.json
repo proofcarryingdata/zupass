@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pod-gpc-example",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -27,10 +27,10 @@
   },
   "dependencies": {
     "@pcd/pcd-types": "0.11.4",
-    "@pcd/pod": "0.1.4",
-    "@pcd/pod-pcd": "0.1.4",
-    "@pcd/gpc": "0.0.5",
-    "@pcd/gpc-pcd": "0.0.5",
+    "@pcd/pod": "0.1.5",
+    "@pcd/pod-pcd": "0.1.5",
+    "@pcd/gpc": "0.0.6",
+    "@pcd/gpc-pcd": "0.0.6",
     "@pcd/semaphore-identity-pcd": "0.11.4",
     "@semaphore-protocol/identity": "^3.15.2",
     "lodash": "^4.17.21",

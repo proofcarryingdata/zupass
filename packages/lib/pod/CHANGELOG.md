@@ -1,5 +1,11 @@
 # @pcd/pod
 
+## 0.1.5
+
+### Patch Changes
+
+- Upgrade dependency on poseidon-lite
+
 ## 0.1.4
 
 ### Patch Changes

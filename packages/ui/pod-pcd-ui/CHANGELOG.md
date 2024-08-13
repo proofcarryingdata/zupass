@@ -1,5 +1,13 @@
 # @pcd/pod-pcd-ui
 
+## 0.1.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.1.5
+  - @pcd/pod-pcd@0.1.5
+
 ## 0.1.4
 
 ### Patch Changes

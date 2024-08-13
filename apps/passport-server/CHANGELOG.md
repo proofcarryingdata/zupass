@@ -1,5 +1,16 @@
 # passport-server
 
+## 0.0.34
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.1.5
+  - @pcd/passport-interface@0.11.6
+  - @pcd/podbox-shared@0.0.3
+  - @pcd/pod-pcd@0.1.5
+  - @pcd/pod-ticket-pcd@0.1.5
+
 ## 0.0.33
 
 ### Patch Changes

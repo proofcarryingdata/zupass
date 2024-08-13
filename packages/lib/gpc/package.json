@@ -1,6 +1,6 @@
 {
   "name": "@pcd/gpc",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -28,8 +28,8 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/gpcircuits": "0.1.4",
-    "@pcd/pod": "0.1.4",
+    "@pcd/gpcircuits": "0.1.5",
+    "@pcd/pod": "0.1.5",
     "@pcd/util": "0.5.3",
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/lodash": "^4.17.1",

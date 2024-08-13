@@ -1,5 +1,14 @@
 # @pcd/gpc-pcd-ui
 
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.6
+  - @pcd/pod@0.1.5
+  - @pcd/gpc-pcd@0.0.6
+
 ## 0.0.5
 
 ### Patch Changes

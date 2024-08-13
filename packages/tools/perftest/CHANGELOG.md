@@ -1,5 +1,15 @@
 # @pcd/perftest
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.6
+  - @pcd/pod@0.1.5
+  - @pcd/gpc-pcd@0.0.6
+  - @pcd/pod-pcd@0.1.5
+
 ## 0.0.7
 
 ### Patch Changes

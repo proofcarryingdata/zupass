@@ -1,5 +1,16 @@
 # consumer-client
 
+## 0.0.44
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.6
+  - @pcd/pod@0.1.5
+  - @pcd/gpc-pcd@0.0.6
+  - @pcd/passport-interface@0.11.6
+  - @pcd/pod-pcd@0.1.5
+
 ## 0.0.43
 
 ### Patch Changes

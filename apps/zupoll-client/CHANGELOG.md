@@ -1,5 +1,11 @@
 # zupoll-client
 
+## 0.0.8
+
+### Patch Changes
+
+- @pcd/passport-interface@0.11.6
+
 ## 0.0.7
 
 ### Patch Changes

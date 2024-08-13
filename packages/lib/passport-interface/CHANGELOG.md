@@ -1,5 +1,12 @@
 # @pcd/passport-interface
 
+## 0.11.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.1.5
+
 ## 0.11.5
 
 ### Patch Changes

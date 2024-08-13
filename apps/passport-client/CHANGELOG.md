@@ -1,5 +1,20 @@
 # passport-client
 
+## 0.0.34
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.6
+  - @pcd/pod@0.1.5
+  - @pcd/gpc-pcd@0.0.6
+  - @pcd/gpc-pcd-ui@0.0.6
+  - @pcd/passport-interface@0.11.6
+  - @pcd/pod-pcd@0.1.5
+  - @pcd/pod-ticket-pcd@0.1.5
+  - @pcd/pod-pcd-ui@0.1.5
+  - @pcd/pod-ticket-pcd-ui@0.1.5
+
 ## 0.0.33
 
 ### Patch Changes
