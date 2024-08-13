@@ -1487,8 +1487,11 @@ export class LemonadePipeline implements BasePipeline {
             ticketInfo.attendeeEmail
           );
 
-          const badgesGiveableByUser =
-            this.getBadgesGiveableByEmail(actorEmail);
+          const badgesGiveableByUser = (
+            await Promise.all(
+              actorEmails.map((e) => this.getBadgesGiveableByEmail(e))
+            )
+          ).flat();
 
           const rateLimitedGiveableByUser = badgesGiveableByUser.filter(
             (b) => b.maxPerDay !== undefined
@@ -1499,12 +1502,18 @@ export class LemonadePipeline implements BasePipeline {
           );
 
           const intervalMs = 24 * 60 * 60 * 1000;
-          const alreadyGivenRateLimited = await this.badgeDB.getGivenBadges(
-            this.id,
-            actorEmail,
-            rateLimitedGiveableByUser.map((b) => b.id),
-            intervalMs
-          );
+          const alreadyGivenRateLimited = (
+            await Promise.all(
+              actorEmails.map((e) =>
+                this.badgeDB.getGivenBadges(
+                  this.id,
+                  e,
+                  rateLimitedGiveableByUser.map((b) => b.id),
+                  intervalMs
+                )
+              )
+            )
+          ).flat();
 
           result.giveBadgeActionInfo = {
             permissioned: badgesGiveableByUser.length > 0,
@@ -1512,7 +1521,7 @@ export class LemonadePipeline implements BasePipeline {
             rateLimitedBadges: badgesGiveableByUser
               .filter(isPerDayBadge)
               .filter(() => {
-                return ticketInfo.attendeeEmail !== actorEmail;
+                return !actorEmails.includes(ticketInfo.attendeeEmail);
               })
               .map((b) => ({
                 alreadyGivenInInterval: alreadyGivenRateLimited.filter(
@@ -1533,16 +1542,17 @@ export class LemonadePipeline implements BasePipeline {
 
         // 3) contact action
         if (this.definition.options.ticketActions?.contacts?.enabled) {
-          if (actorEmail === ticketInfo.attendeeEmail) {
+          if (actorEmails.includes(ticketInfo.attendeeEmail)) {
             result.getContactActionInfo = {
               permissioned: false,
               alreadyReceived: false
             };
           } else {
-            const received = await this.contactDB.getContacts(
-              this.id,
-              actorEmail
-            );
+            const received = (
+              await Promise.all(
+                actorEmails.map((e) => this.contactDB.getContacts(this.id, e))
+              )
+            ).flat();
             result.getContactActionInfo = {
               permissioned: true,
               alreadyReceived: received.includes(ticketInfo.attendeeEmail),
@@ -1583,13 +1593,13 @@ export class LemonadePipeline implements BasePipeline {
       async (span): Promise<PodboxTicketActionResponseValue> => {
         tracePipeline(this.definition);
 
-        let email: string;
+        let emails: string[];
         try {
           const verifiedCredential =
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
-          email = verifiedCredential.email;
+          emails = verifiedCredential.emails.map((e) => e.email);
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1627,15 +1637,10 @@ export class LemonadePipeline implements BasePipeline {
           const ticketId = request.ticketId;
           const ticket = await this.db.loadById(this.id, ticketId);
           const manualTicket = this.getManualTicketById(ticketId);
-          const scannerEmail = email;
           const scaneeEmail = ticket?.email ?? manualTicket?.attendeeEmail;
 
           if (scaneeEmail) {
-            await this.contactDB.saveContact(
-              this.id,
-              scannerEmail,
-              scaneeEmail
-            );
+            await this.contactDB.saveContact(this.id, emails[0], scaneeEmail);
 
             return {
               success: true
@@ -1678,7 +1683,10 @@ export class LemonadePipeline implements BasePipeline {
             }
 
             // prevent wrong ppl from issuing wrong badges
-            if (!b.givers?.includes("*") && !b.givers?.includes(email)) {
+            if (
+              !b.givers?.includes("*") &&
+              !b.givers?.find((e) => emails.includes(e))
+            ) {
               return false;
             }
 
@@ -1688,7 +1696,7 @@ export class LemonadePipeline implements BasePipeline {
           if (recipientEmail) {
             await this.badgeDB.giveBadges(
               this.id,
-              email,
+              emails[0],
               recipientEmail,
               allowedBadges
             );
@@ -1724,7 +1732,7 @@ export class LemonadePipeline implements BasePipeline {
             if (ticketAtom.email) {
               await this.badgeDB.giveBadges(
                 this.id,
-                email,
+                emails[0],
                 ticketAtom.email,
                 autoGrantBadges
               );
@@ -1738,7 +1746,7 @@ export class LemonadePipeline implements BasePipeline {
                 attendeeName: ticketAtom.name,
                 attendeeEmail: ticketAtom.email
               },
-              email
+              emails[0]
             );
           } else {
             // No valid Lemonade atom found, try looking for a manual ticket
@@ -1746,18 +1754,20 @@ export class LemonadePipeline implements BasePipeline {
             if (manualTicket && manualTicket.eventId === request.eventId) {
               await this.badgeDB.giveBadges(
                 this.id,
-                email,
+                emails[0],
                 manualTicket.attendeeEmail,
                 autoGrantBadges
               );
 
               // Manual ticket found, check in with the DB
-              return this.podboxLocalCheckIn(manualTicket, email);
+              return this.podboxLocalCheckIn(manualTicket, emails[0]);
             } else {
               // Didn't find any matching ticket
               logger(
                 `${LOG_TAG} Could not find ticket ${request.ticketId} ` +
-                  `for event ${request.eventId} for checkin requested by ${email} ` +
+                  `for event ${
+                    request.eventId
+                  } for checkin requested by ${JSON.stringify(emails)} ` +
                   `on pipeline ${this.id}`
               );
               span?.setAttribute("checkin_error", "InvalidTicket");
