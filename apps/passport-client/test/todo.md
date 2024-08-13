@@ -1,6 +1,5 @@
 # todo
 
-- turn off turning off eslint in issuance service
 - remove devconnect code from `issuanceService`
 - consider what's happening with zuzalu tickets
 - consider RMW race condition
@@ -20,6 +19,7 @@
 
 # done
 
+- turn off turning off eslint in issuance service
 - fix nested `retry` logic in `saveUser`
 - fix table join from `left join` to just `join`
 - clean up old 'credential-cache'

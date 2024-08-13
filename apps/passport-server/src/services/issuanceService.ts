@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { EdDSAFrogPCDPackage, IFrogData } from "@pcd/eddsa-frog-pcd";
 import {
