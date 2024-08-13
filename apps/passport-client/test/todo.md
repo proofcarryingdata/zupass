@@ -1,10 +1,27 @@
 # todo
 
-- copy that communicates how to 'merge'
-- add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
+- fix incorrect error message
+- make error message for when an email already exists in the user table actually communicate that to the user
+- make error for when an email is already owned by YOU
+- make loading 'self' safe via the `loadSelf` function
+  - this will trickle out into the credential manager and all the invocation of get credential
+- 'change' route should take in 'old email'
+- clean up old 'credential-cache'
+- fix table join from `left join` to just `join`
+- fix nested `retry` logic in `saveUser`
+- turn off turning off eslint in issuance service
+- remove devconnect code from `issuanceService`
+- consider what's happening with zuzalu tickets
+- consider RMW race condition
+- consider `ZupassUserJson` being incompatible in the new version
+- turn off old auth key feature.
 - add logging everywhere that is appropriate
+- add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
 - what do we do with tickets associated with an email that was just removed?
 - need to warn people about potentially destructive actions, and confirm befre executing them
+- change the credential thing such that the email credential type includes multiple emails
+- fix problem where too many fields are returned from `fetchZuconnect` and `fetchZuzalu` - users
+- stable order for user email addresses
 - tests?
 
 # done
@@ -44,3 +61,4 @@
 
 - multiple semaphore identities.
 - specific email copy for 'adding new email address' action with verification code
+- copy that communicates how to 'merge'
