@@ -9,7 +9,8 @@ import {
   PipelineType,
   PipelineZuAuthConfig,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  SignedEmail
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -153,22 +154,27 @@ export class CSVPipeline implements BasePipeline {
       const outputType =
         this.definition.options.outputType ?? CSVPipelineOutputType.Message;
 
-      let requesterEmail: string | undefined;
+      let requesterEmails: SignedEmail[] | undefined;
       let requesterSemaphoreId: string | undefined;
 
       if (req.pcd) {
         try {
-          const { email, semaphoreId } =
+          const { emails, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
-          requesterEmail = email;
+          requesterEmails = emails;
           requesterSemaphoreId = semaphoreId;
           // Consumer is validated, so save them in the consumer list
-          const didUpdate = await this.consumerDB.save(
-            this.id,
-            email,
-            semaphoreId,
-            new Date()
-          );
+          let didUpdate = false;
+          for (const email of emails) {
+            didUpdate =
+              didUpdate ||
+              (await this.consumerDB.save(
+                this.id,
+                email.email,
+                semaphoreId,
+                new Date()
+              ));
+          }
 
           if (this.definition.options.semaphoreGroupName) {
             // If the user's Semaphore commitment has changed, `didUpdate` will be
@@ -185,18 +191,25 @@ export class CSVPipeline implements BasePipeline {
 
       // TODO: cache these
       const somePCDs = await Promise.all(
-        atoms.map(async (atom: CSVAtom) =>
-          makeCSVPCD(
-            atom.row,
-            this.definition.options.outputType ?? CSVPipelineOutputType.Message,
-            {
-              requesterEmail,
-              requesterSemaphoreId,
-              eddsaPrivateKey: this.eddsaPrivateKey,
-              pipelineId: this.id,
-              issueToUnmatchedEmail:
-                this.definition.options.issueToUnmatchedEmail
-            }
+        atoms.flatMap((atom: CSVAtom) =>
+          (requesterEmails
+            ? requesterEmails.map((e) => e.email)
+            : [undefined]
+          ).flatMap(
+            async (e) =>
+              await makeCSVPCD(
+                atom.row,
+                this.definition.options.outputType ??
+                  CSVPipelineOutputType.Message,
+                {
+                  requesterEmail: e,
+                  requesterSemaphoreId,
+                  eddsaPrivateKey: this.eddsaPrivateKey,
+                  pipelineId: this.id,
+                  issueToUnmatchedEmail:
+                    this.definition.options.issueToUnmatchedEmail
+                }
+              )
           )
         )
       );
