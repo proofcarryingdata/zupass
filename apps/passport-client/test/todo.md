@@ -1,7 +1,5 @@
 # todo
 
-- make error message for when an email already exists in the user table actually communicate that to the user
-- make error for when an email is already owned by YOU
 - make loading 'self' safe via the `loadSelf` function
   - this will trickle out into the credential manager and all the invocation of get credential
 - 'change' route should take in 'old email'
@@ -22,6 +20,8 @@
 - fix problem where too many fields are returned from `fetchZuconnect` and `fetchZuzalu` - users
 - stable order for user email addresses
 - tests?
+- make error message for when an email already exists in the user table actually communicate that to the user
+- make error for when an email is already owned by YOU
 
 # done
 
