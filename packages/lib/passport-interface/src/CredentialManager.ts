@@ -212,7 +212,7 @@ export class CredentialManager implements CredentialManagerAPI {
         pcds.map(async (pcd) => {
           const serializedPCD = await this.pcds.serialize(pcd);
           return this.semaphoreSignPayload(
-            createCredentialPayload(serializedPCD)
+            createCredentialPayload([serializedPCD])
           );
         })
       );
