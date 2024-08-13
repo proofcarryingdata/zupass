@@ -65,7 +65,11 @@ export class CredentialSubservice {
 
         return {
           semaphoreId: user.commitment,
-          email: user.emails[0]?.toLowerCase(),
+          emails: user.emails.map((e) => ({
+            email: e,
+            semaphoreId: user.commitment,
+            signer: this.zupassPublicKey
+          })),
           authKey
         };
       })();
