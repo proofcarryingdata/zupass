@@ -1,7 +1,5 @@
 # todo
 
-- remove devconnect code from `issuanceService`
-- consider what's happening with zuzalu tickets
 - consider RMW race condition
 - consider `ZupassUserJson` being incompatible in the new version
 - turn off old auth key feature.
@@ -13,12 +11,14 @@
   - this will trickle out into the credential manager and all the invocation of get credential
 - fix problem where too many fields are returned from `fetchZuconnect` and `fetchZuzalu` - users
 - stable order for user email addresses
+- consider what's happening with zuzalu tickets
 - tests?
 - make error message for when an email already exists in the user table actually communicate that to the user
 - make error for when an email is already owned by YOU
 
 # done
 
+- remove devconnect code from `issuanceService`
 - turn off turning off eslint in issuance service
 - fix nested `retry` logic in `saveUser`
 - fix table join from `left join` to just `join`

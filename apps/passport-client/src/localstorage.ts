@@ -1,9 +1,6 @@
 import {
-  defaultOfflineTickets,
   FeedSubscriptionManager,
   NetworkFeedApi,
-  OfflineDevconnectTicket,
-  OfflineTickets,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -77,61 +74,8 @@ export async function loadSubscriptions(): Promise<FeedSubscriptionManager> {
   );
 }
 
-const OFFLINE_TICKETS_KEY = "offline_tickets";
-export function saveOfflineTickets(
-  offlineTickets: OfflineTickets | undefined
-): void {
-  if (!offlineTickets) {
-    window.localStorage.removeItem(OFFLINE_TICKETS_KEY);
-  } else {
-    window.localStorage.setItem(
-      OFFLINE_TICKETS_KEY,
-      JSON.stringify(offlineTickets)
-    );
-  }
-}
-export function loadOfflineTickets(): OfflineTickets {
-  let tickets = defaultOfflineTickets();
-
-  try {
-    tickets = JSON.parse(
-      window.localStorage.getItem(OFFLINE_TICKETS_KEY) ??
-        JSON.stringify(defaultOfflineTickets())
-    );
-  } catch (e) {
-    //
-  }
-
-  return tickets;
-}
-
-const CHECKED_IN_OFFLINE_TICKETS_KEY = "checked_in_offline_devconnect_tickets";
-export function saveCheckedInOfflineTickets(
-  offlineTickets: OfflineDevconnectTicket[] | undefined
-): void {
-  if (!offlineTickets) {
-    window.localStorage.removeItem(CHECKED_IN_OFFLINE_TICKETS_KEY);
-  } else {
-    window.localStorage.setItem(
-      CHECKED_IN_OFFLINE_TICKETS_KEY,
-      JSON.stringify(offlineTickets)
-    );
-  }
-}
-export function loadCheckedInOfflineDevconnectTickets(): OfflineDevconnectTicket[] {
-  let tickets: OfflineDevconnectTicket[] = [];
-
-  try {
-    tickets = JSON.parse(
-      window.localStorage.getItem(CHECKED_IN_OFFLINE_TICKETS_KEY) ?? "[]"
-    );
-  } catch (e) {
-    //
-    tickets = [];
-  }
-
-  return tickets;
-}
+window?.localStorage?.removeItem("offline_tickets");
+window?.localStorage?.removeItem("checked_in_offline_devconnect_tickets");
 
 export function saveEncryptionKey(key: string): void {
   window.localStorage["encryption_key"] = key;
