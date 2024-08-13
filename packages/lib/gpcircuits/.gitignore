@@ -2,6 +2,7 @@
 *.ts.map
 !.eslintrc.js
 dist
+*.tsbuildinfo
 ptau
 circuits/test
 artifacts/test
