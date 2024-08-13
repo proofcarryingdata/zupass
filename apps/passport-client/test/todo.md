@@ -1,8 +1,5 @@
 # todo
 
-- change the credential thing such that the email credential type includes multiple emails
-  - this will trickle out into the credential manager and all the invocation of get credential
-- make `CredentialSubservice` compatible with email credentials that contain multiple emails
 - consider RMW race condition
 - consider `ZupassUserJson` being incompatible in the new version
 - turn off old auth key feature.
@@ -19,6 +16,9 @@
 
 # done
 
+- change the credential thing such that the email credential type includes multiple emails
+  - this will trickle out into the credential manager and all the invocation of get credential
+- make `CredentialSubservice` compatible with email credentials that contain multiple emails
 - remove devconnect code from `issuanceService`
 - turn off turning off eslint in issuance service
 - fix nested `retry` logic in `saveUser`
