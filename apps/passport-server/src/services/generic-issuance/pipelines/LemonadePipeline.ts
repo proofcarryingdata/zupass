@@ -805,19 +805,24 @@ export class LemonadePipeline implements BasePipeline {
         return { actions: [] };
       }
 
-      const { email, semaphoreId } =
+      const { emails, semaphoreId } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-      span?.setAttribute("email", email);
+      span?.setAttribute("emails", emails.map((e) => e.email).join(","));
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      // Consumer is validated, so save them in the consumer list
-      const didUpdate = await this.consumerDB.save(
-        this.id,
-        email,
-        semaphoreId,
-        new Date()
-      );
+      let didUpdate = false;
+      for (const email of emails) {
+        // Consumer is validated, so save them in the consumer list
+        didUpdate =
+          didUpdate ||
+          (await this.consumerDB.save(
+            this.id,
+            email.email,
+            semaphoreId,
+            new Date()
+          ));
+      }
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         // If the user's Semaphore commitment has changed, `didUpdate` will be
@@ -828,7 +833,11 @@ export class LemonadePipeline implements BasePipeline {
         }
       }
 
-      const tickets = await this.getTicketsForEmail(email, semaphoreId);
+      const tickets = (
+        await Promise.all(
+          emails.map((e) => this.getTicketsForEmail(e.email, semaphoreId))
+        )
+      ).flat();
 
       const ticketActions: PCDAction[] = [];
 
@@ -867,7 +876,11 @@ export class LemonadePipeline implements BasePipeline {
       });
 
       const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;
-      const contacts = await this.getReceivedContactsForEmail(email);
+      const contacts = (
+        await Promise.all(
+          emails.map((e) => this.getReceivedContactsForEmail(e.email))
+        )
+      ).flat();
       const contactActions: PCDAction[] = [
         {
           type: PCDActionType.DeleteFolder,
@@ -882,7 +895,12 @@ export class LemonadePipeline implements BasePipeline {
       ];
 
       const badgeFolder = `${this.definition.options.feedOptions.feedFolder}/badges`;
-      const badges = await this.getReceivedBadgesForEmail(email);
+
+      const badges = (
+        await Promise.all(
+          emails.map((e) => this.getReceivedBadgesForEmail(e.email))
+        )
+      ).flat();
       const badgeActions: PCDAction[] = [
         {
           type: PCDActionType.DeleteFolder,
@@ -1202,7 +1220,9 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async userCanCheckIn(email: string): Promise<boolean> {
     for (const event of this.definition.options.events) {
-      if (await this.canCheckInForEvent(event.genericIssuanceEventId, email)) {
+      if (
+        await this.canCheckInForEvent(event.genericIssuanceEventId, [email])
+      ) {
         return true;
       }
     }
@@ -1215,7 +1235,7 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async canCheckInForEvent(
     eventId: string,
-    checkerEmail: string
+    checkerEmails: string[]
   ): Promise<true | PodboxTicketActionError> {
     const eventConfig = this.definition.options.events.find(
       (e) => e.genericIssuanceEventId === eventId
@@ -1227,23 +1247,31 @@ export class LemonadePipeline implements BasePipeline {
 
     // Collect all of the product IDs that the checker owns for this event
     const checkerProductIds: string[] = [];
-    for (const checkerTicketAtom of await this.db.loadByEmail(
-      this.id,
-      checkerEmail
-    )) {
+    const checkerTickets = (
+      await Promise.all(
+        checkerEmails.map((e) => this.db.loadByEmail(this.id, e))
+      )
+    ).flat();
+    for (const checkerTicketAtom of checkerTickets) {
       if (checkerTicketAtom.genericIssuanceEventId === eventId) {
         checkerProductIds.push(checkerTicketAtom.genericIssuanceProductId);
       }
     }
-    for (const manualTicket of this.getManualTicketsForEmail(checkerEmail)) {
+    const manualTickets = (
+      await Promise.all(
+        checkerEmails.map((e) => this.getManualTicketsForEmail(e))
+      )
+    ).flat();
+    for (const manualTicket of manualTickets) {
       if (manualTicket.eventId === eventConfig.genericIssuanceEventId) {
         checkerProductIds.push(manualTicket.productId);
       }
     }
 
     const checkerEmailIsSuperuser =
-      this.definition.options.superuserEmails?.includes(checkerEmail) ?? false;
-
+      this.definition.options.superuserEmails?.find((e) =>
+        checkerEmails.includes(e)
+      ) ?? false;
     const hasSuperUserTicket = checkerProductIds.some((productId) => {
       return eventConfig.ticketTypes.find(
         (ticketType) =>
@@ -1351,7 +1379,7 @@ export class LemonadePipeline implements BasePipeline {
       async (span): Promise<ActionConfigResponseValue> => {
         tracePipeline(this.definition);
 
-        let actorEmail: string;
+        let actorEmails: string[];
 
         // This method can only be used to pre-check for check-ins.
         // There is no pre-check for any other kind of action at this time.
@@ -1369,15 +1397,18 @@ export class LemonadePipeline implements BasePipeline {
         // 1) verify that the requester is who they say they are
         try {
           span?.setAttribute("ticket_id", request.ticketId);
-          const { email, semaphoreId } =
+          const { emails, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
 
-          span?.setAttribute("checker_email", email);
+          span?.setAttribute(
+            "checker_emails",
+            emails.map((e) => e.email)
+          );
           span?.setAttribute("checked_semaphore_id", semaphoreId);
 
-          actorEmail = email;
+          actorEmails = emails.map((e) => e.email);
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1426,7 +1457,7 @@ export class LemonadePipeline implements BasePipeline {
         // 1) checkin action
         const canCheckIn = await this.canCheckInForEvent(
           request.eventId,
-          actorEmail
+          actorEmails
         );
         if (canCheckIn !== true) {
           result.checkinActionInfo = {
