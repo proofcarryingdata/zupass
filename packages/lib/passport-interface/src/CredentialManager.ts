@@ -15,14 +15,14 @@ import { StorageBackedMap } from "./util/StorageBackedMap";
 
 export interface CredentialManagerAPI {
   canGenerateCredential(req: CredentialRequest): boolean;
-  requestCredentials(req: CredentialRequest): Promise<SerializedPCD[]>;
+  requestCredentials(req: CredentialRequest): Promise<SerializedPCD>;
 }
 
 export type CredentialCache = Map<string, CacheEntry>;
 
 interface CacheEntry {
   timestamp: number;
-  value: SerializedPCD[];
+  value: SerializedPCD;
   request: CredentialRequest;
   cacheId: string;
 }
@@ -65,7 +65,7 @@ export class CredentialManager implements CredentialManagerAPI {
   private readonly cache: CredentialCache;
   private readonly credentialPromises: Map<
     CredentialRequest["pcdType"],
-    { timestamp: number; credential: Promise<SerializedPCD[]>; cacheId: string }
+    { timestamp: number; credential: Promise<SerializedPCD>; cacheId: string }
   >;
 
   public constructor(
@@ -103,7 +103,7 @@ export class CredentialManager implements CredentialManagerAPI {
   private getCachedCredentials(
     type: string | undefined,
     cacheId: string
-  ): SerializedPCD[] | undefined {
+  ): SerializedPCD | undefined {
     const cacheKey = type ?? "none";
     const res = this.cache.get(cacheKey);
     if (res) {
@@ -125,7 +125,7 @@ export class CredentialManager implements CredentialManagerAPI {
   // Adds a credential to the cache
   private setCachedCredentials(
     request: CredentialRequest,
-    value: SerializedPCD[]
+    value: SerializedPCD
   ): void {
     const cacheKey = request.pcdType ?? "none";
     const cacheId = this.getCurrentCacheId();
@@ -158,7 +158,7 @@ export class CredentialManager implements CredentialManagerAPI {
    */
   public async requestCredentials(
     req: CredentialRequest
-  ): Promise<SerializedPCD[]> {
+  ): Promise<SerializedPCD> {
     const cachedCredential = this.getCachedCredentials(
       req.pcdType,
       this.getCurrentCacheId()
@@ -179,9 +179,9 @@ export class CredentialManager implements CredentialManagerAPI {
       }
     }
 
-    const newPromise = this.generateCredentials(req);
-    newPromise.then((credentials) => {
-      this.setCachedCredentials(req, credentials);
+    const newPromise = this.generateCredential(req);
+    newPromise.then((credential) => {
+      this.setCachedCredentials(req, credential);
     });
     this.credentialPromises.set(req.pcdType, {
       credential: newPromise,
@@ -200,9 +200,9 @@ export class CredentialManager implements CredentialManagerAPI {
    * may contain a PCD if a) the feed requests one and b) CredentialManager
    * can find a matching PCD.
    */
-  private async generateCredentials(
+  private async generateCredential(
     req: CredentialRequest
-  ): Promise<SerializedPCD[]> {
+  ): Promise<SerializedPCD> {
     if (req.pcdType === "email-pcd") {
       const pcds = this.pcds.getPCDsByType(req.pcdType);
       if (pcds.length === 0) {
@@ -210,16 +210,14 @@ export class CredentialManager implements CredentialManagerAPI {
           `Could not find a PCD of type ${req.pcdType} for credential payload`
         );
       }
-      return Promise.all(
-        pcds.map(async (pcd) => {
-          const serializedPCD = await this.pcds.serialize(pcd);
-          return this.semaphoreSignPayload(
-            createCredentialPayload([serializedPCD])
-          );
-        })
+
+      const emailPCDs: SerializedPCD<EmailPCD>[] = await Promise.all(
+        pcds.map((pcd) => this.pcds.serialize(pcd))
       );
+
+      return this.semaphoreSignPayload(createCredentialPayload(emailPCDs));
     } else if (req.pcdType === undefined) {
-      return [await this.semaphoreSignPayload(createCredentialPayload())];
+      return await this.semaphoreSignPayload(createCredentialPayload());
     } else {
       throw new Error(
         `Cannot issue credential containing a PCD of type ${req.pcdType}`
