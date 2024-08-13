@@ -17,6 +17,7 @@ import { httpPost } from "./makeRequest";
  */
 export async function requestChangeUserEmail(
   zupassServerUrl: string,
+  oldEmail: string,
   newEmail: string,
   pcd: SerializedPCD<SemaphoreSignaturePCD>,
   /**
@@ -38,6 +39,7 @@ export async function requestChangeUserEmail(
       })
     },
     {
+      oldEmail,
       newEmail,
       pcd,
       confirmationCode

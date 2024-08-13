@@ -24,6 +24,7 @@ export function getEmailUpdateErrorMessage(
       return "The input you provided is invalid. Please check and try again.";
     case EmailUpdateError.TooManyEmails:
       return "You've reached the maximum number of emails allowed for an account.";
+    case EmailUpdateError.CantChangeWrongOldEmail:
     case EmailUpdateError.Unknown:
     default:
       return "An unknown error occurred. Please try again later or contact support if the problem persists.";

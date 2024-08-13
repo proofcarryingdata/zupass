@@ -73,6 +73,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
 
       const result = await requestChangeUserEmail(
         appConfig.zupassServer,
+        self.emails[0],
         newEmail,
         credential
       );
@@ -114,6 +115,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
 
       const result = await requestChangeUserEmail(
         appConfig.zupassServer,
+        self.emails[0],
         newEmail,
         credential,
         confirmationCode

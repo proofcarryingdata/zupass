@@ -1,6 +1,5 @@
 # todo
 
-- 'change' route should take in 'old email'
 - clean up old 'credential-cache'
 - fix table join from `left join` to just `join`
 - fix nested `retry` logic in `saveUser`
@@ -24,6 +23,7 @@
 
 # done
 
+- 'change' route should take in 'old email'
 - make loading 'self' safe via the `loadSelf` function
 - fix incorrect error message in `AddEmailScreen`
 - display your current emails in all the screens that let you edit your email addresses

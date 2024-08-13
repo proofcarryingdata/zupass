@@ -731,6 +731,7 @@ export class UserService {
    * exits without any updates to the user.
    */
   public async handleChangeUserEmail(
+    oldEmail: string,
     newEmail: string,
     pcd: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
@@ -760,6 +761,10 @@ export class UserService {
     );
     if (!requestingUser) {
       throw new PCDHTTPError(404, EmailUpdateError.UserNotFound);
+    }
+
+    if (oldEmail !== requestingUser.emails[0]) {
+      throw new PCDHTTPError(400, EmailUpdateError.UserNotFound);
     }
 
     if (!confirmationCode) {
