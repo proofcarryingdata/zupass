@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:latest
+    restart: always
+    ports:
+      - "5432:5432"
+    command: ['postgres', '-cshared_preload_libraries=pg_stat_statements']
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: your_database
+      PGDATA: '/data/postgres'
+      POSTGRES_INITDB_ARGS: '-E UTF8 --locale=C'
+    volumes:
+      - ./apps/passport-server/local-db-data:/data/postgres
