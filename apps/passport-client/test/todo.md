@@ -1,19 +1,25 @@
 # todo
 
-- consider RMW race condition
+- e2e manual test this myself
+  - richard's confirmation code + stale state bugs
+  - unknown error
+  - mostly error handling
 - consider `ZupassUserJson` being incompatible in the new version
 - add logging everywhere that is appropriate
 - need to warn people about potentially destructive actions, and confirm befre executing them
 - fix problem where too many fields are returned from `fetchZuconnect` and `fetchZuzalu` - users
 - stable order for user email addresses
-- consider what's happening with zuzalu tickets
 - tests?
 - make error message for when an email already exists in the user table actually communicate that to the user
 - make error for when an email is already owned by YOU
 - add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
+- Because this branched off before PODPipeline was merged, I think these changes might break PODPipeline, and you might see some test failures around feed issuance when you merge/rebase with main
+- PODPipeline should also have the new loaded check added to it, though I can pick that up if you don't want to add it.
 
 # done
 
+- consider what's happening with zuzalu tickets
+- consider RMW race condition
 - change the credential thing such that the email credential type includes multiple emails
   - this will trickle out into the credential manager and all the invocation of get credential
 - make `CredentialSubservice` compatible with email credentials that contain multiple emails
