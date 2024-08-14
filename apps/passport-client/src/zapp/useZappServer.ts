@@ -15,6 +15,22 @@ import { v4 as uuidv4 } from "uuid";
 import { useStateContext } from "../appHooks";
 import { ZappServer } from "./ZappServer";
 
+export class ClientChannel {
+  constructor(private port: MessagePort) {}
+
+  public showZupass(): void {
+    this.port.postMessage({
+      type: RPCMessageType.ZUPASS_CLIENT_SHOW
+    });
+  }
+
+  public hideZupass(): void {
+    this.port.postMessage({
+      type: RPCMessageType.ZUPASS_CLIENT_HIDE
+    });
+  }
+}
+
 function setupPort(port: MessagePort, server: ZappServer): void {
   port.addEventListener("message", async (event) => {
     console.log(`SERVER RECEIVED ${event.data.type}`);
@@ -29,7 +45,6 @@ function setupPort(port: MessagePort, server: ZappServer): void {
       const functionToInvoke = (object as Record<string, unknown>)[
         functionName
       ];
-      console.log(object);
       try {
         if (functionToInvoke && typeof functionToInvoke === "function") {
           console.log("invoking function", functionToInvoke, message.args);
@@ -92,11 +107,12 @@ export function useZappServer(): void {
           });
 
           await new Promise<void>((resolve) => {
-            context.stateEmitter.listen((state) => {
+            const unlisten = context.stateEmitter.listen((state) => {
               if (state.self) {
                 postRPCMessage(port, {
                   type: RPCMessageType.ZUPASS_CLIENT_HIDE
                 });
+                unlisten();
                 resolve();
               }
             });
@@ -151,7 +167,12 @@ export function useZappServer(): void {
           }
         }
         if (approved) {
-          const server = new ZappServer(context, zapp);
+          const clientChannel = new ClientChannel(port);
+          const server = new ZappServer(context, zapp, clientChannel);
+
+          // @todo handle this with an action
+          context.update({ embeddedScreen: undefined });
+          window.location.hash = "embedded";
 
           setupPort(port, server);
           port.postMessage({

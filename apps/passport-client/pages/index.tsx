@@ -19,6 +19,7 @@ import { RippleLoader } from "../components/core/RippleLoader";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
+import { EmbeddedScreen } from "../components/screens/EmbeddedScreens/EmbeddedScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
@@ -179,6 +180,7 @@ function RouterImpl(): JSX.Element {
             path="generic-checkin"
             element={<PodboxScannedTicketScreen />}
           />
+          <Route path="embedded" element={<EmbeddedScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>

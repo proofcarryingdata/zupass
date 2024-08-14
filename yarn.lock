@@ -4774,10 +4774,74 @@
   resolved "https://registry.yarnpkg.com/@pcd/eslint-config-custom/-/eslint-config-custom-0.11.1.tgz#b193a14a5a0227a4a1e200c8c4dcba82b5b5e56e"
   integrity sha512-MSz9y9yaqh+PRr8Uerb69ldB3OoXlzvMbVQ0/uR4NoXttEaso7TKGzHt5VGsHjWGWmzYRxA4y+oa/uklVlQhKQ==
 
+"@pcd/gpc-pcd@0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@pcd/gpc-pcd/-/gpc-pcd-0.0.5.tgz#15910d0ebeb400f0e6fd3e005c95105ef76797bb"
+  integrity sha512-CCqeD/llDp7m7TE9xF8O6DeVZSbg2YRGJahrVO9wKdv6qiqnKLtADyZp/BwfKxxUOfT5DMT8jSNsh3lMTpQvGg==
+  dependencies:
+    "@pcd/gpc" "0.0.5"
+    "@pcd/pcd-types" "0.11.4"
+    "@pcd/pod-pcd" "0.1.4"
+    "@pcd/semaphore-identity-pcd" "0.11.4"
+    "@pcd/util" "0.5.3"
+    "@types/lodash" "^4.17.5"
+    json-bigint "^1.0.0"
+    snarkjs "^0.7.4"
+    uuid "^9.0.0"
+
+"@pcd/gpc@0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@pcd/gpc/-/gpc-0.0.5.tgz#860b664a48949cc4f6e07b97c6eea609cda0fe9b"
+  integrity sha512-zcfLSam34XOOZbBkefHBNSzDYNo3IgZHNGSPfp5gbBDx525n77UT2n+YVH39i4UqQnxOGaEHy4KTrNTmbG5EEg==
+  dependencies:
+    "@pcd/gpcircuits" "0.1.4"
+    "@pcd/pod" "0.1.4"
+    "@pcd/util" "0.5.3"
+    "@semaphore-protocol/identity" "^3.15.2"
+    "@types/lodash" "^4.17.1"
+    json-bigint "^1.0.0"
+    snarkjs "^0.7.4"
+    url-join "^4.0.1"
+
+"@pcd/gpcircuits@0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@pcd/gpcircuits/-/gpcircuits-0.1.4.tgz#a7a29a637605d9dbc01534777e9abb36a207057a"
+  integrity sha512-UNEVfM5jPFIVa46xWTMrPDlSZQXHSshA4FmxdW1NXFJQWRYQ8qnM1Au/D74dJz7qhoX0hgQLds+uo/CK757Hcg==
+  dependencies:
+    "@pcd/pod" "0.1.4"
+    fastfile "0.0.20"
+    snarkjs "^0.7.4"
+    url-join "4.0.1"
+
 "@pcd/pcd-types@0.11.1":
   version "0.11.1"
   resolved "https://registry.yarnpkg.com/@pcd/pcd-types/-/pcd-types-0.11.1.tgz#8ad8b4560b829e60205981abb1f52212c4015b68"
   integrity sha512-wTjeMuglVNf2JiwNiedgzstbrKOLqKs3g3MdZ12HRaGHehtFDIZXNwFxVP6tkNzrmm3zXyAnp8qqzYDOHTKmPw==
+
+"@pcd/pod-pcd@0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@pcd/pod-pcd/-/pod-pcd-0.1.4.tgz#79d6ae31e77f7504c7bc992f97894c5233b25d64"
+  integrity sha512-ZKtCs9pikZc9Qg6snq9oRrRTGYRP84Uw6Ljb2409x5qy0n8Pc+VwUvNdSAQVzIACDMnIU2fkzRUdoczCkbGiiA==
+  dependencies:
+    "@pcd/pcd-types" "0.11.4"
+    "@pcd/pod" "0.1.4"
+    "@pcd/util" "0.5.3"
+    json-bigint "^1.0.0"
+    uuid "^9.0.0"
+
+"@pcd/pod@0.1.4":
+  version "0.1.4"
+  resolved "https://registry.yarnpkg.com/@pcd/pod/-/pod-0.1.4.tgz#1e1ba1acf395d538d650b9ddbbbae37e81d920fd"
+  integrity sha512-mYD0AwE1JAFIuZQ8plJKZkbH9I2TFYxNp9B3pbdCnaycP0SWw8YJK0+kaWMItovzcAitYDC3ISYTf40hWMz7Xg==
+  dependencies:
+    "@pcd/util" "0.5.3"
+    "@zk-kit/baby-jubjub" "1.0.1"
+    "@zk-kit/eddsa-poseidon" "1.0.2"
+    "@zk-kit/lean-imt" "2.0.1"
+    "@zk-kit/utils" "1.2.0"
+    js-sha256 "^0.10.1"
+    json-bigint "^1.0.0"
+    poseidon-lite "^0.2.0"
 
 "@pcd/proto-pod-gpc-artifacts@0.5.0":
   version "0.5.0"
@@ -5983,6 +6047,16 @@
   integrity sha512-QE7X69iQI+ZXwldE+rzasvbJiyV/ju1FGHH0Qn2W3FKbuYtqp8LKcy6iSw79fVUT5/Vvf+0XgLCeYVG+UV6hOw==
   dependencies:
     mini-svg-data-uri "^1.2.3"
+
+"@tailwindcss/typography@^0.5.14":
+  version "0.5.14"
+  resolved "https://registry.yarnpkg.com/@tailwindcss/typography/-/typography-0.5.14.tgz#90619a3c3889eb184a53f043e38bd6e424e7b86e"
+  integrity sha512-ZvOCjUbsJBjL9CxQBn+VEnFpouzuKhxh2dH8xMIWHILL+HfOYtlAkWcyoon8LlzE53d2Yo6YO6pahKKNW3q1YQ==
+  dependencies:
+    lodash.castarray "^4.4.0"
+    lodash.isplainobject "^4.0.6"
+    lodash.merge "^4.6.2"
+    postcss-selector-parser "6.0.10"
 
 "@tanstack/react-table@^8.11.8":
   version "8.11.8"
@@ -9805,6 +9879,14 @@ css-color-keywords@^1.0.0:
   resolved "https://registry.yarnpkg.com/css-color-keywords/-/css-color-keywords-1.0.0.tgz#fea2616dc676b2962686b3af8dbdbe180b244e05"
   integrity sha512-FyyrDHZKEjXDpNJYvVsV960FiqQyXc/LlYmsxl2BcdMb2WPx0OGRVgTg55rPSyLSNMqP52R9r8geSp7apN3Ofg==
 
+css-selector-tokenizer@^0.8:
+  version "0.8.0"
+  resolved "https://registry.yarnpkg.com/css-selector-tokenizer/-/css-selector-tokenizer-0.8.0.tgz#88267ef6238e64f2215ea2764b3e2cf498b845dd"
+  integrity sha512-Jd6Ig3/pe62/qe5SBPTN8h8LeUg/pT4lLgtavPf7updwwHpvFzxvOQBHYj2LZDMjUnBzgvIUSjRcf6oT5HzHFg==
+  dependencies:
+    cssesc "^3.0.0"
+    fastparse "^1.1.2"
+
 css-to-react-native@^3.0.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/css-to-react-native/-/css-to-react-native-3.2.0.tgz#cdd8099f71024e149e4f6fe17a7d46ecd55f1e32"
@@ -9874,6 +9956,11 @@ csv@^5.5.3:
     csv-stringify "^5.6.5"
     stream-transform "^2.1.3"
 
+culori@^3:
+  version "3.3.0"
+  resolved "https://registry.yarnpkg.com/culori/-/culori-3.3.0.tgz#e33530adbd124d53bd6550394397e695eaaed739"
+  integrity sha512-pHJg+jbuFsCjz9iclQBqyL3B2HLCBF71BwVNujUYEvCeQMvV97R59MNK3R2+jgJ3a1fcZgI9B3vYgz8lzr/BFQ==
+
 d@1, d@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/d/-/d-1.0.1.tgz#8698095372d58dbee346ffd0c7093f99f8f9eb5a"
@@ -9881,6 +9968,16 @@ d@1, d@^1.0.1:
   dependencies:
     es5-ext "^0.10.50"
     type "^1.0.1"
+
+daisyui@^4.12.10:
+  version "4.12.10"
+  resolved "https://registry.yarnpkg.com/daisyui/-/daisyui-4.12.10.tgz#fc26b6da72c5855f4677d2f100f02e06c8e8a70f"
+  integrity sha512-jp1RAuzbHhGdXmn957Z2XsTZStXGHzFfF0FgIOZj3Wv9sH7OZgLfXTRZNfKVYxltGUOBsG1kbWAdF5SrqjebvA==
+  dependencies:
+    css-selector-tokenizer "^0.8"
+    culori "^3"
+    picocolors "^1"
+    postcss-js "^4"
 
 damerau-levenshtein@^1.0.8:
   version "1.0.8"
@@ -11803,6 +11900,11 @@ fastfile@0.0.20:
   version "0.0.20"
   resolved "https://registry.yarnpkg.com/fastfile/-/fastfile-0.0.20.tgz#794a143d58cfda2e24c298e5ef619c748c8a1879"
   integrity sha512-r5ZDbgImvVWCP0lA/cGNgQcZqR+aYdFx3u+CtJqUE510pBUVGMn4ulL/iRTI4tACTYsNJ736uzFxEBXesPAktA==
+
+fastparse@^1.1.2:
+  version "1.1.2"
+  resolved "https://registry.yarnpkg.com/fastparse/-/fastparse-1.1.2.tgz#91728c5a5942eced8531283c79441ee4122c35a9"
+  integrity sha512-483XLLxTVIwWK3QTrMGRqUfUpoOs/0hbQrl2oz4J0pAcm3A3bu84wxTFqGqkJzewCLdME38xJLJAxBABfQT8sQ==
 
 fastq@^1.6.0:
   version "1.15.0"
@@ -14837,6 +14939,11 @@ lodash.camelcase@^4.3.0:
   resolved "https://registry.yarnpkg.com/lodash.camelcase/-/lodash.camelcase-4.3.0.tgz#b28aa6288a2b9fc651035c7711f65ab6190331a6"
   integrity sha512-TwuEnCnxbc3rAvhf/LbG7tJUDzhqXyFnv3dtzLOPgCG/hODL7WFnsbwktkD7yUV0RrreP/l1PALq/YSg6VvjlA==
 
+lodash.castarray@^4.4.0:
+  version "4.4.0"
+  resolved "https://registry.yarnpkg.com/lodash.castarray/-/lodash.castarray-4.4.0.tgz#c02513515e309daddd4c24c60cfddcf5976d9115"
+  integrity sha512-aVx8ztPv7/2ULbArGJ2Y42bG1mEQ5mGjpdvrbJcJFU3TbYybe+QlLS4pst9zV52ymy2in1KpFPiZnAOATxD4+Q==
+
 lodash.debounce@^4.0.8:
   version "4.0.8"
   resolved "https://registry.yarnpkg.com/lodash.debounce/-/lodash.debounce-4.0.8.tgz#82d79bff30a67c4005ffd5e2515300ad9ca4d7af"
@@ -17069,15 +17176,15 @@ pgtools@^1.0.0:
     pg-connection-string "^2.5.0"
     yargs "^17.7.1"
 
+picocolors@^1, picocolors@^1.0.1:
+  version "1.0.1"
+  resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.0.1.tgz#a8ad579b571952f0e5d25892de5445bcfe25aaa1"
+  integrity sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==
+
 picocolors@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.0.0.tgz#cb5bdc74ff3f51892236eaf79d68bc44564ab81c"
   integrity sha512-1fygroTLlHu66zi26VoTDv8yRgm0Fccecssto+MhsZ0D/DGW2sm8E8AjW7NU5VVTRt5GxbeZ5qBuJr+HyLYkjQ==
-
-picocolors@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/picocolors/-/picocolors-1.0.1.tgz#a8ad579b571952f0e5d25892de5445bcfe25aaa1"
-  integrity sha512-anP1Z8qwhkbmu7MFP5iTt+wQKXgwzf7zTyGlcdzabySa9vd0Xt392U0rVmz9poOaBj0uHJKyyo9/upk0HrEQew==
 
 picomatch@^2.0.4, picomatch@^2.2.1, picomatch@^2.2.2, picomatch@^2.2.3, picomatch@^2.3.1:
   version "2.3.1"
@@ -17185,7 +17292,7 @@ poseidon-lite@^0.0.2:
   resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.0.2.tgz#dc1a7c57f9393a586c5c9efc21b72b77e2c1acb6"
   integrity sha512-bGdDPTOQkJbBjbtSEWc3gY+YhqlGTxGlZ8041F8TGGg5QyGGp1Cfs4b8AEnFFjHbkPg6WdWXUgEjU1GKOKWAPw==
 
-poseidon-lite@^0.2.1:
+poseidon-lite@^0.2.0, poseidon-lite@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.2.1.tgz#7ad98e3a3aa5b91a1fd3a61a87460e9e46fd76d6"
   integrity sha512-xIr+G6HeYfOhCuswdqcFpSX47SPhm0EpisWJ6h7fHlWwaVIvH3dLnejpatrtw6Xc6HaLrpq05y7VRfvDmDGIog==
@@ -17204,7 +17311,7 @@ postcss-import@^15.1.0:
     read-cache "^1.0.0"
     resolve "^1.1.7"
 
-postcss-js@^4.0.1:
+postcss-js@^4, postcss-js@^4.0.1:
   version "4.0.1"
   resolved "https://registry.yarnpkg.com/postcss-js/-/postcss-js-4.0.1.tgz#61598186f3703bab052f1c4f7d805f3991bee9d2"
   integrity sha512-dDLF8pEO191hJMtlHFPRa8xsizHaM82MLfNkUHdUtVEV3tgTp5oj+8qbEqYM57SLfc74KSbw//4SeJma2LRVIw==
@@ -17267,6 +17374,14 @@ postcss-nested@^6.0.1:
   integrity sha512-mEp4xPMi5bSWiMbsgoPfcP74lsWLHkQbZc3sY+jWYd65CUwXrUaTp0fmNpa01ZcETKlIgUdFN/MpS2xZtqL9dQ==
   dependencies:
     postcss-selector-parser "^6.0.11"
+
+postcss-selector-parser@6.0.10:
+  version "6.0.10"
+  resolved "https://registry.yarnpkg.com/postcss-selector-parser/-/postcss-selector-parser-6.0.10.tgz#79b61e2c0d1bfc2602d549e11d0876256f8df88d"
+  integrity sha512-IQ7TZdoaqbT+LCpShg46jnZVlhWD2w6iQYAcYXfHARZ7X1t/UGhhceQDs5X0cGqKvYlHNOuv7Oa1xmb0oQuA3w==
+  dependencies:
+    cssesc "^3.0.0"
+    util-deprecate "^1.0.2"
 
 postcss-selector-parser@^6.0.11:
   version "6.0.13"

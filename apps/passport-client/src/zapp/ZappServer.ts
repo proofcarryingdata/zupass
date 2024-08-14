@@ -1,12 +1,17 @@
+import { GPCPCDArgs, GPCPCDPackage, GPCPCDTypeName } from "@pcd/gpc-pcd";
+import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { PODPCD } from "@pcd/pod-pcd";
 import {
   ZupassAPI,
   ZupassFileSystem,
-  ZupassFolderContent
+  ZupassFolderContent,
+  ZupassGPC
 } from "@pcd/zupass-client";
 import { z } from "zod";
 import { StateContextValue } from "../dispatch";
+import { EmbeddedScreenType } from "../embedded";
+import { ClientChannel } from "./useZappServer";
 
 function safeInput<This extends BaseZappServer, Args extends unknown[], Return>(
   parser: z.ZodSchema<Args>
@@ -30,7 +35,8 @@ function safeInput<This extends BaseZappServer, Args extends unknown[], Return>(
 abstract class BaseZappServer {
   constructor(
     private context: StateContextValue,
-    private zapp: PODPCD
+    private zapp: PODPCD,
+    private clientChannel: ClientChannel
   ) {}
 
   public getZapp(): PODPCD {
@@ -40,11 +46,19 @@ abstract class BaseZappServer {
   public getContext(): StateContextValue {
     return this.context;
   }
+
+  public getClientChannel(): ClientChannel {
+    return this.clientChannel;
+  }
 }
 
 class FileSystem extends BaseZappServer implements ZupassFileSystem {
-  public constructor(context: StateContextValue, zapp: PODPCD) {
-    super(context, zapp);
+  public constructor(
+    context: StateContextValue,
+    zapp: PODPCD,
+    clientChannel: ClientChannel
+  ) {
+    super(context, zapp, clientChannel);
   }
 
   @safeInput(z.tuple([z.string()]))
@@ -98,7 +112,8 @@ class FileSystem extends BaseZappServer implements ZupassFileSystem {
     await this.getContext().dispatch({
       type: "add-pcds",
       folder: path,
-      pcds: [content]
+      pcds: [content],
+      upsert: true
     });
   }
 
@@ -106,12 +121,55 @@ class FileSystem extends BaseZappServer implements ZupassFileSystem {
   public async delete(path: string): Promise<void> {}
 }
 
+class GPC extends BaseZappServer implements ZupassGPC {
+  public constructor(
+    context: StateContextValue,
+    zapp: PODPCD,
+    clientChannel: ClientChannel
+  ) {
+    super(context, zapp, clientChannel);
+  }
+
+  public async prove(args: GPCPCDArgs): Promise<SerializedPCD> {
+    const req: PCDGetRequest<typeof GPCPCDPackage> = {
+      type: PCDRequestType.Get,
+      returnUrl: "",
+      args,
+      pcdType: GPCPCDTypeName,
+      postMessage: false
+    };
+    this.getClientChannel().showZupass();
+    return new Promise((resolve) => {
+      this.getContext().dispatch({
+        type: "show-embedded-screen",
+        screen: {
+          type: EmbeddedScreenType.EmbeddedGetRequest,
+          request: req,
+          callback: (serialized: SerializedPCD) => {
+            this.getClientChannel().hideZupass();
+            this.getContext().dispatch({
+              type: "hide-embedded-screen"
+            });
+            resolve(serialized);
+          }
+        }
+      });
+    });
+  }
+}
+
 export class ZappServer extends BaseZappServer implements ZupassAPI {
   public fs: ZupassFileSystem;
+  public gpc: ZupassGPC;
   public _version = "1" as const;
 
-  constructor(context: StateContextValue, zapp: PODPCD) {
-    super(context, zapp);
-    this.fs = new FileSystem(context, zapp);
+  constructor(
+    context: StateContextValue,
+    zapp: PODPCD,
+    clientChannel: ClientChannel
+  ) {
+    super(context, zapp, clientChannel);
+    this.fs = new FileSystem(context, zapp, clientChannel);
+    this.gpc = new GPC(context, zapp, clientChannel);
   }
 }

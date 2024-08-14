@@ -10,12 +10,26 @@
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "jsx": "react-jsx",
-    "lib": ["ES2020", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "module": "ES2020",
     "moduleResolution": "Bundler",
     "esModuleInterop": true,
     "sourceMap": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules", "../../node_modules"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "../../node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../packages/lib/zupass-client"
+    }
+  ]
 }

@@ -29,12 +29,19 @@ import { GenericProveSection } from "./GenericProveSection";
  * are objects, supports loading from a URL.
  */
 export function GenericProveScreen({
-  req
+  req,
+  onProve
 }: {
   req: PCDGetRequest;
+  onProve?: (
+    _pcd: PCD,
+    serialized: SerializedPCD | undefined,
+    pendingPCD: PendingPCD | undefined,
+    multiplePCDs?: SerializedPCD[]
+  ) => void;
 }): JSX.Element | null {
   const dispatch = useDispatch();
-  const onProve = useCallback(
+  const onProveCallback = useCallback(
     (
       _pcd: PCD,
       serialized: SerializedPCD | undefined,
@@ -65,6 +72,12 @@ export function GenericProveScreen({
     },
     [req.postMessage, req.returnUrl]
   );
+
+  // This allows us to pass in a custom onProve function for use in embedded
+  // screens.
+  if (!onProve) {
+    onProve = onProveCallback;
+  }
 
   if (req.type !== PCDRequestType.Get) {
     err(dispatch, "Unsupported request", `Expected a PCD GET request`);

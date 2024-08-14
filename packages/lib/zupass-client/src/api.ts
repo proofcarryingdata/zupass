@@ -1,4 +1,5 @@
-import { SerializedPCD } from "@pcd/pcd-types";
+import type { GPCPCDArgs } from "@pcd/gpc-pcd";
+import type { SerializedPCD } from "@pcd/pcd-types";
 
 export type ZupassFolderContent =
   | {
@@ -18,7 +19,12 @@ export interface ZupassFileSystem {
   delete: (path: string) => Promise<void>;
 }
 
+export interface ZupassGPC {
+  prove: (args: GPCPCDArgs) => Promise<SerializedPCD>;
+}
+
 export interface ZupassAPI {
   _version: "1";
   fs: ZupassFileSystem;
+  gpc: ZupassGPC;
 }

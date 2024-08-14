@@ -46,6 +46,9 @@
       "path": "packages/lib/zuauth/tsconfig.cjs.json"
     },
     {
+      "path": "packages/lib/zupass-client/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/lib/zupoll-shared/tsconfig.cjs.json"
     },
     {

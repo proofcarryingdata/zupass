@@ -47,6 +47,7 @@ import {
   addZupassProvider,
   ZUPASS_FEED_URL
 } from "./defaultSubscriptions";
+import { EmbeddedScreenState } from "./embedded";
 import {
   loadEncryptionKey,
   loadPrivacyNoticeAgreed,
@@ -171,7 +172,14 @@ export type Action =
   | {
       type: "initialize-strich";
     }
-  | { type: "delete-account" };
+  | { type: "delete-account" }
+  | {
+      type: "show-embedded-screen";
+      screen: EmbeddedScreenState["screen"];
+    }
+  | {
+      type: "hide-embedded-screen";
+    };
 
 export type StateContextValue = {
   getState: GetState;
@@ -303,6 +311,10 @@ export async function dispatch(
       return initializeStrich(state, update);
     case "delete-account":
       return deleteAccount(state, update);
+    case "show-embedded-screen":
+      return showEmbeddedScreen(state, update, action.screen);
+    case "hide-embedded-screen":
+      return hideEmbeddedScreen(state, update);
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -1485,4 +1497,23 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   } else {
     alert(`Error deleting account: ${res.error}`);
   }
+}
+
+async function showEmbeddedScreen(
+  state: AppState,
+  update: ZuUpdate,
+  screen: EmbeddedScreenState["screen"]
+): Promise<void> {
+  update({
+    embeddedScreen: { screen }
+  });
+}
+
+async function hideEmbeddedScreen(
+  state: AppState,
+  update: ZuUpdate
+): Promise<void> {
+  update({
+    embeddedScreen: undefined
+  });
 }

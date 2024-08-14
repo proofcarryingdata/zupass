@@ -69,6 +69,7 @@ export function connect(
   dialog.appendChild(container);
   const shadow = container.attachShadow({ mode: "open" });
 
+  element.innerHTML = "";
   element.appendChild(dialog);
   const iframe = document.createElement("iframe");
   const sandboxAttr = document.createAttribute("sandbox");
@@ -146,6 +147,7 @@ export function connect(
         // @todo Blink (and maybe Webkit) will discard messages if there's no
         // handler yet, so we need to wait a bit and/or retry until Zupass is
         // ready
+        // Zupass takes a few seconds to load, so waiting isn't a bad solution
         await new Promise<void>((resolve) => {
           window.setTimeout(() => resolve(), 1000);
         });
