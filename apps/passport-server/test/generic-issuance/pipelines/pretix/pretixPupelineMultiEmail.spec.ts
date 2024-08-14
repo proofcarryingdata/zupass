@@ -1,7 +1,15 @@
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { expectIsEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
-import { requestGenericIssuanceSemaphoreGroup } from "@pcd/passport-interface";
+import { EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
+import {
+  requestGenericIssuanceSemaphoreGroup,
+  requestPollFeed,
+  ZUPASS_CREDENTIAL_REQUEST,
+  ZupassFeedIds
+} from "@pcd/passport-interface";
+import { isReplaceInFolderAction, PCDActionType } from "@pcd/pcd-collection";
 import { expectIsPODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -13,12 +21,19 @@ import { GenericIssuanceService } from "../../../../src/services/generic-issuanc
 import { PretixPipeline } from "../../../../src/services/generic-issuance/pipelines/PretixPipeline";
 import { PipelineUser } from "../../../../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../../../../src/types";
+import { testLogin } from "../../../user/testLogin";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
-import { expectLength, expectToExist, expectTrue } from "../../../util/util";
+import {
+  expectLength,
+  expectToExist,
+  expectTrue,
+  randomEmail
+} from "../../../util/util";
 import {
   assertUserMatches,
   checkPipelineInfoEndpoint,
+  makeTestCredentials,
   requestTicketsFromPipeline
 } from "../../util";
 import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
@@ -26,7 +41,7 @@ import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline}.
  */
-describe("generic issuance - PretixPipeline", function () {
+describe.only("generic issuance - PretixPipeline - multi-email support", function () {
   const nowDate = new Date();
   const now = Date.now();
 
@@ -52,6 +67,9 @@ describe("generic issuance - PretixPipeline", function () {
   } = setupTestPretixPipeline();
 
   const pipelineDefinitions = [ethLatAmPipeline];
+
+  let testUserIdentity: Identity;
+  const testUserInitialEmail = randomEmail();
 
   /**
    * Sets up a Zupass/Generic issuance backend with one pipeline:
@@ -163,11 +181,66 @@ describe("generic issuance - PretixPipeline", function () {
     // TODO: comprehensive tests of create update read delete
   });
 
+  step("should be able to log in", async function () {
+    const loginResult = await testLogin(giBackend, testUserInitialEmail, {
+      force: true,
+      expectUserAlreadyLoggedIn: false,
+      expectEmailIncorrect: false,
+      skipSetupPassword: false
+    });
+
+    expect(loginResult?.identity).to.not.be.empty;
+    testUserIdentity = loginResult?.identity as Identity;
+  });
+
+  step(
+    "user should be able to be issued an attested email PCD from the server",
+    async function () {
+      const pollFeedResult = await requestPollFeed(
+        `${giBackend.expressContext.localEndpoint}/feeds`,
+        {
+          pcd: await makeTestCredentials(
+            testUserIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
+          feedId: ZupassFeedIds.Email
+        }
+      );
+
+      if (!pollFeedResult.success) {
+        throw new Error("did not expect an error here");
+      }
+
+      expect(pollFeedResult.value?.actions.length).to.eq(2);
+
+      // Zeroth action clears the folder, so this one contains the email
+      const action = pollFeedResult?.value?.actions?.[1];
+      expectToExist(action, isReplaceInFolderAction);
+      expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
+      expect(action.pcds.length).to.eq(1);
+      expect(action.pcds[0].type).to.eq(EmailPCDTypeName);
+
+      // Check that the PCD contains the expected email address
+      const deserializedPCD = await EmailPCDPackage.deserialize(
+        action.pcds[0].pcd
+      );
+      expect(deserializedPCD.claim.emailAddress).to.eq(testUserInitialEmail);
+
+      // Check that the PCD verifies
+      expect(await EmailPCDPackage.verify(deserializedPCD)).to.be.true;
+
+      // Check the public key
+      expect(deserializedPCD.proof.eddsaPCD.claim.publicKey).to.deep.eq(
+        await giBackend.services.issuanceService?.getEdDSAPublicKey()
+      );
+    }
+  );
+
   /**
    * Test for {@link PretixPipeline} for Eth LatAm.
    */
   step(
-    "PretixPipeline issuance and checkin and PipelineInfo for Eth LatAm",
+    "PretixPipeline issuance - specifically multi-email support",
     async () => {
       expectToExist(giService);
       const pipelines = await giService.getAllPipelineInstances();
@@ -177,7 +250,6 @@ describe("generic issuance - PretixPipeline", function () {
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(ethLatAmPipeline.id);
       const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
-      const ethLatAmIssuanceDateTime = new Date();
       const attendeeTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
         ethLatAmTicketFeedUrl,
