@@ -272,12 +272,10 @@ export class FeedSubscriptionManager {
 
   private async makeAlternateCredentialPCD(
     authKey: string
-  ): Promise<SerializedPCD[]> {
-    return [
-      await ObjPCDPackage.serialize(
-        new ObjPCD(randomUUID(), {}, { obj: { authKey } })
-      )
-    ];
+  ): Promise<SerializedPCD> {
+    return ObjPCDPackage.serialize(
+      new ObjPCD(randomUUID(), {}, { obj: { authKey } })
+    );
   }
 
   /**
@@ -293,68 +291,35 @@ export class FeedSubscriptionManager {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {
-      const authKey = undefined; //await this.getAuthKeyForFeed(subscription);
+      const authKey = await this.getAuthKeyForFeed(subscription);
 
-      const pcdCredentials: SerializedPCD[] | undefined = authKey
+      const pcdCredential: SerializedPCD | undefined = authKey
         ? await this.makeAlternateCredentialPCD(authKey)
-        : [
-            await credentialManager.requestCredential({
-              signatureType: "sempahore-signature-pcd",
-              pcdType: subscription.feed.credentialRequest.pcdType
-            })
-          ];
-
-      const results = await Promise.all(
-        pcdCredentials.map((credential) => {
-          return this.api.pollFeed(subscription.providerUrl, {
-            feedId: subscription.feed.id,
-            pcd: credential
+        : await credentialManager.requestCredential({
+            signatureType: "sempahore-signature-pcd",
+            pcdType: subscription.feed.credentialRequest.pcdType
           });
-        })
-      );
 
-      const failure = results.find((r) => !r.success);
-      if (failure?.success === false) {
-        if (failure.code === 410) {
-          this.flagSubscriptionAsEnded(subscription.id, failure.error);
+      const result = await this.api.pollFeed(subscription.providerUrl, {
+        feedId: subscription.feed.id,
+        pcd: pcdCredential
+      });
+
+      if (result?.success === false) {
+        if (result.code === 410) {
+          this.flagSubscriptionAsEnded(subscription.id, result.error);
           return responses;
         }
 
-        throw new Error(failure.error);
+        throw new Error(result.error);
       }
 
-      const actions = results.flatMap((r) => {
-        if (r.success) {
-          return r.value.actions;
-        }
-        return [];
-      });
+      this.validateActions(subscription, result.value.actions);
 
-      // in the case that we're requesting from the same feed
-      // multiple times using two different email credentials,
-      // the result of one of the requests would overwrite the
-      // result of the other request, given both have a 'delete'
-      // action. thus, we coalesce equivalent delete folder actions
-      // into the the first occurrence of a deletion for each folder.
-      const filteredActions = [];
-      const seen = new Set<string>();
-      for (const action of actions) {
-        if (action.type === "DeleteFolder_action") {
-          const key = action.folder;
-          if (seen.has(key)) {
-            continue;
-          } else {
-            seen.add(key);
-            filteredActions.push(action);
-          }
-        } else {
-          filteredActions.push(action);
-        }
-      }
-
-      this.validateActions(subscription, filteredActions);
-
-      const subscriptionActions = { actions: filteredActions, subscription };
+      const subscriptionActions = {
+        actions: result.value.actions,
+        subscription
+      };
 
       if (onFinish) {
         await onFinish(subscriptionActions);
