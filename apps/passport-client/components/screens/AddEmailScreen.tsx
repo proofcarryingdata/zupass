@@ -168,12 +168,12 @@ export function AddEmailScreen(): JSX.Element | null {
         <Spacer h={8} />
         {self.emails.length === 1 ? (
           <>
-            Your current account email is{" "}
+            Your current account email is:{" "}
             {self.emails.map((e) => `'${e}'`).join(", ")}
           </>
         ) : (
           <>
-            Your current emails are{" "}
+            Your current emails are:{" "}
             {self.emails.map((e) => `'${e}'`).join(", ")}
           </>
         )}
@@ -192,7 +192,17 @@ export function AddEmailScreen(): JSX.Element | null {
           Enter a new email address to add to your account. We'll send a
           confirmation code to verify it.
           <Spacer h={8} />
-          Your current email is {self.emails.map((e) => `'${e}'`).join(", ")}
+          {self.emails.length === 1 ? (
+            <>
+              Your current account email is:{" "}
+              {self.emails.map((e) => `'${e}'`).join(", ")}
+            </>
+          ) : (
+            <>
+              Your current emails are:{" "}
+              {self.emails.map((e) => `'${e}'`).join(", ")}
+            </>
+          )}
         </TextCenter>
         <Spacer h={24} />
         <BigInput

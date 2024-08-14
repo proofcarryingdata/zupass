@@ -185,12 +185,12 @@ export function ChangeEmailScreen(): JSX.Element | null {
           <Spacer h={8} />
           {self.emails.length === 1 ? (
             <>
-              Your current account email is{" "}
+              Your current account email is:{" "}
               {self.emails.map((e) => `'${e}'`).join(", ")}
             </>
           ) : (
             <>
-              Your current emails are{" "}
+              Your current emails are:{" "}
               {self.emails.map((e) => `'${e}'`).join(", ")}
             </>
           )}
