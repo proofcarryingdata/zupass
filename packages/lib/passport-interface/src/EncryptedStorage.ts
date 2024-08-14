@@ -7,12 +7,24 @@ import { FeedSubscriptionManager } from "./SubscriptionManager";
 import { User } from "./zuzalu";
 
 export interface SyncedEncryptedStorageV1 {
-  self: User;
+  self: {
+    uuid: string;
+    commitment: string;
+    email: string;
+    salt: string | null;
+    terms_agreed: number;
+  };
   pcds: SerializedPCD[];
 }
 
 export interface SyncedEncryptedStorageV2 {
-  self: User;
+  self: {
+    uuid: string;
+    commitment: string;
+    email: string;
+    salt: string | null;
+    terms_agreed: number;
+  };
 
   /**
    * Serialized {@link PCDCollection}.
@@ -23,7 +35,13 @@ export interface SyncedEncryptedStorageV2 {
 
 export interface SyncedEncryptedStorageV3 {
   // Copied from SyncedEncryptedStorageV2
-  self: User;
+  self: {
+    uuid: string;
+    commitment: string;
+    email: string;
+    salt: string | null;
+    terms_agreed: number;
+  };
 
   /**
    * Serialized {@link PCDCollection}.
@@ -37,10 +55,34 @@ export interface SyncedEncryptedStorageV3 {
   _storage_version: "v3";
 }
 
+export interface SyncedEncryptedStorageV4 {
+  // Copied from SyncedEncryptedStorageV2
+  // changed: emails is an array of emails, rather than a single email
+  self: {
+    uuid: string;
+    commitment: string;
+    emails: string[];
+    salt: string | null;
+    terms_agreed: number;
+  };
+
+  /**
+   * Serialized {@link PCDCollection}.
+   */
+  pcds: string;
+
+  /**
+   * Serialized {@link FeedSubscriptionManager}
+   */
+  subscriptions: string;
+  _storage_version: "v4";
+}
+
 export type SyncedEncryptedStorage =
   | SyncedEncryptedStorageV1
   | SyncedEncryptedStorageV2
-  | SyncedEncryptedStorageV3;
+  | SyncedEncryptedStorageV3
+  | SyncedEncryptedStorageV4;
 
 export function isSyncedEncryptedStorageV1(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -63,6 +105,13 @@ export function isSyncedEncryptedStorageV3(
   return storage._storage_version === "v3";
 }
 
+export function isSyncedEncryptedStorageV4(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  storage: any
+): storage is SyncedEncryptedStorageV4 {
+  return storage._storage_version === "v4";
+}
+
 /**
  * Deserialize a decrypted storage object and set up the PCDCollection and
  * FeedSubscriptionManager to manage its data.  If the storage comes from
@@ -80,7 +129,13 @@ export async function deserializeStorage(
   let pcds: PCDCollection;
   let subscriptions: FeedSubscriptionManager;
 
-  if (isSyncedEncryptedStorageV3(storage)) {
+  if (isSyncedEncryptedStorageV4(storage)) {
+    pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds);
+    subscriptions = FeedSubscriptionManager.deserialize(
+      new NetworkFeedApi(),
+      storage.subscriptions
+    );
+  } else if (isSyncedEncryptedStorageV3(storage)) {
     pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds);
     subscriptions = FeedSubscriptionManager.deserialize(
       new NetworkFeedApi(),
@@ -121,7 +176,7 @@ export async function serializeStorage(
     pcds: await pcds.serializeCollection(),
     self: user,
     subscriptions: subscriptions.serialize(),
-    _storage_version: "v3"
+    _storage_version: "v4"
   };
   return {
     serializedStorage: serializedStorage,
