@@ -1,6 +1,5 @@
 # todo
 
-- fix problem where too many fields are returned from `fetchZuconnect` and `fetchZuzalu` - users
 - consider `ZupassUserJson` being incompatible in the new version
 - add logging everywhere that is appropriate
 - tests?
@@ -9,6 +8,7 @@
 
 # done
 
+- fix problem where too many fields are returned from `fetchZuconnect` and `fetchZuzalu` - users
 - need to warn people about potentially destructive actions, and confirm befre executing them
 - make error message for when an email already exists in the user table actually communicate that to the user
 - e2e manual test this myself
