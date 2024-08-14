@@ -1,19 +1,9 @@
 import { SerializedPCD } from "@pcd/pcd-types";
 import { ZupassFolderContent } from "@pcd/zupass-client";
 import { ReactNode, useMemo, useState } from "react";
+import { TryIt } from "../components/TryIt";
 import { useEmbeddedZupass } from "../hooks/useEmbeddedZupass";
 import { ZUPASS_URL } from "../main";
-
-function TryIt({ onClick, label }: { onClick: () => void; label: string }) {
-  return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm">Try it:</span>
-      <button className="btn btn-primary" onClick={onClick}>
-        {label}
-      </button>
-    </div>
-  );
-}
 
 const sampleSerializedPCD =
   '{"pcd":"{\\"id\\":\\"3de7d407-9990-41ce-b038-bc9dc39a11fb\\",\\"claim\\":{\\"entries\\":{\\"owner\\":{\\"type\\":\\"cryptographic\\",\\"value\\":18711405342588116796533073928767088921854096266145046362753928030796553161041},\\"zupass_description\\":{\\"type\\":\\"string\\",\\"value\\":\\"friendly kitty says hello\\"},\\"zupass_display\\":{\\"type\\":\\"string\\",\\"value\\":\\"collectable\\"},\\"zupass_image_url\\":{\\"type\\":\\"string\\",\\"value\\":\\"https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Felis_catus-cat_on_snow.jpg/358px-Felis_catus-cat_on_snow.jpg\\"},\\"zupass_title\\":{\\"type\\":\\"string\\",\\"value\\":\\"friendly kitty\\"}},\\"signerPublicKey\\":\\"su2CUR47c1us1FwPUN3RNZWzit9nmya2QD60Y/iffxI\\"},\\"proof\\":{\\"signature\\":\\"JEVdyUD5GzZuq1HKBRR4EdVSm5IZ2hVcUWOsZzxEfofp7GrNkwQcPAqqvDY6PFy2SI5uym90g7EuGF93ylV2Aw\\"}}","type":"pod-pcd"}';
