@@ -2,10 +2,7 @@
 
 - consider RMW race condition
 - consider `ZupassUserJson` being incompatible in the new version
-- turn off old auth key feature.
 - add logging everywhere that is appropriate
-- add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
-- what do we do with tickets associated with an email that was just removed?
 - need to warn people about potentially destructive actions, and confirm befre executing them
 - fix problem where too many fields are returned from `fetchZuconnect` and `fetchZuzalu` - users
 - stable order for user email addresses
@@ -13,6 +10,7 @@
 - tests?
 - make error message for when an email already exists in the user table actually communicate that to the user
 - make error for when an email is already owned by YOU
+- add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
 
 # done
 
@@ -60,6 +58,7 @@
 
 # won't do
 
+- turn off old auth key feature.
 - multiple semaphore identities.
 - specific email copy for 'adding new email address' action with verification code
 - copy that communicates how to 'merge'
