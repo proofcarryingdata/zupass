@@ -2,7 +2,7 @@ import { Pool } from "postgres-pool";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
 /**
- * Saves a new user. If a user with the given email already exists, overwrites their
+ * Saves a new user. If a user with the given UUID already exists, overwrites their
  * information. Returns the user's UUID.
  */
 export async function upsertUser(
