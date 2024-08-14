@@ -42,6 +42,15 @@ export function RemoveEmailScreen(): JSX.Element | null {
   const onRemoveEmail = useCallback(async () => {
     if (loading || !self || !emailToRemove) return;
 
+    if (
+      confirm(
+        "Are you sure you want to remove this email? This action" +
+          " may result in your tickets with that email being deleted!"
+      )
+    ) {
+      return;
+    }
+
     setLoading(true);
     setError("");
 

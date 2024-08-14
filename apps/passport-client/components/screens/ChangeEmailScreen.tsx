@@ -100,6 +100,15 @@ export function ChangeEmailScreen(): JSX.Element | null {
     setLoading(true);
     setError("");
 
+    if (
+      confirm(
+        "Are you sure you want to change your email? This action" +
+          " may result in your tickets with your old email being deleted!"
+      )
+    ) {
+      return;
+    }
+
     try {
       const credential = await new CredentialManager(
         stateContext.getState().identity,
