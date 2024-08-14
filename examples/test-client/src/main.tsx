@@ -8,7 +8,8 @@ import {
   useEmbeddedZupass
 } from "./hooks/useEmbeddedZupass";
 
-export const ZUPASS_URL = process.env.ZUPASS_URL;
+export const ZUPASS_URL =
+  process.env.ZUPASS_URL || "https://staging-rob.zupass.org";
 
 const zapp = {
   name: "test-client",
