@@ -34,7 +34,19 @@ group by u.uuid;`
   const usersWithTickets: UserWithZuzaluTickets[] = [];
 
   for (const row of result.rows) {
-    const user: UserRow = row;
+    const user: UserRow = {
+      uuid: row.uuid,
+      commitment: row.commitment,
+      emails: row.emails,
+      salt: row.salt,
+      encryption_key: row.encryption_key,
+      terms_agreed: row.terms_agreed,
+      extra_issuance: row.extra_issuance,
+      time_created: row.time_created,
+      time_updated: row.time_updated,
+      auth_key: row.auth_key
+    } satisfies UserRow;
+
     const zuzaluTickets: ZuzaluPretixTicket[] = [];
 
     for (let i = 0; i < row.names.length; i++) {
