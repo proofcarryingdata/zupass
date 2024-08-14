@@ -171,6 +171,13 @@ export function initAccountRoutes(
   });
 
   /**
+   * Prevent old clients from using the old /account/user route.
+   */
+  app.get("/account/user/:uuid", async (req: Request, res: Response) => {
+    res.status(503).send("Not implemented");
+  });
+
+  /**
    * Gets a Zupass user by their uuid.
    * If the service is not ready, returns a 503 server error.
    * If the user does not exist, returns a 404.
@@ -179,7 +186,7 @@ export function initAccountRoutes(
    * @todo - should we censor part of this unless you're the given user? eg.
    * should we be returning the `salt` here?
    */
-  app.get("/account/user/:uuid", async (req: Request, res: Response) => {
+  app.get("/v2/account/user/:uuid", async (req: Request, res: Response) => {
     await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
   });
 
