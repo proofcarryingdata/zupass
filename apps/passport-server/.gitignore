@@ -5,3 +5,4 @@ envs
 db
 *.ignore
 dev-build
+*.tsbuildinfo

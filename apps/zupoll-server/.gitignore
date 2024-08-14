@@ -2,3 +2,4 @@
 .prod.env
 .staging.env
 *.env
+*.tsbuildinfo
