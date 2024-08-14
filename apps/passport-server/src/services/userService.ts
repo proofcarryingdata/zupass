@@ -602,15 +602,6 @@ export class UserService {
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
   ): Promise<AddUserEmailResponseValue> {
-    if (!validateEmail(emailToAdd)) {
-      throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
-    }
-
-    const maybeExistingUserOfNewEmail = await this.getUserByEmail(emailToAdd);
-    if (maybeExistingUserOfNewEmail) {
-      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
-    }
-
     let credential: VerifiedCredential;
     try {
       const verifiedCredential =
@@ -621,6 +612,15 @@ export class UserService {
       credential = verifiedCredential;
     } catch {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
+    }
+
+    if (!validateEmail(emailToAdd)) {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
+    }
+
+    const maybeExistingUserOfNewEmail = await this.getUserByEmail(emailToAdd);
+    if (maybeExistingUserOfNewEmail) {
+      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
     }
 
     const requestingUser = await this.getUserByCommitment(
@@ -736,15 +736,6 @@ export class UserService {
     pcd: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
   ): Promise<ChangeUserEmailResponseValue> {
-    if (!validateEmail(newEmail)) {
-      throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
-    }
-
-    const maybeExistingUserOfNewEmail = await this.getUserByEmail(newEmail);
-    if (maybeExistingUserOfNewEmail) {
-      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
-    }
-
     let credential: VerifiedCredential;
     try {
       const verifiedCredential = await this.credentialSubservice.tryVerify(pcd);
@@ -756,11 +747,27 @@ export class UserService {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
+    const maybeExistingUserOfNewEmail = await this.getUserByEmail(newEmail);
+    if (maybeExistingUserOfNewEmail) {
+      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
+    }
+
+    if (!validateEmail(newEmail)) {
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
+    }
+
     const requestingUser = await this.getUserByCommitment(
       credential.semaphoreId
     );
     if (!requestingUser) {
       throw new PCDHTTPError(404, EmailUpdateError.UserNotFound);
+    }
+
+    if (requestingUser.emails.length !== 1) {
+      throw new PCDHTTPError(
+        400,
+        EmailUpdateError.CantChangeWhenMultipleEmails
+      );
     }
 
     if (oldEmail !== requestingUser.emails[0]) {
@@ -788,13 +795,6 @@ export class UserService {
 
     if (!isCodeValid) {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidConfirmationCode);
-    }
-
-    if (requestingUser.emails.length !== 1) {
-      throw new PCDHTTPError(
-        400,
-        EmailUpdateError.CantChangeWhenMultipleEmails
-      );
     }
 
     try {
