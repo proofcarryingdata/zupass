@@ -219,6 +219,12 @@ export function ChangeEmailScreen(): JSX.Element | null {
           </>
         ) : (
           <>
+            {error && (
+              <>
+                <ErrorMessage>{error}</ErrorMessage>
+                <Spacer h={16} />
+              </>
+            )}
             <BigInput
               placeholder="Confirmation code"
               value={confirmationCode}

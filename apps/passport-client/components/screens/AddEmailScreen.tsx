@@ -240,6 +240,7 @@ export function AddEmailScreen(): JSX.Element | null {
       </>
     );
   }
+
   return (
     <>
       <MaybeModal />
