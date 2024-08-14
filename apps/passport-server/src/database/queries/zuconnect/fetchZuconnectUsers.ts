@@ -38,7 +38,19 @@ SELECT
   const usersWithTickets: LoggedInZuconnectUser[] = [];
 
   for (const row of result.rows) {
-    const user: UserRow = row;
+    const user = {
+      uuid: row.uuid,
+      commitment: row.commitment,
+      emails: row.emails,
+      salt: row.salt,
+      encryption_key: row.encryption_key,
+      terms_agreed: row.terms_agreed,
+      extra_issuance: row.extra_issuance,
+      time_created: row.time_created,
+      time_updated: row.time_updated,
+      auth_key: row.auth_key
+    } satisfies UserRow;
+
     const zuconnectTickets: ZuconnectTicketInfo[] = [];
 
     for (let i = 0; i < row.names.length; i++) {
