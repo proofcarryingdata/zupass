@@ -20,7 +20,7 @@ export function Navbar({ connecting }: { connecting: boolean }): ReactNode {
   return (
     <div className="navbar bg-base-100 w-full">
       <div className="flex-none">
-        <a className="btn btn-ghost text-lg md:text-xl">Zupass API Client</a>
+        <a className="btn btn-ghost text-lg md:text-xl">PUDDLECRYPTO</a>
       </div>
       <div className="flex-1"></div>
       <div className="flex-none flex items-center">

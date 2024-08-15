@@ -8,13 +8,18 @@
     "lint": "eslint . --max-warnings 0"
   },
   "dependencies": {
+    "@chakra-ui/react": "^2.8.2",
     "@pcd/gpc-pcd": "0.0.5",
-    "@pcd/pod-pcd": "0.1.4",
+    "@pcd/pod": "^0.1.5",
+    "@pcd/pod-pcd": "0.1.5",
+    "@pcd/pod-pcd-ui": "^0.1.5",
     "@pcd/semaphore-identity-pcd": "0.11.4",
     "@pcd/zupass-client": "0.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-icons": "^5.0.1"
+    "react-icons": "^5.0.1",
+    "styled-components": "^6.1.12",
+    "uuid": "^10.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.11.1",

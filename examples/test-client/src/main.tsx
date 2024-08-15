@@ -1,7 +1,7 @@
+import { ChakraProvider } from "@chakra-ui/react";
 import { createRoot } from "react-dom/client";
 import "../styles/index.css";
-import { FileSystem } from "./apis/FileSystem";
-import { GPC } from "./apis/GPC";
+import { FrogCrypto } from "./apis/FrogCrypto";
 import { Navbar } from "./components/Navbar";
 import {
   EmbeddedZupassProvider,
@@ -20,14 +20,16 @@ export default function Main() {
   const { connected } = useEmbeddedZupass();
   return (
     <>
-      <Navbar connecting={!connected} />
-      <div className="container mx-auto my-4 p-4">
-        <p>You can use this page to test the embedded Zupass API.</p>
-        <div className="flex flex-col gap-4 my-4">
-          <FileSystem />
-          <GPC />
+      <ChakraProvider>
+        <Navbar connecting={!connected} />
+        <div className="container mx-auto my-4 p-4">
+          <div className="flex flex-col gap-4 my-4">
+            <FrogCrypto />
+            {/* <FileSystem />
+          <GPC /> */}
+          </div>
         </div>
-      </div>
+      </ChakraProvider>
     </>
   );
 }
