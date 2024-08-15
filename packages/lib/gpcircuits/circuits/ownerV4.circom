@@ -1,6 +1,7 @@
 pragma circom 2.1.8;
 
 include "circomlib/circuits/babyjub.circom";
+include "circomlib/circuits/comparators.circom";
 include "circomlib/circuits/poseidon.circom";
 include "gpc-util.circom";
 
@@ -33,6 +34,14 @@ template OwnerModuleSemaphoreV4 () {
     // Owner's identity commitment (public key hash) to be verified.
     signal input identityCommitmentHash;
 
+    // First step of check that `secretScalar` does not exceed the
+    // order of Baby Jubjub's prime subgroup. Note that a second
+    // bounds check is contained in the call to `BabyPbk()` below, and
+    // both ensure that 0 <= secretScalar < subgroupOrder.
+    var subgroupOrder = 2736030358979909402780800718157159386076813972158567259200215660948447373041;
+    signal upperBoundCheck <== LessThan(251)([secretScalar, subgroupOrder]);
+    upperBoundCheck === 1;
+    
     // Verify semaphore private secrets match the commitment in the POD by
     // re-generating the public commitment to compare.
     signal (computedPublicKeyX, computedPublicKeyY) <== BabyPbk()(secretScalar);

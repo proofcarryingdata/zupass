@@ -9,7 +9,7 @@ include "list-membership.circom";
 include "multituple.circom";
 include "numeric-value.circom";
 include "object.circom";
-include "owner.circom";
+include "ownerV3.circom";
 include "ownerV4.circom";
 include "virtual-entry.circom";
 
@@ -205,31 +205,31 @@ template ProtoPODGPC (
     signal input ownerExternalNullifier;
     
     /*
-     * <=1 OwnerModule with its inputs & outputs.
+     * <=1 OwnerModuleV3 with its inputs & outputs.
      */
 
     // Entry containing owner's Semaphore V3 commitment (public), or -1 to disable ownership checking.
-    signal input ownerEntryIndex[INCLUDE_OWNERV3];
+    signal input ownerV3EntryIndex[INCLUDE_OWNERV3];
 
     // Owner's Semaphore V3 identity (private key) kept hidden and verified.
     signal input ownerSemaphoreV3IdentityNullifier[INCLUDE_OWNERV3], ownerSemaphoreV3IdentityTrapdoor[INCLUDE_OWNERV3];
 
     // Indicator of whether the nullifier hash should be revealed.
-    signal input ownerIsNullifierHashRevealed[INCLUDE_OWNERV3];
+    signal input ownerV3IsNullifierHashRevealed[INCLUDE_OWNERV3];
 
     // Owner module verifies owner's ID, and generates nullifier.
-    signal output ownerRevealedNullifierHash[INCLUDE_OWNERV3];
-    signal ownerIsEnabled[INCLUDE_OWNERV3];
+    signal output ownerV3RevealedNullifierHash[INCLUDE_OWNERV3];
+    signal ownerV3IsEnabled[INCLUDE_OWNERV3];
         
     for (var i = 0; i < INCLUDE_OWNERV3; i++) {
-        ownerIsEnabled[i] <== NOT()(IsZero()(ownerEntryIndex[i] + 1));
-        ownerRevealedNullifierHash[i] <== OwnerModuleSemaphoreV3()(
-            enabled <== ownerIsEnabled[i],
+        ownerV3IsEnabled[i] <== NOT()(IsZero()(ownerV3EntryIndex[i] + 1));
+        ownerV3RevealedNullifierHash[i] <== OwnerModuleSemaphoreV3()(
+            enabled <== ownerV3IsEnabled[i],
             identityNullifier <== ownerSemaphoreV3IdentityNullifier[i],
             identityTrapdoor <== ownerSemaphoreV3IdentityTrapdoor[i],
-            identityCommitmentHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, ownerIsEnabled[i] * ownerEntryIndex[i]),
+            identityCommitmentHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, ownerV3IsEnabled[i] * ownerV3EntryIndex[i]),
             externalNullifier <== ownerExternalNullifier,
-            isNullifierHashRevealed <== ownerIsNullifierHashRevealed[i]
+            isNullifierHashRevealed <== ownerV3IsNullifierHashRevealed[i]
                                                                    );
     }
     /*

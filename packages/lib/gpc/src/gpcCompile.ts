@@ -325,7 +325,7 @@ export function compileProofConfig(
   );
 
   // Create subset of inputs for Semaphore V3 owner module.
-  const circuitOwnerInputs = compileProofOwner(
+  const circuitOwnerV3Inputs = compilerProofOwnerV3(
     proofInputs.owner,
     entryConstraintMetadata.firstOwnerIndex[SEMAPHORE_V3],
     circuitDesc.includeOwnerV3
@@ -384,7 +384,7 @@ export function compileProofConfig(
     ...circuitVirtualEntryInputs,
     ...circuitEntryConstraintInputs,
     ownerExternalNullifier,
-    ...circuitOwnerInputs,
+    ...circuitOwnerV3Inputs,
     ...circuitOwnerV4Inputs,
     ...circuitNumericValueInputs,
     ...circuitMultiTupleInputs,
@@ -842,15 +842,15 @@ function compileProofEntryConstraints(
   };
 }
 
-export function compileProofOwner(
+function compilerProofOwnerV3(
   ownerInput: GPCProofOwnerInputs | undefined,
   firstOwnerIndex: number | undefined,
   paramIncludeOwnerV3: boolean
 ): {
-  ownerEntryIndex: CircuitSignal[];
+  ownerV3EntryIndex: CircuitSignal[];
   ownerSemaphoreV3IdentityNullifier: CircuitSignal[];
   ownerSemaphoreV3IdentityTrapdoor: CircuitSignal[];
-  ownerIsNullifierHashRevealed: CircuitSignal[];
+  ownerV3IsNullifierHashRevealed: CircuitSignal[];
 } {
   if (paramIncludeOwnerV3) {
     // Owner module is enabled if any entry config declared it was an owner
@@ -862,7 +862,7 @@ export function compileProofOwner(
     }
 
     return {
-      ownerEntryIndex: [
+      ownerV3EntryIndex: [
         hasOwner ? BigInt(firstOwnerIndex) : BABY_JUB_NEGATIVE_ONE
       ],
       ownerSemaphoreV3IdentityNullifier: [
@@ -875,16 +875,16 @@ export function compileProofOwner(
           ? ownerInput.semaphoreV3.trapdoor
           : BABY_JUB_NEGATIVE_ONE
       ],
-      ownerIsNullifierHashRevealed: [
+      ownerV3IsNullifierHashRevealed: [
         ownerInput?.externalNullifier !== undefined ? 1n : 0n
       ]
     };
   } else {
     return {
-      ownerEntryIndex: [],
+      ownerV3EntryIndex: [],
       ownerSemaphoreV3IdentityNullifier: [],
       ownerSemaphoreV3IdentityTrapdoor: [],
-      ownerIsNullifierHashRevealed: []
+      ownerV3IsNullifierHashRevealed: []
     };
   }
 }
@@ -999,7 +999,7 @@ export function compileVerifyConfig(
   );
 
   // Create subset of inputs and outputs for Semaphore V3 owner module.
-  const { circuitOwnerInputs, circuitOwnerOutputs } = compileVerifyOwner(
+  const { circuitOwnerV3Inputs, circuitOwnerV3Outputs } = compileVerifyOwnerV3(
     verifyRevealed.owner,
     entryConstraintMetadata.firstOwnerIndex[SEMAPHORE_V3],
     circuitDesc.includeOwnerV3
@@ -1067,7 +1067,7 @@ export function compileVerifyConfig(
       ...circuitVirtualEntryInputs,
       ...circuitEntryConstraintInputs,
       ownerExternalNullifier,
-      ...circuitOwnerInputs,
+      ...circuitOwnerV3Inputs,
       ...circuitOwnerV4Inputs,
       ...circuitNumericValueInputs,
       ...circuitMultiTupleInputs,
@@ -1077,7 +1077,7 @@ export function compileVerifyConfig(
     circuitOutputs: {
       ...circuitEntryOutputs,
       ...circuitVirtualEntryOutputs,
-      ...circuitOwnerOutputs,
+      ...circuitOwnerV3Outputs,
       ...circuitOwnerV4Outputs
     }
   };
@@ -1210,17 +1210,17 @@ function compileVerifyVirtualEntry(
   };
 }
 
-export function compileVerifyOwner(
+function compileVerifyOwnerV3(
   ownerInput: GPCRevealedOwnerClaims | undefined,
   firstOwnerIndex: number | undefined,
   paramIncludeOwnerV3: boolean
 ): {
-  circuitOwnerInputs: {
-    ownerEntryIndex: CircuitSignal[];
-    ownerIsNullifierHashRevealed: CircuitSignal[];
+  circuitOwnerV3Inputs: {
+    ownerV3EntryIndex: CircuitSignal[];
+    ownerV3IsNullifierHashRevealed: CircuitSignal[];
   };
-  circuitOwnerOutputs: {
-    ownerRevealedNullifierHash: CircuitSignal[];
+  circuitOwnerV3Outputs: {
+    ownerV3RevealedNullifierHash: CircuitSignal[];
   };
 } {
   if (paramIncludeOwnerV3) {
@@ -1230,28 +1230,28 @@ export function compileVerifyOwner(
     const hasOwner = firstOwnerIndex !== undefined;
 
     return {
-      circuitOwnerInputs: {
-        ownerEntryIndex: [
+      circuitOwnerV3Inputs: {
+        ownerV3EntryIndex: [
           hasOwner ? BigInt(firstOwnerIndex) : BABY_JUB_NEGATIVE_ONE
         ],
-        ownerIsNullifierHashRevealed: [
+        ownerV3IsNullifierHashRevealed: [
           ownerInput?.externalNullifier !== undefined ? 1n : 0n
         ]
       },
-      circuitOwnerOutputs: {
-        ownerRevealedNullifierHash: [
+      circuitOwnerV3Outputs: {
+        ownerV3RevealedNullifierHash: [
           ownerInput?.nullifierHash ?? BABY_JUB_NEGATIVE_ONE
         ]
       }
     };
   } else {
     return {
-      circuitOwnerInputs: {
-        ownerEntryIndex: [],
-        ownerIsNullifierHashRevealed: []
+      circuitOwnerV3Inputs: {
+        ownerV3EntryIndex: [],
+        ownerV3IsNullifierHashRevealed: []
       },
-      circuitOwnerOutputs: {
-        ownerRevealedNullifierHash: []
+      circuitOwnerV3Outputs: {
+        ownerV3RevealedNullifierHash: []
       }
     };
   }
@@ -1368,7 +1368,7 @@ export function makeRevealedClaims(
             ...(proofInputs.owner?.semaphoreV3 !== undefined
               ? {
                   nullifierHash: BigInt(
-                    circuitOutputs.ownerRevealedNullifierHash[0]
+                    circuitOutputs.ownerV3RevealedNullifierHash[0]
                   )
                 }
               : {}),

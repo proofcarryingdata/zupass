@@ -63,7 +63,7 @@ describe("owner.OwnerModuleSemaphoreV3 should work", function () {
 
   this.beforeAll(async () => {
     circuit = await circomkit.WitnessTester("OwnerModuleSemaphoreV3", {
-      file: "owner",
+      file: "ownerV3",
       template: "OwnerModuleSemaphoreV3"
     });
   });

@@ -25,7 +25,7 @@ export const ownerIdentity = new Identity(
 
 // Semaphore V4 identity
 export const ownerIdentityV4 = new IdentityV4(
-  "0001020304050607080900010203040506070809000102030405060708090001"
+  "20544E72E131A029B85045C68181585D2833E84879B9709143E1F593F0000001"
 );
 
 // 11 entries, max depth 5

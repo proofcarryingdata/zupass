@@ -41,10 +41,10 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
 
   // Owner module (0-1)
-  /*PUB*/ ownerEntryIndex: CircuitSignal /*INCLUDE_OWNERV3*/[];
+  /*PUB*/ ownerV3EntryIndex: CircuitSignal /*INCLUDE_OWNERV3*/[];
   ownerSemaphoreV3IdentityNullifier: CircuitSignal /*INCLUDE_OWNERV3*/[];
   ownerSemaphoreV3IdentityTrapdoor: CircuitSignal /*INCLUDE_OWNERV3*/[];
-  /*PUB*/ ownerIsNullifierHashRevealed: CircuitSignal /*INCLUDE_OWNERV3*/[];
+  /*PUB*/ ownerV3IsNullifierHashRevealed: CircuitSignal /*INCLUDE_OWNERV3*/[];
 
   // Owner V4 module (0-1)
   /*PUB*/ ownerV4EntryIndex: CircuitSignal /*INCLUDE_OWNERV4*/[];
@@ -88,10 +88,10 @@ export type ProtoPODGPCInputNamesType = [
   "virtualEntryIsValueHashRevealed",
   "entryEqualToOtherEntryByIndex",
   "ownerExternalNullifier",
-  "ownerEntryIndex",
+  "ownerV3EntryIndex",
   "ownerSemaphoreV3IdentityNullifier",
   "ownerSemaphoreV3IdentityTrapdoor",
-  "ownerIsNullifierHashRevealed",
+  "ownerV3IsNullifierHashRevealed",
   "ownerV4EntryIndex",
   "ownerSemaphoreV4SecretScalar",
   "ownerV4IsNullifierHashRevealed",
@@ -125,9 +125,9 @@ export type ProtoPODGPCPublicInputs = {
   // External nullifier for owner modules (if any)
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
 
-  // Owner module (1)
-  /*PUB*/ ownerEntryIndex: CircuitSignal /*INCLUDE_OWNERV3*/[];
-  /*PUB*/ ownerIsNullifierHashRevealed: CircuitSignal /*INCLUDE_OWNERV3*/[];
+  // Owner V3 module (1)
+  /*PUB*/ ownerV3EntryIndex: CircuitSignal /*INCLUDE_OWNERV3*/[];
+  /*PUB*/ ownerV3IsNullifierHashRevealed: CircuitSignal /*INCLUDE_OWNERV3*/[];
 
   // Owner V4 module (1)
   /*PUB*/ ownerV4EntryIndex: CircuitSignal /*INCLUDE_OWNERV4*/[];
@@ -160,8 +160,8 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "virtualEntryIsValueHashRevealed",
   "entryEqualToOtherEntryByIndex",
   "ownerExternalNullifier",
-  "ownerEntryIndex",
-  "ownerIsNullifierHashRevealed",
+  "ownerV3EntryIndex",
+  "ownerV3IsNullifierHashRevealed",
   "ownerV4EntryIndex",
   "ownerV4IsNullifierHashRevealed",
   "numericValueEntryIndices",
@@ -181,7 +181,7 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
 export type ProtoPODGPCOutputs = {
   entryRevealedValueHash: CircuitSignal /*MAX_ENTRIES*/[];
   virtualEntryRevealedValueHash: CircuitSignal /*MAX_OBJECTS*/[];
-  ownerRevealedNullifierHash: CircuitSignal /*INCLUDE_OWNERV3*/[];
+  ownerV3RevealedNullifierHash: CircuitSignal /*INCLUDE_OWNERV3*/[];
   ownerV4RevealedNullifierHash: CircuitSignal /*INCLUDE_OWNERV4*/[];
 };
 
@@ -192,7 +192,7 @@ export type ProtoPODGPCOutputs = {
 export type ProtoPODGPCOutputNamesType = [
   "entryRevealedValueHash",
   "virtualEntryRevealedValueHash",
-  "ownerRevealedNullifierHash",
+  "ownerV3RevealedNullifierHash",
   "ownerV4RevealedNullifierHash"
 ];
 
@@ -378,7 +378,7 @@ export class ProtoPODGPC {
       intPublicSignals,
       inputs.entryNameHash.length,
       inputs.objectSignatureS.length,
-      inputs.ownerEntryIndex.length > 0,
+      inputs.ownerV3EntryIndex.length > 0,
       inputs.ownerV4EntryIndex.length > 0
     );
     return { proof, outputs, publicSignals: intPublicSignals };
@@ -426,8 +426,8 @@ export class ProtoPODGPC {
         allInputs.virtualEntryIsValueHashRevealed,
       entryEqualToOtherEntryByIndex: allInputs.entryEqualToOtherEntryByIndex,
       ownerExternalNullifier: allInputs.ownerExternalNullifier,
-      ownerEntryIndex: allInputs.ownerEntryIndex,
-      ownerIsNullifierHashRevealed: allInputs.ownerIsNullifierHashRevealed,
+      ownerV3EntryIndex: allInputs.ownerV3EntryIndex,
+      ownerV3IsNullifierHashRevealed: allInputs.ownerV3IsNullifierHashRevealed,
       ownerV4EntryIndex: allInputs.ownerV4EntryIndex,
       ownerV4IsNullifierHashRevealed: allInputs.ownerV4IsNullifierHashRevealed,
       numericValueEntryIndices: allInputs.numericValueEntryIndices,
@@ -461,7 +461,7 @@ export class ProtoPODGPC {
         maxEntries,
         maxEntries + maxVirtualEntries
       ),
-      ownerRevealedNullifierHash: includeOwnerV3
+      ownerV3RevealedNullifierHash: includeOwnerV3
         ? [publicSignals[maxEntries + maxVirtualEntries]]
         : [],
       ownerV4RevealedNullifierHash: includeOwnerV4
@@ -485,7 +485,7 @@ export class ProtoPODGPC {
     return [
       ...outputs.entryRevealedValueHash,
       ...outputs.virtualEntryRevealedValueHash,
-      ...outputs.ownerRevealedNullifierHash,
+      ...outputs.ownerV3RevealedNullifierHash,
       ...outputs.ownerV4RevealedNullifierHash,
       ...inputs.entryObjectIndex,
       ...inputs.entryNameHash,
@@ -493,8 +493,8 @@ export class ProtoPODGPC {
       inputs.virtualEntryIsValueHashRevealed,
       ...inputs.entryEqualToOtherEntryByIndex,
       inputs.ownerExternalNullifier,
-      ...inputs.ownerEntryIndex,
-      ...inputs.ownerIsNullifierHashRevealed,
+      ...inputs.ownerV3EntryIndex,
+      ...inputs.ownerV3IsNullifierHashRevealed,
       ...inputs.ownerV4EntryIndex,
       ...inputs.ownerV4IsNullifierHashRevealed,
       ...inputs.numericValueEntryIndices,
