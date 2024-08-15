@@ -9,7 +9,7 @@ import { useEmbeddedZupass } from "../hooks/useEmbeddedZupass";
 import { ZUPASS_URL } from "../main";
 
 const PODPCDCard = PODPCDUI.renderCardBody;
-const FOLDER = "puddle";
+const FOLDER = "PUDDLECRYPTO";
 
 export function FrogCrypto(): ReactNode {
   const { z, connected } = useEmbeddedZupass();
@@ -94,9 +94,9 @@ export function FrogCrypto(): ReactNode {
   };
 
   return (
-    <div>
+    <div className="flex flex-col items-center">
       {!!frogs.length && (
-        <p className="mb-2 text-lg text-center">{frogs.length} 🐸</p>
+        <p className="mb-2 text-xl text-center font-bold">{frogs.length} 🐸</p>
       )}
       <button
         onClick={async () => {
@@ -107,7 +107,12 @@ export function FrogCrypto(): ReactNode {
                 zupass_display: "collectable",
                 zupass_image_url: imageUrl,
                 zupass_title: `FROG ${nonce}`,
-                zupass_description: "here's a frog",
+                // zupass_description: `JMP: ${Math.floor(Math.random() * 10) + 1}, WIS: ${Math.floor(Math.random() * 10) + 1}, STR: ${Math.floor(Math.random() * 10) + 1}, DEF: ${Math.floor(Math.random() * 10) + 1}`,
+                timestamp: Date.now(),
+                jmp: Math.floor(Math.random() * 10) + 1,
+                wis: Math.floor(Math.random() * 10) + 1,
+                str: Math.floor(Math.random() * 10) + 1,
+                def: Math.floor(Math.random() * 10) + 1,
                 owner: (await z.identity.getIdentityCommitment()).toString()
               })
             ),
@@ -128,25 +133,52 @@ export function FrogCrypto(): ReactNode {
           });
         }}
         disabled={cooldown > 0}
-        className="bg-green-700 text-white px-4 py-2 rounded disabled:bg-gray-400 mb-4"
+        className="bg-green-700 font-bold text-white px-4 py-2 rounded disabled:opacity-50 mb-4"
       >
         {cooldown > 0
           ? `Get FROG (wait ${formatCooldown(cooldown)})`
           : "Get FROG"}
       </button>
 
-      <h1 className="text-xl font-bold mb-2">FROGS</h1>
-      {!frogs.length && <p>None yet - go collect some!</p>}
+      <div className="mb-8">
+        <button
+          onClick={() =>
+            window.open(
+              `${zupassUrl}/#/?folder=PUDDLECRYPTO`,
+              "_blank",
+              "noopener,noreferrer"
+            )
+          }
+          className="font-bold bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 transition-colors"
+        >
+          View in Zupass
+        </button>
+      </div>
+
       <Container>
         {loading ? (
           <Spinner />
         ) : (
-          frogs.map((pod) => (
-            <CardBodyContainer key={pod.id}>
-              <strong>{pod.claim.entries.zupass_title.value}</strong>
-              <PODPCDCard pcd={pod as PODPCD} />
-            </CardBodyContainer>
-          ))
+          frogs
+            .sort((a, b) => {
+              const timestampA = a.claim.entries.timestamp?.value as
+                | bigint
+                | undefined;
+              const timestampB = b.claim.entries.timestamp?.value as
+                | bigint
+                | undefined;
+
+              if (timestampA && !timestampB) return -1;
+              if (!timestampA && timestampB) return 1;
+              if (!timestampA && !timestampB) return 0;
+              return Number(timestampB - timestampA); // Larger timestamp first
+            })
+            .map((pod) => (
+              <CardBodyContainer key={pod.id}>
+                <strong>{pod.claim.entries.zupass_title.value}</strong>
+                <PODPCDCard pcd={pod as PODPCD} />
+              </CardBodyContainer>
+            ))
         )}
       </Container>
     </div>
