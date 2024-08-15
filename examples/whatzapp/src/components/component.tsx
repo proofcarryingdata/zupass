@@ -18,11 +18,20 @@ import { useToast } from "@/components/ui/use-toast";
 import { useEmbeddedZupass } from "@/hooks/useEmbeddedZupass";
 import { PODPCD } from "@pcd/pod-pcd";
 import { bigIntToPseudonymEmoji, bigIntToPseudonymName } from "@pcd/util";
-import jsAgo from "js-ago";
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { FaChevronLeft, FaPlus } from "react-icons/fa";
 
 type Action = { type: "ADD_CONVERSATION"; payload: string };
+
+function timeForDisplay(date: Date): string {
+  if (date.getTime() < Date.now() - 1000 * 60 * 60 * 24) {
+    return date.toISOString().split("T")[0];
+  }
+  return date.toLocaleTimeString("en", {
+    hour: "2-digit",
+    minute: "2-digit"
+  });
+}
 
 function conversationsReducer(state: string[], action: Action): string[] {
   switch (action.type) {
@@ -73,7 +82,7 @@ function ChatTab({
 }) {
   const timeAgo =
     lastMessageTime !== ""
-      ? jsAgo(new Date(Number(lastMessageTime)))
+      ? timeForDisplay(new Date(Number(lastMessageTime)))
       : "Just started!";
   return (
     <div
@@ -106,8 +115,8 @@ function SentMessage({ message }: { message: PODPCD }) {
     <div className="flex items-end gap-2 justify-end">
       <div className="bg-primary text-white rounded-lg p-3 max-w-[70%]">
         <div className="text-sm">{messageText.value.toString()}</div>
-        <div className="text-xs text-gray-200 mt-1">
-          {jsAgo(new Date(Number(timestamp.value)))}
+        <div className="text-xs text-gray-2000 mt-1">
+          {timeForDisplay(new Date(Number(timestamp.value)))}
         </div>
       </div>
     </div>
@@ -129,7 +138,7 @@ function ReceivedMessage({ message }: { message: PODPCD }) {
         </div>
         <div className="text-sm">{messageText.value.toString()}</div>
         <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-          {jsAgo(new Date(Number(timestamp.value)))}
+          {timeForDisplay(new Date(Number(timestamp.value)))}
         </div>
       </div>
     </div>
