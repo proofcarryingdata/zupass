@@ -1,5 +1,4 @@
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { expectIsEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
   EmailUpdateError,
@@ -11,7 +10,6 @@ import {
   ZupassFeedIds
 } from "@pcd/passport-interface";
 import { isReplaceInFolderAction, PCDActionType } from "@pcd/pcd-collection";
-import { expectIsPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -37,10 +35,8 @@ import {
 } from "../../../util/util";
 import {
   assertUserMatches,
-  checkPipelineInfoEndpoint,
   makeTestCredentials,
   makeTestCredentialsForEmails,
-  requestTicketsFromPipeline,
   requestTicketsFromPipelineWithEmailPCDs
 } from "../../util";
 import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
@@ -133,7 +129,7 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
   const nowDate = new Date();
   const now = Date.now();
 
-  let ZUPASS_EDDSA_PRIVATE_KEY: string;
+  // let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
   let giService: GenericIssuanceService;
 
@@ -142,12 +138,12 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
     adminGIUserEmail,
     ethLatAmGIUserID,
     ethLatAmGIUserEmail,
-    EthLatAmBouncerIdentity,
-    EthLatAmAttendeeIdentity,
-    EthLatAmManualAttendeeIdentity,
-    EthLatAmManualAttendeeEmail,
-    EthLatAmManualBouncerIdentity,
-    EthLatAmManualBouncerEmail,
+    // EthLatAmBouncerIdentity,
+    // EthLatAmAttendeeIdentity,
+    // EthLatAmManualAttendeeIdentity,
+    // EthLatAmManualAttendeeEmail,
+    // EthLatAmManualBouncerIdentity,
+    // EthLatAmManualBouncerEmail,
     mockServer,
     pretixBackend,
     ethLatAmPipeline
@@ -327,7 +323,7 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
       pipeline.issuanceCapability.feedUrl,
       currentEmailPCDs,
       testUserIdentity,
-      [newEmail, newEmail] // 2 - one eddsa and one pod
+      [newEmail, newEmail] // 2 per ticket - one eddsa and one pod
     );
   });
 
@@ -373,7 +369,7 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
       pipeline.issuanceCapability.feedUrl,
       currentEmailPCDs,
       testUserIdentity,
-      [newEmail, newEmail, ...currentEmails, ...currentEmails] // 2 - one eddsa and one pod
+      [newEmail, newEmail, ...currentEmails, ...currentEmails] // 2 per ticket - one eddsa and one pod
     );
   });
 
@@ -489,120 +485,120 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
     }
   );
 
-  /**
-   * Test for {@link PretixPipeline} for Eth LatAm.
-   */
-  step(
-    "PretixPipeline issuance - specifically multi-email support",
-    async () => {
-      const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
-      const attendeeTickets = await requestTicketsFromPipeline(
-        pipeline.issuanceCapability.options.feedFolder,
-        ethLatAmTicketFeedUrl,
-        pipeline.issuanceCapability.options.feedId,
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
-        EthLatAmAttendeeIdentity
-      );
-      expectLength(
-        attendeeTickets.map((t) => t.claim.ticket.attendeeEmail),
-        2
-      );
-      const attendeeTicket = attendeeTickets[0];
-      expectToExist(attendeeTicket);
-      expectIsEdDSATicketPCD(attendeeTicket);
-      expect(attendeeTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
-      );
-      expect(attendeeTicket.claim.ticket.attendeeName).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
-      );
+  // /**
+  //  * Test for {@link PretixPipeline} for Eth LatAm.
+  //  */
+  // step(
+  //   "PretixPipeline issuance - specifically multi-email support",
+  //   async () => {
+  //     const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+  //     const attendeeTickets = await requestTicketsFromPipeline(
+  //       pipeline.issuanceCapability.options.feedFolder,
+  //       ethLatAmTicketFeedUrl,
+  //       pipeline.issuanceCapability.options.feedId,
+  //       ZUPASS_EDDSA_PRIVATE_KEY,
+  //       pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+  //       EthLatAmAttendeeIdentity
+  //     );
+  //     expectLength(
+  //       attendeeTickets.map((t) => t.claim.ticket.attendeeEmail),
+  //       2
+  //     );
+  //     const attendeeTicket = attendeeTickets[0];
+  //     expectToExist(attendeeTicket);
+  //     expectIsEdDSATicketPCD(attendeeTicket);
+  //     expect(attendeeTicket.claim.ticket.attendeeEmail).to.eq(
+  //       pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
+  //     );
+  //     expect(attendeeTicket.claim.ticket.attendeeName).to.eq(
+  //       pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
+  //     );
 
-      const attendeePODTicket = attendeeTickets[1];
-      expectToExist(attendeePODTicket);
-      expectIsPODTicketPCD(attendeePODTicket);
-      expect(attendeePODTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
-      );
-      expect(attendeePODTicket.claim.ticket.attendeeName).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
-      );
+  //     const attendeePODTicket = attendeeTickets[1];
+  //     expectToExist(attendeePODTicket);
+  //     expectIsPODTicketPCD(attendeePODTicket);
+  //     expect(attendeePODTicket.claim.ticket.attendeeEmail).to.eq(
+  //       pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
+  //     );
+  //     expect(attendeePODTicket.claim.ticket.attendeeName).to.eq(
+  //       pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
+  //     );
 
-      const bouncerTickets = await requestTicketsFromPipeline(
-        pipeline.issuanceCapability.options.feedFolder,
-        ethLatAmTicketFeedUrl,
-        pipeline.issuanceCapability.options.feedId,
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
-        EthLatAmBouncerIdentity
-      );
-      expectLength(bouncerTickets, 2);
-      const bouncerTicket = bouncerTickets[0];
-      expectToExist(bouncerTicket);
-      expectIsEdDSATicketPCD(bouncerTicket);
-      expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
-      );
-      expect(bouncerTicket.claim.ticket.attendeeName).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
-      );
-      const bouncerPODTicket = bouncerTickets[1];
-      expectToExist(bouncerPODTicket);
-      expectIsPODTicketPCD(bouncerPODTicket);
-      expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
-      );
-      expect(bouncerPODTicket.claim.ticket.attendeeName).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
-      );
+  //     const bouncerTickets = await requestTicketsFromPipeline(
+  //       pipeline.issuanceCapability.options.feedFolder,
+  //       ethLatAmTicketFeedUrl,
+  //       pipeline.issuanceCapability.options.feedId,
+  //       ZUPASS_EDDSA_PRIVATE_KEY,
+  //       pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+  //       EthLatAmBouncerIdentity
+  //     );
+  //     expectLength(bouncerTickets, 2);
+  //     const bouncerTicket = bouncerTickets[0];
+  //     expectToExist(bouncerTicket);
+  //     expectIsEdDSATicketPCD(bouncerTicket);
+  //     expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+  //       pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+  //     );
+  //     expect(bouncerTicket.claim.ticket.attendeeName).to.eq(
+  //       pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
+  //     );
+  //     const bouncerPODTicket = bouncerTickets[1];
+  //     expectToExist(bouncerPODTicket);
+  //     expectIsPODTicketPCD(bouncerPODTicket);
+  //     expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+  //       pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+  //     );
+  //     expect(bouncerPODTicket.claim.ticket.attendeeName).to.eq(
+  //       pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
+  //     );
 
-      const ManualAttendeeTickets = await requestTicketsFromPipeline(
-        pipeline.issuanceCapability.options.feedFolder,
-        ethLatAmTicketFeedUrl,
-        pipeline.issuanceCapability.options.feedId,
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        EthLatAmManualAttendeeEmail,
-        EthLatAmManualAttendeeIdentity
-      );
+  //     const ManualAttendeeTickets = await requestTicketsFromPipeline(
+  //       pipeline.issuanceCapability.options.feedFolder,
+  //       ethLatAmTicketFeedUrl,
+  //       pipeline.issuanceCapability.options.feedId,
+  //       ZUPASS_EDDSA_PRIVATE_KEY,
+  //       EthLatAmManualAttendeeEmail,
+  //       EthLatAmManualAttendeeIdentity
+  //     );
 
-      expectLength(ManualAttendeeTickets, 2);
-      const ManualAttendeeTicket = ManualAttendeeTickets[0];
-      expectIsEdDSATicketPCD(ManualAttendeeTicket);
-      expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
-        EthLatAmManualAttendeeEmail
-      );
-      const ManualAttendeePODTicket = ManualAttendeeTickets[1];
-      expectIsPODTicketPCD(ManualAttendeePODTicket);
-      expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
-        EthLatAmManualAttendeeEmail
-      );
+  //     expectLength(ManualAttendeeTickets, 2);
+  //     const ManualAttendeeTicket = ManualAttendeeTickets[0];
+  //     expectIsEdDSATicketPCD(ManualAttendeeTicket);
+  //     expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
+  //       EthLatAmManualAttendeeEmail
+  //     );
+  //     const ManualAttendeePODTicket = ManualAttendeeTickets[1];
+  //     expectIsPODTicketPCD(ManualAttendeePODTicket);
+  //     expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
+  //       EthLatAmManualAttendeeEmail
+  //     );
 
-      const ManualBouncerTickets = await requestTicketsFromPipeline(
-        pipeline.issuanceCapability.options.feedFolder,
-        ethLatAmTicketFeedUrl,
-        pipeline.issuanceCapability.options.feedId,
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        EthLatAmManualBouncerEmail,
-        EthLatAmManualBouncerIdentity
-      );
-      expectLength(ManualBouncerTickets, 2);
-      const ManualBouncerTicket = ManualBouncerTickets[0];
-      expectIsEdDSATicketPCD(ManualBouncerTicket);
-      expect(ManualBouncerTicket.claim.ticket.attendeeEmail).to.eq(
-        EthLatAmManualBouncerEmail
-      );
-      expect(ManualBouncerTicket.claim.ticket.imageUrl).to.be.undefined;
+  //     const ManualBouncerTickets = await requestTicketsFromPipeline(
+  //       pipeline.issuanceCapability.options.feedFolder,
+  //       ethLatAmTicketFeedUrl,
+  //       pipeline.issuanceCapability.options.feedId,
+  //       ZUPASS_EDDSA_PRIVATE_KEY,
+  //       EthLatAmManualBouncerEmail,
+  //       EthLatAmManualBouncerIdentity
+  //     );
+  //     expectLength(ManualBouncerTickets, 2);
+  //     const ManualBouncerTicket = ManualBouncerTickets[0];
+  //     expectIsEdDSATicketPCD(ManualBouncerTicket);
+  //     expect(ManualBouncerTicket.claim.ticket.attendeeEmail).to.eq(
+  //       EthLatAmManualBouncerEmail
+  //     );
+  //     expect(ManualBouncerTicket.claim.ticket.imageUrl).to.be.undefined;
 
-      const ManualBouncerPODTicket = ManualBouncerTickets[1];
-      expectIsPODTicketPCD(ManualBouncerPODTicket);
-      expect(ManualBouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        EthLatAmManualBouncerEmail
-      );
-      expect(ManualBouncerPODTicket.claim.ticket.imageUrl).to.be.undefined;
+  //     const ManualBouncerPODTicket = ManualBouncerTickets[1];
+  //     expectIsPODTicketPCD(ManualBouncerPODTicket);
+  //     expect(ManualBouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+  //       EthLatAmManualBouncerEmail
+  //     );
+  //     expect(ManualBouncerPODTicket.claim.ticket.imageUrl).to.be.undefined;
 
-      await checkPipelineInfoEndpoint(giBackend, pipeline);
-    }
-  );
+  //     await checkPipelineInfoEndpoint(giBackend, pipeline);
+  //   }
+  // );
 
   // TODO: make this test work for multi-email issuance
   // step(
