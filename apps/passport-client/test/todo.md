@@ -19,6 +19,10 @@
 - PODPipeline should also have the new loaded check added to it, though I can pick that up if you don't want to add it.
 - add logging everywhere that is appropriate
 - re-read `Credential.ts`
+- remove this todo file
+- test on ivan-staging
+- deploy
+- test on prod
 
 # done
 
