@@ -63,7 +63,11 @@ export const ZupassAPISchema = z.object({
         })
       )
       .returns(z.promise(z.void())),
-    delete: z.function().args(z.string()).returns(z.promise(z.void()))
+    delete: z.function().args(z.string()).returns(z.promise(z.void())),
+    getAllInFolder: z
+      .function()
+      .args(z.string(), z.boolean())
+      .returns(z.promise(z.record(z.string(), z.array(SerializedPCDSchema))))
   }),
   gpc: z.object({
     prove: z
@@ -75,7 +79,15 @@ export const ZupassAPISchema = z.object({
     requestAddSubscription: z
       .function()
       .args(z.string(), z.string())
-      .returns(z.promise(z.void()))
+      .returns(z.promise(z.void())),
+    pollFeed: z
+      .function()
+      .args(z.string(), z.string())
+      .returns(z.promise(z.void())),
+    isSubscribed: z
+      .function()
+      .args(z.string(), z.string())
+      .returns(z.promise(z.boolean()))
   }),
   identity: z.object({
     getIdentityCommitment: z.function().returns(z.promise(z.bigint())),

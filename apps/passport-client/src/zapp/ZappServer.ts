@@ -122,6 +122,39 @@ class FileSystem extends BaseZappServer implements ZupassFileSystem {
 
   @safeInput(z.tuple([z.string()]))
   public async delete(path: string): Promise<void> {}
+
+  @safeInput(z.tuple([z.string(), z.boolean()]))
+  public async getAllInFolder(
+    path: string,
+    recursive: boolean
+  ): Promise<Record<string, SerializedPCD[]>> {
+    const state = this.getContext().getState();
+    const result: Record<string, SerializedPCD[]> = {};
+
+    async function* walkFolderTree(
+      currentPath: string
+    ): AsyncGenerator<[string, SerializedPCD[]]> {
+      const pcds = state.pcds.getAllPCDsInFolder(currentPath);
+      yield [
+        currentPath,
+        await Promise.all(pcds.map((pcd) => state.pcds.serialize(pcd)))
+      ];
+
+      if (recursive) {
+        const folders = state.pcds.getFoldersInFolder(currentPath);
+        for (const folder of folders) {
+          const folderPath = `${folder}`;
+          yield* walkFolderTree(folderPath);
+        }
+      }
+    }
+
+    for await (const [folderPath, serializedPCDs] of walkFolderTree(path)) {
+      result[folderPath] = serializedPCDs;
+    }
+
+    return result;
+  }
 }
 
 class GPC extends BaseZappServer implements ZupassGPC {
@@ -184,6 +217,30 @@ export class Feeds extends BaseZappServer implements ZupassFeeds {
       }
     });
     this.getClientChannel().showZupass();
+  }
+
+  /**
+   * This allows connected apps to force a refresh of an existing subscription.
+   *
+   * @param feedUrl
+   * @param feedId
+   */
+  @safeInput(z.tuple([z.string(), z.string()]))
+  public async pollFeed(feedUrl: string, feedId: string): Promise<void> {
+    const subs = this.getContext().getState().subscriptions;
+    const existingSub = subs.findSubscription(feedUrl, feedId);
+    if (existingSub) {
+      await this.getContext().dispatch({
+        type: "sync-subscription",
+        subscriptionId: existingSub.id
+      });
+    }
+  }
+
+  @safeInput(z.tuple([z.string(), z.string()]))
+  public async isSubscribed(feedUrl: string, feedId: string): Promise<boolean> {
+    const subs = this.getContext().getState().subscriptions;
+    return subs.findSubscription(feedUrl, feedId) !== undefined;
   }
 }
 

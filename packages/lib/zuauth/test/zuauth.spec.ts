@@ -115,7 +115,7 @@ describe("zuauth should work", async function () {
     `../../../pcd/zk-eddsa-event-ticket-pcd/artifacts/circuit.wasm`
   );
 
-  const privKey = newEdDSAPrivateKey();
+  const privKey = await newEdDSAPrivateKey();
 
   const watermark = generateSnarkMessageHash("watermark").toString();
   let zkPCD: ZKEdDSAEventTicketPCD;
@@ -223,7 +223,7 @@ describe("zuauth should work", async function () {
   });
 
   it("should not authenticate PCDs with the wrong public key", async function () {
-    const newPrivKey = newEdDSAPrivateKey();
+    const newPrivKey = await newEdDSAPrivateKey();
     const publicKey = await getEdDSAPublicKey(newPrivKey);
 
     await expect(

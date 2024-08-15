@@ -15,6 +15,10 @@ export type ZupassFolderContent =
 export interface ZupassFileSystem {
   list: (path: string) => Promise<ZupassFolderContent[]>;
   get: (path: string) => Promise<SerializedPCD>;
+  getAllInFolder: (
+    path: string,
+    recursive: boolean
+  ) => Promise<Record<string, SerializedPCD[]>>;
   put: (path: string, content: SerializedPCD) => Promise<void>;
   delete: (path: string) => Promise<void>;
 }
@@ -25,6 +29,8 @@ export interface ZupassGPC {
 
 export interface ZupassFeeds {
   requestAddSubscription: (feedUrl: string, feedId: string) => Promise<void>;
+  pollFeed: (feedUrl: string, feedId: string) => Promise<void>;
+  isSubscribed: (feedUrl: string, feedId: string) => Promise<boolean>;
 }
 
 export interface ZupassIdentity {
