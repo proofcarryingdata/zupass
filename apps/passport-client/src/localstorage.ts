@@ -74,9 +74,6 @@ export async function loadSubscriptions(): Promise<FeedSubscriptionManager> {
   );
 }
 
-window?.localStorage?.removeItem("offline_tickets");
-window?.localStorage?.removeItem("checked_in_offline_devconnect_tickets");
-
 export function saveEncryptionKey(key: string): void {
   window.localStorage["encryption_key"] = key;
 }
@@ -180,3 +177,15 @@ export function saveUsingLaserScanner(usingLaserScanner: boolean): void {
 export function loadUsingLaserScanner(): boolean {
   return window.localStorage["using_laser_scanner"] === "true";
 }
+
+function cleanUpDeprecatedStorage(): void {
+  try {
+    window?.localStorage?.removeItem("offline_tickets");
+    window?.localStorage?.removeItem("checked_in_offline_devconnect_tickets");
+    window?.localStorage?.removeItem("credential-cache-multi");
+  } catch (e) {
+    console.error("Error cleaning up deprecated storage", e);
+  }
+}
+
+cleanUpDeprecatedStorage();
