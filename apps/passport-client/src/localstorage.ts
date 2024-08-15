@@ -87,6 +87,10 @@ export function loadSelf(): User | undefined {
   if (self && self !== "") {
     const parsedSelf = JSON.parse(self);
 
+    // this upgrades the storage representation of an account that
+    // existed prior to the introduction of multi-email support so
+    // that it is compatible with the latest data model
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const singleEmail = (parsedSelf as any)?.email as string | undefined;
     if (singleEmail && parsedSelf) {
