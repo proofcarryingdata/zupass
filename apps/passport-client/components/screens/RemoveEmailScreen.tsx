@@ -43,7 +43,7 @@ export function RemoveEmailScreen(): JSX.Element | null {
     if (loading || !self || !emailToRemove) return;
 
     if (
-      confirm(
+      !confirm(
         "Are you sure you want to remove this email? This action" +
           " may result in your tickets with that email being deleted!"
       )

@@ -97,17 +97,17 @@ export function ChangeEmailScreen(): JSX.Element | null {
   const onChangeEmail = useCallback(async () => {
     if (loading || !self) return;
 
-    setLoading(true);
-    setError("");
-
     if (
-      confirm(
+      !confirm(
         "Are you sure you want to change your email? This action" +
           " may result in your tickets with your old email being deleted!"
       )
     ) {
       return;
     }
+
+    setLoading(true);
+    setError("");
 
     try {
       const credential = await new CredentialManager(
