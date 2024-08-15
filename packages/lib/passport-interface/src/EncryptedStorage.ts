@@ -56,7 +56,7 @@ export interface SyncedEncryptedStorageV3 {
 }
 
 export interface SyncedEncryptedStorageV4 {
-  // Copied from SyncedEncryptedStorageV2
+  // Copied from SyncedEncryptedStorageV3
   // changed: emails is an array of emails, rather than a single email
   self: {
     uuid: string;

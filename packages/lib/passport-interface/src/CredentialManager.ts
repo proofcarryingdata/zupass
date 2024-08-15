@@ -77,14 +77,6 @@ export class CredentialManager implements CredentialManagerAPI {
     this.pcds = pcds;
     this.cache = cache;
     this.credentialPromises = new Map();
-
-    this.updateStorageRepresentation();
-  }
-
-  private updateStorageRepresentation(): void {
-    // if (global.localStorage) {
-    //   global?.localStorage?.removeItem?.("credential-cache");
-    // }
   }
 
   // Can we get a credential containing a given PCD type?
