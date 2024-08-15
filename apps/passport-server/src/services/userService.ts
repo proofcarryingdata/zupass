@@ -59,6 +59,9 @@ const AgreedTermsSchema = z.object({
  */
 export class UserService {
   public readonly bypassEmail: boolean;
+  /**
+   * No particular reason to limit to 6, just needed some limit.
+   */
   private static readonly MAX_USER_EMAIL_ADDRESES = 6;
   private readonly context: ApplicationContext;
   private readonly semaphoreService: SemaphoreService;
@@ -602,6 +605,13 @@ export class UserService {
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
   ): Promise<AddUserEmailResponseValue> {
+    logger(
+      "[USER_SERVICE] handleAddUserEmail",
+      emailToAdd,
+      confirmationCode,
+      serializedPCD
+    );
+
     let credential: VerifiedCredential;
     try {
       const verifiedCredential =
@@ -681,6 +691,12 @@ export class UserService {
     emailToRemove: string,
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<RemoveUserEmailResponseValue> {
+    logger(
+      "[USER_SERVICE] handleRemoveUserEmail",
+      emailToRemove,
+      serializedPCD
+    );
+
     let credential: VerifiedCredential;
     try {
       const verifiedCredential =
@@ -736,6 +752,14 @@ export class UserService {
     pcd: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
   ): Promise<ChangeUserEmailResponseValue> {
+    logger(
+      "[USER_SERVICE] handleChangeUserEmail",
+      oldEmail,
+      newEmail,
+      confirmationCode,
+      pcd
+    );
+
     let credential: VerifiedCredential;
     try {
       if (!validateEmail(newEmail)) {

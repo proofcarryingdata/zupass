@@ -1,4 +1,5 @@
 import { Pool } from "postgres-pool";
+import { logger } from "../../util/logger";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
 /**
@@ -18,6 +19,8 @@ export async function upsertUser(
     emails: string[];
   }
 ): Promise<string> {
+  logger("[DB] upsertUser", params);
+
   if (params.emails.length === 0) {
     throw new Error("users must have at least one email address");
   }

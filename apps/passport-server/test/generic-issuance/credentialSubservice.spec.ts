@@ -61,7 +61,7 @@ describe("generic issuance - credential subservice", function () {
     const identity = new Identity();
     const emailAddress = "test@example.com";
     {
-      const credentials = await makeTestCredential(
+      const credential = await makeTestCredential(
         identity,
         PODBOX_CREDENTIAL_REQUEST,
         emailAddress,
@@ -69,8 +69,8 @@ describe("generic issuance - credential subservice", function () {
       );
 
       // Same promise will be returned for the same input
-      const verifyPromise = credentialSubservice.verify(credentials);
-      const secondPromise = credentialSubservice.verify(credentials);
+      const verifyPromise = credentialSubservice.verify(credential);
+      const secondPromise = credentialSubservice.verify(credential);
       expect(verifyPromise).to.eq(secondPromise);
 
       // Result is a verified credential containing the expected values
@@ -93,7 +93,7 @@ describe("generic issuance - credential subservice", function () {
       // Verifying this with the expectation of a valid email should produce
       // the same result, as the credential has a valid EmailPCD.
       const verifiedCredentialWithEmail =
-        await credentialSubservice.verifyAndExpectZupassEmail(credentials);
+        await credentialSubservice.verifyAndExpectZupassEmail(credential);
       expect(verifiedCredentialWithEmail).to.deep.eq(verifiedCredential);
     }
     {

@@ -209,7 +209,7 @@ export class CredentialManager implements CredentialManagerAPI {
 
       return this.semaphoreSignPayload(createCredentialPayload(emailPCDs));
     } else if (req.pcdType === undefined) {
-      return await this.semaphoreSignPayload(createCredentialPayload());
+      return this.semaphoreSignPayload(createCredentialPayload());
     } else {
       throw new Error(
         `Cannot issue credential containing a PCD of type ${req.pcdType}`

@@ -42,95 +42,6 @@ import {
 import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
 
 /**
- * Given some email PCDs, expect some list of tickets, identified by email addresses
- * to be returned.
- *
- * NOTE: our feeds issue both POD and non-POD tickets. Thus you should expect to see
- * 2 PCDs for each email address.
- */
-async function testGetTickets(
-  pipeline: PretixPipeline,
-  emailPCDs: EmailPCD[],
-  identity: Identity,
-  expectedEmails: string[]
-): Promise<void> {
-  const attendeeTickets = await requestTicketsFromPipelineWithEmailPCDs(
-    pipeline.issuanceCapability.options.feedFolder,
-    pipeline.issuanceCapability.feedUrl,
-    pipeline.issuanceCapability.options.feedId,
-    identity,
-    emailPCDs
-  );
-  expectLength(attendeeTickets, expectedEmails.length);
-
-  while (attendeeTickets.length > 0) {
-    if (expectedEmails.length === 0) {
-      throw new Error("expected more emails than were provided");
-    }
-    const checkingEmail = expectedEmails.pop();
-    const matchingTicket = attendeeTickets.find(
-      (t) => t.claim.ticket.attendeeEmail === checkingEmail
-    );
-    expectToExist(matchingTicket);
-    attendeeTickets.splice(attendeeTickets.indexOf(matchingTicket), 1);
-  }
-}
-
-/**
- * Asks Zupass server for Email PCD, which is necessary to prove ownership of an email address
- * to Feed servers.
- */
-async function testGetEmailPCDs(
-  giBackend: Zupass,
-  testUserIdentity: Identity,
-  expectedEmails: string[]
-): Promise<EmailPCD[]> {
-  const pollFeedResult = await requestPollFeed(
-    `${giBackend.expressContext.localEndpoint}/feeds`,
-    {
-      pcd: await makeTestCredential(
-        testUserIdentity,
-        ZUPASS_CREDENTIAL_REQUEST
-      ),
-      feedId: ZupassFeedIds.Email
-    }
-  );
-
-  if (!pollFeedResult.success) {
-    throw new Error("did not expect an error here");
-  }
-
-  expect(pollFeedResult.value?.actions.length).to.eq(2);
-
-  // Zeroth action clears the folder, so this one contains the email
-  const action = pollFeedResult?.value?.actions?.[1];
-  expectToExist(action, isReplaceInFolderAction);
-  expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
-  expect(action.pcds.length).to.eq(expectedEmails.length);
-
-  const result: EmailPCD[] = [];
-
-  for (const pcd of action.pcds) {
-    expect(pcd.type).to.eq(EmailPCDTypeName);
-
-    // Check that the PCD contains the expected email address
-    const deserializedPCD = await EmailPCDPackage.deserialize(pcd.pcd);
-    expect(expectedEmails).to.include(deserializedPCD.claim.emailAddress);
-    result.push(deserializedPCD);
-
-    // Check that the PCD verifies
-    expect(await EmailPCDPackage.verify(deserializedPCD)).to.be.true;
-
-    // Check the public key
-    expect(deserializedPCD.proof.eddsaPCD.claim.publicKey).to.deep.eq(
-      await giBackend.services.issuanceService?.getEdDSAPublicKey()
-    );
-  }
-
-  return result;
-}
-
-/**
  * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline} in situations
  * where a user has different quantites of emails than precisely one.
  */
@@ -790,3 +701,92 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
   //   }
   // );
 });
+
+/**
+ * Given some email PCDs, expect some list of tickets, identified by email addresses
+ * to be returned.
+ *
+ * NOTE: our feeds issue both POD and non-POD tickets. Thus you should expect to see
+ * 2 PCDs for each email address.
+ */
+async function testGetTickets(
+  pipeline: PretixPipeline,
+  emailPCDs: EmailPCD[],
+  identity: Identity,
+  expectedEmails: string[]
+): Promise<void> {
+  const attendeeTickets = await requestTicketsFromPipelineWithEmailPCDs(
+    pipeline.issuanceCapability.options.feedFolder,
+    pipeline.issuanceCapability.feedUrl,
+    pipeline.issuanceCapability.options.feedId,
+    identity,
+    emailPCDs
+  );
+  expectLength(attendeeTickets, expectedEmails.length);
+
+  while (attendeeTickets.length > 0) {
+    if (expectedEmails.length === 0) {
+      throw new Error("expected more emails than were provided");
+    }
+    const checkingEmail = expectedEmails.pop();
+    const matchingTicket = attendeeTickets.find(
+      (t) => t.claim.ticket.attendeeEmail === checkingEmail
+    );
+    expectToExist(matchingTicket);
+    attendeeTickets.splice(attendeeTickets.indexOf(matchingTicket), 1);
+  }
+}
+
+/**
+ * Asks Zupass server for Email PCD, which is necessary to prove ownership of an email address
+ * to Feed servers.
+ */
+async function testGetEmailPCDs(
+  giBackend: Zupass,
+  testUserIdentity: Identity,
+  expectedEmails: string[]
+): Promise<EmailPCD[]> {
+  const pollFeedResult = await requestPollFeed(
+    `${giBackend.expressContext.localEndpoint}/feeds`,
+    {
+      pcd: await makeTestCredential(
+        testUserIdentity,
+        ZUPASS_CREDENTIAL_REQUEST
+      ),
+      feedId: ZupassFeedIds.Email
+    }
+  );
+
+  if (!pollFeedResult.success) {
+    throw new Error("did not expect an error here");
+  }
+
+  expect(pollFeedResult.value?.actions.length).to.eq(2);
+
+  // Zeroth action clears the folder, so this one contains the email
+  const action = pollFeedResult?.value?.actions?.[1];
+  expectToExist(action, isReplaceInFolderAction);
+  expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
+  expect(action.pcds.length).to.eq(expectedEmails.length);
+
+  const result: EmailPCD[] = [];
+
+  for (const pcd of action.pcds) {
+    expect(pcd.type).to.eq(EmailPCDTypeName);
+
+    // Check that the PCD contains the expected email address
+    const deserializedPCD = await EmailPCDPackage.deserialize(pcd.pcd);
+    expect(expectedEmails).to.include(deserializedPCD.claim.emailAddress);
+    result.push(deserializedPCD);
+
+    // Check that the PCD verifies
+    expect(await EmailPCDPackage.verify(deserializedPCD)).to.be.true;
+
+    // Check the public key
+    expect(deserializedPCD.proof.eddsaPCD.claim.publicKey).to.deep.eq(
+      await giBackend.services.issuanceService?.getEdDSAPublicKey()
+    );
+  }
+
+  return result;
+}
