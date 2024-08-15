@@ -1,6 +1,6 @@
 {
   "name": "@pcd/passport-interface",
-  "version": "0.11.6",
+  "version": "0.11.7",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -10,6 +10,16 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./Credential": {
+      "types": "./dist/types/src/Credential.d.ts",
+      "import": "./dist/esm/src/Credential.js",
+      "require": "./dist/cjs/src/Credential.js"
+    },
+    "./FeedHost": {
+      "types": "./dist/types/src/FeedHost.d.ts",
+      "import": "./dist/esm/src/FeedHost.js",
+      "require": "./dist/cjs/src/FeedHost.js"
     },
     "./PassportPopup/core": {
       "types": "./dist/types/src/PassportPopup/core.d.ts",
@@ -25,6 +35,11 @@
       "types": "./dist/types/src/PassportInterface.d.ts",
       "import": "./dist/esm/src/PassportInterface.js",
       "require": "./dist/cjs/src/PassportInterface.js"
+    },
+    "./RequestTypes": {
+      "types": "./dist/types/src/RequestTypes.d.ts",
+      "import": "./dist/esm/src/RequestTypes.js",
+      "require": "./dist/cjs/src/RequestTypes.js"
     }
   },
   "files": [

@@ -1,5 +1,12 @@
 # @pcd/podbox-shared
 
+## 0.0.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.11.7
+
 ## 0.0.3
 
 ### Patch Changes
