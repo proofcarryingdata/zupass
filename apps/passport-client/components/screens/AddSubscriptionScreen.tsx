@@ -214,9 +214,9 @@ export function AddSubscriptionScreen(): JSX.Element | null {
                 account.
               </p>
               <p>
-                This may mean that you cannot receive the expected PCDs. If you
+                This may mean that you cannot receive your expected PCDs. If you
                 own <strong>{suggestedEmail}</strong> you can add it to your
-                Zupass account in the Settings.
+                Zupass account in Zupass settings.
               </p>
             </MismatchedEmailWarning>
           )}
