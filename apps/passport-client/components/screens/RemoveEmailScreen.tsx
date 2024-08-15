@@ -86,8 +86,10 @@ export function RemoveEmailScreen(): JSX.Element | null {
         extraSubscriptionFetchRequested: true
       });
 
-      setFinished(true);
-      setLoading(false);
+      setTimeout(() => {
+        setFinished(true);
+        setLoading(false);
+      }, 1000);
     } catch (e) {
       setLoading(false);
       setError(getEmailUpdateErrorMessage(getErrorMessage(e)));

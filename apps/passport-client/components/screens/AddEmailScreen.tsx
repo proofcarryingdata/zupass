@@ -134,8 +134,10 @@ export function AddEmailScreen(): JSX.Element | null {
         );
       }
 
-      setFinished(true);
-      setLoading(false);
+      setTimeout(() => {
+        setFinished(true);
+        setLoading(false);
+      }, 1000);
     } catch (e) {
       setLoading(false);
       setError(getEmailUpdateErrorMessage(getErrorMessage(e)));
