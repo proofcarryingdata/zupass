@@ -291,14 +291,11 @@ export class FeedSubscriptionManager {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {
-      const authKey = await this.getAuthKeyForFeed(subscription);
-
-      const pcdCredential: SerializedPCD | undefined = authKey
-        ? await this.makeAlternateCredentialPCD(authKey)
-        : await credentialManager.requestCredential({
-            signatureType: "sempahore-signature-pcd",
-            pcdType: subscription.feed.credentialRequest.pcdType
-          });
+      const pcdCredential: SerializedPCD | undefined =
+        await credentialManager.requestCredential({
+          signatureType: "sempahore-signature-pcd",
+          pcdType: subscription.feed.credentialRequest.pcdType
+        });
 
       const result = await this.api.pollFeed(subscription.providerUrl, {
         feedId: subscription.feed.id,

@@ -53,7 +53,7 @@ export function createCredentialCache(): CredentialCache {
 
 // Creates an in-memory cache with a TTL of one hour, backed by localStorage
 export function createStorageBackedCredentialCache(): CredentialCache {
-  return new StorageBackedMap("credential-cache-multi");
+  return new StorageBackedMap("credential-cache-multi-email");
 }
 
 /**
