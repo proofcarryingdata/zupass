@@ -25,7 +25,7 @@ export function CreatePost({
   };
 
   async function doTextRequest() {
-    if (confirm("Are you sure you want to post this?") === false) return;
+    if (!confirm("Are you sure you want to post this?") === false) return;
 
     if (text === undefined) return;
 

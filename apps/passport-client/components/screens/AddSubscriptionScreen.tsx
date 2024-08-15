@@ -196,11 +196,11 @@ export function AddSubscriptionScreen(): JSX.Element | null {
                 Your
                 {self.emails.length === 1 ? (
                   <>
-                    email is <strong>{self.emails[0]}</strong>
+                    email is: <strong>{self.emails[0]}</strong>
                   </>
                 ) : (
                   <>
-                    emails are{" "}
+                    emails are:{" "}
                     {self.emails.map((e, i) => (
                       <React.Fragment key={e}>
                         <strong>{e}</strong>
