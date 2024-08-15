@@ -1,13 +1,14 @@
 # todo
 
-- add logging everywhere that is appropriate
-- re-read `Credential.ts`
-- remove this todo file
 - test on ivan-staging
+- remove this todo file
 - deploy
 - test on prod
 
 # done
+
+- add logging everywhere that is appropriate
+- re-read `Credential.ts`
 
 - manually test:
 
