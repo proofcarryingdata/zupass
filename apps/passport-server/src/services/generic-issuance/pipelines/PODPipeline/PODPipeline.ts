@@ -153,6 +153,7 @@ export class PODPipeline implements BasePipeline {
             logs.push(
               makePLogInfo(`saved parsed data: ${atoms.length} entries`)
             );
+            await this.db.markAsLoaded(this.id);
           },
           // High priority means that this will run before any other DB access,
           // including reads.
@@ -372,7 +373,10 @@ export class PODPipeline implements BasePipeline {
 
       const actions: PCDAction[] = [];
 
-      if (this.definition.options.feedOptions.feedType === "deleteAndReplace") {
+      if (
+        this.definition.options.feedOptions.feedType === "deleteAndReplace" &&
+        (await this.db.hasLoaded(this.id))
+      ) {
         actions.push({
           type: PCDActionType.DeleteFolder,
           folder: this.definition.options.feedOptions.feedFolder,

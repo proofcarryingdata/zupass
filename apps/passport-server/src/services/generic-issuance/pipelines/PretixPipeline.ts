@@ -356,8 +356,6 @@ export class PretixPipeline implements BasePipeline {
           };
         });
 
-        await this.db.markAsLoaded(this.id);
-
         logger(
           LOG_TAG,
           `saving ${atomsToSave.length} atoms for pipeline id '${this.id}' of type ${this.type}`
@@ -378,6 +376,7 @@ export class PretixPipeline implements BasePipeline {
 
         await this.db.clear(this.definition.id);
         await this.db.save(this.definition.id, atomsToSave);
+        await this.db.markAsLoaded(this.id);
 
         logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
 

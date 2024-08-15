@@ -16,7 +16,6 @@
   - apps/passport-client/components/shared/NewPasswordForm.tsx
   - upgrading from old account to new account
 
-- PODPipeline should also have the new loaded check added to it, though I can pick that up if you don't want to add it.
 - add logging everywhere that is appropriate
 - re-read `Credential.ts`
 - remove this todo file
@@ -26,6 +25,7 @@
 
 # done
 
+- PODPipeline should also have the new loaded check added to it, though I can pick that up if you don't want to add it.
 - Because this branched off before PODPipeline was merged, I think these changes might break PODPipeline, and you might see some test failures around feed issuance when you merge/rebase with main
 - tests.
 - consider `ZupassUserJson` being incompatible in the new version

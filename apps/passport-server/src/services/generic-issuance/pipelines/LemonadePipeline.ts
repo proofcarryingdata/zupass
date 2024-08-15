@@ -385,8 +385,6 @@ export class LemonadePipeline implements BasePipeline {
               makePLogInfo(`loaded ${validTickets.length} valid tickets`)
             );
 
-            await this.db.markAsLoaded(this.id);
-
             return {
               eventConfig,
               tickets: validTickets
@@ -431,6 +429,7 @@ export class LemonadePipeline implements BasePipeline {
       // TODO: error handling
       await this.db.clear(this.definition.id);
       await this.db.save(this.definition.id, atomsToSave);
+      await this.db.markAsLoaded(this.id);
 
       const loadEnd = Date.now();
 
