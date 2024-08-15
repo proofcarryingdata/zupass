@@ -21,6 +21,7 @@
     "@radix-ui/react-avatar": "^1.1.0",
     "@radix-ui/react-dialog": "^1.1.1",
     "@radix-ui/react-slot": "^1.1.0",
+    "@radix-ui/react-toast": "^1.2.1",
     "@vercel/kv": "^2.0.0",
     "@vercel/postgres": "^0.9.0",
     "buffer": "^6.0.3",

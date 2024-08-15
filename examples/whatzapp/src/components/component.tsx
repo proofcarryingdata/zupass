@@ -13,6 +13,8 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/components/ui/use-toast";
 import { useEmbeddedZupass } from "@/hooks/useEmbeddedZupass";
 import { PODPCD } from "@pcd/pod-pcd";
 import { bigIntToPseudonymEmoji, bigIntToPseudonymName } from "@pcd/util";
@@ -258,6 +260,8 @@ export default function Component({
     string | null
   >(null);
 
+  const { toast } = useToast();
+
   const [newConversations, dispatch] = useReducer(conversationsReducer, []);
 
   const allConversations = useMemo(() => {
@@ -277,7 +281,16 @@ export default function Component({
         }`}
       >
         <div className="flex items-center h-[60px] border-b border-gray-200 dark:border-gray-800 px-4">
-          <Avatar className="w-8 h-8">
+          <Avatar
+            onClick={() => {
+              navigator.clipboard.writeText(myId);
+              toast({
+                title: "Copied!",
+                description: "Your ID has been copied to your clipboard."
+              });
+            }}
+            className="w-8 h-8 cursor-pointer"
+          >
             <AvatarFallback>
               {bigIntToPseudonymEmoji(BigInt(myId))}
             </AvatarFallback>
@@ -339,6 +352,7 @@ export default function Component({
           onClose={() => setSelectedConversation(null)}
         />
       )}
+      <Toaster />
     </div>
   );
 }
