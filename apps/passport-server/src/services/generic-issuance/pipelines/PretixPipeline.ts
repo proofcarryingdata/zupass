@@ -113,7 +113,6 @@ export class PretixPipeline implements BasePipeline {
   private definition: PretixPipelineDefinition;
   private cacheService: PersistentCacheService;
   private credentialSubservice: CredentialSubservice;
-  private loaded: boolean;
 
   // Pending check-ins are check-ins which have either completed (and have
   // succeeded) or are in-progress, but which are not yet reflected in the data
@@ -246,7 +245,6 @@ export class PretixPipeline implements BasePipeline {
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
     this.cacheService = cacheService;
-    this.loaded = false;
     this.checkinDB = checkinDB;
     this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
     this.credentialSubservice = credentialSubservice;
@@ -357,7 +355,6 @@ export class PretixPipeline implements BasePipeline {
             orderCode: ticket.order_code
           };
         });
-        this.loaded = true;
 
         logger(
           LOG_TAG,
@@ -379,6 +376,7 @@ export class PretixPipeline implements BasePipeline {
 
         await this.db.clear(this.definition.id);
         await this.db.save(this.definition.id, atomsToSave);
+        await this.db.markAsLoaded(this.id);
 
         logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
 
@@ -950,26 +948,42 @@ export class PretixPipeline implements BasePipeline {
         return { actions: [] };
       }
 
-      const { email, semaphoreId } =
+      const { emails, semaphoreId } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-      span?.setAttribute("email", email);
+      if (!emails || emails.length === 0) {
+        throw new Error("missing emails in credential");
+      }
+
+      span?.setAttribute("email", emails.map((e) => e.email).join(","));
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      const didUpdate = await this.consumerDB.save(
-        this.id,
-        email,
-        semaphoreId,
-        new Date()
-      );
+      let didUpdate = false;
 
-      if (this.autoIssuanceProvider) {
-        const newManualTickets =
-          await this.autoIssuanceProvider.maybeIssueForUser(
-            email,
-            await this.getAllManualTickets(),
-            await this.db.loadByEmail(this.id, email)
-          );
+      for (const e of emails) {
+        didUpdate =
+          didUpdate ||
+          (await this.consumerDB.save(
+            this.id,
+            e.email,
+            semaphoreId,
+            new Date()
+          ));
+      }
+
+      const provider = this.autoIssuanceProvider;
+      if (provider) {
+        const newManualTickets = (
+          await Promise.all(
+            emails.map(async (e) =>
+              provider.maybeIssueForUser(
+                e.email,
+                await this.getAllManualTickets(),
+                await this.db.loadByEmail(this.id, e.email)
+              )
+            )
+          )
+        ).flat();
 
         await Promise.allSettled(
           newManualTickets.map((t) => this.manualTicketDB.save(this.id, t))
@@ -985,13 +999,17 @@ export class PretixPipeline implements BasePipeline {
         }
       }
 
-      const tickets = await this.getTicketsForEmail(email, semaphoreId);
+      const tickets = (
+        await Promise.all(
+          emails.map((e) => this.getTicketsForEmail(e.email, semaphoreId))
+        )
+      ).flat();
 
       span?.setAttribute("pcds_issued", tickets.length);
 
       const actions: PCDAction[] = [];
 
-      if (this.loaded) {
+      if (await this.db.hasLoaded(this.id)) {
         actions.push({
           type: PCDActionType.DeleteFolder,
           folder: this.definition.options.feedOptions.feedFolder,
@@ -1238,7 +1256,7 @@ export class PretixPipeline implements BasePipeline {
   private async canCheckInForEvent(
     eventId: string,
     productId: string,
-    checkerEmail: string
+    checkerEmails: string[]
   ): Promise<true | PodboxTicketActionError> {
     const eventConfig = this.definition.options.events.find(
       (e) => e.genericIssuanceId === eventId
@@ -1248,9 +1266,16 @@ export class PretixPipeline implements BasePipeline {
       return { name: "InvalidTicket" };
     }
 
-    const realCheckerTickets = await this.db.loadByEmail(this.id, checkerEmail);
-    const manualCheckerTickets =
-      await this.getManualTicketsForEmail(checkerEmail);
+    const realCheckerTickets = (
+      await Promise.all(
+        checkerEmails.map((e) => this.db.loadByEmail(this.id, e))
+      )
+    ).flat();
+    const manualCheckerTickets = (
+      await Promise.all(
+        checkerEmails.map((e) => this.getManualTicketsForEmail(e))
+      )
+    ).flat();
 
     // Collect all of the product IDs that the checker owns for this event
     const checkerProductIds: string[] = [];
@@ -1395,7 +1420,7 @@ export class PretixPipeline implements BasePipeline {
       async (span): Promise<ActionConfigResponseValue> => {
         tracePipeline(this.definition);
 
-        let checkerEmail: string;
+        let checkerEmails: string[];
         const { eventId, ticketId } = request;
 
         // This method can only be used to pre-check for check-ins.
@@ -1407,15 +1432,21 @@ export class PretixPipeline implements BasePipeline {
         try {
           span?.setAttribute("ticket_id", ticketId);
 
-          const { email, semaphoreId } =
+          const { emails, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
 
-          span?.setAttribute("checker_email", email);
+          span?.setAttribute(
+            "checker_email",
+            emails?.map((e) => e.email).join(",") ?? ""
+          );
           span?.setAttribute("checked_semaphore_id", semaphoreId);
 
-          checkerEmail = email;
+          checkerEmails = emails?.map((e) => e.email) ?? [];
+          if (checkerEmails.length === 0) {
+            throw new Error("missing emails in credential");
+          }
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1443,7 +1474,7 @@ export class PretixPipeline implements BasePipeline {
           const canCheckInResult = await this.canCheckInForEvent(
             eventId,
             checkinInProductId,
-            checkerEmail
+            checkerEmails
           );
 
           if (canCheckInResult !== true) {
@@ -1564,7 +1595,9 @@ export class PretixPipeline implements BasePipeline {
           }
         } catch (e) {
           logger(
-            `${LOG_TAG} Error when finding ticket ${ticketId} for checkin by ${checkerEmail} on pipeline ${this.id}`,
+            `${LOG_TAG} Error when finding ticket ${ticketId} for checkin by ${JSON.stringify(
+              checkerEmails
+            )} on pipeline ${this.id}`,
             e
           );
           setError(e);
@@ -1580,7 +1613,9 @@ export class PretixPipeline implements BasePipeline {
         }
         // Didn't find any matching ticket
         logger(
-          `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${checkerEmail} on pipeline ${this.id}`
+          `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${JSON.stringify(
+            checkerEmails
+          )} on pipeline ${this.id}`
         );
         span?.setAttribute("checkin_error", "InvalidTicket");
         return {
@@ -1614,19 +1649,26 @@ export class PretixPipeline implements BasePipeline {
         )}`
       );
 
-      let checkerEmail: string;
+      let checkerEmails: string[];
       const { ticketId, eventId } = request;
 
       try {
         span?.setAttribute("ticket_id", ticketId);
-        const { email, semaphoreId } =
+        const { emails, semaphoreId } =
           await this.credentialSubservice.verifyAndExpectZupassEmail(
             request.credential
           );
 
-        span?.setAttribute("checker_email", email);
+        span?.setAttribute(
+          "checker_email",
+          emails?.map((e) => e.email).join(",") ?? ""
+        );
         span?.setAttribute("checked_semaphore_id", semaphoreId);
-        checkerEmail = email;
+        checkerEmails = emails?.map((e) => e.email) ?? [];
+
+        if (checkerEmails.length === 0) {
+          throw new Error("missing emails in credential");
+        }
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);
@@ -1644,7 +1686,7 @@ export class PretixPipeline implements BasePipeline {
       const canCheckInResult = await this.canCheckInForEvent(
         eventId,
         checkinInProductId,
-        checkerEmail
+        checkerEmails
       );
 
       if (canCheckInResult !== true) {
@@ -1654,16 +1696,18 @@ export class PretixPipeline implements BasePipeline {
       // First see if we have an atom which matches the ticket ID
       const ticketAtom = await this.db.loadById(this.id, ticketId);
       if (ticketAtom && ticketAtom.eventId === eventId) {
-        return this.checkInPretixTicket(ticketAtom, checkerEmail);
+        return this.checkInPretixTicket(ticketAtom, checkerEmails[0]);
       } else {
         const manualTicket = await this.getManualTicketById(ticketId);
         if (manualTicket && manualTicket.eventId === eventId) {
           // Manual ticket found, check in with the DB
-          return this.checkInManualTicket(manualTicket, checkerEmail);
+          return this.checkInManualTicket(manualTicket, checkerEmails[0]);
         } else {
           // Didn't find any matching ticket
           logger(
-            `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${checkerEmail} on pipeline ${this.id}`
+            `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${JSON.stringify(
+              checkerEmails
+            )} on pipeline ${this.id}`
           );
           span?.setAttribute("checkin_error", "InvalidTicket");
           return { success: false, error: { name: "InvalidTicket" } };

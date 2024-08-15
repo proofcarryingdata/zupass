@@ -118,8 +118,9 @@ export function AddSubscriptionScreen(): JSX.Element | null {
     } else {
       if (
         suggestedEmail &&
-        self.email.trim().toLocaleLowerCase() !==
-          suggestedEmail.trim().toLocaleLowerCase()
+        !self.emails
+          .map((e) => e.trim().toLocaleLowerCase())
+          .includes(suggestedEmail?.trim().toLocaleLowerCase())
       ) {
         // User is logged in, but they probably got this subscription link from an email for a different address
         setMismatchedEmails(true);
@@ -192,14 +193,30 @@ export function AddSubscriptionScreen(): JSX.Element | null {
           {mismatchedEmails && (
             <MismatchedEmailWarning>
               <p>
-                Your email is <strong>{self.email}</strong> but the subscription
-                link was sent to <strong>{suggestedEmail}</strong>.
+                Your
+                {self.emails.length === 1 ? (
+                  <>
+                    email is: <strong>{self.emails[0]}</strong>
+                  </>
+                ) : (
+                  <>
+                    emails are:{" "}
+                    {self.emails.map((e, i) => (
+                      <React.Fragment key={e}>
+                        <strong>{e}</strong>
+                        {i !== self.emails.length - 1 && ", "}
+                      </React.Fragment>
+                    ))}
+                  </>
+                )}{" "}
+                but the subscription link was sent to{" "}
+                <strong>{suggestedEmail}</strong>, which doesn't belong to this
+                account.
               </p>
               <p>
-                This may mean that you cannot receive the expected PCDs. You may
-                be able to contact the issuer to change the email address to{" "}
-                <strong>{self.email}</strong>, or sign up for a new Zupass
-                account with <strong>{suggestedEmail}</strong>.
+                This may mean that you cannot receive your expected PCDs. If you
+                own <strong>{suggestedEmail}</strong> you can add it to your
+                Zupass account in Zupass settings.
               </p>
             </MismatchedEmailWarning>
           )}

@@ -19,6 +19,7 @@ import {
   requestUser,
   serializeStorage,
   StorageWithRevision,
+  SubscriptionActions,
   User,
   zupassDefaultSubscriptions,
   ZupassFeedIds
@@ -631,7 +632,7 @@ async function setSelf(
       {
         oldSalt: state.self.salt,
         newSalt: self.salt,
-        email: self.email
+        emails: self.emails
       }
     );
   } else if (
@@ -676,7 +677,7 @@ function clearError(state: AppState, update: ZuUpdate): void {
 async function resetPassport(state: AppState, update: ZuUpdate): Promise<void> {
   requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
-    email: state.self?.email,
+    emails: state.self?.emails,
     commitment: state.self?.commitment
   });
   // Clear saved state.
@@ -1035,50 +1036,41 @@ async function doSync(
         state.pcds,
         state.credentialCache
       );
-
-      /**
-       * Because the Email PCD is used as a credential for other feeds, it is
-       * necessary to ensure that the Email PCD is present before polling other
-       * feeds.
-       * We already fetch the Email PCD in {@link finishAccountCreation()}, so
-       * it *should* be present in the PCD collection already. However, there
-       * may have been an intermittent failure (e.g. due to connectivity issues
-       * or the restart of the Zupass server during a deployment). In this
-       * case, we try again here, before continuing to fetch the other feeds.
-       * If there is already an Email PCD then we can skip this step.
-       */
-      if (state.pcds.getPCDsByType(EmailPCDTypeName).length === 0) {
-        console.log(
-          "[SYNC] email PCD not found, attempting to poll Email PCD subscription"
-        );
-        const emailPCDSubscription = state.subscriptions.findSubscription(
-          ZUPASS_FEED_URL,
-          ZupassFeedIds.Email
-        );
-        if (emailPCDSubscription) {
-          console.log("[SYNC] Email PCD subscription found, polling");
-          const emailPCDActions =
-            await state.subscriptions.pollSingleSubscription(
-              emailPCDSubscription,
-              credentialManager
-            );
-          console.log(
-            `[SYNC] Fetched ${emailPCDActions.length} actions from Email PCD feed`
-          );
-          await applyActions(state.pcds, emailPCDActions);
-        }
-      }
       console.log("[SYNC] initalized credentialManager", credentialManager);
+
       const stats = { nActions: 0, nFeeds: 0 };
+      const onSubscriptionResult = async (
+        actions: SubscriptionActions
+      ): Promise<void> => {
+        await applyActions(state.pcds, [actions]);
+        await savePCDs(state.pcds);
+        await saveSubscriptions(state.subscriptions);
+        stats.nActions += actions.actions.length;
+        stats.nFeeds++;
+      };
+
+      // first, always poll the email feed
+      await state.subscriptions.pollEmailSubscription(
+        ZUPASS_FEED_URL,
+        credentialManager,
+        onSubscriptionResult
+      );
+
+      // then, poll everything *except* the email feed
       const subscriptionActions = await state.subscriptions.pollSubscriptions(
         credentialManager,
-        async (actions) => {
-          await applyActions(state.pcds, [actions]);
-          await savePCDs(state.pcds);
-          await saveSubscriptions(state.subscriptions);
-          stats.nActions += actions.actions.length;
-          stats.nFeeds++;
-        }
+        onSubscriptionResult,
+        state.subscriptions
+          .getActiveSubscriptions()
+          .filter(
+            (s) =>
+              s.id !==
+              state.subscriptions.findSubscription(
+                ZUPASS_FEED_URL,
+                ZupassFeedIds.Email
+              )?.id
+          )
+          .map((s) => s.id)
       );
 
       console.log(
@@ -1129,6 +1121,7 @@ async function doSync(
       state.serverStorageRevision,
       credential
     );
+
     if (upRes.success) {
       return {
         serverStorageRevision: upRes.value.revision,

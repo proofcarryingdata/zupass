@@ -32,7 +32,7 @@ import {
   getExistingClaimUrlByTicketId
 } from "../database/queries/poap";
 import { fetchZuconnectTicketById } from "../database/queries/zuconnect/fetchZuconnectTickets";
-import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import { fetchAllUsersWithZuzaluTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { getServerErrorUrl } from "../util/util";
@@ -187,14 +187,13 @@ export class PoapService {
       // A bit of a hack given our implementation details - we know that the ticketId for
       // a Zuzalu EdDSATicketPCD is always set to the user's uuid during issuance, which happens
       // in the function {@link issueZuzaluTicketPCDs} within issuanceService.ts.
-      const zuzaluPretixTicket = await fetchLoggedInZuzaluUser(
-        this.context.dbPool,
-        { uuid: ticketId }
+      const allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(
+        this.context.dbPool
       );
-      if (zuzaluPretixTicket === null) {
+      const matchingTicket = allZuzaluUsers.find((u) => u.uuid === ticketId);
+      if (matchingTicket === null) {
         throw new Error("zuzalu ticket does not exist");
       }
-
       return ticketId;
     });
   }

@@ -1,11 +1,5 @@
 import { RollbarProvider } from "@pcd/client-shared";
 import {
-  CredentialManager,
-  ZUPASS_CREDENTIAL_REQUEST,
-  requestOfflineTickets,
-  requestOfflineTicketsCheckin
-} from "@pcd/passport-interface";
-import {
   getErrorMessage,
   isLocalStorageAvailable,
   isWebAssemblySupported
@@ -23,8 +17,10 @@ import {
   TextCenter
 } from "../components/core";
 import { RippleLoader } from "../components/core/RippleLoader";
+import { AddEmailScreen } from "../components/screens/AddEmailScreen";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
+import { ChangeEmailScreen } from "../components/screens/ChangeEmailScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
@@ -45,10 +41,9 @@ import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExist
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
+import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
-import { DevconnectCheckinByIdScreen } from "../components/screens/ScannedTicketScreens/DevconnectCheckinByIdScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
-import { SecondPartyTicketVerifyScreen } from "../components/screens/ScannedTicketScreens/SecondPartyTicketVerifyScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
@@ -68,11 +63,7 @@ import {
 import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import { loadInitialState } from "../src/loadInitialState";
-import {
-  saveCheckedInOfflineTickets,
-  saveOfflineTickets,
-  saveUsingLaserScanner
-} from "../src/localstorage";
+import { saveUsingLaserScanner } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
@@ -188,67 +179,12 @@ function useBackgroundJobs(): void {
       }
     };
 
-    const startJobSyncOfflineCheckins = async (): Promise<void> => {
-      await jobSyncOfflineCheckins();
-      setInterval(jobSyncOfflineCheckins, 1000 * 60);
-    };
-
-    const jobSyncOfflineCheckins = async (): Promise<void> => {
-      const state = getState();
-      if (!state.self || state.offline) {
-        return;
-      }
-
-      const credentialManager = new CredentialManager(
-        getState().identity,
-        getState().pcds,
-        getState().credentialCache
-      );
-
-      if (state.checkedinOfflineDevconnectTickets.length > 0) {
-        const checkinOfflineTicketsResult = await requestOfflineTicketsCheckin(
-          appConfig.zupassServer,
-          {
-            checkedOfflineInDevconnectTicketIDs:
-              state.checkedinOfflineDevconnectTickets.map((t) => t.id),
-            checkerProof: await credentialManager.requestCredential(
-              ZUPASS_CREDENTIAL_REQUEST
-            )
-          }
-        );
-
-        if (checkinOfflineTicketsResult.success) {
-          update({
-            checkedinOfflineDevconnectTickets: []
-          });
-          saveCheckedInOfflineTickets(undefined);
-        }
-      }
-
-      const offlineTicketsResult = await requestOfflineTickets(
-        appConfig.zupassServer,
-        {
-          checkerProof: await credentialManager.requestCredential(
-            ZUPASS_CREDENTIAL_REQUEST
-          )
-        }
-      );
-
-      if (offlineTicketsResult.success) {
-        update({
-          offlineTickets: offlineTicketsResult.value.offlineTickets
-        });
-        saveOfflineTickets(offlineTicketsResult.value.offlineTickets);
-      }
-    };
-
     const startBackgroundJobs = (): void => {
       console.log("[JOB] Starting background jobs...");
       document.addEventListener("visibilitychange", () => {
         setupPolling();
       });
       setupPolling();
-      startJobSyncOfflineCheckins();
       jobCheckConnectivity();
     };
 
@@ -339,6 +275,9 @@ function RouterImpl(): JSX.Element {
           <Route path="privacy-notice" element={<PrivacyNoticeScreen />} />
           <Route path="create-password" element={<CreatePasswordScreen />} />
           <Route path="change-password" element={<ChangePasswordScreen />} />
+          <Route path="change-email" element={<ChangeEmailScreen />} />
+          <Route path="add-email" element={<AddEmailScreen />} />
+          <Route path="remove-email" element={<RemoveEmailScreen />} />
           <Route
             path="one-click-login/:email/:code/:targetFolder"
             element={<OneClickLoginScreen />}
@@ -356,14 +295,6 @@ function RouterImpl(): JSX.Element {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          {/* This route is used by non-Devconnect tickets */}
-          <Route path="verify" element={<SecondPartyTicketVerifyScreen />} />
-          {/* This route is used to check in a Devconnect ticket with only
-              the ticket ID in the parameters */}
-          <Route
-            path="checkin-by-id"
-            element={<DevconnectCheckinByIdScreen />}
-          />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />

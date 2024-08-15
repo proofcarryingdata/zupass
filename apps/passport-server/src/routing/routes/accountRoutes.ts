@@ -1,9 +1,12 @@
 import {
+  AddUserEmailRequest,
   AgreeTermsRequest,
+  ChangeUserEmailRequest,
   ConfirmEmailRequest,
   CreateNewUserRequest,
   DeleteAccountRequest,
   OneClickLoginRequest,
+  RemoveUserEmailRequest,
   SaltResponseValue,
   VerifyTokenRequest
 } from "@pcd/passport-interface";
@@ -168,6 +171,13 @@ export function initAccountRoutes(
   });
 
   /**
+   * Prevent old clients from using the old /account/user route.
+   */
+  app.get("/account/user/:uuid", async (req: Request, res: Response) => {
+    res.status(503).send("Not implemented");
+  });
+
+  /**
    * Gets a Zupass user by their uuid.
    * If the service is not ready, returns a 503 server error.
    * If the user does not exist, returns a 404.
@@ -176,7 +186,7 @@ export function initAccountRoutes(
    * @todo - should we censor part of this unless you're the given user? eg.
    * should we be returning the `salt` here?
    */
-  app.get("/account/user/:uuid", async (req: Request, res: Response) => {
+  app.get("/v2/account/user/:uuid", async (req: Request, res: Response) => {
     await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
   });
 
@@ -198,5 +208,70 @@ export function initAccountRoutes(
     const pcd = checkBody<DeleteAccountRequest, "pcd">(req, "pcd");
     await userService.handleDeleteAccount(pcd);
     res.sendStatus(200);
+  });
+
+  /**
+   * Adds a new email address to a user's account.
+   */
+  app.post("/account/add-email", async (req: Request, res: Response) => {
+    const newEmail = checkBody<AddUserEmailRequest, "newEmail">(req, "newEmail")
+      .trim()
+      .toLocaleLowerCase();
+    const pcd = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
+    const confirmationCode = req.body.confirmationCode as string | undefined;
+
+    const result = await userService.handleAddUserEmail(
+      newEmail,
+      pcd,
+      confirmationCode
+    );
+
+    res.status(200).json(result);
+  });
+
+  /**
+   * Removes an email address from a user's account.
+   */
+  app.post("/account/delete-email", async (req: Request, res: Response) => {
+    const emailToRemove = checkBody<RemoveUserEmailRequest, "emailToRemove">(
+      req,
+      "emailToRemove"
+    )
+      .trim()
+      .toLocaleLowerCase();
+    const pcd = checkBody<RemoveUserEmailRequest, "pcd">(req, "pcd");
+
+    const result = await userService.handleRemoveUserEmail(emailToRemove, pcd);
+
+    res.status(200).json(result);
+  });
+
+  /**
+   * Changes a user's email address.
+   */
+  app.post("/account/change-email", async (req: Request, res: Response) => {
+    const oldEmail = checkBody<ChangeUserEmailRequest, "oldEmail">(
+      req,
+      "oldEmail"
+    )
+      .trim()
+      .toLocaleLowerCase();
+    const newEmail = checkBody<ChangeUserEmailRequest, "newEmail">(
+      req,
+      "newEmail"
+    )
+      .trim()
+      .toLocaleLowerCase();
+    const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
+    const confirmationCode = req.body.confirmationCode as string | undefined;
+
+    const result = await userService.handleChangeUserEmail(
+      oldEmail,
+      newEmail,
+      pcd,
+      confirmationCode
+    );
+
+    res.status(200).send(result);
   });
 }

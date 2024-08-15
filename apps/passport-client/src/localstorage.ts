@@ -1,9 +1,6 @@
 import {
-  defaultOfflineTickets,
   FeedSubscriptionManager,
   NetworkFeedApi,
-  OfflineDevconnectTicket,
-  OfflineTickets,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -77,62 +74,6 @@ export async function loadSubscriptions(): Promise<FeedSubscriptionManager> {
   );
 }
 
-const OFFLINE_TICKETS_KEY = "offline_tickets";
-export function saveOfflineTickets(
-  offlineTickets: OfflineTickets | undefined
-): void {
-  if (!offlineTickets) {
-    window.localStorage.removeItem(OFFLINE_TICKETS_KEY);
-  } else {
-    window.localStorage.setItem(
-      OFFLINE_TICKETS_KEY,
-      JSON.stringify(offlineTickets)
-    );
-  }
-}
-export function loadOfflineTickets(): OfflineTickets {
-  let tickets = defaultOfflineTickets();
-
-  try {
-    tickets = JSON.parse(
-      window.localStorage.getItem(OFFLINE_TICKETS_KEY) ??
-        JSON.stringify(defaultOfflineTickets())
-    );
-  } catch (e) {
-    //
-  }
-
-  return tickets;
-}
-
-const CHECKED_IN_OFFLINE_TICKETS_KEY = "checked_in_offline_devconnect_tickets";
-export function saveCheckedInOfflineTickets(
-  offlineTickets: OfflineDevconnectTicket[] | undefined
-): void {
-  if (!offlineTickets) {
-    window.localStorage.removeItem(CHECKED_IN_OFFLINE_TICKETS_KEY);
-  } else {
-    window.localStorage.setItem(
-      CHECKED_IN_OFFLINE_TICKETS_KEY,
-      JSON.stringify(offlineTickets)
-    );
-  }
-}
-export function loadCheckedInOfflineDevconnectTickets(): OfflineDevconnectTicket[] {
-  let tickets: OfflineDevconnectTicket[] = [];
-
-  try {
-    tickets = JSON.parse(
-      window.localStorage.getItem(CHECKED_IN_OFFLINE_TICKETS_KEY) ?? "[]"
-    );
-  } catch (e) {
-    //
-    tickets = [];
-  }
-
-  return tickets;
-}
-
 export function saveEncryptionKey(key: string): void {
   window.localStorage["encryption_key"] = key;
 }
@@ -144,7 +85,21 @@ export function loadEncryptionKey(): string | undefined {
 export function loadSelf(): User | undefined {
   const self = window.localStorage["self"];
   if (self && self !== "") {
-    return JSON.parse(self);
+    const parsedSelf = JSON.parse(self);
+
+    // this upgrades the storage representation of an account that
+    // existed prior to the introduction of multi-email support so
+    // that it is compatible with the latest data model
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const singleEmail = (parsedSelf as any)?.email as string | undefined;
+    if (singleEmail && parsedSelf) {
+      parsedSelf.emails = [singleEmail];
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (parsedSelf as any).email;
+    }
+
+    return parsedSelf;
   }
 }
 
@@ -226,3 +181,15 @@ export function saveUsingLaserScanner(usingLaserScanner: boolean): void {
 export function loadUsingLaserScanner(): boolean {
   return window.localStorage["using_laser_scanner"] === "true";
 }
+
+function cleanUpDeprecatedStorage(): void {
+  try {
+    window?.localStorage?.removeItem("offline_tickets");
+    window?.localStorage?.removeItem("checked_in_offline_devconnect_tickets");
+    window?.localStorage?.removeItem("credential-cache-multi");
+  } catch (e) {
+    console.error("Error cleaning up deprecated storage", e);
+  }
+}
+
+cleanUpDeprecatedStorage();

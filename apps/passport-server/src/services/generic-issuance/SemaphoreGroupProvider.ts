@@ -9,6 +9,7 @@ import {
 } from "@pcd/semaphore-group-pcd";
 import { uuidToBigInt } from "@pcd/util";
 import { Group } from "@semaphore-protocol/group";
+import _ from "lodash";
 import { IPipelineConsumerDB } from "../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../database/queries/pipelineSemaphoreHistoryDB";
 import { traced } from "../telemetryService";
@@ -211,7 +212,9 @@ export class SemaphoreGroupProvider {
           ? await this.consumerDB.loadByEmails(this.pipelineId, emails)
           : [];
 
-      const semaphoreIds = consumers.map((consumer) => consumer.commitment);
+      const semaphoreIds = _.uniq(
+        consumers.map((consumer) => consumer.commitment)
+      );
       const group = this.groups.get(groupConfig.groupId);
       if (!group) {
         throw new Error(

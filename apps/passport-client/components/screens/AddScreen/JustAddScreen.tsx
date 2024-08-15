@@ -1,13 +1,10 @@
-import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import {
   PCDAddRequest,
-  ProtocolWorldsFolderName,
-  requestLogToServer
+  ProtocolWorldsFolderName
 } from "@pcd/passport-interface";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { appConfig } from "../../../src/appConfig";
 import {
   useCredentialManager,
   useDispatch,
@@ -30,7 +27,6 @@ import { AppHeader } from "../../shared/AppHeader";
 import { PCDCard } from "../../shared/PCDCard";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { ProtocolWorldsStyling } from "../ProtocolWorldsScreens/ProtocolWorldsStyling";
-import { useTensionConfetti } from "../ProtocolWorldsScreens/useTensionConfetti";
 
 /**
  * Screen that allows the user to respond to a `PCDAddRequest` and add
@@ -55,8 +51,6 @@ export function JustAddScreen({
     signatureType: "sempahore-signature-pcd"
   });
   const isProtocolWorlds = request.folder === ProtocolWorldsFolderName;
-  const [ref, setRef] = useState<HTMLElement | null>(null);
-  const confetti = useTensionConfetti(ref);
   const hasAutoAdded = useRef(false);
 
   const onAddClick = useCallback(async () => {
@@ -90,29 +84,12 @@ export function JustAddScreen({
         pcds: [maybeSerialisedMintedPCD],
         folder: request.folder
       });
-      if (isProtocolWorlds) {
-        confetti();
-        await requestLogToServer(appConfig.zupassServer, "added-tension", {
-          commitment: self.commitment.toString(),
-          email: self.email,
-          pcd: request.pcd,
-          tension: (pcd as EdDSATicketPCD)?.claim?.ticket?.eventName
-        });
-      }
+
       setAdded(true);
     } catch (e) {
       await err(dispatch, "Error Adding PCD", getErrorMessage(e));
     }
-  }, [
-    confetti,
-    dispatch,
-    self,
-    pcd,
-    isMintable,
-    isProtocolWorlds,
-    request,
-    semaphoreSignaturePCD
-  ]);
+  }, [dispatch, self, isMintable, request, semaphoreSignaturePCD]);
 
   useEffect(() => {
     if (autoAdd && !hasAutoAdded.current) {
@@ -170,7 +147,7 @@ export function JustAddScreen({
       {isProtocolWorlds && <ProtocolWorldsStyling />}
       <MaybeModal fullScreen isProveOrAddScreen={true} />
       <AppContainer bg="gray">
-        <Container ref={(r) => setRef(r)}>
+        <Container>
           <Spacer h={16} />
           <AppHeader isProveOrAddScreen={true} />
           <Spacer h={16} />

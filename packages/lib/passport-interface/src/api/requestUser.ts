@@ -13,7 +13,7 @@ export async function requestUser(
   uuid: string
 ): Promise<RequestUserResult> {
   return httpGet<RequestUserResult>(
-    urlJoin(zupassServerUrl, "/account/user", uuid),
+    urlJoin(zupassServerUrl, "/v2/account/user", uuid),
     {
       onValue: async (resText) => ({
         value: JSON.parse(resText) as UserResponseValue,

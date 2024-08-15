@@ -421,7 +421,8 @@ describe("Subscription Manager", async function () {
 
     const serializedEmailPCD = await EmailPCDPackage.serialize(emailPCD);
     // Make sure that the feed was able to decode the EmailPCD
-    expect(mockFeedApi.receivedPayload?.pcd).to.deep.eq(serializedEmailPCD);
+    expect(mockFeedApi.receivedPayload?.pcd).to.deep.eq(undefined);
+    expect(mockFeedApi.receivedPayload?.pcds).to.deep.eq([serializedEmailPCD]);
     expect(mockFeedApi.receivedPayload?.timestamp).to.not.be.undefined;
   });
 

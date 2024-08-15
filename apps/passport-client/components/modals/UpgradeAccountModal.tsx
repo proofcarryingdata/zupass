@@ -1,6 +1,6 @@
 import { CredentialManager } from "@pcd/passport-interface";
 import { getErrorMessage, sleep } from "@pcd/util";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   useDispatch,
@@ -12,7 +12,7 @@ import {
 import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { BigInput, H2, Spacer } from "../core";
+import { H2, Spacer } from "../core";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 import { ScreenLoader } from "../shared/ScreenLoader";
 
@@ -106,13 +106,21 @@ export function UpgradeAccountModal(): JSX.Element | null {
       you must choose a password. Make sure to remember it, otherwise you will
       lose access to all your PCDs.
       <Spacer h={24} />
-      <BigInput value={self.email} disabled={true} />
+      <div>
+        {self.emails.map((e, i) => (
+          <React.Fragment key={i}>
+            {e}
+            <br />
+          </React.Fragment>
+        ))}
+      </div>
+      <Spacer h={8} />
       <Spacer h={8} />
       <NewPasswordForm
         error={error}
         setError={setError}
         passwordInputPlaceholder="New password"
-        email={self.email}
+        emails={self.emails}
         revealPassword={revealPassword}
         setRevealPassword={setRevealPassword}
         submitButtonText="Confirm"

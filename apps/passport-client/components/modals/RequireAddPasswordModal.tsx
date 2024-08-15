@@ -1,6 +1,6 @@
 import { CredentialManager } from "@pcd/passport-interface";
 import { getErrorMessage, sleep } from "@pcd/util";
-import { useCallback, useState } from "react";
+import React, { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import {
   useDispatch,
@@ -12,7 +12,7 @@ import {
 import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { BigInput, CenterColumn, H2, Spacer, TextCenter } from "../core";
+import { CenterColumn, H2, Spacer, TextCenter } from "../core";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 import { ScreenLoader } from "../shared/ScreenLoader";
 
@@ -20,7 +20,7 @@ import { ScreenLoader } from "../shared/ScreenLoader";
  * This uncloseable modal is shown to users of Zupass who have a sync key,
  * and have never created a password. It asks them to create a password.
  */
-export function RequireAddPasswordModal(): JSX.Element {
+export function RequireAddPasswordModal(): ReactNode {
   useSyncE2EEStorage();
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
@@ -84,6 +84,10 @@ export function RequireAddPasswordModal(): JSX.Element {
     update
   ]);
 
+  if (!self) {
+    return null;
+  }
+
   if (loading) {
     return <ScreenLoader text="Adding your password..." />;
   }
@@ -101,13 +105,21 @@ export function RequireAddPasswordModal(): JSX.Element {
         </TextCenter>
 
         <Spacer h={24} />
-        <BigInput value={self?.email ?? ""} disabled={true} />
+        <div>
+          {self.emails.map((e, i) => (
+            <React.Fragment key={i}>
+              {e}
+              <br />
+            </React.Fragment>
+          ))}
+        </div>
         <Spacer h={8} />
+
         <NewPasswordForm
           error={error}
           setError={setError}
           passwordInputPlaceholder="New password"
-          email={self?.email ?? ""}
+          emails={self.emails}
           revealPassword={revealPassword}
           setRevealPassword={setRevealPassword}
           submitButtonText="Confirm"
