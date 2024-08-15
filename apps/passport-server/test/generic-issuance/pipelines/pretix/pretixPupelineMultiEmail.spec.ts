@@ -48,7 +48,7 @@ async function testGetTickets(
   emailPCDs: EmailPCD[],
   identity: Identity,
   expectedEmails: string[]
-) {
+): Promise<void> {
   const attendeeTickets = await requestTicketsFromPipelineWithEmailPCDs(
     pipeline.issuanceCapability.options.feedFolder,
     feedUrl,
