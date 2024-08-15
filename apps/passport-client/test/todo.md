@@ -1,5 +1,14 @@
 # todo
 
+- add logging everywhere that is appropriate
+- re-read `Credential.ts`
+- remove this todo file
+- test on ivan-staging
+- deploy
+- test on prod
+
+# done
+
 - manually test:
 
   - apps/passport-client/components/modals/RequireAddPasswordModal.tsx
@@ -15,15 +24,7 @@
   - apps/passport-client/components/screens/RemoveEmailScreen.tsx
   - apps/passport-client/components/shared/NewPasswordForm.tsx
   - upgrading from old account to new account
-
-- add logging everywhere that is appropriate
-- re-read `Credential.ts`
-- remove this todo file
-- test on ivan-staging
-- deploy
-- test on prod
-
-# done
+  - creating a new account
 
 - PODPipeline should also have the new loaded check added to it, though I can pick that up if you don't want to add it.
 - Because this branched off before PODPipeline was merged, I think these changes might break PODPipeline, and you might see some test failures around feed issuance when you merge/rebase with main
@@ -79,13 +80,12 @@
 - implement backend routes for all three of {change, update, delete} email
 - make sure `saveUser.tsx` is doing the right thing
 - go through `userService` and make sure everything is coherent
+- turn off old auth key feature.
+- specific email copy for 'adding new email address' action with verification code
 
 # won't do
 
-- turn off old auth key feature.
 - multiple semaphore identities.
-- specific email copy for 'adding new email address' action with verification code
 - copy that communicates how to 'merge'
 - stable order for user email addresses
 - add a copy of the 'export' button to the 'delete account' flow, and suggest the user downloads an export of their data
-- make error for when an email is already owned by YOU
