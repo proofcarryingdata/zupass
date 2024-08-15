@@ -1,11 +1,27 @@
 # todo
 
+- manually test:
+
+  - apps/passport-client/components/modals/RequireAddPasswordModal.tsx
+  - apps/passport-client/components/modals/SettingsModal.tsx
+  - apps/passport-client/components/modals/UpgradeAccountModal.tsx
+  - apps/passport-client/components/screens/AddEmailScreen.tsx
+  - apps/passport-client/components/screens/AddScreen/JustAddScreen.tsx
+  - apps/passport-client/components/screens/AddSubscriptionScreen.tsx
+  - apps/passport-client/components/screens/ChangeEmailScreen.tsx
+  - apps/passport-client/components/screens/ChangePasswordScreen.tsx
+  - apps/passport-client/components/screens/LoginScreens/CreatePasswordScreen.tsx
+  - apps/passport-client/components/screens/LoginScreens/OneClickLoginScreen.tsx
+  - apps/passport-client/components/screens/RemoveEmailScreen.tsx
+  - apps/passport-client/components/shared/NewPasswordForm.tsx
+  - upgrading from old account to new account
+
+- PODPipeline should also have the new loaded check added to it, though I can pick that up if you don't want to add it.
 - add logging everywhere that is appropriate
 
 # done
 
 - Because this branched off before PODPipeline was merged, I think these changes might break PODPipeline, and you might see some test failures around feed issuance when you merge/rebase with main
-- PODPipeline should also have the new loaded check added to it, though I can pick that up if you don't want to add it.
 - tests.
 - consider `ZupassUserJson` being incompatible in the new version
 - fix problem where too many fields are returned from `fetchZuconnect` and `fetchZuzalu` - users
