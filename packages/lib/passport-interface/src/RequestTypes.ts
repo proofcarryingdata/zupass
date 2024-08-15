@@ -1140,7 +1140,6 @@ export enum EmailUpdateError {
   CantDeleteOnlyEmail = "CantDeleteOnlyEmail",
   CantChangeWrongOldEmail = "CantChangeWrongOldEmail",
   CantChangeWhenMultipleEmails = "CantChangeWhenMultipleEmails",
-  EmailAlreadyAdded = "EmailAlreadyAdded",
   EmailNotAssociatedWithThisAccount = "EmailNotAssociatedWithThisAccount",
   UserNotFound = "UserNotFound",
   InvalidInput = "InvalidInput",

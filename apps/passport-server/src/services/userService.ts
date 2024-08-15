@@ -653,7 +653,7 @@ export class UserService {
     }
 
     if (requestingUser.emails.includes(emailToAdd)) {
-      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyAdded);
+      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
     }
 
     if (

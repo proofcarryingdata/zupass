@@ -14,7 +14,7 @@ export function getEmailUpdateErrorMessage(
       return "You can't delete your only email address. Please add another email before deleting this one.";
     case EmailUpdateError.CantChangeWhenMultipleEmails:
       return "You can't change your email when you have multiple email addresses associated with your account. Please remove extra emails first.";
-    case EmailUpdateError.EmailAlreadyAdded:
+    case EmailUpdateError.EmailAlreadyRegistered:
       return "This email is already added to your account.";
     case EmailUpdateError.EmailNotAssociatedWithThisAccount:
       return "This email is not associated with your account.";

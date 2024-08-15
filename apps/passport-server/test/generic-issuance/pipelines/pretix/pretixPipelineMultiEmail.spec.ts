@@ -41,21 +41,26 @@ import {
 } from "../../util";
 import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
 
+/**
+ * Given some email PCDs, expect some list of tickets, identified by email addresses
+ * to be returned.
+ *
+ * NOTE: our feeds issue both POD and non-POD tickets. Thus you should expect to see
+ * 2 PCDs for each email address.
+ */
 async function testGetTickets(
   pipeline: PretixPipeline,
-  feedUrl: string,
   emailPCDs: EmailPCD[],
   identity: Identity,
   expectedEmails: string[]
 ): Promise<void> {
   const attendeeTickets = await requestTicketsFromPipelineWithEmailPCDs(
     pipeline.issuanceCapability.options.feedFolder,
-    feedUrl,
+    pipeline.issuanceCapability.feedUrl,
     pipeline.issuanceCapability.options.feedId,
     identity,
     emailPCDs
   );
-
   expectLength(attendeeTickets, expectedEmails.length);
 
   while (attendeeTickets.length > 0) {
@@ -71,6 +76,10 @@ async function testGetTickets(
   }
 }
 
+/**
+ * Asks Zupass server for Email PCD, which is necessary to prove ownership of an email address
+ * to Feed servers.
+ */
 async function testGetEmailPCDs(
   giBackend: Zupass,
   testUserIdentity: Identity,
@@ -129,7 +138,6 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
   const nowDate = new Date();
   const now = Date.now();
 
-  // let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
   let giService: GenericIssuanceService;
 
@@ -138,28 +146,23 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
     adminGIUserEmail,
     ethLatAmGIUserID,
     ethLatAmGIUserEmail,
-    // EthLatAmBouncerIdentity,
-    // EthLatAmAttendeeIdentity,
-    // EthLatAmManualAttendeeIdentity,
-    // EthLatAmManualAttendeeEmail,
-    // EthLatAmManualBouncerIdentity,
-    // EthLatAmManualBouncerEmail,
     mockServer,
     pretixBackend,
     ethLatAmPipeline
-    // ethLatAmSemaphoreGroupIds
   } = setupTestPretixPipeline();
 
   const pipelineDefinitions = [ethLatAmPipeline];
-
   let pipeline: PretixPipeline;
-  let testUserIdentity: Identity;
-  const testUserInitialEmail = randomEmail();
-  let currentEmailPCDs: EmailPCD[] = [];
+  let aliceIdentity: Identity;
+  const aliceInitialEmail = randomEmail();
+  let aliceCurrentEmailPCDs: EmailPCD[] = [];
+  let bobIdentity: Identity;
+  const bobInitialEmail = randomEmail();
+  let bobCurrentEmailPCDs: EmailPCD[] = [];
 
   /**
-   * Sets up a Zupass/Generic issuance backend with one pipeline:
-   * - {@link PretixPipeline}, as defined by {@link setupTestPretixPipeline}
+   * Sets up a Zupass/Generic issuance backend with one pipeline
+   * {@link PretixPipeline}, as defined by {@link setupTestPretixPipeline}
    */
   this.beforeAll(async () => {
     const zupassPublicKey = JSON.stringify(
@@ -174,7 +177,6 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
     giBackend = await startTestingApp({});
 
     const userDB = new PipelineUserDB(giBackend.context.dbPool);
-
     const adminUser: PipelineUser = {
       id: adminGIUserId,
       email: adminGIUserEmail,
@@ -193,7 +195,6 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
       },
       await userDB.getUserById(adminUser.id)
     );
-
     const ethLatAmGIUser: PipelineUser = {
       id: ethLatAmGIUserID,
       email: ethLatAmGIUserEmail,
@@ -217,7 +218,6 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
     // with it. Unhandled requests will bypass the mock server.
     mockServer.listen({ onUnhandledRequest: "bypass" });
 
-    ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
     giService = giBackend.services
       .genericIssuanceService as GenericIssuanceService;
     await giService.stop();
@@ -239,101 +239,119 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
   });
 
   this.afterAll(async () => {
+    await stopApplication(giBackend);
     mockServer.close();
   });
 
-  step("Pipeline should have initialized", async function () {
-    expectToExist(giService);
-    const pipelines = await giService.getAllPipelineInstances();
-    expectToExist(pipelines);
-    expectLength(pipelines, 1);
-    const foundPipeline = pipelines.find(PretixPipeline.is);
-    expectToExist(foundPipeline);
-    pipeline = foundPipeline;
-    expect(pipeline.id).to.eq(ethLatAmPipeline.id);
-  });
-
-  step("should be able to log in", async function () {
-    const loginResult = await testLogin(giBackend, testUserInitialEmail, {
-      force: true,
-      expectUserAlreadyLoggedIn: false,
-      expectEmailIncorrect: false,
-      skipSetupPassword: false
-    });
-
-    expect(loginResult?.identity).to.not.be.empty;
-    testUserIdentity = loginResult?.identity as Identity;
-  });
+  step(
+    "only pipeline - eth latam pipeline with 4 tickets for 4 different emails - should have been initialized",
+    async function () {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelineInstances();
+      expectToExist(pipelines);
+      expectLength(pipelines, 1);
+      const foundPipeline = pipelines.find(PretixPipeline.is);
+      expectToExist(foundPipeline);
+      pipeline = foundPipeline;
+      expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+    }
+  );
 
   step(
-    "user should be able to be issued an attested email PCD from the server",
+    "should be able to log in a couple random users - alice and bob - they have no tickets initially",
     async function () {
-      currentEmailPCDs = await testGetEmailPCDs(giBackend, testUserIdentity, [
-        testUserInitialEmail
+      const loginResultAlice = await testLogin(giBackend, aliceInitialEmail, {
+        force: true,
+        expectUserAlreadyLoggedIn: false,
+        expectEmailIncorrect: false,
+        skipSetupPassword: false
+      });
+      expect(loginResultAlice?.identity).to.not.be.empty;
+      aliceIdentity = loginResultAlice?.identity as Identity;
+
+      const loginResultBob = await testLogin(giBackend, bobInitialEmail, {
+        force: true,
+        expectUserAlreadyLoggedIn: false,
+        expectEmailIncorrect: false,
+        skipSetupPassword: false
+      });
+      expect(loginResultBob?.identity).to.not.be.empty;
+      bobIdentity = loginResultBob?.identity as Identity;
+    }
+  );
+
+  step(
+    "alice and bob should be able to be issued an attested email PCD from the server - and see their (empty) ticket list",
+    async function () {
+      aliceCurrentEmailPCDs = await testGetEmailPCDs(giBackend, aliceIdentity, [
+        aliceInitialEmail
+      ]);
+      await testGetTickets(pipeline, aliceCurrentEmailPCDs, aliceIdentity, []);
+
+      bobCurrentEmailPCDs = await testGetEmailPCDs(giBackend, bobIdentity, [
+        bobInitialEmail
+      ]);
+      await testGetTickets(pipeline, bobCurrentEmailPCDs, bobIdentity, []);
+    }
+  );
+
+  step(
+    "alice should be able to change email address to one that has a ticket",
+    async function () {
+      const credential = await makeTestCredentialsForEmails(
+        aliceIdentity,
+        aliceCurrentEmailPCDs
+      );
+
+      const newEmail =
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail;
+
+      // send a confirmation code token
+      const sendTokenResult = await requestChangeUserEmail(
+        giBackend.expressContext.localEndpoint,
+        aliceInitialEmail,
+        newEmail,
+        credential
+      );
+      expectTrue(sendTokenResult.success);
+
+      // note this is sent to the new email, not old email
+      const token = await fetchEmailToken(giBackend.context.dbPool, newEmail);
+      expectToExist(token);
+
+      // use the confirmation code to change the email
+      const changeEmailResult = await requestChangeUserEmail(
+        giBackend.expressContext.localEndpoint,
+        aliceInitialEmail,
+        newEmail,
+        credential,
+        token
+      );
+
+      expectTrue(changeEmailResult.success);
+
+      aliceCurrentEmailPCDs = await testGetEmailPCDs(giBackend, aliceIdentity, [
+        newEmail
       ]);
 
       await testGetTickets(
         pipeline,
-        pipeline.issuanceCapability.feedUrl,
-        currentEmailPCDs,
-        testUserIdentity,
-        []
+        aliceCurrentEmailPCDs,
+        aliceIdentity,
+        [newEmail, newEmail] // 2 per ticket - one eddsa and one pod
       );
     }
   );
 
-  step("user should be able to change their email address", async function () {
-    const credential = await makeTestCredentialsForEmails(
-      testUserIdentity,
-      currentEmailPCDs
+  step("alice should be able to add an email address", async function () {
+    const currentEmails = aliceCurrentEmailPCDs.map(
+      (pcd) => pcd.claim.emailAddress
     );
-
-    const newEmail =
-      pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail;
-
-    // send a confirmation code token
-    const sendTokenResult = await requestChangeUserEmail(
-      giBackend.expressContext.localEndpoint,
-      testUserInitialEmail,
-      newEmail,
-      credential
-    );
-    expectTrue(sendTokenResult.success);
-
-    const token = await fetchEmailToken(giBackend.context.dbPool, newEmail);
-    expectToExist(token);
-
-    // use the confirmation code to change the email
-    const changeEmailResult = await requestChangeUserEmail(
-      giBackend.expressContext.localEndpoint,
-      testUserInitialEmail,
-      newEmail,
-      credential,
-      token
-    );
-
-    expectTrue(changeEmailResult.success);
-
-    currentEmailPCDs = await testGetEmailPCDs(giBackend, testUserIdentity, [
-      newEmail
-    ]);
-
-    await testGetTickets(
-      pipeline,
-      pipeline.issuanceCapability.feedUrl,
-      currentEmailPCDs,
-      testUserIdentity,
-      [newEmail, newEmail] // 2 per ticket - one eddsa and one pod
-    );
-  });
-
-  step("user should be able to add an email address", async function () {
-    const currentEmails = currentEmailPCDs.map((pcd) => pcd.claim.emailAddress);
     expectLength(currentEmails, 1);
 
     const credential = await makeTestCredentialsForEmails(
-      testUserIdentity,
-      currentEmailPCDs
+      aliceIdentity,
+      aliceCurrentEmailPCDs
     );
 
     const newEmail = pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail;
@@ -359,27 +377,53 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
 
     expectTrue(changeEmailResult.success);
 
-    currentEmailPCDs = await testGetEmailPCDs(giBackend, testUserIdentity, [
+    aliceCurrentEmailPCDs = await testGetEmailPCDs(giBackend, aliceIdentity, [
       newEmail,
       ...currentEmails
     ]);
 
     await testGetTickets(
       pipeline,
-      pipeline.issuanceCapability.feedUrl,
-      currentEmailPCDs,
-      testUserIdentity,
+      aliceCurrentEmailPCDs,
+      aliceIdentity,
       [newEmail, newEmail, ...currentEmails, ...currentEmails] // 2 per ticket - one eddsa and one pod
     );
   });
 
-  step("user should be able to remove an email address", async function () {
-    const currentEmails = currentEmailPCDs.map((pcd) => pcd.claim.emailAddress);
+  step(
+    "bob shouldn't be able to change email to an email that has already been added by alice",
+    async function () {
+      const credential = await makeTestCredentialsForEmails(
+        bobIdentity,
+        bobCurrentEmailPCDs
+      );
+
+      const newEmail =
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail;
+
+      // send a confirmation code token
+      const sendTokenResult = await requestChangeUserEmail(
+        giBackend.expressContext.localEndpoint,
+        bobInitialEmail,
+        newEmail,
+        credential
+      );
+      expectFalse(sendTokenResult.success);
+      expect(sendTokenResult.error).to.eq(
+        EmailUpdateError.EmailAlreadyRegistered
+      );
+    }
+  );
+
+  step("alice should be able to remove an email address", async function () {
+    const currentEmails = aliceCurrentEmailPCDs.map(
+      (pcd) => pcd.claim.emailAddress
+    );
     expectLength(currentEmails, 2);
 
     const credential = await makeTestCredentialsForEmails(
-      testUserIdentity,
-      currentEmailPCDs
+      aliceIdentity,
+      aliceCurrentEmailPCDs
     );
 
     const removedEmail = currentEmails[0];
@@ -395,32 +439,31 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
       (email) => email !== removedEmail
     );
 
-    currentEmailPCDs = await testGetEmailPCDs(
+    aliceCurrentEmailPCDs = await testGetEmailPCDs(
       giBackend,
-      testUserIdentity,
+      aliceIdentity,
       expectedEmailList
     );
 
     await testGetTickets(
       pipeline,
-      pipeline.issuanceCapability.feedUrl,
-      currentEmailPCDs,
-      testUserIdentity,
+      aliceCurrentEmailPCDs,
+      aliceIdentity,
       [...expectedEmailList, ...expectedEmailList] // 2 - one eddsa and one pod
     );
   });
 
   step(
-    "user should not be able to remove their only email address",
+    "alice should NOT be able to remove only email address",
     async function () {
-      const currentEmails = currentEmailPCDs.map(
+      const currentEmails = aliceCurrentEmailPCDs.map(
         (pcd) => pcd.claim.emailAddress
       );
       expectLength(currentEmails, 1);
 
       const credential = await makeTestCredentialsForEmails(
-        testUserIdentity,
-        currentEmailPCDs
+        aliceIdentity,
+        aliceCurrentEmailPCDs
       );
 
       const sendTokenResult = await requestRemoveUserEmail(
@@ -435,18 +478,18 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
   );
 
   step(
-    "user can change their email address back to the original one",
+    "alice can change email address back to initial value",
     async function () {
-      const currentEmails = currentEmailPCDs.map(
+      const currentEmails = aliceCurrentEmailPCDs.map(
         (pcd) => pcd.claim.emailAddress
       );
       expectLength(currentEmails, 1);
       const credential = await makeTestCredentialsForEmails(
-        testUserIdentity,
-        currentEmailPCDs
+        aliceIdentity,
+        aliceCurrentEmailPCDs
       );
 
-      const newEmail = testUserInitialEmail;
+      const newEmail = aliceInitialEmail;
 
       // send a confirmation code
       const sendTokenResult = await requestChangeUserEmail(
@@ -471,16 +514,66 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
 
       expectTrue(changeEmailResult.success);
 
-      currentEmailPCDs = await testGetEmailPCDs(giBackend, testUserIdentity, [
+      aliceCurrentEmailPCDs = await testGetEmailPCDs(giBackend, aliceIdentity, [
         newEmail
       ]);
 
       await testGetTickets(
         pipeline,
-        pipeline.issuanceCapability.feedUrl,
-        currentEmailPCDs,
-        testUserIdentity,
+        aliceCurrentEmailPCDs,
+        aliceIdentity,
         [] // 0 - this person has no tickets
+      );
+    }
+  );
+
+  step(
+    "bob can then change email address to one alice was using for some time",
+    async function () {
+      const currentEmails = aliceCurrentEmailPCDs.map(
+        (pcd) => pcd.claim.emailAddress
+      );
+      expectLength(currentEmails, 1);
+      const credential = await makeTestCredentialsForEmails(
+        aliceIdentity,
+        aliceCurrentEmailPCDs
+      );
+
+      const newEmail =
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail;
+
+      // send a confirmation code
+      const sendTokenResult = await requestChangeUserEmail(
+        giBackend.expressContext.localEndpoint,
+        currentEmails[0],
+        newEmail,
+        credential
+      );
+      expectTrue(sendTokenResult.success);
+
+      const token = await fetchEmailToken(giBackend.context.dbPool, newEmail);
+      expectToExist(token);
+
+      // use the confirmation code to change the email
+      const changeEmailResult = await requestChangeUserEmail(
+        giBackend.expressContext.localEndpoint,
+        currentEmails[0],
+        newEmail,
+        credential,
+        token
+      );
+
+      expectTrue(changeEmailResult.success);
+
+      aliceCurrentEmailPCDs = await testGetEmailPCDs(giBackend, aliceIdentity, [
+        newEmail
+      ]);
+
+      await testGetTickets(
+        pipeline,
+        aliceCurrentEmailPCDs,
+        aliceIdentity,
+        [newEmail, newEmail] // alice's old ticket now issued to bob
       );
     }
   );
@@ -666,9 +759,4 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
   //     ]);
   //   }
   // );
-
-  this.afterAll(async () => {
-    await stopApplication(giBackend);
-    mockServer.close();
-  });
 });
