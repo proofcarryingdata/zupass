@@ -1,5 +1,35 @@
 # @pcd/message-pcd
 
+## 0.1.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/pcd-types@0.11.4
+  - @pcd/eddsa-pcd@0.6.4
+  - @pcd/semaphore-signature-pcd@0.11.4
+
+## 0.1.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/semaphore-signature-pcd@0.11.3
+  - @pcd/pcd-types@0.11.3
+  - @pcd/eddsa-pcd@0.6.3
+
+## 0.1.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.2
+  - @pcd/eddsa-pcd@0.6.2
+  - @pcd/semaphore-signature-pcd@0.11.2
+
 ## 0.1.1
 
 ### Patch Changes

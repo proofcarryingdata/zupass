@@ -1,5 +1,29 @@
 # @pcd/input-test-pcd
 
+## 0.11.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/pcd-types@0.11.4
+
+## 0.11.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.3
+
+## 0.11.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/pcd-types@0.11.2
+
 ## 0.11.1
 
 ### Patch Changes

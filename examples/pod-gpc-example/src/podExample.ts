@@ -79,11 +79,11 @@ export async function podDemo(): Promise<boolean> {
     // String values can contain any unicode string, not limited to identifiers.
     my_favorite_dessert: { type: "string", value: "Blueberry Pie" },
 
-    // int values are bigints with a range limited to 63-bit unsigned
-    // integers.  Ints will be usable for arithmetic in ZK proofs.
-    // Negative values will be supported in future, as will more integer types
-    // with different sizes (like int8 or boolean).
-    someNumber: { type: "int", value: 123n },
+    // int values are bigints with a range limited to 64-bit signed integers.
+    // Ints will be usable for arithmetic in ZK proofs.
+    // More integer types with different sizes (like int8 or boolean) will be
+    // supported in future.
+    someNumber: { type: "int", value: -123n },
 
     // "cryptographic" is a bigint type for values like hashes or uniquue
     // IDs.  Each is a single field element which fits in a circuit signal,

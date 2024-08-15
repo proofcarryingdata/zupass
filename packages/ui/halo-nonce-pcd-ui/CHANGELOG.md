@@ -1,5 +1,35 @@
 # @pcd/halo-nonce-pcd-ui
 
+## 0.2.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/passport-ui@0.11.4
+  - @pcd/pcd-types@0.11.4
+  - @pcd/halo-nonce-pcd@0.7.4
+
+## 0.2.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/halo-nonce-pcd@0.7.3
+  - @pcd/passport-ui@0.11.3
+  - @pcd/pcd-types@0.11.3
+
+## 0.2.2
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/passport-ui@0.11.2
+  - @pcd/pcd-types@0.11.2
+  - @pcd/halo-nonce-pcd@0.7.2
+
 ## 0.2.1
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@pcd/client-shared",
-  "version": "0.0.2",
+  "version": "0.0.5",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -20,6 +20,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
@@ -31,11 +32,12 @@
     "rollbar": "^2.26.4"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.1",
-    "@pcd/tsconfig": "0.11.1",
+    "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/tsconfig": "0.11.4",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"

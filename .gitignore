@@ -40,9 +40,6 @@ apps/passport-server/local-db-data
 apps/passport-server/local-db-log
 logfile
 
-# build
-*.tsbuildinfo
-
 # vim
 *.swp
 

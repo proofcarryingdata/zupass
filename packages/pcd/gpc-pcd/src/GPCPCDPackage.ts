@@ -22,7 +22,6 @@ import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
 import { PODPCD, PODPCDPackage, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
-import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
   FixedPODEntries,
@@ -271,7 +270,7 @@ export async function deserialize(serialized: string): Promise<GPCPCD> {
  */
 export function getDisplayOptions(pcd: GPCPCD): DisplayOptions {
   return {
-    header: "GPC Proof PCD",
+    header: "GPC Proof",
     displayName: "gpc-proof-" + pcd.id
   };
 }

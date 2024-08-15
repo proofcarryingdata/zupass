@@ -1,3 +1,3 @@
-export function assertUnreachable(_: never): never {
-  throw new Error("Unreachable");
+export function assertUnreachable(_: never, message?: string): never {
+  throw new Error(message ?? "Unreachable");
 }

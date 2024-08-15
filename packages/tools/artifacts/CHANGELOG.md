@@ -1,5 +1,23 @@
 # @pcd/util
 
+## 0.4.4
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+
+## 0.4.3
+
+### Patch Changes
+
+- Fix ESM import paths
+
+## 0.4.2
+
+### Patch Changes
+
+- Fix ESM import paths
+
 ## 0.4.1
 
 ### Patch Changes

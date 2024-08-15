@@ -2,6 +2,7 @@ import { PipelineDefinition, PipelineType } from "@pcd/passport-interface";
 import { assertUnreachable } from "@pcd/util";
 import { CSVPipeline } from "../../pipelines/CSVPipeline/CSVPipeline";
 import { LemonadePipeline } from "../../pipelines/LemonadePipeline";
+import { PODPipeline } from "../../pipelines/PODPipeline/PODPipeline";
 import { PretixPipeline } from "../../pipelines/PretixPipeline";
 
 /**
@@ -21,6 +22,8 @@ export function uniqueIdsForPipelineDefinition(
       return LemonadePipeline.uniqueIds(definition);
     case PipelineType.Pretix:
       return PretixPipeline.uniqueIds(definition);
+    case PipelineType.POD:
+      return PODPipeline.uniqueIds(definition);
     default:
       return assertUnreachable(definition);
   }

@@ -72,6 +72,9 @@
       "path": "../../packages/pcd/pod-ticket-pcd"
     },
     {
+      "path": "../../packages/lib/podbox-shared"
+    },
+    {
       "path": "../../packages/pcd/rln-pcd"
     },
     {

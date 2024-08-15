@@ -1,6 +1,6 @@
 {
   "name": "@pcd/eddsa-ticket-pcd",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -25,15 +25,16 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/eddsa-pcd": "0.6.1",
-    "@pcd/pcd-types": "0.11.1",
-    "@pcd/util": "0.5.1",
+    "@pcd/eddsa-pcd": "0.6.4",
+    "@pcd/pcd-types": "0.11.4",
+    "@pcd/util": "0.5.3",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "lodash": "^4.17.21",
@@ -41,14 +42,15 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.1",
-    "@pcd/tsconfig": "0.11.1",
+    "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/tsconfig": "0.11.4",
     "@types/json-bigint": "^1.0.1",
     "@types/lodash": "^4.14.191",
     "@types/mocha": "^10.0.1",
     "@types/url-join": "^4.0.3",
     "@types/uuid": "^9.0.0",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"

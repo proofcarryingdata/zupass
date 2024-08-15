@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pcd-types",
-  "version": "0.11.1",
+  "version": "0.11.4",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -20,15 +20,17 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.1",
-    "@pcd/tsconfig": "0.11.1",
+    "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/tsconfig": "0.11.4",
     "@types/react": "^18.0.22",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "typescript": "^5.3.3"
   },
   "publishConfig": {

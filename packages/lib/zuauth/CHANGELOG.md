@@ -1,5 +1,44 @@
 # @pcd/zuauth
 
+## 1.4.5
+
+### Patch Changes
+
+- Release utils package with correct esm fix
+- Updated dependencies
+  - @pcd/passport-interface@0.11.5
+  - @pcd/pcd-types@0.11.4
+  - @pcd/eddsa-pcd@0.6.4
+  - @pcd/eddsa-ticket-pcd@0.6.4
+  - @pcd/semaphore-identity-pcd@0.11.4
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.4
+
+## 1.4.4
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.3
+  - @pcd/semaphore-identity-pcd@0.11.3
+  - @pcd/passport-interface@0.11.4
+  - @pcd/eddsa-ticket-pcd@0.6.3
+  - @pcd/pcd-types@0.11.3
+  - @pcd/eddsa-pcd@0.6.3
+
+## 1.4.3
+
+### Patch Changes
+
+- Fix ESM import paths
+- Updated dependencies
+  - @pcd/passport-interface@0.11.3
+  - @pcd/pcd-types@0.11.2
+  - @pcd/eddsa-pcd@0.6.2
+  - @pcd/eddsa-ticket-pcd@0.6.2
+  - @pcd/semaphore-identity-pcd@0.11.2
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.2
+
 ## 1.4.2
 
 ### Patch Changes

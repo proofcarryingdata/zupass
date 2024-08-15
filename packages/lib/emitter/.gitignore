@@ -3,3 +3,4 @@
 *.js
 !.eslintrc.js
 dist
+*.tsbuildinfo

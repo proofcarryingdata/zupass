@@ -1,6 +1,6 @@
 {
   "workspaces": {
-    "packages/*/*": {
+    "packages/{lib,tools,pcd,ui}/*": {
       "entry": ["src/index.ts", "test/*.ts"],
       "project": "**/*.{ts,tsx}"
     },
@@ -10,7 +10,7 @@
     }
   },
   "ignore": ["**/*.d.ts", "**/dist"],
-  "ignoreWorkspaces": ["packages/artifacts"],
+  "ignoreWorkspaces": ["packages/artifacts", "packages/patched/circom_runtime"],
   "rules": {
     "binaries": "off",
     "dependencies": "error",

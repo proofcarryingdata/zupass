@@ -1,6 +1,6 @@
 {
   "name": "@pcd/semaphore-group-pcd",
-  "version": "0.11.1",
+  "version": "0.11.4",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -26,16 +26,17 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.11.1",
-    "@pcd/semaphore-identity-pcd": "0.11.1",
-    "@pcd/semaphore-signature-pcd": "0.11.1",
-    "@pcd/util": "0.5.1",
+    "@pcd/pcd-types": "0.11.4",
+    "@pcd/semaphore-identity-pcd": "0.11.4",
+    "@pcd/semaphore-signature-pcd": "0.11.4",
+    "@pcd/util": "0.5.3",
     "@semaphore-protocol/group": "^3.15.2",
     "@semaphore-protocol/identity": "^3.15.2",
     "@semaphore-protocol/proof": "^3.15.2",
@@ -44,13 +45,14 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.1",
-    "@pcd/tsconfig": "0.11.1",
+    "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/tsconfig": "0.11.4",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",
     "chai": "^4.3.7",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0"
   },

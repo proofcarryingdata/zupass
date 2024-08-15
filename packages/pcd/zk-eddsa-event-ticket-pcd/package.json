@@ -1,6 +1,6 @@
 {
   "name": "@pcd/zk-eddsa-event-ticket-pcd",
-  "version": "0.6.1",
+  "version": "0.6.4",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -26,6 +26,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "postbuild": "fix-esm-import-path ./dist/esm/src",
     "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
@@ -33,13 +34,13 @@
     "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-event-ticket-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-event-ticket-pcd && cp -f ./artifacts/circuit.json ./src/circuit.json"
   },
   "dependencies": {
-    "@pcd/eddsa-pcd": "0.6.1",
-    "@pcd/eddsa-ticket-pcd": "0.6.1",
-    "@pcd/pcd-types": "^0.11.1",
-    "@pcd/semaphore-identity-pcd": "0.11.1",
-    "@pcd/semaphore-signature-pcd": "0.11.1",
-    "@pcd/snarkjs": "0.7.4",
-    "@pcd/util": "0.5.1",
+    "@pcd/eddsa-pcd": "0.6.4",
+    "@pcd/eddsa-ticket-pcd": "0.6.4",
+    "@pcd/pcd-types": "^0.11.4",
+    "@pcd/semaphore-identity-pcd": "0.11.4",
+    "@pcd/semaphore-signature-pcd": "0.11.4",
+    "@pcd/snarkjs": "0.7.7",
+    "@pcd/util": "0.5.3",
     "@semaphore-protocol/identity": "^3.15.2",
     "circomlibjs": "^0.1.7",
     "json-bigint": "^1.0.0",
@@ -47,14 +48,15 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/artifacts": "0.4.1",
-    "@pcd/eslint-config-custom": "0.11.1",
-    "@pcd/tsconfig": "0.11.1",
+    "@pcd/artifacts": "0.4.4",
+    "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/tsconfig": "0.11.4",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",
     "chai": "^4.3.7",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"

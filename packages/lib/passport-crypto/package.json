@@ -1,6 +1,6 @@
 {
   "name": "@pcd/passport-crypto",
-  "version": "0.11.1",
+  "version": "0.11.4",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -21,6 +21,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
@@ -30,12 +31,13 @@
     "libsodium-wrappers-sumo": "^0.7.11"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.1",
-    "@pcd/tsconfig": "0.11.1",
+    "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/tsconfig": "0.11.4",
     "@types/libsodium-wrappers-sumo": "^0.7.6",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
     "eslint": "^8.57.0",
+    "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"
