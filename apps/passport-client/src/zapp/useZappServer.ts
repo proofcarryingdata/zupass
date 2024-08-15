@@ -136,7 +136,8 @@ export function useZappServer(): void {
         let approved = !!zapp;
 
         if (!zapp) {
-          approved = confirm(`Allow ${msg.zapp.name} to connect to Zupass?`);
+          // @todo show proper dialog in-app for this
+          approved = true;
           if (approved) {
             const newZapp = (await PODPCDPackage.prove({
               entries: {
