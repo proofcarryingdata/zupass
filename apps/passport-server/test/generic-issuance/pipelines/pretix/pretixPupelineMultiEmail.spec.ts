@@ -339,7 +339,17 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
 
     expectTrue(changeEmailResult.success);
 
-    await testGetEmailPCDs(giBackend, testUserIdentity, [newEmail]);
+    currentEmailPCDs = await testGetEmailPCDs(giBackend, testUserIdentity, [
+      newEmail
+    ]);
+
+    await testGetTickets(
+      pipeline,
+      pipeline.issuanceCapability.feedUrl,
+      currentEmailPCDs,
+      testUserIdentity,
+      [newEmail, newEmail] // 2 - one eddsa and one pod
+    );
   });
 
   /**
