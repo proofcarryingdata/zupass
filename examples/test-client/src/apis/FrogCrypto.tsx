@@ -108,7 +108,7 @@ export function FrogCrypto(): ReactNode {
                 zupass_image_url: imageUrl,
                 zupass_title: `FROG ${nonce}`,
                 zupass_description: "here's a frog",
-                owner: "todo"
+                owner: (await z.identity.getIdentityCommitment()).toString()
               })
             ),
             "0001020304050607080900010203040506070809000102030405060708090000"
