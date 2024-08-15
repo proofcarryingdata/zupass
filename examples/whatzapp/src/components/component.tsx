@@ -331,7 +331,7 @@ export default function Component({
           </div>
         </div>
       </div>
-      {selectedConversation && conversations.size > 0 && (
+      {selectedConversation && allConversations.size > 0 && (
         <CurrentChat
           conversation={allConversations.get(selectedConversation) as PODPCD[]}
           myId={myId}

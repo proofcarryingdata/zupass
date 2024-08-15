@@ -130,11 +130,24 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const feedHost = await initFeedHost();
   const response = await feedHost.handleFeedRequest(body);
-  return NextResponse.json(response);
+
+  return NextResponse.json(response, {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
 }
 
 export async function GET(req: NextRequest) {
   const feedHost = await initFeedHost();
   const response = await feedHost.handleListFeedsRequest(req);
-  return NextResponse.json(response);
+  return NextResponse.json(response, {
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    }
+  });
 }
