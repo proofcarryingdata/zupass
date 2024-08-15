@@ -801,6 +801,10 @@ export class UserService {
       );
     }
 
+    if (newEmail === oldEmail) {
+      throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
+    }
+
     if (confirmationCode === undefined) {
       const newToken =
         await this.emailTokenService.saveNewTokenForEmail(newEmail);
