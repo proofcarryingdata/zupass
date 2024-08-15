@@ -126,7 +126,8 @@ async function testGetEmailPCDs(
 }
 
 /**
- * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline}.
+ * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline} in situations
+ * where a user has different quantites of emails than precisely one.
  */
 describe.only("generic issuance - PretixPipeline - multi-email support", function () {
   const nowDate = new Date();
@@ -243,31 +244,6 @@ describe.only("generic issuance - PretixPipeline - multi-email support", functio
 
   this.afterAll(async () => {
     mockServer.close();
-  });
-
-  step("PipelineUserDB", async function () {
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
-
-    const adminUser: PipelineUser = {
-      id: adminGIUserId,
-      email: adminGIUserEmail,
-      isAdmin: true,
-      timeCreated: nowDate,
-      timeUpdated: nowDate
-    };
-    await userDB.updateUserById(adminUser);
-    assertUserMatches(
-      {
-        id: adminGIUserId,
-        email: adminGIUserEmail,
-        isAdmin: true,
-        timeCreated: nowDate,
-        timeUpdated: nowDate
-      },
-      await userDB.getUserById(adminUser.id)
-    );
-
-    // TODO: comprehensive tests of create update read delete
   });
 
   step("Pipeline should have initialized", async function () {
