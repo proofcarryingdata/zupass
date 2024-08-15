@@ -5417,6 +5417,16 @@
     "@ethersproject/keccak256" "^5.7.0"
     "@zk-kit/incremental-merkle-tree" "1.1.0"
 
+"@semaphore-protocol/identity-v4@npm:@semaphore-protocol/identity@4":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-4.0.1.tgz#6b4abfb8bfde1fc24cdfd88c53f0d3e165e8ea46"
+  integrity sha512-MP/uQHOUNUS22+9PEY8lCnFW2UbE+ccQ5WKn4fRd/nRvknOcm6jN6YbO23AlpfrDfDKhhy8Pfkpjlf/YIi4K/g==
+  dependencies:
+    "@zk-kit/baby-jubjub" "1.0.1"
+    "@zk-kit/eddsa-poseidon" "1.0.2"
+    "@zk-kit/utils" "1.2.0"
+    poseidon-lite "0.2.0"
+
 "@semaphore-protocol/identity@^2.6.1":
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-2.6.1.tgz#49385c1004261ca2e192c43aa04005ce6ef82d83"
@@ -17281,6 +17291,11 @@ plop@^4.0.1:
     node-plop "^0.32.0"
     ora "^8.0.0"
     v8flags "^4.0.1"
+
+poseidon-lite@0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.2.0.tgz#dbc242ebd9c10c32d507a533fa497231d168fd72"
+  integrity sha512-vivDZnGmz8W4G/GzVA72PXkfYStjilu83rjjUfpL4PueKcC8nfX6hCPh2XhoC5FBgC6y0TA3YuUeUo5YCcNoig==
 
 poseidon-lite@^0.0.2:
   version "0.0.2"

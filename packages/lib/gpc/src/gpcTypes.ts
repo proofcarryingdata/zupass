@@ -1,5 +1,6 @@
 import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
+import { Identity as IdentityV4 } from "@semaphore-protocol/identity-v4";
 import { Groth16Proof } from "snarkjs";
 
 /**
@@ -61,6 +62,22 @@ export type TupleIdentifier = `${TuplePrefix}.${PODName}`;
  * and circuit name.
  */
 export type GPCIdentifier = `${string}_${string}`;
+
+/**
+ * String specifying the identity protocol used in the `isOwnerID`
+ * field of {@link GPCProofEntryConfig}.
+ */
+export type IdentityProtocol = typeof SEMAPHORE_V3 | typeof SEMAPHORE_V4;
+
+/**
+ * Semaphore V3 identity protocol string
+ */
+export const SEMAPHORE_V3 = "SemaphoreV3";
+
+/**
+ * Semaphore V4 identity protocol string
+ */
+export const SEMAPHORE_V4 = "SemaphoreV4";
 
 /**
  * GPCProofConfig for a single generic POD entry, virtual or otherwise,
@@ -139,22 +156,22 @@ export type GPCProofEntryConfig = GPCProofEntryConfigCommon & {
   inRange?: { min: bigint; max: bigint };
 
   /**
-   * Indicates that this entry must match the public ID of the owner
-   * identity given in {@link GPCProofInputs}.  For Semaphore V3 this is
-   * the owner's Semaphore commitment (a cryptographic value).
+   * Indicates that this entry must match the public ID of the owner identity
+   * given in {@link GPCProofInputs}. For Semaphore V3 and V4 this is the
+   * owner's Semaphore commitment (a cryptographic value).
    *
    * Comparison in the proof circuit is based on the hash produced by
    * {@link podValueHash}.  This means values of different types can be
    * considered equal if they are treated in the same way by circuits.
    *
-   * If undefined or false, there is no owner-related constraint on this entry.
+   * If undefined, there is no owner-related constraint on this entry.
    *
    * This feature cannot be combined with `equalsEntry` on the same entry (since
    * it shares the same constraints in the circuit).  However since equality
    * constraints can be specified in either direction, you can still constrain
    * an owner entry by specifying it on the non-owner entry.
    */
-  isOwnerID?: boolean;
+  isOwnerID?: IdentityProtocol;
 };
 
 /**
@@ -317,15 +334,21 @@ export type GPCBoundConfig = GPCProofConfig & {
 export type GPCProof = Groth16Proof;
 
 /**
- * Optional part of {@link GPCProofInputs} relating to an owner's identity.
+ * Optional part of {@link GPCProofInputs} relating to an owner's identity, which
+ * at present may be either a Semaphore V3 or Semaphore V4 identity.
  */
 export type GPCProofOwnerInputs = {
   /**
-   * The owner's identity using Semaphore V3.  In future, alternative owner
-   * identity types may be supported, and this will become an optional field.
-   * This will be ignored if no entry is marked with {@link isOwnerID}.
+   * The owner's identity using Semaphore V3. This need not be specified if no
+   * entry has {@link isOwnerID} equal to "SemaphoreV3".
    */
-  semaphoreV3: Identity;
+  semaphoreV3?: Identity;
+
+  /**
+   * The owner's identity using Semaphore V4. This need not be specified if no
+   * entry has {@link isOwnerID} equal to "SemaphoreV4".
+   */
+  semaphoreV4?: IdentityV4;
 
   /**
    * If this field is set, a nullifier hash will be calculated and revealed
@@ -448,12 +471,20 @@ export type GPCRevealedOwnerClaims = {
   externalNullifier: PODValue;
 
   /**
-   * If set, this is a hash calculated in the proof, tied to the
-   * {@link externalNullifier} value and the owner's identity.  This allows
-   * identifying duplicate proofs (e.g. to avoid double spending or voting)
-   * without de-anonymizing the owner.
+   * If set, this is a hash calculated in the proof, tied to the {@link
+   * externalNullifier} value and the owner's Semaphore V3 identity.  This
+   * allows identifying duplicate proofs (e.g. to avoid double spending or
+   * voting) without de-anonymizing the owner.
    */
-  nullifierHash: bigint;
+  nullifierHash?: bigint;
+
+  /**
+   * If set, this is a hash calculated in the proof, tied to the {@link
+   * externalNullifier} value and the owner's Semaphore V4 identity.  This
+   * allows identifying duplicate proofs (e.g. to avoid double spending or
+   * voting) without de-anonymizing the owner.
+   */
+  nullifierHashV4?: bigint;
 };
 
 /**

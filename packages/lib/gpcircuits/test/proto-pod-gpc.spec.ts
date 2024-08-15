@@ -36,10 +36,12 @@ import {
 import {
   circomkit,
   ownerIdentity,
+  ownerIdentityV4,
   privateKey,
   privateKey2,
   sampleEntries,
-  sampleEntries2
+  sampleEntries2,
+  sampleEntries3
 } from "./common";
 
 const MAX_OBJECTS = 3;
@@ -50,6 +52,8 @@ const MAX_LISTS = 2;
 const MAX_LIST_ENTRIES = 20;
 const MAX_TUPLES = 1;
 const TUPLE_ARITY = 4;
+const INCLUDE_OWNERV3 = true;
+const INCLUDE_OWNERV4 = true;
 
 const GPC_PARAMS = ProtoPODGPCCircuitParams(
   MAX_OBJECTS,
@@ -59,7 +63,9 @@ const GPC_PARAMS = ProtoPODGPCCircuitParams(
   MAX_LISTS,
   MAX_LIST_ENTRIES,
   MAX_TUPLES,
-  TUPLE_ARITY
+  TUPLE_ARITY,
+  INCLUDE_OWNERV3,
+  INCLUDE_OWNERV4
 );
 
 /**
@@ -85,7 +91,7 @@ const sampleInput: ProtoPODGPCInputs = {
   objectContentID: [
     12270358673359082965738807859874919382499710065761285952062666579568565718653n,
     18485219261920225334980553941142386419465309066344414743860287563916451539637n,
-    12270358673359082965738807859874919382499710065761285952062666579568565718653n
+    7241399912406653345145199031026192741611253920005831193761254409841914732511n
   ],
   /*PUB*/ objectSignerPubkeyAx: [
     13277427435165878497778222415993513565335242147425444199013288855685581939618n,
@@ -100,21 +106,21 @@ const sampleInput: ProtoPODGPCInputs = {
   objectSignatureR8x: [
     7992821217327622955890465279229121725074281617714658027486909914621548371074n,
     12917697647737660037968891386003485907424346856851728146060963416647764311563n,
-    7992821217327622955890465279229121725074281617714658027486909914621548371074n
+    21607490226449556615222137439381990161964542438510697013272923143657527113613n
   ],
   objectSignatureR8y: [
     11405734751649171564583675673630564127815711985187113530077637798277417877047n,
     7738986716904691927169287478392174278377770853335179083699861759935197872715n,
-    11405734751649171564583675673630564127815711985187113530077637798277417877047n
+    20850812847494270741970629349159543682278395563270616657824578700599271658986n
   ],
   objectSignatureS: [
     1640161649771700932833151683605766558948110094112079974586279748238737601920n,
     793969069331474119331332801728102594224728382005232646705773198580972005784n,
-    1640161649771700932833151683605766558948110094112079974586279748238737601920n
+    1919214721670036290117078263673402937104728511118444604896462911276910982030n
   ],
 
   // Entry modules [MAX_ENTRIES].
-  /*PUB*/ entryObjectIndex: [0n, 0n, 0n, 0n, 0n, 1n, 1n, 1n, 0n, 0n],
+  /*PUB*/ entryObjectIndex: [0n, 0n, 0n, 0n, 0n, 1n, 1n, 1n, 2n, 0n],
   /*PUB*/ entryNameHash: [
     151251200029686127063327095456320040687905427497336635391695211041155747807n,
     134391921332508560099964544679493715295561887371159641958333364222734962117n,
@@ -124,11 +130,11 @@ const sampleInput: ProtoPODGPCInputs = {
     342949817308325102533753023095764481919209045044694155820648303022684782250n,
     53263882652869188233442867997794714745800659178874616674229264640580912587n,
     426359027531308702550614983347627926388963727464163576225979855755198240161n,
-    151251200029686127063327095456320040687905427497336635391695211041155747807n,
+    342949817308325102533753023095764481919209045044694155820648303022684782250n,
     151251200029686127063327095456320040687905427497336635391695211041155747807n
   ],
-  /*PUB*/ entryIsValueHashRevealed: 85n,
-  entryProofDepth: [5n, 4n, 5n, 5n, 4n, 3n, 3n, 3n, 5n, 5n],
+  /*PUB*/ entryIsValueHashRevealed: 341n,
+  entryProofDepth: [5n, 4n, 5n, 5n, 4n, 3n, 3n, 3n, 3n, 5n],
   entryProofIndex: [0n, 14n, 4n, 8n, 12n, 0n, 2n, 4n, 0n, 0n],
   entryProofSiblings: [
     [
@@ -212,11 +218,11 @@ const sampleInput: ProtoPODGPCInputs = {
       0n
     ],
     [
-      9904028930859697121695025471312564917337032846528014134060777877259199866166n,
-      3061484723492332507965148030160360459221544214848710312076669786481227696312n,
-      1034918093316386824116250922167450510848513309806370785803679707656130099343n,
-      1967460137183576823935940165748484233277693357918661365351807577356270673444n,
-      17807035268217408168284551891421581960582995627579868198916345027521558073672n,
+      10822224854462305974571008723353998025009741997958237435994986683037289495571n,
+      20805589006174607077225502453211752083698893938887503022650477350039812475033n,
+      1758151122517447416853548993762452057437739140782902232279705380156991021077n,
+      0n,
+      0n,
       0n,
       0n,
       0n
@@ -246,21 +252,32 @@ const sampleInput: ProtoPODGPCInputs = {
     1n,
     6n,
     7n,
-    3n,
+    8n,
     3n,
     12n,
     11n,
     12n
   ],
 
-  // Owner module (1)
-  /*PUB*/ ownerEntryIndex: 1n,
-  ownerSemaphoreV3IdentityNullifier:
-    99353161014976810914716773124042455250852206298527174581112949561812190422n,
-  ownerSemaphoreV3IdentityTrapdoor:
-    329061722381819402313027227353491409557029289040211387019699013780657641967n,
+  // External nullifier for owner modules
   /*PUB*/ ownerExternalNullifier: 42n,
-  /*PUB*/ ownerIsNullfierHashRevealed: 1n,
+
+  // Owner module (0-1)
+  /*PUB*/ ownerEntryIndex: [1n],
+  ownerSemaphoreV3IdentityNullifier: [
+    99353161014976810914716773124042455250852206298527174581112949561812190422n
+  ],
+  ownerSemaphoreV3IdentityTrapdoor: [
+    329061722381819402313027227353491409557029289040211387019699013780657641967n
+  ],
+  /*PUB*/ ownerIsNullifierHashRevealed: [1n],
+
+  // Owner V4 module (0-1)
+  /*PUB*/ ownerV4EntryIndex: [8n],
+  ownerSemaphoreV4SecretScalar: [
+    1066921846450608811029566588127247112676112021489928135893407497485658369605n
+  ],
+  /*PUB*/ ownerV4IsNullifierHashRevealed: [1n],
 
   // Numeric value module (MAX_NUMERIC_VALUES)
   numericValues: [-5n, 0n, 0n, 0n],
@@ -343,7 +360,7 @@ const sampleOutput: ProtoPODGPCOutputs = {
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     5537782408586483095179205238470693004605299677776401318528976418642660549437n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
-    21888242871839275222246405745257275088548364400416034343698204186575808495616n,
+    10822224854462305974571008723353998025009741997958237435994986683037289495571n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
   ],
   virtualEntryRevealedValueHash: [
@@ -351,8 +368,12 @@ const sampleOutput: ProtoPODGPCOutputs = {
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     8093821485214269328389004542394237209037452657522929891144731833981969398000n
   ],
-  ownerRevealedNullifierHash:
+  ownerRevealedNullifierHash: [
     1517081033071132720435657432021139876572843496027662548196342287861804968602n
+  ],
+  ownerV4RevealedNullifierHash: [
+    894567425121403332266040643563918773524317789061280615331238253663051803519n
+  ]
 };
 
 /**
@@ -367,7 +388,8 @@ const sampleOutput: ProtoPODGPCOutputs = {
  */
 function makeTestSignals(
   params: ProtoPODGPCCircuitParams,
-  isNullifierHashRevealed: boolean
+  isNullifierHashRevealed: boolean,
+  isV4NullifierHashRevealed: boolean
 ): { inputs: ProtoPODGPCInputs; outputs: ProtoPODGPCOutputs } {
   // Test data is selected to exercise a lot of features at once, at full
   // size.  Test data always includes a max of 2 real objects and 6 entries.
@@ -375,7 +397,8 @@ function makeTestSignals(
   // some proof inputs will remain unused.
   const testObjectsWithKeys: [PODEntries, string][] = [
     [sampleEntries, privateKey],
-    [sampleEntries2, privateKey2]
+    [sampleEntries2, privateKey2],
+    [sampleEntries3, privateKey]
   ];
   const testEntries = [
     { name: "A", objectIndex: 0, eqEntryIndex: 3 },
@@ -398,8 +421,18 @@ function makeTestSignals(
       eqEntryIndex: params.maxEntries
     });
   }
+  if (params.maxObjects > 2) {
+    testEntries.push({
+      name: "attendee",
+      objectIndex: 2,
+      eqEntryIndex: undefined
+    });
+  }
   const sigOwnerEntryIndex = 1n;
   const hasOwner = params.maxEntries > sigOwnerEntryIndex;
+
+  const sigOwnerV4EntryIndex = 8n;
+  const hasOwnerV4 = params.maxEntries > sigOwnerV4EntryIndex;
 
   // Build and sign test PODs.
   const pods = [];
@@ -634,15 +667,28 @@ function makeTestSignals(
       entryProofDepth: sigEntryProofDepth,
       entryProofIndex: sigEntryProofIndex,
       entryProofSiblings: sigEntryProofSiblings,
-      ownerEntryIndex: hasOwner ? sigOwnerEntryIndex : BABY_JUB_NEGATIVE_ONE,
-      ownerSemaphoreV3IdentityNullifier: hasOwner
-        ? ownerIdentity.nullifier
-        : BABY_JUB_NEGATIVE_ONE,
-      ownerSemaphoreV3IdentityTrapdoor: hasOwner
-        ? ownerIdentity.trapdoor
-        : BABY_JUB_NEGATIVE_ONE,
       ownerExternalNullifier: 42n,
-      ownerIsNullfierHashRevealed: isNullifierHashRevealed ? 1n : 0n,
+      ownerEntryIndex: [
+        hasOwner ? sigOwnerEntryIndex : BABY_JUB_NEGATIVE_ONE
+      ].slice(+!params.includeOwnerV3),
+      ownerSemaphoreV3IdentityNullifier: [
+        hasOwner ? ownerIdentity.nullifier : BABY_JUB_NEGATIVE_ONE
+      ].slice(+!params.includeOwnerV3),
+      ownerSemaphoreV3IdentityTrapdoor: [
+        hasOwner ? ownerIdentity.trapdoor : BABY_JUB_NEGATIVE_ONE
+      ].slice(+!params.includeOwnerV3),
+      ownerIsNullifierHashRevealed: [isNullifierHashRevealed ? 1n : 0n].slice(
+        +!params.includeOwnerV3
+      ),
+      ownerV4EntryIndex: [
+        hasOwnerV4 ? sigOwnerV4EntryIndex : BABY_JUB_NEGATIVE_ONE
+      ].slice(+!params.includeOwnerV4),
+      ownerSemaphoreV4SecretScalar: [
+        hasOwner ? ownerIdentityV4.secretScalar : 0n
+      ].slice(+!params.includeOwnerV4),
+      ownerV4IsNullifierHashRevealed: [
+        isV4NullifierHashRevealed ? 1n : 0n
+      ].slice(+!params.includeOwnerV4),
       numericValues,
       numericValueEntryIndices,
       numericMinValues,
@@ -656,10 +702,16 @@ function makeTestSignals(
     outputs: {
       entryRevealedValueHash: sigEntryRevealedValueHash,
       virtualEntryRevealedValueHash: sigVirtualEntryRevealedValueHash,
-      ownerRevealedNullifierHash:
-        isNullifierHashRevealed && params.maxEntries > sigOwnerEntryIndex
+      ownerRevealedNullifierHash: [
+        isNullifierHashRevealed && hasOwner
           ? poseidon2([42n, ownerIdentity.nullifier])
           : BABY_JUB_NEGATIVE_ONE
+      ].slice(+!params.includeOwnerV3),
+      ownerV4RevealedNullifierHash: [
+        isV4NullifierHashRevealed && hasOwnerV4
+          ? poseidon2([42n, ownerIdentityV4.secretScalar])
+          : BABY_JUB_NEGATIVE_ONE
+      ].slice(+!params.includeOwnerV4)
     }
   };
 }
@@ -686,17 +738,21 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
   it("should accept dynamic input", async () => {
     let { inputs, outputs } = makeTestSignals(
       GPC_PARAMS,
-      true /*isNullifierHashRevealed*/
+      true /*isNullifierHashRevealed*/,
+      true /*isV4NullifierHashRevealed*/
     );
     expect(inputs).to.deep.eq(sampleInput);
     expect(outputs).to.deep.eq(sampleOutput);
     await circuit.expectPass(inputs, outputs);
 
-    ({ inputs, outputs } = makeTestSignals(
-      GPC_PARAMS,
-      false /*isNullifierHashRevealed*/
-    ));
-    await circuit.expectPass(inputs, outputs);
+    for (const isV4NullifierHashRevealed of [true, false]) {
+      ({ inputs, outputs } = makeTestSignals(
+        GPC_PARAMS,
+        false /*isNullifierHashRevealed*/,
+        isV4NullifierHashRevealed
+      ));
+      await circuit.expectPass(inputs, outputs);
+    }
   });
 
   it("should accept with different parameters", async () => {
@@ -709,7 +765,8 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     )) {
       const { inputs, outputs } = makeTestSignals(
         params,
-        true /*isNullifierHashRevealed*/
+        true /*isNullifierHashRevealed*/,
+        true /*isV4NullifierHashRevealed*/
       );
       const altCircuit = await circomkit.WitnessTester("ProtoPODGPC", {
         file: "proto-pod-gpc",
@@ -789,17 +846,21 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
 
     let { inputs, outputs } = makeTestSignals(
       GPC_PARAMS,
-      true /*isNullifierHashRevealed*/
+      true /*isNullifierHashRevealed*/,
+      true /*isV4NullifierHashRevealed*/
     );
     expect(inputs).to.deep.eq(sampleInput);
     expect(outputs).to.deep.eq(sampleOutput);
     await groth16Test(artifacts, inputs, outputs);
 
-    ({ inputs, outputs } = makeTestSignals(
-      GPC_PARAMS,
-      false /*isNullifierHashRevealed*/
-    ));
-    await groth16Test(artifacts, inputs, outputs);
+    for (const isV4NullifierHashRevealed of [true, false]) {
+      ({ inputs, outputs } = makeTestSignals(
+        GPC_PARAMS,
+        false /*isNullifierHashRevealed*/,
+        isV4NullifierHashRevealed
+      ));
+      await groth16Test(artifacts, inputs, outputs);
+    }
   });
 
   it("should accept with each circuit in family", async () => {
@@ -816,7 +877,8 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
       const artifacts = prepGroth16Test(cd);
       const { inputs, outputs } = makeTestSignals(
         cd,
-        true /*isNullifierHashRevealed*/
+        true /*isNullifierHashRevealed*/,
+        true /*isV4NullifierHashRevealed*/
       );
 
       await groth16Test(artifacts, inputs, outputs);

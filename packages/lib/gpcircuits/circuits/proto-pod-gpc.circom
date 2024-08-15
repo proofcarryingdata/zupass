@@ -10,6 +10,7 @@ include "multituple.circom";
 include "numeric-value.circom";
 include "object.circom";
 include "owner.circom";
+include "ownerV4.circom";
 include "virtual-entry.circom";
 
 /**
@@ -55,7 +56,15 @@ template ProtoPODGPC (
 
     // Indicates the arity (i.e. width or size) of the each tuple, e.g.
     // TUPLE_ARITY = 2 for pairs or TUPLE_ARITY = 3 for triples.
-    TUPLE_ARITY
+    TUPLE_ARITY,
+
+    // Indicates whether the Semaphore V3 owner module should be
+    // enabled.  Should be 0 or 1.
+    INCLUDE_OWNERV3,
+
+    // Indicates whether the Semaphore V4 owner module should be
+    // enabled.  Should be 0 or 1.
+    INCLUDE_OWNERV4
 ) {
     /*
      * 1+ ObjectModules.  Each array corresponds to one input/output for each object module.
@@ -188,29 +197,69 @@ template ProtoPODGPC (
     }
 
     /*
-     * 1 OwnerModule with its inputs & outputs.
+     * External nullifier for owner modules (if any).
+     *
+     * The final nullifier hash(es) will be calculated based on this
+     * and the owner's identity.
+     */
+    signal input ownerExternalNullifier;
+    
+    /*
+     * <=1 OwnerModule with its inputs & outputs.
      */
 
     // Entry containing owner's Semaphore V3 commitment (public), or -1 to disable ownership checking.
-    signal input ownerEntryIndex;
+    signal input ownerEntryIndex[INCLUDE_OWNERV3];
 
     // Owner's Semaphore V3 identity (private key) kept hidden and verified.
-    signal input ownerSemaphoreV3IdentityNullifier, ownerSemaphoreV3IdentityTrapdoor;
+    signal input ownerSemaphoreV3IdentityNullifier[INCLUDE_OWNERV3], ownerSemaphoreV3IdentityTrapdoor[INCLUDE_OWNERV3];
 
-    // Final nullifier hash is calculated based on external nullifier and owner's identity.
-    signal input ownerExternalNullifier, ownerIsNullfierHashRevealed;
+    // Indicator of whether the nullifier hash should be revealed.
+    signal input ownerIsNullifierHashRevealed[INCLUDE_OWNERV3];
 
     // Owner module verifies owner's ID, and generates nullifier.
-    signal ownerIsEnabled <== NOT()(IsZero()(ownerEntryIndex + 1));
-    signal output ownerRevealedNullifierHash <== OwnerModuleSemaphoreV3()(
-        enabled <== ownerIsEnabled,
-        identityNullifier <== ownerSemaphoreV3IdentityNullifier,
-        identityTrapdoor <== ownerSemaphoreV3IdentityTrapdoor,
-        identityCommitmentHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, ownerIsEnabled * ownerEntryIndex),
-        externalNullifier <== ownerExternalNullifier,
-        isNullfierHashRevealed <== ownerIsNullfierHashRevealed
-                                                                          );
+    signal output ownerRevealedNullifierHash[INCLUDE_OWNERV3];
+    signal ownerIsEnabled[INCLUDE_OWNERV3];
+        
+    for (var i = 0; i < INCLUDE_OWNERV3; i++) {
+        ownerIsEnabled[i] <== NOT()(IsZero()(ownerEntryIndex[i] + 1));
+        ownerRevealedNullifierHash[i] <== OwnerModuleSemaphoreV3()(
+            enabled <== ownerIsEnabled[i],
+            identityNullifier <== ownerSemaphoreV3IdentityNullifier[i],
+            identityTrapdoor <== ownerSemaphoreV3IdentityTrapdoor[i],
+            identityCommitmentHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, ownerIsEnabled[i] * ownerEntryIndex[i]),
+            externalNullifier <== ownerExternalNullifier,
+            isNullifierHashRevealed <== ownerIsNullifierHashRevealed[i]
+                                                                   );
+    }
+    /*
+     * <=1 OwnerModuleV4 with its inputs & outputs.
+     */
 
+    // Entry containing owner's Semaphore V4 commitment (public), or -1 to disable ownership checking.
+    signal input ownerV4EntryIndex[INCLUDE_OWNERV4];
+        
+    // Owner's Semaphore V4 secret scalar (derived from private key)
+    // kept hidden and verified.
+    signal input ownerSemaphoreV4SecretScalar[INCLUDE_OWNERV4];
+
+    // Indicator of whether the nullifier hash should be revealed.
+    signal input ownerV4IsNullifierHashRevealed[INCLUDE_OWNERV4];
+        
+    // Owner module verifies owner's ID, and generates nullifier.
+    signal output ownerV4RevealedNullifierHash[INCLUDE_OWNERV4];
+    signal ownerV4IsEnabled[INCLUDE_OWNERV4];
+
+    for (var i = 0; i < INCLUDE_OWNERV4; i++) {
+        ownerV4IsEnabled[i] <== NOT()(IsZero()(ownerV4EntryIndex[i] + 1));
+        ownerV4RevealedNullifierHash[i] <== OwnerModuleSemaphoreV4()(
+            enabled <== ownerV4IsEnabled[i],
+            secretScalar <== ownerSemaphoreV4SecretScalar[i],
+            identityCommitmentHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, ownerV4IsEnabled[i] * ownerV4EntryIndex[i]),
+            externalNullifier <== ownerExternalNullifier,
+            isNullifierHashRevealed <== ownerV4IsNullifierHashRevealed[i]
+                                                                     );
+    }
     
     /*
      * (MAX_NUMERIC_VALUES) NumericValueModules with their inputs

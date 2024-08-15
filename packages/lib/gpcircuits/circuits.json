@@ -1,5 +1,5 @@
 {
-  "proto-pod-gpc_1o-1e-5md-0nv-0x0l-0x0t": {
+  "proto-pod-gpc_1o-1e-5md-0nv-0x0l-0x0t-1ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -10,7 +10,9 @@
       0,
       0,
       0,
-      0
+      0,
+      1,
+      1
     ],
     "pubs": [
       "entryObjectIndex",
@@ -18,9 +20,11 @@
       "entryIsValueHashRevealed",
       "virtualEntryIsValueHashRevealed",
       "entryEqualToOtherEntryByIndex",
-      "ownerEntryIndex",
       "ownerExternalNullifier",
-      "ownerIsNullfierHashRevealed",
+      "ownerEntryIndex",
+      "ownerIsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
       "numericValueEntryIndices",
       "numericMinValues",
       "numericMaxValues",
@@ -31,7 +35,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-5e-6md-2nv-0x0l-0x0t": {
+  "proto-pod-gpc_1o-5e-6md-2nv-0x0l-0x0t-1ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -42,7 +46,9 @@
       0,
       0,
       0,
-      0
+      0,
+      1,
+      1
     ],
     "pubs": [
       "entryObjectIndex",
@@ -50,9 +56,11 @@
       "entryIsValueHashRevealed",
       "virtualEntryIsValueHashRevealed",
       "entryEqualToOtherEntryByIndex",
-      "ownerEntryIndex",
       "ownerExternalNullifier",
-      "ownerIsNullfierHashRevealed",
+      "ownerEntryIndex",
+      "ownerIsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
       "numericValueEntryIndices",
       "numericMinValues",
       "numericMaxValues",
@@ -63,7 +71,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-2nv-1x10l-2x2t": {
+  "proto-pod-gpc_3o-10e-8md-2nv-1x10l-2x2t-1ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -74,7 +82,9 @@
       1,
       10,
       2,
-      2
+      2,
+      1,
+      1
     ],
     "pubs": [
       "entryObjectIndex",
@@ -82,9 +92,11 @@
       "entryIsValueHashRevealed",
       "virtualEntryIsValueHashRevealed",
       "entryEqualToOtherEntryByIndex",
-      "ownerEntryIndex",
       "ownerExternalNullifier",
-      "ownerIsNullfierHashRevealed",
+      "ownerEntryIndex",
+      "ownerIsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
       "numericValueEntryIndices",
       "numericMinValues",
       "numericMaxValues",
@@ -95,7 +107,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-4nv-2x20l-1x4t": {
+  "proto-pod-gpc_3o-10e-8md-4nv-2x20l-1x4t-1ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -106,7 +118,9 @@
       2,
       20,
       1,
-      4
+      4,
+      1,
+      1
     ],
     "pubs": [
       "entryObjectIndex",
@@ -114,9 +128,11 @@
       "entryIsValueHashRevealed",
       "virtualEntryIsValueHashRevealed",
       "entryEqualToOtherEntryByIndex",
-      "ownerEntryIndex",
       "ownerExternalNullifier",
-      "ownerIsNullfierHashRevealed",
+      "ownerEntryIndex",
+      "ownerIsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
       "numericValueEntryIndices",
       "numericMinValues",
       "numericMaxValues",
@@ -127,7 +143,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-4nv-4x20l-5x2t": {
+  "proto-pod-gpc_3o-10e-8md-4nv-4x20l-5x2t-1ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -138,7 +154,9 @@
       4,
       20,
       5,
-      2
+      2,
+      1,
+      1
     ],
     "pubs": [
       "entryObjectIndex",
@@ -146,9 +164,11 @@
       "entryIsValueHashRevealed",
       "virtualEntryIsValueHashRevealed",
       "entryEqualToOtherEntryByIndex",
-      "ownerEntryIndex",
       "ownerExternalNullifier",
-      "ownerIsNullfierHashRevealed",
+      "ownerEntryIndex",
+      "ownerIsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
       "numericValueEntryIndices",
       "numericMinValues",
       "numericMaxValues",
