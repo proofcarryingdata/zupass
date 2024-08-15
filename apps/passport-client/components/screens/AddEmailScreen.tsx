@@ -37,9 +37,7 @@ export function AddEmailScreen(): JSX.Element | null {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [newEmail, setNewEmail] = useState("");
-  const [confirmationCode, setConfirmationCode] = useState<
-    string | undefined
-  >();
+  const [confirmationCode, setConfirmationCode] = useState<string>("");
   const [error, setError] = useState<string | undefined>();
   const [finished, setFinished] = useState(false);
   const [codeSent, setCodeSent] = useState(false);
