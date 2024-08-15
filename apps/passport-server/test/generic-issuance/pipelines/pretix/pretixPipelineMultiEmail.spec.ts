@@ -134,7 +134,7 @@ async function testGetEmailPCDs(
  * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline} in situations
  * where a user has different quantites of emails than precisely one.
  */
-describe.only("generic issuance - PretixPipeline - multi-email support", function () {
+describe("generic issuance - PretixPipeline - multi-email support", function () {
   const nowDate = new Date();
   const now = Date.now();
 
