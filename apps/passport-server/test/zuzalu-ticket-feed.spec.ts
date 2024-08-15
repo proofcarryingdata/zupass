@@ -17,7 +17,7 @@ import {
 } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { Zupass } from "../src/types";
-import { makeTestCredentials } from "./generic-issuance/util";
+import { makeTestCredential } from "./generic-issuance/util";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import { expectZuzaluPretixToHaveSynced } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
@@ -91,7 +91,7 @@ describe("zuzalu-specific zupass functionality", function () {
       const response = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
           feedId: ZupassFeedIds.Zuzalu_23
         }
       );

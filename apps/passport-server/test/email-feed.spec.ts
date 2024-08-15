@@ -12,7 +12,7 @@ import { step } from "mocha-steps";
 import MockDate from "mockdate";
 import { stopApplication } from "../src/application";
 import { Zupass } from "../src/types";
-import { makeTestCredentials } from "./generic-issuance/util";
+import { makeTestCredential } from "./generic-issuance/util";
 import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -60,7 +60,7 @@ describe("attested email feed functionality", function () {
       const pollFeedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeTestCredentials(identity, ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
           feedId: ZupassFeedIds.Email
         }
       );

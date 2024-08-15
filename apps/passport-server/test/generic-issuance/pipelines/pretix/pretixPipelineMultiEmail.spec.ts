@@ -35,7 +35,7 @@ import {
 } from "../../../util/util";
 import {
   assertUserMatches,
-  makeTestCredentials,
+  makeTestCredential,
   makeTestCredentialsForEmails,
   requestTicketsFromPipelineWithEmailPCDs
 } from "../../util";
@@ -88,7 +88,7 @@ async function testGetEmailPCDs(
   const pollFeedResult = await requestPollFeed(
     `${giBackend.expressContext.localEndpoint}/feeds`,
     {
-      pcd: await makeTestCredentials(
+      pcd: await makeTestCredential(
         testUserIdentity,
         ZUPASS_CREDENTIAL_REQUEST
       ),

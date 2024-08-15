@@ -805,8 +805,14 @@ export class LemonadePipeline implements BasePipeline {
         return { actions: [] };
       }
 
-      const { emails, semaphoreId } =
+      const credential =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+
+      const { emails, semaphoreId } = credential;
+
+      if (!emails || emails.length === 0) {
+        throw new Error("missing emails in credential");
+      }
 
       span?.setAttribute("emails", emails.map((e) => e.email).join(","));
       span?.setAttribute("semaphore_id", semaphoreId);
@@ -1397,10 +1403,15 @@ export class LemonadePipeline implements BasePipeline {
         // 1) verify that the requester is who they say they are
         try {
           span?.setAttribute("ticket_id", request.ticketId);
-          const { emails, semaphoreId } =
+          const credential =
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
+
+          const { emails, semaphoreId } = credential;
+          if (!emails || emails.length === 0) {
+            throw new Error("missing emails in credential");
+          }
 
           span?.setAttribute(
             "checker_emails",
@@ -1599,6 +1610,12 @@ export class LemonadePipeline implements BasePipeline {
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
+          if (
+            !verifiedCredential.emails ||
+            verifiedCredential.emails.length === 0
+          ) {
+            throw new Error("missing emails in credential");
+          }
           emails = verifiedCredential.emails.map((e) => e.email);
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);

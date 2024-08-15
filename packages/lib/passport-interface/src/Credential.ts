@@ -52,6 +52,16 @@ export interface VerifiedCredential {
   authKey?: string;
 }
 
+/**
+ * Like {@link VerifiedCredential}, but with the `emails` field guaranteed to be
+ * non-empty.
+ */
+export interface VerifiedCredentialWithEmails extends VerifiedCredential {
+  emails: SignedEmail[];
+  semaphoreId: string;
+  authKey?: string;
+}
+
 export interface SignedEmail {
   signer: EdDSAPublicKey;
   email: string;

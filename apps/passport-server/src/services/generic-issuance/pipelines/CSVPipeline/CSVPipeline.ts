@@ -161,6 +161,11 @@ export class CSVPipeline implements BasePipeline {
         try {
           const { emails, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+
+          if (!emails || emails.length === 0) {
+            throw new Error("missing emails in credential");
+          }
+
           requesterEmails = emails;
           requesterSemaphoreId = semaphoreId;
           // Consumer is validated, so save them in the consumer list

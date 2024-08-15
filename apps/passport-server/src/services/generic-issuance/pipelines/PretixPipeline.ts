@@ -952,6 +952,10 @@ export class PretixPipeline implements BasePipeline {
       const { emails, semaphoreId } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
+      if (!emails || emails.length === 0) {
+        throw new Error("missing emails in credential");
+      }
+
       span?.setAttribute("email", emails.map((e) => e.email).join(","));
       span?.setAttribute("semaphore_id", semaphoreId);
 
@@ -1436,11 +1440,14 @@ export class PretixPipeline implements BasePipeline {
 
           span?.setAttribute(
             "checker_email",
-            emails.map((e) => e.email).join(",")
+            emails?.map((e) => e.email).join(",") ?? ""
           );
           span?.setAttribute("checked_semaphore_id", semaphoreId);
 
-          checkerEmails = emails.map((e) => e.email);
+          checkerEmails = emails?.map((e) => e.email) ?? [];
+          if (checkerEmails.length === 0) {
+            throw new Error("missing emails in credential");
+          }
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1655,10 +1662,14 @@ export class PretixPipeline implements BasePipeline {
 
         span?.setAttribute(
           "checker_email",
-          emails.map((e) => e.email).join(",")
+          emails?.map((e) => e.email).join(",") ?? ""
         );
         span?.setAttribute("checked_semaphore_id", semaphoreId);
-        checkerEmails = emails.map((e) => e.email);
+        checkerEmails = emails?.map((e) => e.email) ?? [];
+
+        if (checkerEmails.length === 0) {
+          throw new Error("missing emails in credential");
+        }
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);
