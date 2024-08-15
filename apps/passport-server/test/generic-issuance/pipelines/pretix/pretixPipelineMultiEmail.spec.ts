@@ -296,6 +296,36 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
   );
 
   step(
+    "alice and bob should not be able to modify each other's emails",
+    async function () {
+      const aliceCredential = await makeTestCredentialsForEmails(
+        aliceIdentity,
+        aliceCurrentEmailPCDs
+      );
+      const newEmail = randomEmail();
+      const sendTokenResult = await requestChangeUserEmail(
+        giBackend.expressContext.localEndpoint,
+        bobCurrentEmailPCDs[0].claim.emailAddress,
+        newEmail,
+        aliceCredential
+      );
+      expectFalse(sendTokenResult.success);
+      expect(sendTokenResult.error).to.eq(
+        EmailUpdateError.EmailNotAssociatedWithThisAccount
+      );
+      const removeEmailResult = await requestRemoveUserEmail(
+        giBackend.expressContext.localEndpoint,
+        bobCurrentEmailPCDs[0].claim.emailAddress,
+        aliceCredential
+      );
+      expectFalse(removeEmailResult.success);
+      expect(removeEmailResult.error).to.eq(
+        EmailUpdateError.EmailNotAssociatedWithThisAccount
+      );
+    }
+  );
+
+  step(
     "alice should be able to change email address to one that has a ticket",
     async function () {
       const credential = await makeTestCredentialsForEmails(

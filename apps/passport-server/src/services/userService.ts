@@ -738,6 +738,10 @@ export class UserService {
   ): Promise<ChangeUserEmailResponseValue> {
     let credential: VerifiedCredential;
     try {
+      if (!validateEmail(newEmail)) {
+        throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
+      }
+
       const verifiedCredential = await this.credentialSubservice.tryVerify(pcd);
       if (!verifiedCredential) {
         throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
@@ -750,10 +754,6 @@ export class UserService {
     const maybeExistingUserOfNewEmail = await this.getUserByEmail(newEmail);
     if (maybeExistingUserOfNewEmail) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
-    }
-
-    if (!validateEmail(newEmail)) {
-      throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
     }
 
     const requestingUser = await this.getUserByCommitment(
@@ -771,7 +771,10 @@ export class UserService {
     }
 
     if (oldEmail !== requestingUser.emails[0]) {
-      throw new PCDHTTPError(400, EmailUpdateError.UserNotFound);
+      throw new PCDHTTPError(
+        400,
+        EmailUpdateError.EmailNotAssociatedWithThisAccount
+      );
     }
 
     if (confirmationCode === undefined) {
