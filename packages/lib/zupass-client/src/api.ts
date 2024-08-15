@@ -1,6 +1,11 @@
 import type { GPCPCDArgs } from "@pcd/gpc-pcd";
 import type { SerializedPCD } from "@pcd/pcd-types";
 
+interface PODQuery {
+  entries: PODEntriesQuery;
+  signerPublicKey: string;
+}
+
 export type ZupassFolderContent =
   | {
       type: "folder";
