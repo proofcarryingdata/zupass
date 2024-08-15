@@ -3,6 +3,7 @@ import "../styles/index.css";
 import { Feeds } from "./apis/Feeds";
 import { FileSystem } from "./apis/FileSystem";
 import { GPC } from "./apis/GPC";
+import { Identity } from "./apis/Identity";
 import { Navbar } from "./components/Navbar";
 import {
   EmbeddedZupassProvider,
@@ -28,6 +29,7 @@ export default function Main() {
           <FileSystem />
           <GPC />
           <Feeds />
+          <Identity />
         </div>
       </div>
     </>

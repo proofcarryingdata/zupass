@@ -76,5 +76,11 @@ export const ZupassAPISchema = z.object({
       .function()
       .args(z.string(), z.string())
       .returns(z.promise(z.void()))
+  }),
+  identity: z.object({
+    getIdentityCommitment: z.function().returns(z.promise(z.bigint())),
+    getAttestedEmails: z
+      .function()
+      .returns(z.promise(z.array(SerializedPCDSchema)))
   })
 }) satisfies z.ZodSchema<ZupassAPI>;
