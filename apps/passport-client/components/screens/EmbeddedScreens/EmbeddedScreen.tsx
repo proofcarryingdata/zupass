@@ -1,10 +1,12 @@
 import { PCDGetRequest, PendingPCD } from "@pcd/passport-interface";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
+import { assertUnreachable } from "@pcd/util";
 import { ReactNode, useCallback } from "react";
 import { useEmbeddedScreenState } from "../../../src/appHooks";
 import { EmbeddedScreenType } from "../../../src/embedded";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { GenericProveScreen } from "../ProveScreen/GenericProveScreen";
+import { EmbeddedAddSubscription } from "./EmbeddedAddSubscription";
 
 /**
  * EmbeddedScreen is used to control the UI when embedded in an iframe.
@@ -22,13 +24,23 @@ export function EmbeddedScreen(): ReactNode {
         callback={embeddedScreen.screen.callback}
       />
     );
-  }
-  if (
+  } else if (
     embeddedScreen.screen?.type === EmbeddedScreenType.EmbeddedAccessRequest
   ) {
     return <div>Embedded Access Request</div>;
+  } else if (
+    embeddedScreen.screen?.type === EmbeddedScreenType.EmbeddedAddSubscription
+  ) {
+    return (
+      <EmbeddedAddSubscription
+        feedUrl={embeddedScreen.screen.feedUrl}
+        feedId={embeddedScreen.screen.feedId}
+      />
+    );
+  } else if (embeddedScreen.screen === undefined) {
+    return <div></div>;
   }
-  return <div></div>;
+  assertUnreachable(embeddedScreen.screen);
 }
 
 function EmbeddedGetRequest({

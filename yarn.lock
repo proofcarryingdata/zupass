@@ -4820,11 +4820,6 @@
     snarkjs "^0.7.4"
     url-join "4.0.1"
 
-"@pcd/pcd-types@0.11.1":
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/@pcd/pcd-types/-/pcd-types-0.11.1.tgz#8ad8b4560b829e60205981abb1f52212c4015b68"
-  integrity sha512-wTjeMuglVNf2JiwNiedgzstbrKOLqKs3g3MdZ12HRaGHehtFDIZXNwFxVP6tkNzrmm3zXyAnp8qqzYDOHTKmPw==
-
 "@pcd/pod-pcd@0.1.4":
   version "0.1.4"
   resolved "https://registry.yarnpkg.com/@pcd/pod-pcd/-/pod-pcd-0.1.4.tgz#79d6ae31e77f7504c7bc992f97894c5233b25d64"

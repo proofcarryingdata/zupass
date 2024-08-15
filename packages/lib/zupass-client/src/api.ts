@@ -23,8 +23,19 @@ export interface ZupassGPC {
   prove: (args: GPCPCDArgs) => Promise<SerializedPCD>;
 }
 
+export interface ZupassFeeds {
+  requestAddSubscription: (feedUrl: string, feedId: string) => Promise<void>;
+}
+
+export interface ZupassIdentity {
+  getIdentityCommitment: () => Promise<bigint>;
+  getAttestedEmails: () => Promise<SerializedPCD[]>;
+}
+
 export interface ZupassAPI {
   _version: "1";
   fs: ZupassFileSystem;
   gpc: ZupassGPC;
+  feeds: ZupassFeeds;
+  identity: ZupassIdentity;
 }

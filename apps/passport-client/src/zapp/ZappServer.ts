@@ -1,12 +1,15 @@
+import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { GPCPCDArgs, GPCPCDPackage, GPCPCDTypeName } from "@pcd/gpc-pcd";
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { PODPCD } from "@pcd/pod-pcd";
 import {
   ZupassAPI,
+  ZupassFeeds,
   ZupassFileSystem,
   ZupassFolderContent,
-  ZupassGPC
+  ZupassGPC,
+  ZupassIdentity
 } from "@pcd/zupass-client";
 import { z } from "zod";
 import { StateContextValue } from "../dispatch";
@@ -158,9 +161,60 @@ class GPC extends BaseZappServer implements ZupassGPC {
   }
 }
 
+export class Feeds extends BaseZappServer implements ZupassFeeds {
+  public constructor(
+    context: StateContextValue,
+    zapp: PODPCD,
+    clientChannel: ClientChannel
+  ) {
+    super(context, zapp, clientChannel);
+  }
+
+  @safeInput(z.tuple([z.string(), z.string()]))
+  public async requestAddSubscription(
+    feedUrl: string,
+    feedId: string
+  ): Promise<void> {
+    this.getContext().dispatch({
+      type: "show-embedded-screen",
+      screen: {
+        type: EmbeddedScreenType.EmbeddedAddSubscription,
+        feedUrl,
+        feedId
+      }
+    });
+    this.getClientChannel().showZupass();
+  }
+}
+
+export class Identity extends BaseZappServer implements ZupassIdentity {
+  public constructor(
+    context: StateContextValue,
+    zapp: PODPCD,
+    clientChannel: ClientChannel
+  ) {
+    super(context, zapp, clientChannel);
+  }
+
+  public async getIdentityCommitment(): Promise<bigint> {
+    return this.getContext().getState().identity.getCommitment();
+  }
+
+  public async getAttestedEmails(): Promise<SerializedPCD[]> {
+    const emailPCDs = this.getContext()
+      .getState()
+      .pcds.getPCDsByType(EmailPCDTypeName);
+    return Promise.all(
+      emailPCDs.map((pcd) => this.getContext().getState().pcds.serialize(pcd))
+    );
+  }
+}
+
 export class ZappServer extends BaseZappServer implements ZupassAPI {
   public fs: ZupassFileSystem;
   public gpc: ZupassGPC;
+  public feeds: ZupassFeeds;
+  public identity: ZupassIdentity;
   public _version = "1" as const;
 
   constructor(
@@ -171,5 +225,7 @@ export class ZappServer extends BaseZappServer implements ZupassAPI {
     super(context, zapp, clientChannel);
     this.fs = new FileSystem(context, zapp, clientChannel);
     this.gpc = new GPC(context, zapp, clientChannel);
+    this.feeds = new Feeds(context, zapp, clientChannel);
+    this.identity = new Identity(context, zapp, clientChannel);
   }
 }
