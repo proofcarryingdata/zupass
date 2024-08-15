@@ -4,6 +4,7 @@ import { SerializedPCD } from "@pcd/pcd-types";
 import { PODPCD } from "@pcd/pod-pcd";
 import {
   ZupassAPI,
+  ZupassFeeds,
   ZupassFileSystem,
   ZupassFolderContent,
   ZupassGPC
@@ -158,9 +159,36 @@ class GPC extends BaseZappServer implements ZupassGPC {
   }
 }
 
+export class Feeds extends BaseZappServer implements ZupassFeeds {
+  public constructor(
+    context: StateContextValue,
+    zapp: PODPCD,
+    clientChannel: ClientChannel
+  ) {
+    super(context, zapp, clientChannel);
+  }
+
+  @safeInput(z.tuple([z.string(), z.string()]))
+  public async requestAddSubscription(
+    feedUrl: string,
+    feedId: string
+  ): Promise<void> {
+    this.getContext().dispatch({
+      type: "show-embedded-screen",
+      screen: {
+        type: EmbeddedScreenType.EmbeddedAddSubscription,
+        feedUrl,
+        feedId
+      }
+    });
+    this.getClientChannel().showZupass();
+  }
+}
+
 export class ZappServer extends BaseZappServer implements ZupassAPI {
   public fs: ZupassFileSystem;
   public gpc: ZupassGPC;
+  public feeds: ZupassFeeds;
   public _version = "1" as const;
 
   constructor(
@@ -171,5 +199,6 @@ export class ZappServer extends BaseZappServer implements ZupassAPI {
     super(context, zapp, clientChannel);
     this.fs = new FileSystem(context, zapp, clientChannel);
     this.gpc = new GPC(context, zapp, clientChannel);
+    this.feeds = new Feeds(context, zapp, clientChannel);
   }
 }

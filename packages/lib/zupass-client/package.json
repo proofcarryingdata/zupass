@@ -28,8 +28,8 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/gpc-pcd": "0.0.5",
-    "@pcd/pcd-types": "0.11.1",
+    "@pcd/gpc-pcd": "0.0.6",
+    "@pcd/pcd-types": "0.11.4",
     "zod": "^3.22.4"
   },
   "devDependencies": {

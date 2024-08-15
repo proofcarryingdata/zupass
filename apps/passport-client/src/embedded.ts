@@ -3,7 +3,9 @@ import { SerializedPCD } from "@pcd/pcd-types";
 
 export enum EmbeddedScreenType {
   EmbeddedGetRequest,
-  EmbeddedAccessRequest
+  EmbeddedAccessRequest,
+  EmbeddedAddSubscription,
+  EmbeddedInstall
 }
 
 export interface EmbeddedGetRequest {
@@ -17,6 +19,16 @@ export interface EmbeddedAccessRequest {
   origin: string;
 }
 
+export interface EmbeddedAddSubscription {
+  type: EmbeddedScreenType.EmbeddedAddSubscription;
+  feedUrl: string;
+  feedId: string;
+}
+
+export interface EmbeddedInstall {
+  type: EmbeddedScreenType.EmbeddedInstall;
+}
+
 export interface EmbeddedScreenState {
-  screen?: EmbeddedGetRequest | EmbeddedAccessRequest;
+  screen?: EmbeddedGetRequest | EmbeddedAccessRequest | EmbeddedAddSubscription;
 }

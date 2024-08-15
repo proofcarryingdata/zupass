@@ -107,7 +107,6 @@ export function connect(
             break;
           } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
             dialog.showModal();
-            // iframe.style.display = "block";
           } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
             dialog.close();
           }
@@ -123,7 +122,6 @@ export function connect(
               .get(handle)
               ?.pending[event.serial]?.reject(new Error(event.error));
           } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
-            console.log("show");
             dialog.showModal();
           } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
             dialog.close();
@@ -173,7 +171,6 @@ export function invoke(
   fn: string,
   args: unknown
 ): Promise<unknown> {
-  console.log(handle);
   const client = clients.get(handle);
   if (!client) {
     throw new Error("zupass client not connected");

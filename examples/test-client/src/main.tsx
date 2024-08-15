@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import "../styles/index.css";
+import { Feeds } from "./apis/Feeds";
 import { FileSystem } from "./apis/FileSystem";
 import { GPC } from "./apis/GPC";
 import { Navbar } from "./components/Navbar";
@@ -26,6 +27,7 @@ export default function Main() {
         <div className="flex flex-col gap-4 my-4">
           <FileSystem />
           <GPC />
+          <Feeds />
         </div>
       </div>
     </>
