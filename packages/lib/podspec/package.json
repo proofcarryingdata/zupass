@@ -34,11 +34,13 @@
     "@pcd/tsconfig": "0.11.3",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
+    "@types/uuid": "^9.0.0",
     "@zk-kit/eddsa-poseidon": "1.0.2",
     "eslint": "^8.57.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "uuid": "^9.0.0"
   },
   "publishConfig": {
     "access": "public"
