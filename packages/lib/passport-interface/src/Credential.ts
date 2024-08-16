@@ -1,7 +1,7 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { SerializedPCD } from "@pcd/pcd-types";
-import { PODPCD } from "@pcd/pod-pcd";
+import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
@@ -108,9 +108,16 @@ export class VerificationError extends Error {}
 export async function verifyCredential(
   credential: Credential
 ): Promise<VerifiedCredential> {
-  if (credential.type !== SemaphoreSignaturePCDPackage.name) {
-    throw new VerificationError(`Credential is not a Semaphore Signature PCD`);
+  if (
+    ![SemaphoreSignaturePCDPackage.name, PODPCDPackage.name].includes(
+      credential.type
+    )
+  ) {
+    throw new VerificationError(
+      `Credential is not a Semaphore Signature PCD or a POD`
+    );
   }
+
   // Ensure that the signature part of the credential verifies.
   const pcd = await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
   if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
