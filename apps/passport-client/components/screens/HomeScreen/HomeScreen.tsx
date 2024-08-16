@@ -39,6 +39,11 @@ import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
 import { ProtocolWorldsHome } from "../ProtocolWorldsScreens/ProtocolWorldsHome";
 import {
+  isPuddleCryptoFolderName,
+  PUDDLE_CRYPTO_FOLDER_NAME,
+  PuddleCryptoScreen
+} from "../ZappScreens/PuddleCrypto";
+import {
   FolderCard,
   FolderDetails,
   FolderEntryContainer,
@@ -125,6 +130,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   const pcdCollection = useWrappedPCDCollection();
   const isRoot = isRootFolder(browsingFolder);
   const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
+  const isPuddleCrypto = isPuddleCryptoFolderName(browsingFolder);
   const isEdgeCity = isEdgeCityFolder(browsingFolder);
   const isProtocolWorlds = isProtocolWorldsFolder(browsingFolder);
   const shouldShowFrogCrypto = useMemo(() => {
@@ -211,6 +217,12 @@ export function HomeScreenImpl(): JSX.Element | null {
                   onFolderClick={onFolderClick}
                 />
               )}
+              {isRoot && (
+                <FolderCard
+                  onFolderClick={onFolderClick}
+                  folder={PUDDLE_CRYPTO_FOLDER_NAME}
+                />
+              )}
             </FolderExplorerContainer>
           )}
 
@@ -220,6 +232,8 @@ export function HomeScreenImpl(): JSX.Element | null {
             <ProtocolWorldsHome />
           ) : isEdgeCity ? (
             <EdgeCityHome />
+          ) : isPuddleCrypto ? (
+            <PuddleCryptoScreen />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}

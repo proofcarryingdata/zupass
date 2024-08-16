@@ -1,5 +1,6 @@
 import { ZupassAPI } from "./api";
 import {
+  postRPCMessage,
   postWindowMessage,
   RPCMessage,
   RPCMessageSchema,
@@ -13,8 +14,6 @@ import { Zapp } from "./zapp";
 const clients = new WeakMap<ZupassAPI, Client>();
 
 interface Client {
-  element: HTMLElement;
-  zapp: Zapp;
   port: MessagePort;
   serial: number;
   pending: Record<
@@ -23,14 +22,16 @@ interface Client {
   >;
 }
 
-export function connect(
-  zapp: Zapp,
-  element: HTMLElement,
-  zupassUrl = "https://zupass.org"
-): Promise<ZupassAPI> {
-  // Will throw if the URL is invalid
-  const normalizedUrl = new URL(zupassUrl);
+interface HostedZupass {
+  iframe: HTMLIFrameElement;
+  shadow: ShadowRoot;
+  dialog: HTMLDialogElement;
+}
 
+function createHostedZupass(
+  element: HTMLElement,
+  normalizedUrl: URL
+): HostedZupass {
   const dialog = document.createElement("dialog");
   dialog.style.borderWidth = "0px";
   dialog.style.borderRadius = "16px";
@@ -81,55 +82,142 @@ export function connect(
   iframe.style.height = "100%";
   iframe.src = normalizedUrl.toString();
 
+  return { iframe, shadow, dialog };
+}
+
+function* mainForEmbeddedZupass(
+  dialog: HTMLDialogElement,
+  port: MessagePort,
+  resolve: (handle: ZupassAPI) => void
+): Generator<undefined, void, RPCMessage> {
+  let handle: ZupassAPI | undefined;
+  while (true) {
+    const event = yield;
+    if (event.type === RPCMessageType.ZUPASS_CLIENT_READY) {
+      handle = createAPIClient(ZupassAPISchema, ZupassAPISchema.shape);
+      clients.set(handle, {
+        port,
+        serial: 0,
+        pending: {}
+      });
+      resolve(handle);
+      break;
+    } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
+      dialog.showModal();
+    } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
+      dialog.close();
+    }
+  }
+
+  while (true) {
+    const event = yield;
+    console.log(`RECEIVED ${event.type}`);
+    if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_RESULT) {
+      clients.get(handle)?.pending[event.serial]?.resolve(event.result);
+    } else if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_ERROR) {
+      clients
+        .get(handle)
+        ?.pending[event.serial]?.reject(new Error(event.error));
+    } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
+      dialog.showModal();
+    } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
+      dialog.close();
+    }
+  }
+}
+
+function* mainForEmbeddedZapp(
+  port: MessagePort,
+  resolve: (handle: ZupassAPI) => void
+): Generator<undefined, void, RPCMessage> {
+  let handle: ZupassAPI | undefined;
+  while (true) {
+    const event = yield;
+    console.log(`RECEIVED ${event.type}`);
+    if (event.type === RPCMessageType.ZUPASS_CLIENT_READY) {
+      handle = createAPIClient(ZupassAPISchema, ZupassAPISchema.shape);
+      clients.set(handle, {
+        port,
+        serial: 0,
+        pending: {}
+      });
+      resolve(handle);
+      break;
+    }
+  }
+
+  while (true) {
+    const event = yield;
+    console.log(`RECEIVED ${event.type}`);
+    if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_RESULT) {
+      clients.get(handle)?.pending[event.serial]?.resolve(event.result);
+    } else if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_ERROR) {
+      clients
+        .get(handle)
+        ?.pending[event.serial]?.reject(new Error(event.error));
+    }
+  }
+}
+
+export function listen(
+  zapp: Zapp,
+  zupassUrl = "https://zupass.org"
+): Promise<ZupassAPI> {
+  const normalizedUrl = new URL(zupassUrl);
+  if (window.self === window.top) {
+    throw new Error("Listen can only be called from within an iframe");
+  }
+
+  return new Promise<ZupassAPI>((resolve, _reject) => {
+    window.onmessage = (ev: MessageEvent): void => {
+      console.log(ev);
+      if (ev.origin !== normalizedUrl.origin) {
+        console.error(
+          `Unexpected origin: ${ev.origin} != ${normalizedUrl.origin}`
+        );
+        return;
+      }
+
+      if (ev.data.type === WindowMessageType.ZUPASS_HOST_CONNECT) {
+        postRPCMessage(ev.ports[0], {
+          type: RPCMessageType.ZUPASS_CLIENT_CONNECT,
+          zapp
+        });
+        const port = ev.ports[0];
+        const eventLoop = mainForEmbeddedZapp(port, resolve);
+        eventLoop.next();
+
+        port.onmessage = (ev: MessageEvent): void => {
+          const msg = RPCMessageSchema.safeParse(ev.data);
+          console.log(msg);
+          if (msg.success) {
+            eventLoop.next(msg.data);
+          } else {
+            console.log("Got unexpected message: ", ev);
+          }
+        };
+      }
+    };
+  });
+}
+
+export function connect(
+  zapp: Zapp,
+  element: HTMLElement,
+  zupassUrl = "https://zupass.org"
+): Promise<ZupassAPI> {
+  // Will throw if the URL is invalid
+  const normalizedUrl = new URL(zupassUrl);
+  const { iframe, shadow, dialog } = createHostedZupass(element, normalizedUrl);
+
   return new Promise<ZupassAPI>((resolve, _reject) => {
     /**
      * @todo timeout?
-     * @todo iframe loads are fake, maybe poll to see if contentwindow exists?
      */
     iframe.addEventListener("load", async () => {
       const chan = new MessageChannel();
       chan.port2.start();
-
-      const main = function* (): Generator<undefined, void, RPCMessage> {
-        let handle: ZupassAPI | undefined;
-        while (true) {
-          const event = yield;
-          if (event.type === RPCMessageType.ZUPASS_CLIENT_READY) {
-            handle = createAPIClient(ZupassAPISchema, ZupassAPISchema.shape);
-            clients.set(handle, {
-              element,
-              zapp,
-              port: chan.port2,
-              serial: 0,
-              pending: {}
-            });
-            resolve(handle);
-            break;
-          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
-            dialog.showModal();
-          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
-            dialog.close();
-          }
-        }
-
-        while (true) {
-          const event = yield;
-          console.log(`RECEIVED ${event.type}`);
-          if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_RESULT) {
-            clients.get(handle)?.pending[event.serial]?.resolve(event.result);
-          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_ERROR) {
-            clients
-              .get(handle)
-              ?.pending[event.serial]?.reject(new Error(event.error));
-          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
-            dialog.showModal();
-          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
-            dialog.close();
-          }
-        }
-      };
-
-      const eventLoop = main();
+      const eventLoop = mainForEmbeddedZupass(dialog, chan.port2, resolve);
       eventLoop.next();
 
       chan.port2.addEventListener("message", (ev: MessageEvent) => {

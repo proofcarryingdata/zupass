@@ -16,8 +16,8 @@ import {
 } from "@pcd/zupass-client";
 import { z } from "zod";
 import { StateContextValue } from "../dispatch";
-import { EmbeddedScreenType } from "../embedded";
-import { ClientChannel } from "./useZappServer";
+import { EmbeddedScreenState, EmbeddedScreenType } from "../embedded";
+import { UIControl } from "./useZappServer";
 
 function safeInput<This extends BaseZappServer, Args extends unknown[], Return>(
   parser: z.ZodSchema<Args>
@@ -42,7 +42,7 @@ abstract class BaseZappServer {
   constructor(
     private context: StateContextValue,
     private zapp: PODPCD,
-    private clientChannel: ClientChannel
+    private uiControl: UIControl
   ) {}
 
   public getZapp(): PODPCD {
@@ -53,8 +53,8 @@ abstract class BaseZappServer {
     return this.context;
   }
 
-  public getClientChannel(): ClientChannel {
-    return this.clientChannel;
+  public getUIControl(): UIControl {
+    return this.uiControl;
   }
 }
 
@@ -62,9 +62,9 @@ class FileSystem extends BaseZappServer implements ZupassFileSystem {
   public constructor(
     context: StateContextValue,
     zapp: PODPCD,
-    clientChannel: ClientChannel
+    uiControl: UIControl
   ) {
-    super(context, zapp, clientChannel);
+    super(context, zapp, uiControl);
   }
 
   @safeInput(ZupassAPISchema.shape.fs.shape.list.parameters())
@@ -131,9 +131,9 @@ class GPC extends BaseZappServer implements ZupassGPC {
   public constructor(
     context: StateContextValue,
     zapp: PODPCD,
-    clientChannel: ClientChannel
+    uiControl: UIControl
   ) {
-    super(context, zapp, clientChannel);
+    super(context, zapp, uiControl);
   }
 
   public async prove(args: GPCPCDArgs): Promise<SerializedPCD> {
@@ -144,22 +144,18 @@ class GPC extends BaseZappServer implements ZupassGPC {
       pcdType: GPCPCDTypeName,
       postMessage: false
     };
-    this.getClientChannel().showZupass();
     return new Promise((resolve) => {
-      this.getContext().dispatch({
-        type: "show-embedded-screen",
+      const screenState: EmbeddedScreenState = {
         screen: {
           type: EmbeddedScreenType.EmbeddedGetRequest,
           request: req,
-          callback: (serialized: SerializedPCD) => {
-            this.getClientChannel().hideZupass();
-            this.getContext().dispatch({
-              type: "hide-embedded-screen"
-            });
+          callback: (serialized: SerializedPCD): void => {
+            this.getUIControl().hideScreen();
             resolve(serialized);
           }
         }
-      });
+      };
+      this.getUIControl().showScreen(screenState);
     });
   }
 }
@@ -168,9 +164,9 @@ export class Feeds extends BaseZappServer implements ZupassFeeds {
   public constructor(
     context: StateContextValue,
     zapp: PODPCD,
-    clientChannel: ClientChannel
+    uiControl: UIControl
   ) {
-    super(context, zapp, clientChannel);
+    super(context, zapp, uiControl);
   }
 
   @safeInput(ZupassAPISchema.shape.feeds.shape.requestAddSubscription)
@@ -178,15 +174,13 @@ export class Feeds extends BaseZappServer implements ZupassFeeds {
     feedUrl: string,
     feedId: string
   ): Promise<void> {
-    this.getContext().dispatch({
-      type: "show-embedded-screen",
+    this.getUIControl().showScreen({
       screen: {
         type: EmbeddedScreenType.EmbeddedAddSubscription,
         feedUrl,
         feedId
       }
     });
-    this.getClientChannel().showZupass();
   }
 }
 
@@ -194,9 +188,9 @@ export class Identity extends BaseZappServer implements ZupassIdentity {
   public constructor(
     context: StateContextValue,
     zapp: PODPCD,
-    clientChannel: ClientChannel
+    uiControl: UIControl
   ) {
-    super(context, zapp, clientChannel);
+    super(context, zapp, uiControl);
   }
 
   public async getIdentityCommitment(): Promise<bigint> {
@@ -217,9 +211,9 @@ class PODServer extends BaseZappServer implements ZupassPOD {
   public constructor(
     context: StateContextValue,
     zapp: PODPCD,
-    clientChannel: ClientChannel
+    uiControl: UIControl
   ) {
-    super(context, zapp, clientChannel);
+    super(context, zapp, uiControl);
   }
 
   @safeInput(ZupassAPISchema.shape.pod.shape.query.parameters())
@@ -253,16 +247,12 @@ export class ZappServer extends BaseZappServer implements ZupassAPI {
   public pod: ZupassPOD;
   public _version = "1" as const;
 
-  constructor(
-    context: StateContextValue,
-    zapp: PODPCD,
-    clientChannel: ClientChannel
-  ) {
-    super(context, zapp, clientChannel);
-    this.fs = new FileSystem(context, zapp, clientChannel);
-    this.gpc = new GPC(context, zapp, clientChannel);
-    this.feeds = new Feeds(context, zapp, clientChannel);
-    this.identity = new Identity(context, zapp, clientChannel);
-    this.pod = new PODServer(context, zapp, clientChannel);
+  constructor(context: StateContextValue, zapp: PODPCD, uiControl: UIControl) {
+    super(context, zapp, uiControl);
+    this.fs = new FileSystem(context, zapp, uiControl);
+    this.gpc = new GPC(context, zapp, uiControl);
+    this.feeds = new Feeds(context, zapp, uiControl);
+    this.identity = new Identity(context, zapp, uiControl);
+    this.pod = new PODServer(context, zapp, uiControl);
   }
 }

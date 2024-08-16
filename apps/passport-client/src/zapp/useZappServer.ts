@@ -13,25 +13,42 @@ import {
 import { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useStateContext } from "../appHooks";
+import { StateContextValue } from "../dispatch";
+import { EmbeddedScreenState } from "../embedded";
 import { ZappServer } from "./ZappServer";
 
-export class ClientChannel {
-  constructor(private port: MessagePort) {}
+export interface UIControl {
+  showScreen(embeddedScreen: EmbeddedScreenState): void;
+  hideScreen(): void;
+}
 
-  public showZupass(): void {
+export class EmbeddedUIControl implements UIControl {
+  constructor(
+    private port: MessagePort,
+    private context: StateContextValue
+  ) {}
+
+  public showScreen(embeddedScreen: EmbeddedScreenState): void {
     this.port.postMessage({
       type: RPCMessageType.ZUPASS_CLIENT_SHOW
     });
+    this.context.dispatch({
+      type: "show-embedded-screen",
+      screen: embeddedScreen.screen
+    });
   }
 
-  public hideZupass(): void {
+  public hideScreen(): void {
     this.port.postMessage({
       type: RPCMessageType.ZUPASS_CLIENT_HIDE
+    });
+    this.context.dispatch({
+      type: "hide-embedded-screen"
     });
   }
 }
 
-function setupPort(port: MessagePort, server: ZappServer): void {
+export function setupPort(port: MessagePort, server: ZappServer): void {
   port.addEventListener("message", async (event) => {
     console.log(`SERVER RECEIVED ${event.data.type}`);
     const message = RPCMessageSchema.parse(event.data);
@@ -169,8 +186,8 @@ export function useZappServer(): void {
           }
         }
         if (approved) {
-          const clientChannel = new ClientChannel(port);
-          const server = new ZappServer(context, zapp, clientChannel);
+          const uiControl = new EmbeddedUIControl(port, context);
+          const server = new ZappServer(context, zapp, uiControl);
 
           // @todo handle this with an action
           context.update({ embeddedScreen: undefined });
