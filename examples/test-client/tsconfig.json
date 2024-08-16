@@ -29,6 +29,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/pcd/semaphore-identity-pcd"
+    },
+    {
       "path": "../../packages/lib/zupass-client"
     }
   ]

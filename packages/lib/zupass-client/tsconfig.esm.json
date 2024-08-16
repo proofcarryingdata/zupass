@@ -12,6 +12,9 @@
   "references": [
     {
       "path": "../../pcd/gpc-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../pcd-types/tsconfig.esm.json"
     }
   ]
 }

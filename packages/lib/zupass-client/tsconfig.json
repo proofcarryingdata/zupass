@@ -25,6 +25,9 @@
   "references": [
     {
       "path": "../../pcd/gpc-pcd"
+    },
+    {
+      "path": "../pcd-types"
     }
   ]
 }
