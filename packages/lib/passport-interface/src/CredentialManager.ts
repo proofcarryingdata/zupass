@@ -264,7 +264,13 @@ export class CredentialManager implements CredentialManagerAPI {
 
     const pcd = await PODPCDPackage.prove({
       entries: {
-        argumentType: ArgumentTypeName.Object
+        argumentType: ArgumentTypeName.Object,
+        value: {
+          signedValue: {
+            type: "string",
+            value: JSON.stringify(payload)
+          }
+        }
       },
       privateKey: {
         argumentType: ArgumentTypeName.String,
