@@ -42,7 +42,7 @@ export const PODBOX_CREDENTIAL_REQUEST: CredentialRequest = {
 };
 
 export const ZUPASS_CREDENTIAL_REQUEST: CredentialRequest = {
-  signatureType: "sempahore-signature-pcd"
+  signatureType: "semaphore-v4-signature-pcd"
 };
 
 // Creates an in-memory cache with a TTL of one hour.
@@ -207,9 +207,12 @@ export class CredentialManager implements CredentialManagerAPI {
         pcds.map((pcd) => this.pcds.serialize(pcd))
       );
 
-      return this.semaphoreSignPayload(createCredentialPayload(emailPCDs));
+      return this.signPayload(
+        createCredentialPayload(emailPCDs),
+        req.signatureType
+      );
     } else if (req.pcdType === undefined) {
-      return this.semaphoreSignPayload(createCredentialPayload());
+      return this.signPayload(createCredentialPayload(), req.signatureType);
     } else {
       throw new Error(
         `Cannot issue credential containing a PCD of type ${req.pcdType}`
@@ -218,9 +221,11 @@ export class CredentialManager implements CredentialManagerAPI {
   }
 
   // Takes a payload and wraps it in a signature PCD.
-  private async semaphoreSignPayload(
-    payload: CredentialPayload
+  private async signPayload(
+    payload: CredentialPayload,
+    signatureType: CredentialRequest["signatureType"]
   ): Promise<Credential> {
+    // if (signatureType === "sempahore-signature-pcd") {
     // In future we might support other types of signature here
     const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
       identity: {
@@ -238,5 +243,6 @@ export class CredentialManager implements CredentialManagerAPI {
     });
 
     return await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
+    // }
   }
 }

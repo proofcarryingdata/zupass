@@ -47,6 +47,9 @@
       "path": "../../pcd/semaphore-identity-v4/tsconfig.esm.json"
     },
     {
+      "path": "../../pcd/pod-pcd/tsconfig.esm.json"
+    },
+    {
       "path": "../../pcd/semaphore-signature-pcd/tsconfig.esm.json"
     },
     {

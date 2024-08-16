@@ -58,6 +58,9 @@
       "path": "../../pcd/semaphore-identity-v4"
     },
     {
+      "path": "../../pcd/pod-pcd"
+    },
+    {
       "path": "../../pcd/semaphore-signature-pcd"
     },
     {
