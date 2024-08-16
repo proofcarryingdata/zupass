@@ -53,7 +53,7 @@ SELECT
 
     const zuconnectTickets: ZuconnectTicketInfo[] = [];
 
-    for (let i = 0; i < row.names.length; i++) {
+    for (let i = 0; i < row.attendee_names.length; i++) {
       zuconnectTickets.push({
         attendee_email: row.attendee_emails[i],
         attendee_name: row.attendee_names[i],
