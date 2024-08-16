@@ -86,6 +86,38 @@ describe("podspec should work", async function () {
     expect(result.status).to.eq("invalid");
   });
 
+  it("should test string entries for list membership", function () {
+    const myPodSpec = p.entries({
+      foo: p.coerce.string().list(["test", "other string"])
+    });
+
+    const result = myPodSpec.safeParse({
+      foo: "test"
+    });
+    expect(result.status).to.eq("valid");
+
+    const result2 = myPodSpec.safeParse({
+      foo: "not in list"
+    });
+    expect(result2.status).to.eq("invalid");
+  });
+
+  it("should test integer entries for list membership", function () {
+    const myPodSpec = p.entries({
+      foo: p.coerce.integer().list([1n, 2n, 3n])
+    });
+
+    const result = myPodSpec.safeParse({
+      foo: 1n
+    });
+    expect(result.status).to.eq("valid");
+
+    const result2 = myPodSpec.safeParse({
+      foo: 4n
+    });
+    expect(result2.status).to.eq("invalid");
+  });
+
   it("should match on tuples", function () {
     const myPodSpec = p
       .entries({
@@ -115,6 +147,13 @@ describe("podspec should work", async function () {
       const result = myPodSpec.safeParse({
         foo: "other string",
         bar: 1n
+      });
+      expect(result.status).to.eq("invalid");
+    }
+    {
+      const result = myPodSpec.safeParse({
+        foo: "test",
+        bar: 2n
       });
       expect(result.status).to.eq("invalid");
     }
