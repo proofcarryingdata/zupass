@@ -140,6 +140,9 @@
       "path": "../../packages/ui/semaphore-group-pcd-ui"
     },
     {
+      "path": "../../packages/pcd/semaphore-identity-pcd"
+    },
+    {
       "path": "../../packages/ui/semaphore-identity-pcd-ui"
     },
     {

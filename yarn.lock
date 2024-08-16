@@ -4774,17 +4774,6 @@
   resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.5.0.tgz#9c01537fe944fa6fa7428ccb8bbb78ea7ea1472f"
   integrity sha512-YL23VeD2KemZlDrDZ38PbO9UsGh3x1yNnvNqstL5wbEmv9H+HUNXRJU07TmaJ2JYoWJpEPZ9g/yJ0oxSD6qSjg==
 
-"@pcd/semaphore-identity-pcd@0.11.4", "@pcd/semaphore-identity-pcd@^0.11.4":
-  version "0.11.4"
-  resolved "https://registry.yarnpkg.com/@pcd/semaphore-identity-pcd/-/semaphore-identity-pcd-0.11.4.tgz#8d4aed535aa2acf083965e90f47466cd37e3508d"
-  integrity sha512-/N6oEGE7cSRyW6EPgNYmt0G+EaGpXn6mdDmJBtGFRCgnqhcOVdvn/ukHniXkcmQBN18pnP4CqD/cVH0dt7bi2Q==
-  dependencies:
-    "@pcd/pcd-types" "0.11.4"
-    "@pcd/util" "0.5.3"
-    "@semaphore-protocol/identity" "^3.15.2"
-    json-bigint "^1.0.0"
-    uuid "^9.0.0"
-
 "@peculiar/asn1-android@^2.3.3":
   version "2.3.6"
   resolved "https://registry.yarnpkg.com/@peculiar/asn1-android/-/asn1-android-2.3.6.tgz#20363c23bc5b9a91f7ffd80d7c3842dccff8c20b"

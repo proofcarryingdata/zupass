@@ -1,14 +1,7 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [
-    "src",
-    "test"
-  ],
-  "exclude": [
-    "dist",
-    "build",
-    "node_modules"
-  ],
+  "include": ["src", "test"],
+  "exclude": ["dist", "build", "node_modules"],
   "references": [
     {
       "path": "../../pcd/eddsa-ticket-pcd"
@@ -21,6 +14,9 @@
     },
     {
       "path": "../../lib/pcd-types"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd"
     },
     {
       "path": "../../pcd/zk-eddsa-event-ticket-pcd"

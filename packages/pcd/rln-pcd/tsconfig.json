@@ -1,15 +1,7 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [
-    "src",
-    "test",
-    "artifacts/*.json"
-  ],
-  "exclude": [
-    "dist",
-    "build",
-    "node_modules"
-  ],
+  "include": ["src", "test", "artifacts/*.json"],
+  "exclude": ["dist", "build", "node_modules"],
   "compilerOptions": {
     "resolveJsonModule": true,
     "outDir": "dist",
@@ -22,6 +14,9 @@
     },
     {
       "path": "../semaphore-group-pcd"
+    },
+    {
+      "path": "../semaphore-identity-pcd"
     },
     {
       "path": "../../lib/util"

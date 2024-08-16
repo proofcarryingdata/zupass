@@ -17,6 +17,9 @@
       "path": "../../lib/pcd-types/tsconfig.cjs.json"
     },
     {
+      "path": "../semaphore-identity-pcd/tsconfig.cjs.json"
+    },
+    {
       "path": "../semaphore-signature-pcd/tsconfig.cjs.json"
     },
     {

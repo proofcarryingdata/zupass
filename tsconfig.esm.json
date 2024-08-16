@@ -103,6 +103,9 @@
       "path": "packages/pcd/semaphore-group-pcd/tsconfig.esm.json"
     },
     {
+      "path": "packages/pcd/semaphore-identity-pcd/tsconfig.esm.json"
+    },
+    {
       "path": "packages/pcd/semaphore-sig-next/tsconfig.esm.json"
     },
     {

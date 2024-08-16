@@ -17,6 +17,9 @@
       "path": "../pcd-types/tsconfig.esm.json"
     },
     {
+      "path": "../../pcd/semaphore-identity-pcd/tsconfig.esm.json"
+    },
+    {
       "path": "../../pcd/rsa-pcd/tsconfig.esm.json"
     }
   ]

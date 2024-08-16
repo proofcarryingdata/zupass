@@ -27,6 +27,9 @@
     },
     {
       "path": "../../packages/pcd/gpc-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-identity-pcd/tsconfig.esm.json"
     }
   ]
 }

@@ -63,6 +63,7 @@ export function getDisplayOptions(pcd: SemaphoreIdentityV4PCD): DisplayOptions {
 export const SemaphoreIdentityV4PCDPackage: PCDPackage<
   SemaphoreIdentityV4PCDClaim,
   SemaphoreIdentityV4PCDProof,
+  // @ts-expect-error https://github.com/proofcarryingdata/zupass/issues/830
   SemaphoreIdentityV4PCDArgs
 > = {
   name: SemaphoreIdentityV4PCDTypeName,

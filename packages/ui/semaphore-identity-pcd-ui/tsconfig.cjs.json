@@ -8,6 +8,9 @@
   "include": ["src", "src/*.json"],
   "references": [
     {
+      "path": "../../pcd/semaphore-identity-pcd/tsconfig.cjs.json"
+    },
+    {
       "path": "../../lib/passport-ui/tsconfig.cjs.json"
     },
     {
