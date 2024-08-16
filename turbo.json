@@ -223,6 +223,7 @@
     "MANUAL_CHECKIN_PIPELINE_ID",
     "OUTBOUND_ALLOW_LIST",
     "PIPELINE_EMAIL_SEND",
+    "ZUPASS_URL",
     "//// add env vars above this line ////"
   ]
 }

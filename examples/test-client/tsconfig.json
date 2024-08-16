@@ -29,6 +29,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/lib/pcd-types"
+    },
+    {
       "path": "../../packages/pcd/semaphore-identity-pcd"
     },
     {
