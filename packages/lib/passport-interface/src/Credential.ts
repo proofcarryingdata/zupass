@@ -109,25 +109,38 @@ export class VerificationError extends Error {}
 export async function verifyCredential(
   credential: Credential
 ): Promise<VerifiedCredential> {
-  if (
-    ![SemaphoreSignaturePCDPackage.name, PODPCDPackage.name].includes(
-      credential.type
-    )
-  ) {
+  let payload: CredentialPayload;
+  let semaphoreId: string | undefined;
+  let semaphoreIdV4: string | undefined;
+
+  if (credential.type === SemaphoreSignaturePCDPackage.name) {
+    // Ensure that the signature part of the credential verifies.
+    const pcd = await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
+    if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
+      throw new VerificationError(`Could not verify signature PCD`);
+    }
+
+    // Parse data from the Semaphore Signature claim. Will throw if the message
+    // is not valid JSON.
+    payload = JSON.parse(pcd.claim.signedMessage);
+    semaphoreId = pcd.claim.identityCommitment;
+  } else if (credential.type === PODPCDPackage.name) {
+    const pcd = await PODPCDPackage.deserialize(credential.pcd);
+    const signedValue = pcd.claim.entries["signedValue"];
+
+    if (signedValue.type !== "string") {
+      throw new VerificationError(
+        `PODPCD has invalid signedValue type: ${signedValue.type}`
+      );
+    }
+
+    payload = JSON.parse(signedValue.value);
+    semaphoreIdV4 = pcd.claim.signerPublicKey;
+  } else {
     throw new VerificationError(
       `Credential is not a Semaphore Signature PCD or a POD`
     );
   }
-
-  // Ensure that the signature part of the credential verifies.
-  const pcd = await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
-  if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
-    throw new VerificationError(`Could not verify signature PCD`);
-  }
-
-  // Parse data from the Semaphore Signature claim. Will throw if the message
-  // is not valid JSON.
-  const payload: CredentialPayload = JSON.parse(pcd.claim.signedMessage);
 
   // The payload should have a timestamp, which should also be a number within
   // certain bounds.
@@ -154,7 +167,7 @@ export async function verifyCredential(
 
         // EmailPCD contains a Semaphore ID in its claim, which must match that of
         // the signature.
-        if (emailPCD.claim.semaphoreId !== pcd.claim.identityCommitment) {
+        if (emailPCD.claim.semaphoreId !== semaphoreId) {
           throw new VerificationError(
             `Email PCD and Signature PCD do not have matching identities`
           );
@@ -171,11 +184,12 @@ export async function verifyCredential(
     // Everything passes, return the verified credential with email claims
     return {
       emails: signedEmails,
-      semaphoreId: pcd.claim.identityCommitment
+      semaphoreId,
+      semaphoreIdV4
     };
   } else {
     // Return a verified credential, without email claims since no EmailPCD
     // was present
-    return { semaphoreId: pcd.claim.identityCommitment };
+    return { semaphoreId, semaphoreIdV4 };
   }
 }
