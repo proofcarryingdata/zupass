@@ -2,10 +2,9 @@ import { GPCPCD, GPCPCDArgs } from "@pcd/gpc-pcd";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useState } from "react";
 import { TryIt } from "../components/TryIt";
 import { useEmbeddedZupass } from "../hooks/useEmbeddedZupass";
-import { ZUPASS_URL } from "../main";
 
 const EXAMPLE_GPC_CONFIG = `{
   "pods": {
@@ -68,10 +67,6 @@ const args: GPCPCDArgs = {
 
 export function GPC(): ReactNode {
   const { z, connected } = useEmbeddedZupass();
-  const zupassUrl = useMemo(() => {
-    return localStorage.getItem("zupassUrl") || ZUPASS_URL;
-  }, []);
-
   const [proof, setProof] = useState<SerializedPCD<GPCPCD>>();
 
   return !connected ? null : (

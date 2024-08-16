@@ -1,5 +1,12 @@
-import { Zapp, ZupassAPI, connect } from "@pcd/zupass-client";
-import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { connect, Zapp, ZupassAPI } from "@pcd/zupass-client";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 
 export enum EmbeddedZupassState {
   CONNECTING,
@@ -30,7 +37,7 @@ export function EmbeddedZupassProvider({
   zapp: Zapp;
   zupassUrl: string;
   children: React.ReactNode;
-}) {
+}): ReactNode {
   const ref = useRef<HTMLDivElement>(null);
 
   const [value, setValue] = useState<EmbeddedZupass>({
@@ -48,6 +55,7 @@ export function EmbeddedZupassProvider({
         });
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -65,7 +73,7 @@ type UseEmbeddedZupass =
     }
   | {
       connected: false;
-      z: {};
+      z: Record<string, never>;
     };
 
 export function useEmbeddedZupass(): UseEmbeddedZupass {

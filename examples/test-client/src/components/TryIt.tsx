@@ -4,7 +4,7 @@ export function TryIt({
 }: {
   onClick: () => void;
   label: string;
-}) {
+}): ReactNode {
   return (
     <div className="flex items-center gap-2">
       <span className="text-sm">Try it:</span>

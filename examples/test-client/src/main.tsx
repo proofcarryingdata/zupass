@@ -18,7 +18,7 @@ const zapp = {
   permissions: ["read", "write"]
 };
 
-export default function Main() {
+export default function Main(): ReactNode {
   const { connected } = useEmbeddedZupass();
   return (
     <>
@@ -36,7 +36,7 @@ export default function Main() {
   );
 }
 
-function App() {
+function App(): ReactNode {
   const zupassUrl = localStorage.getItem("zupassUrl") || ZUPASS_URL;
 
   return (
