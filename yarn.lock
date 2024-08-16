@@ -4769,6 +4769,11 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
+"@pcd/pcd-types@^0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@pcd/pcd-types/-/pcd-types-0.1.0.tgz#f9acc586608fe87355e36d0109ea514130cd692c"
+  integrity sha512-SYxe1/RvOYhJg3694JaK4GpAZ9l6w4pkbRk/GXHqf7nAvDYHJ8oU8Js9kWnF8tGa78kQceRRQIGdPgCPChxGpQ==
+
 "@pcd/proto-pod-gpc-artifacts@0.5.0":
   version "0.5.0"
   resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.5.0.tgz#9c01537fe944fa6fa7428ccb8bbb78ea7ea1472f"
@@ -5343,16 +5348,6 @@
     "@ethersproject/keccak256" "^5.7.0"
     "@zk-kit/incremental-merkle-tree" "1.1.0"
 
-"@semaphore-protocol/identity-v4@npm:@semaphore-protocol/identity@4", "@semaphore-protocol/identity@^4":
-  version "4.0.1"
-  resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-4.0.1.tgz#6b4abfb8bfde1fc24cdfd88c53f0d3e165e8ea46"
-  integrity sha512-MP/uQHOUNUS22+9PEY8lCnFW2UbE+ccQ5WKn4fRd/nRvknOcm6jN6YbO23AlpfrDfDKhhy8Pfkpjlf/YIi4K/g==
-  dependencies:
-    "@zk-kit/baby-jubjub" "1.0.1"
-    "@zk-kit/eddsa-poseidon" "1.0.2"
-    "@zk-kit/utils" "1.2.0"
-    poseidon-lite "0.2.0"
-
 "@semaphore-protocol/identity@^2.6.1":
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-2.6.1.tgz#49385c1004261ca2e192c43aa04005ce6ef82d83"
@@ -5374,6 +5369,16 @@
     "@ethersproject/random" "^5.5.1"
     "@ethersproject/strings" "^5.6.1"
     js-sha512 "^0.8.0"
+
+"@semaphore-protocol/identity@^4":
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-4.0.1.tgz#6b4abfb8bfde1fc24cdfd88c53f0d3e165e8ea46"
+  integrity sha512-MP/uQHOUNUS22+9PEY8lCnFW2UbE+ccQ5WKn4fRd/nRvknOcm6jN6YbO23AlpfrDfDKhhy8Pfkpjlf/YIi4K/g==
+  dependencies:
+    "@zk-kit/baby-jubjub" "1.0.1"
+    "@zk-kit/eddsa-poseidon" "1.0.2"
+    "@zk-kit/utils" "1.2.0"
+    poseidon-lite "0.2.0"
 
 "@semaphore-protocol/proof@^3.15.2":
   version "3.15.2"
@@ -7616,13 +7621,6 @@
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.0.0.tgz#db1af01a4e60f5290734a26c2fd9e863bff049e3"
   integrity sha512-v5UjrZiaRNAN2UJmTFHvlMktaA2Efc2qN1Mwd4060ExX12yRhY8ZhzdlDODhnuHkvW5zPukuBHgQhHMScNP3Pg==
-  dependencies:
-    buffer "^6.0.3"
-
-"@zk-kit/utils@1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.2.0.tgz#7f5dfadb9512f1a090639c912395a6684b560ba2"
-  integrity sha512-Ut9zfnlBVpopZG/s600Ds/FPSWXiPhO4q8949kmXTzwDXytjnvFbDZIFdWqE/lA7/NZjvykiTnnVwmanMxv2+w==
   dependencies:
     buffer "^6.0.3"
 
@@ -17096,10 +17094,15 @@ plop@^4.0.1:
     ora "^8.0.0"
     v8flags "^4.0.1"
 
-poseidon-lite@0.2.0, poseidon-lite@^0.2.0:
+poseidon-lite@0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.2.0.tgz#dbc242ebd9c10c32d507a533fa497231d168fd72"
   integrity sha512-vivDZnGmz8W4G/GzVA72PXkfYStjilu83rjjUfpL4PueKcC8nfX6hCPh2XhoC5FBgC6y0TA3YuUeUo5YCcNoig==
+
+poseidon-lite@^0.0.2:
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.0.2.tgz#dc1a7c57f9393a586c5c9efc21b72b77e2c1acb6"
+  integrity sha512-bGdDPTOQkJbBjbtSEWc3gY+YhqlGTxGlZ8041F8TGGg5QyGGp1Cfs4b8AEnFFjHbkPg6WdWXUgEjU1GKOKWAPw==
 
 poseidon-lite@^0.2.1:
   version "0.2.1"
