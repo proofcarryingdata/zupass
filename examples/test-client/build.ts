@@ -9,7 +9,7 @@ dotenv.config();
 
 const define = {
   "process.env.ZUPASS_URL": JSON.stringify(
-    process.env.ZUPASS_URL ?? "https://staging-rob.zupass.org"
+    process.env.ZUPASS_URL ?? "https://zupass.org"
   )
 };
 
