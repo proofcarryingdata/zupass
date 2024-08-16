@@ -1,12 +1,18 @@
 {
+  "extends": "@pcd/tsconfig/ts-library.json",
+  "include": ["src", "test"],
+  "exclude": ["dist", "build", "node_modules"],
+  "references": [
+    {
+      "path": "../../lib/pcd-types"
+    },
+    {
+      "path": "../../lib/util"
+    }
+  ],
   "compilerOptions": {
-    "target": "es2020",
-    "module": "commonjs",
-    "declaration": true,
-    "outDir": "./dist",
-    "strict": true,
-    "esModuleInterop": true
-  },
-  "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/*"]
+    "outDir": "dist",
+    "declarationDir": "dist/types",
+    "rootDir": "."
+  }
 }
