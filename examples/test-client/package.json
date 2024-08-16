@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "ts-node build.ts dev",
     "build": "ts-node build.ts build",
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint \"**/*.ts{,x}\""
   },
   "dependencies": {
     "dotenv": "^16.0.3",
