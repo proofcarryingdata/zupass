@@ -1,0 +1,41 @@
+{
+  "ts-node": {
+    // these options are overrides used only by ts-node
+    // same as the --compilerOptions flag and the TS_NODE_COMPILER_OPTIONS environment variable
+    "compilerOptions": {
+      "module": "CommonJS"
+    }
+  },
+  "compilerOptions": {
+    "resolveJsonModule": true,
+    "downlevelIteration": true,
+    "jsx": "react-jsx",
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
+    "module": "ES2020",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "sourceMap": true
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules",
+    "../../node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../packages/lib/pcd-types"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-identity-pcd"
+    },
+    {
+      "path": "../../packages/lib/zupass-client"
+    }
+  ]
+}
