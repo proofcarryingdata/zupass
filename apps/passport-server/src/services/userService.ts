@@ -13,6 +13,7 @@ import {
   VerifiedCredential,
   VerifyTokenResponseValue
 } from "@pcd/passport-interface";
+import { AddV4CommitmentResult } from "@pcd/passport-interface/src/api/requestAddSemaphoreV4Commitment";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
@@ -488,6 +489,21 @@ export class UserService {
 
     await deleteUserByUUID(this.context.dbPool, user.uuid);
     await deleteE2EEByCommitment(this.context.dbPool, user.commitment);
+  }
+
+  public async handleAddV4Commitment(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<AddV4CommitmentResult> {
+    const pcd = await SemaphoreSignaturePCDPackage.deserialize(
+      serializedPCD.pcd
+    );
+
+    logger(pcd);
+
+    return {
+      success: true,
+      value: undefined
+    };
   }
 
   /**

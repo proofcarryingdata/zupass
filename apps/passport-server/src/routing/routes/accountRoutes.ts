@@ -158,6 +158,24 @@ export function initAccountRoutes(
   /**
    * Records that the user has agreed to a given version of the legal terms.
    */
+  app.post(
+    "/account/add-v4-commitment",
+    async (req: Request, res: Response) => {
+      const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
+
+      const result = await userService.handleAddV4Commitment(pcd);
+
+      if (result.success) {
+        res.status(200).json(result.value);
+      } else {
+        res.status(403).send(result.error);
+      }
+    }
+  );
+
+  /**
+   * Records that the user has agreed to a given version of the legal terms.
+   */
   app.post("/account/agree-terms", async (req: Request, res: Response) => {
     const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
