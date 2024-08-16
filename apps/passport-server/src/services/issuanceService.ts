@@ -339,14 +339,21 @@ export class IssuanceService {
     }
   }
 
-  private async checkUserExists({
-    semaphoreId
-  }: VerifiedCredential): Promise<UserRow | null> {
-    const user = await fetchUserByCommitment(this.context.dbPool, semaphoreId);
+  private async checkUserExists(
+    credential: VerifiedCredential
+  ): Promise<UserRow | null> {
+    if (!credential.semaphoreId) {
+      throw new Error("invalid credential");
+    }
+
+    const user = await fetchUserByCommitment(
+      this.context.dbPool,
+      credential.semaphoreId
+    );
 
     if (user === null) {
       logger(
-        `can't issue PCDs for ${semaphoreId} because ` +
+        `can't issue PCDs for ${credential.semaphoreId} because ` +
           `we don't have a user with that commitment in the database`
       );
       return null;

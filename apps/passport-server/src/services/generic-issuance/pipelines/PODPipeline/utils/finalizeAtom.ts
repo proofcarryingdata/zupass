@@ -22,6 +22,10 @@ export function finalizeAtom(
 ): PODEntries {
   const newEntries: PODEntries = {};
 
+  if (!credential.semaphoreId) {
+    throw new Error("invalid credential");
+  }
+
   if (!credential.emails || credential.emails.length === 0) {
     throw new Error("missing emails in credential");
   }

@@ -162,6 +162,10 @@ export class CSVPipeline implements BasePipeline {
           const { emails, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
+          if (!semaphoreId) {
+            throw new Error("invalid credential");
+          }
+
           if (!emails || emails.length === 0) {
             throw new Error("missing emails in credential");
           }

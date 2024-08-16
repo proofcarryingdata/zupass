@@ -473,6 +473,10 @@ export class UserService {
       throw new PCDHTTPError(400, "Invalid signature");
     }
 
+    if (!verifyResult.semaphoreId) {
+      throw new Error("invalid credential");
+    }
+
     const user = await fetchUserByCommitment(
       this.context.dbPool,
       verifyResult.semaphoreId
@@ -633,6 +637,10 @@ export class UserService {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
     }
 
+    if (!credential.semaphoreId) {
+      throw new Error("invalid credential");
+    }
+
     const requestingUser = await this.getUserByCommitment(
       credential.semaphoreId
     );
@@ -709,6 +717,10 @@ export class UserService {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
+    if (!credential.semaphoreId) {
+      throw new Error("invalid credential");
+    }
+
     const requestingUser = await this.getUserByCommitment(
       credential.semaphoreId
     );
@@ -778,6 +790,10 @@ export class UserService {
     const maybeExistingUserOfNewEmail = await this.getUserByEmail(newEmail);
     if (maybeExistingUserOfNewEmail) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
+    }
+
+    if (!credential.semaphoreId) {
+      throw new Error("invalid credential");
     }
 
     const requestingUser = await this.getUserByCommitment(

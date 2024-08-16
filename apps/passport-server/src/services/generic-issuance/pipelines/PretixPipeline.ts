@@ -951,6 +951,10 @@ export class PretixPipeline implements BasePipeline {
       const { emails, semaphoreId } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
+      if (!semaphoreId) {
+        throw new Error("invalid credential");
+      }
+
       if (!emails || emails.length === 0) {
         throw new Error("missing emails in credential");
       }
@@ -1437,6 +1441,10 @@ export class PretixPipeline implements BasePipeline {
               request.credential
             );
 
+          if (!semaphoreId) {
+            throw new Error("invalid credential");
+          }
+
           span?.setAttribute(
             "checker_email",
             emails?.map((e) => e.email).join(",") ?? ""
@@ -1658,6 +1666,10 @@ export class PretixPipeline implements BasePipeline {
           await this.credentialSubservice.verifyAndExpectZupassEmail(
             request.credential
           );
+
+        if (!semaphoreId) {
+          throw new Error("invalid credential");
+        }
 
         span?.setAttribute(
           "checker_email",

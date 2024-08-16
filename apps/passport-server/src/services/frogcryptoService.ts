@@ -392,6 +392,9 @@ export class FrogcryptoService {
     try {
       const { semaphoreId } =
         await this.issuanceService.verifyCredential(credential);
+      if (!semaphoreId) {
+        throw new Error("invalid credential");
+      }
       return semaphoreId;
     } catch (e) {
       throw new PCDHTTPError(400, "invalid credential");

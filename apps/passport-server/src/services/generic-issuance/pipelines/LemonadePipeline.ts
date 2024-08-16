@@ -807,6 +807,10 @@ export class LemonadePipeline implements BasePipeline {
       const credential =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
+      if (!credential.semaphoreId) {
+        throw new Error("invalid credential");
+      }
+
       const { emails, semaphoreId } = credential;
 
       if (!emails || emails.length === 0) {
@@ -1406,6 +1410,10 @@ export class LemonadePipeline implements BasePipeline {
             await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
+
+          if (!credential.semaphoreId) {
+            throw new Error("invalid credential");
+          }
 
           const { emails, semaphoreId } = credential;
           if (!emails || emails.length === 0) {

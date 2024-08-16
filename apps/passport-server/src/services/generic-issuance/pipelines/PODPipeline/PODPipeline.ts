@@ -314,6 +314,9 @@ export class PODPipeline implements BasePipeline {
 
       const credential =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+      if (!credential.semaphoreId) {
+        throw new Error("invalid credential");
+      }
       const { emails, semaphoreId } = credential;
 
       span?.setAttribute("email", emails?.map((e) => e.email)?.join(",") ?? "");
