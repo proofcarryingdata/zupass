@@ -13,7 +13,7 @@ export const ZUPASS_URL =
   process.env.ZUPASS_URL || "https://staging-rob.zupass.org";
 
 const zapp = {
-  name: "test-client",
+  name: "PUDDLECRYPTO",
   permissions: ["read", "write"]
 };
 
