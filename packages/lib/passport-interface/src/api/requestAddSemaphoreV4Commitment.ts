@@ -9,7 +9,10 @@ import {
   SemaphoreIdentityV4PCD,
   SemaphoreIdentityV4PCDPackage
 } from "@pcd/semaphore-identity-v4";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { randomUUID, toHexString } from "@pcd/util";
 import urljoin from "url-join";
 import {
@@ -91,4 +94,23 @@ export async function makeAddV4CommitmentRequest(
   return {
     pcd: await SemaphoreSignaturePCDPackage.serialize(v3SigOfV4Sig)
   };
+}
+
+export async function verifyAddV4CommitmentRequestPCD(
+  pcd: SemaphoreSignaturePCD
+): Promise<boolean> {
+  try {
+    const v3SigVerifies = await SemaphoreSignaturePCDPackage.verify(pcd);
+    const expectedV3Id = pcd.claim.identityCommitment;
+    const v4SigOfV3Id = await PODPCDPackage.deserialize(
+      JSON.parse(pcd.claim.signedMessage)
+    );
+    const v4SigVerifies = await PODPCDPackage.verify(v4SigOfV3Id);
+    const v4Message = v4SigOfV3Id.claim.entries["signedValue"];
+    const v4SigIsOfV3Id =
+      v4Message.type === "string" && v4Message.value === expectedV3Id;
+    return v3SigVerifies && v4SigVerifies && v4SigIsOfV3Id;
+  } catch (e) {
+    return false;
+  }
 }
