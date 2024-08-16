@@ -2,8 +2,6 @@ import { ReactNode } from "react";
 import { TryIt } from "../components/TryIt";
 import { useEmbeddedZupass } from "../hooks/useEmbeddedZupass";
 
-// http://localhost:3000/#/add-subscription?url=http%3A%2F%2Flocalhost%3A3002%2Fgeneric-issuance%2Fapi%2Ffeed%2F494bd312-4b97-48e4-8693-be93bdbfa80d%2Fdefault-feed
-
 export function Feeds(): ReactNode {
   const { z, connected } = useEmbeddedZupass();
 
