@@ -167,7 +167,8 @@ export async function verifyCredential(
 
         // EmailPCD contains a Semaphore ID in its claim, which must match that of
         // the signature.
-        if (emailPCD.claim.semaphoreId !== semaphoreId) {
+        // TODO: be more strict on v4 signatures
+        if (!!semaphoreId && emailPCD.claim.semaphoreId !== semaphoreId) {
           throw new VerificationError(
             `Email PCD and Signature PCD do not have matching identities`
           );
