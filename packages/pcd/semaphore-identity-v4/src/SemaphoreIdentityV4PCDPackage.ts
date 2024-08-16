@@ -15,13 +15,17 @@ import {
 export function v3tov4Identity(
   v3Identity: SemaphoreIdentityPCD
 ): SemaphoreIdentityV4PCD {
+  const newPrivateKey = generateSnarkMessageHash(
+    v3Identity.claim.identity.getTrapdoor().toString() +
+      v3Identity.claim.identity.getSecret().toString()
+  )
+    .toString()
+    .substring(0, 64);
+
+  const identity = new Identity(newPrivateKey);
+
   return new SemaphoreIdentityV4PCD(uuid(), {
-    identity: new Identity(
-      generateSnarkMessageHash(
-        v3Identity.claim.identity.getTrapdoor().toString() +
-          v3Identity.claim.identity.getSecret().toString()
-      ).toString()
-    )
+    identity
   });
 }
 

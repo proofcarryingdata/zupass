@@ -55,7 +55,11 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
   const v3Identity = collection.getPCDsByType(SemaphoreIdentityPCDTypeName);
   const v4Identity = collection.getPCDsByType(SemaphoreIdentityV4PCDTypeName);
 
-  if (v3Identity.length > 0 && v4Identity.length === 0) {
+  if (v4Identity.length > 0) {
+    collection.remove(v4Identity[0].id);
+  }
+
+  if (v3Identity.length > 0 /* && v4Identity.length === 0 */) {
     const v3IdentityPCD = v3Identity[0] as SemaphoreIdentityPCD;
     const v4Identity = v3tov4Identity(v3IdentityPCD);
     collection.add(v4Identity);
