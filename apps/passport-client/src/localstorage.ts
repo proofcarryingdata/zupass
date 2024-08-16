@@ -1,12 +1,10 @@
 import {
   FeedSubscriptionManager,
+  makeAddV4CommitmentRequest,
   NetworkFeedApi,
+  requestAddSemaphoreV4Commitment,
   User
 } from "@pcd/passport-interface";
-import {
-  makeAddV4CommitmentRequest,
-  requestAddSemaphoreV4Commitment
-} from "@pcd/passport-interface/src/api/requestAddSemaphoreV4Commitment";
 import { PCDCollection } from "@pcd/pcd-collection";
 import {
   SemaphoreIdentityPCD,
