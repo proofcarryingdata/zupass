@@ -1,5 +1,6 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { requireDefinedParameter } from "@pcd/util";
+import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import { generateSnarkMessageHash, requireDefinedParameter } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
@@ -10,6 +11,19 @@ import {
   SemaphoreIdentityV4PCDProof,
   SemaphoreIdentityV4PCDTypeName
 } from "./SemaphoreIdentityV4PCD";
+
+export function v3tov4Identity(
+  v3Identity: SemaphoreIdentityPCD
+): SemaphoreIdentityV4PCD {
+  return new SemaphoreIdentityV4PCD(uuid(), {
+    identity: new Identity(
+      generateSnarkMessageHash(
+        v3Identity.claim.identity.getTrapdoor().toString() +
+          v3Identity.claim.identity.getSecret().toString()
+      ).toString()
+    )
+  });
+}
 
 export async function prove(
   args: SemaphoreIdentityV4PCDArgs
