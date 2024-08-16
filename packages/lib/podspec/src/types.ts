@@ -20,6 +20,9 @@ import {
  * - [ ] Wrap checkBigIntBounds to stop exceptions being thrown.
  * - [ ] (De)Serialization of PodspecType and subclasses
  * - [ ] Async validation
+ * - [ ] Add a special check for signer public keys
+ * - [ ] Better error reporting
+ * - [ ] Optional entries
  */
 
 function assertUnreachable(_: never, message?: string): never {
