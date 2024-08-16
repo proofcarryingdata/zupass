@@ -1,13 +1,7 @@
-import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
-import {
-  ArgumentTypeName,
-  DisplayOptions,
-  PCDPackage,
-  SerializedPCD
-} from "@pcd/pcd-types";
-import { generateSnarkMessageHash } from "@pcd/util";
+import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { POD, podEntriesFromSimplifiedJSON } from "@pcd/pod";
+import { generateSnarkMessageHash, requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
-import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
   EmailPCD,
@@ -33,20 +27,15 @@ export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
   // Hashes email and returns bigint representation of hash
   const hashedEmail = generateSnarkMessageHash(args.emailAddress.value);
 
-  const eddsaPCD = await EdDSAPCDPackage.prove({
-    message: {
-      value: [hashedEmail.toString(), args.semaphoreId.value],
-      argumentType: ArgumentTypeName.StringArray
-    },
-    privateKey: {
-      value: args.privateKey.value,
-      argumentType: ArgumentTypeName.String
-    },
-    id: {
-      value: args.id.value ? args.id.value + "-signature" : undefined,
-      argumentType: ArgumentTypeName.String
-    }
-  });
+  const pod = POD.sign(
+    podEntriesFromSimplifiedJSON(
+      JSON.stringify({
+        hashedEmail: hashedEmail.toString(),
+        semaphoreId: args.semaphoreId.value
+      })
+    ),
+    args.privateKey.value
+  );
 
   const id = args.id.value ?? uuid();
 
@@ -54,30 +43,33 @@ export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
     id,
     {
       emailAddress: args.emailAddress.value,
-      semaphoreId: args.semaphoreId.value
+      semaphoreId: args.semaphoreId.value,
+      signerPublicKey: pod.signerPublicKey
     },
-    { eddsaPCD }
+    { signature: pod.signature }
   );
 }
 
 export async function verify(pcd: EmailPCD): Promise<boolean> {
-  const messageDerivedFromClaim = generateSnarkMessageHash(
-    pcd.claim.emailAddress
-  );
-
-  if (
-    !_.isEqual(
-      [messageDerivedFromClaim, BigInt(pcd.claim.semaphoreId)],
-      pcd.proof.eddsaPCD.claim.message
-    )
-  ) {
-    return false;
-  }
-
   try {
-    const valid = await EdDSAPCDPackage.verify(pcd.proof.eddsaPCD);
-    return valid;
+    const hashedEmail = generateSnarkMessageHash(pcd.claim.emailAddress);
+
+    const loadedPOD = POD.load(
+      podEntriesFromSimplifiedJSON(
+        JSON.stringify({
+          hashedEmail: hashedEmail.toString(),
+          semaphoreId: pcd.claim.semaphoreId
+        })
+      ),
+      pcd.proof.signature,
+      pcd.claim.signerPublicKey
+    );
+
+    return (
+      loadedPOD.signature === pcd.proof.signature && loadedPOD.verifySignature()
+    );
   } catch (e) {
+    console.error("Verifying invalid POD data:", e);
     return false;
   }
 }
@@ -85,34 +77,28 @@ export async function verify(pcd: EmailPCD): Promise<boolean> {
 export async function serialize(
   pcd: EmailPCD
 ): Promise<SerializedPCD<EmailPCD>> {
-  const serializedEdDSAPCD = await EdDSAPCDPackage.serialize(
-    pcd.proof.eddsaPCD
-  );
-
   return {
     type: EmailPCDTypeName,
     pcd: JSONBig().stringify({
       id: pcd.id,
-      eddsaPCD: serializedEdDSAPCD,
-      emailAddress: pcd.claim.emailAddress,
-      semaphoreId: pcd.claim.semaphoreId
+      claim: pcd.claim,
+      proof: pcd.proof
     })
   } as SerializedPCD<EmailPCD>;
 }
 
 export async function deserialize(serialized: string): Promise<EmailPCD> {
-  const deserializedWrapper = JSONBig().parse(serialized);
-  const deserializedEdDSAPCD = await EdDSAPCDPackage.deserialize(
-    deserializedWrapper.eddsaPCD.pcd
+  const deserialized = JSONBig().parse(serialized);
+  requireDefinedParameter(deserialized.id, "id");
+  requireDefinedParameter(deserialized.claim, "claim");
+  requireDefinedParameter(
+    deserialized.claim.signerPublicKey,
+    "signerPublicKey"
   );
-  return new EmailPCD(
-    deserializedWrapper.id,
-    {
-      emailAddress: deserializedWrapper.emailAddress,
-      semaphoreId: deserializedWrapper.semaphoreId
-    },
-    { eddsaPCD: deserializedEdDSAPCD }
-  );
+  requireDefinedParameter(deserialized.proof, "proof");
+  requireDefinedParameter(deserialized.proof.signature, "signature");
+
+  return new EmailPCD(deserialized.id, deserialized.claim, deserialized.proof);
 }
 
 export function getDisplayOptions(pcd: EmailPCD): DisplayOptions {

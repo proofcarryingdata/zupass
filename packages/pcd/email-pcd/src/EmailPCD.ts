@@ -1,5 +1,5 @@
-import { EdDSAPCD } from "@pcd/eddsa-pcd";
 import { PCD, StringArgument } from "@pcd/pcd-types";
+import type { PODPCDProof } from "@pcd/pod-pcd";
 
 export const EmailPCDTypeName = "email-pcd";
 
@@ -17,11 +17,10 @@ export type EmailPCDArgs = {
 export interface EmailPCDClaim {
   emailAddress: string;
   semaphoreId: string; // stringified big int
+  signerPublicKey: string;
 }
 
-export interface EmailPCDProof {
-  eddsaPCD: EdDSAPCD; // eddsa signature of {@link EmailPCDClaim.email}
-}
+export type EmailPCDProof = PODPCDProof;
 
 export class EmailPCD implements PCD<EmailPCDClaim, EmailPCDProof> {
   type = EmailPCDTypeName;

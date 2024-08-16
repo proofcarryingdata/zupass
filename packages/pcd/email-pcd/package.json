@@ -34,6 +34,7 @@
   "dependencies": {
     "@pcd/eddsa-pcd": "0.6.4",
     "@pcd/pcd-types": "0.11.4",
+    "@pcd/pod": "^0.1.5",
     "@pcd/util": "0.5.3",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
