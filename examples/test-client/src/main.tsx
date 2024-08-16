@@ -1,3 +1,4 @@
+import { ReactNode } from "react";
 import { createRoot } from "react-dom/client";
 import "../styles/index.css";
 import { Feeds } from "./apis/Feeds";
