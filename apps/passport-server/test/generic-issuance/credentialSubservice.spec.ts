@@ -78,14 +78,14 @@ describe("generic issuance - credential subservice", function () {
       expect(verifiedCredential.semaphoreId).to.eq(
         identity.getCommitment().toString()
       );
-      expect(verifiedCredential.email).to.eq(emailAddress);
+      expect(verifiedCredential.emails?.[0].email).to.eq(emailAddress);
       expect(verifiedCredential.semaphoreId).to.eq(
         identity.getCommitment().toString()
       );
-      expectToExist(verifiedCredential.emailPCDSigner);
+      expectToExist(verifiedCredential.emails?.[0].signer);
       expect(
         isEqualEdDSAPublicKey(
-          verifiedCredential.emailPCDSigner,
+          verifiedCredential.emails?.[0].signer,
           zupassPublicKey
         )
       ).to.be.true;
@@ -113,7 +113,7 @@ describe("generic issuance - credential subservice", function () {
       expect(verifiedCredential.semaphoreId).to.eq(
         identity.getCommitment().toString()
       );
-      expect(verifiedCredential.email).to.be.undefined;
+      expect(verifiedCredential.emails?.[0]).to.be.undefined;
       expect(verifiedCredential.authKey).to.be.undefined;
 
       // Verifying this with the expectation of a valid email should throw,
@@ -189,7 +189,7 @@ describe("generic issuance - credential subservice", function () {
         // Verify will return a VerifiedCredential containing an
         // emailSignatureClaim
         (await credentialSubservice.verify(notZupassEmailCredential))
-          .emailPCDSigner as EdDSAPublicKey,
+          .emails?.[0].signer as EdDSAPublicKey,
         zupassPublicKey
       )
       // But this is not the Zupass public key!

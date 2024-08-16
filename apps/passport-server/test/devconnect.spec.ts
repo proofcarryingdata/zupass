@@ -1,37 +1,16 @@
 import { EdDSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
-  EdDSATicketPCD,
-  EdDSATicketPCDPackage,
-  ITicketData,
-  TicketCategory
-} from "@pcd/eddsa-ticket-pcd";
-import { getHash } from "@pcd/passport-crypto";
-import {
-  CredentialPayload,
   KnownTicketGroup,
   KnownTicketTypesResult,
-  LATEST_PRIVACY_NOTICE,
-  PollFeedResponseValue,
-  User,
-  ZUPASS_CREDENTIAL_REQUEST,
-  ZUZALU_23_EVENT_ID,
-  ZUZALU_23_RESIDENT_PRODUCT_ID,
-  ZupassFeedIds,
+  ZupassUserJson,
   ZuzaluUserRole,
-  agreeTerms,
-  requestCheckInById,
   requestConfirmationEmail,
   requestKnownTicketTypes,
-  requestPollFeed,
   requestSemaphoreGroup,
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey,
-  requestVerifyTicket,
-  requestVerifyTicketById,
   requestVerifyToken
 } from "@pcd/passport-interface";
-import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -42,7 +21,6 @@ import { rest } from "msw";
 import { SetupServer } from "msw/node";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
-import { v4 as uuid } from "uuid";
 import {
   DevconnectPretixAPI,
   DevconnectPretixCheckin,
@@ -50,7 +28,6 @@ import {
 } from "../src/apis/devconnect/devconnectPretixAPI";
 import {
   DevconnectPretixConfig,
-  DevconnectPretixOrganizerConfig,
   getDevconnectPretixConfig
 } from "../src/apis/devconnect/organizer";
 import { IEmailAPI } from "../src/apis/emailAPI";
@@ -58,14 +35,9 @@ import { getZuzaluPretixConfig } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import {
   DevconnectPretixTicket,
-  DevconnectPretixTicketWithCheckin,
-  LoggedInZuzaluUser
+  DevconnectPretixTicketWithCheckin
 } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
-import {
-  fetchDevconnectPretixRedactedTicketsByHashedEmail,
-  upsertDevconnectPretixRedactedTicket
-} from "../src/database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
   fetchAllNonDeletedDevconnectPretixTickets,
   fetchDevconnectPretixTicketByTicketId,
@@ -83,14 +55,13 @@ import {
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import {
-  fetchAllZuzaluUsers,
-  fetchZuzaluUser
+  UserWithZuzaluTickets,
+  fetchAllUsersWithZuzaluTickets,
+  fetchAllZuzaluPretixTickets
 } from "../src/database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
-import { sqlQuery } from "../src/database/sqlQuery";
 import {
   OrganizerSync,
-  PRETIX_CHECKER,
-  SyncFailureError
+  PRETIX_CHECKER
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { ZUPASS_TICKET_PUBLIC_KEY_NAME } from "../src/services/issuanceService";
@@ -98,10 +69,6 @@ import { PoapService } from "../src/services/poapService";
 import { PretixSyncStatus } from "../src/services/types";
 import { Zupass } from "../src/types";
 import { mostRecentCheckinEvent } from "../src/util/devconnectTicket";
-import {
-  makeTestCredential,
-  signCredentialPayload
-} from "./generic-issuance/util";
 import {
   DevconnectPretixDataMocker,
   IMockDevconnectPretixData,
@@ -151,17 +118,14 @@ describe("devconnect functionality", function () {
   let eventBConfigId: string;
   let eventCConfigId: string;
 
-  let residentUser: User | undefined;
-  let visitorUser: User | undefined;
-  let organizerUser: User | undefined;
-  let updatedToOrganizerUser: User | undefined;
+  let residentUser: ZupassUserJson | undefined;
+  let visitorUser: ZupassUserJson | undefined;
+  let organizerUser: ZupassUserJson | undefined;
+  let updatedToOrganizerUser: ZupassUserJson | undefined;
 
   let identity: Identity;
   let publicKeyRSA: NodeRSA;
   let publicKeyEdDSA: EdDSAPublicKey;
-
-  let ticketPCD: EdDSATicketPCD;
-  let checkerIdentity: Identity;
 
   const loggedInIdentityCommitments = new Set<string>();
 
@@ -324,7 +288,7 @@ describe("devconnect functionality", function () {
   );
 
   step("logging in as a zuzalu resident should work", async function () {
-    const ticketHolders = await fetchAllZuzaluUsers(db);
+    const ticketHolders = await fetchAllZuzaluPretixTickets(db);
     const resident = ticketHolders.find(
       (t) => t.role === ZuzaluUserRole.Resident
     );
@@ -377,7 +341,7 @@ describe("devconnect functionality", function () {
   step(
     "logging in with the remaining two users should work",
     async function () {
-      const ticketHolders = await fetchAllZuzaluUsers(db);
+      const ticketHolders = await fetchAllZuzaluPretixTickets(db);
       const visitor = ticketHolders.find(
         (t) => t.role === ZuzaluUserRole.Visitor
       );
@@ -439,23 +403,6 @@ describe("devconnect functionality", function () {
       });
     }
   );
-
-  step("should verify zuzalu tickets by ID", async () => {
-    const response = await requestVerifyTicketById(
-      application.expressContext.localEndpoint,
-      {
-        ticketId: residentUser?.uuid as string,
-        timestamp: Date.now().toString()
-      }
-    );
-
-    expect(response?.success).to.be.true;
-    expect(response?.value?.verified).to.be.true;
-    if (response.value?.verified) {
-      expect(response.value.group).eq(KnownTicketGroup.Zuzalu23);
-      expect(response.value.productId).eq(ZUZALU_23_RESIDENT_PRODUCT_ID);
-    }
-  });
 
   step(
     "after more users log in, historic semaphore groups also get updated",
@@ -593,11 +540,17 @@ describe("devconnect functionality", function () {
     async function () {
       const residents = pretixMocker.getResidentsOrOrganizers(false);
       const firstResident = residents[0];
-      const userBefore = await fetchZuzaluUser(db, firstResident.email);
+      const allUsersBefore = await fetchAllUsersWithZuzaluTickets(db);
+      const userBefore = allUsersBefore.find((u) =>
+        u.emails.includes(firstResident.email)
+      );
+      const ticketBefore = userBefore?.zuzaluTickets[0];
+      expectToExist(ticketBefore);
+      expect(userBefore?.zuzaluTickets?.length).to.eq(1);
       if (!firstResident || !userBefore) {
         throw new Error("expected there to be at least one mocked user");
       }
-      expect(userBefore.role).to.eq(ZuzaluUserRole.Resident);
+      expect(ticketBefore.role).to.eq(ZuzaluUserRole.Resident);
       pretixMocker.removeResidentOrOrganizer(firstResident.code);
       const newOrganizer = pretixMocker.addResidentOrOrganizer(true);
       pretixMocker.updateResidentOrOrganizer(newOrganizer.code, (o) => {
@@ -611,12 +564,17 @@ describe("devconnect functionality", function () {
       }
       pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
       await pretixService.trySync();
-      const userAfter = await fetchZuzaluUser(db, firstResident.email);
+      const allUsersAfter = await fetchAllUsersWithZuzaluTickets(db);
+      const userAfter = allUsersAfter.find((u) =>
+        u.emails.includes(firstResident.email)
+      );
+      const ticketAfter = userAfter?.zuzaluTickets[0];
+      expectToExist(ticketAfter);
       if (!userAfter) {
         throw new Error("expected to be able to get user");
       }
-      expect(userAfter.role).to.eq(ZuzaluUserRole.Organizer);
-      updatedToOrganizerUser = userAfter as LoggedInZuzaluUser;
+      expect(ticketAfter.role).to.eq(ZuzaluUserRole.Organizer);
+      updatedToOrganizerUser = userAfter as UserWithZuzaluTickets;
     }
   );
 
@@ -770,7 +728,7 @@ describe("devconnect functionality", function () {
     "replace zuzalu pretix api and sync should cause all users to be removed from " +
       "their role-specific semaphore groups, but they should remain signed in",
     async function () {
-      const oldTicketHolders = await fetchAllZuzaluUsers(db);
+      const oldTicketHolders = await fetchAllZuzaluPretixTickets(db);
 
       const newAPI = newMockZuzaluPretixAPI();
       if (!newAPI) {
@@ -782,7 +740,7 @@ describe("devconnect functionality", function () {
 
       await sleep(100);
 
-      const newTicketHolders = await fetchAllZuzaluUsers(db);
+      const newTicketHolders = await fetchAllZuzaluPretixTickets(db);
 
       const oldEmails = new Set(...oldTicketHolders.map((t) => t.email));
       const newEmails = new Set(...newTicketHolders.map((t) => t.email));
@@ -1095,8 +1053,7 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.context.dbPool,
-      false
+      application.context.dbPool
     );
 
     expect(await os.run()).to.not.throw;
@@ -1140,8 +1097,7 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.context.dbPool,
-      false
+      application.context.dbPool
     );
 
     // Because we're not patching the data from Pretix, default responses
@@ -1234,8 +1190,7 @@ describe("devconnect functionality", function () {
     const os = new OrganizerSync(
       organizer,
       new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.context.dbPool,
-      false
+      application.context.dbPool
     );
     expect(await os.run()).to.not.throw;
 
@@ -1316,8 +1271,7 @@ describe("devconnect functionality", function () {
       const os = new OrganizerSync(
         organizer,
         new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        false
+        application.context.dbPool
       );
 
       let receivedCheckIn = false;
@@ -1965,582 +1919,6 @@ describe("devconnect functionality", function () {
     await expectIssuanceServiceToBeRunning(application);
   });
 
-  step(
-    "user should be able to be issued some PCDs from the server",
-    async function () {
-      MockDate.set(new Date());
-      const response = await requestPollFeed(
-        `${application.expressContext.localEndpoint}/feeds`,
-        {
-          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
-          feedId: ZupassFeedIds.Devconnect
-        }
-      );
-      MockDate.reset();
-
-      if (response.error) {
-        throw new Error("expected to be able to get a feed response");
-      }
-
-      expect(response.value?.actions?.length).to.eq(2);
-
-      // Now we have an action to populate the folder
-      const populateAction = response.value?.actions?.[1];
-      expectToExist(populateAction, isReplaceInFolderAction);
-
-      expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
-      expect(populateAction.folder).to.eq("Devconnect/Event A");
-
-      expect(Array.isArray(populateAction.pcds)).to.eq(true);
-      expect(populateAction.pcds.length).to.eq(6);
-
-      const ticketPCD = populateAction.pcds[0];
-
-      expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
-
-      const deserializedTicketPCD = await EdDSATicketPCDPackage.deserialize(
-        ticketPCD.pcd
-      );
-
-      const verified = await EdDSATicketPCDPackage.verify(
-        deserializedTicketPCD
-      );
-      expect(verified).to.eq(true);
-    }
-  );
-
-  step("issued pcds should have stable ids", async function () {
-    MockDate.set(new Date());
-    const expressResponse1 = await requestPollFeed(
-      `${application.expressContext.localEndpoint}/feeds`,
-      {
-        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
-        feedId: ZupassFeedIds.Devconnect
-      }
-    );
-    const expressResponse2 = await requestPollFeed(
-      `${application.expressContext.localEndpoint}/feeds`,
-      {
-        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
-        feedId: ZupassFeedIds.Devconnect
-      }
-    );
-    MockDate.reset();
-    const response1 = expressResponse1.value as PollFeedResponseValue;
-    const response2 = expressResponse2.value as PollFeedResponseValue;
-    const action1 = response1.actions[1];
-    expectToExist(action1, isReplaceInFolderAction);
-    const action2 = response2.actions[1];
-    expectToExist(action2, isReplaceInFolderAction);
-
-    const pcds1 = await Promise.all(
-      action1.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
-    );
-    const pcds2 = await Promise.all(
-      action2.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
-    );
-
-    expect(pcds1.length).to.eq(pcds2.length);
-    expect(pcds1.length).to.not.eq(0);
-
-    pcds1.forEach((_, i) => {
-      expect(pcds1[i].id).to.eq(pcds2[i].id);
-    });
-  });
-
-  /**
-   * This test updates an event, runs a pretix sync, then fetches the
-   * affected PCD to see if the new event name is reflected there.
-   */
-  step(
-    "user should see event updates reflected in their issued PCDs",
-    async function () {
-      const updatedName = "New name";
-
-      mocker.updateEvent(
-        mocker.get().organizer1.orgUrl,
-        mocker.get().organizer1.eventA.slug,
-        (event) => {
-          event.name.en = updatedName;
-        }
-      );
-
-      mocker.setEventSettings(
-        mocker.get().organizer1.orgUrl,
-        mocker.get().organizer1.eventA.slug,
-        { attendee_emails_asked: true, attendee_emails_required: true }
-      );
-
-      await devconnectPretixSyncService.trySync();
-      MockDate.set(new Date());
-      const response = await requestPollFeed(
-        `${application.expressContext.localEndpoint}/feeds`,
-        {
-          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
-          feedId: ZupassFeedIds.Devconnect
-        }
-      );
-      MockDate.reset();
-      const responseBody = response.value as PollFeedResponseValue;
-      expect(responseBody.actions.length).to.eq(2);
-
-      const devconnectAction = responseBody.actions[1];
-      expectToExist(devconnectAction, isReplaceInFolderAction);
-      expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
-      expect(devconnectAction.folder).to.eq("Devconnect/New name");
-
-      expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
-      const ticketPCD = devconnectAction.pcds[0];
-      expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
-
-      const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
-        ticketPCD.pcd
-      );
-
-      const ticketData = deserializedPCD.claim.ticket;
-
-      expect(ticketData.eventName).to.eq(updatedName);
-    }
-  );
-
-  /**
-   * This test updates a product, runs a pretix sync, then fetches the
-   * affected PCD to see if the new product name is reflected there.
-   */
-  step(
-    "user should see product updates reflected in their issued PCDs",
-    async function () {
-      const updatedName = "New product name";
-
-      mocker.updateItem(
-        mocker.get().organizer1.orgUrl,
-        mocker.get().organizer1.eventA.slug,
-        mocker.get().organizer1.eventAItem1.id,
-        (item) => {
-          item.name.en = updatedName;
-        }
-      );
-
-      await devconnectPretixSyncService.trySync();
-
-      MockDate.set(new Date());
-      const response = await requestPollFeed(
-        `${application.expressContext.localEndpoint}/feeds`,
-        {
-          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
-          feedId: ZupassFeedIds.Devconnect
-        }
-      );
-      MockDate.reset();
-      const responseBody = response.value as PollFeedResponseValue;
-      expect(responseBody.actions.length).to.eq(2);
-      const devconnectAction = responseBody.actions[1];
-      expectToExist(devconnectAction, isReplaceInFolderAction);
-      expect(devconnectAction.folder).to.eq("Devconnect/Event A");
-
-      expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
-      const ticketPCD = devconnectAction.pcds[0];
-      expect(ticketPCD.type).to.eq(EdDSATicketPCDPackage.name);
-
-      const deserializedPCD = await EdDSATicketPCDPackage.deserialize(
-        ticketPCD.pcd
-      );
-
-      const ticketData = deserializedPCD.claim.ticket;
-
-      // "Ticket name" is equivalent to item/product name
-      expect(ticketData.ticketName).to.eq(updatedName);
-    }
-  );
-
-  step("event 'superuser' should be able to log in", async function () {
-    const result = await testLogin(
-      application,
-      mocker.get().organizer1.EMAIL_2,
-      {
-        expectEmailIncorrect: false,
-        expectUserAlreadyLoggedIn: false,
-        force: false,
-        skipSetupPassword: false
-      }
-    );
-
-    if (!result) {
-      throw new Error("failed to log in");
-    }
-
-    checkerIdentity = result.identity;
-  });
-
-  step(
-    "event 'superuser' should be able to checkin a valid ticket by ID",
-    async function () {
-      MockDate.set(new Date());
-      const issueResponse = await requestPollFeed(
-        `${application.expressContext.localEndpoint}/feeds`,
-        {
-          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
-          feedId: ZupassFeedIds.Devconnect
-        }
-      );
-      MockDate.reset();
-      const issueResponseBody = issueResponse.value as PollFeedResponseValue;
-
-      const action = issueResponseBody.actions[1];
-      expectToExist(action, isReplaceInFolderAction);
-      const serializedTicket = action.pcds[2] as SerializedPCD<EdDSATicketPCD>;
-      ticketPCD = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
-
-      const checkinResult = await requestCheckInById(
-        application.expressContext.localEndpoint,
-        {
-          ticketId: ticketPCD.claim.ticket.ticketId,
-          checkerProof: await makeTestCredential(
-            checkerIdentity,
-            ZUPASS_CREDENTIAL_REQUEST
-          )
-        }
-      );
-
-      expect(checkinResult.success).to.eq(true);
-      expect(checkinResult.value).to.eq(undefined);
-      expect(checkinResult.error).to.eq(undefined);
-    }
-  );
-
-  step(
-    "a 'superuser' should not be able to check in a ticket that has already been used to check in",
-    async function () {
-      const checkinResult = await requestCheckInById(
-        application.expressContext.localEndpoint,
-        {
-          ticketId: ticketPCD.claim.ticket.ticketId,
-          checkerProof: await makeTestCredential(
-            checkerIdentity,
-            ZUPASS_CREDENTIAL_REQUEST
-          )
-        }
-      );
-
-      expect(checkinResult.value).to.eq(undefined);
-      expect(checkinResult?.error?.name).to.eq("AlreadyCheckedIn");
-    }
-  );
-
-  step(
-    "should not be able to check in with a ticket that has been revoked",
-    async function () {
-      // TODO
-      expect(true).to.eq(true);
-    }
-  );
-
-  step(
-    "shouldn't be able to issue pcds for the incorrect feed credential payload",
-    async function () {
-      MockDate.set(new Date());
-      const expressResponse = await requestPollFeed(
-        `${application.expressContext.localEndpoint}/feeds`,
-        {
-          pcd: await signCredentialPayload(
-            identity,
-            // Obviously nonsensical type-cast, but `signCredentialPayload`
-            // will JSON.stringify() this
-            "asdf" as unknown as CredentialPayload
-          ),
-          feedId: ZupassFeedIds.Devconnect
-        }
-      );
-      MockDate.reset();
-
-      expect(expressResponse.success).to.eq(false);
-    }
-  );
-
-  step(
-    "shouldn't be able to issue pcds for an expired credential payload",
-    async function () {
-      // Generate credential payload at given time
-      MockDate.set(new Date(2023, 10, 5, 14, 30, 0));
-      const credential = await makeTestCredential(
-        identity,
-        ZUPASS_CREDENTIAL_REQUEST
-      );
-      // Attempt to use credential payload one hour and twenty minutes later
-      MockDate.set(new Date(2023, 10, 5, 15, 50, 0));
-      const expressResponse = await requestPollFeed(
-        `${application.expressContext.localEndpoint}/feeds`,
-        { pcd: credential, feedId: ZupassFeedIds.Devconnect }
-      );
-      MockDate.reset();
-      expect(expressResponse.success).to.eq(false);
-    }
-  );
-
-  step(
-    "shouldn't be able to issue pcds for a user that doesn't exist",
-    async function () {
-      MockDate.set(new Date());
-      const expressResponse = await requestPollFeed(
-        `${application.expressContext.localEndpoint}/feeds`,
-        {
-          pcd: await makeTestCredential(
-            new Identity(),
-            ZUPASS_CREDENTIAL_REQUEST
-          ),
-          feedId: ZupassFeedIds.Devconnect
-        }
-      );
-      MockDate.reset();
-
-      const response = expressResponse.value as PollFeedResponseValue;
-      expect(response.actions).to.deep.eq([
-        {
-          type: PCDActionType.DeleteFolder,
-          folder: "Devconnect",
-          recursive: true
-        }
-      ]);
-    }
-  );
-
-  step("pretix - should be rate-limited by a low limit", async function () {
-    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
-    if (!devconnectPretixAPIConfigFromDB) {
-      throw new Error("Could not load API configuration");
-    }
-
-    const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
-
-    // Set up a sync manager for a single organizer
-    const os = new OrganizerSync(
-      organizer,
-      new DevconnectPretixAPI({ requestsPerInterval: 3 }),
-      application.context.dbPool,
-      false
-    );
-
-    let requests = 0;
-
-    const listener = (): void => {
-      requests++;
-    };
-    // Count each request
-    server.events.on("response:mocked", listener);
-
-    // Perform a single run - this will not sync anything to the DB
-    // because sync cannot complete in a single run with a limit of
-    // one request
-    os.run();
-    await sleep(100);
-    os.cancel();
-
-    // Sync run will end with rate-limiting
-    expect(requests).to.eq(3);
-
-    server.events.removeListener("response:mocked", listener);
-  });
-
-  step(
-    "pretix - should not be rate-limited by a high limit",
-    async function () {
-      const devconnectPretixAPIConfigFromDB =
-        await getDevconnectPretixConfig(db);
-      if (!devconnectPretixAPIConfigFromDB) {
-        throw new Error("Could not load API configuration");
-      }
-
-      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
-
-      // Set up a sync manager for a single organizer
-      const os = new OrganizerSync(
-        organizer,
-        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        false
-      );
-
-      let requests = 0;
-
-      const listener = (): void => {
-        requests++;
-      };
-      // Count each request
-      server.events.on("response:mocked", listener);
-
-      os.run();
-      await sleep(100);
-
-      expect(requests).to.be.greaterThan(3);
-      server.events.removeListener("response:mocked", listener);
-    }
-  );
-
-  step(
-    "should fail to sync if an event we're tracking is deleted",
-    async function () {
-      const devconnectPretixAPIConfigFromDB =
-        await getDevconnectPretixConfig(db);
-      if (!devconnectPretixAPIConfigFromDB) {
-        throw new Error("Could not load API configuration");
-      }
-
-      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
-      const orgUrl = organizer.orgURL;
-
-      const eventID = organizer.events[0].eventID;
-      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
-
-      // Simulate a configured event being unavailable from Pretix
-      server.use(
-        rest.get(orgUrl + "/events/:event", (req, res, ctx) => {
-          if (req.params.event === eventID) {
-            return res(ctx.status(404));
-          }
-          const event = org.eventByEventID.get(req.params.event as string);
-          if (!event) {
-            return res(ctx.status(404));
-          }
-          return res(ctx.json(event));
-        })
-      );
-
-      const os = new OrganizerSync(
-        organizer,
-        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        false
-      );
-
-      let error: SyncFailureError | null = null;
-
-      try {
-        await os.run();
-      } catch (e) {
-        error = e as SyncFailureError;
-      }
-
-      expect(error instanceof SyncFailureError).to.be.true;
-      expect(error?.phase).to.eq("fetching");
-    }
-  );
-
-  step(
-    "should fail to sync if an active product we're tracking is deleted",
-    async function () {
-      const devconnectPretixAPIConfigFromDB =
-        await getDevconnectPretixConfig(db);
-      if (!devconnectPretixAPIConfigFromDB) {
-        throw new Error("Could not load API configuration");
-      }
-
-      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
-      const orgUrl = organizer.orgURL;
-
-      const itemID = parseInt(organizer.events[0].activeItemIDs[0]);
-      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
-
-      // Simulate a configured item being unavailable from Pretix
-      server.use(
-        rest.get(orgUrl + "/events/:event/items", (req, res, ctx) => {
-          const items =
-            org.itemsByEventID.get(req.params.event as string) ?? [];
-          return res(
-            ctx.json({
-              results: items.filter((item) => item.id !== itemID),
-              next: null
-            })
-          );
-        })
-      );
-
-      // Set up a sync manager for a single organizer
-      const os = new OrganizerSync(
-        organizer,
-        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        false
-      );
-
-      let error: SyncFailureError | null = null;
-
-      try {
-        await os.run();
-      } catch (e) {
-        error = e as SyncFailureError;
-      }
-
-      expect(error instanceof SyncFailureError).to.be.true;
-      expect(error?.phase).to.eq("validating");
-    }
-  );
-
-  step(
-    "should fail to sync if a superuser product we're tracking is deleted",
-    async function () {
-      const devconnectPretixAPIConfigFromDB =
-        await getDevconnectPretixConfig(db);
-      if (!devconnectPretixAPIConfigFromDB) {
-        throw new Error("Could not load API configuration");
-      }
-
-      const organizer = devconnectPretixAPIConfigFromDB?.organizers[0];
-      const orgUrl = organizer.orgURL;
-
-      const itemID = parseInt(organizer.events[0].superuserItemIds[0]);
-      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
-
-      // Simulate a configured item being unavailable from Pretix
-      server.use(
-        rest.get(orgUrl + "/events/:event/items", (req, res, ctx) => {
-          const items =
-            org.itemsByEventID.get(req.params.event as string) ?? [];
-          return res(
-            ctx.json({
-              results: items.filter((item) => item.id !== itemID),
-              next: null
-            })
-          );
-        })
-      );
-
-      // Set up a sync manager for a single organizer
-      const os = new OrganizerSync(
-        organizer,
-        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        false
-      );
-
-      let error: SyncFailureError | null = null;
-
-      try {
-        await os.run();
-      } catch (e) {
-        error = e as SyncFailureError;
-      }
-
-      expect(error instanceof SyncFailureError).to.be.true;
-      expect(error?.phase).to.eq("validating");
-    }
-  );
-
-  step(
-    "should not be able to check in with a ticket that has already been used to check in",
-    async function () {
-      // TODO
-      expect(true).to.eq(true);
-    }
-  );
-
-  step(
-    "should not be able to check in with a ticket that has been revoked",
-    async function () {
-      // TODO
-      expect(true).to.eq(true);
-    }
-  );
-
   let knownTicketTypesAndKeys: KnownTicketTypesResult | undefined;
 
   step(
@@ -2588,355 +1966,6 @@ describe("devconnect functionality", function () {
       expect(devconnectTicketTypes?.length).to.eq(4);
     }
   );
-
-  step(
-    "should verify and report knowledge of a known ticket type",
-    async function () {
-      const prvKey = testingEnv.SERVER_EDDSA_PRIVATE_KEY;
-
-      // create a Zuzalu resident ticket
-      const ticketData: ITicketData = {
-        attendeeName: "test name",
-        attendeeEmail: "user@test.com",
-        eventName: "event",
-        ticketName: "ticket",
-        checkerEmail: "checker@test.com",
-        ticketId: uuid(),
-        eventId: ZUZALU_23_EVENT_ID,
-        productId: ZUZALU_23_RESIDENT_PRODUCT_ID,
-        timestampConsumed: Date.now(),
-        timestampSigned: Date.now(),
-        attendeeSemaphoreId: "12345",
-        isConsumed: false,
-        isRevoked: false,
-        ticketCategory: TicketCategory.Zuzalu
-      };
-
-      ticketPCD = await EdDSATicketPCDPackage.prove({
-        ticket: {
-          value: ticketData,
-          argumentType: ArgumentTypeName.Object
-        },
-        privateKey: {
-          value: prvKey,
-          argumentType: ArgumentTypeName.String
-        },
-        id: {
-          value: undefined,
-          argumentType: ArgumentTypeName.String
-        }
-      });
-
-      const result = await requestVerifyTicket(
-        application.expressContext.localEndpoint,
-        {
-          pcd: JSON.stringify(await EdDSATicketPCDPackage.serialize(ticketPCD))
-        }
-      );
-
-      expect(result.success).to.be.true;
-      // The type-checker wants to know about this too
-      if (result.success === true) {
-        expect(result.value?.verified).to.be.true;
-
-        if (result.value.verified === true) {
-          // Should match the Zupass public key name, since we used the Zupass
-          // private key to sign the ticket.
-          expect(result.value.publicKeyName).to.eq(
-            ZUPASS_TICKET_PUBLIC_KEY_NAME
-          );
-          expect(result.value.group).to.eq(KnownTicketGroup.Zuzalu23);
-        }
-      }
-    }
-  );
-
-  step("should not verify an unknown ticket", async function () {
-    const prvKey = testingEnv.SERVER_EDDSA_PRIVATE_KEY;
-
-    // create a Zuzalu resident ticket
-    const ticketData: ITicketData = {
-      attendeeName: "test name",
-      attendeeEmail: "user@test.com",
-      eventName: "event",
-      ticketName: "ticket",
-      checkerEmail: "checker@test.com",
-      ticketId: uuid(),
-      // Random UUIDs mean that this will not be a known ticket type
-      eventId: uuid(),
-      productId: uuid(),
-      timestampConsumed: Date.now(),
-      timestampSigned: Date.now(),
-      attendeeSemaphoreId: "12345",
-      isConsumed: false,
-      isRevoked: false,
-      // Category is claimed to be Zuzalu but this is not trustworthy
-      ticketCategory: TicketCategory.Zuzalu
-    };
-
-    ticketPCD = await EdDSATicketPCDPackage.prove({
-      ticket: {
-        value: ticketData,
-        argumentType: ArgumentTypeName.Object
-      },
-      privateKey: {
-        value: prvKey,
-        argumentType: ArgumentTypeName.String
-      },
-      id: {
-        value: undefined,
-        argumentType: ArgumentTypeName.String
-      }
-    });
-
-    const result = await requestVerifyTicket(
-      application.expressContext.localEndpoint,
-      {
-        pcd: JSON.stringify(await EdDSATicketPCDPackage.serialize(ticketPCD))
-      }
-    );
-
-    expect(result.success).to.be.true;
-    // The type-checker wants to know about this too
-    if (result.success === true) {
-      expect(result.value?.verified).to.be.false;
-    }
-  });
-
-  step("should redact tickets during sync", async () => {
-    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
-    const organizer = devconnectPretixAPIConfigFromDB
-      ?.organizers[0] as DevconnectPretixOrganizerConfig;
-    const orgUrl = organizer.orgURL;
-
-    // Pick an event where we will consume all of the tickets
-    const eventID = organizer.events[0].eventID;
-    const eventConfigID = organizer.events[0].id;
-    const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
-    // Set up a sync manager for a single organizer
-    const os = new OrganizerSync(
-      organizer,
-      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.context.dbPool,
-      // Enable redaction
-      true
-    );
-
-    // Set up the case where nobody has not agreed to legal terms
-    await sqlQuery(db, "UPDATE users SET terms_agreed = 0");
-
-    // Remove synced tickets from previous tests
-    await sqlQuery(db, "DELETE FROM devconnect_pretix_tickets");
-
-    await os.run();
-
-    const tickets = await fetchDevconnectPretixTicketsByEvent(
-      db,
-      eventConfigID
-    );
-    expect(tickets.length).to.eq(0);
-    const ordersForEvent = org.ordersByEventID.get(
-      eventID
-    ) as DevconnectPretixOrder[];
-
-    for (const order of ordersForEvent) {
-      const redactedTickets =
-        await fetchDevconnectPretixRedactedTicketsByHashedEmail(
-          db,
-          await getHash(order.email)
-        );
-      expect(redactedTickets.length > 0).to.be.true;
-    }
-  });
-
-  let unredactUser: Awaited<ReturnType<typeof testLogin>>;
-  step("creating a new account should unredact tickets", async () => {
-    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
-    const organizer = devconnectPretixAPIConfigFromDB
-      ?.organizers[0] as DevconnectPretixOrganizerConfig;
-    const orgUrl = organizer.orgURL;
-
-    // Pick an event where we will consume all of the tickets
-    const eventID = organizer.events[0].eventID;
-    const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
-    const ordersForEvent = org.ordersByEventID.get(
-      eventID
-    ) as DevconnectPretixOrder[];
-
-    const testEmail = ordersForEvent[0].email;
-
-    // Wipe our existing user
-    await sqlQuery(db, "DELETE FROM users WHERE email = $1", [testEmail]);
-
-    const redactedTickets =
-      await fetchDevconnectPretixRedactedTicketsByHashedEmail(
-        db,
-        await getHash(testEmail)
-      );
-
-    let unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
-      db,
-      testEmail
-    );
-    expect(unredactedTickets.length).to.eq(0);
-    expect(redactedTickets.length).to.eq(3);
-
-    unredactUser = await testLogin(application, testEmail, {
-      force: false,
-      expectUserAlreadyLoggedIn: false,
-      expectEmailIncorrect: false,
-      skipSetupPassword: false
-    });
-
-    unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
-      db,
-      testEmail
-    );
-    // Redacted tickets should now be unredacted
-    expect(unredactedTickets.length).to.eq(redactedTickets.length);
-    expect(unredactedTickets.length).to.eq(3);
-
-    const redactedTicketsAfterLogin =
-      await fetchDevconnectPretixRedactedTicketsByHashedEmail(
-        db,
-        await getHash(testEmail)
-      );
-    expect(redactedTicketsAfterLogin.length).to.eq(0);
-  });
-
-  /**
-   * It is possible for a user to log in or agree terms during a sync. This can
-   * result in a situation where they have redacted tickets in the DB even
-   * though their tickets have been un-redacted. The redacted tickets are
-   * harmless and don't interfere with the un-redacted tickets, but it is
-   * obviously good if they get cleaned up when they're no longer needed. This
-   * test manufactures a scenario where a logged-in user has redacted tickets,
-   * and checks that they get deleted on the next sync run.
-   */
-  step(
-    "redacted tickets for logged-in and agreed users should be deleted on next sync",
-    async () => {
-      const devconnectPretixAPIConfigFromDB =
-        await getDevconnectPretixConfig(db);
-      const organizer = devconnectPretixAPIConfigFromDB
-        ?.organizers[0] as DevconnectPretixOrganizerConfig;
-      const orgUrl = organizer.orgURL;
-
-      // Pick an event where we will consume all of the tickets
-      const eventID = organizer.events[0].eventID;
-      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
-      const ordersForEvent = org.ordersByEventID.get(
-        eventID
-      ) as DevconnectPretixOrder[];
-
-      const testEmail = ordersForEvent[0].email;
-      const unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
-        db,
-        testEmail
-      );
-
-      // Insert a redacted ticket manually, simulating a partial sync
-      const hashedEmail = await getHash(testEmail);
-      await upsertDevconnectPretixRedactedTicket(db, {
-        ...unredactedTickets[0],
-        hashed_email: hashedEmail
-      });
-
-      // Check that the ticket is there
-      expect(
-        (
-          await fetchDevconnectPretixRedactedTicketsByHashedEmail(
-            db,
-            hashedEmail
-          )
-        ).length
-      ).to.eq(1);
-
-      const os = new OrganizerSync(
-        organizer,
-        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-        application.context.dbPool,
-        // Enable redaction
-        true
-      );
-
-      await os.run();
-
-      // Post-sync, it should be gone.
-      expect(
-        (
-          await fetchDevconnectPretixRedactedTicketsByHashedEmail(
-            db,
-            hashedEmail
-          )
-        ).length
-      ).to.eq(0);
-    }
-  );
-
-  step("accepting legal terms should unredact tickets", async () => {
-    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
-    const organizer = devconnectPretixAPIConfigFromDB
-      ?.organizers[0] as DevconnectPretixOrganizerConfig;
-    const orgUrl = organizer.orgURL;
-
-    // Pick an event where we will consume all of the tickets
-    const eventID = organizer.events[0].eventID;
-    const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
-    const ordersForEvent = org.ordersByEventID.get(
-      eventID
-    ) as DevconnectPretixOrder[];
-
-    const testEmail = ordersForEvent[0].email;
-
-    // Set up a sync manager for a single organizer
-    const os = new OrganizerSync(
-      organizer,
-      new DevconnectPretixAPI({ requestsPerInterval: 300 }),
-      application.context.dbPool,
-      // Enable redaction
-      true
-    );
-
-    // Set up the case where nobody has not agreed to legal terms
-    await sqlQuery(db, "UPDATE users SET terms_agreed = 0");
-
-    // Remove synced tickets from previous tests
-    await sqlQuery(db, "DELETE FROM devconnect_pretix_tickets");
-
-    await os.run();
-
-    // First verify that the user has redacted tickets, and no unredacted ones
-
-    const redactedTickets =
-      await fetchDevconnectPretixRedactedTicketsByHashedEmail(
-        db,
-        await getHash(testEmail)
-      );
-
-    let unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
-      db,
-      testEmail
-    );
-    expect(unredactedTickets.length).to.eq(0);
-    expect(redactedTickets.length).to.eq(3);
-
-    const result = await agreeTerms(
-      application.expressContext.localEndpoint,
-      LATEST_PRIVACY_NOTICE,
-      unredactUser?.identity as Identity
-    );
-
-    expect(result.success).to.be.true;
-
-    unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
-      db,
-      testEmail
-    );
-    // Redacted tickets should now be unredacted
-    expect(unredactedTickets.length).to.eq(redactedTickets.length);
-    expect(unredactedTickets.length).to.eq(3);
-  });
 
   step(
     "get poap claim urls from devconnect, zuzalu, and zuconnect ticket ids",
@@ -3044,13 +2073,4 @@ describe("devconnect functionality", function () {
       ).to.be.eq(TEST_POAP_LINK_4);
     }
   );
-
-  // TODO: More tests
-  // 1. Test that item_name in ItemInfo and event_name EventInfo always syncs with Pretix.
-  // 2. Test deleting positions within orders (not just entire orders).
-  // 3. Super comprehensive tests for database indices, making sure
-  //    all the unique indices are maintained.
-  // 4. Tests for flakey API responses for orders, items, and event. Test that
-  //    the function returns early but other events aren't affected.
-  // 5. Test that cancelling positions and cancelling events should soft delete.
 });

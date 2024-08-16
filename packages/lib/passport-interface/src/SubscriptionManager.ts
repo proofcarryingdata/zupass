@@ -173,6 +173,16 @@ export class FeedSubscriptionManager {
     });
   }
 
+  public async pollEmailSubscription(
+    zupassFeedUrl: string,
+    credentialManager: CredentialManagerAPI,
+    onFinish?: (actions: SubscriptionActions) => Promise<void>
+  ): Promise<SubscriptionActions[]> {
+    return this.pollSubscriptions(credentialManager, onFinish, [
+      this.findSubscription(zupassFeedUrl, ZupassFeedIds.Email)?.id
+    ]);
+  }
+
   /**
    * This "refreshes" a feed. Existing feed errors are cleared, and new
    * ones may be detected.
@@ -182,11 +192,14 @@ export class FeedSubscriptionManager {
    */
   public async pollSubscriptions(
     credentialManager: CredentialManagerAPI,
-    onFinish?: (actions: SubscriptionActions) => Promise<void>
+    onFinish?: (actions: SubscriptionActions) => Promise<void>,
+    idsToPoll?: Array<string | undefined>
   ): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
 
-    for (const subscription of this.activeSubscriptions) {
+    for (const subscription of this.activeSubscriptions.filter(
+      (s) => !idsToPoll || idsToPoll.includes(s.id)
+    )) {
       // Subscriptions which have ceased issuance should not be polled
       if (subscription.ended) {
         continue;
@@ -260,7 +273,7 @@ export class FeedSubscriptionManager {
   private async makeAlternateCredentialPCD(
     authKey: string
   ): Promise<SerializedPCD> {
-    return await ObjPCDPackage.serialize(
+    return ObjPCDPackage.serialize(
       new ObjPCD(randomUUID(), {}, { obj: { authKey } })
     );
   }
@@ -278,21 +291,18 @@ export class FeedSubscriptionManager {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {
-      const authKey = await this.getAuthKeyForFeed(subscription);
-
-      const pcdCredential: SerializedPCD | undefined = authKey
-        ? await this.makeAlternateCredentialPCD(authKey)
-        : await credentialManager.requestCredential({
-            signatureType: "sempahore-signature-pcd",
-            pcdType: subscription.feed.credentialRequest.pcdType
-          });
+      const pcdCredential: SerializedPCD | undefined =
+        await credentialManager.requestCredential({
+          signatureType: "sempahore-signature-pcd",
+          pcdType: subscription.feed.credentialRequest.pcdType
+        });
 
       const result = await this.api.pollFeed(subscription.providerUrl, {
         feedId: subscription.feed.id,
         pcd: pcdCredential
       });
 
-      if (!result.success) {
+      if (result?.success === false) {
         if (result.code === 410) {
           this.flagSubscriptionAsEnded(subscription.id, result.error);
           return responses;
@@ -301,11 +311,12 @@ export class FeedSubscriptionManager {
         throw new Error(result.error);
       }
 
-      const { actions } = result.value;
+      this.validateActions(subscription, result.value.actions);
 
-      this.validateActions(subscription, actions);
-
-      const subscriptionActions = { actions, subscription };
+      const subscriptionActions = {
+        actions: result.value.actions,
+        subscription
+      };
 
       if (onFinish) {
         await onFinish(subscriptionActions);

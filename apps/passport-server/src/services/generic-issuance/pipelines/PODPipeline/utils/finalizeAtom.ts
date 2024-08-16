@@ -1,7 +1,4 @@
-import {
-  PODPipelineOutput,
-  VerifiedCredentialWithEmail
-} from "@pcd/passport-interface";
+import { PODPipelineOutput, VerifiedCredential } from "@pcd/passport-interface";
 import { PODContent, PODEntries, PODValue } from "@pcd/pod";
 import { PODAtom } from "../PODPipeline";
 
@@ -21,9 +18,13 @@ import { PODAtom } from "../PODPipeline";
 export function finalizeAtom(
   atom: PODAtom,
   output: PODPipelineOutput,
-  credential: VerifiedCredentialWithEmail
+  credential: VerifiedCredential
 ): PODEntries {
   const newEntries: PODEntries = {};
+
+  if (!credential.emails || credential.emails.length === 0) {
+    throw new Error("missing emails in credential");
+  }
 
   for (const [name, entry] of Object.entries(output.entries)) {
     if (entry.source.type === "credentialSemaphoreID") {
@@ -34,7 +35,8 @@ export function finalizeAtom(
     } else if (entry.source.type === "credentialEmail") {
       newEntries[name] = {
         type: "string",
-        value: credential.email
+        // TODO: what's the best way to handle this?
+        value: credential.emails[0].email
       } satisfies PODValue;
     }
   }

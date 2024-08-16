@@ -1,19 +1,11 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
-  CheckTicketByIdRequest,
-  CheckTicketByIdResult,
-  CheckTicketInByIdRequest,
-  CheckTicketInByIdResult,
-  GetOfflineTicketsRequest,
   IssuanceEnabledResponseValue,
   KnownTicketTypesResult,
   ListFeedsRequest,
   ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
-  UploadOfflineCheckinsRequest,
-  VerifyTicketByIdRequest,
-  VerifyTicketByIdResult,
   VerifyTicketRequest,
   VerifyTicketResult
 } from "@pcd/passport-interface";
@@ -107,26 +99,6 @@ export function initPCDIssuanceRoutes(
     res.json(await issuanceService.handleListSingleFeedRequest({ feedId }));
   });
 
-  app.post("/issue/check-ticket-by-id", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleDevconnectCheckTicketByIdRequest(
-      req.body as CheckTicketByIdRequest
-    );
-    res.json(result satisfies CheckTicketByIdResult);
-  });
-
-  /**
-   * Works similarly to /issue/check-in, but instead of receiving a PCD
-   * it receives a ticket ID and attempts to check in with it.
-   */
-  app.post("/issue/check-in-by-id", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleDevconnectCheckInByIdRequest(
-      req.body as CheckTicketInByIdRequest
-    );
-    res.json(result satisfies CheckTicketInByIdResult);
-  });
-
   /**
    * For non-Devconnect ticket PCDs, the standard QR code generates a link
    * to a verification screen in passport-client, which calls this endpoint
@@ -140,47 +112,6 @@ export function initPCDIssuanceRoutes(
     );
     return res.json(result satisfies VerifyTicketResult);
   });
-
-  /**
-   * As above, but using only the ticket ID.
-   */
-  app.post(
-    "/issue/verify-ticket-by-id",
-    async (req: Request, res: Response) => {
-      checkIssuanceServiceStarted(issuanceService);
-      const result = await issuanceService.handleVerifyTicketByIdRequest(
-        req.body as VerifyTicketByIdRequest
-      );
-      return res.json(result satisfies VerifyTicketByIdResult);
-    }
-  );
-
-  /**
-   * Downloads relevant tickets for offline verification/checkin from the
-   * perspective of the user hitting this route.
-   */
-  app.post("/issue/offline-tickets", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
-    await issuanceService.handleGetOfflineTickets(
-      req.body as GetOfflineTicketsRequest,
-      res
-    );
-  });
-
-  /**
-   * Attempts to bulk-check-in tickets that were checked in by a user
-   * in offline mode.
-   */
-  app.post(
-    "/issue/checkin-offline-tickets",
-    async (req: Request, res: Response) => {
-      checkIssuanceServiceStarted(issuanceService);
-      await issuanceService.handleUploadOfflineCheckins(
-        req.body as UploadOfflineCheckinsRequest,
-        res
-      );
-    }
-  );
 
   app.get("/issue/known-ticket-types", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);

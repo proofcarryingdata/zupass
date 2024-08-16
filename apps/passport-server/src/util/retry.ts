@@ -4,15 +4,15 @@ import { sleep } from "@pcd/util";
 export async function execWithRetry<T>(
   task: () => Promise<T>,
   shouldRetry: (e: unknown) => boolean,
-  maxTries: number
+  maxRetries: number
 ): Promise<T> {
   const span = getActiveSpan();
   const backoffFactorMs = 100;
   let latestError = undefined;
 
-  span?.setAttribute("max_tries", maxTries);
+  span?.setAttribute("max_tries", maxRetries);
 
-  for (let i = 0; i < maxTries; i++) {
+  for (let i = 0; i <= maxRetries; i++) {
     span?.setAttribute("try_count", i + 1);
 
     try {

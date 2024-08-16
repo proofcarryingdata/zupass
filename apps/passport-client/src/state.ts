@@ -3,8 +3,6 @@ import {
   FeedSubscriptionManager,
   KnownPublicKey,
   KnownTicketType,
-  OfflineDevconnectTicket,
-  OfflineTickets,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -125,8 +123,6 @@ export interface AppState {
   knownTicketTypes?: KnownTicketType[];
   knownPublicKeys?: Record<string, Record<string, KnownPublicKey>>;
 
-  offlineTickets: OfflineTickets;
-  checkedinOfflineDevconnectTickets: OfflineDevconnectTicket[];
   offline: boolean;
 
   // @todo screen-specific data should perhaps have a structure similar to

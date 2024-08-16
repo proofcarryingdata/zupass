@@ -64,7 +64,9 @@ export function ChangePasswordScreen(): JSX.Element | null {
       } else {
         const saltResult = await requestPasswordSalt(
           appConfig.zupassServer,
-          self.email
+          // any email associated with this account will return the right salt
+          // so we just use the first one
+          self.emails[0]
         );
 
         if (!saltResult.success) {
@@ -177,7 +179,7 @@ export function ChangePasswordScreen(): JSX.Element | null {
           passwordInputPlaceholder={
             isChangePassword ? "New password" : "Password"
           }
-          email={self.email}
+          emails={self.emails}
           revealPassword={revealPassword}
           setRevealPassword={setRevealPassword}
           submitButtonText="Confirm"

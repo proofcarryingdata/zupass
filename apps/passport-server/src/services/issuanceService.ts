@@ -12,17 +12,10 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
-import { ObjPCDPackage, ObjPCDTypeName } from "@pcd/obj-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  CheckTicketByIdRequest,
-  CheckTicketByIdResult,
-  CheckTicketInByIdRequest,
-  CheckTicketInByIdResult,
   Credential,
   FeedHost,
-  GetOfflineTicketsRequest,
-  GetOfflineTicketsResponseValue,
   KnownPublicKeyType,
   KnownTicketGroup,
   KnownTicketTypesResult,
@@ -31,12 +24,8 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
-  UploadOfflineCheckinsRequest,
-  UploadOfflineCheckinsResponseValue,
   VerificationError,
   VerifiedCredential,
-  VerifyTicketByIdRequest,
-  VerifyTicketByIdResult,
   VerifyTicketRequest,
   VerifyTicketResult,
   ZUCONNECT_23_DAY_PASS_PRODUCT_ID,
@@ -46,43 +35,25 @@ import {
   ZUZALU_23_RESIDENT_PRODUCT_ID,
   ZUZALU_23_VISITOR_PRODUCT_ID,
   ZupassFeedIds,
-  ZuzaluUserRole,
   verifyCredential,
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import {
   PCDAction,
   PCDActionType,
-  PCDPermissionType,
-  joinPath
+  PCDPermissionType
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
 import { RollbarService } from "@pcd/server-shared";
-import { ONE_HOUR_MS, getErrorMessage } from "@pcd/util";
+import { ONE_HOUR_MS } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Response } from "express";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
 import urljoin from "url-join";
-import {
-  DevconnectPretixTicketDBWithEmailAndItem,
-  UserRow
-} from "../database/models";
-import { checkInOfflineTickets } from "../database/multitableQueries/checkInOfflineTickets";
-import { fetchOfflineTicketsForChecker } from "../database/multitableQueries/fetchOfflineTickets";
-import {
-  fetchDevconnectPretixTicketByTicketId,
-  fetchDevconnectPretixTicketsByEmail,
-  fetchDevconnectSuperusersForEmail
-} from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
-import { consumeDevconnectPretixTicket } from "../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
+import { UserRow } from "../database/models";
 import {
   fetchKnownPublicKeys,
   fetchKnownTicketByEventAndProductId,
@@ -90,16 +61,9 @@ import {
   setKnownPublicKey,
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
-import { upsertUser } from "../database/queries/saveUser";
-import {
-  fetchUserByAuthKey,
-  fetchUserByCommitment
-} from "../database/queries/users";
-import {
-  fetchZuconnectTicketById,
-  fetchZuconnectTicketsByEmail
-} from "../database/queries/zuconnect/fetchZuconnectTickets";
-import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import { fetchUserByCommitment } from "../database/queries/users";
+import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
+import { fetchAllUsersWithZuzaluTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -155,82 +119,6 @@ export class IssuanceService {
 
     this.feedHost = new FeedHost(
       [
-        {
-          handleRequest: async (
-            req: PollFeedRequest
-          ): Promise<PollFeedResponseValue> => {
-            const actions: PCDAction[] = [];
-
-            try {
-              if (req.pcd === undefined) {
-                throw new Error(`Missing credential`);
-              }
-              const verifiedCredential = await this.verifyCredential(req.pcd);
-              const pcds =
-                await this.issueDevconnectPretixTicketPCDs(verifiedCredential);
-              const ticketsByEvent = _.groupBy(
-                pcds,
-                (pcd) => pcd.claim.ticket.eventName
-              );
-
-              const devconnectTickets = Object.entries(ticketsByEvent).filter(
-                ([eventName]) => eventName !== "SBC SRW"
-              );
-
-              actions.push({
-                type: PCDActionType.DeleteFolder,
-                folder: "Devconnect",
-                recursive: true
-              });
-
-              actions.push(
-                ...(
-                  await Promise.all(
-                    devconnectTickets.map(async ([eventName, tickets]) => [
-                      {
-                        type: PCDActionType.ReplaceInFolder,
-                        folder: joinPath("Devconnect", eventName),
-                        pcds: await Promise.all(
-                          tickets.map((pcd) =>
-                            EdDSATicketPCDPackage.serialize(pcd)
-                          )
-                        )
-                      }
-                    ])
-                  )
-                ).flat()
-              );
-            } catch (e) {
-              logger(`Error encountered while serving feed:`, e);
-              throw e;
-            }
-
-            return { actions };
-          },
-          feed: {
-            id: ZupassFeedIds.Devconnect,
-            name: "Devconnect Tickets",
-            description: "Get your Devconnect tickets here!",
-            partialArgs: undefined,
-            credentialRequest: {
-              signatureType: "sempahore-signature-pcd"
-            },
-            permissions: [
-              {
-                folder: "Devconnect",
-                type: PCDPermissionType.AppendToFolder
-              },
-              {
-                folder: "Devconnect",
-                type: PCDPermissionType.ReplaceInFolder
-              },
-              {
-                folder: "Devconnect",
-                type: PCDPermissionType.DeleteFolder
-              }
-            ]
-          }
-        },
         {
           handleRequest: async (
             req: PollFeedRequest
@@ -422,195 +310,6 @@ export class IssuanceService {
     return getEdDSAPublicKey(this.eddsaPrivateKey);
   }
 
-  public async handleDevconnectCheckInByIdRequest(
-    request: CheckTicketInByIdRequest
-  ): Promise<CheckTicketInByIdResult> {
-    try {
-      const ticketDB = await fetchDevconnectPretixTicketByTicketId(
-        this.context.dbPool,
-        request.ticketId
-      );
-
-      const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-        request.checkerProof.pcd
-      );
-
-      const check = await this.checkDevconnectTicketById(
-        request.ticketId,
-        signaturePCD
-      );
-      if (check.success === false) {
-        return check;
-      }
-
-      const ticketData = {
-        ticketId: request.ticketId,
-        eventId: ticketDB?.pretix_events_config_id
-      };
-
-      // We know this will succeed as it's also called by
-      // checkDevconnectTicketById() above
-      const checker = (await fetchUserByCommitment(
-        this.context.dbPool,
-        signaturePCD.claim.identityCommitment
-      )) as UserRow;
-
-      const successfullyConsumed = await consumeDevconnectPretixTicket(
-        this.context.dbPool,
-        ticketData.ticketId ?? "",
-        checker.email
-      );
-
-      if (successfullyConsumed) {
-        return {
-          value: undefined,
-          success: true
-        };
-      }
-
-      return {
-        error: {
-          name: "ServerError",
-          detailedMessage:
-            "The server encountered an error. Please try again later."
-        },
-        success: false
-      };
-    } catch (e) {
-      logger("Error when consuming devconnect ticket", { error: e });
-      throw new PCDHTTPError(500, "failed to check in", { cause: e });
-    }
-  }
-
-  /**
-   * Checks that a ticket is valid for Devconnect check-in based on the ticket
-   * data in the DB.
-   */
-  public async handleDevconnectCheckTicketByIdRequest(
-    request: CheckTicketByIdRequest
-  ): Promise<CheckTicketByIdResult> {
-    try {
-      const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-        request.signature.pcd
-      );
-      return this.checkDevconnectTicketById(request.ticketId, signaturePCD);
-    } catch (e) {
-      return {
-        error: { name: "ServerError" },
-        success: false
-      };
-    }
-  }
-
-  /**
-   * Checks a ticket for validity based on the ticket's status in the DB.
-   */
-  public async checkDevconnectTicketById(
-    ticketId: string,
-    signature: SemaphoreSignaturePCD
-  ): Promise<CheckTicketByIdResult> {
-    try {
-      const ticketInDb = await fetchDevconnectPretixTicketByTicketId(
-        this.context.dbPool,
-        ticketId
-      );
-
-      if (!ticketInDb) {
-        return {
-          error: {
-            name: "InvalidTicket",
-            detailedMessage: "The ticket you tried to check in is not valid."
-          },
-          success: false
-        };
-      }
-
-      let checker;
-      try {
-        const verifiedCredential = await this.verifyCredential(
-          await SemaphoreSignaturePCDPackage.serialize(signature)
-        );
-        checker = await this.checkUserExists(verifiedCredential);
-        if (!checker) {
-          throw new Error();
-        }
-      } catch (e) {
-        return {
-          error: {
-            name: "NotSuperuser",
-            detailedMessage:
-              "You do not have permission to check this ticket in. Please check with the event host."
-          },
-
-          success: false
-        };
-      }
-
-      const checkerSuperUserPermissions =
-        await fetchDevconnectSuperusersForEmail(
-          this.context.dbPool,
-          checker.email
-        );
-
-      const relevantSuperUserPermission = checkerSuperUserPermissions.find(
-        (perm) =>
-          perm.pretix_events_config_id === ticketInDb.pretix_events_config_id
-      );
-
-      if (!relevantSuperUserPermission) {
-        return {
-          error: {
-            name: "NotSuperuser",
-            detailedMessage:
-              "You do not have permission to check this ticket in. Please check with the event host."
-          },
-          success: false
-        };
-      }
-
-      if (ticketInDb.is_deleted) {
-        return {
-          error: {
-            name: "TicketRevoked",
-            revokedTimestamp: Date.now(),
-            detailedMessage:
-              "The ticket has been revoked. Please check with the event host."
-          },
-          success: false
-        };
-      }
-
-      if (ticketInDb.is_consumed) {
-        return {
-          error: {
-            name: "AlreadyCheckedIn",
-            checker: ticketInDb.checker ?? undefined,
-            checkinTimestamp: (
-              ticketInDb.zupass_checkin_timestamp ?? new Date()
-            ).toISOString()
-          },
-          success: false
-        };
-      }
-
-      return {
-        value: {
-          eventName: ticketInDb.event_name,
-          attendeeEmail: ticketInDb.email,
-          attendeeName: ticketInDb.full_name,
-          ticketName: ticketInDb.item_name
-        },
-        success: true
-      };
-    } catch (e) {
-      logger("Error when checking ticket", { error: e });
-      return {
-        error: { name: "ServerError", detailedMessage: getErrorMessage(e) },
-        success: false
-      };
-    }
-  }
-
   /**
    * Verifies credentials for feeds and check-in. Provides a simple caching
    * layer over {@link verifyCredential}.
@@ -625,25 +324,6 @@ export class IssuanceService {
     if (cached) {
       return cached;
     } else {
-      if (credential.type === ObjPCDTypeName) {
-        const pcd = await ObjPCDPackage.deserialize(credential.pcd);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const authKey = (pcd.proof.obj as any)["authKey"];
-        if (!authKey) {
-          throw new Error("auth key pcd missing authKey entry");
-        }
-        const user = await fetchUserByAuthKey(this.context.dbPool, authKey);
-        if (!user) {
-          throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);
-        }
-
-        return {
-          email: user.email.toLowerCase(),
-          semaphoreId: user.commitment,
-          authKey
-        } satisfies VerifiedCredential;
-      }
-
       const promise = verifyCredential(credential).catch((err) => {
         // If we received an unexpected kind of exception, remove the promise
         // from the cache. Instances of VerificationError indicate that the
@@ -673,64 +353,6 @@ export class IssuanceService {
     }
 
     return user;
-  }
-
-  /**
-   * Fetch all DevconnectPretixTicket entities under a given user's email.
-   */
-  private async issueDevconnectPretixTicketPCDs(
-    credential: VerifiedCredential
-  ): Promise<EdDSATicketPCD[]> {
-    return traced(
-      "IssuanceService",
-      "issueDevconnectPretixTicketPCDs",
-      async (span) => {
-        const commitmentRow = await this.checkUserExists(credential);
-        const email = commitmentRow?.email;
-        if (commitmentRow) {
-          span?.setAttribute(
-            "commitment",
-            commitmentRow?.commitment?.toString() ?? ""
-          );
-        }
-        if (email) {
-          span?.setAttribute("email", email);
-        }
-
-        if (!commitmentRow || !email) {
-          return [];
-        }
-
-        if (this.ticketIssuanceDisabled()) {
-          if (commitmentRow.extra_issuance) {
-            commitmentRow.extra_issuance = false;
-            await upsertUser(this.context.dbPool, commitmentRow);
-          } else {
-            throw new PCDHTTPError(
-              410,
-              `Issuance of Devconnect tickets was turned off on ${this.getTicketIssuanceCutoffDate()?.toDateString()}.` +
-                ` Contact support@0xparc.org if you've lost access to your tickets.`
-            );
-          }
-        }
-
-        const commitmentId = commitmentRow.commitment.toString();
-        const ticketsDB = await fetchDevconnectPretixTicketsByEmail(
-          this.context.dbPool,
-          email
-        );
-
-        const tickets = await Promise.all(
-          ticketsDB
-            .map((t) => IssuanceService.ticketRowToTicketData(t, commitmentId))
-            .map((ticketData) => this.getOrGenerateTicket(ticketData))
-        );
-
-        span?.setAttribute("ticket_count", tickets.length);
-
-        return tickets;
-      }
-    );
   }
 
   private getTicketIssuanceCutoffDate(): Date | null {
@@ -798,8 +420,7 @@ export class IssuanceService {
     const ticketCopy: Partial<ITicketData> = { ...ticketData };
     // the reason we remove `timestampSigned` from the cache key
     // is that it changes every time we instantiate `ITicketData`
-    // for a particular devconnect ticket, rendering the caching
-    // ineffective.
+    // for a particular ticket, rendering the caching ineffective.
     delete ticketCopy.timestampSigned;
     const hash = await getHash(JSON.stringify(ticketCopy));
     return hash;
@@ -839,7 +460,7 @@ export class IssuanceService {
     ticketData: ITicketData,
     eddsaPrivateKey: string
   ): Promise<EdDSATicketPCD> {
-    const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
+    const stableId = await getHash("issued-ticket-" + ticketData.attendeeEmail);
 
     const ticketPCD = await EdDSATicketPCDPackage.prove({
       ticket: {
@@ -857,34 +478,6 @@ export class IssuanceService {
     });
 
     return ticketPCD;
-  }
-
-  private static ticketRowToTicketData(
-    t: DevconnectPretixTicketDBWithEmailAndItem,
-    semaphoreId: string
-  ): ITicketData {
-    return {
-      // unsigned fields
-      attendeeName: t.full_name,
-      attendeeEmail: t.email,
-      eventName: t.event_name,
-      ticketName: t.item_name,
-      checkerEmail: t.checker ?? undefined,
-
-      // signed fields
-      ticketId: t.id,
-      eventId: t.pretix_events_config_id,
-      productId: t.devconnect_pretix_items_info_id,
-      timestampConsumed:
-        t.zupass_checkin_timestamp === null
-          ? 0
-          : new Date(t.zupass_checkin_timestamp).getTime(),
-      timestampSigned: Date.now(),
-      attendeeSemaphoreId: semaphoreId,
-      isConsumed: t.is_consumed,
-      isRevoked: t.is_deleted,
-      ticketCategory: TicketCategory.Devconnect
-    } satisfies ITicketData;
   }
 
   private async issueFrogPCDs(): Promise<SerializedPCD[]> {
@@ -972,30 +565,23 @@ export class IssuanceService {
   private async issueEmailPCDs(
     credential: VerifiedCredential
   ): Promise<EmailPCD[]> {
-    return traced(
-      "IssuanceService",
-      "issueDevconnectPretixTicketPCDs",
-      async (span) => {
-        const commitmentRow = await this.checkUserExists(credential);
-        const email = commitmentRow?.email;
-        if (commitmentRow) {
-          span?.setAttribute(
-            "commitment",
-            commitmentRow?.commitment?.toString() ?? ""
-          );
-        }
-        if (email) {
-          span?.setAttribute("email", email);
-        }
+    return traced("IssuanceService", "issueEmailPCDs", async (span) => {
+      const user = await this.checkUserExists(credential);
 
-        if (!commitmentRow || !email) {
-          return [];
-        }
+      if (!user) {
+        return [];
+      }
 
-        const stableId = "attested-email-" + email;
+      span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
 
-        return [
-          await EmailPCDPackage.prove({
+      if (user) {
+        span?.setAttribute("emails", user.emails);
+      }
+
+      return Promise.all(
+        user.emails.map((email) => {
+          const stableId = "attested-email-" + email;
+          return EmailPCDPackage.prove({
             privateKey: {
               value: this.eddsaPrivateKey,
               argumentType: ArgumentTypeName.String
@@ -1009,13 +595,13 @@ export class IssuanceService {
               argumentType: ArgumentTypeName.String
             },
             semaphoreId: {
-              value: commitmentRow.commitment,
+              value: user.commitment,
               argumentType: ArgumentTypeName.String
             }
-          })
-        ];
-      }
-    );
+          });
+        })
+      );
+    });
   }
 
   private async issueZuzaluTicketPCDs(
@@ -1034,40 +620,42 @@ export class IssuanceService {
         return [];
       }
 
-      const commitmentRow = await this.checkUserExists(credential);
-      const email = commitmentRow?.email;
-      if (commitmentRow) {
-        span?.setAttribute(
-          "commitment",
-          commitmentRow?.commitment?.toString() ?? ""
-        );
+      const user = await this.checkUserExists(credential);
+      const email = user?.emails?.[0];
+      if (user) {
+        span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
       }
       if (email) {
         span?.setAttribute("email", email);
       }
 
-      if (!commitmentRow || !email) {
+      if (!user || !email) {
         return [];
       }
 
-      const user = await fetchLoggedInZuzaluUser(this.context.dbPool, {
-        uuid: commitmentRow.uuid
-      });
+      const allUsersAndTickets = await fetchAllUsersWithZuzaluTickets(
+        this.context.dbPool
+      );
+      const zuzaluTickets = allUsersAndTickets.find((u) => u.uuid === user.uuid)
+        ?.zuzaluTickets;
+      if (!zuzaluTickets) {
+        return [];
+      }
 
       const tickets = [];
 
-      if (user) {
+      for (const ticket of zuzaluTickets) {
         tickets.push(
           await this.getOrGenerateTicket({
             attendeeSemaphoreId: user.commitment,
             eventName: "Zuzalu (March - May 2023)",
             checkerEmail: undefined,
             ticketId: user.uuid,
-            ticketName: user.role.toString(),
-            attendeeName: user.name,
-            attendeeEmail: user.email,
+            ticketName: ticket.role.toString(),
+            attendeeName: ticket.name,
+            attendeeEmail: ticket.email,
             eventId: ZUZALU_23_EVENT_ID,
-            productId: zuzaluRoleToProductId(user.role),
+            productId: zuzaluRoleToProductId(ticket.role),
             timestampSigned: Date.now(),
             timestampConsumed: 0,
             isConsumed: false,
@@ -1104,7 +692,7 @@ export class IssuanceService {
           return [];
         }
         const user = await this.checkUserExists(credential);
-        const email = user?.email;
+        const email = "user?.email";
         if (user) {
           span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
         }
@@ -1166,10 +754,6 @@ export class IssuanceService {
    * 2) whether the ticket matches the ticket types known to us, e.g. Zuzalu
    *    or Zuconnect tickets
    *
-   * Not used for Devconnect tickets, which have a separate check-in flow.
-   * This is the default verification flow for ticket PCDs, based on the
-   * standard QR code, but only Zuconnect/Zuzalu '23 tickets will be returned
-   * as verified.
    */
   private async verifyKnownTicket(
     serializedPCD: SerializedPCD
@@ -1277,81 +861,6 @@ export class IssuanceService {
     }
   }
 
-  /**
-   * Only Zuzalu '23 and Zuconnect '23 tickets support this verification
-   * mechanism, which exists to support short verification URLs for small
-   * QR codes, and relies on server-side knowledge of ticket details.
-   */
-  private async verifyZuconnect23OrZuzalu23TicketById(
-    ticketId: string,
-    timestamp: string
-  ): Promise<VerifyTicketByIdResult> {
-    if (Date.now() - parseInt(timestamp) > ONE_HOUR_MS * 4) {
-      return {
-        success: true,
-        value: {
-          verified: false,
-          message: "Timestamp has expired."
-        }
-      };
-    }
-
-    const zuconnectTicket = await fetchZuconnectTicketById(
-      this.context.dbPool,
-      ticketId
-    );
-
-    if (zuconnectTicket) {
-      return {
-        success: true,
-        value: {
-          verified: true,
-          group: KnownTicketGroup.Zuconnect23,
-          publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-          productId: zuconnectTicket.product_id,
-          ticketName:
-            zuconnectTicket.product_id === ZUCONNECT_23_DAY_PASS_PRODUCT_ID
-              ? zuconnectTicket.extra_info.join("\n")
-              : zuconnectProductIdToName(zuconnectTicket.product_id),
-          eventName: "ZuConnect '23"
-        }
-      };
-    } else {
-      const zuzaluTicket = await fetchLoggedInZuzaluUser(this.context.dbPool, {
-        uuid: ticketId
-      });
-
-      if (zuzaluTicket) {
-        return {
-          success: true,
-          value: {
-            verified: true,
-            group: KnownTicketGroup.Zuzalu23,
-            publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-            productId:
-              zuzaluTicket.role === ZuzaluUserRole.Visitor
-                ? ZUZALU_23_VISITOR_PRODUCT_ID
-                : zuzaluTicket.role === ZuzaluUserRole.Organizer
-                ? ZUZALU_23_ORGANIZER_PRODUCT_ID
-                : ZUZALU_23_RESIDENT_PRODUCT_ID,
-            ticketName:
-              zuzaluTicket.role === ZuzaluUserRole.Visitor
-                ? "Visitor"
-                : zuzaluTicket.role === ZuzaluUserRole.Organizer
-                ? "Organizer"
-                : "Resident",
-            eventName: "Zuzalu '23"
-          }
-        };
-      }
-    }
-
-    return {
-      success: false,
-      error: "Could not verify ticket."
-    };
-  }
-
   public async handleVerifyTicketRequest(
     req: VerifyTicketRequest
   ): Promise<VerifyTicketResult> {
@@ -1363,15 +872,6 @@ export class IssuanceService {
         cause: e
       });
     }
-  }
-
-  public async handleVerifyTicketByIdRequest(
-    req: VerifyTicketByIdRequest
-  ): Promise<VerifyTicketByIdResult> {
-    return this.verifyZuconnect23OrZuzalu23TicketById(
-      req.ticketId,
-      req.timestamp
-    );
   }
 
   /**
@@ -1410,49 +910,6 @@ export class IssuanceService {
         })
       }
     };
-  }
-
-  public async handleGetOfflineTickets(
-    req: GetOfflineTicketsRequest,
-    res: Response
-  ): Promise<void> {
-    let semaphoreId;
-    try {
-      const verifiedCredential = await this.verifyCredential(req.checkerProof);
-      semaphoreId = verifiedCredential.semaphoreId;
-    } catch (_e) {
-      throw new PCDHTTPError(403, "invalid proof");
-    }
-
-    const offlineTickets = await fetchOfflineTicketsForChecker(
-      this.context.dbPool,
-      semaphoreId
-    );
-
-    res.json({
-      offlineTickets
-    } satisfies GetOfflineTicketsResponseValue);
-  }
-
-  public async handleUploadOfflineCheckins(
-    req: UploadOfflineCheckinsRequest,
-    res: Response
-  ): Promise<void> {
-    let semaphoreId;
-    try {
-      const verifiedCredential = await this.verifyCredential(req.checkerProof);
-      semaphoreId = verifiedCredential.semaphoreId;
-    } catch (_e) {
-      throw new PCDHTTPError(403, "invalid proof");
-    }
-
-    await checkInOfflineTickets(
-      this.context.dbPool,
-      semaphoreId,
-      req.checkedOfflineInDevconnectTicketIDs
-    );
-
-    res.json({} satisfies UploadOfflineCheckinsResponseValue);
   }
 }
 

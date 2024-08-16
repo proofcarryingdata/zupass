@@ -10,7 +10,7 @@ import {
   PODPipelineOutputMatch,
   PollFeedRequest,
   PollFeedResponseValue,
-  VerifiedCredentialWithEmail
+  VerifiedCredential
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
@@ -153,6 +153,7 @@ export class PODPipeline implements BasePipeline {
             logs.push(
               makePLogInfo(`saved parsed data: ${atoms.length} entries`)
             );
+            await this.db.markAsLoaded(this.id);
           },
           // High priority means that this will run before any other DB access,
           // including reads.
@@ -220,9 +221,9 @@ export class PODPipeline implements BasePipeline {
    * @returns The atoms that match the given credential
    */
   private async loadMatchingAtoms({
-    email,
+    emails,
     semaphoreId
-  }: VerifiedCredentialWithEmail): Promise<PODAtom[]> {
+  }: VerifiedCredential): Promise<PODAtom[]> {
     // Use the queue to ensure that we are not interleaving with the DB
     // clear/save operation in load().
     const atoms = await this.dbQueue.add(() => this.db.load(this.id));
@@ -234,8 +235,11 @@ export class PODPipeline implements BasePipeline {
         matchingAtoms.push(atom);
       } else if (atom.matchTo.type === "email") {
         if (
-          atom.entries[atom.matchTo.entry].value.toString().toLowerCase() ===
-          email.toLowerCase()
+          emails
+            ?.map((e) => e.email.toLowerCase())
+            ?.includes(
+              atom.entries[atom.matchTo.entry].value.toString().toLowerCase()
+            )
         ) {
           matchingAtoms.push(atom);
         }
@@ -310,13 +314,16 @@ export class PODPipeline implements BasePipeline {
 
       const credential =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
-      const { email, semaphoreId } = credential;
+      const { emails, semaphoreId } = credential;
 
-      span?.setAttribute("email", email);
+      span?.setAttribute("email", emails?.map((e) => e.email)?.join(",") ?? "");
       span?.setAttribute("semaphore_id", semaphoreId);
 
+      for (const e of emails ?? []) {
+        await this.consumerDB.save(this.id, e.email, semaphoreId, new Date());
+      }
+
       // Consumer is validated, so save them in the consumer list
-      await this.consumerDB.save(this.id, email, semaphoreId, new Date());
 
       // PODs must have entries
       const atomsToIssue = (await this.loadMatchingAtoms(credential)).filter(
@@ -366,7 +373,10 @@ export class PODPipeline implements BasePipeline {
 
       const actions: PCDAction[] = [];
 
-      if (this.definition.options.feedOptions.feedType === "deleteAndReplace") {
+      if (
+        this.definition.options.feedOptions.feedType === "deleteAndReplace" &&
+        (await this.db.hasLoaded(this.id))
+      ) {
         actions.push({
           type: PCDActionType.DeleteFolder,
           folder: this.definition.options.feedOptions.feedFolder,

@@ -48,9 +48,14 @@ export function OneClickLoginScreen(): JSX.Element | null {
     }
 
     if (self) {
-      if (email !== self.email) {
+      if (!self.emails?.includes(email as string)) {
         alert(
-          `You are already logged in as ${self.email}. Please log out and try navigating to the link again.`
+          `You are already logged in as ${
+            self.emails.length === 1
+              ? self.emails?.[0]
+              : "an account that owns the following email addresses: " +
+                self.emails.join(", ")
+          }. Please log out and try navigating to the link again.`
         );
         window.location.hash = "#/";
       } else {

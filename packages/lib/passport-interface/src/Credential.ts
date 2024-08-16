@@ -24,6 +24,11 @@ export type Credential = SerializedPCD<SemaphoreSignaturePCD>;
 export interface CredentialPayload {
   // The only type of PCD that can appear here is EmailPCD.
   pcd?: SerializedPCD<EmailPCD>;
+  // Caller can optionally supply multiple emails. in the case
+  // just one email is supplied via the `pcd` field, the request
+  // representation is upgraded to a list stored in this `pcds`
+  // field
+  pcds?: SerializedPCD<EmailPCD>[];
   timestamp: number;
 }
 
@@ -45,23 +50,29 @@ export interface CredentialPayload {
  * memory on caching large PCD objects.
  */
 export interface VerifiedCredential {
-  email?: string;
+  emails?: SignedEmail[];
   semaphoreId: string;
-  emailPCDSigner?: EdDSAPublicKey;
   authKey?: string;
 }
 
-export type VerifiedCredentialWithEmail = VerifiedCredential &
-  Required<Pick<VerifiedCredential, "email">>;
+export interface SignedEmail {
+  signer: EdDSAPublicKey;
+  email: string;
+  semaphoreId: string;
+}
 
 /**
  * Creates a feed credential payload with timestamp.
  */
 export function createCredentialPayload(
-  pcd: SerializedPCD<EmailPCD> | undefined = undefined
+  pcds:
+    | SerializedPCD<EmailPCD>
+    | SerializedPCD<EmailPCD>[]
+    | undefined = undefined
 ): CredentialPayload {
   return {
-    pcd: pcd,
+    pcds:
+      pcds instanceof Array ? pcds : pcds !== undefined ? [pcds] : undefined,
     timestamp: Date.now()
   };
 }
@@ -113,36 +124,47 @@ export async function verifyCredential(
     throw new VerificationError("Credential timestamp out of bounds");
   }
 
+  const emailPCDs = (payload.pcd ? [payload.pcd] : payload.pcds) ?? [];
+
   // If the payload contains a PCD, verify it
-  if (payload.pcd) {
+  if (emailPCDs) {
     // Only EmailPCD is supported here
-    if (payload.pcd.type !== EmailPCDPackage.name) {
-      throw new VerificationError(`Payload PCD is not an EmailPCD`);
+    if (emailPCDs.find((e) => e.type !== EmailPCDPackage.name)) {
+      throw new VerificationError(`all pcds in the payload must be email PCDs`);
     }
 
-    // EmailPCD must verify
-    const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
-    if (!(await EmailPCDPackage.verify(emailPCD))) {
-      throw new VerificationError(`Could not verify email PCD`);
-    }
+    const signedEmails: SignedEmail[] = await Promise.all(
+      emailPCDs.map(async (e) => {
+        // EmailPCD must verify
+        const emailPCD = await EmailPCDPackage.deserialize(e.pcd);
+        if (!(await EmailPCDPackage.verify(emailPCD))) {
+          throw new VerificationError(`Could not verify email PCD`);
+        }
 
-    // EmailPCD contains a Semaphore ID in its claim, which must match that of
-    // the signature.
-    if (emailPCD.claim.semaphoreId !== pcd.claim.identityCommitment) {
-      throw new VerificationError(
-        `Email PCD and Signature PCD do not have matching identities`
-      );
-    }
+        // EmailPCD contains a Semaphore ID in its claim, which must match that of
+        // the signature.
+        if (emailPCD.claim.semaphoreId !== pcd.claim.identityCommitment) {
+          throw new VerificationError(
+            `Email PCD and Signature PCD do not have matching identities`
+          );
+        }
+
+        return {
+          email: emailPCD.claim.emailAddress,
+          signer: emailPCD.proof.eddsaPCD.claim.publicKey,
+          semaphoreId: emailPCD.claim.semaphoreId
+        } satisfies SignedEmail;
+      })
+    );
 
     // Everything passes, return the verified credential with email claims
     return {
-      email: emailPCD.claim.emailAddress,
-      semaphoreId: emailPCD.claim.semaphoreId,
-      emailPCDSigner: emailPCD.proof.eddsaPCD.claim.publicKey
+      emails: signedEmails,
+      semaphoreId: pcd.claim.identityCommitment
     };
   } else {
     // Return a verified credential, without email claims since no EmailPCD
     // was present
-    return { email: undefined, semaphoreId: pcd.claim.identityCommitment };
+    return { semaphoreId: pcd.claim.identityCommitment };
   }
 }

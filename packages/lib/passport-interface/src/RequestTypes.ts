@@ -312,54 +312,6 @@ export interface CheckTicketInByIdRequest {
 }
 
 /**
- * Ask the server for tickets relevant to this user for offline storage,
- * so that offline verification and checkin can work on the client.
- */
-export interface GetOfflineTicketsRequest {
-  /**
-   * A semaphore signature from the checker, used by the server to
-   * determine which tickets should be returned.
-   */
-  checkerProof: Credential;
-}
-
-/**
- * Result value server sends client in response to a {@link GetOfflineTicketsRequest}.
- */
-export interface GetOfflineTicketsResponseValue {
-  /**
-   * Collection of tickets the client should save to localstorage so that
-   * they work offline.
-   */
-  offlineTickets: OfflineTickets;
-}
-
-/**
- * Asks the server to checkin the given tickets. Only affects valid
- * un-checked-in tickets check-in-able by the given user. Silently
- * skips tickets the given user can't check in for any reason.
- */
-export interface UploadOfflineCheckinsRequest {
-  /**
-   * A semaphore signature from the checker, used by the server to
-   * determine which tickets can actually be checked in.
-   */
-  checkerProof: Credential;
-
-  /**
-   * List of ticket ids to attempt to check in.
-   */
-  checkedOfflineInDevconnectTicketIDs: string[];
-}
-
-/**
- * Server gives no feedback in response to a {@link UploadOfflineCheckinsRequest}.
- * That request only fails in the case of a network error, internal server error,
- * and the like.
- */
-export interface UploadOfflineCheckinsResponseValue {}
-
-/**
  * On the happy path, {@link CheckTicketInByIdRequest} has nothing to say and
  * just succeeds.
  */
@@ -572,7 +524,7 @@ export interface PollFeedResponseValue {
 export interface ZupassUserJson {
   uuid: string;
   commitment: string;
-  email: string;
+  emails: string[];
   salt: string | null;
   terms_agreed: number;
 }
@@ -801,37 +753,6 @@ export interface AgreeToTermsResponseValue {
  * issue the user.
  */
 export const ISSUANCE_STRING = "Issue me PCDs please.";
-
-/**
- * Collection of tickets that some clients keep track of so that the tickets
- * contained within it function offline.
- */
-export interface OfflineTickets {
-  devconnectTickets: OfflineDevconnectTicket[];
-}
-
-/**
- * New empty {@link OfflineTickets}.
- */
-export function defaultOfflineTickets(): OfflineTickets {
-  return {
-    devconnectTickets: []
-  };
-}
-
-/**
- * Shown to checkers with valid permissions when they are in offline mode.
- */
-export interface OfflineDevconnectTicket {
-  id: string;
-  attendeeEmail: string;
-  attendeeName: string;
-  eventName: string;
-  ticketName: string;
-  checkinTimestamp?: string;
-  checker: string | null;
-  is_consumed?: boolean;
-}
 
 /**
  * User requests about
@@ -1210,4 +1131,76 @@ export type GenericIssuanceSendPipelineEmailRequest = {
 
 export type GenericIssuanceSendPipelineEmailResponseValue = {
   queued: number;
+};
+
+export enum EmailUpdateError {
+  InvalidCredential = "InvalidCredential",
+  InvalidConfirmationCode = "InvalidConfirmationCode",
+  EmailAlreadyRegistered = "EmailAlreadyRegistered",
+  CantDeleteOnlyEmail = "CantDeleteOnlyEmail",
+  CantChangeWrongOldEmail = "CantChangeWrongOldEmail",
+  CantChangeWhenMultipleEmails = "CantChangeWhenMultipleEmails",
+  EmailNotAssociatedWithThisAccount = "EmailNotAssociatedWithThisAccount",
+  UserNotFound = "UserNotFound",
+  InvalidInput = "InvalidInput",
+  TooManyEmails = "TooManyEmails",
+  Unknown = "Unknown"
+}
+
+export interface AddUserEmailRequest {
+  newEmail: string;
+
+  /**
+   * A semaphore signature from the user, used to verify their identity.
+   */
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * If absent, requests a confirmation code; if present, redeems it.
+   */
+  confirmationCode?: string;
+}
+
+export type AddUserEmailResponseValue =
+  | {
+      sentToken: false;
+      token?: never;
+      newEmailList: string[];
+    }
+  | { sentToken: true; token?: string; newEmailList?: never };
+
+export interface ChangeUserEmailRequest {
+  oldEmail: string;
+  newEmail: string;
+
+  /**
+   * A semaphore signature from the user, used to verify their identity.
+   */
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * If absent, requests a confirmation code; if present, redeems it.
+   */
+  confirmationCode?: string;
+}
+
+export type ChangeUserEmailResponseValue =
+  | {
+      sentToken: false;
+      token?: never;
+      newEmailList: string[];
+    }
+  | { sentToken: true; token?: string; newEmailList?: never };
+
+export interface RemoveUserEmailRequest {
+  emailToRemove: string;
+
+  /**
+   * A semaphore signature from the user, used to verify their identity.
+   */
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+export type RemoveUserEmailResponseValue = {
+  newEmailList: string[];
 };
