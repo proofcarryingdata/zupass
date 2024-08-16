@@ -10,7 +10,23 @@ function generateRandomHex(byteLength: number): string {
 }
 
 describe("podspec should work", async function () {
-  it("podspec should do something", function () {
+  it("should validate POD types", function () {
+    const myPodSpec = p.entries({
+      foo: p.string(),
+      bar: p.integer()
+    });
+
+    const result = myPodSpec.safeParse({
+      foo: { type: "string", value: "test" },
+      bar: { type: "int", value: 1n }
+    });
+    expect(result.status).to.eq("valid");
+    assert(result.status === "valid");
+    expect(result.value.foo.value).to.eq("test");
+    expect(result.value.bar.value).to.eq(1n);
+  });
+
+  it("should coerce javascript values into POD types", function () {
     const myPodSpec = p.entries({
       foo: p.coerce.string(),
       bar: p.coerce.integer()
@@ -26,7 +42,7 @@ describe("podspec should work", async function () {
     expect(result.value.bar.value).to.eq(1n);
   });
 
-  it("podspec should fail with bad inputs", function () {
+  it("should fail with bad inputs", function () {
     const myPodSpec = p.entries({
       foo: p.coerce.string(),
       bar: p.coerce.integer()
@@ -39,7 +55,7 @@ describe("podspec should work", async function () {
     expect(result.status).to.eq("invalid");
   });
 
-  it("podspec should match on tuples", function () {
+  it("should match on tuples", function () {
     const myPodSpec = p
       .entries({
         foo: p.coerce.string(),
@@ -85,7 +101,7 @@ describe("podspec should work", async function () {
     });
   });
 
-  it("should query", function () {
+  it("should query across multiple PODs", function () {
     const key = generateRandomHex(32);
 
     const myPodSpec = p.entries({
