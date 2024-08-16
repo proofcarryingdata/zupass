@@ -25,10 +25,6 @@ export function EmbeddedScreen(): ReactNode {
       />
     );
   } else if (
-    embeddedScreen.screen?.type === EmbeddedScreenType.EmbeddedAccessRequest
-  ) {
-    return <div>Embedded Access Request</div>;
-  } else if (
     embeddedScreen.screen?.type === EmbeddedScreenType.EmbeddedAddSubscription
   ) {
     return (

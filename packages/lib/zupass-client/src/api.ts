@@ -16,6 +16,7 @@ export interface ZupassFileSystem {
   list: (path: string) => Promise<ZupassFolderContent[]>;
   get: (path: string) => Promise<SerializedPCD>;
   put: (path: string, content: SerializedPCD) => Promise<void>;
+  // Not yet implemented:
   delete: (path: string) => Promise<void>;
 }
 
