@@ -33,9 +33,6 @@
       "path": "../pod-pcd"
     },
     {
-      "path": "../semaphore-identity-pcd"
-    },
-    {
       "path": "../../lib/util"
     },
     {

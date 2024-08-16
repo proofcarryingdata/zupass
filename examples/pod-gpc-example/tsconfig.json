@@ -37,9 +37,6 @@
     },
     {
       "path": "../../packages/pcd/gpc-pcd"
-    },
-    {
-      "path": "../../packages/pcd/semaphore-identity-pcd"
     }
   ]
 }

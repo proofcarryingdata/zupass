@@ -3,15 +3,23 @@
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "jsx": "react-jsx",
-    "lib": ["ES2020", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "esModuleInterop": true,
     // To allow for mocha and jest to work together:
     // https://stackoverflow.com/a/65568463
     "skipLibCheck": true,
     "strict": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
   "references": [
     {
       "path": "../../packages/lib/client-shared"
@@ -51,9 +59,6 @@
     },
     {
       "path": "../../packages/pcd/semaphore-group-pcd"
-    },
-    {
-      "path": "../../packages/pcd/semaphore-identity-pcd"
     },
     {
       "path": "../../packages/pcd/semaphore-signature-pcd"

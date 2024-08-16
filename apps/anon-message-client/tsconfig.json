@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -19,7 +23,9 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": [
+        "./src/*"
+      ]
     },
     "forceConsistentCasingInFileNames": true
   },
@@ -27,14 +33,23 @@
     "compilerOptions": {
       "module": "commonjs",
       "outDir": "dist",
-      "lib": ["ES2020"],
+      "lib": [
+        "ES2020"
+      ],
       "target": "ES2020",
       "isolatedModules": false,
       "noEmit": false
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
   "references": [
     {
       "path": "../../packages/pcd/eddsa-ticket-pcd"
@@ -44,9 +59,6 @@
     },
     {
       "path": "../../packages/lib/pcd-types"
-    },
-    {
-      "path": "../../packages/pcd/semaphore-identity-pcd"
     },
     {
       "path": "../../packages/lib/util"

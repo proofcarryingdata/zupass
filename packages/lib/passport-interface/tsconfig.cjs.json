@@ -41,9 +41,6 @@
       "path": "../../pcd/semaphore-group-pcd/tsconfig.cjs.json"
     },
     {
-      "path": "../../pcd/semaphore-identity-pcd/tsconfig.cjs.json"
-    },
-    {
       "path": "../../pcd/semaphore-signature-pcd/tsconfig.cjs.json"
     },
     {

@@ -90,9 +90,6 @@
       "path": "../../packages/pcd/semaphore-group-pcd"
     },
     {
-      "path": "../../packages/pcd/semaphore-identity-pcd"
-    },
-    {
       "path": "../../packages/pcd/semaphore-signature-pcd"
     },
     {

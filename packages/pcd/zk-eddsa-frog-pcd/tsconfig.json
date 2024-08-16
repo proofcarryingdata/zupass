@@ -1,7 +1,15 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": ["src", "test", "artifacts/*.json"],
-  "exclude": ["dist", "build", "node_modules"],
+  "include": [
+    "src",
+    "test",
+    "artifacts/*.json"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
   "references": [
     {
       "path": "../eddsa-frog-pcd"
@@ -11,9 +19,6 @@
     },
     {
       "path": "../../lib/pcd-types"
-    },
-    {
-      "path": "../semaphore-identity-pcd"
     },
     {
       "path": "../semaphore-signature-pcd"
