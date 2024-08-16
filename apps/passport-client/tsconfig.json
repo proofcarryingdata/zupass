@@ -146,6 +146,9 @@
       "path": "../../packages/ui/semaphore-identity-pcd-ui"
     },
     {
+      "path": "../../packages/pcd/semaphore-identity-v4"
+    },
+    {
       "path": "../../packages/pcd/semaphore-signature-pcd"
     },
     {

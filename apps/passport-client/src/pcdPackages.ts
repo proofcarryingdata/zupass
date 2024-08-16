@@ -21,6 +21,7 @@ import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreIdentityV4PCDPackage } from "@pcd/semaphore-identity-v4";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { ZKEdDSAFrogPCDPackage } from "@pcd/zk-eddsa-frog-pcd";
@@ -106,6 +107,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     MessagePCDPackage,
     PODPCDPackage,
     PODTicketPCDPackage,
-    GPCPCDPackage
+    GPCPCDPackage,
+    SemaphoreIdentityV4PCDPackage
   ];
 }

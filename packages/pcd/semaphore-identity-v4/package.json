@@ -1,7 +1,7 @@
 {
   "name": "@pcd/semaphore-identity-v4",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.4",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
