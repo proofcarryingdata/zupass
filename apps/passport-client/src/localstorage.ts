@@ -3,6 +3,10 @@ import {
   NetworkFeedApi,
   User
 } from "@pcd/passport-interface";
+import {
+  makeAddV4CommitmentRequest,
+  requestAddSemaphoreV4Commitment
+} from "@pcd/passport-interface/src/api/requestAddSemaphoreV4Commitment";
 import { PCDCollection } from "@pcd/pcd-collection";
 import {
   SemaphoreIdentityPCD,
@@ -14,6 +18,7 @@ import {
 } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
+import { appConfig } from "./appConfig";
 import { getPackages } from "./pcdPackages";
 import { validateAndLogRunningAppState } from "./validateState";
 
@@ -65,6 +70,11 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
     collection.add(v4Identity);
     await savePCDs(collection);
   }
+
+  await requestAddSemaphoreV4Commitment(
+    appConfig.zupassServer,
+    await makeAddV4CommitmentRequest(collection)
+  );
 
   if (
     !validateAndLogRunningAppState(

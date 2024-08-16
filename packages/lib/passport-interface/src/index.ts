@@ -1,6 +1,7 @@
 export * from "./api/apiResult";
 export * from "./api/constants";
 export * from "./api/makeRequest";
+export * from "./api/requestAddSemaphoreV4Commitment";
 export * from "./api/requestAddUserEmail";
 export * from "./api/requestAgreeTerms";
 export * from "./api/requestChangeBlobKey";
