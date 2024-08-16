@@ -79,13 +79,13 @@ export function FileSystem(): ReactNode {
           <p>
             Adding a PCD is done like this:
             <code className="block text-xs font-base rounded-md p-2">
-              const file = await z.fs.put("{pcdId}", serializedPCD);
+              const file = await z.fs.put("FolderName", serializedPCD);
             </code>
           </p>
           <TryIt
             onClick={async () => {
               try {
-                await z.fs.put("Testing", JSON.parse(sampleSerializedPCD));
+                await z.fs.put("FolderName", JSON.parse(sampleSerializedPCD));
                 setPCDAdded(true);
               } catch (e) {
                 console.log(e);
