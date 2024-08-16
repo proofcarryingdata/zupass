@@ -48,10 +48,10 @@ export async function makeAddV4CommitmentRequest(
 ): Promise<AddV4CommitmentRequest> {
   const v3PCD = pcdCollection.getPCDsByType(
     SemaphoreIdentityPCDPackage.name
-  )[0] as SemaphoreIdentityPCD;
+  )[0] as SemaphoreIdentityPCD | undefined;
   const v4PCD = pcdCollection.getPCDsByType(
     SemaphoreIdentityV4PCDPackage.name
-  )[0] as SemaphoreIdentityV4PCD;
+  )[0] as SemaphoreIdentityV4PCD | undefined;
 
   if (!v3PCD || !v4PCD) {
     throw new Error("Expected exactly one v3 and v4 PCD");
@@ -63,7 +63,7 @@ export async function makeAddV4CommitmentRequest(
       value: {
         signedValue: {
           type: "string",
-          value: JSON.stringify(v3PCD)
+          value: v3PCD.claim.identity.commitment.toString()
         }
       }
     },
@@ -103,7 +103,7 @@ export async function verifyAddV4CommitmentRequestPCD(
     const v3SigVerifies = await SemaphoreSignaturePCDPackage.verify(pcd);
     const expectedV3Id = pcd.claim.identityCommitment;
     const v4SigOfV3Id = await PODPCDPackage.deserialize(
-      JSON.parse(pcd.claim.signedMessage)
+      JSON.parse(pcd.claim.signedMessage).pcd
     );
     const v4SigVerifies = await PODPCDPackage.verify(v4SigOfV3Id);
     const v4Message = v4SigOfV3Id.claim.entries["signedValue"];
@@ -111,6 +111,7 @@ export async function verifyAddV4CommitmentRequestPCD(
       v4Message.type === "string" && v4Message.value === expectedV3Id;
     return v3SigVerifies && v4SigVerifies && v4SigIsOfV3Id;
   } catch (e) {
+    console.log(e);
     return false;
   }
 }

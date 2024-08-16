@@ -10,13 +10,32 @@ import {
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import { expect } from "chai";
+import "mocha";
+import * as path from "path";
 import {
   makeAddV4CommitmentRequest,
   verifyAddV4CommitmentRequestPCD
 } from "../src/api/requestAddSemaphoreV4Commitment";
 
+const zkeyFilePath: string = path.join(
+  __dirname,
+  "../../../pcd/semaphore-signature-pcd/artifacts/16.zkey"
+);
+const wasmFilePath: string = path.join(
+  __dirname,
+  "../../../pcd/semaphore-signature-pcd/artifacts/16.wasm"
+);
+
 describe("V3ToV4Migration", async function () {
-  it("test", async function () {
+  this.beforeAll(async function () {
+    await SemaphoreSignaturePCDPackage.init?.({
+      zkeyFilePath,
+      wasmFilePath
+    });
+  });
+
+  it("V3ToV4Migration", async function () {
     const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
       identity: new Identity()
     });
@@ -31,6 +50,6 @@ describe("V3ToV4Migration", async function () {
       migrationRequest.pcd.pcd
     );
     const verified = await verifyAddV4CommitmentRequestPCD(migrationPCD);
-    expect(verified).toBe(true);
+    expect(verified).to.eq(true);
   });
 });
