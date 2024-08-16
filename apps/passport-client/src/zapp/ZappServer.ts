@@ -121,7 +121,9 @@ class FileSystem extends BaseZappServer implements ZupassFileSystem {
   }
 
   @safeInput(z.tuple([z.string()]))
-  public async delete(path: string): Promise<void> {}
+  public async delete(_path: string): Promise<void> {
+    throw new Error("Not implemented");
+  }
 }
 
 class GPC extends BaseZappServer implements ZupassGPC {
