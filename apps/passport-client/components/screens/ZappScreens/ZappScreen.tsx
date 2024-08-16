@@ -19,7 +19,8 @@ const MAGIC_PRIVATE_KEY =
 
 async function connectToZapp(
   zappWindow: Window,
-  context: StateContextValue
+  context: StateContextValue,
+  origin: string
 ): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 1000));
   return new Promise((resolve) => {
@@ -120,7 +121,8 @@ export function ZappScreen(): ReactNode {
       onLoad={(ev) => {
         connectToZapp(
           (ev.target as HTMLIFrameElement).contentWindow as Window,
-          context
+          context,
+          "http://localhost:3200"
         );
       }}
       src="http://localhost:3200/"
