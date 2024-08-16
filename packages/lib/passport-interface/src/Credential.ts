@@ -1,6 +1,7 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { SerializedPCD } from "@pcd/pcd-types";
+import { PODPCD } from "@pcd/pod-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
@@ -15,7 +16,9 @@ const TIMESTAMP_MAX_AGE = ONE_HOUR_MS + 20 * ONE_MINUTE_MS;
 // To avoid writing `SerializedPCD<SemaphoreSignaturePCD>`, and also to make
 // the `Credential` type a bit less tightly-bound to the implementation details
 // of serialization and Semaphore signatures, we use this type.
-export type Credential = SerializedPCD<SemaphoreSignaturePCD>;
+export type Credential =
+  | SerializedPCD<SemaphoreSignaturePCD>
+  | SerializedPCD<PODPCD>;
 
 /*
  * The payload encoded in the message of the SemaphoreSignaturePCD passed
