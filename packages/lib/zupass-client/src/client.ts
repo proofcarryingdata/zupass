@@ -79,7 +79,7 @@ export function connect(
   iframe.style.borderWidth = "0px";
   iframe.style.width = "100%";
   iframe.style.height = "100%";
-  iframe.src = zupassUrl;
+  iframe.src = normalizedUrl.toString();
 
   return new Promise<ZupassAPI>((resolve, _reject) => {
     /**
