@@ -22,6 +22,10 @@ import {
  * - [ ] Async validation
  */
 
+function assertUnreachable(_: never, message?: string): never {
+  throw new Error(message ?? "Unreachable");
+}
+
 enum PodspecDataType {
   String = "string",
   Int = "int",
@@ -48,7 +52,7 @@ function isPODIntValue(data: unknown): data is PODIntValue {
     throw new Error("Data does not have type and value properties");
   }
   if (data.type !== "int") {
-    throw new Error("Data is not an integer value");
+    throw new Error("PODValue type is not int");
   }
   if (typeof data.value !== "bigint") {
     throw new Error("Data value is not a bigint");
@@ -70,7 +74,7 @@ function isPODStringValue(data: unknown): data is PODStringValue {
     throw new Error("Data does not have type and value properties");
   }
   if (data.type !== "string") {
-    throw new Error("Data is not a string value");
+    throw new Error("PODValue type is not string");
   }
   if (typeof data.value !== "string") {
     throw new Error("Data value is not a string");
@@ -85,11 +89,29 @@ function isPODCryptographicValue(data: unknown): data is PODCryptographicValue {
   if (!("type" in data && "value" in data)) {
     throw new Error("Data does not have type and value properties");
   }
-  if (data.type !== "int") {
-    throw new Error("Data is not an integer value");
+  if (data.type !== "cryptographic") {
+    throw new Error("PODValue type is not cryptographic");
   }
   if (typeof data.value !== "bigint") {
     throw new Error("Data value is not a bigint");
+  }
+  return true;
+}
+
+function isPODEdDSAPublicKeyValue(
+  data: unknown
+): data is PODEdDSAPublicKeyValue {
+  if (typeof data !== "object" || data === null) {
+    throw new Error("Data is null or not an object");
+  }
+  if (!("type" in data && "value" in data)) {
+    throw new Error("Data does not have type and value properties");
+  }
+  if (data.type !== "eddsa_pubkey") {
+    throw new Error("PODValue type is not eddsa_pubkey");
+  }
+  if (typeof data.value !== "string") {
+    throw new Error("Data value is not a string");
   }
   return true;
 }
@@ -117,14 +139,27 @@ interface PodspecEdDSAPubKeyDef extends PodspecTypeDef {
 }
 
 type StringCheck = {
-  kind: "uuid";
+  kind: "list";
+  list: string[];
+  exclude?: boolean;
 };
 
-type IntegerCheck = {
-  kind: "range";
-  min: bigint;
-  max: bigint;
-};
+type IntegerCheck =
+  | {
+      kind: "range";
+      min: bigint;
+      max: bigint;
+    }
+  | {
+      kind: "list";
+      list: bigint[];
+      exclude?: boolean;
+    };
+
+interface CreateArgs<C> {
+  coerce?: boolean;
+  checks?: C[];
+}
 
 interface PodspecTypeDef {
   description?: string;
@@ -167,18 +202,38 @@ class PodspecEdDSAPubKey extends PodspecType<
   PodspecEdDSAPubKeyDef,
   PODEdDSAPublicKeyValue | string
 > {
-  _parse(data: unknown): ParseResult<PODEdDSAPublicKeyValue> {
-    if (typeof data === "string") {
-      checkPublicKeyFormat(data);
-      return SUCCESS({ type: "eddsa_pubkey", value: data });
+  private dataToValue(data: unknown): PODEdDSAPublicKeyValue {
+    try {
+      if (isPODEdDSAPublicKeyValue(data)) {
+        return data;
+      }
+    } catch (e) {
+      if (this.def.coerce) {
+        if (typeof data === "string") {
+          return { type: "eddsa_pubkey", value: data };
+        }
+      } else {
+        throw e;
+      }
     }
-    return FAILURE;
+    throw new Error("Data is not a valid POD eddsa_pubkey value");
   }
 
-  static create(): PodspecEdDSAPubKey {
+  _parse(data: unknown): ParseResult<PODEdDSAPublicKeyValue> {
+    try {
+      const value = this.dataToValue(data);
+      checkPublicKeyFormat(value.value);
+      return SUCCESS(value);
+    } catch (e) {
+      this._addError(e as Error);
+      return FAILURE;
+    }
+  }
+
+  static create(args?: CreateArgs<never>): PodspecEdDSAPubKey {
     return new PodspecEdDSAPubKey({
       type: PodspecDataType.EdDSAPubKey,
-      coerce: false
+      coerce: args?.coerce ?? false
     });
   }
 
@@ -195,39 +250,47 @@ class PodspecCryptographic extends PodspecType<
   PodspecCryptographicDef,
   PODIntValue | number | bigint
 > {
-  _parse(data: unknown): ParseResult<PODCryptographicValue> {
-    if (typeof data === "bigint") {
-      checkBigintBounds("", data, POD_CRYPTOGRAPHIC_MIN, POD_CRYPTOGRAPHIC_MAX);
-      return SUCCESS({ type: "cryptographic", value: data });
+  private dataToValue(data: unknown): PODCryptographicValue {
+    try {
+      if (isPODCryptographicValue(data)) {
+        return data;
+      }
+    } catch (e) {
+      // If coercion is allowed, we can try to convert some types to PODCryptographicValue
+      if (this.def.coerce) {
+        if (typeof data === "number") {
+          return { type: "cryptographic", value: BigInt(data) };
+        }
+        if (typeof data === "bigint") {
+          return { type: "cryptographic", value: data };
+        }
+      } else {
+        throw e;
+      }
     }
-    if (typeof data === "number") {
-      const bigIntValue = BigInt(data);
+    throw new Error("Data is not a valid POD cryptographic value");
+  }
+
+  _parse(data: unknown): ParseResult<PODCryptographicValue> {
+    try {
+      const value = this.dataToValue(data);
       checkBigintBounds(
         "",
-        bigIntValue,
+        value.value,
         POD_CRYPTOGRAPHIC_MIN,
         POD_CRYPTOGRAPHIC_MAX
       );
-      return SUCCESS({ type: "cryptographic", value: bigIntValue });
+      return SUCCESS(value);
+    } catch (e) {
+      this._addError(e as Error);
+      return FAILURE;
     }
-    if (
-      isPODCryptographicValue(data) &&
-      checkBigintBounds(
-        "",
-        data.value,
-        POD_CRYPTOGRAPHIC_MIN,
-        POD_CRYPTOGRAPHIC_MAX
-      )
-    ) {
-      return SUCCESS(data);
-    }
-    return FAILURE;
   }
 
-  static create(): PodspecCryptographic {
+  static create(args?: CreateArgs<never>): PodspecCryptographic {
     return new PodspecCryptographic({
       type: PodspecDataType.Cryptographic,
-      coerce: false
+      coerce: args?.coerce ?? false
     });
   }
 
@@ -247,18 +310,25 @@ class PodspecInteger extends PodspecType<
   private checks: IntegerCheck[] = [];
 
   private dataToValue(data: unknown): PODIntValue {
-    if (typeof data === "bigint") {
-      checkBigintBounds("", data, POD_INT_MIN, POD_INT_MAX);
-      return { type: "int", value: data };
-    }
-    if (typeof data === "number") {
-      const bigIntValue = BigInt(data);
-      checkBigintBounds("", bigIntValue, POD_INT_MIN, POD_INT_MAX);
-      return { type: "int", value: bigIntValue };
-    }
-    if (isPODIntValue(data)) {
-      checkBigintBounds("", data.value, POD_INT_MIN, POD_INT_MAX);
-      return data;
+    try {
+      if (isPODIntValue(data)) {
+        return data;
+      }
+    } catch (e) {
+      // If coercion is allowed, we can try to convert some types to PODIntValue
+      if (this.def.coerce) {
+        if (typeof data === "bigint") {
+          checkBigintBounds("", data, POD_INT_MIN, POD_INT_MAX);
+          return { type: "int", value: data };
+        }
+        if (typeof data === "number") {
+          const bigIntValue = BigInt(data);
+          checkBigintBounds("", bigIntValue, POD_INT_MIN, POD_INT_MAX);
+          return { type: "int", value: bigIntValue };
+        }
+      } else {
+        throw e;
+      }
     }
     throw new Error("Data is not a valid POD integer value");
   }
@@ -272,6 +342,16 @@ class PodspecInteger extends PodspecType<
           if (value.value < check.min || value.value > check.max) {
             throw new Error("Value out of range");
           }
+        } else if (check.kind === "list") {
+          const included = check.list.includes(value.value);
+          if (!included && !check.exclude) {
+            throw new Error("Value not in allowed list");
+          }
+          if (included && check.exclude) {
+            throw new Error("Value in excluded list");
+          }
+        } else {
+          assertUnreachable(check);
         }
       }
 
@@ -280,6 +360,15 @@ class PodspecInteger extends PodspecType<
       this._addError(e as Error);
       return FAILURE;
     }
+  }
+
+  public list(list: bigint[], exclude = false): typeof this {
+    this.checks.push({
+      kind: "list",
+      list,
+      exclude
+    });
+    return this;
   }
 
   public inRange(min: bigint, max: bigint): typeof this {
@@ -300,11 +389,11 @@ class PodspecInteger extends PodspecType<
     return this;
   }
 
-  static create(): PodspecInteger {
+  static create(args?: CreateArgs<IntegerCheck>): PodspecInteger {
     return new PodspecInteger({
       type: PodspecDataType.Int,
-      checks: [],
-      coerce: false
+      checks: args?.checks ?? [],
+      coerce: args?.coerce ?? false
     });
   }
 
@@ -324,18 +413,20 @@ class PodspecString extends PodspecType<
 > {
   private checks: StringCheck[] = [];
 
-  public uuid(): PodspecString {
+  public list(list: string[], exclude = false): PodspecString {
     this.checks.push({
-      kind: "uuid"
+      kind: "list",
+      list,
+      exclude
     });
     return this;
   }
 
-  static create(): PodspecString {
+  static create(args?: CreateArgs<StringCheck>): PodspecString {
     return new PodspecString({
       type: PodspecDataType.String,
-      checks: [],
-      coerce: false
+      checks: args?.checks ?? [],
+      coerce: args?.coerce ?? false
     });
   }
 
@@ -347,14 +438,42 @@ class PodspecString extends PodspecType<
     };
   }
 
+  private dataToValue(data: unknown): PODStringValue {
+    try {
+      if (isPODStringValue(data)) {
+        return data;
+      }
+    } catch (e) {
+      if (this.def.coerce) {
+        if (typeof data === "string") {
+          return { type: "string", value: data };
+        }
+      } else {
+        throw e;
+      }
+    }
+    throw new Error("Data is not a valid POD string value");
+  }
+
   _parse(data: unknown): ParseResult<PODStringValue> {
-    if (typeof data === "string") {
-      return SUCCESS({ type: "string", value: data });
+    try {
+      const value = this.dataToValue(data);
+      for (const check of this.checks) {
+        if (check.kind === "list") {
+          const included = check.list.includes(value.value);
+          if (!included && !check.exclude) {
+            throw new Error("Value not in allowed list");
+          }
+          if (included && check.exclude) {
+            throw new Error("Value in excluded list");
+          }
+        }
+      }
+      return SUCCESS(value);
+    } catch (e) {
+      this._addError(e as Error);
+      return FAILURE;
     }
-    if (isPODStringValue(data)) {
-      return SUCCESS({ type: "string", value: data.value });
-    }
-    return FAILURE;
   }
 }
 
@@ -546,3 +665,14 @@ export const string = PodspecString.create;
 export const integer = PodspecInteger.create;
 export const cryptographic = PodspecCryptographic.create;
 export const eddsaPubKey = PodspecEdDSAPubKey.create;
+
+export const coerce = {
+  string: (args?: CreateArgs<StringCheck>): PodspecString =>
+    string({ ...args, coerce: true }),
+  integer: (args?: CreateArgs<IntegerCheck>): PodspecInteger =>
+    integer({ ...args, coerce: true }),
+  cryptographic: (args?: CreateArgs<never>): PodspecCryptographic =>
+    cryptographic({ ...args, coerce: true }),
+  eddsaPubKey: (args?: CreateArgs<never>): PodspecEdDSAPubKey =>
+    eddsaPubKey({ ...args, coerce: true })
+};

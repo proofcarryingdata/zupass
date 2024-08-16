@@ -12,8 +12,8 @@ function generateRandomHex(byteLength: number): string {
 describe("podspec should work", async function () {
   it("podspec should do something", function () {
     const myPodSpec = p.entries({
-      foo: p.string(),
-      bar: p.integer()
+      foo: p.coerce.string(),
+      bar: p.coerce.integer()
     });
 
     const result = myPodSpec.safeParse({
@@ -28,8 +28,8 @@ describe("podspec should work", async function () {
 
   it("podspec should fail with bad inputs", function () {
     const myPodSpec = p.entries({
-      foo: p.string(),
-      bar: p.integer()
+      foo: p.coerce.string(),
+      bar: p.coerce.integer()
     });
 
     const result = myPodSpec.safeParse({
@@ -42,8 +42,8 @@ describe("podspec should work", async function () {
   it("podspec should match on tuples", function () {
     const myPodSpec = p
       .entries({
-        foo: p.string(),
-        bar: p.integer()
+        foo: p.coerce.string(),
+        bar: p.coerce.integer()
       })
       .matchTuple({
         name: "test",
@@ -80,8 +80,8 @@ describe("podspec should work", async function () {
     });
 
     expect(myPodSpec.serialize()).to.eql({
-      foo: { type: "string", checks: [] },
-      bar: { type: "int" }
+      foo: { type: "string", checks: [], coerce: false },
+      bar: { type: "int", checks: [], coerce: false }
     });
   });
 
