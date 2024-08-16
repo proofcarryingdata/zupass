@@ -621,6 +621,11 @@ export type CreateNewUserRequest = {
   autoRegister?: boolean;
 };
 
+export type AddV4CommitmentRequest = {
+  // semaphore v3 signature of semaphore v4 signature of v3 commitment
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+};
+
 export type OneClickLoginRequest = {
   email: string;
   code: string;
