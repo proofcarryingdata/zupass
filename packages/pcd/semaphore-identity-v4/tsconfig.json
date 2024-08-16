@@ -28,6 +28,9 @@
     },
     {
       "path": "../../lib/util"
+    },
+    {
+      "path": "../semaphore-identity-pcd"
     }
   ]
 }
