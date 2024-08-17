@@ -23,6 +23,7 @@ import {
  * - [ ] Add a special check for signer public keys
  * - [ ] Better error reporting
  * - [ ] Optional entries
+ * - [ ] Check for absence
  */
 
 function assertUnreachable(_: never, message?: string): never {
@@ -134,11 +135,13 @@ interface PodspecIntegerDef extends PodspecTypeDef {
 interface PodspecCryptographicDef extends PodspecTypeDef {
   type: PodspecDataType.Cryptographic;
   coerce: boolean;
+  checks: CryptographicCheck[];
 }
 
 interface PodspecEdDSAPubKeyDef extends PodspecTypeDef {
   type: PodspecDataType.EdDSAPubKey;
   coerce: boolean;
+  checks: EdDSAPubKeyCheck[];
 }
 
 type StringCheck = {
@@ -158,6 +161,10 @@ type IntegerCheck =
       list: bigint[];
       exclude?: boolean;
     };
+
+type CryptographicCheck = never;
+
+type EdDSAPubKeyCheck = never;
 
 interface CreateArgs<C> {
   coerce?: boolean;
@@ -233,17 +240,19 @@ class PodspecEdDSAPubKey extends PodspecType<
     }
   }
 
-  static create(args?: CreateArgs<never>): PodspecEdDSAPubKey {
+  static create(args?: CreateArgs<EdDSAPubKeyCheck>): PodspecEdDSAPubKey {
     return new PodspecEdDSAPubKey({
       type: PodspecDataType.EdDSAPubKey,
-      coerce: args?.coerce ?? false
+      coerce: args?.coerce ?? false,
+      checks: args?.checks ?? []
     });
   }
 
   public serialize(): PodspecEdDSAPubKeyDef {
     return {
       type: PodspecDataType.EdDSAPubKey,
-      coerce: this.def.coerce
+      coerce: this.def.coerce,
+      checks: structuredClone(this.def.checks)
     };
   }
 }
@@ -293,14 +302,16 @@ class PodspecCryptographic extends PodspecType<
   static create(args?: CreateArgs<never>): PodspecCryptographic {
     return new PodspecCryptographic({
       type: PodspecDataType.Cryptographic,
-      coerce: args?.coerce ?? false
+      coerce: args?.coerce ?? false,
+      checks: args?.checks ?? []
     });
   }
 
   public serialize(): PodspecCryptographicDef {
     return {
       type: PodspecDataType.Cryptographic,
-      coerce: this.def.coerce
+      coerce: this.def.coerce,
+      checks: structuredClone(this.def.checks)
     };
   }
 }
@@ -310,8 +321,6 @@ class PodspecInteger extends PodspecType<
   PodspecIntegerDef,
   PODIntValue | number | bigint
 > {
-  private checks: IntegerCheck[] = [];
-
   private dataToValue(data: unknown): PODIntValue {
     try {
       if (isPODIntValue(data)) {
@@ -340,7 +349,7 @@ class PodspecInteger extends PodspecType<
     try {
       const value = this.dataToValue(data);
 
-      for (const check of this.checks) {
+      for (const check of this.def.checks) {
         if (check.kind === "range") {
           if (value.value < check.min || value.value > check.max) {
             throw new Error("Value out of range");
@@ -366,7 +375,7 @@ class PodspecInteger extends PodspecType<
   }
 
   public list(list: bigint[], exclude = false): typeof this {
-    this.checks.push({
+    this.def.checks.push({
       kind: "list",
       list,
       exclude
@@ -384,7 +393,7 @@ class PodspecInteger extends PodspecType<
     if (min > max) {
       throw new Error("Minimum value is greater than maximum value");
     }
-    this.checks.push({
+    this.def.checks.push({
       kind: "range",
       min,
       max
@@ -403,7 +412,7 @@ class PodspecInteger extends PodspecType<
   public serialize(): PodspecIntegerDef {
     return {
       type: PodspecDataType.Int,
-      checks: structuredClone(this.checks),
+      checks: structuredClone(this.def.checks),
       coerce: this.def.coerce
     };
   }
@@ -414,10 +423,8 @@ class PodspecString extends PodspecType<
   PodspecStringDef,
   PODStringValue | string
 > {
-  private checks: StringCheck[] = [];
-
   public list(list: string[], exclude = false): PodspecString {
-    this.checks.push({
+    this.def.checks.push({
       kind: "list",
       list,
       exclude
@@ -436,7 +443,7 @@ class PodspecString extends PodspecType<
   public serialize(): PodspecStringDef {
     return {
       type: PodspecDataType.String,
-      checks: structuredClone(this.checks),
+      checks: structuredClone(this.def.checks),
       coerce: this.def.coerce
     };
   }
@@ -461,7 +468,7 @@ class PodspecString extends PodspecType<
   _parse(data: unknown): ParseResult<PODStringValue> {
     try {
       const value = this.dataToValue(data);
-      for (const check of this.checks) {
+      for (const check of this.def.checks) {
         if (check.kind === "list") {
           const included = check.list.includes(value.value);
           if (!included && !check.exclude) {
@@ -470,6 +477,8 @@ class PodspecString extends PodspecType<
           if (included && check.exclude) {
             throw new Error("Value in excluded list");
           }
+        } else {
+          assertUnreachable(check.kind);
         }
       }
       return SUCCESS(value);
