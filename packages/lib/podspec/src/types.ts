@@ -23,7 +23,6 @@ import {
  * - [ ] Add a special check for signer public keys
  * - [ ] Better error reporting
  * - [ ] Optional entries
- * - [ ] Check for absence
  */
 
 function assertUnreachable(_: never, message?: string): never {
@@ -34,7 +33,63 @@ enum PodspecDataType {
   String = "string",
   Int = "int",
   Cryptographic = "cryptographic",
-  EdDSAPubKey = "eddsa_pubkey"
+  EdDSAPubKey = "eddsa_pubkey",
+  Optional = "optional"
+}
+
+type PodspecTypeDef =
+  | PodspecStringDef
+  | PodspecIntegerDef
+  | PodspecCryptographicDef
+  | PodspecEdDSAPubKeyDef
+  | PodspecOptionalDef;
+
+type PodspecTypeMap = {
+  PodspecStringDef: PodspecString;
+  PodspecIntegerDef: PodspecInteger;
+  PodspecCryptographicDef: PodspecCryptographic;
+  PodspecEdDSAPubKeyDef: PodspecEdDSAPubKey;
+  PodspecOptionalDef: PodspecOptional<PodspecEntryType>;
+};
+
+type DefToPodspecType<T extends PodspecTypeDef> = T extends PodspecOptionalDef
+  ? PodspecOptional<DefToPodspecType<T["innerType"]>>
+  : T extends keyof PodspecTypeMap
+  ? PodspecTypeMap[T] extends PodspecEntryType
+    ? PodspecTypeMap[T]
+    : never
+  : never;
+
+export function deserializeEntry<T extends PodspecTypeDef>(
+  def: T
+): DefToPodspecType<T> {
+  switch (def.type) {
+    case PodspecDataType.String:
+      return string({
+        coerce: def.coerce,
+        checks: def.checks
+      }) as DefToPodspecType<T>;
+    case PodspecDataType.Int:
+      return integer({
+        coerce: def.coerce,
+        checks: def.checks
+      }) as DefToPodspecType<T>;
+    case PodspecDataType.Cryptographic:
+      return cryptographic({
+        coerce: def.coerce,
+        checks: def.checks
+      }) as DefToPodspecType<T>;
+    case PodspecDataType.EdDSAPubKey:
+      return eddsaPubKey({
+        coerce: def.coerce,
+        checks: def.checks
+      }) as DefToPodspecType<T>;
+    case PodspecDataType.Optional:
+      return new PodspecOptional(
+        deserializeEntry(def.innerType)
+      ) as DefToPodspecType<T>;
+  }
+  throw new Error(`Unknown PodspecType: ${(def as { type: string }).type}`);
 }
 
 function isEqualPODValue(a: PODValue, b: PODValue): boolean {
@@ -120,25 +175,25 @@ function isPODEdDSAPublicKeyValue(
   return true;
 }
 
-interface PodspecStringDef extends PodspecTypeDef {
+interface PodspecStringDef extends PodspecEntryTypeDef {
   type: PodspecDataType.String;
   checks: StringCheck[];
   coerce: boolean;
 }
 
-interface PodspecIntegerDef extends PodspecTypeDef {
+interface PodspecIntegerDef extends PodspecEntryTypeDef {
   type: PodspecDataType.Int;
   checks: IntegerCheck[];
   coerce: boolean;
 }
 
-interface PodspecCryptographicDef extends PodspecTypeDef {
+interface PodspecCryptographicDef extends PodspecEntryTypeDef {
   type: PodspecDataType.Cryptographic;
   coerce: boolean;
   checks: CryptographicCheck[];
 }
 
-interface PodspecEdDSAPubKeyDef extends PodspecTypeDef {
+interface PodspecEdDSAPubKeyDef extends PodspecEntryTypeDef {
   type: PodspecDataType.EdDSAPubKey;
   coerce: boolean;
   checks: EdDSAPubKeyCheck[];
@@ -171,15 +226,19 @@ interface CreateArgs<C> {
   checks?: C[];
 }
 
-interface PodspecTypeDef {
+interface BasePodspecTypeDef {
   description?: string;
+  type: unknown;
 }
+
+interface PodspecEntryTypeDef extends BasePodspecTypeDef {}
 
 abstract class PodspecType<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   Output = any,
-  Def extends PodspecTypeDef = PodspecTypeDef,
-  Input = Output
+  Def extends BasePodspecTypeDef = BasePodspecTypeDef,
+  Input = Output,
+  Serialized = Def
 > {
   readonly _output!: Output;
   readonly _input!: Input;
@@ -188,7 +247,7 @@ abstract class PodspecType<
   public constructor(public readonly def: Def) {}
 
   abstract _parse(data: unknown): ParseResult<Output>;
-  abstract serialize(): Def;
+  abstract serialize(): Serialized;
 
   public safeParse(data: unknown): ParseResult<Output> {
     return this._parse(data);
@@ -207,7 +266,18 @@ abstract class PodspecType<
   }
 }
 
-class PodspecEdDSAPubKey extends PodspecType<
+abstract class PodspecEntryType<
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  Output = any,
+  Def extends PodspecEntryTypeDef = PodspecEntryTypeDef,
+  Input = Output
+> extends PodspecType<Output, Def, Input> {
+  public optional(): PodspecOptional<this> {
+    return new PodspecOptional(this);
+  }
+}
+
+class PodspecEdDSAPubKey extends PodspecEntryType<
   PODEdDSAPublicKeyValue,
   PodspecEdDSAPubKeyDef,
   PODEdDSAPublicKeyValue | string
@@ -257,7 +327,7 @@ class PodspecEdDSAPubKey extends PodspecType<
   }
 }
 
-class PodspecCryptographic extends PodspecType<
+class PodspecCryptographic extends PodspecEntryType<
   PODCryptographicValue,
   PodspecCryptographicDef,
   PODIntValue | number | bigint
@@ -316,7 +386,7 @@ class PodspecCryptographic extends PodspecType<
   }
 }
 
-class PodspecInteger extends PodspecType<
+class PodspecInteger extends PodspecEntryType<
   PODIntValue,
   PodspecIntegerDef,
   PODIntValue | number | bigint
@@ -418,7 +488,7 @@ class PodspecInteger extends PodspecType<
   }
 }
 
-class PodspecString extends PodspecType<
+class PodspecString extends PodspecEntryType<
   PODStringValue,
   PodspecStringDef,
   PODStringValue | string
@@ -489,7 +559,47 @@ class PodspecString extends PodspecType<
   }
 }
 
-type RawEntriesType = Record<string, PodspecType>;
+interface PodspecOptionalDef extends PodspecEntryTypeDef {
+  type: "optional";
+  innerType: Exclude<PodspecTypeDef, PodspecOptionalDef>;
+}
+
+class PodspecOptional<T extends PodspecEntryType> extends PodspecEntryType<
+  T["_output"] | undefined,
+  PodspecOptionalDef
+> {
+  constructor(public readonly innerType: T) {
+    super({
+      type: "optional",
+      innerType: innerType.serialize()
+    });
+  }
+
+  _parse(data: unknown): ParseResult<T["_output"] | undefined> {
+    if (data === undefined) {
+      return SUCCESS(undefined);
+    }
+    return this.innerType._parse(data);
+  }
+
+  serialize(): PodspecOptionalDef {
+    return {
+      type: "optional",
+      innerType: this.innerType.serialize()
+    };
+  }
+}
+
+type RawEntriesType = Record<
+  string,
+  | PodspecCryptographic
+  | PodspecInteger
+  | PodspecString
+  | PodspecEdDSAPubKey
+  | PodspecOptional<
+      PodspecCryptographic | PodspecInteger | PodspecString | PodspecEdDSAPubKey
+    >
+>;
 
 export type BaseObjectOutputType<Shape extends RawEntriesType> = {
   [k in keyof Shape]: Shape[k]["_output"];
@@ -546,10 +656,14 @@ type EntriesCheck = {
   spec: TupleSpec;
 };
 
+type SerializedEntriesType<T extends RawEntriesType> = {
+  [k in keyof T]: T[k]["def"];
+};
+
 class EntriesType<
   T extends RawEntriesType,
   Output = objectOutputType<T>
-> extends PodspecType<Output, T, T> {
+> extends PodspecType<Output, T, T, SerializedEntriesType<T>> {
   private checks: EntriesCheck[] = [];
 
   static create<T extends RawEntriesType>(entries: T): EntriesType<T> {
@@ -571,7 +685,7 @@ class EntriesType<
 
     try {
       for (const key in this.def) {
-        if (!(key in data)) {
+        if (!(key in data) && !(this.def[key] instanceof PodspecOptional)) {
           this._addError(new Error(`Entry "${key}" is missing`));
           return FAILURE;
         }
@@ -581,7 +695,10 @@ class EntriesType<
           // Will throw if the key is invalid
           checkPODName(key);
           const parsed = this.def[key].parse(value);
-          result[key] = parsed;
+          // parsed might be undefined if the type is optional
+          if (parsed) {
+            result[key] = parsed;
+          }
         } else {
           // Skip? Maybe throw if there's an unexpected value here
         }
@@ -634,10 +751,10 @@ class EntriesType<
     return SUCCESS(result as Output);
   }
 
-  public serialize(): T {
+  public serialize(): SerializedEntriesType<T> {
     return Object.fromEntries(
       Object.entries(this.def).map(([key, value]) => [key, value.serialize()])
-    ) as T;
+    ) as SerializedEntriesType<T>;
   }
 
   // @todo parameterize TupleSpec with known entry names?
