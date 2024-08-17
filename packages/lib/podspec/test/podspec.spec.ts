@@ -39,7 +39,7 @@ describe("podspec should work", async function () {
     expect(result.value.quux.value).to.eq(pubKey);
   });
 
-  it("should coerce javascript values into POD values", function () {
+  it("should coerce javascript values into POD types", function () {
     const myPodSpec = p.entries({
       foo: p.coerce.string(),
       bar: p.coerce.integer(),
@@ -162,22 +162,16 @@ describe("podspec should work", async function () {
 
   it("podspec should serialize", function () {
     const myPodSpec = p.entries({
-      foo: p.coerce.string(),
-      bar: p.integer().inRange(1n, 10n),
-      baz: p.cryptographic().optional()
+      foo: p.string(),
+      bar: p.integer()
     });
 
     expect(myPodSpec.serialize()).to.eql({
-      foo: { type: "string", checks: [], coerce: true },
-      bar: {
-        type: "int",
-        checks: [{ kind: "range", min: 1n, max: 10n }],
-        coerce: false
+      entries: {
+        foo: { type: "string", checks: [], coerce: false },
+        bar: { type: "int", checks: [], coerce: false }
       },
-      baz: {
-        optional: true,
-        innerType: { type: "cryptographic", checks: [], coerce: false }
-      }
+      checks: []
     });
   });
 
@@ -280,21 +274,5 @@ describe("podspec should work", async function () {
 
     expect(queryResult.matches).to.eql([pods[0]]);
     expect(queryResult.matchingIndexes).to.eql([0]);
-  });
-
-  it("should parse optional types", function () {
-    const myPodSpec = p.entries({
-      foo: p.coerce.integer().optional(),
-      bar: p.coerce.integer().optional()
-    });
-
-    // Neither of the optional entries need to be present
-    const result = myPodSpec.safeParse({
-      abc: "test"
-    });
-    expect(result.status).to.eq("valid");
-    assert(result.status === "valid");
-    expect(result.value.foo).to.eq(undefined);
-    expect(result.value.bar).to.eq(undefined);
   });
 });

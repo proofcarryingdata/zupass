@@ -1,3 +1,3 @@
-import * as p from "./types";
+import * as p from "./core";
 export { p };
 export default p;
