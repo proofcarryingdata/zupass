@@ -24,4 +24,10 @@ export class PodspecOptional<T extends PodspecValue> extends PodspecValue<
   serialize(): PodspecOptionalSerialized<T> {
     throw new Error("Method not implemented.");
   }
+
+  static create<T extends PodspecValue>(
+    args: PodspecOptionalDef<T>
+  ): PodspecOptional<T> {
+    return new PodspecOptional(args);
+  }
 }

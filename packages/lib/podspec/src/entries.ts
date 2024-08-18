@@ -1,4 +1,5 @@
 import { POD, PODEntries, PODValue, checkPODName } from "@pcd/pod";
+import { PodspecDataType } from "./base";
 import { FAILURE, ParseResult, SUCCESS, isValid } from "./parse";
 import { PodspecCryptographic } from "./types/cryptographic";
 import { PodspecEdDSAPubKey } from "./types/eddsa_pubkey";
@@ -186,6 +187,41 @@ export class PodspecEntries<
         ])
       )
     } as PodspecEntriesSerializedDef<E>;
+  }
+
+  static deserialize<E extends RawEntriesType>(
+    serialized: PodspecEntriesSerializedDef<E>
+  ): PodspecEntries<E> {
+    const deserializedEntries: RawEntriesType = {};
+
+    for (const [key, value] of Object.entries(serialized.entries)) {
+      switch (value.type) {
+        case PodspecDataType.String:
+          deserializedEntries[key] = PodspecString.create(value);
+          break;
+        case PodspecDataType.Int:
+          deserializedEntries[key] = PodspecInt.create(value);
+          break;
+        case PodspecDataType.Cryptographic:
+          deserializedEntries[key] = PodspecCryptographic.create(value);
+          break;
+        case PodspecDataType.EdDSAPubKey:
+          deserializedEntries[key] = PodspecEdDSAPubKey.create(value);
+          break;
+        case PodspecDataType.Optional:
+          deserializedEntries[key] = PodspecOptional.create(value);
+          break;
+        default:
+          throw new Error(`Unsupported PodspecDataType: ${value.type}`);
+      }
+    }
+
+    const podspecEntries = new PodspecEntries<E>({
+      entries: deserializedEntries as E,
+      checks: serialized.checks
+    });
+
+    return podspecEntries;
   }
 
   static create<E extends RawEntriesType>(entries: E): PodspecEntries<E> {

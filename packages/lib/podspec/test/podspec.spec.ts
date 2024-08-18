@@ -175,6 +175,17 @@ describe("podspec should work", async function () {
     });
   });
 
+  it("podspec should deserialize", function () {
+    const myPodSpec = p.entries({
+      foo: p.string(),
+      bar: p.integer()
+    });
+
+    const serialized = myPodSpec.serialize();
+
+    expect(p.deserialize(serialized)).to.eql(myPodSpec);
+  });
+
   it("should query across multiple PODs", function () {
     const key = generateRandomHex(32);
 

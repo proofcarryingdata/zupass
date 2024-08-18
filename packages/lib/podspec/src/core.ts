@@ -11,12 +11,12 @@ import { CreateArgs } from "./utils";
 /**
  * TODOs:
  * - [ ] Wrap checkBigIntBounds to stop exceptions being thrown.
- * - [ ] (De)Serialization of PodspecType and subclasses
  * - [ ] Async validation
  * - [ ] Add a special check for signer public keys
  * - [ ] Better error reporting
- * - [ ] Optional entries
  */
+
+export const deserialize = PodspecEntries.deserialize;
 
 export const entries = PodspecEntries.create;
 export const string = PodspecString.create;
