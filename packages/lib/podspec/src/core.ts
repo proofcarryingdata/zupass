@@ -8,14 +8,6 @@ import { IntCheck, PodspecInt } from "./types/int";
 import { PodspecString, StringCheck } from "./types/string";
 import { CreateArgs } from "./utils";
 
-/**
- * TODOs:
- * - [ ] Wrap checkBigIntBounds to stop exceptions being thrown.
- * - [ ] Async validation
- * - [ ] Add a special check for signer public keys
- * - [ ] Better error reporting
- */
-
 export const deserialize = PodspecEntries.deserialize;
 
 export const entries = PodspecEntries.create;

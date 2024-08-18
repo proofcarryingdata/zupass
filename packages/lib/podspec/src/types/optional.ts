@@ -1,5 +1,5 @@
 import { PodspecDataType, PodspecDataTypeDef, PodspecValue } from "../base";
-import { ParseResult } from "../parse";
+import { ParseResult, SUCCESS } from "../parse";
 import { DefinitionOf } from "../utils";
 
 interface PodspecOptionalDef<T> extends PodspecDataTypeDef {
@@ -18,16 +18,28 @@ export class PodspecOptional<T extends PodspecValue> extends PodspecValue<
   T["_input"] | undefined,
   PodspecOptionalSerialized<T>
 > {
-  _parse(_data: unknown): ParseResult<T["_output"] | undefined> {
-    throw new Error("Method not implemented.");
-  }
-  serialize(): PodspecOptionalSerialized<T> {
-    throw new Error("Method not implemented.");
+  constructor(public readonly innerType: T) {
+    super({
+      type: PodspecDataType.Optional,
+      innerType: innerType
+    });
   }
 
-  static create<T extends PodspecValue>(
-    args: PodspecOptionalDef<T>
-  ): PodspecOptional<T> {
-    return new PodspecOptional(args);
+  _parse(data: unknown): ParseResult<T["_output"] | undefined> {
+    if (data === undefined) {
+      return SUCCESS(undefined);
+    }
+    return this.def.innerType._parse(data);
+  }
+
+  serialize(): PodspecOptionalSerialized<T> {
+    return {
+      type: PodspecDataType.Optional,
+      innerTypeDef: this.innerType.def as DefinitionOf<T>
+    };
+  }
+
+  static create<T extends PodspecValue>(innerType: T): PodspecOptional<T> {
+    return new PodspecOptional(innerType);
   }
 }
