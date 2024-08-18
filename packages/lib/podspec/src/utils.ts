@@ -1,6 +1,6 @@
 import { PODValue } from "@pcd/pod";
 import { PodspecValue } from "./base";
-import { RawEntriesType } from "./entries";
+import { RawEntriesType } from "./types/entries";
 
 export type DefinitionOf<T> = T extends PodspecValue<infer Def> ? Def : never;
 
@@ -24,7 +24,7 @@ export type BaseObjectOutputType<Shape extends RawEntriesType> = {
 type optionalKeys<T extends object> = {
   [k in keyof T]: undefined extends T[k] ? k : never;
 }[keyof T];
-type requiredKeys<T extends object> = {
+export type requiredKeys<T extends object> = {
   [k in keyof T]: undefined extends T[k] ? never : k;
 }[keyof T];
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

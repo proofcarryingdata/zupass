@@ -1,12 +1,12 @@
 import { POD, PODEntries, PODValue, checkPODName } from "@pcd/pod";
-import { PodspecDataType } from "./base";
-import { FAILURE, ParseResult, SUCCESS, isValid } from "./parse";
-import { PodspecCryptographic } from "./types/cryptographic";
-import { PodspecEdDSAPubKey } from "./types/eddsa_pubkey";
-import { PodspecInt } from "./types/int";
-import { PodspecOptional } from "./types/optional";
-import { PodspecString } from "./types/string";
-import { isEqualPODValue, objectOutputType } from "./utils";
+import { PodspecDataType } from "../base";
+import { FAILURE, ParseResult, SUCCESS, isValid } from "../parse";
+import { isEqualPODValue, objectOutputType } from "../utils";
+import { PodspecCryptographic } from "./cryptographic";
+import { PodspecEdDSAPubKey } from "./eddsa_pubkey";
+import { PodspecInt } from "./int";
+import { PodspecOptional } from "./optional";
+import { PodspecString } from "./string";
 
 export type RawEntriesType = Record<
   string,
@@ -14,7 +14,9 @@ export type RawEntriesType = Record<
   | PodspecInt
   | PodspecCryptographic
   | PodspecEdDSAPubKey
-  | PodspecOptional<PodspecString>
+  | PodspecOptional<
+      PodspecString | PodspecInt | PodspecCryptographic | PodspecEdDSAPubKey
+    >
 >;
 
 type TupleSpec = {

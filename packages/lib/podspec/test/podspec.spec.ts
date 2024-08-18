@@ -1,4 +1,4 @@
-import { encodePublicKey, POD, POD_INT_MAX } from "@pcd/pod";
+import { decodePrivateKey, encodePublicKey, POD, POD_INT_MAX } from "@pcd/pod";
 import { derivePublicKey } from "@zk-kit/eddsa-poseidon";
 import { assert, expect } from "chai";
 import crypto from "crypto";
@@ -285,5 +285,31 @@ describe("podspec should work", async function () {
 
     expect(queryResult.matches).to.eql([pods[0]]);
     expect(queryResult.matchingIndexes).to.eql([0]);
+  });
+
+  it("should validate entire PODs", function () {
+    const key = generateRandomHex(32);
+    const keyBytes = decodePrivateKey(key);
+    const pubKey = encodePublicKey(derivePublicKey(keyBytes));
+    const eventId = "d1390b7b-4ccb-42bf-8c8b-e397b7c26e6c";
+    const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
+
+    const myPodSpec = p
+      .POD({
+        eventId: p.string(),
+        productId: p.string()
+      })
+      .signer(pubKey);
+
+    const pod = POD.sign(
+      {
+        eventId: { type: "string", value: eventId },
+        productId: { type: "string", value: productId }
+      },
+      key
+    );
+
+    const result = myPodSpec.safeParse(pod);
+    expect(result.status).to.eq("valid");
   });
 });
