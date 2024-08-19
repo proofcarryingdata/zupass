@@ -32,9 +32,16 @@ const entries = {
 };
 
 const result = spec.parse(entries);
+if (result.isValid) {
+  // Ready to use the POD
+  result.value; // Contains the POD entries
+} else {
+  // Handle the error
+  result.errors; // Contains information about the errors
+}
 ```
 
-If the entries are valid, the result will be `PODEntries` object, with static types for the entries which are part of the spec. Otherwise, an exception will be thrown.
+If the entries are valid, `result.value` will be `PODEntries` object, with static types for the entries which are part of the spec. Otherwise, `result.errors` will contain information about the errors encountered during parsing.
 
 ## Use cases
 
