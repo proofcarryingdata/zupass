@@ -13,7 +13,7 @@ export const deserialize = PodspecEntries.deserialize;
 
 export const entries = PodspecEntries.create;
 export const string = PodspecString.create;
-export const integer = PodspecInt.create;
+export const int = PodspecInt.create;
 export const cryptographic = PodspecCryptographic.create;
 export const eddsaPubKey = PodspecEdDSAPubKey.create;
 export const POD = PodspecPOD.create;
@@ -21,8 +21,8 @@ export const POD = PodspecPOD.create;
 export const coerce = {
   string: (args?: CreateArgs<StringCheck>): PodspecString =>
     string({ ...args, coerce: true }),
-  integer: (args?: CreateArgs<IntCheck>): PodspecInt =>
-    integer({ ...args, coerce: true }),
+  int: (args?: CreateArgs<IntCheck>): PodspecInt =>
+    int({ ...args, coerce: true }),
   cryptographic: (
     args?: CreateArgs<CryptographicCheck>
   ): PodspecCryptographic => cryptographic({ ...args, coerce: true }),

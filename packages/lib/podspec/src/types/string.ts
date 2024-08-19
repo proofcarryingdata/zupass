@@ -1,6 +1,14 @@
-import { PODStringValue } from "@pcd/pod";
+import { checkPODValue, PODStringValue } from "@pcd/pod";
 import { PodspecDataType, PodspecDataTypeDef, PodspecValue } from "../base";
-import { FAILURE, ParseResult, SUCCESS } from "../parse";
+import {
+  IssueCode,
+  PodspecBaseIssue,
+  PodspecExcludedByListIssue,
+  PodspecInvalidPodValueIssue,
+  PodspecInvalidTypeIssue,
+  PodspecNotInListIssue
+} from "../error";
+import { FAILURE, ParseParams, ParseResult, SUCCESS } from "../parse";
 import { assertUnreachable, CreateArgs } from "../utils";
 
 /**
@@ -11,16 +19,16 @@ import { assertUnreachable, CreateArgs } from "../utils";
  */
 function isPODStringValue(data: unknown): data is PODStringValue {
   if (typeof data !== "object" || data === null) {
-    throw new Error("Data is null or not an object");
+    return false;
   }
   if (!("type" in data && "value" in data)) {
-    throw new Error("Data does not have type and value properties");
+    return false;
   }
   if (data.type !== "string") {
-    throw new Error("PODValue type is not string");
+    return false;
   }
   if (typeof data.value !== "string") {
-    throw new Error("Data value is not a string");
+    return false;
   }
   return true;
 }
@@ -60,44 +68,75 @@ export class PodspecString extends PodspecValue<
     };
   }
 
-  private dataToValue(data: unknown): PODStringValue {
-    try {
-      if (isPODStringValue(data)) {
-        return data;
+  _parse(data: unknown, params?: ParseParams): ParseResult<PODStringValue> {
+    const issues: PodspecBaseIssue[] = [];
+    let value: PODStringValue | undefined;
+    if (isPODStringValue(data)) {
+      value = data;
+    } else if (this.def.coerce) {
+      if (typeof data === "string") {
+        value = {
+          type: "string",
+          value: data
+        };
       }
-    } catch (e) {
-      if (this.def.coerce) {
-        if (typeof data === "string") {
-          return { type: "string", value: data };
+    }
+
+    if (value === undefined) {
+      const issue: PodspecInvalidTypeIssue = {
+        code: IssueCode.invalid_type,
+        expectedType: PodspecDataType.String,
+        actualType: typeof data,
+        path: params?.path ?? []
+      };
+      issues.push(issue);
+      return FAILURE(issues);
+    }
+
+    try {
+      checkPODValue(params?.path?.[0] ?? "", value);
+    } catch (error) {
+      const issue: PodspecInvalidPodValueIssue = {
+        code: IssueCode.invalid_pod_value,
+        value: value,
+        reason: (error as Error).message,
+        path: params?.path ?? []
+      };
+      issues.push(issue);
+      return FAILURE(issues);
+    }
+
+    for (const check of this.def.checks) {
+      if (check.kind === "list") {
+        const included = check.list.includes(value.value);
+        if (!included && !check.exclude) {
+          const issue: PodspecNotInListIssue = {
+            code: IssueCode.not_in_list,
+            value: value.value,
+            list: check.list,
+            path: params?.path ?? []
+          };
+          issues.push(issue);
+        }
+        if (included && check.exclude) {
+          const issue: PodspecExcludedByListIssue = {
+            code: IssueCode.excluded_by_list,
+            value: value.value,
+            list: check.list,
+            path: params?.path ?? []
+          };
+          issues.push(issue);
         }
       } else {
-        throw e;
+        assertUnreachable(check.kind);
       }
     }
-    throw new Error("Data is not a valid POD string value");
-  }
 
-  _parse(data: unknown): ParseResult<PODStringValue> {
-    try {
-      const value = this.dataToValue(data);
-      for (const check of this.def.checks) {
-        if (check.kind === "list") {
-          const included = check.list.includes(value.value);
-          if (!included && !check.exclude) {
-            throw new Error("Value not in allowed list");
-          }
-          if (included && check.exclude) {
-            throw new Error("Value in excluded list");
-          }
-        } else {
-          assertUnreachable(check.kind);
-        }
-      }
-      return SUCCESS(value);
-    } catch (e) {
-      this._addError(e as Error);
-      return FAILURE;
+    if (issues.length > 0) {
+      return FAILURE(issues);
     }
+
+    return SUCCESS(value);
   }
 
   public constructor(def: PodspecStringDef) {

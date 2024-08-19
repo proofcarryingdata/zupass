@@ -1,4 +1,5 @@
 import { POD, PODContent, PODEntries } from "@pcd/pod";
+import { IssueCode, PodspecError, PodspecInvalidSignerIssue } from "../error";
 import { FAILURE, ParseResult, SUCCESS } from "../parse";
 import { objectOutputType } from "../utils";
 import { PodspecEntries, RawEntriesType } from "./entries";
@@ -67,24 +68,13 @@ export class PodspecPOD<T extends RawEntriesType> {
   public parse(
     data: POD
   ): StrongPOD<objectOutputType<RawEntriesTypeWithoutOptional<T>>> {
-    // Will throw if the POD does not match the expected spec
-    this.def.entries.parse(data.content.asEntries());
-    for (const check of this.def.checks) {
-      if (check.kind === "signer") {
-        if (data.signerPublicKey !== check.signer) {
-          throw new Error("Invalid signer");
-        }
-      } else if (check.kind === "signerList") {
-        if (!check.signerList.includes(data.signerPublicKey)) {
-          throw new Error("Invalid signer");
-        }
-      }
+    const result = this.safeParse(data);
+
+    if (result.status === "invalid") {
+      throw new PodspecError(result.issues);
     }
-    // We can return the POD as is, since we know it matches the spec, but with
-    // a type that tells TypeScript what entries it has
-    return data as StrongPOD<
-      objectOutputType<RawEntriesTypeWithoutOptional<T>>
-    >;
+
+    return result.value;
   }
 
   public safeParse(
@@ -92,10 +82,45 @@ export class PodspecPOD<T extends RawEntriesType> {
   ): ParseResult<
     StrongPOD<objectOutputType<RawEntriesTypeWithoutOptional<T>>>
   > {
-    try {
-      return SUCCESS(this.parse(data));
-    } catch (e) {
-      return FAILURE;
+    const entriesResult = this.def.entries.safeParse(data.content.asEntries(), {
+      path: ["entries"]
+    });
+
+    const issues =
+      entriesResult.status === "invalid" ? entriesResult.issues : [];
+
+    for (const check of this.def.checks) {
+      if (check.kind === "signer") {
+        if (data.signerPublicKey !== check.signer) {
+          const issue: PodspecInvalidSignerIssue = {
+            code: IssueCode.invalid_signer,
+            signer: data.signerPublicKey,
+            list: [check.signer],
+            path: ["signerPublicKey"]
+          };
+          issues.push(issue);
+        }
+      } else if (check.kind === "signerList") {
+        if (!check.signerList.includes(data.signerPublicKey)) {
+          const issue: PodspecInvalidSignerIssue = {
+            code: IssueCode.invalid_signer,
+            signer: data.signerPublicKey,
+            list: check.signerList,
+            path: ["signerPublicKey"]
+          };
+          issues.push(issue);
+        }
+      }
     }
+
+    if (issues.length > 0) {
+      return FAILURE(issues);
+    }
+
+    return SUCCESS(
+      // We can return the POD as is, since we know it matches the spec, but
+      //with a type that tells TypeScript what entries it has
+      data as StrongPOD<objectOutputType<RawEntriesTypeWithoutOptional<T>>>
+    );
   }
 }

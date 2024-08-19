@@ -1,26 +1,35 @@
 import {
-  checkBigintBounds,
+  checkPODValue,
   POD_CRYPTOGRAPHIC_MAX,
   POD_CRYPTOGRAPHIC_MIN,
   PODCryptographicValue,
   PODIntValue
 } from "@pcd/pod";
 import { PodspecDataType, PodspecDataTypeDef, PodspecValue } from "../base";
-import { FAILURE, ParseResult, SUCCESS } from "../parse";
-import { CreateArgs } from "../utils";
+import {
+  IssueCode,
+  PodspecBaseIssue,
+  PodspecExcludedByListIssue,
+  PodspecInvalidPodValueIssue,
+  PodspecInvalidTypeIssue,
+  PodspecNotInListIssue,
+  PodspecNotInRangeIssue
+} from "../error";
+import { FAILURE, ParseParams, ParseResult, SUCCESS } from "../parse";
+import { assertUnreachable, CreateArgs } from "../utils";
 
 function isPODCryptographicValue(data: unknown): data is PODCryptographicValue {
   if (typeof data !== "object" || data === null) {
-    throw new Error("Data is null or not an object");
+    return false;
   }
   if (!("type" in data && "value" in data)) {
-    throw new Error("Data does not have type and value properties");
+    return false;
   }
   if (data.type !== "cryptographic") {
-    throw new Error("PODValue type is not cryptographic");
+    return false;
   }
   if (typeof data.value !== "bigint") {
-    throw new Error("Data value is not a bigint");
+    return false;
   }
   return true;
 }
@@ -48,41 +57,122 @@ export class PodspecCryptographic extends PodspecValue<
   PODCryptographicValue,
   PODIntValue | number | bigint
 > {
-  private dataToValue(data: unknown): PODCryptographicValue {
-    try {
-      if (isPODCryptographicValue(data)) {
-        return data;
+  _parse(
+    data: unknown,
+    params?: ParseParams
+  ): ParseResult<PODCryptographicValue> {
+    const issues: PodspecBaseIssue[] = [];
+
+    let value: PODCryptographicValue | undefined;
+    if (isPODCryptographicValue(data)) {
+      value = data;
+    } else if (this.def.coerce) {
+      if (typeof data === "number") {
+        value = {
+          type: "cryptographic",
+          value: BigInt(data)
+        };
+      } else if (typeof data === "bigint") {
+        value = {
+          type: "cryptographic",
+          value: data
+        };
       }
-    } catch (e) {
-      // If coercion is allowed, we can try to convert some types to PODCryptographicValue
-      if (this.def.coerce) {
-        if (typeof data === "number") {
-          return { type: "cryptographic", value: BigInt(data) };
+    }
+
+    if (value === undefined) {
+      const issue: PodspecInvalidTypeIssue = {
+        code: IssueCode.invalid_type,
+        expectedType: PodspecDataType.Cryptographic,
+        actualType: typeof data,
+        path: params?.path ?? []
+      };
+      issues.push(issue);
+      return FAILURE(issues);
+    }
+
+    try {
+      checkPODValue(params?.path?.[0] ?? "", value);
+    } catch (error) {
+      const issue: PodspecInvalidPodValueIssue = {
+        code: IssueCode.invalid_pod_value,
+        value: value,
+        reason: (error as Error).message,
+        path: params?.path ?? []
+      };
+      issues.push(issue);
+      return FAILURE(issues);
+    }
+
+    for (const check of this.def.checks) {
+      if (check.kind === "range") {
+        if (value.value < check.min || value.value > check.max) {
+          const issue: PodspecNotInRangeIssue = {
+            code: IssueCode.not_in_range,
+            value: value.value,
+            min: check.min,
+            max: check.max,
+            path: params?.path ?? []
+          };
+          issues.push(issue);
         }
-        if (typeof data === "bigint") {
-          return { type: "cryptographic", value: data };
+      } else if (check.kind === "list") {
+        const included = check.list.includes(value.value);
+        if (!included && !check.exclude) {
+          const issue: PodspecNotInListIssue = {
+            code: IssueCode.not_in_list,
+            value: value.value,
+            list: check.list,
+            path: params?.path ?? []
+          };
+          issues.push(issue);
+        }
+        if (included && check.exclude) {
+          const issue: PodspecExcludedByListIssue = {
+            code: IssueCode.excluded_by_list,
+            value: value.value,
+            list: check.list,
+            path: params?.path ?? []
+          };
+          issues.push(issue);
         }
       } else {
-        throw e;
+        assertUnreachable(check);
       }
     }
-    throw new Error("Data is not a valid POD cryptographic value");
+
+    if (issues.length > 0) {
+      return FAILURE(issues);
+    }
+
+    return SUCCESS(value);
   }
 
-  _parse(data: unknown): ParseResult<PODCryptographicValue> {
-    try {
-      const value = this.dataToValue(data);
-      checkBigintBounds(
-        "",
-        value.value,
-        POD_CRYPTOGRAPHIC_MIN,
-        POD_CRYPTOGRAPHIC_MAX
-      );
-      return SUCCESS(value);
-    } catch (e) {
-      this._addError(e as Error);
-      return FAILURE;
+  public list(list: bigint[], exclude = false): typeof this {
+    this.def.checks.push({
+      kind: "list",
+      list,
+      exclude
+    });
+    return this;
+  }
+
+  public inRange(min: bigint, max: bigint): typeof this {
+    if (min < POD_CRYPTOGRAPHIC_MIN) {
+      throw new Error("Minimum value out of bounds");
     }
+    if (max > POD_CRYPTOGRAPHIC_MAX) {
+      throw new Error("Maximum value out of bounds");
+    }
+    if (min > max) {
+      throw new Error("Minimum value is greater than maximum value");
+    }
+    this.def.checks.push({
+      kind: "range",
+      min,
+      max
+    });
+    return this;
   }
 
   static create(args?: CreateArgs<CryptographicCheck>): PodspecCryptographic {

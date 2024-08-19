@@ -1,27 +1,39 @@
-import { checkPublicKeyFormat, PODEdDSAPublicKeyValue } from "@pcd/pod";
+import { checkPODValue, PODEdDSAPublicKeyValue } from "@pcd/pod";
 import { PodspecDataType, PodspecDataTypeDef, PodspecValue } from "../base";
-import { FAILURE, ParseResult, SUCCESS } from "../parse";
-import { CreateArgs } from "../utils";
+import {
+  IssueCode,
+  PodspecBaseIssue,
+  PodspecExcludedByListIssue,
+  PodspecInvalidPodValueIssue,
+  PodspecInvalidTypeIssue,
+  PodspecNotInListIssue
+} from "../error";
+import { FAILURE, ParseParams, ParseResult, SUCCESS } from "../parse";
+import { assertUnreachable, CreateArgs } from "../utils";
 
 function isPODEdDSAPublicKeyValue(
   data: unknown
 ): data is PODEdDSAPublicKeyValue {
   if (typeof data !== "object" || data === null) {
-    throw new Error("Data is null or not an object");
+    return false;
   }
   if (!("type" in data && "value" in data)) {
-    throw new Error("Data does not have type and value properties");
+    return false;
   }
   if (data.type !== "eddsa_pubkey") {
-    throw new Error("PODValue type is not eddsa_pubkey");
+    return false;
   }
   if (typeof data.value !== "string") {
-    throw new Error("Data value is not a string");
+    return false;
   }
   return true;
 }
 
-export type EdDSAPubKeyCheck = never;
+export type EdDSAPubKeyCheck = {
+  kind: "list";
+  list: string[];
+  exclude?: boolean;
+};
 
 interface PodspecEdDSAPubKeyDef extends PodspecDataTypeDef {
   type: PodspecDataType.EdDSAPubKey;
@@ -34,32 +46,88 @@ export class PodspecEdDSAPubKey extends PodspecValue<
   PODEdDSAPublicKeyValue,
   PODEdDSAPublicKeyValue | string
 > {
-  private dataToValue(data: unknown): PODEdDSAPublicKeyValue {
-    try {
-      if (isPODEdDSAPublicKeyValue(data)) {
-        return data;
-      }
-    } catch (e) {
-      if (this.def.coerce) {
-        if (typeof data === "string") {
-          return { type: "eddsa_pubkey", value: data };
-        }
-      } else {
-        throw e;
-      }
-    }
-    throw new Error("Data is not a valid POD eddsa_pubkey value");
+  public list(list: string[], exclude = false): PodspecEdDSAPubKey {
+    this.def.checks.push({
+      kind: "list",
+      list,
+      exclude
+    });
+    return this;
   }
 
-  _parse(data: unknown): ParseResult<PODEdDSAPublicKeyValue> {
-    try {
-      const value = this.dataToValue(data);
-      checkPublicKeyFormat(value.value);
-      return SUCCESS(value);
-    } catch (e) {
-      this._addError(e as Error);
-      return FAILURE;
+  _parse(
+    data: unknown,
+    params?: ParseParams
+  ): ParseResult<PODEdDSAPublicKeyValue> {
+    const issues: PodspecBaseIssue[] = [];
+
+    let value: PODEdDSAPublicKeyValue | undefined;
+    if (isPODEdDSAPublicKeyValue(data)) {
+      value = data;
+    } else {
+      if (typeof data === "string") {
+        value = {
+          type: "eddsa_pubkey",
+          value: data
+        };
+      }
     }
+
+    if (value === undefined) {
+      const issue: PodspecInvalidTypeIssue = {
+        code: IssueCode.invalid_type,
+        expectedType: PodspecDataType.EdDSAPubKey,
+        actualType: typeof data,
+        path: params?.path ?? []
+      };
+      issues.push(issue);
+      return FAILURE(issues);
+    }
+
+    try {
+      checkPODValue(params?.path?.[0] ?? "", value);
+    } catch (error) {
+      const issue: PodspecInvalidPodValueIssue = {
+        code: IssueCode.invalid_pod_value,
+        value: value,
+        reason: (error as Error).message,
+        path: params?.path ?? []
+      };
+      issues.push(issue);
+      return FAILURE(issues);
+    }
+
+    for (const check of this.def.checks) {
+      if (check.kind === "list") {
+        const included = check.list.includes(value.value);
+        if (!included && !check.exclude) {
+          const issue: PodspecNotInListIssue = {
+            code: IssueCode.not_in_list,
+            value: value.value,
+            list: check.list,
+            path: params?.path ?? []
+          };
+          issues.push(issue);
+        }
+        if (included && check.exclude) {
+          const issue: PodspecExcludedByListIssue = {
+            code: IssueCode.excluded_by_list,
+            value: value.value,
+            list: check.list,
+            path: params?.path ?? []
+          };
+          issues.push(issue);
+        }
+      } else {
+        assertUnreachable(check.kind);
+      }
+    }
+
+    if (issues.length > 0) {
+      return FAILURE(issues);
+    }
+
+    return SUCCESS(value);
   }
 
   static create(args?: CreateArgs<EdDSAPubKeyCheck>): PodspecEdDSAPubKey {

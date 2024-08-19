@@ -1,4 +1,5 @@
-import { ParseResult, isValid } from "./parse";
+import { PodspecError } from "./error";
+import { ParseParams, ParseResult, isValid } from "./parse";
 
 export enum PodspecDataType {
   String = "string",
@@ -20,27 +21,22 @@ export abstract class PodspecValue<
 > {
   readonly _output!: Output;
   readonly _input!: Input;
-  readonly errors: Error[] = [];
 
-  abstract _parse(data: unknown): ParseResult<Output>;
+  abstract _parse(data: unknown, params?: ParseParams): ParseResult<Output>;
 
   abstract serialize(): Serialized;
 
   public constructor(public def: Def) {}
 
-  public parse(data: unknown): Output {
-    const result = this._parse(data);
+  public parse(data: unknown, params?: ParseParams): Output {
+    const result = this.safeParse(data, params);
     if (isValid(result)) {
       return result.value;
     }
-    throw new Error("Parse failed");
+    throw new PodspecError(result.issues);
   }
 
-  public safeParse(data: unknown): ParseResult<Output> {
-    return this._parse(data);
-  }
-
-  _addError(e: Error): void {
-    this.errors.push(e);
+  public safeParse(data: unknown, params?: ParseParams): ParseResult<Output> {
+    return this._parse(data, params);
   }
 }

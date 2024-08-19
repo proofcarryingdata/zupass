@@ -1,11 +1,15 @@
-import {
-  checkBigintBounds,
-  POD_INT_MAX,
-  POD_INT_MIN,
-  PODIntValue
-} from "@pcd/pod";
+import { checkPODValue, POD_INT_MAX, POD_INT_MIN, PODIntValue } from "@pcd/pod";
 import { PodspecDataType, PodspecDataTypeDef, PodspecValue } from "../base";
-import { FAILURE, ParseResult, SUCCESS } from "../parse";
+import {
+  IssueCode,
+  PodspecBaseIssue,
+  PodspecExcludedByListIssue,
+  PodspecInvalidPodValueIssue,
+  PodspecInvalidTypeIssue,
+  PodspecNotInListIssue,
+  PodspecNotInRangeIssue
+} from "../error";
+import { FAILURE, ParseParams, ParseResult, SUCCESS } from "../parse";
 import { assertUnreachable, CreateArgs } from "../utils";
 
 /**
@@ -17,16 +21,16 @@ import { assertUnreachable, CreateArgs } from "../utils";
  */
 function isPODIntValue(data: unknown): data is PODIntValue {
   if (typeof data !== "object" || data === null) {
-    throw new Error("Data is null or not an object");
+    return false;
   }
   if (!("type" in data && "value" in data)) {
-    throw new Error("Data does not have type and value properties");
+    return false;
   }
   if (data.type !== "int") {
-    throw new Error("PODValue type is not int");
+    return false;
   }
   if (typeof data.value !== "bigint") {
-    throw new Error("Data value is not a bigint");
+    return false;
   }
   return true;
 }
@@ -54,57 +58,92 @@ export class PodspecInt extends PodspecValue<
   PODIntValue,
   PODIntValue | number | bigint
 > {
-  private dataToValue(data: unknown): PODIntValue {
-    try {
-      if (isPODIntValue(data)) {
-        return data;
+  _parse(data: unknown, params?: ParseParams): ParseResult<PODIntValue> {
+    const issues: PodspecBaseIssue[] = [];
+
+    let value: PODIntValue | undefined;
+    if (isPODIntValue(data)) {
+      value = data;
+    } else if (this.def.coerce) {
+      if (typeof data === "number") {
+        value = {
+          type: "int",
+          value: BigInt(data)
+        };
+      } else if (typeof data === "bigint") {
+        value = {
+          type: "int",
+          value: data
+        };
       }
-    } catch (e) {
-      // If coercion is allowed, we can try to convert some types to PODIntValue
-      if (this.def.coerce) {
-        if (typeof data === "bigint") {
-          checkBigintBounds("", data, POD_INT_MIN, POD_INT_MAX);
-          return { type: "int", value: data };
+    }
+
+    if (value === undefined) {
+      const issue: PodspecInvalidTypeIssue = {
+        code: IssueCode.invalid_type,
+        expectedType: PodspecDataType.Int,
+        actualType: typeof data,
+        path: params?.path ?? []
+      };
+      issues.push(issue);
+      return FAILURE(issues);
+    }
+
+    try {
+      checkPODValue(params?.path?.[0] ?? "", value);
+    } catch (error) {
+      const issue: PodspecInvalidPodValueIssue = {
+        code: IssueCode.invalid_pod_value,
+        value: value,
+        reason: (error as Error).message,
+        path: params?.path ?? []
+      };
+      issues.push(issue);
+      return FAILURE(issues);
+    }
+
+    for (const check of this.def.checks) {
+      if (check.kind === "range") {
+        if (value.value < check.min || value.value > check.max) {
+          const issue: PodspecNotInRangeIssue = {
+            code: IssueCode.not_in_range,
+            value: value.value,
+            min: check.min,
+            max: check.max,
+            path: params?.path ?? []
+          };
+          issues.push(issue);
         }
-        if (typeof data === "number") {
-          const bigIntValue = BigInt(data);
-          checkBigintBounds("", bigIntValue, POD_INT_MIN, POD_INT_MAX);
-          return { type: "int", value: bigIntValue };
+      } else if (check.kind === "list") {
+        const included = check.list.includes(value.value);
+        if (!included && !check.exclude) {
+          const issue: PodspecNotInListIssue = {
+            code: IssueCode.not_in_list,
+            value: value.value,
+            list: check.list,
+            path: params?.path ?? []
+          };
+          issues.push(issue);
+        }
+        if (included && check.exclude) {
+          const issue: PodspecExcludedByListIssue = {
+            code: IssueCode.excluded_by_list,
+            value: value.value,
+            list: check.list,
+            path: params?.path ?? []
+          };
+          issues.push(issue);
         }
       } else {
-        throw e;
+        assertUnreachable(check);
       }
     }
-    throw new Error("Data is not a valid POD integer value");
-  }
 
-  _parse(data: unknown): ParseResult<PODIntValue> {
-    try {
-      const value = this.dataToValue(data);
-
-      for (const check of this.def.checks) {
-        if (check.kind === "range") {
-          if (value.value < check.min || value.value > check.max) {
-            throw new Error("Value out of range");
-          }
-        } else if (check.kind === "list") {
-          const included = check.list.includes(value.value);
-          if (!included && !check.exclude) {
-            throw new Error("Value not in allowed list");
-          }
-          if (included && check.exclude) {
-            throw new Error("Value in excluded list");
-          }
-        } else {
-          assertUnreachable(check);
-        }
-      }
-
-      return SUCCESS(value);
-    } catch (e) {
-      this._addError(e as Error);
-      return FAILURE;
+    if (issues.length > 0) {
+      return FAILURE(issues);
     }
+
+    return SUCCESS(value);
   }
 
   public list(list: bigint[], exclude = false): typeof this {

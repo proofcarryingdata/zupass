@@ -1,9 +1,16 @@
-import { decodePrivateKey, encodePublicKey, POD, POD_INT_MAX } from "@pcd/pod";
+import {
+  decodePrivateKey,
+  encodePublicKey,
+  POD,
+  POD_INT_MAX,
+  POD_INT_MIN
+} from "@pcd/pod";
 import { derivePublicKey } from "@zk-kit/eddsa-poseidon";
 import { assert, expect } from "chai";
 import crypto from "crypto";
 import "mocha";
 import { v4 as uuidv4 } from "uuid";
+import { IssueCode, PodspecIssue } from "../src/error";
 import { p } from "../src/index";
 
 function generateRandomHex(byteLength: number): string {
@@ -15,7 +22,7 @@ describe("podspec should work", async function () {
   it("should validate POD types", function () {
     const myPodSpec = p.entries({
       foo: p.string(),
-      bar: p.integer(),
+      bar: p.int(),
       baz: p.cryptographic(),
       quux: p.eddsaPubKey()
     });
@@ -42,7 +49,7 @@ describe("podspec should work", async function () {
   it("should coerce javascript values into POD types", function () {
     const myPodSpec = p.entries({
       foo: p.coerce.string(),
-      bar: p.coerce.integer(),
+      bar: p.coerce.int(),
       baz: p.coerce.cryptographic(),
       quux: p.coerce.eddsaPubKey()
     });
@@ -66,7 +73,7 @@ describe("podspec should work", async function () {
   it("should fail with bad inputs", function () {
     const myPodSpec = p.entries({
       foo: p.coerce.string(),
-      bar: p.coerce.integer()
+      bar: p.coerce.int()
     });
 
     const result = myPodSpec.safeParse({
@@ -74,17 +81,41 @@ describe("podspec should work", async function () {
       bar: POD_INT_MAX + 1n
     });
     expect(result.status).to.eq("invalid");
+    assert(result.status === "invalid");
+    expect(result.issues).to.eql([
+      {
+        code: IssueCode.invalid_pod_value,
+        value: {
+          type: "int",
+          value: POD_INT_MAX + 1n
+        },
+        reason: `Invalid value for entry ${"bar"}.       Value ${
+          POD_INT_MAX + 1n
+        } is outside supported bounds: (min ${POD_INT_MIN}, max ${POD_INT_MAX}).`,
+        path: ["bar"]
+      }
+    ]);
   });
 
   it("should apply range checks", function () {
     const myPodSpec = p.entries({
-      foo: p.coerce.integer().inRange(1n, 10n)
+      foo: p.coerce.int().inRange(1n, 10n)
     });
 
     const result = myPodSpec.safeParse({
       foo: 11n
     });
     expect(result.status).to.eq("invalid");
+    assert(result.status === "invalid");
+    expect(result.issues).to.eql([
+      {
+        code: IssueCode.not_in_range,
+        min: 1n,
+        max: 10n,
+        value: 11n,
+        path: ["foo"]
+      } satisfies PodspecIssue
+    ]);
   });
 
   it("should test string entries for list membership", function () {
@@ -101,11 +132,20 @@ describe("podspec should work", async function () {
       foo: "not in list"
     });
     expect(result2.status).to.eq("invalid");
+    assert(result2.status === "invalid");
+    expect(result2.issues).to.eql([
+      {
+        code: IssueCode.not_in_list,
+        value: "not in list",
+        list: ["test", "other string"],
+        path: ["foo"]
+      } satisfies PodspecIssue
+    ]);
   });
 
   it("should test integer entries for list membership", function () {
     const myPodSpec = p.entries({
-      foo: p.coerce.integer().list([1n, 2n, 3n])
+      foo: p.coerce.int().list([1n, 2n, 3n])
     });
 
     const result = myPodSpec.safeParse({
@@ -123,7 +163,7 @@ describe("podspec should work", async function () {
     const myPodSpec = p
       .entries({
         foo: p.coerce.string(),
-        bar: p.coerce.integer()
+        bar: p.coerce.int()
       })
       .matchTuple({
         name: "test",
@@ -150,6 +190,23 @@ describe("podspec should work", async function () {
         bar: 1n
       });
       expect(result.status).to.eq("invalid");
+      assert(result.status === "invalid");
+      expect(result.issues).to.eql([
+        {
+          code: IssueCode.not_in_tuple_list,
+          value: [
+            { type: "string", value: "other string" },
+            { type: "int", value: 1n }
+          ],
+          list: [
+            [
+              { type: "string", value: "test" },
+              { type: "int", value: 1n }
+            ]
+          ],
+          path: []
+        } satisfies PodspecIssue
+      ]);
     }
     {
       const result = myPodSpec.safeParse({
@@ -157,13 +214,30 @@ describe("podspec should work", async function () {
         bar: 2n
       });
       expect(result.status).to.eq("invalid");
+      assert(result.status === "invalid");
+      expect(result.issues).to.eql([
+        {
+          code: IssueCode.not_in_tuple_list,
+          value: [
+            { type: "string", value: "test" },
+            { type: "int", value: 2n }
+          ],
+          list: [
+            [
+              { type: "string", value: "test" },
+              { type: "int", value: 1n }
+            ]
+          ],
+          path: []
+        } satisfies PodspecIssue
+      ]);
     }
   });
 
   it("podspec should serialize", function () {
     const myPodSpec = p.entries({
       foo: p.string(),
-      bar: p.integer()
+      bar: p.int()
     });
 
     expect(myPodSpec.serialize()).to.eql({
@@ -178,7 +252,7 @@ describe("podspec should work", async function () {
   it("podspec should deserialize", function () {
     const myPodSpec = p.entries({
       foo: p.string(),
-      bar: p.integer()
+      bar: p.int()
     });
 
     const serialized = myPodSpec.serialize();
@@ -191,7 +265,7 @@ describe("podspec should work", async function () {
 
     const myPodSpec = p.entries({
       foo: p.string(),
-      bar: p.integer()
+      bar: p.int()
     });
 
     const pods = [
@@ -219,7 +293,7 @@ describe("podspec should work", async function () {
   it("should apply range checks in queries", function () {
     const key = generateRandomHex(32);
     const myPodSpec = p.entries({
-      foo: p.integer().inRange(1n, 10n)
+      foo: p.int().inRange(1n, 10n)
     });
 
     const pods = [
