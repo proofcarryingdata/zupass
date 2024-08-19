@@ -1,3 +1,4 @@
+import { POD_INT_MAX } from "@pcd/pod";
 import { p } from "@pcd/podspec";
 import { ReactNode, useState } from "react";
 import { TryIt } from "../components/TryIt";
@@ -15,14 +16,25 @@ export function PODSection(): ReactNode {
           <p>
             Querying PODs is done like this:
             <code className="block text-xs font-base rounded-md p-2 whitespace-pre">
-              {`const q = p.entries({ title: p.string() }).serialize();       
-const pods = await z.pod.query(q);`}
+              {`const q = p
+  .entries({
+    wis: p.int().range(8n, POD_INT_MAX),
+    str: p.int().range(5n, POD_INT_MAX),
+  })
+  .serialize();
+const pods = await z.pod.query(q);
+`}
             </code>
           </p>
           <TryIt
             onClick={async () => {
               try {
-                const q = p.entries({ title: p.string() }).serialize();
+                const q = p
+                  .entries({
+                    wis: p.int().range(BigInt(8), POD_INT_MAX),
+                    str: p.int().range(BigInt(5), POD_INT_MAX)
+                  })
+                  .serialize();
                 const pods = await z.pod.query(q);
                 setSerializedPODs(pods);
               } catch (e) {

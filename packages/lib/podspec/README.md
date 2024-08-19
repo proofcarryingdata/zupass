@@ -41,7 +41,7 @@ if (result.isValid) {
 }
 ```
 
-If the entries are valid, `result.value` will be `PODEntries` object, with static types for the entries which are part of the spec. Otherwise, `result.errors` will contain information about the errors encountered during parsing.
+If the entries are valid, `result.value` will be a `PODEntries` object, with static types for the entries which are part of the spec. Otherwise, `result.errors` will contain information about the errors encountered during parsing.
 
 ## Use cases
 
