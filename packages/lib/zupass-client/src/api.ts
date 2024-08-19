@@ -2,8 +2,9 @@ import type { GPCPCDArgs } from "@pcd/gpc-pcd";
 import type { SerializedPCD } from "@pcd/pcd-types";
 
 interface PODQuery {
-  entries: PODEntriesQuery;
-  signerPublicKey: string;
+  // @todo type this properly
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  entries: any;
 }
 
 export type ZupassFolderContent =
@@ -38,10 +39,16 @@ export interface ZupassIdentity {
   getAttestedEmails: () => Promise<SerializedPCD[]>;
 }
 
+export interface ZupassPOD {
+  // Returns array of serialized PODs
+  query: (query: PODQuery) => Promise<string[]>;
+}
+
 export interface ZupassAPI {
   _version: "1";
   fs: ZupassFileSystem;
   gpc: ZupassGPC;
   feeds: ZupassFeeds;
   identity: ZupassIdentity;
+  pod: ZupassPOD;
 }

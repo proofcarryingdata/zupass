@@ -2,14 +2,16 @@ import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { GPCPCDArgs, GPCPCDPackage, GPCPCDTypeName } from "@pcd/gpc-pcd";
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
-import { PODPCD } from "@pcd/pod-pcd";
+import { PODPCD, PODPCDTypeName } from "@pcd/pod-pcd";
+import { p } from "@pcd/podspec";
 import {
   ZupassAPI,
   ZupassFeeds,
   ZupassFileSystem,
   ZupassFolderContent,
   ZupassGPC,
-  ZupassIdentity
+  ZupassIdentity,
+  ZupassPOD
 } from "@pcd/zupass-client";
 import { z } from "zod";
 import { StateContextValue } from "../dispatch";
@@ -212,11 +214,43 @@ export class Identity extends BaseZappServer implements ZupassIdentity {
   }
 }
 
+class PODServer extends BaseZappServer implements ZupassPOD {
+  public constructor(
+    context: StateContextValue,
+    zapp: PODPCD,
+    clientChannel: ClientChannel
+  ) {
+    super(context, zapp, clientChannel);
+  }
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  public async query(query: { entries: any }): Promise<string[]> {
+    let q;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      q = p.deserialize(query as any);
+      console.log("querying with ", q);
+    } catch (e) {
+      console.log(e);
+      throw e;
+    }
+    const allPCDs = this.getContext().getState().pcds.getAll();
+    const pods = allPCDs
+      .filter((pcd) => pcd.type === PODPCDTypeName)
+      .map((pcd) => (pcd as PODPCD).pod);
+
+    const result = q.query(pods);
+
+    return result.matches.map((match) => match.serialize());
+  }
+}
+
 export class ZappServer extends BaseZappServer implements ZupassAPI {
   public fs: ZupassFileSystem;
   public gpc: ZupassGPC;
   public feeds: ZupassFeeds;
   public identity: ZupassIdentity;
+  public pod: ZupassPOD;
   public _version = "1" as const;
 
   constructor(
@@ -229,5 +263,6 @@ export class ZappServer extends BaseZappServer implements ZupassAPI {
     this.gpc = new GPC(context, zapp, clientChannel);
     this.feeds = new Feeds(context, zapp, clientChannel);
     this.identity = new Identity(context, zapp, clientChannel);
+    this.pod = new PODServer(context, zapp, clientChannel);
   }
 }

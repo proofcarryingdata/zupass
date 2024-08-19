@@ -23,6 +23,10 @@ const PODPCDRecordArgumentSchema = z.object({
   value: z.record(z.string(), PCDArgumentSchema).optional()
 }) satisfies z.ZodSchema<PODPCDRecordArg>;
 
+const PODQuerySchema = z.object({
+  entries: z.any()
+});
+
 export const GPCPCDArgsSchema = z.object({
   proofConfig: StringArgumentSchema,
   pods: PODPCDRecordArgumentSchema,
@@ -82,5 +86,11 @@ export const ZupassAPISchema = z.object({
     getAttestedEmails: z
       .function()
       .returns(z.promise(z.array(SerializedPCDSchema)))
+  }),
+  pod: z.object({
+    query: z
+      .function()
+      .args(PODQuerySchema)
+      .returns(z.promise(z.array(z.string())))
   })
 }) satisfies z.ZodSchema<ZupassAPI>;

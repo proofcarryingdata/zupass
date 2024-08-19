@@ -46,6 +46,7 @@
     "@pcd/pod-ticket-pcd-ui": "0.1.5",
     "@pcd/pod-pcd": "0.1.5",
     "@pcd/pod-pcd-ui": "0.1.5",
+    "@pcd/podspec": "0.0.1",
     "@pcd/rsa-image-pcd": "0.5.4",
     "@pcd/rsa-image-pcd-ui": "0.2.4",
     "@pcd/rsa-pcd": "0.6.4",
