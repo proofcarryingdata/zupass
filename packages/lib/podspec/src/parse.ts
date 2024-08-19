@@ -3,15 +3,15 @@ import { PodspecBaseIssue } from "./error";
 
 export type ParseResult<T> = ParseSuccess<T> | ParseFailure;
 
-export type ParseSuccess<T> = { status: "valid"; value: T };
-export type ParseFailure = { status: "invalid"; issues: PodspecBaseIssue[] };
+export type ParseSuccess<T> = { isValid: true; value: T };
+export type ParseFailure = { isValid: false; issues: PodspecBaseIssue[] };
 
 export const FAILURE = (issues: PodspecBaseIssue[]): ParseFailure => ({
-  status: "invalid",
+  isValid: false,
   issues
 });
 export const SUCCESS = <T>(value: T): ParseResult<T> => ({
-  status: "valid",
+  isValid: true,
   value
 });
 
@@ -76,7 +76,7 @@ export function getParsedType(data: unknown): ParsedType {
 }
 
 export function isValid<T>(result: ParseResult<T>): result is ParseSuccess<T> {
-  return result.status === "valid";
+  return result.isValid;
 }
 
 export type ParsePathComponent = string;

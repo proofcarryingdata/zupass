@@ -146,16 +146,19 @@ export class PodspecInt extends PodspecValue<
     return SUCCESS(value);
   }
 
-  public list(list: bigint[], exclude = false): typeof this {
+  public list(
+    list: bigint[],
+    options: { exclude: boolean } = { exclude: false }
+  ): typeof this {
     this.def.checks.push({
       kind: "list",
       list,
-      exclude
+      exclude: options.exclude
     });
     return this;
   }
 
-  public inRange(min: bigint, max: bigint): typeof this {
+  public range(min: bigint, max: bigint): typeof this {
     if (min < POD_INT_MIN) {
       throw new Error("Minimum value out of bounds");
     }

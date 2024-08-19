@@ -70,7 +70,7 @@ export class PodspecPOD<T extends RawEntriesType> {
   ): StrongPOD<objectOutputType<RawEntriesTypeWithoutOptional<T>>> {
     const result = this.safeParse(data);
 
-    if (result.status === "invalid") {
+    if (!result.isValid) {
       throw new PodspecError(result.issues);
     }
 
@@ -86,8 +86,7 @@ export class PodspecPOD<T extends RawEntriesType> {
       path: ["entries"]
     });
 
-    const issues =
-      entriesResult.status === "invalid" ? entriesResult.issues : [];
+    const issues = !entriesResult.isValid ? entriesResult.issues : [];
 
     for (const check of this.def.checks) {
       if (check.kind === "signer") {

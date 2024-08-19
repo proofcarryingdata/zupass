@@ -214,7 +214,7 @@ export class PodspecEntries<
   }
 
   // @todo parameterize TupleSpec with known entry names?
-  public matchTuple(spec: TupleSpec): typeof this {
+  public tuple(spec: TupleSpec): typeof this {
     // @todo validate
     this.def.checks.push({
       kind: "tupleMembership",

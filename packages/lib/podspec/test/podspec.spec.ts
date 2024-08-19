@@ -38,8 +38,8 @@ describe("podspec should work", async function () {
         value: pubKey
       }
     });
-    expect(result.status).to.eq("valid");
-    assert(result.status === "valid");
+    expect(result.isValid).to.eq(true);
+    assert(result.isValid);
     expect(result.value.foo.value).to.eq("test");
     expect(result.value.bar.value).to.eq(1n);
     expect(result.value.baz.value).to.eq(10000n);
@@ -62,8 +62,8 @@ describe("podspec should work", async function () {
       baz: 10000,
       quux: pubKey
     });
-    expect(result.status).to.eq("valid");
-    assert(result.status === "valid");
+    expect(result.isValid).to.eq(true);
+    assert(result.isValid);
     expect(result.value.foo.value).to.eq("test");
     expect(result.value.bar.value).to.eq(1n);
     expect(result.value.baz.value).to.eq(10000n);
@@ -80,8 +80,8 @@ describe("podspec should work", async function () {
       foo: "test",
       bar: POD_INT_MAX + 1n
     });
-    expect(result.status).to.eq("invalid");
-    assert(result.status === "invalid");
+    expect(result.isValid).to.eq(false);
+    assert(result.isValid === false);
     expect(result.issues).to.eql([
       {
         code: IssueCode.invalid_pod_value,
@@ -99,14 +99,14 @@ describe("podspec should work", async function () {
 
   it("should apply range checks", function () {
     const myPodSpec = p.entries({
-      foo: p.coerce.int().inRange(1n, 10n)
+      foo: p.coerce.int().range(1n, 10n)
     });
 
     const result = myPodSpec.safeParse({
       foo: 11n
     });
-    expect(result.status).to.eq("invalid");
-    assert(result.status === "invalid");
+    expect(result.isValid).to.eq(false);
+    assert(result.isValid === false);
     expect(result.issues).to.eql([
       {
         code: IssueCode.not_in_range,
@@ -126,13 +126,14 @@ describe("podspec should work", async function () {
     const result = myPodSpec.safeParse({
       foo: "test"
     });
-    expect(result.status).to.eq("valid");
+    expect(result.isValid).to.eq(true);
+    assert(result.isValid);
 
     const result2 = myPodSpec.safeParse({
       foo: "not in list"
     });
-    expect(result2.status).to.eq("invalid");
-    assert(result2.status === "invalid");
+    expect(result2.isValid).to.eq(false);
+    assert(result2.isValid === false);
     expect(result2.issues).to.eql([
       {
         code: IssueCode.not_in_list,
@@ -151,12 +152,13 @@ describe("podspec should work", async function () {
     const result = myPodSpec.safeParse({
       foo: 1n
     });
-    expect(result.status).to.eq("valid");
+    expect(result.isValid).to.eq(true);
+    assert(result.isValid);
 
     const result2 = myPodSpec.safeParse({
       foo: 4n
     });
-    expect(result2.status).to.eq("invalid");
+    expect(result2.isValid).to.eq(false);
   });
 
   it("should match on tuples", function () {
@@ -165,7 +167,7 @@ describe("podspec should work", async function () {
         foo: p.coerce.string(),
         bar: p.coerce.int()
       })
-      .matchTuple({
+      .tuple({
         name: "test",
         exclude: false,
         entries: ["foo", "bar"],
@@ -182,15 +184,15 @@ describe("podspec should work", async function () {
         foo: "test",
         bar: 1n
       });
-      expect(result.status).to.eq("valid");
+      expect(result.isValid).to.eq(true);
     }
     {
       const result = myPodSpec.safeParse({
         foo: "other string",
         bar: 1n
       });
-      expect(result.status).to.eq("invalid");
-      assert(result.status === "invalid");
+      expect(result.isValid).to.eq(false);
+      assert(result.isValid === false);
       expect(result.issues).to.eql([
         {
           code: IssueCode.not_in_tuple_list,
@@ -213,8 +215,8 @@ describe("podspec should work", async function () {
         foo: "test",
         bar: 2n
       });
-      expect(result.status).to.eq("invalid");
-      assert(result.status === "invalid");
+      expect(result.isValid).to.eq(false);
+      assert(result.isValid === false);
       expect(result.issues).to.eql([
         {
           code: IssueCode.not_in_tuple_list,
@@ -293,7 +295,7 @@ describe("podspec should work", async function () {
   it("should apply range checks in queries", function () {
     const key = generateRandomHex(32);
     const myPodSpec = p.entries({
-      foo: p.int().inRange(1n, 10n)
+      foo: p.int().range(1n, 10n)
     });
 
     const pods = [
@@ -323,7 +325,7 @@ describe("podspec should work", async function () {
         // for now, treat it as an entry
         signerPublicKey: p.eddsaPubKey()
       })
-      .matchTuple({
+      .tuple({
         name: "test",
         exclude: false,
         entries: ["eventId", "productId", "signerPublicKey"],
@@ -384,6 +386,6 @@ describe("podspec should work", async function () {
     );
 
     const result = myPodSpec.safeParse(pod);
-    expect(result.status).to.eq("valid");
+    expect(result.isValid).to.eq(true);
   });
 });

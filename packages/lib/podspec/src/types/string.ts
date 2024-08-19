@@ -51,11 +51,14 @@ export class PodspecString extends PodspecValue<
   string,
   PodspecStringDef
 > {
-  public list(list: string[], exclude = false): PodspecString {
+  public list(
+    list: string[],
+    options: { exclude: boolean } = { exclude: false }
+  ): typeof this {
     this.def.checks.push({
       kind: "list",
       list,
-      exclude
+      exclude: options.exclude
     });
     return this;
   }
