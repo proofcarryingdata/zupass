@@ -37,9 +37,9 @@ import {
 import { upsertUser } from "../database/queries/saveUser";
 import {
   deleteUserByUUID,
-  fetchUserByCommitment,
   fetchUserByEmail,
-  fetchUserByUUID
+  fetchUserByUUID,
+  fetchUserByV3Commitment
 } from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
@@ -452,7 +452,7 @@ export class UserService {
   public async getUserByCommitment(
     commitment: string
   ): Promise<UserRow | null> {
-    const user = await fetchUserByCommitment(this.context.dbPool, commitment);
+    const user = await fetchUserByV3Commitment(this.context.dbPool, commitment);
 
     if (!user) {
       logger("[SEMA] no user with that commitment exists");
@@ -476,7 +476,7 @@ export class UserService {
       throw new Error("invalid credential");
     }
 
-    const user = await fetchUserByCommitment(
+    const user = await fetchUserByV3Commitment(
       this.context.dbPool,
       verifyResult.semaphoreId
     );
@@ -502,7 +502,7 @@ export class UserService {
       throw new PCDHTTPError(400);
     }
 
-    const user = await fetchUserByCommitment(
+    const user = await fetchUserByV3Commitment(
       this.context.dbPool,
       verification.v3Id
     );
@@ -549,7 +549,7 @@ export class UserService {
     }
 
     const payload = parsedPayload.data;
-    const user = await fetchUserByCommitment(
+    const user = await fetchUserByV3Commitment(
       this.context.dbPool,
       pcd.claim.identityCommitment
     );

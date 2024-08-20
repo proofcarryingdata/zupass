@@ -97,7 +97,7 @@ export async function fetchUserCount(client: Pool): Promise<number> {
 /**
  * Fetches a user by their semaphore commitment.
  */
-export async function fetchUserByCommitment(
+export async function fetchUserByV3Commitment(
   client: Pool,
   commitment: string
 ): Promise<UserRow | null> {
@@ -107,6 +107,30 @@ export async function fetchUserByCommitment(
      FROM users u
      LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.commitment = $1
+     GROUP BY u.uuid`,
+    [commitment]
+  );
+
+  if (result.rowCount === 0) {
+    return null;
+  }
+
+  return result.rows[0];
+}
+
+/**
+ * Fetches a user by their semaphore commitment.
+ */
+export async function fetchUserByEdDSACommitment(
+  client: Pool,
+  commitment: string
+): Promise<UserRow | null> {
+  const result = await sqlQuery(
+    client,
+    `SELECT u.*, array_agg(ue.email) as emails
+     FROM users u
+     LEFT JOIN user_emails ue ON u.uuid = ue.user_id
+     WHERE u.semaphore_v4_id = $1
      GROUP BY u.uuid`,
     [commitment]
   );

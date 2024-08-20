@@ -61,7 +61,7 @@ import {
   setKnownPublicKey,
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
-import { fetchUserByCommitment } from "../database/queries/users";
+import { fetchUserByV3Commitment } from "../database/queries/users";
 import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchAllUsersWithZuzaluTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
@@ -346,7 +346,7 @@ export class IssuanceService {
       throw new Error("invalid credential");
     }
 
-    const user = await fetchUserByCommitment(
+    const user = await fetchUserByV3Commitment(
       this.context.dbPool,
       credential.semaphoreId
     );
