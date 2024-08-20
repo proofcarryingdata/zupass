@@ -39,7 +39,8 @@ import {
   deleteUserByUUID,
   fetchUserByEmail,
   fetchUserByUUID,
-  fetchUserByV3Commitment
+  fetchUserByV3Commitment,
+  fetchUserForCredential
 } from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
@@ -468,17 +469,9 @@ export class UserService {
     const verifyResult =
       await this.credentialSubservice.tryVerify(serializedPCD);
 
-    if (!verifyResult) {
-      throw new PCDHTTPError(400, "Invalid signature");
-    }
-
-    if (!verifyResult.semaphoreId) {
-      throw new Error("invalid credential");
-    }
-
-    const user = await fetchUserByV3Commitment(
+    const user = await fetchUserForCredential(
       this.context.dbPool,
-      verifyResult.semaphoreId
+      verifyResult
     );
 
     if (!user) {

@@ -1,3 +1,4 @@
+import { VerifiedCredential } from "@pcd/passport-interface";
 import { Pool } from "postgres-pool";
 import { UserRow } from "../models";
 import { sqlQuery } from "../sqlQuery";
@@ -92,6 +93,25 @@ export async function deleteUserByUUID(
 export async function fetchUserCount(client: Pool): Promise<number> {
   const result = await sqlQuery(client, "SELECT COUNT(*) AS count FROM users");
   return parseInt(result.rows[0].count, 10);
+}
+
+export async function fetchUserForCredential(
+  client: Pool,
+  credential?: VerifiedCredential
+): Promise<UserRow | null> {
+  if (!credential) {
+    return null;
+  }
+
+  if (credential.semaphoreId) {
+    return fetchUserByV3Commitment(client, credential.semaphoreId);
+  }
+
+  if (credential.semaphoreIdV4) {
+    return fetchUserByEdDSACommitment(client, credential.semaphoreIdV4);
+  }
+
+  return null;
 }
 
 /**

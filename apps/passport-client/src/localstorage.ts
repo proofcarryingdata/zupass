@@ -69,10 +69,14 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
     await savePCDs(collection);
   }
 
-  await requestAddSemaphoreV4Commitment(
-    appConfig.zupassServer,
-    await makeAddV4CommitmentRequest(collection)
-  );
+  try {
+    await requestAddSemaphoreV4Commitment(
+      appConfig.zupassServer,
+      await makeAddV4CommitmentRequest(collection)
+    );
+  } catch (e) {
+    console.error("Error requesting add v4 commitment", e);
+  }
 
   if (
     !validateAndLogRunningAppState(
