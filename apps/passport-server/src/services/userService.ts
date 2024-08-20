@@ -13,7 +13,10 @@ import {
   VerifiedCredential,
   VerifyTokenResponseValue
 } from "@pcd/passport-interface";
-import { AddV4CommitmentResult } from "@pcd/passport-interface/src/api/requestAddSemaphoreV4Commitment";
+import {
+  AddV4CommitmentResult,
+  verifyAddV4CommitmentRequestPCD
+} from "@pcd/passport-interface/src/api/requestAddSemaphoreV4Commitment";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
@@ -498,7 +501,11 @@ export class UserService {
       serializedPCD.pcd
     );
 
-    logger(pcd);
+    const verification = await verifyAddV4CommitmentRequestPCD(pcd);
+
+    if (!verification) {
+      throw new PCDHTTPError(400);
+    }
 
     return {
       success: true,

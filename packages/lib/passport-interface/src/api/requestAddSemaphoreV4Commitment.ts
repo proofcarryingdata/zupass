@@ -98,7 +98,7 @@ export async function makeAddV4CommitmentRequest(
 
 export async function verifyAddV4CommitmentRequestPCD(
   pcd: SemaphoreSignaturePCD
-): Promise<boolean> {
+): Promise<{ v3Id: string; v4Id: string } | undefined> {
   try {
     const v3SigVerifies = await SemaphoreSignaturePCDPackage.verify(pcd);
     const expectedV3Id = pcd.claim.identityCommitment;
@@ -109,9 +109,14 @@ export async function verifyAddV4CommitmentRequestPCD(
     const v4Message = v4SigOfV3Id.claim.entries["signedValue"];
     const v4SigIsOfV3Id =
       v4Message.type === "string" && v4Message.value === expectedV3Id;
-    return v3SigVerifies && v4SigVerifies && v4SigIsOfV3Id;
+    if (v3SigVerifies && v4SigVerifies && v4SigIsOfV3Id) {
+      return {
+        v3Id: expectedV3Id,
+        v4Id: v4SigOfV3Id.claim.signerPublicKey
+      };
+    }
+    return undefined;
   } catch (e) {
-    console.log(e);
-    return false;
+    return undefined;
   }
 }
