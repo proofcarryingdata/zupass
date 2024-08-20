@@ -1,8 +1,15 @@
-import { POD, PODContent, PODEntries } from "@pcd/pod";
-import { IssueCode, PodspecError, PodspecInvalidSignerIssue } from "../error";
-import { FAILURE, ParseResult, SUCCESS } from "../parse";
-import { objectOutputType } from "../utils";
-import { PodspecEntries, RawEntriesType } from "./entries";
+import { POD, PODContent, PODEntries, PODValue } from "@pcd/pod";
+import {
+  IssueCode,
+  PodspecError,
+  PodspecExcludedByTupleListIssue,
+  PodspecInvalidSignerIssue,
+  PodspecInvalidTupleEntryIssue,
+  PodspecNotInTupleListIssue
+} from "../error";
+import { FAILURE, ParsePath, ParseResult, SUCCESS } from "../parse";
+import { isEqualPODValue, objectOutputType } from "../utils";
+import { PodspecEntries, RawEntriesType, TupleSpec } from "./entries";
 import { PodspecOptional } from "./optional";
 
 type PODCheck =
@@ -13,6 +20,10 @@ type PODCheck =
   | {
       kind: "signerList";
       signerList: string[];
+    }
+  | {
+      kind: "tupleMembership";
+      spec: TupleSpec;
     };
 
 export type PodspecPODDef<T extends RawEntriesType> = {
@@ -87,6 +98,7 @@ export class PodspecPOD<T extends RawEntriesType> {
     });
 
     const issues = !entriesResult.isValid ? entriesResult.issues : [];
+    const path: ParsePath = [];
 
     for (const check of this.def.checks) {
       if (check.kind === "signer") {
@@ -109,6 +121,66 @@ export class PodspecPOD<T extends RawEntriesType> {
           };
           issues.push(issue);
         }
+      } else if (check.kind === "tupleMembership" && entriesResult.isValid) {
+        const resultEntryKeys = [
+          ...Object.keys(entriesResult.value),
+          "$signerPublicKey"
+        ];
+        const podEntries = {
+          ...entriesResult.value,
+          $signerPublicKey: {
+            type: "eddsa_pubkey",
+            value: data.signerPublicKey
+          }
+        };
+        const tuple: PODValue[] = [];
+        let validTuple = true;
+        for (const entryKey of check.spec.entries) {
+          const entry = podEntries[entryKey];
+          if (!resultEntryKeys.includes(entryKey) || entry === undefined) {
+            validTuple = false;
+            const issue: PodspecInvalidTupleEntryIssue = {
+              code: IssueCode.invalid_tuple_entry,
+              name: entryKey,
+              path: [entryKey]
+            };
+            issues.push(issue);
+            continue;
+          }
+          tuple.push(entry);
+        }
+        if (!validTuple) {
+          return FAILURE(issues);
+        }
+        let matched = false;
+        for (const tupleToCheck of check.spec.members) {
+          const isMatching = tupleToCheck.every((val, index) =>
+            isEqualPODValue(val, tuple[index])
+          );
+          if (isMatching) {
+            if (check.spec.exclude) {
+              const issue: PodspecExcludedByTupleListIssue = {
+                code: IssueCode.excluded_by_tuple_list,
+                value: tuple,
+                list: check.spec.members,
+                path
+              };
+              issues.push(issue);
+            } else {
+              matched = true;
+              break;
+            }
+          }
+        }
+        if (!(check.spec.exclude ?? false) && !matched) {
+          const issue: PodspecNotInTupleListIssue = {
+            code: IssueCode.not_in_tuple_list,
+            value: tuple,
+            list: check.spec.members,
+            path
+          };
+          issues.push(issue);
+        }
       }
     }
 
@@ -121,5 +193,15 @@ export class PodspecPOD<T extends RawEntriesType> {
       //with a type that tells TypeScript what entries it has
       data as StrongPOD<objectOutputType<RawEntriesTypeWithoutOptional<T>>>
     );
+  }
+
+  // @todo parameterize TupleSpec with known entry names?
+  public tuple(spec: TupleSpec): typeof this {
+    // @todo validate
+    this.def.checks.push({
+      kind: "tupleMembership",
+      spec
+    });
+    return this;
   }
 }

@@ -388,4 +388,58 @@ describe("podspec should work", async function () {
     const result = myPodSpec.safeParse(pod);
     expect(result.isValid).to.eq(true);
   });
+
+  it("should perform tuple checks on PODs including virtual signer entry", function () {
+    const key = generateRandomHex(32);
+    const keyBytes = decodePrivateKey(key);
+    const pubKey = encodePublicKey(derivePublicKey(keyBytes));
+    const eventId = "d1390b7b-4ccb-42bf-8c8b-e397b7c26e6c";
+    const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
+
+    const myPodSpec = p
+      .POD({
+        eventId: p.string(),
+        productId: p.string()
+      })
+      .tuple({
+        name: "test",
+        exclude: false,
+        entries: ["eventId", "productId", "$signerPublicKey"],
+        members: [
+          [
+            { type: "string", value: eventId },
+            { type: "string", value: productId },
+            { type: "eddsa_pubkey", value: pubKey }
+          ]
+        ]
+      });
+
+    {
+      const pod = POD.sign(
+        {
+          eventId: { type: "string", value: eventId },
+          productId: { type: "string", value: productId }
+        },
+        key
+      );
+
+      const result = myPodSpec.safeParse(pod);
+      expect(result.isValid).to.eq(true);
+    }
+    {
+      const pod = POD.sign(
+        {
+          eventId: { type: "string", value: uuidv4() },
+          productId: { type: "string", value: uuidv4() },
+          signerPublicKey: { type: "eddsa_pubkey", value: pubKey }
+        },
+        key
+      );
+
+      const result = myPodSpec.safeParse(pod);
+      expect(result.isValid).to.eq(false);
+      assert(result.isValid === false);
+      expect(result.issues[0].code).to.eq(IssueCode.not_in_tuple_list);
+    }
+  });
 });

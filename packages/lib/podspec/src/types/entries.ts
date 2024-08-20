@@ -30,7 +30,7 @@ export type RawEntriesType = Record<
     >
 >;
 
-type TupleSpec = {
+export type TupleSpec = {
   name: string;
   entries: string[];
   members: PODValue[][];

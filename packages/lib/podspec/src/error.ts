@@ -17,6 +17,7 @@ export enum IssueCode {
 export interface PodspecBaseIssue {
   message?: string;
   path: (string | number)[];
+  code: IssueCode;
 }
 
 export interface PodspecInvalidTypeIssue extends PodspecBaseIssue {
