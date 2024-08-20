@@ -524,7 +524,7 @@ export interface PollFeedResponseValue {
 export interface ZupassUserJson {
   uuid: string;
   commitment: string;
-  semaphore_v4_id?: string;
+  semaphore_v4_id?: string | null;
   emails: string[];
   salt: string | null;
   terms_agreed: number;
