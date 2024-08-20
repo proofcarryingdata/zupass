@@ -74,7 +74,7 @@ export function useVisiblePCDsInFolder(folder: string): PCD[] {
   return pcds.filter(
     (pcd) =>
       // Filter out PODTicketPCDs unless showPODTicketPCDs is true
-      pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs
+      pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs || true
   );
 }
 
