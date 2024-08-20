@@ -1,6 +1,7 @@
 import { HexString, getHash } from "@pcd/passport-crypto";
 import {
   AddUserEmailResponseValue,
+  AddV4CommitmentResult,
   AgreeTermsResult,
   ChangeUserEmailResponseValue,
   ConfirmEmailResponseValue,
@@ -11,12 +12,9 @@ import {
   RemoveUserEmailResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
   VerifiedCredential,
-  VerifyTokenResponseValue
-} from "@pcd/passport-interface";
-import {
-  AddV4CommitmentResult,
+  VerifyTokenResponseValue,
   verifyAddV4CommitmentRequestPCD
-} from "@pcd/passport-interface/src/api/requestAddSemaphoreV4Commitment";
+} from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
