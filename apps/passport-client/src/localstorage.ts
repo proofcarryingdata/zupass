@@ -1,8 +1,6 @@
 import {
   FeedSubscriptionManager,
-  makeAddV4CommitmentRequest,
   NetworkFeedApi,
-  requestAddSemaphoreV4Commitment,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -16,7 +14,6 @@ import {
 } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
-import { appConfig } from "./appConfig";
 import { getPackages } from "./pcdPackages";
 import { validateAndLogRunningAppState } from "./validateState";
 
@@ -69,14 +66,14 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
     await savePCDs(collection);
   }
 
-  try {
-    await requestAddSemaphoreV4Commitment(
-      appConfig.zupassServer,
-      await makeAddV4CommitmentRequest(collection)
-    );
-  } catch (e) {
-    console.error("Error requesting add v4 commitment", e);
-  }
+  // try {
+  //   await requestAddSemaphoreV4Commitment(
+  //     appConfig.zupassServer,
+  //     await makeAddV4CommitmentRequest(collection)
+  //   );
+  // } catch (e) {
+  //   console.error("Error requesting add v4 commitment", e);
+  // }
 
   if (
     !validateAndLogRunningAppState(

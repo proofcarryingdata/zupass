@@ -41,7 +41,7 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
   const semaphoreId = data.attendeeSemaphoreId;
 
   if (!semaphoreId) {
-    throw new Error("attendeeSemaphoreV4Id is required");
+    throw new Error("semaphore id is required");
   }
 
   return [

@@ -36,7 +36,7 @@ import {
   PretixProductConfig
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import {
   PODTicketPCD,
   PODTicketPCDPackage,
@@ -907,14 +907,16 @@ export class PretixPipeline implements BasePipeline {
    */
   private async getTicketsForEmail(
     email: string,
-    v3Commitment?: string,
-    v4Commitment?: string
-  ): Promise<EdDSATicketPCD[]> {
+    v3Commitment: string | undefined,
+    v4Commitment: string | undefined
+  ): Promise<
+    Array<SerializedPCD<EdDSATicketPCD> | SerializedPCD<PODTicketPCD>>
+  > {
     // Load atom-backed tickets
     const relevantTickets = await this.db.loadByEmail(this.id, email);
     // Convert atoms to ticket data
     const ticketDatas = relevantTickets.map((t) =>
-      this.atomToTicketData(t, v3Commitment)
+      this.atomToTicketData(t, v3Commitment, v4Commitment)
     );
     // Load manual tickets from the definition
     const manualTickets = await this.getManualTicketsForEmail(email);
@@ -934,12 +936,32 @@ export class PretixPipeline implements BasePipeline {
 
     // Turn ticket data into PCDs
     const tickets = await Promise.all(
-      ticketDatas.map((t) =>
-        this.getOrGenerateTicket<EdDSATicketPCD>(t, EdDSATicketPCDTypeName)
-      )
+      ticketDatas.map(async (t) => {
+        const ticket = await this.getOrGenerateTicket<EdDSATicketPCD>(
+          t,
+          EdDSATicketPCDTypeName
+        );
+        if (ticket) {
+          return EdDSATicketPCDPackage.serialize(ticket);
+        }
+        return undefined;
+      })
     );
 
-    return onlyDefined(tickets);
+    const podTickets = await Promise.all(
+      ticketDatas.map(async (t) => {
+        const ticket = await this.getOrGenerateTicket<PODTicketPCD>(
+          t,
+          PODTicketPCDTypeName
+        );
+        if (ticket) {
+          return PODTicketPCDPackage.serialize(ticket);
+        }
+        return undefined;
+      })
+    );
+
+    return onlyDefined([...tickets, ...podTickets]);
   }
 
   private async issuePretixTicketPCDs(
@@ -1029,30 +1051,10 @@ export class PretixPipeline implements BasePipeline {
         });
       }
 
-      const ticketPCDs = await Promise.all(
-        tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-      );
-
-      if (this.definition.options.enablePODTickets) {
-        const podTickets = await Promise.all(
-          tickets.map((ticket) => {
-            return this.getOrGenerateTicket<PODTicketPCD>(
-              ticket.claim.ticket,
-              PODTicketPCDTypeName
-            );
-          })
-        );
-        ticketPCDs.push(
-          ...(await Promise.all(
-            onlyDefined(podTickets).map((t) => PODTicketPCDPackage.serialize(t))
-          ))
-        );
-      }
-
       actions.push({
         type: PCDActionType.ReplaceInFolder,
         folder: this.definition.options.feedOptions.feedFolder,
-        pcds: ticketPCDs
+        pcds: tickets
       });
 
       const result: PollFeedResponseValue = { actions };
@@ -1063,8 +1065,8 @@ export class PretixPipeline implements BasePipeline {
 
   private atomToTicketData(
     atom: PretixAtom,
-    semaphoreId?: string,
-    v4Commitment?: string
+    semaphoreId: string | undefined,
+    v4Commitment: string | undefined
   ): ITicketData {
     if (!atom.email) {
       throw new Error(`Atom missing email: ${atom.id} in pipeline ${this.id}`);
@@ -1116,6 +1118,13 @@ export class PretixPipeline implements BasePipeline {
       logger(
         `${LOG_TAG} cache miss for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
       );
+
+      if (
+        ticketPCDType === EdDSATicketPCDTypeName &&
+        !ticketData.attendeeSemaphoreId
+      ) {
+        return undefined;
+      }
 
       const generatedTicket: T | undefined = (
         ticketPCDType === EdDSATicketPCDTypeName

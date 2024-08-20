@@ -61,7 +61,7 @@ import {
   setKnownPublicKey,
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
-import { fetchUserByV3Commitment } from "../database/queries/users";
+import { fetchUserForCredential } from "../database/queries/users";
 import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchAllUsersWithZuzaluTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
@@ -342,14 +342,7 @@ export class IssuanceService {
   private async checkUserExists(
     credential: VerifiedCredential
   ): Promise<UserRow | null> {
-    if (!credential.semaphoreId) {
-      throw new Error("invalid credential");
-    }
-
-    const user = await fetchUserByV3Commitment(
-      this.context.dbPool,
-      credential.semaphoreId
-    );
+    const user = await fetchUserForCredential(this.context.dbPool, credential);
 
     if (user === null) {
       logger(
