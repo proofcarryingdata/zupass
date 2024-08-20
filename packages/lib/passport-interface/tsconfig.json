@@ -34,9 +34,6 @@
       "path": "../emitter"
     },
     {
-      "path": "../../pcd/obj-pcd"
-    },
-    {
       "path": "../passport-crypto"
     },
     {

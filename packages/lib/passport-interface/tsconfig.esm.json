@@ -23,9 +23,6 @@
       "path": "../emitter/tsconfig.esm.json"
     },
     {
-      "path": "../../pcd/obj-pcd/tsconfig.esm.json"
-    },
-    {
       "path": "../passport-crypto/tsconfig.esm.json"
     },
     {

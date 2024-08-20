@@ -29,7 +29,6 @@
     "@pcd/server-shared": "0.0.5",
     "@pcd/email-pcd": "0.6.4",
     "@pcd/message-pcd": "0.1.4",
-    "@pcd/obj-pcd": "0.0.5",
     "@pcd/passport-crypto": "0.11.4",
     "@pcd/passport-interface": "0.11.6",
     "@pcd/pcd-collection": "0.11.4",

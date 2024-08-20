@@ -83,9 +83,6 @@
       "path": "../../packages/ui/message-pcd-ui"
     },
     {
-      "path": "../../packages/pcd/obj-pcd"
-    },
-    {
       "path": "../../packages/lib/passport-crypto"
     },
     {
