@@ -1,11 +1,8 @@
 import type { GPCPCDArgs } from "@pcd/gpc-pcd";
 import type { SerializedPCD } from "@pcd/pcd-types";
+import type { GenericSerializedEntriesSpec } from "@pcd/podspec";
 
-interface PODQuery {
-  // @todo type this properly
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  entries: any;
-}
+type PODQuery = GenericSerializedEntriesSpec;
 
 export type ZupassFolderContent =
   | {

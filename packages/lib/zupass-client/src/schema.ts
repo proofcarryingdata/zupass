@@ -23,8 +23,39 @@ const PODPCDRecordArgumentSchema = z.object({
   value: z.record(z.string(), PCDArgumentSchema).optional()
 }) satisfies z.ZodSchema<PODPCDRecordArg>;
 
+const PODValueSchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("string"),
+    value: z.string()
+  }),
+  z.object({
+    type: z.literal("int"),
+    value: z.bigint()
+  }),
+  z.object({
+    type: z.literal("cryptographic"),
+    value: z.bigint()
+  }),
+  z.object({
+    type: z.literal("eddsa_pubkey"),
+    value: z.string()
+  })
+]);
+
 const PODQuerySchema = z.object({
-  entries: z.any()
+  // @todo: replace any with a more specific type
+  entries: z.any(),
+  checks: z.array(
+    z.object({
+      kind: z.literal("tupleMembership"),
+      spec: z.object({
+        name: z.string(),
+        entries: z.array(z.string()),
+        members: z.array(z.array(PODValueSchema)),
+        exclude: z.boolean().optional()
+      })
+    })
+  )
 });
 
 export const GPCPCDArgsSchema = z.object({

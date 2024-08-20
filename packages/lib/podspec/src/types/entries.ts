@@ -52,7 +52,7 @@ interface QueryResult {
   matchingIndexes: number[];
 }
 
-interface PodspecEntriesSerializedDef<T extends RawEntriesType> {
+export interface PodspecEntriesSerializedDef<T extends RawEntriesType> {
   entries: SerializedEntriesType<T>;
   checks: PodspecCheck[];
 }

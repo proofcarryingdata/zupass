@@ -6,6 +6,7 @@ import { PODPCD, PODPCDTypeName } from "@pcd/pod-pcd";
 import { p } from "@pcd/podspec";
 import {
   ZupassAPI,
+  ZupassAPISchema,
   ZupassFeeds,
   ZupassFileSystem,
   ZupassFolderContent,
@@ -66,7 +67,7 @@ class FileSystem extends BaseZappServer implements ZupassFileSystem {
     super(context, zapp, clientChannel);
   }
 
-  @safeInput(z.tuple([z.string()]))
+  @safeInput(ZupassAPISchema.shape.fs.shape.list.parameters())
   public async list(path: string): Promise<ZupassFolderContent[]> {
     const state = this.getContext().getState();
     const pcds = state.pcds.getAllPCDsInFolder(path);
@@ -90,7 +91,7 @@ class FileSystem extends BaseZappServer implements ZupassFileSystem {
     return result;
   }
 
-  @safeInput(z.tuple([z.string()]))
+  @safeInput(ZupassAPISchema.shape.fs.shape.get.parameters())
   public async get(path: string): Promise<SerializedPCD> {
     const pathElements = path.split("/");
     // @todo validate path, check permissions
@@ -108,9 +109,7 @@ class FileSystem extends BaseZappServer implements ZupassFileSystem {
     return serializedPCD;
   }
 
-  @safeInput(
-    z.tuple([z.string(), z.object({ pcd: z.string(), type: z.string() })])
-  )
+  @safeInput(ZupassAPISchema.shape.fs.shape.put.parameters())
   public async put(path: string, content: SerializedPCD): Promise<void> {
     // @todo validate path
     console.log("adding ", path, content);
@@ -122,7 +121,7 @@ class FileSystem extends BaseZappServer implements ZupassFileSystem {
     });
   }
 
-  @safeInput(z.tuple([z.string()]))
+  @safeInput(ZupassAPISchema.shape.fs.shape.delete.parameters())
   public async delete(_path: string): Promise<void> {
     throw new Error("Not implemented");
   }
@@ -174,7 +173,7 @@ export class Feeds extends BaseZappServer implements ZupassFeeds {
     super(context, zapp, clientChannel);
   }
 
-  @safeInput(z.tuple([z.string(), z.string()]))
+  @safeInput(ZupassAPISchema.shape.feeds.shape.requestAddSubscription)
   public async requestAddSubscription(
     feedUrl: string,
     feedId: string
@@ -223,8 +222,8 @@ class PODServer extends BaseZappServer implements ZupassPOD {
     super(context, zapp, clientChannel);
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  public async query(query: { entries: any }): Promise<string[]> {
+  @safeInput(ZupassAPISchema.shape.pod.shape.query.parameters())
+  public async query(query: unknown): Promise<string[]> {
     let q;
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any

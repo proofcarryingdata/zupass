@@ -14,6 +14,9 @@
       "path": "../../pcd/gpc-pcd/tsconfig.esm.json"
     },
     {
+      "path": "../podspec/tsconfig.esm.json"
+    },
+    {
       "path": "../pcd-types/tsconfig.esm.json"
     }
   ]
