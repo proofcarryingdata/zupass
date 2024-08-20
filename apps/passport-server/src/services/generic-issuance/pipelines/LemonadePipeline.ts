@@ -44,7 +44,7 @@ import {
 } from "@pcd/pod-ticket-pcd";
 import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
-import { str } from "@pcd/util";
+import { onlyDefined, str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import stable_stringify from "fast-json-stable-stringify";
 import _ from "lodash";
@@ -788,7 +788,7 @@ export class LemonadePipeline implements BasePipeline {
       )
     );
 
-    return tickets;
+    return onlyDefined(tickets);
   }
 
   private async issueLemonadeTicketPCDs(
@@ -874,7 +874,7 @@ export class LemonadePipeline implements BasePipeline {
         );
         ticketPCDs.push(
           ...(await Promise.all(
-            podTickets.map((t) => PODTicketPCDPackage.serialize(t))
+            onlyDefined(podTickets).map((t) => PODTicketPCDPackage.serialize(t))
           ))
         );
       }
@@ -940,7 +940,7 @@ export class LemonadePipeline implements BasePipeline {
   private async getOrGenerateTicket<T extends EdDSATicketPCD | PODTicketPCD>(
     ticketData: ITicketData,
     ticketPCDType: T["type"]
-  ): Promise<T> {
+  ): Promise<T | undefined> {
     return traced(LOG_NAME, "getOrGenerateTicket", async (span) => {
       span?.setAttribute("ticket_id", ticketData.ticketId);
       span?.setAttribute("ticket_email", ticketData.attendeeEmail);
@@ -960,14 +960,18 @@ export class LemonadePipeline implements BasePipeline {
         `${LOG_TAG} cache miss for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
       );
 
-      const generatedTicket: T = (
+      const generatedTicket: T | undefined = (
         ticketPCDType === EdDSATicketPCDTypeName
           ? await this.ticketDataToTicketPCD(ticketData, this.eddsaPrivateKey)
           : await this.ticketDataToPODTicketPCD(
               ticketData,
               this.eddsaPrivateKey
             )
-      ) as T;
+      ) as T | undefined;
+
+      if (!generatedTicket) {
+        return undefined;
+      }
 
       try {
         this.cacheTicket(generatedTicket);
