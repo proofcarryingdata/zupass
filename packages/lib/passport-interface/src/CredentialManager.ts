@@ -2,7 +2,10 @@ import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { PODPCDPackage } from "@pcd/pod-pcd";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityPCDPackage,
+  SemaphoreIdentityPCDTypeName
+} from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreIdentityV4PCD,
   SemaphoreIdentityV4PCDTypeName
@@ -121,9 +124,21 @@ export class CredentialManager implements CredentialManagerAPI {
   }
 
   private getCurrentCacheId(): string {
-    return (this.pcds.getPCDsByType(EmailPCDTypeName) as EmailPCD[])
+    const idSection = this.pcds
+      .getAll()
+      .filter(
+        (p) =>
+          p.type === SemaphoreIdentityV4PCDTypeName ||
+          p.type === SemaphoreIdentityPCDTypeName
+      )
+      .map((p) => p.id)
+      .join(":");
+    const emailSection = (
+      this.pcds.getPCDsByType(EmailPCDTypeName) as EmailPCD[]
+    )
       .map((p) => p.claim.emailAddress)
       .join(":");
+    return emailSection + ":" + idSection;
   }
 
   // Adds a credential to the cache
