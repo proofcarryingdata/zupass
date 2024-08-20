@@ -265,8 +265,7 @@ export class UserService {
     if (existingUser) {
       res.status(200).json({
         isNewUser: false,
-        encryptionKey: existingUser.encryption_key,
-        authKey: existingUser.auth_key
+        encryptionKey: existingUser.encryption_key
       } satisfies OneClickLoginResponseValue);
       return;
     }
@@ -306,8 +305,7 @@ export class UserService {
     logger(`[USER_SERVICE] logged in a user`, userJson);
     res.status(200).json({
       isNewUser: true,
-      zupassUser: userJson,
-      authKey: user.auth_key
+      zupassUser: userJson
     } satisfies OneClickLoginResponseValue);
   }
 
@@ -397,8 +395,7 @@ export class UserService {
 
     const userJson = userRowToZupassUserJson(user);
     const response: NewUserResponseValue = {
-      ...userJson,
-      authKey: user.auth_key
+      ...userJson
     };
 
     logger(`[USER_SERVICE] logged in a user`, userJson);
@@ -618,8 +615,7 @@ export class UserService {
     }
 
     return {
-      encryptionKey: user?.encryption_key ?? null,
-      authKey: user?.auth_key ?? null
+      encryptionKey: user?.encryption_key ?? null
     };
   }
 

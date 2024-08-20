@@ -239,21 +239,6 @@ export class FeedSubscriptionManager {
     return actions;
   }
 
-  private static AUTH_KEY_KEY = "authKey";
-  public static saveAuthKey(authKey: string | undefined): void {
-    if (authKey === undefined) {
-      localStorage?.removeItem(this.AUTH_KEY_KEY);
-    } else {
-      localStorage?.setItem(this.AUTH_KEY_KEY, authKey);
-    }
-  }
-
-  public getSavedAuthKey(): string | undefined {
-    return (
-      localStorage?.getItem(FeedSubscriptionManager.AUTH_KEY_KEY) ?? undefined
-    );
-  }
-
   /**
    * Performs the network fetch of a subscription, and inspects the results
    * for validity. The error log for the subscription will be reset and

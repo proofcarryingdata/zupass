@@ -43,26 +43,6 @@ export async function fetchUserByUUID(
 }
 
 /**
- * Fetches the user row corresponding to a particular auth_key from the database.
- */
-export async function fetchUserByAuthKey(
-  client: Pool,
-  authKey: string
-): Promise<UserRow | null> {
-  const result = await sqlQuery(
-    client,
-    `SELECT u.*, array_agg(ue.email) as emails
-     FROM users u
-     LEFT JOIN user_emails ue ON u.uuid = ue.user_id
-     WHERE u.auth_key = $1
-     GROUP BY u.uuid`,
-    [authKey]
-  );
-
-  return result.rows[0] || null;
-}
-
-/**
  * Fetches all the users from the database.
  */
 export async function fetchAllUsers(client: Pool): Promise<UserRow[]> {

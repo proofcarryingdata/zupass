@@ -43,8 +43,7 @@ group by u.uuid;`
       terms_agreed: row.terms_agreed,
       extra_issuance: row.extra_issuance,
       time_created: row.time_created,
-      time_updated: row.time_updated,
-      auth_key: row.auth_key
+      time_updated: row.time_updated
     } satisfies UserRow;
 
     const zuzaluTickets: ZuzaluPretixTicket[] = [];
