@@ -492,15 +492,28 @@ export class UserService {
   public async handleAddV4Commitment(
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<AddV4CommitmentResult> {
-    const pcd = await SemaphoreSignaturePCDPackage.deserialize(
+    const v3Sig = await SemaphoreSignaturePCDPackage.deserialize(
       serializedPCD.pcd
     );
 
-    const verification = await verifyAddV4CommitmentRequestPCD(pcd);
+    const verification = await verifyAddV4CommitmentRequestPCD(v3Sig);
 
     if (!verification) {
       throw new PCDHTTPError(400);
     }
+
+    const user = await fetchUserByCommitment(
+      this.context.dbPool,
+      verification.v3Id
+    );
+
+    if (!user) {
+      throw new PCDHTTPError(400, "User not found");
+    }
+
+    user.semaphore_v4_id = verification.v4Id;
+
+    await upsertUser(this.context.dbPool, user);
 
     return {
       success: true,
