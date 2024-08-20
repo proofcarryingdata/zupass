@@ -9,7 +9,12 @@ import {
 } from "../error";
 import { FAILURE, ParsePath, ParseResult, SUCCESS } from "../parse";
 import { isEqualPODValue, objectOutputType } from "../utils";
-import { PodspecEntries, RawEntriesType, TupleSpec } from "./entries";
+import {
+  PodspecEntries,
+  PodspecEntriesSerializedDef,
+  RawEntriesType,
+  TupleSpec
+} from "./entries";
 import { PodspecOptional } from "./optional";
 
 /**
@@ -64,6 +69,11 @@ type ExcludeOptional<T> = T extends PodspecOptional<any> ? never : T;
 export type RawEntriesTypeWithoutOptional<T extends RawEntriesType> = {
   [K in keyof T]: ExcludeOptional<T[K]>;
 };
+
+interface SerializedPodspecPOD<T extends RawEntriesType> {
+  entries: PodspecEntriesSerializedDef<T>;
+  checks: PODCheck[];
+}
 
 /**
  * A Podspec for a whole POD.
@@ -242,6 +252,33 @@ export class PodspecPOD<T extends RawEntriesType> {
       //with a type that tells TypeScript what entries it has
       data as StrongPOD<objectOutputType<RawEntriesTypeWithoutOptional<T>>>
     );
+  }
+
+  /**
+   * Serializes the Podspec into a format that can be cloned.
+   *
+   * @returns The serialized Podspec.
+   */
+  public serialize(): SerializedPodspecPOD<T> {
+    return {
+      entries: this.def.entries.serialize(),
+      checks: this.def.checks
+    };
+  }
+
+  /**
+   * Deserializes a serialized Podspec.
+   *
+   * @param serialized - The serialized Podspec.
+   * @returns The deserialized Podspec.
+   */
+  public static deserialize<T extends RawEntriesType>(
+    serialized: SerializedPodspecPOD<T>
+  ): PodspecPOD<T> {
+    return new PodspecPOD({
+      entries: PodspecEntries.deserialize(serialized.entries),
+      checks: serialized.checks
+    });
   }
 
   /**

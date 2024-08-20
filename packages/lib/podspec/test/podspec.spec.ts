@@ -12,6 +12,7 @@ import "mocha";
 import { v4 as uuidv4 } from "uuid";
 import { IssueCode, PodspecIssue } from "../src/error";
 import { p } from "../src/index";
+import { PodspecPOD } from "../src/types/pod";
 
 function generateRandomHex(byteLength: number): string {
   const randomBytes = crypto.randomBytes(byteLength);
@@ -441,5 +442,35 @@ describe("podspec should work", async function () {
       assert(result.isValid === false);
       expect(result.issues[0].code).to.eq(IssueCode.not_in_tuple_list);
     }
+  });
+
+  it("can serialize and deserialize full-POD Podspecs", function () {
+    const key = generateRandomHex(32);
+    const keyBytes = decodePrivateKey(key);
+    const pubKey = encodePublicKey(derivePublicKey(keyBytes));
+    const eventId = "d1390b7b-4ccb-42bf-8c8b-e397b7c26e6c";
+    const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
+
+    const myPodSpec = p
+      .POD({
+        eventId: p.string(),
+        productId: p.string()
+      })
+      .tuple({
+        name: "test",
+        exclude: false,
+        entries: ["eventId", "productId", "$signerPublicKey"],
+        members: [
+          [
+            { type: "string", value: eventId },
+            { type: "string", value: productId },
+            { type: "eddsa_pubkey", value: pubKey }
+          ]
+        ]
+      });
+
+    const serialized = myPodSpec.serialize();
+    const deserialized = PodspecPOD.deserialize(serialized);
+    expect(deserialized).to.eql(myPodSpec);
   });
 });
