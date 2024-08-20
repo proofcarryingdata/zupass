@@ -47,7 +47,7 @@ export const PODBOX_CREDENTIAL_REQUEST: CredentialRequest = {
 };
 
 export const ZUPASS_CREDENTIAL_REQUEST: CredentialRequest = {
-  signatureType: "semaphore-v4-signature-pcd"
+  signatureType: "sempahore-signature-pcd"
 };
 
 // Creates an in-memory cache with a TTL of one hour.
@@ -86,6 +86,13 @@ export class CredentialManager implements CredentialManagerAPI {
 
   // Can we get a credential containing a given PCD type?
   public canGenerateCredential(req: CredentialRequest): boolean {
+    const hasV4Identity =
+      this.pcds.getPCDsByType(SemaphoreIdentityV4PCDTypeName).length !== 0;
+
+    if (req.signatureType === "semaphore-v4-signature-pcd" && !hasV4Identity) {
+      return false;
+    }
+
     if (req.pcdType === "email-pcd") {
       return this.pcds.getPCDsByType(req.pcdType).length !== 0;
     } else if (req.pcdType === undefined) {
