@@ -114,7 +114,6 @@ describe("generic issuance - credential subservice", function () {
         identity.getCommitment().toString()
       );
       expect(verifiedCredential.emails?.[0]).to.be.undefined;
-      expect(verifiedCredential.authKey).to.be.undefined;
 
       // Verifying this with the expectation of a valid email should throw,
       // since the credential does not have an EmailPCD.

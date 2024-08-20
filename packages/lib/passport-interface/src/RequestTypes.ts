@@ -595,7 +595,6 @@ export type VerifyTokenRequest = {
  */
 export type VerifyTokenResponseValue = {
   encryptionKey: string | null;
-  authKey: string | null;
 };
 
 /**
@@ -637,8 +636,8 @@ export type OneClickLoginRequest = {
 };
 
 export type OneClickLoginResponseValue =
-  | { isNewUser: true; zupassUser: ZupassUserJson; authKey: string }
-  | { isNewUser: false; encryptionKey: string | null; authKey: string };
+  | { isNewUser: true; zupassUser: ZupassUserJson }
+  | { isNewUser: false; encryptionKey: string | null };
 
 /**
  * Zupass responds with this when you ask it if it is able to
@@ -670,7 +669,7 @@ export type UserResponseValue = ZupassUserJson;
 /**
  * When you ask Zupass to create a new user, it will respond with this type.
  */
-export type NewUserResponseValue = ZupassUserJson & { authKey: string };
+export type NewUserResponseValue = ZupassUserJson;
 
 /**
  * Zupass responds with this when you ask it if it knows of a given

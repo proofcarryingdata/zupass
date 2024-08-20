@@ -78,7 +78,7 @@ export class CredentialSubservice {
       if (!email || !semaphoreId) {
         throw new VerificationError("Missing email PCD in credential");
       }
-      if (!verifiedCredential.authKey && !this.isZupassPublicKey(signer)) {
+      if (this.isZupassPublicKey(signer)) {
         throw new VerificationError("Email PCD not signed by Zupass");
       }
     }

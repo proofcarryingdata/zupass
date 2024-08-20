@@ -56,7 +56,6 @@ export interface VerifiedCredential {
   emails?: SignedEmail[];
   semaphoreId?: string;
   semaphoreIdV4?: string;
-  authKey?: string;
 }
 
 export interface SignedEmail {
