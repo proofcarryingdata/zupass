@@ -1,2 +1,2 @@
-update table users add column semaphore_v4_id VARCHAR UNIQUE default null;
-update table users drop column auth_key;
+alter table users add column semaphore_v4_id VARCHAR UNIQUE default null;
+alter table users drop column auth_key;
