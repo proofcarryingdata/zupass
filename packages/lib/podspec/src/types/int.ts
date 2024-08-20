@@ -35,6 +35,9 @@ function isPODIntValue(data: unknown): data is PODIntValue {
   return true;
 }
 
+/**
+ * The checks that can be applied to an integer POD.
+ */
 export type IntCheck =
   | {
       kind: "range";
@@ -53,11 +56,24 @@ interface PodspecIntDef extends PodspecDataTypeDef {
   coerce: boolean;
 }
 
+/**
+ * Podspec for an integer POD.
+ */
 export class PodspecInt extends PodspecValue<
+  // The definition of the Podspec
   PodspecIntDef,
+  // The output value for the Podspec
   PODIntValue,
+  // The input value for the Podspec, including coercion
   PODIntValue | number | bigint
 > {
+  /**
+   * Parses the input data into an integer POD.
+   *
+   * @param data - The input data to parse
+   * @param params - The parse parameters
+   * @returns The parsed integer POD
+   */
   _parse(data: unknown, params?: ParseParams): ParseResult<PODIntValue> {
     const issues: PodspecBaseIssue[] = [];
 
@@ -146,19 +162,34 @@ export class PodspecInt extends PodspecValue<
     return SUCCESS(value);
   }
 
+  /**
+   * Adds a list check to the integer POD.
+   *
+   * @param list - The list of values to check against
+   * @param options - The options for the list check
+   * @returns The integer POD with the list check added
+   */
   public list(
     list: bigint[],
     options: { exclude: boolean } = { exclude: false }
-  ): typeof this {
-    this.def.checks.push({
-      kind: "list",
-      list,
-      exclude: options.exclude
+  ): PodspecInt {
+    return new PodspecInt({
+      ...this.def,
+      checks: [
+        ...this.def.checks,
+        { kind: "list", list, exclude: options.exclude }
+      ]
     });
-    return this;
   }
 
-  public range(min: bigint, max: bigint): typeof this {
+  /**
+   * Adds a range check to the integer POD.
+   *
+   * @param min - The minimum value to check against
+   * @param max - The maximum value to check against
+   * @returns The integer POD with the range check added
+   */
+  public range(min: bigint, max: bigint): PodspecInt {
     if (min < POD_INT_MIN) {
       throw new Error("Minimum value out of bounds");
     }
@@ -168,14 +199,19 @@ export class PodspecInt extends PodspecValue<
     if (min > max) {
       throw new Error("Minimum value is greater than maximum value");
     }
-    this.def.checks.push({
-      kind: "range",
-      min,
-      max
+
+    return new PodspecInt({
+      ...this.def,
+      checks: [...this.def.checks, { kind: "range", min, max }]
     });
-    return this;
   }
 
+  /**
+   * Creates a new integer Podspec.
+   *
+   * @param args - The arguments for the integer Podspec
+   * @returns The integer Podspec
+   */
   static create(args?: CreateArgs<IntCheck>): PodspecInt {
     return new PodspecInt({
       type: PodspecDataType.Int,
@@ -184,6 +220,13 @@ export class PodspecInt extends PodspecValue<
     });
   }
 
+  /**
+   * Serializes the integer Podspec to a cloneable object.
+   * This may not be safe to serialize as JSON due to the presence of bigint
+   * values.
+   *
+   * @returns The serialized integer Podspec
+   */
   public serialize(): PodspecIntDef {
     return {
       type: PodspecDataType.Int,

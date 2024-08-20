@@ -19,6 +19,13 @@ import { PodspecInt } from "./int";
 import { PodspecOptional } from "./optional";
 import { PodspecString } from "./string";
 
+/**
+ * The type of the entries that the PodspecEntries can parse.
+ * Mirrors the structure of {@link PODEntries}, with the addition of
+ * PodspecOptional. Optional values are values that can be omitted from the
+ * POD without causing the POD to be invalid, and are either present or
+ * omitted rather than being undefined.
+ */
 export type RawEntriesType = Record<
   string,
   | PodspecString
@@ -30,6 +37,11 @@ export type RawEntriesType = Record<
     >
 >;
 
+/**
+ * Specification for a tuple of POD entries, and a list of tuples that are
+ * considered valid. If the exclude flag is set, then the list becomes an
+ * exclusion list, and the tuple must not match any of the tuples in the list.
+ */
 export type TupleSpec = {
   name: string;
   entries: string[];
@@ -37,21 +49,40 @@ export type TupleSpec = {
   exclude?: boolean;
 };
 
+/**
+ * Types of checks that can be performed on the entries.
+ */
 type PodspecCheck = {
   kind: "tupleMembership";
   spec: TupleSpec;
 };
 
+/**
+ * Definition of a set of entries and the checks that should be performed on them.
+ */
 export type PodspecEntriesDef<T extends RawEntriesType> = {
   entries: T;
   checks: PodspecCheck[];
 };
 
+/**
+ * Result of a query over a set of PODs.
+ */
 interface QueryResult {
   matches: POD[];
   matchingIndexes: number[];
 }
 
+/**
+ * Serialized definition of a set of entries and the checks that should be
+ * performed on them.
+ *
+ * The serialized definition is a cloneable object, but may not be safe to
+ * serialize to JSON due to the presence of bigint values.
+ *
+ * Initial use of this is for the Z API, where queries must be serialized
+ * before being sent to the wallet.
+ */
 export interface PodspecEntriesSerializedDef<T extends RawEntriesType> {
   entries: SerializedEntriesType<T>;
   checks: PodspecCheck[];
@@ -61,18 +92,27 @@ type SerializedEntriesType<T extends RawEntriesType> = {
   [k in keyof T]: T[k]["def"];
 };
 
+/**
+ * Podspec for a set of entries and the checks that should be performed on them.
+ */
 export class PodspecEntries<
+  // The type of the entries that the PodspecEntries can parse.
   E extends RawEntriesType,
+  // The type of the output that the PodspecEntries can parse into.
+  // This is derived from the input type, as the input value contains the keys
+  // which determine the keys present in the resulting PODEntries.
   Output = objectOutputType<E>
 > {
-  readonly errors: Error[] = [];
-
-  private _addError(e: Error): void {
-    this.errors.push(e);
-  }
-
   public constructor(public def: PodspecEntriesDef<E>) {}
 
+  /**
+   * Parses the given data into the output type.
+   * Will throw an exception if the data is invalid.
+   *
+   * @param data - The data to parse.
+   * @param params - Optional parameters for the parse operation.
+   * @returns The parsed output.
+   */
   public parse(data: unknown, params?: ParseParams): Output {
     const result = this.safeParse(data, params);
     if (isValid(result)) {
@@ -81,10 +121,26 @@ export class PodspecEntries<
     throw new PodspecError(result.issues);
   }
 
+  /**
+   * Parses the given data into the output type, returning a ParseResult.
+   * Will not throw an exception, in contrast to {@link parse}.
+   *
+   * @param data - The data to parse.
+   * @param params - Optional parameters for the parse operation.
+   * @returns The parse result.
+   */
   public safeParse(data: unknown, params?: ParseParams): ParseResult<Output> {
     return this._parse(data, params);
   }
 
+  /**
+   * Parses the given data into the output type, returning a ParseResult.
+   * Meant for internal use rather than as an external API.
+   *
+   * @param data - The data to parse.
+   * @param params - Optional parameters for the parse operation.
+   * @returns The parse result.
+   */
   _parse(data: unknown, params?: ParseParams): ParseResult<Output> {
     const path = params?.path ?? [];
     if (typeof data !== "object") {
@@ -213,9 +269,14 @@ export class PodspecEntries<
     return SUCCESS(result as Output);
   }
 
-  // @todo parameterize TupleSpec with known entry names?
+  /**
+   * Adds a tuple membership check to the Podspec.
+   *
+   * @param spec - The tuple specification.
+   * @returns The Podspec with the tuple membership check added.
+   */
   public tuple(spec: TupleSpec): typeof this {
-    // @todo validate
+    // @todo validate this before adding it
     this.def.checks.push({
       kind: "tupleMembership",
       spec
@@ -223,6 +284,15 @@ export class PodspecEntries<
     return this;
   }
 
+  /**
+   * Queries a set of PODs against the Podspec.
+   * If you want to query a single POD, use {@link parse} instead.
+   * If you want the query to include POD-level metadata such as signer public
+   * key, use {@link PodspecPOD.query} instead.
+   *
+   * @param pods - The pods to query.
+   * @returns The query result.
+   */
   public query(pods: POD[]): QueryResult {
     const matchingIndexes: number[] = [];
     const matches: POD[] = [];
@@ -239,6 +309,14 @@ export class PodspecEntries<
     };
   }
 
+  /**
+   * Serializes the Podspec into a cloneable object.
+   *
+   * The serialized may not be safe to serialize to JSON due to the presence
+   * of bigint values.
+   *
+   * @returns The serialized Podspec.
+   */
   public serialize(): PodspecEntriesSerializedDef<E> {
     return {
       checks: structuredClone(this.def.checks),
@@ -251,6 +329,18 @@ export class PodspecEntries<
     } as PodspecEntriesSerializedDef<E>;
   }
 
+  /**
+   * Deserializes a serialized PodspecEntries.
+   * Note that this is not the same as deserializing PodspecPOD.
+   * See {@link PodspecPOD.deserialize} for that.
+   *
+   * The initial use of this is for the Z API, where queries must be
+   * serialized before being sent to the wallet, and the wallet must be able
+   * to deserialize them.
+   *
+   * @param serialized - The serialized Podspec.
+   * @returns The deserialized Podspec.
+   */
   static deserialize<E extends RawEntriesType>(
     serialized: PodspecEntriesSerializedDef<E>
   ): PodspecEntries<E> {
@@ -286,6 +376,12 @@ export class PodspecEntries<
     return podspecEntries;
   }
 
+  /**
+   * Creates a new Podspec from a set of entry specs.
+   *
+   * @param entries - The entry specs to create the Podspec from.
+   * @returns The new Podspec.
+   */
   static create<E extends RawEntriesType>(entries: E): PodspecEntries<E> {
     return new PodspecEntries({ entries, checks: [] });
   }

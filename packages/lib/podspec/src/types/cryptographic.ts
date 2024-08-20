@@ -18,6 +18,13 @@ import {
 import { FAILURE, ParseParams, ParseResult, SUCCESS } from "../parse";
 import { assertUnreachable, CreateArgs } from "../utils";
 
+/**
+ * Checks if the given data is a PODCryptographicValue.
+ * Only checks that the data is an object with the correct properties, and does
+ * not check that the value is within specific bounds.
+ * @param data - The data to check.
+ * @returns True if the data is a PODCryptographicValue, false otherwise.
+ */
 function isPODCryptographicValue(data: unknown): data is PODCryptographicValue {
   if (typeof data !== "object" || data === null) {
     return false;
@@ -34,6 +41,9 @@ function isPODCryptographicValue(data: unknown): data is PODCryptographicValue {
   return true;
 }
 
+/**
+ * Checks that can be performed on a PODCryptographicValue.
+ */
 export type CryptographicCheck =
   | {
       kind: "range";
@@ -52,11 +62,23 @@ interface PodspecCryptographicDef extends PodspecDataTypeDef {
   checks: CryptographicCheck[];
 }
 
+/**
+ * A Podspec type for a PODCryptographicValue.
+ */
 export class PodspecCryptographic extends PodspecValue<
+  // The definition of the PodspecCryptographic.
   PodspecCryptographicDef,
+  // The type of the value that the PodspecCryptographic outputs.
   PODCryptographicValue,
+  // The type of the value that the PodspecCryptographic accepts (including coercion).
   PODIntValue | number | bigint
 > {
+  /**
+   * Parses the given data into a PODCryptographicValue.
+   * @param data - The data to parse.
+   * @param params - The parse parameters.
+   * @returns The parsed PODCryptographicValue, or an issue if the data is invalid.
+   */
   _parse(
     data: unknown,
     params?: ParseParams
@@ -148,19 +170,32 @@ export class PodspecCryptographic extends PodspecValue<
     return SUCCESS(value);
   }
 
+  /**
+   * Adds a list check to the PODCryptographicValue.
+   * @param list - The list of values to check against.
+   * @param options - The options for the list check.
+   * @returns A new PodspecCryptographicValue with the list check added.
+   */
   public list(
     list: bigint[],
     options: { exclude: boolean } = { exclude: false }
-  ): typeof this {
-    this.def.checks.push({
-      kind: "list",
-      list,
-      exclude: options.exclude
+  ): PodspecCryptographic {
+    return new PodspecCryptographic({
+      ...this.def,
+      checks: [
+        ...this.def.checks,
+        { kind: "list", list, exclude: options.exclude }
+      ]
     });
-    return this;
   }
 
-  public range(min: bigint, max: bigint): typeof this {
+  /**
+   * Adds a range check to the PODCryptographicValue.
+   * @param min - The minimum value to check against.
+   * @param max - The maximum value to check against.
+   * @returns A new PodspecCryptographicValue with the range check added.
+   */
+  public range(min: bigint, max: bigint): PodspecCryptographic {
     if (min < POD_CRYPTOGRAPHIC_MIN) {
       throw new Error("Minimum value out of bounds");
     }
@@ -170,14 +205,20 @@ export class PodspecCryptographic extends PodspecValue<
     if (min > max) {
       throw new Error("Minimum value is greater than maximum value");
     }
-    this.def.checks.push({
-      kind: "range",
-      min,
-      max
+    return new PodspecCryptographic({
+      ...this.def,
+      checks: [...this.def.checks, { kind: "range", min, max }]
     });
-    return this;
   }
 
+  /**
+   * Creates a new PodspecCryptographicValue.
+   *
+   * See {@link CreateArgs} for more details.
+   *
+   * @param args - Optional arguments specifying checks and coercion.
+   * @returns A new PodspecCryptographicValue.
+   */
   static create(args?: CreateArgs<CryptographicCheck>): PodspecCryptographic {
     return new PodspecCryptographic({
       type: PodspecDataType.Cryptographic,
@@ -186,6 +227,13 @@ export class PodspecCryptographic extends PodspecValue<
     });
   }
 
+  /**
+   * Serializes the PodspecCryptographicValue into a PodspecCryptographicDef.
+   * The result is a cloneable object, but may not be safe to serialize to
+   * JSON due to the presence of bigint values.
+   *
+   * @returns The serialized PodspecCryptographicDef.
+   */
   public serialize(): PodspecCryptographicDef {
     return {
       type: PodspecDataType.Cryptographic,

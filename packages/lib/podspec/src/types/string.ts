@@ -33,36 +33,62 @@ function isPODStringValue(data: unknown): data is PODStringValue {
   return true;
 }
 
+/**
+ * Checks that can be added to a string Podspec.
+ */
 export type StringCheck = {
   kind: "list";
   list: string[];
   exclude?: boolean;
 };
 
+/**
+ * The definition of a string Podspec.
+ */
 interface PodspecStringDef extends PodspecDataTypeDef {
   type: PodspecDataType.String;
   checks: StringCheck[];
   coerce: boolean;
 }
 
+/**
+ * A Podspec type for a POD string value.
+ */
 export class PodspecString extends PodspecValue<
+  // The definition of the PodspecString.
   PodspecStringDef,
+  // The type of the value that the PodspecString outputs.
   PODStringValue,
-  string,
+  // The type of the value that the PodspecString accepts (including coercion).
+  PODStringValue | string,
+  // The serialized form of the PodspecString.
   PodspecStringDef
 > {
+  /**
+   * Adds a list check to the PodspecString.
+   *
+   * @param list - The list of strings to check against.
+   * @param options - The options for the list check.
+   * @returns The PodspecString.
+   */
   public list(
     list: string[],
     options: { exclude: boolean } = { exclude: false }
-  ): typeof this {
-    this.def.checks.push({
-      kind: "list",
-      list,
-      exclude: options.exclude
+  ): PodspecString {
+    return new PodspecString({
+      ...this.def,
+      checks: [
+        ...this.def.checks,
+        { kind: "list", list, exclude: options.exclude }
+      ]
     });
-    return this;
   }
 
+  /**
+   * Serializes the string Podspec to a cloneable object.
+   *
+   * @returns The serialized string Podspec
+   */
   public serialize(): PodspecStringDef {
     return {
       type: PodspecDataType.String,
@@ -71,6 +97,12 @@ export class PodspecString extends PodspecValue<
     };
   }
 
+  /**
+   * Parses the given data into a POD string value.
+   *
+   * @param data - The data to parse.
+   * @returns The parsed POD string value, or an issue if the data is invalid.
+   */
   _parse(data: unknown, params?: ParseParams): ParseResult<PODStringValue> {
     const issues: PodspecBaseIssue[] = [];
     let value: PODStringValue | undefined;
@@ -146,6 +178,12 @@ export class PodspecString extends PodspecValue<
     super(def);
   }
 
+  /**
+   * Creates a new string Podspec.
+   *
+   * @param args - The arguments for the string Podspec.
+   * @returns The new string Podspec.
+   */
   static create(args?: CreateArgs<StringCheck>): PodspecString {
     return new PodspecString({
       type: PodspecDataType.String,

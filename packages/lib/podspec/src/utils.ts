@@ -17,6 +17,10 @@ export interface CreateArgs<C> {
   checks?: C[];
 }
 
+/**
+ * Some TypeScript voodoo to turn a Podspec definition into a TypeScript type
+ * which matches the PODEntries that result from parsing.
+ */
 export type BaseObjectOutputType<Shape extends RawEntriesType> = {
   [k in keyof Shape]: Shape[k]["_output"];
 };

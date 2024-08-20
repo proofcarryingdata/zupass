@@ -11,6 +11,9 @@ import { CreateArgs } from "./utils";
 
 export const deserialize = PodspecEntries.deserialize;
 
+/**
+ * Creation functions for Podspec types.
+ */
 export const entries = PodspecEntries.create;
 export const string = PodspecString.create;
 export const int = PodspecInt.create;
@@ -18,6 +21,9 @@ export const cryptographic = PodspecCryptographic.create;
 export const eddsaPubKey = PodspecEdDSAPubKey.create;
 export const POD = PodspecPOD.create;
 
+/**
+ * Creation functions for Podspec values with coercion enabled.
+ */
 export const coerce = {
   string: (args?: CreateArgs<StringCheck>): PodspecString =>
     string({ ...args, coerce: true }),
