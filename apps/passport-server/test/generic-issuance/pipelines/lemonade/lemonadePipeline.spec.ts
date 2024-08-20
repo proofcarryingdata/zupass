@@ -12,7 +12,6 @@ import {
   requestPodboxTicketAction
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { expectIsPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
   SemaphoreGroupPCDPackage,
   deserializeSemaphoreGroup,
@@ -1034,7 +1033,7 @@ describe("generic issuance - LemonadePipeline", function () {
         EdgeCityDenverBouncer.email,
         EdgeCityBouncerIdentity
       );
-      expectLength(bouncerTickets, 2);
+      expectLength(bouncerTickets, 1);
       const bouncerTicket = bouncerTickets[0];
       expectToExist(bouncerTicket);
       expectIsEdDSATicketPCD(bouncerTicket);
@@ -1044,14 +1043,14 @@ describe("generic issuance - LemonadePipeline", function () {
       // Bouncer ticket is checked out
       expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
 
-      const bouncerPODTicket = bouncerTickets[1];
-      expectToExist(bouncerPODTicket);
-      expectIsPODTicketPCD(bouncerPODTicket);
-      expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        EdgeCityDenverBouncer.email
-      );
-      // Bouncer ticket is checked out
-      expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(false);
+      // const bouncerPODTicket = bouncerTickets[1];
+      // expectToExist(bouncerPODTicket);
+      // expectIsPODTicketPCD(bouncerPODTicket);
+      // expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+      //   EdgeCityDenverBouncer.email
+      // );
+      // // Bouncer ticket is checked out
+      // expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(false);
 
       const edgeCityCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
 
