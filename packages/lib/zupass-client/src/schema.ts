@@ -43,19 +43,41 @@ const PODValueSchema = z.discriminatedUnion("type", [
 ]);
 
 const PODQuerySchema = z.object({
-  // @todo: replace any with a more specific type
-  entries: z.any(),
   checks: z.array(
-    z.object({
-      kind: z.literal("tupleMembership"),
-      spec: z.object({
-        name: z.string(),
-        entries: z.array(z.string()),
-        members: z.array(z.array(PODValueSchema)),
-        exclude: z.boolean().optional()
+    z.discriminatedUnion("kind", [
+      z.object({
+        kind: z.literal("tupleMembership"),
+        spec: z.object({
+          name: z.string(),
+          entries: z.array(z.string()),
+          members: z.array(z.array(PODValueSchema)),
+          exclude: z.boolean().optional()
+        })
+      }),
+      z.object({
+        kind: z.literal("signer"),
+        signer: z.string()
+      }),
+      z.object({
+        kind: z.literal("signerList"),
+        signerList: z.array(z.string())
       })
-    })
-  )
+    ])
+  ),
+  entries: z.object({
+    entries: z.any(),
+    checks: z.array(
+      z.object({
+        kind: z.literal("tupleMembership"),
+        spec: z.object({
+          name: z.string(),
+          entries: z.array(z.string()),
+          members: z.array(z.array(PODValueSchema)),
+          exclude: z.boolean().optional()
+        })
+      })
+    )
+  })
 });
 
 export const GPCPCDArgsSchema = z.object({

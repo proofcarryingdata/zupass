@@ -1,4 +1,4 @@
-import { POD, PODEntries, PODValue, checkPODName } from "@pcd/pod";
+import { PODEntries, PODValue, checkPODName } from "@pcd/pod";
 import { PodspecDataType } from "../base";
 import {
   IssueCode,
@@ -64,14 +64,6 @@ export type PodspecEntriesDef<T extends RawEntriesType> = {
   entries: T;
   checks: PodspecCheck[];
 };
-
-/**
- * Result of a query over a set of PODs.
- */
-interface QueryResult {
-  matches: POD[];
-  matchingIndexes: number[];
-}
 
 /**
  * Serialized definition of a set of entries and the checks that should be
@@ -282,31 +274,6 @@ export class PodspecEntries<
       spec
     });
     return this;
-  }
-
-  /**
-   * Queries a set of PODs against the Podspec.
-   * If you want to query a single POD, use {@link parse} instead.
-   * If you want the query to include POD-level metadata such as signer public
-   * key, use {@link PodspecPOD.query} instead.
-   *
-   * @param pods - The pods to query.
-   * @returns The query result.
-   */
-  public query(pods: POD[]): QueryResult {
-    const matchingIndexes: number[] = [];
-    const matches: POD[] = [];
-    for (const [index, pod] of pods.entries()) {
-      const result = this._parse(pod.content.asEntries());
-      if (isValid(result)) {
-        matchingIndexes.push(index);
-        matches.push(pod);
-      }
-    }
-    return {
-      matches,
-      matchingIndexes
-    };
   }
 
   /**

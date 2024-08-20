@@ -226,6 +226,7 @@ class PODServer extends BaseZappServer implements ZupassPOD {
   public async query(query: unknown): Promise<string[]> {
     let q;
     try {
+      // @todo need a better way of defining the possibly type of the query
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       q = p.deserialize(query as any);
       console.log("querying with ", q);

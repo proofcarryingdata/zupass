@@ -253,7 +253,7 @@ describe("podspec should work", async function () {
   });
 
   it("podspec should deserialize", function () {
-    const myPodSpec = p.entries({
+    const myPodSpec = p.pod({
       foo: p.string(),
       bar: p.int()
     });
@@ -266,7 +266,7 @@ describe("podspec should work", async function () {
   it("should query across multiple PODs", function () {
     const key = generateRandomHex(32);
 
-    const myPodSpec = p.entries({
+    const myPodSpec = p.pod({
       foo: p.string(),
       bar: p.int()
     });
@@ -295,7 +295,7 @@ describe("podspec should work", async function () {
 
   it("should apply range checks in queries", function () {
     const key = generateRandomHex(32);
-    const myPodSpec = p.entries({
+    const myPodSpec = p.pod({
       foo: p.int().range(1n, 10n)
     });
 
@@ -319,7 +319,7 @@ describe("podspec should work", async function () {
     const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
 
     const myPodSpec = p
-      .entries({
+      .pod({
         eventId: p.string(),
         productId: p.string(),
         // @todo add a special check for signer public keys
@@ -372,7 +372,7 @@ describe("podspec should work", async function () {
     const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
 
     const myPodSpec = p
-      .POD({
+      .pod({
         eventId: p.string(),
         productId: p.string()
       })
@@ -398,7 +398,7 @@ describe("podspec should work", async function () {
     const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
 
     const myPodSpec = p
-      .POD({
+      .pod({
         eventId: p.string(),
         productId: p.string()
       })
@@ -452,7 +452,7 @@ describe("podspec should work", async function () {
     const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
 
     const myPodSpec = p
-      .POD({
+      .pod({
         eventId: p.string(),
         productId: p.string()
       })

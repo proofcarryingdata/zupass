@@ -70,9 +70,17 @@ export type RawEntriesTypeWithoutOptional<T extends RawEntriesType> = {
   [K in keyof T]: ExcludeOptional<T[K]>;
 };
 
-interface SerializedPodspecPOD<T extends RawEntriesType> {
+export interface SerializedPodspecPOD<T extends RawEntriesType> {
   entries: PodspecEntriesSerializedDef<T>;
   checks: PODCheck[];
+}
+
+/**
+ * Result of a query over a set of PODs.
+ */
+interface QueryResult {
+  matches: POD[];
+  matchingIndexes: number[];
 }
 
 /**
@@ -292,5 +300,30 @@ export class PodspecPOD<T extends RawEntriesType> {
       entries: this.def.entries,
       checks: [...this.def.checks, { kind: "tupleMembership", spec }]
     });
+  }
+
+  /**
+   * Queries a set of PODs against the Podspec.
+   * If you want to query a single POD, use {@link parse} instead.
+   * If you want the query to include POD-level metadata such as signer public
+   * key, use {@link PodspecPOD.query} instead.
+   *
+   * @param pods - The pods to query.
+   * @returns The query result.
+   */
+  public query(pods: POD[]): QueryResult {
+    const matchingIndexes: number[] = [];
+    const matches: POD[] = [];
+    for (const [index, pod] of pods.entries()) {
+      const result = this.safeParse(pod);
+      if (result.isValid) {
+        matchingIndexes.push(index);
+        matches.push(pod);
+      }
+    }
+    return {
+      matches,
+      matchingIndexes
+    };
   }
 }

@@ -1,8 +1,8 @@
 import type { GPCPCDArgs } from "@pcd/gpc-pcd";
 import type { SerializedPCD } from "@pcd/pcd-types";
-import type { GenericSerializedEntriesSpec } from "@pcd/podspec";
+import { GenericSerializedPodspecPOD } from "@pcd/podspec";
 
-type PODQuery = GenericSerializedEntriesSpec;
+type PODQuery = GenericSerializedPodspecPOD;
 
 export type ZupassFolderContent =
   | {

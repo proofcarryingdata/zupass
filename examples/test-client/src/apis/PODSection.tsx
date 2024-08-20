@@ -17,9 +17,9 @@ export function PODSection(): ReactNode {
             Querying PODs is done like this:
             <code className="block text-xs font-base rounded-md p-2 whitespace-pre">
               {`const q = p
-  .entries({
-    wis: p.int().range(8n, POD_INT_MAX),
-    str: p.int().range(5n, POD_INT_MAX),
+  .pod({
+    wis: p.int().range(BigInt(8), POD_INT_MAX),
+    str: p.int().range(BigInt(5), POD_INT_MAX),
   })
   .serialize();
 const pods = await z.pod.query(q);
@@ -30,7 +30,7 @@ const pods = await z.pod.query(q);
             onClick={async () => {
               try {
                 const q = p
-                  .entries({
+                  .pod({
                     wis: p.int().range(BigInt(8), POD_INT_MAX),
                     str: p.int().range(BigInt(5), POD_INT_MAX)
                   })

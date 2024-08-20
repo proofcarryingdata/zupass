@@ -9,7 +9,7 @@ import { PodspecPOD } from "./types/pod";
 import { PodspecString, StringCheck } from "./types/string";
 import { CreateArgs } from "./utils";
 
-export const deserialize = PodspecEntries.deserialize;
+export const deserialize = PodspecPOD.deserialize;
 
 /**
  * Creation functions for Podspec types.
@@ -19,7 +19,7 @@ export const string = PodspecString.create;
 export const int = PodspecInt.create;
 export const cryptographic = PodspecCryptographic.create;
 export const eddsaPubKey = PodspecEdDSAPubKey.create;
-export const POD = PodspecPOD.create;
+export const pod = PodspecPOD.create;
 
 /**
  * Creation functions for Podspec values with coercion enabled.
