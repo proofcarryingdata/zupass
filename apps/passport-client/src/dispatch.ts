@@ -32,6 +32,7 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
+import { v3tov4Identity } from "@pcd/semaphore-identity-v4";
 import { assertUnreachable, sleep } from "@pcd/util";
 import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
@@ -309,14 +310,14 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ): Promise<void> {
-  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
-  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+  const v3Identity = await SemaphoreIdentityPCDPackage.prove({ identity });
+  const v4Identity = v3tov4Identity(v3Identity);
+  const pcds = new PCDCollection(await getPackages(), [v3Identity, v4Identity]);
 
   await savePCDs(pcds);
+  update({ pcds });
 
   window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
-
-  update({ pcds });
 }
 
 async function oneClickLogin(
