@@ -46,9 +46,9 @@ export async function upsertUser(
         client,
         `\
 INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance, semaphore_v4_id)
-VALUES ($1, $2, $3, $4, $5, $6)
+VALUES ($1, $2, $3, $4, $5, $6, $8)
 ON CONFLICT (uuid) DO UPDATE SET 
-commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7 semaphore_v4_id=$8
+commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7, semaphore_v4_id=$8
 returning *`,
         [
           uuid,
