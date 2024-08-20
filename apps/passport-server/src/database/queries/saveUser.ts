@@ -5,15 +5,17 @@ import { sqlQuery, sqlTransaction } from "../sqlQuery";
 /**
  * Saves a new user. If a user with the given UUID already exists, overwrites their
  * information. Returns the user's UUID.
+ *
+ * @param params is a partial {@link UserRow}.
  */
 export async function upsertUser(
   client: Pool,
-  // this is a partial UserRow
   params: {
     uuid: string;
     commitment: string;
     salt?: string | null;
     encryption_key?: string | null;
+    semaphore_v4_id?: string | null;
     terms_agreed: number;
     extra_issuance: boolean;
     emails: string[];
@@ -36,16 +38,17 @@ export async function upsertUser(
         terms_agreed,
         extra_issuance,
         uuid,
-        emails
+        emails,
+        semaphore_v4_id
       } = params;
 
       const upsertUserResult = await sqlQuery(
         client,
         `\
-INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance)
+INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance, semaphore_v4_id)
 VALUES ($1, $2, $3, $4, $5, $6)
 ON CONFLICT (uuid) DO UPDATE SET 
-commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7
+commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7 semaphore_v4_id=$8
 returning *`,
         [
           uuid,
@@ -54,7 +57,8 @@ returning *`,
           encryption_key,
           terms_agreed,
           extra_issuance,
-          new Date()
+          new Date(),
+          semaphore_v4_id
         ],
         0
       );

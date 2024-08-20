@@ -158,6 +158,7 @@ export interface UserRow {
   time_created: Date;
   time_updated: Date;
   auth_key: string;
+  semaphore_v4_id: string | null;
 }
 
 export interface EncryptedStorageModel {
