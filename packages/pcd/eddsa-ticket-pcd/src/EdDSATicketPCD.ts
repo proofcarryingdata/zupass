@@ -54,7 +54,8 @@ export interface ITicketData {
   productId: string; // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
   timestampConsumed: number;
   timestampSigned: number;
-  attendeeSemaphoreId: string;
+  attendeeSemaphoreId?: string;
+  attendeeSemaphoreV4Id?: string;
   isConsumed: boolean;
   isRevoked: boolean;
   ticketCategory: TicketCategory;

@@ -42,8 +42,9 @@ import {
   PODTicketPCDPackage,
   PODTicketPCDTypeName
 } from "@pcd/pod-ticket-pcd";
+import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
-import { normalizeEmail, str } from "@pcd/util";
+import { normalizeEmail, onlyDefined, str } from "@pcd/util";
 import stable_stringify from "fast-json-stable-stringify";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
@@ -852,7 +853,8 @@ export class PretixPipeline implements BasePipeline {
 
   private async manualTicketToTicketData(
     manualTicket: ManualTicket,
-    sempahoreId: string
+    sempahoreId?: string,
+    v4Commitment?: string
   ): Promise<ITicketData> {
     const event = this.getEventById(manualTicket.eventId);
     const product = this.getProductById(event, manualTicket.productId);
@@ -869,6 +871,7 @@ export class PretixPipeline implements BasePipeline {
       attendeeEmail: manualTicket.attendeeEmail,
       attendeeName: manualTicket.attendeeName,
       attendeeSemaphoreId: sempahoreId,
+      attendeeSemaphoreV4Id: v4Commitment,
       imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
       isConsumed: checkIn ? true : false,
       isRevoked: false,
@@ -904,13 +907,14 @@ export class PretixPipeline implements BasePipeline {
    */
   private async getTicketsForEmail(
     email: string,
-    identityCommitment: string
+    v3Commitment?: string,
+    v4Commitment?: string
   ): Promise<EdDSATicketPCD[]> {
     // Load atom-backed tickets
     const relevantTickets = await this.db.loadByEmail(this.id, email);
     // Convert atoms to ticket data
     const ticketDatas = relevantTickets.map((t) =>
-      this.atomToTicketData(t, identityCommitment)
+      this.atomToTicketData(t, v3Commitment)
     );
     // Load manual tickets from the definition
     const manualTickets = await this.getManualTicketsForEmail(email);
@@ -919,7 +923,11 @@ export class PretixPipeline implements BasePipeline {
     ticketDatas.push(
       ...(await Promise.all(
         manualTickets.map((manualTicket) =>
-          this.manualTicketToTicketData(manualTicket, identityCommitment)
+          this.manualTicketToTicketData(
+            manualTicket,
+            v3Commitment,
+            v4Commitment
+          )
         )
       ))
     );
@@ -931,7 +939,7 @@ export class PretixPipeline implements BasePipeline {
       )
     );
 
-    return tickets;
+    return onlyDefined(tickets);
   }
 
   private async issuePretixTicketPCDs(
@@ -948,32 +956,29 @@ export class PretixPipeline implements BasePipeline {
         return { actions: [] };
       }
 
-      const { emails, semaphoreId } =
+      const { emails, semaphoreId, semaphoreIdV4 } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
-
-      if (!semaphoreId) {
-        throw new Error("invalid credential");
-      }
 
       if (!emails || emails.length === 0) {
         throw new Error("missing emails in credential");
       }
 
       span?.setAttribute("email", emails.map((e) => e.email).join(","));
-      span?.setAttribute("semaphore_id", semaphoreId);
+      span?.setAttribute("semaphore_id", semaphoreId ?? "");
+      span?.setAttribute("semaphore_v4_id", semaphoreIdV4 ?? "");
 
-      let didUpdate = false;
-
-      for (const e of emails) {
-        didUpdate =
-          didUpdate ||
-          (await this.consumerDB.save(
-            this.id,
-            e.email,
-            semaphoreId,
-            new Date()
-          ));
-      }
+      // TODO
+      // let didUpdate = false;
+      // for (const e of emails) {
+      //   didUpdate =
+      //     didUpdate ||
+      //     (await this.consumerDB.save(
+      //       this.id,
+      //       e.email,
+      //       semaphoreId,
+      //       new Date()
+      //     ));
+      // }
 
       const provider = this.autoIssuanceProvider;
       if (provider) {
@@ -996,16 +1001,18 @@ export class PretixPipeline implements BasePipeline {
 
       // If the user's Semaphore commitment has changed, `didUpdate` will be
       // true, and we need to update the Semaphore groups
-      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        if (didUpdate) {
-          span?.setAttribute("semaphore_groups_updated", true);
-          await this.triggerSemaphoreGroupUpdate();
-        }
-      }
+      // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+      //   if (didUpdate) {
+      //     span?.setAttribute("semaphore_groups_updated", true);
+      //     await this.triggerSemaphoreGroupUpdate();
+      //   }
+      // }
 
       const tickets = (
         await Promise.all(
-          emails.map((e) => this.getTicketsForEmail(e.email, semaphoreId))
+          emails.map((e) =>
+            this.getTicketsForEmail(e.email, semaphoreId, semaphoreIdV4)
+          )
         )
       ).flat();
 
@@ -1036,7 +1043,7 @@ export class PretixPipeline implements BasePipeline {
         );
         ticketPCDs.push(
           ...(await Promise.all(
-            podTickets.map((t) => PODTicketPCDPackage.serialize(t))
+            onlyDefined(podTickets).map((t) => PODTicketPCDPackage.serialize(t))
           ))
         );
       }
@@ -1053,7 +1060,11 @@ export class PretixPipeline implements BasePipeline {
     });
   }
 
-  private atomToTicketData(atom: PretixAtom, semaphoreId: string): ITicketData {
+  private atomToTicketData(
+    atom: PretixAtom,
+    semaphoreId?: string,
+    v4Commitment?: string
+  ): ITicketData {
     if (!atom.email) {
       throw new Error(`Atom missing email: ${atom.id} in pipeline ${this.id}`);
     }
@@ -1074,6 +1085,7 @@ export class PretixPipeline implements BasePipeline {
       timestampConsumed: atom.timestampConsumed?.getTime() ?? 0,
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
+      attendeeSemaphoreV4Id: v4Commitment,
       imageUrl: this.atomToImageUrl(atom),
       isConsumed: atom.isConsumed,
       isRevoked: false,
@@ -1084,7 +1096,7 @@ export class PretixPipeline implements BasePipeline {
   private async getOrGenerateTicket<T extends EdDSATicketPCD | PODTicketPCD>(
     ticketData: ITicketData,
     ticketPCDType: T["type"]
-  ): Promise<T> {
+  ): Promise<T | undefined> {
     return traced(LOG_NAME, "getOrGenerateTicket", async (span) => {
       span?.setAttribute("ticket_id", ticketData.ticketId);
       span?.setAttribute("ticket_email", ticketData.attendeeEmail);
@@ -1104,14 +1116,18 @@ export class PretixPipeline implements BasePipeline {
         `${LOG_TAG} cache miss for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
       );
 
-      const generatedTicket: T = (
+      const generatedTicket: T | undefined = (
         ticketPCDType === EdDSATicketPCDTypeName
           ? await this.ticketDataToTicketPCD(ticketData, this.eddsaPrivateKey)
           : await this.ticketDataToPODTicketPCD(
               ticketData,
               this.eddsaPrivateKey
             )
-      ) as T;
+      ) as T | undefined;
+
+      if (!generatedTicket) {
+        return undefined;
+      }
 
       try {
         this.cacheTicket(generatedTicket);
@@ -1227,14 +1243,18 @@ export class PretixPipeline implements BasePipeline {
   private async ticketDataToPODTicketPCD(
     ticketData: ITicketData,
     eddsaPrivateKey: string
-  ): Promise<PODTicketPCD> {
+  ): Promise<PODTicketPCD | undefined> {
     const stableId = await getHash(
       `issued-pod-ticket-${this.id}-${ticketData.ticketId}`
     );
 
+    if (!ticketData.attendeeSemaphoreV4Id) {
+      return undefined;
+    }
+
     const ticketPCD = await PODTicketPCDPackage.prove({
       ticket: {
-        value: ticketData,
+        value: ticketData as IPODTicketData,
         argumentType: ArgumentTypeName.Object
       },
       privateKey: {

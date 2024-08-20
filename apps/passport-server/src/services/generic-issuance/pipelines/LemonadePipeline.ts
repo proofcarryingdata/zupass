@@ -42,6 +42,7 @@ import {
   PODTicketPCDPackage,
   PODTicketPCDTypeName
 } from "@pcd/pod-ticket-pcd";
+import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { str } from "@pcd/util";
 import { randomUUID } from "crypto";
@@ -1084,14 +1085,18 @@ export class LemonadePipeline implements BasePipeline {
   private async ticketDataToPODTicketPCD(
     ticketData: ITicketData,
     eddsaPrivateKey: string
-  ): Promise<PODTicketPCD> {
+  ): Promise<PODTicketPCD | undefined> {
     const stableId = await getHash(
       `issued-pod-ticket-${this.id}-${ticketData.ticketId}`
     );
 
+    if (!ticketData.attendeeSemaphoreV4Id) {
+      return undefined;
+    }
+
     const ticketPCD = await PODTicketPCDPackage.prove({
       ticket: {
-        value: ticketData,
+        value: ticketData as IPODTicketData,
         argumentType: ArgumentTypeName.Object
       },
       privateKey: {

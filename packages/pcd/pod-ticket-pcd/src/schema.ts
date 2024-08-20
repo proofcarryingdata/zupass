@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { TicketCategory } from "./PODTicketPCD";
-import { canBeBigInt, cryptographic } from "./utils";
 
 export const TicketDataSchema = z.object({
   eventName: z.string(),
@@ -13,7 +12,7 @@ export const TicketDataSchema = z.object({
   productId: z.string().uuid(),
   timestampConsumed: z.number().int().nonnegative(),
   timestampSigned: z.number().int().nonnegative(),
-  attendeeSemaphoreId: z.string().refine(canBeBigInt).transform(cryptographic),
+  attendeeSemaphoreV4Id: z.string(),
   isConsumed: z.boolean(),
   isRevoked: z.boolean(),
   ticketCategory: z.nativeEnum(TicketCategory),

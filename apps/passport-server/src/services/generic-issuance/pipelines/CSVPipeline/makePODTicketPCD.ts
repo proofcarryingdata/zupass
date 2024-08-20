@@ -1,5 +1,6 @@
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { PODTicketPCD, PODTicketPCDPackage } from "@pcd/pod-ticket-pcd";
+import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
 import { traced } from "../../../telemetryService";
 import { rowToTicket } from "./makeTicketPCD";
 
@@ -29,6 +30,10 @@ export async function makePODTicketPCD(
       return undefined;
     }
 
+    if (!ticket.attendeeSemaphoreV4Id) {
+      return undefined;
+    }
+
     const pcd = await PODTicketPCDPackage.prove({
       privateKey: {
         value: eddsaPrivateKey,
@@ -39,7 +44,7 @@ export async function makePODTicketPCD(
         argumentType: ArgumentTypeName.String
       },
       ticket: {
-        value: ticket,
+        value: ticket as IPODTicketData,
         argumentType: ArgumentTypeName.Object
       }
     });
