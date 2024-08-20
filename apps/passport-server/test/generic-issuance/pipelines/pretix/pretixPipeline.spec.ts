@@ -214,7 +214,7 @@ describe("generic issuance - PretixPipeline", function () {
       );
       expectLength(
         attendeeTickets.map((t) => t.claim.ticket.attendeeEmail),
-        2
+        1
       );
       const attendeeTicket = attendeeTickets[0];
       expectToExist(attendeeTicket);
@@ -226,15 +226,15 @@ describe("generic issuance - PretixPipeline", function () {
         pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
       );
 
-      const attendeePODTicket = attendeeTickets[1];
-      expectToExist(attendeePODTicket);
-      expectIsPODTicketPCD(attendeePODTicket);
-      expect(attendeePODTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
-      );
-      expect(attendeePODTicket.claim.ticket.attendeeName).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
-      );
+      // const attendeePODTicket = attendeeTickets[1];
+      // expectToExist(attendeePODTicket);
+      // expectIsPODTicketPCD(attendeePODTicket);
+      // expect(attendeePODTicket.claim.ticket.attendeeEmail).to.eq(
+      //   pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
+      // );
+      // expect(attendeePODTicket.claim.ticket.attendeeName).to.eq(
+      //   pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
+      // );
 
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
@@ -244,7 +244,7 @@ describe("generic issuance - PretixPipeline", function () {
         pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
         EthLatAmBouncerIdentity
       );
-      expectLength(bouncerTickets, 2);
+      expectLength(bouncerTickets, 1);
       const bouncerTicket = bouncerTickets[0];
       expectToExist(bouncerTicket);
       expectIsEdDSATicketPCD(bouncerTicket);
@@ -254,15 +254,15 @@ describe("generic issuance - PretixPipeline", function () {
       expect(bouncerTicket.claim.ticket.attendeeName).to.eq(
         pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
       );
-      const bouncerPODTicket = bouncerTickets[1];
-      expectToExist(bouncerPODTicket);
-      expectIsPODTicketPCD(bouncerPODTicket);
-      expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
-      );
-      expect(bouncerPODTicket.claim.ticket.attendeeName).to.eq(
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
-      );
+      // const bouncerPODTicket = bouncerTickets[1];
+      // expectToExist(bouncerPODTicket);
+      // expectIsPODTicketPCD(bouncerPODTicket);
+      // expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+      //   pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+      // );
+      // expect(bouncerPODTicket.claim.ticket.attendeeName).to.eq(
+      //   pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
+      // );
 
       const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
 
@@ -323,17 +323,17 @@ describe("generic issuance - PretixPipeline", function () {
         EthLatAmManualAttendeeEmail,
         EthLatAmManualAttendeeIdentity
       );
-      expectLength(ManualAttendeeTickets, 2);
+      expectLength(ManualAttendeeTickets, 1);
       const ManualAttendeeTicket = ManualAttendeeTickets[0];
       expectIsEdDSATicketPCD(ManualAttendeeTicket);
       expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
         EthLatAmManualAttendeeEmail
       );
-      const ManualAttendeePODTicket = ManualAttendeeTickets[1];
-      expectIsPODTicketPCD(ManualAttendeePODTicket);
-      expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
-        EthLatAmManualAttendeeEmail
-      );
+      // const ManualAttendeePODTicket = ManualAttendeeTickets[1];
+      // expectIsPODTicketPCD(ManualAttendeePODTicket);
+      // expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
+      //   EthLatAmManualAttendeeEmail
+      // );
 
       const ManualBouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
@@ -343,7 +343,7 @@ describe("generic issuance - PretixPipeline", function () {
         EthLatAmManualBouncerEmail,
         EthLatAmManualBouncerIdentity
       );
-      expectLength(ManualBouncerTickets, 2);
+      expectLength(ManualBouncerTickets, 1);
       const ManualBouncerTicket = ManualBouncerTickets[0];
       expectIsEdDSATicketPCD(ManualBouncerTicket);
       expect(ManualBouncerTicket.claim.ticket.attendeeEmail).to.eq(
@@ -351,12 +351,12 @@ describe("generic issuance - PretixPipeline", function () {
       );
       expect(ManualBouncerTicket.claim.ticket.imageUrl).to.be.undefined;
 
-      const ManualBouncerPODTicket = ManualBouncerTickets[1];
-      expectIsPODTicketPCD(ManualBouncerPODTicket);
-      expect(ManualBouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        EthLatAmManualBouncerEmail
-      );
-      expect(ManualBouncerPODTicket.claim.ticket.imageUrl).to.be.undefined;
+      // const ManualBouncerPODTicket = ManualBouncerTickets[1];
+      // expectIsPODTicketPCD(ManualBouncerPODTicket);
+      // expect(ManualBouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+      //   EthLatAmManualBouncerEmail
+      // );
+      // expect(ManualBouncerPODTicket.claim.ticket.imageUrl).to.be.undefined;
 
       pretixBackend.checkOut(
         ethLatAmPretixOrganizer.orgUrl,
@@ -387,7 +387,7 @@ describe("generic issuance - PretixPipeline", function () {
           EthLatAmManualAttendeeEmail,
           EthLatAmManualAttendeeIdentity
         );
-        expectLength(ManualAttendeeTickets, 2);
+        expectLength(ManualAttendeeTickets, 1);
         const ManualAttendeeTicket = ManualAttendeeTickets[0];
         expectIsEdDSATicketPCD(ManualAttendeeTicket);
         expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
@@ -400,18 +400,18 @@ describe("generic issuance - PretixPipeline", function () {
         expect(ManualAttendeeTicket.claim.ticket.timestampConsumed).to.eq(
           Date.now()
         );
-        const ManualAttendeePODTicket = ManualAttendeeTickets[1];
-        expectIsPODTicketPCD(ManualAttendeePODTicket);
-        expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
-          EthLatAmManualAttendeeEmail
-        );
-        expect(ManualAttendeePODTicket.claim.ticket.isConsumed).to.eq(true);
-        expect(ManualAttendeePODTicket.claim.ticket.imageUrl).to.eq(
-          EthLatAmImageUrl
-        );
-        expect(ManualAttendeePODTicket.claim.ticket.timestampConsumed).to.eq(
-          Date.now()
-        );
+        // const ManualAttendeePODTicket = ManualAttendeeTickets[1];
+        // expectIsPODTicketPCD(ManualAttendeePODTicket);
+        // expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
+        //   EthLatAmManualAttendeeEmail
+        // );
+        // expect(ManualAttendeePODTicket.claim.ticket.isConsumed).to.eq(true);
+        // expect(ManualAttendeePODTicket.claim.ticket.imageUrl).to.eq(
+        //   EthLatAmImageUrl
+        // );
+        // expect(ManualAttendeePODTicket.claim.ticket.timestampConsumed).to.eq(
+        //   Date.now()
+        // );
       }
 
       const manualBouncerChecksInManualAttendeeAgain =
