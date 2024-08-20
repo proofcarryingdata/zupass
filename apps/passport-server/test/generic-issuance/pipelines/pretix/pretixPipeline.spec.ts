@@ -623,7 +623,7 @@ describe("generic issuance - PretixPipeline", function () {
       pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
       EthLatAmBouncerIdentity
     );
-    expectLength(bouncerTickets, 2);
+    expectLength(bouncerTickets, 1);
     const bouncerTicket = bouncerTickets[0];
     expectToExist(bouncerTicket);
     expectIsEdDSATicketPCD(bouncerTicket);

@@ -275,12 +275,9 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
         newEmail
       ]);
 
-      await testGetTickets(
-        pipeline,
-        aliceCurrentEmailPCDs,
-        aliceIdentity,
-        [newEmail, newEmail] // 2 per ticket - one eddsa and one pod
-      );
+      await testGetTickets(pipeline, aliceCurrentEmailPCDs, aliceIdentity, [
+        newEmail
+      ]);
     }
   );
 
@@ -327,7 +324,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
       pipeline,
       aliceCurrentEmailPCDs,
       aliceIdentity,
-      [newEmail, newEmail, ...currentEmails, ...currentEmails] // 2 per ticket - one eddsa and one pod
+      [newEmail, ...currentEmails] // 2 per ticket - one eddsa and one pod
     );
   });
 
@@ -386,12 +383,9 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
       expectedEmailList
     );
 
-    await testGetTickets(
-      pipeline,
-      aliceCurrentEmailPCDs,
-      aliceIdentity,
-      [...expectedEmailList, ...expectedEmailList] // 2 - one eddsa and one pod
-    );
+    await testGetTickets(pipeline, aliceCurrentEmailPCDs, aliceIdentity, [
+      ...expectedEmailList
+    ]);
   });
 
   step(
@@ -514,7 +508,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
         pipeline,
         aliceCurrentEmailPCDs,
         aliceIdentity,
-        [newEmail, newEmail] // alice's old ticket now issued to bob
+        [newEmail] // alice's old ticket now issued to bob
       );
     }
   );

@@ -653,7 +653,7 @@ describe("generic issuance - LemonadePipeline", function () {
         newUser.email,
         newUserIdentity
       );
-      expectLength(NewUserTickets, 2);
+      expectLength(NewUserTickets, 1);
 
       const attendeeGroupResponse = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,

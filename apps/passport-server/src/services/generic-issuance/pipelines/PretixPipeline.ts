@@ -967,18 +967,19 @@ export class PretixPipeline implements BasePipeline {
       span?.setAttribute("semaphore_id", semaphoreId ?? "");
       span?.setAttribute("semaphore_v4_id", semaphoreIdV4 ?? "");
 
-      // TODO
-      // let didUpdate = false;
-      // for (const e of emails) {
-      //   didUpdate =
-      //     didUpdate ||
-      //     (await this.consumerDB.save(
-      //       this.id,
-      //       e.email,
-      //       semaphoreId,
-      //       new Date()
-      //     ));
-      // }
+      let didUpdate = false;
+      if (semaphoreId) {
+        for (const e of emails) {
+          didUpdate =
+            didUpdate ||
+            (await this.consumerDB.save(
+              this.id,
+              e.email,
+              semaphoreId,
+              new Date()
+            ));
+        }
+      }
 
       const provider = this.autoIssuanceProvider;
       if (provider) {
@@ -1001,12 +1002,12 @@ export class PretixPipeline implements BasePipeline {
 
       // If the user's Semaphore commitment has changed, `didUpdate` will be
       // true, and we need to update the Semaphore groups
-      // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-      //   if (didUpdate) {
-      //     span?.setAttribute("semaphore_groups_updated", true);
-      //     await this.triggerSemaphoreGroupUpdate();
-      //   }
-      // }
+      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+        if (didUpdate) {
+          span?.setAttribute("semaphore_groups_updated", true);
+          await this.triggerSemaphoreGroupUpdate();
+        }
+      }
 
       const tickets = (
         await Promise.all(

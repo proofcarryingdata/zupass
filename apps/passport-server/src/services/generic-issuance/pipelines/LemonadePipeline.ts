@@ -565,7 +565,8 @@ export class LemonadePipeline implements BasePipeline {
 
   private async manualTicketToTicketData(
     manualTicket: ManualTicket,
-    sempahoreId: string
+    sempahoreId: string | undefined,
+    sempahoreIdV4: string | undefined
   ): Promise<ITicketData> {
     const event = this.getEventById(manualTicket.eventId);
     const product = this.getTicketTypeById(event, manualTicket.productId);
@@ -582,6 +583,7 @@ export class LemonadePipeline implements BasePipeline {
       attendeeEmail: manualTicket.attendeeEmail,
       attendeeName: manualTicket.attendeeName,
       attendeeSemaphoreId: sempahoreId,
+      attendeeSemaphoreV4Id: sempahoreIdV4,
       isConsumed: checkIn ? true : false,
       isRevoked: false,
       timestampSigned: Date.now(),
@@ -625,7 +627,7 @@ export class LemonadePipeline implements BasePipeline {
 
         // semaphore id intentially left blank, as I'm just trying to get the ticket
         // so that I can link to it, not issue it/make proofs about it
-        const tickets = await this.getTicketsForEmail(b.giver, "");
+        const tickets = await this.getTicketsForEmail(b.giver, "", "");
         const ticket = tickets?.[0]?.claim?.ticket;
         const encodedLink = linkToTicket(
           urljoin(process.env.PASSPORT_CLIENT_URL ?? "", "/#/generic-checkin"),
@@ -694,7 +696,7 @@ export class LemonadePipeline implements BasePipeline {
       contacts.map(async (contact) => {
         // semaphore id intentially left blank, as I'm just trying to get the ticket
         // so that I can link to it, not issue it/make proofs about it
-        const tickets = await this.getTicketsForEmail(contact, "");
+        const tickets = await this.getTicketsForEmail(contact, "", "");
         const ticket: ITicketData | undefined = tickets?.[0]?.claim?.ticket;
         const encodedLink = linkToTicket(
           urljoin(process.env.PASSPORT_CLIENT_URL ?? "", "/#/generic-checkin"),
@@ -751,7 +753,8 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async getTicketsForEmail(
     email: string,
-    identityCommitment: string
+    identityCommitment: string | undefined,
+    identityCommitmentV4: string | undefined
   ): Promise<EdDSATicketPCD[]> {
     // Load atom-backed tickets
     const relevantTickets = await this.db.loadByEmail(this.id, email);
@@ -768,7 +771,7 @@ export class LemonadePipeline implements BasePipeline {
       if (checkInsById[t.id]) {
         t.checkinDate = checkInsById[t.id].timestamp;
       }
-      return this.atomToTicketData(t, identityCommitment);
+      return this.atomToTicketData(t, identityCommitment, identityCommitmentV4);
     });
     // Load manual tickets from the definition
     const manualTickets = this.getManualTicketsForEmail(email);
@@ -776,7 +779,11 @@ export class LemonadePipeline implements BasePipeline {
     ticketDatas.push(
       ...(await Promise.all(
         manualTickets.map((manualTicket) =>
-          this.manualTicketToTicketData(manualTicket, identityCommitment)
+          this.manualTicketToTicketData(
+            manualTicket,
+            identityCommitment,
+            identityCommitmentV4
+          )
         )
       ))
     );
@@ -808,30 +815,29 @@ export class LemonadePipeline implements BasePipeline {
       const credential =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-      if (!credential.semaphoreId) {
-        throw new Error("invalid credential");
-      }
-
-      const { emails, semaphoreId } = credential;
+      const { emails, semaphoreId, semaphoreIdV4 } = credential;
 
       if (!emails || emails.length === 0) {
         throw new Error("missing emails in credential");
       }
 
       span?.setAttribute("emails", emails.map((e) => e.email).join(","));
-      span?.setAttribute("semaphore_id", semaphoreId);
+      span?.setAttribute("semaphore_id", semaphoreId ?? "");
+      span?.setAttribute("semaphore_id_v4", semaphoreIdV4 ?? "");
 
       let didUpdate = false;
-      for (const email of emails) {
-        // Consumer is validated, so save them in the consumer list
-        didUpdate =
-          didUpdate ||
-          (await this.consumerDB.save(
-            this.id,
-            email.email,
-            semaphoreId,
-            new Date()
-          ));
+      if (semaphoreId) {
+        for (const email of emails) {
+          // Consumer is validated, so save them in the consumer list
+          didUpdate =
+            didUpdate ||
+            (await this.consumerDB.save(
+              this.id,
+              email.email,
+              semaphoreId,
+              new Date()
+            ));
+        }
       }
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
@@ -845,7 +851,9 @@ export class LemonadePipeline implements BasePipeline {
 
       const tickets = (
         await Promise.all(
-          emails.map((e) => this.getTicketsForEmail(e.email, semaphoreId))
+          emails.map((e) =>
+            this.getTicketsForEmail(e.email, semaphoreId, semaphoreIdV4)
+          )
         )
       ).flat();
 
@@ -1209,7 +1217,8 @@ export class LemonadePipeline implements BasePipeline {
    */
   private atomToTicketData(
     atom: LemonadeAtom,
-    semaphoreId: string
+    semaphoreId: string | undefined,
+    semaphoreIdV4: string | undefined
   ): ITicketData {
     return {
       // unsigned fields
@@ -1227,6 +1236,7 @@ export class LemonadePipeline implements BasePipeline {
         atom.checkinDate instanceof Date ? atom.checkinDate.getTime() : 0,
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
+      attendeeSemaphoreV4Id: semaphoreIdV4,
       isConsumed: atom.checkinDate instanceof Date,
       isRevoked: false, // Not clear what concept this maps to in Lemonade
       ticketCategory: TicketCategory.Generic // TODO?
