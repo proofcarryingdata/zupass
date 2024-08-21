@@ -13,6 +13,7 @@ import React, {
 } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled, { CSSProperties } from "styled-components";
+import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
   useFolders,
@@ -38,11 +39,7 @@ import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
 import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
 import { ProtocolWorldsHome } from "../ProtocolWorldsScreens/ProtocolWorldsHome";
-import {
-  isPuddleCryptoFolderName,
-  PUDDLE_CRYPTO_FOLDER_NAME,
-  PuddleCryptoScreen
-} from "../ZappScreens/PuddleCrypto";
+import { ZappScreen } from "../ZappScreens/ZappScreen";
 import {
   FolderCard,
   FolderDetails,
@@ -130,9 +127,10 @@ export function HomeScreenImpl(): JSX.Element | null {
   const pcdCollection = useWrappedPCDCollection();
   const isRoot = isRootFolder(browsingFolder);
   const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
-  const isPuddleCrypto = isPuddleCryptoFolderName(browsingFolder);
   const isEdgeCity = isEdgeCityFolder(browsingFolder);
   const isProtocolWorlds = isProtocolWorldsFolder(browsingFolder);
+  const isZappFolder = !!appConfig.zapps[browsingFolder];
+
   const shouldShowFrogCrypto = useMemo(() => {
     const folders = pcdCollection.value.getAllFolderNames();
     const goodFolders = [
@@ -217,12 +215,10 @@ export function HomeScreenImpl(): JSX.Element | null {
                   onFolderClick={onFolderClick}
                 />
               )}
-              {isRoot && (
-                <FolderCard
-                  onFolderClick={onFolderClick}
-                  folder={PUDDLE_CRYPTO_FOLDER_NAME}
-                />
-              )}
+              {isRoot &&
+                Object.keys(appConfig.zapps).map((folder) => (
+                  <FolderCard onFolderClick={onFolderClick} folder={folder} />
+                ))}
             </FolderExplorerContainer>
           )}
 
@@ -232,8 +228,8 @@ export function HomeScreenImpl(): JSX.Element | null {
             <ProtocolWorldsHome />
           ) : isEdgeCity ? (
             <EdgeCityHome />
-          ) : isPuddleCrypto ? (
-            <PuddleCryptoScreen />
+          ) : isZappFolder ? (
+            <ZappScreen />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}

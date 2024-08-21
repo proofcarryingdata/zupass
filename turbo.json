@@ -224,6 +224,7 @@
     "OUTBOUND_ALLOW_LIST",
     "PIPELINE_EMAIL_SEND",
     "ZUPASS_URL",
+    "ZAPPS",
     "//// add env vars above this line ////"
   ]
 }
