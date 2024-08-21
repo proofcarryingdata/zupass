@@ -8,10 +8,17 @@ import {
 } from "@pcd/zupass-client";
 import { ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { useStateContext } from "../../../src/appHooks";
+import {
+  useDispatch,
+  useEmbeddedScreenState,
+  useStateContext
+} from "../../../src/appHooks";
 import { StateContextValue } from "../../../src/dispatch";
-import { EmbeddedUIControl, setupPort } from "../../../src/zapp/useZappServer";
+import { EmbeddedScreenType, ZappEmbeddingMode } from "../../../src/embedded";
+import { EmbeddingUIControl, setupPort } from "../../../src/zapp/useZappServer";
 import { ZappServer } from "../../../src/zapp/ZappServer";
+import { AdhocModal } from "../../modals/AdhocModal";
+import { EmbeddedGetRequest } from "../EmbeddedScreens/EmbeddedScreen";
 
 // In real usage, this would be the user's Semaphore v4 key
 const MAGIC_PRIVATE_KEY =
@@ -81,11 +88,14 @@ async function connectToZapp(
           }
         }
         if (approved) {
-          const uiControl = new EmbeddedUIControl(port, context);
+          const uiControl = new EmbeddingUIControl(context);
           const server = new ZappServer(context, zapp, uiControl);
 
           // @todo handle this with an action
-          context.update({ embeddedScreen: undefined });
+          context.update({
+            embeddedScreen: undefined,
+            zappEmbeddingMode: ZappEmbeddingMode.ZappInsideZupass
+          });
           port.removeEventListener("message", setupListener);
           setupPort(port, server);
           port.postMessage({
@@ -116,17 +126,43 @@ async function connectToZapp(
 export function ZappScreen(): ReactNode {
   const context = useStateContext();
   return (
-    <iframe
-      style={{ width: "100%", height: "100%", borderRadius: "10px" }}
-      onLoad={(ev) => {
-        connectToZapp(
-          (ev.target as HTMLIFrameElement).contentWindow as Window,
-          context,
-          "http://localhost:3200"
-        );
+    <>
+      <ZappModal />
+      <iframe
+        style={{ width: "100%", height: "100%", borderRadius: "10px" }}
+        onLoad={(ev) => {
+          connectToZapp(
+            (ev.target as HTMLIFrameElement).contentWindow as Window,
+            context,
+            "http://localhost:3200"
+          );
+        }}
+        src="http://localhost:3200/"
+        sandbox="allow-same-origin allow-scripts allow-popups allow-modals allow-forms"
+      />
+    </>
+  );
+}
+
+function ZappModal(): ReactNode {
+  const embeddedScreen = useEmbeddedScreenState();
+  const dispatch = useDispatch();
+  return (
+    <AdhocModal
+      open={embeddedScreen?.screen !== undefined}
+      onClose={() => {
+        dispatch({
+          type: "hide-embedded-screen"
+        });
       }}
-      src="http://localhost:3200/"
-      sandbox="allow-same-origin allow-scripts allow-popups allow-modals allow-forms"
-    />
+    >
+      {embeddedScreen?.screen?.type ===
+        EmbeddedScreenType.EmbeddedGetRequest && (
+        <EmbeddedGetRequest
+          request={embeddedScreen.screen.request}
+          callback={embeddedScreen.screen.callback}
+        />
+      )}
+    </AdhocModal>
   );
 }

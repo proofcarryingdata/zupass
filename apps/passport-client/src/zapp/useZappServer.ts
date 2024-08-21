@@ -14,12 +14,31 @@ import { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useStateContext } from "../appHooks";
 import { StateContextValue } from "../dispatch";
-import { EmbeddedScreenState } from "../embedded";
+import { ZappEmbeddingMode, ZappScreenState } from "../embedded";
 import { ZappServer } from "./ZappServer";
 
 export interface UIControl {
-  showScreen(embeddedScreen: EmbeddedScreenState): void;
+  showScreen(embeddedScreen: ZappScreenState): void;
   hideScreen(): void;
+}
+
+export class EmbeddingUIControl implements UIControl {
+  constructor(private context: StateContextValue) {}
+
+  public showScreen(embeddedScreen: ZappScreenState): void {
+    if (embeddedScreen.screen) {
+      this.context.dispatch({
+        type: "show-embedded-screen",
+        screen: embeddedScreen.screen
+      });
+    }
+  }
+
+  public hideScreen(): void {
+    this.context.dispatch({
+      type: "hide-embedded-screen"
+    });
+  }
 }
 
 export class EmbeddedUIControl implements UIControl {
@@ -28,7 +47,7 @@ export class EmbeddedUIControl implements UIControl {
     private context: StateContextValue
   ) {}
 
-  public showScreen(embeddedScreen: EmbeddedScreenState): void {
+  public showScreen(embeddedScreen: ZappScreenState): void {
     this.port.postMessage({
       type: RPCMessageType.ZUPASS_CLIENT_SHOW
     });
@@ -84,6 +103,7 @@ export function setupPort(port: MessagePort, server: ZappServer): void {
           throw new Error("Function not found");
         }
       } catch (error) {
+        console.error("Error invoking function", error);
         port.postMessage({
           type: RPCMessageType.ZUPASS_CLIENT_INVOKE_ERROR,
           error: getErrorMessage(error)
@@ -190,7 +210,10 @@ export function useZappServer(): void {
           const server = new ZappServer(context, zapp, uiControl);
 
           // @todo handle this with an action
-          context.update({ embeddedScreen: undefined });
+          context.update({
+            embeddedScreen: undefined,
+            zappEmbeddingMode: ZappEmbeddingMode.ZupassInsideZapp
+          });
           window.location.hash = "embedded";
 
           setupPort(port, server);

@@ -48,7 +48,7 @@ import {
   addZupassProvider,
   ZUPASS_FEED_URL
 } from "./defaultSubscriptions";
-import { EmbeddedScreenState } from "./embedded";
+import { ZappScreenState } from "./embedded";
 import {
   loadEncryptionKey,
   loadPrivacyNoticeAgreed,
@@ -176,7 +176,7 @@ export type Action =
   | { type: "delete-account" }
   | {
       type: "show-embedded-screen";
-      screen: EmbeddedScreenState["screen"];
+      screen: ZappScreenState["screen"];
     }
   | {
       type: "hide-embedded-screen";
@@ -1495,7 +1495,7 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
 async function showEmbeddedScreen(
   state: AppState,
   update: ZuUpdate,
-  screen: EmbeddedScreenState["screen"]
+  screen: ZappScreenState["screen"]
 ): Promise<void> {
   update({
     embeddedScreen: { screen }
