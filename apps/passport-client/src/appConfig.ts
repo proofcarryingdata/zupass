@@ -17,6 +17,8 @@ interface AppConfig {
   strichLicenseKey: string | undefined;
   // should PODTicketPCDs be visible?
   showPODTicketPCDs: boolean;
+  // folder name -> zapp URL
+  zapps: Record<string, string>;
 }
 
 if (
@@ -52,7 +54,8 @@ export const appConfig: AppConfig = {
   rollbarToken: process.env.ROLLBAR_TOKEN,
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
   strichLicenseKey: process.env.STRICH_LICENSE_KEY,
-  showPODTicketPCDs: process.env.SHOW_POD_TICKET_PCDS === "true"
+  showPODTicketPCDs: process.env.SHOW_POD_TICKET_PCDS === "true",
+  zapps: process.env.ZAPPS ? JSON.parse(process.env.ZAPPS) : {}
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

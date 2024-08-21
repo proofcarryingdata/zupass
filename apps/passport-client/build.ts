@@ -71,6 +71,11 @@ const define = {
           process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
         )
       }
+    : {}),
+  ...(process.env.ZAPPS !== undefined
+    ? {
+        "process.env.ZAPPS": JSON.stringify(process.env.ZAPPS)
+      }
     : {})
 };
 
