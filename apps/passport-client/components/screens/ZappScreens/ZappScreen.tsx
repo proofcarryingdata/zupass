@@ -14,7 +14,7 @@ import {
   useStateContext
 } from "../../../src/appHooks";
 import { StateContextValue } from "../../../src/dispatch";
-import { EmbeddedScreenType, ZappEmbeddingMode } from "../../../src/embedded";
+import { EmbeddedScreenType } from "../../../src/embedded";
 import { EmbeddingUIControl, setupPort } from "../../../src/zapp/useZappServer";
 import { ZappServer } from "../../../src/zapp/ZappServer";
 import { AdhocModal } from "../../modals/AdhocModal";
@@ -93,8 +93,7 @@ async function connectToZapp(
 
           // @todo handle this with an action
           context.update({
-            embeddedScreen: undefined,
-            zappEmbeddingMode: ZappEmbeddingMode.ZappInsideZupass
+            embeddedScreen: undefined
           });
           port.removeEventListener("message", setupListener);
           setupPort(port, server);
@@ -123,7 +122,7 @@ async function connectToZapp(
   });
 }
 
-export function ZappScreen(): ReactNode {
+export function ZappScreen({ url }: { url: string }): ReactNode {
   const context = useStateContext();
   return (
     <>
@@ -134,10 +133,10 @@ export function ZappScreen(): ReactNode {
           connectToZapp(
             (ev.target as HTMLIFrameElement).contentWindow as Window,
             context,
-            "http://localhost:3200"
+            url
           );
         }}
-        src="http://localhost:3200/"
+        src={url}
         sandbox="allow-same-origin allow-scripts allow-popups allow-modals allow-forms"
       />
     </>

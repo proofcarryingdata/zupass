@@ -6,11 +6,6 @@ export enum EmbeddedScreenType {
   EmbeddedAddSubscription
 }
 
-export enum ZappEmbeddingMode {
-  ZappInsideZupass,
-  ZupassInsideZapp
-}
-
 export interface EmbeddedGetRequest {
   type: EmbeddedScreenType.EmbeddedGetRequest;
   request: PCDGetRequest;

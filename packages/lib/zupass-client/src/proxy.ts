@@ -10,6 +10,14 @@ interface ProxyCallbackOptions {
 
 type ProxyCallback = (opts: ProxyCallbackOptions) => unknown;
 
+/**
+ * Create a recursive proxy that forwards method calls to a callback.
+ *
+ * @param callback The callback to invoke when a method is called
+ * @param path The path of the method being called
+ * @param root The root object being proxied
+ * @returns A proxy object that forwards method calls to the callback
+ */
 function createRecursiveProxy(
   callback: ProxyCallback,
   path: readonly string[],
@@ -47,6 +55,18 @@ function createRecursiveProxy(
   return proxy;
 }
 
+/**
+ * Create a client for a Zupass API.
+ *
+ * Uses the Zod schema to create a recursive proxy that forwards method
+ * calls to the Zupass instance. The client object is asserted to be of type
+ * ZupassAPI, which enables TypeScript to provide compile-time type safety for
+ * API calls.
+ *
+ * @param schema The Zod schema for the API
+ * @param shape The shape of the API
+ * @returns A client for the API
+ */
 export const createAPIClient = (
   schema: ZodSchema,
   shape: ZodRawShape
@@ -68,6 +88,8 @@ export const createAPIClient = (
           throw new Error(`Unexpected non-object at path ${path.join(".")}`);
         }
       }
+      // Get the Zod schema for the operation. These are defined as ZodFunction
+      // objects, which define both parameters and return type.
       const operationSchema = containingObject[operation];
       if (!operationSchema) {
         throw new Error(
@@ -82,11 +104,10 @@ export const createAPIClient = (
 
       const dotPath = `${path.join(".")}.${operation}`;
 
-      const result = await invoke(opts.proxy as ZupassAPI, dotPath, opts.args);
-      console.log(result);
-      return result;
+      // Invoke the operation on the Zupass instance.
+      // This will send a message over the message port to Zupass.
+      return invoke(opts.proxy as ZupassAPI, dotPath, opts.args);
     },
     [],
     undefined
   ) as ZupassAPI;
-//   ^? provide empty array as path to begin with

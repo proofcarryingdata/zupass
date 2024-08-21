@@ -14,7 +14,7 @@ import { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useStateContext } from "../appHooks";
 import { StateContextValue } from "../dispatch";
-import { ZappEmbeddingMode, ZappScreenState } from "../embedded";
+import { ZappScreenState } from "../embedded";
 import { ZappServer } from "./ZappServer";
 
 export interface UIControl {
@@ -211,8 +211,7 @@ export function useZappServer(): void {
 
           // @todo handle this with an action
           context.update({
-            embeddedScreen: undefined,
-            zappEmbeddingMode: ZappEmbeddingMode.ZupassInsideZapp
+            embeddedScreen: undefined
           });
           window.location.hash = "embedded";
 

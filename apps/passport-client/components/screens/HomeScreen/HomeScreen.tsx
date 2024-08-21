@@ -229,7 +229,7 @@ export function HomeScreenImpl(): JSX.Element | null {
           ) : isEdgeCity ? (
             <EdgeCityHome />
           ) : isZappFolder ? (
-            <ZappScreen />
+            <ZappScreen url={appConfig.zapps[browsingFolder]} />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}

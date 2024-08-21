@@ -7,7 +7,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
-import { ZappEmbeddingMode, ZappScreenState } from "./embedded";
+import { ZappScreenState } from "./embedded";
 import { Emitter } from "./emitter";
 
 export type GetState = () => AppState;
@@ -134,9 +134,9 @@ export interface AppState {
 
   strichSDKstate: "initialized" | "error" | undefined;
 
-  // If Zupass is in an embedded iframe, the state of the embedded screen.
+  // If Zupass is in an embedded iframe, or is embedding content in a modal to
+  // be displayed above a Zapp, the state of the embedded screen.
   embeddedScreen?: ZappScreenState;
-  zappEmbeddingMode?: ZappEmbeddingMode;
 }
 
 export interface AppError {
