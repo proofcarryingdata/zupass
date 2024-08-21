@@ -16,7 +16,7 @@ import {
 } from "@pcd/zupass-client";
 import { z } from "zod";
 import { StateContextValue } from "../dispatch";
-import { EmbeddedScreenState, EmbeddedScreenType } from "../embedded";
+import { EmbeddedScreenType, ZappScreenState } from "../embedded";
 import { UIControl } from "./useZappServer";
 
 function safeInput<This extends BaseZappServer, Args extends unknown[], Return>(
@@ -145,7 +145,7 @@ class GPC extends BaseZappServer implements ZupassGPC {
       postMessage: false
     };
     return new Promise((resolve) => {
-      const screenState: EmbeddedScreenState = {
+      const screenState: ZappScreenState = {
         screen: {
           type: EmbeddedScreenType.EmbeddedGetRequest,
           request: req,
@@ -155,6 +155,7 @@ class GPC extends BaseZappServer implements ZupassGPC {
           }
         }
       };
+      console.log("showing zapp modal", screenState);
       this.getUIControl().showScreen(screenState);
     });
   }

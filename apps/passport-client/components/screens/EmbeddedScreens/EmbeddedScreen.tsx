@@ -39,7 +39,7 @@ export function EmbeddedScreen(): ReactNode {
   assertUnreachable(embeddedScreen.screen);
 }
 
-function EmbeddedGetRequest({
+export function EmbeddedGetRequest({
   request,
   callback
 }: {
