@@ -24,7 +24,6 @@ export interface PodspecBaseIssue {
 export interface PodspecInvalidTypeIssue extends PodspecBaseIssue {
   code: IssueCode.invalid_type;
   expectedType: string;
-  actualType: string;
 }
 
 export interface PodspecNotInListIssue extends PodspecBaseIssue {

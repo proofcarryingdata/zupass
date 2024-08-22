@@ -107,7 +107,6 @@ export class PodspecCryptographic extends PodspecValue<
       const issue: PodspecInvalidTypeIssue = {
         code: IssueCode.invalid_type,
         expectedType: PodspecDataType.Cryptographic,
-        actualType: typeof data,
         path: params?.path ?? []
       };
       issues.push(issue);

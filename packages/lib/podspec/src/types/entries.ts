@@ -1,5 +1,5 @@
 import { PODEntries, PODValue, checkPODName } from "@pcd/pod";
-import { PodspecDataType } from "../base";
+import { PodspecDataType, PodspecValue } from "../base";
 import {
   IssueCode,
   PodspecBaseIssue,
@@ -95,7 +95,13 @@ export class PodspecEntries<
   // which determine the keys present in the resulting PODEntries.
   Output = objectOutputType<E>
 > {
-  public constructor(public def: PodspecEntriesDef<E>) {}
+  public constructor(public def: PodspecEntriesDef<E>) {
+    for (const key in this.def.entries) {
+      if (!(this.def.entries[key] instanceof PodspecValue)) {
+        throw new Error(`Entry ${key} is not an instance of PodspecValue`);
+      }
+    }
+  }
 
   /**
    * Parses the given data into the output type.
@@ -139,7 +145,6 @@ export class PodspecEntries<
       const issue: PodspecInvalidTypeIssue = {
         code: IssueCode.invalid_type,
         expectedType: "object",
-        actualType: typeof data,
         path
       };
       return FAILURE([issue]);
@@ -149,7 +154,6 @@ export class PodspecEntries<
       const issue: PodspecInvalidTypeIssue = {
         code: IssueCode.invalid_type,
         expectedType: "object",
-        actualType: "null",
         path
       };
       return FAILURE([issue]);
@@ -185,6 +189,7 @@ export class PodspecEntries<
           };
           issues.push(issue);
         }
+
         const parsedEntry = this.def.entries[key].safeParse(value, {
           path: [...path, key]
         });

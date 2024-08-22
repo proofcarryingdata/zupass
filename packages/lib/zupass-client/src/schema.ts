@@ -56,11 +56,23 @@ const PODQuerySchema = z.object({
       }),
       z.object({
         kind: z.literal("signer"),
-        signer: z.string()
+        signer: z.string(),
+        exclude: z.boolean().optional()
       }),
       z.object({
         kind: z.literal("signerList"),
-        signerList: z.array(z.string())
+        signerList: z.array(z.string()),
+        exclude: z.boolean().optional()
+      }),
+      z.object({
+        kind: z.literal("signature"),
+        signature: z.string(),
+        exclude: z.boolean().optional()
+      }),
+      z.object({
+        kind: z.literal("signatureList"),
+        signatureList: z.array(z.string()),
+        exclude: z.boolean().optional()
       })
     ])
   ),

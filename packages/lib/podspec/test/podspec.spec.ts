@@ -10,13 +10,27 @@ import { assert, expect } from "chai";
 import crypto from "crypto";
 import "mocha";
 import { v4 as uuidv4 } from "uuid";
-import { IssueCode, PodspecIssue } from "../src/error";
+import { PodspecDataType } from "../src/base";
+import {
+  IssueCode,
+  PodspecInvalidPodValueIssue,
+  PodspecInvalidTypeIssue,
+  PodspecIssue
+} from "../src/error";
 import { p } from "../src/index";
 import { PodspecPOD } from "../src/types/pod";
 
 function generateRandomHex(byteLength: number): string {
   const randomBytes = crypto.randomBytes(byteLength);
   return randomBytes.toString("hex");
+}
+
+function generateKeyPair(): { privateKey: string; publicKey: string } {
+  const privateKey = generateRandomHex(32);
+  const publicKey = encodePublicKey(
+    derivePublicKey(decodePrivateKey(privateKey))
+  );
+  return { privateKey, publicKey };
 }
 
 describe("podspec should work", async function () {
@@ -28,9 +42,7 @@ describe("podspec should work", async function () {
       quux: p.eddsaPubKey()
     });
 
-    const pubKey = encodePublicKey(
-      derivePublicKey(decodePrivateKey(generateRandomHex(32)))
-    );
+    const { publicKey } = generateKeyPair();
 
     const result = myPodSpec.safeParse({
       foo: { type: "string", value: "test" },
@@ -38,7 +50,7 @@ describe("podspec should work", async function () {
       baz: { type: "cryptographic", value: 10000n },
       quux: {
         type: "eddsa_pubkey",
-        value: pubKey
+        value: publicKey
       }
     });
     expect(result.isValid).to.eq(true);
@@ -46,7 +58,7 @@ describe("podspec should work", async function () {
     expect(result.value.foo.value).to.eq("test");
     expect(result.value.bar.value).to.eq(1n);
     expect(result.value.baz.value).to.eq(10000n);
-    expect(result.value.quux.value).to.eq(pubKey);
+    expect(result.value.quux.value).to.eq(publicKey);
   });
 
   it("should coerce javascript values into POD types", function () {
@@ -57,22 +69,20 @@ describe("podspec should work", async function () {
       quux: p.coerce.eddsaPubKey()
     });
 
-    const pubKey = encodePublicKey(
-      derivePublicKey(decodePrivateKey(generateRandomHex(32)))
-    );
+    const { publicKey } = generateKeyPair();
 
     const result = myPodSpec.safeParse({
       foo: "test",
       bar: 1,
       baz: 10000,
-      quux: pubKey
+      quux: publicKey
     });
     expect(result.isValid).to.eq(true);
     assert(result.isValid);
     expect(result.value.foo.value).to.eq("test");
     expect(result.value.bar.value).to.eq(1n);
     expect(result.value.baz.value).to.eq(10000n);
-    expect(result.value.quux.value).to.eq(pubKey);
+    expect(result.value.quux.value).to.eq(publicKey);
   });
 
   it("should fail with bad inputs", function () {
@@ -317,9 +327,7 @@ describe("podspec should work", async function () {
   });
 
   it("should match on tuples in queries", function () {
-    const key = generateRandomHex(32);
-    const keyBytes = decodePrivateKey(key);
-    const pubKey = encodePublicKey(derivePublicKey(keyBytes));
+    const { publicKey, privateKey } = generateKeyPair();
     const eventId = "d1390b7b-4ccb-42bf-8c8b-e397b7c26e6c";
     const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
 
@@ -336,7 +344,7 @@ describe("podspec should work", async function () {
           [
             { type: "string", value: eventId },
             { type: "string", value: productId },
-            { type: "eddsa_pubkey", value: pubKey }
+            { type: "eddsa_pubkey", value: publicKey }
           ]
         ]
       });
@@ -347,14 +355,14 @@ describe("podspec should work", async function () {
           eventId: { type: "string", value: eventId },
           productId: { type: "string", value: productId }
         },
-        key
+        privateKey
       ),
       POD.sign(
         {
           eventId: { type: "string", value: uuidv4() },
           productId: { type: "string", value: uuidv4() }
         },
-        key
+        privateKey
       )
     ];
 
@@ -365,9 +373,7 @@ describe("podspec should work", async function () {
   });
 
   it("should validate entire PODs", function () {
-    const key = generateRandomHex(32);
-    const keyBytes = decodePrivateKey(key);
-    const pubKey = encodePublicKey(derivePublicKey(keyBytes));
+    const { publicKey, privateKey } = generateKeyPair();
     const eventId = "d1390b7b-4ccb-42bf-8c8b-e397b7c26e6c";
     const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
 
@@ -376,14 +382,14 @@ describe("podspec should work", async function () {
         eventId: p.string(),
         productId: p.string()
       })
-      .signer(pubKey);
+      .signer(publicKey);
 
     const pod = POD.sign(
       {
         eventId: { type: "string", value: eventId },
         productId: { type: "string", value: productId }
       },
-      key
+      privateKey
     );
 
     const result = myPodSpec.safeParse(pod);
@@ -391,9 +397,7 @@ describe("podspec should work", async function () {
   });
 
   it("should perform tuple checks on PODs including virtual signer entry", function () {
-    const key = generateRandomHex(32);
-    const keyBytes = decodePrivateKey(key);
-    const pubKey = encodePublicKey(derivePublicKey(keyBytes));
+    const { publicKey, privateKey } = generateKeyPair();
     const eventId = "d1390b7b-4ccb-42bf-8c8b-e397b7c26e6c";
     const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
 
@@ -410,7 +414,7 @@ describe("podspec should work", async function () {
           [
             { type: "string", value: eventId },
             { type: "string", value: productId },
-            { type: "eddsa_pubkey", value: pubKey }
+            { type: "eddsa_pubkey", value: publicKey }
           ]
         ]
       });
@@ -421,7 +425,7 @@ describe("podspec should work", async function () {
           eventId: { type: "string", value: eventId },
           productId: { type: "string", value: productId }
         },
-        key
+        privateKey
       );
 
       const result = myPodSpec.safeParse(pod);
@@ -432,9 +436,9 @@ describe("podspec should work", async function () {
         {
           eventId: { type: "string", value: uuidv4() },
           productId: { type: "string", value: uuidv4() },
-          signerPublicKey: { type: "eddsa_pubkey", value: pubKey }
+          signerPublicKey: { type: "eddsa_pubkey", value: publicKey }
         },
-        key
+        privateKey
       );
 
       const result = myPodSpec.safeParse(pod);
@@ -445,8 +449,7 @@ describe("podspec should work", async function () {
   });
 
   it("can query for PODs with matching signatures", function () {
-    const key = generateRandomHex(32);
-    const pubKey = encodePublicKey(derivePublicKey(key));
+    const { publicKey, privateKey } = generateKeyPair();
     const eventId = "d1390b7b-4ccb-42bf-8c8b-e397b7c26e6c";
     const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
 
@@ -455,17 +458,17 @@ describe("podspec should work", async function () {
         {
           eventId: { type: "string", value: eventId },
           productId: { type: "string", value: productId },
-          signerPublicKey: { type: "eddsa_pubkey", value: pubKey }
+          signerPublicKey: { type: "eddsa_pubkey", value: publicKey }
         },
-        key
+        privateKey
       ),
       POD.sign(
         {
           eventId: { type: "string", value: uuidv4() },
           productId: { type: "string", value: uuidv4() },
-          signerPublicKey: { type: "eddsa_pubkey", value: pubKey }
+          signerPublicKey: { type: "eddsa_pubkey", value: publicKey }
         },
-        key
+        privateKey
       )
     ];
 
@@ -483,9 +486,7 @@ describe("podspec should work", async function () {
   });
 
   it("can serialize and deserialize full-POD Podspecs", function () {
-    const key = generateRandomHex(32);
-    const keyBytes = decodePrivateKey(key);
-    const pubKey = encodePublicKey(derivePublicKey(keyBytes));
+    const { publicKey } = generateKeyPair();
     const eventId = "d1390b7b-4ccb-42bf-8c8b-e397b7c26e6c";
     const productId = "d38f0c3f-586b-44c6-a69a-1348481e927d";
 
@@ -502,7 +503,7 @@ describe("podspec should work", async function () {
           [
             { type: "string", value: eventId },
             { type: "string", value: productId },
-            { type: "eddsa_pubkey", value: pubKey }
+            { type: "eddsa_pubkey", value: publicKey }
           ]
         ]
       });
@@ -528,5 +529,83 @@ describe("podspec should work", async function () {
       foo: { type: "string", value: "test" }
     });
     expect(resultWithoutOptional.isValid).to.eq(true);
+  });
+
+  it("should fail to instantiate a Podspec with invalid entries", function () {
+    expect(() =>
+      p.entries({
+        foo: p.string(),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        bar: { type: "invalid" } as any
+      })
+    ).to.throw;
+  });
+
+  it("should handle different POD value types in the same spec", function () {
+    const { publicKey } = generateKeyPair();
+    const myPodSpec = p.entries({
+      stringField: p.string(),
+      intField: p.int(),
+      cryptoField: p.cryptographic(),
+      eddsaField: p.eddsaPubKey()
+    });
+
+    const validResult = myPodSpec.safeParse({
+      stringField: { type: "string", value: "test" },
+      intField: { type: "int", value: 123n },
+      cryptoField: { type: "cryptographic", value: 456n },
+      eddsaField: { type: "eddsa_pubkey", value: publicKey }
+    });
+
+    expect(validResult.isValid).to.eq(true);
+
+    const invalidResult = myPodSpec.safeParse({
+      stringField: { type: "string", value: null },
+      intField: { type: "int", value: POD_INT_MAX + 1n },
+      cryptoField: { type: "string", value: "invalid" },
+      eddsaField: { type: "eddsa_pubkey", value: "invalidEddsaPubKey" }
+    });
+    expect(invalidResult.isValid).to.eq(false);
+    assert(invalidResult.isValid === false);
+    expect(invalidResult.issues).to.eql([
+      {
+        code: IssueCode.invalid_type,
+        expectedType: PodspecDataType.String,
+        path: ["stringField"]
+      } satisfies PodspecInvalidTypeIssue,
+      {
+        code: IssueCode.invalid_pod_value,
+        value: { type: "int", value: 9223372036854775808n },
+        reason:
+          "Invalid value for entry intField.       Value 9223372036854775808 is outside supported bounds: (min -9223372036854775808, max 9223372036854775807).",
+        path: ["intField"]
+      } satisfies PodspecInvalidPodValueIssue,
+      {
+        code: IssueCode.invalid_type,
+        expectedType: PodspecDataType.Cryptographic,
+        path: ["cryptoField"]
+      } satisfies PodspecInvalidTypeIssue,
+      {
+        code: IssueCode.invalid_pod_value,
+        value: { type: "eddsa_pubkey", value: "invalidEddsaPubKey" },
+        reason:
+          "Public key should be 32 bytes, encoded as hex or Base64 in eddsaField.",
+        path: ["eddsaField"]
+      } satisfies PodspecInvalidPodValueIssue
+    ]);
+  });
+
+  it("should handle empty lists", function () {
+    // Matching on empty lists will always fail
+    const myPodSpec = p.entries({
+      foo: p.coerce.string().list([])
+    });
+
+    const result = myPodSpec.safeParse({
+      foo: "test"
+    });
+    expect(result.isValid).to.eq(false);
+    assert(result.isValid === false);
+    expect(result.issues[0].code).to.eq(IssueCode.not_in_list);
   });
 });

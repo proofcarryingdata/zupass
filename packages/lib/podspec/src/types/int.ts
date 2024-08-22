@@ -99,7 +99,6 @@ export class PodspecInt extends PodspecValue<
       const issue: PodspecInvalidTypeIssue = {
         code: IssueCode.invalid_type,
         expectedType: PodspecDataType.Int,
-        actualType: typeof data,
         path: params?.path ?? []
       };
       issues.push(issue);

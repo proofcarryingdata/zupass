@@ -102,7 +102,6 @@ export class PodspecEdDSAPubKey extends PodspecValue<
       const issue: PodspecInvalidTypeIssue = {
         code: IssueCode.invalid_type,
         expectedType: PodspecDataType.EdDSAPubKey,
-        actualType: typeof data,
         path: params?.path ?? []
       };
       issues.push(issue);
