@@ -2,8 +2,7 @@ import { Pool } from "postgres-pool";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
- * Delete a particular user that has a ticket in pretix, and also their
- * identity commitment, if they have logged into the passport.
+ * Delete a particular user that has a ticket in pretix.
  */
 export async function deleteZuzaluTicket(
   client: Pool,

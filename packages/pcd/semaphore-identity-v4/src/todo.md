@@ -16,6 +16,10 @@
   - e.g. there are various react hooks that need to be updated
 - rename `commitment` to something that uses the word `v3`
 - document `IssuanceService`
+- update `testLogin`
+- packages/lib/passport-interface/test/V3ToV4Migration.spec.ts
+- document v3tov4Identity
+- figure out how to import both v3 and v4 identity in the same package
 
 # done
 

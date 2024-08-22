@@ -38,10 +38,10 @@ export function semaphoreIdToBigInt(v: string): bigint {
  * a list of big integers ({@link SerializedTicket}).
  */
 export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
-  const semaphoreId = data.attendeeSemaphoreId;
+  const v3Commitment = data.attendeeSemaphoreId;
 
-  if (!semaphoreId) {
-    throw new Error("semaphore id is required");
+  if (!v3Commitment) {
+    throw new Error("semaphore id (semaphore v3 commitment) is required");
   }
 
   return [
@@ -50,7 +50,7 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
     uuidToBigInt(data.productId),
     numberToBigInt(data.timestampConsumed),
     numberToBigInt(data.timestampSigned),
-    semaphoreIdToBigInt(semaphoreId),
+    semaphoreIdToBigInt(v3Commitment),
     booleanToBigInt(data.isConsumed),
     booleanToBigInt(data.isRevoked),
     numberToBigInt(data.ticketCategory),

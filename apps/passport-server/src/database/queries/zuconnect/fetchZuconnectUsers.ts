@@ -40,6 +40,7 @@ SELECT
   for (const row of result.rows) {
     const user = {
       uuid: row.uuid,
+      // Semaphore v3 commitment.
       commitment: row.commitment,
       emails: row.emails,
       salt: row.salt,

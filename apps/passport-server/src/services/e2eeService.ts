@@ -98,7 +98,7 @@ export class E2EEService {
       throw new PCDHTTPError(400, "Missing request fields");
     }
 
-    let commitment: string | undefined = undefined;
+    let v3Commitment: string | undefined = undefined;
     if (request.pcd?.pcd) {
       const verifyResult = await this.credentialSubservice.tryVerify(
         request.pcd as SerializedPCD<SemaphoreSignaturePCD>
@@ -108,7 +108,7 @@ export class E2EEService {
         throw new PCDHTTPError(400, "Invalid signature");
       }
 
-      commitment = verifyResult.semaphoreId;
+      v3Commitment = verifyResult.semaphoreId;
     }
 
     let resultRevision = undefined;
@@ -117,7 +117,7 @@ export class E2EEService {
         this.context.dbPool,
         request.blobKey,
         request.encryptedBlob,
-        commitment
+        v3Commitment
       );
     } else {
       const updateResult = await updateEncryptedStorage(
@@ -125,7 +125,7 @@ export class E2EEService {
         request.blobKey,
         request.encryptedBlob,
         request.knownRevision,
-        commitment
+        v3Commitment
       );
       resultRevision = this.checkUpdateResult(
         request.blobKey,

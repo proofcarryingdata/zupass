@@ -27,12 +27,13 @@ export async function testLogin(
 ): Promise<{ user: User; identity: Identity } | undefined> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
-  const commitment = identity.commitment.toString();
+  // const v4Identity = v3tov4Identity(identity);
+  const v3Commitment = identity.commitment.toString();
 
   const confirmationEmailResult = await requestConfirmationEmail(
     application.expressContext.localEndpoint,
     email,
-    commitment,
+    v3Commitment,
     force
   );
 
@@ -82,7 +83,7 @@ export async function testLogin(
     application.expressContext.localEndpoint,
     email,
     token,
-    commitment,
+    v3Commitment,
     skipSetupPassword ? undefined : salt,
     encryptionKey,
     undefined
@@ -96,7 +97,7 @@ export async function testLogin(
   expect(newUserResult.value).to.haveOwnProperty("commitment");
   expect(newUserResult.value).to.haveOwnProperty("emails");
   expect(newUserResult.success).to.eq(true);
-  expect(newUserResult.value.commitment).to.eq(commitment);
+  expect(newUserResult.value.commitment).to.eq(v3Commitment);
   expect(newUserResult.value.emails).to.deep.eq([email]);
 
   const getUserResponse = await requestUser(

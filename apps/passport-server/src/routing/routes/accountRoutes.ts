@@ -68,6 +68,7 @@ export function initAccountRoutes(
       req,
       "commitment"
     );
+    // TODO: upload v4 commitment here too.
     const force =
       checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
 
@@ -93,6 +94,7 @@ export function initAccountRoutes(
   app.post("/account/one-click-login", async (req: Request, res: Response) => {
     const email = checkBody<OneClickLoginRequest, "email">(req, "email");
     const code = checkBody<OneClickLoginRequest, "code">(req, "code");
+    // TODO: upload v4 commitment here too.
     const commitment = checkBody<OneClickLoginRequest, "commitment">(
       req,
       "commitment"
@@ -139,6 +141,7 @@ export function initAccountRoutes(
     const { salt, encryptionKey, autoRegister } =
       req.body as CreateNewUserRequest as CreateNewUserRequest;
     const token = checkBody<CreateNewUserRequest, "token">(req, "token");
+    // TODO: upload v4 commitment here too.
     const commitment = checkBody<CreateNewUserRequest, "commitment">(
       req,
       "commitment"

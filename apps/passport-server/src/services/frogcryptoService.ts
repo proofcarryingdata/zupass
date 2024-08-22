@@ -143,10 +143,10 @@ export class FrogcryptoService {
     }
 
     const user = await this.getUserForCredential(req.pcd);
-    const semaphoreId = user.commitment;
+    const v3Commitment = user.commitment;
 
     const userFeeds = _.keyBy(
-      await fetchUserFeedsState(this.context.dbPool, semaphoreId),
+      await fetchUserFeedsState(this.context.dbPool, v3Commitment),
       "feed_id"
     );
 
@@ -159,7 +159,7 @@ export class FrogcryptoService {
         this.computeUserFeedState(userFeeds[feed.id], feed)
       ),
       possibleFrogs: await getPossibleFrogs(this.context.dbPool),
-      myScore: await getUserScore(this.context.dbPool, semaphoreId)
+      myScore: await getUserScore(this.context.dbPool, v3Commitment)
     };
   }
 
@@ -167,15 +167,15 @@ export class FrogcryptoService {
     req: FrogCryptoShareTelegramHandleRequest
   ): Promise<FrogCryptoShareTelegramHandleResponseValue> {
     const user = await this.getUserForCredential(req.pcd);
-    const semaphoreId = user.commitment;
+    const v3Commitment = user.commitment;
 
     await updateUserScoreboardPreference(
       this.context.dbPool,
-      semaphoreId,
+      v3Commitment,
       req.reveal
     );
 
-    const myScore = await getUserScore(this.context.dbPool, semaphoreId);
+    const myScore = await getUserScore(this.context.dbPool, v3Commitment);
     if (!myScore) {
       throw new PCDHTTPError(404, "User not found");
     }
@@ -190,9 +190,9 @@ export class FrogcryptoService {
     feed: FrogCryptoFeed
   ): Promise<IFrogData> {
     const user = await this.getUserForCredential(credential);
-    const semaphoreId = user.commitment;
+    const v3Commitment = user.commitment;
 
-    await initializeUserFeedState(this.context.dbPool, semaphoreId, feed.id);
+    await initializeUserFeedState(this.context.dbPool, v3Commitment, feed.id);
 
     return sqlTransaction(
       this.context.dbPool,
@@ -200,7 +200,7 @@ export class FrogcryptoService {
       async (client) => {
         const lastFetchedAt = await updateUserFeedState(
           client,
-          semaphoreId,
+          v3Commitment,
           feed.id
         ).catch((e) => {
           if (e.message.includes("could not obtain lock")) {
@@ -219,7 +219,7 @@ export class FrogcryptoService {
 
         const { nextFetchAt } = this.computeUserFeedState(
           {
-            semaphore_id: semaphoreId,
+            semaphore_id: v3Commitment,
             feed_id: feed.id,
             last_fetched_at: lastFetchedAt
           },
@@ -237,11 +237,11 @@ export class FrogcryptoService {
           throw new PCDHTTPError(404, "Frog Not Found");
         }
 
-        const frogData = this.generateFrogData(frogDataSpec, semaphoreId);
+        const frogData = this.generateFrogData(frogDataSpec, v3Commitment);
 
         const { score: scoreAfterRoll } = await incrementScore(
           client,
-          semaphoreId,
+          v3Commitment,
           frogData.rarity,
           // non-frog frog doesn't get point
           frogData.biome === Biome.Unknown ? 0 : 1
@@ -254,7 +254,7 @@ export class FrogcryptoService {
         if (scoreAfterRoll <= FROG_FREEROLLS) {
           await updateUserFeedState(
             client,
-            semaphoreId,
+            v3Commitment,
             feed.id,
             lastFetchedAt.toUTCString()
           );
