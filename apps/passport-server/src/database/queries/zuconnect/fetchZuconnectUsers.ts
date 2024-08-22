@@ -22,7 +22,7 @@ export async function fetchAllLoggedInZuconnectUsers(
     `\
 SELECT 
         u.*,
-        array_agg(ue.email) as emails,
+        array_agg(distinct ue.email) as emails,
         array_agg(t.attendee_email) as attendee_emails,
         array_agg(t.attendee_name) as attendee_names,
         array_agg(t.product_id) as attendee_product_ids,
@@ -53,7 +53,7 @@ SELECT
 
     const zuconnectTickets: ZuconnectTicketInfo[] = [];
 
-    for (let i = 0; i < row.names.length; i++) {
+    for (let i = 0; i < row.attendee_names.length; i++) {
       zuconnectTickets.push({
         attendee_email: row.attendee_emails[i],
         attendee_name: row.attendee_names[i],
