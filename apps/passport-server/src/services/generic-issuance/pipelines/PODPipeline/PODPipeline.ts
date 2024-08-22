@@ -309,16 +309,18 @@ export class PODPipeline implements BasePipeline {
       }
 
       // POD pipeline is only compatible with semaphore v4.
-      if (!credential.semaphoreId) {
+      const { emails, semaphoreId, semaphoreIdV4 } = credential;
+      if (!semaphoreIdV4) {
         throw new Error("invalid credential");
       }
-      const { emails, semaphoreId } = credential;
 
       span?.setAttribute("email", emails?.map((e) => e.email)?.join(",") ?? "");
-      span?.setAttribute("semaphore_id", semaphoreId);
+      span?.setAttribute("semaphore_id", semaphoreId ?? "");
 
-      for (const e of emails ?? []) {
-        await this.consumerDB.save(this.id, e.email, semaphoreId, new Date());
+      if (semaphoreId) {
+        for (const e of emails ?? []) {
+          await this.consumerDB.save(this.id, e.email, semaphoreId, new Date());
+        }
       }
 
       // Consumer is validated, so save them in the consumer list

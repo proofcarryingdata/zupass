@@ -31,6 +31,7 @@ export function finalizeAtom(
   }
 
   for (const [name, entry] of Object.entries(output.entries)) {
+    // TODO: handle semaphore v4
     if (entry.source.type === "credentialSemaphoreID") {
       newEntries[name] = {
         type: "cryptographic",

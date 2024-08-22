@@ -1430,6 +1430,7 @@ export class LemonadePipeline implements BasePipeline {
               request.credential
             );
 
+          // for now, lemonade pipeline actions are only compatible with v3 credentials.
           if (!credential.semaphoreId) {
             throw new Error("invalid credential");
           }
