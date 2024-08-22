@@ -14,6 +14,7 @@
 - update the semaphore group stuff to be able to handle v4 groups.
 - make the client aware of the v4 identity
   - e.g. there are various react hooks that need to be updated
+- rename `commitment` to something that uses the word `v3`
 
 # done
 
@@ -23,6 +24,7 @@
 - update `VerifiedCredential` to support v4 signature credential type
 - make `Credential` and `CredentialSubservice` accept v4 signatures as well as v3 signatures
 - make `CredentialManager` default generate v4 credentials over v3 credentials
+- remove `authKey` and `ObjPCD` concept
 
 # won't do
 

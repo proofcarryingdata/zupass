@@ -339,20 +339,10 @@ export class IssuanceService {
     }
   }
 
-  private async checkUserExists(
+  private async getUserForCredential(
     credential: VerifiedCredential
   ): Promise<UserRow | null> {
-    const user = await fetchUserForCredential(this.context.dbPool, credential);
-
-    if (user === null) {
-      logger(
-        `can't issue PCDs for ${credential.semaphoreId} because ` +
-          `we don't have a user with that commitment in the database`
-      );
-      return null;
-    }
-
-    return user;
+    return fetchUserForCredential(this.context.dbPool, credential);
   }
 
   private getTicketIssuanceCutoffDate(): Date | null {
@@ -566,7 +556,7 @@ export class IssuanceService {
     credential: VerifiedCredential
   ): Promise<EmailPCD[]> {
     return traced("IssuanceService", "issueEmailPCDs", async (span) => {
-      const user = await this.checkUserExists(credential);
+      const user = await this.getUserForCredential(credential);
 
       if (!user) {
         return [];
@@ -620,7 +610,7 @@ export class IssuanceService {
         return [];
       }
 
-      const user = await this.checkUserExists(credential);
+      const user = await this.getUserForCredential(credential);
       const email = user?.emails?.[0];
       if (user) {
         span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
@@ -691,7 +681,7 @@ export class IssuanceService {
           );
           return [];
         }
-        const user = await this.checkUserExists(credential);
+        const user = await this.getUserForCredential(credential);
         const email = "user?.email";
         if (user) {
           span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
