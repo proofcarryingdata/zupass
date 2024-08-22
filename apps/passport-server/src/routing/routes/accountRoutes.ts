@@ -170,9 +170,9 @@ export function initAccountRoutes(
   app.post(
     "/account/add-v4-commitment",
     async (req: Request, res: Response) => {
-      const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
+      const v4SigCredential = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
-      const result = await userService.handleAddV4Commitment(pcd);
+      const result = await userService.handleAddV4Commitment(v4SigCredential);
 
       if (result.success) {
         res.status(200).json(result.value);
@@ -186,9 +186,9 @@ export function initAccountRoutes(
    * Records that the user has agreed to a given version of the legal terms.
    */
   app.post("/account/agree-terms", async (req: Request, res: Response) => {
-    const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
+    const v4SigCredential = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
-    const result = await userService.handleAgreeTerms(pcd);
+    const result = await userService.handleAgreeTerms(v4SigCredential);
 
     if (result.success) {
       res.status(200).json(result.value);
@@ -244,12 +244,12 @@ export function initAccountRoutes(
     const newEmail = checkBody<AddUserEmailRequest, "newEmail">(req, "newEmail")
       .trim()
       .toLocaleLowerCase();
-    const pcd = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
+    const v4SigCredential = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
     const confirmationCode = req.body.confirmationCode as string | undefined;
 
     const result = await userService.handleAddUserEmail(
       newEmail,
-      pcd,
+      v4SigCredential,
       confirmationCode
     );
 
@@ -266,9 +266,15 @@ export function initAccountRoutes(
     )
       .trim()
       .toLocaleLowerCase();
-    const pcd = checkBody<RemoveUserEmailRequest, "pcd">(req, "pcd");
+    const v4SigCredential = checkBody<RemoveUserEmailRequest, "pcd">(
+      req,
+      "pcd"
+    );
 
-    const result = await userService.handleRemoveUserEmail(emailToRemove, pcd);
+    const result = await userService.handleRemoveUserEmail(
+      emailToRemove,
+      v4SigCredential
+    );
 
     res.status(200).json(result);
   });
@@ -289,13 +295,16 @@ export function initAccountRoutes(
     )
       .trim()
       .toLocaleLowerCase();
-    const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
+    const v4SigCredential = checkBody<ChangeUserEmailRequest, "pcd">(
+      req,
+      "pcd"
+    );
     const confirmationCode = req.body.confirmationCode as string | undefined;
 
     const result = await userService.handleChangeUserEmail(
       oldEmail,
       newEmail,
-      pcd,
+      v4SigCredential,
       confirmationCode
     );
 
