@@ -218,6 +218,7 @@ export class UserService {
     email: string,
     code: string,
     commitment: string,
+    v4Commitment: string,
     encryption_key: string,
     res: Response
   ): Promise<void> {
@@ -266,6 +267,7 @@ export class UserService {
       uuid: randomUUID(),
       emails: [email],
       commitment,
+      semaphore_v4_id: v4Commitment,
       encryption_key,
       terms_agreed: LATEST_PRIVACY_NOTICE,
       extra_issuance: false

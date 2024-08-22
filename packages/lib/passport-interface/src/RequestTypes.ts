@@ -633,6 +633,7 @@ export type OneClickLoginRequest = {
   email: string;
   code: string;
   commitment: string;
+  v4Commitment: string;
   encryptionKey: string;
 };
 
