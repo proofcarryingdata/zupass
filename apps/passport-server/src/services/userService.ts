@@ -483,6 +483,9 @@ export class UserService {
     await deleteE2EEByCommitment(this.context.dbPool, user.commitment);
   }
 
+  /**
+   * Only supports semaphore v4 email credentials.
+   */
   public async getUserForUnverifiedCredential(
     credential: Credential
   ): Promise<UserRow | null> {
@@ -645,29 +648,19 @@ export class UserService {
    */
   public async handleAddUserEmail(
     emailToAdd: string,
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
+    unverifiedCredential: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
   ): Promise<AddUserEmailResponseValue> {
     logger(
       "[USER_SERVICE] handleAddUserEmail",
       emailToAdd,
       confirmationCode,
-      serializedPCD
+      unverifiedCredential
     );
 
-    const user = await this.getUserForCredential(
-      await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd)
-    );
-
-    let credential: VerifiedCredential;
-    try {
-      const verifiedCredential =
-        await this.credentialSubservice.tryVerify(serializedPCD);
-      if (!verifiedCredential) {
-        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
-      }
-      credential = verifiedCredential;
-    } catch {
+    const requestingUser =
+      await this.getUserForUnverifiedCredential(unverifiedCredential);
+    if (!requestingUser) {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
@@ -680,13 +673,6 @@ export class UserService {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
     }
 
-    if (!credential.semaphoreId) {
-      throw new Error("invalid credential");
-    }
-
-    const requestingUser = await this.getUserByCommitment(
-      credential.semaphoreId
-    );
     if (!requestingUser) {
       throw new PCDHTTPError(400, EmailUpdateError.Unknown);
     }
@@ -740,35 +726,18 @@ export class UserService {
 
   public async handleRemoveUserEmail(
     emailToRemove: string,
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+    unverifiedCredential: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<RemoveUserEmailResponseValue> {
     logger(
       "[USER_SERVICE] handleRemoveUserEmail",
       emailToRemove,
-      serializedPCD
+      unverifiedCredential
     );
 
-    let credential: VerifiedCredential;
-    try {
-      const verifiedCredential =
-        await this.credentialSubservice.tryVerify(serializedPCD);
-      if (!verifiedCredential) {
-        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
-      }
-      credential = verifiedCredential;
-    } catch (error) {
-      throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
-    }
-
-    if (!credential.semaphoreId) {
-      throw new Error("invalid credential");
-    }
-
-    const requestingUser = await this.getUserByCommitment(
-      credential.semaphoreId
-    );
+    const requestingUser =
+      await this.getUserForUnverifiedCredential(unverifiedCredential);
     if (!requestingUser) {
-      throw new PCDHTTPError(400, EmailUpdateError.UserNotFound);
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
     if (!requestingUser.emails.includes(emailToRemove)) {
@@ -804,7 +773,7 @@ export class UserService {
   public async handleChangeUserEmail(
     oldEmail: string,
     newEmail: string,
-    pcd: SerializedPCD<SemaphoreSignaturePCD>,
+    unverifiedCredential: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
   ): Promise<ChangeUserEmailResponseValue> {
     logger(
@@ -812,38 +781,18 @@ export class UserService {
       oldEmail,
       newEmail,
       confirmationCode,
-      pcd
+      unverifiedCredential
     );
 
-    let credential: VerifiedCredential;
-    try {
-      if (!validateEmail(newEmail)) {
-        throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
-      }
-
-      const verifiedCredential = await this.credentialSubservice.tryVerify(pcd);
-      if (!verifiedCredential) {
-        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
-      }
-      credential = verifiedCredential;
-    } catch {
+    const requestingUser =
+      await this.getUserForUnverifiedCredential(unverifiedCredential);
+    if (!requestingUser) {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
     const maybeExistingUserOfNewEmail = await this.getUserByEmail(newEmail);
     if (maybeExistingUserOfNewEmail) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
-    }
-
-    if (!credential.semaphoreId) {
-      throw new Error("invalid credential");
-    }
-
-    const requestingUser = await this.getUserByCommitment(
-      credential.semaphoreId
-    );
-    if (!requestingUser) {
-      throw new PCDHTTPError(404, EmailUpdateError.UserNotFound);
     }
 
     if (requestingUser.emails.length !== 1) {
