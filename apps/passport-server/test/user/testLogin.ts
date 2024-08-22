@@ -39,8 +39,6 @@ export async function testLogin(
   const confirmationEmailResult = await requestConfirmationEmail(
     application.expressContext.localEndpoint,
     email,
-    v3Commitment,
-    v4Commitment,
     force
   );
 

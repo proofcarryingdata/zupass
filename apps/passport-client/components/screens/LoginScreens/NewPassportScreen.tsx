@@ -154,13 +154,12 @@ function SendEmailVerification({ email }: { email: string }): JSX.Element {
     const confirmationEmailResult = await requestConfirmationEmail(
       appConfig.zupassServer,
       email,
-      identity.commitment.toString(),
       false
     );
     setEmailSending(false);
 
     handleConfirmationEmailResult(confirmationEmailResult);
-  }, [email, handleConfirmationEmailResult, identity.commitment]);
+  }, [email, handleConfirmationEmailResult]);
 
   useEffect(() => {
     if (triedSendingEmail) return;

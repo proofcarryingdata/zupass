@@ -20,6 +20,7 @@
 - packages/lib/passport-interface/test/V3ToV4Migration.spec.ts
 - document v3tov4Identity
 - figure out how to import both v3 and v4 identity in the same package
+- semaphore team - plz publish v4 packages under a diff name?
 
 # done
 
