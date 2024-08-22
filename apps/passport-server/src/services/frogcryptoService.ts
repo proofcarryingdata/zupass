@@ -27,7 +27,7 @@ import {
 import { PCDActionType } from "@pcd/pcd-collection";
 import { RollbarService } from "@pcd/server-shared";
 import _ from "lodash";
-import { FrogCryptoUserFeedState } from "../database/models";
+import { FrogCryptoUserFeedState, UserRow } from "../database/models";
 import {
   deleteFrogData,
   fetchUserFeedsState,
@@ -44,7 +44,7 @@ import {
   upsertFeedData,
   upsertFrogData
 } from "../database/queries/frogcrypto";
-import { fetchUserByV3Commitment } from "../database/queries/users";
+import { fetchUserForCredential } from "../database/queries/users";
 import { sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
@@ -142,7 +142,8 @@ export class FrogcryptoService {
       throw new PCDHTTPError(400, "feedIds must be an array");
     }
 
-    const semaphoreId = await this.verifyCredentialAndGetSemaphoreId(req.pcd);
+    const user = await this.getUserForCredential(req.pcd);
+    const semaphoreId = user.commitment;
 
     const userFeeds = _.keyBy(
       await fetchUserFeedsState(this.context.dbPool, semaphoreId),
@@ -165,7 +166,8 @@ export class FrogcryptoService {
   public async updateTelegramHandleSharing(
     req: FrogCryptoShareTelegramHandleRequest
   ): Promise<FrogCryptoShareTelegramHandleResponseValue> {
-    const semaphoreId = await this.verifyCredentialAndGetSemaphoreId(req.pcd);
+    const user = await this.getUserForCredential(req.pcd);
+    const semaphoreId = user.commitment;
 
     await updateUserScoreboardPreference(
       this.context.dbPool,
@@ -187,8 +189,8 @@ export class FrogcryptoService {
     credential: Credential,
     feed: FrogCryptoFeed
   ): Promise<IFrogData> {
-    const semaphoreId =
-      await this.verifyCredentialAndGetSemaphoreId(credential);
+    const user = await this.getUserForCredential(credential);
+    const semaphoreId = user.commitment;
 
     await initializeUserFeedState(this.context.dbPool, semaphoreId, feed.id);
 
@@ -386,16 +388,18 @@ export class FrogcryptoService {
     };
   }
 
-  private async verifyCredentialAndGetSemaphoreId(
-    credential: Credential
-  ): Promise<string> {
+  private async getUserForCredential(credential: Credential): Promise<UserRow> {
     try {
-      const { semaphoreId } =
-        await this.issuanceService.verifyCredential(credential);
-      if (!semaphoreId) {
-        throw new Error("invalid credential");
+      const user = await fetchUserForCredential(
+        this.context.dbPool,
+        await this.issuanceService.verifyCredential(credential)
+      );
+
+      if (!user) {
+        throw new PCDHTTPError(400, "invalid credential");
       }
-      return semaphoreId;
+
+      return user;
     } catch (e) {
       throw new PCDHTTPError(400, "invalid credential");
     }
@@ -407,8 +411,7 @@ export class FrogcryptoService {
   private async cachedVerifyAdminSignaturePCD(
     credential: Credential
   ): Promise<void> {
-    const id = await this.verifyCredentialAndGetSemaphoreId(credential);
-    const user = await fetchUserByV3Commitment(this.context.dbPool, id);
+    const user = await this.getUserForCredential(credential);
     if (!user) {
       throw new PCDHTTPError(400, "invalid PCD");
     }

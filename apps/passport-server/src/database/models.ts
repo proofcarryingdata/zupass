@@ -144,6 +144,9 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
 
 export interface UserRow {
   uuid: string;
+  /**
+   * v3 semaphore commitment - not cryptographically meaningful
+   */
   commitment: string;
   emails: string[];
   salt: string | null;
@@ -157,6 +160,9 @@ export interface UserRow {
   extra_issuance: boolean;
   time_created: Date;
   time_updated: Date;
+  /**
+   * EdDSA public key - semaphore commitment from semaphore v4.
+   */
   semaphore_v4_id: string | null;
 }
 
