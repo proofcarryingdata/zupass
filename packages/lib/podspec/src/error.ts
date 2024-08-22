@@ -10,7 +10,8 @@ export enum IssueCode {
   invalid_tuple_entry = "invalid_tuple_entry",
   not_in_tuple_list = "not_in_tuple_list",
   excluded_by_tuple_list = "excluded_by_tuple_list",
-  invalid_signer = "invalid_signer",
+  incorrect_signer = "incorrect_signer",
+  incorrect_signature = "incorrect_signature",
   invalid_pod_value = "invalid_pod_value"
 }
 
@@ -73,9 +74,15 @@ export interface PodspecExcludedByTupleListIssue extends PodspecBaseIssue {
   list: PODValue[][];
 }
 
-export interface PodspecInvalidSignerIssue extends PodspecBaseIssue {
-  code: IssueCode.invalid_signer;
+export interface PodspecIncorrectSignerIssue extends PodspecBaseIssue {
+  code: IssueCode.incorrect_signer;
   signer: string;
+  list: string[];
+}
+
+export interface PodspecIncorrectSignatureIssue extends PodspecBaseIssue {
+  code: IssueCode.incorrect_signature;
+  signature: string;
   list: string[];
 }
 
@@ -95,7 +102,7 @@ export type PodspecIssue =
   | PodspecInvalidTupleEntryIssue
   | PodspecNotInTupleListIssue
   | PodspecExcludedByTupleListIssue
-  | PodspecInvalidSignerIssue
+  | PodspecIncorrectSignerIssue
   | PodspecInvalidPodValueIssue;
 
 export class PodspecError extends Error {

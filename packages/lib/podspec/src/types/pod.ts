@@ -3,12 +3,13 @@ import {
   IssueCode,
   PodspecError,
   PodspecExcludedByTupleListIssue,
-  PodspecInvalidSignerIssue,
+  PodspecIncorrectSignatureIssue,
+  PodspecIncorrectSignerIssue,
   PodspecInvalidTupleEntryIssue,
   PodspecNotInTupleListIssue
 } from "../error";
 import { FAILURE, ParsePath, ParseResult, SUCCESS } from "../parse";
-import { isEqualPODValue, objectOutputType } from "../utils";
+import { assertUnreachable, isEqualPODValue, objectOutputType } from "../utils";
 import {
   PodspecEntries,
   PodspecEntriesSerializedDef,
@@ -24,14 +25,26 @@ type PODCheck =
   | {
       kind: "signer";
       signer: string;
+      exclude: boolean;
     }
   | {
       kind: "signerList";
       signerList: string[];
+      exclude: boolean;
     }
   | {
       kind: "tupleMembership";
       spec: TupleSpec;
+    }
+  | {
+      kind: "signature";
+      signature: string;
+      exclude: boolean;
+    }
+  | {
+      kind: "signatureList";
+      signatureList: string[];
+      exclude: boolean;
     };
 
 /**
@@ -108,10 +121,10 @@ export class PodspecPOD<T extends RawEntriesType> {
    * @param signer - The signer of the POD.
    * @returns The new Podspec.
    */
-  public signer(signer: string): PodspecPOD<T> {
+  public signer(signer: string, exclude: boolean = false): PodspecPOD<T> {
     return new PodspecPOD({
       entries: this.def.entries,
-      checks: [{ kind: "signer", signer }]
+      checks: [{ kind: "signer", signer, exclude }]
     });
   }
 
@@ -122,10 +135,43 @@ export class PodspecPOD<T extends RawEntriesType> {
    * @param signerList - The list of signers of the POD.
    * @returns The new Podspec.
    */
-  public signerList(signerList: string[]): PodspecPOD<T> {
+  public signerList(
+    signerList: string[],
+    exclude: boolean = false
+  ): PodspecPOD<T> {
     return new PodspecPOD({
       entries: this.def.entries,
-      checks: [{ kind: "signerList", signerList }]
+      checks: [{ kind: "signerList", signerList, exclude }]
+    });
+  }
+
+  /**
+   * Returns a new Podspec instance with a check on the signature.
+   *
+   * @param signature - The signature of the POD.
+   * @returns The new Podspec.
+   */
+  public signature(signature: string, exclude: boolean = false): PodspecPOD<T> {
+    return new PodspecPOD({
+      entries: this.def.entries,
+      checks: [{ kind: "signature", signature, exclude }]
+    });
+  }
+
+  /**
+   * Returns a new Podspec instance, checking the signature against a list of
+   * allowed signatures.
+   *
+   * @param signatureList - The list of signatures of the POD.
+   * @returns The new Podspec.
+   */
+  public signatureList(
+    signatureList: string[],
+    exclude: boolean = false
+  ): PodspecPOD<T> {
+    return new PodspecPOD({
+      entries: this.def.entries,
+      checks: [{ kind: "signatureList", signatureList, exclude }]
     });
   }
 
@@ -169,9 +215,13 @@ export class PodspecPOD<T extends RawEntriesType> {
 
     for (const check of this.def.checks) {
       if (check.kind === "signer") {
-        if (data.signerPublicKey !== check.signer) {
-          const issue: PodspecInvalidSignerIssue = {
-            code: IssueCode.invalid_signer,
+        const signerMatches = data.signerPublicKey === check.signer;
+        if (
+          (!signerMatches && !check.exclude) ||
+          (signerMatches && check.exclude)
+        ) {
+          const issue: PodspecIncorrectSignerIssue = {
+            code: IssueCode.incorrect_signer,
             signer: data.signerPublicKey,
             list: [check.signer],
             path: ["signerPublicKey"]
@@ -179,16 +229,51 @@ export class PodspecPOD<T extends RawEntriesType> {
           issues.push(issue);
         }
       } else if (check.kind === "signerList") {
-        if (!check.signerList.includes(data.signerPublicKey)) {
-          const issue: PodspecInvalidSignerIssue = {
-            code: IssueCode.invalid_signer,
+        const signerInList = check.signerList.includes(data.signerPublicKey);
+        if (
+          (!signerInList && !check.exclude) ||
+          (signerInList && check.exclude)
+        ) {
+          const issue: PodspecIncorrectSignerIssue = {
+            code: IssueCode.incorrect_signer,
             signer: data.signerPublicKey,
             list: check.signerList,
             path: ["signerPublicKey"]
           };
           issues.push(issue);
         }
-      } else if (check.kind === "tupleMembership" && entriesResult.isValid) {
+      } else if (check.kind === "signature") {
+        const signatureMatches = data.signature === check.signature;
+        if (
+          (!signatureMatches && !check.exclude) ||
+          (signatureMatches && check.exclude)
+        ) {
+          const issue: PodspecIncorrectSignatureIssue = {
+            code: IssueCode.incorrect_signature,
+            signature: data.signature,
+            list: [check.signature],
+            path: ["signature"]
+          };
+          issues.push(issue);
+        }
+      } else if (check.kind === "signatureList") {
+        const signatureInList = check.signatureList.includes(data.signature);
+        if (
+          (!signatureInList && !check.exclude) ||
+          (signatureInList && check.exclude)
+        ) {
+          const issue: PodspecIncorrectSignatureIssue = {
+            code: IssueCode.incorrect_signature,
+            signature: data.signature,
+            list: check.signatureList,
+            path: ["signature"]
+          };
+          issues.push(issue);
+        }
+      } else if (check.kind === "tupleMembership") {
+        if (!entriesResult.isValid) {
+          return FAILURE(issues);
+        }
         const resultEntryKeys = [
           ...Object.keys(entriesResult.value),
           "$signerPublicKey"
@@ -248,6 +333,8 @@ export class PodspecPOD<T extends RawEntriesType> {
           };
           issues.push(issue);
         }
+      } else {
+        assertUnreachable(check);
       }
     }
 
