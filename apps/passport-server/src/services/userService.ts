@@ -5,6 +5,7 @@ import {
   AgreeTermsResult,
   ChangeUserEmailResponseValue,
   ConfirmEmailResponseValue,
+  Credential,
   EmailUpdateError,
   LATEST_PRIVACY_NOTICE,
   NewUserResponseValue,
@@ -482,11 +483,26 @@ export class UserService {
     await deleteE2EEByCommitment(this.context.dbPool, user.commitment);
   }
 
+  public async getUserForUnverifiedCredential(
+    credential: Credential
+  ): Promise<UserRow | null> {
+    return fetchUserForCredential(
+      this.context.dbPool,
+      await this.credentialSubservice.verifyAndExpectZupassEmail(credential)
+    );
+  }
+
+  public async getUserForCredential(
+    credential: VerifiedCredential
+  ): Promise<UserRow | null> {
+    return fetchUserForCredential(this.context.dbPool, credential);
+  }
+
   public async handleAddV4Commitment(
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+    v4Credential: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<AddV4CommitmentResult> {
     const v3Sig = await SemaphoreSignaturePCDPackage.deserialize(
-      serializedPCD.pcd
+      v4Credential.pcd
     );
 
     const verification = await verifyAddV4CommitmentRequestPCD(v3Sig);
@@ -637,6 +653,10 @@ export class UserService {
       emailToAdd,
       confirmationCode,
       serializedPCD
+    );
+
+    const user = await this.getUserForCredential(
+      await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd)
     );
 
     let credential: VerifiedCredential;

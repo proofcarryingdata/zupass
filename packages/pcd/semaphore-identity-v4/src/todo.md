@@ -15,6 +15,7 @@
 - make the client aware of the v4 identity
   - e.g. there are various react hooks that need to be updated
 - rename `commitment` to something that uses the word `v3`
+- document `IssuanceService`
 
 # done
 

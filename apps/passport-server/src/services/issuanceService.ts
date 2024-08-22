@@ -53,7 +53,6 @@ import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
 import urljoin from "url-join";
-import { UserRow } from "../database/models";
 import {
   fetchKnownPublicKeys,
   fetchKnownTicketByEventAndProductId,
@@ -61,7 +60,6 @@ import {
   setKnownPublicKey,
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
-import { fetchUserForCredential } from "../database/queries/users";
 import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchAllUsersWithZuzaluTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
@@ -76,9 +74,15 @@ import { zuzaluRoleToProductId } from "../util/zuzaluUser";
 import { MultiProcessService } from "./multiProcessService";
 import { PersistentCacheService } from "./persistentCacheService";
 import { traced } from "./telemetryService";
+import { UserService } from "./userService";
 
 export const ZUPASS_TICKET_PUBLIC_KEY_NAME = "Zupass";
 
+/**
+ * Pre-Podbox-era issuance service.
+ *
+ * TODO: document this more clearly
+ */
 export class IssuanceService {
   private readonly context: ApplicationContext;
   private readonly cacheService: PersistentCacheService;
@@ -89,6 +93,7 @@ export class IssuanceService {
   private readonly exportedRSAPrivateKey: string;
   private readonly exportedRSAPublicKey: string;
   private readonly multiprocessService: MultiProcessService;
+  private readonly userService: UserService;
   private readonly verificationPromiseCache: LRUCache<
     string,
     Promise<VerifiedCredential>
@@ -98,6 +103,7 @@ export class IssuanceService {
     context: ApplicationContext,
     cacheService: PersistentCacheService,
     multiprocessService: MultiProcessService,
+    userService: UserService,
     rollbarService: RollbarService | null,
     rsaPrivateKey: NodeRSA,
     eddsaPrivateKey: string
@@ -105,6 +111,7 @@ export class IssuanceService {
     this.context = context;
     this.cacheService = cacheService;
     this.multiprocessService = multiprocessService;
+    this.userService = userService;
     this.rollbarService = rollbarService;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
@@ -339,12 +346,6 @@ export class IssuanceService {
     }
   }
 
-  private async getUserForCredential(
-    credential: VerifiedCredential
-  ): Promise<UserRow | null> {
-    return fetchUserForCredential(this.context.dbPool, credential);
-  }
-
   private getTicketIssuanceCutoffDate(): Date | null {
     const cutoffDate = process.env.TICKET_ISSUANCE_CUTOFF_DATE;
 
@@ -556,7 +557,7 @@ export class IssuanceService {
     credential: VerifiedCredential
   ): Promise<EmailPCD[]> {
     return traced("IssuanceService", "issueEmailPCDs", async (span) => {
-      const user = await this.getUserForCredential(credential);
+      const user = await this.userService.getUserForCredential(credential);
 
       if (!user) {
         return [];
@@ -610,7 +611,7 @@ export class IssuanceService {
         return [];
       }
 
-      const user = await this.getUserForCredential(credential);
+      const user = await this.userService.getUserForCredential(credential);
       const email = user?.emails?.[0];
       if (user) {
         span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
@@ -681,7 +682,7 @@ export class IssuanceService {
           );
           return [];
         }
-        const user = await this.getUserForCredential(credential);
+        const user = await this.userService.getUserForCredential(credential);
         const email = "user?.email";
         if (user) {
           span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
@@ -907,7 +908,8 @@ export async function startIssuanceService(
   context: ApplicationContext,
   cacheService: PersistentCacheService,
   rollbarService: RollbarService | null,
-  multiprocessService: MultiProcessService
+  multiprocessService: MultiProcessService,
+  userService: UserService
 ): Promise<IssuanceService | null> {
   const zupassRsaKey = loadRSAPrivateKey();
   const zupassEddsaKey = loadEdDSAPrivateKey();
@@ -926,6 +928,7 @@ export async function startIssuanceService(
     context,
     cacheService,
     multiprocessService,
+    userService,
     rollbarService,
     zupassRsaKey,
     zupassEddsaKey

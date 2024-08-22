@@ -62,17 +62,7 @@ export async function startServices(
     context.dbPool,
     rollbarService
   );
-  const issuanceService = await startIssuanceService(
-    context,
-    persistentCacheService,
-    rollbarService,
-    multiprocessService
-  );
-  const frogcryptoService = await startFrogcryptoService(
-    context,
-    rollbarService,
-    issuanceService
-  );
+
   const poapService = startPoapService(context, rollbarService);
   const genericIssuanceService = await startGenericIssuanceService(
     context,
@@ -85,6 +75,7 @@ export async function startServices(
     emailService,
     credentialSubservice
   );
+
   const userService = startUserService(
     context,
     semaphoreService,
@@ -93,6 +84,19 @@ export async function startServices(
     rateLimitService,
     genericIssuanceService,
     credentialSubservice
+  );
+
+  const issuanceService = await startIssuanceService(
+    context,
+    persistentCacheService,
+    rollbarService,
+    multiprocessService,
+    userService
+  );
+  const frogcryptoService = await startFrogcryptoService(
+    context,
+    rollbarService,
+    issuanceService
   );
 
   const services: GlobalServices = {
