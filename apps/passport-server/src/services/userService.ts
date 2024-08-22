@@ -307,6 +307,7 @@ export class UserService {
     token: string,
     email: string,
     commitment: string,
+    v4Commitment: string,
     salt: string | undefined,
     encryption_key: string | undefined,
     autoRegister: boolean | undefined,
@@ -316,7 +317,8 @@ export class UserService {
       `[USER_SERVICE] new-user ${JSON.stringify({
         token,
         email,
-        commitment
+        commitment,
+        v4Commitment
       })}`
     );
 
@@ -352,11 +354,12 @@ export class UserService {
 
     await this.emailTokenService.saveNewTokenForEmail(email);
 
-    logger(`[USER_SERVICE] Saving commitment: ${commitment}`);
+    logger(`[USER_SERVICE] Saving commitment: ${commitment}, ${v4Commitment}`);
     await upsertUser(this.context.dbPool, {
       uuid: existingUser ? existingUser.uuid : randomUUID(),
       emails: existingUser ? existingUser.emails : [email],
       commitment,
+      semaphore_v4_id: v4Commitment,
       salt,
       encryption_key,
       // If the user already exists, then they're accessing this via the

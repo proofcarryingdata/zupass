@@ -141,7 +141,10 @@ export function initAccountRoutes(
     const { salt, encryptionKey, autoRegister } =
       req.body as CreateNewUserRequest as CreateNewUserRequest;
     const token = checkBody<CreateNewUserRequest, "token">(req, "token");
-    // TODO: upload v4 commitment here too.
+    const v4Commitment = checkBody<CreateNewUserRequest, "v4Commitment">(
+      req,
+      "v4Commitment"
+    );
     const commitment = checkBody<CreateNewUserRequest, "commitment">(
       req,
       "commitment"
@@ -151,6 +154,7 @@ export function initAccountRoutes(
       token,
       email,
       commitment,
+      v4Commitment,
       salt,
       encryptionKey,
       autoRegister,
