@@ -12,6 +12,7 @@ export async function upsertUser(
   client: Pool,
   params: {
     uuid: string;
+    // Semaphore v3 commitment.
     commitment: string;
     salt?: string | null;
     encryption_key?: string | null;

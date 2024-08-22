@@ -32,7 +32,7 @@ import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
-  deleteE2EEByCommitment,
+  deleteE2EEByV3Commitment,
   fetchEncryptedStorage
 } from "../database/queries/e2ee";
 import { upsertUser } from "../database/queries/saveUser";
@@ -480,7 +480,7 @@ export class UserService {
     }
 
     await deleteUserByUUID(this.context.dbPool, user.uuid);
-    await deleteE2EEByCommitment(this.context.dbPool, user.commitment);
+    await deleteE2EEByV3Commitment(this.context.dbPool, user.commitment);
   }
 
   /**

@@ -49,6 +49,9 @@ export interface TelegramChat {
  * A zuzalu pretix-ticket-holder that may or may not have logged in yet.
  */
 export interface ZuzaluUser extends ZuzaluPretixTicket {
+  /**
+   * Semaphore v3 commitment.
+   */
   commitment: string | null;
   uuid: string | null;
   time_created: Date;
@@ -136,6 +139,9 @@ export interface DevconnectProduct {
  */
 export interface LoggedInZuzaluUser extends ZuzaluUser {
   uuid: string;
+  /**
+   * Semaphore v3 commitment.
+   */
   commitment: string;
   salt: string | null;
   encryption_key: string | null;
@@ -145,7 +151,7 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
 export interface UserRow {
   uuid: string;
   /**
-   * v3 semaphore commitment - not cryptographically meaningful
+   * Semaphore v3 commitment.
    */
   commitment: string;
   emails: string[];

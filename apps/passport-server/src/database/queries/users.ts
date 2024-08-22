@@ -108,18 +108,18 @@ export async function fetchUserForCredential(
   }
 
   if (credential.semaphoreIdV4) {
-    return fetchUserByEdDSACommitment(client, credential.semaphoreIdV4);
+    return fetchUserByV4Commitment(client, credential.semaphoreIdV4);
   }
 
   return null;
 }
 
 /**
- * Fetches a user by their semaphore commitment.
+ * Fetches a user by their semaphore v3 commitment.
  */
 export async function fetchUserByV3Commitment(
   client: Pool,
-  commitment: string
+  v3Commitment: string
 ): Promise<UserRow | null> {
   const result = await sqlQuery(
     client,
@@ -128,7 +128,7 @@ export async function fetchUserByV3Commitment(
      LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.commitment = $1
      GROUP BY u.uuid`,
-    [commitment]
+    [v3Commitment]
   );
 
   if (result.rowCount === 0) {
@@ -139,11 +139,11 @@ export async function fetchUserByV3Commitment(
 }
 
 /**
- * Fetches a user by their semaphore commitment.
+ * Fetches a user by their semaphore v4 commitment.
  */
-export async function fetchUserByEdDSACommitment(
+export async function fetchUserByV4Commitment(
   client: Pool,
-  commitment: string
+  v4Commitment: string
 ): Promise<UserRow | null> {
   const result = await sqlQuery(
     client,
@@ -152,7 +152,7 @@ export async function fetchUserByEdDSACommitment(
      LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.semaphore_v4_id = $1
      GROUP BY u.uuid`,
-    [commitment]
+    [v4Commitment]
   );
 
   if (result.rowCount === 0) {
