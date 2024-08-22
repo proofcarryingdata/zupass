@@ -301,19 +301,14 @@ export class PODPipeline implements BasePipeline {
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "feedIssue", async (span) => {
-      if (!req.pcd) {
-        throw new Error("missing credential pcd");
-      }
+      const credential =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-      if (
-        this.definition.options.paused ||
-        (await this.db.load(this.id)).length === 0
-      ) {
+      if (this.definition.options.paused) {
         return { actions: [] };
       }
 
-      const credential =
-        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+      // POD pipeline is only compatible with semaphore v4.
       if (!credential.semaphoreId) {
         throw new Error("invalid credential");
       }

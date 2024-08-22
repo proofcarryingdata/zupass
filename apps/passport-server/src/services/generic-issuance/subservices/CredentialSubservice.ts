@@ -64,8 +64,12 @@ export class CredentialSubservice {
    * `emailSignatureClaim` cannot be undefined.
    */
   public async verifyAndExpectZupassEmail(
-    credential: Credential
+    credential: Credential | undefined
   ): Promise<VerifiedCredential> {
+    if (!credential) {
+      throw new VerificationError("Missing credential");
+    }
+
     const verifiedCredential = await this.verify(credential);
 
     if (!verifiedCredential.emails || verifiedCredential.emails.length === 0) {

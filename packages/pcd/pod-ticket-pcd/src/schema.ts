@@ -12,6 +12,9 @@ export const TicketDataSchema = z.object({
   productId: z.string().uuid(),
   timestampConsumed: z.number().int().nonnegative(),
   timestampSigned: z.number().int().nonnegative(),
+  /**
+   * User's Zupass semaphore v4 ID, which is an EdDSA public key.
+   */
   attendeeSemaphoreV4Id: z.string(),
   isConsumed: z.boolean(),
   isRevoked: z.boolean(),
