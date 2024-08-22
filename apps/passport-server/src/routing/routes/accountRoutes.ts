@@ -156,7 +156,9 @@ export function initAccountRoutes(
   });
 
   /**
-   * Records that the user has agreed to a given version of the legal terms.
+   * Lets a client upload its v4 commitment to zupass, which happens in the case that
+   * a user has a v3 identity and zupass account that existed prior to the introduction
+   * of the v4 identity.
    */
   app.post(
     "/account/add-v4-commitment",
