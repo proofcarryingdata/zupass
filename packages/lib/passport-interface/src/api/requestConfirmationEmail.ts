@@ -19,6 +19,7 @@ export async function requestConfirmationEmail(
   zupassServerUrl: string,
   email: string,
   commitment: string,
+  v4Commitment: string,
   force: boolean
 ): Promise<ConfirmEmailResult> {
   return httpPostSimple(
@@ -33,6 +34,7 @@ export async function requestConfirmationEmail(
     {
       email,
       commitment,
+      v4Commitment,
       force: force ? "true" : "false"
     } satisfies ConfirmEmailRequest
   );

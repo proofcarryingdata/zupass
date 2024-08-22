@@ -541,12 +541,6 @@ export type ConfirmEmailRequest = {
   email: string;
 
   /**
-   * Public semaphore commitment of this user. The server never learns
-   * the user's private semaphore details.
-   */
-  commitment: string;
-
-  /**
    * Whether or not to overwrite an existing user, if one is present.
    * Required to be 'true' if a user with the same email already exists.
    */
@@ -615,7 +609,14 @@ export type DeviceLoginRequest = {
 export type CreateNewUserRequest = {
   email: string;
   token: string;
+  /**
+   * Semaphore v3 commitment.
+   */
   commitment: string;
+  /**
+   * Semaphore v4 commitment.
+   */
+  v4Commitment: string;
   salt: string | undefined;
   encryptionKey: string | undefined;
   autoRegister?: boolean;

@@ -64,15 +64,11 @@ export function initAccountRoutes(
     const email = normalizeEmail(
       checkBody<ConfirmEmailRequest, "email">(req, "email")
     );
-    const commitment = checkBody<ConfirmEmailRequest, "commitment">(
-      req,
-      "commitment"
-    );
-    // TODO: upload v4 commitment here too.
+
     const force =
       checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
 
-    await userService.handleSendTokenEmail(email, commitment, force, res);
+    await userService.handleSendTokenEmail(email, force, res);
   });
 
   /**

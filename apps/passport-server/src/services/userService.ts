@@ -120,14 +120,12 @@ export class UserService {
 
   public async handleSendTokenEmail(
     email: string,
-    commitment: string,
     force: boolean,
     res: Response
   ): Promise<void> {
     logger(
       `[USER_SERVICE] send-token-email ${JSON.stringify({
         email,
-        commitment,
         force
       })}`
     );
@@ -174,12 +172,6 @@ export class UserService {
     ) {
       throw new PCDHTTPError(403, `'${email}' already registered`);
     }
-
-    logger(
-      `Saved login token for ${
-        existingCommitment === null ? "NEW" : "EXISTING"
-      } email=${email} commitment=${commitment}`
-    );
 
     if (this.bypassEmail) {
       logger("[DEV] Bypassing email, returning token");

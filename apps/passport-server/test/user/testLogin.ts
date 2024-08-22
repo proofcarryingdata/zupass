@@ -5,6 +5,9 @@ import {
   requestUser,
   User
 } from "@pcd/passport-interface";
+import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import { v3tov4Identity } from "@pcd/semaphore-identity-v4";
+import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomBytes } from "crypto";
@@ -27,13 +30,17 @@ export async function testLogin(
 ): Promise<{ user: User; identity: Identity } | undefined> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
-  // const v4Identity = v3tov4Identity(identity);
+  const v4Identity = v3tov4Identity(
+    new SemaphoreIdentityPCD(randomUUID(), { identity })
+  );
   const v3Commitment = identity.commitment.toString();
+  const v4Commitment = v4Identity.claim.identity.commitment.toString();
 
   const confirmationEmailResult = await requestConfirmationEmail(
     application.expressContext.localEndpoint,
     email,
     v3Commitment,
+    v4Commitment,
     force
   );
 
@@ -84,6 +91,7 @@ export async function testLogin(
     email,
     token,
     v3Commitment,
+    v4Commitment,
     skipSetupPassword ? undefined : salt,
     encryptionKey,
     undefined
