@@ -335,7 +335,11 @@ async function oneClickLogin(
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
     identity: state.identity
   });
-  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+  const v4IdentityPCD = v3tov4Identity(identityPCD);
+  const pcds = new PCDCollection(await getPackages(), [
+    identityPCD,
+    v4IdentityPCD
+  ]);
 
   await savePCDs(pcds);
   update({ pcds });
@@ -353,6 +357,7 @@ async function oneClickLogin(
     email,
     code,
     state.identity.commitment.toString(),
+    v4IdentityPCD.claim.identity.publicKey.toString(),
     encryptionKey
   );
 
@@ -421,13 +426,19 @@ async function createNewUserSkipPassword(
   update({
     modal: { modalType: "none" }
   });
+
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+    identity: state.identity
+  });
+  const v4IdentityPCD = v3tov4Identity(identityPCD);
+
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
   if (autoRegister) {
-    const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-      identity: state.identity
-    });
-    const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+    const pcds = new PCDCollection(await getPackages(), [
+      identityPCD,
+      v4IdentityPCD
+    ]);
 
     await savePCDs(pcds);
     update({ pcds });
@@ -446,6 +457,7 @@ async function createNewUserSkipPassword(
     email,
     token,
     state.identity.commitment.toString(),
+    v4IdentityPCD.claim.identity.publicKey.toString(),
     undefined,
     encryptionKey,
     autoRegister
@@ -486,11 +498,18 @@ async function createNewUserWithPassword(
     encryptionKey
   });
 
+  const v4IdentityPCD = v3tov4Identity(
+    await SemaphoreIdentityPCDPackage.prove({
+      identity: state.identity
+    })
+  );
+
   const newUserResult = await requestCreateNewUser(
     appConfig.zupassServer,
     email,
     token,
     state.identity.commitment.toString(),
+    v4IdentityPCD.claim.identity.publicKey.toString(),
     newSalt,
     undefined,
     undefined

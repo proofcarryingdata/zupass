@@ -17,6 +17,7 @@ export async function requestOneClickLogin(
   email: string,
   code: string,
   commitment: string,
+  v4Commitment: string,
   encryptionKey: string
 ): Promise<LoginResult> {
   return httpPostSimple(
@@ -29,6 +30,7 @@ export async function requestOneClickLogin(
       email,
       code,
       commitment,
+      v4Commitment,
       encryptionKey
     } satisfies OneClickLoginRequest
   );
