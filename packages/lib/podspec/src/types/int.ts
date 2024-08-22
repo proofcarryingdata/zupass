@@ -11,6 +11,7 @@ import {
 } from "../error";
 import { FAILURE, ParseParams, ParseResult, SUCCESS } from "../parse";
 import { assertUnreachable, CreateArgs } from "../utils";
+import { PodspecOptional } from "./optional";
 
 /**
  * Checks if the given data has the correct shape for a POD integer value.
@@ -204,6 +205,15 @@ export class PodspecInt extends PodspecValue<
       ...this.def,
       checks: [...this.def.checks, { kind: "range", min, max }]
     });
+  }
+
+  /**
+   * Creates a new optional integer Podspec.
+   *
+   * @returns The new optional integer Podspec
+   */
+  public optional(): PodspecOptional<PodspecInt> {
+    return PodspecOptional.create(this);
   }
 
   /**

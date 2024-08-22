@@ -17,6 +17,7 @@ import {
 } from "../error";
 import { FAILURE, ParseParams, ParseResult, SUCCESS } from "../parse";
 import { assertUnreachable, CreateArgs } from "../utils";
+import { PodspecOptional } from "./optional";
 
 /**
  * Checks if the given data is a PODCryptographicValue.
@@ -209,6 +210,15 @@ export class PodspecCryptographic extends PodspecValue<
       ...this.def,
       checks: [...this.def.checks, { kind: "range", min, max }]
     });
+  }
+
+  /**
+   * Creates a new optional cryptographic Podspec.
+   *
+   * @returns The new optional cryptographic Podspec
+   */
+  public optional(): PodspecOptional<PodspecCryptographic> {
+    return PodspecOptional.create(this);
   }
 
   /**

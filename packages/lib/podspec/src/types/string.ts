@@ -10,6 +10,7 @@ import {
 } from "../error";
 import { FAILURE, ParseParams, ParseResult, SUCCESS } from "../parse";
 import { assertUnreachable, CreateArgs } from "../utils";
+import { PodspecOptional } from "./optional";
 
 /**
  * Checks if the given data has the correct shape for a POD string value.
@@ -174,8 +175,13 @@ export class PodspecString extends PodspecValue<
     return SUCCESS(value);
   }
 
-  public constructor(def: PodspecStringDef) {
-    super(def);
+  /**
+   * Creates a new optional string Podspec.
+   *
+   * @returns The new optional string Podspec
+   */
+  public optional(): PodspecOptional<PodspecString> {
+    return PodspecOptional.create(this);
   }
 
   /**

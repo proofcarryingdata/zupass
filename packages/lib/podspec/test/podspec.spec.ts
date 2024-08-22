@@ -511,4 +511,22 @@ describe("podspec should work", async function () {
     const deserialized = PodspecPOD.deserialize(serialized);
     expect(deserialized).to.eql(myPodSpec);
   });
+
+  it("should handle optional fields", function () {
+    const optionalPodSpec = p.entries({
+      foo: p.string(),
+      bar: p.int().optional()
+    });
+
+    const resultWithOptional = optionalPodSpec.safeParse({
+      foo: { type: "string", value: "test" },
+      bar: { type: "int", value: 123n }
+    });
+    expect(resultWithOptional.isValid).to.eq(true);
+
+    const resultWithoutOptional = optionalPodSpec.safeParse({
+      foo: { type: "string", value: "test" }
+    });
+    expect(resultWithoutOptional.isValid).to.eq(true);
+  });
 });

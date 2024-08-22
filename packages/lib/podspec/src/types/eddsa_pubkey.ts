@@ -10,6 +10,7 @@ import {
 } from "../error";
 import { FAILURE, ParseParams, ParseResult, SUCCESS } from "../parse";
 import { assertUnreachable, CreateArgs } from "../utils";
+import { PodspecOptional } from "./optional";
 
 /**
  * Checks if the given data is a PODEdDSAPublicKeyValue.
@@ -152,6 +153,15 @@ export class PodspecEdDSAPubKey extends PodspecValue<
     }
 
     return SUCCESS(value);
+  }
+
+  /**
+   * Creates a new optional EdDSAPubKey Podspec.
+   *
+   * @returns The new optional EdDSAPubKey Podspec
+   */
+  public optional(): PodspecOptional<PodspecEdDSAPubKey> {
+    return PodspecOptional.create(this);
   }
 
   /**
