@@ -66,7 +66,7 @@ export function AddEmailScreen(): JSX.Element | null {
         pcds,
         stateContext.getState().credentialCache
       ).requestCredential({
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "semaphore-v4-signature-pcd"
       });
 
       const response = await requestAddUserEmail(
@@ -102,7 +102,7 @@ export function AddEmailScreen(): JSX.Element | null {
         pcds,
         stateContext.getState().credentialCache
       ).requestCredential({
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "semaphore-v4-signature-pcd"
       });
 
       const response = await requestAddUserEmail(

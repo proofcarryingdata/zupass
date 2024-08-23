@@ -1,7 +1,5 @@
 # todo
 
-- migrate alread-logged-in clients
-  - make user with 2 logged in clients migrates without conflicts
 - need to create tests for pipelines that make sure they work with both a v3 and a v4 identity
 - figure out how to hide/show tickets where there's both an EdDSA ticket and a POD ticket in the client.
   - we don't want there to appear to be duplicates
@@ -18,6 +16,8 @@
 - document v3tov4Identity
 - figure out how to import both v3 and v4 identity in the same package
 - semaphore team - plz publish v4 packages under a diff name?
+- migrate alread-logged-in clients
+  - make user with 2 logged in clients migrates without conflicts
 
 # done
 

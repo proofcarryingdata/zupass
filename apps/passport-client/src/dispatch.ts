@@ -1468,7 +1468,7 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   );
 
   const pcd = await credentialManager.requestCredential({
-    signatureType: "sempahore-signature-pcd"
+    signatureType: "semaphore-v4-signature-pcd"
   });
 
   const res = await requestDeleteAccount(appConfig.zupassServer, { pcd });

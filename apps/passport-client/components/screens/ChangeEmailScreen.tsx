@@ -66,7 +66,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
         pcds,
         stateContext.getState().credentialCache
       ).requestCredential({
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "semaphore-v4-signature-pcd"
       });
 
       const result = await requestChangeUserEmail(
@@ -115,7 +115,7 @@ export function ChangeEmailScreen(): JSX.Element | null {
         pcds,
         stateContext.getState().credentialCache
       ).requestCredential({
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "semaphore-v4-signature-pcd"
       });
 
       const result = await requestChangeUserEmail(

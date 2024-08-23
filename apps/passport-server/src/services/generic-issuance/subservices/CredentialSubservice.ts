@@ -58,8 +58,8 @@ export class CredentialSubservice {
   }
 
   /**
-   * Performs normal verification, but also checks to ensure that the EmailPCD
-   * exists, and that it was signed by Zupass. Returns a modified
+   * Performs normal verification, but also checks to ensure any emails
+   * included in the credential were signed by the Zupass EdDSA key.
    * {@link VerifiedCredential} type, indicating that `emailClaim` and
    * `emailSignatureClaim` cannot be undefined.
    */
@@ -72,11 +72,7 @@ export class CredentialSubservice {
 
     const verifiedCredential = await this.verify(credential);
 
-    if (!verifiedCredential.emails || verifiedCredential.emails.length === 0) {
-      throw new VerificationError("Missing Email PCDs");
-    }
-
-    for (const signedEmail of verifiedCredential.emails) {
+    for (const signedEmail of verifiedCredential.emails ?? []) {
       const { email, semaphoreId, signer } = signedEmail;
 
       if (!email || !semaphoreId) {

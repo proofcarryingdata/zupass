@@ -47,7 +47,7 @@ const CACHE_TTL = ONE_HOUR_MS;
  */
 export const PODBOX_CREDENTIAL_REQUEST: CredentialRequest = {
   pcdType: "email-pcd",
-  signatureType: "sempahore-signature-pcd"
+  signatureType: "semaphore-v4-signature-pcd"
 };
 
 export const ZUPASS_CREDENTIAL_REQUEST: CredentialRequest = {

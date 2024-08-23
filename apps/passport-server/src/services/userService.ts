@@ -670,10 +670,6 @@ export class UserService {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
     }
 
-    if (!requestingUser) {
-      throw new PCDHTTPError(400, EmailUpdateError.Unknown);
-    }
-
     if (confirmationCode === undefined) {
       const newToken =
         await this.emailTokenService.saveNewTokenForEmail(emailToAdd);

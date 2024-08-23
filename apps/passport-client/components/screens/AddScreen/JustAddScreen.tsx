@@ -48,7 +48,7 @@ export function JustAddScreen({
   const isMintable =
     request.pcd.type === "pod-pcd" && request.mintUrl !== undefined;
   const semaphoreSignaturePCD = useCredentialManager().requestCredential({
-    signatureType: "sempahore-signature-pcd"
+    signatureType: "semaphore-v4-signature-pcd"
   });
   const isProtocolWorlds = request.folder === ProtocolWorldsFolderName;
   const hasAutoAdded = useRef(false);

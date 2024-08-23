@@ -94,7 +94,7 @@ export function ChangePasswordScreen(): JSX.Element | null {
         dispatch,
         update,
         await credentialManager.requestCredential({
-          signatureType: "sempahore-signature-pcd"
+          signatureType: "semaphore-v4-signature-pcd"
         })
       );
 

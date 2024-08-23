@@ -56,7 +56,7 @@ export function RequireAddPasswordModal(): ReactNode {
         dispatch,
         update,
         await credentialManager.requestCredential({
-          signatureType: "sempahore-signature-pcd"
+          signatureType: "semaphore-v4-signature-pcd"
         })
       );
 
