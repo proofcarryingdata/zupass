@@ -6,21 +6,18 @@
   - probs just hide the EdDSA ticket if a POD ticket that is the 'same' already exists
 - semaphore v4 identity pcd tests
   - (luckily, i think the tests should be mostly copy-paste from the v3 tests)
-- probably need to update the data model of a bunch of stuff to refer to users by their uuid rather than their commitment
 - update the semaphore group stuff to be able to handle v4 groups.
-- make the client aware of the v4 identity
-  - e.g. there are various react hooks that need to be updated
 - document `IssuanceService`
 - update `testLogin`
 - packages/lib/passport-interface/test/V3ToV4Migration.spec.ts
 - document v3tov4Identity
 - figure out how to import both v3 and v4 identity in the same package
 - semaphore team - plz publish v4 packages under a diff name?
-- migrate alread-logged-in clients
-  - make user with 2 logged in clients migrates without conflicts
 
 # done
 
+- migrate alread-logged-in clients
+  - make user with 2 logged in clients migrates without conflicts
 - rename `commitment` to something that uses the word `v3`
 - create and upload v4 identity on login
 - upload v4 commitment to zupass wherever we already do so for v3
