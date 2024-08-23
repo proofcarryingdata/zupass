@@ -340,8 +340,9 @@ function DeletePOD({ z }: { z: ZupassAPIWrapper }): ReactNode {
         onClick={async () => {
           try {
             await z.pod.delete(signature);
+            setDeletionState(PODDeletionState.Success);
           } catch (e) {
-            console.log(e);
+            setDeletionState(PODDeletionState.Failure);
           }
         }}
         label="Delete POD"
