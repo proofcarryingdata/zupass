@@ -94,14 +94,17 @@ export async function makeAddV4CommitmentRequest(
   };
 }
 
+/**
+ * @param sig created by {@link makeAddV4CommitmentRequest}
+ */
 export async function verifyAddV4CommitmentRequestPCD(
-  pcd: SemaphoreSignaturePCD
+  sig: SemaphoreSignaturePCD
 ): Promise<{ v3Id: string; v4Id: string } | undefined> {
   try {
-    const v3SigVerifies = await SemaphoreSignaturePCDPackage.verify(pcd);
-    const expectedV3Id = pcd.claim.identityCommitment;
+    const v3SigVerifies = await SemaphoreSignaturePCDPackage.verify(sig);
+    const expectedV3Id = sig.claim.identityCommitment;
     const v4SigOfV3Id = await PODPCDPackage.deserialize(
-      JSON.parse(pcd.claim.signedMessage).pcd
+      JSON.parse(sig.claim.signedMessage).pcd
     );
     const v4SigVerifies = await PODPCDPackage.verify(v4SigOfV3Id);
     const v4Message = v4SigOfV3Id.claim.entries["signedValue"];

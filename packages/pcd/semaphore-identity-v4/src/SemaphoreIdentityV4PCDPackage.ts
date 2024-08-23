@@ -1,8 +1,9 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { encodePrivateKey, POD } from "@pcd/pod";
+import { encodePrivateKey, encodePublicKey } from "@pcd/pod";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { generateSnarkMessageHash, requireDefinedParameter } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import { derivePublicKey } from "@zk-kit/eddsa-poseidon";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import {
@@ -13,23 +14,14 @@ import {
   SemaphoreIdentityV4PCDTypeName
 } from "./SemaphoreIdentityV4PCD";
 
-// TODO: is this right?
 export function v4PublicKey(identity: Identity): string {
-  const privateKeyString = v4PrivateKey(identity);
-  const pod = POD.sign(
-    {
-      a: {
-        type: "int",
-        value: 0n
-      }
-    },
-    privateKeyString
+  const unpackedPublicKey = derivePublicKey(
+    Buffer.from(identity.export(), "base64")
   );
-  const publicKey = pod.signerPublicKey;
+  const publicKey = encodePublicKey(unpackedPublicKey);
   return publicKey;
 }
 
-// TODO: is this right?
 export function v4PrivateKey(identity: Identity): string {
   return encodePrivateKey(Buffer.from(identity.export(), "base64"));
 }
@@ -37,16 +29,16 @@ export function v4PrivateKey(identity: Identity): string {
 export function v3tov4Identity(
   v3Identity: SemaphoreIdentityPCD
 ): SemaphoreIdentityV4PCD {
-  const newPrivateKey = Buffer.from(
+  const derivedPrivateKey = Buffer.from(
     generateSnarkMessageHash(
       v3Identity.claim.identity.getTrapdoor().toString() +
         v3Identity.claim.identity.getSecret().toString()
     ).toString()
   ).subarray(0, 32);
 
-  const identity = new Identity(newPrivateKey);
+  const identity = new Identity(derivedPrivateKey);
 
-  return new SemaphoreIdentityV4PCD(uuid(), {
+  return new SemaphoreIdentityV4PCD(v3Identity.id + "-v4", {
     identity
   });
 }

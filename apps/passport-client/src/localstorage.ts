@@ -11,8 +11,7 @@ import {
 import {
   SemaphoreIdentityV4PCD,
   SemaphoreIdentityV4PCDTypeName,
-  v3tov4Identity,
-  v4PublicKey
+  v3tov4Identity
 } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
@@ -59,27 +58,14 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
     SemaphoreIdentityV4PCDTypeName
   )[0] as SemaphoreIdentityV4PCD | undefined;
 
+  // user already had an account with a v3 identity, but no v4 identity.
+  // so. we derive a v4 identity from the v3 identity and add it to the collection.
   if (v3Identity.length > 0 && !v4Identity) {
     const v3IdentityPCD = v3Identity[0] as SemaphoreIdentityPCD;
     const v4Identity = v3tov4Identity(v3IdentityPCD);
     collection.add(v4Identity);
     await savePCDs(collection);
   }
-
-  if (v4Identity) {
-    console.log("v4Identity", v4PublicKey(v4Identity.claim.identity));
-  } else {
-    console.log("no v4Identity");
-  }
-
-  // try {
-  //   await requestAddSemaphoreV4Commitment(
-  //     appConfig.zupassServer,
-  //     await makeAddV4CommitmentRequest(collection)
-  //   );
-  // } catch (e) {
-  //   console.error("Error requesting add v4 commitment", e);
-  // }
 
   if (
     !validateAndLogRunningAppState(

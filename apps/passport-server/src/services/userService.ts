@@ -480,9 +480,6 @@ export class UserService {
     await deleteE2EEByV3Commitment(this.context.dbPool, user.commitment);
   }
 
-  /**
-   * Only supports semaphore v4 email credentials.
-   */
   public async getUserForUnverifiedCredential(
     credential: Credential
   ): Promise<UserRow | null> {
@@ -498,12 +495,13 @@ export class UserService {
     return fetchUserForCredential(this.context.dbPool, credential);
   }
 
+  /**
+   * @param sig created by {@link makeAddV4CommitmentRequest}
+   */
   public async handleAddV4Commitment(
-    v4Credential: SerializedPCD<SemaphoreSignaturePCD>
+    sig: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<AddV4CommitmentResult> {
-    const v3Sig = await SemaphoreSignaturePCDPackage.deserialize(
-      v4Credential.pcd
-    );
+    const v3Sig = await SemaphoreSignaturePCDPackage.deserialize(sig.pcd);
 
     const verification = await verifyAddV4CommitmentRequestPCD(v3Sig);
 
