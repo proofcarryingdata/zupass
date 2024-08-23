@@ -5,7 +5,8 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreIdentityV4PCDPackage,
-  v3tov4Identity
+  v3tov4Identity,
+  v4PublicKey
 } from "@pcd/semaphore-identity-v4";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { randomUUID } from "@pcd/util";
@@ -50,6 +51,9 @@ describe("V3ToV4Migration", async function () {
       migrationRequest.pcd.pcd
     );
     const verified = await verifyAddV4CommitmentRequestPCD(migrationPCD);
-    expect(verified).to.eq(true);
+    expect(verified).to.deep.eq({
+      v3Id: v3Id.claim.identity.commitment.toString(),
+      v4Id: v4PublicKey(v4Id.claim.identity)
+    });
   });
 });

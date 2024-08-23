@@ -86,7 +86,6 @@ export class FrogcryptoService {
             }
             await this.issuanceService.verifyCredential(req.pcd);
 
-            console.log("asdf", req.pcd);
             return {
               actions: [
                 {
@@ -103,7 +102,6 @@ export class FrogcryptoService {
             if (e instanceof PCDHTTPError) {
               throw e;
             }
-            console.log(e);
             logger(`Error encountered while serving feed:`, e);
             this.rollbarService?.reportError(e);
           }
@@ -402,8 +400,7 @@ export class FrogcryptoService {
 
       return user;
     } catch (e) {
-      console.log(e);
-      throw new PCDHTTPError(400, "invalid credential  2");
+      throw new PCDHTTPError(400, "invalid credential");
     }
   }
 

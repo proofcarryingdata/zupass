@@ -19,7 +19,7 @@ export function nextTestPort(): number {
 }
 
 export const testingEnv: EnvironmentVariables = Object.freeze({
-  SUPPRESS_LOGGING: "false",
+  SUPPRESS_LOGGING: "true",
   PORT: TEST_PORT,
   NODE_ENV: "production",
   MAILGUN_API_KEY: undefined,

@@ -25,7 +25,7 @@ describe("PODTicketPCD should work", function () {
       productId: uuid(),
       timestampConsumed: Date.now(),
       timestampSigned: Date.now(),
-      attendeeSemaphoreId: "12345",
+      attendeeSemaphoreV4Id: "12345",
       isConsumed: false,
       isRevoked: false,
       ticketCategory: TicketCategory.Devconnect
@@ -76,7 +76,7 @@ describe("PODTicketPCD should work", function () {
 
     ticket.claim.ticket = {
       ...originalTicketData,
-      attendeeSemaphoreId: "54321"
+      attendeeSemaphoreV4Id: "54321"
     };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
