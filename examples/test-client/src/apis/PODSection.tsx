@@ -61,6 +61,7 @@ const pods = await z.pod.query(q);
           )}
         </div>
         <InsertPOD z={z} />
+        <DeletePOD z={z} />
       </div>
     </div>
   );
@@ -155,6 +156,7 @@ function InsertPOD({ z }: { z: ZupassAPIWrapper }): ReactNode {
   const [creationState, setCreationState] = useState<PODCreationState>(
     PODCreationState.None
   );
+  const [signature, setSignature] = useState<string>("");
   const [entries, dispatch] = useReducer(insertPODReducer, {
     test: { type: "string", value: "Testing" }
   } satisfies PODEntries);
@@ -209,6 +211,7 @@ await z.pod.insert(pod);`}
           try {
             const pod = POD.sign(entries, MAGIC_PRIVATE_KEY);
             await z.pod.insert(pod);
+            setSignature(pod.signature);
             setCreationState(PODCreationState.Success);
           } catch (e) {
             setCreationState(PODCreationState.Failure);
@@ -219,7 +222,12 @@ await z.pod.insert(pod);`}
       {creationState !== PODCreationState.None && (
         <div className="my-2">
           {creationState === PODCreationState.Success && (
-            <div>POD inserted successfully!</div>
+            <div>
+              POD inserted successfully! The signature is{" "}
+              <code className="block text-xs font-base rounded-md p-2 whitespace-pre">
+                {signature}
+              </code>
+            </div>
           )}
           {creationState === PODCreationState.Failure && (
             <div>An error occurred while inserting your POD.</div>
@@ -289,6 +297,65 @@ function InsertPODEntry({
           min={POD_INT_MIN.toString()}
         />
       </label>
+    </div>
+  );
+}
+
+enum PODDeletionState {
+  None,
+  Success,
+  Failure
+}
+
+function DeletePOD({ z }: { z: ZupassAPIWrapper }): ReactNode {
+  const [signature, setSignature] = useState<string>("");
+  const [deletionState, setDeletionState] = useState<PODDeletionState>(
+    PODDeletionState.None
+  );
+  return (
+    <div>
+      <p>
+        To delete a POD, we must specify the signature. You can use a signature
+        from the POD you created above.
+      </p>
+      <div className="flex flex-row gap-2">
+        <label className="block">
+          <span className="text-gray-700">Signature</span>
+          <input
+            type="text"
+            value={signature}
+            className="mt-1 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"
+            placeholder=""
+            onChange={(ev) => setSignature(ev.target.value)}
+          />
+        </label>
+      </div>
+      <p>
+        <code className="block text-xs font-base rounded-md p-2 whitespace-pre-wrap">
+          {`await z.pod.delete("${signature}");`}
+        </code>
+      </p>
+
+      <TryIt
+        onClick={async () => {
+          try {
+            await z.pod.delete(signature);
+          } catch (e) {
+            console.log(e);
+          }
+        }}
+        label="Delete POD"
+      />
+      {deletionState !== PODDeletionState.None && (
+        <div className="my-2">
+          {deletionState === PODDeletionState.Success && (
+            <div>POD deleted successfully!</div>
+          )}
+          {deletionState === PODDeletionState.Failure && (
+            <div>An error occurred while deleting your POD.</div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
