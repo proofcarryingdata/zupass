@@ -402,6 +402,7 @@ export class FrogcryptoService {
 
       return user;
     } catch (e) {
+      console.log(e);
       throw new PCDHTTPError(400, "invalid credential  2");
     }
   }

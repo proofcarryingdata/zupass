@@ -48,7 +48,7 @@ import {
   testFrogsAndObjects
 } from "./util/frogcrypto";
 import { startTestingApp } from "./util/startTestingApplication";
-import { expectToExist } from "./util/util";
+import { expectToExist, randomEmail } from "./util/util";
 
 const DATE_EPOCH_1H = new Date(60 * 60 * 1000);
 const DATE_EPOCH_1H1M = new Date(DATE_EPOCH_1H.getTime() + 60 * 1000);
@@ -79,7 +79,18 @@ describe.only("frogcrypto functionality", function () {
   });
 
   this.beforeEach(async () => {
-    identity = new Identity();
+    const user = await testLogin(application, randomEmail(), {
+      force: true,
+      skipSetupPassword: true,
+      expectUserAlreadyLoggedIn: false,
+      expectEmailIncorrect: false
+    });
+
+    if (!user) {
+      throw new Error("expected to be able to login");
+    }
+
+    identity = user.identity;
   });
 
   it("should be able to discover only public feeds", async function () {
