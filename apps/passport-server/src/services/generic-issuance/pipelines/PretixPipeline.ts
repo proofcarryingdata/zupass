@@ -1699,20 +1699,19 @@ export class PretixPipeline implements BasePipeline {
 
       try {
         span?.setAttribute("ticket_id", ticketId);
-        const { emails, semaphoreId } =
+        const { emails, semaphoreId, semaphoreIdV4 } =
           await this.credentialSubservice.verifyAndExpectZupassEmail(
             request.credential
           );
-
-        if (!semaphoreId) {
-          throw new Error("invalid credential");
-        }
 
         span?.setAttribute(
           "checker_email",
           emails?.map((e) => e.email).join(",") ?? ""
         );
-        span?.setAttribute("checked_semaphore_id", semaphoreId);
+        span?.setAttribute(
+          "checker_semaphore_id",
+          semaphoreId ?? semaphoreIdV4 ?? ""
+        );
         checkerEmails = emails?.map((e) => e.email) ?? [];
 
         if (checkerEmails.length === 0) {
