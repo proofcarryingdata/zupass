@@ -1,5 +1,11 @@
-import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
+import {
+  createStorageBackedCredentialCache,
+  makeAddV4CommitmentRequest,
+  requestAddSemaphoreV4Commitment
+} from "@pcd/passport-interface";
+import { SemaphoreIdentityV4PCDTypeName } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
+import { appConfig } from "./appConfig";
 import {
   loadEncryptionKey,
   loadIdentity,
@@ -24,6 +30,20 @@ export async function loadInitialState(): Promise<AppState> {
   const self = loadSelf();
 
   const pcds = await loadPCDs(self);
+
+  if (pcds && self && !self.semaphore_v4_id) {
+    const semaphoreV4IdentityPCD = pcds.getPCDsByType(
+      SemaphoreIdentityV4PCDTypeName
+    )[0];
+
+    if (semaphoreV4IdentityPCD) {
+      await requestAddSemaphoreV4Commitment(
+        appConfig.zupassServer,
+        await makeAddV4CommitmentRequest(pcds)
+      );
+    }
+  }
+
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
 
