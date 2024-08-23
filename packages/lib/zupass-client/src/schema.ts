@@ -156,6 +156,8 @@ export const ZupassAPISchema = z.object({
     query: z
       .function()
       .args(PODQuerySchema)
-      .returns(z.promise(z.array(z.string())))
+      .returns(z.promise(z.array(z.string()))),
+    insert: z.function().args(z.string()).returns(z.promise(z.void())),
+    delete: z.function().args(z.string()).returns(z.promise(z.void()))
   })
 }) satisfies z.ZodSchema<ZupassAPI>;

@@ -25,7 +25,8 @@ export default function Main(): ReactNode {
     <>
       <Navbar connecting={!connected} />
       <div className="container mx-auto my-4 p-4">
-        <p>You can use this page to test the embedded Zupass API.</p>
+        <p>Welcome to Parcnet!</p>
+        <p>You can use this page to test the Parcnet API.</p>
         <div className="flex flex-col gap-4 my-4">
           <FileSystem />
           <PODSection />

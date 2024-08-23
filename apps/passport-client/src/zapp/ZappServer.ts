@@ -2,7 +2,8 @@ import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { GPCPCDArgs, GPCPCDPackage, GPCPCDTypeName } from "@pcd/gpc-pcd";
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
-import { PODPCD, PODPCDTypeName } from "@pcd/pod-pcd";
+import { POD } from "@pcd/pod";
+import { PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { p } from "@pcd/podspec";
 import {
   ZupassAPI,
@@ -14,10 +15,13 @@ import {
   ZupassIdentity,
   ZupassPOD
 } from "@pcd/zupass-client";
+import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
 import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";
 import { ClientChannel } from "./useZappServer";
+
+const ZAPP_POD_SPECIAL_FOLDER_NAME = "PODs from Zapps";
 
 function safeInput<This extends BaseZappServer, Args extends unknown[], Return>(
   parser: z.ZodSchema<Args>
@@ -242,6 +246,57 @@ class PODServer extends BaseZappServer implements ZupassPOD {
     const result = q.query(pods);
 
     return result.matches.map((match) => match.serialize());
+  }
+
+  @safeInput(ZupassAPISchema.shape.pod.shape.insert.parameters())
+  /**
+   * Insert a POD into the PCD collection.
+   */
+  public async insert(serializedPod: string): Promise<void> {
+    const pod = POD.deserialize(serializedPod);
+    const id = uuidv4();
+    const podPCD = new PODPCD(id, pod);
+    const serializedPCD = await PODPCDPackage.serialize(podPCD);
+    this.getContext().dispatch({
+      type: "add-pcds",
+      // This is probably not where we want to store these, but it's not clear
+      // how much the folder concept should be visible to the API.
+      // We could add a "meta" parameter which could contain a "zupassFolder"
+      // record, for instance, but this begins to couple the API too closely to
+      // the specifics of Zupass.
+      // In the meantime, however, PODs stored in this way can be retrieved by
+      // Zapps using the query API.
+      folder: ZAPP_POD_SPECIAL_FOLDER_NAME,
+      pcds: [serializedPCD],
+      upsert: true
+    });
+  }
+
+  @safeInput(ZupassAPISchema.shape.pod.shape.delete.parameters())
+  /**
+   * Delete all PODs with the given signature.
+   */
+  public async delete(signature: string): Promise<void> {
+    const allPCDs = this.getContext()
+      .getState()
+      // Deletion is restricted to Zapp-created PODs
+      .pcds.getAllPCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME);
+    const pcdIds = allPCDs
+      .filter(
+        (pcd) =>
+          pcd.type === PODPCDTypeName &&
+          (pcd as PODPCD).proof.signature === signature
+      )
+      .map((pcd) => pcd.id);
+
+    await Promise.all(
+      pcdIds.map((id) =>
+        this.getContext().dispatch({
+          type: "remove-pcd",
+          id
+        })
+      )
+    );
   }
 }
 
