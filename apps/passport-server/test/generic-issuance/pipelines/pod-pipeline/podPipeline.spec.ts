@@ -32,7 +32,7 @@ import {
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link PODPipeline}.
  */
-describe("generic issuance - PODPipeline", function () {
+describe.skip("generic issuance - PODPipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
 

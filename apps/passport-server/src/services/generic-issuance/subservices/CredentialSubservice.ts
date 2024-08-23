@@ -64,13 +64,21 @@ export class CredentialSubservice {
    * `emailSignatureClaim` cannot be undefined.
    */
   public async verifyAndExpectZupassEmail(
-    credential: Credential | undefined
+    credential: Credential | undefined,
+    allowMissingEmail?: boolean
   ): Promise<VerifiedCredential> {
     if (!credential) {
       throw new VerificationError("Missing credential");
     }
 
     const verifiedCredential = await this.verify(credential);
+
+    if (
+      !allowMissingEmail &&
+      (!verifiedCredential.emails || verifiedCredential.emails.length === 0)
+    ) {
+      throw new VerificationError("Missing email PCD in credential");
+    }
 
     for (const signedEmail of verifiedCredential.emails ?? []) {
       const { email, semaphoreId, signer } = signedEmail;

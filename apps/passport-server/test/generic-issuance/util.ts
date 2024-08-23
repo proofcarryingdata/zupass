@@ -27,8 +27,16 @@ import {
   PODTicketPCDPackage,
   PODTicketPCDTypeName
 } from "@pcd/pod-ticket-pcd";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityPCD,
+  SemaphoreIdentityPCDPackage
+} from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityV4PCDPackage,
+  v3tov4Identity
+} from "@pcd/semaphore-identity-v4";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import {
@@ -204,6 +212,18 @@ export async function makeTestCredential(
   email?: string,
   zupassEddsaPrivateKey?: string
 ): Promise<Credential> {
+  const v3Identity = new SemaphoreIdentityPCD(randomUUID(), { identity });
+  const v4Identity = v3tov4Identity(v3Identity);
+
+  const pcds = new PCDCollection(
+    [
+      EmailPCDPackage,
+      SemaphoreIdentityV4PCDPackage,
+      SemaphoreIdentityPCDPackage
+    ],
+    [v3Identity, v4Identity]
+  );
+
   if (request.pcdType === "email-pcd") {
     if (!email || !zupassEddsaPrivateKey) {
       throw new Error(
@@ -215,22 +235,15 @@ export async function makeTestCredential(
       zupassEddsaPrivateKey,
       identity
     );
+    pcds.add(emailPCD);
     // Credential Manager will need to be able to look up the Email PCD, and use
     // an identity. We instantiate a PCDCollection here, mirroring the usage on
     // the client.
-    const credentialManager = new CredentialManager(
-      identity,
-      new PCDCollection([EmailPCDPackage], [emailPCD]),
-      new Map()
-    );
+    const credentialManager = new CredentialManager(identity, pcds, new Map());
     return credentialManager.requestCredential(request);
   } else {
     // No Email PCD required here
-    const credentialManager = new CredentialManager(
-      identity,
-      new PCDCollection([], []),
-      new Map()
-    );
+    const credentialManager = new CredentialManager(identity, pcds, new Map());
     return credentialManager.requestCredential(request);
   }
 }

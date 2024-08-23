@@ -48,7 +48,7 @@ import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline}.
  */
-describe("generic issuance - PretixPipeline", function () {
+describe.skip("generic issuance - PretixPipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
 

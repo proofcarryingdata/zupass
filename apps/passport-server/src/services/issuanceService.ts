@@ -329,8 +329,10 @@ export class IssuanceService {
     const span = getActiveSpan();
     span?.setAttribute("credential_verification_cache_hit", !!cached);
     if (cached) {
+      console.log("cached", cached);
       return cached;
     } else {
+      console.log("verifying");
       const promise = verifyCredential(credential).catch((err) => {
         // If we received an unexpected kind of exception, remove the promise
         // from the cache. Instances of VerificationError indicate that the
