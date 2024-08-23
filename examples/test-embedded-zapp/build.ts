@@ -62,7 +62,7 @@ async function run(command: string): Promise<void> {
 
       const options = {
         host: "0.0.0.0",
-        port: 3200,
+        port: 3201,
         servedir: "public"
       };
 
