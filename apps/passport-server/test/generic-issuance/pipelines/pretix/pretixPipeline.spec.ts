@@ -48,7 +48,7 @@ import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline}.
  */
-describe.skip("generic issuance - PretixPipeline", function () {
+describe("generic issuance - PretixPipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
 
@@ -270,7 +270,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         bouncerTicket.claim.ticket.attendeeEmail,
         EthLatAmBouncerIdentity,
-        bouncerTicket
+        bouncerTicket.claim.ticket.ticketId,
+        bouncerTicket.claim.ticket.eventId
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
 
@@ -280,7 +281,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         bouncerTicket.claim.ticket.attendeeEmail,
         EthLatAmBouncerIdentity,
-        bouncerTicket
+        bouncerTicket.claim.ticket.ticketId,
+        bouncerTicket.claim.ticket.eventId
       );
       expect(bouncerCheckInBouncerAgain.value).to.deep.contain({
         success: false
@@ -292,7 +294,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         attendeeTicket.claim.ticket.attendeeEmail,
         EthLatAmAttendeeIdentity,
-        bouncerTicket
+        bouncerTicket.claim.ticket.ticketId,
+        bouncerTicket.claim.ticket.eventId
       );
 
       expect(attendeeCheckInBouncerResult.value).to.deep.eq({
@@ -307,7 +310,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
           newEdDSAPrivateKey(),
           attendeeTicket.claim.ticket.attendeeEmail,
           EthLatAmAttendeeIdentity,
-          bouncerTicket
+          bouncerTicket.claim.ticket.ticketId,
+          bouncerTicket.claim.ticket.eventId
         );
       expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
         success: false,
@@ -371,7 +375,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
           ZUPASS_EDDSA_PRIVATE_KEY,
           EthLatAmManualBouncerEmail,
           EthLatAmManualBouncerIdentity,
-          ManualAttendeeTicket
+          ManualAttendeeTicket.claim.ticket.ticketId,
+          ManualAttendeeTicket.claim.ticket.eventId
         );
       expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
         success: true
@@ -419,7 +424,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
           ZUPASS_EDDSA_PRIVATE_KEY,
           EthLatAmManualBouncerEmail,
           EthLatAmManualBouncerIdentity,
-          ManualAttendeeTicket
+          ManualAttendeeTicket.claim.ticket.ticketId,
+          ManualAttendeeTicket.claim.ticket.eventId
         );
       expect(manualBouncerChecksInManualAttendeeAgain.value).to.deep.eq({
         success: false,
@@ -436,7 +442,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
           ZUPASS_EDDSA_PRIVATE_KEY,
           EthLatAmManualAttendeeEmail,
           EthLatAmManualAttendeeIdentity,
-          ManualBouncerTicket
+          ManualAttendeeTicket.claim.ticket.ticketId,
+          ManualAttendeeTicket.claim.ticket.eventId
         );
       expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
         success: false,
@@ -651,7 +658,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
       ZUPASS_EDDSA_PRIVATE_KEY,
       bouncerTicket.claim.ticket.attendeeEmail,
       EthLatAmBouncerIdentity,
-      bouncerTicket
+      bouncerTicket.claim.ticket.ticketId,
+      bouncerTicket.claim.ticket.eventId
     );
     expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
     const checkinTimestamp = Date.now();
@@ -695,7 +703,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         bouncerTicket.claim.ticket.attendeeEmail,
         EthLatAmBouncerIdentity,
-        bouncerTicket
+        bouncerTicket.claim.ticket.ticketId,
+        bouncerTicket.claim.ticket.eventId
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({
         success: false,
@@ -723,7 +732,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         bouncerTicket.claim.ticket.attendeeEmail,
         EthLatAmBouncerIdentity,
-        bouncerTicket
+        bouncerTicket.claim.ticket.ticketId,
+        bouncerTicket.claim.ticket.eventId
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({
         success: false,
@@ -773,7 +783,8 @@ describe.skip("generic issuance - PretixPipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         bouncerTicket.claim.ticket.attendeeEmail,
         EthLatAmBouncerIdentity,
-        bouncerTicket
+        bouncerTicket.claim.ticket.ticketId,
+        bouncerTicket.claim.ticket.eventId
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
       MockDate.set(Date.now() + ONE_SECOND_MS);

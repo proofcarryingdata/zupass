@@ -292,7 +292,8 @@ describe.skip("generic issuance - LemonadePipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         EdgeCityDenverBouncerTicket.user_email,
         EdgeCityBouncerIdentity,
-        AttendeeTicket
+        AttendeeTicket.claim.ticket.ticketId,
+        AttendeeTicket.claim.ticket.eventId
       );
       expect(bouncerChecksInAttendee.value).to.deep.eq({ success: true });
 
@@ -302,7 +303,8 @@ describe.skip("generic issuance - LemonadePipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         EdgeCityDenverBouncerTicket.user_email,
         EdgeCityBouncerIdentity,
-        AttendeeTicket
+        AttendeeTicket.claim.ticket.ticketId,
+        AttendeeTicket.claim.ticket.eventId
       );
       // TODO check for specific error type
       expect(bouncerChecksInAttendeeAgain.value).to.deep.contain({
@@ -316,7 +318,8 @@ describe.skip("generic issuance - LemonadePipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         EdgeCityAttendeeTicket.user_email,
         EdgeCityDenverAttendeeIdentity,
-        BouncerTicket
+        BouncerTicket.claim.ticket.ticketId,
+        BouncerTicket.claim.ticket.eventId
       );
 
       expect(atteendeeChecksInBouncerResult.value).to.deep.eq({
@@ -331,7 +334,8 @@ describe.skip("generic issuance - LemonadePipeline", function () {
           newEdDSAPrivateKey(),
           EdgeCityAttendeeTicket.user_email,
           EdgeCityDenverAttendeeIdentity,
-          BouncerTicket
+          BouncerTicket.claim.ticket.ticketId,
+          BouncerTicket.claim.ticket.eventId
         );
       expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
         success: false,
@@ -364,7 +368,8 @@ describe.skip("generic issuance - LemonadePipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         EdgeCityDenverBouncer2Ticket.user_email,
         EdgeCityBouncer2Identity,
-        Bouncer2Ticket
+        Bouncer2Ticket.claim.ticket.ticketId,
+        Bouncer2Ticket.claim.ticket.eventId
       );
       expect(bouncer2ChecksInSelf.value).to.deep.eq({ success: true });
 
@@ -414,7 +419,8 @@ describe.skip("generic issuance - LemonadePipeline", function () {
           ZUPASS_EDDSA_PRIVATE_KEY,
           EdgeCityManualBouncerEmail,
           EdgeCityManualBouncerIdentity,
-          ManualAttendeeTicket
+          ManualAttendeeTicket.claim.ticket.ticketId,
+          ManualAttendeeTicket.claim.ticket.eventId
         );
       expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
         success: true
@@ -456,7 +462,8 @@ describe.skip("generic issuance - LemonadePipeline", function () {
           ZUPASS_EDDSA_PRIVATE_KEY,
           EdgeCityManualBouncerEmail,
           EdgeCityManualBouncerIdentity,
-          ManualAttendeeTicket
+          ManualAttendeeTicket.claim.ticket.ticketId,
+          ManualAttendeeTicket.claim.ticket.eventId
         );
       expect(manualBouncerChecksInManualAttendeeAgain.value).to.deep.eq({
         success: false,
@@ -473,7 +480,8 @@ describe.skip("generic issuance - LemonadePipeline", function () {
           ZUPASS_EDDSA_PRIVATE_KEY,
           EdgeCityManualAttendeeEmail,
           EdgeCityManualAttendeeIdentity,
-          ManualBouncerTicket
+          ManualBouncerTicket.claim.ticket.ticketId,
+          ManualBouncerTicket.claim.ticket.eventId
         );
       expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
         success: false,

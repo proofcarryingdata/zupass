@@ -50,6 +50,11 @@ export const PODBOX_CREDENTIAL_REQUEST: CredentialRequest = {
   signatureType: "sempahore-signature-pcd"
 };
 
+export const PODBOX_SEMAPHORE_V4_CREDENTIAL_REQUEST: CredentialRequest = {
+  pcdType: "email-pcd",
+  signatureType: "semaphore-v4-signature-pcd"
+};
+
 export const ZUPASS_CREDENTIAL_REQUEST: CredentialRequest = {
   signatureType: "sempahore-signature-pcd"
 };

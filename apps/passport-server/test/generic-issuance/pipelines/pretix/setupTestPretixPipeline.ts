@@ -19,7 +19,9 @@ import { expectLength, expectToExist } from "../../../util/util";
 /**
  * Sets up test data required to test {@link PretixPipeline}
  */
-export function setupTestPretixPipeline(): PretixPipelineTestData {
+export function setupTestPretixPipeline(
+  semaphoreV4 = false
+): PretixPipelineTestData {
   const adminGIUserId = randomUUID();
   const adminGIUserEmail = "admin@test.com";
 
@@ -106,7 +108,8 @@ export function setupTestPretixPipeline(): PretixPipelineTestData {
         feedDescription: "Eth Lat Am tickets! <copy>",
         feedDisplayName: "Eth LatAm",
         feedFolder: "Eth LatAm",
-        feedId: "eth-latam"
+        feedId: "eth-latam",
+        semaphoreV4
       },
       events: ethLatAmConfiguredEvents,
       manualTickets: [

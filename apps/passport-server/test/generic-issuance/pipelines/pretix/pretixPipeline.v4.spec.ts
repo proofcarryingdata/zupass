@@ -44,16 +44,14 @@ import {
   requestTicketsFromPipeline,
   signCredentialPayload
 } from "../../util";
-import { setupAutoIssuancePipeline } from "./setupAutoIssuancePipeline";
+import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
 
 /**
- * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline} implementing
- * auto-issuance features.
+ * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline}.
  */
-describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function () {
+describe.only("generic issuance - PretixPipeline with semaphore v4", function () {
   const nowDate = new Date();
-  MockDate.set(nowDate);
-  const now = nowDate.getTime();
+  const now = Date.now();
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
@@ -62,33 +60,28 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
   const {
     adminGIUserId,
     adminGIUserEmail,
-    autoIssuanceGIUserID,
-    autoIssuanceGIUserEmail,
-    AutoIssuanceBouncerIdentity,
-    AutoIssuanceAttendeeIdentity,
-    AutoIssuanceManualAttendeeIdentity,
-    AutoIssuanceManualAttendeeEmail,
-    AutoIssuanceManualBouncerIdentity,
-    AutoIssuanceManualBouncerEmail,
-    AutoIssuanceImageUrl,
+    ethLatAmGIUserID,
+    ethLatAmGIUserEmail,
+    EthLatAmBouncerIdentity,
+    EthLatAmAttendeeIdentity,
+    EthLatAmManualAttendeeIdentity,
+    EthLatAmManualAttendeeEmail,
+    EthLatAmManualBouncerIdentity,
+    EthLatAmManualBouncerEmail,
+    EthLatAmImageUrl,
     mockServer,
     pretixBackend,
-    autoIssuancePretixOrganizer,
-    autoIssuanceEvent,
-    autoIssuancePipeline,
-    autoIssuanceSemaphoreGroupIds
-  } = setupAutoIssuancePipeline();
+    ethLatAmPretixOrganizer,
+    ethLatAmEvent,
+    ethLatAmPipeline,
+    ethLatAmSemaphoreGroupIds
+  } = setupTestPretixPipeline(true);
 
-  const autoIssuanceInterval = autoIssuancePipeline.options.autoIssuance?.[0]
-    ?.schedule?.intervalMs as number;
-  const autoIssuanceEnd = autoIssuancePipeline.options.autoIssuance?.[0]
-    ?.schedule?.endDate as string;
-
-  const pipelineDefinitions = [autoIssuancePipeline];
+  const pipelineDefinitions = [ethLatAmPipeline];
 
   /**
    * Sets up a Zupass/Generic issuance backend with one pipeline:
-   * - {@link PretixPipeline}, as defined by {@link setupAutoIssuancePipeline}
+   * - {@link PretixPipeline}, as defined by {@link setupTestPretixPipeline}
    */
   this.beforeAll(async () => {
     const zupassPublicKey = JSON.stringify(
@@ -123,23 +116,23 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       await userDB.getUserById(adminUser.id)
     );
 
-    const autoIssuanceGIUser: PipelineUser = {
-      id: autoIssuanceGIUserID,
-      email: autoIssuanceGIUserEmail,
+    const ethLatAmGIUser: PipelineUser = {
+      id: ethLatAmGIUserID,
+      email: ethLatAmGIUserEmail,
       isAdmin: false,
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(autoIssuanceGIUser);
+    await userDB.updateUserById(ethLatAmGIUser);
     assertUserMatches(
       {
-        id: autoIssuanceGIUserID,
-        email: autoIssuanceGIUserEmail,
+        id: ethLatAmGIUserID,
+        email: ethLatAmGIUserEmail,
         isAdmin: false,
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(autoIssuanceGIUser.id)
+      await userDB.getUserById(ethLatAmGIUser.id)
     );
 
     // The mock server will intercept any requests for URLs that are registered
@@ -197,10 +190,10 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
   });
 
   /**
-   * Test for {@link PretixPipeline} for Auto Issuance event.
+   * Test for {@link PretixPipeline} for Eth LatAm.
    */
   step(
-    "PretixPipeline issuance and checkin and PipelineInfo for Auto Issuance",
+    "PretixPipeline issuance and checkin and PipelineInfo for Eth LatAm",
     async () => {
       expectToExist(giService);
       const pipelines = await giService.getAllPipelineInstances();
@@ -208,186 +201,76 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       expectLength(pipelines, 1);
       const pipeline = pipelines.find(PretixPipeline.is);
       expectToExist(pipeline);
-      expect(pipeline.id).to.eq(autoIssuancePipeline.id);
-      const autoIssuanceTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
-      const autoIssuanceIssuanceDateTime = new Date();
-
-      const foodVendorTickets = await requestTicketsFromPipeline(
-        pipeline.issuanceCapability.options.feedFolder,
-        autoIssuanceTicketFeedUrl,
-        pipeline.issuanceCapability.options.feedId,
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceFoodVendorEmail,
-        AutoIssuanceAttendeeIdentity
-      );
-      expectLength(foodVendorTickets, 2); // just their food vendor ticket and corresponding pod ticket
-
+      expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+      const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+      const ethLatAmIssuanceDateTime = new Date();
       const attendeeTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
-        autoIssuanceTicketFeedUrl,
+        ethLatAmTicketFeedUrl,
         pipeline.issuanceCapability.options.feedId,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail,
-        AutoIssuanceAttendeeIdentity
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+        EthLatAmAttendeeIdentity,
+        true
       );
       expectLength(
-        attendeeTickets.map((t) => t.claim.ticket),
-        (1 + 2) * 2 // 1 ticket + pod + 2 vouchers + 2 voucher pods
+        attendeeTickets.map((t) => t.claim.ticket.attendeeEmail),
+        1
       );
 
-      {
-        // issuing again immediately does not give you further food vouchers
-        const attendeeTickets = await requestTicketsFromPipeline(
-          pipeline.issuanceCapability.options.feedFolder,
-          autoIssuanceTicketFeedUrl,
-          pipeline.issuanceCapability.options.feedId,
-          ZUPASS_EDDSA_PRIVATE_KEY,
-          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail,
-          AutoIssuanceAttendeeIdentity
-        );
-        expectLength(
-          attendeeTickets.map((t) => t.claim.ticket),
-          (1 + 2) * 2 // 1 ticket + pod + 2 vouchers + 2 voucher pods
-        );
-
-        const savedDate = new Date();
-        MockDate.set(
-          new Date(savedDate.getTime() + autoIssuanceInterval + 1000)
-        );
-        // issuing again after `autoIssuanceInterval` ms does give you further food vouchers
-        const attendeeTicketsAfterSomeTime = await requestTicketsFromPipeline(
-          pipeline.issuanceCapability.options.feedFolder,
-          autoIssuanceTicketFeedUrl,
-          pipeline.issuanceCapability.options.feedId,
-          ZUPASS_EDDSA_PRIVATE_KEY,
-          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail,
-          AutoIssuanceAttendeeIdentity
-        );
-        expectLength(
-          attendeeTicketsAfterSomeTime.map((t) => t.claim.ticket),
-          (1 + 4) * 2 // 1 ticket + pod + 4 vouchers + 4 voucher pods
-        );
-
-        MockDate.set(new Date(new Date(autoIssuanceEnd).getTime() + 1));
-        // issuing after auto issuance end yields no further food vouchers
-        const attendeeTicketsAfterEnd = await requestTicketsFromPipeline(
-          pipeline.issuanceCapability.options.feedFolder,
-          autoIssuanceTicketFeedUrl,
-          pipeline.issuanceCapability.options.feedId,
-          ZUPASS_EDDSA_PRIVATE_KEY,
-          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail,
-          AutoIssuanceAttendeeIdentity
-        );
-        expectLength(
-          attendeeTicketsAfterEnd.map((t) => t.claim.ticket),
-          (1 + 4) * 2 // 1 ticket + pod + 4 vouchers + 4 voucher pods
-        );
-
-        MockDate.set(savedDate);
-      }
-
-      const attendeeTicket = attendeeTickets[0];
-      const attendeeFoodVoucherTicket = attendeeTickets[1];
-      expectIsEdDSATicketPCD(attendeeFoodVoucherTicket);
-      expectToExist(attendeeTicket);
-      expectIsEdDSATicketPCD(attendeeTicket);
-      expect(attendeeTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail
-      );
-      expect(attendeeTicket.claim.ticket.attendeeName).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeName
-      );
-
-      const attendeePODTicket = attendeeTickets[5];
+      const attendeePODTicket = attendeeTickets[0];
       expectToExist(attendeePODTicket);
       expectIsPODTicketPCD(attendeePODTicket);
       expect(attendeePODTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
       );
       expect(attendeePODTicket.claim.ticket.attendeeName).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeName
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
       );
 
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
-        autoIssuanceTicketFeedUrl,
+        ethLatAmTicketFeedUrl,
         pipeline.issuanceCapability.options.feedId,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail,
-        AutoIssuanceBouncerIdentity
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+        EthLatAmBouncerIdentity,
+        true
       );
-      expectLength(bouncerTickets, 2);
-      const bouncerTicket = bouncerTickets[0];
-      expectToExist(bouncerTicket);
-      expectIsEdDSATicketPCD(bouncerTicket);
-      expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
-      );
-      expect(bouncerTicket.claim.ticket.attendeeName).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerName
-      );
-      const bouncerPODTicket = bouncerTickets[1];
+      expectLength(bouncerTickets, 1);
+
+      const bouncerPODTicket = bouncerTickets[0];
       expectToExist(bouncerPODTicket);
       expectIsPODTicketPCD(bouncerPODTicket);
       expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
       );
       expect(bouncerPODTicket.claim.ticket.attendeeName).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerName
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
       );
 
-      const autoIssuanceCheckinRoute =
-        pipeline.checkinCapability.getCheckinUrl();
-
-      {
-        const foodVendorChecksInFoodVoucher =
-          await requestCheckInPipelineTicket(
-            pipeline.checkinCapability.getCheckinUrl(),
-            ZUPASS_EDDSA_PRIVATE_KEY,
-            pretixBackend.get().autoIssuanceOrganizer
-              .autoIssuanceFoodVendorEmail,
-            new Identity(),
-            attendeeFoodVoucherTicket.claim.ticket.ticketId,
-            attendeeFoodVoucherTicket.claim.ticket.eventId
-          );
-
-        expect(foodVendorChecksInFoodVoucher.value).to.deep.eq({
-          success: true
-        });
-
-        const foodVendorChecksInGATicket = await requestCheckInPipelineTicket(
-          pipeline.checkinCapability.getCheckinUrl(),
-          ZUPASS_EDDSA_PRIVATE_KEY,
-          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceFoodVendorEmail,
-          new Identity(),
-          attendeeTicket.claim.ticket.ticketId,
-          attendeeTicket.claim.ticket.eventId
-        );
-
-        expect(foodVendorChecksInGATicket.value).to.deep.eq({
-          success: false,
-          error: { name: "NotSuperuser" }
-        });
-      }
+      const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
 
       const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
-        autoIssuanceCheckinRoute,
+        ethLatAmCheckinRoute,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        bouncerTicket.claim.ticket.attendeeEmail,
-        AutoIssuanceBouncerIdentity,
-        bouncerTicket.claim.ticket.ticketId,
-        bouncerTicket.claim.ticket.eventId
+        bouncerPODTicket.claim.ticket.attendeeEmail,
+        EthLatAmBouncerIdentity,
+        bouncerPODTicket.claim.ticket.ticketId,
+        bouncerPODTicket.claim.ticket.eventId,
+        true
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
 
       // can't check in a ticket that's already checked in
       const bouncerCheckInBouncerAgain = await requestCheckInPipelineTicket(
-        autoIssuanceCheckinRoute,
+        ethLatAmCheckinRoute,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        bouncerTicket.claim.ticket.attendeeEmail,
-        AutoIssuanceBouncerIdentity,
-        bouncerTicket.claim.ticket.ticketId,
-        bouncerTicket.claim.ticket.eventId
+        bouncerPODTicket.claim.ticket.attendeeEmail,
+        EthLatAmBouncerIdentity,
+        bouncerPODTicket.claim.ticket.ticketId,
+        bouncerPODTicket.claim.ticket.eventId,
+        true
       );
       expect(bouncerCheckInBouncerAgain.value).to.deep.contain({
         success: false
@@ -395,12 +278,13 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
 
       // can't check in a ticket using a ticket that isn't a superuser ticket
       const attendeeCheckInBouncerResult = await requestCheckInPipelineTicket(
-        autoIssuanceCheckinRoute,
+        ethLatAmCheckinRoute,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        attendeeTicket.claim.ticket.attendeeEmail,
-        AutoIssuanceAttendeeIdentity,
-        bouncerTicket.claim.ticket.ticketId,
-        bouncerTicket.claim.ticket.eventId
+        attendeePODTicket.claim.ticket.attendeeEmail,
+        EthLatAmAttendeeIdentity,
+        bouncerPODTicket.claim.ticket.ticketId,
+        bouncerPODTicket.claim.ticket.eventId,
+        true
       );
 
       expect(attendeeCheckInBouncerResult.value).to.deep.eq({
@@ -411,12 +295,13 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       // can't check in a ticket with an email PCD signed by a non-Zupass private key
       const fakeBouncerCheckInBouncerResult =
         await requestCheckInPipelineTicket(
-          autoIssuanceCheckinRoute,
+          ethLatAmCheckinRoute,
           newEdDSAPrivateKey(),
-          attendeeTicket.claim.ticket.attendeeEmail,
-          AutoIssuanceAttendeeIdentity,
-          bouncerTicket.claim.ticket.ticketId,
-          bouncerTicket.claim.ticket.eventId
+          attendeePODTicket.claim.ticket.attendeeEmail,
+          EthLatAmAttendeeIdentity,
+          bouncerPODTicket.claim.ticket.ticketId,
+          bouncerPODTicket.claim.ticket.eventId,
+          true
         );
       expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
         success: false,
@@ -425,51 +310,42 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
 
       const ManualAttendeeTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
-        autoIssuanceTicketFeedUrl,
+        ethLatAmTicketFeedUrl,
         pipeline.issuanceCapability.options.feedId,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        AutoIssuanceManualAttendeeEmail,
-        AutoIssuanceManualAttendeeIdentity
+        EthLatAmManualAttendeeEmail,
+        EthLatAmManualAttendeeIdentity,
+        true
       );
-      expectLength(ManualAttendeeTickets, 6);
-      const ManualAttendeeTicket = ManualAttendeeTickets[0];
-      expectIsEdDSATicketPCD(ManualAttendeeTicket);
-      expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
-        AutoIssuanceManualAttendeeEmail
-      );
-      const ManualAttendeePODTicket = ManualAttendeeTickets[3];
+      expectLength(ManualAttendeeTickets, 1);
+      const ManualAttendeePODTicket = ManualAttendeeTickets[0];
       expectIsPODTicketPCD(ManualAttendeePODTicket);
       expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
-        AutoIssuanceManualAttendeeEmail
+        EthLatAmManualAttendeeEmail
       );
 
       const ManualBouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
-        autoIssuanceTicketFeedUrl,
+        ethLatAmTicketFeedUrl,
         pipeline.issuanceCapability.options.feedId,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        AutoIssuanceManualBouncerEmail,
-        AutoIssuanceManualBouncerIdentity
+        EthLatAmManualBouncerEmail,
+        EthLatAmManualBouncerIdentity,
+        true
       );
-      expectLength(ManualBouncerTickets, 2);
-      const ManualBouncerTicket = ManualBouncerTickets[0];
-      expectIsEdDSATicketPCD(ManualBouncerTicket);
-      expect(ManualBouncerTicket.claim.ticket.attendeeEmail).to.eq(
-        AutoIssuanceManualBouncerEmail
-      );
-      expect(ManualBouncerTicket.claim.ticket.imageUrl).to.be.undefined;
+      expectLength(ManualBouncerTickets, 1);
 
-      const ManualBouncerPODTicket = ManualBouncerTickets[1];
+      const ManualBouncerPODTicket = ManualBouncerTickets[0];
       expectIsPODTicketPCD(ManualBouncerPODTicket);
       expect(ManualBouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        AutoIssuanceManualBouncerEmail
+        EthLatAmManualBouncerEmail
       );
       expect(ManualBouncerPODTicket.claim.ticket.imageUrl).to.be.undefined;
 
       pretixBackend.checkOut(
-        autoIssuancePretixOrganizer.orgUrl,
-        autoIssuanceEvent.slug,
-        bouncerTicket.claim.ticket.attendeeEmail
+        ethLatAmPretixOrganizer.orgUrl,
+        ethLatAmEvent.slug,
+        bouncerPODTicket.claim.ticket.attendeeEmail
       );
       MockDate.set(Date.now() + ONE_SECOND_MS);
       await pipeline.load();
@@ -478,10 +354,11 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
         await requestCheckInPipelineTicket(
           pipeline.checkinCapability.getCheckinUrl(),
           ZUPASS_EDDSA_PRIVATE_KEY,
-          AutoIssuanceManualBouncerEmail,
-          AutoIssuanceManualBouncerIdentity,
-          ManualAttendeeTicket.claim.ticket.ticketId,
-          ManualAttendeeTicket.claim.ticket.eventId
+          EthLatAmManualBouncerEmail,
+          EthLatAmManualBouncerIdentity,
+          ManualAttendeePODTicket.claim.ticket.ticketId,
+          ManualAttendeePODTicket.claim.ticket.eventId,
+          true
         );
       expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
         success: true
@@ -490,33 +367,23 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       {
         const ManualAttendeeTickets = await requestTicketsFromPipeline(
           pipeline.issuanceCapability.options.feedFolder,
-          autoIssuanceTicketFeedUrl,
+          ethLatAmTicketFeedUrl,
           pipeline.issuanceCapability.options.feedId,
           ZUPASS_EDDSA_PRIVATE_KEY,
-          AutoIssuanceManualAttendeeEmail,
-          AutoIssuanceManualAttendeeIdentity
+          EthLatAmManualAttendeeEmail,
+          EthLatAmManualAttendeeIdentity,
+          true
         );
-        expectLength(ManualAttendeeTickets, 6);
-        const ManualAttendeeTicket = ManualAttendeeTickets[0];
-        expectIsEdDSATicketPCD(ManualAttendeeTicket);
-        expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
-          AutoIssuanceManualAttendeeEmail
-        );
-        expect(ManualAttendeeTicket.claim.ticket.isConsumed).to.eq(true);
-        expect(ManualAttendeeTicket.claim.ticket.imageUrl).to.eq(
-          AutoIssuanceImageUrl
-        );
-        expect(ManualAttendeeTicket.claim.ticket.timestampConsumed).to.eq(
-          Date.now()
-        );
-        const ManualAttendeePODTicket = ManualAttendeeTickets[3];
+        expectLength(ManualAttendeeTickets, 1);
+
+        const ManualAttendeePODTicket = ManualAttendeeTickets[0];
         expectIsPODTicketPCD(ManualAttendeePODTicket);
         expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
-          AutoIssuanceManualAttendeeEmail
+          EthLatAmManualAttendeeEmail
         );
         expect(ManualAttendeePODTicket.claim.ticket.isConsumed).to.eq(true);
         expect(ManualAttendeePODTicket.claim.ticket.imageUrl).to.eq(
-          AutoIssuanceImageUrl
+          EthLatAmImageUrl
         );
         expect(ManualAttendeePODTicket.claim.ticket.timestampConsumed).to.eq(
           Date.now()
@@ -527,10 +394,11 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
         await requestCheckInPipelineTicket(
           pipeline.checkinCapability.getCheckinUrl(),
           ZUPASS_EDDSA_PRIVATE_KEY,
-          AutoIssuanceManualBouncerEmail,
-          AutoIssuanceManualBouncerIdentity,
-          ManualAttendeeTicket.claim.ticket.ticketId,
-          ManualAttendeeTicket.claim.ticket.eventId
+          EthLatAmManualBouncerEmail,
+          EthLatAmManualBouncerIdentity,
+          ManualAttendeePODTicket.claim.ticket.ticketId,
+          ManualAttendeePODTicket.claim.ticket.eventId,
+          true
         );
       expect(manualBouncerChecksInManualAttendeeAgain.value).to.deep.eq({
         success: false,
@@ -545,10 +413,11 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
         await requestCheckInPipelineTicket(
           pipeline.checkinCapability.getCheckinUrl(),
           ZUPASS_EDDSA_PRIVATE_KEY,
-          AutoIssuanceManualAttendeeEmail,
-          AutoIssuanceManualAttendeeIdentity,
-          ManualBouncerTicket.claim.ticket.ticketId,
-          ManualBouncerTicket.claim.ticket.eventId
+          EthLatAmManualAttendeeEmail,
+          EthLatAmManualAttendeeIdentity,
+          ManualBouncerPODTicket.claim.ticket.ticketId,
+          ManualBouncerPODTicket.claim.ticket.eventId,
+          true
         );
       expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
         success: false,
@@ -557,39 +426,37 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
 
       // Verify that consumers were saved for each user who requested tickets
       const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
-      const consumers = await consumerDB.loadByEmails(autoIssuancePipeline.id, [
-        AutoIssuanceManualAttendeeEmail,
-        AutoIssuanceManualBouncerEmail,
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail,
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
+      const consumers = await consumerDB.loadByEmails(ethLatAmPipeline.id, [
+        EthLatAmManualAttendeeEmail,
+        EthLatAmManualBouncerEmail,
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
       ]);
       expectLength(consumers, 4);
       expect(consumers).to.deep.include.members([
         {
-          email: AutoIssuanceManualAttendeeEmail,
-          commitment: AutoIssuanceManualAttendeeIdentity.commitment.toString(),
-          timeCreated: autoIssuanceIssuanceDateTime,
-          timeUpdated: autoIssuanceIssuanceDateTime
+          email: EthLatAmManualAttendeeEmail,
+          commitment: EthLatAmManualAttendeeIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
         },
         {
-          email: AutoIssuanceManualBouncerEmail,
-          commitment: AutoIssuanceManualBouncerIdentity.commitment.toString(),
-          timeCreated: autoIssuanceIssuanceDateTime,
-          timeUpdated: autoIssuanceIssuanceDateTime
+          email: EthLatAmManualBouncerEmail,
+          commitment: EthLatAmManualBouncerIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
         },
         {
-          email:
-            pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail,
-          commitment: AutoIssuanceAttendeeIdentity.commitment.toString(),
-          timeCreated: autoIssuanceIssuanceDateTime,
-          timeUpdated: autoIssuanceIssuanceDateTime
+          email: pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+          commitment: EthLatAmAttendeeIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
         },
         {
-          email:
-            pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail,
-          commitment: AutoIssuanceBouncerIdentity.commitment.toString(),
-          timeCreated: autoIssuanceIssuanceDateTime,
-          timeUpdated: autoIssuanceIssuanceDateTime
+          email: pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+          commitment: EthLatAmBouncerIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
         }
       ]);
 
@@ -604,57 +471,57 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       const pipelines = await giService.getAllPipelineInstances();
       expectToExist(pipelines);
       expectLength(pipelines, 1);
-      const autoIssuancePipeline = pipelines.find(PretixPipeline.is);
-      expectToExist(autoIssuancePipeline);
+      const ethLatAmPipeline = pipelines.find(PretixPipeline.is);
+      expectToExist(ethLatAmPipeline);
 
-      await autoIssuancePipeline.load();
+      await ethLatAmPipeline.load();
 
       const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
-        autoIssuancePipeline.id,
-        autoIssuanceSemaphoreGroupIds.all
+        ethLatAmPipeline.id,
+        ethLatAmSemaphoreGroupIds.all
       );
       expectTrue(semaphoreGroupAll.success);
       expectLength(semaphoreGroupAll.value.members, 4);
       expect(semaphoreGroupAll.value.members).to.deep.include.members([
-        AutoIssuanceBouncerIdentity.commitment.toString(),
-        AutoIssuanceAttendeeIdentity.commitment.toString(),
-        AutoIssuanceManualAttendeeIdentity.commitment.toString(),
-        AutoIssuanceManualBouncerIdentity.commitment.toString()
+        EthLatAmBouncerIdentity.commitment.toString(),
+        EthLatAmAttendeeIdentity.commitment.toString(),
+        EthLatAmManualAttendeeIdentity.commitment.toString(),
+        EthLatAmManualBouncerIdentity.commitment.toString()
       ]);
 
       const semaphoreGroupBouncers = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
-        autoIssuancePipeline.id,
-        autoIssuanceSemaphoreGroupIds.bouncers
+        ethLatAmPipeline.id,
+        ethLatAmSemaphoreGroupIds.bouncers
       );
 
       expectTrue(semaphoreGroupBouncers.success);
       expectLength(semaphoreGroupBouncers.value.members, 2);
       expect(semaphoreGroupBouncers.value.members).to.deep.include.members([
-        AutoIssuanceBouncerIdentity.commitment.toString(),
-        AutoIssuanceManualBouncerIdentity.commitment.toString()
+        EthLatAmBouncerIdentity.commitment.toString(),
+        EthLatAmManualBouncerIdentity.commitment.toString()
       ]);
 
       const semaphoreGroupAttendees =
         await requestGenericIssuanceSemaphoreGroup(
           process.env.PASSPORT_SERVER_URL as string,
-          autoIssuancePipeline.id,
-          autoIssuanceSemaphoreGroupIds.attendees
+          ethLatAmPipeline.id,
+          ethLatAmSemaphoreGroupIds.attendees
         );
 
       expectTrue(semaphoreGroupAttendees.success);
       expectLength(semaphoreGroupAttendees.value.members, 2);
       expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
-        AutoIssuanceAttendeeIdentity.commitment.toString(),
-        AutoIssuanceManualAttendeeIdentity.commitment.toString()
+        EthLatAmAttendeeIdentity.commitment.toString(),
+        EthLatAmManualAttendeeIdentity.commitment.toString()
       ]);
 
       const semaphoreGroupAttendeesAndBouncers =
         await requestGenericIssuanceSemaphoreGroup(
           process.env.PASSPORT_SERVER_URL as string,
-          autoIssuancePipeline.id,
-          autoIssuanceSemaphoreGroupIds.attendeesAndBouncers
+          ethLatAmPipeline.id,
+          ethLatAmSemaphoreGroupIds.attendeesAndBouncers
         );
 
       expectTrue(semaphoreGroupAttendeesAndBouncers.success);
@@ -662,10 +529,10 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       expect(
         semaphoreGroupAttendeesAndBouncers.value.members
       ).to.deep.include.members([
-        AutoIssuanceBouncerIdentity.commitment.toString(),
-        AutoIssuanceAttendeeIdentity.commitment.toString(),
-        AutoIssuanceManualAttendeeIdentity.commitment.toString(),
-        AutoIssuanceManualBouncerIdentity.commitment.toString()
+        EthLatAmBouncerIdentity.commitment.toString(),
+        EthLatAmAttendeeIdentity.commitment.toString(),
+        EthLatAmManualAttendeeIdentity.commitment.toString(),
+        EthLatAmManualBouncerIdentity.commitment.toString()
       ]);
     }
   );
@@ -674,9 +541,9 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
     expectToExist(giService);
 
     const checkinDB = new PipelineCheckinDB(giBackend.context.dbPool);
-    const checkins = await checkinDB.getByPipelineId(autoIssuancePipeline.id);
-    // Manual attendee ticket and food voucher was checked in
-    expectLength(checkins, 2);
+    const checkins = await checkinDB.getByPipelineId(ethLatAmPipeline.id);
+    // Manual attendee ticket was checked in
+    expectLength(checkins, 1);
 
     const userDB = new PipelineUserDB(giBackend.context.dbPool);
     const adminUser = await userDB.getUserById(adminGIUserId);
@@ -684,7 +551,7 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
 
     // Delete the manual tickets from the definition
     const latestPipeline = (await giService.getPipeline(
-      autoIssuancePipeline.id
+      ethLatAmPipeline.id
     )) as PretixPipelineDefinition;
     const newPipelineDefinition = structuredClone(latestPipeline);
     newPipelineDefinition.options.manualTickets = [];
@@ -705,9 +572,9 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
     expect(pipeline.id).to.eq(newPipelineDefinition.id);
     // Verify that there are no checkins in the DB now
     {
-      const checkins = await checkinDB.getByPipelineId(autoIssuancePipeline.id);
-      // only food voucher checkin is found as the tickets have been deleted
-      expectLength(checkins, 1);
+      const checkins = await checkinDB.getByPipelineId(ethLatAmPipeline.id);
+      // no checkins are found as the tickets have been deleted
+      expectLength(checkins, 0);
     }
   });
 
@@ -716,57 +583,50 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
     const pipelines = await giService.getAllPipelineInstances();
     const pipeline = pipelines.find(PretixPipeline.is);
     expectToExist(pipeline);
-    expect(pipeline.id).to.eq(autoIssuancePipeline.id);
-    const autoIssuanceTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+    expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+    const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
 
     // Ensure that bouncer is checked out
     pretixBackend.checkOut(
-      autoIssuancePretixOrganizer.orgUrl,
-      autoIssuanceEvent.slug,
-      pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
+      ethLatAmPretixOrganizer.orgUrl,
+      "eth-lat-am",
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
     );
     MockDate.set(Date.now() + ONE_SECOND_MS);
     // Verify that bouncer is checked out in backend
     await pipeline.load();
     const bouncerTickets = await requestTicketsFromPipeline(
       pipeline.issuanceCapability.options.feedFolder,
-      autoIssuanceTicketFeedUrl,
+      ethLatAmTicketFeedUrl,
       pipeline.issuanceCapability.options.feedId,
       ZUPASS_EDDSA_PRIVATE_KEY,
-      pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail,
-      AutoIssuanceBouncerIdentity
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+      EthLatAmBouncerIdentity,
+      true
     );
-    expectLength(bouncerTickets, 2);
-    const bouncerTicket = bouncerTickets[0];
-    expectToExist(bouncerTicket);
-    expectIsEdDSATicketPCD(bouncerTicket);
-    expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
-      pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
-    );
-    // Bouncer ticket is checked out
-    expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
-    expect(bouncerTicket.claim.ticket.imageUrl).to.be.undefined;
+    expectLength(bouncerTickets, 1);
 
-    const bouncerPODTicket = bouncerTickets[1];
+    const bouncerPODTicket = bouncerTickets[0];
     expectToExist(bouncerPODTicket);
     expectIsPODTicketPCD(bouncerPODTicket);
     expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-      pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
     );
     // Bouncer ticket is checked out
     expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(false);
     expect(bouncerPODTicket.claim.ticket.imageUrl).to.be.undefined;
 
     // Now check the bouncer in
-    const autoIssuanceCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
+    const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
 
     const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
-      autoIssuanceCheckinRoute,
+      ethLatAmCheckinRoute,
       ZUPASS_EDDSA_PRIVATE_KEY,
-      bouncerTicket.claim.ticket.attendeeEmail,
-      AutoIssuanceBouncerIdentity,
-      bouncerTicket.claim.ticket.ticketId,
-      bouncerTicket.claim.ticket.eventId
+      bouncerPODTicket.claim.ticket.attendeeEmail,
+      EthLatAmBouncerIdentity,
+      bouncerPODTicket.claim.ticket.ticketId,
+      bouncerPODTicket.claim.ticket.eventId,
+      true
     );
     expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
     const checkinTimestamp = Date.now();
@@ -778,27 +638,19 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       // Get updated tickets from feed
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
-        autoIssuanceTicketFeedUrl,
+        ethLatAmTicketFeedUrl,
         pipeline.issuanceCapability.options.feedId,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail,
-        AutoIssuanceBouncerIdentity
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+        EthLatAmBouncerIdentity,
+        true
       );
-      expectLength(bouncerTickets, 2);
-      const bouncerTicket = bouncerTickets[0];
-      expectToExist(bouncerTicket);
-      expectIsEdDSATicketPCD(bouncerTicket);
-      expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
-      );
-      // User is now checked in
-      expect(bouncerTicket.claim.ticket.isConsumed).to.eq(true);
-
-      const bouncerPODTicket = bouncerTickets[1];
+      expectLength(bouncerTickets, 1);
+      const bouncerPODTicket = bouncerTickets[0];
       expectToExist(bouncerPODTicket);
       expectIsPODTicketPCD(bouncerPODTicket);
       expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
       );
       // User is now checked in
       expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(true);
@@ -806,12 +658,13 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
     {
       // Trying to check in again should fail
       const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
-        autoIssuanceCheckinRoute,
+        ethLatAmCheckinRoute,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        bouncerTicket.claim.ticket.attendeeEmail,
-        AutoIssuanceBouncerIdentity,
-        bouncerTicket.claim.ticket.ticketId,
-        bouncerTicket.claim.ticket.eventId
+        bouncerPODTicket.claim.ticket.attendeeEmail,
+        EthLatAmBouncerIdentity,
+        bouncerPODTicket.claim.ticket.ticketId,
+        bouncerPODTicket.claim.ticket.eventId,
+        true
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({
         success: false,
@@ -826,21 +679,21 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       // Check the bouncer out again
       // Simulates the effect of check-in being deleted in Pretix
       pretixBackend.checkOut(
-        autoIssuancePretixOrganizer.orgUrl,
-        autoIssuanceEvent.slug,
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
+        ethLatAmPretixOrganizer.orgUrl,
+        "eth-lat-am",
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
       );
     }
     {
       // Trying to check in again should fail because we have not yet reloaded
       // data from Pretix.
       const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
-        autoIssuanceCheckinRoute,
+        ethLatAmCheckinRoute,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        bouncerTicket.claim.ticket.attendeeEmail,
-        AutoIssuanceBouncerIdentity,
-        bouncerTicket.claim.ticket.ticketId,
-        bouncerTicket.claim.ticket.eventId
+        bouncerPODTicket.claim.ticket.attendeeEmail,
+        EthLatAmBouncerIdentity,
+        bouncerPODTicket.claim.ticket.ticketId,
+        bouncerPODTicket.claim.ticket.eventId
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({
         success: false,
@@ -856,43 +709,35 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
     {
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
-        autoIssuanceTicketFeedUrl,
+        ethLatAmTicketFeedUrl,
         pipeline.issuanceCapability.options.feedId,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail,
-        AutoIssuanceBouncerIdentity
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+        EthLatAmBouncerIdentity,
+        true
       );
-      expectLength(bouncerTickets, 2);
-      const bouncerTicket = bouncerTickets[0];
-      expectToExist(bouncerTicket);
-      expectIsEdDSATicketPCD(bouncerTicket);
-      expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
-      );
-      // Bouncer ticket is checked out
-      expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+      expectLength(bouncerTickets, 1);
 
-      const bouncerPODTicket = bouncerTickets[1];
+      const bouncerPODTicket = bouncerTickets[0];
       expectToExist(bouncerPODTicket);
       expectIsPODTicketPCD(bouncerPODTicket);
       expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
       );
       // Bouncer ticket is checked out
       expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(false);
     }
     {
       // Now check the bouncer in
-      const autoIssuanceCheckinRoute =
-        pipeline.checkinCapability.getCheckinUrl();
+      const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
 
       const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
-        autoIssuanceCheckinRoute,
+        ethLatAmCheckinRoute,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        bouncerTicket.claim.ticket.attendeeEmail,
-        AutoIssuanceBouncerIdentity,
-        bouncerTicket.claim.ticket.ticketId,
-        bouncerTicket.claim.ticket.eventId
+        bouncerPODTicket.claim.ticket.attendeeEmail,
+        EthLatAmBouncerIdentity,
+        bouncerPODTicket.claim.ticket.ticketId,
+        bouncerPODTicket.claim.ticket.eventId
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
       MockDate.set(Date.now() + ONE_SECOND_MS);
@@ -902,30 +747,31 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       {
         const bouncerTickets = await requestTicketsFromPipeline(
           pipeline.issuanceCapability.options.feedFolder,
-          autoIssuanceTicketFeedUrl,
+          ethLatAmTicketFeedUrl,
           pipeline.issuanceCapability.options.feedId,
           ZUPASS_EDDSA_PRIVATE_KEY,
-          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail,
-          AutoIssuanceBouncerIdentity
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+          EthLatAmBouncerIdentity,
+          true
         );
-        expectLength(bouncerTickets, 2);
+        expectLength(bouncerTickets, 1);
         const bouncerTicket = bouncerTickets[0];
         expectToExist(bouncerTicket);
         expectIsEdDSATicketPCD(bouncerTicket);
         expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
-          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
         );
         // User is now checked in
         expect(bouncerTicket.claim.ticket.isConsumed).to.eq(true);
 
-        const bouncerPODTicket = bouncerTickets[1];
-        expectToExist(bouncerPODTicket);
-        expectIsPODTicketPCD(bouncerPODTicket);
-        expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceBouncerEmail
-        );
-        // User is now checked in
-        expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(true);
+        // const bouncerPODTicket = bouncerTickets[1];
+        // expectToExist(bouncerPODTicket);
+        // expectIsPODTicketPCD(bouncerPODTicket);
+        // expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+        //   pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+        // );
+        // // User is now checked in
+        // expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(true);
       }
     }
   });
@@ -937,15 +783,52 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       const pipelines = await giService.getAllPipelineInstances();
       const pipeline = pipelines.find(PretixPipeline.is);
       expectToExist(pipeline);
-      expect(pipeline.id).to.eq(autoIssuancePipeline.id);
+      expect(pipeline.id).to.eq(ethLatAmPipeline.id);
 
       const backup = pretixBackend.backup();
       // These event settings are invalid, and so the Pretix pipeline should
       // refuse to load any tickets for the event.
       pretixBackend.setEventSettings(
-        autoIssuancePretixOrganizer.orgUrl,
-        autoIssuanceEvent.slug,
+        ethLatAmPretixOrganizer.orgUrl,
+        ethLatAmEvent.slug,
         { attendee_emails_asked: false, attendee_emails_required: false }
+      );
+
+      const runInfo = await pipeline.load();
+      expect(runInfo.atomsLoaded).to.eq(0);
+      expectLength(
+        runInfo.latestLogs.filter(
+          (log) => log.level === PipelineLogLevel.Error
+        ),
+        1
+      );
+
+      pretixBackend.restore(backup);
+    }
+  );
+
+  step(
+    "Pretix should not load tickets for events which have products with invalid settings",
+    async function () {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelineInstances();
+      const pipeline = pipelines.find(PretixPipeline.is);
+      expectToExist(pipeline);
+      expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+
+      // The setup of products is considered to be part of the event
+      // configuration, so a mis-configured product will block the loading of
+      // any tickets for the event, even if there are no tickets using this
+      // product.
+
+      const backup = pretixBackend.backup();
+      pretixBackend.updateProduct(
+        ethLatAmPretixOrganizer.orgUrl,
+        pretixBackend.get().ethLatAmOrganizer.ethLatAm.slug,
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmTShirtProduct.id,
+        (product) => {
+          product.generate_tickets = true;
+        }
       );
 
       const runInfo = await pipeline.load();
@@ -968,60 +851,60 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       const pipelines = await giService.getAllPipelineInstances();
       const pipeline = pipelines.find(PretixPipeline.is);
       expectToExist(pipeline);
-      expect(pipeline.id).to.eq(autoIssuancePipeline.id);
-      const autoIssuanceTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+      expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+      const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
 
       pretixBackend.checkOut(
-        autoIssuancePretixOrganizer.orgUrl,
-        autoIssuanceEvent.slug,
-        autoIssuancePretixOrganizer.autoIssuanceBouncerEmail
+        ethLatAmPretixOrganizer.orgUrl,
+        ethLatAmEvent.slug,
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail
       );
 
       // Verify that bouncer is checked out in backend
       await pipeline.load();
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
-        autoIssuanceTicketFeedUrl,
+        ethLatAmTicketFeedUrl,
         pipeline.issuanceCapability.options.feedId,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        autoIssuancePretixOrganizer.autoIssuanceBouncerEmail,
-        AutoIssuanceBouncerIdentity
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail,
+        EthLatAmBouncerIdentity,
+        true
       );
-      expectLength(bouncerTickets, 2);
+      expectLength(bouncerTickets, 1);
       const bouncerTicket = bouncerTickets[0];
       expectToExist(bouncerTicket);
       expectIsEdDSATicketPCD(bouncerTicket);
       expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
-        autoIssuancePretixOrganizer.autoIssuanceBouncerEmail
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail
       );
       // Bouncer ticket is checked out
       expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
 
-      const bouncerPODTicket = bouncerTickets[1];
-      expectToExist(bouncerPODTicket);
-      expectIsPODTicketPCD(bouncerPODTicket);
-      expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        autoIssuancePretixOrganizer.autoIssuanceBouncerEmail
-      );
-      // Bouncer ticket is checked out
-      expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(false);
+      // const bouncerPODTicket = bouncerTickets[1];
+      // expectToExist(bouncerPODTicket);
+      // expectIsPODTicketPCD(bouncerPODTicket);
+      // expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+      //   ethLatAmPretixOrganizer.ethLatAmBouncerEmail
+      // );
+      // // Bouncer ticket is checked out
+      // expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(false);
 
-      const autoIssuanceCheckinRoute =
-        pipeline.checkinCapability.getCheckinUrl();
+      const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
 
       const badEmailPCD = await proveEmailPCD(
-        autoIssuancePretixOrganizer.autoIssuanceBouncerEmail,
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail,
         // Not the Zupass private key!
         newEdDSAPrivateKey(),
-        AutoIssuanceBouncerIdentity
+        EthLatAmBouncerIdentity
       );
       const goodEmailPCD = await proveEmailPCD(
-        autoIssuancePretixOrganizer.autoIssuanceBouncerEmail,
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        AutoIssuanceBouncerIdentity
+        EthLatAmBouncerIdentity
       );
       const badEmailCredential = await signCredentialPayload(
-        AutoIssuanceBouncerIdentity,
+        EthLatAmBouncerIdentity,
         createCredentialPayload(await EmailPCDPackage.serialize(badEmailPCD))
       );
       const mismatchedIdentityCredential = await signCredentialPayload(
@@ -1031,14 +914,14 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
       );
       MockDate.set(Date.now() - ONE_DAY_MS);
       const expiredCredential = await signCredentialPayload(
-        AutoIssuanceBouncerIdentity,
+        EthLatAmBouncerIdentity,
         createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
       );
       MockDate.set(Date.now() + ONE_DAY_MS);
 
       {
         const result = await requestPodboxTicketAction(
-          autoIssuanceCheckinRoute,
+          ethLatAmCheckinRoute,
           badEmailCredential,
           {
             checkin: true
@@ -1054,7 +937,7 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
 
       {
         const result = await requestPodboxTicketAction(
-          autoIssuanceCheckinRoute,
+          ethLatAmCheckinRoute,
           mismatchedIdentityCredential,
           {
             checkin: true
@@ -1070,7 +953,7 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
 
       {
         const result = await requestPodboxTicketAction(
-          autoIssuanceCheckinRoute,
+          ethLatAmCheckinRoute,
           expiredCredential,
           {
             checkin: true
@@ -1091,8 +974,8 @@ describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function 
     const pipelines = await giService.getAllPipelineInstances();
     expectToExist(pipelines);
     expectLength(pipelines, 1);
-    const autoIssuancePipeline = pipelines.find(PretixPipeline.is);
-    expectToExist(autoIssuancePipeline);
+    const ethLatAmPipeline = pipelines.find(PretixPipeline.is);
+    expectToExist(ethLatAmPipeline);
   });
 
   this.afterAll(async () => {

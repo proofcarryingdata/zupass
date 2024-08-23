@@ -11,6 +11,7 @@ import {
   CredentialRequest,
   InfoResult,
   PODBOX_CREDENTIAL_REQUEST,
+  PODBOX_SEMAPHORE_V4_CREDENTIAL_REQUEST,
   PodboxTicketActionResult,
   PollFeedResult,
   requestPipelineInfo,
@@ -91,11 +92,15 @@ export async function requestCheckInPipelineTicket(
   zupassEddsaPrivateKey: string,
   checkerEmail: string,
   checkerIdentity: Identity,
-  ticket: EdDSATicketPCD
+  ticketId: string,
+  eventId: string,
+  semaphoreV4 = false
 ): Promise<PodboxTicketActionResult> {
   const ticketCheckerFeedCredentials = await makeTestCredential(
     checkerIdentity,
-    PODBOX_CREDENTIAL_REQUEST,
+    semaphoreV4
+      ? PODBOX_SEMAPHORE_V4_CREDENTIAL_REQUEST
+      : PODBOX_CREDENTIAL_REQUEST,
     checkerEmail,
     zupassEddsaPrivateKey
   );
@@ -106,8 +111,8 @@ export async function requestCheckInPipelineTicket(
     {
       checkin: true
     },
-    ticket.claim.ticket.ticketId,
-    ticket.claim.ticket.eventId
+    ticketId,
+    eventId
   );
 }
 
@@ -160,13 +165,16 @@ export async function requestTicketsFromPipeline(
   /**
    * Is owned by this identity.
    */
-  identity: Identity
+  identity: Identity,
+  semaphoreV4 = false
 ): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
   const ticketPCDResponse = await requestPollFeed(feedUrl, {
     feedId: feedId,
     pcd: await makeTestCredential(
       identity,
-      PODBOX_CREDENTIAL_REQUEST,
+      semaphoreV4
+        ? PODBOX_SEMAPHORE_V4_CREDENTIAL_REQUEST
+        : PODBOX_CREDENTIAL_REQUEST,
       email,
       zupassEddsaPrivateKey
     )
