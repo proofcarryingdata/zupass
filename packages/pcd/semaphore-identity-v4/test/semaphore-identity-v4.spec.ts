@@ -38,16 +38,32 @@ describe("Semaphore Identity PCD", function () {
   });
 
   it("stuff", async function () {
-    const { prove, serialize, deserialize } = SemaphoreIdentityV4PCDPackage;
+    const original = new Identity();
 
-    const identity = new Identity();
-    const privateKey = v4PrivateKey(identity);
-    const publicKey = v4PublicKey(identity);
+    expect(original.export()).to.eq(
+      Identity.import(v4PrivateKey(original)).export()
+    );
 
-    expect(identity.export()).to.eq(Identity.import(privateKey).export());
+    const pod = POD.sign(
+      { a: { type: "int", value: 0n } },
+      v4PrivateKey(original)
+    );
 
-    const pod = POD.sign({ a: { type: "int", value: 0n } }, privateKey);
-    expect(pod.signerPublicKey).to.eq(publicKey);
+    expect(pod.signerPublicKey).to.eq(v4PublicKey(original));
+
+    const v4IdentityPCD = await SemaphoreIdentityV4PCDPackage.prove({
+      identity: original
+    });
+    const serialized =
+      await SemaphoreIdentityV4PCDPackage.serialize(v4IdentityPCD);
+    const deserialized = await SemaphoreIdentityV4PCDPackage.deserialize(
+      serialized.pcd
+    );
+    expect(deserialized.claim.identity.export()).to.eq(original.export());
+
+    expect(v4PublicKey(deserialized.claim.identity)).to.eq(
+      v4PublicKey(original)
+    );
   });
 
   // TODO: Uncomment this test when we have a saved PCD to test against
