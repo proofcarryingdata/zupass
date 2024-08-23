@@ -252,16 +252,9 @@ export class FeedSubscriptionManager {
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {
-      const signatureType: CredentialRequest["signatureType"] =
-        credentialManager.canGenerateCredential({
-          signatureType: "semaphore-v4-signature-pcd"
-        })
-          ? "semaphore-v4-signature-pcd"
-          : "sempahore-signature-pcd";
-
       const pcdCredential: SerializedPCD | undefined =
         await credentialManager.requestCredential({
-          signatureType: signatureType,
+          signatureType: subscription.feed.credentialRequest.signatureType,
           pcdType: subscription.feed.credentialRequest.pcdType
         });
 
