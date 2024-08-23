@@ -1,7 +1,5 @@
 # todo
 
-- upload v4 commitment to zupass wherever we already do so for v3
-- create and upload v4 identity on login
 - migrate alread-logged-in clients
   - make user with 2 logged in clients migrates without conflicts
 - need to create tests for pipelines that make sure they work with both a v3 and a v4 identity
@@ -14,7 +12,6 @@
 - update the semaphore group stuff to be able to handle v4 groups.
 - make the client aware of the v4 identity
   - e.g. there are various react hooks that need to be updated
-- rename `commitment` to something that uses the word `v3`
 - document `IssuanceService`
 - update `testLogin`
 - packages/lib/passport-interface/test/V3ToV4Migration.spec.ts
@@ -24,6 +21,9 @@
 
 # done
 
+- rename `commitment` to something that uses the word `v3`
+- create and upload v4 identity on login
+- upload v4 commitment to zupass wherever we already do so for v3
 - update data model of user to also contain v4 identity commitment, alongside the v3 identity commitment
 - v4 signature PCD is just ... a pod?
 - implement v4 identity pcd
