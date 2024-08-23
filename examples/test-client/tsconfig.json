@@ -32,6 +32,15 @@
       "path": "../../packages/lib/pcd-types"
     },
     {
+      "path": "../../packages/lib/pod"
+    },
+    {
+      "path": "../../packages/pcd/pod-pcd"
+    },
+    {
+      "path": "../../packages/lib/podspec"
+    },
+    {
       "path": "../../packages/pcd/semaphore-identity-pcd"
     },
     {
