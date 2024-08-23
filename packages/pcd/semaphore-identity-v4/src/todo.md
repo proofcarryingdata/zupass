@@ -1,21 +1,18 @@
 # todo
 
-- need to create tests for pipelines that make sure they work with both a v3 and a v4 identity
 - figure out how to hide/show tickets where there's both an EdDSA ticket and a POD ticket in the client.
   - we don't want there to appear to be duplicates
   - probs just hide the EdDSA ticket if a POD ticket that is the 'same' already exists
 - semaphore v4 identity pcd tests
   - (luckily, i think the tests should be mostly copy-paste from the v3 tests)
-- update the semaphore group stuff to be able to handle v4 groups.
 - document `IssuanceService`
-- update `testLogin`
 - packages/lib/passport-interface/test/V3ToV4Migration.spec.ts
 - document v3tov4Identity
-- figure out how to import both v3 and v4 identity in the same package
-- semaphore team - plz publish v4 packages under a diff name?
 
 # done
 
+- update `testLogin`
+- need to create tests for pipelines that make sure they work with both a v3 and a v4 identity
 - migrate alread-logged-in clients
   - make user with 2 logged in clients migrates without conflicts
 - rename `commitment` to something that uses the word `v3`
@@ -32,3 +29,4 @@
 # won't do
 
 - eventually we're going to need `GPCCredential`
+- update the semaphore group stuff to be able to handle v4 groups. - https://linear.app/0xparc-pcd/issue/0XP-1132/zupass-backend-podbox-backend-should-maintain-both-semaphore-v3-and-v4

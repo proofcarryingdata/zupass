@@ -41,6 +41,9 @@ describe("V3ToV4Migration", async function () {
       identity: new Identity()
     });
     const v4Id = v3tov4Identity(v3Id);
+    const v4Id2 = v3tov4Identity(v3Id); // check it's deterministic
+    expect(v4Id.claim.identity.export()).to.eq(v4Id2.claim.identity.export());
+
     const pcds = new PCDCollection(
       [SemaphoreIdentityPCDPackage, SemaphoreIdentityV4PCDPackage],
       [v3Id, v4Id]
