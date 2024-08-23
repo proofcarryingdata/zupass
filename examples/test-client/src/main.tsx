@@ -5,6 +5,7 @@ import { Feeds } from "./apis/Feeds";
 import { FileSystem } from "./apis/FileSystem";
 import { GPC } from "./apis/GPC";
 import { Identity } from "./apis/Identity";
+import { PODSection } from "./apis/PODSection";
 import { Navbar } from "./components/Navbar";
 import {
   EmbeddedZupassProvider,
@@ -27,6 +28,7 @@ export default function Main(): ReactNode {
         <p>You can use this page to test the embedded Zupass API.</p>
         <div className="flex flex-col gap-4 my-4">
           <FileSystem />
+          <PODSection />
           <GPC />
           <Feeds />
           <Identity />

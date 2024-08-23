@@ -116,6 +116,9 @@
       "path": "../../packages/ui/pod-pcd-ui"
     },
     {
+      "path": "../../packages/lib/podspec"
+    },
+    {
       "path": "../../packages/pcd/rsa-image-pcd"
     },
     {

@@ -24,13 +24,7 @@
   // References are automatically maintained by `yarn fix-references`
   "references": [
     {
-      "path": "../../pcd/gpc-pcd"
-    },
-    {
-      "path": "../podspec"
-    },
-    {
-      "path": "../pcd-types"
+      "path": "../pod"
     }
   ]
 }

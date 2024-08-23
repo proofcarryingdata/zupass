@@ -1,5 +1,8 @@
 import type { GPCPCDArgs } from "@pcd/gpc-pcd";
 import type { SerializedPCD } from "@pcd/pcd-types";
+import { GenericSerializedPodspecPOD } from "@pcd/podspec";
+
+type PODQuery = GenericSerializedPodspecPOD;
 
 export type ZupassFolderContent =
   | {
@@ -30,13 +33,22 @@ export interface ZupassFeeds {
 
 export interface ZupassIdentity {
   getIdentityCommitment: () => Promise<bigint>;
+  // Should be PODs rather than SerializedPCDs in future
   getAttestedEmails: () => Promise<SerializedPCD[]>;
+}
+
+export interface ZupassPOD {
+  // Returns array of serialized PODs
+  query: (query: PODQuery) => Promise<string[]>;
 }
 
 export interface ZupassAPI {
   _version: "1";
-  fs: ZupassFileSystem;
+  // Flagged as optional and is effectively deprecated
+  fs?: ZupassFileSystem;
   gpc: ZupassGPC;
-  feeds: ZupassFeeds;
+  // Flagged as optional and is effectively deprecated
+  feeds?: ZupassFeeds;
   identity: ZupassIdentity;
+  pod: ZupassPOD;
 }

@@ -14,6 +14,9 @@
       "path": "../../pcd/gpc-pcd/tsconfig.cjs.json"
     },
     {
+      "path": "../podspec/tsconfig.cjs.json"
+    },
+    {
       "path": "../pcd-types/tsconfig.cjs.json"
     }
   ]
