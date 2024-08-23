@@ -8,6 +8,7 @@
 - document `IssuanceService`
 - packages/lib/passport-interface/test/V3ToV4Migration.spec.ts
 - document v3tov4Identity
+- use better hash for v4 identity derivation
 
 # done
 
