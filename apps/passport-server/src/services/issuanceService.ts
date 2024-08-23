@@ -451,7 +451,7 @@ export class IssuanceService {
     ticketData: ITicketData,
     eddsaPrivateKey: string
   ): Promise<EdDSATicketPCD> {
-    const stableId = await getHash("issued-ticket-" + ticketData.attendeeEmail);
+    const stableId = await getHash(JSON.stringify(ticketData));
 
     const ticketPCD = await EdDSATicketPCDPackage.prove({
       ticket: {
@@ -691,14 +691,23 @@ export class IssuanceService {
           span?.setAttribute("email", email);
         }
 
-        if (!user || !email) {
+        if (!user) {
           return [];
         }
 
-        const tickets = await fetchZuconnectTicketsByEmail(
-          this.context.dbPool,
-          email
-        );
+        if (user) {
+          span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
+        }
+
+        span?.setAttribute("emails", user.emails.join(","));
+
+        const tickets = (
+          await Promise.all(
+            user.emails.map(async (email) =>
+              fetchZuconnectTicketsByEmail(this.context.dbPool, email)
+            )
+          )
+        ).flat();
 
         const pcds = [];
 
