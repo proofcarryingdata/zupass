@@ -66,7 +66,7 @@ import { setupTestLemonadePipeline } from "./setupTestLemonadePipeline";
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link LemonadePipeline}.
  */
-describe.skip("generic issuance - LemonadePipeline", function () {
+describe("generic issuance - LemonadePipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
 
