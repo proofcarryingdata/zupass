@@ -1,5 +1,6 @@
 import { POD, POD_INT_MAX } from "@pcd/pod";
 import { p } from "@pcd/podspec";
+import JSONBig from "json-bigint";
 import { ReactNode, useState } from "react";
 import { TryIt } from "../components/TryIt";
 import { useEmbeddedZupass } from "../hooks/useEmbeddedZupass";
@@ -20,8 +21,7 @@ export function PODSection(): ReactNode {
   .pod({
     wis: p.int().range(BigInt(8), POD_INT_MAX),
     str: p.int().range(BigInt(5), POD_INT_MAX),
-  })
-  .serialize();
+  });
 const pods = await z.pod.query(q);
 `}
             </code>
@@ -43,7 +43,15 @@ const pods = await z.pod.query(q);
           />
           {pods.length > 0 && (
             <pre className="whitespace-pre-wrap">
-              {JSON.stringify(pods, null, 2)}
+              {JSONBig.stringify(
+                pods.map((p) => ({
+                  entries: p.content.asEntries(),
+                  signature: p.signature,
+                  signerPublicKey: p.signerPublicKey
+                })),
+                null,
+                2
+              )}
             </pre>
           )}
         </div>
