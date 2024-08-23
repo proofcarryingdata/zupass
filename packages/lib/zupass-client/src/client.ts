@@ -1,4 +1,5 @@
-import { ZupassAPI } from "./api";
+import { ZupassAPI } from "./api_internal";
+import { ZupassAPIWrapper } from "./api_wrapper";
 import {
   postWindowMessage,
   RPCMessage,
@@ -27,7 +28,7 @@ export function connect(
   zapp: Zapp,
   element: HTMLElement,
   zupassUrl = "https://zupass.org"
-): Promise<ZupassAPI> {
+): Promise<ZupassAPIWrapper> {
   // Will throw if the URL is invalid
   const normalizedUrl = new URL(zupassUrl);
 
@@ -81,7 +82,7 @@ export function connect(
   iframe.style.height = "100%";
   iframe.src = normalizedUrl.toString();
 
-  return new Promise<ZupassAPI>((resolve, _reject) => {
+  return new Promise<ZupassAPIWrapper>((resolve, _reject) => {
     /**
      * @todo timeout?
      * @todo iframe loads are fake, maybe poll to see if contentwindow exists?
@@ -103,7 +104,7 @@ export function connect(
               serial: 0,
               pending: {}
             });
-            resolve(handle);
+            resolve(new ZupassAPIWrapper(handle));
             break;
           } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
             dialog.showModal();

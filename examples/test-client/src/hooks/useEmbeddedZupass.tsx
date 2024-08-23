@@ -1,4 +1,4 @@
-import { connect, Zapp, ZupassAPI } from "@pcd/zupass-client";
+import { connect, Zapp, ZupassAPIWrapper } from "@pcd/zupass-client";
 import {
   createContext,
   ReactNode,
@@ -25,7 +25,7 @@ type EmbeddedZupass =
     }
   | {
       state: EmbeddedZupassState.CONNECTED;
-      z: ZupassAPI;
+      z: ZupassAPIWrapper;
       ref: React.RefObject<HTMLDivElement>;
     };
 
@@ -69,7 +69,7 @@ export function EmbeddedZupassProvider({
 type UseEmbeddedZupass =
   | {
       connected: true;
-      z: ZupassAPI;
+      z: ZupassAPIWrapper;
     }
   | {
       connected: false;

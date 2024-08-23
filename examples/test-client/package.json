@@ -15,7 +15,7 @@
     "@pcd/pod-pcd": "0.1.5",
     "@pcd/podspec": "0.0.2",
     "@pcd/semaphore-identity-pcd": "0.11.4",
-    "@pcd/zupass-client": "0.0.2",
+    "@pcd/zupass-client": "0.0.3",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1"
