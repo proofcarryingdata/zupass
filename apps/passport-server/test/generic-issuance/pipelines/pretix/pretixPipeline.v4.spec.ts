@@ -46,7 +46,7 @@ import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline}.
  */
-describe.only("generic issuance - PretixPipeline with semaphore v4", function () {
+describe("generic issuance - PretixPipeline with semaphore v4", function () {
   const nowDate = new Date();
   const now = Date.now();
 
@@ -70,8 +70,8 @@ describe.only("generic issuance - PretixPipeline with semaphore v4", function ()
     pretixBackend,
     ethLatAmPretixOrganizer,
     ethLatAmEvent,
-    ethLatAmPipeline,
-    ethLatAmSemaphoreGroupIds
+    ethLatAmPipeline
+    // ethLatAmSemaphoreGroupIds
   } = setupTestPretixPipeline(true);
 
   const pipelineDefinitions = [ethLatAmPipeline];
@@ -200,7 +200,7 @@ describe.only("generic issuance - PretixPipeline with semaphore v4", function ()
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(ethLatAmPipeline.id);
       const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
-      const ethLatAmIssuanceDateTime = new Date();
+      // const ethLatAmIssuanceDateTime = new Date();
       const attendeeTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
         ethLatAmTicketFeedUrl,
