@@ -1,7 +1,13 @@
+import { POD } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
+import { expect } from "chai";
 import "mocha";
-import { SemaphoreIdentityV4PCDPackage } from "../src/SemaphoreIdentityV4PCDPackage";
+import {
+  SemaphoreIdentityV4PCDPackage,
+  v4PrivateKey,
+  v4PublicKey
+} from "../src/SemaphoreIdentityV4PCDPackage";
 
 describe("Semaphore Identity PCD", function () {
   it("should be instantiatable", async function () {
@@ -24,11 +30,24 @@ describe("Semaphore Identity PCD", function () {
     const deserialized = await deserialize(serialized.pcd);
 
     assert.equal(
-      identityPCD.claim.identity.toString(),
-      deserialized.claim.identity.toString()
+      identityPCD.claim.identity.export(),
+      deserialized.claim.identity.export()
     );
 
     assert.equal(deserialized.claim.identity instanceof Identity, true);
+  });
+
+  it("stuff", async function () {
+    const { prove, serialize, deserialize } = SemaphoreIdentityV4PCDPackage;
+
+    const identity = new Identity();
+    const privateKey = v4PrivateKey(identity);
+    const publicKey = v4PublicKey(identity);
+
+    expect(identity.export()).to.eq(Identity.import(privateKey).export());
+
+    const pod = POD.sign({ a: { type: "int", value: 0n } }, privateKey);
+    expect(pod.signerPublicKey).to.eq(publicKey);
   });
 
   // TODO: Uncomment this test when we have a saved PCD to test against

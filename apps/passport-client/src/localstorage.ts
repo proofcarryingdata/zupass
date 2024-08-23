@@ -9,8 +9,10 @@ import {
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
 import {
+  SemaphoreIdentityV4PCD,
   SemaphoreIdentityV4PCDTypeName,
-  v3tov4Identity
+  v3tov4Identity,
+  v4PublicKey
 } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
@@ -53,17 +55,21 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
   );
 
   const v3Identity = collection.getPCDsByType(SemaphoreIdentityPCDTypeName);
-  const v4Identity = collection.getPCDsByType(SemaphoreIdentityV4PCDTypeName);
+  const v4Identity = collection.getPCDsByType(
+    SemaphoreIdentityV4PCDTypeName
+  )[0] as SemaphoreIdentityV4PCD | undefined;
 
-  if (v4Identity.length > 0) {
-    collection.remove(v4Identity[0].id);
-  }
-
-  if (v3Identity.length > 0 /* && v4Identity.length === 0 */) {
+  if (v3Identity.length > 0 && !v4Identity) {
     const v3IdentityPCD = v3Identity[0] as SemaphoreIdentityPCD;
     const v4Identity = v3tov4Identity(v3IdentityPCD);
     collection.add(v4Identity);
     await savePCDs(collection);
+  }
+
+  if (v4Identity) {
+    console.log("v4Identity", v4PublicKey(v4Identity.claim.identity));
+  } else {
+    console.log("no v4Identity");
   }
 
   // try {

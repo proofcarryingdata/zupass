@@ -1,4 +1,5 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { encodePrivateKey, POD } from "@pcd/pod";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { generateSnarkMessageHash, requireDefinedParameter } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
@@ -11,6 +12,27 @@ import {
   SemaphoreIdentityV4PCDProof,
   SemaphoreIdentityV4PCDTypeName
 } from "./SemaphoreIdentityV4PCD";
+
+// TODO: is this right?
+export function v4PublicKey(identity: Identity): string {
+  const privateKeyString = v4PrivateKey(identity);
+  const pod = POD.sign(
+    {
+      a: {
+        type: "int",
+        value: 0n
+      }
+    },
+    privateKeyString
+  );
+  const publicKey = pod.signerPublicKey;
+  return publicKey;
+}
+
+// TODO: is this right?
+export function v4PrivateKey(identity: Identity): string {
+  return encodePrivateKey(Buffer.from(identity.privateKey));
+}
 
 export function v3tov4Identity(
   v3Identity: SemaphoreIdentityPCD
@@ -47,7 +69,7 @@ export async function serialize(
     pcd: JSONBig.stringify({
       type: pcd.type,
       id: pcd.id,
-      identity: pcd.claim.identity.toString()
+      identity: pcd.claim.identity.export()
     })
   } as SerializedPCD<SemaphoreIdentityV4PCD>;
 }
@@ -61,7 +83,7 @@ export async function deserialize(
   requireDefinedParameter(identity, "identity");
 
   return new SemaphoreIdentityV4PCD(id, {
-    identity: new Identity(identity)
+    identity: Identity.import(identity)
   });
 }
 

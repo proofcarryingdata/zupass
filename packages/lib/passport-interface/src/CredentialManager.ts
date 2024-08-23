@@ -8,10 +8,11 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreIdentityV4PCD,
-  SemaphoreIdentityV4PCDTypeName
+  SemaphoreIdentityV4PCDTypeName,
+  v4PrivateKey
 } from "@pcd/semaphore-identity-v4";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { ONE_HOUR_MS, randomUUID, toHexString } from "@pcd/util";
+import { ONE_HOUR_MS, randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import {
   Credential,
@@ -280,9 +281,7 @@ export class CredentialManager implements CredentialManagerAPI {
       throw new Error("Could not find a SemaphoreIdentityV4PCD");
     }
 
-    const privateKey = v4Identity.claim.identity.privateKey;
-    const privateKeyString: string =
-      typeof privateKey === "string" ? privateKey : toHexString(privateKey);
+    const privateKeyString: string = v4PrivateKey(v4Identity.claim.identity);
 
     const pcd = await PODPCDPackage.prove({
       entries: {

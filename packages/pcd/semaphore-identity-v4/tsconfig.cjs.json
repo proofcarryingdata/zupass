@@ -18,6 +18,9 @@
     },
     {
       "path": "../semaphore-identity-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/pod/tsconfig.cjs.json"
     }
   ]
 }

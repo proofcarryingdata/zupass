@@ -32,7 +32,7 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
-import { v3tov4Identity } from "@pcd/semaphore-identity-v4";
+import { v3tov4Identity, v4PublicKey } from "@pcd/semaphore-identity-v4";
 import { assertUnreachable, sleep } from "@pcd/util";
 import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
@@ -357,7 +357,7 @@ async function oneClickLogin(
     email,
     code,
     state.identity.commitment.toString(),
-    v4IdentityPCD.claim.identity.publicKey.toString(),
+    v4PublicKey(v4IdentityPCD.claim.identity),
     encryptionKey
   );
 
@@ -457,7 +457,7 @@ async function createNewUserSkipPassword(
     email,
     token,
     state.identity.commitment.toString(),
-    v4IdentityPCD.claim.identity.publicKey.toString(),
+    v4PublicKey(v4IdentityPCD.claim.identity),
     undefined,
     encryptionKey,
     autoRegister
@@ -509,7 +509,7 @@ async function createNewUserWithPassword(
     email,
     token,
     state.identity.commitment.toString(),
-    v4IdentityPCD.claim.identity.publicKey.toString(),
+    v4PublicKey(v4IdentityPCD.claim.identity),
     newSalt,
     undefined,
     undefined
@@ -1051,7 +1051,7 @@ async function doSync(
       };
 
       // first, always poll the email feed
-      await state.subscriptions.pollEmailSubscription(
+      const _emailActions = await state.subscriptions.pollEmailSubscription(
         ZUPASS_FEED_URL,
         credentialManager,
         onSubscriptionResult

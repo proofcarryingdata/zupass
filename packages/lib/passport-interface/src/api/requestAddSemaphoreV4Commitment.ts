@@ -7,13 +7,14 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreIdentityV4PCD,
-  SemaphoreIdentityV4PCDPackage
+  SemaphoreIdentityV4PCDPackage,
+  v4PrivateKey
 } from "@pcd/semaphore-identity-v4";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { randomUUID, toHexString } from "@pcd/util";
+import { randomUUID } from "@pcd/util";
 import urljoin from "url-join";
 import {
   AddV4CommitmentRequest,
@@ -69,10 +70,7 @@ export async function makeAddV4CommitmentRequest(
     },
     privateKey: {
       argumentType: ArgumentTypeName.String,
-      value:
-        typeof v4PCD.claim.identity.privateKey === "string"
-          ? v4PCD.claim.identity.privateKey
-          : toHexString(v4PCD.claim.identity.privateKey)
+      value: v4PrivateKey(v4PCD.claim.identity)
     },
     id: {
       argumentType: ArgumentTypeName.String,

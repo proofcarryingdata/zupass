@@ -37,6 +37,7 @@
     "@pcd/eslint-config-custom": "0.11.4",
     "@pcd/semaphore-identity-pcd": "0.11.4",
     "@pcd/tsconfig": "0.11.4",
+    "@pcd/pod": "0.1.5",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "eslint": "^8.57.0",
