@@ -281,6 +281,9 @@ class PODServer extends BaseZappServer implements ZupassPOD {
       .getState()
       // Deletion is restricted to Zapp-created PODs
       .pcds.getAllPCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME);
+    // This will delete *all* PODs in the folder which have a matching
+    // signature. Since signatures are unique, this seems reasonable. There is
+    // probably no good reason to have multiple PODs with the same signature.
     const pcdIds = allPCDs
       .filter(
         (pcd) =>
