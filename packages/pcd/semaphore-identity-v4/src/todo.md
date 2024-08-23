@@ -9,6 +9,11 @@
 - packages/lib/passport-interface/test/V3ToV4Migration.spec.ts
 - document v3tov4Identity
 - use better hash for v4 identity derivation
+- remove `enablePodIssuance` option for podbox pipelines
+- add comments throughout
+- pr description + review comments pointing out imp details
+- update outdated comments in tests indicating duplicate tickets
+- ask about getting semaphore v4 packages published under a diff name
 
 # done
 
