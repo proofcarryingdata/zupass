@@ -162,6 +162,7 @@ export class CSVPipeline implements BasePipeline {
           const { emails, semaphoreId } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
+          // For now, CSV Pipeline only supports semaphore v3
           if (!semaphoreId) {
             throw new Error("invalid credential");
           }
