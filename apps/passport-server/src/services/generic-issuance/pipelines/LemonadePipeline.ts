@@ -817,6 +817,13 @@ export class LemonadePipeline implements BasePipeline {
 
       const { emails, semaphoreId, semaphoreIdV4 } = credential;
 
+      if (
+        (this.definition.options.feedOptions.semaphoreV4 && !semaphoreIdV4) ||
+        (!this.definition.options.feedOptions.semaphoreV4 && !semaphoreId)
+      ) {
+        throw new Error("incorrect signature type");
+      }
+
       if (!emails || emails.length === 0) {
         throw new Error("missing emails in credential");
       }

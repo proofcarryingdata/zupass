@@ -310,8 +310,12 @@ export class PODPipeline implements BasePipeline {
 
       // POD pipeline is only compatible with semaphore v4.
       const { emails, semaphoreId, semaphoreIdV4 } = credential;
-      if (!semaphoreIdV4) {
-        throw new Error("invalid credential");
+
+      if (
+        (this.definition.options.feedOptions.semaphoreV4 && !semaphoreIdV4) ||
+        (!this.definition.options.feedOptions.semaphoreV4 && !semaphoreId)
+      ) {
+        throw new Error("incorrect signature type");
       }
 
       span?.setAttribute("email", emails?.map((e) => e.email)?.join(",") ?? "");
