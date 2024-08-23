@@ -21,12 +21,6 @@ export async function getEdgeCityBalances(
         SELECT collector_email AS email, COUNT(*) * 10 AS count
         FROM podbox_collected_contacts
         GROUP BY collector_email
-
-        UNION ALL
-
-        select u.email, s.score as count
-        from ecd_frog_scores s
-        join users u on u.commitment = s.semaphore_id
       ) AS subquery
       GROUP BY email
     ) AS final_query
