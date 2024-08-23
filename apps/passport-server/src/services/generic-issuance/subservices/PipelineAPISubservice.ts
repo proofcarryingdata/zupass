@@ -226,7 +226,9 @@ export class PipelineAPISubservice {
               }
             ],
             credentialRequest: {
-              signatureType: "sempahore-signature-pcd",
+              signatureType: feedCapability.options.semaphoreV4
+                ? "semaphore-v4-signature-pcd"
+                : "sempahore-signature-pcd",
               pcdType: "email-pcd"
             }
           } satisfies Feed

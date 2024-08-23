@@ -268,7 +268,8 @@ const FeedIssuanceOptionsSchema = z.object({
   feedId: z.string(),
   feedDisplayName: z.string(),
   feedDescription: z.string(),
-  feedFolder: z.string()
+  feedFolder: z.string(),
+  semaphoreV4: z.boolean().optional()
 });
 
 export type FeedIssuanceOptions = z.infer<typeof FeedIssuanceOptionsSchema>;

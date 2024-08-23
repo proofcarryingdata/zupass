@@ -1,4 +1,5 @@
 import {
+  FeedIssuanceOptions,
   PipelineZuAuthConfig,
   PollFeedRequest,
   PollFeedResponseValue
@@ -8,19 +9,6 @@ import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { Pipeline } from "../pipelines/types";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
-
-export interface FeedIssuanceOptions {
-  /**
-   * Used to differentiate between different feeds on the same {@link Pipeline}.
-   * TODO:
-   * - ensure at runtime that a {@link Pipeline} doesn't contain capabilities
-   *   with overlapping {@link feedId}s.
-   */
-  feedId: string;
-  feedDisplayName: string;
-  feedDescription: string;
-  feedFolder: string;
-}
 
 /**
  * Can be attached to a {@link Pipeline} that can issue feeds to external
