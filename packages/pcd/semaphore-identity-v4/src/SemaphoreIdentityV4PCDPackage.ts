@@ -31,18 +31,18 @@ export function v4PublicKey(identity: Identity): string {
 
 // TODO: is this right?
 export function v4PrivateKey(identity: Identity): string {
-  return encodePrivateKey(Buffer.from(identity.privateKey));
+  return encodePrivateKey(Buffer.from(identity.export(), "base64"));
 }
 
 export function v3tov4Identity(
   v3Identity: SemaphoreIdentityPCD
 ): SemaphoreIdentityV4PCD {
-  const newPrivateKey = generateSnarkMessageHash(
-    v3Identity.claim.identity.getTrapdoor().toString() +
-      v3Identity.claim.identity.getSecret().toString()
-  )
-    .toString()
-    .substring(0, 64);
+  const newPrivateKey = Buffer.from(
+    generateSnarkMessageHash(
+      v3Identity.claim.identity.getTrapdoor().toString() +
+        v3Identity.claim.identity.getSecret().toString()
+    ).toString()
+  ).subarray(0, 32);
 
   const identity = new Identity(newPrivateKey);
 
