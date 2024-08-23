@@ -1,7 +1,7 @@
 module.exports = {
   // TODO: override this to always be true in CI
-  forbidOnly: false,
-  forbidPending: false,
+  forbidOnly: true,
+  forbidPending: true,
   failZero: true,
   bail: true,
   timeout: "120000"
