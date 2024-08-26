@@ -176,7 +176,7 @@ export function LoginScreen(): JSX.Element {
         // Access granted, try reading the local storage
         const encryptionKey = handle.localStorage.getItem("encryption_key");
         if (encryptionKey) {
-          tryToLogin(encryptionKey);
+          return tryToLogin(encryptionKey);
         }
       })
       .catch(() => {})
