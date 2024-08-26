@@ -10,6 +10,7 @@ import {
   useEffect,
   useState
 } from "react";
+import { UAParser } from "ua-parser-js";
 import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
@@ -130,7 +131,7 @@ export function LoginScreen(): JSX.Element {
   );
 
   const [tryStorageAccess, setTryStorageAccess] = useState(false);
-  const [tryCookieLogin, setTryCookieLogin] = useState(false);
+  const [tryStorageLogin, setTryStorageLogin] = useState(false);
 
   const tryToLogin = useCallback(
     async (encryptionKey: string) => {
@@ -148,31 +149,34 @@ export function LoginScreen(): JSX.Element {
             encryptionKey
           });
         } else {
-          // Failed to log in with the cookie
+          // Failed to log in with key from local storage
           // This will cause the regular login flow to kick in
-          setTryCookieLogin(false);
+          setTryStorageLogin(false);
         }
       } catch (e) {
-        setTryCookieLogin(false);
+        setTryStorageLogin(false);
       }
     },
     [dispatch]
   );
 
-  const requestStorageAccess = useCallback(() => {
-    document
-      .requestStorageAccess()
-      .then(() => {
-        // Access granted, try reading the cookie
-        const cookies = Object.fromEntries(
-          document.cookie
-            .split("; ")
-            .map((v) => v.split(/=(.*)/s).map(decodeURIComponent))
-        );
+  const requestStorageAccessAndLogIn = useCallback(() => {
+    const parser = new UAParser();
+    const isChrome = parser.getBrowser().name === "Chrome";
+    if (!isChrome) {
+      setTryStorageAccess(false);
+      return;
+    }
 
-        if (cookies["auth"]) {
-          setTryCookieLogin(true);
-          tryToLogin(cookies["auth"]).catch(() => setTryCookieLogin(false));
+    document
+      // @ts-expect-error Chrome-only API
+      .requestStorageAccess({ localStorage: true })
+      // @ts-expect-error Chrome-only API
+      .then((handle: { localStorage: Storage }) => {
+        // Access granted, try reading the local storage
+        const encryptionKey = handle.localStorage.getItem("encryption_key");
+        if (encryptionKey) {
+          tryToLogin(encryptionKey);
         }
       })
       .catch(() => {})
@@ -189,23 +193,14 @@ export function LoginScreen(): JSX.Element {
           // No access, try requesting it interactively
           setTryStorageAccess(true);
         } else {
-          // We do have access, try reading the cookie
-          const cookies = Object.fromEntries(
-            document.cookie
-              .split("; ")
-              .map((v) => v.split(/=(.*)/s).map(decodeURIComponent))
-          );
-
-          // Is there an auth cookie?
-          if (cookies["auth"]) {
-            // Yes, we're trying to log in with the cookie
-            setTryCookieLogin(true);
-            await tryToLogin(cookies["auth"]);
-          }
+          setTryStorageAccess(true);
+          requestStorageAccessAndLogIn();
         }
+        setTryStorageAccess(true);
+        // requestStorageAccess();
       }
     })();
-  }, [dispatch, tryToLogin]);
+  }, [dispatch, requestStorageAccessAndLogIn, tryToLogin]);
 
   useEffect(() => {
     // Redirect to home if already logged in
@@ -252,18 +247,20 @@ export function LoginScreen(): JSX.Element {
           <Spacer h={24} />
           Do you want to connect to Zupass?
           <Spacer h={24} />
-          <Button onClick={requestStorageAccess}>Connect to Zupass</Button>
+          <Button onClick={requestStorageAccessAndLogIn}>
+            Connect to Zupass
+          </Button>
         </TextCenter>
       )}
 
-      {tryCookieLogin && (
+      {tryStorageLogin && (
         <TextCenter>
           <Spacer h={24} />
           <RippleLoader />
         </TextCenter>
       )}
 
-      {!tryStorageAccess && !tryCookieLogin && !state.loggingOut && (
+      {!tryStorageAccess && !tryStorageLogin && !state.loggingOut && (
         <>
           <Spacer h={24} />
           <CenterColumn>

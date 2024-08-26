@@ -850,11 +850,6 @@ async function loadAfterLogin(
   saveSelf(self);
   saveIdentity(identityPCD.claim.identityV3);
 
-  const authCookieContent = encryptionKey;
-  document.cookie = `auth=${authCookieContent};SameSite=None;Secure`;
-  console.log(authCookieContent);
-  console.log("Cookie set:", document.cookie);
-
   update({
     encryptionKey,
     pcds,
