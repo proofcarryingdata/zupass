@@ -133,6 +133,10 @@ export function LoginScreen(): JSX.Element {
   const [tryStorageAccess, setTryStorageAccess] = useState(false);
   const [tryStorageLogin, setTryStorageLogin] = useState(false);
 
+  /**
+   * Assuming we're in Chrome and an iframe, and we've successfully loaded an
+   * encryption key from local storage, try to use it to log in.
+   */
   const tryToLogin = useCallback(
     async (encryptionKey: string) => {
       // Try to download and decrypt the storage
@@ -152,18 +156,10 @@ export function LoginScreen(): JSX.Element {
     [dispatch]
   );
 
-  const requestStorageAccessAndLogIn = useCallback(async () => {
-    const parser = new UAParser();
-    const isChrome = parser.getBrowser().name === "Chrome";
-    if (!isChrome) {
-      // We're not on Chrome, so we can't request storage access
-      // Set the state to false to hide the "Connect to Zupass" button
-      // User will have to login manually
-      setTryStorageLogin(false);
-      setTryStorageAccess(false);
-      return;
-    }
-
+  /**
+   * This will only be called if we're in an iframe and Chrome.
+   */
+  const requestStorageAndLogIn = useCallback(async () => {
     try {
       // @ts-expect-error Chrome-only API
       const handle: { localStorage: Storage } =
@@ -176,7 +172,9 @@ export function LoginScreen(): JSX.Element {
         await tryToLogin(encryptionKey);
       }
     } catch (_e) {
-      // Do nothing
+      // If the user rejected the storage access request, catch the exception
+      // but otherwise do nothing. The finally block will return the user to
+      // the regular login flow.
     } finally {
       setTryStorageAccess(false);
       setTryStorageLogin(false);
@@ -185,22 +183,34 @@ export function LoginScreen(): JSX.Element {
 
   useEffect(() => {
     (async (): Promise<void> => {
-      // Are we in an iframe? If so, we need to request storage access
-      if (window.parent !== window) {
+      // Are we in an iframe? If so, we might be able to skip requesting the
+      // user's email and password by retrieving their encryption key from the
+      // first-party local storage. Currently this only works on Chrome.
+      const parser = new UAParser();
+      const isChrome = parser.getBrowser().name === "Chrome";
+
+      if (window.parent !== window && isChrome) {
         // Do we already have access?
         const hasAccess = await document.hasStorageAccess();
         if (!hasAccess) {
           // No access, try requesting it interactively
-          // Setting this state will trigger the UI to show the "Connect to Zupass" button
+          // Setting this state will trigger the UI to show the "Connect to
+          // Zupass" button. To request storage access, the user must click
+          // the button and approve the dialog.
+          // Storage access requests must occur in response to a user action,
+          // so we can't request it automatically here and must wait for the
+          // user to click the button.
           setTryStorageAccess(true);
         } else {
           // We have access, try logging in
+          // Show a spinner:
           setTryStorageLogin(true);
-          requestStorageAccessAndLogIn();
+          // Try to read from storage and log in
+          requestStorageAndLogIn();
         }
       }
     })();
-  }, [dispatch, requestStorageAccessAndLogIn, tryToLogin]);
+  }, [dispatch, requestStorageAndLogIn, tryToLogin]);
 
   useEffect(() => {
     // Redirect to home if already logged in
@@ -247,9 +257,7 @@ export function LoginScreen(): JSX.Element {
           <Spacer h={24} />
           Do you want to connect to Zupass?
           <Spacer h={24} />
-          <Button onClick={requestStorageAccessAndLogIn}>
-            Connect to Zupass
-          </Button>
+          <Button onClick={requestStorageAndLogIn}>Connect to Zupass</Button>
         </TextCenter>
       )}
 
