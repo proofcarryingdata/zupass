@@ -185,11 +185,16 @@ export function LoginScreen(): JSX.Element {
     (async (): Promise<void> => {
       // Are we in an iframe? If so, we might be able to skip requesting the
       // user's email and password by retrieving their encryption key from the
-      // first-party local storage. Currently this only works on Chrome.
+      // first-party local storage. Currently this only works on Chrome 125+.
       const parser = new UAParser();
-      const isChrome = parser.getBrowser().name === "Chrome";
+      const browserName = parser.getBrowser().name;
+      const browserVersion = parser.getBrowser().version;
+      const isChrome125OrAbove =
+        browserName === "Chrome" &&
+        browserVersion &&
+        parseInt(browserVersion) >= 125;
 
-      if (window.parent !== window && isChrome) {
+      if (window.parent !== window && isChrome125OrAbove) {
         // Do we already have access?
         const hasAccess = await document.hasStorageAccess();
         if (!hasAccess) {
