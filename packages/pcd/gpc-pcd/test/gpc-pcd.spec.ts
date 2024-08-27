@@ -156,7 +156,7 @@ describe("GPCPCD should work", async function () {
     expect(gpcPCD.claim.revealed.owner?.nullifierHash).to.not.be.undefined;
     expect(gpcPCD.claim.revealed.watermark?.value).to.eq("some watermark");
     expect(gpcPCD.claim.config.circuitIdentifier).to.eq(
-      "proto-pod-gpc_3o-10e-8md-4nv-4x20l-5x2t"
+      "proto-pod-gpc_3o-10e-8md-4nv-4x20l-5x2t-1ov3-1ov4"
     );
 
     expect(await GPCPCDPackage.verify(gpcPCD)).to.be.true;
