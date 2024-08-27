@@ -5,6 +5,9 @@ import {
   requestUser,
   User
 } from "@pcd/passport-interface";
+import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import { v3tov4Identity } from "@pcd/semaphore-identity-v4";
+import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomBytes } from "crypto";
@@ -27,12 +30,15 @@ export async function testLogin(
 ): Promise<{ user: User; identity: Identity } | undefined> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
-  const commitment = identity.commitment.toString();
+  const v4Identity = v3tov4Identity(
+    new SemaphoreIdentityPCD(randomUUID(), { identity })
+  );
+  const v3Commitment = identity.commitment.toString();
+  const v4Commitment = v4Identity.claim.identity.commitment.toString();
 
   const confirmationEmailResult = await requestConfirmationEmail(
     application.expressContext.localEndpoint,
     email,
-    commitment,
     force
   );
 
@@ -82,7 +88,8 @@ export async function testLogin(
     application.expressContext.localEndpoint,
     email,
     token,
-    commitment,
+    v3Commitment,
+    v4Commitment,
     skipSetupPassword ? undefined : salt,
     encryptionKey,
     undefined
@@ -96,7 +103,7 @@ export async function testLogin(
   expect(newUserResult.value).to.haveOwnProperty("commitment");
   expect(newUserResult.value).to.haveOwnProperty("emails");
   expect(newUserResult.success).to.eq(true);
-  expect(newUserResult.value.commitment).to.eq(commitment);
+  expect(newUserResult.value.commitment).to.eq(v3Commitment);
   expect(newUserResult.value.emails).to.deep.eq([email]);
 
   const getUserResponse = await requestUser(
@@ -108,9 +115,6 @@ export async function testLogin(
     throw new Error("expected to get a user");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const newUserResultWoutAuthKey: any = newUserResult.value;
-  delete newUserResultWoutAuthKey.authKey;
   expect(getUserResponse.value).to.deep.eq(newUserResult.value);
 
   return { user: getUserResponse.value, identity };

@@ -23,9 +23,6 @@
       "path": "../emitter/tsconfig.esm.json"
     },
     {
-      "path": "../../pcd/obj-pcd/tsconfig.esm.json"
-    },
-    {
       "path": "../passport-crypto/tsconfig.esm.json"
     },
     {
@@ -42,6 +39,12 @@
     },
     {
       "path": "../../pcd/semaphore-identity-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-v4/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/pod-pcd/tsconfig.esm.json"
     },
     {
       "path": "../../pcd/semaphore-signature-pcd/tsconfig.esm.json"

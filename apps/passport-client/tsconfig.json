@@ -83,9 +83,6 @@
       "path": "../../packages/ui/message-pcd-ui"
     },
     {
-      "path": "../../packages/pcd/obj-pcd"
-    },
-    {
       "path": "../../packages/lib/passport-crypto"
     },
     {
@@ -116,9 +113,6 @@
       "path": "../../packages/ui/pod-pcd-ui"
     },
     {
-      "path": "../../packages/lib/podspec"
-    },
-    {
       "path": "../../packages/pcd/rsa-image-pcd"
     },
     {
@@ -147,6 +141,9 @@
     },
     {
       "path": "../../packages/ui/semaphore-identity-pcd-ui"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-identity-v4"
     },
     {
       "path": "../../packages/pcd/semaphore-signature-pcd"

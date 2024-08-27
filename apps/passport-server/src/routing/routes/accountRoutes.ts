@@ -64,14 +64,11 @@ export function initAccountRoutes(
     const email = normalizeEmail(
       checkBody<ConfirmEmailRequest, "email">(req, "email")
     );
-    const commitment = checkBody<ConfirmEmailRequest, "commitment">(
-      req,
-      "commitment"
-    );
+
     const force =
       checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
 
-    await userService.handleSendTokenEmail(email, commitment, force, res);
+    await userService.handleSendTokenEmail(email, force, res);
   });
 
   /**
@@ -93,6 +90,10 @@ export function initAccountRoutes(
   app.post("/account/one-click-login", async (req: Request, res: Response) => {
     const email = checkBody<OneClickLoginRequest, "email">(req, "email");
     const code = checkBody<OneClickLoginRequest, "code">(req, "code");
+    const v4Commitment = checkBody<OneClickLoginRequest, "v4Commitment">(
+      req,
+      "v4Commitment"
+    );
     const commitment = checkBody<OneClickLoginRequest, "commitment">(
       req,
       "commitment"
@@ -106,6 +107,7 @@ export function initAccountRoutes(
       email,
       code,
       commitment,
+      v4Commitment,
       encryptionKey,
       res
     );
@@ -139,6 +141,10 @@ export function initAccountRoutes(
     const { salt, encryptionKey, autoRegister } =
       req.body as CreateNewUserRequest as CreateNewUserRequest;
     const token = checkBody<CreateNewUserRequest, "token">(req, "token");
+    const v4Commitment = checkBody<CreateNewUserRequest, "v4Commitment">(
+      req,
+      "v4Commitment"
+    );
     const commitment = checkBody<CreateNewUserRequest, "commitment">(
       req,
       "commitment"
@@ -148,6 +154,7 @@ export function initAccountRoutes(
       token,
       email,
       commitment,
+      v4Commitment,
       salt,
       encryptionKey,
       autoRegister,
@@ -156,12 +163,32 @@ export function initAccountRoutes(
   });
 
   /**
+   * Lets a client upload its v4 commitment to zupass, which happens in the case that
+   * a user has a v3 identity and zupass account that existed prior to the introduction
+   * of the v4 identity.
+   */
+  app.post(
+    "/account/add-v4-commitment",
+    async (req: Request, res: Response) => {
+      const v4SigCredential = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
+
+      const result = await userService.handleAddV4Commitment(v4SigCredential);
+
+      if (result.success) {
+        res.status(200).json(result.value);
+      } else {
+        res.status(403).send(result.error);
+      }
+    }
+  );
+
+  /**
    * Records that the user has agreed to a given version of the legal terms.
    */
   app.post("/account/agree-terms", async (req: Request, res: Response) => {
-    const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
+    const v4SigCredential = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
-    const result = await userService.handleAgreeTerms(pcd);
+    const result = await userService.handleAgreeTerms(v4SigCredential);
 
     if (result.success) {
       res.status(200).json(result.value);
@@ -217,12 +244,12 @@ export function initAccountRoutes(
     const newEmail = checkBody<AddUserEmailRequest, "newEmail">(req, "newEmail")
       .trim()
       .toLocaleLowerCase();
-    const pcd = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
+    const v4SigCredential = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
     const confirmationCode = req.body.confirmationCode as string | undefined;
 
     const result = await userService.handleAddUserEmail(
       newEmail,
-      pcd,
+      v4SigCredential,
       confirmationCode
     );
 
@@ -239,9 +266,15 @@ export function initAccountRoutes(
     )
       .trim()
       .toLocaleLowerCase();
-    const pcd = checkBody<RemoveUserEmailRequest, "pcd">(req, "pcd");
+    const v4SigCredential = checkBody<RemoveUserEmailRequest, "pcd">(
+      req,
+      "pcd"
+    );
 
-    const result = await userService.handleRemoveUserEmail(emailToRemove, pcd);
+    const result = await userService.handleRemoveUserEmail(
+      emailToRemove,
+      v4SigCredential
+    );
 
     res.status(200).json(result);
   });
@@ -262,13 +295,16 @@ export function initAccountRoutes(
     )
       .trim()
       .toLocaleLowerCase();
-    const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
+    const v4SigCredential = checkBody<ChangeUserEmailRequest, "pcd">(
+      req,
+      "pcd"
+    );
     const confirmationCode = req.body.confirmationCode as string | undefined;
 
     const result = await userService.handleChangeUserEmail(
       oldEmail,
       newEmail,
-      pcd,
+      v4SigCredential,
       confirmationCode
     );
 

@@ -15,6 +15,7 @@ export async function requestCreateNewUser(
   email: string,
   token: string,
   commitment: string,
+  v4Commitment: string,
   salt: HexString | undefined,
   encryptionKey: HexString | undefined,
   autoRegister: boolean | undefined
@@ -29,6 +30,7 @@ export async function requestCreateNewUser(
       email,
       token,
       commitment,
+      v4Commitment,
       salt,
       encryptionKey,
       autoRegister

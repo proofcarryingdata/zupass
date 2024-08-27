@@ -1,9 +1,18 @@
 import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { PODPCDPackage } from "@pcd/pod-pcd";
+import {
+  SemaphoreIdentityPCDPackage,
+  SemaphoreIdentityPCDTypeName
+} from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityV4PCD,
+  SemaphoreIdentityV4PCDTypeName,
+  v4PrivateKey
+} from "@pcd/semaphore-identity-v4";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { ONE_HOUR_MS } from "@pcd/util";
+import { ONE_HOUR_MS, randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import {
   Credential,
@@ -39,6 +48,11 @@ const CACHE_TTL = ONE_HOUR_MS;
 export const PODBOX_CREDENTIAL_REQUEST: CredentialRequest = {
   pcdType: "email-pcd",
   signatureType: "sempahore-signature-pcd"
+};
+
+export const PODBOX_SEMAPHORE_V4_CREDENTIAL_REQUEST: CredentialRequest = {
+  pcdType: "email-pcd",
+  signatureType: "semaphore-v4-signature-pcd"
 };
 
 export const ZUPASS_CREDENTIAL_REQUEST: CredentialRequest = {
@@ -81,6 +95,13 @@ export class CredentialManager implements CredentialManagerAPI {
 
   // Can we get a credential containing a given PCD type?
   public canGenerateCredential(req: CredentialRequest): boolean {
+    const hasV4Identity =
+      this.pcds.getPCDsByType(SemaphoreIdentityV4PCDTypeName).length !== 0;
+
+    if (req.signatureType === "semaphore-v4-signature-pcd" && !hasV4Identity) {
+      return false;
+    }
+
     if (req.pcdType === "email-pcd") {
       return this.pcds.getPCDsByType(req.pcdType).length !== 0;
     } else if (req.pcdType === undefined) {
@@ -109,9 +130,21 @@ export class CredentialManager implements CredentialManagerAPI {
   }
 
   private getCurrentCacheId(): string {
-    return (this.pcds.getPCDsByType(EmailPCDTypeName) as EmailPCD[])
+    const idSection = this.pcds
+      .getAll()
+      .filter(
+        (p) =>
+          p.type === SemaphoreIdentityV4PCDTypeName ||
+          p.type === SemaphoreIdentityPCDTypeName
+      )
+      .map((p) => p.id)
+      .join(":");
+    const emailSection = (
+      this.pcds.getPCDsByType(EmailPCDTypeName) as EmailPCD[]
+    )
       .map((p) => p.claim.emailAddress)
       .join(":");
+    return emailSection + ":" + idSection;
   }
 
   // Adds a credential to the cache
@@ -207,9 +240,12 @@ export class CredentialManager implements CredentialManagerAPI {
         pcds.map((pcd) => this.pcds.serialize(pcd))
       );
 
-      return this.semaphoreSignPayload(createCredentialPayload(emailPCDs));
+      return this.signPayload(
+        createCredentialPayload(emailPCDs),
+        req.signatureType
+      );
     } else if (req.pcdType === undefined) {
-      return this.semaphoreSignPayload(createCredentialPayload());
+      return this.signPayload(createCredentialPayload(), req.signatureType);
     } else {
       throw new Error(
         `Cannot issue credential containing a PCD of type ${req.pcdType}`
@@ -218,25 +254,60 @@ export class CredentialManager implements CredentialManagerAPI {
   }
 
   // Takes a payload and wraps it in a signature PCD.
-  private async semaphoreSignPayload(
-    payload: CredentialPayload
+  private async signPayload(
+    payload: CredentialPayload,
+    signatureType: CredentialRequest["signatureType"]
   ): Promise<Credential> {
-    // In future we might support other types of signature here
-    const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
-      identity: {
-        argumentType: ArgumentTypeName.PCD,
-        value: await SemaphoreIdentityPCDPackage.serialize(
-          await SemaphoreIdentityPCDPackage.prove({
-            identity: this.identity
-          })
-        )
+    if (signatureType === "sempahore-signature-pcd") {
+      // In future we might support other types of signature here
+      const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
+        identity: {
+          argumentType: ArgumentTypeName.PCD,
+          value: await SemaphoreIdentityPCDPackage.serialize(
+            await SemaphoreIdentityPCDPackage.prove({
+              identity: this.identity
+            })
+          )
+        },
+        signedMessage: {
+          argumentType: ArgumentTypeName.String,
+          value: JSON.stringify(payload)
+        }
+      });
+
+      return await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
+    }
+
+    const v4Identity = this.pcds.getPCDsByType(
+      SemaphoreIdentityV4PCDTypeName
+    )[0] as SemaphoreIdentityV4PCD | undefined;
+
+    if (!v4Identity) {
+      throw new Error("Could not find a SemaphoreIdentityV4PCD");
+    }
+
+    const privateKeyString: string = v4PrivateKey(v4Identity.claim.identity);
+
+    const pcd = await PODPCDPackage.prove({
+      entries: {
+        argumentType: ArgumentTypeName.Object,
+        value: {
+          signedValue: {
+            type: "string",
+            value: JSON.stringify(payload)
+          }
+        }
       },
-      signedMessage: {
+      privateKey: {
         argumentType: ArgumentTypeName.String,
-        value: JSON.stringify(payload)
+        value: privateKeyString
+      },
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: randomUUID()
       }
     });
 
-    return await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
+    return await PODPCDPackage.serialize(pcd);
   }
 }

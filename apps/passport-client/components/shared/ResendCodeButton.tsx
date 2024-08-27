@@ -1,7 +1,6 @@
 import { requestConfirmationEmail } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../src/appConfig";
-import { useIdentity } from "../../src/appHooks";
 import { Button } from "../core";
 
 interface ResendCodeButtonProps {
@@ -11,7 +10,6 @@ interface ResendCodeButtonProps {
 export function ResendCodeButton({
   email
 }: ResendCodeButtonProps): JSX.Element {
-  const identity = useIdentity();
   // If not zero, this is the number of seconds the user will have
   // to wait before clicking this button again. Technically, this
   // frontend check doesn't really matter for sophisticated actors,
@@ -44,12 +42,7 @@ export function ResendCodeButton({
   ): Promise<void> => {
     event.preventDefault();
     console.log("handling click");
-    await requestConfirmationEmail(
-      appConfig.zupassServer,
-      email,
-      identity.commitment.toString(),
-      true
-    );
+    await requestConfirmationEmail(appConfig.zupassServer, email, true);
     startTimer();
   };
 

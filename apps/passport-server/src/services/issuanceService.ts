@@ -61,7 +61,7 @@ import {
   setKnownPublicKey,
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
-import { fetchUserByCommitment } from "../database/queries/users";
+import { fetchUserByV3Commitment } from "../database/queries/users";
 import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchAllUsersWithZuzaluTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
@@ -342,7 +342,10 @@ export class IssuanceService {
   private async checkUserExists({
     semaphoreId
   }: VerifiedCredential): Promise<UserRow | null> {
-    const user = await fetchUserByCommitment(this.context.dbPool, semaphoreId);
+    const user = await fetchUserByV3Commitment(
+      this.context.dbPool,
+      semaphoreId
+    );
 
     if (user === null) {
       logger(

@@ -1,5 +1,4 @@
 import { Emitter } from "@pcd/emitter";
-import { ObjPCD, ObjPCDPackage } from "@pcd/obj-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   PCDAction,
@@ -13,7 +12,7 @@ import {
   PCDTypeNameOf,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { isFulfilled, randomUUID } from "@pcd/util";
+import { isFulfilled } from "@pcd/util";
 import stringify from "fast-json-stable-stringify";
 import { v4 as uuid } from "uuid";
 import { CredentialManagerAPI } from "./CredentialManager";
@@ -240,44 +239,6 @@ export class FeedSubscriptionManager {
     return actions;
   }
 
-  private static AUTH_KEY_KEY = "authKey";
-  public static saveAuthKey(authKey: string | undefined): void {
-    if (authKey === undefined) {
-      localStorage?.removeItem(this.AUTH_KEY_KEY);
-    } else {
-      localStorage?.setItem(this.AUTH_KEY_KEY, authKey);
-    }
-  }
-
-  public getSavedAuthKey(): string | undefined {
-    return (
-      localStorage?.getItem(FeedSubscriptionManager.AUTH_KEY_KEY) ?? undefined
-    );
-  }
-
-  private async getAuthKeyForFeed(
-    sub: Subscription
-  ): Promise<string | undefined> {
-    const podboxServerUrl = process.env.PASSPORT_SERVER_URL;
-    if (!podboxServerUrl) {
-      return undefined;
-    }
-
-    if (!sub.providerUrl.startsWith(podboxServerUrl)) {
-      return undefined;
-    }
-
-    return this.getSavedAuthKey();
-  }
-
-  private async makeAlternateCredentialPCD(
-    authKey: string
-  ): Promise<SerializedPCD> {
-    return ObjPCDPackage.serialize(
-      new ObjPCD(randomUUID(), {}, { obj: { authKey } })
-    );
-  }
-
   /**
    * Performs the network fetch of a subscription, and inspects the results
    * for validity. The error log for the subscription will be reset and
@@ -293,7 +254,7 @@ export class FeedSubscriptionManager {
     try {
       const pcdCredential: SerializedPCD | undefined =
         await credentialManager.requestCredential({
-          signatureType: "sempahore-signature-pcd",
+          signatureType: subscription.feed.credentialRequest.signatureType,
           pcdType: subscription.feed.credentialRequest.pcdType
         });
 
@@ -689,7 +650,7 @@ export interface SubscriptionProvider {
 // The configuration of the credential required by a feed server
 export interface CredentialRequest {
   // Can be extended as more signature types are supported
-  signatureType: "sempahore-signature-pcd";
+  signatureType: "sempahore-signature-pcd" | "semaphore-v4-signature-pcd";
   // Can be extended as more PCD types are supported
   // Including a PCD in the credential is optional. We might also want to
   // query on more than just type of PCD in future.

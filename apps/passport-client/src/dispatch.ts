@@ -32,6 +32,7 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
+import { v3tov4Identity, v4PublicKey } from "@pcd/semaphore-identity-v4";
 import { assertUnreachable, sleep } from "@pcd/util";
 import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
@@ -122,7 +123,6 @@ export type Action =
       type: "load-after-login";
       storage: StorageWithRevision;
       encryptionKey: string;
-      authKey?: string;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
   | { type: "password-change-on-other-tab" }
@@ -236,12 +236,7 @@ export async function dispatch(
     case "reset-passport":
       return resetPassport(state, update);
     case "load-after-login":
-      return loadAfterLogin(
-        action.encryptionKey,
-        action.authKey,
-        action.storage,
-        update
-      );
+      return loadAfterLogin(action.encryptionKey, action.storage, update);
     case "set-modal":
       return update({
         modal: action.modal
@@ -327,14 +322,14 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ): Promise<void> {
-  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
-  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+  const v3Identity = await SemaphoreIdentityPCDPackage.prove({ identity });
+  const v4Identity = v3tov4Identity(v3Identity);
+  const pcds = new PCDCollection(await getPackages(), [v3Identity, v4Identity]);
 
   await savePCDs(pcds);
+  update({ pcds });
 
   window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
-
-  update({ pcds });
 }
 
 async function oneClickLogin(
@@ -352,7 +347,11 @@ async function oneClickLogin(
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
     identity: state.identity
   });
-  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+  const v4IdentityPCD = v3tov4Identity(identityPCD);
+  const pcds = new PCDCollection(await getPackages(), [
+    identityPCD,
+    v4IdentityPCD
+  ]);
 
   await savePCDs(pcds);
   update({ pcds });
@@ -370,6 +369,7 @@ async function oneClickLogin(
     email,
     code,
     state.identity.commitment.toString(),
+    v4PublicKey(v4IdentityPCD.claim.identity),
     encryptionKey
   );
 
@@ -378,7 +378,6 @@ async function oneClickLogin(
     if (oneClickLoginResult.value.isNewUser) {
       return finishAccountCreation(
         oneClickLoginResult.value.zupassUser,
-        oneClickLoginResult.value.authKey,
         state,
         update,
         targetFolder
@@ -398,7 +397,6 @@ async function oneClickLogin(
       if (storageResult.success) {
         return loadAfterLogin(
           oneClickLoginResult.value.encryptionKey,
-          oneClickLoginResult.value.authKey,
           storageResult.value,
           update
         );
@@ -440,13 +438,19 @@ async function createNewUserSkipPassword(
   update({
     modal: { modalType: "none" }
   });
+
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+    identity: state.identity
+  });
+  const v4IdentityPCD = v3tov4Identity(identityPCD);
+
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
   if (autoRegister) {
-    const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-      identity: state.identity
-    });
-    const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+    const pcds = new PCDCollection(await getPackages(), [
+      identityPCD,
+      v4IdentityPCD
+    ]);
 
     await savePCDs(pcds);
     update({ pcds });
@@ -465,6 +469,7 @@ async function createNewUserSkipPassword(
     email,
     token,
     state.identity.commitment.toString(),
+    v4PublicKey(v4IdentityPCD.claim.identity),
     undefined,
     encryptionKey,
     autoRegister
@@ -473,7 +478,6 @@ async function createNewUserSkipPassword(
   if (newUserResult.success) {
     return finishAccountCreation(
       newUserResult.value,
-      newUserResult.value.authKey,
       state,
       update,
       targetFolder
@@ -506,23 +510,25 @@ async function createNewUserWithPassword(
     encryptionKey
   });
 
+  const v4IdentityPCD = v3tov4Identity(
+    await SemaphoreIdentityPCDPackage.prove({
+      identity: state.identity
+    })
+  );
+
   const newUserResult = await requestCreateNewUser(
     appConfig.zupassServer,
     email,
     token,
     state.identity.commitment.toString(),
+    v4PublicKey(v4IdentityPCD.claim.identity),
     newSalt,
     undefined,
     undefined
   );
 
   if (newUserResult.success) {
-    return finishAccountCreation(
-      newUserResult.value,
-      newUserResult.value.authKey,
-      state,
-      update
-    );
+    return finishAccountCreation(newUserResult.value, state, update);
   }
 
   update({
@@ -540,7 +546,6 @@ async function createNewUserWithPassword(
  */
 async function finishAccountCreation(
   user: User,
-  authKey: string,
   state: AppState,
   update: ZuUpdate,
   targetFolder?: string | null
@@ -563,7 +568,6 @@ async function finishAccountCreation(
     return; // Don't save the bad identity. User must reset account.
   }
 
-  FeedSubscriptionManager.saveAuthKey(authKey);
   const subscriptions = new FeedSubscriptionManager(new NetworkFeedApi());
   addZupassProvider(subscriptions);
   const emailSub = await subscriptions.subscribe(
@@ -766,7 +770,6 @@ async function removePCD(
 
 async function loadAfterLogin(
   encryptionKey: string,
-  authKey: string | undefined,
   storage: StorageWithRevision,
   update: ZuUpdate
 ): Promise<void> {
@@ -774,8 +777,6 @@ async function loadAfterLogin(
     storage.storage,
     await getPackages()
   );
-
-  FeedSubscriptionManager.saveAuthKey(authKey);
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
   const userResponse = await requestUser(
@@ -1062,7 +1063,7 @@ async function doSync(
       };
 
       // first, always poll the email feed
-      await state.subscriptions.pollEmailSubscription(
+      const _emailActions = await state.subscriptions.pollEmailSubscription(
         ZUPASS_FEED_URL,
         credentialManager,
         onSubscriptionResult
@@ -1479,7 +1480,7 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   );
 
   const pcd = await credentialManager.requestCredential({
-    signatureType: "sempahore-signature-pcd"
+    signatureType: "semaphore-v4-signature-pcd"
   });
 
   const res = await requestDeleteAccount(appConfig.zupassServer, { pcd });

@@ -1,9 +1,11 @@
 import { HexString, getHash } from "@pcd/passport-crypto";
 import {
   AddUserEmailResponseValue,
+  AddV4CommitmentResult,
   AgreeTermsResult,
   ChangeUserEmailResponseValue,
   ConfirmEmailResponseValue,
+  Credential,
   EmailUpdateError,
   LATEST_PRIVACY_NOTICE,
   NewUserResponseValue,
@@ -11,7 +13,8 @@ import {
   RemoveUserEmailResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
   VerifiedCredential,
-  VerifyTokenResponseValue
+  VerifyTokenResponseValue,
+  verifyAddV4CommitmentRequestPCD
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -29,15 +32,16 @@ import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
-  deleteE2EEByCommitment,
+  deleteE2EEByV3Commitment,
   fetchEncryptedStorage
 } from "../database/queries/e2ee";
 import { upsertUser } from "../database/queries/saveUser";
 import {
   deleteUserByUUID,
-  fetchUserByCommitment,
   fetchUserByEmail,
-  fetchUserByUUID
+  fetchUserByUUID,
+  fetchUserByV3Commitment,
+  fetchUserForCredential
 } from "../database/queries/users";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
@@ -116,14 +120,12 @@ export class UserService {
 
   public async handleSendTokenEmail(
     email: string,
-    commitment: string,
     force: boolean,
     res: Response
   ): Promise<void> {
     logger(
       `[USER_SERVICE] send-token-email ${JSON.stringify({
         email,
-        commitment,
         force
       })}`
     );
@@ -171,12 +173,6 @@ export class UserService {
       throw new PCDHTTPError(403, `'${email}' already registered`);
     }
 
-    logger(
-      `Saved login token for ${
-        existingCommitment === null ? "NEW" : "EXISTING"
-      } email=${email} commitment=${commitment}`
-    );
-
     if (this.bypassEmail) {
       logger("[DEV] Bypassing email, returning token");
       res.status(200).json({
@@ -222,6 +218,7 @@ export class UserService {
     email: string,
     code: string,
     commitment: string,
+    v4Commitment: string,
     encryption_key: string,
     res: Response
   ): Promise<void> {
@@ -261,8 +258,7 @@ export class UserService {
     if (existingUser) {
       res.status(200).json({
         isNewUser: false,
-        encryptionKey: existingUser.encryption_key,
-        authKey: existingUser.auth_key
+        encryptionKey: existingUser.encryption_key
       } satisfies OneClickLoginResponseValue);
       return;
     }
@@ -271,6 +267,7 @@ export class UserService {
       uuid: randomUUID(),
       emails: [email],
       commitment,
+      semaphore_v4_id: v4Commitment,
       encryption_key,
       terms_agreed: LATEST_PRIVACY_NOTICE,
       extra_issuance: false
@@ -302,8 +299,7 @@ export class UserService {
     logger(`[USER_SERVICE] logged in a user`, userJson);
     res.status(200).json({
       isNewUser: true,
-      zupassUser: userJson,
-      authKey: user.auth_key
+      zupassUser: userJson
     } satisfies OneClickLoginResponseValue);
   }
 
@@ -311,6 +307,7 @@ export class UserService {
     token: string,
     email: string,
     commitment: string,
+    v4Commitment: string,
     salt: string | undefined,
     encryption_key: string | undefined,
     autoRegister: boolean | undefined,
@@ -320,7 +317,8 @@ export class UserService {
       `[USER_SERVICE] new-user ${JSON.stringify({
         token,
         email,
-        commitment
+        commitment,
+        v4Commitment
       })}`
     );
 
@@ -356,11 +354,12 @@ export class UserService {
 
     await this.emailTokenService.saveNewTokenForEmail(email);
 
-    logger(`[USER_SERVICE] Saving commitment: ${commitment}`);
+    logger(`[USER_SERVICE] Saving commitment: ${commitment}, ${v4Commitment}`);
     await upsertUser(this.context.dbPool, {
       uuid: existingUser ? existingUser.uuid : randomUUID(),
       emails: existingUser ? existingUser.emails : [email],
       commitment,
+      semaphore_v4_id: v4Commitment,
       salt,
       encryption_key,
       // If the user already exists, then they're accessing this via the
@@ -393,8 +392,7 @@ export class UserService {
 
     const userJson = userRowToZupassUserJson(user);
     const response: NewUserResponseValue = {
-      ...userJson,
-      authKey: user.auth_key
+      ...userJson
     };
 
     logger(`[USER_SERVICE] logged in a user`, userJson);
@@ -453,7 +451,7 @@ export class UserService {
   public async getUserByCommitment(
     commitment: string
   ): Promise<UserRow | null> {
-    const user = await fetchUserByCommitment(this.context.dbPool, commitment);
+    const user = await fetchUserByV3Commitment(this.context.dbPool, commitment);
 
     if (!user) {
       logger("[SEMA] no user with that commitment exists");
@@ -469,13 +467,9 @@ export class UserService {
     const verifyResult =
       await this.credentialSubservice.tryVerify(serializedPCD);
 
-    if (!verifyResult) {
-      throw new PCDHTTPError(400, "Invalid signature");
-    }
-
-    const user = await fetchUserByCommitment(
+    const user = await fetchUserForCredential(
       this.context.dbPool,
-      verifyResult.semaphoreId
+      verifyResult
     );
 
     if (!user) {
@@ -483,7 +477,55 @@ export class UserService {
     }
 
     await deleteUserByUUID(this.context.dbPool, user.uuid);
-    await deleteE2EEByCommitment(this.context.dbPool, user.commitment);
+    await deleteE2EEByV3Commitment(this.context.dbPool, user.commitment);
+  }
+
+  public async getUserForUnverifiedCredential(
+    credential: Credential
+  ): Promise<UserRow | null> {
+    return fetchUserForCredential(
+      this.context.dbPool,
+      await this.credentialSubservice.verifyAndExpectZupassEmail(credential)
+    );
+  }
+
+  public async getUserForCredential(
+    credential: VerifiedCredential
+  ): Promise<UserRow | null> {
+    return fetchUserForCredential(this.context.dbPool, credential);
+  }
+
+  /**
+   * @param sig created by {@link makeAddV4CommitmentRequest}
+   */
+  public async handleAddV4Commitment(
+    sig: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<AddV4CommitmentResult> {
+    const v3Sig = await SemaphoreSignaturePCDPackage.deserialize(sig.pcd);
+
+    const verification = await verifyAddV4CommitmentRequestPCD(v3Sig);
+
+    if (!verification) {
+      throw new PCDHTTPError(400);
+    }
+
+    const user = await fetchUserByV3Commitment(
+      this.context.dbPool,
+      verification.v3Id
+    );
+
+    if (!user) {
+      throw new PCDHTTPError(400, "User not found");
+    }
+
+    user.semaphore_v4_id = verification.v4Id;
+
+    await upsertUser(this.context.dbPool, user);
+
+    return {
+      success: true,
+      value: undefined
+    };
   }
 
   /**
@@ -514,7 +556,7 @@ export class UserService {
     }
 
     const payload = parsedPayload.data;
-    const user = await fetchUserByCommitment(
+    const user = await fetchUserByV3Commitment(
       this.context.dbPool,
       pcd.claim.identityCommitment
     );
@@ -591,8 +633,7 @@ export class UserService {
     }
 
     return {
-      encryptionKey: user?.encryption_key ?? null,
-      authKey: user?.auth_key ?? null
+      encryptionKey: user?.encryption_key ?? null
     };
   }
 
@@ -602,25 +643,19 @@ export class UserService {
    */
   public async handleAddUserEmail(
     emailToAdd: string,
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
+    unverifiedCredential: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
   ): Promise<AddUserEmailResponseValue> {
     logger(
       "[USER_SERVICE] handleAddUserEmail",
       emailToAdd,
       confirmationCode,
-      serializedPCD
+      unverifiedCredential
     );
 
-    let credential: VerifiedCredential;
-    try {
-      const verifiedCredential =
-        await this.credentialSubservice.tryVerify(serializedPCD);
-      if (!verifiedCredential) {
-        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
-      }
-      credential = verifiedCredential;
-    } catch {
+    const requestingUser =
+      await this.getUserForUnverifiedCredential(unverifiedCredential);
+    if (!requestingUser) {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
@@ -631,13 +666,6 @@ export class UserService {
     const maybeExistingUserOfNewEmail = await this.getUserByEmail(emailToAdd);
     if (maybeExistingUserOfNewEmail) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
-    }
-
-    const requestingUser = await this.getUserByCommitment(
-      credential.semaphoreId
-    );
-    if (!requestingUser) {
-      throw new PCDHTTPError(400, EmailUpdateError.Unknown);
     }
 
     if (confirmationCode === undefined) {
@@ -689,31 +717,18 @@ export class UserService {
 
   public async handleRemoveUserEmail(
     emailToRemove: string,
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+    unverifiedCredential: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<RemoveUserEmailResponseValue> {
     logger(
       "[USER_SERVICE] handleRemoveUserEmail",
       emailToRemove,
-      serializedPCD
+      unverifiedCredential
     );
 
-    let credential: VerifiedCredential;
-    try {
-      const verifiedCredential =
-        await this.credentialSubservice.tryVerify(serializedPCD);
-      if (!verifiedCredential) {
-        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
-      }
-      credential = verifiedCredential;
-    } catch (error) {
-      throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
-    }
-
-    const requestingUser = await this.getUserByCommitment(
-      credential.semaphoreId
-    );
+    const requestingUser =
+      await this.getUserForUnverifiedCredential(unverifiedCredential);
     if (!requestingUser) {
-      throw new PCDHTTPError(400, EmailUpdateError.UserNotFound);
+      throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
     if (!requestingUser.emails.includes(emailToRemove)) {
@@ -749,7 +764,7 @@ export class UserService {
   public async handleChangeUserEmail(
     oldEmail: string,
     newEmail: string,
-    pcd: SerializedPCD<SemaphoreSignaturePCD>,
+    unverifiedCredential: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
   ): Promise<ChangeUserEmailResponseValue> {
     logger(
@@ -757,34 +772,18 @@ export class UserService {
       oldEmail,
       newEmail,
       confirmationCode,
-      pcd
+      unverifiedCredential
     );
 
-    let credential: VerifiedCredential;
-    try {
-      if (!validateEmail(newEmail)) {
-        throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
-      }
-
-      const verifiedCredential = await this.credentialSubservice.tryVerify(pcd);
-      if (!verifiedCredential) {
-        throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
-      }
-      credential = verifiedCredential;
-    } catch {
+    const requestingUser =
+      await this.getUserForUnverifiedCredential(unverifiedCredential);
+    if (!requestingUser) {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
     const maybeExistingUserOfNewEmail = await this.getUserByEmail(newEmail);
     if (maybeExistingUserOfNewEmail) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
-    }
-
-    const requestingUser = await this.getUserByCommitment(
-      credential.semaphoreId
-    );
-    if (!requestingUser) {
-      throw new PCDHTTPError(404, EmailUpdateError.UserNotFound);
     }
 
     if (requestingUser.emails.length !== 1) {

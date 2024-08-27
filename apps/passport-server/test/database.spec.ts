@@ -54,8 +54,8 @@ import {
 import { upsertUser } from "../src/database/queries/saveUser";
 import {
   deleteUserByEmail,
-  fetchUserByCommitment,
-  fetchUserByEmail
+  fetchUserByEmail,
+  fetchUserByV3Commitment
 } from "../src/database/queries/users";
 import { deleteZuzaluTicket } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import {
@@ -515,7 +515,7 @@ describe("database reads and writes", function () {
     expect(insertedCommitment.emails).to.deep.eq([email]);
     expect(insertedCommitment.uuid).to.eq(uuid);
 
-    expect(await fetchUserByCommitment(db, commitment)).to.deep.eq(
+    expect(await fetchUserByV3Commitment(db, commitment)).to.deep.eq(
       insertedCommitment
     );
 

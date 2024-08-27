@@ -1,3 +1,4 @@
+import { VerifiedCredential } from "@pcd/passport-interface";
 import { Pool } from "postgres-pool";
 import { UserRow } from "../models";
 import { sqlQuery } from "../sqlQuery";
@@ -37,26 +38,6 @@ export async function fetchUserByUUID(
      WHERE u.uuid = $1
      GROUP BY u.uuid`,
     [uuid]
-  );
-
-  return result.rows[0] || null;
-}
-
-/**
- * Fetches the user row corresponding to a particular auth_key from the database.
- */
-export async function fetchUserByAuthKey(
-  client: Pool,
-  authKey: string
-): Promise<UserRow | null> {
-  const result = await sqlQuery(
-    client,
-    `SELECT u.*, array_agg(ue.email) as emails
-     FROM users u
-     LEFT JOIN user_emails ue ON u.uuid = ue.user_id
-     WHERE u.auth_key = $1
-     GROUP BY u.uuid`,
-    [authKey]
   );
 
   return result.rows[0] || null;
@@ -115,11 +96,39 @@ export async function fetchUserCount(client: Pool): Promise<number> {
 }
 
 /**
- * Fetches a user by their semaphore commitment.
+ * Fetches a user by their semaphore v4 commitment.
  */
-export async function fetchUserByCommitment(
+export async function fetchUserForCredential(
   client: Pool,
-  commitment: string
+  credential?: VerifiedCredential | null
+): Promise<UserRow | null> {
+  if (!credential) {
+    return null;
+  }
+
+  const result = await sqlQuery(
+    client,
+    `SELECT u.*, array_agg(ue.email) as emails
+    FROM users u
+    LEFT JOIN user_emails ue ON u.uuid = ue.user_id
+    WHERE u.commitment = $1
+    GROUP BY u.uuid`,
+    [credential.semaphoreId]
+  );
+
+  if (result.rowCount === 0) {
+    return null;
+  }
+
+  return result.rows[0];
+}
+
+/**
+ * Fetches a user by their semaphore v3 commitment.
+ */
+export async function fetchUserByV3Commitment(
+  client: Pool,
+  v3Commitment: string
 ): Promise<UserRow | null> {
   const result = await sqlQuery(
     client,
@@ -128,7 +137,31 @@ export async function fetchUserByCommitment(
      LEFT JOIN user_emails ue ON u.uuid = ue.user_id
      WHERE u.commitment = $1
      GROUP BY u.uuid`,
-    [commitment]
+    [v3Commitment]
+  );
+
+  if (result.rowCount === 0) {
+    return null;
+  }
+
+  return result.rows[0];
+}
+
+/**
+ * Fetches a user by their semaphore v4 commitment.
+ */
+export async function fetchUserByV4Commitment(
+  client: Pool,
+  v4Commitment: string
+): Promise<UserRow | null> {
+  const result = await sqlQuery(
+    client,
+    `SELECT u.*, array_agg(ue.email) as emails
+     FROM users u
+     LEFT JOIN user_emails ue ON u.uuid = ue.user_id
+     WHERE u.semaphore_v4_id = $1
+     GROUP BY u.uuid`,
+    [v4Commitment]
   );
 
   if (result.rowCount === 0) {

@@ -40,6 +40,7 @@ SELECT
   for (const row of result.rows) {
     const user = {
       uuid: row.uuid,
+      // Semaphore v3 commitment.
       commitment: row.commitment,
       emails: row.emails,
       salt: row.salt,
@@ -48,7 +49,7 @@ SELECT
       extra_issuance: row.extra_issuance,
       time_created: row.time_created,
       time_updated: row.time_updated,
-      auth_key: row.auth_key
+      semaphore_v4_id: row.semaphore_v4_id
     } satisfies UserRow;
 
     const zuconnectTickets: ZuconnectTicketInfo[] = [];

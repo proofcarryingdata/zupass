@@ -524,6 +524,7 @@ export interface PollFeedResponseValue {
 export interface ZupassUserJson {
   uuid: string;
   commitment: string;
+  semaphore_v4_id?: string | null;
   emails: string[];
   salt: string | null;
   terms_agreed: number;
@@ -538,12 +539,6 @@ export type ConfirmEmailRequest = {
    * Each email can have one account on Zupass.
    */
   email: string;
-
-  /**
-   * Public semaphore commitment of this user. The server never learns
-   * the user's private semaphore details.
-   */
-  commitment: string;
 
   /**
    * Whether or not to overwrite an existing user, if one is present.
@@ -594,7 +589,6 @@ export type VerifyTokenRequest = {
  */
 export type VerifyTokenResponseValue = {
   encryptionKey: string | null;
-  authKey: string | null;
 };
 
 /**
@@ -615,22 +609,37 @@ export type DeviceLoginRequest = {
 export type CreateNewUserRequest = {
   email: string;
   token: string;
+  /**
+   * Semaphore v3 commitment.
+   */
   commitment: string;
+  /**
+   * Semaphore v4 commitment.
+   */
+  v4Commitment: string;
   salt: string | undefined;
   encryptionKey: string | undefined;
   autoRegister?: boolean;
 };
 
+export type AddV4CommitmentRequest = {
+  // semaphore v3 signature of semaphore v4 signature of v3 commitment
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+};
+
+export type AddV4CommitmentResponseValue = undefined;
+
 export type OneClickLoginRequest = {
   email: string;
   code: string;
   commitment: string;
+  v4Commitment: string;
   encryptionKey: string;
 };
 
 export type OneClickLoginResponseValue =
-  | { isNewUser: true; zupassUser: ZupassUserJson; authKey: string }
-  | { isNewUser: false; encryptionKey: string | null; authKey: string };
+  | { isNewUser: true; zupassUser: ZupassUserJson }
+  | { isNewUser: false; encryptionKey: string | null };
 
 /**
  * Zupass responds with this when you ask it if it is able to
@@ -662,7 +671,7 @@ export type UserResponseValue = ZupassUserJson;
 /**
  * When you ask Zupass to create a new user, it will respond with this type.
  */
-export type NewUserResponseValue = ZupassUserJson & { authKey: string };
+export type NewUserResponseValue = ZupassUserJson;
 
 /**
  * Zupass responds with this when you ask it if it knows of a given
