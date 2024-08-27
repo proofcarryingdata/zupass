@@ -1,5 +1,6 @@
 import {
   GPCProofConfig,
+  SEMAPHORE_V3,
   gpcBindConfig,
   podMembershipListsToSimplifiedJSON,
   serializeGPCProofConfig
@@ -48,7 +49,7 @@ describe("GPCPCD should work", async function () {
             E: { isRevealed: false, equalsEntry: "pod0.A" },
             owner: {
               isRevealed: false,
-              isOwnerID: true,
+              isOwnerID: SEMAPHORE_V3,
               isMemberOf: "admissibleOwners"
             }
           }
@@ -194,7 +195,7 @@ describe("GPCPCD input POD validator should work", () => {
           E: { isRevealed: false, equalsEntry: "pod0.A" },
           owner: {
             isRevealed: false,
-            isOwnerID: true,
+            isOwnerID: SEMAPHORE_V3,
             isMemberOf: "admissibleOwners"
           }
         }
@@ -357,7 +358,7 @@ describe("GPCPCD input POD validator should work", () => {
             Example: { isRevealed: false, equalsEntry: "pod0.A" },
             owner: {
               isRevealed: false,
-              isOwnerID: true,
+              isOwnerID: SEMAPHORE_V3,
               isMemberOf: "admissibleOwners"
             }
           }
