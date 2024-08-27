@@ -3,7 +3,7 @@ import { GPCPCDArgs, GPCPCDPackage, GPCPCDTypeName } from "@pcd/gpc-pcd";
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { POD } from "@pcd/pod";
-import { PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
+import { isPODPCD, PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { p } from "@pcd/podspec";
 import {
   ZupassAPI,
@@ -241,9 +241,7 @@ class PODServer extends BaseZappServer implements ZupassPOD {
     const allPCDs = this.getContext()
       .getState()
       .pcds.getAllPCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME);
-    const pods = allPCDs
-      .filter((pcd) => pcd.type === PODPCDTypeName)
-      .map((pcd) => (pcd as PODPCD).pod);
+    const pods = allPCDs.filter(isPODPCD).map((pcd) => pcd.pod);
 
     const result = q.query(pods);
 
