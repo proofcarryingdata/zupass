@@ -135,52 +135,52 @@ export function LoginScreen(): JSX.Element {
 
   const tryToLogin = useCallback(
     async (encryptionKey: string) => {
-      try {
-        // Try to download and decrypt the storage
-        const storageRequest = await requestDownloadAndDecryptStorage(
-          appConfig.zupassServer,
+      // Try to download and decrypt the storage
+      const storageRequest = await requestDownloadAndDecryptStorage(
+        appConfig.zupassServer,
+        encryptionKey
+      );
+      if (storageRequest.success) {
+        // Success, log in
+        dispatch({
+          type: "load-after-login",
+          storage: storageRequest.value,
           encryptionKey
-        );
-        if (storageRequest.success) {
-          // Success, log in
-          dispatch({
-            type: "load-after-login",
-            storage: storageRequest.value,
-            encryptionKey
-          });
-        } else {
-          // Failed to log in with key from local storage
-          // This will cause the regular login flow to kick in
-          setTryStorageLogin(false);
-        }
-      } catch (e) {
-        setTryStorageLogin(false);
+        });
       }
     },
     [dispatch]
   );
 
-  const requestStorageAccessAndLogIn = useCallback(() => {
+  const requestStorageAccessAndLogIn = useCallback(async () => {
     const parser = new UAParser();
     const isChrome = parser.getBrowser().name === "Chrome";
     if (!isChrome) {
+      // We're not on Chrome, so we can't request storage access
+      // Set the state to false to hide the "Connect to Zupass" button
+      // User will have to login manually
+      setTryStorageLogin(false);
       setTryStorageAccess(false);
       return;
     }
 
-    document
+    try {
       // @ts-expect-error Chrome-only API
-      .requestStorageAccess({ localStorage: true })
-      // @ts-expect-error Chrome-only API
-      .then((handle: { localStorage: Storage }) => {
-        // Access granted, try reading the local storage
-        const encryptionKey = handle.localStorage.getItem("encryption_key");
-        if (encryptionKey) {
-          return tryToLogin(encryptionKey);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setTryStorageAccess(false));
+      const handle: { localStorage: Storage } =
+        // @ts-expect-error Chrome-only API
+        await document.requestStorageAccess({ localStorage: true });
+
+      // Access granted, try reading the local storage
+      const encryptionKey = handle.localStorage.getItem("encryption_key");
+      if (encryptionKey) {
+        await tryToLogin(encryptionKey);
+      }
+    } catch (_e) {
+      // Do nothing
+    } finally {
+      setTryStorageAccess(false);
+      setTryStorageLogin(false);
+    }
   }, [tryToLogin]);
 
   useEffect(() => {
@@ -191,13 +191,13 @@ export function LoginScreen(): JSX.Element {
         const hasAccess = await document.hasStorageAccess();
         if (!hasAccess) {
           // No access, try requesting it interactively
+          // Setting this state will trigger the UI to show the "Connect to Zupass" button
           setTryStorageAccess(true);
         } else {
-          setTryStorageAccess(true);
+          // We have access, try logging in
+          setTryStorageLogin(true);
           requestStorageAccessAndLogIn();
         }
-        setTryStorageAccess(true);
-        // requestStorageAccess();
       }
     })();
   }, [dispatch, requestStorageAccessAndLogIn, tryToLogin]);
