@@ -238,7 +238,9 @@ class PODServer extends BaseZappServer implements ZupassPOD {
       console.log(e);
       throw e;
     }
-    const allPCDs = this.getContext().getState().pcds.getAll();
+    const allPCDs = this.getContext()
+      .getState()
+      .pcds.getAllPCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME);
     const pods = allPCDs
       .filter((pcd) => pcd.type === PODPCDTypeName)
       .map((pcd) => (pcd as PODPCD).pod);
