@@ -2,18 +2,13 @@ import type { GPCPCDArgs } from "@pcd/gpc-pcd";
 import type { SerializedPCD } from "@pcd/pcd-types";
 import { GenericSerializedPodspecPOD } from "@pcd/podspec";
 
-export type PODQuery = GenericSerializedPodspecPOD;
+/**
+ * @file This file contains the RPC interfaces for the Zupass client.
+ *
+ * These interfaces are implemented in rpc_client.ts.
+ */
 
-export type ZupassFolderContent =
-  | {
-      type: "folder";
-      name: string;
-    }
-  | {
-      type: "pcd";
-      id: string;
-      pcdType: SerializedPCD["type"];
-    };
+export type PODQuery = GenericSerializedPodspecPOD;
 
 export interface SubscriptionResult {
   subscriptionId: string;
@@ -30,7 +25,6 @@ export interface ZupassIdentity {
 }
 
 export interface ZupassPOD {
-  // Returns array of serialized PODs
   query: (query: PODQuery) => Promise<string[]>;
   insert: (serializedPod: string) => Promise<void>;
   delete: (signature: string) => Promise<void>;

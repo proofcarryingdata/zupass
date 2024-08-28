@@ -19,6 +19,11 @@ type ZupassRPCMethodName =
   | `pod.${keyof typeof ZupassAPISchema.shape.pod.shape}`
   | `identity.${keyof typeof ZupassAPISchema.shape.identity.shape}`;
 
+/**
+ * The RPC client handles low-level communication with the Zupass iframe.
+ * It is responsible for sending and receiving messages via MessagePorts,
+ * as well as for parsing the responses.
+ */
 export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
   public pod: ZupassPOD;
   public gpc: ZupassGPC;
@@ -60,7 +65,7 @@ export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
   }
 
   /**
-   * Provides type-save invocation, ensuring that we pass the correct types in
+   * Provides type-safe invocation, ensuring that we pass the correct types in
    * and that we parse the result to ensure that it is of the correct type.
    *
    * @param fn - The method name.
@@ -160,10 +165,20 @@ export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
     };
   }
 
+  /**
+   * Start the RPC client.
+   *
+   * This starts an event loop which waits indefinitely for messages from
+   * Zupass.
+   *
+   * @param onConnect - Callback to call when the Zupass client is ready.
+   */
   public start(onConnect: () => void): void {
     const eventLoop = this.main(onConnect);
     eventLoop.next();
 
+    // Set up a listener for messages from Zupass
+    // Messages are sent to the event loop for processing
     this.#port.addEventListener("message", (ev: MessageEvent) => {
       const msg = RPCMessageSchema.safeParse(ev.data);
       if (msg.success) {
@@ -240,7 +255,6 @@ export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
     this.#emitter.removeAllListeners("subscription-update");
   }
 
-  // Method to emit events
   #emitSubscriptionUpdate(update: string[], subscriptionId: string): void {
     this.#emitter.emit("subscription-update", { update, subscriptionId });
   }

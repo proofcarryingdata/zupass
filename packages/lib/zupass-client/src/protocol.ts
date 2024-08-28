@@ -1,10 +1,16 @@
 import { z } from "zod";
 import { ZappSchema } from "./zapp";
 
+/**
+ * Messages sent from the parent page to Zupass.
+ */
 export enum WindowMessageType {
   ZUPASS_CLIENT_CONNECT = "zupass-client-connect"
 }
 
+/**
+ * Messages sent via MessagePorts.
+ */
 export enum RPCMessageType {
   ZUPASS_CLIENT_INVOKE = "zupass-client-invoke",
   ZUPASS_CLIENT_INVOKE_RESULT = "zupass-client-invoke-result",
@@ -15,6 +21,9 @@ export enum RPCMessageType {
   ZUPASS_CLIENT_SUBSCRIPTION_UPDATE = "zupass-client-subscription-update"
 }
 
+/**
+ * Schema for messages sent via MessagePorts.
+ */
 export const RPCMessageSchema = z.discriminatedUnion("type", [
   z.object({
     type: z.literal(RPCMessageType.ZUPASS_CLIENT_INVOKE),

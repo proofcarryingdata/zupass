@@ -7,6 +7,14 @@ import { ZupassIdentity, ZupassRPC } from "./rpc_interfaces";
 
 type QueryType = ReturnType<typeof p.pod>;
 
+/**
+ * A Subscription object is returned to the caller when a subscription is
+ * created. It allows the caller to attach event listeners to the subscription
+ * to get updates when the PODs change.
+ *
+ * It also allows the caller to run the query immediately, which is useful on
+ * first creating the subscription, before any updates are available.
+ */
 export class Subscription {
   #emitter: EventEmitter;
   #query: QueryType;
@@ -53,13 +61,13 @@ class ZupassAPIPODWrapper {
     });
   }
 
-  async query(query: ReturnType<typeof p.pod>): Promise<POD[]> {
+  async query(query: QueryType): Promise<POD[]> {
     const serialized = query.serialize();
     const pods = await this.#api.pod.query(serialized);
     return pods.map((pod) => POD.deserialize(pod));
   }
 
-  async subscribe(query: ReturnType<typeof p.pod>): Promise<Subscription> {
+  async subscribe(query: QueryType): Promise<Subscription> {
     const serialized = query.serialize();
     const subscriptionId = await this.#api.pod.subscribe(serialized);
     const emitter = new EventEmitter();
@@ -80,6 +88,7 @@ class ZupassAPIPODWrapper {
 
 class ZupassGPCWrapper {
   #api: ZupassRPC;
+
   constructor(api: ZupassRPC) {
     this.#api = api;
   }
@@ -96,8 +105,9 @@ class ZupassGPCWrapper {
     return this.#api.gpc.verify(serialized);
   }
 }
+
 /**
- * Wraps the internal Zupass API to provide a more user-friendly interface.
+ * Wraps the Zupass RPC API to provide a more user-friendly interface.
  * Specifically, this handles serialization and deserialization of PODs and
  * query data.
  */
