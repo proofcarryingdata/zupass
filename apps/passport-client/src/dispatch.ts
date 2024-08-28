@@ -10,7 +10,9 @@ import {
   FeedSubscriptionManager,
   getNamedAPIErrorMessage,
   LATEST_PRIVACY_NOTICE,
+  makeAddV4CommitmentRequest,
   NetworkFeedApi,
+  requestAddSemaphoreV4Commitment,
   requestCreateNewUser,
   requestDeleteAccount,
   requestDownloadAndDecryptStorage,
@@ -64,7 +66,7 @@ import {
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
-import { findUserIdentityPCD } from "./user";
+import { findUserIdentityV3PCD, findUserIdentityV4PCD } from "./user";
 import {
   downloadAndMergeStorage,
   uploadSerializedStorage,
@@ -792,23 +794,42 @@ async function loadAfterLogin(
   }
 
   // Validate stored state against the user response.
-  const identityPCD = findUserIdentityPCD(pcds, userResponse.value);
+  const identityPCDV3 = findUserIdentityV3PCD(pcds, userResponse.value);
   if (
     !validateAndLogRunningAppState(
       "loadAfterLogin",
       userResponse.value,
-      identityPCD?.claim?.identity,
+      identityPCDV3?.claim?.identity,
       pcds
     )
   ) {
     userInvalid(update);
     return;
   }
-  if (!identityPCD) {
+  if (!identityPCDV3) {
     // Validation should've caught this, but the compiler doesn't know that.
     console.error("No identity PCD found in encrypted storage.");
     userInvalid(update);
     return;
+  }
+
+  const identityV4PCD = findUserIdentityV4PCD(pcds, userResponse.value);
+  if (!identityV4PCD) {
+    try {
+      const newV4Identity = v3tov4Identity(identityPCDV3);
+      pcds.add(newV4Identity);
+      const res = await requestAddSemaphoreV4Commitment(
+        appConfig.zupassServer,
+        await makeAddV4CommitmentRequest(pcds)
+      );
+      if (!res.success) {
+        throw new Error(res.error);
+      }
+    } catch (e) {
+      console.error("Failed to add V4 identity to user", e);
+      userInvalid(update);
+      return;
+    }
   }
 
   let modal: AppState["modal"] = { modalType: "none" };
@@ -831,7 +852,7 @@ async function loadAfterLogin(
   });
   saveEncryptionKey(encryptionKey);
   saveSelf(self);
-  saveIdentity(identityPCD.claim.identity);
+  saveIdentity(identityPCDV3.claim.identity);
 
   update({
     encryptionKey,
@@ -839,7 +860,7 @@ async function loadAfterLogin(
     subscriptions,
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash,
-    identity: identityPCD.claim.identity,
+    identity: identityPCDV3.claim.identity,
     self,
     modal
   });
@@ -1063,7 +1084,7 @@ async function doSync(
       };
 
       // first, always poll the email feed
-      const _emailActions = await state.subscriptions.pollEmailSubscription(
+      await state.subscriptions.pollEmailSubscription(
         ZUPASS_FEED_URL,
         credentialManager,
         onSubscriptionResult
@@ -1480,7 +1501,7 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   );
 
   const pcd = await credentialManager.requestCredential({
-    signatureType: "semaphore-v4-signature-pcd"
+    signatureType: "sempahore-signature-pcd"
   });
 
   const res = await requestDeleteAccount(appConfig.zupassServer, { pcd });

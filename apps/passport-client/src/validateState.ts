@@ -8,7 +8,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
 import { AppState } from "./state";
-import { findIdentityPCD, findUserIdentityPCD } from "./user";
+import { findIdentityV3PCD, findUserIdentityV3PCD } from "./user";
 
 /**
  * Returns `true` if {@link validateInitialAppState} returns no errors, and `false`
@@ -136,9 +136,9 @@ export function getRunningAppStateValidationErrors(
   // Find identity PCD in the standard way, using a known commitment.
   let identityPCDFromCollection = undefined;
   if (self && pcds) {
-    identityPCDFromCollection = findUserIdentityPCD(pcds, self);
+    identityPCDFromCollection = findUserIdentityV3PCD(pcds, self);
   } else if (identity && pcds) {
-    identityPCDFromCollection = findIdentityPCD(
+    identityPCDFromCollection = findIdentityV3PCD(
       pcds,
       identity.commitment.toString()
     );

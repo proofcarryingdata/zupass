@@ -650,7 +650,7 @@ export interface SubscriptionProvider {
 // The configuration of the credential required by a feed server
 export interface CredentialRequest {
   // Can be extended as more signature types are supported
-  signatureType: "sempahore-signature-pcd" | "semaphore-v4-signature-pcd";
+  signatureType: "sempahore-signature-pcd";
   // Can be extended as more PCD types are supported
   // Including a PCD in the credential is optional. We might also want to
   // query on more than just type of PCD in future.
