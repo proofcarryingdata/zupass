@@ -444,7 +444,11 @@ export async function prove(
   const { proof, publicSignals } = await groth16.fullProve(
     snarkInput,
     initArgs.wasmFilePath,
-    initArgs.zkeyFilePath
+    initArgs.zkeyFilePath,
+    undefined,
+    {
+      memorySize: 0
+    }
   );
 
   const claim = claimFromProofResult(

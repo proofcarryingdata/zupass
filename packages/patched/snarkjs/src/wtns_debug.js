@@ -18,7 +18,7 @@
 */
 
 import * as fastFile from "fastfile";
-import { WitnessCalculatorBuilder } from "@pcd/circom_runtime";
+import { WitnessCalculatorBuilder } from "circom_runtime";
 import * as wtnsUtils from "./wtns_utils.js";
 import * as binFileUtils from "@iden3/binfileutils";
 import loadSyms from "./loadsyms.js";
