@@ -2,6 +2,7 @@ import { GPCPCDArgs } from "@pcd/gpc-pcd";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { EventEmitter } from "eventemitter3";
 import { z, ZodFunction, ZodTuple, ZodTypeAny } from "zod";
+import { DialogController } from "./client";
 import { RPCMessage, RPCMessageSchema, RPCMessageType } from "./protocol";
 import {
   PODQuery,
@@ -32,7 +33,7 @@ export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
 
   // #-prefix indicates private fields, enforced at the JavaScript level so
   // that these values are not accessible outside of the class.
-  #dialog: HTMLDialogElement;
+  #dialogController: DialogController;
   #port: MessagePort;
   #serial = 0;
   #pending = new Map<
@@ -40,6 +41,7 @@ export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
     { resolve: (value: unknown) => void; reject: (reason?: unknown) => void }
   >();
   #emitter: EventEmitter;
+  #connected: boolean = false;
 
   /**
    * Invoke a method on the remote Zupass.
@@ -51,6 +53,9 @@ export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
    * @returns A promise that resolves to the method's return value.
    */
   #invoke(fn: string, args: unknown[]): Promise<unknown> {
+    if (!this.#connected) {
+      throw new Error("Client is not connected");
+    }
     this.#serial++;
     const promise = new Promise((resolve, reject) => {
       this.#pending.set(this.#serial, { resolve, reject });
@@ -96,9 +101,9 @@ export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
     }
   }
 
-  constructor(port: MessagePort, dialog: HTMLDialogElement) {
+  constructor(port: MessagePort, dialogController: DialogController) {
     this.#port = port;
-    this.#dialog = dialog;
+    this.#dialogController = dialogController;
     this.#emitter = new EventEmitter();
 
     this.pod = {
@@ -209,12 +214,13 @@ export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
       const event = yield;
       console.log(`RECEIVED ${event.type}`);
       if (event.type === RPCMessageType.ZUPASS_CLIENT_READY) {
+        this.#connected = true;
         onConnect();
         break;
       } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
-        this.#dialog.showModal();
+        this.#dialogController.show();
       } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
-        this.#dialog.close();
+        this.#dialogController.close();
       }
     }
 
@@ -226,9 +232,9 @@ export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
       } else if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_ERROR) {
         this.#pending.get(event.serial)?.reject(new Error(event.error));
       } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
-        this.#dialog.showModal();
+        this.#dialogController.show();
       } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
-        this.#dialog.close();
+        this.#dialogController.close();
       } else if (
         event.type === RPCMessageType.ZUPASS_CLIENT_SUBSCRIPTION_UPDATE
       ) {
@@ -257,5 +263,9 @@ export class ZupassRPCClient implements ZupassRPC, ZupassEvents {
 
   #emitSubscriptionUpdate(update: string[], subscriptionId: string): void {
     this.#emitter.emit("subscription-update", { update, subscriptionId });
+  }
+
+  public isConnected(): boolean {
+    return this.#connected;
   }
 }

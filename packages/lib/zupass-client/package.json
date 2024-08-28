@@ -40,6 +40,7 @@
     "@pcd/tsconfig": "0.11.1",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
+    "chai-as-promised": "^7.1.1",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",

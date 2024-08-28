@@ -3,6 +3,27 @@ import { postWindowMessage, WindowMessageType } from "./protocol";
 import { ZupassRPCClient } from "./rpc_client";
 import { Zapp } from "./zapp";
 
+class DialogControllerImpl implements DialogController {
+  #dialog: HTMLDialogElement;
+
+  constructor(dialog: HTMLDialogElement) {
+    this.#dialog = dialog;
+  }
+
+  public show(): void {
+    this.#dialog.showModal();
+  }
+
+  public close(): void {
+    this.#dialog.close();
+  }
+}
+
+export interface DialogController {
+  show(): void;
+  close(): void;
+}
+
 /**
  * Connects to Zupass and returns a ZupassAPI object.
  *
@@ -82,7 +103,10 @@ export function connect(
       const chan = new MessageChannel();
 
       // Create a new RPC client
-      const client = new ZupassRPCClient(chan.port2, dialog);
+      const client = new ZupassRPCClient(
+        chan.port2,
+        new DialogControllerImpl(dialog)
+      );
       // Tell the RPC client to start. It will call the function we pass in
       // when the connection is ready, at which point we can resolve the
       // promise and return the API wrapper to the caller.
