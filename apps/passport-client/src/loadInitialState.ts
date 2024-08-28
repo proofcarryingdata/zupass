@@ -31,7 +31,11 @@ export async function loadInitialState(): Promise<AppState> {
 
   const pcds = await loadPCDs(self);
 
-  if (pcds && self && !self.semaphore_v4_commitment) {
+  if (
+    pcds &&
+    self &&
+    (!self.semaphore_v4_commitment || !self.semaphore_v4_pubkey)
+  ) {
     const semaphoreV4IdentityPCD = pcds.getPCDsByType(
       SemaphoreIdentityV4PCDTypeName
     )[0];

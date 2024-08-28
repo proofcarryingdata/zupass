@@ -29,16 +29,18 @@
   "dependencies": {
     "@pcd/pcd-types": "0.11.4",
     "@pcd/util": "0.5.3",
-    "@zk-kit/eddsa-poseidon": "1.0.2",
     "@semaphore-protocol/identity": "^4.0.3",
     "@types/json-bigint": "^1.0.3",
+    "@zk-kit/eddsa-poseidon": "1.0.2",
+    "@zk-kit/utils": "^1.2.0",
+    "js-sha256": "^0.11.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/pod": "0.1.5",
     "@pcd/semaphore-identity-pcd": "0.11.4",
     "@pcd/tsconfig": "0.11.4",
-    "@pcd/pod": "0.1.5",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "eslint": "^8.57.0",
