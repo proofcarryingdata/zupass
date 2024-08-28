@@ -40,6 +40,7 @@
     "@pcd/passport-ui": "0.11.4",
     "@pcd/pcd-collection": "0.11.4",
     "@pcd/pcd-types": "0.11.4",
+    "@pcd/podspec": "0.0.2",
     "@pcd/pod": "0.1.5",
     "@pcd/pod-ticket-pcd": "0.1.5",
     "@pcd/pod-ticket-pcd-ui": "0.1.5",

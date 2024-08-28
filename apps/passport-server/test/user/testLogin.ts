@@ -6,7 +6,11 @@ import {
   User
 } from "@pcd/passport-interface";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import { v3tov4Identity } from "@pcd/semaphore-identity-v4";
+import {
+  v3tov4Identity,
+  v4PublicKey,
+  v4PublicKeyToCommitment
+} from "@pcd/semaphore-identity-v4";
 import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -34,7 +38,7 @@ export async function testLogin(
     new SemaphoreIdentityPCD(randomUUID(), { identity })
   );
   const v3Commitment = identity.commitment.toString();
-  const v4Commitment = v4Identity.claim.identity.commitment.toString();
+  const v4Pubkey = v4PublicKey(v4Identity.claim.identity);
 
   const confirmationEmailResult = await requestConfirmationEmail(
     application.expressContext.localEndpoint,
@@ -89,7 +93,7 @@ export async function testLogin(
     email,
     token,
     v3Commitment,
-    v4Commitment,
+    v4Pubkey,
     skipSetupPassword ? undefined : salt,
     encryptionKey,
     undefined
@@ -104,6 +108,10 @@ export async function testLogin(
   expect(newUserResult.value).to.haveOwnProperty("emails");
   expect(newUserResult.success).to.eq(true);
   expect(newUserResult.value.commitment).to.eq(v3Commitment);
+  expect(newUserResult.value.semaphore_v4_pubkey).to.eq(v4Pubkey);
+  expect(newUserResult.value.semaphore_v4_commitment).to.eq(
+    v4PublicKeyToCommitment(v4Pubkey)
+  );
   expect(newUserResult.value.emails).to.deep.eq([email]);
 
   const getUserResponse = await requestUser(

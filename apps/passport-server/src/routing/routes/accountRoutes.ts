@@ -90,10 +90,10 @@ export function initAccountRoutes(
   app.post("/account/one-click-login", async (req: Request, res: Response) => {
     const email = checkBody<OneClickLoginRequest, "email">(req, "email");
     const code = checkBody<OneClickLoginRequest, "code">(req, "code");
-    const v4Commitment = checkBody<OneClickLoginRequest, "v4Commitment">(
-      req,
-      "v4Commitment"
-    );
+    const semaphore_v4_pubkey = checkBody<
+      OneClickLoginRequest,
+      "semaphore_v4_pubkey"
+    >(req, "semaphore_v4_pubkey");
     const commitment = checkBody<OneClickLoginRequest, "commitment">(
       req,
       "commitment"
@@ -107,7 +107,7 @@ export function initAccountRoutes(
       email,
       code,
       commitment,
-      v4Commitment,
+      semaphore_v4_pubkey,
       encryptionKey,
       res
     );
@@ -141,10 +141,10 @@ export function initAccountRoutes(
     const { salt, encryptionKey, autoRegister } =
       req.body as CreateNewUserRequest as CreateNewUserRequest;
     const token = checkBody<CreateNewUserRequest, "token">(req, "token");
-    const v4Commitment = checkBody<CreateNewUserRequest, "v4Commitment">(
-      req,
-      "v4Commitment"
-    );
+    const semaphore_v4_pubkey = checkBody<
+      CreateNewUserRequest,
+      "semaphore_v4_pubkey"
+    >(req, "semaphore_v4_pubkey");
     const commitment = checkBody<CreateNewUserRequest, "commitment">(
       req,
       "commitment"
@@ -154,7 +154,7 @@ export function initAccountRoutes(
       token,
       email,
       commitment,
-      v4Commitment,
+      semaphore_v4_pubkey,
       salt,
       encryptionKey,
       autoRegister,

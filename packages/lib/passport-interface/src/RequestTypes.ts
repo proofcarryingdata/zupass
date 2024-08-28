@@ -615,9 +615,9 @@ export type CreateNewUserRequest = {
    */
   commitment: string;
   /**
-   * Semaphore v4 commitment.
+   * Semaphore v4 public key.
    */
-  v4Commitment: string;
+  semaphore_v4_pubkey: string;
   salt: string | undefined;
   encryptionKey: string | undefined;
   autoRegister?: boolean;
@@ -634,7 +634,7 @@ export type OneClickLoginRequest = {
   email: string;
   code: string;
   commitment: string;
-  v4Commitment: string;
+  semaphore_v4_pubkey: string;
   encryptionKey: string;
 };
 

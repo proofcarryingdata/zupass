@@ -25,7 +25,9 @@ import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Asks a feed for new PCDs.
+ * Asks the Zupass server to add a semaphore v4 commitment to the user's account.
+ *
+ * Idempotent.
  *
  * Never rejects. All information encoded in the resolved response.
  */
@@ -35,8 +37,8 @@ export async function requestAddSemaphoreV4Commitment(
 ): Promise<AddV4CommitmentResult> {
   return httpPostSimple(
     urljoin(zupassServerUrl, "/account/add-v4-commitment"),
-    async (resText) => ({
-      value: JSON.parse(resText) as AddV4CommitmentResponseValue,
+    async () => ({
+      value: undefined,
       success: true
     }),
     req

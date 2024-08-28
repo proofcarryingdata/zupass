@@ -48,8 +48,10 @@ export async function upsertUser(
       const upsertUserResult = await sqlQuery(
         client,
         `\
-INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance, semaphore_v4_commitment, semaphore_v4_pubkey)
-VALUES ($1, $2, $3, $4, $5, $6, $8)
+INSERT INTO users 
+(uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance, semaphore_v4_commitment, semaphore_v4_pubkey)
+VALUES 
+($1, $2, $3, $4, $5, $6, $8, $9)
 ON CONFLICT (uuid) DO UPDATE SET 
 commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7, semaphore_v4_commitment=$8, semaphore_v4_pubkey=$9
 returning *`,

@@ -254,7 +254,7 @@ export class FeedSubscriptionManager {
     try {
       const pcdCredential: SerializedPCD | undefined =
         await credentialManager.requestCredential({
-          signatureType: subscription.feed.credentialRequest.signatureType,
+          signatureType: "sempahore-signature-pcd",
           pcdType: subscription.feed.credentialRequest.pcdType
         });
 
