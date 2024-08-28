@@ -12,7 +12,6 @@ import {
   OneClickLoginResponseValue,
   RemoveUserEmailResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
-  VerifiedCredential,
   VerifyTokenResponseValue,
   verifyAddV4CommitmentRequestPCD
 } from "@pcd/passport-interface";
@@ -492,12 +491,6 @@ export class UserService {
     );
   }
 
-  public async getUserForCredential(
-    credential: VerifiedCredential
-  ): Promise<UserRow | null> {
-    return fetchUserForCredential(this.context.dbPool, credential);
-  }
-
   /**
    * @param sig created by {@link makeAddV4CommitmentRequest}
    */
@@ -521,10 +514,11 @@ export class UserService {
       throw new PCDHTTPError(400, "User not found");
     }
 
-    user.semaphore_v4_commitment = verification.v4Commitment;
-    user.semaphore_v4_pubkey = verification.v4PublicKey;
-
-    await upsertUser(this.context.dbPool, user);
+    if (!user.semaphore_v4_commitment && !user.semaphore_v4_pubkey) {
+      user.semaphore_v4_commitment = verification.v4Commitment;
+      user.semaphore_v4_pubkey = verification.v4PublicKey;
+      await upsertUser(this.context.dbPool, user);
+    }
 
     return {
       success: true,
