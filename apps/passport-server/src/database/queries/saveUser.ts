@@ -16,7 +16,8 @@ export async function upsertUser(
     commitment: string;
     salt?: string | null;
     encryption_key?: string | null;
-    semaphore_v4_id?: string | null;
+    semaphore_v4_commitment?: string | null;
+    semaphore_v4_pubkey?: string | null;
     terms_agreed: number;
     extra_issuance: boolean;
     emails: string[];
@@ -40,16 +41,17 @@ export async function upsertUser(
         extra_issuance,
         uuid,
         emails,
-        semaphore_v4_id
+        semaphore_v4_commitment,
+        semaphore_v4_pubkey
       } = params;
 
       const upsertUserResult = await sqlQuery(
         client,
         `\
-INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance, semaphore_v4_id)
+INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance, semaphore_v4_commitment, semaphore_v4_pubkey)
 VALUES ($1, $2, $3, $4, $5, $6, $8)
 ON CONFLICT (uuid) DO UPDATE SET 
-commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7, semaphore_v4_id=$8
+commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7, semaphore_v4_commitment=$8, semaphore_v4_pubkey=$9
 returning *`,
         [
           uuid,
@@ -59,7 +61,8 @@ returning *`,
           terms_agreed,
           extra_issuance,
           new Date(),
-          semaphore_v4_id
+          semaphore_v4_commitment,
+          semaphore_v4_pubkey
         ],
         0
       );

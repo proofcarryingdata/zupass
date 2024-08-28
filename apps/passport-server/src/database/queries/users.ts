@@ -96,7 +96,7 @@ export async function fetchUserCount(client: Pool): Promise<number> {
 }
 
 /**
- * Fetches a user by their semaphore v4 commitment.
+ * Fetches a user given a verified credential.
  */
 export async function fetchUserForCredential(
   client: Pool,

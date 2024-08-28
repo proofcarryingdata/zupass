@@ -17,6 +17,7 @@ import {
   verifyAddV4CommitmentRequestPCD
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
+import { v4PublicKeyToCommitment } from "@pcd/semaphore-identity-v4";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
@@ -218,7 +219,7 @@ export class UserService {
     email: string,
     code: string,
     commitment: string,
-    v4Commitment: string,
+    v4PublicKey: string,
     encryption_key: string,
     res: Response
   ): Promise<void> {
@@ -267,7 +268,8 @@ export class UserService {
       uuid: randomUUID(),
       emails: [email],
       commitment,
-      semaphore_v4_id: v4Commitment,
+      semaphore_v4_pubkey: v4PublicKey,
+      semaphore_v4_commitment: v4PublicKeyToCommitment(v4PublicKey),
       encryption_key,
       terms_agreed: LATEST_PRIVACY_NOTICE,
       extra_issuance: false
@@ -307,7 +309,7 @@ export class UserService {
     token: string,
     email: string,
     commitment: string,
-    v4Commitment: string,
+    v4PublicKey: string,
     salt: string | undefined,
     encryption_key: string | undefined,
     autoRegister: boolean | undefined,
@@ -318,7 +320,7 @@ export class UserService {
         token,
         email,
         commitment,
-        v4Commitment
+        v4PublicKey
       })}`
     );
 
@@ -354,12 +356,13 @@ export class UserService {
 
     await this.emailTokenService.saveNewTokenForEmail(email);
 
-    logger(`[USER_SERVICE] Saving commitment: ${commitment}, ${v4Commitment}`);
+    logger(`[USER_SERVICE] Saving commitment: ${commitment}, ${v4PublicKey}`);
     await upsertUser(this.context.dbPool, {
       uuid: existingUser ? existingUser.uuid : randomUUID(),
       emails: existingUser ? existingUser.emails : [email],
       commitment,
-      semaphore_v4_id: v4Commitment,
+      semaphore_v4_pubkey: v4PublicKey,
+      semaphore_v4_commitment: v4PublicKeyToCommitment(v4PublicKey),
       salt,
       encryption_key,
       // If the user already exists, then they're accessing this via the
@@ -511,14 +514,15 @@ export class UserService {
 
     const user = await fetchUserByV3Commitment(
       this.context.dbPool,
-      verification.v3Id
+      verification.v3Commitment
     );
 
     if (!user) {
       throw new PCDHTTPError(400, "User not found");
     }
 
-    user.semaphore_v4_id = verification.v4Id;
+    user.semaphore_v4_commitment = verification.v4Commitment;
+    user.semaphore_v4_pubkey = verification.v4PublicKey;
 
     await upsertUser(this.context.dbPool, user);
 

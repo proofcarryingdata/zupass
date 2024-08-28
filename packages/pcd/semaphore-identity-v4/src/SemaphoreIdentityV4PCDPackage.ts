@@ -18,8 +18,8 @@ import {
   SemaphoreIdentityV4PCDTypeName
 } from "./SemaphoreIdentityV4PCD";
 
-export function v4PublicKeyToCommitment(publicKey: string): bigint {
-  return podEdDSAPublicKeyHash(publicKey);
+export function v4PublicKeyToCommitment(publicKey: string): string {
+  return podEdDSAPublicKeyHash(publicKey).toString();
 }
 
 export function v4PublicKey(identity: Identity): string {

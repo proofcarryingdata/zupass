@@ -166,10 +166,15 @@ export interface UserRow {
   extra_issuance: boolean;
   time_created: Date;
   time_updated: Date;
+
+  /**
+   * poseidon2 hash of EdDSA public key of user's semaphore v4 identity
+   */
+  semaphore_v4_commitment?: string | null;
   /**
    * EdDSA public key - semaphore commitment from semaphore v4.
    */
-  semaphore_v4_id: string | null;
+  semaphore_v4_pubkey?: string | null;
 }
 
 export interface EncryptedStorageModel {

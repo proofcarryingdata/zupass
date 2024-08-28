@@ -8,7 +8,8 @@ import {
 import {
   SemaphoreIdentityV4PCD,
   SemaphoreIdentityV4PCDPackage,
-  v4PrivateKey
+  v4PrivateKey,
+  v4PublicKeyToCommitment
 } from "@pcd/semaphore-identity-v4";
 import {
   SemaphoreSignaturePCD,
@@ -99,7 +100,10 @@ export async function makeAddV4CommitmentRequest(
  */
 export async function verifyAddV4CommitmentRequestPCD(
   sig: SemaphoreSignaturePCD
-): Promise<{ v3Id: string; v4Id: string } | undefined> {
+): Promise<
+  | { v3Commitment: string; v4PublicKey: string; v4Commitment: string }
+  | undefined
+> {
   try {
     const v3SigVerifies = await SemaphoreSignaturePCDPackage.verify(sig);
     const expectedV3Id = sig.claim.identityCommitment;
@@ -112,8 +116,9 @@ export async function verifyAddV4CommitmentRequestPCD(
       v4Message.type === "string" && v4Message.value === expectedV3Id;
     if (v3SigVerifies && v4SigVerifies && v4SigIsOfV3Id) {
       return {
-        v3Id: expectedV3Id,
-        v4Id: v4SigOfV3Id.claim.signerPublicKey
+        v3Commitment: expectedV3Id,
+        v4PublicKey: v4PublicKeyToCommitment(v4SigOfV3Id.claim.signerPublicKey),
+        v4Commitment: v4SigOfV3Id.claim.signerPublicKey
       };
     }
     return undefined;
