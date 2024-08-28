@@ -1,5 +1,9 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { encodePrivateKey, encodePublicKey } from "@pcd/pod";
+import {
+  encodePrivateKey,
+  encodePublicKey,
+  podEdDSAPublicKeyHash
+} from "@pcd/pod";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { generateSnarkMessageHash, requireDefinedParameter } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
@@ -13,6 +17,10 @@ import {
   SemaphoreIdentityV4PCDProof,
   SemaphoreIdentityV4PCDTypeName
 } from "./SemaphoreIdentityV4PCD";
+
+export function v4PublicKeyToCommitment(publicKey: string): bigint {
+  return podEdDSAPublicKeyHash(publicKey);
+}
 
 export function v4PublicKey(identity: Identity): string {
   const unpackedPublicKey = derivePublicKey(
