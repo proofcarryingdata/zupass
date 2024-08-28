@@ -1,3 +1,5 @@
+import { ReactNode } from "react";
+
 export function TryIt({
   onClick,
   label

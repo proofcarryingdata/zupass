@@ -166,6 +166,11 @@ class GPC extends BaseZappServer implements ZupassGPC {
       });
     });
   }
+
+  public async verify(serialized: SerializedPCD): Promise<boolean> {
+    const pcd = await GPCPCDPackage.deserialize(serialized.pcd);
+    return GPCPCDPackage.verify(pcd);
+  }
 }
 
 export class Feeds extends BaseZappServer implements ZupassFeeds {

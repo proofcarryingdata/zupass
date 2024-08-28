@@ -138,7 +138,11 @@ export const ZupassAPISchema = z.object({
     prove: z
       .function()
       .args(GPCPCDArgsSchema)
-      .returns(z.promise(SerializedPCDSchema))
+      .returns(z.promise(SerializedPCDSchema)),
+    verify: z
+      .function()
+      .args(SerializedPCDSchema)
+      .returns(z.promise(z.boolean()))
   }),
   feeds: z.object({
     requestAddSubscription: z

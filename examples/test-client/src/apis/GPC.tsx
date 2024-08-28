@@ -1,5 +1,5 @@
 import { GPCPCD, GPCPCDArgs } from "@pcd/gpc-pcd";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { ReactNode, useState } from "react";
@@ -67,7 +67,8 @@ const args: GPCPCDArgs = {
 
 export function GPC(): ReactNode {
   const { z, connected } = useEmbeddedZupass();
-  const [proof, setProof] = useState<SerializedPCD<GPCPCD>>();
+  const [proof, setProof] = useState<GPCPCD>();
+  const [verified, setVerified] = useState<boolean | undefined>();
 
   return !connected ? null : (
     <div>
@@ -154,6 +155,36 @@ const args: GPCPCDArgs = {
           {proof && (
             <pre className="whitespace-pre-wrap">
               {JSON.stringify(proof, null, 2)}
+            </pre>
+          )}
+        </div>
+        <div>
+          <p>
+            Verify a GPC proof like this:
+            <code className="block text-xs font-base rounded-md p-2 whitespace-pre-wrap">
+              {`
+const verified = await z.gpc.verify(proof);
+            `}
+            </code>
+          </p>
+          {!proof && (
+            <span>Generate a proof above, then we can verify it.</span>
+          )}
+          {proof && (
+            <TryIt
+              onClick={async () => {
+                try {
+                  setVerified(await z.gpc.verify(proof));
+                } catch (e) {
+                  console.log(e);
+                }
+              }}
+              label="Verify GPC Proof"
+            />
+          )}
+          {verified !== undefined && (
+            <pre className="whitespace-pre-wrap">
+              Verified: {verified.toString()}
             </pre>
           )}
         </div>

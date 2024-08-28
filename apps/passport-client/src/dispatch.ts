@@ -1497,6 +1497,7 @@ async function showEmbeddedScreen(
   update: ZuUpdate,
   screen: EmbeddedScreenState["screen"]
 ): Promise<void> {
+  window.location.hash = "embedded";
   update({
     embeddedScreen: { screen }
   });

@@ -25,6 +25,7 @@ export interface ZupassFileSystem {
 
 export interface ZupassGPC {
   prove: (args: GPCPCDArgs) => Promise<SerializedPCD>;
+  verify: (pcd: SerializedPCD) => Promise<boolean>;
 }
 
 export interface ZupassFeeds {
