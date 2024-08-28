@@ -11,7 +11,8 @@ export enum RPCMessageType {
   ZUPASS_CLIENT_INVOKE_ERROR = "zupass-client-invoke-error",
   ZUPASS_CLIENT_READY = "zupass-client-ready",
   ZUPASS_CLIENT_SHOW = "zupass-client-show",
-  ZUPASS_CLIENT_HIDE = "zupass-client-hide"
+  ZUPASS_CLIENT_HIDE = "zupass-client-hide",
+  ZUPASS_CLIENT_SUBSCRIPTION_UPDATE = "zupass-client-subscription-update"
 }
 
 export const RPCMessageSchema = z.discriminatedUnion("type", [
@@ -39,6 +40,12 @@ export const RPCMessageSchema = z.discriminatedUnion("type", [
   }),
   z.object({
     type: z.literal(RPCMessageType.ZUPASS_CLIENT_HIDE)
+  }),
+  z.object({
+    type: z.literal(RPCMessageType.ZUPASS_CLIENT_SUBSCRIPTION_UPDATE),
+    subscriptionSerial: z.number(),
+    update: z.array(z.string()),
+    subscriptionId: z.string()
   })
 ]);
 

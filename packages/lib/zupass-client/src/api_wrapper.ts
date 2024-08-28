@@ -1,18 +1,71 @@
 import { GPCPCD, GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import { POD } from "@pcd/pod";
 import { p } from "@pcd/podspec";
-import { ZupassAPI, ZupassFileSystem, ZupassIdentity } from "./api_internal";
+import { EventEmitter } from "eventemitter3";
+import { ZupassRPCClient } from "./rpc_client";
+import { ZupassIdentity, ZupassRPC } from "./rpc_interfaces";
+
+type QueryType = ReturnType<typeof p.pod>;
+
+export class Subscription {
+  #emitter: EventEmitter;
+  #query: QueryType;
+  #api: ZupassAPIPODWrapper;
+
+  constructor(
+    query: QueryType,
+    emitter: EventEmitter,
+    api: ZupassAPIPODWrapper
+  ) {
+    this.#emitter = emitter;
+    this.#query = query;
+    this.#api = api;
+  }
+
+  async query(): Promise<POD[]> {
+    return this.#api.query(this.#query);
+  }
+
+  on(event: "update", callback: (result: POD[]) => void): void {
+    this.#emitter.on("update", callback);
+  }
+
+  off(event: "update", callback: (result: POD[]) => void): void {
+    this.#emitter.off("update", callback);
+  }
+}
 
 class ZupassAPIPODWrapper {
-  #api: ZupassAPI;
-  constructor(api: ZupassAPI) {
+  #api: ZupassRPCClient;
+  #subscriptionEmitters: Map<string, EventEmitter>;
+
+  constructor(api: ZupassRPCClient) {
     this.#api = api;
+    this.#subscriptionEmitters = new Map();
+    this.#api.on("subscription-update", (result) => {
+      const emitter = this.#subscriptionEmitters.get(result.subscriptionId);
+      if (emitter) {
+        emitter.emit(
+          "update",
+          result.update.map((pod) => POD.deserialize(pod))
+        );
+      }
+    });
   }
 
   async query(query: ReturnType<typeof p.pod>): Promise<POD[]> {
     const serialized = query.serialize();
     const pods = await this.#api.pod.query(serialized);
     return pods.map((pod) => POD.deserialize(pod));
+  }
+
+  async subscribe(query: ReturnType<typeof p.pod>): Promise<Subscription> {
+    const serialized = query.serialize();
+    const subscriptionId = await this.#api.pod.subscribe(serialized);
+    const emitter = new EventEmitter();
+    const subscription = new Subscription(query, emitter, this);
+    this.#subscriptionEmitters.set(subscriptionId, emitter);
+    return subscription;
   }
 
   async insert(pod: POD): Promise<void> {
@@ -26,8 +79,8 @@ class ZupassAPIPODWrapper {
 }
 
 class ZupassGPCWrapper {
-  #api: ZupassAPI;
-  constructor(api: ZupassAPI) {
+  #api: ZupassRPC;
+  constructor(api: ZupassRPC) {
     this.#api = api;
   }
 
@@ -48,18 +101,16 @@ class ZupassGPCWrapper {
  * Specifically, this handles serialization and deserialization of PODs and
  * query data.
  */
-export class ZupassAPIWrapper {
-  #api: ZupassAPI;
+export class ZupassAPI {
+  #api: ZupassRPCClient;
   public pod: ZupassAPIPODWrapper;
   public identity: ZupassIdentity;
   public gpc: ZupassGPCWrapper;
-  public fs?: ZupassFileSystem;
-  // Feeds API is deliberately omitted
-  constructor(api: ZupassAPI) {
+
+  constructor(api: ZupassRPCClient) {
     this.#api = api;
     this.pod = new ZupassAPIPODWrapper(api);
     this.identity = api.identity;
     this.gpc = new ZupassGPCWrapper(api);
-    this.fs = api.fs;
   }
 }

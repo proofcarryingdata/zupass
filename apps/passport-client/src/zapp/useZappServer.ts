@@ -7,6 +7,7 @@ import {
   RPCMessage,
   RPCMessageSchema,
   RPCMessageType,
+  SubscriptionResult,
   WindowMessageSchema,
   WindowMessageType
 } from "@pcd/zupass-client";
@@ -28,6 +29,18 @@ export class ClientChannel {
     this.port.postMessage({
       type: RPCMessageType.ZUPASS_CLIENT_HIDE
     });
+  }
+
+  public subscriptionUpdate(
+    { update, subscriptionId }: SubscriptionResult,
+    subscriptionSerial: number
+  ): void {
+    this.port.postMessage({
+      type: RPCMessageType.ZUPASS_CLIENT_SUBSCRIPTION_UPDATE,
+      update,
+      subscriptionId,
+      subscriptionSerial
+    } satisfies RPCMessage);
   }
 }
 

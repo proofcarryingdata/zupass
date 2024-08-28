@@ -1,6 +1,6 @@
 import { POD, POD_INT_MAX, POD_INT_MIN, PODEntries, PODValue } from "@pcd/pod";
 import { p } from "@pcd/podspec";
-import { ZupassAPIWrapper } from "@pcd/zupass-client";
+import { Subscription, ZupassAPI } from "@pcd/zupass-client";
 import JSONBig from "json-bigint";
 import { ReactNode, useReducer, useState } from "react";
 import { Button } from "../components/Button";
@@ -12,57 +12,69 @@ const MAGIC_PRIVATE_KEY =
 
 export function PODSection(): ReactNode {
   const { z, connected } = useEmbeddedZupass();
-  const [pods, setPODs] = useState<POD[]>([]);
 
   return !connected ? null : (
     <div>
       <h1 className="text-xl font-bold mb-2">PODs</h1>
       <div className="prose">
-        <div>
-          <p>
-            Querying PODs is done like this:
-            <code className="block text-xs font-base rounded-md p-2 whitespace-pre">
-              {`const q = p
-  .pod({
-    wis: p.int().range(BigInt(8), POD_INT_MAX),
-    str: p.int().range(BigInt(5), POD_INT_MAX),
-  });
+        <h2 className="text-lg font-bold mt-4">Query PODs</h2>
+        <QueryPODs z={z} />
+        <h2 className="text-lg font-bold mt-4">Insert POD</h2>
+        <InsertPOD z={z} />
+        <h2 className="text-lg font-bold mt-4">Delete POD</h2>
+        <DeletePOD z={z} />
+        <h2 className="text-lg font-bold mt-4">Subscribe to PODs</h2>
+        <SubscribeToPODs z={z} />
+      </div>
+    </div>
+  );
+}
+
+function QueryPODs({ z }: { z: ZupassAPI }): ReactNode {
+  const [pods, setPODs] = useState<POD[]>([]);
+
+  return (
+    <div>
+      <p>
+        Querying PODs is done like this:
+        <code className="block text-xs font-base rounded-md p-2 whitespace-pre">
+          {`const q = p
+.pod({
+wis: p.int().range(BigInt(8), POD_INT_MAX),
+str: p.int().range(BigInt(5), POD_INT_MAX),
+});
 const pods = await z.pod.query(q);
 `}
-            </code>
-          </p>
-          <TryIt
-            onClick={async () => {
-              try {
-                const q = p.pod({
-                  wis: p.int().range(BigInt(8), POD_INT_MAX),
-                  str: p.int().range(BigInt(5), POD_INT_MAX)
-                });
-                const pods = await z.pod.query(q);
-                setPODs(pods);
-              } catch (e) {
-                console.log(e);
-              }
-            }}
-            label="Query PODs"
-          />
-          {pods.length > 0 && (
-            <pre className="whitespace-pre-wrap">
-              {JSONBig.stringify(
-                pods.map((p) => ({
-                  entries: p.content.asEntries(),
-                  signature: p.signature,
-                  signerPublicKey: p.signerPublicKey
-                })),
-                null,
-                2
-              )}
-            </pre>
+        </code>
+      </p>
+      <TryIt
+        onClick={async () => {
+          try {
+            const q = p.pod({
+              wis: p.int().range(BigInt(8), POD_INT_MAX),
+              str: p.int().range(BigInt(5), POD_INT_MAX)
+            });
+            const pods = await z.pod.query(q);
+            setPODs(pods);
+          } catch (e) {
+            console.log(e);
+          }
+        }}
+        label="Query PODs"
+      />
+      {pods.length > 0 && (
+        <pre className="whitespace-pre-wrap">
+          {JSONBig.stringify(
+            pods.map((p) => ({
+              entries: p.content.asEntries(),
+              signature: p.signature,
+              signerPublicKey: p.signerPublicKey
+            })),
+            null,
+            2
           )}
-        </div>
-        <InsertPOD z={z} />
-        <DeletePOD z={z} />
-      </div>
+        </pre>
+      )}
     </div>
   );
 }
@@ -86,6 +98,10 @@ type Action =
   | {
       type: "ADD_ENTRY";
       value: PODValue;
+    }
+  | {
+      type: "REMOVE_ENTRY";
+      key: string;
     };
 
 const stringish = ["string", "eddsa_pubkey"];
@@ -104,6 +120,9 @@ const insertPODReducer = function (
         n++;
       }
       state[key] = action.value;
+      break;
+    case "REMOVE_ENTRY":
+      delete state[action.key];
       break;
     case "SET_KEY":
       state[action.newKey] = state[action.key];
@@ -152,7 +171,7 @@ enum PODCreationState {
   Failure
 }
 
-function InsertPOD({ z }: { z: ZupassAPIWrapper }): ReactNode {
+function InsertPOD({ z }: { z: ZupassAPI }): ReactNode {
   const [creationState, setCreationState] = useState<PODCreationState>(
     PODCreationState.None
   );
@@ -169,7 +188,7 @@ function InsertPOD({ z }: { z: ZupassAPIWrapper }): ReactNode {
       <div className="flex flex-col gap-2 mb-4">
         {Object.entries(entries).map(([name, value], index) => (
           <InsertPODEntry
-            key={name}
+            key={index}
             showLabels={index === 0}
             name={name}
             value={value.value}
@@ -256,6 +275,7 @@ function InsertPODEntry({
       <label className="block">
         {showLabels && <span className="text-gray-700">Name</span>}
         <input
+          autoComplete="off"
           type="text"
           value={name}
           className="mt-1 block w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"
@@ -297,6 +317,11 @@ function InsertPODEntry({
           min={POD_INT_MIN.toString()}
         />
       </label>
+      <div className="flex items-end">
+        <Button onClick={() => dispatch({ type: "REMOVE_ENTRY", key: name })}>
+          Remove
+        </Button>
+      </div>
     </div>
   );
 }
@@ -307,7 +332,7 @@ enum PODDeletionState {
   Failure
 }
 
-function DeletePOD({ z }: { z: ZupassAPIWrapper }): ReactNode {
+function DeletePOD({ z }: { z: ZupassAPI }): ReactNode {
   const [signature, setSignature] = useState<string>("");
   const [deletionState, setDeletionState] = useState<PODDeletionState>(
     PODDeletionState.None
@@ -355,6 +380,63 @@ function DeletePOD({ z }: { z: ZupassAPIWrapper }): ReactNode {
           {deletionState === PODDeletionState.Failure && (
             <div>An error occurred while deleting your POD.</div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SubscribeToPODs({ z }: { z: ZupassAPI }): ReactNode {
+  const [pods, setPODs] = useState<POD[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+
+  return (
+    <div>
+      <p>
+        Subscribing to updates about PODs is done like this:
+        <code className="block text-xs font-base rounded-md p-2 whitespace-pre">
+          {`const q = p
+.pod({
+wis: p.int().range(BigInt(8), POD_INT_MAX),
+str: p.int().range(BigInt(5), POD_INT_MAX),
+});
+const pods = await z.pod.subscribe(q);
+`}
+        </code>
+      </p>
+      <TryIt
+        onClick={async () => {
+          try {
+            const q = p.pod({
+              wis: p.int().range(BigInt(8), POD_INT_MAX),
+              str: p.int().range(BigInt(5), POD_INT_MAX)
+            });
+            const sub = await z.pod.subscribe(q);
+            setSubscription(sub);
+            sub.on("update", (update) => {
+              setPODs(update);
+            });
+            const results = await sub.query();
+            setPODs(results);
+          } catch (e) {
+            console.log(e);
+          }
+        }}
+        label="Subscribe to PODs"
+      />
+      {pods.length > 0 && subscription !== null && (
+        <div>
+          <pre className="whitespace-pre-wrap">
+            {JSONBig.stringify(
+              pods.map((p) => ({
+                entries: p.content.asEntries(),
+                signature: p.signature,
+                signerPublicKey: p.signerPublicKey
+              })),
+              null,
+              2
+            )}
+          </pre>
         </div>
       )}
     </div>

@@ -6,14 +6,11 @@ import { POD } from "@pcd/pod";
 import { isPODPCD, PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { p } from "@pcd/podspec";
 import {
-  ZupassAPI,
   ZupassAPISchema,
-  ZupassFeeds,
-  ZupassFileSystem,
-  ZupassFolderContent,
   ZupassGPC,
   ZupassIdentity,
-  ZupassPOD
+  ZupassPOD,
+  ZupassRPC
 } from "@pcd/zupass-client";
 import { v4 as uuidv4 } from "uuid";
 import { z } from "zod";
@@ -62,75 +59,6 @@ abstract class BaseZappServer {
   }
 }
 
-class FileSystem extends BaseZappServer implements ZupassFileSystem {
-  public constructor(
-    context: StateContextValue,
-    zapp: PODPCD,
-    clientChannel: ClientChannel
-  ) {
-    super(context, zapp, clientChannel);
-  }
-
-  @safeInput(ZupassAPISchema.shape.fs.shape.list.parameters())
-  public async list(path: string): Promise<ZupassFolderContent[]> {
-    const state = this.getContext().getState();
-    const pcds = state.pcds.getAllPCDsInFolder(path);
-    const folders = state.pcds.getFoldersInFolder(path);
-    const result: ZupassFolderContent[] = [];
-
-    for (const folder of folders) {
-      result.push({
-        type: "folder",
-        name: folder
-      });
-    }
-    for (const pcd of pcds) {
-      result.push({
-        type: "pcd",
-        id: pcd.id,
-        pcdType: pcd.type
-      });
-    }
-    console.log(result);
-    return result;
-  }
-
-  @safeInput(ZupassAPISchema.shape.fs.shape.get.parameters())
-  public async get(path: string): Promise<SerializedPCD> {
-    const pathElements = path.split("/");
-    // @todo validate path, check permissions
-    const pcdId = pathElements.pop();
-    if (!pcdId) {
-      throw new Error("No PCD ID found in path");
-    }
-    const pcdCollection = this.getContext().getState().pcds;
-    const pcd = pcdCollection.getById(pcdId);
-    if (!pcd) {
-      throw new Error(`PCD with ID ${pcdId} does not exist`);
-    }
-    const serializedPCD = pcdCollection.serialize(pcd);
-
-    return serializedPCD;
-  }
-
-  @safeInput(ZupassAPISchema.shape.fs.shape.put.parameters())
-  public async put(path: string, content: SerializedPCD): Promise<void> {
-    // @todo validate path
-    console.log("adding ", path, content);
-    await this.getContext().dispatch({
-      type: "add-pcds",
-      folder: path,
-      pcds: [content],
-      upsert: true
-    });
-  }
-
-  @safeInput(ZupassAPISchema.shape.fs.shape.delete.parameters())
-  public async delete(_path: string): Promise<void> {
-    throw new Error("Not implemented");
-  }
-}
-
 class GPC extends BaseZappServer implements ZupassGPC {
   public constructor(
     context: StateContextValue,
@@ -173,32 +101,6 @@ class GPC extends BaseZappServer implements ZupassGPC {
   }
 }
 
-export class Feeds extends BaseZappServer implements ZupassFeeds {
-  public constructor(
-    context: StateContextValue,
-    zapp: PODPCD,
-    clientChannel: ClientChannel
-  ) {
-    super(context, zapp, clientChannel);
-  }
-
-  @safeInput(ZupassAPISchema.shape.feeds.shape.requestAddSubscription)
-  public async requestAddSubscription(
-    feedUrl: string,
-    feedId: string
-  ): Promise<void> {
-    this.getContext().dispatch({
-      type: "show-embedded-screen",
-      screen: {
-        type: EmbeddedScreenType.EmbeddedAddSubscription,
-        feedUrl,
-        feedId
-      }
-    });
-    this.getClientChannel().showZupass();
-  }
-}
-
 export class Identity extends BaseZappServer implements ZupassIdentity {
   public constructor(
     context: StateContextValue,
@@ -208,7 +110,7 @@ export class Identity extends BaseZappServer implements ZupassIdentity {
     super(context, zapp, clientChannel);
   }
 
-  public async getIdentityCommitment(): Promise<bigint> {
+  public async getSemaphoreV3Commitment(): Promise<bigint> {
     return this.getContext().getState().identity.getCommitment();
   }
 
@@ -223,6 +125,8 @@ export class Identity extends BaseZappServer implements ZupassIdentity {
 }
 
 class PODServer extends BaseZappServer implements ZupassPOD {
+  public subscriptionIds: Set<string> = new Set();
+
   public constructor(
     context: StateContextValue,
     zapp: PODPCD,
@@ -306,12 +210,63 @@ class PODServer extends BaseZappServer implements ZupassPOD {
       )
     );
   }
+
+  @safeInput(ZupassAPISchema.shape.pod.shape.subscribe.parameters())
+  public async subscribe(query: unknown): Promise<string> {
+    // We don't want the listener to keep a strong reference to the server
+    // object, as this will prevent it from being garbage collected.
+    // Using a WeakRef means that if the ZappServer is dereferenced elsewhere,
+    // the listener will not keep it alive.
+    const ref = new WeakRef(this);
+    let serial = 0;
+    let lastResults: string[] = [];
+    const subscriptionId = uuidv4();
+    this.subscriptionIds.add(subscriptionId);
+    const cancel = this.getContext()
+      .getState()
+      .pcds.changeEmitter.listen(async () => {
+        const server = ref.deref();
+        if (server && server.subscriptionIds.has(subscriptionId)) {
+          // Re-running the query here may not be optimal.
+          // A longer-term solution might be to have finer-grained observation
+          // of changes to the PCD collection, so that we can know if the
+          // results are likely to have changed without re-running the query.
+          const newResults = await server.query(query);
+
+          if (
+            lastResults.length === newResults.length &&
+            lastResults.every((result, index) => result === newResults[index])
+          ) {
+            return;
+          }
+          lastResults = newResults;
+          this.getClientChannel().subscriptionUpdate(
+            {
+              update: newResults,
+              subscriptionId
+            },
+            serial
+          );
+          serial++;
+        } else {
+          cancel();
+        }
+      });
+    return subscriptionId;
+  }
+
+  @safeInput(ZupassAPISchema.shape.pod.shape.unsubscribe.parameters())
+  public async unsubscribe(subscriptionId: string): Promise<void> {
+    if (this.subscriptionIds.has(subscriptionId)) {
+      this.subscriptionIds.delete(subscriptionId);
+    } else {
+      throw new Error(`Subscription with ID ${subscriptionId} does not exist`);
+    }
+  }
 }
 
-export class ZappServer extends BaseZappServer implements ZupassAPI {
-  public fs: ZupassFileSystem;
+export class ZappServer extends BaseZappServer implements ZupassRPC {
   public gpc: ZupassGPC;
-  public feeds: ZupassFeeds;
   public identity: ZupassIdentity;
   public pod: ZupassPOD;
   public _version = "1" as const;
@@ -322,9 +277,7 @@ export class ZappServer extends BaseZappServer implements ZupassAPI {
     clientChannel: ClientChannel
   ) {
     super(context, zapp, clientChannel);
-    this.fs = new FileSystem(context, zapp, clientChannel);
     this.gpc = new GPC(context, zapp, clientChannel);
-    this.feeds = new Feeds(context, zapp, clientChannel);
     this.identity = new Identity(context, zapp, clientChannel);
     this.pod = new PODServer(context, zapp, clientChannel);
   }

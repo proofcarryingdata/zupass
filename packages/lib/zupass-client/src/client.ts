@@ -1,34 +1,13 @@
-import { ZupassAPI } from "./api_internal";
-import { ZupassAPIWrapper } from "./api_wrapper";
-import {
-  postWindowMessage,
-  RPCMessage,
-  RPCMessageSchema,
-  RPCMessageType,
-  WindowMessageType
-} from "./protocol";
-import { createAPIClient } from "./proxy";
-import { ZupassAPISchema } from "./schema";
+import { ZupassAPI } from "./api_wrapper";
+import { postWindowMessage, WindowMessageType } from "./protocol";
+import { ZupassRPCClient } from "./rpc_client";
 import { Zapp } from "./zapp";
-
-const clients = new WeakMap<ZupassAPI, Client>();
-
-interface Client {
-  element: HTMLElement;
-  zapp: Zapp;
-  port: MessagePort;
-  serial: number;
-  pending: Record<
-    number,
-    { resolve: (result: unknown) => void; reject: (reason: unknown) => void }
-  >;
-}
 
 export function connect(
   zapp: Zapp,
   element: HTMLElement,
   zupassUrl = "https://zupass.org"
-): Promise<ZupassAPIWrapper> {
+): Promise<ZupassAPI> {
   // Will throw if the URL is invalid
   const normalizedUrl = new URL(zupassUrl);
 
@@ -82,64 +61,21 @@ export function connect(
   iframe.style.height = "100%";
   iframe.src = normalizedUrl.toString();
 
-  return new Promise<ZupassAPIWrapper>((resolve, _reject) => {
+  return new Promise<ZupassAPI>((resolve, _reject) => {
     /**
      * @todo timeout?
      * @todo iframe loads are fake, maybe poll to see if contentwindow exists?
      */
     iframe.addEventListener("load", async () => {
       const chan = new MessageChannel();
-      chan.port2.start();
 
-      const main = function* (): Generator<undefined, void, RPCMessage> {
-        let handle: ZupassAPI | undefined;
-        while (true) {
-          const event = yield;
-          if (event.type === RPCMessageType.ZUPASS_CLIENT_READY) {
-            handle = createAPIClient(ZupassAPISchema, ZupassAPISchema.shape);
-            clients.set(handle, {
-              element,
-              zapp,
-              port: chan.port2,
-              serial: 0,
-              pending: {}
-            });
-            resolve(new ZupassAPIWrapper(handle));
-            break;
-          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
-            dialog.showModal();
-          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
-            dialog.close();
-          }
-        }
-
-        while (true) {
-          const event = yield;
-          console.log(`RECEIVED ${event.type}`);
-          if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_RESULT) {
-            clients.get(handle)?.pending[event.serial]?.resolve(event.result);
-          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_INVOKE_ERROR) {
-            clients
-              .get(handle)
-              ?.pending[event.serial]?.reject(new Error(event.error));
-          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_SHOW) {
-            dialog.showModal();
-          } else if (event.type === RPCMessageType.ZUPASS_CLIENT_HIDE) {
-            dialog.close();
-          }
-        }
-      };
-
-      const eventLoop = main();
-      eventLoop.next();
-
-      chan.port2.addEventListener("message", (ev: MessageEvent) => {
-        const msg = RPCMessageSchema.safeParse(ev.data);
-        if (msg.success) {
-          eventLoop.next(msg.data);
-        } else {
-          console.log("Got unexpected message: ", ev);
-        }
+      // Create a new RPC client
+      const client = new ZupassRPCClient(chan.port2, dialog);
+      // Tell the RPC client to start. It will call the function we pass in
+      // when the connection is ready, at which point we can resolve the
+      // promise and return the API wrapper to the caller.
+      client.start(() => {
+        resolve(new ZupassAPI(client));
       });
 
       if (iframe.contentWindow) {
@@ -165,26 +101,4 @@ export function connect(
     });
     shadow.appendChild(iframe);
   });
-}
-
-export function invoke(
-  handle: ZupassAPI,
-  fn: string,
-  args: unknown
-): Promise<unknown> {
-  const client = clients.get(handle);
-  if (!client) {
-    throw new Error("zupass client not connected");
-  }
-  const serial = client.serial++;
-  const promise = new Promise((resolve, reject) => {
-    client.pending[serial] = { resolve, reject };
-    client.port.postMessage({
-      type: "zupass-client-invoke",
-      fn,
-      args,
-      serial
-    });
-  });
-  return promise;
 }

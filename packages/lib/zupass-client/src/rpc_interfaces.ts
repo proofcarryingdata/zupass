@@ -2,7 +2,7 @@ import type { GPCPCDArgs } from "@pcd/gpc-pcd";
 import type { SerializedPCD } from "@pcd/pcd-types";
 import { GenericSerializedPodspecPOD } from "@pcd/podspec";
 
-type PODQuery = GenericSerializedPodspecPOD;
+export type PODQuery = GenericSerializedPodspecPOD;
 
 export type ZupassFolderContent =
   | {
@@ -15,12 +15,9 @@ export type ZupassFolderContent =
       pcdType: SerializedPCD["type"];
     };
 
-export interface ZupassFileSystem {
-  list: (path: string) => Promise<ZupassFolderContent[]>;
-  get: (path: string) => Promise<SerializedPCD>;
-  put: (path: string, content: SerializedPCD) => Promise<void>;
-  // Not yet implemented:
-  delete: (path: string) => Promise<void>;
+export interface SubscriptionResult {
+  subscriptionId: string;
+  update: string[];
 }
 
 export interface ZupassGPC {
@@ -28,14 +25,8 @@ export interface ZupassGPC {
   verify: (pcd: SerializedPCD) => Promise<boolean>;
 }
 
-export interface ZupassFeeds {
-  requestAddSubscription: (feedUrl: string, feedId: string) => Promise<void>;
-}
-
 export interface ZupassIdentity {
-  getIdentityCommitment: () => Promise<bigint>;
-  // Should be PODs rather than SerializedPCDs in future
-  getAttestedEmails: () => Promise<SerializedPCD[]>;
+  getSemaphoreV3Commitment: () => Promise<bigint>;
 }
 
 export interface ZupassPOD {
@@ -43,15 +34,20 @@ export interface ZupassPOD {
   query: (query: PODQuery) => Promise<string[]>;
   insert: (serializedPod: string) => Promise<void>;
   delete: (signature: string) => Promise<void>;
+  subscribe: (query: PODQuery) => Promise<string>;
+  unsubscribe: (subscriptionId: string) => Promise<void>;
 }
 
-export interface ZupassAPI {
+export interface ZupassRPC {
   _version: "1";
-  // Flagged as optional and is effectively deprecated
-  fs?: ZupassFileSystem;
   gpc: ZupassGPC;
-  // Flagged as optional and is effectively deprecated
-  feeds?: ZupassFeeds;
   identity: ZupassIdentity;
   pod: ZupassPOD;
+}
+
+export interface ZupassEvents {
+  on: (
+    event: "subscription-update",
+    callback: (result: SubscriptionResult) => void
+  ) => void;
 }
