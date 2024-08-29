@@ -168,7 +168,7 @@ export interface UserRow {
   time_updated: Date;
 
   /**
-   * poseidon2 hash of EdDSA public key of user's semaphore v4 identity
+   * A user's commitment is the poseidon2 hash of their EdDSA public key in semaphore V4
    */
   semaphore_v4_commitment?: string | null;
   /**
