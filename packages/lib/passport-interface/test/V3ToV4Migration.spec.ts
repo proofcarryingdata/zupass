@@ -16,6 +16,7 @@ import "mocha";
 import * as path from "path";
 import {
   makeAddV4CommitmentRequest,
+  V4MigrationVerification,
   verifyAddV4CommitmentRequestPCD
 } from "../src/api/requestAddSemaphoreV4Commitment";
 
@@ -55,8 +56,9 @@ describe("V3ToV4Migration", async function () {
     );
     const verified = await verifyAddV4CommitmentRequestPCD(migrationPCD);
     expect(verified).to.deep.eq({
-      v3Id: v3Id.claim.identity.commitment.toString(),
-      v4Id: v4PublicKey(v4Id.claim.identity)
-    });
+      v3Commitment: v3Id.claim.identity.commitment.toString(),
+      v4PublicKey: v4PublicKey(v4Id.claim.identity),
+      v4Commitment: v4Id.claim.identity.commitment.toString()
+    } satisfies V4MigrationVerification);
   });
 });
