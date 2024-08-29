@@ -523,6 +523,9 @@ export interface PollFeedResponseValue {
  */
 export interface ZupassUserJson {
   uuid: string;
+  /**
+   * Semaphore v3 commitment.
+   */
   commitment: string;
   semaphore_v4_commitment?: string | null;
   semaphore_v4_pubkey?: string | null;
