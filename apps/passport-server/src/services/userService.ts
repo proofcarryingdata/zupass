@@ -1,7 +1,6 @@
 import { HexString, getHash } from "@pcd/passport-crypto";
 import {
   AddUserEmailResponseValue,
-  AddV4CommitmentResult,
   AgreeTermsResult,
   ChangeUserEmailResponseValue,
   ConfirmEmailResponseValue,
@@ -12,6 +11,7 @@ import {
   OneClickLoginResponseValue,
   RemoveUserEmailResponseValue,
   UNREDACT_TICKETS_TERMS_VERSION,
+  UpgradeUserWithV4CommitmentResult,
   VerifyTokenResponseValue,
   verifyAddV4CommitmentRequestPCD
 } from "@pcd/passport-interface";
@@ -496,7 +496,7 @@ export class UserService {
    */
   public async handleAddV4Commitment(
     sig: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<AddV4CommitmentResult> {
+  ): Promise<UpgradeUserWithV4CommitmentResult> {
     const v3Sig = await SemaphoreSignaturePCDPackage.deserialize(sig.pcd);
 
     const verification = await verifyAddV4CommitmentRequestPCD(v3Sig);

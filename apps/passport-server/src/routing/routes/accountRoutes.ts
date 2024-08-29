@@ -168,7 +168,7 @@ export function initAccountRoutes(
    * of the v4 identity.
    */
   app.post(
-    "/account/add-v4-commitment",
+    "/account/upgrade-with-v4-commitment",
     async (req: Request, res: Response) => {
       const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 

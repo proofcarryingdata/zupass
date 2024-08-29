@@ -21,7 +21,7 @@ import {
   makeAddV4CommitmentRequest,
   V4MigrationVerification,
   verifyAddV4CommitmentRequestPCD
-} from "../src/api/requestAddSemaphoreV4Commitment";
+} from "../src/api/requestUpgradeUserWithV4Commitment";
 
 const zkeyFilePath: string = path.join(
   __dirname,

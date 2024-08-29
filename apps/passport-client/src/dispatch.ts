@@ -12,12 +12,12 @@ import {
   LATEST_PRIVACY_NOTICE,
   makeAddV4CommitmentRequest,
   NetworkFeedApi,
-  requestAddSemaphoreV4Commitment,
   requestCreateNewUser,
   requestDeleteAccount,
   requestDownloadAndDecryptStorage,
   requestLogToServer,
   requestOneClickLogin,
+  requestUpgradeUserWithV4Commitment,
   requestUser,
   serializeStorage,
   StorageWithRevision,
@@ -818,7 +818,7 @@ async function loadAfterLogin(
     try {
       const newV4Identity = v3tov4Identity(identityPCDV3);
       pcds.add(newV4Identity);
-      const res = await requestAddSemaphoreV4Commitment(
+      const res = await requestUpgradeUserWithV4Commitment(
         appConfig.zupassServer,
         await makeAddV4CommitmentRequest(pcds)
       );

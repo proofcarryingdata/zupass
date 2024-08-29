@@ -19,24 +19,27 @@ import { randomUUID } from "@pcd/util";
 import urljoin from "url-join";
 import {
   AddV4CommitmentRequest,
-  AddV4CommitmentResponseValue
+  UpgradeUserWithV4CommitmentResponseValue
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Asks the Zupass server to add a semaphore v4 commitment to the user's account.
+ * Asks the Zupass server to add a semaphore v4 commitment to the user's account, given
+ * they already have an account with just a v3 identity.
  *
  * Idempotent.
  *
+ * @see {@link makeAddV4CommitmentRequest} for details regarding what this request contains.
+ *
  * Never rejects. All information encoded in the resolved response.
  */
-export async function requestAddSemaphoreV4Commitment(
+export async function requestUpgradeUserWithV4Commitment(
   zupassServerUrl: string,
   req: AddV4CommitmentRequest
-): Promise<AddV4CommitmentResult> {
+): Promise<UpgradeUserWithV4CommitmentResult> {
   return httpPostSimple(
-    urljoin(zupassServerUrl, "/account/add-v4-commitment"),
+    urljoin(zupassServerUrl, "/account/upgrade-with-v4-commitment"),
     async () => ({
       value: undefined,
       success: true
@@ -45,7 +48,8 @@ export async function requestAddSemaphoreV4Commitment(
   );
 }
 
-export type AddV4CommitmentResult = APIResult<AddV4CommitmentResponseValue>;
+export type UpgradeUserWithV4CommitmentResult =
+  APIResult<UpgradeUserWithV4CommitmentResponseValue>;
 
 /**
  * @returns a v3 signature of a v4 signature of the identity commitment of the identity that

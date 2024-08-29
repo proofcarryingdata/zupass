@@ -1,7 +1,7 @@
 import {
   createStorageBackedCredentialCache,
   makeAddV4CommitmentRequest,
-  requestAddSemaphoreV4Commitment
+  requestUpgradeUserWithV4Commitment
 } from "@pcd/passport-interface";
 import { SemaphoreIdentityV4PCDTypeName } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
@@ -41,7 +41,7 @@ export async function loadInitialState(): Promise<AppState> {
     )[0];
 
     if (semaphoreV4IdentityPCD) {
-      await requestAddSemaphoreV4Commitment(
+      await requestUpgradeUserWithV4Commitment(
         appConfig.zupassServer,
         await makeAddV4CommitmentRequest(pcds)
       );

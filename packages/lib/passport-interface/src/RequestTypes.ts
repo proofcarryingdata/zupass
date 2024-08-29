@@ -634,7 +634,7 @@ export type AddV4CommitmentRequest = {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
 };
 
-export type AddV4CommitmentResponseValue = undefined;
+export type UpgradeUserWithV4CommitmentResponseValue = undefined;
 
 export type OneClickLoginRequest = {
   email: string;

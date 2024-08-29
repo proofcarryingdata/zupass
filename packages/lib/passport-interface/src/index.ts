@@ -1,7 +1,6 @@
 export * from "./api/apiResult";
 export * from "./api/constants";
 export * from "./api/makeRequest";
-export * from "./api/requestAddSemaphoreV4Commitment";
 export * from "./api/requestAddUserEmail";
 export * from "./api/requestAgreeTerms";
 export * from "./api/requestChangeBlobKey";
@@ -49,6 +48,7 @@ export * from "./api/requestSemaphoreGroup";
 export * from "./api/requestServerEdDSAPublicKey";
 export * from "./api/requestServerProofStatus";
 export * from "./api/requestServerRSAPublicKey";
+export * from "./api/requestUpgradeUserWithV4Commitment";
 export * from "./api/requestUploadEncryptedStorage";
 export * from "./api/requestUser";
 export * from "./api/requestVerifyTicket";
