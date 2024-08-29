@@ -1,19 +1,18 @@
-import {
-  encodePrivateKey,
-  encodePublicKey,
-  podEdDSAPublicKeyHash
-} from "@pcd/pod";
+import { decodePublicKey, encodePrivateKey, encodePublicKey } from "@pcd/pod";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { beBigIntToBuffer } from "@zk-kit/utils";
 import { sha256 } from "js-sha256";
+import { poseidon2 } from "poseidon-lite/poseidon2";
 import { SemaphoreIdentityV4PCD } from "./SemaphoreIdentityV4PCD";
 
 /**
  * Given a semaphore v4 public key, returns the corresponding v4 identity commitment.
  */
 export function v4PublicKeyToCommitment(publicKey: string): string {
-  return podEdDSAPublicKeyHash(publicKey).toString();
+  // matches implementation in semaphore v4 lib:
+  // https://github.com/semaphore-protocol/semaphore/blob/3572f44/packages/identity/src/index.ts#L49
+  return poseidon2(decodePublicKey(publicKey)).toString();
 }
 
 /**

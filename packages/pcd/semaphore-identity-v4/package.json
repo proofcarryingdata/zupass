@@ -34,6 +34,7 @@
     "@zk-kit/eddsa-poseidon": "1.0.2",
     "@zk-kit/utils": "^1.2.0",
     "js-sha256": "^0.11.0",
+    "poseidon-lite": "^0.3.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
