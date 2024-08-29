@@ -172,7 +172,7 @@ export interface UserRow {
    */
   semaphore_v4_commitment?: string | null;
   /**
-   * EdDSA public key - semaphore commitment from semaphore v4.
+   * EdDSA public key identifying a user in semaphore v4.
    */
   semaphore_v4_pubkey?: string | null;
 }
