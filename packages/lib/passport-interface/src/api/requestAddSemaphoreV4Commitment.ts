@@ -98,7 +98,9 @@ export async function makeAddV4CommitmentRequest(
 }
 
 /**
- * @param sig created by {@link makeAddV4CommitmentRequest}
+ * @param sig created by {@link makeAddV4CommitmentRequest}. This function verifies that it
+ * is a valid v3 signature of a valid v4 signature of the identity that was used to create
+ * the outermost v3 signature.
  */
 export async function verifyAddV4CommitmentRequestPCD(
   sig: SemaphoreSignaturePCD
