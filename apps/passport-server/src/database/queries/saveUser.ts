@@ -31,6 +31,12 @@ export async function upsertUser(
     throw new Error("users must have at least one email address");
   }
 
+  if (!!params.semaphore_v4_commitment !== !!params.semaphore_v4_pubkey) {
+    throw new Error(
+      "semaphore_v4_commitment and semaphore_v4_pubkey must both be set or unset"
+    );
+  }
+
   return sqlTransaction(
     client,
     "save user",

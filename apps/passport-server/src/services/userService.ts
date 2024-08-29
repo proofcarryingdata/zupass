@@ -518,6 +518,10 @@ export class UserService {
       user.semaphore_v4_commitment = verification.v4Commitment;
       user.semaphore_v4_pubkey = verification.v4PublicKey;
       await upsertUser(this.context.dbPool, user);
+    } else {
+      logger(
+        `[USER_SERVICE] User ${user.uuid} already has a v4 commitment. Skipping update.`
+      );
     }
 
     return {
