@@ -4,7 +4,11 @@ import assert from "assert";
 import { expect } from "chai";
 import "mocha";
 import { SemaphoreIdentityV4PCDPackage } from "../src/SemaphoreIdentityV4PCDPackage";
-import { v4PrivateKey, v4PublicKey } from "../src/utils";
+import {
+  v4PrivateKey,
+  v4PublicKey,
+  v4PublicKeyToCommitment
+} from "../src/utils";
 
 describe("Semaphore Identity PCD", function () {
   it("should be instantiatable", async function () {
@@ -86,5 +90,12 @@ describe("Semaphore Identity PCD", function () {
     const pod = POD.sign({ a: { type: "int", value: 0n } }, privateKey);
     expect(pod.signerPublicKey).to.eq(v4PublicKey(identity));
     expect(encodePublicKey(identity.publicKey)).to.eq(v4PublicKey(identity));
+  });
+
+  it("v4PublicKeyToCommitment", function () {
+    const identity = new Identity();
+    expect(identity.commitment.toString()).to.eq(
+      v4PublicKeyToCommitment(v4PublicKey(identity))
+    );
   });
 });
