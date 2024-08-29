@@ -47,6 +47,11 @@ export async function requestAddSemaphoreV4Commitment(
 
 export type AddV4CommitmentResult = APIResult<AddV4CommitmentResponseValue>;
 
+/**
+ * @returns a v3 signature of a v4 signature of the identity commitment of the identity that
+ * was used to create the outermost v3 signature. Expects that both a v3 and v4 identity PCD
+ * exist in the collection. This proves that the creator of this request 'owns' both identities.
+ */
 export async function makeAddV4CommitmentRequest(
   pcdCollection: PCDCollection
 ): Promise<AddV4CommitmentRequest> {
@@ -58,7 +63,9 @@ export async function makeAddV4CommitmentRequest(
   )[0] as SemaphoreIdentityV4PCD | undefined;
 
   if (!v3PCD || !v4PCD) {
-    throw new Error("Expected exactly one v3 and v4 PCD");
+    throw new Error(
+      "Expected a v3 and v4 identity PCD to exist in the collection"
+    );
   }
 
   const v4SigOfV3Claim = await PODPCDPackage.prove({
