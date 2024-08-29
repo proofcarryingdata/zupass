@@ -105,4 +105,14 @@ describe("V3ToV4Migration", async function () {
     const verified = await verifyAddV4CommitmentRequestPCD(migrationPCD);
     expect(verified).to.deep.eq(undefined);
   });
+
+  it("V3ToV4Migration is deterministic", async function () {
+    const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
+      identity: new Identity("asdf")
+    });
+    const v4Id = v3tov4Identity(v3Id);
+    expect(v4Id.claim.identity.export()).to.eq(
+      "IS/H+GdcAaGchwJQ7RtOmCNJlmFCbMtJB9P/rxPUEs0="
+    );
+  });
 });
