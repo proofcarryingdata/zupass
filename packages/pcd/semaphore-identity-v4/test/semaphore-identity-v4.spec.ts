@@ -1,13 +1,10 @@
-import { POD } from "@pcd/pod";
+import { encodePublicKey, POD } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import { expect } from "chai";
 import "mocha";
-import {
-  SemaphoreIdentityV4PCDPackage,
-  v4PrivateKey,
-  v4PublicKey
-} from "../src/SemaphoreIdentityV4PCDPackage";
+import { SemaphoreIdentityV4PCDPackage } from "../src/SemaphoreIdentityV4PCDPackage";
+import { v4PrivateKey, v4PublicKey } from "../src/utils";
 
 describe("Semaphore Identity PCD", function () {
   it("should be instantiatable", async function () {
@@ -81,5 +78,13 @@ describe("Semaphore Identity PCD", function () {
     expect(deserialized.claim.identity).to.deep.eq(
       Identity.import("MjAzMTU5OTAwNzk4NDM2MTU4MTQ5MDY1Mjc0OTMxNDY=")
     );
+  });
+
+  it("v4PublicKey", function () {
+    const identity = new Identity();
+    const privateKey = identity.export();
+    const pod = POD.sign({ a: { type: "int", value: 0n } }, privateKey);
+    expect(pod.signerPublicKey).to.eq(v4PublicKey(identity));
+    expect(encodePublicKey(identity.publicKey)).to.eq(v4PublicKey(identity));
   });
 });
