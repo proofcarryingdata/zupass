@@ -2,6 +2,19 @@ import { Pool } from "postgres-pool";
 import { logger } from "../../util/logger";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
+export interface SaveUserParams {
+  uuid: string;
+  // Semaphore v3 commitment.
+  commitment: string;
+  salt?: string | null;
+  encryption_key?: string | null;
+  semaphore_v4_commitment?: string | null;
+  semaphore_v4_pubkey?: string | null;
+  terms_agreed: number;
+  extra_issuance: boolean;
+  emails: string[];
+}
+
 /**
  * Saves a new user. If a user with the given UUID already exists, overwrites their
  * information. Returns the user's UUID.
@@ -10,18 +23,7 @@ import { sqlQuery, sqlTransaction } from "../sqlQuery";
  */
 export async function upsertUser(
   client: Pool,
-  params: {
-    uuid: string;
-    // Semaphore v3 commitment.
-    commitment: string;
-    salt?: string | null;
-    encryption_key?: string | null;
-    semaphore_v4_commitment?: string | null;
-    semaphore_v4_pubkey?: string | null;
-    terms_agreed: number;
-    extra_issuance: boolean;
-    emails: string[];
-  }
+  params: SaveUserParams
 ): Promise<string> {
   logger("[DB] upsertUser", params);
 

@@ -145,7 +145,7 @@ export async function fetchUserByV4Commitment(
     `SELECT u.*, array_agg(ue.email) as emails
      FROM users u
      LEFT JOIN user_emails ue ON u.uuid = ue.user_id
-     WHERE u.semaphore_v4_id = $1
+     WHERE u.semaphore_v4_commitment = $1
      GROUP BY u.uuid`,
     [v4Commitment]
   );
