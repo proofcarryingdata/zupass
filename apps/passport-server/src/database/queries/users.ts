@@ -106,21 +106,7 @@ export async function fetchUserForCredential(
     return null;
   }
 
-  const result = await sqlQuery(
-    client,
-    `SELECT u.*, array_agg(ue.email) as emails
-    FROM users u
-    LEFT JOIN user_emails ue ON u.uuid = ue.user_id
-    WHERE u.commitment = $1
-    GROUP BY u.uuid`,
-    [credential.semaphoreId]
-  );
-
-  if (result.rowCount === 0) {
-    return null;
-  }
-
-  return result.rows[0];
+  return fetchUserByV3Commitment(client, credential.semaphoreId);
 }
 
 /**

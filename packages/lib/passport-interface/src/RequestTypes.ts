@@ -626,6 +626,9 @@ export type CreateNewUserRequest = {
   autoRegister?: boolean;
 };
 
+/**
+ * Asks the Zupass server to add a user's semaphore v4 commitment to their existing account.
+ */
 export type AddV4CommitmentRequest = {
   // semaphore v3 signature of semaphore v4 signature of v3 commitment
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
