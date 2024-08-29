@@ -1,10 +1,16 @@
 import { encodePublicKey, POD } from "@pcd/pod";
+import {
+  newV3Identity,
+  SemaphoreIdentityPCD
+} from "@pcd/semaphore-identity-pcd";
+import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import { expect } from "chai";
 import "mocha";
 import { SemaphoreIdentityV4PCDPackage } from "../src/SemaphoreIdentityV4PCDPackage";
 import {
+  v3tov4Identity,
   v4PrivateKey,
   v4PublicKey,
   v4PublicKeyToCommitment
@@ -97,5 +103,12 @@ describe("Semaphore Identity PCD", function () {
     expect(identity.commitment.toString()).to.eq(
       v4PublicKeyToCommitment(v4PublicKey(identity))
     );
+  });
+
+  it("v3tov4Identity is deterministic", function () {
+    const v3Identity = new SemaphoreIdentityPCD(randomUUID(), {
+      identity: newV3Identity()
+    });
+    expect(v3tov4Identity(v3Identity)).to.deep.eq(v3tov4Identity(v3Identity));
   });
 });
