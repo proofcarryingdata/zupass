@@ -75,9 +75,58 @@ describe("V3ToV4Migration", async function () {
       entries: {
         argumentType: ArgumentTypeName.Object,
         value: {
-          signedValue: {
+          mySemaphoreV3Commitment: {
+            type: "cryptographic",
+            value: 1n
+          },
+          pod_type: {
             type: "string",
-            value: "asdf"
+            value: "zupass_semaphore_v4_migration"
+          }
+        }
+      },
+      privateKey: {
+        argumentType: ArgumentTypeName.String,
+        value: v4PrivateKey(v4Id.claim.identity)
+      },
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: randomUUID()
+      }
+    });
+
+    const migrationPCD = await SemaphoreSignaturePCDPackage.prove({
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        value: await SemaphoreIdentityPCDPackage.serialize(v3Id)
+      },
+      signedMessage: {
+        argumentType: ArgumentTypeName.String,
+        value: JSON.stringify(await PODPCDPackage.serialize(v4SigOfV3Claim))
+      }
+    });
+
+    const verified = await verifyAddV4CommitmentRequestPCD(migrationPCD);
+    expect(verified).to.deep.eq(undefined);
+  });
+
+  it("V3ToV4Migration wrong pod type should not verify", async function () {
+    const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
+      identity: new Identity()
+    });
+    const v4Id = v3tov4Identity(v3Id);
+
+    const v4SigOfV3Claim = await PODPCDPackage.prove({
+      entries: {
+        argumentType: ArgumentTypeName.Object,
+        value: {
+          mySemaphoreV3Commitment: {
+            type: "cryptographic",
+            value: v3Id.claim.identity.commitment
+          },
+          pod_type: {
+            type: "string",
+            value: "zupass_semaphore_v4_migration XD"
           }
         }
       },

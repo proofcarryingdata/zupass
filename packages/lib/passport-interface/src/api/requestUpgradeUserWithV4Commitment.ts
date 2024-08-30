@@ -76,9 +76,13 @@ export async function makeAddV4CommitmentRequest(
     entries: {
       argumentType: ArgumentTypeName.Object,
       value: {
-        signedValue: {
+        mySemaphoreV3Commitment: {
+          type: "cryptographic",
+          value: v3PCD.claim.identity.commitment
+        },
+        pod_type: {
           type: "string",
-          value: v3PCD.claim.identity.commitment.toString()
+          value: "zupass_semaphore_v4_migration"
         }
       }
     },
@@ -118,17 +122,21 @@ export async function verifyAddV4CommitmentRequestPCD(
 ): Promise<V4MigrationVerification | undefined> {
   try {
     const v3SigVerifies = await SemaphoreSignaturePCDPackage.verify(sig);
-    const expectedV3Id = sig.claim.identityCommitment;
+    const expectedV3Id = BigInt(sig.claim.identityCommitment);
     const v4SigOfV3Id = await PODPCDPackage.deserialize(
       JSON.parse(sig.claim.signedMessage).pcd
     );
     const v4SigVerifies = await PODPCDPackage.verify(v4SigOfV3Id);
-    const v4Message = v4SigOfV3Id.claim.entries["signedValue"];
+    const v4Message = v4SigOfV3Id.claim.entries["mySemaphoreV3Commitment"];
     const v4SigIsOfV3Id =
-      v4Message.type === "string" && v4Message.value === expectedV3Id;
-    if (v3SigVerifies && v4SigVerifies && v4SigIsOfV3Id) {
+      v4Message.type === "cryptographic" && v4Message.value === expectedV3Id;
+    const isRightPodType =
+      v4SigOfV3Id.claim.entries["pod_type"]?.type === "string" &&
+      v4SigOfV3Id.claim.entries["pod_type"].value ===
+        "zupass_semaphore_v4_migration";
+    if (v3SigVerifies && v4SigVerifies && v4SigIsOfV3Id && isRightPodType) {
       return {
-        v3Commitment: expectedV3Id,
+        v3Commitment: expectedV3Id.toString(),
         v4PublicKey: v4SigOfV3Id.claim.signerPublicKey,
         v4Commitment: v4PublicKeyToCommitment(v4SigOfV3Id.claim.signerPublicKey)
       };
