@@ -813,6 +813,10 @@ async function loadAfterLogin(
     return;
   }
 
+  // if the user does not have a v4 identity, create one for them,
+  // and request that the server upgrade their account to include
+  // their v4 identity details. this is a one-time migration step
+  // necessary to upgrade an account from semaphore v3 to v4.
   const identityV4PCD = findUserIdentityV4PCD(pcds, userResponse.value);
   if (!identityV4PCD) {
     try {
