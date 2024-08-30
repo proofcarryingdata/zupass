@@ -236,11 +236,11 @@ export function getRunningAppStateValidationErrors(
   const publicKeyV4FromIdentityField = identityV4 && v4PublicKey(identityV4);
 
   if (commitmentFromSelfField === undefined) {
-    errors.push(`'self' missing a commitment`);
+    errors.push(`'self' missing a v3 commitment`);
   }
 
   if (commitmentV4FromSelfField === undefined) {
-    errors.push(`'self' missing a commitment`);
+    errors.push(`'self' missing a v4 commitment`);
   }
 
   if (

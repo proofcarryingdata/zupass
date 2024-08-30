@@ -73,7 +73,7 @@ import { randomEmailToken } from "../src/util/util";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { expectToExist, randomEmail } from "./util/util";
 
-describe.only("database reads and writes", function () {
+describe("database reads and writes", function () {
   let db: Pool;
   let testTicket: ZuzaluPretixTicket;
   let otherRole: ZuzaluUserRole;

@@ -6,7 +6,8 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreIdentityV4PCDPackage,
-  v3tov4Identity
+  v3tov4Identity,
+  v4PublicKey
 } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -85,7 +86,8 @@ describe("validateAppState", async function () {
     ).to.deep.eq({
       errors: [
         "'pcds' contains no pcds",
-        "'pcds' field in app state does not contain an identity PCD"
+        "'pcds' field in app state does not contain an identity v3 PCD",
+        "'pcds' field in app state does not contain an identity v4 PCD"
       ],
       userUUID: undefined,
       ...TAG
@@ -105,7 +107,10 @@ describe("validateAppState", async function () {
         true
       )
     ).to.deep.eq({
-      errors: ["'pcds' field in app state does not contain an identity PCD"],
+      errors: [
+        "'pcds' field in app state does not contain an identity v3 PCD",
+        "'pcds' field in app state does not contain an identity v4 PCD"
+      ],
       userUUID: undefined,
       ...TAG
     } satisfies ErrorReport);
@@ -146,7 +151,8 @@ describe("validateAppState", async function () {
     ).to.deep.eq({
       errors: [
         "missing 'pcds'",
-        "'pcds' field in app state does not contain an identity PCD"
+        "'pcds' field in app state does not contain an identity v3 PCD",
+        "'pcds' field in app state does not contain an identity v4 PCD"
       ],
       userUUID: undefined,
       ...TAG
@@ -156,6 +162,8 @@ describe("validateAppState", async function () {
   it("logged in ; no errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
+      semaphore_v4_commitment: v4id1.commitment.toString(),
+      semaphore_v4_pubkey: v4PublicKey(v4id1),
       emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
@@ -165,6 +173,11 @@ describe("validateAppState", async function () {
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity1
+      })
+    );
+    pcds.add(
+      await SemaphoreIdentityV4PCDPackage.prove({
+        identity: v4id1
       })
     );
     expect(
@@ -235,7 +248,9 @@ describe("validateAppState", async function () {
       userUUID: self.uuid,
       errors: [
         "'pcds' contains no pcds",
-        "'pcds' field in app state does not contain an identity PCD"
+        "'pcds' field in app state does not contain an identity v3 PCD",
+        "'pcds' field in app state does not contain an identity v4 PCD",
+        `'self' missing a v4 commitment`
       ],
       ...TAG
     } satisfies ErrorReport);
@@ -255,7 +270,9 @@ describe("validateAppState", async function () {
       userUUID: self.uuid,
       errors: [
         "missing 'pcds'",
-        "'pcds' field in app state does not contain an identity PCD"
+        "'pcds' field in app state does not contain an identity v3 PCD",
+        "'pcds' field in app state does not contain an identity v4 PCD",
+        `'self' missing a v4 commitment`
       ],
       ...TAG
     } satisfies ErrorReport);
@@ -279,7 +296,12 @@ describe("validateAppState", async function () {
       validateRunningAppState(TAG_STR, self, undefined, undefined, pcds)
     ).to.deep.eq({
       userUUID: self.uuid,
-      errors: ["missing 'identity'"],
+      errors: [
+        `'pcds' field in app state does not contain an identity v4 PCD`,
+        "missing 'identity'",
+        "missing 'identityV4'",
+        `'self' missing a v4 commitment`
+      ],
       ...TAG
     } satisfies ErrorReport);
   });
@@ -298,11 +320,19 @@ describe("validateAppState", async function () {
         identity: identity1
       })
     );
+    pcds.add(
+      await SemaphoreIdentityV4PCDPackage.prove({
+        identity: v4id1
+      })
+    );
     expect(
       validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
     ).to.deep.eq({
       userUUID: self.uuid,
-      errors: ["'self' missing a commitment"],
+      errors: [
+        "'self' missing a v3 commitment",
+        `'self' missing a v4 commitment`
+      ],
       ...TAG
     } satisfies ErrorReport);
   });
@@ -310,6 +340,8 @@ describe("validateAppState", async function () {
   it("logged in ; self commitment wrong ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity2.commitment.toString(),
+      semaphore_v4_commitment: v4id2.commitment.toString(),
+      semaphore_v4_pubkey: v4PublicKey(v4id2),
       emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
@@ -321,13 +353,26 @@ describe("validateAppState", async function () {
         identity: identity1
       })
     );
+    pcds.add(
+      await SemaphoreIdentityV4PCDPackage.prove({
+        identity: v4id1
+      })
+    );
     expect(
       validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
     ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
+        `public key in 'self' field of app state (${v4PublicKey(
+          v4id2
+        )}) does not match public key of 'identityV4' field of app state (${v4PublicKey(
+          v4id1
+        )})`,
+        `v4 commitment in 'self' field of app state (${v4id2.commitment}) does not match v4 commitment of 'identityV4' field of app state (${v4id1.commitment})`,
         `commitment of identity pcd in collection (${commitment1}) does not match commitment in 'self' field of app state (${commitment2})`,
-        `commitment in 'self' field of app state (${commitment2}) does not match commitment of 'identity' field of app state (${commitment1})`
+        `commitment in 'self' field of app state (${commitment2}) does not match commitment of 'identity' field of app state (${commitment1})`,
+        `commitment of identity v4 pcd in collection (${v4id1.commitment}) does not match commitment in 'self' field of app state (${v4id2.commitment})`,
+        `v4 commitment in 'self' field of app state (${v4id2.commitment}) does not match commitment of 'identityV4' field of app state (${v4id1.commitment})`
       ],
       ...TAG
     } satisfies ErrorReport);
@@ -336,6 +381,8 @@ describe("validateAppState", async function () {
   it("logged in ; pcd collection identity wrong ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
+      semaphore_v4_commitment: v4id1.commitment.toString(),
+      semaphore_v4_pubkey: v4PublicKey(v4id1),
       emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
@@ -347,13 +394,20 @@ describe("validateAppState", async function () {
         identity: identity2
       })
     );
+    pcds.add(
+      await SemaphoreIdentityV4PCDPackage.prove({
+        identity: v4id2
+      })
+    );
     expect(
       validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
     ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         `commitment of identity pcd in collection (${commitment2}) does not match commitment in 'self' field of app state (${commitment1})`,
-        `commitment of 'identity' field of app state (${commitment1}) does not match commitment of identity pcd in collection (${commitment2})`
+        `commitment of 'identity' field of app state (${commitment1}) does not match commitment of identity pcd in collection (${commitment2})`,
+        `commitment of identity v4 pcd in collection (${v4id2.commitment}) does not match commitment in 'self' field of app state (${v4id1.commitment})`,
+        `commitment of 'identityV4' field of app state (${v4id1.commitment}) does not match commitment of identity v4 pcd in collection (${v4id2.commitment})`
       ],
       ...TAG
     } satisfies ErrorReport);
@@ -362,6 +416,8 @@ describe("validateAppState", async function () {
   it("logged in ; appState identity wrong ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
+      semaphore_v4_commitment: v4id1.commitment.toString(),
+      semaphore_v4_pubkey: v4PublicKey(v4id1),
       emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
@@ -373,13 +429,26 @@ describe("validateAppState", async function () {
         identity: identity1
       })
     );
+    pcds.add(
+      await SemaphoreIdentityV4PCDPackage.prove({
+        identity: v4id1
+      })
+    );
     expect(
       validateRunningAppState(TAG_STR, self, identity2, v4id2, pcds)
     ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
+        `public key in 'self' field of app state (${v4PublicKey(
+          v4id1
+        )}) does not match public key of 'identityV4' field of app state (${v4PublicKey(
+          v4id2
+        )})`,
+        `v4 commitment in 'self' field of app state (${v4id1.commitment}) does not match v4 commitment of 'identityV4' field of app state (${v4id2.commitment})`,
         `commitment in 'self' field of app state (${commitment1}) does not match commitment of 'identity' field of app state (${commitment2})`,
-        `commitment of 'identity' field of app state (${commitment2}) does not match commitment of identity pcd in collection (${commitment1})`
+        `commitment of 'identity' field of app state (${commitment2}) does not match commitment of identity pcd in collection (${commitment1})`,
+        `v4 commitment in 'self' field of app state (${v4id1.commitment}) does not match commitment of 'identityV4' field of app state (${v4id2.commitment})`,
+        `commitment of 'identityV4' field of app state (${v4id2.commitment}) does not match commitment of identity v4 pcd in collection (${v4id1.commitment})`
       ],
       ...TAG
     } satisfies ErrorReport);
@@ -388,6 +457,8 @@ describe("validateAppState", async function () {
   it("logged in ; all identities mistmatched ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
+      semaphore_v4_commitment: v4id1.commitment.toString(),
+      semaphore_v4_pubkey: v4PublicKey(v4id1),
       emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
@@ -399,14 +470,28 @@ describe("validateAppState", async function () {
         identity: identity2
       })
     );
+    pcds.add(
+      await SemaphoreIdentityV4PCDPackage.prove({
+        identity: v4id2
+      })
+    );
     expect(
       validateRunningAppState(TAG_STR, self, identity3, v4id3, pcds)
     ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
+        `public key in 'self' field of app state (${v4PublicKey(
+          v4id1
+        )}) does not match public key of 'identityV4' field of app state (${v4PublicKey(
+          v4id3
+        )})`,
+        `v4 commitment in 'self' field of app state (${v4id1.commitment}) does not match v4 commitment of 'identityV4' field of app state (${v4id3.commitment})`,
         `commitment of identity pcd in collection (${commitment2}) does not match commitment in 'self' field of app state (${commitment1})`,
         `commitment in 'self' field of app state (${commitment1}) does not match commitment of 'identity' field of app state (${commitment3})`,
-        `commitment of 'identity' field of app state (${commitment3}) does not match commitment of identity pcd in collection (${commitment2})`
+        `commitment of 'identity' field of app state (${commitment3}) does not match commitment of identity pcd in collection (${commitment2})`,
+        `commitment of identity v4 pcd in collection (${v4id2.commitment}) does not match commitment in 'self' field of app state (${v4id1.commitment})`,
+        `v4 commitment in 'self' field of app state (${v4id1.commitment}) does not match commitment of 'identityV4' field of app state (${v4id3.commitment})`,
+        `commitment of 'identityV4' field of app state (${v4id3.commitment}) does not match commitment of identity v4 pcd in collection (${v4id2.commitment})`
       ],
       ...TAG
     } satisfies ErrorReport);

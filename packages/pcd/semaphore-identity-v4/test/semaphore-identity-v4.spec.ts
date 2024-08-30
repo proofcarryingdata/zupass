@@ -48,7 +48,7 @@ describe("Semaphore Identity PCD", function () {
     const original = new IdentityV4();
 
     expect(original.export()).to.eq(
-      Identity.import(v4PrivateKey(original)).export()
+      IdentityV4.import(v4PrivateKey(original)).export()
     );
 
     const pod = POD.sign(
