@@ -512,18 +512,12 @@ async function createNewUserWithPassword(
     encryptionKey
   });
 
-  const v4IdentityPCD = v3tov4IdentityPCD(
-    await SemaphoreIdentityPCDPackage.prove({
-      identity: state.identityV3
-    })
-  );
-
   const newUserResult = await requestCreateNewUser(
     appConfig.zupassServer,
     email,
     token,
     state.identityV3.commitment.toString(),
-    v4PublicKey(v4IdentityPCD.claim.identity),
+    v4PublicKey(state.identityV4),
     newSalt,
     undefined,
     undefined
