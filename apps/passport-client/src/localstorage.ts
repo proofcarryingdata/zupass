@@ -11,7 +11,7 @@ import {
 import {
   SemaphoreIdentityV4PCD,
   SemaphoreIdentityV4PCDTypeName,
-  v3tov4Identity
+  v3tov4IdentityPCD
 } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
@@ -62,7 +62,7 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
   // so. we derive a v4 identity from the v3 identity and add it to the collection.
   if (v3Identity.length > 0 && !v4Identity) {
     const v3IdentityPCD = v3Identity[0] as SemaphoreIdentityPCD;
-    const v4Identity = v3tov4Identity(v3IdentityPCD);
+    const v4Identity = v3tov4IdentityPCD(v3IdentityPCD);
     collection.add(v4Identity);
     await savePCDs(collection);
   }

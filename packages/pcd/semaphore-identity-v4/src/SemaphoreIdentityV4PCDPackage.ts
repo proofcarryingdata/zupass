@@ -1,6 +1,5 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { requireDefinedParameter } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import {
@@ -10,6 +9,7 @@ import {
   SemaphoreIdentityV4PCDProof,
   SemaphoreIdentityV4PCDTypeName
 } from "./SemaphoreIdentityV4PCD";
+import { IdentityV4 } from "./forwardedTypes";
 
 export async function prove(
   args: SemaphoreIdentityV4PCDArgs
@@ -43,7 +43,7 @@ export async function deserialize(
   requireDefinedParameter(identity, "identity");
 
   return new SemaphoreIdentityV4PCD(id, {
-    identity: Identity.import(identity)
+    identity: IdentityV4.import(identity)
   });
 }
 

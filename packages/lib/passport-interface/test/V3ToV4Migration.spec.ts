@@ -7,7 +7,7 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreIdentityV4PCDPackage,
-  v3tov4Identity,
+  v3tov4IdentityPCD,
   v4PrivateKey,
   v4PublicKey
 } from "@pcd/semaphore-identity-v4";
@@ -44,8 +44,8 @@ describe("V3ToV4Migration", async function () {
     const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
       identity: new Identity()
     });
-    const v4Id = v3tov4Identity(v3Id);
-    const v4Id2 = v3tov4Identity(v3Id); // check it's deterministic
+    const v4Id = v3tov4IdentityPCD(v3Id);
+    const v4Id2 = v3tov4IdentityPCD(v3Id); // check it's deterministic
     expect(v4Id.claim.identity.export()).to.eq(v4Id2.claim.identity.export());
 
     const rightPCDs = new PCDCollection(
@@ -69,7 +69,7 @@ describe("V3ToV4Migration", async function () {
     const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
       identity: new Identity()
     });
-    const v4Id = v3tov4Identity(v3Id);
+    const v4Id = v3tov4IdentityPCD(v3Id);
 
     const v4SigOfV3Claim = await PODPCDPackage.prove({
       entries: {
@@ -114,7 +114,7 @@ describe("V3ToV4Migration", async function () {
     const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
       identity: new Identity()
     });
-    const v4Id = v3tov4Identity(v3Id);
+    const v4Id = v3tov4IdentityPCD(v3Id);
 
     const v4SigOfV3Claim = await PODPCDPackage.prove({
       entries: {
@@ -159,7 +159,7 @@ describe("V3ToV4Migration", async function () {
     const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
       identity: new Identity("asdf")
     });
-    const v4Id = v3tov4Identity(v3Id);
+    const v4Id = v3tov4IdentityPCD(v3Id);
     expect(v4Id.claim.identity.export()).to.eq(
       "IS/H+GdcAaGchwJQ7RtOmCNJlmFCbMtJB9P/rxPUEs0="
     );

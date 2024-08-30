@@ -34,7 +34,7 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
-import { v3tov4Identity, v4PublicKey } from "@pcd/semaphore-identity-v4";
+import { v3tov4IdentityPCD, v4PublicKey } from "@pcd/semaphore-identity-v4";
 import { assertUnreachable, sleep } from "@pcd/util";
 import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
@@ -325,7 +325,7 @@ async function genPassport(
   update: ZuUpdate
 ): Promise<void> {
   const v3Identity = await SemaphoreIdentityPCDPackage.prove({ identity });
-  const v4Identity = v3tov4Identity(v3Identity);
+  const v4Identity = v3tov4IdentityPCD(v3Identity);
   const pcds = new PCDCollection(await getPackages(), [v3Identity, v4Identity]);
 
   await savePCDs(pcds);
@@ -349,7 +349,7 @@ async function oneClickLogin(
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
     identity: state.identity
   });
-  const v4IdentityPCD = v3tov4Identity(identityPCD);
+  const v4IdentityPCD = v3tov4IdentityPCD(identityPCD);
   const pcds = new PCDCollection(await getPackages(), [
     identityPCD,
     v4IdentityPCD
@@ -444,7 +444,7 @@ async function createNewUserSkipPassword(
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
     identity: state.identity
   });
-  const v4IdentityPCD = v3tov4Identity(identityPCD);
+  const v4IdentityPCD = v3tov4IdentityPCD(identityPCD);
 
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
@@ -512,7 +512,7 @@ async function createNewUserWithPassword(
     encryptionKey
   });
 
-  const v4IdentityPCD = v3tov4Identity(
+  const v4IdentityPCD = v3tov4IdentityPCD(
     await SemaphoreIdentityPCDPackage.prove({
       identity: state.identity
     })
@@ -820,7 +820,7 @@ async function loadAfterLogin(
   const identityV4PCD = findUserIdentityV4PCD(pcds, userResponse.value);
   if (!identityV4PCD) {
     try {
-      const newV4Identity = v3tov4Identity(identityPCDV3);
+      const newV4Identity = v3tov4IdentityPCD(identityPCDV3);
       pcds.add(newV4Identity);
       const res = await requestUpgradeUserWithV4Commitment(
         appConfig.zupassServer,

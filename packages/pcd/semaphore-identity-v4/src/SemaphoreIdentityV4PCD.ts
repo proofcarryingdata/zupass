@@ -1,5 +1,5 @@
 import { PCD } from "@pcd/pcd-types";
-import { Identity } from "@semaphore-protocol/identity";
+import { IdentityV4 } from "./forwardedTypes";
 
 export const SemaphoreIdentityV4PCDTypeName = "semaphore-identity-v4-pcd";
 
@@ -7,14 +7,14 @@ export const SemaphoreIdentityV4PCDTypeName = "semaphore-identity-v4-pcd";
  * @param identity - The semaphore v4 identity to be stored in the PCD.
  */
 export type SemaphoreIdentityV4PCDArgs = {
-  identity: Identity;
+  identity: IdentityV4;
 };
 
 /**
  * @param identity - The semaphore v4 identity represented by the PCD.
  */
 export interface SemaphoreIdentityV4PCDClaim {
-  identity: Identity;
+  identity: IdentityV4;
 }
 
 export type SemaphoreIdentityV4PCDProof = undefined;
