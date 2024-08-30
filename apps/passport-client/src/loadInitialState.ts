@@ -3,7 +3,6 @@ import {
   makeAddV4CommitmentRequest,
   requestUpgradeUserWithV4Commitment
 } from "@pcd/passport-interface";
-import { SemaphoreIdentityV4PCDTypeName } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import {
@@ -16,6 +15,7 @@ import {
   saveIdentity
 } from "./localstorage";
 import { AppState } from "./state";
+import { findIdentityV4PCD } from "./user";
 import { validateAndLogInitialAppState } from "./validateState";
 
 export async function loadInitialState(): Promise<AppState> {
@@ -40,10 +40,7 @@ export async function loadInitialState(): Promise<AppState> {
     self &&
     (!self.semaphore_v4_commitment || !self.semaphore_v4_pubkey)
   ) {
-    const semaphoreV4IdentityPCD = pcds.getPCDsByType(
-      SemaphoreIdentityV4PCDTypeName
-    )[0];
-
+    const semaphoreV4IdentityPCD = findIdentityV4PCD(pcds);
     if (semaphoreV4IdentityPCD) {
       await requestUpgradeUserWithV4Commitment(
         appConfig.zupassServer,
