@@ -1,7 +1,8 @@
 import {
   createStorageBackedCredentialCache,
   makeAddV4CommitmentRequest,
-  requestUpgradeUserWithV4Commitment
+  requestUpgradeUserWithV4Commitment,
+  requestUser
 } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
@@ -12,7 +13,8 @@ import {
   loadPersistentSyncStatus,
   loadSelf,
   loadSubscriptions,
-  saveIdentity
+  saveIdentity,
+  saveSelf
 } from "./localstorage";
 import { AppState } from "./state";
 import { findIdentityV4PCD } from "./user";
@@ -27,7 +29,7 @@ export async function loadInitialState(): Promise<AppState> {
     saveIdentity(identity);
   }
 
-  const self = loadSelf();
+  let self = loadSelf();
 
   const pcds = await loadPCDs(self);
 
@@ -46,6 +48,14 @@ export async function loadInitialState(): Promise<AppState> {
         appConfig.zupassServer,
         await makeAddV4CommitmentRequest(pcds)
       );
+    }
+    const newSelfResponse = await requestUser(
+      appConfig.zupassServer,
+      self.uuid
+    );
+    if (newSelfResponse.success) {
+      self = newSelfResponse.value;
+      saveSelf(self);
     }
   }
 
