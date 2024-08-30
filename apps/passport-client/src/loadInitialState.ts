@@ -31,6 +31,10 @@ export async function loadInitialState(): Promise<AppState> {
 
   const pcds = await loadPCDs(self);
 
+  // in the case that the user has not upgraded their account to v4,
+  // (as indicated by missing semaphore_v4_commitment or semaphore_v4_pubkey in self)
+  // upgrade their account to include their v4 identity details. this is a one-time
+  // migration step necessary to upgrade an account from semaphore v3 to v4.
   if (
     pcds &&
     self &&
