@@ -22,12 +22,12 @@ import { findIdentityV4PCD } from "./user";
 import { validateAndLogInitialAppState } from "./validateState";
 
 export async function loadInitialState(): Promise<AppState> {
-  let identity = loadIdentity();
+  let identityV3 = loadIdentity();
 
-  if (!identity) {
+  if (!identityV3) {
     console.log("Generating a new Semaphore identity...");
-    identity = new Identity();
-    saveIdentity(identity);
+    identityV3 = new Identity();
+    saveIdentity(identityV3);
   }
 
   let self = loadSelf();
@@ -83,8 +83,8 @@ export async function loadInitialState(): Promise<AppState> {
     self,
     encryptionKey,
     pcds,
-    identity,
-    identityV4: v3tov4Identity(identity),
+    identityV3: identityV3,
+    identityV4: v3tov4Identity(identityV3),
     modal,
     subscriptions,
     resolvingSubscriptionId: undefined,

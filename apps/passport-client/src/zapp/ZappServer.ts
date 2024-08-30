@@ -200,7 +200,7 @@ export class Identity extends BaseZappServer implements ZupassIdentity {
   }
 
   public async getIdentityCommitment(): Promise<bigint> {
-    return this.getContext().getState().identity.getCommitment();
+    return this.getContext().getState().identityV3.getCommitment();
   }
 
   public async getAttestedEmails(): Promise<SerializedPCD[]> {

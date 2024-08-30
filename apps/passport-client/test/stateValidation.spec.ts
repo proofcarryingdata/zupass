@@ -4,6 +4,10 @@ import { ZupassUserJson } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityV4PCDPackage,
+  v3tov4Identity
+} from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { v4 as uuid } from "uuid";
@@ -37,21 +41,30 @@ describe("validateAppState", async function () {
     '["0xaa5fa3165e1ca129bd7a2b3bada18c5f81350faacf2edff59cf44eeba2e2d",' +
       '"0xa944ed90153fc2be5759a0d18eda47266885aea0966ef4dbb96ff979c29ed4"]'
   );
+  const v4id1 = v3tov4Identity(identity1);
   const commitment1 = identity1.commitment;
   const identity2 = new Identity(
     '["0x8526e030dbd593833f24bf73b60f0bcc58690c590b9953acc741f2eb71394d",' +
       '"0x520e4ae6f5d5e4526dd517e61defe16f90bd4aef72b41394285e77463e0c69"]'
   );
+  const v4id2 = v3tov4Identity(identity2);
   const commitment2 = identity2.commitment;
   const identity3 = new Identity(
     '["0x4837c6f88904d1dfefcb7dc6486e95c06cda6eb76d76a9888167c0993e40f0",' +
       '"0x956f9e03b0cc324045d24f9b20531e547272fab8e8ee2f96c0cf2e50311468"]'
   );
+  const v4id3 = v3tov4Identity(identity3);
   const commitment3 = identity3.commitment;
 
   it("logged out ; no errors", async function () {
     expect(
-      validateRunningAppState(TAG_STR, undefined, undefined, undefined)
+      validateRunningAppState(
+        TAG_STR,
+        undefined,
+        undefined,
+        undefined,
+        undefined
+      )
     ).to.deep.eq({
       errors: [],
       userUUID: undefined,
@@ -63,6 +76,7 @@ describe("validateAppState", async function () {
     expect(
       validateRunningAppState(
         TAG_STR,
+        undefined,
         undefined,
         undefined,
         new PCDCollection(pcdPackages),
@@ -82,6 +96,7 @@ describe("validateAppState", async function () {
         TAG_STR,
         undefined,
         undefined,
+        undefined,
         await (async (): Promise<PCDCollection> => {
           const collection = new PCDCollection(pcdPackages);
           collection.add(await newEdSAPCD());
@@ -96,13 +111,23 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
 
     const pcds = new PCDCollection(pcdPackages);
-    pcds.add(
+    pcds.addAll([
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity1
+      }),
+      await SemaphoreIdentityV4PCDPackage.prove({
+        identity: v4id1
       })
-    );
+    ]);
     expect(
-      validateRunningAppState(TAG_STR, undefined, undefined, pcds, true)
+      validateRunningAppState(
+        TAG_STR,
+        undefined,
+        undefined,
+        undefined,
+        pcds,
+        true
+      )
     ).to.deep.eq({
       errors: [],
       userUUID: undefined,
@@ -110,7 +135,14 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
 
     expect(
-      validateRunningAppState(TAG_STR, undefined, undefined, undefined, true)
+      validateRunningAppState(
+        TAG_STR,
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        true
+      )
     ).to.deep.eq({
       errors: [
         "missing 'pcds'",
@@ -135,7 +167,9 @@ describe("validateAppState", async function () {
         identity: identity1
       })
     );
-    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+    expect(
+      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
+    ).to.deep.eq({
       userUUID: self.uuid,
       errors: [],
       ...TAG
@@ -147,7 +181,9 @@ describe("validateAppState", async function () {
         identity: identity2
       })
     );
-    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+    expect(
+      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
+    ).to.deep.eq({
       userUUID: self.uuid,
       errors: [],
       ...TAG
@@ -161,11 +197,23 @@ describe("validateAppState", async function () {
       })
     );
     pcds.add(
+      await SemaphoreIdentityV4PCDPackage.prove({
+        identity: v4id2
+      })
+    );
+    pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity1
       })
     );
-    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+    pcds.add(
+      await SemaphoreIdentityV4PCDPackage.prove({
+        identity: v4id1
+      })
+    );
+    expect(
+      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
+    ).to.deep.eq({
       userUUID: self.uuid,
       errors: [],
       ...TAG
@@ -181,7 +229,9 @@ describe("validateAppState", async function () {
       uuid: uuid()
     };
     const pcds = new PCDCollection(pcdPackages);
-    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+    expect(
+      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
+    ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         "'pcds' contains no pcds",
@@ -200,7 +250,7 @@ describe("validateAppState", async function () {
       uuid: uuid()
     };
     expect(
-      validateRunningAppState(TAG_STR, self, identity1, undefined)
+      validateRunningAppState(TAG_STR, self, identity1, v4id1, undefined)
     ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
@@ -225,7 +275,9 @@ describe("validateAppState", async function () {
         identity: identity1
       })
     );
-    expect(validateRunningAppState(TAG_STR, self, undefined, pcds)).to.deep.eq({
+    expect(
+      validateRunningAppState(TAG_STR, self, undefined, undefined, pcds)
+    ).to.deep.eq({
       userUUID: self.uuid,
       errors: ["missing 'identity'"],
       ...TAG
@@ -246,7 +298,9 @@ describe("validateAppState", async function () {
         identity: identity1
       })
     );
-    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+    expect(
+      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
+    ).to.deep.eq({
       userUUID: self.uuid,
       errors: ["'self' missing a commitment"],
       ...TAG
@@ -267,7 +321,9 @@ describe("validateAppState", async function () {
         identity: identity1
       })
     );
-    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+    expect(
+      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
+    ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         `commitment of identity pcd in collection (${commitment1}) does not match commitment in 'self' field of app state (${commitment2})`,
@@ -291,7 +347,9 @@ describe("validateAppState", async function () {
         identity: identity2
       })
     );
-    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+    expect(
+      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
+    ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         `commitment of identity pcd in collection (${commitment2}) does not match commitment in 'self' field of app state (${commitment1})`,
@@ -315,7 +373,9 @@ describe("validateAppState", async function () {
         identity: identity1
       })
     );
-    expect(validateRunningAppState(TAG_STR, self, identity2, pcds)).to.deep.eq({
+    expect(
+      validateRunningAppState(TAG_STR, self, identity2, v4id2, pcds)
+    ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         `commitment in 'self' field of app state (${commitment1}) does not match commitment of 'identity' field of app state (${commitment2})`,
@@ -339,7 +399,9 @@ describe("validateAppState", async function () {
         identity: identity2
       })
     );
-    expect(validateRunningAppState(TAG_STR, self, identity3, pcds)).to.deep.eq({
+    expect(
+      validateRunningAppState(TAG_STR, self, identity3, v4id3, pcds)
+    ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         `commitment of identity pcd in collection (${commitment2}) does not match commitment in 'self' field of app state (${commitment1})`,

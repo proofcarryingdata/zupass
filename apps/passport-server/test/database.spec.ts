@@ -11,7 +11,7 @@ import {
   ZuzaluUserRole
 } from "@pcd/passport-interface";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import { v3tov4Identity, v4PublicKey } from "@pcd/semaphore-identity-v4";
+import { v3tov4IdentityPCD, v4PublicKey } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -874,7 +874,7 @@ describe.only("database reads and writes", function () {
       expect(createdUser.encryption_key).to.eq(newUserParams.encryption_key);
       expect(createdUser.extra_issuance).to.eq(newUserParams.extra_issuance);
 
-      const v4Id = v3tov4Identity(v3Id);
+      const v4Id = v3tov4IdentityPCD(v3Id);
       const v4Commitment = v4Id.claim.identity.commitment.toString();
       const v4Pubkey = v4PublicKey(v4Id.claim.identity);
       createdUser.semaphore_v4_commitment = v4Commitment;

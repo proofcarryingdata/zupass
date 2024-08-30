@@ -98,8 +98,8 @@ export function useSelf(): User | undefined {
   return useSelector<User | undefined>((s) => s.self, []);
 }
 
-export function useIdentity(): Identity {
-  return useSelector<Identity>((s) => s.identity, []);
+export function useIdentityV3(): Identity {
+  return useSelector<Identity>((s) => s.identityV3, []);
 }
 
 export function useDispatch(): Dispatcher {
@@ -193,7 +193,7 @@ export function useCredentialCache(): CredentialCache {
 }
 
 export function useCredentialManager(): CredentialManager {
-  const identity = useIdentity();
+  const identity = useIdentityV3();
   const pcds = usePCDCollection();
   const credentialCache = useCredentialCache();
   return useMemo(

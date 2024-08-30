@@ -80,9 +80,9 @@ export function ChangePasswordScreen(): JSX.Element | null {
         );
       }
 
-      const { pcds, identity, credentialCache } = stateContext.getState();
+      const { pcds, identityV3, credentialCache } = stateContext.getState();
       const credentialManager = new CredentialManager(
-        identity,
+        identityV3,
         pcds,
         credentialCache
       );

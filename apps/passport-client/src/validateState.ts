@@ -120,7 +120,7 @@ export function getInitialAppStateValidationErrors(
   const errors = [
     ...getRunningAppStateValidationErrors(
       state?.self,
-      state?.identity,
+      state?.identityV3,
       state?.identityV4,
       state?.pcds
     )

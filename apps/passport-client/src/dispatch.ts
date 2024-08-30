@@ -203,7 +203,7 @@ export async function dispatch(
 ): Promise<void> {
   switch (action.type) {
     case "new-passport":
-      return genPassport(state.identity, action.email, update);
+      return genPassport(state.identityV3, action.email, update);
     case "create-user-skip-password":
       return createNewUserSkipPassword(
         action.email,
@@ -347,7 +347,7 @@ async function oneClickLogin(
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-    identity: state.identity
+    identity: state.identityV3
   });
   const v4IdentityPCD = v3tov4IdentityPCD(identityPCD);
   const pcds = new PCDCollection(await getPackages(), [
@@ -370,7 +370,7 @@ async function oneClickLogin(
     appConfig.zupassServer,
     email,
     code,
-    state.identity.commitment.toString(),
+    state.identityV3.commitment.toString(),
     v4PublicKey(v4IdentityPCD.claim.identity),
     encryptionKey
   );
@@ -442,7 +442,7 @@ async function createNewUserSkipPassword(
   });
 
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-    identity: state.identity
+    identity: state.identityV3
   });
   const v4IdentityPCD = v3tov4IdentityPCD(identityPCD);
 
@@ -470,7 +470,7 @@ async function createNewUserSkipPassword(
     appConfig.zupassServer,
     email,
     token,
-    state.identity.commitment.toString(),
+    state.identityV3.commitment.toString(),
     v4PublicKey(v4IdentityPCD.claim.identity),
     undefined,
     encryptionKey,
@@ -514,7 +514,7 @@ async function createNewUserWithPassword(
 
   const v4IdentityPCD = v3tov4IdentityPCD(
     await SemaphoreIdentityPCDPackage.prove({
-      identity: state.identity
+      identity: state.identityV3
     })
   );
 
@@ -522,7 +522,7 @@ async function createNewUserWithPassword(
     appConfig.zupassServer,
     email,
     token,
-    state.identity.commitment.toString(),
+    state.identityV3.commitment.toString(),
     v4PublicKey(v4IdentityPCD.claim.identity),
     newSalt,
     undefined,
@@ -557,7 +557,8 @@ async function finishAccountCreation(
     !validateAndLogRunningAppState(
       "finishAccountCreation",
       user,
-      state.identity,
+      state.identityV3,
+      state.identityV4,
       state.pcds
     )
   ) {
@@ -579,7 +580,7 @@ async function finishAccountCreation(
 
   const actions = await subscriptions.pollSingleSubscription(
     emailSub,
-    new CredentialManager(state.identity, state.pcds, new Map())
+    new CredentialManager(state.identityV3, state.pcds, new Map())
   );
   await applyActions(state.pcds, actions);
 
@@ -595,7 +596,8 @@ async function finishAccountCreation(
   console.log("[ACCOUNT] Upload initial PCDs");
   const uploadResult = await uploadStorage(
     user,
-    state.identity,
+    state.identityV3,
+    state.identityV4,
     state.pcds,
     state.subscriptions,
     undefined // knownRevision
@@ -654,12 +656,13 @@ async function setSelf(
       }
     );
   } else if (
-    BigInt(self.commitment).toString() !== state.identity.commitment.toString()
+    BigInt(self.commitment).toString() !==
+    state.identityV3.commitment.toString()
   ) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
     requestLogToServer(appConfig.zupassServer, "invalid-user", {
-      oldCommitment: state.identity.commitment.toString(),
+      oldCommitment: state.identityV3.commitment.toString(),
       newCommitment: self.commitment.toString()
     });
   } else if (state.self && state.self.uuid !== self.uuid) {
@@ -795,11 +798,13 @@ async function loadAfterLogin(
 
   // Validate stored state against the user response.
   const identityPCDV3 = findUserIdentityV3PCD(pcds, userResponse.value);
+  const identityPCDV4 = findUserIdentityV4PCD(pcds, userResponse.value);
   if (
     !validateAndLogRunningAppState(
       "loadAfterLogin",
       userResponse.value,
       identityPCDV3?.claim?.identity,
+      identityPCDV4?.claim?.identity,
       pcds
     )
   ) {
@@ -864,7 +869,7 @@ async function loadAfterLogin(
     subscriptions,
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash,
-    identity: identityPCDV3.claim.identity,
+    identityV3: identityPCDV3.claim.identity,
     self,
     modal
   });
@@ -1030,7 +1035,8 @@ async function doSync(
       state.serverStorageRevision,
       state.serverStorageHash,
       state.self,
-      state.identity,
+      state.identityV3,
+      state.identityV4,
       state.pcds,
       state.subscriptions
     );
@@ -1070,7 +1076,7 @@ async function doSync(
         state.subscriptions.getActiveSubscriptions()
       );
       const credentialManager = new CredentialManager(
-        state.identity,
+        state.identityV3,
         state.pcds,
         state.credentialCache
       );
@@ -1142,7 +1148,7 @@ async function doSync(
     console.log("[SYNC] sync action: upload");
 
     const credentialManager = new CredentialManager(
-      state.identity,
+      state.identityV3,
       state.pcds,
       state.credentialCache
     );
@@ -1152,7 +1158,8 @@ async function doSync(
 
     const upRes = await uploadSerializedStorage(
       state.self,
-      state.identity,
+      state.identityV3,
+      state.identityV4,
       state.pcds,
       appStorage.serializedStorage,
       appStorage.storageHash,
@@ -1222,7 +1229,7 @@ async function syncSubscription(
       throw new Error(`Subscription ${subscriptionId} not found`);
     }
     const credentialManager = new CredentialManager(
-      state.identity,
+      state.identityV3,
       state.pcds,
       state.credentialCache
     );
@@ -1373,7 +1380,7 @@ async function promptToAgreePrivacyNotice(
     await agreeTerms(
       appConfig.zupassServer,
       LATEST_PRIVACY_NOTICE,
-      state.identity
+      state.identityV3
     );
   } else {
     update({
@@ -1499,7 +1506,7 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   await sleep(2000);
 
   const credentialManager = new CredentialManager(
-    state.identity,
+    state.identityV3,
     state.pcds,
     state.credentialCache
   );

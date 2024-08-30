@@ -31,7 +31,7 @@ import { appConfig } from "../../src/appConfig";
 import {
   useCredentialCache,
   useDispatch,
-  useIdentity,
+  useIdentityV3,
   usePCDCollection,
   useQuery,
   useSelf,
@@ -394,7 +394,7 @@ function SubscribeSection({
   providerName: string;
   info: Feed;
 }): JSX.Element {
-  const identity = useIdentity();
+  const identity = useIdentityV3();
   const pcds = usePCDCollection();
   const dispatch = useDispatch();
   const credentialCache = useCredentialCache();
