@@ -91,13 +91,15 @@ export class PODContent {
       }
       if (!Object.is(hashes.length, this._map.size * 2)) {
         throw new Error(
-          `Assertion failed: ${hashes.length} == ${this._map.size * 2}`
+          `[ERR_ASSERTION] Expected inputs to be strictly equal:\n\n${
+            hashes.length
+          } !== ${this._map.size * 2}`
         );
       }
       merkleTree.insertMany(hashes);
       if (!Object.is(merkleTree.size, hashes.length)) {
         throw new Error(
-          `Assertion failed: ${merkleTree.size} == ${hashes.length}`
+          `[ERR_ASSERTION] Expected inputs to be strictly equal:\n\n${merkleTree.size} !== ${hashes.length}`
         );
       }
       this._merkleTree = merkleTree;
