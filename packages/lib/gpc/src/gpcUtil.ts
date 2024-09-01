@@ -139,6 +139,12 @@ export function canonicalizeSignerPublicKeyConfig(
 export function canonicalizeEntryConfig(
   proofEntryConfig: GPCProofEntryConfig
 ): GPCProofEntryConfig {
+  const canonicalizedBoundsCheckConfig = canonicalizeBoundsCheckConfig({
+    ...(proofEntryConfig.inRange ? { inRange: proofEntryConfig.inRange } : {}),
+    ...(proofEntryConfig.notInRange
+      ? { notInRange: proofEntryConfig.notInRange }
+      : {})
+  });
   // Set optional fields only when they have non-default values.
   return {
     isRevealed: proofEntryConfig.isRevealed,
@@ -146,22 +152,7 @@ export function canonicalizeEntryConfig(
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
       : {}),
-    ...(proofEntryConfig.inRange !== undefined
-      ? {
-          inRange: {
-            min: proofEntryConfig.inRange.min,
-            max: proofEntryConfig.inRange.max
-          }
-        }
-      : {}),
-    ...(proofEntryConfig.notInRange !== undefined
-      ? {
-          notInRange: {
-            min: proofEntryConfig.notInRange.min,
-            max: proofEntryConfig.notInRange.max
-          }
-        }
-      : {}),
+    ...canonicalizedBoundsCheckConfig,
     ...(proofEntryConfig.isMemberOf !== undefined
       ? {
           isMemberOf: proofEntryConfig.isMemberOf
@@ -172,6 +163,51 @@ export function canonicalizeEntryConfig(
           isNotMemberOf: proofEntryConfig.isNotMemberOf
         }
       : {})
+  };
+}
+
+export function canonicalizeBoundsCheckConfig(
+  boundsCheckConfig: GPCProofEntryBoundsCheckConfig
+): GPCProofEntryBoundsCheckConfig {
+  const { inRange, notInRange } = boundsCheckConfig;
+
+  // Throw if an invalid interval is specified to avoid invalid
+  // canonicalisations.
+  for (const interval of [inRange, notInRange]) {
+    if (interval && interval.min > interval.max) {
+      throw new Error(
+        `Invalid bounds check interval ${interval} in config cannot be canonicalized. The minimum value must be less than or equal to the maximum value.`
+      );
+    }
+  }
+
+  return {
+    ...(!inRange && !notInRange
+      ? {}
+      : !inRange
+      ? { notInRange: notInRange }
+      : !notInRange
+      ? { inRange: inRange }
+      : // inRange\notInRange = [inRange.min, ⍵] for some ⍵.
+      notInRange.min > inRange.min && notInRange.max >= inRange.max
+      ? {
+          inRange: {
+            min: inRange.min,
+            max: _.min([notInRange.min - 1n, inRange.max]) as bigint
+          }
+        }
+      : // inRange\notInRange = [⍺, inRange.max] for some ⍺.
+      notInRange.min <= inRange.min && notInRange.max < inRange.max
+      ? {
+          inRange: {
+            min: _.max([notInRange.max + 1n, inRange.min]) as bigint,
+            max: inRange.max
+          }
+        }
+      : {
+          inRange: inRange,
+          notInRange: notInRange
+        })
   };
 }
 
@@ -622,8 +658,7 @@ export type ListConfig = {
  * Bounds checks are indicated in each entry field via the optional property
  * `inRange`, which specifies (public) constant upper and lower bounds. This
  * procedure singles out and arranges these bounds check configurations by entry
- * identifier. It also simplifies bounds checks in cases where the inequalities
- * underlying the bounds checks reduce to a single interval membership check.
+ * identifier.
  *
  * @param proofConfig the proof configuration
  * @returns a record mapping entry identifiers to their bounds check
@@ -641,36 +676,12 @@ export function boundsCheckConfigFromProofConfig(
               [
                 `${podName}.${entryName}`,
                 {
-                  ...(!entryConfig.inRange
-                    ? { notInRange: entryConfig.notInRange }
-                    : !entryConfig.notInRange
+                  ...(entryConfig.inRange
                     ? { inRange: entryConfig.inRange }
-                    : entryConfig.notInRange.min > entryConfig.inRange.min &&
-                      entryConfig.notInRange.max >= entryConfig.inRange.max
-                    ? {
-                        inRange: {
-                          min: entryConfig.inRange.min,
-                          max: _.min([
-                            entryConfig.notInRange.min - 1n,
-                            entryConfig.inRange.max
-                          ]) as bigint
-                        }
-                      }
-                    : entryConfig.notInRange.min <= entryConfig.inRange.min &&
-                      entryConfig.notInRange.max < entryConfig.inRange.max
-                    ? {
-                        inRange: {
-                          min: _.max([
-                            entryConfig.notInRange.max + 1n,
-                            entryConfig.inRange.min
-                          ]) as bigint,
-                          max: entryConfig.inRange.max
-                        }
-                      }
-                    : {
-                        inRange: entryConfig.inRange,
-                        notInRange: entryConfig.notInRange
-                      })
+                    : {}),
+                  ...(entryConfig.notInRange
+                    ? { notInRange: entryConfig.notInRange }
+                    : {})
                 }
               ]
             ];

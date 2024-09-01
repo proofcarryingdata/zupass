@@ -248,32 +248,16 @@ export function checkProofEntryBoundsCheckConfig(
     }
   }
 
-  // Check intersections (if any).
+  // If `entryConfig.inRange` is contained in `entryConfig.notInRange`, there is an empty intersection.
   if (
-    entryConfig.inRange !== undefined &&
-    entryConfig.notInRange !== undefined
+    entryConfig.inRange &&
+    entryConfig.notInRange &&
+    entryConfig.inRange.min >= entryConfig.notInRange.min &&
+    entryConfig.inRange.max <= entryConfig.notInRange.max
   ) {
-    // If `entryConfig.inRange` is contained in `entryConfig.notInRange`, there is an empty intersection.
-    if (
-      entryConfig.inRange.min >= entryConfig.notInRange.min &&
-      entryConfig.inRange.max <= entryConfig.notInRange.max
-    ) {
-      throw new Error(
-        `Range constraints for ${nameForErrorMessages} are incompatible with each other.`
-      );
-    }
-
-    // If the intersection is a closed interval, we only require one bounds
-    // check for this entry. This will be handled when the bounds check
-    // configuration is generated.
-    if (
-      (entryConfig.notInRange.min > entryConfig.inRange.min &&
-        entryConfig.notInRange.max >= entryConfig.inRange.max) ||
-      (entryConfig.notInRange.min <= entryConfig.inRange.min &&
-        entryConfig.notInRange.max < entryConfig.inRange.max)
-    ) {
-      nBoundsChecks -= 1;
-    }
+    throw new Error(
+      `Range constraints for ${nameForErrorMessages} are incompatible with each other.`
+    );
   }
 
   return nBoundsChecks;

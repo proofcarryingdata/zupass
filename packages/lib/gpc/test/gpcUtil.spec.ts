@@ -3,11 +3,13 @@ import { expect } from "chai";
 import "mocha";
 import {
   GPCProofConfig,
+  GPCProofEntryBoundsCheckConfig,
   GPCProofEntryConfig,
   GPCProofEntryConfigCommon
 } from "../src";
 import {
   boundsCheckConfigFromProofConfig,
+  canonicalizeBoundsCheckConfig,
   canonicalizeEntryConfig,
   canonicalizeSignerPublicKeyConfig
 } from "../src/gpcUtil";
@@ -54,6 +56,17 @@ describe("Object entry configuration canonicalization should work", () => {
 
     expect(canonicalizedConfig).to.deep.eq(expectedCanonicalizedConfig);
   });
+  it("should work as expected on a POD entry configuration with bounds checks", () => {
+    const config: GPCProofEntryConfig = {
+      isRevealed: false,
+      inRange: { min: -512n, max: 25n },
+      notInRange: { min: -256n, max: -5n }
+    };
+
+    const canonicalizedConfig = canonicalizeEntryConfig(config);
+
+    expect(canonicalizedConfig).to.deep.eq(canonicalizedConfig);
+  });
 });
 
 describe("Object signer's public key configuration canonicalization should work", () => {
@@ -84,6 +97,142 @@ describe("Object signer's public key configuration canonicalization should work"
     };
 
     expect(canonicalizedConfig).to.deep.eq(expectedCanonicalizedConfig);
+  });
+});
+
+describe("Object entry bounds check canonicalization should work", () => {
+  it("should work as expected in the absence of range checks", () => {
+    const boundsCheckConfig = {};
+    const canonicalizedBoundsCheckConfig =
+      canonicalizeBoundsCheckConfig(boundsCheckConfig);
+    expect(canonicalizedBoundsCheckConfig).to.deep.eq({});
+  });
+  it("should work as expected for a simple in-range check", () => {
+    const boundsCheckConfig = {
+      inRange: { min: 0n, max: 27n }
+    };
+    const canonicalizedBoundsCheckConfig =
+      canonicalizeBoundsCheckConfig(boundsCheckConfig);
+    expect(canonicalizedBoundsCheckConfig).to.deep.eq(boundsCheckConfig);
+  });
+  it("should work as expected for a simple not-in-range check", () => {
+    const boundsCheckConfig = {
+      notInRange: { min: 256n, max: 8000000n }
+    };
+    const canonicalizedBoundsCheckConfig =
+      canonicalizeBoundsCheckConfig(boundsCheckConfig);
+    expect(canonicalizedBoundsCheckConfig).to.deep.eq(boundsCheckConfig);
+  });
+  it("should throw for invalid intervals", () => {
+    const boundsCheckConfigs = [
+      { inRange: { min: 56n, max: 55n } },
+      {
+        notInRange: { min: 80n, max: 79n }
+      },
+      { inRange: { min: 52n, max: 51n }, notInRange: { min: 0n, max: 56n } },
+      { inRange: { min: 0n, max: 100n }, notInRange: { min: 57n, max: 56n } }
+    ];
+    for (const boundsCheckConfig of boundsCheckConfigs) {
+      expect(() => canonicalizeBoundsCheckConfig(boundsCheckConfig)).to.throw;
+    }
+  });
+  it("should work as expected for disjoint in- and not-in-range checks", () => {
+    const boundsCheckConfigs = [
+      {
+        inRange: { min: POD_INT_MIN, max: 2n },
+        notInRange: { min: 1000n, max: POD_INT_MAX }
+      },
+      { inRange: { min: 0n, max: 10n }, notInRange: { min: 55n, max: 128n } },
+      {
+        inRange: { min: 1000n, max: POD_INT_MAX },
+        notInRange: { min: POD_INT_MIN, max: 2n }
+      },
+      { inRange: { min: 55n, max: 128n }, notInRange: { min: 0n, max: 10n } }
+    ];
+    for (const boundsCheckConfig of boundsCheckConfigs) {
+      const canonicalizedBoundsCheckConfig =
+        canonicalizeBoundsCheckConfig(boundsCheckConfig);
+      expect(canonicalizedBoundsCheckConfig).to.deep.eq({
+        inRange: boundsCheckConfig.inRange
+      });
+    }
+  });
+  it("should work as expected for overlapping in- and not-in-range checks", () => {
+    const boundsCheckConfigPairs: [
+      GPCProofEntryBoundsCheckConfig,
+      GPCProofEntryBoundsCheckConfig
+    ][] = [
+      // Left overlap
+      [
+        { inRange: { min: 27n, max: 53n }, notInRange: { min: -5n, max: 27n } },
+        { inRange: { min: 28n, max: 53n } }
+      ],
+      [
+        { inRange: { min: 27n, max: 53n }, notInRange: { min: -5n, max: 30n } },
+        { inRange: { min: 31n, max: 53n } }
+      ],
+      [
+        {
+          inRange: { min: 88n, max: 1000n },
+          notInRange: { min: 88n, max: 88n }
+        },
+        { inRange: { min: 89n, max: 1000n } }
+      ],
+      // Right overlap
+      [
+        { inRange: { min: 27n, max: 53n }, notInRange: { min: 53n, max: 60n } },
+        { inRange: { min: 27n, max: 52n } }
+      ],
+      [
+        { inRange: { min: 27n, max: 53n }, notInRange: { min: 30n, max: 60n } },
+        { inRange: { min: 27n, max: 29n } }
+      ],
+      [
+        {
+          inRange: { min: 88n, max: 1000n },
+          notInRange: { min: 1000n, max: 1000n }
+        },
+        { inRange: { min: 88n, max: 999n } }
+      ]
+    ];
+    for (const [
+      boundsCheckConfig,
+      expectedCanonicalizedBoundsCheckConfig
+    ] of boundsCheckConfigPairs) {
+      const canonicalizedBoundsCheckConfig =
+        canonicalizeBoundsCheckConfig(boundsCheckConfig);
+      expect(canonicalizedBoundsCheckConfig).to.deep.eq(
+        expectedCanonicalizedBoundsCheckConfig
+      );
+    }
+  });
+  it("should work as expected in other cases", () => {
+    const boundsCheckConfigs = [
+      // notInRange ⊂ inRange (strict).
+      {
+        inRange: { min: POD_INT_MIN, max: POD_INT_MAX },
+        notInRange: { min: -256n, max: -5n }
+      },
+      {
+        inRange: { min: -55n, max: 0n },
+        notInRange: { min: -42n, max: -4n }
+      },
+      // inRange ⊂ notInRange, which amounts to the empty set. This will be
+      // caught in the 'check' phase.
+      {
+        inRange: { min: -256n, max: -5n },
+        notInRange: { min: POD_INT_MIN, max: POD_INT_MAX }
+      },
+      {
+        inRange: { min: -42n, max: -4n },
+        notInRange: { min: -55n, max: 0n }
+      }
+    ];
+    for (const boundsCheckConfig of boundsCheckConfigs) {
+      const canonicalizedBoundsCheckConfig =
+        canonicalizeBoundsCheckConfig(boundsCheckConfig);
+      expect(canonicalizedBoundsCheckConfig).to.deep.eq(boundsCheckConfig);
+    }
   });
 });
 
@@ -161,26 +310,6 @@ describe("Bounds check configuration derivation works as expected", () => {
           entries: {
             A: {
               isRevealed: false,
-              inRange: { min: 0n, max: 24n },
-              notInRange: { min: 25n, max: 30n }
-            },
-            B: {
-              isRevealed: false,
-              inRange: { min: 0n, max: 24n },
-              notInRange: { min: 24n, max: 500n }
-            },
-            C: {
-              isRevealed: true,
-              inRange: { min: 0n, max: 24n },
-              notInRange: { min: -10n, max: -1n }
-            },
-            D: {
-              isRevealed: false,
-              inRange: { min: 0n, max: 24n },
-              notInRange: { min: -10n, max: 0n }
-            },
-            E: {
-              isRevealed: false,
               inRange: { min: 0n, max: 24n }
             }
           }
@@ -189,8 +318,7 @@ describe("Bounds check configuration derivation works as expected", () => {
           entries: {
             D: {
               isRevealed: false,
-              inRange: { min: 0n, max: 30n },
-              notInRange: { min: -10n, max: 4n }
+              inRange: { min: 5n, max: 30n }
             },
             E: {
               isRevealed: false,
@@ -208,30 +336,6 @@ describe("Bounds check configuration derivation works as expected", () => {
     const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
     expect(boundsCheckConfig).to.deep.eq({
       "somePod.A": {
-        inRange: {
-          min: 0n,
-          max: 24n
-        }
-      },
-      "somePod.B": {
-        inRange: {
-          min: 0n,
-          max: 23n
-        }
-      },
-      "somePod.C": {
-        inRange: {
-          min: 0n,
-          max: 24n
-        }
-      },
-      "somePod.D": {
-        inRange: {
-          min: 1n,
-          max: 24n
-        }
-      },
-      "somePod.E": {
         inRange: {
           min: 0n,
           max: 24n

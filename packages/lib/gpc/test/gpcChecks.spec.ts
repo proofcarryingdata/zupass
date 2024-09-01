@@ -49,7 +49,7 @@ describe("Entry bounds check config check should work", () => {
           inRange: { min: 3n, max: 100n },
           notInRange: { min: 204n, max: 900n }
         },
-        1
+        2
       ],
       [
         {
@@ -63,14 +63,14 @@ describe("Entry bounds check config check should work", () => {
           inRange: { min: 0n, max: 10n },
           notInRange: { min: 5n, max: 100n }
         },
-        1
+        2
       ],
       [
         {
           inRange: { min: 0n, max: 10n },
           notInRange: { min: -5n, max: 5n }
         },
-        1
+        2
       ]
     ] satisfies [GPCProofEntryBoundsCheckConfig, number][]) {
       const entryName = "somePOD.someEntry";
