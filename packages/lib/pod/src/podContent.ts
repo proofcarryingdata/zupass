@@ -1,5 +1,4 @@
 import { LeanIMT, LeanIMTMerkleProof } from "@zk-kit/lean-imt";
-import assert from "assert";
 import { podMerkleTreeHash, podNameHash, podValueHash } from "./podCrypto";
 import { PODEntries, PODName, PODValue } from "./podTypes";
 import {
@@ -90,9 +89,19 @@ export class PODContent {
         hashes.push(podNameHash(podName));
         hashes.push(podValueHash(podInfo.value));
       }
-      assert.equal(hashes.length, this._map.size * 2);
+      if (!Object.is(hashes.length, this._map.size * 2)) {
+        throw new Error(
+          `[ERR_ASSERTION] Expected inputs to be strictly equal:\n\n${
+            hashes.length
+          } !== ${this._map.size * 2}`
+        );
+      }
       merkleTree.insertMany(hashes);
-      assert.equal(merkleTree.size, hashes.length);
+      if (!Object.is(merkleTree.size, hashes.length)) {
+        throw new Error(
+          `[ERR_ASSERTION] Expected inputs to be strictly equal:\n\n${merkleTree.size} !== ${hashes.length}`
+        );
+      }
       this._merkleTree = merkleTree;
     }
     return this._merkleTree;
