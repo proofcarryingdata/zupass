@@ -123,7 +123,13 @@ export function canonicalizeVirtualEntryConfig(
   defaultIsRevealed: boolean
 ): GPCProofEntryConfigCommon | undefined {
   const virtualEntryConfigKeys = Object.keys(virtualEntryConfig).filter((key) =>
-    ["isRevealed", "equalsEntry", "isMemberOf", "isNotMemberOf"].includes(key)
+    [
+      "isRevealed",
+      "equalsEntry",
+      "isMemberOf",
+      "isNotMemberOf",
+      "notEqualsEntry"
+    ].includes(key)
   );
   // The check phase guarantees that `isRevealed` is specified in this case.
   if (
@@ -137,6 +143,9 @@ export function canonicalizeVirtualEntryConfig(
       isRevealed: virtualEntryConfig.isRevealed,
       ...(virtualEntryConfig.equalsEntry !== undefined
         ? { equalsEntry: virtualEntryConfig.equalsEntry }
+        : {}),
+      ...(virtualEntryConfig.notEqualsEntry !== undefined
+        ? { notEqualsEntry: virtualEntryConfig.notEqualsEntry }
         : {}),
       ...(virtualEntryConfig.isMemberOf !== undefined
         ? {
@@ -165,6 +174,10 @@ export function canonicalizeEntryConfig(
     ...(proofEntryConfig.isOwnerID ? { isOwnerID: true } : {}),
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
+      : {}),
+
+    ...(proofEntryConfig.notEqualsEntry !== undefined
+      ? { notEqualsEntry: proofEntryConfig.notEqualsEntry }
       : {}),
     ...canonicalizedBoundsCheckConfig,
     ...(proofEntryConfig.isMemberOf !== undefined

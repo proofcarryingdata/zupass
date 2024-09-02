@@ -36,6 +36,7 @@ export type ProtoPODGPCInputs = {
 
   // Entry constraint modules.
   /*PUB*/ entryEqualToOtherEntryByIndex: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES*/[];
+  /*PUB*/ entryIsEqualToOtherEntry: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES packed bits*/;
 
   // Owner module (1)
   /*PUB*/ ownerEntryIndex: CircuitSignal;
@@ -81,6 +82,7 @@ export type ProtoPODGPCInputNamesType = [
   "entryProofSiblings",
   "virtualEntryIsValueHashRevealed",
   "entryEqualToOtherEntryByIndex",
+  "entryIsEqualToOtherEntry",
   "ownerEntryIndex",
   "ownerSemaphoreV3IdentityNullifier",
   "ownerSemaphoreV3IdentityTrapdoor",
@@ -113,6 +115,7 @@ export type ProtoPODGPCPublicInputs = {
 
   // Entry constraint modules.
   /*PUB*/ entryEqualToOtherEntryByIndex: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES*/[];
+  /*PUB*/ entryIsEqualToOtherEntry: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES packed bits*/;
 
   // Owner module (1)
   /*PUB*/ ownerEntryIndex: CircuitSignal;
@@ -146,6 +149,7 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "entryIsValueHashRevealed",
   "virtualEntryIsValueHashRevealed",
   "entryEqualToOtherEntryByIndex",
+  "entryIsEqualToOtherEntry",
   "ownerEntryIndex",
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
@@ -389,6 +393,7 @@ export class ProtoPODGPC {
       virtualEntryIsValueHashRevealed:
         allInputs.virtualEntryIsValueHashRevealed,
       entryEqualToOtherEntryByIndex: allInputs.entryEqualToOtherEntryByIndex,
+      entryIsEqualToOtherEntry: allInputs.entryIsEqualToOtherEntry,
       ownerEntryIndex: allInputs.ownerEntryIndex,
       ownerExternalNullifier: allInputs.ownerExternalNullifier,
       ownerIsNullfierHashRevealed: allInputs.ownerIsNullfierHashRevealed,
@@ -447,6 +452,7 @@ export class ProtoPODGPC {
       inputs.entryIsValueHashRevealed,
       inputs.virtualEntryIsValueHashRevealed,
       ...inputs.entryEqualToOtherEntryByIndex,
+      inputs.entryIsEqualToOtherEntry,
       inputs.ownerEntryIndex,
       inputs.ownerExternalNullifier,
       inputs.ownerIsNullfierHashRevealed,

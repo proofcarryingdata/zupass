@@ -209,22 +209,26 @@ describe("entry.EntryConstraintModule should work", function () {
     });
   });
 
-  it("should accept or reject based on index", async () => {
+  it("should accept or reject based on index and equality flag", async () => {
     const valueHashes = makeValueHashes(MAX_ENTRIES);
     for (let i = 0; i < valueHashes.length; i++) {
-      await circuit.expectPass(
-        {
+      for (const j of [0, 1]) {
+        await circuit.expectPass(
+          {
+            valueHash: valueHashes[i],
+            entryValueHashes: valueHashes,
+            equalToOtherEntryByIndex: (i + j) % valueHashes.length,
+            isEqualToOtherEntry: 1 - j
+          },
+          {}
+        );
+        await circuit.expectFail({
           valueHash: valueHashes[i],
           entryValueHashes: valueHashes,
-          equalToOtherEntryByIndex: i
-        },
-        {}
-      );
-      await circuit.expectFail({
-        valueHash: valueHashes[i],
-        entryValueHashes: valueHashes,
-        equalToOtherEntryByIndex: (i + 1) % valueHashes.length
-      });
+          equalToOtherEntryByIndex: (i + j) % valueHashes.length,
+          isEqualToOtherEntry: j
+        });
+      }
     }
   });
 
@@ -236,33 +240,41 @@ describe("entry.EntryConstraintModule should work", function () {
       params: [valueHashes.length]
     });
     for (let i = 0; i < valueHashes.length; i++) {
-      await altCircuit.expectPass(
-        {
+      for (const j of [0, 1]) {
+        await altCircuit.expectPass(
+          {
+            valueHash: valueHashes[i],
+            entryValueHashes: valueHashes,
+            equalToOtherEntryByIndex: (i + j) % valueHashes.length,
+            isEqualToOtherEntry: 1 - j
+          },
+          {}
+        );
+        await altCircuit.expectFail({
           valueHash: valueHashes[i],
           entryValueHashes: valueHashes,
-          equalToOtherEntryByIndex: i
-        },
-        {}
-      );
-      await altCircuit.expectFail({
-        valueHash: valueHashes[i],
-        entryValueHashes: valueHashes,
-        equalToOtherEntryByIndex: (i + 1) % valueHashes.length
-      });
+          equalToOtherEntryByIndex: (i + j) % valueHashes.length,
+          isEqualToOtherEntry: j
+        });
+      }
     }
   });
 
   it("should reject index out of range", async () => {
     const valueHashes = makeValueHashes(MAX_ENTRIES);
-    await circuit.expectFail({
-      valueHash: valueHashes[0],
-      entryValueHashes: valueHashes,
-      equalToOtherEntryByIndex: -1
-    });
-    await circuit.expectFail({
-      valueHash: valueHashes[0],
-      entryValueHashes: valueHashes,
-      equalToOtherEntryByIndex: valueHashes.length
-    });
+    for (const j of [0, 1]) {
+      await circuit.expectFail({
+        valueHash: valueHashes[0],
+        entryValueHashes: valueHashes,
+        equalToOtherEntryByIndex: -1,
+        isEqualToOtherEntry: j
+      });
+      await circuit.expectFail({
+        valueHash: valueHashes[0],
+        entryValueHashes: valueHashes,
+        equalToOtherEntryByIndex: valueHashes.length,
+        isEqualToOtherEntry: j
+      });
+    }
   });
 });

@@ -793,6 +793,7 @@ function compileProofEntryConstraints(
 ): {
   circuitEntryConstraintInputs: {
     entryEqualToOtherEntryByIndex: CircuitSignal[];
+    entryIsEqualToOtherEntry: CircuitSignal;
   };
   entryConstraintMetadata: {
     firstOwnerIndex?: number;
@@ -801,21 +802,34 @@ function compileProofEntryConstraints(
   // Deal with equality comparision and POD ownership, which share circuitry.
   let firstOwnerIndex = undefined;
   const entryEqualToOtherEntryByIndex: bigint[] = [];
+  const entryIsEqualToOtherEntry: bigint[] = [];
   const virtualEntryEqualToOtherEntryByIndex: bigint[] = [];
+  const virtualEntryIsEqualToOtherEntry: bigint[] = [];
 
   for (const entryInfo of entryMap.values()) {
+    const equalToOtherEntryByIndex = isVirtualEntryName(entryInfo.entryName)
+      ? virtualEntryEqualToOtherEntryByIndex
+      : entryEqualToOtherEntryByIndex;
+    const isEqualToOtherEntry = isVirtualEntryName(entryInfo.entryName)
+      ? virtualEntryIsEqualToOtherEntry
+      : entryIsEqualToOtherEntry;
+
     // An entry is always compared either to the first owner entry (to ensure
     // only one owner), or to another entry specified by config, or to itself
     // in order to make the constraint a nop.
     if (entryInfo.entryConfig.isOwnerID) {
       if (firstOwnerIndex === undefined) {
         firstOwnerIndex = entryInfo.entryIndex;
-      } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
+      } else if (
+        entryInfo.entryConfig.equalsEntry !== undefined ||
+        entryInfo.entryConfig.notEqualsEntry !== undefined
+      ) {
         throw new Error(
-          "Can't use isOwnerID and equalsEntry on the same entry."
+          "Can't use isOwnerID and equalsEntry or notEqualsEntry on the same entry."
         );
       }
       entryEqualToOtherEntryByIndex.push(BigInt(firstOwnerIndex));
+      entryIsEqualToOtherEntry.push(1n);
     } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
       const otherEntryInfo = entryMap.get(entryInfo.entryConfig.equalsEntry);
       if (otherEntryInfo === undefined) {
@@ -823,15 +837,20 @@ function compileProofEntryConstraints(
           `Missing entry ${entryInfo.entryConfig.equalsEntry} for equality comparison.`
         );
       }
-      (isVirtualEntryName(entryInfo.entryName)
-        ? virtualEntryEqualToOtherEntryByIndex
-        : entryEqualToOtherEntryByIndex
-      ).push(BigInt(otherEntryInfo.entryIndex));
+      equalToOtherEntryByIndex.push(BigInt(otherEntryInfo.entryIndex));
+      isEqualToOtherEntry.push(1n);
+    } else if (entryInfo.entryConfig.notEqualsEntry !== undefined) {
+      const otherEntryInfo = entryMap.get(entryInfo.entryConfig.notEqualsEntry);
+      if (otherEntryInfo === undefined) {
+        throw new Error(
+          `Missing entry ${entryInfo.entryConfig.notEqualsEntry} for inequality comparison.`
+        );
+      }
+      equalToOtherEntryByIndex.push(BigInt(otherEntryInfo.entryIndex));
+      isEqualToOtherEntry.push(0n);
     } else {
-      (isVirtualEntryName(entryInfo.entryName)
-        ? virtualEntryEqualToOtherEntryByIndex
-        : entryEqualToOtherEntryByIndex
-      ).push(BigInt(entryInfo.entryIndex));
+      equalToOtherEntryByIndex.push(BigInt(entryInfo.entryIndex));
+      isEqualToOtherEntry.push(1n);
     }
   }
 
@@ -843,6 +862,7 @@ function compileProofEntryConstraints(
     entryIndex++
   ) {
     entryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
+    entryIsEqualToOtherEntry.push(1n);
   }
   for (
     let entryIndex = virtualEntryEqualToOtherEntryByIndex.length;
@@ -850,12 +870,16 @@ function compileProofEntryConstraints(
     entryIndex++
   ) {
     virtualEntryEqualToOtherEntryByIndex.push(BigInt(maxEntries + entryIndex));
+    virtualEntryIsEqualToOtherEntry.push(1n);
   }
 
   return {
     circuitEntryConstraintInputs: {
       entryEqualToOtherEntryByIndex: entryEqualToOtherEntryByIndex.concat(
         virtualEntryEqualToOtherEntryByIndex
+      ),
+      entryIsEqualToOtherEntry: array2Bits(
+        entryIsEqualToOtherEntry.concat(virtualEntryIsEqualToOtherEntry)
       )
     },
     entryConstraintMetadata:

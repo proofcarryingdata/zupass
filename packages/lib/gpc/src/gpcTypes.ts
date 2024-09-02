@@ -90,13 +90,32 @@ export type GPCProofEntryConfigCommon = {
    *
    * If undefined, there is no equality constraint.
    *
-   * For non-virtual entries, this feature cannot be combined with `isOwnerID`
-   * on the same entry (since it shares the same constraints in the circuit).
-   * However since equality constraints can be specified in either direction,
-   * you can still constrain an owner entry by specifying it on the non-owner
-   * entry.
+   * For non-virtual entries, this feature cannot be combined with
+   * `notEqualsEntry` or `isOwnerID` on the same entry (since it shares the same
+   * constraints in the circuit).  Since equality constraints can be specified
+   * in either direction, you can still constrain an owner entry by specifying
+   * it on the non-owner entry.
    */
   equalsEntry?: PODEntryIdentifier;
+
+  /**
+   * Indicates that this entry must not be equal to another entry.  The other
+   * entry is specified by a 2-part {@link PODEntryIdentifier} string used to
+   * find the entry in one of the pods in {@link GPCProofInputs}.
+   *
+   * Comparison in the proof circuit is based on the hash produced by
+   * {@link podValueHash}.  This means values of different types can be
+   * considered equal if they are treated in the same way by circuits.
+   *
+   * If undefined, there is no inequality constraint.
+   *
+   * For non-virtual entries, this feature cannot be combined with `equalsEntry`
+   * or `isOwnerID` on the same entry (since it shares the same constraints in
+   * the circuit). Since inequality constraints can be specified in either
+   * direction, you can still constrain an owner entry by specifying it on the
+   * non-owner entry.
+   */
+  notEqualsEntry?: PODEntryIdentifier;
 
   /**
    * Indicates a single list in which this entry must lie, which corresponds to
