@@ -40,6 +40,7 @@ import {
   GPCRequirements,
   LIST_MEMBERSHIP,
   LIST_NONMEMBERSHIP,
+  canonicalizeBoundsCheckConfig,
   checkPODEntryIdentifier,
   checkPODEntryName,
   isVirtualEntryIdentifier,
@@ -222,11 +223,16 @@ export function checkProofEntryBoundsCheckConfig(
   nameForErrorMessages: string,
   entryConfig: GPCProofEntryBoundsCheckConfig
 ): number {
+  // Canonicalize to simplify in cases where this is necessary.
+  const boundsCheckConfig = canonicalizeBoundsCheckConfig(
+    entryConfig.inRange,
+    entryConfig.notInRange
+  );
   let nBoundsChecks = 0;
 
   for (const [checkType, inRange] of [
-    ["bounds check", entryConfig.inRange],
-    ["out of bounds check", entryConfig.notInRange]
+    ["bounds check", boundsCheckConfig.inRange],
+    ["out of bounds check", boundsCheckConfig.notInRange]
   ] as [string, ClosedInterval][]) {
     if (inRange !== undefined) {
       if (inRange.min < POD_INT_MIN) {
@@ -250,10 +256,10 @@ export function checkProofEntryBoundsCheckConfig(
 
   // If `entryConfig.inRange` is contained in `entryConfig.notInRange`, there is an empty intersection.
   if (
-    entryConfig.inRange &&
-    entryConfig.notInRange &&
-    entryConfig.inRange.min >= entryConfig.notInRange.min &&
-    entryConfig.inRange.max <= entryConfig.notInRange.max
+    boundsCheckConfig.inRange &&
+    boundsCheckConfig.notInRange &&
+    boundsCheckConfig.inRange.min >= boundsCheckConfig.notInRange.min &&
+    boundsCheckConfig.inRange.max <= boundsCheckConfig.notInRange.max
   ) {
     throw new Error(
       `Range constraints for ${nameForErrorMessages} are incompatible with each other.`

@@ -46,6 +46,13 @@ describe("Entry bounds check config check should work", () => {
       [{ notInRange: { min: POD_INT_MIN, max: 100n } }, 1],
       [
         {
+          inRange: { min: 3n, max: 100n },
+          notInRange: { min: 204n, max: 900n }
+        },
+        1
+      ],
+      [
+        {
           inRange: { min: -1000n, max: 1000n },
           notInRange: { min: 0n, max: 10n }
         },
@@ -54,9 +61,23 @@ describe("Entry bounds check config check should work", () => {
       [
         {
           inRange: { min: 0n, max: 10n },
+          notInRange: { min: 5n, max: 100n }
+        },
+        1
+      ],
+      [
+        {
+          inRange: { min: 0n, max: 10n },
+          notInRange: { min: 5n, max: 100n }
+        },
+        1
+      ],
+      [
+        {
+          inRange: { min: 0n, max: 10n },
           notInRange: { min: -5n, max: 5n }
         },
-        2
+        1
       ]
     ] satisfies [GPCProofEntryBoundsCheckConfig, number][]) {
       const entryName = "somePOD.someEntry";
@@ -75,6 +96,10 @@ describe("Entry bounds check config check should work", () => {
       {
         inRange: { min: POD_INT_MIN - 1n, max: 100n },
         notInRange: { min: 0n, max: 50n }
+      },
+      {
+        notInRange: { min: 10n, max: 55n },
+        inRange: { min: 3n, max: POD_INT_MAX + 1n }
       }
     ]) {
       const entryName = "somePOD.someEntry";
