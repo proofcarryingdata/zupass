@@ -294,7 +294,7 @@ export function arrayToProtoPODGPCCircuitParam(
 export function paramMaxVirtualEntries(
   params: ProtoPODGPCCircuitParams
 ): number {
-  return params.maxObjects;
+  return 2 * params.maxObjects;
 }
 
 /**
@@ -339,7 +339,7 @@ export class ProtoPODGPC {
     const outputs = ProtoPODGPC.outputsFromPublicSignals(
       intPublicSignals,
       inputs.entryNameHash.length,
-      inputs.objectSignatureS.length
+      2 * inputs.objectContentID.length
     );
     return { proof, outputs, publicSignals: intPublicSignals };
   }

@@ -124,7 +124,7 @@ template ProtoPODGPC (
      */
     
     // Maximum number of virtual entries.
-    var MAX_VIRTUAL_ENTRIES = MAX_OBJECTS;
+    var MAX_VIRTUAL_ENTRIES = 2 * MAX_OBJECTS;
 
     // Total number of entries in the circuit, virtual or otherwise
     var TOTAL_ENTRIES = MAX_ENTRIES + MAX_VIRTUAL_ENTRIES;
@@ -141,6 +141,7 @@ template ProtoPODGPC (
     (virtualEntryValueHashes, virtualEntryRevealedValueHash)
         <== VirtualEntryModule(MAX_OBJECTS)(
             virtualEntryIsValueHashRevealed,
+            objectContentID,
             objectSignerPubkeyAx,
             objectSignerPubkeyAy);
 

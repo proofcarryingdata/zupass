@@ -16,19 +16,21 @@ export type PODEntryIdentifier = `${PODName}.${PODName | PODVirtualEntryName}`;
  * the form `${PODName}.${PODVirtualEntryName}`.
  */
 export const POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX = new RegExp(
-  /([A-Za-z_]\w*)\.\$(signerPublicKey)$/
+  /([A-Za-z_]\w*)\.\$(signerPublicKey|contentID)$/
 );
 
 /**
  * String specifying valid virtual entry name.
  */
-export type PODVirtualEntryName = "$signerPublicKey";
+export type PODVirtualEntryName = "$signerPublicKey" | "$contentID";
 
 /**
  * Regex matching legal names for POD virtual entries. Matches
  * `PODVirtualEntryName`.
  */
-export const POD_VIRTUAL_NAME_REGEX = new RegExp(/^\$(signerPublicKey)$/);
+export const POD_VIRTUAL_NAME_REGEX = new RegExp(
+  /^\$(signerPublicKey|contentID)$/
+);
 
 /**
  * Optional set of lists for checking POD entry (or tuple) value
@@ -173,6 +175,14 @@ export type GPCProofObjectConfig = {
    * constrained in other ways based on other parts of this configuration.
    */
   entries: Record<PODName, GPCProofEntryConfig>;
+
+  /**
+   * The content ID of this object to be proven. The GPC can choose
+   * to simply reveal it or else hide it but constrain it to lie in a list or
+   * be equal to another object's signing key. If this configuration
+   * is undefined, the content ID will not be revealed.
+   */
+  contentID?: GPCProofEntryConfigCommon;
 
   /**
    * The signer's public key of this object to be proven. The GPC can choose
@@ -421,6 +431,12 @@ export type GPCRevealedObjectClaims = {
    * `cryptographic` value are considered the same if their value is equal.
    */
   entries?: PODEntries;
+
+  /**
+   * Potentially redacted content ID of this POD. The proof confirms that this
+   * is computed properly.
+   */
+  contentID?: bigint;
 
   /**
    * Potentially redacted EdDSA public key of the issuer of this POD.  The proof
