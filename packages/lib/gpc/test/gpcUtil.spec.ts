@@ -102,25 +102,30 @@ describe("Object signer's public key configuration canonicalization should work"
 
 describe("Object entry bounds check canonicalization should work", () => {
   it("should work as expected in the absence of range checks", () => {
-    const boundsCheckConfig = {};
-    const canonicalizedBoundsCheckConfig =
-      canonicalizeBoundsCheckConfig(boundsCheckConfig);
+    const canonicalizedBoundsCheckConfig = canonicalizeBoundsCheckConfig(
+      undefined,
+      undefined
+    );
     expect(canonicalizedBoundsCheckConfig).to.deep.eq({});
   });
   it("should work as expected for a simple in-range check", () => {
     const boundsCheckConfig = {
       inRange: { min: 0n, max: 27n }
     };
-    const canonicalizedBoundsCheckConfig =
-      canonicalizeBoundsCheckConfig(boundsCheckConfig);
+    const canonicalizedBoundsCheckConfig = canonicalizeBoundsCheckConfig(
+      boundsCheckConfig.inRange,
+      undefined
+    );
     expect(canonicalizedBoundsCheckConfig).to.deep.eq(boundsCheckConfig);
   });
   it("should work as expected for a simple not-in-range check", () => {
     const boundsCheckConfig = {
       notInRange: { min: 256n, max: 8000000n }
     };
-    const canonicalizedBoundsCheckConfig =
-      canonicalizeBoundsCheckConfig(boundsCheckConfig);
+    const canonicalizedBoundsCheckConfig = canonicalizeBoundsCheckConfig(
+      undefined,
+      boundsCheckConfig.notInRange
+    );
     expect(canonicalizedBoundsCheckConfig).to.deep.eq(boundsCheckConfig);
   });
   it("should throw for invalid intervals", () => {
@@ -133,7 +138,12 @@ describe("Object entry bounds check canonicalization should work", () => {
       { inRange: { min: 0n, max: 100n }, notInRange: { min: 57n, max: 56n } }
     ];
     for (const boundsCheckConfig of boundsCheckConfigs) {
-      expect(() => canonicalizeBoundsCheckConfig(boundsCheckConfig)).to.throw;
+      expect(() =>
+        canonicalizeBoundsCheckConfig(
+          boundsCheckConfig.inRange,
+          boundsCheckConfig.notInRange
+        )
+      ).to.throw;
     }
   });
   it("should work as expected for disjoint in- and not-in-range checks", () => {
@@ -150,8 +160,10 @@ describe("Object entry bounds check canonicalization should work", () => {
       { inRange: { min: 55n, max: 128n }, notInRange: { min: 0n, max: 10n } }
     ];
     for (const boundsCheckConfig of boundsCheckConfigs) {
-      const canonicalizedBoundsCheckConfig =
-        canonicalizeBoundsCheckConfig(boundsCheckConfig);
+      const canonicalizedBoundsCheckConfig = canonicalizeBoundsCheckConfig(
+        boundsCheckConfig.inRange,
+        boundsCheckConfig.notInRange
+      );
       expect(canonicalizedBoundsCheckConfig).to.deep.eq({
         inRange: boundsCheckConfig.inRange
       });
@@ -199,16 +211,18 @@ describe("Object entry bounds check canonicalization should work", () => {
       boundsCheckConfig,
       expectedCanonicalizedBoundsCheckConfig
     ] of boundsCheckConfigPairs) {
-      const canonicalizedBoundsCheckConfig =
-        canonicalizeBoundsCheckConfig(boundsCheckConfig);
+      const canonicalizedBoundsCheckConfig = canonicalizeBoundsCheckConfig(
+        boundsCheckConfig.inRange,
+        boundsCheckConfig.notInRange
+      );
       expect(canonicalizedBoundsCheckConfig).to.deep.eq(
         expectedCanonicalizedBoundsCheckConfig
       );
     }
   });
-  it("should work as expected in other cases", () => {
+  it("should work as expected in the case where notInRange ⊂⊂ inRange or inRange ⊂ notInRange", () => {
     const boundsCheckConfigs = [
-      // notInRange ⊂ inRange (strict).
+      // notInRange ⊂⊂ inRange
       {
         inRange: { min: POD_INT_MIN, max: POD_INT_MAX },
         notInRange: { min: -256n, max: -5n }
@@ -221,6 +235,10 @@ describe("Object entry bounds check canonicalization should work", () => {
       // caught in the 'check' phase.
       {
         inRange: { min: -256n, max: -5n },
+        notInRange: { min: -256n, max: -5n }
+      },
+      {
+        inRange: { min: -256n, max: -5n },
         notInRange: { min: POD_INT_MIN, max: POD_INT_MAX }
       },
       {
@@ -229,8 +247,10 @@ describe("Object entry bounds check canonicalization should work", () => {
       }
     ];
     for (const boundsCheckConfig of boundsCheckConfigs) {
-      const canonicalizedBoundsCheckConfig =
-        canonicalizeBoundsCheckConfig(boundsCheckConfig);
+      const canonicalizedBoundsCheckConfig = canonicalizeBoundsCheckConfig(
+        boundsCheckConfig.inRange,
+        boundsCheckConfig.notInRange
+      );
       expect(canonicalizedBoundsCheckConfig).to.deep.eq(boundsCheckConfig);
     }
   });

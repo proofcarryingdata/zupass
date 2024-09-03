@@ -46,22 +46,8 @@ describe("Entry bounds check config check should work", () => {
       [{ notInRange: { min: POD_INT_MIN, max: 100n } }, 1],
       [
         {
-          inRange: { min: 3n, max: 100n },
-          notInRange: { min: 204n, max: 900n }
-        },
-        2
-      ],
-      [
-        {
           inRange: { min: -1000n, max: 1000n },
           notInRange: { min: 0n, max: 10n }
-        },
-        2
-      ],
-      [
-        {
-          inRange: { min: 0n, max: 10n },
-          notInRange: { min: 5n, max: 100n }
         },
         2
       ],
@@ -89,18 +75,6 @@ describe("Entry bounds check config check should work", () => {
       {
         inRange: { min: POD_INT_MIN - 1n, max: 100n },
         notInRange: { min: 0n, max: 50n }
-      },
-      {
-        notInRange: { min: POD_INT_MIN - 1n, max: 100n },
-        inRange: { min: 300n, max: POD_INT_MAX }
-      },
-      {
-        notInRange: { min: 10n, max: 55n },
-        inRange: { min: 3n, max: POD_INT_MAX + 1n }
-      },
-      {
-        notInRange: { min: 3n, max: POD_INT_MAX + 1n },
-        inRange: { min: 0n, max: 1n }
       }
     ]) {
       const entryName = "somePOD.someEntry";

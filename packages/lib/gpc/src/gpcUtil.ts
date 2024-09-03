@@ -139,12 +139,10 @@ export function canonicalizeSignerPublicKeyConfig(
 export function canonicalizeEntryConfig(
   proofEntryConfig: GPCProofEntryConfig
 ): GPCProofEntryConfig {
-  const canonicalizedBoundsCheckConfig = canonicalizeBoundsCheckConfig({
-    ...(proofEntryConfig.inRange ? { inRange: proofEntryConfig.inRange } : {}),
-    ...(proofEntryConfig.notInRange
-      ? { notInRange: proofEntryConfig.notInRange }
-      : {})
-  });
+  const canonicalizedBoundsCheckConfig = canonicalizeBoundsCheckConfig(
+    proofEntryConfig.inRange,
+    proofEntryConfig.notInRange
+  );
   // Set optional fields only when they have non-default values.
   return {
     isRevealed: proofEntryConfig.isRevealed,
@@ -167,10 +165,9 @@ export function canonicalizeEntryConfig(
 }
 
 export function canonicalizeBoundsCheckConfig(
-  boundsCheckConfig: GPCProofEntryBoundsCheckConfig
+  inRange: ClosedInterval | undefined,
+  notInRange: ClosedInterval | undefined
 ): GPCProofEntryBoundsCheckConfig {
-  const { inRange, notInRange } = boundsCheckConfig;
-
   // Throw if an invalid interval is specified to avoid invalid
   // canonicalisations.
   for (const interval of [inRange, notInRange]) {
@@ -204,7 +201,10 @@ export function canonicalizeBoundsCheckConfig(
             max: inRange.max
           }
         }
-      : {
+      : // Either `inRange` is contained in `notInRange` (which is an error and
+        // will be caught in the check phase) or `notInRange` is a subset of the
+        // interior of `inRange`, which requires two bounds checks.
+        {
           inRange: inRange,
           notInRange: notInRange
         })
