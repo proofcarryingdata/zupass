@@ -1,4 +1,4 @@
-import { encodePublicKey, POD } from "@pcd/pod";
+import { decodePrivateKey, encodePublicKey, POD } from "@pcd/pod";
 import {
   newV3Identity,
   SemaphoreIdentityPCD
@@ -112,5 +112,9 @@ describe("Semaphore Identity PCD", function () {
     expect(v3tov4IdentityPCD(v3Identity)).to.deep.eq(
       v3tov4IdentityPCD(v3Identity)
     );
+    const privateKey = decodePrivateKey(
+      v3tov4IdentityPCD(v3Identity).claim.identity.export()
+    );
+    expect(privateKey.length).to.eq(32);
   });
 });
