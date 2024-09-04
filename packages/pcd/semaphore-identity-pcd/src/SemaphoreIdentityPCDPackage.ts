@@ -10,11 +10,15 @@ import {
   SemaphoreIdentityPCDProof,
   SemaphoreIdentityPCDTypeName
 } from "./SemaphoreIdentityPCD";
+import { v3tov4Identity } from "./v4IdentityUtils";
 
 export async function prove(
   args: SemaphoreIdentityPCDArgs
 ): Promise<SemaphoreIdentityPCD> {
-  return new SemaphoreIdentityPCD(uuid(), { identity: args.identity });
+  return new SemaphoreIdentityPCD(uuid(), {
+    identity: args.identity,
+    identityV4: v3tov4Identity(args.identity)
+  });
 }
 
 export async function verify(pcd: SemaphoreIdentityPCD): Promise<boolean> {
@@ -42,8 +46,10 @@ export async function deserialize(
   requireDefinedParameter(id, "id");
   requireDefinedParameter(identity, "identity");
 
+  const v3Identity = new Identity(identity);
   return new SemaphoreIdentityPCD(id, {
-    identity: new Identity(identity)
+    identity: new Identity(identity),
+    identityV4: v3tov4Identity(v3Identity)
   });
 }
 

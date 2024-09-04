@@ -5,7 +5,10 @@ import {
   requestUser,
   User
 } from "@pcd/passport-interface";
-import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityPCD,
+  v3tov4Identity
+} from "@pcd/semaphore-identity-pcd";
 import {
   v3tov4IdentityPCD,
   v4PublicKey,
@@ -35,7 +38,10 @@ export async function testLogin(
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
   const v4Identity = v3tov4IdentityPCD(
-    new SemaphoreIdentityPCD(randomUUID(), { identity })
+    new SemaphoreIdentityPCD(randomUUID(), {
+      identity,
+      identityV4: v3tov4Identity(identity)
+    })
   );
   const v3Commitment = identity.commitment.toString();
   const v4Pubkey = v4PublicKey(v4Identity.claim.identity);

@@ -10,7 +10,10 @@ import {
   LATEST_PRIVACY_NOTICE,
   ZuzaluUserRole
 } from "@pcd/passport-interface";
-import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityPCD,
+  v3tov4Identity
+} from "@pcd/semaphore-identity-pcd";
 import { v3tov4IdentityPCD, v4PublicKey } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -848,8 +851,10 @@ describe("database reads and writes", function () {
   step(
     "should be able to update and get user by v4 semaphore identity",
     async function () {
+      const id = new Identity();
       const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
-        identity: new Identity()
+        identity: id,
+        identityV4: v3tov4Identity(id)
       });
 
       const newUserParams: SaveUserParams = {
