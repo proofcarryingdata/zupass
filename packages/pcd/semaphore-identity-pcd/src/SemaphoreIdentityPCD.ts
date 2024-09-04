@@ -1,4 +1,5 @@
 import { PCD } from "@pcd/pcd-types";
+import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import { Identity } from "@semaphore-protocol/identity";
 
 export const SemaphoreIdentityPCDTypeName = "semaphore-identity-pcd";
@@ -9,6 +10,7 @@ export type SemaphoreIdentityPCDArgs = {
 
 export interface SemaphoreIdentityPCDClaim {
   identity: Identity;
+  identityV4: IdentityV4;
 }
 
 export type SemaphoreIdentityPCDProof = undefined;
