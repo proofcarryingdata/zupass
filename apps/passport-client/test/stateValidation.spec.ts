@@ -85,8 +85,7 @@ describe("validateAppState", async function () {
     ).to.deep.eq({
       errors: [
         "'pcds' contains no pcds",
-        "'pcds' field in app state does not contain an identity v3 PCD",
-        "'pcds' field in app state does not contain an identity v4 PCD"
+        "'pcds' field in app state does not contain an identity pcd"
       ],
       userUUID: undefined,
       ...TAG
@@ -106,10 +105,7 @@ describe("validateAppState", async function () {
         true
       )
     ).to.deep.eq({
-      errors: [
-        "'pcds' field in app state does not contain an identity v3 PCD",
-        "'pcds' field in app state does not contain an identity v4 PCD"
-      ],
+      errors: ["'pcds' field in app state does not contain an identity pcd"],
       userUUID: undefined,
       ...TAG
     } satisfies ErrorReport);
@@ -147,8 +143,7 @@ describe("validateAppState", async function () {
     ).to.deep.eq({
       errors: [
         "missing 'pcds'",
-        "'pcds' field in app state does not contain an identity v3 PCD",
-        "'pcds' field in app state does not contain an identity v4 PCD"
+        "'pcds' field in app state does not contain an identity pcd"
       ],
       userUUID: undefined,
       ...TAG
@@ -229,8 +224,7 @@ describe("validateAppState", async function () {
       userUUID: self.uuid,
       errors: [
         "'pcds' contains no pcds",
-        "'pcds' field in app state does not contain an identity v3 PCD",
-        "'pcds' field in app state does not contain an identity v4 PCD",
+        "'pcds' field in app state does not contain an identity pcd",
         `'self' missing a v4 commitment`
       ],
       ...TAG
@@ -251,8 +245,7 @@ describe("validateAppState", async function () {
       userUUID: self.uuid,
       errors: [
         "missing 'pcds'",
-        "'pcds' field in app state does not contain an identity v3 PCD",
-        "'pcds' field in app state does not contain an identity v4 PCD",
+        "'pcds' field in app state does not contain an identity pcd",
         `'self' missing a v4 commitment`
       ],
       ...TAG
@@ -278,7 +271,6 @@ describe("validateAppState", async function () {
     ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
-        `'pcds' field in app state does not contain an identity v4 PCD`,
         "missing 'identity'",
         "missing 'identityV4'",
         `'self' missing a v4 commitment`
