@@ -1,5 +1,6 @@
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { decodePrivateKey } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import {
   SemaphoreIdentityPCD,
@@ -164,5 +165,8 @@ describe("V3ToV4Migration", async function () {
     expect(v4Id.claim.identity.export()).to.eq(
       "IS/H+GdcAaGchwJQ7RtOmCNJlmFCbMtJB9P/rxPUEs0="
     );
+
+    const privateKey = decodePrivateKey(v4Id.claim.identity.export());
+    expect(privateKey.length).to.eq(32);
   });
 });
