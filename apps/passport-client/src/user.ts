@@ -45,14 +45,14 @@ export function hasSetupPassword(user: User): boolean {
   return !!user && !!user.salt;
 }
 
-export function findUserIdentityV3PCD(
+export function findUserIdentityPCD(
   pcds: PCDCollection,
   user: User
 ): SemaphoreIdentityPCD | undefined {
-  return findIdentityV3PCD(pcds, user.commitment);
+  return findIdentityPCD(pcds, user.commitment);
 }
 
-export function findIdentityV3PCD(
+export function findIdentityPCD(
   pcds: PCDCollection,
   v3Commitment: string
 ): SemaphoreIdentityPCD | undefined {

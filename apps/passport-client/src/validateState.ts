@@ -10,7 +10,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
 import { AppState } from "./state";
-import { findIdentityV3PCD, findUserIdentityV3PCD } from "./user";
+import { findIdentityPCD, findUserIdentityPCD } from "./user";
 
 /**
  * Returns `true` if {@link validateInitialAppState} returns no errors, and `false`
@@ -145,12 +145,9 @@ export function getRunningAppStateValidationErrors(
   let idFromPCDCollection: SemaphoreIdentityPCD | undefined = undefined;
 
   if (self && pcds) {
-    idFromPCDCollection = findUserIdentityV3PCD(pcds, self);
+    idFromPCDCollection = findUserIdentityPCD(pcds, self);
   } else if (identity && identityV4 && pcds) {
-    idFromPCDCollection = findIdentityV3PCD(
-      pcds,
-      identity.commitment.toString()
-    );
+    idFromPCDCollection = findIdentityPCD(pcds, identity.commitment.toString());
   }
 
   // If identity PCD doesn't match, or we don't have a known commitment,

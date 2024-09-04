@@ -66,7 +66,7 @@ import {
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
-import { findUserIdentityV3PCD } from "./user";
+import { findUserIdentityPCD } from "./user";
 import {
   downloadAndMergeStorage,
   uploadSerializedStorage,
@@ -782,7 +782,7 @@ async function loadAfterLogin(
   }
 
   // Validate stored state against the user response.
-  const identity = findUserIdentityV3PCD(pcds, userResponse.value);
+  const identity = findUserIdentityPCD(pcds, userResponse.value);
   if (
     !validateAndLogRunningAppState(
       "loadAfterLogin",

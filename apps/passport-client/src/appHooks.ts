@@ -25,7 +25,7 @@ import { loadUsingLaserScanner } from "./localstorage";
 import { clearAllPendingRequests } from "./sessionStorage";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
-import { findUserIdentityV3PCD, hasSetupPassword } from "./user";
+import { findUserIdentityPCD, hasSetupPassword } from "./user";
 import { getLastValidVerifyUrl, maybeRedirect } from "./util";
 
 /**
@@ -89,7 +89,7 @@ export function useUserIdentityPCD(): SemaphoreIdentityPCD | undefined {
   const identityPCD = useMemo(() => {
     // Using wrapped PCDCollection ensures this memo updates when contents
     // change, not just the PCDCollection object.
-    return self && findUserIdentityV3PCD(wrappedPCDs.value, self);
+    return self && findUserIdentityPCD(wrappedPCDs.value, self);
   }, [self, wrappedPCDs]);
   return identityPCD;
 }
