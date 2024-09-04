@@ -42,7 +42,4 @@ describe("Semaphore Identity PCD - extra v4 functionality", function () {
     const privateKey = decodePrivateKey(v3tov4Identity(v3Identity).export());
     expect(privateKey.length).to.eq(32);
   });
-
-  // TODO: test that serializing a semaphore identity PCD and then deserializing it
-  // results in the same v4 identity being generated in the claim.
 });
