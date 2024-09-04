@@ -16,7 +16,7 @@ import {
   verifyAddV4CommitmentRequestPCD
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
-import { v4PublicKeyToCommitment } from "@pcd/semaphore-identity-v4";
+import { v4PublicKeyToCommitment } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage

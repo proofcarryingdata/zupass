@@ -7,13 +7,10 @@ import {
 } from "@pcd/passport-interface";
 import {
   SemaphoreIdentityPCD,
-  v3tov4Identity
-} from "@pcd/semaphore-identity-pcd";
-import {
-  v3tov4IdentityPCD,
+  v3tov4Identity,
   v4PublicKey,
   v4PublicKeyToCommitment
-} from "@pcd/semaphore-identity-v4";
+} from "@pcd/semaphore-identity-pcd";
 import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -37,14 +34,12 @@ export async function testLogin(
 ): Promise<{ user: User; identity: Identity } | undefined> {
   const { userService, emailTokenService } = application.services;
   const identity = new Identity();
-  const v4Identity = v3tov4IdentityPCD(
-    new SemaphoreIdentityPCD(randomUUID(), {
-      identity,
-      identityV4: v3tov4Identity(identity)
-    })
-  );
+  const identityPCD = new SemaphoreIdentityPCD(randomUUID(), {
+    identity,
+    identityV4: v3tov4Identity(identity)
+  });
   const v3Commitment = identity.commitment.toString();
-  const v4Pubkey = v4PublicKey(v4Identity.claim.identity);
+  const v4Pubkey = v4PublicKey(identityPCD.claim.identityV4);
 
   const confirmationEmailResult = await requestConfirmationEmail(
     application.expressContext.localEndpoint,
