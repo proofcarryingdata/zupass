@@ -142,23 +142,24 @@ export function getRunningAppStateValidationErrors(
   const loggedOut = !self;
 
   // Find identity PCD in the standard way, using a known commitment.
-  let idFromPCDCollection: SemaphoreIdentityPCD | undefined = undefined;
+  let identityPCDFromCollection: SemaphoreIdentityPCD | undefined = undefined;
 
   if (self && pcds) {
-    idFromPCDCollection = findUserIdentityPCD(pcds, self);
+    identityPCDFromCollection = findUserIdentityPCD(pcds, self);
   } else if (identity && identityV4 && pcds) {
-    idFromPCDCollection = findIdentityPCD(pcds, identity.commitment.toString());
+    identityPCDFromCollection = findIdentityPCD(
+      pcds,
+      identity.commitment.toString()
+    );
   }
 
   // If identity PCD doesn't match, or we don't have a known commitment,
   // grab any available identity PCD so we can report whether it's missing vs.
   // mismatch.
-  if (pcds) {
-    if (!idFromPCDCollection) {
-      idFromPCDCollection = pcds.getPCDsByType(
-        SemaphoreIdentityPCDPackage.name
-      )?.[0] as SemaphoreIdentityPCD | undefined;
-    }
+  if (pcds && !identityPCDFromCollection) {
+    identityPCDFromCollection = pcds.getPCDsByType(
+      SemaphoreIdentityPCDPackage.name
+    )?.[0] as SemaphoreIdentityPCD | undefined;
   }
 
   if (forceCheckPCDs || !loggedOut) {
@@ -170,7 +171,7 @@ export function getRunningAppStateValidationErrors(
       errors.push("'pcds' contains no pcds");
     }
 
-    if (!idFromPCDCollection) {
+    if (!identityPCDFromCollection) {
       errors.push(
         "'pcds' field in app state does not contain an identity v3 PCD"
       );
@@ -189,14 +190,14 @@ export function getRunningAppStateValidationErrors(
     errors.push("missing 'identityV4'");
   }
 
-  const identityFromPCDCollection = idFromPCDCollection?.claim?.identity;
+  const identityFromPCDCollection = identityPCDFromCollection?.claim?.identity;
   const commitmentOfIdentityPCDInCollection =
     identityFromPCDCollection?.commitment?.toString();
   const commitmentFromSelfField = self?.commitment;
   const commitmentFromIdentityField = identity?.commitment?.toString();
 
   const commitmentOfIdentityV4PCDInCollection =
-    idFromPCDCollection?.claim.identityV4?.commitment?.toString();
+    identityPCDFromCollection?.claim.identityV4?.commitment?.toString();
   const commitmentV4FromSelfField = self?.semaphore_v4_commitment;
   const commitmentV4FromIdentityField = identityV4?.commitment?.toString();
   const publicKeyV4FromSelfField = self?.semaphore_v4_pubkey;
