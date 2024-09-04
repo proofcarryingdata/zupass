@@ -1,6 +1,6 @@
 import {
   createStorageBackedCredentialCache,
-  makeAddV4CommitmentRequest,
+  makeUpgradeUserWithV4CommitmentRequest,
   requestUpgradeUserWithV4Commitment,
   requestUser
 } from "@pcd/passport-interface";
@@ -47,7 +47,7 @@ export async function loadInitialState(): Promise<AppState> {
     if (semaphoreV4IdentityPCD) {
       await requestUpgradeUserWithV4Commitment(
         appConfig.zupassServer,
-        await makeAddV4CommitmentRequest(pcds)
+        await makeUpgradeUserWithV4CommitmentRequest(pcds)
       );
     }
     const newSelfResponse = await requestUser(

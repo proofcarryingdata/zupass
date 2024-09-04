@@ -629,7 +629,7 @@ export type CreateNewUserRequest = {
 /**
  * Asks the Zupass server to add a user's semaphore v4 commitment to their existing account.
  */
-export type AddV4CommitmentRequest = {
+export type UpgradeUserWithV4CommitmentRequest = {
   // semaphore v3 signature of semaphore v4 signature of v3 commitment
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
 };

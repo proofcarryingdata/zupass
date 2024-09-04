@@ -18,7 +18,7 @@ import { expect } from "chai";
 import "mocha";
 import * as path from "path";
 import {
-  makeAddV4CommitmentRequest,
+  makeUpgradeUserWithV4CommitmentRequest,
   V4MigrationVerification,
   verifyAddV4CommitmentRequestPCD
 } from "../src/api/requestUpgradeUserWithV4Commitment";
@@ -53,7 +53,8 @@ describe("V3ToV4Migration", async function () {
       [v3Id, v4Id]
     );
 
-    const migrationRequest = await makeAddV4CommitmentRequest(rightPCDs);
+    const migrationRequest =
+      await makeUpgradeUserWithV4CommitmentRequest(rightPCDs);
     const migrationPCD = await SemaphoreSignaturePCDPackage.deserialize(
       migrationRequest.pcd.pcd
     );

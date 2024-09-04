@@ -10,7 +10,7 @@ import {
   FeedSubscriptionManager,
   getNamedAPIErrorMessage,
   LATEST_PRIVACY_NOTICE,
-  makeAddV4CommitmentRequest,
+  makeUpgradeUserWithV4CommitmentRequest,
   NetworkFeedApi,
   requestCreateNewUser,
   requestDeleteAccount,
@@ -823,7 +823,7 @@ async function loadAfterLogin(
       pcds.add(newV4Identity);
       const res = await requestUpgradeUserWithV4Commitment(
         appConfig.zupassServer,
-        await makeAddV4CommitmentRequest(pcds)
+        await makeUpgradeUserWithV4CommitmentRequest(pcds)
       );
       if (!res.success) {
         throw new Error(res.error);

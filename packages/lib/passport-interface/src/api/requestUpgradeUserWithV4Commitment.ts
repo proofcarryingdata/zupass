@@ -18,7 +18,7 @@ import {
 import { randomUUID } from "@pcd/util";
 import urljoin from "url-join";
 import {
-  AddV4CommitmentRequest,
+  UpgradeUserWithV4CommitmentRequest,
   UpgradeUserWithV4CommitmentResponseValue
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
@@ -30,13 +30,13 @@ import { httpPostSimple } from "./makeRequest";
  *
  * Idempotent.
  *
- * @see {@link makeAddV4CommitmentRequest} for details regarding what this request contains.
+ * @see {@link makeUpgradeUserWithV4CommitmentRequest} for details regarding what this request contains.
  *
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestUpgradeUserWithV4Commitment(
   zupassServerUrl: string,
-  req: AddV4CommitmentRequest
+  req: UpgradeUserWithV4CommitmentRequest
 ): Promise<UpgradeUserWithV4CommitmentResult> {
   return httpPostSimple(
     urljoin(zupassServerUrl, "/account/upgrade-with-v4-commitment"),
@@ -56,9 +56,9 @@ export type UpgradeUserWithV4CommitmentResult =
  * was used to create the outermost v3 signature. Expects that both a v3 and v4 identity PCD
  * exist in the collection. This proves that the creator of this request 'owns' both identities.
  */
-export async function makeAddV4CommitmentRequest(
+export async function makeUpgradeUserWithV4CommitmentRequest(
   pcdCollection: PCDCollection
-): Promise<AddV4CommitmentRequest> {
+): Promise<UpgradeUserWithV4CommitmentRequest> {
   const v3PCD = pcdCollection.getPCDsByType(
     SemaphoreIdentityPCDPackage.name
   )[0] as SemaphoreIdentityPCD | undefined;
@@ -113,7 +113,7 @@ export async function makeAddV4CommitmentRequest(
 }
 
 /**
- * @param sig created by {@link makeAddV4CommitmentRequest}. This function verifies that it
+ * @param sig created by {@link makeUpgradeUserWithV4CommitmentRequest}. This function verifies that it
  * is a valid v3 signature of a valid v4 signature of the identity that was used to create
  * the outermost v3 signature.
  */
