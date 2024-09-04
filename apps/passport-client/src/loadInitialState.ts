@@ -4,7 +4,12 @@ import {
   requestUpgradeUserWithV4Commitment,
   requestUser
 } from "@pcd/passport-interface";
-import { v3tov4Identity } from "@pcd/semaphore-identity-v4";
+import { PCDCollection } from "@pcd/pcd-collection";
+import {
+  SemaphoreIdentityPCD,
+  v3tov4Identity
+} from "@pcd/semaphore-identity-pcd";
+import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import {
@@ -17,8 +22,8 @@ import {
   saveIdentity,
   saveSelf
 } from "./localstorage";
+import { getPackages } from "./pcdPackages";
 import { AppState } from "./state";
-import { findIdentityV4PCD } from "./user";
 import { validateAndLogInitialAppState } from "./validateState";
 
 export async function loadInitialState(): Promise<AppState> {
@@ -43,17 +48,23 @@ export async function loadInitialState(): Promise<AppState> {
     self &&
     (!self.semaphore_v4_commitment || !self.semaphore_v4_pubkey)
   ) {
-    const semaphoreV4IdentityPCD = findIdentityV4PCD(pcds);
-    if (semaphoreV4IdentityPCD) {
-      await requestUpgradeUserWithV4Commitment(
-        appConfig.zupassServer,
-        await makeUpgradeUserWithV4CommitmentRequest(pcds)
-      );
-    }
+    const identityPCD = new SemaphoreIdentityPCD(randomUUID(), {
+      identity: identityV3,
+      identityV4: v3tov4Identity(identityV3)
+    });
+
+    await requestUpgradeUserWithV4Commitment(
+      appConfig.zupassServer,
+      await makeUpgradeUserWithV4CommitmentRequest(
+        new PCDCollection(await getPackages(), [identityPCD])
+      )
+    );
+
     const newSelfResponse = await requestUser(
       appConfig.zupassServer,
       self.uuid
     );
+
     if (newSelfResponse.success) {
       self = newSelfResponse.value;
       saveSelf(self);

@@ -16,8 +16,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
-import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
-import { IdentityV4 } from "@pcd/semaphore-identity-v4";
+import { IdentityV3, IdentityV4 } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";

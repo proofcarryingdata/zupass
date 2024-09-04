@@ -1,25 +1,16 @@
 import { User, requestLogToServer } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import {
-  SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDPackage
-} from "@pcd/semaphore-identity-pcd";
-import {
   IdentityV4,
-  SemaphoreIdentityV4PCD,
-  SemaphoreIdentityV4PCDPackage,
+  SemaphoreIdentityPCD,
+  SemaphoreIdentityPCDPackage,
   v4PublicKey
-} from "@pcd/semaphore-identity-v4";
+} from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
 import { AppState } from "./state";
-import {
-  findIdentityV3PCD,
-  findIdentityV4PCD,
-  findUserIdentityV3PCD,
-  findUserIdentityV4PCD
-} from "./user";
+import { findIdentityV3PCD, findUserIdentityV3PCD } from "./user";
 
 /**
  * Returns `true` if {@link validateInitialAppState} returns no errors, and `false`
@@ -151,21 +142,14 @@ export function getRunningAppStateValidationErrors(
   const loggedOut = !self;
 
   // Find identity PCD in the standard way, using a known commitment.
-  let identityV3PCDFromCollection: SemaphoreIdentityPCD | undefined = undefined;
-  let identityV4PCDFromCollection: SemaphoreIdentityV4PCD | undefined =
-    undefined;
+  let idFromPCDCollection: SemaphoreIdentityPCD | undefined = undefined;
 
   if (self && pcds) {
-    identityV3PCDFromCollection = findUserIdentityV3PCD(pcds, self);
-    identityV4PCDFromCollection = findUserIdentityV4PCD(pcds, self);
+    idFromPCDCollection = findUserIdentityV3PCD(pcds, self);
   } else if (identity && identityV4 && pcds) {
-    identityV3PCDFromCollection = findIdentityV3PCD(
+    idFromPCDCollection = findIdentityV3PCD(
       pcds,
       identity.commitment.toString()
-    );
-    identityV4PCDFromCollection = findIdentityV4PCD(
-      pcds,
-      identityV4.commitment.toString()
     );
   }
 
@@ -173,15 +157,10 @@ export function getRunningAppStateValidationErrors(
   // grab any available identity PCD so we can report whether it's missing vs.
   // mismatch.
   if (pcds) {
-    if (!identityV3PCDFromCollection) {
-      identityV3PCDFromCollection = pcds.getPCDsByType(
+    if (!idFromPCDCollection) {
+      idFromPCDCollection = pcds.getPCDsByType(
         SemaphoreIdentityPCDPackage.name
       )?.[0] as SemaphoreIdentityPCD | undefined;
-    }
-    if (!identityV4PCDFromCollection) {
-      identityV4PCDFromCollection = pcds.getPCDsByType(
-        SemaphoreIdentityV4PCDPackage.name
-      )?.[0] as SemaphoreIdentityV4PCD | undefined;
     }
   }
 
@@ -194,15 +173,9 @@ export function getRunningAppStateValidationErrors(
       errors.push("'pcds' contains no pcds");
     }
 
-    if (!identityV3PCDFromCollection) {
+    if (!idFromPCDCollection) {
       errors.push(
         "'pcds' field in app state does not contain an identity v3 PCD"
-      );
-    }
-
-    if (!identityV4PCDFromCollection) {
-      errors.push(
-        "'pcds' field in app state does not contain an identity v4 PCD"
       );
     }
   }
@@ -219,17 +192,14 @@ export function getRunningAppStateValidationErrors(
     errors.push("missing 'identityV4'");
   }
 
-  const identityFromPCDCollection =
-    identityV3PCDFromCollection?.claim?.identity;
+  const identityFromPCDCollection = idFromPCDCollection?.claim?.identity;
   const commitmentOfIdentityPCDInCollection =
     identityFromPCDCollection?.commitment?.toString();
   const commitmentFromSelfField = self?.commitment;
   const commitmentFromIdentityField = identity?.commitment?.toString();
 
-  const identityV4FromPCDCollection =
-    identityV4PCDFromCollection?.claim?.identity;
   const commitmentOfIdentityV4PCDInCollection =
-    identityV4FromPCDCollection?.commitment?.toString();
+    idFromPCDCollection?.claim.identityV4?.commitment?.toString();
   const commitmentV4FromSelfField = self?.semaphore_v4_commitment;
   const commitmentV4FromIdentityField = identityV4?.commitment?.toString();
   const publicKeyV4FromSelfField = self?.semaphore_v4_pubkey;

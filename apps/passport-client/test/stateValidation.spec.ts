@@ -3,12 +3,11 @@ import { PCDCrypto } from "@pcd/passport-crypto";
 import { ZupassUserJson } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
-  SemaphoreIdentityV4PCDPackage,
+  SemaphoreIdentityPCDPackage,
   v3tov4Identity,
   v4PublicKey
-} from "@pcd/semaphore-identity-v4";
+} from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { v4 as uuid } from "uuid";
@@ -119,9 +118,6 @@ describe("validateAppState", async function () {
     pcds.addAll([
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity1
-      }),
-      await SemaphoreIdentityV4PCDPackage.prove({
-        identity: v4id1
       })
     ]);
     expect(
@@ -175,11 +171,6 @@ describe("validateAppState", async function () {
         identity: identity1
       })
     );
-    pcds.add(
-      await SemaphoreIdentityV4PCDPackage.prove({
-        identity: v4id1
-      })
-    );
     expect(
       validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
     ).to.deep.eq({
@@ -210,18 +201,8 @@ describe("validateAppState", async function () {
       })
     );
     pcds.add(
-      await SemaphoreIdentityV4PCDPackage.prove({
-        identity: v4id2
-      })
-    );
-    pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity1
-      })
-    );
-    pcds.add(
-      await SemaphoreIdentityV4PCDPackage.prove({
-        identity: v4id1
       })
     );
     expect(
@@ -320,11 +301,6 @@ describe("validateAppState", async function () {
         identity: identity1
       })
     );
-    pcds.add(
-      await SemaphoreIdentityV4PCDPackage.prove({
-        identity: v4id1
-      })
-    );
     expect(
       validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
     ).to.deep.eq({
@@ -351,11 +327,6 @@ describe("validateAppState", async function () {
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity1
-      })
-    );
-    pcds.add(
-      await SemaphoreIdentityV4PCDPackage.prove({
-        identity: v4id1
       })
     );
     expect(
@@ -394,11 +365,6 @@ describe("validateAppState", async function () {
         identity: identity2
       })
     );
-    pcds.add(
-      await SemaphoreIdentityV4PCDPackage.prove({
-        identity: v4id2
-      })
-    );
     expect(
       validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
     ).to.deep.eq({
@@ -427,11 +393,6 @@ describe("validateAppState", async function () {
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity1
-      })
-    );
-    pcds.add(
-      await SemaphoreIdentityV4PCDPackage.prove({
-        identity: v4id1
       })
     );
     expect(
@@ -468,11 +429,6 @@ describe("validateAppState", async function () {
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity2
-      })
-    );
-    pcds.add(
-      await SemaphoreIdentityV4PCDPackage.prove({
-        identity: v4id2
       })
     );
     expect(

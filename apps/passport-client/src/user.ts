@@ -4,10 +4,6 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
-import {
-  SemaphoreIdentityV4PCD,
-  SemaphoreIdentityV4PCDTypeName
-} from "@pcd/semaphore-identity-v4";
 import { appConfig } from "./appConfig";
 import { Dispatcher } from "./dispatch";
 
@@ -66,29 +62,6 @@ export function findIdentityV3PCD(
       v3Commitment
     ) {
       return pcd as SemaphoreIdentityPCD;
-    }
-  }
-  return undefined;
-}
-
-export function findUserIdentityV4PCD(
-  pcds: PCDCollection,
-  user: User
-): SemaphoreIdentityV4PCD | undefined {
-  return findIdentityV4PCD(pcds, user.semaphore_v4_commitment);
-}
-
-export function findIdentityV4PCD(
-  pcds: PCDCollection,
-  v4Commitment?: string | undefined | null
-): SemaphoreIdentityV4PCD | undefined {
-  for (const pcd of pcds.getPCDsByType(SemaphoreIdentityV4PCDTypeName)) {
-    if (
-      (pcd as SemaphoreIdentityV4PCD).claim.identity.commitment.toString() ===
-        v4Commitment ||
-      v4Commitment === undefined
-    ) {
-      return pcd as SemaphoreIdentityV4PCD;
     }
   }
   return undefined;

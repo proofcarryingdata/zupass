@@ -6,8 +6,7 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
-import { IdentityV4 } from "@pcd/semaphore-identity-v4";
+import { IdentityV3, IdentityV4 } from "@pcd/semaphore-identity-pcd";
 import { EmbeddedScreenState } from "./embedded";
 import { Emitter } from "./emitter";
 export type GetState = () => AppState;

@@ -32,9 +32,9 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
   isSemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
-  SemaphoreIdentityPCDTypeName
+  SemaphoreIdentityPCDTypeName,
+  v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
-import { v3tov4IdentityPCD, v4PublicKey } from "@pcd/semaphore-identity-v4";
 import { assertUnreachable, sleep } from "@pcd/util";
 import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
@@ -66,7 +66,7 @@ import {
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
-import { findUserIdentityV3PCD, findUserIdentityV4PCD } from "./user";
+import { findUserIdentityV3PCD } from "./user";
 import {
   downloadAndMergeStorage,
   uploadSerializedStorage,
@@ -324,9 +324,8 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ): Promise<void> {
-  const v3Identity = await SemaphoreIdentityPCDPackage.prove({ identity });
-  const v4Identity = v3tov4IdentityPCD(v3Identity);
-  const pcds = new PCDCollection(await getPackages(), [v3Identity, v4Identity]);
+  const id = await SemaphoreIdentityPCDPackage.prove({ identity });
+  const pcds = new PCDCollection(await getPackages(), [id]);
 
   await savePCDs(pcds);
   update({ pcds });
@@ -346,14 +345,10 @@ async function oneClickLogin(
   });
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
-  const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+  const id = await SemaphoreIdentityPCDPackage.prove({
     identity: state.identityV3
   });
-  const v4IdentityPCD = v3tov4IdentityPCD(identityPCD);
-  const pcds = new PCDCollection(await getPackages(), [
-    identityPCD,
-    v4IdentityPCD
-  ]);
+  const pcds = new PCDCollection(await getPackages(), [id]);
 
   await savePCDs(pcds);
   update({ pcds });
@@ -371,7 +366,7 @@ async function oneClickLogin(
     email,
     code,
     state.identityV3.commitment.toString(),
-    v4PublicKey(v4IdentityPCD.claim.identity),
+    v4PublicKey(id.claim.identityV4),
     encryptionKey
   );
 
@@ -441,18 +436,14 @@ async function createNewUserSkipPassword(
     modal: { modalType: "none" }
   });
 
-  const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+  const id = await SemaphoreIdentityPCDPackage.prove({
     identity: state.identityV3
   });
-  const v4IdentityPCD = v3tov4IdentityPCD(identityPCD);
 
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
   if (autoRegister) {
-    const pcds = new PCDCollection(await getPackages(), [
-      identityPCD,
-      v4IdentityPCD
-    ]);
+    const pcds = new PCDCollection(await getPackages(), [id]);
 
     await savePCDs(pcds);
     update({ pcds });
@@ -471,7 +462,7 @@ async function createNewUserSkipPassword(
     email,
     token,
     state.identityV3.commitment.toString(),
-    v4PublicKey(v4IdentityPCD.claim.identity),
+    v4PublicKey(id.claim.identityV4),
     undefined,
     encryptionKey,
     autoRegister
@@ -791,48 +782,34 @@ async function loadAfterLogin(
   }
 
   // Validate stored state against the user response.
-  const identityPCDV3 = findUserIdentityV3PCD(pcds, userResponse.value);
-  const identityPCDV4 = findUserIdentityV4PCD(pcds, userResponse.value);
+  const identity = findUserIdentityV3PCD(pcds, userResponse.value);
   if (
     !validateAndLogRunningAppState(
       "loadAfterLogin",
       userResponse.value,
-      identityPCDV3?.claim?.identity,
-      identityPCDV4?.claim?.identity,
+      identity?.claim?.identity,
+      identity?.claim?.identityV4,
       pcds
     )
   ) {
     userInvalid(update);
     return;
   }
-  if (!identityPCDV3) {
+  if (!identity) {
     // Validation should've caught this, but the compiler doesn't know that.
     console.error("No identity PCD found in encrypted storage.");
     userInvalid(update);
     return;
   }
 
-  // if the user does not have a v4 identity, create one for them,
-  // and request that the server upgrade their account to include
-  // their v4 identity details. this is a one-time migration step
-  // necessary to upgrade an account from semaphore v3 to v4.
-  const identityV4PCD = findUserIdentityV4PCD(pcds, userResponse.value);
-  if (!identityV4PCD) {
-    try {
-      const newV4Identity = v3tov4IdentityPCD(identityPCDV3);
-      pcds.add(newV4Identity);
-      const res = await requestUpgradeUserWithV4Commitment(
-        appConfig.zupassServer,
-        await makeUpgradeUserWithV4CommitmentRequest(pcds)
-      );
-      if (!res.success) {
-        throw new Error(res.error);
-      }
-    } catch (e) {
-      console.error("Failed to add V4 identity to user", e);
-      userInvalid(update);
-      return;
-    }
+  // TODO: document this
+  if (!self.semaphore_v4_commitment || !self.semaphore_v4_pubkey) {
+    const _res = await requestUpgradeUserWithV4Commitment(
+      appConfig.zupassServer,
+      await makeUpgradeUserWithV4CommitmentRequest(pcds)
+    );
+
+    // TODO: handle res
   }
 
   let modal: AppState["modal"] = { modalType: "none" };
@@ -855,7 +832,7 @@ async function loadAfterLogin(
   });
   saveEncryptionKey(encryptionKey);
   saveSelf(self);
-  saveIdentity(identityPCDV3.claim.identity);
+  saveIdentity(identity.claim.identity);
 
   update({
     encryptionKey,
@@ -863,7 +840,7 @@ async function loadAfterLogin(
     subscriptions,
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash,
-    identityV3: identityPCDV3.claim.identity,
+    identityV3: identity.claim.identity,
     self,
     modal
   });

@@ -4,15 +4,6 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import {
-  SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDTypeName
-} from "@pcd/semaphore-identity-pcd";
-import {
-  SemaphoreIdentityV4PCD,
-  SemaphoreIdentityV4PCDTypeName,
-  v3tov4IdentityPCD
-} from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
 import { getPackages } from "./pcdPackages";
@@ -59,20 +50,6 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
     await getPackages(),
     serializedCollection ?? "{}"
   );
-
-  const v3Identity = collection.getPCDsByType(SemaphoreIdentityPCDTypeName);
-  const v4Identity = collection.getPCDsByType(
-    SemaphoreIdentityV4PCDTypeName
-  )[0] as SemaphoreIdentityV4PCD | undefined;
-
-  // user already had an account with a v3 identity, but no v4 identity.
-  // so. we derive a v4 identity from the v3 identity and add it to the collection.
-  if (v3Identity.length > 0 && !v4Identity) {
-    const v3IdentityPCD = v3Identity[0] as SemaphoreIdentityPCD;
-    const v4Identity = v3tov4IdentityPCD(v3IdentityPCD);
-    collection.add(v4Identity);
-    await savePCDs(collection);
-  }
 
   if (
     !validateAndLogRunningAppState(
