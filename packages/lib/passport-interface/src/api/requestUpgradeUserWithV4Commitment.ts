@@ -3,14 +3,10 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import {
   SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDPackage
-} from "@pcd/semaphore-identity-pcd";
-import {
-  SemaphoreIdentityV4PCD,
-  SemaphoreIdentityV4PCDPackage,
+  SemaphoreIdentityPCDPackage,
   v4PrivateKey,
   v4PublicKeyToCommitment
-} from "@pcd/semaphore-identity-v4";
+} from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
@@ -59,16 +55,13 @@ export type UpgradeUserWithV4CommitmentResult =
 export async function makeUpgradeUserWithV4CommitmentRequest(
   pcdCollection: PCDCollection
 ): Promise<UpgradeUserWithV4CommitmentRequest> {
-  const v3PCD = pcdCollection.getPCDsByType(
+  const identity = pcdCollection.getPCDsByType(
     SemaphoreIdentityPCDPackage.name
   )[0] as SemaphoreIdentityPCD | undefined;
-  const v4PCD = pcdCollection.getPCDsByType(
-    SemaphoreIdentityV4PCDPackage.name
-  )[0] as SemaphoreIdentityV4PCD | undefined;
 
-  if (!v3PCD || !v4PCD) {
+  if (!identity) {
     throw new Error(
-      "Expected a v3 and v4 identity PCD to exist in the collection"
+      "Expected a semaphore identity to be present in the PCD collection"
     );
   }
 
@@ -78,7 +71,7 @@ export async function makeUpgradeUserWithV4CommitmentRequest(
       value: {
         mySemaphoreV3Commitment: {
           type: "cryptographic",
-          value: v3PCD.claim.identity.commitment
+          value: identity.claim.identity.commitment
         },
         pod_type: {
           type: "string",
@@ -88,7 +81,7 @@ export async function makeUpgradeUserWithV4CommitmentRequest(
     },
     privateKey: {
       argumentType: ArgumentTypeName.String,
-      value: v4PrivateKey(v4PCD.claim.identity)
+      value: v4PrivateKey(identity.claim.identityV4)
     },
     id: {
       argumentType: ArgumentTypeName.String,
@@ -99,7 +92,7 @@ export async function makeUpgradeUserWithV4CommitmentRequest(
   const v3SigOfV4Sig = await SemaphoreSignaturePCDPackage.prove({
     identity: {
       argumentType: ArgumentTypeName.PCD,
-      value: await SemaphoreIdentityPCDPackage.serialize(v3PCD)
+      value: await SemaphoreIdentityPCDPackage.serialize(identity)
     },
     signedMessage: {
       argumentType: ArgumentTypeName.String,
