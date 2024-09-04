@@ -11,6 +11,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreIdentityV4PCDTypeName } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -74,7 +75,9 @@ export function useVisiblePCDsInFolder(folder: string): PCD[] {
   return pcds.filter(
     (pcd) =>
       // Filter out PODTicketPCDs unless showPODTicketPCDs is true
-      pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs
+      (pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs) &&
+      // Filter out V4 semaphore Identity
+      pcd.type !== SemaphoreIdentityV4PCDTypeName
   );
 }
 

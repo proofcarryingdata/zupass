@@ -1,5 +1,4 @@
 import { PCD } from "@pcd/pcd-types";
-import { SemaphoreIdentityV4PCDTypeName } from "@pcd/semaphore-identity-v4";
 import { sleep } from "@pcd/util";
 import _ from "lodash";
 import { useCallback, useMemo, useState } from "react";
@@ -91,9 +90,7 @@ export function PCDCardList({
       (sortState.sortBy && sortState.sortOrder
         ? _.orderBy(sortablePCDs, [sortState.sortBy], [sortState.sortOrder])
         : sortablePCDs
-      )
-        .map((o) => o.value)
-        .filter((pcd) => pcd.type !== SemaphoreIdentityV4PCDTypeName),
+      ).map((o) => o.value),
     [sortState, sortablePCDs]
   );
 
