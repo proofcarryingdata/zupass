@@ -5,14 +5,11 @@ import { PODPCDPackage } from "@pcd/pod-pcd";
 import {
   IdentityV3,
   SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDPackage
-} from "@pcd/semaphore-identity-pcd";
-import {
-  SemaphoreIdentityV4PCDPackage,
-  v3tov4IdentityPCD,
+  SemaphoreIdentityPCDPackage,
+  v3tov4Identity,
   v4PrivateKey,
   v4PublicKey
-} from "@pcd/semaphore-identity-v4";
+} from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { randomUUID } from "@pcd/util";
 
@@ -42,18 +39,13 @@ describe("V3ToV4Migration", async function () {
     });
   });
 
-  it("V3ToV4Migration", async function () {
-    const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
-      identity: new IdentityV3()
+  it("V3ToV4Migration request should verify", async function () {
+    const identityV3 = new IdentityV3();
+    const id = new SemaphoreIdentityPCD(randomUUID(), {
+      identity: identityV3,
+      identityV4: v3tov4Identity(identityV3)
     });
-    const v4Id = v3tov4IdentityPCD(v3Id);
-    const v4Id2 = v3tov4IdentityPCD(v3Id); // check it's deterministic
-    expect(v4Id.claim.identity.export()).to.eq(v4Id2.claim.identity.export());
-
-    const rightPCDs = new PCDCollection(
-      [SemaphoreIdentityPCDPackage, SemaphoreIdentityV4PCDPackage],
-      [v3Id, v4Id]
-    );
+    const rightPCDs = new PCDCollection([SemaphoreIdentityPCDPackage], [id]);
 
     const migrationRequest =
       await makeUpgradeUserWithV4CommitmentRequest(rightPCDs);
@@ -62,17 +54,18 @@ describe("V3ToV4Migration", async function () {
     );
     const verified = await verifyAddV4CommitmentRequestPCD(migrationPCD);
     expect(verified).to.deep.eq({
-      v3Commitment: v3Id.claim.identity.commitment.toString(),
-      v4PublicKey: v4PublicKey(v4Id.claim.identity),
-      v4Commitment: v4Id.claim.identity.commitment.toString()
+      v3Commitment: id.claim.identity.commitment.toString(),
+      v4PublicKey: v4PublicKey(id.claim.identityV4),
+      v4Commitment: id.claim.identityV4.commitment.toString()
     } satisfies V4MigrationVerification);
   });
 
   it("V3ToV4Migration wrong v3 identity should not verify", async function () {
-    const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
-      identity: new IdentityV3()
+    const identityV3 = new IdentityV3();
+    const identityPCD = new SemaphoreIdentityPCD(randomUUID(), {
+      identity: identityV3,
+      identityV4: v3tov4Identity(identityV3)
     });
-    const v4Id = v3tov4IdentityPCD(v3Id);
 
     const v4SigOfV3Claim = await PODPCDPackage.prove({
       entries: {
@@ -80,7 +73,7 @@ describe("V3ToV4Migration", async function () {
         value: {
           mySemaphoreV3Commitment: {
             type: "cryptographic",
-            value: 1n
+            value: 1n // this is the wrong bit, it should be the v3 commitment
           },
           pod_type: {
             type: "string",
@@ -90,7 +83,7 @@ describe("V3ToV4Migration", async function () {
       },
       privateKey: {
         argumentType: ArgumentTypeName.String,
-        value: v4PrivateKey(v4Id.claim.identity)
+        value: v4PrivateKey(identityPCD.claim.identityV4)
       },
       id: {
         argumentType: ArgumentTypeName.String,
@@ -101,7 +94,7 @@ describe("V3ToV4Migration", async function () {
     const migrationPCD = await SemaphoreSignaturePCDPackage.prove({
       identity: {
         argumentType: ArgumentTypeName.PCD,
-        value: await SemaphoreIdentityPCDPackage.serialize(v3Id)
+        value: await SemaphoreIdentityPCDPackage.serialize(identityPCD)
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
@@ -114,10 +107,11 @@ describe("V3ToV4Migration", async function () {
   });
 
   it("V3ToV4Migration wrong pod type should not verify", async function () {
-    const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
-      identity: new IdentityV3()
+    const identityV3 = new IdentityV3();
+    const identityPCD = new SemaphoreIdentityPCD(randomUUID(), {
+      identity: identityV3,
+      identityV4: v3tov4Identity(identityV3)
     });
-    const v4Id = v3tov4IdentityPCD(v3Id);
 
     const v4SigOfV3Claim = await PODPCDPackage.prove({
       entries: {
@@ -125,7 +119,7 @@ describe("V3ToV4Migration", async function () {
         value: {
           mySemaphoreV3Commitment: {
             type: "cryptographic",
-            value: v3Id.claim.identity.commitment
+            value: identityPCD.claim.identity.commitment
           },
           pod_type: {
             type: "string",
@@ -135,7 +129,7 @@ describe("V3ToV4Migration", async function () {
       },
       privateKey: {
         argumentType: ArgumentTypeName.String,
-        value: v4PrivateKey(v4Id.claim.identity)
+        value: v4PrivateKey(identityPCD.claim.identityV4)
       },
       id: {
         argumentType: ArgumentTypeName.String,
@@ -146,7 +140,7 @@ describe("V3ToV4Migration", async function () {
     const migrationPCD = await SemaphoreSignaturePCDPackage.prove({
       identity: {
         argumentType: ArgumentTypeName.PCD,
-        value: await SemaphoreIdentityPCDPackage.serialize(v3Id)
+        value: await SemaphoreIdentityPCDPackage.serialize(identityPCD)
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
@@ -167,15 +161,17 @@ describe("V3ToV4Migration", async function () {
     expect(serializedV3Identity).to.eq(parsedV3Identity.toString());
 
     const v3Id = new SemaphoreIdentityPCD(uuid, {
-      identity: parsedV3Identity
+      identity: parsedV3Identity,
+      identityV4: v3tov4Identity(parsedV3Identity)
     });
 
-    const v4Id = v3tov4IdentityPCD(v3Id);
-    expect(v4Id.claim.identity.export()).to.eq(
+    expect(v3Id.claim.identityV4.export()).to.eq(
       "T2UZ7xc1/IG8ipSzJGvlSBJiN5eylpAhgII2vWA44sI="
     );
 
-    const privateKey = decodePrivateKey(v4Id.claim.identity.export());
+    const privateKey = decodePrivateKey(
+      v3Id.claim.identityV4.claim.identity.export()
+    );
     expect(privateKey.length).to.eq(32);
   });
 });

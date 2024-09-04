@@ -1,8 +1,10 @@
 import { decodePublicKey, encodePrivateKey, encodePublicKey } from "@pcd/pod";
+import { randomUUID } from "@pcd/util";
 import { beBigIntToBuffer } from "@zk-kit/utils";
 import { sha256 } from "js-sha256";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import { IdentityV3, IdentityV4 } from "./forwardedTypes";
+import { SemaphoreIdentityPCD } from "./SemaphoreIdentityPCD";
 
 /**
  * Given a semaphore v4 public key, returns the corresponding v4 identity commitment.
@@ -39,4 +41,11 @@ export function v3tov4Identity(v3Identity: IdentityV3): IdentityV4 {
   // this private key needs to be 32 bytes to be compatible with POD
   const privKey = Buffer.from(sha256(hashInput), "hex");
   return new IdentityV4(privKey);
+}
+
+export function v3IdentityToPCD(v3Identity: IdentityV3): SemaphoreIdentityPCD {
+  return new SemaphoreIdentityPCD(randomUUID(), {
+    identity: v3Identity,
+    identityV4: v3tov4Identity(v3Identity)
+  });
 }
