@@ -68,6 +68,8 @@ export async function loadInitialState(): Promise<AppState> {
     if (newSelfResponse.success) {
       self = newSelfResponse.value;
       saveSelf(self);
+    } else {
+      // anything to do here?
     }
   }
 
