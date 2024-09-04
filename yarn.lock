@@ -5451,7 +5451,7 @@
     "@ethersproject/keccak256" "^5.7.0"
     "@zk-kit/incremental-merkle-tree" "1.1.0"
 
-"@semaphore-protocol/identity@4.0.3", "@semaphore-protocol/identity@^4.0.3":
+"@semaphore-protocol/identity@4.0.3":
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-4.0.3.tgz#9be7fe70a04bc02d9cdb0019693e062a69aca7e6"
   integrity sha512-IfGpE00gWnuM0c41g3rY1uU0he8X8JOrerqXjGzrsW0sXRe/jkxL/jln6zufVTGleN/mGdP9CkqXh7Ca7QjAiw==

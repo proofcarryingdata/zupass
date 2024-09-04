@@ -43,7 +43,6 @@
     "@pcd/rsa-ticket-pcd": "0.6.4",
     "@pcd/semaphore-group-pcd": "0.11.4",
     "@pcd/semaphore-identity-pcd": "0.11.4",
-    "@pcd/semaphore-identity-v4": "0.2.4",
     "@pcd/semaphore-signature-pcd": "0.11.4",
     "@pcd/util": "^0.5.3",
     "@pcd/zk-eddsa-event-ticket-pcd": "0.6.4",
