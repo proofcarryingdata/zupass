@@ -49,6 +49,7 @@ export function v3tov4Identity(v3Identity: IdentityV3): IdentityV4 {
       beBigIntToBuffer(v3Identity.trapdoor, 32).toString("hex"),
     "hex"
   );
+  // this private key needs to be 32 bytes to be compatible with POD
   const privKey = Buffer.from(sha256(hashInput), "hex");
   return new IdentityV4(privKey);
 }
