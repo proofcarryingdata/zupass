@@ -169,9 +169,7 @@ describe("V3ToV4Migration", async function () {
       "T2UZ7xc1/IG8ipSzJGvlSBJiN5eylpAhgII2vWA44sI="
     );
 
-    const privateKey = decodePrivateKey(
-      v3Id.claim.identityV4.claim.identity.export()
-    );
+    const privateKey = decodePrivateKey(v3Id.claim.identityV4.export());
     expect(privateKey.length).to.eq(32);
   });
 });
