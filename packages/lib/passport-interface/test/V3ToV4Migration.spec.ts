@@ -3,6 +3,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { decodePrivateKey } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import {
+  IdentityV3,
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
@@ -14,7 +15,7 @@ import {
 } from "@pcd/semaphore-identity-v4";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { randomUUID } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
+
 import { expect } from "chai";
 import "mocha";
 import * as path from "path";
@@ -43,7 +44,7 @@ describe("V3ToV4Migration", async function () {
 
   it("V3ToV4Migration", async function () {
     const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
-      identity: new Identity()
+      identity: new IdentityV3()
     });
     const v4Id = v3tov4IdentityPCD(v3Id);
     const v4Id2 = v3tov4IdentityPCD(v3Id); // check it's deterministic
@@ -69,7 +70,7 @@ describe("V3ToV4Migration", async function () {
 
   it("V3ToV4Migration wrong v3 identity should not verify", async function () {
     const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
-      identity: new Identity()
+      identity: new IdentityV3()
     });
     const v4Id = v3tov4IdentityPCD(v3Id);
 
@@ -114,7 +115,7 @@ describe("V3ToV4Migration", async function () {
 
   it("V3ToV4Migration wrong pod type should not verify", async function () {
     const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
-      identity: new Identity()
+      identity: new IdentityV3()
     });
     const v4Id = v3tov4IdentityPCD(v3Id);
 
@@ -158,12 +159,20 @@ describe("V3ToV4Migration", async function () {
   });
 
   it("V3ToV4Migration is deterministic", async function () {
-    const v3Id = new SemaphoreIdentityPCD(randomUUID(), {
-      identity: new Identity("asdf")
+    const serializedV3Identity =
+      '["0xb3003134d5aeaca667168d3e53e12fa7eb683e67d6bb9ce33e0e106417a875","0x349f66df87b20e111f1cb7c14fc527a386afd74f4d345850269c1eb0b3ae9b"]';
+    const parsedV3Identity = new IdentityV3(serializedV3Identity);
+    const uuid = "bd5a2ee5-dde2-43df-9642-9d50dea10c4e";
+
+    expect(serializedV3Identity).to.eq(parsedV3Identity.toString());
+
+    const v3Id = new SemaphoreIdentityPCD(uuid, {
+      identity: parsedV3Identity
     });
+
     const v4Id = v3tov4IdentityPCD(v3Id);
     expect(v4Id.claim.identity.export()).to.eq(
-      "IS/H+GdcAaGchwJQ7RtOmCNJlmFCbMtJB9P/rxPUEs0="
+      "T2UZ7xc1/IG8ipSzJGvlSBJiN5eylpAhgII2vWA44sI="
     );
 
     const privateKey = decodePrivateKey(v4Id.claim.identity.export());
