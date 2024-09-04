@@ -33,6 +33,7 @@ import {
   isSemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName,
+  v3tov4Identity,
   v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
 import { assertUnreachable, sleep } from "@pcd/util";
@@ -324,8 +325,8 @@ async function genPassport(
   email: string,
   update: ZuUpdate
 ): Promise<void> {
-  const id = await SemaphoreIdentityPCDPackage.prove({ identity });
-  const pcds = new PCDCollection(await getPackages(), [id]);
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
+  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
   await savePCDs(pcds);
   update({ pcds });
@@ -345,10 +346,10 @@ async function oneClickLogin(
   });
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
-  const id = await SemaphoreIdentityPCDPackage.prove({
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({
     identity: state.identityV3
   });
-  const pcds = new PCDCollection(await getPackages(), [id]);
+  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
   await savePCDs(pcds);
   update({ pcds });
@@ -366,7 +367,7 @@ async function oneClickLogin(
     email,
     code,
     state.identityV3.commitment.toString(),
-    v4PublicKey(id.claim.identityV4),
+    v4PublicKey(identityPCD.claim.identityV4),
     encryptionKey
   );
 
@@ -436,14 +437,13 @@ async function createNewUserSkipPassword(
     modal: { modalType: "none" }
   });
 
-  const id = await SemaphoreIdentityPCDPackage.prove({
-    identity: state.identityV3
-  });
-
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
   if (autoRegister) {
-    const pcds = new PCDCollection(await getPackages(), [id]);
+    const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+      identity: state.identityV3
+    });
+    const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
     await savePCDs(pcds);
     update({ pcds });
@@ -462,7 +462,7 @@ async function createNewUserSkipPassword(
     email,
     token,
     state.identityV3.commitment.toString(),
-    v4PublicKey(id.claim.identityV4),
+    v4PublicKey(v3tov4Identity(state.identityV3)),
     undefined,
     encryptionKey,
     autoRegister
@@ -782,20 +782,20 @@ async function loadAfterLogin(
   }
 
   // Validate stored state against the user response.
-  const identity = findUserIdentityPCD(pcds, userResponse.value);
+  const identityPCD = findUserIdentityPCD(pcds, userResponse.value);
   if (
     !validateAndLogRunningAppState(
       "loadAfterLogin",
       userResponse.value,
-      identity?.claim?.identity,
-      identity?.claim?.identityV4,
+      identityPCD?.claim?.identity,
+      identityPCD?.claim?.identityV4,
       pcds
     )
   ) {
     userInvalid(update);
     return;
   }
-  if (!identity) {
+  if (!identityPCD) {
     // Validation should've caught this, but the compiler doesn't know that.
     console.error("No identity PCD found in encrypted storage.");
     userInvalid(update);
@@ -832,7 +832,7 @@ async function loadAfterLogin(
   });
   saveEncryptionKey(encryptionKey);
   saveSelf(self);
-  saveIdentity(identity.claim.identity);
+  saveIdentity(identityPCD.claim.identity);
 
   update({
     encryptionKey,
@@ -840,7 +840,7 @@ async function loadAfterLogin(
     subscriptions,
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash,
-    identityV3: identity.claim.identity,
+    identityV3: identityPCD.claim.identity,
     self,
     modal
   });
