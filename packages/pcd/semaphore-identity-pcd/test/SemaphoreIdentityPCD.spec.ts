@@ -1,7 +1,7 @@
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import { expect } from "chai";
-import { SemaphoreIdentityPCDPackage } from "../src";
+import { IdentityV3, IdentityV4, SemaphoreIdentityPCDPackage } from "../src";
 
 describe("Semaphore Identity PCD", function () {
   it("should be instantiatable", async function () {
@@ -27,8 +27,13 @@ describe("Semaphore Identity PCD", function () {
       identityPCD.claim.identity.toString(),
       deserialized.claim.identity.toString()
     );
+    assert.equal(
+      identityPCD.claim.identityV4.export(),
+      deserialized.claim.identityV4.export()
+    );
 
-    assert.equal(deserialized.claim.identity instanceof Identity, true);
+    assert.equal(deserialized.claim.identity instanceof IdentityV3, true);
+    assert.equal(deserialized.claim.identityV4 instanceof IdentityV4, true);
   });
 
   it("should be able to compatibly deserialize a saved PCD", async function () {
@@ -47,6 +52,9 @@ describe("Semaphore Identity PCD", function () {
       new Identity(
         '["0x5e169461d89b553370b4ac3bae0df93cd7f127abfee5c38d2c1b30d3ebf654","0xc96157535de33d96ef25e41350cd569b34e97243180ec56a7497eb4f0c3d16"]'
       )
+    );
+    expect(deserialized.claim.identityV4.export()).to.deep.eq(
+      "9KF/Pog6A6Qw0kbpvnj+J504cEO80/uJ1WbAwTJVhJ8="
     );
   });
 });

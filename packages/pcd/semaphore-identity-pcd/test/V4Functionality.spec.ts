@@ -8,7 +8,7 @@ import "mocha";
 import { v3tov4Identity, v4PrivateKey } from "../src";
 import { IdentityV3, IdentityV4 } from "../src/forwardedTypes";
 
-describe("Semaphore Identity PCD", function () {
+describe("Semaphore Identity PCD - extra v4 functionality", function () {
   it("public and private key extraction should work", async function () {
     const original = new IdentityV4();
     expect(original.export()).to.eq(
