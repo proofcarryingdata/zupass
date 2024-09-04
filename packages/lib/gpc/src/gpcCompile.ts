@@ -774,11 +774,11 @@ function compileProofEntryConstraints(
     entryEqualToOtherEntryByIndex: CircuitSignal[];
   };
   entryConstraintMetadata: {
-    firstOwnerIndex?: number;
+    firstOwnerIndex: number;
   };
 } {
   // Deal with equality comparision and POD ownership, which share circuitry.
-  let firstOwnerIndex = undefined;
+  let firstOwnerIndex = 0;
   const entryEqualToOtherEntryByIndex: bigint[] = [];
   const virtualEntryEqualToOtherEntryByIndex: bigint[] = [];
 
@@ -787,7 +787,7 @@ function compileProofEntryConstraints(
     // only one owner), or to another entry specified by config, or to itself
     // in order to make the constraint a nop.
     if (entryInfo.entryConfig.isOwnerID) {
-      if (firstOwnerIndex === undefined) {
+      if (firstOwnerIndex === 0) {
         firstOwnerIndex = entryInfo.entryIndex;
       } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
         throw new Error(
@@ -837,14 +837,13 @@ function compileProofEntryConstraints(
         virtualEntryEqualToOtherEntryByIndex
       )
     },
-    entryConstraintMetadata:
-      firstOwnerIndex !== undefined ? { firstOwnerIndex } : {}
+    entryConstraintMetadata: { firstOwnerIndex }
   };
 }
 
-export function compileProofOwner(
+function compileProofOwner(
   ownerInput: GPCProofOwnerInputs | undefined,
-  firstOwnerIndex: number | undefined
+  firstOwnerIndex: number
 ): {
   ownerEntryIndex: CircuitSignal;
   ownerSemaphoreV3IdentityNullifier: CircuitSignal;
@@ -855,7 +854,7 @@ export function compileProofOwner(
   // Owner module is enabled if any entry config declared it was an owner
   // commitment.  It can't be enabled purely for purpose of nullifier hash,
   // since an unconstrained owner could be set to any random numbers.
-  const hasOwner = firstOwnerIndex !== undefined;
+  const hasOwner = firstOwnerIndex !== 0;
   if (hasOwner && ownerInput?.semaphoreV3 === undefined) {
     throw new Error("Missing owner identity.");
   }
@@ -1141,9 +1140,9 @@ function compileVerifyVirtualEntry(
   };
 }
 
-export function compileVerifyOwner(
+function compileVerifyOwner(
   ownerInput: GPCRevealedOwnerClaims | undefined,
-  firstOwnerIndex: number | undefined
+  firstOwnerIndex: number
 ): {
   circuitOwnerInputs: {
     ownerEntryIndex: CircuitSignal;
@@ -1157,7 +1156,7 @@ export function compileVerifyOwner(
   // Owner module is enabled if any entry config declared it was an owner
   // commitment.  It can't be enabled purely for purpose of nullifier hash,
   // since an unconstrained owner could be set to any random numbers.
-  const hasOwner = firstOwnerIndex !== undefined;
+  const hasOwner = firstOwnerIndex !== 0;
 
   return {
     circuitOwnerInputs: {
