@@ -1,3 +1,7 @@
+// todo:
+// - check that everywhere a v3 identity is present, a v4 identity should also be present
+// - check thatv4 identity is derived from v3 identity
+
 import { EdDSAPCD, EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { PCDCrypto } from "@pcd/passport-crypto";
 import { ZupassUserJson } from "@pcd/passport-interface";
@@ -85,7 +89,7 @@ describe("validateAppState", async function () {
     ).to.deep.eq({
       errors: [
         "'pcds' contains no pcds",
-        "'pcds' field in app state does not contain an identity pcd"
+        "'pcds' field in app state does not contain an identity PCD"
       ],
       userUUID: undefined,
       ...TAG
@@ -105,17 +109,17 @@ describe("validateAppState", async function () {
         true
       )
     ).to.deep.eq({
-      errors: ["'pcds' field in app state does not contain an identity pcd"],
+      errors: ["'pcds' field in app state does not contain an identity PCD"],
       userUUID: undefined,
       ...TAG
     } satisfies ErrorReport);
 
     const pcds = new PCDCollection(pcdPackages);
-    pcds.addAll([
+    pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity1
       })
-    ]);
+    );
     expect(
       validateRunningAppState(
         TAG_STR,
@@ -143,7 +147,7 @@ describe("validateAppState", async function () {
     ).to.deep.eq({
       errors: [
         "missing 'pcds'",
-        "'pcds' field in app state does not contain an identity pcd"
+        "'pcds' field in app state does not contain an identity PCD"
       ],
       userUUID: undefined,
       ...TAG
@@ -224,7 +228,7 @@ describe("validateAppState", async function () {
       userUUID: self.uuid,
       errors: [
         "'pcds' contains no pcds",
-        "'pcds' field in app state does not contain an identity pcd",
+        "'pcds' field in app state does not contain an identity PCD",
         `'self' missing a v4 commitment`
       ],
       ...TAG
@@ -245,7 +249,7 @@ describe("validateAppState", async function () {
       userUUID: self.uuid,
       errors: [
         "missing 'pcds'",
-        "'pcds' field in app state does not contain an identity pcd",
+        "'pcds' field in app state does not contain an identity PCD",
         `'self' missing a v4 commitment`
       ],
       ...TAG

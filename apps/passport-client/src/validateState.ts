@@ -172,7 +172,7 @@ export function getRunningAppStateValidationErrors(
     }
 
     if (!identityPCDFromCollection) {
-      errors.push("'pcds' field in app state does not contain an identity pcd");
+      errors.push("'pcds' field in app state does not contain an identity PCD");
     }
   }
 
