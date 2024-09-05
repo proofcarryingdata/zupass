@@ -3,7 +3,7 @@ import { CircuitSignal } from "./types";
 export type OwnerModuleSemaphoreV4Inputs = {
   enabled: CircuitSignal;
   secretScalar: CircuitSignal;
-  identityCommitmentHash: CircuitSignal;
+  identityCommitment: CircuitSignal;
   externalNullifier: CircuitSignal;
   isNullifierHashRevealed: CircuitSignal;
 };
@@ -11,7 +11,7 @@ export type OwnerModuleSemaphoreV4Inputs = {
 export type OwnerModuleSemaphoreV4nputNamesType = [
   "enabled",
   "secretScalar",
-  "identityCommitmentHash",
+  "identityCommitment",
   "externalNullifier",
   "isNullifierHashRevealed"
 ];

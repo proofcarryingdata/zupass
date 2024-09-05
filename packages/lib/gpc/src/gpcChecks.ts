@@ -4,6 +4,7 @@ import {
   requiredNumTuples
 } from "@pcd/gpcircuits";
 import {
+  EDDSA_PUBKEY_TYPE_STRING,
   POD,
   PODName,
   PODValue,
@@ -15,11 +16,12 @@ import {
   checkPODName,
   checkPODValue,
   checkPublicKeyFormat,
+  encodePublicKey,
   podValueHash,
   requireType
 } from "@pcd/pod";
+import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import { Identity } from "@semaphore-protocol/identity";
-import { Identity as IdentityV4 } from "@semaphore-protocol/identity-v4";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import {
@@ -152,7 +154,9 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     totalNumericValues,
     numLists,
     maxListSize,
-    tupleArities
+    tupleArities,
+    includeOwnerV3,
+    includeOwnerV4
   );
 }
 
@@ -468,12 +472,26 @@ export function checkProofInputsForConfig(
 
         for (const [ownerIDType, ownerCommitment] of [
           [SEMAPHORE_V3, proofInputs.owner.semaphoreV3?.commitment],
-          [SEMAPHORE_V4, proofInputs.owner.semaphoreV4?.commitment]
+          [
+            SEMAPHORE_V4,
+            proofInputs.owner.semaphoreV4?.publicKey
+              ? encodePublicKey(proofInputs.owner.semaphoreV4?.publicKey)
+              : undefined
+          ]
         ]) {
           if (entryConfig.isOwnerID === ownerIDType) {
             if (ownerCommitment === undefined) {
               throw new ReferenceError(
                 `Configured owner commitment in POD references missing identity.`
+              );
+            } else if (
+              (ownerIDType === SEMAPHORE_V3 &&
+                podValue.type !== "cryptographic") ||
+              (ownerIDType === SEMAPHORE_V4 &&
+                podValue.type !== EDDSA_PUBKEY_TYPE_STRING)
+            ) {
+              throw new Error(
+                "Semaphore V3 owner identity commitment must be of cryptographic type and Semaphore V4 owner identity must be of EdDSA public key type."
               );
             } else if (podValue.value !== ownerCommitment) {
               throw new Error(
@@ -483,13 +501,6 @@ export function checkProofInputsForConfig(
               break;
             }
           }
-        }
-
-        // Owner commitment value must be a cryptographic number.
-        if (podValue.type !== "cryptographic") {
-          throw new Error(
-            "Owner identity commitment must be of cryptographic type."
-          );
         }
       }
 
@@ -740,10 +751,10 @@ export function checkRevealedClaims(
       "owner.externalNullifier",
       revealedClaims.owner.externalNullifier
     );
-    if ("nullifierHash" in revealedClaims.owner) {
+    if ("nullifierHashV3" in revealedClaims.owner) {
       requireType(
-        "owner.nullifierHash",
-        revealedClaims.owner.nullifierHash,
+        "owner.nullifierHashV3",
+        revealedClaims.owner.nullifierHashV3,
         "bigint"
       );
     } else {

@@ -1,5 +1,5 @@
 {
-  "proto-pod-gpc_1o-1e-5md-0nv-0x0l-0x0t-1ov3-1ov4": {
+  "proto-pod-gpc_1o-1e-5md-0nv-0x0l-0x0t-1ov3-0ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -12,7 +12,7 @@
       0,
       0,
       1,
-      1
+      0
     ],
     "pubs": [
       "entryObjectIndex",
@@ -143,7 +143,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-4nv-2x20l-2x2t-1ov3-1ov4": {
+  "proto-pod-gpc_3o-10e-8md-4nv-2x20l-2x2t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -155,7 +155,7 @@
       20,
       2,
       2,
-      1,
+      0,
       1
     ],
     "pubs": [

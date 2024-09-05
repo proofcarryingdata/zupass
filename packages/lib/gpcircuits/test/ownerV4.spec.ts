@@ -2,7 +2,7 @@ import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
-import { poseidon1 } from "poseidon-lite";
+import { poseidon2 } from "poseidon-lite";
 import {
   CircuitSignal,
   OwnerModuleSemaphoreV4Inputs,
@@ -26,18 +26,19 @@ describe("owner.OwnerModuleSemaphoreV4 should work", function () {
     inputs: OwnerModuleSemaphoreV4Inputs;
     outputs: OwnerModuleSemaphoreV4Outputs;
   } {
+    const externalNullifier = 42n;
     return {
       inputs: {
         enabled: isEnabled ? 1n : 0n,
         secretScalar: ownerIdentityV4.secretScalar,
-        identityCommitmentHash: poseidon1([ownerIdentityV4.commitment]),
-        externalNullifier: 42n,
+        identityCommitment: ownerIdentityV4.commitment,
+        externalNullifier,
         isNullifierHashRevealed: isNullifierHashRevealed ? 1n : 0n
       },
       outputs: {
         revealedNullifierHash:
           isEnabled && isNullifierHashRevealed
-            ? 894567425121403332266040643563918773524317789061280615331238253663051803519n
+            ? poseidon2([externalNullifier, ownerIdentityV4.secretScalar])
             : BABY_JUB_NEGATIVE_ONE
       }
     };
@@ -46,16 +47,16 @@ describe("owner.OwnerModuleSemaphoreV4 should work", function () {
   const sampleInput: OwnerModuleSemaphoreV4Inputs = {
     enabled: 1n,
     secretScalar:
-      1066921846450608811029566588127247112676112021489928135893407497485658369605n,
-    identityCommitmentHash:
-      10822224854462305974571008723353998025009741997958237435994986683037289495571n,
+      2216916178205221996784875615548956289937038466803771088017302823987023506835n,
+    identityCommitment:
+      15170632554331862997050742014395807449361562342470859240457119918675786875630n,
     externalNullifier: 42n,
     isNullifierHashRevealed: 1n
   };
 
   const sampleOutput: OwnerModuleSemaphoreV4Outputs = {
     revealedNullifierHash:
-      894567425121403332266040643563918773524317789061280615331238253663051803519n
+      6116400069185604620537879245252081108418163848212598544276099192936153798105n
   };
 
   this.beforeAll(async () => {

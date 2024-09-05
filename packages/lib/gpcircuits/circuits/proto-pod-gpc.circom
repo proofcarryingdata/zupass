@@ -255,7 +255,10 @@ template ProtoPODGPC (
         ownerV4RevealedNullifierHash[i] <== OwnerModuleSemaphoreV4()(
             enabled <== ownerV4IsEnabled[i],
             secretScalar <== ownerSemaphoreV4SecretScalar[i],
-            identityCommitmentHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, ownerV4IsEnabled[i] * ownerV4EntryIndex[i]),
+            identityCommitment <== InputSelector(MAX_ENTRIES)(
+                entryValueHashes,
+                ownerV4IsEnabled[i] * ownerV4EntryIndex[i]
+                                                              ),
             externalNullifier <== ownerExternalNullifier,
             isNullifierHashRevealed <== ownerV4IsNullifierHashRevealed[i]
                                                                      );

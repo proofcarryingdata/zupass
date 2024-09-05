@@ -325,7 +325,7 @@ export function compileProofConfig(
   );
 
   // Create subset of inputs for Semaphore V3 owner module.
-  const circuitOwnerV3Inputs = compilerProofOwnerV3(
+  const circuitOwnerV3Inputs = compileProofOwnerV3(
     proofInputs.owner,
     entryConstraintMetadata.firstOwnerIndex[SEMAPHORE_V3],
     circuitDesc.includeOwnerV3
@@ -776,7 +776,7 @@ function compileProofEntryConstraints(
   // Deal with equality comparision and POD ownership, which share circuitry.
   const firstOwnerIndex = Object.fromEntries(
     [SEMAPHORE_V3, SEMAPHORE_V4].map((idType) => [idType, undefined])
-  ) as Record<IdentityProtocol, number>;
+  ) as Record<IdentityProtocol, number | undefined>;
   const entryEqualToOtherEntryByIndex: bigint[] = [];
   const virtualEntryEqualToOtherEntryByIndex: bigint[] = [];
 
@@ -794,7 +794,9 @@ function compileProofEntryConstraints(
           "Can't use isOwnerID and equalsEntry on the same entry."
         );
       }
-      entryEqualToOtherEntryByIndex.push(BigInt(firstOwnerIndex[ownerIDType]));
+      entryEqualToOtherEntryByIndex.push(
+        BigInt(firstOwnerIndex[ownerIDType] as number)
+      );
     } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
       const otherEntryInfo = entryMap.get(entryInfo.entryConfig.equalsEntry);
       if (otherEntryInfo === undefined) {
@@ -837,12 +839,11 @@ function compileProofEntryConstraints(
         virtualEntryEqualToOtherEntryByIndex
       )
     },
-    entryConstraintMetadata:
-      firstOwnerIndex !== undefined ? { firstOwnerIndex } : {}
+    entryConstraintMetadata: { firstOwnerIndex }
   };
 }
 
-function compilerProofOwnerV3(
+export function compileProofOwnerV3(
   ownerInput: GPCProofOwnerInputs | undefined,
   firstOwnerIndex: number | undefined,
   paramIncludeOwnerV3: boolean
@@ -889,7 +890,7 @@ function compilerProofOwnerV3(
   }
 }
 
-function compileProofOwnerV4(
+export function compileProofOwnerV4(
   ownerInput: GPCProofOwnerInputs | undefined,
   firstOwnerIndex: number | undefined,
   paramIncludeOwnerV4: boolean
@@ -1210,7 +1211,7 @@ function compileVerifyVirtualEntry(
   };
 }
 
-function compileVerifyOwnerV3(
+export function compileVerifyOwnerV3(
   ownerInput: GPCRevealedOwnerClaims | undefined,
   firstOwnerIndex: number | undefined,
   paramIncludeOwnerV3: boolean
@@ -1240,7 +1241,7 @@ function compileVerifyOwnerV3(
       },
       circuitOwnerV3Outputs: {
         ownerV3RevealedNullifierHash: [
-          ownerInput?.nullifierHash ?? BABY_JUB_NEGATIVE_ONE
+          ownerInput?.nullifierHashV3 ?? BABY_JUB_NEGATIVE_ONE
         ]
       }
     };
@@ -1257,7 +1258,7 @@ function compileVerifyOwnerV3(
   }
 }
 
-function compileVerifyOwnerV4(
+export function compileVerifyOwnerV4(
   ownerInput: GPCRevealedOwnerClaims | undefined,
   firstOwnerIndex: number | undefined,
   paramIncludeOwnerV4: boolean
@@ -1367,7 +1368,7 @@ export function makeRevealedClaims(
             externalNullifier: proofInputs.owner.externalNullifier,
             ...(proofInputs.owner?.semaphoreV3 !== undefined
               ? {
-                  nullifierHash: BigInt(
+                  nullifierHashV3: BigInt(
                     circuitOutputs.ownerV3RevealedNullifierHash[0]
                   )
                 }

@@ -1,8 +1,13 @@
 import { loadCircomkitConfig } from "@pcd/gpcircuits";
-import { EDDSA_PUBKEY_TYPE_STRING, PODEntries } from "@pcd/pod";
+import {
+  EDDSA_PUBKEY_TYPE_STRING,
+  PODEdDSAPublicKeyValue,
+  PODEntries,
+  encodePublicKey
+} from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import { Identity } from "@semaphore-protocol/identity";
-import { Identity as IdentityV4 } from "@semaphore-protocol/identity-v4";
 import { AssertionError, assert, expect } from "chai";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
@@ -58,7 +63,7 @@ export const sampleEntries = {
   },
   otherTicketID: { type: "int", value: 999n },
   owner: { type: "cryptographic", value: ownerIdentity.commitment },
-  ownerV4: { type: "cryptographic", value: ownerIdentityV4.commitment }
+  ownerV4: PODEdDSAPublicKeyValue(encodePublicKey(ownerIdentityV4.publicKey))
 } satisfies PODEntries;
 
 // 3 entries, max depth 3

@@ -1,7 +1,12 @@
-import { EDDSA_PUBKEY_TYPE_STRING, PODEntries } from "@pcd/pod";
+import {
+  EDDSA_PUBKEY_TYPE_STRING,
+  PODEdDSAPublicKeyValue,
+  PODEntries,
+  encodePublicKey
+} from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import { Identity } from "@semaphore-protocol/identity";
-import { Identity as IdentityV4 } from "@semaphore-protocol/identity-v4";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
@@ -58,7 +63,7 @@ export const sampleEntries2 = {
 
 // 3 entries, max depth 3
 export const sampleEntries3 = {
-  attendee: { type: "cryptographic", value: ownerIdentityV4.commitment },
+  attendee: PODEdDSAPublicKeyValue(encodePublicKey(ownerIdentityV4.publicKey)),
   eventID: { type: "cryptographic", value: 400n },
   ticketID: { type: "cryptographic", value: 1n },
   pubKey: sampleEntries2.pubKey

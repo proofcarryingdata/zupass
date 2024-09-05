@@ -27,7 +27,7 @@ const CIRCUIT_PARAMETERS = [
     maxTuples: 0,
     tupleArity: 0,
     includeOwnerV3: true,
-    includeOwnerV4: true
+    includeOwnerV4: false
   },
   {
     maxObjects: 1,
@@ -74,7 +74,7 @@ const CIRCUIT_PARAMETERS = [
     maxListElements: 20,
     maxTuples: 2,
     tupleArity: 2,
-    includeOwnerV3: true,
+    includeOwnerV3: false,
     includeOwnerV4: true
   },
   {

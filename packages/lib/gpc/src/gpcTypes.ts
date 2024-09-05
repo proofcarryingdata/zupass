@@ -1,6 +1,6 @@
 import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
+import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import { Identity } from "@semaphore-protocol/identity";
-import { Identity as IdentityV4 } from "@semaphore-protocol/identity-v4";
 import { Groth16Proof } from "snarkjs";
 
 /**
@@ -476,7 +476,7 @@ export type GPCRevealedOwnerClaims = {
    * allows identifying duplicate proofs (e.g. to avoid double spending or
    * voting) without de-anonymizing the owner.
    */
-  nullifierHash?: bigint;
+  nullifierHashV3?: bigint;
 
   /**
    * If set, this is a hash calculated in the proof, tied to the {@link

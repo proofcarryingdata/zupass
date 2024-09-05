@@ -236,7 +236,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     },
     owner: {
       externalNullifier: { type: "int", value: 42n },
-      nullifierHash: poseidon2([
+      nullifierHashV3: poseidon2([
         makeWatermarkSignal({ type: "int", value: 42n }),
         ownerIdentity.nullifier
       ])
@@ -576,7 +576,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       },
       owner: {
         externalNullifier,
-        nullifierHash: poseidon2([
+        nullifierHashV3: poseidon2([
           makeWatermarkSignal(externalNullifier),
           ownerIdentity.nullifier
         ])
@@ -1151,7 +1151,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         ...revealedClaims,
         owner: {
           externalNullifier: { type: "string", value: "fake" },
-          nullifierHash: 1234n
+          nullifierHashV3: 1234n
         }
       },
       GPC_TEST_ARTIFACTS_PATH

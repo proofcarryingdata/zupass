@@ -32,7 +32,7 @@ template OwnerModuleSemaphoreV4 () {
     signal input secretScalar;
 
     // Owner's identity commitment (public key hash) to be verified.
-    signal input identityCommitmentHash;
+    signal input identityCommitment;
 
     // First step of check that `secretScalar` does not exceed the
     // order of Baby Jubjub's prime subgroup. Note that a second
@@ -46,9 +46,8 @@ template OwnerModuleSemaphoreV4 () {
     // re-generating the public commitment to compare.
     signal (computedPublicKeyX, computedPublicKeyY) <== BabyPbk()(secretScalar);
     signal computedIdentityCommitment <== Poseidon(2)([computedPublicKeyX, computedPublicKeyY]);
-    signal computedIdentityCommitmentHash <== Poseidon(1)([computedIdentityCommitment]);
 
-    (computedIdentityCommitmentHash - identityCommitmentHash) * enabled === 0;
+    (computedIdentityCommitment - identityCommitment) * enabled === 0;
 
     // External nullifier, used to tie together nullifiers within a single category. 
     signal input externalNullifier;

@@ -10,9 +10,9 @@
       "maxTuples": 0,
       "tupleArity": 0,
       "includeOwnerV3": true,
-      "includeOwnerV4": true
+      "includeOwnerV4": false
     },
-    8333
+    6607
   ],
   [
     {
@@ -27,7 +27,7 @@
       "includeOwnerV3": true,
       "includeOwnerV4": true
     },
-    15309
+    15096
   ],
   [
     {
@@ -42,7 +42,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    12953
+    12740
   ],
   [
     {
@@ -57,7 +57,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    20645
+    20432
   ],
   [
     {
@@ -69,10 +69,10 @@
       "maxListElements": 20,
       "maxTuples": 2,
       "tupleArity": 2,
-      "includeOwnerV3": true,
+      "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    38326
+    37181
   ],
   [
     {
@@ -87,6 +87,6 @@
       "includeOwnerV3": true,
       "includeOwnerV4": true
     },
-    39625
+    39412
   ]
 ]
