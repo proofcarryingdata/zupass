@@ -262,7 +262,7 @@ export async function gpcDemo(): Promise<boolean> {
   );
   console.log(
     "Revealed watermark and nullifier",
-    revealedClaims.owner?.nullifierHash,
+    revealedClaims.owner?.nullifierHashV3,
     revealedClaims.watermark?.value
   );
 
