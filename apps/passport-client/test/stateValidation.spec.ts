@@ -117,7 +117,7 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity1
+        identityV3: identity1
       })
     );
     expect(
@@ -167,7 +167,7 @@ describe("validateAppState", async function () {
     let pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity1
+        identityV3: identity1
       })
     );
     expect(
@@ -181,7 +181,7 @@ describe("validateAppState", async function () {
     // Extra identity PCD comes second and is ignored.
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity2
+        identityV3: identity2
       })
     );
     expect(
@@ -196,12 +196,12 @@ describe("validateAppState", async function () {
     pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity2
+        identityV3: identity2
       })
     );
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity1
+        identityV3: identity1
       })
     );
     expect(
@@ -267,7 +267,7 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity1
+        identityV3: identity1
       })
     );
     expect(
@@ -294,7 +294,7 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity1
+        identityV3: identity1
       })
     );
     expect(
@@ -322,7 +322,7 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity1
+        identityV3: identity1
       })
     );
     expect(
@@ -358,7 +358,7 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity2
+        identityV3: identity2
       })
     );
     expect(
@@ -388,7 +388,7 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity1
+        identityV3: identity1
       })
     );
     expect(
@@ -424,7 +424,7 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity: identity2
+        identityV3: identity2
       })
     );
     expect(

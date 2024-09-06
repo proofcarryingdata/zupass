@@ -71,7 +71,7 @@ export async function makeUpgradeUserWithV4CommitmentRequest(
       value: {
         mySemaphoreV3Commitment: {
           type: "cryptographic",
-          value: identity.claim.identity.commitment
+          value: identity.claim.identityV3.commitment
         },
         pod_type: {
           type: "string",

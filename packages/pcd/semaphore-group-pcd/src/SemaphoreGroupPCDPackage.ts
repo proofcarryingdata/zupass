@@ -71,7 +71,7 @@ export async function prove(
   const deserializedGroup = deserializeSemaphoreGroup(serializedGroup);
 
   const fullProof = await generateProof(
-    identityPCD.claim.identity,
+    identityPCD.claim.identityV3,
     deserializedGroup,
     args.externalNullifier.value,
     args.signal.value,

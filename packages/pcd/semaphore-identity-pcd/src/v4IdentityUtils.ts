@@ -45,7 +45,7 @@ export function v3tov4Identity(v3Identity: IdentityV3): IdentityV4 {
 
 export function v3IdentityToPCD(v3Identity: IdentityV3): SemaphoreIdentityPCD {
   return new SemaphoreIdentityPCD(randomUUID(), {
-    identity: v3Identity,
+    identityV3: v3Identity,
     identityV4: v3tov4Identity(v3Identity)
   });
 }

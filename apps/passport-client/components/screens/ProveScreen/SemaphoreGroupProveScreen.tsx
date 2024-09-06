@@ -181,7 +181,7 @@ export function SemaphoreGroupProveScreen({
 }
 
 async function fillArgs(
-  identity: Identity,
+  identityV3: Identity,
   semaphoreGroup: SerializedSemaphoreGroup,
   reqArgs: SemaphoreGroupPCDArgs
 ): Promise<SemaphoreGroupPCDArgs> {
@@ -202,7 +202,7 @@ async function fillArgs(
       argumentType: ArgumentTypeName.PCD,
       pcdType: SemaphoreIdentityPCDPackage.name,
       value: await SemaphoreIdentityPCDPackage.serialize(
-        await SemaphoreIdentityPCDPackage.prove({ identity })
+        await SemaphoreIdentityPCDPackage.prove({ identityV3 })
       )
     }
   };

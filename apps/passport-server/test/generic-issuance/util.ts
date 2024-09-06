@@ -264,7 +264,7 @@ export async function makeTestCredentialsForEmails(
  * {@link makeTestCredential} above.
  */
 export async function signCredentialPayload(
-  identity: Identity,
+  identityV3: Identity,
   payload: CredentialPayload
 ): Promise<Credential> {
   const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
@@ -272,7 +272,7 @@ export async function signCredentialPayload(
       argumentType: ArgumentTypeName.PCD,
       value: await SemaphoreIdentityPCDPackage.serialize(
         await SemaphoreIdentityPCDPackage.prove({
-          identity
+          identityV3
         })
       )
     },

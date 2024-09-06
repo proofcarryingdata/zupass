@@ -51,7 +51,7 @@ export async function prove(args: RLNPCDArgs): Promise<RLNPCD> {
   if (!signal) {
     throw new Error("cannot make proof: signal is not provided");
   }
-  const identity = identityPCD.claim.identity;
+  const identity = identityPCD.claim.identityV3;
   const rln = getRLNInstance(BigInt(rlnIdentifier), identity);
   const group = deserializeSemaphoreGroup(serializedGroup);
   const leafIndex = group.indexOf(identity.getCommitment());

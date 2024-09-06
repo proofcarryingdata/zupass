@@ -696,7 +696,7 @@ describe("generic issuance - LemonadePipeline", function () {
       expectTrue(attendeeGroupValidResponse.value.valid);
 
       const newUserIdentityPCD = await SemaphoreIdentityPCDPackage.prove({
-        identity: newUserIdentity
+        identityV3: newUserIdentity
       });
 
       const groupPCD = await SemaphoreGroupPCDPackage.prove({
@@ -810,7 +810,7 @@ describe("generic issuance - LemonadePipeline", function () {
         );
 
         const newUserIdentityPCD = await SemaphoreIdentityPCDPackage.prove({
-          identity: changedIdentity // Use the changed identity
+          identityV3: changedIdentity // Use the changed identity
         });
 
         const groupPCD = await SemaphoreGroupPCDPackage.prove({

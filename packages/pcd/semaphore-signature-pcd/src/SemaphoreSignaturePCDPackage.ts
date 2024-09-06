@@ -60,7 +60,7 @@ export async function prove(
 
   // Set up singleton group
   const group = new Group(1, 16);
-  group.addMember(identityPCD.claim.identity.commitment);
+  group.addMember(identityPCD.claim.identityV3.commitment);
 
   // Get Keccak256 hashed version of message for input into Semaphore
   const signal = generateSnarkMessageHash(args.signedMessage.value);
@@ -70,7 +70,7 @@ export async function prove(
   // identity commitment as an externalNullifier for other groups, if they
   // wish to maintain anonymity.
   const fullProof = await generateProof(
-    identityPCD.claim.identity,
+    identityPCD.claim.identityV3,
     group,
     STATIC_SIGNATURE_PCD_NULLIFIER,
     signal,
@@ -81,7 +81,7 @@ export async function prove(
   );
 
   const claim: SemaphoreSignaturePCDClaim = {
-    identityCommitment: identityPCD.claim.identity.commitment.toString(),
+    identityCommitment: identityPCD.claim.identityV3.commitment.toString(),
     signedMessage: args.signedMessage.value,
     nullifierHash: fullProof.nullifierHash + ""
   };

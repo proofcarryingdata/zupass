@@ -321,11 +321,11 @@ export async function dispatch(
 }
 
 async function genPassport(
-  identity: Identity,
+  identityV3: Identity,
   email: string,
   update: ZuUpdate
 ): Promise<void> {
-  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identityV3 });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
   await savePCDs(pcds);
@@ -347,7 +347,7 @@ async function oneClickLogin(
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-    identity: state.identityV3
+    identityV3: state.identityV3
   });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
@@ -441,7 +441,7 @@ async function createNewUserSkipPassword(
   // in the one-click flow, we'll need to do it here.
   if (autoRegister) {
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-      identity: state.identityV3
+      identityV3: state.identityV3
     });
     const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
@@ -787,7 +787,7 @@ async function loadAfterLogin(
     !validateAndLogRunningAppState(
       "loadAfterLogin",
       userResponse.value,
-      identityPCD?.claim?.identity,
+      identityPCD?.claim?.identityV3,
       identityPCD?.claim?.identityV4,
       pcds
     )
@@ -832,7 +832,7 @@ async function loadAfterLogin(
   });
   saveEncryptionKey(encryptionKey);
   saveSelf(self);
-  saveIdentity(identityPCD.claim.identity);
+  saveIdentity(identityPCD.claim.identityV3);
 
   update({
     encryptionKey,
@@ -840,7 +840,7 @@ async function loadAfterLogin(
     subscriptions,
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash,
-    identityV3: identityPCD.claim.identity,
+    identityV3: identityPCD.claim.identityV3,
     self,
     modal
   });
@@ -1387,7 +1387,8 @@ async function mergeImport(
       !(isSemaphoreIdentityPCD(pcd) && userHasExistingSemaphoreIdentityPCD) &&
       !(
         isSemaphoreIdentityPCD(pcd) &&
-        pcd.claim.identity.getCommitment().toString() !== state.self?.commitment
+        pcd.claim.identityV3.getCommitment().toString() !==
+          state.self?.commitment
       ) &&
       !target.hasPCDWithId(pcd.id)
     );

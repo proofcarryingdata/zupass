@@ -188,7 +188,8 @@ export function getRunningAppStateValidationErrors(
     errors.push("missing 'identityV4'");
   }
 
-  const identityFromPCDCollection = identityPCDFromCollection?.claim?.identity;
+  const identityFromPCDCollection =
+    identityPCDFromCollection?.claim?.identityV3;
   const commitmentOfIdentityPCDInCollection =
     identityFromPCDCollection?.commitment?.toString();
   const commitmentFromSelfField = self?.commitment;

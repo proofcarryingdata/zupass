@@ -8,12 +8,14 @@ import {
 } from "@pcd/passport-interface";
 import { ErrorContainer } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  IdentityV3,
+  SemaphoreIdentityPCDPackage
+} from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCDArgs,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import { cloneDeep } from "lodash";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
@@ -143,7 +145,7 @@ export function SemaphoreSignatureProveScreen({
 }
 
 async function fillArgs(
-  identity: Identity,
+  identityV3: IdentityV3,
   uuid: string,
   modifiedArgs: SemaphoreSignaturePCDArgs,
   returnURL: string,
@@ -170,7 +172,7 @@ async function fillArgs(
       argumentType: ArgumentTypeName.PCD,
       pcdType: SemaphoreIdentityPCDPackage.name,
       value: await SemaphoreIdentityPCDPackage.serialize(
-        await SemaphoreIdentityPCDPackage.prove({ identity })
+        await SemaphoreIdentityPCDPackage.prove({ identityV3 })
       )
     }
   };

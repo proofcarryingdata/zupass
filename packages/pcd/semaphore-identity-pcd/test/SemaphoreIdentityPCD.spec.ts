@@ -8,7 +8,7 @@ describe("Semaphore Identity PCD", function () {
     const { prove, verify } = SemaphoreIdentityPCDPackage;
     const identity = new Identity();
 
-    const identityPCD = await prove({ identity });
+    const identityPCD = await prove({ identityV3: identity });
     const valid = await verify(identityPCD);
 
     assert.equal(valid, true);
@@ -18,21 +18,21 @@ describe("Semaphore Identity PCD", function () {
     const { prove, serialize, deserialize } = SemaphoreIdentityPCDPackage;
     const identity = new Identity();
 
-    const identityPCD = await prove({ identity });
+    const identityPCD = await prove({ identityV3: identity });
 
     const serialized = await serialize(identityPCD);
     const deserialized = await deserialize(serialized.pcd);
 
     assert.equal(
-      identityPCD.claim.identity.toString(),
-      deserialized.claim.identity.toString()
+      identityPCD.claim.identityV3.toString(),
+      deserialized.claim.identityV3.toString()
     );
     assert.equal(
       identityPCD.claim.identityV4.export(),
       deserialized.claim.identityV4.export()
     );
 
-    assert.equal(deserialized.claim.identity instanceof IdentityV3, true);
+    assert.equal(deserialized.claim.identityV3 instanceof IdentityV3, true);
     assert.equal(deserialized.claim.identityV4 instanceof IdentityV4, true);
   });
 
@@ -48,7 +48,7 @@ describe("Semaphore Identity PCD", function () {
     const deserializedValid = await verify(deserialized);
     expect(deserializedValid).to.eq(true);
     expect(deserialized.id).to.eq("e3bf14ca-b8eb-4a78-9485-c8b1982a497f");
-    expect(deserialized.claim.identity).to.deep.eq(
+    expect(deserialized.claim.identityV3).to.deep.eq(
       new Identity(
         '["0x5e169461d89b553370b4ac3bae0df93cd7f127abfee5c38d2c1b30d3ebf654","0xc96157535de33d96ef25e41350cd569b34e97243180ec56a7497eb4f0c3d16"]'
       )

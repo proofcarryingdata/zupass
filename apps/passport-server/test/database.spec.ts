@@ -852,7 +852,7 @@ describe("database reads and writes", function () {
 
       const newUserParams: SaveUserParams = {
         uuid: randomUUID(),
-        commitment: identity.claim.identity.commitment.toString(),
+        commitment: identity.claim.identityV3.commitment.toString(),
         terms_agreed: 0,
         emails: [randomEmail()],
         salt: randomUUID(),

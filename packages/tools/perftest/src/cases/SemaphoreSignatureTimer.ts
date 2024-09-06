@@ -19,9 +19,9 @@ const wasmFilePath = path.join(
 );
 
 async function setupProveArgs(): Promise<SemaphoreSignaturePCDArgs> {
-  const identity = new Identity();
+  const identityV3 = new Identity();
   const identityPCD = await SemaphoreIdentityPCDPackage.serialize(
-    await SemaphoreIdentityPCDPackage.prove({ identity })
+    await SemaphoreIdentityPCDPackage.prove({ identityV3 })
   );
 
   return {

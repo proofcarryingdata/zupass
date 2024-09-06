@@ -33,12 +33,12 @@ export async function testLogin(
   }
 ): Promise<{ user: User; identity: Identity } | undefined> {
   const { userService, emailTokenService } = application.services;
-  const identity = new Identity();
+  const identityV3 = new Identity();
   const identityPCD = new SemaphoreIdentityPCD(randomUUID(), {
-    identity,
-    identityV4: v3tov4Identity(identity)
+    identityV3,
+    identityV4: v3tov4Identity(identityV3)
   });
-  const v3Commitment = identity.commitment.toString();
+  const v3Commitment = identityV3.commitment.toString();
   const v4Pubkey = v4PublicKey(identityPCD.claim.identityV4);
 
   const confirmationEmailResult = await requestConfirmationEmail(
@@ -126,5 +126,5 @@ export async function testLogin(
 
   expect(getUserResponse.value).to.deep.eq(newUserResult.value);
 
-  return { user: getUserResponse.value, identity };
+  return { user: getUserResponse.value, identity: identityV3 };
 }
