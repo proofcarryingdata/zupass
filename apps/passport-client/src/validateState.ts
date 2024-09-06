@@ -146,7 +146,7 @@ export function getRunningAppStateValidationErrors(
 
   if (self && pcds) {
     identityPCDFromCollection = findUserIdentityPCD(pcds, self);
-  } else if (identity && identityV4 && pcds) {
+  } else if (identity && pcds) {
     identityPCDFromCollection = findIdentityPCD(
       pcds,
       identity.commitment.toString()
