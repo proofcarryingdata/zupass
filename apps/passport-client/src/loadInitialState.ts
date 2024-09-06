@@ -46,6 +46,9 @@ export async function loadInitialState(): Promise<AppState> {
   ) {
     const identityPCD = v3IdentityToPCD(identityV3);
 
+    // there isn't really any to way to handle an error in this process, so
+    // we'll just proceed regardless of the response, and let this code-path
+    // execute again later to try again.
     await requestUpgradeUserWithV4Commitment(
       appConfig.zupassServer,
       await makeUpgradeUserWithV4CommitmentRequest(
