@@ -185,7 +185,10 @@ export function canonicalizeBoundsCheckConfig(
       ? { notInRange: notInRange }
       : !notInRange
       ? { inRange: inRange }
-      : // inRange\notInRange = [inRange.min, ⍵] for some ⍵.
+      : // inRange\notInRange = [inRange.min, ⍵] for some ⍵, i.e. `notInRange.min`
+      // lies to the right of `inRange.max` (non-overlapping case) or they
+      // overlap in such a way that `inRange.min` lies to the left of
+      // `notInRange.min`.
       notInRange.min > inRange.min && notInRange.max >= inRange.max
       ? {
           inRange: {
@@ -193,7 +196,10 @@ export function canonicalizeBoundsCheckConfig(
             max: _.min([notInRange.min - 1n, inRange.max]) as bigint
           }
         }
-      : // inRange\notInRange = [⍺, inRange.max] for some ⍺.
+      : // inRange\notInRange = [⍺, inRange.max] for some ⍺, i.e. `notInRange.max`
+      // lies to the left of `inRange.min` (non-overlapping case) or they
+      // overlap in such a way that `inRange.max` lies to the right of
+      // `notInRange.max`.
       notInRange.min <= inRange.min && notInRange.max < inRange.max
       ? {
           inRange: {
