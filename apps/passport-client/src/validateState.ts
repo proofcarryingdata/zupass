@@ -203,11 +203,6 @@ export function getRunningAppStateValidationErrors(
     errors.push(`'self' missing a v3 commitment`);
   }
 
-  // self identity v4 and app state identity v4 must match, if present
-  if (identityV4 && commitmentV4FromSelfField === undefined) {
-    errors.push(`'self' missing a v4 commitment`);
-  }
-
   if (
     commitmentFromSelfField === undefined ||
     commitmentOfIdentityPCDInCollection === undefined ||
@@ -250,8 +245,11 @@ export function getRunningAppStateValidationErrors(
 
   if (
     commitmentV4FromSelfField === undefined ||
+    commitmentV4FromSelfField === null ||
     commitmentOfIdentityV4PCDInCollection === undefined ||
-    commitmentV4FromIdentityField === undefined
+    commitmentOfIdentityV4PCDInCollection === null ||
+    commitmentV4FromIdentityField === undefined ||
+    commitmentV4FromIdentityField === null
   ) {
     // these cases are validated earlier in this function
   } else {
