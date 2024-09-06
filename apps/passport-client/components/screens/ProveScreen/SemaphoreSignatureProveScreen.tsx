@@ -18,7 +18,7 @@ import { cloneDeep } from "lodash";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
-import { useIdentity, useSelf } from "../../../src/appHooks";
+import { useIdentityV3, useSelf } from "../../../src/appHooks";
 import {
   safeRedirect,
   safeRedirectPending
@@ -34,7 +34,7 @@ export function SemaphoreSignatureProveScreen({
 }): JSX.Element {
   // Create a zero-knowledge proof using the identity in DispatchContext
   const self = useSelf();
-  const identity = useIdentity();
+  const identity = useIdentityV3();
   const [proving, setProving] = useState(false);
   const [error, setError] = useState<string | undefined>();
 

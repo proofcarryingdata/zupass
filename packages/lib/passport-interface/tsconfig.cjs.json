@@ -23,9 +23,6 @@
       "path": "../emitter/tsconfig.cjs.json"
     },
     {
-      "path": "../../pcd/obj-pcd/tsconfig.cjs.json"
-    },
-    {
       "path": "../passport-crypto/tsconfig.cjs.json"
     },
     {
@@ -42,6 +39,12 @@
     },
     {
       "path": "../../pcd/semaphore-identity-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-v4/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/pod-pcd/tsconfig.cjs.json"
     },
     {
       "path": "../../pcd/semaphore-signature-pcd/tsconfig.cjs.json"

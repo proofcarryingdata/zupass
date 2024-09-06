@@ -107,7 +107,6 @@ export function AlreadyRegisteredScreen(): JSX.Element | null {
     const emailConfirmationResult = await requestConfirmationEmail(
       appConfig.zupassServer,
       email,
-      identityCommitment,
       true
     );
     handleConfirmationEmailResult(emailConfirmationResult);

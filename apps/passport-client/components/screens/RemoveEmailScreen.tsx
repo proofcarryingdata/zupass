@@ -56,7 +56,7 @@ export function RemoveEmailScreen(): JSX.Element | null {
 
     try {
       const credential = await new CredentialManager(
-        stateContext.getState().identity,
+        stateContext.getState().identityV3,
         pcds,
         stateContext.getState().credentialCache
       ).requestCredential({

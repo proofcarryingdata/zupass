@@ -1720,7 +1720,6 @@ describe("devconnect functionality", function () {
       const confirmationResult = await requestConfirmationEmail(
         application.expressContext.localEndpoint,
         email,
-        identity.commitment.toString(),
         true
       );
 
@@ -1731,7 +1730,6 @@ describe("devconnect functionality", function () {
     const confirmationResult = await requestConfirmationEmail(
       application.expressContext.localEndpoint,
       email,
-      identity.commitment.toString(),
       true
     );
 

@@ -43,9 +43,9 @@ export function UpgradeAccountModal(): JSX.Element | null {
         throw new Error("Could not load encryption key");
       }
 
-      const { pcds, identity, credentialCache } = stateContext.getState();
+      const { pcds, identityV3, credentialCache } = stateContext.getState();
       const credentialManager = new CredentialManager(
-        identity,
+        identityV3,
         pcds,
         credentialCache
       );

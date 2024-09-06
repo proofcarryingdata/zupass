@@ -48,6 +48,7 @@ export * from "./api/requestSemaphoreGroup";
 export * from "./api/requestServerEdDSAPublicKey";
 export * from "./api/requestServerProofStatus";
 export * from "./api/requestServerRSAPublicKey";
+export * from "./api/requestUpgradeUserWithV4Commitment";
 export * from "./api/requestUploadEncryptedStorage";
 export * from "./api/requestUser";
 export * from "./api/requestVerifyTicket";

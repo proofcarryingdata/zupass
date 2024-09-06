@@ -11,6 +11,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreIdentityV4PCDTypeName } from "@pcd/semaphore-identity-v4";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -25,7 +26,7 @@ import { loadUsingLaserScanner } from "./localstorage";
 import { clearAllPendingRequests } from "./sessionStorage";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
-import { findUserIdentityPCD, hasSetupPassword } from "./user";
+import { findUserIdentityV3PCD, hasSetupPassword } from "./user";
 import { getLastValidVerifyUrl, maybeRedirect } from "./util";
 
 /**
@@ -74,7 +75,9 @@ export function useVisiblePCDsInFolder(folder: string): PCD[] {
   return pcds.filter(
     (pcd) =>
       // Filter out PODTicketPCDs unless showPODTicketPCDs is true
-      pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs
+      (pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs) &&
+      // Filter out V4 semaphore Identity
+      pcd.type !== SemaphoreIdentityV4PCDTypeName
   );
 }
 
@@ -89,7 +92,7 @@ export function useUserIdentityPCD(): SemaphoreIdentityPCD | undefined {
   const identityPCD = useMemo(() => {
     // Using wrapped PCDCollection ensures this memo updates when contents
     // change, not just the PCDCollection object.
-    return self && findUserIdentityPCD(wrappedPCDs.value, self);
+    return self && findUserIdentityV3PCD(wrappedPCDs.value, self);
   }, [self, wrappedPCDs]);
   return identityPCD;
 }
@@ -98,8 +101,8 @@ export function useSelf(): User | undefined {
   return useSelector<User | undefined>((s) => s.self, []);
 }
 
-export function useIdentity(): Identity {
-  return useSelector<Identity>((s) => s.identity, []);
+export function useIdentityV3(): Identity {
+  return useSelector<Identity>((s) => s.identityV3, []);
 }
 
 export function useDispatch(): Dispatcher {
@@ -193,7 +196,7 @@ export function useCredentialCache(): CredentialCache {
 }
 
 export function useCredentialManager(): CredentialManager {
-  const identity = useIdentity();
+  const identity = useIdentityV3();
   const pcds = usePCDCollection();
   const credentialCache = useCredentialCache();
   return useMemo(

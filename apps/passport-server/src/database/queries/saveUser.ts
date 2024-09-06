@@ -2,27 +2,39 @@ import { Pool } from "postgres-pool";
 import { logger } from "../../util/logger";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
+export interface SaveUserParams {
+  uuid: string;
+  // Semaphore v3 commitment.
+  commitment: string;
+  salt?: string | null;
+  encryption_key?: string | null;
+  semaphore_v4_commitment?: string | null;
+  semaphore_v4_pubkey?: string | null;
+  terms_agreed: number;
+  extra_issuance: boolean;
+  emails: string[];
+}
+
 /**
  * Saves a new user. If a user with the given UUID already exists, overwrites their
  * information. Returns the user's UUID.
+ *
+ * @param params is a partial {@link UserRow}.
  */
 export async function upsertUser(
   client: Pool,
-  // this is a partial UserRow
-  params: {
-    uuid: string;
-    commitment: string;
-    salt?: string | null;
-    encryption_key?: string | null;
-    terms_agreed: number;
-    extra_issuance: boolean;
-    emails: string[];
-  }
+  params: SaveUserParams
 ): Promise<string> {
   logger("[DB] upsertUser", params);
 
   if (params.emails.length === 0) {
     throw new Error("users must have at least one email address");
+  }
+
+  if (!!params.semaphore_v4_commitment !== !!params.semaphore_v4_pubkey) {
+    throw new Error(
+      "semaphore_v4_commitment and semaphore_v4_pubkey must both be set or unset"
+    );
   }
 
   return sqlTransaction(
@@ -36,16 +48,20 @@ export async function upsertUser(
         terms_agreed,
         extra_issuance,
         uuid,
-        emails
+        emails,
+        semaphore_v4_commitment,
+        semaphore_v4_pubkey
       } = params;
 
       const upsertUserResult = await sqlQuery(
         client,
         `\
-INSERT INTO users (uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO users 
+(uuid, commitment, salt, encryption_key, terms_agreed, extra_issuance, semaphore_v4_commitment, semaphore_v4_pubkey)
+VALUES 
+($1, $2, $3, $4, $5, $6, $8, $9)
 ON CONFLICT (uuid) DO UPDATE SET 
-commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7
+commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7, semaphore_v4_commitment=$8, semaphore_v4_pubkey=$9
 returning *`,
         [
           uuid,
@@ -54,7 +70,9 @@ returning *`,
           encryption_key,
           terms_agreed,
           extra_issuance,
-          new Date()
+          new Date(),
+          semaphore_v4_commitment,
+          semaphore_v4_pubkey
         ],
         0
       );
