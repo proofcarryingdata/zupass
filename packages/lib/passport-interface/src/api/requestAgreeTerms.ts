@@ -32,7 +32,7 @@ export async function requestAgreeTerms(
 export async function agreeTerms(
   zupassServerUrl: string,
   version: number,
-  identity: Identity
+  identityV3: Identity
 ): Promise<AgreeTermsResult> {
   return requestAgreeTerms(zupassServerUrl, {
     // A generic authenticated route solution might make this much simpler
@@ -42,7 +42,7 @@ export async function agreeTerms(
           argumentType: ArgumentTypeName.PCD,
           value: await SemaphoreIdentityPCDPackage.serialize(
             await SemaphoreIdentityPCDPackage.prove({
-              identity
+              identityV3
             })
           )
         },

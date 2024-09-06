@@ -54,12 +54,12 @@ export function findUserIdentityPCD(
 
 export function findIdentityPCD(
   pcds: PCDCollection,
-  identityCommitment: string
+  v3Commitment: string
 ): SemaphoreIdentityPCD | undefined {
   for (const pcd of pcds.getPCDsByType(SemaphoreIdentityPCDTypeName)) {
     if (
-      (pcd as SemaphoreIdentityPCD).claim.identity.commitment.toString() ===
-      identityCommitment
+      (pcd as SemaphoreIdentityPCD).claim.identityV3.commitment.toString() ===
+      v3Commitment
     ) {
       return pcd as SemaphoreIdentityPCD;
     }

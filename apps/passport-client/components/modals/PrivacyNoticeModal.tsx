@@ -3,7 +3,7 @@ import { Spacer } from "@pcd/passport-ui";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { useDispatch, useIdentity } from "../../src/appHooks";
+import { useDispatch, useIdentityV3 } from "../../src/appHooks";
 import { savePrivacyNoticeAgreed } from "../../src/localstorage";
 import { Button, H2 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
@@ -11,7 +11,7 @@ import { PrivacyNotice } from "../shared/PrivacyNotice";
 
 export function PrivacyNoticeModal(): JSX.Element {
   const dispatch = useDispatch();
-  const identity = useIdentity();
+  const identity = useIdentityV3();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const onClick = useCallback(async () => {

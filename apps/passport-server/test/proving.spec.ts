@@ -57,7 +57,7 @@ describe("server-side proving functionality", function () {
             pcdType: SemaphoreIdentityPCDPackage.name,
             value: await SemaphoreIdentityPCDPackage.serialize(
               await SemaphoreIdentityPCDPackage.prove({
-                identity: new Identity()
+                identityV3: new Identity()
               })
             )
           },

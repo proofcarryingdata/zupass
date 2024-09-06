@@ -1,5 +1,4 @@
 import { Emitter } from "@pcd/emitter";
-import { ObjPCD, ObjPCDPackage } from "@pcd/obj-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   PCDAction,
@@ -13,7 +12,7 @@ import {
   PCDTypeNameOf,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { isFulfilled, randomUUID } from "@pcd/util";
+import { isFulfilled } from "@pcd/util";
 import stringify from "fast-json-stable-stringify";
 import { v4 as uuid } from "uuid";
 import { CredentialManagerAPI } from "./CredentialManager";
@@ -238,44 +237,6 @@ export class FeedSubscriptionManager {
     );
     this.updatedEmitter.emit();
     return actions;
-  }
-
-  private static AUTH_KEY_KEY = "authKey";
-  public static saveAuthKey(authKey: string | undefined): void {
-    if (authKey === undefined) {
-      localStorage?.removeItem(this.AUTH_KEY_KEY);
-    } else {
-      localStorage?.setItem(this.AUTH_KEY_KEY, authKey);
-    }
-  }
-
-  public getSavedAuthKey(): string | undefined {
-    return (
-      localStorage?.getItem(FeedSubscriptionManager.AUTH_KEY_KEY) ?? undefined
-    );
-  }
-
-  private async getAuthKeyForFeed(
-    sub: Subscription
-  ): Promise<string | undefined> {
-    const podboxServerUrl = process.env.PASSPORT_SERVER_URL;
-    if (!podboxServerUrl) {
-      return undefined;
-    }
-
-    if (!sub.providerUrl.startsWith(podboxServerUrl)) {
-      return undefined;
-    }
-
-    return this.getSavedAuthKey();
-  }
-
-  private async makeAlternateCredentialPCD(
-    authKey: string
-  ): Promise<SerializedPCD> {
-    return ObjPCDPackage.serialize(
-      new ObjPCD(randomUUID(), {}, { obj: { authKey } })
-    );
   }
 
   /**

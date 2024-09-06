@@ -10,7 +10,7 @@ import { Button, LinkButton } from "@pcd/passport-ui";
 import { ZUPASS_SENDER_EMAIL, getErrorMessage, sleep } from "@pcd/util";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../../src/appConfig";
-import { useDispatch, useIdentity, useQuery } from "../../../src/appHooks";
+import { useDispatch, useIdentityV3, useQuery } from "../../../src/appHooks";
 import { err } from "../../../src/util";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { ConfirmationCodeInput } from "../../core/Input";
@@ -41,7 +41,7 @@ export function NewPassportScreen(): JSX.Element | null {
 }
 
 function SendEmailVerification({ email }: { email: string }): JSX.Element {
-  const identity = useIdentity();
+  const identity = useIdentityV3();
   const dispatch = useDispatch();
   const [error, setError] = useState<string | undefined>();
   const [triedSendingEmail, setTriedSendingEmail] = useState(false);
@@ -154,13 +154,12 @@ function SendEmailVerification({ email }: { email: string }): JSX.Element {
     const confirmationEmailResult = await requestConfirmationEmail(
       appConfig.zupassServer,
       email,
-      identity.commitment.toString(),
       false
     );
     setEmailSending(false);
 
     handleConfirmationEmailResult(confirmationEmailResult);
-  }, [email, handleConfirmationEmailResult, identity.commitment]);
+  }, [email, handleConfirmationEmailResult]);
 
   useEffect(() => {
     if (triedSendingEmail) return;

@@ -393,7 +393,7 @@ export async function gpcDemo(): Promise<boolean> {
   const swordPODPCD = new PODPCD(uuid(), podSword);
   const shieldPODPCD = new PODPCD(uuid(), podShield);
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-    identity: semaphoreIdentity
+    identityV3: semaphoreIdentity
   });
 
   // The GPCPCD allows us to prove about an arbitrary number of PODs.

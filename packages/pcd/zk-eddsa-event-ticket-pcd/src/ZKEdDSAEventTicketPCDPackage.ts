@@ -240,10 +240,10 @@ function snarkInputForProof(
     ticketSignatureS: rawSig.S.toString(),
 
     // Attendee identity secret
-    semaphoreIdentityNullifier: identityPCD.claim.identity
+    semaphoreIdentityNullifier: identityPCD.claim.identityV3
       .getNullifier()
       .toString(),
-    semaphoreIdentityTrapdoor: identityPCD.claim.identity
+    semaphoreIdentityTrapdoor: identityPCD.claim.identityV3
       .getTrapdoor()
       .toString(),
 

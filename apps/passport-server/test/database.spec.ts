@@ -10,6 +10,7 @@ import {
   LATEST_PRIVACY_NOTICE,
   ZuzaluUserRole
 } from "@pcd/passport-interface";
+import { v3IdentityToPCD, v4PublicKey } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -51,11 +52,13 @@ import {
   getExistingClaimUrlByTicketId,
   insertNewPoapUrl
 } from "../src/database/queries/poap";
-import { upsertUser } from "../src/database/queries/saveUser";
+import { SaveUserParams, upsertUser } from "../src/database/queries/saveUser";
 import {
   deleteUserByEmail,
-  fetchUserByCommitment,
-  fetchUserByEmail
+  fetchUserByEmail,
+  fetchUserByUUID,
+  fetchUserByV3Commitment,
+  fetchUserByV4Commitment
 } from "../src/database/queries/users";
 import { deleteZuzaluTicket } from "../src/database/queries/zuzalu_pretix_tickets/deleteZuzaluUser";
 import {
@@ -515,7 +518,7 @@ describe("database reads and writes", function () {
     expect(insertedCommitment.emails).to.deep.eq([email]);
     expect(insertedCommitment.uuid).to.eq(uuid);
 
-    expect(await fetchUserByCommitment(db, commitment)).to.deep.eq(
+    expect(await fetchUserByV3Commitment(db, commitment)).to.deep.eq(
       insertedCommitment
     );
 
@@ -840,4 +843,65 @@ describe("database reads and writes", function () {
     expect(await getExistingClaimUrlByTicketId(db, "hash-2")).to.eq(url2);
     expect(await getExistingClaimUrlByTicketId(db, "hash-3")).to.eq(url3);
   });
+
+  step(
+    "should be able to update and get user by v4 semaphore identity",
+    async function () {
+      const id = new Identity();
+      const identity = v3IdentityToPCD(id);
+
+      const newUserParams: SaveUserParams = {
+        uuid: randomUUID(),
+        commitment: identity.claim.identityV3.commitment.toString(),
+        terms_agreed: 0,
+        emails: [randomEmail()],
+        salt: randomUUID(),
+        encryption_key: randomUUID(),
+        extra_issuance: false
+      };
+
+      const uuid = await upsertUser(db, newUserParams);
+      const createdUser = await fetchUserByUUID(db, uuid);
+
+      expectToExist(createdUser);
+      expect(createdUser.uuid).to.eq(newUserParams.uuid);
+      expect(createdUser.commitment).to.eq(newUserParams.commitment);
+      expect(createdUser.terms_agreed).to.eq(newUserParams.terms_agreed);
+      expect(createdUser.emails).to.deep.eq(newUserParams.emails);
+      expect(createdUser.salt).to.eq(newUserParams.salt);
+      expect(createdUser.encryption_key).to.eq(newUserParams.encryption_key);
+      expect(createdUser.extra_issuance).to.eq(newUserParams.extra_issuance);
+
+      const v4Commitment = identity.claim.identityV4.commitment.toString();
+      const v4Pubkey = v4PublicKey(identity.claim.identityV4);
+      createdUser.semaphore_v4_commitment = v4Commitment;
+      createdUser.semaphore_v4_pubkey = v4Pubkey;
+
+      await upsertUser(db, createdUser);
+
+      const userByUUID = await fetchUserByUUID(db, uuid);
+      const userByV3Commitment = await fetchUserByV3Commitment(
+        db,
+        newUserParams.commitment
+      );
+      const userByV4Commitment = await fetchUserByV4Commitment(
+        db,
+        identity.claim.identityV4.commitment.toString()
+      );
+
+      expectToExist(userByUUID);
+      expect(userByUUID).to.deep.eq(userByV3Commitment);
+      expect(userByUUID).to.deep.eq(userByV4Commitment);
+
+      expect(userByUUID.uuid).to.eq(newUserParams.uuid);
+      expect(userByUUID.commitment).to.eq(newUserParams.commitment);
+      expect(userByUUID.terms_agreed).to.eq(newUserParams.terms_agreed);
+      expect(userByUUID.emails).to.deep.eq(newUserParams.emails);
+      expect(userByUUID.salt).to.eq(newUserParams.salt);
+      expect(userByUUID.encryption_key).to.eq(newUserParams.encryption_key);
+      expect(userByUUID.extra_issuance).to.eq(newUserParams.extra_issuance);
+      expect(userByUUID.semaphore_v4_commitment).to.eq(v4Commitment);
+      expect(userByUUID.semaphore_v4_pubkey).to.eq(v4Pubkey);
+    }
+  );
 });

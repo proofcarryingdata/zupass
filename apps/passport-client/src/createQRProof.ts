@@ -1,11 +1,13 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  IdentityV3,
+  SemaphoreIdentityPCDPackage
+} from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDArgs,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import { uuidToBigint } from "./util";
 
 export interface QRPayload {
@@ -15,7 +17,7 @@ export interface QRPayload {
 
 // Create a PCD proving that we own a given semaphore identity.
 export async function createQRProof(
-  identity: Identity,
+  identityV3: IdentityV3,
   uuid: string,
   timestamp: number
 ): Promise<SemaphoreSignaturePCD> {
@@ -35,7 +37,7 @@ export async function createQRProof(
       argumentType: ArgumentTypeName.PCD,
       pcdType: SemaphoreIdentityPCDPackage.name,
       value: await SemaphoreIdentityPCDPackage.serialize(
-        await SemaphoreIdentityPCDPackage.prove({ identity })
+        await SemaphoreIdentityPCDPackage.prove({ identityV3 })
       )
     }
   };

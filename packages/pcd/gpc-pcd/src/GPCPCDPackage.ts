@@ -141,7 +141,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
       ...(ownerSemaphorePCD !== undefined
         ? {
             owner: {
-              semaphoreV3: ownerSemaphorePCD?.claim?.identity,
+              semaphoreV3: ownerSemaphorePCD?.claim?.identityV3,
               externalNullifier: externalNullifier
             }
           }

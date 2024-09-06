@@ -19,7 +19,7 @@ function SemaphoreIdentityCardBody({
       </p>
       <Separator />
       <FieldLabel>Semaphore Commitment</FieldLabel>
-      <HiddenText text={pcd.claim.identity.commitment.toString()} />
+      <HiddenText text={pcd.claim.identityV3.commitment.toString()} />
     </Container>
   );
 }

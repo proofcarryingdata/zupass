@@ -30,7 +30,7 @@ const wasmFilePath = path.join(
 );
 
 async function setupProveArgs(): Promise<ZKEdDSAEventTicketPCDArgs> {
-  const identity = new Identity(
+  const identityV3 = new Identity(
     '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
   );
 
@@ -57,7 +57,7 @@ async function setupProveArgs(): Promise<ZKEdDSAEventTicketPCDArgs> {
     productId: "c94002fb-2c41-480b-842d-fa826fb517e5",
     timestampConsumed: 0,
     timestampSigned: 1693028498280,
-    attendeeSemaphoreId: identity.getCommitment().toString(),
+    attendeeSemaphoreId: identityV3.getCommitment().toString(),
     isConsumed: false,
     isRevoked: false,
     ticketCategory: TicketCategory.Devconnect
@@ -76,7 +76,7 @@ async function setupProveArgs(): Promise<ZKEdDSAEventTicketPCDArgs> {
   ];
 
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-    identity: identity
+    identityV3
   });
 
   const serializedIdentityPCD =

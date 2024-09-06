@@ -90,7 +90,7 @@ export class MockFeedApi implements IFeedApi {
                       pcds: [
                         await SemaphoreIdentityPCDPackage.serialize(
                           await SemaphoreIdentityPCDPackage.prove({
-                            identity: new Identity()
+                            identityV3: new Identity()
                           })
                         )
                       ]
@@ -138,7 +138,7 @@ export class MockFeedApi implements IFeedApi {
                       pcds: [
                         await SemaphoreIdentityPCDPackage.serialize(
                           await SemaphoreIdentityPCDPackage.prove({
-                            identity: new Identity()
+                            identityV3: new Identity()
                           })
                         )
                       ]

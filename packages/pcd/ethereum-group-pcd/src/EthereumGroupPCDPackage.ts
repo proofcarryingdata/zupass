@@ -101,7 +101,7 @@ export async function prove(
   const deserializedIdentity = await SemaphoreIdentityPCDPackage.deserialize(
     args.identity.value.pcd
   );
-  const message = deserializedIdentity.claim.identity.commitment.toString();
+  const message = deserializedIdentity.claim.identityV3.commitment.toString();
   const msgHash = ethers.utils.hashMessage(message);
 
   const prover = args.groupType.value === "address" ? addrProver : pubkeyProver;

@@ -18,7 +18,6 @@ import { httpPostSimple } from "./makeRequest";
 export async function requestConfirmationEmail(
   zupassServerUrl: string,
   email: string,
-  commitment: string,
   force: boolean
 ): Promise<ConfirmEmailResult> {
   return httpPostSimple(
@@ -32,7 +31,6 @@ export async function requestConfirmationEmail(
           },
     {
       email,
-      commitment,
       force: force ? "true" : "false"
     } satisfies ConfirmEmailRequest
   );

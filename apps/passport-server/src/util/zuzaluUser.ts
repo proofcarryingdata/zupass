@@ -52,7 +52,9 @@ export function userRowToZupassUserJson(user: UserRow): ZupassUserJson {
       commitment: user.commitment,
       emails: user.emails,
       salt: user.salt,
-      terms_agreed: user.terms_agreed
+      terms_agreed: user.terms_agreed,
+      semaphore_v4_commitment: user.semaphore_v4_commitment,
+      semaphore_v4_pubkey: user.semaphore_v4_pubkey
     } satisfies ZupassUserJson,
     {
       // TODO: remove this once we are sure that

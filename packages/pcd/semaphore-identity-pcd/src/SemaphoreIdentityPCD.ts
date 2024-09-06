@@ -1,14 +1,19 @@
 import { PCD } from "@pcd/pcd-types";
-import { Identity } from "@semaphore-protocol/identity";
+import { IdentityV3, IdentityV4 } from "./forwardedTypes";
+import { v3tov4Identity } from "./v4IdentityUtils";
 
 export const SemaphoreIdentityPCDTypeName = "semaphore-identity-pcd";
 
 export type SemaphoreIdentityPCDArgs = {
-  identity: Identity;
+  identityV3: IdentityV3;
 };
 
 export interface SemaphoreIdentityPCDClaim {
-  identity: Identity;
+  identityV3: IdentityV3;
+  /**
+   * This v4 semaphore identity is deterministically derived from the v3 identity.
+   */
+  identityV4: IdentityV4;
 }
 
 export type SemaphoreIdentityPCDProof = undefined;
@@ -29,5 +34,11 @@ export class SemaphoreIdentityPCD
     this.claim = claim;
     this.proof = undefined;
     this.id = id;
+
+    if (
+      v3tov4Identity(claim.identityV3).export() !== claim.identityV4.export()
+    ) {
+      throw new Error("v3tov4Identity(claim.identity) !== claim.identityV4");
+    }
   }
 }

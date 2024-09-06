@@ -6,16 +6,18 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { Identity } from "@semaphore-protocol/identity";
+import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
 import { EmbeddedScreenState } from "./embedded";
 import { Emitter } from "./emitter";
-
 export type GetState = () => AppState;
 export type StateEmitter = Emitter<AppState>;
 
 export interface AppState {
-  // Zuzalu semaphore identity.
-  identity: Identity;
+  /**
+   * Semaphore v3 identity. A v4 identity can be derived from this value using
+   * the function `v3tov4Identity`.
+   */
+  identityV3: IdentityV3;
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;
   encryptionKey?: string;

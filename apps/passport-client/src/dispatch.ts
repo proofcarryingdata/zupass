@@ -10,12 +10,14 @@ import {
   FeedSubscriptionManager,
   getNamedAPIErrorMessage,
   LATEST_PRIVACY_NOTICE,
+  makeUpgradeUserWithV4CommitmentRequest,
   NetworkFeedApi,
   requestCreateNewUser,
   requestDeleteAccount,
   requestDownloadAndDecryptStorage,
   requestLogToServer,
   requestOneClickLogin,
+  requestUpgradeUserWithV4Commitment,
   requestUser,
   serializeStorage,
   StorageWithRevision,
@@ -30,7 +32,9 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
   isSemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
-  SemaphoreIdentityPCDTypeName
+  SemaphoreIdentityPCDTypeName,
+  v3tov4Identity,
+  v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
 import { assertUnreachable, sleep } from "@pcd/util";
 import { StrichSDK } from "@pixelverse/strichjs-sdk";
@@ -122,7 +126,6 @@ export type Action =
       type: "load-after-login";
       storage: StorageWithRevision;
       encryptionKey: string;
-      authKey?: string;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
   | { type: "password-change-on-other-tab" }
@@ -201,7 +204,7 @@ export async function dispatch(
 ): Promise<void> {
   switch (action.type) {
     case "new-passport":
-      return genPassport(state.identity, action.email, update);
+      return genPassport(state.identityV3, action.email, update);
     case "create-user-skip-password":
       return createNewUserSkipPassword(
         action.email,
@@ -236,12 +239,7 @@ export async function dispatch(
     case "reset-passport":
       return resetPassport(state, update);
     case "load-after-login":
-      return loadAfterLogin(
-        action.encryptionKey,
-        action.authKey,
-        action.storage,
-        update
-      );
+      return loadAfterLogin(action.encryptionKey, action.storage, update);
     case "set-modal":
       return update({
         modal: action.modal
@@ -323,18 +321,17 @@ export async function dispatch(
 }
 
 async function genPassport(
-  identity: Identity,
+  identityV3: Identity,
   email: string,
   update: ZuUpdate
 ): Promise<void> {
-  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identityV3 });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
   await savePCDs(pcds);
+  update({ pcds });
 
   window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
-
-  update({ pcds });
 }
 
 async function oneClickLogin(
@@ -350,7 +347,7 @@ async function oneClickLogin(
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-    identity: state.identity
+    identityV3: state.identityV3
   });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
@@ -369,7 +366,8 @@ async function oneClickLogin(
     appConfig.zupassServer,
     email,
     code,
-    state.identity.commitment.toString(),
+    state.identityV3.commitment.toString(),
+    v4PublicKey(identityPCD.claim.identityV4),
     encryptionKey
   );
 
@@ -378,7 +376,6 @@ async function oneClickLogin(
     if (oneClickLoginResult.value.isNewUser) {
       return finishAccountCreation(
         oneClickLoginResult.value.zupassUser,
-        oneClickLoginResult.value.authKey,
         state,
         update,
         targetFolder
@@ -398,7 +395,6 @@ async function oneClickLogin(
       if (storageResult.success) {
         return loadAfterLogin(
           oneClickLoginResult.value.encryptionKey,
-          oneClickLoginResult.value.authKey,
           storageResult.value,
           update
         );
@@ -440,11 +436,12 @@ async function createNewUserSkipPassword(
   update({
     modal: { modalType: "none" }
   });
+
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
   if (autoRegister) {
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-      identity: state.identity
+      identityV3: state.identityV3
     });
     const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
@@ -464,7 +461,8 @@ async function createNewUserSkipPassword(
     appConfig.zupassServer,
     email,
     token,
-    state.identity.commitment.toString(),
+    state.identityV3.commitment.toString(),
+    v4PublicKey(v3tov4Identity(state.identityV3)),
     undefined,
     encryptionKey,
     autoRegister
@@ -473,7 +471,6 @@ async function createNewUserSkipPassword(
   if (newUserResult.success) {
     return finishAccountCreation(
       newUserResult.value,
-      newUserResult.value.authKey,
       state,
       update,
       targetFolder
@@ -510,19 +507,15 @@ async function createNewUserWithPassword(
     appConfig.zupassServer,
     email,
     token,
-    state.identity.commitment.toString(),
+    state.identityV3.commitment.toString(),
+    v4PublicKey(v3tov4Identity(state.identityV3)),
     newSalt,
     undefined,
     undefined
   );
 
   if (newUserResult.success) {
-    return finishAccountCreation(
-      newUserResult.value,
-      newUserResult.value.authKey,
-      state,
-      update
-    );
+    return finishAccountCreation(newUserResult.value, state, update);
   }
 
   update({
@@ -540,7 +533,6 @@ async function createNewUserWithPassword(
  */
 async function finishAccountCreation(
   user: User,
-  authKey: string,
   state: AppState,
   update: ZuUpdate,
   targetFolder?: string | null
@@ -550,7 +542,7 @@ async function finishAccountCreation(
     !validateAndLogRunningAppState(
       "finishAccountCreation",
       user,
-      state.identity,
+      state.identityV3,
       state.pcds
     )
   ) {
@@ -563,7 +555,6 @@ async function finishAccountCreation(
     return; // Don't save the bad identity. User must reset account.
   }
 
-  FeedSubscriptionManager.saveAuthKey(authKey);
   const subscriptions = new FeedSubscriptionManager(new NetworkFeedApi());
   addZupassProvider(subscriptions);
   const emailSub = await subscriptions.subscribe(
@@ -573,7 +564,7 @@ async function finishAccountCreation(
 
   const actions = await subscriptions.pollSingleSubscription(
     emailSub,
-    new CredentialManager(state.identity, state.pcds, new Map())
+    new CredentialManager(state.identityV3, state.pcds, new Map())
   );
   await applyActions(state.pcds, actions);
 
@@ -589,7 +580,7 @@ async function finishAccountCreation(
   console.log("[ACCOUNT] Upload initial PCDs");
   const uploadResult = await uploadStorage(
     user,
-    state.identity,
+    state.identityV3,
     state.pcds,
     state.subscriptions,
     undefined // knownRevision
@@ -648,12 +639,13 @@ async function setSelf(
       }
     );
   } else if (
-    BigInt(self.commitment).toString() !== state.identity.commitment.toString()
+    BigInt(self.commitment).toString() !==
+    state.identityV3.commitment.toString()
   ) {
     console.log("Identity commitment mismatch");
     userMismatched = true;
     requestLogToServer(appConfig.zupassServer, "invalid-user", {
-      oldCommitment: state.identity.commitment.toString(),
+      oldCommitment: state.identityV3.commitment.toString(),
       newCommitment: self.commitment.toString()
     });
   } else if (state.self && state.self.uuid !== self.uuid) {
@@ -766,7 +758,6 @@ async function removePCD(
 
 async function loadAfterLogin(
   encryptionKey: string,
-  authKey: string | undefined,
   storage: StorageWithRevision,
   update: ZuUpdate
 ): Promise<void> {
@@ -774,8 +765,6 @@ async function loadAfterLogin(
     storage.storage,
     await getPackages()
   );
-
-  FeedSubscriptionManager.saveAuthKey(authKey);
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
   const userResponse = await requestUser(
@@ -785,7 +774,7 @@ async function loadAfterLogin(
   if (!userResponse.success) {
     throw new Error(userResponse.error.errorMessage);
   }
-  const self: User = userResponse.value;
+  let self: User = userResponse.value;
   if (!self) {
     throw new Error("No User returned by server.");
   }
@@ -796,7 +785,7 @@ async function loadAfterLogin(
     !validateAndLogRunningAppState(
       "loadAfterLogin",
       userResponse.value,
-      identityPCD?.claim?.identity,
+      identityPCD?.claim?.identityV3,
       pcds
     )
   ) {
@@ -808,6 +797,27 @@ async function loadAfterLogin(
     console.error("No identity PCD found in encrypted storage.");
     userInvalid(update);
     return;
+  }
+
+  // prior to the introduction of semaphore v4, users didn't have a v4 identity.
+  // the v4 identity is generated deterministically from the v3 identity. this case
+  // explicitly handles the situation when a user who had an account prior to the
+  // introduction of semaphore v4 logs in. in that case, we upgrade their account.
+  if (!self.semaphore_v4_commitment || !self.semaphore_v4_pubkey) {
+    await requestUpgradeUserWithV4Commitment(
+      appConfig.zupassServer,
+      await makeUpgradeUserWithV4CommitmentRequest(pcds)
+    );
+    const newSelfResponse = await requestUser(
+      appConfig.zupassServer,
+      self.uuid
+    );
+    if (newSelfResponse.success) {
+      self = newSelfResponse.value;
+      saveSelf(self);
+    } else {
+      // proceed to the next step anyway, since we don't have any other option
+    }
   }
 
   let modal: AppState["modal"] = { modalType: "none" };
@@ -830,7 +840,7 @@ async function loadAfterLogin(
   });
   saveEncryptionKey(encryptionKey);
   saveSelf(self);
-  saveIdentity(identityPCD.claim.identity);
+  saveIdentity(identityPCD.claim.identityV3);
 
   update({
     encryptionKey,
@@ -838,7 +848,7 @@ async function loadAfterLogin(
     subscriptions,
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash,
-    identity: identityPCD.claim.identity,
+    identityV3: identityPCD.claim.identityV3,
     self,
     modal
   });
@@ -1004,7 +1014,7 @@ async function doSync(
       state.serverStorageRevision,
       state.serverStorageHash,
       state.self,
-      state.identity,
+      state.identityV3,
       state.pcds,
       state.subscriptions
     );
@@ -1044,7 +1054,7 @@ async function doSync(
         state.subscriptions.getActiveSubscriptions()
       );
       const credentialManager = new CredentialManager(
-        state.identity,
+        state.identityV3,
         state.pcds,
         state.credentialCache
       );
@@ -1116,7 +1126,7 @@ async function doSync(
     console.log("[SYNC] sync action: upload");
 
     const credentialManager = new CredentialManager(
-      state.identity,
+      state.identityV3,
       state.pcds,
       state.credentialCache
     );
@@ -1126,7 +1136,7 @@ async function doSync(
 
     const upRes = await uploadSerializedStorage(
       state.self,
-      state.identity,
+      state.identityV3,
       state.pcds,
       appStorage.serializedStorage,
       appStorage.storageHash,
@@ -1196,7 +1206,7 @@ async function syncSubscription(
       throw new Error(`Subscription ${subscriptionId} not found`);
     }
     const credentialManager = new CredentialManager(
-      state.identity,
+      state.identityV3,
       state.pcds,
       state.credentialCache
     );
@@ -1347,7 +1357,7 @@ async function promptToAgreePrivacyNotice(
     await agreeTerms(
       appConfig.zupassServer,
       LATEST_PRIVACY_NOTICE,
-      state.identity
+      state.identityV3
     );
   } else {
     update({
@@ -1383,7 +1393,8 @@ async function mergeImport(
       !(isSemaphoreIdentityPCD(pcd) && userHasExistingSemaphoreIdentityPCD) &&
       !(
         isSemaphoreIdentityPCD(pcd) &&
-        pcd.claim.identity.getCommitment().toString() !== state.self?.commitment
+        pcd.claim.identityV3.getCommitment().toString() !==
+          state.self?.commitment
       ) &&
       !target.hasPCDWithId(pcd.id)
     );
@@ -1473,7 +1484,7 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   await sleep(2000);
 
   const credentialManager = new CredentialManager(
-    state.identity,
+    state.identityV3,
     state.pcds,
     state.credentialCache
   );

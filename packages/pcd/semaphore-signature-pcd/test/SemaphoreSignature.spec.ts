@@ -26,7 +26,7 @@ describe("semaphore signature PCD should work", function () {
 
     const identity = new Identity();
     const identityPCD = await SemaphoreIdentityPCDPackage.serialize(
-      await SemaphoreIdentityPCDPackage.prove({ identity })
+      await SemaphoreIdentityPCDPackage.prove({ identityV3: identity })
     );
 
     args = {

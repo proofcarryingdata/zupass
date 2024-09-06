@@ -664,7 +664,7 @@ async function addSignatureProofPCD(
 
 async function addIdentityPCD(): Promise<void> {
   const newIdentity = await SemaphoreIdentityPCDPackage.prove({
-    identity: new Identity()
+    identityV3: new Identity()
   });
 
   const serializedNewIdentity =
@@ -828,7 +828,7 @@ async function addGPCPCD(
   );
 
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-    identity: EXAMPLE_OWNER_IDENTITY
+    identityV3: EXAMPLE_OWNER_IDENTITY
   });
 
   const proveArgs: GPCPCDArgs = {

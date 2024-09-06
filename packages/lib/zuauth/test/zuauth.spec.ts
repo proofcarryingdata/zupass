@@ -54,7 +54,7 @@ async function makeZKTicketPCD(
   const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(ticketPCD);
   const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
     await SemaphoreIdentityPCDPackage.prove({
-      identity
+      identityV3: identity
     })
   );
 
