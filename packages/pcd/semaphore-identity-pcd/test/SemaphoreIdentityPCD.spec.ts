@@ -34,6 +34,11 @@ describe("Semaphore Identity PCD", function () {
 
     assert.equal(deserialized.claim.identityV3 instanceof IdentityV3, true);
     assert.equal(deserialized.claim.identityV4 instanceof IdentityV4, true);
+
+    const serializedAgain = await serialize(deserialized);
+    expect(serializedAgain).to.deep.eq(serialized);
+    const deserializedAgain = await deserialize(serializedAgain.pcd);
+    expect(deserializedAgain).to.deep.eq(deserialized);
   });
 
   it("should be able to compatibly deserialize a saved PCD", async function () {
