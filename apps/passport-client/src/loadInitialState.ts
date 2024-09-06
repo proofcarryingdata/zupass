@@ -95,12 +95,10 @@ export async function loadInitialState(): Promise<AppState> {
           new PCDCollection(await getPackages(), [identityPCD])
         )
       );
-
       const newSelfResponse = await requestUser(
         appConfig.zupassServer,
         self.uuid
       );
-
       if (newSelfResponse.success) {
         self = newSelfResponse.value;
         saveSelf(self);

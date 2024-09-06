@@ -776,7 +776,7 @@ async function loadAfterLogin(
   if (!userResponse.success) {
     throw new Error(userResponse.error.errorMessage);
   }
-  const self: User = userResponse.value;
+  let self: User = userResponse.value;
   if (!self) {
     throw new Error("No User returned by server.");
   }
@@ -802,14 +802,25 @@ async function loadAfterLogin(
     return;
   }
 
-  // TODO: document this
+  // prior to the introduction of semaphore v4, users didn't have a v4 identity.
+  // the v4 identity is generated deterministically from the v3 identity. this case
+  // explicitly handles the situation when a user who had an account prior to the
+  // introduction of semaphore v4 logs in. in that case, we upgrade their account.
   if (!self.semaphore_v4_commitment || !self.semaphore_v4_pubkey) {
-    const _res = await requestUpgradeUserWithV4Commitment(
+    await requestUpgradeUserWithV4Commitment(
       appConfig.zupassServer,
       await makeUpgradeUserWithV4CommitmentRequest(pcds)
     );
-
-    // TODO: handle res
+    const newSelfResponse = await requestUser(
+      appConfig.zupassServer,
+      self.uuid
+    );
+    if (newSelfResponse.success) {
+      self = newSelfResponse.value;
+      saveSelf(self);
+    } else {
+      // proceed to the next step anyway, since we don't have any other option
+    }
   }
 
   let modal: AppState["modal"] = { modalType: "none" };
