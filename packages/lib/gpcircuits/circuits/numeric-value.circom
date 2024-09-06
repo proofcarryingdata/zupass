@@ -38,11 +38,11 @@ template NumericValueModule() {
     // preserving order.
     var ABS_POD_INT_MIN = 1 << 63;
     
-    // Check that minValue <= numericValue <= maxValue.
-    signal boundsCheck <== BoundsCheckModule(64)(
+    // Check that minValue <= numericValue <= maxValue and return the
+    // result.
+    signal output isInBounds <== BoundsCheckModule(64)(
         numericValue + ABS_POD_INT_MIN,
         minValue + ABS_POD_INT_MIN,
         maxValue + ABS_POD_INT_MIN
-                                                 );
-    boundsCheck === 1;
+                                                        );
 }
