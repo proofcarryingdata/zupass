@@ -27,6 +27,9 @@
       "path": "../../pcd/gpc-pcd"
     },
     {
+      "path": "../pod"
+    },
+    {
       "path": "../podspec"
     },
     {

@@ -1,7 +1,7 @@
 import type { GPCPCDArgs, PODPCDRecordArg } from "@pcd/gpc-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { z } from "zod";
-import { ZupassAPI } from "./api";
+import { ZupassAPI } from "./api_internal";
 
 export const SerializedPCDSchema = z.object({
   type: z.string(),

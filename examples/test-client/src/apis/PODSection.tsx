@@ -1,12 +1,13 @@
-import { POD_INT_MAX } from "@pcd/pod";
+import { POD, POD_INT_MAX } from "@pcd/pod";
 import { p } from "@pcd/podspec";
+import JSONBig from "json-bigint";
 import { ReactNode, useState } from "react";
 import { TryIt } from "../components/TryIt";
 import { useEmbeddedZupass } from "../hooks/useEmbeddedZupass";
 
 export function PODSection(): ReactNode {
   const { z, connected } = useEmbeddedZupass();
-  const [serializedPODs, setSerializedPODs] = useState<string[]>([]);
+  const [pods, setPODs] = useState<POD[]>([]);
 
   return !connected ? null : (
     <div>
@@ -20,8 +21,7 @@ export function PODSection(): ReactNode {
   .pod({
     wis: p.int().range(BigInt(8), POD_INT_MAX),
     str: p.int().range(BigInt(5), POD_INT_MAX),
-  })
-  .serialize();
+  });
 const pods = await z.pod.query(q);
 `}
             </code>
@@ -29,23 +29,29 @@ const pods = await z.pod.query(q);
           <TryIt
             onClick={async () => {
               try {
-                const q = p
-                  .pod({
-                    wis: p.int().range(BigInt(8), POD_INT_MAX),
-                    str: p.int().range(BigInt(5), POD_INT_MAX)
-                  })
-                  .serialize();
+                const q = p.pod({
+                  wis: p.int().range(BigInt(8), POD_INT_MAX),
+                  str: p.int().range(BigInt(5), POD_INT_MAX)
+                });
                 const pods = await z.pod.query(q);
-                setSerializedPODs(pods);
+                setPODs(pods);
               } catch (e) {
                 console.log(e);
               }
             }}
             label="Query PODs"
           />
-          {serializedPODs.length > 0 && (
+          {pods.length > 0 && (
             <pre className="whitespace-pre-wrap">
-              {JSON.stringify(serializedPODs, null, 2)}
+              {JSONBig.stringify(
+                pods.map((p) => ({
+                  entries: p.content.asEntries(),
+                  signature: p.signature,
+                  signerPublicKey: p.signerPublicKey
+                })),
+                null,
+                2
+              )}
             </pre>
           )}
         </div>
