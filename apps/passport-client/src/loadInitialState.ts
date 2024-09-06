@@ -65,7 +65,7 @@ export async function loadInitialState(): Promise<AppState> {
       self = newSelfResponse.value;
       saveSelf(self);
     } else {
-      // anything to do here?
+      // proceed to the next step anyway, since we don't have any other option
     }
   }
 
