@@ -1,7 +1,12 @@
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import { expect } from "chai";
-import { IdentityV3, IdentityV4, SemaphoreIdentityPCDPackage } from "../src";
+import {
+  IdentityV3,
+  IdentityV4,
+  SemaphoreIdentityPCDPackage,
+  v3tov4Identity
+} from "../src";
 
 describe("Semaphore Identity PCD", function () {
   it("should be instantiatable", async function () {
@@ -19,6 +24,10 @@ describe("Semaphore Identity PCD", function () {
     const identity = new Identity();
 
     const identityPCD = await prove({ identityV3: identity });
+
+    expect(identityPCD.claim.identityV4.export()).to.eq(
+      v3tov4Identity(identity).export()
+    );
 
     const serialized = await serialize(identityPCD);
     const deserialized = await deserialize(serialized.pcd);
