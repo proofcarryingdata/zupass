@@ -18,15 +18,6 @@ class ZupassAPIPODWrapper {
     const pods = await this.#api.pod.query(serialized);
     return pods.map((pod) => POD.deserialize(pod));
   }
-
-  async insert(pod: POD): Promise<void> {
-    const serialized = pod.serialize();
-    return this.#api.pod.insert(serialized);
-  }
-
-  async delete(signature: string): Promise<void> {
-    return this.#api.pod.delete(signature);
-  }
 }
 
 /**

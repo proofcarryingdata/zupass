@@ -40,8 +40,6 @@ export interface ZupassIdentity {
 export interface ZupassPOD {
   // Returns array of serialized PODs
   query: (query: PODQuery) => Promise<string[]>;
-  insert: (serializedPod: string) => Promise<void>;
-  delete: (signature: string) => Promise<void>;
 }
 
 export interface ZupassAPI {
