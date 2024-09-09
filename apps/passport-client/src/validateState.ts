@@ -182,11 +182,11 @@ export function getRunningAppStateValidationErrors(
   }
 
   if (!identityV3FromState) {
-    errors.push("missing v3 identity");
+    errors.push("missing v3 identity from state");
   }
 
   if (!identityV4FromState) {
-    errors.push("missing v4 identity");
+    errors.push("missing v4 identity from state");
   }
 
   const identityV3FromPCDCollection =
