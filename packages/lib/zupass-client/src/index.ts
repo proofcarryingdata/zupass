@@ -1,4 +1,5 @@
-export * from "./api";
+export * from "./api_internal";
+export * from "./api_wrapper";
 export * from "./client";
 export * from "./protocol";
 export * from "./schema";

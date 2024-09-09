@@ -1,7 +1,7 @@
 import type { GPCPCDArgs, PODPCDRecordArg } from "@pcd/gpc-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { z } from "zod";
-import { ZupassAPI } from "./api";
+import { ZupassAPI } from "./api_internal";
 
 export const SerializedPCDSchema = z.object({
   type: z.string(),
@@ -156,6 +156,8 @@ export const ZupassAPISchema = z.object({
     query: z
       .function()
       .args(PODQuerySchema)
-      .returns(z.promise(z.array(z.string())))
+      .returns(z.promise(z.array(z.string()))),
+    insert: z.function().args(z.string()).returns(z.promise(z.void())),
+    delete: z.function().args(z.string()).returns(z.promise(z.void()))
   })
 }) satisfies z.ZodSchema<ZupassAPI>;

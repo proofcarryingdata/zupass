@@ -17,6 +17,7 @@ import {
   GPCBoundConfig,
   GPCIdentifier,
   GPCProofConfig,
+  GPCProofEntryBoundsCheckConfig,
   GPCProofEntryConfig,
   GPCProofEntryConfigCommon,
   GPCProofObjectConfig,
@@ -154,6 +155,10 @@ export function canonicalizeVirtualEntryConfig(
 export function canonicalizeEntryConfig(
   proofEntryConfig: GPCProofEntryConfig
 ): GPCProofEntryConfig {
+  const canonicalizedBoundsCheckConfig = canonicalizeBoundsCheckConfig(
+    proofEntryConfig.inRange,
+    proofEntryConfig.notInRange
+  );
   // Set optional fields only when they have non-default values.
   return {
     isRevealed: proofEntryConfig.isRevealed,
@@ -161,14 +166,7 @@ export function canonicalizeEntryConfig(
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
       : {}),
-    ...(proofEntryConfig.inRange !== undefined
-      ? {
-          inRange: {
-            min: proofEntryConfig.inRange.min,
-            max: proofEntryConfig.inRange.max
-          }
-        }
-      : {}),
+    ...canonicalizedBoundsCheckConfig,
     ...(proofEntryConfig.isMemberOf !== undefined
       ? {
           isMemberOf: proofEntryConfig.isMemberOf
@@ -179,6 +177,59 @@ export function canonicalizeEntryConfig(
           isNotMemberOf: proofEntryConfig.isNotMemberOf
         }
       : {})
+  };
+}
+
+export function canonicalizeBoundsCheckConfig(
+  inRange: ClosedInterval | undefined,
+  notInRange: ClosedInterval | undefined
+): GPCProofEntryBoundsCheckConfig {
+  // Throw if an invalid interval is specified to avoid invalid
+  // canonicalisations.
+  for (const interval of [inRange, notInRange]) {
+    if (interval && interval.min > interval.max) {
+      throw new Error(
+        `Invalid bounds check interval ${interval} in config cannot be canonicalized. The minimum value must be less than or equal to the maximum value.`
+      );
+    }
+  }
+
+  return {
+    ...(!inRange && !notInRange
+      ? {}
+      : !inRange
+      ? { notInRange: notInRange }
+      : !notInRange
+      ? { inRange: inRange }
+      : // inRange\notInRange = [inRange.min, ⍵] for some ⍵, i.e. `notInRange.min`
+      // lies to the right of `inRange.max` (non-overlapping case) or they
+      // overlap in such a way that `inRange.min` lies to the left of
+      // `notInRange.min`.
+      notInRange.min > inRange.min && notInRange.max >= inRange.max
+      ? {
+          inRange: {
+            min: inRange.min,
+            max: _.min([notInRange.min - 1n, inRange.max]) as bigint
+          }
+        }
+      : // inRange\notInRange = [⍺, inRange.max] for some ⍺, i.e. `notInRange.max`
+      // lies to the left of `inRange.min` (non-overlapping case) or they
+      // overlap in such a way that `inRange.max` lies to the right of
+      // `notInRange.max`.
+      notInRange.min <= inRange.min && notInRange.max < inRange.max
+      ? {
+          inRange: {
+            min: _.max([notInRange.max + 1n, inRange.min]) as bigint,
+            max: inRange.max
+          }
+        }
+      : // Either `inRange` is contained in `notInRange` (which is an error and
+        // will be caught in the check phase) or `notInRange` is a subset of the
+        // interior of `inRange`, which requires two bounds checks.
+        {
+          inRange: inRange,
+          notInRange: notInRange
+        })
   };
 }
 
@@ -597,7 +648,7 @@ export const LIST_NONMEMBERSHIP = "non-membership";
  */
 export type GPCProofBoundsCheckConfig = Record<
   PODEntryIdentifier,
-  BoundsConfig
+  GPCProofEntryBoundsCheckConfig
 >;
 
 /**
@@ -613,10 +664,9 @@ export type GPCProofMembershipListConfig = Record<
 >;
 
 /**
- * Bounds check configuration for an individual entry. This specifies the bounds
- * check required for relevant entries at the circuit level.
+ * Convenient type for closed intervals used in (out of) bounds/range checks.
  */
-export type BoundsConfig = { min: bigint; max: bigint };
+export type ClosedInterval = { min: bigint; max: bigint };
 
 /**
  * List configuration for an individual entry or tuple. This specifies the type
@@ -645,11 +695,23 @@ export function boundsCheckConfigFromProofConfig(
 ): GPCProofBoundsCheckConfig {
   return Object.fromEntries(
     Object.entries(proofConfig.pods).flatMap(([podName, podConfig]) =>
-      Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) =>
-        entryConfig.inRange === undefined
+      Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) => {
+        return !(entryConfig.inRange || entryConfig.notInRange)
           ? []
-          : [[`${podName}.${entryName}`, entryConfig.inRange]]
-      )
+          : [
+              [
+                `${podName}.${entryName}`,
+                {
+                  ...(entryConfig.inRange
+                    ? { inRange: entryConfig.inRange }
+                    : {}),
+                  ...(entryConfig.notInRange
+                    ? { notInRange: entryConfig.notInRange }
+                    : {})
+                }
+              ]
+            ];
+      })
     )
   );
 }

@@ -29,7 +29,6 @@ import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import _ from "lodash";
 import {
   GPCBoundConfig,
-  GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofInputs,
   GPCProofObjectConfig,
@@ -42,6 +41,7 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
+  GPCProofBoundsCheckConfig,
   GPCProofMembershipListConfig,
   LIST_MEMBERSHIP,
   boundsCheckConfigFromProofConfig,
@@ -331,8 +331,9 @@ export function compileProofConfig(
   );
 
   // Create numeric value module inputs.
+  const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
   const circuitNumericValueInputs = compileProofNumericValues(
-    proofConfig,
+    boundsCheckConfig,
     entryMap,
     circuitDesc.maxNumericValues
   );
@@ -402,44 +403,59 @@ function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
 }
 
 function compileProofNumericValues(
-  proofConfig: GPCProofConfig,
+  boundsCheckConfig: GPCProofBoundsCheckConfig,
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<POD>>,
   paramNumericValues: number
 ): {
   numericValues: CircuitSignal[];
   numericValueEntryIndices: CircuitSignal[];
+  numericValueInRange: CircuitSignal;
   numericMinValues: CircuitSignal[];
   numericMaxValues: CircuitSignal[];
 } {
   const {
     numericValueIdOrder,
     numericValueEntryIndices,
+    numericValueInRange,
     numericMinValues,
     numericMaxValues
-  } = compileCommonNumericValues(proofConfig, entryMap, paramNumericValues);
+  } = compileCommonNumericValues(
+    boundsCheckConfig,
+    entryMap,
+    paramNumericValues
+  );
 
   // Compile numeric entry values.
-  const unpaddedNumericValues: bigint[] = numericValueIdOrder.map((entryId) => {
-    const entryName = entryMap.get(entryId)?.entryName;
-    if (entryName === undefined) {
-      throw new ReferenceError(`Missing entry name for identifier ${entryId}.`);
+  const unpaddedNumericValues: bigint[] = numericValueIdOrder.flatMap(
+    (entryId) => {
+      const entryName = entryMap.get(entryId)?.entryName;
+      if (entryName === undefined) {
+        throw new ReferenceError(
+          `Missing entry name for identifier ${entryId}.`
+        );
+      }
+
+      const entryValue = entryMap
+        .get(entryId)
+        ?.objInput?.content.getValue(entryName);
+
+      if (entryValue?.type !== "int") {
+        throw new TypeError("Type of value of entry ${entryId} must be 'int'.");
+      }
+
+      // Duplicate value if both `inRange` and `notInRange` are present for the
+      // entry.
+      return Object.keys(boundsCheckConfig[entryId]).map(
+        (_) => entryValue.value
+      );
     }
-
-    const entryValue = entryMap
-      .get(entryId)
-      ?.objInput?.content.getValue(entryName);
-
-    if (entryValue?.type !== "int") {
-      throw new TypeError("Type of value of entry ${entryId} must be 'int'.");
-    }
-
-    return entryValue.value;
-  });
+  );
 
   return {
     // Pad with 0s.
     numericValues: padArray(unpaddedNumericValues, paramNumericValues, 0n),
     numericValueEntryIndices,
+    numericValueInRange,
     numericMinValues,
     numericMaxValues
   };
@@ -448,63 +464,70 @@ function compileProofNumericValues(
 function compileCommonNumericValues<
   ObjInput extends POD | GPCRevealedObjectClaims
 >(
-  proofConfig: GPCProofConfig,
+  boundsCheckConfig: GPCProofBoundsCheckConfig,
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
   paramNumericValues: number
 ): {
   numericValueIdOrder: PODEntryIdentifier[];
   numericValueEntryIndices: CircuitSignal[];
+  numericValueInRange: CircuitSignal;
   numericMinValues: CircuitSignal[];
   numericMaxValues: CircuitSignal[];
 } {
-  const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
-
   // Arrange POD entry identifiers according to {@link podEntryIdentifierCompare}.
   const numericValueIdOrder = (
     Object.keys(boundsCheckConfig) as PODEntryIdentifier[]
   ).sort(podEntryIdentifierCompare);
 
-  // Compile entry indices
-  const unpaddedNumericValueEntryIndices = numericValueIdOrder.map(
-    (entryId) => {
-      const idx = entryMap.get(entryId)?.entryIndex;
+  // Compile signals
+  const unpaddedNumericValueSignals = numericValueIdOrder.flatMap((entryId) => {
+    // Look up entry index.
+    const idx = entryMap.get(entryId)?.entryIndex;
 
-      if (idx === undefined) {
-        throw new ReferenceError(`Missing input for identifier ${entryId}.`);
-      }
-
-      return BigInt(idx);
+    if (idx === undefined) {
+      throw new ReferenceError(`Missing input for identifier ${entryId}.`);
     }
-  );
 
-  // Compile minimum values.
-  const unpaddedNumericMinValues = numericValueIdOrder.map(
-    (entryId) => boundsCheckConfig[entryId].min
-  );
+    const inRange = boundsCheckConfig[entryId].inRange;
+    const notInRange = boundsCheckConfig[entryId].notInRange;
 
-  // Compile maximum values.
-  const unpaddedNumericMaxValues = numericValueIdOrder.map(
-    (entryId) => boundsCheckConfig[entryId].max
-  );
+    return [
+      ...(inRange ? [[BigInt(idx), 1n, inRange.min, inRange.max]] : []),
+      ...(notInRange ? [[BigInt(idx), 0n, notInRange.min, notInRange.max]] : [])
+    ];
+  });
 
   return {
     numericValueIdOrder,
     // Pad with index -1 (mod p), which is a reference to the value 0.
     numericValueEntryIndices: padArray(
-      unpaddedNumericValueEntryIndices,
+      unpaddedNumericValueSignals.map((x) => x[0]),
       paramNumericValues,
       BABY_JUB_NEGATIVE_ONE
+    ),
+    // Pad with 1s, which amounts to an in-range check for the padded
+    // values.
+    numericValueInRange: array2Bits(
+      padArray(
+        unpaddedNumericValueSignals.map((x) => x[1]),
+        paramNumericValues,
+        1n
+      )
     ),
     // Pad with 0s, which amounts to a lower bound of 0 for those padded entries
     // with value 0.
     numericMinValues: padArray(
-      unpaddedNumericMinValues,
+      unpaddedNumericValueSignals.map((x) => x[2]),
       paramNumericValues,
       0n
     ),
     // Pad with 0s, which amounts to an upper bound of 0 for those padded
     // entries with value 0.
-    numericMaxValues: padArray(unpaddedNumericMaxValues, paramNumericValues, 0n)
+    numericMaxValues: padArray(
+      unpaddedNumericValueSignals.map((x) => x[3]),
+      paramNumericValues,
+      0n
+    )
   };
 }
 
@@ -944,9 +967,10 @@ export function compileVerifyConfig(
   );
 
   // Create numeric value module inputs
+  const boundsCheckConfig = boundsCheckConfigFromProofConfig(verifyConfig);
   const { numericValueIdOrder: _, ...circuitNumericValueInputs } =
     compileCommonNumericValues(
-      verifyConfig,
+      boundsCheckConfig,
       entryMap,
       circuitDesc.maxNumericValues
     );

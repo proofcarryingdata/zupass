@@ -16,6 +16,8 @@ export type NumericValueModuleInputNamesType = [
   "maxValue"
 ];
 
-export type NumericValueModuleOutputs = Record<string, never>;
+export type NumericValueModuleOutputs = {
+  isInBounds: CircuitSignal;
+};
 
-export type NumericValueModuleOutputNamesType = [];
+export type NumericValueModuleOutputNamesType = ["isInBounds"];
