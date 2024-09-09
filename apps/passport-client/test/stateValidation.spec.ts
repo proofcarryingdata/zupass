@@ -58,7 +58,6 @@ describe("validateAppState", async function () {
       '"0x956f9e03b0cc324045d24f9b20531e547272fab8e8ee2f96c0cf2e50311468"]'
   );
   const v4id3 = v3tov4Identity(identity3);
-  const commitment3 = identity3.commitment;
 
   it("logged out ; no errors", async function () {
     expect(
