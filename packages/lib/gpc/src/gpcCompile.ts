@@ -11,7 +11,8 @@ import {
   extendedSignalArray,
   hashTuple,
   padArray,
-  paramMaxVirtualEntries
+  paramMaxVirtualEntries,
+  zipLists
 } from "@pcd/gpcircuits";
 import {
   POD,
@@ -139,8 +140,6 @@ function prepCompilerMaps<
     // Add virtual entries even if they are not explicitly specified in the
     // config. By default, signers' public keys are revealed and POD content IDs
     // are not.
-    //
-    // TODO(POD-P3): Modify for other virtual entry types when they are available.
     entryMap.set(`${objName}.$contentID`, {
       objName,
       objIndex,
@@ -710,10 +709,10 @@ function compileProofVirtualEntry<
   return {
     virtualEntryIsValueHashRevealed: array2Bits(
       padArray(
-        unpaddedContentIDIsValueHashRevealed.flatMap((hash, i) => [
-          hash,
-          unpaddedSignerPublicKeyIsValueHashRevealed[i]
-        ]),
+        zipLists([
+          unpaddedContentIDIsValueHashRevealed,
+          unpaddedSignerPublicKeyIsValueHashRevealed
+        ]).flat(),
         2 * circuitDesc.maxObjects,
         0n
       )
@@ -1143,10 +1142,10 @@ function compileVerifyVirtualEntry(
 
   return {
     virtualEntryRevealedValueHash: padArray(
-      unpaddedContentIDRevealedValueHash.flatMap((hash, i) => [
-        hash,
-        unpaddedSignerPublicKeyRevealedValueHash[i]
-      ]),
+      zipLists([
+        unpaddedContentIDRevealedValueHash,
+        unpaddedSignerPublicKeyRevealedValueHash
+      ]).flat(),
       2 * circuitDesc.maxObjects,
       BABY_JUB_NEGATIVE_ONE
     )

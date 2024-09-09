@@ -737,7 +737,6 @@ function checkRevealedObjectClaims(
 
   if (objClaims.contentID !== undefined) {
     requireType("contentID", objClaims.contentID, "bigint");
-    // TODO: Normalisation check?
   }
 
   if (objClaims.signerPublicKey !== undefined) {

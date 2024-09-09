@@ -121,8 +121,12 @@ export function canonicalizeVirtualEntryConfig(
   virtualEntryConfig: GPCProofEntryConfigCommon,
   defaultIsRevealed: boolean
 ): GPCProofEntryConfigCommon | undefined {
+  const virtualEntryConfigKeys = Object.keys(virtualEntryConfig).filter((key) =>
+    ["isRevealed", "equalsEntry", "isMemberOf", "isNotMemberOf"].includes(key)
+  );
+  // The check phase guarantees that `isRevealed` is specified in this case.
   if (
-    Object.keys(virtualEntryConfig).length === 1 &&
+    virtualEntryConfigKeys.length === 1 &&
     virtualEntryConfig.isRevealed === defaultIsRevealed
   ) {
     return undefined;
