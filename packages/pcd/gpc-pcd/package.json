@@ -47,6 +47,7 @@
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
+    "@types/snarkjs": "^0.7.5",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",

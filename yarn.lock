@@ -7043,10 +7043,10 @@
   resolved "https://registry.yarnpkg.com/@types/shimmer/-/shimmer-1.0.2.tgz#93eb2c243c351f3f17d5c580c7467ae5d686b65f"
   integrity sha512-dKkr1bTxbEsFlh2ARpKzcaAmsYixqt9UyCdoEZk8rHyE4iQYcDCyvSjDSf7JUWJHlJiTtbIoQjxKh6ViywqDAg==
 
-"@types/snarkjs@0.7.5":
-  version "0.7.5"
-  resolved "https://registry.yarnpkg.com/@types/snarkjs/-/snarkjs-0.7.5.tgz#bf31c8a43246867df2f148fc5716d95a01d91f41"
-  integrity sha512-Dyeid5dOIxboZmG4RTch3XBX7myVVllE8908rPnp0McSYWUatAdn/MKcXxUx3KUdxe7qeLKBVgZvTqXsR5+d5A==
+"@types/snarkjs@^0.7.5":
+  version "0.7.8"
+  resolved "https://registry.yarnpkg.com/@types/snarkjs/-/snarkjs-0.7.8.tgz#8fd47457247efd4a6dabcdd71ec1986532155480"
+  integrity sha512-x37Jsv1vx6I6RMJdfvYEmDUOLYgzYMecwlk13gniDOcN20xLVe9hy9DlQxWeCPirqpDY/jwugQSqCi2RxehU3g==
 
 "@types/stack-utils@^2.0.0":
   version "2.0.1"
