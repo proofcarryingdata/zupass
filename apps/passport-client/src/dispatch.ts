@@ -852,6 +852,7 @@ async function loadAfterLogin(
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash,
     identityV3: identityPCD.claim.identityV3,
+    identityV4: identityPCD.claim.identityV4,
     self,
     modal
   });
