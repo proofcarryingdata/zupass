@@ -5,7 +5,7 @@ import {
   requestUser
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { v3IdentityToPCD, v3tov4Identity } from "@pcd/semaphore-identity-pcd";
+import { v3IdentityToPCD } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import {
@@ -59,7 +59,6 @@ export async function loadInitialState(): Promise<AppState> {
     encryptionKey,
     pcds,
     identityV3,
-    identityV4: v3tov4Identity(identityV3),
     modal,
     subscriptions,
     resolvingSubscriptionId: undefined,

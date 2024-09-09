@@ -508,7 +508,7 @@ async function createNewUserWithPassword(
     email,
     token,
     state.identityV3.commitment.toString(),
-    v4PublicKey(state.identityV4),
+    v4PublicKey(v3tov4Identity(state.identityV3)),
     newSalt,
     undefined,
     undefined
@@ -543,7 +543,7 @@ async function finishAccountCreation(
       "finishAccountCreation",
       user,
       state.identityV3,
-      state.identityV4,
+      v3tov4Identity(state.identityV3),
       state.pcds
     )
   ) {
@@ -582,7 +582,7 @@ async function finishAccountCreation(
   const uploadResult = await uploadStorage(
     user,
     state.identityV3,
-    state.identityV4,
+    v3tov4Identity(state.identityV3),
     state.pcds,
     state.subscriptions,
     undefined // knownRevision
@@ -852,7 +852,6 @@ async function loadAfterLogin(
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash,
     identityV3: identityPCD.claim.identityV3,
-    identityV4: identityPCD.claim.identityV4,
     self,
     modal
   });
@@ -1019,7 +1018,7 @@ async function doSync(
       state.serverStorageHash,
       state.self,
       state.identityV3,
-      state.identityV4,
+      v3tov4Identity(state.identityV3),
       state.pcds,
       state.subscriptions
     );
@@ -1142,7 +1141,7 @@ async function doSync(
     const upRes = await uploadSerializedStorage(
       state.self,
       state.identityV3,
-      state.identityV4,
+      v3tov4Identity(state.identityV3),
       state.pcds,
       appStorage.serializedStorage,
       appStorage.storageHash,

@@ -51,13 +51,13 @@ describe("validateAppState", async function () {
     '["0x8526e030dbd593833f24bf73b60f0bcc58690c590b9953acc741f2eb71394d",' +
       '"0x520e4ae6f5d5e4526dd517e61defe16f90bd4aef72b41394285e77463e0c69"]'
   );
-  const v4id2 = v3tov4Identity(identity2);
+  const _v4id2 = v3tov4Identity(identity2);
   const commitment2 = identity2.commitment;
   const identity3 = new Identity(
     '["0x4837c6f88904d1dfefcb7dc6486e95c06cda6eb76d76a9888167c0993e40f0",' +
       '"0x956f9e03b0cc324045d24f9b20531e547272fab8e8ee2f96c0cf2e50311468"]'
   );
-  const v4id3 = v3tov4Identity(identity3);
+  const _v4id3 = v3tov4Identity(identity3);
 
   it("logged out ; no errors", async function () {
     expect(
@@ -81,7 +81,6 @@ describe("validateAppState", async function () {
         TAG_STR,
         undefined,
         undefined,
-        undefined,
         new PCDCollection(pcdPackages),
         true
       )
@@ -97,7 +96,6 @@ describe("validateAppState", async function () {
     expect(
       validateRunningAppState(
         TAG_STR,
-        undefined,
         undefined,
         undefined,
         await (async (): Promise<PCDCollection> => {
@@ -120,14 +118,7 @@ describe("validateAppState", async function () {
       })
     );
     expect(
-      validateRunningAppState(
-        TAG_STR,
-        undefined,
-        undefined,
-        undefined,
-        pcds,
-        true
-      )
+      validateRunningAppState(TAG_STR, undefined, undefined, pcds, true)
     ).to.deep.eq({
       errors: [],
       userUUID: undefined,
@@ -135,14 +126,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
 
     expect(
-      validateRunningAppState(
-        TAG_STR,
-        undefined,
-        undefined,
-        undefined,
-        undefined,
-        true
-      )
+      validateRunningAppState(TAG_STR, undefined, undefined, undefined, true)
     ).to.deep.eq({
       errors: [
         "missing 'pcds'",
@@ -169,9 +153,7 @@ describe("validateAppState", async function () {
         identityV3: identity1
       })
     );
-    expect(
-      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
-    ).to.deep.eq({
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [],
       ...TAG
@@ -183,9 +165,7 @@ describe("validateAppState", async function () {
         identityV3: identity2
       })
     );
-    expect(
-      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
-    ).to.deep.eq({
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [],
       ...TAG
@@ -203,9 +183,7 @@ describe("validateAppState", async function () {
         identityV3: identity1
       })
     );
-    expect(
-      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
-    ).to.deep.eq({
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [],
       ...TAG
@@ -221,9 +199,7 @@ describe("validateAppState", async function () {
       uuid: uuid()
     };
     const pcds = new PCDCollection(pcdPackages);
-    expect(
-      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
-    ).to.deep.eq({
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         "'pcds' contains no pcds",
@@ -242,7 +218,7 @@ describe("validateAppState", async function () {
       uuid: uuid()
     };
     expect(
-      validateRunningAppState(TAG_STR, self, identity1, v4id1, undefined)
+      validateRunningAppState(TAG_STR, self, identity1, undefined)
     ).to.deep.eq({
       userUUID: self.uuid,
       errors: [
@@ -267,9 +243,7 @@ describe("validateAppState", async function () {
         identityV3: identity1
       })
     );
-    expect(
-      validateRunningAppState(TAG_STR, self, undefined, undefined, pcds)
-    ).to.deep.eq({
+    expect(validateRunningAppState(TAG_STR, self, undefined, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         "missing v3 identity from state",
@@ -293,9 +267,7 @@ describe("validateAppState", async function () {
         identityV3: identity1
       })
     );
-    expect(
-      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
-    ).to.deep.eq({
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: ["'self' missing a v3 commitment"],
       ...TAG
@@ -316,9 +288,7 @@ describe("validateAppState", async function () {
         identityV3: identity1
       })
     );
-    expect(
-      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
-    ).to.deep.eq({
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         `commitment of identity pcd in collection (${commitment1}) does not match commitment in 'self' field of app state (${commitment2})`,
@@ -342,9 +312,7 @@ describe("validateAppState", async function () {
         identityV3: identity2
       })
     );
-    expect(
-      validateRunningAppState(TAG_STR, self, identity1, v4id1, pcds)
-    ).to.deep.eq({
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         `commitment of identity pcd in collection (${commitment2}) does not match commitment in 'self' field of app state (${commitment1})`,
@@ -369,9 +337,7 @@ describe("validateAppState", async function () {
         identityV3: identity1
       })
     );
-    expect(
-      validateRunningAppState(TAG_STR, self, identity2, v4id2, pcds)
-    ).to.deep.eq({
+    expect(validateRunningAppState(TAG_STR, self, identity2, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         `commitment in 'self' field of app state (${identity1.commitment.toString()}) does not match commitment of 'identity' field of app state (${identity2.commitment.toString()})`,
@@ -396,9 +362,7 @@ describe("validateAppState", async function () {
         identityV3: identity2
       })
     );
-    expect(
-      validateRunningAppState(TAG_STR, self, identity3, v4id3, pcds)
-    ).to.deep.eq({
+    expect(validateRunningAppState(TAG_STR, self, identity3, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         `commitment of identity pcd in collection (${identity2.commitment.toString()}) does not match commitment in 'self' field of app state (${identity1.commitment.toString()})`,

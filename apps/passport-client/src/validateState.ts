@@ -5,7 +5,6 @@ import {
   IdentityV4,
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
-  v3tov4Identity,
   v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
@@ -50,7 +49,6 @@ export function validateAndLogRunningAppState(
     tag,
     self,
     identity,
-    identityV4,
     pcds,
     forceCheckPCDs
   );
@@ -85,7 +83,6 @@ export function validateRunningAppState(
   tag: string,
   self: User | undefined,
   identity: Identity | undefined,
-  identityV4: IdentityV4 | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
 ): ErrorReport {
@@ -93,7 +90,6 @@ export function validateRunningAppState(
     errors: getRunningAppStateValidationErrors(
       self,
       identity,
-      identityV4,
       pcds,
       forceCheckPCDs
     ),
@@ -114,7 +110,6 @@ export function getInitialAppStateValidationErrors(
     ...getRunningAppStateValidationErrors(
       state?.self,
       state?.identityV3,
-      state?.identityV4,
       state?.pcds
     )
   ];
@@ -136,7 +131,6 @@ export function getInitialAppStateValidationErrors(
 export function getRunningAppStateValidationErrors(
   self: User | undefined,
   identityV3FromState: IdentityV3 | undefined,
-  identityV4FromState: IdentityV4 | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
 ): string[] {
@@ -183,10 +177,6 @@ export function getRunningAppStateValidationErrors(
 
   if (!identityV3FromState) {
     errors.push("missing v3 identity from state");
-  }
-
-  if (!identityV4FromState) {
-    errors.push("missing v4 identity from state");
   }
 
   const identityV3FromPCDCollection =
@@ -238,37 +228,11 @@ export function getRunningAppStateValidationErrors(
   const v4CommitmentFromPCDCollection =
     identityPCDFromCollection?.claim.identityV4?.commitment?.toString();
   const v4CommitmentFromSelfField = self?.semaphore_v4_commitment;
-  const v4CommitmentFromIdentityField =
-    identityV4FromState?.commitment?.toString();
 
   const v4PublicKeyFromSelfField = self?.semaphore_v4_pubkey;
-  const v4PublicKeyFromIdentityField =
-    identityV4FromState && v4PublicKey(identityV4FromState);
   const v4PublicKeyFromPCDCollection =
     identityPCDFromCollection &&
     v4PublicKey(identityPCDFromCollection.claim.identityV4);
-
-  if (identityV3FromState && identityV4FromState) {
-    if (
-      v3tov4Identity(identityV3FromState).export() !==
-      identityV4FromState.export()
-    ) {
-      errors.push(
-        `v4 identity does not match derivation of v4 identity from v3 identity as implemented by 'v3tov4Identity'`
-      );
-    }
-  }
-
-  if (identityV4FromState && identityPCDFromCollection) {
-    if (
-      identityV4FromState.export() !==
-      identityPCDFromCollection.claim.identityV4.export()
-    ) {
-      errors.push(
-        `v4 identity in app state does not match v4 identity in pcd collection`
-      );
-    }
-  }
 
   // either we are missing v4 commitment from `self`
   if (!v4CommitmentFromSelfField && !!v4PublicKeyFromSelfField) {
@@ -284,13 +248,6 @@ export function getRunningAppStateValidationErrors(
   }
   // or both v4 public key and v4 commitment are present in `self`
   else if (v4CommitmentFromSelfField && v4PublicKeyFromSelfField) {
-    if (v4CommitmentFromSelfField !== v4CommitmentFromIdentityField) {
-      errors.push(
-        `v4 commitment in self (${v4CommitmentFromSelfField})` +
-          ` does not match v4 commitment of v4 identity in app state (${v4CommitmentFromIdentityField})`
-      );
-    }
-
     if (v4CommitmentFromSelfField !== v4CommitmentFromPCDCollection) {
       errors.push(
         `v4 commitment in self (${v4CommitmentFromSelfField})` +
@@ -298,17 +255,10 @@ export function getRunningAppStateValidationErrors(
       );
     }
 
-    if (v4PublicKeyFromSelfField !== v4PublicKeyFromIdentityField) {
-      errors.push(
-        `v4 public key in self (${v4PublicKeyFromSelfField})` +
-          ` does not match v4 public key of identity in app state (${v4PublicKeyFromIdentityField})`
-      );
-    }
-
     if (v4PublicKeyFromSelfField !== v4PublicKeyFromPCDCollection) {
       errors.push(
         `v4 public key in self (${v4PublicKeyFromSelfField})` +
-          ` does not match v4 public key of identity in pcd collection (${v4PublicKeyFromIdentityField})`
+          ` does not match v4 public key of identity in pcd collection (${v4PublicKeyFromPCDCollection})`
       );
     }
   } else {
