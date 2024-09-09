@@ -290,6 +290,7 @@ const sampleInput: ProtoPODGPCInputs = {
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
   ],
+  /*PUB*/ numericValueInRange: 15n,
   /*PUB*/ numericMinValues: [-10n, 0n, 0n, 0n],
   /*PUB*/ numericMaxValues: [132n, 0n, 0n, 0n],
 
@@ -618,14 +619,16 @@ function makeTestSignals(
   const [
     numericValues,
     numericValueEntryIndices,
+    numericValueInRange,
     numericMinValues,
     numericMaxValues
   ] =
     params.maxNumericValues === 0 || params.maxEntries < 5
-      ? [[], [], [], []]
+      ? [[], [], 0n, [], []]
       : [
           padArray([sigEntryValue[4]], params.maxNumericValues, 0n),
           padArray([4n], params.maxNumericValues, BABY_JUB_NEGATIVE_ONE),
+          array2Bits(padArray([1n], params.maxNumericValues, 1n)),
           padArray([-10n], params.maxNumericValues, 0n),
           padArray([132n], params.maxNumericValues, 0n)
         ];
@@ -752,6 +755,7 @@ function makeTestSignals(
       ].slice(+!params.includeOwnerV4),
       numericValues,
       numericValueEntryIndices,
+      numericValueInRange,
       numericMinValues,
       numericMaxValues,
       tupleIndices,

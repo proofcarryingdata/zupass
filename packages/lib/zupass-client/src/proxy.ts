@@ -1,5 +1,5 @@
 import { ZodFunction, ZodObject, ZodRawShape, ZodSchema } from "zod";
-import { ZupassAPI } from "./api";
+import { ZupassAPI } from "./api_internal";
 import { invoke } from "./client";
 
 interface ProxyCallbackOptions {

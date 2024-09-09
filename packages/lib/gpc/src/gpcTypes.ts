@@ -2,6 +2,7 @@ import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
 import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import { Identity } from "@semaphore-protocol/identity";
 import { Groth16Proof } from "snarkjs";
+import { ClosedInterval } from "./gpcUtil";
 
 /**
  * String specifying a named entry, virtual or otherwise, in a named object, in
@@ -143,38 +144,53 @@ export type GPCProofEntryConfigCommon = {
 };
 
 /**
- * GPCProofConfig for a single non-virtual POD entry, specifying which features
- * and constraints should be enabled for that entry.
+ * Bounds check configuration for an individual entry. This specifies the bounds
+ * checks required for that entry.
  */
-export type GPCProofEntryConfig = GPCProofEntryConfigCommon & {
+export type GPCProofEntryBoundsCheckConfig = {
   /**
    * Indicates the range/interval/bounds within which this entry should
    * lie. Both (inclusive) bounds must be specified, and they should be
    * signed 64-bit integer values. They will always be revealed by virtue of
    * their inclusion in the proof configuration.
    */
-  inRange?: { min: bigint; max: bigint };
+  inRange?: ClosedInterval;
 
   /**
-   * Indicates that this entry must match the public ID of the owner identity
-   * given in {@link GPCProofInputs}. For Semaphore V3 this is the owner's
-   * Semaphore commitment (a cryptographic value), whereas for Semaphore V4 this
-   * is the owner's EdDSA public key (a PODEdDSAPublicKeyValue) that hashes to
-   * their identity commitment.
-   *
-   * Comparison in the proof circuit is based on the hash produced by
-   * {@link podValueHash}.  This means values of different types can be
-   * considered equal if they are treated in the same way by circuits.
-   *
-   * If undefined, there is no owner-related constraint on this entry.
-   *
-   * This feature cannot be combined with `equalsEntry` on the same entry (since
-   * it shares the same constraints in the circuit).  However since equality
-   * constraints can be specified in either direction, you can still constrain
-   * an owner entry by specifying it on the non-owner entry.
+   * Indicates the range/interval/bounds outside of which this entry should
+   * lie. Both (inclusive) bounds must be specified, and they should be signed
+   * 64-bit integer values. They will always be revealed by virtue of their
+   * inclusion in the proof configuration.
    */
-  isOwnerID?: IdentityProtocol;
+  notInRange?: ClosedInterval;
 };
+
+/**
+ * GPCProofConfig for a single non-virtual POD entry, specifying which features
+ * and constraints should be enabled for that entry.
+ */
+export type GPCProofEntryConfig = GPCProofEntryConfigCommon &
+  GPCProofEntryBoundsCheckConfig & {
+    /**
+     * Indicates that this entry must match the public ID of the owner identity
+     * given in {@link GPCProofInputs}. For Semaphore V3 this is the owner's
+     * Semaphore commitment (a cryptographic value), whereas for Semaphore V4 this
+     * is the owner's EdDSA public key (a PODEdDSAPublicKeyValue) that hashes to
+     * their identity commitment.
+     *
+     * Comparison in the proof circuit is based on the hash produced by
+     * {@link podValueHash}.  This means values of different types can be
+     * considered equal if they are treated in the same way by circuits.
+     *
+     * If undefined, there is no owner-related constraint on this entry.
+     *
+     * This feature cannot be combined with `equalsEntry` on the same entry (since
+     * it shares the same constraints in the circuit).  However since equality
+     * constraints can be specified in either direction, you can still constrain
+     * an owner entry by specifying it on the non-owner entry.
+     */
+    isOwnerID?: IdentityProtocol;
+  };
 
 /**
  * GPCProofConfig for a single POD object, specifying which featuers and

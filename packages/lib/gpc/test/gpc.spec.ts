@@ -411,7 +411,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     expect(isVerified).to.be.true;
   });
 
-  it("should prove and verify bounds checks", async function () {
+  it("should prove and verify within-bounds checks", async function () {
     const { isVerified } = await gpcProofTest(
       {
         pods: {
@@ -424,6 +424,31 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
                 inRange: {
                   min: 3n,
                   max: 256n
+                }
+              }
+            }
+          }
+        }
+      },
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
+    expect(isVerified).to.be.true;
+  });
+
+  it("should prove and verify out-of-bounds checks", async function () {
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          pod1: {
+            ...typicalProofConfig.pods.pod1,
+            entries: {
+              ...typicalProofConfig.pods.pod1.entries,
+              G: {
+                isRevealed: false,
+                notInRange: {
+                  min: 0n,
+                  max: 6n
                 }
               }
             }
@@ -464,8 +489,12 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         },
         pod1: {
           entries: {
-            A: { isRevealed: false, inRange: { min: 100n, max: 132n } },
-            G: { isRevealed: true, inRange: { min: POD_INT_MIN, max: 30n } },
+            A: {
+              isRevealed: false,
+              inRange: { min: 100n, max: 132n },
+              notInRange: { min: 105n, max: 110n }
+            },
+            G: { isRevealed: true, notInRange: { min: POD_INT_MIN, max: 0n } },
             K: { isRevealed: false, inRange: { min: -10n, max: 0n } },
             otherTicketID: { isRevealed: false },
             owner: { isRevealed: false, isOwnerID: SEMAPHORE_V3 }

@@ -28,6 +28,7 @@ import {
   GPCBoundConfig,
   GPCIdentifier,
   GPCProofConfig,
+  GPCProofEntryBoundsCheckConfig,
   GPCProofEntryConfig,
   GPCProofInputs,
   GPCProofObjectConfig,
@@ -39,11 +40,12 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
-  BoundsConfig,
+  ClosedInterval,
   GPCProofMembershipListConfig,
   GPCRequirements,
   LIST_MEMBERSHIP,
   LIST_NONMEMBERSHIP,
+  canonicalizeBoundsCheckConfig,
   checkPODEntryIdentifier,
   checkPODEntryName,
   isVirtualEntryIdentifier,
@@ -181,13 +183,16 @@ function checkProofObjConfig(
   let hasOwnerV4 = false;
   for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
     checkPODEntryName(entryName, true);
-    const { hasBoundsCheck, hasOwnerV3Check, hasOwnerV4Check } =
-      checkProofEntryConfig(
-        `${nameForErrorMessages}.${entryName}`,
-        entryConfig
-      );
+    const {
+      nBoundsChecks: nEntryBoundsChecks,
+      hasOwnerV3Check,
+      hasOwnerV4Check
+    } = checkProofEntryConfig(
+      `${nameForErrorMessages}.${entryName}`,
+      entryConfig
+    );
     nEntries++;
-    nBoundsChecks += +hasBoundsCheck;
+    nBoundsChecks += nEntryBoundsChecks;
     hasOwnerV3 ||= hasOwnerV3Check;
     hasOwnerV4 ||= hasOwnerV4Check;
   }
@@ -204,9 +209,9 @@ export function checkProofEntryConfig(
   nameForErrorMessages: string,
   entryConfig: GPCProofEntryConfig
 ): {
-  hasBoundsCheck: boolean;
   hasOwnerV3Check: boolean;
   hasOwnerV4Check: boolean;
+  nBoundsChecks: number;
 } {
   requireType(
     `${nameForErrorMessages}.isValueRevealed`,
@@ -235,31 +240,65 @@ export function checkProofEntryConfig(
     );
   }
 
-  const hasBoundsCheck = entryConfig.inRange !== undefined;
-
-  if (hasBoundsCheck) {
-    const inRange = entryConfig.inRange as BoundsConfig;
-    if (inRange.min < POD_INT_MIN) {
-      throw new RangeError(
-        `Minimum value of entry ${nameForErrorMessages} is less than smallest admissible value ${POD_INT_MIN}.`
-      );
-    }
-    if (inRange.max > POD_INT_MAX) {
-      throw new RangeError(
-        `Maximum value of entry ${nameForErrorMessages} is greater than largest admissible ${POD_INT_MAX}.`
-      );
-    }
-    if (inRange.max < inRange.min) {
-      throw new Error(
-        "Minimum value for entry ${nameForErrorMesages} must be less than or equal to its maximum value."
-      );
-    }
-  }
+  const nBoundsChecks = checkProofEntryBoundsCheckConfig(
+    nameForErrorMessages,
+    entryConfig
+  );
 
   const hasOwnerV3Check = entryConfig.isOwnerID === SEMAPHORE_V3;
   const hasOwnerV4Check = entryConfig.isOwnerID === SEMAPHORE_V4;
 
-  return { hasBoundsCheck, hasOwnerV3Check, hasOwnerV4Check };
+  return { hasOwnerV3Check, hasOwnerV4Check, nBoundsChecks };
+}
+
+export function checkProofEntryBoundsCheckConfig(
+  nameForErrorMessages: string,
+  entryConfig: GPCProofEntryBoundsCheckConfig
+): number {
+  // Canonicalize to simplify in cases where this is necessary.
+  const boundsCheckConfig = canonicalizeBoundsCheckConfig(
+    entryConfig.inRange,
+    entryConfig.notInRange
+  );
+  let nBoundsChecks = 0;
+
+  for (const [checkType, inRange] of [
+    ["bounds check", boundsCheckConfig.inRange],
+    ["out of bounds check", boundsCheckConfig.notInRange]
+  ] as [string, ClosedInterval][]) {
+    if (inRange !== undefined) {
+      if (inRange.min < POD_INT_MIN) {
+        throw new RangeError(
+          `Minimum value of ${checkType} for entry ${nameForErrorMessages} is less than smallest admissible value ${POD_INT_MIN}.`
+        );
+      }
+      if (inRange.max > POD_INT_MAX) {
+        throw new RangeError(
+          `Maximum value of ${checkType} for entry ${nameForErrorMessages} is greater than largest admissible ${POD_INT_MAX}.`
+        );
+      }
+      if (inRange.max < inRange.min) {
+        throw new Error(
+          "Minimum value of ${checkType} for entry ${nameForErrorMesages} must be less than or equal to its maximum value."
+        );
+      }
+      nBoundsChecks += 1;
+    }
+  }
+
+  // If `entryConfig.inRange` is contained in `entryConfig.notInRange`, there is an empty intersection.
+  if (
+    boundsCheckConfig.inRange &&
+    boundsCheckConfig.notInRange &&
+    boundsCheckConfig.inRange.min >= boundsCheckConfig.notInRange.min &&
+    boundsCheckConfig.inRange.max <= boundsCheckConfig.notInRange.max
+  ) {
+    throw new Error(
+      `Range constraints for ${nameForErrorMessages} are incompatible with each other.`
+    );
+  }
+
+  return nBoundsChecks;
 }
 
 export function checkProofTupleConfig(proofConfig: GPCProofConfig): void {
@@ -563,6 +602,21 @@ export function checkProofBoundsCheckInputsForConfig(
     if (entryValue.value > entryConfig.inRange.max) {
       throw new RangeError(
         `Entry ${entryName} is greater than its prescribed maximum value ${entryConfig.inRange.max}.`
+      );
+    }
+  }
+  if (entryConfig.notInRange !== undefined) {
+    if (entryValue.type !== "int") {
+      throw new TypeError(
+        `Proof configuration for entry ${entryName} has out of bounds check but entry value is not of type "int".`
+      );
+    }
+    if (
+      entryConfig.notInRange.min <= entryValue.value &&
+      entryValue.value <= entryConfig.notInRange.max
+    ) {
+      throw new RangeError(
+        `Entry ${entryName} does not lie outside of the interval [${entryConfig.notInRange.min},${entryConfig.notInRange.max}].`
       );
     }
   }
