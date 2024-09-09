@@ -1,5 +1,12 @@
 # passport-client
 
+## 0.0.35
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zupass-client@0.0.4
+
 ## 0.0.34
 
 ### Patch Changes
