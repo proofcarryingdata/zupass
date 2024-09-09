@@ -9,9 +9,17 @@ export const BABY_JUB_PRIME = BigInt(
 );
 
 /**
- * Encoding of -1 in a Baby Jubjub field element (as p-1).
+ * Encoding of -1 in the Baby Jubjub base field (as p-1).
  */
 export const BABY_JUB_NEGATIVE_ONE = BABY_JUB_PRIME - 1n;
+
+/**
+ * Encoding of -1 in the Baby Jubjub 251-bit prime order subgroup's scalar
+ * field (as subgroupOrder-1).
+ */
+export const BABY_JUB_SUBGROUP_ORDER_MINUS_ONE = BigInt(
+  "2736030358979909402780800718157159386076813972158567259200215660948447373040"
+);
 
 /**
  * Determines whether a given number (as decimal string) represents -1,

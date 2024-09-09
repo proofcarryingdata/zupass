@@ -363,7 +363,10 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     }
 
     if (proofInputs.owner.externalNullifier !== undefined) {
-      if (Object.keys(proofInputs.owner).length === 1) {
+      if (
+        proofInputs.owner.semaphoreV3 === undefined &&
+        proofInputs.owner.semaphoreV4 === undefined
+      ) {
         throw new Error(
           `An external nullifier cannot be specified without an accompanying identity object.`
         );
@@ -470,7 +473,7 @@ export function checkProofInputsForConfig(
           );
         }
 
-        for (const [ownerIDType, ownerCommitment] of [
+        for (const [ownerIDType, ownerID] of [
           [SEMAPHORE_V3, proofInputs.owner.semaphoreV3?.commitment],
           [
             SEMAPHORE_V4,
@@ -480,7 +483,7 @@ export function checkProofInputsForConfig(
           ]
         ]) {
           if (entryConfig.isOwnerID === ownerIDType) {
-            if (ownerCommitment === undefined) {
+            if (ownerID === undefined) {
               throw new ReferenceError(
                 `Configured owner commitment in POD references missing identity.`
               );
@@ -493,7 +496,7 @@ export function checkProofInputsForConfig(
               throw new Error(
                 "Semaphore V3 owner identity commitment must be of cryptographic type and Semaphore V4 owner identity must be of EdDSA public key type."
               );
-            } else if (podValue.value !== ownerCommitment) {
+            } else if (podValue.value !== ownerID) {
               throw new Error(
                 `Configured owner commitment in POD doesn't match given identity.`
               );

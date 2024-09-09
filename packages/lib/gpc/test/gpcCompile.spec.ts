@@ -1,6 +1,9 @@
 import { CircuitSignal } from "@pcd/gpcircuits";
 import { PODValue } from "@pcd/pod";
-import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import {
+  BABY_JUB_NEGATIVE_ONE,
+  BABY_JUB_SUBGROUP_ORDER_MINUS_ONE
+} from "@pcd/util";
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -134,7 +137,9 @@ describe("Semaphore V4 owner module compilation for proving should work", () => 
       );
       expect(circuitOwnerV4Inputs).to.deep.eq({
         ownerV4EntryIndex: paramIncludeOwnerV4 ? [BABY_JUB_NEGATIVE_ONE] : [],
-        ownerSemaphoreV4SecretScalar: paramIncludeOwnerV4 ? [0n] : [],
+        ownerSemaphoreV4SecretScalar: paramIncludeOwnerV4
+          ? [BABY_JUB_SUBGROUP_ORDER_MINUS_ONE]
+          : [],
         ownerV4IsNullifierHashRevealed: paramIncludeOwnerV4 ? [0n] : []
       });
     }

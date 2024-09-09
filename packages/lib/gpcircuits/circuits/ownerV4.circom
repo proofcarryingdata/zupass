@@ -31,7 +31,8 @@ template OwnerModuleSemaphoreV4 () {
     // verified.
     signal input secretScalar;
 
-    // Owner's identity commitment (public key hash) to be verified.
+    // Owner's identity commitment (hash of a Baby Jubjub EdDSA public
+    // key viewed as a PODEdDSAPublicKeyValue) to be verified.
     signal input identityCommitment;
 
     // First step of check that `secretScalar` does not exceed the

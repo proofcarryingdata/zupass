@@ -88,7 +88,7 @@ template ProtoPODGPC (
             signatureR8x <== objectSignatureR8x[objectIndex],
             signatureR8y <== objectSignatureR8y[objectIndex],
             signatureS <== objectSignatureS[objectIndex]
-                       );
+        );
     }
 
     // TODO(POD-P3): Provide a way to (optionally?) ensure objects are unique
@@ -183,7 +183,7 @@ template ProtoPODGPC (
             proofDepth <== entryProofDepth[entryIndex],
             proofIndex <== entryProofIndex[entryIndex],
             proofSiblings <== entryProofSiblings[entryIndex]
-                                                                             );
+        );
     }
 
     // Items which scale with the number of total entries (real and virtual).
@@ -193,7 +193,7 @@ template ProtoPODGPC (
             valueHash <== totalEntryValueHashes[entryIndex],
             entryValueHashes <== totalEntryValueHashes,
             equalToOtherEntryByIndex <== entryEqualToOtherEntryByIndex[entryIndex]
-                                                                 );
+        );
     }
 
     /*
@@ -230,7 +230,7 @@ template ProtoPODGPC (
             identityCommitmentHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, ownerV3IsEnabled[i] * ownerV3EntryIndex[i]),
             externalNullifier <== ownerExternalNullifier,
             isNullifierHashRevealed <== ownerV3IsNullifierHashRevealed[i]
-                                                                   );
+        );
     }
     /*
      * <=1 OwnerModuleV4 with its inputs & outputs.
@@ -258,10 +258,10 @@ template ProtoPODGPC (
             identityCommitment <== InputSelector(MAX_ENTRIES)(
                 entryValueHashes,
                 ownerV4IsEnabled[i] * ownerV4EntryIndex[i]
-                                                              ),
+            ),
             externalNullifier <== ownerExternalNullifier,
             isNullifierHashRevealed <== ownerV4IsNullifierHashRevealed[i]
-                                                                     );
+        );
     }
     
     /*
@@ -289,12 +289,12 @@ template ProtoPODGPC (
             // Disable value hash check if index is -1.
             NOT()(
                 IsZero()(numericValueEntryIndices[i] + 1)
-                  ),
+            ),
             numericValues[i],
             MaybeInputSelector(MAX_ENTRIES)(
                 entryValueHashes,
                 numericValueEntryIndices[i]
-                                            ),
+            ),
             numericMinValues[i],
             numericMaxValues[i]);
     }

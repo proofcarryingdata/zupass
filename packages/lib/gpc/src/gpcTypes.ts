@@ -157,8 +157,10 @@ export type GPCProofEntryConfig = GPCProofEntryConfigCommon & {
 
   /**
    * Indicates that this entry must match the public ID of the owner identity
-   * given in {@link GPCProofInputs}. For Semaphore V3 and V4 this is the
-   * owner's Semaphore commitment (a cryptographic value).
+   * given in {@link GPCProofInputs}. For Semaphore V3 this is the owner's
+   * Semaphore commitment (a cryptographic value), whereas for Semaphore V4 this
+   * is the owner's EdDSA public key (a PODEdDSAPublicKeyValue) that hashes to
+   * their identity commitment.
    *
    * Comparison in the proof circuit is based on the hash produced by
    * {@link podValueHash}.  This means values of different types can be

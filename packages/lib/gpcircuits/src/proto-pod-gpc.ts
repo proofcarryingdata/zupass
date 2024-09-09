@@ -40,7 +40,7 @@ export type ProtoPODGPCInputs = {
   // External nullifier for owner modules (if any)
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
 
-  // Owner module (0-1)
+  // Owner V3 module (0-1)
   /*PUB*/ ownerV3EntryIndex: CircuitSignal /*INCLUDE_OWNERV3*/[];
   ownerSemaphoreV3IdentityNullifier: CircuitSignal /*INCLUDE_OWNERV3*/[];
   ownerSemaphoreV3IdentityTrapdoor: CircuitSignal /*INCLUDE_OWNERV3*/[];

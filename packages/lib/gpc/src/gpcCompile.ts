@@ -24,7 +24,10 @@ import {
   podNameHash,
   podValueHash
 } from "@pcd/pod";
-import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import {
+  BABY_JUB_NEGATIVE_ONE,
+  BABY_JUB_SUBGROUP_ORDER_MINUS_ONE
+} from "@pcd/util";
 import _ from "lodash";
 import {
   GPCBoundConfig,
@@ -774,9 +777,10 @@ function compileProofEntryConstraints(
   };
 } {
   // Deal with equality comparision and POD ownership, which share circuitry.
-  const firstOwnerIndex = Object.fromEntries(
-    [SEMAPHORE_V3, SEMAPHORE_V4].map((idType) => [idType, undefined])
-  ) as Record<IdentityProtocol, number | undefined>;
+  const firstOwnerIndex = {
+    [SEMAPHORE_V3]: undefined,
+    [SEMAPHORE_V4]: undefined
+  } as Record<IdentityProtocol, number | undefined>;
   const entryEqualToOtherEntryByIndex: bigint[] = [];
   const virtualEntryEqualToOtherEntryByIndex: bigint[] = [];
 
@@ -915,7 +919,7 @@ export function compileProofOwnerV4(
       ownerSemaphoreV4SecretScalar: [
         hasOwner && ownerInput?.semaphoreV4?.secretScalar !== undefined
           ? ownerInput.semaphoreV4.secretScalar
-          : 0n
+          : BABY_JUB_SUBGROUP_ORDER_MINUS_ONE
       ],
       ownerV4IsNullifierHashRevealed: [
         ownerInput?.externalNullifier !== undefined ? 1n : 0n

@@ -6,7 +6,10 @@ import {
   decodePublicKey,
   decodeSignature
 } from "@pcd/pod";
-import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import {
+  BABY_JUB_NEGATIVE_ONE,
+  BABY_JUB_SUBGROUP_ORDER_MINUS_ONE
+} from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import _ from "lodash";
@@ -740,7 +743,9 @@ function makeTestSignals(
         hasOwnerV4 ? sigOwnerV4EntryIndex : BABY_JUB_NEGATIVE_ONE
       ].slice(+!params.includeOwnerV4),
       ownerSemaphoreV4SecretScalar: [
-        hasOwnerV4 ? ownerIdentityV4.secretScalar : 0n
+        hasOwnerV4
+          ? ownerIdentityV4.secretScalar
+          : BABY_JUB_SUBGROUP_ORDER_MINUS_ONE
       ].slice(+!params.includeOwnerV4),
       ownerV4IsNullifierHashRevealed: [
         isV4NullifierHashRevealed ? 1n : 0n
