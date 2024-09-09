@@ -1,6 +1,7 @@
 import { User, requestLogToServer } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import {
+  IdentityV3,
   IdentityV4,
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
@@ -134,8 +135,8 @@ export function getInitialAppStateValidationErrors(
  */
 export function getRunningAppStateValidationErrors(
   self: User | undefined,
-  identity: Identity | undefined,
-  identityV4: IdentityV4 | undefined,
+  identityV3FromState: IdentityV3 | undefined,
+  identityV4FromState: IdentityV4 | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
 ): string[] {
@@ -144,13 +145,12 @@ export function getRunningAppStateValidationErrors(
 
   // Find identity PCD in the standard way, using a known commitment.
   let identityPCDFromCollection: SemaphoreIdentityPCD | undefined = undefined;
-
   if (self && pcds) {
     identityPCDFromCollection = findUserIdentityPCD(pcds, self);
-  } else if (identity && pcds) {
+  } else if (identityV3FromState && pcds) {
     identityPCDFromCollection = findIdentityPCD(
       pcds,
-      identity.commitment.toString()
+      identityV3FromState.commitment.toString()
     );
   }
 
@@ -181,32 +181,30 @@ export function getRunningAppStateValidationErrors(
     return errors;
   }
 
-  if (!identity) {
-    errors.push("missing 'identity'");
+  if (!identityV3FromState) {
+    errors.push("missing v3 identity");
   }
 
-  const identityFromPCDCollection =
+  if (!identityV4FromState) {
+    errors.push("missing v4 identity");
+  }
+
+  const identityV3FromPCDCollection =
     identityPCDFromCollection?.claim?.identityV3;
-  const commitmentOfIdentityPCDInCollection =
-    identityFromPCDCollection?.commitment?.toString();
-  const commitmentFromSelfField = self?.commitment;
-  const commitmentFromIdentityField = identity?.commitment?.toString();
+  const v3CommitmentOfIdentityPCDInCollection =
+    identityV3FromPCDCollection?.commitment?.toString();
+  const v3CommitmentFromSelfField = self?.commitment;
+  const v3CommitmentFromIdentityField =
+    identityV3FromState?.commitment?.toString();
 
-  const commitmentOfIdentityV4PCDInCollection =
-    identityPCDFromCollection?.claim.identityV4?.commitment?.toString();
-  const commitmentV4FromSelfField = self?.semaphore_v4_commitment;
-  const commitmentV4FromIdentityField = identityV4?.commitment?.toString();
-  const publicKeyV4FromSelfField = self?.semaphore_v4_pubkey;
-  const publicKeyV4FromIdentityField = identityV4 && v4PublicKey(identityV4);
-
-  if (commitmentFromSelfField === undefined) {
+  if (v3CommitmentFromSelfField === undefined) {
     errors.push(`'self' missing a v3 commitment`);
   }
 
   if (
-    commitmentFromSelfField === undefined ||
-    commitmentOfIdentityPCDInCollection === undefined ||
-    commitmentFromIdentityField === undefined
+    !v3CommitmentFromSelfField ||
+    !v3CommitmentOfIdentityPCDInCollection ||
+    !v3CommitmentFromIdentityField
   ) {
     // these cases are validated earlier in this function
   } else {
@@ -214,75 +212,107 @@ export function getRunningAppStateValidationErrors(
     // places that the user's commitment exists match - in the self, the
     // identity, and in the pcd collection
 
-    if (commitmentOfIdentityPCDInCollection !== commitmentFromSelfField) {
+    if (v3CommitmentOfIdentityPCDInCollection !== v3CommitmentFromSelfField) {
       errors.push(
-        `commitment of identity pcd in collection (${commitmentOfIdentityPCDInCollection})` +
-          ` does not match commitment in 'self' field of app state (${commitmentFromSelfField})`
+        `commitment of identity pcd in collection (${v3CommitmentOfIdentityPCDInCollection})` +
+          ` does not match commitment in 'self' field of app state (${v3CommitmentFromSelfField})`
       );
     }
-    if (commitmentFromSelfField !== commitmentFromIdentityField) {
+    if (v3CommitmentFromSelfField !== v3CommitmentFromIdentityField) {
       errors.push(
-        `commitment in 'self' field of app state (${commitmentFromSelfField})` +
-          ` does not match commitment of 'identity' field of app state (${commitmentFromIdentityField})`
+        `commitment in 'self' field of app state (${v3CommitmentFromSelfField})` +
+          ` does not match commitment of 'identity' field of app state (${v3CommitmentFromIdentityField})`
       );
     }
 
-    if (commitmentFromIdentityField !== commitmentOfIdentityPCDInCollection) {
-      errors.push(
-        `commitment of 'identity' field of app state (${commitmentFromIdentityField})` +
-          ` does not match commitment of identity pcd in collection (${commitmentOfIdentityPCDInCollection})`
-      );
-    }
-  }
-
-  if (identity && identityV4) {
-    if (v3tov4Identity(identity).export() !== identityV4.export()) {
-      errors.push(
-        `v4 identity does not match derivation of v4 identity from v3 identity as implemented by v3tov4Identity`
-      );
-    }
-  }
-
-  if (
-    commitmentV4FromSelfField === undefined ||
-    commitmentV4FromSelfField === null ||
-    commitmentOfIdentityV4PCDInCollection === undefined ||
-    commitmentOfIdentityV4PCDInCollection === null ||
-    commitmentV4FromIdentityField === undefined ||
-    commitmentV4FromIdentityField === null
-  ) {
-    // these cases are validated earlier in this function
-  } else {
-    // in 'else' block we check that the commitments from all three
-    // places that the user's commitment exists match - in the self, the
-    // identity, and in the pcd collection
-
-    if (commitmentOfIdentityV4PCDInCollection !== commitmentV4FromSelfField) {
-      errors.push(
-        `commitment of identity v4 pcd in collection (${commitmentOfIdentityV4PCDInCollection})` +
-          ` does not match commitment in 'self' field of app state (${commitmentV4FromSelfField})`
-      );
-    }
-    if (commitmentV4FromSelfField !== commitmentV4FromIdentityField) {
-      errors.push(
-        `v4 commitment in 'self' field of app state (${commitmentV4FromSelfField})` +
-          ` does not match commitment of 'identityV4' field of app state (${commitmentV4FromIdentityField})`
-      );
-    }
     if (
-      commitmentV4FromIdentityField !== commitmentOfIdentityV4PCDInCollection
+      v3CommitmentFromIdentityField !== v3CommitmentOfIdentityPCDInCollection
     ) {
       errors.push(
-        `commitment of 'identityV4' field of app state (${commitmentV4FromIdentityField})` +
-          ` does not match commitment of identity v4 pcd in collection (${commitmentOfIdentityV4PCDInCollection})`
+        `commitment of 'identity' field of app state (${v3CommitmentFromIdentityField})` +
+          ` does not match commitment of identity pcd in collection (${v3CommitmentOfIdentityPCDInCollection})`
       );
     }
-    if (publicKeyV4FromSelfField !== publicKeyV4FromIdentityField) {
+  }
+
+  const v4CommitmentFromPCDCollection =
+    identityPCDFromCollection?.claim.identityV4?.commitment?.toString();
+  const v4CommitmentFromSelfField = self?.semaphore_v4_commitment;
+  const v4CommitmentFromIdentityField =
+    identityV4FromState?.commitment?.toString();
+
+  const v4PublicKeyFromSelfField = self?.semaphore_v4_pubkey;
+  const v4PublicKeyFromIdentityField =
+    identityV4FromState && v4PublicKey(identityV4FromState);
+  const v4PublicKeyFromPCDCollection =
+    identityPCDFromCollection &&
+    v4PublicKey(identityPCDFromCollection.claim.identityV4);
+
+  if (identityV3FromState && identityV4FromState) {
+    if (
+      v3tov4Identity(identityV3FromState).export() !==
+      identityV4FromState.export()
+    ) {
       errors.push(
-        `public key in 'self' field of app state (${publicKeyV4FromSelfField})` +
-          ` does not match public key of 'identityV4' field of app state (${publicKeyV4FromIdentityField})`
+        `v4 identity does not match derivation of v4 identity from v3 identity as implemented by 'v3tov4Identity'`
       );
     }
+  }
+
+  if (identityV4FromState && identityPCDFromCollection) {
+    if (
+      identityV4FromState.export() !==
+      identityPCDFromCollection.claim.identityV4.export()
+    ) {
+      errors.push(
+        `v4 identity in app state does not match v4 identity in pcd collection`
+      );
+    }
+  }
+
+  // either we are missing v4 commitment from `self`
+  if (!v4CommitmentFromSelfField && !!v4PublicKeyFromSelfField) {
+    errors.push(
+      "missing 'semaphore_v4_commitment' from 'self'. either both 'semaphore_v4_commitment' and 'semaphore_v4_pubkey' must be present, or neither must be present."
+    );
+  }
+  // or we are missing v4 public key from `self`
+  else if (!!v4CommitmentFromSelfField && !v4PublicKeyFromSelfField) {
+    errors.push(
+      "missing 'semaphore_v4_pubkey' from 'self'. either both 'semaphore_v4_commitment' and 'semaphore_v4_pubkey' must be present, or neither must be present."
+    );
+  }
+  // or both v4 public key and v4 commitment are present in `self`
+  else if (v4CommitmentFromSelfField && v4PublicKeyFromSelfField) {
+    if (v4CommitmentFromSelfField !== v4CommitmentFromIdentityField) {
+      errors.push(
+        `v4 commitment in self (${v4CommitmentFromSelfField})` +
+          ` does not match v4 commitment of v4 identity in app state (${v4CommitmentFromIdentityField})`
+      );
+    }
+
+    if (v4CommitmentFromSelfField !== v4CommitmentFromPCDCollection) {
+      errors.push(
+        `v4 commitment in self (${v4CommitmentFromSelfField})` +
+          ` does not match v4 commitment of identity in pcd collection (${v4CommitmentFromPCDCollection})`
+      );
+    }
+
+    if (v4PublicKeyFromSelfField !== v4PublicKeyFromIdentityField) {
+      errors.push(
+        `v4 public key in self (${v4PublicKeyFromSelfField})` +
+          ` does not match v4 public key of identity in app state (${v4PublicKeyFromIdentityField})`
+      );
+    }
+
+    if (v4PublicKeyFromSelfField !== v4PublicKeyFromPCDCollection) {
+      errors.push(
+        `v4 public key in self (${v4PublicKeyFromSelfField})` +
+          ` does not match v4 public key of identity in pcd collection (${v4PublicKeyFromIdentityField})`
+      );
+    }
+  } else {
+    // or we are missing both, which is fine
   }
 
   return errors;

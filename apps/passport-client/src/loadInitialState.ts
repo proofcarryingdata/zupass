@@ -31,7 +31,7 @@ export async function loadInitialState(): Promise<AppState> {
     saveIdentity(identityV3);
   }
 
-  let self = loadSelf();
+  const self = loadSelf();
 
   const pcds = await loadPCDs(self);
 
@@ -95,13 +95,17 @@ export async function loadInitialState(): Promise<AppState> {
           new PCDCollection(await getPackages(), [identityPCD])
         )
       );
+
+      // after the upgrade, we need to reload the user to ensure that the
+      // v4 identity details are reflected in the user object.
       const newSelfResponse = await requestUser(
         appConfig.zupassServer,
         self.uuid
       );
+
       if (newSelfResponse.success) {
-        self = newSelfResponse.value;
-        saveSelf(self);
+        state.self = newSelfResponse.value;
+        saveSelf(newSelfResponse.value);
       } else {
         // proceed to the next step anyway, since we don't have any other option
       }
