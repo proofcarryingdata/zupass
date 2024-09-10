@@ -12,6 +12,7 @@ describe("EdDSA attested email should work", function () {
     "0001020304050607080900010203040506070809000102030405060708090001";
   const emailAddress = "user@test.com";
   const semaphoreId = "12345";
+  const semaphoreV4Id = "78910";
   const otherEmail = "someuser@example.com";
   const otherSemaphoreID = "42";
   const stableId = "attested-email-" + otherEmail;
@@ -24,6 +25,10 @@ describe("EdDSA attested email should work", function () {
       },
       semaphoreId: {
         value: semaphoreId,
+        argumentType: ArgumentTypeName.String
+      },
+      semaphoreV4Id: {
+        value: semaphoreV4Id,
         argumentType: ArgumentTypeName.String
       },
       privateKey: {
@@ -40,6 +45,7 @@ describe("EdDSA attested email should work", function () {
   it("should reflect prove args", async function () {
     expect(emailPCD.claim.emailAddress).to.eq(emailAddress);
     expect(emailPCD.claim.semaphoreId).to.eq(semaphoreId);
+    expect(emailPCD.claim.semaphoreV4Id).to.eq(semaphoreV4Id);
     expect(emailPCD.id).to.not.be.empty;
   });
 
@@ -61,6 +67,10 @@ describe("EdDSA attested email should work", function () {
       },
       semaphoreId: {
         value: otherSemaphoreID,
+        argumentType: ArgumentTypeName.String
+      },
+      semaphoreV4Id: {
+        value: semaphoreV4Id,
         argumentType: ArgumentTypeName.String
       },
       privateKey: {
@@ -90,6 +100,10 @@ describe("EdDSA attested email should work", function () {
       },
       semaphoreId: {
         value: otherSemaphoreID,
+        argumentType: ArgumentTypeName.String
+      },
+      semaphoreV4Id: {
+        value: semaphoreV4Id,
         argumentType: ArgumentTypeName.String
       },
       privateKey: {

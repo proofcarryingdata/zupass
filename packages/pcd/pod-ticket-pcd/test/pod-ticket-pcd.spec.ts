@@ -26,6 +26,7 @@ describe("PODTicketPCD should work", function () {
       timestampConsumed: Date.now(),
       timestampSigned: Date.now(),
       attendeeSemaphoreId: "12345",
+      attendeeSemaphoreV4Id: "12345",
       isConsumed: false,
       isRevoked: false,
       ticketCategory: TicketCategory.Devconnect

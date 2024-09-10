@@ -4,6 +4,7 @@ import {
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
 import { v5 as uuidv5 } from "uuid";
 import { logger } from "../../../../util/logger";
 import { traced } from "../../../telemetryService";
@@ -13,7 +14,7 @@ export function summarizeEventAndProductIds(
   ticketRows: string[][]
 ): string {
   const tickets = ticketRows
-    .map((r) => rowToTicket(r, "", pipelineId))
+    .map((r) => csvRowToEdDSATicketData(r, "", pipelineId))
     .filter((t) => !!t) as ITicketData[];
 
   const summary: Record<string, { eventId: string; productId: string }> = {};
@@ -28,7 +29,7 @@ export function summarizeEventAndProductIds(
   return JSON.stringify(summary, null, 2);
 }
 
-export function rowToTicket(
+export function csvRowToEdDSATicketData(
   row: string[],
   attendeeSemaphoreId: string,
   pipelineId: string
@@ -80,6 +81,58 @@ export function rowToTicket(
   }
 }
 
+export function csvRowToPODTicketData(
+  row: string[],
+  attendeeSemaphoreId: string,
+  attendeeSemaphoreV4Id: string,
+  pipelineId: string
+): IPODTicketData | undefined {
+  try {
+    const eventName: string = row[0];
+    const ticketName: string = row[1];
+    const attendeeName: string = row[2];
+    const attendeeEmail: string = row[3];
+    const imageUrl: string = row[4];
+    const id: string = row[5] ?? "";
+
+    const eventId: string = uuidv5(`${eventName}-${ticketName}`, pipelineId);
+    const productId: string = uuidv5(`product-${eventId}`, pipelineId);
+    const ticketId: string = uuidv5(
+      `${eventId}-${productId}-${attendeeEmail}-${id}`,
+      pipelineId
+    );
+
+    return {
+      eventName,
+      ticketName,
+      checkerEmail: undefined, // changes if checkin feature enabled for csv pipelines
+      imageUrl,
+      imageAltText: undefined,
+      ticketId, // The ticket ID is a unique identifier of the ticket.
+      eventId, // The event ID uniquely identifies an event.
+      productId, // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
+      timestampConsumed: 0, // change if checkin feature enabled for csv pipelines
+      timestampSigned: Date.now(),
+      attendeeSemaphoreId,
+      ticketSecret: undefined,
+      attendeeSemaphoreV4Id,
+      isConsumed: false, // changes if checkin feature enabled for csv pipelines
+      isRevoked: false,
+      ticketCategory: TicketCategory.Generic,
+      attendeeName,
+      attendeeEmail
+    } satisfies IPODTicketData;
+  } catch (e) {
+    logger(
+      `rowToTicket`,
+      `failed to convert csv ticket row to ticket data`,
+      row,
+      e
+    );
+    return undefined;
+  }
+}
+
 export async function makeTicketPCD(
   inputRow: string[],
   eddsaPrivateKey: string,
@@ -93,7 +146,11 @@ export async function makeTicketPCD(
       return undefined;
     }
 
-    const ticket = rowToTicket(inputRow, requesterSemaphoreId, pipelineId);
+    const ticket = csvRowToEdDSATicketData(
+      inputRow,
+      requesterSemaphoreId,
+      pipelineId
+    );
 
     if (!ticket) {
       return undefined;

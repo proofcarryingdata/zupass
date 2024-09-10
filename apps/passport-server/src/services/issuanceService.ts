@@ -600,6 +600,10 @@ export class IssuanceService {
             semaphoreId: {
               value: user.commitment,
               argumentType: ArgumentTypeName.String
+            },
+            semaphoreV4Id: {
+              value: user.semaphore_v4_commitment ?? undefined,
+              argumentType: ArgumentTypeName.String
             }
           });
         })

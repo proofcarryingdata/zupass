@@ -8,8 +8,10 @@ export type EmailPCDArgs = {
   privateKey: StringArgument;
   // the verified email address
   emailAddress: StringArgument;
-  // semaphore ID
+  // semaphore v3 ID
   semaphoreId: StringArgument;
+  // semaphore v4 ID
+  semaphoreV4Id: StringArgument;
   // A unique string identifying the PCD
   id: StringArgument;
 };
@@ -17,6 +19,8 @@ export type EmailPCDArgs = {
 export interface EmailPCDClaim {
   emailAddress: string;
   semaphoreId: string; // stringified big int
+  // stringified big int. optional because a user does not have their v4 ID until they migrate
+  semaphoreV4Id?: string;
 }
 
 export interface EmailPCDProof {

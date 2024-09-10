@@ -187,6 +187,7 @@ function cleanUpDeprecatedStorage(): void {
     window?.localStorage?.removeItem("offline_tickets");
     window?.localStorage?.removeItem("checked_in_offline_devconnect_tickets");
     window?.localStorage?.removeItem("credential-cache-multi");
+    window?.localStorage?.removeItem("credential-cache-multi-email");
   } catch (e) {
     console.error("Error cleaning up deprecated storage", e);
   }

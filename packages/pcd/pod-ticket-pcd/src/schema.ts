@@ -13,12 +13,30 @@ export const TicketDataSchema = z.object({
   productId: z.string().uuid(),
   timestampConsumed: z.number().int().nonnegative(),
   timestampSigned: z.number().int().nonnegative(),
-  attendeeSemaphoreId: z.string().refine(canBeBigInt).transform(cryptographic),
+  /**
+   * V3 semaphore commitment.
+   * Optional, used only by legacy v3 tickets.
+   */
+  attendeeSemaphoreId: z
+    .string()
+    .refine(canBeBigInt)
+    .optional()
+    // important that the transform comes last, otherwise
+    // `dataToPodEntries` will not work
+    .transform(cryptographic),
+  attendeeSemaphoreV4Id: z
+    .string()
+    .refine(canBeBigInt)
+    .optional()
+    // important that the transform comes last, otherwise
+    // `dataToPodEntries` will not work
+    .transform(cryptographic),
   isConsumed: z.boolean(),
   isRevoked: z.boolean(),
   ticketCategory: z.nativeEnum(TicketCategory),
   attendeeName: z.string(),
-  attendeeEmail: z.string()
+  attendeeEmail: z.string(),
+  ticketSecret: z.string().optional()
 });
 
 export type IPODTicketData = z.infer<typeof TicketDataSchema>;

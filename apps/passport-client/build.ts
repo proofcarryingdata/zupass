@@ -58,13 +58,6 @@ const define = {
         )
       }
     : {}),
-  ...(process.env.SHOW_POD_TICKET_PCDS !== undefined
-    ? {
-        "process.env.SHOW_POD_TICKET_PCDS": JSON.stringify(
-          process.env.SHOW_POD_TICKET_PCDS
-        )
-      }
-    : {}),
   ...(process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined
     ? {
         "process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE": JSON.stringify(

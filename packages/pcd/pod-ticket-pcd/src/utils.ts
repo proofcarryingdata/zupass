@@ -12,7 +12,7 @@ type PotentialBigInt = string | number | bigint | boolean;
  * A no-op "transform" which we can use to flag that a data type ought to be
  * treated as a POD "cryptographic" value.
  */
-export function cryptographic<T extends PotentialBigInt>(a: T): T {
+export function cryptographic<T extends PotentialBigInt>(a?: T): T | undefined {
   return a;
 }
 
