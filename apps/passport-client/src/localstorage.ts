@@ -14,14 +14,7 @@ const COLLECTION_KEY = "pcd_collection";
 
 export async function savePCDs(pcds: PCDCollection): Promise<void> {
   if (
-    !validateAndLogRunningAppState(
-      "savePCDs",
-      undefined,
-      undefined,
-      undefined,
-      pcds,
-      true
-    )
+    !validateAndLogRunningAppState("savePCDs", undefined, undefined, pcds, true)
   ) {
     console.error(
       "PCD Collection failed to validate - not writing it to localstorage"
@@ -54,7 +47,6 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
   if (
     !validateAndLogRunningAppState(
       "loadPCDs",
-      undefined,
       undefined,
       undefined,
       collection,

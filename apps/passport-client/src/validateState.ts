@@ -2,7 +2,6 @@ import { User, requestLogToServer } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import {
   IdentityV3,
-  IdentityV4,
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
   v4PublicKey
@@ -41,7 +40,6 @@ export function validateAndLogRunningAppState(
   tag: string,
   self: User | undefined,
   identity: Identity | undefined,
-  identityV4: IdentityV4 | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
 ): boolean {

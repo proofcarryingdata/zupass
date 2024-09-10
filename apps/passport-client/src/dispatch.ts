@@ -543,7 +543,6 @@ async function finishAccountCreation(
       "finishAccountCreation",
       user,
       state.identityV3,
-      v3tov4Identity(state.identityV3),
       state.pcds
     )
   ) {
@@ -582,7 +581,6 @@ async function finishAccountCreation(
   const uploadResult = await uploadStorage(
     user,
     state.identityV3,
-    v3tov4Identity(state.identityV3),
     state.pcds,
     state.subscriptions,
     undefined // knownRevision
@@ -788,7 +786,6 @@ async function loadAfterLogin(
       "loadAfterLogin",
       userResponse.value,
       identityPCD?.claim?.identityV3,
-      identityPCD?.claim?.identityV4,
       pcds
     )
   ) {
@@ -1018,7 +1015,6 @@ async function doSync(
       state.serverStorageHash,
       state.self,
       state.identityV3,
-      v3tov4Identity(state.identityV3),
       state.pcds,
       state.subscriptions
     );
@@ -1141,7 +1137,6 @@ async function doSync(
     const upRes = await uploadSerializedStorage(
       state.self,
       state.identityV3,
-      v3tov4Identity(state.identityV3),
       state.pcds,
       appStorage.serializedStorage,
       appStorage.storageHash,

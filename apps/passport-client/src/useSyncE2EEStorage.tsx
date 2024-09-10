@@ -16,7 +16,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
-import { IdentityV3, IdentityV4 } from "@pcd/semaphore-identity-pcd";
+import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";
@@ -116,7 +116,6 @@ export type UploadStorageResult = APIResult<
 export async function uploadStorage(
   user: User,
   userIdentityV3: IdentityV3,
-  userIdentityV4: IdentityV4,
   pcds: PCDCollection,
   subscriptions: FeedSubscriptionManager,
   knownRevision?: string
@@ -129,7 +128,6 @@ export async function uploadStorage(
   return uploadSerializedStorage(
     user,
     userIdentityV3,
-    userIdentityV4,
     pcds,
     serializedStorage,
     storageHash,
@@ -152,7 +150,6 @@ export async function uploadStorage(
 export async function uploadSerializedStorage(
   user: User,
   userIdentityV3: IdentityV3,
-  userIdentityV4: IdentityV4,
   pcds: PCDCollection,
   serializedStorage: SyncedEncryptedStorage,
   storageHash: string,
@@ -164,7 +161,6 @@ export async function uploadSerializedStorage(
       "uploadSerializedStorage",
       user,
       userIdentityV3,
-      userIdentityV4,
       pcds
     )
   ) {
@@ -407,7 +403,6 @@ export async function downloadAndMergeStorage(
   knownServerHash: string | undefined,
   appSelf: User,
   appIdentityV3: IdentityV3,
-  appIdentityV4: IdentityV4,
   appPCDs: PCDCollection,
   appSubscriptions: FeedSubscriptionManager
 ): Promise<SyncStorageResult> {
@@ -439,7 +434,6 @@ export async function downloadAndMergeStorage(
   const downloaded = await tryDeserializeNewStorage(
     appSelf,
     appIdentityV3,
-    appIdentityV4,
     storageResult.value.storage
   );
   if (downloaded === undefined) {
@@ -515,7 +509,6 @@ export async function downloadAndMergeStorage(
 export async function tryDeserializeNewStorage(
   appSelf: User,
   appIdentityV3: IdentityV3,
-  appIdentityV4: IdentityV4,
   storage: SyncedEncryptedStorage
 ): Promise<
   | undefined
@@ -536,7 +529,6 @@ export async function tryDeserializeNewStorage(
         "downloadStorage",
         appSelf,
         appIdentityV3,
-        appIdentityV4,
         pcds
       )
     ) {
