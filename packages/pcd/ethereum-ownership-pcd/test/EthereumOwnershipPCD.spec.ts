@@ -25,12 +25,12 @@ describe("Ethereum ownership PCD", function () {
   it("should work", async function () {
     const wallet = ethers.Wallet.createRandom();
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identityV3: new Identity()
     });
     const serializedIdentity =
       await SemaphoreIdentityPCDPackage.serialize(identity);
     const signatureOfIdentityCommitment = await wallet.signMessage(
-      identity.claim.identity.commitment.toString()
+      identity.claim.identityV3.commitment.toString()
     );
 
     const ethereumPCD = await EthereumOwnershipPCDPackage.prove({
@@ -60,12 +60,12 @@ describe("Ethereum ownership PCD", function () {
   it("should not be able create a PCD from an invalid signature", async function () {
     const wallet = ethers.Wallet.createRandom();
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identityV3: new Identity()
     });
     const serializedIdentity =
       await SemaphoreIdentityPCDPackage.serialize(identity);
     const signatureOfIdentityCommitment = await wallet.signMessage(
-      identity.claim.identity.commitment.toString()
+      identity.claim.identityV3.commitment.toString()
     );
     const mangledSignature =
       signatureOfIdentityCommitment.substring(
@@ -95,14 +95,14 @@ describe("Ethereum ownership PCD", function () {
   it("should not be able create a PCD where identity does not match identity pcd", async function () {
     const wallet = ethers.Wallet.createRandom();
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identityV3: new Identity()
     });
     const signatureOfIdentityCommitment = await wallet.signMessage(
-      identity.claim.identity.commitment.toString()
+      identity.claim.identityV3.commitment.toString()
     );
 
     const identity2 = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identityV3: new Identity()
     });
     const serializedIdentity2 =
       await SemaphoreIdentityPCDPackage.serialize(identity2);
@@ -131,12 +131,12 @@ describe("Ethereum ownership PCD", function () {
   it("should not be able verify a PCD whose Ethereum address was tampered with", async function () {
     const wallet = ethers.Wallet.createRandom();
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identityV3: new Identity()
     });
     const serializedIdentity =
       await SemaphoreIdentityPCDPackage.serialize(identity);
     const signatureOfIdentityCommitment = await wallet.signMessage(
-      identity.claim.identity.commitment.toString()
+      identity.claim.identityV3.commitment.toString()
     );
 
     const pcd = await EthereumOwnershipPCDPackage.prove({

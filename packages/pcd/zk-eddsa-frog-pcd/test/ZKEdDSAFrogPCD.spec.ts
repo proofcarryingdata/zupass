@@ -71,7 +71,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
     identity: Identity
   ): Promise<SerializedPCD<SemaphoreIdentityPCD>> {
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-      identity: identity
+      identityV3: identity
     });
 
     return await SemaphoreIdentityPCDPackage.serialize(identityPCD);
