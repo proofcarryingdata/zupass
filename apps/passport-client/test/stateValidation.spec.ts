@@ -51,7 +51,7 @@ describe("validateAppState", async function () {
     '["0x8526e030dbd593833f24bf73b60f0bcc58690c590b9953acc741f2eb71394d",' +
       '"0x520e4ae6f5d5e4526dd517e61defe16f90bd4aef72b41394285e77463e0c69"]'
   );
-  const _v4id2 = v3tov4Identity(identity2);
+  const v4id2 = v3tov4Identity(identity2);
   const commitment2 = identity2.commitment;
   const identity3 = new Identity(
     '["0x4837c6f88904d1dfefcb7dc6486e95c06cda6eb76d76a9888167c0993e40f0",' +
@@ -411,6 +411,94 @@ describe("validateAppState", async function () {
       userUUID: self.uuid,
       errors: [
         "missing 'semaphore_v4_pubkey' from 'self'. either both 'semaphore_v4_commitment' and 'semaphore_v4_pubkey' must be present, or neither must be present."
+      ],
+      ...TAG
+    } satisfies ErrorReport);
+  });
+
+  it("logged in ; mismatched v4 commitment post-migration ; errors", async function () {
+    const self: ZupassUserJson = {
+      commitment: identity1.commitment.toString(),
+      semaphore_v4_commitment: v4id2.commitment.toString(), // this one is wrong
+      semaphore_v4_pubkey: v4PublicKey(v4id1),
+      emails: [randomEmail()],
+      salt: saltAndEncryptionKey.salt,
+      terms_agreed: 1,
+      uuid: uuid()
+    };
+    const pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identityV3: identity1
+      })
+    );
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: [
+        `v4 commitment in self (${
+          self.semaphore_v4_commitment
+        }) does not match v4 commitment of identity in pcd collection (${v4id1.commitment.toString()})`
+      ],
+      ...TAG
+    } satisfies ErrorReport);
+  });
+
+  it("logged in ; mismatched v4 public key post-migration ; errors", async function () {
+    const self: ZupassUserJson = {
+      commitment: identity1.commitment.toString(),
+      semaphore_v4_commitment: v4id1.commitment.toString(), // this one is wrong
+      semaphore_v4_pubkey: v4PublicKey(v4id2),
+      emails: [randomEmail()],
+      salt: saltAndEncryptionKey.salt,
+      terms_agreed: 1,
+      uuid: uuid()
+    };
+    const pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identityV3: identity1
+      })
+    );
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: [
+        `v4 public key in self (${
+          self.semaphore_v4_pubkey
+        }) does not match v4 public key of identity in pcd collection (${v4PublicKey(
+          v4id1
+        )})`
+      ],
+      ...TAG
+    } satisfies ErrorReport);
+  });
+
+  it("logged in ; mismatched v4 public key AND commitmentpost-migration ; errors", async function () {
+    const self: ZupassUserJson = {
+      commitment: identity1.commitment.toString(),
+      semaphore_v4_commitment: v4id2.commitment.toString(), // this one is wrong
+      semaphore_v4_pubkey: v4PublicKey(v4id2), // this one is ALSO wrong
+      emails: [randomEmail()],
+      salt: saltAndEncryptionKey.salt,
+      terms_agreed: 1,
+      uuid: uuid()
+    };
+    const pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identityV3: identity1
+      })
+    );
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: [
+        `v4 commitment in self (${
+          self.semaphore_v4_commitment
+        }) does not match v4 commitment of identity in pcd collection (${v4id1.commitment.toString()})`,
+        `v4 public key in self (${
+          self.semaphore_v4_pubkey
+        }) does not match v4 public key of identity in pcd collection (${v4PublicKey(
+          v4id1
+        )})`
       ],
       ...TAG
     } satisfies ErrorReport);
