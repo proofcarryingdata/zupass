@@ -54,7 +54,8 @@ export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
     id,
     {
       emailAddress: args.emailAddress.value,
-      semaphoreId: args.semaphoreId.value
+      semaphoreId: args.semaphoreId.value,
+      semaphoreV4Id: args.semaphoreV4Id.value
     },
     { eddsaPCD }
   );

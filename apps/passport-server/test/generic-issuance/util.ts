@@ -27,7 +27,10 @@ import {
   PODTicketPCDPackage,
   PODTicketPCDTypeName
 } from "@pcd/pod-ticket-pcd";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityPCDPackage,
+  v3tov4Identity
+} from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -288,7 +291,8 @@ export async function signCredentialPayload(
 export async function proveEmailPCD(
   email: string,
   zupassEddsaPrivateKey: string,
-  identity: Identity
+  identity: Identity,
+  includeV4Id: boolean = false
 ): Promise<EmailPCD> {
   return EmailPCDPackage.prove({
     privateKey: {
@@ -305,6 +309,12 @@ export async function proveEmailPCD(
     },
     semaphoreId: {
       value: identity.commitment.toString(),
+      argumentType: ArgumentTypeName.String
+    },
+    semaphoreV4Id: {
+      value: includeV4Id
+        ? v3tov4Identity(identity).commitment.toString()
+        : undefined,
       argumentType: ArgumentTypeName.String
     }
   });
