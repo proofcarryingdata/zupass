@@ -59,6 +59,7 @@ export interface SignedEmail {
   signer: EdDSAPublicKey;
   email: string;
   semaphoreId: string;
+  semaphoreV4Id?: string;
 }
 
 /**
@@ -152,7 +153,8 @@ export async function verifyCredential(
         return {
           email: emailPCD.claim.emailAddress,
           signer: emailPCD.proof.eddsaPCD.claim.publicKey,
-          semaphoreId: emailPCD.claim.semaphoreId
+          semaphoreId: emailPCD.claim.semaphoreId,
+          semaphoreV4Id: emailPCD.claim.semaphoreV4Id
         } satisfies SignedEmail;
       })
     );
