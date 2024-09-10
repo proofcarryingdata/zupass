@@ -52,7 +52,7 @@ export const appConfig: AppConfig = {
   rollbarToken: process.env.ROLLBAR_TOKEN,
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
   strichLicenseKey: process.env.STRICH_LICENSE_KEY,
-  showPODTicketPCDs: process.env.SHOW_POD_TICKET_PCDS === "true"
+  showPODTicketPCDs: true //process.env.SHOW_POD_TICKET_PCDS === "true"
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));
