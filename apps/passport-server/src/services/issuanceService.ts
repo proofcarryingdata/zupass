@@ -171,6 +171,11 @@ export class IssuanceService {
                 throw new Error(`Missing credential`);
               }
               const verifiedCredential = await this.verifyCredential(req.pcd);
+              const user = await this.checkUserExists(verifiedCredential);
+              if (user) {
+                verifiedCredential.semaphoreV4Id =
+                  user.semaphore_v4_commitment ?? undefined;
+              }
               const pcds = await this.issueEmailPCDs(verifiedCredential);
 
               // Clear out the folder

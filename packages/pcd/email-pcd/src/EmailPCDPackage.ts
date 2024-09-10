@@ -96,7 +96,8 @@ export async function serialize(
       id: pcd.id,
       eddsaPCD: serializedEdDSAPCD,
       emailAddress: pcd.claim.emailAddress,
-      semaphoreId: pcd.claim.semaphoreId
+      semaphoreId: pcd.claim.semaphoreId,
+      semaphoreV4Id: pcd.claim.semaphoreV4Id
     })
   } as SerializedPCD<EmailPCD>;
 }
@@ -110,7 +111,8 @@ export async function deserialize(serialized: string): Promise<EmailPCD> {
     deserializedWrapper.id,
     {
       emailAddress: deserializedWrapper.emailAddress,
-      semaphoreId: deserializedWrapper.semaphoreId
+      semaphoreId: deserializedWrapper.semaphoreId,
+      semaphoreV4Id: deserializedWrapper.semaphoreV4Id
     },
     { eddsaPCD: deserializedEdDSAPCD }
   );

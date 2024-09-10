@@ -12,7 +12,9 @@ function EmailCardBody({ pcd }: { pcd: EmailPCD }): JSX.Element {
   return (
     <Container>
       <EmailInfo>
-        <span>{emailAddress}</span>
+        <span>{emailAddress}</span> <br />
+        <span>Semaphore ID: {pcd.claim.semaphoreId}</span> <br />
+        <span>Semaphore V4 ID: {pcd.claim.semaphoreV4Id}</span>
       </EmailInfo>
     </Container>
   );
