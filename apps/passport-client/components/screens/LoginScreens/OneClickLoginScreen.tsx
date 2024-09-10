@@ -10,7 +10,7 @@ import { ScreenLoader } from "../../shared/ScreenLoader";
  * - `code` is the pretix or lemonade order code
  * - `email` is the email address of the ticket to whom the ticket was issued
  * - `targetFolder` is the folder to redirect to after login. optional.
- * example: http://localhost:3000/one-click-login/ivan@0xparc.org/123456/0xPARC%2520Summer%2520'24
+ * example: http://localhost:3000/#/one-click-login/ivan@0xparc.org/123456/0xPARC%2520Summer%2520'24
  */
 export function OneClickLoginScreen(): JSX.Element | null {
   const dispatch = useDispatch();

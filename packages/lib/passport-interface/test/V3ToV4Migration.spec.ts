@@ -42,7 +42,7 @@ describe("V3ToV4Migration", async function () {
   it("V3ToV4Migration request should verify", async function () {
     const identityV3 = new IdentityV3();
     const id = new SemaphoreIdentityPCD(randomUUID(), {
-      identity: identityV3,
+      identityV3: identityV3,
       identityV4: v3tov4Identity(identityV3)
     });
     const rightPCDs = new PCDCollection([SemaphoreIdentityPCDPackage], [id]);
@@ -54,7 +54,7 @@ describe("V3ToV4Migration", async function () {
     );
     const verified = await verifyAddV4CommitmentRequestPCD(migrationPCD);
     expect(verified).to.deep.eq({
-      v3Commitment: id.claim.identity.commitment.toString(),
+      v3Commitment: id.claim.identityV3.commitment.toString(),
       v4PublicKey: v4PublicKey(id.claim.identityV4),
       v4Commitment: id.claim.identityV4.commitment.toString()
     } satisfies V4MigrationVerification);
@@ -63,7 +63,7 @@ describe("V3ToV4Migration", async function () {
   it("V3ToV4Migration wrong v3 identity should not verify", async function () {
     const identityV3 = new IdentityV3();
     const identityPCD = new SemaphoreIdentityPCD(randomUUID(), {
-      identity: identityV3,
+      identityV3: identityV3,
       identityV4: v3tov4Identity(identityV3)
     });
 
@@ -109,7 +109,7 @@ describe("V3ToV4Migration", async function () {
   it("V3ToV4Migration wrong pod type should not verify", async function () {
     const identityV3 = new IdentityV3();
     const identityPCD = new SemaphoreIdentityPCD(randomUUID(), {
-      identity: identityV3,
+      identityV3: identityV3,
       identityV4: v3tov4Identity(identityV3)
     });
 
@@ -119,7 +119,7 @@ describe("V3ToV4Migration", async function () {
         value: {
           mySemaphoreV3Commitment: {
             type: "cryptographic",
-            value: identityPCD.claim.identity.commitment
+            value: identityPCD.claim.identityV3.commitment
           },
           pod_type: {
             type: "string",
@@ -161,7 +161,7 @@ describe("V3ToV4Migration", async function () {
     expect(serializedV3Identity).to.eq(parsedV3Identity.toString());
 
     const v3Id = new SemaphoreIdentityPCD(uuid, {
-      identity: parsedV3Identity,
+      identityV3: parsedV3Identity,
       identityV4: v3tov4Identity(parsedV3Identity)
     });
 
