@@ -140,8 +140,6 @@ describe("validateAppState", async function () {
   it("logged in ; pre semaphore v4 migration ; no errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
-      semaphore_v4_commitment: v4id1.commitment.toString(),
-      semaphore_v4_pubkey: v4PublicKey(v4id1),
       emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
@@ -368,10 +366,10 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; pre semaphore v4 migration ; no errors", async function () {
+  it("logged in ; partially applied semaphore v4 migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
-      semaphore_v4_commitment: v4id1.commitment.toString(),
+      // semaphore_v4_commitment: v4id1.commitment.toString(), - missing
       semaphore_v4_pubkey: v4PublicKey(v4id1),
       emails: [randomEmail()],
       salt: saltAndEncryptionKey.salt,
@@ -386,7 +384,34 @@ describe("validateAppState", async function () {
     );
     expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
-      errors: [],
+      errors: [
+        "missing 'semaphore_v4_commitment' from 'self'. either both 'semaphore_v4_commitment' and 'semaphore_v4_pubkey' must be present, or neither must be present."
+      ],
+      ...TAG
+    } satisfies ErrorReport);
+  });
+
+  it("logged in ; partially applied semaphore v4 migration ; errors", async function () {
+    const self: ZupassUserJson = {
+      commitment: identity1.commitment.toString(),
+      semaphore_v4_commitment: v4id1.commitment.toString(),
+      // semaphore_v4_pubkey: v4PublicKey(v4id1), - missing
+      emails: [randomEmail()],
+      salt: saltAndEncryptionKey.salt,
+      terms_agreed: 1,
+      uuid: uuid()
+    };
+    const pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identityV3: identity1
+      })
+    );
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: [
+        "missing 'semaphore_v4_pubkey' from 'self'. either both 'semaphore_v4_commitment' and 'semaphore_v4_pubkey' must be present, or neither must be present."
+      ],
       ...TAG
     } satisfies ErrorReport);
   });
