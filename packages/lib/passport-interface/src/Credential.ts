@@ -52,6 +52,7 @@ export interface CredentialPayload {
 export interface VerifiedCredential {
   emails?: SignedEmail[];
   semaphoreId: string;
+  semaphoreV4Id?: string;
   authKey?: string;
 }
 
@@ -159,10 +160,14 @@ export async function verifyCredential(
       })
     );
 
+    const semaphoreV4Id = signedEmails.find((e) => e.semaphoreV4Id)
+      ?.semaphoreV4Id;
+
     // Everything passes, return the verified credential with email claims
     return {
       emails: signedEmails,
-      semaphoreId: pcd.claim.identityCommitment
+      semaphoreId: pcd.claim.identityCommitment,
+      semaphoreV4Id
     };
   } else {
     // Return a verified credential, without email claims since no EmailPCD

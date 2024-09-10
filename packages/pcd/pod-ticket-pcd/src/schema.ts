@@ -13,12 +13,20 @@ export const TicketDataSchema = z.object({
   productId: z.string().uuid(),
   timestampConsumed: z.number().int().nonnegative(),
   timestampSigned: z.number().int().nonnegative(),
+  /**
+   * V3 semaphore commitment.
+   */
   attendeeSemaphoreId: z.string().refine(canBeBigInt).transform(cryptographic),
+  attendeeSemaphoreV4Id: z
+    .string()
+    .refine(canBeBigInt)
+    .transform(cryptographic),
   isConsumed: z.boolean(),
   isRevoked: z.boolean(),
   ticketCategory: z.nativeEnum(TicketCategory),
   attendeeName: z.string(),
-  attendeeEmail: z.string()
+  attendeeEmail: z.string(),
+  ticketSecret: z.string().optional()
 });
 
 export type IPODTicketData = z.infer<typeof TicketDataSchema>;
