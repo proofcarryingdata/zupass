@@ -137,7 +137,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; no errors", async function () {
+  it("logged in ; pre semaphore v4 migration ; no errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       semaphore_v4_commitment: v4id1.commitment.toString(),
@@ -190,7 +190,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; empty pcd collection ; errors", async function () {
+  it("logged in ; empty pcd collection ; pre semaphore v4 migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       emails: [randomEmail()],
@@ -209,7 +209,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; missing pcd collection ; errors", async function () {
+  it("logged in ; missing pcd collection ; pre semaphore v4 migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       emails: [randomEmail()],
@@ -229,7 +229,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; missing identity ; errors", async function () {
+  it("logged in ; missing identity ; pre semaphore v4 migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       emails: [randomEmail()],
@@ -253,7 +253,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; self missing commitment ; errors", async function () {
+  it("logged in ; self missing commitment ; pre semaphore v4 migration ; errors", async function () {
     const self: ZupassUserJson = {
       // Missing commitment field
       emails: [randomEmail()],
@@ -274,7 +274,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; self commitment wrong ; errors", async function () {
+  it("logged in ; self commitment wrong ; pre semaphore v4 migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity2.commitment.toString(),
       emails: [randomEmail()],
@@ -298,7 +298,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; pcd collection identity wrong ; errors", async function () {
+  it("logged in ; pcd collection identity wrong ; pre semaphore v4 migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       emails: [randomEmail()],
@@ -323,7 +323,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; appState identity wrong ; errors", async function () {
+  it("logged in ; appState identity wrong ; pre semaphore v4 migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       emails: [randomEmail()],
@@ -348,7 +348,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; all identities mistmatched ; errors", async function () {
+  it("logged in ; all identities mistmatched ; pre semaphore v4 migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       emails: [randomEmail()],
