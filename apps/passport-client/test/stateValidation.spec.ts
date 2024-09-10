@@ -1,7 +1,3 @@
-// todo:
-// - check that everywhere a v3 identity is present, a v4 identity should also be present
-// - check thatv4 identity is derived from v3 identity
-
 import { EdDSAPCD, EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { PCDCrypto } from "@pcd/passport-crypto";
 import { ZupassUserJson } from "@pcd/passport-interface";
