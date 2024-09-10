@@ -5,6 +5,13 @@ import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
+/**
+ * format: http://localhost:3000/#/one-click-login/:email/:code/:targetFolder
+ * - `code` is the pretix or lemonade order code
+ * - `email` is the email address of the ticket to whom the ticket was issued
+ * - `targetFolder` is the folder to redirect to after login. optional.
+ * example: http://localhost:3000/one-click-login/ivan@0xparc.org/123456/0xPARC%2520Summer%2520'24
+ */
 export function OneClickLoginScreen(): JSX.Element | null {
   const dispatch = useDispatch();
   const { email, code, targetFolder } = useParams();
