@@ -141,6 +141,8 @@ export function initAccountRoutes(
     const { salt, encryptionKey, autoRegister } =
       req.body as CreateNewUserRequest as CreateNewUserRequest;
     const token = checkBody<CreateNewUserRequest, "token">(req, "token");
+    // we only need the v4 pubkey because the commitment is deriveable from it
+    // using the function `v4PublicKeyToCommitment`
     const semaphore_v4_pubkey = checkBody<
       CreateNewUserRequest,
       "semaphore_v4_pubkey"

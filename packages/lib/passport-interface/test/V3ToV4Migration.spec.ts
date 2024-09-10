@@ -12,7 +12,6 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { randomUUID } from "@pcd/util";
-
 import { expect } from "chai";
 import "mocha";
 import * as path from "path";
@@ -73,7 +72,7 @@ describe("V3ToV4Migration", async function () {
         value: {
           mySemaphoreV3Commitment: {
             type: "cryptographic",
-            value: 1n // this is the wrong bit, it should be the v3 commitment
+            value: 1n // this is the problem this test is catching; it should be the v3 commitment
           },
           pod_type: {
             type: "string",

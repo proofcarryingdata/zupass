@@ -630,7 +630,10 @@ export type CreateNewUserRequest = {
  * Asks the Zupass server to add a user's semaphore v4 commitment to their existing account.
  */
 export type UpgradeUserWithV4CommitmentRequest = {
-  // semaphore v3 signature of semaphore v4 signature of v3 commitment
+  /**
+   * semaphore v3 signature of semaphore v4 signature (i.e. a POD) of v3 commitment
+   * created by `makeUpgradeUserWithV4CommitmentRequest`
+   */
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
 };
 
@@ -639,7 +642,13 @@ export type UpgradeUserWithV4CommitmentResponseValue = undefined;
 export type OneClickLoginRequest = {
   email: string;
   code: string;
+  /**
+   * Semaphore v3 commitment.
+   */
   commitment: string;
+  /**
+   * We don't need the v4 commitment here as it is deriveable from the v4 pubkey.
+   */
   semaphore_v4_pubkey: string;
   encryptionKey: string;
 };

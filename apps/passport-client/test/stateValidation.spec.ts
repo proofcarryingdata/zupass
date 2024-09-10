@@ -53,17 +53,10 @@ describe("validateAppState", async function () {
     '["0x4837c6f88904d1dfefcb7dc6486e95c06cda6eb76d76a9888167c0993e40f0",' +
       '"0x956f9e03b0cc324045d24f9b20531e547272fab8e8ee2f96c0cf2e50311468"]'
   );
-  const _v4id3 = v3tov4Identity(identity3);
 
   it("logged out ; no errors", async function () {
     expect(
-      validateRunningAppState(
-        TAG_STR,
-        undefined,
-        undefined,
-        undefined,
-        undefined
-      )
+      validateRunningAppState(TAG_STR, undefined, undefined, undefined)
     ).to.deep.eq({
       errors: [],
       userUUID: undefined,
@@ -387,7 +380,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; partially applied semaphore v4 migration ; errors", async function () {
+  it("logged in ; another partially applied semaphore v4 migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       semaphore_v4_commitment: v4id1.commitment.toString(),
@@ -439,7 +432,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; mismatched v4 public key post-migration ; errors", async function () {
+  it("logged in ; another mismatched v4 public key post-migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       semaphore_v4_commitment: v4id1.commitment.toString(), // this one is wrong

@@ -260,7 +260,8 @@ export function getRunningAppStateValidationErrors(
       );
     }
   } else {
-    // or we are missing both, which is fine
+    // or we are missing both, which is fine, because this is the state that all users
+    // who logged in prior to the v4 migration will be in.
   }
 
   return errors;

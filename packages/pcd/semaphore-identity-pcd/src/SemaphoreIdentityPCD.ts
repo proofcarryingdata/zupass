@@ -1,6 +1,5 @@
 import { PCD } from "@pcd/pcd-types";
-import { Identity as IdentityV4 } from "@semaphore-protocol/core";
-import { IdentityV3 } from "./forwardedTypes";
+import { IdentityV3, IdentityV4 } from "./forwardedTypes";
 import { v3tov4Identity } from "./v4IdentityUtils";
 
 export const SemaphoreIdentityPCDTypeName = "semaphore-identity-pcd";

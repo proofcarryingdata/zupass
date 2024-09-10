@@ -13,6 +13,10 @@ export type GetState = () => AppState;
 export type StateEmitter = Emitter<AppState>;
 
 export interface AppState {
+  /**
+   * Semaphore v3 identity. A v4 identity can be derived from this value using
+   * the function `v3tov4Identity`.
+   */
   identityV3: IdentityV3;
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;
