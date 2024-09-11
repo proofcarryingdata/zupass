@@ -4838,10 +4838,10 @@
     json-bigint "^1.0.0"
     poseidon-lite "^0.2.0"
 
-"@pcd/proto-pod-gpc-artifacts@0.6.0":
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.6.0.tgz#84ea113de362bcdf6a17def3ead5a72f6e7a8eac"
-  integrity sha512-jt5Igg/G1JCUHILOKlTJzJ7ZwITay5oblG5smQoWv66WYJ8xSwhV7xWvx+Cu+yQ7R/+Q0WwsK5kCoFQwAqGryg==
+"@pcd/proto-pod-gpc-artifacts@0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.7.0.tgz#82baaf7742ca4d2f5d1c85fe735558bd11c058bd"
+  integrity sha512-u4k7VvRu8214ypMM8TLnKjGlSo8X3/Lk3v44iT27krdivrGVk4KPBPRQZ9pDI6bZ9gQrxFfW81i5BM7lJAIuzg==
 
 "@pcd/tsconfig@0.11.1":
   version "0.11.1"
