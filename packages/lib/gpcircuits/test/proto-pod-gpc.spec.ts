@@ -12,7 +12,7 @@ import { WitnessTester } from "circomkit";
 import _ from "lodash";
 import "mocha";
 import path from "path";
-import { poseidon2 } from "poseidon-lite";
+import { poseidon1, poseidon2 } from "poseidon-lite";
 import {
   CircuitArtifactPaths,
   CircuitSignal,
@@ -234,7 +234,7 @@ const sampleInput: ProtoPODGPCInputs = {
   ],
 
   // Virtual entry module.
-  virtualEntryIsValueHashRevealed: 5n,
+  virtualEntryIsValueHashRevealed: 38n,
 
   // Entry constraint modules.
   /*PUB*/ entryEqualToOtherEntryByIndex: [
@@ -248,9 +248,12 @@ const sampleInput: ProtoPODGPCInputs = {
     7n,
     3n,
     3n,
+    10n,
+    15n,
     12n,
-    11n,
-    12n
+    13n,
+    14n,
+    15n
   ],
 
   // Owner module (1)
@@ -278,7 +281,7 @@ const sampleInput: ProtoPODGPCInputs = {
   /*PUB*/ tupleIndices: [[0n, 3n, 4n, 0n]],
 
   // List membership module (1)
-  /*PUB*/ listComparisonValueIndex: [13n, 2n],
+  /*PUB*/ listComparisonValueIndex: [16n, 2n],
   /*PUB*/ listContainsComparisonValue: 1n,
   /*PUB*/ listValidValues: [
     [
@@ -348,7 +351,10 @@ const sampleOutput: ProtoPODGPCOutputs = {
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
   ],
   virtualEntryRevealedValueHash: [
+    21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     8093821485214269328389004542394237209037452657522929891144731833981969398000n,
+    15753760259932082996092161797051962795070962513663244554172857040414575368353n,
+    21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     8093821485214269328389004542394237209037452657522929891144731833981969398000n
   ],
@@ -416,7 +422,7 @@ function makeTestSignals(
   }
 
   // Fill in ObjectModule inputs.
-  const sigObjectContentID = [];
+  const sigObjectContentID: bigint[] = [];
   const sigObjectSignerPubkeyAx: CircuitSignal[] = [];
   const sigObjectSignerPubkeyAy: CircuitSignal[] = [];
   const sigObjectSignatureR8x = [];
@@ -500,17 +506,23 @@ function makeTestSignals(
     );
   }
 
-  // Virtual entry hash is arbitrarily revealed for even-numbered virtual
-  // entries, which amounts to even-numbered objects.
+  // Virtual entry hash is arbitrarily revealed according to the pattern
+  // [0n,1n,1n,0n,0n,1n,...], which amounts to revealing the signer's public key
+  // for the even objects and the content ID for the odd ones.
   const maxVirtualEntries = paramMaxVirtualEntries(params);
-  const sigVirtualEntryIsValueHashRevealed = sigObjectSignatureS.map((_, i) =>
-    BigInt(1 - (i % 2))
+  const sigVirtualEntryIsValueHashRevealed = sigObjectContentID.flatMap(
+    (_, i) => (i % 2 === 0 ? [0n, 1n] : [1n, 0n])
   );
   const sigVirtualEntryRevealedValueHash =
     sigVirtualEntryIsValueHashRevealed.map((indicator, i) =>
       indicator === 0n
         ? BABY_JUB_NEGATIVE_ONE
-        : poseidon2([sigObjectSignerPubkeyAx[i], sigObjectSignerPubkeyAy[i]])
+        : i % 2 === 0
+        ? poseidon1([sigObjectContentID[i / 2]])
+        : poseidon2([
+            sigObjectSignerPubkeyAx[(i - 1) / 2],
+            sigObjectSignerPubkeyAy[(i - 1) / 2]
+          ])
     );
 
   // Constrain the 0th POD's signer's public key to equal the 2nd one's (if
@@ -518,8 +530,8 @@ function makeTestSignals(
   const sigVirtualEntryEqualToOtherEntryByIndex = Array(maxVirtualEntries)
     .fill(0)
     .map((_, i) =>
-      i === 0 && params.maxObjects > 2
-        ? BigInt(params.maxEntries + 2)
+      i === 1 && params.maxObjects > 2
+        ? BigInt(params.maxEntries + 5)
         : BigInt(params.maxEntries + i)
     );
 

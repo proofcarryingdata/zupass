@@ -54,7 +54,8 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
               isRevealed: true,
               ...(includeList ? { isNotMemberOf: "inadmissibleTickets" } : {})
             }
-          }
+          },
+          contentID: { isRevealed: true }
         }
       },
       ...(includeTuple
@@ -91,6 +92,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     const expectedRevealedClaims: GPCRevealedClaims = {
       pods: {
         somePodName: {
+          contentID: pod2.contentID,
           entries: { ticketID: { type: "cryptographic", value: 999n } },
           signerPublicKey: pod2.signerPublicKey
         }
@@ -250,6 +252,33 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
   });
 
   it("should prove and verify checking equality non-virtual to virtual", async function () {
+    // Entry = content ID
+    {
+      const pod2 = POD.sign(
+        { otherPODID: { type: "cryptographic", value: pod1.contentID } },
+        privateKey
+      );
+      const { isVerified } = await gpcProofTest(
+        {
+          pods: {
+            ...typicalProofConfig.pods,
+            pod2: {
+              entries: {
+                otherPODID: {
+                  isRevealed: false,
+                  equalsEntry: "pod1.$contentID"
+                }
+              },
+              signerPublicKey: { isRevealed: false }
+            }
+          }
+        },
+        { ...typicalProofInputs, pods: { pod1, pod2 } },
+        expectedRevealedClaimsForTypicalCase
+      );
+      expect(isVerified).to.be.true;
+    }
+    // Entry = signer's public key
     const { isVerified } = await gpcProofTest(
       {
         pods: {
@@ -272,6 +301,38 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
   });
 
   it("should prove and verify checking equality virtual to non-virtual", async function () {
+    // Content ID = entry
+    {
+      const pod2 = POD.sign(
+        { otherPODID: { type: "cryptographic", value: pod1.contentID } },
+        privateKey
+      );
+      const { isVerified } = await gpcProofTest(
+        {
+          pods: {
+            pod1: {
+              ...typicalProofConfig.pods.pod1,
+              contentID: {
+                isRevealed: false,
+                equalsEntry: "pod2.otherPODID"
+              }
+            },
+            pod2: {
+              entries: {
+                otherPODID: {
+                  isRevealed: false
+                }
+              },
+              signerPublicKey: { isRevealed: false }
+            }
+          }
+        },
+        { ...typicalProofInputs, pods: { pod1, pod2 } },
+        expectedRevealedClaimsForTypicalCase
+      );
+      expect(isVerified).to.be.true;
+    }
+    // Signer's public key = entry
     const { isVerified } = await gpcProofTest(
       {
         pods: {
@@ -297,6 +358,31 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
   });
 
   it("should prove and verify checking equality virtual to virtual", async function () {
+    // Content ID = content ID
+    {
+      const { isVerified } = await gpcProofTest(
+        {
+          pods: {
+            pod1: {
+              ...typicalProofConfig.pods.pod1
+            },
+            pod2: {
+              entries: {
+                A: {
+                  isRevealed: false
+                }
+              },
+              contentID: { isRevealed: false, equalsEntry: "pod1.$contentID" },
+              signerPublicKey: { isRevealed: false }
+            }
+          }
+        },
+        { ...typicalProofInputs, pods: { pod1, pod2: pod1 } },
+        expectedRevealedClaimsForTypicalCase
+      );
+      expect(isVerified).to.be.true;
+    }
+    // Signer's public key = signer's public key
     const pod2 = POD.sign(sampleEntries2, privateKey);
     const { isVerified } = await gpcProofTest(
       {
@@ -315,6 +401,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       expectedRevealedClaimsForTypicalCase
     );
     expect(isVerified).to.be.true;
+    // TODO(POD-P∞): Invert Poseidon hash function.
   });
 
   it("should prove and verify within-bounds checks", async function () {
@@ -1127,8 +1214,10 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         ...revealedClaims,
         pods: {
           somePodName: {
-            entries: { ticketID: { type: "cryptographic", value: 111111n } },
-            signerPublicKey: revealedClaims.pods.somePodName.signerPublicKey
+            ...revealedClaims.pods.somePodName,
+            entries: {
+              ticketID: { type: "cryptographic", value: 111111n }
+            }
           }
         }
       },

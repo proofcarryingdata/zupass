@@ -298,7 +298,7 @@ export function arrayToProtoPODGPCCircuitParam(
 export function paramMaxVirtualEntries(
   params: ProtoPODGPCCircuitParams
 ): number {
-  return params.maxObjects;
+  return 2 * params.maxObjects;
 }
 
 /**
@@ -343,7 +343,7 @@ export class ProtoPODGPC {
     const outputs = ProtoPODGPC.outputsFromPublicSignals(
       intPublicSignals,
       inputs.entryNameHash.length,
-      inputs.objectSignatureS.length
+      2 * inputs.objectContentID.length
     );
     return { proof, outputs, publicSignals: intPublicSignals };
   }
@@ -603,5 +603,5 @@ export class ProtoPODGPC {
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.6.0";
+  public static ARTIFACTS_NPM_VERSION = "0.7.0";
 }

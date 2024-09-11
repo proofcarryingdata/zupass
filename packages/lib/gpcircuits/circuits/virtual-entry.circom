@@ -5,7 +5,9 @@ include "circomlib/circuits/poseidon.circom";
 include "gpc-util.circom";
 
 /**
- * Module deriving virtual entry data from PODs' cryptographic data.
+ * Module deriving virtual entry data from PODs' cryptographic
+ * data. At the moment, virtual entries are objects' content IDs and
+ * signers' public keys.
  * 
  * This module's functionality is always enabled.
  */
@@ -13,25 +15,31 @@ template VirtualEntryModule (
     // Max number of PODs from which we derive virtual entries
     MAX_OBJECTS
 ) {
-    // Number of virtual entries. Currently coincides with the number
-    // of objects.
-    var MAX_VIRTUAL_ENTRIES = MAX_OBJECTS;
+    // Number of virtual entries.
+    var MAX_VIRTUAL_ENTRIES = 2 * MAX_OBJECTS;
     
     // Boolean flags for virtual entry behaviour.
     signal input isValueHashRevealed /*MAX_VIRTUAL_ENTRIES packed bits*/;
-
+    
     // Signals forming virtual entries.
+    signal input objectContentID[MAX_OBJECTS];
     signal input objectSignerPubkeyAx[MAX_OBJECTS];
     signal input objectSignerPubkeyAy[MAX_OBJECTS];
 
-    // Virtual entry value hashes deduced from cryptographic data. At
-    // the moment, this consists of hashed object signers' public
-    // keys.
+    // Virtual entry value hashes deduced from cryptographic data.
     signal output valueHashes[MAX_VIRTUAL_ENTRIES];
-    
+
     for (var i = 0; i < MAX_OBJECTS; i++) {
-        valueHashes[i]
-            <== Poseidon(2)([objectSignerPubkeyAx[i], objectSignerPubkeyAy[i]]);
+            valueHashes[2*i]
+                <== Poseidon(1)([objectContentID[i]]);
+            
+            valueHashes[2*i + 1]
+                <== Poseidon(2)(
+                    [
+                        objectSignerPubkeyAx[i],
+                        objectSignerPubkeyAy[i]
+                     ]
+                                );
     }
     
     signal isValueHashRevealedBits[MAX_VIRTUAL_ENTRIES]

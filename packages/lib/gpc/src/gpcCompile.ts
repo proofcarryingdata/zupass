@@ -11,7 +11,8 @@ import {
   extendedSignalArray,
   hashTuple,
   padArray,
-  paramMaxVirtualEntries
+  paramMaxVirtualEntries,
+  zipLists
 } from "@pcd/gpcircuits";
 import {
   POD,
@@ -123,7 +124,7 @@ function prepCompilerMaps<
   const entryMap = new Map();
   let objIndex = 0;
   let entryIndex = 0;
-  const signerPubKeyEntryIndexOffset = circuitDesc.maxEntries;
+  const virtualEntryIndexOffset = circuitDesc.maxEntries;
   const objNameOrder = Object.keys(config.pods).sort();
   for (const objName of objNameOrder) {
     const objConfig = config.pods[objName];
@@ -137,17 +138,25 @@ function prepCompilerMaps<
     objMap.set(objName, { objConfig, objInput, objIndex });
 
     // Add virtual entries even if they are not explicitly specified in the
-    // config. Unless specified otherwise, they are revealed.
-    //
-    // TODO(POD-P3): Modify for other virtual entry types when they are available.
+    // config. By default, signers' public keys are revealed and POD content IDs
+    // are not.
+    entryMap.set(`${objName}.$contentID`, {
+      objName,
+      objIndex,
+      objConfig,
+      objInput,
+      entryName: "$contentID",
+      entryIndex: virtualEntryIndexOffset + 2 * objIndex,
+      entryConfig: objConfig.contentID ?? {}
+    });
     entryMap.set(`${objName}.$signerPublicKey`, {
       objName,
       objIndex,
       objConfig,
       objInput,
       entryName: "$signerPublicKey",
-      entryIndex: signerPubKeyEntryIndexOffset + objIndex,
-      entryConfig: { isRevealed: objConfig.signerPublicKey?.isRevealed ?? true }
+      entryIndex: virtualEntryIndexOffset + 2 * objIndex + 1,
+      entryConfig: objConfig.signerPublicKey ?? {}
     });
 
     const entryNameOrder = Object.keys(objConfig.entries).sort();
@@ -700,22 +709,34 @@ function compileProofVirtualEntry<
   virtualEntryIsValueHashRevealed: CircuitSignal;
 } {
   const objNames = Array.from(objMap.keys());
-  const unpaddedVirtualEntryIsValueHashRevealed = objNames.map((objName) => {
+  const unpaddedContentIDIsValueHashRevealed = objNames.map((objName) => {
+    const entryInfo = entryMap.get(`${objName}.$contentID`);
+    if (entryInfo === undefined) {
+      throw new Error(`Entry ${objName}.$contentID is missing from entry map.`);
+    }
+    const isContentIDRevealed = entryInfo.entryConfig.isRevealed ?? false;
+    return BigInt(+isContentIDRevealed);
+  });
+
+  const unpaddedSignerPublicKeyIsValueHashRevealed = objNames.map((objName) => {
     const entryInfo = entryMap.get(`${objName}.$signerPublicKey`);
     if (entryInfo === undefined) {
       throw new Error(
         `Entry ${objName}.$signerPublicKey is missing from entry map.`
       );
     }
-    const isPublicKeyRevealed = entryInfo.entryConfig.isRevealed;
+    const isPublicKeyRevealed = entryInfo.entryConfig.isRevealed ?? true;
     return BigInt(+isPublicKeyRevealed);
   });
 
   return {
     virtualEntryIsValueHashRevealed: array2Bits(
       padArray(
-        unpaddedVirtualEntryIsValueHashRevealed,
-        circuitDesc.maxObjects,
+        zipLists([
+          unpaddedContentIDIsValueHashRevealed,
+          unpaddedSignerPublicKeyIsValueHashRevealed
+        ]).flat(),
+        2 * circuitDesc.maxObjects,
         0n
       )
     )
@@ -1119,7 +1140,18 @@ function compileVerifyVirtualEntry(
 } {
   const objNames = Array.from(objMap.keys());
 
-  const unpaddedVirtualEntryRevealedValueHash = objNames.map((objName) => {
+  const unpaddedContentIDRevealedValueHash = objNames.map((objName) => {
+    const entryInfo = entryMap.get(`${objName}.$contentID`);
+    if (entryInfo === undefined) {
+      throw new Error(`Entry ${objName}.$contentID is missing from entry map.`);
+    }
+    const maybeContentID = entryInfo.objInput?.contentID;
+    return maybeContentID !== undefined
+      ? podValueHash({ type: "cryptographic", value: maybeContentID })
+      : BABY_JUB_NEGATIVE_ONE;
+  });
+
+  const unpaddedSignerPublicKeyRevealedValueHash = objNames.map((objName) => {
     const entryInfo = entryMap.get(`${objName}.$signerPublicKey`);
     if (entryInfo === undefined) {
       throw new Error(
@@ -1134,8 +1166,11 @@ function compileVerifyVirtualEntry(
 
   return {
     virtualEntryRevealedValueHash: padArray(
-      unpaddedVirtualEntryRevealedValueHash,
-      circuitDesc.maxObjects,
+      zipLists([
+        unpaddedContentIDRevealedValueHash,
+        unpaddedSignerPublicKeyRevealedValueHash
+      ]).flat(),
+      2 * circuitDesc.maxObjects,
       BABY_JUB_NEGATIVE_ONE
     )
   };
@@ -1204,7 +1239,9 @@ export function makeRevealedClaims(
       throw new ReferenceError(`Missing revealed POD ${objName}.`);
     }
     let anyRevealedEntries = false;
-    // Unless specified otherwise, reveal signer's public key by default.
+    // Unless specified otherwise, reveal signer's public key and hide content
+    // ID by default.
+    let revealedContentID = false;
     let revealedSignerPublicKey = true;
     const revealedEntries: Record<PODName, PODValue> = {};
     for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
@@ -1219,12 +1256,16 @@ export function makeRevealedClaims(
         revealedEntries[entryName] = entryValue;
       }
     }
+    if (objConfig.contentID?.isRevealed !== undefined) {
+      revealedContentID = objConfig.contentID.isRevealed;
+    }
     if (objConfig.signerPublicKey?.isRevealed !== undefined) {
       revealedSignerPublicKey = objConfig.signerPublicKey.isRevealed;
     }
-    if (anyRevealedEntries || revealedSignerPublicKey) {
+    if (anyRevealedEntries || revealedSignerPublicKey || revealedContentID) {
       revealedObjects[objName] = {
         ...(anyRevealedEntries ? { entries: revealedEntries } : {}),
+        ...(revealedContentID ? { contentID: pod.contentID } : {}),
         ...(revealedSignerPublicKey
           ? { signerPublicKey: pod.signerPublicKey }
           : {})
