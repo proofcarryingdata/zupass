@@ -165,6 +165,11 @@ template ProtoPODGPC (
     //   entryEqualToOtherEntryIndex[i] = i
     signal input entryEqualToOtherEntryByIndex[TOTAL_ENTRIES];
 
+    // Boolean flag for whether the comparison should be equality or
+    // inequality.
+    signal input entryIsEqualToOtherEntry /*TOTAL_ENTRIES packed bits*/;
+    signal entryIsEqualToOtherEntryBits[TOTAL_ENTRIES] <== Num2Bits(TOTAL_ENTRIES)(entryIsEqualToOtherEntry);
+
     // Modules which scale with number of (non-virtual) entries.
     for (var entryIndex = 0; entryIndex < MAX_ENTRIES; entryIndex++) {
         // Entry module proves that an entry exists within the object's merkle tree.
@@ -184,7 +189,8 @@ template ProtoPODGPC (
         EntryConstraintModule(TOTAL_ENTRIES)(
             valueHash <== totalEntryValueHashes[entryIndex],
             entryValueHashes <== totalEntryValueHashes,
-            equalToOtherEntryByIndex <== entryEqualToOtherEntryByIndex[entryIndex]
+            equalToOtherEntryByIndex <== entryEqualToOtherEntryByIndex[entryIndex],
+            isEqualToOtherEntry <== entryIsEqualToOtherEntryBits[entryIndex]
                                                                  );
     }
 

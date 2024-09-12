@@ -208,12 +208,33 @@ export function checkProofEntryConfig(
     if (entryConfig.equalsEntry !== undefined) {
       throw new Error("Can't use isOwnerID and equalsEntry on the same entry.");
     }
+    if (entryConfig.notEqualsEntry !== undefined) {
+      throw new Error(
+        "Can't use isOwnerID and notEqualsEntry on the same entry."
+      );
+    }
+  }
+
+  if (
+    entryConfig.equalsEntry !== undefined &&
+    entryConfig.notEqualsEntry !== undefined
+  ) {
+    throw new Error(
+      "Can't use equalsEntry and notEqualsEntry on the same entry."
+    );
   }
 
   if (entryConfig.equalsEntry !== undefined) {
     checkPODEntryIdentifier(
       `${nameForErrorMessages}.equalsEntry`,
       entryConfig.equalsEntry
+    );
+  }
+
+  if (entryConfig.notEqualsEntry !== undefined) {
+    checkPODEntryIdentifier(
+      `${nameForErrorMessages}.notEqualsEntry`,
+      entryConfig.notEqualsEntry
     );
   }
 
@@ -477,22 +498,33 @@ export function checkProofInputsForConfig(
         }
       }
 
-      // Identified equal entry must also exist.
-      if (entryConfig.equalsEntry !== undefined) {
+      // Identified (not) equal entry must also exist.
+      const entryEqConfig =
+        entryConfig.equalsEntry || entryConfig.notEqualsEntry;
+      if (entryEqConfig !== undefined) {
+        const errorStringQualifier = entryConfig.notEqualsEntry ? " not " : " ";
         const otherValue = resolvePODEntryIdentifier(
-          entryConfig.equalsEntry,
+          entryEqConfig,
           proofInputs.pods
         );
         if (otherValue === undefined) {
           throw new ReferenceError(
-            `Input entry ${objName}.${entryName} should be proved to equal` +
+            `Input entry ${objName}.${entryName} should be proved` +
+              errorStringQualifier +
+              `to equal` +
               ` ${entryConfig.equalsEntry} which doesn't exist in input.`
           );
         }
-
-        if (podValueHash(otherValue) !== podValueHash(podValue)) {
+        const entryEqCheck =
+          podValueHash(otherValue) === podValueHash(podValue);
+        if (
+          (entryConfig.equalsEntry && !entryEqCheck) ||
+          (entryConfig.notEqualsEntry && entryEqCheck)
+        ) {
           throw new Error(
-            `Input entry ${objName}.${entryName} doesn't equal ${entryConfig.equalsEntry}.`
+            `Input entry ${objName}.${entryName} does` +
+              errorStringQualifier +
+              `equal ${entryConfig.equalsEntry}.`
           );
         }
       }
