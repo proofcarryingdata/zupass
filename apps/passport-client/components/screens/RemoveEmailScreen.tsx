@@ -60,7 +60,8 @@ export function RemoveEmailScreen(): JSX.Element | null {
         pcds,
         stateContext.getState().credentialCache
       ).requestCredential({
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "sempahore-signature-pcd",
+        pcdType: "email-pcd"
       });
 
       const response = await requestRemoveUserEmail(
