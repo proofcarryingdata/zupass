@@ -321,6 +321,12 @@ export type GPCProofConfig = {
   pods: Record<PODName, GPCProofObjectConfig>;
 
   /**
+   * Indicates whether the configured PODs are unique. If this is true, it
+   * enables the POD uniqueness module on the circuit level.
+   */
+  uniquePODs?: boolean;
+
+  /**
    * Defines named tuples of POD entries. The tuples' names lie in a separate
    * namespace and are internally prefixed with '$tuple.'. These tuples must be
    * of arity (i.e. size/width) at least 2.

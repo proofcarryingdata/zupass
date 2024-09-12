@@ -1,6 +1,13 @@
+import {
+  decodePublicKey,
+  decodeSignature,
+  podStringHash,
+  signPODRoot
+} from "@pcd/pod";
 import { CircomkitConfig } from "circomkit";
 import { PathLike } from "fs";
 import path from "path";
+import { ObjectModuleInputs } from "./object";
 import { CircuitSignal } from "./types";
 
 /**
@@ -192,4 +199,44 @@ export function zeroResidueMod(x: CircuitSignal, n: bigint): bigint {
   const xAsBigint: bigint = typeof x === "string" ? BigInt(x) : x;
 
   return (n + (xAsBigint % n)) % n;
+}
+
+/**
+ * Creates dummy signals for unused object slots in ProtoPODGPC via dummy
+ * content IDs in the form of POD string hashes of the message `unused POD ${n}`
+ * as well as corresponding signatures.
+ */
+export function dummyObjectSignals(
+  numObjects: number
+): ObjectModuleInputs /*numObjects*/[] {
+  // Dummy private key.
+  const privateKey =
+    "0000000000000000000000000000000000000000000000000000000000000000";
+
+  const messageHashes = Array(numObjects)
+    .fill(undefined)
+    .map((_, i) => `unused POD ${i}`)
+    .map(podStringHash);
+
+  const encodedSignatures = messageHashes.map((msgHash) =>
+    signPODRoot(msgHash, privateKey)
+  );
+
+  const publicKeys = encodedSignatures.map((encSig) =>
+    decodePublicKey(encSig.publicKey)
+  );
+  const signatures = encodedSignatures.map((encSig) =>
+    decodeSignature(encSig.signature)
+  );
+
+  return messageHashes.map((msgHash, i) => {
+    return {
+      contentID: msgHash,
+      signerPubkeyAx: publicKeys[i][0],
+      signerPubkeyAy: publicKeys[i][1],
+      signatureR8x: signatures[i].R8[0],
+      signatureR8y: signatures[i].R8[1],
+      signatureS: signatures[i].S
+    };
+  });
 }

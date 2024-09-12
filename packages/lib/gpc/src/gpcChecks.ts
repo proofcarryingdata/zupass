@@ -131,6 +131,10 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     includeOwnerV4 ||= hasOwnerV4;
   }
 
+  if (proofConfig.uniquePODs !== undefined) {
+    requireType("uniquePODs", proofConfig.uniquePODs, "boolean");
+  }
+
   if (proofConfig.tuples !== undefined) {
     checkProofTupleConfig(proofConfig);
   }
@@ -618,7 +622,28 @@ export function checkProofInputsForConfig(
     throw new Error("Nullifier requires an entry containing owner ID.");
   }
 
+  checkProofPODUniquenessInputsForConfig(proofConfig, proofInputs);
+
   checkProofListMembershipInputsForConfig(proofConfig, proofInputs);
+}
+
+export function checkProofPODUniquenessInputsForConfig(
+  proofConfig: { uniquePODs?: boolean },
+  proofInputs: { pods: Record<PODName, POD> }
+) {
+  if (proofConfig.uniquePODs) {
+    const contentIDs = Object.values(proofInputs.pods).map(
+      (pod) => pod.contentID
+    );
+    const uniqueContentIDs = _.uniq(contentIDs);
+    const podsAreUnique = _.isEqual(contentIDs, uniqueContentIDs);
+
+    if (!podsAreUnique) {
+      throw new Error(
+        "Proof configuration specifies that the PODs should be unique, but they aren't."
+      );
+    }
+  }
 }
 
 export function checkProofBoundsCheckInputsForConfig(

@@ -34,6 +34,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
+      "uniquenessModuleIsEnabled",
       "globalWatermark"
     ]
   },
@@ -72,6 +73,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
+      "uniquenessModuleIsEnabled",
       "globalWatermark"
     ]
   },
@@ -110,6 +112,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
+      "uniquenessModuleIsEnabled",
       "globalWatermark"
     ]
   },
@@ -148,6 +151,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
+      "uniquenessModuleIsEnabled",
       "globalWatermark"
     ]
   },
@@ -186,6 +190,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
+      "uniquenessModuleIsEnabled",
       "globalWatermark"
     ]
   },
@@ -224,6 +229,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
+      "uniquenessModuleIsEnabled",
       "globalWatermark"
     ]
   }
