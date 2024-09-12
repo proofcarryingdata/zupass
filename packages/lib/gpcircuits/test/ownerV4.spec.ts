@@ -2,69 +2,67 @@ import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
-import { poseidon1 } from "poseidon-lite";
+import { poseidon2 } from "poseidon-lite";
 import {
   CircuitSignal,
-  OwnerModuleSemaphoreV3Inputs,
-  OwnerModuleSemaphoreV3OutputNamesType,
-  OwnerModuleSemaphoreV3Outputs,
-  OwnerModuleSemaphoreV3nputNamesType
+  OwnerModuleSemaphoreV4Inputs,
+  OwnerModuleSemaphoreV4OutputNamesType,
+  OwnerModuleSemaphoreV4Outputs,
+  OwnerModuleSemaphoreV4nputNamesType
 } from "../src";
-import { circomkit, ownerIdentity } from "./common";
+import { circomkit, ownerIdentityV4 } from "./common";
 
-describe("owner.OwnerModuleSemaphoreV3 should work", function () {
+describe("owner.OwnerModuleSemaphoreV4 should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
   let circuit: WitnessTester<
-    OwnerModuleSemaphoreV3nputNamesType,
-    OwnerModuleSemaphoreV3OutputNamesType
+    OwnerModuleSemaphoreV4nputNamesType,
+    OwnerModuleSemaphoreV4OutputNamesType
   >;
 
   function makeTestSignals(
     isEnabled: boolean,
-    isNullfierHashRevealed: boolean
+    isNullifierHashRevealed: boolean
   ): {
-    inputs: OwnerModuleSemaphoreV3Inputs;
-    outputs: OwnerModuleSemaphoreV3Outputs;
+    inputs: OwnerModuleSemaphoreV4Inputs;
+    outputs: OwnerModuleSemaphoreV4Outputs;
   } {
+    const externalNullifier = 42n;
     return {
       inputs: {
         enabled: isEnabled ? 1n : 0n,
-        identityNullifier: ownerIdentity.nullifier,
-        identityTrapdoor: ownerIdentity.trapdoor,
-        identityCommitmentHash: poseidon1([ownerIdentity.commitment]),
-        externalNullifier: 42n,
-        isNullfierHashRevealed: isNullfierHashRevealed ? 1n : 0n
+        secretScalar: ownerIdentityV4.secretScalar,
+        identityCommitment: ownerIdentityV4.commitment,
+        externalNullifier,
+        isNullifierHashRevealed: isNullifierHashRevealed ? 1n : 0n
       },
       outputs: {
         revealedNullifierHash:
-          isEnabled && isNullfierHashRevealed
-            ? 1517081033071132720435657432021139876572843496027662548196342287861804968602n
+          isEnabled && isNullifierHashRevealed
+            ? poseidon2([externalNullifier, ownerIdentityV4.secretScalar])
             : BABY_JUB_NEGATIVE_ONE
       }
     };
   }
 
-  const sampleInput: OwnerModuleSemaphoreV3Inputs = {
+  const sampleInput: OwnerModuleSemaphoreV4Inputs = {
     enabled: 1n,
-    identityNullifier:
-      99353161014976810914716773124042455250852206298527174581112949561812190422n,
-    identityTrapdoor:
-      329061722381819402313027227353491409557029289040211387019699013780657641967n,
-    identityCommitmentHash:
-      6111114915052368960013028357687874844561982077054171687671655940344165800007n,
+    secretScalar:
+      2216916178205221996784875615548956289937038466803771088017302823987023506835n,
+    identityCommitment:
+      15170632554331862997050742014395807449361562342470859240457119918675786875630n,
     externalNullifier: 42n,
-    isNullfierHashRevealed: 1n
+    isNullifierHashRevealed: 1n
   };
 
-  const sampleOutput: OwnerModuleSemaphoreV3Outputs = {
+  const sampleOutput: OwnerModuleSemaphoreV4Outputs = {
     revealedNullifierHash:
-      1517081033071132720435657432021139876572843496027662548196342287861804968602n
+      6116400069185604620537879245252081108418163848212598544276099192936153798105n
   };
 
   this.beforeAll(async () => {
-    circuit = await circomkit.WitnessTester("OwnerModuleSemaphoreV3", {
-      file: "owner",
-      template: "OwnerModuleSemaphoreV3"
+    circuit = await circomkit.WitnessTester("OwnerModuleSemaphoreV4", {
+      file: "ownerV4",
+      template: "OwnerModuleSemaphoreV4"
     });
   });
 
@@ -109,7 +107,7 @@ describe("owner.OwnerModuleSemaphoreV3 should work", function () {
       const badInput = { ...sampleInput };
       (badInput as Record<string, CircuitSignal>)[inputName] = 0xbadn;
       if (
-        ["externalNullifier", "enabled", "isNullfierHashRevealed"].includes(
+        ["externalNullifier", "enabled", "isNullifierHashRevealed"].includes(
           inputName
         )
       ) {

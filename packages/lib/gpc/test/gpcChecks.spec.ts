@@ -18,6 +18,8 @@ describe("Proof entry config check should work", () => {
     const entryName = "somePOD.someEntry";
     const entryConfig = { isRevealed: false };
     expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
+      hasOwnerV3Check: false,
+      hasOwnerV4Check: false,
       nBoundsChecks: 0
     });
   });
@@ -32,7 +34,35 @@ describe("Proof entry config check should work", () => {
       equalsEntry: "someOtherPOD.someOtherEntry"
     };
     expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
+      hasOwnerV3Check: false,
+      hasOwnerV4Check: false,
       nBoundsChecks: 2
+    });
+  });
+
+  it("should pass for an entry configuration with a Semaphore V3 owner identity commitment", () => {
+    const entryName = "somePOD.someEntry";
+    const entryConfig: GPCProofEntryConfig = {
+      isRevealed: false,
+      isOwnerID: "SemaphoreV3"
+    };
+    expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
+      hasOwnerV3Check: true,
+      hasOwnerV4Check: false,
+      nBoundsChecks: 0
+    });
+  });
+
+  it("should pass for an entry configuration with a Semaphore V4 owner identity commitment", () => {
+    const entryName = "somePOD.someEntry";
+    const entryConfig: GPCProofEntryConfig = {
+      isRevealed: false,
+      isOwnerID: "SemaphoreV4"
+    };
+    expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
+      hasOwnerV3Check: false,
+      hasOwnerV4Check: true,
+      nBoundsChecks: 0
     });
   });
 });

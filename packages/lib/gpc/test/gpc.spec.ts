@@ -21,6 +21,10 @@ import {
   GPCProofInputs,
   GPCRevealedClaims,
   GPC_ARTIFACTS_NPM_VERSION,
+  IdentityProtocol,
+  PODEntryIdentifier,
+  SEMAPHORE_V3,
+  SEMAPHORE_V4,
   gpcArtifactDownloadURL,
   gpcProve,
   gpcVerify
@@ -30,6 +34,7 @@ import {
   GPC_TEST_ARTIFACTS_PATH,
   expectAsyncError,
   ownerIdentity,
+  ownerIdentityV4,
   privateKey,
   privateKey2,
   sampleEntries,
@@ -200,7 +205,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             equalsEntry: "pod1.A",
             isMemberOf: "list1"
           },
-          owner: { isRevealed: false, isOwnerID: true }
+          owner: { isRevealed: false, isOwnerID: SEMAPHORE_V3 }
         },
         signerPublicKey: {
           isRevealed: false,
@@ -235,7 +240,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     },
     owner: {
       externalNullifier: { type: "int", value: 42n },
-      nullifierHash: poseidon2([
+      nullifierHashV3: poseidon2([
         makeWatermarkSignal({ type: "int", value: 42n }),
         ownerIdentity.nullifier
       ])
@@ -244,11 +249,100 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     watermark: { type: "int", value: 1337n }
   };
 
-  it("should prove and verify a typical case", async function () {
+  it("should prove and verify a typical case with Semaphore V3 owner identity", async function () {
     const { isVerified } = await gpcProofTest(
       typicalProofConfig,
       typicalProofInputs,
       expectedRevealedClaimsForTypicalCase
+    );
+    expect(isVerified).to.be.true;
+  });
+
+  it("should prove and verify a typical case with Semaphore V4 owner identity", async function () {
+    const typicalProofConfigV4 = {
+      pods: {
+        pod1: {
+          signerPublicKey: typicalProofConfig.pods.pod1.signerPublicKey,
+          entries: {
+            A: { isRevealed: true },
+            E: {
+              isRevealed: false,
+              equalsEntry: "pod1.A" as PODEntryIdentifier,
+              isMemberOf: "list1"
+            },
+            ownerV4: {
+              isRevealed: false,
+              isOwnerID: SEMAPHORE_V4 as IdentityProtocol
+            }
+          }
+        }
+      }
+    };
+    const typicalProofInputsV4 = {
+      ...typicalProofInputs,
+      owner: {
+        semaphoreV4: ownerIdentityV4,
+        externalNullifier: typicalProofInputs.owner?.externalNullifier
+      }
+    };
+
+    const expectedRevealedClaimsForTypicalV4Case = {
+      ...expectedRevealedClaimsForTypicalCase,
+      owner: {
+        externalNullifier: { type: "int", value: 42n },
+        nullifierHashV4: poseidon2([
+          makeWatermarkSignal({ type: "int", value: 42n }),
+          ownerIdentityV4.secretScalar
+        ])
+      }
+    } as GPCRevealedClaims;
+
+    const { isVerified } = await gpcProofTest(
+      typicalProofConfigV4,
+      typicalProofInputsV4,
+      expectedRevealedClaimsForTypicalV4Case
+    );
+    expect(isVerified).to.be.true;
+  });
+
+  it("should prove and verify a typical case with both Semaphore V3 and Semaphore V4 owner identities", async function () {
+    const typicalProofConfigV3V4 = {
+      pods: {
+        pod1: {
+          signerPublicKey: typicalProofConfig.pods.pod1.signerPublicKey,
+          entries: {
+            ...typicalProofConfig.pods.pod1.entries,
+            ownerV4: {
+              isRevealed: false,
+              isOwnerID: SEMAPHORE_V4 as IdentityProtocol
+            }
+          }
+        }
+      }
+    };
+    const typicalProofInputsV3V4 = {
+      ...typicalProofInputs,
+      owner: {
+        ...typicalProofInputs.owner,
+        semaphoreV4: ownerIdentityV4
+      }
+    };
+
+    const expectedRevealedClaimsForTypicalV3V4Case = {
+      ...expectedRevealedClaimsForTypicalCase,
+      owner: {
+        ...expectedRevealedClaimsForTypicalCase.owner,
+        nullifierHashV4: poseidon2([
+          makeWatermarkSignal({ type: "int", value: 42n }),
+          ownerIdentityV4.secretScalar
+        ])
+      }
+    } as GPCRevealedClaims;
+
+    const { isVerified } = await gpcProofTest(
+      typicalProofConfigV3V4,
+      typicalProofInputsV3V4,
+      expectedRevealedClaimsForTypicalV3V4Case
     );
     expect(isVerified).to.be.true;
   });
@@ -557,7 +651,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             ticketID: { isRevealed: false, equalsEntry: "pod1.otherTicketID" },
             attendee: {
               isRevealed: false,
-              isOwnerID: true,
+              isOwnerID: SEMAPHORE_V3,
               isMemberOf: "goats"
             }
           },
@@ -575,7 +669,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             G: { isRevealed: true, notInRange: { min: POD_INT_MIN, max: 0n } },
             K: { isRevealed: false, inRange: { min: -10n, max: 0n } },
             otherTicketID: { isRevealed: false },
-            owner: { isRevealed: false, isOwnerID: true }
+            owner: { isRevealed: false, isOwnerID: SEMAPHORE_V3 }
           },
           signerPublicKey: {
             isRevealed: false
@@ -683,7 +777,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       },
       owner: {
         externalNullifier,
-        nullifierHash: poseidon2([
+        nullifierHashV3: poseidon2([
           makeWatermarkSignal(externalNullifier),
           ownerIdentity.nullifier
         ])
@@ -1258,7 +1352,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         ...revealedClaims,
         owner: {
           externalNullifier: { type: "string", value: "fake" },
-          nullifierHash: 1234n
+          nullifierHashV3: 1234n
         }
       },
       GPC_TEST_ARTIFACTS_PATH

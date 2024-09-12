@@ -1,4 +1,8 @@
-import { GPCProofConfig, serializeGPCProofConfig } from "@pcd/gpc";
+import {
+  GPCProofConfig,
+  SEMAPHORE_V3,
+  serializeGPCProofConfig
+} from "@pcd/gpc";
 import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -33,7 +37,7 @@ const proofConfig: GPCProofConfig = {
         E: { isRevealed: false, equalsEntry: "pod0.A" },
         owner: {
           isRevealed: false,
-          isOwnerID: true,
+          isOwnerID: SEMAPHORE_V3,
           isMemberOf: "admissibleOwners"
         }
       }
@@ -412,7 +416,7 @@ describe("Prescribed signer public key check against proof configuration should 
             E: { isRevealed: false, equalsEntry: "pod0.A" },
             owner: {
               isRevealed: false,
-              isOwnerID: true,
+              isOwnerID: SEMAPHORE_V3,
               isMemberOf: "admissibleOwners"
             }
           },

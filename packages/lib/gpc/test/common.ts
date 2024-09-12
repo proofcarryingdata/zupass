@@ -1,6 +1,12 @@
 import { loadCircomkitConfig } from "@pcd/gpcircuits";
-import { EDDSA_PUBKEY_TYPE_STRING, PODEntries } from "@pcd/pod";
+import {
+  EDDSA_PUBKEY_TYPE_STRING,
+  PODEdDSAPublicKeyValue,
+  PODEntries,
+  encodePublicKey
+} from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import { Identity } from "@semaphore-protocol/identity";
 import { AssertionError, assert, expect } from "chai";
 import { Circomkit } from "circomkit";
@@ -27,8 +33,14 @@ export const GPC_TEST_ARTIFACTS_PATH = path.join(
 export const privateKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 0001020304050607080900010203040506070809000102030405060708090001
 export const privateKey2 = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAQFBggIAAA"; // hex 0001020304050607080900010203040506070809000102030404050608080000
 
+// Semaphore V3 identity
 export const ownerIdentity = new Identity(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
+);
+
+// Semaphore V4 identity
+export const ownerIdentityV4 = new IdentityV4(
+  "0001020304050607080900010203040506070809000102030405060708090001"
 );
 
 // 11 entries, max depth 5
@@ -50,7 +62,8 @@ export const sampleEntries = {
     value: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
   },
   otherTicketID: { type: "int", value: 999n },
-  owner: { type: "cryptographic", value: ownerIdentity.commitment }
+  owner: { type: "cryptographic", value: ownerIdentity.commitment },
+  ownerV4: PODEdDSAPublicKeyValue(encodePublicKey(ownerIdentityV4.publicKey))
 } satisfies PODEntries;
 
 // 3 entries, max depth 3

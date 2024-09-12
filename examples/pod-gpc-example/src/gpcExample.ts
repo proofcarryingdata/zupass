@@ -112,8 +112,8 @@ export async function gpcDemo(): Promise<boolean> {
 
           // I'm proving the presence of an entry called "owner".  I'm not
           // revealing it, but will be proving I own the corresponding
-          // Semaphore identity secrets.
-          owner: { isRevealed: false, isOwnerID: true }
+          // Semaphore V3 identity secrets.
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" }
         }
       }
     }
@@ -262,7 +262,7 @@ export async function gpcDemo(): Promise<boolean> {
   );
   console.log(
     "Revealed watermark and nullifier",
-    revealedClaims.owner?.nullifierHash,
+    revealedClaims.owner?.nullifierHashV3,
     revealedClaims.watermark?.value
   );
 
@@ -308,7 +308,7 @@ export async function gpcDemo(): Promise<boolean> {
     pods: {
       weapon: {
         entries: {
-          owner: { isRevealed: false, isOwnerID: true },
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" },
           attack: { isRevealed: true },
 
           // The equalsEntry constraint can refer to an entry in another
@@ -322,7 +322,7 @@ export async function gpcDemo(): Promise<boolean> {
       },
       armor: {
         entries: {
-          owner: { isRevealed: false, isOwnerID: true },
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" },
           defense: { isRevealed: true },
 
           // We could put an equalsEntry here as well, but it would be redundant.
@@ -402,13 +402,13 @@ export async function gpcDemo(): Promise<boolean> {
       swordPOD: {
         entries: {
           attack: { isRevealed: true },
-          owner: { isRevealed: false, isOwnerID: true }
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" }
         }
       },
       shieldPOD: {
         entries: {
           defense: { isRevealed: true },
-          owner: { isRevealed: false, isOwnerID: true }
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" }
         }
       }
     }

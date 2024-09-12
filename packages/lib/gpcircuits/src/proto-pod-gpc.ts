@@ -38,12 +38,19 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ entryEqualToOtherEntryByIndex: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES*/[];
   /*PUB*/ entryIsEqualToOtherEntry: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES packed bits*/;
 
-  // Owner module (1)
-  /*PUB*/ ownerEntryIndex: CircuitSignal;
-  ownerSemaphoreV3IdentityNullifier: CircuitSignal;
-  ownerSemaphoreV3IdentityTrapdoor: CircuitSignal;
+  // External nullifier for owner modules (if any)
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
-  /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
+
+  // Owner V3 module (0-1)
+  /*PUB*/ ownerV3EntryIndex: CircuitSignal /*INCLUDE_OWNERV3*/[];
+  ownerSemaphoreV3IdentityNullifier: CircuitSignal /*INCLUDE_OWNERV3*/[];
+  ownerSemaphoreV3IdentityTrapdoor: CircuitSignal /*INCLUDE_OWNERV3*/[];
+  /*PUB*/ ownerV3IsNullifierHashRevealed: CircuitSignal /*INCLUDE_OWNERV3*/[];
+
+  // Owner V4 module (0-1)
+  /*PUB*/ ownerV4EntryIndex: CircuitSignal /*INCLUDE_OWNERV4*/[];
+  ownerSemaphoreV4SecretScalar: CircuitSignal /*INCLUDE_OWNERV4*/[];
+  /*PUB*/ ownerV4IsNullifierHashRevealed: CircuitSignal /*INCLUDE_OWNERV4*/[];
 
   // Numeric value modules [MAX_NUMERIC_VALUES].
   numericValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
@@ -83,11 +90,14 @@ export type ProtoPODGPCInputNamesType = [
   "virtualEntryIsValueHashRevealed",
   "entryEqualToOtherEntryByIndex",
   "entryIsEqualToOtherEntry",
-  "ownerEntryIndex",
+  "ownerExternalNullifier",
+  "ownerV3EntryIndex",
   "ownerSemaphoreV3IdentityNullifier",
   "ownerSemaphoreV3IdentityTrapdoor",
-  "ownerExternalNullifier",
-  "ownerIsNullfierHashRevealed",
+  "ownerV3IsNullifierHashRevealed",
+  "ownerV4EntryIndex",
+  "ownerSemaphoreV4SecretScalar",
+  "ownerV4IsNullifierHashRevealed",
   "numericValues",
   "numericValueEntryIndices",
   "numericValueInRange",
@@ -117,10 +127,16 @@ export type ProtoPODGPCPublicInputs = {
   /*PUB*/ entryEqualToOtherEntryByIndex: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES*/[];
   /*PUB*/ entryIsEqualToOtherEntry: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES packed bits*/;
 
-  // Owner module (1)
-  /*PUB*/ ownerEntryIndex: CircuitSignal;
+  // External nullifier for owner modules (if any)
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
-  /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
+
+  // Owner V3 module (1)
+  /*PUB*/ ownerV3EntryIndex: CircuitSignal /*INCLUDE_OWNERV3*/[];
+  /*PUB*/ ownerV3IsNullifierHashRevealed: CircuitSignal /*INCLUDE_OWNERV3*/[];
+
+  // Owner V4 module (1)
+  /*PUB*/ ownerV4EntryIndex: CircuitSignal /*INCLUDE_OWNERV4*/[];
+  /*PUB*/ ownerV4IsNullifierHashRevealed: CircuitSignal /*INCLUDE_OWNERV4*/[];
 
   // Bounds check module (1)
   /*PUB*/ numericValueEntryIndices: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
@@ -150,9 +166,11 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "virtualEntryIsValueHashRevealed",
   "entryEqualToOtherEntryByIndex",
   "entryIsEqualToOtherEntry",
-  "ownerEntryIndex",
   "ownerExternalNullifier",
-  "ownerIsNullfierHashRevealed",
+  "ownerV3EntryIndex",
+  "ownerV3IsNullifierHashRevealed",
+  "ownerV4EntryIndex",
+  "ownerV4IsNullifierHashRevealed",
   "numericValueEntryIndices",
   "numericValueInRange",
   "numericMinValues",
@@ -171,7 +189,8 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
 export type ProtoPODGPCOutputs = {
   entryRevealedValueHash: CircuitSignal /*MAX_ENTRIES*/[];
   virtualEntryRevealedValueHash: CircuitSignal /*MAX_OBJECTS*/[];
-  ownerRevealedNullifierHash: CircuitSignal;
+  ownerV3RevealedNullifierHash: CircuitSignal /*INCLUDE_OWNERV3*/[];
+  ownerV4RevealedNullifierHash: CircuitSignal /*INCLUDE_OWNERV4*/[];
 };
 
 /**
@@ -181,7 +200,8 @@ export type ProtoPODGPCOutputs = {
 export type ProtoPODGPCOutputNamesType = [
   "entryRevealedValueHash",
   "virtualEntryRevealedValueHash",
-  "ownerRevealedNullifierHash"
+  "ownerV3RevealedNullifierHash",
+  "ownerV4RevealedNullifierHash"
 ];
 
 /**
@@ -228,6 +248,16 @@ export type ProtoPODGPCCircuitParams = {
    * e.g. tupleArity = 2 for pairs or tupleArity = 3 for triples.
    */
   tupleArity: number;
+
+  /**
+   * Boolean expressing whether a Semaphore V3 owner module should be included.
+   */
+  includeOwnerV3: boolean;
+
+  /**
+   * Boolean expressing whether a Semaphore V4 owner module should be included.
+   */
+  includeOwnerV4: boolean;
 };
 
 /**
@@ -241,7 +271,9 @@ export function ProtoPODGPCCircuitParams(
   maxLists: number,
   maxListElements: number,
   maxTuples: number,
-  tupleArity: number
+  tupleArity: number,
+  includeOwnerV3: boolean,
+  includeOwnerV4: boolean
 ): ProtoPODGPCCircuitParams {
   return {
     maxObjects,
@@ -251,7 +283,9 @@ export function ProtoPODGPCCircuitParams(
     maxLists,
     maxListElements,
     maxTuples,
-    tupleArity
+    tupleArity,
+    includeOwnerV3,
+    includeOwnerV4
   };
 }
 
@@ -271,7 +305,9 @@ export function protoPODGPCCircuitParamArray(
     params.maxLists,
     params.maxListElements,
     params.maxTuples,
-    params.tupleArity
+    params.tupleArity,
+    +params.includeOwnerV3,
+    +params.includeOwnerV4
   ];
 }
 
@@ -291,7 +327,9 @@ export function arrayToProtoPODGPCCircuitParam(
     params[4],
     params[5],
     params[6],
-    params[7]
+    params[7],
+    !!params[8],
+    !!params[9]
   );
 }
 
@@ -347,7 +385,9 @@ export class ProtoPODGPC {
     const outputs = ProtoPODGPC.outputsFromPublicSignals(
       intPublicSignals,
       inputs.entryNameHash.length,
-      2 * inputs.objectContentID.length
+      2 * inputs.objectContentID.length,
+      inputs.ownerV3EntryIndex.length > 0,
+      inputs.ownerV4EntryIndex.length > 0
     );
     return { proof, outputs, publicSignals: intPublicSignals };
   }
@@ -394,9 +434,11 @@ export class ProtoPODGPC {
         allInputs.virtualEntryIsValueHashRevealed,
       entryEqualToOtherEntryByIndex: allInputs.entryEqualToOtherEntryByIndex,
       entryIsEqualToOtherEntry: allInputs.entryIsEqualToOtherEntry,
-      ownerEntryIndex: allInputs.ownerEntryIndex,
       ownerExternalNullifier: allInputs.ownerExternalNullifier,
-      ownerIsNullfierHashRevealed: allInputs.ownerIsNullfierHashRevealed,
+      ownerV3EntryIndex: allInputs.ownerV3EntryIndex,
+      ownerV3IsNullifierHashRevealed: allInputs.ownerV3IsNullifierHashRevealed,
+      ownerV4EntryIndex: allInputs.ownerV4EntryIndex,
+      ownerV4IsNullifierHashRevealed: allInputs.ownerV4IsNullifierHashRevealed,
       numericValueEntryIndices: allInputs.numericValueEntryIndices,
       numericValueInRange: allInputs.numericValueInRange,
       numericMinValues: allInputs.numericMinValues,
@@ -413,13 +455,15 @@ export class ProtoPODGPC {
    * Extract named outputs from the public circuit signals.
    *
    * Because of the flattened array representation of the public signals, the
-   * circuit's maxEntries parameter must be known to properly reconstruct
-   * output arrays.
+   * circuit's maxEntries and includeOwner parameters must be known to properly
+   * reconstruct output arrays.
    */
   public static outputsFromPublicSignals(
     publicSignals: bigint[],
     maxEntries: number,
-    maxVirtualEntries: number
+    maxVirtualEntries: number,
+    includeOwnerV3: boolean,
+    includeOwnerV4: boolean
   ): ProtoPODGPCOutputs {
     return {
       entryRevealedValueHash: publicSignals.slice(0, maxEntries),
@@ -427,7 +471,12 @@ export class ProtoPODGPC {
         maxEntries,
         maxEntries + maxVirtualEntries
       ),
-      ownerRevealedNullifierHash: publicSignals[maxEntries + maxVirtualEntries]
+      ownerV3RevealedNullifierHash: includeOwnerV3
+        ? [publicSignals[maxEntries + maxVirtualEntries]]
+        : [],
+      ownerV4RevealedNullifierHash: includeOwnerV4
+        ? [publicSignals[maxEntries + maxVirtualEntries + +includeOwnerV3]]
+        : []
     };
   }
 
@@ -446,16 +495,19 @@ export class ProtoPODGPC {
     return [
       ...outputs.entryRevealedValueHash,
       ...outputs.virtualEntryRevealedValueHash,
-      outputs.ownerRevealedNullifierHash,
+      ...outputs.ownerV3RevealedNullifierHash,
+      ...outputs.ownerV4RevealedNullifierHash,
       ...inputs.entryObjectIndex,
       ...inputs.entryNameHash,
       inputs.entryIsValueHashRevealed,
       inputs.virtualEntryIsValueHashRevealed,
       ...inputs.entryEqualToOtherEntryByIndex,
       inputs.entryIsEqualToOtherEntry,
-      inputs.ownerEntryIndex,
       inputs.ownerExternalNullifier,
-      inputs.ownerIsNullfierHashRevealed,
+      ...inputs.ownerV3EntryIndex,
+      ...inputs.ownerV3IsNullifierHashRevealed,
+      ...inputs.ownerV4EntryIndex,
+      ...inputs.ownerV4IsNullifierHashRevealed,
       ...inputs.numericValueEntryIndices,
       inputs.numericValueInRange,
       ...inputs.numericMinValues.map((value) =>
@@ -529,16 +581,11 @@ export class ProtoPODGPC {
     circuitDesc: ProtoPODGPCCircuitDesc,
     requiredParams: ProtoPODGPCCircuitParams
   ): boolean {
-    return (
-      circuitDesc.maxObjects >= requiredParams.maxObjects &&
-      circuitDesc.maxEntries >= requiredParams.maxEntries &&
-      circuitDesc.merkleMaxDepth >= requiredParams.merkleMaxDepth &&
-      circuitDesc.maxNumericValues >= requiredParams.maxNumericValues &&
-      circuitDesc.maxLists >= requiredParams.maxLists &&
-      circuitDesc.maxListElements >= requiredParams.maxListElements &&
-      circuitDesc.maxTuples >= requiredParams.maxTuples &&
-      circuitDesc.tupleArity >= requiredParams.tupleArity
-    );
+    const descValues = protoPODGPCCircuitParamArray(circuitDesc);
+    const reqValues = protoPODGPCCircuitParamArray(requiredParams);
+    return descValues
+      .map((descValue, i) => descValue >= reqValues[i])
+      .reduce((a, b) => a && b);
   }
 
   /**
@@ -564,7 +611,13 @@ export class ProtoPODGPC {
    * Generates a circuit name based on parameters.
    */
   public static circuitNameForParams(params: ProtoPODGPCCircuitParams): string {
-    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md-${params.maxNumericValues}nv-${params.maxLists}x${params.maxListElements}l-${params.maxTuples}x${params.tupleArity}t`;
+    return `${params.maxObjects}o-${params.maxEntries}e-${
+      params.merkleMaxDepth
+    }md-${params.maxNumericValues}nv-${params.maxLists}x${
+      params.maxListElements
+    }l-${params.maxTuples}x${
+      params.tupleArity
+    }t-${+params.includeOwnerV3}ov3-${+params.includeOwnerV4}ov4`;
   }
 
   private static circuitDescForParams(
@@ -609,5 +662,5 @@ export class ProtoPODGPC {
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.8.0";
+  public static ARTIFACTS_NPM_VERSION = "0.9.0";
 }

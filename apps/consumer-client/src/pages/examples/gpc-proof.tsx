@@ -217,8 +217,8 @@ export default function Page(): JSX.Element {
                 {pcd.claim.revealed.owner?.externalNullifier && (
                   <p>{`External Nullifier: ${pcd.claim.revealed.owner?.externalNullifier.value}`}</p>
                 )}
-                {pcd.claim.revealed.owner?.nullifierHash && (
-                  <p>{`Nullifier Hash: ${pcd.claim.revealed.owner?.nullifierHash}`}</p>
+                {pcd.claim.revealed.owner?.nullifierHashV3 && (
+                  <p>{`Nullifier Hash: ${pcd.claim.revealed.owner?.nullifierHashV3}`}</p>
                 )}
               </>
             )}

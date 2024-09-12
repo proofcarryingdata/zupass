@@ -15,10 +15,10 @@ import {
 } from "../src/gpcUtil";
 
 describe("Object entry configuration canonicalization should work", () => {
-  it("should work as expected on a typical POD entry configuration with isOwnerID = false", () => {
+  it(`should work as expected on a typical POD entry configuration with isOwnerID = undefined`, () => {
     const config: GPCProofEntryConfig = {
       isNotMemberOf: "someOtherList",
-      isOwnerID: false,
+      isOwnerID: undefined,
       equalsEntry: "pod0.B",
       isMemberOf: "someList",
       isRevealed: true
@@ -35,10 +35,10 @@ describe("Object entry configuration canonicalization should work", () => {
 
     expect(canonicalizedConfig).to.deep.eq(expectedCanonicalizedConfig);
   });
-  it("should work as expected on a typical POD entry configuration with isOwnerID = true", () => {
+  it(`should work as expected on a typical POD entry configuration with isOwnerID = "SemaphoreV3"`, () => {
     const config: GPCProofEntryConfig = {
       isNotMemberOf: "someOtherList",
-      isOwnerID: true,
+      isOwnerID: "SemaphoreV3",
       equalsEntry: "pod0.B",
       isMemberOf: "someList",
       isRevealed: true
@@ -48,7 +48,28 @@ describe("Object entry configuration canonicalization should work", () => {
 
     const expectedCanonicalizedConfig = {
       isRevealed: true,
-      isOwnerID: true,
+      isOwnerID: "SemaphoreV3",
+      equalsEntry: "pod0.B",
+      isMemberOf: "someList",
+      isNotMemberOf: "someOtherList"
+    };
+
+    expect(canonicalizedConfig).to.deep.eq(expectedCanonicalizedConfig);
+  });
+  it(`should work as expected on a typical POD entry configuration with isOwnerID = "SemaphoreV4"`, () => {
+    const config: GPCProofEntryConfig = {
+      isNotMemberOf: "someOtherList",
+      isOwnerID: "SemaphoreV4",
+      equalsEntry: "pod0.B",
+      isMemberOf: "someList",
+      isRevealed: true
+    };
+
+    const canonicalizedConfig = canonicalizeEntryConfig(config);
+
+    const expectedCanonicalizedConfig = {
+      isRevealed: true,
+      isOwnerID: "SemaphoreV4",
       equalsEntry: "pod0.B",
       isMemberOf: "someList",
       isNotMemberOf: "someOtherList"

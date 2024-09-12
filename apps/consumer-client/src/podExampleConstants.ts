@@ -18,7 +18,8 @@ export const EXAMPLE_POD_CONTENT = `{
   "I": 9,
   "J": 10,
   "K": -5,
-  "owner": 18711405342588116796533073928767088921854096266145046362753928030796553161041
+  "owner": 18711405342588116796533073928767088921854096266145046362753928030796553161041,
+  "ownerV4": "pod_eddsa_pubkey:1nsPGF66uuDfBnpQD+7o/9SPX7L0JDn+lubKh+QGuS8"
 }`;
 
 export const EXAMPLE_POD_CONTENT_WITH_DISPLAY = `{
@@ -57,7 +58,7 @@ export const EXAMPLE_GPC_CONFIG = `{
         },
         "owner": {
           "isRevealed": false,
-          "isOwnerID": true
+          "isOwnerID": "SemaphoreV3"
         }
       }
     },

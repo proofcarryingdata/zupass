@@ -171,7 +171,9 @@ export function canonicalizeEntryConfig(
   // Set optional fields only when they have non-default values.
   return {
     isRevealed: proofEntryConfig.isRevealed,
-    ...(proofEntryConfig.isOwnerID ? { isOwnerID: true } : {}),
+    ...(proofEntryConfig.isOwnerID
+      ? { isOwnerID: proofEntryConfig.isOwnerID }
+      : {}),
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
       : {}),
@@ -618,6 +620,16 @@ export type GPCRequirements = {
    * Arities (sizes) of tuples which can included in a proof.
    */
   tupleArities: Record<PODName, number>;
+
+  /**
+   * Indicator of whether a Semaphore V3 ownership check is required.
+   */
+  includeOwnerV3: boolean;
+
+  /**
+   * Indicator of whether a Semaphore V4 ownership check is required.
+   */
+  includeOwnerV4: boolean;
 };
 
 /**
@@ -630,7 +642,9 @@ export function GPCRequirements(
   nNumericValues: number = 0,
   nLists: number = 0,
   maxListSize: number = 0,
-  tupleArities: Record<PODName, number> = {}
+  tupleArities: Record<PODName, number> = {},
+  includeOwnerV3: boolean = false,
+  includeOwnerV4: boolean = false
 ): GPCRequirements {
   return {
     nObjects,
@@ -639,7 +653,9 @@ export function GPCRequirements(
     nNumericValues,
     nLists,
     maxListSize,
-    tupleArities
+    tupleArities,
+    includeOwnerV3,
+    includeOwnerV4
   };
 }
 
