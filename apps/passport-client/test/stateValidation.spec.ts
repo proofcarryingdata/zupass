@@ -461,7 +461,7 @@ describe("validateAppState", async function () {
     } satisfies ErrorReport);
   });
 
-  it("logged in ; mismatched v4 public key AND commitmentpost-migration ; errors", async function () {
+  it("logged in ; mismatched v4 public key AND commitment post-migration ; errors", async function () {
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       semaphore_v4_commitment: v4id2.commitment.toString(), // this one is wrong

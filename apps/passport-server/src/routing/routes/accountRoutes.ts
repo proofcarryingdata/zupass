@@ -90,10 +90,13 @@ export function initAccountRoutes(
   app.post("/account/one-click-login", async (req: Request, res: Response) => {
     const email = checkBody<OneClickLoginRequest, "email">(req, "email");
     const code = checkBody<OneClickLoginRequest, "code">(req, "code");
+    // we only need the v4 pubkey because the commitment is deriveable from it
+    // using the function `v4PublicKeyToCommitment`
     const semaphore_v4_pubkey = checkBody<
       OneClickLoginRequest,
       "semaphore_v4_pubkey"
     >(req, "semaphore_v4_pubkey");
+    // v3 commitment
     const commitment = checkBody<OneClickLoginRequest, "commitment">(
       req,
       "commitment"

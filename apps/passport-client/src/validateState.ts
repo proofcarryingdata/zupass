@@ -6,7 +6,6 @@ import {
   SemaphoreIdentityPCDPackage,
   v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
 import { AppState } from "./state";
@@ -39,7 +38,7 @@ export function validateAndLogInitialAppState(
 export function validateAndLogRunningAppState(
   tag: string,
   self: User | undefined,
-  identity: Identity | undefined,
+  identity: IdentityV3 | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
 ): boolean {
@@ -80,7 +79,7 @@ export function validateInitialAppState(
 export function validateRunningAppState(
   tag: string,
   self: User | undefined,
-  identity: Identity | undefined,
+  identity: IdentityV3 | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
 ): ErrorReport {
@@ -224,7 +223,7 @@ export function getRunningAppStateValidationErrors(
   }
 
   const v4CommitmentFromPCDCollection =
-    identityPCDFromCollection?.claim.identityV4?.commitment?.toString();
+    identityPCDFromCollection?.claim?.identityV4?.commitment?.toString();
   const v4CommitmentFromSelfField = self?.semaphore_v4_commitment;
 
   const v4PublicKeyFromSelfField = self?.semaphore_v4_pubkey;
