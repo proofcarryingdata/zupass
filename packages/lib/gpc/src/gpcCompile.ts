@@ -820,13 +820,6 @@ function compileProofEntryConstraints(
     if (entryInfo.entryConfig.isOwnerID) {
       if (firstOwnerIndex === undefined) {
         firstOwnerIndex = entryInfo.entryIndex;
-      } else if (
-        entryInfo.entryConfig.equalsEntry !== undefined ||
-        entryInfo.entryConfig.notEqualsEntry !== undefined
-      ) {
-        throw new Error(
-          "Can't use isOwnerID and equalsEntry or notEqualsEntry on the same entry."
-        );
       }
       entryEqualToOtherEntryByIndex.push(BigInt(firstOwnerIndex));
       entryIsEqualToOtherEntry.push(1n);

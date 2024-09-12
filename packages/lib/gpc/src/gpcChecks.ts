@@ -499,40 +499,32 @@ export function checkProofInputsForConfig(
       }
 
       // Identified (not) equal entry must also exist.
-      if (entryConfig.equalsEntry !== undefined) {
+      const entryEqConfig =
+        entryConfig.equalsEntry || entryConfig.notEqualsEntry;
+      if (entryEqConfig !== undefined) {
+        const errorStringQualifier = entryConfig.notEqualsEntry ? " not " : " ";
         const otherValue = resolvePODEntryIdentifier(
-          entryConfig.equalsEntry,
+          entryEqConfig,
           proofInputs.pods
         );
         if (otherValue === undefined) {
           throw new ReferenceError(
-            `Input entry ${objName}.${entryName} should be proved to equal` +
+            `Input entry ${objName}.${entryName} should be proved` +
+              errorStringQualifier +
+              `to equal` +
               ` ${entryConfig.equalsEntry} which doesn't exist in input.`
           );
         }
-
-        if (podValueHash(otherValue) !== podValueHash(podValue)) {
+        const entryEqCheck =
+          podValueHash(otherValue) === podValueHash(podValue);
+        if (
+          (entryConfig.equalsEntry && !entryEqCheck) ||
+          (entryConfig.notEqualsEntry && entryEqCheck)
+        ) {
           throw new Error(
-            `Input entry ${objName}.${entryName} doesn't equal ${entryConfig.equalsEntry}.`
-          );
-        }
-      }
-
-      if (entryConfig.notEqualsEntry !== undefined) {
-        const otherValue = resolvePODEntryIdentifier(
-          entryConfig.notEqualsEntry,
-          proofInputs.pods
-        );
-        if (otherValue === undefined) {
-          throw new ReferenceError(
-            `Input entry ${objName}.${entryName} should be proved not to equal` +
-              ` ${entryConfig.notEqualsEntry} which doesn't exist in input.`
-          );
-        }
-
-        if (podValueHash(otherValue) === podValueHash(podValue)) {
-          throw new Error(
-            `Input entry ${objName}.${entryName} equals ${entryConfig.notEqualsEntry}.`
+            `Input entry ${objName}.${entryName} does` +
+              errorStringQualifier +
+              `equal ${entryConfig.equalsEntry}.`
           );
         }
       }

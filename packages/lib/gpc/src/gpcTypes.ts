@@ -90,11 +90,10 @@ export type GPCProofEntryConfigCommon = {
    *
    * If undefined, there is no equality constraint.
    *
-   * For non-virtual entries, this feature cannot be combined with
-   * `notEqualsEntry` or `isOwnerID` on the same entry (since it shares the same
-   * constraints in the circuit).  Since equality constraints can be specified
-   * in either direction, you can still constrain an owner entry by specifying
-   * it on the non-owner entry.
+   * This feature cannot be combined with `notEqualsEntry` or `isOwnerID` on the
+   * same entry (since it shares the same constraints in the circuit).  Since
+   * equality constraints can be specified in either direction, you can still
+   * constrain an owner entry by specifying it on the non-owner entry.
    */
   equalsEntry?: PODEntryIdentifier;
 
@@ -109,11 +108,10 @@ export type GPCProofEntryConfigCommon = {
    *
    * If undefined, there is no inequality constraint.
    *
-   * For non-virtual entries, this feature cannot be combined with `equalsEntry`
-   * or `isOwnerID` on the same entry (since it shares the same constraints in
-   * the circuit). Since inequality constraints can be specified in either
-   * direction, you can still constrain an owner entry by specifying it on the
-   * non-owner entry.
+   * This feature cannot be combined with `equalsEntry` or `isOwnerID` on the
+   * same entry (since it shares the same constraints in the circuit). Since
+   * inequality constraints can be specified in either direction, you can still
+   * constrain an owner entry by specifying it on the non-owner entry.
    */
   notEqualsEntry?: PODEntryIdentifier;
 
