@@ -10,15 +10,19 @@ import {
   SemaphoreIdentityPCDProof,
   SemaphoreIdentityPCDTypeName
 } from "./SemaphoreIdentityPCD";
+import { v3tov4Identity } from "./v4IdentityUtils";
 
 export async function prove(
   args: SemaphoreIdentityPCDArgs
 ): Promise<SemaphoreIdentityPCD> {
-  return new SemaphoreIdentityPCD(uuid(), { identity: args.identity });
+  return new SemaphoreIdentityPCD(uuid(), {
+    identityV3: args.identityV3,
+    identityV4: v3tov4Identity(args.identityV3)
+  });
 }
 
 export async function verify(pcd: SemaphoreIdentityPCD): Promise<boolean> {
-  return pcd?.claim?.identity !== undefined;
+  return pcd?.claim?.identityV3 !== undefined;
 }
 
 export async function serialize(
@@ -29,7 +33,10 @@ export async function serialize(
     pcd: JSONBig.stringify({
       type: pcd.type,
       id: pcd.id,
-      identity: pcd.claim.identity.toString()
+      // note this is the v3 identity, but is not named
+      // 'identityV3' in the serialized format for backwards
+      // compatibility
+      identity: pcd.claim.identityV3.toString()
     })
   } as SerializedPCD<SemaphoreIdentityPCD>;
 }
@@ -42,8 +49,10 @@ export async function deserialize(
   requireDefinedParameter(id, "id");
   requireDefinedParameter(identity, "identity");
 
+  const v3Identity = new Identity(identity);
   return new SemaphoreIdentityPCD(id, {
-    identity: new Identity(identity)
+    identityV3: new Identity(identity),
+    identityV4: v3tov4Identity(v3Identity)
   });
 }
 
@@ -51,7 +60,8 @@ export function getDisplayOptions(pcd: SemaphoreIdentityPCD): DisplayOptions {
   return {
     header: "Semaphore Identity",
     displayName:
-      "semaphore-id-" + pcd.claim.identity.commitment.toString().substring(0, 8)
+      "semaphore-id-" +
+      pcd.claim.identityV3.commitment.toString().substring(0, 8)
   };
 }
 

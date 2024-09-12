@@ -55,7 +55,7 @@ async function setupProveArgs(): Promise<GPCPCDArgs> {
   const podPCD = new PODPCD(uuid(), pod);
 
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-    identity: ownerIdentity
+    identityV3: ownerIdentity
   });
 
   return {

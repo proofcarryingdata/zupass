@@ -225,7 +225,7 @@ describe("Subscription Manager", async function () {
       pcds: [
         await SemaphoreIdentityPCDPackage.serialize(
           await SemaphoreIdentityPCDPackage.prove({
-            identity: new Identity()
+            identityV3: new Identity()
           })
         )
       ]

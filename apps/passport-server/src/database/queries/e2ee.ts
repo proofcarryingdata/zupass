@@ -46,7 +46,7 @@ export async function setEncryptedStorage(
   dbPool: Pool,
   blobKey: string,
   encryptedBlob: string,
-  commitment?: string
+  v3Commitment?: string
 ): Promise<string> {
   const result = await sqlQuery(
     dbPool,
@@ -55,7 +55,7 @@ export async function setEncryptedStorage(
     ON CONFLICT(blob_key) DO UPDATE
     SET encrypted_blob = $2, revision = e2ee.revision + 1, commitment = $3
     RETURNING revision`,
-    [blobKey, encryptedBlob, commitment ?? null]
+    [blobKey, encryptedBlob, v3Commitment ?? null]
   );
   return result.rows[0].revision;
 }
@@ -86,7 +86,7 @@ export async function updateEncryptedStorage(
   blobKey: string,
   encryptedBlob: string,
   knownRevision: string,
-  commitment?: string
+  v3Commitment?: string
 ): Promise<UpdateEncryptedStorageResult> {
   // This single-step update is safe even without a transaction.  If two matching
   // updates to the same revision race with each other, the implicit row lock
@@ -99,7 +99,7 @@ export async function updateEncryptedStorage(
     SET encrypted_blob = $2, revision = revision + 1, commitment = $4, time_updated = now()
     WHERE blob_key = $1 AND revision = $3
     RETURNING revision`,
-    [blobKey, encryptedBlob, knownRevision, commitment ?? null]
+    [blobKey, encryptedBlob, knownRevision, v3Commitment ?? null]
   );
 
   // Update didn't match, but we need to distinguish the two possible cases.
@@ -126,7 +126,7 @@ export async function rekeyEncryptedStorage(
   newSalt: string,
   encryptedBlob: string,
   knownRevision?: string,
-  commitment?: string
+  v3Commitment?: string
 ): Promise<UpdateEncryptedStorageResult> {
   const newRevision = await sqlTransaction<string | undefined>(
     dbPool,
@@ -149,7 +149,7 @@ export async function rekeyEncryptedStorage(
             newBlobKey,
             encryptedBlob,
             knownRevision,
-            commitment ?? null
+            v3Commitment ?? null
           ]
         );
       } else {
@@ -158,7 +158,7 @@ export async function rekeyEncryptedStorage(
           SET blob_key = $2, encrypted_blob = $3, revision = revision + 1, time_updated = now(), commitment = $4
           WHERE blob_key = $1
           RETURNING revision`,
-          [oldBlobKey, newBlobKey, encryptedBlob, commitment ?? null]
+          [oldBlobKey, newBlobKey, encryptedBlob, v3Commitment ?? null]
         );
       }
 
@@ -193,11 +193,11 @@ export async function fetchE2EEStorageCount(dbPool: Pool): Promise<number> {
   return parseInt(result.rows[0].count, 10);
 }
 
-export async function deleteE2EEByCommitment(
+export async function deleteE2EEByV3Commitment(
   dbPool: Pool,
-  commitment: string
+  v3Commitment: string
 ): Promise<void> {
   await sqlQuery(dbPool, `delete from e2ee where commitment = $1`, [
-    commitment
+    v3Commitment
   ]);
 }

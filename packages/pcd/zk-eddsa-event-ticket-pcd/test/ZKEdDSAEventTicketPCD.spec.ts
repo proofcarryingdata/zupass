@@ -11,13 +11,12 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import {
+  IdentityV3,
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
 import { BABY_JUB_NEGATIVE_ONE, uuidToBigInt } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
-
 import {
   EdDSATicketFieldsToReveal,
   snarkInputForValidEventIds,
@@ -33,11 +32,11 @@ import "mocha";
 const zkeyFilePath = path.join(__dirname, `../artifacts/circuit.zkey`);
 const wasmFilePath = path.join(__dirname, `../artifacts/circuit.wasm`);
 
-const identity1 = new Identity(
+const identity1 = new IdentityV3(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
 );
 
-const identity2 = new Identity(
+const identity2 = new IdentityV3(
   '["222061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
 );
 
@@ -181,10 +180,10 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
   const validEventIdsNoTicket: string[] = [uuid(), uuid(), uuid(), uuid()];
 
   async function makeSerializedIdentityPCD(
-    identity: Identity
+    identityV3: IdentityV3
   ): Promise<SerializedPCD<SemaphoreIdentityPCD>> {
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-      identity: identity
+      identityV3: identityV3
     });
 
     return await SemaphoreIdentityPCDPackage.serialize(identityPCD);

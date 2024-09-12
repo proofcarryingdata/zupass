@@ -29,7 +29,7 @@ describe("semaphore group identity should work", function () {
     const signal = 1;
 
     const identityPCD = await SemaphoreIdentityPCDPackage.serialize(
-      await SemaphoreIdentityPCDPackage.prove({ identity })
+      await SemaphoreIdentityPCDPackage.prove({ identityV3: identity })
     );
 
     args = {

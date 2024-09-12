@@ -62,11 +62,12 @@ export function ChangeEmailScreen(): JSX.Element | null {
 
     try {
       const credential = await new CredentialManager(
-        stateContext.getState().identity,
+        stateContext.getState().identityV3,
         pcds,
         stateContext.getState().credentialCache
       ).requestCredential({
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "sempahore-signature-pcd",
+        pcdType: "email-pcd"
       });
 
       const result = await requestChangeUserEmail(
@@ -111,11 +112,12 @@ export function ChangeEmailScreen(): JSX.Element | null {
 
     try {
       const credential = await new CredentialManager(
-        stateContext.getState().identity,
+        stateContext.getState().identityV3,
         pcds,
         stateContext.getState().credentialCache
       ).requestCredential({
-        signatureType: "sempahore-signature-pcd"
+        signatureType: "sempahore-signature-pcd",
+        pcdType: "email-pcd"
       });
 
       const result = await requestChangeUserEmail(

@@ -4,7 +4,6 @@ import {
   getEdDSAPublicKey,
   isEqualEdDSAPublicKey
 } from "@pcd/eddsa-pcd";
-import { ObjPCDPackage, ObjPCDTypeName } from "@pcd/obj-pcd";
 import {
   Credential,
   VerificationError,
@@ -13,8 +12,6 @@ import {
 } from "@pcd/passport-interface";
 import { LRUCache } from "lru-cache";
 import { Pool } from "postgres-pool";
-import { fetchUserByAuthKey } from "../../../database/queries/users";
-import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { loadEdDSAPrivateKey } from "../../issuanceService";
 
 /**
@@ -45,36 +42,6 @@ export class CredentialSubservice {
    * Verify a credential, ideally using a cached verification.
    */
   public verify(credential: Credential): Promise<VerifiedCredential> {
-    if (credential.type === ObjPCDTypeName) {
-      return (async (): Promise<VerifiedCredential> => {
-        if (!this.dbPool) {
-          throw new Error(
-            "missing database pool - can't authenticate authKey PCD"
-          );
-        }
-        const pcd = await ObjPCDPackage.deserialize(credential.pcd);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const authKey = (pcd.proof.obj as any)["authKey"];
-        if (!authKey) {
-          throw new Error("auth key pcd missing authKey entry");
-        }
-        const user = await fetchUserByAuthKey(this.dbPool, authKey);
-        if (!user) {
-          throw new PCDHTTPError(401, `no user for auth key ${authKey} found`);
-        }
-
-        return {
-          semaphoreId: user.commitment,
-          emails: user.emails.map((e) => ({
-            email: e,
-            semaphoreId: user.commitment,
-            signer: this.zupassPublicKey
-          })),
-          authKey
-        };
-      })();
-    }
-
     const key = JSON.stringify(credential);
     const cached = this.verificationCache.get(key);
     const span = getActiveSpan();

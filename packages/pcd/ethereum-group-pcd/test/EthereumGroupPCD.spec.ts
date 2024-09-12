@@ -32,12 +32,12 @@ async function groupProof(
   merkleProof: MerkleProof;
 }> {
   const signatureOfIdentityCommitment = await wallet.signMessage(
-    identity.claim.identity.commitment.toString()
+    identity.claim.identityV3.commitment.toString()
   );
 
   const msgHash = Buffer.from(
     ethers.utils
-      .hashMessage(identity.claim.identity.commitment.toString())
+      .hashMessage(identity.claim.identityV3.commitment.toString())
       .slice(2),
     "hex"
   );
@@ -96,7 +96,7 @@ async function happyPathEthGroupPCD(
   groupType: GroupType
 ): Promise<EthereumGroupPCD> {
   const identity = await SemaphoreIdentityPCDPackage.prove({
-    identity: new Identity()
+    identityV3: new Identity()
   });
   const serializedIdentity =
     await SemaphoreIdentityPCDPackage.serialize(identity);
@@ -238,7 +238,7 @@ describe("Ethereum Group PCD", function () {
 
   it("should not be able create a PCD with a different identity", async function () {
     const identity1 = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identityV3: new Identity()
     });
     const wallet = ethers.Wallet.createRandom();
     const { signatureOfIdentityCommitment, merkleProof } = await groupProof(
@@ -247,7 +247,7 @@ describe("Ethereum Group PCD", function () {
     );
 
     const identity2 = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identityV3: new Identity()
     });
     const serializedIdentity2 =
       await SemaphoreIdentityPCDPackage.serialize(identity2);
@@ -280,7 +280,7 @@ describe("Ethereum Group PCD", function () {
 
   it("should not be able to create a PCD with tampered merkle root", async function () {
     const identity = await SemaphoreIdentityPCDPackage.prove({
-      identity: new Identity()
+      identityV3: new Identity()
     });
     const serializedIdentity =
       await SemaphoreIdentityPCDPackage.serialize(identity);

@@ -44,7 +44,7 @@ import {
   upsertFeedData,
   upsertFrogData
 } from "../database/queries/frogcrypto";
-import { fetchUserByCommitment } from "../database/queries/users";
+import { fetchUserByV3Commitment } from "../database/queries/users";
 import { sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
@@ -405,7 +405,7 @@ export class FrogcryptoService {
     credential: Credential
   ): Promise<void> {
     const id = await this.verifyCredentialAndGetSemaphoreId(credential);
-    const user = await fetchUserByCommitment(this.context.dbPool, id);
+    const user = await fetchUserByV3Commitment(this.context.dbPool, id);
     if (!user) {
       throw new PCDHTTPError(400, "invalid PCD");
     }

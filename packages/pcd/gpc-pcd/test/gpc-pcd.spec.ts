@@ -79,7 +79,7 @@ describe("GPCPCD should work", async function () {
     const ticketPODPCD = new PODPCD(uuid(), ticketPOD);
 
     const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-      identity: ownerIdentity
+      identityV3: ownerIdentity
     });
 
     const proveArgs: GPCPCDArgs = {

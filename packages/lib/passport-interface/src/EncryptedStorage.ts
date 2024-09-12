@@ -78,11 +78,37 @@ export interface SyncedEncryptedStorageV4 {
   _storage_version: "v4";
 }
 
+export interface SyncedEncryptedStorageV5 {
+  // Copied from SyncedEncryptedStorageV4
+  // changed: added semaphore v4 identity
+  self: {
+    uuid: string;
+    commitment: string;
+    emails: string[];
+    salt: string | null;
+    terms_agreed: number;
+    semaphore_v4_commitment?: string | null;
+    semaphore_v4_pubkey?: string | null;
+  };
+
+  /**
+   * Serialized {@link PCDCollection}.
+   */
+  pcds: string;
+
+  /**
+   * Serialized {@link FeedSubscriptionManager}
+   */
+  subscriptions: string;
+  _storage_version: "v5";
+}
+
 export type SyncedEncryptedStorage =
   | SyncedEncryptedStorageV1
   | SyncedEncryptedStorageV2
   | SyncedEncryptedStorageV3
-  | SyncedEncryptedStorageV4;
+  | SyncedEncryptedStorageV4
+  | SyncedEncryptedStorageV5;
 
 export function isSyncedEncryptedStorageV1(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -112,6 +138,13 @@ export function isSyncedEncryptedStorageV4(
   return storage._storage_version === "v4";
 }
 
+export function isSyncedEncryptedStorageV5(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  storage: any
+): storage is SyncedEncryptedStorageV5 {
+  return storage._storage_version === "v5";
+}
+
 /**
  * Deserialize a decrypted storage object and set up the PCDCollection and
  * FeedSubscriptionManager to manage its data.  If the storage comes from
@@ -129,7 +162,13 @@ export async function deserializeStorage(
   let pcds: PCDCollection;
   let subscriptions: FeedSubscriptionManager;
 
-  if (isSyncedEncryptedStorageV4(storage)) {
+  if (isSyncedEncryptedStorageV5(storage)) {
+    pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds);
+    subscriptions = FeedSubscriptionManager.deserialize(
+      new NetworkFeedApi(),
+      storage.subscriptions
+    );
+  } else if (isSyncedEncryptedStorageV4(storage)) {
     pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds);
     subscriptions = FeedSubscriptionManager.deserialize(
       new NetworkFeedApi(),

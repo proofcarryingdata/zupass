@@ -64,14 +64,11 @@ export function initAccountRoutes(
     const email = normalizeEmail(
       checkBody<ConfirmEmailRequest, "email">(req, "email")
     );
-    const commitment = checkBody<ConfirmEmailRequest, "commitment">(
-      req,
-      "commitment"
-    );
+
     const force =
       checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
 
-    await userService.handleSendTokenEmail(email, commitment, force, res);
+    await userService.handleSendTokenEmail(email, force, res);
   });
 
   /**
@@ -93,6 +90,13 @@ export function initAccountRoutes(
   app.post("/account/one-click-login", async (req: Request, res: Response) => {
     const email = checkBody<OneClickLoginRequest, "email">(req, "email");
     const code = checkBody<OneClickLoginRequest, "code">(req, "code");
+    // we only need the v4 pubkey because the commitment is deriveable from it
+    // using the function `v4PublicKeyToCommitment`
+    const semaphore_v4_pubkey = checkBody<
+      OneClickLoginRequest,
+      "semaphore_v4_pubkey"
+    >(req, "semaphore_v4_pubkey");
+    // v3 commitment
     const commitment = checkBody<OneClickLoginRequest, "commitment">(
       req,
       "commitment"
@@ -106,6 +110,7 @@ export function initAccountRoutes(
       email,
       code,
       commitment,
+      semaphore_v4_pubkey,
       encryptionKey,
       res
     );
@@ -139,6 +144,12 @@ export function initAccountRoutes(
     const { salt, encryptionKey, autoRegister } =
       req.body as CreateNewUserRequest as CreateNewUserRequest;
     const token = checkBody<CreateNewUserRequest, "token">(req, "token");
+    // we only need the v4 pubkey because the commitment is deriveable from it
+    // using the function `v4PublicKeyToCommitment`
+    const semaphore_v4_pubkey = checkBody<
+      CreateNewUserRequest,
+      "semaphore_v4_pubkey"
+    >(req, "semaphore_v4_pubkey");
     const commitment = checkBody<CreateNewUserRequest, "commitment">(
       req,
       "commitment"
@@ -148,12 +159,33 @@ export function initAccountRoutes(
       token,
       email,
       commitment,
+      semaphore_v4_pubkey,
       salt,
       encryptionKey,
       autoRegister,
       res
     );
   });
+
+  /**
+   * Lets a client upload its v4 commitment to zupass, which happens in the case that
+   * a user has a v3 identity and zupass account that existed prior to the introduction
+   * of the v4 identity.
+   */
+  app.post(
+    "/account/upgrade-with-v4-commitment",
+    async (req: Request, res: Response) => {
+      const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
+
+      const result = await userService.handleAddV4Commitment(pcd);
+
+      if (result.success) {
+        res.status(200).json(result.value);
+      } else {
+        res.status(403).send(result.error);
+      }
+    }
+  );
 
   /**
    * Records that the user has agreed to a given version of the legal terms.

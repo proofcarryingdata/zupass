@@ -33,7 +33,7 @@ describe("rln-pcd should work", function () {
     const epoch = BigInt(42);
 
     const identityPCD = await SemaphoreIdentityPCDPackage.serialize(
-      await SemaphoreIdentityPCDPackage.prove({ identity })
+      await SemaphoreIdentityPCDPackage.prove({ identityV3: identity })
     );
 
     // Arguments required for proving

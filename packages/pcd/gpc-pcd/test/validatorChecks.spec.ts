@@ -63,7 +63,7 @@ describe("PCD type check should work", () => {
 
   it("should fail for another type of PCD.", async () => {
     const identityPCD = (await SemaphoreIdentityPCDPackage.prove({
-      identity: ownerIdentity
+      identityV3: ownerIdentity
     })) as unknown as PODPCD;
     expect(checkPCDType(identityPCD)).to.be.false;
   });

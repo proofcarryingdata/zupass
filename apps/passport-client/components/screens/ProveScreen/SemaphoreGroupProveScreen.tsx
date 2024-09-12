@@ -17,7 +17,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
-import { useIdentity } from "../../../src/appHooks";
+import { useIdentityV3 } from "../../../src/appHooks";
 import {
   safeRedirect,
   safeRedirectPending
@@ -34,7 +34,7 @@ export function SemaphoreGroupProveScreen({
 }): JSX.Element {
   const [error, setError] = useState<string | undefined>();
   const [group, setGroup] = useState<SerializedSemaphoreGroup | null>(null);
-  const identity = useIdentity();
+  const identity = useIdentityV3();
   const [proving, setProving] = useState(false);
   const isLoading = group === null;
 
@@ -181,7 +181,7 @@ export function SemaphoreGroupProveScreen({
 }
 
 async function fillArgs(
-  identity: Identity,
+  identityV3: Identity,
   semaphoreGroup: SerializedSemaphoreGroup,
   reqArgs: SemaphoreGroupPCDArgs
 ): Promise<SemaphoreGroupPCDArgs> {
@@ -202,7 +202,7 @@ async function fillArgs(
       argumentType: ArgumentTypeName.PCD,
       pcdType: SemaphoreIdentityPCDPackage.name,
       value: await SemaphoreIdentityPCDPackage.serialize(
-        await SemaphoreIdentityPCDPackage.prove({ identity })
+        await SemaphoreIdentityPCDPackage.prove({ identityV3 })
       )
     }
   };

@@ -16,8 +16,8 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
+import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";
 import { appConfig } from "./appConfig";
@@ -115,7 +115,7 @@ export type UploadStorageResult = APIResult<
  */
 export async function uploadStorage(
   user: User,
-  userIdentity: Identity,
+  userIdentityV3: IdentityV3,
   pcds: PCDCollection,
   subscriptions: FeedSubscriptionManager,
   knownRevision?: string
@@ -127,7 +127,7 @@ export async function uploadStorage(
   );
   return uploadSerializedStorage(
     user,
-    userIdentity,
+    userIdentityV3,
     pcds,
     serializedStorage,
     storageHash,
@@ -149,7 +149,7 @@ export async function uploadStorage(
  */
 export async function uploadSerializedStorage(
   user: User,
-  userIdentity: Identity,
+  userIdentityV3: IdentityV3,
   pcds: PCDCollection,
   serializedStorage: SyncedEncryptedStorage,
   storageHash: string,
@@ -160,7 +160,7 @@ export async function uploadSerializedStorage(
     !validateAndLogRunningAppState(
       "uploadSerializedStorage",
       user,
-      userIdentity,
+      userIdentityV3,
       pcds
     )
   ) {
@@ -402,7 +402,7 @@ export async function downloadAndMergeStorage(
   knownServerRevision: string | undefined,
   knownServerHash: string | undefined,
   appSelf: User,
-  appIdentity: Identity,
+  appIdentityV3: IdentityV3,
   appPCDs: PCDCollection,
   appSubscriptions: FeedSubscriptionManager
 ): Promise<SyncStorageResult> {
@@ -433,7 +433,7 @@ export async function downloadAndMergeStorage(
   // merge is necessary.
   const downloaded = await tryDeserializeNewStorage(
     appSelf,
-    appIdentity,
+    appIdentityV3,
     storageResult.value.storage
   );
   if (downloaded === undefined) {
@@ -504,11 +504,11 @@ export async function downloadAndMergeStorage(
 }
 
 /**
- * {@link appSelf} and {@link appIdentity} are used solely for validation purposes.
+ * {@link appSelf} and {@link appIdentityV3} are used solely for validation purposes.
  */
 export async function tryDeserializeNewStorage(
   appSelf: User,
-  appIdentity: Identity,
+  appIdentityV3: IdentityV3,
   storage: SyncedEncryptedStorage
 ): Promise<
   | undefined
@@ -528,7 +528,7 @@ export async function tryDeserializeNewStorage(
       !validateAndLogRunningAppState(
         "downloadStorage",
         appSelf,
-        appIdentity,
+        appIdentityV3,
         pcds
       )
     ) {

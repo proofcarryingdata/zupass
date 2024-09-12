@@ -1,7 +1,10 @@
 import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  IdentityV3,
+  SemaphoreIdentityPCDPackage
+} from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
@@ -60,7 +63,7 @@ export function createStorageBackedCredentialCache(): CredentialCache {
  * Handles generation of credentials for feeds.
  */
 export class CredentialManager implements CredentialManagerAPI {
-  private readonly identity: Identity;
+  private readonly identityV3: IdentityV3;
   private readonly pcds: PCDCollection;
   private readonly cache: CredentialCache;
   private readonly credentialPromises: Map<
@@ -73,7 +76,7 @@ export class CredentialManager implements CredentialManagerAPI {
     pcds: PCDCollection,
     cache: CredentialCache
   ) {
-    this.identity = identity;
+    this.identityV3 = identity;
     this.pcds = pcds;
     this.cache = cache;
     this.credentialPromises = new Map();
@@ -227,7 +230,7 @@ export class CredentialManager implements CredentialManagerAPI {
         argumentType: ArgumentTypeName.PCD,
         value: await SemaphoreIdentityPCDPackage.serialize(
           await SemaphoreIdentityPCDPackage.prove({
-            identity: this.identity
+            identityV3: this.identityV3
           })
         )
       },

@@ -5,6 +5,13 @@ import {
   requestUser,
   User
 } from "@pcd/passport-interface";
+import {
+  SemaphoreIdentityPCD,
+  v3tov4Identity,
+  v4PublicKey,
+  v4PublicKeyToCommitment
+} from "@pcd/semaphore-identity-pcd";
+import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomBytes } from "crypto";
@@ -26,13 +33,17 @@ export async function testLogin(
   }
 ): Promise<{ user: User; identity: Identity } | undefined> {
   const { userService, emailTokenService } = application.services;
-  const identity = new Identity();
-  const commitment = identity.commitment.toString();
+  const identityV3 = new Identity();
+  const identityPCD = new SemaphoreIdentityPCD(randomUUID(), {
+    identityV3,
+    identityV4: v3tov4Identity(identityV3)
+  });
+  const v3Commitment = identityV3.commitment.toString();
+  const v4Pubkey = v4PublicKey(identityPCD.claim.identityV4);
 
   const confirmationEmailResult = await requestConfirmationEmail(
     application.expressContext.localEndpoint,
     email,
-    commitment,
     force
   );
 
@@ -82,7 +93,8 @@ export async function testLogin(
     application.expressContext.localEndpoint,
     email,
     token,
-    commitment,
+    v3Commitment,
+    v4Pubkey,
     skipSetupPassword ? undefined : salt,
     encryptionKey,
     undefined
@@ -96,7 +108,11 @@ export async function testLogin(
   expect(newUserResult.value).to.haveOwnProperty("commitment");
   expect(newUserResult.value).to.haveOwnProperty("emails");
   expect(newUserResult.success).to.eq(true);
-  expect(newUserResult.value.commitment).to.eq(commitment);
+  expect(newUserResult.value.commitment).to.eq(v3Commitment);
+  expect(newUserResult.value.semaphore_v4_pubkey).to.eq(v4Pubkey);
+  expect(newUserResult.value.semaphore_v4_commitment).to.eq(
+    v4PublicKeyToCommitment(v4Pubkey)
+  );
   expect(newUserResult.value.emails).to.deep.eq([email]);
 
   const getUserResponse = await requestUser(
@@ -108,10 +124,7 @@ export async function testLogin(
     throw new Error("expected to get a user");
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const newUserResultWoutAuthKey: any = newUserResult.value;
-  delete newUserResultWoutAuthKey.authKey;
   expect(getUserResponse.value).to.deep.eq(newUserResult.value);
 
-  return { user: getUserResponse.value, identity };
+  return { user: getUserResponse.value, identity: identityV3 };
 }
