@@ -91,45 +91,70 @@ function canonicalizeObjectConfig(
     canonicalEntries[entryName] = canonicalizeEntryConfig(entryConfig);
   }
 
+  // Check if content ID configuration is set to its defaults, in which case it
+  // will be omitted in the canonicalised config.
+  const contentIDConfig = proofObjectConfig.contentID;
+  const canonicalizedContentIDConfig =
+    contentIDConfig !== undefined
+      ? canonicalizeVirtualEntryConfig(contentIDConfig, false)
+      : undefined;
+
   // Check if signer's public key configuration is set to its defaults, in which
   // case it will be omitted in the canonicalised config.
   const signerPublicKeyConfig = proofObjectConfig.signerPublicKey;
   const canonicalizedSignerPublicKeyConfig =
     signerPublicKeyConfig !== undefined
-      ? canonicalizeSignerPublicKeyConfig(signerPublicKeyConfig)
+      ? canonicalizeVirtualEntryConfig(signerPublicKeyConfig, true)
       : undefined;
 
   return {
     entries: canonicalEntries,
+    ...(canonicalizedContentIDConfig !== undefined
+      ? { contentID: canonicalizedContentIDConfig }
+      : {}),
     ...(canonicalizedSignerPublicKeyConfig !== undefined
       ? { signerPublicKey: canonicalizedSignerPublicKeyConfig }
       : {})
   };
 }
 
-export function canonicalizeSignerPublicKeyConfig(
-  signerPublicKeyConfig: GPCProofEntryConfigCommon
+export function canonicalizeVirtualEntryConfig(
+  virtualEntryConfig: GPCProofEntryConfigCommon,
+  defaultIsRevealed: boolean
 ): GPCProofEntryConfigCommon | undefined {
+  const virtualEntryConfigKeys = Object.keys(virtualEntryConfig).filter((key) =>
+    [
+      "isRevealed",
+      "equalsEntry",
+      "isMemberOf",
+      "isNotMemberOf",
+      "notEqualsEntry"
+    ].includes(key)
+  );
+  // The check phase guarantees that `isRevealed` is specified in this case.
   if (
-    Object.keys(signerPublicKeyConfig).length === 1 &&
-    signerPublicKeyConfig.isRevealed
+    virtualEntryConfigKeys.length === 1 &&
+    virtualEntryConfig.isRevealed === defaultIsRevealed
   ) {
     return undefined;
   } else {
     // Set optional fields only when they have non-default values.
     return {
-      isRevealed: signerPublicKeyConfig.isRevealed,
-      ...(signerPublicKeyConfig.equalsEntry !== undefined
-        ? { equalsEntry: signerPublicKeyConfig.equalsEntry }
+      isRevealed: virtualEntryConfig.isRevealed,
+      ...(virtualEntryConfig.equalsEntry !== undefined
+        ? { equalsEntry: virtualEntryConfig.equalsEntry }
         : {}),
-      ...(signerPublicKeyConfig.isMemberOf !== undefined
+      ...(virtualEntryConfig.notEqualsEntry !== undefined
+        ? { notEqualsEntry: virtualEntryConfig.notEqualsEntry }
+        : {}),
+      ...(virtualEntryConfig.isMemberOf !== undefined
         ? {
-            isMemberOf: signerPublicKeyConfig.isMemberOf
+            isMemberOf: virtualEntryConfig.isMemberOf
           }
         : {}),
-      ...(signerPublicKeyConfig.isNotMemberOf !== undefined
+      ...(virtualEntryConfig.isNotMemberOf !== undefined
         ? {
-            isNotMemberOf: signerPublicKeyConfig.isNotMemberOf
+            isNotMemberOf: virtualEntryConfig.isNotMemberOf
           }
         : {})
     };
@@ -151,6 +176,10 @@ export function canonicalizeEntryConfig(
       : {}),
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
+      : {}),
+
+    ...(proofEntryConfig.notEqualsEntry !== undefined
+      ? { notEqualsEntry: proofEntryConfig.notEqualsEntry }
       : {}),
     ...canonicalizedBoundsCheckConfig,
     ...(proofEntryConfig.isMemberOf !== undefined
@@ -330,10 +359,14 @@ export function resolvePODEntry(
     return pod?.content?.getValue(entryName);
   }
 
-  // TODO(POD-P3): Modify for other virtual entry types when they are available by including switch statement.
-  return pod?.signerPublicKey !== undefined
-    ? PODEdDSAPublicKeyValue(pod?.signerPublicKey)
-    : undefined;
+  switch (entryName) {
+    case "$contentID":
+      return { type: "cryptographic", value: pod?.contentID };
+    case "$signerPublicKey":
+      return PODEdDSAPublicKeyValue(pod?.signerPublicKey);
+  }
+
+  return undefined;
 }
 
 /**
@@ -735,6 +768,12 @@ export function listConfigFromProofConfig(
   // Check entries and signer's public keys for membership declarations.
   for (const podName of Object.keys(proofConfig.pods)) {
     const pod = proofConfig.pods[podName];
+
+    addIdentifierToListConfig(
+      gpcListConfig,
+      pod.contentID,
+      `${podName}.$contentID`
+    );
 
     addIdentifierToListConfig(
       gpcListConfig,

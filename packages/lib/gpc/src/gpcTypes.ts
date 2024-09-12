@@ -18,19 +18,21 @@ export type PODEntryIdentifier = `${PODName}.${PODName | PODVirtualEntryName}`;
  * the form `${PODName}.${PODVirtualEntryName}`.
  */
 export const POD_VIRTUAL_ENTRY_IDENTIFIER_REGEX = new RegExp(
-  /([A-Za-z_]\w*)\.\$(signerPublicKey)$/
+  /([A-Za-z_]\w*)\.\$(signerPublicKey|contentID)$/
 );
 
 /**
  * String specifying valid virtual entry name.
  */
-export type PODVirtualEntryName = "$signerPublicKey";
+export type PODVirtualEntryName = "$signerPublicKey" | "$contentID";
 
 /**
  * Regex matching legal names for POD virtual entries. Matches
  * `PODVirtualEntryName`.
  */
-export const POD_VIRTUAL_NAME_REGEX = new RegExp(/^\$(signerPublicKey)$/);
+export const POD_VIRTUAL_NAME_REGEX = new RegExp(
+  /^\$(signerPublicKey|contentID)$/
+);
 
 /**
  * Optional set of lists for checking POD entry (or tuple) value
@@ -105,13 +107,30 @@ export type GPCProofEntryConfigCommon = {
    *
    * If undefined, there is no equality constraint.
    *
-   * For non-virtual entries, this feature cannot be combined with `isOwnerID`
-   * on the same entry (since it shares the same constraints in the circuit).
-   * However since equality constraints can be specified in either direction,
-   * you can still constrain an owner entry by specifying it on the non-owner
-   * entry.
+   * This feature cannot be combined with `notEqualsEntry` or `isOwnerID` on the
+   * same entry (since it shares the same constraints in the circuit).  Since
+   * equality constraints can be specified in either direction, you can still
+   * constrain an owner entry by specifying it on the non-owner entry.
    */
   equalsEntry?: PODEntryIdentifier;
+
+  /**
+   * Indicates that this entry must not be equal to another entry.  The other
+   * entry is specified by a 2-part {@link PODEntryIdentifier} string used to
+   * find the entry in one of the pods in {@link GPCProofInputs}.
+   *
+   * Comparison in the proof circuit is based on the hash produced by
+   * {@link podValueHash}.  This means values of different types can be
+   * considered equal if they are treated in the same way by circuits.
+   *
+   * If undefined, there is no inequality constraint.
+   *
+   * This feature cannot be combined with `equalsEntry` or `isOwnerID` on the
+   * same entry (since it shares the same constraints in the circuit). Since
+   * inequality constraints can be specified in either direction, you can still
+   * constrain an owner entry by specifying it on the non-owner entry.
+   */
+  notEqualsEntry?: PODEntryIdentifier;
 
   /**
    * Indicates a single list in which this entry must lie, which corresponds to
@@ -208,6 +227,14 @@ export type GPCProofObjectConfig = {
    * constrained in other ways based on other parts of this configuration.
    */
   entries: Record<PODName, GPCProofEntryConfig>;
+
+  /**
+   * The content ID of this object to be proven. The GPC can choose
+   * to simply reveal it or else hide it but constrain it to lie in a list or
+   * be equal to another object's signing key. If this configuration
+   * is undefined, the content ID will not be revealed.
+   */
+  contentID?: GPCProofEntryConfigCommon;
 
   /**
    * The signer's public key of this object to be proven. The GPC can choose
@@ -462,6 +489,12 @@ export type GPCRevealedObjectClaims = {
    * `cryptographic` value are considered the same if their value is equal.
    */
   entries?: PODEntries;
+
+  /**
+   * Potentially redacted content ID of this POD. The proof confirms that this
+   * is computed properly.
+   */
+  contentID?: bigint;
 
   /**
    * Potentially redacted EdDSA public key of the issuer of this POD.  The proof

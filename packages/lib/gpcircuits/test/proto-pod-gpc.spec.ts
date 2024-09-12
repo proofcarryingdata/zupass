@@ -15,7 +15,7 @@ import { WitnessTester } from "circomkit";
 import _ from "lodash";
 import "mocha";
 import path from "path";
-import { poseidon2 } from "poseidon-lite";
+import { poseidon1, poseidon2 } from "poseidon-lite";
 import {
   CircuitArtifactPaths,
   CircuitSignal,
@@ -243,24 +243,28 @@ const sampleInput: ProtoPODGPCInputs = {
   ],
 
   // Virtual entry module.
-  virtualEntryIsValueHashRevealed: 5n,
+  virtualEntryIsValueHashRevealed: 38n,
 
   // Entry constraint modules.
   /*PUB*/ entryEqualToOtherEntryByIndex: [
     3n,
-    1n,
+    0n,
     2n,
-    3n,
+    1n,
     4n,
     1n,
     6n,
     7n,
     8n,
     3n,
+    10n,
+    15n,
     12n,
-    11n,
-    12n
+    13n,
+    14n,
+    15n
   ],
+  /*PUB*/ entryIsEqualToOtherEntry: 65525n,
 
   // External nullifier for owner modules
   /*PUB*/ ownerExternalNullifier: 42n,
@@ -305,7 +309,7 @@ const sampleInput: ProtoPODGPCInputs = {
 
   // List membership module (1)
   /*PUB*/ listComparisonValueIndex: [
-    13n,
+    16n,
     2n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
@@ -423,7 +427,10 @@ const sampleOutput: ProtoPODGPCOutputs = {
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
   ],
   virtualEntryRevealedValueHash: [
+    21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     8093821485214269328389004542394237209037452657522929891144731833981969398000n,
+    15753760259932082996092161797051962795070962513663244554172857040414575368353n,
+    21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     8093821485214269328389004542394237209037452657522929891144731833981969398000n
   ],
@@ -460,31 +467,49 @@ function makeTestSignals(
     [sampleEntries3, privateKey]
   ];
   const testEntries = [
-    { name: "A", objectIndex: 0, eqEntryIndex: 3 },
-    { name: "owner", objectIndex: 0, eqEntryIndex: undefined },
-    { name: "C", objectIndex: 0, eqEntryIndex: undefined },
-    { name: "E", objectIndex: 0, eqEntryIndex: undefined },
-    { name: "K", objectIndex: 0, eqEntryIndex: undefined }
+    { name: "A", objectIndex: 0, eqEntryIndex: 3, eqEntryFlag: 1 },
+    { name: "owner", objectIndex: 0, eqEntryIndex: 0, eqEntryFlag: 0 },
+    {
+      name: "C",
+      objectIndex: 0,
+      eqEntryIndex: undefined,
+      eqEntryFlag: undefined
+    },
+    { name: "E", objectIndex: 0, eqEntryIndex: 1, eqEntryFlag: 0 },
+    {
+      name: "K",
+      objectIndex: 0,
+      eqEntryIndex: undefined,
+      eqEntryFlag: undefined
+    }
   ];
   if (params.maxObjects > 1) {
-    testEntries.push({ name: "attendee", objectIndex: 1, eqEntryIndex: 1 });
+    testEntries.push({
+      name: "attendee",
+      objectIndex: 1,
+      eqEntryIndex: 1,
+      eqEntryFlag: 1
+    });
     testEntries.push({
       name: "eventID",
       objectIndex: 1,
-      eqEntryIndex: undefined
+      eqEntryIndex: undefined,
+      eqEntryFlag: undefined
     });
     // Public key is constrained to equal POD 0's signer's public key.
     testEntries.push({
       name: "pubKey",
       objectIndex: 1,
-      eqEntryIndex: params.maxEntries
+      eqEntryIndex: params.maxEntries,
+      eqEntryFlag: 1
     });
   }
   if (params.maxObjects > 2) {
     testEntries.push({
       name: "attendee",
       objectIndex: 2,
-      eqEntryIndex: undefined
+      eqEntryIndex: undefined,
+      eqEntryFlag: undefined
     });
   }
   const sigOwnerV3EntryIndex = 1n;
@@ -508,7 +533,7 @@ function makeTestSignals(
   }
 
   // Fill in ObjectModule inputs.
-  const sigObjectContentID = [];
+  const sigObjectContentID: bigint[] = [];
   const sigObjectSignerPubkeyAx: CircuitSignal[] = [];
   const sigObjectSignerPubkeyAy: CircuitSignal[] = [];
   const sigObjectSignatureR8x = [];
@@ -534,6 +559,7 @@ function makeTestSignals(
   const sigEntryIsValueHashRevealed = [];
   const sigEntryRevealedValueHash = [];
   const sigEntryEqualToOtherEntryByIndex = [];
+  const sigEntryIsEqualToOtherEntry = [];
   const sigEntryProofDepth = [];
   const sigEntryProofIndex = [];
   const sigEntryProofSiblings = [];
@@ -580,8 +606,10 @@ function makeTestSignals(
       entryInfo.eqEntryIndex < params.maxEntries
     ) {
       sigEntryEqualToOtherEntryByIndex.push(BigInt(entryInfo.eqEntryIndex));
+      sigEntryIsEqualToOtherEntry.push(BigInt(entryInfo.eqEntryFlag));
     } else {
       sigEntryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
+      sigEntryIsEqualToOtherEntry.push(BigInt(1n));
     }
     sigEntryProofDepth.push(BigInt(entrySignals.proof.siblings.length));
     sigEntryProofIndex.push(BigInt(entrySignals.proof.index));
@@ -592,17 +620,23 @@ function makeTestSignals(
     );
   }
 
-  // Virtual entry hash is arbitrarily revealed for even-numbered virtual
-  // entries, which amounts to even-numbered objects.
+  // Virtual entry hash is arbitrarily revealed according to the pattern
+  // [0n,1n,1n,0n,0n,1n,...], which amounts to revealing the signer's public key
+  // for the even objects and the content ID for the odd ones.
   const maxVirtualEntries = paramMaxVirtualEntries(params);
-  const sigVirtualEntryIsValueHashRevealed = sigObjectSignatureS.map((_, i) =>
-    BigInt(1 - (i % 2))
+  const sigVirtualEntryIsValueHashRevealed = sigObjectContentID.flatMap(
+    (_, i) => (i % 2 === 0 ? [0n, 1n] : [1n, 0n])
   );
   const sigVirtualEntryRevealedValueHash =
     sigVirtualEntryIsValueHashRevealed.map((indicator, i) =>
       indicator === 0n
         ? BABY_JUB_NEGATIVE_ONE
-        : poseidon2([sigObjectSignerPubkeyAx[i], sigObjectSignerPubkeyAy[i]])
+        : i % 2 === 0
+        ? poseidon1([sigObjectContentID[i / 2]])
+        : poseidon2([
+            sigObjectSignerPubkeyAx[(i - 1) / 2],
+            sigObjectSignerPubkeyAy[(i - 1) / 2]
+          ])
     );
 
   // Constrain the 0th POD's signer's public key to equal the 2nd one's (if
@@ -610,10 +644,12 @@ function makeTestSignals(
   const sigVirtualEntryEqualToOtherEntryByIndex = Array(maxVirtualEntries)
     .fill(0)
     .map((_, i) =>
-      i === 0 && params.maxObjects > 2
-        ? BigInt(params.maxEntries + 2)
+      i === 1 && params.maxObjects > 2
+        ? BigInt(params.maxEntries + 5)
         : BigInt(params.maxEntries + i)
     );
+  const sigVirtualEntryIsEqualToOtherEntry =
+    sigVirtualEntryEqualToOtherEntryByIndex.map((_) => 1n);
 
   // Constrain entry 4 (sampleEntries.K) to lie in the interval [-10n, 132n]
   const [
@@ -725,6 +761,9 @@ function makeTestSignals(
       ),
       entryEqualToOtherEntryByIndex: sigEntryEqualToOtherEntryByIndex.concat(
         sigVirtualEntryEqualToOtherEntryByIndex
+      ),
+      entryIsEqualToOtherEntry: array2Bits(
+        sigEntryIsEqualToOtherEntry.concat(sigVirtualEntryIsEqualToOtherEntry)
       ),
       entryProofDepth: sigEntryProofDepth,
       entryProofIndex: sigEntryProofIndex,

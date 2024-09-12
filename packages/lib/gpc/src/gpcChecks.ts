@@ -196,6 +196,12 @@ function checkProofObjConfig(
     hasOwnerV3 ||= hasOwnerV3Check;
     hasOwnerV4 ||= hasOwnerV4Check;
   }
+  if (objConfig.contentID !== undefined) {
+    checkProofEntryConfig(
+      `${nameForErrorMessages}.$contentID`,
+      objConfig.contentID
+    );
+  }
   if (objConfig.signerPublicKey !== undefined) {
     checkProofEntryConfig(
       `${nameForErrorMessages}.$signerPublicKey`,
@@ -231,12 +237,33 @@ export function checkProofEntryConfig(
     if (entryConfig.equalsEntry !== undefined) {
       throw new Error("Can't use isOwnerID and equalsEntry on the same entry.");
     }
+    if (entryConfig.notEqualsEntry !== undefined) {
+      throw new Error(
+        "Can't use isOwnerID and notEqualsEntry on the same entry."
+      );
+    }
+  }
+
+  if (
+    entryConfig.equalsEntry !== undefined &&
+    entryConfig.notEqualsEntry !== undefined
+  ) {
+    throw new Error(
+      "Can't use equalsEntry and notEqualsEntry on the same entry."
+    );
   }
 
   if (entryConfig.equalsEntry !== undefined) {
     checkPODEntryIdentifier(
       `${nameForErrorMessages}.equalsEntry`,
       entryConfig.equalsEntry
+    );
+  }
+
+  if (entryConfig.notEqualsEntry !== undefined) {
+    checkPODEntryIdentifier(
+      `${nameForErrorMessages}.notEqualsEntry`,
+      entryConfig.notEqualsEntry
     );
   }
 
@@ -546,22 +573,33 @@ export function checkProofInputsForConfig(
         }
       }
 
-      // Identified equal entry must also exist.
-      if (entryConfig.equalsEntry !== undefined) {
+      // Identified (not) equal entry must also exist.
+      const entryEqConfig =
+        entryConfig.equalsEntry || entryConfig.notEqualsEntry;
+      if (entryEqConfig !== undefined) {
+        const errorStringQualifier = entryConfig.notEqualsEntry ? " not " : " ";
         const otherValue = resolvePODEntryIdentifier(
-          entryConfig.equalsEntry,
+          entryEqConfig,
           proofInputs.pods
         );
         if (otherValue === undefined) {
           throw new ReferenceError(
-            `Input entry ${objName}.${entryName} should be proved to equal` +
+            `Input entry ${objName}.${entryName} should be proved` +
+              errorStringQualifier +
+              `to equal` +
               ` ${entryConfig.equalsEntry} which doesn't exist in input.`
           );
         }
-
-        if (podValueHash(otherValue) !== podValueHash(podValue)) {
+        const entryEqCheck =
+          podValueHash(otherValue) === podValueHash(podValue);
+        if (
+          (entryConfig.equalsEntry && !entryEqCheck) ||
+          (entryConfig.notEqualsEntry && entryEqCheck)
+        ) {
           throw new Error(
-            `Input entry ${objName}.${entryName} doesn't equal ${entryConfig.equalsEntry}.`
+            `Input entry ${objName}.${entryName} does` +
+              errorStringQualifier +
+              `equal ${entryConfig.equalsEntry}.`
           );
         }
       }
@@ -863,6 +901,10 @@ function checkRevealedObjectClaims(
     }
   }
 
+  if (objClaims.contentID !== undefined) {
+    requireType("contentID", objClaims.contentID, "bigint");
+  }
+
   if (objClaims.signerPublicKey !== undefined) {
     requireType("signerPublicKey", objClaims.signerPublicKey, "string");
     checkPublicKeyFormat(objClaims.signerPublicKey);
@@ -928,6 +970,25 @@ export function checkVerifyClaimsForConfig(
       }
     }
 
+    // Examine config for POD content ID.
+    if (objConfig.contentID?.isRevealed ?? false) {
+      // This named object in config should be provided in claims.
+      const objClaims = revealedClaims.pods[objName];
+      if (objClaims === undefined) {
+        throw new ReferenceError(
+          `Configuration reveals content ID of object "${objName}" but
+          the POD is not revealed in claims.`
+        );
+      }
+      const revealedContentID = objClaims.contentID;
+      if (revealedContentID === undefined) {
+        throw new ReferenceError(
+          `Configuration reveals content ID of object "${objName}" which` +
+            ` doesn't exist in claims.`
+        );
+      }
+    }
+
     // Examine config for signer's public key.
     if (objConfig.signerPublicKey?.isRevealed ?? true) {
       // This named object in config should be provided in claims.
@@ -960,7 +1021,8 @@ export function checkVerifyClaimsForConfig(
 
   // Reverse check that each revealed entry and object exists and is revealed in
   // config. Object signers' public keys need not be specified in the config if
-  // revealed, though they should be if not.
+  // revealed, though they should be if not, and content IDs need not be
+  // specified, in which case they should not be revealed.
   for (const [objName, objClaims] of Object.entries(revealedClaims.pods)) {
     const objConfig = boundConfig.pods[objName];
     if (objConfig === undefined) {
@@ -968,11 +1030,20 @@ export function checkVerifyClaimsForConfig(
         `Claims include object "${objName}" which doesn't exist in config.`
       );
     }
+    if (objClaims.contentID !== undefined) {
+      const contentIDConfig = objConfig.contentID;
+      if (contentIDConfig === undefined) {
+        throw new ReferenceError(
+          `Claims reveal content ID of object "${objName}" which
+             doesn't exist in config.`
+        );
+      }
+    }
     if (objClaims.signerPublicKey === undefined) {
       const signerPublicKeyConfig = objConfig.signerPublicKey;
       if (signerPublicKeyConfig === undefined) {
         throw new ReferenceError(
-          `Claims do not reveal signer' public key of object "${objName}" which
+          `Claims do not reveal signer's public key of object "${objName}" which
              doesn't exist in config.`
         );
       }

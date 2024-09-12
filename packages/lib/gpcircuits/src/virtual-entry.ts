@@ -2,12 +2,14 @@ import { CircuitSignal } from "./types";
 
 export type VirtualEntryModuleInputs = {
   isValueHashRevealed: CircuitSignal;
+  objectContentID: CircuitSignal /*MAX_OBJECTS*/[];
   objectSignerPubkeyAx: CircuitSignal /*MAX_OBJECTS*/[];
   objectSignerPubkeyAy: CircuitSignal /*MAX_OBJECTS*/[];
 };
 
 export type VirtualEntryModuleInputNamesType = [
   "isValueHashRevealed",
+  "objectContentID",
   "objectSignerPubkeyAx",
   "objectSignerPubkeyAy"
 ];

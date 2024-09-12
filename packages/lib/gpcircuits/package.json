@@ -48,6 +48,7 @@
     "@semaphore-protocol/core": "^4.0.3",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
+    "@types/snarkjs": "^0.7.5",
     "@zk-kit/binary-merkle-root.circom": "1.0.0",
     "circomkit": "^0.0.24",
     "circomlib": "^2.0.5",

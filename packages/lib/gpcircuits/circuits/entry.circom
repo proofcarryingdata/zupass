@@ -2,6 +2,7 @@ pragma circom 2.1.8;
 
 include "@zk-kit/binary-merkle-root.circom/src/binary-merkle-root.circom";
 include "circomlib/circuits/bitify.circom";
+include "circomlib/circuits/comparators.circom";
 include "gpc-util.circom";
 
 /**
@@ -57,7 +58,7 @@ template EntryModule (
  * No overall enable flag, but can be disabled by setting constraints to compare to
  * itself.
  * 
- * Index is constrained to be within the range [0, MAX_ENTRIES).
+ * Index is constrained to be within the range [0, MAX_ENTRIES). 
  */
 template EntryConstraintModule(
     // Indicates the number of Entry modules included in this GPC, which is
@@ -71,11 +72,22 @@ template EntryConstraintModule(
     // Other entries for comparison.
     signal input entryValueHashes[MAX_ENTRIES];
 
-    // Equality constraint: prove this entry's value has the same hash as another entry.
-    // This can be disabled by comparing to self: entryEqualToOtherEntryIndex[i] = i
+    // (In)equality constraint: prove this entry's value has (not) the
+    // same hash as another entry.
+    //
+    // This can be disabled by checking for equality with self:
+    // entryEqualToOtherEntryIndex[i] = i; isEqualToOtherEntry = 1.
+    //
+    // `isEqualToOtherEntry` is assumed to be constrained to be 0 or 1
+    // elsewhere.
     signal input equalToOtherEntryByIndex;
+    signal input isEqualToOtherEntry;
+
     signal otherValueHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, equalToOtherEntryByIndex);
-    valueHash === otherValueHash;
+
+    signal equalityCheck <== IsEqual()([valueHash, otherValueHash]);
+
+    equalityCheck === isEqualToOtherEntry;
 
     // TODO(POD-P2): lowerbound, upperbound, more constraints.
 }

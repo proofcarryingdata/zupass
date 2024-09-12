@@ -11,7 +11,7 @@ import {
   boundsCheckConfigFromProofConfig,
   canonicalizeBoundsCheckConfig,
   canonicalizeEntryConfig,
-  canonicalizeSignerPublicKeyConfig
+  canonicalizeVirtualEntryConfig
 } from "../src/gpcUtil";
 
 describe("Object entry configuration canonicalization should work", () => {
@@ -90,34 +90,50 @@ describe("Object entry configuration canonicalization should work", () => {
   });
 });
 
-describe("Object signer's public key configuration canonicalization should work", () => {
-  it("should work as expected on a trivial POD signer's public key configuration", () => {
-    const config: GPCProofEntryConfigCommon = {
-      isRevealed: true
-    };
+describe("Object virtual entry configuration canonicalization should work", () => {
+  it("should work as expected on a trivial configuration", () => {
+    for (const defaultIsRevealed of [true, false]) {
+      for (const isRevealed of [true, false]) {
+        const config: GPCProofEntryConfigCommon = {
+          isRevealed
+        };
 
-    const canonicalizedConfig = canonicalizeSignerPublicKeyConfig(config);
+        const canonicalizedConfig = canonicalizeVirtualEntryConfig(
+          config,
+          defaultIsRevealed
+        );
 
-    expect(canonicalizedConfig).to.be.undefined;
+        expect(canonicalizedConfig).to.deep.eq(
+          isRevealed === defaultIsRevealed ? undefined : config
+        );
+      }
+    }
   });
-  it("should work as expected on a typical POD signer's public key configuration", () => {
-    const config: GPCProofEntryConfigCommon = {
-      isNotMemberOf: "someOtherList",
-      equalsEntry: "pod0.key",
-      isMemberOf: "someList",
-      isRevealed: true
-    };
+  it("should work as expected on a typical virtual entry configuration", () => {
+    for (const defaultIsRevealed of [true, false]) {
+      for (const isRevealed of [true, false]) {
+        const config: GPCProofEntryConfigCommon = {
+          isNotMemberOf: "someOtherList",
+          equalsEntry: "pod0.key",
+          isMemberOf: "someList",
+          isRevealed
+        };
 
-    const canonicalizedConfig = canonicalizeSignerPublicKeyConfig(config);
+        const canonicalizedConfig = canonicalizeVirtualEntryConfig(
+          config,
+          defaultIsRevealed
+        );
 
-    const expectedCanonicalizedConfig = {
-      isRevealed: true,
-      equalsEntry: "pod0.key",
-      isMemberOf: "someList",
-      isNotMemberOf: "someOtherList"
-    };
+        const expectedCanonicalizedConfig = {
+          isRevealed,
+          equalsEntry: "pod0.key",
+          isMemberOf: "someList",
+          isNotMemberOf: "someOtherList"
+        };
 
-    expect(canonicalizedConfig).to.deep.eq(expectedCanonicalizedConfig);
+        expect(canonicalizedConfig).to.deep.eq(expectedCanonicalizedConfig);
+      }
+    }
   });
 });
 

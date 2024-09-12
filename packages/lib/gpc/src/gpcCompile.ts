@@ -11,7 +11,8 @@ import {
   extendedSignalArray,
   hashTuple,
   padArray,
-  paramMaxVirtualEntries
+  paramMaxVirtualEntries,
+  zipLists
 } from "@pcd/gpcircuits";
 import {
   POD,
@@ -129,7 +130,7 @@ function prepCompilerMaps<
   const entryMap = new Map();
   let objIndex = 0;
   let entryIndex = 0;
-  const signerPubKeyEntryIndexOffset = circuitDesc.maxEntries;
+  const virtualEntryIndexOffset = circuitDesc.maxEntries;
   const objNameOrder = Object.keys(config.pods).sort();
   for (const objName of objNameOrder) {
     const objConfig = config.pods[objName];
@@ -143,17 +144,25 @@ function prepCompilerMaps<
     objMap.set(objName, { objConfig, objInput, objIndex });
 
     // Add virtual entries even if they are not explicitly specified in the
-    // config. Unless specified otherwise, they are revealed.
-    //
-    // TODO(POD-P3): Modify for other virtual entry types when they are available.
+    // config. By default, signers' public keys are revealed and POD content IDs
+    // are not.
+    entryMap.set(`${objName}.$contentID`, {
+      objName,
+      objIndex,
+      objConfig,
+      objInput,
+      entryName: "$contentID",
+      entryIndex: virtualEntryIndexOffset + 2 * objIndex,
+      entryConfig: objConfig.contentID ?? {}
+    });
     entryMap.set(`${objName}.$signerPublicKey`, {
       objName,
       objIndex,
       objConfig,
       objInput,
       entryName: "$signerPublicKey",
-      entryIndex: signerPubKeyEntryIndexOffset + objIndex,
-      entryConfig: { isRevealed: objConfig.signerPublicKey?.isRevealed ?? true }
+      entryIndex: virtualEntryIndexOffset + 2 * objIndex + 1,
+      entryConfig: objConfig.signerPublicKey ?? {}
     });
 
     const entryNameOrder = Object.keys(objConfig.entries).sort();
@@ -722,22 +731,34 @@ function compileProofVirtualEntry<
   virtualEntryIsValueHashRevealed: CircuitSignal;
 } {
   const objNames = Array.from(objMap.keys());
-  const unpaddedVirtualEntryIsValueHashRevealed = objNames.map((objName) => {
+  const unpaddedContentIDIsValueHashRevealed = objNames.map((objName) => {
+    const entryInfo = entryMap.get(`${objName}.$contentID`);
+    if (entryInfo === undefined) {
+      throw new Error(`Entry ${objName}.$contentID is missing from entry map.`);
+    }
+    const isContentIDRevealed = entryInfo.entryConfig.isRevealed ?? false;
+    return BigInt(+isContentIDRevealed);
+  });
+
+  const unpaddedSignerPublicKeyIsValueHashRevealed = objNames.map((objName) => {
     const entryInfo = entryMap.get(`${objName}.$signerPublicKey`);
     if (entryInfo === undefined) {
       throw new Error(
         `Entry ${objName}.$signerPublicKey is missing from entry map.`
       );
     }
-    const isPublicKeyRevealed = entryInfo.entryConfig.isRevealed;
+    const isPublicKeyRevealed = entryInfo.entryConfig.isRevealed ?? true;
     return BigInt(+isPublicKeyRevealed);
   });
 
   return {
     virtualEntryIsValueHashRevealed: array2Bits(
       padArray(
-        unpaddedVirtualEntryIsValueHashRevealed,
-        circuitDesc.maxObjects,
+        zipLists([
+          unpaddedContentIDIsValueHashRevealed,
+          unpaddedSignerPublicKeyIsValueHashRevealed
+        ]).flat(),
+        2 * circuitDesc.maxObjects,
         0n
       )
     )
@@ -794,6 +815,7 @@ function compileProofEntryConstraints(
 ): {
   circuitEntryConstraintInputs: {
     entryEqualToOtherEntryByIndex: CircuitSignal[];
+    entryIsEqualToOtherEntry: CircuitSignal;
   };
   entryConstraintMetadata: {
     firstOwnerIndex: Record<IdentityProtocol, number | undefined>;
@@ -805,13 +827,23 @@ function compileProofEntryConstraints(
     [SEMAPHORE_V4]: undefined
   } as Record<IdentityProtocol, number | undefined>;
   const entryEqualToOtherEntryByIndex: bigint[] = [];
+  const entryIsEqualToOtherEntry: bigint[] = [];
   const virtualEntryEqualToOtherEntryByIndex: bigint[] = [];
+  const virtualEntryIsEqualToOtherEntry: bigint[] = [];
 
   for (const entryInfo of entryMap.values()) {
+    const equalToOtherEntryByIndex = isVirtualEntryName(entryInfo.entryName)
+      ? virtualEntryEqualToOtherEntryByIndex
+      : entryEqualToOtherEntryByIndex;
+    const isEqualToOtherEntry = isVirtualEntryName(entryInfo.entryName)
+      ? virtualEntryIsEqualToOtherEntry
+      : entryIsEqualToOtherEntry;
+
     // An entry is always compared either to the first owner entry of each
     // supported identity type (to ensure only one owner with respect to that
     // type), or to another entry specified by config, or to itself in order to
     // make the constraint a nop.
+
     const ownerIDType = entryInfo.entryConfig.isOwnerID;
     if (ownerIDType !== undefined) {
       if (firstOwnerIndex[ownerIDType] === undefined) {
@@ -824,6 +856,7 @@ function compileProofEntryConstraints(
       entryEqualToOtherEntryByIndex.push(
         BigInt(firstOwnerIndex[ownerIDType] as number)
       );
+      entryIsEqualToOtherEntry.push(1n);
     } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
       const otherEntryInfo = entryMap.get(entryInfo.entryConfig.equalsEntry);
       if (otherEntryInfo === undefined) {
@@ -831,15 +864,20 @@ function compileProofEntryConstraints(
           `Missing entry ${entryInfo.entryConfig.equalsEntry} for equality comparison.`
         );
       }
-      (isVirtualEntryName(entryInfo.entryName)
-        ? virtualEntryEqualToOtherEntryByIndex
-        : entryEqualToOtherEntryByIndex
-      ).push(BigInt(otherEntryInfo.entryIndex));
+      equalToOtherEntryByIndex.push(BigInt(otherEntryInfo.entryIndex));
+      isEqualToOtherEntry.push(1n);
+    } else if (entryInfo.entryConfig.notEqualsEntry !== undefined) {
+      const otherEntryInfo = entryMap.get(entryInfo.entryConfig.notEqualsEntry);
+      if (otherEntryInfo === undefined) {
+        throw new Error(
+          `Missing entry ${entryInfo.entryConfig.notEqualsEntry} for inequality comparison.`
+        );
+      }
+      equalToOtherEntryByIndex.push(BigInt(otherEntryInfo.entryIndex));
+      isEqualToOtherEntry.push(0n);
     } else {
-      (isVirtualEntryName(entryInfo.entryName)
-        ? virtualEntryEqualToOtherEntryByIndex
-        : entryEqualToOtherEntryByIndex
-      ).push(BigInt(entryInfo.entryIndex));
+      equalToOtherEntryByIndex.push(BigInt(entryInfo.entryIndex));
+      isEqualToOtherEntry.push(1n);
     }
   }
 
@@ -851,6 +889,7 @@ function compileProofEntryConstraints(
     entryIndex++
   ) {
     entryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
+    entryIsEqualToOtherEntry.push(1n);
   }
   for (
     let entryIndex = virtualEntryEqualToOtherEntryByIndex.length;
@@ -858,12 +897,16 @@ function compileProofEntryConstraints(
     entryIndex++
   ) {
     virtualEntryEqualToOtherEntryByIndex.push(BigInt(maxEntries + entryIndex));
+    virtualEntryIsEqualToOtherEntry.push(1n);
   }
 
   return {
     circuitEntryConstraintInputs: {
       entryEqualToOtherEntryByIndex: entryEqualToOtherEntryByIndex.concat(
         virtualEntryEqualToOtherEntryByIndex
+      ),
+      entryIsEqualToOtherEntry: array2Bits(
+        entryIsEqualToOtherEntry.concat(virtualEntryIsEqualToOtherEntry)
       )
     },
     entryConstraintMetadata: { firstOwnerIndex }
@@ -1217,7 +1260,18 @@ function compileVerifyVirtualEntry(
 } {
   const objNames = Array.from(objMap.keys());
 
-  const unpaddedVirtualEntryRevealedValueHash = objNames.map((objName) => {
+  const unpaddedContentIDRevealedValueHash = objNames.map((objName) => {
+    const entryInfo = entryMap.get(`${objName}.$contentID`);
+    if (entryInfo === undefined) {
+      throw new Error(`Entry ${objName}.$contentID is missing from entry map.`);
+    }
+    const maybeContentID = entryInfo.objInput?.contentID;
+    return maybeContentID !== undefined
+      ? podValueHash({ type: "cryptographic", value: maybeContentID })
+      : BABY_JUB_NEGATIVE_ONE;
+  });
+
+  const unpaddedSignerPublicKeyRevealedValueHash = objNames.map((objName) => {
     const entryInfo = entryMap.get(`${objName}.$signerPublicKey`);
     if (entryInfo === undefined) {
       throw new Error(
@@ -1232,8 +1286,11 @@ function compileVerifyVirtualEntry(
 
   return {
     virtualEntryRevealedValueHash: padArray(
-      unpaddedVirtualEntryRevealedValueHash,
-      circuitDesc.maxObjects,
+      zipLists([
+        unpaddedContentIDRevealedValueHash,
+        unpaddedSignerPublicKeyRevealedValueHash
+      ]).flat(),
+      2 * circuitDesc.maxObjects,
       BABY_JUB_NEGATIVE_ONE
     )
   };
@@ -1360,7 +1417,9 @@ export function makeRevealedClaims(
       throw new ReferenceError(`Missing revealed POD ${objName}.`);
     }
     let anyRevealedEntries = false;
-    // Unless specified otherwise, reveal signer's public key by default.
+    // Unless specified otherwise, reveal signer's public key and hide content
+    // ID by default.
+    let revealedContentID = false;
     let revealedSignerPublicKey = true;
     const revealedEntries: Record<PODName, PODValue> = {};
     for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
@@ -1375,12 +1434,16 @@ export function makeRevealedClaims(
         revealedEntries[entryName] = entryValue;
       }
     }
+    if (objConfig.contentID?.isRevealed !== undefined) {
+      revealedContentID = objConfig.contentID.isRevealed;
+    }
     if (objConfig.signerPublicKey?.isRevealed !== undefined) {
       revealedSignerPublicKey = objConfig.signerPublicKey.isRevealed;
     }
-    if (anyRevealedEntries || revealedSignerPublicKey) {
+    if (anyRevealedEntries || revealedSignerPublicKey || revealedContentID) {
       revealedObjects[objName] = {
         ...(anyRevealedEntries ? { entries: revealedEntries } : {}),
+        ...(revealedContentID ? { contentID: pod.contentID } : {}),
         ...(revealedSignerPublicKey
           ? { signerPublicKey: pod.signerPublicKey }
           : {})

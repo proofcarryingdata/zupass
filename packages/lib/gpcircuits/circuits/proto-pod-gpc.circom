@@ -133,7 +133,7 @@ template ProtoPODGPC (
      */
     
     // Maximum number of virtual entries.
-    var MAX_VIRTUAL_ENTRIES = MAX_OBJECTS;
+    var MAX_VIRTUAL_ENTRIES = 2 * MAX_OBJECTS;
 
     // Total number of entries in the circuit, virtual or otherwise
     var TOTAL_ENTRIES = MAX_ENTRIES + MAX_VIRTUAL_ENTRIES;
@@ -150,6 +150,7 @@ template ProtoPODGPC (
     (virtualEntryValueHashes, virtualEntryRevealedValueHash)
         <== VirtualEntryModule(MAX_OBJECTS)(
             virtualEntryIsValueHashRevealed,
+            objectContentID,
             objectSignerPubkeyAx,
             objectSignerPubkeyAy);
 
@@ -173,6 +174,11 @@ template ProtoPODGPC (
     //   entryEqualToOtherEntryIndex[i] = i
     signal input entryEqualToOtherEntryByIndex[TOTAL_ENTRIES];
 
+    // Boolean flag for whether the comparison should be equality or
+    // inequality.
+    signal input entryIsEqualToOtherEntry /*TOTAL_ENTRIES packed bits*/;
+    signal entryIsEqualToOtherEntryBits[TOTAL_ENTRIES] <== Num2Bits(TOTAL_ENTRIES)(entryIsEqualToOtherEntry);
+
     // Modules which scale with number of (non-virtual) entries.
     for (var entryIndex = 0; entryIndex < MAX_ENTRIES; entryIndex++) {
         // Entry module proves that an entry exists within the object's merkle tree.
@@ -192,7 +198,8 @@ template ProtoPODGPC (
         EntryConstraintModule(TOTAL_ENTRIES)(
             valueHash <== totalEntryValueHashes[entryIndex],
             entryValueHashes <== totalEntryValueHashes,
-            equalToOtherEntryByIndex <== entryEqualToOtherEntryByIndex[entryIndex]
+            equalToOtherEntryByIndex <== entryEqualToOtherEntryByIndex[entryIndex],
+            isEqualToOtherEntry <== entryIsEqualToOtherEntryBits[entryIndex]
         );
     }
 

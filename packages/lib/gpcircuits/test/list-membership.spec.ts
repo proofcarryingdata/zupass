@@ -251,10 +251,10 @@ describe("List membership helpers should work", function () {
       tupleIndices: [
         [0n, 1n],
         [2n, 3n],
-        [8n, 4n],
-        [9n, 5n]
+        [9n, 4n],
+        [10n, 5n]
       ],
-      listComparisonValueIndex: [7n, 10n, 0n],
+      listComparisonValueIndex: [8n, 11n, 0n],
       listValidValues: listValidValues1
     });
 
@@ -264,10 +264,10 @@ describe("List membership helpers should work", function () {
       tupleIndices: [
         [0n, 1n, 0n],
         [2n, 3n, 4n],
-        [8n, 5n, 2n],
+        [9n, 5n, 2n],
         [0n, 0n, 0n]
       ],
-      listComparisonValueIndex: [7n, 9n, 0n],
+      listComparisonValueIndex: [8n, 10n, 0n],
       listValidValues: listValidValues2
     });
 
@@ -280,7 +280,7 @@ describe("List membership helpers should work", function () {
         [0n, 0n, 0n, 0n],
         [0n, 0n, 0n, 0n]
       ],
-      listComparisonValueIndex: [7n, 8n, 0n],
+      listComparisonValueIndex: [8n, 9n, 0n],
       listValidValues: listValidValues3
     });
   });

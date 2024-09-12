@@ -36,6 +36,7 @@ export type ProtoPODGPCInputs = {
 
   // Entry constraint modules.
   /*PUB*/ entryEqualToOtherEntryByIndex: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES*/[];
+  /*PUB*/ entryIsEqualToOtherEntry: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES packed bits*/;
 
   // External nullifier for owner modules (if any)
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
@@ -88,6 +89,7 @@ export type ProtoPODGPCInputNamesType = [
   "entryProofSiblings",
   "virtualEntryIsValueHashRevealed",
   "entryEqualToOtherEntryByIndex",
+  "entryIsEqualToOtherEntry",
   "ownerExternalNullifier",
   "ownerV3EntryIndex",
   "ownerSemaphoreV3IdentityNullifier",
@@ -123,6 +125,7 @@ export type ProtoPODGPCPublicInputs = {
 
   // Entry constraint modules.
   /*PUB*/ entryEqualToOtherEntryByIndex: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES*/[];
+  /*PUB*/ entryIsEqualToOtherEntry: CircuitSignal /*MAX_ENTRIES + MAX_VIRTUAL_ENTRIES packed bits*/;
 
   // External nullifier for owner modules (if any)
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
@@ -162,6 +165,7 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "entryIsValueHashRevealed",
   "virtualEntryIsValueHashRevealed",
   "entryEqualToOtherEntryByIndex",
+  "entryIsEqualToOtherEntry",
   "ownerExternalNullifier",
   "ownerV3EntryIndex",
   "ownerV3IsNullifierHashRevealed",
@@ -336,7 +340,7 @@ export function arrayToProtoPODGPCCircuitParam(
 export function paramMaxVirtualEntries(
   params: ProtoPODGPCCircuitParams
 ): number {
-  return params.maxObjects;
+  return 2 * params.maxObjects;
 }
 
 /**
@@ -381,7 +385,7 @@ export class ProtoPODGPC {
     const outputs = ProtoPODGPC.outputsFromPublicSignals(
       intPublicSignals,
       inputs.entryNameHash.length,
-      inputs.objectSignatureS.length,
+      2 * inputs.objectContentID.length,
       inputs.ownerV3EntryIndex.length > 0,
       inputs.ownerV4EntryIndex.length > 0
     );
@@ -429,6 +433,7 @@ export class ProtoPODGPC {
       virtualEntryIsValueHashRevealed:
         allInputs.virtualEntryIsValueHashRevealed,
       entryEqualToOtherEntryByIndex: allInputs.entryEqualToOtherEntryByIndex,
+      entryIsEqualToOtherEntry: allInputs.entryIsEqualToOtherEntry,
       ownerExternalNullifier: allInputs.ownerExternalNullifier,
       ownerV3EntryIndex: allInputs.ownerV3EntryIndex,
       ownerV3IsNullifierHashRevealed: allInputs.ownerV3IsNullifierHashRevealed,
@@ -497,6 +502,7 @@ export class ProtoPODGPC {
       inputs.entryIsValueHashRevealed,
       inputs.virtualEntryIsValueHashRevealed,
       ...inputs.entryEqualToOtherEntryByIndex,
+      inputs.entryIsEqualToOtherEntry,
       inputs.ownerExternalNullifier,
       ...inputs.ownerV3EntryIndex,
       ...inputs.ownerV3IsNullifierHashRevealed,
@@ -656,5 +662,5 @@ export class ProtoPODGPC {
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.6.0";
+  public static ARTIFACTS_NPM_VERSION = "0.8.0";
 }

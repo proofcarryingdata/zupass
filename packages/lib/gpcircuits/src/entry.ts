@@ -26,12 +26,14 @@ export type EntryConstraintModuleInputs = {
   valueHash: CircuitSignal;
   entryValueHashes: CircuitSignal[];
   equalToOtherEntryByIndex: CircuitSignal;
+  isEqualToOtherEntry: CircuitSignal;
 };
 
 export type EntryConstraintModuleInputNamesType = [
   "valueHash",
   "entryValueHashes",
-  "equalToOtherEntryByIndex"
+  "equalToOtherEntryByIndex",
+  "isEqualToOtherEntry"
 ];
 
 export type EntryConstraintModuleOutputs = Record<string, never>;
