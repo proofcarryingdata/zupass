@@ -11,5 +11,6 @@ export * from "./ownerV4";
 export * from "./proto-pod-gpc";
 export * from "./tuple";
 export * from "./types";
+export * from "./uniqueness";
 export * from "./util";
 export * from "./virtual-entry";

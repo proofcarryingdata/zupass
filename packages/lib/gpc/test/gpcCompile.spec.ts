@@ -10,6 +10,7 @@ import { poseidon2 } from "poseidon-lite/poseidon2";
 import {
   compileProofOwnerV3,
   compileProofOwnerV4,
+  compileProofPODUniqueness,
   compileVerifyOwnerV3,
   compileVerifyOwnerV4
 } from "../src/gpcCompile";
@@ -230,6 +231,21 @@ describe("Semaphore V4 owner module compilation for verification should work", (
           ownerV4RevealedNullifierHash: [nullifierHashV4]
         });
       }
+    }
+  });
+});
+
+describe("POD uniqueness module compilation for proving and verification should work", () => {
+  it("should work as expected for a proof configuration with POD uniqueness enabled", () => {
+    expect(compileProofPODUniqueness({ uniquePODs: true })).to.deep.equal({
+      uniquenessModuleIsEnabled: 1n
+    });
+  });
+  it("should work as expected for a proof configuration with POD uniqueness disabled", () => {
+    for (const config of [{}, { uniquePODs: false }]) {
+      expect(compileProofPODUniqueness(config)).to.deep.equal({
+        uniquenessModuleIsEnabled: 0n
+      });
     }
   });
 });

@@ -27,6 +27,7 @@ import {
   ProtoPODGPCOutputNamesType,
   ProtoPODGPCOutputs,
   array2Bits,
+  dummyObjectSignals,
   extendedSignalArray,
   gpcArtifactPaths,
   maxTupleArity,
@@ -406,6 +407,9 @@ const sampleInput: ProtoPODGPCInputs = {
     ]
   ],
 
+  // POD uniqueness module (1)
+  /*PUB*/ uniquenessModuleIsEnabled: 1n,
+
   // Global module (1)
   /*PUB*/ globalWatermark: 1337n
 };
@@ -533,24 +537,42 @@ function makeTestSignals(
   }
 
   // Fill in ObjectModule inputs.
-  const sigObjectContentID: bigint[] = [];
+  const sigObjectContentID: CircuitSignal[] = [];
   const sigObjectSignerPubkeyAx: CircuitSignal[] = [];
   const sigObjectSignerPubkeyAy: CircuitSignal[] = [];
-  const sigObjectSignatureR8x = [];
-  const sigObjectSignatureR8y = [];
-  const sigObjectSignatureS = [];
-  for (let objectIndex = 0; objectIndex < params.maxObjects; objectIndex++) {
-    // Unused objects get filled in with the same info as object 0.
-    const isObjectEnabled = objectIndex < testObjectsWithKeys.length;
-    const i = isObjectEnabled ? objectIndex : 0;
-
-    sigObjectContentID.push(pods[i].contentID);
-    sigObjectSignerPubkeyAx.push(publicKeys[i][0]);
-    sigObjectSignerPubkeyAy.push(publicKeys[i][1]);
-    sigObjectSignatureR8x.push(signatures[i].R8[0]);
-    sigObjectSignatureR8y.push(signatures[i].R8[1]);
-    sigObjectSignatureS.push(signatures[i].S);
+  const sigObjectSignatureR8x: CircuitSignal[] = [];
+  const sigObjectSignatureR8y: CircuitSignal[] = [];
+  const sigObjectSignatureS: CircuitSignal[] = [];
+  for (
+    let objectIndex = 0;
+    objectIndex < Math.min(params.maxObjects, testObjectsWithKeys.length);
+    objectIndex++
+  ) {
+    sigObjectContentID.push(pods[objectIndex].contentID);
+    sigObjectSignerPubkeyAx.push(publicKeys[objectIndex][0]);
+    sigObjectSignerPubkeyAy.push(publicKeys[objectIndex][1]);
+    sigObjectSignatureR8x.push(signatures[objectIndex].R8[0]);
+    sigObjectSignatureR8y.push(signatures[objectIndex].R8[1]);
+    sigObjectSignatureS.push(signatures[objectIndex].S);
   }
+
+  // Unused objects get filled in with dummy object signals with valid
+  // signatures and distinct content IDs.
+  const numDummyObjects = Math.max(
+    0,
+    params.maxObjects - testObjectsWithKeys.length
+  );
+  const sigObjectPadding = dummyObjectSignals(numDummyObjects);
+  sigObjectContentID.push(...sigObjectPadding.map((o) => o.contentID));
+  sigObjectSignerPubkeyAx.push(
+    ...sigObjectPadding.map((o) => o.signerPubkeyAx)
+  );
+  sigObjectSignerPubkeyAy.push(
+    ...sigObjectPadding.map((o) => o.signerPubkeyAy)
+  );
+  sigObjectSignatureR8x.push(...sigObjectPadding.map((o) => o.signatureR8x));
+  sigObjectSignatureR8y.push(...sigObjectPadding.map((o) => o.signatureR8y));
+  sigObjectSignatureS.push(...sigObjectPadding.map((o) => o.signatureS));
 
   // Fill in entry module inputs.
   const sigEntryObjectIndex = [];
@@ -745,6 +767,8 @@ function makeTestSignals(
     extendedSignalArray(isMember.map(BigInt), params.maxLists, 1n)
   );
 
+  const uniquenessModuleIsEnabled = 1n;
+
   return {
     inputs: {
       objectContentID: sigObjectContentID,
@@ -801,6 +825,7 @@ function makeTestSignals(
       listComparisonValueIndex,
       listContainsComparisonValue,
       listValidValues,
+      uniquenessModuleIsEnabled,
       globalWatermark: 1337n
     },
     outputs: {

@@ -8,6 +8,7 @@ import {
   ProtoPODGPCPublicInputs,
   array2Bits,
   computeTupleIndices,
+  dummyObjectSignals,
   extendedSignalArray,
   hashTuple,
   padArray,
@@ -32,6 +33,7 @@ import {
 import _ from "lodash";
 import {
   GPCBoundConfig,
+  GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofInputs,
   GPCProofObjectConfig,
@@ -377,6 +379,9 @@ export function compileProofConfig(
     circuitDesc.maxListElements
   );
 
+  // Create subset of inputs for POD uniqueness module.
+  const circuitUniquenessInputs = compileProofPODUniqueness(proofConfig);
+
   // Create other global inputs.
   const circuitGlobalInputs = compileProofGlobal(proofInputs);
 
@@ -402,6 +407,7 @@ export function compileProofConfig(
     ...circuitNumericValueInputs,
     ...circuitMultiTupleInputs,
     ...circuitListMembershipInputs,
+    ...circuitUniquenessInputs,
     ...circuitGlobalInputs
   };
 }
@@ -673,10 +679,9 @@ function combineProofObjects(
   objectSignatureS: CircuitSignal /*MAX_OBJECTS*/[];
 } {
   // Object modules don't have an explicit disabled state, so spare object
-  // slots get filled in with copies of Object 0.
-  for (let objIndex = allObjInputs.length; objIndex < maxObjects; objIndex++) {
-    allObjInputs.push({ ...allObjInputs[0] });
-  }
+  // slots get filled with dummy objects with distinct content IDs.
+  const objPadding = dummyObjectSignals(maxObjects - allObjInputs.length);
+  allObjInputs.push(...objPadding);
 
   return {
     objectContentID: allObjInputs.map((o) => o.contentID),
@@ -719,6 +724,14 @@ function compileProofEntry(
       merkleMaxDepth
     )
   };
+}
+
+export function compileProofPODUniqueness(proofConfig: {
+  uniquePODs?: boolean;
+}): {
+  uniquenessModuleIsEnabled: CircuitSignal;
+} {
+  return { uniquenessModuleIsEnabled: BigInt(proofConfig.uniquePODs ?? false) };
 }
 
 function compileProofVirtualEntry<
@@ -1111,6 +1124,9 @@ export function compileVerifyConfig(
     circuitDesc.maxListElements
   );
 
+  // Create subset of inputs for POD uniqueness module.
+  const circuitUniquenessInputs = compileProofPODUniqueness(verifyConfig);
+
   // Create other global inputs.  Logic shared with compileProofConfig,
   // since all the signals involved are public.
   const circuitGlobalInputs = compileProofGlobal(verifyRevealed);
@@ -1144,6 +1160,7 @@ export function compileVerifyConfig(
       ...circuitNumericValueInputs,
       ...circuitMultiTupleInputs,
       ...circuitListMembershipInputs,
+      ...circuitUniquenessInputs,
       ...circuitGlobalInputs
     },
     circuitOutputs: {

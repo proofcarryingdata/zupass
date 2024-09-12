@@ -67,6 +67,9 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ listContainsComparisonValue: CircuitSignal;
   /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 
+  // POD uniqueness module (1)
+  /*PUB*/ uniquenessModuleIsEnabled: CircuitSignal;
+  
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
 };
@@ -107,6 +110,7 @@ export type ProtoPODGPCInputNamesType = [
   "listComparisonValueIndex",
   "listContainsComparisonValue",
   "listValidValues",
+  "uniquenessModuleIsEnabled",
   "globalWatermark"
 ];
 
@@ -152,6 +156,9 @@ export type ProtoPODGPCPublicInputs = {
   /*PUB*/ listContainsComparisonValue: CircuitSignal;
   /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 
+  // POD uniqueness module (1)
+  /*PUB*/ uniquenessModuleIsEnabled: CircuitSignal;
+  
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
 };
@@ -179,6 +186,7 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "listComparisonValueIndex",
   "listContainsComparisonValue",
   "listValidValues",
+  "uniquenessModuleIsEnabled",
   "globalWatermark"
 ];
 
@@ -447,6 +455,7 @@ export class ProtoPODGPC {
       listComparisonValueIndex: allInputs.listComparisonValueIndex,
       listContainsComparisonValue: allInputs.listContainsComparisonValue,
       listValidValues: allInputs.listValidValues,
+      uniquenessModuleIsEnabled: allInputs.uniquenessModuleIsEnabled,
       globalWatermark: allInputs.globalWatermark
     };
   }
@@ -520,6 +529,7 @@ export class ProtoPODGPC {
       ...inputs.listComparisonValueIndex,
       inputs.listContainsComparisonValue,
       ...inputs.listValidValues.flat(),
+      inputs.uniquenessModuleIsEnabled,
       inputs.globalWatermark
     ].map(BigInt);
   }

@@ -82,3 +82,41 @@ template MaybeInputSelector (N) {
     // `selectedIndex` must have been in [0,...,N-1] or -1.
     (1 - success)*(selectedIndex + 1) === 0;
 }
+
+/**
+ * Left-rotates elements of a given array by I positions.
+ */
+template Rotl(I,N) {
+    signal input in[N];
+    signal output out[N];
+
+    for(var i = 0; i < N; i++) {
+        out[i] <== in[(i + I)%N];
+    }
+}
+
+/**
+ * Takes the first I elements of a given array and returns the array
+ * containing those elements.
+ */
+template Take(I,N) {
+    signal input in[N];
+    signal output out[I];
+
+    for (var i = 0; i < I; i++) {
+        out[i] <== in[i];
+    }
+}
+
+/**
+ * Adds a field element to all elements of a given array.
+ */
+template Add(N) {
+    signal input element;
+    signal input in[N];
+    signal output out[N];
+
+    for(var i = 0; i < N; i++) {
+        out[i] <== in[i] + element;
+    }
+}
