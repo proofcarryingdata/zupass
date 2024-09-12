@@ -609,5 +609,5 @@ export class ProtoPODGPC {
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.7.0";
+  public static ARTIFACTS_NPM_VERSION = "0.8.0";
 }
