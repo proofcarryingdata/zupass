@@ -884,7 +884,6 @@ export class PretixPipeline implements BasePipeline {
 
   private async manualTicketToPODTicketData(
     manualTicket: ManualTicket,
-    semaphoreV3Id: string,
     semaphoreV4Id: string
   ): Promise<IPODTicketData> {
     const event = this.getEventById(manualTicket.eventId);
@@ -901,7 +900,6 @@ export class PretixPipeline implements BasePipeline {
       productId: manualTicket.productId,
       attendeeEmail: manualTicket.attendeeEmail,
       attendeeName: manualTicket.attendeeName,
-      attendeeSemaphoreId: semaphoreV3Id,
       imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
       isConsumed: checkIn ? true : false,
       isRevoked: false,
@@ -974,14 +972,13 @@ export class PretixPipeline implements BasePipeline {
    */
   private async getPODTicketsForEmail(
     email: string,
-    semaphoreV3Id: string,
     semaphoreV4Id: string
   ): Promise<PODTicketPCD[]> {
     // Load atom-backed tickets
     const relevantTickets = await this.db.loadByEmail(this.id, email);
     // Convert atoms to ticket data
     const ticketDatas: IPODTicketData[] = relevantTickets.map((t) =>
-      this.atomToPODTicketData(t, semaphoreV3Id, semaphoreV4Id)
+      this.atomToPODTicketData(t, semaphoreV4Id)
     );
     // Load manual tickets from the definition
     const manualTickets = await this.getManualTicketsForEmail(email);
@@ -990,11 +987,7 @@ export class PretixPipeline implements BasePipeline {
     ticketDatas.push(
       ...(await Promise.all(
         manualTickets.map((manualTicket) =>
-          this.manualTicketToPODTicketData(
-            manualTicket,
-            semaphoreV3Id,
-            semaphoreV4Id
-          )
+          this.manualTicketToPODTicketData(manualTicket, semaphoreV4Id)
         )
       ))
     );
@@ -1099,11 +1092,7 @@ export class PretixPipeline implements BasePipeline {
           await Promise.all(
             emails.map((e) =>
               e.semaphoreV4Id
-                ? this.getPODTicketsForEmail(
-                    e.email,
-                    semaphoreId,
-                    e.semaphoreV4Id
-                  )
+                ? this.getPODTicketsForEmail(e.email, e.semaphoreV4Id)
                 : undefined
             )
           )
@@ -1132,7 +1121,6 @@ export class PretixPipeline implements BasePipeline {
 
   private atomToPODTicketData(
     atom: PretixAtom,
-    semaphoreV3Id: string,
     semaphoreV4Id: string
   ): IPODTicketData {
     if (!atom.email) {
@@ -1151,7 +1139,6 @@ export class PretixPipeline implements BasePipeline {
       productId: atom.productId,
       timestampConsumed: atom.timestampConsumed?.getTime() ?? 0,
       timestampSigned: Date.now(),
-      attendeeSemaphoreId: semaphoreV3Id,
       owner: semaphoreV4Id,
       imageUrl: this.atomToImageUrl(atom),
       isConsumed: atom.isConsumed,
