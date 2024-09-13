@@ -1,6 +1,6 @@
 {
   "name": "generic-issuance-client",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -19,9 +19,9 @@
     "@emotion/styled": "^11.11.0",
     "@monaco-editor/react": "^4.6.0",
     "@pcd/pod": "0.1.5",
-    "@pcd/podbox-shared": "0.0.3",
+    "@pcd/podbox-shared": "0.0.4",
     "@pcd/client-shared": "0.0.5",
-    "@pcd/passport-interface": "0.11.6",
+    "@pcd/passport-interface": "0.11.7",
     "@pcd/util": "0.5.3",
     "@rollbar/react": "^0.11.2",
     "@stytch/react": "^15.0.0",

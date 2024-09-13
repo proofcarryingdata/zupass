@@ -1,6 +1,6 @@
 {
   "name": "passport-client",
-  "version": "0.0.34",
+  "version": "0.0.35",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -36,7 +36,7 @@
     "@pcd/message-pcd": "0.1.4",
     "@pcd/message-pcd-ui": "0.1.4",
     "@pcd/passport-crypto": "0.11.4",
-    "@pcd/passport-interface": "0.11.6",
+    "@pcd/passport-interface": "0.11.7",
     "@pcd/passport-ui": "0.11.4",
     "@pcd/pcd-collection": "0.11.4",
     "@pcd/pcd-types": "0.11.4",

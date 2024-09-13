@@ -1,5 +1,11 @@
 # @pcd/passport-interface
 
+## 0.11.7
+
+### Patch Changes
+
+- Expose more exports from passport-interface
+
 ## 0.11.6
 
 ### Patch Changes
