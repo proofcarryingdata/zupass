@@ -12,7 +12,6 @@ import {
   requestPodboxTicketAction
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { expectIsPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
   SemaphoreGroupPCDPackage,
   deserializeSemaphoreGroup,
@@ -254,16 +253,10 @@ describe("generic issuance - LemonadePipeline", function () {
         EdgeCityDenverAttendee.email,
         EdgeCityDenverAttendeeIdentity
       );
-      expectLength(AttendeeTickets, 2); // EdDSA and POD tickets
+      expectLength(AttendeeTickets, 1);
       const AttendeeTicket = AttendeeTickets[0];
       expectIsEdDSATicketPCD(AttendeeTicket);
       expect(AttendeeTicket.claim.ticket.attendeeEmail)
-        .to.eq(EdgeCityAttendeeTicket.user_email)
-        .to.eq(EdgeCityDenverAttendee.email);
-
-      const AttendeePODTicket = AttendeeTickets[1];
-      expectIsPODTicketPCD(AttendeePODTicket);
-      expect(AttendeePODTicket.claim.ticket.attendeeEmail)
         .to.eq(EdgeCityAttendeeTicket.user_email)
         .to.eq(EdgeCityDenverAttendee.email);
 
@@ -275,16 +268,10 @@ describe("generic issuance - LemonadePipeline", function () {
         EdgeCityDenverBouncerTicket.user_email,
         EdgeCityBouncerIdentity
       );
-      expectLength(BouncerTickets, 2);
+      expectLength(BouncerTickets, 1);
       const BouncerTicket = BouncerTickets[0];
       expectIsEdDSATicketPCD(BouncerTicket);
       expect(BouncerTicket.claim.ticket.attendeeEmail)
-        .to.eq(EdgeCityDenverBouncerTicket.user_email)
-        .to.eq(EdgeCityDenverBouncer.email);
-
-      const BouncerPODTicket = BouncerTickets[1];
-      expectIsPODTicketPCD(BouncerPODTicket);
-      expect(BouncerPODTicket.claim.ticket.attendeeEmail)
         .to.eq(EdgeCityDenverBouncerTicket.user_email)
         .to.eq(EdgeCityDenverBouncer.email);
 
@@ -347,16 +334,10 @@ describe("generic issuance - LemonadePipeline", function () {
         EdgeCityDenverBouncer2Ticket.user_email,
         EdgeCityBouncer2Identity
       );
-      expectLength(Bouncer2Tickets, 2);
+      expectLength(Bouncer2Tickets, 1);
       const Bouncer2Ticket = Bouncer2Tickets[0];
       expectIsEdDSATicketPCD(Bouncer2Ticket);
       expect(Bouncer2Ticket.claim.ticket.attendeeEmail)
-        .to.eq(EdgeCityDenverBouncer2Ticket.user_email)
-        .to.eq(EdgeCityDenverBouncer2.email);
-
-      const Bouncer2PODTicket = Bouncer2Tickets[1];
-      expectIsPODTicketPCD(Bouncer2PODTicket);
-      expect(Bouncer2PODTicket.claim.ticket.attendeeEmail)
         .to.eq(EdgeCityDenverBouncer2Ticket.user_email)
         .to.eq(EdgeCityDenverBouncer2.email);
 
@@ -377,15 +358,10 @@ describe("generic issuance - LemonadePipeline", function () {
         EdgeCityManualAttendeeEmail,
         EdgeCityManualAttendeeIdentity
       );
-      expectLength(ManualAttendeeTickets, 2);
+      expectLength(ManualAttendeeTickets, 1);
       const ManualAttendeeTicket = ManualAttendeeTickets[0];
       expectIsEdDSATicketPCD(ManualAttendeeTicket);
       expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
-        EdgeCityManualAttendeeEmail
-      );
-      const ManualAttendeePODTicket = ManualAttendeeTickets[1];
-      expectIsPODTicketPCD(ManualAttendeePODTicket);
-      expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
         EdgeCityManualAttendeeEmail
       );
 
@@ -397,15 +373,10 @@ describe("generic issuance - LemonadePipeline", function () {
         EdgeCityManualBouncerEmail,
         EdgeCityManualBouncerIdentity
       );
-      expectLength(ManualBouncerTickets, 2);
+      expectLength(ManualBouncerTickets, 1);
       const ManualBouncerTicket = ManualBouncerTickets[0];
       expectIsEdDSATicketPCD(ManualBouncerTicket);
       expect(ManualBouncerTicket.claim.ticket.attendeeEmail).to.eq(
-        EdgeCityManualBouncerEmail
-      );
-      const ManualBouncerPODTicket = ManualBouncerTickets[1];
-      expectIsPODTicketPCD(ManualBouncerPODTicket);
-      expect(ManualBouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
         EdgeCityManualBouncerEmail
       );
 
@@ -430,7 +401,7 @@ describe("generic issuance - LemonadePipeline", function () {
           EdgeCityManualAttendeeEmail,
           EdgeCityManualAttendeeIdentity
         );
-        expectLength(ManualAttendeeTickets, 2);
+        expectLength(ManualAttendeeTickets, 1);
         const ManualAttendeeTicket = ManualAttendeeTickets[0];
         expectIsEdDSATicketPCD(ManualAttendeeTicket);
         expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
@@ -438,15 +409,6 @@ describe("generic issuance - LemonadePipeline", function () {
         );
         expect(ManualAttendeeTicket.claim.ticket.isConsumed).to.eq(true);
         expect(ManualAttendeeTicket.claim.ticket.timestampConsumed).to.eq(
-          Date.now()
-        );
-        const ManualAttendeePODTicket = ManualAttendeeTickets[1];
-        expectIsPODTicketPCD(ManualAttendeePODTicket);
-        expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
-          EdgeCityManualAttendeeEmail
-        );
-        expect(ManualAttendeePODTicket.claim.ticket.isConsumed).to.eq(true);
-        expect(ManualAttendeePODTicket.claim.ticket.timestampConsumed).to.eq(
           Date.now()
         );
       }
@@ -653,7 +615,7 @@ describe("generic issuance - LemonadePipeline", function () {
         newUser.email,
         newUserIdentity
       );
-      expectLength(NewUserTickets, 2);
+      expectLength(NewUserTickets, 1);
 
       const attendeeGroupResponse = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
@@ -1034,7 +996,7 @@ describe("generic issuance - LemonadePipeline", function () {
         EdgeCityDenverBouncer.email,
         EdgeCityBouncerIdentity
       );
-      expectLength(bouncerTickets, 2);
+      expectLength(bouncerTickets, 1);
       const bouncerTicket = bouncerTickets[0];
       expectToExist(bouncerTicket);
       expectIsEdDSATicketPCD(bouncerTicket);
@@ -1043,15 +1005,6 @@ describe("generic issuance - LemonadePipeline", function () {
       );
       // Bouncer ticket is checked out
       expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
-
-      const bouncerPODTicket = bouncerTickets[1];
-      expectToExist(bouncerPODTicket);
-      expectIsPODTicketPCD(bouncerPODTicket);
-      expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
-        EdgeCityDenverBouncer.email
-      );
-      // Bouncer ticket is checked out
-      expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(false);
 
       const edgeCityCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
 

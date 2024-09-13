@@ -12,7 +12,7 @@ type PotentialBigInt = string | number | bigint | boolean;
  * A no-op "transform" which we can use to flag that a data type ought to be
  * treated as a POD "cryptographic" value.
  */
-export function cryptographic<T extends PotentialBigInt>(a: T): T {
+export function cryptographic<T extends PotentialBigInt>(a?: T): T | undefined {
   return a;
 }
 
@@ -102,11 +102,13 @@ export function dataToPodEntries<T>(
         // Right now we only support the "cryptographic" transform, which
         // indicates that this should become a "cryptographic" POD value.
         if (field._def.effect.transform === cryptographic) {
-          entries[key] = {
-            // Cryptographic values are always BigInts.
-            value: BigInt(data[key]),
-            type: "cryptographic"
-          };
+          if (data[key] !== null && data[key] !== undefined) {
+            entries[key] = {
+              // Cryptographic values are always BigInts.
+              value: BigInt(data[key]),
+              type: "cryptographic"
+            };
+          }
         } else {
           throw new Error(`Unrecognized transform on key ${key}`);
         }

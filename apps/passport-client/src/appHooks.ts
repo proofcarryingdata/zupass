@@ -1,3 +1,4 @@
+import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { wrap, Wrapper } from "@pcd/emitter";
 import {
   CredentialCache,
@@ -9,12 +10,11 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
-import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
+import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { appConfig } from "./appConfig";
 import {
   Dispatcher,
   StateContext,
@@ -71,11 +71,49 @@ export function usePCDsInFolder(folder: string): PCD[] {
 
 export function useVisiblePCDsInFolder(folder: string): PCD[] {
   const pcds = usePCDsInFolder(folder);
-  return pcds.filter(
-    (pcd) =>
-      // Filter out PODTicketPCDs unless showPODTicketPCDs is true
-      pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs
-  );
+
+  const filteredPCDs = useMemo(() => {
+    let result: PCD[] = [];
+
+    // step 1. of filtering - hide EdDSA tickets that have corresponding POD tickets
+    for (const pcd of pcds) {
+      // if we've already encountered a corresponding eddsa ticket, replace it
+      if (isPODTicketPCD(pcd)) {
+        const existingEddsaIdx = result.findIndex(
+          (alreadyAdded) =>
+            isEdDSATicketPCD(alreadyAdded) &&
+            alreadyAdded.claim.ticket.ticketId === pcd.claim.ticket.ticketId
+        );
+        if (existingEddsaIdx !== -1) {
+          result[existingEddsaIdx] = pcd;
+        }
+      }
+      // if we have not already encountered a corresponding POD ticket, add it
+      else if (isEdDSATicketPCD(pcd)) {
+        const existingPodIdx = result.findIndex(
+          (alreadyAdded) =>
+            isPODTicketPCD(alreadyAdded) &&
+            alreadyAdded.claim.ticket.ticketId === pcd.claim.ticket.ticketId
+        );
+        if (existingPodIdx === -1) {
+          result.push(pcd);
+        }
+      }
+      // in all other cases, just add the pcd
+      else {
+        result.push(pcd);
+      }
+    }
+
+    // step 2. of filtering - hide POD tickets that have don't have a V4 sempahore identity.
+    result = result.filter(
+      (pcd) => !isPODTicketPCD(pcd) || !!pcd.claim.ticket.owner
+    );
+
+    return result;
+  }, [pcds]);
+
+  return filteredPCDs;
 }
 
 export function useFolders(path: string): string[] {

@@ -44,8 +44,8 @@ import { BasePipeline, Pipeline } from "../types";
 import { makeMessagePCD } from "./makeMessagePCD";
 import { makePODTicketPCD } from "./makePODTicketPCD";
 import {
+  csvRowToEdDSATicketData,
   makeTicketPCD,
-  rowToTicket,
   summarizeEventAndProductIds
 } from "./makeTicketPCD";
 
@@ -156,10 +156,11 @@ export class CSVPipeline implements BasePipeline {
 
       let requesterEmails: SignedEmail[] | undefined;
       let requesterSemaphoreId: string | undefined;
+      let requesterSemaphoreV4Id: string | undefined;
 
       if (req.pcd) {
         try {
-          const { emails, semaphoreId } =
+          const { emails, semaphoreId, semaphoreV4Id } =
             await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
           if (!emails || emails.length === 0) {
@@ -168,6 +169,7 @@ export class CSVPipeline implements BasePipeline {
 
           requesterEmails = emails;
           requesterSemaphoreId = semaphoreId;
+          requesterSemaphoreV4Id = semaphoreV4Id;
           // Consumer is validated, so save them in the consumer list
           let didUpdate = false;
           for (const email of emails) {
@@ -209,6 +211,7 @@ export class CSVPipeline implements BasePipeline {
                 {
                   requesterEmail: e,
                   requesterSemaphoreId,
+                  requesterSemaphoreV4Id,
                   eddsaPrivateKey: this.eddsaPrivateKey,
                   pipelineId: this.id,
                   issueToUnmatchedEmail:
@@ -351,7 +354,7 @@ export class CSVPipeline implements BasePipeline {
     // Find all of the unique products and create a metadata entry
     for (const atom of await this.db.load(this.id)) {
       // Passing "" as the Semaphore ID here is a bit of a hack
-      const ticket = rowToTicket(atom.row, "", this.id);
+      const ticket = csvRowToEdDSATicketData(atom.row, "", this.id);
       if (ticket) {
         uniqueProductMetadata[ticket.productId] = {
           pcdType: "eddsa-ticket-pcd",
@@ -385,7 +388,7 @@ export class CSVPipeline implements BasePipeline {
         for (const atom of await this.db.load(this.id)) {
           // We can use a dummy Semaphore ID here because we only care about
           // the event ID and product ID for the ticket.
-          const ticket = rowToTicket(atom.row, "0", this.id);
+          const ticket = csvRowToEdDSATicketData(atom.row, "0", this.id);
           if (ticket) {
             data.push({
               email: ticket.attendeeEmail,
@@ -473,6 +476,7 @@ export async function makeCSVPCD(
   opts: {
     requesterEmail?: string;
     requesterSemaphoreId?: string;
+    requesterSemaphoreV4Id?: string;
     eddsaPrivateKey: string;
     pipelineId: string;
     issueToUnmatchedEmail?: boolean;
@@ -499,6 +503,7 @@ export async function makeCSVPCD(
           opts.eddsaPrivateKey,
           opts.requesterEmail,
           opts.requesterSemaphoreId,
+          opts.requesterSemaphoreV4Id,
           opts.pipelineId,
           opts.issueToUnmatchedEmail
         );

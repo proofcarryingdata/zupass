@@ -727,7 +727,7 @@ async function removePCD(
   pcdId: string
 ): Promise<void> {
   const pcd = state.pcds.getById(pcdId);
-  if (!appConfig.showPODTicketPCDs && pcd && isEdDSATicketPCD(pcd)) {
+  if (pcd && isEdDSATicketPCD(pcd)) {
     // EdDSATicketPCDs are currently duplicated as PODTicketPCDs. Since
     // PODTicketPCDs are hidden, they cannot be removed via the UI. IF an
     // EdDSATicketPCD is remove but its counterpart PODTicketPCD is not, then

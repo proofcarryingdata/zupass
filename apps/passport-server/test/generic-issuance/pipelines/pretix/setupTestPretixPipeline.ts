@@ -19,7 +19,9 @@ import { expectLength, expectToExist } from "../../../util/util";
 /**
  * Sets up test data required to test {@link PretixPipeline}
  */
-export function setupTestPretixPipeline(): PretixPipelineTestData {
+export function setupTestPretixPipeline(
+  enablePODTickets: boolean = false
+): PretixPipelineTestData {
   const adminGIUserId = randomUUID();
   const adminGIUserEmail = "admin@test.com";
 
@@ -175,7 +177,7 @@ export function setupTestPretixPipeline(): PretixPipelineTestData {
       ],
       pretixAPIKey: ethLatAmPretixOrganizer.token,
       pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl,
-      enablePODTickets: true
+      enablePODTickets
     },
     type: PipelineType.Pretix
   };

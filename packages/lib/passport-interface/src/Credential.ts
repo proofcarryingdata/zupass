@@ -52,6 +52,7 @@ export interface CredentialPayload {
 export interface VerifiedCredential {
   emails?: SignedEmail[];
   semaphoreId: string;
+  semaphoreV4Id?: string;
   authKey?: string;
 }
 
@@ -59,6 +60,7 @@ export interface SignedEmail {
   signer: EdDSAPublicKey;
   email: string;
   semaphoreId: string;
+  semaphoreV4Id?: string;
 }
 
 /**
@@ -152,15 +154,21 @@ export async function verifyCredential(
         return {
           email: emailPCD.claim.emailAddress,
           signer: emailPCD.proof.eddsaPCD.claim.publicKey,
-          semaphoreId: emailPCD.claim.semaphoreId
+          semaphoreId: emailPCD.claim.semaphoreId,
+          semaphoreV4Id: emailPCD.claim.semaphoreV4Id
         } satisfies SignedEmail;
       })
     );
 
+    // a bit hacky
+    const semaphoreV4Id = signedEmails.find((e) => e.semaphoreV4Id)
+      ?.semaphoreV4Id;
+
     // Everything passes, return the verified credential with email claims
     return {
       emails: signedEmails,
-      semaphoreId: pcd.claim.identityCommitment
+      semaphoreId: pcd.claim.identityCommitment,
+      semaphoreV4Id
     };
   } else {
     // Return a verified credential, without email claims since no EmailPCD

@@ -15,8 +15,6 @@ interface AppConfig {
   rollbarEnvName: string | undefined;
   // license key for Strich scanner
   strichLicenseKey: string | undefined;
-  // should PODTicketPCDs be visible?
-  showPODTicketPCDs: boolean;
 }
 
 if (
@@ -51,8 +49,7 @@ export const appConfig: AppConfig = {
   maxIdentityProofAgeMs: ONE_HOUR_MS * 4,
   rollbarToken: process.env.ROLLBAR_TOKEN,
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
-  strichLicenseKey: process.env.STRICH_LICENSE_KEY,
-  showPODTicketPCDs: process.env.SHOW_POD_TICKET_PCDS === "true"
+  strichLicenseKey: process.env.STRICH_LICENSE_KEY
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

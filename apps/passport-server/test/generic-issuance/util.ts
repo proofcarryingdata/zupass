@@ -27,7 +27,10 @@ import {
   PODTicketPCDPackage,
   PODTicketPCDTypeName
 } from "@pcd/pod-ticket-pcd";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityPCDPackage,
+  v3tov4Identity
+} from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -104,6 +107,39 @@ export async function requestCheckInPipelineTicket(
 }
 
 /**
+ * Receivers of {@link EdDSATicketPCD} can 'check in' other holders of
+ * tickets issued by the same feed, if their ticket's 'product type' has
+ * been configured by the owner of the pipeline of this feed.
+ */
+export async function requestCheckInPipelinePODTicket(
+  /**
+   * {@link Pipeline}s can have a {@link CheckinCapability}
+   */
+  checkinRoute: string,
+  zupassEddsaPrivateKey: string,
+  checkerEmail: string,
+  checkerIdentity: Identity,
+  ticket: PODTicketPCD
+): Promise<PodboxTicketActionResult> {
+  const ticketCheckerFeedCredentials = await makeTestCredential(
+    checkerIdentity,
+    PODBOX_CREDENTIAL_REQUEST,
+    checkerEmail,
+    zupassEddsaPrivateKey
+  );
+
+  return requestPodboxTicketAction(
+    checkinRoute,
+    ticketCheckerFeedCredentials,
+    {
+      checkin: true
+    },
+    ticket.claim.ticket.ticketId,
+    ticket.claim.ticket.eventId
+  );
+}
+
+/**
  * Extracts tickets from {@link PollFeedResult}. Expects tickets to be returned
  * in a single {@link ReplaceInFolderAction}. Checks that the first and only
  * {@link PCDAction}
@@ -152,7 +188,11 @@ export async function requestTicketsFromPipeline(
   /**
    * Is owned by this identity.
    */
-  identity: Identity
+  identity: Identity,
+  /**
+   * Whether to include the v4 ID in the EmailPCD.
+   */
+  includeV4Id: boolean = false
 ): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
   const ticketPCDResponse = await requestPollFeed(feedUrl, {
     feedId: feedId,
@@ -160,7 +200,8 @@ export async function requestTicketsFromPipeline(
       identity,
       PODBOX_CREDENTIAL_REQUEST,
       email,
-      zupassEddsaPrivateKey
+      zupassEddsaPrivateKey,
+      includeV4Id
     )
   });
 
@@ -202,7 +243,8 @@ export async function makeTestCredential(
   identity: Identity,
   request: CredentialRequest,
   email?: string,
-  zupassEddsaPrivateKey?: string
+  zupassEddsaPrivateKey?: string,
+  includeV4Id: boolean = false
 ): Promise<Credential> {
   if (request.pcdType === "email-pcd") {
     if (!email || !zupassEddsaPrivateKey) {
@@ -213,7 +255,8 @@ export async function makeTestCredential(
     const emailPCD = await proveEmailPCD(
       email,
       zupassEddsaPrivateKey,
-      identity
+      identity,
+      includeV4Id
     );
     // Credential Manager will need to be able to look up the Email PCD, and use
     // an identity. We instantiate a PCDCollection here, mirroring the usage on
@@ -288,7 +331,8 @@ export async function signCredentialPayload(
 export async function proveEmailPCD(
   email: string,
   zupassEddsaPrivateKey: string,
-  identity: Identity
+  identity: Identity,
+  includeV4Id: boolean = false
 ): Promise<EmailPCD> {
   return EmailPCDPackage.prove({
     privateKey: {
@@ -305,6 +349,12 @@ export async function proveEmailPCD(
     },
     semaphoreId: {
       value: identity.commitment.toString(),
+      argumentType: ArgumentTypeName.String
+    },
+    semaphoreV4Id: {
+      value: includeV4Id
+        ? v3tov4Identity(identity).commitment.toString()
+        : undefined,
       argumentType: ArgumentTypeName.String
     }
   });

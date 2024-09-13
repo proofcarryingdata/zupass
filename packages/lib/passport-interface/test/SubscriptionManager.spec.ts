@@ -1,7 +1,10 @@
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { PCDActionType, PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityPCDPackage,
+  v3tov4Identity
+} from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { assert, expect } from "chai";
 import MockDate from "mockdate";
@@ -387,6 +390,10 @@ describe("Subscription Manager", async function () {
       },
       semaphoreId: {
         value: identity.getCommitment().toString(),
+        argumentType: ArgumentTypeName.String
+      },
+      semaphoreV4Id: {
+        value: v3tov4Identity(identity).commitment.toString(),
         argumentType: ArgumentTypeName.String
       },
       privateKey: {
