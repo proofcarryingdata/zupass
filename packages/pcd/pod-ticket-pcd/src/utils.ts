@@ -102,11 +102,13 @@ export function dataToPodEntries<T>(
         // Right now we only support the "cryptographic" transform, which
         // indicates that this should become a "cryptographic" POD value.
         if (field._def.effect.transform === cryptographic) {
-          entries[key] = {
-            // Cryptographic values are always BigInts.
-            value: BigInt(data[key]),
-            type: "cryptographic"
-          };
+          if (data[key] !== null && data[key] !== undefined) {
+            entries[key] = {
+              // Cryptographic values are always BigInts.
+              value: BigInt(data[key]),
+              type: "cryptographic"
+            };
+          }
         } else {
           throw new Error(`Unrecognized transform on key ${key}`);
         }
