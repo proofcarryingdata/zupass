@@ -107,7 +107,7 @@ export function useVisiblePCDsInFolder(folder: string): PCD[] {
 
     // step 2. of filtering - hide POD tickets that have don't have a V4 sempahore identity.
     result = result.filter(
-      (pcd) => !isPODTicketPCD(pcd) || !!pcd.claim.ticket.attendeeSemaphoreV4Id
+      (pcd) => !isPODTicketPCD(pcd) || !!pcd.claim.ticket.owner
     );
 
     return result;

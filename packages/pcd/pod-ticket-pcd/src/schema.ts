@@ -16,6 +16,7 @@ export const TicketDataSchema = z.object({
   /**
    * V3 semaphore commitment.
    * Optional, used only by legacy v3 tickets.
+   * @deprecated
    */
   attendeeSemaphoreId: z
     .string()
@@ -24,7 +25,10 @@ export const TicketDataSchema = z.object({
     // important that the transform comes last, otherwise
     // `dataToPodEntries` will not work
     .transform(cryptographic),
-  attendeeSemaphoreV4Id: z
+  /**
+   * Semaphore v4 identity commitment.
+   */
+  owner: z
     .string()
     .refine(canBeBigInt)
     .optional()

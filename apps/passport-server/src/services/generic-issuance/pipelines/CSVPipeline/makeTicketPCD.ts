@@ -84,7 +84,7 @@ export function csvRowToEdDSATicketData(
 export function csvRowToPODTicketData(
   row: string[],
   attendeeSemaphoreId: string,
-  attendeeSemaphoreV4Id: string,
+  owner: string,
   pipelineId: string
 ): IPODTicketData | undefined {
   try {
@@ -115,7 +115,7 @@ export function csvRowToPODTicketData(
       timestampSigned: Date.now(),
       attendeeSemaphoreId,
       ticketSecret: undefined,
-      attendeeSemaphoreV4Id,
+      owner,
       isConsumed: false, // changes if checkin feature enabled for csv pipelines
       isRevoked: false,
       ticketCategory: TicketCategory.Generic,

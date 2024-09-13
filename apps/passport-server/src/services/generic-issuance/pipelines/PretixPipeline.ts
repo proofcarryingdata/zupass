@@ -911,7 +911,7 @@ export class PretixPipeline implements BasePipeline {
       eventName: event.name,
       ticketName: product.name,
       checkerEmail: undefined,
-      attendeeSemaphoreV4Id: semaphoreV4Id,
+      owner: semaphoreV4Id,
       ticketSecret: undefined
     };
   }
@@ -1152,7 +1152,7 @@ export class PretixPipeline implements BasePipeline {
       timestampConsumed: atom.timestampConsumed?.getTime() ?? 0,
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreV3Id,
-      attendeeSemaphoreV4Id: semaphoreV4Id,
+      owner: semaphoreV4Id,
       imageUrl: this.atomToImageUrl(atom),
       isConsumed: atom.isConsumed,
       isRevoked: false,
