@@ -8,7 +8,8 @@ import {
   SubscriptionErrorType
 } from "@pcd/passport-interface";
 import { Separator } from "@pcd/passport-ui";
-import _ from "lodash";
+import keyBy from "lodash/keyBy";
+import maxBy from "lodash/maxBy";
 import prettyMilliseconds from "pretty-ms";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
@@ -47,7 +48,7 @@ export function GetFrogTab({
 }): JSX.Element {
   const { value: subManager } = useSubscriptions();
   const userStateByFeedId = useMemo(
-    () => _.keyBy(userState.feeds, (feed) => feed.feedId),
+    () => keyBy(userState.feeds, (feed) => feed.feedId),
     [userState]
   );
 
@@ -194,7 +195,10 @@ const SearchButton = ({
     refreshUserState,
     subManager
   ]);
-  const name = useMemo(() => `search ${_.upperCase(feed.name)}`, [feed.name]);
+  const name = useMemo(
+    () => `search ${feed.name.toLocaleUpperCase()}`,
+    [feed.name]
+  );
   const freerolls = FROG_FREEROLLS + 1 - (score ?? 0);
   const ButtonComponent = useMemo(() => {
     switch (feed.name) {
@@ -241,7 +245,7 @@ const useGetLastFrog = (): (() => EdDSAFrogPCD | undefined) => {
   const pcdCollection = usePCDCollection();
   const getLastFrog = useCallback(
     () =>
-      _.maxBy(
+      maxBy(
         pcdCollection
           .getAllPCDsInFolder(FrogCryptoFolderName)
           .filter(isEdDSAFrogPCD),

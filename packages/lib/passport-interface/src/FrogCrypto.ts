@@ -1,5 +1,5 @@
 import { Biome, EdDSAFrogPCDPackage, Rarity } from "@pcd/eddsa-frog-pcd";
-import _ from "lodash";
+import mapValues from "lodash/mapValues";
 import { z } from "zod";
 import { Feed } from "./SubscriptionManager";
 
@@ -42,7 +42,7 @@ export const FrogCryptoFeedBiomeConfigSchema = z.object({
 });
 
 export const FrogCryptoFeedBiomeConfigsSchema = z.object(
-  _.mapValues(Biome, () => FrogCryptoFeedBiomeConfigSchema.optional())
+  mapValues(Biome, () => FrogCryptoFeedBiomeConfigSchema.optional())
 );
 
 export type FrogCryptoFeedBiomeConfigs = z.infer<

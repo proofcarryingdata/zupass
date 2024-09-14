@@ -12,7 +12,6 @@ import {
 } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
-import _ from "lodash";
 import "mocha";
 import path from "path";
 import { poseidon1, poseidon2 } from "poseidon-lite";
@@ -46,6 +45,7 @@ import {
   sampleEntries2,
   sampleEntries3
 } from "./common";
+import isEqual from "lodash/isEqual";
 
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
@@ -974,7 +974,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
     // sizes, with truncated data as necessary.
     for (const cd of ProtoPODGPC.CIRCUIT_PARAMETERS.map((pair) => pair[0])) {
       // Skip the default (largest) config, already tested above.
-      if (_.isEqual(cd, GPC_PARAMS)) {
+      if (isEqual(cd, GPC_PARAMS)) {
         continue;
       }
 

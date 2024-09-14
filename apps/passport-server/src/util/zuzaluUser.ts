@@ -5,7 +5,7 @@ import {
   ZupassUserJson,
   ZuzaluUserRole
 } from "@pcd/passport-interface";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
 import { UserRow, ZuzaluPretixTicket } from "../database/models";
 
 /**
@@ -20,9 +20,7 @@ export function pretixTicketsDifferent(
     return true;
   }
 
-  if (
-    !_.isEqual(oldTicket.visitor_date_ranges, newTicket.visitor_date_ranges)
-  ) {
+  if (!isEqual(oldTicket.visitor_date_ranges, newTicket.visitor_date_ranges)) {
     return true;
   }
 

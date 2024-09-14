@@ -1,5 +1,5 @@
 import { ONE_HOUR_MS } from "@pcd/util";
-import _ from "lodash";
+import sample from "lodash/sample";
 import { v4 as uuid } from "uuid";
 import {
   ZuzaluPretixConfig,
@@ -236,6 +236,6 @@ export class ZuzaluPretixDataMocker {
       "Slimbo",
       "Froggy"
     ];
-    return _.sample(firstNames) + " " + _.sample(lastNames);
+    return sample(firstNames) + " " + sample(lastNames);
   }
 }

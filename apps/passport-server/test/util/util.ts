@@ -1,8 +1,7 @@
 import { expect } from "chai";
 import JSONBig from "json-bigint";
-import _ from "lodash";
+import sample from "lodash/sample";
 import { v4 as uuid } from "uuid";
-
 export function randomEmail(): string {
   return uuid() + "@test.com";
 }
@@ -129,5 +128,5 @@ export function safeTrue(): boolean {
 export function randomName(): string {
   const firstNames = ["Bob", "Steve", "Gub", "Mob", "Flub", "Jib", "Grub"];
   const lastNames = ["Froby", "Shmoby", "Glowby", "Brimby", "Slimbo", "Froggy"];
-  return _.sample(firstNames) + " " + _.sample(lastNames);
+  return sample(firstNames) + " " + sample(lastNames);
 }

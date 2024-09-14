@@ -7,7 +7,7 @@ import {
 } from "@pcd/pcd-types";
 import { generateSnarkMessageHash } from "@pcd/util";
 import JSONBig from "json-bigint";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
 import { v4 as uuid } from "uuid";
 import {
   EmailPCD,
@@ -67,7 +67,7 @@ export async function verify(pcd: EmailPCD): Promise<boolean> {
   );
 
   if (
-    !_.isEqual(
+    !isEqual(
       [messageDerivedFromClaim, BigInt(pcd.claim.semaphoreId)],
       pcd.proof.eddsaPCD.claim.message
     )

@@ -1,6 +1,6 @@
 import { PCD } from "@pcd/pcd-types";
 import { sleep } from "@pcd/util";
-import _ from "lodash";
+import orderBy from "lodash/orderBy";
 import { useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
@@ -88,7 +88,7 @@ export function PCDCardList({
   const sortedPCDs = useMemo(
     () =>
       (sortState.sortBy && sortState.sortOrder
-        ? _.orderBy(sortablePCDs, [sortState.sortBy], [sortState.sortOrder])
+        ? orderBy(sortablePCDs, [sortState.sortBy], [sortState.sortOrder])
         : sortablePCDs
       ).map((o) => o.value),
     [sortState, sortablePCDs]

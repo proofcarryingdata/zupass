@@ -4,7 +4,8 @@ import {
   PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
-import _ from "lodash";
+import difference from "lodash/difference";
+import isEqual from "lodash/isEqual";
 import { Pool, PoolClient } from "postgres-pool";
 import { GenericIssuancePipelineRow } from "../models";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
@@ -214,12 +215,12 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
           )
         ).rows.map((row) => row.editor_id);
 
-        if (!_.isEqual(pipeline.editor_user_ids, definition.editorUserIds)) {
-          const editorsToRemove = _.difference(
+        if (!isEqual(pipeline.editor_user_ids, definition.editorUserIds)) {
+          const editorsToRemove = difference(
             pipeline.editor_user_ids,
             definition.editorUserIds
           );
-          const editorsToAdd = _.difference(
+          const editorsToAdd = difference(
             definition.editorUserIds,
             pipeline.editor_user_ids
           );

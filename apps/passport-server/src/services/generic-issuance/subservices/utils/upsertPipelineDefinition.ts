@@ -5,7 +5,7 @@ import {
   isCSVPipelineDefinition
 } from "@pcd/passport-interface";
 import { onlyDefined, str } from "@pcd/util";
-import _ from "lodash";
+import isEqual from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { PCDHTTPError } from "../../../../routing/pcdHttpError";
 import { logger } from "../../../../util/logger";
@@ -116,7 +116,7 @@ export async function upsertPipelineDefinition(
 
     if (
       !editor.isAdmin &&
-      !_.isEqual(
+      !isEqual(
         existingPipelineDefinition.options.alerts,
         newDefinition.options.alerts
       )

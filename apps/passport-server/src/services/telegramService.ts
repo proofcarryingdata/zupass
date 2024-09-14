@@ -38,7 +38,7 @@ import {
   Message,
   UserFromGetMe
 } from "grammy/types";
-import _ from "lodash";
+import uniq from "lodash/uniq";
 import { v1 as uuidV1 } from "uuid";
 import { AnonMessageWithDetails } from "../database/models";
 import {
@@ -1352,7 +1352,7 @@ export class TelegramService {
         anonMessageId
       );
 
-      const allEmojis = _.uniq([
+      const allEmojis = uniq([
         ...getDisplayEmojis(new Date(anonMessage.message_timestamp)),
         ...reactionsForMessage.map((rc) => rc.reaction)
       ]);

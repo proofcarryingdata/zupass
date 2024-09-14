@@ -2,7 +2,7 @@ import {
   FrogCryptoScore,
   requestFrogCryptoGetScoreboard
 } from "@pcd/passport-interface";
-import _ from "lodash";
+import orderBy from "lodash/orderBy";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
@@ -225,7 +225,7 @@ export function groupScores(scores: FrogCryptoScore[]): {
     scores: [] as FrogCryptoScore[]
   })).reverse();
 
-  _.orderBy(scores, ["score"], ["desc"]).forEach((score) => {
+  orderBy(scores, ["score"], ["desc"]).forEach((score) => {
     const index = SCORES.findIndex((item) => item.score > score.score);
     const curr = SCORES[index === -1 ? SCORES.length - 1 : index - 1];
 

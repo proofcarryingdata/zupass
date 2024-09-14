@@ -7,7 +7,7 @@ import {
   podValueHash
 } from "@pcd/pod";
 import { PODPCD, PODPCDTypeName } from "@pcd/pod-pcd";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
 import {
   FixedPODEntries,
   PODPCDArgValidatorParams,
@@ -173,7 +173,7 @@ export function checkPODAgainstPrescribedSignerPublicKeys(
   try {
     return (
       prescribedSignerPublicKeys?.[podName] === undefined ||
-      _.isEqual(
+      isEqual(
         decodePublicKey(prescribedSignerPublicKeys[podName]),
         decodePublicKey(signerPublicKey)
       )

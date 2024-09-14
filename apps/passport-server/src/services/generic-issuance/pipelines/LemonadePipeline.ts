@@ -40,7 +40,7 @@ import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import stable_stringify from "fast-json-stable-stringify";
-import _ from "lodash";
+import keyBy from "lodash/keyBy";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
 import urljoin from "url-join";
@@ -754,7 +754,7 @@ export class LemonadePipeline implements BasePipeline {
       this.id,
       relevantTickets.map((ticket) => ticket.id)
     );
-    const checkInsById = _.keyBy(checkIns, (checkIn) => checkIn.ticketId);
+    const checkInsById = keyBy(checkIns, (checkIn) => checkIn.ticketId);
 
     // Convert atoms to ticket data
     const ticketDatas = relevantTickets.map((t) => {
@@ -1918,7 +1918,7 @@ export class LemonadePipeline implements BasePipeline {
     return traced(LOG_NAME, "getManualCheckinSummary", async (span) => {
       const results: PipelineCheckinSummary[] = [];
       const checkIns = await this.checkinDB.getByPipelineId(this.id);
-      const checkInsById = _.keyBy(checkIns, (checkIn) => checkIn.ticketId);
+      const checkInsById = keyBy(checkIns, (checkIn) => checkIn.ticketId);
 
       for (const ticketAtom of await this.db.load(this.id)) {
         const checkIn = checkInsById[ticketAtom.id];

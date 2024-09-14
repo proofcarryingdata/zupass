@@ -7,7 +7,7 @@ import {
 import { ErrorMessage, Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { getErrorMessage } from "@pcd/util";
-import _ from "lodash";
+import chain from "lodash/chain";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
 // react-table-lite does not have types
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
@@ -277,7 +277,7 @@ export function DataTable({
 }): JSX.Element {
   const keys =
     data.length > 0
-      ? _.chain(data).map(Object.keys).flatten().uniq().value()
+      ? chain(data).map(Object.keys).flatten().uniq().value()
       : [];
 
   const dataWithChecked = data.map((row) => ({

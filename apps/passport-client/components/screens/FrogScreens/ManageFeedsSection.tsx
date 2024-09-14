@@ -8,7 +8,8 @@ import {
 import { ErrorMessage, Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { getErrorMessage } from "@pcd/util";
-import _ from "lodash";
+import chain from "lodash/chain";
+import upperFirst from "lodash/upperFirst";
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useState } from "react";
 // react-table-lite does not have types
@@ -206,7 +207,7 @@ function feedParser(data: string): FrogCryptoDbFeedData[] {
       Object.keys(Biome).reduce((acc, biome) => {
         const dropWeightScaler =
           rawFeed[
-            `biomes${_.upperFirst(
+            `biomes${upperFirst(
               biome.replace(/\s/, "").toLowerCase()
             )}Dropweightscaler`
           ];
@@ -265,7 +266,7 @@ function feedUnparser(feeds: FrogCryptoDbFeedData[]): string {
         const biomeConfig = feed.feed.biomes[biome];
         if (biomeConfig) {
           acc[
-            `biomes${_.upperFirst(
+            `biomes${upperFirst(
               biome.replace(/\s/, "").toLowerCase()
             )}Dropweightscaler`
           ] = biomeConfig.dropWeightScaler;
@@ -292,7 +293,7 @@ export function DataTable({
   }));
   const keys =
     data.length > 0
-      ? _.chain(data).map(Object.keys).flatten().uniq().value()
+      ? chain(data).map(Object.keys).flatten().uniq().value()
       : [];
 
   return (
