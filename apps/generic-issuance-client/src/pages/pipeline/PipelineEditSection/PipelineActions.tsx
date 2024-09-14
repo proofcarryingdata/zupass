@@ -7,7 +7,7 @@ import {
   PipelineInfoResponseValue,
   isCSVPipelineDefinition
 } from "@pcd/passport-interface";
-import _ from "lodash";
+import cloneDeep from "lodash/cloneDeep";
 import React, { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { AddDataModal } from "../../../components/AddDataModal";
@@ -81,7 +81,7 @@ export function PipelineActions({
     }
 
     setActionInProgress(`Reverting pipeline '${pipeline.id}'...`);
-    const historicVersion: Partial<PipelineDefinition> = _.cloneDeep(
+    const historicVersion: Partial<PipelineDefinition> = cloneDeep(
       maybeHistoricPipeline
     );
     historicVersion.timeUpdated = pipeline.timeUpdated;
@@ -114,7 +114,7 @@ export function PipelineActions({
     }
 
     setActionInProgress(`Duplicating pipeline '${pipeline.id}'...`);
-    const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
+    const copyDefinition: Partial<PipelineDefinition> = cloneDeep(pipeline);
     delete copyDefinition.id;
     delete copyDefinition.ownerUserId;
     copyDefinition.options = {
@@ -179,7 +179,7 @@ export function PipelineActions({
       setActionInProgress(
         `Changing protection status of pipeline '${pipeline.id}'...`
       );
-      const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
+      const copyDefinition: Partial<PipelineDefinition> = cloneDeep(pipeline);
       copyDefinition.options = {
         ...copyDefinition.options,
         protected: !pipelineProtected
@@ -210,7 +210,7 @@ export function PipelineActions({
       setActionInProgress(
         `Changing pause state of pipeline '${pipeline.id}'...`
       );
-      const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
+      const copyDefinition: Partial<PipelineDefinition> = cloneDeep(pipeline);
       copyDefinition.options = {
         ...copyDefinition.options,
         paused: !pipelinePaused
@@ -241,7 +241,7 @@ export function PipelineActions({
       setActionInProgress(
         `Changing importance of pipeline '${pipeline.id}'...`
       );
-      const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
+      const copyDefinition: Partial<PipelineDefinition> = cloneDeep(pipeline);
       copyDefinition.options = {
         ...copyDefinition.options,
         important: !pipelineImportant

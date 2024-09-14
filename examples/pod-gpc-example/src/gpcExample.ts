@@ -36,7 +36,7 @@ import { POD, PODEntries, podEntriesToSimplifiedJSON } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
 
@@ -244,7 +244,7 @@ export async function gpcDemo(): Promise<boolean> {
   // If the config isn't hard-coded in the verifier, you need to ensure it's
   // suitable.  The canonicalization which happens in binding means you can
   // compare bound configs using a simple deep equals.
-  if (!_.isEqual(boundConfig, manualBoundConfig)) {
+  if (!isEqual(boundConfig, manualBoundConfig)) {
     throw new Error("Unexpected configuration.");
   }
 
@@ -286,9 +286,9 @@ export async function gpcDemo(): Promise<boolean> {
   const vConfig = deserializeGPCBoundConfig(serializedConfig);
   const vClaims = deserializeGPCRevealedClaims(serializedClaims);
   if (
-    !_.isEqual(vProof, proof) ||
-    !_.isEqual(vConfig, boundConfig) ||
-    !_.isEqual(vClaims, revealedClaims)
+    !isEqual(vProof, proof) ||
+    !isEqual(vConfig, boundConfig) ||
+    !isEqual(vClaims, revealedClaims)
   ) {
     throw new Error("Serialization should maintain contents.");
   }

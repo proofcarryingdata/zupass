@@ -16,7 +16,7 @@ import {
   PipelineDefinition,
   PipelineInfoResponseValue
 } from "@pcd/passport-interface";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
 import { ReactNode } from "react";
 import { PodLink } from "../../components/Core";
 import { pipelineDisplayNameStr } from "../../components/PipelineDisplayUtils";
@@ -270,7 +270,7 @@ function ExpandAllButton(): ReactNode {
   const ctx = useGIContext();
   const disabled =
     !ctx.pipelineDetailsAccordionState ||
-    _.isEqual(ctx.pipelineDetailsAccordionState, EXPANDED);
+    isEqual(ctx.pipelineDetailsAccordionState, EXPANDED);
 
   return (
     <Button

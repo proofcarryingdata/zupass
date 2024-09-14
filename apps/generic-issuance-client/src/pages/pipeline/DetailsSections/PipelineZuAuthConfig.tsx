@@ -1,7 +1,8 @@
 import { CheckIcon, CopyIcon } from "@chakra-ui/icons";
 import { Button, Spacer, useToast } from "@chakra-ui/react";
 import { PipelineZuAuthConfig } from "@pcd/passport-interface";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
+import uniqWith from "lodash/uniqWith";
 import { ReactNode, useCallback, useState } from "react";
 
 /**
@@ -58,7 +59,7 @@ export function PipelineZuAuthConfigSection({
    */
   if (!includeProductOptions) {
     json = JSON.stringify(
-      _.uniqWith(
+      uniqWith(
         pipelineZuAuthConfig.map(
           ({ eventId, eventName, publicKey, pcdType }) =>
             ({
@@ -68,7 +69,7 @@ export function PipelineZuAuthConfigSection({
               eventName
             }) satisfies PipelineZuAuthConfig
         ),
-        _.isEqual
+        isEqual
       ),
       null,
       2

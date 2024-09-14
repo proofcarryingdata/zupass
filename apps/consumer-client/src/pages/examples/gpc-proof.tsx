@@ -32,7 +32,7 @@ import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { emptyStrToUndefined } from "@pcd/util";
 import JSONBig from "json-bigint";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
 import { useEffect, useState } from "react";
 import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
@@ -413,14 +413,14 @@ async function verifyProof(
   } catch (configError) {
     return { valid: false, err: "Invalid proof config." };
   }
-  const sameConfig = _.isEqual(localBoundConfig, pcd.claim.config);
+  const sameConfig = isEqual(localBoundConfig, pcd.claim.config);
   if (!sameConfig) {
     return { valid: false, err: "Config does not match." };
   }
 
   // Check for equality of membership lists as sets, since the elements are
   // sorted by hash before being fed into circuits.
-  const sameMembershipLists = _.isEqual(
+  const sameMembershipLists = isEqual(
     membershipListsToSets(pcd.claim.revealed.membershipLists ?? {}),
     membershipLists === undefined
       ? {}

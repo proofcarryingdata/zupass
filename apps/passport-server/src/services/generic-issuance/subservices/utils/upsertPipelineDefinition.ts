@@ -5,7 +5,7 @@ import {
   isCSVPipelineDefinition
 } from "@pcd/passport-interface";
 import { onlyDefined, str } from "@pcd/util";
-import isEqual from "lodash";
+import isEqual from "lodash/isEqual";
 import { v4 as uuidv4 } from "uuid";
 import { PCDHTTPError } from "../../../../routing/pcdHttpError";
 import { logger } from "../../../../util/logger";
