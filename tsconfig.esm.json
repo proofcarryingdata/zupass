@@ -112,6 +112,9 @@
       "path": "packages/pcd/semaphore-signature-pcd/tsconfig.esm.json"
     },
     {
+      "path": "packages/pcd/unknown-pcd/tsconfig.esm.json"
+    },
+    {
       "path": "packages/pcd/webauthn-pcd/tsconfig.esm.json"
     },
     {
