@@ -28,6 +28,7 @@ import {
   setPendingViewFrogCryptoRequest,
   setPendingViewSubscriptionsRequest
 } from "../../../src/sessionStorage";
+import { useSelector } from "../../../src/subscribe";
 import {
   BigInput,
   Button,
@@ -47,6 +48,8 @@ export function LoginScreen(): JSX.Element {
   const [error, setError] = useState<string | undefined>();
   const query = useQuery();
   const redirectedFromAction = query?.get("redirectedFromAction") === "true";
+  const connectedZapp = useSelector((state) => state.connectedZapp);
+  const zappOrigin = useSelector((state) => state.zappOrigin);
 
   const pendingGetWithoutProvingRequest = query?.get(
     pendingRequestKeys.getWithoutProving
@@ -260,7 +263,8 @@ export function LoginScreen(): JSX.Element {
       {tryStorageAccess && (
         <TextCenter>
           <Spacer h={24} />
-          Do you want to connect to Zupass?
+          Do you want to allow <em>{connectedZapp?.name}</em> ({zappOrigin}) to
+          connect to Zupass?
           <Spacer h={24} />
           <Button onClick={requestStorageAndLogIn}>Connect to Zupass</Button>
         </TextCenter>

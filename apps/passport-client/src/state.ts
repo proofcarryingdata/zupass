@@ -8,6 +8,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
+import { Zapp } from "@pcd/zupass-client";
 import { EmbeddedScreenState } from "./embedded";
 import { Emitter } from "./emitter";
 export type GetState = () => AppState;
