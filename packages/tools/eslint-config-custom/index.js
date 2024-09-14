@@ -8,7 +8,7 @@ module.exports = {
     "plugin:import/typescript"
   ],
   parser: "@typescript-eslint/parser",
-  plugins: ["@typescript-eslint", "react", "react-hooks", "prettier"],
+  plugins: ["@typescript-eslint", "react", "react-hooks", "prettier", "lodash"],
   ignorePatterns: ["*.d.ts"],
   rules: {
     "no-case-declarations": "off",
@@ -44,7 +44,8 @@ module.exports = {
           "CallExpression[callee.name='describe'] MemberExpression[object.type='ThisExpression'][property.name='timeout']",
         message: "Manual timeouts in Mocha tests are not allowed."
       }
-    ]
+    ],
+    "lodash/import-scope": ["error", "method"]
   },
   settings: {
     "import/resolver": {
