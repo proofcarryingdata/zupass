@@ -7,7 +7,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { LoginCategory } from "@pcd/zupoll-shared";
-import _ from "lodash";
+import groupBy from "lodash/groupBy";
 import { Dispatch, SetStateAction } from "react";
 import { LoginGroup } from "../../api/loginGroups";
 
@@ -38,7 +38,7 @@ export function SelectLoginGroup({
         <SelectValue placeholder="Select a Group to Log In" />
       </SelectTrigger>
       <SelectContent>
-        {Object.entries(_.groupBy(groups, (g: LoginGroup) => g.configs[0].year))
+        {Object.entries(groupBy(groups, (g: LoginGroup) => g.configs[0].year))
           .sort((lhs, rhs) => {
             return (
               new Date(

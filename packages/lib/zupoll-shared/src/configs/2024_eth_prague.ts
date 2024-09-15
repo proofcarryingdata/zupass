@@ -1,3 +1,4 @@
+import clone from "lodash/clone";
 import urljoin from "url-join";
 import { makePodboxGroupUrl } from "../makePodboxGroupUrl";
 import { makePodboxLoginConfigs } from "../makePodboxLoginConfigs";
@@ -95,14 +96,14 @@ export function makeEthPrague(
   ETH_PRAGUE_CONFIG[0].ballotConfigs?.splice(
     1,
     0,
-    structuredClone(hackerBallotType),
-    structuredClone(audienceBallotType)
+    clone(hackerBallotType),
+    clone(audienceBallotType)
   );
   ETH_PRAGUE_CONFIG[1].ballotConfigs?.splice(
     1,
     0,
-    Object.assign(structuredClone(hackerBallotType), { canCreate: false }),
-    Object.assign(structuredClone(audienceBallotType), { canCreate: false })
+    Object.assign(clone(hackerBallotType), { canCreate: false }),
+    Object.assign(clone(audienceBallotType), { canCreate: false })
   );
 
   return ETH_PRAGUE_CONFIG;
