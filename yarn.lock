@@ -4786,10 +4786,86 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
+"@parcnet-js/client-helpers@^0.0.0":
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-0.0.0.tgz#e092e9393a3a8fc88cecc9ad8ae34f7f7c5c8906"
+  integrity sha512-K+7TFJS2RIc+DNMsxwokrvQDNhUcUcDq9o7CV50tdpO7ZVlu7XTzrKDAYLvy4kYVvkTQ7OcHwMG/tBad6WqU9Q==
+  dependencies:
+    "@parcnet-js/client-rpc" "0.0.0"
+    json-bigint "^1.0.0"
+    ws "^8.18.0"
+
+"@parcnet-js/client-rpc@0.0.0", "@parcnet-js/client-rpc@^0.0.0":
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-0.0.0.tgz#dabffbacd22c020e63538b317591f6b9b594c337"
+  integrity sha512-kcqxXzqguFwDYATBl2Qoh/16MAOBOD1rd2u9Y2k7XUKD3Q7jTJFS34iyzEjy5UJ3h2wHydH9/7umtm4lw/TljA==
+  dependencies:
+    "@parcnet-js/podspec" "0.0.0"
+    "@pcd/gpc" "0.0.6"
+    "@pcd/pod" "0.1.5"
+    zod "^3.22.4"
+
+"@parcnet-js/podspec@0.0.0", "@parcnet-js/podspec@^0.0.0":
+  version "0.0.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-0.0.0.tgz#03dbd24691a0c6eb0461ad1ca6636bf74d4d9a15"
+  integrity sha512-QfDMekKgSfZW9UPPHMeaTy29vCzF4Xjvgfwa/FAO1Ji0Kjz+046xudRWp/gnSMlE+ehoHRbg/3438sWsCGfMNw==
+  dependencies:
+    "@pcd/gpc" "0.0.6"
+    "@pcd/pod" "0.1.5"
+
+"@pcd/gpc@0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@pcd/gpc/-/gpc-0.0.6.tgz#1a210ccf74b79413e4880936ea8cb92692295cfe"
+  integrity sha512-qlN1895ZBsY7cjikNbgxMG2V+2PsnHgvaew2f1tEB6HmJaEiYdPi/cP+fJgKrLqPmDA37p8aOx4CUq+k/do6aA==
+  dependencies:
+    "@pcd/gpcircuits" "0.1.5"
+    "@pcd/pod" "0.1.5"
+    "@pcd/util" "0.5.3"
+    "@semaphore-protocol/identity" "^3.15.2"
+    "@types/lodash" "^4.17.1"
+    json-bigint "^1.0.0"
+    snarkjs "^0.7.4"
+    url-join "^4.0.1"
+
+"@pcd/gpcircuits@0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@pcd/gpcircuits/-/gpcircuits-0.1.5.tgz#13be3173ebaac5f111d25aad08e47e7cc9249bd3"
+  integrity sha512-Ivlzyu8+flgOUmq/N+mWw1y6bvzY58HLjI1KAFPxOsGI3evVStrgg5j91z80rRJJK50ohG6aL5lX59zG4sV3YA==
+  dependencies:
+    "@pcd/pod" "0.1.5"
+    fastfile "0.0.20"
+    snarkjs "^0.7.4"
+    url-join "4.0.1"
+
+"@pcd/pod@0.1.5":
+  version "0.1.5"
+  resolved "https://registry.yarnpkg.com/@pcd/pod/-/pod-0.1.5.tgz#771fc2a5f9dad97e6acc7234137a750e92658b1e"
+  integrity sha512-3xdpPlyABFJn9/iag4jBBvTNU1kdXD2d1EQWz3lOvqcxpWK+ov/0eU1qPcsHk2yKAbftZ33lrP+4CA6k3M4BdA==
+  dependencies:
+    "@pcd/util" "0.5.3"
+    "@zk-kit/baby-jubjub" "1.0.1"
+    "@zk-kit/eddsa-poseidon" "1.0.2"
+    "@zk-kit/lean-imt" "2.0.1"
+    "@zk-kit/utils" "1.2.0"
+    js-sha256 "^0.10.1"
+    json-bigint "^1.0.0"
+    poseidon-lite "^0.2.1"
+
 "@pcd/proto-pod-gpc-artifacts@0.9.0":
   version "0.9.0"
   resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.9.0.tgz#784ce57cf7e8efee155f9d6b290f0ff797917fb9"
   integrity sha512-DipHMqcwpwCGy0/4hpENYjhKPcxVDEM4Koe13L1QpDYlOVVlUfsV9Y5ObpjtZELH4Q8jLWEW2tnMW9vR+c388w==
+
+"@pcd/util@0.5.3":
+  version "0.5.3"
+  resolved "https://registry.yarnpkg.com/@pcd/util/-/util-0.5.3.tgz#35fec4eb942bf9420894d47e97aa7bb8b5eea9a5"
+  integrity sha512-mAfbpQrl2CYJJwNDHJKwkUD0JYuEAtD3Tli87hb7jZ3vvHmtT/mXlivbpnNZ5uyoowiArnhPMwng/2JmyuU3Cw==
+  dependencies:
+    buffer "^6.0.3"
+    email-validator "^2.0.4"
+    js-sha256 "^0.10.1"
+    secure-random "^1.1.2"
+    uuid "^9.0.0"
 
 "@peculiar/asn1-android@^2.3.3":
   version "2.3.6"
@@ -22174,6 +22250,11 @@ ws@^8.13.0:
   version "8.14.1"
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.14.1.tgz#4b9586b4f70f9e6534c7bb1d3dc0baa8b8cf01e0"
   integrity sha512-4OOseMUq8AzRBI/7SLMUwO+FEDnguetSk7KMb1sHwvF2w2Wv5Hoj0nlifx8vtGsftE/jWHojPy8sMMzYLJ2G/A==
+
+ws@^8.18.0:
+  version "8.18.0"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-8.18.0.tgz#0d7505a6eafe2b0e712d232b42279f53bc289bbc"
+  integrity sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==
 
 xhr-request-promise@^0.1.2:
   version "0.1.3"
