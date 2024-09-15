@@ -5,7 +5,6 @@ import {
 } from "@pcd/passport-interface";
 import { splitPath } from "@pcd/pcd-collection";
 import { sleep } from "@pcd/util";
-import chain from "lodash/chain";
 import { v4 as uuid } from "uuid";
 import { Dispatcher } from "./dispatch";
 
@@ -78,10 +77,11 @@ function getVerifyUrlPrefixes(): string[] {
 // Given an input string, check if there exists a ticket verify URL within it.
 // If so, return the last occurance of a verify URL. If not, return null.
 export function getLastValidVerifyUrl(inputString: string): string | null {
-  const lastValidUrlStartIdx = chain(getVerifyUrlPrefixes())
-    .map((verifyUrlPrefix) => inputString.lastIndexOf(verifyUrlPrefix))
-    .max()
-    .value();
+  const lastValidUrlStartIdx = Math.max(
+    ...getVerifyUrlPrefixes().map((verifyUrlPrefix) =>
+      inputString.lastIndexOf(verifyUrlPrefix)
+    )
+  );
   if (lastValidUrlStartIdx !== -1) {
     return inputString.slice(lastValidUrlStartIdx);
   }

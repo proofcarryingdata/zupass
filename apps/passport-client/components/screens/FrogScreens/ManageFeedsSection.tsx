@@ -8,7 +8,6 @@ import {
 import { ErrorMessage, Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { getErrorMessage } from "@pcd/util";
-import chain from "lodash/chain";
 import upperFirst from "lodash/upperFirst";
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useState } from "react";
@@ -293,7 +292,10 @@ export function DataTable({
   }));
   const keys =
     data.length > 0
-      ? chain(data).map(Object.keys).flatten().uniq().value()
+      ? data
+          .map(Object.keys)
+          .flat()
+          .filter((key, index, self) => self.indexOf(key) === index)
       : [];
 
   return (
