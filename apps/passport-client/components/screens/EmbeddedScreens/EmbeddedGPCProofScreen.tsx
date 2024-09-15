@@ -253,6 +253,34 @@ function ProvePODInfo({
           })}
         </ConstraintsContainer>
       )}
+      {schema.tuples && (
+        <TuplesContainer>
+          <TuplesTitle>Tuples:</TuplesTitle>
+          {schema.tuples.map((tuple) => {
+            return (
+              <TupleItem key={tuple.entries.join(",")}>
+                Entries{" "}
+                {tuple.entries.slice(0, -1).map((entry) => (
+                  <EntryName key={entry}>{entry}, </EntryName>
+                ))}
+                and{" "}
+                <EntryName>{tuple.entries[tuple.entries.length - 1]}</EntryName>{" "}
+                must {tuple.isNotMemberOf ? "not " : ""}match a list:
+                <br />
+                <Reveal>
+                  <ConstraintList>
+                    {(tuple.isNotMemberOf ?? tuple.isMemberOf ?? [])
+                      .map((v) => v.map((e) => e.value.toString()).join(", "))
+                      .map((item) => (
+                        <div>{item}</div>
+                      ))}
+                  </ConstraintList>
+                </Reveal>
+              </TupleItem>
+            );
+          })}
+        </TuplesContainer>
+      )}
     </PODInfo>
   );
 }
@@ -309,7 +337,9 @@ const EntryName = styled.span`
 `;
 
 const EntryValue = styled.div`
-  color: rgba(var(--white-rgb), 0.8);
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: rgba(var(--black-rgb), 0.3);
 `;
 
 const ConstraintsContainer = styled.div`
@@ -329,13 +359,26 @@ const ConstraintText = styled.div``;
 
 const ConstraintValue = styled.span`
   margin: 0px 4px;
-  padding: 4px;
+  padding: 4px 8px;
   border-radius: 4px;
   background-color: rgba(var(--black-rgb), 0.3);
 `;
 
 const ConstraintList = styled.div`
-  padding: 4px;
+  padding: 4px 8px;
   border-radius: 4px;
   background-color: rgba(var(--black-rgb), 0.3);
+`;
+
+const TuplesContainer = styled.div`
+  margin-top: 16px;
+`;
+
+const TuplesTitle = styled.div`
+  font-weight: 600;
+  margin-bottom: 8px;
+`;
+
+const TupleItem = styled.div`
+  margin-bottom: 12px;
 `;
