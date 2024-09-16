@@ -694,7 +694,8 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
           entries: ["pod1.$signerPublicKey", "pod2.$signerPublicKey"],
           isMemberOf: "admissiblePubKeyPairs"
         }
-      }
+      },
+      uniquePODs: true
     };
     const proofInputs: GPCProofInputs = {
       pods: { pod1, pod2 },
