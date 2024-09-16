@@ -165,6 +165,12 @@ export function LoginScreen(): JSX.Element {
           storage: storageRequest.value,
           encryptionKey
         });
+      } else {
+        // Something unexpected went wrong
+        setError(
+          "Unable to log in automatically, please enter your email to log in"
+        );
+        setStorageAccessStatus(StorageAccessStatus.Denied);
       }
     },
     [dispatch]
@@ -190,9 +196,11 @@ export function LoginScreen(): JSX.Element {
         setStorageAccessStatus(StorageAccessStatus.NoLocalStorage);
       }
     } catch (_e) {
-      // If the user rejected the storage access request, catch the exception
-      // but otherwise do nothing. The finally block will return the user to
-      // the regular login flow.
+      // If the user rejected the storage access request, set an error message.
+      // The finally block will return the user to the regular login flow.
+      setError(
+        "Unable to log in automatically, please enter your email to log in"
+      );
     } finally {
       setStorageAccessStatus(StorageAccessStatus.Denied);
     }
