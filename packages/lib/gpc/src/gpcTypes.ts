@@ -1,6 +1,6 @@
 import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
-import { Identity as IdentityV4 } from "@semaphore-protocol/core";
-import { Identity } from "@semaphore-protocol/identity";
+import type { Identity as IdentityV4 } from "@semaphore-protocol/core";
+import type { Identity } from "@semaphore-protocol/identity";
 import { Groth16Proof } from "snarkjs";
 import { ClosedInterval } from "./gpcUtil";
 

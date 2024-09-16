@@ -20,8 +20,8 @@ import {
   podValueHash,
   requireType
 } from "@pcd/pod";
-import { Identity as IdentityV4 } from "@semaphore-protocol/core";
-import { Identity } from "@semaphore-protocol/identity";
+import type { Identity as IdentityV4 } from "@semaphore-protocol/core";
+import type { Identity as IdentityV3 } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import {
@@ -384,6 +384,47 @@ export function checkListMembershipInput(
 }
 
 /**
+ * Checks if the given object is a valid Semaphore V3 Identity.
+ *
+ * @param obj the object to check
+ * @returns true if the object is a valid Semaphore V3 Identity, false otherwise
+ */
+function isIdentityV3(obj: Partial<IdentityV3>): obj is IdentityV3 {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    typeof obj.secret === "bigint" &&
+    typeof obj.commitment === "bigint" &&
+    typeof obj.trapdoor === "bigint" &&
+    typeof obj.nullifier === "bigint"
+  );
+}
+
+/**
+ * Checks if the given object is a valid Semaphore V4 Identity.
+ *
+ * @param obj the object to check
+ * @returns true if the object is a valid Semaphore V4 Identity, false otherwise
+ */
+function isIdentityV4(obj: Partial<IdentityV4>): obj is IdentityV4 {
+  return (
+    typeof obj === "object" &&
+    obj !== null &&
+    typeof obj.commitment === "bigint" &&
+    typeof obj.secretScalar === "bigint" &&
+    typeof obj.publicKey === "object" &&
+    obj.publicKey !== null &&
+    typeof obj.publicKey[0] === "bigint" &&
+    typeof obj.publicKey[1] === "bigint" &&
+    obj.privateKey !== null &&
+    (typeof obj.privateKey === "string" ||
+      (typeof obj.privateKey === "object" &&
+        (obj.privateKey instanceof Buffer ||
+          obj.privateKey instanceof Uint8Array)))
+  );
+}
+
+/**
  * Checks the validity of a proof inputs, throwing if they are invalid.
  *
  * @param proofInputs proof inputs
@@ -412,7 +453,7 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
   if (proofInputs.owner !== undefined) {
     if (proofInputs.owner.semaphoreV3 !== undefined) {
       requireType(`owner.SemaphoreV3`, proofInputs.owner.semaphoreV3, "object");
-      if (!(proofInputs.owner.semaphoreV3 instanceof Identity)) {
+      if (!isIdentityV3(proofInputs.owner.semaphoreV3)) {
         throw new TypeError(
           `owner.semaphoreV3 must be a SemaphoreV3 Identity object.`
         );
@@ -421,7 +462,7 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
 
     if (proofInputs.owner.semaphoreV4 !== undefined) {
       requireType(`owner.SemaphoreV4`, proofInputs.owner.semaphoreV4, "object");
-      if (!(proofInputs.owner.semaphoreV4 instanceof IdentityV4)) {
+      if (!isIdentityV4(proofInputs.owner.semaphoreV4)) {
         throw new TypeError(
           `owner.semaphoreV4 must be a SemaphoreV4 Identity object.`
         );

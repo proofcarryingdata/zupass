@@ -4,6 +4,8 @@ import {
   BABY_JUB_NEGATIVE_ONE,
   BABY_JUB_SUBGROUP_ORDER_MINUS_ONE
 } from "@pcd/util";
+import type { Identity as IdentityV4 } from "@semaphore-protocol/core";
+import type { Identity as IdentityV3 } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -70,6 +72,20 @@ describe("Semaphore V3 owner module compilation for proving should work", () => 
       ownerSemaphoreV3IdentityTrapdoor: CircuitSignal[];
       ownerV3IsNullifierHashRevealed: CircuitSignal[];
     } => compileProofOwnerV3(undefined, 3, true);
+    expect(delayedCircuitOwnerInputs).to.throw;
+  });
+  it("should throw for a proof with an invalid Semaphore V3 identity", () => {
+    const delayedCircuitOwnerInputs = (): {
+      ownerV3EntryIndex: CircuitSignal[];
+      ownerSemaphoreV3IdentityNullifier: CircuitSignal[];
+      ownerSemaphoreV3IdentityTrapdoor: CircuitSignal[];
+      ownerV3IsNullifierHashRevealed: CircuitSignal[];
+    } =>
+      compileProofOwnerV3(
+        { semaphoreV3: { nullifier: 0n, trapdoor: 0n } as IdentityV3 },
+        3,
+        true
+      );
     expect(delayedCircuitOwnerInputs).to.throw;
   });
 });
@@ -176,6 +192,19 @@ describe("Semaphore V4 owner module compilation for proving should work", () => 
       ownerSemaphoreV4SecretScalar: CircuitSignal[];
       ownerV4IsNullifierHashRevealed: CircuitSignal[];
     } => compileProofOwnerV4(undefined, 3, true);
+    expect(delayedCircuitOwnerInputs).to.throw;
+  });
+  it("should throw for a proof with an invalid Semaphore V4 identity", () => {
+    const delayedCircuitOwnerInputs = (): {
+      ownerV4EntryIndex: CircuitSignal[];
+      ownerSemaphoreV4SecretScalar: CircuitSignal[];
+      ownerV4IsNullifierHashRevealed: CircuitSignal[];
+    } =>
+      compileProofOwnerV4(
+        { semaphoreV4: { secretScalar: 0n } as IdentityV4 },
+        3,
+        true
+      );
     expect(delayedCircuitOwnerInputs).to.throw;
   });
 });
