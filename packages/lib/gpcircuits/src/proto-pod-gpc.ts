@@ -69,7 +69,7 @@ export type ProtoPODGPCInputs = {
 
   // POD uniqueness module (1)
   /*PUB*/ uniquenessModuleIsEnabled: CircuitSignal;
-  
+
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
 };
@@ -158,7 +158,7 @@ export type ProtoPODGPCPublicInputs = {
 
   // POD uniqueness module (1)
   /*PUB*/ uniquenessModuleIsEnabled: CircuitSignal;
-  
+
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
 };

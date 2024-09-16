@@ -33,7 +33,6 @@ import {
 import _ from "lodash";
 import {
   GPCBoundConfig,
-  GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofInputs,
   GPCProofObjectConfig,

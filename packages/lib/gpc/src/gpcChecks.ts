@@ -630,7 +630,7 @@ export function checkProofInputsForConfig(
 export function checkProofPODUniquenessInputsForConfig(
   proofConfig: { uniquePODs?: boolean },
   proofInputs: { pods: Record<PODName, POD> }
-) {
+): void {
   if (proofConfig.uniquePODs) {
     const contentIDs = Object.values(proofInputs.pods).map(
       (pod) => pod.contentID

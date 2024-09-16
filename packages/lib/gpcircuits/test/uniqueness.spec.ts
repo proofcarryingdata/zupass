@@ -1,4 +1,3 @@
-import { POD_INT_MAX, POD_INT_MIN, podValueHash } from "@pcd/pod";
 import { WitnessTester } from "circomkit";
 import "mocha";
 import {
