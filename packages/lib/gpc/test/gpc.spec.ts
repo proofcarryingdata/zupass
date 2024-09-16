@@ -1089,6 +1089,34 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       "TypeError",
       "Membership list list1 in input contains an invalid tuple. Tuples must have arity at least 2."
     );
+
+    await expectAsyncError(
+      async () => {
+        await gpcProve(
+          {
+            ...proofConfig,
+            pods: {
+              ...proofConfig.pods,
+              someOtherPodName: {
+                entries: { ticketID: { isRevealed: false } },
+                signerPublicKey: { isRevealed: false }
+              }
+            },
+            uniquePODs: true
+          },
+          {
+            ...proofInputs,
+            pods: {
+              ...proofInputs.pods,
+              someOtherPodName: proofInputs.pods.somePodName
+            }
+          },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "Error",
+      "Proof configuration specifies that the PODs should be unique, but they aren't."
+    );
   });
 
   it("verifying should throw on illegal inputs", async function () {
@@ -1322,6 +1350,30 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       revealedClaims: revealedClaims2
     } = await gpcProve(proofConfig2, proofInputs2, GPC_TEST_ARTIFACTS_PATH);
 
+    // Proof data with a duplicate POD
+    const proofConfig3 = {
+      ...proofConfig,
+      pods: {
+        ...proofConfig.pods,
+        someOtherPodName: {
+          entries: { ticketID: { isRevealed: false } },
+          signerPublicKey: { isRevealed: false }
+        }
+      }
+    };
+    const proofInputs3 = {
+      ...proofInputs,
+      pods: {
+        ...proofInputs.pods,
+        someOtherPodName: proofInputs.pods.somePodName
+      }
+    };
+    const {
+      proof: proof3,
+      boundConfig: boundConfig3,
+      revealedClaims: revealedClaims3
+    } = await gpcProve(proofConfig3, proofInputs3, GPC_TEST_ARTIFACTS_PATH);
+
     // Tamper with proof
     let isVerified = await gpcVerify(
       { ...proof, pi_a: [proof.pi_a[0] + 1, proof.pi_a[1]] },
@@ -1417,6 +1469,15 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
           inadmissibleTickets: [sampleEntries2.ticketID, sampleEntries.owner]
         }
       },
+      GPC_TEST_ARTIFACTS_PATH
+    );
+    expect(isVerified).to.be.false;
+
+    // Tamper with POD uniqueness flag
+    isVerified = await gpcVerify(
+      proof3,
+      { ...boundConfig3, uniquePODs: true },
+      revealedClaims3,
       GPC_TEST_ARTIFACTS_PATH
     );
     expect(isVerified).to.be.false;
