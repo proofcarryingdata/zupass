@@ -2,6 +2,7 @@ import {
   requestDownloadAndDecryptStorage,
   requestLogToServer
 } from "@pcd/passport-interface";
+import { TextButton } from "@pcd/passport-ui";
 import { validateEmail } from "@pcd/util";
 import {
   ChangeEvent,
@@ -41,6 +42,15 @@ import {
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
 import { InlineError } from "../../shared/InlineError";
+
+enum StorageAccessStatus {
+  None, // Default status
+  CanRequest, // Suitable browser, show the option to request
+  Requesting, // Request dialog visible
+  Granted, // Access granted
+  NoLocalStorage, // Access granted but no relevant storage values found
+  Denied // Access denied
+}
 
 export function LoginScreen(): JSX.Element {
   const dispatch = useDispatch();
@@ -133,8 +143,9 @@ export function LoginScreen(): JSX.Element {
     [dispatch, email]
   );
 
-  const [tryStorageAccess, setTryStorageAccess] = useState(false);
-  const [tryStorageLogin, setTryStorageLogin] = useState(false);
+  const [storageAccessStatus, setStorageAccessStatus] = useState(
+    StorageAccessStatus.None
+  );
 
   /**
    * Assuming we're in Chrome and an iframe, and we've successfully loaded an
@@ -164,23 +175,26 @@ export function LoginScreen(): JSX.Element {
    */
   const requestStorageAndLogIn = useCallback(async () => {
     try {
+      setStorageAccessStatus(StorageAccessStatus.Requesting);
       // @ts-expect-error Chrome-only API
       const handle: { localStorage: Storage } =
         // @ts-expect-error Chrome-only API
         await document.requestStorageAccess({ localStorage: true });
 
+      setStorageAccessStatus(StorageAccessStatus.Granted);
       // Access granted, try reading the local storage
       const encryptionKey = handle.localStorage.getItem("encryption_key");
       if (encryptionKey) {
         await tryToLogin(encryptionKey);
+      } else {
+        setStorageAccessStatus(StorageAccessStatus.NoLocalStorage);
       }
     } catch (_e) {
       // If the user rejected the storage access request, catch the exception
       // but otherwise do nothing. The finally block will return the user to
       // the regular login flow.
     } finally {
-      setTryStorageAccess(false);
-      setTryStorageLogin(false);
+      setStorageAccessStatus(StorageAccessStatus.Denied);
     }
   }, [tryToLogin]);
 
@@ -208,11 +222,11 @@ export function LoginScreen(): JSX.Element {
           // Storage access requests must occur in response to a user action,
           // so we can't request it automatically here and must wait for the
           // user to click the button.
-          setTryStorageAccess(true);
+          setStorageAccessStatus(StorageAccessStatus.CanRequest);
         } else {
-          // We have access, try logging in
+          // Access is allowed in principle, now we can request storage
           // Show a spinner:
-          setTryStorageLogin(true);
+          setStorageAccessStatus(StorageAccessStatus.Requesting);
           // Try to read from storage and log in
           requestStorageAndLogIn();
         }
@@ -260,49 +274,61 @@ export function LoginScreen(): JSX.Element {
         </>
       )}
 
-      {tryStorageAccess && (
+      {storageAccessStatus === StorageAccessStatus.CanRequest && (
         <TextCenter>
           <Spacer h={24} />
           Do you want to allow <em>{connectedZapp?.name}</em> ({zappOrigin}) to
           connect to Zupass?
           <Spacer h={24} />
-          <Button onClick={requestStorageAndLogIn}>Connect to Zupass</Button>
+          <Button onClick={requestStorageAndLogIn}>
+            Connect to Zupass
+          </Button>{" "}
+          <Spacer h={24} />
+          <TextButton
+            onClick={() => setStorageAccessStatus(StorageAccessStatus.Denied)}
+          >
+            Log in manually
+          </TextButton>
         </TextCenter>
       )}
 
-      {tryStorageLogin && (
+      {(storageAccessStatus === StorageAccessStatus.Requesting ||
+        storageAccessStatus === StorageAccessStatus.Granted) && (
         <TextCenter>
           <Spacer h={24} />
           <RippleLoader />
         </TextCenter>
       )}
 
-      {!tryStorageAccess && !tryStorageLogin && !state.loggingOut && (
-        <>
-          <Spacer h={24} />
-          <CenterColumn>
-            <form onSubmit={onGenPass}>
-              <BigInput
-                autoCapitalize="off"
-                autoCorrect="off"
-                type="text"
-                autoFocus
-                placeholder="email address"
-                value={email}
-                onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                  setEmail(e.target.value)
-                }
-              />
-              <InlineError error={error} />
-              <Spacer h={8} />
-              <Button style="primary" type="submit">
-                Continue
-              </Button>
-            </form>
-          </CenterColumn>
-          <Spacer h={64} />
-        </>
-      )}
+      {(storageAccessStatus === StorageAccessStatus.None ||
+        storageAccessStatus === StorageAccessStatus.Denied ||
+        storageAccessStatus === StorageAccessStatus.NoLocalStorage) &&
+        !state.loggingOut && (
+          <>
+            <Spacer h={24} />
+            <CenterColumn>
+              <form onSubmit={onGenPass}>
+                <BigInput
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  type="text"
+                  autoFocus
+                  placeholder="email address"
+                  value={email}
+                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                    setEmail(e.target.value)
+                  }
+                />
+                <InlineError error={error} />
+                <Spacer h={8} />
+                <Button style="primary" type="submit">
+                  Continue
+                </Button>
+              </form>
+            </CenterColumn>
+            <Spacer h={64} />
+          </>
+        )}
     </AppContainer>
   );
 }
