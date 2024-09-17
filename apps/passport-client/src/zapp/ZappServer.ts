@@ -8,7 +8,13 @@ import {
   ProveResult
 } from "@parcnet-js/client-rpc";
 import * as p from "@parcnet-js/podspec";
-import { encodePrivateKey, POD, PODEntries } from "@pcd/pod";
+import {
+  GPCBoundConfig,
+  GPCProof,
+  GPCRevealedClaims,
+  gpcVerify
+} from "@pcd/gpc";
+import { encodePrivateKey, encodePublicKey, POD, PODEntries } from "@pcd/pod";
 import { isPODPCD, PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { v4 as uuidv4 } from "uuid";
@@ -52,6 +58,16 @@ export class ZupassIdentityRPC
   public async getSemaphoreV3Commitment(): Promise<bigint> {
     return this.getContext().getState().identityV3.getCommitment();
   }
+
+  public async getSemaphoreV4Commitment(): Promise<bigint> {
+    return v3tov4Identity(this.getContext().getState().identityV3).commitment;
+  }
+
+  public async getSemaphoreV4PublicKey(): Promise<string> {
+    return encodePublicKey(
+      v3tov4Identity(this.getContext().getState().identityV3).publicKey
+    );
+  }
 }
 
 class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
@@ -66,10 +82,12 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       .pcds.changeEmitter.listen(() => {});
   }
 
+  // Not yet implemented
   public async subscribe(_query: PODQuery): Promise<string> {
     return "1";
   }
 
+  // Not yet implemented
   public async unsubscribe(_subscriptionId: string): Promise<void> {}
 
   public async query(query: PODQuery): Promise<string[]> {
@@ -159,7 +177,6 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
   }
 
   public async prove(request: p.PodspecProofRequest): Promise<ProveResult> {
-    console.log("prove", request);
     const prs = p.proofRequest(request);
     const pods = this.getContext()
       .getState()
@@ -196,12 +213,35 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
     });
   }
 
-  public async verify(): Promise<boolean> {
-    return true;
+  public async verify(
+    proof: GPCProof,
+    boundConfig: GPCBoundConfig,
+    revealedClaims: GPCRevealedClaims,
+    proofRequest: p.PodspecProofRequest
+  ): Promise<boolean> {
+    const config = p.proofRequest(proofRequest).getProofRequest().proofConfig;
+    config.circuitIdentifier = boundConfig.circuitIdentifier;
+
+    return gpcVerify(
+      proof,
+      config as GPCBoundConfig,
+      revealedClaims,
+      new URL("/artifacts/proto-pod-gpc", window.location.origin).toString()
+    );
   }
 
-  public async canProve(): Promise<boolean> {
-    return true;
+  public async canProve(request: p.PodspecProofRequest): Promise<boolean> {
+    const prs = p.proofRequest(request);
+    const pods = this.getContext()
+      .getState()
+      .pcds.getAllPCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME)
+      .filter(isPODPCD)
+      .map((pcd) => pcd.pod);
+
+    const inputPods = prs.queryForInputs(pods);
+    return Object.values(inputPods).every(
+      (candidates) => candidates.length > 0
+    );
   }
 }
 
