@@ -321,8 +321,8 @@ export type GPCProofConfig = {
   pods: Record<PODName, GPCProofObjectConfig>;
 
   /**
-   * Indicates whether the configured PODs are unique. If this is true, it
-   * enables the POD uniqueness module on the circuit level.
+   * Indicates whether the configured PODs should have unique content IDs.
+   * If this is true, it enables the POD uniqueness module on the circuit level.
    */
   uniquePODs?: boolean;
 

@@ -34,7 +34,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
-      "uniquenessModuleIsEnabled",
+      "requireUniqueContentIDs",
       "globalWatermark"
     ]
   },
@@ -73,7 +73,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
-      "uniquenessModuleIsEnabled",
+      "requireUniqueContentIDs",
       "globalWatermark"
     ]
   },
@@ -112,7 +112,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
-      "uniquenessModuleIsEnabled",
+      "requireUniqueContentIDs",
       "globalWatermark"
     ]
   },
@@ -151,7 +151,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
-      "uniquenessModuleIsEnabled",
+      "requireUniqueContentIDs",
       "globalWatermark"
     ]
   },
@@ -190,7 +190,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
-      "uniquenessModuleIsEnabled",
+      "requireUniqueContentIDs",
       "globalWatermark"
     ]
   },
@@ -229,7 +229,7 @@
       "listComparisonValueIndex",
       "listContainsComparisonValue",
       "listValidValues",
-      "uniquenessModuleIsEnabled",
+      "requireUniqueContentIDs",
       "globalWatermark"
     ]
   }

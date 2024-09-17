@@ -25,7 +25,7 @@ template ListMembershipModule(
     signal output isMember;
 
     isMember <== IsZero()(
-        UnnormalisedListNonMembership(MAX_LIST_ELEMENTS, MAX_LIST_ELEMENTS)(
+        NotEqualsAny(MAX_LIST_ELEMENTS, MAX_LIST_ELEMENTS)(
             comparisonValue,
             validValues
         )
@@ -34,31 +34,31 @@ template ListMembershipModule(
 
 /**
  * Helper template returning a non-zero field element if the given
- * value is not an element of the given list restricted to the first
- * `NUM_LIST_ELEMENTS` elements and zero otherwise. This is done by
- * subtracting the value from all elements of the list and folding it
- * by means of field multiplication.
+ * value is not equal to any element of the given list restricted to
+ * the first `NUM_LIST_ELEMENTS` elements and zero otherwise. This is
+ * done by subtracting the value from all elements of the list and
+ * folding it by means of field multiplication.
  */
-template UnnormalisedListNonMembership(NUM_LIST_ELEMENTS, MAX_LIST_ELEMENTS) {
+template NotEqualsAny(NUM_LIST_ELEMENTS, MAX_LIST_ELEMENTS) {
      // Value to be checked.
     signal input comparisonValue; 
 
-    // List of admissible values.
-    signal input validValues[MAX_LIST_ELEMENTS];
+    // List of values to check against for equality.
+    signal input values[MAX_LIST_ELEMENTS];
 
     // Indicator of whether the value is not an element of the list of
     // admissible values, viz. a non-zero field element iff the value
     // is a non-member.
-    signal output isNotMember;
+    signal output isNotEqual;
 
     if (NUM_LIST_ELEMENTS == 0) {
-        isNotMember <== 1;
+        isNotEqual <== 1;
     } else {
-        isNotMember <== MultiAND(NUM_LIST_ELEMENTS)(
-            Add(NUM_LIST_ELEMENTS)(
+        isNotEqual <== MultiAND(NUM_LIST_ELEMENTS)(
+            ArrayAddScalar(NUM_LIST_ELEMENTS)(
                 -comparisonValue,
                 Take(NUM_LIST_ELEMENTS, MAX_LIST_ELEMENTS)(
-                    validValues
+                    values
                 )
             )
         );

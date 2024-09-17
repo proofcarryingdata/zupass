@@ -86,7 +86,7 @@ template MaybeInputSelector (N) {
 /**
  * Left-rotates elements of a given array by I positions.
  */
-template Rotl(I,N) {
+template ArrayRotl(I,N) {
     signal input in[N];
     signal output out[N];
 
@@ -111,7 +111,7 @@ template Take(I,N) {
 /**
  * Adds a field element to all elements of a given array.
  */
-template Add(N) {
+template ArrayAddScalar(N) {
     signal input element;
     signal input in[N];
     signal output out[N];

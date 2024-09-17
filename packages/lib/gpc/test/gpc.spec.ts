@@ -1115,7 +1115,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         );
       },
       "Error",
-      "Proof configuration specifies that the PODs should be unique, but they aren't."
+      "Proof configuration specifies that the PODs should have unique content IDs, but they don't."
     );
   });
 

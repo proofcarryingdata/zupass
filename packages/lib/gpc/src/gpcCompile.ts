@@ -728,9 +728,9 @@ function compileProofEntry(
 export function compileProofPODUniqueness(proofConfig: {
   uniquePODs?: boolean;
 }): {
-  uniquenessModuleIsEnabled: CircuitSignal;
+  requireUniqueContentIDs: CircuitSignal;
 } {
-  return { uniquenessModuleIsEnabled: BigInt(proofConfig.uniquePODs ?? false) };
+  return { requireUniqueContentIDs: BigInt(proofConfig.uniquePODs ?? false) };
 }
 
 function compileProofVirtualEntry<
