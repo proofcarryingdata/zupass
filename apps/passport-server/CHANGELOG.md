@@ -1,5 +1,50 @@
 # passport-server
 
+## 0.0.37
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.1.7
+  - @pcd/util@0.5.4
+  - @pcd/passport-interface@0.11.9
+  - @pcd/podbox-shared@0.0.6
+  - @pcd/pod-pcd@0.1.7
+  - @pcd/pod-ticket-pcd@0.1.7
+  - @pcd/semaphore-identity-pcd@0.11.6
+  - @pcd/eddsa-frog-pcd@0.3.5
+  - @pcd/eddsa-pcd@0.6.5
+  - @pcd/eddsa-ticket-pcd@0.6.5
+  - @pcd/email-pcd@0.6.5
+  - @pcd/rln-pcd@0.10.5
+  - @pcd/rsa-pcd@0.6.5
+  - @pcd/semaphore-group-pcd@0.11.6
+  - @pcd/semaphore-signature-pcd@0.11.6
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.6
+  - @pcd/zk-eddsa-frog-pcd@0.3.6
+  - @pcd/pcd-collection@0.11.6
+  - @pcd/message-pcd@0.1.6
+  - @pcd/rsa-image-pcd@0.5.5
+  - @pcd/rsa-ticket-pcd@0.6.5
+
+## 0.0.36
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.1.6
+  - @pcd/passport-interface@0.11.8
+  - @pcd/podbox-shared@0.0.5
+  - @pcd/pod-pcd@0.1.6
+  - @pcd/pod-ticket-pcd@0.1.6
+  - @pcd/semaphore-identity-pcd@0.11.5
+  - @pcd/pcd-collection@0.11.5
+  - @pcd/semaphore-group-pcd@0.11.5
+  - @pcd/semaphore-signature-pcd@0.11.5
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.5
+  - @pcd/zk-eddsa-frog-pcd@0.3.5
+  - @pcd/message-pcd@0.1.5
+
 ## 0.0.35
 
 ### Patch Changes

@@ -1,5 +1,46 @@
 # consumer-client
 
+## 0.0.47
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.8
+  - @pcd/pod@0.1.7
+  - @pcd/util@0.5.4
+  - @pcd/gpc-pcd@0.0.8
+  - @pcd/passport-interface@0.11.9
+  - @pcd/pod-pcd@0.1.7
+  - @pcd/semaphore-identity-pcd@0.11.6
+  - @pcd/eddsa-frog-pcd@0.3.5
+  - @pcd/eddsa-pcd@0.6.5
+  - @pcd/eddsa-ticket-pcd@0.6.5
+  - @pcd/ethereum-group-pcd@0.5.6
+  - @pcd/ethereum-ownership-pcd@0.11.6
+  - @pcd/semaphore-group-pcd@0.11.6
+  - @pcd/semaphore-signature-pcd@0.11.6
+  - @pcd/webauthn-pcd@0.11.5
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.6
+  - @pcd/zk-eddsa-frog-pcd@0.3.6
+
+## 0.0.46
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.7
+  - @pcd/pod@0.1.6
+  - @pcd/gpc-pcd@0.0.7
+  - @pcd/passport-interface@0.11.8
+  - @pcd/pod-pcd@0.1.6
+  - @pcd/semaphore-identity-pcd@0.11.5
+  - @pcd/ethereum-group-pcd@0.5.5
+  - @pcd/ethereum-ownership-pcd@0.11.5
+  - @pcd/semaphore-group-pcd@0.11.5
+  - @pcd/semaphore-signature-pcd@0.11.5
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.5
+  - @pcd/zk-eddsa-frog-pcd@0.3.5
+
 ## 0.0.45
 
 ### Patch Changes

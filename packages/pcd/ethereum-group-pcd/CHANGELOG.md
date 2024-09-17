@@ -1,5 +1,21 @@
 # @pcd/ethereum-group-pcd
 
+## 0.5.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/util@0.5.4
+  - @pcd/semaphore-identity-pcd@0.11.6
+  - @pcd/semaphore-signature-pcd@0.11.6
+
+## 0.5.5
+
+### Patch Changes
+
+- @pcd/semaphore-identity-pcd@0.11.5
+- @pcd/semaphore-signature-pcd@0.11.5
+
 ## 0.5.4
 
 ### Patch Changes

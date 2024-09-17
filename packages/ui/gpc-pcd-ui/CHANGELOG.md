@@ -1,5 +1,26 @@
 # @pcd/gpc-pcd-ui
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.8
+  - @pcd/pod@0.1.7
+  - @pcd/util@0.5.4
+  - @pcd/gpc-pcd@0.0.8
+  - @pcd/passport-ui@0.11.6
+
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.7
+  - @pcd/pod@0.1.6
+  - @pcd/gpc-pcd@0.0.7
+  - @pcd/passport-ui@0.11.5
+
 ## 0.0.6
 
 ### Patch Changes

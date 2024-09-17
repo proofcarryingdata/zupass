@@ -1,5 +1,19 @@
 # @pcd/message-pcd-ui
 
+## 0.1.6
+
+### Patch Changes
+
+- @pcd/message-pcd@0.1.6
+- @pcd/passport-ui@0.11.6
+
+## 0.1.5
+
+### Patch Changes
+
+- @pcd/message-pcd@0.1.5
+- @pcd/passport-ui@0.11.5
+
 ## 0.1.4
 
 ### Patch Changes

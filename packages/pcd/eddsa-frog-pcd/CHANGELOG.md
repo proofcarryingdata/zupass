@@ -1,5 +1,13 @@
 # @pcd/eddsa-frog-pcd
 
+## 0.3.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/util@0.5.4
+  - @pcd/eddsa-pcd@0.6.5
+
 ## 0.3.4
 
 ### Patch Changes

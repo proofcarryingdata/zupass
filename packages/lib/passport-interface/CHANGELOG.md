@@ -1,5 +1,34 @@
 # @pcd/passport-interface
 
+## 0.11.9
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.1.7
+  - @pcd/util@0.5.4
+  - @pcd/pod-pcd@0.1.7
+  - @pcd/semaphore-identity-pcd@0.11.6
+  - @pcd/eddsa-frog-pcd@0.3.5
+  - @pcd/eddsa-pcd@0.6.5
+  - @pcd/eddsa-ticket-pcd@0.6.5
+  - @pcd/email-pcd@0.6.5
+  - @pcd/semaphore-group-pcd@0.11.6
+  - @pcd/semaphore-signature-pcd@0.11.6
+  - @pcd/pcd-collection@0.11.6
+
+## 0.11.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.1.6
+  - @pcd/pod-pcd@0.1.6
+  - @pcd/semaphore-identity-pcd@0.11.5
+  - @pcd/pcd-collection@0.11.5
+  - @pcd/semaphore-group-pcd@0.11.5
+  - @pcd/semaphore-signature-pcd@0.11.5
+
 ## 0.11.7
 
 ### Patch Changes

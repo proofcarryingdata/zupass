@@ -1,6 +1,6 @@
 {
   "name": "@pcd/util",
-  "version": "0.5.3",
+  "version": "0.5.4",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",

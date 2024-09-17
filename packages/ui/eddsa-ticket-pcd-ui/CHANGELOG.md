@@ -1,5 +1,24 @@
 # @pcd/eddsa-ticket-pcd-ui
 
+## 0.2.7
+
+### Patch Changes
+
+- @pcd/passport-interface@0.11.9
+- @pcd/semaphore-identity-pcd@0.11.6
+- @pcd/eddsa-ticket-pcd@0.6.5
+- @pcd/zk-eddsa-event-ticket-pcd@0.6.6
+- @pcd/passport-ui@0.11.6
+
+## 0.2.6
+
+### Patch Changes
+
+- @pcd/passport-interface@0.11.8
+- @pcd/semaphore-identity-pcd@0.11.5
+- @pcd/zk-eddsa-event-ticket-pcd@0.6.5
+- @pcd/passport-ui@0.11.5
+
 ## 0.2.5
 
 ### Patch Changes

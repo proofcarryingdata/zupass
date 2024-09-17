@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pod-pcd-ui",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -27,11 +27,11 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pod": "0.1.5",
-    "@pcd/pod-pcd": "0.1.5",
-    "@pcd/passport-ui": "0.11.4",
+    "@pcd/pod": "0.1.7",
+    "@pcd/pod-pcd": "0.1.7",
+    "@pcd/passport-ui": "0.11.6",
     "@pcd/pcd-types": "0.11.4",
-    "@pcd/util": "0.5.3",
+    "@pcd/util": "0.5.4",
     "react": "^18.2.0"
   },
   "devDependencies": {
