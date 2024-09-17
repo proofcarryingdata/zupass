@@ -59,7 +59,7 @@
     "verdaccio-memory": "^10.3.2"
   },
   "engines": {
-    "node": "^20"
+    "node": "20"
   },
   "dependencies": {
     "@changesets/cli": "^2.26.0",
