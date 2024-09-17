@@ -29,7 +29,6 @@ import {
   BABY_JUB_NEGATIVE_ONE,
   BABY_JUB_SUBGROUP_ORDER_MINUS_ONE
 } from "@pcd/util";
-import _ from "lodash";
 import {
   GPCBoundConfig,
   GPCProofEntryConfig,

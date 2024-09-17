@@ -14,7 +14,7 @@ import {
   styled
 } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
-import _ from "lodash";
+import startCase from "lodash/startCase";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export const EdDSAFrogPCDUI: PCDUI<EdDSAFrogPCD> = {
@@ -193,7 +193,7 @@ function temperamentValue(temperament: Temperament): string {
 }
 
 function biomeValue(biome: Biome): string {
-  return _.startCase(Biome[biome]);
+  return startCase(Biome[biome]);
 }
 
 function FrogQR({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {

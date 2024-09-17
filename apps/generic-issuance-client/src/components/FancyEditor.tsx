@@ -1,6 +1,6 @@
 import { Box, Spinner } from "@chakra-ui/react";
 import { Editor, Monaco } from "@monaco-editor/react";
-import _ from "lodash";
+import merge from "lodash/merge";
 import { editor } from "monaco-editor";
 import React, {
   useCallback,
@@ -56,7 +56,7 @@ export const FancyEditor = React.forwardRef(
 
     const mergedEditorOptions =
       useMemo<editor.IStandaloneEditorConstructionOptions>(() => {
-        return _.merge(
+        return merge(
           {
             readOnly: readonly,
             minimap: {

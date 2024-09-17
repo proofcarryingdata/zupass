@@ -2,7 +2,7 @@ import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import stringify from "fast-json-stable-stringify";
-import _ from "lodash";
+import uniq from "lodash/uniq";
 import {
   AppendToFolderAction,
   DeleteFolderAction,
@@ -299,7 +299,7 @@ export class PCDCollection {
       const subFolders = Object.values(this.folders).filter((folderPath) => {
         return isFolderAncestor(folderPath, folder);
       });
-      folders.push(..._.uniq(subFolders));
+      folders.push(...uniq(subFolders));
     }
 
     for (const folderPath of folders) {

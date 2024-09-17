@@ -1,5 +1,5 @@
 import { EdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
-import _ from "lodash";
+import range from "lodash/range";
 import { useCallback, useState } from "react";
 import { useSwipeable } from "react-swipeable";
 import styled from "styled-components";
@@ -78,7 +78,7 @@ const Container = styled.div<{ index: number; count: number; color: string }>`
     padding: 0;
     border: 1px solid ${({ color }): string => color};
     box-shadow: ${({ index, count, color }): string => {
-      return [..._.range(-1, -index - 1, -1), ..._.range(1, count - index)]
+      return [...range(-1, -index - 1, -1), ...range(1, count - index)]
         .map((i) => {
           const offset = i * 2;
 

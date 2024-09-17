@@ -39,7 +39,7 @@ import {
 import { assertUnreachable, sleep } from "@pcd/util";
 import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
-import _ from "lodash";
+import uniq from "lodash/uniq";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
 import {
@@ -1281,7 +1281,7 @@ async function removeSubscription(
 
   if (deleteContents) {
     const subscriptionFolders = existingSubscription
-      ? _.uniq(existingSubscription.feed.permissions.map((p) => p.folder)).sort(
+      ? uniq(existingSubscription.feed.permissions.map((p) => p.folder)).sort(
           (a, b) => a.localeCompare(b)
         )
       : [];

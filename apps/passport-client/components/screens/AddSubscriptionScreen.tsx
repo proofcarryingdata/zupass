@@ -13,7 +13,7 @@ import {
   isReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import { sleep } from "@pcd/util";
-import _ from "lodash";
+import uniq from "lodash/uniq";
 import React, {
   MouseEvent,
   useCallback,
@@ -545,7 +545,7 @@ function AlreadySubscribed({
   };
 
   const navigate = useNavigate();
-  const folders = _.uniq(
+  const folders = uniq(
     existingSubscription.feed.permissions.map((p) => p.folder)
   ).sort((a, b) => a.localeCompare(b));
   const goToFolder = useCallback(

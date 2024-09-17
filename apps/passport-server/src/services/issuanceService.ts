@@ -48,7 +48,7 @@ import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RollbarService } from "@pcd/server-shared";
 import { ONE_HOUR_MS } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
-import _ from "lodash";
+import sample from "lodash/sample";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
@@ -502,7 +502,7 @@ export class IssuanceService {
       "images/frogs/frog4.jpeg"
     ];
 
-    const randomFrogPath = _.sample(frogPaths);
+    const randomFrogPath = sample(frogPaths);
 
     const id = timeBasedId(FROG_INTERVAL_MS) + "";
 

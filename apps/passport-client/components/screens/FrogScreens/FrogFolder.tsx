@@ -1,5 +1,5 @@
 import { FrogCryptoFolderName } from "@pcd/passport-interface";
-import _ from "lodash";
+import min from "lodash/min";
 import prettyMilliseconds from "pretty-ms";
 import { PropsWithChildren, useEffect, useMemo, useState } from "react";
 import styled, {
@@ -108,7 +108,7 @@ function useFetchTimestamp(): number | null {
         return null;
       }
 
-      return _.min(activeFeeds.map((feed) => feed.nextFetchAt)) ?? null;
+      return min(activeFeeds.map((feed) => feed.nextFetchAt)) ?? null;
     } catch (e) {
       console.error(e);
       return null;
@@ -131,7 +131,7 @@ function CountDown({
   }, [timestamp]);
   const [diffText, setDiffText] = useState(
     timestamp < Date.now() && !frogcryptoGrayscale
-      ? _.upperCase("Available Now")
+      ? "Available Now".toLocaleUpperCase()
       : ""
   );
 
@@ -142,7 +142,7 @@ function CountDown({
       if (frogcryptoGrayscale) {
         setDiffText("");
       } else if (diffMs < 0) {
-        setDiffText(_.upperCase("Available Now"));
+        setDiffText("Available Now".toLocaleUpperCase());
       } else {
         const diffString = prettyMilliseconds(diffMs, {
           millisecondsDecimalDigits: 0,

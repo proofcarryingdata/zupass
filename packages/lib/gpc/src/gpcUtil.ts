@@ -12,7 +12,8 @@ import {
   requireType
 } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import _ from "lodash";
+import max from "lodash/max";
+import min from "lodash/min";
 import {
   GPCBoundConfig,
   GPCIdentifier,
@@ -224,7 +225,7 @@ export function canonicalizeBoundsCheckConfig(
       ? {
           inRange: {
             min: inRange.min,
-            max: _.min([notInRange.min - 1n, inRange.max]) as bigint
+            max: min([notInRange.min - 1n, inRange.max]) as bigint
           }
         }
       : // inRange\notInRange = [⍺, inRange.max] for some ⍺, i.e. `notInRange.max`
@@ -234,7 +235,7 @@ export function canonicalizeBoundsCheckConfig(
       notInRange.min <= inRange.min && notInRange.max < inRange.max
       ? {
           inRange: {
-            min: _.max([notInRange.max + 1n, inRange.min]) as bigint,
+            min: max([notInRange.max + 1n, inRange.min]) as bigint,
             max: inRange.max
           }
         }

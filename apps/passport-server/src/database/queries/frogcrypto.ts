@@ -10,7 +10,8 @@ import {
   FrogCryptoScore
 } from "@pcd/passport-interface";
 import { PCDPermissionType } from "@pcd/pcd-collection";
-import _ from "lodash";
+import omit from "lodash/omit";
+import unzip from "lodash/unzip";
 import { Client } from "pg";
 import { Pool } from "postgres-pool";
 import { parseFrogEnum } from "../../util/frogcrypto";
@@ -130,7 +131,7 @@ export async function upsertFrogData(
     on conflict (id) do update
     set uuid = $2, frog = $3
     `,
-      [frogData.id, frogData.uuid, _.omit(frogData, ["id", "uuid"])]
+      [frogData.id, frogData.uuid, omit(frogData, ["id", "uuid"])]
     );
   }
 }
@@ -190,12 +191,11 @@ export async function sampleFrogData(
   pool: Pool,
   biomes: FrogCryptoFeedBiomeConfigs
 ): Promise<FrogCryptoFrogData | undefined> {
-  const [biomeKeys, scalingFactors] = _.chain(biomes)
-    .toPairs()
+  const biomePairs = Object.entries(biomes);
+  const filteredPairs = biomePairs
     .map(([biome, config]) => [biome, config?.dropWeightScaler])
-    .filter(([, scalingFactor]) => !!scalingFactor)
-    .unzip()
-    .value();
+    .filter(([, scalingFactor]) => !!scalingFactor);
+  const [biomeKeys, scalingFactors] = unzip(filteredPairs);
 
   const result = await sqlQuery(
     pool,
@@ -308,7 +308,7 @@ export async function getScoreboard(
   );
 
   return result.rows.map(
-    (row) => _.omit(row, ["semaphore_id"]) as FrogCryptoScore
+    (row) => omit(row, ["semaphore_id"]) as FrogCryptoScore
   );
 }
 
@@ -326,7 +326,7 @@ export async function getUserScore(
   );
 
   return result.rows.map(
-    (row) => _.omit(row, ["semaphore_id"]) as FrogCryptoScore
+    (row) => omit(row, ["semaphore_id"]) as FrogCryptoScore
   )[0];
 }
 

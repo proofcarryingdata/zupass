@@ -1,6 +1,6 @@
 import { Spinner } from "@/components/ui/spinner";
 import { LoginCategory } from "@pcd/zupoll-shared";
-import _ from "lodash";
+import sample from "lodash/sample";
 import { useMemo, useState } from "react";
 import styled from "styled-components";
 import { LOGIN_GROUPS } from "../../api/loginGroups";
@@ -52,7 +52,7 @@ const tips = [
 
 export function LoggingIn() {
   const randomTip = useMemo(() => {
-    return _.sample(tips);
+    return sample(tips);
   }, []);
 
   return (

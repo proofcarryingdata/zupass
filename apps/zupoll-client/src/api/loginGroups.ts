@@ -3,7 +3,7 @@ import {
   LoginConfig,
   getPodboxConfigs
 } from "@pcd/zupoll-shared";
-import _ from "lodash";
+import groupBy from "lodash/groupBy";
 import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../env";
 import {
   DEVCONNECT_ORGANIZER_CONFIG,
@@ -39,7 +39,7 @@ export const LOGIN_GROUPS: LoginGroup[] = groupLoginConfigs([
 
 function groupLoginConfigs(configs: LoginConfig[]): LoginGroup[] {
   const rawGroups = Object.entries(
-    _.groupBy(configs, (r) => r.configCategoryId)
+    groupBy(configs, (r) => r.configCategoryId)
   ) as [LoginCategory, LoginConfig[]][];
 
   return rawGroups.map(

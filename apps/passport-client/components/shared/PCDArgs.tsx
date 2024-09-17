@@ -28,7 +28,9 @@ import {
   isStringArrayArgument,
   isToggleListArgument
 } from "@pcd/pcd-types";
-import _ from "lodash";
+import kebabCase from "lodash/kebabCase";
+import partition from "lodash/partition";
+import startCase from "lodash/startCase";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FaCheck, FaHashtag, FaQuestion } from "react-icons/fa";
 import { FaInfo, FaList, FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
@@ -108,7 +110,7 @@ export function PCDArgs<T extends PCDPackage>({
     }
   );
 
-  const [visible, hidden] = _.partition(
+  const [visible, hidden] = partition(
     flattenedArgs,
     ([parentArgName, argName, arg]) =>
       arg.defaultVisible ??
@@ -229,7 +231,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
     return {
       // merge arg with default value
       arg: {
-        displayName: _.startCase(qualifiedArgName),
+        displayName: startCase(qualifiedArgName),
         ...(defaultArg || {}),
         ...arg
       },
@@ -723,7 +725,7 @@ function ArgContainer({
               <Caption>{displayName}</Caption>
               {description && (
                 <a
-                  data-tooltip-id={`arg-input-tooltip-${_.kebabCase(
+                  data-tooltip-id={`arg-input-tooltip-${kebabCase(
                     displayName
                   )}`}
                   data-tooltip-content={description}
@@ -734,7 +736,7 @@ function ArgContainer({
                 </a>
               )}
               <TooltipContainer
-                id={`arg-input-tooltip-${_.kebabCase(displayName)}`}
+                id={`arg-input-tooltip-${kebabCase(displayName)}`}
               />
             </>
           ) : (

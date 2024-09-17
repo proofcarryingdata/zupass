@@ -6,7 +6,7 @@ import {
   SerializedPCD
 } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
 import { v4 as uuid } from "uuid";
 import {
   EdDSATicketPCD,
@@ -64,7 +64,7 @@ export async function prove(args: EdDSATicketPCDArgs): Promise<EdDSATicketPCD> {
 export async function verify(pcd: EdDSATicketPCD): Promise<boolean> {
   const messageDerivedFromClaim = ticketDataToBigInts(pcd.claim.ticket);
 
-  if (!_.isEqual(messageDerivedFromClaim, pcd.proof.eddsaPCD.claim.message)) {
+  if (!isEqual(messageDerivedFromClaim, pcd.proof.eddsaPCD.claim.message)) {
     return false;
   }
 

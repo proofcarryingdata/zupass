@@ -1,4 +1,4 @@
-import _ from "lodash";
+import uniq from "lodash/uniq";
 
 export const PATH_SEP = "/";
 
@@ -17,11 +17,11 @@ export function getFoldersInFolder(
   folderPath: string,
   allPaths: string[]
 ): string[] {
-  const descendantsOfFolder = _.uniq(
+  const descendantsOfFolder = uniq(
     allPaths.filter((p) => isFolderAncestor(p, folderPath))
   );
 
-  const descendantsWithMissing = _.uniq([
+  const descendantsWithMissing = uniq([
     ...descendantsOfFolder.flatMap((path) => getAllAncestors(path)),
     ...descendantsOfFolder
   ]).filter((a) => a !== "");

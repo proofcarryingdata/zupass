@@ -24,7 +24,7 @@ import {
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import AsyncLock from "async-lock";
-import { isEqual } from "lodash";
+import isEqual from "lodash/isEqual";
 import { PoapEvent } from "../database/models";
 import { fetchDevconnectPretixTicketByTicketId } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {

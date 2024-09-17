@@ -14,7 +14,9 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDPackage } from "@pcd/pcd-types";
-import _ from "lodash";
+import findKey from "lodash/findKey";
+import random from "lodash/random";
+import sample from "lodash/sample";
 import { Pool } from "postgres-pool";
 import { getFeedData } from "../database/queries/frogcrypto";
 import { PCDHTTPError } from "../routing/pcdHttpError";
@@ -138,7 +140,7 @@ export function sampleFrogAttribute(
   max?: number,
   rarity?: Rarity
 ): number {
-  return _.random(
+  return random(
     Math.round(min ?? 0),
     Math.round(max ?? (rarity === Rarity.Common ? 7 : 15))
   );
@@ -148,7 +150,7 @@ export function parseFrogEnum(
   e: Record<number, string>,
   value: string
 ): number {
-  const key = _.findKey(
+  const key = findKey(
     e,
     (v) =>
       typeof v === "string" &&
@@ -162,7 +164,7 @@ export function parseFrogEnum(
 
 export function parseFrogTemperament(value?: string): Temperament {
   if (!value) {
-    return _.sample(COMMON_TEMPERAMENT_SET) ?? Temperament.N_A; // fallback makes TS happy
+    return sample(COMMON_TEMPERAMENT_SET) ?? Temperament.N_A; // fallback makes TS happy
   }
   if (value === "N/A") {
     return Temperament.N_A;

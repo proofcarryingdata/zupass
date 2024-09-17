@@ -16,7 +16,7 @@ import {
   SemaphoreSignaturePCDArgs,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { cloneDeep } from "lodash";
+import cloneDeep from "lodash/cloneDeep";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";

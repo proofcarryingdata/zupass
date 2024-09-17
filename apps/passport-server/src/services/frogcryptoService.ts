@@ -26,7 +26,9 @@ import {
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { RollbarService } from "@pcd/server-shared";
-import _ from "lodash";
+import intersection from "lodash/intersection";
+import keyBy from "lodash/keyBy";
+import pick from "lodash/pick";
 import { FrogCryptoUserFeedState } from "../database/models";
 import {
   deleteFrogData,
@@ -144,7 +146,7 @@ export class FrogcryptoService {
 
     const semaphoreId = await this.verifyCredentialAndGetSemaphoreId(req.pcd);
 
-    const userFeeds = _.keyBy(
+    const userFeeds = keyBy(
       await fetchUserFeedsState(this.context.dbPool, semaphoreId),
       "feed_id"
     );
@@ -359,7 +361,7 @@ export class FrogcryptoService {
     const rarity = parseFrogEnum(Rarity, frogData.rarity);
 
     return {
-      ..._.pick(frogData, "name", "description"),
+      ...pick(frogData, "name", "description"),
       imageUrl: `${process.env.PASSPORT_SERVER_URL}/frogcrypto/images/${frogData.uuid}`,
       frogId: frogData.id,
       biome: parseFrogEnum(Biome, frogData.biome),
@@ -409,7 +411,7 @@ export class FrogcryptoService {
     if (!user) {
       throw new PCDHTTPError(400, "invalid PCD");
     }
-    if (!_.intersection(this.adminUsers, user.emails)) {
+    if (!intersection(this.adminUsers, user.emails)) {
       throw new PCDHTTPError(403, "not authorized");
     }
   }

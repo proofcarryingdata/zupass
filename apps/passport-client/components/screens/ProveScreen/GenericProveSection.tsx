@@ -27,7 +27,6 @@ import {
   ZKEdDSAEventTicketPCDPackage,
   isZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
@@ -163,7 +162,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         const result: SerializedPCD<ZKEdDSAEventTicketPCD>[] = [];
 
         for (const t of relevantPCDs) {
-          const argsClone = _.clone(args) as ArgsOf<
+          const argsClone = structuredClone(args) as ArgsOf<
             typeof ZKEdDSAEventTicketPCDPackage
           >;
           argsClone.ticket.value = await EdDSATicketPCDPackage.serialize(

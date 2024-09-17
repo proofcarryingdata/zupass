@@ -1,6 +1,6 @@
 import { FrogCryptoDbFeedData } from "@pcd/passport-interface";
 import { expect } from "chai";
-import _ from "lodash";
+import range from "lodash/range";
 import "mocha";
 import { step } from "mocha-steps";
 import { Client } from "pg";
@@ -94,7 +94,7 @@ describe("database reads and writes for frogcrypto features", function () {
 
   step("sample a frog from weighted biomes", async function () {
     const frogs = await Promise.all(
-      _.range(0, 1000).map(() =>
+      range(0, 1000).map(() =>
         sampleFrogData(db, {
           TheCapital: { dropWeightScaler: 100 },
           Desert: { dropWeightScaler: 0.01 },

@@ -1,5 +1,5 @@
 import { PCDCrypto } from "@pcd/passport-crypto";
-import _ from "lodash";
+import startCase from "lodash/startCase";
 import { useCallback, useEffect, useState } from "react";
 import { bigintToUint8Array, uint8arrayToBigint } from "../../../src/util";
 
@@ -39,7 +39,7 @@ export function useUsernameGenerator():
 
         return lowercase
           ? randomAdjective + "_" + randomAnimal
-          : _.startCase(`${randomAdjective} ${randomAnimal}`);
+          : startCase(`${randomAdjective} ${randomAnimal}`);
       } catch (e) {
         console.debug("Error in useUsernameGenerator", e);
         return "An Unknown Toad";

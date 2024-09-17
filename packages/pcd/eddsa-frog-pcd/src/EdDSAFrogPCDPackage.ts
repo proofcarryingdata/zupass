@@ -6,7 +6,7 @@ import {
   SerializedPCD
 } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
 import { v4 as uuid } from "uuid";
 import {
   EdDSAFrogPCD,
@@ -64,7 +64,7 @@ export async function verify(pcd: EdDSAFrogPCD): Promise<boolean> {
   const messageDerivedFromClaim = frogDataToBigInts(pcd.claim.data);
 
   return (
-    _.isEqual(messageDerivedFromClaim, pcd.proof.eddsaPCD.claim.message) &&
+    isEqual(messageDerivedFromClaim, pcd.proof.eddsaPCD.claim.message) &&
     EdDSAPCDPackage.verify(pcd.proof.eddsaPCD)
   );
 }
