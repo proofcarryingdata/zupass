@@ -19,26 +19,26 @@ template UniquenessModule(
     signal output valuesAreUnique;
 
     // Array of field elements indicating whether the corresponding
-    // element of `values` is unique, i.e. isUnique[i] = 0 iff
-    // values[i] is not unique.
-    signal isUnique[NUM_LIST_ELEMENTS];
+    // element of `values` has no duplicates following it in `values`,
+    // i.e. noDupsAfter[i] = 0 iff this is the case.
+    signal noDupsAfter[NUM_LIST_ELEMENTS];
 
     // Loop through and check whether the ith element of `values` is
-    // not an element of `values` with that element deleted.
+    // not an element of `values` with the first i+1 elements removed.
     for(var i = 0; i < NUM_LIST_ELEMENTS; i++) {
         var j = i+1;
-        isUnique[i] <==
-            UnnormalisedListNonMembership(NUM_LIST_ELEMENTS - j, NUM_LIST_ELEMENTS)(
+        noDupsAfter[i] <==
+            NotEqualsAny(NUM_LIST_ELEMENTS - j, NUM_LIST_ELEMENTS)(
                 values[i],
-                Rotl(j, NUM_LIST_ELEMENTS)(values)
+                ArrayRotl(j, NUM_LIST_ELEMENTS)(values)
             );
     }
 
-    // All values are unique iff all elements of `isUnique` are non-zero.
+    // All values are unique iff all elements of `noDupsAfter` are non-zero.
     valuesAreUnique <== NOT()(
         IsZero()(
             MultiAND(NUM_LIST_ELEMENTS)(
-                isUnique
+                noDupsAfter
             )
         )
     );

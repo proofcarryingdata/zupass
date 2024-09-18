@@ -238,13 +238,13 @@ describe("Semaphore V4 owner module compilation for verification should work", (
 describe("POD uniqueness module compilation for proving and verification should work", () => {
   it("should work as expected for a proof configuration with POD uniqueness enabled", () => {
     expect(compileProofPODUniqueness({ uniquePODs: true })).to.deep.equal({
-      uniquenessModuleIsEnabled: 1n
+      requireUniqueContentIDs: 1n
     });
   });
   it("should work as expected for a proof configuration with POD uniqueness disabled", () => {
     for (const config of [{}, { uniquePODs: false }]) {
       expect(compileProofPODUniqueness(config)).to.deep.equal({
-        uniquenessModuleIsEnabled: 0n
+        requireUniqueContentIDs: 0n
       });
     }
   });

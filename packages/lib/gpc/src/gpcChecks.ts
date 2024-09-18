@@ -23,7 +23,8 @@ import {
 import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
-import _ from "lodash";
+import isEqual from "lodash/isEqual";
+import uniq from "lodash/uniq";
 import {
   GPCBoundConfig,
   GPCIdentifier,
@@ -630,17 +631,17 @@ export function checkProofInputsForConfig(
 export function checkProofPODUniquenessInputsForConfig(
   proofConfig: { uniquePODs?: boolean },
   proofInputs: { pods: Record<PODName, POD> }
-) {
+): void {
   if (proofConfig.uniquePODs) {
     const contentIDs = Object.values(proofInputs.pods).map(
       (pod) => pod.contentID
     );
-    const uniqueContentIDs = _.uniq(contentIDs);
-    const podsAreUnique = _.isEqual(contentIDs, uniqueContentIDs);
+    const uniqueContentIDs = uniq(contentIDs);
+    const podsAreUnique = isEqual(contentIDs, uniqueContentIDs);
 
     if (!podsAreUnique) {
       throw new Error(
-        "Proof configuration specifies that the PODs should be unique, but they aren't."
+        "Proof configuration specifies that the PODs should have unique content IDs, but they don't."
       );
     }
   }
@@ -727,7 +728,7 @@ export function checkProofListMembershipInputsForConfig(
       for (const element of inputList) {
         const elementWidth = widthOfEntryOrTuple(element);
 
-        if (!_.isEqual(elementWidth, comparisonWidth)) {
+        if (!isEqual(elementWidth, comparisonWidth)) {
           throw new TypeError(
             `Membership list ${listIdentifier} in input contains element of width ${elementWidth} while comparison value with identifier ${JSON.stringify(
               comparisonId
@@ -740,7 +741,7 @@ export function checkProofListMembershipInputsForConfig(
       // hashes as this reflects how the values will be treated in the
       // circuit.
       const isComparisonValueInList = inputList.find((element) =>
-        _.isEqual(
+        isEqual(
           applyOrMap(podValueHash, element),
           applyOrMap(podValueHash, comparisonValue)
         )
@@ -785,7 +786,7 @@ export function checkInputListNamesForConfig(
   );
   const inputListNames = new Set(listNames);
 
-  if (!_.isEqual(configListNames, inputListNames)) {
+  if (!isEqual(configListNames, inputListNames)) {
     throw new Error(
       `Config and input list mismatch.` +
         `  Configuration expects lists ${JSON.stringify(

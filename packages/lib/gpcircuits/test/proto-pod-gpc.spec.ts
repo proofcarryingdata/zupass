@@ -408,7 +408,7 @@ const sampleInput: ProtoPODGPCInputs = {
   ],
 
   // POD uniqueness module (1)
-  /*PUB*/ uniquenessModuleIsEnabled: 1n,
+  /*PUB*/ requireUniqueContentIDs: 0n,
 
   // Global module (1)
   /*PUB*/ globalWatermark: 1337n
@@ -459,7 +459,8 @@ const sampleOutput: ProtoPODGPCOutputs = {
 function makeTestSignals(
   params: ProtoPODGPCCircuitParams,
   isNullifierHashRevealed: boolean,
-  isV4NullifierHashRevealed: boolean
+  isV4NullifierHashRevealed: boolean,
+  requireUniqueContentIDs: boolean = true
 ): { inputs: ProtoPODGPCInputs; outputs: ProtoPODGPCOutputs } {
   // Test data is selected to exercise a lot of features at once, at full
   // size.  Test data always includes a max of 2 real objects and 6 entries.
@@ -767,8 +768,6 @@ function makeTestSignals(
     extendedSignalArray(isMember.map(BigInt), params.maxLists, 1n)
   );
 
-  const uniquenessModuleIsEnabled = 1n;
-
   return {
     inputs: {
       objectContentID: sigObjectContentID,
@@ -825,7 +824,7 @@ function makeTestSignals(
       listComparisonValueIndex,
       listContainsComparisonValue,
       listValidValues,
-      uniquenessModuleIsEnabled,
+      requireUniqueContentIDs: BigInt(requireUniqueContentIDs),
       globalWatermark: 1337n
     },
     outputs: {
@@ -868,7 +867,8 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     let { inputs, outputs } = makeTestSignals(
       GPC_PARAMS,
       true /*isNullifierHashRevealed*/,
-      true /*isV4NullifierHashRevealed*/
+      true /*isV4NullifierHashRevealed*/,
+      false /*requireUniqueContentIDs*/
     );
     expect(inputs).to.deep.eq(sampleInput);
     expect(outputs).to.deep.eq(sampleOutput);
@@ -976,7 +976,8 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
     let { inputs, outputs } = makeTestSignals(
       GPC_PARAMS,
       true /*isNullifierHashRevealed*/,
-      true /*isV4NullifierHashRevealed*/
+      true /*isV4NullifierHashRevealed*/,
+      false /*requireUniqueContentIDs*/
     );
     expect(inputs).to.deep.eq(sampleInput);
     expect(outputs).to.deep.eq(sampleOutput);

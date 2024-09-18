@@ -373,11 +373,11 @@ template ProtoPODGPC (
      */
 
     // Boolean indicating whether the uniqueness module is enabled.
-    signal input uniquenessModuleIsEnabled;
+    signal input requireUniqueContentIDs;
     signal podsAreUnique <== UniquenessModule(MAX_OBJECTS)(
         objectContentID
     );
-    uniquenessModuleIsEnabled * (1 - podsAreUnique) === 0;
+    requireUniqueContentIDs * (1 - podsAreUnique) === 0;
     
     /*
      * 1 GlobalModule with its inputs & outputs.

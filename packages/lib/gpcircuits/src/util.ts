@@ -205,6 +205,11 @@ export function zeroResidueMod(x: CircuitSignal, n: bigint): bigint {
  * Creates dummy signals for unused object slots in ProtoPODGPC via dummy
  * content IDs in the form of POD string hashes of the message `unused POD ${n}`
  * as well as corresponding signatures.
+ *
+ * Note that these do not arise from actual PODs but they present valid content
+ * IDs since they will pass the necessary signature checks in the
+ * ProtoPODGPC. This is sufficient because they do not have any entries
+ * associated with them.
  */
 export function dummyObjectSignals(
   numObjects: number
