@@ -1,5 +1,11 @@
 # @pcd/rsa-ticket-pcd
 
+## 0.6.5
+
+### Patch Changes
+
+- @pcd/rsa-pcd@0.6.5
+
 ## 0.6.4
 
 ### Patch Changes

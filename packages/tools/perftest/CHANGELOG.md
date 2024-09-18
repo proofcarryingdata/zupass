@@ -1,5 +1,33 @@
 # @pcd/perftest
 
+## 0.0.10
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.8
+  - @pcd/pod@0.1.7
+  - @pcd/util@0.5.4
+  - @pcd/gpc-pcd@0.0.8
+  - @pcd/pod-pcd@0.1.7
+  - @pcd/semaphore-identity-pcd@0.11.6
+  - @pcd/eddsa-ticket-pcd@0.6.5
+  - @pcd/semaphore-signature-pcd@0.11.6
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.6
+
+## 0.0.9
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.7
+  - @pcd/pod@0.1.6
+  - @pcd/gpc-pcd@0.0.7
+  - @pcd/pod-pcd@0.1.6
+  - @pcd/semaphore-identity-pcd@0.11.5
+  - @pcd/semaphore-signature-pcd@0.11.5
+  - @pcd/zk-eddsa-event-ticket-pcd@0.6.5
+
 ## 0.0.8
 
 ### Patch Changes

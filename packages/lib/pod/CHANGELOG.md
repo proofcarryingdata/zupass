@@ -1,5 +1,19 @@
 # @pcd/pod
 
+## 0.1.7
+
+### Patch Changes
+
+- Fix prior broken release
+- Updated dependencies
+  - @pcd/util@0.5.4
+
+## 0.1.6
+
+### Patch Changes
+
+- Upgrade @zk-kit dependencies
+
 ## 0.1.5
 
 ### Patch Changes

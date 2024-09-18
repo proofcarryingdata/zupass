@@ -1,5 +1,11 @@
 # @pcd/rsa-image-pcd
 
+## 0.5.5
+
+### Patch Changes
+
+- @pcd/rsa-pcd@0.6.5
+
 ## 0.5.4
 
 ### Patch Changes

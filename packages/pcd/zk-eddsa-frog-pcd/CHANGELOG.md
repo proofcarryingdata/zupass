@@ -1,5 +1,23 @@
 # @pcd/zk-eddsa-frog-pcd
 
+## 0.3.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/util@0.5.4
+  - @pcd/semaphore-identity-pcd@0.11.6
+  - @pcd/eddsa-frog-pcd@0.3.5
+  - @pcd/eddsa-pcd@0.6.5
+  - @pcd/semaphore-signature-pcd@0.11.6
+
+## 0.3.5
+
+### Patch Changes
+
+- @pcd/semaphore-identity-pcd@0.11.5
+- @pcd/semaphore-signature-pcd@0.11.5
+
 ## 0.3.4
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "test-client",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "private": true,
   "scripts": {
     "dev": "ts-node build.ts dev",
@@ -10,13 +10,13 @@
   "dependencies": {
     "dotenv": "^16.0.3",
     "json-bigint": "^1.0.0",
-    "@pcd/gpc-pcd": "0.0.5",
+    "@pcd/gpc-pcd": "0.0.8",
     "@pcd/pcd-types": "0.11.4",
-    "@pcd/pod": "0.1.5",
-    "@pcd/pod-pcd": "0.1.5",
-    "@pcd/podspec": "0.0.2",
-    "@pcd/semaphore-identity-pcd": "0.11.4",
-    "@pcd/zupass-client": "0.0.3",
+    "@pcd/pod": "0.1.7",
+    "@pcd/pod-pcd": "0.1.7",
+    "@pcd/podspec": "0.0.4",
+    "@pcd/semaphore-identity-pcd": "0.11.6",
+    "@pcd/zupass-client": "0.0.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1"
@@ -24,8 +24,8 @@
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@pcd/eslint-config-custom": "0.11.1",
-    "@pcd/tsconfig": "0.11.1",
+    "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/tsconfig": "0.11.4",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/typography": "^0.5.14",
     "@types/json-bigint": "^1.0.1",

@@ -1,5 +1,27 @@
 # @pcd/pod-gpc-example
 
+## 0.0.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.8
+  - @pcd/pod@0.1.7
+  - @pcd/gpc-pcd@0.0.8
+  - @pcd/pod-pcd@0.1.7
+  - @pcd/semaphore-identity-pcd@0.11.6
+
+## 0.0.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpc@0.0.7
+  - @pcd/pod@0.1.6
+  - @pcd/gpc-pcd@0.0.7
+  - @pcd/pod-pcd@0.1.6
+  - @pcd/semaphore-identity-pcd@0.11.5
+
 ## 0.0.5
 
 ### Patch Changes

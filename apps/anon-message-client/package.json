@@ -1,6 +1,6 @@
 {
   "name": "anon-message-client",
-  "version": "0.1.13",
+  "version": "0.1.15",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -11,12 +11,12 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pcd/eddsa-ticket-pcd": "0.6.4",
-    "@pcd/passport-interface": "^0.11.5",
+    "@pcd/eddsa-ticket-pcd": "0.6.5",
+    "@pcd/passport-interface": "^0.11.9",
     "@pcd/pcd-types": "0.11.4",
-    "@pcd/semaphore-identity-pcd": "0.11.4",
-    "@pcd/util": "^0.5.3",
-    "@pcd/zk-eddsa-event-ticket-pcd": "0.6.4",
+    "@pcd/semaphore-identity-pcd": "0.11.6",
+    "@pcd/util": "^0.5.4",
+    "@pcd/zk-eddsa-event-ticket-pcd": "0.6.6",
     "@types/node": "20.4.10",
     "@types/react": "18.2.20",
     "@types/react-dom": "18.2.7",

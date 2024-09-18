@@ -29,6 +29,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/pcd/gpc-pcd"
+    },
+    {
       "path": "../../packages/lib/pcd-types"
     },
     {
