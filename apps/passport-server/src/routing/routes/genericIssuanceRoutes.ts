@@ -14,6 +14,7 @@ import {
   GenericIssuanceUpsertPipelineRequest,
   GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
+  OneClickEmailResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
   PodboxTicketActionPreCheckRequest,
@@ -566,6 +567,18 @@ export function initGenericIssuanceRoutes(
       res.json(result);
     }
   );
+
+  app.get("/generic-issuance/api/one-click-emails", async (req, res) => {
+    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    const apiKey = checkUrlParam(req, "apiKey");
+    const pipelineId = checkUrlParam(req, "pipelineId");
+
+    const resultValue: OneClickEmailResponseValue = {
+      values: { asdf: "asdf" }
+    };
+
+    res.json(resultValue);
+  });
 
   app.post(
     "/generic-issuance/api/send-email",
