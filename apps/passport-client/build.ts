@@ -64,6 +64,20 @@ const define = {
           process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
         )
       }
+    : {}),
+  ...(process.env.ZAPP_RESTRICT_ORIGINS !== undefined
+    ? {
+        "process.env.ZAPP_RESTRICT_ORIGINS": JSON.stringify(
+          process.env.ZAPP_RESTRICT_ORIGINS
+        )
+      }
+    : {}),
+  ...(process.env.ZAPP_ALLOWED_SIGNER_ORIGINS !== undefined
+    ? {
+        "process.env.ZAPP_ALLOWED_SIGNER_ORIGINS": JSON.stringify(
+          process.env.ZAPP_ALLOWED_SIGNER_ORIGINS
+        )
+      }
     : {})
 };
 

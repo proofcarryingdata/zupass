@@ -15,6 +15,10 @@ interface AppConfig {
   rollbarEnvName: string | undefined;
   // license key for Strich scanner
   strichLicenseKey: string | undefined;
+  // restrict origins allowed to sign PODs to the ones in ZAPP_ALLOWED_SIGNER_ORIGINS?
+  zappRestrictOrigins: boolean;
+  // origins that are allowed to sign PODs
+  zappAllowedSignerOrigins: string[];
 }
 
 if (
@@ -49,7 +53,10 @@ export const appConfig: AppConfig = {
   maxIdentityProofAgeMs: ONE_HOUR_MS * 4,
   rollbarToken: process.env.ROLLBAR_TOKEN,
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
-  strichLicenseKey: process.env.STRICH_LICENSE_KEY
+  strichLicenseKey: process.env.STRICH_LICENSE_KEY,
+  zappRestrictOrigins: process.env.ZAPP_RESTRICT_ORIGINS === "true",
+  zappAllowedSignerOrigins:
+    process.env.ZAPP_ALLOWED_SIGNER_ORIGINS?.split(",") ?? []
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

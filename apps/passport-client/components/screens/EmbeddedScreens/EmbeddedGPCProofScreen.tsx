@@ -1,10 +1,6 @@
 import { ProveResult } from "@parcnet-js/client-rpc";
 import * as p from "@parcnet-js/podspec";
-import {
-  EntriesSchema,
-  PODSchema,
-  PodspecProofRequest
-} from "@parcnet-js/podspec";
+import { EntriesSchema, PodspecProofRequest } from "@parcnet-js/podspec";
 import { gpcProve } from "@pcd/gpc";
 import { Button, Spacer } from "@pcd/passport-ui";
 import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
@@ -130,23 +126,23 @@ function ProvePODInfo({
   onChange
 }: {
   name: string;
-  schema: PODSchema<EntriesSchema>;
+  schema: p.ProofConfigPODSchema<EntriesSchema>;
   pods: POD[];
   selectedPOD: POD | undefined;
   onChange: (pod: POD | undefined) => void;
 }): ReactNode {
-  const revealedEntries = Object.entries(schema.entries)
+  const revealedEntries = Object.entries(schema.pod.entries)
     .map(([name, entry]) => {
       if (entry.type === "optional") {
         entry = entry.innerType;
       }
       return [name, entry] as const;
     })
-    .filter(([_, entry]) => entry.isRevealed);
+    .filter(([name, _entry]) => schema.revealed?.[name] ?? false);
 
   const selectedPODEntries = selectedPOD?.content.asEntries();
 
-  const entriesWithConstraints = Object.entries(schema.entries)
+  const entriesWithConstraints = Object.entries(schema.pod.entries)
     .map(([name, entry]) => {
       if (entry.type === "optional") {
         entry = entry.innerType;
@@ -253,10 +249,10 @@ function ProvePODInfo({
           })}
         </ConstraintsContainer>
       )}
-      {schema.tuples && (
+      {schema.pod.tuples && (
         <TuplesContainer>
           <TuplesTitle>Tuples:</TuplesTitle>
-          {schema.tuples.map((tuple) => {
+          {schema.pod.tuples.map((tuple) => {
             return (
               <TupleItem key={tuple.entries.join(",")}>
                 Entries{" "}

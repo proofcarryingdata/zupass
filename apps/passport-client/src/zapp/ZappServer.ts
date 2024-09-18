@@ -18,6 +18,7 @@ import { encodePrivateKey, encodePublicKey, POD, PODEntries } from "@pcd/pod";
 import { isPODPCD, PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { v4 as uuidv4 } from "uuid";
+import { appConfig } from "../appConfig";
 import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";
 
@@ -154,6 +155,15 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
   }
 
   public async sign(entries: PODEntries): Promise<string> {
+    const origin = this.getContext().getState().zappOrigin;
+    console.log("Origin: " + origin);
+    console.log("Allowed origins: " + appConfig.zappAllowedSignerOrigins);
+    if (
+      appConfig.zappRestrictOrigins &&
+      (!origin || !appConfig.zappAllowedSignerOrigins.includes(origin))
+    ) {
+      throw new Error("Origin not allowed to sign PODs");
+    }
     const pod = POD.sign(
       entries,
       encodePrivateKey(

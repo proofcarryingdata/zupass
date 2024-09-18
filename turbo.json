@@ -113,6 +113,8 @@
     "NEXT_PUBLIC_PASSPORT_CLIENT_URL",
     "NEXT_PUBLIC_PASSPORT_SERVER_URL",
     "NODE_OPTIONS",
+    "ZAPP_RESTRICT_ORIGINS",
+    "ZAPP_ALLOWED_SIGNER_ORIGINS",
     "//// add env vars above this line ////"
   ],
   "globalEnv": [
