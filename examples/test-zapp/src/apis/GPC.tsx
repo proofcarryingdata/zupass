@@ -277,7 +277,7 @@ const request = ticketProofRequest({
   }
 });
 
-const gpcProof = await z.gpc.prove(request);
+const gpcProof = await z.gpc.prove(request.schema);
 
 `}
             </code>
@@ -292,14 +292,13 @@ const gpcProof = await z.gpc.prove(request);
           <TryIt
             onClick={async () => {
               try {
-                const hmm = ticketProofRequest({
-                  attributes: [[publicKey as string, EVENT_ID]],
+                const request = ticketProofRequest({
+                  classificationTuples: [[publicKey as string, EVENT_ID]],
                   fieldsToReveal: {
                     eventId: true
                   }
                 });
-                console.log(hmm.schema);
-                setProveResult(await z.gpc.prove(hmm.schema));
+                setProveResult(await z.gpc.prove(request.schema));
               } catch (e) {
                 console.log(e);
               }

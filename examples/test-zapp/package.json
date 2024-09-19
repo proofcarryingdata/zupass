@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@parcnet-js/app-connector": "0.0.3",
-    "@parcnet-js/podspec": "^0.0.2",
-    "@parcnet-js/ticket-spec": "^0.0.1",
+    "@parcnet-js/podspec": "^0.0.3",
+    "@parcnet-js/ticket-spec": "^0.0.2",
     "@parcnet-js/client-rpc": "^0.0.4",
     "@pcd/pod": "0.1.7",
     "json-bigint": "^1.0.0",
