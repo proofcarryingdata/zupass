@@ -224,6 +224,8 @@
     "PIPELINE_EMAIL_SEND",
     "ZUPASS_URL",
     "DEVCON_PODBOX_API_KEY",
+    "DEVCON_PODBOX_API_URL",
+    "DEVCON_PIPELINE_ID",
     "//// add env vars above this line ////"
   ]
 }

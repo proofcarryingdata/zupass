@@ -13,6 +13,7 @@ import {
   UNREDACT_TICKETS_TERMS_VERSION,
   UpgradeUserWithV4CommitmentResult,
   VerifyTokenResponseValue,
+  requestPodboxOneClickEmails,
   verifyAddV4CommitmentRequestPCD
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -28,6 +29,7 @@ import {
 } from "@pcd/util";
 import { randomUUID } from "crypto";
 import { Response } from "express";
+import { sha256 } from "js-sha256";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
@@ -75,6 +77,12 @@ export class UserService {
   private readonly genericIssuanceService: GenericIssuanceService | null;
   private readonly credentialSubservice: CredentialSubservice;
 
+  private podboxSyncLoop: ReturnType<typeof setTimeout> | undefined;
+  private anonymizedDevconEmails: Record<
+    string /* sha256 of email */,
+    string /* pretix order code */
+  > = {};
+
   public constructor(
     context: ApplicationContext,
     semaphoreService: SemaphoreService,
@@ -94,6 +102,45 @@ export class UserService {
     this.bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
+  }
+
+  public async start(): Promise<void> {
+    try {
+      await this.syncPodboxEmails();
+    } catch (e) {
+      logger("[USER_SERVICE] Error syncing podbox emails", e);
+    }
+
+    this.podboxSyncLoop = setTimeout(async () => {
+      this.start();
+    }, 1000);
+  }
+
+  public stop(): void {
+    clearTimeout(this.podboxSyncLoop);
+  }
+
+  private async syncPodboxEmails(): Promise<void> {
+    if (
+      !process.env.DEVCON_PODBOX_API_URL ||
+      !process.env.DEVCON_PIPELINE_ID ||
+      !process.env.DEVCON_PODBOX_API_KEY
+    ) {
+      logger("[USER_SERVICE] No podbox credentials found, skipping sync");
+      return;
+    }
+
+    const res = await requestPodboxOneClickEmails(
+      process.env.DEVCON_PODBOX_API_URL,
+      process.env.DEVCON_PIPELINE_ID,
+      process.env.DEVCON_PODBOX_API_KEY
+    );
+
+    if (res.success) {
+      this.anonymizedDevconEmails = res.value.values;
+    } else {
+      logger("[USER_SERVICE] Error syncing podbox emails", res.error);
+    }
   }
 
   public async getSaltByEmail(email: string): Promise<string | null> {
@@ -222,14 +269,13 @@ export class UserService {
     encryption_key: string,
     res: Response
   ): Promise<void> {
-    if (!this.genericIssuanceService) {
-      throw new PCDHTTPError(500, "Generic issuance service not initialized");
-    }
     const valid =
-      await this.genericIssuanceService.validateEmailAndPretixOrderCode(
+      this.anonymizedDevconEmails[sha256(email)] === code ||
+      (await this.genericIssuanceService?.validateEmailAndPretixOrderCode(
         email,
         code
-      );
+      ));
+
     if (!valid) {
       throw new PCDHTTPError(
         403,
@@ -857,7 +903,7 @@ export function startUserService(
   genericIssuanceService: GenericIssuanceService | null,
   credentialSubservice: CredentialSubservice
 ): UserService {
-  return new UserService(
+  const userService = new UserService(
     context,
     semaphoreService,
     emailTokenService,
@@ -866,4 +912,8 @@ export function startUserService(
     genericIssuanceService,
     credentialSubservice
   );
+
+  userService.start();
+
+  return userService;
 }
