@@ -608,7 +608,8 @@ export function initGenericIssuanceRoutes(
         const ticket = tickets.atoms[i];
         if (ticket.email) {
           const hashedEmail = sha256(ticket.email);
-          result.values[hashedEmail] = ticket.orderCode;
+          const hashedOrderCode = sha256(ticket.orderCode);
+          result.values[hashedEmail] = hashedOrderCode;
         }
 
         // throttle hashing to avoid locking up the server

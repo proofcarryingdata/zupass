@@ -81,7 +81,7 @@ export class UserService {
   private podboxSyncLoopTimeout: ReturnType<typeof setTimeout> | undefined;
   private anonymizedDevconEmails: Record<
     string /* sha256 of email */,
-    string /* pretix order code */
+    string /* sha256 of pretix order code */
   > = {};
 
   public constructor(
@@ -275,7 +275,8 @@ export class UserService {
     encryption_key: string,
     res: Response
   ): Promise<void> {
-    const validDevcon = this.anonymizedDevconEmails[sha256(email)] === code;
+    const validDevcon =
+      this.anonymizedDevconEmails[sha256(email)] === sha256(code);
     const valid =
       validDevcon ||
       (await this.genericIssuanceService?.validateEmailAndPretixOrderCode(
