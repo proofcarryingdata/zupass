@@ -273,6 +273,7 @@ const request = ticketProofRequest({
   ],
   fieldsToReveal: {
     eventId: true
+    // other fields could be revealed too
   }
 });
 
@@ -280,6 +281,13 @@ const gpcProof = await z.gpc.prove(request);
 
 `}
             </code>
+            <p>
+              You can pass in as many pairs of public key and event ID as you
+              want to match on. You can also pass in triples of public key,
+              event ID, and product ID - although you can't mix and match pairs
+              and triples. This does a similar job to ZuAuth, but with a simpler
+              configuration.
+            </p>
           </p>
           <TryIt
             onClick={async () => {
