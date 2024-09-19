@@ -63,6 +63,7 @@ import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { useZappServer } from "../src/zapp/useZappServer";
+import ComponentsScreen from "../new-components/ComponentsScreen";
 
 function App(): JSX.Element {
   useBackgroundJobs();
@@ -129,6 +130,10 @@ function RouterImpl(): JSX.Element {
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
+
+          {appConfig.devMode && (
+            <Route path="components" element={<ComponentsScreen />} />
+          )}
           <Route
             path="login-interstitial"
             element={<LoginInterstitialScreen />}
