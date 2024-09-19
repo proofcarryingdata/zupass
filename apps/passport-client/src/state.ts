@@ -1,3 +1,4 @@
+import { Zapp } from "@parcnet-js/client-rpc";
 import {
   CredentialCache,
   FeedSubscriptionManager,
@@ -138,6 +139,9 @@ export interface AppState {
 
   // If Zupass is in an embedded iframe, the state of the embedded screen.
   embeddedScreen?: EmbeddedScreenState;
+
+  connectedZapp?: Zapp;
+  zappOrigin?: string;
 }
 
 export interface AppError {

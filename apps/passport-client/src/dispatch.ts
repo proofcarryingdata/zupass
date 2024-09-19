@@ -1,3 +1,4 @@
+import { Zapp } from "@parcnet-js/client-rpc";
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCrypto } from "@pcd/passport-crypto";
@@ -183,6 +184,11 @@ export type Action =
     }
   | {
       type: "hide-embedded-screen";
+    }
+  | {
+      type: "zapp-connect";
+      zapp: Zapp;
+      origin: string;
     };
 
 export type StateContextValue = {
@@ -314,6 +320,8 @@ export async function dispatch(
       return showEmbeddedScreen(state, update, action.screen);
     case "hide-embedded-screen":
       return hideEmbeddedScreen(state, update);
+    case "zapp-connect":
+      return zappConnect(state, update, action.zapp, action.origin);
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -1519,5 +1527,17 @@ async function hideEmbeddedScreen(
 ): Promise<void> {
   update({
     embeddedScreen: undefined
+  });
+}
+
+async function zappConnect(
+  state: AppState,
+  update: ZuUpdate,
+  zapp: Zapp,
+  origin: string
+): Promise<void> {
+  update({
+    zappOrigin: origin,
+    connectedZapp: zapp
   });
 }
