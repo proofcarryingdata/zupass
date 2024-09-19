@@ -11,6 +11,7 @@ include "numeric-value.circom";
 include "object.circom";
 include "ownerV3.circom";
 include "ownerV4.circom";
+include "uniqueness.circom";
 include "virtual-entry.circom";
 
 /**
@@ -365,6 +366,18 @@ template ProtoPODGPC (
 
         listContainsComparisonValueBits[i] === membershipCheckResult[i];
     }
+
+    /*
+     * 1 UniquenessModule with its inputs & outputs.  Currently only
+     * used for uniqueness of PODs via their content IDs.
+     */
+
+    // Boolean indicating whether the uniqueness module is enabled.
+    signal input requireUniqueContentIDs;
+    signal podsAreUnique <== UniquenessModule(MAX_OBJECTS)(
+        objectContentID
+    );
+    requireUniqueContentIDs * (1 - podsAreUnique) === 0;
     
     /*
      * 1 GlobalModule with its inputs & outputs.

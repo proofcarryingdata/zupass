@@ -67,6 +67,11 @@ export function canonicalizeConfig(
     canonicalPODs[objName] = canonicalizeObjectConfig(objectConfig);
   }
 
+  // Omit POD uniqueness field if not `true`.
+  const canonicalizedPODUniquenessConfig = canonicalizePODUniquenessConfig(
+    proofConfig.uniquePODs
+  );
+
   // Force tuples and their membership lists to be sorted by name
   const tupleRecord = canonicalizeTupleConfig(proofConfig.tuples ?? {});
 
@@ -75,6 +80,7 @@ export function canonicalizeConfig(
   return {
     circuitIdentifier: circuitIdentifier,
     pods: canonicalPODs,
+    ...canonicalizedPODUniquenessConfig,
     ...(proofConfig.tuples !== undefined ? { tuples: tupleRecord } : {})
   };
 }
@@ -116,6 +122,12 @@ function canonicalizeObjectConfig(
       ? { signerPublicKey: canonicalizedSignerPublicKeyConfig }
       : {})
   };
+}
+
+export function canonicalizePODUniquenessConfig(
+  podUniquenessConfig: boolean | undefined
+): { uniquePODs?: boolean } {
+  return podUniquenessConfig ? { uniquePODs: true } : {};
 }
 
 export function canonicalizeVirtualEntryConfig(

@@ -5101,10 +5101,10 @@
     "@pcd/gpc" "0.0.8"
     "@pcd/pod" "0.1.7"
 
-"@pcd/proto-pod-gpc-artifacts@0.9.0":
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.9.0.tgz#784ce57cf7e8efee155f9d6b290f0ff797917fb9"
-  integrity sha512-DipHMqcwpwCGy0/4hpENYjhKPcxVDEM4Koe13L1QpDYlOVVlUfsV9Y5ObpjtZELH4Q8jLWEW2tnMW9vR+c388w==
+"@pcd/proto-pod-gpc-artifacts@0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.10.0.tgz#bea63e671f770d2f98a28fa8af4da9f37aee6be5"
+  integrity sha512-Gusvv631cZgjbR2jox0Zj8jDn5xaVDBnKT8g76fH/ficiwORD+IKXdwILiatZJZfCASEVOGhS5bFfj510ylBUQ==
 
 "@peculiar/asn1-android@^2.3.3":
   version "2.3.6"

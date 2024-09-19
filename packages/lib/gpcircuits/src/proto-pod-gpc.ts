@@ -67,6 +67,9 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ listContainsComparisonValue: CircuitSignal;
   /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 
+  // POD uniqueness module (1)
+  /*PUB*/ requireUniqueContentIDs: CircuitSignal;
+
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
 };
@@ -107,6 +110,7 @@ export type ProtoPODGPCInputNamesType = [
   "listComparisonValueIndex",
   "listContainsComparisonValue",
   "listValidValues",
+  "requireUniqueContentIDs",
   "globalWatermark"
 ];
 
@@ -152,6 +156,9 @@ export type ProtoPODGPCPublicInputs = {
   /*PUB*/ listContainsComparisonValue: CircuitSignal;
   /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 
+  // POD uniqueness module (1)
+  /*PUB*/ requireUniqueContentIDs: CircuitSignal;
+
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
 };
@@ -179,6 +186,7 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "listComparisonValueIndex",
   "listContainsComparisonValue",
   "listValidValues",
+  "requireUniqueContentIDs",
   "globalWatermark"
 ];
 
@@ -447,6 +455,7 @@ export class ProtoPODGPC {
       listComparisonValueIndex: allInputs.listComparisonValueIndex,
       listContainsComparisonValue: allInputs.listContainsComparisonValue,
       listValidValues: allInputs.listValidValues,
+      requireUniqueContentIDs: allInputs.requireUniqueContentIDs,
       globalWatermark: allInputs.globalWatermark
     };
   }
@@ -520,6 +529,7 @@ export class ProtoPODGPC {
       ...inputs.listComparisonValueIndex,
       inputs.listContainsComparisonValue,
       ...inputs.listValidValues.flat(),
+      inputs.requireUniqueContentIDs,
       inputs.globalWatermark
     ].map(BigInt);
   }
@@ -662,5 +672,5 @@ export class ProtoPODGPC {
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.9.0";
+  public static ARTIFACTS_NPM_VERSION = "0.10.0";
 }

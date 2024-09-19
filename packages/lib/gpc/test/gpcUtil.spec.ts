@@ -11,6 +11,7 @@ import {
   boundsCheckConfigFromProofConfig,
   canonicalizeBoundsCheckConfig,
   canonicalizeEntryConfig,
+  canonicalizePODUniquenessConfig,
   canonicalizeVirtualEntryConfig
 } from "../src/gpcUtil";
 
@@ -412,6 +413,20 @@ describe("Bounds check configuration derivation works as expected", () => {
         notInRange: { min: 100n, max: 200n }
       }
     });
+  });
+});
+
+describe("POD uniqueness config canonicalization should work", () => {
+  it("should work as expected if omitted", () => {
+    expect(canonicalizePODUniquenessConfig(undefined)).to.deep.equal({});
+  });
+  it("should work as expected if enabled", () => {
+    expect(canonicalizePODUniquenessConfig(true)).to.deep.equal({
+      uniquePODs: true
+    });
+  });
+  it("should work as expected if explicitly disabled", () => {
+    expect(canonicalizePODUniquenessConfig(false)).to.deep.equal({});
   });
 });
 // TODO(POD-P3): More tests
