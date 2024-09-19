@@ -24,7 +24,9 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { sleep } from "@pcd/util";
 import express from "express";
+import { sha256 } from "js-sha256";
 import urljoin from "url-join";
 import { PipelineCheckinDB } from "../../database/queries/pipelineCheckinDB";
 import { GenericIssuanceService } from "../../services/generic-issuance/GenericIssuanceService";
@@ -573,11 +575,40 @@ export function initGenericIssuanceRoutes(
     const apiKey = checkUrlParam(req, "apiKey");
     const pipelineId = checkUrlParam(req, "pipelineId");
 
-    const resultValue: OneClickEmailResponseValue = {
-      values: { asdf: "asdf" }
-    };
+    if (
+      !process.env.DEVCON_PODBOX_API_KEY ||
+      apiKey !== process.env.DEVCON_PODBOX_API_KEY
+    ) {
+      throw new PCDHTTPError(401, "invalid api key");
+    }
 
-    res.json(resultValue);
+    const pipeline = (
+      await genericIssuanceService.getAllPipelineInstances()
+    ).find((p) => p.id === pipelineId && PretixPipeline.is(p)) as
+      | PretixPipeline
+      | undefined;
+
+    if (!pipeline) {
+      throw new PCDHTTPError(400, "pipeline not found");
+    }
+
+    const tickets = await pipeline.getAllTickets();
+
+    const result: OneClickEmailResponseValue = { values: {} };
+
+    for (let i = 0; i < tickets.atoms.length; i++) {
+      const ticket = tickets.atoms[i];
+      if (ticket.email) {
+        const hashedEmail = sha256(ticket.email);
+        result.values[hashedEmail] = ticket.email;
+      }
+
+      if (i % 25 === 0) {
+        await sleep(1);
+      }
+    }
+
+    res.json(result);
   });
 
   app.post(

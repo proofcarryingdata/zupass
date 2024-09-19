@@ -223,6 +223,7 @@
     "OUTBOUND_ALLOW_LIST",
     "PIPELINE_EMAIL_SEND",
     "ZUPASS_URL",
+    "DEVCON_PODBOX_API_KEY",
     "//// add env vars above this line ////"
   ]
 }
