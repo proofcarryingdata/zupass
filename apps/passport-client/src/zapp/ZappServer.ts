@@ -64,7 +64,7 @@ export class ZupassIdentityRPC
     return v3tov4Identity(this.getContext().getState().identityV3).commitment;
   }
 
-  public async getSemaphoreV4PublicKey(): Promise<string> {
+  public async getPublicKey(): Promise<string> {
     return encodePublicKey(
       v3tov4Identity(this.getContext().getState().identityV3).publicKey
     );

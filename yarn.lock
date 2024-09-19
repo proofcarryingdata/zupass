@@ -5059,13 +5059,13 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@parcnet-js/app-connector@0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.2.tgz#53628e384a9c832778fb45197850e4b65a5241f6"
-  integrity sha512-1Fb/X7dCe0Rqd7pRx22zkgCWU9eftbtgY8TYTRemHFblyYnFS7NhLsMy2cs6dI/w6AfZVgigQIv6KxKO0RY7Eg==
+"@parcnet-js/app-connector@0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.3.tgz#7613b46fbfc09101bc92a246433a956d8d16c20d"
+  integrity sha512-hTJeuklL9QE7ilZv2Bn7F3ffZ6Wf9GtdF+1RRhCVbonJah5dt6h4RGVijj5nskPG42zJERq7rHFkLRzG/FqHLA==
   dependencies:
     "@brenoroosevelt/toast" "^2.0.3"
-    "@parcnet-js/client-rpc" "0.0.2"
+    "@parcnet-js/client-rpc" "0.0.3"
     "@parcnet-js/podspec" "0.0.2"
     "@pcd/gpc" "^0.0.8"
     "@pcd/pod" "^0.1.7"
@@ -5073,20 +5073,20 @@
     json-bigint "^1.0.0"
     valibot "^0.42.0"
 
-"@parcnet-js/client-helpers@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-0.0.3.tgz#97c1d998f60878b1c5c0b9ea6a3baf32e6aa501b"
-  integrity sha512-6km7WT7xh9+1/r8A8+O1Dlsp6YfOwY9M5F7p/8xclIZ2YYJCqnx+LC8UV59KuZ90Lu0ild5kqonUmOLO24MmQA==
+"@parcnet-js/client-helpers@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-0.0.4.tgz#d6e86143a78b2a85dfcbc684c8233088fa32f96b"
+  integrity sha512-EOiMT35SYzOCTXuOBPL0hKNmNjPGppvj/OmmbCYNKO4AscoQJwH8Sg51ne9duCuBinP3hE5LlWterzPW9UOSpw==
   dependencies:
-    "@parcnet-js/client-rpc" "0.0.2"
+    "@parcnet-js/client-rpc" "0.0.3"
     json-bigint "^1.0.0"
     valibot "^0.42.0"
     ws "^8.18.0"
 
-"@parcnet-js/client-rpc@0.0.2", "@parcnet-js/client-rpc@^0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-0.0.2.tgz#130bc4bd4e1ddccd28e041b94b99ac1099672cc2"
-  integrity sha512-B1Wgna3PFt1/ZTpSwvS6Er6zfP0ZXBakYsKzSMfssGI/fl+dJi7EKaYNxzt9Nh5Elfm8kiTVKv3cu2r4m9DrCQ==
+"@parcnet-js/client-rpc@0.0.3", "@parcnet-js/client-rpc@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-0.0.3.tgz#616433150246e996d1c886b0a4460f3c36369068"
+  integrity sha512-hEeTGG8mZJT+U5BRvCrbMag9mR5YdAhtbocWcQaUFk+I24RYhmp99XXkhp6/VemY/MLFsMvoVeKO1a7wW8r0Ug==
   dependencies:
     "@parcnet-js/podspec" "0.0.2"
     "@pcd/gpc" "^0.0.8"

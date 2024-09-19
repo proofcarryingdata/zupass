@@ -16,8 +16,8 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.24.0",
-    "@parcnet-js/client-helpers": "^0.0.3",
-    "@parcnet-js/client-rpc": "^0.0.2",
+    "@parcnet-js/client-helpers": "^0.0.4",
+    "@parcnet-js/client-rpc": "^0.0.3",
     "@parcnet-js/podspec": "^0.0.2",
     "@pcd/client-shared": "0.0.5",
     "@pcd/eddsa-frog-pcd": "0.3.5",

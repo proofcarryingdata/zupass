@@ -63,15 +63,15 @@ export function Identity(): ReactNode {
         </div>
         <div>
           <p>
-            Getting the v4 identity public key is done like this:
+            Getting the public key is done like this:
             <code className="block text-xs font-base rounded-md p-2">
-              await z.identity.getSemaphoreV4PublicKey();
+              await z.identity.getPublicKey();
             </code>
           </p>
           <TryIt
             onClick={async () => {
               try {
-                const publicKey = await z.identity.getSemaphoreV4PublicKey();
+                const publicKey = await z.identity.getPublicKey();
                 setPublicKey(publicKey);
               } catch (e) {
                 console.log(e);
