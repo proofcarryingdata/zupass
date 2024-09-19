@@ -5,9 +5,15 @@ import { gpcProve } from "@pcd/gpc";
 import { Button, Spacer } from "@pcd/passport-ui";
 import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import { isPODPCD, PODPCD } from "@pcd/pod-pcd";
+import {
+  PODTicketPCD,
+  PODTicketPCDTypeName,
+  ticketToPOD
+} from "@pcd/pod-ticket-pcd";
+import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { Fragment, ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
-import { usePCDsInFolder } from "../../../src/appHooks";
+import { useIdentityV3, usePCDs, usePCDsInFolder } from "../../../src/appHooks";
 import { ZAPP_POD_SPECIAL_FOLDER_NAME } from "../../../src/zapp/ZappServer";
 import { H2 } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
@@ -30,9 +36,15 @@ export function EmbeddedGPCProofScreen({
   const allPods = useMemo(() => {
     return podPCDs.filter(isPODPCD).map((pcd: PODPCD) => pcd.pod);
   }, [podPCDs]);
+  const allPCDs = usePCDs();
+  const ticketPODs = useMemo(() => {
+    return allPCDs
+      .filter((pcd) => pcd.type === PODTicketPCDTypeName)
+      .map((pcd) => ticketToPOD(pcd as PODTicketPCD));
+  }, [allPCDs]);
   const candidatePODs = useMemo(() => {
-    return prs.queryForInputs(allPods);
-  }, [allPods, prs]);
+    return prs.queryForInputs([...allPods, ...ticketPODs]);
+  }, [allPods, ticketPODs, prs]);
   const proofRequest = useMemo(() => {
     return prs.getProofRequest();
   }, [prs]);
@@ -44,6 +56,7 @@ export function EmbeddedGPCProofScreen({
     );
   }, [selectedPODs, proofRequestSchema]);
   const [proving, setProving] = useState(false);
+  const identityV3 = useIdentityV3();
 
   return (
     <AppContainer bg="gray">
@@ -91,7 +104,12 @@ export function EmbeddedGPCProofScreen({
                 {
                   pods: selectedPODs as Record<string, POD>,
                   membershipLists: proofRequest.membershipLists,
-                  watermark: proofRequest.watermark
+                  watermark: proofRequest.watermark,
+                  owner: {
+                    semaphoreV3: identityV3,
+                    semaphoreV4: v3tov4Identity(identityV3),
+                    externalNullifier: proofRequest.externalNullifier
+                  }
                 },
                 new URL(
                   "/artifacts/proto-pod-gpc",
@@ -173,7 +191,11 @@ function ProvePODInfo({
           {pods.map((pod) => {
             return (
               <option key={pod.signature} value={pod.signature}>
-                {pod.signature.substring(0, 16)}
+                {schema.pod.meta?.labelEntry
+                  ? pod.content
+                      .asEntries()
+                      [schema.pod.meta.labelEntry].value.toString()
+                  : pod.signature.substring(0, 16)}
               </option>
             );
           })}

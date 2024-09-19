@@ -5083,12 +5083,22 @@
     valibot "^0.42.0"
     ws "^8.18.0"
 
-"@parcnet-js/client-rpc@0.0.3", "@parcnet-js/client-rpc@^0.0.3":
+"@parcnet-js/client-rpc@0.0.3":
   version "0.0.3"
   resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-0.0.3.tgz#616433150246e996d1c886b0a4460f3c36369068"
   integrity sha512-hEeTGG8mZJT+U5BRvCrbMag9mR5YdAhtbocWcQaUFk+I24RYhmp99XXkhp6/VemY/MLFsMvoVeKO1a7wW8r0Ug==
   dependencies:
     "@parcnet-js/podspec" "0.0.2"
+    "@pcd/gpc" "^0.0.8"
+    "@pcd/pod" "^0.1.7"
+    valibot "^0.42.0"
+
+"@parcnet-js/client-rpc@0.0.4", "@parcnet-js/client-rpc@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-0.0.4.tgz#3a0edea2bc5832bbdc6bd25cdeb51f8f1de8f5aa"
+  integrity sha512-sY0LZdxxj4sLcTWkg4conj18cZNNKWm7+aR2aCK+zswwPlz2chA8kO0HEbHjjENkqT6oQLCpzgk/URsqoCBSNw==
+  dependencies:
+    "@parcnet-js/podspec" "0.0.3"
     "@pcd/gpc" "^0.0.8"
     "@pcd/pod" "^0.1.7"
     valibot "^0.42.0"
@@ -5100,6 +5110,22 @@
   dependencies:
     "@pcd/gpc" "0.0.8"
     "@pcd/pod" "0.1.7"
+
+"@parcnet-js/podspec@0.0.3", "@parcnet-js/podspec@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-0.0.3.tgz#23eb9427761e881e617637998b655db18f425275"
+  integrity sha512-/IlXwBXEcOREFtyyMSVHz3Va7azCV5i4x6u1cuF9W0Bs3uLwkOG5ej+TceFScpB0jhdedMw/J3iY5VYaWJJtkA==
+  dependencies:
+    "@pcd/gpc" "0.0.8"
+    "@pcd/pod" "0.1.7"
+
+"@parcnet-js/ticket-spec@^0.0.1":
+  version "0.0.1"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-0.0.1.tgz#d30756ecc7596fe45fa182ce2580d5dec4a97b16"
+  integrity sha512-5ltmFbwege7NFLvPFjMSOhsnd9jjGySa4MSzxGDy1nLMUk4YeCTQt0ZnVl6rbf5UzYnKfWDa7hHopGlyoD8IRg==
+  dependencies:
+    "@parcnet-js/client-rpc" "0.0.4"
+    "@parcnet-js/podspec" "0.0.3"
 
 "@pcd/proto-pod-gpc-artifacts@0.10.0":
   version "0.10.0"
