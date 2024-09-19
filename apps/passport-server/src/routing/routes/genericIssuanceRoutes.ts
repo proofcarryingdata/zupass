@@ -572,7 +572,9 @@ export function initGenericIssuanceRoutes(
 
   /**
    * For a given pipeline, gets an anonymized mapping from hashed email to
-   * Pretix order code, which is used for one-click email verification.
+   * Pretix order code, which is used for one-click email verification. Hit by
+   * the zupass backend, and authenticated with the DEVCON_PODBOX_API_KEY env
+   * var. Used on the zupass backend to authenticate one-click login requests.
    */
   app.get(
     "/generic-issuance/api/one-click-emails/:pipelineId/:apiKey",
@@ -606,7 +608,7 @@ export function initGenericIssuanceRoutes(
         const ticket = tickets.atoms[i];
         if (ticket.email) {
           const hashedEmail = sha256(ticket.email);
-          result.values[hashedEmail] = ticket.email;
+          result.values[hashedEmail] = ticket.orderCode;
         }
 
         // throttle hashing to avoid locking up the server

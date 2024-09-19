@@ -77,7 +77,8 @@ export class UserService {
   private readonly genericIssuanceService: GenericIssuanceService | null;
   private readonly credentialSubservice: CredentialSubservice;
 
-  private podboxSyncLoop: ReturnType<typeof setTimeout> | undefined;
+  private stopped = false;
+  private podboxSyncLoopTimeout: ReturnType<typeof setTimeout> | undefined;
   private anonymizedDevconEmails: Record<
     string /* sha256 of email */,
     string /* pretix order code */
@@ -105,19 +106,24 @@ export class UserService {
   }
 
   public async start(): Promise<void> {
+    if (this.stopped) {
+      return;
+    }
+
     try {
       await this.syncPodboxEmails();
     } catch (e) {
       logger("[USER_SERVICE] Error syncing podbox emails", e);
     }
 
-    this.podboxSyncLoop = setTimeout(async () => {
+    this.podboxSyncLoopTimeout = setTimeout(async () => {
       this.start();
-    }, 1000);
+    }, 1000 * 45);
   }
 
   public stop(): void {
-    clearTimeout(this.podboxSyncLoop);
+    this.stopped = true;
+    clearTimeout(this.podboxSyncLoopTimeout);
   }
 
   private async syncPodboxEmails(): Promise<void> {
@@ -269,8 +275,9 @@ export class UserService {
     encryption_key: string,
     res: Response
   ): Promise<void> {
+    const validDevcon = this.anonymizedDevconEmails[sha256(email)] === code;
     const valid =
-      this.anonymizedDevconEmails[sha256(email)] === code ||
+      validDevcon ||
       (await this.genericIssuanceService?.validateEmailAndPretixOrderCode(
         email,
         code
