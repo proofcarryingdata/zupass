@@ -1,8 +1,7 @@
-import React from "react";
-import { Typography } from "./Typography";
-import { AppContainer } from "../components/shared/AppContainer";
 import { CenterColumn, TextCenter } from "../components/core";
+import { AppContainer } from "../components/shared/AppContainer";
 import { BigInput } from "./Input";
+import { Typography } from "./Typography";
 
 const ComponentsScreen = (): JSX.Element => {
   return (
@@ -10,7 +9,7 @@ const ComponentsScreen = (): JSX.Element => {
       <TextCenter>Hello, world!</TextCenter>
       <Typography>Typography component</Typography>
       <CenterColumn>
-        <BigInput placeholder="fuckyaaaaoo" />
+        <BigInput placeholder="placeholder" />
       </CenterColumn>
     </AppContainer>
   );
