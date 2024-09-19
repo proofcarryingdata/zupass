@@ -570,46 +570,49 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  app.get("/generic-issuance/api/one-click-emails", async (req, res) => {
-    checkGenericIssuanceServiceStarted(genericIssuanceService);
-    const apiKey = checkUrlParam(req, "apiKey");
-    const pipelineId = checkUrlParam(req, "pipelineId");
+  app.get(
+    "/generic-issuance/api/one-click-emails/:pipelineId/:apiKey",
+    async (req, res) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const apiKey = checkUrlParam(req, "apiKey");
+      const pipelineId = checkUrlParam(req, "pipelineId");
 
-    if (
-      !process.env.DEVCON_PODBOX_API_KEY ||
-      apiKey !== process.env.DEVCON_PODBOX_API_KEY
-    ) {
-      throw new PCDHTTPError(401, "invalid api key");
-    }
-
-    const pipeline = (
-      await genericIssuanceService.getAllPipelineInstances()
-    ).find((p) => p.id === pipelineId && PretixPipeline.is(p)) as
-      | PretixPipeline
-      | undefined;
-
-    if (!pipeline) {
-      throw new PCDHTTPError(400, "pipeline not found");
-    }
-
-    const tickets = await pipeline.getAllTickets();
-
-    const result: OneClickEmailResponseValue = { values: {} };
-
-    for (let i = 0; i < tickets.atoms.length; i++) {
-      const ticket = tickets.atoms[i];
-      if (ticket.email) {
-        const hashedEmail = sha256(ticket.email);
-        result.values[hashedEmail] = ticket.email;
+      if (
+        !process.env.DEVCON_PODBOX_API_KEY ||
+        apiKey !== process.env.DEVCON_PODBOX_API_KEY
+      ) {
+        throw new PCDHTTPError(401, "invalid api key");
       }
 
-      if (i % 25 === 0) {
-        await sleep(1);
-      }
-    }
+      const pipeline = (
+        await genericIssuanceService.getAllPipelineInstances()
+      ).find((p) => p.id === pipelineId && PretixPipeline.is(p)) as
+        | PretixPipeline
+        | undefined;
 
-    res.json(result);
-  });
+      if (!pipeline) {
+        throw new PCDHTTPError(400, "pipeline not found");
+      }
+
+      const tickets = await pipeline.getAllTickets();
+
+      const result: OneClickEmailResponseValue = { values: {} };
+
+      for (let i = 0; i < tickets.atoms.length; i++) {
+        const ticket = tickets.atoms[i];
+        if (ticket.email) {
+          const hashedEmail = sha256(ticket.email);
+          result.values[hashedEmail] = ticket.email;
+        }
+
+        if (i % 25 === 0) {
+          await sleep(1);
+        }
+      }
+
+      res.json(result);
+    }
+  );
 
   app.post(
     "/generic-issuance/api/send-email",
