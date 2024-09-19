@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "incremental": false,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "jsx": "react-jsx",
@@ -165,9 +165,6 @@
     },
     {
       "path": "../../packages/ui/zk-eddsa-frog-pcd-ui"
-    },
-    {
-      "path": "../../packages/lib/zupass-client"
     }
   ]
 }

@@ -49,9 +49,6 @@
       "path": "packages/lib/zuauth/tsconfig.esm.json"
     },
     {
-      "path": "packages/lib/zupass-client/tsconfig.esm.json"
-    },
-    {
       "path": "packages/lib/zupoll-shared/tsconfig.esm.json"
     },
     {
