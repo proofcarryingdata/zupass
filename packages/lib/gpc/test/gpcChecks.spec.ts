@@ -1,5 +1,7 @@
 import {
+  POD,
   PODEdDSAPublicKeyValue,
+  PODName,
   PODValue,
   POD_INT_MAX,
   POD_INT_MIN
@@ -10,8 +12,10 @@ import { GPCProofEntryBoundsCheckConfig, GPCProofEntryConfig } from "../src";
 import {
   checkProofBoundsCheckInputsForConfig,
   checkProofEntryBoundsCheckConfig,
-  checkProofEntryConfig
+  checkProofEntryConfig,
+  checkProofPODUniquenessInputsForConfig
 } from "../src/gpcChecks";
+import { privateKey, sampleEntries, sampleEntries2 } from "./common";
 
 describe("Proof entry config check should work", () => {
   it("should pass for a minimal entry configuration", () => {
@@ -241,6 +245,53 @@ describe("Proof config check against input for bounds checks should work", () =>
           )
         ).to.throw(TypeError);
       }
+    }
+  });
+});
+
+describe("Proof config check against input for POD uniqueness should work", () => {
+  const pod1 = POD.sign(sampleEntries, privateKey);
+  const pod2 = POD.sign(sampleEntries2, privateKey);
+  const pod3 = POD.sign({ A: sampleEntries.A }, privateKey);
+  const pod4 = POD.sign({ E: sampleEntries.E }, privateKey);
+
+  const uniquePODInputs = [
+    { pod1 },
+    { pod1, pod2 },
+    { pod1, pod2, pod3 },
+    { pod1, pod2, pod3, pod4 }
+  ] as Record<PODName, POD>[];
+
+  const nonuniquePODInputs = [
+    { pod1, pod2: pod1 },
+    { pod1, pod2, pod3: pod1 },
+    { pod2, pod1, pod3: pod1 },
+    { pod1, pod2, pod3, pod4: pod1 },
+    { pod2, pod3, pod1, pod4: pod1 }
+  ] as Record<PODName, POD>[];
+
+  it("should pass if disabled", () => {
+    for (const pods of uniquePODInputs.concat(nonuniquePODInputs)) {
+      for (const config of [{}, { uniquePODs: false }]) {
+        expect(() => checkProofPODUniquenessInputsForConfig(config, { pods }))
+          .to.not.throw;
+      }
+    }
+  });
+
+  it("should pass for unique POD inputs", () => {
+    for (const pods of uniquePODInputs) {
+      expect(() =>
+        checkProofPODUniquenessInputsForConfig({ uniquePODs: true }, { pods })
+      ).to.not.throw;
+    }
+  });
+
+  it("should throw for non-unique POD inputs if enabled", () => {
+    for (const pods of nonuniquePODInputs) {
+      expect(() =>
+        checkProofPODUniquenessInputsForConfig({ uniquePODs: true }, { pods })
+      ).to.throw;
     }
   });
 });

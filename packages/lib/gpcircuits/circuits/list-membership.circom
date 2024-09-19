@@ -1,6 +1,7 @@
 pragma circom 2.1.8;
 
 include "circomlib/circuits/comparators.circom";
+include "circomlib/circuits/gates.circom";
 
 /**
  * Module for checking whether a value is a member of a given list.
@@ -14,25 +15,30 @@ template ListMembershipModule(
     // Value to be checked.
     signal input comparisonValue; 
 
-    // List of admissible value hashes. Assumed to have repetitions if the actual list length is smaller.
+    // List of admissible value hashes. Assumed to have repetitions if
+    // the actual list length is smaller.
     signal input validValues[MAX_LIST_ELEMENTS]; 
 
-    // Boolean indicating whether `comparisonValue` lies in `validValues`.
+    // Boolean indicating whether `comparisonValue` lies in
+    // `validValues`.
     signal output isMember;
 
-    signal partialProduct[MAX_LIST_ELEMENTS];
-
+    // Shift the values by `comparisonValue`.
+    signal shiftedValues[MAX_LIST_ELEMENTS];
     for (var i = 0; i < MAX_LIST_ELEMENTS; i++) {
-        if (i == 0) {
-            partialProduct[i] <== comparisonValue - validValues[i];
-        } else {
-            partialProduct[i] <== partialProduct[i-1] * (comparisonValue - validValues[i]);
-        }
+        shiftedValues[i] <== validValues[i] - comparisonValue;
     }
 
     if (MAX_LIST_ELEMENTS == 0) {
         isMember <== 0;
     } else {
-        isMember <== IsZero()(partialProduct[MAX_LIST_ELEMENTS - 1]);
+        // `comparisonValue` lies in `validValues` iff
+        // `shiftedValues[i]` is 0 for some i, which is equivalent to
+        // the product of all elements of `shiftedValues` being 0.
+        isMember <== IsZero()(
+            MultiAND(MAX_LIST_ELEMENTS)(
+                shiftedValues
+            )
+        );
     }
 }

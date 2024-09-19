@@ -15,6 +15,10 @@ interface AppConfig {
   rollbarEnvName: string | undefined;
   // license key for Strich scanner
   strichLicenseKey: string | undefined;
+  // restrict origins allowed to sign PODs to the ones in ZAPP_ALLOWED_SIGNER_ORIGINS?
+  zappRestrictOrigins: boolean;
+  // origins that are allowed to sign PODs
+  zappAllowedSignerOrigins: string[];
 }
 
 if (
@@ -42,6 +46,23 @@ if (
   alert("STRICH_LICENSE_KEY not set");
 }
 
+let zappAllowedSignerOrigins: string[];
+
+try {
+  console.log(
+    "ZAPP_ALLOWED_SIGNER_ORIGINS: " + process.env.ZAPP_ALLOWED_SIGNER_ORIGINS
+  );
+  zappAllowedSignerOrigins = process.env.ZAPP_ALLOWED_SIGNER_ORIGINS
+    ? JSON.parse(process.env.ZAPP_ALLOWED_SIGNER_ORIGINS)
+    : [];
+  if (!Array.isArray(zappAllowedSignerOrigins)) {
+    throw new Error("ZAPP_ALLOWED_SIGNER_ORIGINS is not an array");
+  }
+} catch (e) {
+  console.error("Failed to parse ZAPP_ALLOWED_SIGNER_ORIGINS", e);
+  zappAllowedSignerOrigins = [];
+}
+
 export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
   zupassServer: process.env.PASSPORT_SERVER_URL as string,
@@ -49,7 +70,9 @@ export const appConfig: AppConfig = {
   maxIdentityProofAgeMs: ONE_HOUR_MS * 4,
   rollbarToken: process.env.ROLLBAR_TOKEN,
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
-  strichLicenseKey: process.env.STRICH_LICENSE_KEY
+  strichLicenseKey: process.env.STRICH_LICENSE_KEY,
+  zappRestrictOrigins: process.env.ZAPP_RESTRICT_ORIGINS === "true",
+  zappAllowedSignerOrigins: zappAllowedSignerOrigins
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));
