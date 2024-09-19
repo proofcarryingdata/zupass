@@ -1,11 +1,12 @@
 {
-  "proto-pod-gpc_1o-1e-5md-0nv-0x0l-0x0t-1ov3-0ov4": {
+  "proto-pod-gpc_1o-1e-5md-0nv-0ei-0x0l-0x0t-1ov3-0ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       1,
       1,
       5,
+      0,
       0,
       0,
       0,
@@ -30,6 +31,9 @@
       "numericValueInRange",
       "numericMinValues",
       "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
       "tupleIndices",
       "listComparisonValueIndex",
       "listContainsComparisonValue",
@@ -38,7 +42,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-5e-6md-2nv-0x0l-0x0t-1ov3-1ov4": {
+  "proto-pod-gpc_1o-5e-6md-2nv-0ei-0x0l-0x0t-1ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -50,6 +54,7 @@
       0,
       0,
       0,
+      0,
       1,
       1
     ],
@@ -69,6 +74,9 @@
       "numericValueInRange",
       "numericMinValues",
       "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
       "tupleIndices",
       "listComparisonValueIndex",
       "listContainsComparisonValue",
@@ -77,13 +85,14 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-5e-5md-0nv-1x200l-1x3t-0ov3-1ov4": {
+  "proto-pod-gpc_1o-5e-5md-0nv-0ei-1x200l-1x3t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       1,
       5,
       5,
+      0,
       0,
       1,
       200,
@@ -108,6 +117,9 @@
       "numericValueInRange",
       "numericMinValues",
       "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
       "tupleIndices",
       "listComparisonValueIndex",
       "listContainsComparisonValue",
@@ -116,7 +128,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-11e-5md-0nv-1x200l-1x3t-0ov3-1ov4": {
+  "proto-pod-gpc_1o-11e-5md-0nv-0ei-1x200l-1x3t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -124,6 +136,7 @@
       11,
       5,
       0,
+      0,
       1,
       200,
       1,
@@ -147,6 +160,9 @@
       "numericValueInRange",
       "numericMinValues",
       "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
       "tupleIndices",
       "listComparisonValueIndex",
       "listContainsComparisonValue",
@@ -155,7 +171,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-4nv-2x20l-2x2t-0ov3-1ov4": {
+  "proto-pod-gpc_3o-10e-8md-4nv-2ei-2x20l-2x2t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -163,6 +179,7 @@
       10,
       8,
       4,
+      2,
       2,
       20,
       2,
@@ -186,6 +203,9 @@
       "numericValueInRange",
       "numericMinValues",
       "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
       "tupleIndices",
       "listComparisonValueIndex",
       "listContainsComparisonValue",
@@ -194,7 +214,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-4nv-4x20l-5x3t-1ov3-1ov4": {
+  "proto-pod-gpc_3o-10e-8md-4nv-2ei-4x20l-5x3t-1ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -202,6 +222,7 @@
       10,
       8,
       4,
+      2,
       4,
       20,
       5,
@@ -225,6 +246,9 @@
       "numericValueInRange",
       "numericMinValues",
       "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
       "tupleIndices",
       "listComparisonValueIndex",
       "listContainsComparisonValue",

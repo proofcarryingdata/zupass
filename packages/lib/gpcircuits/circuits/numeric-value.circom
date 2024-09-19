@@ -2,6 +2,7 @@ pragma circom 2.1.8;
 
 include "circomlib/circuits/poseidon.circom";
 include "bounds.circom";
+include "constants.circom";
 
 /**
  * Module constraining a single entry value of POD object. It proves
@@ -32,17 +33,11 @@ template NumericValueModule() {
     signal input minValue;
     signal input maxValue;
 
-    // Absolute value of minimum value of a 64-bit signed integer.
-    // This will be added to all values fed into the bounds check
-    // module to convert them to 64-bit unsigned integers while
-    // preserving order.
-    var ABS_POD_INT_MIN = 1 << 63;
-    
     // Check that minValue <= numericValue <= maxValue and return the
     // result.
-    signal output isInBounds <== BoundsCheckModule(64)(
-        numericValue + ABS_POD_INT_MIN,
-        minValue + ABS_POD_INT_MIN,
-        maxValue + ABS_POD_INT_MIN
-                                                        );
+    signal output isInBounds <== BoundsCheckModule(POD_INT_BITS())(
+        numericValue + ABS_POD_INT_MIN(),
+        minValue + ABS_POD_INT_MIN(),
+        maxValue + ABS_POD_INT_MIN()
+    );
 }

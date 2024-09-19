@@ -185,11 +185,40 @@ export type GPCProofEntryBoundsCheckConfig = {
 };
 
 /**
+ * Entry inequality configuration for an individual entry. This specifies
+ * inequalities that should be satisfied with respect to other entries. All such
+ * entries must be bounds-checked to lie in the appropriate range ([POD_INT_MIN,
+ * POD_INT_MAX]), lest the resulting circuit be underconstrained.
+ */
+export type GPCProofEntryInequalityConfig = {
+  /**
+   * Indicates an entry that should be greater than this one.
+   */
+  lessThan?: PODEntryIdentifier;
+
+  /**
+   * Indicates an entry that should be greater than or equal to this one.
+   */
+  lessThanEq?: PODEntryIdentifier;
+
+  /**
+   * Indicates an entry that should be less than this one.
+   */
+  greaterThan?: PODEntryIdentifier;
+
+  /**
+   * Indicates an entry that should be less than or equal to this one.
+   */
+  greaterThanEq?: PODEntryIdentifier;
+};
+
+/**
  * GPCProofConfig for a single non-virtual POD entry, specifying which features
  * and constraints should be enabled for that entry.
  */
 export type GPCProofEntryConfig = GPCProofEntryConfigCommon &
-  GPCProofEntryBoundsCheckConfig & {
+  GPCProofEntryBoundsCheckConfig &
+  GPCProofEntryInequalityConfig & {
     /**
      * Indicates that this entry must match the public ID of the owner identity
      * given in {@link GPCProofInputs}. For Semaphore V3 this is the owner's

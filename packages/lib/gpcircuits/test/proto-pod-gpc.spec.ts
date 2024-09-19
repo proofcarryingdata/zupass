@@ -52,6 +52,7 @@ const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
 const MERKLE_MAX_DEPTH = 8;
 const MAX_NUMERIC_VALUES = 4;
+const MAX_ENTRY_INEQUALITIES = 2;
 const MAX_LISTS = 4;
 const MAX_LIST_ENTRIES = 20;
 const MAX_TUPLES = 5;
@@ -64,6 +65,7 @@ const GPC_PARAMS = ProtoPODGPCCircuitParams(
   MAX_ENTRIES,
   MERKLE_MAX_DEPTH,
   MAX_NUMERIC_VALUES,
+  MAX_ENTRY_INEQUALITIES,
   MAX_LISTS,
   MAX_LIST_ENTRIES,
   MAX_TUPLES,
@@ -288,16 +290,21 @@ const sampleInput: ProtoPODGPCInputs = {
   /*PUB*/ ownerV4IsNullifierHashRevealed: [1n],
 
   // Numeric value module (MAX_NUMERIC_VALUES)
-  numericValues: [-5n, 0n, 0n, 0n],
+  numericValues: [123n, -5n, 0n, 0n],
   /*PUB*/ numericValueEntryIndices: [
+    0n,
     4n,
-    21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
   ],
   /*PUB*/ numericValueInRange: 15n,
-  /*PUB*/ numericMinValues: [-10n, 0n, 0n, 0n],
-  /*PUB*/ numericMaxValues: [132n, 0n, 0n, 0n],
+  /*PUB*/ numericMinValues: [0n, -10n, 0n, 0n],
+  /*PUB*/ numericMaxValues: [1000n, 132n, 0n, 0n],
+
+  // Entry inequality module (MAX_ENTRY_INEQUALITIES).
+  /*PUB*/ entryInequalityValueIndex: [1n, 0n],
+  /*PUB*/ entryInequalityOtherValueIndex: [0n, 1n],
+  /*PUB*/ entryInequalityIsLessThan: 1n,
 
   // Tuple module (1)
   /*PUB*/ tupleIndices: [
@@ -674,7 +681,8 @@ function makeTestSignals(
   const sigVirtualEntryIsEqualToOtherEntry =
     sigVirtualEntryEqualToOtherEntryByIndex.map((_) => 1n);
 
-  // Constrain entry 4 (sampleEntries.K) to lie in the interval [-10n, 132n]
+  // Constrain entry 0 (sampleEntries.A) to lie in the interval [0n, 1000n] and
+  // entry 4 (sampleEntries.K) to lie in the interval [-10n, 132n]
   const [
     numericValues,
     numericValueEntryIndices,
@@ -682,14 +690,48 @@ function makeTestSignals(
     numericMinValues,
     numericMaxValues
   ] =
-    params.maxNumericValues === 0 || params.maxEntries < 5
+    params.maxNumericValues === 0
       ? [[], [], 0n, [], []]
-      : [
-          padArray([sigEntryValue[4]], params.maxNumericValues, 0n),
-          padArray([4n], params.maxNumericValues, BABY_JUB_NEGATIVE_ONE),
+      : params.maxEntries < 5
+      ? [
+          padArray([sigEntryValue[0]], params.maxNumericValues, 0n),
+          padArray([0n], params.maxNumericValues, BABY_JUB_NEGATIVE_ONE),
           array2Bits(padArray([1n], params.maxNumericValues, 1n)),
-          padArray([-10n], params.maxNumericValues, 0n),
-          padArray([132n], params.maxNumericValues, 0n)
+          padArray([0n], params.maxNumericValues, 0n),
+          padArray([1000n], params.maxNumericValues, 0n)
+        ]
+      : [
+          padArray(
+            [sigEntryValue[0], sigEntryValue[4]],
+            params.maxNumericValues,
+            0n
+          ),
+          padArray([0n, 4n], params.maxNumericValues, BABY_JUB_NEGATIVE_ONE),
+          array2Bits(padArray([1n, 1n], params.maxNumericValues, 1n)),
+          padArray([0n, -10n], params.maxNumericValues, 0n),
+          padArray([1000n, 132n], params.maxNumericValues, 0n)
+        ];
+
+  // Constrain entry 4 (numeric value 1) to be less than entry 0 (numeric value
+  // 0) and entry 0 to be greater than or
+  // equal to entry 4.
+  const [
+    entryInequalityValueIndex,
+    entryInequalityOtherValueIndex,
+    entryInequalityIsLessThan
+  ] =
+    params.maxEntryInequalities === 0
+      ? [[], [], 0n]
+      : params.maxEntries < 5 || params.maxEntryInequalities < 2
+      ? [
+          padArray([], params.maxEntryInequalities, 0n),
+          padArray([], params.maxEntryInequalities, 0n),
+          0n
+        ]
+      : [
+          padArray([1n, 0n], params.maxEntryInequalities, 0n),
+          padArray([0n, 1n], params.maxEntryInequalities, 0n),
+          array2Bits(padArray([1n, 0n], params.maxEntryInequalities, 0n))
         ];
 
   // A list of pairs of indices and values.
@@ -820,6 +862,9 @@ function makeTestSignals(
       numericValueInRange,
       numericMinValues,
       numericMaxValues,
+      entryInequalityValueIndex,
+      entryInequalityOtherValueIndex,
+      entryInequalityIsLessThan,
       tupleIndices,
       listComparisonValueIndex,
       listContainsComparisonValue,
