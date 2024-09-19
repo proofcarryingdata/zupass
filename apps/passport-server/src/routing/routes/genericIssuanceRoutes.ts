@@ -570,12 +570,16 @@ export function initGenericIssuanceRoutes(
     }
   );
 
+  /**
+   * For a given pipeline, gets an anonymized mapping from hashed email to
+   * Pretix order code, which is used for one-click email verification.
+   */
   app.get(
     "/generic-issuance/api/one-click-emails/:pipelineId/:apiKey",
     async (req, res) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const apiKey = checkUrlParam(req, "apiKey");
       const pipelineId = checkUrlParam(req, "pipelineId");
+      const apiKey = checkUrlParam(req, "apiKey");
 
       if (
         !process.env.DEVCON_PODBOX_API_KEY ||
@@ -605,6 +609,8 @@ export function initGenericIssuanceRoutes(
           result.values[hashedEmail] = ticket.email;
         }
 
+        // throttle hashing to avoid locking up the server
+        // during this operation
         if (i % 25 === 0) {
           await sleep(1);
         }
