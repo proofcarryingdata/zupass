@@ -1,5 +1,24 @@
 # @pcd/gpcircuits
 
+## 0.0.8
+
+### Patch Changes
+
+- Fix prior broken release
+- Updated dependencies
+  - @pcd/pod@0.1.7
+  - @pcd/util@0.5.4
+  - @pcd/gpcircuits@0.1.7
+
+## 0.0.7
+
+### Patch Changes
+
+- Upgrade @zk-kit dependencies
+- Updated dependencies
+  - @pcd/pod@0.1.6
+  - @pcd/gpcircuits@0.1.6
+
 ## 0.0.6
 
 ### Patch Changes

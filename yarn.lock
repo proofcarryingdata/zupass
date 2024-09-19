@@ -4786,84 +4786,10 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@pcd/eslint-config-custom@0.11.1":
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/@pcd/eslint-config-custom/-/eslint-config-custom-0.11.1.tgz#b193a14a5a0227a4a1e200c8c4dcba82b5b5e56e"
-  integrity sha512-MSz9y9yaqh+PRr8Uerb69ldB3OoXlzvMbVQ0/uR4NoXttEaso7TKGzHt5VGsHjWGWmzYRxA4y+oa/uklVlQhKQ==
-
-"@pcd/gpc-pcd@0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@pcd/gpc-pcd/-/gpc-pcd-0.0.5.tgz#15910d0ebeb400f0e6fd3e005c95105ef76797bb"
-  integrity sha512-CCqeD/llDp7m7TE9xF8O6DeVZSbg2YRGJahrVO9wKdv6qiqnKLtADyZp/BwfKxxUOfT5DMT8jSNsh3lMTpQvGg==
-  dependencies:
-    "@pcd/gpc" "0.0.5"
-    "@pcd/pcd-types" "0.11.4"
-    "@pcd/pod-pcd" "0.1.4"
-    "@pcd/semaphore-identity-pcd" "0.11.4"
-    "@pcd/util" "0.5.3"
-    "@types/lodash" "^4.17.5"
-    json-bigint "^1.0.0"
-    snarkjs "^0.7.4"
-    uuid "^9.0.0"
-
-"@pcd/gpc@0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@pcd/gpc/-/gpc-0.0.5.tgz#860b664a48949cc4f6e07b97c6eea609cda0fe9b"
-  integrity sha512-zcfLSam34XOOZbBkefHBNSzDYNo3IgZHNGSPfp5gbBDx525n77UT2n+YVH39i4UqQnxOGaEHy4KTrNTmbG5EEg==
-  dependencies:
-    "@pcd/gpcircuits" "0.1.4"
-    "@pcd/pod" "0.1.4"
-    "@pcd/util" "0.5.3"
-    "@semaphore-protocol/identity" "^3.15.2"
-    "@types/lodash" "^4.17.1"
-    json-bigint "^1.0.0"
-    snarkjs "^0.7.4"
-    url-join "^4.0.1"
-
-"@pcd/gpcircuits@0.1.4":
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/@pcd/gpcircuits/-/gpcircuits-0.1.4.tgz#a7a29a637605d9dbc01534777e9abb36a207057a"
-  integrity sha512-UNEVfM5jPFIVa46xWTMrPDlSZQXHSshA4FmxdW1NXFJQWRYQ8qnM1Au/D74dJz7qhoX0hgQLds+uo/CK757Hcg==
-  dependencies:
-    "@pcd/pod" "0.1.4"
-    fastfile "0.0.20"
-    snarkjs "^0.7.4"
-    url-join "4.0.1"
-
-"@pcd/pod-pcd@0.1.4":
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/@pcd/pod-pcd/-/pod-pcd-0.1.4.tgz#79d6ae31e77f7504c7bc992f97894c5233b25d64"
-  integrity sha512-ZKtCs9pikZc9Qg6snq9oRrRTGYRP84Uw6Ljb2409x5qy0n8Pc+VwUvNdSAQVzIACDMnIU2fkzRUdoczCkbGiiA==
-  dependencies:
-    "@pcd/pcd-types" "0.11.4"
-    "@pcd/pod" "0.1.4"
-    "@pcd/util" "0.5.3"
-    json-bigint "^1.0.0"
-    uuid "^9.0.0"
-
-"@pcd/pod@0.1.4":
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/@pcd/pod/-/pod-0.1.4.tgz#1e1ba1acf395d538d650b9ddbbbae37e81d920fd"
-  integrity sha512-mYD0AwE1JAFIuZQ8plJKZkbH9I2TFYxNp9B3pbdCnaycP0SWw8YJK0+kaWMItovzcAitYDC3ISYTf40hWMz7Xg==
-  dependencies:
-    "@pcd/util" "0.5.3"
-    "@zk-kit/baby-jubjub" "1.0.1"
-    "@zk-kit/eddsa-poseidon" "1.0.2"
-    "@zk-kit/lean-imt" "2.0.1"
-    "@zk-kit/utils" "1.2.0"
-    js-sha256 "^0.10.1"
-    json-bigint "^1.0.0"
-    poseidon-lite "^0.2.0"
-
 "@pcd/proto-pod-gpc-artifacts@0.10.0":
   version "0.10.0"
   resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.10.0.tgz#bea63e671f770d2f98a28fa8af4da9f37aee6be5"
   integrity sha512-Gusvv631cZgjbR2jox0Zj8jDn5xaVDBnKT8g76fH/ficiwORD+IKXdwILiatZJZfCASEVOGhS5bFfj510ylBUQ==
-
-"@pcd/tsconfig@0.11.1":
-  version "0.11.1"
-  resolved "https://registry.yarnpkg.com/@pcd/tsconfig/-/tsconfig-0.11.1.tgz#b80dafe5da5a20efe40b8d2cc57939a4ea52a8e5"
-  integrity sha512-qCX/sy0c92PehoeONSH3aZGXdwaeNXbeM+ChUZYzXfAxUogqeV+fu2zrn594bfZwHIrg+VI1GOEqM8Yaujr9tg==
 
 "@peculiar/asn1-android@^2.3.3":
   version "2.3.6"
@@ -7724,6 +7650,13 @@
   dependencies:
     "@zk-kit/utils" "1.0.0"
 
+"@zk-kit/baby-jubjub@1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-1.0.3.tgz#8d2eccd20d729f1dbd39203dbff9a245a61dea76"
+  integrity sha512-Wl+QfV6XGOMk1yU2JTqHXeKWfJVXp83is0+dtqfj9wx4wsAPpb+qzYvwAxW5PBx5/Nu71Bh7jp/5vM+6QgHSwA==
+  dependencies:
+    "@zk-kit/utils" "1.2.1"
+
 "@zk-kit/binary-merkle-root.circom@1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@zk-kit/binary-merkle-root.circom/-/binary-merkle-root.circom-1.0.0.tgz#b91890fb7b87c8a8b57953ee95ec0351eb4fe241"
@@ -7738,6 +7671,15 @@
   dependencies:
     "@zk-kit/baby-jubjub" "1.0.1"
     "@zk-kit/utils" "1.0.0"
+    buffer "6.0.3"
+
+"@zk-kit/eddsa-poseidon@1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-1.0.3.tgz#0da41ca6a6888072db7639d8499edf2eb0650d79"
+  integrity sha512-VyTu5jXHDqno3MBDWhoIwGz0vO/HB1X/2wqwope4JRvS4V8S9sYTwH3paf7ynImrJV7L/zK61RHxpGKbNemYRQ==
+  dependencies:
+    "@zk-kit/baby-jubjub" "1.0.3"
+    "@zk-kit/utils" "1.2.1"
     buffer "6.0.3"
 
 "@zk-kit/groth16@0.3.0":
@@ -7783,6 +7725,13 @@
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.2.0.tgz#7f5dfadb9512f1a090639c912395a6684b560ba2"
   integrity sha512-Ut9zfnlBVpopZG/s600Ds/FPSWXiPhO4q8949kmXTzwDXytjnvFbDZIFdWqE/lA7/NZjvykiTnnVwmanMxv2+w==
+  dependencies:
+    buffer "^6.0.3"
+
+"@zk-kit/utils@1.2.1":
+  version "1.2.1"
+  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.2.1.tgz#6cb38120535c73ab68cd0f09684882af148f256d"
+  integrity sha512-H2nTsyWdicVOyvqC5AjgU7tsTgmR6PDrruFJNmlmdhKp7RxEia/E1B1swMZjaasYa2QMp4Zc6oB7cWchty7B2Q==
   dependencies:
     buffer "^6.0.3"
 
@@ -17402,7 +17351,7 @@ poseidon-lite@^0.0.2:
   resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.0.2.tgz#dc1a7c57f9393a586c5c9efc21b72b77e2c1acb6"
   integrity sha512-bGdDPTOQkJbBjbtSEWc3gY+YhqlGTxGlZ8041F8TGGg5QyGGp1Cfs4b8AEnFFjHbkPg6WdWXUgEjU1GKOKWAPw==
 
-poseidon-lite@^0.2.0, poseidon-lite@^0.2.1:
+poseidon-lite@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.2.1.tgz#7ad98e3a3aa5b91a1fd3a61a87460e9e46fd76d6"
   integrity sha512-xIr+G6HeYfOhCuswdqcFpSX47SPhm0EpisWJ6h7fHlWwaVIvH3dLnejpatrtw6Xc6HaLrpq05y7VRfvDmDGIog==

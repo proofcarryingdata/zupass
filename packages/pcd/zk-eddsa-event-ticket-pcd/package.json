@@ -1,6 +1,6 @@
 {
   "name": "@pcd/zk-eddsa-event-ticket-pcd",
-  "version": "0.6.4",
+  "version": "0.6.6",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -34,13 +34,13 @@
     "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-event-ticket-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-event-ticket-pcd && cp -f ./artifacts/circuit.json ./src/circuit.json"
   },
   "dependencies": {
-    "@pcd/eddsa-pcd": "0.6.4",
-    "@pcd/eddsa-ticket-pcd": "0.6.4",
+    "@pcd/eddsa-pcd": "0.6.5",
+    "@pcd/eddsa-ticket-pcd": "0.6.5",
     "@pcd/pcd-types": "^0.11.4",
-    "@pcd/semaphore-identity-pcd": "0.11.4",
-    "@pcd/semaphore-signature-pcd": "0.11.4",
+    "@pcd/semaphore-identity-pcd": "0.11.6",
+    "@pcd/semaphore-signature-pcd": "0.11.6",
     "@pcd/snarkjs": "0.7.7",
-    "@pcd/util": "0.5.3",
+    "@pcd/util": "0.5.4",
     "@semaphore-protocol/identity": "^3.15.2",
     "circomlibjs": "^0.1.7",
     "json-bigint": "^1.0.0",

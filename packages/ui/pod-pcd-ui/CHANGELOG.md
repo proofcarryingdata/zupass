@@ -1,5 +1,24 @@
 # @pcd/pod-pcd-ui
 
+## 0.1.7
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.1.7
+  - @pcd/util@0.5.4
+  - @pcd/pod-pcd@0.1.7
+  - @pcd/passport-ui@0.11.6
+
+## 0.1.6
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.1.6
+  - @pcd/pod-pcd@0.1.6
+  - @pcd/passport-ui@0.11.5
+
 ## 0.1.5
 
 ### Patch Changes

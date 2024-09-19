@@ -14,6 +14,12 @@
   // References are automatically maintained by `yarn fix-references`
   "references": [
     {
+      "path": "../../packages/lib/gpc/tsconfig.esm.json"
+    },
+    {
+      "path": "../../packages/pcd/gpc-pcd/tsconfig.esm.json"
+    },
+    {
       "path": "../../packages/lib/pcd-types/tsconfig.esm.json"
     },
     {
@@ -21,12 +27,6 @@
     },
     {
       "path": "../../packages/pcd/pod-pcd/tsconfig.esm.json"
-    },
-    {
-      "path": "../../packages/lib/gpc/tsconfig.esm.json"
-    },
-    {
-      "path": "../../packages/pcd/gpc-pcd/tsconfig.esm.json"
     },
     {
       "path": "../../packages/pcd/semaphore-identity-pcd/tsconfig.esm.json"

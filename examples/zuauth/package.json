@@ -1,6 +1,6 @@
 {
   "name": "zuauth-example",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -10,8 +10,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pcd/util": "0.5.3",
-    "@pcd/passport-interface": "^0.11.5",
+    "@pcd/util": "0.5.4",
+    "@pcd/passport-interface": "^0.11.9",
     "@pcd/zuauth": "1.4.5",
     "iron-session": "^8.0.2",
     "next": "^14.1.4",

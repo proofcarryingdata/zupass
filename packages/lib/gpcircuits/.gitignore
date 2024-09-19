@@ -4,5 +4,6 @@
 dist
 *.tsbuildinfo
 ptau
+circuits/main
 circuits/test
 artifacts/test

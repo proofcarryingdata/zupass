@@ -1,7 +1,7 @@
 {
   "name": "@pcd/podbox-shared",
   "private": false,
-  "version": "0.0.4",
+  "version": "0.0.6",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -28,9 +28,9 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/passport-interface": "0.11.7",
-    "@pcd/pod": "0.1.5",
-    "@pcd/util": "0.5.3",
+    "@pcd/passport-interface": "0.11.9",
+    "@pcd/pod": "0.1.7",
+    "@pcd/util": "0.5.4",
     "csv-parse": "^5.5.3",
     "csv-stringify": "^6.4.5",
     "uuid": "^9.0.0",

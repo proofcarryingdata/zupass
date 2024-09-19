@@ -98,10 +98,13 @@
       "path": "../../packages/lib/pcd-types"
     },
     {
-      "path": "../../packages/lib/podspec"
+      "path": "../../packages/lib/pod"
     },
     {
-      "path": "../../packages/lib/pod"
+      "path": "../../packages/pcd/pod-pcd"
+    },
+    {
+      "path": "../../packages/ui/pod-pcd-ui"
     },
     {
       "path": "../../packages/pcd/pod-ticket-pcd"
@@ -110,10 +113,7 @@
       "path": "../../packages/ui/pod-ticket-pcd-ui"
     },
     {
-      "path": "../../packages/pcd/pod-pcd"
-    },
-    {
-      "path": "../../packages/ui/pod-pcd-ui"
+      "path": "../../packages/lib/podspec"
     },
     {
       "path": "../../packages/pcd/rsa-image-pcd"

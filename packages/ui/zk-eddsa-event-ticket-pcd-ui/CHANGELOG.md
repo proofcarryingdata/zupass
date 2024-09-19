@@ -1,5 +1,19 @@
 # @pcd/zk-eddsa-event-ticket-pcd-ui
 
+## 0.2.7
+
+### Patch Changes
+
+- @pcd/zk-eddsa-event-ticket-pcd@0.6.6
+- @pcd/passport-ui@0.11.6
+
+## 0.2.6
+
+### Patch Changes
+
+- @pcd/zk-eddsa-event-ticket-pcd@0.6.5
+- @pcd/passport-ui@0.11.5
+
 ## 0.2.5
 
 ### Patch Changes
