@@ -18,28 +18,32 @@ template UniquenessModule(
     // unique.
     signal output valuesAreUnique;
 
-    // Array of field elements indicating whether the corresponding
-    // element of `values` has no duplicates following it in `values`,
-    // i.e. noDupsAfter[i] = 0 iff this is the case.
-    signal noDupsAfter[NUM_LIST_ELEMENTS];
+    // Number of pairs of distinct indices in [0, NUM_LIST_ELEMENTS[
+    // (modulo order).
+    var NUM_PAIRS = NUM_LIST_ELEMENTS*(NUM_LIST_ELEMENTS - 1)\2;
 
-    // Loop through and check whether the ith element of `values` is
-    // not an element of `values` with the first i+1 elements removed.
-    for(var i = 0; i < NUM_LIST_ELEMENTS; i++) {
-        var j = i+1;
-        noDupsAfter[i] <==
-            NotEqualsAny(NUM_LIST_ELEMENTS - j, NUM_LIST_ELEMENTS)(
-                values[i],
-                ArrayRotl(j, NUM_LIST_ELEMENTS)(values)
-            );
+    // Matrix of differences of the form M[i,j] = values[i] -
+    // values[j] for i < j arranged in column-major order.
+    signal valueDifferences[NUM_PAIRS];
+    for (var i = 0; i < NUM_LIST_ELEMENTS; i++) {
+        for(var j = i + 1; j < NUM_LIST_ELEMENTS; j++) {
+            var k = j + NUM_LIST_ELEMENTS*i - (i + 1)*(i + 2)\2;
+            valueDifferences[k] <== values[i] - values[j];
+        }
     }
 
-    // All values are unique iff all elements of `noDupsAfter` are non-zero.
-    valuesAreUnique <== NOT()(
-        IsZero()(
-            MultiAND(NUM_LIST_ELEMENTS)(
-                noDupsAfter
+    if (NUM_PAIRS == 0) {
+        valuesAreUnique <== 1;
+    } else {
+        // All values are unique iff all elements of
+        // `valueDifferences` are nonzero, which is the case iff the
+        // product of all elements of `valueDifferences` is nonzero.
+        valuesAreUnique <== NOT()(
+            IsZero()(
+                MultiAND(NUM_PAIRS)(
+                    valueDifferences
+                )
             )
-        )
-    );
+        );
+    }
 }
