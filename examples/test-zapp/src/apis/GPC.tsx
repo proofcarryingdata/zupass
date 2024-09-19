@@ -263,7 +263,7 @@ await z.pod.insert(pod);
             <code className="block text-xs font-base rounded-md p-2 whitespace-pre-wrap">
               {`
 const request = ticketProofRequest({
-  attributes: [
+  classificationTuples: [
     [
       // The public key to match
       "${publicKey}",
