@@ -1,5 +1,12 @@
 # @pcd/halo-nonce-pcd
 
+## 0.7.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/util@0.5.4
+
 ## 0.7.4
 
 ### Patch Changes

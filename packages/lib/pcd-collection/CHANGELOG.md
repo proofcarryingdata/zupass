@@ -1,5 +1,17 @@
 # @pcd/pcd-types
 
+## 0.11.6
+
+### Patch Changes
+
+- @pcd/semaphore-identity-pcd@0.11.6
+
+## 0.11.5
+
+### Patch Changes
+
+- @pcd/semaphore-identity-pcd@0.11.5
+
 ## 0.11.4
 
 ### Patch Changes

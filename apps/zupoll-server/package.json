@@ -1,6 +1,6 @@
 {
   "name": "zupoll-server",
-  "version": "0.0.6",
+  "version": "0.0.8",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -20,10 +20,10 @@
     "@octokit/rest": "^19.0.7",
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
     "@pcd/pcd-types": "0.11.4",
-    "@pcd/semaphore-group-pcd": "0.11.4",
-    "@pcd/semaphore-signature-pcd": "0.11.4",
+    "@pcd/semaphore-group-pcd": "0.11.6",
+    "@pcd/semaphore-signature-pcd": "0.11.6",
     "@pcd/server-shared": "0.0.5",
-    "@pcd/util": "^0.5.3",
+    "@pcd/util": "^0.5.4",
     "@pcd/zupoll-shared": "0.0.5",
     "@prisma/client": "^4.12.0",
     "cors": "^2.8.5",

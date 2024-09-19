@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.app.json",
+  "files": [],
+  "references": [
+    {
+      "path": "../../packages/lib/pod"
+    }
+  ]
+}

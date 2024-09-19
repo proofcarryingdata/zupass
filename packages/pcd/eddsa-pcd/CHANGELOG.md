@@ -1,5 +1,12 @@
 # @pcd/eddsa-pcd
 
+## 0.6.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/util@0.5.4
+
 ## 0.6.4
 
 ### Patch Changes

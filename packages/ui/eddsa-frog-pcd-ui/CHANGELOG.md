@@ -1,5 +1,18 @@
 # @pcd/eddsa-frog-pcd-ui
 
+## 0.2.6
+
+### Patch Changes
+
+- @pcd/eddsa-frog-pcd@0.3.5
+- @pcd/passport-ui@0.11.6
+
+## 0.2.5
+
+### Patch Changes
+
+- @pcd/passport-ui@0.11.5
+
 ## 0.2.4
 
 ### Patch Changes

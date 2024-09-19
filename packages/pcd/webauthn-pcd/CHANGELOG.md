@@ -1,5 +1,12 @@
 # @pcd/webauthn-pcd
 
+## 0.11.5
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/util@0.5.4
+
 ## 0.11.4
 
 ### Patch Changes

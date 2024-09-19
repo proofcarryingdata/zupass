@@ -1,5 +1,21 @@
 # zupoll-server
 
+## 0.0.8
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/util@0.5.4
+  - @pcd/semaphore-group-pcd@0.11.6
+  - @pcd/semaphore-signature-pcd@0.11.6
+
+## 0.0.7
+
+### Patch Changes
+
+- @pcd/semaphore-group-pcd@0.11.5
+- @pcd/semaphore-signature-pcd@0.11.5
+
 ## 0.0.6
 
 ### Patch Changes
