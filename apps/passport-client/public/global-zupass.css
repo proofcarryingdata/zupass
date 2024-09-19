@@ -19,6 +19,16 @@ html {
   --black: #000000;
   --black-rgb: 0, 0, 0;
 
+
+  --text-tertiary: #8B94AC;
+  --dot-bg: #ECECEC;
+  --dot-color: #e4e4e4;
+  --dot-size: 3px;
+  --dot-space: 22px;
+  --dot-pattern-bg: linear-gradient(90deg, var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
+    linear-gradient(var(--dot-bg) calc(var(--dot-space) - var(--dot-size)), transparent 1%) center / var(--dot-space) var(--dot-space),
+    var(--dot-color);
+
   background: var(--bg-dark-primary);
   color: var(--white);
   font:
@@ -37,6 +47,7 @@ a:visited {
   color: var(--accent-dark);
   text-decoration: none;
 }
+
 a:hover {
   text-decoration: underline;
   cursor: pointer;
@@ -47,48 +58,49 @@ a:hover {
   font-family: "PlexSans";
   font-style: normal;
   font-weight: 200;
-  src: url(/fonts/IBMPlexSans-ExtraLight.ttf) format("truetype")
-    url(/fonts/IBMPlexSans-ExtraLight.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-ExtraLight.ttf) format("truetype") url(/fonts/IBMPlexSans-ExtraLight.woff) format("woff");
 }
+
 @font-face {
   font-family: "PlexSans";
   font-style: normal;
   font-weight: 300;
-  src: url(/fonts/IBMPlexSans-Light.ttf) format("truetype")
-    url(/fonts/IBMPlexSans-Light.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-Light.ttf) format("truetype") url(/fonts/IBMPlexSans-Light.woff) format("woff");
 }
+
 @font-face {
   font-family: "PlexSans";
   font-style: italic;
   font-weight: 300;
-  src: url(/fonts/IBMPlexSans-LightItalic.ttf) format("truetype")
-    url(/fonts/IBMPlexSans-LightItalic.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-LightItalic.ttf) format("truetype") url(/fonts/IBMPlexSans-LightItalic.woff) format("woff");
 }
+
 @font-face {
   font-family: "PlexSans";
   font-style: normal;
   font-weight: 400;
-  src: url(/fonts/IBMPlexSans-Regular.ttf) format("truetype")
-    url(/fonts/IBMPlexSans-Regular.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-Regular.ttf) format("truetype") url(/fonts/IBMPlexSans-Regular.woff) format("woff");
 }
+
 @font-face {
   font-family: "PlexSans";
   font-style: normal;
   font-weight: 500;
-  src: url(/fonts/IBMPlexSans-Medium.ttf) format("truetype")
-    url(/fonts/IBMPlexSans-Medium.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-Medium.ttf) format("truetype") url(/fonts/IBMPlexSans-Medium.woff) format("woff");
 }
+
 @font-face {
   font-family: "PlexSans";
   font-style: normal;
   font-weight: 600;
-  src: url(/fonts/IBMPlexSans-SemiBold.ttf) format("truetype")
-    url(/fonts/IBMPlexSans-SemiBold.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-SemiBold.ttf) format("truetype") url(/fonts/IBMPlexSans-SemiBold.woff) format("woff");
 }
+
 @font-face {
   font-family: "SuperFunky";
   src: url(/fonts/SuperFunky.ttf) format("truetype");
 }
+
 @font-face {
   font-family: "PressStart2P";
   src: url(/fonts/PressStart2P.ttf) format("truetype");
@@ -121,6 +133,7 @@ h6 {
   margin: 0;
   padding: 0;
 }
+
 h1,
 h2,
 h3,
@@ -130,34 +143,42 @@ h6 {
   font-size: 100%;
   font-weight: normal;
 }
+
 ul {
   list-style: none;
 }
+
 button,
 input,
 select {
   margin: 0;
 }
+
 html {
   box-sizing: border-box;
 }
+
 *,
 *::before,
 *::after {
   box-sizing: inherit;
 }
+
 img,
 video {
   height: auto;
   max-width: 100%;
 }
+
 iframe {
   border: 0;
 }
+
 table {
   border-collapse: collapse;
   border-spacing: 0;
 }
+
 td,
 th {
   padding: 0;
@@ -197,14 +218,16 @@ img {
   width: 80px;
   height: 80px;
 }
-.loader > div {
+
+.loader>div {
   position: absolute;
   border: 4px solid var(--accent-dark);
   opacity: 1;
   border-radius: 50%;
   animation: ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
 }
-.loader > div:nth-child(2) {
+
+.loader>div:nth-child(2) {
   animation-delay: -0.5s;
 }
 
@@ -216,6 +239,7 @@ img {
     height: 0;
     opacity: 0;
   }
+
   4.9% {
     top: 36px;
     left: 36px;
@@ -223,6 +247,7 @@ img {
     height: 0;
     opacity: 0;
   }
+
   5% {
     top: 36px;
     left: 36px;
@@ -230,6 +255,7 @@ img {
     height: 0;
     opacity: 1;
   }
+
   100% {
     top: 0px;
     left: 0px;
