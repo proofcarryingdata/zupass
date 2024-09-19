@@ -115,6 +115,7 @@
     "NODE_OPTIONS",
     "ZAPP_RESTRICT_ORIGINS",
     "ZAPP_ALLOWED_SIGNER_ORIGINS",
+    "CLIENT_URL",
     "//// add env vars above this line ////"
   ],
   "globalEnv": [
