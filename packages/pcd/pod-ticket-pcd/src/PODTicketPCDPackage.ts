@@ -13,6 +13,23 @@ import { IPODTicketData, TicketDataSchema } from "./schema";
 import { dataToPodEntries } from "./utils";
 
 /**
+ * Converts a {@link PODTicketPCD} to a {@link POD}.
+ * @param pcd The POD Ticket PCD to convert.
+ * @returns The POD.
+ */
+export function ticketToPOD(pcd: PODTicketPCD): POD {
+  return POD.load(
+    dataToPodEntries<PODTicketPCDClaim["ticket"]>(
+      pcd.claim.ticket,
+      TicketDataSchema,
+      TicketDataSchema.shape
+    ),
+    pcd.proof.signature,
+    pcd.claim.signerPublicKey
+  );
+}
+
+/**
  * Creates a new {@link PODTicketPCD} by generating an {@link PODTicketPCDProof}
  * and deriving an {@link PODTicketPCDClaim} from the given {@link PODTicketPCDArgs}.
  */
