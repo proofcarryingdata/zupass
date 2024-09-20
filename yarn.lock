@@ -5059,10 +5059,10 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@parcnet-js/app-connector@^0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.5.tgz#8c570d254fb0fbbd94b00dbeaa52f5c9b9db087f"
-  integrity sha512-vIaCXYe3YOl6OLiZ/E/la2p7uFuDwKXL/WaxHqlcMqvvw67aRYJs564Ijrze6AP55pSNGyBqsXjp72BYY8nKoA==
+"@parcnet-js/app-connector@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.6.tgz#11f1d9b0cd474dfa52f84de2e03d430939f70b8f"
+  integrity sha512-xpgHzOZ5lUk0ZzkZ4jxxRXcBtsdvGGT+Htn8PFVRrGZIF0j5O5dL/xSR0gJJbWLRoXGx6oNu4qmX5c2udut40A==
   dependencies:
     "@brenoroosevelt/toast" "^2.0.3"
     "@parcnet-js/client-rpc" "0.0.4"
