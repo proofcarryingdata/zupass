@@ -6,6 +6,7 @@ import {
 import {
   EDDSA_PUBKEY_TYPE_STRING,
   POD,
+  PODIntValue,
   PODName,
   PODValue,
   PODValueTuple,
@@ -57,6 +58,7 @@ import {
   resolvePODEntryIdentifier,
   resolvePODEntryOrTupleIdentifier,
   splitCircuitIdentifier,
+  splitPODEntryIdentifier,
   widthOfEntryOrTuple
 } from "./gpcUtil";
 // TODO(POD-P2): Split out the parts of this which should be public from
@@ -168,12 +170,13 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   }
 
   const nBoundsChecks: number = Object.values(boundsChecks).reduce(
-    (x, y) => x + y
+    (x, y) => x + y,
+    0
   );
 
   const nEntryInequalities = Object.values(entryInequalityChecks)
     .map((inequalityChecks) => Object.keys(inequalityChecks).length)
-    .reduce((x, y) => x + y);
+    .reduce((x, y) => x + y, 0);
 
   const listConfig: GPCProofMembershipListConfig =
     listConfigFromProofConfig(proofConfig);
@@ -194,6 +197,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     totalEntries,
     requiredMerkleDepth,
     nBoundsChecks,
+    nEntryInequalities,
     numLists,
     maxListSize,
     tupleArities,
@@ -423,7 +427,7 @@ export function checkProofBoundsCheckConfigForEntryInequalityConfig(
     PODEntryIdentifier,
     Record<string, PODEntryIdentifier>
   >
-) {
+): void {
   const inequalityCheckedEntries = uniq(
     Object.keys(entryInequalityChecks).concat(
       Object.values(entryInequalityChecks)
@@ -575,6 +579,9 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     // Numeric values (bounds checks) are handled solely in the proof config,
     // hence we return 0 here.
     0,
+    // Entry inequalities are handled solely in the proof config, hence we
+    // return 0 here.
+    0,
     // The number of required lists cannot be properly deduced here, so we
     // return 0.
     0,
@@ -722,6 +729,14 @@ export function checkProofInputsForConfig(
         entryConfig,
         podValue
       );
+
+      // Check entry inequalities for entry
+      checkProofEntryInequalityInputsForConfig(
+        `${objName}.${entryName}`,
+        entryConfig,
+        podValue,
+        proofInputs.pods
+      );
     }
   }
   // Check that nullifier isn't requested if it's not linked to anything.
@@ -789,6 +804,54 @@ export function checkProofBoundsCheckInputsForConfig(
       throw new RangeError(
         `Entry ${entryName} does not lie outside of the interval [${entryConfig.notInRange.min},${entryConfig.notInRange.max}].`
       );
+    }
+  }
+}
+
+export function checkProofEntryInequalityInputsForConfig(
+  entryName: PODEntryIdentifier,
+  entryConfig: GPCProofEntryConfig,
+  entryValue: PODValue,
+  pods: Record<PODName, POD>
+): void {
+  type B = boolean;
+  type N = bigint;
+  const inequalityCheckTriples: [
+    string,
+    PODEntryIdentifier | undefined,
+    (x: N, y: N) => B
+  ][] = [
+    ["less than", entryConfig.lessThan, (x: N, y: N): B => x < y],
+    [
+      "less than or equal to",
+      entryConfig.lessThanEq,
+      (x: N, y: N): B => x <= y
+    ],
+    ["greater than", entryConfig.greaterThan, (x: N, y: N): B => x > y],
+    [
+      "greater than or equal to",
+      entryConfig.greaterThanEq,
+      (x: N, y: N): B => x >= y
+    ]
+  ];
+
+  for (const [checkType, otherEntry, cmp] of inequalityCheckTriples) {
+    if (otherEntry !== undefined) {
+      const { objName, entryName: otherEntryName } =
+        splitPODEntryIdentifier(otherEntry);
+
+      // Both `entryName` and `otherEntryName` are amongst the bounds-checked
+      // entries and therefore exist in the input as PODIntValues.
+      const pod = pods[objName] as POD;
+      const otherEntryValue = resolvePODEntry(
+        otherEntryName,
+        pod
+      ) as PODIntValue;
+      if (!cmp(entryValue.value as bigint, otherEntryValue.value)) {
+        throw new Error(
+          `Input entry ${entryName} should be ${checkType} entry ${otherEntry}, but it is not.`
+        );
+      }
     }
   }
 }
@@ -1009,6 +1072,7 @@ export function checkRevealedClaims(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
+    0,
     0,
     0,
     maxListSize,
@@ -1266,6 +1330,7 @@ export function circuitDescMeetsRequirements(
     circuitDesc.maxEntries >= circuitReq.nEntries &&
     circuitDesc.merkleMaxDepth >= circuitReq.merkleMaxDepth &&
     circuitDesc.maxNumericValues >= circuitReq.nNumericValues &&
+    circuitDesc.maxEntryInequalities >= circuitReq.nEntryInequalities &&
     circuitDesc.maxLists >= circuitReq.nLists &&
     // The circuit description should be able to contain the largest of the lists.
     circuitDesc.maxListElements >= circuitReq.maxListSize &&
@@ -1309,6 +1374,7 @@ export function mergeRequirements(
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
     Math.max(rs1.nNumericValues, rs2.nNumericValues),
+    Math.max(rs1.nEntryInequalities, rs2.nEntryInequalities),
     Math.max(rs1.nLists, rs2.nLists),
     Math.max(rs1.maxListSize, rs2.maxListSize),
     tupleArities,

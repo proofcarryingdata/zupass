@@ -24,6 +24,7 @@ describe("Proof entry config check should work", () => {
     expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
       hasOwnerV3Check: false,
       hasOwnerV4Check: false,
+      inequalityChecks: {},
       nBoundsChecks: 0
     });
   });
@@ -40,6 +41,7 @@ describe("Proof entry config check should work", () => {
     expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
       hasOwnerV3Check: false,
       hasOwnerV4Check: false,
+      inequalityChecks: {},
       nBoundsChecks: 2
     });
   });
@@ -53,6 +55,7 @@ describe("Proof entry config check should work", () => {
     expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
       hasOwnerV3Check: true,
       hasOwnerV4Check: false,
+      inequalityChecks: {},
       nBoundsChecks: 0
     });
   });
@@ -66,6 +69,7 @@ describe("Proof entry config check should work", () => {
     expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
       hasOwnerV3Check: false,
       hasOwnerV4Check: true,
+      inequalityChecks: {},
       nBoundsChecks: 0
     });
   });

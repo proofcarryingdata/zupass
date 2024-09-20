@@ -56,8 +56,7 @@ import {
   isVirtualEntryIdentifier,
   isVirtualEntryName,
   listConfigFromProofConfig,
-  makeWatermarkSignal,
-  podEntryIdentifierCompare
+  makeWatermarkSignal
 } from "./gpcUtil";
 
 /**
@@ -359,6 +358,14 @@ export function compileProofConfig(
     circuitDesc.maxNumericValues
   );
 
+  // Create entry inequality inputs.
+  const circuitEntryInequalityInputs = compileCommonEntryInequalities(
+    boundsCheckConfig,
+    entryMap,
+    circuitDesc.maxNumericValues,
+    circuitDesc.maxEntryInequalities
+  );
+
   // Create subset of inputs for multituple module padded to max size.
   const circuitMultiTupleInputs = compileProofMultiTuples(
     tupleMap,
@@ -404,6 +411,7 @@ export function compileProofConfig(
     ...circuitOwnerV3Inputs,
     ...circuitOwnerV4Inputs,
     ...circuitNumericValueInputs,
+    ...circuitEntryInequalityInputs,
     ...circuitMultiTupleInputs,
     ...circuitListMembershipInputs,
     ...circuitUniquenessInputs,
@@ -488,6 +496,67 @@ function compileProofNumericValues(
   };
 }
 
+export function compileCommonEntryInequalities<
+  ObjInput extends POD | GPCRevealedObjectClaims
+>(
+  boundsCheckConfig: GPCProofBoundsCheckConfig,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
+  paramNumericValues: number,
+  paramEntryInequalities: number
+): {
+  entryInequalityValueIndex: CircuitSignal[];
+  entryInequalityOtherValueIndex: CircuitSignal[];
+  entryInequalityIsLessThan: CircuitSignal;
+} {
+  const numericValueIndex: Record<PODEntryIdentifier, bigint> =
+    Object.fromEntries(
+      Object.keys(boundsCheckConfig).map((entryIdentifier, i) => [
+        entryIdentifier,
+        BigInt(i)
+      ])
+    );
+  const signalTriples = (
+    Object.entries(numericValueIndex) as [PODEntryIdentifier, bigint][]
+  ).flatMap(([entryIdentifier, entryIndex]): bigint[][] => {
+    const entryConfig = entryMap.get(entryIdentifier)
+      ?.entryConfig as GPCProofEntryConfig;
+    return [
+      entryConfig.lessThan
+        ? [[entryIndex, numericValueIndex[entryConfig.lessThan], 1n]]
+        : [],
+      entryConfig.lessThanEq
+        ? [[numericValueIndex[entryConfig.lessThanEq], entryIndex, 0n]]
+        : [],
+      entryConfig.greaterThan
+        ? [[numericValueIndex[entryConfig.greaterThan], entryIndex, 1n]]
+        : [],
+      entryConfig.greaterThanEq
+        ? [[entryIndex, numericValueIndex[entryConfig.greaterThanEq], 0n]]
+        : []
+    ].flat();
+  });
+
+  return {
+    entryInequalityValueIndex: extendedSignalArray(
+      signalTriples.map((x) => x[0]),
+      paramEntryInequalities,
+      0n
+    ),
+    entryInequalityOtherValueIndex: extendedSignalArray(
+      signalTriples.map((x) => x[1]),
+      paramEntryInequalities,
+      0n
+    ),
+    entryInequalityIsLessThan: array2Bits(
+      extendedSignalArray(
+        signalTriples.map((x) => x[2]),
+        paramNumericValues,
+        0n
+      )
+    )
+  };
+}
+
 function compileCommonNumericValues<
   ObjInput extends POD | GPCRevealedObjectClaims
 >(
@@ -501,10 +570,10 @@ function compileCommonNumericValues<
   numericMinValues: CircuitSignal[];
   numericMaxValues: CircuitSignal[];
 } {
-  // Arrange POD entry identifiers according to {@link podEntryIdentifierCompare}.
-  const numericValueIdOrder = (
-    Object.keys(boundsCheckConfig) as PODEntryIdentifier[]
-  ).sort(podEntryIdentifierCompare);
+  // POD entry identifiers arranged according to {@link podEntryIdentifierCompare}.
+  const numericValueIdOrder = Object.keys(
+    boundsCheckConfig
+  ) as PODEntryIdentifier[];
 
   // Compile signals
   const unpaddedNumericValueSignals = numericValueIdOrder.flatMap((entryId) => {
@@ -1104,6 +1173,14 @@ export function compileVerifyConfig(
       circuitDesc.maxNumericValues
     );
 
+  // Create entry inequality inputs.
+  const circuitEntryInequalityInputs = compileCommonEntryInequalities(
+    boundsCheckConfig,
+    entryMap,
+    circuitDesc.maxNumericValues,
+    circuitDesc.maxEntryInequalities
+  );
+
   // Create subset of inputs for multituple module padded to max size.
   const circuitMultiTupleInputs = compileProofMultiTuples(
     tupleMap,
@@ -1157,6 +1234,7 @@ export function compileVerifyConfig(
       ...circuitOwnerV3Inputs,
       ...circuitOwnerV4Inputs,
       ...circuitNumericValueInputs,
+      ...circuitEntryInequalityInputs,
       ...circuitMultiTupleInputs,
       ...circuitListMembershipInputs,
       ...circuitUniquenessInputs,
