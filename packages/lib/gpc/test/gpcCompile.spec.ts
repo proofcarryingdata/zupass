@@ -280,11 +280,7 @@ describe("POD entry inequality module compilation for proving and verification s
     { entryConfig: { isRevealed: false } }
   ]);
   it("should work as expected for no entry inequality checks", () => {
-    for (const [paramNumericValues, paramEntryInequalities] of [
-      [0, 0],
-      [2, 0],
-      [3, 3]
-    ]) {
+    for (const paramEntryInequalities of [0, 2, 6]) {
       const boundsCheckConfig = {};
       const entryMap = new Map(typicalEntryIdConfigPairs);
       const entryIneqSignals = compileCommonEntryInequalities(

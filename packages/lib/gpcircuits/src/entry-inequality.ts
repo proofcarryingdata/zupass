@@ -5,10 +5,7 @@ export type EntryInequalityModuleInputs = {
   otherValue: CircuitSignal;
 };
 
-export type EntryInequalityModuleInputNamesType = [
-  "value",
-  "otherValue"
-];
+export type EntryInequalityModuleInputNamesType = ["value", "otherValue"];
 
 export type EntryInequalityModuleOutputs = { out: CircuitSignal };
 
