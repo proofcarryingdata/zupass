@@ -54,6 +54,7 @@ import {
   GlobalBackground
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
+import ComponentsScreen from "../new-components/ComponentsScreen";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
@@ -63,11 +64,17 @@ import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { useZappServer } from "../src/zapp/useZappServer";
-import ComponentsScreen from "../new-components/ComponentsScreen";
+
+if (appConfig.devMode) {
+  new EventSource("/esbuild").addEventListener("change", () =>
+    location.reload()
+  );
+}
 
 function App(): JSX.Element {
   useBackgroundJobs();
   useZappServer();
+
   const state = useStateContext().getState();
 
   const hasStack = !!state.error?.stack;
