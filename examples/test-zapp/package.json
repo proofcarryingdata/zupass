@@ -10,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@parcnet-js/app-connector": "0.0.3",
+    "@parcnet-js/app-connector": "^0.0.5",
     "@parcnet-js/podspec": "^0.0.3",
     "@parcnet-js/ticket-spec": "^0.0.2",
     "@parcnet-js/client-rpc": "^0.0.4",

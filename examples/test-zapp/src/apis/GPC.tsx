@@ -295,7 +295,8 @@ const gpcProof = await z.gpc.prove(request.schema);
                 const request = ticketProofRequest({
                   classificationTuples: [[publicKey as string, EVENT_ID]],
                   fieldsToReveal: {
-                    eventId: true
+                    eventId: true,
+                    productId: true
                   }
                 });
                 setProveResult(await z.gpc.prove(request.schema));
