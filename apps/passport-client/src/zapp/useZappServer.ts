@@ -17,6 +17,7 @@ export function useZappServer(): void {
 
       if (!context.getState().self) {
         advice.showClient();
+        context.dispatch({ type: "zapp-connect", zapp, origin });
 
         await new Promise<void>((resolve) => {
           const unlisten = context.stateEmitter.listen((state) => {
@@ -85,8 +86,6 @@ export function useZappServer(): void {
       }
       if (approved) {
         const server = new ZupassRPCProcessor(context, zappPOD, advice);
-
-        context.dispatch({ type: "zapp-connect", zapp, origin });
 
         // @todo handle this with an action
         context.update({ embeddedScreen: undefined });

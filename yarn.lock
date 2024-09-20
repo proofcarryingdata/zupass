@@ -5059,10 +5059,10 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@parcnet-js/app-connector@^0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.5.tgz#8c570d254fb0fbbd94b00dbeaa52f5c9b9db087f"
-  integrity sha512-vIaCXYe3YOl6OLiZ/E/la2p7uFuDwKXL/WaxHqlcMqvvw67aRYJs564Ijrze6AP55pSNGyBqsXjp72BYY8nKoA==
+"@parcnet-js/app-connector@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.6.tgz#11f1d9b0cd474dfa52f84de2e03d430939f70b8f"
+  integrity sha512-xpgHzOZ5lUk0ZzkZ4jxxRXcBtsdvGGT+Htn8PFVRrGZIF0j5O5dL/xSR0gJJbWLRoXGx6oNu4qmX5c2udut40A==
   dependencies:
     "@brenoroosevelt/toast" "^2.0.3"
     "@parcnet-js/client-rpc" "0.0.4"
@@ -7513,6 +7513,11 @@
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@types/tough-cookie/-/tough-cookie-4.0.3.tgz#3d06b6769518450871fbc40770b7586334bdfd90"
   integrity sha512-THo502dA5PzG/sfQH+42Lw3fvmYkceefOspdCwpHRul8ik2Jv1K8I5OZz1AT3/rs46kwgMCe9bSBmDLYkkOMGg==
+
+"@types/ua-parser-js@^0.7.39":
+  version "0.7.39"
+  resolved "https://registry.yarnpkg.com/@types/ua-parser-js/-/ua-parser-js-0.7.39.tgz#832c58e460c9435e4e34bb866e85e9146e12cdbb"
+  integrity sha512-P/oDfpofrdtF5xw433SPALpdSchtJmY7nsJItf8h3KXqOslkbySh8zq4dSWXH2oTjRvJ5PczVEoCZPow6GicLg==
 
 "@types/unist@*", "@types/unist@^3.0.0":
   version "3.0.2"
@@ -21780,6 +21785,11 @@ typewriter-effect@^2.21.0:
   dependencies:
     prop-types "^15.8.1"
     raf "^3.4.1"
+
+ua-parser-js@^1.0.38:
+  version "1.0.38"
+  resolved "https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-1.0.38.tgz#66bb0c4c0e322fe48edfe6d446df6042e62f25e2"
+  integrity sha512-Aq5ppTOfvrCMgAPneW1HfWj66Xi7XL+/mIy996R1/CLS/rcyJQm6QZdsKrUeivDFQ+Oc9Wyuwor8Ze8peEoUoQ==
 
 uglify-js@^3.1.4:
   version "3.17.4"
