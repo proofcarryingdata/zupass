@@ -157,8 +157,6 @@ function ProvePODInfo({
         !!(entry.type === "int" && entry.inRange)
     );
 
-  console.log(schema.pod);
-
   return (
     <PODInfo>
       <PODSelectContainer>
