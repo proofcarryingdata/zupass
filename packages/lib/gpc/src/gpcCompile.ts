@@ -362,7 +362,6 @@ export function compileProofConfig(
   const circuitEntryInequalityInputs = compileCommonEntryInequalities(
     boundsCheckConfig,
     entryMap,
-    circuitDesc.maxNumericValues,
     circuitDesc.maxEntryInequalities
   );
 
@@ -497,11 +496,10 @@ function compileProofNumericValues(
 }
 
 export function compileCommonEntryInequalities<
-  ObjInput extends POD | GPCRevealedObjectClaims
+  CompilerEntryInfo extends { entryConfig: GPCProofEntryConfig }
 >(
   boundsCheckConfig: GPCProofBoundsCheckConfig,
-  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
-  paramNumericValues: number,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo>,
   paramEntryInequalities: number
 ): {
   entryInequalityValueIndex: CircuitSignal[];
@@ -550,7 +548,7 @@ export function compileCommonEntryInequalities<
     entryInequalityIsLessThan: array2Bits(
       extendedSignalArray(
         signalTriples.map((x) => x[2]),
-        paramNumericValues,
+        paramEntryInequalities,
         0n
       )
     )
@@ -1177,7 +1175,6 @@ export function compileVerifyConfig(
   const circuitEntryInequalityInputs = compileCommonEntryInequalities(
     boundsCheckConfig,
     entryMap,
-    circuitDesc.maxNumericValues,
     circuitDesc.maxEntryInequalities
   );
 

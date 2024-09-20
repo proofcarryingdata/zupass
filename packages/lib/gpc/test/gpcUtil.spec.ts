@@ -5,12 +5,14 @@ import {
   GPCProofConfig,
   GPCProofEntryBoundsCheckConfig,
   GPCProofEntryConfig,
-  GPCProofEntryConfigCommon
+  GPCProofEntryConfigCommon,
+  GPCProofEntryInequalityConfig
 } from "../src";
 import {
   boundsCheckConfigFromProofConfig,
   canonicalizeBoundsCheckConfig,
   canonicalizeEntryConfig,
+  canonicalizeEntryInequalityConfig,
   canonicalizePODUniquenessConfig,
   canonicalizeVirtualEntryConfig
 } from "../src/gpcUtil";
@@ -87,7 +89,22 @@ describe("Object entry configuration canonicalization should work", () => {
 
     const canonicalizedConfig = canonicalizeEntryConfig(config);
 
-    expect(canonicalizedConfig).to.deep.eq(canonicalizedConfig);
+    expect(canonicalizedConfig).to.deep.eq(config);
+  });
+  it("should work as expected on a POD entry configuration with inequality checks", () => {
+    const config: GPCProofEntryConfig = {
+      isRevealed: false,
+      inRange: { min: -512n, max: 25n },
+      notInRange: { min: -256n, max: -5n },
+      lessThan: "somePOD.a",
+      greaterThan: "somePOD.c",
+      greaterThanEq: "somePOD.d",
+      lessThanEq: "somePOD.b"
+    };
+
+    const canonicalizedConfig = canonicalizeEntryConfig(config);
+
+    expect(canonicalizedConfig).to.deep.eq(config);
   });
 });
 
@@ -292,6 +309,27 @@ describe("Object entry bounds check canonicalization should work", () => {
       expect(canonicalizedBoundsCheckConfig).to.deep.eq(boundsCheckConfig);
     }
   });
+});
+
+describe("Object entry inequality check canonicalization should work", () => {
+  const configs: GPCProofEntryInequalityConfig[] = [
+    { lessThan: "somePOD.a" },
+    { greaterThan: "somePOD.a" },
+    { lessThanEq: "somePOD.a" },
+    { greaterThanEq: "somePOD.a" },
+    { greaterThan: "somePOD.a", lessThan: "someOtherPOD.b" },
+    { lessThanEq: "somePOD.a", lessThan: "someOtherPOD.b" },
+    {
+      lessThanEq: "somePOD.a",
+      greaterThan: "somePOD.c",
+      lessThan: "someOtherPOD.b",
+      greaterThanEq: "somePOD.d"
+    }
+  ];
+  const canonicalizedConfigs: GPCProofEntryInequalityConfig[] = configs.map(
+    canonicalizeEntryInequalityConfig
+  );
+  expect(canonicalizedConfigs).to.deep.equal(configs);
 });
 
 describe("Bounds check configuration derivation works as expected", () => {

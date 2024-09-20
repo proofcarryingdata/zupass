@@ -23,6 +23,13 @@ template EntryInequalityModule(
     signal input value;
     signal input otherValue;
 
-    // Boolean indicating whether value < otherValue.
-    signal output out <== LessThan(NUM_BITS)([value, otherValue]);
+    // Boolean indicating whether value < otherValue. Values are
+    // shifted to allow for signed POD int values, cf. {@link
+    // NumericValueModule}.
+    signal output out <== LessThan(NUM_BITS)(
+        [
+            value + ABS_POD_INT_MIN(),
+            otherValue + ABS_POD_INT_MIN()
+        ]
+    );
 }

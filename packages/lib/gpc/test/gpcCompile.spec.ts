@@ -1,5 +1,9 @@
-import { CircuitSignal } from "@pcd/gpcircuits";
-import { PODValue } from "@pcd/pod";
+import {
+  CircuitSignal,
+  array2Bits,
+  extendedSignalArray
+} from "@pcd/gpcircuits";
+import { PODValue, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import {
   BABY_JUB_NEGATIVE_ONE,
   BABY_JUB_SUBGROUP_ORDER_MINUS_ONE
@@ -8,13 +12,19 @@ import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import {
+  GPCProofEntryBoundsCheckConfig,
+  GPCProofEntryConfig,
+  PODEntryIdentifier
+} from "../src";
+import {
+  compileCommonEntryInequalities,
   compileProofOwnerV3,
   compileProofOwnerV4,
   compileProofPODUniqueness,
   compileVerifyOwnerV3,
   compileVerifyOwnerV4
 } from "../src/gpcCompile";
-import { makeWatermarkSignal } from "../src/gpcUtil";
+import { GPCProofBoundsCheckConfig, makeWatermarkSignal } from "../src/gpcUtil";
 import { ownerIdentity, ownerIdentityV4 } from "./common";
 
 describe("Semaphore V3 owner module compilation for proving should work", () => {
@@ -245,6 +255,211 @@ describe("POD uniqueness module compilation for proving and verification should 
     for (const config of [{}, { uniquePODs: false }]) {
       expect(compileProofPODUniqueness(config)).to.deep.equal({
         requireUniqueContentIDs: 0n
+      });
+    }
+  });
+});
+
+describe("POD entry inequality module compilation for proving and verification should work", () => {
+  const typicalEntryIdentifiers: PODEntryIdentifier[] = [
+    "pod1.a",
+    "pod2.someEntry",
+    "pod2.someOtherEntry",
+    "pod3.entry",
+    "pod4.a",
+    "pod4.b"
+  ];
+  const typicalBoundsCheckConfigPairs = typicalEntryIdentifiers.map(
+    (entryId) => [entryId, { min: POD_INT_MIN, max: POD_INT_MAX }]
+  ) as [PODEntryIdentifier, GPCProofEntryBoundsCheckConfig][];
+  const typicalEntryIdConfigPairs: [
+    PODEntryIdentifier,
+    { entryConfig: GPCProofEntryConfig }
+  ][] = typicalEntryIdentifiers.map((entryId) => [
+    entryId,
+    { entryConfig: { isRevealed: false } }
+  ]);
+  it("should work as expected for no entry inequality checks", () => {
+    for (const [paramNumericValues, paramEntryInequalities] of [
+      [0, 0],
+      [2, 0],
+      [3, 3]
+    ]) {
+      const boundsCheckConfig = {};
+      const entryMap = new Map(typicalEntryIdConfigPairs);
+      const entryIneqSignals = compileCommonEntryInequalities(
+        boundsCheckConfig,
+        entryMap,
+        paramEntryInequalities
+      );
+      expect(entryIneqSignals).to.deep.eq({
+        entryInequalityValueIndex: extendedSignalArray(
+          [],
+          paramEntryInequalities,
+          0n
+        ),
+        entryInequalityOtherValueIndex: extendedSignalArray(
+          [],
+          paramEntryInequalities,
+          0n
+        ),
+        entryInequalityIsLessThan: 0n
+      });
+    }
+  });
+  it("should work as expected with <=1 entry inequality check per entry", () => {
+    const entryIdConfigPairsWithIneq: [
+      PODEntryIdentifier,
+      { entryConfig: GPCProofEntryConfig }
+    ][] = [
+      [
+        "pod1.a",
+        { entryConfig: { isRevealed: false, greaterThan: "pod2.someEntry" } }
+      ],
+      [
+        "pod2.someEntry",
+        { entryConfig: { isRevealed: false, lessThanEq: "pod1.a" } }
+      ],
+      [
+        "pod2.someOtherEntry",
+        {
+          entryConfig: { isRevealed: false, greaterThanEq: "pod3.entry" }
+        }
+      ],
+      [
+        "pod3.entry",
+        {
+          entryConfig: { isRevealed: false, lessThanEq: "pod2.someEntry" }
+        }
+      ]
+    ];
+    for (const paramEntryInequalities of [1, 2, 3, 4, 6]) {
+      const boundsCheckConfig: GPCProofBoundsCheckConfig = Object.fromEntries(
+        typicalBoundsCheckConfigPairs
+      );
+      const entryMap = new Map(
+        typicalEntryIdConfigPairs.concat(
+          entryIdConfigPairsWithIneq.slice(0, paramEntryInequalities)
+        )
+      );
+      const entryIneqSignals = compileCommonEntryInequalities(
+        boundsCheckConfig,
+        entryMap,
+        paramEntryInequalities
+      );
+      expect(entryIneqSignals).to.deep.eq({
+        entryInequalityValueIndex: extendedSignalArray(
+          [1n, 0n, 2n, 1n].slice(0, paramEntryInequalities),
+          paramEntryInequalities,
+          0n
+        ),
+        entryInequalityOtherValueIndex: extendedSignalArray(
+          [0n, 1n, 3n, 3n].slice(0, paramEntryInequalities),
+          paramEntryInequalities,
+          0n
+        ),
+        entryInequalityIsLessThan: array2Bits(
+          extendedSignalArray(
+            [1n, 0n, 0n, 0n].slice(0, paramEntryInequalities),
+            paramEntryInequalities,
+            0n
+          )
+        )
+      });
+    }
+  });
+  it("should work as expected with more complex entry inequality checks", () => {
+    const entryIdConfigPairsWithIneq: [
+      PODEntryIdentifier,
+      { entryConfig: GPCProofEntryConfig }
+    ][] = [
+      [
+        "pod1.a",
+        {
+          entryConfig: {
+            isRevealed: false,
+            lessThan: "pod4.a",
+            greaterThan: "pod2.someEntry"
+          }
+        }
+      ],
+      [
+        "pod2.someEntry",
+        { entryConfig: { isRevealed: false, lessThanEq: "pod1.a" } }
+      ],
+      [
+        "pod2.someOtherEntry",
+        {
+          entryConfig: {
+            isRevealed: false,
+            lessThan: "pod4.b",
+            greaterThan: "pod4.a",
+            greaterThanEq: "pod3.entry"
+          }
+        }
+      ],
+      [
+        "pod3.entry",
+        {
+          entryConfig: {
+            isRevealed: false,
+            lessThan: "pod4.b",
+            greaterThan: "pod4.a",
+            greaterThanEq: "pod1.a",
+            lessThanEq: "pod2.someEntry"
+          }
+        }
+      ]
+    ];
+    for (const paramEntryInequalities of [2, 3, 6, 10, 12]) {
+      const numEntriesWithChecks =
+        paramEntryInequalities < 3
+          ? 1
+          : paramEntryInequalities < 6
+          ? 2
+          : paramEntryInequalities < 10
+          ? 3
+          : 4;
+      const boundsCheckConfig: GPCProofBoundsCheckConfig = Object.fromEntries(
+        typicalBoundsCheckConfigPairs
+      );
+      const entryMap = new Map(
+        typicalEntryIdConfigPairs.concat(
+          entryIdConfigPairsWithIneq.slice(0, numEntriesWithChecks)
+        )
+      );
+      const entryIneqSignals = compileCommonEntryInequalities(
+        boundsCheckConfig,
+        entryMap,
+        paramEntryInequalities
+      );
+      expect(entryIneqSignals).to.deep.eq({
+        entryInequalityValueIndex: extendedSignalArray(
+          [0n, 1n, 0n, 2n, 4n, 2n, 3n, 1n, 4n, 3n].slice(
+            0,
+            paramEntryInequalities
+          ),
+          paramEntryInequalities,
+          0n
+        ),
+        entryInequalityOtherValueIndex: extendedSignalArray(
+          [4n, 0n, 1n, 5n, 2n, 3n, 5n, 3n, 3n, 0n].slice(
+            0,
+            paramEntryInequalities
+          ),
+          paramEntryInequalities,
+          0n
+        ),
+        entryInequalityIsLessThan: array2Bits(
+          extendedSignalArray(
+            [1n, 1n, 0n, 1n, 1n, 0n, 1n, 0n, 1n, 0n].slice(
+              0,
+              paramEntryInequalities
+            ),
+            paramEntryInequalities,
+            0n
+          )
+        )
       });
     }
   });

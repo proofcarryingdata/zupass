@@ -8,11 +8,18 @@ import {
 } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
-import { GPCProofEntryBoundsCheckConfig, GPCProofEntryConfig } from "../src";
 import {
+  GPCProofEntryBoundsCheckConfig,
+  GPCProofEntryConfig,
+  GPCProofEntryInequalityConfig,
+  PODEntryIdentifier
+} from "../src";
+import {
+  checkProofBoundsCheckConfigForEntryInequalityConfig,
   checkProofBoundsCheckInputsForConfig,
   checkProofEntryBoundsCheckConfig,
   checkProofEntryConfig,
+  checkProofEntryInequalityInputsForConfig,
   checkProofPODUniquenessInputsForConfig
 } from "../src/gpcChecks";
 import { privateKey, sampleEntries, sampleEntries2 } from "./common";
@@ -36,12 +43,13 @@ describe("Proof entry config check should work", () => {
       isMemberOf: "someList",
       inRange: { min: 0n, max: 100n },
       notInRange: { min: 10n, max: 30n },
-      equalsEntry: "someOtherPOD.someOtherEntry"
+      equalsEntry: "someOtherPOD.someOtherEntry",
+      lessThan: "someOtherPOD.anotherEntry"
     };
     expect(checkProofEntryConfig(entryName, entryConfig)).to.deep.equal({
       hasOwnerV3Check: false,
       hasOwnerV4Check: false,
-      inequalityChecks: {},
+      inequalityChecks: { lessThan: "someOtherPOD.anotherEntry" },
       nBoundsChecks: 2
     });
   });
@@ -295,6 +303,182 @@ describe("Proof config check against input for POD uniqueness should work", () =
     for (const pods of nonuniquePODInputs) {
       expect(() =>
         checkProofPODUniquenessInputsForConfig({ uniquePODs: true }, { pods })
+      ).to.throw;
+    }
+  });
+});
+
+describe("Proof entry inequality config check against bounds check config should work", () => {
+  const boundsChecks = {
+    "pod1.a": 1,
+    "pod2.someEntry": 2,
+    "pod2.someOtherEntry": 1,
+    "pod3.entry": 1,
+    "pod4.a": 2,
+    "pod4.b": 1
+  };
+  it("should pass for no entry inequalities", () => {
+    // Without bounds checks
+    expect(() => checkProofBoundsCheckConfigForEntryInequalityConfig({}, {})).to
+      .not.throw;
+    // With bounds checks
+    expect(() =>
+      checkProofBoundsCheckConfigForEntryInequalityConfig(boundsChecks, {})
+    ).to.not.throw;
+  });
+  it("should pass for entry inequalities with corresponding bounds checks", () => {
+    const entryInequalityCheckCombos: Record<
+      PODEntryIdentifier,
+      GPCProofEntryInequalityConfig
+    >[] = [
+      { "pod1.a": { greaterThan: "pod3.entry" } },
+      {
+        "pod1.a": { greaterThan: "pod3.entry" },
+        "pod3.entry": { lessThanEq: "pod4.b" }
+      },
+      {
+        "pod1.a": { greaterThan: "pod2.someEntry" },
+        "pod2.someEntry": { lessThanEq: "pod1.a" },
+        "pod2.someOtherEntry": { greaterThanEq: "pod3.entry" },
+        "pod3.entry": { lessThanEq: "pod2.someEntry" }
+      },
+      {
+        "pod1.a": { lessThan: "pod4.a", greaterThan: "pod2.someEntry" },
+        "pod2.someEntry": { lessThanEq: "pod1.a" },
+        "pod2.someOtherEntry": {
+          lessThan: "pod4.b",
+          greaterThan: "pod4.a",
+          greaterThanEq: "pod3.entry"
+        },
+        "pod3.entry": {
+          lessThan: "pod4.b",
+          greaterThan: "pod4.a",
+          greaterThanEq: "pod1.a",
+          lessThanEq: "pod2.someEntry"
+        }
+      }
+    ];
+    for (const entryInequalityChecks of entryInequalityCheckCombos) {
+      expect(() =>
+        checkProofBoundsCheckConfigForEntryInequalityConfig(
+          boundsChecks,
+          entryInequalityChecks
+        )
+      ).to.not.throw;
+    }
+  });
+  it("should throw for entry inequalities without corresponding bounds checks", () => {
+    const entryInequalityCheckCombos: Record<
+      PODEntryIdentifier,
+      GPCProofEntryInequalityConfig
+    >[] = [
+      { "pod1.a": { greaterThan: "pod3.entre" } },
+      {
+        "pod1.a": { greaterThan: "pod3.entry" },
+        "pod3.entry": { lessThanEq: "pod4.bee" }
+      },
+      {
+        "pod1.a": { greaterThan: "pod2.someEntry" },
+        "pod2.someEntry": { lessThanEq: "pod1.ay" },
+        "pod2.someOtherEntry": { greaterThanEq: "pod3.entry" },
+        "pod3.entry": { lessThanEq: "pod2.someEntry" }
+      },
+      {
+        "pod1.a": { lessThan: "pod4.a", greaterThan: "pod2.someEntry" },
+        "pod2.someEntry": { lessThanEq: "pod1.a" },
+        "pod2.someOtherEntry": {
+          lessThan: "pod4.b",
+          greaterThan: "pod4.a",
+          greaterThanEq: "pod3.entry"
+        },
+        "pod3.entry": {
+          lessThan: "pod4.b",
+          greaterThan: "pod4.ay",
+          greaterThanEq: "pod1.a",
+          lessThanEq: "pod2.someEntre"
+        }
+      }
+    ];
+    for (const entryInequalityChecks of entryInequalityCheckCombos) {
+      expect(() =>
+        checkProofBoundsCheckConfigForEntryInequalityConfig(
+          boundsChecks,
+          entryInequalityChecks
+        )
+      ).to.throw;
+    }
+  });
+});
+
+describe("Proof entry inequality config check against inputs should work", () => {
+  const pod1 = POD.sign(sampleEntries, privateKey);
+  const pod2 = pod1;
+  const pods = { pod1, pod2 };
+  it("should pass for no entry inequality check", () => {
+    expect(() =>
+      checkProofEntryInequalityInputsForConfig(
+        "pod1.A",
+        {},
+        { type: "int", value: 123n },
+        pods
+      )
+    ).to.not.throw;
+  });
+  it("should pass for simple inequality checks with valid input", () => {
+    const entryInequalityConfigs: GPCProofEntryInequalityConfig[] = [
+      { lessThan: "pod1.B" },
+      { greaterThan: "pod1.G" },
+      { lessThanEq: "pod2.A" },
+      { greaterThanEq: "pod1.H" }
+    ];
+    for (const entryInequalityConfig of entryInequalityConfigs) {
+      expect(() =>
+        checkProofEntryInequalityInputsForConfig(
+          "pod2.A",
+          entryInequalityConfig,
+          { type: "int", value: 123n },
+          pods
+        )
+      ).to.not.throw;
+    }
+  });
+  it("should pass for more complex inequality checks with valid input", () => {
+    const entryInequalityConfigs: GPCProofEntryInequalityConfig[] = [
+      { lessThan: "pod1.B", greaterThan: "pod1.G" },
+      { lessThan: "pod1.B", greaterThan: "pod1.G", lessThanEq: "pod2.A" },
+      {
+        lessThan: "pod1.B",
+        greaterThan: "pod1.G",
+        lessThanEq: "pod2.A",
+        greaterThanEq: "pod1.H"
+      }
+    ];
+    for (const entryInequalityConfig of entryInequalityConfigs) {
+      expect(() =>
+        checkProofEntryInequalityInputsForConfig(
+          "pod2.A",
+          entryInequalityConfig,
+          { type: "int", value: 123n },
+          pods
+        )
+      ).to.not.throw;
+    }
+  });
+  it("should throw for inequality checks with invalid input", () => {
+    const entryInequalityConfigs: GPCProofEntryInequalityConfig[] = [
+      { lessThan: "pod1.G" },
+      { lessThan: "pod1.B", greaterThan: "pod2.B" },
+      { greaterThan: "pod1.H", lessThanEq: "pod2.K" },
+      { greaterThan: "pod1.H", greaterThanEq: "pod1.B" }
+    ];
+    for (const entryInequalityConfig of entryInequalityConfigs) {
+      expect(() =>
+        checkProofEntryInequalityInputsForConfig(
+          "pod2.A",
+          entryInequalityConfig,
+          { type: "int", value: 123n },
+          pods
+        )
       ).to.throw;
     }
   });

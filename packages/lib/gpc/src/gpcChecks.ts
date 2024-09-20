@@ -404,14 +404,12 @@ export function checkProofEntryInequalityConfig(
       (ineqCheck: string): [string, PODEntryIdentifier][] => {
         const otherEntryIdentifier =
           entryConfig[ineqCheck as keyof typeof entryConfig];
-
         if (otherEntryIdentifier !== undefined) {
           // The other entry identifier should be valid.
           checkPODEntryIdentifier(
             `${nameForErrorMessages}.${ineqCheck}`,
             otherEntryIdentifier
           );
-
           return [[ineqCheck, otherEntryIdentifier]];
         } else {
           return [];
@@ -425,14 +423,14 @@ export function checkProofBoundsCheckConfigForEntryInequalityConfig(
   boundsChecks: Record<PODEntryIdentifier, number>,
   entryInequalityChecks: Record<
     PODEntryIdentifier,
-    Record<string, PODEntryIdentifier>
+    GPCProofEntryInequalityConfig
   >
 ): void {
   const inequalityCheckedEntries = uniq(
     Object.keys(entryInequalityChecks).concat(
-      Object.values(entryInequalityChecks)
-        .map((inequalityChecks) => Object.values(inequalityChecks))
-        .flat()
+      Object.values(entryInequalityChecks).flatMap((inequalityChecks) =>
+        Object.values(inequalityChecks)
+      )
     )
   ) as PODEntryIdentifier[];
   for (const entryIdentifier of inequalityCheckedEntries) {
@@ -810,7 +808,7 @@ export function checkProofBoundsCheckInputsForConfig(
 
 export function checkProofEntryInequalityInputsForConfig(
   entryName: PODEntryIdentifier,
-  entryConfig: GPCProofEntryConfig,
+  entryConfig: GPCProofEntryInequalityConfig,
   entryValue: PODValue,
   pods: Record<PODName, POD>
 ): void {
