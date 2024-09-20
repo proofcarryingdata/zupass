@@ -201,7 +201,6 @@ export function LoginScreen(): JSX.Element {
       setError(
         "Unable to log in automatically, please enter your email to log in"
       );
-    } finally {
       setStorageAccessStatus(StorageAccessStatus.Denied);
     }
   }, [tryToLogin]);
