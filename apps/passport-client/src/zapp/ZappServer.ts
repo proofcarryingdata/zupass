@@ -16,6 +16,11 @@ import {
 } from "@pcd/gpc";
 import { encodePrivateKey, encodePublicKey, POD, PODEntries } from "@pcd/pod";
 import { isPODPCD, PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
+import {
+  PODTicketPCD,
+  PODTicketPCDTypeName,
+  ticketToPOD
+} from "@pcd/pod-ticket-pcd";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { v4 as uuidv4 } from "uuid";
 import { appConfig } from "../appConfig";
@@ -193,6 +198,13 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
       .pcds.getAllPCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME)
       .filter(isPODPCD)
       .map((pcd) => pcd.pod);
+
+    const ticketPods = this.getContext()
+      .getState()
+      .pcds.getPCDsByType(PODTicketPCDTypeName)
+      .map((pcd) => ticketToPOD(pcd as PODTicketPCD));
+
+    pods.push(...ticketPods);
 
     const inputPods = prs.queryForInputs(pods);
     if (
