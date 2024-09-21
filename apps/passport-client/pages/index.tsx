@@ -60,16 +60,13 @@ import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
 import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
+import { enableLiveReload } from "../src/liveReload";
 import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { useZappServer } from "../src/zapp/useZappServer";
 
-if (appConfig.devMode) {
-  new EventSource("/esbuild").addEventListener("change", () =>
-    location.reload()
-  );
-}
+enableLiveReload();
 
 function App(): JSX.Element {
   useBackgroundJobs();
