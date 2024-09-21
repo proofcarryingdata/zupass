@@ -18,6 +18,10 @@ const TicketCardContainer = styled.div<{ $borderColor: Property.Color }>`
   border-style: solid;
   border-width: 4px;
   border-color: ${({ $borderColor }): Property.Color => $borderColor};
+  background-color: white;
+  box-shadow:
+    0px 2px 4px -1px rgba(0, 0, 0, 0.06),
+    0px 4px 6px -1px rgba(0, 0, 0, 0.1);
 `;
 
 const TicketCardImage = styled.img`
