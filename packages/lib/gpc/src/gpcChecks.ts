@@ -207,7 +207,7 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
 }
 
 function checkProofObjConfig(
-  nameForErrorMessages: string,
+  objName: string,
   objConfig: GPCProofObjectConfig
 ): {
   nEntries: number;
@@ -221,7 +221,7 @@ function checkProofObjConfig(
 } {
   if (Object.keys(objConfig.entries).length === 0) {
     throw new TypeError(
-      `Must prove at least one entry in object "${nameForErrorMessages}".`
+      `Must prove at least one entry in object "${objName}".`
     );
   }
 
@@ -235,7 +235,7 @@ function checkProofObjConfig(
   let hasOwnerV4 = false;
   for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
     checkPODEntryName(entryName, true);
-    const podEntryIdentifier: PODEntryIdentifier = `${nameForErrorMessages}.${entryName}`;
+    const podEntryIdentifier: PODEntryIdentifier = `${objName}.${entryName}`;
     const {
       nBoundsChecks: nEntryBoundsChecks,
       hasOwnerV3Check,
@@ -253,14 +253,11 @@ function checkProofObjConfig(
     hasOwnerV4 ||= hasOwnerV4Check;
   }
   if (objConfig.contentID !== undefined) {
-    checkProofEntryConfig(
-      `${nameForErrorMessages}.$contentID`,
-      objConfig.contentID
-    );
+    checkProofEntryConfig(`${objName}.$contentID`, objConfig.contentID);
   }
   if (objConfig.signerPublicKey !== undefined) {
     checkProofEntryConfig(
-      `${nameForErrorMessages}.$signerPublicKey`,
+      `${objName}.$signerPublicKey`,
       objConfig.signerPublicKey
     );
   }
@@ -396,7 +393,7 @@ export function checkProofEntryBoundsCheckConfig(
 }
 
 export function checkProofEntryInequalityConfig(
-  nameForErrorMessages: PODEntryIdentifier,
+  entryIdentifier: PODEntryIdentifier,
   entryConfig: GPCProofEntryInequalityConfig
 ): Record<string, PODEntryIdentifier> {
   return Object.fromEntries(
@@ -407,7 +404,7 @@ export function checkProofEntryInequalityConfig(
         if (otherEntryIdentifier !== undefined) {
           // The other entry identifier should be valid.
           checkPODEntryIdentifier(
-            `${nameForErrorMessages}.${ineqCheck}`,
+            `${entryIdentifier}.${ineqCheck}`,
             otherEntryIdentifier
           );
           return [[ineqCheck, otherEntryIdentifier]];
@@ -835,15 +832,16 @@ export function checkProofEntryInequalityInputsForConfig(
 
   for (const [checkType, otherEntry, cmp] of inequalityCheckTriples) {
     if (otherEntry !== undefined) {
-      const { objName, entryName: otherEntryName } =
+      const { objName: otherObjName, entryName: otherEntryName } =
         splitPODEntryIdentifier(otherEntry);
 
-      // Both `entryName` and `otherEntryName` are amongst the bounds-checked
-      // entries and therefore exist in the input as PODIntValues.
-      const pod = pods[objName] as POD;
+      // Since {@link checkProofBoundsCheckInputsForConfig} has passed, both
+      // `entryName` and `otherEntryName` are amongst the bounds-checked entries
+      // and therefore exist in the input as PODIntValues.
+      const otherPOD = pods[otherObjName] as POD;
       const otherEntryValue = resolvePODEntry(
         otherEntryName,
-        pod
+        otherPOD
       ) as PODIntValue;
       if (!cmp(entryValue.value as bigint, otherEntryValue.value)) {
         throw new Error(

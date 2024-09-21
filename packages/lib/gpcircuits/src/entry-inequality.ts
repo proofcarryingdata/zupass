@@ -7,6 +7,6 @@ export type EntryInequalityModuleInputs = {
 
 export type EntryInequalityModuleInputNamesType = ["value", "otherValue"];
 
-export type EntryInequalityModuleOutputs = { out: CircuitSignal };
+export type EntryInequalityModuleOutputs = { isLessThan: CircuitSignal };
 
-export type EntryInequalityModuleOutputNamesType = ["out"];
+export type EntryInequalityModuleOutputNamesType = ["isLessThan"];

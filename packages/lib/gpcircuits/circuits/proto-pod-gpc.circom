@@ -2,7 +2,6 @@ pragma circom 2.1.8;
 
 include "circomlib/circuits/gates.circom";
 include "circomlib/circuits/poseidon.circom";
-include "constants.circom";
 include "entry.circom";
 include "entry-inequality.circom";
 include "global.circom";
@@ -72,6 +71,12 @@ template ProtoPODGPC (
     // enabled.  Should be 0 or 1.
     INCLUDE_OWNERV4
 ) {
+    /**
+     * Maximum number of bits in a POD int value. Used in the bounds
+     * check, numeric value and entry inequality modules.
+     */
+    var POD_INT_BITS = 64;
+     
     /*
      * 1+ ObjectModules.  Each array corresponds to one input/output for each object module.
      */
@@ -308,7 +313,7 @@ template ProtoPODGPC (
     
     for (var i = 0; i < MAX_NUMERIC_VALUES; i++) {
         numericValueBoundsCheck[i]
-            <== NumericValueModule()(
+            <== NumericValueModule(POD_INT_BITS)(
                 // Disable value hash check if index is -1.
                 NOT()(
                     IsZero()(numericValueEntryIndices[i] + 1)
@@ -348,7 +353,7 @@ template ProtoPODGPC (
     
     for (var i = 0; i < MAX_ENTRY_INEQUALITIES; i++) {
         entryInequalityCheck[i]
-            <== EntryInequalityModule(POD_INT_BITS())(
+            <== EntryInequalityModule(POD_INT_BITS)(
                 InputSelector(MAX_NUMERIC_VALUES)(
                     numericValues,
                     entryInequalityValueIndex[i]

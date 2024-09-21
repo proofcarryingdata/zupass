@@ -48,15 +48,16 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
-  GPCProofBoundsCheckConfig,
+  GPCProofEntryNumericValueConfig,
   GPCProofMembershipListConfig,
+  GPCProofNumericValueConfig,
   LIST_MEMBERSHIP,
-  boundsCheckConfigFromProofConfig,
   isTupleIdentifier,
   isVirtualEntryIdentifier,
   isVirtualEntryName,
   listConfigFromProofConfig,
-  makeWatermarkSignal
+  makeWatermarkSignal,
+  numericValueConfigFromProofConfig
 } from "./gpcUtil";
 
 /**
@@ -351,16 +352,16 @@ export function compileProofConfig(
   );
 
   // Create numeric value module inputs.
-  const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
+  const numericValueConfig = numericValueConfigFromProofConfig(proofConfig);
   const circuitNumericValueInputs = compileProofNumericValues(
-    boundsCheckConfig,
+    numericValueConfig,
     entryMap,
     circuitDesc.maxNumericValues
   );
 
   // Create entry inequality inputs.
   const circuitEntryInequalityInputs = compileCommonEntryInequalities(
-    boundsCheckConfig,
+    numericValueConfig,
     entryMap,
     circuitDesc.maxEntryInequalities
   );
@@ -437,7 +438,7 @@ function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
 }
 
 function compileProofNumericValues(
-  boundsCheckConfig: GPCProofBoundsCheckConfig,
+  numericValueConfig: GPCProofNumericValueConfig,
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<POD>>,
   paramNumericValues: number
 ): {
@@ -454,7 +455,7 @@ function compileProofNumericValues(
     numericMinValues,
     numericMaxValues
   } = compileCommonNumericValues(
-    boundsCheckConfig,
+    numericValueConfig,
     entryMap,
     paramNumericValues
   );
@@ -479,9 +480,9 @@ function compileProofNumericValues(
 
       // Duplicate value if both `inRange` and `notInRange` are present for the
       // entry.
-      return Object.keys(boundsCheckConfig[entryId]).map(
-        (_) => entryValue.value
-      );
+      return Object.keys(
+        numericValueConfig.get(entryId)?.boundsCheckConfig ?? {}
+      ).map((_) => entryValue.value);
     }
   );
 
@@ -498,7 +499,7 @@ function compileProofNumericValues(
 export function compileCommonEntryInequalities<
   CompilerEntryInfo extends { entryConfig: GPCProofEntryConfig }
 >(
-  boundsCheckConfig: GPCProofBoundsCheckConfig,
+  numericValueConfig: GPCProofNumericValueConfig,
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo>,
   paramEntryInequalities: number
 ): {
@@ -506,32 +507,59 @@ export function compileCommonEntryInequalities<
   entryInequalityOtherValueIndex: CircuitSignal[];
   entryInequalityIsLessThan: CircuitSignal;
 } {
-  const numericValueIndex: Record<PODEntryIdentifier, bigint> =
-    Object.fromEntries(
-      Object.keys(boundsCheckConfig).map((entryIdentifier, i) => [
-        entryIdentifier,
-        BigInt(i)
-      ])
-    );
+  // For each numeric value with an entry inequality check, arrange the
+  // inequality check to one of the form 'a < b', returning a list of triples of
+  // the form [index of a as numeric value, index of b as numeric value,
+  // BigInt(a<b)] arranged in lexicographic order of POD entry identifiers. If
+  // an entry has more than one inequality check, the checks are arranged in the
+  // following order: lessThan, lessThanEq, greaterThan, greaterThanEq.
   const signalTriples = (
-    Object.entries(numericValueIndex) as [PODEntryIdentifier, bigint][]
-  ).flatMap(([entryIdentifier, entryIndex]): bigint[][] => {
+    Array.from(numericValueConfig.entries()) as [
+      PODEntryIdentifier,
+      GPCProofEntryNumericValueConfig
+    ][]
+  ).flatMap(([entryIdentifier, numericValueEntryConfig]): bigint[][] => {
     const entryConfig = entryMap.get(entryIdentifier)
       ?.entryConfig as GPCProofEntryConfig;
+    const entryIndex = numericValueEntryConfig.index;
     return [
       entryConfig.lessThan
-        ? [[entryIndex, numericValueIndex[entryConfig.lessThan], 1n]]
+        ? [
+            [
+              entryIndex,
+              numericValueConfig.get(entryConfig.lessThan)?.index,
+              1n
+            ]
+          ]
         : [],
       entryConfig.lessThanEq
-        ? [[numericValueIndex[entryConfig.lessThanEq], entryIndex, 0n]]
+        ? [
+            [
+              numericValueConfig.get(entryConfig.lessThanEq)?.index,
+              entryIndex,
+              0n
+            ]
+          ]
         : [],
       entryConfig.greaterThan
-        ? [[numericValueIndex[entryConfig.greaterThan], entryIndex, 1n]]
+        ? [
+            [
+              numericValueConfig.get(entryConfig.greaterThan)?.index,
+              entryIndex,
+              1n
+            ]
+          ]
         : [],
       entryConfig.greaterThanEq
-        ? [[entryIndex, numericValueIndex[entryConfig.greaterThanEq], 0n]]
+        ? [
+            [
+              entryIndex,
+              numericValueConfig.get(entryConfig.greaterThanEq)?.index,
+              0n
+            ]
+          ]
         : []
-    ].flat();
+    ].flat() as [bigint, bigint, bigint][];
   });
 
   return {
@@ -558,7 +586,7 @@ export function compileCommonEntryInequalities<
 function compileCommonNumericValues<
   ObjInput extends POD | GPCRevealedObjectClaims
 >(
-  boundsCheckConfig: GPCProofBoundsCheckConfig,
+  numericValueConfig: GPCProofNumericValueConfig,
   entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>,
   paramNumericValues: number
 ): {
@@ -569,9 +597,7 @@ function compileCommonNumericValues<
   numericMaxValues: CircuitSignal[];
 } {
   // POD entry identifiers arranged according to {@link podEntryIdentifierCompare}.
-  const numericValueIdOrder = Object.keys(
-    boundsCheckConfig
-  ) as PODEntryIdentifier[];
+  const numericValueIdOrder = Array.from(numericValueConfig.keys());
 
   // Compile signals
   const unpaddedNumericValueSignals = numericValueIdOrder.flatMap((entryId) => {
@@ -582,8 +608,9 @@ function compileCommonNumericValues<
       throw new ReferenceError(`Missing input for identifier ${entryId}.`);
     }
 
-    const inRange = boundsCheckConfig[entryId].inRange;
-    const notInRange = boundsCheckConfig[entryId].notInRange;
+    const inRange = numericValueConfig.get(entryId)?.boundsCheckConfig.inRange;
+    const notInRange =
+      numericValueConfig.get(entryId)?.boundsCheckConfig.notInRange;
 
     return [
       ...(inRange ? [[BigInt(idx), 1n, inRange.min, inRange.max]] : []),
@@ -1163,17 +1190,17 @@ export function compileVerifyConfig(
   );
 
   // Create numeric value module inputs
-  const boundsCheckConfig = boundsCheckConfigFromProofConfig(verifyConfig);
+  const numericValueConfig = numericValueConfigFromProofConfig(verifyConfig);
   const { numericValueIdOrder: _, ...circuitNumericValueInputs } =
     compileCommonNumericValues(
-      boundsCheckConfig,
+      numericValueConfig,
       entryMap,
       circuitDesc.maxNumericValues
     );
 
   // Create entry inequality inputs.
   const circuitEntryInequalityInputs = compileCommonEntryInequalities(
-    boundsCheckConfig,
+    numericValueConfig,
     entryMap,
     circuitDesc.maxEntryInequalities
   );

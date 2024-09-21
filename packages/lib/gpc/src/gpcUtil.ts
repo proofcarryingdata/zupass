@@ -711,16 +711,25 @@ export const LIST_MEMBERSHIP = "membership";
 export const LIST_NONMEMBERSHIP = "non-membership";
 
 /**
- * Configuration for bounds checks arranged by entry identifier requiring a
- * bounds check.
+ * Configuration for numeric values containing bounds check configurations and
+ * indices according to entry identifier arranged in lexicographic order.
  *
  * This is deduced from the proof configuration in
- * {@link boundsCheckConfigFromProofConfig}.
+ * {@link numericValueConfigFromProofConfig}.
  */
-export type GPCProofBoundsCheckConfig = Record<
+export type GPCProofNumericValueConfig = Map<
   PODEntryIdentifier,
-  GPCProofEntryBoundsCheckConfig
+  GPCProofEntryNumericValueConfig
 >;
+
+/**
+ * Configuration for a single numeric value entry containing a bounds check
+ * configuration and index, cf. {@link GPCProofNumericValueConfig}.
+ */
+export type GPCProofEntryNumericValueConfig = {
+  boundsCheckConfig: GPCProofEntryBoundsCheckConfig;
+  index: bigint;
+};
 
 /**
  * Configuration for named lists arranged by identifier requiring a list
@@ -750,22 +759,23 @@ export type ListConfig = {
 };
 
 /**
- * Determines the bounds check configuration from the proof configuration sorted
- * in lexicographic order.
+ * Determines the numeric value module configuration from the proof
+ * configuration sorted by POD entry identifier in lexicographic order.
  *
- * Bounds checks are indicated in each entry field via the optional property
- * `inRange`, which specifies (public) constant upper and lower bounds. This
- * procedure singles out and arranges these bounds check configurations by entry
- * identifier.
+ * Bounds checks are indicated in each entry field via the optional properties
+ * `inRange` and `notInRange`, which specify (public) constant upper and lower
+ * bounds. This procedure singles out these bounds check configurations and
+ * keeps track of the indices of these numeric values assuming lexicographical
+ * order with respect to their entry identifiers.
  *
  * @param proofConfig the proof configuration
- * @returns a record mapping entry identifiers to their bounds check
- * configurations
+ * @returns a map taking an entry identifier to a record containing its bounds
+ * check configuration and numeric value index.
  */
-export function boundsCheckConfigFromProofConfig(
+export function numericValueConfigFromProofConfig(
   proofConfig: GPCProofConfig
-): GPCProofBoundsCheckConfig {
-  return Object.fromEntries(
+): GPCProofNumericValueConfig {
+  return new Map(
     (
       Object.entries(proofConfig.pods).flatMap(([podName, podConfig]) =>
         Object.entries(podConfig.entries).flatMap(
@@ -788,7 +798,12 @@ export function boundsCheckConfigFromProofConfig(
           }
         )
       ) as [PODEntryIdentifier, GPCProofEntryBoundsCheckConfig][]
-    ).sort((x, y) => podEntryIdentifierCompare(x[0], y[0]))
+    )
+      .sort((x, y) => podEntryIdentifierCompare(x[0], y[0]))
+      .map(([entryIdentifier, boundsCheckConfig], i) => [
+        entryIdentifier,
+        { boundsCheckConfig, index: BigInt(i) }
+      ])
   );
 }
 

@@ -187,8 +187,8 @@ export type GPCProofEntryBoundsCheckConfig = {
 /**
  * Entry inequality configuration for an individual entry. This specifies
  * inequalities that should be satisfied with respect to other entries. All such
- * entries must be bounds-checked to lie in the appropriate range ([POD_INT_MIN,
- * POD_INT_MAX]), lest the resulting circuit be underconstrained.
+ * entries must be bounds-checked to lie in (a subset of) the appropriate range
+ * ([POD_INT_MIN, POD_INT_MAX]), lest the resulting circuit be underconstrained.
  */
 export type GPCProofEntryInequalityConfig = {
   /**

@@ -2,7 +2,6 @@ pragma circom 2.1.8;
 
 include "circomlib/circuits/poseidon.circom";
 include "bounds.circom";
-include "constants.circom";
 
 /**
  * Module constraining a single entry value of POD object. It proves
@@ -12,7 +11,11 @@ include "constants.circom";
  * This module has an explicit enable flag. If it is disabled, the bounds
  * check parameters should take on their default values, viz. 0 and 0.
  */
-template NumericValueModule() {
+template NumericValueModule(
+    // Number of bits required to represent the inputs. Must be less
+    // than 252, cf. {@link BoundsCheckModule}.
+    NUM_BITS
+) {
     // Boolean flag for the value check. Booleanness will be deduced
     // from the entry index passed to the ProtoPODGPC circuit and thus
     // checked externally.
@@ -33,11 +36,13 @@ template NumericValueModule() {
     signal input minValue;
     signal input maxValue;
 
+    var ABS_POD_INT_MIN = 1 << (NUM_BITS - 1);
+    
     // Check that minValue <= numericValue <= maxValue and return the
-    // result.
-    signal output isInBounds <== BoundsCheckModule(POD_INT_BITS())(
-        numericValue + ABS_POD_INT_MIN(),
-        minValue + ABS_POD_INT_MIN(),
-        maxValue + ABS_POD_INT_MIN()
+    // result. Values are shifted to allow for signed POD int values.
+    signal output isInBounds <== BoundsCheckModule(NUM_BITS)(
+        numericValue + ABS_POD_INT_MIN,
+        minValue + ABS_POD_INT_MIN,
+        maxValue + ABS_POD_INT_MIN
     );
 }

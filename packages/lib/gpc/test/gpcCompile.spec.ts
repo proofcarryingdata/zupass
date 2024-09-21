@@ -11,11 +11,7 @@ import {
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
-import {
-  GPCProofEntryBoundsCheckConfig,
-  GPCProofEntryConfig,
-  PODEntryIdentifier
-} from "../src";
+import { GPCProofEntryConfig, PODEntryIdentifier } from "../src";
 import {
   compileCommonEntryInequalities,
   compileProofOwnerV3,
@@ -24,7 +20,11 @@ import {
   compileVerifyOwnerV3,
   compileVerifyOwnerV4
 } from "../src/gpcCompile";
-import { GPCProofBoundsCheckConfig, makeWatermarkSignal } from "../src/gpcUtil";
+import {
+  GPCProofEntryNumericValueConfig,
+  GPCProofNumericValueConfig,
+  makeWatermarkSignal
+} from "../src/gpcUtil";
 import { ownerIdentity, ownerIdentityV4 } from "./common";
 
 describe("Semaphore V3 owner module compilation for proving should work", () => {
@@ -269,9 +269,18 @@ describe("POD entry inequality module compilation for proving and verification s
     "pod4.a",
     "pod4.b"
   ];
-  const typicalBoundsCheckConfigPairs = typicalEntryIdentifiers.map(
-    (entryId) => [entryId, { min: POD_INT_MIN, max: POD_INT_MAX }]
-  ) as [PODEntryIdentifier, GPCProofEntryBoundsCheckConfig][];
+  const typicalNumericValueConfigTriples = typicalEntryIdentifiers.map(
+    (entryId, i) => [
+      entryId,
+      {
+        boundsCheckConfig: { min: POD_INT_MIN, max: POD_INT_MAX },
+        index: BigInt(i)
+      }
+    ]
+  ) as [PODEntryIdentifier, GPCProofEntryNumericValueConfig][];
+  const typicalNumericValueConfig: GPCProofNumericValueConfig = new Map(
+    typicalNumericValueConfigTriples
+  );
   const typicalEntryIdConfigPairs: [
     PODEntryIdentifier,
     { entryConfig: GPCProofEntryConfig }
@@ -281,14 +290,14 @@ describe("POD entry inequality module compilation for proving and verification s
   ]);
   it("should work as expected for no entry inequality checks", () => {
     for (const paramEntryInequalities of [0, 2, 6]) {
-      const boundsCheckConfig = {};
+      const numericValueConfig: GPCProofNumericValueConfig = new Map([]);
       const entryMap = new Map(typicalEntryIdConfigPairs);
       const entryIneqSignals = compileCommonEntryInequalities(
-        boundsCheckConfig,
+        numericValueConfig,
         entryMap,
         paramEntryInequalities
       );
-      expect(entryIneqSignals).to.deep.eq({
+      expect(entryIneqSignals).to.deep.equal({
         entryInequalityValueIndex: extendedSignalArray(
           [],
           paramEntryInequalities,
@@ -330,16 +339,13 @@ describe("POD entry inequality module compilation for proving and verification s
       ]
     ];
     for (const paramEntryInequalities of [1, 2, 3, 4, 6]) {
-      const boundsCheckConfig: GPCProofBoundsCheckConfig = Object.fromEntries(
-        typicalBoundsCheckConfigPairs
-      );
       const entryMap = new Map(
         typicalEntryIdConfigPairs.concat(
           entryIdConfigPairsWithIneq.slice(0, paramEntryInequalities)
         )
       );
       const entryIneqSignals = compileCommonEntryInequalities(
-        boundsCheckConfig,
+        typicalNumericValueConfig,
         entryMap,
         paramEntryInequalities
       );
@@ -416,16 +422,13 @@ describe("POD entry inequality module compilation for proving and verification s
           : paramEntryInequalities < 10
           ? 3
           : 4;
-      const boundsCheckConfig: GPCProofBoundsCheckConfig = Object.fromEntries(
-        typicalBoundsCheckConfigPairs
-      );
       const entryMap = new Map(
         typicalEntryIdConfigPairs.concat(
           entryIdConfigPairsWithIneq.slice(0, numEntriesWithChecks)
         )
       );
       const entryIneqSignals = compileCommonEntryInequalities(
-        boundsCheckConfig,
+        typicalNumericValueConfig,
         entryMap,
         paramEntryInequalities
       );
