@@ -21,20 +21,22 @@ const ComponentsScreen = (): JSX.Element => {
         <CenterColumn>
           <BigInput placeholder="placeholder" />
         </CenterColumn>
-        <TicketCard
-          title="DEVCON 2025"
-          address="Bangkok, Thailand"
-          ticketCount={3}
-          cardColor="purple"
-          imgSource="https://i.imgur.com/Fzs5N9T.jpeg"
-        />
-        <TicketCard
-          title="ETH Denver 2024"
-          address="Denver, Colorado"
-          ticketCount={1}
-          cardColor="orange"
-          imgSource="https://i.imgur.com/Fzs5N9T.jpeg"
-        />
+        <div style={{ display: "flex", flexDirection: "row", gap: 40 }}>
+          <TicketCard
+            title="DEVCON 2025"
+            address="Bangkok, Thailand"
+            ticketCount={3}
+            cardColor="purple"
+            imgSource="https://i.imgur.com/Fzs5N9T.jpeg"
+          />
+          <TicketCard
+            title="ETH Denver 2024"
+            address="Denver, Colorado"
+            ticketCount={1}
+            cardColor="orange"
+            imgSource="https://i.imgur.com/Fzs5N9T.jpeg"
+          />
+        </div>
         <Ticket name="Richard Lu" type="Speaker" email="richard@0xparg.org" />
       </div>
     </AppContainer>
