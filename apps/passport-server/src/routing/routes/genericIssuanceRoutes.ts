@@ -579,6 +579,8 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/one-click-emails/:pipelineId/:apiKey",
     async (req, res) => {
+      logger("[PODBOX] handling one-click-emails:", req.params);
+
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineId = checkUrlParam(req, "pipelineId");
       const apiKey = checkUrlParam(req, "apiKey");
@@ -587,7 +589,7 @@ export function initGenericIssuanceRoutes(
         !process.env.DEVCON_PODBOX_API_KEY ||
         apiKey !== process.env.DEVCON_PODBOX_API_KEY
       ) {
-        throw new PCDHTTPError(401, "invalid api key");
+        throw new PCDHTTPError(401, "invalid api key " + apiKey);
       }
 
       const pipeline = (
@@ -597,10 +599,13 @@ export function initGenericIssuanceRoutes(
         | undefined;
 
       if (!pipeline) {
-        throw new PCDHTTPError(400, "pipeline not found");
+        throw new PCDHTTPError(400, "pipeline not found " + pipelineId);
       }
 
       const tickets = await pipeline.getAllTickets();
+      logger(
+        `[PODBOX] one-click-emails: summarizing ${tickets.atoms.length} tickets`
+      );
 
       const result: OneClickEmailResponseValue = { values: {} };
 

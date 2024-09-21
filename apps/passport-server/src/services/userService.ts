@@ -55,6 +55,7 @@ import { GenericIssuanceService } from "./generic-issuance/GenericIssuanceServic
 import { CredentialSubservice } from "./generic-issuance/subservices/CredentialSubservice";
 import { RateLimitService } from "./rateLimitService";
 import { SemaphoreService } from "./semaphoreService";
+import { traced } from "./telemetryService";
 
 const AgreedTermsSchema = z.object({
   version: z.number().max(LATEST_PRIVACY_NOTICE)
@@ -107,6 +108,7 @@ export class UserService {
 
   public async start(): Promise<void> {
     if (this.stopped) {
+      logger("[USER_SERVICE] stopped - not scheduling another sync");
       return;
     }
 
@@ -116,9 +118,11 @@ export class UserService {
       logger("[USER_SERVICE] Error syncing podbox emails", e);
     }
 
+    const syncInterval = 1000 * 45;
+    logger(`[USER_SERVICE] scheduling another podbox sync in ${syncInterval}`);
     this.podboxSyncLoopTimeout = setTimeout(async () => {
       this.start();
-    }, 1000 * 45);
+    }, syncInterval);
   }
 
   public stop(): void {
@@ -127,26 +131,33 @@ export class UserService {
   }
 
   private async syncPodboxEmails(): Promise<void> {
-    if (
-      !process.env.DEVCON_PODBOX_API_URL ||
-      !process.env.DEVCON_PIPELINE_ID ||
-      !process.env.DEVCON_PODBOX_API_KEY
-    ) {
-      logger("[USER_SERVICE] No podbox credentials found, skipping sync");
-      return;
-    }
+    return traced("USER_SERVICE", "syncPodboxEmails", async () => {
+      if (
+        !process.env.DEVCON_PODBOX_API_URL ||
+        !process.env.DEVCON_PIPELINE_ID ||
+        !process.env.DEVCON_PODBOX_API_KEY
+      ) {
+        logger("[USER_SERVICE] No podbox credentials found, skipping sync");
+        return;
+      }
 
-    const res = await requestPodboxOneClickEmails(
-      process.env.DEVCON_PODBOX_API_URL,
-      process.env.DEVCON_PIPELINE_ID,
-      process.env.DEVCON_PODBOX_API_KEY
-    );
+      logger("[USER_SERVICE] Scheduling devcon podbox sync");
 
-    if (res.success) {
-      this.anonymizedDevconEmails = res.value.values;
-    } else {
-      logger("[USER_SERVICE] Error syncing podbox emails", res.error);
-    }
+      const res = await requestPodboxOneClickEmails(
+        process.env.DEVCON_PODBOX_API_URL,
+        process.env.DEVCON_PIPELINE_ID,
+        process.env.DEVCON_PODBOX_API_KEY
+      );
+
+      if (res.success) {
+        logger(
+          `[USER_SERVICE] successfully completed devcon podbox sync, got ${res.value?.values?.length} emails`
+        );
+        this.anonymizedDevconEmails = res.value.values;
+      } else {
+        logger("[USER_SERVICE] Error syncing podbox emails", res.error);
+      }
+    });
   }
 
   public async getSaltByEmail(email: string): Promise<string | null> {
