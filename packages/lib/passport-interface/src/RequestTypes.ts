@@ -1232,7 +1232,7 @@ export type RemoveUserEmailResponseValue = {
 
 export type OneClickEmailResponseValue = {
   /**
-   * Hashed email -> Pretix order code
+   * Hashed email -> hashed pretix order codes
    */
-  values: Record<string, string>;
+  values: Record<string, string[]>;
 };
