@@ -67,6 +67,8 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/fonts/Barlow-Regular.ttf",
   "/fonts/Barlow-Medium.ttf",
   "/fonts/Barlow-SemiBold.ttf",
+  "/fonts/Barlow-Bold.ttf",
+  "/fonts/Barlow-ExtraBold.ttf",
   "/fonts/IBMPlexSans-ExtraLight.woff",
   "/fonts/IBMPlexSans-Light.woff",
   "/fonts/IBMPlexSans-LightItalic.woff",

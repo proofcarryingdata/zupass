@@ -105,6 +105,20 @@ a:hover {
   src: url(/fonts/Barlow-SemiBold.ttf) format("truetype");
 }
 
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 700;
+  src: url(/fonts/Barlow-Bold.ttf) format("truetype");
+}
+
+@font-face {
+  font-family: "Barlow";
+  font-style: normal;
+  font-weight: 800;
+  src: url(/fonts/Barlow-ExtraBold.ttf) format("truetype");
+}
+
 /* IBM Plex Sans */
 @font-face {
   font-family: "PlexSans";
