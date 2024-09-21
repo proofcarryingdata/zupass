@@ -75,7 +75,9 @@ export class CredentialSubservice {
         throw new VerificationError("Missing email PCD in credential");
       }
       if (!verifiedCredential.authKey && !this.isZupassPublicKey(signer)) {
-        throw new VerificationError("Email PCD not signed by Zupass");
+        throw new VerificationError(
+          `Email PCD not signed by Zupass. expected ${this.zupassPublicKey} but got ${signer}`
+        );
       }
     }
 
