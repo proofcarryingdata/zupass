@@ -1,9 +1,5 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
-import {
-  EdDSAPublicKey,
-  getEdDSAPublicKey,
-  isEqualEdDSAPublicKey
-} from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   Credential,
   VerificationError,
@@ -12,7 +8,7 @@ import {
 } from "@pcd/passport-interface";
 import { LRUCache } from "lru-cache";
 import { Pool } from "postgres-pool";
-import { loadEdDSAPrivateKey } from "../../issuanceService";
+import { loadZupassEdDSAPublicKey } from "../../issuanceService";
 
 /**
  * Manages server-side verification of credential PCDs.
@@ -99,13 +95,11 @@ export class CredentialSubservice {
 export async function startCredentialSubservice(
   dbPool: Pool
 ): Promise<CredentialSubservice> {
-  const zupassEddsaKey = loadEdDSAPrivateKey();
+  const zupassEddsaPublicKey = await loadZupassEdDSAPublicKey();
 
-  if (!zupassEddsaKey) {
-    throw new Error("Missing environment variable SERVER_EDDSA_PRIVATE_KEY");
+  if (!zupassEddsaPublicKey) {
+    throw new Error("Missing generic issuance zupass public key");
   }
 
-  const zupassPublicKey = await getEdDSAPublicKey(zupassEddsaKey);
-
-  return new CredentialSubservice(zupassPublicKey, dbPool);
+  return new CredentialSubservice(zupassEddsaPublicKey, dbPool);
 }
