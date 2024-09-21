@@ -20,15 +20,27 @@ function PODTicketCardBody({
   idBasedVerifyURL: string;
 }): JSX.Element {
   const ticketData = pcd.claim.ticket;
+  const hasImage = pcd.claim.ticket.imageUrl !== undefined;
 
   return (
     <Container>
-      <TicketQR pcd={pcd} idBasedVerifyURL={idBasedVerifyURL} />
+      {hasImage && (
+        <TicketInfo>
+          <TicketImage hidePadding={false} pcd={pcd} />
+          <span>{ticketData?.attendeeName}</span>
+          <span>{ticketData?.attendeeEmail}</span>
+        </TicketInfo>
+      )}
 
-      <TicketInfo>
-        <span>{ticketData.attendeeName}</span>
-        <span>{ticketData.attendeeEmail}</span>
-      </TicketInfo>
+      {!hasImage && (
+        <>
+          <TicketQR pcd={pcd} idBasedVerifyURL={idBasedVerifyURL} />
+          <TicketInfo>
+            <span>{ticketData.attendeeName}</span>
+            <span>{ticketData.attendeeEmail}</span>
+          </TicketInfo>
+        </>
+      )}
     </Container>
   );
 }
@@ -96,3 +108,19 @@ const TicketInfo = styled.div`
   align-items: center;
   flex-direction: column;
 `;
+
+function TicketImage({
+  pcd,
+  hidePadding
+}: {
+  pcd: PODTicketPCD;
+  hidePadding?: boolean;
+}): JSX.Element {
+  const { imageUrl, imageAltText } = pcd.claim.ticket;
+  if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
+  return (
+    <div style={{ padding: "8px" }}>
+      <img src={imageUrl} alt={imageAltText} />
+    </div>
+  );
+}
