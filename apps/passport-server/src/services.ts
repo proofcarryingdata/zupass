@@ -122,6 +122,7 @@ export async function startServices(
 }
 
 export async function stopServices(services: GlobalServices): Promise<void> {
+  services.userService.stop();
   services.provingService.stop();
   services.semaphoreService.stop();
   services.zuzaluPretixSyncService?.stop();

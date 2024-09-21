@@ -1229,3 +1229,10 @@ export interface RemoveUserEmailRequest {
 export type RemoveUserEmailResponseValue = {
   newEmailList: string[];
 };
+
+export type OneClickEmailResponseValue = {
+  /**
+   * Hashed email -> hashed pretix order codes
+   */
+  values: Record<string, string[]>;
+};
