@@ -26,9 +26,16 @@ const TicketCardContainer = styled.div<{ $borderColor: Property.Color }>`
 
 const TicketCardImage = styled.img`
   width: 100%;
+  height: 100%;
+`;
+
+const TicketCardImageContainer = styled.div`
+  position: relative;
+  width: 100%;
   min-width: 350px;
   height: 215px;
   border-radius: 8px;
+  overflow: hidden;
 `;
 
 const TicketCardDetails = styled.div`
@@ -40,11 +47,26 @@ const TicketCardDetails = styled.div`
   padding: 8px;
 `;
 
+const DateChipContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  border-radius: 200px;
+  padding: 4px 10px;
+  gap: 10px;
+  background-color: black;
+`;
+
 interface TicketCardProps {
   imgSource: string;
   title: string;
   address: string;
   ticketCount: number;
+  ticketDate: string;
   cardColor: CardColor;
 }
 export const TicketCard = ({
@@ -52,11 +74,19 @@ export const TicketCard = ({
   title,
   address,
   ticketCount,
-  cardColor
+  cardColor,
+  ticketDate
 }: TicketCardProps): JSX.Element => {
   return (
     <TicketCardContainer $borderColor={CARD_COLORS[cardColor]}>
-      <TicketCardImage src={imgSource} />
+      <TicketCardImageContainer>
+        <DateChipContainer>
+          <Typography fontSize={12} fontWeight={800} color="white">
+            {ticketDate}
+          </Typography>
+        </DateChipContainer>
+        <TicketCardImage src={imgSource} />
+      </TicketCardImageContainer>
       <TicketCardDetails>
         <Typography fontSize={18} fontWeight={800}>
           {title}

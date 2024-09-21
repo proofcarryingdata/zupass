@@ -3,9 +3,10 @@ import React from "react";
 import styled from "styled-components";
 
 export type FontWeight = 400 | 500 | 600 | 700 | 800 | 900;
-export type FontSize = 14 | 16 | 18;
+export type FontSize = 12 | 14 | 16 | 18;
 
 const LINE_HEIGHT: Record<FontSize, number> = {
+  "12": 16.2,
   "14": 18.9,
   "16": 21.6,
   "18": 24.3

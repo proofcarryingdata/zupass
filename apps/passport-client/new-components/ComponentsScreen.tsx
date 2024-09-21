@@ -28,6 +28,7 @@ const ComponentsScreen = (): JSX.Element => {
             ticketCount={3}
             cardColor="purple"
             imgSource="https://i.imgur.com/Fzs5N9T.jpeg"
+            ticketDate="NOV. 12-15, 2024"
           />
           <TicketCard
             title="ETH Denver 2024"
@@ -35,6 +36,7 @@ const ComponentsScreen = (): JSX.Element => {
             ticketCount={1}
             cardColor="orange"
             imgSource="https://i.imgur.com/Fzs5N9T.jpeg"
+            ticketDate="AUG. 13, 2022"
           />
         </div>
         <Ticket name="Richard Lu" type="Speaker" email="richard@0xparg.org" />
