@@ -1,4 +1,3 @@
-import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import NodeRSA from "node-rsa";
 import { EnvironmentVariables } from "../../src/types";
 import { logger } from "../../src/util/logger";
@@ -38,8 +37,9 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   SERVER_RSA_PRIVATE_KEY_BASE64: Buffer.from(
     new NodeRSA({ b: 2048 }).exportKey("private")
   ).toString("base64"),
-  SERVER_EDDSA_PRIVATE_KEY: newEdDSAPrivateKey(),
-  GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY: newEdDSAPrivateKey(),
+  SERVER_EDDSA_PRIVATE_KEY:
+    "129806f9d68c3cf87450a968748fd31f01ba4e6f2078d80f24ebab23d98df7cf",
+  GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY: `["00f669040a1c31ff18b8e221b94ac36580da68a05c69c21298569e97e193ca45","2b2a9ae6ed7d5ca397637bbe7180849ac6e828171790644ed723abf2decb96c2"]`,
   STYTCH_PROJECT_ID: "stytch_project_id",
   STYTCH_SECRET: "stytch_url",
   GENERIC_ISSUANCE_CLIENT_URL: "http://localhost:3005",
