@@ -1,13 +1,14 @@
 import styled from "styled-components";
 import { Typography } from "../Typography";
 import { FaChevronRight } from "react-icons/fa";
+import { Avatar } from "../Avatar";
 
 export type ListItemType = {
   title: string;
-  LeftIcon: React.ReactNode;
+  LeftIcon?: React.ReactNode;
 };
 
-const ListItemContainer = styled.li`
+const ListItemContainer = styled.div`
   display: flex;
   width: 100%;
   align-items: center;
@@ -24,12 +25,23 @@ const ListItemRightContainer = styled.div`
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 `;
 
+const IconContainer = styled.div`
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+`;
+
 export const ListItem = ({ title, LeftIcon }: ListItemType) => {
   return (
     <ListItemContainer>
-      {LeftIcon}
+      <IconContainer>{LeftIcon ? LeftIcon : <Avatar />}</IconContainer>
       <ListItemRightContainer>
-        <Typography>{title}</Typography>
+        <Typography family="Neue Haas Unica" fontWeight={500} fontSize={16}>
+          {title}
+        </Typography>
         <FaChevronRight color="var(--text-tertiary)" />
       </ListItemRightContainer>
     </ListItemContainer>
