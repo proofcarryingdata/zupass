@@ -1,10 +1,13 @@
+import { useEffect, useRef, useState } from "react";
 import { CenterColumn, TextCenter } from "../components/core";
 import { AppContainer } from "../components/shared/AppContainer";
-import { BigInput } from "./Input";
+import { Input2 } from "./Input";
 import { Ticket } from "./Ticket";
 import { TicketCard } from "./TicketCard";
+import { Button } from "../components/screens/FrogScreens/Button";
 
 const ComponentsScreen = (): JSX.Element => {
+  const [error, setError] = useState("");
   return (
     <AppContainer bg="gray">
       <div
@@ -19,7 +22,18 @@ const ComponentsScreen = (): JSX.Element => {
       >
         <TextCenter>Hello, world!</TextCenter>
         <CenterColumn>
-          <BigInput placeholder="placeholder" />
+          <Input2 variant="secondary" placeholder="placeholder" error={error} />
+          <Button
+            onClick={() => {
+              if (error) {
+                setError("");
+              } else {
+                setError("some generic error");
+              }
+            }}
+          >
+            test input{" "}
+          </Button>
         </CenterColumn>
         <div style={{ display: "flex", flexDirection: "row", gap: 40 }}>
           <TicketCard
