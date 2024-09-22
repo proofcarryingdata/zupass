@@ -64,6 +64,7 @@ export const BtnBase = styled.button`
 const BtnSecondary = styled(BtnBase)`
   color: var(--text-primary);
   background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.05);
   &:hover {
     background: hsl(0, 0%, 98%);
   }
