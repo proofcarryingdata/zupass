@@ -9,6 +9,7 @@ import { List } from "./List/List";
 import { Ticket } from "./Ticket";
 import { TicketCard } from "./TicketCard";
 import { SettingsBottomModal } from "./settingsBottomModal";
+import { FaTrashCan } from "react-icons/fa6";
 
 const ComponentsScreen = (): JSX.Element => {
   const [error, setError] = useState("");
@@ -72,6 +73,7 @@ const ComponentsScreen = (): JSX.Element => {
                 list={[
                   {
                     title: "Event Passes",
+                    isLastItemBorder: false,
                     children: [
                       {
                         title: "Devcon Pass",
@@ -80,10 +82,14 @@ const ComponentsScreen = (): JSX.Element => {
                         )
                       },
                       {
-                        title: "Berlin Event Pass"
+                        title: "Berlin Event Pass",
+                        variant: "danger",
+                        LeftIcon: <FaTrashCan />
                       },
                       {
-                        title: "Denver Event Pass"
+                        title: "Denver Event Pass",
+                        variant: "danger",
+                        LeftIcon: <FaTrashCan />
                       }
                     ]
                   },

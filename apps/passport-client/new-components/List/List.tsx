@@ -5,6 +5,7 @@ import { ListItem, ListItemType } from "./ListItem";
 export type GroupType = {
   children: ListItemType[];
   title?: string;
+  isLastItemBorder?: boolean;
 };
 
 type ListChild = GroupType | ListItemType;
@@ -17,13 +18,18 @@ const GroupContainer = styled.div`
   margin-bottom: 20px;
 `;
 
-const ListGroup = ({ children, title }: GroupType) => {
+const ListGroup = ({ children, title, isLastItemBorder }: GroupType) => {
+  const len = children.length;
+
   return (
     <GroupContainer>
       <Typography color="var(--text-tertiary)" family="Neue Haas Unica">
         {title}
       </Typography>
-      {children.map((child) => {
+      {children.map((child, i) => {
+        if (i === len - 1) {
+          return <ListItem {...child} showBottomBorder={isLastItemBorder} />;
+        }
         return <ListItem {...child} />;
       })}
     </GroupContainer>
