@@ -24,6 +24,9 @@ export interface AppState {
   encryptionKey?: string;
   credentialCache: CredentialCache;
 
+  // bottom modal will deprecate modal
+  bottomModal: { modalType: "settings" } | { modalType: "none" };
+
   // View state
   modal:
     | { modalType: "info" }

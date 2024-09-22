@@ -60,6 +60,7 @@ export async function loadInitialState(): Promise<AppState> {
     pcds,
     identityV3,
     modal,
+    bottomModal: { modalType: "none" },
     subscriptions,
     resolvingSubscriptionId: undefined,
     credentialCache,

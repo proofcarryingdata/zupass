@@ -1,18 +1,21 @@
 import { useState } from "react";
 import { CenterColumn, TextCenter } from "../components/core";
 import { AppContainer } from "../components/shared/AppContainer";
+import { Avatar } from "./Avatar";
+import { Button2 } from "./Button";
 import { FloatingMenu } from "./FloatingMenu";
 import { Input2 } from "./Input";
+import { List } from "./List/List";
 import { Ticket } from "./Ticket";
 import { TicketCard } from "./TicketCard";
-import { Button2 } from "./Button";
-import { Avatar } from "./Avatar";
-import { List } from "./List/List";
+import { SettingsBottomModal } from "./settingsBottomModal";
 
 const ComponentsScreen = (): JSX.Element => {
   const [error, setError] = useState("");
   return (
     <AppContainer bg="gray">
+      {/* We need to reconsider the MaybeModal concept, not sure we will apply the same for bottom-modal */}
+      <SettingsBottomModal />
       <div
         style={{
           display: "flex",
