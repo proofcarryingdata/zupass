@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { Typography } from "../Typography";
 import { FaChevronRight } from "react-icons/fa";
 import { Avatar } from "../Avatar";
@@ -9,6 +9,8 @@ export type ListItemType = {
   LeftIcon?: React.ReactNode;
   variant?: ListItemVariant;
   showBottomBorder?: boolean;
+  key?: string;
+  onClick?: () => void;
 };
 
 const getVariantColor = (variant: ListItemVariant) => {
@@ -20,12 +22,25 @@ const getVariantColor = (variant: ListItemVariant) => {
       return "var(--text-primary)";
   }
 };
-const ListItemContainer = styled.div<{ variant: ListItemVariant }>`
+
+const listItemClickableCSS = css`
+  cursor: pointer;
+  // so it wont be annoying ot click on an item
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
+`;
+
+const ListItemContainer = styled.div<{
+  variant: ListItemVariant;
+  isClickable: boolean;
+}>`
   display: flex;
   width: 100%;
   align-items: center;
   gap: 16px;
   color: ${({ variant }) => getVariantColor(variant)};
+  ${({ isClickable }) => (isClickable ? listItemClickableCSS : undefined)};
 `;
 
 const ListItemRightContainer = styled.div<{ showBottomBorder: boolean }>`
@@ -54,13 +69,18 @@ export const ListItem = ({
   title,
   LeftIcon,
   variant,
-  showBottomBorder
+  showBottomBorder,
+  onClick
 }: ListItemType) => {
   const defaultVariant = variant ?? "primary";
   const defaultShowBottomBorder =
     showBottomBorder !== undefined ? showBottomBorder : true;
   return (
-    <ListItemContainer variant={defaultVariant}>
+    <ListItemContainer
+      variant={defaultVariant}
+      onClick={onClick}
+      isClickable={!!onClick}
+    >
       <IconContainer>{LeftIcon ? LeftIcon : <Avatar />}</IconContainer>
       <ListItemRightContainer showBottomBorder={defaultShowBottomBorder}>
         <Typography

@@ -28,9 +28,15 @@ const ListGroup = ({ children, title, isLastItemBorder }: GroupType) => {
       </Typography>
       {children.map((child, i) => {
         if (i === len - 1) {
-          return <ListItem {...child} showBottomBorder={isLastItemBorder} />;
+          return (
+            <ListItem
+              {...child}
+              showBottomBorder={isLastItemBorder}
+              key={child.key}
+            />
+          );
         }
-        return <ListItem {...child} />;
+        return <ListItem {...child} key={child.key} />;
       })}
     </GroupContainer>
   );
