@@ -6,6 +6,7 @@ import { FloatingMenu } from "./FloatingMenu";
 import { Input2 } from "./Input";
 import { Ticket } from "./Ticket";
 import { TicketCard } from "./TicketCard";
+import { Button2 } from "./Button";
 
 const ComponentsScreen = (): JSX.Element => {
   const [error, setError] = useState("");
@@ -25,17 +26,28 @@ const ComponentsScreen = (): JSX.Element => {
         <TextCenter>Hello, world!</TextCenter>
         <CenterColumn>
           <Input2 variant="secondary" placeholder="placeholder" error={error} />
-          <Button
-            onClick={() => {
-              if (error) {
-                setError("");
-              } else {
-                setError("some generic error");
-              }
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 12
             }}
           >
-            test input{" "}
-          </Button>
+            <Button2
+              variant="danger"
+              onClick={() => {
+                if (error) {
+                  setError("");
+                } else {
+                  setError("some generic error");
+                }
+              }}
+            >
+              test input{" "}
+            </Button2>
+            <Button2>primary</Button2>
+            <Button2 variant="secondary">secondary</Button2>
+          </div>
         </CenterColumn>
         <div style={{ display: "flex", flexDirection: "row", gap: 40 }}>
           <TicketCard
