@@ -36,7 +36,7 @@ export function AddScreen(): JSX.Element | null {
 
   if (!screen) {
     // Need AppContainer to display error
-    return <AppContainer bg="gray" />;
+    return <AppContainer bg="primary" />;
   }
   return screen;
 }

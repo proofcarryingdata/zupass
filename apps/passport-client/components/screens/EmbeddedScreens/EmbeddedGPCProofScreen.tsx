@@ -46,7 +46,7 @@ export function EmbeddedGPCProofScreen({
   const [proving, setProving] = useState(false);
 
   return (
-    <AppContainer bg="gray">
+    <AppContainer bg="primary">
       <Spacer h={4} />
       <H2
         style={{

@@ -97,7 +97,7 @@ function App(): JSX.Element {
         <HashRouter>
           <Routes>
             <Route path="/terms" element={<TermsScreen />} />
-            <Route path="*" element={<AppContainer bg="gray" />} />
+            <Route path="*" element={<AppContainer bg="primary" />} />
           </Routes>
         </HashRouter>
       )}

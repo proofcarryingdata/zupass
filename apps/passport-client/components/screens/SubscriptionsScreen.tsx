@@ -29,7 +29,7 @@ export function SubscriptionsScreen(): JSX.Element {
     <>
       <MaybeModal />
       <Overscroll />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <ScreenNavigation label={"Home"} to="/" />
         <Spacer h={8} />
         <Button onClick={onAddNewClicked}>Add Subscription</Button>

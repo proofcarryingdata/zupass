@@ -164,7 +164,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   return (
     <>
       <MaybeModal />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <Spacer h={24} />
         <AppHeader isEdgeCity={isEdgeCity} />
         <Spacer h={24} />
