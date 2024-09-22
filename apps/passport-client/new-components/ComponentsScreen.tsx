@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CenterColumn, Spacer, TextCenter } from "../components/core";
 import { AppContainer } from "../components/shared/AppContainer";
 import { Avatar } from "./Avatar";
@@ -10,6 +10,7 @@ import { Ticket } from "./Ticket";
 import { TicketCard } from "./TicketCard";
 import { SettingsBottomModal } from "./settingsBottomModal";
 import { FaTrashCan } from "react-icons/fa6";
+import { Accordion, AccordionRef } from "./Accordion";
 const exampleList = [
   {
     title: "Event Passes",
@@ -64,6 +65,7 @@ const exampleList = [
 
 const ComponentsScreen = (): JSX.Element => {
   const [error, setError] = useState("");
+  const accordionRef = useRef<AccordionRef>(null);
   return (
     <AppContainer bg="gray">
       {/* We need to reconsider the MaybeModal concept, not sure we will apply the same for bottom-modal */}
@@ -101,7 +103,6 @@ const ComponentsScreen = (): JSX.Element => {
             >
               test input{" "}
             </Button2>
-            <Button2>primary</Button2>
             <Button2 variant="secondary">secondary</Button2>
           </div>
           <div>
@@ -128,9 +129,44 @@ const ComponentsScreen = (): JSX.Element => {
                 background: "#fff",
                 borderRadius: 40,
                 width: 370,
-                height: 630
+                height: 630,
+                padding: 12,
+                position: "relative"
               }}
-            ></div>
+            >
+              <Accordion
+                ref={accordionRef}
+                title="revealed information"
+                children={[
+                  {
+                    title: "AttendeeEmail"
+                  },
+                  {
+                    title: "AttendeeName",
+                    onClick() {
+                      console.log("Example onclick accordion item");
+                    }
+                  },
+                  {
+                    title: "EventID"
+                  },
+                  {
+                    title: "Product ID"
+                  },
+                  {
+                    title: "AttendeeSemaphoreId"
+                  }
+                ]}
+              />
+              <Button2
+                style={{ position: "absolute", bottom: 20, maxWidth: 344 }}
+                onClick={() => {
+                  accordionRef.current?.toggle();
+                }}
+              >
+                Click to toggle accordion
+              </Button2>
+            </div>
           </div>
         </CenterColumn>
         <div style={{ display: "flex", flexDirection: "row", gap: 40 }}>
