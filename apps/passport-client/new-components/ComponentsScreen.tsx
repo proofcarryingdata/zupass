@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { CenterColumn, TextCenter } from "../components/core";
+import { Button } from "../components/screens/FrogScreens/Button";
 import { AppContainer } from "../components/shared/AppContainer";
+import { FloatingMenu } from "./FloatingMenu";
 import { Input2 } from "./Input";
 import { Ticket } from "./Ticket";
 import { TicketCard } from "./TicketCard";
-import { Button } from "../components/screens/FrogScreens/Button";
 
 const ComponentsScreen = (): JSX.Element => {
   const [error, setError] = useState("");
@@ -20,6 +21,7 @@ const ComponentsScreen = (): JSX.Element => {
           padding: 40
         }}
       >
+        <FloatingMenu />
         <TextCenter>Hello, world!</TextCenter>
         <CenterColumn>
           <Input2 variant="secondary" placeholder="placeholder" error={error} />
