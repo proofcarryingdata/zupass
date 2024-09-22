@@ -22,6 +22,8 @@ html {
   --text-tertiary: #8b94ac;
   --text-primary: #1E2C50;
 
+  --core-accent: #0077FF;
+
   --dot-bg: #ececec;
   --dot-color: #e4e4e4;
   --dot-size: 3px;
@@ -170,6 +172,112 @@ a:hover {
   font-family: "PressStart2P";
   src: url(/fonts/PressStart2P.ttf) format("truetype");
 }
+
+/* Neue Haas Unica */
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: normal;
+  font-weight: 100;
+  src: url(/fonts/NeueHaasUnicaPro-UltraLight.ttf) format("truetype");
+}
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: italic;
+  font-weight: 100;
+  src: url(/fonts/NeueHaasUnicaPro-UltLightIt.ttf) format("truetype");
+}
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: normal;
+  font-weight: 200;
+  src: url(/fonts/NeueHaasUnicaPro-Thin.ttf) format("truetype");
+}
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: italic;
+  font-weight: 200;
+  src: url(/fonts/NeueHaasUnicaPro-ThinItalic.ttf) format("truetype");
+}
+
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: normal;
+  font-weight: 300;
+  src: url(/fonts/NeueHaasUnicaPro-Light.ttf) format("truetype");
+}
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: italic;
+  font-weight: 300;
+  src: url(/fonts/NeueHaasUnicaPro-LightIt.ttf) format("truetype");
+}
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: normal;
+  font-weight: 400;
+  src: url(/fonts/NeueHaasUnicaPro-Regular.ttf) format("truetype");
+}
+
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: italic;
+  font-weight: 400;
+  src: url(/fonts/NeueHaasUnicaPro-Italic.ttf) format("truetype");
+}
+
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: normal;
+  font-weight: 500;
+  src: url(/fonts/NeueHaasUnicaPro-Medium.ttf) format("truetype");
+}
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: italic;
+  font-weight: 500;
+  src: url(/fonts/NeueHaasUnicaPro-MediumIt.ttf) format("truetype");
+}
+
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: normal;
+  font-weight: 600;
+  src: url(/fonts/NeueHaasUnicaPro-Bold.ttf) format("truetype");
+}
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: italic;
+  font-weight: 600;
+  src: url(/fonts/NeueHaasUnicaPro-BoldItalic.ttf) format("truetype");
+}
+
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: normal;
+  font-weight: 700;
+  src: url(/fonts/NeueHaasUnicaPro-Heavy.ttf) format("truetype");
+}
+
+
+@font-face {
+  font-family: "Neue Haas Unica";
+  font-style: italic;
+  font-weight: 700;
+  src: url(/fonts/NeueHaasUnicaPro-HeavyIt.ttf) format("truetype");
+}
+
 
 /*! minireset.css v0.0.6 | MIT License | github.com/jgthms/minireset.css */
 html,

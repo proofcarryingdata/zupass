@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 export type FontWeight = 400 | 500 | 600 | 700 | 800 | 900;
 export type FontSize = 12 | 14 | 16 | 18;
-
+export type FontFamily = "Barlow" | "Neue Haas Unica";
 const LINE_HEIGHT: Record<FontSize, number> = {
   "12": 16.2,
   "14": 18.9,
@@ -18,8 +18,9 @@ const TypographyText = styled.span<{
   $color: Property.Color;
   $opacity?: number;
   $underline?: boolean;
+  $family?: FontFamily;
 }>`
-  font-family: "Barlow", sans-serif;
+  font-family: ${({ $family }): string => $family ?? "Barlow"}, sans-serif;
   font-size: ${({ $fontSize }): string => `${$fontSize}px`};
   font-weight: ${({ $fontWeight }): number => $fontWeight};
   line-height: ${({ $fontSize }): string =>
@@ -33,6 +34,7 @@ const TypographyText = styled.span<{
 interface TypographyProps {
   fontSize?: FontSize;
   fontWeight?: FontWeight;
+  family?: FontFamily;
   color?: Property.Color;
   children?: React.ReactNode;
   opacity?: number;
@@ -43,13 +45,15 @@ export const Typography: React.FC<TypographyProps> = ({
   children,
   fontSize = 14,
   fontWeight = 400,
-  color = "black",
+  color = "var(--text-primary)",
   opacity,
   underline,
-  style
+  style,
+  family
 }): JSX.Element => {
   return (
     <TypographyText
+      $family={family ?? "Barlow"}
       $fontSize={fontSize}
       $fontWeight={fontWeight}
       $color={color}
