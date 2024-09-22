@@ -5059,47 +5059,53 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@parcnet-js/app-connector@0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.3.tgz#7613b46fbfc09101bc92a246433a956d8d16c20d"
-  integrity sha512-hTJeuklL9QE7ilZv2Bn7F3ffZ6Wf9GtdF+1RRhCVbonJah5dt6h4RGVijj5nskPG42zJERq7rHFkLRzG/FqHLA==
+"@parcnet-js/app-connector@^0.0.6":
+  version "0.0.6"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.6.tgz#11f1d9b0cd474dfa52f84de2e03d430939f70b8f"
+  integrity sha512-xpgHzOZ5lUk0ZzkZ4jxxRXcBtsdvGGT+Htn8PFVRrGZIF0j5O5dL/xSR0gJJbWLRoXGx6oNu4qmX5c2udut40A==
   dependencies:
     "@brenoroosevelt/toast" "^2.0.3"
-    "@parcnet-js/client-rpc" "0.0.3"
-    "@parcnet-js/podspec" "0.0.2"
+    "@parcnet-js/client-rpc" "0.0.4"
+    "@parcnet-js/podspec" "0.0.3"
     "@pcd/gpc" "^0.0.8"
     "@pcd/pod" "^0.1.7"
     eventemitter3 "^5.0.1"
     json-bigint "^1.0.0"
     valibot "^0.42.0"
 
-"@parcnet-js/client-helpers@^0.0.4":
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-0.0.4.tgz#d6e86143a78b2a85dfcbc684c8233088fa32f96b"
-  integrity sha512-EOiMT35SYzOCTXuOBPL0hKNmNjPGppvj/OmmbCYNKO4AscoQJwH8Sg51ne9duCuBinP3hE5LlWterzPW9UOSpw==
+"@parcnet-js/client-helpers@^0.0.5":
+  version "0.0.5"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-0.0.5.tgz#a4e5197ad7508d0b457c5b6fb302ef3be31ec18d"
+  integrity sha512-fz7OIGqxmqBx77CLv6V8NXHbnlIKnwUwGCSJp0zfAJLXS+IecbS/vzi6Ch5xBgtypIHdsoCi9AXqZE+Ets4LoQ==
   dependencies:
-    "@parcnet-js/client-rpc" "0.0.3"
-    json-bigint "^1.0.0"
+    "@parcnet-js/client-rpc" "0.0.4"
     valibot "^0.42.0"
-    ws "^8.18.0"
 
-"@parcnet-js/client-rpc@0.0.3", "@parcnet-js/client-rpc@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-0.0.3.tgz#616433150246e996d1c886b0a4460f3c36369068"
-  integrity sha512-hEeTGG8mZJT+U5BRvCrbMag9mR5YdAhtbocWcQaUFk+I24RYhmp99XXkhp6/VemY/MLFsMvoVeKO1a7wW8r0Ug==
+"@parcnet-js/client-rpc@0.0.4", "@parcnet-js/client-rpc@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-0.0.4.tgz#3a0edea2bc5832bbdc6bd25cdeb51f8f1de8f5aa"
+  integrity sha512-sY0LZdxxj4sLcTWkg4conj18cZNNKWm7+aR2aCK+zswwPlz2chA8kO0HEbHjjENkqT6oQLCpzgk/URsqoCBSNw==
   dependencies:
-    "@parcnet-js/podspec" "0.0.2"
+    "@parcnet-js/podspec" "0.0.3"
     "@pcd/gpc" "^0.0.8"
     "@pcd/pod" "^0.1.7"
     valibot "^0.42.0"
 
-"@parcnet-js/podspec@0.0.2", "@parcnet-js/podspec@^0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-0.0.2.tgz#9dcd81b16f508d0fa78f46187ad9d142dcea09b6"
-  integrity sha512-gxfH8xvJh23vUE/2wSem2hmWUP78dIya//Z3ITXQrYkjAxbbG5BUxB1bETLuRjPofaYBwjYpWMMF2C676JFgKw==
+"@parcnet-js/podspec@0.0.3", "@parcnet-js/podspec@^0.0.3":
+  version "0.0.3"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-0.0.3.tgz#23eb9427761e881e617637998b655db18f425275"
+  integrity sha512-/IlXwBXEcOREFtyyMSVHz3Va7azCV5i4x6u1cuF9W0Bs3uLwkOG5ej+TceFScpB0jhdedMw/J3iY5VYaWJJtkA==
   dependencies:
     "@pcd/gpc" "0.0.8"
     "@pcd/pod" "0.1.7"
+
+"@parcnet-js/ticket-spec@^0.0.2":
+  version "0.0.2"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-0.0.2.tgz#6aa4a62421f0f3a50635053954721db025d3c536"
+  integrity sha512-G9CArA+VyrnvxhxkaZ4DvrtZCHR8kGS8TcDKKFwe7bzPhza5OTymgF3dWuU0gQKU5ptar/RcUFmWzbi5FVsSgA==
+  dependencies:
+    "@parcnet-js/client-rpc" "0.0.4"
+    "@parcnet-js/podspec" "0.0.3"
 
 "@pcd/proto-pod-gpc-artifacts@0.11.0":
   version "0.11.0"
@@ -7507,6 +7513,11 @@
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/@types/tough-cookie/-/tough-cookie-4.0.3.tgz#3d06b6769518450871fbc40770b7586334bdfd90"
   integrity sha512-THo502dA5PzG/sfQH+42Lw3fvmYkceefOspdCwpHRul8ik2Jv1K8I5OZz1AT3/rs46kwgMCe9bSBmDLYkkOMGg==
+
+"@types/ua-parser-js@^0.7.39":
+  version "0.7.39"
+  resolved "https://registry.yarnpkg.com/@types/ua-parser-js/-/ua-parser-js-0.7.39.tgz#832c58e460c9435e4e34bb866e85e9146e12cdbb"
+  integrity sha512-P/oDfpofrdtF5xw433SPALpdSchtJmY7nsJItf8h3KXqOslkbySh8zq4dSWXH2oTjRvJ5PczVEoCZPow6GicLg==
 
 "@types/unist@*", "@types/unist@^3.0.0":
   version "3.0.2"
@@ -21775,6 +21786,11 @@ typewriter-effect@^2.21.0:
     prop-types "^15.8.1"
     raf "^3.4.1"
 
+ua-parser-js@^1.0.38:
+  version "1.0.38"
+  resolved "https://registry.yarnpkg.com/ua-parser-js/-/ua-parser-js-1.0.38.tgz#66bb0c4c0e322fe48edfe6d446df6042e62f25e2"
+  integrity sha512-Aq5ppTOfvrCMgAPneW1HfWj66Xi7XL+/mIy996R1/CLS/rcyJQm6QZdsKrUeivDFQ+Oc9Wyuwor8Ze8peEoUoQ==
+
 uglify-js@^3.1.4:
   version "3.17.4"
   resolved "https://registry.yarnpkg.com/uglify-js/-/uglify-js-3.17.4.tgz#61678cf5fa3f5b7eb789bb345df29afb8257c22c"
@@ -22904,11 +22920,6 @@ ws@^8.13.0:
   version "8.14.1"
   resolved "https://registry.yarnpkg.com/ws/-/ws-8.14.1.tgz#4b9586b4f70f9e6534c7bb1d3dc0baa8b8cf01e0"
   integrity sha512-4OOseMUq8AzRBI/7SLMUwO+FEDnguetSk7KMb1sHwvF2w2Wv5Hoj0nlifx8vtGsftE/jWHojPy8sMMzYLJ2G/A==
-
-ws@^8.18.0:
-  version "8.18.0"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-8.18.0.tgz#0d7505a6eafe2b0e712d232b42279f53bc289bbc"
-  integrity sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==
 
 xhr-request-promise@^0.1.2:
   version "0.1.3"

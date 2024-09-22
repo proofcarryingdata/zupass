@@ -1057,3 +1057,22 @@ export function loadEdDSAPrivateKey(): string | null {
 
   return pkeyEnv;
 }
+
+export async function loadZupassEdDSAPublicKey(): Promise<EdDSAPublicKey | null> {
+  const pkeyEnv = process.env.GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY;
+
+  if (!pkeyEnv) {
+    logger(
+      "[INIT] missing environment variable GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY"
+    );
+    return null;
+  }
+
+  try {
+    return JSON.parse(pkeyEnv);
+  } catch (e) {
+    logger("failed to parse zupass public key", e);
+  }
+
+  return null;
+}
