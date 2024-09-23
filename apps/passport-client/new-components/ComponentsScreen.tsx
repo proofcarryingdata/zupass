@@ -84,6 +84,9 @@ const ComponentsScreen = (): JSX.Element => {
         <TextCenter>Hello, world!</TextCenter>
         <CenterColumn>
           <Input2 variant="secondary" placeholder="placeholder" error={error} />
+          <Spacer h={4} />
+          <Input2 variant="primary" placeholder="placeholder" error={error} />
+          <Spacer h={12} />
           <div
             style={{
               display: "flex",
@@ -91,6 +94,18 @@ const ComponentsScreen = (): JSX.Element => {
               gap: 12
             }}
           >
+            <Button2
+              variant="primary"
+              onClick={() => {
+                if (error) {
+                  setError("");
+                } else {
+                  setError("some generic error");
+                }
+              }}
+            >
+              primary
+            </Button2>
             <Button2
               variant="danger"
               onClick={() => {
@@ -143,7 +158,7 @@ const ComponentsScreen = (): JSX.Element => {
                   },
                   {
                     title: "AttendeeName",
-                    onClick() {
+                    onClick(): void {
                       console.log("Example onclick accordion item");
                     }
                   },
@@ -188,6 +203,7 @@ const ComponentsScreen = (): JSX.Element => {
           />
         </div>
         <Ticket name="Richard Lu" type="Speaker" email="richard@0xparg.org" />
+        <Spacer h={48} />
       </div>
     </AppContainer>
   );

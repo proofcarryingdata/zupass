@@ -1,6 +1,7 @@
 import styled from "styled-components";
 import { Typography } from "../Typography";
 import { ListItem, ListItemType } from "./ListItem";
+import { ReactElement } from "react";
 
 export type GroupType = {
   children: ListItemType[];
@@ -18,7 +19,11 @@ const GroupContainer = styled.div`
   margin-bottom: 20px;
 `;
 
-const ListGroup = ({ children, title, isLastItemBorder }: GroupType) => {
+const ListGroup = ({
+  children,
+  title,
+  isLastItemBorder
+}: GroupType): ReactElement => {
   const len = children.length;
 
   return (
@@ -50,7 +55,7 @@ const ListContainer = styled.div`
   padding: 12px 24px;
 `;
 
-export const List = ({ list }: ListProps) => {
+export const List = ({ list }: ListProps): ReactElement => {
   return (
     <ListContainer>
       {list.map((child) => {
