@@ -59,6 +59,11 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ numericMinValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
   /*PUB*/ numericMaxValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
 
+  // Entry inequality modules [MAX_ENTRY_INEQUALITIES].
+  /*PUB*/ entryInequalityValueIndex: CircuitSignal /*MAX_ENTRY_INEQUALITIES*/[];
+  /*PUB*/ entryInequalityOtherValueIndex: CircuitSignal /*MAX_ENTRY_INEQUALITIES*/[];
+  /*PUB*/ entryInequalityIsLessThan: CircuitSignal /*MAX_ENTRY_INEQUALITIES packed bits*/;
+
   // MultiTuple module (1)
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
 
@@ -106,6 +111,9 @@ export type ProtoPODGPCInputNamesType = [
   "numericValueInRange",
   "numericMinValues",
   "numericMaxValues",
+  "entryInequalityValueIndex",
+  "entryInequalityOtherValueIndex",
+  "entryInequalityIsLessThan",
   "tupleIndices",
   "listComparisonValueIndex",
   "listContainsComparisonValue",
@@ -142,11 +150,16 @@ export type ProtoPODGPCPublicInputs = {
   /*PUB*/ ownerV4EntryIndex: CircuitSignal /*INCLUDE_OWNERV4*/[];
   /*PUB*/ ownerV4IsNullifierHashRevealed: CircuitSignal /*INCLUDE_OWNERV4*/[];
 
-  // Bounds check module (1)
+  // Numeric value modules [MAX_NUMERIC_VALUES]
   /*PUB*/ numericValueEntryIndices: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
   /*PUB*/ numericValueInRange: CircuitSignal /*MAX_NUMERIC_VALUES packed bits*/;
   /*PUB*/ numericMinValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
   /*PUB*/ numericMaxValues: CircuitSignal /*MAX_NUMERIC_VALUES*/[];
+
+  // Entry inequality modules [MAX_ENTRY_INEQUALITIES].
+  /*PUB*/ entryInequalityValueIndex: CircuitSignal /*MAX_ENTRY_INEQUALITIES*/[];
+  /*PUB*/ entryInequalityOtherValueIndex: CircuitSignal /*MAX_ENTRY_INEQUALITIES*/[];
+  /*PUB*/ entryInequalityIsLessThan: CircuitSignal /*MAX_ENTRY_INEQUALITIES packed bits*/;
 
   // Tuple module (1)
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
@@ -182,6 +195,9 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "numericValueInRange",
   "numericMinValues",
   "numericMaxValues",
+  "entryInequalityValueIndex",
+  "entryInequalityOtherValueIndex",
+  "entryInequalityIsLessThan",
   "tupleIndices",
   "listComparisonValueIndex",
   "listContainsComparisonValue",
@@ -237,6 +253,11 @@ export type ProtoPODGPCCircuitParams = {
   maxNumericValues: number;
 
   /**
+   * Number of entry inequalities.
+   */
+  maxEntryInequalities: number;
+
+  /**
    * Number of membership lists.
    */
   maxLists: number;
@@ -276,6 +297,7 @@ export function ProtoPODGPCCircuitParams(
   maxEntries: number,
   merkleMaxDepth: number,
   maxNumericValues: number,
+  maxEntryInequalities: number,
   maxLists: number,
   maxListElements: number,
   maxTuples: number,
@@ -288,6 +310,7 @@ export function ProtoPODGPCCircuitParams(
     maxEntries,
     merkleMaxDepth,
     maxNumericValues,
+    maxEntryInequalities,
     maxLists,
     maxListElements,
     maxTuples,
@@ -310,6 +333,7 @@ export function protoPODGPCCircuitParamArray(
     params.maxEntries,
     params.merkleMaxDepth,
     params.maxNumericValues,
+    params.maxEntryInequalities,
     params.maxLists,
     params.maxListElements,
     params.maxTuples,
@@ -336,8 +360,9 @@ export function arrayToProtoPODGPCCircuitParam(
     params[5],
     params[6],
     params[7],
-    !!params[8],
-    !!params[9]
+    params[8],
+    !!params[9],
+    !!params[10]
   );
 }
 
@@ -451,6 +476,9 @@ export class ProtoPODGPC {
       numericValueInRange: allInputs.numericValueInRange,
       numericMinValues: allInputs.numericMinValues,
       numericMaxValues: allInputs.numericMaxValues,
+      entryInequalityValueIndex: allInputs.entryInequalityValueIndex,
+      entryInequalityOtherValueIndex: allInputs.entryInequalityOtherValueIndex,
+      entryInequalityIsLessThan: allInputs.entryInequalityIsLessThan,
       tupleIndices: allInputs.tupleIndices,
       listComparisonValueIndex: allInputs.listComparisonValueIndex,
       listContainsComparisonValue: allInputs.listContainsComparisonValue,
@@ -525,6 +553,9 @@ export class ProtoPODGPC {
       ...inputs.numericMaxValues.map((value) =>
         zeroResidueMod(value, BABY_JUB_PRIME)
       ),
+      ...inputs.entryInequalityValueIndex,
+      ...inputs.entryInequalityOtherValueIndex,
+      inputs.entryInequalityIsLessThan,
       ...inputs.tupleIndices.flat(),
       ...inputs.listComparisonValueIndex,
       inputs.listContainsComparisonValue,
@@ -623,9 +654,9 @@ export class ProtoPODGPC {
   public static circuitNameForParams(params: ProtoPODGPCCircuitParams): string {
     return `${params.maxObjects}o-${params.maxEntries}e-${
       params.merkleMaxDepth
-    }md-${params.maxNumericValues}nv-${params.maxLists}x${
-      params.maxListElements
-    }l-${params.maxTuples}x${
+    }md-${params.maxNumericValues}nv-${params.maxEntryInequalities}ei-${
+      params.maxLists
+    }x${params.maxListElements}l-${params.maxTuples}x${
       params.tupleArity
     }t-${+params.includeOwnerV3}ov3-${+params.includeOwnerV4}ov4`;
   }
@@ -672,5 +703,5 @@ export class ProtoPODGPC {
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.10.0";
+  public static ARTIFACTS_NPM_VERSION = "0.11.0";
 }

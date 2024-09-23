@@ -5,6 +5,7 @@ import {
   PODEdDSAPublicKeyValue,
   PODValue,
   PODValueTuple,
+  POD_INT_MAX,
   POD_INT_MIN
 } from "@pcd/pod";
 import { expect } from "chai";
@@ -633,6 +634,36 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     expect(isVerified).to.be.true;
   });
 
+  it("should prove and verify entry inequality checks", async function () {
+    const { isVerified } = await gpcProofTest(
+      {
+        pods: {
+          pod1: {
+            ...typicalProofConfig.pods.pod1,
+            entries: {
+              ...typicalProofConfig.pods.pod1.entries,
+              A: {
+                isRevealed: true,
+                inRange: { min: POD_INT_MIN, max: POD_INT_MAX }
+              },
+              G: {
+                isRevealed: false,
+                notInRange: {
+                  min: 0n,
+                  max: 6n
+                },
+                lessThan: "pod1.A"
+              }
+            }
+          }
+        }
+      },
+      typicalProofInputs,
+      expectedRevealedClaimsForTypicalCase
+    );
+    expect(isVerified).to.be.true;
+  });
+
   it("should prove and verify a complex case", async function () {
     const pod1 = POD.sign(sampleEntries, privateKey);
     const pod2 = POD.sign(sampleEntries2, privateKey2);
@@ -664,9 +695,14 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
             A: {
               isRevealed: false,
               inRange: { min: 100n, max: 132n },
-              notInRange: { min: 105n, max: 110n }
+              notInRange: { min: 105n, max: 110n },
+              greaterThanEq: "pod1.G"
             },
-            G: { isRevealed: true, notInRange: { min: POD_INT_MIN, max: 0n } },
+            G: {
+              isRevealed: true,
+              notInRange: { min: POD_INT_MIN, max: 0n },
+              greaterThan: "pod1.K"
+            },
             K: { isRevealed: false, inRange: { min: -10n, max: 0n } },
             otherTicketID: { isRevealed: false },
             owner: { isRevealed: false, isOwnerID: SEMAPHORE_V3 }
@@ -809,6 +845,36 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       },
       "TypeError",
       "Must prove at least one entry in object"
+    );
+
+    await expectAsyncError(
+      async () => {
+        const pod1 = POD.sign(sampleEntries, privateKey);
+        await gpcProve(
+          {
+            pods: {
+              pod1: {
+                entries: {
+                  A: {
+                    isRevealed: false,
+                    inRange: { min: POD_INT_MIN, max: POD_INT_MAX },
+                    greaterThan: "pod2.H"
+                  }
+                }
+              },
+              pod2: {
+                entries: {
+                  H: { isRevealed: false }
+                }
+              }
+            }
+          },
+          { pods: { pod1, pod2: pod1 } },
+          GPC_TEST_ARTIFACTS_PATH
+        );
+      },
+      "Error",
+      "Entry pod2.H requires a bounds check to be used in an entry inequality."
     );
 
     await expectAsyncError(
@@ -1374,6 +1440,35 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
       revealedClaims: revealedClaims3
     } = await gpcProve(proofConfig3, proofInputs3, GPC_TEST_ARTIFACTS_PATH);
 
+    // Proof data with bounds checks
+    const proofConfig4: GPCProofConfig = {
+      pods: {
+        pod1: {
+          entries: {
+            A: {
+              isRevealed: false,
+              inRange: { min: POD_INT_MIN, max: POD_INT_MAX },
+              greaterThan: "pod2.H"
+            }
+          }
+        },
+        pod2: {
+          entries: {
+            H: {
+              isRevealed: false,
+              inRange: { min: POD_INT_MIN, max: POD_INT_MAX }
+            }
+          }
+        }
+      }
+    };
+    const proofInputs4 = { pods: { pod1, pod2: pod1 } };
+    const {
+      proof: proof4,
+      boundConfig: boundConfig4,
+      revealedClaims: revealedClaims4
+    } = await gpcProve(proofConfig4, proofInputs4, GPC_TEST_ARTIFACTS_PATH);
+
     // Tamper with proof
     let isVerified = await gpcVerify(
       { ...proof, pi_a: [proof.pi_a[0] + 1, proof.pi_a[1]] },
@@ -1469,6 +1564,29 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
           inadmissibleTickets: [sampleEntries2.ticketID, sampleEntries.owner]
         }
       },
+      GPC_TEST_ARTIFACTS_PATH
+    );
+    expect(isVerified).to.be.false;
+
+    // Tamper with entry inequality
+    isVerified = await gpcVerify(
+      proof4,
+      {
+        ...boundConfig4,
+        pods: {
+          ...boundConfig4.pods,
+          pod1: {
+            entries: {
+              A: {
+                isRevealed: false,
+                inRange: { min: POD_INT_MIN, max: POD_INT_MAX },
+                lessThan: "pod2.H"
+              }
+            }
+          }
+        }
+      },
+      revealedClaims4,
       GPC_TEST_ARTIFACTS_PATH
     );
     expect(isVerified).to.be.false;

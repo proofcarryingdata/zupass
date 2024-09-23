@@ -1,6 +1,7 @@
 export * from "./artifacts";
 export * from "./bounds";
 export * from "./entry";
+export * from "./entry-inequality";
 export * from "./global";
 export * from "./list-membership";
 export * from "./multituple";

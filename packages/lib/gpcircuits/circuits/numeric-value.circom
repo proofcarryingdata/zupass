@@ -11,7 +11,11 @@ include "bounds.circom";
  * This module has an explicit enable flag. If it is disabled, the bounds
  * check parameters should take on their default values, viz. 0 and 0.
  */
-template NumericValueModule() {
+template NumericValueModule(
+    // Number of bits required to represent the inputs. Must be less
+    // than 252, cf. {@link BoundsCheckModule}.
+    NUM_BITS
+) {
     // Boolean flag for the value check. Booleanness will be deduced
     // from the entry index passed to the ProtoPODGPC circuit and thus
     // checked externally.
@@ -32,17 +36,13 @@ template NumericValueModule() {
     signal input minValue;
     signal input maxValue;
 
-    // Absolute value of minimum value of a 64-bit signed integer.
-    // This will be added to all values fed into the bounds check
-    // module to convert them to 64-bit unsigned integers while
-    // preserving order.
-    var ABS_POD_INT_MIN = 1 << 63;
+    var ABS_POD_INT_MIN = 1 << (NUM_BITS - 1);
     
     // Check that minValue <= numericValue <= maxValue and return the
-    // result.
-    signal output isInBounds <== BoundsCheckModule(64)(
+    // result. Values are shifted to allow for signed POD int values.
+    signal output isInBounds <== BoundsCheckModule(NUM_BITS)(
         numericValue + ABS_POD_INT_MIN,
         minValue + ABS_POD_INT_MIN,
         maxValue + ABS_POD_INT_MIN
-                                                        );
+    );
 }
