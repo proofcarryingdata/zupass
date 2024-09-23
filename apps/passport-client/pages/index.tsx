@@ -135,9 +135,8 @@ function RouterImpl(): JSX.Element {
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
 
-          {appConfig.devMode && (
-            <Route path="components" element={<ComponentsScreen />} />
-          )}
+          <Route path="components" element={<ComponentsScreen />} />
+
           <Route
             path="login-interstitial"
             element={<LoginInterstitialScreen />}
