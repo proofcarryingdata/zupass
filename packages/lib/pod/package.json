@@ -31,7 +31,7 @@
     "@pcd/util": "0.5.4",
     "@zk-kit/baby-jubjub": "1.0.3",
     "@zk-kit/eddsa-poseidon": "1.0.3",
-    "@zk-kit/lean-imt": "2.0.1",
+    "@zk-kit/lean-imt": "2.2.1",
     "@zk-kit/utils": "1.2.1",
     "js-sha256": "^0.10.1",
     "json-bigint": "^1.0.0",
