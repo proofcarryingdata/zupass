@@ -76,9 +76,9 @@ export function FrogSubscriptionScreen(): JSX.Element {
             onSubmit={(e): void => {
               e.preventDefault();
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              window.location.href = `/#/frogscriptions/${
-                (e.target as any)["feedCode"]?.value
-              }`;
+              window.location.href = `/#/frogscriptions/${(e.target as any)[
+                "feedCode"
+              ]?.value}`;
             }}
           >
             <input type="text" id="feedCode" name="feedCode" />
