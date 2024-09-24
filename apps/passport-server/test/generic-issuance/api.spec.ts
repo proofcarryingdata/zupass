@@ -24,12 +24,18 @@ import { assertUserMatches } from "./util";
 /**
  * Tests for {@link GenericIssuanceService}'s external API.
  */
-describe("generic issuance - external API", function () {
+describe.only("generic issuance - external API", function () {
   const nowDate = new Date();
   let giBackend: Zupass;
 
   const adminGIUserEmail = "admin@example.com";
   const adminGIUserId = randomUUID();
+
+  const giUser1Email = "giuser1@example.com";
+  const giUser1Id = randomUUID();
+
+  const giUser2Email = "giuser2@example.com";
+  const giUser2Id = randomUUID();
 
   /**
    * Sets up a Zupass/Generic issuance backend.
@@ -69,6 +75,44 @@ describe("generic issuance - external API", function () {
         timeUpdated: nowDate
       },
       await userDB.getUserById(adminUser.id)
+    );
+
+    const user1: PipelineUser = {
+      id: giUser1Id,
+      email: giUser1Email,
+      isAdmin: false,
+      timeCreated: nowDate,
+      timeUpdated: nowDate
+    };
+    await userDB.updateUserById(user1);
+    assertUserMatches(
+      {
+        id: giUser1Id,
+        email: giUser1Email,
+        isAdmin: false,
+        timeCreated: nowDate,
+        timeUpdated: nowDate
+      },
+      await userDB.getUserById(user1.id)
+    );
+
+    const user2: PipelineUser = {
+      id: giUser2Id,
+      email: giUser2Email,
+      isAdmin: false,
+      timeCreated: nowDate,
+      timeUpdated: nowDate
+    };
+    await userDB.updateUserById(user2);
+    assertUserMatches(
+      {
+        id: giUser2Id,
+        email: giUser2Email,
+        isAdmin: false,
+        timeCreated: nowDate,
+        timeUpdated: nowDate
+      },
+      await userDB.getUserById(user2.id)
     );
   });
 
