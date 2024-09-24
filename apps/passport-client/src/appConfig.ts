@@ -20,7 +20,7 @@ interface AppConfig {
   // origins that are allowed to sign PODs
   zappAllowedSignerOrigins: string[];
   // folder name -> zapp URL
-  zapps: Record<string, string>;
+  embeddedZapps: Record<string, string>;
 }
 
 if (
@@ -62,13 +62,15 @@ try {
   zappAllowedSignerOrigins = [];
 }
 
-let zapps: Record<string, string> = {};
+let embeddedZapps: Record<string, string> = {};
 
 try {
-  zapps = process.env.ZAPPS ? JSON.parse(process.env.ZAPPS) : {};
+  embeddedZapps = process.env.EMBEDDED_ZAPPS
+    ? JSON.parse(process.env.EMBEDDED_ZAPPS)
+    : {};
 } catch (e) {
-  console.error("Failed to parse ZAPPS", e);
-  zapps = {};
+  console.error("Failed to parse EMBEDDED_ZAPPS", e);
+  embeddedZapps = {};
 }
 
 export const appConfig: AppConfig = {
@@ -81,7 +83,7 @@ export const appConfig: AppConfig = {
   strichLicenseKey: process.env.STRICH_LICENSE_KEY,
   zappRestrictOrigins: process.env.ZAPP_RESTRICT_ORIGINS === "true",
   zappAllowedSignerOrigins: zappAllowedSignerOrigins,
-  zapps: zapps
+  embeddedZapps: embeddedZapps
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

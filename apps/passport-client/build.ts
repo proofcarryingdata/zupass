@@ -79,9 +79,9 @@ const define = {
         )
       }
     : {}),
-  ...(process.env.ZAPPS !== undefined
+  ...(process.env.EMBEDDED_ZAPPS !== undefined
     ? {
-        "process.env.ZAPPS": JSON.stringify(process.env.ZAPPS)
+        "process.env.EMBEDDED_ZAPPS": JSON.stringify(process.env.EMBEDDED_ZAPPS)
       }
     : {})
 };

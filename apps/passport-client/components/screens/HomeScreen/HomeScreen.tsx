@@ -129,7 +129,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
   const isEdgeCity = isEdgeCityFolder(browsingFolder);
   const isProtocolWorlds = isProtocolWorldsFolder(browsingFolder);
-  const isZappFolder = !!appConfig.zapps[browsingFolder];
+  const isZappFolder = !!appConfig.embeddedZapps[browsingFolder];
 
   const shouldShowFrogCrypto = useMemo(() => {
     const folders = pcdCollection.value.getAllFolderNames();
@@ -216,7 +216,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                 />
               )}
               {isRoot &&
-                Object.keys(appConfig.zapps).map((folder) => (
+                Object.keys(appConfig.embeddedZapps).map((folder) => (
                   <FolderCard
                     key={folder}
                     onFolderClick={onFolderClick}
@@ -233,7 +233,7 @@ export function HomeScreenImpl(): JSX.Element | null {
           ) : isEdgeCity ? (
             <EdgeCityHome />
           ) : isZappFolder ? (
-            <ZappScreen url={appConfig.zapps[browsingFolder]} />
+            <ZappScreen url={appConfig.embeddedZapps[browsingFolder]} />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
