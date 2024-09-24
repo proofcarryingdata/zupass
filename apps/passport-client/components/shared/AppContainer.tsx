@@ -12,10 +12,12 @@ import { ScreenLoader } from "./ScreenLoader";
 // Wrapper for all screens.
 export function AppContainer({
   children,
-  bg
+  bg,
+  fullscreen
 }: {
   bg: "primary" | "gray";
   children?: ReactNode;
+  fullscreen?: boolean;
 }): JSX.Element {
   const dispatch = useDispatch();
   const error = useAppError();
@@ -29,7 +31,7 @@ export function AppContainer({
   const col =
     bg === "gray" ? "var(--dot-pattern-bg)" : "var(--bg-dark-primary)";
   return (
-    <>
+    <Container $fullscreen={!!fullscreen}>
       <GlobalBackground color={col} />
       <Background>
         <CenterColumn>
@@ -49,7 +51,7 @@ export function AppContainer({
           {error && <ErrorPopup error={error} onClose={onClose} />}
         </CenterColumn>
       </Background>
-    </>
+    </Container>
   );
 }
 
@@ -74,4 +76,14 @@ export const CenterColumn = styled.div`
   margin: 0 auto;
   position: relative;
   padding: 16px;
+`;
+
+const Container = styled.div<{ $fullscreen: boolean }>`
+  ${({ $fullscreen }): string =>
+    $fullscreen
+      ? `
+          display: flex;
+          height: 100vh;
+        `
+      : ""}
 `;
