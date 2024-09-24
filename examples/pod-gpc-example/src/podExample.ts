@@ -69,7 +69,7 @@ export async function podDemo(): Promise<boolean> {
   // to use as variable identifiers.
   //
   // Entry values are represented by a PODValue, which includes a value and type.
-  // The type controls how the value is hashed and inclued in ZK proofs.
+  // The type controls how the value is hashed and included in ZK proofs.
   // The type itself is not part of the value, and is not hashed.
   // Currently supported types are "string", "int", and "cryptographic".
   //
@@ -85,11 +85,11 @@ export async function podDemo(): Promise<boolean> {
     // supported in future.
     someNumber: { type: "int", value: -123n },
 
-    // "cryptographic" is a bigint type for values like hashes or uniquue
+    // "cryptographic" is a bigint type for values like hashes or unique
     // IDs.  Each is a single field element which fits in a circuit signal,
     // meaning an integer mod p for a large (254 bit) prime.
     // In proofs, these values can be compared for equality, but not manipulated
-    // arithmatically (no addition, less-than, etc).
+    // arithmetically (no addition, less-than, etc).
     mySemaphoreID: {
       type: "cryptographic",
 
@@ -235,10 +235,10 @@ export async function podDemo(): Promise<boolean> {
 
   // All PCDs can be verified, which makes use of cryptographic info in the
   // proof field.  In this case, it's checking the signature on the content ID
-  // deroved from the entries.
+  // derived from the entries.
   console.log("PCD is valid?", await PODPCDPackage.verify(pcd));
 
-  // PCDs can also be creatd by the "prove" interface.  This uses a more generic
+  // PCDs can also be created by the "prove" interface.  This uses a more generic
   // (and more verbose) argument specification which allows requests to prove
   // to be transmitted to apps like Zupass.
   const pcd2 = await PODPCDPackage.prove({
