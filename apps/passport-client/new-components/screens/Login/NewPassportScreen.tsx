@@ -199,6 +199,9 @@ const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
           <Input2 variant="primary" value={email} />
           <Input2
             variant="primary"
+            type="number"
+            pattern="[0-9]*"
+            inputmode="numeric"
             value={token}
             onChange={(e): void => {
               setToken(e.target.value.replace(/\D/g, ""));
