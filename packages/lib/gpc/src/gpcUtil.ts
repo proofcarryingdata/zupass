@@ -20,6 +20,7 @@ import {
   GPCProofEntryBoundsCheckConfig,
   GPCProofEntryConfig,
   GPCProofEntryConfigCommon,
+  GPCProofEntryInequalityConfig,
   GPCProofObjectConfig,
   GPCProofTupleConfig,
   PODEntryIdentifier,
@@ -180,6 +181,8 @@ export function canonicalizeEntryConfig(
     proofEntryConfig.inRange,
     proofEntryConfig.notInRange
   );
+  const canonicalizedEntryInequalityConfig =
+    canonicalizeEntryInequalityConfig(proofEntryConfig);
   // Set optional fields only when they have non-default values.
   return {
     isRevealed: proofEntryConfig.isRevealed,
@@ -194,6 +197,7 @@ export function canonicalizeEntryConfig(
       ? { notEqualsEntry: proofEntryConfig.notEqualsEntry }
       : {}),
     ...canonicalizedBoundsCheckConfig,
+    ...canonicalizedEntryInequalityConfig,
     ...(proofEntryConfig.isMemberOf !== undefined
       ? {
           isMemberOf: proofEntryConfig.isMemberOf
@@ -257,6 +261,25 @@ export function canonicalizeBoundsCheckConfig(
           inRange: inRange,
           notInRange: notInRange
         })
+  };
+}
+
+export function canonicalizeEntryInequalityConfig(
+  proofEntryConfig: GPCProofEntryInequalityConfig
+): GPCProofEntryInequalityConfig {
+  return {
+    ...(proofEntryConfig.lessThan
+      ? { lessThan: proofEntryConfig.lessThan }
+      : {}),
+    ...(proofEntryConfig.lessThanEq
+      ? { lessThanEq: proofEntryConfig.lessThanEq }
+      : {}),
+    ...(proofEntryConfig.greaterThan
+      ? { greaterThan: proofEntryConfig.greaterThan }
+      : {}),
+    ...(proofEntryConfig.greaterThanEq
+      ? { greaterThanEq: proofEntryConfig.greaterThanEq }
+      : {})
   };
 }
 
@@ -619,6 +642,11 @@ export type GPCRequirements = {
   nNumericValues: number;
 
   /**
+   * Number of entry inequalities.
+   */
+  nEntryInequalities: number;
+
+  /**
    * Number of lists to be included in proof.
    */
   nLists: number;
@@ -652,6 +680,7 @@ export function GPCRequirements(
   nEntries: number,
   merkleMaxDepth: number,
   nNumericValues: number = 0,
+  nEntryInequalities: number = 0,
   nLists: number = 0,
   maxListSize: number = 0,
   tupleArities: Record<PODName, number> = {},
@@ -663,6 +692,7 @@ export function GPCRequirements(
     nEntries,
     merkleMaxDepth,
     nNumericValues,
+    nEntryInequalities,
     nLists,
     maxListSize,
     tupleArities,
@@ -681,16 +711,25 @@ export const LIST_MEMBERSHIP = "membership";
 export const LIST_NONMEMBERSHIP = "non-membership";
 
 /**
- * Configuration for bounds checks arranged by entry identifier requiring a
- * bounds check.
+ * Configuration for numeric values containing bounds check configurations and
+ * indices according to entry identifier arranged in lexicographic order.
  *
  * This is deduced from the proof configuration in
- * {@link boundsCheckConfigFromProofConfig}.
+ * {@link numericValueConfigFromProofConfig}.
  */
-export type GPCProofBoundsCheckConfig = Record<
+export type GPCProofNumericValueConfig = Map<
   PODEntryIdentifier,
-  GPCProofEntryBoundsCheckConfig
+  GPCProofEntryNumericValueConfig
 >;
+
+/**
+ * Configuration for a single numeric value entry containing a bounds check
+ * configuration and index, cf. {@link GPCProofNumericValueConfig}.
+ */
+export type GPCProofEntryNumericValueConfig = {
+  boundsCheckConfig: GPCProofEntryBoundsCheckConfig;
+  index: bigint;
+};
 
 /**
  * Configuration for named lists arranged by identifier requiring a list
@@ -720,40 +759,51 @@ export type ListConfig = {
 };
 
 /**
- * Determines the bounds check configuration from the proof configuration.
+ * Determines the numeric value module configuration from the proof
+ * configuration sorted by POD entry identifier in lexicographic order.
  *
- * Bounds checks are indicated in each entry field via the optional property
- * `inRange`, which specifies (public) constant upper and lower bounds. This
- * procedure singles out and arranges these bounds check configurations by entry
- * identifier.
+ * Bounds checks are indicated in each entry field via the optional properties
+ * `inRange` and `notInRange`, which specify (public) constant upper and lower
+ * bounds. This procedure singles out these bounds check configurations and
+ * keeps track of the indices of these numeric values assuming lexicographical
+ * order with respect to their entry identifiers.
  *
  * @param proofConfig the proof configuration
- * @returns a record mapping entry identifiers to their bounds check
- * configurations
+ * @returns a map taking an entry identifier to a record containing its bounds
+ * check configuration and numeric value index.
  */
-export function boundsCheckConfigFromProofConfig(
+export function numericValueConfigFromProofConfig(
   proofConfig: GPCProofConfig
-): GPCProofBoundsCheckConfig {
-  return Object.fromEntries(
-    Object.entries(proofConfig.pods).flatMap(([podName, podConfig]) =>
-      Object.entries(podConfig.entries).flatMap(([entryName, entryConfig]) => {
-        return !(entryConfig.inRange || entryConfig.notInRange)
-          ? []
-          : [
-              [
-                `${podName}.${entryName}`,
-                {
-                  ...(entryConfig.inRange
-                    ? { inRange: entryConfig.inRange }
-                    : {}),
-                  ...(entryConfig.notInRange
-                    ? { notInRange: entryConfig.notInRange }
-                    : {})
-                }
-              ]
-            ];
-      })
+): GPCProofNumericValueConfig {
+  return new Map(
+    (
+      Object.entries(proofConfig.pods).flatMap(([podName, podConfig]) =>
+        Object.entries(podConfig.entries).flatMap(
+          ([entryName, entryConfig]) => {
+            return !(entryConfig.inRange || entryConfig.notInRange)
+              ? []
+              : [
+                  [
+                    `${podName}.${entryName}`,
+                    {
+                      ...(entryConfig.inRange
+                        ? { inRange: entryConfig.inRange }
+                        : {}),
+                      ...(entryConfig.notInRange
+                        ? { notInRange: entryConfig.notInRange }
+                        : {})
+                    }
+                  ]
+                ];
+          }
+        )
+      ) as [PODEntryIdentifier, GPCProofEntryBoundsCheckConfig][]
     )
+      .sort((x, y) => podEntryIdentifierCompare(x[0], y[0]))
+      .map(([entryIdentifier, boundsCheckConfig], i) => [
+        entryIdentifier,
+        { boundsCheckConfig, index: BigInt(i) }
+      ])
   );
 }
 

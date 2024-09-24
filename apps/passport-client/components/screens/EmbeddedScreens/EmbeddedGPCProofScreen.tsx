@@ -131,6 +131,7 @@ function ProvePODInfo({
   selectedPOD: POD | undefined;
   onChange: (pod: POD | undefined) => void;
 }): ReactNode {
+  const [showOtherStatements, setShowOtherStatements] = useState(false);
   const revealedEntries = Object.entries(schema.pod.entries)
     .map(([name, entry]) => {
       if (entry.type === "optional") {
@@ -173,7 +174,11 @@ function ProvePODInfo({
           {pods.map((pod) => {
             return (
               <option key={pod.signature} value={pod.signature}>
-                {pod.signature.substring(0, 16)}
+                {schema.pod.meta?.labelEntry
+                  ? pod.content
+                      .asEntries()
+                      [schema.pod.meta.labelEntry].value.toString()
+                  : pod.signature.substring(0, 16)}
               </option>
             );
           })}
@@ -194,88 +199,119 @@ function ProvePODInfo({
           );
         })}
       </RevealedEntriesGrid>
-
-      {entriesWithConstraints.length > 0 && (
-        <ConstraintsContainer>
-          <ConstraintsTitle>Proven constraints:</ConstraintsTitle>
-          {entriesWithConstraints.map(([entryName, entry]) => {
-            return (
-              <ConstraintItem key={`${name}-${entryName}-constraints`}>
-                {entry.isMemberOf && (
-                  <ConstraintText>
-                    <EntryName>{entryName}</EntryName> is member of list:{" "}
-                    <Reveal>
-                      <ConstraintList>
-                        {entry.isMemberOf
-                          .map((v) => v.value.toString())
-                          .join(", ")}
-                      </ConstraintList>
-                    </Reveal>
-                  </ConstraintText>
-                )}
-                {entry.isNotMemberOf && (
-                  <ConstraintText>
-                    <EntryName>{entryName}</EntryName> is not member of list:{" "}
-                    <Reveal>
-                      <ConstraintList>
-                        {entry.isNotMemberOf
-                          .map((v) => v.value.toString())
-                          .join(", ")}
-                      </ConstraintList>
-                    </Reveal>
-                  </ConstraintText>
-                )}
-                {entry.type === "int" && entry.inRange && (
-                  <ConstraintText>
-                    <EntryName>{entryName}</EntryName> is
-                    <ConstraintValue>
-                      {entry.inRange.min === POD_INT_MIN &&
-                        entry.inRange.max === POD_INT_MAX &&
-                        "any number"}
-                      {entry.inRange.min !== POD_INT_MIN &&
-                        entry.inRange.max === POD_INT_MAX &&
-                        `greater than ${entry.inRange.min}`}
-                      {entry.inRange.min === POD_INT_MIN &&
-                        entry.inRange.max !== POD_INT_MAX &&
-                        `less than ${entry.inRange.max}`}
-                      {entry.inRange.min !== POD_INT_MIN &&
-                        entry.inRange.max !== POD_INT_MAX &&
-                        `between ${entry.inRange.min} and ${entry.inRange.max}`}
-                    </ConstraintValue>
-                  </ConstraintText>
-                )}
-              </ConstraintItem>
-            );
-          })}
-        </ConstraintsContainer>
+      {schema.owner && (
+        <OwnerStatement>
+          Entry <EntryName>{schema.owner.entry}</EntryName> must match your{" "}
+          {schema.owner.protocol === "SemaphoreV3"
+            ? "Semaphore commitment"
+            : "public key"}
+        </OwnerStatement>
       )}
-      {schema.pod.tuples && (
-        <TuplesContainer>
-          <TuplesTitle>Tuples:</TuplesTitle>
-          {schema.pod.tuples.map((tuple) => {
-            return (
-              <TupleItem key={tuple.entries.join(",")}>
-                Entries{" "}
-                {tuple.entries.slice(0, -1).map((entry) => (
-                  <EntryName key={entry}>{entry}, </EntryName>
-                ))}
-                and{" "}
-                <EntryName>{tuple.entries[tuple.entries.length - 1]}</EntryName>{" "}
-                must {tuple.isNotMemberOf ? "not " : ""}match a list:
-                <br />
-                <Reveal>
-                  <ConstraintList>
-                    {(tuple.isNotMemberOf ?? tuple.isMemberOf ?? [])
-                      .map((v) => v.map((e) => e.value.toString()).join(", "))
-                      .map((item) => (
-                        <div>{item}</div>
-                      ))}
-                  </ConstraintList>
-                </Reveal>
-              </TupleItem>
-            );
-          })}
-        </TuplesContainer>
+      <OtherStatementsButton
+        onClick={() => setShowOtherStatements(!showOtherStatements)}
+      >
+        {showOtherStatements
+          ? "Hide other statements ▼"
+          : "Show other statements ▶"}
+      </OtherStatementsButton>
+      {showOtherStatements && (
+        <>
+          {entriesWithConstraints.length > 0 && (
+            <ConstraintsContainer>
+              <ConstraintsTitle>Proven constraints:</ConstraintsTitle>
+              {entriesWithConstraints.map(([entryName, entry]) => {
+                return (
+                  <ConstraintItem key={`${name}-${entryName}-constraints`}>
+                    {entry.isMemberOf && (
+                      <ConstraintText>
+                        <EntryName>{entryName}</EntryName> is member of list:{" "}
+                        <Reveal>
+                          <ConstraintList>
+                            {entry.isMemberOf
+                              .map((v) => v.value.toString())
+                              .join(", ")}
+                          </ConstraintList>
+                        </Reveal>
+                      </ConstraintText>
+                    )}
+                    {entry.isNotMemberOf && (
+                      <ConstraintText>
+                        <EntryName>{entryName}</EntryName> is not member of
+                        list:{" "}
+                        <Reveal>
+                          <ConstraintList>
+                            {entry.isNotMemberOf
+                              .map((v) => v.value.toString())
+                              .join(", ")}
+                          </ConstraintList>
+                        </Reveal>
+                      </ConstraintText>
+                    )}
+                    {entry.type === "int" && entry.inRange && (
+                      <ConstraintText>
+                        <EntryName>{entryName}</EntryName> is
+                        <ConstraintValue>
+                          {entry.inRange.min === POD_INT_MIN &&
+                            entry.inRange.max === POD_INT_MAX &&
+                            "any number"}
+                          {entry.inRange.min !== POD_INT_MIN &&
+                            entry.inRange.max === POD_INT_MAX &&
+                            `greater than ${entry.inRange.min}`}
+                          {entry.inRange.min === POD_INT_MIN &&
+                            entry.inRange.max !== POD_INT_MAX &&
+                            `less than ${entry.inRange.max}`}
+                          {entry.inRange.min !== POD_INT_MIN &&
+                            entry.inRange.max !== POD_INT_MAX &&
+                            `between ${entry.inRange.min} and ${entry.inRange.max}`}
+                        </ConstraintValue>
+                      </ConstraintText>
+                    )}
+                  </ConstraintItem>
+                );
+              })}
+            </ConstraintsContainer>
+          )}
+          {schema.pod.tuples && (
+            <TuplesContainer>
+              <TuplesTitle>Tuples:</TuplesTitle>
+              {schema.pod.tuples.map((tuple) => {
+                return (
+                  <TupleItem key={tuple.entries.join(",")}>
+                    Entries{" "}
+                    {tuple.entries.length === 2 ? (
+                      <>
+                        <EntryName>{tuple.entries[0]}</EntryName> and{" "}
+                      </>
+                    ) : (
+                      <>
+                        {tuple.entries.slice(0, -1).map((entry) => (
+                          <EntryName key={entry}>{entry}, </EntryName>
+                        ))}
+                        and{" "}
+                      </>
+                    )}
+                    <EntryName>
+                      {tuple.entries[tuple.entries.length - 1]}
+                    </EntryName>{" "}
+                    must {tuple.isNotMemberOf ? "not " : ""}match a list:
+                    <br />
+                    <Reveal>
+                      <ConstraintList>
+                        {(tuple.isNotMemberOf ?? tuple.isMemberOf ?? [])
+                          .map((v) =>
+                            v.map((e) => e.value.toString()).join(", ")
+                          )
+                          .map((item) => (
+                            <div>{item}</div>
+                          ))}
+                      </ConstraintList>
+                    </Reveal>
+                  </TupleItem>
+                );
+              })}
+            </TuplesContainer>
+          )}
+        </>
       )}
     </PODInfo>
   );
@@ -307,6 +343,7 @@ const PODInfo = styled.div`
 
 const PODName = styled.div`
   font-weight: 600;
+  text-transform: capitalize;
 `;
 
 const PODSelectContainer = styled.label`
@@ -317,7 +354,7 @@ const PODSelectContainer = styled.label`
 `;
 
 const RevealedEntriesTitle = styled.div`
-  margin-top: 8px;
+  margin-top: 16px;
   margin-bottom: 4px;
   font-weight: 600;
 `;
@@ -325,7 +362,9 @@ const RevealedEntriesTitle = styled.div`
 const RevealedEntriesGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
+  gap: 4px;
+  align-items: center;
+  margin-bottom: 16px;
 `;
 
 const EntryName = styled.span`
@@ -333,13 +372,13 @@ const EntryName = styled.span`
 `;
 
 const EntryValue = styled.div`
-  padding: 4px 8px;
+  padding: 2px 8px;
   border-radius: 4px;
   background-color: rgba(var(--black-rgb), 0.3);
 `;
 
 const ConstraintsContainer = styled.div`
-  margin-top: 16px;
+  margin-top: 8px;
 `;
 
 const ConstraintsTitle = styled.div`
@@ -367,7 +406,7 @@ const ConstraintList = styled.div`
 `;
 
 const TuplesContainer = styled.div`
-  margin-top: 16px;
+  margin-top: 8px;
 `;
 
 const TuplesTitle = styled.div`
@@ -377,4 +416,19 @@ const TuplesTitle = styled.div`
 
 const TupleItem = styled.div`
   margin-bottom: 12px;
+`;
+
+const OtherStatementsButton = styled.button`
+  border: 0px;
+  background: none;
+  color: rgb(var(--white-rgb));
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0px;
+  margin: 8px 0px;
+`;
+
+const OwnerStatement = styled.div`
+  margin-top: 8px;
+  margin-bottom: 8px;
 `;

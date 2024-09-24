@@ -14,6 +14,7 @@ import {
   GenericIssuanceUpsertPipelineRequest,
   GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
+  OneClickEmailResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
   PodboxTicketActionPreCheckRequest,
@@ -23,7 +24,9 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { sleep } from "@pcd/util";
 import express from "express";
+import { sha256 } from "js-sha256";
 import urljoin from "url-join";
 import { PipelineCheckinDB } from "../../database/queries/pipelineCheckinDB";
 import { GenericIssuanceService } from "../../services/generic-issuance/GenericIssuanceService";
@@ -562,6 +565,68 @@ export function initGenericIssuanceRoutes(
         await genericIssuanceService.handleGetPipelineSemaphoreGroups(
           pipelineId
         );
+
+      res.json(result);
+    }
+  );
+
+  /**
+   * For a given pipeline, gets an anonymized mapping from hashed email to
+   * Pretix order code, which is used for one-click email verification. Hit by
+   * the zupass backend, and authenticated with the DEVCON_PODBOX_API_KEY env
+   * var. Used on the zupass backend to authenticate one-click login requests.
+   */
+  app.get(
+    "/generic-issuance/api/one-click-emails/:pipelineId/:apiKey",
+    async (req, res) => {
+      logger("[PODBOX] handling one-click-emails:", req.params);
+
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineId = checkUrlParam(req, "pipelineId");
+      const apiKey = checkUrlParam(req, "apiKey");
+
+      if (
+        !process.env.DEVCON_PODBOX_API_KEY ||
+        apiKey !== process.env.DEVCON_PODBOX_API_KEY
+      ) {
+        throw new PCDHTTPError(401, "invalid api key " + apiKey);
+      }
+
+      const pipeline = (
+        await genericIssuanceService.getAllPipelineInstances()
+      ).find((p) => p.id === pipelineId && PretixPipeline.is(p)) as
+        | PretixPipeline
+        | undefined;
+
+      if (!pipeline) {
+        throw new PCDHTTPError(400, "pipeline not found " + pipelineId);
+      }
+
+      const tickets = await pipeline.getAllTickets();
+      logger(
+        `[PODBOX] one-click-emails: summarizing ${tickets.atoms.length} tickets`
+      );
+
+      const result: OneClickEmailResponseValue = { values: {} };
+
+      for (let i = 0; i < tickets.atoms.length; i++) {
+        const ticket = tickets.atoms[i];
+        if (ticket.email) {
+          const hashedEmail = sha256(ticket.email);
+          const hashedOrderCode = sha256(ticket.orderCode);
+          if (!result.values[hashedEmail]) {
+            result.values[hashedEmail] = [hashedOrderCode];
+          } else {
+            result.values[hashedEmail].push(hashedOrderCode);
+          }
+        }
+
+        // throttle hashing to avoid locking up the server
+        // during this operation
+        if (i % 25 === 0) {
+          await sleep(1);
+        }
+      }
 
       res.json(result);
     }

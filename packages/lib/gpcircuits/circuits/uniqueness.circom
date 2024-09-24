@@ -26,7 +26,7 @@ template UniquenessModule(
     // values[j] for i < j arranged in column-major order.
     signal valueDifferences[NUM_PAIRS];
     for (var i = 0; i < NUM_LIST_ELEMENTS; i++) {
-        for(var j = i + 1; j < NUM_LIST_ELEMENTS; j++) {
+        for (var j = i + 1; j < NUM_LIST_ELEMENTS; j++) {
             var k = j + NUM_LIST_ELEMENTS*i - (i + 1)*(i + 2)\2;
             valueDifferences[k] <== values[i] - values[j];
         }

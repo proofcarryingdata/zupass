@@ -17,7 +17,7 @@ template ListMembershipModule(
 
     // List of admissible value hashes. Assumed to have repetitions if
     // the actual list length is smaller.
-    signal input validValues[MAX_LIST_ELEMENTS]; 
+    signal input validValues[MAX_LIST_ELEMENTS];
 
     // Boolean indicating whether `comparisonValue` lies in
     // `validValues`.
@@ -28,7 +28,7 @@ template ListMembershipModule(
     for (var i = 0; i < MAX_LIST_ELEMENTS; i++) {
         shiftedValues[i] <== validValues[i] - comparisonValue;
     }
-
+    
     if (MAX_LIST_ELEMENTS == 0) {
         isMember <== 0;
     } else {

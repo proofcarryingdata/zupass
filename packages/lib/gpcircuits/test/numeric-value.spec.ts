@@ -17,7 +17,7 @@ describe("numeric-value.NumericValueModule should work", async function () {
     circuit = await circomkit.WitnessTester("NumericValueModule", {
       file: "numeric-value",
       template: "NumericValueModule",
-      params: []
+      params: [64]
     });
   });
 

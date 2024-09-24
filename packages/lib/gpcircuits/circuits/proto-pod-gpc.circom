@@ -3,6 +3,7 @@ pragma circom 2.1.8;
 include "circomlib/circuits/gates.circom";
 include "circomlib/circuits/poseidon.circom";
 include "entry.circom";
+include "entry-inequality.circom";
 include "global.circom";
 include "gpc-util.circom";
 include "list-membership.circom";
@@ -42,6 +43,9 @@ template ProtoPODGPC (
 
     // Max number of numeric values.
     MAX_NUMERIC_VALUES,
+
+    // Max number of entry inequalities.
+    MAX_ENTRY_INEQUALITIES,
     
     // Indicates the number of ListMembership modules included in this GPC,
     // setting the largest number of distinct membership lists for (tuples of)
@@ -67,6 +71,12 @@ template ProtoPODGPC (
     // enabled.  Should be 0 or 1.
     INCLUDE_OWNERV4
 ) {
+    /**
+     * Maximum number of bits in a POD int value. Used in the bounds
+     * check, numeric value and entry inequality modules.
+     */
+    var POD_INT_BITS = 64;
+     
     /*
      * 1+ ObjectModules.  Each array corresponds to one input/output for each object module.
      */
@@ -303,7 +313,7 @@ template ProtoPODGPC (
     
     for (var i = 0; i < MAX_NUMERIC_VALUES; i++) {
         numericValueBoundsCheck[i]
-            <== NumericValueModule()(
+            <== NumericValueModule(POD_INT_BITS)(
                 // Disable value hash check if index is -1.
                 NOT()(
                     IsZero()(numericValueEntryIndices[i] + 1)
@@ -317,6 +327,43 @@ template ProtoPODGPC (
                 numericMaxValues[i]);
 
         numericValueInRangeBits[i] === numericValueBoundsCheck[i];
+    }
+
+    /*
+     * (MAX_ENTRY_INEQUALITIES) EntryInequalityModules with their
+     * inputs & outputs.
+     */
+    
+    // Values to be compared are referenced by their indices in
+    // `numericValues`. These should be padded with 0s if necessary.
+    signal input entryInequalityValueIndex[MAX_ENTRY_INEQUALITIES];
+    signal input entryInequalityOtherValueIndex[MAX_ENTRY_INEQUALITIES];
+
+    // Inequalities are of the form 'value < otherValue' or 'value >=
+    // otherValue', the former corresponding to entry inequality
+    // module output value 1 and the latter to 0. This motivates the
+    // following bit-packed indicators. These should be padded with
+    // 0s if necessary.
+    signal input entryInequalityIsLessThan;
+    signal entryInequalityIsLessThanBits[MAX_ENTRY_INEQUALITIES]
+        <== Num2Bits(MAX_ENTRY_INEQUALITIES)(entryInequalityIsLessThan);
+
+    // Output of entry inequality check.
+    signal entryInequalityCheck[MAX_ENTRY_INEQUALITIES];
+    
+    for (var i = 0; i < MAX_ENTRY_INEQUALITIES; i++) {
+        entryInequalityCheck[i]
+            <== EntryInequalityModule(POD_INT_BITS)(
+                InputSelector(MAX_NUMERIC_VALUES)(
+                    numericValues,
+                    entryInequalityValueIndex[i]
+                ),
+                InputSelector(MAX_NUMERIC_VALUES)(
+                    numericValues,
+                    entryInequalityOtherValueIndex[i]
+                )
+            );
+        entryInequalityIsLessThanBits[i] === entryInequalityCheck[i];
     }
     
     /*

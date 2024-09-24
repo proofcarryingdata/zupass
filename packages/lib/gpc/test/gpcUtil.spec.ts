@@ -5,14 +5,16 @@ import {
   GPCProofConfig,
   GPCProofEntryBoundsCheckConfig,
   GPCProofEntryConfig,
-  GPCProofEntryConfigCommon
+  GPCProofEntryConfigCommon,
+  GPCProofEntryInequalityConfig
 } from "../src";
 import {
-  boundsCheckConfigFromProofConfig,
   canonicalizeBoundsCheckConfig,
   canonicalizeEntryConfig,
+  canonicalizeEntryInequalityConfig,
   canonicalizePODUniquenessConfig,
-  canonicalizeVirtualEntryConfig
+  canonicalizeVirtualEntryConfig,
+  numericValueConfigFromProofConfig
 } from "../src/gpcUtil";
 
 describe("Object entry configuration canonicalization should work", () => {
@@ -87,7 +89,22 @@ describe("Object entry configuration canonicalization should work", () => {
 
     const canonicalizedConfig = canonicalizeEntryConfig(config);
 
-    expect(canonicalizedConfig).to.deep.eq(canonicalizedConfig);
+    expect(canonicalizedConfig).to.deep.eq(config);
+  });
+  it("should work as expected on a POD entry configuration with inequality checks", () => {
+    const config: GPCProofEntryConfig = {
+      isRevealed: false,
+      inRange: { min: -512n, max: 25n },
+      notInRange: { min: -256n, max: -5n },
+      lessThan: "somePOD.a",
+      greaterThan: "somePOD.c",
+      greaterThanEq: "somePOD.d",
+      lessThanEq: "somePOD.b"
+    };
+
+    const canonicalizedConfig = canonicalizeEntryConfig(config);
+
+    expect(canonicalizedConfig).to.deep.eq(config);
   });
 });
 
@@ -294,7 +311,28 @@ describe("Object entry bounds check canonicalization should work", () => {
   });
 });
 
-describe("Bounds check configuration derivation works as expected", () => {
+describe("Object entry inequality check canonicalization should work", () => {
+  const configs: GPCProofEntryInequalityConfig[] = [
+    { lessThan: "somePOD.a" },
+    { greaterThan: "somePOD.a" },
+    { lessThanEq: "somePOD.a" },
+    { greaterThanEq: "somePOD.a" },
+    { greaterThan: "somePOD.a", lessThan: "someOtherPOD.b" },
+    { lessThanEq: "somePOD.a", lessThan: "someOtherPOD.b" },
+    {
+      lessThanEq: "somePOD.a",
+      greaterThan: "somePOD.c",
+      lessThan: "someOtherPOD.b",
+      greaterThanEq: "somePOD.d"
+    }
+  ];
+  const canonicalizedConfigs: GPCProofEntryInequalityConfig[] = configs.map(
+    canonicalizeEntryInequalityConfig
+  );
+  expect(canonicalizedConfigs).to.deep.equal(configs);
+});
+
+describe("Numeric value configuration derivation works as expected", () => {
   it("should work as expected on a proof configuration without bounds checks", () => {
     const proofConfig: GPCProofConfig = {
       pods: {
@@ -307,8 +345,8 @@ describe("Bounds check configuration derivation works as expected", () => {
         }
       }
     };
-    const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
-    expect(boundsCheckConfig).to.deep.eq({});
+    const numericValueConfig = numericValueConfigFromProofConfig(proofConfig);
+    expect(numericValueConfig).to.deep.eq(new Map([]));
   });
   it("should work as expected on a proof configuration with simple bounds checks", () => {
     const proofConfig: GPCProofConfig = {
@@ -339,27 +377,47 @@ describe("Bounds check configuration derivation works as expected", () => {
         }
       }
     };
-    const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
-    expect(boundsCheckConfig).to.deep.eq({
-      "somePod.A": {
-        inRange: {
-          min: 0n,
-          max: POD_INT_MAX
-        }
-      },
-      "somePod.B": {
-        notInRange: {
-          min: POD_INT_MIN,
-          max: 87n
-        }
-      },
-      "someOtherPod.D": {
-        inRange: {
-          min: 5n,
-          max: 25n
-        }
-      }
-    });
+    const numericValueConfig = numericValueConfigFromProofConfig(proofConfig);
+    expect(numericValueConfig).to.deep.eq(
+      new Map([
+        [
+          "someOtherPod.D",
+          {
+            boundsCheckConfig: {
+              inRange: {
+                min: 5n,
+                max: 25n
+              }
+            },
+            index: 0n
+          }
+        ],
+        [
+          "somePod.A",
+          {
+            boundsCheckConfig: {
+              inRange: {
+                min: 0n,
+                max: POD_INT_MAX
+              }
+            },
+            index: 1n
+          }
+        ],
+        [
+          "somePod.B",
+          {
+            boundsCheckConfig: {
+              notInRange: {
+                min: POD_INT_MIN,
+                max: 87n
+              }
+            },
+            index: 2n
+          }
+        ]
+      ])
+    );
   });
   it("should work as expected on a proof configuration with more complex bounds checks", () => {
     const proofConfig: GPCProofConfig = {
@@ -391,28 +449,54 @@ describe("Bounds check configuration derivation works as expected", () => {
         }
       }
     };
-    const boundsCheckConfig = boundsCheckConfigFromProofConfig(proofConfig);
-    expect(boundsCheckConfig).to.deep.eq({
-      "somePod.A": {
-        inRange: {
-          min: 0n,
-          max: 24n
-        }
-      },
-      "someOtherPod.D": {
-        inRange: {
-          min: 5n,
-          max: 30n
-        }
-      },
-      "someOtherPod.E": {
-        inRange: { min: -1000n, max: 20n },
-        notInRange: { min: -5n, max: 4n }
-      },
-      "someOtherPod.F": {
-        notInRange: { min: 100n, max: 200n }
-      }
-    });
+    const numericValueConfig = numericValueConfigFromProofConfig(proofConfig);
+    expect(numericValueConfig).to.deep.eq(
+      new Map([
+        [
+          "someOtherPod.D",
+          {
+            boundsCheckConfig: {
+              inRange: {
+                min: 5n,
+                max: 30n
+              }
+            },
+            index: 0n
+          }
+        ],
+        [
+          "someOtherPod.E",
+          {
+            boundsCheckConfig: {
+              inRange: { min: -1000n, max: 20n },
+              notInRange: { min: -5n, max: 4n }
+            },
+            index: 1n
+          }
+        ],
+        [
+          "someOtherPod.F",
+          {
+            boundsCheckConfig: {
+              notInRange: { min: 100n, max: 200n }
+            },
+            index: 2n
+          }
+        ],
+        [
+          "somePod.A",
+          {
+            boundsCheckConfig: {
+              inRange: {
+                min: 0n,
+                max: 24n
+              }
+            },
+            index: 3n
+          }
+        ]
+      ])
+    );
   });
 });
 

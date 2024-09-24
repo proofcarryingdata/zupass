@@ -38,6 +38,7 @@ export * from "./api/requestLogToServer";
 export * from "./api/requestOneClickLogin";
 export * from "./api/requestPasswordSalt";
 export * from "./api/requestPipelineInfo";
+export * from "./api/requestPodboxOneClickEmails";
 export * from "./api/requestPodboxTicketAction";
 export * from "./api/requestPodboxTicketActionPreCheck";
 export * from "./api/requestPollFeed";

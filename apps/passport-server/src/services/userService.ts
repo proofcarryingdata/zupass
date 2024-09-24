@@ -13,6 +13,7 @@ import {
   UNREDACT_TICKETS_TERMS_VERSION,
   UpgradeUserWithV4CommitmentResult,
   VerifyTokenResponseValue,
+  requestPodboxOneClickEmails,
   verifyAddV4CommitmentRequestPCD
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -28,6 +29,7 @@ import {
 } from "@pcd/util";
 import { randomUUID } from "crypto";
 import { Response } from "express";
+import { sha256 } from "js-sha256";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
@@ -53,6 +55,7 @@ import { GenericIssuanceService } from "./generic-issuance/GenericIssuanceServic
 import { CredentialSubservice } from "./generic-issuance/subservices/CredentialSubservice";
 import { RateLimitService } from "./rateLimitService";
 import { SemaphoreService } from "./semaphoreService";
+import { traced } from "./telemetryService";
 
 const AgreedTermsSchema = z.object({
   version: z.number().max(LATEST_PRIVACY_NOTICE)
@@ -75,6 +78,13 @@ export class UserService {
   private readonly genericIssuanceService: GenericIssuanceService | null;
   private readonly credentialSubservice: CredentialSubservice;
 
+  private stopped = false;
+  private podboxSyncLoopTimeout: ReturnType<typeof setTimeout> | undefined;
+  private anonymizedDevconEmails: Record<
+    string /* sha256 of email */,
+    string[] /* sha256's of pretix order code's */
+  > = {};
+
   public constructor(
     context: ApplicationContext,
     semaphoreService: SemaphoreService,
@@ -94,6 +104,60 @@ export class UserService {
     this.bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
+  }
+
+  public async start(): Promise<void> {
+    if (this.stopped) {
+      logger("[USER_SERVICE] stopped - not scheduling another sync");
+      return;
+    }
+
+    try {
+      await this.syncPodboxEmails();
+    } catch (e) {
+      logger("[USER_SERVICE] Error syncing podbox emails", e);
+    }
+
+    const syncInterval = 1000 * 45;
+    logger(`[USER_SERVICE] scheduling another podbox sync in ${syncInterval}`);
+    this.podboxSyncLoopTimeout = setTimeout(async () => {
+      this.start();
+    }, syncInterval);
+  }
+
+  public stop(): void {
+    this.stopped = true;
+    clearTimeout(this.podboxSyncLoopTimeout);
+  }
+
+  private async syncPodboxEmails(): Promise<void> {
+    return traced("USER_SERVICE", "syncPodboxEmails", async () => {
+      if (
+        !process.env.DEVCON_PODBOX_API_URL ||
+        !process.env.DEVCON_PIPELINE_ID ||
+        !process.env.DEVCON_PODBOX_API_KEY
+      ) {
+        logger("[USER_SERVICE] No podbox credentials found, skipping sync");
+        return;
+      }
+
+      logger("[USER_SERVICE] Scheduling devcon podbox sync");
+
+      const res = await requestPodboxOneClickEmails(
+        process.env.DEVCON_PODBOX_API_URL,
+        process.env.DEVCON_PIPELINE_ID,
+        process.env.DEVCON_PODBOX_API_KEY
+      );
+
+      if (res.success) {
+        logger(
+          `[USER_SERVICE] successfully completed devcon podbox sync, got ${res.value?.values?.length} emails`
+        );
+        this.anonymizedDevconEmails = res.value.values;
+      } else {
+        logger("[USER_SERVICE] Error syncing podbox emails", res.error);
+      }
+    });
   }
 
   public async getSaltByEmail(email: string): Promise<string | null> {
@@ -222,14 +286,17 @@ export class UserService {
     encryption_key: string,
     res: Response
   ): Promise<void> {
-    if (!this.genericIssuanceService) {
-      throw new PCDHTTPError(500, "Generic issuance service not initialized");
-    }
+    const validDevcon = this.anonymizedDevconEmails[sha256(email)]?.includes(
+      sha256(code)
+    );
+
     const valid =
-      await this.genericIssuanceService.validateEmailAndPretixOrderCode(
+      validDevcon ||
+      (await this.genericIssuanceService?.validateEmailAndPretixOrderCode(
         email,
         code
-      );
+      ));
+
     if (!valid) {
       throw new PCDHTTPError(
         403,
@@ -857,7 +924,7 @@ export function startUserService(
   genericIssuanceService: GenericIssuanceService | null,
   credentialSubservice: CredentialSubservice
 ): UserService {
-  return new UserService(
+  const userService = new UserService(
     context,
     semaphoreService,
     emailTokenService,
@@ -866,4 +933,8 @@ export function startUserService(
     genericIssuanceService,
     credentialSubservice
   );
+
+  userService.start();
+
+  return userService;
 }

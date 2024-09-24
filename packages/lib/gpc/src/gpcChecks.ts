@@ -6,6 +6,7 @@ import {
 import {
   EDDSA_PUBKEY_TYPE_STRING,
   POD,
+  PODIntValue,
   PODName,
   PODValue,
   PODValueTuple,
@@ -31,6 +32,7 @@ import {
   GPCProofConfig,
   GPCProofEntryBoundsCheckConfig,
   GPCProofEntryConfig,
+  GPCProofEntryInequalityConfig,
   GPCProofInputs,
   GPCProofObjectConfig,
   GPCRevealedClaims,
@@ -56,6 +58,7 @@ import {
   resolvePODEntryIdentifier,
   resolvePODEntryOrTupleIdentifier,
   splitCircuitIdentifier,
+  splitPODEntryIdentifier,
   widthOfEntryOrTuple
 } from "./gpcUtil";
 // TODO(POD-P2): Split out the parts of this which should be public from
@@ -114,23 +117,49 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   let totalObjects = 0;
   let totalEntries = 0;
   let requiredMerkleDepth = 0;
-  let totalNumericValues = 0;
+  const boundsChecks: Record<PODEntryIdentifier, number> = {};
+  const entryInequalityChecks: Record<
+    PODEntryIdentifier,
+    Record<string, PODEntryIdentifier>
+  > = {};
   let includeOwnerV3 = false;
   let includeOwnerV4 = false;
   for (const [objName, objConfig] of Object.entries(proofConfig.pods)) {
     checkPODName(objName);
-    const { nEntries, nBoundsChecks, hasOwnerV3, hasOwnerV4 } =
-      checkProofObjConfig(objName, objConfig);
+    const {
+      nEntries,
+      nBoundsChecks,
+      inequalityChecks,
+      hasOwnerV3,
+      hasOwnerV4
+    } = checkProofObjConfig(objName, objConfig);
     totalObjects++;
     totalEntries += nEntries;
     requiredMerkleDepth = Math.max(
       requiredMerkleDepth,
       calcMinMerkleDepthForEntries(nEntries)
     );
-    totalNumericValues += nBoundsChecks;
+    (Object.keys(nBoundsChecks) as PODEntryIdentifier[]).forEach(
+      (entryIdentifier: PODEntryIdentifier) => {
+        boundsChecks[entryIdentifier] = nBoundsChecks[entryIdentifier];
+      }
+    );
+    (Object.keys(inequalityChecks) as PODEntryIdentifier[]).forEach(
+      (entryIdentifier: PODEntryIdentifier) => {
+        entryInequalityChecks[entryIdentifier] =
+          inequalityChecks[entryIdentifier];
+      }
+    );
     includeOwnerV3 ||= hasOwnerV3;
     includeOwnerV4 ||= hasOwnerV4;
   }
+
+  // A range check should also be carried out on all entries involved in entry
+  // inequalities to ensure the validity of the entry inequality circuit.
+  checkProofBoundsCheckConfigForEntryInequalityConfig(
+    boundsChecks,
+    entryInequalityChecks
+  );
 
   if (proofConfig.uniquePODs !== undefined) {
     requireType("uniquePODs", proofConfig.uniquePODs, "boolean");
@@ -139,6 +168,15 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   if (proofConfig.tuples !== undefined) {
     checkProofTupleConfig(proofConfig);
   }
+
+  const nBoundsChecks: number = Object.values(boundsChecks).reduce(
+    (x, y) => x + y,
+    0
+  );
+
+  const nEntryInequalities = Object.values(entryInequalityChecks)
+    .map((inequalityChecks) => Object.keys(inequalityChecks).length)
+    .reduce((x, y) => x + y, 0);
 
   const listConfig: GPCProofMembershipListConfig =
     listConfigFromProofConfig(proofConfig);
@@ -158,7 +196,8 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
-    totalNumericValues,
+    nBoundsChecks,
+    nEntryInequalities,
     numLists,
     maxListSize,
     tupleArities,
@@ -168,61 +207,71 @@ export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
 }
 
 function checkProofObjConfig(
-  nameForErrorMessages: string,
+  objName: string,
   objConfig: GPCProofObjectConfig
 ): {
   nEntries: number;
-  nBoundsChecks: number;
+  nBoundsChecks: Record<PODEntryIdentifier, number>;
+  inequalityChecks: Record<
+    PODEntryIdentifier,
+    Record<string, PODEntryIdentifier>
+  >;
   hasOwnerV3: boolean;
   hasOwnerV4: boolean;
 } {
   if (Object.keys(objConfig.entries).length === 0) {
     throw new TypeError(
-      `Must prove at least one entry in object "${nameForErrorMessages}".`
+      `Must prove at least one entry in object "${objName}".`
     );
   }
 
   let nEntries = 0;
-  let nBoundsChecks = 0;
+  const nBoundsChecks: Record<PODEntryIdentifier, number> = {};
+  const inequalityChecks: Record<
+    PODEntryIdentifier,
+    Record<string, PODEntryIdentifier>
+  > = {};
   let hasOwnerV3 = false;
   let hasOwnerV4 = false;
   for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
     checkPODEntryName(entryName, true);
+    const podEntryIdentifier: PODEntryIdentifier = `${objName}.${entryName}`;
     const {
       nBoundsChecks: nEntryBoundsChecks,
       hasOwnerV3Check,
-      hasOwnerV4Check
-    } = checkProofEntryConfig(
-      `${nameForErrorMessages}.${entryName}`,
-      entryConfig
-    );
+      hasOwnerV4Check,
+      inequalityChecks: inequalityChecksForEntry
+    } = checkProofEntryConfig(podEntryIdentifier, entryConfig);
     nEntries++;
-    nBoundsChecks += nEntryBoundsChecks;
+    if (nEntryBoundsChecks > 0) {
+      nBoundsChecks[podEntryIdentifier] = nEntryBoundsChecks;
+    }
+    if (Object.keys(inequalityChecksForEntry).length > 0) {
+      inequalityChecks[podEntryIdentifier] = inequalityChecksForEntry;
+    }
     hasOwnerV3 ||= hasOwnerV3Check;
     hasOwnerV4 ||= hasOwnerV4Check;
   }
   if (objConfig.contentID !== undefined) {
-    checkProofEntryConfig(
-      `${nameForErrorMessages}.$contentID`,
-      objConfig.contentID
-    );
+    checkProofEntryConfig(`${objName}.$contentID`, objConfig.contentID);
   }
   if (objConfig.signerPublicKey !== undefined) {
     checkProofEntryConfig(
-      `${nameForErrorMessages}.$signerPublicKey`,
+      `${objName}.$signerPublicKey`,
       objConfig.signerPublicKey
     );
   }
-  return { nEntries, nBoundsChecks, hasOwnerV3, hasOwnerV4 };
+  return { nEntries, nBoundsChecks, inequalityChecks, hasOwnerV3, hasOwnerV4 };
 }
 
 export function checkProofEntryConfig(
-  nameForErrorMessages: string,
+  nameForErrorMessages: PODEntryIdentifier,
   entryConfig: GPCProofEntryConfig
 ): {
   hasOwnerV3Check: boolean;
   hasOwnerV4Check: boolean;
   nBoundsChecks: number;
+  inequalityChecks: Record<string, PODEntryIdentifier>;
 } {
   requireType(
     `${nameForErrorMessages}.isValueRevealed`,
@@ -277,14 +326,24 @@ export function checkProofEntryConfig(
     entryConfig
   );
 
+  const inequalityChecks = checkProofEntryInequalityConfig(
+    nameForErrorMessages,
+    entryConfig
+  );
+
   const hasOwnerV3Check = entryConfig.isOwnerID === SEMAPHORE_V3;
   const hasOwnerV4Check = entryConfig.isOwnerID === SEMAPHORE_V4;
 
-  return { hasOwnerV3Check, hasOwnerV4Check, nBoundsChecks };
+  return {
+    hasOwnerV3Check,
+    hasOwnerV4Check,
+    nBoundsChecks,
+    inequalityChecks
+  };
 }
 
 export function checkProofEntryBoundsCheckConfig(
-  nameForErrorMessages: string,
+  nameForErrorMessages: PODEntryIdentifier,
   entryConfig: GPCProofEntryBoundsCheckConfig
 ): number {
   // Canonicalize to simplify in cases where this is necessary.
@@ -331,6 +390,53 @@ export function checkProofEntryBoundsCheckConfig(
   }
 
   return nBoundsChecks;
+}
+
+export function checkProofEntryInequalityConfig(
+  entryIdentifier: PODEntryIdentifier,
+  entryConfig: GPCProofEntryInequalityConfig
+): Record<string, PODEntryIdentifier> {
+  return Object.fromEntries(
+    ["lessThan", "lessThanEq", "greaterThan", "greaterThanEq"].flatMap(
+      (ineqCheck: string): [string, PODEntryIdentifier][] => {
+        const otherEntryIdentifier =
+          entryConfig[ineqCheck as keyof typeof entryConfig];
+        if (otherEntryIdentifier !== undefined) {
+          // The other entry identifier should be valid.
+          checkPODEntryIdentifier(
+            `${entryIdentifier}.${ineqCheck}`,
+            otherEntryIdentifier
+          );
+          return [[ineqCheck, otherEntryIdentifier]];
+        } else {
+          return [];
+        }
+      }
+    )
+  );
+}
+
+export function checkProofBoundsCheckConfigForEntryInequalityConfig(
+  boundsChecks: Record<PODEntryIdentifier, number>,
+  entryInequalityChecks: Record<
+    PODEntryIdentifier,
+    GPCProofEntryInequalityConfig
+  >
+): void {
+  const inequalityCheckedEntries = uniq(
+    Object.keys(entryInequalityChecks).concat(
+      Object.values(entryInequalityChecks).flatMap((inequalityChecks) =>
+        Object.values(inequalityChecks)
+      )
+    )
+  ) as PODEntryIdentifier[];
+  for (const entryIdentifier of inequalityCheckedEntries) {
+    if (boundsChecks[entryIdentifier] === undefined) {
+      throw new Error(
+        `Entry ${entryIdentifier} requires a bounds check to be used in an entry inequality.`
+      );
+    }
+  }
 }
 
 export function checkProofTupleConfig(proofConfig: GPCProofConfig): void {
@@ -467,6 +573,9 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
     requiredMerkleDepth,
     // Numeric values (bounds checks) are handled solely in the proof config,
     // hence we return 0 here.
+    0,
+    // Entry inequalities are handled solely in the proof config, hence we
+    // return 0 here.
     0,
     // The number of required lists cannot be properly deduced here, so we
     // return 0.
@@ -615,6 +724,14 @@ export function checkProofInputsForConfig(
         entryConfig,
         podValue
       );
+
+      // Check entry inequalities for entry
+      checkProofEntryInequalityInputsForConfig(
+        `${objName}.${entryName}`,
+        entryConfig,
+        podValue,
+        proofInputs.pods
+      );
     }
   }
   // Check that nullifier isn't requested if it's not linked to anything.
@@ -682,6 +799,55 @@ export function checkProofBoundsCheckInputsForConfig(
       throw new RangeError(
         `Entry ${entryName} does not lie outside of the interval [${entryConfig.notInRange.min},${entryConfig.notInRange.max}].`
       );
+    }
+  }
+}
+
+export function checkProofEntryInequalityInputsForConfig(
+  entryName: PODEntryIdentifier,
+  entryConfig: GPCProofEntryInequalityConfig,
+  entryValue: PODValue,
+  pods: Record<PODName, POD>
+): void {
+  type B = boolean;
+  type N = bigint;
+  const inequalityCheckTriples: [
+    string,
+    PODEntryIdentifier | undefined,
+    (x: N, y: N) => B
+  ][] = [
+    ["less than", entryConfig.lessThan, (x: N, y: N): B => x < y],
+    [
+      "less than or equal to",
+      entryConfig.lessThanEq,
+      (x: N, y: N): B => x <= y
+    ],
+    ["greater than", entryConfig.greaterThan, (x: N, y: N): B => x > y],
+    [
+      "greater than or equal to",
+      entryConfig.greaterThanEq,
+      (x: N, y: N): B => x >= y
+    ]
+  ];
+
+  for (const [checkType, otherEntry, cmp] of inequalityCheckTriples) {
+    if (otherEntry !== undefined) {
+      const { objName: otherObjName, entryName: otherEntryName } =
+        splitPODEntryIdentifier(otherEntry);
+
+      // Since {@link checkProofBoundsCheckInputsForConfig} has passed, both
+      // `entryName` and `otherEntryName` are amongst the bounds-checked entries
+      // and therefore exist in the input as PODIntValues.
+      const otherPOD = pods[otherObjName] as POD;
+      const otherEntryValue = resolvePODEntry(
+        otherEntryName,
+        otherPOD
+      ) as PODIntValue;
+      if (!cmp(entryValue.value as bigint, otherEntryValue.value)) {
+        throw new Error(
+          `Input entry ${entryName} should be ${checkType} entry ${otherEntry}, but it is not.`
+        );
+      }
     }
   }
 }
@@ -902,6 +1068,7 @@ export function checkRevealedClaims(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
+    0,
     0,
     0,
     maxListSize,
@@ -1159,6 +1326,7 @@ export function circuitDescMeetsRequirements(
     circuitDesc.maxEntries >= circuitReq.nEntries &&
     circuitDesc.merkleMaxDepth >= circuitReq.merkleMaxDepth &&
     circuitDesc.maxNumericValues >= circuitReq.nNumericValues &&
+    circuitDesc.maxEntryInequalities >= circuitReq.nEntryInequalities &&
     circuitDesc.maxLists >= circuitReq.nLists &&
     // The circuit description should be able to contain the largest of the lists.
     circuitDesc.maxListElements >= circuitReq.maxListSize &&
@@ -1202,6 +1370,7 @@ export function mergeRequirements(
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
     Math.max(rs1.nNumericValues, rs2.nNumericValues),
+    Math.max(rs1.nEntryInequalities, rs2.nEntryInequalities),
     Math.max(rs1.nLists, rs2.nLists),
     Math.max(rs1.maxListSize, rs2.maxListSize),
     tupleArities,
