@@ -62,11 +62,10 @@ import { Emitter } from "../src/emitter";
 import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
-import { useZappServer } from "../src/zapp/useZappServer";
 
 function App(): JSX.Element {
   useBackgroundJobs();
-  useZappServer();
+  // useZappServer();
   const state = useStateContext().getState();
 
   const hasStack = !!state.error?.stack;

@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { useDispatch, useEmbeddedScreenState } from "../../../src/appHooks";
+import { ListenMode, useZappServer } from "../../../src/zapp/useZappServer";
 import { AdhocModal } from "../../modals/AdhocModal";
 import { EmbeddedScreen } from "../EmbeddedScreens/EmbeddedScreen";
 
@@ -17,6 +18,7 @@ export function ZappScreen({ url }: { url: string }): ReactNode {
 }
 
 function ZappModal(): ReactNode {
+  useZappServer(ListenMode.LISTEN_IF_NOT_EMBEDDED);
   const embeddedScreen = useEmbeddedScreenState();
   const dispatch = useDispatch();
   return (

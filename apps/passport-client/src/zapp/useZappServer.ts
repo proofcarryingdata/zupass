@@ -8,13 +8,31 @@ import { v4 as uuidv4 } from "uuid";
 import { useStateContext } from "../appHooks";
 import { ZupassRPCProcessor } from "./ZappServer";
 
-export function useZappServer(): void {
+export enum ListenMode {
+  LISTEN_IF_EMBEDDED,
+  LISTEN_IF_NOT_EMBEDDED
+}
+
+export function useZappServer(
+  mode: ListenMode = ListenMode.LISTEN_IF_EMBEDDED
+): void {
   const context = useStateContext();
 
   useEffect(() => {
+    if (
+      mode === ListenMode.LISTEN_IF_EMBEDDED &&
+      window.parent === window.self
+    ) {
+      return;
+    }
+    if (
+      mode === ListenMode.LISTEN_IF_NOT_EMBEDDED &&
+      window.parent !== window.self
+    ) {
+      return;
+    }
     (async (): Promise<void> => {
       const { zapp, advice, origin } = await listen();
-      console.log("Zapp connected", zapp, advice, origin);
 
       if (!context.getState().self) {
         advice.showClient();
@@ -94,9 +112,8 @@ export function useZappServer(): void {
           window.location.hash = "embedded";
         }
 
-        console.log("Zapp ready");
         advice.ready(server);
       }
     })();
-  }, [context]);
+  }, [context, mode]);
 }
