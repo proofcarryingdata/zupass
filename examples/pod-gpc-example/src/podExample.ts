@@ -128,8 +128,11 @@ export async function podDemo(): Promise<boolean> {
   console.log("PODContent ID", podContent.contentID);
 
   // PODContent is a Map-like class with accessors for getting values.
-  console.log("PODContent value (with type)", podContent.getValue("someNumer"));
-  console.log("PODContent raw value", podContent.getRawValue("someNumer"));
+  console.log(
+    "PODContent value (with type)",
+    podContent.getValue("someNumber")
+  );
+  console.log("PODContent raw value", podContent.getRawValue("someNumber"));
 
   // PODContent can generate Merkle membership proofs which prove that an entry
   // is contained in a given root.  This is the basis of the ZK proofs which
@@ -149,7 +152,7 @@ export async function podDemo(): Promise<boolean> {
   const signature = pod.signature;
 
   // You can get the underlying PODContent from a POD if you need it.
-  console.log("POD value", pod.content.getValue("someNumer"));
+  console.log("POD value", pod.content.getValue("someNumber"));
 
   // If you already have the signature from a saved POD, you can
   // recreate it without signing again.
