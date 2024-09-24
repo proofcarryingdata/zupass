@@ -1,6 +1,6 @@
 import { Cog6ToothIcon, Square3Stack3DIcon } from "@heroicons/react/24/solid";
 import styled from "styled-components";
-import { useDispatch } from "../src/appHooks";
+import { useDispatch } from "../../src/appHooks";
 
 const FloatingMenuContainer = styled.div`
   position: fixed;

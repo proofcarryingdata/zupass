@@ -1,16 +1,17 @@
+import { Spacer } from "@pcd/passport-ui";
 import { useRef, useState } from "react";
-import { CenterColumn, Spacer, TextCenter } from "../components/core";
-import { AppContainer } from "../components/shared/AppContainer";
-import { Avatar } from "./Avatar";
-import { Button2 } from "./Button";
-import { FloatingMenu } from "./FloatingMenu";
-import { Input2 } from "./Input";
-import { List } from "./List";
-import { Ticket } from "./Ticket";
-import { TicketCard } from "./TicketCard";
-import { SettingsBottomModal } from "./settingsBottomModal";
 import { FaTrashCan } from "react-icons/fa6";
-import { Accordion, AccordionRef } from "./Accordion";
+import { CenterColumn, TextCenter } from "../../components/core";
+import { AppContainer } from "../../components/shared/AppContainer";
+import { Accordion, AccordionRef } from "../shared/Accordion";
+import { Avatar } from "../shared/Avatar";
+import { Button2 } from "../shared/Button";
+import { FloatingMenu } from "../shared/FloatingMenu";
+import { Input2 } from "../shared/Input";
+import { List } from "../shared/List";
+import { Ticket } from "../shared/Ticket";
+import { TicketCard } from "../shared/TicketCard";
+import { SettingsBottomModal } from "../shared/settingsBottomModal";
 const exampleList = [
   {
     title: "Event Passes",
@@ -84,9 +85,6 @@ const ComponentsScreen = (): JSX.Element => {
         <TextCenter>Hello, world!</TextCenter>
         <CenterColumn>
           <Input2 variant="secondary" placeholder="placeholder" error={error} />
-          <Spacer h={4} />
-          <Input2 variant="primary" placeholder="placeholder" error={error} />
-          <Spacer h={12} />
           <div
             style={{
               display: "flex",
@@ -94,18 +92,6 @@ const ComponentsScreen = (): JSX.Element => {
               gap: 12
             }}
           >
-            <Button2
-              variant="primary"
-              onClick={() => {
-                if (error) {
-                  setError("");
-                } else {
-                  setError("some generic error");
-                }
-              }}
-            >
-              primary
-            </Button2>
             <Button2
               variant="danger"
               onClick={() => {
@@ -158,7 +144,7 @@ const ComponentsScreen = (): JSX.Element => {
                   },
                   {
                     title: "AttendeeName",
-                    onClick(): void {
+                    onClick() {
                       console.log("Example onclick accordion item");
                     }
                   },
@@ -203,7 +189,6 @@ const ComponentsScreen = (): JSX.Element => {
           />
         </div>
         <Ticket name="Richard Lu" type="Speaker" email="richard@0xparg.org" />
-        <Spacer h={48} />
       </div>
     </AppContainer>
   );

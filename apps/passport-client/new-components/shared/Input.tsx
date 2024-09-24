@@ -1,5 +1,5 @@
 import { ForwardedRef, InputHTMLAttributes, Ref, forwardRef } from "react";
-import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import styled, { css } from "styled-components";
 import { Typography } from "./Typography";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
@@ -50,16 +50,18 @@ export const BigInput2 = styled.input<{
     pointer-events: none;
     background: rgba(0, 0, 0, 0.05);
   }
-  ${({ error }): FlattenSimpleInterpolation | undefined => {
+  ${({ error }) => {
     if (error) return errorCSS;
   }}
-  ${({ variant }): FlattenSimpleInterpolation | undefined => {
+  ${({ variant }) => {
     if (variant === "secondary") return secondaryCSS;
   }}
 `;
 
 const ErrorContainer = styled.div`
   display: flex;
+  width: 100%;
+  height: 100%;
   flex-direction: column;
   gap: 8px;
   justify-content: flex-start;

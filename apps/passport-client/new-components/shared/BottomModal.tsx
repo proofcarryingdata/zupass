@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import styled from "styled-components";
-import { useDispatch } from "../src/appHooks";
+import { useDispatch } from "../../src/appHooks";
 
 const BottomModalOverlay = styled.div<{ $fullScreen?: boolean }>`
   position: fixed;

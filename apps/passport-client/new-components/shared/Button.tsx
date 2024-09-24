@@ -1,9 +1,9 @@
 import * as React from "react";
-import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import styled, { css } from "styled-components";
 
 type BtnVariant = "primary" | "secondary" | "danger";
 
-const getBtnVariant = (variant: BtnVariant): typeof BtnBase => {
+const getBtnVariant = (variant: BtnVariant) => {
   switch (variant) {
     case "secondary":
       return BtnSecondary;
@@ -57,8 +57,7 @@ const disabledCSS = css`
 
 export const BtnBase = styled.button`
   ${buttonStyle}
-  ${({ disabled }): FlattenSimpleInterpolation | undefined =>
-    disabled === true ? disabledCSS : undefined}
+  ${({ disabled }) => (disabled === true ? disabledCSS : undefined)}
 }
 `;
 

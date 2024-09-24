@@ -1,6 +1,7 @@
 import { Property } from "csstype";
 import styled from "styled-components";
 import { Typography } from "./Typography";
+import { forwardRef } from "react";
 
 type CardColor = "purple" | "orange";
 const CARD_COLORS: Record<CardColor, Property.Color> = {
@@ -62,43 +63,41 @@ const DateChipContainer = styled.div`
 `;
 
 interface TicketCardProps {
-  imgSource: string;
   title: string;
   address: string;
   ticketCount: number;
   ticketDate: string;
   cardColor: CardColor;
+  imgSource?: string;
 }
-export const TicketCard = ({
-  imgSource,
-  title,
-  address,
-  ticketCount,
-  cardColor,
-  ticketDate
-}: TicketCardProps): JSX.Element => {
-  return (
-    <TicketCardContainer $borderColor={CARD_COLORS[cardColor]}>
-      <TicketCardImageContainer>
-        <DateChipContainer>
-          <Typography fontSize={12} fontWeight={800} color="white">
-            {ticketDate}
+export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
+  (
+    { imgSource, title, address, ticketCount, cardColor, ticketDate },
+    ref
+  ): JSX.Element => {
+    return (
+      <TicketCardContainer ref={ref} $borderColor={CARD_COLORS[cardColor]}>
+        <TicketCardImageContainer>
+          <DateChipContainer>
+            <Typography fontSize={12} fontWeight={800} color="white">
+              {ticketDate}
+            </Typography>
+          </DateChipContainer>
+          <TicketCardImage src={imgSource} />
+        </TicketCardImageContainer>
+        <TicketCardDetails>
+          <Typography fontSize={18} fontWeight={800}>
+            {title}
           </Typography>
-        </DateChipContainer>
-        <TicketCardImage src={imgSource} />
-      </TicketCardImageContainer>
-      <TicketCardDetails>
-        <Typography fontSize={18} fontWeight={800}>
-          {title}
-        </Typography>
-        <Typography
-          fontSize={14}
-          fontWeight={400}
-          color="rgba(124, 139, 180, 1)"
-        >
-          {`${address} • ${ticketCount} ticket${ticketCount > 1 ? "s" : ""}`}
-        </Typography>
-      </TicketCardDetails>
-    </TicketCardContainer>
-  );
-};
+          <Typography
+            fontSize={14}
+            fontWeight={400}
+            color="rgba(124, 139, 180, 1)"
+          >
+            {`${address} • ${ticketCount} ticket${ticketCount > 1 ? "s" : ""}`}
+          </Typography>
+        </TicketCardDetails>
+      </TicketCardContainer>
+    );
+  }
+);
