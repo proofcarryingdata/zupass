@@ -82,6 +82,7 @@ export type Action =
   | {
       type: "new-passport";
       email: string;
+      newUi?: boolean;
     }
   | {
       type: "create-user-skip-password";
@@ -214,7 +215,7 @@ export async function dispatch(
 ): Promise<void> {
   switch (action.type) {
     case "new-passport":
-      return genPassport(state.identityV3, action.email, update);
+      return genPassport(state.identityV3, action.email, update, action.newUi);
     case "create-user-skip-password":
       return createNewUserSkipPassword(
         action.email,
@@ -339,7 +340,8 @@ export async function dispatch(
 async function genPassport(
   identityV3: Identity,
   email: string,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identityV3 });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
@@ -347,7 +349,8 @@ async function genPassport(
   await savePCDs(pcds);
   update({ pcds });
 
-  window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
+  const route = newUi ? "#/new/new-passport" : "#/new-passport";
+  window.location.hash = `${route}?email=` + encodeURIComponent(email);
 }
 
 async function oneClickLogin(
