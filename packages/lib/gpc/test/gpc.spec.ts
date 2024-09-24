@@ -27,6 +27,7 @@ import {
   SEMAPHORE_V3,
   SEMAPHORE_V4,
   gpcArtifactDownloadURL,
+  gpcCheckProvable,
   gpcProve,
   gpcVerify
 } from "../src";
@@ -829,356 +830,309 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
   it("proving should throw on illegal inputs", async function () {
     const { proofConfig, proofInputs } = makeMinimalArgs(true);
 
+    async function doIllegalArgTest(
+      proofConfig: GPCProofConfig,
+      proofInputs: GPCProofInputs,
+      errorType: string,
+      errorMessage: string
+    ): Promise<void> {
+      // Expected error should be thrown by gpcProve.
+      await expectAsyncError(
+        async () => {
+          await gpcProve(proofConfig, proofInputs, GPC_TEST_ARTIFACTS_PATH);
+        },
+        errorType,
+        errorMessage
+      );
+
+      // The same error should be seen in gpcCheckProvable.
+      // This isn't async, but use expectAsyncError for consistency of args.
+      await expectAsyncError(
+        async () => {
+          gpcCheckProvable(proofConfig, proofInputs);
+        },
+        errorType,
+        errorMessage
+      );
+    }
+
     // Config is illegal.
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            pods: {
-              somePodName: { entries: {} }
-            }
-          },
-          proofInputs,
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        pods: {
+          somePodName: { entries: {} }
+        }
       },
+      proofInputs,
       "TypeError",
       "Must prove at least one entry in object"
     );
 
-    await expectAsyncError(
-      async () => {
-        const pod1 = POD.sign(sampleEntries, privateKey);
-        await gpcProve(
-          {
-            pods: {
-              pod1: {
-                entries: {
-                  A: {
-                    isRevealed: false,
-                    inRange: { min: POD_INT_MIN, max: POD_INT_MAX },
-                    greaterThan: "pod2.H"
-                  }
-                }
-              },
-              pod2: {
-                entries: {
-                  H: { isRevealed: false }
-                }
+    const pod1 = POD.sign(sampleEntries, privateKey);
+    await doIllegalArgTest(
+      {
+        pods: {
+          pod1: {
+            entries: {
+              A: {
+                isRevealed: false,
+                inRange: { min: POD_INT_MIN, max: POD_INT_MAX },
+                greaterThan: "pod2.H"
               }
             }
           },
-          { pods: { pod1, pod2: pod1 } },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          pod2: {
+            entries: {
+              H: { isRevealed: false }
+            }
+          }
+        }
       },
+      { pods: { pod1, pod2: pod1 } },
       "Error",
       "Entry pod2.H requires a bounds check to be used in an entry inequality."
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            tuples: {
-              someTupleName: { entries: [] }
-            }
-          },
-          proofInputs,
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        tuples: {
+          someTupleName: { entries: [] }
+        }
       },
+      proofInputs,
       "TypeError",
       "Tuple someTupleName specifies invalid tuple configuration. Tuples must have arity at least 2."
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            pods: {
-              somePodName: {
-                entries: {
-                  ticketID: {
-                    isRevealed: true,
-                    isMemberOf: "specialTickets",
-                    isNotMemberOf: "inadmissibleTickets"
-                  }
-                }
+    await doIllegalArgTest(
+      {
+        pods: {
+          somePodName: {
+            entries: {
+              ticketID: {
+                isRevealed: true,
+                isMemberOf: "specialTickets",
+                isNotMemberOf: "inadmissibleTickets"
               }
             }
-          },
-          {
-            ...proofInputs,
-            membershipLists: {
-              inadmissibleTickets: [sampleEntries2.attendee, sampleEntries.J],
-              specialTickets: [sampleEntries2.ticketID]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
+      },
+      {
+        ...proofInputs,
+        membershipLists: {
+          inadmissibleTickets: [sampleEntries2.attendee, sampleEntries.J],
+          specialTickets: [sampleEntries2.ticketID]
+        }
       },
       "Error",
       "Both membership and non-membership lists are specified in the configuration of somePodName.ticketID."
     );
 
     // Input is illegal.
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          proofConfig,
-          {
-            ...proofInputs,
-            watermark: { type: "string", value: 123n } as unknown as PODValue
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      proofConfig,
+      {
+        ...proofInputs,
+        watermark: { type: "string", value: 123n } as unknown as PODValue
       },
       "TypeError",
       "Invalid value for entry watermark"
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            pods: {
-              somePodName: {
-                entries: {
-                  ticketID: {
-                    isRevealed: true,
-                    isMemberOf: "admissibleTickets"
-                  }
-                }
+    await doIllegalArgTest(
+      {
+        pods: {
+          somePodName: {
+            entries: {
+              ticketID: {
+                isRevealed: true,
+                isMemberOf: "admissibleTickets"
               }
             }
-          },
-          { ...proofInputs, membershipLists: { admissibleTickets: [] } },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
       },
+      { ...proofInputs, membershipLists: { admissibleTickets: [] } },
       "Error",
       "Membership list admissibleTickets is empty."
     );
 
     // Config doesn't match input.
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            pods: {
-              wrongPODName: {
-                entries: {
-                  ticketID: { isRevealed: true }
-                }
-              }
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        pods: {
+          wrongPODName: {
+            entries: {
+              ticketID: { isRevealed: true }
             }
-          },
-          proofInputs,
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
       },
+      proofInputs,
       "ReferenceError",
       "Configured POD object wrongPODName not provided in inputs"
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            pods: {
-              somePodName: {
-                entries: {
-                  ticketID: {
-                    isRevealed: true,
-                    isMemberOf: "admissibleTickets"
-                  }
-                }
+    await doIllegalArgTest(
+      {
+        pods: {
+          somePodName: {
+            entries: {
+              ticketID: {
+                isRevealed: true,
+                isMemberOf: "admissibleTickets"
               }
             }
-          },
-          proofInputs,
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
       },
+      proofInputs,
       "Error",
       'Config and input list mismatch.  Configuration expects lists ["admissibleTickets"].  Input contains [].'
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          proofConfig,
-          {
-            ...proofInputs,
-            membershipLists: {
-              admissibleTickets: [
-                sampleEntries2.ticketID,
-                sampleEntries2.ticketID
-              ]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      proofConfig,
+      {
+        ...proofInputs,
+        membershipLists: {
+          admissibleTickets: [sampleEntries2.ticketID, sampleEntries2.ticketID]
+        }
       },
       "Error",
       'Config and input list mismatch.  Configuration expects lists [].  Input contains ["admissibleTickets"].'
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            pods: {
-              somePodName: {
-                entries: {
-                  ticketID: {
-                    isRevealed: true,
-                    isMemberOf: "admissibleTickets"
-                  }
-                }
+    await doIllegalArgTest(
+      {
+        pods: {
+          somePodName: {
+            entries: {
+              ticketID: {
+                isRevealed: true,
+                isMemberOf: "admissibleTickets"
               }
             }
-          },
-          {
-            ...proofInputs,
-            membershipLists: {
-              admissibleTickets: [
-                [
-                  sampleEntries2.ticketID,
-                  sampleEntries.otherTicketID,
-                  sampleEntries.G
-                ]
-              ]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
+      },
+      {
+        ...proofInputs,
+        membershipLists: {
+          admissibleTickets: [
+            [
+              sampleEntries2.ticketID,
+              sampleEntries.otherTicketID,
+              sampleEntries.G
+            ]
+          ]
+        }
       },
       "TypeError",
       'Membership list admissibleTickets in input contains element of width 3 while comparison value with identifier "somePodName.ticketID" has width 1.'
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            pods: {
-              somePodName: {
-                entries: {
-                  ticketID: {
-                    isRevealed: true,
-                    isNotMemberOf: "inadmissibleTickets"
-                  }
-                }
+    await doIllegalArgTest(
+      {
+        pods: {
+          somePodName: {
+            entries: {
+              ticketID: {
+                isRevealed: true,
+                isNotMemberOf: "inadmissibleTickets"
               }
             }
-          },
-          {
-            ...proofInputs,
-            membershipLists: {
-              inadmissibleTickets: [
-                sampleEntries2.ticketID,
-                sampleEntries.otherTicketID,
-                sampleEntries.G
-              ]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
+      },
+      {
+        ...proofInputs,
+        membershipLists: {
+          inadmissibleTickets: [
+            sampleEntries2.ticketID,
+            sampleEntries.otherTicketID,
+            sampleEntries.G
+          ]
+        }
       },
       "Error",
       'Comparison value {"type":"cryptographic","value":999} corresponding to identifier "somePodName.ticketID" is a member of list "inadmissibleTickets".'
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            tuples: {
-              tuple1: {
-                entries: ["somePodName.ticketID", "somePodName.ticketID"],
-                isMemberOf: "list1"
-              }
-            }
-          },
-          {
-            ...proofInputs,
-            membershipLists: {
-              list1: [
-                [sampleEntries2.ticketID, sampleEntries2.ticketID],
-                [
-                  sampleEntries2.ticketID,
-                  sampleEntries.G,
-                  sampleEntries.otherTicketID
-                ],
-                [sampleEntries.otherTicketID, sampleEntries.G]
-              ]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        tuples: {
+          tuple1: {
+            entries: ["somePodName.ticketID", "somePodName.ticketID"],
+            isMemberOf: "list1"
+          }
+        }
+      },
+      {
+        ...proofInputs,
+        membershipLists: {
+          list1: [
+            [sampleEntries2.ticketID, sampleEntries2.ticketID],
+            [
+              sampleEntries2.ticketID,
+              sampleEntries.G,
+              sampleEntries.otherTicketID
+            ],
+            [sampleEntries.otherTicketID, sampleEntries.G]
+          ]
+        }
       },
       "TypeError",
       "Membership list list1 in input has a type mismatch: It contains an element of width 2 and one of width 3."
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            tuples: {
-              tuple1: {
-                entries: ["somePodName.ticketID", "somePodName.ticketID"],
-                isMemberOf: "list1"
-              }
-            }
-          },
-          {
-            ...proofInputs,
-            membershipLists: {
-              list1: [
-                [sampleEntries2.ticketID, sampleEntries2.ticketID],
-                [sampleEntries2.ticketID],
-                [sampleEntries.otherTicketID, sampleEntries.G]
-              ]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        tuples: {
+          tuple1: {
+            entries: ["somePodName.ticketID", "somePodName.ticketID"],
+            isMemberOf: "list1"
+          }
+        }
+      },
+      {
+        ...proofInputs,
+        membershipLists: {
+          list1: [
+            [sampleEntries2.ticketID, sampleEntries2.ticketID],
+            [sampleEntries2.ticketID],
+            [sampleEntries.otherTicketID, sampleEntries.G]
+          ]
+        }
       },
       "TypeError",
       "Membership list list1 in input contains an invalid tuple. Tuples must have arity at least 2."
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            pods: {
-              ...proofConfig.pods,
-              someOtherPodName: {
-                entries: { ticketID: { isRevealed: false } },
-                signerPublicKey: { isRevealed: false }
-              }
-            },
-            uniquePODs: true
-          },
-          {
-            ...proofInputs,
-            pods: {
-              ...proofInputs.pods,
-              someOtherPodName: proofInputs.pods.somePodName
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        pods: {
+          ...proofConfig.pods,
+          someOtherPodName: {
+            entries: { ticketID: { isRevealed: false } },
+            signerPublicKey: { isRevealed: false }
+          }
+        },
+        uniquePODs: true
+      },
+      {
+        ...proofInputs,
+        pods: {
+          ...proofInputs.pods,
+          someOtherPodName: proofInputs.pods.somePodName
+        }
       },
       "Error",
       "Proof configuration specifies that the PODs should have unique content IDs, but they don't."
