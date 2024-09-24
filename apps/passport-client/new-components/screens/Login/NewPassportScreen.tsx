@@ -84,7 +84,8 @@ const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
               await dispatch({
                 type: "load-after-login",
                 storage: storageResult.value,
-                encryptionKey
+                encryptionKey,
+                newUi: true
               });
             } else {
               setError(

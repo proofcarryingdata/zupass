@@ -1,18 +1,129 @@
-import { useBottomModal } from "../../src/appHooks";
+import {
+  ArrowDownTrayIcon,
+  ArrowRightStartOnRectangleIcon,
+  ArrowUpTrayIcon,
+  EnvelopeIcon,
+  EyeIcon,
+  InformationCircleIcon,
+  TrashIcon
+} from "@heroicons/react/24/solid";
+import styled from "styled-components";
+import { useBottomModal, useStateContext } from "../../src/appHooks";
 import { BottomModal } from "./BottomModal";
+import { Typography } from "./Typography";
+
+interface SettingItem {
+  title: string;
+  icon: JSX.Element;
+  onClick: () => void;
+  variant?: "danger";
+}
 
 export function SettingsBottomModal(): JSX.Element {
   const activeBottomModal = useBottomModal();
+  const state = useStateContext().getState();
+
+  const items: SettingItem[] = [
+    {
+      title: "About Zupass",
+      icon: <InformationCircleIcon width={24} height={24} color="#7C8BB4" />,
+      onClick: (): void => {}
+    },
+    {
+      title: "Change Password",
+      icon: <EyeIcon width={24} height={24} color="#7C8BB4" />,
+      onClick: (): void => {}
+    },
+    {
+      title: "Manage Emails",
+      icon: <EnvelopeIcon width={24} height={24} color="#7C8BB4" />,
+      onClick: (): void => {}
+    },
+    {
+      title: "Import",
+      icon: <ArrowUpTrayIcon width={24} height={24} color="#7C8BB4" />,
+      onClick: (): void => {}
+    },
+    {
+      title: "Export",
+      icon: <ArrowDownTrayIcon width={24} height={24} color="#7C8BB4" />,
+      onClick: (): void => {}
+    },
+    {
+      title: "Logout",
+      icon: (
+        <ArrowRightStartOnRectangleIcon
+          width={24}
+          height={24}
+          color="#7C8BB4"
+        />
+      ),
+      onClick: (): void => {}
+    },
+    {
+      title: "Delete Account",
+      icon: <TrashIcon width={24} height={24} color="#E0431C" />,
+      onClick: (): void => {},
+      variant: "danger"
+    }
+  ];
+
   return (
     <BottomModal isOpen={activeBottomModal.modalType === "settings"}>
-      <div>dsfsdfdsfdsfs</div>
-      <div>dsfsdfdsfdsfs</div>
-      <div>dsfsdfdsfdsfs</div>
-      <div>dsfsdfdsfdsfs</div>
-      <div>dsfsdfdsfdsfs</div>
-      <div>dsfsdfdsfdsfs</div>
-      <div>dsfsdfdsfdsfs</div>
-      <div>dsfsdfdsfdsfs</div>
+      <SettingsContainer>
+        <UserTitleContainer>
+          <Typography fontSize={20} fontWeight={800} align="center">
+            {state.self?.emails[0]}
+          </Typography>
+        </UserTitleContainer>
+        <SettingsActionContainer>
+          {items.map(({ icon, title, onClick, variant }, i) => (
+            <SettingsItemContainer onClick={onClick}>
+              {icon}
+              <Typography
+                fontSize={18}
+                fontWeight={500}
+                style={{
+                  padding: "16px 0px",
+                  borderBottom:
+                    i !== items.length - 1 ? "1px solid #ECEAF4" : "none",
+                  width: "100%"
+                }}
+                family="Neue Haas Unica"
+                color={variant === "danger" ? "#E0431C" : "#1E2C50"}
+              >
+                {title}
+              </Typography>
+            </SettingsItemContainer>
+          ))}
+        </SettingsActionContainer>
+      </SettingsContainer>
     </BottomModal>
   );
 }
+
+const SettingsContainer = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+const UserTitleContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+`;
+
+const SettingsActionContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const SettingsItemContainer = styled.div<{ $variant?: "danger" }>`
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  padding: 0px 12px;
+  gap: 16px;
+`;

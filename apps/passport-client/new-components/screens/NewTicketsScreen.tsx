@@ -1,19 +1,13 @@
 import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
+import { PCD } from "@pcd/pcd-types";
+import { ReactElement, useLayoutEffect, useRef, useState } from "react";
+import styled from "styled-components";
 import { AppContainer } from "../../components/shared/AppContainer";
 import { usePCDs } from "../../src/appHooks";
-import { PCD } from "@pcd/pcd-types";
-import {
-  MutableRefObject,
-  ReactElement,
-  RefObject,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState
-} from "react";
-import styled from "styled-components";
-import { TicketCard } from "../shared/TicketCard";
 import { Button2 } from "../shared/Button";
+import { FloatingMenu } from "../shared/FloatingMenu";
+import { SettingsBottomModal } from "../shared/SettingsBottomModal";
+import { TicketCard } from "../shared/TicketCard";
 
 const GAP = 4;
 const isEventTicketPCD = (
@@ -111,6 +105,8 @@ export const NewTicketsScreen = (): ReactElement => {
       >
         click me
       </Button2>
+      <FloatingMenu />
+      <SettingsBottomModal />
     </AppContainer>
   );
 };

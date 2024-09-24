@@ -132,6 +132,7 @@ export type Action =
       type: "load-after-login";
       storage: StorageWithRevision;
       encryptionKey: string;
+      newUi?: boolean;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
   | { type: "password-change-on-other-tab" }
@@ -250,7 +251,12 @@ export async function dispatch(
     case "reset-passport":
       return resetPassport(state, update);
     case "load-after-login":
-      return loadAfterLogin(action.encryptionKey, action.storage, update);
+      return loadAfterLogin(
+        action.encryptionKey,
+        action.storage,
+        update,
+        action.newUi
+      );
     case "set-modal":
       return update({
         modal: action.modal
@@ -778,7 +784,8 @@ async function removePCD(
 async function loadAfterLogin(
   encryptionKey: string,
   storage: StorageWithRevision,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
@@ -879,7 +886,8 @@ async function loadAfterLogin(
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
-    window.location.hash = "#/";
+    console.log(newUi, "S");
+    window.location.hash = newUi ? "#/new/tickets" : "#/";
   }
 }
 
