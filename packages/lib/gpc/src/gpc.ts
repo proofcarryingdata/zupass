@@ -86,12 +86,12 @@ export function gpcBindConfig(proofConfig: GPCProofConfig): {
  * {@link GPCProofConfig}, {@link GPCProofInputs}, {@link GPCBoundConfig}, and
  * {@link ProtoPODGPCCircuitDesc}.
  *
- * If the config or inputs cannot be used to generate a valid proof, this
- * functio will throw an exception with a message explaining why.  If this
- * function returns successfully, it should be possible to later call
- * {@link gpcProve} with the same arguments without any risk of failing due
- * to config or inputs, though internal errors in proof generation or artifact
- * download are still possible.
+ * If the config or inputs cannot be used to generate a valid proof with
+ * the supported circuits, this function will throw an exception with a message
+ * explaining why.  If this function returns successfully, it should be possible
+ * to later call {@link gpcProve} with the same arguments without any risk of
+ * failing due to config or inputs, though internal errors in proof generation
+ * or artifact download are still possible.
  *
  * The specific ZK circuit needed will be picked as the smallest supported
  * circuit which can fit the configuration and inputs.  If you need a specific
