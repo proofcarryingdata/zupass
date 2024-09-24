@@ -13,6 +13,7 @@ import React, {
 } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled, { CSSProperties } from "styled-components";
+import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
   useFolders,
@@ -38,6 +39,7 @@ import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
 import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
 import { ProtocolWorldsHome } from "../ProtocolWorldsScreens/ProtocolWorldsHome";
+import { ZappScreen } from "../ZappScreens/ZappScreen";
 import {
   FolderCard,
   FolderDetails,
@@ -127,6 +129,8 @@ export function HomeScreenImpl(): JSX.Element | null {
   const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
   const isEdgeCity = isEdgeCityFolder(browsingFolder);
   const isProtocolWorlds = isProtocolWorldsFolder(browsingFolder);
+  const isZappFolder = !!appConfig.zapps[browsingFolder];
+
   const shouldShowFrogCrypto = useMemo(() => {
     const folders = pcdCollection.value.getAllFolderNames();
     const goodFolders = [
@@ -211,6 +215,10 @@ export function HomeScreenImpl(): JSX.Element | null {
                   onFolderClick={onFolderClick}
                 />
               )}
+              {isRoot &&
+                Object.keys(appConfig.zapps).map((folder) => (
+                  <FolderCard onFolderClick={onFolderClick} folder={folder} />
+                ))}
             </FolderExplorerContainer>
           )}
 
@@ -220,6 +228,8 @@ export function HomeScreenImpl(): JSX.Element | null {
             <ProtocolWorldsHome />
           ) : isEdgeCity ? (
             <EdgeCityHome />
+          ) : isZappFolder ? (
+            <ZappScreen url={appConfig.zapps[browsingFolder]} />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}

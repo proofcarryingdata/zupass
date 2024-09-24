@@ -78,6 +78,11 @@ const define = {
           process.env.ZAPP_ALLOWED_SIGNER_ORIGINS
         )
       }
+    : {}),
+  ...(process.env.ZAPPS !== undefined
+    ? {
+        "process.env.ZAPPS": JSON.stringify(process.env.ZAPPS)
+      }
     : {})
 };
 

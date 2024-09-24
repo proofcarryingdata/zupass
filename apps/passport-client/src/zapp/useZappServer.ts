@@ -14,6 +14,7 @@ export function useZappServer(): void {
   useEffect(() => {
     (async (): Promise<void> => {
       const { zapp, advice, origin } = await listen();
+      console.log("Zapp connected", zapp, advice, origin);
 
       if (!context.getState().self) {
         advice.showClient();
@@ -89,8 +90,11 @@ export function useZappServer(): void {
 
         // @todo handle this with an action
         context.update({ embeddedScreen: undefined });
-        window.location.hash = "embedded";
+        if (window.parent !== window.self) {
+          window.location.hash = "embedded";
+        }
 
+        console.log("Zapp ready");
         advice.ready(server);
       }
     })();
