@@ -51,9 +51,6 @@ if (
 let zappAllowedSignerOrigins: string[];
 
 try {
-  console.log(
-    "ZAPP_ALLOWED_SIGNER_ORIGINS: " + process.env.ZAPP_ALLOWED_SIGNER_ORIGINS
-  );
   zappAllowedSignerOrigins = process.env.ZAPP_ALLOWED_SIGNER_ORIGINS
     ? JSON.parse(process.env.ZAPP_ALLOWED_SIGNER_ORIGINS)
     : [];

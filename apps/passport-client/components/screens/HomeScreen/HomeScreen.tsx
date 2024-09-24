@@ -217,7 +217,11 @@ export function HomeScreenImpl(): JSX.Element | null {
               )}
               {isRoot &&
                 Object.keys(appConfig.zapps).map((folder) => (
-                  <FolderCard onFolderClick={onFolderClick} folder={folder} />
+                  <FolderCard
+                    key={folder}
+                    onFolderClick={onFolderClick}
+                    folder={folder}
+                  />
                 ))}
             </FolderExplorerContainer>
           )}
