@@ -6,6 +6,7 @@ import {
   PipelineType,
   PretixPipelineDefinition,
   isPretixPipelineDefinition,
+  requestGenericIssuanceDeletePipeline,
   requestGenericIssuanceGetPipeline,
   requestGenericIssuanceUpsertPipeline,
   requestPipelineInfo
@@ -764,5 +765,216 @@ t2,i1`,
       );
       expectFalse(infoRes.success);
     }
+  });
+
+  step("admins can update all pipelines", async () => {
+    const newNote = "Updated by admin";
+
+    for (const pipeline of [
+      adminCsvPipelineDef,
+      user1CsvPipelineDef,
+      user2CsvPipelineDef
+    ]) {
+      const dlRes = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        pipeline.id,
+        adminGIUserEmail
+      );
+      expectTrue(dlRes.success);
+
+      const updatedPipeline: CSVPipelineDefinition = {
+        ...(dlRes.value as CSVPipelineDefinition),
+        options: {
+          ...(dlRes.value as CSVPipelineDefinition).options,
+          notes: newNote
+        }
+      };
+
+      const res = await requestGenericIssuanceUpsertPipeline(
+        giBackend.expressContext.localEndpoint,
+        { jwt: adminGIUserEmail, pipeline: updatedPipeline }
+      );
+
+      expectTrue(res.success);
+      expect(res.value?.id).to.eq(pipeline.id);
+
+      const getRes = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        pipeline.id,
+        adminGIUserEmail
+      );
+
+      expectTrue(getRes.success);
+      expect(getRes.value?.options.notes).to.eq(newNote);
+    }
+  });
+
+  step("non-admins can only update their own pipelines", async () => {
+    const newNote = "Updated by user 1";
+
+    // user 1 updates their own pipeline
+    {
+      const dlRes = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        user1CsvPipelineDef.id,
+        adminGIUserEmail
+      );
+      expectTrue(dlRes.success);
+
+      const updatedPipeline: CSVPipelineDefinition = {
+        ...(dlRes.value as CSVPipelineDefinition),
+        options: {
+          ...(dlRes.value as CSVPipelineDefinition).options,
+          notes: newNote
+        }
+      };
+
+      const res = await requestGenericIssuanceUpsertPipeline(
+        giBackend.expressContext.localEndpoint,
+        { jwt: giUser1Email, pipeline: updatedPipeline }
+      );
+
+      expectTrue(res.success);
+      expect(res.value?.id).to.eq(user1CsvPipelineDef.id);
+
+      const getRes = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        user1CsvPipelineDef.id,
+        giUser1Email
+      );
+
+      expectTrue(getRes.success);
+      expect(getRes.value?.options.notes).to.eq(newNote);
+    }
+
+    // user 1 cannot update admin's pipeline
+    {
+      const updatedPipeline: CSVPipelineDefinition = {
+        ...adminCsvPipelineDef,
+        options: {
+          ...adminCsvPipelineDef.options,
+          notes: newNote
+        }
+      };
+
+      const res = await requestGenericIssuanceUpsertPipeline(
+        giBackend.expressContext.localEndpoint,
+        { jwt: giUser1Email, pipeline: updatedPipeline }
+      );
+
+      expectFalse(res.success);
+    }
+
+    // user 1 cannot update other user's pipeline
+    {
+      const updatedPipeline: CSVPipelineDefinition = {
+        ...user2CsvPipelineDef,
+        options: {
+          ...user2CsvPipelineDef.options,
+          notes: newNote
+        }
+      };
+
+      const res = await requestGenericIssuanceUpsertPipeline(
+        giBackend.expressContext.localEndpoint,
+        { jwt: giUser1Email, pipeline: updatedPipeline }
+      );
+
+      expectFalse(res.success);
+    }
+  });
+
+  step("admins can delete all pipelines", async () => {
+    // user 1 creates another csv pipeline
+    const newPipelineDef: CSVPipelineDefinition = {
+      ...user1CsvPipelineDef,
+      id: randomUUID(),
+      timeCreated: new Date().toISOString(),
+      timeUpdated: new Date().toISOString()
+    };
+
+    const createRes = await requestGenericIssuanceUpsertPipeline(
+      giBackend.expressContext.localEndpoint,
+      { jwt: giUser1Email, pipeline: newPipelineDef }
+    );
+
+    expectTrue(createRes.success);
+    expect(createRes.value?.id).to.eq(newPipelineDef.id);
+
+    // admin deletes user 1's pipeline using requestGenericIssuanceDeletePipeline
+    const deleteRes = await requestGenericIssuanceDeletePipeline(
+      giBackend.expressContext.localEndpoint,
+      newPipelineDef.id,
+      adminGIUserEmail
+    );
+
+    expectTrue(deleteRes.success);
+
+    // Verify the pipeline is deleted
+    const getRes = await requestGenericIssuanceGetPipeline(
+      giBackend.expressContext.localEndpoint,
+      newPipelineDef.id,
+      adminGIUserEmail
+    );
+
+    expectFalse(getRes.success);
+  });
+
+  step("non-admins can only delete their own pipelines", async () => {
+    // user 1 fails to delete admin's pipeline
+    {
+      const deleteRes = await requestGenericIssuanceDeletePipeline(
+        giBackend.expressContext.localEndpoint,
+        adminCsvPipelineDef.id,
+        giUser1Email
+      );
+
+      expectFalse(deleteRes.success);
+    }
+
+    // user 1 fails to delete other user's pipeline
+    {
+      const deleteRes = await requestGenericIssuanceDeletePipeline(
+        giBackend.expressContext.localEndpoint,
+        user2CsvPipelineDef.id,
+        giUser1Email
+      );
+
+      expectFalse(deleteRes.success);
+    }
+
+    // user 1 creates another csv pipeline
+    const newPipelineDef: CSVPipelineDefinition = {
+      ...user1CsvPipelineDef,
+      id: randomUUID(),
+      timeCreated: new Date().toISOString(),
+      timeUpdated: new Date().toISOString()
+    };
+
+    const createRes = await requestGenericIssuanceUpsertPipeline(
+      giBackend.expressContext.localEndpoint,
+      { jwt: giUser1Email, pipeline: newPipelineDef }
+    );
+
+    expectTrue(createRes.success);
+    expect(createRes.value?.id).to.eq(newPipelineDef.id);
+
+    // user 1 deletes their own pipeline
+    const deleteRes = await requestGenericIssuanceDeletePipeline(
+      giBackend.expressContext.localEndpoint,
+      newPipelineDef.id,
+      giUser1Email
+    );
+
+    expectTrue(deleteRes.success);
+
+    // Verify the pipeline is deleted
+    const getRes = await requestGenericIssuanceGetPipeline(
+      giBackend.expressContext.localEndpoint,
+      newPipelineDef.id,
+      giUser1Email
+    );
+
+    expectFalse(getRes.success);
   });
 });
