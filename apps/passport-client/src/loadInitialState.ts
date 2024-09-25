@@ -21,6 +21,7 @@ import {
 import { getPackages } from "./pcdPackages";
 import { AppState } from "./state";
 import { validateAndLogInitialAppState } from "./validateState";
+import { initTestData } from "../initTestData";
 
 export async function loadInitialState(): Promise<AppState> {
   let identityV3 = loadIdentity();
@@ -70,7 +71,9 @@ export async function loadInitialState(): Promise<AppState> {
     importScreen: undefined,
     strichSDKstate: undefined
   };
-
+  if (appConfig.devMode) {
+    await initTestData(state);
+  }
   if (!validateAndLogInitialAppState("loadInitialState", state)) {
     state.userInvalid = true;
     state.modal = { modalType: "invalid-participant" };
