@@ -887,7 +887,7 @@ async function loadAfterLogin(
     window.location.hash = "#/login-interstitial";
   } else {
     console.log(newUi, "S");
-    window.location.hash = newUi ? "#/new/tickets" : "#/";
+    window.location.hash = newUi ? "#/new" : "#/";
   }
 }
 
