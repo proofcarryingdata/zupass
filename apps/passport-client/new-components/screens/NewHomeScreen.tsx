@@ -1,6 +1,6 @@
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
-import { AppContainer } from "../../components/shared/AppContainer";
-import { usePCDs, useSelf } from "../../src/appHooks";
+import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import {
   ReactElement,
@@ -9,14 +9,14 @@ import {
   useRef,
   useState
 } from "react";
-import styled, { css } from "styled-components";
-import { TicketCard } from "../shared/TicketCard";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
-import { Spacer } from "@pcd/passport-ui";
-import { FloatingMenu } from "../shared/FloatingMenu";
-import { SettingsBottomModal } from "../shared/SettingsBottomModal";
-import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { useNavigate } from "react-router-dom";
+import styled, { css } from "styled-components";
+import { AppContainer } from "../../components/shared/AppContainer";
+import { usePCDs, useSelf } from "../../src/appHooks";
+import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
+import { FloatingMenu } from "../shared/FloatingMenu";
+import { SettingsBottomModal } from "../shared/Modals/SettingsBottomModal";
+import { TicketCard } from "../shared/TicketCard";
 
 const GAP = 4;
 const isEventTicketPCD = (
@@ -128,7 +128,7 @@ export const NewHomeScreen = (): ReactElement => {
   useEffect(() => {
     if (!self) {
       console.log("Redirecting to login screen");
-      navigate("/login", { replace: true });
+      navigate("/new/login", { replace: true });
     }
   });
   useLayoutEffect(() => {

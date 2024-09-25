@@ -50,7 +50,12 @@ export function SettingsBottomModal(): JSX.Element {
         {
           title: "Add Password",
           icon: <EyeIcon width={24} height={24} color="#7C8BB4" />,
-          onClick: (): void => {}
+          onClick: (): void => {
+            dispatch({
+              type: "set-bottom-modal",
+              modal: { modalType: "add-password" }
+            });
+          }
         },
         !hasSetupPassword
       ),

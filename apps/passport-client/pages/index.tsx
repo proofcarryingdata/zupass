@@ -134,9 +134,9 @@ function RouterImpl(): JSX.Element {
     <HashRouter>
       <Routes>
         <Route path="/new">
-          <Route path="/login" element={<NewLoginScreen />} />
-          <Route path="new-passport" element={<NewPassportScreen2 />} />
           <Route index element={<NewHomeScreen />} />
+          <Route path="login" element={<NewLoginScreen />} />
+          <Route path="new-passport" element={<NewPassportScreen2 />} />
         </Route>
         <Route path="/">
           <Route path="terms" element={<TermsScreen />} />
