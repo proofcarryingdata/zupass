@@ -7,7 +7,8 @@ import {
   PretixPipelineDefinition,
   isPretixPipelineDefinition,
   requestGenericIssuanceGetPipeline,
-  requestGenericIssuanceUpsertPipeline
+  requestGenericIssuanceUpsertPipeline,
+  requestPipelineInfo
 } from "@pcd/passport-interface";
 import { randomUUID } from "@pcd/util";
 import { expect } from "chai";
@@ -613,9 +614,16 @@ t2,i1`,
         adminCsvPipelineDef.id,
         adminGIUserEmail
       );
-
       expectTrue(res.success);
       expect(res.value?.id).to.eq(adminCsvPipelineDef.id);
+
+      const infoRes = await requestPipelineInfo(
+        adminGIUserEmail,
+        giBackend.expressContext.localEndpoint,
+        adminCsvPipelineDef.id
+      );
+      expectTrue(infoRes.success);
+      expect(infoRes.value?.ownerEmail).to.eq(adminGIUserEmail);
     }
 
     {
@@ -624,9 +632,16 @@ t2,i1`,
         user1CsvPipelineDef.id,
         adminGIUserEmail
       );
-
       expectTrue(res.success);
       expect(res.value?.id).to.eq(user1CsvPipelineDef.id);
+
+      const infoRes = await requestPipelineInfo(
+        adminGIUserEmail,
+        giBackend.expressContext.localEndpoint,
+        user1CsvPipelineDef.id
+      );
+      expectTrue(infoRes.success);
+      expect(infoRes.value?.ownerEmail).to.eq(giUser1Email);
     }
 
     {
@@ -635,22 +650,36 @@ t2,i1`,
         user2CsvPipelineDef.id,
         adminGIUserEmail
       );
-
       expectTrue(res.success);
       expect(res.value?.id).to.eq(user2CsvPipelineDef.id);
+
+      const infoRes = await requestPipelineInfo(
+        adminGIUserEmail,
+        giBackend.expressContext.localEndpoint,
+        user2CsvPipelineDef.id
+      );
+      expectTrue(infoRes.success);
+      expect(infoRes.value?.ownerEmail).to.eq(giUser2Email);
     }
   });
 
   step("non-admins can only get their own pipelines", async () => {
     {
-      const res = await requestGenericIssuanceGetPipeline(
+      const pRes = await requestGenericIssuanceGetPipeline(
         giBackend.expressContext.localEndpoint,
         user1CsvPipelineDef.id,
         giUser1Email
       );
+      expectTrue(pRes.success);
+      expect(pRes.value?.id).to.eq(user1CsvPipelineDef.id);
 
-      expectTrue(res.success);
-      expect(res.value?.id).to.eq(user1CsvPipelineDef.id);
+      const infoRes = await requestPipelineInfo(
+        giUser1Email,
+        giBackend.expressContext.localEndpoint,
+        user1CsvPipelineDef.id
+      );
+      expectTrue(infoRes.success);
+      expect(infoRes.value?.ownerEmail).to.eq(giUser1Email);
     }
 
     {
@@ -659,8 +688,14 @@ t2,i1`,
         user2CsvPipelineDef.id,
         giUser1Email
       );
-
       expectFalse(res.success);
+
+      const infoRes = await requestPipelineInfo(
+        giUser1Email,
+        giBackend.expressContext.localEndpoint,
+        user2CsvPipelineDef.id
+      );
+      expectFalse(infoRes.success);
     }
 
     {
@@ -669,8 +704,14 @@ t2,i1`,
         adminCsvPipelineDef.id,
         giUser1Email
       );
-
       expectFalse(res.success);
+
+      const infoRes = await requestPipelineInfo(
+        giUser1Email,
+        giBackend.expressContext.localEndpoint,
+        adminCsvPipelineDef.id
+      );
+      expectFalse(infoRes.success);
     }
 
     {
@@ -682,6 +723,14 @@ t2,i1`,
 
       expectTrue(res.success);
       expect(res.value?.id).to.eq(user2CsvPipelineDef.id);
+
+      const infoRes = await requestPipelineInfo(
+        giUser2Email,
+        giBackend.expressContext.localEndpoint,
+        user2CsvPipelineDef.id
+      );
+      expectTrue(infoRes.success);
+      expect(infoRes.value?.ownerEmail).to.eq(giUser2Email);
     }
 
     {
@@ -690,8 +739,14 @@ t2,i1`,
         user1CsvPipelineDef.id,
         giUser2Email
       );
-
       expectFalse(res.success);
+
+      const infoRes = await requestPipelineInfo(
+        giUser2Email,
+        giBackend.expressContext.localEndpoint,
+        user1CsvPipelineDef.id
+      );
+      expectFalse(infoRes.success);
     }
 
     {
@@ -700,8 +755,14 @@ t2,i1`,
         adminCsvPipelineDef.id,
         giUser2Email
       );
-
       expectFalse(res.success);
+
+      const infoRes = await requestPipelineInfo(
+        giUser2Email,
+        giBackend.expressContext.localEndpoint,
+        adminCsvPipelineDef.id
+      );
+      expectFalse(infoRes.success);
     }
   });
 });
