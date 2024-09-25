@@ -977,4 +977,49 @@ t2,i1`,
 
     expectFalse(getRes.success);
   });
+
+  step("non-users cannot perform any pipeline operations", async () => {
+    const nonUserToken = randomUUID();
+
+    const newPipelineDef: CSVPipelineDefinition = {
+      ...adminCsvPipelineDef,
+      id: randomUUID(),
+      timeCreated: new Date().toISOString(),
+      timeUpdated: new Date().toISOString()
+    };
+
+    // Attempt to create a pipeline
+    const createRes = await requestGenericIssuanceUpsertPipeline(
+      giBackend.expressContext.localEndpoint,
+      {
+        jwt: nonUserToken,
+        pipeline: newPipelineDef
+      }
+    );
+    expectFalse(createRes.success);
+
+    // Attempt to get a pipeline
+    const getRes = await requestGenericIssuanceGetPipeline(
+      giBackend.expressContext.localEndpoint,
+      adminCsvPipelineDef.id,
+      nonUserToken
+    );
+    expectFalse(getRes.success);
+
+    // Attempt to delete a pipeline
+    const deleteRes = await requestGenericIssuanceDeletePipeline(
+      giBackend.expressContext.localEndpoint,
+      adminCsvPipelineDef.id,
+      nonUserToken
+    );
+    expectFalse(deleteRes.success);
+
+    // Attempt to get pipeline info
+    const infoRes = await requestPipelineInfo(
+      nonUserToken,
+      giBackend.expressContext.localEndpoint,
+      adminCsvPipelineDef.id
+    );
+    expectFalse(infoRes.success);
+  });
 });
