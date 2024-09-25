@@ -28,7 +28,7 @@ import { assertUserMatches } from "./util";
 /**
  * Tests for {@link GenericIssuanceService}'s external API.
  */
-describe.only("generic issuance - external API", function () {
+describe("generic issuance - external API", function () {
   const nowDate = new Date();
   let giBackend: Zupass;
 
@@ -901,7 +901,7 @@ t2,i1`,
     expectTrue(createRes.success);
     expect(createRes.value?.id).to.eq(newPipelineDef.id);
 
-    // admin deletes user 1's pipeline using requestGenericIssuanceDeletePipeline
+    // admin deletes user 1's pipeline
     const deleteRes = await requestGenericIssuanceDeletePipeline(
       giBackend.expressContext.localEndpoint,
       newPipelineDef.id,
