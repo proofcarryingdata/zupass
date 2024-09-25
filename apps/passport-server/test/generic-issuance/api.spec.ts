@@ -640,4 +640,68 @@ t2,i1`,
       expect(res.value?.id).to.eq(user2CsvPipelineDef.id);
     }
   });
+
+  step("non-admins can only get their own pipelines", async () => {
+    {
+      const res = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        user1CsvPipelineDef.id,
+        giUser1Email
+      );
+
+      expectTrue(res.success);
+      expect(res.value?.id).to.eq(user1CsvPipelineDef.id);
+    }
+
+    {
+      const res = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        user2CsvPipelineDef.id,
+        giUser1Email
+      );
+
+      expectFalse(res.success);
+    }
+
+    {
+      const res = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        adminCsvPipelineDef.id,
+        giUser1Email
+      );
+
+      expectFalse(res.success);
+    }
+
+    {
+      const res = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        user2CsvPipelineDef.id,
+        giUser2Email
+      );
+
+      expectTrue(res.success);
+      expect(res.value?.id).to.eq(user2CsvPipelineDef.id);
+    }
+
+    {
+      const res = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        user1CsvPipelineDef.id,
+        giUser2Email
+      );
+
+      expectFalse(res.success);
+    }
+
+    {
+      const res = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        adminCsvPipelineDef.id,
+        giUser2Email
+      );
+
+      expectFalse(res.success);
+    }
+  });
 });
