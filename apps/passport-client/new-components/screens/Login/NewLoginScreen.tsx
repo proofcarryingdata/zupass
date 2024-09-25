@@ -1,7 +1,6 @@
 import { requestLogToServer } from "@pcd/passport-interface";
 import { validateEmail } from "@pcd/util";
 import { FormEvent, useCallback, useEffect, useState } from "react";
-import styled from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { appConfig } from "../../../src/appConfig";
 import {
@@ -22,6 +21,11 @@ import {
 } from "../../../src/sessionStorage";
 import { Button2 } from "../../shared/Button";
 import { Input2 } from "../../shared/Input";
+import {
+  LoginContainer,
+  LoginForm,
+  LoginTitleContainer
+} from "../../shared/Login/LoginComponents";
 import { Typography } from "../../shared/Typography";
 
 export const NewLoginScreen = (): JSX.Element => {
@@ -164,28 +168,3 @@ export const NewLoginScreen = (): JSX.Element => {
     </AppContainer>
   );
 };
-
-export const LoginContainer = styled.div`
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  justify-content: flex-end;
-  gap: 12px;
-  align-items: center;
-`;
-export const LoginTitleContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-start;
-  padding: 0px 12px;
-  text-align: left;
-`;
-export const LoginForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  gap: 8px;
-  margin-bottom: 30px;
-`;

@@ -55,6 +55,7 @@ import {
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import ComponentsScreen from "../new-components/screens/ComponentsScreen";
+import { NewAlreadyRegisteredScreen } from "../new-components/screens/Login/NewAlreadyRegisteredScreen";
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
 import { NewPassportScreen2 } from "../new-components/screens/Login/NewPassportScreen";
 import { NewHomeScreen } from "../new-components/screens/NewHomeScreen";
@@ -137,6 +138,10 @@ function RouterImpl(): JSX.Element {
           <Route index element={<NewHomeScreen />} />
           <Route path="login" element={<NewLoginScreen />} />
           <Route path="new-passport" element={<NewPassportScreen2 />} />
+          <Route
+            path="already-registered"
+            element={<NewAlreadyRegisteredScreen />}
+          />
         </Route>
         <Route path="/">
           <Route path="terms" element={<TermsScreen />} />

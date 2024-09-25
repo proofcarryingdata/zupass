@@ -15,13 +15,13 @@ import { useDispatch, useIdentityV3, useQuery } from "../../../src/appHooks";
 import { err } from "../../../src/util";
 import { Button2 } from "../../shared/Button";
 import { Input2 } from "../../shared/Input";
-import { ResendCodeButton2 } from "../../shared/ResendCodeButton";
-import { Typography } from "../../shared/Typography";
 import {
   LoginContainer,
   LoginForm,
   LoginTitleContainer
-} from "./NewLoginScreen";
+} from "../../shared/Login/LoginComponents";
+import { ResendCodeButton2 } from "../../shared/ResendCodeButton";
+import { Typography } from "../../shared/Typography";
 
 export const NewPassportScreen2 = (): JSX.Element => {
   const query = useQuery();
@@ -134,7 +134,7 @@ const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
         setLoadingAccount(false);
 
         if (saltResult.success) {
-          window.location.href = `#/already-registered?email=${encodeURIComponent(
+          window.location.href = `#/new/already-registered?email=${encodeURIComponent(
             email
           )}&identityCommitment=${encodeURIComponent(
             identity.commitment.toString()
