@@ -6,6 +6,7 @@ import {
   PipelineType,
   PretixPipelineDefinition,
   isPretixPipelineDefinition,
+  requestGenericIssuanceGetPipeline,
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
 import { randomUUID } from "@pcd/util";
@@ -598,6 +599,41 @@ t2,i1`,
       const res = await requestGenericIssuanceUpsertPipeline(
         giBackend.expressContext.localEndpoint,
         { jwt: giUser2Email, pipeline: user2CsvPipelineDef }
+      );
+
+      expectTrue(res.success);
+      expect(res.value?.id).to.eq(user2CsvPipelineDef.id);
+    }
+  });
+
+  step("admins are able to get all pipelines", async () => {
+    {
+      const res = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        adminCsvPipelineDef.id,
+        adminGIUserEmail
+      );
+
+      expectTrue(res.success);
+      expect(res.value?.id).to.eq(adminCsvPipelineDef.id);
+    }
+
+    {
+      const res = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        user1CsvPipelineDef.id,
+        adminGIUserEmail
+      );
+
+      expectTrue(res.success);
+      expect(res.value?.id).to.eq(user1CsvPipelineDef.id);
+    }
+
+    {
+      const res = await requestGenericIssuanceGetPipeline(
+        giBackend.expressContext.localEndpoint,
+        user2CsvPipelineDef.id,
+        adminGIUserEmail
       );
 
       expectTrue(res.success);
