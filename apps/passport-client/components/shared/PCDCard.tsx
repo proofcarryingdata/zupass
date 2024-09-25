@@ -165,10 +165,12 @@ function getUI(
  */
 function TicketWrapper({
   pcd,
-  hidePadding
+  hidePadding,
+  newUI
 }: {
   pcd: EdDSATicketPCD;
   hidePadding?: boolean;
+  newUI?: boolean;
 }): JSX.Element | null {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
@@ -211,6 +213,7 @@ function TicketWrapper({
 
   return identityPCD ? (
     <Card
+      newUI={newUI}
       hidePadding={hidePadding}
       pcd={pcd}
       identityPCD={identityPCD}
@@ -220,14 +223,16 @@ function TicketWrapper({
   ) : null;
 }
 
-function CardBody({
+export function CardBody({
   pcd,
   isMainIdentity,
-  hidePadding
+  hidePadding,
+  newUI
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
   hidePadding?: boolean;
+  newUI?: boolean;
 }): JSX.Element {
   const pcdCollection = usePCDCollection();
 
@@ -236,7 +241,9 @@ function CardBody({
   }
   if (pcdCollection.hasPackage(pcd.type)) {
     if (isEdDSATicketPCD(pcd)) {
-      return <TicketWrapper pcd={pcd} hidePadding={hidePadding} />;
+      return (
+        <TicketWrapper newUI={newUI} pcd={pcd} hidePadding={hidePadding} />
+      );
     }
     if (isPODTicketPCD(pcd)) {
       const Component = PODTicketPCDUI.renderCardBody;

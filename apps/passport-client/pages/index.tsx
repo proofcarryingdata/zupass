@@ -58,7 +58,7 @@ import ComponentsScreen from "../new-components/screens/ComponentsScreen";
 import { NewAlreadyRegisteredScreen } from "../new-components/screens/Login/NewAlreadyRegisteredScreen";
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
 import { NewPassportScreen2 } from "../new-components/screens/Login/NewPassportScreen";
-import { NewHomeScreen } from "../new-components/screens/NewHomeScreen";
+import { NewHomeScreen } from "../new-components/screens/Home";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
