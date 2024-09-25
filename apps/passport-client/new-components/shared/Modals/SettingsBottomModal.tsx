@@ -38,27 +38,18 @@ export function SettingsBottomModal(): JSX.Element {
         icon: <InformationCircleIcon width={24} height={24} color="#7C8BB4" />,
         onClick: (): void => {}
       },
-      ...insertIf(
-        {
-          title: "Change Password",
-          icon: <EyeIcon width={24} height={24} color="#7C8BB4" />,
-          onClick: (): void => {}
-        },
-        hasSetupPassword
-      ),
-      ...insertIf(
-        {
-          title: "Add Password",
-          icon: <EyeIcon width={24} height={24} color="#7C8BB4" />,
-          onClick: (): void => {
-            dispatch({
-              type: "set-bottom-modal",
-              modal: { modalType: "add-password" }
-            });
-          }
-        },
-        !hasSetupPassword
-      ),
+      {
+        title: `${hasSetupPassword ? "Change" : "Add"} Password`,
+        icon: <EyeIcon width={24} height={24} color="#7C8BB4" />,
+        onClick: (): void => {
+          dispatch({
+            type: "set-bottom-modal",
+            modal: {
+              modalType: "change-password"
+            }
+          });
+        }
+      },
       {
         title: "Manage Emails",
         icon: <EnvelopeIcon width={24} height={24} color="#7C8BB4" />,
@@ -158,7 +149,3 @@ const SettingsItemContainer = styled.div<{ $variant?: "danger" }>`
   padding: 0px 12px;
   gap: 16px;
 `;
-
-const insertIf = <T,>(item: T, condition: boolean): T[] => {
-  return condition ? [item] : [];
-};

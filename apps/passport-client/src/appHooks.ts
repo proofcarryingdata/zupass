@@ -162,7 +162,7 @@ export function useModal(): AppState["modal"] {
   return useSelector<AppState["modal"]>((s) => s.modal, []);
 }
 
-export function useBottomModal(): AppState["modal"] {
+export function useBottomModal(): AppState["bottomModal"] {
   return useSelector<AppState["bottomModal"]>((s) => s.bottomModal, []);
 }
 

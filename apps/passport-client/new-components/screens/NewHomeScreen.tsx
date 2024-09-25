@@ -15,7 +15,7 @@ import { AppContainer } from "../../components/shared/AppContainer";
 import { usePCDs, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { FloatingMenu } from "../shared/FloatingMenu";
-import { SettingsBottomModal } from "../shared/Modals/SettingsBottomModal";
+import { NewModals } from "../shared/Modals/NewModals";
 import { TicketCard } from "../shared/TicketCard";
 
 const GAP = 4;
@@ -219,7 +219,7 @@ export const NewHomeScreen = (): ReactElement => {
       </ButtonsContainer>
       <Spacer h={20} />
       <FloatingMenu />
-      <SettingsBottomModal />
+      <NewModals />
     </AppContainer>
   );
 };

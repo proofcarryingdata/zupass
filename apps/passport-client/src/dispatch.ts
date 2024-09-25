@@ -886,7 +886,7 @@ async function loadAfterLogin(
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
-    console.log(newUi, "S");
+    console.log(newUi, "Saaaaaaaaaaa");
     window.location.hash = newUi ? "#/new" : "#/";
   }
 }

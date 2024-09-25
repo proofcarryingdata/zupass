@@ -27,7 +27,8 @@ export interface AppState {
   // bottom modal will deprecate modal
   bottomModal:
     | { modalType: "settings" }
-    | { modalType: "add-password" }
+    | { modalType: "change-password" }
+    | { modalType: "success-modal"; title: string; description: string }
     | { modalType: "none" };
 
   // View state
