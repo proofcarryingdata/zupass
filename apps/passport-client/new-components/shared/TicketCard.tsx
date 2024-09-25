@@ -23,6 +23,7 @@ const TicketCardContainer = styled.div<{ $borderColor: Property.Color }>`
   box-shadow:
     0px 2px 4px -1px rgba(0, 0, 0, 0.06),
     0px 4px 6px -1px rgba(0, 0, 0, 0.1);
+  max-width: 345px;
 `;
 
 const TicketCardImage = styled.img`
@@ -33,7 +34,7 @@ const TicketCardImage = styled.img`
 const TicketCardImageContainer = styled.div`
   position: relative;
   width: 100%;
-  min-width: 350px;
+  min-width: 325px;
   height: 215px;
   border-radius: 8px;
   overflow: hidden;
