@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CSVPipelineDefinition,
@@ -36,6 +37,66 @@ describe.only("generic issuance - external API", function () {
 
   const giUser2Email = "giuser2@example.com";
   const giUser2Id = randomUUID();
+
+  const adminCsvPipelineDef: CSVPipelineDefinition = {
+    type: PipelineType.CSV,
+    ownerUserId: adminGIUserId,
+    timeCreated: new Date().toISOString(),
+    timeUpdated: new Date().toISOString(),
+    id: randomUUID(),
+    editorUserIds: [],
+    options: {
+      csv: `title,image
+t1,i1
+t2,i1`,
+      feedOptions: {
+        feedDescription: "CSV goodies",
+        feedDisplayName: "CSV goodies",
+        feedFolder: "goodie bag",
+        feedId: "goodie-bag"
+      }
+    }
+  };
+
+  const user1CsvPipelineDef: CSVPipelineDefinition = {
+    type: PipelineType.CSV,
+    ownerUserId: adminGIUserId,
+    timeCreated: new Date().toISOString(),
+    timeUpdated: new Date().toISOString(),
+    id: randomUUID(),
+    editorUserIds: [],
+    options: {
+      csv: `title,image
+t1,i1
+t2,i1`,
+      feedOptions: {
+        feedDescription: "CSV goodies",
+        feedDisplayName: "CSV goodies",
+        feedFolder: "goodie bag",
+        feedId: "goodie-bag"
+      }
+    }
+  };
+
+  const user2CsvPipelineDef: CSVPipelineDefinition = {
+    type: PipelineType.CSV,
+    ownerUserId: adminGIUserId,
+    timeCreated: new Date().toISOString(),
+    timeUpdated: new Date().toISOString(),
+    id: randomUUID(),
+    editorUserIds: [],
+    options: {
+      csv: `title,image
+t1,i1
+t2,i1`,
+      feedOptions: {
+        feedDescription: "CSV goodies",
+        feedDisplayName: "CSV goodies",
+        feedFolder: "goodie bag",
+        feedId: "goodie-bag"
+      }
+    }
+  };
 
   /**
    * Sets up a Zupass/Generic issuance backend.
@@ -509,6 +570,38 @@ describe.only("generic issuance - external API", function () {
         { pipeline: secondPipelineDefinition, jwt: adminGIUserEmail }
       );
       expectTrue(result.success);
+    }
+  });
+
+  step("users are able to create pipelines", async () => {
+    {
+      const res = await requestGenericIssuanceUpsertPipeline(
+        giBackend.expressContext.localEndpoint,
+        { jwt: adminGIUserEmail, pipeline: adminCsvPipelineDef }
+      );
+
+      expectTrue(res.success);
+      expect(res.value?.id).to.eq(adminCsvPipelineDef.id);
+    }
+
+    {
+      const res = await requestGenericIssuanceUpsertPipeline(
+        giBackend.expressContext.localEndpoint,
+        { jwt: giUser1Email, pipeline: user1CsvPipelineDef }
+      );
+
+      expectTrue(res.success);
+      expect(res.value?.id).to.eq(user1CsvPipelineDef.id);
+    }
+
+    {
+      const res = await requestGenericIssuanceUpsertPipeline(
+        giBackend.expressContext.localEndpoint,
+        { jwt: giUser2Email, pipeline: user2CsvPipelineDef }
+      );
+
+      expectTrue(res.success);
+      expect(res.value?.id).to.eq(user2CsvPipelineDef.id);
     }
   });
 });
