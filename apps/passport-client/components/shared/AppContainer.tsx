@@ -13,11 +13,13 @@ import { ScreenLoader } from "./ScreenLoader";
 export function AppContainer({
   children,
   bg,
-  fullscreen
+  fullscreen,
+  noPadding
 }: {
   bg: "primary" | "gray";
   children?: ReactNode;
   fullscreen?: boolean;
+  noPadding?: boolean;
 }): JSX.Element {
   const dispatch = useDispatch();
   const error = useAppError();
@@ -34,7 +36,7 @@ export function AppContainer({
     <Container $fullscreen={!!fullscreen}>
       <GlobalBackground color={col} />
       <Background>
-        <CenterColumn>
+        <CenterColumn defaultPadding={!noPadding}>
           {children && (
             <Toaster
               toastOptions={{
@@ -66,7 +68,7 @@ export const Background = styled.div`
   min-height: 100%;
 `;
 
-export const CenterColumn = styled.div`
+export const CenterColumn = styled.div<{ defaultPadding: boolean }>`
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -75,7 +77,7 @@ export const CenterColumn = styled.div`
   max-width: 420px;
   margin: 0 auto;
   position: relative;
-  padding: 16px;
+  ${({ defaultPadding }): string => (defaultPadding ? "padding: 16px;" : "")}
 `;
 
 const Container = styled.div<{ $fullscreen: boolean }>`
