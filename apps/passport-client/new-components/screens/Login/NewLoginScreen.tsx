@@ -136,8 +136,9 @@ export const NewLoginScreen = (): JSX.Element => {
             color="#1E2C50"
             family="Neue Haas Unica"
           >
-            Zupass is a zero knowledge application created by 0xPARC. It’s a
-            stepping stone towards building the next internet.
+            {redirectedFromAction
+              ? "To complete this request, please login or register with your email below."
+              : "Zupass is a zero knowledge application created by 0xPARC. It’s a stepping stone towards building the next internet."}
           </Typography>
         </LoginTitleContainer>
         <LoginForm onSubmit={onGenPass}>

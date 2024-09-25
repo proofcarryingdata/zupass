@@ -7,8 +7,13 @@ import {
   InformationCircleIcon,
   TrashIcon
 } from "@heroicons/react/24/solid";
+import { useMemo } from "react";
 import styled from "styled-components";
-import { useBottomModal, useStateContext } from "../../src/appHooks";
+import {
+  useBottomModal,
+  useDispatch,
+  useStateContext
+} from "../../src/appHooks";
 import { BottomModal } from "./BottomModal";
 import { Typography } from "./Typography";
 
@@ -22,51 +27,59 @@ interface SettingItem {
 export function SettingsBottomModal(): JSX.Element {
   const activeBottomModal = useBottomModal();
   const state = useStateContext().getState();
+  const dispatch = useDispatch();
 
-  const items: SettingItem[] = [
-    {
-      title: "About Zupass",
-      icon: <InformationCircleIcon width={24} height={24} color="#7C8BB4" />,
-      onClick: (): void => {}
-    },
-    {
-      title: "Change Password",
-      icon: <EyeIcon width={24} height={24} color="#7C8BB4" />,
-      onClick: (): void => {}
-    },
-    {
-      title: "Manage Emails",
-      icon: <EnvelopeIcon width={24} height={24} color="#7C8BB4" />,
-      onClick: (): void => {}
-    },
-    {
-      title: "Import",
-      icon: <ArrowUpTrayIcon width={24} height={24} color="#7C8BB4" />,
-      onClick: (): void => {}
-    },
-    {
-      title: "Export",
-      icon: <ArrowDownTrayIcon width={24} height={24} color="#7C8BB4" />,
-      onClick: (): void => {}
-    },
-    {
-      title: "Logout",
-      icon: (
-        <ArrowRightStartOnRectangleIcon
-          width={24}
-          height={24}
-          color="#7C8BB4"
-        />
-      ),
-      onClick: (): void => {}
-    },
-    {
-      title: "Delete Account",
-      icon: <TrashIcon width={24} height={24} color="#E0431C" />,
-      onClick: (): void => {},
-      variant: "danger"
-    }
-  ];
+  const items: SettingItem[] = useMemo(
+    () => [
+      {
+        title: "About Zupass",
+        icon: <InformationCircleIcon width={24} height={24} color="#7C8BB4" />,
+        onClick: (): void => {}
+      },
+      {
+        title: "Change Password",
+        icon: <EyeIcon width={24} height={24} color="#7C8BB4" />,
+        onClick: (): void => {}
+      },
+      {
+        title: "Manage Emails",
+        icon: <EnvelopeIcon width={24} height={24} color="#7C8BB4" />,
+        onClick: (): void => {}
+      },
+      {
+        title: "Import",
+        icon: <ArrowUpTrayIcon width={24} height={24} color="#7C8BB4" />,
+        onClick: (): void => {}
+      },
+      {
+        title: "Export",
+        icon: <ArrowDownTrayIcon width={24} height={24} color="#7C8BB4" />,
+        onClick: (): void => {}
+      },
+      {
+        title: "Logout",
+        icon: (
+          <ArrowRightStartOnRectangleIcon
+            width={24}
+            height={24}
+            color="#7C8BB4"
+          />
+        ),
+        onClick: (): void => {
+          if (window.confirm("Are you sure you want to log out?")) {
+            dispatch({ type: "reset-passport" });
+          }
+        }
+      },
+      {
+        title: "Delete Account",
+        icon: <TrashIcon width={24} height={24} color="#E0431C" />,
+        onClick: (): void => {},
+        variant: "danger"
+      }
+    ],
+    [dispatch]
+  );
 
   return (
     <BottomModal isOpen={activeBottomModal.modalType === "settings"}>
