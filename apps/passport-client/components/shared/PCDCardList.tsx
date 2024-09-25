@@ -68,6 +68,7 @@ export function PCDCardList({
       })),
     [pcdCollection, pcds]
   );
+  console.log("sortableshit:", sortablePCDs);
   // only show sort options that are valid for all PCDs
   const sortOptions = useMemo(
     () =>
