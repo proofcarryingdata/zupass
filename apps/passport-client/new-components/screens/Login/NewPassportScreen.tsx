@@ -102,7 +102,8 @@ const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
               email,
               token,
               targetFolder: undefined,
-              autoRegister: false
+              autoRegister: false,
+              newUi: true
             });
           }
         } catch (e) {
