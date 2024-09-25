@@ -92,6 +92,7 @@ export type Action =
       autoRegister: boolean;
       /** Zupass will attempt to automatically direct a user to targetFolder on registration */
       targetFolder: string | undefined | null;
+      newUi?: boolean;
     }
   | {
       type: "login";
@@ -224,7 +225,8 @@ export async function dispatch(
         action.targetFolder,
         action.autoRegister,
         state,
-        update
+        update,
+        action.newUi
       );
     case "login":
       return createNewUserWithPassword(
@@ -456,7 +458,8 @@ async function createNewUserSkipPassword(
   targetFolder: string | undefined | null,
   autoRegister: boolean,
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   update({
     modal: { modalType: "none" }
@@ -498,7 +501,8 @@ async function createNewUserSkipPassword(
       newUserResult.value,
       state,
       update,
-      targetFolder
+      targetFolder,
+      newUi
     );
   }
 
@@ -560,7 +564,8 @@ async function finishAccountCreation(
   user: User,
   state: AppState,
   update: ZuUpdate,
-  targetFolder?: string | null
+  targetFolder?: string | null,
+  newUi = false
 ): Promise<void> {
   // Verify that the identity is correct.
   if (
@@ -632,12 +637,14 @@ async function finishAccountCreation(
   // Account creation is complete.  Close any existing modal, and redirect
   // user if they were in the middle of something.
   update({ modal: { modalType: "none" } });
+
+  const baseRoute = newUi ? "#/new/" : "#/";
   if (hasPendingRequest()) {
-    window.location.hash = "#/login-interstitial";
+    window.location.hash = `${baseRoute}login-interstitial`;
   } else {
     window.location.hash = targetFolder
-      ? `#/?folder=${encodeURIComponent(targetFolder)}`
-      : "#/";
+      ? `${baseRoute}?folder=${encodeURIComponent(targetFolder)}`
+      : baseRoute;
   }
 }
 
