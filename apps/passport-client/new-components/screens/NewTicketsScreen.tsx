@@ -13,6 +13,9 @@ import styled, { css } from "styled-components";
 import { TicketCard } from "../shared/TicketCard";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import { Spacer } from "@pcd/passport-ui";
+import { FloatingMenu } from "../shared/FloatingMenu";
+import { FloatingMenu } from "../shared/FloatingMenu";
+import { SettingsBottomModal } from "../shared/SettingsBottomModal";
 
 const GAP = 4;
 const isEventTicketPCD = (
