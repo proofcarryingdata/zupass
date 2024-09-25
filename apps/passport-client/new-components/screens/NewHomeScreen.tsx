@@ -1,6 +1,6 @@
 import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { AppContainer } from "../../components/shared/AppContainer";
-import { usePCDs } from "../../src/appHooks";
+import { usePCDs, useSelf } from "../../src/appHooks";
 import { PCD } from "@pcd/pcd-types";
 import {
   ReactElement,
@@ -14,15 +14,16 @@ import { TicketCard } from "../shared/TicketCard";
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import { Spacer } from "@pcd/passport-ui";
 import { FloatingMenu } from "../shared/FloatingMenu";
-import { FloatingMenu } from "../shared/FloatingMenu";
 import { SettingsBottomModal } from "../shared/SettingsBottomModal";
+import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
+import { useNavigate } from "react-router-dom";
 
 const GAP = 4;
 const isEventTicketPCD = (
   pcd: PCD<unknown, unknown>
 ): pcd is EdDSATicketPCD => {
   const typedPcd = pcd as EdDSATicketPCD;
-
+  // TODO: fetch the pods type as well and prioritize it if theres a conflict.
   return typedPcd.type === "eddsa-ticket-pcd" && !!typedPcd?.claim?.ticket;
 };
 const useTickets = (): Map<string, EdDSATicketPCD[]> => {
@@ -105,9 +106,6 @@ const ButtonsContainer = styled.div`
   gap: 12px;
 `;
 
-const StyledAppContainer = styled(AppContainer)`
-  gap: 20px;
-`;
 const positionInPx = (currentPos: number, elWidth: number, len: number) => {
   const max = len * (elWidth + GAP);
   const truePos = currentPos * (elWidth + GAP);
@@ -118,12 +116,21 @@ const getEventDetails = (tickets: EdDSATicketPCD[]) => {
   return tickets[0].claim.ticket;
 };
 
-export const NewTicketsScreen = (): ReactElement => {
+export const NewHomeScreen = (): ReactElement => {
+  useSyncE2EEStorage();
   const tickets = useTickets();
   const [currentPos, setCurrentPos] = useState(0);
   const [width, setWidth] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const self = useSelf();
+  const navigate = useNavigate();
 
+  useEffect(() => {
+    if (!self) {
+      console.log("Redirecting to login screen");
+      navigate("/login", { replace: true });
+    }
+  });
   useLayoutEffect(() => {
     console.log("called");
     if (scrollRef.current) {
