@@ -157,7 +157,8 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
         await dispatch({
           type: "load-after-login",
           storage: storageResult.value,
-          encryptionKey: encryptionKey
+          encryptionKey: encryptionKey,
+          newUi: true
         });
       } catch (e) {
         setIsLoggingIn(false);
@@ -211,7 +212,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
           autoCorrect="off"
           type="text"
           autoFocus
-          value={email}
+          defaultValue={email}
           disabled
         />
         <Input2
@@ -226,7 +227,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
           error={error}
         />
         <Button2 type="submit" disabled={isLoggingIn}>
-          {isLoggingIn ? "Verifying" : "Sign in  "}
+          {isLoggingIn ? "Verifying..." : "Sign in  "}
         </Button2>
       </StyledLoginForm>
     );
