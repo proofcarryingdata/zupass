@@ -9,7 +9,7 @@ import { Button2 } from "../shared/Button";
 import { FloatingMenu } from "../shared/FloatingMenu";
 import { Input2 } from "../shared/Input";
 import { List } from "../shared/List";
-import { SettingsBottomModal } from "../shared/SettingsBottomModal";
+import { SettingsBottomModal } from "../shared/Modals/SettingsBottomModal";
 import { Ticket } from "../shared/Ticket";
 import { TicketCard } from "../shared/TicketCard";
 const exampleList = [

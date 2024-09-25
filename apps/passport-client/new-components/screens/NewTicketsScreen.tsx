@@ -6,7 +6,7 @@ import { AppContainer } from "../../components/shared/AppContainer";
 import { usePCDs } from "../../src/appHooks";
 import { Button2 } from "../shared/Button";
 import { FloatingMenu } from "../shared/FloatingMenu";
-import { SettingsBottomModal } from "../shared/SettingsBottomModal";
+import { SettingsBottomModal } from "../shared/Modals/SettingsBottomModal";
 import { TicketCard } from "../shared/TicketCard";
 
 const GAP = 4;

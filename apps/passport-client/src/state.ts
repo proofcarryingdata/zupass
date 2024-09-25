@@ -25,7 +25,10 @@ export interface AppState {
   credentialCache: CredentialCache;
 
   // bottom modal will deprecate modal
-  bottomModal: { modalType: "settings" } | { modalType: "none" };
+  bottomModal:
+    | { modalType: "settings" }
+    | { modalType: "add-password" }
+    | { modalType: "none" };
 
   // View state
   modal:
