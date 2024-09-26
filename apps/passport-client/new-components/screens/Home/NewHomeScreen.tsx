@@ -28,6 +28,7 @@ import {
   PODTicketPCDTypeName,
   isPODTicketPCD
 } from "@pcd/pod-ticket-pcd";
+import { Typography } from "../../shared/Typography";
 
 const GAP = 4;
 const ANOTHER_GAP = 40;
@@ -178,7 +179,6 @@ export const NewHomeScreen = (): ReactElement => {
   const [width2, setWidth2] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pcdCardScrollRef = useRef<HTMLDivElement>(null);
-  const exampleTicketRef = useRef<HTMLDivElement>(null);
   const self = useSelf();
   const navigate = useNavigate();
   useEffect(() => {
@@ -203,6 +203,15 @@ export const NewHomeScreen = (): ReactElement => {
       );
     }
   }, [setWidth, setWidth2, tickets.length]);
+
+  if (!tickets.length)
+    return (
+      <AppContainer bg="gray">
+        <Typography> You have no tickets </Typography>
+        <FloatingMenu />
+        <NewModals />
+      </AppContainer>
+    );
 
   return (
     <AppContainer bg="gray" noPadding>
