@@ -12,7 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
-import { usePCDs, useSelf, useUserIdentityPCD } from "../../../src/appHooks";
+import { usePCDs, useSelf } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { CardBody } from "../../../components/shared/PCDCard";
@@ -102,7 +102,7 @@ export const PageCircleButton = styled.button<{
     0px 1px 2px 0px rgba(0, 0, 0, 0.06);
 
   background: rgba(255, 255, 255, 0.8);
-  ${({ disabled }): FlattenSimpleInterpolation =>
+  ${({ disabled }): FlattenSimpleInterpolation | undefined =>
     disabled ? disabledCSS : undefined}
 `;
 
@@ -129,7 +129,11 @@ const positionInPx = (
   return truePos > max ? max : truePos;
 };
 
-const calculateElWidth = (scrollWidth: number, gap: number, len: number) => {
+const calculateElWidth = (
+  scrollWidth: number,
+  gap: number,
+  len: number
+): number => {
   return Math.ceil((scrollWidth - gap * (len - 1)) / len);
 };
 
@@ -144,18 +148,15 @@ export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
   const [currentPos, setCurrentPos] = useState(0);
-  const [currentEventName, setCurrentEventName] = useState<string>();
   const [width, setWidth] = useState(0);
   const [width2, setWidth2] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pcdCardScrollRef = useRef<HTMLDivElement>(null);
   const self = useSelf();
   const navigate = useNavigate();
-  const userIdentityPCD = useUserIdentityPCD();
 
   useEffect(() => {
     if (!self) {
-      console.log("Redirecting to login screen");
       navigate("/new/login", { replace: true });
     }
   });
@@ -177,16 +178,12 @@ export const NewHomeScreen = (): ReactElement => {
     }
   }, [setWidth, setWidth2, tickets.size]);
 
-  useEffect(() => {
-    console.log("padding", (window.screen.width - width2) / 2);
-  }, [width2]);
-
   return (
     <AppContainer bg="gray" noPadding>
       <Container elWidth={width}>
         <Scroller
           gap={GAP}
-          offset={(window.screen.width - width) / 2}
+          offset={(420 - width) / 2}
           ref={scrollRef}
           scrollInPx={positionInPx(currentPos, width, tickets.size - 1, GAP)}
           amount={tickets.size - 1}
@@ -208,9 +205,7 @@ export const NewHomeScreen = (): ReactElement => {
             );
           })}
         </Scroller>
-        {SHOW_HELPER_LINES && (
-          <Line padding={(window.screen.width - width) / 2} />
-        )}
+        {SHOW_HELPER_LINES && <Line padding={(420 - width) / 2} />}
       </Container>
       <Spacer h={20} />
       <ButtonsContainer>
@@ -260,10 +255,10 @@ export const NewHomeScreen = (): ReactElement => {
             tickets.size,
             ANOTHER_GAP
           )}
-          offset={(window.screen.width - width2) / 2}
+          offset={(420 - width2) / 2}
           amount={tickets.size - 1}
         >
-          {Array.from(tickets).map(([eventName, eventTickets]) => {
+          {Array.from(tickets).map(([_eventName, eventTickets]) => {
             return (
               <TicketsContainer>
                 {eventTickets.map((ticket) => (
