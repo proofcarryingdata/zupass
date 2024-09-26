@@ -190,7 +190,7 @@ const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
             fontSize={16}
             fontWeight={400}
             color="#1E2C50"
-            family="Neue Haas Unica"
+            family="Rubik"
           >
             Check your inbox for an email from noreply@zupass.org. Use the most
             recent code you received to continue.

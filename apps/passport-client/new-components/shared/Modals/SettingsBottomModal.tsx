@@ -111,7 +111,7 @@ export function SettingsBottomModal(): JSX.Element {
                     i !== items.length - 1 ? "1px solid #ECEAF4" : "none",
                   width: "100%"
                 }}
-                family="Neue Haas Unica"
+                family="Rubik"
                 color={variant === "danger" ? "#E0431C" : "#1E2C50"}
               >
                 {title}

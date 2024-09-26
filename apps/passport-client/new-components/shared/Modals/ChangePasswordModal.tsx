@@ -133,7 +133,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
           <Typography fontSize={20} fontWeight={800}>
             {isChangePassword ? "Change" : "Add"} Password
           </Typography>
-          <Typography fontSize={16} fontWeight={400} family="Neue Haas Unica">
+          <Typography fontSize={16} fontWeight={400} family="Rubik">
             Make sure that your {isChangePassword ? "new" : ""} password is
             secure, unique, and memorable. If you forget your password, you'll
             have to reset your account, and you will lose access to all your

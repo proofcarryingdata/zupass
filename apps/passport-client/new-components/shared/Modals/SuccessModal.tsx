@@ -33,7 +33,7 @@ export const SuccessModal = (): JSX.Element => {
           <Typography fontSize={20} fontWeight={800}>
             {title}
           </Typography>
-          <Typography fontSize={16} fontWeight={400} family="Neue Haas Unica">
+          <Typography fontSize={16} fontWeight={400} family="Rubik">
             {description}
           </Typography>
         </TitleContainer>

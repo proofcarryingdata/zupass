@@ -152,7 +152,7 @@ export const NewLoginScreen = (): JSX.Element => {
             fontSize={16}
             fontWeight={400}
             color="#1E2C50"
-            family="Neue Haas Unica"
+            family="Rubik"
           >
             {redirectedFromAction
               ? "To complete this request, please login or register with your email below."

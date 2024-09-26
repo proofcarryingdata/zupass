@@ -55,7 +55,7 @@ export function ResendCodeButton2({
         color={"#1E2C50"}
         fontSize={14}
         fontWeight={500}
-        family="Neue Haas Unica"
+        family="Rubik"
         opacity={disabled ? 0.4 : 1}
       >
         {disabled ? `Resend code (${waitCountInSeconds})` : "Resend code"}

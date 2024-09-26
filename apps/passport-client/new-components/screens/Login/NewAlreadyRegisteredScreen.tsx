@@ -79,7 +79,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
         verifyToken(result.value?.devToken);
       } else {
         if (email && identityCommitment) {
-          window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
+          window.location.href = `#/new/enter-confirmation-code?email=${encodeURIComponent(
             email
           )}&identityCommitment=${encodeURIComponent(
             identityCommitment
@@ -244,7 +244,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
             fontSize={16}
             fontWeight={400}
             color="#1E2C50"
-            family="Neue Haas Unica"
+            family="Rubik"
           >
             We see you have an account, please login with your{" "}
             {salt ? "password" : "Sync Key"}.
@@ -260,7 +260,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
               color={"#1E2C50"}
               fontSize={14}
               fontWeight={500}
-              family="Neue Haas Unica"
+              family="Rubik"
             >
               {salt ? "Forgot Password?" : "Lost Sync Key?"}
             </Typography>
