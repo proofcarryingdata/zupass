@@ -33,7 +33,6 @@ import { Typography } from "../../shared/Typography";
 const GAP = 4;
 const ANOTHER_GAP = 40;
 const SHOW_HELPER_LINES = false;
-const TICKET_HEIGHT = 401;
 const TICKET_GAP = 20;
 type TicketType = EdDSATicketPCD | PODTicketPCD;
 
@@ -170,6 +169,39 @@ const getEventDetails = (tickets: TicketType[]): ITicketData => {
     .ticket;
   return (ticket as ITicketData) ?? (tickets[0].claim.ticket as ITicketData);
 };
+const EmptyCardContainer = styled.div`
+  display: flex;
+  height: 302px;
+  justify-content: center;
+  align-items: center;
+  border-radius: 16px;
+  background: #e1e1e2;
+  /* shadow-inset-black */
+  box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
+  padding: 0 40px;
+`;
+
+const InnerContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+`;
+
+const EmptyCard = (): ReactElement => {
+  return (
+    <EmptyCardContainer>
+      <InnerContainer>
+        <Typography fontWeight={800} color="var(--text-tertiary)">
+          YOU HAVE NO EVENT PASSES
+        </Typography>
+        <Typography color="var(--text-tertiary)">
+          Make sure you are logged in with the correct email address.
+        </Typography>
+      </InnerContainer>
+    </EmptyCardContainer>
+  );
+};
 
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
@@ -213,7 +245,7 @@ export const NewHomeScreen = (): ReactElement => {
   if (!tickets.length)
     return (
       <AppContainer bg="gray">
-        <Typography> You have no tickets </Typography>
+        <EmptyCard />
         <FloatingMenu />
         <NewModals />
       </AppContainer>
