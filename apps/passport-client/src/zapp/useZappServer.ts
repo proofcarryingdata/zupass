@@ -6,11 +6,25 @@ import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useStateContext } from "../appHooks";
+import { StateContextValue } from "../dispatch";
 import { ZupassRPCProcessor } from "./ZappServer";
 
 export enum ListenMode {
   LISTEN_IF_EMBEDDED,
   LISTEN_IF_NOT_EMBEDDED
+}
+
+async function waitForAuthentication(
+  context: StateContextValue
+): Promise<void> {
+  return new Promise<void>((resolve) => {
+    const unlisten = context.stateEmitter.listen((state) => {
+      if (state.self) {
+        unlisten();
+        resolve();
+      }
+    });
+  });
 }
 
 export function useZappServer(mode: ListenMode): void {
@@ -31,20 +45,13 @@ export function useZappServer(mode: ListenMode): void {
     }
     (async (): Promise<void> => {
       const { zapp, advice, origin } = await listen();
-
-      if (!context.getState().self) {
+      context.dispatch({ type: "zapp-connect", zapp, origin });
+      if (mode === ListenMode.LISTEN_IF_EMBEDDED && !context.getState().self) {
+        // If we're not logged in, we need to show a message to the user
+        window.location.hash = "connect-popup";
         advice.showClient();
-        context.dispatch({ type: "zapp-connect", zapp, origin });
-
-        await new Promise<void>((resolve) => {
-          const unlisten = context.stateEmitter.listen((state) => {
-            if (state.self) {
-              advice.hideClient();
-              unlisten();
-              resolve();
-            }
-          });
-        });
+        await waitForAuthentication(context);
+        advice.hideClient();
       }
 
       const zapps = context.getState().pcds.getAllPCDsInFolder("Zapps");
@@ -64,6 +71,7 @@ export function useZappServer(mode: ListenMode): void {
       let approved = !!zappPOD;
 
       if (!zappPOD) {
+        // @todo show a modal instead of using confirm
         approved = confirm(
           `Allow ${zapp.name} at ${origin} to connect to your Zupass account?\r\n\r\nThis is HIGHLY EXPERIMENTAL - make sure you trust this website.`
         );

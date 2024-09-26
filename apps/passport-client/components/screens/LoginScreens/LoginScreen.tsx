@@ -23,6 +23,7 @@ import {
   pendingRequestKeys,
   setPendingAddRequest,
   setPendingAddSubscriptionRequest,
+  setPendingAuthenticateIFrameRequest,
   setPendingGenericIssuanceCheckinRequest,
   setPendingGetWithoutProvingRequest,
   setPendingProofRequest,
@@ -78,6 +79,10 @@ export function LoginScreen(): JSX.Element {
   const pendingGenericIssuanceCheckinRequest = query?.get(
     pendingRequestKeys.genericIssuanceCheckin
   );
+  const pendingAuthenticateIFrameRequest = query?.get(
+    pendingRequestKeys.authenticateIFrame
+  );
+
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
 
@@ -104,6 +109,9 @@ export function LoginScreen(): JSX.Element {
         pendingGenericIssuanceCheckinRequest
       );
       pendingRequestForLogging = pendingRequestKeys.genericIssuanceCheckin;
+    } else if (pendingAuthenticateIFrameRequest) {
+      setPendingAuthenticateIFrameRequest(pendingAuthenticateIFrameRequest);
+      pendingRequestForLogging = pendingRequestKeys.authenticateIFrame;
     }
 
     if (pendingRequestForLogging) {
@@ -118,7 +126,8 @@ export function LoginScreen(): JSX.Element {
     pendingViewSubscriptionsRequest,
     pendingAddSubscriptionRequest,
     pendingViewFrogCryptoRequest,
-    pendingGenericIssuanceCheckinRequest
+    pendingGenericIssuanceCheckinRequest,
+    pendingAuthenticateIFrameRequest
   ]);
 
   const suggestedEmail = query?.get("email");
