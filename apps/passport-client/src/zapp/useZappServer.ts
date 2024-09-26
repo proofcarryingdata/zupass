@@ -13,9 +13,7 @@ export enum ListenMode {
   LISTEN_IF_NOT_EMBEDDED
 }
 
-export function useZappServer(
-  mode: ListenMode = ListenMode.LISTEN_IF_EMBEDDED
-): void {
+export function useZappServer(mode: ListenMode): void {
   const context = useStateContext();
 
   useEffect(() => {
