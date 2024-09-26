@@ -61,6 +61,7 @@ import { NewCreatePasswordScreen } from "../new-components/screens/Login/NewCrea
 import { NewEnterConfirmationCodeScreen } from "../new-components/screens/Login/NewEnterConfirmationCodeScreen";
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
 import { NewPassportScreen2 } from "../new-components/screens/Login/NewPassportScreen";
+import { NewSyncExistingScreen } from "../new-components/screens/Login/NewSyncExistingScreen";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
@@ -149,6 +150,7 @@ function RouterImpl(): JSX.Element {
             path="already-registered"
             element={<NewAlreadyRegisteredScreen />}
           />
+          <Route path="sync-existing" element={<NewSyncExistingScreen />} />
         </Route>
         <Route path="/">
           <Route path="terms" element={<TermsScreen />} />

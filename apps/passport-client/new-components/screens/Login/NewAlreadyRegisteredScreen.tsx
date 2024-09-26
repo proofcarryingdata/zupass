@@ -200,9 +200,19 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
      */
     if (!salt) {
       return (
-        <Button2 onClick={onLoginWithMasterPasswordClick}>
-          Login with Sync Key{" "}
-        </Button2>
+        <>
+          <Input2
+            autoCapitalize="off"
+            autoCorrect="off"
+            type="text"
+            autoFocus
+            defaultValue={email}
+            disabled
+          />
+          <Button2 onClick={onLoginWithMasterPasswordClick}>
+            Login with Sync Key{" "}
+          </Button2>
+        </>
       );
     }
     return (
