@@ -8,6 +8,7 @@ import {
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import {
+  MutableRefObject,
   ReactElement,
   useEffect,
   useLayoutEffect,
@@ -38,7 +39,7 @@ const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
   // TODO: fetch the pods type as well and prioritize it if theres a conflict.
   return isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd);
 };
-const useTickets = (): Map<string, TicketType[]> => {
+const useTickets = (): Array<[string, TicketType[]]> => {
   const allPCDs = usePCDs();
   const tickets = allPCDs.filter(isEventTicketPCD);
   const eventsMap = new Map<string, TicketType[]>();
@@ -66,7 +67,7 @@ const useTickets = (): Map<string, TicketType[]> => {
 
     ticketList.push(ticket);
   }
-  return eventsMap;
+  return Array.from(eventsMap.entries());
 };
 const Scroller = styled.div<{
   amount: number;
@@ -78,7 +79,7 @@ const Scroller = styled.div<{
   flex-direction: row;
   gap: ${({ gap }): number => gap}px;
   position: relative;
-  transition: 0.2s cubic-bezier(0.25, 0.8, 0.5, 1);
+  transition: left 0.2s cubic-bezier(0.25, 0.8, 0.5, 1);
   left: ${({ scrollInPx }): number => -scrollInPx}px;
   transform: translateX(${({ offset }): number => offset}px);
 `;
@@ -93,11 +94,12 @@ const Line = styled.div<{ padding: number }>`
   z-index: 100;
 `;
 
-const Container = styled.div<{ elWidth: number }>`
+const Container = styled.div<{ elWidth: number; height?: number }>`
   margin-top: 20px;
   width: 100%;
   overflow: hidden;
   position: relative;
+  height: ${({ height }): string => `${height}px` ?? "100%"};
 `;
 
 const disabledCSS = css`
@@ -141,6 +143,7 @@ const TicketsContainer = styled.div`
   border: 1px solid red;
   height: 100%;
   gap: 20px;
+  border: 1px solid blue;
 `;
 
 const positionInPx = (
@@ -162,6 +165,14 @@ const calculateElWidth = (
   return Math.ceil((scrollWidth - gap * (len - 1)) / len);
 };
 
+const calculateScrollContainerHeight = (
+  itemHeight: number,
+  gap: number,
+  len: number
+): number => {
+  return Math.ceil((itemHeight + gap) * (len - 1));
+};
+
 const getEventDetails = (tickets: TicketType[]): ITicketData => {
   const ticket = tickets.find((ticket) => !!ticket.claim.ticket.imageUrl)?.claim
     .ticket;
@@ -174,11 +185,11 @@ export const NewHomeScreen = (): ReactElement => {
   const [currentPos, setCurrentPos] = useState(0);
   const [width, setWidth] = useState(0);
   const [width2, setWidth2] = useState(0);
+  const [ticketHeight, setTicketHeight] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pcdCardScrollRef = useRef<HTMLDivElement>(null);
   const self = useSelf();
   const navigate = useNavigate();
-
   useEffect(() => {
     if (!self) {
       navigate("/new/login", { replace: true });
@@ -188,7 +199,7 @@ export const NewHomeScreen = (): ReactElement => {
   useLayoutEffect(() => {
     if (scrollRef.current) {
       setWidth(
-        calculateElWidth(scrollRef.current.scrollWidth, GAP, tickets.size)
+        calculateElWidth(scrollRef.current.scrollWidth, GAP, tickets.length)
       );
     }
     if (pcdCardScrollRef.current) {
@@ -196,11 +207,11 @@ export const NewHomeScreen = (): ReactElement => {
         calculateElWidth(
           pcdCardScrollRef.current.scrollWidth,
           ANOTHER_GAP,
-          tickets.size
+          tickets.length
         )
       );
     }
-  }, [setWidth, setWidth2, tickets.size]);
+  }, [setWidth, setWidth2, tickets.length]);
 
   return (
     <AppContainer bg="gray" noPadding>
@@ -209,10 +220,10 @@ export const NewHomeScreen = (): ReactElement => {
           gap={GAP}
           offset={(420 - width) / 2}
           ref={scrollRef}
-          scrollInPx={positionInPx(currentPos, width, tickets.size - 1, GAP)}
-          amount={tickets.size - 1}
+          scrollInPx={positionInPx(currentPos, width, tickets.length - 1, GAP)}
+          amount={tickets.length - 1}
         >
-          {Array.from(tickets).map(([eventName, eventTickets], i) => {
+          {tickets.map(([eventName, eventTickets], i) => {
             console.log(eventTickets);
             const eventDetails = getEventDetails(eventTickets);
             return (
@@ -251,12 +262,12 @@ export const NewHomeScreen = (): ReactElement => {
           />
         </PageCircleButton>
         <PageCircleButton
-          disabled={currentPos === tickets.size - 1}
+          disabled={currentPos === tickets.length - 1}
           padding={6}
           diameter={28}
           onClick={() => {
             setCurrentPos((old) => {
-              if (old === tickets.size - 1) return old;
+              if (old === tickets.length - 1) return old;
               return old + 1;
             });
           }}
@@ -269,20 +280,23 @@ export const NewHomeScreen = (): ReactElement => {
         </PageCircleButton>
       </ButtonsContainer>
       <Spacer h={20} />
-      <Container elWidth={width2}>
+      <Container
+        elWidth={width2}
+        height={(401 + 20) * tickets[currentPos][1].length}
+      >
         <Scroller
           gap={ANOTHER_GAP}
           ref={pcdCardScrollRef}
           scrollInPx={positionInPx(
             currentPos,
             width2,
-            tickets.size,
+            tickets.length,
             ANOTHER_GAP
           )}
           offset={(420 - width2) / 2}
-          amount={tickets.size - 1}
+          amount={tickets.length - 1}
         >
-          {Array.from(tickets).map(([_eventName, eventTickets]) => {
+          {tickets.map(([_eventName, eventTickets]) => {
             return (
               <TicketsContainer>
                 {eventTickets.map((ticket) => (
