@@ -57,12 +57,22 @@ function EdDSATicketPCDCardBody({
   const ticketData = getEdDSATicketData(pcd);
 
   const [zk, setZk] = useState<boolean>(idBasedVerifyURL === undefined);
+
   const onToggle = useCallback(() => {
     setZk(!zk);
   }, [zk]);
 
   const redact = zk && idBasedVerifyURL !== undefined;
   if (newUI) {
+    const data = Buffer.from(
+      JSON.stringify(
+        pcd,
+        (_, v) => (typeof v === "bigint" ? v.toString() : v),
+
+        2
+      )
+    );
+    const blob = new Blob([data], { type: "plain/json" });
     return (
       <NEW_UI__Container>
         <div
@@ -91,6 +101,18 @@ function EdDSATicketPCDCardBody({
             <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
           </NEW_UI__ExtraInfoContainer>
         </NEW_UI__InfoContainer>
+        <NEW_UI__ExtraSection
+          onClick={() => {
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "test.json";
+            a.click();
+            a.remove();
+          }}
+        >
+          <NEW_UI__ExtraSectionText>Download ticket</NEW_UI__ExtraSectionText>
+          <DownloadIcon />
+        </NEW_UI__ExtraSection>
       </NEW_UI__Container>
     );
   }
@@ -227,7 +249,7 @@ const ZKMode = styled.div`
 `;
 
 const NEW_UI__Container = styled.div`
-  font-family: Barlow;
+  font-family: Rubik;
   border-radius: 16px;
   border: 2px solid var(--text-white, #fff);
   background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
@@ -235,6 +257,9 @@ const NEW_UI__Container = styled.div`
   /* shadow-sm */
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
   padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
 
 const NEW_UI__InfoContainer = styled.div`
@@ -243,13 +268,13 @@ const NEW_UI__InfoContainer = styled.div`
   justify-content: center;
   align-items: flex-start;
 `;
-
 const NEW_UI__AttendeeName = styled.div`
   color: #9a4ac9;
   font-size: 20px;
   font-style: normal;
   font-weight: 800;
   line-height: 135%; /* 27px */
+  font-family: Barlow, sans-serif;
 `;
 
 const NEW_UI__ExtraInfoContainer = styled.div`
@@ -264,3 +289,38 @@ const NEW_UI__ExtraInfo = styled.div`
   font-weight: 400;
   line-height: 135%; /* 18.9px */
 `;
+
+const NEW_UI__ExtraSection = styled.div`
+  display: flex;
+  flex-direction: row;
+  border-top: 1px solid #eee;
+  padding: 16px 0;
+  justify-content: space-between;
+`;
+
+const NEW_UI__ExtraSectionText = styled.div`
+  color: var(--text-primary);
+  font-family: Rubik;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 135%;
+`;
+
+const DownloadIcon = (): JSX.Element => (
+  <svg
+    width={20}
+    height={20}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="var(--text-tertiary)"
+    className="size-6"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+    />
+  </svg>
+);

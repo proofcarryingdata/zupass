@@ -7,7 +7,15 @@ import { EdDSATicketPCDUI } from "@pcd/eddsa-ticket-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { PODTicketPCDUI } from "@pcd/pod-ticket-pcd-ui";
-import { memo, useCallback, useContext, useMemo, useState } from "react";
+import {
+  ForwardedRef,
+  forwardRef,
+  memo,
+  useCallback,
+  useContext,
+  useMemo,
+  useState
+} from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
@@ -163,15 +171,14 @@ function getUI(
  * of ZK proofs, and can be configured to include different URLs in their QR
  * codes based on the type of ticket provided.
  */
-function TicketWrapper({
-  pcd,
-  hidePadding,
-  newUI
-}: {
-  pcd: EdDSATicketPCD;
-  hidePadding?: boolean;
-  newUI?: boolean;
-}): JSX.Element | null {
+const TicketWrapper = forwardRef<
+  HTMLDivElement,
+  {
+    pcd: EdDSATicketPCD;
+    hidePadding?: boolean;
+    newUI?: boolean;
+  }
+>(({ pcd, newUI, hidePadding }, ref) => {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
@@ -212,69 +219,76 @@ function TicketWrapper({
       : `${window.location.origin}/#/verify`;
 
   return identityPCD ? (
-    <Card
-      newUI={newUI}
-      hidePadding={hidePadding}
-      pcd={pcd}
-      identityPCD={identityPCD}
-      verifyURL={verifyURL}
-      idBasedVerifyURL={idBasedVerifyURL}
-    />
+    <div ref={ref}>
+      <Card
+        newUI={newUI}
+        hidePadding={hidePadding}
+        pcd={pcd}
+        identityPCD={identityPCD}
+        verifyURL={verifyURL}
+        idBasedVerifyURL={idBasedVerifyURL}
+      />
+    </div>
   ) : null;
-}
+});
 
-export function CardBody({
-  pcd,
-  isMainIdentity,
-  hidePadding,
-  newUI
-}: {
+type CardBodyProps = {
   pcd: PCD;
   isMainIdentity: boolean;
   hidePadding?: boolean;
   newUI?: boolean;
-}): JSX.Element {
-  const pcdCollection = usePCDCollection();
+};
 
-  if (isMainIdentity) {
-    return <MainIdentityCard />;
+export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
+  ({ pcd, isMainIdentity, hidePadding, newUI }, ref) => {
+    const pcdCollection = usePCDCollection();
+
+    if (isMainIdentity) {
+      return <MainIdentityCard />;
+    }
+    if (pcdCollection.hasPackage(pcd.type)) {
+      if (isEdDSATicketPCD(pcd)) {
+        return (
+          <TicketWrapper
+            ref={ref}
+            newUI={newUI}
+            pcd={pcd}
+            hidePadding={hidePadding}
+          />
+        );
+      }
+      if (isPODTicketPCD(pcd)) {
+        const Component = PODTicketPCDUI.renderCardBody;
+        return (
+          <div ref={ref}>
+            <Component
+              newUI={newUI}
+              pcd={pcd}
+              idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
+            />
+          </div>
+        );
+      }
+      const ui = getUI(pcd.type);
+      if (ui) {
+        const Component = ui.renderCardBody;
+        return <Component pcd={pcd} />;
+      } else {
+        console.warn(`Could not find a UI renderer for PCD type "${pcd.type}"`);
+      }
+    }
+
+    return (
+      <>
+        <TextCenter>
+          {pcd.type} unsupported <br />
+          no implementation of a ui for this type of card found
+        </TextCenter>
+        <Spacer h={16} />
+      </>
+    );
   }
-  if (pcdCollection.hasPackage(pcd.type)) {
-    if (isEdDSATicketPCD(pcd)) {
-      return (
-        <TicketWrapper newUI={newUI} pcd={pcd} hidePadding={hidePadding} />
-      );
-    }
-    if (isPODTicketPCD(pcd)) {
-      const Component = PODTicketPCDUI.renderCardBody;
-      return (
-        <Component
-          newUI={newUI}
-          pcd={pcd}
-          idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
-        />
-      );
-    }
-    const ui = getUI(pcd.type);
-    if (ui) {
-      const Component = ui.renderCardBody;
-      return <Component pcd={pcd} />;
-    } else {
-      console.warn(`Could not find a UI renderer for PCD type "${pcd.type}"`);
-    }
-  }
-
-  return (
-    <>
-      <TextCenter>
-        {pcd.type} unsupported <br />
-        no implementation of a ui for this type of card found
-      </TextCenter>
-      <Spacer h={16} />
-    </>
-  );
-}
-
+);
 export const CardContainer = styled.div`
   width: 100%;
   padding: 8px;

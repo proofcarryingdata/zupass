@@ -177,10 +177,13 @@ export const NewHomeScreen = (): ReactElement => {
   const [currentPos, setCurrentPos] = useState(0);
   const [width, setWidth] = useState(0);
   const [width2, setWidth2] = useState(0);
+  const [ticketHeight, setTicketHeight] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pcdCardScrollRef = useRef<HTMLDivElement>(null);
+  const ticketRef = useRef<HTMLDivElement>(null);
   const self = useSelf();
   const navigate = useNavigate();
+
   useEffect(() => {
     if (!self) {
       navigate("/new/login", { replace: true });
@@ -201,6 +204,9 @@ export const NewHomeScreen = (): ReactElement => {
           tickets.length
         )
       );
+    }
+    if (ticketRef.current) {
+      setTicketHeight(ticketRef.current.clientHeight);
     }
   }, [setWidth, setWidth2, tickets.length]);
 
@@ -224,7 +230,6 @@ export const NewHomeScreen = (): ReactElement => {
           amount={tickets.length - 1}
         >
           {tickets.map(([eventName, eventTickets], i) => {
-            console.log(eventTickets);
             const eventDetails = getEventDetails(eventTickets);
             return (
               <TicketCard
@@ -282,7 +287,7 @@ export const NewHomeScreen = (): ReactElement => {
       <Spacer h={20} />
       <Container
         elWidth={width2}
-        height={(TICKET_HEIGHT + TICKET_GAP) * tickets[currentPos][1].length}
+        height={(ticketHeight + TICKET_GAP) * tickets[currentPos][1].length}
       >
         <Scroller
           gap={ANOTHER_GAP}
@@ -296,11 +301,16 @@ export const NewHomeScreen = (): ReactElement => {
           offset={(420 - width2) / 2}
           amount={tickets.length - 1}
         >
-          {tickets.map(([_eventName, eventTickets]) => {
+          {tickets.map(([_eventName, eventTickets], i) => {
             return (
               <TicketsContainer>
-                {eventTickets.map((ticket) => (
-                  <CardBody newUI={true} pcd={ticket} isMainIdentity={false} />
+                {eventTickets.map((ticket, j) => (
+                  <CardBody
+                    ref={!!i && !!j ? ticketRef : undefined}
+                    newUI={true}
+                    pcd={ticket}
+                    isMainIdentity={false}
+                  />
                 ))}
               </TicketsContainer>
             );
