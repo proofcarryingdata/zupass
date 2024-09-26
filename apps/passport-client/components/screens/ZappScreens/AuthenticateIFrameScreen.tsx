@@ -4,7 +4,7 @@ import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { Spacer } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
-import { AuthMessage } from "./ConnectPopupScreen";
+import { IFrameAuthenticationMessage } from "./ConnectPopupScreen";
 
 export function AuthenticateIFrameScreen(): ReactNode {
   const encryptionKey = useSyncKey();
@@ -21,7 +21,6 @@ export function AuthenticateIFrameScreen(): ReactNode {
   }, []);
 
   useEffect(() => {
-    console.log("AuthenticateIFrameScreen", isLegitimateOpener);
     if (isLegitimateOpener && encryptionKey) {
       const chan = new MessageChannel();
       chan.port1.onmessage = (): void => {
@@ -36,7 +35,7 @@ export function AuthenticateIFrameScreen(): ReactNode {
         {
           type: "auth",
           encryptionKey: encryptionKey as string
-        } satisfies AuthMessage,
+        } satisfies IFrameAuthenticationMessage,
         origin,
         [chan.port2]
       );

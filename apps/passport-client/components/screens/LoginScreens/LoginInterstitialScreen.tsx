@@ -17,10 +17,8 @@ export function LoginInterstitialScreen(): JSX.Element {
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
 
   useLayoutEffect(() => {
-    console.log("loadedIssuedPCDs", loadedIssuedPCDs);
     if (loadedIssuedPCDs) {
       const pendingRequest = getPendingRequest();
-      console.log("pendingRequest", pendingRequest);
       if (pendingRequest) {
         switch (pendingRequest.key) {
           case "proof": {
