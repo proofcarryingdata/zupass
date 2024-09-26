@@ -34,7 +34,7 @@ const buttonStyle = css`
   border: none;
   border-radius: 200px;
   font-size: 16px;
-  font-weight: 400;
+  font-weight: 500;
   background: var(--core-accent);
   opacity: 1;
   cursor: pointer;

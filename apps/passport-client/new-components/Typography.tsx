@@ -4,7 +4,7 @@ import styled from "styled-components";
 
 export type FontWeight = 400 | 500 | 600 | 700 | 800 | 900;
 export type FontSize = 12 | 14 | 16 | 18;
-export type FontFamily = "Barlow" | "Neue Haas Unica";
+export type FontFamily = "Barlow" | "Rubik";
 const LINE_HEIGHT: Record<FontSize, number> = {
   "12": 16.2,
   "14": 18.9,
