@@ -84,7 +84,7 @@ export const ListItem = ({
       <IconContainer>{LeftIcon ? LeftIcon : <Avatar />}</IconContainer>
       <ListItemRightContainer showBottomBorder={defaultShowBottomBorder}>
         <Typography
-          family="Neue Haas Unica"
+          family="Rubik"
           fontWeight={500}
           fontSize={16}
           color={getVariantColor(defaultVariant)}

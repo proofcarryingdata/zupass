@@ -425,8 +425,8 @@ function SubscribeSection({
     info.credentialRequest.pcdType === undefined
       ? "Signature"
       : info.credentialRequest.pcdType === EmailPCDTypeName
-        ? "Verified Email"
-        : "";
+      ? "Verified Email"
+      : "";
 
   // This UI should probably resemble the proving screen much more, giving
   // the user more information about what information will be disclosed in
