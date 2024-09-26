@@ -1,6 +1,5 @@
 import { Dispatch, SetStateAction, UIEvent, useRef } from "react";
 import styled from "styled-components";
-import { useDispatch } from "../../../src/appHooks";
 import {
   PASSWORD_MINIMUM_LENGTH,
   checkPasswordStrength
@@ -18,11 +17,15 @@ interface NewPasswordForm {
   revealPassword: boolean;
   setRevealPassword: Dispatch<SetStateAction<boolean>>;
   onSuccess: () => void;
+  onCancel: () => void;
   submitButtonText: string;
   passwordInputPlaceholder?: string; // Override placeholder on the first input
   autoFocus?: boolean;
   setError: Dispatch<SetStateAction<string | undefined>>;
   error?: string;
+  showSkipConfirm?: boolean;
+  onSkipConfirm?: () => void;
+  style?: React.CSSProperties;
 }
 
 export const NewPasswordForm2 = ({
@@ -35,13 +38,16 @@ export const NewPasswordForm2 = ({
   revealPassword,
   setRevealPassword,
   onSuccess,
+  onCancel,
   submitButtonText,
   passwordInputPlaceholder,
   autoFocus,
   setError,
-  error
+  error,
+  showSkipConfirm,
+  onSkipConfirm,
+  style
 }: NewPasswordForm): JSX.Element => {
-  const dispatch = useDispatch();
   const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
   const checkPasswordAndSubmit = (e: UIEvent): void => {
@@ -87,7 +93,7 @@ export const NewPasswordForm2 = ({
   };
 
   return (
-    <PasswordForm>
+    <PasswordForm style={style}>
       {/* For password manager autofill */}
       <input hidden readOnly value={emails[0]} />
       <InputsContainer>
@@ -125,19 +131,14 @@ export const NewPasswordForm2 = ({
         <Button2 onClick={checkPasswordAndSubmit} disabled={!!error || loading}>
           {submitButtonText}
         </Button2>
-        <Button2
-          onClick={() => {
-            dispatch({
-              type: "set-bottom-modal",
-              modal: {
-                modalType: "settings"
-              }
-            });
-          }}
-          variant="secondary"
-        >
+        <Button2 onClick={onCancel} variant="secondary">
           Back
         </Button2>
+        {showSkipConfirm && (
+          <Button2 onClick={onSkipConfirm} variant="danger">
+            Skip for now
+          </Button2>
+        )}
       </InputsContainer>
     </PasswordForm>
   );

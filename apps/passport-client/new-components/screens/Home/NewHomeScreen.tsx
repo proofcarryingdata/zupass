@@ -8,6 +8,11 @@ import {
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import {
+  PODTicketPCD,
+  PODTicketPCDTypeName,
+  isPODTicketPCD
+} from "@pcd/pod-ticket-pcd";
+import {
   ReactElement,
   useEffect,
   useLayoutEffect,
@@ -17,17 +22,12 @@ import {
 import { useNavigate } from "react-router-dom";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
+import { CardBody } from "../../../components/shared/PCDCard";
 import { usePCDs, useSelf } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { FloatingMenu } from "../../shared/FloatingMenu";
-import { CardBody } from "../../../components/shared/PCDCard";
-import { TicketCard } from "../../shared/TicketCard";
 import { NewModals } from "../../shared/Modals/NewModals";
-import {
-  PODTicketPCD,
-  PODTicketPCDTypeName,
-  isPODTicketPCD
-} from "@pcd/pod-ticket-pcd";
+import { TicketCard } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 
 const GAP = 4;

@@ -175,9 +175,9 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
   useEffect(() => {
     if (self || !email || !identityCommitment) {
       if (hasPendingRequest()) {
-        window.location.hash = "#/login-interstitial";
+        window.location.hash = "#/new/login-interstitial";
       } else {
-        window.location.hash = "#/";
+        window.location.hash = "#/new";
       }
     }
   }, [self, email, identityCommitment]);

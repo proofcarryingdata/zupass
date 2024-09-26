@@ -99,6 +99,7 @@ export type Action =
       email: string;
       password: string;
       token: string;
+      newUi?: boolean;
     }
   | {
       type: "one-click-login";
@@ -234,7 +235,8 @@ export async function dispatch(
         action.token,
         action.password,
         state,
-        update
+        update,
+        action.newUi
       );
     case "one-click-login":
       return oneClickLogin(
@@ -520,7 +522,8 @@ async function createNewUserWithPassword(
   token: string,
   password: string,
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: encryptionKey } =
@@ -544,7 +547,13 @@ async function createNewUserWithPassword(
   );
 
   if (newUserResult.success) {
-    return finishAccountCreation(newUserResult.value, state, update);
+    return finishAccountCreation(
+      newUserResult.value,
+      state,
+      update,
+      undefined,
+      newUi
+    );
   }
 
   update({
