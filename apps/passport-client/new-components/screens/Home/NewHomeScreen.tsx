@@ -1,5 +1,10 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
-import { EdDSATicketPCD, ITicketData } from "@pcd/eddsa-ticket-pcd";
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDTypeName,
+  ITicketData,
+  isEdDSATicketPCD
+} from "@pcd/eddsa-ticket-pcd";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import {
@@ -18,24 +23,44 @@ import { FloatingMenu } from "../../shared/FloatingMenu";
 import { CardBody } from "../../../components/shared/PCDCard";
 import { TicketCard } from "../../shared/TicketCard";
 import { NewModals } from "../../shared/Modals/NewModals";
+import {
+  PODTicketPCD,
+  PODTicketPCDTypeName,
+  isPODTicketPCD
+} from "@pcd/pod-ticket-pcd";
 
 const GAP = 4;
 const ANOTHER_GAP = 40;
 const SHOW_HELPER_LINES = false;
-const isEventTicketPCD = (
-  pcd: PCD<unknown, unknown>
-): pcd is EdDSATicketPCD => {
-  const typedPcd = pcd as EdDSATicketPCD;
+const TICKET_HEIGHT = 401;
+const TICKET_GAP = 20;
+type TicketType = EdDSATicketPCD | PODTicketPCD;
+
+const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
   // TODO: fetch the pods type as well and prioritize it if theres a conflict.
-  return typedPcd.type === "eddsa-ticket-pcd" && !!typedPcd?.claim?.ticket;
+  return isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd);
 };
-const useTickets = (): Map<string, EdDSATicketPCD[]> => {
+const useTickets = (): Array<[string, TicketType[]]> => {
   const allPCDs = usePCDs();
   const tickets = allPCDs.filter(isEventTicketPCD);
-  const eventsMap = new Map<string, EdDSATicketPCD[]>();
+  const eventsMap = new Map<string, TicketType[]>();
 
   for (const ticket of tickets) {
     const ticketList = eventsMap.get(ticket.claim.ticket.eventName) ?? [];
+    const existingTicketIndex = ticketList.findIndex(
+      (value) => value.claim.ticket.ticketId === ticket.claim.ticket.ticketId
+    );
+
+    // we prioritize POD tickets, so in case we encounter one, we remove the eddesa ticket.
+    // if we counter eddesa ticket we check if we have the pod one and if so, ignore eddesa.
+    if (existingTicketIndex >= 0 && ticket.type === PODTicketPCDTypeName) {
+      ticketList.splice(existingTicketIndex);
+    } else if (
+      existingTicketIndex >= 0 &&
+      ticket.type === EdDSATicketPCDTypeName
+    ) {
+      continue;
+    }
 
     if (!eventsMap.get(ticket.claim.ticket.eventName)) {
       eventsMap.set(ticket.claim.ticket.eventName, ticketList);
@@ -43,7 +68,7 @@ const useTickets = (): Map<string, EdDSATicketPCD[]> => {
 
     ticketList.push(ticket);
   }
-  return eventsMap;
+  return Array.from(eventsMap.entries());
 };
 const Scroller = styled.div<{
   amount: number;
@@ -55,7 +80,7 @@ const Scroller = styled.div<{
   flex-direction: row;
   gap: ${({ gap }): number => gap}px;
   position: relative;
-  transition: 0.2s cubic-bezier(0.25, 0.8, 0.5, 1);
+  transition: left 0.2s cubic-bezier(0.25, 0.8, 0.5, 1);
   left: ${({ scrollInPx }): number => -scrollInPx}px;
   transform: translateX(${({ offset }): number => offset}px);
 `;
@@ -70,11 +95,12 @@ const Line = styled.div<{ padding: number }>`
   z-index: 100;
 `;
 
-const Container = styled.div<{ elWidth: number }>`
+const Container = styled.div<{ elWidth: number; height?: number }>`
   margin-top: 20px;
   width: 100%;
   overflow: hidden;
   position: relative;
+  height: ${({ height }): string => `${height}px` ?? "100%"};
 `;
 
 const disabledCSS = css`
@@ -115,7 +141,8 @@ const TicketsContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  height: 100%;
+  gap: ${TICKET_GAP}px;
 `;
 
 const positionInPx = (
@@ -137,11 +164,10 @@ const calculateElWidth = (
   return Math.ceil((scrollWidth - gap * (len - 1)) / len);
 };
 
-const getEventDetails = (tickets: EdDSATicketPCD[]): ITicketData => {
-  return (
-    tickets.find((ticket) => !!ticket.claim.ticket.imageUrl)?.claim.ticket ??
-    tickets[0].claim.ticket
-  );
+const getEventDetails = (tickets: TicketType[]): ITicketData => {
+  const ticket = tickets.find((ticket) => !!ticket.claim.ticket.imageUrl)?.claim
+    .ticket;
+  return (ticket as ITicketData) ?? (tickets[0].claim.ticket as ITicketData);
 };
 
 export const NewHomeScreen = (): ReactElement => {
@@ -152,9 +178,9 @@ export const NewHomeScreen = (): ReactElement => {
   const [width2, setWidth2] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pcdCardScrollRef = useRef<HTMLDivElement>(null);
+  const exampleTicketRef = useRef<HTMLDivElement>(null);
   const self = useSelf();
   const navigate = useNavigate();
-
   useEffect(() => {
     if (!self) {
       navigate("/new/login", { replace: true });
@@ -164,7 +190,7 @@ export const NewHomeScreen = (): ReactElement => {
   useLayoutEffect(() => {
     if (scrollRef.current) {
       setWidth(
-        calculateElWidth(scrollRef.current.scrollWidth, GAP, tickets.size)
+        calculateElWidth(scrollRef.current.scrollWidth, GAP, tickets.length)
       );
     }
     if (pcdCardScrollRef.current) {
@@ -172,11 +198,11 @@ export const NewHomeScreen = (): ReactElement => {
         calculateElWidth(
           pcdCardScrollRef.current.scrollWidth,
           ANOTHER_GAP,
-          tickets.size
+          tickets.length
         )
       );
     }
-  }, [setWidth, setWidth2, tickets.size]);
+  }, [setWidth, setWidth2, tickets.length]);
 
   return (
     <AppContainer bg="gray" noPadding>
@@ -185,10 +211,10 @@ export const NewHomeScreen = (): ReactElement => {
           gap={GAP}
           offset={(420 - width) / 2}
           ref={scrollRef}
-          scrollInPx={positionInPx(currentPos, width, tickets.size - 1, GAP)}
-          amount={tickets.size - 1}
+          scrollInPx={positionInPx(currentPos, width, tickets.length - 1, GAP)}
+          amount={tickets.length - 1}
         >
-          {Array.from(tickets).map(([eventName, eventTickets], i) => {
+          {tickets.map(([eventName, eventTickets], i) => {
             console.log(eventTickets);
             const eventDetails = getEventDetails(eventTickets);
             return (
@@ -227,12 +253,12 @@ export const NewHomeScreen = (): ReactElement => {
           />
         </PageCircleButton>
         <PageCircleButton
-          disabled={currentPos === tickets.size - 1}
+          disabled={currentPos === tickets.length - 1}
           padding={6}
           diameter={28}
           onClick={() => {
             setCurrentPos((old) => {
-              if (old === tickets.size - 1) return old;
+              if (old === tickets.length - 1) return old;
               return old + 1;
             });
           }}
@@ -245,20 +271,23 @@ export const NewHomeScreen = (): ReactElement => {
         </PageCircleButton>
       </ButtonsContainer>
       <Spacer h={20} />
-      <Container elWidth={width2}>
+      <Container
+        elWidth={width2}
+        height={(TICKET_HEIGHT + TICKET_GAP) * tickets[currentPos][1].length}
+      >
         <Scroller
           gap={ANOTHER_GAP}
           ref={pcdCardScrollRef}
           scrollInPx={positionInPx(
             currentPos,
             width2,
-            tickets.size,
+            tickets.length,
             ANOTHER_GAP
           )}
           offset={(420 - width2) / 2}
-          amount={tickets.size - 1}
+          amount={tickets.length - 1}
         >
-          {Array.from(tickets).map(([_eventName, eventTickets]) => {
+          {tickets.map(([_eventName, eventTickets]) => {
             return (
               <TicketsContainer>
                 {eventTickets.map((ticket) => (
