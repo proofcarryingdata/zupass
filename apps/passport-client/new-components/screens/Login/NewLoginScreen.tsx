@@ -1,6 +1,7 @@
 import { requestLogToServer } from "@pcd/passport-interface";
 import { validateEmail } from "@pcd/util";
 import { FormEvent, useCallback, useEffect, useState } from "react";
+import styled from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { appConfig } from "../../../src/appConfig";
 import {
@@ -127,6 +128,19 @@ export const NewLoginScreen = (): JSX.Element => {
     }
   }, [self]);
 
+  if (state.loggingOut) {
+    // # TODO add loader
+    return (
+      <AppContainer bg="gray" fullscreen>
+        <LogoutContainer>
+          <Typography fontSize={18} fontWeight={800} color="#8B94AC">
+            LOGGING OUT
+          </Typography>
+        </LogoutContainer>
+      </AppContainer>
+    );
+  }
+
   return (
     <AppContainer bg="gray" fullscreen>
       <LoginContainer>
@@ -168,3 +182,11 @@ export const NewLoginScreen = (): JSX.Element => {
     </AppContainer>
   );
 };
+
+const LogoutContainer = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+`;
