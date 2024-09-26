@@ -1,5 +1,5 @@
 import { getHash } from "@pcd/passport-crypto";
-import { PCDCollection } from "@pcd/pcd-collection";
+import { FalbackDeserializeFunction, PCDCollection } from "@pcd/pcd-collection";
 import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import stringify from "fast-json-stable-stringify";
 import { NetworkFeedApi } from "./FeedAPI";
@@ -153,7 +153,8 @@ export function isSyncedEncryptedStorageV5(
  */
 export async function deserializeStorage(
   storage: SyncedEncryptedStorage,
-  pcdPackages: PCDPackage[]
+  pcdPackages: PCDPackage[],
+  fallbackDeserializeFunction?: FalbackDeserializeFunction
 ): Promise<{
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;
@@ -163,29 +164,47 @@ export async function deserializeStorage(
   let subscriptions: FeedSubscriptionManager;
 
   if (isSyncedEncryptedStorageV5(storage)) {
-    pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds);
+    pcds = await PCDCollection.deserialize(
+      pcdPackages,
+      storage.pcds,
+      fallbackDeserializeFunction
+    );
     subscriptions = FeedSubscriptionManager.deserialize(
       new NetworkFeedApi(),
       storage.subscriptions
     );
   } else if (isSyncedEncryptedStorageV4(storage)) {
-    pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds);
+    pcds = await PCDCollection.deserialize(
+      pcdPackages,
+      storage.pcds,
+      fallbackDeserializeFunction
+    );
     subscriptions = FeedSubscriptionManager.deserialize(
       new NetworkFeedApi(),
       storage.subscriptions
     );
   } else if (isSyncedEncryptedStorageV3(storage)) {
-    pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds);
+    pcds = await PCDCollection.deserialize(
+      pcdPackages,
+      storage.pcds,
+      fallbackDeserializeFunction
+    );
     subscriptions = FeedSubscriptionManager.deserialize(
       new NetworkFeedApi(),
       storage.subscriptions
     );
   } else if (isSyncedEncryptedStorageV2(storage)) {
-    pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds);
+    pcds = await PCDCollection.deserialize(
+      pcdPackages,
+      storage.pcds,
+      fallbackDeserializeFunction
+    );
     subscriptions = new FeedSubscriptionManager(new NetworkFeedApi());
   } else if (isSyncedEncryptedStorageV1(storage)) {
     pcds = new PCDCollection(pcdPackages);
-    await pcds.deserializeAllAndAdd(storage.pcds);
+    await pcds.deserializeAllAndAdd(storage.pcds, {
+      fallbackDeserializeFunction
+    });
     subscriptions = new FeedSubscriptionManager(new NetworkFeedApi());
   } else {
     throw new Error(

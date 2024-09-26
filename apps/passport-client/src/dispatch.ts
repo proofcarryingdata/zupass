@@ -65,7 +65,7 @@ import {
   saveSelf,
   saveSubscriptions
 } from "./localstorage";
-import { getPackages } from "./pcdPackages";
+import { fallbackPCDDeserializationFunction, getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { findUserIdentityPCD } from "./user";
@@ -771,7 +771,8 @@ async function loadAfterLogin(
 ): Promise<void> {
   const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
-    await getPackages()
+    await getPackages(),
+    fallbackPCDDeserializationFunction
   );
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.

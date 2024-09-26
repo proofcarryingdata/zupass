@@ -48,53 +48,53 @@ describe("UnknownPCD Package", async function () {
 
   it("should be creatable using constructor", async function () {
     const id1 = uuid();
-    const seralizedPCD1: SerializedPCD = {
+    const serializedPCD1: SerializedPCD = {
       type: "some-pcd-type1",
       pcd: "opaque1"
     };
-    const pcd1 = new UnknownPCD(id1, seralizedPCD1);
+    const pcd1 = new UnknownPCD(id1, serializedPCD1);
     expect(pcd1.type).to.eq(UnknownPCDTypeName);
     expect(isUnknownPCD(pcd1)).to.be.true;
     expect(pcd1.id).to.eq(id1);
-    expect(pcd1.claim.serializedPCD).to.eq(seralizedPCD1);
+    expect(pcd1.claim.serializedPCD).to.eq(serializedPCD1);
     expect(pcd1.proof.error).to.be.undefined;
 
     const id2 = uuid();
-    const seralizedPCD2: SerializedPCD = {
+    const serializedPCD2: SerializedPCD = {
       type: "some-pcd-type2",
       pcd: "opaque2"
     };
     const err2 = new Error("2");
-    const pcd2 = new UnknownPCD(id2, seralizedPCD2, err2);
+    const pcd2 = new UnknownPCD(id2, serializedPCD2, err2);
     expect(pcd1.type).to.eq(UnknownPCDTypeName);
     expect(isUnknownPCD(pcd1)).to.be.true;
     expect(pcd2.id).to.eq(id2);
-    expect(pcd2.claim.serializedPCD).to.eq(seralizedPCD2);
+    expect(pcd2.claim.serializedPCD).to.eq(serializedPCD2);
     expect(pcd2.proof.error).to.eq(err2);
 
-    const pcd3 = new UnknownPCD(id1, seralizedPCD1, 3);
+    const pcd3 = new UnknownPCD(id1, serializedPCD1, 3);
     expect(pcd1.type).to.eq(UnknownPCDTypeName);
     expect(isUnknownPCD(pcd1)).to.be.true;
     expect(pcd3.id).to.eq(id1);
-    expect(pcd3.claim.serializedPCD).to.eq(seralizedPCD1);
+    expect(pcd3.claim.serializedPCD).to.eq(serializedPCD1);
     expect(pcd3.proof.error).to.eq(3);
   });
 
   it("should be creatable using prove", async function () {
-    const seralizedPCD1: SerializedPCD = {
+    const serializedPCD1: SerializedPCD = {
       type: "some-pcd-type1",
       pcd: "opaque1"
     };
     const pcd1 = await UnknownPCDPackage.prove({
       serializedPCD: {
-        value: seralizedPCD1,
+        value: serializedPCD1,
         argumentType: ArgumentTypeName.Object
       }
     });
     expect(pcd1.type).to.eq(UnknownPCDTypeName);
     expect(isUnknownPCD(pcd1)).to.be.true;
     expect(pcd1.id).to.not.be.undefined;
-    expect(pcd1.claim.serializedPCD).to.eq(seralizedPCD1);
+    expect(pcd1.claim.serializedPCD).to.eq(serializedPCD1);
     expect(pcd1.proof.error).to.be.undefined;
   });
 

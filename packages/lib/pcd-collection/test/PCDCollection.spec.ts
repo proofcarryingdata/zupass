@@ -386,6 +386,8 @@ describe("PCDCollection", async function () {
     expect(firstCollection.getAll()).to.deep.eq(pcdList);
     expect(firstCollection.getFolderOfPCD(pcdList[1].id)).to.eq("A");
   });
+
+  // TODO(artwyman): Test deserialization fallback
 });
 
 function waitForNewHash(

@@ -61,6 +61,7 @@
     "@pcd/semaphore-identity-pcd-ui": "0.2.6",
     "@pcd/semaphore-signature-pcd": "0.11.6",
     "@pcd/semaphore-signature-pcd-ui": "0.2.6",
+    "@pcd/unknown-pcd": "0.0.0",
     "@pcd/util": "^0.5.4",
     "@pcd/zk-eddsa-event-ticket-pcd": "0.6.6",
     "@pcd/zk-eddsa-event-ticket-pcd-ui": "0.2.7",

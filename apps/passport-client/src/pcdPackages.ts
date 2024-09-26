@@ -13,7 +13,8 @@ import {
 import { GPCPCDPackage } from "@pcd/gpc-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { MessagePCDPackage } from "@pcd/message-pcd";
-import { PCDPackage } from "@pcd/pcd-types";
+import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { PODTicketPCDPackage } from "@pcd/pod-ticket-pcd";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
@@ -22,6 +23,7 @@ import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { UnknownPCDPackage, wrapUnknownPCD } from "@pcd/unknown-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { ZKEdDSAFrogPCDPackage } from "@pcd/zk-eddsa-frog-pcd";
 import { makeEncodedVerifyLink } from "./qr";
@@ -88,6 +90,8 @@ async function loadPackages(): Promise<PCDPackage[]> {
     )
   });
 
+  await UnknownPCDPackage.init?.({ verifyBehavior: "error" });
+
   return [
     SemaphoreGroupPCDPackage,
     SemaphoreIdentityPCDPackage,
@@ -106,6 +110,18 @@ async function loadPackages(): Promise<PCDPackage[]> {
     MessagePCDPackage,
     PODPCDPackage,
     PODTicketPCDPackage,
-    GPCPCDPackage
+    GPCPCDPackage,
+    UnknownPCDPackage
   ];
+}
+
+export async function fallbackPCDDeserializationFunction(
+  _collection: PCDCollection,
+  _pcdPackage: PCDPackage | undefined,
+  serializedPCD: SerializedPCD,
+  deserializeError: unknown
+): Promise<PCD> {
+  // TODO(artwyman): Log to the server for diagnostics.
+  console.error(`Wrapping with UnknownPCD(${serializedPCD.type}`);
+  return wrapUnknownPCD(serializedPCD, deserializeError);
 }

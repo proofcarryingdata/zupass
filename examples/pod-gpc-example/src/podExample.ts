@@ -260,8 +260,8 @@ export async function podDemo(): Promise<boolean> {
   // PCDs can also be serialized and deserialized, which is what Zupass uses
   // for storage and sync.  This layer will (in future) also handle versioning
   // and backward compatibility.
-  const seralizedPCD = await PODPCDPackage.serialize(pcd);
-  const deserializedPCD = await PODPCDPackage.deserialize(seralizedPCD.pcd);
+  const serializedPCD = await PODPCDPackage.serialize(pcd);
+  const deserializedPCD = await PODPCDPackage.deserialize(serializedPCD.pcd);
   console.log("Deserialized PCD ID", deserializedPCD.id);
 
   // For more things you can do with the @pcd/pod-pcd package, check out
