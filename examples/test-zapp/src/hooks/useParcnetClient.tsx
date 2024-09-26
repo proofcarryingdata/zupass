@@ -1,5 +1,5 @@
 import type { ParcnetAPI, Zapp } from "@parcnet-js/app-connector";
-import { connect } from "@parcnet-js/app-connector";
+import { connect, connectToHost } from "@parcnet-js/app-connector";
 import type { ReactNode } from "react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
@@ -59,6 +59,7 @@ export function ParcnetIframeProvider({
   children: React.ReactNode;
 }): ReactNode {
   const ref = useRef<HTMLDivElement>(null);
+  const isMounted = useRef(false);
 
   const [value, setValue] = useState<ClientState>({
     state: ClientConnectionState.CONNECTING,
@@ -66,8 +67,22 @@ export function ParcnetIframeProvider({
   });
 
   useEffect(() => {
-    if (ref.current) {
-      void connect(zapp, ref.current, url).then((zupass) => {
+    if (!isMounted.current) {
+      isMounted.current = true;
+      return;
+    }
+    if (window.parent === window.self) {
+      if (ref.current) {
+        void connect(zapp, ref.current, url).then((zupass) => {
+          setValue({
+            state: ClientConnectionState.CONNECTED,
+            z: zupass,
+            ref
+          });
+        });
+      }
+    } else {
+      void connectToHost(zapp).then((zupass) => {
         setValue({
           state: ClientConnectionState.CONNECTED,
           z: zupass,
@@ -75,6 +90,11 @@ export function ParcnetIframeProvider({
         });
       });
     }
+
+    return () => {
+      isMounted.current = false;
+    };
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

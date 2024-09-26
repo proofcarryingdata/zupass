@@ -5,7 +5,6 @@ import { SerializedPCD } from "@pcd/pcd-types";
 
 export enum EmbeddedScreenType {
   EmbeddedGetRequest,
-  EmbeddedAddSubscription,
   EmbeddedGPCProof
 }
 
@@ -15,12 +14,6 @@ export interface EmbeddedGetRequest {
   callback: (serialized: SerializedPCD) => void;
 }
 
-export interface EmbeddedAddSubscription {
-  type: EmbeddedScreenType.EmbeddedAddSubscription;
-  feedUrl: string;
-  feedId: string;
-}
-
 export interface EmbeddedGPCProof {
   type: EmbeddedScreenType.EmbeddedGPCProof;
   proofRequest: PodspecProofRequest;
@@ -28,5 +21,5 @@ export interface EmbeddedGPCProof {
 }
 
 export interface EmbeddedScreenState {
-  screen?: EmbeddedGetRequest | EmbeddedAddSubscription | EmbeddedGPCProof;
+  screen?: EmbeddedGetRequest | EmbeddedGPCProof;
 }
