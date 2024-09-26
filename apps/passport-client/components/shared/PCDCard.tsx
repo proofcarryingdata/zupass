@@ -249,6 +249,7 @@ export function CardBody({
       const Component = PODTicketPCDUI.renderCardBody;
       return (
         <Component
+          newUI={newUI}
           pcd={pcd}
           idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
         />

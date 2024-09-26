@@ -1,5 +1,10 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
-import { EdDSATicketPCD, ITicketData } from "@pcd/eddsa-ticket-pcd";
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDTypeName,
+  ITicketData,
+  isEdDSATicketPCD
+} from "@pcd/eddsa-ticket-pcd";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import {
@@ -18,24 +23,42 @@ import { FloatingMenu } from "../../shared/FloatingMenu";
 import { CardBody } from "../../../components/shared/PCDCard";
 import { TicketCard } from "../../shared/TicketCard";
 import { NewModals } from "../../shared/Modals/NewModals";
+import {
+  PODTicketPCD,
+  PODTicketPCDTypeName,
+  isPODTicketPCD
+} from "@pcd/pod-ticket-pcd";
 
 const GAP = 4;
 const ANOTHER_GAP = 40;
 const SHOW_HELPER_LINES = false;
-const isEventTicketPCD = (
-  pcd: PCD<unknown, unknown>
-): pcd is EdDSATicketPCD => {
-  const typedPcd = pcd as EdDSATicketPCD;
+type TicketType = EdDSATicketPCD | PODTicketPCD;
+
+const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
   // TODO: fetch the pods type as well and prioritize it if theres a conflict.
-  return typedPcd.type === "eddsa-ticket-pcd" && !!typedPcd?.claim?.ticket;
+  return isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd);
 };
-const useTickets = (): Map<string, EdDSATicketPCD[]> => {
+const useTickets = (): Map<string, TicketType[]> => {
   const allPCDs = usePCDs();
   const tickets = allPCDs.filter(isEventTicketPCD);
-  const eventsMap = new Map<string, EdDSATicketPCD[]>();
+  const eventsMap = new Map<string, TicketType[]>();
 
   for (const ticket of tickets) {
     const ticketList = eventsMap.get(ticket.claim.ticket.eventName) ?? [];
+    const existingTicketIndex = ticketList.findIndex(
+      (value) => value.claim.ticket.ticketId === ticket.claim.ticket.ticketId
+    );
+
+    // we prioritize POD tickets, so in case we encounter one, we remove the eddesa ticket.
+    // if we counter eddesa ticket we check if we have the pod one and if so, ignore eddesa.
+    if (existingTicketIndex >= 0 && ticket.type === PODTicketPCDTypeName) {
+      ticketList.splice(existingTicketIndex);
+    } else if (
+      existingTicketIndex >= 0 &&
+      ticket.type === EdDSATicketPCDTypeName
+    ) {
+      continue;
+    }
 
     if (!eventsMap.get(ticket.claim.ticket.eventName)) {
       eventsMap.set(ticket.claim.ticket.eventName, ticketList);
@@ -115,6 +138,8 @@ const TicketsContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
+  border: 1px solid red;
+  height: 100%;
   gap: 20px;
 `;
 
@@ -137,11 +162,10 @@ const calculateElWidth = (
   return Math.ceil((scrollWidth - gap * (len - 1)) / len);
 };
 
-const getEventDetails = (tickets: EdDSATicketPCD[]): ITicketData => {
-  return (
-    tickets.find((ticket) => !!ticket.claim.ticket.imageUrl)?.claim.ticket ??
-    tickets[0].claim.ticket
-  );
+const getEventDetails = (tickets: TicketType[]): ITicketData => {
+  const ticket = tickets.find((ticket) => !!ticket.claim.ticket.imageUrl)?.claim
+    .ticket;
+  return (ticket as ITicketData) ?? (tickets[0].claim.ticket as ITicketData);
 };
 
 export const NewHomeScreen = (): ReactElement => {
