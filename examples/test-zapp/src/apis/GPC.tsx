@@ -308,7 +308,7 @@ const gpcProof = await z.gpc.prove(request.schema);
                 console.log(e);
               }
             }}
-            label="Get GPC Proof"
+            label="Get Ticket Proof"
           />
           {proveResult && (
             <pre className="whitespace-pre-wrap">

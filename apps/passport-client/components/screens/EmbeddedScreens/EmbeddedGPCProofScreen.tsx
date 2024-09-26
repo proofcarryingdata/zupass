@@ -9,6 +9,7 @@ import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { Fragment, ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useIdentityV3, usePCDsInFolder } from "../../../src/appHooks";
+import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { ZAPP_POD_SPECIAL_FOLDER_NAME } from "../../../src/zapp/ZappServer";
 import { H2 } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
@@ -21,6 +22,7 @@ export function EmbeddedGPCProofScreen({
   proofRequestSchema: PodspecProofRequest;
   callback: (result: ProveResult) => void;
 }): ReactNode {
+  useSyncE2EEStorage();
   const prs = useMemo(() => {
     return p.proofRequest(proofRequestSchema);
   }, [proofRequestSchema]);
