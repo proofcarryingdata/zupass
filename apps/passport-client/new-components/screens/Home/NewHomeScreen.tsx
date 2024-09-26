@@ -8,7 +8,6 @@ import {
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import {
-  MutableRefObject,
   ReactElement,
   useEffect,
   useLayoutEffect,
@@ -33,6 +32,8 @@ import {
 const GAP = 4;
 const ANOTHER_GAP = 40;
 const SHOW_HELPER_LINES = false;
+const TICKET_HEIGHT = 401;
+const TICKET_GAP = 20;
 type TicketType = EdDSATicketPCD | PODTicketPCD;
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
@@ -140,10 +141,8 @@ const TicketsContainer = styled.div`
   width: 100%;
   display: flex;
   flex-direction: column;
-  border: 1px solid red;
   height: 100%;
-  gap: 20px;
-  border: 1px solid blue;
+  gap: ${TICKET_GAP}px;
 `;
 
 const positionInPx = (
@@ -165,14 +164,6 @@ const calculateElWidth = (
   return Math.ceil((scrollWidth - gap * (len - 1)) / len);
 };
 
-const calculateScrollContainerHeight = (
-  itemHeight: number,
-  gap: number,
-  len: number
-): number => {
-  return Math.ceil((itemHeight + gap) * (len - 1));
-};
-
 const getEventDetails = (tickets: TicketType[]): ITicketData => {
   const ticket = tickets.find((ticket) => !!ticket.claim.ticket.imageUrl)?.claim
     .ticket;
@@ -185,9 +176,9 @@ export const NewHomeScreen = (): ReactElement => {
   const [currentPos, setCurrentPos] = useState(0);
   const [width, setWidth] = useState(0);
   const [width2, setWidth2] = useState(0);
-  const [ticketHeight, setTicketHeight] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pcdCardScrollRef = useRef<HTMLDivElement>(null);
+  const exampleTicketRef = useRef<HTMLDivElement>(null);
   const self = useSelf();
   const navigate = useNavigate();
   useEffect(() => {
@@ -282,7 +273,7 @@ export const NewHomeScreen = (): ReactElement => {
       <Spacer h={20} />
       <Container
         elWidth={width2}
-        height={(401 + 20) * tickets[currentPos][1].length}
+        height={(TICKET_HEIGHT + TICKET_GAP) * tickets[currentPos][1].length}
       >
         <Scroller
           gap={ANOTHER_GAP}
