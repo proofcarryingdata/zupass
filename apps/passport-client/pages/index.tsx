@@ -57,19 +57,24 @@ import {
   GlobalBackground
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
+import ComponentsScreen from "../new-components/ComponentsScreen";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
 import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
+import { enableLiveReload } from "../src/liveReload";
 import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { ListenMode, useZappServer } from "../src/zapp/useZappServer";
 
+enableLiveReload();
+
 function App(): JSX.Element {
   useBackgroundJobs();
   useZappServer(ListenMode.LISTEN_IF_EMBEDDED);
+
   const state = useStateContext().getState();
 
   const hasStack = !!state.error?.stack;
@@ -95,7 +100,7 @@ function App(): JSX.Element {
         <HashRouter>
           <Routes>
             <Route path="/terms" element={<TermsScreen />} />
-            <Route path="*" element={<AppContainer bg="gray" />} />
+            <Route path="*" element={<AppContainer bg="primary" />} />
           </Routes>
         </HashRouter>
       )}
@@ -132,6 +137,9 @@ function RouterImpl(): JSX.Element {
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
+
+          <Route path="components" element={<ComponentsScreen />} />
+
           <Route
             path="login-interstitial"
             element={<LoginInterstitialScreen />}

@@ -116,6 +116,10 @@ export type Action =
       modal: AppState["modal"];
     }
   | {
+      type: "set-bottom-modal";
+      modal: AppState["bottomModal"];
+    }
+  | {
       type: "error";
       error: AppError;
     }
@@ -255,6 +259,10 @@ export async function dispatch(
     case "set-modal":
       return update({
         modal: action.modal
+      });
+    case "set-bottom-modal":
+      return update({
+        bottomModal: action.modal
       });
     case "password-change-on-other-tab":
       return handlePasswordChangeOnOtherTab(update);

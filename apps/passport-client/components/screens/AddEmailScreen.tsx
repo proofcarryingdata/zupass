@@ -246,7 +246,7 @@ export function AddEmailScreen(): JSX.Element | null {
   return (
     <>
       <MaybeModal />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <Spacer h={64} />
         <CenterColumn>{content}</CenterColumn>
       </AppContainer>

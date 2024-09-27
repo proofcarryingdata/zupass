@@ -63,7 +63,7 @@ export function FrogSubscriptionScreen(): JSX.Element {
   }
 
   return (
-    <AppContainer bg="gray">
+    <AppContainer bg="primary">
       <Container>
         <TypistText
           onInit={(typewriter): TypewriterClass =>

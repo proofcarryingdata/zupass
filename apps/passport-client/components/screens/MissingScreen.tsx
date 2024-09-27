@@ -7,7 +7,7 @@ export function MissingScreen(): JSX.Element {
   const loc = useLocation();
 
   return (
-    <AppContainer bg="gray">
+    <AppContainer bg="primary">
       <CenterColumn w={290}>
         <TextCenter>
           <Spacer h={64} />

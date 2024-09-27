@@ -146,7 +146,7 @@ export function JustAddScreen({
     <>
       {isProtocolWorlds && <ProtocolWorldsStyling />}
       <MaybeModal fullScreen isProveOrAddScreen={true} />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <Container>
           <Spacer h={16} />
           <AppHeader isProveOrAddScreen={true} />

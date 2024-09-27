@@ -14,7 +14,7 @@ export function ServerErrorScreen(): JSX.Element {
   const description = query.get("description");
 
   return (
-    <AppContainer bg="gray">
+    <AppContainer bg="primary">
       <CenterColumn w={290}>
         <TextCenter>
           <Spacer h={64} />

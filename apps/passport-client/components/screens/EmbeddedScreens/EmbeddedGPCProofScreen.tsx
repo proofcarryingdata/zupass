@@ -50,7 +50,7 @@ export function EmbeddedGPCProofScreen({
   const identity = useIdentityV3();
 
   return (
-    <AppContainer bg="gray">
+    <AppContainer bg="primary">
       <Spacer h={4} />
       <H2
         style={{
