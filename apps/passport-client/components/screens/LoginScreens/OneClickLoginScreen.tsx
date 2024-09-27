@@ -1,5 +1,7 @@
 import { requestGenericIssuanceTicketPreviews } from "@pcd/passport-interface";
-import { useCallback, useEffect } from "react";
+import { IPODTicketData } from "@pcd/pod-ticket-pcd";
+import { PODTicketCardBodyImpl } from "@pcd/pod-ticket-pcd-ui";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useSelf } from "../../../src/appHooks";
@@ -15,10 +17,12 @@ import { ScreenLoader } from "../../shared/ScreenLoader";
  * example: http://localhost:3000/#/one-click-login/ivan@0xparc.org/123456/0xPARC%2520Summer%2520'24
  */
 export function OneClickLoginScreen(): JSX.Element | null {
+  const self = useSelf();
   const dispatch = useDispatch();
   const { email, code, targetFolder } = useParams();
-
-  const self = useSelf();
+  const [ticketPreviews, setTicketPreviews] = useState<IPODTicketData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | undefined>();
 
   const redirectToTargetFolder = useCallback(() => {
     if (targetFolder) {
@@ -46,12 +50,11 @@ export function OneClickLoginScreen(): JSX.Element | null {
         code
       );
 
-      console.log(result);
-
+      setLoading(false);
       if (result.success) {
-        console.log(result.value);
+        setTicketPreviews(result.value.tickets);
       } else {
-        console.error(result.error);
+        setError(result.error);
       }
     } catch (err) {
       await dispatch({
@@ -62,7 +65,7 @@ export function OneClickLoginScreen(): JSX.Element | null {
         }
       });
     }
-  }, [dispatch, email, code, targetFolder]);
+  }, [dispatch, email, code]);
 
   useEffect(() => {
     if (process.env.ONE_CLICK_LOGIN_ENABLED !== "true") {
@@ -102,7 +105,18 @@ export function OneClickLoginScreen(): JSX.Element | null {
     <>
       <MaybeModal fullScreen />
       <AppContainer bg="primary">
-        <ScreenLoader />
+        {loading && <ScreenLoader />}
+
+        {error && <div>{error}</div>}
+
+        {!loading &&
+          ticketPreviews.map((ticket) => (
+            <PODTicketCardBodyImpl
+              idBasedVerifyURL=""
+              ticketData={ticket}
+              key={ticket.ticketId}
+            />
+          ))}
       </AppContainer>
     </>
   );
