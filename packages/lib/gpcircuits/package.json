@@ -31,7 +31,7 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau && yarn clean-test-artifacts",
     "gen-circuit-parameters": "npx tsx scripts/gen-circuit-parameters.ts",
     "gen-test-artifacts": "npx tsx scripts/gen-test-artifacts.ts",
-    "clean-test-artifacts": "rm -rf artifacts/test",
+    "clean-test-artifacts": "rm -rf artifacts/test circuits/main",
     "copy-test-to-snark-artifacts": "./scripts/copy-test-to-snark-artifacts.sh"
   },
   "dependencies": {
