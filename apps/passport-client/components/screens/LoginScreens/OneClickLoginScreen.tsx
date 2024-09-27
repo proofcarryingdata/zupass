@@ -70,7 +70,9 @@ export function OneClickLoginScreen(): JSX.Element | null {
     if (!email || !code) {
       return;
     }
+
     try {
+      setLoading(true);
       await dispatch({
         type: "one-click-login",
         email,
@@ -78,6 +80,7 @@ export function OneClickLoginScreen(): JSX.Element | null {
         targetFolder
       });
     } catch (err) {
+      setLoading(false);
       await dispatch({
         type: "error",
         error: {
@@ -134,24 +137,29 @@ export function OneClickLoginScreen(): JSX.Element | null {
           <>
             <Spacer h={32} />
 
-            {ticketPreviews.map((ticket) => (
-              <CardOutlineExpanded>
-                <CardBodyContainer>
-                  <CardHeader isMainIdentity={true}>
-                    {ticket.eventName} ({ticket.ticketName})
-                  </CardHeader>
-                  <PODTicketCardBodyImpl
-                    idBasedVerifyURL=""
-                    ticketData={ticket}
-                    key={ticket.ticketId}
-                  />
-                </CardBodyContainer>
-              </CardOutlineExpanded>
-            ))}
+            {ticketPreviews.length === 0 ? (
+              <div>No tickets found</div>
+            ) : (
+              <>
+                {ticketPreviews.map((ticket) => (
+                  <CardOutlineExpanded>
+                    <CardBodyContainer>
+                      <CardHeader isMainIdentity={true}>
+                        {ticket.eventName} ({ticket.ticketName})
+                      </CardHeader>
+                      <PODTicketCardBodyImpl
+                        idBasedVerifyURL=""
+                        ticketData={ticket}
+                        key={ticket.ticketId}
+                      />
+                    </CardBodyContainer>
+                  </CardOutlineExpanded>
+                ))}
+                <Spacer h={16} />
+              </>
+            )}
 
-            <Spacer h={16} />
-
-            <Button onClick={handleOneClickLogin}>More Zupass</Button>
+            <Button onClick={handleOneClickLogin}>Continue to Zupass</Button>
           </>
         )}
       </AppContainer>
