@@ -669,7 +669,7 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  app.post(
+  app.get(
     "/generic-issuance/api/ticket-previews/:email/:orderCode",
     async (req, res) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);

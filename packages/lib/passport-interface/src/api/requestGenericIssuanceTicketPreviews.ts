@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
 import { TicketPreviewResultValue } from "../RequestTypes";
 import { APIResult } from "./apiResult";
-import { httpPostSimple } from "./makeRequest";
+import { httpGetSimple } from "./makeRequest";
 
 /**
  * Asks the server to fetch the pipeline definition corresponding to the
@@ -13,7 +13,7 @@ export async function requestGenericIssuanceTicketPreviews(
   email: string,
   orderCode: string
 ): Promise<GenericIssuanceTicketPreviewResponse> {
-  return httpPostSimple(
+  return httpGetSimple(
     urlJoin(
       zupassServerUrl,
       `/generic-issuance/api/ticket-previews`,
@@ -24,8 +24,7 @@ export async function requestGenericIssuanceTicketPreviews(
       value: JSON.parse(resText) as TicketPreviewResultValue,
       success: true
     }),
-    {},
-    true
+    {}
   );
 }
 
