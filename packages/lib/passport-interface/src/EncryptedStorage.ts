@@ -1,5 +1,8 @@
 import { getHash } from "@pcd/passport-crypto";
-import { FalbackDeserializeFunction, PCDCollection } from "@pcd/pcd-collection";
+import {
+  FallbackDeserializeFunction,
+  PCDCollection
+} from "@pcd/pcd-collection";
 import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import stringify from "fast-json-stable-stringify";
 import { NetworkFeedApi } from "./FeedAPI";
@@ -154,7 +157,7 @@ export function isSyncedEncryptedStorageV5(
 export async function deserializeStorage(
   storage: SyncedEncryptedStorage,
   pcdPackages: PCDPackage[],
-  fallbackDeserializeFunction?: FalbackDeserializeFunction
+  fallbackDeserializeFunction?: FallbackDeserializeFunction
 ): Promise<{
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;

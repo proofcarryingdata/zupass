@@ -36,6 +36,8 @@
     "@types/chai": "^4.3.5",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
+    "chai": "^4.3.7",
+    "chai-as-promised": "^7.1.1",
     "eslint": "^8.57.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",

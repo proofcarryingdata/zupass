@@ -43,13 +43,13 @@ export type MergeFilterPredicate = (pcd: PCD, target: PCDCollection) => boolean;
  * fallback at all.
  *
  * @param collection the PCDCollection performing the deserialization
- * @param pcdPacage the package for the type of the serialized PCD, if any
+ * @param pcdPackage the package for the type of the serialized PCD, if any
  * @param serializedPCD the serialized PCD to deserialize
  * @param deserializeError the error thrown by the deserialize attempt
  * @return a PCD representing or wrapping the serialized PCD
  * @throws if no fallback deserialization is possible
  */
-export type FalbackDeserializeFunction = (
+export type FallbackDeserializeFunction = (
   collection: PCDCollection,
   pcdPackage: PCDPackage | undefined,
   serializedPCD: SerializedPCD,
@@ -362,7 +362,7 @@ export class PCDCollection {
 
   public async deserialize(
     serialized: SerializedPCD,
-    fallbackDeserializeFunction?: FalbackDeserializeFunction
+    fallbackDeserializeFunction?: FallbackDeserializeFunction
   ): Promise<PCD> {
     const pcdPackage = this.getPackage(serialized.type);
     try {
@@ -389,7 +389,7 @@ export class PCDCollection {
 
   public async deserializeAll(
     serialized: SerializedPCD[],
-    fallbackDeserializeFunction?: FalbackDeserializeFunction
+    fallbackDeserializeFunction?: FallbackDeserializeFunction
   ): Promise<PCD[]> {
     return Promise.all(
       serialized.map(async (serialized: SerializedPCD) =>
@@ -402,7 +402,7 @@ export class PCDCollection {
     serialized: SerializedPCD[],
     options?: {
       upsert?: boolean;
-      fallbackDeserializeFunction?: FalbackDeserializeFunction;
+      fallbackDeserializeFunction?: FallbackDeserializeFunction;
     }
   ): Promise<void> {
     const deserialized = await this.deserializeAll(
@@ -424,7 +424,7 @@ export class PCDCollection {
     serialized: SerializedPCD,
     options?: {
       upsert?: boolean;
-      fallbackDeserializeFunction?: FalbackDeserializeFunction;
+      fallbackDeserializeFunction?: FallbackDeserializeFunction;
     }
   ): Promise<void> {
     await this.deserializeAllAndAdd([serialized], options);
@@ -500,7 +500,7 @@ export class PCDCollection {
   public static async deserialize(
     packages: PCDPackage[],
     serialized: string,
-    fallbackDeserializeFunction?: FalbackDeserializeFunction
+    fallbackDeserializeFunction?: FallbackDeserializeFunction
   ): Promise<PCDCollection> {
     const parsed = JSON.parse(serialized) as Partial<SerializedPCDCollection>;
     const collection = new PCDCollection(packages, []);

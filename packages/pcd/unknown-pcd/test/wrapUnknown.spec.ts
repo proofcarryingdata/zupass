@@ -24,16 +24,16 @@ describe("UnknownPCD wrapping", async function () {
     const unknownPCD = wrapUnknownPCD(serializedPCD, err);
     expect(unknownPCD.type).to.eq(UnknownPCDPackage.name);
     expect(unknownPCD.claim.serializedPCD).to.deep.eq(serializedPCD);
-    expect(unknownPCD.proof.error).to.eq(err);
+    expect(unknownPCD.claim.error).to.eq(err);
   });
 
   it("should derive stable IDs from input", async function () {
     const TEST_INOUT = [
-      ["", "2be7e62d-cd24-5576-8fe0-39c621cb4c40"],
-      ["123", "e66c6343-ab9e-5ccd-ac90-10b37466851c"],
-      ["{asfadf", "5c138a2a-e463-54c0-b488-51de2683a367"],
-      ["{}", "b395734c-691b-5f98-8735-ee07f1f1a2fd"],
-      ['{"hello": "world"}', "8094dfa4-3739-5fb0-82ae-38fdfe18e6a5"],
+      ["", "716b054e-5864-5bff-bba6-462da20e4426"],
+      ["123", "1092a5f0-95a4-5d64-8a84-e440983806cc"],
+      ["{asfadf", "bbfa2f3e-509e-5370-bc82-befc15c8e6c3"],
+      ["{}", "981457e3-c96b-5f39-b10f-31b6acf8fa62"],
+      ['{"hello": "world"}', "e06a8699-e053-5d5a-9dc4-dc88e98904b8"],
       ['{"hello": "world", "id": "found-id1"}', "found-id1"],
       ['{"hello": "world", "id": "found-id2", "number": 123.456}', "found-id2"],
       [
@@ -44,7 +44,7 @@ describe("UnknownPCD wrapping", async function () {
         '{"hello": "world", "id": "found-id-too-big' +
           new Array(PCD_ID_MAX_LENGTH).join("X") +
           '", "bigint": 123456789012345678901234567890}',
-        "b4f9aae0-8e03-5f6d-a0b1-cbe3f2be7863"
+        "d6df6d1d-8935-546f-a19b-6ff3b711c57c"
       ]
     ];
 

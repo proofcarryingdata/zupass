@@ -38,13 +38,7 @@ export interface UnknownPCDClaim {
    * The serialized PCD wrapped by this UnknownPCD.
    */
   serializedPCD: SerializedPCD;
-}
 
-/**
- * Defines the UnknownPCD proof, which contains private information
- * about the wrapped PCD.
- */
-export interface UnknownPCDProof {
   /**
    * The deserialization error which lead to the creation of this
    * UnknownPCD wrapper.
@@ -53,7 +47,13 @@ export interface UnknownPCDProof {
 }
 
 /**
- * The UnknownPCD is a wrapper intended to some other PCD which cannot be
+ * Defines the UnknownPCD proof, which contains private information
+ * about the wrapped PCD.
+ */
+export interface UnknownPCDProof {}
+
+/**
+ * The UnknownPCD is a wrapper intended to wrap some other PCD which cannot be
  * properly deserialized into its normal PCD form.  The wrapper holds the
  * original data unchanged.
  *
@@ -79,8 +79,8 @@ export class UnknownPCD implements PCD<UnknownPCDClaim, UnknownPCDProof> {
     error?: unknown
   ) {
     this.id = id;
-    this.claim = { serializedPCD };
-    this.proof = { error };
+    this.claim = { serializedPCD, error };
+    this.proof = {};
   }
 }
 

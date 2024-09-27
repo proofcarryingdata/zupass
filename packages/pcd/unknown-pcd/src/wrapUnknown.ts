@@ -5,7 +5,8 @@ import { UnknownPCD } from "./UnknownPCD";
 
 /**
  * Wraps the given serialized PCD in an UnknownPCD, with an ID derived
- * via a best-effort attempt.
+ * via a best-effort attempt to determine the original ID, or a stable
+ * ID (see {@link derivePCDID}).
  *
  * @param serialized the serialized PCD to examine
  * @param error the error from deserialization, if any
@@ -18,7 +19,7 @@ export function wrapUnknownPCD(
   return new UnknownPCD(derivePCDID(serialized), serialized, error);
 }
 
-export const PCD_ID_MAX_LENGTH = 100;
+export const PCD_ID_MAX_LENGTH = 1024;
 export const UNKNOWN_PCD_NAMESPACE_UUID =
   "68a4fb89-b625-4c72-8069-498e6d1df77c";
 
@@ -54,11 +55,11 @@ export function derivePCDID(serialized: SerializedPCD): string {
       return deserialized.id;
     }
 
-    // No ID found.  Fallthrough to genenerate a new stable ID.
+    // No ID found.  Fallthrough to generate a new stable ID.
   } catch (e) {
-    // Parsing failed.  Fallthrough to genenerate a new stable ID.
+    // Parsing failed.  Fallthrough to generate a new stable ID.
   }
 
-  // Generate stable ID based on a hash of the serialized string.
-  return uuidv5(serialized.pcd, UNKNOWN_PCD_NAMESPACE_UUID);
+  // Generate stable ID based on a hash of the serialized PCD.
+  return uuidv5(JSON.stringify(serialized), UNKNOWN_PCD_NAMESPACE_UUID);
 }

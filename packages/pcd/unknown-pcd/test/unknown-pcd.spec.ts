@@ -1,5 +1,6 @@
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { assert, AssertionError, expect } from "chai";
+import chai, { assert, expect } from "chai";
+import chaiAsPromised from "chai-as-promised";
 import "mocha";
 import { v4 as uuid } from "uuid";
 import {
@@ -10,25 +11,7 @@ import {
   UnknownPCDTypeName
 } from "../src";
 
-// TODO(artwyman): Move this to a test-util package shared with gpc
-export async function expectAsyncError(
-  fn: () => Promise<void>,
-  typeName: string,
-  errSubstring?: string
-): Promise<void> {
-  try {
-    await fn();
-    assert.fail("Expected an error to be thrown.");
-  } catch (e: unknown) {
-    if (e instanceof AssertionError || !(e instanceof Object)) {
-      throw e;
-    }
-    expect(e.constructor.name).to.eq(typeName);
-    if (errSubstring) {
-      expect("" + e).to.contain(errSubstring);
-    }
-  }
-}
+chai.use(chaiAsPromised);
 
 const testSerializedPCD: SerializedPCD = {
   type: "some-pcd-type",
@@ -57,7 +40,7 @@ describe("UnknownPCD Package", async function () {
     expect(isUnknownPCD(pcd1)).to.be.true;
     expect(pcd1.id).to.eq(id1);
     expect(pcd1.claim.serializedPCD).to.eq(serializedPCD1);
-    expect(pcd1.proof.error).to.be.undefined;
+    expect(pcd1.claim.error).to.be.undefined;
 
     const id2 = uuid();
     const serializedPCD2: SerializedPCD = {
@@ -70,14 +53,14 @@ describe("UnknownPCD Package", async function () {
     expect(isUnknownPCD(pcd1)).to.be.true;
     expect(pcd2.id).to.eq(id2);
     expect(pcd2.claim.serializedPCD).to.eq(serializedPCD2);
-    expect(pcd2.proof.error).to.eq(err2);
+    expect(pcd2.claim.error).to.eq(err2);
 
     const pcd3 = new UnknownPCD(id1, serializedPCD1, 3);
     expect(pcd1.type).to.eq(UnknownPCDTypeName);
     expect(isUnknownPCD(pcd1)).to.be.true;
     expect(pcd3.id).to.eq(id1);
     expect(pcd3.claim.serializedPCD).to.eq(serializedPCD1);
-    expect(pcd3.proof.error).to.eq(3);
+    expect(pcd3.claim.error).to.eq(3);
   });
 
   it("should be creatable using prove", async function () {
@@ -93,9 +76,27 @@ describe("UnknownPCD Package", async function () {
     });
     expect(pcd1.type).to.eq(UnknownPCDTypeName);
     expect(isUnknownPCD(pcd1)).to.be.true;
-    expect(pcd1.id).to.not.be.undefined;
+    expect(pcd1.id).to.eq("df48d5cd-7df5-5e19-9901-4288a7d51288");
     expect(pcd1.claim.serializedPCD).to.eq(serializedPCD1);
-    expect(pcd1.proof.error).to.be.undefined;
+    expect(pcd1.claim.error).to.be.undefined;
+  });
+
+  it("should find an ID in prove", async function () {
+    const serializedPCD1: SerializedPCD = {
+      type: "some-pcd-type1",
+      pcd: '{"id": "found-id"}'
+    };
+    const pcd1 = await UnknownPCDPackage.prove({
+      serializedPCD: {
+        value: serializedPCD1,
+        argumentType: ArgumentTypeName.Object
+      }
+    });
+    expect(pcd1.type).to.eq(UnknownPCDTypeName);
+    expect(isUnknownPCD(pcd1)).to.be.true;
+    expect(pcd1.id).to.eq("found-id");
+    expect(pcd1.claim.serializedPCD).to.eq(serializedPCD1);
+    expect(pcd1.claim.error).to.be.undefined;
   });
 
   it("verify should behave as configured by init", async function () {
@@ -104,40 +105,27 @@ describe("UnknownPCD Package", async function () {
     }
 
     await UnknownPCDPackage.init(undefined);
-    await expectAsyncError(
-      async () => {
-        await UnknownPCDPackage.verify(testUnknownPCD);
-      },
-      "Error",
-      "test UnknownPCD error"
-    );
+    await expect(
+      UnknownPCDPackage.verify(testUnknownPCD)
+    ).to.eventually.be.rejectedWith(Error, "test UnknownPCD error");
 
     await UnknownPCDPackage.init({ verifyBehavior: undefined });
-    await expectAsyncError(
-      async () => {
-        await UnknownPCDPackage.verify(testUnknownPCD);
-      },
-      "Error",
-      "test UnknownPCD error"
-    );
+    await expect(
+      UnknownPCDPackage.verify(testUnknownPCD)
+    ).to.eventually.be.rejectedWith(Error, "test UnknownPCD error");
 
     await UnknownPCDPackage.init({ verifyBehavior: "error" });
-    await expectAsyncError(
-      async () => {
-        await UnknownPCDPackage.verify(testUnknownPCD);
-      },
-      "Error",
-      "test UnknownPCD error"
-    );
+    await expect(
+      UnknownPCDPackage.verify(testUnknownPCD)
+    ).to.eventually.be.rejectedWith(Error, "test UnknownPCD error");
 
     await UnknownPCDPackage.init({ verifyBehavior: "error" });
-    await expectAsyncError(
-      async () => {
-        await UnknownPCDPackage.verify(
-          new UnknownPCD(uuid(), testSerializedPCD, undefined)
-        );
-      },
-      "Error",
+    await expect(
+      UnknownPCDPackage.verify(
+        new UnknownPCD(uuid(), testSerializedPCD, undefined)
+      )
+    ).to.eventually.be.rejectedWith(
+      Error,
       'UnknownPCD wrapping "some-pcd-type" cannot be validated.'
     );
 
@@ -155,11 +143,10 @@ describe("UnknownPCD Package", async function () {
   });
 
   it("should refuse to deserialize", async function () {
-    await expectAsyncError(
-      async () => {
-        await UnknownPCDPackage.deserialize('{id: "whatever"}');
-      },
-      "Error",
+    await expect(
+      UnknownPCDPackage.deserialize('{id: "whatever"}')
+    ).to.eventually.be.rejectedWith(
+      Error,
       "UnknownPCD cannot be deserialized."
     );
   });

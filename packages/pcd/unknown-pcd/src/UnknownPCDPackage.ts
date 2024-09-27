@@ -1,5 +1,4 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { v4 as uuid } from "uuid";
 import {
   UnknownPCD,
   UnknownPCDArgs,
@@ -8,6 +7,7 @@ import {
   UnknownPCDProof,
   UnknownPCDTypeName
 } from "./UnknownPCD";
+import { derivePCDID } from "./wrapUnknown";
 
 let savedInitArgs: UnknownPCDInitArgs = undefined;
 
@@ -29,13 +29,7 @@ export async function prove(args: UnknownPCDArgs): Promise<UnknownPCD> {
     throw new Error("No serialized PCD value provided");
   }
 
-  // TODO(artwyman): Think harder about this.  There's no way to reliably
-  // extract the proper ID from the SerializedPCD, so it's not going to be
-  // consistent in the PCDCollection.  We could make a best-effort attempt
-  // using JSON and/or JSONBig deserialization to look for an "id" field.
-  // We could also change SerializedPCD going forward to contain an "id"
-  // field, but it would have to be optional.
-  const id = uuid();
+  const id = derivePCDID(args.serializedPCD.value);
 
   return new UnknownPCD(id, args.serializedPCD.value, undefined);
 }
@@ -43,7 +37,7 @@ export async function prove(args: UnknownPCDArgs): Promise<UnknownPCD> {
 /**
  * Verifies an UnknownPCD.  Since the validity of the opaque serializedPCD
  * is not known, the result of this function instead depends on the
- * behavior configuredin the {@link UnknownPCDInitArgs}.
+ * behavior configured in the {@link UnknownPCDInitArgs}.
  */
 export async function verify(pcd: UnknownPCD): Promise<boolean> {
   const behavior = savedInitArgs?.verifyBehavior || "error";
@@ -56,8 +50,8 @@ export async function verify(pcd: UnknownPCD): Promise<boolean> {
       break;
   }
 
-  if (pcd.proof.error !== undefined) {
-    throw pcd.proof.error;
+  if (pcd.claim.error !== undefined) {
+    throw pcd.claim.error;
   }
   throw new Error(
     `UnknownPCD wrapping "${pcd.claim.serializedPCD.type}" cannot be validated.`
@@ -68,8 +62,8 @@ export async function verify(pcd: UnknownPCD): Promise<boolean> {
  * Serializes a {@link UnknownPCD}, which results in the wrapped serialized
  * PCD in its original form, with its original type.
  *
- * @param pcd The POD PCD to be serialized.
- * @returns The serialized version of the POD PCD.
+ * @param pcd The PCD to be serialized.
+ * @returns The serialized version of the PCD.
  */
 export async function serialize(pcd: UnknownPCD): Promise<SerializedPCD> {
   return pcd.claim.serializedPCD;
