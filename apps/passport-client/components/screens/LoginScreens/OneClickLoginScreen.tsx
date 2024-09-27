@@ -31,12 +31,12 @@ export function OneClickLoginScreen(): JSX.Element | null {
       return;
     }
     try {
-      await dispatch({
-        type: "one-click-login",
-        email,
-        code,
-        targetFolder
-      });
+      // await dispatch({
+      //   type: "one-click-login",
+      //   email,
+      //   code,
+      //   targetFolder
+      // });
     } catch (err) {
       await dispatch({
         type: "error",
