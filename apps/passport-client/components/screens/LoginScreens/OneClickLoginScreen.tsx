@@ -1,5 +1,7 @@
+import { requestGenericIssuanceTicketPreviews } from "@pcd/passport-interface";
 import { useCallback, useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useSelf } from "../../../src/appHooks";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
@@ -37,6 +39,20 @@ export function OneClickLoginScreen(): JSX.Element | null {
       //   code,
       //   targetFolder
       // });
+
+      const result = await requestGenericIssuanceTicketPreviews(
+        appConfig.zupassServer,
+        email,
+        code
+      );
+
+      console.log(result);
+
+      if (result.success) {
+        console.log(result.value);
+      } else {
+        console.error(result.error);
+      }
     } catch (err) {
       await dispatch({
         type: "error",

@@ -20,7 +20,8 @@ import {
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  TicketPreviewResultValue
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { Request } from "express";
@@ -344,5 +345,22 @@ export class GenericIssuanceService {
    */
   public async getEdgeCityBalances(): Promise<EdgeCityBalance[]> {
     return getEdgeCityBalances(this.context.dbPool);
+  }
+
+  public async handleGetTicketPreview(
+    email: string,
+    orderCode: string
+  ): Promise<TicketPreviewResultValue> {
+    return {
+      tickets: [
+        {
+          name: "Test",
+          email: "test@test.com",
+          ticketSecret: "test",
+          eventName: "Test Event",
+          productName: "Test Product"
+        }
+      ]
+    } satisfies TicketPreviewResultValue;
   }
 }

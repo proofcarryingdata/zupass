@@ -1236,3 +1236,13 @@ export type OneClickEmailResponseValue = {
    */
   values: Record<string, string[]>;
 };
+
+export type TicketPreviewResultValue = {
+  tickets: Array<{
+    name: string;
+    email: string;
+    ticketSecret: string;
+    eventName: string;
+    productName: string;
+  }>;
+};

@@ -29,6 +29,7 @@ export * from "./api/requestGenericIssuanceSemaphoreGroup";
 export * from "./api/requestGenericIssuanceSemaphoreGroupRoot";
 export * from "./api/requestGenericIssuanceSendPipelineEmail";
 export * from "./api/requestGenericIssuanceSetManualCheckInState";
+export * from "./api/requestGenericIssuanceTicketPreviews";
 export * from "./api/requestGenericIssuanceUpsertPipeline";
 export * from "./api/requestGenericIssuanceValidSemaphoreGroup";
 export * from "./api/requestIssuanceServiceEnabled";
