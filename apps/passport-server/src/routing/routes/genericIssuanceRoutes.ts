@@ -670,16 +670,18 @@ export function initGenericIssuanceRoutes(
   );
 
   app.get(
-    "/generic-issuance/api/ticket-previews/:email/:orderCode",
+    "/generic-issuance/api/ticket-previews/:email/:orderCode/:pipelineId?",
     async (req, res) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
 
       const email = checkUrlParam(req, "email");
       const orderCode = checkUrlParam(req, "orderCode");
+      const pipelineId = req.params.pipelineId;
 
       const result = await genericIssuanceService.handleGetTicketPreview(
         email,
-        orderCode
+        orderCode,
+        pipelineId
       );
 
       res.json(result satisfies TicketPreviewResultValue);

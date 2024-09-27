@@ -145,7 +145,7 @@ function RouterImpl(): JSX.Element {
           <Route path="add-email" element={<AddEmailScreen />} />
           <Route path="remove-email" element={<RemoveEmailScreen />} />
           <Route
-            path="one-click-login/:email/:code/:targetFolder"
+            path="one-click-login/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
             element={<OneClickLoginScreen />}
           />
           <Route

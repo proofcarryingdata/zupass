@@ -4,14 +4,13 @@ import { APIResult } from "./apiResult";
 import { httpGetSimple } from "./makeRequest";
 
 /**
- * Asks the server to fetch the pipeline definition corresponding to the
- * given pipeline ID. Requires cookies, as this is part of generic issuance
- * user authentication.
+ * Asks the server to fetch the ticket previews for the given email and order code.
  */
 export async function requestGenericIssuanceTicketPreviews(
   zupassServerUrl: string,
   email: string,
-  orderCode: string
+  orderCode: string,
+  pipelineId?: string
 ): Promise<GenericIssuanceTicketPreviewResponse> {
   return httpGetSimple(
     urlJoin(
@@ -19,7 +18,7 @@ export async function requestGenericIssuanceTicketPreviews(
       `/generic-issuance/api/ticket-previews`,
       encodeURIComponent(email),
       encodeURIComponent(orderCode)
-    ),
+    ) + (pipelineId ? `/${pipelineId}` : ""),
     async (resText) => ({
       value: JSON.parse(resText) as TicketPreviewResultValue,
       success: true

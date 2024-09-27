@@ -349,30 +349,38 @@ export class GenericIssuanceService {
     return getEdgeCityBalances(this.context.dbPool);
   }
 
+  /**
+   * Given an email and order code, and optionally a pipeline ID (which defaults to DEVCON_PIPELINE_ID),
+   * returns the ticket previews for the given email and order code. A ticket preview is basically a
+   * PODTicket in non-pcd form - just the raw IPODTicketData. This is used to display all the tickets
+   * a user might need when trying to check into an event, without having them go through a costly
+   * and slow account registration flow.
+   */
   public async handleGetTicketPreview(
     email: string,
-    orderCode: string
+    orderCode: string,
+    pipelineId?: string
   ): Promise<TicketPreviewResultValue> {
-    const devconPipelineId = process.env.DEVCON_PIPELINE_ID;
-    const devconPipeline = (await this.getAllPipelineInstances()).find(
-      (p) => p.id === devconPipelineId && PretixPipeline.is(p)
+    const requestedPipelineId = pipelineId ?? process.env.DEVCON_PIPELINE_ID;
+    const pipeline = (await this.getAllPipelineInstances()).find(
+      (p) => p.id === requestedPipelineId && PretixPipeline.is(p)
     ) as PretixPipeline | undefined;
 
-    if (!devconPipeline) {
+    if (!pipeline) {
       throw new PCDHTTPError(
         400,
-        "devcon pipeline not found " + devconPipelineId
+        "handleGetTicketPreview: pipeline not found " + requestedPipelineId
       );
     }
 
-    const tickets = await devconPipeline.getAllTickets();
+    const tickets = await pipeline.getAllTickets();
 
     const matchingTickets = tickets.atoms.filter(
       (atom) => atom.email === email && atom.orderCode === orderCode
     );
 
-    const ticketDatas = matchingTickets.map((atom) =>
-      devconPipeline.atomToPODTicketData(atom, "1234")
+    const ticketDatas = matchingTickets.map(
+      (atom) => pipeline.atomToPODTicketData(atom, "1") // fake semaphore id as it's not needed for the ticket preview
     );
 
     return {

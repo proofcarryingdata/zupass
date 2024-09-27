@@ -16,7 +16,7 @@ import {
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
 /**
- * format: http://localhost:3000/#/one-click-login/:email/:code/:targetFolder
+ * format: http://localhost:3000/#/one-click-login/:email/:code/:targetFolder/:pipelineId?/:serverUrl?
  * - `code` is the pretix or lemonade order code
  * - `email` is the email address of the ticket to whom the ticket was issued
  * - `targetFolder` is the folder to redirect to after login. optional.
@@ -25,7 +25,7 @@ import { ScreenLoader } from "../../shared/ScreenLoader";
 export function OneClickLoginScreen(): JSX.Element | null {
   const self = useSelf();
   const dispatch = useDispatch();
-  const { email, code, targetFolder } = useParams();
+  const { email, code, targetFolder, pipelineId, serverUrl } = useParams();
   const [ticketPreviews, setTicketPreviews] = useState<IPODTicketData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
@@ -44,9 +44,10 @@ export function OneClickLoginScreen(): JSX.Element | null {
     }
     try {
       const previewRes = await requestGenericIssuanceTicketPreviews(
-        appConfig.zupassServer,
+        serverUrl ?? appConfig.zupassServer,
         email,
-        code
+        code,
+        pipelineId
       );
 
       setLoading(false);
@@ -64,7 +65,7 @@ export function OneClickLoginScreen(): JSX.Element | null {
         }
       });
     }
-  }, [dispatch, email, code]);
+  }, [email, code, serverUrl, pipelineId, dispatch]);
 
   const handleOneClickLogin = useCallback(async () => {
     if (!email || !code) {
@@ -141,8 +142,8 @@ export function OneClickLoginScreen(): JSX.Element | null {
               <div>No tickets found</div>
             ) : (
               <>
-                {ticketPreviews.map((ticket) => (
-                  <CardOutlineExpanded>
+                {ticketPreviews.map((ticket, i) => (
+                  <CardOutlineExpanded key={i}>
                     <CardBodyContainer>
                       <CardHeader isMainIdentity={true}>
                         {ticket.eventName} ({ticket.ticketName})
