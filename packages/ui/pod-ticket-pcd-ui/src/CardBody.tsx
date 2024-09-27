@@ -1,6 +1,7 @@
 import { QRDisplayWithRegenerateAndStorage, styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { PODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
 import { useCallback } from "react";
 import urlJoin from "url-join";
 
@@ -19,14 +20,28 @@ function PODTicketCardBody({
   pcd: PODTicketPCD;
   idBasedVerifyURL: string;
 }): JSX.Element {
-  const ticketData = pcd.claim.ticket;
-  const hasImage = pcd.claim.ticket.imageUrl !== undefined;
+  return (
+    <PODTicketCardBodyImpl
+      ticketData={pcd.claim.ticket}
+      idBasedVerifyURL={idBasedVerifyURL}
+    />
+  );
+}
+
+export function PODTicketCardBodyImpl({
+  ticketData,
+  idBasedVerifyURL
+}: {
+  ticketData: IPODTicketData;
+  idBasedVerifyURL: string;
+}): JSX.Element {
+  const hasImage = ticketData.imageUrl !== undefined;
 
   return (
     <Container>
       {hasImage && (
         <TicketInfo>
-          <TicketImage hidePadding={false} pcd={pcd} />
+          <TicketImage hidePadding={false} ticketData={ticketData} />
           <span>{ticketData?.attendeeName}</span>
           <span>{ticketData?.attendeeEmail}</span>
         </TicketInfo>
@@ -34,7 +49,10 @@ function PODTicketCardBody({
 
       {!hasImage && (
         <>
-          <TicketQR pcd={pcd} idBasedVerifyURL={idBasedVerifyURL} />
+          <TicketQR
+            ticketData={ticketData}
+            idBasedVerifyURL={idBasedVerifyURL}
+          />
           <TicketInfo>
             <span>{ticketData.attendeeName}</span>
             <span>{ticketData.attendeeEmail}</span>
@@ -44,12 +62,11 @@ function PODTicketCardBody({
     </Container>
   );
 }
-
 function TicketQR({
-  pcd,
+  ticketData,
   idBasedVerifyURL
 }: {
-  pcd: PODTicketPCD;
+  ticketData: IPODTicketData;
   idBasedVerifyURL: string;
 }): JSX.Element {
   const generate = useCallback(async () => {
@@ -58,29 +75,29 @@ function TicketQR({
         "53edb3e7-6733-41e0-a9be-488877c5c572", // eth berlin
         "508313ea-f16b-4729-bdf0-281c64493ca9", //  eth prague
         "5074edf5-f079-4099-b036-22223c0c6995" // devcon 7
-      ].includes(pcd.claim.ticket.eventId) &&
-      pcd.claim.ticket.ticketSecret
+      ].includes(ticketData.eventId) &&
+      ticketData.ticketSecret
     ) {
-      return pcd.claim.ticket.ticketSecret;
+      return ticketData.ticketSecret;
     }
 
     return linkToTicket(
       idBasedVerifyURL,
-      pcd.claim.ticket.ticketId,
-      pcd.claim.ticket.eventId
+      ticketData.ticketId,
+      ticketData.eventId
     );
   }, [
     idBasedVerifyURL,
-    pcd.claim.ticket.eventId,
-    pcd.claim.ticket.ticketId,
-    pcd.claim.ticket.ticketSecret
+    ticketData.eventId,
+    ticketData.ticketId,
+    ticketData.ticketSecret
   ]);
 
   return (
     <QRDisplayWithRegenerateAndStorage
       generateQRPayload={generate}
       maxAgeMs={1000 * 60}
-      uniqueId={pcd.id}
+      uniqueId={ticketData.ticketId}
     />
   );
 }
@@ -119,13 +136,13 @@ const TicketInfo = styled.div`
 `;
 
 function TicketImage({
-  pcd,
+  ticketData,
   hidePadding
 }: {
-  pcd: PODTicketPCD;
+  ticketData: IPODTicketData;
   hidePadding?: boolean;
 }): JSX.Element {
-  const { imageUrl, imageAltText } = pcd.claim.ticket;
+  const { imageUrl, imageAltText } = ticketData;
   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
   return (
     <div style={{ padding: "8px" }}>
