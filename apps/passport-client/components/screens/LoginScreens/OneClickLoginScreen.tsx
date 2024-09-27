@@ -7,6 +7,11 @@ import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useSelf } from "../../../src/appHooks";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
+import {
+  CardBodyContainer,
+  CardHeader,
+  CardOutlineExpanded
+} from "../../shared/PCDCard";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
 /**
@@ -111,11 +116,18 @@ export function OneClickLoginScreen(): JSX.Element | null {
 
         {!loading &&
           ticketPreviews.map((ticket) => (
-            <PODTicketCardBodyImpl
-              idBasedVerifyURL=""
-              ticketData={ticket}
-              key={ticket.ticketId}
-            />
+            <CardOutlineExpanded>
+              <CardBodyContainer>
+                <CardHeader isMainIdentity={true}>
+                  {ticket.eventName} ({ticket.ticketName})
+                </CardHeader>
+                <PODTicketCardBodyImpl
+                  idBasedVerifyURL=""
+                  ticketData={ticket}
+                  key={ticket.ticketId}
+                />
+              </CardBodyContainer>
+            </CardOutlineExpanded>
           ))}
       </AppContainer>
     </>
