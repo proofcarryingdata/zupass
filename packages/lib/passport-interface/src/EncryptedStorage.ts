@@ -167,41 +167,33 @@ export async function deserializeStorage(
   let subscriptions: FeedSubscriptionManager;
 
   if (isSyncedEncryptedStorageV5(storage)) {
-    pcds = await PCDCollection.deserialize(
-      pcdPackages,
-      storage.pcds,
+    pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds, {
       fallbackDeserializeFunction
-    );
+    });
     subscriptions = FeedSubscriptionManager.deserialize(
       new NetworkFeedApi(),
       storage.subscriptions
     );
   } else if (isSyncedEncryptedStorageV4(storage)) {
-    pcds = await PCDCollection.deserialize(
-      pcdPackages,
-      storage.pcds,
+    pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds, {
       fallbackDeserializeFunction
-    );
+    });
     subscriptions = FeedSubscriptionManager.deserialize(
       new NetworkFeedApi(),
       storage.subscriptions
     );
   } else if (isSyncedEncryptedStorageV3(storage)) {
-    pcds = await PCDCollection.deserialize(
-      pcdPackages,
-      storage.pcds,
+    pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds, {
       fallbackDeserializeFunction
-    );
+    });
     subscriptions = FeedSubscriptionManager.deserialize(
       new NetworkFeedApi(),
       storage.subscriptions
     );
   } else if (isSyncedEncryptedStorageV2(storage)) {
-    pcds = await PCDCollection.deserialize(
-      pcdPackages,
-      storage.pcds,
+    pcds = await PCDCollection.deserialize(pcdPackages, storage.pcds, {
       fallbackDeserializeFunction
-    );
+    });
     subscriptions = new FeedSubscriptionManager(new NetworkFeedApi());
   } else if (isSyncedEncryptedStorageV1(storage)) {
     pcds = new PCDCollection(pcdPackages);

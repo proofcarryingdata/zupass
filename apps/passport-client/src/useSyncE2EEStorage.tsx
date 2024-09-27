@@ -31,7 +31,7 @@ import {
   savePersistentSyncStatus,
   saveSubscriptions
 } from "./localstorage";
-import { fallbackPCDDeserializationFunction, getPackages } from "./pcdPackages";
+import { fallbackDeserializeFunction, getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
 import { validateAndLogRunningAppState } from "./validateState";
 
@@ -522,7 +522,7 @@ export async function tryDeserializeNewStorage(
     const { pcds, subscriptions, storageHash } = await deserializeStorage(
       storage,
       await getPackages(),
-      fallbackPCDDeserializationFunction
+      fallbackDeserializeFunction
     );
 
     if (

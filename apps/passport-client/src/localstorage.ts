@@ -6,7 +6,7 @@ import {
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
-import { fallbackPCDDeserializationFunction, getPackages } from "./pcdPackages";
+import { fallbackDeserializeFunction, getPackages } from "./pcdPackages";
 import { validateAndLogRunningAppState } from "./validateState";
 
 const OLD_PCDS_KEY = "pcds"; // deprecated
@@ -42,7 +42,7 @@ export async function loadPCDs(self?: User): Promise<PCDCollection> {
   const collection = await PCDCollection.deserialize(
     await getPackages(),
     serializedCollection ?? "{}",
-    fallbackPCDDeserializationFunction
+    { fallbackDeserializeFunction }
   );
 
   if (

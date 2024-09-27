@@ -115,7 +115,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
   ];
 }
 
-export async function fallbackPCDDeserializationFunction(
+export async function fallbackDeserializeFunction(
   _collection: PCDCollection,
   _pcdPackage: PCDPackage | undefined,
   serializedPCD: SerializedPCD,

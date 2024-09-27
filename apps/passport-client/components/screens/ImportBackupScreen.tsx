@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useFilePicker } from "use-file-picker";
 import { useDispatch, usePCDCollection } from "../../src/appHooks";
 import {
-  fallbackPCDDeserializationFunction,
+  fallbackDeserializeFunction,
   getPackages
 } from "../../src/pcdPackages";
 import { AppState } from "../../src/state";
@@ -111,7 +111,7 @@ export function ImportBackupScreen(): JSX.Element {
               await deserializeStorage(
                 storageExport,
                 await getPackages(),
-                fallbackPCDDeserializationFunction
+                fallbackDeserializeFunction
               )
             ).pcds;
           } catch (e) {
