@@ -47,6 +47,8 @@ import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketSc
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
+import { AuthenticateIFrameScreen } from "../components/screens/ZappScreens/AuthenticateIFrameScreen";
+import { ConnectPopupScreen } from "../components/screens/ZappScreens/ConnectPopupScreen";
 import {
   AppContainer,
   Background,
@@ -64,13 +66,13 @@ import { enableLiveReload } from "../src/liveReload";
 import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
-import { useZappServer } from "../src/zapp/useZappServer";
+import { ListenMode, useZappServer } from "../src/zapp/useZappServer";
 
 enableLiveReload();
 
 function App(): JSX.Element {
   useBackgroundJobs();
-  useZappServer();
+  useZappServer(ListenMode.LISTEN_IF_EMBEDDED);
 
   const state = useStateContext().getState();
 
@@ -183,6 +185,11 @@ function RouterImpl(): JSX.Element {
           <Route
             path="generic-checkin"
             element={<PodboxScannedTicketScreen />}
+          />
+          <Route path="connect-popup" element={<ConnectPopupScreen />} />
+          <Route
+            path="authenticate-iframe"
+            element={<AuthenticateIFrameScreen />}
           />
           <Route path="embedded" element={<EmbeddedScreen />} />
           <Route path="*" element={<MissingScreen />} />

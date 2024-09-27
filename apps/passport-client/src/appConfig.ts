@@ -19,6 +19,8 @@ interface AppConfig {
   zappRestrictOrigins: boolean;
   // origins that are allowed to sign PODs
   zappAllowedSignerOrigins: string[];
+  // folder name -> zapp URL
+  embeddedZapps: Record<string, string>;
 }
 
 if (
@@ -49,9 +51,6 @@ if (
 let zappAllowedSignerOrigins: string[];
 
 try {
-  console.log(
-    "ZAPP_ALLOWED_SIGNER_ORIGINS: " + process.env.ZAPP_ALLOWED_SIGNER_ORIGINS
-  );
   zappAllowedSignerOrigins = process.env.ZAPP_ALLOWED_SIGNER_ORIGINS
     ? JSON.parse(process.env.ZAPP_ALLOWED_SIGNER_ORIGINS)
     : [];
@@ -63,6 +62,17 @@ try {
   zappAllowedSignerOrigins = [];
 }
 
+let embeddedZapps: Record<string, string> = {};
+
+try {
+  embeddedZapps = process.env.EMBEDDED_ZAPPS
+    ? JSON.parse(process.env.EMBEDDED_ZAPPS)
+    : {};
+} catch (e) {
+  console.error("Failed to parse EMBEDDED_ZAPPS", e);
+  embeddedZapps = {};
+}
+
 export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
   zupassServer: process.env.PASSPORT_SERVER_URL as string,
@@ -72,7 +82,8 @@ export const appConfig: AppConfig = {
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
   strichLicenseKey: process.env.STRICH_LICENSE_KEY,
   zappRestrictOrigins: process.env.ZAPP_RESTRICT_ORIGINS === "true",
-  zappAllowedSignerOrigins: zappAllowedSignerOrigins
+  zappAllowedSignerOrigins: zappAllowedSignerOrigins,
+  embeddedZapps: embeddedZapps
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

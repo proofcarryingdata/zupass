@@ -63,8 +63,8 @@ function bindConfigWithRequirements(
  * for supported circuits.)
  *
  * @param proofConfig the raw proof config to bind.
- * @returns a new configuration object bound and canonicalized as described
- *   above.
+ * @returns a new configuration object bound and canonicalized (see
+ *   {@link GPCBoundConfig}), as well as a description of selected circuit.
  * @throws TypeError if the input configuration is malformed
  * @throws Error if the requirements of the given configuration are impossible
  *   to meet with the given circuit
@@ -74,6 +74,48 @@ export function gpcBindConfig(proofConfig: GPCProofConfig): {
   circuitDesc: ProtoPODGPCCircuitDesc;
 } {
   const circuitReq = checkProofConfig(proofConfig);
+  return bindConfigWithRequirements(proofConfig, circuitReq);
+}
+
+/**
+ * Checks whether the the given configuration and inputs can be used to generate
+ * a valid GPC Proof.  This function performs all of the argument checks of
+ * {@link gpcProve}, but does not perform expensive proof generation or trigger
+ * any side-effects such as downloading artifacts.  See the
+ * documentation of the input and output types for more details:
+ * {@link GPCProofConfig}, {@link GPCProofInputs}, {@link GPCBoundConfig}, and
+ * {@link ProtoPODGPCCircuitDesc}.
+ *
+ * If the config or inputs cannot be used to generate a valid proof with
+ * the supported circuits, this function will throw an exception with a message
+ * explaining why.  If this function returns successfully, it should be possible
+ * to later call {@link gpcProve} with the same arguments without any risk of
+ * failing due to config or inputs, though internal errors in proof generation
+ * or artifact download are still possible.
+ *
+ * The specific ZK circuit needed will be picked as the smallest supported
+ * circuit which can fit the configuration and inputs.  If you need a specific
+ * circuit to be used instead (e.g. to support larger object sizes for
+ * future reuse), you can specify that in `proofConfig.circuitIdentifier`.
+ * (See {@link ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
+ *
+ * @param proofConfig the configuration specifying the constraints to be proven.
+ * @param proofInputs the input data (PODs and other values) specific to this
+ *  proof.
+ * @returns a new configuration object bound and canonicalized (see
+ *   {@link GPCBoundConfig}), as well as a description of selected circuit.
+ * @throws TypeError if any of the arguments is malformed
+ * @throws Error if the requirements of the given configuration are impossible
+ *   to meet with the given circuit
+ */
+export function gpcCheckProvable(
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs
+): {
+  boundConfig: GPCBoundConfig;
+  circuitDesc: ProtoPODGPCCircuitDesc;
+} {
+  const circuitReq = checkProofArgs(proofConfig, proofInputs);
   return bindConfigWithRequirements(proofConfig, circuitReq);
 }
 
@@ -110,10 +152,9 @@ export async function gpcProve(
   boundConfig: GPCBoundConfig;
   revealedClaims: GPCRevealedClaims;
 }> {
-  const circuitReq = checkProofArgs(proofConfig, proofInputs);
-  const { boundConfig, circuitDesc } = bindConfigWithRequirements(
+  const { boundConfig, circuitDesc } = gpcCheckProvable(
     proofConfig,
-    circuitReq
+    proofInputs
   );
 
   const artifactPaths = gpcArtifactPaths(pathToArtifacts, circuitDesc);

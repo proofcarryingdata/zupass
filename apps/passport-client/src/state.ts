@@ -140,7 +140,8 @@ export interface AppState {
 
   strichSDKstate: "initialized" | "error" | undefined;
 
-  // If Zupass is in an embedded iframe, the state of the embedded screen.
+  // If we're showing a screen in an embedded iframe or a dialog above an
+  // embedded Zapp, the state of that screen.
   embeddedScreen?: EmbeddedScreenState;
 
   connectedZapp?: Zapp;

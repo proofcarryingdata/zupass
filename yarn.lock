@@ -5064,18 +5064,17 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@parcnet-js/app-connector@^0.0.6":
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.6.tgz#11f1d9b0cd474dfa52f84de2e03d430939f70b8f"
-  integrity sha512-xpgHzOZ5lUk0ZzkZ4jxxRXcBtsdvGGT+Htn8PFVRrGZIF0j5O5dL/xSR0gJJbWLRoXGx6oNu4qmX5c2udut40A==
+"@parcnet-js/app-connector@^0.0.7":
+  version "0.0.7"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.7.tgz#15cb93b55c206a5aa4697bdeb3cab5d2d40f8bfd"
+  integrity sha512-nmw5gE700JsFR01ErkzUGbsE81Z+bKLMapRlw4JjptXmOLMR+o1e3eafNc9CA8M4wHJ2M6Ik2LTh1VHaOK9j0A==
   dependencies:
     "@brenoroosevelt/toast" "^2.0.3"
     "@parcnet-js/client-rpc" "0.0.4"
     "@parcnet-js/podspec" "0.0.3"
     "@pcd/gpc" "^0.0.8"
     "@pcd/pod" "^0.1.7"
-    eventemitter3 "^5.0.1"
-    json-bigint "^1.0.0"
+    nanoevents "^9.0.0"
     valibot "^0.42.0"
 
 "@parcnet-js/client-helpers@^0.0.5":
@@ -12271,11 +12270,6 @@ eventemitter3@^4.0.4:
   resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-4.0.7.tgz#2de9b68f6528d5644ef5c59526a1b4a07306169f"
   integrity sha512-8guHBZCwKnFhYdHr2ysuRWErTwhoN2X8XELRlrRwpmfeY2jjuUN4taQMsULKUVo1K4DvZl+0pgfyoysHxvmvEw==
 
-eventemitter3@^5.0.1:
-  version "5.0.1"
-  resolved "https://registry.yarnpkg.com/eventemitter3/-/eventemitter3-5.0.1.tgz#53f5ffd0a492ac800721bb42c66b841de96423c4"
-  integrity sha512-GWkBvjiSZK87ELrYOSESUYeVIc9mvLLf/nXalMOS5dYrgZq9o5OVkbZAVM06CVxYsCwH9BDZFPlQTlPA1j4ahA==
-
 events@^3.0.0, events@^3.2.0, events@^3.3.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/events/-/events-3.3.0.tgz#31a95ad0a924e2d2c419a813aeb2c4e878ea7400"
@@ -16699,6 +16693,11 @@ nanoclone@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/nanoclone/-/nanoclone-0.2.1.tgz#dd4090f8f1a110d26bb32c49ed2f5b9235209ed4"
   integrity sha512-wynEP02LmIbLpcYw8uBKpcfF6dmg2vcpKqxeH5UcoKEYdExslsdUA4ugFauuaeYdTB76ez6gJW8XAZ6CgkXYxA==
+
+nanoevents@^9.0.0:
+  version "9.0.0"
+  resolved "https://registry.yarnpkg.com/nanoevents/-/nanoevents-9.0.0.tgz#c44fa7dde1615ac092023d5c881a3ee0b0a8c8fd"
+  integrity sha512-X8pU7IOpgKXVLPxYUI55ymXc8XuBE+uypfEyEFBtHkD1EX9KavYTVc+vXZHFyHKzA1TaZoVDqklLdQBBrxIuAw==
 
 nanoid@3.3.3:
   version "3.3.3"
@@ -22136,6 +22135,11 @@ valibot@^0.42.0:
   version "0.42.0"
   resolved "https://registry.yarnpkg.com/valibot/-/valibot-0.42.0.tgz#fed34043e49d1ee4327d700f01e1a24182ca8aef"
   integrity sha512-igMdmHXxDiQY714ssh9bGisMqJ2yg7sko1KOmv/omnrIacGtP6mGrbvVT1IuV1bDrHyG9ybgpHwG1UElDiDCLg==
+
+valibot@^0.42.1:
+  version "0.42.1"
+  resolved "https://registry.yarnpkg.com/valibot/-/valibot-0.42.1.tgz#a31183d8e9d7552f98e22ca0977172cab8815188"
+  integrity sha512-3keXV29Ar5b//Hqi4MbSdV7lfVp6zuYLZuA9V1PvQUsXqogr+u5lvLPLk3A4f74VUXDnf/JfWMN6sB+koJ/FFw==
 
 validate-npm-package-license@^3.0.1:
   version "3.0.4"

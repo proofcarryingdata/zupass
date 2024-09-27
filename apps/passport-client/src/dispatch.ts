@@ -28,7 +28,9 @@ import {
   ZupassFeedIds
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
-import { PCD, SerializedPCD } from "@pcd/pcd-types";
+import { ArgumentTypeName, PCD, SerializedPCD } from "@pcd/pcd-types";
+import { encodePrivateKey } from "@pcd/pod";
+import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
   isSemaphoreIdentityPCD,
@@ -42,6 +44,7 @@ import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { appConfig } from "./appConfig";
 import {
   notifyLoginToOtherTabs,
@@ -193,6 +196,9 @@ export type Action =
       type: "zapp-connect";
       zapp: Zapp;
       origin: string;
+    }
+  | {
+      type: "approve-zapp";
     };
 
 export type StateContextValue = {
@@ -330,6 +336,8 @@ export async function dispatch(
       return hideEmbeddedScreen(state, update);
     case "zapp-connect":
       return zappConnect(state, update, action.zapp, action.origin);
+    case "approve-zapp":
+      return approveZapp(state, update);
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -1524,6 +1532,9 @@ async function showEmbeddedScreen(
   update: ZuUpdate,
   screen: EmbeddedScreenState["screen"]
 ): Promise<void> {
+  if (window.parent !== window.self) {
+    window.location.hash = "embedded";
+  }
   update({
     embeddedScreen: { screen }
   });
@@ -1548,4 +1559,33 @@ async function zappConnect(
     zappOrigin: origin,
     connectedZapp: zapp
   });
+}
+
+async function approveZapp(state: AppState, update: ZuUpdate): Promise<void> {
+  const zapp = state.connectedZapp;
+  if (!zapp || !state.zappOrigin) {
+    return;
+  }
+  const newZapp = (await PODPCDPackage.prove({
+    entries: {
+      argumentType: ArgumentTypeName.Object,
+      value: {
+        origin: { type: "string", value: state.zappOrigin },
+        name: { type: "string", value: zapp.name }
+      }
+    },
+    privateKey: {
+      argumentType: ArgumentTypeName.String,
+      value: encodePrivateKey(
+        Buffer.from(v3tov4Identity(state.identityV3).export(), "base64")
+      )
+    },
+    id: {
+      argumentType: ArgumentTypeName.String,
+      value: uuidv4()
+    }
+  })) as PODPCD;
+
+  const newZappSerialized = await PODPCDPackage.serialize(newZapp);
+  return addPCDs(state, update, [newZappSerialized], false, "Zapps");
 }
