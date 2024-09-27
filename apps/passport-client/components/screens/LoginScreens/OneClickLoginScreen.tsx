@@ -43,24 +43,17 @@ export function OneClickLoginScreen(): JSX.Element | null {
       return;
     }
     try {
-      // await dispatch({
-      //   type: "one-click-login",
-      //   email,
-      //   code,
-      //   targetFolder
-      // });
-
-      const result = await requestGenericIssuanceTicketPreviews(
+      const previewRes = await requestGenericIssuanceTicketPreviews(
         appConfig.zupassServer,
         email,
         code
       );
 
       setLoading(false);
-      if (result.success) {
-        setTicketPreviews(result.value.tickets);
+      if (previewRes.success) {
+        setTicketPreviews(previewRes.value.tickets);
       } else {
-        setError(result.error);
+        setError(previewRes.error);
       }
     } catch (err) {
       await dispatch({
