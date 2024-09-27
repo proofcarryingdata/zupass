@@ -34,6 +34,7 @@ import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/Alre
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
+import { NewOneClickLoginScreen } from "../components/screens/LoginScreens/NewOneClickLoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
 import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
@@ -149,6 +150,10 @@ function RouterImpl(): JSX.Element {
           <Route
             path="one-click-login/:email/:code/:targetFolder"
             element={<OneClickLoginScreen />}
+          />
+          <Route
+            path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
+            element={<NewOneClickLoginScreen />}
           />
           <Route
             path="enter-confirmation-code"
