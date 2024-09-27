@@ -1,4 +1,5 @@
 import { requestGenericIssuanceTicketPreviews } from "@pcd/passport-interface";
+import { Button, Spacer } from "@pcd/passport-ui";
 import { IPODTicketData } from "@pcd/pod-ticket-pcd";
 import { PODTicketCardBodyImpl } from "@pcd/pod-ticket-pcd-ui";
 import { useCallback, useEffect, useState } from "react";
@@ -37,7 +38,7 @@ export function OneClickLoginScreen(): JSX.Element | null {
     }
   }, [targetFolder]);
 
-  const handleOneClickLogin = useCallback(async () => {
+  const handleLoadTicketPreviews = useCallback(async () => {
     if (!email || !code) {
       return;
     }
@@ -72,6 +73,28 @@ export function OneClickLoginScreen(): JSX.Element | null {
     }
   }, [dispatch, email, code]);
 
+  const handleOneClickLogin = useCallback(async () => {
+    if (!email || !code) {
+      return;
+    }
+    try {
+      await dispatch({
+        type: "one-click-login",
+        email,
+        code,
+        targetFolder
+      });
+    } catch (err) {
+      await dispatch({
+        type: "error",
+        error: {
+          title: "An error occured",
+          message: (err as Error).message || "An error occured"
+        }
+      });
+    }
+  }, [email, code, dispatch, targetFolder]);
+
   useEffect(() => {
     if (process.env.ONE_CLICK_LOGIN_ENABLED !== "true") {
       window.location.hash = "#/";
@@ -95,12 +118,12 @@ export function OneClickLoginScreen(): JSX.Element | null {
     } else if (!email || !code) {
       window.location.hash = "#/";
     } else {
-      handleOneClickLogin();
+      handleLoadTicketPreviews();
     }
   }, [
     self,
     targetFolder,
-    handleOneClickLogin,
+    handleLoadTicketPreviews,
     redirectToTargetFolder,
     email,
     code
@@ -114,21 +137,30 @@ export function OneClickLoginScreen(): JSX.Element | null {
 
         {error && <div>{error}</div>}
 
-        {!loading &&
-          ticketPreviews.map((ticket) => (
-            <CardOutlineExpanded>
-              <CardBodyContainer>
-                <CardHeader isMainIdentity={true}>
-                  {ticket.eventName} ({ticket.ticketName})
-                </CardHeader>
-                <PODTicketCardBodyImpl
-                  idBasedVerifyURL=""
-                  ticketData={ticket}
-                  key={ticket.ticketId}
-                />
-              </CardBodyContainer>
-            </CardOutlineExpanded>
-          ))}
+        {!loading && (
+          <>
+            <Spacer h={32} />
+
+            {ticketPreviews.map((ticket) => (
+              <CardOutlineExpanded>
+                <CardBodyContainer>
+                  <CardHeader isMainIdentity={true}>
+                    {ticket.eventName} ({ticket.ticketName})
+                  </CardHeader>
+                  <PODTicketCardBodyImpl
+                    idBasedVerifyURL=""
+                    ticketData={ticket}
+                    key={ticket.ticketId}
+                  />
+                </CardBodyContainer>
+              </CardOutlineExpanded>
+            ))}
+
+            <Spacer h={16} />
+
+            <Button onClick={handleOneClickLogin}>More Zupass</Button>
+          </>
+        )}
       </AppContainer>
     </>
   );
