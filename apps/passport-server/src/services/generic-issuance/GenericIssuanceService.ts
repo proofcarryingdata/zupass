@@ -56,6 +56,7 @@ import {
   IBadgeGiftingDB,
   IContactSharingDB
 } from "../../database/queries/ticketActionDBs";
+import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { DiscordService } from "../discordService";
@@ -63,6 +64,7 @@ import { EmailService } from "../emailService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
+import { PretixPipeline } from "./pipelines/PretixPipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { CredentialSubservice } from "./subservices/CredentialSubservice";
 import { PipelineSubservice } from "./subservices/PipelineSubservice";
@@ -351,16 +353,30 @@ export class GenericIssuanceService {
     email: string,
     orderCode: string
   ): Promise<TicketPreviewResultValue> {
+    const devconPipelineId = process.env.DEVCON_PIPELINE_ID;
+    const devconPipeline = (await this.getAllPipelineInstances()).find(
+      (p) => p.id === devconPipelineId && PretixPipeline.is(p)
+    ) as PretixPipeline | undefined;
+
+    if (!devconPipeline) {
+      throw new PCDHTTPError(
+        400,
+        "devcon pipeline not found " + devconPipelineId
+      );
+    }
+
+    const tickets = await devconPipeline.getAllTickets();
+
+    const matchingTickets = tickets.atoms.filter(
+      (atom) => atom.email === email && atom.orderCode === orderCode
+    );
+
+    const ticketDatas = matchingTickets.map((atom) =>
+      devconPipeline.atomToPODTicketData(atom, "1234")
+    );
+
     return {
-      tickets: [
-        {
-          name: "Test",
-          email: "test@test.com",
-          ticketSecret: "test",
-          eventName: "Test Event",
-          productName: "Test Product"
-        }
-      ]
+      tickets: ticketDatas
     } satisfies TicketPreviewResultValue;
   }
 }

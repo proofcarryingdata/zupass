@@ -2,6 +2,8 @@ import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCD, EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+
+import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Credential } from "./Credential";
@@ -1238,11 +1240,5 @@ export type OneClickEmailResponseValue = {
 };
 
 export type TicketPreviewResultValue = {
-  tickets: Array<{
-    name: string;
-    email: string;
-    ticketSecret: string;
-    eventName: string;
-    productName: string;
-  }>;
+  tickets: Array<IPODTicketData>;
 };

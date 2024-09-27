@@ -673,6 +673,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/ticket-previews/:email/:orderCode",
     async (req, res) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
+
       const email = checkUrlParam(req, "email");
       const orderCode = checkUrlParam(req, "orderCode");
 
