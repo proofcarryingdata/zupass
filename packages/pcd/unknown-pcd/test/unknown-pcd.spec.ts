@@ -14,7 +14,7 @@ import {
 chai.use(chaiAsPromised);
 
 const testSerializedPCD: SerializedPCD = {
-  type: "some-pcd-type",
+  type: "some-pcd",
   pcd: "some-opaque-string"
 };
 const testUnknownPCD = new UnknownPCD(
@@ -126,7 +126,7 @@ describe("UnknownPCD Package", async function () {
       )
     ).to.eventually.be.rejectedWith(
       Error,
-      'UnknownPCD wrapping "some-pcd-type" cannot be validated.'
+      'UnknownPCD wrapping "some-pcd" cannot be validated.'
     );
 
     await UnknownPCDPackage.init({ verifyBehavior: "valid" });
@@ -157,7 +157,7 @@ describe("UnknownPCD Package", async function () {
     }
 
     const displayOptions = UnknownPCDPackage.getDisplayOptions(testUnknownPCD);
-    expect(displayOptions.header).to.eq("Unknown PCD");
+    expect(displayOptions.header).to.eq("Unknown some");
     expect(displayOptions.displayName).to.eq(
       "unknown-" + testSerializedPCD.type
     );

@@ -21,6 +21,9 @@
     },
     {
       "path": "../../pcd/rsa-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/unknown-pcd/tsconfig.esm.json"
     }
   ]
 }

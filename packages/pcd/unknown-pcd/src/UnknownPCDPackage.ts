@@ -89,8 +89,16 @@ export async function deserialize(_serialized: string): Promise<UnknownPCD> {
  * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(pcd: UnknownPCD): DisplayOptions {
+  function shortenPCDType(pcdType: string): string {
+    if (pcdType.endsWith("-pcd")) {
+      return pcdType.slice(0, pcdType.length - "-pcd".length);
+    }
+    return pcdType;
+  }
+
+  const displayType = shortenPCDType(pcd.claim.serializedPCD.type);
   return {
-    header: "Unknown PCD",
+    header: `Unknown ${displayType}`,
     displayName: "unknown-" + pcd.claim.serializedPCD.type
   };
 }

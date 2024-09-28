@@ -175,6 +175,9 @@
       "path": "packages/ui/semaphore-signature-pcd-ui/tsconfig.cjs.json"
     },
     {
+      "path": "packages/ui/unknown-pcd-ui/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/ui/webauthn-pcd-ui/tsconfig.cjs.json"
     },
     {
