@@ -168,6 +168,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
  */
 export async function prove(args: GPCPCDArgs): Promise<GPCPCD> {
   const zkArtifactPath = ensureInitialized();
+  const circuitFamily = savedInitArgs?.circuitFamily;
   const { proofConfig, proofInputs } = await checkProofArgs(args);
   const id =
     args.id !== undefined && typeof args.id.value === "string"
@@ -177,7 +178,8 @@ export async function prove(args: GPCPCDArgs): Promise<GPCPCD> {
   const { boundConfig, revealedClaims, proof } = await gpcProve(
     proofConfig,
     proofInputs,
-    zkArtifactPath
+    zkArtifactPath,
+    circuitFamily
   );
 
   return new GPCPCD(
@@ -199,11 +201,13 @@ export async function prove(args: GPCPCDArgs): Promise<GPCPCD> {
  */
 export async function verify(pcd: GPCPCD): Promise<boolean> {
   const zkArtifactPath = ensureInitialized();
+  const circuitFamily = savedInitArgs?.circuitFamily;
   return gpcVerify(
     pcd.proof.groth16Proof,
     pcd.claim.config,
     pcd.claim.revealed,
-    zkArtifactPath
+    zkArtifactPath,
+    circuitFamily
   );
 }
 

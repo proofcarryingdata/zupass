@@ -245,3 +245,45 @@ export function dummyObjectSignals(
     };
   });
 }
+
+// Constants specifying locations of files and directories relevant to circuit
+// parameter and artifact generation.
+export const projectDir = path.join(__dirname, "..");
+export const artifactsDir = path.join(projectDir, "artifacts");
+export const circuitDir = path.join(projectDir, "circuits", "main");
+const paramDir = path.join(projectDir, "scripts", "parameters");
+export const jsonFileConfig: Record<string, Record<string, string>> = {
+  prod: {
+    circuitParamGenJsonFile: path.join(paramDir, "paramGen.json"),
+    circuitParamJsonFile: path.join(
+      projectDir,
+      "src",
+      "circuitParameters.json"
+    ),
+    circuitsJsonFile: path.join(projectDir, "circuits.json")
+  },
+  test: {
+    circuitParamGenJsonFile: path.join(paramDir, "testParamGen.json"),
+    circuitParamJsonFile: path.join(
+      projectDir,
+      "src",
+      "testCircuitParameters.json"
+    ),
+    circuitsJsonFile: path.join(projectDir, "testCircuits.json")
+  }
+};
+
+/**
+ * Ensures that the type of the set of circuit parameters (if provided) is
+ * valid.  At present, this amounts to checking for either "prod" or "test".
+ */
+export function ensureCircuitParamSet(name: string | undefined): string {
+  const admissibleParamSets = Object.keys(jsonFileConfig);
+  if (name && !admissibleParamSets.includes(name)) {
+    throw new Error(
+      `Circuit parameters must be one of the following types: ${admissibleParamSets}`
+    );
+  } else {
+    return name ?? "prod";
+  }
+}

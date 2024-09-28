@@ -1,4 +1,10 @@
-import { ProtoPODGPC } from "@pcd/gpcircuits";
+import {
+  ProtoPODGPC,
+  ProtoPODGPCCircuitDesc,
+  ProtoPODGPCCircuitParams,
+  ensureCircuitParamSet,
+  jsonFileConfig
+} from "@pcd/gpcircuits";
 import {
   POD,
   PODCryptographicValue,
@@ -9,13 +15,16 @@ import {
   POD_INT_MIN
 } from "@pcd/pod";
 import { expect } from "chai";
+import { readFileSync as fsReadFile } from "fs";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
+import { env } from "process";
 import {
   GPCArtifactSource,
   GPCArtifactStability,
   GPCArtifactVersion,
   GPCBoundConfig,
+  GPCProof,
   GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofEntryConfigCommon,
@@ -26,10 +35,10 @@ import {
   PODEntryIdentifier,
   SEMAPHORE_V3,
   SEMAPHORE_V4,
-  gpcArtifactDownloadURL,
-  gpcCheckProvable,
-  gpcProve,
-  gpcVerify
+  gpcCheckProvable as _gpcCheckProvable,
+  gpcProve as _gpcProve,
+  gpcVerify as _gpcVerify,
+  gpcArtifactDownloadURL
 } from "../src";
 import { makeCircuitIdentifier, makeWatermarkSignal } from "../src/gpcUtil";
 import {
@@ -42,6 +51,48 @@ import {
   sampleEntries,
   sampleEntries2
 } from "./common";
+
+// Test circuit parameters. If the environment variable `GPC_FAMILY_TYPE` is set
+// to "prod", then the production circuit family and artifacts will be used.
+const familyType = env["GPC_FAMILY_TYPE"];
+const circuitParamType = ensureCircuitParamSet(familyType ?? "test");
+export const TEST_CIRCUIT_PARAMETERS: [ProtoPODGPCCircuitParams, number][] =
+  JSON.parse(
+    fsReadFile(jsonFileConfig[circuitParamType].circuitParamJsonFile, {
+      encoding: "utf8"
+    })
+  ) as [ProtoPODGPCCircuitParams, number][];
+const testCircuitFamily: ProtoPODGPCCircuitDesc[] =
+  ProtoPODGPC.circuitFamilyFromParams(TEST_CIRCUIT_PARAMETERS);
+
+// Test-specific GPC proof and verification functions
+const gpcCheckProvable = (
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs
+): { boundConfig: GPCBoundConfig; circuitDesc: ProtoPODGPCCircuitDesc } =>
+  _gpcCheckProvable(proofConfig, proofInputs, testCircuitFamily);
+const gpcProve = (
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs,
+  pathToArtifacts: string
+): Promise<{
+  proof: GPCProof;
+  boundConfig: GPCBoundConfig;
+  revealedClaims: GPCRevealedClaims;
+}> => _gpcProve(proofConfig, proofInputs, pathToArtifacts, testCircuitFamily);
+const gpcVerify = (
+  proof: GPCProof,
+  boundConfig: GPCBoundConfig,
+  revealedClaims: GPCRevealedClaims,
+  pathToArtifacts: string
+): Promise<boolean> =>
+  _gpcVerify(
+    proof,
+    boundConfig,
+    revealedClaims,
+    pathToArtifacts,
+    testCircuitFamily
+  );
 
 describe("gpc library (Compiled test artifacts) should work", async function () {
   function makeMinimalArgs(
@@ -174,14 +225,14 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
 
     // For this small case, the library should auto-pick the smallest circuit.
     expect(boundConfig.circuitIdentifier).to.eq(
-      makeCircuitIdentifier(ProtoPODGPC.CIRCUIT_FAMILY[0])
+      makeCircuitIdentifier(testCircuitFamily[0])
     );
   });
 
   it("should prove and verify a minimal case with each circuit in the family", async function () {
     const { proofConfig, proofInputs, expectedRevealedClaims } =
       makeMinimalArgs();
-    for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY.slice(1)) {
+    for (const circuitDesc of testCircuitFamily.slice(1)) {
       const circuitID = makeCircuitIdentifier(circuitDesc);
       const { isVerified, boundConfig } = await gpcProofTest(
         {

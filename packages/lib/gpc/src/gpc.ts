@@ -33,11 +33,13 @@ import {
 
 function bindConfigWithRequirements(
   proofConfig: GPCProofConfig,
-  circuitReq: GPCRequirements
+  circuitReq: GPCRequirements,
+  circuitFamily: ProtoPODGPCCircuitDesc[]
 ): { boundConfig: GPCBoundConfig; circuitDesc: ProtoPODGPCCircuitDesc } {
   // Assumes proofConfig has already been checked by the caller.
   const circuitDesc = checkCircuitRequirements(
     circuitReq,
+    circuitFamily,
     proofConfig.circuitIdentifier
   );
   const boundConfig = canonicalizeConfig(
@@ -63,18 +65,24 @@ function bindConfigWithRequirements(
  * for supported circuits.)
  *
  * @param proofConfig the raw proof config to bind.
+ * @param [circuitFamily=ProtaoPODGPC.CIRCUIT_FAMILY] the circuit family to
+ *   pick the circuit from. This is assumed to be sorted in order of
+ *   increasing circuit count.
  * @returns a new configuration object bound and canonicalized (see
  *   {@link GPCBoundConfig}), as well as a description of selected circuit.
  * @throws TypeError if the input configuration is malformed
  * @throws Error if the requirements of the given configuration are impossible
  *   to meet with the given circuit
  */
-export function gpcBindConfig(proofConfig: GPCProofConfig): {
+export function gpcBindConfig(
+  proofConfig: GPCProofConfig,
+  circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
+): {
   boundConfig: GPCBoundConfig;
   circuitDesc: ProtoPODGPCCircuitDesc;
 } {
   const circuitReq = checkProofConfig(proofConfig);
-  return bindConfigWithRequirements(proofConfig, circuitReq);
+  return bindConfigWithRequirements(proofConfig, circuitReq, circuitFamily);
 }
 
 /**
@@ -102,6 +110,9 @@ export function gpcBindConfig(proofConfig: GPCProofConfig): {
  * @param proofConfig the configuration specifying the constraints to be proven.
  * @param proofInputs the input data (PODs and other values) specific to this
  *  proof.
+ * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to
+ *   pick the circuit from. This is assumed to be sorted in order of
+ *   increasing circuit count.
  * @returns a new configuration object bound and canonicalized (see
  *   {@link GPCBoundConfig}), as well as a description of selected circuit.
  * @throws TypeError if any of the arguments is malformed
@@ -110,13 +121,14 @@ export function gpcBindConfig(proofConfig: GPCProofConfig): {
  */
 export function gpcCheckProvable(
   proofConfig: GPCProofConfig,
-  proofInputs: GPCProofInputs
+  proofInputs: GPCProofInputs,
+  circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
 ): {
   boundConfig: GPCBoundConfig;
   circuitDesc: ProtoPODGPCCircuitDesc;
 } {
   const circuitReq = checkProofArgs(proofConfig, proofInputs);
-  return bindConfigWithRequirements(proofConfig, circuitReq);
+  return bindConfigWithRequirements(proofConfig, circuitReq, circuitFamily);
 }
 
 /**
@@ -137,6 +149,9 @@ export function gpcCheckProvable(
  * @param pathToArtifacts the path to the root folder where circuit artifacts
  *   can be found.  This may be a URL (in browser) or a filesystem path (in
  *   Node).
+ * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to
+ *   pick the circuit from. This is assumed to be sorted in order of
+ *   increasing circuit count.
  * @returns The Groth16 proof, a bound configuration usable for reliable
  *   verification or future proofs (see {@link GPCBoundConfig}), and the
  *   revealed claims of this proof (see {@link GPCRevealedClaims}).
@@ -146,7 +161,8 @@ export function gpcCheckProvable(
 export async function gpcProve(
   proofConfig: GPCProofConfig,
   proofInputs: GPCProofInputs,
-  pathToArtifacts: string
+  pathToArtifacts: string,
+  circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
 ): Promise<{
   proof: GPCProof;
   boundConfig: GPCBoundConfig;
@@ -154,7 +170,8 @@ export async function gpcProve(
 }> {
   const { boundConfig, circuitDesc } = gpcCheckProvable(
     proofConfig,
-    proofInputs
+    proofInputs,
+    circuitFamily
   );
 
   const artifactPaths = gpcArtifactPaths(pathToArtifacts, circuitDesc);
@@ -195,6 +212,9 @@ export async function gpcProve(
  * @param pathToArtifacts the path to the root foler where circuit artifacts
  *   can be found.  This may be a URL (in browser) or a filesystem path (in
  *   Node).
+ * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to
+ *   pick the circuit from. This is assumed to be sorted in order of
+ *   increasing circuit count.
  * @returns true if the proof is valid
  * @throws TypeError if any of the arguments is malformed
  * @throws Error if the proof cannot be verified
@@ -203,11 +223,13 @@ export async function gpcVerify(
   proof: GPCProof,
   boundConfig: GPCBoundConfig,
   revealedClaims: GPCRevealedClaims,
-  pathToArtifacts: string
+  pathToArtifacts: string,
+  circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
 ): Promise<boolean> {
   const circuitReq = checkVerifyArgs(boundConfig, revealedClaims);
   const circuitDesc = checkCircuitRequirements(
     circuitReq,
+    circuitFamily,
     boundConfig.circuitIdentifier
   );
 
