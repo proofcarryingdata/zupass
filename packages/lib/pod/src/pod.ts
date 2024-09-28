@@ -1,9 +1,13 @@
 import { requireDefinedParameter } from "@pcd/util";
-import JSONBig from "json-bigint";
 import { PODContent } from "./podContent";
 import { signPODRoot, verifyPODRootSignature } from "./podCrypto";
 import { PODEntries } from "./podTypes";
-import { checkPublicKeyFormat, checkSignatureFormat } from "./podUtil";
+import {
+  checkPublicKeyFormat,
+  checkSignatureFormat,
+  safeBigIntParse,
+  safeBigIntStringify
+} from "./podUtil";
 
 /**
  * Class encapsulating a signed POD with functions for common use cases.
@@ -127,10 +131,7 @@ export class POD {
    * Serializes this instance as a JSON string.
    */
   public serialize(): string {
-    return JSONBig({
-      useNativeBigInt: true,
-      alwaysParseAsBig: true
-    }).stringify({
+    return safeBigIntStringify({
       entries: this.content.asEntries(),
       signature: this.signature,
       signerPublicKey: this.signerPublicKey
@@ -146,10 +147,7 @@ export class POD {
    *   legal for inclusion in a POD
    */
   public static deserialize(serializedPOD: string): POD {
-    const parsedPOD = JSONBig({
-      useNativeBigInt: true,
-      alwaysParseAsBig: true
-    }).parse(serializedPOD);
+    const parsedPOD = safeBigIntParse(serializedPOD);
 
     // TODO(POD-P2): More careful schema validation, likely with Zod, with
     // special handling of the PODEntries type and subtypes.

@@ -1,4 +1,3 @@
-import JSONBig from "json-bigint";
 import {
   EDDSA_PUBKEY_TYPE_STRING,
   PODEntries,
@@ -392,10 +391,7 @@ export function serializePODEntries(
   entries: PODEntries,
   space?: number
 ): string {
-  return JSONBig({
-    useNativeBigInt: true,
-    alwaysParseAsBig: true
-  }).stringify(entries, null, space);
+  return safeBigIntStringify(entries, space);
 }
 
 /**
@@ -407,10 +403,7 @@ export function serializePODEntries(
  * @throws if the serialized form is invalid
  */
 export function deserializePODEntries(serializedEntries: string): PODEntries {
-  return JSONBig({
-    useNativeBigInt: true,
-    alwaysParseAsBig: true
-  }).parse(serializedEntries);
+  return safeBigIntParse(serializedEntries);
 }
 
 /**
@@ -467,10 +460,7 @@ export function podEntriesToSimplifiedJSON(
   for (const [name, value] of Object.entries(entries)) {
     simplified[name] = podValueToRawValue(value);
   }
-  return JSONBig({
-    useNativeBigInt: true,
-    alwaysParseAsBig: true
-  }).stringify(simplified, null, space);
+  return safeBigIntStringify(simplified, space);
 }
 
 /**
@@ -536,10 +526,10 @@ export function podValueOrTupleFromRawValue(
 export function podEntriesFromSimplifiedJSON(
   simplifiedJSON: string
 ): PODEntries {
-  const simplifiedEntries = JSONBig({
-    useNativeBigInt: true,
-    alwaysParseAsBig: true
-  }).parse(simplifiedJSON) as Record<string, PODRawValue>;
+  const simplifiedEntries = safeBigIntParse(simplifiedJSON) as Record<
+    string,
+    PODRawValue
+  >;
   const entries: Record<string, PODValue> = {};
   for (const [entryName, rawValue] of Object.entries(simplifiedEntries)) {
     entries[entryName] = podValueFromRawValue(rawValue);
@@ -670,4 +660,62 @@ export function decodeBytesAuto(
     }
   }
   throw new TypeError(errorMessage);
+}
+
+/**
+ * Replaces BigInts with their string representation.
+ * @param key the key of the entry in the JSON object
+ * @param value the value of the entry in the JSON object
+ * @returns the value to be serialized
+ */
+function bigIntReplacer(key: string, value: unknown): unknown {
+  if (typeof value === "bigint") {
+    return value.toString();
+  }
+  return value;
+}
+
+/**
+ * Serializes an object to a string, replacing BigInts with their string
+ * representation.
+ * @param obj the object to serialize
+ * @param space pretty-printing configuration, as defined by the corresponding
+ *   argument to JSON.stringify.
+ * @returns a string representation of the object
+ */
+export function safeBigIntStringify(
+  obj: unknown,
+  space?: string | number
+): string {
+  return JSON.stringify(obj, bigIntReplacer, space);
+}
+
+/**
+ * Regex for matching BigInt strings.
+ */
+const BIGINT_STRING_REGEX = /^-?\d+n?$/;
+
+/**
+ * Revives BigInts from their string representation.
+ * @param key the key of the entry in the JSON object
+ * @param value the value of the entry in the JSON object
+ * @returns the value to be deserialized
+ */
+function bigIntReviver(key: string, value: unknown): unknown {
+  if (typeof value === "string" && value.match(BIGINT_STRING_REGEX)) {
+    return BigInt(value);
+  }
+  return value;
+}
+
+/**
+ * Parses a string as JSON, reviving BigInts from their string representation.
+ * @param json the string to parse
+ * @returns the parsed object
+ */
+export function safeBigIntParse(
+  json: string
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): any {
+  return JSON.parse(json, bigIntReviver);
 }
