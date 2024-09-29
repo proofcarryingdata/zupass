@@ -33,7 +33,7 @@ export function PODSection(): ReactNode {
 }
 
 function QueryPODs({ z }: { z: ParcnetAPI }): ReactNode {
-  const [pods, setPODs] = useState<POD[]>([]);
+  const [pods, setPODs] = useState<POD[] | undefined>(undefined);
 
   return (
     <div>
@@ -79,7 +79,7 @@ const pods = await z.pod.query(q);
         }}
         label="Query PODs"
       />
-      {pods.length > 0 && (
+      {pods !== undefined && (
         <pre className="whitespace-pre-wrap">
           {JSONBig.stringify(
             pods.map((p) => ({

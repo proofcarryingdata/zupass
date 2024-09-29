@@ -133,3 +133,7 @@ export function bigintToUint8Array(bigint: bigint): Uint8Array {
 export function uint8arrayToBigint(uint8Array: Uint8Array): bigint {
   return BigInt("0x" + Buffer.from(uint8Array).toString("hex"));
 }
+
+export function isInIframe(): boolean {
+  return window !== window.parent;
+}

@@ -46,6 +46,9 @@
       "path": "../pod"
     },
     {
+      "path": "../../pcd/pod-ticket-pcd"
+    },
+    {
       "path": "../../pcd/semaphore-group-pcd"
     },
     {

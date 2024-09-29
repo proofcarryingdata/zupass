@@ -77,6 +77,7 @@ export function GPC(): ReactNode {
     <div>
       <h1 className="text-xl font-bold mb-2">GPC</h1>
       <div className="prose">
+        <h2 className="text-lg font-bold mt-4">GPC proof</h2>
         <div>
           <p>
             Generating a GPC proof is done like this:
@@ -146,6 +147,7 @@ const gpcProof = await z.gpc.prove(request);
             </pre>
           )}
         </div>
+        <h2 className="text-lg font-bold mt-4">Verify GPC proof</h2>
         <div>
           <p>
             Verify a GPC proof like this:
@@ -185,7 +187,7 @@ const verified = await z.gpc.verify(proof, config, revealedClaims, request);
             </pre>
           )}
         </div>
-
+        <h2 className="text-lg font-bold mt-4">Generate a ticket</h2>
         <div>
           <p>
             We're about to look at ticket ownership proofs. However, you might
@@ -257,6 +259,7 @@ await z.pod.insert(pod);
           )}
         </div>
 
+        <h2 className="text-lg font-bold mt-4">Generate a ticket proof</h2>
         <div>
           <p>
             Generating a ticket ownership proof is done like this:
@@ -272,7 +275,8 @@ const request = ticketProofRequest({
     ]
   ],
   fieldsToReveal: {
-    eventId: true
+    eventId: true,
+    productId: true
     // other fields could be revealed too
   }
 });
@@ -304,7 +308,7 @@ const gpcProof = await z.gpc.prove(request.schema);
                 console.log(e);
               }
             }}
-            label="Get GPC Proof"
+            label="Get Ticket Proof"
           />
           {proveResult && (
             <pre className="whitespace-pre-wrap">
