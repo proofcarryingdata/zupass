@@ -12,6 +12,7 @@ import { List } from "../shared/List";
 import { NewModals } from "../shared/Modals/NewModals";
 import { Ticket } from "../shared/Ticket";
 import { TicketCard } from "../shared/TicketCard";
+import { NewLoader } from "./Home/NewLoader";
 const exampleList = [
   {
     title: "Event Passes",
@@ -107,6 +108,7 @@ const ComponentsScreen = (): JSX.Element => {
             <Button2 variant="secondary">secondary</Button2>
           </div>
           <div>
+            <NewLoader columns={5} rows={3} />
             <Avatar imgSrc={"https://i.imgur.com/Fzs5N9T.jpeg"} />
           </div>
           <div
