@@ -78,8 +78,6 @@ import { ListenMode, useZappServer } from "../src/zapp/useZappServer";
 
 enableLiveReload();
 
-enableLiveReload();
-
 function App(): JSX.Element {
   useBackgroundJobs();
   useZappServer(ListenMode.LISTEN_IF_EMBEDDED);

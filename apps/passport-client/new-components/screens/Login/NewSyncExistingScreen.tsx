@@ -71,7 +71,7 @@ export const NewSyncExistingScreen = (): JSX.Element => {
   }, [encryptionKey, dispatch]);
 
   const onClose = useCallback(() => {
-    window.location.hash = "#/";
+    window.location.hash = "#/new";
   }, []);
 
   return (
@@ -79,7 +79,7 @@ export const NewSyncExistingScreen = (): JSX.Element => {
       <LoginContainer>
         <LoginTitleContainer>
           <Typography fontSize={24} fontWeight={800} color="#1E2C50">
-            LOGIN{" "}
+            LOGIN
           </Typography>
           <Typography
             fontSize={16}

@@ -117,7 +117,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
         identityCommitment
       }
     );
-    window.location.href = "#/sync-existing";
+    window.location.href = "#/new/sync-existing";
   }, [email, identityCommitment]);
 
   const onSubmitPassword = useCallback(
@@ -210,7 +210,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
             disabled
           />
           <Button2 onClick={onLoginWithMasterPasswordClick}>
-            Login with Sync Key{" "}
+            Login with Sync Key
           </Button2>
         </>
       );
