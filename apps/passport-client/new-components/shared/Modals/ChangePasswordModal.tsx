@@ -165,6 +165,9 @@ export const ChangePasswordModal = (): JSX.Element | null => {
               }
             });
           }}
+          isChangePassword={isChangePassword}
+          currentPassword={currentPassword}
+          setCurrentPassword={setCurrentPassword}
         />
       </Container>
     </BottomModal>

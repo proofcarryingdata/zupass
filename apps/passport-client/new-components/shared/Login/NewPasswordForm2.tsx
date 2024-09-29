@@ -16,6 +16,9 @@ interface NewPasswordForm {
   setConfirmPassword: Dispatch<SetStateAction<string>>;
   revealPassword: boolean;
   setRevealPassword: Dispatch<SetStateAction<boolean>>;
+  currentPassword?: string;
+  setCurrentPassword?: Dispatch<SetStateAction<string>>;
+  isChangePassword?: boolean;
   onSuccess: () => void;
   onCancel: () => void;
   submitButtonText: string;
@@ -37,6 +40,9 @@ export const NewPasswordForm2 = ({
   setConfirmPassword,
   revealPassword,
   setRevealPassword,
+  currentPassword,
+  setCurrentPassword,
+  isChangePassword,
   onSuccess,
   onCancel,
   submitButtonText,
@@ -79,12 +85,15 @@ export const NewPasswordForm2 = ({
   };
 
   const getErrorMessage = (
-    inputType: "password" | "confirm"
+    inputType: "password" | "confirm" | "change"
   ): string | undefined => {
     if (!error) return undefined;
-    const errors: Record<string, "password" | "confirm"> = {
+    const errors: Record<string, "password" | "confirm" | "change"> = {
       "Password must be at least 8 characters.": "password",
-      "Passwords don't match": "confirm"
+      "Passwords don't match": "confirm",
+      "Error occurred while fetching salt from server": "change",
+      "Incorrect password. If you've lost your password, reset your account below.":
+        "change"
     };
 
     if (errors[error] === inputType) return error;
@@ -97,6 +106,19 @@ export const NewPasswordForm2 = ({
       {/* For password manager autofill */}
       <input hidden readOnly value={emails[0]} />
       <InputsContainer>
+        {isChangePassword && (
+          <Input2
+            value={currentPassword}
+            onChange={({ target: { value } }): void => {
+              setError("");
+              setCurrentPassword?.(value);
+            }}
+            placeholder="Current password"
+            error={getErrorMessage("change")}
+            variant="secondary"
+            type="password"
+          />
+        )}
         <Input2
           value={password}
           onChange={({ target: { value } }): void => {
