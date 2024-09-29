@@ -27,6 +27,7 @@ import {
   LoginForm,
   LoginTitleContainer
 } from "../../shared/Login/LoginComponents";
+import { NewLoader } from "../../shared/NewLoader";
 import { Typography } from "../../shared/Typography";
 
 export const NewLoginScreen = (): JSX.Element => {
@@ -129,10 +130,10 @@ export const NewLoginScreen = (): JSX.Element => {
   }, [self]);
 
   if (state.loggingOut) {
-    // # TODO add loader
     return (
       <AppContainer bg="gray" fullscreen>
         <LogoutContainer>
+          <NewLoader columns={5} rows={5} />
           <Typography fontSize={18} fontWeight={800} color="#8B94AC">
             LOGGING OUT
           </Typography>
@@ -189,4 +190,5 @@ const LogoutContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
 `;

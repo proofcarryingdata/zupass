@@ -62,6 +62,7 @@ import { NewHomeScreen } from "../new-components/screens/Home";
 import { NewAlreadyRegisteredScreen } from "../new-components/screens/Login/NewAlreadyRegisteredScreen";
 import { NewCreatePasswordScreen } from "../new-components/screens/Login/NewCreatePasswordScreen";
 import { NewEnterConfirmationCodeScreen } from "../new-components/screens/Login/NewEnterConfirmationCodeScreen";
+import { NewLoginInterstitialScreen } from "../new-components/screens/Login/NewLoginInterstitialScreen";
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
 import { NewPassportScreen2 } from "../new-components/screens/Login/NewPassportScreen";
 import { NewSyncExistingScreen } from "../new-components/screens/Login/NewSyncExistingScreen";
@@ -155,6 +156,10 @@ function RouterImpl(): JSX.Element {
           <Route
             path="already-registered"
             element={<NewAlreadyRegisteredScreen />}
+          />
+          <Route
+            path="login-interstitial"
+            element={<NewLoginInterstitialScreen />}
           />
           <Route path="sync-existing" element={<NewSyncExistingScreen />} />
           <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
