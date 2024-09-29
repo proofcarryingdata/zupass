@@ -10,9 +10,10 @@ import { FloatingMenu } from "../shared/FloatingMenu";
 import { Input2 } from "../shared/Input";
 import { List } from "../shared/List";
 import { NewModals } from "../shared/Modals/NewModals";
+import { NewLoader } from "../shared/NewLoader";
 import { Ticket } from "../shared/Ticket";
 import { TicketCard } from "../shared/TicketCard";
-import { NewLoader } from "./Home/NewLoader";
+
 const exampleList = [
   {
     title: "Event Passes",

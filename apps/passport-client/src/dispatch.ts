@@ -1425,15 +1425,16 @@ async function promptToAgreePrivacyNotice(
       state.identityV3
     );
   } else {
-  if (newUi) {
-    // on new ui this is not a modal
-    window.location.hash = "#/new/updated-terms";
-  } else {
-    update({
-      modal: {
-        modalType: "privacy-notice"
-      }
-    });
+    if (newUi) {
+      // on new ui this is not a modal
+      window.location.hash = "#/new/updated-terms";
+    } else {
+      update({
+        modal: {
+          modalType: "privacy-notice"
+        }
+      });
+    }
   }
 }
 
