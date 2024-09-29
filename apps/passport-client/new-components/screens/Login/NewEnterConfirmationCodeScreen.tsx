@@ -94,7 +94,7 @@ export const NewEnterConfirmationCodeScreen = (): JSX.Element => {
           variant="primary"
           type="number"
           pattern="[0-9]*"
-          inputmode="numeric"
+          inputMode="numeric"
           value={input}
           onChange={(e): void => {
             setInput(e.target.value.replace(/\D/g, ""));

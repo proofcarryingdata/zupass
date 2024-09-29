@@ -202,7 +202,7 @@ const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
             variant="primary"
             type="number"
             pattern="[0-9]*"
-            inputmode="numeric"
+            inputMode="numeric"
             value={token}
             onChange={(e): void => {
               setToken(e.target.value.replace(/\D/g, ""));
