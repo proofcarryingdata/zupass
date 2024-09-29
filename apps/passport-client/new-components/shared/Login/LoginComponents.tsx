@@ -7,6 +7,7 @@ export const LoginContainer = styled.div`
   justify-content: flex-end;
   gap: 12px;
   align-items: center;
+  max-width: 100%;
 `;
 export const LoginTitleContainer = styled.div`
   display: flex;

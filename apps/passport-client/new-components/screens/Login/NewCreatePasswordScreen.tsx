@@ -25,7 +25,6 @@ export const NewCreatePasswordScreen = (): JSX.Element | null => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
   const [settingPassword, setSettingPassword] = useState(false);
-  const [skipConfirm, setSkipConfirm] = useState(false);
 
   const redirectToLoginPageWithError = useCallback((e: Error | string) => {
     console.error(e);
@@ -35,6 +34,12 @@ export const NewCreatePasswordScreen = (): JSX.Element | null => {
 
   const onSkipPassword = useCallback(async () => {
     try {
+      if (
+        !confirm(
+          "Are you sure you want to skip setting a password? You can always set password later."
+        )
+      )
+        return;
       // If email or token are undefined, we will already have redirected to
       // login, so this is just for type-checking
       if (email && token) {
@@ -176,10 +181,8 @@ export const NewCreatePasswordScreen = (): JSX.Element | null => {
           setConfirmPassword={setConfirmPassword}
           onSuccess={onSetPassword}
           onCancel={onCancelClick}
-          // showSkipConfirm={!skipConfirm}
-          // onSkipConfirm={(): void => {
-          //   onSkipPassword();
-          // }}
+          showSkipConfirm
+          onSkipConfirm={onSkipPassword}
           style={{ width: "100%", marginBottom: 24 }}
         />
       </LoginContainer>
