@@ -16,6 +16,7 @@ import {
   ReactElement,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState
 } from "react";
@@ -35,40 +36,68 @@ const ANOTHER_GAP = 40;
 const SHOW_HELPER_LINES = false;
 const TICKET_GAP = 20;
 type TicketType = EdDSATicketPCD | PODTicketPCD;
+const TypeNames = [EdDSATicketPCDTypeName, PODTicketPCDTypeName] as const;
+type TicketTypeName = (typeof TypeNames)[number];
+type TicketPack = {
+  eventTicket: TicketType;
+  addOns: TicketType[];
+  attendeeEmail: string;
+  eventId: string;
+  packType: TicketTypeName;
+};
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
   // TODO: fetch the pods type as well and prioritize it if theres a conflict.
   return isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd);
 };
-const useTickets = (): Array<[string, TicketType[]]> => {
+
+const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
   const tickets = allPCDs.filter(isEventTicketPCD);
-  const eventsMap = new Map<string, TicketType[]>();
-
-  for (const ticket of tickets) {
-    const ticketList = eventsMap.get(ticket.claim.ticket.eventName) ?? [];
-    const existingTicketIndex = ticketList.findIndex(
-      (value) => value.claim.ticket.ticketId === ticket.claim.ticket.ticketId
-    );
-
-    // we prioritize POD tickets, so in case we encounter one, we remove the eddesa ticket.
-    // if we counter eddesa ticket we check if we have the pod one and if so, ignore eddesa.
-    if (existingTicketIndex >= 0 && ticket.type === PODTicketPCDTypeName) {
-      ticketList.splice(existingTicketIndex);
-    } else if (
-      existingTicketIndex >= 0 &&
-      ticket.type === EdDSATicketPCDTypeName
-    ) {
-      continue;
+  const ticketsTrigger = tickets.map((t) => t.id).join(" ");
+  return useMemo(() => {
+    const eventsMap = new Map<string, TicketPack[]>();
+    for (const ticket of tickets) {
+      console.log(ticket.claim.ticket.attendeeEmail, ticket);
+      if (ticket.claim.ticket.ticketName !== "GA") continue;
+      let ticketPacks = eventsMap.get(ticket.claim.ticket.eventName);
+      if (!ticketPacks) {
+        ticketPacks = [];
+        eventsMap.set(ticket.claim.ticket.eventName, ticketPacks);
+      }
+      if (ticket.type === PODTicketPCDTypeName) {
+        const relatedEddesaTicketPackIdx = ticketPacks.findIndex(
+          (pack) =>
+            pack.attendeeEmail === ticket.claim.ticket.attendeeEmail &&
+            pack.packType === EdDSATicketPCDTypeName
+        );
+        if (relatedEddesaTicketPackIdx >= 0)
+          ticketPacks.splice(relatedEddesaTicketPackIdx, 1);
+      }
+      ticketPacks.push({
+        eventTicket: ticket,
+        eventId: ticket.claim.ticket.eventId,
+        addOns: [],
+        attendeeEmail: ticket.claim.ticket.attendeeEmail,
+        packType: ticket.type as TicketTypeName
+      });
     }
+    for (const ticket of tickets) {
+      if (ticket.claim.ticket.ticketName === "GA") continue;
+      const ticketPacks = eventsMap.get(ticket.claim.ticket.eventName);
+      if (!ticketPacks) continue;
+      const pack = ticketPacks.find(
+        (pack) =>
+          pack.attendeeEmail === ticket.claim.ticket.attendeeEmail &&
+          pack.packType === ticket.type
+      );
 
-    if (!eventsMap.get(ticket.claim.ticket.eventName)) {
-      eventsMap.set(ticket.claim.ticket.eventName, ticketList);
+      if (!pack) continue;
+      pack.addOns.push(ticket);
     }
-
-    ticketList.push(ticket);
-  }
-  return Array.from(eventsMap.entries());
+    return Array.from(eventsMap.entries());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ticketsTrigger]);
 };
 const Scroller = styled.div<{
   amount: number;
@@ -164,11 +193,10 @@ const calculateElWidth = (
   return Math.ceil((scrollWidth - gap * (len - 1)) / len);
 };
 
-const getEventDetails = (tickets: TicketType[]): ITicketData => {
-  const ticket = tickets.find((ticket) => !!ticket.claim.ticket.imageUrl)?.claim
-    .ticket;
-  return (ticket as ITicketData) ?? (tickets[0].claim.ticket as ITicketData);
+const getEventDetails = (tickets: TicketPack): ITicketData => {
+  return tickets.eventTicket.claim.ticket as ITicketData;
 };
+
 const EmptyCardContainer = styled.div`
   display: flex;
   height: 302px;
@@ -187,6 +215,16 @@ const InnerContainer = styled.div`
   align-items: center;
   text-align: center;
 `;
+
+const calcColHeight = (ticketRefs: HTMLDivElement[]): number => {
+  const len = ticketRefs.length;
+  const allSize = ticketRefs.reduce((acc, ref) => {
+    acc += ref.clientHeight;
+    return acc;
+  }, 0);
+
+  return allSize + len * ANOTHER_GAP;
+};
 
 const EmptyCard = (): ReactElement => {
   return (
@@ -209,10 +247,10 @@ export const NewHomeScreen = (): ReactElement => {
   const [currentPos, setCurrentPos] = useState(0);
   const [width, setWidth] = useState(0);
   const [width2, setWidth2] = useState(0);
-  const [ticketHeight, setTicketHeight] = useState(0);
+  const [colHeight, setColHeight] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pcdCardScrollRef = useRef<HTMLDivElement>(null);
-  const ticketRef = useRef<HTMLDivElement>(null);
+  const ticketsRef = useRef<Map<string, HTMLDivElement[]>>(new Map());
   const self = useSelf();
   const navigate = useNavigate();
 
@@ -237,10 +275,58 @@ export const NewHomeScreen = (): ReactElement => {
         )
       );
     }
-    if (ticketRef.current) {
-      setTicketHeight(ticketRef.current.clientHeight);
-    }
+    // if (ticketRef.current) {
+    //   setTicketHeight(ticketRef.current.clientHeight);
+    // }
   }, [setWidth, setWidth2, tickets.length]);
+
+  useEffect(() => {
+    const refs = ticketsRef.current.get(tickets[currentPos][0]);
+    if (!refs) {
+      setColHeight(0);
+      return;
+    }
+    setColHeight(calcColHeight(refs));
+  }, [currentPos, tickets]);
+
+  const renderedTickets = useMemo(() => {
+    ticketsRef.current = new Map();
+    console.log(tickets);
+    return tickets.map(([eventName, eventTicketPack]) => {
+      return (
+        <TicketsContainer
+          key={eventTicketPack.map((pack) => pack.eventTicket.id).join("-")}
+        >
+          {eventTicketPack.map((pack) => {
+            return (
+              <CardBody
+                addOns={
+                  pack.addOns.length > 0
+                    ? {
+                        text: `View ${pack.addOns.length} add-on items`,
+                        onClick(): void {}
+                      }
+                    : undefined
+                }
+                ref={(ref) => {
+                  if (!ref) return;
+                  const group = ticketsRef.current.get(eventName);
+                  if (!group) {
+                    ticketsRef.current.set(eventName, [ref]);
+                    return;
+                  }
+                  group.push(ref);
+                }}
+                newUI={true}
+                pcd={pack.eventTicket}
+                isMainIdentity={false}
+              />
+            );
+          })}
+        </TicketsContainer>
+      );
+    });
+  }, [tickets]);
 
   if (!tickets.length)
     return (
@@ -250,7 +336,7 @@ export const NewHomeScreen = (): ReactElement => {
         <NewModals />
       </AppContainer>
     );
-
+  // return null;
   return (
     <AppContainer bg="gray" noPadding>
       <Container elWidth={width}>
@@ -261,8 +347,8 @@ export const NewHomeScreen = (): ReactElement => {
           scrollInPx={positionInPx(currentPos, width, tickets.length - 1, GAP)}
           amount={tickets.length - 1}
         >
-          {tickets.map(([eventName, eventTickets], i) => {
-            const eventDetails = getEventDetails(eventTickets);
+          {tickets.map(([eventName, packs], i) => {
+            const eventDetails = getEventDetails(packs[0]);
             return (
               <TicketCard
                 address={eventName}
@@ -271,7 +357,7 @@ export const NewHomeScreen = (): ReactElement => {
                   eventDetails.timestampSigned
                 ).toDateString()}
                 imgSource={eventDetails.imageUrl}
-                ticketCount={eventTickets.length}
+                ticketCount={packs.length}
                 cardColor={i % 2 === 0 ? "purple" : "orange"}
               />
             );
@@ -317,10 +403,7 @@ export const NewHomeScreen = (): ReactElement => {
         </PageCircleButton>
       </ButtonsContainer>
       <Spacer h={20} />
-      <Container
-        elWidth={width2}
-        height={(ticketHeight + TICKET_GAP) * tickets[currentPos][1].length}
-      >
+      <Container elWidth={width2} height={colHeight}>
         <Scroller
           gap={ANOTHER_GAP}
           ref={pcdCardScrollRef}
@@ -333,20 +416,7 @@ export const NewHomeScreen = (): ReactElement => {
           offset={(420 - width2) / 2}
           amount={tickets.length - 1}
         >
-          {tickets.map(([_eventName, eventTickets], i) => {
-            return (
-              <TicketsContainer>
-                {eventTickets.map((ticket, j) => (
-                  <CardBody
-                    ref={!!i && !!j ? ticketRef : undefined}
-                    newUI={true}
-                    pcd={ticket}
-                    isMainIdentity={false}
-                  />
-                ))}
-              </TicketsContainer>
-            );
-          })}
+          {renderedTickets}
         </Scroller>
         {SHOW_HELPER_LINES && (
           <Line padding={(window.screen.width - width2) / 2} />

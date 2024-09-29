@@ -5,9 +5,16 @@ import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
 import { useCallback } from "react";
 import urlJoin from "url-join";
 
+type NEW_UI__AddOns = {
+  onClick: () => void;
+  text: string;
+};
 export interface PODTicketPCDCardProps {
+  ticketData: IPODTicketData;
+  pcd: PODTicketPCD;
   idBasedVerifyURL: string;
   newUI?: boolean;
+  addOns?: NEW_UI__AddOns;
 }
 
 export const PODTicketPCDUI: PCDUI<PODTicketPCD, PODTicketPCDCardProps> = {
@@ -17,11 +24,13 @@ export const PODTicketPCDUI: PCDUI<PODTicketPCD, PODTicketPCDCardProps> = {
 function PODTicketCardBody({
   pcd,
   newUI,
-  idBasedVerifyURL
+  idBasedVerifyURL,
+  addOns
 }: {
   pcd: PODTicketPCD;
   idBasedVerifyURL: string;
   newUI?: boolean;
+  addOns?: NEW_UI__AddOns;
 }): JSX.Element {
   return (
     <PODTicketCardBodyImpl
@@ -29,6 +38,7 @@ function PODTicketCardBody({
       ticketData={pcd.claim.ticket}
       idBasedVerifyURL={idBasedVerifyURL}
       newUI={newUI}
+      addOns={addOns}
     />
   );
 }
@@ -37,13 +47,9 @@ export function PODTicketCardBodyImpl({
   ticketData,
   idBasedVerifyURL,
   newUI,
-  pcd
-}: {
-  ticketData: IPODTicketData;
-  pcd: PODTicketPCD;
-  idBasedVerifyURL: string;
-  newUI?: boolean;
-}): JSX.Element {
+  pcd,
+  addOns
+}: PODTicketPCDCardProps): JSX.Element {
   const hasImage = ticketData.imageUrl !== undefined;
 
   if (newUI) {
@@ -82,18 +88,26 @@ export function PODTicketCardBodyImpl({
             <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
           </NEW_UI__ExtraInfoContainer>
         </NEW_UI__InfoContainer>
-        <NEW_UI__ExtraSection
-          onClick={() => {
-            const a = document.createElement("a");
-            a.href = URL.createObjectURL(blob);
-            a.download = "test.json";
-            a.click();
-            a.remove();
-          }}
-        >
-          <NEW_UI__ExtraSectionText>Download ticket</NEW_UI__ExtraSectionText>
-          <DownloadIcon />
-        </NEW_UI__ExtraSection>
+        <div>
+          <NEW_UI__ExtraSection
+            onClick={() => {
+              const a = document.createElement("a");
+              a.href = URL.createObjectURL(blob);
+              a.download = "test.json";
+              a.click();
+              a.remove();
+            }}
+          >
+            <NEW_UI__ExtraSectionText>Download ticket</NEW_UI__ExtraSectionText>
+            <DownloadIcon />
+          </NEW_UI__ExtraSection>
+          {addOns && (
+            <NEW_UI__ExtraSection onClick={addOns.onClick}>
+              <NEW_UI__ExtraSectionText>{addOns.text}</NEW_UI__ExtraSectionText>
+              <QRIcon />
+            </NEW_UI__ExtraSection>
+          )}
+        </div>
       </NEW_UI__Container>
     );
   }
@@ -284,6 +298,30 @@ const DownloadIcon = (): JSX.Element => (
       strokeLinecap="round"
       strokeLinejoin="round"
       d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+    />
+  </svg>
+);
+
+const QRIcon = (): JSX.Element => (
+  <svg
+    width={20}
+    height={20}
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="var(--text-tertiary)"
+    className="size-6"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z"
     />
   </svg>
 );
