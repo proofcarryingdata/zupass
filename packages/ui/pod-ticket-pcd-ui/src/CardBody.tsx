@@ -25,18 +25,24 @@ function PODTicketCardBody({
 }): JSX.Element {
   return (
     <PODTicketCardBodyImpl
+      pcd={pcd}
       ticketData={pcd.claim.ticket}
       idBasedVerifyURL={idBasedVerifyURL}
+      newUI={newUI}
     />
   );
 }
 
 export function PODTicketCardBodyImpl({
   ticketData,
-  idBasedVerifyURL
+  idBasedVerifyURL,
+  newUI,
+  pcd
 }: {
   ticketData: IPODTicketData;
+  pcd: PODTicketPCD;
   idBasedVerifyURL: string;
+  newUI?: boolean;
 }): JSX.Element {
   const hasImage = ticketData.imageUrl !== undefined;
 
@@ -59,7 +65,10 @@ export function PODTicketCardBodyImpl({
             minHeight: 320
           }}
         >
-          <TicketQR pcd={pcd} idBasedVerifyURL={idBasedVerifyURL} />
+          <TicketQR
+            ticketData={ticketData}
+            idBasedVerifyURL={idBasedVerifyURL}
+          />
         </div>
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
