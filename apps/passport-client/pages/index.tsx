@@ -65,6 +65,9 @@ import { NewEnterConfirmationCodeScreen } from "../new-components/screens/Login/
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
 import { NewPassportScreen2 } from "../new-components/screens/Login/NewPassportScreen";
 import { NewSyncExistingScreen } from "../new-components/screens/Login/NewSyncExistingScreen";
+import { NewPrivacyNoticeScreen } from "../new-components/screens/NewPrivacyNoticeScreen";
+import { NewTermsScreen } from "../new-components/screens/NewTermsScreen";
+import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTermsScreen";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
@@ -154,6 +157,9 @@ function RouterImpl(): JSX.Element {
             element={<NewAlreadyRegisteredScreen />}
           />
           <Route path="sync-existing" element={<NewSyncExistingScreen />} />
+          <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
+          <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
+          <Route path="terms" element={<NewTermsScreen />} />
         </Route>
         <Route path="/">
           <Route path="terms" element={<TermsScreen />} />

@@ -170,9 +170,11 @@ export type Action =
   | {
       type: "handle-agreed-privacy-notice";
       version: number;
+      newUi?: boolean;
     }
   | {
       type: "prompt-to-agree-privacy-notice";
+      newUi?: boolean;
     }
   | {
       type: "sync-subscription";
@@ -319,9 +321,14 @@ export async function dispatch(
         action.permissions
       );
     case "handle-agreed-privacy-notice":
-      return handleAgreedPrivacyNotice(state, update, action.version);
+      return handleAgreedPrivacyNotice(
+        state,
+        update,
+        action.version,
+        action.newUi
+      );
     case "prompt-to-agree-privacy-notice":
-      return promptToAgreePrivacyNotice(state, update);
+      return promptToAgreePrivacyNotice(state, update, action.newUi);
     case "sync-subscription":
       return syncSubscription(
         state,
@@ -1380,15 +1387,21 @@ async function updateSubscriptionPermissions(
 async function handleAgreedPrivacyNotice(
   state: AppState,
   update: ZuUpdate,
-  version: number
+  version: number,
+  newUi = false
 ): Promise<void> {
   if (state.self) {
-    saveSelf({ ...state.self, terms_agreed: version });
-    update({
-      self: { ...state.self, terms_agreed: version },
-      loadedIssuedPCDs: false,
-      modal: { modalType: "none" }
-    });
+    if (newUi) {
+      saveSelf({ ...state.self, terms_agreed: version });
+      window.location.hash = "#/new";
+    } else {
+      saveSelf({ ...state.self, terms_agreed: version });
+      update({
+        self: { ...state.self, terms_agreed: version },
+        loadedIssuedPCDs: false,
+        modal: { modalType: "none" }
+      });
+    }
   }
 }
 
@@ -1400,7 +1413,8 @@ async function handleAgreedPrivacyNotice(
  */
 async function promptToAgreePrivacyNotice(
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const cachedTerms = loadPrivacyNoticeAgreed();
   if (cachedTerms === LATEST_PRIVACY_NOTICE) {
@@ -1410,6 +1424,10 @@ async function promptToAgreePrivacyNotice(
       LATEST_PRIVACY_NOTICE,
       state.identityV3
     );
+  } else {
+  if (newUi) {
+    // on new ui this is not a modal
+    window.location.hash = "#/new/updated-terms";
   } else {
     update({
       modal: {

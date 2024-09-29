@@ -3,13 +3,16 @@ import React from "react";
 import styled from "styled-components";
 
 export type FontWeight = 400 | 500 | 600 | 700 | 800 | 900;
-export type FontSize = 12 | 14 | 16 | 18;
+export type FontSize = 12 | 14 | 16 | 18 | 20 | 22 | 24;
 export type FontFamily = "Barlow" | "Rubik";
 const LINE_HEIGHT: Record<FontSize, number> = {
   "12": 16.2,
   "14": 18.9,
   "16": 21.6,
-  "18": 24.3
+  "18": 24.3,
+  "20": 27,
+  "22": 29.7,
+  "24": 32.4
 };
 
 const TypographyText = styled.span<{
