@@ -336,7 +336,7 @@ loadInitialState()
       >
         <GlobalBackground color={"var(--bg-dark-primary)"} />
         <Background>
-          <CenterColumn>
+          <CenterColumn defaultPadding={false}>
             <TextCenter>
               <Spacer h={64} />
               <H1>An error occurred when loading Zupass</H1>
