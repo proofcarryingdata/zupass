@@ -6,6 +6,7 @@ import {
 } from "../../../src/password";
 import { Button2 } from "../Button";
 import { Input2 } from "../Input";
+import { PasswordInput2 } from "./PasswordInput2";
 
 interface NewPasswordForm {
   loading: boolean;
@@ -14,8 +15,6 @@ interface NewPasswordForm {
   setPassword: Dispatch<SetStateAction<string>>;
   confirmPassword: string;
   setConfirmPassword: Dispatch<SetStateAction<string>>;
-  revealPassword: boolean;
-  setRevealPassword: Dispatch<SetStateAction<boolean>>;
   currentPassword?: string;
   setCurrentPassword?: Dispatch<SetStateAction<string>>;
   isChangePassword?: boolean;
@@ -38,8 +37,6 @@ export const NewPasswordForm2 = ({
   setPassword,
   confirmPassword,
   setConfirmPassword,
-  revealPassword,
-  setRevealPassword,
   currentPassword,
   setCurrentPassword,
   isChangePassword,
@@ -107,7 +104,7 @@ export const NewPasswordForm2 = ({
       <input hidden readOnly value={emails[0]} />
       <InputsContainer>
         {isChangePassword && (
-          <Input2
+          <PasswordInput2
             value={currentPassword}
             onChange={({ target: { value } }): void => {
               setError("");
@@ -115,8 +112,6 @@ export const NewPasswordForm2 = ({
             }}
             placeholder="Current password"
             error={getErrorMessage("change")}
-            variant="secondary"
-            type="password"
           />
         )}
         <Input2
@@ -136,7 +131,7 @@ export const NewPasswordForm2 = ({
           variant="secondary"
           type="password"
         />
-        <Input2
+        <PasswordInput2
           ref={confirmPasswordRef}
           value={confirmPassword}
           onChange={({ target: { value } }): void => {
@@ -145,8 +140,6 @@ export const NewPasswordForm2 = ({
           }}
           placeholder="Confirm password"
           error={getErrorMessage("confirm")}
-          variant="secondary"
-          type="password"
         />
       </InputsContainer>
       <InputsContainer>

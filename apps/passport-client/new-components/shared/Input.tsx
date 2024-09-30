@@ -2,7 +2,7 @@ import { ForwardedRef, InputHTMLAttributes, Ref, forwardRef } from "react";
 import styled, { css } from "styled-components";
 import { Typography } from "./Typography";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface NewInputProps extends InputHTMLAttributes<HTMLInputElement> {
   variant?: "primary" | "secondary";
   error?: string;
 }
@@ -68,7 +68,7 @@ const ErrorContainer = styled.div`
 `;
 
 export const Input2 = forwardRef(
-  (inputProps: InputProps, ref: ForwardedRef<HTMLInputElement>) => {
+  (inputProps: NewInputProps, ref: ForwardedRef<HTMLInputElement>) => {
     const { error, variant } = inputProps;
     const defaultVariant = variant ?? "primary";
     if (error) {

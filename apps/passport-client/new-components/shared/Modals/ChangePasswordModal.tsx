@@ -43,7 +43,6 @@ export const ChangePasswordModal = (): JSX.Element | null => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [revealPassword, setRevealPassword] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
@@ -149,8 +148,6 @@ export const ChangePasswordModal = (): JSX.Element | null => {
             isChangePassword ? "New password" : "Password"
           }
           emails={self.emails}
-          revealPassword={revealPassword}
-          setRevealPassword={setRevealPassword}
           submitButtonText="Confirm"
           password={newPassword}
           confirmPassword={confirmPassword}
