@@ -203,7 +203,7 @@ export const TicketQRWrapper = forwardRef<
   if (isEdDSATicketPCD(pcd) && identityPCD) {
     const urls = getURLsBasedOnCategory(pcd.claim.ticket.ticketCategory);
     return (
-      <QRContainer>
+      <QRContainer ref={ref}>
         <EddsaTicketQR
           pcd={pcd}
           zk={false}
@@ -218,7 +218,7 @@ export const TicketQRWrapper = forwardRef<
     const urls = getURLsBasedOnCategory(pcd.claim.ticket.ticketCategory);
     if (urls.idBasedVerifyURL)
       return (
-        <QRContainer>
+        <QRContainer ref={ref}>
           <PODTicketQR
             ticketData={pcd.claim.ticket}
             idBasedVerifyURL={urls.idBasedVerifyURL}

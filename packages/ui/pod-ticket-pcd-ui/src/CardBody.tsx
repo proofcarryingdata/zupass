@@ -136,7 +136,7 @@ export function PODTicketCardBodyImpl({
     </Container>
   );
 }
-function TicketQR({
+export function TicketQR({
   ticketData,
   idBasedVerifyURL
 }: {
