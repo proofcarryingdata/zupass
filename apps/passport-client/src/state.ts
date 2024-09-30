@@ -29,6 +29,7 @@ export interface AppState {
     | { modalType: "settings" }
     | { modalType: "change-password" }
     | { modalType: "success-modal"; title: string; description: string }
+    | { modalType: "about" }
     | { modalType: "none" };
 
   // View state

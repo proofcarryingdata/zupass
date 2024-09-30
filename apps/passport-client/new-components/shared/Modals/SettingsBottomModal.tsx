@@ -36,7 +36,14 @@ export function SettingsBottomModal(): JSX.Element {
       {
         title: "About Zupass",
         icon: <InformationCircleIcon width={24} height={24} color="#7C8BB4" />,
-        onClick: (): void => {}
+        onClick: (): void => {
+          dispatch({
+            type: "set-bottom-modal",
+            modal: {
+              modalType: "about"
+            }
+          });
+        }
       },
       {
         title: `${hasSetupPassword ? "Change" : "Add"} Password`,

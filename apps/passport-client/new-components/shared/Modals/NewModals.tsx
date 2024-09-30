@@ -1,3 +1,4 @@
+import { AboutZupassModal } from "./AboutZupassModal";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 import { SettingsBottomModal } from "./SettingsBottomModal";
 import { SuccessModal } from "./SuccessModal";
@@ -8,6 +9,7 @@ export const NewModals = (): JSX.Element => {
       <SettingsBottomModal />
       <ChangePasswordModal />
       <SuccessModal />
+      <AboutZupassModal />
     </>
   );
 };
