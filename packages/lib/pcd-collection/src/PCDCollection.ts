@@ -380,7 +380,7 @@ export class PCDCollection {
             firstError
           );
         } catch (fallbackError) {
-          // Fallback also faied, so fallthrough to re-throw the original error
+          // Fallback also failed, so fallthrough to re-throw the original error
         }
       }
       throw firstError;
