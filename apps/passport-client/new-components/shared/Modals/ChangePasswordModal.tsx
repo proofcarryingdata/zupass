@@ -30,11 +30,6 @@ export const ChangePasswordModal = (): JSX.Element | null => {
   const activeBottomModal = useBottomModal();
   const hasSetupPassword = useHasSetupPassword();
   const serverStorageRevision = useServerStorageRevision();
-
-  // We want the `isChangePassword` state to persist on future renders,
-  // otherwise we may show the invalid copy on the "finished" screen
-  // after a password is set for the first time.
-  const [isChangePassword] = useState(hasSetupPassword);
   const stateContext = useStateContext();
   const dispatch = useDispatch();
   const update = useUpdate();
@@ -56,7 +51,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
     setLoading(true);
     try {
       let currentEncryptionKey: HexString;
-      if (!isChangePassword) {
+      if (!hasSetupPassword) {
         currentEncryptionKey = loadEncryptionKey() as string;
       } else {
         const saltResult = await requestPasswordSalt(
@@ -100,9 +95,9 @@ export const ChangePasswordModal = (): JSX.Element | null => {
         type: "set-bottom-modal",
         modal: {
           modalType: "success-modal",
-          title: isChangePassword ? "PASSWORD CHANGED" : "PASSWORD ADDED",
+          title: hasSetupPassword ? "PASSWORD CHANGED" : "PASSWORD ADDED",
           description: `You have successfully ${
-            isChangePassword ? "changed" : "added"
+            hasSetupPassword ? "changed" : "added"
           } your password.`
         }
       });
@@ -114,7 +109,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
   }, [
     loading,
     self,
-    isChangePassword,
+    hasSetupPassword,
     stateContext,
     newPassword,
     serverStorageRevision,
@@ -130,10 +125,10 @@ export const ChangePasswordModal = (): JSX.Element | null => {
       <Container>
         <TitleContainer>
           <Typography fontSize={20} fontWeight={800}>
-            {isChangePassword ? "Change" : "Add"} Password
+            {hasSetupPassword ? "Change" : "Add"} Password
           </Typography>
           <Typography fontSize={16} fontWeight={400} family="Rubik">
-            Make sure that your {isChangePassword ? "new" : ""} password is
+            Make sure that your {hasSetupPassword ? "new" : ""} password is
             secure, unique, and memorable. If you forget your password, you'll
             have to reset your account, and you will lose access to all your
             PODs.
@@ -141,11 +136,11 @@ export const ChangePasswordModal = (): JSX.Element | null => {
         </TitleContainer>
         <NewPasswordForm2
           loading={loading}
-          autoFocus={!isChangePassword}
+          autoFocus={!hasSetupPassword}
           error={error}
           setError={setError}
           passwordInputPlaceholder={
-            isChangePassword ? "New password" : "Password"
+            hasSetupPassword ? "New password" : "Password"
           }
           emails={self.emails}
           submitButtonText="Confirm"
@@ -162,7 +157,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
               }
             });
           }}
-          isChangePassword={isChangePassword}
+          isChangePassword={hasSetupPassword}
           currentPassword={currentPassword}
           setCurrentPassword={setCurrentPassword}
         />

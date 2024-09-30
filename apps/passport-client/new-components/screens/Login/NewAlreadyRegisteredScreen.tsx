@@ -26,6 +26,7 @@ import {
   LoginForm,
   LoginTitleContainer
 } from "../../shared/Login/LoginComponents";
+import { PasswordInput2 } from "../../shared/Login/PasswordInput2";
 import { Typography } from "../../shared/Typography";
 
 export const NewAlreadyRegisteredScreen: React.FC = () => {
@@ -225,7 +226,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
           defaultValue={email}
           disabled
         />
-        <Input2
+        <PasswordInput2
           autoFocus
           value={password}
           onChange={(e) => {
@@ -233,7 +234,6 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
             setError(undefined);
           }}
           placeholder="Password"
-          type="password"
           error={error}
         />
         <Button2 type="submit" disabled={isLoggingIn}>

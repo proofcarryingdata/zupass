@@ -5,7 +5,6 @@ import {
   checkPasswordStrength
 } from "../../../src/password";
 import { Button2 } from "../Button";
-import { Input2 } from "../Input";
 import { PasswordInput2 } from "./PasswordInput2";
 
 interface NewPasswordForm {
@@ -112,9 +111,10 @@ export const NewPasswordForm2 = ({
             }}
             placeholder="Current password"
             error={getErrorMessage("change")}
+            variant="secondary"
           />
         )}
-        <Input2
+        <PasswordInput2
           value={password}
           onChange={({ target: { value } }): void => {
             setError("");
@@ -129,7 +129,6 @@ export const NewPasswordForm2 = ({
           autoFocus={autoFocus}
           error={getErrorMessage("password")}
           variant="secondary"
-          type="password"
         />
         <PasswordInput2
           ref={confirmPasswordRef}
@@ -140,6 +139,7 @@ export const NewPasswordForm2 = ({
           }}
           placeholder="Confirm password"
           error={getErrorMessage("confirm")}
+          variant="secondary"
         />
       </InputsContainer>
       <InputsContainer>

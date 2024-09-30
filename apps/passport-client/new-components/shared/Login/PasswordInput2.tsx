@@ -12,7 +12,6 @@ export const PasswordInput2 = forwardRef(
       <PasswordInputContainer>
         <Input2
           {...props}
-          variant="secondary"
           type={!showPassword ? "password" : "text"}
           ref={ref}
         />
@@ -33,6 +32,7 @@ export const PasswordInput2 = forwardRef(
 
 const PasswordInputContainer = styled.div`
   display: flex;
+  width: 100%;
   position: relative;
 `;
 
