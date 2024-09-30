@@ -94,7 +94,7 @@ export const Input2 = forwardRef(
     }
     return (
       <PasswordInputContainer>
-        <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />;
+        <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />
         {inputProps.endIcon && (
           <IconContainer>{inputProps.endIcon}</IconContainer>
         )}
