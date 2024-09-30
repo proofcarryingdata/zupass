@@ -281,12 +281,14 @@ export const NewHomeScreen = (): ReactElement => {
   }, [setWidth, setWidth2, tickets.length]);
 
   useEffect(() => {
-    const refs = ticketsRef.current.get(tickets[currentPos][0]);
-    if (!refs) {
-      setColHeight(0);
-      return;
+    if (tickets[currentPos]) {
+      const refs = ticketsRef.current.get(tickets[currentPos][0]);
+      if (!refs) {
+        setColHeight(0);
+        return;
+      }
+      setColHeight(calcColHeight(refs));
     }
-    setColHeight(calcColHeight(refs));
   }, [currentPos, tickets]);
 
   const renderedTickets = useMemo(() => {
