@@ -15,6 +15,11 @@
       "types": "./dist/types/src/podChecks.d.ts",
       "import": "./dist/esm/src/podChecks.js",
       "require": "./dist/cjs/src/podChecks.js"
+    },
+    "./podTypes": {
+      "types": "./dist/types/src/podTypes.d.ts",
+      "import": "./dist/esm/src/podTypes.js",
+      "require": "./dist/cjs/src/podTypes.js"
     }
   },
   "files": [
