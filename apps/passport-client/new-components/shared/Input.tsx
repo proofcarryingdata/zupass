@@ -5,6 +5,7 @@ import { Typography } from "./Typography";
 export interface NewInputProps extends InputHTMLAttributes<HTMLInputElement> {
   variant?: "primary" | "secondary";
   error?: string;
+  endIcon?: React.ReactNode;
 }
 
 const errorCSS = css`
@@ -74,7 +75,12 @@ export const Input2 = forwardRef(
     if (error) {
       return (
         <ErrorContainer>
-          <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />
+          <PasswordInputContainer>
+            <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />
+            {inputProps.endIcon && (
+              <IconContainer>{inputProps.endIcon}</IconContainer>
+            )}
+          </PasswordInputContainer>
           <Typography
             color="var(--new-danger)"
             style={{
@@ -86,7 +92,14 @@ export const Input2 = forwardRef(
         </ErrorContainer>
       );
     }
-    return <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />;
+    return (
+      <PasswordInputContainer>
+        <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />;
+        {inputProps.endIcon && (
+          <IconContainer>{inputProps.endIcon}</IconContainer>
+        )}
+      </PasswordInputContainer>
+    );
   }
 );
 
@@ -101,3 +114,18 @@ export const ConfirmationCodeInput = (
     <Input2 type="text" inputMode="numeric" pattern="[0-9]*" {...inputProps} />
   );
 };
+
+const PasswordInputContainer = styled.div`
+  display: flex;
+  width: 100%;
+  position: relative;
+`;
+
+const IconContainer = styled.div`
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+`;
