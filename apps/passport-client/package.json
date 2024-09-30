@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.24.0",
+    "@heroicons/react": "^2.1.5",
     "@parcnet-js/client-helpers": "^0.0.5",
     "@parcnet-js/client-rpc": "^0.0.4",
     "@parcnet-js/podspec": "^0.0.3",
@@ -105,6 +106,7 @@
     "ua-parser-js": "^1.0.38",
     "use-file-picker": "^2.1.1",
     "uuid": "^9.0.0",
+    "valibot": "^0.42.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {

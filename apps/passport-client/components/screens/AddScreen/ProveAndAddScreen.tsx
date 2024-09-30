@@ -79,7 +79,7 @@ export function ProveAndAddScreen({
   return (
     <>
       <MaybeModal fullScreen isProveOrAddScreen={true} />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <Container>
           <Spacer h={24} />
           <AppHeader isProveOrAddScreen={true}>

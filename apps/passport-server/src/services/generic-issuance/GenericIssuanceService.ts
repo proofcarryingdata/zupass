@@ -20,7 +20,8 @@ import {
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  TicketPreviewResultValue
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { Request } from "express";
@@ -55,6 +56,7 @@ import {
   IBadgeGiftingDB,
   IContactSharingDB
 } from "../../database/queries/ticketActionDBs";
+import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { DiscordService } from "../discordService";
@@ -62,6 +64,7 @@ import { EmailService } from "../emailService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
+import { PretixPipeline } from "./pipelines/PretixPipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { CredentialSubservice } from "./subservices/CredentialSubservice";
 import { PipelineSubservice } from "./subservices/PipelineSubservice";
@@ -344,5 +347,44 @@ export class GenericIssuanceService {
    */
   public async getEdgeCityBalances(): Promise<EdgeCityBalance[]> {
     return getEdgeCityBalances(this.context.dbPool);
+  }
+
+  /**
+   * Given an email and order code, and optionally a pipeline ID (which defaults to DEVCON_PIPELINE_ID),
+   * returns the ticket previews for the given email and order code. A ticket preview is basically a
+   * PODTicket in non-pcd form - just the raw IPODTicketData. This is used to display all the tickets
+   * a user might need when trying to check into an event, without having them go through a costly
+   * and slow account registration flow.
+   */
+  public async handleGetTicketPreview(
+    email: string,
+    orderCode: string,
+    pipelineId?: string
+  ): Promise<TicketPreviewResultValue> {
+    const requestedPipelineId = pipelineId ?? process.env.DEVCON_PIPELINE_ID;
+    const pipeline = (await this.getAllPipelineInstances()).find(
+      (p) => p.id === requestedPipelineId && PretixPipeline.is(p)
+    ) as PretixPipeline | undefined;
+
+    if (!pipeline) {
+      throw new PCDHTTPError(
+        400,
+        "handleGetTicketPreview: pipeline not found " + requestedPipelineId
+      );
+    }
+
+    const tickets = await pipeline.getAllTickets();
+
+    const matchingTickets = tickets.atoms.filter(
+      (atom) => atom.email === email && atom.orderCode === orderCode
+    );
+
+    const ticketDatas = matchingTickets.map(
+      (atom) => pipeline.atomToPODTicketData(atom, "1") // fake semaphore id as it's not needed for the ticket preview
+    );
+
+    return {
+      tickets: ticketDatas
+    } satisfies TicketPreviewResultValue;
   }
 }

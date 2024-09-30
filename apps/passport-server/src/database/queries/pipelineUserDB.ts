@@ -1,4 +1,5 @@
 import { normalizeEmail } from "@pcd/util";
+import { validate } from "email-validator";
 import { Pool, PoolClient } from "postgres-pool";
 import { v4 as uuid } from "uuid";
 import { traceUser } from "../../services/generic-issuance/honeycombQueries";
@@ -56,6 +57,10 @@ export class PipelineUserDB implements IPipelineUserDB {
         this.db,
         "createOrGetUser",
         async (client): Promise<PipelineUser> => {
+          if (!validate(email)) {
+            throw new Error(`Invalid email: ${email}`);
+          }
+
           span?.setAttribute("email", email);
           const existingUser = await this.getUserByEmail(email, client);
           if (existingUser) {

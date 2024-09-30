@@ -253,7 +253,7 @@ export function ImportBackupScreen(): JSX.Element {
   return (
     <>
       <MaybeModal />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <ScreenNavigation label={"Home"} to="/" />
         <Container>
           <Spacer h={8} />

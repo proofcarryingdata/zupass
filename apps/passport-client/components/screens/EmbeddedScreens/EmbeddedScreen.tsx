@@ -6,7 +6,6 @@ import { useEmbeddedScreenState } from "../../../src/appHooks";
 import { EmbeddedScreenType } from "../../../src/embedded";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { GenericProveScreen } from "../ProveScreen/GenericProveScreen";
-import { EmbeddedAddSubscription } from "./EmbeddedAddSubscription";
 import { EmbeddedGPCProofScreen } from "./EmbeddedGPCProofScreen";
 
 /**
@@ -14,7 +13,6 @@ import { EmbeddedGPCProofScreen } from "./EmbeddedGPCProofScreen";
  */
 export function EmbeddedScreen(): ReactNode {
   const embeddedScreen = useEmbeddedScreenState();
-  useSyncE2EEStorage();
   if (!embeddedScreen) {
     return null;
   }
@@ -23,15 +21,6 @@ export function EmbeddedScreen(): ReactNode {
       <EmbeddedGetRequest
         request={embeddedScreen.screen.request}
         callback={embeddedScreen.screen.callback}
-      />
-    );
-  } else if (
-    embeddedScreen.screen?.type === EmbeddedScreenType.EmbeddedAddSubscription
-  ) {
-    return (
-      <EmbeddedAddSubscription
-        feedUrl={embeddedScreen.screen.feedUrl}
-        feedId={embeddedScreen.screen.feedId}
       />
     );
   } else if (
@@ -56,6 +45,7 @@ function EmbeddedGetRequest({
   request: PCDGetRequest;
   callback: (serialized: SerializedPCD) => void;
 }): ReactNode {
+  useSyncE2EEStorage();
   const onProve = useCallback(
     (
       pcd: PCD,

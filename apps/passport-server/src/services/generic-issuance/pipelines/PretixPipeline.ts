@@ -1119,7 +1119,7 @@ export class PretixPipeline implements BasePipeline {
     });
   }
 
-  private atomToPODTicketData(
+  public atomToPODTicketData(
     atom: PretixAtom,
     semaphoreV4Id: string
   ): IPODTicketData {

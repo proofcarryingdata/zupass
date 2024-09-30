@@ -162,6 +162,10 @@ export function useModal(): AppState["modal"] {
   return useSelector<AppState["modal"]>((s) => s.modal, []);
 }
 
+export function useBottomModal(): AppState["modal"] {
+  return useSelector<AppState["bottomModal"]>((s) => s.bottomModal, []);
+}
+
 export function useSyncKey(): string | undefined {
   return useSelector<string | undefined>((s) => s.encryptionKey, []);
 }

@@ -34,6 +34,7 @@ import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/Alre
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
+import { NewOneClickLoginScreen } from "../components/screens/LoginScreens/NewOneClickLoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
 import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
@@ -47,6 +48,8 @@ import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketSc
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
+import { AuthenticateIFrameScreen } from "../components/screens/ZappScreens/AuthenticateIFrameScreen";
+import { ConnectPopupScreen } from "../components/screens/ZappScreens/ConnectPopupScreen";
 import {
   AppContainer,
   Background,
@@ -54,19 +57,24 @@ import {
   GlobalBackground
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
+import ComponentsScreen from "../new-components/ComponentsScreen";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
 import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
+import { enableLiveReload } from "../src/liveReload";
 import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
-import { useZappServer } from "../src/zapp/useZappServer";
+import { ListenMode, useZappServer } from "../src/zapp/useZappServer";
+
+enableLiveReload();
 
 function App(): JSX.Element {
   useBackgroundJobs();
-  useZappServer();
+  useZappServer(ListenMode.LISTEN_IF_EMBEDDED);
+
   const state = useStateContext().getState();
 
   const hasStack = !!state.error?.stack;
@@ -92,7 +100,7 @@ function App(): JSX.Element {
         <HashRouter>
           <Routes>
             <Route path="/terms" element={<TermsScreen />} />
-            <Route path="*" element={<AppContainer bg="gray" />} />
+            <Route path="*" element={<AppContainer bg="primary" />} />
           </Routes>
         </HashRouter>
       )}
@@ -129,6 +137,9 @@ function RouterImpl(): JSX.Element {
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
+
+          <Route path="components" element={<ComponentsScreen />} />
+
           <Route
             path="login-interstitial"
             element={<LoginInterstitialScreen />}
@@ -147,6 +158,10 @@ function RouterImpl(): JSX.Element {
           <Route
             path="one-click-login/:email/:code/:targetFolder"
             element={<OneClickLoginScreen />}
+          />
+          <Route
+            path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
+            element={<NewOneClickLoginScreen />}
           />
           <Route
             path="enter-confirmation-code"
@@ -175,6 +190,11 @@ function RouterImpl(): JSX.Element {
           <Route
             path="generic-checkin"
             element={<PodboxScannedTicketScreen />}
+          />
+          <Route path="connect-popup" element={<ConnectPopupScreen />} />
+          <Route
+            path="authenticate-iframe"
+            element={<AuthenticateIFrameScreen />}
           />
           <Route path="embedded" element={<EmbeddedScreen />} />
           <Route path="*" element={<MissingScreen />} />

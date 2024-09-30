@@ -63,14 +63,14 @@ export function ScanScreen(): JSX.Element {
 
   if (isRedirectingProtocolWorlds) {
     return (
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <ScreenLoader text="Discovering something new.." />
       </AppContainer>
     );
   }
 
   return (
-    <AppContainer bg="gray">
+    <AppContainer bg="primary">
       {!usingLaserScanner && (
         <QRContainer>
           <Spacer h={8} />

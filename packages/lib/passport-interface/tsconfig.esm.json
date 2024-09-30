@@ -35,6 +35,9 @@
       "path": "../pod/tsconfig.esm.json"
     },
     {
+      "path": "../../pcd/pod-ticket-pcd/tsconfig.esm.json"
+    },
+    {
       "path": "../../pcd/semaphore-group-pcd/tsconfig.esm.json"
     },
     {

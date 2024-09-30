@@ -61,6 +61,14 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/semaphore-artifacts/16.zkey",
   "/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm",
   "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey",
+  "/fonts/Barlow-ExtraLight.ttf",
+  "/fonts/Barlow-Light.ttf",
+  "/fonts/Barlow-LightItalic.ttf",
+  "/fonts/Barlow-Regular.ttf",
+  "/fonts/Barlow-Medium.ttf",
+  "/fonts/Barlow-SemiBold.ttf",
+  "/fonts/Barlow-Bold.ttf",
+  "/fonts/Barlow-ExtraBold.ttf",
   "/fonts/IBMPlexSans-ExtraLight.woff",
   "/fonts/IBMPlexSans-Light.woff",
   "/fonts/IBMPlexSans-LightItalic.woff",
@@ -83,7 +91,21 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/images/social.webp",
   "/images/star.webp",
   "/images/wristband.webp",
-  "/zxcvbn.js"
+  "/zxcvbn.js",
+  "fonts/Rubik-Black.ttf",
+  "fonts/Rubik-BlackItalic.ttf",
+  "fonts/Rubik-Bold.ttf",
+  "fonts/Rubik-BoldItalic.ttf",
+  "fonts/Rubik-ExtraBold.ttf",
+  "fonts/Rubik-ExtraBoldItalic.ttf",
+  "fonts/Rubik-Italic.ttf",
+  "fonts/Rubik-Light.ttf",
+  "fonts/Rubik-LightItalic.ttf",
+  "fonts/Rubik-Medium.ttf",
+  "fonts/Rubik-MediumItalic.ttf",
+  "fonts/Rubik-Regular.ttf",
+  "fonts/Rubik-SemiBold.ttf",
+  "fonts/Rubik-SemiBoldItalic.ttf"
 ]);
 
 /**

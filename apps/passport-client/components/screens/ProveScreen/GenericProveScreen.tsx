@@ -87,7 +87,7 @@ export function GenericProveScreen({
   return (
     <>
       <MaybeModal fullScreen isProveOrAddScreen={true} />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <AppHeader isProveOrAddScreen={true}>
           <H2
             style={{

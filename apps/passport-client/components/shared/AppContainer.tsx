@@ -11,7 +11,8 @@ import { ScreenLoader } from "./ScreenLoader";
 
 // Wrapper for all screens.
 export function AppContainer({
-  children
+  children,
+  bg
 }: {
   bg: "primary" | "gray";
   children?: ReactNode;
@@ -25,7 +26,8 @@ export function AppContainer({
     [dispatch]
   );
 
-  const col = "var(--bg-dark-primary)";
+  const col =
+    bg === "gray" ? "var(--dot-pattern-bg)" : "var(--bg-dark-primary)";
   return (
     <>
       <GlobalBackground color={col} />
@@ -53,7 +55,7 @@ export function AppContainer({
 
 export const GlobalBackground = createGlobalStyle<{ color: string }>`
   html {
-    background-color: ${(p): string => p.color};
+    background: ${(p): string => p.color};
   }
 `;
 
