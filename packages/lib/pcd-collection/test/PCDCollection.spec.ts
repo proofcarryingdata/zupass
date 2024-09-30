@@ -1,14 +1,26 @@
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
+import {
+  ArgumentTypeName,
+  PCD,
+  PCDPackage,
+  SerializedPCD
+} from "@pcd/pcd-types";
+import { RSAPCD, RSAPCDPackage, RSAPCDTypeName } from "@pcd/rsa-pcd";
+import {
+  UnknownPCD,
+  UnknownPCDPackage,
+  UnknownPCDTypeName,
+  wrapUnknownPCD
+} from "@pcd/unknown-pcd";
 import chai, { expect } from "chai";
+import chaiAsPromised from "chai-as-promised";
+import chaiSpies from "chai-spies";
 import "mocha";
 import NodeRSA from "node-rsa";
 import { v4 as uuid } from "uuid";
 import { PCDCollection } from "../src";
 
-import chaiSpies from "chai-spies";
-
 chai.use(chaiSpies);
+chai.use(chaiAsPromised);
 
 async function newPCD(id?: string): Promise<RSAPCD> {
   id = id ?? uuid();
@@ -385,6 +397,89 @@ describe("PCDCollection", async function () {
 
     expect(firstCollection.getAll()).to.deep.eq(pcdList);
     expect(firstCollection.getFolderOfPCD(pcdList[1].id)).to.eq("A");
+  });
+
+  async function testFallbackFunction(
+    _collection: PCDCollection,
+    _pcdPackage: PCDPackage | undefined,
+    serializedPCD: SerializedPCD,
+    deserializeError: unknown
+  ): Promise<PCD> {
+    return wrapUnknownPCD(serializedPCD, deserializeError);
+  }
+
+  it("should support deserialization fallback on missing package", async function () {
+    // Good collection contains 1 RSAPCD
+    const goodCollection = new PCDCollection([
+      RSAPCDPackage,
+      UnknownPCDPackage
+    ]);
+    goodCollection.add(await newPCD());
+    const serializedGood = await goodCollection.serializeCollection();
+
+    // Deserializing without RSAPCD package uses UnknownPCD fallback.
+    await expect(
+      PCDCollection.deserialize([UnknownPCDPackage], serializedGood)
+    ).to.eventually.be.rejectedWith(Error, "no package matching rsa-pcd");
+    const badCollection = await PCDCollection.deserialize(
+      [UnknownPCDPackage],
+      serializedGood,
+      {
+        fallbackDeserializeFunction: testFallbackFunction
+      }
+    );
+    expect(badCollection.getAll()).has.length(1);
+    const unknownPCD = badCollection.getAll()[0] as UnknownPCD;
+    expect(unknownPCD.type).eq(UnknownPCDTypeName);
+    expect(unknownPCD.claim.serializedPCD.type).eq(RSAPCDTypeName);
+
+    // Round-trip serialization should return to the same good state
+    const serializedBad = await badCollection.serializeCollection();
+    expect(serializedBad).to.eq(serializedGood);
+
+    // Good state should be deserializable with the right package.
+    const recoveredCollection = await PCDCollection.deserialize(
+      [RSAPCDPackage, UnknownPCDPackage],
+      serializedBad
+    );
+    expect(recoveredCollection.getAll()).to.deep.eq(goodCollection.getAll());
+  });
+
+  it("should support deserialization fallback on unparsable PCD", async function () {
+    // Good collection contains 1 RSAPCD
+    const goodCollection = new PCDCollection([
+      RSAPCDPackage,
+      UnknownPCDPackage
+    ]);
+    goodCollection.add(await newPCD());
+    const serializedGood = await goodCollection.serializeCollection();
+
+    // Manually corrupt the serialized RSAPCD to force fallback.
+    const serializedCorrupt = serializedGood.replace("claim", "clown");
+
+    // Deserializing unparsable data uses UnknownPCD fallback.
+    await expect(
+      PCDCollection.deserialize(
+        [RSAPCDPackage, UnknownPCDPackage],
+        serializedCorrupt
+      )
+    ).to.eventually.be.rejectedWith(Error, "claim must be defined");
+    const badCollection = await PCDCollection.deserialize(
+      [RSAPCDPackage, UnknownPCDPackage],
+      serializedCorrupt,
+      {
+        fallbackDeserializeFunction: testFallbackFunction
+      }
+    );
+    expect(badCollection.getAll()).has.length(1);
+    const unknownPCD = badCollection.getAll()[0] as UnknownPCD;
+    expect(unknownPCD.type).eq(UnknownPCDTypeName);
+    expect(unknownPCD.claim.serializedPCD.type).eq(RSAPCDTypeName);
+
+    // Round-trip serialization should return to the same corrupt state
+    // allowing for a retry in a future version of code.
+    const serializedBad = await badCollection.serializeCollection();
+    expect(serializedBad).to.eq(serializedCorrupt);
   });
 });
 
