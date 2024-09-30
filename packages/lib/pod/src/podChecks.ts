@@ -12,11 +12,7 @@ import {
   POD_NAME_REGEX,
   POD_VALUE_STRING_TYPE_IDENTIFIER
 } from "./podTypes";
-import {
-  CryptoBytesEncodingGroups,
-  decodeBytesAuto,
-  getPODValueForCircuit
-} from "./podUtil";
+import { type CryptoBytesEncodingGroups, decodeBytesAuto } from "./podUtil";
 
 /**
  * Private keys are 32 bytes (any arbitrary bytes), represented as Base64 or
@@ -321,4 +317,24 @@ export function checkPODValue(
  */
 export function isPODNumericValue(podValue: PODValue): boolean {
   return getPODValueForCircuit(podValue) !== undefined;
+}
+
+/**
+ * Gets the numeric representation of the given value for inclusion in a
+ * circuit, if any.
+ *
+ * @param podValue the value to convert
+ * @returns the numeric value, or undefined if this value cannot be represented
+ *   in a circuit
+ */
+export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
+  switch (podValue.type) {
+    case "string":
+      return undefined;
+    case "int":
+    case "cryptographic":
+      return podValue.value;
+    default:
+      return undefined;
+  }
 }

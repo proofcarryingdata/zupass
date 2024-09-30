@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./podChecks": {
-      "types": "./dist/types/src/podChecks.d.ts",
-      "import": "./dist/esm/src/podChecks.js",
-      "require": "./dist/cjs/src/podChecks.js"
+    "./podUtils": {
+      "types": "./dist/types/src/podUtils.d.ts",
+      "import": "./dist/esm/src/podUtils.js",
+      "require": "./dist/cjs/src/podUtils.js"
     },
     "./podTypes": {
       "types": "./dist/types/src/podTypes.d.ts",
