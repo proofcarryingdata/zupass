@@ -302,6 +302,7 @@ export const NewHomeScreen = (): ReactElement => {
           {eventTicketPack.map((pack) => {
             return (
               <CardBody
+                key={pack.eventId}
                 addOns={
                   pack.addOns.length > 0
                     ? {
@@ -353,6 +354,7 @@ export const NewHomeScreen = (): ReactElement => {
             const eventDetails = getEventDetails(packs[0]);
             return (
               <TicketCard
+                key={eventName}
                 address={eventName}
                 title={eventName}
                 ticketDate={new Date(

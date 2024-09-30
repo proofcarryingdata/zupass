@@ -100,7 +100,7 @@ export function SettingsBottomModal(): JSX.Element {
         </UserTitleContainer>
         <SettingsActionContainer>
           {items.map(({ icon, title, onClick, variant }, i) => (
-            <SettingsItemContainer onClick={onClick}>
+            <SettingsItemContainer key={title} onClick={onClick}>
               {icon}
               <Typography
                 fontSize={18}
