@@ -1,17 +1,12 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import {
-  EdDSATicketPCD,
   EdDSATicketPCDTypeName,
   ITicketData,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
-import {
-  PODTicketPCD,
-  PODTicketPCDTypeName,
-  isPODTicketPCD
-} from "@pcd/pod-ticket-pcd";
+import { PODTicketPCDTypeName, isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
   ReactElement,
   useEffect,
@@ -30,21 +25,13 @@ import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
 import { TicketCard } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
+import { TicketPack, TicketType, TicketTypeName } from "./types";
+import { AddOnsModal } from "./AddOnModal";
 
-const GAP = 4;
-const ANOTHER_GAP = 40;
+const EVENT_GAP = 4;
+const TICKETS_HORIZONTAL_GAP = 40;
 const SHOW_HELPER_LINES = false;
-const TICKET_GAP = 20;
-type TicketType = EdDSATicketPCD | PODTicketPCD;
-const TypeNames = [EdDSATicketPCDTypeName, PODTicketPCDTypeName] as const;
-type TicketTypeName = (typeof TypeNames)[number];
-type TicketPack = {
-  eventTicket: TicketType;
-  addOns: TicketType[];
-  attendeeEmail: string;
-  eventId: string;
-  packType: TicketTypeName;
-};
+const TICKET_VERTICAL_GAP = 20;
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
   // TODO: fetch the pods type as well and prioritize it if theres a conflict.
@@ -58,7 +45,6 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
   return useMemo(() => {
     const eventsMap = new Map<string, TicketPack[]>();
     for (const ticket of tickets) {
-      console.log(ticket.claim.ticket.attendeeEmail, ticket);
       if (ticket.claim.ticket.ticketName !== "GA") continue;
       let ticketPacks = eventsMap.get(ticket.claim.ticket.eventName);
       if (!ticketPacks) {
@@ -171,7 +157,7 @@ const TicketsContainer = styled.div`
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: ${TICKET_GAP}px;
+  gap: ${TICKET_VERTICAL_GAP}px;
 `;
 
 const positionInPx = (
@@ -216,14 +202,33 @@ const InnerContainer = styled.div`
   text-align: center;
 `;
 
-const calcColHeight = (ticketRefs: HTMLDivElement[]): number => {
+const calculateTicketsColumnHeight = (ticketRefs: HTMLDivElement[]): number => {
   const len = ticketRefs.length;
-  const allSize = ticketRefs.reduce((acc, ref) => {
+  // we have to calculate it per ticket column since different tickets can have different heights (if you have addons vs you dont)
+  const sumOfTicketsHeight = ticketRefs.reduce((acc, ref) => {
     acc += ref.clientHeight;
     return acc;
   }, 0);
 
-  return allSize + len * ANOTHER_GAP;
+  return sumOfTicketsHeight + len * TICKETS_HORIZONTAL_GAP;
+};
+
+const useWindowWidth = (): number => {
+  const [windoWidth, setWindowWidth] = useState(window.innerWidth);
+
+  useEffect(() => {
+    const onResize = (): void => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", onResize);
+
+    return () => {
+      window.removeEventListener("resize", onResize);
+    };
+  }, []);
+
+  return windoWidth;
 };
 
 const EmptyCard = (): ReactElement => {
@@ -245,12 +250,15 @@ export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
   const [currentPos, setCurrentPos] = useState(0);
-  const [width, setWidth] = useState(0);
-  const [width2, setWidth2] = useState(0);
-  const [colHeight, setColHeight] = useState(0);
+  const [eventCardWidth, setEventCardWidth] = useState(0);
+  const [ticketCardWidth, setTicketCardWidth] = useState(0);
+  const [ticketsColumnHeight, setTicketsColumnHeight] = useState(0);
+  const [addOns, setAddOns] = useState<TicketType[]>([]);
+  const [addOnModalOpen, setAddOnModalOpen] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const pcdCardScrollRef = useRef<HTMLDivElement>(null);
   const ticketsRef = useRef<Map<string, HTMLDivElement[]>>(new Map());
+  const windowWidth = useWindowWidth();
   const self = useSelf();
   const navigate = useNavigate();
 
@@ -262,38 +270,38 @@ export const NewHomeScreen = (): ReactElement => {
 
   useLayoutEffect(() => {
     if (scrollRef.current) {
-      setWidth(
-        calculateElWidth(scrollRef.current.scrollWidth, GAP, tickets.length)
-      );
-    }
-    if (pcdCardScrollRef.current) {
-      setWidth2(
+      setEventCardWidth(
         calculateElWidth(
-          pcdCardScrollRef.current.scrollWidth,
-          ANOTHER_GAP,
+          scrollRef.current.scrollWidth,
+          EVENT_GAP,
           tickets.length
         )
       );
     }
-    // if (ticketRef.current) {
-    //   setTicketHeight(ticketRef.current.clientHeight);
-    // }
-  }, [setWidth, setWidth2, tickets.length]);
+    if (pcdCardScrollRef.current) {
+      setTicketCardWidth(
+        calculateElWidth(
+          pcdCardScrollRef.current.scrollWidth,
+          TICKETS_HORIZONTAL_GAP,
+          tickets.length
+        )
+      );
+    }
+  }, [setEventCardWidth, setTicketCardWidth, tickets.length]);
 
   useEffect(() => {
     if (tickets[currentPos]) {
       const refs = ticketsRef.current.get(tickets[currentPos][0]);
       if (!refs) {
-        setColHeight(0);
+        setTicketsColumnHeight(0);
         return;
       }
-      setColHeight(calcColHeight(refs));
+      setTicketsColumnHeight(calculateTicketsColumnHeight(refs));
     }
   }, [currentPos, tickets]);
 
   const renderedTickets = useMemo(() => {
     ticketsRef.current = new Map();
-    console.log(tickets);
     return tickets.map(([eventName, eventTicketPack]) => {
       return (
         <TicketsContainer
@@ -307,7 +315,10 @@ export const NewHomeScreen = (): ReactElement => {
                   pack.addOns.length > 0
                     ? {
                         text: `View ${pack.addOns.length} add-on items`,
-                        onClick(): void {}
+                        onClick(): void {
+                          setAddOnModalOpen(true);
+                          setAddOns(pack.addOns);
+                        }
                       }
                     : undefined
                 }
@@ -341,13 +352,18 @@ export const NewHomeScreen = (): ReactElement => {
     );
   // return null;
   return (
-    <AppContainer bg="gray" noPadding>
-      <Container elWidth={width}>
+    <AppContainer bg="gray" noPadding fullscreen>
+      <Container elWidth={eventCardWidth}>
         <Scroller
-          gap={GAP}
-          offset={(420 - width) / 2}
+          gap={EVENT_GAP}
+          offset={(windowWidth - eventCardWidth) / 2}
           ref={scrollRef}
-          scrollInPx={positionInPx(currentPos, width, tickets.length - 1, GAP)}
+          scrollInPx={positionInPx(
+            currentPos,
+            eventCardWidth,
+            tickets.length - 1,
+            EVENT_GAP
+          )}
           amount={tickets.length - 1}
         >
           {tickets.map(([eventName, packs], i) => {
@@ -367,7 +383,7 @@ export const NewHomeScreen = (): ReactElement => {
             );
           })}
         </Scroller>
-        {SHOW_HELPER_LINES && <Line padding={(420 - width) / 2} />}
+        {SHOW_HELPER_LINES && <Line padding={(420 - eventCardWidth) / 2} />}
       </Container>
       <Spacer h={20} />
       <ButtonsContainer>
@@ -407,28 +423,33 @@ export const NewHomeScreen = (): ReactElement => {
         </PageCircleButton>
       </ButtonsContainer>
       <Spacer h={20} />
-      <Container elWidth={width2} height={colHeight}>
+      <Container elWidth={ticketCardWidth} height={ticketsColumnHeight}>
         <Scroller
-          gap={ANOTHER_GAP}
+          gap={TICKETS_HORIZONTAL_GAP}
           ref={pcdCardScrollRef}
           scrollInPx={positionInPx(
             currentPos,
-            width2,
+            ticketCardWidth,
             tickets.length,
-            ANOTHER_GAP
+            TICKETS_HORIZONTAL_GAP
           )}
-          offset={(420 - width2) / 2}
+          offset={(windowWidth - ticketCardWidth) / 2}
           amount={tickets.length - 1}
         >
           {renderedTickets}
         </Scroller>
         {SHOW_HELPER_LINES && (
-          <Line padding={(window.screen.width - width2) / 2} />
+          <Line padding={(windowWidth - ticketCardWidth) / 2} />
         )}
       </Container>
       <Spacer h={48} />
       <FloatingMenu />
       <NewModals />
+      <AddOnsModal
+        setIsOpen={setAddOnModalOpen}
+        addOns={addOns}
+        isOpen={addOnModalOpen}
+      />
     </AppContainer>
   );
 };

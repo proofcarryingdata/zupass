@@ -26,6 +26,7 @@ const BottomModalContainer = styled.div`
   color: black;
   flex: 1;
   box-shadow: 0px 4px 6px -1px #0000001a;
+  width: 100%;
 `;
 
 export type BottomModalProps = {

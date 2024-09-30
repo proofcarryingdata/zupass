@@ -3,10 +3,16 @@ import {
   TicketCategory,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
-import { EdDSATicketPCDUI } from "@pcd/eddsa-ticket-pcd-ui";
+import {
+  EdDSATicketPCDUI,
+  TicketQR as EddsaTicketQR
+} from "@pcd/eddsa-ticket-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
-import { PODTicketPCDUI } from "@pcd/pod-ticket-pcd-ui";
+import {
+  PODTicketPCDUI,
+  TicketQR as PODTicketQR
+} from "@pcd/pod-ticket-pcd-ui";
 import {
   forwardRef,
   memo,
@@ -163,6 +169,74 @@ function getUI(
     ? (pcdRenderers as Record<string, PCDUI<PCD>>)[pcdPackageName]
     : undefined;
 }
+
+const getURLsBasedOnCategory = (category: TicketCategory) => {
+  const ticketCategory = category;
+  const idBasedVerifyURL =
+    ticketCategory === TicketCategory.Devconnect
+      ? `${window.location.origin}/#/checkin-by-id`
+      : ticketCategory === TicketCategory.ZuConnect
+      ? `${window.location.origin}/#/verify`
+      : ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : undefined;
+
+  const verifyURL =
+    ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : `${window.location.origin}/#/verify`;
+  return { idBasedVerifyURL, verifyURL };
+};
+
+const QRContainer = styled.div`
+  height: 265px;
+  width: 265px;
+`;
+export const TicketQRWrapper = forwardRef<
+  HTMLDivElement,
+  {
+    pcd: PCD<unknown, unknown>;
+  }
+>(({ pcd }, ref) => {
+  const identityPCD = useUserIdentityPCD();
+
+  if (isEdDSATicketPCD(pcd) && identityPCD) {
+    const urls = getURLsBasedOnCategory(pcd.claim.ticket.ticketCategory);
+    return (
+      <QRContainer>
+        <EddsaTicketQR
+          pcd={pcd}
+          zk={false}
+          identityPCD={identityPCD}
+          idBasedVerifyURL={urls.idBasedVerifyURL}
+          verifyURL={urls.verifyURL}
+        />
+      </QRContainer>
+    );
+  }
+  if (isPODTicketPCD(pcd)) {
+    const urls = getURLsBasedOnCategory(pcd.claim.ticket.ticketCategory);
+    if (urls.idBasedVerifyURL)
+      return (
+        <QRContainer>
+          <PODTicketQR
+            ticketData={pcd.claim.ticket}
+            idBasedVerifyURL={urls.idBasedVerifyURL}
+          />
+        </QRContainer>
+      );
+  }
+
+  return (
+    <>
+      <TextCenter>
+        {pcd.type} unsupported <br />
+        no implementation of a ui for this type of card found
+      </TextCenter>
+      <Spacer h={16} />
+    </>
+  );
+});
 
 /**
  * EdDSATicketPCD cards require some extra context and configuration. In
