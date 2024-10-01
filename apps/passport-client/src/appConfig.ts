@@ -22,7 +22,7 @@ interface AppConfig {
 }
 
 if (
-  !process.env.PASSPORT_SERVER_URL &&
+  !import.meta.env.VITE_PASSPORT_SERVER_URL &&
   global.window &&
   !!global.window.alert
 ) {
@@ -30,7 +30,7 @@ if (
 }
 
 if (
-  !process.env.FROGCRYPTO_SERVER_URL &&
+  !import.meta.env.VITE_FROGCRYPTO_SERVER_URL &&
   global.window &&
   !!global.window.alert
 ) {
@@ -40,8 +40,8 @@ if (
 let zappAllowedSignerOrigins: string[];
 
 try {
-  zappAllowedSignerOrigins = process.env.ZAPP_ALLOWED_SIGNER_ORIGINS
-    ? JSON.parse(process.env.ZAPP_ALLOWED_SIGNER_ORIGINS)
+  zappAllowedSignerOrigins = import.meta.env.VITE_ZAPP_ALLOWED_SIGNER_ORIGINS
+    ? JSON.parse(import.meta.env.VITE_ZAPP_ALLOWED_SIGNER_ORIGINS)
     : [];
   if (!Array.isArray(zappAllowedSignerOrigins)) {
     throw new Error("ZAPP_ALLOWED_SIGNER_ORIGINS is not an array");
@@ -54,8 +54,8 @@ try {
 let embeddedZapps: Record<string, string> = {};
 
 try {
-  embeddedZapps = process.env.EMBEDDED_ZAPPS
-    ? JSON.parse(process.env.EMBEDDED_ZAPPS)
+  embeddedZapps = import.meta.env.VITE_EMBEDDED_ZAPPS
+    ? JSON.parse(import.meta.env.VITE_EMBEDDED_ZAPPS)
     : {};
 } catch (e) {
   console.error("Failed to parse EMBEDDED_ZAPPS", e);
@@ -64,12 +64,12 @@ try {
 
 export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
-  zupassServer: process.env.PASSPORT_SERVER_URL as string,
-  frogCryptoServer: process.env.FROGCRYPTO_SERVER_URL as string,
+  zupassServer: import.meta.env.VITE_PASSPORT_SERVER_URL as string,
+  frogCryptoServer: import.meta.env.VITE_FROGCRYPTO_SERVER_URL as string,
   maxIdentityProofAgeMs: ONE_HOUR_MS * 4,
-  rollbarToken: process.env.ROLLBAR_TOKEN,
-  rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
-  zappRestrictOrigins: process.env.ZAPP_RESTRICT_ORIGINS === "true",
+  rollbarToken: import.meta.env.VITE_ROLLBAR_TOKEN,
+  rollbarEnvName: import.meta.env.VITE_ROLLBAR_ENV_NAME,
+  zappRestrictOrigins: import.meta.env.VITE_ZAPP_RESTRICT_ORIGINS === "true",
   zappAllowedSignerOrigins: zappAllowedSignerOrigins,
   embeddedZapps: embeddedZapps
 };

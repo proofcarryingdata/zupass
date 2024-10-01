@@ -6,3 +6,4 @@ public/service-worker.js
 public/index.html
 public/bundle-stats.html
 public/scandit-engine
+dist
