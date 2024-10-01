@@ -5175,11 +5175,6 @@
     elliptic "^6.5.4"
     snarkjs "^0.5.0"
 
-"@pixelverse/strichjs-sdk@^1.4.6":
-  version "1.4.6"
-  resolved "https://registry.yarnpkg.com/@pixelverse/strichjs-sdk/-/strichjs-sdk-1.4.6.tgz#8871435e032cde13f808b2826a15f11e8856db8e"
-  integrity sha512-x0KMKpaDfQB5mhCtUMS1ajZXzybJ9+If4jY8/SBrX+sOnOA9YwP9GVDWJ6VLEufoe52Y/my4w8Vcobj0AxMREw==
-
 "@pkgjs/parseargs@^0.11.0":
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/@pkgjs/parseargs/-/parseargs-0.11.0.tgz#a77ea742fab25775145434eb1d2328cf5013ac33"
