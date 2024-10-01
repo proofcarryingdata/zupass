@@ -1,6 +1,5 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
-import { Point } from "@zk-kit/baby-jubjub";
 import {
   derivePublicKey,
   packSignature,
@@ -80,7 +79,7 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
     // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
     const pubKey = pcd.claim.publicKey.map((coordinateString: string) =>
       BigInt("0x" + coordinateString)
-    ) as Point;
+    ) as [bigint, bigint];
 
     const hashedMessage = poseidonHashMessage(pcd.claim.message);
 
