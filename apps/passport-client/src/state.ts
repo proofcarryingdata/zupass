@@ -27,6 +27,7 @@ export interface AppState {
 
   // bottom modal will deprecate modal
   bottomModal:
+    | { modalType: "pods-collection" }
     | { modalType: "settings" }
     | { modalType: "change-password" }
     | { modalType: "success-modal"; title: string; description: string }

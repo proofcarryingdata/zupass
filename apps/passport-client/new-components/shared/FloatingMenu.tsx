@@ -33,7 +33,14 @@ export const FloatingMenu = (): JSX.Element => {
   const dispatch = useDispatch();
   return (
     <FloatingMenuContainer>
-      <FloatingMenuItem>
+      <FloatingMenuItem
+        onClick={() => {
+          dispatch({
+            type: "set-bottom-modal",
+            modal: { modalType: "pods-collection" }
+          });
+        }}
+      >
         <Square3Stack3DIcon color="#000000" opacity={0.6} height={24} />
       </FloatingMenuItem>
       <FloatingMenuItem
