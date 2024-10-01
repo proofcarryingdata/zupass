@@ -20,6 +20,8 @@ interface NewPasswordForm {
   onSuccess: () => void;
   onCancel: () => void;
   submitButtonText: string;
+  revealPassword: boolean;
+  setRevealPassword: Dispatch<SetStateAction<boolean>>;
   passwordInputPlaceholder?: string; // Override placeholder on the first input
   autoFocus?: boolean;
   setError: Dispatch<SetStateAction<string | undefined>>;

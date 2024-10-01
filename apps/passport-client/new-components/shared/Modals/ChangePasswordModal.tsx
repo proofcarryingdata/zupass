@@ -38,6 +38,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [revealPassword, setRevealPassword] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
@@ -135,6 +136,8 @@ export const ChangePasswordModal = (): JSX.Element | null => {
           </Typography>
         </TitleContainer>
         <NewPasswordForm2
+          setRevealPassword={setRevealPassword}
+          revealPassword={revealPassword}
           loading={loading}
           autoFocus={!hasSetupPassword}
           error={error}
