@@ -32,11 +32,13 @@ const BottomModalContainer = styled.div`
 export type BottomModalProps = {
   isOpen: boolean;
   children: ReactNode;
+  onClickOutside?: () => void;
 };
 
 export const BottomModal = ({
   isOpen,
-  children
+  children,
+  onClickOutside
 }: BottomModalProps): JSX.Element | null => {
   const dispatch = useDispatch();
   if (!isOpen) {
@@ -49,6 +51,7 @@ export const BottomModal = ({
           type: "set-bottom-modal",
           modal: { modalType: "none" }
         });
+        onClickOutside && onClickOutside();
       }}
     >
       <BottomModalContainer

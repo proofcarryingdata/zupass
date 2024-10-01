@@ -4,20 +4,21 @@ import styled from "styled-components";
 type LoaderProps = {
   rows: number;
   columns: number;
+  color?: string;
 };
 
-const Rect = styled.div<{ active: boolean }>`
+const Rect = styled.div<{ active: boolean; color: string }>`
   width: 8px;
   height: 8px;
-  background: var(--text-tertiary, #8b94ac);
+  background: ${({ color }): string => color};
   opacity: ${({ active }): number => (active ? 1 : 0.2)};
 `;
 
-const Container = styled.div`
+const Container = styled.div<{ rows: number; columns: number }>`
   display: grid;
   place-items: center;
-  grid-template-rows: repeat(5, 8px);
-  grid-template-columns: repeat(5, 8px);
+  grid-template-rows: repeat(${({ rows }): number => rows}, 8px);
+  grid-template-columns: repeat(${({ columns }): number => columns}, 8px);
   gap: 5px;
 `;
 
@@ -33,7 +34,11 @@ const generateStaticNoise = (rows: number, columns: number): number[][] => {
   return noise;
 };
 
-export const NewLoader = ({ rows, columns }: LoaderProps): ReactElement => {
+export const NewLoader = ({
+  rows,
+  columns,
+  color
+}: LoaderProps): ReactElement => {
   const [noise, setNoise] = useState(generateStaticNoise(rows, columns));
   useEffect(() => {
     const intervalId = setInterval(() => {
@@ -48,11 +53,21 @@ export const NewLoader = ({ rows, columns }: LoaderProps): ReactElement => {
       for (let j = 0; j < columns; j++) {
         const isActive = noise[i][j] > 0.65;
 
-        row.push(<Rect key={`${i}-${j}`} active={isActive} />);
+        row.push(
+          <Rect
+            key={`${i}-${j}`}
+            active={isActive}
+            color={color ?? "var(--text-tertiary)"}
+          />
+        );
       }
       comp.push(row);
     }
     return comp;
-  }, [rows, columns, noise]);
-  return <Container>{grid}</Container>;
+  }, [rows, columns, noise, color]);
+  return (
+    <Container rows={rows} columns={columns}>
+      {grid}
+    </Container>
+  );
 };
