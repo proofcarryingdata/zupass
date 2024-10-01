@@ -186,6 +186,7 @@ export const ManageEmailModal = (): JSX.Element => {
 
       setTimeout(() => {
         setEmailManagerState(undefined);
+        setLoading(false);
       }, 1000);
     } catch (e) {
       setLoading(false);
