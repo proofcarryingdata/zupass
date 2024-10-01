@@ -1,5 +1,6 @@
 import { AboutZupassModal } from "./AboutZupassModal";
 import { ChangePasswordModal } from "./ChangePasswordModal";
+import { DeleteAccountModal } from "./DeleteAccountModal";
 import { ManageEmailModal } from "./ManageEmailsModal";
 import { PodsCollectionBottomModal } from "./PodsCollectionBottomModal";
 import { SettingsBottomModal } from "./SettingsBottomModal";
@@ -14,6 +15,7 @@ export const NewModals = (): JSX.Element => {
       <SuccessModal />
       <AboutZupassModal />
       <ManageEmailModal />
+      <DeleteAccountModal />
     </>
   );
 };
