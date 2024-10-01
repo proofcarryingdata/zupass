@@ -10,6 +10,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
 import { EmbeddedScreenState } from "./embedded";
 import { Emitter } from "./emitter";
+import { TicketType } from "../new-components/screens/Home/types";
 export type GetState = () => AppState;
 export type StateEmitter = Emitter<AppState>;
 
@@ -30,7 +31,11 @@ export interface AppState {
     | { modalType: "change-password" }
     | { modalType: "success-modal"; title: string; description: string }
     | { modalType: "about" }
+<<<<<<< Updated upstream
     | { modalType: "manage-emails" }
+=======
+    | { modalType: "ticket-add-ons"; addOns: TicketType[] }
+>>>>>>> Stashed changes
     | { modalType: "none" };
 
   // View state
