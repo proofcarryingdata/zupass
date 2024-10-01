@@ -31,11 +31,8 @@ export interface AppState {
     | { modalType: "change-password" }
     | { modalType: "success-modal"; title: string; description: string }
     | { modalType: "about" }
-<<<<<<< Updated upstream
     | { modalType: "manage-emails" }
-=======
     | { modalType: "ticket-add-ons"; addOns: TicketType[] }
->>>>>>> Stashed changes
     | { modalType: "none" };
 
   // View state
