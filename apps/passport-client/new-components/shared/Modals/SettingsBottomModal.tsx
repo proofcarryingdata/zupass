@@ -60,7 +60,14 @@ export function SettingsBottomModal(): JSX.Element {
       {
         title: "Manage Emails",
         icon: <EnvelopeIcon width={24} height={24} color="#7C8BB4" />,
-        onClick: (): void => {}
+        onClick: (): void => {
+          dispatch({
+            type: "set-bottom-modal",
+            modal: {
+              modalType: "manage-emails"
+            }
+          });
+        }
       },
       {
         title: "Import",
