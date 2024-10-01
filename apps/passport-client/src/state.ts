@@ -8,9 +8,9 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
+import { TicketType } from "../new-components/screens/Home/types";
 import { EmbeddedScreenState } from "./embedded";
 import { Emitter } from "./emitter";
-import { TicketType } from "../new-components/screens/Home/types";
 export type GetState = () => AppState;
 export type StateEmitter = Emitter<AppState>;
 
@@ -27,7 +27,7 @@ export interface AppState {
 
   // bottom modal will deprecate modal
   bottomModal:
-    | { modalType: "pods-collection" }
+    | { modalType: "pods-collection"; activePodId?: string }
     | { modalType: "settings" }
     | { modalType: "change-password" }
     | { modalType: "success-modal"; title: string; description: string }
