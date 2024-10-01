@@ -40,7 +40,6 @@ import {
   v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
 import { assertUnreachable, sleep } from "@pcd/util";
-import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
@@ -180,9 +179,6 @@ export type Action =
       type: "merge-import";
       collection: PCDCollection;
       pcdsToMergeIds: Set<PCD["id"]>;
-    }
-  | {
-      type: "initialize-strich";
     }
   | { type: "delete-account" }
   | {
@@ -326,8 +322,6 @@ export async function dispatch(
         action.collection,
         action.pcdsToMergeIds
       );
-    case "initialize-strich":
-      return initializeStrich(state, update);
     case "delete-account":
       return deleteAccount(state, update);
     case "show-embedded-screen":
@@ -1473,29 +1467,6 @@ async function removeAllPCDsInFolder(
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
   window.scrollTo({ top: 0 });
-}
-
-async function initializeStrich(
-  state: AppState,
-  update: ZuUpdate
-): Promise<void> {
-  if (!appConfig.strichLicenseKey) {
-    console.log("Strich license key is not defined");
-    return;
-  }
-  try {
-    await Promise.race([
-      StrichSDK.initialize(appConfig.strichLicenseKey),
-      sleep(10000)
-    ]);
-    if (StrichSDK.isInitialized()) {
-      update({ strichSDKstate: "initialized" });
-    } else {
-      update({ strichSDKstate: "error" });
-    }
-  } catch (e) {
-    update({ strichSDKstate: "error" });
-  }
 }
 
 async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {

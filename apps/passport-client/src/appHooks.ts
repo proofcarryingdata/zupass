@@ -346,10 +346,6 @@ export function useLoginIfNoSelf(
   }, [key, request, self, userForcedToLogout]);
 }
 
-export function useStrichSDKState(): AppState["strichSDKstate"] {
-  return useSelector((s) => s.strichSDKstate, []);
-}
-
 export function useEmbeddedScreenState(): AppState["embeddedScreen"] {
   return useSelector((s) => s.embeddedScreen, []);
 }

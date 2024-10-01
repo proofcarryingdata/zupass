@@ -13,8 +13,6 @@ interface AppConfig {
   rollbarToken: string | undefined;
   // the environment to which the client uploads errors in rollbar
   rollbarEnvName: string | undefined;
-  // license key for Strich scanner
-  strichLicenseKey: string | undefined;
   // restrict origins allowed to sign PODs to the ones in ZAPP_ALLOWED_SIGNER_ORIGINS?
   zappRestrictOrigins: boolean;
   // origins that are allowed to sign PODs
@@ -37,15 +35,6 @@ if (
   !!global.window.alert
 ) {
   alert("FROGCRYPTO_SERVER_URL not set");
-}
-
-if (
-  (!process.env.STRICH_LICENSE_KEY || process.env.STRICH_LICENSE_KEY === "") &&
-  process.env.NODE_ENV === "production" &&
-  global.window &&
-  !!global.window.alert
-) {
-  alert("STRICH_LICENSE_KEY not set");
 }
 
 let zappAllowedSignerOrigins: string[];
@@ -80,7 +69,6 @@ export const appConfig: AppConfig = {
   maxIdentityProofAgeMs: ONE_HOUR_MS * 4,
   rollbarToken: process.env.ROLLBAR_TOKEN,
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
-  strichLicenseKey: process.env.STRICH_LICENSE_KEY,
   zappRestrictOrigins: process.env.ZAPP_RESTRICT_ORIGINS === "true",
   zappAllowedSignerOrigins: zappAllowedSignerOrigins,
   embeddedZapps: embeddedZapps
