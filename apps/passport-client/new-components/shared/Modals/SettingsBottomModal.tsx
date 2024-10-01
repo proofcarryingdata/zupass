@@ -13,6 +13,7 @@ import {
   useBottomModal,
   useDispatch,
   useHasSetupPassword,
+  usePCDCollection,
   useStateContext
 } from "../../../src/appHooks";
 import { BottomModal } from "../BottomModal";
@@ -30,7 +31,7 @@ export function SettingsBottomModal(): JSX.Element {
   const state = useStateContext().getState();
   const dispatch = useDispatch();
   const hasSetupPassword = useHasSetupPassword();
-
+  const pcdCollection = usePCDCollection();
   const items: SettingItem[] = useMemo(
     () => [
       {
@@ -99,9 +100,32 @@ export function SettingsBottomModal(): JSX.Element {
         icon: <TrashIcon width={24} height={24} color="#E0431C" />,
         onClick: (): void => {},
         variant: "danger"
+      },
+      {
+        title: "add PCDS",
+        icon: <InformationCircleIcon width={24} height={24} color="#E0431C" />,
+        onClick: () => {
+          const pcd = {
+            A: 123,
+            B: 321,
+            C: "hello",
+            D: "foobar",
+            E: 123,
+            F: 4294967295,
+            G: 7,
+            H: 8,
+            I: 9,
+            J: 10,
+            K: -5,
+            owner: 18711405342588116796533073928767088921854096266145046362753928030796553161041,
+            ownerV4:
+              "pod_eddsa_pubkey:1nsPGF66uuDfBnpQD+7o/9SPX7L0JDn+lubKh+QGuS8"
+          };
+          pcdCollection.add(pcd);
+        }
       }
     ],
-    [dispatch, hasSetupPassword]
+    [dispatch, hasSetupPassword, pcdCollection]
   );
 
   return (

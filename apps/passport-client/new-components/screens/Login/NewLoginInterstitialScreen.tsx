@@ -9,7 +9,7 @@ import {
 } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { NewLoader } from "../../shared/NewLoader";
-import { Typography } from "../../Typography";
+import { Typography } from "../../shared/Typography";
 
 export function NewLoginInterstitialScreen(): JSX.Element {
   useSyncE2EEStorage();

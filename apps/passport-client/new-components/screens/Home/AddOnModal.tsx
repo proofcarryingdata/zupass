@@ -1,8 +1,8 @@
 import React, { ReactElement, useState } from "react";
-import { BottomModal } from "../../BottomModal";
+import { BottomModal } from "../../shared/BottomModal";
 import { TicketQRWrapper } from "../../../components/shared/PCDCard";
 import styled from "styled-components";
-import { Typography } from "../../Typography";
+import { Typography } from "../../shared/Typography";
 import { Button2 } from "../../shared/Button";
 import SwipeableViews from "react-swipeable-views";
 import { useBottomModal, useDispatch } from "../../../src/appHooks";
