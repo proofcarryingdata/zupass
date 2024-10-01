@@ -91,7 +91,7 @@ const Scroller = styled.div<{
   offset: number;
   gap: number;
 }>`
-  display: flex;
+  display: inline-flex;
   flex-direction: row;
   gap: ${({ gap }): number => gap}px;
   position: relative;
@@ -168,6 +168,7 @@ const positionInPx = (
 ): number => {
   const max = len * (elWidth + gap);
   const truePos = currentPos * (elWidth + gap);
+
   return truePos > max ? max : truePos;
 };
 
@@ -344,7 +345,7 @@ export const NewHomeScreen = (): ReactElement => {
         </TicketsContainer>
       );
     });
-  }, [tickets]);
+  }, [tickets, dispatch]);
 
   if (!tickets.length)
     return (
@@ -354,7 +355,7 @@ export const NewHomeScreen = (): ReactElement => {
         <NewModals />
       </AppContainer>
     );
-  // return null;
+
   return (
     <AppContainer bg="gray" noPadding fullscreen>
       <Container elWidth={eventCardWidth}>
@@ -438,7 +439,7 @@ export const NewHomeScreen = (): ReactElement => {
             TICKETS_HORIZONTAL_GAP
           )}
           offset={(windowWidth - ticketCardWidth) / 2}
-          amount={tickets.length - 1}
+          amount={tickets.length}
         >
           {renderedTickets}
         </Scroller>
