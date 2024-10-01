@@ -7,13 +7,11 @@ import {
   unpackSignature,
   verifySignature
 } from "@zk-kit/eddsa-poseidon";
-import {
-  poseidon1,
-  poseidon12,
-  poseidon13,
-  poseidon2,
-  poseidon3
-} from "poseidon-lite";
+import { poseidon1 } from "poseidon-lite/poseidon1";
+import { poseidon12 } from "poseidon-lite/poseidon12";
+import { poseidon13 } from "poseidon-lite/poseidon13";
+import { poseidon2 } from "poseidon-lite/poseidon2";
+import { poseidon3 } from "poseidon-lite/poseidon3";
 import { v4 as uuid } from "uuid";
 import {
   EdDSAInitArgs,
@@ -207,11 +205,11 @@ function poseidonHashMessage(message: bigint[]): bigint {
       // Used by PODs for value hashing, so no extra bundle size impact.
       return poseidon1(message);
     case 2:
-      // UYsed by PODs for Merkle tree hasing, so no extra bundle size impact.
+      // Used by PODs for Merkle tree hasing, so no extra bundle size impact.
       return poseidon2(message);
     case 3:
-      // Needed for backward-compatibility tests.
-      // TODO(artwyman): Alter backward-compatibility test case to use a different size
+      // Used by unit tests, including backward-compatibility with fixed values.
+      // Used by GPCs for tuple hasing, so no extra bundle size impact.
       return poseidon3(message);
     case 12:
       // Tailored to the size of EdDSATicketPCD.
