@@ -1,4 +1,3 @@
-import { listen } from "@parcnet-js/client-helpers/connection/iframe";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { encodePrivateKey } from "@pcd/pod";
 import { isPODPCD, PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
@@ -44,6 +43,7 @@ export function useZappServer(mode: ListenMode): void {
       return;
     }
     (async (): Promise<void> => {
+      const { listen } = await import("@parcnet-js/client-helpers/connection/iframe");
       const { zapp, advice, origin } = await listen();
       context.dispatch({ type: "zapp-connect", zapp, origin });
       if (mode === ListenMode.LISTEN_IF_EMBEDDED && !context.getState().self) {

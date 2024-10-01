@@ -1,4 +1,4 @@
-import { ConnectorAdvice } from "@parcnet-js/client-helpers";
+import { type ConnectorAdvice } from "@parcnet-js/client-helpers";
 import {
   ParcnetGPCRPC,
   ParcnetIdentityRPC,

@@ -3,6 +3,7 @@
   "version": "0.0.37",
   "license": "GPL-3.0-or-later",
   "private": true,
+  "type": "module",
   "scripts": {
     "dev": "ts-node build.ts dev",
     "build": "tsc --noEmit && ts-node build.ts build",

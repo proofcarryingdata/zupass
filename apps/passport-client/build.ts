@@ -95,7 +95,9 @@ const appOpts: BuildOptions = {
   },
   outdir: "public/js",
   metafile: true,
-  define
+  define,
+  splitting: true,
+  format: "esm"
 };
 
 const serviceWorkerOpts: BuildOptions = {
