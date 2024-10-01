@@ -33,6 +33,7 @@ export interface AppState {
     | { modalType: "success-modal"; title: string; description: string }
     | { modalType: "about" }
     | { modalType: "manage-emails" }
+    | { modalType: "delete-account" }
     | { modalType: "ticket-add-ons"; addOns: TicketType[] }
     | { modalType: "none" };
 
