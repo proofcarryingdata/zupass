@@ -19,7 +19,7 @@ import { useNavigate } from "react-router-dom";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
-import { usePCDs, useSelf } from "../../../src/appHooks";
+import { useDispatch, usePCDs, useSelf } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
@@ -253,8 +253,7 @@ export const NewHomeScreen = (): ReactElement => {
   const [eventCardWidth, setEventCardWidth] = useState(0);
   const [ticketCardWidth, setTicketCardWidth] = useState(0);
   const [ticketsColumnHeight, setTicketsColumnHeight] = useState(0);
-  const [addOns, setAddOns] = useState<TicketType[]>([]);
-  const [addOnModalOpen, setAddOnModalOpen] = useState(false);
+  const dispatch = useDispatch();
   const scrollRef = useRef<HTMLDivElement>(null);
   const pcdCardScrollRef = useRef<HTMLDivElement>(null);
   const ticketsRef = useRef<Map<string, HTMLDivElement[]>>(new Map());
@@ -316,8 +315,13 @@ export const NewHomeScreen = (): ReactElement => {
                     ? {
                         text: `View ${pack.addOns.length} add-on items`,
                         onClick(): void {
-                          setAddOnModalOpen(true);
-                          setAddOns(pack.addOns);
+                          dispatch({
+                            type: "set-bottom-modal",
+                            modal: {
+                              addOns: pack.addOns,
+                              modalType: "ticket-add-ons"
+                            }
+                          });
                         }
                       }
                     : undefined
@@ -445,11 +449,7 @@ export const NewHomeScreen = (): ReactElement => {
       <Spacer h={48} />
       <FloatingMenu />
       <NewModals />
-      <AddOnsModal
-        setIsOpen={setAddOnModalOpen}
-        addOns={addOns}
-        isOpen={addOnModalOpen}
-      />
+      <AddOnsModal />
     </AppContainer>
   );
 };
