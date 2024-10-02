@@ -6,9 +6,9 @@ import {
   useDispatch,
   useUserShouldAgreeNewPrivacyNotice
 } from "../../src/appHooks";
+import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 import { ErrorPopup } from "../modals/ErrorPopup";
 import { ScreenLoader } from "./ScreenLoader";
-import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 
 // Wrapper for all screens.
 export function AppContainer({
