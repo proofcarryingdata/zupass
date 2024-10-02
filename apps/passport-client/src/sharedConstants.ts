@@ -22,3 +22,5 @@ export const OUTDATED_BROWSER_ERROR_MESSAGE =
   "SecurityError: The operation is insecure";
 
 export const OOM_ERROR_MESSAGE = "Out of memory";
+
+export const MAX_WIDTH_SCREEN = 420;

@@ -8,6 +8,7 @@ import {
 } from "../../src/appHooks";
 import { ErrorPopup } from "../modals/ErrorPopup";
 import { ScreenLoader } from "./ScreenLoader";
+import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 
 // Wrapper for all screens.
 export function AppContainer({
@@ -74,7 +75,7 @@ export const CenterColumn = styled.div<{ defaultPadding: boolean }>`
   align-items: center;
   flex-direction: column;
   min-height: 100%;
-  max-width: 420px;
+  max-width: ${MAX_WIDTH_SCREEN}px;
   margin: 0 auto;
   position: relative;
   ${({ defaultPadding }): string => (defaultPadding ? "padding: 16px;" : "")}

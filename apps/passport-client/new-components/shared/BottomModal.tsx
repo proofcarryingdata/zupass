@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
+import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 
 const BottomModalOverlay = styled.div<{ $fullScreen?: boolean }>`
   position: fixed;
@@ -27,6 +28,8 @@ const BottomModalContainer = styled.div`
   flex: 1;
   box-shadow: 0px 4px 6px -1px #0000001a;
   width: 100%;
+  max-width: ${MAX_WIDTH_SCREEN}px;
+  margin: 0 auto;
 `;
 
 export type BottomModalProps = {
