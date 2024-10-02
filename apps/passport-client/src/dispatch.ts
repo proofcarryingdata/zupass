@@ -109,6 +109,7 @@ export type Action =
       email: string;
       code: string;
       targetFolder: string | undefined | null;
+      newUI?: boolean;
     }
   | {
       type: "set-self";
@@ -251,6 +252,7 @@ export async function dispatch(
         action.email,
         action.code,
         action.targetFolder,
+        action.newUI ?? false,
         state,
         update
       );
@@ -382,6 +384,7 @@ async function oneClickLogin(
   email: string,
   code: string,
   targetFolder: string | undefined | null,
+  newUI: boolean,
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
@@ -422,7 +425,8 @@ async function oneClickLogin(
         oneClickLoginResult.value.zupassUser,
         state,
         update,
-        targetFolder
+        targetFolder,
+        newUI
       );
     }
 
@@ -440,7 +444,8 @@ async function oneClickLogin(
         return loadAfterLogin(
           oneClickLoginResult.value.encryptionKey,
           storageResult.value,
-          update
+          update,
+          newUI
         );
       }
 
@@ -455,8 +460,10 @@ async function oneClickLogin(
       });
     }
 
+    const base = newUI ? "#/new" : "#";
     // Account has password - direct to enter password
-    window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
+    window.location.hash =
+      base + "/new-passport?email=" + encodeURIComponent(email);
     return;
   }
 
@@ -1161,7 +1168,6 @@ async function doSync(
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }
-
     return {
       loadedIssuedPCDs: true,
       loadingIssuedPCDs: false,

@@ -79,6 +79,7 @@ import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { ListenMode, useZappServer } from "../src/zapp/useZappServer";
+import { NewOneClickLoginScreen2 } from "../new-components/screens/newOneClickLoginScreen2";
 
 enableLiveReload();
 
@@ -193,7 +194,7 @@ function RouterImpl(): JSX.Element {
           />
           <Route
             path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
-            element={<NewOneClickLoginScreen />}
+            element={<NewOneClickLoginScreen2 />}
           />
           <Route
             path="enter-confirmation-code"
