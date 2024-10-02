@@ -1,4 +1,4 @@
-import NodeRSA from "node-rsa";
+import type { default as NodeRSA } from "node-rsa";
 import { IRSATicketData, RSATicketPCD } from "./RSATicketPCD";
 
 export function getTicketData(pcd?: RSATicketPCD): IRSATicketData {
@@ -14,7 +14,10 @@ export function getTicketData(pcd?: RSATicketPCD): IRSATicketData {
   return ticketData;
 }
 
-export function getPublicKey(pcd?: RSATicketPCD): NodeRSA | undefined {
+export async function getPublicKey(
+  pcd?: RSATicketPCD
+): Promise<NodeRSA | undefined> {
+  const { default: NodeRSA } = await import("node-rsa");
   const encodedPublicKey = pcd?.proof?.rsaPCD?.proof?.publicKey;
   if (!encodedPublicKey) {
     return undefined;

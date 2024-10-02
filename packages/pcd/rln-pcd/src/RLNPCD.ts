@@ -7,7 +7,7 @@ import {
 } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import { Proof, RLN, RLNFullProof } from "rlnjs";
+import type { Proof, RLNFullProof } from "rlnjs";
 import { v4 as uuid } from "uuid";
 
 export const RLNPCDTypeName = "rln-pcd";
@@ -100,10 +100,11 @@ export class RLNPCD implements PCD<RLNPCDClaim, RLNPCDProof> {
   }
 }
 
-export function checkClaimProofMatching(
+export async function checkClaimProofMatching(
   claim: RLNPCDClaim,
   proof: RLNPCDProof
-): void {
+): Promise<void> {
+  const { RLN } = await import("rlnjs");
   const claimExternalNullifier = RLN._genNullifier(
     claim.epoch,
     claim.rlnIdentifier

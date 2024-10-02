@@ -4,7 +4,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
-import { RLN } from "rlnjs";
+import type { RLN } from "rlnjs";
 import verificationKeyJSON from "../artifacts/16.json";
 import {
   RLNPCD,
@@ -52,7 +52,7 @@ export async function prove(args: RLNPCDArgs): Promise<RLNPCD> {
     throw new Error("cannot make proof: signal is not provided");
   }
   const identity = identityPCD.claim.identityV3;
-  const rln = getRLNInstance(BigInt(rlnIdentifier), identity);
+  const rln = await getRLNInstance(BigInt(rlnIdentifier), identity);
   const group = deserializeSemaphoreGroup(serializedGroup);
   const leafIndex = group.indexOf(identity.getCommitment());
   const merkleProof = group.generateMerkleProof(leafIndex);
@@ -61,12 +61,16 @@ export async function prove(args: RLNPCDArgs): Promise<RLNPCD> {
 }
 
 export async function verify(pcd: RLNPCD): Promise<boolean> {
-  checkClaimProofMatching(pcd.claim, pcd.proof);
+  await checkClaimProofMatching(pcd.claim, pcd.proof);
   const fullProof = pcd.toRLNFullProof();
+  const { RLN } = await import("rlnjs");
   return await RLN.verifySNARKProof(verificationKeyJSON, fullProof.snarkProof);
 }
 
-function getRLNInstance(rlnIdentifier: bigint, identity?: Identity): RLN {
+async function getRLNInstance(
+  rlnIdentifier: bigint,
+  identity?: Identity
+): Promise<RLN> {
   if (!initArgs) {
     throw new Error("cannot make proof: init has not been called yet");
   }
@@ -84,6 +88,7 @@ function getRLNInstance(rlnIdentifier: bigint, identity?: Identity): RLN {
     // Leave it undefined and let RLN handle it
     identityStr = undefined;
   }
+  const { RLN } = await import("rlnjs");
 
   return new RLN(
     initArgs.wasmFilePath,

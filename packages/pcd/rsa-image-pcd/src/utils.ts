@@ -1,7 +1,10 @@
-import NodeRSA from "node-rsa";
+import type { default as NodeRSA } from "node-rsa";
 import { RSAImagePCD } from "./RSAImagePCD";
 
-export function getPublicKey(pcd?: RSAImagePCD): NodeRSA | undefined {
+export async function getPublicKey(
+  pcd?: RSAImagePCD
+): Promise<NodeRSA | undefined> {
+  const { default: NodeRSA } = await import("node-rsa");
   const encodedPublicKey = pcd?.proof?.rsaPCD?.proof?.publicKey;
   if (!encodedPublicKey) {
     return undefined;
