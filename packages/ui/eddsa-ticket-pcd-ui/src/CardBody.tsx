@@ -81,20 +81,13 @@ function EdDSATicketPCDCardBody({
     const blob = new Blob([data], { type: "plain/json" });
     return (
       <NEW_UI__Container>
-        <div
-          style={{
-            minWidth: 320,
-            minHeight: 320
-          }}
-        >
-          <TicketQR
-            pcd={pcd}
-            identityPCD={identityPCD}
-            verifyURL={verifyURL}
-            idBasedVerifyURL={idBasedVerifyURL}
-            zk={zk}
-          />
-        </div>
+        <TicketQR
+          pcd={pcd}
+          identityPCD={identityPCD}
+          verifyURL={verifyURL}
+          idBasedVerifyURL={idBasedVerifyURL}
+          zk={zk}
+        />
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
             {ticketData?.attendeeName.toUpperCase() || "Unknown"}

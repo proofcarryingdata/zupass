@@ -7,14 +7,7 @@ import {
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { PODTicketPCDTypeName, isPODTicketPCD } from "@pcd/pod-ticket-pcd";
-import {
-  ReactElement,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState
-} from "react";
+import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
@@ -25,21 +18,20 @@ import {
   usePCDs,
   useSelf
 } from "../../../src/appHooks";
+import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
+import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
-import { TicketPack, TicketType, TicketTypeName } from "./types";
 import { AddOnsModal } from "./AddOnModal";
-import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
-import { NewLoader } from "../../shared/NewLoader";
+import { TicketPack, TicketType, TicketTypeName } from "./types";
 
-const EVENT_GAP = 4;
-const EVENT_GAP_DESKTOP = 40;
+const CARD_GAP = 8;
 const TICKETS_HORIZONTAL_GAP = 40;
-const SHOW_HELPER_LINES = false;
 const TICKET_VERTICAL_GAP = 20;
+const SCREEN_HORIZONTAL_PADDING = 20;
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
   // TODO: fetch the pods type as well and prioritize it if theres a conflict.
@@ -94,31 +86,19 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
   }, [ticketsTrigger]);
 };
 const Scroller = styled.div<{
-  amount: number;
   scrollInPx: number;
-  offset: number;
-  gap: number;
 }>`
   display: inline-flex;
   flex-direction: row;
-  gap: ${({ gap }): number => gap}px;
+  padding-left: ${SCREEN_HORIZONTAL_PADDING}px;
+  padding-right: ${SCREEN_HORIZONTAL_PADDING}px;
+  gap: 8px;
   position: relative;
   transition: left 0.2s cubic-bezier(0.25, 0.8, 0.5, 1);
   left: ${({ scrollInPx }): number => -scrollInPx}px;
-  transform: translateX(${({ offset }): number => offset}px);
 `;
 
-const Line = styled.div<{ padding: number }>`
-  width: 5px;
-  position: absolute;
-  left: ${({ padding }): number => padding}px;
-  top: 0;
-  bottom: 0;
-  background: pink;
-  z-index: 100;
-`;
-
-const Container = styled.div<{ elWidth: number; height?: number }>`
+const Container = styled.div<{ height?: number }>`
   margin-top: 20px;
   width: 100%;
   overflow: hidden;
@@ -160,33 +140,13 @@ const ButtonsContainer = styled.div`
   gap: 12px;
 `;
 
-const TicketsContainer = styled.div`
-  width: 100%;
+const TicketsContainer = styled.div<{ $width: number }>`
+  width: ${({ $width }): number => $width}px;
   display: flex;
   flex-direction: column;
   height: 100%;
   gap: ${TICKET_VERTICAL_GAP}px;
 `;
-
-const positionInPx = (
-  currentPos: number,
-  elWidth: number,
-  len: number,
-  gap: number
-): number => {
-  const max = len * (elWidth + gap);
-  const truePos = currentPos * (elWidth + gap);
-
-  return truePos > max ? max : truePos;
-};
-
-const calculateElWidth = (
-  scrollWidth: number,
-  gap: number,
-  len: number
-): number => {
-  return Math.ceil((scrollWidth - gap * (len - 1)) / len);
-};
 
 const getEventDetails = (tickets: TicketPack): ITicketData => {
   return tickets.eventTicket.claim.ticket as ITicketData;
@@ -223,7 +183,7 @@ const calculateTicketsColumnHeight = (ticketRefs: HTMLDivElement[]): number => {
 };
 
 const useWindowWidth = (): number => {
-  const [windoWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   useEffect(() => {
     const onResize = (): void => {
       setWindowWidth(window.innerWidth);
@@ -236,7 +196,7 @@ const useWindowWidth = (): number => {
     };
   }, []);
 
-  return windoWidth;
+  return windowWidth;
 };
 
 const LoadingScreenContainer = styled.div`
@@ -266,8 +226,6 @@ export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
   const [currentPos, setCurrentPos] = useState(0);
-  const [eventCardWidth, setEventCardWidth] = useState(0);
-  const [ticketCardWidth, setTicketCardWidth] = useState(0);
   const [ticketsColumnHeight, setTicketsColumnHeight] = useState(0);
   const dispatch = useDispatch();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -284,37 +242,9 @@ export const NewHomeScreen = (): ReactElement => {
     }
   });
 
-  // variable event gap for mobile view and desktop view
-  const eventGap =
-    windowWidth > MAX_WIDTH_SCREEN ? EVENT_GAP_DESKTOP : EVENT_GAP;
-  console.log(eventCardWidth);
-  useLayoutEffect(() => {
-    console.log(scrollRef.current, pcdCardScrollRef.current);
-    if (scrollRef.current) {
-      setEventCardWidth(
-        calculateElWidth(
-          scrollRef.current.scrollWidth,
-          eventGap,
-          tickets.length
-        )
-      );
-    }
-    if (pcdCardScrollRef.current) {
-      setTicketCardWidth(
-        calculateElWidth(
-          pcdCardScrollRef.current.scrollWidth,
-          TICKETS_HORIZONTAL_GAP,
-          tickets.length
-        )
-      );
-    }
-  }, [
-    eventGap,
-    setEventCardWidth,
-    setTicketCardWidth,
-    tickets.length,
-    isLoadedPCDs
-  ]);
+  const cardWidth =
+    (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
+    SCREEN_HORIZONTAL_PADDING * 2;
 
   useEffect(() => {
     if (tickets[currentPos]) {
@@ -332,6 +262,7 @@ export const NewHomeScreen = (): ReactElement => {
     return tickets.map(([eventName, eventTicketPack]) => {
       return (
         <TicketsContainer
+          $width={cardWidth}
           key={eventTicketPack.map((pack) => pack.eventTicket.id).join("-")}
         >
           {eventTicketPack.map((pack) => {
@@ -372,7 +303,7 @@ export const NewHomeScreen = (): ReactElement => {
         </TicketsContainer>
       );
     });
-  }, [tickets, dispatch]);
+  }, [tickets, dispatch, cardWidth]);
   if (!isLoadedPCDs) {
     return (
       <AppContainer fullscreen={true} bg="gray">
@@ -398,33 +329,18 @@ export const NewHomeScreen = (): ReactElement => {
       </AppContainer>
     );
 
-  const relativeWindowWidth =
-    windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth;
-  console.log({
-    relativeWindowWidth,
-    eventCardWidth,
-    ticketCardWidth,
-    eventGap
-  });
   return (
     <AppContainer bg="gray" noPadding fullscreen>
-      <Container elWidth={eventCardWidth}>
+      <Container>
         <Scroller
-          gap={eventGap}
-          offset={(relativeWindowWidth - eventCardWidth) / 2}
           ref={scrollRef}
-          scrollInPx={positionInPx(
-            currentPos,
-            eventCardWidth,
-            tickets.length - 1,
-            eventGap
-          )}
-          amount={tickets.length - 1}
+          scrollInPx={currentPos * (cardWidth + CARD_GAP)}
         >
           {tickets.map(([eventName, packs], i) => {
             const eventDetails = getEventDetails(packs[0]);
             return (
               <TicketCard
+                ticketWidth={cardWidth}
                 key={eventName}
                 address={eventName}
                 title={eventName}
@@ -438,7 +354,6 @@ export const NewHomeScreen = (): ReactElement => {
             );
           })}
         </Scroller>
-        {SHOW_HELPER_LINES && <Line padding={(420 - eventCardWidth) / 2} />}
       </Container>
       <Spacer h={20} />
       <ButtonsContainer>
@@ -478,24 +393,13 @@ export const NewHomeScreen = (): ReactElement => {
         </PageCircleButton>
       </ButtonsContainer>
       <Spacer h={20} />
-      <Container elWidth={ticketCardWidth} height={ticketsColumnHeight}>
+      <Container height={ticketsColumnHeight}>
         <Scroller
-          gap={TICKETS_HORIZONTAL_GAP}
           ref={pcdCardScrollRef}
-          scrollInPx={positionInPx(
-            currentPos,
-            ticketCardWidth,
-            tickets.length,
-            TICKETS_HORIZONTAL_GAP
-          )}
-          offset={(relativeWindowWidth - ticketCardWidth) / 2}
-          amount={tickets.length}
+          scrollInPx={currentPos * (cardWidth + CARD_GAP)}
         >
           {renderedTickets}
         </Scroller>
-        {SHOW_HELPER_LINES && (
-          <Line padding={(relativeWindowWidth - ticketCardWidth) / 2} />
-        )}
       </Container>
       <Spacer h={48} />
       <FloatingMenu />

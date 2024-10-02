@@ -65,17 +65,7 @@ export function PODTicketCardBodyImpl({
 
     return (
       <NEW_UI__Container>
-        <div
-          style={{
-            minWidth: 320,
-            minHeight: 320
-          }}
-        >
-          <TicketQR
-            ticketData={ticketData}
-            idBasedVerifyURL={idBasedVerifyURL}
-          />
-        </div>
+        <TicketQR ticketData={ticketData} idBasedVerifyURL={idBasedVerifyURL} />
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
             {ticketData?.attendeeName.toUpperCase() || "Unknown"}
