@@ -27,8 +27,10 @@ import { TicketCard } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 import { AddOnsModal } from "./AddOnModal";
+import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 
 const EVENT_GAP = 4;
+const EVENT_GAP_DESKTOP = 40;
 const TICKETS_HORIZONTAL_GAP = 40;
 const SHOW_HELPER_LINES = false;
 const TICKET_VERTICAL_GAP = 20;
@@ -216,7 +218,6 @@ const calculateTicketsColumnHeight = (ticketRefs: HTMLDivElement[]): number => {
 
 const useWindowWidth = (): number => {
   const [windoWidth, setWindowWidth] = useState(window.innerWidth);
-
   useEffect(() => {
     const onResize = (): void => {
       setWindowWidth(window.innerWidth);
@@ -268,12 +269,16 @@ export const NewHomeScreen = (): ReactElement => {
     }
   });
 
+  // variable event gap for mobile view and desktop view
+  const eventGap =
+    windowWidth > MAX_WIDTH_SCREEN ? EVENT_GAP_DESKTOP : EVENT_GAP;
+
   useLayoutEffect(() => {
     if (scrollRef.current) {
       setEventCardWidth(
         calculateElWidth(
           scrollRef.current.scrollWidth,
-          EVENT_GAP,
+          eventGap,
           tickets.length
         )
       );
@@ -287,7 +292,7 @@ export const NewHomeScreen = (): ReactElement => {
         )
       );
     }
-  }, [setEventCardWidth, setTicketCardWidth, tickets.length]);
+  }, [eventGap, setEventCardWidth, setTicketCardWidth, tickets.length]);
 
   useEffect(() => {
     if (tickets[currentPos]) {
@@ -355,19 +360,21 @@ export const NewHomeScreen = (): ReactElement => {
         <NewModals />
       </AppContainer>
     );
+  const relativeWindowWidth =
+    windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth;
 
   return (
     <AppContainer bg="gray" noPadding fullscreen>
       <Container elWidth={eventCardWidth}>
         <Scroller
-          gap={EVENT_GAP}
-          offset={(windowWidth - eventCardWidth) / 2}
+          gap={eventGap}
+          offset={(relativeWindowWidth - eventCardWidth) / 2}
           ref={scrollRef}
           scrollInPx={positionInPx(
             currentPos,
             eventCardWidth,
             tickets.length - 1,
-            EVENT_GAP
+            eventGap
           )}
           amount={tickets.length - 1}
         >
@@ -438,13 +445,13 @@ export const NewHomeScreen = (): ReactElement => {
             tickets.length,
             TICKETS_HORIZONTAL_GAP
           )}
-          offset={(windowWidth - ticketCardWidth) / 2}
+          offset={(relativeWindowWidth - ticketCardWidth) / 2}
           amount={tickets.length}
         >
           {renderedTickets}
         </Scroller>
         {SHOW_HELPER_LINES && (
-          <Line padding={(windowWidth - ticketCardWidth) / 2} />
+          <Line padding={(relativeWindowWidth - ticketCardWidth) / 2} />
         )}
       </Container>
       <Spacer h={48} />
