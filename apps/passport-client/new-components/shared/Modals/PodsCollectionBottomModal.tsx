@@ -120,7 +120,7 @@ export const PodsCollectionBottomModal = (): JSX.Element => {
 };
 
 const ListContainer = styled.div`
-  height: 500px;
+  height: 450px;
   overflow-y: auto;
 `;
 

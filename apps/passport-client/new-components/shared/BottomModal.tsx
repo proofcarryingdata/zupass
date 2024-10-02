@@ -13,7 +13,7 @@ const BottomModalOverlay = styled.div<{ $fullScreen?: boolean }>`
   overflow-y: hidden;
   backdrop-filter: blur(4px);
   z-index: 9999;
-  padding: 12px;
+  padding: 0px 12px 12px 12px;
   display: flex;
   align-items: end;
 `;
@@ -29,6 +29,7 @@ const BottomModalContainer = styled.div`
   box-shadow: 0px 4px 6px -1px #0000001a;
   width: 100%;
   max-width: ${MAX_WIDTH_SCREEN}px;
+  max-height: 100%;
   margin: 0 auto;
 `;
 
