@@ -19,7 +19,12 @@ import { useNavigate } from "react-router-dom";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
-import { useDispatch, usePCDs, useSelf } from "../../../src/appHooks";
+import {
+  useDispatch,
+  useLoadedIssuedPCDs,
+  usePCDs,
+  useSelf
+} from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
@@ -28,6 +33,7 @@ import { Typography } from "../../shared/Typography";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 import { AddOnsModal } from "./AddOnModal";
 import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
+import { NewLoader } from "../../shared/NewLoader";
 
 const EVENT_GAP = 4;
 const EVENT_GAP_DESKTOP = 40;
@@ -233,6 +239,14 @@ const useWindowWidth = (): number => {
   return windoWidth;
 };
 
+const LoadingScreenContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: auto 0;
+`;
+
 const EmptyCard = (): ReactElement => {
   return (
     <EmptyCardContainer>
@@ -262,6 +276,7 @@ export const NewHomeScreen = (): ReactElement => {
   const windowWidth = useWindowWidth();
   const self = useSelf();
   const navigate = useNavigate();
+  const isLoadedPCDs = useLoadedIssuedPCDs();
 
   useEffect(() => {
     if (!self) {
@@ -272,8 +287,9 @@ export const NewHomeScreen = (): ReactElement => {
   // variable event gap for mobile view and desktop view
   const eventGap =
     windowWidth > MAX_WIDTH_SCREEN ? EVENT_GAP_DESKTOP : EVENT_GAP;
-
+  console.log(eventCardWidth);
   useLayoutEffect(() => {
+    console.log(scrollRef.current, pcdCardScrollRef.current);
     if (scrollRef.current) {
       setEventCardWidth(
         calculateElWidth(
@@ -292,7 +308,13 @@ export const NewHomeScreen = (): ReactElement => {
         )
       );
     }
-  }, [eventGap, setEventCardWidth, setTicketCardWidth, tickets.length]);
+  }, [
+    eventGap,
+    setEventCardWidth,
+    setTicketCardWidth,
+    tickets.length,
+    isLoadedPCDs
+  ]);
 
   useEffect(() => {
     if (tickets[currentPos]) {
@@ -303,7 +325,7 @@ export const NewHomeScreen = (): ReactElement => {
       }
       setTicketsColumnHeight(calculateTicketsColumnHeight(refs));
     }
-  }, [currentPos, tickets]);
+  }, [currentPos, tickets, isLoadedPCDs]);
 
   const renderedTickets = useMemo(() => {
     ticketsRef.current = new Map();
@@ -351,7 +373,22 @@ export const NewHomeScreen = (): ReactElement => {
       );
     });
   }, [tickets, dispatch]);
-
+  if (!isLoadedPCDs) {
+    return (
+      <AppContainer fullscreen={true} bg="gray">
+        <LoadingScreenContainer>
+          <NewLoader columns={5} rows={5} />
+          <Typography
+            fontSize={18}
+            fontWeight={800}
+            color="var(--text-tertiary)"
+          >
+            GENERATING PODS
+          </Typography>
+        </LoadingScreenContainer>
+      </AppContainer>
+    );
+  }
   if (!tickets.length)
     return (
       <AppContainer bg="gray">
@@ -360,9 +397,15 @@ export const NewHomeScreen = (): ReactElement => {
         <NewModals />
       </AppContainer>
     );
+
   const relativeWindowWidth =
     windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth;
-
+  console.log({
+    relativeWindowWidth,
+    eventCardWidth,
+    ticketCardWidth,
+    eventGap
+  });
   return (
     <AppContainer bg="gray" noPadding fullscreen>
       <Container elWidth={eventCardWidth}>
