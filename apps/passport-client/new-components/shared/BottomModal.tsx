@@ -18,11 +18,14 @@ const BottomModalOverlay = styled.div<{ $fullScreen?: boolean }>`
   align-items: end;
 `;
 
-const BottomModalContainer = styled.div`
+const BottomModalContainer = styled.div<{
+  $height?: React.CSSProperties["height"];
+}>`
   padding: 24px 24px 20px 24px;
   gap: 20px;
   border-radius: 40px;
   background: #ffffff;
+  margin-top: 12px;
   bottom: 12px;
   color: black;
   flex: 1;
@@ -30,6 +33,7 @@ const BottomModalContainer = styled.div`
   width: 100%;
   max-width: ${MAX_WIDTH_SCREEN}px;
   max-height: 100%;
+  height: ${({ $height }): string | number => ($height ? $height : "auto")};
   margin: 0 auto;
 `;
 
@@ -38,13 +42,15 @@ export type BottomModalProps = {
   children: ReactNode;
   modalContainerStyle?: React.CSSProperties;
   onClickOutside?: () => void;
+  height?: React.CSSProperties["height"];
 };
 
 export const BottomModal = ({
   isOpen,
   children,
   modalContainerStyle,
-  onClickOutside
+  onClickOutside,
+  height
 }: BottomModalProps): JSX.Element | null => {
   const dispatch = useDispatch();
   if (!isOpen) {
@@ -66,6 +72,7 @@ export const BottomModal = ({
           // Consider use clickOutside hook instead of that
           e.stopPropagation();
         }}
+        $height={height}
       >
         {children}
       </BottomModalContainer>

@@ -88,14 +88,14 @@ export const PodsCollectionBottomModal = (): JSX.Element => {
             COLLECTED PODS
           </Typography>
         </UserTitleContainer>
-        <ListContainer ref={listContainerRef}>
+        <ListContainer ref={listContainerRef} $activePod={!!activePod}>
           {activePod ? (
             <CardBody newUI={true} isMainIdentity={false} pcd={activePod} />
           ) : (
             <List list={podsCollectionList} />
           )}
         </ListContainer>
-        <ContainerWithPadding>
+        <ContainerWithPadding $activePod={!!activePod}>
           <Button2
             onClick={() => {
               if (activePod) {
@@ -119,17 +119,18 @@ export const PodsCollectionBottomModal = (): JSX.Element => {
   );
 };
 
-const ListContainer = styled.div`
-  height: 450px;
+const ListContainer = styled.div<{ $activePod?: boolean }>`
   overflow-y: auto;
+  height: ${({ $activePod }): string => ($activePod ? "auto" : "450px")};
 `;
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
+  height: fit-content;
 `;
-const ContainerWithPadding = styled.div`
-  padding: 24px;
+const ContainerWithPadding = styled.div<{ $activePod?: boolean }>`
+  padding: ${({ $activePod }): number => ($activePod ? 0 : 24)}px 24px 24px 24px;
 `;
 
 const UserTitleContainer = styled.div`
