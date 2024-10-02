@@ -34,7 +34,6 @@ import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/Alre
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
-import { NewOneClickLoginScreen } from "../components/screens/LoginScreens/NewOneClickLoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
 import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
@@ -66,6 +65,7 @@ import { NewLoginInterstitialScreen } from "../new-components/screens/Login/NewL
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
 import { NewPassportScreen2 } from "../new-components/screens/Login/NewPassportScreen";
 import { NewSyncExistingScreen } from "../new-components/screens/Login/NewSyncExistingScreen";
+import { NewOneClickLoginScreen2 } from "../new-components/screens/NewOneClickLoginScreen2";
 import { NewPrivacyNoticeScreen } from "../new-components/screens/NewPrivacyNoticeScreen";
 import { NewTermsScreen } from "../new-components/screens/NewTermsScreen";
 import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTermsScreen";
@@ -79,7 +79,6 @@ import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { ListenMode, useZappServer } from "../src/zapp/useZappServer";
-import { NewOneClickLoginScreen2 } from "../new-components/screens/newOneClickLoginScreen2";
 
 enableLiveReload();
 
