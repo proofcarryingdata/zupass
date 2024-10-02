@@ -1,4 +1,8 @@
-import { r as BabyJubjubR } from "@zk-kit/baby-jubjub";
+// Prime order of the alt_bn128 curve.
+// Should always be equal to the `r` constant in @zk-kit/baby-jubjub.
+export const BabyJubjubR = BigInt(
+  "21888242871839275222246405745257275088548364400416034343698204186575808495617"
+);
 
 /**
  * Name of a POD entry is a string with a limited character set, checked using
