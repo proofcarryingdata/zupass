@@ -103,7 +103,8 @@ function EdDSATicketPCDCardBody({
             onClick={() => {
               const a = document.createElement("a");
               a.href = URL.createObjectURL(blob);
-              a.download = "test.json";
+              a.download =
+                (ticketData?.eventName || "event-ticket-data") + ".json";
               a.click();
               a.remove();
             }}
