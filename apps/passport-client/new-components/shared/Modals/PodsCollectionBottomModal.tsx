@@ -1,6 +1,6 @@
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
@@ -16,6 +16,8 @@ import { Typography } from "../Typography";
 
 export const PodsCollectionBottomModal = (): JSX.Element => {
   const activeBottomModal = useBottomModal();
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useDispatch();
   const pcdCollection = usePCDCollection();
   const isPodsCollectionModalOpen =
@@ -52,6 +54,8 @@ export const PodsCollectionBottomModal = (): JSX.Element => {
         title: isTicket ? pcd.claim.ticket.eventName : pcd.type,
         key: pcd.id,
         onClick: () => {
+          listContainerRef.current &&
+            setScrollPosition(listContainerRef.current.scrollTop);
           dispatch({
             type: "set-bottom-modal",
             modal: { modalType: "pods-collection", activePodId: pcd.id }
@@ -66,31 +70,50 @@ export const PodsCollectionBottomModal = (): JSX.Element => {
     return Object.values(result);
   }, [pcdCollection, dispatch]);
 
+  useEffect(() => {
+    // Restore scroll position when list is shown again
+    if (!activePod && listContainerRef.current) {
+      listContainerRef.current.scrollTop = scrollPosition;
+    }
+  }, [activePod, scrollPosition]);
+
   return (
-    <BottomModal isOpen={isPodsCollectionModalOpen}>
+    <BottomModal
+      modalContainerStyle={{ padding: 0, paddingTop: 24 }}
+      isOpen={isPodsCollectionModalOpen}
+    >
       <Container>
         <UserTitleContainer>
           <Typography fontSize={20} fontWeight={800} align="center">
             COLLECTED PODS
           </Typography>
         </UserTitleContainer>
-        <ListContainer>
+        <ListContainer ref={listContainerRef}>
           {activePod ? (
             <CardBody newUI={true} isMainIdentity={false} pcd={activePod} />
           ) : (
             <List list={podsCollectionList} />
           )}
         </ListContainer>
-        <Button2
-          onClick={() => {
-            dispatch({
-              type: "set-bottom-modal",
-              modal: { modalType: "none" }
-            });
-          }}
-        >
-          Close
-        </Button2>
+        <ContainerWithPadding>
+          <Button2
+            onClick={() => {
+              if (activePod) {
+                dispatch({
+                  type: "set-bottom-modal",
+                  modal: { modalType: "pods-collection" }
+                });
+              } else {
+                dispatch({
+                  type: "set-bottom-modal",
+                  modal: { modalType: "none" }
+                });
+              }
+            }}
+          >
+            {activePod ? "Back" : "Close"}
+          </Button2>
+        </ContainerWithPadding>
       </Container>
     </BottomModal>
   );
@@ -104,11 +127,14 @@ const ListContainer = styled.div`
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 24px;
+`;
+const ContainerWithPadding = styled.div`
+  padding: 24px;
 `;
 
 const UserTitleContainer = styled.div`
   display: flex;
   flex-direction: column;
   justify-content: center;
+  padding-bottom: 24px;
 `;

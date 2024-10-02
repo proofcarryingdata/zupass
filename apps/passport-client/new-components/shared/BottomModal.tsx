@@ -32,12 +32,14 @@ const BottomModalContainer = styled.div`
 export type BottomModalProps = {
   isOpen: boolean;
   children: ReactNode;
+  modalContainerStyle?: React.CSSProperties;
   onClickOutside?: () => void;
 };
 
 export const BottomModal = ({
   isOpen,
   children,
+  modalContainerStyle,
   onClickOutside
 }: BottomModalProps): JSX.Element | null => {
   const dispatch = useDispatch();
@@ -55,6 +57,7 @@ export const BottomModal = ({
       }}
     >
       <BottomModalContainer
+        style={modalContainerStyle}
         onClick={(e) => {
           // Consider use clickOutside hook instead of that
           e.stopPropagation();

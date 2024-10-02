@@ -44,15 +44,16 @@ const ListGroup = ({ children, title, isLastItemBorder }: GroupType) => {
 
 type ListProps = {
   list: ListChild[];
+  style?: React.CSSProperties;
 };
 
 const ListContainer = styled.div`
   padding: 12px 24px;
 `;
 
-export const List = ({ list }: ListProps) => {
+export const List = ({ list, style }: ListProps) => {
   return (
-    <ListContainer>
+    <ListContainer style={style}>
       {list.map((child) => {
         return isListGroup(child) ? (
           <ListGroup {...child} />
