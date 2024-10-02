@@ -211,6 +211,7 @@ const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
             autoFocus
             placeholder="6 digit code"
             error={error}
+            hideArrows
           />
           <Button2 variant="primary" disabled={loading} type="submit">
             {!loading ? "Verify" : "Verifying..."}

@@ -103,6 +103,7 @@ export const NewEnterConfirmationCodeScreen = (): JSX.Element => {
           autoFocus
           placeholder="6 digit code"
           error={error}
+          hideArrows
         />
 
         <InputsContainer>

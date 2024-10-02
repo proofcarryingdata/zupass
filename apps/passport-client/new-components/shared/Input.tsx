@@ -1,11 +1,12 @@
-import { ForwardedRef, InputHTMLAttributes, Ref, forwardRef } from "react";
-import styled, { css } from "styled-components";
+import { ForwardedRef, forwardRef, InputHTMLAttributes, Ref } from "react";
+import styled, { css, FlattenSimpleInterpolation } from "styled-components";
 import { Typography } from "./Typography";
 
 export interface NewInputProps extends InputHTMLAttributes<HTMLInputElement> {
   variant?: "primary" | "secondary";
   error?: string;
   endIcon?: React.ReactNode;
+  hideArrows?: boolean;
 }
 
 const errorCSS = css`
@@ -28,8 +29,20 @@ const secondaryCSS = css`
   background: var(--secondary-input-bg);
 `;
 
+const noArrowsCSS = css`
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  & {
+    -moz-appearance: textfield;
+  }
+`;
+
 export const BigInput2 = styled.input<{
   error?: string;
+  hideArrows?: boolean;
   variant: "primary" | "secondary";
 }>`
   width: 100%;
@@ -51,11 +64,14 @@ export const BigInput2 = styled.input<{
     pointer-events: none;
     background: rgba(0, 0, 0, 0.05);
   }
-  ${({ error }) => {
+  ${({ error }): FlattenSimpleInterpolation | undefined => {
     if (error) return errorCSS;
   }}
-  ${({ variant }) => {
+  ${({ variant }): FlattenSimpleInterpolation | undefined => {
     if (variant === "secondary") return secondaryCSS;
+  }}
+  ${({ hideArrows }): FlattenSimpleInterpolation | undefined => {
+    if (hideArrows) return noArrowsCSS;
   }}
 `;
 
