@@ -1,7 +1,7 @@
 import { Property } from "csstype";
+import { forwardRef } from "react";
 import styled from "styled-components";
 import { Typography } from "./Typography";
-import { forwardRef } from "react";
 
 type CardColor = "purple" | "orange";
 const CARD_COLORS: Record<CardColor, Property.Color> = {

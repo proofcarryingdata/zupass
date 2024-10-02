@@ -78,9 +78,7 @@ export function PODTicketCardBodyImpl({
         </div>
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
-            {ticketData?.attendeeName
-              ? ticketData.attendeeName.toUpperCase()
-              : "JOHN DOE"}
+            {ticketData?.attendeeName.toUpperCase() || "Unknown"}
           </NEW_UI__AttendeeName>
           <NEW_UI__ExtraInfoContainer>
             <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
