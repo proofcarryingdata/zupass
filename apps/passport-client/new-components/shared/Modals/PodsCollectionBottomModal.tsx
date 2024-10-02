@@ -13,7 +13,26 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
+import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD } from "@pcd/pcd-types";
 
+const getActivePod = (
+  collection: PCDCollection,
+  activePodId: string,
+  type: "ticketId" | "id"
+): PCD<unknown, unknown> | undefined => {
+  if (type === "ticketId") {
+    return collection
+      .getAll()
+      .find(
+        (pod) =>
+          (isPODTicketPCD(pod) || isEdDSATicketPCD(pod)) &&
+          pod.claim.ticket.ticketId === activePodId
+      );
+  } else {
+    return collection.getById(activePodId);
+  }
+};
 export const PodsCollectionBottomModal = (): JSX.Element => {
   const activeBottomModal = useBottomModal();
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -22,13 +41,17 @@ export const PodsCollectionBottomModal = (): JSX.Element => {
   const pcdCollection = usePCDCollection();
   const isPodsCollectionModalOpen =
     activeBottomModal.modalType === "pods-collection";
-  const activePodId = isPodsCollectionModalOpen
-    ? activeBottomModal.activePodId
-    : undefined;
 
-  const activePod = activePodId
-    ? pcdCollection.getById(activePodId)
-    : undefined;
+  const activePod =
+    isPodsCollectionModalOpen && activeBottomModal.activePodId
+      ? getActivePod(
+          pcdCollection,
+          activeBottomModal.activePodId,
+          activeBottomModal.idType ?? "id"
+        )
+      : undefined;
+
+  console.log(pcdCollection.getAll().map((p) => console.log(p)));
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
