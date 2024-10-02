@@ -27,5 +27,15 @@ export default defineConfig({
         }
       : {})
   },
-  clearScreen: false
+  clearScreen: false,
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          react: ["react", "react-dom", "react-router-dom"],
+          libsodium: ["libsodium-wrappers-sumo", "libsodium-sumo"]
+        }
+      }
+    }
+  }
 });
