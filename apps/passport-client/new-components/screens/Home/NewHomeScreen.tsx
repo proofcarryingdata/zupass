@@ -31,6 +31,7 @@ import { TicketPack, TicketType, TicketTypeName } from "./types";
 const CARD_GAP = 8;
 const TICKETS_HORIZONTAL_GAP = 40;
 const TICKET_VERTICAL_GAP = 20;
+const SCREEN_HORIZONTAL_PADDING = 20;
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
   // TODO: fetch the pods type as well and prioritize it if theres a conflict.
@@ -89,8 +90,8 @@ const Scroller = styled.div<{
 }>`
   display: inline-flex;
   flex-direction: row;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: ${SCREEN_HORIZONTAL_PADDING}px;
+  padding-right: ${SCREEN_HORIZONTAL_PADDING}px;
   gap: 8px;
   position: relative;
   transition: left 0.2s cubic-bezier(0.25, 0.8, 0.5, 1);
@@ -242,7 +243,8 @@ export const NewHomeScreen = (): ReactElement => {
   });
 
   const cardWidth =
-    (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) - 40;
+    (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
+    SCREEN_HORIZONTAL_PADDING * 2;
 
   useEffect(() => {
     if (tickets[currentPos]) {
