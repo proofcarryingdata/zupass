@@ -5,6 +5,7 @@ import {
 import { isRootFolder, normalizePath } from "@pcd/pcd-collection";
 import React, {
   ReactNode,
+  Suspense,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -36,8 +37,6 @@ import { AppHeader } from "../../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../../shared/LoadingIssuedPCDs";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
-import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
-import { FrogFolder } from "../FrogScreens/FrogFolder";
 import { ProtocolWorldsHome } from "../ProtocolWorldsScreens/ProtocolWorldsHome";
 import { ZappScreen } from "../ZappScreens/ZappScreen";
 import {
@@ -164,6 +163,16 @@ export function HomeScreenImpl(): JSX.Element | null {
   }, [browsingFolder, dispatch]);
 
   if (!self) return null;
+  const LazyFrogCryptoHomeSection = React.lazy(() =>
+    import("../FrogScreens/FrogCryptoHomeSection").then(
+      ({ FrogCryptoHomeSection }) => ({ default: FrogCryptoHomeSection })
+    )
+  );
+  const LazyFrogFolder = React.lazy(() =>
+    import("../FrogScreens/FrogFolder").then(({ FrogFolder }) => ({
+      default: FrogFolder
+    }))
+  );
 
   return (
     <>
@@ -210,10 +219,12 @@ export function HomeScreenImpl(): JSX.Element | null {
                     );
                   })}
               {isRoot && shouldShowFrogCrypto && (
-                <FrogFolder
-                  Container={FrogFolderContainer}
-                  onFolderClick={onFolderClick}
-                />
+                <Suspense fallback={<RippleLoader />}>
+                  <LazyFrogFolder
+                    Container={FrogFolderContainer}
+                    onFolderClick={onFolderClick}
+                  />
+                </Suspense>
               )}
               {isRoot &&
                 Object.keys(appConfig.embeddedZapps).map((folder) => (
@@ -227,7 +238,9 @@ export function HomeScreenImpl(): JSX.Element | null {
           )}
 
           {isFrogCrypto ? (
-            <FrogCryptoHomeSection />
+            <Suspense fallback={<RippleLoader />}>
+              <LazyFrogCryptoHomeSection />
+            </Suspense>
           ) : isProtocolWorlds ? (
             <ProtocolWorldsHome />
           ) : isEdgeCity ? (

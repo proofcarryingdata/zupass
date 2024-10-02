@@ -5,7 +5,7 @@ import {
   isWebAssemblySupported
 } from "@pcd/util";
 import * as React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import {
@@ -23,8 +23,6 @@ import { ChangeEmailScreen } from "../components/screens/ChangeEmailScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { EmbeddedScreen } from "../components/screens/EmbeddedScreens/EmbeddedScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
-import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
-import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
@@ -130,6 +128,18 @@ function RouterImpl(): JSX.Element {
     );
   }
 
+  const LazyFrogManagerScreen = React.lazy(() =>
+    import("../components/screens/FrogScreens/FrogManagerScreen").then(
+      ({ FrogManagerScreen }) => ({ default: FrogManagerScreen })
+    )
+  );
+
+  const LazyFrogSubscriptionScreen = React.lazy(() =>
+    import("../components/screens/FrogScreens/FrogSubscriptionScreen").then(
+      ({ FrogSubscriptionScreen }) => ({ default: FrogSubscriptionScreen })
+    )
+  );
+
   return (
     <HashRouter>
       <Routes>
@@ -179,11 +189,29 @@ function RouterImpl(): JSX.Element {
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
-          <Route path="pond-control" element={<FrogManagerScreen />} />
-          <Route path="frogscriptions" element={<FrogSubscriptionScreen />} />
+          <Route
+            path="pond-control"
+            element={
+              <Suspense fallback={<RippleLoader />}>
+                <LazyFrogManagerScreen />
+              </Suspense>
+            }
+          />
+          <Route
+            path="frogscriptions"
+            element={
+              <Suspense fallback={<RippleLoader />}>
+                <LazyFrogSubscriptionScreen />
+              </Suspense>
+            }
+          />
           <Route
             path="frogscriptions/:feedCode"
-            element={<FrogSubscriptionScreen />}
+            element={
+              <Suspense fallback={<RippleLoader />}>
+                <LazyFrogSubscriptionScreen />
+              </Suspense>
+            }
           />
           <Route path="server-error" element={<ServerErrorScreen />} />
           <Route path="import" element={<ImportBackupScreen />} />

@@ -4,7 +4,7 @@ import {
 } from "@pcd/passport-interface";
 import { Separator, Spacer } from "@pcd/passport-ui";
 import { bigintToPseudonymNumber, emailToBigint } from "@pcd/util";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
