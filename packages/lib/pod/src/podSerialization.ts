@@ -1,4 +1,5 @@
 import JSONBig from "json-bigint";
+import { checkStringEncodedValueType } from "./podChecks";
 import {
   EDDSA_PUBKEY_TYPE_STRING,
   POD_INT_MAX,
@@ -9,7 +10,7 @@ import {
   PODValue,
   PODValueTuple
 } from "./podTypes";
-import { applyOrMap, checkStringEncodedValueType } from "./podUtil";
+import { applyOrMap } from "./podUtil";
 
 /**
  * Serializes `PODEntries` to a string in a full-fidelity format.  Calling

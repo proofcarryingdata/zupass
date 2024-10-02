@@ -1,10 +1,9 @@
 import { LeanIMT, LeanIMTMerkleProof } from "@zk-kit/lean-imt";
+import { checkPODName, checkPODValue } from "./podChecks";
 import { podMerkleTreeHash, podNameHash, podValueHash } from "./podCrypto";
 import { deserializePODEntries, serializePODEntries } from "./podSerialization";
 import { PODEntries, PODName, PODValue } from "./podTypes";
 import {
-  checkPODName,
-  checkPODValue,
   cloneOptionalPODValue,
   clonePODValue,
   getPODValueForCircuit

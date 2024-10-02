@@ -1,18 +1,20 @@
-// TODO(POD-P3): Decide if these utils should all be published outside
-// of the package, or only a subset.
-
 import {
   EDDSA_PUBKEY_TYPE_STRING,
-  PODRawValue,
-  PODValue,
   POD_CRYPTOGRAPHIC_MAX,
   POD_CRYPTOGRAPHIC_MIN,
   POD_INT_MAX,
   POD_INT_MIN,
   POD_NAME_REGEX,
-  POD_VALUE_STRING_TYPE_IDENTIFIER
+  POD_VALUE_STRING_TYPE_IDENTIFIER,
+  PODRawValue,
+  PODValue
 } from "./podTypes";
-import { type CryptoBytesEncodingGroups, decodeBytesAuto } from "./podUtil";
+import {
+  CryptoBytesEncodingGroups,
+  decodeBytesAuto,
+  getPODValueForCircuit,
+  PRIVATE_KEY_ENCODING_GROUPS
+} from "./podUtil";
 
 /**
  * Private keys are 32 bytes (any arbitrary bytes), represented as Base64 or
@@ -24,15 +26,6 @@ import { type CryptoBytesEncodingGroups, decodeBytesAuto } from "./podUtil";
 export const PRIVATE_KEY_REGEX = new RegExp(
   /^(?:([A-Za-z0-9+/]{43}=?)|([0-9A-Fa-f]{64}))$/
 );
-
-/**
- * Description of the match groups in {@link PRIVATE_KEY_REGEX} and how they
- * map to encoding formats, as needed by {@link decodeBytesAuto}.
- */
-export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
-  { index: 1, encoding: "base64" },
-  { index: 2, encoding: "hex" }
-];
 
 /**
  * Public keys are 32 bytes (a packed elliptic curve point), represented as
@@ -317,24 +310,4 @@ export function checkPODValue(
  */
 export function isPODNumericValue(podValue: PODValue): boolean {
   return getPODValueForCircuit(podValue) !== undefined;
-}
-
-/**
- * Gets the numeric representation of the given value for inclusion in a
- * circuit, if any.
- *
- * @param podValue the value to convert
- * @returns the numeric value, or undefined if this value cannot be represented
- *   in a circuit
- */
-export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
-  switch (podValue.type) {
-    case "string":
-      return undefined;
-    case "int":
-    case "cryptographic":
-      return podValue.value;
-    default:
-      return undefined;
-  }
 }
