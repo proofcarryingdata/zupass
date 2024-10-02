@@ -182,7 +182,7 @@ const calculateTicketsColumnHeight = (ticketRefs: HTMLDivElement[]): number => {
 };
 
 const useWindowWidth = (): number => {
-  const [windoWidth, setWindowWidth] = useState(window.innerWidth);
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   useEffect(() => {
     const onResize = (): void => {
       setWindowWidth(window.innerWidth);
@@ -195,7 +195,7 @@ const useWindowWidth = (): number => {
     };
   }, []);
 
-  return windoWidth;
+  return windowWidth;
 };
 
 const LoadingScreenContainer = styled.div`
