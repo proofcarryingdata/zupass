@@ -87,6 +87,10 @@ const Container = styled.div<{ $fullscreen: boolean }>`
       ? `
           display: flex;
           height: 100vh;
+
+          @supports (height: 100dvh) {
+            height: 100dvh;
+          }
         `
       : ""}
 `;
