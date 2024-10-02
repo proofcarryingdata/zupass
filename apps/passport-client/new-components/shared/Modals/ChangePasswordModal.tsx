@@ -41,6 +41,15 @@ export const ChangePasswordModal = (): JSX.Element | null => {
   const [revealPassword, setRevealPassword] = useState(false);
   const [error, setError] = useState<string | undefined>();
 
+  const isOpen = activeBottomModal.modalType === "change-password";
+  useEffect(() => {
+    return () => {
+      setNewPassword("");
+      setConfirmPassword("");
+      setError(undefined);
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (!self) {
       navigate("/new/login", { replace: true });
@@ -122,7 +131,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
   if (!self) return null;
 
   return (
-    <BottomModal isOpen={activeBottomModal.modalType === "change-password"}>
+    <BottomModal isOpen={isOpen}>
       <Container>
         <TitleContainer>
           <Typography fontSize={20} fontWeight={800}>

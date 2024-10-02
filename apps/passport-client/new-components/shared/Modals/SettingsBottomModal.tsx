@@ -16,6 +16,7 @@ import {
   useStateContext
 } from "../../../src/appHooks";
 import { BottomModal } from "../BottomModal";
+import { Button2 } from "../Button";
 import { Typography } from "../Typography";
 
 interface SettingItem {
@@ -139,6 +140,18 @@ export function SettingsBottomModal(): JSX.Element {
             </SettingsItemContainer>
           ))}
         </SettingsActionContainer>
+        <Button2
+          onClick={() => {
+            dispatch({
+              type: "set-bottom-modal",
+              modal: {
+                modalType: "none"
+              }
+            });
+          }}
+        >
+          Back
+        </Button2>
       </SettingsContainer>
     </BottomModal>
   );
