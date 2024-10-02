@@ -72,8 +72,12 @@ export const PodsCollectionBottomModal = (): JSX.Element => {
 
   useEffect(() => {
     // Restore scroll position when list is shown again
-    if (!activePod && listContainerRef.current) {
-      listContainerRef.current.scrollTop = scrollPosition;
+    if (listContainerRef.current) {
+      if (!activePod) {
+        listContainerRef.current.scrollTop = scrollPosition;
+      } else {
+        listContainerRef.current.scrollTop = 0;
+      }
     }
   }, [activePod, scrollPosition]);
 
@@ -88,14 +92,14 @@ export const PodsCollectionBottomModal = (): JSX.Element => {
             COLLECTED PODS
           </Typography>
         </UserTitleContainer>
-        <ListContainer ref={listContainerRef} $activePod={!!activePod}>
+        <ListContainer ref={listContainerRef}>
           {activePod ? (
             <CardBody newUI={true} isMainIdentity={false} pcd={activePod} />
           ) : (
-            <List list={podsCollectionList} />
+            <List style={{ paddingTop: 0 }} list={podsCollectionList} />
           )}
         </ListContainer>
-        <ContainerWithPadding $activePod={!!activePod}>
+        <ContainerWithPadding>
           <Button2
             onClick={() => {
               if (activePod) {
@@ -119,9 +123,9 @@ export const PodsCollectionBottomModal = (): JSX.Element => {
   );
 };
 
-const ListContainer = styled.div<{ $activePod?: boolean }>`
+const ListContainer = styled.div`
   overflow-y: auto;
-  height: ${({ $activePod }): string => ($activePod ? "auto" : "450px")};
+  max-height: calc(100vh - 260px);
 `;
 
 const Container = styled.div`
@@ -129,8 +133,8 @@ const Container = styled.div`
   flex-direction: column;
   height: fit-content;
 `;
-const ContainerWithPadding = styled.div<{ $activePod?: boolean }>`
-  padding: ${({ $activePod }): number => ($activePod ? 0 : 24)}px 24px 24px 24px;
+const ContainerWithPadding = styled.div`
+  padding: 24px 24px 24px 24px;
 `;
 
 const UserTitleContainer = styled.div`
