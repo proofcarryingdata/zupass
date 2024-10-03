@@ -44,6 +44,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
   const isOpen = activeBottomModal.modalType === "change-password";
   useEffect(() => {
     return () => {
+      setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       setError(undefined);
