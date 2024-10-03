@@ -206,6 +206,10 @@ export type Action =
     }
   | {
       type: "approve-zapp";
+    }
+  | {
+      type: "pasueSync";
+      value: boolean;
     };
 
 export type StateContextValue = {
@@ -226,6 +230,9 @@ export async function dispatch(
   update: ZuUpdate
 ): Promise<void> {
   switch (action.type) {
+    case "pasueSync":
+      update({ pauseSync: action.value });
+      break;
     case "new-passport":
       return genPassport(state.identityV3, action.email, update, action.newUi);
     case "create-user-skip-password":

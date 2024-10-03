@@ -170,7 +170,6 @@ const InnerContainer = styled.div`
   align-items: center;
   text-align: center;
 `;
-
 const calculateTicketsColumnHeight = (ticketRefs: HTMLDivElement[]): number => {
   const len = ticketRefs.length;
   // we have to calculate it per ticket column since different tickets can have different heights (if you have addons vs you dont)
@@ -235,6 +234,8 @@ export const NewHomeScreen = (): ReactElement => {
   const self = useSelf();
   const navigate = useNavigate();
   const isLoadedPCDs = useLoadedIssuedPCDs();
+
+  const modals = useMemo(() => <NewModals />, []);
 
   useEffect(() => {
     if (!self) {
@@ -320,91 +321,92 @@ export const NewHomeScreen = (): ReactElement => {
       </AppContainer>
     );
   }
-  if (!tickets.length)
-    return (
-      <AppContainer bg="gray">
-        <EmptyCard />
-        <FloatingMenu />
-        <NewModals />
-      </AppContainer>
-    );
 
   return (
-    <AppContainer bg="gray" noPadding fullscreen>
-      <Container>
-        <Scroller
-          ref={scrollRef}
-          scrollInPx={currentPos * (cardWidth + CARD_GAP)}
-        >
-          {tickets.map(([eventName, packs], i) => {
-            const eventDetails = getEventDetails(packs[0]);
-            return (
-              <TicketCard
-                ticketWidth={cardWidth}
-                key={eventName}
-                address={eventName}
-                title={eventName}
-                ticketDate={new Date(
-                  eventDetails.timestampSigned
-                ).toDateString()}
-                imgSource={eventDetails.imageUrl}
-                ticketCount={packs.length}
-                cardColor={i % 2 === 0 ? "purple" : "orange"}
+    <AppContainer
+      bg="gray"
+      noPadding={tickets.length > 0}
+      fullscreen={tickets.length > 0}
+    >
+      {!tickets.length && <EmptyCard />}
+      {tickets.length > 0 && (
+        <>
+          <Container>
+            <Scroller
+              ref={scrollRef}
+              scrollInPx={currentPos * (cardWidth + CARD_GAP)}
+            >
+              {tickets.map(([eventName, packs], i) => {
+                const eventDetails = getEventDetails(packs[0]);
+                return (
+                  <TicketCard
+                    ticketWidth={cardWidth}
+                    key={eventName}
+                    address={eventName}
+                    title={eventName}
+                    ticketDate={new Date(
+                      eventDetails.timestampSigned
+                    ).toDateString()}
+                    imgSource={eventDetails.imageUrl}
+                    ticketCount={packs.length}
+                    cardColor={i % 2 === 0 ? "purple" : "orange"}
+                  />
+                );
+              })}
+            </Scroller>
+          </Container>
+          <Spacer h={20} />
+          <ButtonsContainer>
+            <PageCircleButton
+              disabled={currentPos === 0}
+              padding={6}
+              diameter={28}
+              onClick={() => {
+                setCurrentPos((old) => {
+                  if (old === 0) return old;
+                  return old - 1;
+                });
+              }}
+            >
+              <ChevronLeftIcon
+                width={20}
+                height={20}
+                color="var(--text-tertiary)"
               />
-            );
-          })}
-        </Scroller>
-      </Container>
-      <Spacer h={20} />
-      <ButtonsContainer>
-        <PageCircleButton
-          disabled={currentPos === 0}
-          padding={6}
-          diameter={28}
-          onClick={() => {
-            setCurrentPos((old) => {
-              if (old === 0) return old;
-              return old - 1;
-            });
-          }}
-        >
-          <ChevronLeftIcon
-            width={20}
-            height={20}
-            color="var(--text-tertiary)"
-          />
-        </PageCircleButton>
-        <PageCircleButton
-          disabled={currentPos === tickets.length - 1}
-          padding={6}
-          diameter={28}
-          onClick={() => {
-            setCurrentPos((old) => {
-              if (old === tickets.length - 1) return old;
-              return old + 1;
-            });
-          }}
-        >
-          <ChevronRightIcon
-            width={20}
-            height={20}
-            color="var(--text-tertiary)"
-          />
-        </PageCircleButton>
-      </ButtonsContainer>
-      <Spacer h={20} />
-      <Container height={ticketsColumnHeight}>
-        <Scroller
-          ref={pcdCardScrollRef}
-          scrollInPx={currentPos * (cardWidth + CARD_GAP)}
-        >
-          {renderedTickets}
-        </Scroller>
-      </Container>
+            </PageCircleButton>
+            <PageCircleButton
+              disabled={currentPos === tickets.length - 1}
+              padding={6}
+              diameter={28}
+              onClick={() => {
+                setCurrentPos((old) => {
+                  if (old === tickets.length - 1) return old;
+                  return old + 1;
+                });
+              }}
+            >
+              <ChevronRightIcon
+                width={20}
+                height={20}
+                color="var(--text-tertiary)"
+              />
+            </PageCircleButton>
+          </ButtonsContainer>
+          <Spacer h={20} />
+          <Container height={ticketsColumnHeight}>
+            <Scroller
+              ref={pcdCardScrollRef}
+              scrollInPx={currentPos * (cardWidth + CARD_GAP)}
+            >
+              {renderedTickets}
+            </Scroller>
+          </Container>
+        </>
+      )}
       <Spacer h={48} />
       <FloatingMenu />
-      <NewModals />
       <AddOnsModal />
+      {modals}
     </AppContainer>
   );
 };
