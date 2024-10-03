@@ -161,6 +161,22 @@ export function checkPODName(name?: string): string {
 }
 
 /**
+ * Checks that the input matches the proper format for {@link PODEntries}, by
+ * checking each name and value in turn.
+ *
+ * @param podEntries the entries to check
+ * @throws TypeError if the input type, or any of the names or values are
+ *   invalid
+ */
+export function checkPODEntries(podEntries: PODEntries): void {
+  requireType("entries", podEntries, "object");
+  for (const [n, v] of Object.entries(podEntries)) {
+    checkPODName(n);
+    checkPODValue(n, v);
+  }
+}
+
+/**
  * Checks that `value` has the run-time type given by `typeName`.  Works for
  * any Typescript Type.
  *
