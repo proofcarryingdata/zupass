@@ -2,7 +2,8 @@ import { QRDisplayWithRegenerateAndStorage, styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { PODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
-import { useCallback } from "react";
+import html2canvas from "html2canvas";
+import { useCallback, useRef, useState } from "react";
 import urlJoin from "url-join";
 
 type NEW_UI__AddOns = {
@@ -11,7 +12,6 @@ type NEW_UI__AddOns = {
 };
 export interface PODTicketPCDCardProps {
   ticketData: IPODTicketData;
-  pcd: PODTicketPCD;
   idBasedVerifyURL: string;
   newUI?: boolean;
   addOns?: NEW_UI__AddOns;
@@ -34,7 +34,6 @@ function PODTicketCardBody({
 }): JSX.Element {
   return (
     <PODTicketCardBodyImpl
-      pcd={pcd}
       ticketData={pcd.claim.ticket}
       idBasedVerifyURL={idBasedVerifyURL}
       newUI={newUI}
@@ -47,47 +46,49 @@ export function PODTicketCardBodyImpl({
   ticketData,
   idBasedVerifyURL,
   newUI,
-  pcd,
   addOns
 }: PODTicketPCDCardProps): JSX.Element {
+  const ticketImageRef = useRef<HTMLDivElement>(null);
   const hasImage = ticketData.imageUrl !== undefined;
 
+  const [downloading, setDownloading] = useState(false);
+
   if (newUI) {
-    const data = Buffer.from(
-      JSON.stringify(
-        pcd,
-        (_, v) => (typeof v === "bigint" ? v.toString() : v),
-
-        2
-      )
-    );
-    const blob = new Blob([data], { type: "plain/json" });
-
     return (
       <NEW_UI__Container>
-        <TicketQR ticketData={ticketData} idBasedVerifyURL={idBasedVerifyURL} />
-        <NEW_UI__InfoContainer>
-          <NEW_UI__AttendeeName>
-            {ticketData?.attendeeName.toUpperCase() || "Unknown"}
-          </NEW_UI__AttendeeName>
-          <NEW_UI__ExtraInfoContainer>
-            <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
-            <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
-            <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
-          </NEW_UI__ExtraInfoContainer>
-        </NEW_UI__InfoContainer>
+        <NEW_UI__TicketImageContainer ref={ticketImageRef}>
+          <TicketQR
+            ticketData={ticketData}
+            idBasedVerifyURL={idBasedVerifyURL}
+          />
+          <NEW_UI__InfoContainer>
+            <NEW_UI__AttendeeName>
+              {ticketData?.attendeeName.toUpperCase() || "Unknown"}
+            </NEW_UI__AttendeeName>
+            <NEW_UI__ExtraInfoContainer>
+              <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
+              <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
+              <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
+            </NEW_UI__ExtraInfoContainer>
+          </NEW_UI__InfoContainer>
+        </NEW_UI__TicketImageContainer>
         <div>
           <NEW_UI__ExtraSection
-            onClick={() => {
-              const a = document.createElement("a");
-              a.href = URL.createObjectURL(blob);
-              a.download =
-                (ticketData?.eventName || "event-ticket-data") + ".json";
-              a.click();
-              a.remove();
+            onClick={async () => {
+              if (downloading) return;
+              setDownloading(true);
+              const ticketElement = ticketImageRef.current;
+              if (!ticketElement) return;
+              await shareOrDownloadImage(
+                ticketElement,
+                (ticketData?.eventName || "event-ticket-data") + ".png"
+              );
+              setDownloading(false);
             }}
           >
-            <NEW_UI__ExtraSectionText>Download ticket</NEW_UI__ExtraSectionText>
+            <NEW_UI__ExtraSectionText $disabled={downloading}>
+              Download ticket
+            </NEW_UI__ExtraSectionText>
             <DownloadIcon />
           </NEW_UI__ExtraSection>
           {addOns && (
@@ -222,10 +223,16 @@ const NEW_UI__Container = styled.div`
 
   /* shadow-sm */
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
-  padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+`;
+
+const NEW_UI__TicketImageContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 16px 0px 16px;
 `;
 
 const NEW_UI__InfoContainer = styled.div`
@@ -260,12 +267,23 @@ const NEW_UI__ExtraSection = styled.div`
   display: flex;
   flex-direction: row;
   border-top: 1px solid #eee;
-  padding: 16px 0;
+  padding: 16px;
   justify-content: space-between;
+
+  cursor: pointer;
+  user-select: none;
+  &:focus {
+    outline: none;
+    background-color: "var(--text-tertiary)";
+  }
+  &:active {
+    background-color: "var(--text-tertiary)";
+  }
 `;
 
-const NEW_UI__ExtraSectionText = styled.div`
-  color: var(--text-primary);
+const NEW_UI__ExtraSectionText = styled.div<{ $disabled?: boolean }>`
+  color: ${({ $disabled }): string =>
+    $disabled ? "var(--text-tertiary)" : "var(--text-primary)"};
   font-family: Rubik;
   font-size: 16px;
   font-weight: 400;
@@ -314,3 +332,44 @@ const QRIcon = (): JSX.Element => (
     />
   </svg>
 );
+
+const shareOrDownloadImage = async (
+  ticketElement: HTMLElement | null,
+  fileName: string
+): Promise<void> => {
+  if (!ticketElement) return;
+
+  const canvas: HTMLCanvasElement = await html2canvas(ticketElement);
+  const blob: Blob | null = await new Promise((resolve) =>
+    canvas.toBlob(resolve, "image/png")
+  );
+  if (!blob) return; // Ensure the blob exists before proceeding
+
+  const downloadImage = (blob: Blob, fileName: string): void => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = fileName;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+  const file = new File([blob], fileName, { type: "image/png" });
+  if (navigator.share && navigator.canShare({ files: [file] })) {
+    try {
+      await navigator.share({
+        files: [file]
+      });
+    } catch (e) {
+      console.error("Error sharing image", e);
+      // Ignore errors related to the user aborting the share or a share already in progress
+      if (
+        e instanceof Error &&
+        ["AbortError", "InvalidStateError"].includes(e.name)
+      )
+        return;
+      downloadImage(blob, fileName);
+    }
+  } else {
+    downloadImage(blob, fileName);
+  }
+};

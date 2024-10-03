@@ -1,6 +1,6 @@
 import { requestGenericIssuanceTicketPreviews } from "@pcd/passport-interface";
 import { Button, Spacer } from "@pcd/passport-ui";
-import { IPODTicketData, PODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { IPODTicketData } from "@pcd/pod-ticket-pcd";
 import { PODTicketCardBodyImpl } from "@pcd/pod-ticket-pcd-ui";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -150,8 +150,6 @@ export function NewOneClickLoginScreen(): JSX.Element | null {
                       </CardHeader>
                       <PODTicketCardBodyImpl
                         idBasedVerifyURL=""
-                        // TODO FIX THIS!!!!!
-                        pcd={ticket as unknown as PODTicketPCD}
                         ticketData={ticket}
                         key={ticket.ticketId}
                       />

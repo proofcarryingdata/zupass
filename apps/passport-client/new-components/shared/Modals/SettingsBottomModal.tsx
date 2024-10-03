@@ -224,5 +224,6 @@ const useExport = (): (() => void) => {
     link.href = `data://text/json;base64,${data}`;
     link.download = `zupass-${storageHash}.json`;
     link.click();
+    link.remove();
   }, [user, pcds, subscriptions]);
 };
