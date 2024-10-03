@@ -7,13 +7,17 @@ import {
   InformationCircleIcon,
   TrashIcon
 } from "@heroicons/react/24/solid";
-import { useMemo } from "react";
+import { serializeStorage } from "@pcd/passport-interface";
+import { useCallback, useMemo } from "react";
 import styled from "styled-components";
 import {
   useBottomModal,
   useDispatch,
   useHasSetupPassword,
-  useStateContext
+  usePCDCollection,
+  useSelf,
+  useStateContext,
+  useSubscriptions
 } from "../../../src/appHooks";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
@@ -31,6 +35,8 @@ export function SettingsBottomModal(): JSX.Element {
   const state = useStateContext().getState();
   const dispatch = useDispatch();
   const hasSetupPassword = useHasSetupPassword();
+  const exportData = useExport();
+
   const items: SettingItem[] = useMemo(
     () => [
       {
@@ -77,7 +83,7 @@ export function SettingsBottomModal(): JSX.Element {
       {
         title: "Export",
         icon: <ArrowDownTrayIcon width={24} height={24} color="#7C8BB4" />,
-        onClick: (): void => {}
+        onClick: exportData
       },
       {
         title: "Logout",
@@ -108,7 +114,7 @@ export function SettingsBottomModal(): JSX.Element {
         variant: "danger"
       }
     ],
-    [dispatch, hasSetupPassword]
+    [dispatch, hasSetupPassword, exportData]
   );
 
   return (
@@ -121,7 +127,7 @@ export function SettingsBottomModal(): JSX.Element {
         </UserTitleContainer>
         <SettingsActionContainer>
           {items.map(({ icon, title, onClick, variant }, i) => (
-            <SettingsItemContainer key={title} onClick={onClick}>
+            <SettingsItemButton key={title} onClick={onClick}>
               {icon}
               <Typography
                 fontSize={18}
@@ -137,7 +143,7 @@ export function SettingsBottomModal(): JSX.Element {
               >
                 {title}
               </Typography>
-            </SettingsItemContainer>
+            </SettingsItemButton>
           ))}
         </SettingsActionContainer>
         <Button2
@@ -175,10 +181,48 @@ const SettingsActionContainer = styled.div`
   flex-direction: column;
 `;
 
-const SettingsItemContainer = styled.div<{ $variant?: "danger" }>`
+const SettingsItemButton = styled.div<{ $variant?: "danger" }>`
   display: flex;
   justify-content: flex-start;
   align-items: center;
   padding: 0px 12px;
   gap: 16px;
+  cursor: pointer;
+  user-select: none;
+  &:focus {
+    outline: none;
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  &:active {
+    background-color: rgba(0, 0, 0, 0.2);
+  }
+  ${({ $variant }): string => ($variant === "danger" ? `color: red;` : "")}
 `;
+
+const useExport = (): (() => void) => {
+  const user = useSelf();
+  const pcds = usePCDCollection();
+  const subscriptions = useSubscriptions();
+
+  return useCallback(async () => {
+    if (!user) return;
+    // Since we already use this data for remote sync, we know that it's
+    // sufficient for loading an account on to a new device.
+    const { serializedStorage, storageHash } = await serializeStorage(
+      user,
+      pcds,
+      subscriptions.value
+    );
+
+    // Data in a data URL must be Base64-encoded
+    const data = Buffer.from(JSON.stringify(serializedStorage)).toString(
+      "base64"
+    );
+
+    // Trigger the download
+    const link = document.createElement("a");
+    link.href = `data://text/json;base64,${data}`;
+    link.download = `zupass-${storageHash}.json`;
+    link.click();
+  }, [user, pcds, subscriptions]);
+};
