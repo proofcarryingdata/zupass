@@ -7,6 +7,7 @@ import { ManageEmailModal } from "./ManageEmailsModal";
 import { PodsCollectionBottomModal } from "./PodsCollectionBottomModal";
 import { SettingsBottomModal } from "./SettingsBottomModal";
 import { SuccessModal } from "./SuccessModal";
+import { ImportModal } from "./ImportModal";
 
 export const NewModals = (): JSX.Element => {
   const { modalType } = useBottomModal();
@@ -34,6 +35,7 @@ export const NewModals = (): JSX.Element => {
       <AboutZupassModal />
       <ManageEmailModal />
       <DeleteAccountModal />
+      <ImportModal />
     </>
   );
 };

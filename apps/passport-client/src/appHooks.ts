@@ -222,6 +222,10 @@ export function useIsLoggedIn(): boolean {
   return useSelector<boolean>((s) => s.self !== undefined, []);
 }
 
+export function useCanSync(): boolean {
+  return useSelector<boolean>((s) => !s.pauseSync, []);
+}
+
 export function useIsDeletingAccount(): boolean {
   return useSelector<boolean>((s) => !!s.deletingAccount, []);
 }

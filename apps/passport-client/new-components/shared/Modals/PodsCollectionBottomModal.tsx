@@ -33,7 +33,7 @@ const getActivePod = (
     return collection.getById(activePodId);
   }
 };
-export const PodsCollectionBottomModal = (): JSX.Element => {
+export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const activeBottomModal = useBottomModal();
   const [scrollPosition, setScrollPosition] = useState(0);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
@@ -50,8 +50,6 @@ export const PodsCollectionBottomModal = (): JSX.Element => {
           activeBottomModal.idType ?? "id"
         )
       : undefined;
-
-  console.log(pcdCollection.getAll().map((p) => console.log(p)));
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();

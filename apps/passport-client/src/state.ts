@@ -22,6 +22,7 @@ export interface AppState {
   identityV3: IdentityV3;
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;
+  pauseSync: boolean;
   encryptionKey?: string;
   credentialCache: CredentialCache;
 
@@ -36,6 +37,7 @@ export interface AppState {
     | { modalType: "change-password" }
     | { modalType: "success-modal"; title: string; description: string }
     | { modalType: "about" }
+    | { modalType: "import" }
     | { modalType: "manage-emails" }
     | { modalType: "delete-account" }
     | { modalType: "ticket-add-ons"; addOns: TicketType[] }

@@ -223,6 +223,8 @@ export const NewHomeScreen = (): ReactElement => {
   const navigate = useNavigate();
   const isLoadedPCDs = useLoadedIssuedPCDs();
 
+  const modals = useMemo(() => <NewModals />, []);
+
   useEffect(() => {
     if (!self) {
       navigate("/new/login", { replace: true });
@@ -249,14 +251,6 @@ export const NewHomeScreen = (): ReactElement => {
       </AppContainer>
     );
   }
-  if (!tickets.length)
-    return (
-      <AppContainer bg="gray">
-        <EmptyCard />
-        <FloatingMenu />
-        <NewModals />
-      </AppContainer>
-    );
 
   return (
     <AppContainer bg="gray" noPadding fullscreen>
@@ -372,8 +366,8 @@ export const NewHomeScreen = (): ReactElement => {
       </SwipeViewContainer>
       <Spacer h={48} />
       <FloatingMenu />
-      <NewModals />
       <AddOnsModal />
+      {modals}
     </AppContainer>
   );
 };
