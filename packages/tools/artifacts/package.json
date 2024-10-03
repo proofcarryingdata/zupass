@@ -27,7 +27,7 @@
     "js-logger": "^1.6.1",
     "log-symbols": "^5.1.0",
     "ora": "^7.0.1",
-    "snarkjs": "^0.7.4"
+    "@pcd/snarkjs": "0.7.7"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.11.4",

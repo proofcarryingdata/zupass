@@ -2,7 +2,7 @@ import { EdDSAFrogPCD, IFrogData } from "@pcd/eddsa-frog-pcd";
 import type { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { BigIntArgument, PCD, PCDArgument } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import { Groth16Proof } from "snarkjs";
+import { Groth16Proof } from "@pcd/snarkjs";
 
 /**
  * The global unique type name of the {@link ZKEdDSAFrogPCD}.

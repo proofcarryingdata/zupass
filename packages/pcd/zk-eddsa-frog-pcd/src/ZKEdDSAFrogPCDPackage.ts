@@ -18,6 +18,7 @@ import {
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
+import { Groth16Proof, groth16 } from "@pcd/snarkjs";
 import {
   fromHexString,
   generateSnarkMessageHash,
@@ -26,7 +27,6 @@ import {
 } from "@pcd/util";
 import { unpackSignature } from "@zk-kit/eddsa-poseidon";
 import JSONBig from "json-bigint";
-import { Groth16Proof, groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import {

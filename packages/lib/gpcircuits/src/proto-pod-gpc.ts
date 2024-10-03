@@ -1,5 +1,5 @@
+import { Groth16Proof, groth16 } from "@pcd/snarkjs";
 import { BABY_JUB_PRIME } from "@pcd/util";
-import { Groth16Proof, groth16 } from "snarkjs";
 import { loadVerificationKey } from "./artifacts";
 import circuitParamJson from "./circuitParameters.json";
 import { CircuitDesc, CircuitSignal } from "./types";
