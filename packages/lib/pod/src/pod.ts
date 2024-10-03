@@ -2,6 +2,7 @@ import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
 import { PODContent } from "./podContent";
 import { signPODRoot, verifyPODRootSignature } from "./podCrypto";
+import { JSONPOD, podEntriesFromJSON, podEntriesToJSON } from "./podJSON";
 import { PODEntries } from "./podTypes";
 import { checkPublicKeyFormat, checkSignatureFormat } from "./podUtil";
 
@@ -162,6 +163,38 @@ export class POD {
       parsedPOD.entries,
       parsedPOD.signature,
       parsedPOD.signerPublicKey
+    );
+  }
+
+  /**
+   * Converts this POD to a JSON-compatible format which can be safely
+   * serialized using `JSON.stringify` without any loss of information.  To
+   * reconstitute a POD object from JSON, see {@link fromJSON}.
+   *
+   * @returns a JSON-compatible representation of this POD.
+   */
+  public toJSON(): JSONPOD {
+    return {
+      entries: podEntriesToJSON(this._content.asEntries()),
+      signature: this._signature,
+      signerPublicKey: this._signerPublicKey
+    };
+  }
+
+  /**
+   * Rebuilds a POD object from the JSON-compatible format produced by
+   * {@link toJSON}.  The input can be taken directly from `JSON.parse` and
+   * will be fully validated by this function.
+   *
+   * @param jsonPOD the JSON-encoded POD.
+   * @returns a new POD object
+   * @throws TypeError if the input is malformed
+   */
+  public static fromJSON(jsonPOD: JSONPOD): POD {
+    return POD.load(
+      podEntriesFromJSON(jsonPOD.entries),
+      jsonPOD.signature,
+      jsonPOD.signerPublicKey
     );
   }
 }

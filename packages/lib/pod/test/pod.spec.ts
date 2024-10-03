@@ -106,6 +106,34 @@ describe("POD class should work", async function () {
     }
   });
 
+  it("should serialize and deserialize as JSON objects", function () {
+    for (const sampleEntries of [sampleEntries1, sampleEntries2]) {
+      const signedPOD = POD.sign(sampleEntries, privateKey);
+      expect(signedPOD.verifySignature()).to.be.true;
+
+      const serialized = signedPOD.toJSON();
+      const deserializedPOD = POD.fromJSON(serialized);
+      expect(deserializedPOD.verifySignature()).to.be.true;
+      expect(deserializedPOD.content.asEntries()).to.deep.eq(sampleEntries);
+      expect(deserializedPOD.signature).to.eq(signedPOD.signature);
+      expect(deserializedPOD.signerPublicKey).to.eq(signedPOD.signerPublicKey);
+    }
+  });
+
+  it("should serialize and deserialize as JSON strings", function () {
+    for (const sampleEntries of [sampleEntries1, sampleEntries2]) {
+      const signedPOD = POD.sign(sampleEntries, privateKey);
+      expect(signedPOD.verifySignature()).to.be.true;
+
+      const serialized = JSON.stringify(signedPOD.toJSON());
+      const deserializedPOD = POD.fromJSON(JSON.parse(serialized));
+      expect(deserializedPOD.verifySignature()).to.be.true;
+      expect(deserializedPOD.content.asEntries()).to.deep.eq(sampleEntries);
+      expect(deserializedPOD.signature).to.eq(signedPOD.signature);
+      expect(deserializedPOD.signerPublicKey).to.eq(signedPOD.signerPublicKey);
+    }
+  });
+
   it("should reject invalid entries when signing", function () {
     const testEntries = clonePODEntries(sampleEntries1) as Record<
       PODName,

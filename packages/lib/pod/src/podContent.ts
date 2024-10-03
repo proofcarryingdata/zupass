@@ -1,5 +1,10 @@
 import { LeanIMT, LeanIMTMerkleProof } from "@zk-kit/lean-imt";
 import { podMerkleTreeHash, podNameHash, podValueHash } from "./podCrypto";
+import {
+  JSONPODEntries,
+  podEntriesFromJSON,
+  podEntriesToJSON
+} from "./podJSON";
 import { PODEntries, PODName, PODValue } from "./podTypes";
 import {
   checkPODName,
@@ -202,6 +207,30 @@ export class PODContent {
    */
   public static deserialize(serializedEntries: string): PODContent {
     return PODContent.fromEntries(deserializePODEntries(serializedEntries));
+  }
+
+  /**
+   * Converts the entries to a JSON-compatible format which can be safely
+   * serialized using `JSON.stringify` without any loss of information.  To
+   * reconstitute a PODContent object from JSON, see {@link fromJSON}.
+   *
+   * @returns a JSON-compatible representation of this POD.
+   */
+  public toJSON(): JSONPODEntries {
+    return podEntriesToJSON(this.asEntries());
+  }
+
+  /**
+   * Rebuilds a PODContent object from entries in the JSON-compatible format
+   * produced by {@link toJSON}.  The input can be taken directly from
+   * `JSON.parse` and will be fully validated by this function.
+   *
+   * @param jsonEntries the JSON-encoded entries.
+   * @returns a new POD object
+   * @throws TypeError if the input is malformed
+   */
+  public static fromJSON(jsonEntries: JSONPODEntries): PODContent {
+    return PODContent.fromEntries(podEntriesFromJSON(jsonEntries));
   }
 
   /**

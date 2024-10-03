@@ -1,5 +1,17 @@
 import { PODEntries, PODName, PODValue } from "./podTypes";
-import { checkPODName, checkPODValue } from "./podUtil";
+import { checkPODName, checkPODValue, requireType } from "./podUtil";
+
+/**
+ * Defines the JSON encoding of a POD.  Unlike the {@link POD} class, objects
+ * which fit this type contain only JSON-compatible types (no bigints).
+ * They can thus be freely combined with other JSON and serialized using
+ * JSON.stringify.  See {@link JSONPODValue} for details of the encodings used.
+ */
+export type JSONPOD = {
+  entries: JSONPODEntries;
+  signature: string;
+  signerPublicKey: string;
+};
 
 /**
  * Defines the JSON encoding of a POD value.  Unlike the {@link PODValue} type,
@@ -102,6 +114,7 @@ export type JSONPODEntries = Record<PODName, JSONPODValue>;
  * @throws TypeError if the input entries are not validly formed
  */
 export function podEntriesFromJSON(jsonEntries: JSONPODEntries): PODEntries {
+  requireType("jsonEntries", jsonEntries, "object");
   return Object.fromEntries(
     Object.entries(jsonEntries).map(([name, jsonValue]) => [
       checkPODName(name),
@@ -220,6 +233,7 @@ export function podValueFromTypedJSON(
  * @throws TypeError if the input entries are not validly formed
  */
 export function podEntriesToJSON(podEntries: PODEntries): JSONPODEntries {
+  requireType("podEntries", podEntries, "object");
   return Object.fromEntries(
     Object.entries(podEntries).map(([name, podValue]) => [
       checkPODName(name),

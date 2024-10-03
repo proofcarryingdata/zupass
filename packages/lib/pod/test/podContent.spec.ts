@@ -167,6 +167,50 @@ describe("PODContent class should work", async function () {
     expect(transferredContent2.listNames()).to.deep.eq(expectedNameOrder2);
   });
 
+  it("should serialize and deserialize as JSON objects", function () {
+    const transferredContent1 = PODContent.fromJSON(podContent1.toJSON());
+    expect(transferredContent1.size).to.eq(expectedCount1);
+    expect(transferredContent1.contentID).to.eq(podContent1.contentID);
+    expect(transferredContent1.merkleTreeDepth).to.eq(
+      podContent1.merkleTreeDepth
+    );
+    expect(transferredContent1.asEntries()).to.deep.eq(podContent1.asEntries());
+    expect(transferredContent1.listNames()).to.deep.eq(expectedNameOrder1);
+
+    const transferredContent2 = PODContent.fromJSON(podContent2.toJSON());
+    expect(transferredContent2.size).to.eq(expectedCount2);
+    expect(transferredContent2.contentID).to.eq(podContent2.contentID);
+    expect(transferredContent2.merkleTreeDepth).to.eq(
+      podContent2.merkleTreeDepth
+    );
+    expect(transferredContent2.asEntries()).to.deep.eq(podContent2.asEntries());
+    expect(transferredContent2.listNames()).to.deep.eq(expectedNameOrder2);
+  });
+
+  it("should serialize and deserialize as JSON strings", function () {
+    const transferredContent1 = PODContent.fromJSON(
+      JSON.parse(JSON.stringify(podContent1.toJSON()))
+    );
+    expect(transferredContent1.size).to.eq(expectedCount1);
+    expect(transferredContent1.contentID).to.eq(podContent1.contentID);
+    expect(transferredContent1.merkleTreeDepth).to.eq(
+      podContent1.merkleTreeDepth
+    );
+    expect(transferredContent1.asEntries()).to.deep.eq(podContent1.asEntries());
+    expect(transferredContent1.listNames()).to.deep.eq(expectedNameOrder1);
+
+    const transferredContent2 = PODContent.fromJSON(
+      JSON.parse(JSON.stringify(podContent2.toJSON()))
+    );
+    expect(transferredContent2.size).to.eq(expectedCount2);
+    expect(transferredContent2.contentID).to.eq(podContent2.contentID);
+    expect(transferredContent2.merkleTreeDepth).to.eq(
+      podContent2.merkleTreeDepth
+    );
+    expect(transferredContent2.asEntries()).to.deep.eq(podContent2.asEntries());
+    expect(transferredContent2.listNames()).to.deep.eq(expectedNameOrder2);
+  });
+
   it("should not be mutable via getValue", function () {
     const pc = PODContent.fromEntries(sampleEntries1);
     expect(pc.getValue("A")).to.deep.eq({ type: "int", value: 123n });
