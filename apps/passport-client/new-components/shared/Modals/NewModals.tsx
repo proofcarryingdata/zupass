@@ -1,15 +1,15 @@
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { useBottomModal } from "../../../src/appHooks";
 import { AboutZupassModal } from "./AboutZupassModal";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 import { DeleteAccountModal } from "./DeleteAccountModal";
+import { ImportModal } from "./ImportModal";
 import { ManageEmailModal } from "./ManageEmailsModal";
 import { PodsCollectionBottomModal } from "./PodsCollectionBottomModal";
 import { SettingsBottomModal } from "./SettingsBottomModal";
 import { SuccessModal } from "./SuccessModal";
-import { ImportModal } from "./ImportModal";
 
-export const NewModals = (): JSX.Element => {
+export const NewModals = React.memo((): JSX.Element => {
   const { modalType } = useBottomModal();
   const isOpen = modalType !== "none";
 
@@ -38,4 +38,4 @@ export const NewModals = (): JSX.Element => {
       <ImportModal />
     </>
   );
-};
+});

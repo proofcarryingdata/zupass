@@ -223,8 +223,6 @@ export const NewHomeScreen = (): ReactElement => {
   const navigate = useNavigate();
   const isLoadedPCDs = useLoadedIssuedPCDs();
 
-  const modals = useMemo(() => <NewModals />, []);
-
   useEffect(() => {
     if (!self) {
       navigate("/new/login", { replace: true });
@@ -253,121 +251,132 @@ export const NewHomeScreen = (): ReactElement => {
   }
 
   return (
-    <AppContainer bg="gray" noPadding fullscreen>
-      <SwipeViewContainer>
-        <SwipableViews
-          style={{ padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px` }}
-          slideStyle={{
-            padding: `0 ${CARD_GAP / 2}px`
-          }}
-          resistance={true}
-          index={currentPos}
-          onChangeIndex={(e) => {
-            console.log(e);
-            setCurrentPos(e);
-          }}
-        >
-          {tickets.map(([eventName, packs], i) => {
-            const eventDetails = getEventDetails(packs[0]);
-            return (
-              <Container key={eventName}>
-                <TicketCard
-                  ticketWidth={cardWidth}
-                  key={eventName}
-                  address={eventName}
-                  title={eventName}
-                  ticketDate={new Date(
-                    eventDetails.timestampSigned
-                  ).toDateString()}
-                  imgSource={eventDetails.imageUrl}
-                  ticketCount={packs.length}
-                  cardColor={i % 2 === 0 ? "purple" : "orange"}
-                />
-                <TicketsContainer
-                  $width={cardWidth}
-                  key={packs.map((pack) => pack.eventTicket.id).join("-")}
-                >
-                  {packs.map((pack) => {
-                    return (
-                      <CardBody
-                        key={pack.eventId}
-                        addOns={
-                          pack.addOns.length > 0
-                            ? {
-                                text: `View ${pack.addOns.length} add-on items`,
-                                onClick(): void {
-                                  dispatch({
-                                    type: "set-bottom-modal",
-                                    modal: {
-                                      addOns: pack.addOns,
-                                      modalType: "ticket-add-ons"
+    <AppContainer
+      bg="gray"
+      noPadding={tickets.length > 0}
+      fullscreen={tickets.length > 0}
+    >
+      {!tickets.length && <EmptyCard />}
+      {tickets.length > 0 && (
+        <>
+          <SwipeViewContainer>
+            <SwipableViews
+              style={{
+                padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
+              }}
+              slideStyle={{
+                padding: `0 ${CARD_GAP / 2}px`
+              }}
+              resistance={true}
+              index={currentPos}
+              onChangeIndex={(e) => {
+                console.log(e);
+                setCurrentPos(e);
+              }}
+            >
+              {tickets.map(([eventName, packs], i) => {
+                const eventDetails = getEventDetails(packs[0]);
+                return (
+                  <Container key={eventName}>
+                    <TicketCard
+                      ticketWidth={cardWidth}
+                      key={eventName}
+                      address={eventName}
+                      title={eventName}
+                      ticketDate={new Date(
+                        eventDetails.timestampSigned
+                      ).toDateString()}
+                      imgSource={eventDetails.imageUrl}
+                      ticketCount={packs.length}
+                      cardColor={i % 2 === 0 ? "purple" : "orange"}
+                    />
+                    <TicketsContainer
+                      $width={cardWidth}
+                      key={packs.map((pack) => pack.eventTicket.id).join("-")}
+                    >
+                      {packs.map((pack) => {
+                        return (
+                          <CardBody
+                            key={pack.eventId}
+                            addOns={
+                              pack.addOns.length > 0
+                                ? {
+                                    text: `View ${pack.addOns.length} add-on items`,
+                                    onClick(): void {
+                                      dispatch({
+                                        type: "set-bottom-modal",
+                                        modal: {
+                                          addOns: pack.addOns,
+                                          modalType: "ticket-add-ons"
+                                        }
+                                      });
                                     }
-                                  });
-                                }
+                                  }
+                                : undefined
+                            }
+                            ref={(ref) => {
+                              if (!ref) return;
+                              const group = ticketsRef.current.get(eventName);
+                              if (!group) {
+                                ticketsRef.current.set(eventName, [ref]);
+                                return;
                               }
-                            : undefined
-                        }
-                        ref={(ref) => {
-                          if (!ref) return;
-                          const group = ticketsRef.current.get(eventName);
-                          if (!group) {
-                            ticketsRef.current.set(eventName, [ref]);
-                            return;
-                          }
-                          group.push(ref);
-                        }}
-                        newUI={true}
-                        pcd={pack.eventTicket}
-                        isMainIdentity={false}
-                      />
-                    );
-                  })}
-                </TicketsContainer>
-              </Container>
-            );
-          })}
-        </SwipableViews>
-        <ButtonsContainer>
-          <PageCircleButton
-            disabled={currentPos === 0}
-            padding={6}
-            diameter={28}
-            onClick={() => {
-              setCurrentPos((old) => {
-                if (old === 0) return old;
-                return old - 1;
-              });
-            }}
-          >
-            <ChevronLeftIcon
-              width={20}
-              height={20}
-              color="var(--text-tertiary)"
-            />
-          </PageCircleButton>
-          <PageCircleButton
-            disabled={currentPos === tickets.length - 1}
-            padding={6}
-            diameter={28}
-            onClick={() => {
-              setCurrentPos((old) => {
-                if (old === tickets.length - 1) return old;
-                return old + 1;
-              });
-            }}
-          >
-            <ChevronRightIcon
-              width={20}
-              height={20}
-              color="var(--text-tertiary)"
-            />
-          </PageCircleButton>
-        </ButtonsContainer>
-      </SwipeViewContainer>
+                              group.push(ref);
+                            }}
+                            newUI={true}
+                            pcd={pack.eventTicket}
+                            isMainIdentity={false}
+                          />
+                        );
+                      })}
+                    </TicketsContainer>
+                  </Container>
+                );
+              })}
+            </SwipableViews>
+            <ButtonsContainer>
+              <PageCircleButton
+                disabled={currentPos === 0}
+                padding={6}
+                diameter={28}
+                onClick={() => {
+                  setCurrentPos((old) => {
+                    if (old === 0) return old;
+                    return old - 1;
+                  });
+                }}
+              >
+                <ChevronLeftIcon
+                  width={20}
+                  height={20}
+                  color="var(--text-tertiary)"
+                />
+              </PageCircleButton>
+              <PageCircleButton
+                disabled={currentPos === tickets.length - 1}
+                padding={6}
+                diameter={28}
+                onClick={() => {
+                  setCurrentPos((old) => {
+                    if (old === tickets.length - 1) return old;
+                    return old + 1;
+                  });
+                }}
+              >
+                <ChevronRightIcon
+                  width={20}
+                  height={20}
+                  color="var(--text-tertiary)"
+                />
+              </PageCircleButton>
+            </ButtonsContainer>
+          </SwipeViewContainer>
+        </>
+      )}
       <Spacer h={48} />
       <FloatingMenu />
       <AddOnsModal />
-      {modals}
+      <NewModals />
     </AppContainer>
   );
 };
