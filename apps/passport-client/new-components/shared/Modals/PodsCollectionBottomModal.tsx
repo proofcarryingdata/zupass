@@ -1,5 +1,8 @@
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
+import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { intersectionWith } from "lodash";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
@@ -13,8 +16,6 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
-import { PCDCollection } from "@pcd/pcd-collection";
-import { PCD } from "@pcd/pcd-types";
 
 const getActivePod = (
   collection: PCDCollection,
@@ -53,6 +54,17 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
+    // If we have the same ticket in both POD and EDSA, we want to show only the POD one
+    const podTickets = allPcds.filter(isPODTicketPCD);
+    const eddsaTickets = allPcds.filter(isEdDSATicketPCD);
+    const badTicketsIds = intersectionWith(eddsaTickets, podTickets, (a, b) => {
+      return a.claim.ticket.ticketId === b.claim.ticket.ticketId;
+    }).map((ticket) => ticket.id);
+    const filteredPcds = allPcds.filter(
+      (pcd) => !isEdDSATicketPCD(pcd) || !badTicketsIds.includes(pcd.id)
+    );
+
+    // Group PCDs by folder and create a list of groups with the items inside
     const result: Record<string, GroupType> = {};
     for (const [key, value] of Object.entries(pcdCollection.folders)) {
       if (!result[value]) {
@@ -62,15 +74,14 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         };
       }
 
-      const pcd = allPcds.find((pcd) => pcd.id === key);
-      if (!pcd) {
-        continue;
-      }
+      const pcd = filteredPcds.find((pcd) => pcd.id === key);
+      if (!pcd) continue;
 
       const edsaIsTicket = isEdDSATicketPCD(pcd);
       const podIsTicket = isPODTicketPCD(pcd);
 
       const isTicket = edsaIsTicket || podIsTicket;
+
       result[value].children.push({
         title: isTicket ? pcd.claim.ticket.eventName : pcd.type,
         key: pcd.id,
