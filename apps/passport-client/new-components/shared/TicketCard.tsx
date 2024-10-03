@@ -13,7 +13,7 @@ const CARD_COLORS: Record<CardColor, Property.Color> = {
 
 const TicketCardContainer = styled.div<{
   $borderColor: Property.Color;
-  $width: number;
+  $width: number | string;
 }>`
   display: flex;
   flex-direction: column;
@@ -25,7 +25,8 @@ const TicketCardContainer = styled.div<{
   border-width: 4px;
   border-color: ${({ $borderColor }): Property.Color => $borderColor};
   background-color: white;
-  width: ${({ $width }): number => $width}px;
+  width: ${({ $width }): string =>
+    typeof $width === "number" ? `${$width}px` : $width};
   height: ${TicketCardHeight}px;
   box-shadow:
     0px 2px 4px -1px rgba(0, 0, 0, 0.06),
@@ -71,9 +72,9 @@ const DateChipContainer = styled.div`
 interface TicketCardProps {
   title: string;
   address: string;
-  ticketWidth?: number;
+  ticketWidth?: number | string;
   ticketCount: number;
-  ticketDate: string;
+  ticketDate?: string;
   cardColor: CardColor;
   imgSource?: string;
 }
@@ -97,11 +98,13 @@ export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
         $borderColor={CARD_COLORS[cardColor]}
       >
         <TicketCardImageContainer>
-          <DateChipContainer>
-            <Typography fontSize={12} fontWeight={800} color="white">
-              {ticketDate}
-            </Typography>
-          </DateChipContainer>
+          {ticketDate && (
+            <DateChipContainer>
+              <Typography fontSize={12} fontWeight={800} color="white">
+                {ticketDate}
+              </Typography>
+            </DateChipContainer>
+          )}
           <TicketCardImage src={imgSource} />
         </TicketCardImageContainer>
         <TicketCardDetails>
