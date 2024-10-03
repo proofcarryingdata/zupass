@@ -3,6 +3,8 @@ import { forwardRef } from "react";
 import styled from "styled-components";
 import { Typography } from "./Typography";
 
+export const TicketCardHeight = 300;
+
 type CardColor = "purple" | "orange";
 const CARD_COLORS: Record<CardColor, Property.Color> = {
   purple: "rgba(154, 74, 201, 1)",
@@ -24,6 +26,7 @@ const TicketCardContainer = styled.div<{
   border-color: ${({ $borderColor }): Property.Color => $borderColor};
   background-color: white;
   width: ${({ $width }): number => $width}px;
+  height: ${TicketCardHeight}px;
   box-shadow:
     0px 2px 4px -1px rgba(0, 0, 0, 0.06),
     0px 4px 6px -1px rgba(0, 0, 0, 0.1);
