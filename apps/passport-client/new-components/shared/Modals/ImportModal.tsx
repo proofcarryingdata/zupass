@@ -1,25 +1,24 @@
-import React, { ReactNode, useCallback, useEffect, useState } from "react";
-import { BottomModal } from "../BottomModal";
+import { EmailPCDTypeName } from "@pcd/email-pcd";
+import { deserializeStorage } from "@pcd/passport-interface";
+import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD } from "@pcd/pcd-types";
+import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
+import { ReactNode, useCallback, useState } from "react";
+import styled from "styled-components";
+import { useFilePicker } from "use-file-picker";
 import {
   useBottomModal,
   useDispatch,
   usePCDCollection
 } from "../../../src/appHooks";
-import { Typography } from "../Typography";
-import styled from "styled-components";
-import { Button2 } from "../Button";
-import { useSelector } from "../../../src/subscribe";
-import { AppState } from "../../../src/state";
-import { PCDCollection } from "@pcd/pcd-collection";
-import { PCD } from "@pcd/pcd-types";
-import { useFilePicker } from "use-file-picker";
-import { deserializeStorage } from "@pcd/passport-interface";
 import { getPackages } from "../../../src/pcdPackages";
-import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd";
-import { EmailPCDTypeName } from "@pcd/email-pcd";
-import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
-import _ from "lodash";
+import { AppState } from "../../../src/state";
+import { useSelector } from "../../../src/subscribe";
+import { BottomModal } from "../BottomModal";
+import { Button2 } from "../Button";
 import { NewLoader } from "../NewLoader";
+import { Typography } from "../Typography";
 
 const Container = styled.div`
   display: flex;
@@ -252,7 +251,7 @@ export const ImportModal = (): ReactNode => {
         </Typography>
       </TextContainer>
       <ButtonsContainer>
-        <Button2 onClick={openFilePicker}>Selet file</Button2>
+        <Button2 onClick={openFilePicker}>Select file</Button2>
         <Button2
           variant="secondary"
           onClick={() => {
