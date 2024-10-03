@@ -35,7 +35,7 @@ const SCREEN_HORIZONTAL_PADDING = 20;
 const BUTTONS_CONTAINER_HEIGHT = 40;
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
-  // TODO: fetch the pods type as well and prioritize it if theres a conflict. test
+  // TODO: fetch the pods type as well and prioritize it if theres a conflict.
   return isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd);
 };
 
@@ -227,7 +227,7 @@ export const NewHomeScreen = (): ReactElement => {
     if (!self) {
       navigate("/new/login", { replace: true });
     }
-  });
+  }, [self, navigate]);
 
   const cardWidth =
     (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
