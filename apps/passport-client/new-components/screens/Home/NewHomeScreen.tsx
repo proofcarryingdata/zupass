@@ -273,6 +273,7 @@ export const NewHomeScreen = (): ReactElement => {
                 console.log(e);
                 setCurrentPos(e);
               }}
+              draggable={false}
             >
               {tickets.map(([eventName, packs], i) => {
                 const eventDetails = getEventDetails(packs[0]);
