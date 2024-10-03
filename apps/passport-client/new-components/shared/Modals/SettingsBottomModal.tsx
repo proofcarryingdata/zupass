@@ -191,10 +191,10 @@ const SettingsItemButton = styled.div<{ $variant?: "danger" }>`
   user-select: none;
   &:focus {
     outline: none;
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: "#7c8bb443";
   }
   &:active {
-    background-color: rgba(0, 0, 0, 0.2);
+    background-color: "#7c8bb443";
   }
   ${({ $variant }): string => ($variant === "danger" ? `color: red;` : "")}
 `;
