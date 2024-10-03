@@ -22,7 +22,7 @@ export interface AppState {
   identityV3: IdentityV3;
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;
-  pauseSync: boolean;
+  pauseSync?: boolean;
   encryptionKey?: string;
   credentialCache: CredentialCache;
 

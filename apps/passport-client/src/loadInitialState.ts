@@ -21,7 +21,6 @@ import {
 import { getPackages } from "./pcdPackages";
 import { AppState } from "./state";
 import { validateAndLogInitialAppState } from "./validateState";
-import { initTestData } from "../initTestData";
 
 export async function loadInitialState(): Promise<AppState> {
   let identityV3 = loadIdentity();
