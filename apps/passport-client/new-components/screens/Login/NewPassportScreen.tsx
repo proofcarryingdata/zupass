@@ -9,6 +9,7 @@ import {
 import { getErrorMessage, sleep } from "@pcd/util";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import styled from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useIdentityV3, useQuery } from "../../../src/appHooks";
@@ -20,10 +21,11 @@ import {
   LoginForm,
   LoginTitleContainer
 } from "../../shared/Login/LoginComponents";
+import { NewLoader } from "../../shared/NewLoader";
 import { ResendCodeButton2 } from "../../shared/ResendCodeButton";
 import { Typography } from "../../shared/Typography";
 
-export const NewPassportScreen2 = (): JSX.Element => {
+export const NewPassportScreen2 = (): JSX.Element | null => {
   const query = useQuery();
   const email = query?.get("email");
 
@@ -34,23 +36,27 @@ export const NewPassportScreen2 = (): JSX.Element => {
   }, [email]);
 
   if (!email) {
-    return <></>;
+    return null;
   }
   return <SendEmailVerification email={email} />;
 };
 
-const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
+const SendEmailVerification = ({
+  email
+}: {
+  email: string;
+}): JSX.Element | null => {
   const navigate = useNavigate();
   const identity = useIdentityV3();
   const dispatch = useDispatch();
   const [error, setError] = useState<string | undefined>();
   const [triedSendingEmail, setTriedSendingEmail] = useState(false);
-  const [_emailSent, setEmailSent] = useState(false);
-  const [_emailSending, setEmailSending] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
+  const [emailSending, setEmailSending] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [loadingAccount, setLoadingAccount] = useState(false);
   const [token, setToken] = useState("");
-  const loading = verifyingCode || loadingAccount;
+  const loadingPage = loadingAccount || emailSending || !emailSent;
 
   const verifyToken = useCallback(
     async (token: string) => {
@@ -179,6 +185,31 @@ const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
     [verifyToken, token]
   );
 
+  if (loadingPage) {
+    let loaderText = "";
+    if (verifyingCode) {
+      loaderText = "VERIFYING TOKEN...";
+    } else if (loadingAccount) {
+      loaderText = "LOADING ACCOUNT INFORMATION...";
+    } else if (emailSending) {
+      loaderText = "CHECKING IF YOU ALREADY HAVE AN ACCOUNT...";
+    }
+    return (
+      <AppContainer fullscreen={true} bg="gray">
+        <LoadingScreenContainer>
+          <NewLoader columns={5} rows={5} />
+          <Typography
+            fontSize={18}
+            fontWeight={800}
+            color="var(--text-tertiary)"
+          >
+            {loaderText}
+          </Typography>
+        </LoadingScreenContainer>
+      </AppContainer>
+    );
+  }
+
   return (
     <AppContainer bg="gray" fullscreen>
       <LoginContainer>
@@ -213,8 +244,8 @@ const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
             error={error}
             hideArrows
           />
-          <Button2 variant="primary" disabled={loading} type="submit">
-            {!loading ? "Verify" : "Verifying..."}
+          <Button2 variant="primary" disabled={verifyingCode} type="submit">
+            {!verifyingCode ? "Verify" : "Verifying..."}
           </Button2>
           <Button2 variant="secondary" onClick={() => navigate("/new")}>
             Cancel
@@ -225,3 +256,11 @@ const SendEmailVerification = ({ email }: { email: string }): JSX.Element => {
     </AppContainer>
   );
 };
+
+const LoadingScreenContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: auto 0;
+`;

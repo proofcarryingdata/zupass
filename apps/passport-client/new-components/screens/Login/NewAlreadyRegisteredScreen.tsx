@@ -41,7 +41,6 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
   const [sendingConfirmationEmail, setSendingConfirmationEmail] =
     useState(false);
   const [password, setPassword] = useState("");
-  const [revealPassword, setRevealPassword] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
 
   const verifyToken = useCallback(
@@ -216,6 +215,8 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
         </>
       );
     }
+
+    const loading = isLoggingIn || sendingConfirmationEmail;
     return (
       <StyledLoginForm onSubmit={onSubmitPassword}>
         <Input2
@@ -236,8 +237,8 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
           placeholder="Password"
           error={error}
         />
-        <Button2 type="submit" disabled={isLoggingIn}>
-          {isLoggingIn ? "Verifying..." : "Sign in  "}
+        <Button2 type="submit" disabled={loading}>
+          {loading ? "Verifying..." : "Sign in  "}
         </Button2>
       </StyledLoginForm>
     );
