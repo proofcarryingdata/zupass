@@ -35,7 +35,7 @@
     "@semaphore-protocol/core": "^4.0.3",
     "lodash": "^4.17.21",
     "json-bigint": "^1.0.0",
-    "snarkjs": "^0.7.4",
+    "@pcd/snarkjs": "0.7.7",
     "url-join": "^4.0.1"
   },
   "devDependencies": {

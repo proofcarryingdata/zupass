@@ -8,7 +8,7 @@ import {
 import { PODEntries, PODName } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import { Groth16Proof } from "snarkjs";
+import { Groth16Proof } from "@pcd/snarkjs";
 
 /**
  * Types representing the claims and proof of a GPCPCD, re-exported from the

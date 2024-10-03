@@ -4,7 +4,7 @@ import { existsSync, writeFileSync } from "fs";
 import logger from "js-logger";
 import logSymbols from "log-symbols";
 import { tmpdir } from "os";
-import { zKey } from "snarkjs";
+import { zKey } from "@pcd/snarkjs";
 import { pkg } from "../config.js";
 import Spinner from "../spinner.js";
 import { executeCommand, confirm } from "../utils.js";
