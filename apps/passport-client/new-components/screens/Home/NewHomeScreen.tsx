@@ -35,7 +35,7 @@ const SCREEN_HORIZONTAL_PADDING = 20;
 const BUTTONS_CONTAINER_HEIGHT = 40;
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
-  // TODO: fetch the pods type as well and prioritize it if theres a conflict.
+  // TODO: fetch the pods type as well and prioritize it if theres a conflict. test
   return isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd);
 };
 
