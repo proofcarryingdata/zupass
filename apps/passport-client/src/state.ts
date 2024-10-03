@@ -142,8 +142,12 @@ export interface AppState {
   // embedded Zapp, the state of that screen.
   embeddedScreen?: EmbeddedScreenState;
 
+  // When we're connected to a zapp, the zapp and its origin
   connectedZapp?: Zapp;
   zappOrigin?: string;
+
+  // Whether the user has approved the zapp
+  zappApproved?: boolean;
 }
 
 export interface AppError {

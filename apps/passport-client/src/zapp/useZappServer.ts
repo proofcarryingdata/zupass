@@ -27,6 +27,34 @@ async function waitForAuthentication(
   });
 }
 
+async function waitForFirstSync(context: StateContextValue): Promise<void> {
+  return new Promise<void>((resolve) => {
+    if (context.getState().completedFirstSync) {
+      resolve();
+      return;
+    }
+    const unlisten = context.stateEmitter.listen((state) => {
+      if (state.completedFirstSync) {
+        unlisten();
+        resolve();
+      }
+    });
+  });
+}
+
+async function waitForPermissionApproval(
+  context: StateContextValue
+): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    const unlisten = context.stateEmitter.listen((state) => {
+      if (state.zappApproved !== undefined) {
+        unlisten();
+        resolve(state.zappApproved);
+      }
+    });
+  });
+}
+
 export function useZappServer(mode: ListenMode): void {
   const context = useStateContext();
 
@@ -54,6 +82,8 @@ export function useZappServer(mode: ListenMode): void {
         advice.hideClient();
       }
 
+      await waitForFirstSync(context);
+
       const zapps = context.getState().pcds.getAllPCDsInFolder("Zapps");
       let zappPOD = zapps.filter(isPODPCD).find((zapp) => {
         return Object.entries(zapp.claim.entries).find(([key, entry]) => {
@@ -71,10 +101,11 @@ export function useZappServer(mode: ListenMode): void {
       let approved = !!zappPOD;
 
       if (!zappPOD) {
-        // @todo show a modal instead of using confirm
-        approved = confirm(
-          `Allow ${zapp.name} at ${origin} to connect to your Zupass account?\r\n\r\nThis is HIGHLY EXPERIMENTAL - make sure you trust this website.`
-        );
+        window.location.hash = "approve-permissions";
+        advice.showClient();
+        approved = await waitForPermissionApproval(context);
+        advice.hideClient();
+
         if (approved) {
           const newZapp = (await PODPCDPackage.prove({
             entries: {
@@ -109,6 +140,7 @@ export function useZappServer(mode: ListenMode): void {
           return;
         }
       }
+
       if (approved) {
         const server = new ZupassRPCProcessor(context, zappPOD, advice);
 
@@ -119,6 +151,8 @@ export function useZappServer(mode: ListenMode): void {
         }
 
         advice.ready(server);
+      } else {
+        throw new Error("User did not approve Zapp permissions");
       }
     })();
   }, [context, mode]);

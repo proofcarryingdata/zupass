@@ -1,11 +1,15 @@
 import { ConnectorAdvice } from "@parcnet-js/client-helpers";
 import {
+  MissingPermissionError,
   ParcnetGPCRPC,
   ParcnetIdentityRPC,
   ParcnetPODRPC,
   ParcnetRPC,
+  ParcnetRPCMethodName,
+  PODData,
   PODQuery,
-  ProveResult
+  ProveResult,
+  Zapp
 } from "@parcnet-js/client-rpc";
 import * as p from "@parcnet-js/podspec";
 import {
@@ -15,7 +19,7 @@ import {
   gpcVerify
 } from "@pcd/gpc";
 import { encodePrivateKey, encodePublicKey, POD, PODEntries } from "@pcd/pod";
-import { isPODPCD, PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
+import { PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import {
   PODTicketPCD,
   PODTicketPCDTypeName,
@@ -26,8 +30,7 @@ import { v4 as uuidv4 } from "uuid";
 import { appConfig } from "../appConfig";
 import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";
-
-export const ZAPP_POD_SPECIAL_FOLDER_NAME = "PODs from Zapps";
+import { collectionIdToFolderName, getPODsForCollections } from "./collections";
 
 abstract class BaseZappServer {
   constructor(
@@ -47,6 +50,10 @@ abstract class BaseZappServer {
   public getAdvice(): ConnectorAdvice {
     return this.advice;
   }
+
+  public getPermissions(): Zapp["permissions"] {
+    return this.getContext().getState().connectedZapp?.permissions ?? {};
+  }
 }
 
 export class ZupassIdentityRPC
@@ -62,14 +69,41 @@ export class ZupassIdentityRPC
   }
 
   public async getSemaphoreV3Commitment(): Promise<bigint> {
+    if (
+      !this.getContext().getState().connectedZapp?.permissions
+        .READ_PUBLIC_IDENTIFIERS
+    ) {
+      throw new MissingPermissionError(
+        "READ_PUBLIC_IDENTIFIERS",
+        "identity.getSemaphoreV3Commitment"
+      );
+    }
     return this.getContext().getState().identityV3.getCommitment();
   }
 
   public async getSemaphoreV4Commitment(): Promise<bigint> {
+    if (
+      !this.getContext().getState().connectedZapp?.permissions
+        .READ_PUBLIC_IDENTIFIERS
+    ) {
+      throw new MissingPermissionError(
+        "READ_PUBLIC_IDENTIFIERS",
+        "identity.getSemaphoreV4Commitment"
+      );
+    }
     return v3tov4Identity(this.getContext().getState().identityV3).commitment;
   }
 
   public async getPublicKey(): Promise<string> {
+    if (
+      !this.getContext().getState().connectedZapp?.permissions
+        .READ_PUBLIC_IDENTIFIERS
+    ) {
+      throw new MissingPermissionError(
+        "READ_PUBLIC_IDENTIFIERS",
+        "identity.getPublicKey"
+      );
+    }
     return encodePublicKey(
       v3tov4Identity(this.getContext().getState().identityV3).publicKey
     );
@@ -83,48 +117,51 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
     advice: ConnectorAdvice
   ) {
     super(context, zapp, advice);
-    this.getContext()
-      .getState()
-      .pcds.changeEmitter.listen(() => {});
   }
 
   // Not yet implemented
-  public async subscribe(_query: PODQuery): Promise<string> {
+  public async subscribe(
+    _collectionId: string,
+    _query: PODQuery
+  ): Promise<string> {
     return "1";
   }
 
   // Not yet implemented
   public async unsubscribe(_subscriptionId: string): Promise<void> {}
 
-  public async query(query: PODQuery): Promise<string[]> {
-    const allPCDs = this.getContext()
-      .getState()
-      .pcds.getAllPCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME);
-    const pods = allPCDs.filter(isPODPCD).map((pcd) => pcd.pod);
+  public async query(
+    collectionId: string,
+    query: PODQuery
+  ): Promise<PODData[]> {
+    if (!this.getPermissions().READ_POD?.collections.includes(collectionId)) {
+      throw new MissingPermissionError("READ_POD", "pod.query");
+    }
+    const pods = getPODsForCollections(this.getContext().getState().pcds, [
+      collectionId
+    ]);
 
     const result = p.pod(query).query(pods);
 
-    return result.matches.map((match) => match.serialize());
+    return result.matches.map(p.podToPODData);
   }
 
   /**
    * Insert a POD into the PCD collection.
    */
-  public async insert(serializedPod: string): Promise<void> {
-    const pod = POD.deserialize(serializedPod);
+  public async insert(collectionId: string, podData: PODData): Promise<void> {
+    if (!this.getPermissions().INSERT_POD?.collections.includes(collectionId)) {
+      throw new MissingPermissionError("INSERT_POD", "pod.insert");
+    }
     const id = uuidv4();
-    const podPCD = new PODPCD(id, pod);
+    const podPCD = new PODPCD(
+      id,
+      POD.load(podData.entries, podData.signature, podData.signerPublicKey)
+    );
     const serializedPCD = await PODPCDPackage.serialize(podPCD);
     this.getContext().dispatch({
       type: "add-pcds",
-      // This is probably not where we want to store these, but it's not clear
-      // how much the folder concept should be visible to the API.
-      // We could add a "meta" parameter which could contain a "zupassFolder"
-      // record, for instance, but this begins to couple the API too closely to
-      // the specifics of Zupass.
-      // In the meantime, however, PODs stored in this way can be retrieved by
-      // Zapps using the query API.
-      folder: ZAPP_POD_SPECIAL_FOLDER_NAME,
+      folder: collectionIdToFolderName(collectionId),
       pcds: [serializedPCD],
       upsert: true
     });
@@ -133,11 +170,13 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
   /**
    * Delete all PODs with the given signature.
    */
-  public async delete(signature: string): Promise<void> {
+  public async delete(collectionId: string, signature: string): Promise<void> {
+    if (!this.getPermissions().DELETE_POD?.collections.includes(collectionId)) {
+      throw new MissingPermissionError("DELETE_POD", "pod.delete");
+    }
     const allPCDs = this.getContext()
       .getState()
-      // Deletion is restricted to Zapp-created PODs
-      .pcds.getAllPCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME);
+      .pcds.getAllPCDsInFolder(collectionIdToFolderName(collectionId));
     // This will delete *all* PODs in the folder which have a matching
     // signature. Since signatures are unique, this seems reasonable. There is
     // probably no good reason to have multiple PODs with the same signature.
@@ -159,15 +198,16 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
     );
   }
 
-  public async sign(entries: PODEntries): Promise<string> {
+  public async sign(entries: PODEntries): Promise<PODData> {
     const origin = this.getContext().getState().zappOrigin;
-    console.log("Origin: " + origin);
-    console.log("Allowed origins: " + appConfig.zappAllowedSignerOrigins);
     if (
       appConfig.zappRestrictOrigins &&
       (!origin || !appConfig.zappAllowedSignerOrigins.includes(origin))
     ) {
       throw new Error("Origin not allowed to sign PODs");
+    }
+    if (!this.getPermissions().SIGN_POD) {
+      throw new MissingPermissionError("SIGN_POD", "pod.sign");
     }
     const pod = POD.sign(
       entries,
@@ -178,7 +218,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
         )
       )
     );
-    return pod.serialize();
+    return p.podToPODData(pod);
   }
 }
 
@@ -191,13 +231,42 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
     super(context, zapp, advice);
   }
 
-  public async prove(request: p.PodspecProofRequest): Promise<ProveResult> {
+  private getPODsIfPermitted(
+    collectionIds: string[] | undefined,
+    method: ParcnetRPCMethodName
+  ): POD[] {
+    const permission = this.getPermissions().REQUEST_PROOF;
+    if (!permission) {
+      throw new MissingPermissionError("REQUEST_PROOF", method);
+    }
+
+    let requestedCollectionIds = collectionIds;
+
+    if (!requestedCollectionIds) {
+      requestedCollectionIds = permission.collections;
+    } else if (
+      requestedCollectionIds.some(
+        (collectionId) => !permission.collections.includes(collectionId)
+      )
+    ) {
+      throw new MissingPermissionError("REQUEST_PROOF", method);
+    }
+
+    return getPODsForCollections(
+      this.getContext().getState().pcds,
+      requestedCollectionIds
+    );
+  }
+
+  public async prove({
+    request,
+    collectionIds
+  }: {
+    request: p.PodspecProofRequest;
+    collectionIds?: string[];
+  }): Promise<ProveResult> {
+    const pods = this.getPODsIfPermitted(collectionIds, "gpc.prove");
     const prs = p.proofRequest(request);
-    const pods = this.getContext()
-      .getState()
-      .pcds.getAllPCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME)
-      .filter(isPODPCD)
-      .map((pcd) => pcd.pod);
 
     const ticketPods = this.getContext()
       .getState()
@@ -252,13 +321,15 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
     );
   }
 
-  public async canProve(request: p.PodspecProofRequest): Promise<boolean> {
+  public async canProve({
+    request,
+    collectionIds
+  }: {
+    request: p.PodspecProofRequest;
+    collectionIds?: string[];
+  }): Promise<boolean> {
+    const pods = this.getPODsIfPermitted(collectionIds, "gpc.canProve");
     const prs = p.proofRequest(request);
-    const pods = this.getContext()
-      .getState()
-      .pcds.getAllPCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME)
-      .filter(isPODPCD)
-      .map((pcd) => pcd.pod);
 
     const inputPods = prs.queryForInputs(pods);
     return Object.values(inputPods).every(

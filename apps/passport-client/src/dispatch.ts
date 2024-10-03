@@ -194,7 +194,8 @@ export type Action =
       origin: string;
     }
   | {
-      type: "approve-zapp";
+      type: "zapp-approval";
+      approved: boolean;
     };
 
 export type StateContextValue = {
@@ -330,8 +331,8 @@ export async function dispatch(
       return hideEmbeddedScreen(state, update);
     case "zapp-connect":
       return zappConnect(state, update, action.zapp, action.origin);
-    case "approve-zapp":
-      return approveZapp(state, update);
+    case "zapp-approval":
+      return zappApproval(state, update, action.approved);
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -1533,31 +1534,40 @@ async function zappConnect(
   });
 }
 
-async function approveZapp(state: AppState, update: ZuUpdate): Promise<void> {
+async function zappApproval(
+  state: AppState,
+  update: ZuUpdate,
+  approved: boolean
+): Promise<void> {
   const zapp = state.connectedZapp;
   if (!zapp || !state.zappOrigin) {
     return;
   }
-  const newZapp = (await PODPCDPackage.prove({
-    entries: {
-      argumentType: ArgumentTypeName.Object,
-      value: {
-        origin: { type: "string", value: state.zappOrigin },
-        name: { type: "string", value: zapp.name }
+  if (approved) {
+    const newZapp = (await PODPCDPackage.prove({
+      entries: {
+        argumentType: ArgumentTypeName.Object,
+        value: {
+          origin: { type: "string", value: state.zappOrigin },
+          name: { type: "string", value: zapp.name }
+        }
+      },
+      privateKey: {
+        argumentType: ArgumentTypeName.String,
+        value: encodePrivateKey(
+          Buffer.from(v3tov4Identity(state.identityV3).export(), "base64")
+        )
+      },
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: uuidv4()
       }
-    },
-    privateKey: {
-      argumentType: ArgumentTypeName.String,
-      value: encodePrivateKey(
-        Buffer.from(v3tov4Identity(state.identityV3).export(), "base64")
-      )
-    },
-    id: {
-      argumentType: ArgumentTypeName.String,
-      value: uuidv4()
-    }
-  })) as PODPCD;
+    })) as PODPCD;
 
-  const newZappSerialized = await PODPCDPackage.serialize(newZapp);
-  return addPCDs(state, update, [newZappSerialized], false, "Zapps");
+    const newZappSerialized = await PODPCDPackage.serialize(newZapp);
+    update({ zappApproved: true });
+    return addPCDs(state, update, [newZappSerialized], false, "Zapps");
+  } else {
+    update({ zappApproved: false });
+  }
 }
