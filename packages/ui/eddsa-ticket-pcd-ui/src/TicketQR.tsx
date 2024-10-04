@@ -42,7 +42,8 @@ export function TicketQR({
       [
         "53edb3e7-6733-41e0-a9be-488877c5c572", // eth berlin
         "508313ea-f16b-4729-bdf0-281c64493ca9", //  eth prague
-        "5074edf5-f079-4099-b036-22223c0c6995" // devcon 7
+        "5074edf5-f079-4099-b036-22223c0c6995", // devcon 7
+        "f474401b-af3e-47a4-92f9-3786b122168b" // devcon test
       ].includes(pcd.claim.ticket.eventId) &&
       pcd.claim.ticket.ticketSecret
     ) {
