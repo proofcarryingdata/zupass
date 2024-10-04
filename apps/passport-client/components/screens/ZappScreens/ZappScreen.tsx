@@ -18,6 +18,7 @@ export function ZappScreen({ url }: { url: string }): ReactNode {
     <>
       <ZappModal />
       <IframeResizer
+        rel="preload"
         style={{
           // NB: Using min-width to set the width of the iFrame, works around an issue in iOS that can prevent the iFrame from sizing correctly.
           width: "1px",
