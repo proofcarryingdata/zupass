@@ -43,10 +43,7 @@ export type JSONPODValue =
  * {@link JSONPODValue} type for string entries.  These can be most simply
  * encoded as a JSON string, which is reserved for this type.
  */
-export type JSONPODStringValue =
-  | string
-  | { string: string }
-  | { type: "string"; value: string };
+export type JSONPODStringValue = string | { string: string };
 
 /**
  * {@link JSONPODValue} type for int entries.  These can be most simply
@@ -56,10 +53,7 @@ export type JSONPODStringValue =
  * the other encodings to specify value type.  Any string encoding accepted by
  * `BigInt(s)` is acceptable.
  */
-export type JSONPODIntValue =
-  | number
-  | { int: number | string }
-  | { type: "int"; value: number | string };
+export type JSONPODIntValue = number | { int: number | string };
 
 /**
  * {@link JSONPODValue} type for cryptographic entries.  These must always use
@@ -69,9 +63,7 @@ export type JSONPODIntValue =
  * no accuracy is lost.  Otherwise any string encoding accepted by `BigInt(s)`
  * is acceptable.
  */
-export type JSONPODCryptographicValue =
-  | { cryptographic: number | string }
-  | { type: "cryptographic"; value: number | string };
+export type JSONPODCryptographicValue = { cryptographic: number | string };
 
 /**
  * {@link JSONPODValue} type for EdDSA public key entries.  These must always
@@ -79,18 +71,7 @@ export type JSONPODCryptographicValue =
  * values.  The value within the typed object should be a string in a format
  * accepted by {@link decodePublicKey}.
  */
-export type JSONPODEdDSAPublicKeyValue =
-  | { eddsa_pubkey: string }
-  | { type: "eddsa_pubkey"; value: string };
-
-/**
- * Shortcut type for the structure of any {@link JSONPODValue} using the
- * explicit object encoding with separate `type` and `value` fields.  This is
- * similar in structure to the {@link PODValue} type, but differs in that the
- * value uses a JSON-compatible encoding, rather than a bare `string` or
- * `bigint`.
- */
-export type JSONExplicitPODValue = { type: "string"; value: number | string };
+export type JSONPODEdDSAPublicKeyValue = { eddsa_pubkey: string };
 
 /**
  * Defines the JSON encoding a set of POD entries.  Unlike the
@@ -140,33 +121,18 @@ export function podValueFromJSON(
   nameForErrorMessages = nameForErrorMessages || "(unnamed)";
   switch (typeof jsonValue) {
     case "string":
-      return checkPODValue(nameForErrorMessages, {
-        type: "string",
-        value: jsonValue
-      });
+      return podValueFromTypedJSON("string", jsonValue, nameForErrorMessages);
     case "number":
-      return checkPODValue(nameForErrorMessages, {
-        type: "int",
-        value: BigInt(jsonValue)
-      });
+      return podValueFromTypedJSON("int", jsonValue, nameForErrorMessages);
     case "object":
-      switch (Object.keys(jsonValue).length) {
-        case 1:
-          const [n, v] = Object.entries(jsonValue)[0];
-          return podValueFromTypedJSON(n, v, nameForErrorMessages);
-        case 2:
-          const explicitValue = jsonValue as JSONExplicitPODValue;
-          return podValueFromTypedJSON(
-            explicitValue.type,
-            explicitValue.value,
-            nameForErrorMessages
-          );
-        default:
-          throw new TypeError(
-            `Value ${nameForErrorMessages} isn't a well-formed JSON POD Value.` +
-              "  It should have only 1 or 2 keys."
-          );
+      if (Object.keys(jsonValue).length !== 1) {
+        throw new TypeError(
+          `Value ${nameForErrorMessages} isn't a well-formed JSON POD Value.` +
+            "  It should be an object with a single key."
+        );
       }
+      const [n, v] = Object.entries(jsonValue)[0];
+      return podValueFromTypedJSON(n, v, nameForErrorMessages);
     default:
       throw new TypeError(
         `Value ${nameForErrorMessages} has invalid type '${typeof jsonValue}'.`
