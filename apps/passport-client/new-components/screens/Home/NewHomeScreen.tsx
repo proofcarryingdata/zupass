@@ -1,4 +1,8 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  XMarkIcon
+} from "@heroicons/react/24/solid";
 import {
   EdDSATicketPCDTypeName,
   ITicketData,
@@ -35,7 +39,6 @@ import {
 } from "../../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
-import { Button2 } from "../../shared/Button";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
 import { NewLoader } from "../../shared/NewLoader";
@@ -278,11 +281,12 @@ export const NewHomeScreen = (): ReactElement => {
         noPadding={tickets.length > 0}
         fullscreen={tickets.length > 0}
       >
-        <Button2 variant="secondary" onClick={() => setZappUrl("")}>
-          Back
-        </Button2>
-        <Spacer h={12} />
-        <ZappScreen url={zappUrl} />
+        <SwipeViewContainer>
+          <FloatingReturnButton onClick={() => setZappUrl("")}>
+            <XMarkIcon color="#000000" opacity={0.6} height={24} />
+          </FloatingReturnButton>
+          <ZappScreen url={zappUrl} />
+        </SwipeViewContainer>
       </AppContainer>
     );
   }
@@ -522,4 +526,26 @@ const ZappButton = styled.button`
 
   /* shadow-sm */
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+`;
+
+const FloatingReturnButton = styled.div`
+  position: fixed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  top: 20px;
+
+  background-color: #ffffff;
+  z-index: 2;
+  margin-left: 24px;
+  box-shadow: 0px 1px 3px 0px #0000001a;
+
+  padding: 8px;
+  border-radius: 200px;
+  opacity: 0px;
+
+  justify-content: center;
+  align-items: center;
+  display: flex;
 `;
