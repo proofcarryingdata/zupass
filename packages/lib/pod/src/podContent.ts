@@ -8,6 +8,7 @@ import {
   clonePODValue,
   deserializePODEntries,
   getPODValueForCircuit,
+  requireType,
   serializePODEntries
 } from "./podUtil";
 
@@ -70,6 +71,7 @@ export class PODContent {
    * @throws if any of the entries aren't legal for inclusion in a POD
    */
   public static fromEntries(entries: PODEntries): PODContent {
+    requireType("entries", entries, "object");
     const sortedNames = Object.keys(entries)
       .map((name) => checkPODName(name))
       .sort();

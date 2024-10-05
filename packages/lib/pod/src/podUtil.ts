@@ -161,8 +161,11 @@ export function checkPODName(name?: string): string {
 }
 
 /**
- * Checks that `value` has the run-time type given by `typeName`.  Works for
- * any Typescript Type.
+ * Checks that `value` has the run-time type given by `typeName`.
+ *
+ * Works for any runtime JavaScript type, but two values have special meaning.
+ * "object" is used specifically to require a non-array object, while "array"
+ * is used to mean an array object.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -175,16 +178,41 @@ export function requireType(
   value: unknown,
   typeName: string
 ): void {
-  if (typeof value !== typeName) {
-    throw new TypeError(
-      `Invalid value for entry ${nameForErrorMessages}.  Expected type ${typeName}.`
-    );
+  switch (typeName) {
+    case "object":
+      if (typeof value !== "object" || Array.isArray(value)) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+          Expected a non-array object.`
+        );
+      }
+      break;
+    case "array":
+      if (typeof value !== "object" || !Array.isArray(value)) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+          Expected an array.`
+        );
+      }
+      break;
+    default:
+      if (typeof value !== typeName) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+          Expected type ${typeName}.`
+        );
+      }
+      break;
   }
 }
 
 /**
  * Checks that `value` has the run-time type given by `typeName`.  Compile-time
  * type of input/output is limited to expected POD value types.
+ *
+ * Works for any runtime JavaScript type, but two values have special meaning.
+ * "object" is used specifically to require a non-array object, while "array"
+ * is used to mean an array object.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.

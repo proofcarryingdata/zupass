@@ -195,7 +195,11 @@ describe("podUtil input checkers should work", async function () {
       [0n, "bigint"],
       [-123n, "bigint"],
       ["", "string"],
-      ["hello", "string"]
+      ["hello", "string"],
+      [{}, "object"],
+      [{ abc: 123 }, "object"],
+      [[], "array"],
+      [[1, 2, 3, "abc"], "array"]
     ] as [string | bigint, string][];
     for (const testInput of testCases) {
       const checked = requireValueType("valueName", testInput[0], testInput[1]);
@@ -211,7 +215,11 @@ describe("podUtil input checkers should work", async function () {
       [0n, "string"],
       ["hello", "bigint"],
       [undefined, "bigint"],
-      [undefined, "string"]
+      [undefined, "string"],
+      [{}, "array"],
+      [{ abc: 123 }, "array"],
+      [[], "object"],
+      [[1, 2, 3, "abc"], "object"]
     ] as [string | bigint, string][];
     for (const testInput of testCases) {
       const fn = (): void => {
