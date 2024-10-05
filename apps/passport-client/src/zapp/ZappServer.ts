@@ -35,13 +35,8 @@ import { collectionIdToFolderName, getPODsForCollections } from "./collections";
 abstract class BaseZappServer {
   constructor(
     private context: StateContextValue,
-    private zapp: PODPCD,
     private advice: ConnectorAdvice
   ) {}
-
-  public getZapp(): PODPCD {
-    return this.zapp;
-  }
 
   public getContext(): StateContextValue {
     return this.context;
@@ -62,10 +57,9 @@ export class ZupassIdentityRPC
 {
   public constructor(
     context: StateContextValue,
-    zapp: PODPCD,
     clientChannel: ConnectorAdvice
   ) {
-    super(context, zapp, clientChannel);
+    super(context, clientChannel);
   }
 
   public async getSemaphoreV3Commitment(): Promise<bigint> {
@@ -111,12 +105,8 @@ export class ZupassIdentityRPC
 }
 
 class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
-  public constructor(
-    context: StateContextValue,
-    zapp: PODPCD,
-    advice: ConnectorAdvice
-  ) {
-    super(context, zapp, advice);
+  public constructor(context: StateContextValue, advice: ConnectorAdvice) {
+    super(context, advice);
   }
 
   // Not yet implemented
@@ -223,16 +213,12 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
 }
 
 class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
-  public constructor(
-    context: StateContextValue,
-    zapp: PODPCD,
-    advice: ConnectorAdvice
-  ) {
-    super(context, zapp, advice);
+  public constructor(context: StateContextValue, advice: ConnectorAdvice) {
+    super(context, advice);
   }
 
   private getPODsIfPermitted(
-    collectionIds: string[] | undefined,
+    collectionIds: string[],
     method: ParcnetRPCMethodName
   ): POD[] {
     const permission = this.getPermissions().REQUEST_PROOF;
@@ -240,12 +226,8 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
       throw new MissingPermissionError("REQUEST_PROOF", method);
     }
 
-    let requestedCollectionIds = collectionIds;
-
-    if (!requestedCollectionIds) {
-      requestedCollectionIds = permission.collections;
-    } else if (
-      requestedCollectionIds.some(
+    if (
+      collectionIds.some(
         (collectionId) => !permission.collections.includes(collectionId)
       )
     ) {
@@ -254,7 +236,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
 
     return getPODsForCollections(
       this.getContext().getState().pcds,
-      requestedCollectionIds
+      collectionIds
     );
   }
 
@@ -265,6 +247,8 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
     request: p.PodspecProofRequest;
     collectionIds?: string[];
   }): Promise<ProveResult> {
+    collectionIds =
+      collectionIds ?? this.getPermissions().REQUEST_PROOF?.collections ?? [];
     const pods = this.getPODsIfPermitted(collectionIds, "gpc.prove");
     const prs = p.proofRequest(request);
 
@@ -291,6 +275,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
         screen: {
           type: EmbeddedScreenType.EmbeddedGPCProof,
           proofRequest: request,
+          collectionIds,
           callback: (result: ProveResult) => {
             this.getContext().dispatch({
               type: "hide-embedded-screen"
@@ -328,6 +313,8 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
     request: p.PodspecProofRequest;
     collectionIds?: string[];
   }): Promise<boolean> {
+    collectionIds =
+      collectionIds ?? this.getPermissions().REQUEST_PROOF?.collections ?? [];
     const pods = this.getPODsIfPermitted(collectionIds, "gpc.canProve");
     const prs = p.proofRequest(request);
 
@@ -345,30 +332,14 @@ export class ZupassRPCProcessor extends BaseZappServer implements ParcnetRPC {
   public readonly pod: ZupassPODRPC;
   public readonly gpc: ZupassGPCRPC;
 
-  public constructor(
-    context: StateContextValue,
-    zapp: PODPCD,
-    advice: ConnectorAdvice
-  ) {
-    super(context, zapp, advice);
+  public constructor(context: StateContextValue, advice: ConnectorAdvice) {
+    super(context, advice);
     // this.subscriptions = new QuerySubscriptions(this.pods);
     // this.subscriptions.onSubscriptionUpdated((update, serial) => {
     //   this.clientChannel.subscriptionUpdate(update, serial);
     // });
-    this.pod = new ZupassPODRPC(
-      this.getContext(),
-      this.getZapp(),
-      this.getAdvice()
-    );
-    this.identity = new ZupassIdentityRPC(
-      this.getContext(),
-      this.getZapp(),
-      this.getAdvice()
-    );
-    this.gpc = new ZupassGPCRPC(
-      this.getContext(),
-      this.getZapp(),
-      this.getAdvice()
-    );
+    this.pod = new ZupassPODRPC(this.getContext(), this.getAdvice());
+    this.identity = new ZupassIdentityRPC(this.getContext(), this.getAdvice());
+    this.gpc = new ZupassGPCRPC(this.getContext(), this.getAdvice());
   }
 }

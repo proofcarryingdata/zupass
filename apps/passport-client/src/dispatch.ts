@@ -43,7 +43,6 @@ import { assertUnreachable, sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { appConfig } from "./appConfig";
 import {
   notifyLoginToOtherTabs,
@@ -1549,7 +1548,11 @@ async function zappApproval(
         argumentType: ArgumentTypeName.Object,
         value: {
           origin: { type: "string", value: state.zappOrigin },
-          name: { type: "string", value: zapp.name }
+          name: { type: "string", value: zapp.name },
+          permissions: {
+            type: "string",
+            value: JSON.stringify(zapp.permissions)
+          }
         }
       },
       privateKey: {
@@ -1560,7 +1563,7 @@ async function zappApproval(
       },
       id: {
         argumentType: ArgumentTypeName.String,
-        value: uuidv4()
+        value: `zapp-${zapp.name}-${state.zappOrigin}`
       }
     })) as PODPCD;
 

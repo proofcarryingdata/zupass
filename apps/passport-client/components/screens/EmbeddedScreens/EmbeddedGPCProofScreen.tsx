@@ -4,22 +4,23 @@ import { EntriesSchema, PodspecProofRequest } from "@parcnet-js/podspec";
 import { gpcProve } from "@pcd/gpc";
 import { Button, Spacer } from "@pcd/passport-ui";
 import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
-import { isPODPCD, PODPCD } from "@pcd/pod-pcd";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { Fragment, ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
-import { useIdentityV3, usePCDsInFolder } from "../../../src/appHooks";
+import { useIdentityV3, usePCDCollection } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
-import { ZAPP_POD_SPECIAL_FOLDER_NAME } from "../../../src/zapp/ZappServer";
+import { getPODsForCollections } from "../../../src/zapp/collections";
 import { H2 } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
 import { Spinner } from "../../shared/Spinner";
 
 export function EmbeddedGPCProofScreen({
   proofRequestSchema,
+  collectionIds,
   callback
 }: {
   proofRequestSchema: PodspecProofRequest;
+  collectionIds: string[];
   callback: (result: ProveResult) => void;
 }): ReactNode {
   useSyncE2EEStorage();
@@ -29,10 +30,10 @@ export function EmbeddedGPCProofScreen({
   const [selectedPODs, setSelectedPODs] = useState<
     Record<string, POD | undefined>
   >({});
-  const podPCDs = usePCDsInFolder(ZAPP_POD_SPECIAL_FOLDER_NAME);
+  const pcds = usePCDCollection();
   const allPods = useMemo(() => {
-    return podPCDs.filter(isPODPCD).map((pcd: PODPCD) => pcd.pod);
-  }, [podPCDs]);
+    return getPODsForCollections(pcds, collectionIds);
+  }, [pcds, collectionIds]);
   const candidatePODs = useMemo(() => {
     return prs.queryForInputs(allPods);
   }, [allPods, prs]);
