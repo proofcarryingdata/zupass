@@ -4,9 +4,7 @@ import {
 } from "@pcd/passport-interface";
 import { isRootFolder, normalizePath } from "@pcd/pcd-collection";
 import React, {
-  lazy,
   ReactNode,
-  Suspense,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -38,6 +36,7 @@ import { AppHeader } from "../../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../../shared/LoadingIssuedPCDs";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
+import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
 import { ProtocolWorldsHome } from "../ProtocolWorldsScreens/ProtocolWorldsHome";
 import { ZappScreen } from "../ZappScreens/ZappScreen";
@@ -165,11 +164,6 @@ export function HomeScreenImpl(): JSX.Element | null {
   }, [browsingFolder, dispatch]);
 
   if (!self) return null;
-  const LazyFrogCrypto = lazy(() =>
-    import("../FrogScreens/FrogCryptoHomeSection").then(
-      ({ FrogCryptoHomeSection }) => ({ default: FrogCryptoHomeSection })
-    )
-  );
 
   return (
     <>
@@ -233,9 +227,7 @@ export function HomeScreenImpl(): JSX.Element | null {
           )}
 
           {isFrogCrypto ? (
-            <Suspense fallback={<RippleLoader />}>
-              <LazyFrogCrypto />
-            </Suspense>
+            <FrogCryptoHomeSection />
           ) : isProtocolWorlds ? (
             <ProtocolWorldsHome />
           ) : isEdgeCity ? (
