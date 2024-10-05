@@ -1,5 +1,5 @@
 import { decodeQRPayload, encodeQRPayload } from "@pcd/passport-ui";
-import assert from "assert";
+import { assert, describe, it } from "vitest";
 
 function makeTestPayload(length: number): string {
   let result = "";
