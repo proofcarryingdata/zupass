@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, UIEvent, useRef } from "react";
+import { Dispatch, ReactNode, SetStateAction, UIEvent, useRef } from "react";
 import styled from "styled-components";
 import {
   PASSWORD_MINIMUM_LENGTH,
@@ -6,6 +6,8 @@ import {
 } from "../../../src/password";
 import { Button2 } from "../Button";
 import { PasswordInput2 } from "./PasswordInput2";
+import { NewLoader } from "../NewLoader";
+import { Typography } from "../Typography";
 
 interface NewPasswordForm {
   loading: boolean;
@@ -82,6 +84,15 @@ export const NewPasswordForm2 = ({
     return;
   };
 
+  const textOrLoader = (text: string): ReactNode => {
+    if (loading) return <NewLoader columns={3} rows={2} color="white" />;
+
+    return (
+      <Typography color="inherit" fontSize={18} fontWeight={500} family="Rubik">
+        {text}
+      </Typography>
+    );
+  };
   const getErrorMessage = (
     inputType: "password" | "confirm" | "change"
   ): string | undefined => {
@@ -146,7 +157,7 @@ export const NewPasswordForm2 = ({
       </InputsContainer>
       <InputsContainer>
         <Button2 onClick={checkPasswordAndSubmit} disabled={!!error || loading}>
-          {submitButtonText}
+          {textOrLoader(submitButtonText)}
         </Button2>
         <Button2 onClick={onCancel} variant="secondary">
           Back
