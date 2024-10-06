@@ -8,6 +8,10 @@ export function collectionIdToFolderName(collectionId: string): string {
   return `${COLLECTIONS_ROOT_FOLDER_NAME}/${collectionId}`;
 }
 
+export function getCollectionNames(pcds: PCDCollection): string[] {
+  return pcds.getFoldersInFolder(COLLECTIONS_ROOT_FOLDER_NAME);
+}
+
 export function getPODsForCollections(
   pcds: PCDCollection,
   collectionIds: string[]

@@ -31,6 +31,7 @@ import { appConfig } from "../appConfig";
 import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";
 import { collectionIdToFolderName, getPODsForCollections } from "./collections";
+import { QuerySubscriptionManager } from "./query_subscription_manager";
 
 abstract class BaseZappServer {
   constructor(
@@ -105,20 +106,24 @@ export class ZupassIdentityRPC
 }
 
 class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
-  public constructor(context: StateContextValue, advice: ConnectorAdvice) {
+  public constructor(
+    context: StateContextValue,
+    advice: ConnectorAdvice,
+    private readonly querySubscriptionManager: QuerySubscriptionManager
+  ) {
     super(context, advice);
   }
 
-  // Not yet implemented
   public async subscribe(
-    _collectionId: string,
-    _query: PODQuery
+    collectionId: string,
+    query: PODQuery
   ): Promise<string> {
-    return "1";
+    return this.querySubscriptionManager.addSubscription(collectionId, query);
   }
 
-  // Not yet implemented
-  public async unsubscribe(_subscriptionId: string): Promise<void> {}
+  public async unsubscribe(subscriptionId: string): Promise<void> {
+    this.querySubscriptionManager.removeSubscription(subscriptionId);
+  }
 
   public async query(
     collectionId: string,
@@ -149,7 +154,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       POD.load(podData.entries, podData.signature, podData.signerPublicKey)
     );
     const serializedPCD = await PODPCDPackage.serialize(podPCD);
-    this.getContext().dispatch({
+    await this.getContext().dispatch({
       type: "add-pcds",
       folder: collectionIdToFolderName(collectionId),
       pcds: [serializedPCD],
@@ -177,6 +182,8 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
           (pcd as PODPCD).proof.signature === signature
       )
       .map((pcd) => pcd.id);
+
+    console.log("deleting", pcdIds);
 
     await Promise.all(
       pcdIds.map((id) =>
@@ -327,18 +334,27 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
 
 export class ZupassRPCProcessor extends BaseZappServer implements ParcnetRPC {
   _version: "1" = "1" as const;
-  //private readonly subscriptions: QuerySubscriptions;
   public readonly identity: ZupassIdentityRPC;
   public readonly pod: ZupassPODRPC;
   public readonly gpc: ZupassGPCRPC;
+  private readonly querySubscriptionManager: QuerySubscriptionManager =
+    new QuerySubscriptionManager(this.getContext());
 
   public constructor(context: StateContextValue, advice: ConnectorAdvice) {
     super(context, advice);
-    // this.subscriptions = new QuerySubscriptions(this.pods);
-    // this.subscriptions.onSubscriptionUpdated((update, serial) => {
-    //   this.clientChannel.subscriptionUpdate(update, serial);
-    // });
-    this.pod = new ZupassPODRPC(this.getContext(), this.getAdvice());
+    this.querySubscriptionManager.onSubscriptionUpdated(
+      (subscriptionId, update, serial) => {
+        this.getAdvice().subscriptionUpdate({ subscriptionId, update }, serial);
+      }
+    );
+    context
+      .getState()
+      .pcds.changeEmitter.listen(() => this.querySubscriptionManager.update());
+    this.pod = new ZupassPODRPC(
+      this.getContext(),
+      this.getAdvice(),
+      this.querySubscriptionManager
+    );
     this.identity = new ZupassIdentityRPC(this.getContext(), this.getAdvice());
     this.gpc = new ZupassGPCRPC(this.getContext(), this.getAdvice());
   }
