@@ -132,7 +132,6 @@ export const PageCircleButton = styled.button<{
 const ButtonsContainer = styled.div`
   display: flex;
   position: absolute;
-  height: ${BUTTONS_CONTAINER_HEIGHT};
   gap: 12px;
   top: ${TicketCardHeight +
   BUTTONS_CONTAINER_HEIGHT / 2 +
@@ -270,7 +269,6 @@ export const NewHomeScreen = (): ReactElement => {
               resistance={true}
               index={currentPos}
               onChangeIndex={(e) => {
-                console.log(e);
                 setCurrentPos(e);
               }}
             >
