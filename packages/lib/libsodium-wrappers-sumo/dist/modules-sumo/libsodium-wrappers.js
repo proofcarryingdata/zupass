@@ -19,6 +19,7 @@
                 "crypto_aead_xchacha20poly1305_ietf_encrypt",
                 "crypto_aead_xchacha20poly1305_ietf_encrypt_detached",
                 "crypto_aead_xchacha20poly1305_ietf_keygen",
+                "crypto_hash",
                 "crypto_pwhash",
                 "crypto_pwhash_scryptsalsa208sha256",
                 "crypto_pwhash_scryptsalsa208sha256_ll",
@@ -63,7 +64,8 @@
                 V,
                 W,
                 H,
-                j
+                j,
+                z
               ],
               e = 0;
             e < r.length;
@@ -353,19 +355,19 @@
             "crypto_verify_64_BYTES"
           ];
           for (e = 0; e < o.length; e++)
-            "function" == typeof (n = t["_" + o[e].toLowerCase()]) &&
-              (_[o[e]] = n());
-          var c = [
+            "function" == typeof (c = t["_" + o[e].toLowerCase()]) &&
+              (_[o[e]] = c());
+          var n = [
             "SODIUM_VERSION_STRING",
             "crypto_pwhash_STRPREFIX",
             "crypto_pwhash_argon2i_STRPREFIX",
             "crypto_pwhash_argon2id_STRPREFIX",
             "crypto_pwhash_scryptsalsa208sha256_STRPREFIX"
           ];
-          for (e = 0; e < c.length; e++) {
-            var n;
-            "function" == typeof (n = t["_" + c[e].toLowerCase()]) &&
-              (_[c[e]] = t.UTF8ToString(n()));
+          for (e = 0; e < n.length; e++) {
+            var c;
+            "function" == typeof (c = t["_" + n[e].toLowerCase()]) &&
+              (_[n[e]] = t.UTF8ToString(c()));
           }
         }
         t = a;
@@ -373,9 +375,9 @@
           r();
           var e = new Uint8Array([98, 97, 108, 108, 115]),
             o = _.randombytes_buf(_.crypto_secretbox_NONCEBYTES),
-            c = _.randombytes_buf(_.crypto_secretbox_KEYBYTES),
-            n = _.crypto_secretbox_easy(e, o, c),
-            s = _.crypto_secretbox_open_easy(n, o, c);
+            n = _.randombytes_buf(_.crypto_secretbox_KEYBYTES),
+            c = _.crypto_secretbox_easy(e, o, n),
+            s = _.crypto_secretbox_open_easy(c, o, n);
           if (_.memcmp(e, s)) return;
         } catch (_) {
           if (null == t.useBackupModule)
@@ -401,14 +403,14 @@
         } catch (_) {
           throw new TypeError("The encoded data was not valid.");
         }
-      for (var r = "", e = 0, c = 0; c < t; c++) {
-        var n = Array.prototype.slice.call(_, c * a + e, (c + 1) * a + e);
-        if (0 != n.length) {
+      for (var r = "", e = 0, n = 0; n < t; n++) {
+        var c = Array.prototype.slice.call(_, n * a + e, (n + 1) * a + e);
+        if (0 != c.length) {
           var s,
-            p = n.length,
+            p = c.length,
             h = 0;
           do {
-            var y = n[--p];
+            var y = c[--p];
             y >= 240
               ? ((h = 4), (s = !0))
               : y >= 224
@@ -417,13 +419,13 @@
               ? ((h = 2), (s = !0))
               : y < 128 && ((h = 1), (s = !0));
           } while (!s);
-          for (var i = h - (n.length - p), l = 0; l < i; l++) e--, n.pop();
-          r += o(n);
+          for (var i = h - (c.length - p), l = 0; l < i; l++) e--, c.pop();
+          r += o(c);
         }
       }
       return r;
     }
-    function c(_) {
+    function n(_) {
       _ = f(null, _, "input");
       for (var a, t, r, e = "", o = 0; o < _.length; o++)
         (r =
@@ -432,19 +434,19 @@
           (e += String.fromCharCode(255 & r) + String.fromCharCode(r >>> 8));
       return e;
     }
-    var n = {
+    var c = {
       ORIGINAL: 1,
       ORIGINAL_NO_PADDING: 3,
       URLSAFE: 5,
       URLSAFE_NO_PADDING: 7
     };
     function s(_) {
-      if (null == _) return n.URLSAFE_NO_PADDING;
+      if (null == _) return c.URLSAFE_NO_PADDING;
       if (
-        _ !== n.ORIGINAL &&
-        _ !== n.ORIGINAL_NO_PADDING &&
-        _ !== n.URLSAFE &&
-        _ != n.URLSAFE_NO_PADDING
+        _ !== c.ORIGINAL &&
+        _ !== c.ORIGINAL_NO_PADDING &&
+        _ !== c.URLSAFE &&
+        _ != c.URLSAFE_NO_PADDING
       )
         throw new Error("unsupported base64 variant");
       return _;
@@ -453,9 +455,9 @@
       (a = s(a)), (_ = f(e, _, "input"));
       var r,
         e = [],
-        c = 0 | Math.floor(_.length / 3),
-        n = _.length - 3 * c,
-        p = 4 * c + (0 !== n ? (2 & a ? 2 + (n >>> 1) : 4) : 0),
+        n = 0 | Math.floor(_.length / 3),
+        c = _.length - 3 * n,
+        p = 4 * n + (0 !== c ? (2 & a ? 2 + (c >>> 1) : 4) : 0),
         h = new l(p + 1),
         y = E(_);
       return (
@@ -475,8 +477,8 @@
       if (_ instanceof l) {
         if ("uint8array" === t) return _.to_Uint8Array();
         if ("text" === t) return o(_.to_Uint8Array());
-        if ("hex" === t) return c(_.to_Uint8Array());
-        if ("base64" === t) return p(_.to_Uint8Array(), n.URLSAFE_NO_PADDING);
+        if ("hex" === t) return n(_.to_Uint8Array());
+        if ("base64" === t) return p(_.to_Uint8Array(), c.URLSAFE_NO_PADDING);
         throw new Error('What is output format "' + t + '"?');
       }
       if ("object" == typeof _) {
@@ -540,35 +542,35 @@
           : void T(_, "unsupported input type for " + t)
       );
     }
-    function Y(_, a, r, e, o, c) {
-      var n = [];
-      i(c);
+    function Y(_, a, r, e, o, n) {
+      var c = [];
+      i(n);
       var s = null;
       null != _ &&
-        ((s = E((_ = f(n, _, "secret_nonce")))), _.length, n.push(s)),
-        (a = f(n, a, "ciphertext"));
+        ((s = E((_ = f(c, _, "secret_nonce")))), _.length, c.push(s)),
+        (a = f(c, a, "ciphertext"));
       var p,
         y = t._crypto_aead_chacha20poly1305_ietf_abytes(),
         u = a.length;
-      u < y && T(n, "ciphertext is too short"), (p = E(a)), n.push(p);
+      u < y && T(c, "ciphertext is too short"), (p = E(a)), c.push(p);
       var g = null,
         Y = 0;
       null != r &&
-        ((g = E((r = f(n, r, "additional_data")))), (Y = r.length), n.push(g)),
-        (e = f(n, e, "public_nonce"));
+        ((g = E((r = f(c, r, "additional_data")))), (Y = r.length), c.push(g)),
+        (e = f(c, e, "public_nonce"));
       var m,
         B = 0 | t._crypto_aead_chacha20poly1305_ietf_npubbytes();
-      e.length !== B && T(n, "invalid public_nonce length"),
+      e.length !== B && T(c, "invalid public_nonce length"),
         (m = E(e)),
-        n.push(m),
-        (o = f(n, o, "key"));
+        c.push(m),
+        (o = f(c, o, "key"));
       var b,
         v = 0 | t._crypto_aead_chacha20poly1305_ietf_keybytes();
-      o.length !== v && T(n, "invalid key length"), (b = E(o)), n.push(b);
+      o.length !== v && T(c, "invalid key length"), (b = E(o)), c.push(b);
       var A = new l((u - t._crypto_aead_chacha20poly1305_ietf_abytes()) | 0),
         M = A.address;
       if (
-        (n.push(M),
+        (c.push(M),
         0 ===
           t._crypto_aead_chacha20poly1305_ietf_decrypt(
             M,
@@ -584,14 +586,14 @@
             b
           ))
       ) {
-        var I = h(A, c);
-        return d(n), I;
+        var I = h(A, n);
+        return d(c), I;
       }
-      S(n, "ciphertext cannot be decrypted using that key");
+      S(c, "ciphertext cannot be decrypted using that key");
     }
-    function m(_, a, r, e, o, c, n) {
+    function m(_, a, r, e, o, n, c) {
       var s = [];
-      i(n);
+      i(c);
       var p = null;
       null != _ &&
         ((p = E((_ = f(s, _, "secret_nonce")))), _.length, s.push(p));
@@ -611,10 +613,10 @@
       o.length !== v && T(s, "invalid public_nonce length"),
         (b = E(o)),
         s.push(b),
-        (c = f(s, c, "key"));
+        (n = f(s, n, "key"));
       var A,
         M = 0 | t._crypto_aead_chacha20poly1305_ietf_keybytes();
-      c.length !== M && T(s, "invalid key length"), (A = E(c)), s.push(A);
+      n.length !== M && T(s, "invalid key length"), (A = E(n)), s.push(A);
       var I = new l(0 | u),
         w = I.address;
       if (
@@ -634,38 +636,38 @@
             A
           ))
       ) {
-        var x = h(I, n);
+        var x = h(I, c);
         return d(s), x;
       }
       S(s, "ciphertext cannot be decrypted using that key");
     }
-    function B(_, a, r, e, o, c) {
-      var n = [];
-      i(c);
-      var s = E((_ = f(n, _, "message"))),
+    function B(_, a, r, e, o, n) {
+      var c = [];
+      i(n);
+      var s = E((_ = f(c, _, "message"))),
         p = _.length;
-      n.push(s);
+      c.push(s);
       var y = null,
         u = 0;
       null != a &&
-        ((y = E((a = f(n, a, "additional_data")))), (u = a.length), n.push(y));
+        ((y = E((a = f(c, a, "additional_data")))), (u = a.length), c.push(y));
       var g = null;
       null != r &&
-        ((g = E((r = f(n, r, "secret_nonce")))), r.length, n.push(g)),
-        (e = f(n, e, "public_nonce"));
+        ((g = E((r = f(c, r, "secret_nonce")))), r.length, c.push(g)),
+        (e = f(c, e, "public_nonce"));
       var Y,
         m = 0 | t._crypto_aead_chacha20poly1305_ietf_npubbytes();
-      e.length !== m && T(n, "invalid public_nonce length"),
+      e.length !== m && T(c, "invalid public_nonce length"),
         (Y = E(e)),
-        n.push(Y),
-        (o = f(n, o, "key"));
+        c.push(Y),
+        (o = f(c, o, "key"));
       var B,
         b = 0 | t._crypto_aead_chacha20poly1305_ietf_keybytes();
-      o.length !== b && T(n, "invalid key length"), (B = E(o)), n.push(B);
+      o.length !== b && T(c, "invalid key length"), (B = E(o)), c.push(B);
       var v = new l((p + t._crypto_aead_chacha20poly1305_ietf_abytes()) | 0),
         A = v.address;
       if (
-        (n.push(A),
+        (c.push(A),
         0 ===
           t._crypto_aead_chacha20poly1305_ietf_encrypt(
             A,
@@ -681,41 +683,41 @@
             B
           ))
       ) {
-        var M = h(v, c);
-        return d(n), M;
+        var M = h(v, n);
+        return d(c), M;
       }
-      S(n, "invalid usage");
+      S(c, "invalid usage");
     }
-    function b(_, a, r, e, o, c) {
-      var n = [];
-      i(c);
-      var s = E((_ = f(n, _, "message"))),
+    function b(_, a, r, e, o, n) {
+      var c = [];
+      i(n);
+      var s = E((_ = f(c, _, "message"))),
         p = _.length;
-      n.push(s);
+      c.push(s);
       var y = null,
         u = 0;
       null != a &&
-        ((y = E((a = f(n, a, "additional_data")))), (u = a.length), n.push(y));
+        ((y = E((a = f(c, a, "additional_data")))), (u = a.length), c.push(y));
       var g = null;
       null != r &&
-        ((g = E((r = f(n, r, "secret_nonce")))), r.length, n.push(g)),
-        (e = f(n, e, "public_nonce"));
+        ((g = E((r = f(c, r, "secret_nonce")))), r.length, c.push(g)),
+        (e = f(c, e, "public_nonce"));
       var Y,
         m = 0 | t._crypto_aead_chacha20poly1305_ietf_npubbytes();
-      e.length !== m && T(n, "invalid public_nonce length"),
+      e.length !== m && T(c, "invalid public_nonce length"),
         (Y = E(e)),
-        n.push(Y),
-        (o = f(n, o, "key"));
+        c.push(Y),
+        (o = f(c, o, "key"));
       var B,
         b = 0 | t._crypto_aead_chacha20poly1305_ietf_keybytes();
-      o.length !== b && T(n, "invalid key length"), (B = E(o)), n.push(B);
+      o.length !== b && T(c, "invalid key length"), (B = E(o)), c.push(B);
       var v = new l(0 | p),
         A = v.address;
-      n.push(A);
+      c.push(A);
       var M = new l(0 | t._crypto_aead_chacha20poly1305_ietf_abytes()),
         I = M.address;
       if (
-        (n.push(I),
+        (c.push(I),
         0 ===
           t._crypto_aead_chacha20poly1305_ietf_encrypt_detached(
             A,
@@ -732,10 +734,10 @@
             B
           ))
       ) {
-        var w = h({ ciphertext: v, mac: M }, c);
-        return d(n), w;
+        var w = h({ ciphertext: v, mac: M }, n);
+        return d(c), w;
       }
-      S(n, "invalid usage");
+      S(c, "invalid usage");
     }
     function v(_) {
       var a = [];
@@ -755,35 +757,35 @@
       var o = h(r, _);
       return d(a), o;
     }
-    function M(_, a, r, e, o, c) {
-      var n = [];
-      i(c);
+    function M(_, a, r, e, o, n) {
+      var c = [];
+      i(n);
       var s = null;
       null != _ &&
-        ((s = E((_ = f(n, _, "secret_nonce")))), _.length, n.push(s)),
-        (a = f(n, a, "ciphertext"));
+        ((s = E((_ = f(c, _, "secret_nonce")))), _.length, c.push(s)),
+        (a = f(c, a, "ciphertext"));
       var p,
         y = t._crypto_aead_xchacha20poly1305_ietf_abytes(),
         u = a.length;
-      u < y && T(n, "ciphertext is too short"), (p = E(a)), n.push(p);
+      u < y && T(c, "ciphertext is too short"), (p = E(a)), c.push(p);
       var g = null,
         Y = 0;
       null != r &&
-        ((g = E((r = f(n, r, "additional_data")))), (Y = r.length), n.push(g)),
-        (e = f(n, e, "public_nonce"));
+        ((g = E((r = f(c, r, "additional_data")))), (Y = r.length), c.push(g)),
+        (e = f(c, e, "public_nonce"));
       var m,
         B = 0 | t._crypto_aead_xchacha20poly1305_ietf_npubbytes();
-      e.length !== B && T(n, "invalid public_nonce length"),
+      e.length !== B && T(c, "invalid public_nonce length"),
         (m = E(e)),
-        n.push(m),
-        (o = f(n, o, "key"));
+        c.push(m),
+        (o = f(c, o, "key"));
       var b,
         v = 0 | t._crypto_aead_xchacha20poly1305_ietf_keybytes();
-      o.length !== v && T(n, "invalid key length"), (b = E(o)), n.push(b);
+      o.length !== v && T(c, "invalid key length"), (b = E(o)), c.push(b);
       var A = new l((u - t._crypto_aead_xchacha20poly1305_ietf_abytes()) | 0),
         M = A.address;
       if (
-        (n.push(M),
+        (c.push(M),
         0 ===
           t._crypto_aead_xchacha20poly1305_ietf_decrypt(
             M,
@@ -799,14 +801,14 @@
             b
           ))
       ) {
-        var I = h(A, c);
-        return d(n), I;
+        var I = h(A, n);
+        return d(c), I;
       }
-      S(n, "ciphertext cannot be decrypted using that key");
+      S(c, "ciphertext cannot be decrypted using that key");
     }
-    function I(_, a, r, e, o, c, n) {
+    function I(_, a, r, e, o, n, c) {
       var s = [];
-      i(n);
+      i(c);
       var p = null;
       null != _ &&
         ((p = E((_ = f(s, _, "secret_nonce")))), _.length, s.push(p));
@@ -826,10 +828,10 @@
       o.length !== v && T(s, "invalid public_nonce length"),
         (b = E(o)),
         s.push(b),
-        (c = f(s, c, "key"));
+        (n = f(s, n, "key"));
       var A,
         M = 0 | t._crypto_aead_xchacha20poly1305_ietf_keybytes();
-      c.length !== M && T(s, "invalid key length"), (A = E(c)), s.push(A);
+      n.length !== M && T(s, "invalid key length"), (A = E(n)), s.push(A);
       var I = new l(0 | u),
         w = I.address;
       if (
@@ -849,38 +851,38 @@
             A
           ))
       ) {
-        var x = h(I, n);
+        var x = h(I, c);
         return d(s), x;
       }
       S(s, "ciphertext cannot be decrypted using that key");
     }
-    function w(_, a, r, e, o, c) {
-      var n = [];
-      i(c);
-      var s = E((_ = f(n, _, "message"))),
+    function w(_, a, r, e, o, n) {
+      var c = [];
+      i(n);
+      var s = E((_ = f(c, _, "message"))),
         p = _.length;
-      n.push(s);
+      c.push(s);
       var y = null,
         u = 0;
       null != a &&
-        ((y = E((a = f(n, a, "additional_data")))), (u = a.length), n.push(y));
+        ((y = E((a = f(c, a, "additional_data")))), (u = a.length), c.push(y));
       var g = null;
       null != r &&
-        ((g = E((r = f(n, r, "secret_nonce")))), r.length, n.push(g)),
-        (e = f(n, e, "public_nonce"));
+        ((g = E((r = f(c, r, "secret_nonce")))), r.length, c.push(g)),
+        (e = f(c, e, "public_nonce"));
       var Y,
         m = 0 | t._crypto_aead_xchacha20poly1305_ietf_npubbytes();
-      e.length !== m && T(n, "invalid public_nonce length"),
+      e.length !== m && T(c, "invalid public_nonce length"),
         (Y = E(e)),
-        n.push(Y),
-        (o = f(n, o, "key"));
+        c.push(Y),
+        (o = f(c, o, "key"));
       var B,
         b = 0 | t._crypto_aead_xchacha20poly1305_ietf_keybytes();
-      o.length !== b && T(n, "invalid key length"), (B = E(o)), n.push(B);
+      o.length !== b && T(c, "invalid key length"), (B = E(o)), c.push(B);
       var v = new l((p + t._crypto_aead_xchacha20poly1305_ietf_abytes()) | 0),
         A = v.address;
       if (
-        (n.push(A),
+        (c.push(A),
         0 ===
           t._crypto_aead_xchacha20poly1305_ietf_encrypt(
             A,
@@ -896,41 +898,41 @@
             B
           ))
       ) {
-        var M = h(v, c);
-        return d(n), M;
+        var M = h(v, n);
+        return d(c), M;
       }
-      S(n, "invalid usage");
+      S(c, "invalid usage");
     }
-    function x(_, a, r, e, o, c) {
-      var n = [];
-      i(c);
-      var s = E((_ = f(n, _, "message"))),
+    function x(_, a, r, e, o, n) {
+      var c = [];
+      i(n);
+      var s = E((_ = f(c, _, "message"))),
         p = _.length;
-      n.push(s);
+      c.push(s);
       var y = null,
         u = 0;
       null != a &&
-        ((y = E((a = f(n, a, "additional_data")))), (u = a.length), n.push(y));
+        ((y = E((a = f(c, a, "additional_data")))), (u = a.length), c.push(y));
       var g = null;
       null != r &&
-        ((g = E((r = f(n, r, "secret_nonce")))), r.length, n.push(g)),
-        (e = f(n, e, "public_nonce"));
+        ((g = E((r = f(c, r, "secret_nonce")))), r.length, c.push(g)),
+        (e = f(c, e, "public_nonce"));
       var Y,
         m = 0 | t._crypto_aead_xchacha20poly1305_ietf_npubbytes();
-      e.length !== m && T(n, "invalid public_nonce length"),
+      e.length !== m && T(c, "invalid public_nonce length"),
         (Y = E(e)),
-        n.push(Y),
-        (o = f(n, o, "key"));
+        c.push(Y),
+        (o = f(c, o, "key"));
       var B,
         b = 0 | t._crypto_aead_xchacha20poly1305_ietf_keybytes();
-      o.length !== b && T(n, "invalid key length"), (B = E(o)), n.push(B);
+      o.length !== b && T(c, "invalid key length"), (B = E(o)), c.push(B);
       var v = new l(0 | p),
         A = v.address;
-      n.push(A);
+      c.push(A);
       var M = new l(0 | t._crypto_aead_xchacha20poly1305_ietf_abytes()),
         I = M.address;
       if (
-        (n.push(I),
+        (c.push(I),
         0 ===
           t._crypto_aead_xchacha20poly1305_ietf_encrypt_detached(
             A,
@@ -947,10 +949,10 @@
             B
           ))
       ) {
-        var w = h({ ciphertext: v, mac: M }, c);
-        return d(n), w;
+        var w = h({ ciphertext: v, mac: M }, n);
+        return d(c), w;
       }
-      S(n, "invalid usage");
+      S(c, "invalid usage");
     }
     function N(_) {
       var a = [];
@@ -961,9 +963,23 @@
       var o = h(r, _);
       return d(a), o;
     }
-    function L(_, a, r, e, o, c, n) {
+    function L(_, a) {
+      var r = [];
+      i(a);
+      var e = E((_ = f(r, _, "message"))),
+        o = _.length;
+      r.push(e);
+      var n = new l(0 | t._crypto_hash_bytes()),
+        c = n.address;
+      if ((r.push(c), !(0 | t._crypto_hash(c, e, o, 0)))) {
+        var s = h(n, a);
+        return d(r), s;
+      }
+      S(r, "invalid usage");
+    }
+    function O(_, a, r, e, o, n, c) {
       var s = [];
-      i(n),
+      i(c),
         g(s, _, "keyLength"),
         ("number" != typeof _ || (0 | _) !== _ || _ < 0) &&
           T(s, "keyLength must be an unsigned integer");
@@ -981,56 +997,56 @@
         g(s, o, "memLimit"),
         ("number" != typeof o || (0 | o) !== o || o < 0) &&
           T(s, "memLimit must be an unsigned integer"),
-        g(s, c, "algorithm"),
-        ("number" != typeof c || (0 | c) !== c || c < 0) &&
+        g(s, n, "algorithm"),
+        ("number" != typeof n || (0 | n) !== n || n < 0) &&
           T(s, "algorithm must be an unsigned integer");
       var m = new l(0 | _),
         B = m.address;
       if (
-        (s.push(B), !(0 | t._crypto_pwhash(B, _, 0, p, y, 0, u, e, 0, o, c)))
+        (s.push(B), !(0 | t._crypto_pwhash(B, _, 0, p, y, 0, u, e, 0, o, n)))
       ) {
-        var b = h(m, n);
+        var b = h(m, c);
         return d(s), b;
       }
       S(s, "invalid usage");
     }
-    function O(_, a, r, e, o, c) {
-      var n = [];
-      i(c),
-        g(n, _, "keyLength"),
+    function k(_, a, r, e, o, n) {
+      var c = [];
+      i(n),
+        g(c, _, "keyLength"),
         ("number" != typeof _ || (0 | _) !== _ || _ < 0) &&
-          T(n, "keyLength must be an unsigned integer");
-      var s = E((a = f(n, a, "password"))),
+          T(c, "keyLength must be an unsigned integer");
+      var s = E((a = f(c, a, "password"))),
         p = a.length;
-      n.push(s), (r = f(n, r, "salt"));
+      c.push(s), (r = f(c, r, "salt"));
       var y,
         u = 0 | t._crypto_pwhash_scryptsalsa208sha256_saltbytes();
-      r.length !== u && T(n, "invalid salt length"),
+      r.length !== u && T(c, "invalid salt length"),
         (y = E(r)),
-        n.push(y),
-        g(n, e, "opsLimit"),
+        c.push(y),
+        g(c, e, "opsLimit"),
         ("number" != typeof e || (0 | e) !== e || e < 0) &&
-          T(n, "opsLimit must be an unsigned integer"),
-        g(n, o, "memLimit"),
+          T(c, "opsLimit must be an unsigned integer"),
+        g(c, o, "memLimit"),
         ("number" != typeof o || (0 | o) !== o || o < 0) &&
-          T(n, "memLimit must be an unsigned integer");
+          T(c, "memLimit must be an unsigned integer");
       var Y = new l(0 | _),
         m = Y.address;
       if (
-        (n.push(m),
+        (c.push(m),
         !(
           0 |
           t._crypto_pwhash_scryptsalsa208sha256(m, _, 0, s, p, 0, y, e, 0, o)
         ))
       ) {
-        var B = h(Y, c);
-        return d(n), B;
+        var B = h(Y, n);
+        return d(c), B;
       }
-      S(n, "invalid usage");
+      S(c, "invalid usage");
     }
-    function k(_, a, r, e, o, c, n) {
+    function U(_, a, r, e, o, n, c) {
       var s = [];
-      i(n);
+      i(c);
       var p = E((_ = f(s, _, "password"))),
         y = _.length;
       s.push(p);
@@ -1046,29 +1062,29 @@
         g(s, o, "p"),
         ("number" != typeof o || (0 | o) !== o || o < 0) &&
           T(s, "p must be an unsigned integer"),
-        g(s, c, "keyLength"),
-        ("number" != typeof c || (0 | c) !== c || c < 0) &&
+        g(s, n, "keyLength"),
+        ("number" != typeof n || (0 | n) !== n || n < 0) &&
           T(s, "keyLength must be an unsigned integer");
-      var m = new l(0 | c),
+      var m = new l(0 | n),
         B = m.address;
       if (
         (s.push(B),
         !(
           0 |
-          t._crypto_pwhash_scryptsalsa208sha256_ll(p, y, u, Y, r, 0, e, o, B, c)
+          t._crypto_pwhash_scryptsalsa208sha256_ll(p, y, u, Y, r, 0, e, o, B, n)
         ))
       ) {
-        var b = h(m, n);
+        var b = h(m, c);
         return d(s), b;
       }
       S(s, "invalid usage");
     }
-    function U(_, a, r, e) {
+    function C(_, a, r, e) {
       var o = [];
       i(e);
-      var c = E((_ = f(o, _, "password"))),
-        n = _.length;
-      o.push(c),
+      var n = E((_ = f(o, _, "password"))),
+        c = _.length;
+      o.push(n),
         g(o, a, "opsLimit"),
         ("number" != typeof a || (0 | a) !== a || a < 0) &&
           T(o, "opsLimit must be an unsigned integer"),
@@ -1079,38 +1095,38 @@
         .address;
       if (
         (o.push(s),
-        !(0 | t._crypto_pwhash_scryptsalsa208sha256_str(s, c, n, 0, a, 0, r)))
+        !(0 | t._crypto_pwhash_scryptsalsa208sha256_str(s, n, c, 0, a, 0, r)))
       ) {
         var p = t.UTF8ToString(s);
         return d(o), p;
       }
       S(o, "invalid usage");
     }
-    function C(_, a, r) {
+    function R(_, a, r) {
       var o = [];
       i(r),
         "string" != typeof _ && T(o, "hashed_password must be a string"),
         (_ = e(_ + "\0")),
-        null != n &&
-          _.length - 1 !== n &&
+        null != c &&
+          _.length - 1 !== c &&
           T(o, "invalid hashed_password length");
-      var c = E(_),
-        n = _.length - 1;
-      o.push(c);
+      var n = E(_),
+        c = _.length - 1;
+      o.push(n);
       var s = E((a = f(o, a, "password"))),
         p = a.length;
       o.push(s);
       var h = !(
-        0 | t._crypto_pwhash_scryptsalsa208sha256_str_verify(c, s, p, 0)
+        0 | t._crypto_pwhash_scryptsalsa208sha256_str_verify(n, s, p, 0)
       );
       return d(o), h;
     }
-    function R(_, a, r, e) {
+    function P(_, a, r, e) {
       var o = [];
       i(e);
-      var c = E((_ = f(o, _, "password"))),
-        n = _.length;
-      o.push(c),
+      var n = E((_ = f(o, _, "password"))),
+        c = _.length;
+      o.push(n),
         g(o, a, "opsLimit"),
         ("number" != typeof a || (0 | a) !== a || a < 0) &&
           T(o, "opsLimit must be an unsigned integer"),
@@ -1118,50 +1134,50 @@
         ("number" != typeof r || (0 | r) !== r || r < 0) &&
           T(o, "memLimit must be an unsigned integer");
       var s = new l(0 | t._crypto_pwhash_strbytes()).address;
-      if ((o.push(s), !(0 | t._crypto_pwhash_str(s, c, n, 0, a, 0, r)))) {
+      if ((o.push(s), !(0 | t._crypto_pwhash_str(s, n, c, 0, a, 0, r)))) {
         var p = t.UTF8ToString(s);
         return d(o), p;
       }
       S(o, "invalid usage");
     }
-    function P(_, a, r, o) {
-      var c = [];
+    function K(_, a, r, o) {
+      var n = [];
       i(o),
-        "string" != typeof _ && T(c, "hashed_password must be a string"),
+        "string" != typeof _ && T(n, "hashed_password must be a string"),
         (_ = e(_ + "\0")),
         null != s &&
           _.length - 1 !== s &&
-          T(c, "invalid hashed_password length");
-      var n = E(_),
+          T(n, "invalid hashed_password length");
+      var c = E(_),
         s = _.length - 1;
-      c.push(n),
-        g(c, a, "opsLimit"),
+      n.push(c),
+        g(n, a, "opsLimit"),
         ("number" != typeof a || (0 | a) !== a || a < 0) &&
-          T(c, "opsLimit must be an unsigned integer"),
-        g(c, r, "memLimit"),
+          T(n, "opsLimit must be an unsigned integer"),
+        g(n, r, "memLimit"),
         ("number" != typeof r || (0 | r) !== r || r < 0) &&
-          T(c, "memLimit must be an unsigned integer");
-      var p = !!(0 | t._crypto_pwhash_str_needs_rehash(n, a, 0, r));
-      return d(c), p;
+          T(n, "memLimit must be an unsigned integer");
+      var p = !!(0 | t._crypto_pwhash_str_needs_rehash(c, a, 0, r));
+      return d(n), p;
     }
-    function K(_, a, r) {
+    function X(_, a, r) {
       var o = [];
       i(r),
         "string" != typeof _ && T(o, "hashed_password must be a string"),
         (_ = e(_ + "\0")),
-        null != n &&
-          _.length - 1 !== n &&
+        null != c &&
+          _.length - 1 !== c &&
           T(o, "invalid hashed_password length");
-      var c = E(_),
-        n = _.length - 1;
-      o.push(c);
+      var n = E(_),
+        c = _.length - 1;
+      o.push(n);
       var s = E((a = f(o, a, "password"))),
         p = a.length;
       o.push(s);
-      var h = !(0 | t._crypto_pwhash_str_verify(c, s, p, 0));
+      var h = !(0 | t._crypto_pwhash_str_verify(n, s, p, 0));
       return d(o), h;
     }
-    function X(_, a) {
+    function G(_, a) {
       var r = [];
       i(a),
         g(r, _, "length"),
@@ -1170,10 +1186,10 @@
       var e = new l(0 | _),
         o = e.address;
       r.push(o), t._randombytes_buf(o, _);
-      var c = h(e, a);
-      return d(r), c;
+      var n = h(e, a);
+      return d(r), n;
     }
-    function G(_, a, r) {
+    function D(_, a, r) {
       var e = [];
       i(r),
         g(e, _, "length"),
@@ -1181,23 +1197,23 @@
           T(e, "length must be an unsigned integer"),
         (a = f(e, a, "seed"));
       var o,
-        c = 0 | t._randombytes_seedbytes();
-      a.length !== c && T(e, "invalid seed length"), (o = E(a)), e.push(o);
-      var n = new l(0 | _),
-        s = n.address;
+        n = 0 | t._randombytes_seedbytes();
+      a.length !== n && T(e, "invalid seed length"), (o = E(a)), e.push(o);
+      var c = new l(0 | _),
+        s = c.address;
       e.push(s), t._randombytes_buf_deterministic(s, _, o);
-      var p = h(n, r);
+      var p = h(c, r);
       return d(e), p;
     }
-    function D(_) {
+    function F(_) {
       i(_), t._randombytes_close();
     }
-    function F(_) {
+    function V(_) {
       i(_);
       var a = t._randombytes_random() >>> 0;
       return d([]), a;
     }
-    function V(_, a) {
+    function W(_, a) {
       var r = [];
       i(a);
       for (var e = t._malloc(24), o = 0; o < 6; o++)
@@ -1221,10 +1237,10 @@
         S(r, "unsupported implementation"),
         d(r);
     }
-    function W(_) {
+    function H(_) {
       i(_), t._randombytes_stir();
     }
-    function H(_, a) {
+    function j(_, a) {
       var r = [];
       i(a),
         g(r, _, "upper_bound"),
@@ -1233,7 +1249,7 @@
       var e = t._randombytes_uniform(_) >>> 0;
       return d(r), e;
     }
-    function j() {
+    function z() {
       var _ = t._sodium_version_string(),
         a = t.UTF8ToString(_);
       return d([]), a;
@@ -1255,7 +1271,7 @@
           throw new TypeError("Arguments must have the same length");
         for (e = 0; e < t; e++) (r >>= 8), (r += _[e] + a[e]), (_[e] = 255 & r);
       }),
-      (_.base64_variants = n),
+      (_.base64_variants = c),
       (_.compare = function (_, a) {
         if (!(_ instanceof Uint8Array && a instanceof Uint8Array))
           throw new TypeError("Only Uint8Array instances can be compared");
@@ -1272,11 +1288,11 @@
         var r,
           e = [],
           o = new l((3 * (_ = f(e, _, "input")).length) / 4),
-          c = E(_),
-          n = u(4),
+          n = E(_),
+          c = u(4),
           p = u(4);
         return (
-          e.push(c),
+          e.push(n),
           e.push(o.address),
           e.push(o.result_bin_len_p),
           e.push(o.b64_end_p),
@@ -1284,15 +1300,15 @@
             t._sodium_base642bin(
               o.address,
               o.length,
-              c,
+              n,
               _.length,
               0,
-              n,
+              c,
               p,
               a
             ) && S(e, "invalid input"),
-          t.getValue(p, "i32") - c !== _.length && S(e, "incomplete input"),
-          (o.length = t.getValue(n, "i32")),
+          t.getValue(p, "i32") - n !== _.length && S(e, "incomplete input"),
+          (o.length = t.getValue(c, "i32")),
           (r = o.to_Uint8Array()),
           d(e),
           r
@@ -1303,14 +1319,14 @@
           r = [],
           e = new l((_ = f(r, _, "input")).length / 2),
           o = E(_),
-          c = u(4);
+          n = u(4);
         return (
           r.push(o),
           r.push(e.address),
           r.push(e.hex_end_p),
-          0 !== t._sodium_hex2bin(e.address, e.length, o, _.length, 0, 0, c) &&
+          0 !== t._sodium_hex2bin(e.address, e.length, o, _.length, 0, 0, n) &&
             S(r, "invalid input"),
-          t.getValue(c, "i32") - o !== _.length && S(r, "incomplete input"),
+          t.getValue(n, "i32") - o !== _.length && S(r, "incomplete input"),
           (a = e.to_Uint8Array()),
           d(r),
           a
@@ -1355,17 +1371,17 @@
         var r,
           e = [],
           o = u(4),
-          c = 1,
-          n = 0,
+          n = 1,
+          c = 0,
           s = 0 | _.length,
           p = new l(s + a);
         e.push(o), e.push(p.address);
         for (var h = p.address, y = p.address + s + a; h < y; h++)
-          (t.HEAPU8[h] = _[n]),
-            (n += c =
+          (t.HEAPU8[h] = _[c]),
+            (c += n =
               1 &
               ~(
-                ((65535 & (((s -= c) >>> 48) | (s >>> 32) | (s >>> 16) | s)) -
+                ((65535 & (((s -= n) >>> 48) | (s >>> 32) | (s >>> 16) | s)) -
                   1) >>
                 16
               ));
@@ -1400,7 +1416,7 @@
         return Object.keys(_).sort();
       }),
       (_.to_base64 = p),
-      (_.to_hex = c),
+      (_.to_hex = n),
       (_.to_string = o),
       _
     );

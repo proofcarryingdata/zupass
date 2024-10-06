@@ -6,9 +6,6 @@ code which is not relevant to Zupass.
 All cryptographic functions have been removed except those used by
 `@pcd/passport-crypto`.
 
-The JavaScript fallback code has been removed, as Zupass requires
-WebAssembly support.
-
 # libsodium.js
 
 ## Overview
