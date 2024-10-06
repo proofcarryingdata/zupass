@@ -129,7 +129,9 @@ export function SettingsBottomModal(): JSX.Element {
       <SettingsContainer>
         <UserTitleContainer>
           <Typography fontSize={20} fontWeight={800} align="center">
-            {state.self?.emails[0]}
+            {state.self?.emails.map((email) => {
+              return <div>{email}</div>;
+            })}
           </Typography>
         </UserTitleContainer>
         <SettingsActionContainer>

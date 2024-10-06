@@ -33,7 +33,11 @@ const TicketCardContainer = styled.div<{
     0px 4px 6px -1px rgba(0, 0, 0, 0.1);
 `;
 
-const TicketCardImage = styled.img`
+const TicketCardImage = styled.div<{ src?: string }>`
+  ${({ src }): string | undefined =>
+    src ? `background: url(${src});` : undefined}
+  background-size: cover;
+  background-position: 50% 50%;
   width: 100%;
   height: 100%;
 `;
