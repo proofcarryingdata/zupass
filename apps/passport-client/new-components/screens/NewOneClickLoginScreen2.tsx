@@ -10,6 +10,7 @@ import { Button2 } from "../shared/Button";
 import styled from "styled-components";
 import { TicketQR } from "@pcd/pod-ticket-pcd-ui";
 import { NewLoader } from "../shared/NewLoader";
+import { TicketCard } from "../shared/TicketCard";
 
 const TicketContainer = styled.div`
   border-radius: 16px;
@@ -32,7 +33,7 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 12px;
+  gap: 20px;
 `;
 
 const LoadingScreenContainer = styled.div`
@@ -165,14 +166,7 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
     } else {
       handleLoadTicketPreviews();
     }
-  }, [
-    self,
-    targetFolder,
-    handleLoadTicketPreviews,
-    redirectToTargetFolder,
-    email,
-    code
-  ]);
+  }, [self, targetFolder, handleLoadTicketPreviews, email, code]);
 
   const textOrLoader = (text: string): ReactNode => {
     if (loading) return <NewLoader columns={3} rows={2} color="white" />;
@@ -198,15 +192,26 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
       </AppContainer>
     );
   }
+
   return (
     <AppContainer noPadding bg="gray">
       <Container>
-        <OneClickTicket data={ticketPreviews[0]} />
+        <TicketCard
+          ticketWidth={"100%"}
+          title={ticketPreviews[0].eventName}
+          address={ticketPreviews[0].eventName}
+          imgSource={ticketPreviews[0].imageUrl}
+          ticketCount={ticketPreviews.length}
+          cardColor={
+            ticketPreviews[0].eventName.length % 2 ? "purple" : "orange"
+          }
+        />
         <Button2 onClick={handleOneClickLogin}>
           <Typography color="var(--text-white)" fontSize={18} fontWeight={500}>
             {textOrLoader("Continue to Zupass")}
           </Typography>
         </Button2>
+        <OneClickTicket data={ticketPreviews[0]} />
       </Container>
     </AppContainer>
   );
