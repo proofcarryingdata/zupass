@@ -40,7 +40,6 @@ import {
   v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
 import { assertUnreachable, sleep } from "@pcd/util";
-import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
@@ -68,7 +67,7 @@ import {
   saveSelf,
   saveSubscriptions
 } from "./localstorage";
-import { getPackages } from "./pcdPackages";
+import { fallbackDeserializeFunction, getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { findUserIdentityPCD } from "./user";
@@ -187,9 +186,6 @@ export type Action =
       type: "merge-import";
       collection: PCDCollection;
       pcdsToMergeIds: Set<PCD["id"]>;
-    }
-  | {
-      type: "initialize-strich";
     }
   | { type: "delete-account" }
   | {
@@ -353,8 +349,6 @@ export async function dispatch(
         action.collection,
         action.pcdsToMergeIds
       );
-    case "initialize-strich":
-      return initializeStrich(state, update);
     case "delete-account":
       return deleteAccount(state, update);
     case "show-embedded-screen":
@@ -834,7 +828,8 @@ async function loadAfterLogin(
 ): Promise<void> {
   const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
-    await getPackages()
+    await getPackages(),
+    fallbackDeserializeFunction
   );
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
@@ -1530,29 +1525,6 @@ async function removeAllPCDsInFolder(
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
   window.scrollTo({ top: 0 });
-}
-
-async function initializeStrich(
-  state: AppState,
-  update: ZuUpdate
-): Promise<void> {
-  if (!appConfig.strichLicenseKey) {
-    console.log("Strich license key is not defined");
-    return;
-  }
-  try {
-    await Promise.race([
-      StrichSDK.initialize(appConfig.strichLicenseKey),
-      sleep(10000)
-    ]);
-    if (StrichSDK.isInitialized()) {
-      update({ strichSDKstate: "initialized" });
-    } else {
-      update({ strichSDKstate: "error" });
-    }
-  } catch (e) {
-    update({ strichSDKstate: "error" });
-  }
 }
 
 async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {

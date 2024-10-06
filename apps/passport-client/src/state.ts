@@ -154,8 +154,6 @@ export interface AppState {
     error?: string;
   };
 
-  strichSDKstate: "initialized" | "error" | undefined;
-
   // If we're showing a screen in an embedded iframe or a dialog above an
   // embedded Zapp, the state of that screen.
   embeddedScreen?: EmbeddedScreenState;

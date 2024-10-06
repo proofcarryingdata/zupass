@@ -49,7 +49,7 @@
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",
     "mocha": "^10.2.0",
-    "poseidon-lite": "^0.2.1",
+    "poseidon-lite": "^0.3.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"
   },

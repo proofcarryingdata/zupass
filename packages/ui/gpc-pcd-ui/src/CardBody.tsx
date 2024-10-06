@@ -48,14 +48,18 @@ function GPCCardBody({ pcd }: { pcd: GPCPCD }): JSX.Element {
 
       <FieldLabel>Proof Config</FieldLabel>
       <p>This specifies what has been proven and revealed.</p>
-      <TextContainer style={{ overflowX: "auto" }}>
+      <TextContainer
+        style={{ overflowX: "auto", maxHeight: "200px", overflowY: "auto" }}
+      >
         <pre>{serializeGPCBoundConfig(pcd.claim.config, 2)}</pre>
       </TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Revealed Claims</FieldLabel>
       <p>These are the entries and metadata revealed in the proof.</p>
-      <TextContainer style={{ overflowX: "auto" }}>
+      <TextContainer
+        style={{ overflowX: "auto", maxHeight: "200px", overflowY: "auto" }}
+      >
         <pre>{serializeGPCRevealedClaims(pcd.claim.revealed, 2)}</pre>
       </TextContainer>
       <Spacer h={8} />

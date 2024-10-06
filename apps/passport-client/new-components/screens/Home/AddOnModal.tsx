@@ -1,11 +1,11 @@
-import React, { ReactElement, useState } from "react";
-import { BottomModal } from "../../shared/BottomModal";
-import { TicketQRWrapper } from "../../../components/shared/PCDCard";
-import styled from "styled-components";
-import { Typography } from "../../shared/Typography";
-import { Button2 } from "../../shared/Button";
+import { ReactElement, useState } from "react";
 import SwipeableViews from "react-swipeable-views";
+import styled from "styled-components";
+import { TicketQRWrapper } from "../../../components/shared/PCDCard";
 import { useBottomModal, useDispatch } from "../../../src/appHooks";
+import { BottomModal } from "../../shared/BottomModal";
+import { Button2 } from "../../shared/Button";
+import { Typography } from "../../shared/Typography";
 
 const QRContainer = styled.div`
   display: flex;
@@ -64,7 +64,6 @@ export const AddOnsModal = (): JSX.Element | null => {
   return (
     <BottomModal isOpen={activeModal.modalType === "ticket-add-ons"}>
       <SwipeableViews
-        id="test"
         containerStyle={{ width: "100%", paddingBottom: 12 }}
         slideStyle={{ padding: "0 10px" }}
         resistance={true}
