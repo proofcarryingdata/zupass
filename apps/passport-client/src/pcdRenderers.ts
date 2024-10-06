@@ -31,6 +31,8 @@ import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreIdentityPCDUI } from "@pcd/semaphore-identity-pcd-ui";
 import { SemaphoreSignaturePCDTypeName } from "@pcd/semaphore-signature-pcd";
 import { SemaphoreSignaturePCDUI } from "@pcd/semaphore-signature-pcd-ui";
+import { UnknownPCDTypeName } from "@pcd/unknown-pcd";
+import { UnknownPCDUI } from "@pcd/unknown-pcd-ui";
 import { ZKEdDSAEventTicketPCDTypeName } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { ZKEdDSAEventTicketPCDUI } from "@pcd/zk-eddsa-event-ticket-pcd-ui";
 
@@ -52,7 +54,8 @@ const renderablePCDs = [
   MessagePCDTypeName,
   PODPCDTypeName,
   PODTicketPCDTypeName,
-  GPCPCDTypeName
+  GPCPCDTypeName,
+  UnknownPCDTypeName
 ] as const;
 
 export type RenderablePCDType = (typeof renderablePCDs)[number];
@@ -76,5 +79,6 @@ export const pcdRenderers: {
   [MessagePCDTypeName]: MessagePCDUI,
   [PODPCDTypeName]: PODPCDUI,
   [PODTicketPCDTypeName]: PODTicketPCDUI,
-  [GPCPCDTypeName]: GPCPCDUI
+  [GPCPCDTypeName]: GPCPCDUI,
+  [UnknownPCDTypeName]: UnknownPCDUI
 };

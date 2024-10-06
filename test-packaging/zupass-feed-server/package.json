@@ -9,7 +9,6 @@
   "private": true,
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
-    "@types/circomlibjs": "^0.1.6",
     "@types/cors": "^2.8.14",
     "@types/express": "^4.17.17",
     "@types/json-bigint": "^1.0.2",

@@ -51,13 +51,6 @@ const define = {
         )
       }
     : {}),
-  ...(process.env.STRICH_LICENSE_KEY !== undefined
-    ? {
-        "process.env.STRICH_LICENSE_KEY": JSON.stringify(
-          process.env.STRICH_LICENSE_KEY
-        )
-      }
-    : {}),
   ...(process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined
     ? {
         "process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE": JSON.stringify(
@@ -141,11 +134,6 @@ async function run(command: string): Promise<void> {
 
   switch (command) {
     case "build":
-      if (!define["process.env.STRICH_LICENSE_KEY"]) {
-        console.warn(
-          "STRICH_LICENSE_KEY is not defined, fallback QR code reader will be used"
-        );
-      }
       const appRes = await build({ ...appOpts, minify: true });
       console.error("Built client");
 

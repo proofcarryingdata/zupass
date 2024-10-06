@@ -47,7 +47,6 @@
     "postinstall": "patch-package"
   },
   "devDependencies": {
-    "@types/circomlibjs": "0.1.6",
     "@types/node": "^20.11.28",
     "plop": "^4.0.1",
     "prettier": "^3.0.0",
