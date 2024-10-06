@@ -15,8 +15,7 @@ export const DeleteAccountModal = (): ReactElement => {
     if (
       window.confirm(
         "Are you sure you want to delete your account? This action cannot be undone."
-      ) &&
-      window.confirm("Are you really sure?")
+      )
     ) {
       dispatch({ type: "delete-account" });
     }
@@ -47,7 +46,7 @@ export const DeleteAccountModal = (): ReactElement => {
             DELETE ACCOUNT
           </Typography>
           <Typography fontSize={16} color="var(--text-primary)">
-            Please confirm if you want to delete your account.
+            Please confirm that you want to delete your account.
           </Typography>
         </TextBlock>
         <Input2 disabled value={self?.emails[0]} />
