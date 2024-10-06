@@ -974,7 +974,8 @@ function userInvalid(update: ZuUpdate): void {
 function anotherDeviceChangedPassword(update: ZuUpdate): void {
   update({
     anotherDeviceChangedPassword: true,
-    modal: { modalType: "another-device-changed-password" }
+    modal: { modalType: "another-device-changed-password" },
+    bottomModal: { modalType: "another-device-changed-password" }
   });
 }
 
