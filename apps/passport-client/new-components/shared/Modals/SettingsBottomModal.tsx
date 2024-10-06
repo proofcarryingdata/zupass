@@ -22,9 +22,6 @@ import {
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { Typography } from "../Typography";
-import { Accordion } from "../Accordion";
-import { title } from "process";
-import { email } from "valibot";
 
 interface SettingItem {
   title: string;
