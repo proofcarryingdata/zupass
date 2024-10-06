@@ -426,7 +426,7 @@ export const ManageEmailModal = (): JSX.Element => {
               setEmailToRemove(email);
               setEmailManagerState(EmailManagerState.deleteEmail);
             }}
-            canEdit={!emailManagerState}
+            canEdit={emails.length === 1 && !emailManagerState}
             onEdit={(): void => {
               setOldEmail(email);
               setEmailManagerState(EmailManagerState.changeEmail);
