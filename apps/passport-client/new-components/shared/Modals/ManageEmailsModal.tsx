@@ -58,7 +58,7 @@ export const ManageEmailModal = (): JSX.Element => {
 
   const [emailToRemove, setEmailToRemove] = useState("");
   const [emailToRemoveText, setEmailToRemoveText] = useState("");
-
+  const errorOrLoading = !!error || loading;
   const reset = (): void => {
     startTransition((): void => {
       setConfirmationCode("");
@@ -127,6 +127,7 @@ export const ManageEmailModal = (): JSX.Element => {
       } else if (!response.success) {
         setError(getEmailUpdateErrorMessage(response.error));
         setLoading(false);
+        return;
       }
 
       setEmailManagerState(
@@ -344,7 +345,7 @@ export const ManageEmailModal = (): JSX.Element => {
         <Button2
           variant="danger"
           onClick={onRemoveEmail}
-          disabled={emailToRemove !== emailToRemoveText}
+          disabled={errorOrLoading || emailToRemove !== emailToRemoveText}
         >
           {textOrLoader("Delete")}
         </Button2>
@@ -399,6 +400,7 @@ export const ManageEmailModal = (): JSX.Element => {
               ? onChangeEmail()
               : sendConfirmationCode();
           }}
+          disabled={errorOrLoading}
         >
           {textOrLoader(
             emailManagerState ===
@@ -420,11 +422,12 @@ export const ManageEmailModal = (): JSX.Element => {
             email={email}
             canDelete={emails.length > 1}
             disabled
-            onDelete={() => {
+            onDelete={(): void => {
               setEmailToRemove(email);
               setEmailManagerState(EmailManagerState.deleteEmail);
             }}
-            onEdit={() => {
+            canEdit={!emailManagerState}
+            onEdit={(): void => {
               setOldEmail(email);
               setEmailManagerState(EmailManagerState.changeEmail);
             }}
@@ -448,6 +451,7 @@ export const ManageEmailModal = (): JSX.Element => {
               ? setEmailManagerState(EmailManagerState.addEmail)
               : sendConfirmationCode();
           }}
+          disabled={errorOrLoading}
         >
           {textOrLoader(
             !emailManagerState ? "Add email" : "Get confirmation code"
@@ -472,6 +476,7 @@ export const ManageEmailModal = (): JSX.Element => {
           onClick={() => {
             verifyCode();
           }}
+          disabled={errorOrLoading}
         >
           {textOrLoader("Verify")}
         </Button2>
@@ -524,6 +529,7 @@ const EmailInput = ({
   disabled,
   error,
   onEdit,
+  canEdit,
   onDelete,
   canDelete
 }: {
@@ -532,6 +538,7 @@ const EmailInput = ({
   disabled?: boolean;
   error?: string;
   onEdit?: () => void;
+  canEdit?: boolean;
   onDelete?: () => void;
   canDelete?: boolean;
 }): JSX.Element => {
@@ -547,15 +554,18 @@ const EmailInput = ({
       />
       {disabled && (
         <IconsContainer>
-          {/* commenting out since not sure how to approach */}
-          <PencilIcon
-            color="var(--core-accent)"
-            width={20}
-            height={20}
-            onClick={onEdit}
-          />
+          {canEdit && (
+            <PencilIcon
+              style={{ cursor: "pointer" }}
+              color="var(--core-accent)"
+              width={20}
+              height={20}
+              onClick={onEdit}
+            />
+          )}
           {canDelete && (
             <TrashIcon
+              style={{ cursor: "pointer" }}
               color="var(--core-accent)"
               width={20}
               height={20}
