@@ -138,14 +138,19 @@ export function useZappServer(mode: ListenMode): void {
         approved = true;
       }
 
-      if (!approved) {
-        window.location.hash = "approve-permissions";
-        advice.showClient();
-        approved = await waitForPermissionApproval(context);
-        advice.hideClient();
-
+      if (mode === ListenMode.LISTEN_IF_NOT_EMBEDDED) {
+        approved = true;
+        await context.dispatch({ type: "zapp-approval", approved });
+      } else {
         if (!approved) {
-          throw new Error("User did not approve Zapp permissions");
+          window.location.hash = "approve-permissions";
+          advice.showClient();
+          approved = await waitForPermissionApproval(context);
+          advice.hideClient();
+
+          if (!approved) {
+            throw new Error("User did not approve Zapp permissions");
+          }
         }
       }
 
