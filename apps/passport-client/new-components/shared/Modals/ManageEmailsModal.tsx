@@ -475,6 +475,7 @@ export const ManageEmailModal = (): JSX.Element => {
         <Button2
           onClick={() => {
             verifyCode();
+            reset();
           }}
           disabled={errorOrLoading}
         >
