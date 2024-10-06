@@ -311,6 +311,8 @@ export const ManageEmailModal = (): JSX.Element => {
           emails: response.value.newEmailList
         }
       });
+      reset();
+
       stateContext.update({
         extraSubscriptionFetchRequested: true
       });
