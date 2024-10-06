@@ -140,6 +140,6 @@ export async function initTestData(
     });
 
     pcds.add(pcd, { upsert: true });
-    pcds.setFolder(pcd.id, ticket);
+    pcds.setFolder(pcd.id, "tickets/eventTickets");
   }
 }
