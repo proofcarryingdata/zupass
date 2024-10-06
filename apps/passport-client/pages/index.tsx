@@ -144,7 +144,7 @@ function RouterImpl(): JSX.Element {
   return (
     <HashRouter>
       <Routes>
-        <Route path="/new">
+        <Route path="/">
           <Route index element={<NewHomeScreen />} />
           <Route path="login" element={<NewLoginScreen />} />
           <Route path="new-passport" element={<NewPassportScreen2 />} />
@@ -165,41 +165,17 @@ function RouterImpl(): JSX.Element {
           <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
           <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
           <Route path="terms" element={<NewTermsScreen />} />
-        </Route>
-        <Route path="/">
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
-
-          <Route path="components" element={<ComponentsScreen />} />
-          <Route
-            path="login-interstitial"
-            element={<LoginInterstitialScreen />}
-          />
-          <Route
-            path="already-registered"
-            element={<AlreadyRegisteredScreen />}
-          />
-          <Route path="sync-existing" element={<SyncExistingScreen />} />
-          <Route path="privacy-notice" element={<PrivacyNoticeScreen />} />
-          <Route path="create-password" element={<CreatePasswordScreen />} />
-          <Route path="change-password" element={<ChangePasswordScreen />} />
-          <Route path="change-email" element={<ChangeEmailScreen />} />
-          <Route path="add-email" element={<AddEmailScreen />} />
-          <Route path="remove-email" element={<RemoveEmailScreen />} />
-          <Route
+          {/* <Route
             path="one-click-login/:email/:code/:targetFolder"
             element={<OneClickLoginScreen />}
-          />
+          />  */}
           <Route
             path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
             element={<NewOneClickLoginScreen2 />}
           />
-          <Route
-            path="enter-confirmation-code"
-            element={<EnterConfirmationCodeScreen />}
-          />
-          <Route path="new-passport" element={<NewPassportScreen />} />
           <Route
             path="get-without-proving"
             element={<GetWithoutProvingScreen />}
@@ -218,7 +194,6 @@ function RouterImpl(): JSX.Element {
             element={<FrogSubscriptionScreen />}
           />
           <Route path="server-error" element={<ServerErrorScreen />} />
-          <Route path="import" element={<ImportBackupScreen />} />
           <Route
             path="generic-checkin"
             element={<PodboxScannedTicketScreen />}
