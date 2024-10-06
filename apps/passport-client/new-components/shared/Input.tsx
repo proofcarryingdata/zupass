@@ -88,33 +88,26 @@ export const Input2 = forwardRef(
   (inputProps: NewInputProps, ref: ForwardedRef<HTMLInputElement>) => {
     const { error, variant } = inputProps;
     const defaultVariant = variant ?? "primary";
-    if (error) {
-      return (
-        <ErrorContainer>
-          <PasswordInputContainer>
-            <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />
-            {inputProps.endIcon && (
-              <IconContainer>{inputProps.endIcon}</IconContainer>
-            )}
-          </PasswordInputContainer>
-          <Typography
-            color="var(--new-danger)"
-            style={{
-              marginLeft: 12
-            }}
-          >
-            {error}
-          </Typography>
-        </ErrorContainer>
-      );
-    }
+    const errorComp = (
+      <Typography
+        color="var(--new-danger)"
+        style={{
+          marginLeft: 12
+        }}
+      >
+        {error}
+      </Typography>
+    );
     return (
-      <PasswordInputContainer>
-        <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />
-        {inputProps.endIcon && (
-          <IconContainer>{inputProps.endIcon}</IconContainer>
-        )}
-      </PasswordInputContainer>
+      <ErrorContainer>
+        <PasswordInputContainer>
+          <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />
+          {inputProps.endIcon && (
+            <IconContainer>{inputProps.endIcon}</IconContainer>
+          )}
+        </PasswordInputContainer>
+        {error && errorComp}
+      </ErrorContainer>
     );
   }
 );
