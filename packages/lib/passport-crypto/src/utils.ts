@@ -1,6 +1,6 @@
+import sodium from "@pcd/libsodium-wrappers-sumo";
 import { Buffer } from "buffer";
 import nodeCrypto from "crypto";
-import sodium from "libsodium-wrappers-sumo";
 
 // This is necessary as libsodium-wrappers-sumo is a CommonJS package and
 // doesn't support importing individual items properly.
