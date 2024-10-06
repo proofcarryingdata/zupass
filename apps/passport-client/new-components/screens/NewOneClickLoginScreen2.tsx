@@ -1,4 +1,4 @@
-import React, { ReactNode, useCallback, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelf } from "../../src/appHooks";
 import { useParams } from "react-router-dom";
 import { IPODTicketData } from "@pcd/pod-ticket-pcd";
@@ -165,14 +165,7 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
     } else {
       handleLoadTicketPreviews();
     }
-  }, [
-    self,
-    targetFolder,
-    handleLoadTicketPreviews,
-    redirectToTargetFolder,
-    email,
-    code
-  ]);
+  }, [self, targetFolder, handleLoadTicketPreviews, email, code]);
 
   const textOrLoader = (text: string): ReactNode => {
     if (loading) return <NewLoader columns={3} rows={2} color="white" />;

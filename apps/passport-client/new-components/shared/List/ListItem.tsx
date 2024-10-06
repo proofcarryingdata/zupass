@@ -1,7 +1,8 @@
-import styled, { css } from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { Typography } from "../Typography";
 import { FaChevronRight } from "react-icons/fa";
 import { Avatar } from "../Avatar";
+import { ReactElement } from "react";
 
 export type ListItemVariant = "primary" | "danger";
 export type ListItemType = {
@@ -13,7 +14,7 @@ export type ListItemType = {
   onClick?: () => void;
 };
 
-const getVariantColor = (variant: ListItemVariant) => {
+const getVariantColor = (variant: ListItemVariant): string => {
   switch (variant) {
     case "danger":
       return "var(--new-danger)";
@@ -39,8 +40,9 @@ const ListItemContainer = styled.div<{
   width: 100%;
   align-items: center;
   gap: 16px;
-  color: ${({ variant }) => getVariantColor(variant)};
-  ${({ isClickable }) => (isClickable ? listItemClickableCSS : undefined)};
+  color: ${({ variant }): string => getVariantColor(variant)};
+  ${({ isClickable }): FlattenSimpleInterpolation | undefined =>
+    isClickable ? listItemClickableCSS : undefined};
 `;
 
 const ListItemRightContainer = styled.div<{ showBottomBorder: boolean }>`
@@ -50,7 +52,7 @@ const ListItemRightContainer = styled.div<{ showBottomBorder: boolean }>`
   height: 56px;
   align-items: center;
   justify-content: space-between;
-  ${({ showBottomBorder }) =>
+  ${({ showBottomBorder }): string | undefined =>
     showBottomBorder
       ? "border-bottom: 1px solid rgba(0, 0, 0, 0.05);"
       : undefined};
@@ -71,7 +73,7 @@ export const ListItem = ({
   variant,
   showBottomBorder,
   onClick
-}: ListItemType) => {
+}: ListItemType): ReactElement => {
   const defaultVariant = variant ?? "primary";
   const defaultShowBottomBorder =
     showBottomBorder !== undefined ? showBottomBorder : true;

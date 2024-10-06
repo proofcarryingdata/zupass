@@ -1,13 +1,12 @@
-import React, { ReactNode, useCallback } from "react";
+import { ReactElement, useCallback } from "react";
 import { BottomModal } from "../BottomModal";
 import { useBottomModal, useDispatch, useSelf } from "../../../src/appHooks";
 import styled from "styled-components";
 import { Button2 } from "../Button";
 import { Typography } from "../Typography";
-import { NewLoader } from "../NewLoader";
 import { Input2 } from "../Input";
 
-export const DeleteAccountModal = (props: {}) => {
+export const DeleteAccountModal = (): ReactElement => {
   const state = useBottomModal();
   const self = useSelf();
   const dispatch = useDispatch();

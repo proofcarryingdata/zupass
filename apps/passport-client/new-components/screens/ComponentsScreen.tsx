@@ -147,7 +147,7 @@ const ComponentsScreen = (): JSX.Element => {
                   },
                   {
                     title: "AttendeeName",
-                    onClick() {
+                    onClick(): void {
                       console.log("Example onclick accordion item");
                     }
                   },

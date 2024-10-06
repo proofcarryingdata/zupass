@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
-import styled, { css } from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { Typography } from "../Typography";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 
@@ -30,7 +30,8 @@ const Container = styled.div<{ open: boolean }>`
   border-right: 1.15px solid #eceaf4;
   background: #f6f8fd;
   border-radius: 10px;
-  ${({ open }) => (open ? parentContainerOpenCss : undefined)}
+  ${({ open }): FlattenSimpleInterpolation | undefined =>
+    open ? parentContainerOpenCss : undefined}
 `;
 
 const closedCss = css`
@@ -45,7 +46,8 @@ const HeaderContainer = styled.div<{ open: boolean }>`
   color: var(--text-tertiary);
   border-bottom: 1.15px solid #eceaf4;
   cursor: pointer;
-  ${({ open }) => (!open ? closedCss : undefined)}
+  ${({ open }): FlattenSimpleInterpolation | undefined =>
+    !open ? closedCss : undefined}
 `;
 
 const ToggleContainer = styled.div`
@@ -58,8 +60,8 @@ const ToggleContainer = styled.div`
 const AccordionItem = styled.div<{ lastItem: boolean; clickable: boolean }>`
   padding: 12px 16px;
   color: var(--text-primary);
-  cursor: ${({ clickable }) => (clickable ? "pointer" : "unset")};
-  ${({ lastItem }) =>
+  cursor: ${({ clickable }): string => (clickable ? "pointer" : "unset")};
+  ${({ lastItem }): string | undefined =>
     !lastItem ? "border-bottom: 1.15px solid #eceaf4;" : undefined}
 `;
 export const Accordion = forwardRef<AccordionRef, AccordionProps>(
@@ -68,16 +70,16 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
 
     useImperativeHandle(ref, () => {
       return {
-        open() {
+        open(): void {
           setOpen(true);
         },
-        close() {
+        close(): void {
           setOpen(false);
         },
-        toggle() {
+        toggle(): void {
           setOpen((old) => !old);
         },
-        getState() {
+        getState(): boolean {
           return open;
         }
       };
