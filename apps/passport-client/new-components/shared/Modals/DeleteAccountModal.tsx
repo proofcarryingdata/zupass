@@ -47,7 +47,7 @@ export const DeleteAccountModal = (): ReactElement => {
             DELETE ACCOUNT
           </Typography>
           <Typography fontSize={16} color="var(--text-primary)">
-            Please confirm if you want to delete this email from your account.
+            Please confirm if you want to delete your account.
           </Typography>
         </TextBlock>
         <Input2 disabled value={self?.emails[0]} />
