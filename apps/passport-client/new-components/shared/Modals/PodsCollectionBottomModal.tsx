@@ -3,7 +3,7 @@ import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { intersectionWith } from "lodash";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
@@ -16,6 +16,11 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
+import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
+import {
+  getDisplayOptions as getPodDisplayOptions,
+  isPODPCD
+} from "@pcd/pod-pcd";
 
 const getActivePod = (
   collection: PCDCollection,
@@ -32,6 +37,37 @@ const getActivePod = (
       );
   } else {
     return collection.getById(activePodId);
+  }
+};
+
+const isEmailPCD = (pcd: PCD<unknown, unknown>): pcd is EmailPCD =>
+  pcd.type === EmailPCDTypeName;
+
+const getPcdName = (pcd: PCD<unknown, unknown>): string => {
+  switch (true) {
+    case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
+      return pcd.claim.ticket.eventName + " - " + pcd.claim.ticket.ticketName;
+    case isEmailPCD(pcd):
+      return pcd.claim.emailAddress;
+    case isPODPCD(pcd):
+      return getPodDisplayOptions(pcd).displayName ?? pcd.id;
+    default:
+      return pcd.id;
+  }
+};
+
+const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
+  switch (true) {
+    case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
+      return <Avatar imgSrc={pcd.claim.ticket.imageUrl} />;
+    case isPODPCD(pcd):
+      const imageUrl = pcd.claim.entries["zupass_image_url"]?.value;
+      if (typeof imageUrl === "string") {
+        return <Avatar imgSrc={imageUrl} />;
+      }
+      return undefined;
+    default:
+      return undefined;
   }
 };
 export const PodsCollectionBottomModal = (): JSX.Element | null => {
@@ -77,14 +113,8 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       const pcd = filteredPcds.find((pcd) => pcd.id === key);
       if (!pcd) continue;
 
-      const edsaIsTicket = isEdDSATicketPCD(pcd);
-      const podIsTicket = isPODTicketPCD(pcd);
-
-      const isTicket = edsaIsTicket || podIsTicket;
       result[value].children.push({
-        title: isTicket
-          ? pcd.claim.ticket.eventName + " - " + pcd.claim.ticket.ticketName
-          : pcd.type,
+        title: getPcdName(pcd),
         key: pcd.id,
         onClick: () => {
           listContainerRef.current &&
@@ -94,9 +124,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
             modal: { modalType: "pods-collection", activePodId: pcd.id }
           });
         },
-        LeftIcon: isTicket ? (
-          <Avatar imgSrc={pcd.claim.ticket.imageUrl} />
-        ) : undefined
+        LeftIcon: getPCDImage(pcd)
       });
     }
 

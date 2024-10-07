@@ -7,21 +7,18 @@ import {
   InformationCircleIcon,
   TrashIcon
 } from "@heroicons/react/24/solid";
-import { serializeStorage } from "@pcd/passport-interface";
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import styled from "styled-components";
 import {
   useBottomModal,
   useDispatch,
   useHasSetupPassword,
-  usePCDCollection,
-  useSelf,
-  useStateContext,
-  useSubscriptions
+  useStateContext
 } from "../../../src/appHooks";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { Typography } from "../Typography";
+import { useExport } from "../utils";
 
 interface SettingItem {
   title: string;
@@ -90,7 +87,18 @@ export function SettingsBottomModal(): JSX.Element {
       {
         title: "Export",
         icon: <ArrowDownTrayIcon width={24} height={24} color="#7C8BB4" />,
-        onClick: exportData
+        onClick: async (): Promise<void> => {
+          await exportData();
+          dispatch({
+            type: "set-bottom-modal",
+            modal: {
+              modalType: "success-modal",
+              title: "EXPORT SUCCESSFUL",
+              description:
+                "Your data has been exported and sent to your local folder."
+            }
+          });
+        }
       },
       {
         title: "Logout",
@@ -207,32 +215,3 @@ const SettingsItemButton = styled.div<{ $variant?: "danger" }>`
   }
   ${({ $variant }): string => ($variant === "danger" ? `color: red;` : "")}
 `;
-
-const useExport = (): (() => void) => {
-  const user = useSelf();
-  const pcds = usePCDCollection();
-  const subscriptions = useSubscriptions();
-
-  return useCallback(async () => {
-    if (!user) return;
-    // Since we already use this data for remote sync, we know that it's
-    // sufficient for loading an account on to a new device.
-    const { serializedStorage, storageHash } = await serializeStorage(
-      user,
-      pcds,
-      subscriptions.value
-    );
-
-    // Data in a data URL must be Base64-encoded
-    const data = Buffer.from(JSON.stringify(serializedStorage)).toString(
-      "base64"
-    );
-
-    // Trigger the download
-    const link = document.createElement("a");
-    link.href = `data://text/json;base64,${data}`;
-    link.download = `zupass-${storageHash}.json`;
-    link.click();
-    link.remove();
-  }, [user, pcds, subscriptions]);
-};

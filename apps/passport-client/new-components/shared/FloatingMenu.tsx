@@ -1,6 +1,7 @@
 import { Cog6ToothIcon, Square3Stack3DIcon } from "@heroicons/react/24/solid";
 import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
+import { Typography } from "./Typography";
 
 const FloatingMenuContainer = styled.div`
   position: fixed;
@@ -8,26 +9,30 @@ const FloatingMenuContainer = styled.div`
   align-items: center;
   justify-content: space-between;
   bottom: 20px;
-  background-color: #ffffff;
-
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
   z-index: 2;
-  min-height: 56px;
   left: 50%;
   transform: translateX(-50%);
-  box-shadow: 0px 1px 3px 0px #0000001a;
-
-  padding: 8px 20px 8px 20px;
+  padding: 10px 24px;
   border-radius: 200px;
-  opacity: 0px;
 `;
 
 const FloatingMenuItem = styled.div`
-  width: 48px;
+  width: 56px;
   height: 40px;
   justify-content: center;
   align-items: center;
   display: flex;
   cursor: pointer;
+`;
+
+const IconContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  opacity: 0.8;
 `;
 
 export const FloatingMenu = (): JSX.Element => {
@@ -42,7 +47,17 @@ export const FloatingMenu = (): JSX.Element => {
           });
         }}
       >
-        <Square3Stack3DIcon color="#000000" opacity={0.6} height={24} />
+        <IconContainer>
+          <Square3Stack3DIcon color="inherit" height={24} />
+          <Typography
+            fontSize={10}
+            fontWeight={500}
+            family="Rubik"
+            color="inherit"
+          >
+            PODS
+          </Typography>
+        </IconContainer>
       </FloatingMenuItem>
       <FloatingMenuItem
         onClick={() =>
@@ -52,7 +67,17 @@ export const FloatingMenu = (): JSX.Element => {
           })
         }
       >
-        <Cog6ToothIcon color="#000000" opacity={0.6} height={24} />
+        <IconContainer>
+          <Cog6ToothIcon color="inherit" height={24} />
+          <Typography
+            fontSize={10}
+            fontWeight={500}
+            family="Rubik"
+            color="inherit"
+          >
+            SETTINGS
+          </Typography>
+        </IconContainer>
       </FloatingMenuItem>
     </FloatingMenuContainer>
   );
