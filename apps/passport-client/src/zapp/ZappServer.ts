@@ -118,6 +118,9 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
     collectionId: string,
     query: PODQuery
   ): Promise<string> {
+    if (!this.getPermissions().READ_POD?.collections.includes(collectionId)) {
+      throw new MissingPermissionError("READ_POD", "pod.query");
+    }
     return this.querySubscriptionManager.addSubscription(collectionId, query);
   }
 
