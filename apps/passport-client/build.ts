@@ -149,6 +149,26 @@ async function run(command: string): Promise<void> {
         ...serviceWorkerOpts,
         minify: true
       });
+
+      // Create a array of generated chunks for use with the service worker
+      const generatedChunks = Object.keys(appRes.metafile?.outputs || {})
+        .filter((output) => !output.endsWith(".map")) // Exclude .map files
+        .map((output) => output.replace("public", ""));
+
+      // replace the generated chunks placeholder with the actual chunks
+      let serviceWorkerSource = fs.readFileSync(
+        path.join("public", "service-worker.js"),
+        "utf-8"
+      );
+      serviceWorkerSource = serviceWorkerSource.replace(
+        "self.__CHUNKS",
+        JSON.stringify(generatedChunks)
+      );
+      fs.writeFileSync(
+        path.join("public", "service-worker.js"),
+        serviceWorkerSource
+      );
+
       console.error("Built service worker");
       break;
     case "dev":
