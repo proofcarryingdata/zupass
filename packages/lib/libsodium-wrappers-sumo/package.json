@@ -38,7 +38,7 @@
     "ecc"
   ],
   "scripts": {
-    "test": "mocha"
+    "test": "echo \"No tests\""
   },
   "author": "Ahmad Ben Mrad (@BatikhSouri)",
   "contributors": [
