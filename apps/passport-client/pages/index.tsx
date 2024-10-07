@@ -16,32 +16,33 @@ import {
   TextCenter
 } from "../components/core";
 import { RippleLoader } from "../components/core/RippleLoader";
-import { AddEmailScreen } from "../components/screens/AddEmailScreen";
+// Go over all the files and remove what not needed
+// import { AddEmailScreen } from "../components/screens/AddEmailScreen";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
-import { ChangeEmailScreen } from "../components/screens/ChangeEmailScreen";
-import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
+// import { ChangeEmailScreen } from "../components/screens/ChangeEmailScreen";
+// import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { EmbeddedScreen } from "../components/screens/EmbeddedScreens/EmbeddedScreen";
-import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
+// import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
-import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
+// import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
-import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
-import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
-import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
+// import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
+// import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
+// import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
-import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
-import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
-import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
-import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
+// import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
+// import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
+// import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
+// import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
-import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
+// import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
@@ -56,7 +57,6 @@ import {
   GlobalBackground
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
-import ComponentsScreen from "../new-components/screens/ComponentsScreen";
 import { NewHomeScreen } from "../new-components/screens/Home";
 import { NewAlreadyRegisteredScreen } from "../new-components/screens/Login/NewAlreadyRegisteredScreen";
 import { NewCreatePasswordScreen } from "../new-components/screens/Login/NewCreatePasswordScreen";
