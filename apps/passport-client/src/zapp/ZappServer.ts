@@ -257,9 +257,9 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
     request: p.PodspecProofRequest;
     collectionIds?: string[];
   }): Promise<ProveResult> {
-    collectionIds =
+    const realCollectionIds =
       collectionIds ?? this.getPermissions().REQUEST_PROOF?.collections ?? [];
-    const pods = this.getPODsIfPermitted(collectionIds, "gpc.prove");
+    const pods = this.getPODsIfPermitted(realCollectionIds, "gpc.prove");
     const prs = p.proofRequest(request);
 
     const ticketPods = this.getContext()
@@ -285,7 +285,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
         screen: {
           type: EmbeddedScreenType.EmbeddedGPCProof,
           proofRequest: request,
-          collectionIds,
+          collectionIds: realCollectionIds,
           callback: (result: ProveResult) => {
             this.getContext().dispatch({
               type: "hide-embedded-screen"
