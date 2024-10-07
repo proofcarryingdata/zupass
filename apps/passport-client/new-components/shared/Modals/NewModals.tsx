@@ -9,6 +9,7 @@ import { ManageEmailModal } from "./ManageEmailsModal";
 import { PodsCollectionBottomModal } from "./PodsCollectionBottomModal";
 import { SettingsBottomModal } from "./SettingsBottomModal";
 import { SuccessModal } from "./SuccessModal";
+import { SessionExpiredModal } from "./SessionExpiredModal";
 
 export const NewModals = React.memo((): JSX.Element => {
   const { modalType } = useBottomModal();
@@ -38,6 +39,7 @@ export const NewModals = React.memo((): JSX.Element => {
       <ManageEmailModal />
       <DeleteAccountModal />
       <ImportModal />
+      <SessionExpiredModal />
     </>
   );
 });

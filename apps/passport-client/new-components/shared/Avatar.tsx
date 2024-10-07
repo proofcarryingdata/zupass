@@ -23,10 +23,12 @@ const Outer = styled.div<{ size: number }>`
   background: #e4eaff;
 `;
 
-const AvatarImage = styled.img`
-  flex-shrink: 0;
-  min-height: 100%;
-  min-width: 100%;
+const AvatarImage = styled.div<{ src: string }>`
+  background: url(${({ src }): string => src});
+  background-size: cover;
+  background-position: 50% 50%;
+  width: 100%;
+  height: 100%;
 `;
 
 export const Avatar = ({ imgSrc }: IconProps): ReactElement => {
