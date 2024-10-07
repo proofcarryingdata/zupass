@@ -965,9 +965,11 @@ async function saveNewPasswordAndBroadcast(
 }
 
 function userInvalid(update: ZuUpdate): void {
+  console.log("user is invalid");
   update({
     userInvalid: true,
-    modal: { modalType: "invalid-participant" }
+    modal: { modalType: "invalid-participant" },
+    bottomModal: { modalType: "invalid-participant" }
   });
 }
 

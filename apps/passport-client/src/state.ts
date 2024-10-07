@@ -36,6 +36,7 @@ export interface AppState {
     | { modalType: "settings" }
     | { modalType: "change-password" }
     | { modalType: "another-device-changed-password" }
+    | { modalType: "invalid-participant" }
     | { modalType: "success-modal"; title: string; description: string }
     | { modalType: "about" }
     | { modalType: "import" }

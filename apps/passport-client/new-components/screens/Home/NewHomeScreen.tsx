@@ -17,7 +17,8 @@ import {
   useDispatch,
   useLoadedIssuedPCDs,
   usePCDs,
-  useSelf
+  useSelf,
+  useUserForcedToLogout
 } from "../../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
@@ -222,6 +223,7 @@ export const NewHomeScreen = (): ReactElement => {
   const navigate = useNavigate();
   const isLoadedPCDs = useLoadedIssuedPCDs();
 
+  const isInvalidUser = useUserForcedToLogout();
   useEffect(() => {
     if (!self) {
       navigate("/new/login", { replace: true });
@@ -232,7 +234,8 @@ export const NewHomeScreen = (): ReactElement => {
     (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
     SCREEN_HORIZONTAL_PADDING * 2;
 
-  if (!isLoadedPCDs) {
+  // if not loaded pcds yet and the user session is valid
+  if (!isLoadedPCDs && !isInvalidUser) {
     return (
       <AppContainer fullscreen={true} bg="gray">
         <LoadingScreenContainer>
@@ -249,13 +252,14 @@ export const NewHomeScreen = (): ReactElement => {
     );
   }
 
+  // if the user is invalid we show empty card and trigger a session invalid modal
   return (
     <AppContainer
       bg="gray"
       noPadding={tickets.length > 0}
       fullscreen={tickets.length > 0}
     >
-      {!tickets.length && <EmptyCard />}
+      {(!tickets.length || isInvalidUser) && <EmptyCard />}
       {tickets.length > 0 && (
         <>
           <SwipeViewContainer>
