@@ -241,7 +241,7 @@ await z.pod.insert(pod);
               });
 
               const pod = await z.pod.sign(entries);
-              await z.pod.collection("Tickets").insert(pod);
+              await z.pod.collection("Apples").insert(pod);
               setTicket(pod);
             }}
             label="Generate Ticket"
@@ -271,7 +271,8 @@ const request = ticketProofRequest({
     ]
   ],
   fieldsToReveal: {
-    eventId: true
+    attendeeName: true,
+    attendeeEmail: true
   }
 });
 
@@ -288,7 +289,8 @@ const gpcProof = await z.gpc.prove({ request: request.schema });
                     [await z.identity.getPublicKey(), EVENT_ID]
                   ],
                   fieldsToReveal: {
-                    eventId: true
+                    attendeeName: true,
+                    attendeeEmail: true
                   }
                 });
                 setProveResult(await z.gpc.prove({ request: request.schema }));
