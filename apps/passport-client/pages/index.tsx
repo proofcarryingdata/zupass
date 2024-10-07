@@ -180,9 +180,14 @@ function RouterImpl(): JSX.Element {
           <Route path="halo" element={<HaloScreen />} />
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
-          <React.Suspense fallback={<RippleLoader />}>
-            <Route path="scan" element={<LazyScanScreen />} />
-          </React.Suspense>
+          <Route
+            path="scan"
+            element={
+              <React.Suspense fallback={<RippleLoader />}>
+                <LazyScanScreen />
+              </React.Suspense>
+            }
+          />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
