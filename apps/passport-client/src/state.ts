@@ -35,6 +35,7 @@ export interface AppState {
       }
     | { modalType: "settings" }
     | { modalType: "change-password" }
+    | { modalType: "another-device-changed-password" }
     | { modalType: "success-modal"; title: string; description: string }
     | { modalType: "about" }
     | { modalType: "import" }
@@ -153,8 +154,6 @@ export interface AppState {
     imported?: number;
     error?: string;
   };
-
-  strichSDKstate: "initialized" | "error" | undefined;
 
   // If we're showing a screen in an embedded iframe or a dialog above an
   // embedded Zapp, the state of that screen.

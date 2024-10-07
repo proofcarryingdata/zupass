@@ -170,7 +170,9 @@ function getUI(
     : undefined;
 }
 
-const getURLsBasedOnCategory = (category: TicketCategory) => {
+const getURLsBasedOnCategory = (
+  category: TicketCategory
+): { idBasedVerifyURL: string | undefined; verifyURL: string } => {
   const ticketCategory = category;
   const idBasedVerifyURL =
     ticketCategory === TicketCategory.Devconnect

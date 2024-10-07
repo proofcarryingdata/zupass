@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { useBottomModal } from "../../../src/appHooks";
 import { AboutZupassModal } from "./AboutZupassModal";
+import { AnotherDeviceChangedPasswordBottomModal } from "./AnotherDeviceChangedPasswordBottomModal";
 import { ChangePasswordModal } from "./ChangePasswordModal";
 import { DeleteAccountModal } from "./DeleteAccountModal";
 import { ImportModal } from "./ImportModal";
@@ -30,6 +31,7 @@ export const NewModals = React.memo((): JSX.Element => {
     <>
       <SettingsBottomModal />
       <ChangePasswordModal />
+      <AnotherDeviceChangedPasswordBottomModal />
       <PodsCollectionBottomModal />
       <SuccessModal />
       <AboutZupassModal />

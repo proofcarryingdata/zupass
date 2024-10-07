@@ -152,6 +152,12 @@
       "path": "../../packages/ui/semaphore-signature-pcd-ui"
     },
     {
+      "path": "../../packages/pcd/unknown-pcd"
+    },
+    {
+      "path": "../../packages/ui/unknown-pcd-ui"
+    },
+    {
       "path": "../../packages/lib/util"
     },
     {

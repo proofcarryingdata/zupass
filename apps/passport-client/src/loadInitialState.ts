@@ -67,8 +67,7 @@ export async function loadInitialState(): Promise<AppState> {
     offline: !window.navigator.onLine,
     serverStorageRevision: persistentSyncStatus.serverStorageRevision,
     serverStorageHash: persistentSyncStatus.serverStorageHash,
-    importScreen: undefined,
-    strichSDKstate: undefined
+    importScreen: undefined
   };
   if (
     appConfig.devMode &&

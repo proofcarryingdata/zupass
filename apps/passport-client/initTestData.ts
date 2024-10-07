@@ -101,7 +101,7 @@ export async function initTestData(
 
   const pkey = newEdDSAPrivateKey();
 
-  for (const [i, ticket] of testData.tickets.entries()) {
+  for (const [_i, ticket] of testData.tickets.entries()) {
     const eventName = ticket;
     const ticketName = "GA";
     const ticketId = randomUUID();
@@ -140,6 +140,6 @@ export async function initTestData(
     });
 
     pcds.add(pcd, { upsert: true });
-    pcds.setFolder(pcd.id, ticket);
+    pcds.setFolder(pcd.id, "tickets/eventTickets");
   }
 }

@@ -69,7 +69,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     for (const [key, value] of Object.entries(pcdCollection.folders)) {
       if (!result[value]) {
         result[value] = {
-          title: value.replace("/", "+"),
+          title: value.replace(/\//g, " · "),
           children: []
         };
       }
@@ -81,9 +81,10 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       const podIsTicket = isPODTicketPCD(pcd);
 
       const isTicket = edsaIsTicket || podIsTicket;
-
       result[value].children.push({
-        title: isTicket ? pcd.claim.ticket.eventName : pcd.type,
+        title: isTicket
+          ? pcd.claim.ticket.eventName + " - " + pcd.claim.ticket.ticketName
+          : pcd.type,
         key: pcd.id,
         onClick: () => {
           listContainerRef.current &&

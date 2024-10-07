@@ -1,17 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import {
-  useDispatch,
-  useLaserScannerKeystrokeInput,
-  useStrichSDKState
-} from "../../src/appHooks";
+import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
 import { isProtocolWorldsUrl, maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
 import { ReactQrReaderScanner } from "../core/scanners/ReactQRReaderScanner";
-import { StrichScanner } from "../core/scanners/StrichScanner";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 import { ScreenLoader } from "../shared/ScreenLoader";
@@ -51,16 +46,6 @@ export function ScanScreen(): JSX.Element {
     [nav]
   );
 
-  // the SDK initialization state
-  const sdkState = useStrichSDKState();
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    if (sdkState !== "initialized") {
-      dispatch({ type: "initialize-strich" });
-    }
-  }, [dispatch, sdkState]);
-
   if (isRedirectingProtocolWorlds) {
     return (
       <AppContainer bg="primary">
@@ -79,9 +64,7 @@ export function ScanScreen(): JSX.Element {
             <Home />
           </ButtonsContainer>
           <Spacer h={8} />
-          {sdkState === "initialized" && <StrichScanner onResult={onResult} />}
-          {sdkState === "error" && <ReactQrReaderScanner onResult={onResult} />}
-          {sdkState === undefined && <div>Initializing scanner...</div>}
+          <ReactQrReaderScanner onResult={onResult} />
           <Spacer h={16} />
           <TextCenter>Scan a ticket</TextCenter>
         </QRContainer>

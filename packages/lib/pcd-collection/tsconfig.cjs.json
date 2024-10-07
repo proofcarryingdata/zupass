@@ -21,6 +21,9 @@
     },
     {
       "path": "../../pcd/rsa-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/unknown-pcd/tsconfig.cjs.json"
     }
   ]
 }

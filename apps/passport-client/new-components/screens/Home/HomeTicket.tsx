@@ -1,6 +1,7 @@
 import { PCD } from "@pcd/pcd-types";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
+import { ReactElement } from "react";
 
 const Container = styled.div`
   border-radius: 16px;
@@ -10,7 +11,7 @@ const Container = styled.div`
   /* shadow-sm */
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
 `;
-export const HomeTicket = (props: { pcd: PCD }) => {
+export const HomeTicket = (props: { pcd: PCD }): ReactElement => {
   const { pcd } = props;
   return (
     <Container>

@@ -43,6 +43,7 @@ export type BottomModalProps = {
   modalContainerStyle?: React.CSSProperties;
   onClickOutside?: () => void;
   height?: React.CSSProperties["height"];
+  dismissable?: boolean;
 };
 
 export const BottomModal = ({
@@ -50,7 +51,8 @@ export const BottomModal = ({
   children,
   modalContainerStyle,
   onClickOutside,
-  height
+  height,
+  dismissable = true
 }: BottomModalProps): JSX.Element | null => {
   const dispatch = useDispatch();
   if (!isOpen) {
@@ -59,10 +61,12 @@ export const BottomModal = ({
   return (
     <BottomModalOverlay
       onClick={() => {
-        dispatch({
-          type: "set-bottom-modal",
-          modal: { modalType: "none" }
-        });
+        if (dismissable) {
+          dispatch({
+            type: "set-bottom-modal",
+            modal: { modalType: "none" }
+          });
+        }
         onClickOutside && onClickOutside();
       }}
     >

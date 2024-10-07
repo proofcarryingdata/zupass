@@ -32,6 +32,30 @@ type AddPCDOptions = { upsert?: boolean };
 
 export type MergeFilterPredicate = (pcd: PCD, target: PCDCollection) => boolean;
 
+/**
+ * Function type for use in deserialization.  This is a fallback option used
+ * when no PCD package is available, or when the named package fails to
+ * deserialize.  It could wrap the PCD in a different type, or perform some
+ * more expensive parsing.
+ *
+ * If the fallback function fails (throws) it will cause the deserialization
+ * to fail, in the same way (with the same error) as if there were no
+ * fallback at all.
+ *
+ * @param collection the PCDCollection performing the deserialization
+ * @param pcdPackage the package for the type of the serialized PCD, if any
+ * @param serializedPCD the serialized PCD to deserialize
+ * @param deserializeError the error thrown by the deserialize attempt
+ * @return a PCD representing or wrapping the serialized PCD
+ * @throws if no fallback deserialization is possible
+ */
+export type FallbackDeserializeFunction = (
+  collection: PCDCollection,
+  pcdPackage: PCDPackage | undefined,
+  serializedPCD: SerializedPCD,
+  deserializeError: unknown
+) => Promise<PCD>;
+
 export function matchActionToPermission(
   action: PCDAction,
   permissions: PCDPermission[]
@@ -336,22 +360,52 @@ export class PCDCollection {
     } satisfies SerializedPCDCollection);
   }
 
-  public async deserialize(serialized: SerializedPCD): Promise<PCD> {
+  public async deserialize(
+    serialized: SerializedPCD,
+    options?: { fallbackDeserializeFunction?: FallbackDeserializeFunction }
+  ): Promise<PCD> {
     const pcdPackage = this.getPackage(serialized.type);
-    if (!pcdPackage) throw new Error(`no package matching ${serialized.type}`);
-    const deserialized = await pcdPackage.deserialize(serialized.pcd);
-    return deserialized;
+    try {
+      if (!pcdPackage)
+        throw new Error(`no package matching ${serialized.type}`);
+      const deserialized = await pcdPackage.deserialize(serialized.pcd);
+      return deserialized;
+    } catch (firstError: unknown) {
+      if (options?.fallbackDeserializeFunction) {
+        try {
+          return await options.fallbackDeserializeFunction(
+            this,
+            pcdPackage,
+            serialized,
+            firstError
+          );
+        } catch (fallbackError) {
+          // Fallback also failed, so fallthrough to re-throw the original error
+        }
+      }
+      throw firstError;
+    }
   }
 
-  public async deserializeAll(serialized: SerializedPCD[]): Promise<PCD[]> {
-    return Promise.all(serialized.map(this.deserialize.bind(this)));
+  public async deserializeAll(
+    serialized: SerializedPCD[],
+    options?: { fallbackDeserializeFunction?: FallbackDeserializeFunction }
+  ): Promise<PCD[]> {
+    return Promise.all(
+      serialized.map(async (serialized: SerializedPCD) =>
+        this.deserialize(serialized, options)
+      )
+    );
   }
 
   public async deserializeAllAndAdd(
     serialized: SerializedPCD[],
-    options?: { upsert?: boolean }
+    options?: {
+      upsert?: boolean;
+      fallbackDeserializeFunction?: FallbackDeserializeFunction;
+    }
   ): Promise<void> {
-    const deserialized = await this.deserializeAll(serialized);
+    const deserialized = await this.deserializeAll(serialized, options);
     this.addAll(deserialized, options);
   }
 
@@ -365,7 +419,10 @@ export class PCDCollection {
 
   public async deserializeAndAdd(
     serialized: SerializedPCD,
-    options?: { upsert?: boolean }
+    options?: {
+      upsert?: boolean;
+      fallbackDeserializeFunction?: FallbackDeserializeFunction;
+    }
   ): Promise<void> {
     await this.deserializeAllAndAdd([serialized], options);
   }
@@ -439,7 +496,8 @@ export class PCDCollection {
 
   public static async deserialize(
     packages: PCDPackage[],
-    serialized: string
+    serialized: string,
+    options?: { fallbackDeserializeFunction?: FallbackDeserializeFunction }
   ): Promise<PCDCollection> {
     const parsed = JSON.parse(serialized) as Partial<SerializedPCDCollection>;
     const collection = new PCDCollection(packages, []);
@@ -448,7 +506,9 @@ export class PCDCollection {
     const parsedFolders = parsed.folders ?? {};
 
     const pcds: PCD[] = await Promise.all(
-      serializedPcdsList.map(collection.deserialize.bind(collection))
+      serializedPcdsList.map(async (serialized: SerializedPCD) =>
+        collection.deserialize(serialized, options)
+      )
     );
     collection.addAll(pcds, { upsert: true });
     collection.folders = parsedFolders;

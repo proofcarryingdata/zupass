@@ -18,7 +18,9 @@ export function DefaultPODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
       </p>
       <Separator />
       <FieldLabel>POD Entries</FieldLabel>
-      <TextContainer style={{ overflowX: "auto" }}>
+      <TextContainer
+        style={{ overflowX: "auto", maxHeight: "300px", overflowY: "auto" }}
+      >
         <pre>{podEntriesToSimplifiedJSON(pcd.claim.entries, 2)}</pre>
       </TextContainer>
       <Spacer h={8} />

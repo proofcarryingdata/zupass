@@ -13,6 +13,9 @@ export default defineConfig({
   esbuild: {
     target: "es2020"
   },
+  build: {
+    sourcemap: true
+  },
   server: {
     port: 3200
   },

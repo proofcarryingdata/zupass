@@ -131,7 +131,6 @@ export function useBackgroundJobs(): void {
     setupBroadcastChannel(dispatch);
     setupUsingLaserScanning();
     startBackgroundJobs();
-    dispatch({ type: "initialize-strich" });
 
     return () => {
       closeBroadcastChannel();

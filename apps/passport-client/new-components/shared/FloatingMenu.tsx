@@ -27,6 +27,7 @@ const FloatingMenuItem = styled.div`
   justify-content: center;
   align-items: center;
   display: flex;
+  cursor: pointer;
 `;
 
 export const FloatingMenu = (): JSX.Element => {
