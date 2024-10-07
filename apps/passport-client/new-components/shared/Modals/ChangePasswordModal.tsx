@@ -53,7 +53,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
 
   useEffect(() => {
     if (!self) {
-      navigate("/new/login", { replace: true });
+      navigate("/login", { replace: true });
     }
   }, [self, navigate]);
 

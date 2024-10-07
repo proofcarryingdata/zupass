@@ -224,7 +224,7 @@ export const NewHomeScreen = (): ReactElement => {
 
   useEffect(() => {
     if (!self) {
-      navigate("/new/login", { replace: true });
+      navigate("/login", { replace: true });
     }
   });
 
@@ -321,7 +321,6 @@ export const NewHomeScreen = (): ReactElement => {
                               }
                               group.push(ref);
                             }}
-                            newUI={true}
                             pcd={pack.eventTicket}
                             isMainIdentity={false}
                           />

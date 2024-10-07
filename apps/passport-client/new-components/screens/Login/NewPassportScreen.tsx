@@ -90,8 +90,7 @@ const SendEmailVerification = ({
               await dispatch({
                 type: "load-after-login",
                 storage: storageResult.value,
-                encryptionKey,
-                newUi: true
+                encryptionKey
               });
             } else {
               setError(
@@ -108,8 +107,7 @@ const SendEmailVerification = ({
               email,
               token,
               targetFolder: undefined,
-              autoRegister: false,
-              newUi: true
+              autoRegister: false
             });
           }
         } catch (e) {
@@ -141,7 +139,7 @@ const SendEmailVerification = ({
         setLoadingAccount(false);
 
         if (saltResult.success) {
-          window.location.href = `#/new/already-registered?email=${encodeURIComponent(
+          window.location.href = `#/already-registered?email=${encodeURIComponent(
             email
           )}&identityCommitment=${encodeURIComponent(
             identity.commitment.toString()
@@ -247,7 +245,7 @@ const SendEmailVerification = ({
           <Button2 variant="primary" disabled={verifyingCode} type="submit">
             {!verifyingCode ? "Verify" : "Verifying..."}
           </Button2>
-          <Button2 variant="secondary" onClick={() => navigate("/new")}>
+          <Button2 variant="secondary" onClick={() => navigate("/")}>
             Cancel
           </Button2>
           <ResendCodeButton2 email={email} />

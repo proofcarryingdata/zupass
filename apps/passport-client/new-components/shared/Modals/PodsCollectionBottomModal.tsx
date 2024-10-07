@@ -127,7 +127,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         </UserTitleContainer>
         <ListContainer ref={listContainerRef}>
           {activePod ? (
-            <CardBody newUI={true} isMainIdentity={false} pcd={activePod} />
+            <CardBody isMainIdentity={false} pcd={activePod} />
           ) : (
             <List style={{ paddingTop: 0 }} list={podsCollectionList} />
           )}

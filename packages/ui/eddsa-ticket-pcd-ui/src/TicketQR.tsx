@@ -36,7 +36,7 @@ export function TicketQR({
 }: {
   pcd: EdDSATicketPCD;
   zk: boolean;
-} & Omit<EdDSATicketPCDCardProps, "newUI" | "onClickAddons">): JSX.Element {
+} & Omit<EdDSATicketPCDCardProps, "onClickAddons">): JSX.Element {
   const generate = useCallback(async () => {
     if (
       [

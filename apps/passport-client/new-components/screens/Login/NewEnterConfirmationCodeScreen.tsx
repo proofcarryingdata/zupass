@@ -40,7 +40,7 @@ export const NewEnterConfirmationCodeScreen = (): JSX.Element => {
     setVerifyingCode(false);
 
     if (verifyTokenResult.success) {
-      window.location.hash = `#/new/create-password?email=${encodeURIComponent(
+      window.location.hash = `#/create-password?email=${encodeURIComponent(
         email
       )}&token=${encodeURIComponent(token)}`;
     } else {
@@ -49,7 +49,7 @@ export const NewEnterConfirmationCodeScreen = (): JSX.Element => {
   }, [email, input]);
 
   const onCancelClick = useCallback(() => {
-    window.location.href = "#/new";
+    window.location.href = "#/";
   }, []);
 
   // scroll to top when we navigate to this page

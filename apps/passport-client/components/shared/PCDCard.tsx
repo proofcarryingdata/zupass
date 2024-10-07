@@ -251,10 +251,9 @@ const TicketWrapper = forwardRef<
   {
     pcd: EdDSATicketPCD;
     hidePadding?: boolean;
-    newUI?: boolean;
     addOns?: AddOnsProps;
   }
->(({ pcd, newUI, hidePadding, addOns }, ref) => {
+>(({ pcd, hidePadding, addOns }, ref) => {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
@@ -297,7 +296,6 @@ const TicketWrapper = forwardRef<
   return identityPCD ? (
     <div ref={ref}>
       <Card
-        newUI={newUI}
         hidePadding={hidePadding}
         pcd={pcd}
         identityPCD={identityPCD}
@@ -316,12 +314,11 @@ type CardBodyProps = {
   pcd: PCD;
   isMainIdentity: boolean;
   hidePadding?: boolean;
-  newUI?: boolean;
   addOns?: AddOnsProps;
 };
 
 export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
-  ({ pcd, isMainIdentity, hidePadding, newUI, addOns }, ref) => {
+  ({ pcd, isMainIdentity, hidePadding, addOns }, ref) => {
     const pcdCollection = usePCDCollection();
 
     if (isMainIdentity) {
@@ -329,14 +326,7 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
     }
     if (pcdCollection.hasPackage(pcd.type)) {
       if (isEdDSATicketPCD(pcd)) {
-        return (
-          <TicketWrapper
-            ref={ref}
-            newUI={newUI}
-            pcd={pcd}
-            hidePadding={hidePadding}
-          />
-        );
+        return <TicketWrapper ref={ref} pcd={pcd} hidePadding={hidePadding} />;
       }
       if (isPODTicketPCD(pcd)) {
         const Component = PODTicketPCDUI.renderCardBody;
@@ -345,7 +335,6 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
             <Component
               ticketData={pcd.claim.ticket}
               addOns={addOns}
-              newUI={newUI}
               pcd={pcd}
               idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
             />
