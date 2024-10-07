@@ -139,7 +139,7 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
         }
       });
     }
-  }, [email, code, dispatch, targetFolder, ticketPreviews]);
+  }, [email, code, dispatch, targetFolder]);
 
   useEffect(() => {
     if (process.env.ONE_CLICK_LOGIN_ENABLED !== "true") {
