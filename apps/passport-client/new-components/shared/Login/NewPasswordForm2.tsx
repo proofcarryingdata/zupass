@@ -1,13 +1,13 @@
-import { Dispatch, ReactNode, SetStateAction, UIEvent, useRef } from "react";
+import { Dispatch, ReactNode, SetStateAction, useRef } from "react";
 import styled from "styled-components";
 import {
   PASSWORD_MINIMUM_LENGTH,
   checkPasswordStrength
 } from "../../../src/password";
 import { Button2 } from "../Button";
-import { PasswordInput2 } from "./PasswordInput2";
 import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
+import { PasswordInput2 } from "./PasswordInput2";
 
 interface NewPasswordForm {
   loading: boolean;
@@ -56,8 +56,7 @@ export const NewPasswordForm2 = ({
 }: NewPasswordForm): JSX.Element => {
   const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
-  const checkPasswordAndSubmit = (e: UIEvent): void => {
-    e.preventDefault();
+  const checkPasswordAndSubmit = (): void => {
     if (password === "") {
       setError("Enter a password");
     } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
@@ -172,7 +171,7 @@ export const NewPasswordForm2 = ({
   );
 };
 
-const PasswordForm = styled.form`
+const PasswordForm = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;

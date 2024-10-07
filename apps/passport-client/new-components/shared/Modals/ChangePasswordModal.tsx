@@ -129,6 +129,15 @@ export const ChangePasswordModal = (): JSX.Element | null => {
     currentPassword
   ]);
 
+  const onCancel = useCallback(() => {
+    dispatch({
+      type: "set-bottom-modal",
+      modal: {
+        modalType: "settings"
+      }
+    });
+  }, [dispatch]);
+
   if (!self) return null;
 
   return (
@@ -162,14 +171,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
           setPassword={setNewPassword}
           setConfirmPassword={setConfirmPassword}
           onSuccess={onChangePassword}
-          onCancel={() => {
-            dispatch({
-              type: "set-bottom-modal",
-              modal: {
-                modalType: "settings"
-              }
-            });
-          }}
+          onCancel={onCancel}
           isChangePassword={hasSetupPassword}
           currentPassword={currentPassword}
           setCurrentPassword={setCurrentPassword}
