@@ -1,15 +1,6 @@
 import { PODEntries, PODValue } from "./podTypes";
 
 /**
- * Description of the match groups in {@link PRIVATE_KEY_REGEX} and how they
- * map to encoding formats, as needed by {@link decodeBytesAuto}.
- */
-export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
-  { index: 1, encoding: "base64" },
-  { index: 2, encoding: "hex" }
-];
-
-/**
  * Gets the numeric representation of the given value for inclusion in a
  * circuit, if any.
  *

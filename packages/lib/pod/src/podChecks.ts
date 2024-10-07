@@ -12,8 +12,7 @@ import {
 import {
   CryptoBytesEncodingGroups,
   decodeBytesAuto,
-  getPODValueForCircuit,
-  PRIVATE_KEY_ENCODING_GROUPS
+  getPODValueForCircuit
 } from "./podUtil";
 
 /**
@@ -63,6 +62,15 @@ export const SIGNATURE_REGEX = new RegExp(
  * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
 export const SIGNATURE_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
+  { index: 1, encoding: "base64" },
+  { index: 2, encoding: "hex" }
+];
+
+/**
+ * Description of the match groups in {@link PRIVATE_KEY_REGEX} and how they
+ * map to encoding formats, as needed by {@link decodeBytesAuto}.
+ */
+export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
   { index: 1, encoding: "base64" },
   { index: 2, encoding: "hex" }
 ];
