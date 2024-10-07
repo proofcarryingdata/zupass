@@ -332,42 +332,44 @@ export const NewHomeScreen = (): ReactElement => {
                 );
               })}
             </SwipableViews>
-            <ButtonsContainer>
-              <PageCircleButton
-                disabled={currentPos === 0}
-                padding={6}
-                diameter={28}
-                onClick={() => {
-                  setCurrentPos((old) => {
-                    if (old === 0) return old;
-                    return old - 1;
-                  });
-                }}
-              >
-                <ChevronLeftIcon
-                  width={20}
-                  height={20}
-                  color="var(--text-tertiary)"
-                />
-              </PageCircleButton>
-              <PageCircleButton
-                disabled={currentPos === tickets.length - 1}
-                padding={6}
-                diameter={28}
-                onClick={() => {
-                  setCurrentPos((old) => {
-                    if (old === tickets.length - 1) return old;
-                    return old + 1;
-                  });
-                }}
-              >
-                <ChevronRightIcon
-                  width={20}
-                  height={20}
-                  color="var(--text-tertiary)"
-                />
-              </PageCircleButton>
-            </ButtonsContainer>
+            {tickets.length > 1 && (
+              <ButtonsContainer>
+                <PageCircleButton
+                  disabled={currentPos === 0}
+                  padding={6}
+                  diameter={28}
+                  onClick={() => {
+                    setCurrentPos((old) => {
+                      if (old === 0) return old;
+                      return old - 1;
+                    });
+                  }}
+                >
+                  <ChevronLeftIcon
+                    width={20}
+                    height={20}
+                    color="var(--text-tertiary)"
+                  />
+                </PageCircleButton>
+                <PageCircleButton
+                  disabled={currentPos === tickets.length - 1}
+                  padding={6}
+                  diameter={28}
+                  onClick={() => {
+                    setCurrentPos((old) => {
+                      if (old === tickets.length - 1) return old;
+                      return old + 1;
+                    });
+                  }}
+                >
+                  <ChevronRightIcon
+                    width={20}
+                    height={20}
+                    color="var(--text-tertiary)"
+                  />
+                </PageCircleButton>
+              </ButtonsContainer>
+            )}
           </SwipeViewContainer>
         </>
       )}
