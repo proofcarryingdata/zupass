@@ -90,7 +90,18 @@ export function SettingsBottomModal(): JSX.Element {
       {
         title: "Export",
         icon: <ArrowDownTrayIcon width={24} height={24} color="#7C8BB4" />,
-        onClick: exportData
+        onClick: async (): Promise<void> => {
+          await exportData();
+          dispatch({
+            type: "set-bottom-modal",
+            modal: {
+              modalType: "success-modal",
+              title: "EXPORT SUCCESSFUL",
+              description:
+                "Your data has been exported and sent to your local folder."
+            }
+          });
+        }
       },
       {
         title: "Logout",
@@ -208,7 +219,7 @@ const SettingsItemButton = styled.div<{ $variant?: "danger" }>`
   ${({ $variant }): string => ($variant === "danger" ? `color: red;` : "")}
 `;
 
-const useExport = (): (() => void) => {
+const useExport = (): (() => Promise<void>) => {
   const user = useSelf();
   const pcds = usePCDCollection();
   const subscriptions = useSubscriptions();
