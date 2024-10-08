@@ -331,11 +331,13 @@ describe("podUtil input checkers should work", async function () {
   it("checkPODValue should reject invalid inputs", function () {
     const testCases = [
       undefined,
+      null,
       {},
       { type: "int" },
       { value: 0n },
       { type: undefined, value: 0n },
       { type: "string", value: undefined },
+      { type: "string", value: null },
       { type: "something", value: 0n },
       { type: "bigint", value: 0n },
       { type: "something", value: "something" },

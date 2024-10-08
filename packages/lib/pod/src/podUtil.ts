@@ -293,9 +293,19 @@ export function checkPODValue(
   nameForErrorMessages: string,
   podValue?: PODValue
 ): PODValue {
+  if (podValue === null) {
+    throw new TypeError(
+      `POD value for ${nameForErrorMessages} cannot be null.`
+    );
+  }
   if (podValue === undefined || podValue.value === undefined) {
     throw new TypeError(
       `POD value for ${nameForErrorMessages} cannot be undefined.`
+    );
+  }
+  if (podValue.value === null) {
+    throw new TypeError(
+      `POD value for ${nameForErrorMessages} cannot be null.`
     );
   }
 
