@@ -13,7 +13,6 @@ import { EmbeddedGPCProofScreen } from "./EmbeddedGPCProofScreen";
  */
 export function EmbeddedScreen(): ReactNode {
   const embeddedScreen = useEmbeddedScreenState();
-  console.log("embeddedScreen", embeddedScreen);
   if (!embeddedScreen) {
     return null;
   }
