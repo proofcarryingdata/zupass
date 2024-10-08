@@ -21,8 +21,6 @@ export function MainIdentityCard({ user }: { user?: User }): JSX.Element {
     />
   );
 
-  console.log(MyAvatar());
-
   return (
     <CardBody>
       <Spacer h={24} />
