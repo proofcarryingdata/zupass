@@ -4,6 +4,11 @@ import { EntriesSchema, PodspecProofRequest } from "@parcnet-js/podspec";
 import { gpcProve } from "@pcd/gpc";
 import { Button, Spacer } from "@pcd/passport-ui";
 import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
+import {
+  PODTicketPCD,
+  PODTicketPCDTypeName,
+  ticketToPOD
+} from "@pcd/pod-ticket-pcd";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { Fragment, ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
@@ -32,7 +37,13 @@ export function EmbeddedGPCProofScreen({
   >({});
   const pcds = usePCDCollection();
   const allPods = useMemo(() => {
-    return getPODsForCollections(pcds, collectionIds);
+    const pods = getPODsForCollections(pcds, collectionIds);
+    const ticketPods = pcds
+      .getPCDsByType(PODTicketPCDTypeName)
+      .map((pcd) => ticketToPOD(pcd as PODTicketPCD));
+
+    pods.push(...ticketPods);
+    return pods;
   }, [pcds, collectionIds]);
   const candidatePODs = useMemo(() => {
     return prs.queryForInputs(allPods);
