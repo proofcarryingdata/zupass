@@ -602,7 +602,7 @@ export class IssuanceService {
               argumentType: ArgumentTypeName.String
             },
             semaphoreV4Id: {
-              value: user.semaphore_v4_commitment ?? undefined,
+              value: user.semaphore_v4_pubkey ?? undefined,
               argumentType: ArgumentTypeName.String
             }
           });
