@@ -380,7 +380,7 @@ export class GenericIssuanceService {
     );
 
     const ticketDatas = matchingTickets.map(
-      (atom) => pipeline.atomToPODTicketData(atom, "1", "1") // fake semaphore id as it's not needed for the ticket preview
+      (atom) => pipeline.atomToPODTicketData(atom, "1") // fake semaphore id as it's not needed for the ticket preview
     );
 
     return {
