@@ -95,6 +95,18 @@ export const ManageEmailModal = (): JSX.Element => {
     </Button2>
   );
 
+  const backToManageBtn = (
+    <Button2
+      onClick={() => {
+        setEmailManagerState(undefined);
+        reset();
+      }}
+      variant="secondary"
+    >
+      Back
+    </Button2>
+  );
+
   const sendConfirmationCode = useCallback(async () => {
     if (loading || !self) return;
 
@@ -347,7 +359,7 @@ export const ManageEmailModal = (): JSX.Element => {
         >
           {textOrLoader("Delete")}
         </Button2>
-        {backBtn}
+        {backToManageBtn}
       </ButtonsContainer>
     </>
   );
@@ -405,7 +417,7 @@ export const ManageEmailModal = (): JSX.Element => {
           )}
         </Button2>
 
-        {backBtn}
+        {backToManageBtn}
       </ButtonsContainer>
     </>
   );
@@ -430,15 +442,7 @@ export const ManageEmailModal = (): JSX.Element => {
         >
           {textOrLoader("Get confirmation code")}
         </Button2>
-        <Button2
-          onClick={() => {
-            setEmailManagerState(undefined);
-            reset();
-          }}
-          variant="secondary"
-        >
-          Back
-        </Button2>
+        {backToManageBtn}
       </ButtonsContainer>
     </>
   );
@@ -497,7 +501,7 @@ export const ManageEmailModal = (): JSX.Element => {
         >
           {textOrLoader("Verify")}
         </Button2>
-        {backBtn}
+        {backToManageBtn}
       </ButtonsContainer>
     </>
   );
