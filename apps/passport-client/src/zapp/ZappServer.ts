@@ -186,7 +186,6 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       )
       .map((pcd) => pcd.id);
 
-    console.log("deleting", pcdIds);
 
     await Promise.all(
       pcdIds.map((id) =>
