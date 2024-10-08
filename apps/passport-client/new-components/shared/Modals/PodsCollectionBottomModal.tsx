@@ -47,7 +47,6 @@ const isEmailPCD = (pcd: PCD<unknown, unknown>): pcd is EmailPCD =>
   pcd.type === EmailPCDTypeName;
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
-  console.log(pcd.type);
   switch (true) {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
       return pcd.claim.ticket.eventName + " - " + pcd.claim.ticket.ticketName;
@@ -66,7 +65,6 @@ const getPcdName = (pcd: PCD<unknown, unknown>): string => {
 };
 
 const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
-  console.log(pcd.type, pcd);
   switch (true) {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
       return <Avatar imgSrc={pcd.claim.ticket.imageUrl} />;

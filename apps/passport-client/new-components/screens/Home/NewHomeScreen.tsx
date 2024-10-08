@@ -43,7 +43,6 @@ const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
 const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
   const tickets = allPCDs.filter(isEventTicketPCD);
-  const ticketsTrigger = tickets.map((t) => t.id).join(" ");
   return useMemo(() => {
     const eventsMap = new Map<string, TicketPack[]>();
     for (const ticket of tickets) {
@@ -84,8 +83,7 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
       pack.addOns.push(ticket);
     }
     return Array.from(eventsMap.entries());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticketsTrigger]);
+  }, [tickets]);
 };
 
 const Container = styled.div`
