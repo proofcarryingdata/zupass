@@ -81,6 +81,8 @@ export const CenterColumn = styled.div<{ defaultPadding: boolean }>`
   max-width: ${MAX_WIDTH_SCREEN}px;
   margin: 0 auto;
   position: relative;
+  // add padding to the bottom to prevent cut off by floating menu
+  padding-bottom: 55px;
   ${({ defaultPadding }): string => (defaultPadding ? "padding: 16px;" : "")}
 `;
 
