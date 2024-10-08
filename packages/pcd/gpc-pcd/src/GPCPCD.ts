@@ -1,4 +1,5 @@
 import { GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
+import { ProtoPODGPCCircuitDesc } from "@pcd/gpcircuits";
 import {
   PCD,
   PCDArgument,
@@ -29,13 +30,21 @@ export const GPCPCDTypeName = "gpc-pcd";
 /**
  * Interface containing the arguments that 3rd parties use to
  * initialize this PCD package.
- *
- * This is the root path from which to fetch the ZK artifacts required
- * to prove and verify.  This can be a URL (in browser) or a file path
- * (in Node server or utests).
  */
 export type GPCPCDInitArgs = {
+  /**
+   * This is the root path from which to fetch the ZK artifacts required
+   * to prove and verify.  This can be a URL (in browser) or a file path
+   * (in Node server or utests).
+   */
   zkArtifactPath: string;
+
+  /**
+   * This is the circuit family the GPC compiler will pick the circuit from. If
+   * unspecified, the circuit family underlying the pcd/proto-pod-gpc-artifacts
+   * NPM package will be used.
+   */
+  circuitFamily?: ProtoPODGPCCircuitDesc[];
 };
 
 /**

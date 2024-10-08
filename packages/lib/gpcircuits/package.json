@@ -29,10 +29,13 @@
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau && yarn clean-test-artifacts",
-    "gen-circuit-parameters": "npx tsx scripts/gen-circuit-parameters.ts",
-    "gen-test-artifacts": "npx tsx scripts/gen-test-artifacts.ts",
+    "gen-circuit-parameters": "tsx scripts/gen-circuit-parameters.ts",
+    "gen-test-circuit-parameters": "tsx scripts/gen-circuit-parameters.ts test",
+    "gen-artifacts": "tsx scripts/gen-artifacts.ts",
+    "gen-test-artifacts": "tsx scripts/gen-artifacts.ts test",
+    "clean-prod-artifacts": "rm -rf artifacts/prod circuits/main",
     "clean-test-artifacts": "rm -rf artifacts/test circuits/main",
-    "copy-test-to-snark-artifacts": "./scripts/copy-test-to-snark-artifacts.sh"
+    "copy-snark-artifacts": "./scripts/copy-snark-artifacts.sh"
   },
   "dependencies": {
     "@pcd/pod": "0.1.7",

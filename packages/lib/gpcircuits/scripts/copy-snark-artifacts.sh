@@ -5,7 +5,7 @@ set -ex
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 GPCIRCUITS_PACKAGE_DIR="$SCRIPT_DIR/.."
-SRC_DIR="$GPCIRCUITS_PACKAGE_DIR/artifacts/test"
+SRC_DIR="$GPCIRCUITS_PACKAGE_DIR/artifacts/prod"
 
 if [ ! -d "$SRC_DIR" ]; then
   echo "$SRC_DIR does not exist."

@@ -12,15 +12,18 @@ import {
 } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
+import { readFileSync as fsReadFile } from "fs";
 import _ from "lodash";
 import "mocha";
 import path from "path";
 import { poseidon1, poseidon2 } from "poseidon-lite";
+import { env } from "process";
 import {
   CircuitArtifactPaths,
   CircuitSignal,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
   ProtoPODGPC,
+  ProtoPODGPCCircuitDesc,
   ProtoPODGPCCircuitParams,
   ProtoPODGPCInputNamesType,
   ProtoPODGPCInputs,
@@ -38,6 +41,11 @@ import {
   zipLists
 } from "../src";
 import {
+  artifactsDir,
+  ensureCircuitParamSet,
+  jsonFileConfig
+} from "../src/util";
+import {
   circomkit,
   ownerIdentity,
   ownerIdentityV4,
@@ -47,6 +55,19 @@ import {
   sampleEntries2,
   sampleEntries3
 } from "./common";
+
+// Test circuit parameters. If the environment variable `GPC_FAMILY_TYPE` is set
+// to "prod", then the production circuit family and artifacts will be used.
+const familyType = env["GPC_FAMILY_TYPE"];
+const circuitParamType = ensureCircuitParamSet(familyType ?? "test");
+export const TEST_CIRCUIT_PARAMETERS: [ProtoPODGPCCircuitParams, number][] =
+  JSON.parse(
+    fsReadFile(jsonFileConfig[circuitParamType].circuitParamJsonFile, {
+      encoding: "utf8"
+    })
+  ) as [ProtoPODGPCCircuitParams, number][];
+export const testCircuitFamily: ProtoPODGPCCircuitDesc[] =
+  ProtoPODGPC.circuitFamilyFromParams(TEST_CIRCUIT_PARAMETERS);
 
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
@@ -962,7 +983,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
   function prepGroth16Test(
     params: ProtoPODGPCCircuitParams
   ): CircuitArtifactPaths {
-    const circuitDesc = ProtoPODGPC.pickCircuit(params);
+    const circuitDesc = ProtoPODGPC.pickCircuit(params, testCircuitFamily);
     if (!circuitDesc) {
       throw new Error(
         `None of the circuit descriptions can accommodate the following parameters: ${JSON.stringify(
@@ -972,7 +993,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
     }
 
     const artifacts = gpcArtifactPaths(
-      path.join(__dirname, "../artifacts/test"),
+      path.join(artifactsDir, circuitParamType),
       circuitDesc
     );
     expect(artifacts.wasmPath).to.not.be.empty;
@@ -1010,33 +1031,37 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
     expect(verified).to.be.true;
   }
 
-  it("should accept a sample input", async () => {
-    const artifacts = prepGroth16Test(GPC_PARAMS);
-    await groth16Test(artifacts, sampleInput, sampleOutput);
-  });
+  // Skip sample input tests if dealing with other parameter families, as there
+  // is no guarantee that the circuit parameters assumed here are present.
+  if (circuitParamType === "test") {
+    it("should accept a sample input", async () => {
+      const artifacts = prepGroth16Test(GPC_PARAMS);
+      await groth16Test(artifacts, sampleInput, sampleOutput);
+    });
 
-  it("should accept dynamic input", async () => {
-    const artifacts = prepGroth16Test(GPC_PARAMS);
+    it("should accept dynamic input", async () => {
+      const artifacts = prepGroth16Test(GPC_PARAMS);
 
-    let { inputs, outputs } = makeTestSignals(
-      GPC_PARAMS,
-      true /*isNullifierHashRevealed*/,
-      true /*isV4NullifierHashRevealed*/,
-      false /*requireUniqueContentIDs*/
-    );
-    expect(inputs).to.deep.eq(sampleInput);
-    expect(outputs).to.deep.eq(sampleOutput);
-    await groth16Test(artifacts, inputs, outputs);
-
-    for (const isV4NullifierHashRevealed of [true, false]) {
-      ({ inputs, outputs } = makeTestSignals(
+      let { inputs, outputs } = makeTestSignals(
         GPC_PARAMS,
-        false /*isNullifierHashRevealed*/,
-        isV4NullifierHashRevealed
-      ));
+        true /*isNullifierHashRevealed*/,
+        true /*isV4NullifierHashRevealed*/,
+        false /*requireUniqueContentIDs*/
+      );
+      expect(inputs).to.deep.eq(sampleInput);
+      expect(outputs).to.deep.eq(sampleOutput);
       await groth16Test(artifacts, inputs, outputs);
-    }
-  });
+
+      for (const isV4NullifierHashRevealed of [true, false]) {
+        ({ inputs, outputs } = makeTestSignals(
+          GPC_PARAMS,
+          false /*isNullifierHashRevealed*/,
+          isV4NullifierHashRevealed
+        ));
+        await groth16Test(artifacts, inputs, outputs);
+      }
+    });
+  }
 
   it("should accept with each circuit in family", async () => {
     // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8, ... } is the default

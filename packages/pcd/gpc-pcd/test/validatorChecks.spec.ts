@@ -548,7 +548,6 @@ describe("POD check against prescribed signers' public keys should work", () => 
         params
       )
     ).to.be.false;
-    console.log(params.notFoundMessage);
     expect(params.notFoundMessage).to.be.eq(
       "Public key should be 32 bytes, encoded as hex or Base64."
     );
