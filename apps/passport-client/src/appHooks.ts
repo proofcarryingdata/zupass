@@ -1,3 +1,4 @@
+import { Zapp } from "@parcnet-js/client-rpc";
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { wrap, Wrapper } from "@pcd/emitter";
 import {
@@ -348,4 +349,12 @@ export function useLoginIfNoSelf(
 
 export function useEmbeddedScreenState(): AppState["embeddedScreen"] {
   return useSelector((s) => s.embeddedScreen, []);
+}
+
+export function useZapp(): Zapp | undefined {
+  return useSelector<Zapp | undefined>((s) => s.connectedZapp, []);
+}
+
+export function useZappOrigin(): string | undefined {
+  return useSelector<string | undefined>((s) => s.zappOrigin, []);
 }

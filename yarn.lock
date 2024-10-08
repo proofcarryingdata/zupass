@@ -5047,52 +5047,52 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@parcnet-js/app-connector@^0.0.7":
-  version "0.0.7"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-0.0.7.tgz#15cb93b55c206a5aa4697bdeb3cab5d2d40f8bfd"
-  integrity sha512-nmw5gE700JsFR01ErkzUGbsE81Z+bKLMapRlw4JjptXmOLMR+o1e3eafNc9CA8M4wHJ2M6Ik2LTh1VHaOK9j0A==
+"@parcnet-js/app-connector@^1.0.0-beta.2":
+  version "1.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-1.0.0-beta.2.tgz#883693c8865cdce99f88ff9c42545fcad78f9aa4"
+  integrity sha512-z/tvKO10pOblfaSU3iiWSUQr7a7BG44wJWRnGI8L4pIN2WZ9FOUULr3fS6fPMJK3lbx3L2Tvdl15s3kyiVx/SA==
   dependencies:
     "@brenoroosevelt/toast" "^2.0.3"
-    "@parcnet-js/client-rpc" "0.0.4"
-    "@parcnet-js/podspec" "0.0.3"
+    "@parcnet-js/client-rpc" "1.0.0-beta.1"
+    "@parcnet-js/podspec" "1.0.0-beta.1"
     "@pcd/gpc" "^0.0.8"
     "@pcd/pod" "^0.1.7"
     nanoevents "^9.0.0"
     valibot "^0.42.0"
 
-"@parcnet-js/client-helpers@^0.0.5":
-  version "0.0.5"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-0.0.5.tgz#a4e5197ad7508d0b457c5b6fb302ef3be31ec18d"
-  integrity sha512-fz7OIGqxmqBx77CLv6V8NXHbnlIKnwUwGCSJp0zfAJLXS+IecbS/vzi6Ch5xBgtypIHdsoCi9AXqZE+Ets4LoQ==
+"@parcnet-js/client-helpers@^1.0.0-beta.1":
+  version "1.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-1.0.0-beta.1.tgz#4d3918f83bc058eb739183ab536ec0cfb91c5f9f"
+  integrity sha512-C94KmGTYLsRGkw2UU5c4+7pcLT4l9cOPIJqKRC6+NvlEJF2MLvJpD1vqfzwYEqY2o2NhoxZESgqmbsHx3KY9Qg==
   dependencies:
-    "@parcnet-js/client-rpc" "0.0.4"
+    "@parcnet-js/client-rpc" "1.0.0-beta.1"
     valibot "^0.42.0"
 
-"@parcnet-js/client-rpc@0.0.4", "@parcnet-js/client-rpc@^0.0.4":
-  version "0.0.4"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-0.0.4.tgz#3a0edea2bc5832bbdc6bd25cdeb51f8f1de8f5aa"
-  integrity sha512-sY0LZdxxj4sLcTWkg4conj18cZNNKWm7+aR2aCK+zswwPlz2chA8kO0HEbHjjENkqT6oQLCpzgk/URsqoCBSNw==
+"@parcnet-js/client-rpc@1.0.0-beta.1", "@parcnet-js/client-rpc@^1.0.0-beta.1":
+  version "1.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-1.0.0-beta.1.tgz#8396073b13eda6da10617ed7aacf59e4f25fb2b5"
+  integrity sha512-Nvwf3eA9kgZSCZgwKCEoRiG76FTIjcxuADlz0hJZZ2iWOFaotS9Hv9ePEJpUuf4TVRdoeAd4iuXcCSUvbUCXoQ==
   dependencies:
-    "@parcnet-js/podspec" "0.0.3"
+    "@parcnet-js/podspec" "1.0.0-beta.1"
     "@pcd/gpc" "^0.0.8"
     "@pcd/pod" "^0.1.7"
     valibot "^0.42.0"
 
-"@parcnet-js/podspec@0.0.3", "@parcnet-js/podspec@^0.0.3":
-  version "0.0.3"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-0.0.3.tgz#23eb9427761e881e617637998b655db18f425275"
-  integrity sha512-/IlXwBXEcOREFtyyMSVHz3Va7azCV5i4x6u1cuF9W0Bs3uLwkOG5ej+TceFScpB0jhdedMw/J3iY5VYaWJJtkA==
+"@parcnet-js/podspec@1.0.0-beta.1", "@parcnet-js/podspec@^1.0.0-beta.1":
+  version "1.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-1.0.0-beta.1.tgz#286b39b86e55365ef19fdc436630fc6eb9d54315"
+  integrity sha512-RnhXdJl+4bus4h2Ddk6i52bacvvFwV/Hr8HN6uPa4AT2l7/BEp8DPfqMzlvbdnVejV3vdtKd5zk3f9XcH+jD1g==
   dependencies:
     "@pcd/gpc" "0.0.8"
     "@pcd/pod" "0.1.7"
 
-"@parcnet-js/ticket-spec@^0.0.2":
-  version "0.0.2"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-0.0.2.tgz#6aa4a62421f0f3a50635053954721db025d3c536"
-  integrity sha512-G9CArA+VyrnvxhxkaZ4DvrtZCHR8kGS8TcDKKFwe7bzPhza5OTymgF3dWuU0gQKU5ptar/RcUFmWzbi5FVsSgA==
+"@parcnet-js/ticket-spec@^1.0.0-beta.1":
+  version "1.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-1.0.0-beta.1.tgz#1d071368bdf5f5723caac0b8376f025e17c89591"
+  integrity sha512-60EOlIbn5anirhi6soKpJ19thV7Dfh5UCiH0QkFOARJERAJM7tcr7Wsl5lk3yDoOQtXbCN20/Gyt0WLCsDHXvw==
   dependencies:
-    "@parcnet-js/client-rpc" "0.0.4"
-    "@parcnet-js/podspec" "0.0.3"
+    "@parcnet-js/client-rpc" "1.0.0-beta.1"
+    "@parcnet-js/podspec" "1.0.0-beta.1"
 
 "@pcd/proto-pod-gpc-artifacts@0.11.0":
   version "0.11.0"
