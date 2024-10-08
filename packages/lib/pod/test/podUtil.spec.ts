@@ -259,7 +259,7 @@ describe("podUtil input checkers should work", async function () {
           testInput[2]
         );
       };
-      expect(fn).to.throw(TypeError, "valueName");
+      expect(fn).to.throw(RangeError, "valueName");
     }
   });
 
@@ -320,35 +320,41 @@ describe("podUtil input checkers should work", async function () {
 
   it("checkPODValue should reject invalid inputs", function () {
     const testCases = [
-      undefined,
-      {},
-      { type: "int" },
-      { value: 0n },
-      { type: undefined, value: 0n },
-      { type: "string", value: undefined },
-      { type: "something", value: 0n },
-      { type: "bigint", value: 0n },
-      { type: "something", value: "something" },
-      { type: "string", value: 0n },
-      { type: "string", value: 123 },
-      { type: EDDSA_PUBKEY_TYPE_STRING, value: "hello" },
-      { type: EDDSA_PUBKEY_TYPE_STRING, value: "0" },
-      { type: EDDSA_PUBKEY_TYPE_STRING, value: 0n },
-      { type: "cryptographic", value: "hello" },
-      { type: "cryptographic", value: 123 },
-      { type: "cryptographic", value: -1n },
-      { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MIN - 1n },
-      { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MAX + 1n },
-      { type: "int", value: "hello" },
-      { type: "int", value: 123 },
-      { type: "int", value: POD_INT_MIN - 1n },
-      { type: "int", value: POD_INT_MAX + 1n }
-    ] as (undefined | PODValue)[];
-    for (const testInput of testCases) {
+      [undefined as unknown as PODValue, TypeError],
+      [{}, TypeError],
+      [{ type: "int" }, TypeError],
+      [{ value: 0n }, TypeError],
+      [{ type: undefined, value: 0n }, TypeError],
+      [{ type: "string", value: undefined }, TypeError],
+      [{ type: "something", value: 0n }, TypeError],
+      [{ type: "bigint", value: 0n }, TypeError],
+      [{ type: "something", value: "something" }, TypeError],
+      [{ type: "string", value: 0n }, TypeError],
+      [{ type: "string", value: 123 }, TypeError],
+      [{ type: EDDSA_PUBKEY_TYPE_STRING, value: "hello" }, TypeError],
+      [{ type: EDDSA_PUBKEY_TYPE_STRING, value: "0" }, TypeError],
+      [{ type: EDDSA_PUBKEY_TYPE_STRING, value: 0n }, TypeError],
+      [{ type: "cryptographic", value: "hello" }, TypeError],
+      [{ type: "cryptographic", value: 123 }, TypeError],
+      [{ type: "cryptographic", value: -1n }, RangeError],
+      [
+        { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MIN - 1n },
+        RangeError
+      ],
+      [
+        { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MAX + 1n },
+        RangeError
+      ],
+      [{ type: "int", value: "hello" }, TypeError],
+      [{ type: "int", value: 123 }, TypeError],
+      [{ type: "int", value: POD_INT_MIN - 1n }, RangeError],
+      [{ type: "int", value: POD_INT_MAX + 1n }, RangeError]
+    ] as [PODValue, ErrorConstructor][];
+    for (const [testInput, expectedError] of testCases) {
       const fn = (): void => {
         checkPODValue("valueName", testInput);
       };
-      expect(fn).to.throw(TypeError, "valueName");
+      expect(fn).to.throw(expectedError, "valueName");
     }
   });
 });

@@ -15,9 +15,6 @@ import {
   POD_VALUE_STRING_TYPE_IDENTIFIER
 } from "./podTypes";
 
-// TODO(POD-P3): Decide if these utils should all be published outside
-// of the package, or only a subset.
-
 /**
  * Private keys are 32 bytes (any arbitrary bytes), represented as Base64 or
  * hexadecimal
@@ -167,6 +164,7 @@ export function checkPODName(name?: string): string {
  * @param podEntries the entries to check
  * @throws TypeError if the input type, or any of the names or values are
  *   invalid
+ * @throws RangeError if a value is outside of the bounds
  */
 export function checkPODEntries(podEntries: PODEntries): void {
   requireType("entries", podEntries, "object");
@@ -251,7 +249,7 @@ export function checkStringEncodedValueType(
  * @param minValue the minimum legal value (inclusive lower bound)
  * @param maxValue the maximum legal value (inclusive upper bound)
  * @returns the value unmodified, for easy chaining
- * @throws TypeError if the value is outside of the bounds
+ * @throws RangeError if the value is outside of the bounds
  */
 export function checkBigintBounds(
   nameForErrorMessages: string,
@@ -260,9 +258,9 @@ export function checkBigintBounds(
   maxValue: bigint
 ): bigint {
   if (value < minValue || value > maxValue) {
-    throw new TypeError(
-      `Invalid value for entry ${nameForErrorMessages}. \
-      Value ${value} is outside supported bounds: (min ${minValue}, max ${maxValue}).`
+    throw new RangeError(
+      `Invalid value for entry ${nameForErrorMessages}.  ` +
+        `Value ${value} is outside supported bounds: (min ${minValue}, max ${maxValue}).`
     );
   }
   return value;
@@ -276,6 +274,7 @@ export function checkBigintBounds(
  * @param podValue the value to check
  * @returns the unmodified value, for easy chaining
  * @throws TypeError if the value is invalid
+ * @throws RangeError if the value is outside of the bounds
  */
 export function checkPODValue(
   nameForErrorMessages: string,

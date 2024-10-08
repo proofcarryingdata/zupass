@@ -144,7 +144,7 @@ describe("POD class should work", async function () {
     const fn = (): void => {
       POD.sign(testEntries, privateKey);
     };
-    expect(fn).to.throw(TypeError, "badValueName");
+    expect(fn).to.throw(RangeError, "badValueName");
   });
 
   it("should reject malformed private key when signing", function () {
@@ -170,7 +170,7 @@ describe("POD class should work", async function () {
     const fn = (): void => {
       POD.load(testEntries, signedPOD.signature, signedPOD.signerPublicKey);
     };
-    expect(fn).to.throw(TypeError, "badValueName");
+    expect(fn).to.throw(RangeError, "badValueName");
   });
 
   it("should reject malformed signature when loading", function () {

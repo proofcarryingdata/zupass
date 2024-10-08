@@ -93,6 +93,8 @@ export type JSONPODEntries = Record<PODName, JSONPODValue>;
  * @param jsonEntries the JSON-encoded POD entries to parse
  * @returns a standard TypeScript POD entries representation
  * @throws TypeError if the input entries are not validly formed
+ * @throws RangeError if a value is outside of the bounds
+ * @throws SyntaxError if a value is unparseable
  */
 export function podEntriesFromJSON(jsonEntries: JSONPODEntries): PODEntries {
   requireType("jsonEntries", jsonEntries, "object");
@@ -113,6 +115,8 @@ export function podEntriesFromJSON(jsonEntries: JSONPODEntries): PODEntries {
  *   in error messages
  * @returns a standard TypeScript POD value
  * @throws TypeError if the input value is not validly formed
+ * @throws RangeError if a value is outside of the bounds
+ * @throws SyntaxError if a value is unparseable
  */
 export function podValueFromJSON(
   jsonValue: JSONPODValue,
@@ -146,21 +150,23 @@ export function podValueFromJSON(
  * {@link podValueFromJSON} instead.  This function is intended as a helper
  * for other parsers with their own source of type information.
  *
- * @param podType the type of {@link PODValue} expected
+ * @param podValueType the type of {@link PODValue} expected
  * @param jsonRawValue the JSON-compatible encoding of the bare value with
  *   no type information
  * @param nameForErrorMessages an optional name for this value to be used
  *   in error messages
  * @returns a standard TypeScript POD value
  * @throws TypeError if the input type or value are not validly formed
+ * @throws RangeError if a value is outside of the bounds
+ * @throws SyntaxError if a value is unparseable
  */
 export function podValueFromTypedJSON(
-  podType: string,
+  podValueType: string,
   jsonRawValue: number | string,
   nameForErrorMessages?: string
 ): PODValue {
   nameForErrorMessages = nameForErrorMessages || "(unnamed)";
-  switch (podType) {
+  switch (podValueType) {
     case "string":
       return checkPODValue(nameForErrorMessages, {
         type: "string",
@@ -169,12 +175,12 @@ export function podValueFromTypedJSON(
     case "int":
       return checkPODValue(nameForErrorMessages, {
         type: "int",
-        value: BigInt(jsonRawValue)
+        value: bigintFromJSON(jsonRawValue)
       });
     case "cryptographic":
       return checkPODValue(nameForErrorMessages, {
         type: "cryptographic",
-        value: BigInt(jsonRawValue)
+        value: bigintFromJSON(jsonRawValue)
       });
     case "eddsa_pubkey":
       return checkPODValue(nameForErrorMessages, {
@@ -183,7 +189,54 @@ export function podValueFromTypedJSON(
       });
     default:
       throw new TypeError(
-        `Value ${nameForErrorMessages} specifies unknown type '${podType}'.`
+        `Value ${nameForErrorMessages} specifies unknown type '${podValueType}'.`
+      );
+  }
+}
+
+/**
+ * Parses an integer value into a `bigint` from JSON-compatible value encoding
+ * separate from type inforation.  Most use cases should use
+ * {@link podValueFromJSON} instead.  This function is intended as a helper
+ * for other parsers with their own source of type information.
+ *
+ * @param numericValue the encoded numeric value, which could be a number, or
+ *   a stringified number
+ * @param nameForErrorMessages an optional name for this value to be used
+ *   in error messages
+ * @returns a bigint representing the number
+ * @throws TypeError if the input type or value are not validly formed
+ * @throws RangeError if a value is outside of the bounds
+ * @throws SyntaxError if a value is unparseable
+ */
+export function bigintFromJSON(
+  numericValue: number | string,
+  nameForErrorMessages?: string
+): bigint {
+  nameForErrorMessages = nameForErrorMessages || "(unnamed)";
+  switch (typeof numericValue) {
+    case "number":
+      if (
+        numericValue > Number.MAX_SAFE_INTEGER ||
+        numericValue < Number.MIN_SAFE_INTEGER
+      ) {
+        // This is to catch a mistake in JSON generation as early as possible.
+        // JSON.parse will parse overly large values but lose accuracy.
+        // Throwing here is more informative than waiting for a signature
+        // validation to fail.
+        throw new RangeError(
+          `Numeric value ${nameForErrorMessages} is too large to be safely` +
+            " represented in JSON and must be stringified instead."
+        );
+      }
+      return BigInt(numericValue);
+    case "string":
+      return BigInt(numericValue);
+    default:
+      throw new TypeError(
+        `Value ${nameForErrorMessages} is an unexpected type ` +
+          `'${typeof numericValue}'.  Numeric values must be encoded as a ` +
+          "number or string."
       );
   }
 }

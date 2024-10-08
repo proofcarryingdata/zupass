@@ -189,6 +189,7 @@ export class POD {
    * @param jsonPOD the JSON-encoded POD.
    * @returns a new POD object
    * @throws TypeError if the input is malformed
+   * @throws RangeError if a value is outside of the bounds
    */
   public static fromJSON(jsonPOD: JSONPOD): POD {
     return POD.load(

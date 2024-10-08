@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 import {
+  bigintFromJSON,
   bigintToSimplestJSON,
   checkPODEntries,
   JSONPODEntries,
@@ -82,40 +83,61 @@ describe("podJSON conversions should work", async function () {
   // TODO(artwyman): test suite for podValueFromTypedJSON
   // TODO(artwyman): podValueFromTypedJSON negative test cases
 
+  const bigintEncodedPairs = [
+    [0n, 0],
+    [1n, 1],
+    [-1n, -1],
+    [1234567890n, 1234567890],
+    [-1234567890n, -1234567890],
+    [BigInt(Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER],
+    [BigInt(Number.MIN_SAFE_INTEGER), Number.MIN_SAFE_INTEGER],
+    [
+      BigInt(Number.MAX_SAFE_INTEGER) + 1n,
+      "0x" + (BigInt(Number.MAX_SAFE_INTEGER) + 1n).toString(16)
+    ],
+    [
+      BigInt(Number.MIN_SAFE_INTEGER) - 1n,
+      (BigInt(Number.MIN_SAFE_INTEGER) - 1n).toString()
+    ],
+    [POD_INT_MAX, "0x" + POD_INT_MAX.toString(16)],
+    [POD_INT_MIN, POD_INT_MIN.toString()],
+    [POD_CRYPTOGRAPHIC_MAX, "0x" + POD_CRYPTOGRAPHIC_MAX.toString(16)],
+    [POD_CRYPTOGRAPHIC_MIN, 0],
+
+    // This function doesn't do any range checking
+    [
+      POD_CRYPTOGRAPHIC_MAX + 1n,
+      "0x" + (POD_CRYPTOGRAPHIC_MAX + 1n).toString(16)
+    ],
+    [-(POD_CRYPTOGRAPHIC_MAX + 1n), (-(POD_CRYPTOGRAPHIC_MAX + 1n)).toString()]
+  ] satisfies [bigint, number | string][];
+
+  it("bigintFromJSON should work on valid input", async function () {
+    for (const [output, input] of bigintEncodedPairs) {
+      expect(bigintFromJSON(input)).to.eq(output);
+    }
+  });
+
+  it("bigintFromJSON should reject invalid input", async function () {
+    const invalidNumberResults = [
+      [Number.MAX_SAFE_INTEGER + 1, RangeError],
+      [Number.MIN_SAFE_INTEGER - 1, RangeError],
+      [1.2345, RangeError],
+      [-12345.6, RangeError],
+      ["hello", SyntaxError],
+      ["-0x12345", SyntaxError],
+      [undefined as unknown as string, TypeError],
+      [null as unknown as string, TypeError],
+      [{} as unknown as number, TypeError]
+    ] satisfies [number | string, ErrorConstructor][];
+    for (const [input, errType] of invalidNumberResults) {
+      const fn = (): bigint => bigintFromJSON(input);
+      expect(fn).to.throw(errType);
+    }
+  });
+
   it("bigintToSimplestJSON should pick the best format", async function () {
-    const inputOutputPairs = [
-      [0n, 0],
-      [1n, 1],
-      [-1n, -1],
-      [1234567890n, 1234567890],
-      [-1234567890n, -1234567890],
-      [BigInt(Number.MAX_SAFE_INTEGER), Number.MAX_SAFE_INTEGER],
-      [BigInt(Number.MIN_SAFE_INTEGER), Number.MIN_SAFE_INTEGER],
-      [
-        BigInt(Number.MAX_SAFE_INTEGER) + 1n,
-        "0x" + (BigInt(Number.MAX_SAFE_INTEGER) + 1n).toString(16)
-      ],
-      [
-        BigInt(Number.MIN_SAFE_INTEGER) - 1n,
-        (BigInt(Number.MIN_SAFE_INTEGER) - 1n).toString()
-      ],
-      [POD_INT_MAX, "0x" + POD_INT_MAX.toString(16)],
-      [POD_INT_MIN, POD_INT_MIN.toString()],
-      [POD_CRYPTOGRAPHIC_MAX, "0x" + POD_CRYPTOGRAPHIC_MAX.toString(16)],
-      [POD_CRYPTOGRAPHIC_MIN, 0],
-
-      // This function doesn't do any range checking
-      [
-        POD_CRYPTOGRAPHIC_MAX + 1n,
-        "0x" + (POD_CRYPTOGRAPHIC_MAX + 1n).toString(16)
-      ],
-      [
-        -(POD_CRYPTOGRAPHIC_MAX + 1n),
-        (-(POD_CRYPTOGRAPHIC_MAX + 1n)).toString()
-      ]
-    ] satisfies [bigint, number | string][];
-
-    for (const [input, output] of inputOutputPairs) {
+    for (const [input, output] of bigintEncodedPairs) {
       expect(bigintToSimplestJSON(input)).to.eq(output);
     }
   });
