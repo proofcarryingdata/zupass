@@ -263,7 +263,14 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
     const ticketPods = this.getContext()
       .getState()
       .pcds.getPCDsByType(PODTicketPCDTypeName)
-      .map((pcd) => ticketToPOD(pcd as PODTicketPCD));
+      .map((pcd) => {
+        try {
+          return ticketToPOD(pcd as PODTicketPCD);
+        } catch (e) {
+          return undefined;
+        }
+      })
+      .filter((p) => !!p) as POD[];
 
     pods.push(...ticketPods);
 
@@ -298,6 +305,19 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
   }
 
   public async verify(
+    proof: GPCProof,
+    boundConfig: GPCBoundConfig,
+    revealedClaims: GPCRevealedClaims
+  ): Promise<boolean> {
+    return gpcVerify(
+      proof,
+      boundConfig,
+      revealedClaims,
+      new URL("/artifacts/proto-pod-gpc", window.location.origin).toString()
+    );
+  }
+
+  public async verifyWithProofRequest(
     proof: GPCProof,
     boundConfig: GPCBoundConfig,
     revealedClaims: GPCRevealedClaims,

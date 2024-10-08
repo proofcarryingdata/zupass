@@ -40,7 +40,14 @@ export function EmbeddedGPCProofScreen({
     const pods = getPODsForCollections(pcds, collectionIds);
     const ticketPods = pcds
       .getPCDsByType(PODTicketPCDTypeName)
-      .map((pcd) => ticketToPOD(pcd as PODTicketPCD));
+      .map((pcd) => {
+        try {
+          return ticketToPOD(pcd as PODTicketPCD);
+        } catch (e) {
+          return undefined;
+        }
+      })
+      .filter((p) => !!p) as POD[];
 
     pods.push(...ticketPods);
     return pods;
