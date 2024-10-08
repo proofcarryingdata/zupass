@@ -1,15 +1,14 @@
 import styled from "styled-components";
 
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import {
-  useBottomModal,
-  useDispatch,
-  usePCDCollection,
-  useSelf,
-  useStateContext
-} from "../../../src/appHooks";
-import { BottomModal } from "../BottomModal";
-import { Button2 } from "../Button";
-import { Input2 } from "../Input";
+  CredentialManager,
+  requestAddUserEmail,
+  requestChangeUserEmail,
+  requestRemoveUserEmail
+} from "@pcd/passport-interface";
+import { getErrorMessage } from "@pcd/util";
+import { validate } from "email-validator";
 import {
   ChangeEventHandler,
   ReactNode,
@@ -17,17 +16,18 @@ import {
   useState,
   useTransition
 } from "react";
-import { validate } from "email-validator";
-import {
-  CredentialManager,
-  requestAddUserEmail,
-  requestChangeUserEmail,
-  requestRemoveUserEmail
-} from "@pcd/passport-interface";
 import { appConfig } from "../../../src/appConfig";
+import {
+  useBottomModal,
+  useDispatch,
+  usePCDCollection,
+  useSelf,
+  useStateContext
+} from "../../../src/appHooks";
 import { getEmailUpdateErrorMessage } from "../../../src/errorMessage";
-import { getErrorMessage } from "@pcd/util";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { BottomModal, BottomModalHeader } from "../BottomModal";
+import { Button2 } from "../Button";
+import { Input2 } from "../Input";
 import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
 
@@ -329,14 +329,10 @@ export const ManageEmailModal = (): JSX.Element => {
 
   const deleteEmailContainer = (
     <>
-      <TextBlock>
-        <Typography fontWeight={800} fontSize={20} color="var(--text-primary)">
-          DELETE EMAIL
-        </Typography>
-        <Typography fontSize={16} color="var(--text-primary)">
-          Please confirm if you want to delete this email from your account.{" "}
-        </Typography>
-      </TextBlock>
+      <BottomModalHeader
+        title="DELETE EMAIL"
+        description="Please confirm if you want to delete this email from your account. "
+      />
       <Input2
         variant="secondary"
         placeholder={emailToRemove}
@@ -357,14 +353,11 @@ export const ManageEmailModal = (): JSX.Element => {
   );
   const changeEmailContainer = (
     <>
-      <TextBlock>
-        <Typography fontWeight={800} fontSize={20} color="var(--text-primary)">
-          CHANGE EMAIL
-        </Typography>
-        <Typography fontSize={16} color="var(--text-primary)">
-          Enter your new email address. We'll send a confirmation code to verify
-          it.
-        </Typography>
+      <BottomModalHeader
+        title="CHANGE EMAIL"
+        description="Enter your new email address. We'll send a confirmation code to verify
+          it."
+      >
         <Typography fontSize={16} color="var(--text-primary)">
           The email you are about to change is:{" "}
           <Typography
@@ -375,7 +368,7 @@ export const ManageEmailModal = (): JSX.Element => {
             {oldEmail}
           </Typography>
         </Typography>
-      </TextBlock>
+      </BottomModalHeader>
       <EmailInput
         email={newEmail}
         onChange={(e) => {
@@ -416,8 +409,45 @@ export const ManageEmailModal = (): JSX.Element => {
       </ButtonsContainer>
     </>
   );
+  const addEmailView = (
+    <>
+      <BottomModalHeader
+        title="ADD EMAIL"
+        description="Enter your new email address. We'll send a confirmation code to verify it."
+      />
+      <EmailInput
+        email={newEmail}
+        onChange={(e) => {
+          setNewEmail(e.target.value);
+          setError("");
+        }}
+        error={error}
+      />
+      <ButtonsContainer>
+        <Button2
+          onClick={() => sendConfirmationCode()}
+          disabled={errorOrLoading}
+        >
+          {textOrLoader("Get confirmation code")}
+        </Button2>
+        <Button2
+          onClick={() => {
+            setEmailManagerState(undefined);
+            reset();
+          }}
+          variant="secondary"
+        >
+          Back
+        </Button2>
+      </ButtonsContainer>
+    </>
+  );
   const emailListView = (
     <>
+      <BottomModalHeader
+        title="MANAGE EMAILS"
+        description="You will be able to login with any of your connected emails."
+      />
       <EmailsContainer>
         {emails?.map((email) => (
           <EmailInput
@@ -435,29 +465,13 @@ export const ManageEmailModal = (): JSX.Element => {
             }}
           />
         ))}
-        {emailManagerState === EmailManagerState.addEmail && (
-          <EmailInput
-            email={newEmail}
-            onChange={(e) => {
-              setNewEmail(e.target.value);
-              setError("");
-            }}
-            error={error}
-          />
-        )}
       </EmailsContainer>
       <ButtonsContainer>
         <Button2
-          onClick={() => {
-            !emailManagerState
-              ? setEmailManagerState(EmailManagerState.addEmail)
-              : sendConfirmationCode();
-          }}
+          onClick={() => setEmailManagerState(EmailManagerState.addEmail)}
           disabled={errorOrLoading}
         >
-          {textOrLoader(
-            !emailManagerState ? "Add email" : "Get confirmation code"
-          )}
+          Add email
         </Button2>
         {backBtn}
       </ButtonsContainer>
@@ -499,6 +513,8 @@ export const ManageEmailModal = (): JSX.Element => {
         return deleteEmailContainer;
       case EmailManagerState.enterConfirmationCode:
         return enterCodeContainer;
+      case EmailManagerState.addEmail:
+        return addEmailView;
       default:
         return emailListView;
     }
@@ -597,11 +613,4 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-`;
-
-const TextBlock = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-start;
 `;
