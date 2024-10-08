@@ -2,6 +2,7 @@ import { verifySignature } from "@zk-kit/eddsa-poseidon";
 import { expect } from "chai";
 import "mocha";
 import {
+  JSONPOD,
   POD,
   PODName,
   PODValue,
@@ -131,6 +132,41 @@ describe("POD class should work", async function () {
       expect(deserializedPOD.content.asEntries()).to.deep.eq(sampleEntries);
       expect(deserializedPOD.signature).to.eq(signedPOD.signature);
       expect(deserializedPOD.signerPublicKey).to.eq(signedPOD.signerPublicKey);
+    }
+  });
+
+  it("should reject invalid JSON input", function () {
+    const goodPOD = POD.sign(sampleEntries1, privateKey);
+    const goodJSONPOD = goodPOD.toJSON();
+    const badInputs = [
+      [{}, TypeError],
+      [
+        { entries: goodJSONPOD.entries, signature: goodJSONPOD.signature },
+        TypeError
+      ],
+      [
+        {
+          entries: goodJSONPOD.entries,
+          signerPublicKey: goodJSONPOD.signerPublicKey
+        },
+        TypeError
+      ],
+      [
+        {
+          signature: goodJSONPOD.signature,
+          signerPublicKey: goodJSONPOD.signerPublicKey
+        },
+        TypeError
+      ],
+      [{ ...goodJSONPOD, entries: { "!@#$": "hello" } }, TypeError],
+      [{ ...goodJSONPOD, signature: "malformed" }, TypeError],
+      [{ ...goodJSONPOD, signerPublicKey: "malformed" }, TypeError],
+      [{ ...goodJSONPOD, version: "2" }, TypeError]
+    ] as [JSONPOD, ErrorConstructor][];
+
+    for (const [badInput, expectedError] of badInputs) {
+      const fn = (): POD => POD.fromJSON(badInput);
+      expect(fn).to.throw(expectedError);
     }
   });
 

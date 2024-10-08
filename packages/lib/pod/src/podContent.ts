@@ -227,7 +227,7 @@ export class PODContent {
    *
    * @param jsonEntries the JSON-encoded entries.
    * @returns a new POD object
-   * @throws TypeError if the input is malformed
+   * @throws if the input is malformed
    */
   public static fromJSON(jsonEntries: JSONPODEntries): PODContent {
     return PODContent.fromEntries(podEntriesFromJSON(jsonEntries));

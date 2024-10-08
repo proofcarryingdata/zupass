@@ -1,6 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 import {
+  JSONPODEntries,
   PODContent,
   PODName,
   PODValue,
@@ -13,6 +14,7 @@ import {
   clonePODEntries,
   clonePODValue,
   isPODNumericValue,
+  podEntriesToJSON,
   podNameHash,
   podValueHash
 } from "../src";
@@ -209,6 +211,21 @@ describe("PODContent class should work", async function () {
     );
     expect(transferredContent2.asEntries()).to.deep.eq(podContent2.asEntries());
     expect(transferredContent2.listNames()).to.deep.eq(expectedNameOrder2);
+  });
+
+  it("should reject invalid JSON input", function () {
+    const goodJSON = podEntriesToJSON(sampleEntries1);
+    const badInputs = [
+      [{ ...goodJSON, "!@#$": "hello" }, TypeError],
+      [{ ...goodJSON, hello: undefined }, TypeError],
+      [{ ...goodJSON, hello: null }, TypeError],
+      [{ ...goodJSON, hello: { type: "string", value: 123n } }, TypeError]
+    ] as [JSONPODEntries, ErrorConstructor][];
+
+    for (const [badInput, expectedError] of badInputs) {
+      const fn = (): PODContent => PODContent.fromJSON(badInput);
+      expect(fn).to.throw(expectedError);
+    }
   });
 
   it("should not be mutable via getValue", function () {

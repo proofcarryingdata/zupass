@@ -4,7 +4,11 @@ import { PODContent } from "./podContent";
 import { signPODRoot, verifyPODRootSignature } from "./podCrypto";
 import { JSONPOD, podEntriesFromJSON, podEntriesToJSON } from "./podJSON";
 import { PODEntries } from "./podTypes";
-import { checkPublicKeyFormat, checkSignatureFormat } from "./podUtil";
+import {
+  checkPublicKeyFormat,
+  checkSignatureFormat,
+  requireType
+} from "./podUtil";
 
 /**
  * Class encapsulating a signed POD with functions for common use cases.
@@ -192,6 +196,18 @@ export class POD {
    * @throws RangeError if a value is outside of the bounds
    */
   public static fromJSON(jsonPOD: JSONPOD): POD {
+    requireType("jsonPOD", jsonPOD, "object");
+
+    // Rule out unrecognized keys to avoid lossy parsing of a future format
+    // which might have more fields.  This also implicitly rejects a "version"
+    // field, so that if we add one later old code won't ignore it.
+    if (Object.keys(jsonPOD).length !== 3) {
+      throw TypeError(
+        "JSON POD should contain only the 3 expected keys: " +
+          "entries, signature, signerPublicKey"
+      );
+    }
+
     return POD.load(
       podEntriesFromJSON(jsonPOD.entries),
       jsonPOD.signature,
