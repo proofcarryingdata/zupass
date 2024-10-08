@@ -218,8 +218,10 @@ describe("podUtil input checkers should work", async function () {
       [undefined, "string"],
       [{}, "array"],
       [{ abc: 123 }, "array"],
+      [null, "array"],
       [[], "object"],
-      [[1, 2, 3, "abc"], "object"]
+      [[1, 2, 3, "abc"], "object"],
+      [null, "object"]
     ] as [string | bigint, string][];
     for (const testInput of testCases) {
       const fn = (): void => {

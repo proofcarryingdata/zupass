@@ -164,8 +164,8 @@ export function checkPODName(name?: string): string {
  * Checks that `value` has the run-time type given by `typeName`.
  *
  * Works for any runtime JavaScript type, but two values have special meaning.
- * "object" is used specifically to require a non-array object, while "array"
- * is used to mean an array object.
+ * "object" is used specifically to require a non-null non-array object, while
+ * "array" is used to mean an non-null array object.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -180,10 +180,10 @@ export function requireType(
 ): void {
   switch (typeName) {
     case "object":
-      if (typeof value !== "object" || Array.isArray(value)) {
+      if (typeof value !== "object" || Array.isArray(value) || value === null) {
         throw new TypeError(
           `Invalid value for entry ${nameForErrorMessages}.  \
-          Expected a non-array object.`
+          Expected a non-array non-null object.`
         );
       }
       break;
