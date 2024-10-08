@@ -35,6 +35,7 @@ const BottomModalContainer = styled.div<{
   max-height: 100%;
   height: ${({ $height }): string | number => ($height ? $height : "auto")};
   margin: 0 auto;
+  overflow-y: auto;
 `;
 
 export type BottomModalProps = {
