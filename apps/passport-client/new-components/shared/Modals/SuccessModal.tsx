@@ -38,6 +38,7 @@ export const SuccessModal = (): JSX.Element => {
           </Typography>
         </TitleContainer>
         <Button2
+          variant="secondary"
           onClick={() => {
             dispatch({
               type: "set-bottom-modal",

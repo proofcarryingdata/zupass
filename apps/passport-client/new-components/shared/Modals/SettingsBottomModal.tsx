@@ -173,7 +173,7 @@ export function SettingsBottomModal(): JSX.Element {
             });
           }}
         >
-          Back
+          Close
         </Button2>
       </SettingsContainer>
     </BottomModal>

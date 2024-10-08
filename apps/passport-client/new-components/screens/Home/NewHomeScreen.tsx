@@ -53,7 +53,6 @@ const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
 const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
   const tickets = allPCDs.filter(isEventTicketPCD);
-  const ticketsTrigger = tickets.map((t) => t.id).join(" ");
   return useMemo(() => {
     const eventsMap = new Map<string, TicketPack[]>();
     for (const ticket of tickets) {
@@ -94,16 +93,16 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
       pack.addOns.push(ticket);
     }
     return Array.from(eventsMap.entries());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ticketsTrigger]);
+  }, [tickets]);
 };
 
-const Container = styled.div`
+const Container = styled.div<{ ticketsAmount: number }>`
   display: flex;
   flex-direction: column;
   margin-top: 20px;
   width: fit-content;
-  gap: ${40 + BUTTONS_CONTAINER_HEIGHT}px;
+  gap: ${({ ticketsAmount }): number =>
+    ticketsAmount > 1 ? 40 + BUTTONS_CONTAINER_HEIGHT : 20}px;
 `;
 
 const SwipeViewContainer = styled.div`
@@ -309,7 +308,7 @@ export const NewHomeScreen = (): ReactElement => {
               {tickets.map(([eventName, packs], i) => {
                 const eventDetails = getEventDetails(packs[0]);
                 return (
-                  <Container key={eventName}>
+                  <Container key={eventName} ticketsAmount={tickets.length}>
                     <TicketCard
                       ticketWidth={cardWidth}
                       key={eventName}
@@ -435,7 +434,7 @@ export const NewHomeScreen = (): ReactElement => {
           </SwipeViewContainer>
         </>
       )}
-      <Spacer h={48} />
+      <Spacer h={96} />
       <FloatingMenu />
       <AddOnsModal />
       <NewModals />
