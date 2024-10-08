@@ -16,6 +16,7 @@ enum PODDisplayFormat {
   Collectable = "collectable"
 }
 
+const newui = true;
 /**
  * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
@@ -52,7 +53,9 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
     sigButtonColor.color = "white";
     sigButtonColor.background = "var(--danger)";
   }
-
+  if (newui) {
+    return <Container>hello, world</Container>;
+  }
   return (
     <Container>
       {content}
@@ -60,7 +63,7 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
       <Separator />
       {otherDisplayFormat === undefined ? null : (
         <Button
-          style="secondary"
+          style="primary"
           size="small"
           onClick={async (): Promise<void> =>
             setDisplayFormat(otherDisplayFormat || "pod")
@@ -84,10 +87,10 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
         {sigStatus === 0
           ? "Check signature"
           : sigStatus > 0
-          ? "Valid signature"
-          : error !== undefined
-          ? "Signature error!"
-          : "Bad signature!"}
+            ? "Valid signature"
+            : error !== undefined
+              ? "Signature error!"
+              : "Bad signature!"}
       </Button>
       {error === undefined ? null : <ErrorContainer>{error}</ErrorContainer>}
     </Container>
