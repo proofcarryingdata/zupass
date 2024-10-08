@@ -129,7 +129,17 @@ export function podValueFromJSON(
     case "number":
       return podValueFromTypedJSON("int", jsonValue, nameForErrorMessages);
     case "object":
-      if (Object.keys(jsonValue).length !== 1) {
+      if (Array.isArray(jsonValue)) {
+        throw new TypeError(
+          `Value ${nameForErrorMessages} isn't a well-formed JSON POD Value.` +
+            "  It should be an object not an array."
+        );
+      }
+      if (
+        jsonValue === null ||
+        Array.isArray(jsonValue) ||
+        Object.keys(jsonValue).length !== 1
+      ) {
         throw new TypeError(
           `Value ${nameForErrorMessages} isn't a well-formed JSON POD Value.` +
             "  It should be an object with a single key."
@@ -170,17 +180,17 @@ export function podValueFromTypedJSON(
     case "string":
       return checkPODValue(nameForErrorMessages, {
         type: "string",
-        value: jsonRawValue as string
+        value: jsonRawValue as string // checkPODValue check this
       });
     case "int":
       return checkPODValue(nameForErrorMessages, {
         type: "int",
-        value: bigintFromJSON(jsonRawValue)
+        value: bigintFromJSON(jsonRawValue, nameForErrorMessages)
       });
     case "cryptographic":
       return checkPODValue(nameForErrorMessages, {
         type: "cryptographic",
-        value: bigintFromJSON(jsonRawValue)
+        value: bigintFromJSON(jsonRawValue, nameForErrorMessages)
       });
     case "eddsa_pubkey":
       return checkPODValue(nameForErrorMessages, {
@@ -277,7 +287,8 @@ export function podValueToJSON(
   podValue: PODValue,
   nameForErrorMessages?: string
 ): JSONPODValue {
-  podValue = checkPODValue(nameForErrorMessages || "(unnamed)", podValue);
+  nameForErrorMessages = nameForErrorMessages || "(unnamed)";
+  podValue = checkPODValue(nameForErrorMessages, podValue);
   switch (podValue.type) {
     case "string":
       return podValue.value;
@@ -292,8 +303,11 @@ export function podValueToJSON(
     case "eddsa_pubkey":
       return { eddsa_pubkey: podValue.value };
     default:
-      // @ts-expect-error podValue is of type `never` if we've covered all types
-      throw TypeError(`Unhandled POD value type '${podValue.type as string}'.`);
+      throw TypeError(
+        `Value ${nameForErrorMessages} has unhandled POD value ` +
+          // @ts-expect-error podValue is of type `never` if we've covered all types
+          `type '${podValue.type}'.`
+      );
   }
 }
 

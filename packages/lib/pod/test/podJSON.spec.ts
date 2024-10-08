@@ -5,13 +5,18 @@ import {
   bigintToSimplestJSON,
   checkPODEntries,
   JSONPODEntries,
+  JSONPODValue,
   POD_CRYPTOGRAPHIC_MAX,
   POD_CRYPTOGRAPHIC_MIN,
   POD_INT_MAX,
   POD_INT_MIN,
   PODEntries,
   podEntriesFromJSON,
-  podEntriesToJSON
+  podEntriesToJSON,
+  PODValue,
+  podValueFromJSON,
+  podValueFromTypedJSON,
+  podValueToJSON
 } from "../src";
 import { expectedPublicKey, expectedPublicKeyHex } from "./common";
 
@@ -77,11 +82,219 @@ describe("podJSON conversions should work", async function () {
     expect(parsedEntries2).to.deep.eq(parsedEntries);
   });
 
-  // TODO(artwyman): PODEntries negative test cases
-  // TODO(artwyman): test suite for PODValue to/from JSON
-  // TODO(artwyman): PODValue negative test cases
-  // TODO(artwyman): test suite for podValueFromTypedJSON
-  // TODO(artwyman): podValueFromTypedJSON negative test cases
+  it("podEntriesFromJSON should reject invalid inputs", function () {
+    const badInputs = [
+      // TODO(artwyman) PR1920: [undefined as unknown as JSONPODEntries, TypeError],
+      // TODO(artwyman) PR1920: [null as unknown as JSONPODEntries, TypeError],
+      [[1, 2, 3] as unknown as JSONPODEntries, TypeError],
+      [{ "!@#$%$one": 1 } as JSONPODEntries, TypeError],
+      [{ one: 1n } as unknown as JSONPODEntries, TypeError],
+      [
+        {
+          one: Number.MAX_SAFE_INTEGER + 1
+        } as unknown as JSONPODEntries,
+        RangeError
+      ]
+    ] satisfies [JSONPODEntries, ErrorConstructor][];
+    for (const [input, expectedError] of badInputs) {
+      const fn = (): PODEntries => podEntriesFromJSON(input);
+      expect(fn).to.throw(expectedError);
+    }
+  });
+
+  it("podEntriesToJSON should reject invalid types", function () {
+    const badInputs = [
+      // TODO(artwyman) PR1920: [undefined as unknown as PODEntries, TypeError],
+      // TODO(artwyman) PR1920: [null as unknown as PODEntries, TypeError],
+      [[1, 2, 3] as unknown as PODEntries, TypeError],
+      [{ "!@#$%$one": { type: "int", value: 1n } } as PODEntries, TypeError],
+      [{ one: { type: "int", value: 1 } } as unknown as PODEntries, TypeError]
+    ] satisfies [PODEntries, ErrorConstructor][];
+    for (const [input, expectedError] of badInputs) {
+      const fn = (): JSONPODEntries => podEntriesToJSON(input);
+      expect(fn).to.throw(expectedError);
+    }
+  });
+
+  it("PODValue JSON conversion should round-trip properly", function () {
+    const testValues = [
+      "hello",
+      { string: "world" },
+
+      123,
+      { int: 456 },
+
+      -123,
+      { int: -456 },
+
+      { int: "9223372036854775123" },
+      { int: "-9223372036854775123" },
+
+      { cryptographic: 456 },
+      { cryptographic: "1234567890912345678901234567890" },
+
+      { eddsa_pubkey: expectedPublicKey },
+      { eddsa_pubkey: expectedPublicKeyHex }
+    ] satisfies JSONPODValue[];
+    const expectedValues = [
+      { type: "string", value: "hello" },
+      { type: "string", value: "world" },
+
+      { type: "int", value: 123n },
+      { type: "int", value: 456n },
+
+      { type: "int", value: -123n },
+      { type: "int", value: -456n },
+
+      { type: "int", value: 9223372036854775123n },
+      { type: "int", value: -9223372036854775123n },
+
+      { type: "cryptographic", value: 456n },
+      { type: "cryptographic", value: 1234567890912345678901234567890n },
+
+      { type: "eddsa_pubkey", value: expectedPublicKey },
+      { type: "eddsa_pubkey", value: expectedPublicKeyHex }
+    ] satisfies PODValue[];
+
+    for (let i = 0; i < testValues.length; i++) {
+      const parsedValue = podValueFromJSON(testValues[i]);
+      expect(parsedValue).to.deep.eq(expectedValues[i]);
+      const roundTripValue = podValueFromJSON(podValueToJSON(parsedValue));
+      expect(roundTripValue).to.deep.eq(expectedValues[i]);
+    }
+  });
+
+  it("podValueToJSON should pick smallest format", function () {
+    const expectedInputOutput = [
+      [{ type: "string", value: "hello" }, "hello"],
+      [{ type: "int", value: 123n }, 123],
+      [
+        { type: "int", value: 9223372036854775123n },
+        { int: "0x7ffffffffffffd53" }
+      ],
+      [
+        { type: "int", value: -9223372036854775123n },
+        { int: "-9223372036854775123" }
+      ],
+      [{ type: "cryptographic", value: 456n }, { cryptographic: 456 }],
+      [
+        { type: "cryptographic", value: 1234567890912345678901234567890n },
+        { cryptographic: "0xf951a9fce668f22f345ef0ad2" }
+      ]
+    ] satisfies [PODValue, JSONPODValue][];
+
+    for (const [input, output] of expectedInputOutput) {
+      expect(podValueToJSON(input)).to.deep.eq(output);
+    }
+  });
+
+  it("podValueFromJSON should reject invalid inputs", function () {
+    const nameForErrorMessages = "expectedName";
+    const badInputs = [
+      [undefined as unknown as JSONPODValue, TypeError],
+      [null as unknown as JSONPODValue, TypeError],
+      [{} as unknown as JSONPODValue, TypeError],
+      [[1] as unknown as JSONPODValue, TypeError],
+      [Number.MAX_SAFE_INTEGER + 1, RangeError],
+      [Number.MIN_SAFE_INTEGER - 1, RangeError],
+      [{ type: "int", value: 1 } as unknown as JSONPODValue, TypeError],
+      [{ one: 1, two: 2, three: 3 } as unknown as JSONPODValue, TypeError]
+    ] satisfies [JSONPODValue, ErrorConstructor][];
+
+    for (const [badInput, expectedError] of badInputs) {
+      const fn = (): PODValue =>
+        podValueFromJSON(badInput, nameForErrorMessages);
+      expect(fn).to.throw(expectedError, nameForErrorMessages);
+    }
+  });
+
+  it("podValueToJSON should reject invalid input types", function () {
+    const nameForErrorMessages = "expectedName";
+    const badInputs = [
+      [undefined as unknown as PODValue, TypeError],
+      [null as unknown as PODValue, TypeError],
+      [{} as unknown as PODValue, TypeError],
+      [[1] as unknown as PODValue, TypeError],
+      [{ type: "int", value: undefined } as unknown as PODValue, TypeError],
+      [{ type: "int", value: null } as unknown as PODValue, TypeError],
+      [{ type: "int", value: 1 } as unknown as PODValue, TypeError],
+      [{ one: 1, two: 2, three: 3 } as unknown as PODValue, TypeError],
+      [{ type: "foo", value: "hello" } as unknown as PODValue, TypeError]
+    ] satisfies [PODValue, ErrorConstructor][];
+
+    for (const [badInput, expectedError] of badInputs) {
+      const fn = (): JSONPODValue =>
+        podValueToJSON(badInput, nameForErrorMessages);
+      expect(fn).to.throw(expectedError, nameForErrorMessages);
+    }
+  });
+
+  it("podValueFromTypedJSON should process valid inputs", function () {
+    const testValues = [
+      ["string", "hello"],
+
+      ["int", 123],
+
+      ["int", -123],
+
+      ["int", "9223372036854775123"],
+      ["int", "-9223372036854775123"],
+
+      ["cryptographic", 456],
+      ["cryptographic", "1234567890912345678901234567890"],
+
+      ["eddsa_pubkey", expectedPublicKey],
+      ["eddsa_pubkey", expectedPublicKeyHex]
+    ] satisfies [string, number | string][];
+    const expectedValues = [
+      { type: "string", value: "hello" },
+
+      { type: "int", value: 123n },
+      { type: "int", value: -123n },
+
+      { type: "int", value: 9223372036854775123n },
+      { type: "int", value: -9223372036854775123n },
+
+      { type: "cryptographic", value: 456n },
+      { type: "cryptographic", value: 1234567890912345678901234567890n },
+
+      { type: "eddsa_pubkey", value: expectedPublicKey },
+      { type: "eddsa_pubkey", value: expectedPublicKeyHex }
+    ] satisfies PODValue[];
+
+    for (let i = 0; i < testValues.length; i++) {
+      expect(
+        podValueFromTypedJSON(testValues[i][0], testValues[i][1])
+      ).to.deep.eq(expectedValues[i]);
+    }
+  });
+
+  it("podValueFromTypedJSON should reject invalid inputs", function () {
+    const nameForErrorMessages = "expectedName";
+    const badInputs = [
+      [undefined as unknown as string, 123, TypeError],
+      [null as unknown as string, 123, TypeError],
+      ["string", 123, TypeError],
+      ["int", "hello", SyntaxError],
+      ["int", 123n as unknown as number, TypeError],
+      ["int", Number.MAX_SAFE_INTEGER + 1, RangeError],
+      ["int", Number.MIN_SAFE_INTEGER - 1, RangeError],
+      ["cryptographic", "hello", SyntaxError],
+      ["cryptographic", Number.MAX_SAFE_INTEGER + 1, RangeError],
+      ["cryptographic", Number.MIN_SAFE_INTEGER - 1, RangeError],
+      ["eddsa_pubkey", 123, TypeError],
+      ["eddsa_pubkey", "hello", TypeError]
+    ] satisfies [string, number | string, ErrorConstructor][];
+
+    for (const [badType, badValue, expectedError] of badInputs) {
+      const fn = (): PODValue =>
+        podValueFromTypedJSON(badType, badValue, nameForErrorMessages);
+      expect(fn).to.throw(
+        expectedError,
+        expectedError === SyntaxError ? undefined : nameForErrorMessages
+      );
+    }
+  });
 
   const bigintEncodedPairs = [
     [0n, 0],
@@ -119,6 +332,7 @@ describe("podJSON conversions should work", async function () {
   });
 
   it("bigintFromJSON should reject invalid input", async function () {
+    const nameForErrorMessages = "expectedName";
     const invalidNumberResults = [
       [Number.MAX_SAFE_INTEGER + 1, RangeError],
       [Number.MIN_SAFE_INTEGER - 1, RangeError],
@@ -131,7 +345,7 @@ describe("podJSON conversions should work", async function () {
       [{} as unknown as number, TypeError]
     ] satisfies [number | string, ErrorConstructor][];
     for (const [input, errType] of invalidNumberResults) {
-      const fn = (): bigint => bigintFromJSON(input);
+      const fn = (): bigint => bigintFromJSON(input, nameForErrorMessages);
       expect(fn).to.throw(errType);
     }
   });
