@@ -2,7 +2,7 @@ import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
-import { intersectionWith } from "lodash";
+import intersectionWith from "lodash/intersectionWith";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
@@ -21,6 +21,9 @@ import {
   getDisplayOptions as getPodDisplayOptions,
   isPODPCD
 } from "@pcd/pod-pcd";
+import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
+import { isUnknownPCD } from "@pcd/unknown-pcd";
+import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
 
 const getActivePod = (
   collection: PCDCollection,
@@ -44,19 +47,26 @@ const isEmailPCD = (pcd: PCD<unknown, unknown>): pcd is EmailPCD =>
   pcd.type === EmailPCDTypeName;
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
+  console.log(pcd.type);
   switch (true) {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
       return pcd.claim.ticket.eventName + " - " + pcd.claim.ticket.ticketName;
     case isEmailPCD(pcd):
       return pcd.claim.emailAddress;
     case isPODPCD(pcd):
-      return getPodDisplayOptions(pcd).displayName ?? pcd.id;
+      return getPodDisplayOptions(pcd).header ?? pcd.id;
+    case isEdDSAFrogPCD(pcd):
+      return pcd.claim.data.name;
+    case isZKEdDSAFrogPCD(pcd):
+      return pcd.claim.partialFrog.name ?? pcd.id;
+    case isUnknownPCD(pcd):
     default:
       return pcd.id;
   }
 };
 
 const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
+  console.log(pcd.type, pcd);
   switch (true) {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
       return <Avatar imgSrc={pcd.claim.ticket.imageUrl} />;
@@ -66,6 +76,11 @@ const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
         return <Avatar imgSrc={imageUrl} />;
       }
       return undefined;
+    case isEdDSAFrogPCD(pcd):
+      return pcd.claim.data.imageUrl;
+    case isZKEdDSAFrogPCD(pcd):
+      return pcd.claim.partialFrog.imageUrl;
+    case isUnknownPCD(pcd):
     default:
       return undefined;
   }
