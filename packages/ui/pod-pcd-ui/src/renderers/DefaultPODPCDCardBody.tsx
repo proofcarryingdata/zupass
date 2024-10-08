@@ -38,12 +38,6 @@ export function DefaultPODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
 export function DefaultPODPCDCardBody2({ pcd }: { pcd: PODPCD }): JSX.Element {
   return (
     <Container>
-      <p>
-        A piece of signed Provable Object Data <br />
-        Learn more about PODs <a href="https://zupass.org/pod">here</a>
-      </p>
-      <Separator />
-      <FieldLabel>POD Entries</FieldLabel>
       <TextContainer
         style={{ overflowX: "auto", maxHeight: "300px", overflowY: "auto" }}
       >
