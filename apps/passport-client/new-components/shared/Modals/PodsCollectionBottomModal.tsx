@@ -1,3 +1,4 @@
+import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -7,7 +8,9 @@ import {
   isPODPCD
 } from "@pcd/pod-pcd";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
-import { intersectionWith } from "lodash";
+import { isUnknownPCD } from "@pcd/unknown-pcd";
+import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
+import intersectionWith from "lodash/intersectionWith";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
@@ -50,7 +53,12 @@ const getPcdName = (pcd: PCD<unknown, unknown>): string => {
     case isEmailPCD(pcd):
       return pcd.claim.emailAddress;
     case isPODPCD(pcd):
-      return getPodDisplayOptions(pcd).displayName ?? pcd.id;
+      return getPodDisplayOptions(pcd).header ?? pcd.id;
+    case isEdDSAFrogPCD(pcd):
+      return pcd.claim.data.name;
+    case isZKEdDSAFrogPCD(pcd):
+      return pcd.claim.partialFrog.name ?? pcd.id;
+    case isUnknownPCD(pcd):
     default:
       return pcd.id;
   }
@@ -66,6 +74,11 @@ const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
         return <Avatar imgSrc={imageUrl} />;
       }
       return undefined;
+    case isEdDSAFrogPCD(pcd):
+      return pcd.claim.data.imageUrl;
+    case isZKEdDSAFrogPCD(pcd):
+      return pcd.claim.partialFrog.imageUrl;
+    case isUnknownPCD(pcd):
     default:
       return undefined;
   }

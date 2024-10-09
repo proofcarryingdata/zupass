@@ -88,11 +88,11 @@ export const ImportModal = (): ReactNode => {
 
   // since the import action is not a seperate page anymore, we have to manually stop the sync when the import is in progress
   const pauseSync = useCallback(
-    (): Promise<void> => dispatch({ type: "pasueSync", value: true }),
+    (): Promise<void> => dispatch({ type: "pauseSync", value: true }),
     [dispatch]
   );
   const continueSync = useCallback(
-    (): Promise<void> => dispatch({ type: "pasueSync", value: false }),
+    (): Promise<void> => dispatch({ type: "pauseSync", value: false }),
     [dispatch]
   );
 
@@ -263,7 +263,29 @@ export const ImportModal = (): ReactNode => {
       </ButtonsContainer>
     </>
   );
-
+  const emptyImporState = (
+    <>
+      <TextContainer>
+        <Typography fontWeight={800} fontSize={20}>
+          NO PCDS FOUND
+        </Typography>
+        <Typography fontSize={16}>
+          The file you uploaded didn't contain new PCDs, please try a different
+          file.
+        </Typography>
+      </TextContainer>
+      <ButtonsContainer>
+        <Button2
+          variant="secondary"
+          onClick={() => {
+            reset(false);
+          }}
+        >
+          Back
+        </Button2>
+      </ButtonsContainer>
+    </>
+  );
   return (
     <BottomModal
       isOpen={activeModal.modalType === "import"}
@@ -274,53 +296,57 @@ export const ImportModal = (): ReactNode => {
       <Container>
         {importState.state === "initial" && initialState}
 
-        {importState.state === "valid-file-selected" && (
-          <>
-            <TextContainer>
-              <Typography fontSize={16} fontWeight={500}>
-                The selected file contains{" "}
-                <Typography fontWeight={700}>
-                  {importState.mergeablePcdIds.size}
-                </Typography>{" "}
-                new PCDs
-              </Typography>
-              <div>
-                Import PCDs from the following backed-up folders:
-                <Folders>
-                  {Object.entries(importState.folderCounts).map(
-                    ([folder, count]) => {
-                      return (
-                        <Folder key={folder === "" ? "Main Folder" : folder}>
-                          <input
-                            type="checkbox"
-                            checked={importState.selectedFolders.has(folder)}
-                            onChange={(): void => toggleFolder(folder)}
-                          ></input>
-                          <Typography fontSize={16} fontWeight={500}>
-                            {folder === "" ? "Main Folder" : folder} ({count})
-                          </Typography>
-                        </Folder>
-                      );
-                    }
-                  )}
-                </Folders>
-              </div>
-              <Button2
-                onClick={importPCDs}
-                disabled={importState.selectedFolders.size === 0}
-              >
-                Import{" "}
-                {Object.entries(importState.folderCounts).reduce(
-                  (total, [folder, count]) =>
-                    total +
-                    (importState.selectedFolders.has(folder) ? count : 0),
-                  0
-                )}{" "}
-                PCDs
-              </Button2>
-            </TextContainer>
-          </>
-        )}
+        {importState.state === "valid-file-selected" &&
+          importState.mergeablePcdIds.size <= 0 &&
+          emptyImporState}
+        {importState.state === "valid-file-selected" &&
+          importState.mergeablePcdIds.size > 0 && (
+            <>
+              <TextContainer>
+                <Typography fontSize={16} fontWeight={500}>
+                  The selected file contains{" "}
+                  <Typography fontWeight={700}>
+                    {importState.mergeablePcdIds.size}
+                  </Typography>{" "}
+                  new PCDs
+                </Typography>
+                <div>
+                  Import PCDs from the following backed-up folders:
+                  <Folders>
+                    {Object.entries(importState.folderCounts).map(
+                      ([folder, count]) => {
+                        return (
+                          <Folder key={folder === "" ? "Main Folder" : folder}>
+                            <input
+                              type="checkbox"
+                              checked={importState.selectedFolders.has(folder)}
+                              onChange={(): void => toggleFolder(folder)}
+                            ></input>
+                            <Typography fontSize={16} fontWeight={500}>
+                              {folder === "" ? "Main Folder" : folder} ({count})
+                            </Typography>
+                          </Folder>
+                        );
+                      }
+                    )}
+                  </Folders>
+                </div>
+                <Button2
+                  onClick={importPCDs}
+                  disabled={importState.selectedFolders.size === 0}
+                >
+                  Import{" "}
+                  {Object.entries(importState.folderCounts).reduce(
+                    (total, [folder, count]) =>
+                      total +
+                      (importState.selectedFolders.has(folder) ? count : 0),
+                    0
+                  )}{" "}
+                  PCDs
+                </Button2>
+              </TextContainer>
+            </>
+          )}
         {importState.state === "import-complete" && !importEventState && (
           <NewLoader columns={5} rows={5} />
         )}
@@ -341,6 +367,7 @@ export const ImportModal = (): ReactNode => {
                 </Typography>
               </TextContainer>
               <Button2
+                variant="secondary"
                 onClick={() => {
                   reset(true);
                 }}
@@ -381,6 +408,7 @@ export const ImportModal = (): ReactNode => {
               </Typography>
             </TextContainer>
             <Button2
+              variant="secondary"
               onClick={() => {
                 reset(true);
               }}
