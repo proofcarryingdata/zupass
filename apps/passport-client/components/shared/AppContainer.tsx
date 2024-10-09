@@ -1,7 +1,6 @@
 import { ReactNode, useCallback } from "react";
 import { Toaster } from "react-hot-toast";
 import styled, { createGlobalStyle } from "styled-components";
-// import { ErrorBottomModal } from "../../new-components/shared/Modals/ErrorBottomModal";
 import {
   useAppError,
   useDispatch,
