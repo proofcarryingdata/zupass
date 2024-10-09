@@ -1,8 +1,10 @@
 import {
+  Card,
   FieldLabel,
   HiddenText,
   Separator,
   Spacer,
+  styled,
   TextContainer
 } from "@pcd/passport-ui";
 import { podEntriesToSimplifiedJSON } from "@pcd/pod";
@@ -35,22 +37,40 @@ export function DefaultPODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
   );
 }
 
+const StyledPre = styled.pre`
+  color: var(--text-primary);
+  // TODO: check about this font-family
+  // font-family: "Roboto Mono";
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 135%; /* 18.9px */
+`;
+
 export function DefaultPODPCDCardBody2({ pcd }: { pcd: PODPCD }): JSX.Element {
   return (
-    <Container>
+    <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
       <TextContainer
-        style={{ overflowX: "auto", maxHeight: "300px", overflowY: "auto" }}
+        style={{
+          overflowX: "auto",
+          maxHeight: "300px",
+
+          overflowY: "auto",
+          backgroundColor: "#F6F8FD"
+        }}
       >
-        <pre>{podEntriesToSimplifiedJSON(pcd.claim.entries, 2)}</pre>
+        <StyledPre>
+          {podEntriesToSimplifiedJSON(pcd.claim.entries, 2)}
+        </StyledPre>
       </TextContainer>
-      <Spacer h={8} />
-      <FieldLabel>EdDSA Public Key</FieldLabel>
-      <HiddenText
-        text={pcd.claim.signerPublicKey}
-        style={{ overflowX: "auto" }}
-      />
-      <FieldLabel>EdDSA Signature</FieldLabel>
-      <HiddenText text={pcd.proof.signature} style={{ overflowX: "auto" }} />
-    </Container>
+      <Card title="EdDSA PUBLIC KEY">
+        <HiddenText
+          text={pcd.claim.signerPublicKey}
+          style={{ overflowX: "auto" }}
+        />
+      </Card>
+      <Card title="EdDSA SIGNATURE">
+        <HiddenText text={pcd.proof.signature} style={{ overflowX: "auto" }} />
+      </Card>
+    </div>
   );
 }

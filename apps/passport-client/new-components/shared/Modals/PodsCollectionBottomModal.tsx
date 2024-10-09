@@ -1,6 +1,11 @@
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
+import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
+import {
+  getDisplayOptions as getPodDisplayOptions,
+  isPODPCD
+} from "@pcd/pod-pcd";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { intersectionWith } from "lodash";
 import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
@@ -16,11 +21,6 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
-import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
-import {
-  getDisplayOptions as getPodDisplayOptions,
-  isPODPCD
-} from "@pcd/pod-pcd";
 
 const getActivePod = (
   collection: PCDCollection,
@@ -148,11 +148,13 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       isOpen={isPodsCollectionModalOpen}
     >
       <Container>
-        <UserTitleContainer>
-          <Typography fontSize={20} fontWeight={800} align="center">
-            COLLECTED PODS
-          </Typography>
-        </UserTitleContainer>
+        {!activePod && (
+          <UserTitleContainer>
+            <Typography fontSize={20} fontWeight={800} align="center">
+              COLLECTED PODS
+            </Typography>
+          </UserTitleContainer>
+        )}
         <ListContainer ref={listContainerRef}>
           {activePod ? (
             <CardBody isMainIdentity={false} pcd={activePod} />

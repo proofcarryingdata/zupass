@@ -4,7 +4,7 @@ import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { useState } from "react";
 import { CollectablePODPCDCardBody } from "./renderers/CollectablePODPCDCardBody";
-import { DefaultPODPCDCardBody } from "./renderers/DefaultPODPCDCardBody";
+import { DefaultPODPCDCardBody2 } from "./renderers/DefaultPODPCDCardBody";
 import { Container } from "./shared";
 
 export const PODPCDUI: PCDUI<PODPCD> = {
@@ -41,7 +41,7 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
     case PODDisplayFormat.POD:
     // Fallthrough
     default:
-      content = <DefaultPODPCDCardBody pcd={pcd} />;
+      content = <DefaultPODPCDCardBody2 pcd={pcd} />;
       break;
   }
 
@@ -54,7 +54,20 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
     sigButtonColor.background = "var(--danger)";
   }
   if (newui) {
-    return <Container>hello, world</Container>;
+    return (
+      <Container>
+        <div
+          style={{
+            padding: 12,
+            borderRadius: 12,
+            border: "1px solid rgba(0, 0, 0, 0.10)",
+            boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.05)"
+          }}
+        >
+          {content}
+        </div>
+      </Container>
+    );
   }
   return (
     <Container>
@@ -87,10 +100,10 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
         {sigStatus === 0
           ? "Check signature"
           : sigStatus > 0
-            ? "Valid signature"
-            : error !== undefined
-              ? "Signature error!"
-              : "Bad signature!"}
+          ? "Valid signature"
+          : error !== undefined
+          ? "Signature error!"
+          : "Bad signature!"}
       </Button>
       {error === undefined ? null : <ErrorContainer>{error}</ErrorContainer>}
     </Container>

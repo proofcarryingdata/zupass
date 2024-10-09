@@ -1,23 +1,10 @@
 import { styled } from "@pcd/passport-ui";
 
 export const Container = styled.div`
-  padding: 24px;
+  padding-right: 24px;
+  padding-left: 24px;
   display: flex;
   flex-direction: column;
-`;
-const BlockContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const Block = styled.div`
-  display: flex;
-  padding: 4px;
-  flex-direction: column;
-  align-items: flex-start;
-  align-self: stretch;
-  border-radius: 8px;
 `;
 
 export const Title = styled.div`
