@@ -207,12 +207,12 @@ export function requireType(
 }
 
 /**
- * Checks that `value` has the run-time type given by `typeName`.  Compile-time
- * type of input/output is limited to expected POD value types.
+ * Checks that `value` has the run-time type given by `typeName`, and returns
+ * the value for easy chaining.
  *
- * Works for any runtime JavaScript type, but two values have special meaning.
- * "object" is used specifically to require a non-array object, while "array"
- * is used to mean an array object.
+ * Works identically to {@link requireType} except that the compile-time type of
+ * input/output is limited to expected POD value types to help catch errors
+ * at compile time.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
