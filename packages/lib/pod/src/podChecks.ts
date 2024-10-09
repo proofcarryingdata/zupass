@@ -158,8 +158,11 @@ export function checkPODName(name?: string): string {
 }
 
 /**
- * Checks that `value` has the run-time type given by `typeName`.  Works for
- * any Typescript Type.
+ * Checks that `value` has the run-time type given by `typeName`.
+ *
+ * Works for any runtime JavaScript type, but two values have special meaning.
+ * "object" is used specifically to require a non-null non-array object, while
+ * "array" is used to mean a non-null array object.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -172,16 +175,41 @@ export function requireType(
   value: unknown,
   typeName: string
 ): void {
-  if (typeof value !== typeName) {
-    throw new TypeError(
-      `Invalid value for entry ${nameForErrorMessages}.  Expected type ${typeName}.`
-    );
+  switch (typeName) {
+    case "object":
+      if (typeof value !== "object" || Array.isArray(value) || value === null) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+          Expected a non-array non-null object.`
+        );
+      }
+      break;
+    case "array":
+      if (typeof value !== "object" || !Array.isArray(value)) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+          Expected an array.`
+        );
+      }
+      break;
+    default:
+      if (typeof value !== typeName) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+          Expected type ${typeName}.`
+        );
+      }
+      break;
   }
 }
 
 /**
- * Checks that `value` has the run-time type given by `typeName`.  Compile-time
- * type of input/output is limited to expected POD value types.
+ * Checks that `value` has the run-time type given by `typeName`, and returns
+ * the value for easy chaining.
+ *
+ * Works identically to {@link requireType} except that the compile-time type of
+ * input/output is limited to expected POD value types to help catch errors
+ * at compile time.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -262,9 +290,19 @@ export function checkPODValue(
   nameForErrorMessages: string,
   podValue?: PODValue
 ): PODValue {
+  if (podValue === null) {
+    throw new TypeError(
+      `POD value for ${nameForErrorMessages} cannot be null.`
+    );
+  }
   if (podValue === undefined || podValue.value === undefined) {
     throw new TypeError(
       `POD value for ${nameForErrorMessages} cannot be undefined.`
+    );
+  }
+  if (podValue.value === null) {
+    throw new TypeError(
+      `POD value for ${nameForErrorMessages} cannot be null.`
     );
   }
 
