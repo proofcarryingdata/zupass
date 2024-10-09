@@ -8,6 +8,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
+import { TicketType } from "../new-components/screens/Home/types";
 import { EmbeddedScreenState } from "./embedded";
 import { Emitter } from "./emitter";
 export type GetState = () => AppState;
@@ -21,11 +22,28 @@ export interface AppState {
   identityV3: IdentityV3;
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;
+  pauseSync?: boolean;
   encryptionKey?: string;
   credentialCache: CredentialCache;
 
   // bottom modal will deprecate modal
-  bottomModal: { modalType: "settings" } | { modalType: "none" };
+  bottomModal:
+    | {
+        modalType: "pods-collection";
+        activePodId?: string;
+        idType?: "ticketId" | "id";
+      }
+    | { modalType: "settings" }
+    | { modalType: "change-password" }
+    | { modalType: "another-device-changed-password" }
+    | { modalType: "invalid-participant" }
+    | { modalType: "success-modal"; title: string; description: string }
+    | { modalType: "about" }
+    | { modalType: "import" }
+    | { modalType: "manage-emails" }
+    | { modalType: "delete-account" }
+    | { modalType: "ticket-add-ons"; addOns: TicketType[] }
+    | { modalType: "none" };
 
   // View state
   modal:

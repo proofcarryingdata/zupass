@@ -6,16 +6,21 @@ import {
   useDispatch,
   useUserShouldAgreeNewPrivacyNotice
 } from "../../src/appHooks";
+import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 import { ErrorPopup } from "../modals/ErrorPopup";
 import { ScreenLoader } from "./ScreenLoader";
 
 // Wrapper for all screens.
 export function AppContainer({
   children,
-  bg
+  bg,
+  fullscreen,
+  noPadding
 }: {
   bg: "primary" | "gray";
   children?: ReactNode;
+  fullscreen?: boolean;
+  noPadding?: boolean;
 }): JSX.Element {
   const dispatch = useDispatch();
   const error = useAppError();
@@ -29,10 +34,10 @@ export function AppContainer({
   const col =
     bg === "gray" ? "var(--dot-pattern-bg)" : "var(--bg-dark-primary)";
   return (
-    <>
+    <Container $fullscreen={!!fullscreen}>
       <GlobalBackground color={col} />
       <Background>
-        <CenterColumn>
+        <CenterColumn defaultPadding={!noPadding}>
           {children && (
             <Toaster
               toastOptions={{
@@ -46,10 +51,12 @@ export function AppContainer({
             />
           )}
           {children ?? <ScreenLoader text="Zupass" />}
+          {/* When phase3 please remove ErrorPopup with ErrorBottomModal */}
           {error && <ErrorPopup error={error} onClose={onClose} />}
+          {/* {error && <ErrorBottomModal error={error} onClose={onClose} />} */}
         </CenterColumn>
       </Background>
-    </>
+    </Container>
   );
 }
 
@@ -64,14 +71,28 @@ export const Background = styled.div`
   min-height: 100%;
 `;
 
-export const CenterColumn = styled.div`
+export const CenterColumn = styled.div<{ defaultPadding: boolean }>`
   display: flex;
   justify-content: flex-start;
   align-items: center;
   flex-direction: column;
   min-height: 100%;
-  max-width: 420px;
+  max-width: ${MAX_WIDTH_SCREEN}px;
   margin: 0 auto;
   position: relative;
-  padding: 16px;
+  ${({ defaultPadding }): string => (defaultPadding ? "padding: 16px;" : "")}
+`;
+
+const Container = styled.div<{ $fullscreen: boolean }>`
+  ${({ $fullscreen }): string =>
+    $fullscreen
+      ? `
+          display: flex;
+          height: 100vh;
+
+          @supports (height: 100dvh) {
+            height: 100dvh;
+          }
+        `
+      : ""}
 `;
