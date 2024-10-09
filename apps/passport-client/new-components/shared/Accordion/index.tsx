@@ -79,8 +79,7 @@ const AccordionItem = styled.div<{ lastItem: boolean; clickable: boolean }>`
 const ItemContainer = styled.div`
   display: flex;
   flex-direction: column;
-  max-height: 100%;
-  overflow-y: scroll;
+  max-height: 30vh;
 `;
 
 export const Accordion = forwardRef<AccordionRef, AccordionProps>(
@@ -107,24 +106,26 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
     const renderedChildren = useMemo(() => {
       const len = children.length;
       return (
-        <ItemContainer>
-          {children.map((child, i) => {
-            const isLast = len - 1 === i;
-            return (
-              <AccordionItem
-                clickable={!!child.onClick}
-                key={child.key}
-                onClick={child.onClick}
-                lastItem={isLast}
-              >
-                <Typography fontSize={14} fontWeight={500}>
-                  {child.title}
-                </Typography>
-                {child.icon}
-              </AccordionItem>
-            );
-          })}
-        </ItemContainer>
+        <div style={{ flexBasis: "50%", overflowY: "scroll" }}>
+          <ItemContainer>
+            {children.map((child, i) => {
+              const isLast = len - 1 === i;
+              return (
+                <AccordionItem
+                  clickable={!!child.onClick}
+                  key={child.key}
+                  onClick={child.onClick}
+                  lastItem={isLast}
+                >
+                  <Typography fontSize={14} fontWeight={500}>
+                    {child.title}
+                  </Typography>
+                  {child.icon}
+                </AccordionItem>
+              );
+            })}
+          </ItemContainer>
+        </div>
       );
     }, [children]);
 

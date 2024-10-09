@@ -31,20 +31,16 @@ import {
 import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FaCheck, FaHashtag, FaQuestion } from "react-icons/fa";
-import { FaInfo, FaList, FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
+import { FaList, FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
 import { GrDocumentLocked } from "react-icons/gr";
 import { TbLetterT } from "react-icons/tb";
 import { SingleValue } from "react-select";
 import { Tooltip } from "react-tooltip";
 import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
-import { Caption } from "../core";
-import { Chip, ChipsContainer } from "../core/Chip";
 import Select from "./Select";
-import {
-  Accordion,
-  AccrodionChild
-} from "../../new-components/shared/Accordion";
+import { Accordion } from "../../new-components/shared/Accordion";
+import { Typography } from "../../new-components/shared/Typography";
 
 /**
  * Type used in `PCDArgs` for record container argument flattening process.
@@ -111,7 +107,6 @@ export function PCDArgs<T extends PCDPackage>({
       }
     }
   );
-
   const [visible, hidden] = _.partition(
     flattenedArgs,
     ([parentArgName, argName, arg]) =>
@@ -122,47 +117,21 @@ export function PCDArgs<T extends PCDPackage>({
 
   return (
     <ArgsContainer id="pcd-args">
-      {visible.map(([parentKey, key, value]) => {
-        console.log(key, value.argumentType, value.value);
-        return (
-          <ArgInput
-            key={parentKey !== undefined ? `${parentKey}.${key}` : key}
-            argName={key}
-            parentArgName={parentKey}
-            arg={value}
-            setArgs={setArgs}
-            defaultArg={options?.[parentKey ?? key]}
-            proveOptions={proveOptions}
-          />
-        );
-      })}
-      {hidden.length > 0 && (
-        <>
-          <ShowMoreButton
-            onClick={(): void => setShowAll((showAll) => !showAll)}
-          >
-            {showAll ? "▼ Hide" : "▶ Show"} {hidden.length} more inputs
-          </ShowMoreButton>
-          {
-            /**
-             * NB: we have to render all the hidden inputs so that
-             * any default value can be automatically set.
-             */
-            hidden.map(([parentKey, key, value]) => (
-              <ArgInput
-                key={parentKey !== undefined ? `${parentKey}.${key}` : key}
-                argName={key}
-                parentArgName={parentKey}
-                arg={value}
-                setArgs={setArgs}
-                defaultArg={options?.[parentKey ?? key]}
-                hidden={!showAll}
-                proveOptions={proveOptions}
-              />
-            ))
-          }
-        </>
-      )}
+      <ArgsInnerContainer>
+        {visible.map(([parentKey, key, value]) => {
+          return (
+            <ArgInput
+              key={parentKey !== undefined ? `${parentKey}.${key}` : key}
+              argName={key}
+              parentArgName={parentKey}
+              arg={value}
+              setArgs={setArgs}
+              defaultArg={options?.[parentKey ?? key]}
+              proveOptions={proveOptions}
+            />
+          );
+        })}
+      </ArgsInnerContainer>
     </ArgsContainer>
   );
 }
@@ -491,7 +460,8 @@ export function ObjectArgInput({
 
 function ToggleListArgInput({
   arg,
-  setArg
+  setArg,
+  ...rest
 }: ArgInputProps<ToogleListArgument<ToggleList>>): JSX.Element {
   const type = isRevealListArgument(arg) ? "reveal" : "default";
   const getLabel = useCallback(
@@ -532,7 +502,7 @@ function ToggleListArgInput({
   );
 
   return (
-    <div>
+    <ArgContainer arg={arg} {...rest}>
       {!!entries.length && (
         <Accordion
           title={arg.displayName || "revealed information"}
@@ -548,7 +518,7 @@ function ToggleListArgInput({
           })}
         />
       )}
-    </div>
+    </ArgContainer>
   );
 }
 
@@ -616,7 +586,19 @@ export function PCDArgInput({
       setPCD(undefined);
     }
   }, [arg.value, pcdCollection]);
-
+  if (proveOptions?.multi) {
+    return (
+      <Accordion
+        children={options.map((option) => {
+          return {
+            title: option.label,
+            key: option.id
+          };
+        })}
+        title={arg.displayName ?? "tickets"}
+      />
+    );
+  }
   if (proveOptions?.multi) {
     return (
       <ArgContainer
@@ -654,16 +636,36 @@ export function PCDArgInput({
       }
     >
       {!!relevantPCDs.length && (
-        <Select
-          value={options.find((option) => option.id === pcd?.id)}
-          options={options}
-          onChange={onChange}
-          isDisabled={!arg.userProvided}
-        />
+        <SelectContainer>
+          <Typography
+            style={{ paddingTop: 12, paddingLeft: 12 }}
+            fontWeight={700}
+            fontSize={14}
+            color="var(--text-tertiary)"
+          >
+            {arg.displayName?.toUpperCase() ?? "TICKETS"}
+          </Typography>
+          <Select
+            value={options.find((option) => option.id === pcd?.id)}
+            options={options}
+            onChange={onChange}
+            isDisabled={!arg.userProvided}
+          />
+        </SelectContainer>
       )}
     </ArgContainer>
   );
 }
+
+const SelectContainer = styled.div`
+  border-radius: 8px;
+  border: 1px solid #eceaf4;
+  background: #f6f8fd;
+  display: flex;
+  padding: 4px;
+  gap: 8px;
+  flex-direction: column;
+`;
 
 const MultiOptionContainer = styled.div`
   width: 100%;
@@ -686,11 +688,9 @@ const MultiOptionSingleOption = styled.div`
 `;
 
 function ArgContainer({
-  arg: { argumentType, displayName, description, hideIcon },
   hidden,
   error,
-  children,
-  end
+  children
 }: {
   arg: Argument<PrimitiveArgumentTypeName, unknown>;
   hidden?: boolean;
@@ -701,44 +701,8 @@ function ArgContainer({
 }): JSX.Element {
   return (
     <ArgItemContainer hidden={hidden ?? false} error={!!error}>
-      {!hideIcon && (
-        <ArgItemIcon
-          draggable={false}
-          aria-label={argumentType}
-          title={argumentType}
-        >
-          {argTypeIcons[argumentType]}
-        </ArgItemIcon>
-      )}
-      <ArgItem>
-        <ArgName>
-          {displayName ? (
-            <>
-              <Caption>{displayName}</Caption>
-              {description && (
-                <a
-                  data-tooltip-id={`arg-input-tooltip-${_.kebabCase(
-                    displayName
-                  )}`}
-                  data-tooltip-content={description}
-                >
-                  <TooltipIcon draggable={false}>
-                    <FaInfo />
-                  </TooltipIcon>
-                </a>
-              )}
-              <TooltipContainer
-                id={`arg-input-tooltip-${_.kebabCase(displayName)}`}
-              />
-            </>
-          ) : (
-            description && <Description>{description}</Description>
-          )}
-          <End>{end}</End>
-        </ArgName>
-        {children}
-        {error && <ErrorText>{error}</ErrorText>}
-      </ArgItem>
+      {children}
+      {error && <ErrorText>{error}</ErrorText>}
     </ArgItemContainer>
   );
 }
@@ -773,15 +737,8 @@ const End = styled.div`
 `;
 
 const ArgItemContainer = styled.div<{ hidden: boolean; error: boolean }>`
-  border-radius: 16px;
-  border: 1px solid;
-  border-color: ${({ error }): string =>
-    error ? "var(--danger)" : "var(--primary-lite)"};
-  background-color: red;
-  align-items: center;
-  padding: 8px 16px;
-  gap: 16px;
-  display: ${({ hidden }): string => (hidden ? "none" : "flex")};
+  width: 100%;
+  display: ${({ hidden }): string => (hidden ? "none" : "")};
 `;
 
 const ArgItemIcon = styled.div`
@@ -818,6 +775,7 @@ const ArgItem = styled.div`
 const ArgsContainer = styled.div`
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
 `;
 
 const ErrorText = styled.div`
@@ -866,78 +824,9 @@ const ShowMoreButton = styled.a`
   text-decoration: none;
 `;
 
-function ToggleListArgInputOld({
-  arg,
-  setArg,
-  ...rest
-}: ArgInputProps<ToogleListArgument<ToggleList>>): JSX.Element {
-  const [showAll, setShowAll] = useState(arg.userProvided);
-
-  const type = isRevealListArgument(arg) ? "reveal" : "default";
-  const getLabel = useCallback(
-    (key: string) => {
-      switch (type) {
-        case "reveal":
-          return key.replace(/^reveal/, "");
-        default:
-          return key;
-      }
-    },
-    [type]
-  );
-  const getIcon = useCallback(
-    (value: boolean) => {
-      switch (type) {
-        case "reveal":
-          return value ? <FaRegEye size={18} /> : <FaRegEyeSlash size={18} />;
-        default:
-          return undefined;
-      }
-    },
-    [type]
-  );
-
-  const entries = useMemo(
-    () =>
-      showAll
-        ? Object.entries(arg.value as unknown as ArrayLike<boolean>)
-        : Object.entries(arg.value as unknown as ArrayLike<boolean>).filter(
-            ([_, value]) => value
-          ),
-    [arg.value, showAll]
-  );
-
-  return (
-    <ArgContainer
-      arg={arg}
-      {...rest}
-      end={
-        entries.length ? (
-          <ShowMoreButton
-            onClick={(): void => setShowAll((showAll) => !showAll)}
-          >
-            {showAll ? "▲" : "▼"}
-          </ShowMoreButton>
-        ) : undefined
-      }
-    >
-      {!!entries.length && (
-        <ChipsContainer direction={showAll ? "row" : "column"}>
-          {entries.map(([key, value]) => (
-            <Chip
-              key={key}
-              label={getLabel(key)}
-              onClick={
-                arg.userProvided
-                  ? (): void => setArg({ ...arg.value, [key]: !value })
-                  : undefined
-              }
-              checked={value}
-              icon={getIcon(value)}
-            />
-          ))}
-        </ChipsContainer>
-      )}
-    </ArgContainer>
-  );
-}
+const ArgsInnerContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex-grow: 1;
+`;

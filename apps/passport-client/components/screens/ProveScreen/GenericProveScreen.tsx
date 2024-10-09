@@ -15,6 +15,14 @@ import {
 } from "../../../src/passportRequest";
 import { err } from "../../../src/util";
 import { GenericProveSection } from "./GenericProveSection";
+import styled from "styled-components";
+import { Typography } from "../../../new-components/shared/Typography";
+
+const Header = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
 
 /**
  * Renders a UI in response to a request from Zupass to calculate
@@ -81,11 +89,27 @@ export function GenericProveScreen({
   }
   console.log(req);
   return (
-    <GenericProveSection
-      initialArgs={req.args}
-      onProve={onProve}
-      pcdType={req.pcdType}
-      options={req.options}
-    />
+    <Container>
+      <Header>
+        <Typography color="var(--text-primary)" fontSize={20} fontWeight={800}>
+          SIGN IN WITH ZUPASS
+        </Typography>
+        <Typography color="var(--text-primary)" fontSize={16}>
+          {req.options?.description}
+        </Typography>
+      </Header>
+      <GenericProveSection
+        initialArgs={req.args}
+        onProve={onProve}
+        pcdType={req.pcdType}
+        options={req.options}
+      />
+    </Container>
   );
 }
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+`;
