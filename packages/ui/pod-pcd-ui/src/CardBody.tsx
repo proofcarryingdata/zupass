@@ -1,4 +1,9 @@
-import { Button, ErrorContainer, Separator } from "@pcd/passport-ui";
+import {
+  Button,
+  ErrorContainer,
+  Separator,
+  SlidingTabs
+} from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { getErrorMessage } from "@pcd/util";
@@ -60,11 +65,45 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
           style={{
             padding: 12,
             borderRadius: 12,
+            display: "flex",
+            flexDirection: "column",
+            gap: 12,
             border: "1px solid rgba(0, 0, 0, 0.10)",
             boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.05)"
           }}
         >
           {content}
+          <div style={{ paddingLeft: 12 }}>
+            <a
+              onClick={async (): Promise<void> => {
+                const sigResult = await verifySignature(pcd);
+                setError(sigResult.errorMessage);
+                setSigStatus(sigResult.isValid ? 1 : -1);
+              }}
+              style={{
+                color: sigStatus > 0 ? "#5B952C" : undefined,
+                textDecoration: sigStatus > 0 ? "none" : undefined
+              }}
+            >
+              {sigStatus === 0
+                ? "Check signature"
+                : sigStatus > 0
+                ? "Valid signature"
+                : error !== undefined
+                ? "Signature error!"
+                : "Bad signature!"}
+            </a>
+          </div>
+          <SlidingTabs
+            initialIndex={displayFormat === PODDisplayFormat.POD ? 1 : 0}
+            onChange={(tab) => {
+              setDisplayFormat(tab);
+            }}
+            tabs={[
+              { value: PODDisplayFormat.Collectable, label: "CARD" },
+              { value: PODDisplayFormat.POD, label: "POD" }
+            ]}
+          />
         </div>
       </Container>
     );
