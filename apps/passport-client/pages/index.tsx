@@ -47,6 +47,7 @@ import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketSc
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
+import { ApprovePermissionsScreen } from "../components/screens/ZappScreens/ApprovePermissionsScreen";
 import { AuthenticateIFrameScreen } from "../components/screens/ZappScreens/AuthenticateIFrameScreen";
 import { ConnectPopupScreen } from "../components/screens/ZappScreens/ConnectPopupScreen";
 import {
@@ -224,6 +225,10 @@ function RouterImpl(): JSX.Element {
             element={<PodboxScannedTicketScreen />}
           />
           <Route path="connect-popup" element={<ConnectPopupScreen />} />
+          <Route
+            path="approve-permissions"
+            element={<ApprovePermissionsScreen />}
+          />
           <Route
             path="authenticate-iframe"
             element={<AuthenticateIFrameScreen />}
