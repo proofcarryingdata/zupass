@@ -5061,52 +5061,52 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@parcnet-js/app-connector@^1.0.0-beta.2":
-  version "1.0.0-beta.2"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-1.0.0-beta.2.tgz#883693c8865cdce99f88ff9c42545fcad78f9aa4"
-  integrity sha512-z/tvKO10pOblfaSU3iiWSUQr7a7BG44wJWRnGI8L4pIN2WZ9FOUULr3fS6fPMJK3lbx3L2Tvdl15s3kyiVx/SA==
+"@parcnet-js/app-connector@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-1.0.0.tgz#30666034bae6282ea672bdd689418cc9c245cbb1"
+  integrity sha512-3AxQe9QT62UP3c9IJd/q50vwXAM7P8BEOXowBR2x2BPBaRNhdYEqhL3NChPK70yk0WSWxh8/clhRGmg3TIBYDw==
   dependencies:
     "@brenoroosevelt/toast" "^2.0.3"
-    "@parcnet-js/client-rpc" "1.0.0-beta.1"
-    "@parcnet-js/podspec" "1.0.0-beta.1"
+    "@parcnet-js/client-rpc" "1.0.0"
+    "@parcnet-js/podspec" "1.0.0"
     "@pcd/gpc" "^0.0.8"
     "@pcd/pod" "^0.1.7"
     nanoevents "^9.0.0"
     valibot "^0.42.0"
 
-"@parcnet-js/client-helpers@^1.0.0-beta.1":
-  version "1.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-1.0.0-beta.1.tgz#4d3918f83bc058eb739183ab536ec0cfb91c5f9f"
-  integrity sha512-C94KmGTYLsRGkw2UU5c4+7pcLT4l9cOPIJqKRC6+NvlEJF2MLvJpD1vqfzwYEqY2o2NhoxZESgqmbsHx3KY9Qg==
+"@parcnet-js/client-helpers@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-1.0.0.tgz#c4964d506e7793f1a8c703771f8c74980f0f6f22"
+  integrity sha512-ha5eneC5K0mSHdLUaglECOj1D3e0jBXxfGS5CN3D68DOo8A3KqYaZqyif8JXtqopkSw7hIUhqaWOHZLY6Uq17w==
   dependencies:
-    "@parcnet-js/client-rpc" "1.0.0-beta.1"
+    "@parcnet-js/client-rpc" "1.0.0"
     valibot "^0.42.0"
 
-"@parcnet-js/client-rpc@1.0.0-beta.1", "@parcnet-js/client-rpc@^1.0.0-beta.1":
-  version "1.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-1.0.0-beta.1.tgz#8396073b13eda6da10617ed7aacf59e4f25fb2b5"
-  integrity sha512-Nvwf3eA9kgZSCZgwKCEoRiG76FTIjcxuADlz0hJZZ2iWOFaotS9Hv9ePEJpUuf4TVRdoeAd4iuXcCSUvbUCXoQ==
+"@parcnet-js/client-rpc@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-1.0.0.tgz#5a95f221012d9b061d7dbd6158ace98d7b8af9bb"
+  integrity sha512-eu/6xf6eZSiOgCaNC1pR8th8FJ0SULAba8Ufdm1E42XSUwC1th9gFM/1AY9aViUvz4zWT51BGPRFdkIB310pHw==
   dependencies:
-    "@parcnet-js/podspec" "1.0.0-beta.1"
+    "@parcnet-js/podspec" "1.0.0"
     "@pcd/gpc" "^0.0.8"
     "@pcd/pod" "^0.1.7"
     valibot "^0.42.0"
 
-"@parcnet-js/podspec@1.0.0-beta.1", "@parcnet-js/podspec@^1.0.0-beta.1":
-  version "1.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-1.0.0-beta.1.tgz#286b39b86e55365ef19fdc436630fc6eb9d54315"
-  integrity sha512-RnhXdJl+4bus4h2Ddk6i52bacvvFwV/Hr8HN6uPa4AT2l7/BEp8DPfqMzlvbdnVejV3vdtKd5zk3f9XcH+jD1g==
+"@parcnet-js/podspec@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-1.0.0.tgz#b5093d2d5fd2a1433ea9129d7075d401a528d791"
+  integrity sha512-ea4o1dTP4crplo/iGnWYkdXGKAaBsOMkSjNhKw0NttuEVlIqELOLXtjV2byAClFnqnmbxkmRUZr6i0s9X3VILg==
   dependencies:
     "@pcd/gpc" "0.0.8"
     "@pcd/pod" "0.1.7"
 
-"@parcnet-js/ticket-spec@^1.0.0-beta.1":
-  version "1.0.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-1.0.0-beta.1.tgz#1d071368bdf5f5723caac0b8376f025e17c89591"
-  integrity sha512-60EOlIbn5anirhi6soKpJ19thV7Dfh5UCiH0QkFOARJERAJM7tcr7Wsl5lk3yDoOQtXbCN20/Gyt0WLCsDHXvw==
+"@parcnet-js/ticket-spec@1.0.0":
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-1.0.0.tgz#64873458f8a0d3bad41fe41b155cfce965bd53b3"
+  integrity sha512-4S9xwbSPWY15lr3dU33dMpom2jgQSe1Z8+hK9jCbLfWvNK1jo3+rp9w/cv5q/wc2VA844Zu3AOse+aTH+lkxEw==
   dependencies:
-    "@parcnet-js/client-rpc" "1.0.0-beta.1"
-    "@parcnet-js/podspec" "1.0.0-beta.1"
+    "@parcnet-js/client-rpc" "1.0.0"
+    "@parcnet-js/podspec" "1.0.0"
 
 "@pcd/proto-pod-gpc-artifacts@0.11.0":
   version "0.11.0"
@@ -20271,16 +20271,7 @@ string-template@~0.2.1:
   resolved "https://registry.yarnpkg.com/string-template/-/string-template-0.2.1.tgz#42932e598a352d01fc22ec3367d9d84eec6c9add"
   integrity sha512-Yptehjogou2xm4UJbxJ4CxgZx12HBfeystp0y3x7s4Dj32ltVVG1Gg8YhKjHZkHicuKpZX/ffilA8505VbUbpw==
 
-"string-width-cjs@npm:string-width@^4.2.0":
-  version "4.2.3"
-  resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
-  integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
-  dependencies:
-    emoji-regex "^8.0.0"
-    is-fullwidth-code-point "^3.0.0"
-    strip-ansi "^6.0.1"
-
-string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
+"string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
@@ -20413,14 +20404,7 @@ stringify-entities@^4.0.0:
     character-entities-html4 "^2.0.0"
     character-entities-legacy "^3.0.0"
 
-"strip-ansi-cjs@npm:strip-ansi@^6.0.1":
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
-  integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
-  dependencies:
-    ansi-regex "^5.0.1"
-
-strip-ansi@^6.0.0, strip-ansi@^6.0.1:
+"strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
@@ -22850,7 +22834,7 @@ workspace-tools@^0.36.4:
     js-yaml "^4.1.0"
     micromatch "^4.0.0"
 
-"wrap-ansi-cjs@npm:wrap-ansi@^7.0.0":
+"wrap-ansi-cjs@npm:wrap-ansi@^7.0.0", wrap-ansi@^7.0.0:
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
   integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
@@ -22863,15 +22847,6 @@ wrap-ansi@^6.0.1, wrap-ansi@^6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-6.2.0.tgz#e9393ba07102e6c91a3b221478f0257cd2856e53"
   integrity sha512-r6lPcBGxZXlIcymEu7InxDMhdW0KDxpLgoFLcguasxCaJ/SOIZwINatK9KY/tf+ZrlywOKU0UDj3ATXUBfxJXA==
-  dependencies:
-    ansi-styles "^4.0.0"
-    string-width "^4.1.0"
-    strip-ansi "^6.0.0"
-
-wrap-ansi@^7.0.0:
-  version "7.0.0"
-  resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
-  integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
   dependencies:
     ansi-styles "^4.0.0"
     string-width "^4.1.0"
