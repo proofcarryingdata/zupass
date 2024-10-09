@@ -1,10 +1,11 @@
 import { listen } from "@parcnet-js/client-helpers/connection/iframe";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { encodePrivateKey } from "@pcd/pod";
-import { isPODPCD, PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
-import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
+import { PermissionRequestSchema, Zapp } from "@parcnet-js/client-rpc";
+import * as p from "@parcnet-js/podspec";
+import { $s } from "@parcnet-js/podspec/pod_value_utils";
+import { isPODPCD } from "@pcd/pod-pcd";
+import { isEqual } from "lodash";
 import { useEffect } from "react";
-import { v4 as uuidv4 } from "uuid";
+import * as v from "valibot";
 import { useStateContext } from "../appHooks";
 import { StateContextValue } from "../dispatch";
 import { ZupassRPCProcessor } from "./ZappServer";
@@ -27,6 +28,79 @@ async function waitForAuthentication(
   });
 }
 
+async function waitForFirstSync(context: StateContextValue): Promise<void> {
+  return new Promise<void>((resolve) => {
+    if (context.getState().completedFirstSync) {
+      resolve();
+      return;
+    }
+    const unlisten = context.stateEmitter.listen((state) => {
+      if (state.completedFirstSync) {
+        unlisten();
+        resolve();
+      }
+    });
+  });
+}
+
+async function waitForPermissionApproval(
+  context: StateContextValue
+): Promise<boolean> {
+  return new Promise<boolean>((resolve) => {
+    const unlisten = context.stateEmitter.listen((state) => {
+      if (state.zappApproved !== undefined) {
+        unlisten();
+        resolve(state.zappApproved);
+      }
+    });
+  });
+}
+
+function isAlreadyAuthorized(
+  context: StateContextValue,
+  zapp: Zapp,
+  origin: string
+): boolean {
+  const zapps = context.getState().pcds.getAllPCDsInFolder("Zapps");
+  const zappPODs = zapps.filter(isPODPCD).map((pcd) => pcd.pod);
+
+  const appPodSpec = p.pod({
+    entries: {
+      origin: {
+        type: "string",
+        isMemberOf: [$s(origin)]
+      },
+      name: {
+        type: "string",
+        isMemberOf: [$s(zapp.name)]
+      },
+      permissions: {
+        type: "string"
+      }
+    }
+  });
+
+  const existingPODQuery = appPodSpec.query(zappPODs);
+  if (existingPODQuery.matches.length === 1) {
+    try {
+      const existingPermissions = v.parse(
+        PermissionRequestSchema,
+        JSON.parse(
+          existingPODQuery.matches[0].content.asEntries().permissions.value
+        )
+      );
+      console.log("existingPermissions", existingPermissions);
+      console.log("zapp.permissions", zapp.permissions);
+      if (isEqual(existingPermissions, zapp.permissions)) {
+        return true;
+      }
+    } catch (e) {
+      console.error("Error parsing permissions", e);
+    }
+  }
+  return false;
+}
+
 export function useZappServer(mode: ListenMode): void {
   const context = useStateContext();
 
@@ -45,6 +119,8 @@ export function useZappServer(mode: ListenMode): void {
     }
     (async (): Promise<void> => {
       const { zapp, advice, origin } = await listen();
+      console.log("zapp", zapp);
+      console.log("origin", origin);
       context.dispatch({ type: "zapp-connect", zapp, origin });
       if (mode === ListenMode.LISTEN_IF_EMBEDDED && !context.getState().self) {
         // If we're not logged in, we need to show a message to the user
@@ -54,72 +130,39 @@ export function useZappServer(mode: ListenMode): void {
         advice.hideClient();
       }
 
-      const zapps = context.getState().pcds.getAllPCDsInFolder("Zapps");
-      let zappPOD = zapps.filter(isPODPCD).find((zapp) => {
-        return Object.entries(zapp.claim.entries).find(([key, entry]) => {
-          if (
-            key === "origin" &&
-            entry.type === "string" &&
-            entry.value === origin
-          ) {
-            return true;
+      await waitForFirstSync(context);
+
+      let approved = false;
+
+      if (isAlreadyAuthorized(context, zapp, origin)) {
+        approved = true;
+      }
+
+      if (mode === ListenMode.LISTEN_IF_NOT_EMBEDDED) {
+        approved = true;
+        await context.dispatch({ type: "zapp-approval", approved });
+      } else {
+        if (!approved) {
+          window.location.hash = "approve-permissions";
+          advice.showClient();
+          approved = await waitForPermissionApproval(context);
+          advice.hideClient();
+
+          if (!approved) {
+            throw new Error("User did not approve Zapp permissions");
           }
-          return false;
-        });
-      });
-
-      let approved = !!zappPOD;
-
-      if (!zappPOD) {
-        // @todo show a modal instead of using confirm
-        approved = confirm(
-          `Allow ${zapp.name} at ${origin} to connect to your Zupass account?\r\n\r\nThis is HIGHLY EXPERIMENTAL - make sure you trust this website.`
-        );
-        if (approved) {
-          const newZapp = (await PODPCDPackage.prove({
-            entries: {
-              argumentType: ArgumentTypeName.Object,
-              value: {
-                origin: { type: "string", value: origin },
-                name: { type: "string", value: zapp.name }
-              }
-            },
-            privateKey: {
-              argumentType: ArgumentTypeName.String,
-              value: encodePrivateKey(
-                Buffer.from(
-                  v3tov4Identity(context.getState().identityV3).export(),
-                  "base64"
-                )
-              )
-            },
-            id: {
-              argumentType: ArgumentTypeName.String,
-              value: uuidv4()
-            }
-          })) as PODPCD;
-          const newZappSerialized = await PODPCDPackage.serialize(newZapp);
-          context.dispatch({
-            type: "add-pcds",
-            pcds: [newZappSerialized],
-            folder: "Zapps"
-          });
-          zappPOD = newZapp;
-        } else {
-          return;
         }
       }
-      if (approved) {
-        const server = new ZupassRPCProcessor(context, zappPOD, advice);
 
-        // @todo handle this with an action
-        context.update({ embeddedScreen: undefined });
-        if (window.parent !== window.self) {
-          window.location.hash = "embedded";
-        }
+      const server = new ZupassRPCProcessor(context, advice);
 
-        advice.ready(server);
+      // @todo handle this with an action
+      context.update({ embeddedScreen: { screen: undefined } });
+      if (window.parent !== window.self) {
+        window.location.hash = "embedded";
       }
+
+      advice.ready(server);
     })();
   }, [context, mode]);
 }
