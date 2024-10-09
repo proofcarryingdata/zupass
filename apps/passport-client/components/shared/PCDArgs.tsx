@@ -41,6 +41,10 @@ import { usePCDCollection } from "../../src/appHooks";
 import { Caption } from "../core";
 import { Chip, ChipsContainer } from "../core/Chip";
 import Select from "./Select";
+import {
+  Accordion,
+  AccrodionChild
+} from "../../new-components/shared/Accordion";
 
 /**
  * Type used in `PCDArgs` for record container argument flattening process.
@@ -117,18 +121,21 @@ export function PCDArgs<T extends PCDPackage>({
   );
 
   return (
-    <ArgsContainer>
-      {visible.map(([parentKey, key, value]) => (
-        <ArgInput
-          key={parentKey !== undefined ? `${parentKey}.${key}` : key}
-          argName={key}
-          parentArgName={parentKey}
-          arg={value}
-          setArgs={setArgs}
-          defaultArg={options?.[parentKey ?? key]}
-          proveOptions={proveOptions}
-        />
-      ))}
+    <ArgsContainer id="pcd-args">
+      {visible.map(([parentKey, key, value]) => {
+        console.log(key, value.argumentType, value.value);
+        return (
+          <ArgInput
+            key={parentKey !== undefined ? `${parentKey}.${key}` : key}
+            argName={key}
+            parentArgName={parentKey}
+            arg={value}
+            setArgs={setArgs}
+            defaultArg={options?.[parentKey ?? key]}
+            proveOptions={proveOptions}
+          />
+        );
+      })}
       {hidden.length > 0 && (
         <>
           <ShowMoreButton
@@ -522,39 +529,22 @@ function ToggleListArgInput({
           ),
     [arg.value, showAll]
   );
+  console.log("this is a toggle list", arg);
 
   return (
-    <ArgContainer
-      arg={arg}
-      {...rest}
-      end={
-        entries.length ? (
-          <ShowMoreButton
-            onClick={(): void => setShowAll((showAll) => !showAll)}
-          >
-            {showAll ? "▲" : "▼"}
-          </ShowMoreButton>
-        ) : undefined
-      }
-    >
+    <>
       {!!entries.length && (
-        <ChipsContainer direction={showAll ? "row" : "column"}>
-          {entries.map(([key, value]) => (
-            <Chip
-              key={key}
-              label={getLabel(key)}
-              onClick={
-                arg.userProvided
-                  ? (): void => setArg({ ...arg.value, [key]: !value })
-                  : undefined
-              }
-              checked={value}
-              icon={getIcon(value)}
-            />
-          ))}
-        </ChipsContainer>
+        <Accordion
+          title={arg.displayName || "revealed information"}
+          children={entries.map(([key, value]) => {
+            return {
+              title: getLabel(key),
+              key
+            };
+          })}
+        />
       )}
-    </ArgContainer>
+    </>
   );
 }
 

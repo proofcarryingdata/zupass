@@ -1,4 +1,10 @@
-import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import {
+  ReactNode,
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useState
+} from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { Typography } from "../Typography";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
@@ -6,6 +12,7 @@ import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 export type AccrodionChild = {
   title: string;
   key?: string;
+  icon?: ReactNode;
   onClick?: () => void;
 };
 

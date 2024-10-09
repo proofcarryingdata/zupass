@@ -14,10 +14,6 @@ import {
   safeRedirectPending
 } from "../../../src/passportRequest";
 import { err } from "../../../src/util";
-import { H2, Spacer } from "../../core";
-import { MaybeModal } from "../../modals/Modal";
-import { AppContainer } from "../../shared/AppContainer";
-import { AppHeader } from "../../shared/AppHeader";
 import { GenericProveSection } from "./GenericProveSection";
 
 /**
@@ -83,29 +79,13 @@ export function GenericProveScreen({
     err(dispatch, "Unsupported request", `Expected a PCD GET request`);
     return null;
   }
-
+  console.log(req);
   return (
-    <>
-      <MaybeModal fullScreen isProveOrAddScreen={true} />
-      <AppContainer bg="primary">
-        <AppHeader isProveOrAddScreen={true}>
-          <H2
-            style={{
-              flex: 1,
-              textAlign: "center"
-            }}
-          >
-            {req.options?.title ?? "Prove " + req.pcdType}
-          </H2>
-        </AppHeader>
-        <GenericProveSection
-          initialArgs={req.args}
-          onProve={onProve}
-          pcdType={req.pcdType}
-          options={req.options}
-        />
-        <Spacer h={64} />
-      </AppContainer>
-    </>
+    <GenericProveSection
+      initialArgs={req.args}
+      onProve={onProve}
+      pcdType={req.pcdType}
+      options={req.options}
+    />
   );
 }

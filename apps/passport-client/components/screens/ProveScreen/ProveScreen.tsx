@@ -70,7 +70,7 @@ export function ProveScreen(): JSX.Element | null {
   return screen;
 }
 
-function getScreen(request: PCDGetRequest): JSX.Element | null {
+export function getScreen(request: PCDGetRequest): JSX.Element | null {
   if (request.type !== PCDRequestType.Get) {
     return null;
   }

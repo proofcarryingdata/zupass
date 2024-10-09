@@ -45,6 +45,7 @@ import { Button } from "../../core";
 import { ProgressBar } from "../../core/ProgressBar";
 import { RippleLoader } from "../../core/RippleLoader";
 import { PCDArgs } from "../../shared/PCDArgs";
+import { Typography } from "../../../new-components/shared/Typography";
 
 /**
  * A reuseable form which can be used to generate a new instance of a PCD
@@ -223,7 +224,11 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
   return (
     <Container>
-      {options?.description && <Description>{options.description}</Description>}
+      {options?.description && (
+        <Typography fontSize={16} family="Rubik">
+          {options.description}
+        </Typography>
+      )}
 
       {options?.debug && <pre>{JSON.stringify(args, null, 2)}</pre>}
 
@@ -233,13 +238,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         options={pcdPackage?.getProveDisplayOptions?.()?.defaultArgs}
         proveOptions={options}
       />
-
-      {folder && (
-        <div>
-          PCD will be added to folder: <br />
-          <strong>{folder}</strong>
-        </div>
-      )}
 
       {error && <ErrorContainer>{error}</ErrorContainer>}
 
