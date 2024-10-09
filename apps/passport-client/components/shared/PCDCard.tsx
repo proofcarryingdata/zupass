@@ -71,11 +71,11 @@ function PCDCardImpl({
     >
       {expanded ? (
         <CardOutlineExpanded>
-          {!hideHeader && (
+          {/* {!hideHeader && (
             <CardHeader isMainIdentity={isMainIdentity}>
               <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
             </CardHeader>
-          )}
+          )} */}
           <CardBodyContainer>
             <CardBody
               pcd={pcd}
@@ -363,15 +363,14 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
 );
 export const CardContainer = styled.div`
   width: 100%;
-  padding: 8px;
 `;
 
 export const CardOutlineExpanded = styled.div`
   ${({ disabled }: { disabled?: boolean }): FlattenSimpleInterpolation => css`
     width: 100%;
     border-radius: 12px;
-    border: 1px solid var(--accent-dark);
-    background: var(--primary-dark);
+    // border: 1px solid var(--accent-dark);
+    // background: var(--primary-dark);
     overflow: hidden;
 
     ${disabled &&

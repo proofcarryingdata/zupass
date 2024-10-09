@@ -5,6 +5,7 @@ import {
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
+import { BottomModal } from "../../../new-components/shared/BottomModal";
 import {
   useCredentialManager,
   useDispatch,
@@ -18,15 +19,11 @@ import {
 } from "../../../src/sessionStorage";
 import { useDeserialized } from "../../../src/useDeserialized";
 import { err } from "../../../src/util";
-import { Button, H2, Spacer } from "../../core";
+import { Spacer } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
-import { MaybeModal } from "../../modals/Modal";
 import { AddedPCD } from "../../shared/AddedPCD";
-import { AppContainer } from "../../shared/AppContainer";
-import { AppHeader } from "../../shared/AppHeader";
 import { PCDCard } from "../../shared/PCDCard";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
-import { ProtocolWorldsStyling } from "../ProtocolWorldsScreens/ProtocolWorldsStyling";
 
 /**
  * Screen that allows the user to respond to a `PCDAddRequest` and add
@@ -105,8 +102,7 @@ export function JustAddScreen({
   } else if (!added) {
     content = (
       <>
-        {isProtocolWorlds && <H2>{"TENSION DISCOVERED".toUpperCase()}</H2>}
-        <Spacer h={16} />
+        {/* {isProtocolWorlds && <H2>{"TENSION DISCOVERED".toUpperCase()}</H2>} */}
         {pcd && (
           <PCDCard
             hidePadding={isProtocolWorlds}
@@ -116,16 +112,29 @@ export function JustAddScreen({
           />
         )}
         {!isProtocolWorlds && request.folder && (
-          <div>
-            This item will be added to folder:
-            <br /> <strong>{request.folder}</strong>
+          <div style={{ textAlign: "center" }}>
+            <span>This item will be added to folder</span>
+            <strong>{request.folder}</strong>
           </div>
         )}
         {error && JSON.stringify(error)}
         <Spacer h={16} />
-        <Button onClick={onAddClick}>
-          {isProtocolWorlds ? "Collect" : isMintable ? "Mint" : "Add"}
-        </Button>
+        <div style={{ paddingLeft: 24, paddingRight: 24 }}>
+          <button
+            style={{
+              borderRadius: 200,
+              background: "var(--core-accent, #07F)",
+              height: 54,
+              border: 0,
+              color: "white",
+              width: "100%",
+              boxShadow: "0px 1px 2px 0px rgba(0, 0, 0, 0.05)"
+            }}
+            onClick={onAddClick}
+          >
+            {isProtocolWorlds ? "Collect" : isMintable ? "Mint" : "Add"}
+          </button>
+        </div>
       </>
     );
   } else if (isProtocolWorlds) {
@@ -144,16 +153,23 @@ export function JustAddScreen({
 
   return (
     <>
-      {isProtocolWorlds && <ProtocolWorldsStyling />}
-      <MaybeModal fullScreen isProveOrAddScreen={true} />
-      <AppContainer bg="primary">
+      {/* {isProtocolWorlds && <ProtocolWorldsStyling />} */}
+      {/* <MaybeModal fullScreen isProveOrAddScreen={true} /> */}
+      <BottomModal
+        modalContainerStyle={{ padding: 0, paddingTop: 24, paddingBottom: 24 }}
+        isOpen={true}
+        dismissable={false}
+      >
+        {content}
+      </BottomModal>
+      {/* <AppContainer bg="primary">
         <Container>
           <Spacer h={16} />
           <AppHeader isProveOrAddScreen={true} />
           <Spacer h={16} />
           {content}
         </Container>
-      </AppContainer>
+      </AppContainer> */}
     </>
   );
 }
