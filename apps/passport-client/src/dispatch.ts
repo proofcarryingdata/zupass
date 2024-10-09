@@ -204,7 +204,7 @@ export type Action =
       type: "approve-zapp";
     }
   | {
-      type: "pasueSync";
+      type: "pauseSync";
       value: boolean;
     };
 
@@ -226,7 +226,7 @@ export async function dispatch(
   update: ZuUpdate
 ): Promise<void> {
   switch (action.type) {
-    case "pasueSync":
+    case "pauseSync":
       update({ pauseSync: action.value });
       break;
     case "new-passport":
