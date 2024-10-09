@@ -2,6 +2,7 @@ import { expect } from "chai";
 import "mocha";
 import {
   PODContent,
+  PODEntries,
   PODName,
   PODValue,
   POD_CRYPTOGRAPHIC_MAX,
@@ -210,6 +211,24 @@ describe("PODContent class should work", async function () {
     }
     expect(pc.getValue("A")).to.deep.eq({ type: "int", value: 123n });
     expect(pc.getRawValue("A")).to.eq(123n);
+  });
+
+  it("should reject invalid types at construction", function () {
+    const badInputs = [
+      "",
+      "hello",
+      123,
+      undefined,
+      null,
+      ["hello", "world"],
+      [1, 2, 3]
+    ];
+    for (const badInput of badInputs) {
+      const fn = (): void => {
+        PODContent.fromEntries(badInput as unknown as PODEntries);
+      };
+      expect(fn).to.throw(TypeError);
+    }
   });
 
   it("should reject invalid names at construction", function () {

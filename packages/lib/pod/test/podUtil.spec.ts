@@ -195,7 +195,11 @@ describe("podUtil input checkers should work", async function () {
       [0n, "bigint"],
       [-123n, "bigint"],
       ["", "string"],
-      ["hello", "string"]
+      ["hello", "string"],
+      [{}, "object"],
+      [{ abc: 123 }, "object"],
+      [[], "array"],
+      [[1, 2, 3, "abc"], "array"]
     ] as [string | bigint, string][];
     for (const testInput of testCases) {
       const checked = requireValueType("valueName", testInput[0], testInput[1]);
@@ -211,7 +215,13 @@ describe("podUtil input checkers should work", async function () {
       [0n, "string"],
       ["hello", "bigint"],
       [undefined, "bigint"],
-      [undefined, "string"]
+      [undefined, "string"],
+      [{}, "array"],
+      [{ abc: 123 }, "array"],
+      [null, "array"],
+      [[], "object"],
+      [[1, 2, 3, "abc"], "object"],
+      [null, "object"]
     ] as [string | bigint, string][];
     for (const testInput of testCases) {
       const fn = (): void => {
@@ -321,11 +331,13 @@ describe("podUtil input checkers should work", async function () {
   it("checkPODValue should reject invalid inputs", function () {
     const testCases = [
       undefined,
+      null,
       {},
       { type: "int" },
       { value: 0n },
       { type: undefined, value: 0n },
       { type: "string", value: undefined },
+      { type: "string", value: null },
       { type: "something", value: 0n },
       { type: "bigint", value: 0n },
       { type: "something", value: "something" },
