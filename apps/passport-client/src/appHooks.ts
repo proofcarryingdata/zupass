@@ -1,3 +1,4 @@
+import { Zapp } from "@parcnet-js/client-rpc";
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { wrap, Wrapper } from "@pcd/emitter";
 import {
@@ -162,7 +163,7 @@ export function useModal(): AppState["modal"] {
   return useSelector<AppState["modal"]>((s) => s.modal, []);
 }
 
-export function useBottomModal(): AppState["modal"] {
+export function useBottomModal(): AppState["bottomModal"] {
   return useSelector<AppState["bottomModal"]>((s) => s.bottomModal, []);
 }
 
@@ -220,6 +221,10 @@ export function useIsSyncSettled(): boolean {
 
 export function useIsLoggedIn(): boolean {
   return useSelector<boolean>((s) => s.self !== undefined, []);
+}
+
+export function useCanSync(): boolean {
+  return useSelector<boolean>((s) => !s.pauseSync, []);
 }
 
 export function useIsDeletingAccount(): boolean {
@@ -348,4 +353,12 @@ export function useLoginIfNoSelf(
 
 export function useEmbeddedScreenState(): AppState["embeddedScreen"] {
   return useSelector((s) => s.embeddedScreen, []);
+}
+
+export function useZapp(): Zapp | undefined {
+  return useSelector<Zapp | undefined>((s) => s.connectedZapp, []);
+}
+
+export function useZappOrigin(): string | undefined {
+  return useSelector<string | undefined>((s) => s.zappOrigin, []);
 }

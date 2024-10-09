@@ -3,13 +3,16 @@ import React from "react";
 import styled from "styled-components";
 
 export type FontWeight = 400 | 500 | 600 | 700 | 800 | 900;
-export type FontSize = 12 | 14 | 16 | 18;
+export type FontSize = 10 | 12 | 14 | 16 | 18 | 20 | 24;
 export type FontFamily = "Barlow" | "Rubik";
 const LINE_HEIGHT: Record<FontSize, number> = {
+  "10": 13.5,
   "12": 16.2,
   "14": 18.9,
   "16": 21.6,
-  "18": 24.3
+  "18": 24.3,
+  "20": 27,
+  "24": 32.4
 };
 
 const TypographyText = styled.span<{
@@ -19,6 +22,7 @@ const TypographyText = styled.span<{
   $opacity?: number;
   $underline?: boolean;
   $family?: FontFamily;
+  $align?: React.CSSProperties["textAlign"];
 }>`
   font-family: ${({ $family }): string => $family ?? "Barlow"}, sans-serif;
   font-size: ${({ $fontSize }): string => `${$fontSize}px`};
@@ -29,6 +33,7 @@ const TypographyText = styled.span<{
   opacity: ${({ $opacity }): number => $opacity ?? 1};
   text-decoration: ${({ $underline }): string =>
     $underline ? "underline" : "none"};
+  text-align: ${({ $align }): React.CSSProperties["textAlign"] => $align};
 `;
 
 interface TypographyProps {
@@ -39,6 +44,7 @@ interface TypographyProps {
   children?: React.ReactNode;
   opacity?: number;
   underline?: boolean;
+  align?: React.CSSProperties["textAlign"];
   style?: React.CSSProperties;
 }
 export const Typography: React.FC<TypographyProps> = ({
@@ -49,7 +55,8 @@ export const Typography: React.FC<TypographyProps> = ({
   opacity,
   underline,
   style,
-  family
+  family,
+  align
 }): JSX.Element => {
   return (
     <TypographyText
@@ -59,6 +66,7 @@ export const Typography: React.FC<TypographyProps> = ({
       $color={color}
       $opacity={opacity}
       $underline={underline}
+      $align={align}
       style={style}
     >
       {children}

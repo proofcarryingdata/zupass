@@ -1,15 +1,12 @@
 import { LeanIMT, LeanIMTMerkleProof } from "@zk-kit/lean-imt";
+import { checkPODName, checkPODValue } from "./podChecks";
 import { podMerkleTreeHash, podNameHash, podValueHash } from "./podCrypto";
+import { deserializePODEntries, serializePODEntries } from "./podSerialization";
 import { PODEntries, PODName, PODValue } from "./podTypes";
 import {
-  checkPODName,
-  checkPODValue,
   cloneOptionalPODValue,
   clonePODValue,
-  deserializePODEntries,
-  getPODValueForCircuit,
-  requireType,
-  serializePODEntries
+  getPODValueForCircuit
 } from "./podUtil";
 
 type PODEntryInfo = { index: number; value: PODValue };
@@ -71,7 +68,6 @@ export class PODContent {
    * @throws if any of the entries aren't legal for inclusion in a POD
    */
   public static fromEntries(entries: PODEntries): PODContent {
-    requireType("entries", entries, "object");
     const sortedNames = Object.keys(entries)
       .map((name) => checkPODName(name))
       .sort();

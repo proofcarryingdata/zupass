@@ -39,7 +39,7 @@ html {
   --secondary-input-bg: #EBF1F6;
 
 
-  background: var(--bg-dark-primary);
+  background: var(--dot-pattern-bg);
   color: var(--white);
   font:
     16px PlexSans,
