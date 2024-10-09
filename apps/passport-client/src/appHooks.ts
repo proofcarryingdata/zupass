@@ -353,3 +353,35 @@ export function useLoginIfNoSelf(
 export function useEmbeddedScreenState(): AppState["embeddedScreen"] {
   return useSelector((s) => s.embeddedScreen, []);
 }
+
+// Fixes an issue on iOS where components break when switching from landscape to portrait mode.
+// Relevant issue: https://linear.app/0xparc-pcd/issue/0XP-1334/when-changing-to-landscape-and-than-back-to-portrait-the-home-page
+// This hook detects orientation changes and forces a reflow by briefly hiding and redisplaying the document body,
+// ensuring components are re-rendered correctly.
+// https://linear.app/0xparc-pcd/issue/0XP-1334/when-changing-to-landscape-and-than-back-to-portrait-the-home-page
+export const useIOSOrientationFix = (): void => {
+  useEffect(() => {
+    const onOrientationChange = (): void => {
+      document.body.style.display = "none";
+      document.body.offsetHeight; // force document reflow
+      document.body.style.display = "";
+    };
+
+    if (window.screen?.orientation) {
+      window.screen.orientation.addEventListener("change", onOrientationChange);
+    } else {
+      window.addEventListener("orientationchange", onOrientationChange);
+    }
+
+    return (): void => {
+      if (window.screen?.orientation) {
+        window.screen.orientation.removeEventListener(
+          "change",
+          onOrientationChange
+        );
+      } else {
+        window.removeEventListener("orientationchange", onOrientationChange);
+      }
+    };
+  }, []);
+};
