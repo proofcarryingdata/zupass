@@ -491,11 +491,8 @@ export function ObjectArgInput({
 
 function ToggleListArgInput({
   arg,
-  setArg,
-  ...rest
+  setArg
 }: ArgInputProps<ToogleListArgument<ToggleList>>): JSX.Element {
-  const [showAll, setShowAll] = useState(arg.userProvided);
-
   const type = isRevealListArgument(arg) ? "reveal" : "default";
   const getLabel = useCallback(
     (key: string) => {
@@ -512,7 +509,12 @@ function ToggleListArgInput({
     (value: boolean) => {
       switch (type) {
         case "reveal":
-          return value ? <FaRegEye size={18} /> : <FaRegEyeSlash size={18} />;
+          return value ? (
+            <FaRegEye size={18} />
+          ) : (
+            <FaRegEyeSlash color="var(--text-tertiary)" size={18} />
+          );
+
         default:
           return undefined;
       }
@@ -520,31 +522,33 @@ function ToggleListArgInput({
     [type]
   );
 
+  // ordering by items revealed
   const entries = useMemo(
     () =>
-      showAll
-        ? Object.entries(arg.value as unknown as ArrayLike<boolean>)
-        : Object.entries(arg.value as unknown as ArrayLike<boolean>).filter(
-            ([_, value]) => value
-          ),
-    [arg.value, showAll]
+      Object.entries(arg.value as unknown as ArrayLike<boolean>).sort(
+        ([_key, value], [_key2, value2]) => Number(value2) - Number(value)
+      ),
+    [arg.value]
   );
-  console.log("this is a toggle list", arg);
 
   return (
-    <>
+    <div>
       {!!entries.length && (
         <Accordion
           title={arg.displayName || "revealed information"}
           children={entries.map(([key, value]) => {
             return {
               title: getLabel(key),
+              icon: getIcon(value),
+              onClick: arg.userProvided
+                ? (): void => setArg({ ...arg.value, [key]: !value })
+                : undefined,
               key
             };
           })}
         />
       )}
-    </>
+    </div>
   );
 }
 
@@ -773,7 +777,7 @@ const ArgItemContainer = styled.div<{ hidden: boolean; error: boolean }>`
   border: 1px solid;
   border-color: ${({ error }): string =>
     error ? "var(--danger)" : "var(--primary-lite)"};
-  background-color: rgba(var(--white-rgb), 0.01);
+  background-color: red;
   align-items: center;
   padding: 8px 16px;
   gap: 16px;
@@ -812,12 +816,8 @@ const ArgItem = styled.div`
 `;
 
 const ArgsContainer = styled.div`
-  width: 100%;
   display: flex;
-  align-items: stretch;
   flex-direction: column;
-  gap: 8px;
-  color: var(--white);
 `;
 
 const ErrorText = styled.div`
@@ -865,3 +865,79 @@ const ShowMoreButton = styled.a`
   cursor: pointer;
   text-decoration: none;
 `;
+
+function ToggleListArgInputOld({
+  arg,
+  setArg,
+  ...rest
+}: ArgInputProps<ToogleListArgument<ToggleList>>): JSX.Element {
+  const [showAll, setShowAll] = useState(arg.userProvided);
+
+  const type = isRevealListArgument(arg) ? "reveal" : "default";
+  const getLabel = useCallback(
+    (key: string) => {
+      switch (type) {
+        case "reveal":
+          return key.replace(/^reveal/, "");
+        default:
+          return key;
+      }
+    },
+    [type]
+  );
+  const getIcon = useCallback(
+    (value: boolean) => {
+      switch (type) {
+        case "reveal":
+          return value ? <FaRegEye size={18} /> : <FaRegEyeSlash size={18} />;
+        default:
+          return undefined;
+      }
+    },
+    [type]
+  );
+
+  const entries = useMemo(
+    () =>
+      showAll
+        ? Object.entries(arg.value as unknown as ArrayLike<boolean>)
+        : Object.entries(arg.value as unknown as ArrayLike<boolean>).filter(
+            ([_, value]) => value
+          ),
+    [arg.value, showAll]
+  );
+
+  return (
+    <ArgContainer
+      arg={arg}
+      {...rest}
+      end={
+        entries.length ? (
+          <ShowMoreButton
+            onClick={(): void => setShowAll((showAll) => !showAll)}
+          >
+            {showAll ? "▲" : "▼"}
+          </ShowMoreButton>
+        ) : undefined
+      }
+    >
+      {!!entries.length && (
+        <ChipsContainer direction={showAll ? "row" : "column"}>
+          {entries.map(([key, value]) => (
+            <Chip
+              key={key}
+              label={getLabel(key)}
+              onClick={
+                arg.userProvided
+                  ? (): void => setArg({ ...arg.value, [key]: !value })
+                  : undefined
+              }
+              checked={value}
+              icon={getIcon(value)}
+            />
+          ))}
+        </ChipsContainer>
+      )}
+    </ArgContainer>
+  );
+}

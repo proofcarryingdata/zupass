@@ -1,4 +1,4 @@
-import React, { ReactElement, ReactNode } from "react";
+import { ReactElement } from "react";
 import { BottomModal } from "../BottomModal";
 import { useBottomModal, useDispatch } from "../../../src/appHooks";
 import { getScreen } from "../../../components/screens/ProveScreen/ProveScreen";
