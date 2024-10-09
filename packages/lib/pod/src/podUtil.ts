@@ -165,7 +165,7 @@ export function checkPODName(name?: string): string {
  *
  * Works for any runtime JavaScript type, but two values have special meaning.
  * "object" is used specifically to require a non-null non-array object, while
- * "array" is used to mean an non-null array object.
+ * "array" is used to mean a non-null array object.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
