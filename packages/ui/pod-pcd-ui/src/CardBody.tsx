@@ -2,7 +2,8 @@ import {
   Button,
   ErrorContainer,
   Separator,
-  SlidingTabs
+  SlidingTabs,
+  VIcon
 } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
@@ -59,6 +60,7 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
     sigButtonColor.background = "var(--danger)";
   }
   if (newui) {
+    const isValidSig = sigStatus > 0;
     return (
       <Container>
         <div
@@ -81,17 +83,20 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
                 setSigStatus(sigResult.isValid ? 1 : -1);
               }}
               style={{
-                color: sigStatus > 0 ? "#5B952C" : undefined,
-                textDecoration: sigStatus > 0 ? "none" : undefined
+                color: isValidSig ? "#5B952C" : undefined,
+                textDecoration: isValidSig ? "none" : undefined
               }}
             >
-              {sigStatus === 0
-                ? "Check signature"
-                : sigStatus > 0
-                ? "Valid signature"
-                : error !== undefined
-                ? "Signature error!"
-                : "Bad signature!"}
+              <span style={{ paddingRight: 8 }}>
+                {sigStatus === 0
+                  ? "Check signature"
+                  : isValidSig
+                  ? "Valid signature"
+                  : error !== undefined
+                  ? "Signature error!"
+                  : "Bad signature!"}
+              </span>
+              {isValidSig && <VIcon />}
             </a>
           </div>
           <SlidingTabs
