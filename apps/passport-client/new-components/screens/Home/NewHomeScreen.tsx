@@ -63,7 +63,7 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
       }
       ticketPacks.push({
         eventTicket: ticket,
-        eventId: ticket.claim.ticket.eventId,
+        eventName: ticket.claim.ticket.eventName,
         addOns: [],
         attendeeEmail: ticket.claim.ticket.attendeeEmail,
         packType: ticket.type as TicketTypeName
@@ -275,18 +275,20 @@ export const NewHomeScreen = (): ReactElement => {
                 setCurrentPos(e);
               }}
             >
-              {tickets.map(([eventName, packs], i) => {
+              {tickets.map(([eventId, packs], i) => {
                 const eventDetails = getEventDetails(packs[0]);
+                console.log(eventDetails);
                 return (
-                  <Container key={eventName} ticketsAmount={tickets.length}>
+                  <Container key={eventId} ticketsAmount={tickets.length}>
                     <TicketCard
                       ticketWidth={cardWidth}
-                      key={eventName}
-                      address={eventName}
-                      title={eventName}
-                      ticketDate={new Date(
-                        eventDetails.timestampSigned
-                      ).toDateString()}
+                      address={eventDetails.eventLocation}
+                      title={eventDetails.eventName}
+                      ticketDate={
+                        eventDetails.eventStartDate
+                          ? new Date(eventDetails.eventStartDate).toDateString()
+                          : undefined
+                      }
                       imgSource={eventDetails.imageUrl}
                       ticketCount={packs.length}
                       cardColor={i % 2 === 0 ? "purple" : "orange"}
@@ -298,7 +300,7 @@ export const NewHomeScreen = (): ReactElement => {
                       {packs.map((pack) => {
                         return (
                           <CardBody
-                            key={pack.eventId}
+                            key={pack.eventName}
                             addOns={
                               pack.addOns.length > 0
                                 ? {
@@ -317,9 +319,9 @@ export const NewHomeScreen = (): ReactElement => {
                             }
                             ref={(ref) => {
                               if (!ref) return;
-                              const group = ticketsRef.current.get(eventName);
+                              const group = ticketsRef.current.get(eventId);
                               if (!group) {
-                                ticketsRef.current.set(eventName, [ref]);
+                                ticketsRef.current.set(eventId, [ref]);
                                 return;
                               }
                               group.push(ref);
