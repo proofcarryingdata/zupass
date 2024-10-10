@@ -84,8 +84,8 @@ describe("podJSON conversions should work", async function () {
 
   it("podEntriesFromJSON should reject invalid inputs", function () {
     const badInputs = [
-      // TODO(artwyman) PR1920: [undefined as unknown as JSONPODEntries, TypeError],
-      // TODO(artwyman) PR1920: [null as unknown as JSONPODEntries, TypeError],
+      [undefined as unknown as JSONPODEntries, TypeError],
+      [null as unknown as JSONPODEntries, TypeError],
       [[1, 2, 3] as unknown as JSONPODEntries, TypeError],
       [{ "!@#$%$one": 1 } as JSONPODEntries, TypeError],
       [{ one: 1n } as unknown as JSONPODEntries, TypeError],
@@ -104,8 +104,8 @@ describe("podJSON conversions should work", async function () {
 
   it("podEntriesToJSON should reject invalid types", function () {
     const badInputs = [
-      // TODO(artwyman) PR1920: [undefined as unknown as PODEntries, TypeError],
-      // TODO(artwyman) PR1920: [null as unknown as PODEntries, TypeError],
+      [undefined as unknown as PODEntries, TypeError],
+      [null as unknown as PODEntries, TypeError],
       [[1, 2, 3] as unknown as PODEntries, TypeError],
       [{ "!@#$%$one": { type: "int", value: 1n } } as PODEntries, TypeError],
       [{ one: { type: "int", value: 1 } } as unknown as PODEntries, TypeError]
