@@ -76,6 +76,7 @@ import {
   uploadStorage
 } from "./useSyncE2EEStorage";
 import { validateAndLogRunningAppState } from "./validateState";
+import { redirect } from "react-router-dom";
 
 export type Dispatcher = (action: Action) => Promise<void>;
 
@@ -104,6 +105,11 @@ export type Action =
       email: string;
       code: string;
       targetFolder: string | undefined | null;
+    }
+  | {
+      type: "scroll-to-ticket";
+      eventId: string;
+      ticketId: string;
     }
   | {
       type: "set-self";
@@ -203,6 +209,7 @@ export type Action =
 
 export type StateContextValue = {
   getState: GetState;
+
   stateEmitter: StateEmitter;
   dispatch: Dispatcher;
   update: ZuUpdate;
@@ -339,6 +346,12 @@ export async function dispatch(
       return zappConnect(state, update, action.zapp, action.origin);
     case "zapp-approval":
       return zappApproval(state, update, action.approved);
+    case "scroll-to-ticket":
+      const url = new URL("/");
+      url.searchParams.set("eventId", action.eventId);
+      url.searchParams.set("ticketId", action.ticketId);
+      redirect(url.toString());
+      return;
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
