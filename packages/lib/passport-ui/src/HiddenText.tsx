@@ -33,6 +33,12 @@ const CardWrapper = styled.div`
   border-radius: 8px;
 `;
 
+const CardFieldLabel = styled(FieldLabel)`
+  padding-left: 12px;
+  padding-top: 4px;
+  padding-bottom: 8px;
+`;
+
 export const Card = ({
   title,
   children
@@ -42,9 +48,7 @@ export const Card = ({
 }): JSX.Element => {
   return (
     <CardWrapper>
-      <FieldLabel style={{ paddingLeft: 12, paddingTop: 4, paddingBottom: 8 }}>
-        {title}
-      </FieldLabel>
+      <CardFieldLabel>{title}</CardFieldLabel>
       {children}
     </CardWrapper>
   );

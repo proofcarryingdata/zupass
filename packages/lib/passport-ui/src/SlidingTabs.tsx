@@ -46,7 +46,7 @@ const TabItem = styled.div<{ active: boolean }>`
   font-style: normal;
   font-weight: 500;
   line-height: 135%; /* 18.9px */
-  color: ${({ active }) =>
+  color: ${({ active }): string =>
     active
       ? "color: var(--text-primary, #1E2C50)"
       : "var(--text-tertiary, #8B94AC)"};
@@ -79,7 +79,7 @@ export const SlidingTabs = <T,>({
   tabs,
   onChange,
   initialIndex = 0
-}: SlidingTabsProps<T>) => {
+}: SlidingTabsProps<T>): JSX.Element => {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [indicatorStyle, setIndicatorStyle] = useState({});
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -94,7 +94,7 @@ export const SlidingTabs = <T,>({
     }
   }, [activeIndex]);
 
-  const handleTabClick = (index: number) => {
+  const handleTabClick = (index: number): void => {
     if (index === activeIndex) return;
     onChange(tabs[index].value);
     setActiveIndex(index);
