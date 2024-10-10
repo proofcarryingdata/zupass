@@ -1386,7 +1386,7 @@ async function promptToAgreePrivacyNotice(state: AppState): Promise<void> {
     );
   } else {
     // on new ui this is not a modal
-    window.location.hash = "#/new/updated-terms";
+    window.location.hash = "#/updated-terms";
   }
 }
 
