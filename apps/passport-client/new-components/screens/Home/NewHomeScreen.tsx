@@ -29,6 +29,7 @@ import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
+import { uniqWith } from "lodash";
 
 const CARD_GAP = 8;
 const TICKET_VERTICAL_GAP = 20;
@@ -42,24 +43,24 @@ const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
 
 const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
-  const tickets = allPCDs.filter(isEventTicketPCD);
+  const tickets = allPCDs.filter(isEventTicketPCD).reverse();
+  //fitering out overlapping eddsa tickets
+  const uniqTickets = uniqWith(tickets, (t1, t2) => {
+    return (
+      t1.claim.ticket.eventId === t2.claim.ticket.eventId &&
+      t1.claim.ticket.attendeeEmail === t2.claim.ticket.attendeeEmail &&
+      t1.type === EdDSATicketPCDTypeName
+    );
+  });
+
   return useMemo(() => {
     const eventsMap = new Map<string, TicketPack[]>();
-    for (const ticket of tickets) {
+    for (const ticket of uniqTickets) {
       if (ticket.claim.ticket.isAddOn) continue;
       let ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
       if (!ticketPacks) {
         ticketPacks = [];
         eventsMap.set(ticket.claim.ticket.eventId, ticketPacks);
-      }
-      if (ticket.type === PODTicketPCDTypeName) {
-        const relatedEddesaTicketPackIdx = ticketPacks.findIndex(
-          (pack) =>
-            pack.attendeeEmail === ticket.claim.ticket.attendeeEmail &&
-            pack.packType === EdDSATicketPCDTypeName
-        );
-        if (relatedEddesaTicketPackIdx >= 0)
-          ticketPacks.splice(relatedEddesaTicketPackIdx, 1);
       }
       ticketPacks.push({
         eventTicket: ticket,
@@ -69,21 +70,19 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
         packType: ticket.type as TicketTypeName
       });
     }
-    for (const ticket of tickets) {
+    for (const ticket of uniqTickets) {
       if (!ticket.claim.ticket.isAddOn) continue;
       const ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
       if (!ticketPacks) continue;
       const pack = ticketPacks.find(
-        (pack) =>
-          pack.attendeeEmail === ticket.claim.ticket.attendeeEmail &&
-          pack.packType === ticket.type
+        (pack) => pack.attendeeEmail === ticket.claim.ticket.attendeeEmail
       );
 
       if (!pack) continue;
       pack.addOns.push(ticket);
     }
     return Array.from(eventsMap.entries());
-  }, [tickets]);
+  }, [uniqTickets]);
 };
 
 const Container = styled.div<{ ticketsAmount: number }>`
