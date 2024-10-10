@@ -24,7 +24,6 @@ export const Separator = styled.div`
 
 export const FieldLabel = styled.div`
   font-weight: bold;
-  // color: #8b94ac;
   color: var(--text-tertiary);
   font-family: Barlow;
   font-size: 14px;
