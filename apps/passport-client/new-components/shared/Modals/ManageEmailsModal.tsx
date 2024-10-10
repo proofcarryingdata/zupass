@@ -27,7 +27,7 @@ import {
 import { appConfig } from "../../../src/appConfig";
 import { getEmailUpdateErrorMessage } from "../../../src/errorMessage";
 import { getErrorMessage } from "@pcd/util";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { PencilIcon, TrashIcon } from "@heroicons/react/16/solid";
 import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
 

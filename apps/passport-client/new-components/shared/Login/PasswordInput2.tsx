@@ -1,5 +1,5 @@
-import EyeIcon from "@heroicons/react/24/solid/EyeIcon";
-import EyeSlashIcon from "@heroicons/react/24/solid/EyeSlashIcon";
+import EyeIcon from "@heroicons/react/16/solid/EyeIcon";
+import EyeSlashIcon from "@heroicons/react/16/solid/EyeSlashIcon";
 import { ForwardedRef, forwardRef, useState } from "react";
 import { Input2, NewInputProps } from "../Input";
 
