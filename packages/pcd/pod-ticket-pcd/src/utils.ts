@@ -17,6 +17,13 @@ export function cryptographic<T extends PotentialBigInt>(a?: T): T | undefined {
 }
 
 /**
+ * Converts a public key to a commitment.
+ */
+export function eddsaPublicKey<T extends string>(a?: T): string | undefined {
+  return a;
+}
+
+/**
  * Validator that ensures that a value can really be transformed into a BigInt.
  * Only relevant for strings which may contain non-numeric values.
  */
@@ -107,6 +114,13 @@ export function dataToPodEntries<T>(
               // Cryptographic values are always BigInts.
               value: BigInt(data[key]),
               type: "cryptographic"
+            };
+          }
+        } else if (field._def.effect.transform === eddsaPublicKey) {
+          if (data[key] !== null && data[key] !== undefined) {
+            entries[key] = {
+              value: data[key],
+              type: "eddsa_pubkey"
             };
           }
         } else {

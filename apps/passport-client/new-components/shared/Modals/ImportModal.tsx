@@ -88,11 +88,11 @@ export const ImportModal = (): ReactNode => {
 
   // since the import action is not a seperate page anymore, we have to manually stop the sync when the import is in progress
   const pauseSync = useCallback(
-    (): Promise<void> => dispatch({ type: "pasueSync", value: true }),
+    (): Promise<void> => dispatch({ type: "pauseSync", value: true }),
     [dispatch]
   );
   const continueSync = useCallback(
-    (): Promise<void> => dispatch({ type: "pasueSync", value: false }),
+    (): Promise<void> => dispatch({ type: "pauseSync", value: false }),
     [dispatch]
   );
 

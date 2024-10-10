@@ -1,3 +1,4 @@
+import { Zapp } from "@parcnet-js/client-rpc";
 import type { ReactNode } from "react";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
@@ -12,9 +13,16 @@ import {
 import "./index.css";
 import { getConnectionInfo } from "./utils";
 
-const zapp = {
+const zapp: Zapp = {
   name: "test-client",
-  permissions: ["read", "write"]
+  permissions: {
+    REQUEST_PROOF: { collections: ["Apples", "Bananas"] },
+    SIGN_POD: {},
+    READ_POD: { collections: ["Apples", "Bananas"] },
+    INSERT_POD: { collections: ["Apples", "Bananas"] },
+    DELETE_POD: { collections: ["Bananas"] },
+    READ_PUBLIC_IDENTIFIERS: {}
+  }
 };
 
 export default function Main(): ReactNode {

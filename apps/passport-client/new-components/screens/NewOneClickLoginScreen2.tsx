@@ -69,7 +69,7 @@ const OneClickTicket = ({ data }: { data: IPODTicketData }): JSX.Element => {
 };
 
 const redirectToTargetFolder = (): void => {
-  window.location.hash = `#/new`;
+  window.location.hash = `#/`;
 };
 
 export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
@@ -117,8 +117,7 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
         type: "one-click-login",
         email,
         code,
-        targetFolder,
-        newUI: true
+        targetFolder
       });
 
       // dispatch({
@@ -157,12 +156,12 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
                 self.emails.join(", ")
           }. Please log out and try navigating to the link again.`
         );
-        window.location.hash = "#/new";
+        window.location.hash = "#/";
       } else {
         redirectToTargetFolder();
       }
     } else if (!email || !code) {
-      window.location.hash = "#/new";
+      window.location.hash = "#/";
     } else {
       handleLoadTicketPreviews();
     }

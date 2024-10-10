@@ -45,7 +45,7 @@
     "@pcd/tsconfig": "0.11.4",
     "@pcd/util": "^0.5.4",
     "@semaphore-protocol/identity": "^3.15.2",
-    "@semaphore-protocol/core": "^4.0.3",
+    "semaphore-identity-v4": "npm:@semaphore-protocol/identity@^4.0.3",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/snarkjs": "^0.7.5",

@@ -1,7 +1,6 @@
 import { ProveResult } from "@parcnet-js/client-rpc";
-import type { PodspecProofRequest } from "@parcnet-js/podspec";
+import type { PODData, PodspecProofRequest } from "@parcnet-js/podspec";
 import { TicketSpec, ticketProofRequest } from "@parcnet-js/ticket-spec";
-import { POD } from "@pcd/pod";
 import JSONBig from "json-bigint";
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
@@ -60,7 +59,7 @@ export function GPC(): ReactNode {
   const [verified, setVerified] = useState<boolean | undefined>();
   const [identityV3, setIdentityV3] = useState<bigint | undefined>();
   const [publicKey, setPublicKey] = useState<string | undefined>();
-  const [ticket, setTicket] = useState<POD | undefined>();
+  const [ticket, setTicket] = useState<PODData | undefined>();
 
   useEffect(() => {
     void (async (): Promise<void> => {
@@ -77,7 +76,6 @@ export function GPC(): ReactNode {
     <div>
       <h1 className="text-xl font-bold mb-2">GPC</h1>
       <div className="prose">
-        <h2 className="text-lg font-bold mt-4">GPC proof</h2>
         <div>
           <p>
             Generating a GPC proof is done like this:
@@ -126,7 +124,7 @@ const request: PodspecProofRequest = {
   }
 };
 
-const gpcProof = await z.gpc.prove(request);
+const gpcProof = await z.gpc.prove({ request });
 
 `}
             </code>
@@ -134,7 +132,7 @@ const gpcProof = await z.gpc.prove(request);
           <TryIt
             onClick={async () => {
               try {
-                setProveResult(await z.gpc.prove(request));
+                setProveResult(await z.gpc.prove({ request }));
               } catch (e) {
                 console.log(e);
               }
@@ -147,7 +145,6 @@ const gpcProof = await z.gpc.prove(request);
             </pre>
           )}
         </div>
-        <h2 className="text-lg font-bold mt-4">Verify GPC proof</h2>
         <div>
           <p>
             Verify a GPC proof like this:
@@ -169,8 +166,7 @@ const verified = await z.gpc.verify(proof, config, revealedClaims, request);
                       await z.gpc.verify(
                         proveResult.proof,
                         proveResult.boundConfig,
-                        proveResult.revealedClaims,
-                        request
+                        proveResult.revealedClaims
                       )
                     );
                   }
@@ -187,7 +183,7 @@ const verified = await z.gpc.verify(proof, config, revealedClaims, request);
             </pre>
           )}
         </div>
-        <h2 className="text-lg font-bold mt-4">Generate a ticket</h2>
+
         <div>
           <p>
             We're about to look at ticket ownership proofs. However, you might
@@ -244,7 +240,7 @@ await z.pod.insert(pod);
               });
 
               const pod = await z.pod.sign(entries);
-              await z.pod.insert(pod);
+              await z.pod.collection("Apples").insert(pod);
               setTicket(pod);
             }}
             label="Generate Ticket"
@@ -259,7 +255,6 @@ await z.pod.insert(pod);
           )}
         </div>
 
-        <h2 className="text-lg font-bold mt-4">Generate a ticket proof</h2>
         <div>
           <p>
             Generating a ticket ownership proof is done like this:
@@ -267,43 +262,38 @@ await z.pod.insert(pod);
               {`
 const request = ticketProofRequest({
   classificationTuples: [
-    [
-      // The public key to match
-      "${publicKey}",
-      // The event ID to match
-      "${EVENT_ID}"
-    ]
+    {
+      signerPublicKey: "${publicKey}",
+      eventId: "${EVENT_ID}"
+    }
   ],
   fieldsToReveal: {
-    eventId: true,
-    productId: true
-    // other fields could be revealed too
+    attendeeName: true,
+    attendeeEmail: true
   }
 });
 
-const gpcProof = await z.gpc.prove(request.schema);
+const gpcProof = await z.gpc.prove({ request: request.schema });
 
 `}
             </code>
-            <p>
-              You can pass in as many pairs of public key and event ID as you
-              want to match on. You can also pass in triples of public key,
-              event ID, and product ID - although you can't mix and match pairs
-              and triples. This does a similar job to ZuAuth, but with a simpler
-              configuration.
-            </p>
           </p>
           <TryIt
             onClick={async () => {
               try {
                 const request = ticketProofRequest({
-                  classificationTuples: [[publicKey as string, EVENT_ID]],
+                  classificationTuples: [
+                    {
+                      signerPublicKey: await z.identity.getPublicKey(),
+                      eventId: EVENT_ID
+                    }
+                  ],
                   fieldsToReveal: {
-                    eventId: true,
-                    productId: true
+                    attendeeName: true,
+                    attendeeEmail: true
                   }
                 });
-                setProveResult(await z.gpc.prove(request.schema));
+                setProveResult(await z.gpc.prove({ request: request.schema }));
               } catch (e) {
                 console.log(e);
               }

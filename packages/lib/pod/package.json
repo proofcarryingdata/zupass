@@ -10,6 +10,16 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./podChecks": {
+      "types": "./dist/types/src/podChecks.d.ts",
+      "import": "./dist/esm/src/podChecks.js",
+      "require": "./dist/cjs/src/podChecks.js"
+    },
+    "./podTypes": {
+      "types": "./dist/types/src/podTypes.d.ts",
+      "import": "./dist/esm/src/podTypes.js",
+      "require": "./dist/cjs/src/podTypes.js"
     }
   },
   "files": [
@@ -29,7 +39,6 @@
   },
   "dependencies": {
     "@pcd/util": "0.5.4",
-    "@zk-kit/baby-jubjub": "1.0.3",
     "@zk-kit/eddsa-poseidon": "1.0.3",
     "@zk-kit/lean-imt": "2.2.1",
     "@zk-kit/utils": "1.2.1",
@@ -45,7 +54,9 @@
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/circomlibjs": "^0.1.6",
     "@types/chai": "^4.3.5",
+    "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
+    "@zk-kit/baby-jubjub": "1.0.3",
     "circomlibjs": "^0.1.7",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",
@@ -55,5 +66,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "sideEffects": false
 }

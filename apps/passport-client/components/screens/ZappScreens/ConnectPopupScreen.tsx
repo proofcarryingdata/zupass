@@ -172,7 +172,7 @@ export function ConnectPopupScreen(): ReactNode {
 
   return (
     <AppContainer bg="primary">
-      <Spacer h={64} />
+      <Spacer h={32} />
       <TextCenter>
         <H1>ZUPASS</H1>
         <Spacer h={24} />

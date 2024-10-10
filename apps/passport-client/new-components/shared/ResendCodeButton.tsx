@@ -1,5 +1,6 @@
 import { requestConfirmationEmail } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
+import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { Typography } from "./Typography";
 
@@ -45,7 +46,7 @@ export function ResendCodeButton2({
   const disabled = waitCountInSeconds > 0;
 
   return (
-    <div
+    <ResendCodeButtonContainer
       onClick={() => {
         if (disabled) return;
         handleClick();
@@ -60,6 +61,11 @@ export function ResendCodeButton2({
       >
         {disabled ? `Resend code (${waitCountInSeconds})` : "Resend code"}
       </Typography>
-    </div>
+    </ResendCodeButtonContainer>
   );
 }
+
+const ResendCodeButtonContainer = styled.div`
+  cursor: pointer;
+  user-select: none;
+`;

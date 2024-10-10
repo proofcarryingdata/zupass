@@ -30,12 +30,18 @@ export function EmbeddedScreen(): ReactNode {
       <EmbeddedGPCProofScreen
         proofRequestSchema={embeddedScreen.screen.proofRequest}
         callback={embeddedScreen.screen.callback}
+        collectionIds={embeddedScreen.screen.collectionIds}
       />
     );
   } else if (embeddedScreen.screen === undefined) {
-    return <div></div>;
+    return <DefaultEmbeddedScreen />;
   }
   assertUnreachable(embeddedScreen.screen);
+}
+
+function DefaultEmbeddedScreen(): ReactNode {
+  useSyncE2EEStorage();
+  return <div></div>;
 }
 
 function EmbeddedGetRequest({

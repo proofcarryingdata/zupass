@@ -237,7 +237,7 @@ export const NewHomeScreen = (): ReactElement => {
   const isInvalidUser = useUserForcedToLogout();
   useEffect(() => {
     if (!self) {
-      navigate("/new/login", { replace: true });
+      navigate("/login", { replace: true });
     }
   }, [self, navigate]);
 
@@ -381,7 +381,6 @@ export const NewHomeScreen = (): ReactElement => {
                                 }
                                 group.push(ref);
                               }}
-                              newUI={true}
                               pcd={pack.eventTicket}
                               isMainIdentity={false}
                             />

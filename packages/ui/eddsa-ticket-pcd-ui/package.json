@@ -20,6 +20,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "watch": "tsc --watch -p tsconfig.cjs.json & tsc --watch -p tsconfig.esm.json",
     "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",

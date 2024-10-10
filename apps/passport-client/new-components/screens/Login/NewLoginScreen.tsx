@@ -114,8 +114,7 @@ export const NewLoginScreen = (): JSX.Element => {
         setLoading(true);
         dispatch({
           type: "new-passport",
-          email: trimmedEmail.toLocaleLowerCase("en-US"),
-          newUi: true
+          email: trimmedEmail.toLocaleLowerCase("en-US")
         });
       }
     },

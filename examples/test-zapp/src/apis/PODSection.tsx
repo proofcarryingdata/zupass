@@ -1,6 +1,7 @@
 import type { ParcnetAPI, Subscription } from "@parcnet-js/app-connector";
+import type { PODData } from "@parcnet-js/podspec";
 import * as p from "@parcnet-js/podspec";
-import type { POD, PODEntries, PODValue } from "@pcd/pod";
+import type { PODEntries, PODValue } from "@pcd/pod";
 import { POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import JSONBig from "json-bigint";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
@@ -11,7 +12,7 @@ import { useParcnetClient } from "../hooks/useParcnetClient";
 
 export function PODSection(): ReactNode {
   const { z, connected } = useParcnetClient();
-  const [pod, setPOD] = useState<POD | null>(null);
+  const [pod, setPOD] = useState<p.PODData | null>(null);
 
   return !connected ? null : (
     <div>
@@ -33,7 +34,10 @@ export function PODSection(): ReactNode {
 }
 
 function QueryPODs({ z }: { z: ParcnetAPI }): ReactNode {
-  const [pods, setPODs] = useState<POD[] | undefined>(undefined);
+  const [pods, setPODs] = useState<p.PODData[] | undefined>(undefined);
+  const [selectedCollection, setSelectedCollection] = useState<
+    "Apples" | "Bananas"
+  >("Apples");
 
   return (
     <div>
@@ -52,10 +56,25 @@ function QueryPODs({ z }: { z: ParcnetAPI }): ReactNode {
     }
   }
 });
-const pods = await z.pod.query(q);
+const pods = await z.pod.collection("${selectedCollection}").query(q);
 `}
         </code>
       </p>
+      <div className="mt-2 mb-4">
+        <label className="flex flex-row gap-2 items-center">
+          <span className="text-gray-700">Collections</span>
+          <select
+            value={selectedCollection}
+            onChange={(e) =>
+              setSelectedCollection(e.target.value as "Apples" | "Bananas")
+            }
+            className="w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"
+          >
+            <option value="Apples">Apples</option>
+            <option value="Bananas">Bananas</option>
+          </select>
+        </label>
+      </div>
       <TryIt
         onClick={async () => {
           try {
@@ -71,7 +90,7 @@ const pods = await z.pod.query(q);
                 }
               }
             });
-            const pods = await z.pod.query(q);
+            const pods = await z.pod.collection(selectedCollection).query(q);
             setPODs(pods);
           } catch (e) {
             console.log(e);
@@ -83,7 +102,7 @@ const pods = await z.pod.query(q);
         <pre className="whitespace-pre-wrap">
           {JSONBig.stringify(
             pods.map((p) => ({
-              entries: p.content.asEntries(),
+              entries: p.entries,
               signature: p.signature,
               signerPublicKey: p.signerPublicKey
             })),
@@ -201,12 +220,12 @@ function SignPOD({
   setSignedPOD
 }: {
   z: ParcnetAPI;
-  setSignedPOD: Dispatch<SetStateAction<POD | null>>;
+  setSignedPOD: Dispatch<SetStateAction<p.PODData | null>>;
 }): ReactNode {
   const [creationState, setCreationState] = useState<PODCreationState>(
     PODCreationState.None
   );
-  const [pod, setPOD] = useState<POD | null>(null);
+  const [pod, setPOD] = useState<p.PODData | null>(null);
   const [entries, dispatch] = useReducer(editPODReducer, {
     test: { type: "string", value: "Testing" }
   } satisfies PODEntries);
@@ -358,7 +377,16 @@ function EditPODEntry({
   );
 }
 
-function InsertPOD({ z, pod }: { z: ParcnetAPI; pod: POD | null }): ReactNode {
+function InsertPOD({
+  z,
+  pod
+}: {
+  z: ParcnetAPI;
+  pod: p.PODData | null;
+}): ReactNode {
+  const [selectedCollection, setSelectedCollection] = useState<
+    "Apples" | "Bananas"
+  >("Apples");
   const [insertionState, setInsertionState] = useState<PODCreationState>(
     PODCreationState.None
   );
@@ -376,11 +404,25 @@ function InsertPOD({ z, pod }: { z: ParcnetAPI; pod: POD | null }): ReactNode {
           {`await z.pod.insert(pod);`}
         </code>
       </p>
-
+      <div className="mt-2 mb-4">
+        <label className="flex flex-row gap-2 items-center">
+          <span className="text-gray-700">Collections</span>
+          <select
+            value={selectedCollection}
+            onChange={(e) =>
+              setSelectedCollection(e.target.value as "Apples" | "Bananas")
+            }
+            className="w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"
+          >
+            <option value="Apples">Apples</option>
+            <option value="Bananas">Bananas</option>
+          </select>
+        </label>
+      </div>
       <TryIt
         onClick={async () => {
           try {
-            await z.pod.insert(pod);
+            await z.pod.collection(selectedCollection).insert(pod);
             setInsertionState(PODCreationState.Success);
           } catch (_e) {
             setInsertionState(PODCreationState.Failure);
@@ -410,6 +452,9 @@ enum PODDeletionState {
 
 function DeletePOD({ z }: { z: ParcnetAPI }): ReactNode {
   const [signature, setSignature] = useState<string>("");
+  const [selectedCollection, setSelectedCollection] = useState<
+    "Apples" | "Bananas"
+  >("Apples");
   const [deletionState, setDeletionState] = useState<PODDeletionState>(
     PODDeletionState.None
   );
@@ -433,14 +478,30 @@ function DeletePOD({ z }: { z: ParcnetAPI }): ReactNode {
       </div>
       <p>
         <code className="block text-xs font-base rounded-md p-2 whitespace-pre-wrap">
-          {`await z.pod.delete("${signature}");`}
+          {`await z.pod.collection("${selectedCollection}").delete("${signature}");`}
         </code>
       </p>
+
+      <div className="mt-2 mb-4">
+        <label className="flex flex-row gap-2 items-center">
+          <span className="text-gray-700">Collections</span>
+          <select
+            value={selectedCollection}
+            onChange={(e) =>
+              setSelectedCollection(e.target.value as "Apples" | "Bananas")
+            }
+            className="w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"
+          >
+            <option value="Apples">Apples</option>
+            <option value="Bananas">Bananas</option>
+          </select>
+        </label>
+      </div>
 
       <TryIt
         onClick={async () => {
           try {
-            await z.pod.delete(signature);
+            await z.pod.collection(selectedCollection).delete(signature);
             setDeletionState(PODDeletionState.Success);
           } catch (_e) {
             setDeletionState(PODDeletionState.Failure);
@@ -463,7 +524,10 @@ function DeletePOD({ z }: { z: ParcnetAPI }): ReactNode {
 }
 
 function SubscribeToPODs({ z }: { z: ParcnetAPI }): ReactNode {
-  const [pods, setPODs] = useState<POD[]>([]);
+  const [pods, setPODs] = useState<PODData[]>([]);
+  const [selectedCollection, setSelectedCollection] = useState<
+    "Apples" | "Bananas"
+  >("Apples");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [subscription, setSubscription] = useState<Subscription<any> | null>(
     null
@@ -486,10 +550,25 @@ function SubscribeToPODs({ z }: { z: ParcnetAPI }): ReactNode {
     }
   }
 });
-const sub = await z.pod.subscribe(q);
+const sub = await z.pod.collection("${selectedCollection}").subscribe(q);
 `}
         </code>
       </p>
+      <div className="mt-2 mb-4">
+        <label className="flex flex-row gap-2 items-center">
+          <span className="text-gray-700">Collections</span>
+          <select
+            value={selectedCollection}
+            onChange={(e) =>
+              setSelectedCollection(e.target.value as "Apples" | "Bananas")
+            }
+            className="w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"
+          >
+            <option value="Apples">Apples</option>
+            <option value="Bananas">Bananas</option>
+          </select>
+        </label>
+      </div>
       <TryIt
         onClick={async () => {
           try {
@@ -505,7 +584,7 @@ const sub = await z.pod.subscribe(q);
                 }
               }
             });
-            const sub = await z.pod.subscribe(q);
+            const sub = await z.pod.collection(selectedCollection).subscribe(q);
             setSubscription(sub);
             sub.on("update", (update) => {
               setPODs(update);
@@ -523,7 +602,7 @@ const sub = await z.pod.subscribe(q);
           <pre className="whitespace-pre-wrap">
             {JSONBig.stringify(
               pods.map((p) => ({
-                entries: p.content.asEntries(),
+                entries: p.entries,
                 signature: p.signature,
                 signerPublicKey: p.signerPublicKey
               })),

@@ -21,11 +21,11 @@ import {
   podValueHash,
   requireType
 } from "@pcd/pod";
-import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import isEqual from "lodash/isEqual";
 import uniq from "lodash/uniq";
+import { Identity as IdentityV4 } from "semaphore-identity-v4";
 import {
   GPCBoundConfig,
   GPCIdentifier,

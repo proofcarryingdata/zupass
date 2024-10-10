@@ -17,6 +17,7 @@ export interface EmbeddedGetRequest {
 export interface EmbeddedGPCProof {
   type: EmbeddedScreenType.EmbeddedGPCProof;
   proofRequest: PodspecProofRequest;
+  collectionIds: string[];
   callback: (result: ProveResult) => void;
 }
 
