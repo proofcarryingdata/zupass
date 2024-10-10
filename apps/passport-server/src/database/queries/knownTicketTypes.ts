@@ -1,5 +1,5 @@
 import { KnownPublicKeyType, KnownTicketGroup } from "@pcd/passport-interface";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import {
   KnownPublicKeyDB,
   KnownTicketType,
@@ -11,7 +11,7 @@ import { sqlQuery } from "../sqlQuery";
  * Fetches known public keys from the database.
  */
 export async function fetchKnownPublicKeys(
-  client: Pool
+  client: PoolClient
 ): Promise<KnownPublicKeyDB[]> {
   const result = await sqlQuery(client, `SELECT * FROM known_public_keys`);
 
@@ -23,7 +23,7 @@ export async function fetchKnownPublicKeys(
  * same name and type already exists.
  */
 export async function setKnownPublicKey(
-  client: Pool,
+  client: PoolClient,
   publicKeyName: string,
   publicKeyType: KnownPublicKeyType,
   publicKey: string
@@ -46,7 +46,7 @@ export async function setKnownPublicKey(
  * check that the public key matches the one that they expect.
  */
 export async function fetchKnownTicketByEventAndProductId(
-  client: Pool,
+  client: PoolClient,
   eventId: string,
   productId: string
 ): Promise<KnownTicketTypeWithKey | null> {
@@ -66,7 +66,7 @@ export async function fetchKnownTicketByEventAndProductId(
  * List all of the known tickets.
  */
 export async function fetchKnownTicketTypes(
-  client: Pool
+  client: PoolClient
 ): Promise<KnownTicketTypeWithKey[]> {
   const result = await sqlQuery(
     client,
@@ -86,7 +86,7 @@ export async function fetchKnownTicketTypes(
  * identifier already exists, will replace existing values.
  */
 export async function setKnownTicketType(
-  client: Pool,
+  client: PoolClient,
   identifier: string,
   eventId: string,
   productId: string,
@@ -119,7 +119,7 @@ export async function setKnownTicketType(
  * Deletes a known ticket type.
  */
 export async function deleteKnownTicketType(
-  client: Pool,
+  client: PoolClient,
   identifier: string
 ): Promise<void> {
   await sqlQuery(
@@ -133,7 +133,7 @@ export async function deleteKnownTicketType(
  * Fetch ticket types belonging to a group.
  */
 export async function fetchKnownTicketTypesByGroup(
-  client: Pool,
+  client: PoolClient,
   ticketGroup: KnownTicketGroup
 ): Promise<KnownTicketType[]> {
   const result = await sqlQuery(

@@ -1,19 +1,12 @@
-import { Pool, PoolClient } from "postgres-pool";
-import { sqlTransaction } from "../../sqlQuery";
+import { PoolClient } from "postgres-pool";
 
 export async function agreeTermsAndUnredactTickets(
-  client: Pool,
+  client: PoolClient,
   userUUID: string,
   version: number
 ): Promise<void> {
-  await sqlTransaction<void>(
-    client,
-    "agree terms and unredact tickets",
-    async (txClient: PoolClient) => {
-      await txClient.query(
-        "UPDATE users SET terms_agreed = $1 WHERE uuid = $2",
-        [version, userUUID]
-      );
-    }
-  );
+  await client.query("UPDATE users SET terms_agreed = $1 WHERE uuid = $2", [
+    version,
+    userUUID
+  ]);
 }

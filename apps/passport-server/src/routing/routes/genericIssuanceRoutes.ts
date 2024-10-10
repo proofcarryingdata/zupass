@@ -30,6 +30,7 @@ import express from "express";
 import { sha256 } from "js-sha256";
 import urljoin from "url-join";
 import { PipelineCheckinDB } from "../../database/queries/pipelineCheckinDB";
+import { namedSqlTransaction, sqlTransaction } from "../../database/sqlQuery";
 import { GenericIssuanceService } from "../../services/generic-issuance/GenericIssuanceService";
 import {
   getAllGenericIssuanceHTTPQuery,
@@ -79,7 +80,10 @@ export function initGenericIssuanceRoutes(
    */
   app.post("/generic-issuance/api/self", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
-    const user = await genericIssuanceService.authSession(req);
+    const user = await sqlTransaction(context.dbPool, (client) =>
+      genericIssuanceService.authSession(client, req)
+    );
+
     traceUser(user);
 
     const result: GenericIssuanceSelfResponseValue = {
@@ -110,9 +114,11 @@ export function initGenericIssuanceRoutes(
       throw new PCDHTTPError(400);
     }
 
-    const checkinDb = new PipelineCheckinDB(context.dbPool);
+    const checkinDb = new PipelineCheckinDB();
     const tickets = await pipeline.getAllTickets();
-    const checkins = await checkinDb.getByPipelineId(pragueId);
+    const checkins = await sqlTransaction(context.dbPool, (client) =>
+      checkinDb.getByPipelineId(client, pragueId)
+    );
 
     const products: Record<string, string> = {
       "508b3dc0-864e-4e87-9ce4-5eebbb672362": "Vendor A",
@@ -211,13 +217,19 @@ export function initGenericIssuanceRoutes(
    */
   app.post("/generic-issuance/api/pipeline-info", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
-    const user = await genericIssuanceService.authSession(req);
-    traceUser(user);
-
-    const reqBody = req.body as PipelineInfoRequest;
-    const result = await genericIssuanceService.handleGetPipelineInfo(
-      user,
-      reqBody.pipelineId
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/generic-issuance/api/pipeline-info",
+      async (client) => {
+        const user = await genericIssuanceService.authSession(client, req);
+        traceUser(user);
+        const reqBody = req.body as PipelineInfoRequest;
+        return genericIssuanceService.handleGetPipelineInfo(
+          client,
+          user,
+          reqBody.pipelineId
+        );
+      }
     );
     res.json(result satisfies PipelineInfoResponseValue);
   });
@@ -297,11 +309,18 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/get-all-user-pipelines",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authSession(req);
-      traceUser(user);
-
-      const result =
-        await genericIssuanceService.getAllUserPipelineDefinitions(user);
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/generic-issuance/api/get-all-user-pipelines",
+        async (client) => {
+          const user = await genericIssuanceService.authSession(client, req);
+          traceUser(user);
+          return genericIssuanceService.getAllUserPipelineDefinitions(
+            client,
+            user
+          );
+        }
+      );
       res.json(
         result satisfies GenericIssuanceGetAllUserPipelinesResponseValue
       );
@@ -315,14 +334,18 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/get-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-
-      const user = await genericIssuanceService.authSession(req);
-
-      traceUser(user);
-
-      const result = await genericIssuanceService.loadPipelineDefinition(
-        user,
-        checkUrlParam(req, "id")
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/generic-issuance/api/get-pipeline/:id",
+        async (client) => {
+          const user = await genericIssuanceService.authSession(client, req);
+          traceUser(user);
+          return genericIssuanceService.loadPipelineDefinition(
+            client,
+            user,
+            checkUrlParam(req, "id")
+          );
+        }
       );
 
       if (!result) {
@@ -340,15 +363,23 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/upsert-pipeline",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authSession(req);
-      traceUser(user);
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/generic-issuance/api/upsert-pipeline",
+        async (client) => {
+          const user = await genericIssuanceService.authSession(client, req);
+          traceUser(user);
+          const reqBody = req.body as GenericIssuanceUpsertPipelineRequest;
+          const { definition: result } =
+            await genericIssuanceService.upsertPipelineDefinition(
+              client,
+              user,
+              reqBody.pipeline
+            );
+          return result;
+        }
+      );
 
-      const reqBody = req.body as GenericIssuanceUpsertPipelineRequest;
-      const { definition: result } =
-        await genericIssuanceService.upsertPipelineDefinition(
-          user,
-          reqBody.pipeline
-        );
       res.json(result satisfies GenericIssuanceUpsertPipelineResponseValue);
     }
   );
@@ -360,12 +391,18 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/delete-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authSession(req);
-      traceUser(user);
-
-      const result = await genericIssuanceService.deletePipelineDefinition(
-        user,
-        checkUrlParam(req, "id")
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/generic-issuance/api/delete-pipeline/:id",
+        async (client) => {
+          const user = await genericIssuanceService.authSession(client, req);
+          traceUser(user);
+          return genericIssuanceService.deletePipelineDefinition(
+            client,
+            user,
+            checkUrlParam(req, "id")
+          );
+        }
       );
       res.json(result satisfies GenericIssuanceDeletePipelineResponseValue);
     }
@@ -422,20 +459,26 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/fetch-pretix-events",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authSession(req);
-      traceUser(user);
-
-      const events = await genericIssuanceService.fetchAllPretixEvents(
-        checkBody<GenericIssuanceFetchPretixEventsRequest, "orgUrl">(
-          req,
-          "orgUrl"
-        ),
-        checkBody<GenericIssuanceFetchPretixEventsRequest, "token">(
-          req,
-          "token"
-        )
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/generic-issuance/api/fetch-pretix-events",
+        async (client) => {
+          const user = await genericIssuanceService.authSession(client, req);
+          traceUser(user);
+          return genericIssuanceService.fetchAllPretixEvents(
+            checkBody<GenericIssuanceFetchPretixEventsRequest, "orgUrl">(
+              req,
+              "orgUrl"
+            ),
+            checkBody<GenericIssuanceFetchPretixEventsRequest, "token">(
+              req,
+              "token"
+            )
+          );
+        }
       );
-      res.json(events satisfies GenericIssuanceFetchPretixEventsResponseValue);
+
+      res.json(result satisfies GenericIssuanceFetchPretixEventsResponseValue);
     }
   );
 
@@ -443,9 +486,10 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/fetch-pretix-products",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authSession(req);
+      const user = await sqlTransaction(context.dbPool, (client) =>
+        genericIssuanceService.authSession(client, req)
+      );
       traceUser(user);
-
       const events = await genericIssuanceService.fetchPretixProducts(
         checkBody<GenericIssuanceFetchPretixProductsRequest, "orgUrl">(
           req,
@@ -468,7 +512,13 @@ export function initGenericIssuanceRoutes(
 
   app.post("/edgecity/balances", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
-    res.send(await genericIssuanceService.getEdgeCityBalances());
+    await namedSqlTransaction(
+      context.dbPool,
+      "/edgecity/balances",
+      async (client) => {
+        res.send(await genericIssuanceService.getEdgeCityBalances(client));
+      }
+    );
   });
 
   /**
@@ -654,18 +704,30 @@ export function initGenericIssuanceRoutes(
         "email"
       );
 
-      const user = await genericIssuanceService.authSession(req);
+      await namedSqlTransaction(
+        context.dbPool,
+        "/generic-issuance/api/send-email",
+        async (client) => {
+          const user = await genericIssuanceService.authSession(client, req);
 
-      if (!user.isAdmin) {
-        throw new PCDHTTPError(401, "only admins can send emails to pipelines");
-      }
+          if (!user.isAdmin) {
+            throw new PCDHTTPError(
+              401,
+              "only admins can send emails to pipelines"
+            );
+          }
 
-      const result = await genericIssuanceService.handleSendPipelineEmail(
-        pipelineId,
-        email
+          const result = await genericIssuanceService.handleSendPipelineEmail(
+            client,
+            pipelineId,
+            email
+          );
+
+          res.json(
+            result satisfies GenericIssuanceSendPipelineEmailResponseValue
+          );
+        }
       );
-
-      res.json(result satisfies GenericIssuanceSendPipelineEmailResponseValue);
     }
   );
 

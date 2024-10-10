@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { RateLimitBucket } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
@@ -31,7 +31,7 @@ import { sqlQuery } from "../sqlQuery";
  * @returns the RateLimitBucket
  */
 export async function consumeRateLimitToken(
-  client: Pool,
+  client: PoolClient,
   actionType: string,
   actionId: string,
   maxActions: number,
@@ -117,7 +117,7 @@ export async function consumeRateLimitToken(
  * Delete multiple rate limit buckets
  */
 export async function pruneRateLimitBuckets(
-  client: Pool,
+  client: PoolClient,
   actionType: string,
   // Expire all buckets whose last_take is less than or equal to this timestamp
   // Appropriate timestamps must be calculated by the caller, using the bucket
@@ -135,7 +135,7 @@ export async function pruneRateLimitBuckets(
  * Delete rate limit buckets not of given action types
  */
 export async function deleteUnsupportedRateLimitBuckets(
-  client: Pool,
+  client: PoolClient,
   supportedActionTypes: string[]
 ): Promise<void> {
   await sqlQuery(

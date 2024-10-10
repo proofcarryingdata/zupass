@@ -1,9 +1,9 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { TelegramReactionCount } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 export async function fetchTelegramReactionsForMessage(
-  client: Pool,
+  client: PoolClient,
   anonMessageId: string
 ): Promise<TelegramReactionCount[]> {
   const result = await sqlQuery(
@@ -27,7 +27,7 @@ export async function fetchTelegramReactionsForMessage(
 }
 
 export async function fetchTelegramTotalKarmaForNullifier(
-  client: Pool,
+  client: PoolClient,
   nulliferHash: string
 ): Promise<number> {
   const result = await sqlQuery(

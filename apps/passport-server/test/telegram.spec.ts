@@ -4,7 +4,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
-import { Pool } from "postgres-pool";
+import { Pool, PoolClient } from "postgres-pool";
 import { v4 as uuid } from "uuid";
 import { TelegramEvent } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
@@ -33,19 +33,22 @@ import { ITestEvent, ITestOrganizer } from "./devconnectdb.spec";
 import { overrideEnvironment, testingEnv } from "./util/env";
 
 describe("telegram bot functionality", function () {
-  let db: Pool;
+  let pool: Pool;
+  let client: PoolClient;
 
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
-    db = await getDB();
+    pool = await getDB();
+    client = await pool.connect();
   });
 
   this.afterAll(async () => {
-    await db.end();
+    await client.release();
+    await pool.end();
   });
 
   step("database should initialize", async function () {
-    expect(db).to.not.eq(null);
+    expect(client).to.not.eq(null);
   });
 
   const dummyUserId = 12345;
@@ -85,7 +88,7 @@ describe("telegram bot functionality", function () {
   step("should be able to insert organizer configs", async function () {
     for (const organizer of testOrganizers) {
       const id = await insertPretixOrganizerConfig(
-        db,
+        client,
         organizer.organizerUrl,
         organizer.token,
         organizer.disabled
@@ -93,7 +96,7 @@ describe("telegram bot functionality", function () {
       organizer.dbId = id;
       expect(typeof id).to.eq("string");
     }
-    const allOrganizers = await getAllOrganizers(db);
+    const allOrganizers = await getAllOrganizers(client);
     expect(allOrganizers.length).to.eq(testOrganizers.length);
   });
 
@@ -107,7 +110,7 @@ describe("telegram bot functionality", function () {
         const items: string[] = [];
         const superItems: string[] = [];
         const eventConfigId = await insertPretixEventConfig(
-          db,
+          client,
           organizer.dbId,
           items,
           superItems,
@@ -123,8 +126,8 @@ describe("telegram bot functionality", function () {
   );
 
   step("should be able to add a new telegram chat", async function () {
-    expect(await insertTelegramChat(db, dummyChatId)).to.eq(1);
-    const insertedChat = await fetchTelegramChat(db, dummyChatId);
+    expect(await insertTelegramChat(client, dummyChatId)).to.eq(1);
+    const insertedChat = await fetchTelegramChat(client, dummyChatId);
     expect(insertedChat?.telegram_chat_id).to.eq(dummyChatId.toString());
   });
 
@@ -132,7 +135,7 @@ describe("telegram bot functionality", function () {
     // Insert a dummy user
     const newIdentity = new Identity();
     const newCommitment = newIdentity.commitment.toString();
-    const uuid = await upsertUser(db, {
+    const uuid = await upsertUser(client, {
       uuid: randomUUID(),
       emails: ["ivan@0xparc.org"],
       commitment: newCommitment,
@@ -146,29 +149,31 @@ describe("telegram bot functionality", function () {
     // Insert a dummy Telegram user and chat as verified
     expect(
       await insertTelegramVerification(
-        db,
+        client,
         dummyUserId,
         dummyChatId,
         newCommitment
       )
     ).to.eq(1);
     // Check that the user is verified for access to the chat
-    expect(await fetchTelegramVerificationStatus(db, dummyUserId, dummyChatId))
-      .to.be.true;
+    expect(
+      await fetchTelegramVerificationStatus(client, dummyUserId, dummyChatId)
+    ).to.be.true;
   });
 
   step("should be able to delete a verification", async function () {
-    await deleteTelegramVerification(db, dummyUserId, dummyChatId);
+    await deleteTelegramVerification(client, dummyUserId, dummyChatId);
     // Check that the user is no longer verified for access to the chat
-    expect(await fetchTelegramVerificationStatus(db, dummyUserId, dummyChatId))
-      .to.be.false;
+    expect(
+      await fetchTelegramVerificationStatus(client, dummyUserId, dummyChatId)
+    ).to.be.false;
   });
 
   step("should be able to link an event and tg chat", async function () {
     const eventConfigId = testEvents[0].dbEventConfigId;
-    await insertTelegramEvent(db, eventConfigId, dummyChatId);
+    await insertTelegramEvent(client, eventConfigId, dummyChatId);
     const insertedEvent = await fetchTelegramBotEvent(
-      db,
+      client,
       eventConfigId,
       dummyChatId
     );
@@ -182,9 +187,9 @@ describe("telegram bot functionality", function () {
     async function () {
       const newEventConfigId = testEvents[1].dbEventConfigId;
 
-      await insertTelegramEvent(db, newEventConfigId, dummyChatId);
+      await insertTelegramEvent(client, newEventConfigId, dummyChatId);
       const insertedEvent = await fetchTelegramBotEvent(
-        db,
+        client,
         newEventConfigId,
         dummyChatId
       );
@@ -197,10 +202,10 @@ describe("telegram bot functionality", function () {
     "should be able to connect an existing ticketed event to a new chat",
     async function () {
       const eventConfigId = testEvents[0].dbEventConfigId;
-      await insertTelegramChat(db, dummyChatId_1);
-      await insertTelegramEvent(db, eventConfigId, dummyChatId_1);
+      await insertTelegramChat(client, dummyChatId_1);
+      await insertTelegramEvent(client, eventConfigId, dummyChatId_1);
       const insertedEvent = await fetchTelegramBotEvent(
-        db,
+        client,
         eventConfigId,
         dummyChatId_1
       );
@@ -213,9 +218,9 @@ describe("telegram bot functionality", function () {
     "should be able to update the chat a ticket refers to",
     async function () {
       const eventConfigId = testEvents[0].dbEventConfigId;
-      await insertTelegramEvent(db, eventConfigId, dummyChatId);
+      await insertTelegramEvent(client, eventConfigId, dummyChatId);
       let insertedEventsByEventId = await fetchTelegramBotEvent(
-        db,
+        client,
         eventConfigId,
         dummyChatId
       );
@@ -223,9 +228,9 @@ describe("telegram bot functionality", function () {
         dummyChatId.toString()
       );
 
-      await insertTelegramEvent(db, eventConfigId, dummyChatId_1);
+      await insertTelegramEvent(client, eventConfigId, dummyChatId_1);
       insertedEventsByEventId = await fetchTelegramBotEvent(
-        db,
+        client,
         eventConfigId,
         dummyChatId_1
       );
@@ -326,18 +331,24 @@ describe("telegram bot functionality", function () {
     }
   );
   step("should be able to add multiple anon topics", async function () {
-    await insertTelegramTopic(db, dummyChatId, "test", anonChannelID, true);
+    await insertTelegramTopic(client, dummyChatId, "test", anonChannelID, true);
     const insertedAnonTopic = await fetchTelegramAnonTopicsByChatId(
-      db,
+      client,
       dummyChatId
     );
     expect(insertedAnonTopic[0]?.telegramChatID).to.eq(dummyChatId.toString());
     expect(insertedAnonTopic[0]?.topic_id).to.eq(anonChannelID.toString());
     expect(insertedAnonTopic[0]?.topic_name).to.eq("test");
-    await insertTelegramTopic(db, dummyChatId, "test1", anonChannelID_1, true);
+    await insertTelegramTopic(
+      client,
+      dummyChatId,
+      "test1",
+      anonChannelID_1,
+      true
+    );
 
     const insertedAnonTopic_1 = await fetchTelegramAnonTopicsByChatId(
-      db,
+      client,
       dummyChatId
     );
     expect(insertedAnonTopic_1.length).to.eq(2);
@@ -349,7 +360,7 @@ describe("telegram bot functionality", function () {
   });
 
   step("test empty array query", async function () {
-    const badQuery = await fetchTelegramTopicsByChatId(db, 169);
+    const badQuery = await fetchTelegramTopicsByChatId(client, 169);
     expect(badQuery.length).to.eq(0);
   });
 });

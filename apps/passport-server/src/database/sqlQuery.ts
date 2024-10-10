@@ -10,7 +10,7 @@ import { execWithRetry } from "../util/retry";
  * Retries queries that fail due to a connection error.
  */
 export function sqlQuery(
-  pool: Pool | PoolClient,
+  client: PoolClient,
   query: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args?: any[],
@@ -19,7 +19,7 @@ export function sqlQuery(
   return traced("DB", "query", async (span) => {
     span?.setAttribute("query", query);
     try {
-      return await execQueryWithRetry(pool, query, args, maxRetries);
+      return await execQueryWithRetry(client, query, args, maxRetries);
     } catch (e) {
       span?.setAttribute("error", e + "");
 
@@ -54,13 +54,22 @@ async function execQueryWithRetry(
   );
 }
 
+export function sqlTransaction<T>(
+  pool: Pool,
+  func: (client: PoolClient) => Promise<T>
+): Promise<T> {
+  return namedSqlTransaction(pool, "execWithClient", async (client) =>
+    func(client)
+  );
+}
+
 /**
  * Executes a given function inside a transaction against the database, and
  * traces its performance.  Retries queries that fail due to a connection error.
  * The transaction will be committed if the txn function returns a value, or
  * rolled back if it throws/rejects.
  */
-export function sqlTransaction<T>(
+export function namedSqlTransaction<T>(
   pool: Pool,
   txn_desc: string,
   txn: (client: PoolClient) => Promise<T>,

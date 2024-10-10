@@ -1,15 +1,15 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { PretixOrganizerRow } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 export async function insertPretixOrganizerConfig(
-  db: Pool,
+  client: PoolClient,
   organizerUrl: string,
   token: string,
   disabled: boolean
 ): Promise<string> {
   const id = await sqlQuery(
-    db,
+    client,
     `insert into pretix_organizers_config(organizer_url, token, disabled) ` +
       `values ($1, $2, $3) ` +
       `on conflict (organizer_url) do update set token = $2 ` +
@@ -21,14 +21,17 @@ export async function insertPretixOrganizerConfig(
 }
 
 export async function getAllOrganizers(
-  db: Pool
+  client: PoolClient
 ): Promise<PretixOrganizerRow[]> {
-  const result = await sqlQuery(db, `select * from pretix_organizers_config`);
+  const result = await sqlQuery(
+    client,
+    `select * from pretix_organizers_config`
+  );
   return result.rows as PretixOrganizerRow[];
 }
 
 export async function insertPretixEventConfig(
-  db: Pool,
+  client: PoolClient,
   organizerConfigId: string,
   activeItemIds: string[],
   superuserItemIds: string[],
@@ -44,7 +47,7 @@ export async function insertPretixEventConfig(
   });
 
   const result = await sqlQuery(
-    db,
+    client,
     `insert into pretix_events_config(pretix_organizers_config_id, active_item_ids, event_id, superuser_item_ids) ` +
       `values ($1, $2, $3, $4) ` +
       `on conflict (event_id, pretix_organizers_config_id) do update set pretix_organizers_config_id = $1, active_item_ids = $2, superuser_item_ids = $4 ` +

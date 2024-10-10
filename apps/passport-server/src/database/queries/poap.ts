@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { PoapEvent } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
@@ -12,7 +12,7 @@ import { sqlQuery } from "../sqlQuery";
  * redirected to this POAP claim URL.
  */
 export async function claimNewPoapUrl(
-  client: Pool,
+  client: PoolClient,
   poapEvent: PoapEvent,
   hashedTicketId: string
 ): Promise<string | null> {
@@ -36,7 +36,7 @@ WHERE claim_url =
  * Insert a new POAP claim URL.
  */
 export async function insertNewPoapUrl(
-  client: Pool,
+  client: PoolClient,
   claimUrl: string,
   poapEvent: PoapEvent
 ): Promise<void> {
@@ -56,7 +56,7 @@ VALUES
  * if it exists; otherwise, return NULL.
  */
 export async function getExistingClaimUrlByTicketId(
-  client: Pool,
+  client: PoolClient,
   hashedTicketId: string
 ): Promise<string | null> {
   const result = await sqlQuery(

@@ -12,7 +12,7 @@ import {
 import { PCDPermissionType } from "@pcd/pcd-collection";
 import _ from "lodash";
 import { Client } from "pg";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { parseFrogEnum } from "../../util/frogcrypto";
 import { FrogCryptoUserFeedState } from "../models";
 import { sqlQuery } from "../sqlQuery";
@@ -21,7 +21,7 @@ import { sqlQuery } from "../sqlQuery";
  * Fetches state of all feeds for a particular user.
  */
 export async function fetchUserFeedsState(
-  client: Pool,
+  client: PoolClient,
   semaphoreId: string
 ): Promise<FrogCryptoUserFeedState[]> {
   const result = await sqlQuery(
@@ -39,7 +39,7 @@ export async function fetchUserFeedsState(
  * NB: This must run before transaction begins to ensure there is a lock TX can acquire and avoid deadlocks.
  */
 export async function initializeUserFeedState(
-  client: Pool,
+  client: PoolClient,
   semaphoreId: string,
   feedId: string
 ): Promise<void> {
@@ -118,7 +118,7 @@ export async function updateUserFeedState(
  * Upsert frog data into the database.
  */
 export async function upsertFrogData(
-  client: Pool,
+  client: PoolClient,
   frogDataList: FrogCryptoFrogData[]
 ): Promise<void> {
   for (const frogData of frogDataList) {
@@ -138,9 +138,11 @@ export async function upsertFrogData(
 /**
  * Returns all the frogs in the database.
  */
-export async function getFrogData(pool: Pool): Promise<FrogCryptoFrogData[]> {
+export async function getFrogData(
+  client: PoolClient
+): Promise<FrogCryptoFrogData[]> {
   const result = await sqlQuery(
-    pool,
+    client,
     `select * from frogcrypto_frogs order by id`
   );
 
@@ -151,11 +153,11 @@ export async function getFrogData(pool: Pool): Promise<FrogCryptoFrogData[]> {
  * Delete frog data from the database by ids.
  */
 export async function deleteFrogData(
-  pool: Pool,
+  client: PoolClient,
   frogIds: number[]
 ): Promise<void> {
   await sqlQuery(
-    pool,
+    client,
     `delete from frogcrypto_frogs where id = any($1::int[])`,
     [frogIds]
   );
@@ -164,9 +166,9 @@ export async function deleteFrogData(
 /**
  * Returns a list of possible frogs
  */
-export async function getPossibleFrogs(pool: Pool): Promise<DexFrog[]> {
+export async function getPossibleFrogs(client: PoolClient): Promise<DexFrog[]> {
   const result = await sqlQuery(
-    pool,
+    client,
     `
   select id, frog->>'rarity' as rarity
   from frogcrypto_frogs
@@ -187,7 +189,7 @@ export async function getPossibleFrogs(pool: Pool): Promise<DexFrog[]> {
  * https://utopia.duth.gr/~pefraimi/research/data/2007EncOfAlg.pdf
  */
 export async function sampleFrogData(
-  pool: Pool,
+  client: PoolClient,
   biomes: FrogCryptoFeedBiomeConfigs
 ): Promise<FrogCryptoFrogData | undefined> {
   const [biomeKeys, scalingFactors] = _.chain(biomes)
@@ -198,7 +200,7 @@ export async function sampleFrogData(
     .value();
 
   const result = await sqlQuery(
-    pool,
+    client,
     `
     with biome_scaling as (
       select unnest($1::text[]) as biome, unnest($2::float[]) as scaling_factor
@@ -298,11 +300,11 @@ scores_with_username as (
  * Returns the top scores.
  */
 export async function getScoreboard(
-  pool: Pool,
+  client: PoolClient,
   limit = 50
 ): Promise<FrogCryptoScore[]> {
   const result = await sqlQuery(
-    pool,
+    client,
     ScoreCTEs + `select * from scores_with_username limit $1`,
     [limit]
   );
@@ -316,11 +318,11 @@ export async function getScoreboard(
  * Returns the user's score and rank.
  */
 export async function getUserScore(
-  pool: Pool,
+  client: PoolClient,
   semaphoreId: string
 ): Promise<FrogCryptoScore | undefined> {
   const result = await sqlQuery(
-    pool,
+    client,
     ScoreCTEs + `select * from scores_with_username where semaphore_id = $1`,
     [semaphoreId]
   );
@@ -334,12 +336,12 @@ export async function getUserScore(
  * Update the user's preference to reveal their TG username on the scoreboard.
  */
 export async function updateUserScoreboardPreference(
-  pool: Pool,
+  client: PoolClient,
   semaphoreId: string,
   allow: boolean
 ): Promise<void> {
   await sqlQuery(
-    pool,
+    client,
     `update frogcrypto_user_scores
     set telegram_sharing_allowed = $1
     where semaphore_id = $2`,
@@ -351,7 +353,7 @@ export async function updateUserScoreboardPreference(
  * Upsert feed data into the database.
  */
 export async function upsertFeedData(
-  client: Pool,
+  client: PoolClient,
   feedDataList: FrogCryptoDbFeedData[]
 ): Promise<void> {
   for (const feedData of feedDataList) {
@@ -372,9 +374,9 @@ export async function upsertFeedData(
  * Returns all the raw feeds in the database.
  */
 export async function getRawFeedData(
-  pool: Pool
+  client: PoolClient
 ): Promise<FrogCryptoDbFeedData[]> {
-  const result = await sqlQuery(pool, `select * from frogcrypto_feeds`);
+  const result = await sqlQuery(client, `select * from frogcrypto_feeds`);
 
   return result.rows;
 }
@@ -382,8 +384,10 @@ export async function getRawFeedData(
 /**
  * Returns all the feeds in the database.
  */
-export async function getFeedData(pool: Pool): Promise<FrogCryptoFeed[]> {
-  return (await getRawFeedData(pool)).map(toFeedData);
+export async function getFeedData(
+  client: PoolClient
+): Promise<FrogCryptoFeed[]> {
+  return (await getRawFeedData(client)).map(toFeedData);
 }
 
 function toFeedData(dbFeedData: FrogCryptoDbFeedData): FrogCryptoFeed {

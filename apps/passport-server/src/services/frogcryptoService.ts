@@ -27,6 +27,7 @@ import {
 import { PCDActionType } from "@pcd/pcd-collection";
 import { RollbarService } from "@pcd/server-shared";
 import _ from "lodash";
+import { PoolClient } from "postgres-pool";
 import { FrogCryptoUserFeedState } from "../database/models";
 import {
   deleteFrogData,
@@ -45,7 +46,7 @@ import {
   upsertFrogData
 } from "../database/queries/frogcrypto";
 import { fetchUserByV3Commitment } from "../database/queries/users";
-import { sqlTransaction } from "../database/sqlQuery";
+import { namedSqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import {
@@ -77,27 +78,33 @@ export class FrogcryptoService {
       (feed: FrogCryptoFeed) =>
         async (req: PollFeedRequest): Promise<PollFeedResponseValue> => {
           try {
-            if (feed.activeUntil <= Date.now() / 1000) {
-              throw new PCDHTTPError(403, "Feed is not active");
-            }
-
-            if (req.pcd === undefined) {
-              throw new PCDHTTPError(400, `Missing credential`);
-            }
-            await this.issuanceService.verifyCredential(req.pcd);
-
-            return {
-              actions: [
-                {
-                  pcds: await this.issuanceService.issueEdDSAFrogPCDs(
-                    req.pcd,
-                    await this.reserveFrogData(req.pcd, feed)
-                  ),
-                  folder: FrogCryptoFolderName,
-                  type: PCDActionType.AppendToFolder
+            return namedSqlTransaction(
+              this.context.dbPool,
+              "pollFeed",
+              async (client) => {
+                if (feed.activeUntil <= Date.now() / 1000) {
+                  throw new PCDHTTPError(403, "Feed is not active");
                 }
-              ]
-            };
+
+                if (req.pcd === undefined) {
+                  throw new PCDHTTPError(400, `Missing credential`);
+                }
+                await this.issuanceService.verifyCredential(req.pcd);
+
+                return {
+                  actions: [
+                    {
+                      pcds: await this.issuanceService.issueEdDSAFrogPCDs(
+                        req.pcd,
+                        await this.reserveFrogData(client, req.pcd, feed)
+                      ),
+                      folder: FrogCryptoFolderName,
+                      type: PCDActionType.AppendToFolder
+                    }
+                  ]
+                };
+              }
+            );
           } catch (e) {
             if (e instanceof PCDHTTPError) {
               throw e;
@@ -135,6 +142,7 @@ export class FrogcryptoService {
   }
 
   public async getUserState(
+    client: PoolClient,
     req: FrogCryptoUserStateRequest
   ): Promise<FrogCryptoUserStateResponseValue> {
     if (!("feedIds" in req)) throw new PCDHTTPError(400, "missing feedIds");
@@ -142,10 +150,13 @@ export class FrogcryptoService {
       throw new PCDHTTPError(400, "feedIds must be an array");
     }
 
-    const semaphoreId = await this.verifyCredentialAndGetSemaphoreId(req.pcd);
+    const semaphoreId = await this.verifyCredentialAndGetSemaphoreId(
+      client,
+      req.pcd
+    );
 
     const userFeeds = _.keyBy(
-      await fetchUserFeedsState(this.context.dbPool, semaphoreId),
+      await fetchUserFeedsState(client, semaphoreId),
       "feed_id"
     );
 
@@ -157,23 +168,23 @@ export class FrogcryptoService {
       feeds: allFeeds.map((feed) =>
         this.computeUserFeedState(userFeeds[feed.id], feed)
       ),
-      possibleFrogs: await getPossibleFrogs(this.context.dbPool),
-      myScore: await getUserScore(this.context.dbPool, semaphoreId)
+      possibleFrogs: await getPossibleFrogs(client),
+      myScore: await getUserScore(client, semaphoreId)
     };
   }
 
   public async updateTelegramHandleSharing(
+    client: PoolClient,
     req: FrogCryptoShareTelegramHandleRequest
   ): Promise<FrogCryptoShareTelegramHandleResponseValue> {
-    const semaphoreId = await this.verifyCredentialAndGetSemaphoreId(req.pcd);
-
-    await updateUserScoreboardPreference(
-      this.context.dbPool,
-      semaphoreId,
-      req.reveal
+    const semaphoreId = await this.verifyCredentialAndGetSemaphoreId(
+      client,
+      req.pcd
     );
 
-    const myScore = await getUserScore(this.context.dbPool, semaphoreId);
+    await updateUserScoreboardPreference(client, semaphoreId, req.reveal);
+
+    const myScore = await getUserScore(client, semaphoreId);
     if (!myScore) {
       throw new PCDHTTPError(404, "User not found");
     }
@@ -184,102 +195,94 @@ export class FrogcryptoService {
   }
 
   private async reserveFrogData(
+    client: PoolClient,
     credential: Credential,
     feed: FrogCryptoFeed
   ): Promise<IFrogData> {
-    const semaphoreId =
-      await this.verifyCredentialAndGetSemaphoreId(credential);
-
-    await initializeUserFeedState(this.context.dbPool, semaphoreId, feed.id);
-
-    return sqlTransaction(
-      this.context.dbPool,
-      "reserve frog",
-      async (client) => {
-        const lastFetchedAt = await updateUserFeedState(
-          client,
-          semaphoreId,
-          feed.id
-        ).catch((e) => {
-          if (e.message.includes("could not obtain lock")) {
-            throw new PCDHTTPError(
-              429,
-              "There is another frog request in flight!"
-            );
-          }
-          throw e;
-        });
-        if (!lastFetchedAt) {
-          const e = new Error("User feed state unexpectedly not found!");
-          logger(`Error encountered while serving feed:`, e);
-          throw e;
-        }
-
-        const { nextFetchAt } = this.computeUserFeedState(
-          {
-            semaphore_id: semaphoreId,
-            feed_id: feed.id,
-            last_fetched_at: lastFetchedAt
-          },
-          feed
-        );
-        if (nextFetchAt > Date.now()) {
-          throw new PCDHTTPError(403, `Next fetch available at ${nextFetchAt}`);
-        }
-
-        const frogDataSpec = await sampleFrogData(
-          this.context.dbPool,
-          feed.biomes
-        );
-        if (!frogDataSpec) {
-          throw new PCDHTTPError(404, "Frog Not Found");
-        }
-
-        const frogData = this.generateFrogData(frogDataSpec, semaphoreId);
-
-        const { score: scoreAfterRoll } = await incrementScore(
-          client,
-          semaphoreId,
-          frogData.rarity,
-          // non-frog frog doesn't get point
-          frogData.biome === Biome.Unknown ? 0 : 1
-        );
-
-        if (scoreAfterRoll > FROG_SCORE_CAP) {
-          throw new PCDHTTPError(403, "Frog faucet off.");
-        }
-        // rollback last fetched timestamp if user has free rolls left
-        if (scoreAfterRoll <= FROG_FREEROLLS) {
-          await updateUserFeedState(
-            client,
-            semaphoreId,
-            feed.id,
-            lastFetchedAt.toUTCString()
-          );
-        }
-
-        return frogData;
-      }
+    const semaphoreId = await this.verifyCredentialAndGetSemaphoreId(
+      client,
+      credential
     );
+
+    await initializeUserFeedState(client, semaphoreId, feed.id);
+
+    const lastFetchedAt = await updateUserFeedState(
+      client,
+      semaphoreId,
+      feed.id
+    ).catch((e) => {
+      if (e.message.includes("could not obtain lock")) {
+        throw new PCDHTTPError(429, "There is another frog request in flight!");
+      }
+      throw e;
+    });
+    if (!lastFetchedAt) {
+      const e = new Error("User feed state unexpectedly not found!");
+      logger(`Error encountered while serving feed:`, e);
+      throw e;
+    }
+
+    const { nextFetchAt } = this.computeUserFeedState(
+      {
+        semaphore_id: semaphoreId,
+        feed_id: feed.id,
+        last_fetched_at: lastFetchedAt
+      },
+      feed
+    );
+    if (nextFetchAt > Date.now()) {
+      throw new PCDHTTPError(403, `Next fetch available at ${nextFetchAt}`);
+    }
+
+    const frogDataSpec = await sampleFrogData(client, feed.biomes);
+    if (!frogDataSpec) {
+      throw new PCDHTTPError(404, "Frog Not Found");
+    }
+
+    const frogData = this.generateFrogData(frogDataSpec, semaphoreId);
+
+    const { score: scoreAfterRoll } = await incrementScore(
+      client,
+      semaphoreId,
+      frogData.rarity,
+      // non-frog frog doesn't get point
+      frogData.biome === Biome.Unknown ? 0 : 1
+    );
+
+    if (scoreAfterRoll > FROG_SCORE_CAP) {
+      throw new PCDHTTPError(403, "Frog faucet off.");
+    }
+    // rollback last fetched timestamp if user has free rolls left
+    if (scoreAfterRoll <= FROG_FREEROLLS) {
+      await updateUserFeedState(
+        client,
+        semaphoreId,
+        feed.id,
+        lastFetchedAt.toUTCString()
+      );
+    }
+
+    return frogData;
   }
 
   /**
    * Upsert frog data into the database and return all frog data.
    */
   public async updateFrogData(
+    client: PoolClient,
     req: FrogCryptoUpdateFrogsRequest
   ): Promise<FrogCryptoUpdateFrogsResponseValue> {
-    await this.cachedVerifyAdminSignaturePCD(req.pcd);
+    await this.cachedVerifyAdminSignaturePCD(client, req.pcd);
 
     try {
-      await upsertFrogData(this.context.dbPool, req.frogs);
+      await upsertFrogData(client, req.frogs);
     } catch (e) {
       logger(`Error encountered while inserting frog data:`, e);
       throw new PCDHTTPError(500, `Error inserting frog data: ${e}`);
     }
 
     return {
-      frogs: await getFrogData(this.context.dbPool)
+      frogs: await getFrogData(client)
     };
   }
 
@@ -287,34 +290,36 @@ export class FrogcryptoService {
    * Delete frog data from the database and return all frog data.
    */
   public async deleteFrogData(
+    client: PoolClient,
     req: FrogCryptoDeleteFrogsRequest
   ): Promise<FrogCryptoDeleteFrogsResponseValue> {
-    await this.cachedVerifyAdminSignaturePCD(req.pcd);
+    await this.cachedVerifyAdminSignaturePCD(client, req.pcd);
 
-    await deleteFrogData(this.context.dbPool, req.frogIds);
+    await deleteFrogData(client, req.frogIds);
 
     return {
-      frogs: await getFrogData(this.context.dbPool)
+      frogs: await getFrogData(client)
     };
   }
 
   /**
    * Return default number of top scores.
    */
-  public async getScoreboard(): Promise<FrogCryptoScore[]> {
-    return getScoreboard(this.context.dbPool);
+  public async getScoreboard(client: PoolClient): Promise<FrogCryptoScore[]> {
+    return getScoreboard(client);
   }
 
   /**
    * Upsert feed data into the database and return all raw feed data.
    */
   public async updateFeedData(
+    client: PoolClient,
     req: FrogCryptoUpdateFeedsRequest
   ): Promise<FrogCryptoUpdateFeedsResponseValue> {
-    await this.cachedVerifyAdminSignaturePCD(req.pcd);
+    await this.cachedVerifyAdminSignaturePCD(client, req.pcd);
 
     try {
-      await upsertFeedData(this.context.dbPool, req.feeds);
+      await upsertFeedData(client, req.feeds);
       // nb: refresh in-memory feed cache. As of 2023/11, we run a single
       // server. Once we scale out, servers may return stale data. See @{link
       // feedHost#refreshFeeds} on how to fix.
@@ -325,7 +330,7 @@ export class FrogcryptoService {
     }
 
     return {
-      feeds: await getRawFeedData(this.context.dbPool)
+      feeds: await getRawFeedData(client)
     };
   }
 
@@ -387,6 +392,7 @@ export class FrogcryptoService {
   }
 
   private async verifyCredentialAndGetSemaphoreId(
+    client: PoolClient,
     credential: Credential
   ): Promise<string> {
     try {
@@ -402,10 +408,11 @@ export class FrogcryptoService {
    * Verify credential against a static list of admin identities.
    */
   private async cachedVerifyAdminSignaturePCD(
+    client: PoolClient,
     credential: Credential
   ): Promise<void> {
-    const id = await this.verifyCredentialAndGetSemaphoreId(credential);
-    const user = await fetchUserByV3Commitment(this.context.dbPool, id);
+    const id = await this.verifyCredentialAndGetSemaphoreId(client, credential);
+    const user = await fetchUserByV3Commitment(client, id);
     if (!user) {
       throw new PCDHTTPError(400, "invalid PCD");
     }

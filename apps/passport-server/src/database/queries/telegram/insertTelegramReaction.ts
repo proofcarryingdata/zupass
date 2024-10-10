@@ -1,8 +1,8 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../../sqlQuery";
 
 export async function insertTelegramReaction(
-  client: Pool,
+  client: PoolClient,
   proof: string,
   anonMessageId: string,
   reaction: string,

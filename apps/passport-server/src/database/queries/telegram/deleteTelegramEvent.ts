@@ -1,11 +1,11 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
  * Delete an event <> telegram chat entry.
  */
 export async function deleteTelegramEvent(
-  client: Pool,
+  client: PoolClient,
   ticketEventId: string
 ): Promise<void> {
   await sqlQuery(
@@ -19,7 +19,7 @@ export async function deleteTelegramEvent(
 }
 
 export async function deleteTelegramChat(
-  client: Pool,
+  client: PoolClient,
   telegramChatId: number
 ): Promise<void> {
   await sqlQuery(
@@ -33,7 +33,7 @@ export async function deleteTelegramChat(
 }
 
 export async function deleteTelegramChatTopic(
-  client: Pool,
+  client: PoolClient,
   telegramChatId: number,
   telegramTopicId: number
 ): Promise<void> {
@@ -48,7 +48,7 @@ export async function deleteTelegramChatTopic(
 }
 
 export async function deleteTelegramForward(
-  client: Pool,
+  client: PoolClient,
   receiverChatTopicID: number,
   senderChatTopicID: number | null
 ): Promise<void> {

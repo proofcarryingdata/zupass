@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { AnonNullifierInfo, TelegramConversation } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -6,7 +6,7 @@ import { sqlQuery } from "../../sqlQuery";
  * Fetch the list of Telegram conversations for a user from the database.
  */
 export async function fetchTelegramConversation(
-  client: Pool,
+  client: PoolClient,
   telegramUserId: number
 ): Promise<TelegramConversation | null> {
   const result = await sqlQuery(
@@ -22,7 +22,7 @@ export async function fetchTelegramConversation(
 }
 
 export async function fetchTelegramConversationsByChatId(
-  client: Pool,
+  client: PoolClient,
   telegramChatId: number
 ): Promise<TelegramConversation[]> {
   const result = await sqlQuery(
@@ -37,11 +37,8 @@ export async function fetchTelegramConversationsByChatId(
   return result.rows;
 }
 
-/**
- *
- */
 export async function fetchTelegramVerificationStatus(
-  client: Pool,
+  client: PoolClient,
   telegramUserId: number,
   telegramChatId: number
 ): Promise<boolean> {
@@ -59,7 +56,7 @@ export async function fetchTelegramVerificationStatus(
 }
 
 export async function fetchAnonTopicNullifier(
-  client: Pool,
+  client: PoolClient,
   nullifierHash: string,
   chatTopicId: number
 ): Promise<AnonNullifierInfo | undefined> {

@@ -10,6 +10,10 @@ import {
 } from "@pcd/passport-interface";
 import { randomUUID } from "@pcd/util";
 import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
+import {
+  namedSqlTransaction,
+  sqlTransaction
+} from "../../../../src/database/sqlQuery";
 import { GenericIssuanceService } from "../../../../src/services/generic-issuance/GenericIssuanceService";
 import { PODPipeline } from "../../../../src/services/generic-issuance/pipelines/PODPipeline/PODPipeline";
 import { Zupass } from "../../../../src/types";
@@ -95,26 +99,37 @@ export async function updateAndRestartPipeline(
   adminGIUserId: string,
   updateFn: (definition: PODPipelineDefinition) => void
 ): Promise<void> {
-  const userDB = new PipelineUserDB(giBackend.context.dbPool);
-  const adminUser = await userDB.getUserById(adminGIUserId);
-  expectToExist(adminUser);
+  return namedSqlTransaction(
+    giBackend.context.dbPool,
+    "updateAndRestartPipeline",
+    async (client) => {
+      const userDB = new PipelineUserDB();
+      const adminUser = await sqlTransaction(
+        giBackend.context.dbPool,
+        (client) => userDB.getUserById(client, adminGIUserId)
+      );
+      expectToExist(adminUser);
 
-  const pipelines = await giService.getAllPipelineInstances();
-  expectLength(pipelines, 1);
-  const podPipeline = pipelines.find(PODPipeline.is);
-  expectToExist(podPipeline);
-  const latestPipeline = (await giService.getPipeline(
-    podPipeline.id
-  )) as PODPipelineDefinition;
-  const newPipelineDefinition = structuredClone(latestPipeline);
-  // Get the updates pipeline definition
-  updateFn(newPipelineDefinition);
+      const pipelines = await giService.getAllPipelineInstances();
+      expectLength(pipelines, 1);
+      const podPipeline = pipelines.find(PODPipeline.is);
+      expectToExist(podPipeline);
+      const latestPipeline = (await giService.getPipeline(
+        client,
+        podPipeline.id
+      )) as PODPipelineDefinition;
+      const newPipelineDefinition = structuredClone(latestPipeline);
+      // Get the updates pipeline definition
+      updateFn(newPipelineDefinition);
 
-  const updateRes = await giService.upsertPipelineDefinition(
-    adminUser,
-    newPipelineDefinition
+      const updateRes = await giService.upsertPipelineDefinition(
+        client,
+        adminUser,
+        newPipelineDefinition
+      );
+      return updateRes.restartPromise;
+    }
   );
-  return updateRes.restartPromise;
 }
 
 export async function requestPODFeed(

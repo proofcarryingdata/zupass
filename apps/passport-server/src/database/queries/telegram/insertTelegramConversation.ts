@@ -1,11 +1,11 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
  * Insert a Telegram conversation into the database.
  */
 export async function insertTelegramVerification(
-  client: Pool,
+  client: PoolClient,
   telegramUserId: number,
   telegramChatId: number,
   semaphoreId: string,
@@ -23,7 +23,7 @@ export async function insertTelegramVerification(
 }
 
 export async function insertTelegramChat(
-  client: Pool,
+  client: PoolClient,
   telegramChatId: number
 ): Promise<number> {
   const result = await sqlQuery(
@@ -38,7 +38,7 @@ export async function insertTelegramChat(
 }
 
 export async function insertTelegramEvent(
-  client: Pool,
+  client: PoolClient,
   ticketEventId: string,
   telegramChatId: number
 ): Promise<number> {
@@ -54,7 +54,7 @@ on conflict (ticket_event_id, telegram_chat_id) do nothing;`,
 }
 
 export async function insertTelegramTopic(
-  client: Pool,
+  client: PoolClient,
   telegramChatId: string | number,
   topicName: string,
   topicId?: string | number | null,
@@ -73,7 +73,7 @@ set topic_name = $3, is_anon_topic = $4;`,
 }
 
 export async function insertOrUpdateTelegramNullifier(
-  client: Pool,
+  client: PoolClient,
   nullifierHash: string,
   messageTimestamps: string[],
   chatTopicId: number
@@ -93,7 +93,7 @@ export async function insertOrUpdateTelegramNullifier(
 }
 
 export async function updateTelegramUsername(
-  client: Pool,
+  client: PoolClient,
   telegramUserId: string,
   telegramUsername: string
 ): Promise<void> {
@@ -108,7 +108,7 @@ export async function updateTelegramUsername(
 }
 
 export async function insertTelegramForward(
-  client: Pool,
+  client: PoolClient,
   senderChatTopicID: number | null,
   receiverChatTopicID: number | null
 ): Promise<number> {
@@ -124,7 +124,7 @@ on conflict (sender_chat_topic_id, receiver_chat_topic_id) do nothing`,
 }
 
 export async function insertTelegramAnonMessage(
-  client: Pool,
+  client: PoolClient,
   id: string,
   nullifierHash: string,
   chatTopicId: number,

@@ -6,6 +6,7 @@ import {
 } from "@pcd/passport-interface";
 import { onlyDefined, str } from "@pcd/util";
 import _ from "lodash";
+import { PoolClient } from "postgres-pool";
 import { v4 as uuidv4 } from "uuid";
 import { PCDHTTPError } from "../../../../routing/pcdHttpError";
 import { logger } from "../../../../util/logger";
@@ -31,6 +32,7 @@ export interface UpsertPipelineResult {
  * represented in {@link PipelineExecutorSubservice} by a {@link PipelineSlot}.
  */
 export async function upsertPipelineDefinition(
+  client: PoolClient,
   editor: PipelineUser,
   newDefinition: PipelineDefinition,
   userSubservice: UserSubservice,
@@ -53,7 +55,7 @@ export async function upsertPipelineDefinition(
   }
 
   const otherPipelines = (
-    await pipelineSubservice.loadPipelineDefinitions()
+    await pipelineSubservice.loadPipelineDefinitions(client)
   ).filter((definition) => definition.id !== newDefinition.id);
 
   for (const definition of otherPipelines) {
@@ -75,7 +77,7 @@ export async function upsertPipelineDefinition(
   }
 
   const existingPipelineDefinition =
-    await pipelineSubservice.loadPipelineDefinition(newDefinition.id);
+    await pipelineSubservice.loadPipelineDefinition(client, newDefinition.id);
   const existingSlot = executorSubservice
     .getAllPipelineSlots()
     .find((slot) => slot.definition.id === existingPipelineDefinition?.id);
@@ -104,8 +106,10 @@ export async function upsertPipelineDefinition(
         throw new PCDHTTPError(400, "Cannot change owner of pipeline");
       }
       if (
-        (await userSubservice.getUserById(newDefinition.ownerUserId)) ===
-        undefined
+        (await userSubservice.getUserById(
+          client,
+          newDefinition.ownerUserId
+        )) === undefined
       ) {
         throw new PCDHTTPError(
           400,
@@ -132,7 +136,9 @@ export async function upsertPipelineDefinition(
     }
     newDefinition.editorUserIds = (
       await Promise.all(
-        newDefinition.editorUserIds.map((id) => userSubservice.getUserById(id))
+        newDefinition.editorUserIds.map((id) =>
+          userSubservice.getUserById(client, id)
+        )
       ).then(onlyDefined)
     ).map((u) => u.id);
 
@@ -163,9 +169,14 @@ export async function upsertPipelineDefinition(
     `executing upsert of pipeline ${str(validatedNewDefinition)}`
   );
   tracePipeline(validatedNewDefinition);
-  await pipelineSubservice.saveDefinition(validatedNewDefinition, editor.id);
+  await pipelineSubservice.saveDefinition(
+    client,
+    validatedNewDefinition,
+    editor.id
+  );
   if (existingSlot) {
     existingSlot.owner = await userSubservice.getUserById(
+      client,
       validatedNewDefinition.ownerUserId
     );
   }
@@ -173,11 +184,13 @@ export async function upsertPipelineDefinition(
   // purposely not awaited as this also performs a Pipeline load,
   // which can take an arbitrary amount of time.
   const restartPromise = executorSubservice.restartPipeline(
+    client,
     validatedNewDefinition.id
   );
 
   // To get accurate timestamps, we need to load the pipeline definition
   const savedDefinition = await pipelineSubservice.getPipeline(
+    client,
     validatedNewDefinition.id
   );
   if (savedDefinition === undefined) {

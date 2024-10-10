@@ -1,5 +1,5 @@
 import { QueryResultRow } from "pg";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
 /**
@@ -13,12 +13,14 @@ export interface IPipelineSemaphoreHistoryDB {
    * entry for each group belonging to the pipeline.
    */
   getLatestGroupsForPipeline(
+    client: PoolClient,
     pipelineId: string
   ): Promise<PipelineSemaphoreGroupHistory[]>;
   /**
    * Adds a history entry.
    */
   addGroupHistoryEntry(
+    client: PoolClient,
     pipelineId: string,
     groupId: string,
     rootHash: string,
@@ -28,6 +30,7 @@ export interface IPipelineSemaphoreHistoryDB {
    * Gets the latest history entry for a specific group.
    */
   getLatestHistoryForGroup(
+    client: PoolClient,
     pipelineId: string,
     groupId: string
   ): Promise<PipelineSemaphoreGroupHistory | undefined>;
@@ -35,6 +38,7 @@ export interface IPipelineSemaphoreHistoryDB {
    * Gets the history entry for a group with a specific root hash.
    */
   getHistoricalGroup(
+    client: PoolClient,
     pipelineId: string,
     groupId: string,
     rootHash: string
@@ -42,24 +46,23 @@ export interface IPipelineSemaphoreHistoryDB {
   /**
    * Deletes all history for a group.
    */
-  deleteGroupHistory(pipelineId: string, groupId: string): Promise<void>;
+  deleteGroupHistory(
+    client: PoolClient,
+    pipelineId: string,
+    groupId: string
+  ): Promise<void>;
 }
 
 export class PipelineSemaphoreHistoryDB implements IPipelineSemaphoreHistoryDB {
-  private db: Pool;
-
-  public constructor(db: Pool) {
-    this.db = db;
-  }
-
   /**
    * Gets the latest Semaphore group data for each group on a pipeline.
    */
   public async getLatestGroupsForPipeline(
+    client: PoolClient,
     pipelineId: string
   ): Promise<PipelineSemaphoreGroupHistory[]> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `
       SELECT DISTINCT ON (group_id) id, pipeline_id, group_id, root_hash, serialized_group, time_created
       FROM generic_issuance_semaphore_history
@@ -75,11 +78,12 @@ export class PipelineSemaphoreHistoryDB implements IPipelineSemaphoreHistoryDB {
    * Returns the latest history entry for a specific group.
    */
   public async getLatestHistoryForGroup(
+    client: PoolClient,
     pipelineId: string,
     groupId: string
   ): Promise<PipelineSemaphoreGroupHistory | undefined> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `
       SELECT DISTINCT ON (group_id) id, pipeline_id, group_id, root_hash, serialized_group, time_created
       FROM generic_issuance_semaphore_history
@@ -101,13 +105,14 @@ export class PipelineSemaphoreHistoryDB implements IPipelineSemaphoreHistoryDB {
    * order of historic entries for the `getLatestGroups` query.
    */
   public async addGroupHistoryEntry(
+    client: PoolClient,
     pipelineId: string,
     groupId: string,
     rootHash: string,
     serializedGroup: string
   ): Promise<void> {
     await sqlQuery(
-      this.db,
+      client,
       `
     INSERT INTO generic_issuance_semaphore_history (pipeline_id, group_id, root_hash, serialized_group, time_created)
     VALUES($1, $2, $3, $4, $5)
@@ -120,11 +125,12 @@ export class PipelineSemaphoreHistoryDB implements IPipelineSemaphoreHistoryDB {
    * Deletes the history of a Semaphore group.
    */
   public async deleteGroupHistory(
+    client: PoolClient,
     pipelineId: string,
     groupId: string
   ): Promise<void> {
     await sqlQuery(
-      this.db,
+      client,
       "DELETE FROM generic_issuance_semaphore_history WHERE pipeline_id = $1 AND group_id = $2",
       [pipelineId, groupId]
     );
@@ -134,12 +140,13 @@ export class PipelineSemaphoreHistoryDB implements IPipelineSemaphoreHistoryDB {
    * Gets a historic Semaphore group, identified by the root hash.
    */
   public async getHistoricalGroup(
+    client: PoolClient,
     pipelineId: string,
     groupId: string,
     rootHash: string
   ): Promise<PipelineSemaphoreGroupHistory | undefined> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `
       SELECT * FROM generic_issuance_semaphore_history
       WHERE pipeline_id = $1 AND group_id = $2 AND root_hash = $3

@@ -1,6 +1,6 @@
 import { DateRange, ZuzaluUserRole } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import {
   IZuzaluPretixAPI,
   ZuzaluPretixOrder,
@@ -11,6 +11,7 @@ import { deleteZuzaluTicket } from "../database/queries/zuzalu_pretix_tickets/de
 import { fetchAllZuzaluPretixTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { updateZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
+import { namedSqlTransaction } from "../database/sqlQuery";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
@@ -118,7 +119,9 @@ export class ZuzaluPretixSyncService {
       const { dbPool } = this.context;
 
       try {
-        await this.saveTickets(dbPool, tickets);
+        await namedSqlTransaction(dbPool, "saveTickets", (client) =>
+          this.saveTickets(client, tickets)
+        );
       } catch (e) {
         logger("[PRETIX] failed to save tickets");
         logger("[PRETIX]", e);
@@ -141,12 +144,12 @@ export class ZuzaluPretixSyncService {
    * - Delete tickets that are no longer residents.
    */
   private async saveTickets(
-    dbClient: Pool,
+    client: PoolClient,
     pretixTickets: ZuzaluPretixTicket[]
   ): Promise<void> {
     return traced(SERVICE_NAME_FOR_TRACING, "saveTickets", async (span) => {
       const pretixTicketsAsMap = ticketsToMapByEmail(pretixTickets);
-      const existingTickets = await fetchAllZuzaluPretixTickets(dbClient);
+      const existingTickets = await fetchAllZuzaluPretixTickets(client);
       const existingTicketsByEmail = ticketsToMapByEmail(existingTickets);
       const newTickets = pretixTickets.filter(
         (p) => !existingTicketsByEmail.has(p.email)
@@ -156,7 +159,7 @@ export class ZuzaluPretixSyncService {
       logger(`[PRETIX] Inserting ${newTickets.length} new tickets`);
       for (const ticket of newTickets) {
         logger(`[PRETIX] Inserting ${JSON.stringify(ticket)}`);
-        await insertZuzaluPretixTicket(dbClient, ticket);
+        await insertZuzaluPretixTicket(client, ticket);
       }
 
       // Step 2 of saving: update tickets that have changed
@@ -180,7 +183,7 @@ export class ZuzaluPretixSyncService {
             updatedTicket
           )}`
         );
-        await updateZuzaluPretixTicket(dbClient, updatedTicket);
+        await updateZuzaluPretixTicket(client, updatedTicket);
       }
 
       // Step 3 of saving: remove users that don't have a ticket anymore
@@ -190,7 +193,7 @@ export class ZuzaluPretixSyncService {
       logger(`[PRETIX] Deleting ${removedTickets.length} users`);
       for (const removedTicket of removedTickets) {
         logger(`[PRETIX] Deleting ${JSON.stringify(removedTicket)}`);
-        await deleteZuzaluTicket(dbClient, removedTicket.email);
+        await deleteZuzaluTicket(client, removedTicket.email);
       }
 
       span?.setAttribute("ticketsInserted", newTickets.length);

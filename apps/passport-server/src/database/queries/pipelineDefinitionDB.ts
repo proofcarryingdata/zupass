@@ -5,9 +5,9 @@ import {
   PipelineType
 } from "@pcd/passport-interface";
 import _ from "lodash";
-import { Pool, PoolClient } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { GenericIssuancePipelineRow } from "../models";
-import { sqlQuery, sqlTransaction } from "../sqlQuery";
+import { sqlQuery } from "../sqlQuery";
 
 /**
  * This doesn't follow the general convention we've had so far of queries
@@ -17,27 +17,38 @@ import { sqlQuery, sqlTransaction } from "../sqlQuery";
  * interfaces, but it doesn't strictly have to end up that way for production.
  */
 export interface IPipelineDefinitionDB {
-  loadPipelineDefinitions(): Promise<PipelineDefinition[]>;
-  deleteDefinition(pipelineId: string): Promise<void>;
-  deleteAllDefinitions(): Promise<void>;
-  getDefinition(pipelineId: string): Promise<PipelineDefinition | undefined>;
+  loadPipelineDefinitions(client: PoolClient): Promise<PipelineDefinition[]>;
+  deleteDefinition(client: PoolClient, pipelineId: string): Promise<void>;
+  deleteAllDefinitions(client: PoolClient): Promise<void>;
+  getDefinition(
+    client: PoolClient,
+    pipelineId: string
+  ): Promise<PipelineDefinition | undefined>;
   upsertDefinition(
+    client: PoolClient,
     definition: PipelineDefinition,
     editorUserId: string | undefined
   ): Promise<void>;
-  upsertDefinitions(definitions: PipelineDefinition[]): Promise<void>;
+  upsertDefinitions(
+    client: PoolClient,
+    definitions: PipelineDefinition[]
+  ): Promise<void>;
   saveLoadSummary(
+    client: PoolClient,
     pipelineId: string,
     lastRunInfo?: PipelineLoadSummary
   ): Promise<void>;
   getLastLoadSummary(
+    client: PoolClient,
     pipelineId: string
   ): Promise<PipelineLoadSummary | undefined>;
   appendToEditHistory(
+    client: PoolClient,
     pipelineDefinition: PipelineDefinition,
     editorUserId: string
   ): Promise<void>;
   getEditHistory(
+    client: PoolClient,
     pipelineId: string,
     maxQuantity?: number
   ): Promise<PipelineHistoryEntry[]>;
@@ -49,17 +60,12 @@ export interface IPipelineDefinitionDB {
 export class PipelineDefinitionDB implements IPipelineDefinitionDB {
   private runInfos: Record<string, PipelineLoadSummary | undefined> = {};
 
-  private db: Pool;
-
-  public constructor(db: Pool) {
-    this.db = db;
-  }
-
   /**
    * Gets the last {@link PipelineLoadSummary} from an in-memory store for the
    * {@link Pipeline} identified by the @param pipelineId.
    */
   public async getLastLoadSummary(
+    client: PoolClient,
     pipelineId: string
   ): Promise<PipelineLoadSummary | undefined> {
     return this.runInfos[pipelineId];
@@ -70,6 +76,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * identified by the @param pipelineId.
    */
   public async saveLoadSummary(
+    client: PoolClient,
     pipelineId: string,
     lastRunInfo: PipelineLoadSummary | undefined
   ): Promise<void> {
@@ -81,9 +88,11 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    *
    * @todo use `zod` to ensure these are properly formatted.
    */
-  public async loadPipelineDefinitions(): Promise<PipelineDefinition[]> {
+  public async loadPipelineDefinitions(
+    client: PoolClient
+  ): Promise<PipelineDefinition[]> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `
       SELECT p.*, ARRAY_AGG(e.editor_id) AS editor_user_ids
       FROM generic_issuance_pipelines p
@@ -111,29 +120,25 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
   /**
    * Deletes all {@link PipelineDefinition} from the database.
    */
-  public async deleteAllDefinitions(): Promise<void> {
-    await sqlQuery(this.db, "DELETE FROM generic_issuance_pipeline_editors");
-    await sqlQuery(this.db, "DELETE FROM generic_issuance_pipelines");
+  public async deleteAllDefinitions(client: PoolClient): Promise<void> {
+    await sqlQuery(client, "DELETE FROM generic_issuance_pipeline_editors");
+    await sqlQuery(client, "DELETE FROM generic_issuance_pipelines");
   }
 
   /**
    * Deletes a particular {@link PipelineDefinition} from the database.
    */
-  public async deleteDefinition(pipelineId: string): Promise<void> {
-    await sqlTransaction(
-      this.db,
-      "Delete pipeline definition",
-      async (client) => {
-        await client.query(
-          "DELETE FROM generic_issuance_pipeline_editors WHERE pipeline_id = $1",
-          [pipelineId]
-        );
-        await client.query(
-          "DELETE FROM generic_issuance_pipelines WHERE id = $1",
-          [pipelineId]
-        );
-      }
+  public async deleteDefinition(
+    client: PoolClient,
+    pipelineId: string
+  ): Promise<void> {
+    await client.query(
+      "DELETE FROM generic_issuance_pipeline_editors WHERE pipeline_id = $1",
+      [pipelineId]
     );
+    await client.query("DELETE FROM generic_issuance_pipelines WHERE id = $1", [
+      pipelineId
+    ]);
   }
 
   /**
@@ -143,10 +148,11 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * @todo use `zod` to parse this.
    */
   public async getDefinition(
+    client: PoolClient,
     definitionID: string
   ): Promise<PipelineDefinition | undefined> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `
       SELECT p.*, ARRAY_AGG(e.editor_id) AS editor_user_ids
       FROM generic_issuance_pipelines p
@@ -181,85 +187,82 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * as the pipeline ID.
    */
   public async upsertDefinition(
+    client: PoolClient,
     definition: PipelineDefinition,
     editorUserId: string | undefined
   ): Promise<void> {
-    await sqlTransaction(
-      this.db,
-      "Insert or update pipeline definition",
-      async (client: PoolClient) => {
-        await this.appendToEditHistory(definition, editorUserId);
+    await this.appendToEditHistory(client, definition, editorUserId);
 
-        const pipeline: GenericIssuancePipelineRow = (
-          await client.query(
-            `
+    const pipeline: GenericIssuancePipelineRow = (
+      await client.query(
+        `
         INSERT INTO generic_issuance_pipelines (id, owner_user_id, pipeline_type, config) VALUES($1, $2, $3, $4)
         ON CONFLICT(id) DO UPDATE
         SET (owner_user_id, pipeline_type, config, time_updated) = ($2, $3, $4, NOW())
         RETURNING *
         `,
-            [
-              definition.id,
-              definition.ownerUserId,
-              definition.type,
-              JSON.stringify(definition.options)
-            ]
-          )
-        ).rows[0];
+        [
+          definition.id,
+          definition.ownerUserId,
+          definition.type,
+          JSON.stringify(definition.options)
+        ]
+      )
+    ).rows[0];
 
-        pipeline.editor_user_ids = (
+    pipeline.editor_user_ids = (
+      await client.query(
+        `SELECT editor_id FROM generic_issuance_pipeline_editors WHERE pipeline_id = $1`,
+        [definition.id]
+      )
+    ).rows.map((row) => row.editor_id);
+
+    if (!_.isEqual(pipeline.editor_user_ids, definition.editorUserIds)) {
+      const editorsToRemove = _.difference(
+        pipeline.editor_user_ids,
+        definition.editorUserIds
+      );
+      const editorsToAdd = _.difference(
+        definition.editorUserIds,
+        pipeline.editor_user_ids
+      );
+
+      if (editorsToRemove.length > 0) {
+        await client.query(
+          `DELETE FROM generic_issuance_pipeline_editors WHERE editor_id = ANY($1)`,
+          [[editorsToRemove]]
+        );
+      }
+
+      if (editorsToAdd.length > 0) {
+        for (const editorId of editorsToAdd) {
           await client.query(
-            `SELECT editor_id FROM generic_issuance_pipeline_editors WHERE pipeline_id = $1`,
-            [definition.id]
-          )
-        ).rows.map((row) => row.editor_id);
-
-        if (!_.isEqual(pipeline.editor_user_ids, definition.editorUserIds)) {
-          const editorsToRemove = _.difference(
-            pipeline.editor_user_ids,
-            definition.editorUserIds
+            "INSERT INTO generic_issuance_pipeline_editors (pipeline_id, editor_id) VALUES($1, $2)",
+            [pipeline.id, editorId]
           );
-          const editorsToAdd = _.difference(
-            definition.editorUserIds,
-            pipeline.editor_user_ids
-          );
-
-          if (editorsToRemove.length > 0) {
-            await client.query(
-              `DELETE FROM generic_issuance_pipeline_editors WHERE editor_id = ANY($1)`,
-              [[editorsToRemove]]
-            );
-          }
-
-          if (editorsToAdd.length > 0) {
-            for (const editorId of editorsToAdd) {
-              await client.query(
-                "INSERT INTO generic_issuance_pipeline_editors (pipeline_id, editor_id) VALUES($1, $2)",
-                [pipeline.id, editorId]
-              );
-            }
-          }
         }
       }
-    );
+    }
   }
 
   /**
    * Bulk version of {@link upsertDefinition}.
    */
   public async upsertDefinitions(
+    client: PoolClient,
     definitions: PipelineDefinition[]
   ): Promise<void> {
     for (const definition of definitions) {
-      await this.upsertDefinition(definition, undefined);
+      await this.upsertDefinition(client, definition, undefined);
     }
   }
 
   public async appendToEditHistory(
+    client: PoolClient,
     pipelineDefinition: PipelineDefinition,
     editorUserId?: string
   ): Promise<void> {
-    await this.db.query(
+    await client.query(
       `
     insert into podbox_edit_history
     (pipeline, editor_user_id, time_created)
@@ -270,10 +273,11 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
   }
 
   public async getEditHistory(
+    client: PoolClient,
     pipelineId: string,
     maxQuantity?: number
   ): Promise<PipelineHistoryEntry[]> {
-    const res = await this.db.query(
+    const res = await client.query(
       `
     select * from podbox_edit_history
     where pipeline->>'id' = $1

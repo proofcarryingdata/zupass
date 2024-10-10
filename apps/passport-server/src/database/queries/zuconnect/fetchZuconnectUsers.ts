@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { UserRow, ZuconnectTicketDB } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -15,7 +15,7 @@ export type LoggedInZuconnectUser = UserRow & {
  * Fetches all logged-in users with a non-deleted Zuconnect ticket.
  */
 export async function fetchAllLoggedInZuconnectUsers(
-  client: Pool
+  client: PoolClient
 ): Promise<LoggedInZuconnectUser[]> {
   const result = await sqlQuery(
     client,

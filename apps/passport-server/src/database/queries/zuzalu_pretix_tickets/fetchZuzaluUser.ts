@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { UserRow, ZuzaluPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -11,7 +11,7 @@ export type UserWithZuzaluTickets = UserRow & {
  * an array of their Zuzalu pretix tickets.
  */
 export async function fetchAllUsersWithZuzaluTickets(
-  client: Pool
+  client: PoolClient
 ): Promise<UserWithZuzaluTickets[]> {
   const result = await sqlQuery(
     client,
@@ -71,7 +71,7 @@ group by u.uuid;`
  * Zupass users in any way.
  */
 export async function fetchAllZuzaluPretixTickets(
-  client: Pool
+  client: PoolClient
 ): Promise<ZuzaluPretixTicket[]> {
   const result = await sqlQuery(
     client,

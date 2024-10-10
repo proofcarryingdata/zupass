@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
 export interface CacheEntry {
@@ -9,12 +9,12 @@ export interface CacheEntry {
 }
 
 export async function setCacheValue(
-  db: Pool,
+  client: PoolClient,
   key: string,
   value: string
 ): Promise<CacheEntry> {
   const result = await sqlQuery(
-    db,
+    client,
     `
 insert into cache(
   cache_key,
@@ -33,11 +33,11 @@ returning *;`,
 }
 
 export async function getCacheValue(
-  db: Pool,
+  client: PoolClient,
   key: string
 ): Promise<CacheEntry | undefined> {
   const result = await sqlQuery(
-    db,
+    client,
     `select * from cache where cache_key = $1`,
     [key]
   );
@@ -49,8 +49,8 @@ export async function getCacheValue(
   return result.rows[0];
 }
 
-export async function getCacheSize(db: Pool): Promise<number> {
-  const result = await sqlQuery(db, `select count(*) from cache;`);
+export async function getCacheSize(client: PoolClient): Promise<number> {
+  const result = await sqlQuery(client, `select count(*) from cache;`);
   return parseInt(result.rows[0].count);
 }
 
@@ -63,12 +63,12 @@ export async function getCacheSize(db: Pool): Promise<number> {
  * @returns the amount of entries deleted
  */
 export async function deleteExpiredCacheEntries(
-  db: Pool,
+  client: PoolClient,
   maxAgeInDays: number,
   maxEntries: number
 ): Promise<number> {
   const result = await sqlQuery(
-    db,
+    client,
     `
 with deleted as (
   with nonExpired as (

@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import {
   DevconnectPretixTicketWithCheckin,
   DevconnectPretixTicketWithCheckinDB
@@ -10,7 +10,7 @@ import { sqlQuery } from "../../sqlQuery";
  * inserted yet. This does not insert an identity commitment for them.
  */
 export async function insertDevconnectPretixTicket(
-  client: Pool,
+  client: PoolClient,
   params: DevconnectPretixTicketWithCheckin
 ): Promise<DevconnectPretixTicketWithCheckinDB> {
   const result = await sqlQuery(

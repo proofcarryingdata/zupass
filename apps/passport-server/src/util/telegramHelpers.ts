@@ -27,7 +27,7 @@ import {
   ChatMemberAdministrator,
   ChatMemberOwner
 } from "grammy/types";
-import { Pool } from "postgres-pool";
+import { Pool, PoolClient } from "postgres-pool";
 import {
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
@@ -52,6 +52,7 @@ import {
   insertTelegramEvent,
   insertTelegramForward
 } from "../database/queries/telegram/insertTelegramConversation";
+import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
 import { traced } from "../services/telemetryService";
 import { generateFrogProofUrl } from "./frogTelegramHelpers";
 import { logger } from "./logger";
@@ -561,7 +562,7 @@ export const generateReactProofUrl = async (
 };
 
 export const getChatsWithMembershipStatus = async (
-  db: Pool,
+  client: PoolClient,
   ctx: BotContext,
   userId: number,
   chatId?: number // if chatId is provided, only fetch chats with that id
@@ -570,7 +571,7 @@ export const getChatsWithMembershipStatus = async (
     span?.setAttribute("userId", userId.toString());
 
     const chatIdsWithMembership = await fetchTelegramChatsWithMembershipStatus(
-      db,
+      client,
       userId,
       chatId
     );
@@ -618,28 +619,33 @@ export const eventsToLink = async (
       .text(
         `Yes, ${event.isLinkedToCurrentChat ? "remove" : "add"}`,
         async (ctx) => {
-          let replyText = "";
-          if (!(await senderIsAdmin(ctx))) return;
+          await sqlTransaction(ctx.session.dbPool, async (client) => {
+            let replyText = "";
+            if (!(await senderIsAdmin(ctx))) return;
 
-          if (!event.isLinkedToCurrentChat) {
-            replyText = `<i>Added ${event.eventName} from chat</i>`;
-            await insertTelegramChat(db, chatId);
-            await insertTelegramEvent(db, event.configEventID, chatId);
+            if (!event.isLinkedToCurrentChat) {
+              replyText = `<i>Added ${event.eventName} from chat</i>`;
+              await insertTelegramChat(client, chatId);
+              await insertTelegramEvent(client, event.configEventID, chatId);
+              await editOrSendMessage(ctx, replyText);
+            } else {
+              replyText = `<i>Removed ${event.eventName} to chat</i>`;
+              await deleteTelegramEvent(client, event.configEventID);
+            }
+            ctx.session.selectedEvent = undefined;
+            await ctx.menu.update({ immediate: true });
             await editOrSendMessage(ctx, replyText);
-          } else {
-            replyText = `<i>Removed ${event.eventName} to chat</i>`;
-            await deleteTelegramEvent(db, event.configEventID);
-          }
-          ctx.session.selectedEvent = undefined;
-          await ctx.menu.update({ immediate: true });
-          await editOrSendMessage(ctx, replyText);
+          });
         }
       )
       .row();
   }
   // Otherwise, display all events to add or remove.
   else {
-    const events = await fetchEventsWithTelegramChats(db, true, chatId);
+    const events = await sqlTransaction(ctx.session.dbPool, (client) =>
+      fetchEventsWithTelegramChats(client, true, chatId)
+    );
+
     for (const event of events) {
       range
         .text(
@@ -679,10 +685,9 @@ export const chatsToJoin = async (
     }
     span?.setAttribute("userId", userId?.toString());
 
-    const chatsWithMembership = await getChatsWithMembershipStatus(
-      db,
-      ctx,
-      userId
+    const chatsWithMembership = await sqlTransaction(
+      ctx.session.dbPool,
+      (client) => getChatsWithMembershipStatus(client, ctx, userId)
     );
 
     if (chatsWithMembership.length === 0) {
@@ -761,10 +766,9 @@ export const chatsToJoinV2 = async (
           });
         }
       } else {
-        const chatsWithMembership = await getChatsWithMembershipStatus(
-          db,
-          ctx,
-          userId
+        const chatsWithMembership = await sqlTransaction(
+          ctx.session.dbPool,
+          (client) => getChatsWithMembershipStatus(client, ctx, userId)
         );
 
         if (chatsWithMembership.length === 0) {
@@ -825,15 +829,22 @@ export const chatsToPostIn = async (
         const chat = ctx.session.selectedChat;
 
         // Fetch anon topics for the selected chat
-        const topics = await fetchTelegramAnonTopicsByChatId(
+        const { topics, telegramEvents } = await sqlTransaction(
           ctx.session.dbPool,
-          chat.id
-        );
+          async (client) => {
+            const topics = await fetchTelegramAnonTopicsByChatId(
+              client,
+              chat.id
+            );
 
-        // Fetch telegram event Ids for the selected chat.
-        const telegramEvents = await fetchTelegramEventsByChatId(
-          ctx.session.dbPool,
-          chat.id
+            // Fetch telegram event Ids for the selected chat.
+            const telegramEvents = await fetchTelegramEventsByChatId(
+              client,
+              chat.id
+            );
+
+            return { topics, telegramEvents };
+          }
         );
 
         const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
@@ -880,9 +891,13 @@ export const chatsToPostIn = async (
       // Otherwise, give the user a list of chats that they are members of.
       else {
         // Only show chats a user is in
-        const chatsWithMembership = (
-          await getChatsWithMembershipStatus(db, ctx, userId)
-        ).filter((c) => c.isChatMember);
+        const chatsWithMembership = await sqlTransaction(
+          ctx.session.dbPool,
+          async (client) =>
+            (await getChatsWithMembershipStatus(client, ctx, userId)).filter(
+              (c) => c.isChatMember
+            )
+        );
 
         if (chatsWithMembership.length > 0) {
           for (const chat of chatsWithMembership) {
@@ -916,7 +931,7 @@ export const chatsToPostIn = async (
 };
 
 const getCurrentTopic = async (
-  db: Pool,
+  client: PoolClient,
   ctx: BotContext,
   chatId: number
 ): Promise<{
@@ -926,7 +941,7 @@ const getCurrentTopic = async (
   const message = ctx.update.message || ctx.update.callback_query?.message;
 
   const topic = await fetchTelegramTopic(
-    db,
+    client,
     chatId,
     message?.message_thread_id
   );
@@ -950,127 +965,134 @@ export const chatsToForwardTo = async (
       range.text(`Database not connected. Try again...`);
       return;
     }
-    const userId = ctx.from?.id;
-    if (!userId) {
-      range.text(`User not found. Try again...`);
-      return;
-    }
-    const chatId = ctx.chat?.id;
-    if (!chatId) {
-      range.text(`Chat not found. Try again...`);
-      return;
-    }
 
-    span?.setAttribute("userId", userId.toString());
-    span?.setAttribute("chatId", ctx.chat.id);
-
-    try {
-      // If a topic has been selected, confirm forwarding to this topic.
-      if (ctx.session.topicToForwardTo) {
-        const topicToForwardTo = ctx.session.topicToForwardTo;
-        const { topic, messageThreadId } = await getCurrentTopic(
-          db,
-          ctx,
-          chatId
-        );
-        range
-          .text(
-            `↰  ${topicToForwardTo.chat?.title} - ${topicToForwardTo.topic_name}`,
-            async (ctx) => {
-              if (!(await senderIsAdmin(ctx))) return;
-              ctx.session.topicToForwardTo = undefined;
-              ctx.menu.update();
-            }
-          )
-          .row();
-        // If sender_chat_topic_id exists, this topic is already linked to the forwarding topic
-        if (topicToForwardTo.sender_chat_topic_id) {
-          range.text(`Stop Forwarding`, async (ctx) => {
-            if (
-              topicToForwardTo.sender_chat_topic_id &&
-              topicToForwardTo.receiver_chat_topic_id
-            ) {
-              await deleteTelegramForward(
-                db,
-                topicToForwardTo.receiver_chat_topic_id,
-                topicToForwardTo.sender_chat_topic_id
-              );
-              await ctx.reply(`${topic.topic_name} is no longer forwarding`, {
-                reply_to_message_id: messageThreadId
-              });
-              ctx.session.topicToForwardTo = undefined;
-              ctx.menu.update();
-            } else {
-              ctx.reply(`Can't delete this topic`, {
-                reply_to_message_id: messageThreadId
-              });
-            }
-          });
-        } else {
-          range.text(`Forward Messages`, async (ctx) => {
-            if (!(await senderIsAdmin(ctx))) return;
-
-            // Add event to telegramForwarding table
-            await insertTelegramForward(db, topic.id, topicToForwardTo.id);
-            logger(
-              `[TELEGRAM] set ${topic.topic_name} to forward to ${topicToForwardTo.topic_name}`
-            );
-            ctx.reply(
-              `Set <b>${topicToForwardTo.chat?.title}</b> - <i>${topicToForwardTo.topic_name}</i> to receive messages from this topic`,
-              {
-                message_thread_id: messageThreadId,
-                parse_mode: "HTML"
-              }
-            );
-            ctx.session.topicToForwardTo = undefined;
-            ctx.menu.update();
-          });
-        }
+    await namedSqlTransaction(db, "chatsToForwardTo", async (client) => {
+      const userId = ctx.from?.id;
+      if (!userId) {
+        range.text(`User not found. Try again...`);
+        return;
       }
-      // Otherwise, give the user a list of topics that are receiving messages.
-      else {
-        const { topic, messageThreadId } = await getCurrentTopic(
-          db,
-          ctx,
-          chatId
-        );
+      const chatId = ctx.chat?.id;
+      if (!chatId) {
+        range.text(`Chat not found. Try again...`);
+        return;
+      }
 
-        const topicsReceving = await fetchTelegramTopicsReceiving(db);
-        const finalTopics = reduceFwdList(
-          topic.id,
-          topicsReceving.filter((t) => t.id !== topic.id)
-        );
-        const topicsWithChats = await chatIDsToChats(ctx, finalTopics);
+      span?.setAttribute("userId", userId.toString());
+      span?.setAttribute("chatId", ctx.chat.id);
 
-        if (topicsWithChats.length === 0) {
-          ctx.reply(`No chats are open to receiving`, {
-            message_thread_id: messageThreadId
-          });
-          return;
-        }
-
-        for (const topic of topicsWithChats) {
+      try {
+        // If a topic has been selected, confirm forwarding to this topic.
+        if (ctx.session.topicToForwardTo) {
+          const topicToForwardTo = ctx.session.topicToForwardTo;
+          const { topic, messageThreadId } = await getCurrentTopic(
+            client,
+            ctx,
+            chatId
+          );
           range
             .text(
-              `${topic.sender_chat_topic_id ? "✅" : ""} ${topic.chat
-                ?.title} - ${topic.topic_name}`,
+              `↰  ${topicToForwardTo.chat?.title} - ${topicToForwardTo.topic_name}`,
               async (ctx) => {
                 if (!(await senderIsAdmin(ctx))) return;
-                ctx.session.topicToForwardTo = topic;
+                ctx.session.topicToForwardTo = undefined;
                 ctx.menu.update();
               }
             )
             .row();
-        }
-      }
-    } catch (error) {
-      const message = ctx.update.message || ctx.update.callback_query?.message;
+          // If sender_chat_topic_id exists, this topic is already linked to the forwarding topic
+          if (topicToForwardTo.sender_chat_topic_id) {
+            range.text(`Stop Forwarding`, async (ctx) => {
+              if (
+                topicToForwardTo.sender_chat_topic_id &&
+                topicToForwardTo.receiver_chat_topic_id
+              ) {
+                await deleteTelegramForward(
+                  client,
+                  topicToForwardTo.receiver_chat_topic_id,
+                  topicToForwardTo.sender_chat_topic_id
+                );
+                await ctx.reply(`${topic.topic_name} is no longer forwarding`, {
+                  reply_to_message_id: messageThreadId
+                });
+                ctx.session.topicToForwardTo = undefined;
+                ctx.menu.update();
+              } else {
+                ctx.reply(`Can't delete this topic`, {
+                  reply_to_message_id: messageThreadId
+                });
+              }
+            });
+          } else {
+            range.text(`Forward Messages`, async (ctx) => {
+              if (!(await senderIsAdmin(ctx))) return;
 
-      ctx.reply(`Action failed ${error}`, {
-        reply_to_message_id: message?.message_thread_id
-      });
-      return;
-    }
+              // Add event to telegramForwarding table
+              await insertTelegramForward(
+                client,
+                topic.id,
+                topicToForwardTo.id
+              );
+              logger(
+                `[TELEGRAM] set ${topic.topic_name} to forward to ${topicToForwardTo.topic_name}`
+              );
+              ctx.reply(
+                `Set <b>${topicToForwardTo.chat?.title}</b> - <i>${topicToForwardTo.topic_name}</i> to receive messages from this topic`,
+                {
+                  message_thread_id: messageThreadId,
+                  parse_mode: "HTML"
+                }
+              );
+              ctx.session.topicToForwardTo = undefined;
+              ctx.menu.update();
+            });
+          }
+        }
+        // Otherwise, give the user a list of topics that are receiving messages.
+        else {
+          const { topic, messageThreadId } = await getCurrentTopic(
+            client,
+            ctx,
+            chatId
+          );
+
+          const topicsReceving = await fetchTelegramTopicsReceiving(client);
+          const finalTopics = reduceFwdList(
+            topic.id,
+            topicsReceving.filter((t) => t.id !== topic.id)
+          );
+          const topicsWithChats = await chatIDsToChats(ctx, finalTopics);
+
+          if (topicsWithChats.length === 0) {
+            ctx.reply(`No chats are open to receiving`, {
+              message_thread_id: messageThreadId
+            });
+            return;
+          }
+
+          for (const topic of topicsWithChats) {
+            range
+              .text(
+                `${topic.sender_chat_topic_id ? "✅" : ""} ${topic.chat
+                  ?.title} - ${topic.topic_name}`,
+                async (ctx) => {
+                  if (!(await senderIsAdmin(ctx))) return;
+                  ctx.session.topicToForwardTo = topic;
+                  ctx.menu.update();
+                }
+              )
+              .row();
+          }
+        }
+      } catch (error) {
+        const message =
+          ctx.update.message || ctx.update.callback_query?.message;
+
+        ctx.reply(`Action failed ${error}`, {
+          reply_to_message_id: message?.message_thread_id
+        });
+      }
+    });
   });
 };
 

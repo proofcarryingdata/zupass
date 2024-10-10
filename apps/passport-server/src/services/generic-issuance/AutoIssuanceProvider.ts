@@ -4,6 +4,7 @@ import {
   MemberCriteria
 } from "@pcd/passport-interface";
 import { randomUUID } from "@pcd/util";
+import { PoolClient } from "postgres-pool";
 import { IPipelineConsumerDB } from "../../database/queries/pipelineConsumerDB";
 import { logger } from "../../util/logger";
 import { PretixAtom } from "./pipelines/PretixPipeline";
@@ -21,11 +22,12 @@ export class AutoIssuanceProvider {
   }
 
   public async dripNewManualTickets(
+    client: PoolClient,
     consumerDB: IPipelineConsumerDB,
     existingManualTickets: ManualTicket[],
     realTickets: PretixAtom[]
   ): Promise<ManualTicket[]> {
-    const allConsumers = await consumerDB.loadAll(this.pipelineId);
+    const allConsumers = await consumerDB.loadAll(client, this.pipelineId);
     const newManualTickets: ManualTicket[] = [];
 
     for (const consumer of allConsumers) {

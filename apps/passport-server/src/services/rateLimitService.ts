@@ -1,10 +1,12 @@
 import { RollbarService } from "@pcd/server-shared";
 import { ONE_DAY_MS, ONE_HOUR_MS } from "@pcd/util";
+import { Pool, PoolClient } from "postgres-pool";
 import {
   consumeRateLimitToken,
   deleteUnsupportedRateLimitBuckets,
   pruneRateLimitBuckets
 } from "../database/queries/rateLimit";
+import { sqlTransaction } from "../database/sqlQuery";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
@@ -38,11 +40,15 @@ export class RateLimitService {
     this.context = context;
     this.rollbarService = rollbarService;
     const pruneExpiredBuckets = async (): Promise<void> => {
-      await this.pruneBuckets();
+      await sqlTransaction(this.context.dbPool, (client) =>
+        this.pruneBuckets(client)
+      );
       this.pruneTimeout = setTimeout(() => pruneExpiredBuckets(), ONE_HOUR_MS);
     };
     pruneExpiredBuckets();
-    this.removeUnsupportedBuckets();
+    sqlTransaction(this.context.dbPool, (client) =>
+      this.removeUnsupportedBuckets(client)
+    );
     this.disabled = disabled;
   }
 
@@ -72,6 +78,7 @@ export class RateLimitService {
    * @returns Whether or not to permit the action
    */
   public async requestRateLimitedAction(
+    pool: Pool,
     actionType: RateLimitedActionType,
     actionId: string
   ): Promise<boolean> {
@@ -89,12 +96,14 @@ export class RateLimitService {
 
         const limit = this.bucketConfig[actionType];
 
-        const result = await consumeRateLimitToken(
-          this.context.dbPool,
-          actionType,
-          actionId,
-          limit.maxActions,
-          limit.timePeriodMs
+        const result = await sqlTransaction(pool, (client) =>
+          consumeRateLimitToken(
+            client,
+            actionType,
+            actionId,
+            limit.maxActions,
+            limit.timePeriodMs
+          )
         );
 
         // -1 indicates that the action should be declined
@@ -119,13 +128,13 @@ export class RateLimitService {
   /**
    * Delete expired rate-limiting buckets from the DB.
    */
-  public async pruneBuckets(): Promise<void> {
+  public async pruneBuckets(client: PoolClient): Promise<void> {
     for (const [actionType, bucketConfig] of Object.entries(
       this.bucketConfig
     )) {
       try {
         await pruneRateLimitBuckets(
-          this.context.dbPool,
+          client,
           actionType,
           Date.now() - bucketConfig.timePeriodMs
         );
@@ -142,10 +151,10 @@ export class RateLimitService {
   /**
    * Delete legacy unsupported buckets;
    */
-  public async removeUnsupportedBuckets(): Promise<void> {
+  public async removeUnsupportedBuckets(client: PoolClient): Promise<void> {
     try {
       await deleteUnsupportedRateLimitBuckets(
-        this.context.dbPool,
+        client,
         Object.keys(this.bucketConfig)
       );
     } catch (e) {
