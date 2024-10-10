@@ -1630,7 +1630,7 @@ async function zappApproval(
 
     const newZappSerialized = await PODPCDPackage.serialize(newZapp);
     update({ zappApproved: true });
-    return addPCDs(state, update, [newZappSerialized], false, "Zapps");
+    return addPCDs(state, update, [newZappSerialized], true, "Zapps");
   } else {
     update({ zappApproved: false });
   }

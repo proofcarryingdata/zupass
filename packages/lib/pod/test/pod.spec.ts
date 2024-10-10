@@ -2,6 +2,7 @@ import { verifySignature } from "@zk-kit/eddsa-poseidon";
 import { expect } from "chai";
 import "mocha";
 import {
+  JSONPOD,
   POD,
   PODName,
   PODValue,
@@ -106,6 +107,69 @@ describe("POD class should work", async function () {
     }
   });
 
+  it("should serialize and deserialize as JSON objects", function () {
+    for (const sampleEntries of [sampleEntries1, sampleEntries2]) {
+      const signedPOD = POD.sign(sampleEntries, privateKey);
+      expect(signedPOD.verifySignature()).to.be.true;
+
+      const serialized = signedPOD.toJSON();
+      const deserializedPOD = POD.fromJSON(serialized);
+      expect(deserializedPOD.verifySignature()).to.be.true;
+      expect(deserializedPOD.content.asEntries()).to.deep.eq(sampleEntries);
+      expect(deserializedPOD.signature).to.eq(signedPOD.signature);
+      expect(deserializedPOD.signerPublicKey).to.eq(signedPOD.signerPublicKey);
+    }
+  });
+
+  it("should serialize and deserialize as JSON strings", function () {
+    for (const sampleEntries of [sampleEntries1, sampleEntries2]) {
+      const signedPOD = POD.sign(sampleEntries, privateKey);
+      expect(signedPOD.verifySignature()).to.be.true;
+
+      const serialized = JSON.stringify(signedPOD.toJSON());
+      const deserializedPOD = POD.fromJSON(JSON.parse(serialized));
+      expect(deserializedPOD.verifySignature()).to.be.true;
+      expect(deserializedPOD.content.asEntries()).to.deep.eq(sampleEntries);
+      expect(deserializedPOD.signature).to.eq(signedPOD.signature);
+      expect(deserializedPOD.signerPublicKey).to.eq(signedPOD.signerPublicKey);
+    }
+  });
+
+  it("should reject invalid JSON input", function () {
+    const goodPOD = POD.sign(sampleEntries1, privateKey);
+    const goodJSONPOD = goodPOD.toJSON();
+    const badInputs = [
+      [{}, TypeError],
+      [
+        { entries: goodJSONPOD.entries, signature: goodJSONPOD.signature },
+        TypeError
+      ],
+      [
+        {
+          entries: goodJSONPOD.entries,
+          signerPublicKey: goodJSONPOD.signerPublicKey
+        },
+        TypeError
+      ],
+      [
+        {
+          signature: goodJSONPOD.signature,
+          signerPublicKey: goodJSONPOD.signerPublicKey
+        },
+        TypeError
+      ],
+      [{ ...goodJSONPOD, entries: { "!@#$": "hello" } }, TypeError],
+      [{ ...goodJSONPOD, signature: "malformed" }, TypeError],
+      [{ ...goodJSONPOD, signerPublicKey: "malformed" }, TypeError],
+      [{ ...goodJSONPOD, version: "2" }, TypeError]
+    ] as [JSONPOD, ErrorConstructor][];
+
+    for (const [badInput, expectedError] of badInputs) {
+      const fn = (): POD => POD.fromJSON(badInput);
+      expect(fn).to.throw(expectedError);
+    }
+  });
+
   it("should reject invalid entries when signing", function () {
     const testEntries = clonePODEntries(sampleEntries1) as Record<
       PODName,
@@ -116,7 +180,7 @@ describe("POD class should work", async function () {
     const fn = (): void => {
       POD.sign(testEntries, privateKey);
     };
-    expect(fn).to.throw(TypeError, "badValueName");
+    expect(fn).to.throw(RangeError, "badValueName");
   });
 
   it("should reject malformed private key when signing", function () {
@@ -142,7 +206,7 @@ describe("POD class should work", async function () {
     const fn = (): void => {
       POD.load(testEntries, signedPOD.signature, signedPOD.signerPublicKey);
     };
-    expect(fn).to.throw(TypeError, "badValueName");
+    expect(fn).to.throw(RangeError, "badValueName");
   });
 
   it("should reject malformed signature when loading", function () {
