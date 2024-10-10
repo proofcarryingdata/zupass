@@ -19,10 +19,10 @@ import {
   POD,
   PODContent,
   PODEntries,
-  deserializePODEntries,
-  podEntriesFromSimplifiedJSON,
-  podEntriesToSimplifiedJSON,
-  serializePODEntries
+  podEntriesFromJSON,
+  podEntriesToJSON,
+  podValueFromJSON,
+  podValueToJSON
 } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { Identity } from "@semaphore-protocol/identity";
@@ -160,58 +160,53 @@ export async function podDemo(): Promise<boolean> {
   console.log("Loaded POD content ID", loadedPOD.contentID);
 
   //////////////////////////////////////////////////////////////////////////////
-  // POD contents can be serialized to/from strings in JSON, though not directly
-  // using JSON.stringify due to the use of bigint (and more non-JSON types in
-  // future).  The formats for doing so are work-in-progress and may change
-  // with future feedback and features.  Backward-compatibility will be possible
-  // in future, but may require some additional code at this level.  See the
-  // PCD wrappers below which will handle compatibility automatically.
+  // POD contents can be serialized to/from a JSON-compatible format, which can
+  // then stringified and parsed using standard JavaScript techniques.  This
+  // format is optimized to be short and human-readable, but maintains full
+  // type information.
+  //
+  // The formats is a work-in-progress and may change with future feedback and
+  // features.  Backward-compatibility will be possible in future in future, but
+  // may require some additional code at this level to specify which format
+  // version to use.  See the PCD wrappers below which will handle compatibility
+  // automatically.
   //////////////////////////////////////////////////////////////////////////////
 
-  // PODContent serializes as its entries, since the Merkle Tree can be
-  // rebuilt on-demand.  The default format for entries contains full type
-  // information and can reconstruct the PODEntries exactly.
-  const serializedContent = podContent.serialize();
-  console.log("Serialized content (full fidelity)", serializedContent);
-  const deserializedContent = PODContent.deserialize(serializedContent);
+  // PODContent serializes as its just its entries, since the Merkle Tree can be
+  // rebuilt on-demand.
+  const jsonContent = podContent.toJSON();
+  console.log("JSON content", jsonContent);
+  const stringifiedContent = JSON.stringify(jsonContent);
+  console.log("Stringified content", stringifiedContent);
+  const deserializedContent = PODContent.fromJSON(
+    JSON.parse(stringifiedContent)
+  );
   console.log("Deserialized content ID", deserializedContent.contentID);
 
-  // The POD class also supports full-fidelity serialization, which includes
+  // The POD class also supports JSON serialization, which includes
   // the signature and public key.
-  const serializedPOD = pod.serialize();
-  console.log("Serialized POD (full fidelity)", serializedPOD);
-  const deserializedPOD = POD.deserialize(serializedPOD);
+  const jsonPOD = pod.toJSON();
+  console.log("JSON POD", jsonPOD);
+  const stringifiedPOD = JSON.stringify(jsonPOD);
+  console.log("Stringified POD", stringifiedPOD);
+  const deserializedPOD = POD.fromJSON(JSON.parse(stringifiedPOD));
   console.log("Deserialized POD ID", deserializedPOD.contentID);
 
-  // You can perform the same full-fidelity entry conversion directly with
+  // You can perform the same JSON conversion on entries or values directly with
   // these helper functions.
-  const serializedEntries = serializePODEntries(sampleEntries);
-  const deserializedEntries = deserializePODEntries(serializedEntries);
+  const stringifiedEntries = JSON.stringify(podEntriesToJSON(sampleEntries));
+  const deserializedEntries = podEntriesFromJSON(
+    JSON.parse(stringifiedEntries)
+  );
   console.log("Deserialized entries", deserializedEntries);
-
-  // There's also a simplified JSON format which omits the types.  This
-  // is optimized for human readability, and supports configured spacing
-  // in the same way as JSON.stringify.
-  const simplifiedJSON = podEntriesToSimplifiedJSON(sampleEntries, 2);
-  console.log("Simplified JSON", simplifiedJSON);
-
-  // When parsing simplified JSON, the types will be derived from the values.
-  // This means the types might not be identical to the original entries.  The
-  // content ID will still be the same, because it depends only on values.  E.g.
-  // a "cryptographic" might come out as an "int", but only if its value is
-  // small enough that they would behave identically.
-  const entriesFromSimplified = podEntriesFromSimplifiedJSON(simplifiedJSON);
-  console.log(
-    "What type is a small number?",
-    entriesFromSimplified.smallCryptographic
+  const stringifiedValue = JSON.stringify(
+    podValueToJSON(sampleEntries.my_favorite_dessert)
   );
-  console.log(
-    "ContentID from simplified JSON",
-    PODContent.fromEntries(entriesFromSimplified).contentID
-  );
+  const deserializedValue = podValueFromJSON(JSON.parse(stringifiedValue));
+  console.log("Deserialized value", deserializedValue);
 
   // For more things you can do with the @pcd/pod package, check out the
-  // function documentation in pod.ts, podContent.ts, and podUtil.ts.
+  // function documentation in pod.ts, podContent.ts, podTypes.ts, etc.
 
   //////////////////////////////////////////////////////////////////////////////
   // A POD PCD, found in the @pcd/pod-pcd package, wraps a POD and makes

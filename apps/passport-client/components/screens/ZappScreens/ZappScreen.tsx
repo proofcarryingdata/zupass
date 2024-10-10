@@ -1,11 +1,19 @@
 import IframeResizer from "iframe-resizer-react";
 import { ReactNode } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useDispatch, useEmbeddedScreenState } from "../../../src/appHooks";
 import { ListenMode, useZappServer } from "../../../src/zapp/useZappServer";
 import { AdhocModal } from "../../modals/AdhocModal";
 import { EmbeddedScreen } from "../EmbeddedScreens/EmbeddedScreen";
 
 export function ZappScreen({ url }: { url: string }): ReactNode {
+  const [searchParams] = useSearchParams();
+  const queryParam = searchParams.get("q");
+  const urlWithOptionalParameter = new URL(url);
+  if (queryParam) {
+    urlWithOptionalParameter.searchParams.set("q", queryParam);
+  }
+
   return (
     <>
       <ZappModal />

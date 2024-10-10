@@ -6,6 +6,7 @@ import {
   POD_INT_MIN,
   POD_NAME_REGEX,
   POD_VALUE_STRING_TYPE_IDENTIFIER,
+  PODEntries,
   PODRawValue,
   PODValue
 } from "./podTypes";
@@ -158,8 +159,28 @@ export function checkPODName(name?: string): string {
 }
 
 /**
- * Checks that `value` has the run-time type given by `typeName`.  Works for
- * any Typescript Type.
+ * Checks that the input matches the proper format for {@link PODEntries}, by
+ * checking each name and value in turn.
+ *
+ * @param podEntries the entries to check
+ * @throws TypeError if the input type, or any of the names or values are
+ *   invalid
+ * @throws RangeError if a value is outside of the bounds
+ */
+export function checkPODEntries(podEntries: PODEntries): void {
+  requireType("entries", podEntries, "object");
+  for (const [n, v] of Object.entries(podEntries)) {
+    checkPODName(n);
+    checkPODValue(n, v);
+  }
+}
+
+/**
+ * Checks that `value` has the run-time type given by `typeName`.
+ *
+ * Works for any runtime JavaScript type, but two values have special meaning.
+ * "object" is used specifically to require a non-null non-array object, while
+ * "array" is used to mean a non-null array object.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -172,16 +193,41 @@ export function requireType(
   value: unknown,
   typeName: string
 ): void {
-  if (typeof value !== typeName) {
-    throw new TypeError(
-      `Invalid value for entry ${nameForErrorMessages}.  Expected type ${typeName}.`
-    );
+  switch (typeName) {
+    case "object":
+      if (typeof value !== "object" || Array.isArray(value) || value === null) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+          Expected a non-array non-null object.`
+        );
+      }
+      break;
+    case "array":
+      if (typeof value !== "object" || !Array.isArray(value)) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+          Expected an array.`
+        );
+      }
+      break;
+    default:
+      if (typeof value !== typeName) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+          Expected type ${typeName}.`
+        );
+      }
+      break;
   }
 }
 
 /**
- * Checks that `value` has the run-time type given by `typeName`.  Compile-time
- * type of input/output is limited to expected POD value types.
+ * Checks that `value` has the run-time type given by `typeName`, and returns
+ * the value for easy chaining.
+ *
+ * Works identically to {@link requireType} except that the compile-time type of
+ * input/output is limited to expected POD value types to help catch errors
+ * at compile time.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -232,7 +278,7 @@ export function checkStringEncodedValueType(
  * @param minValue the minimum legal value (inclusive lower bound)
  * @param maxValue the maximum legal value (inclusive upper bound)
  * @returns the value unmodified, for easy chaining
- * @throws TypeError if the value is outside of the bounds
+ * @throws RangeError if the value is outside of the bounds
  */
 export function checkBigintBounds(
   nameForErrorMessages: string,
@@ -241,9 +287,9 @@ export function checkBigintBounds(
   maxValue: bigint
 ): bigint {
   if (value < minValue || value > maxValue) {
-    throw new TypeError(
-      `Invalid value for entry ${nameForErrorMessages}. \
-      Value ${value} is outside supported bounds: (min ${minValue}, max ${maxValue}).`
+    throw new RangeError(
+      `Invalid value for entry ${nameForErrorMessages}.  ` +
+        `Value ${value} is outside supported bounds: (min ${minValue}, max ${maxValue}).`
     );
   }
   return value;
@@ -257,14 +303,25 @@ export function checkBigintBounds(
  * @param podValue the value to check
  * @returns the unmodified value, for easy chaining
  * @throws TypeError if the value is invalid
+ * @throws RangeError if the value is outside of the bounds
  */
 export function checkPODValue(
   nameForErrorMessages: string,
   podValue?: PODValue
 ): PODValue {
+  if (podValue === null) {
+    throw new TypeError(
+      `POD value for ${nameForErrorMessages} cannot be null.`
+    );
+  }
   if (podValue === undefined || podValue.value === undefined) {
     throw new TypeError(
       `POD value for ${nameForErrorMessages} cannot be undefined.`
+    );
+  }
+  if (podValue.value === null) {
+    throw new TypeError(
+      `POD value for ${nameForErrorMessages} cannot be null.`
     );
   }
 
