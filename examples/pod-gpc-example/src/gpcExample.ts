@@ -436,14 +436,17 @@ export async function gpcDemo(): Promise<boolean> {
     },
     externalNullifier: {
       value: "example nullifier",
-      argumentType: ArgumentTypeName.String
+      argumentType: ArgumentTypeName.Object
     },
     membershipLists: {
-      argumentType: ArgumentTypeName.String
+      argumentType: ArgumentTypeName.Object
     },
     watermark: {
-      value: "example watermark",
-      argumentType: ArgumentTypeName.String
+      value: {
+        cryptographic:
+          "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+      },
+      argumentType: ArgumentTypeName.Object
     },
     id: {
       argumentType: ArgumentTypeName.String,

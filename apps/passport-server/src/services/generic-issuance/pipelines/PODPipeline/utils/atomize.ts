@@ -84,6 +84,7 @@ export function atomize(
   // POD uses for sorting and validating entries and their keys.
   const sortedEntries = PODContent.fromEntries(entries).asEntries();
 
+  // TODO(artwyman): Figure out how to phase out this use of the deprecated format.
   const id = uuidv5(serializePODEntries(sortedEntries), pipelineId);
 
   return { entries, outputId, id, matchTo: output.match };
