@@ -1,5 +1,5 @@
+import { checkPODName, checkPODValue, requireType } from "./podChecks";
 import { PODEntries, PODName, PODValue } from "./podTypes";
-import { checkPODName, checkPODValue, requireType } from "./podUtil";
 
 /**
  * Defines the JSON encoding of a POD.  Unlike the {@link POD} class, objects
