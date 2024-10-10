@@ -6,7 +6,7 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
-import { PODTicketPCDTypeName, isPODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
@@ -53,6 +53,7 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
     );
   });
 
+  console.log(uniqTickets);
   //  This hook is building "ticket packs"
   //  ticket pack - main ticket and all its ticket addons, under the same event and attendee
   return useMemo(() => {
