@@ -275,7 +275,10 @@ export type FeedIssuanceOptions = z.infer<typeof FeedIssuanceOptionsSchema>;
 
 const ImageOptionsSchema = z.object({
   imageUrl: z.string(),
-  requireCheckedIn: z.boolean()
+  requireCheckedIn: z.boolean(),
+  qrCodeOverrideImageUrl: z.string().optional(),
+  eventStartDate: z.string().optional(),
+  eventLocation: z.string().optional()
 });
 
 export type ImageOptions = z.infer<typeof ImageOptionsSchema>;
@@ -372,7 +375,11 @@ const PretixProductConfigSchema = z.object({
    *
    * see pretix docs here: https://docs.pretix.eu/en/latest/api/resources/orders.html#order-position-resource
    */
-  nameQuestionPretixQuestionIdentitifier: z.string().optional()
+  nameQuestionPretixQuestionIdentitifier: z.string().optional(),
+  /**
+   * Whether the item is considereed an "add-on item" for the purposes of swag
+   */
+  isAddOnItem: z.boolean().optional()
 });
 
 /**
