@@ -150,7 +150,7 @@ export class SemaphoreGroupProvider {
         this.groups.set(
           groupConfig.groupId,
           historicalGroup
-            ? deserializeSemaphoreGroup(
+            ? await deserializeSemaphoreGroup(
                 JSON.parse(historicalGroup.serializedGroup)
               )
             : new Group(
