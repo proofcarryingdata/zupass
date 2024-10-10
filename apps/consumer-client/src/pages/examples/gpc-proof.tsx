@@ -4,22 +4,24 @@ import {
   GPCArtifactVersion,
   GPCBoundConfig,
   GPCProofConfig,
+  JSONPODMembershipLists,
   deserializeGPCProofConfig,
   gpcArtifactDownloadURL,
   gpcBindConfig,
   membershipListsToSets,
-  podMembershipListsFromSimplifiedJSON,
+  podMembershipListsFromJSON,
   serializeGPCBoundConfig
 } from "@pcd/gpc";
 import {
   GPCPCD,
   GPCPCDArgs,
   GPCPCDPackage,
+  JSONFixedPODEntries,
   checkPODAgainstPrescribedSignerPublicKeys,
   checkPODEntriesAgainstPrescribedEntries,
   checkPrescribedEntriesAgainstProofConfig,
   checkPrescribedSignerPublicKeysAgainstProofConfig,
-  fixedPODEntriesFromSimplifiedJSON
+  fixedPODEntriesFromJSON
 } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdGetRequestUrl,
@@ -252,6 +254,22 @@ export function openGPCPopup(
   watermark?: string,
   externalNullifier?: string
 ): void {
+  // Validate JSON input by parsing locally before sending.
+  let jsonMembershipLists: JSONPODMembershipLists | undefined = undefined;
+  if (membershipLists) {
+    jsonMembershipLists = JSON.parse(membershipLists);
+    if (jsonMembershipLists !== undefined) {
+      podMembershipListsFromJSON(jsonMembershipLists);
+    }
+  }
+  let jsonPrescribedEntries: JSONFixedPODEntries | undefined = undefined;
+  if (prescribedEntries) {
+    jsonPrescribedEntries = JSON.parse(prescribedEntries);
+    if (jsonPrescribedEntries !== undefined) {
+      fixedPODEntriesFromJSON(jsonPrescribedEntries);
+    }
+  }
+
   const args: GPCPCDArgs = {
     proofConfig: {
       argumentType: ArgumentTypeName.String,
@@ -278,8 +296,8 @@ export function openGPCPopup(
       },
       validatorParams: {
         proofConfig,
-        membershipLists,
-        prescribedEntries,
+        membershipLists: jsonMembershipLists,
+        prescribedEntries: jsonPrescribedEntries,
         prescribedSignerPublicKeys:
           prescribedSignerPublicKeys !== undefined
             ? JSON.parse(prescribedSignerPublicKeys)
@@ -293,17 +311,17 @@ export function openGPCPopup(
       userProvided: true
     },
     externalNullifier: {
-      argumentType: ArgumentTypeName.String,
+      argumentType: ArgumentTypeName.Object,
       value: externalNullifier,
       userProvided: false
     },
     membershipLists: {
-      argumentType: ArgumentTypeName.String,
-      value: membershipLists,
+      argumentType: ArgumentTypeName.Object,
+      value: jsonMembershipLists,
       userProvided: false
     },
     watermark: {
-      argumentType: ArgumentTypeName.String,
+      argumentType: ArgumentTypeName.Object,
       value: watermark,
       userProvided: false
     }
@@ -425,7 +443,7 @@ async function verifyProof(
     membershipLists === undefined
       ? {}
       : membershipListsToSets(
-          podMembershipListsFromSimplifiedJSON(membershipLists)
+          podMembershipListsFromJSON(JSON.parse(membershipLists))
         )
   );
   if (!sameMembershipLists) {
@@ -435,8 +453,9 @@ async function verifyProof(
   // Check that revealed entries match up with prescribed entries.
   if (prescribedEntries !== undefined) {
     const params = { notFoundMessage: undefined };
-    const deserialisedPrescribedEntries =
-      fixedPODEntriesFromSimplifiedJSON(prescribedEntries);
+    const deserialisedPrescribedEntries = fixedPODEntriesFromJSON(
+      JSON.parse(prescribedEntries)
+    );
 
     for (const podName of Object.keys(deserialisedPrescribedEntries)) {
       const revealedPODData = pcd.claim.revealed.pods[podName];

@@ -1,5 +1,5 @@
 import { ObjectArgument, PCD, StringArgument } from "@pcd/pcd-types";
-import { POD, PODEntries } from "@pcd/pod";
+import { JSONPODEntries, POD, PODEntries } from "@pcd/pod";
 
 /**
  * A set of entries defining a POD, represented in an object.  See `@pcd/pod`
@@ -27,11 +27,7 @@ export type PODPCDArgs = {
   /**
    * A {@link ITicketData} object containing ticket information that is encoded into this PCD.
    */
-  entries: ObjectArgument<PODEntries>;
-  // TODO(POD-P3): Figure out serializable format here.  ObjectArgument is
-  // intended to be directly JSON serializable, so can't contain bigints
-  // if used for network requests (e.g. ProveAndAdd).  The choice here should
-  // be driven by the needs of the Prove screen.
+  entries: ObjectArgument<JSONPODEntries>;
 
   /**
    * The signer's EdDSA private key.  This is a 32-byte value used to sign the

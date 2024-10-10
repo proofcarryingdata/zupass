@@ -78,18 +78,18 @@ async function setupProveArgs(): Promise<GPCPCDArgs> {
     },
     externalNullifier: {
       value: "some external nullifier",
-      argumentType: ArgumentTypeName.String
+      argumentType: ArgumentTypeName.Object
     },
     watermark: {
       value: "some watermark",
-      argumentType: ArgumentTypeName.String
+      argumentType: ArgumentTypeName.Object
     },
     id: {
       argumentType: ArgumentTypeName.String,
       value: uuid()
     },
     membershipLists: {
-      argumentType: ArgumentTypeName.String
+      argumentType: ArgumentTypeName.Object
     }
   } satisfies GPCPCDArgs;
 }
