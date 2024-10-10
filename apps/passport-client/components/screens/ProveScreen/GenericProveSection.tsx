@@ -45,6 +45,9 @@ import { Button } from "../../core";
 import { ProgressBar } from "../../core/ProgressBar";
 import { RippleLoader } from "../../core/RippleLoader";
 import { PCDArgs } from "../../shared/PCDArgs";
+import { Typography } from "../../../new-components/shared/Typography";
+import { Button2 } from "../../../new-components/shared/Button";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
 
 /**
  * A reuseable form which can be used to generate a new instance of a PCD
@@ -95,6 +98,13 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
           isPCDArgument(arg) && !arg.value
       ),
     [args]
+  );
+  console.log(
+    Object.entries(args).find(
+      ([_, arg]) =>
+        // only PCD arguments are required
+        isPCDArgument(arg) && !arg.value
+    )
   );
 
   const onProveClick = useCallback(async () => {
@@ -223,56 +233,26 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
   return (
     <Container>
-      {options?.description && <Description>{options.description}</Description>}
-
       {options?.debug && <pre>{JSON.stringify(args, null, 2)}</pre>}
-
       <PCDArgs
         args={args}
         setArgs={setArgs}
         options={pcdPackage?.getProveDisplayOptions?.()?.defaultArgs}
         proveOptions={options}
       />
-
-      {folder && (
-        <div>
-          PCD will be added to folder: <br />
-          <strong>{folder}</strong>
-        </div>
-      )}
-
       {error && <ErrorContainer>{error}</ErrorContainer>}
-
-      {proving ? (
-        options?.multi ? (
-          <ProgressBar
-            label="Proving"
-            fractionCompleted={
-              multiProofsCompleted / Math.max(1, multiProofsQueued)
-            }
-          />
-        ) : (
-          <RippleLoader />
-        )
-      ) : (
-        <Button disabled={!isProveReady} onClick={onProveClick}>
-          Prove
-        </Button>
-      )}
+      <Button2 disabled={!isProveReady || proving} onClick={onProveClick}>
+        {proving ? <NewLoader rows={2} columns={3} /> : "Prove"}
+      </Button2>
     </Container>
   );
 }
-
-const Description = styled.div`
-  font-size: 14px;
-  color: rgba(var(--white-rgb), 0.8);
-`;
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
   align-items: stretch;
-  padding: 16px 8px;
-  gap: 16px;
+  justify-content: space-between;
   width: 100%;
+  height: 100%;
 `;

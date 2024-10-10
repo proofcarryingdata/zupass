@@ -4,6 +4,7 @@ import {
   FeedSubscriptionManager,
   KnownPublicKey,
   KnownTicketType,
+  PCDGetRequest,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -40,6 +41,7 @@ export interface AppState {
     | { modalType: "success-modal"; title: string; description: string }
     | { modalType: "about" }
     | { modalType: "import" }
+    | { modalType: "prove"; request: PCDGetRequest }
     | { modalType: "manage-emails" }
     | { modalType: "delete-account" }
     | { modalType: "ticket-add-ons"; addOns: TicketType[] }
