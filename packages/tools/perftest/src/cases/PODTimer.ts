@@ -1,5 +1,5 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { POD, PODContent } from "@pcd/pod";
+import { POD, PODContent, podEntriesToJSON } from "@pcd/pod";
 import { PODEntries, PODPCD, PODPCDArgs, PODPCDPackage } from "@pcd/pod-pcd";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { TimerCase } from "../types";
@@ -22,7 +22,7 @@ export const sampleEntries = {
 
 export const proveArgs: PODPCDArgs = {
   entries: {
-    value: sampleEntries,
+    value: podEntriesToJSON(sampleEntries),
     argumentType: ArgumentTypeName.Object
   },
   privateKey: {

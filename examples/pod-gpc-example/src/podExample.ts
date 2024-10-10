@@ -238,7 +238,7 @@ export async function podDemo(): Promise<boolean> {
   // to be transmitted to apps like Zupass.
   const pcd2 = await PODPCDPackage.prove({
     entries: {
-      value: sampleEntries,
+      value: podEntriesToJSON(sampleEntries),
       argumentType: ArgumentTypeName.Object
     },
     privateKey: {
