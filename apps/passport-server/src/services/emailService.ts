@@ -53,7 +53,7 @@ export class EmailService {
       const msg = {
         to,
         from: `Zupass <${ZUPASS_SENDER_EMAIL}>`,
-        subject: "Welcome to Zupass",
+        subject: `${token} is your confirmation code`,
         ...(await this.composeTokenEmail(token))
       };
 
