@@ -60,6 +60,7 @@ export interface ITicketData {
   ticketCategory: TicketCategory;
   attendeeName: string;
   attendeeEmail: string;
+  qrCodeOverrideImageUrl?: string;
   eventLocation?: string;
   eventStartDate?: string;
   isAddOn?: boolean;
