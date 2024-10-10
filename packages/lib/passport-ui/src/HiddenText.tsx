@@ -53,8 +53,16 @@ export const Card = ({
 export const TextContainer = styled.div`
   border: 1px solid #eceaf4;
   overflow: hidden;
-  padding: 4px 8px;
+  padding: 10px 12px;
   border-radius: 8px;
+
+  min-height: 40px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: #fff;
+  color: var(--text-primary, #1e2c50);
+  font-family: Rubik;
+  font-size: 16px;
+  line-height: 20px;
 `;
 
 export const HiddenTextContainer = styled.div`
