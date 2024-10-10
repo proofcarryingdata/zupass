@@ -4,6 +4,8 @@ import {
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { str } from "@pcd/util";
+import { Pool } from "postgres-pool";
+import { acquireAdvisoryLock } from "../../../database/advisoryLock";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
@@ -52,6 +54,7 @@ export class PipelineExecutorSubservice {
   private discordService: DiscordService | null;
   private rollbarService: RollbarService | null;
   private nextLoadTimeout: NodeJS.Timeout | undefined;
+  private pool: Pool;
 
   public constructor(
     pipelineSubservice: PipelineSubservice,
@@ -264,12 +267,21 @@ export class PipelineExecutorSubservice {
    */
   public async performPipelineLoad(
     pipelineSlot: PipelineSlot
-  ): Promise<PipelineLoadSummary> {
-    return traced<PipelineLoadSummary>(
+  ): Promise<PipelineLoadSummary | undefined> {
+    return traced<PipelineLoadSummary | undefined>(
       SERVICE_NAME,
       "performPipelineLoad",
-      async (): Promise<PipelineLoadSummary> => {
-        return performPipelineLoad(
+      async (): Promise<PipelineLoadSummary | undefined> => {
+        const locked = await acquireAdvisoryLock(
+          this.pool,
+          pipelineSlot.definition.id
+        );
+
+        if (!locked) {
+          return undefined;
+        }
+
+        const result = await performPipelineLoad(
           pipelineSlot,
           this.pipelineSubservice,
           this.userSubservice,
@@ -277,6 +289,7 @@ export class PipelineExecutorSubservice {
           this.pagerdutyService,
           this.rollbarService
         );
+        return result;
       }
     );
   }

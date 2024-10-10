@@ -25,7 +25,7 @@ export function hashToInt64(input: string): string {
 export async function acquireAdvisoryLock(
   pool: Pool,
   lockName: string
-): Promise<void> {
+): Promise<boolean> {
   const lockInt = hashToInt64(lockName);
   const res = await sqlQuery(pool, `SELECT pg_advisory_lock($1)`, [lockInt]);
   return res.rows[0].pg_advisory_unlock;
@@ -34,7 +34,7 @@ export async function acquireAdvisoryLock(
 export async function releaseAdvisoryLock(
   pool: Pool,
   lockName: string
-): Promise<void> {
+): Promise<boolean> {
   const lockInt = hashToInt64(lockName);
   const res = await sqlQuery(pool, `SELECT pg_advisory_unlock($1)`, [lockInt]);
   return res.rows[0].pg_advisory_unlock;
