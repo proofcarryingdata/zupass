@@ -41,7 +41,6 @@ function PCDCardImpl({
   expanded,
   onClick,
   hideRemoveButton,
-  hideHeader,
   hidePadding
 }: {
   pcd: PCD;
@@ -49,7 +48,6 @@ function PCDCardImpl({
   isMainIdentity?: boolean;
   onClick?: (id: string, cardContainer: HTMLDivElement | undefined) => void;
   hideRemoveButton?: boolean;
-  hideHeader?: boolean;
   hidePadding?: boolean;
 }): JSX.Element {
   const [containerRef, setContainerRef] = useState<HTMLDivElement | undefined>(
@@ -71,11 +69,6 @@ function PCDCardImpl({
     >
       {expanded ? (
         <CardOutlineExpanded>
-          {/* {!hideHeader && (
-            <CardHeader isMainIdentity={isMainIdentity}>
-              <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
-            </CardHeader>
-          )} */}
           <CardBodyContainer>
             <CardBody
               pcd={pcd}
@@ -369,8 +362,6 @@ export const CardOutlineExpanded = styled.div`
   ${({ disabled }: { disabled?: boolean }): FlattenSimpleInterpolation => css`
     width: 100%;
     border-radius: 12px;
-    // border: 1px solid var(--accent-dark);
-    // background: var(--primary-dark);
     overflow: hidden;
 
     ${disabled &&
