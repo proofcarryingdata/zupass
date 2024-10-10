@@ -40,6 +40,9 @@ import { Typography } from "../../shared/Typography";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 
+// @ts-expect-error TMP fix for bad lib
+const _SwipableViews = SwipableViews.default;
+
 const CARD_GAP = 8;
 const TICKET_VERTICAL_GAP = 20;
 const SCREEN_HORIZONTAL_PADDING = 20;
@@ -290,7 +293,7 @@ export const NewHomeScreen = (): ReactElement => {
       {tickets.length > 0 && (
         <>
           <SwipeViewContainer>
-            <SwipableViews.default
+            <_SwipableViews
               style={{
                 padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
               }}
@@ -299,8 +302,7 @@ export const NewHomeScreen = (): ReactElement => {
               }}
               resistance={true}
               index={currentPos}
-              onChangeIndex={(e) => {
-                console.log(e);
+              onChangeIndex={(e: number) => {
                 setCurrentPos(e);
               }}
               draggable={false}
@@ -391,7 +393,7 @@ export const NewHomeScreen = (): ReactElement => {
                   </Container>
                 );
               })}
-            </SwipableViews.default>
+            </_SwipableViews>
             {tickets.length > 1 && (
               <ButtonsContainer>
                 <PageCircleButton
