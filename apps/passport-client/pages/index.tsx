@@ -48,6 +48,7 @@ import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketSc
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
+import { ApprovePermissionsScreen } from "../components/screens/ZappScreens/ApprovePermissionsScreen";
 import { AuthenticateIFrameScreen } from "../components/screens/ZappScreens/AuthenticateIFrameScreen";
 import { ConnectPopupScreen } from "../components/screens/ZappScreens/ConnectPopupScreen";
 import {
@@ -165,6 +166,28 @@ function RouterImpl(): JSX.Element {
           <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
           <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
           <Route path="terms" element={<NewTermsScreen />} />
+        </Route>
+        <Route path="/">
+          <Route index element={<NewHomeScreen />} />
+          <Route path="login" element={<NewLoginScreen />} />
+          <Route path="new-passport" element={<NewPassportScreen2 />} />
+          <Route
+            path="enter-confirmation-code"
+            element={<NewEnterConfirmationCodeScreen />}
+          />
+          <Route path="create-password" element={<NewCreatePasswordScreen />} />
+          <Route
+            path="already-registered"
+            element={<NewAlreadyRegisteredScreen />}
+          />
+          <Route
+            path="login-interstitial"
+            element={<NewLoginInterstitialScreen />}
+          />
+          <Route path="sync-existing" element={<NewSyncExistingScreen />} />
+          <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
+          <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
+          <Route path="terms" element={<NewTermsScreen />} />
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
@@ -199,6 +222,10 @@ function RouterImpl(): JSX.Element {
             element={<PodboxScannedTicketScreen />}
           />
           <Route path="connect-popup" element={<ConnectPopupScreen />} />
+          <Route
+            path="approve-permissions"
+            element={<ApprovePermissionsScreen />}
+          />
           <Route
             path="authenticate-iframe"
             element={<AuthenticateIFrameScreen />}
