@@ -7,6 +7,9 @@ import { BottomModal } from "../../shared/BottomModal";
 import { Button2 } from "../../shared/Button";
 import { Typography } from "../../shared/Typography";
 
+// @ts-expect-error TMP fix for bad lib
+const _SwipableViews = SwipeableViews.default;
+
 const QRContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -63,11 +66,11 @@ export const AddOnsModal = (): JSX.Element | null => {
   const addOns = activeModal.addOns;
   return (
     <BottomModal isOpen={activeModal.modalType === "ticket-add-ons"}>
-      <SwipeableViews.default
+      <_SwipableViews
         containerStyle={{ width: "100%", paddingBottom: 12 }}
         slideStyle={{ padding: "0 10px" }}
         resistance={true}
-        onChangeIndex={(e) => {
+        onChangeIndex={(e: number) => {
           console.log(e);
           setActiveIdx(e);
         }}
@@ -86,7 +89,7 @@ export const AddOnsModal = (): JSX.Element | null => {
             </QRContainer>
           );
         })}
-      </SwipeableViews.default>
+      </_SwipableViews>
       <ContentContainer>
         <Dots amount={addOns.length} activeIdx={activeIdx} />
         <Typography color="var(--text-tertiary)" fontWeight={500} fontSize={14}>
