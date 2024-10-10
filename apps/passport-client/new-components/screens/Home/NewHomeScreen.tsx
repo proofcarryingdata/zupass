@@ -46,11 +46,11 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
   return useMemo(() => {
     const eventsMap = new Map<string, TicketPack[]>();
     for (const ticket of tickets) {
-      if (ticket.claim.ticket.ticketName !== "GA") continue;
-      let ticketPacks = eventsMap.get(ticket.claim.ticket.eventName);
+      if (ticket.claim.ticket.isAddOn) continue;
+      let ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
       if (!ticketPacks) {
         ticketPacks = [];
-        eventsMap.set(ticket.claim.ticket.eventName, ticketPacks);
+        eventsMap.set(ticket.claim.ticket.eventId, ticketPacks);
       }
       if (ticket.type === PODTicketPCDTypeName) {
         const relatedEddesaTicketPackIdx = ticketPacks.findIndex(
@@ -70,8 +70,8 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
       });
     }
     for (const ticket of tickets) {
-      if (ticket.claim.ticket.ticketName === "GA") continue;
-      const ticketPacks = eventsMap.get(ticket.claim.ticket.eventName);
+      if (!ticket.claim.ticket.isAddOn) continue;
+      const ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
       if (!ticketPacks) continue;
       const pack = ticketPacks.find(
         (pack) =>
