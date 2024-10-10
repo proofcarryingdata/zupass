@@ -4,6 +4,7 @@ import styled, { createGlobalStyle } from "styled-components";
 import {
   useAppError,
   useDispatch,
+  useIOSOrientationFix,
   useUserShouldAgreeNewPrivacyNotice
 } from "../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
@@ -25,6 +26,7 @@ export function AppContainer({
   const dispatch = useDispatch();
   const error = useAppError();
   useUserShouldAgreeNewPrivacyNotice();
+  useIOSOrientationFix();
 
   const onClose = useCallback(
     () => dispatch({ type: "clear-error" }),

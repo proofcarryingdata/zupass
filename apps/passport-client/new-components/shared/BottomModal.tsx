@@ -2,6 +2,7 @@ import { ReactNode } from "react";
 import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
+import { Typography } from "./Typography";
 
 const BottomModalOverlay = styled.div<{ $fullScreen?: boolean }>`
   position: fixed;
@@ -81,5 +82,35 @@ export const BottomModal = ({
         {children}
       </BottomModalContainer>
     </BottomModalOverlay>
+  );
+};
+
+const TextBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+`;
+
+// TODO: use this on all other bottom modal and reuse code
+export const BottomModalHeader = ({
+  title,
+  description,
+  children
+}: {
+  title: string;
+  description: string;
+  children?: ReactNode;
+}): JSX.Element => {
+  return (
+    <TextBlock>
+      <Typography fontWeight={800} fontSize={20} color="var(--text-primary)">
+        {title}
+      </Typography>
+      <Typography fontSize={16} color="var(--text-primary)">
+        {description}
+      </Typography>
+      {children || null}
+    </TextBlock>
   );
 };
