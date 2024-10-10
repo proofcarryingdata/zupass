@@ -28,12 +28,11 @@
   },
   "dependencies": {
     "buffer": "^6.0.3",
-    "libsodium-wrappers-sumo": "^0.7.11"
+    "@pcd/libsodium-wrappers-sumo": "^0.7.15"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.11.4",
     "@pcd/tsconfig": "0.11.4",
-    "@types/libsodium-wrappers-sumo": "^0.7.6",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
     "eslint": "^8.57.0",
