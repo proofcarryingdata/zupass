@@ -79,6 +79,7 @@ const define = {
     : {})
 };
 
+const APP_OUT_DIR = "public/js";
 const appOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
@@ -93,7 +94,7 @@ const appOpts: BuildOptions = {
   loader: {
     ".svg": "dataurl"
   },
-  outdir: "public/js",
+  outdir: APP_OUT_DIR,
   metafile: true,
   define,
   splitting: true,
@@ -131,6 +132,7 @@ run(process.argv[2])
   .catch((err) => console.error(err));
 
 async function run(command: string): Promise<void> {
+  clearBuildDirectory(APP_OUT_DIR);
   compileHtml();
   copyGPCArtifacts();
 
@@ -229,4 +231,10 @@ function copyGPCArtifacts(): void {
     path.join("public/artifacts/proto-pod-gpc"),
     { recursive: true }
   );
+}
+
+// Function to clear the previous build directory
+function clearBuildDirectory(outDir: string): void {
+  fs.rmSync(outDir, { recursive: true, force: true });
+  console.log(`Cleared build directory: ${outDir}`);
 }
