@@ -60,6 +60,9 @@ export interface ITicketData {
   ticketCategory: TicketCategory;
   attendeeName: string;
   attendeeEmail: string;
+  eventLocation?: string;
+  eventStartDate?: string;
+  isAddOn?: boolean;
 }
 
 /**

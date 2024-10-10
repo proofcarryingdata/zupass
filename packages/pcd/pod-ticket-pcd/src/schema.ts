@@ -39,7 +39,10 @@ export const TicketDataSchema = z.object({
   ticketCategory: z.nativeEnum(TicketCategory),
   attendeeName: z.string(),
   attendeeEmail: z.string(),
-  ticketSecret: z.string().optional()
+  ticketSecret: z.string().optional(),
+  eventLocation: z.string().optional(),
+  eventStartDate: z.string().optional(),
+  isAddOn: z.boolean().optional()
 });
 
 export type IPODTicketData = z.infer<typeof TicketDataSchema>;
