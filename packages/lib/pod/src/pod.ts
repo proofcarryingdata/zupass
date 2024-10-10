@@ -1,14 +1,10 @@
 import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
+import { checkPublicKeyFormat, checkSignatureFormat, requireType } from "./podChecks";
 import { PODContent } from "./podContent";
 import { signPODRoot, verifyPODRootSignature } from "./podCrypto";
 import { JSONPOD, podEntriesFromJSON, podEntriesToJSON } from "./podJSON";
 import { PODEntries } from "./podTypes";
-import {
-  checkPublicKeyFormat,
-  checkSignatureFormat,
-  requireType
-} from "./podUtil";
 
 /**
  * Class encapsulating a signed POD with functions for common use cases.

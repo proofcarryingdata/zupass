@@ -1,16 +1,24 @@
 import { ReactNode } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useDispatch, useEmbeddedScreenState } from "../../../src/appHooks";
 import { ListenMode, useZappServer } from "../../../src/zapp/useZappServer";
 import { AdhocModal } from "../../modals/AdhocModal";
 import { EmbeddedScreen } from "../EmbeddedScreens/EmbeddedScreen";
 
 export function ZappScreen({ url }: { url: string }): ReactNode {
+  const [searchParams] = useSearchParams();
+  const queryParam = searchParams.get("q");
+  const urlWithOptionalParameter = new URL(url);
+  if (queryParam) {
+    urlWithOptionalParameter.searchParams.set("q", queryParam);
+  }
+
   return (
     <>
       <ZappModal />
       <iframe
         style={{ width: "100%", height: "100%", borderRadius: "10px" }}
-        src={url}
+        src={urlWithOptionalParameter.toString()}
         sandbox="allow-downloads allow-same-origin allow-scripts allow-popups allow-modals allow-forms allow-storage-access-by-user-activation allow-popups-to-escape-sandbox"
       />
     </>
