@@ -53,8 +53,11 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
     );
   });
 
+  //  This hook is building "ticket packs"
+  //  ticket pack - main ticket and all its ticket addons, under the same event and attendee
   return useMemo(() => {
     const eventsMap = new Map<string, TicketPack[]>();
+    // creating the initial ticket packs for events - only main event ticket
     for (const ticket of uniqTickets) {
       if (ticket.claim.ticket.isAddOn) continue;
       let ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
@@ -70,6 +73,7 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
         packType: ticket.type as TicketTypeName
       });
     }
+    // adding the addons to their respective ticket pack
     for (const ticket of uniqTickets) {
       if (!ticket.claim.ticket.isAddOn) continue;
       const ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
