@@ -89,8 +89,6 @@ function isAlreadyAuthorized(
           existingPODQuery.matches[0].content.asEntries().permissions.value
         )
       );
-      console.log("existingPermissions", existingPermissions);
-      console.log("zapp.permissions", zapp.permissions);
       if (isEqual(existingPermissions, zapp.permissions)) {
         return true;
       }

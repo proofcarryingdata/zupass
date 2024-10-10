@@ -83,6 +83,7 @@ export type Action =
   | {
       type: "new-passport";
       email: string;
+      newUi?: boolean;
     }
   | {
       type: "create-user-skip-password";
@@ -92,18 +93,21 @@ export type Action =
       autoRegister: boolean;
       /** Zupass will attempt to automatically direct a user to targetFolder on registration */
       targetFolder: string | undefined | null;
+      newUi?: boolean;
     }
   | {
       type: "login";
       email: string;
       password: string;
       token: string;
+      newUi?: boolean;
     }
   | {
       type: "one-click-login";
       email: string;
       code: string;
       targetFolder: string | undefined | null;
+      newUI?: boolean;
     }
   | {
       type: "set-self";
@@ -132,6 +136,7 @@ export type Action =
       type: "load-after-login";
       storage: StorageWithRevision;
       encryptionKey: string;
+      newUi?: boolean;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
   | { type: "password-change-on-other-tab" }
@@ -164,9 +169,11 @@ export type Action =
   | {
       type: "handle-agreed-privacy-notice";
       version: number;
+      newUi?: boolean;
     }
   | {
       type: "prompt-to-agree-privacy-notice";
+      newUi?: boolean;
     }
   | {
       type: "sync-subscription";
@@ -223,7 +230,7 @@ export async function dispatch(
       update({ pauseSync: action.value });
       break;
     case "new-passport":
-      return genPassport(state.identityV3, action.email, update);
+      return genPassport(state.identityV3, action.email, update, action.newUi);
     case "create-user-skip-password":
       return createNewUserSkipPassword(
         action.email,
@@ -231,7 +238,8 @@ export async function dispatch(
         action.targetFolder,
         action.autoRegister,
         state,
-        update
+        update,
+        action.newUi
       );
     case "login":
       return createNewUserWithPassword(
@@ -239,13 +247,15 @@ export async function dispatch(
         action.token,
         action.password,
         state,
-        update
+        update,
+        action.newUi
       );
     case "one-click-login":
       return oneClickLogin(
         action.email,
         action.code,
         action.targetFolder,
+        action.newUI ?? false,
         state,
         update
       );
@@ -258,7 +268,12 @@ export async function dispatch(
     case "reset-passport":
       return resetPassport(state, update);
     case "load-after-login":
-      return loadAfterLogin(action.encryptionKey, action.storage, update);
+      return loadAfterLogin(
+        action.encryptionKey,
+        action.storage,
+        update,
+        action.newUi
+      );
     case "set-modal":
       return update({
         modal: action.modal
@@ -348,7 +363,8 @@ export async function dispatch(
 async function genPassport(
   identityV3: Identity,
   email: string,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identityV3 });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
@@ -364,6 +380,7 @@ async function oneClickLogin(
   email: string,
   code: string,
   targetFolder: string | undefined | null,
+  newUI: boolean,
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
@@ -404,7 +421,8 @@ async function oneClickLogin(
         oneClickLoginResult.value.zupassUser,
         state,
         update,
-        targetFolder
+        targetFolder,
+        newUI
       );
     }
 
@@ -422,7 +440,8 @@ async function oneClickLogin(
         return loadAfterLogin(
           oneClickLoginResult.value.encryptionKey,
           storageResult.value,
-          update
+          update,
+          newUI
         );
       }
 
@@ -459,7 +478,8 @@ async function createNewUserSkipPassword(
   targetFolder: string | undefined | null,
   autoRegister: boolean,
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   update({
     modal: { modalType: "none" }
@@ -501,7 +521,8 @@ async function createNewUserSkipPassword(
       newUserResult.value,
       state,
       update,
-      targetFolder
+      targetFolder,
+      newUi
     );
   }
 
@@ -519,7 +540,8 @@ async function createNewUserWithPassword(
   token: string,
   password: string,
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: encryptionKey } =
@@ -563,7 +585,8 @@ async function finishAccountCreation(
   user: User,
   state: AppState,
   update: ZuUpdate,
-  targetFolder?: string | null
+  targetFolder?: string | null,
+  newUi = false
 ): Promise<void> {
   // Verify that the identity is correct.
   if (
@@ -789,7 +812,8 @@ async function removePCD(
 async function loadAfterLogin(
   encryptionKey: string,
   storage: StorageWithRevision,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
@@ -891,7 +915,7 @@ async function loadAfterLogin(
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
-    window.location.hash = "#/";
+    window.location.hash = newUi ? "#/new" : "#/";
   }
 }
 
@@ -1572,7 +1596,7 @@ async function zappApproval(
 
     const newZappSerialized = await PODPCDPackage.serialize(newZapp);
     update({ zappApproved: true });
-    return addPCDs(state, update, [newZappSerialized], false, "Zapps");
+    return addPCDs(state, update, [newZappSerialized], true, "Zapps");
   } else {
     update({ zappApproved: false });
   }

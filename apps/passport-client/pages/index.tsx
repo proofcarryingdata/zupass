@@ -145,6 +145,28 @@ function RouterImpl(): JSX.Element {
   return (
     <HashRouter>
       <Routes>
+        <Route path="/new">
+          <Route index element={<NewHomeScreen />} />
+          <Route path="login" element={<NewLoginScreen />} />
+          <Route path="new-passport" element={<NewPassportScreen2 />} />
+          <Route
+            path="enter-confirmation-code"
+            element={<NewEnterConfirmationCodeScreen />}
+          />
+          <Route path="create-password" element={<NewCreatePasswordScreen />} />
+          <Route
+            path="already-registered"
+            element={<NewAlreadyRegisteredScreen />}
+          />
+          <Route
+            path="login-interstitial"
+            element={<NewLoginInterstitialScreen />}
+          />
+          <Route path="sync-existing" element={<NewSyncExistingScreen />} />
+          <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
+          <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
+          <Route path="terms" element={<NewTermsScreen />} />
+        </Route>
         <Route path="/">
           <Route index element={<NewHomeScreen />} />
           <Route path="login" element={<NewLoginScreen />} />
