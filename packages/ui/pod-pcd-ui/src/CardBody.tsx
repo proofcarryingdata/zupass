@@ -26,7 +26,6 @@ enum PODDisplayFormat {
   Collectable = "collectable"
 }
 
-const newui = true;
 /**
  * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
