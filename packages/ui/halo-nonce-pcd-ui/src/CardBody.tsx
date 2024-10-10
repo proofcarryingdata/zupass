@@ -1,19 +1,13 @@
 import { HaLoNoncePCD } from "@pcd/halo-nonce-pcd";
 import { FieldLabel, Spacer, TextContainer, styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
-import Airtable from "airtable";
+
 import { useEffect, useState } from "react";
 
 export const HaLoNoncePCDUI: PCDUI<HaLoNoncePCD> = {
   renderCardBody: HaLoNonceCardBody,
   getHeader: Header
 };
-
-// Read-only API key into Airtable with no sensitive data
-const base = new Airtable({
-  apiKey:
-    "pat5y56owllLzfmW4.18658c109003682514513254c6f464f52022562acbb3af33d7fd95f05eebb6f2"
-}).base("appJcTn3eQUXKQEKT");
 
 function useAirtableData(pubkeyHex: string): {
   headerText: string;
@@ -27,35 +21,43 @@ function useAirtableData(pubkeyHex: string): {
   useEffect(() => {
     if (loadedAirtable) return;
 
-    base("Image link")
-      .select({
-        fields: ["pubKeyHex", "imageUrl", "experienceName"]
-      })
-      .eachPage(
-        function page(records, fetchNextPage) {
-          for (const record of records) {
-            if (record.get("pubKeyHex") === pubkeyHex) {
-              const recordImageUrl = record.get("imageUrl");
-              if (recordImageUrl) {
-                setImageUrl(recordImageUrl.toString());
+    import("airtable").then(({ default: Airtable }) => {
+      // Read-only API key into Airtable with no sensitive data
+      const base = new Airtable({
+        apiKey:
+          "pat5y56owllLzfmW4.18658c109003682514513254c6f464f52022562acbb3af33d7fd95f05eebb6f2"
+      }).base("appJcTn3eQUXKQEKT");
+
+      base("Image link")
+        .select({
+          fields: ["pubKeyHex", "imageUrl", "experienceName"]
+        })
+        .eachPage(
+          function page(records, fetchNextPage) {
+            for (const record of records) {
+              if (record.get("pubKeyHex") === pubkeyHex) {
+                const recordImageUrl = record.get("imageUrl");
+                if (recordImageUrl) {
+                  setImageUrl(recordImageUrl.toString());
+                }
+                const experienceName = record.get("experienceName");
+                if (experienceName) {
+                  setHeaderText(experienceName.toString().toUpperCase());
+                }
+                break;
               }
-              const experienceName = record.get("experienceName");
-              if (experienceName) {
-                setHeaderText(experienceName.toString().toUpperCase());
-              }
-              break;
             }
+            fetchNextPage();
+          },
+          function done(err) {
+            if (err) {
+              console.error(err);
+              return;
+            }
+            setLoadedAirtable(true);
           }
-          fetchNextPage();
-        },
-        function done(err) {
-          if (err) {
-            console.error(err);
-            return;
-          }
-          setLoadedAirtable(true);
-        }
-      );
+        );
+    });
   }, [loadedAirtable, pubkeyHex]);
 
   return { headerText, imageUrl, loadedAirtable };

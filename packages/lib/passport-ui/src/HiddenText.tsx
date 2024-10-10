@@ -1,6 +1,8 @@
 import { ReactNode, useCallback, useState } from "react";
+import { CopyIcon } from "./CopyIcon";
 import { FieldLabel } from "./Core";
 import styled from "./StyledWrapper";
+import { VIcon } from "./VIcon";
 
 export function HiddenText({
   text,
@@ -31,12 +33,25 @@ const CardWrapper = styled.div`
   background-color: #f6f8fd;
   padding: 4px;
   border-radius: 8px;
+  position: relative;
 `;
 
 const CardFieldLabel = styled(FieldLabel)`
   padding-left: 12px;
   padding-top: 4px;
   padding-bottom: 8px;
+  text-transform: uppercase;
+`;
+
+const CopyButtonWrapper = styled.div`
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 `;
 
 export const Card = ({
@@ -51,6 +66,37 @@ export const Card = ({
       <CardFieldLabel>{title}</CardFieldLabel>
       {children}
     </CardWrapper>
+  );
+};
+
+export const CardWithCopy = ({
+  title,
+  children,
+  onCopy
+}: {
+  title: string;
+  children: ReactNode;
+  onCopy: () => Promise<void>;
+}): JSX.Element => {
+  const [coppied, setCoppied] = useState(false);
+  const onCopyClick = useCallback(async () => {
+    try {
+      await onCopy();
+      setCoppied(true);
+      setTimeout(() => {
+        setCoppied(false);
+      }, 3000);
+    } catch (e) {
+      console.error("Failed to copy", e);
+    }
+  }, [onCopy]);
+  return (
+    <Card title={title}>
+      <CopyButtonWrapper onClick={onCopyClick}>
+        {coppied ? <VIcon /> : <CopyIcon />}
+      </CopyButtonWrapper>
+      {children}
+    </Card>
   );
 };
 

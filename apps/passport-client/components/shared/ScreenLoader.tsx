@@ -1,7 +1,6 @@
-import { Spacer } from "@pcd/passport-ui";
 import { useEffect, useState } from "react";
-import { CenterColumn, TextCenter } from "../core";
-import { RippleLoader } from "../core/RippleLoader";
+import { NewLoader } from "../../new-components/shared/NewLoader";
+import { Typography } from "../../new-components/shared/Typography";
 
 const textDisplayTimeout = 2000;
 
@@ -18,13 +17,19 @@ export function ScreenLoader({ text }: { text?: string }): JSX.Element {
   }, []);
 
   return (
-    <CenterColumn>
-      <TextCenter>
-        <Spacer h={128} />
-        <RippleLoader />
-        <Spacer h={24} />
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh"
+      }}
+    >
+      <NewLoader />
+      <Typography style={{ marginTop: 10 }}>
         {textVisible && text && <>{text}</>}
-      </TextCenter>
-    </CenterColumn>
+      </Typography>
+    </div>
   );
 }

@@ -10,7 +10,6 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { requireDefinedParameter } from "@pcd/util";
-import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import {
@@ -40,6 +39,8 @@ export async function prove(
   if (args.ethereumAddress.value === undefined) {
     throw new Error(`missing argument ethereumAddress`);
   }
+
+  const { ethers } = await import("ethers");
 
   if (!ethers.utils.isAddress(args.ethereumAddress.value)) {
     throw new Error(`${args.ethereumAddress} is not a valid Ethereum address`);
@@ -118,6 +119,7 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
     );
 
   try {
+    const { ethers } = await import("ethers");
     const recoveredAddress = ethers.utils.verifyMessage(
       deserializedSignatureProof.claim.identityCommitment,
       pcd.proof.ethereumSignatureOfCommitment

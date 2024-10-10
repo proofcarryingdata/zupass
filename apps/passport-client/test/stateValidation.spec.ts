@@ -9,8 +9,8 @@ import {
   v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { expect } from "chai";
 import { v4 as uuid } from "uuid";
+import { describe, expect, it } from "vitest";
 import { randomEmail } from "../src/util";
 import { ErrorReport, validateRunningAppState } from "../src/validateState";
 

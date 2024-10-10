@@ -87,8 +87,10 @@ async function getLatestHistoricalSemaphoreGroups(
     application.context.dbPool
   );
 
-  const parsedLatestGroups = latestGroups.map((g) =>
-    deserializeSemaphoreGroup(JSON.parse(g.serializedGroup))
+  const parsedLatestGroups = await Promise.all(
+    latestGroups.map((g) =>
+      deserializeSemaphoreGroup(JSON.parse(g.serializedGroup))
+    )
   );
 
   return {

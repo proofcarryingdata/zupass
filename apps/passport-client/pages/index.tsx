@@ -43,7 +43,6 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 // import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
-import { ScanScreen } from "../components/screens/ScanScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
@@ -142,6 +141,12 @@ function RouterImpl(): JSX.Element {
     );
   }
 
+  const LazyScanScreen = React.lazy(() =>
+    import("../components/screens/ScanScreen").then((module) => ({
+      default: module.ScanScreen
+    }))
+  );
+
   return (
     <HashRouter>
       <Routes>
@@ -206,7 +211,14 @@ function RouterImpl(): JSX.Element {
           <Route path="halo" element={<HaloScreen />} />
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
-          <Route path="scan" element={<ScanScreen />} />
+          <Route
+            path="scan"
+            element={
+              <React.Suspense fallback={<RippleLoader />}>
+                <LazyScanScreen />
+              </React.Suspense>
+            }
+          />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />

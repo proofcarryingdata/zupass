@@ -145,7 +145,9 @@ async function verifyProof(
   const sameExternalNullifier =
     pcd.claim.externalNullifier === externalNullifier;
 
-  const expectedGroup = deserializeSemaphoreGroup(serializedExpectedGroup);
+  const expectedGroup = await deserializeSemaphoreGroup(
+    serializedExpectedGroup
+  );
   const sameRoot = expectedGroup.root.toString() === pcd.claim.merkleRoot;
 
   return sameExternalNullifier && sameRoot;

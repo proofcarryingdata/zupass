@@ -1,7 +1,6 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
-import NodeRSA from "node-rsa";
 import { v4 as uuid } from "uuid";
 import {
   RSAPCD,
@@ -21,6 +20,7 @@ export async function prove(args: RSAPCDArgs): Promise<RSAPCD> {
   }
 
   const id = typeof args.id.value === "string" ? args.id.value : uuid();
+  const { default: NodeRSA } = await import("node-rsa");
   const key = new NodeRSA(args.privateKey.value);
   const publicKey = key.exportKey("public");
   const signature = key.sign(args.signedMessage.value, "hex");
@@ -34,6 +34,7 @@ export async function prove(args: RSAPCDArgs): Promise<RSAPCD> {
 
 export async function verify(pcd: RSAPCD): Promise<boolean> {
   try {
+    const { default: NodeRSA } = await import("node-rsa");
     const publicKey = new NodeRSA(pcd.proof.publicKey, "public");
     const valid = publicKey.verify(
       Buffer.from(pcd.claim.message),

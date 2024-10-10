@@ -631,7 +631,7 @@ describe("generic issuance - LemonadePipeline", function () {
         EdgeCityBouncer2Identity.commitment.toString(),
         newUserIdentity.commitment.toString()
       ]);
-      const attendeeGroup = deserializeSemaphoreGroup(
+      const attendeeGroup = await deserializeSemaphoreGroup(
         attendeeGroupResponse.value
       );
 
@@ -643,7 +643,9 @@ describe("generic issuance - LemonadePipeline", function () {
         );
       expectTrue(attendeesGroupRootResponse.success);
       expect(attendeesGroupRootResponse.value).to.eq(
-        deserializeSemaphoreGroup(attendeeGroupResponse.value).root.toString()
+        (
+          await deserializeSemaphoreGroup(attendeeGroupResponse.value)
+        ).root.toString()
       );
 
       const attendeeGroupValidResponse =
@@ -727,7 +729,7 @@ describe("generic issuance - LemonadePipeline", function () {
           newAttendeeGroupResponse.value.zeroValue
         ]);
 
-        const newAttendeeGroup = deserializeSemaphoreGroup(
+        const newAttendeeGroup = await deserializeSemaphoreGroup(
           newAttendeeGroupResponse.value
         );
         expect(newAttendeeGroup.root).to.not.eq(attendeeGroup.root.toString());

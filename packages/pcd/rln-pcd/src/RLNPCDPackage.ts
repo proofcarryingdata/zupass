@@ -53,7 +53,7 @@ export async function prove(args: RLNPCDArgs): Promise<RLNPCD> {
   }
   const identity = identityPCD.claim.identityV3;
   const rln = getRLNInstance(BigInt(rlnIdentifier), identity);
-  const group = deserializeSemaphoreGroup(serializedGroup);
+  const group = await deserializeSemaphoreGroup(serializedGroup);
   const leafIndex = group.indexOf(identity.getCommitment());
   const merkleProof = group.generateMerkleProof(leafIndex);
   const fullProof = await rln.generateProof(signal, merkleProof, epoch);
