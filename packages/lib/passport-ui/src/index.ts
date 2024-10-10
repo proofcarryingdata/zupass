@@ -1,4 +1,5 @@
 export * from "./Button";
+export * from "./CopyIcon";
 export * from "./Core";
 export * from "./error";
 export * from "./HiddenText";
