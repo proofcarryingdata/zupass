@@ -34,6 +34,7 @@ import {
 import { fallbackDeserializeFunction, getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
 import { validateAndLogRunningAppState } from "./validateState";
+import { useCanSync } from "./appHooks";
 
 export type UpdateBlobKeyStorageInfo = {
   revision: string;
@@ -549,6 +550,7 @@ export async function tryDeserializeNewStorage(
 
 export function useSyncE2EEStorage(): void {
   const { dispatch } = useContext(StateContext);
+  const canSync = useCanSync();
 
   const load = useCallback(() => {
     setTimeout(() => {
@@ -557,8 +559,8 @@ export function useSyncE2EEStorage(): void {
   }, [dispatch]);
 
   useOnStateChange(() => {
-    load();
-  }, [load]);
+    if (canSync) load();
+  }, [load, canSync]);
 
   useEffect(() => {
     load();

@@ -3,11 +3,24 @@ import {
   TicketCategory,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
-import { EdDSATicketPCDUI } from "@pcd/eddsa-ticket-pcd-ui";
+import {
+  EdDSATicketPCDUI,
+  TicketQR as EddsaTicketQR
+} from "@pcd/eddsa-ticket-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
-import { PODTicketPCDUI } from "@pcd/pod-ticket-pcd-ui";
-import { memo, useCallback, useContext, useMemo, useState } from "react";
+import {
+  PODTicketPCDUI,
+  TicketQR as PODTicketQR
+} from "@pcd/pod-ticket-pcd-ui";
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useContext,
+  useMemo,
+  useState
+} from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
@@ -157,19 +170,91 @@ function getUI(
     : undefined;
 }
 
+const getURLsBasedOnCategory = (
+  category: TicketCategory
+): { idBasedVerifyURL: string | undefined; verifyURL: string } => {
+  const ticketCategory = category;
+  const idBasedVerifyURL =
+    ticketCategory === TicketCategory.Devconnect
+      ? `${window.location.origin}/#/checkin-by-id`
+      : ticketCategory === TicketCategory.ZuConnect
+      ? `${window.location.origin}/#/verify`
+      : ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : undefined;
+
+  const verifyURL =
+    ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : `${window.location.origin}/#/verify`;
+  return { idBasedVerifyURL, verifyURL };
+};
+
+const QRContainer = styled.div`
+  height: 265px;
+  width: 265px;
+`;
+export const TicketQRWrapper = forwardRef<
+  HTMLDivElement,
+  {
+    pcd: PCD<unknown, unknown>;
+  }
+>(({ pcd }, ref) => {
+  const identityPCD = useUserIdentityPCD();
+
+  if (isEdDSATicketPCD(pcd) && identityPCD) {
+    const urls = getURLsBasedOnCategory(pcd.claim.ticket.ticketCategory);
+    return (
+      <QRContainer ref={ref}>
+        <EddsaTicketQR
+          pcd={pcd}
+          zk={false}
+          identityPCD={identityPCD}
+          idBasedVerifyURL={urls.idBasedVerifyURL}
+          verifyURL={urls.verifyURL}
+        />
+      </QRContainer>
+    );
+  }
+  if (isPODTicketPCD(pcd)) {
+    const urls = getURLsBasedOnCategory(pcd.claim.ticket.ticketCategory);
+    if (urls.idBasedVerifyURL)
+      return (
+        <QRContainer ref={ref}>
+          <PODTicketQR
+            ticketData={pcd.claim.ticket}
+            idBasedVerifyURL={urls.idBasedVerifyURL}
+          />
+        </QRContainer>
+      );
+  }
+
+  return (
+    <>
+      <TextCenter>
+        {pcd.type} unsupported <br />
+        no implementation of a ui for this type of card found
+      </TextCenter>
+      <Spacer h={16} />
+    </>
+  );
+});
+
 /**
  * EdDSATicketPCD cards require some extra context and configuration. In
  * particular, they require access to the user's identity PCD for generation
  * of ZK proofs, and can be configured to include different URLs in their QR
  * codes based on the type of ticket provided.
  */
-function TicketWrapper({
-  pcd,
-  hidePadding
-}: {
-  pcd: EdDSATicketPCD;
-  hidePadding?: boolean;
-}): JSX.Element | null {
+const TicketWrapper = forwardRef<
+  HTMLDivElement,
+  {
+    pcd: EdDSATicketPCD;
+    hidePadding?: boolean;
+    newUI?: boolean;
+    addOns?: AddOnsProps;
+  }
+>(({ pcd, newUI, hidePadding, addOns }, ref) => {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
@@ -210,63 +295,83 @@ function TicketWrapper({
       : `${window.location.origin}/#/verify`;
 
   return identityPCD ? (
-    <Card
-      hidePadding={hidePadding}
-      pcd={pcd}
-      identityPCD={identityPCD}
-      verifyURL={verifyURL}
-      idBasedVerifyURL={idBasedVerifyURL}
-    />
+    <div ref={ref}>
+      <Card
+        newUI={newUI}
+        hidePadding={hidePadding}
+        pcd={pcd}
+        identityPCD={identityPCD}
+        verifyURL={verifyURL}
+        idBasedVerifyURL={idBasedVerifyURL}
+        addOns={addOns}
+      />
+    </div>
   ) : null;
-}
-
-function CardBody({
-  pcd,
-  isMainIdentity,
-  hidePadding
-}: {
+});
+export type AddOnsProps = {
+  onClick: () => void;
+  text: string;
+};
+type CardBodyProps = {
   pcd: PCD;
   isMainIdentity: boolean;
   hidePadding?: boolean;
-}): JSX.Element {
-  const pcdCollection = usePCDCollection();
+  newUI?: boolean;
+  addOns?: AddOnsProps;
+};
 
-  if (isMainIdentity) {
-    return <MainIdentityCard />;
+export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
+  ({ pcd, isMainIdentity, hidePadding, newUI, addOns }, ref) => {
+    const pcdCollection = usePCDCollection();
+
+    if (isMainIdentity) {
+      return <MainIdentityCard />;
+    }
+    if (pcdCollection.hasPackage(pcd.type)) {
+      if (isEdDSATicketPCD(pcd)) {
+        return (
+          <TicketWrapper
+            ref={ref}
+            newUI={newUI}
+            pcd={pcd}
+            hidePadding={hidePadding}
+          />
+        );
+      }
+      if (isPODTicketPCD(pcd)) {
+        const Component = PODTicketPCDUI.renderCardBody;
+        return (
+          <div ref={ref}>
+            <Component
+              ticketData={pcd.claim.ticket}
+              addOns={addOns}
+              newUI={newUI}
+              pcd={pcd}
+              idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
+            />
+          </div>
+        );
+      }
+      const ui = getUI(pcd.type);
+      if (ui) {
+        const Component = ui.renderCardBody;
+        return <Component pcd={pcd} />;
+      } else {
+        console.warn(`Could not find a UI renderer for PCD type "${pcd.type}"`);
+      }
+    }
+
+    return (
+      <>
+        <TextCenter>
+          {pcd.type} unsupported <br />
+          no implementation of a ui for this type of card found
+        </TextCenter>
+        <Spacer h={16} />
+      </>
+    );
   }
-  if (pcdCollection.hasPackage(pcd.type)) {
-    if (isEdDSATicketPCD(pcd)) {
-      return <TicketWrapper pcd={pcd} hidePadding={hidePadding} />;
-    }
-    if (isPODTicketPCD(pcd)) {
-      const Component = PODTicketPCDUI.renderCardBody;
-      return (
-        <Component
-          pcd={pcd}
-          idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
-        />
-      );
-    }
-    const ui = getUI(pcd.type);
-    if (ui) {
-      const Component = ui.renderCardBody;
-      return <Component pcd={pcd} />;
-    } else {
-      console.warn(`Could not find a UI renderer for PCD type "${pcd.type}"`);
-    }
-  }
-
-  return (
-    <>
-      <TextCenter>
-        {pcd.type} unsupported <br />
-        no implementation of a ui for this type of card found
-      </TextCenter>
-      <Spacer h={16} />
-    </>
-  );
-}
-
+);
 export const CardContainer = styled.div`
   width: 100%;
   padding: 8px;

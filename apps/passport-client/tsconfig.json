@@ -105,9 +105,6 @@
       "path": "../../packages/ui/pod-ticket-pcd-ui"
     },
     {
-      "path": "../../packages/lib/podspec"
-    },
-    {
       "path": "../../packages/pcd/rsa-image-pcd"
     },
     {

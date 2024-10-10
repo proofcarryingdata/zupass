@@ -69,7 +69,13 @@ export async function loadInitialState(): Promise<AppState> {
     serverStorageHash: persistentSyncStatus.serverStorageHash,
     importScreen: undefined
   };
-
+  if (
+    appConfig.devMode &&
+    (appConfig.zupassServer.includes("127.0.0.1") ||
+      appConfig.zupassServer.includes("localhost"))
+  ) {
+    // await initTestData(state);
+  }
   if (!validateAndLogInitialAppState("loadInitialState", state)) {
     state.userInvalid = true;
     state.modal = { modalType: "invalid-participant" };

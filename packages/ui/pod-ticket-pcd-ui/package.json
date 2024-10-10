@@ -26,9 +26,10 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pod-ticket-pcd": "0.1.7",
     "@pcd/passport-ui": "0.11.6",
     "@pcd/pcd-types": "0.11.4",
+    "@pcd/pod-ticket-pcd": "0.1.7",
+    "html2canvas": "^1.4.1",
     "url-join": "4.0.1"
   },
   "devDependencies": {

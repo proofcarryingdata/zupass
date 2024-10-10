@@ -1,10 +1,12 @@
-import { ForwardedRef, InputHTMLAttributes, Ref, forwardRef } from "react";
-import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import { ForwardedRef, forwardRef, InputHTMLAttributes, Ref } from "react";
+import styled, { css, FlattenSimpleInterpolation } from "styled-components";
 import { Typography } from "./Typography";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface NewInputProps extends InputHTMLAttributes<HTMLInputElement> {
   variant?: "primary" | "secondary";
   error?: string;
+  endIcon?: React.ReactNode;
+  hideArrows?: boolean;
 }
 
 const errorCSS = css`
@@ -27,8 +29,20 @@ const secondaryCSS = css`
   background: var(--secondary-input-bg);
 `;
 
+const noArrowsCSS = css`
+  &::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  & {
+    -moz-appearance: textfield;
+  }
+`;
+
 export const BigInput2 = styled.input<{
   error?: string;
+  hideArrows?: boolean;
   variant: "primary" | "secondary";
 }>`
   width: 100%;
@@ -56,35 +70,45 @@ export const BigInput2 = styled.input<{
   ${({ variant }): FlattenSimpleInterpolation | undefined => {
     if (variant === "secondary") return secondaryCSS;
   }}
+  ${({ hideArrows }): FlattenSimpleInterpolation | undefined => {
+    if (hideArrows) return noArrowsCSS;
+  }}
 `;
 
 const ErrorContainer = styled.div`
   display: flex;
+  width: 100%;
+  height: 100%;
   flex-direction: column;
   gap: 8px;
   justify-content: flex-start;
 `;
 
 export const Input2 = forwardRef(
-  (inputProps: InputProps, ref: ForwardedRef<HTMLInputElement>) => {
+  (inputProps: NewInputProps, ref: ForwardedRef<HTMLInputElement>) => {
     const { error, variant } = inputProps;
     const defaultVariant = variant ?? "primary";
-    if (error) {
-      return (
-        <ErrorContainer>
+    const errorComp = (
+      <Typography
+        color="var(--new-danger)"
+        style={{
+          marginLeft: 12
+        }}
+      >
+        {error}
+      </Typography>
+    );
+    return (
+      <ErrorContainer>
+        <PasswordInputContainer>
           <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />
-          <Typography
-            color="var(--new-danger)"
-            style={{
-              marginLeft: 12
-            }}
-          >
-            {error}
-          </Typography>
-        </ErrorContainer>
-      );
-    }
-    return <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />;
+          {inputProps.endIcon && (
+            <IconContainer>{inputProps.endIcon}</IconContainer>
+          )}
+        </PasswordInputContainer>
+        {error && errorComp}
+      </ErrorContainer>
+    );
   }
 );
 
@@ -99,3 +123,18 @@ export const ConfirmationCodeInput = (
     <Input2 type="text" inputMode="numeric" pattern="[0-9]*" {...inputProps} />
   );
 };
+
+const PasswordInputContainer = styled.div`
+  display: flex;
+  width: 100%;
+  position: relative;
+`;
+
+const IconContainer = styled.div`
+  position: absolute;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 18px;
+  height: 18px;
+`;
