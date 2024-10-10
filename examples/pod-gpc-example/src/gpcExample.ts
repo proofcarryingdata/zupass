@@ -32,7 +32,7 @@ import {
 } from "@pcd/gpc";
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { POD, PODEntries, podEntriesToSimplifiedJSON } from "@pcd/pod";
+import { POD, PODEntries } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
@@ -65,10 +65,7 @@ export async function gpcDemo(): Promise<boolean> {
     } satisfies PODEntries,
     privateKey
   );
-  console.log(
-    "Sword",
-    podEntriesToSimplifiedJSON(podSword.content.asEntries())
-  );
+  console.log("Sword", podSword.content.toJSON());
   const podShield = POD.sign(
     {
       pod_type: { type: "string", value: "item.shield" },
@@ -78,10 +75,7 @@ export async function gpcDemo(): Promise<boolean> {
     } satisfies PODEntries,
     privateKey
   );
-  console.log(
-    "Shield",
-    podEntriesToSimplifiedJSON(podShield.content.asEntries())
-  );
+  console.log("Shield", podShield.content.toJSON());
   const signerPublicKey = podSword.signerPublicKey;
 
   //////////////////////////////////////////////////////////////////////////////
