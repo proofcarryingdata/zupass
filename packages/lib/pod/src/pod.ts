@@ -198,9 +198,11 @@ export class POD {
   public static fromJSON(jsonPOD: JSONPOD): POD {
     requireType("jsonPOD", jsonPOD, "object");
 
-    // Rule out unrecognized keys to avoid lossy parsing of a future format
-    // which might have more fields.  This also implicitly rejects a "version"
-    // field, so that if we add one later old code won't ignore it.
+    // The loading below validates that the expected keys exist with valid
+    // values.  Here we also rule out extra unrecognized keys to avoid lossy
+    // parsing of a future format which might have more fields.  This includes
+    // rejecting any potential "version" field, so that if we add one later old
+    // code won't ignore it.
     if (Object.keys(jsonPOD).length !== 3) {
       throw TypeError(
         "JSON POD should contain only the 3 expected keys: " +
