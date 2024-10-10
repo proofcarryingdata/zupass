@@ -290,7 +290,7 @@ export const NewHomeScreen = (): ReactElement => {
       {tickets.length > 0 && (
         <>
           <SwipeViewContainer>
-            <SwipableViews
+            <SwipableViews.default
               style={{
                 padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
               }}
@@ -391,7 +391,7 @@ export const NewHomeScreen = (): ReactElement => {
                   </Container>
                 );
               })}
-            </SwipableViews>
+            </SwipableViews.default>
             {tickets.length > 1 && (
               <ButtonsContainer>
                 <PageCircleButton

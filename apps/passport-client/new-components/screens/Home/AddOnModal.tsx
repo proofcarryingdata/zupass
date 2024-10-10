@@ -63,7 +63,7 @@ export const AddOnsModal = (): JSX.Element | null => {
   const addOns = activeModal.addOns;
   return (
     <BottomModal isOpen={activeModal.modalType === "ticket-add-ons"}>
-      <SwipeableViews
+      <SwipeableViews.default
         containerStyle={{ width: "100%", paddingBottom: 12 }}
         slideStyle={{ padding: "0 10px" }}
         resistance={true}
@@ -86,7 +86,7 @@ export const AddOnsModal = (): JSX.Element | null => {
             </QRContainer>
           );
         })}
-      </SwipeableViews>
+      </SwipeableViews.default>
       <ContentContainer>
         <Dots amount={addOns.length} activeIdx={activeIdx} />
         <Typography color="var(--text-tertiary)" fontWeight={500} fontSize={14}>
