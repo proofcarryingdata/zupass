@@ -51,10 +51,8 @@ export function DefaultPODPCDCardBody2({ pcd }: { pcd: PODPCD }): JSX.Element {
     <div style={{ display: "flex", gap: 8, flexDirection: "column" }}>
       <TextContainer
         style={{
-          overflowX: "auto",
-          maxHeight: "300px",
-
-          overflowY: "auto",
+          overflow: "auto",
+          maxHeight: "280px",
           backgroundColor: "#F6F8FD"
         }}
       >
