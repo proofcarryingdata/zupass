@@ -13,7 +13,6 @@ type NEW_UI__AddOns = {
 export interface PODTicketPCDCardProps {
   ticketData: IPODTicketData;
   idBasedVerifyURL: string;
-  newUI?: boolean;
   addOns?: NEW_UI__AddOns;
 }
 
@@ -23,20 +22,17 @@ export const PODTicketPCDUI: PCDUI<PODTicketPCD, PODTicketPCDCardProps> = {
 
 function PODTicketCardBody({
   pcd,
-  newUI,
   idBasedVerifyURL,
   addOns
 }: {
   pcd: PODTicketPCD;
   idBasedVerifyURL: string;
-  newUI?: boolean;
   addOns?: NEW_UI__AddOns;
 }): JSX.Element {
   return (
     <PODTicketCardBodyImpl
       ticketData={pcd.claim.ticket}
       idBasedVerifyURL={idBasedVerifyURL}
-      newUI={newUI}
       addOns={addOns}
     />
   );
@@ -45,85 +41,54 @@ function PODTicketCardBody({
 export function PODTicketCardBodyImpl({
   ticketData,
   idBasedVerifyURL,
-  newUI,
   addOns
 }: PODTicketPCDCardProps): JSX.Element {
   const ticketImageRef = useRef<HTMLDivElement>(null);
-  const hasImage = ticketData.imageUrl !== undefined;
 
   const [downloading, setDownloading] = useState(false);
 
-  if (newUI) {
-    return (
-      <NEW_UI__Container>
-        <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-          <TicketQR
-            ticketData={ticketData}
-            idBasedVerifyURL={idBasedVerifyURL}
-          />
-          <NEW_UI__InfoContainer>
-            <NEW_UI__AttendeeName>
-              {ticketData?.attendeeName.toUpperCase() || "Unknown"}
-            </NEW_UI__AttendeeName>
-            <NEW_UI__ExtraInfoContainer>
-              <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
-              <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
-              <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
-            </NEW_UI__ExtraInfoContainer>
-          </NEW_UI__InfoContainer>
-        </NEW_UI__TicketImageContainer>
-        <div>
-          <NEW_UI__ExtraSection
-            onClick={async () => {
-              if (downloading) return;
-              setDownloading(true);
-              const ticketElement = ticketImageRef.current;
-              if (!ticketElement) return;
-              await shareOrDownloadImage(
-                ticketElement,
-                (ticketData?.eventName || "event-ticket-data") + ".png"
-              );
-              setDownloading(false);
-            }}
-          >
-            <NEW_UI__ExtraSectionText $disabled={downloading}>
-              Download ticket
-            </NEW_UI__ExtraSectionText>
-            <DownloadIcon />
-          </NEW_UI__ExtraSection>
-          {addOns && (
-            <NEW_UI__ExtraSection onClick={addOns.onClick}>
-              <NEW_UI__ExtraSectionText>{addOns.text}</NEW_UI__ExtraSectionText>
-              <QRIcon />
-            </NEW_UI__ExtraSection>
-          )}
-        </div>
-      </NEW_UI__Container>
-    );
-  }
   return (
-    <Container>
-      {hasImage && (
-        <TicketInfo>
-          <TicketImage hidePadding={false} ticketData={ticketData} />
-          <span>{ticketData?.attendeeName}</span>
-          <span>{ticketData?.attendeeEmail}</span>
-        </TicketInfo>
-      )}
-
-      {!hasImage && (
-        <>
-          <TicketQR
-            ticketData={ticketData}
-            idBasedVerifyURL={idBasedVerifyURL}
-          />
-          <TicketInfo>
-            <span>{ticketData.attendeeName}</span>
-            <span>{ticketData.attendeeEmail}</span>
-          </TicketInfo>
-        </>
-      )}
-    </Container>
+    <NEW_UI__Container>
+      <NEW_UI__TicketImageContainer ref={ticketImageRef}>
+        <TicketQR ticketData={ticketData} idBasedVerifyURL={idBasedVerifyURL} />
+        <NEW_UI__InfoContainer>
+          <NEW_UI__AttendeeName>
+            {ticketData?.attendeeName.toUpperCase() || "Unknown"}
+          </NEW_UI__AttendeeName>
+          <NEW_UI__ExtraInfoContainer>
+            <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
+            <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
+            <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
+          </NEW_UI__ExtraInfoContainer>
+        </NEW_UI__InfoContainer>
+      </NEW_UI__TicketImageContainer>
+      <div>
+        <NEW_UI__ExtraSection
+          onClick={async () => {
+            if (downloading) return;
+            setDownloading(true);
+            const ticketElement = ticketImageRef.current;
+            if (!ticketElement) return;
+            await shareOrDownloadImage(
+              ticketElement,
+              (ticketData?.eventName || "event-ticket-data") + ".png"
+            );
+            setDownloading(false);
+          }}
+        >
+          <NEW_UI__ExtraSectionText $disabled={downloading}>
+            Download ticket
+          </NEW_UI__ExtraSectionText>
+          <DownloadIcon />
+        </NEW_UI__ExtraSection>
+        {addOns && (
+          <NEW_UI__ExtraSection onClick={addOns.onClick}>
+            <NEW_UI__ExtraSectionText>{addOns.text}</NEW_UI__ExtraSectionText>
+            <QRIcon />
+          </NEW_UI__ExtraSection>
+        )}
+      </div>
+    </NEW_UI__Container>
   );
 }
 export function TicketQR({
@@ -185,35 +150,23 @@ export function linkToTicket(
   return makeIdBasedVerifyLink(baseUrl, encodedId);
 }
 
-const Container = styled.span`
-  padding: 16px;
-  overflow: hidden;
-  width: 100%;
-`;
-
-const TicketInfo = styled.div`
-  margin-top: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-`;
-
-function TicketImage({
-  ticketData,
-  hidePadding
-}: {
-  ticketData: IPODTicketData;
-  hidePadding?: boolean;
-}): JSX.Element {
-  const { imageUrl, imageAltText } = ticketData;
-  if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
-  return (
-    <div style={{ padding: "8px" }}>
-      <img src={imageUrl} alt={imageAltText} />
-    </div>
-  );
-}
+// Might be back soon, consider reuse of this component TicketImage
+// packages/ui/eddsa-ticket-pcd-ui/src/CardBody.tsx
+// function TicketImage({
+//   ticketData,
+//   hidePadding
+// }: {
+//   ticketData: IPODTicketData;
+//   hidePadding?: boolean;
+// }): JSX.Element {
+//   const { imageUrl, imageAltText } = ticketData;
+//   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
+//   return (
+//     <div style={{ padding: "8px" }}>
+//       <img src={imageUrl} alt={imageAltText} />
+//     </div>
+//   );
+// }
 
 const NEW_UI__Container = styled.div`
   font-family: Rubik;

@@ -21,6 +21,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "postbuild": "fix-esm-import-path ./dist/esm/src",
+    "watch": "tsc -b tsconfig.cjs.json tsconfig.esm.json --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"

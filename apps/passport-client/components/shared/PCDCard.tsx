@@ -41,7 +41,6 @@ function PCDCardImpl({
   expanded,
   onClick,
   hideRemoveButton,
-  hideHeader,
   hidePadding
 }: {
   pcd: PCD;
@@ -49,7 +48,6 @@ function PCDCardImpl({
   isMainIdentity?: boolean;
   onClick?: (id: string, cardContainer: HTMLDivElement | undefined) => void;
   hideRemoveButton?: boolean;
-  hideHeader?: boolean;
   hidePadding?: boolean;
 }): JSX.Element {
   const [containerRef, setContainerRef] = useState<HTMLDivElement | undefined>(
@@ -71,11 +69,6 @@ function PCDCardImpl({
     >
       {expanded ? (
         <CardOutlineExpanded>
-          {!hideHeader && (
-            <CardHeader isMainIdentity={isMainIdentity}>
-              <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
-            </CardHeader>
-          )}
           <CardBodyContainer>
             <CardBody
               pcd={pcd}
@@ -251,10 +244,9 @@ const TicketWrapper = forwardRef<
   {
     pcd: EdDSATicketPCD;
     hidePadding?: boolean;
-    newUI?: boolean;
     addOns?: AddOnsProps;
   }
->(({ pcd, newUI, hidePadding, addOns }, ref) => {
+>(({ pcd, hidePadding, addOns }, ref) => {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
@@ -297,7 +289,6 @@ const TicketWrapper = forwardRef<
   return identityPCD ? (
     <div ref={ref}>
       <Card
-        newUI={newUI}
         hidePadding={hidePadding}
         pcd={pcd}
         identityPCD={identityPCD}
@@ -316,12 +307,11 @@ type CardBodyProps = {
   pcd: PCD;
   isMainIdentity: boolean;
   hidePadding?: boolean;
-  newUI?: boolean;
   addOns?: AddOnsProps;
 };
 
 export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
-  ({ pcd, isMainIdentity, hidePadding, newUI, addOns }, ref) => {
+  ({ pcd, isMainIdentity, hidePadding, addOns }, ref) => {
     const pcdCollection = usePCDCollection();
 
     if (isMainIdentity) {
@@ -329,14 +319,7 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
     }
     if (pcdCollection.hasPackage(pcd.type)) {
       if (isEdDSATicketPCD(pcd)) {
-        return (
-          <TicketWrapper
-            ref={ref}
-            newUI={newUI}
-            pcd={pcd}
-            hidePadding={hidePadding}
-          />
-        );
+        return <TicketWrapper ref={ref} pcd={pcd} hidePadding={hidePadding} />;
       }
       if (isPODTicketPCD(pcd)) {
         const Component = PODTicketPCDUI.renderCardBody;
@@ -345,7 +328,6 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
             <Component
               ticketData={pcd.claim.ticket}
               addOns={addOns}
-              newUI={newUI}
               pcd={pcd}
               idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
             />
@@ -374,15 +356,12 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
 );
 export const CardContainer = styled.div`
   width: 100%;
-  padding: 8px;
 `;
 
 export const CardOutlineExpanded = styled.div`
   ${({ disabled }: { disabled?: boolean }): FlattenSimpleInterpolation => css`
     width: 100%;
     border-radius: 12px;
-    border: 1px solid var(--accent-dark);
-    background: var(--primary-dark);
     overflow: hidden;
 
     ${disabled &&
