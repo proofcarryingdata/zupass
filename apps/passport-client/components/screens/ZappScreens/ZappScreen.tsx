@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import React, { ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useEmbeddedScreenState } from "../../../src/appHooks";
 import { ListenMode, useZappServer } from "../../../src/zapp/useZappServer";
