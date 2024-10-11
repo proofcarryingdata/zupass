@@ -24,7 +24,7 @@ import {
   hexToBigInt,
   requireDefinedParameter
 } from "@pcd/util";
-import { Eddsa, buildEddsa } from "circomlibjs";
+import { unpackSignature } from "@zk-kit/eddsa-poseidon";
 import JSONBig from "json-bigint";
 import { Groth16Proof, groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
@@ -84,24 +84,6 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAFrogPCDArgs
   };
 }
 
-let initializedPromise: Promise<void> | undefined;
-let eddsa: Eddsa;
-
-/**
- * A promise designed to make sure that the EdDSA algorithm
- * of the `circomlibjs` package has been properly initialized.
- * It only initializes them once.
- */
-async function ensureEddsaInitialized(): Promise<void> {
-  if (!initializedPromise) {
-    initializedPromise = (async (): Promise<void> => {
-      eddsa = await buildEddsa();
-    })();
-  }
-
-  await initializedPromise;
-}
-
 async function checkProveInputs(args: ZKEdDSAFrogPCDArgs): Promise<{
   frogPCD: EdDSAFrogPCD;
   identityPCD: SemaphoreIdentityPCD;
@@ -154,11 +136,7 @@ function snarkInputForProof(
   const frogAsBigIntArray = frogDataToBigInts(frogPCD.claim.data);
   const signerPubKey = frogPCD.proof.eddsaPCD.claim.publicKey;
 
-  // Note: unpackSignature leaves the R8 point's coordinates in Montgomery
-  // form, which is then reversed by toObject below.
-  // This is a reference to Montgomery form of numbers for modular
-  // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
-  const rawSig = eddsa.unpackSignature(
+  const rawSig = unpackSignature(
     fromHexString(frogPCD.proof.eddsaPCD.proof.signature)
   );
 
@@ -181,8 +159,8 @@ function snarkInputForProof(
     // Frog signature fields
     frogSignerPubkeyAx: hexToBigInt(signerPubKey[0]).toString(),
     frogSignerPubkeyAy: hexToBigInt(signerPubKey[1]).toString(),
-    frogSignatureR8x: eddsa.F.toObject(rawSig.R8[0]).toString(),
-    frogSignatureR8y: eddsa.F.toObject(rawSig.R8[1]).toString(),
+    frogSignatureR8x: rawSig.R8[0].toString(),
+    frogSignatureR8y: rawSig.R8[1].toString(),
     frogSignatureS: rawSig.S.toString(),
 
     // Owner identity secret
@@ -236,8 +214,6 @@ export async function prove(args: ZKEdDSAFrogPCDArgs): Promise<ZKEdDSAFrogPCD> {
   if (!initArgs) {
     throw new Error("cannot make proof: init has not been called yet");
   }
-
-  await ensureEddsaInitialized();
 
   const { frogPCD, identityPCD, externalNullifier, watermark } =
     await checkProveInputs(args);

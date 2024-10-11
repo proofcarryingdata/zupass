@@ -51,13 +51,6 @@ const define = {
         )
       }
     : {}),
-  ...(process.env.STRICH_LICENSE_KEY !== undefined
-    ? {
-        "process.env.STRICH_LICENSE_KEY": JSON.stringify(
-          process.env.STRICH_LICENSE_KEY
-        )
-      }
-    : {}),
   ...(process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined
     ? {
         "process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE": JSON.stringify(
@@ -86,6 +79,7 @@ const define = {
     : {})
 };
 
+const APP_OUT_DIR = "public/js";
 const appOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
@@ -100,9 +94,12 @@ const appOpts: BuildOptions = {
   loader: {
     ".svg": "dataurl"
   },
-  outdir: "public/js",
+  outdir: APP_OUT_DIR,
   metafile: true,
-  define
+  define,
+  splitting: true,
+  format: "esm",
+  drop: process.env.DISABLE_CONSOLE_LOG === "true" ? ["console"] : []
 };
 
 const serviceWorkerOpts: BuildOptions = {
@@ -136,16 +133,12 @@ run(process.argv[2])
   .catch((err) => console.error(err));
 
 async function run(command: string): Promise<void> {
+  clearBuildDirectory(APP_OUT_DIR);
   compileHtml();
   copyGPCArtifacts();
 
   switch (command) {
     case "build":
-      if (!define["process.env.STRICH_LICENSE_KEY"]) {
-        console.warn(
-          "STRICH_LICENSE_KEY is not defined, fallback QR code reader will be used"
-        );
-      }
       const appRes = await build({ ...appOpts, minify: true });
       console.error("Built client");
 
@@ -159,6 +152,26 @@ async function run(command: string): Promise<void> {
         ...serviceWorkerOpts,
         minify: true
       });
+
+      // Create a array of generated chunks for use with the service worker
+      const generatedChunks = Object.keys(appRes.metafile?.outputs || {})
+        .filter((output) => !output.endsWith(".map")) // Exclude .map files
+        .map((output) => output.replace("public", ""));
+
+      // replace the generated chunks placeholder with the actual chunks
+      let serviceWorkerSource = fs.readFileSync(
+        path.join("public", "service-worker.js"),
+        "utf-8"
+      );
+      serviceWorkerSource = serviceWorkerSource.replace(
+        "self.__CHUNKS",
+        JSON.stringify(generatedChunks)
+      );
+      fs.writeFileSync(
+        path.join("public", "service-worker.js"),
+        serviceWorkerSource
+      );
+
       console.error("Built service worker");
       break;
     case "dev":
@@ -219,4 +232,10 @@ function copyGPCArtifacts(): void {
     path.join("public/artifacts/proto-pod-gpc"),
     { recursive: true }
   );
+}
+
+// Function to clear the previous build directory
+function clearBuildDirectory(outDir: string): void {
+  fs.rmSync(outDir, { recursive: true, force: true });
+  console.log(`Cleared build directory: ${outDir}`);
 }

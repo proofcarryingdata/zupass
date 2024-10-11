@@ -104,7 +104,7 @@ describe("podspec should work", async function () {
           type: "int",
           value: POD_INT_MAX + 1n
         },
-        reason: `Invalid value for entry ${"bar"}.       Value ${
+        reason: `Invalid value for entry ${"bar"}.  Value ${
           POD_INT_MAX + 1n
         } is outside supported bounds: (min ${POD_INT_MIN}, max ${POD_INT_MAX}).`,
         path: ["bar"]
@@ -577,7 +577,7 @@ describe("podspec should work", async function () {
         code: IssueCode.invalid_pod_value,
         value: { type: "int", value: 9223372036854775808n },
         reason:
-          "Invalid value for entry intField.       Value 9223372036854775808 is outside supported bounds: (min -9223372036854775808, max 9223372036854775807).",
+          "Invalid value for entry intField.  Value 9223372036854775808 is outside supported bounds: (min -9223372036854775808, max 9223372036854775807).",
         path: ["intField"]
       } satisfies PodspecInvalidPodValueIssue,
       {

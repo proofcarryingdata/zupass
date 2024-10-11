@@ -40,11 +40,9 @@ import {
   v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
 import { assertUnreachable, sleep } from "@pcd/util";
-import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { appConfig } from "./appConfig";
 import {
   notifyLoginToOtherTabs,
@@ -68,7 +66,7 @@ import {
   saveSelf,
   saveSubscriptions
 } from "./localstorage";
-import { getPackages } from "./pcdPackages";
+import { fallbackDeserializeFunction, getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { findUserIdentityPCD } from "./user";
@@ -85,6 +83,7 @@ export type Action =
   | {
       type: "new-passport";
       email: string;
+      newUi?: boolean;
     }
   | {
       type: "create-user-skip-password";
@@ -94,18 +93,21 @@ export type Action =
       autoRegister: boolean;
       /** Zupass will attempt to automatically direct a user to targetFolder on registration */
       targetFolder: string | undefined | null;
+      newUi?: boolean;
     }
   | {
       type: "login";
       email: string;
       password: string;
       token: string;
+      newUi?: boolean;
     }
   | {
       type: "one-click-login";
       email: string;
       code: string;
       targetFolder: string | undefined | null;
+      newUI?: boolean;
     }
   | {
       type: "set-self";
@@ -134,6 +136,7 @@ export type Action =
       type: "load-after-login";
       storage: StorageWithRevision;
       encryptionKey: string;
+      newUi?: boolean;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
   | { type: "password-change-on-other-tab" }
@@ -166,9 +169,11 @@ export type Action =
   | {
       type: "handle-agreed-privacy-notice";
       version: number;
+      newUi?: boolean;
     }
   | {
       type: "prompt-to-agree-privacy-notice";
+      newUi?: boolean;
     }
   | {
       type: "sync-subscription";
@@ -180,9 +185,6 @@ export type Action =
       type: "merge-import";
       collection: PCDCollection;
       pcdsToMergeIds: Set<PCD["id"]>;
-    }
-  | {
-      type: "initialize-strich";
     }
   | { type: "delete-account" }
   | {
@@ -198,7 +200,12 @@ export type Action =
       origin: string;
     }
   | {
-      type: "approve-zapp";
+      type: "pauseSync";
+      value: boolean;
+    }
+  | {
+      type: "zapp-approval";
+      approved: boolean;
     };
 
 export type StateContextValue = {
@@ -219,8 +226,11 @@ export async function dispatch(
   update: ZuUpdate
 ): Promise<void> {
   switch (action.type) {
+    case "pauseSync":
+      update({ pauseSync: action.value });
+      break;
     case "new-passport":
-      return genPassport(state.identityV3, action.email, update);
+      return genPassport(state.identityV3, action.email, update, action.newUi);
     case "create-user-skip-password":
       return createNewUserSkipPassword(
         action.email,
@@ -228,7 +238,8 @@ export async function dispatch(
         action.targetFolder,
         action.autoRegister,
         state,
-        update
+        update,
+        action.newUi
       );
     case "login":
       return createNewUserWithPassword(
@@ -236,13 +247,15 @@ export async function dispatch(
         action.token,
         action.password,
         state,
-        update
+        update,
+        action.newUi
       );
     case "one-click-login":
       return oneClickLogin(
         action.email,
         action.code,
         action.targetFolder,
+        action.newUI ?? false,
         state,
         update
       );
@@ -255,7 +268,12 @@ export async function dispatch(
     case "reset-passport":
       return resetPassport(state, update);
     case "load-after-login":
-      return loadAfterLogin(action.encryptionKey, action.storage, update);
+      return loadAfterLogin(
+        action.encryptionKey,
+        action.storage,
+        update,
+        action.newUi
+      );
     case "set-modal":
       return update({
         modal: action.modal
@@ -308,9 +326,14 @@ export async function dispatch(
         action.permissions
       );
     case "handle-agreed-privacy-notice":
-      return handleAgreedPrivacyNotice(state, update, action.version);
+      return handleAgreedPrivacyNotice(
+        state,
+        update,
+        action.version,
+        action.newUi
+      );
     case "prompt-to-agree-privacy-notice":
-      return promptToAgreePrivacyNotice(state, update);
+      return promptToAgreePrivacyNotice(state, update, action.newUi);
     case "sync-subscription":
       return syncSubscription(
         state,
@@ -326,8 +349,6 @@ export async function dispatch(
         action.collection,
         action.pcdsToMergeIds
       );
-    case "initialize-strich":
-      return initializeStrich(state, update);
     case "delete-account":
       return deleteAccount(state, update);
     case "show-embedded-screen":
@@ -336,8 +357,8 @@ export async function dispatch(
       return hideEmbeddedScreen(state, update);
     case "zapp-connect":
       return zappConnect(state, update, action.zapp, action.origin);
-    case "approve-zapp":
-      return approveZapp(state, update);
+    case "zapp-approval":
+      return zappApproval(state, update, action.approved);
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -347,7 +368,8 @@ export async function dispatch(
 async function genPassport(
   identityV3: Identity,
   email: string,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identityV3 });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
@@ -355,13 +377,15 @@ async function genPassport(
   await savePCDs(pcds);
   update({ pcds });
 
-  window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
+  const route = newUi ? "#/new/new-passport" : "#/new-passport";
+  window.location.hash = `${route}?email=` + encodeURIComponent(email);
 }
 
 async function oneClickLogin(
   email: string,
   code: string,
   targetFolder: string | undefined | null,
+  newUI: boolean,
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
@@ -402,7 +426,8 @@ async function oneClickLogin(
         oneClickLoginResult.value.zupassUser,
         state,
         update,
-        targetFolder
+        targetFolder,
+        newUI
       );
     }
 
@@ -420,7 +445,8 @@ async function oneClickLogin(
         return loadAfterLogin(
           oneClickLoginResult.value.encryptionKey,
           storageResult.value,
-          update
+          update,
+          newUI
         );
       }
 
@@ -435,8 +461,10 @@ async function oneClickLogin(
       });
     }
 
+    const base = newUI ? "#/new" : "#";
     // Account has password - direct to enter password
-    window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
+    window.location.hash =
+      base + "/new-passport?email=" + encodeURIComponent(email);
     return;
   }
 
@@ -455,7 +483,8 @@ async function createNewUserSkipPassword(
   targetFolder: string | undefined | null,
   autoRegister: boolean,
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   update({
     modal: { modalType: "none" }
@@ -497,7 +526,8 @@ async function createNewUserSkipPassword(
       newUserResult.value,
       state,
       update,
-      targetFolder
+      targetFolder,
+      newUi
     );
   }
 
@@ -515,7 +545,8 @@ async function createNewUserWithPassword(
   token: string,
   password: string,
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: encryptionKey } =
@@ -539,7 +570,13 @@ async function createNewUserWithPassword(
   );
 
   if (newUserResult.success) {
-    return finishAccountCreation(newUserResult.value, state, update);
+    return finishAccountCreation(
+      newUserResult.value,
+      state,
+      update,
+      undefined,
+      newUi
+    );
   }
 
   update({
@@ -559,7 +596,8 @@ async function finishAccountCreation(
   user: User,
   state: AppState,
   update: ZuUpdate,
-  targetFolder?: string | null
+  targetFolder?: string | null,
+  newUi = false
 ): Promise<void> {
   // Verify that the identity is correct.
   if (
@@ -631,12 +669,14 @@ async function finishAccountCreation(
   // Account creation is complete.  Close any existing modal, and redirect
   // user if they were in the middle of something.
   update({ modal: { modalType: "none" } });
+
+  const baseRoute = newUi ? "#/new/" : "#/";
   if (hasPendingRequest()) {
-    window.location.hash = "#/login-interstitial";
+    window.location.hash = `${baseRoute}login-interstitial`;
   } else {
     window.location.hash = targetFolder
-      ? `#/?folder=${encodeURIComponent(targetFolder)}`
-      : "#/";
+      ? `${baseRoute}?folder=${encodeURIComponent(targetFolder)}`
+      : baseRoute;
   }
 }
 
@@ -783,11 +823,13 @@ async function removePCD(
 async function loadAfterLogin(
   encryptionKey: string,
   storage: StorageWithRevision,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
-    await getPackages()
+    await getPackages(),
+    fallbackDeserializeFunction
   );
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
@@ -884,7 +926,7 @@ async function loadAfterLogin(
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
-    window.location.hash = "#/";
+    window.location.hash = newUi ? "#/new" : "#/";
   }
 }
 
@@ -923,16 +965,19 @@ async function saveNewPasswordAndBroadcast(
 }
 
 function userInvalid(update: ZuUpdate): void {
+  console.log("user is invalid");
   update({
     userInvalid: true,
-    modal: { modalType: "invalid-participant" }
+    modal: { modalType: "invalid-participant" },
+    bottomModal: { modalType: "invalid-participant" }
   });
 }
 
 function anotherDeviceChangedPassword(update: ZuUpdate): void {
   update({
     anotherDeviceChangedPassword: true,
-    modal: { modalType: "another-device-changed-password" }
+    modal: { modalType: "another-device-changed-password" },
+    bottomModal: { modalType: "another-device-changed-password" }
   });
 }
 
@@ -1128,7 +1173,6 @@ async function doSync(
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }
-
     return {
       loadedIssuedPCDs: true,
       loadingIssuedPCDs: false,
@@ -1353,15 +1397,21 @@ async function updateSubscriptionPermissions(
 async function handleAgreedPrivacyNotice(
   state: AppState,
   update: ZuUpdate,
-  version: number
+  version: number,
+  newUi = false
 ): Promise<void> {
   if (state.self) {
-    saveSelf({ ...state.self, terms_agreed: version });
-    update({
-      self: { ...state.self, terms_agreed: version },
-      loadedIssuedPCDs: false,
-      modal: { modalType: "none" }
-    });
+    if (newUi) {
+      saveSelf({ ...state.self, terms_agreed: version });
+      window.location.hash = "#/new";
+    } else {
+      saveSelf({ ...state.self, terms_agreed: version });
+      update({
+        self: { ...state.self, terms_agreed: version },
+        loadedIssuedPCDs: false,
+        modal: { modalType: "none" }
+      });
+    }
   }
 }
 
@@ -1373,7 +1423,8 @@ async function handleAgreedPrivacyNotice(
  */
 async function promptToAgreePrivacyNotice(
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  newUi = false
 ): Promise<void> {
   const cachedTerms = loadPrivacyNoticeAgreed();
   if (cachedTerms === LATEST_PRIVACY_NOTICE) {
@@ -1384,11 +1435,16 @@ async function promptToAgreePrivacyNotice(
       state.identityV3
     );
   } else {
-    update({
-      modal: {
-        modalType: "privacy-notice"
-      }
-    });
+    if (newUi) {
+      // on new ui this is not a modal
+      window.location.hash = "#/new/updated-terms";
+    } else {
+      update({
+        modal: {
+          modalType: "privacy-notice"
+        }
+      });
+    }
   }
 }
 
@@ -1474,29 +1530,6 @@ async function removeAllPCDsInFolder(
   window.scrollTo({ top: 0 });
 }
 
-async function initializeStrich(
-  state: AppState,
-  update: ZuUpdate
-): Promise<void> {
-  if (!appConfig.strichLicenseKey) {
-    console.log("Strich license key is not defined");
-    return;
-  }
-  try {
-    await Promise.race([
-      StrichSDK.initialize(appConfig.strichLicenseKey),
-      sleep(10000)
-    ]);
-    if (StrichSDK.isInitialized()) {
-      update({ strichSDKstate: "initialized" });
-    } else {
-      update({ strichSDKstate: "error" });
-    }
-  } catch (e) {
-    update({ strichSDKstate: "error" });
-  }
-}
-
 async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   update({
     deletingAccount: true,
@@ -1561,31 +1594,44 @@ async function zappConnect(
   });
 }
 
-async function approveZapp(state: AppState, update: ZuUpdate): Promise<void> {
+async function zappApproval(
+  state: AppState,
+  update: ZuUpdate,
+  approved: boolean
+): Promise<void> {
   const zapp = state.connectedZapp;
   if (!zapp || !state.zappOrigin) {
     return;
   }
-  const newZapp = (await PODPCDPackage.prove({
-    entries: {
-      argumentType: ArgumentTypeName.Object,
-      value: {
-        origin: { type: "string", value: state.zappOrigin },
-        name: { type: "string", value: zapp.name }
+  if (approved) {
+    const newZapp = (await PODPCDPackage.prove({
+      entries: {
+        argumentType: ArgumentTypeName.Object,
+        value: {
+          origin: { type: "string", value: state.zappOrigin },
+          name: { type: "string", value: zapp.name },
+          permissions: {
+            type: "string",
+            value: JSON.stringify(zapp.permissions)
+          }
+        }
+      },
+      privateKey: {
+        argumentType: ArgumentTypeName.String,
+        value: encodePrivateKey(
+          Buffer.from(v3tov4Identity(state.identityV3).export(), "base64")
+        )
+      },
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: `zapp-${zapp.name}-${state.zappOrigin}`
       }
-    },
-    privateKey: {
-      argumentType: ArgumentTypeName.String,
-      value: encodePrivateKey(
-        Buffer.from(v3tov4Identity(state.identityV3).export(), "base64")
-      )
-    },
-    id: {
-      argumentType: ArgumentTypeName.String,
-      value: uuidv4()
-    }
-  })) as PODPCD;
+    })) as PODPCD;
 
-  const newZappSerialized = await PODPCDPackage.serialize(newZapp);
-  return addPCDs(state, update, [newZappSerialized], false, "Zapps");
+    const newZappSerialized = await PODPCDPackage.serialize(newZapp);
+    update({ zappApproved: true });
+    return addPCDs(state, update, [newZappSerialized], true, "Zapps");
+  } else {
+    update({ zappApproved: false });
+  }
 }

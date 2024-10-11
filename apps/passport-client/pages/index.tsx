@@ -34,7 +34,6 @@ import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/Alre
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
-import { NewOneClickLoginScreen } from "../components/screens/LoginScreens/NewOneClickLoginScreen";
 import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
 import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
@@ -43,11 +42,11 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
-import { ScanScreen } from "../components/screens/ScanScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
+import { ApprovePermissionsScreen } from "../components/screens/ZappScreens/ApprovePermissionsScreen";
 import { AuthenticateIFrameScreen } from "../components/screens/ZappScreens/AuthenticateIFrameScreen";
 import { ConnectPopupScreen } from "../components/screens/ZappScreens/ConnectPopupScreen";
 import {
@@ -57,7 +56,19 @@ import {
   GlobalBackground
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
-import ComponentsScreen from "../new-components/ComponentsScreen";
+import ComponentsScreen from "../new-components/screens/ComponentsScreen";
+import { NewHomeScreen } from "../new-components/screens/Home";
+import { NewAlreadyRegisteredScreen } from "../new-components/screens/Login/NewAlreadyRegisteredScreen";
+import { NewCreatePasswordScreen } from "../new-components/screens/Login/NewCreatePasswordScreen";
+import { NewEnterConfirmationCodeScreen } from "../new-components/screens/Login/NewEnterConfirmationCodeScreen";
+import { NewLoginInterstitialScreen } from "../new-components/screens/Login/NewLoginInterstitialScreen";
+import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
+import { NewPassportScreen2 } from "../new-components/screens/Login/NewPassportScreen";
+import { NewSyncExistingScreen } from "../new-components/screens/Login/NewSyncExistingScreen";
+import { NewOneClickLoginScreen2 } from "../new-components/screens/NewOneClickLoginScreen2";
+import { NewPrivacyNoticeScreen } from "../new-components/screens/NewPrivacyNoticeScreen";
+import { NewTermsScreen } from "../new-components/screens/NewTermsScreen";
+import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTermsScreen";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
@@ -130,16 +141,43 @@ function RouterImpl(): JSX.Element {
     );
   }
 
+  const LazyScanScreen = React.lazy(() =>
+    import("../components/screens/ScanScreen").then((module) => ({
+      default: module.ScanScreen
+    }))
+  );
+
   return (
     <HashRouter>
       <Routes>
+        <Route path="/new">
+          <Route index element={<NewHomeScreen />} />
+          <Route path="login" element={<NewLoginScreen />} />
+          <Route path="new-passport" element={<NewPassportScreen2 />} />
+          <Route
+            path="enter-confirmation-code"
+            element={<NewEnterConfirmationCodeScreen />}
+          />
+          <Route path="create-password" element={<NewCreatePasswordScreen />} />
+          <Route
+            path="already-registered"
+            element={<NewAlreadyRegisteredScreen />}
+          />
+          <Route
+            path="login-interstitial"
+            element={<NewLoginInterstitialScreen />}
+          />
+          <Route path="sync-existing" element={<NewSyncExistingScreen />} />
+          <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
+          <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
+          <Route path="terms" element={<NewTermsScreen />} />
+        </Route>
         <Route path="/">
           <Route path="terms" element={<TermsScreen />} />
           <Route index element={<HomeScreen />} />
           <Route path="login" element={<LoginScreen />} />
 
           <Route path="components" element={<ComponentsScreen />} />
-
           <Route
             path="login-interstitial"
             element={<LoginInterstitialScreen />}
@@ -161,7 +199,7 @@ function RouterImpl(): JSX.Element {
           />
           <Route
             path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
-            element={<NewOneClickLoginScreen />}
+            element={<NewOneClickLoginScreen2 />}
           />
           <Route
             path="enter-confirmation-code"
@@ -175,7 +213,14 @@ function RouterImpl(): JSX.Element {
           <Route path="halo" element={<HaloScreen />} />
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
-          <Route path="scan" element={<ScanScreen />} />
+          <Route
+            path="scan"
+            element={
+              <React.Suspense fallback={<RippleLoader />}>
+                <LazyScanScreen />
+              </React.Suspense>
+            }
+          />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
@@ -192,6 +237,10 @@ function RouterImpl(): JSX.Element {
             element={<PodboxScannedTicketScreen />}
           />
           <Route path="connect-popup" element={<ConnectPopupScreen />} />
+          <Route
+            path="approve-permissions"
+            element={<ApprovePermissionsScreen />}
+          />
           <Route
             path="authenticate-iframe"
             element={<AuthenticateIFrameScreen />}
@@ -304,7 +353,7 @@ loadInitialState()
       >
         <GlobalBackground color={"var(--bg-dark-primary)"} />
         <Background>
-          <CenterColumn>
+          <CenterColumn defaultPadding={false}>
             <TextCenter>
               <Spacer h={64} />
               <H1>An error occurred when loading Zupass</H1>

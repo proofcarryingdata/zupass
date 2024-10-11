@@ -1,7 +1,14 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": ["src", "test"],
-  "exclude": ["dist", "build", "node_modules"],
+  "include": [
+    "src",
+    "test"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
   "references": [
     {
       "path": "../emitter"
@@ -17,6 +24,9 @@
     },
     {
       "path": "../../pcd/rsa-pcd"
+    },
+    {
+      "path": "../../pcd/unknown-pcd"
     }
   ],
   "compilerOptions": {

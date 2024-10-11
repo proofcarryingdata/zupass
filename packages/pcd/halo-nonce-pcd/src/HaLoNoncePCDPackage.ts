@@ -1,6 +1,5 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { requireDefinedParameter } from "@pcd/util";
-import { ec } from "elliptic";
 import { sha256 } from "js-sha256";
 import { v4 as uuid } from "uuid";
 import {
@@ -10,8 +9,6 @@ import {
   HaLoNoncePCDProof,
   HaLoNoncePCDTypeName
 } from "./HaLoNoncePCD";
-
-const secp256k1 = new ec("secp256k1");
 
 export async function prove(args: HaLoNoncePCDArgs): Promise<HaLoNoncePCD> {
   if (
@@ -32,6 +29,8 @@ export async function prove(args: HaLoNoncePCDArgs): Promise<HaLoNoncePCD> {
   }
 
   try {
+    const { ec } = await import("elliptic");
+    const secp256k1 = new ec("secp256k1");
     secp256k1.keyFromPublic(claim.pubkeyHex, "hex");
   } catch (e) {
     throw new Error("Unable to decode public key.");
@@ -75,6 +74,8 @@ export async function verify(pcd: HaLoNoncePCD): Promise<boolean> {
 
   let key;
   try {
+    const { ec } = await import("elliptic");
+    const secp256k1 = new ec("secp256k1");
     key = secp256k1.keyFromPublic(pcd.claim.pubkeyHex, "hex");
   } catch (e) {
     return false;

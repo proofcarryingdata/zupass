@@ -16,7 +16,7 @@
   "scripts": {
     "localdb:restart": "yarn localdb:down && yarn localdb:init && yarn localdb:up",
     "localdb:init": "bash -c 'rm -rf apps/passport-server/local-db-data/ && initdb -U admin --pwfile=<(echo password) -A password -D apps/passport-server/local-db-data'",
-    "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
+    "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log -o \"-k $(mktemp -d)\" start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "scripts/build.sh",
     "build:packages": "scripts/build.sh --filter=./packages/**/*  --filter=!./apps/*",
@@ -47,7 +47,6 @@
     "postinstall": "patch-package"
   },
   "devDependencies": {
-    "@types/circomlibjs": "0.1.6",
     "@types/node": "^20.11.28",
     "plop": "^4.0.1",
     "prettier": "^3.0.0",

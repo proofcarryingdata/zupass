@@ -1,5 +1,3 @@
-import { r as BabyJubjubR } from "@zk-kit/baby-jubjub";
-
 /**
  * Name of a POD entry is a string with a limited character set, checked using
  * {@link POD_NAME_REGEX}.
@@ -58,7 +56,11 @@ export const POD_CRYPTOGRAPHIC_MIN = 0n;
 /**
  * Maximum legal value of a `cryptographic` entry value.
  */
-export const POD_CRYPTOGRAPHIC_MAX = BabyJubjubR - 1n;
+export const POD_CRYPTOGRAPHIC_MAX =
+  // Prime order of the alt_bn128 curve.
+  // Should always be equal to the `r` constant in @zk-kit/baby-jubjub.
+  21888242871839275222246405745257275088548364400416034343698204186575808495617n -
+  1n;
 
 /**
  * POD value for constrained integer values intended for comparison and

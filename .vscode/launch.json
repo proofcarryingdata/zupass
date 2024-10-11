@@ -19,6 +19,23 @@
       "port": 4321,
       "restart": true,
       "cwd": "${workspaceRoot}"
+    },
+    {
+      "args": [
+        "-r",
+        "ts-node/register",
+        "--config",
+        "${workspaceFolder}/.mocharc.js",
+        "--no-timeouts",
+        "--exit",
+        "${file}"
+      ],
+      "cwd": "${fileDirname}",
+      "internalConsoleOptions": "openOnSessionStart",
+      "name": "TS Mocha Test (Current File)",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "request": "launch",
+      "type": "node"
     }
   ]
 }
