@@ -912,6 +912,10 @@ export class PretixPipeline implements BasePipeline {
       attendeeName: manualTicket.attendeeName,
       attendeeSemaphoreId: sempahoreId,
       imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
+      qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
+      eventStartDate: event.imageOptions?.eventStartDate,
+      eventLocation: event.imageOptions?.eventLocation,
+      isAddOn: product.isAddOnItem,
       isConsumed: checkIn ? true : false,
       isRevoked: false,
       timestampSigned: Date.now(),
@@ -944,6 +948,10 @@ export class PretixPipeline implements BasePipeline {
       attendeeEmail: manualTicket.attendeeEmail,
       attendeeName: manualTicket.attendeeName,
       imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
+      qrCodeOverrideImageUrl: event.imageOptions?.qrCodeOverrideImageUrl,
+      eventStartDate: event.imageOptions?.eventStartDate,
+      eventLocation: event.imageOptions?.eventLocation,
+      isAddOn: product.isAddOnItem,
       isConsumed: checkIn ? true : false,
       isRevoked: false,
       timestampSigned: Date.now(),
@@ -1199,6 +1207,10 @@ export class PretixPipeline implements BasePipeline {
       timestampSigned: Date.now(),
       owner: semaphoreV4Id,
       imageUrl: this.atomToImageUrl(atom),
+      qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
+      eventStartDate: this.atomToEventStartDate(atom),
+      eventLocation: this.atomToEventLocation(atom),
+      isAddOn: this.atomToIsAddOn(atom),
       isConsumed: atom.isConsumed,
       isRevoked: false,
       ticketCategory: TicketCategory.Generic
@@ -1230,6 +1242,10 @@ export class PretixPipeline implements BasePipeline {
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
       imageUrl: this.atomToImageUrl(atom),
+      qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
+      eventStartDate: this.atomToEventStartDate(atom),
+      eventLocation: this.atomToEventLocation(atom),
+      isAddOn: this.atomToIsAddOn(atom),
       isConsumed: atom.isConsumed,
       isRevoked: false,
       ticketCategory: TicketCategory.Generic
@@ -2157,6 +2173,19 @@ export class PretixPipeline implements BasePipeline {
     return this.getEventById(atom.eventId).name;
   }
 
+  private atomToEventLocation(atom: PretixAtom): string | undefined {
+    return this.getEventById(atom.eventId).imageOptions?.eventLocation;
+  }
+
+  private atomToEventStartDate(atom: PretixAtom): string | undefined {
+    return this.getEventById(atom.eventId).imageOptions?.eventStartDate;
+  }
+
+  private atomToIsAddOn(atom: PretixAtom): boolean | undefined {
+    return this.getProductById(this.getEventById(atom.eventId), atom.productId)
+      .isAddOnItem;
+  }
+
   private atomToTicketName(atom: PretixAtom): string {
     const event = this.getEventById(atom.eventId);
     const product = this.getProductById(event, atom.productId);
@@ -2174,6 +2203,13 @@ export class PretixPipeline implements BasePipeline {
 
   private atomToPretixEventId(ticketAtom: PretixAtom): string {
     return this.getEventById(ticketAtom.eventId).externalId;
+  }
+
+  private atomToQrCodeOverrideImageUrl(
+    ticketAtom: PretixAtom
+  ): string | undefined {
+    return this.getEventById(ticketAtom.eventId).imageOptions
+      ?.qrCodeOverrideImageUrl;
   }
 
   private atomToImageUrl(ticketAtom: PretixAtom): string | undefined {

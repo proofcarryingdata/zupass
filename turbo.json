@@ -230,6 +230,7 @@
     "DEVCON_PODBOX_API_KEY",
     "DEVCON_PODBOX_API_URL",
     "DEVCON_PIPELINE_ID",
+    "DISABLE_CONSOLE_LOG",
     "//// add env vars above this line ////"
   ]
 }
