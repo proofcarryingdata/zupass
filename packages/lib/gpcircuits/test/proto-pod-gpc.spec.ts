@@ -39,7 +39,6 @@ import {
   zipLists
 } from "../src";
 import { ARTIFACTS_DIR, chooseCircuitFamily } from "../src/internal";
-import { ensureCircuitParamSet } from "../src/util";
 import {
   circomkit,
   ownerIdentity,
