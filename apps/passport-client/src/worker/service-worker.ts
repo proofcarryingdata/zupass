@@ -27,6 +27,14 @@ const FETCH_TIMEOUT_MS = 5000;
 const CACHE_VERSION = "v2";
 
 /**
+ * The `GENERATED_CHUNKS` is a placeholder that is replaced during the build process
+ * (via esbuild) with an array of URLs representing the files to be cached.
+ * These will be included in the EPHMERAL_CACHE_RESOURCES set below.
+ */
+// @ts-expect-error - This is a placeholder that is replaced during the build process.
+const GENERATED_CHUNKS = self.__CHUNKS;
+
+/**
  * Ephemeral cache is for resources which may change frequently, where we
  * want to optimize for freshness, but allow caching for offline.  This cache
  * is also updated dynamically as resources are fetched, including for any
@@ -40,7 +48,8 @@ const EPHEMERAL_CACHE_RESOURCES = new Set([
   "/",
   "/index.html",
   "/global-zupass.css",
-  "/js/index.js"
+  "/js/index.js",
+  ...GENERATED_CHUNKS
 ]);
 
 /**
