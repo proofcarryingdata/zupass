@@ -18,7 +18,7 @@ import {
   GPCRevealedClaims,
   gpcVerify
 } from "@pcd/gpc";
-import { encodePublicKey, POD, PODEntries } from "@pcd/pod";
+import { encodePrivateKey, encodePublicKey, POD, PODEntries } from "@pcd/pod";
 import { PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import {
   PODTicketPCD,
@@ -32,6 +32,7 @@ import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";
 import { collectionIdToFolderName, getPODsForCollections } from "./collections";
 import { QuerySubscriptionManager } from "./query_subscription_manager";
+import { ListenMode } from "./useZappServer";
 
 abstract class BaseZappServer {
   constructor(
@@ -207,6 +208,36 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
     if (!this.getPermissions().SIGN_POD) {
       throw new MissingPermissionError("SIGN_POD", "pod.sign");
     }
+    if (
+      entries.pod_type &&
+      typeof entries.pod_type.value === "string" &&
+      entries.pod_type.value.substring(0, 7) === "zupass_"
+    ) {
+      throw new Error(`The pod_type prefix "zupass_" is reserved.`);
+    }
+
+    // If the Zapp is embedded, it can sign a POD directly
+    const zappIsEmbedded =
+      this.getContext().getState().listenMode ===
+      ListenMode.LISTEN_IF_NOT_EMBEDDED;
+
+    const zappOrigin = this.getContext().getState().zappOrigin;
+
+    if (
+      zappIsEmbedded ||
+      (zappOrigin && appConfig.zappAllowedSignerOrigins.includes(zappOrigin))
+    ) {
+      const pod = POD.sign(
+        entries,
+        encodePrivateKey(
+          Buffer.from(
+            v3tov4Identity(this.getContext().getState().identityV3).export(),
+            "base64"
+          )
+        )
+      );
+      return p.podToPODData(pod);
+    }
     return new Promise((resolve, reject) => {
       this.getContext().dispatch({
         type: "show-embedded-screen",
@@ -225,6 +256,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
             this.getContext().dispatch({
               type: "hide-embedded-screen"
             });
+
             reject(new Error("User cancelled"));
           }
         }
