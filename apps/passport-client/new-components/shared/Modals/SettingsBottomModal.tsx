@@ -6,7 +6,7 @@ import {
   EyeIcon,
   InformationCircleIcon,
   TrashIcon
-} from "@heroicons/react/24/solid";
+} from "@heroicons/react/16/solid";
 import { useMemo } from "react";
 import styled from "styled-components";
 import {
@@ -39,6 +39,7 @@ export function SettingsBottomModal(): JSX.Element {
       {
         title: "About Zupass",
         icon: <InformationCircleIcon width={24} height={24} color="#7C8BB4" />,
+
         onClick: (): void => {
           dispatch({
             type: "set-bottom-modal",
