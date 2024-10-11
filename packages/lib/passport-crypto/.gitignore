@@ -1,5 +1,5 @@
 *.d.ts
-!src/types/index.d.ts
+!src/types/*.d.ts
 *.d.ts.map
 *.js
 !.eslintrc.js

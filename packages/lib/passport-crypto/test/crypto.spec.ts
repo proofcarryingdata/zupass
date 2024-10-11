@@ -1,4 +1,4 @@
-import assert from "assert";
+import { assert, describe, it } from "vitest";
 import { passportDecrypt, passportEncrypt } from "../src/endToEndEncryption";
 import { PCDCrypto } from "../src/passportCrypto";
 import {
