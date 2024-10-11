@@ -7,6 +7,7 @@ import {
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { uniqWith } from "lodash";
 import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
@@ -29,7 +30,6 @@ import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
-import { uniqWith } from "lodash";
 
 const CARD_GAP = 8;
 const TICKET_VERTICAL_GAP = 20;
@@ -280,7 +280,6 @@ export const NewHomeScreen = (): ReactElement => {
             >
               {tickets.map(([eventId, packs], i) => {
                 const eventDetails = getEventDetails(packs[0]);
-                console.log(eventDetails);
                 return (
                   <Container key={eventId} ticketsAmount={tickets.length}>
                     <TicketCard
