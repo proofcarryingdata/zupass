@@ -75,7 +75,7 @@ const DateChipContainer = styled.div`
 
 interface TicketCardProps {
   title: string;
-  address: string;
+  address?: string;
   ticketWidth?: number | string;
   ticketCount: number;
   ticketDate?: string;
@@ -120,7 +120,9 @@ export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
             fontWeight={400}
             color="rgba(124, 139, 180, 1)"
           >
-            {`${address} • ${ticketCount} ticket${ticketCount > 1 ? "s" : ""}`}
+            {`${address ? `${address} • ` : ""}${ticketCount} ticket${
+              ticketCount > 1 ? "s" : ""
+            }`}
           </Typography>
         </TicketCardDetails>
       </TicketCardContainer>
