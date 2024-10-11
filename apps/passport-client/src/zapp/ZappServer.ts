@@ -18,7 +18,7 @@ import {
   GPCRevealedClaims,
   gpcVerify
 } from "@pcd/gpc";
-import { encodePrivateKey, encodePublicKey, POD, PODEntries } from "@pcd/pod";
+import { encodePublicKey, POD, PODEntries } from "@pcd/pod";
 import { PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
 import {
   PODTicketPCD,
@@ -207,16 +207,30 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
     if (!this.getPermissions().SIGN_POD) {
       throw new MissingPermissionError("SIGN_POD", "pod.sign");
     }
-    const pod = POD.sign(
-      entries,
-      encodePrivateKey(
-        Buffer.from(
-          v3tov4Identity(this.getContext().getState().identityV3).export(),
-          "base64"
-        )
-      )
-    );
-    return p.podToPODData(pod);
+    return new Promise((resolve, reject) => {
+      this.getContext().dispatch({
+        type: "show-embedded-screen",
+        screen: {
+          type: EmbeddedScreenType.EmbeddedSignPOD,
+          entries,
+          callback: (result: PODData) => {
+            this.getContext().dispatch({
+              type: "hide-embedded-screen"
+            });
+            this.getAdvice().hideClient();
+            resolve(result);
+          },
+          onCancel: () => {
+            this.getAdvice().hideClient();
+            this.getContext().dispatch({
+              type: "hide-embedded-screen"
+            });
+            reject(new Error("User cancelled"));
+          }
+        }
+      });
+      this.getAdvice().showClient();
+    });
   }
 }
 
