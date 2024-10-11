@@ -21,8 +21,17 @@ export type JSONPODMembershipLists = Record<
   JSONPODValue[] | JSONPODValueTuple[]
 >;
 
-// TODO(artwyman): Cleanup, document, and unit test
-
+/**
+ * Parses {@link PODMembershipLists} from the JSON-compatible format,
+ * potentially received directly from `JSON.parse`.  The format for values is
+ * as described by {@link JSONPODValue}, and the additional objects/arrays
+ * containing the values are standard JSON.
+ *
+ * @param jsonMembershipLists a JSON-compatible representation of
+ *   `PODMembershipLists`
+ * @returns `PODMembershipLists` parsed from JSON
+ * @throws if the serialized form is invalid
+ */
 export function podMembershipListsFromJSON(
   jsonMembershipLists: JSONPODMembershipLists
 ): PODMembershipLists {
@@ -52,6 +61,16 @@ export function podMembershipListsFromJSON(
   return resultLists;
 }
 
+/**
+ * Converts {@link PODMembershipLists} to the JSON-compatible format which
+ * can be serialized directly via `JSON.stringify`.  The format for values is
+ * as described by {@link JSONPODValue}, and the additional objects/arrays
+ * containing the values are passed through as pure JSON.
+ *
+ * @param membershipLists `PODMembershipLists` to convert
+ * @returns JSON representation
+ * @throws if the serialized form is invalid
+ */
 export function podMembershipListsToJSON(
   membershipLists: PODMembershipLists
 ): JSONPODMembershipLists {
@@ -82,4 +101,5 @@ export function podMembershipListsToJSON(
 }
 
 // TODO(POD-P1): Finish gpcJSON for GPC config/inputs/outputs.  So far it
-// only covers POD values.
+// only covers use cases covered by POD values contained in simple JSON
+// containers.
