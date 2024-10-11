@@ -1,8 +1,4 @@
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  XMarkIcon
-} from "@heroicons/react/24/solid";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
 import {
   EdDSATicketPCDTypeName,
   ITicketData,
@@ -12,13 +8,7 @@ import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { uniqWith } from "lodash";
-import React, {
-  ReactElement,
-  useEffect,
-  useMemo,
-  useRef,
-  useState
-} from "react";
+import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, {
@@ -283,7 +273,7 @@ export const NewHomeScreen = (): ReactElement => {
       >
         <SwipeViewContainer>
           <FloatingReturnButton onClick={() => setZappUrl("")}>
-            <XMarkIcon color="#000000" opacity={0.6} height={24} />
+            <span>Back to Zupass</span>
           </FloatingReturnButton>
           <ZappScreen url={zappUrl} />
         </SwipeViewContainer>
@@ -530,22 +520,26 @@ const ZappButton = styled.button`
 
 const FloatingReturnButton = styled.div`
   position: fixed;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  cursor: pointer;
-  top: 20px;
-
-  background-color: #ffffff;
+  left: 50%;
+  bottom: 20px;
   z-index: 2;
-  margin-left: 24px;
-  box-shadow: 0px 1px 3px 0px #0000001a;
+  transform: translateX(-50%);
 
-  padding: 8px;
+  display: inline-flex;
+  padding: 8px 20px;
+  align-items: flex-start;
+
   border-radius: 200px;
-  opacity: 0px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
 
-  justify-content: center;
-  align-items: center;
-  display: flex;
+  /* text */
+  color: #fff;
+  text-align: center;
+  font-family: Rubik;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 135%;
 `;
