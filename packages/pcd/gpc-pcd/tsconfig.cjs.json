@@ -14,9 +14,6 @@
       "path": "../../lib/gpc/tsconfig.cjs.json"
     },
     {
-      "path": "../../lib/gpcircuits/tsconfig.cjs.json"
-    },
-    {
       "path": "../../lib/pcd-types/tsconfig.cjs.json"
     },
     {

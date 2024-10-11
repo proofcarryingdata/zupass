@@ -12,18 +12,16 @@ import {
 } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
-import { readFileSync as fsReadFile } from "fs";
 import _ from "lodash";
 import "mocha";
 import path from "path";
 import { poseidon1, poseidon2 } from "poseidon-lite";
-import { env } from "process";
+
 import {
   CircuitArtifactPaths,
   CircuitSignal,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
   ProtoPODGPC,
-  ProtoPODGPCCircuitDesc,
   ProtoPODGPCCircuitParams,
   ProtoPODGPCInputNamesType,
   ProtoPODGPCInputs,
@@ -40,11 +38,8 @@ import {
   protoPODGPCCircuitParamArray,
   zipLists
 } from "../src";
-import {
-  artifactsDir,
-  ensureCircuitParamSet,
-  jsonFileConfig
-} from "../src/util";
+import { ARTIFACTS_DIR, chooseCircuitFamily } from "../src/internal";
+import { ensureCircuitParamSet } from "../src/util";
 import {
   circomkit,
   ownerIdentity,
@@ -56,18 +51,8 @@ import {
   sampleEntries3
 } from "./common";
 
-// Test circuit parameters. If the environment variable `GPC_FAMILY_TYPE` is set
-// to "prod", then the production circuit family and artifacts will be used.
-const familyType = env["GPC_FAMILY_TYPE"];
-const circuitParamType = ensureCircuitParamSet(familyType ?? "test");
-export const TEST_CIRCUIT_PARAMETERS: [ProtoPODGPCCircuitParams, number][] =
-  JSON.parse(
-    fsReadFile(jsonFileConfig[circuitParamType].circuitParamJsonFile, {
-      encoding: "utf8"
-    })
-  ) as [ProtoPODGPCCircuitParams, number][];
-export const testCircuitFamily: ProtoPODGPCCircuitDesc[] =
-  ProtoPODGPC.circuitFamilyFromParams(TEST_CIRCUIT_PARAMETERS);
+// Choose circuit family according to environment variable `GPC_FAMILY_VARIANT`.
+const { circuitParamType, testCircuitFamily } = chooseCircuitFamily();
 
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
@@ -979,7 +964,7 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
   // - Negative testing of invalid inputs.
 });
 
-describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", function () {
+describe(`proto-pod-gpc.ProtoPODGPC (Compiled ${circuitParamType} artifacts) should work`, function () {
   function prepGroth16Test(
     params: ProtoPODGPCCircuitParams
   ): CircuitArtifactPaths {
@@ -993,7 +978,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
     }
 
     const artifacts = gpcArtifactPaths(
-      path.join(artifactsDir, circuitParamType),
+      path.join(ARTIFACTS_DIR, circuitParamType),
       circuitDesc
     );
     expect(artifacts.wasmPath).to.not.be.empty;

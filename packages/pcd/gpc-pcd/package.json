@@ -29,7 +29,6 @@
   },
   "dependencies": {
     "@pcd/gpc": "0.0.8",
-    "@pcd/gpcircuits": "0.1.7",
     "@pcd/pcd-types": "0.11.4",
     "@pcd/pod-pcd": "0.1.7",
     "@pcd/semaphore-identity-pcd": "0.11.6",

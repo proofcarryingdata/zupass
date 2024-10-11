@@ -6,7 +6,9 @@ import {
   gpcArtifactPaths,
   unpkgDownloadRootURL
 } from "../src";
-import { testCircuitFamily } from "./proto-pod-gpc.spec";
+import { chooseCircuitFamily } from "../src/internal";
+
+const { testCircuitFamily } = chooseCircuitFamily();
 
 describe("artifact URL helpers should work", function () {
   it("gpcArtifactPaths should work for file paths", async () => {

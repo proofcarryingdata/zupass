@@ -7,6 +7,7 @@ import {
 import { CircomkitConfig } from "circomkit";
 import { PathLike } from "fs";
 import path from "path";
+import { JSON_FILE_CONFIG } from "./internal";
 import { ObjectModuleInputs } from "./object";
 import { CircuitSignal } from "./types";
 
@@ -246,39 +247,17 @@ export function dummyObjectSignals(
   });
 }
 
-// Constants specifying locations of files and directories relevant to circuit
-// parameter and artifact generation.
-export const projectDir = path.join(__dirname, "..");
-export const artifactsDir = path.join(projectDir, "artifacts");
-export const circuitDir = path.join(projectDir, "circuits", "main");
-const paramDir = path.join(projectDir, "scripts", "parameters");
-export const jsonFileConfig: Record<string, Record<string, string>> = {
-  prod: {
-    circuitParamGenJsonFile: path.join(paramDir, "paramGen.json"),
-    circuitParamJsonFile: path.join(
-      projectDir,
-      "src",
-      "circuitParameters.json"
-    ),
-    circuitsJsonFile: path.join(projectDir, "circuits.json")
-  },
-  test: {
-    circuitParamGenJsonFile: path.join(paramDir, "testParamGen.json"),
-    circuitParamJsonFile: path.join(
-      projectDir,
-      "src",
-      "testCircuitParameters.json"
-    ),
-    circuitsJsonFile: path.join(projectDir, "testCircuits.json")
-  }
-};
-
 /**
  * Ensures that the type of the set of circuit parameters (if provided) is
  * valid.  At present, this amounts to checking for either "prod" or "test".
+ *
+ * @param name optional string identifying the set of circuit parameters
+ * @returns string identifying the set of circuit parameters ("prod" if
+ * unspecified).
+ * @throws Error if the circuit parameter family set specified is inadmissible.
  */
 export function ensureCircuitParamSet(name: string | undefined): string {
-  const admissibleParamSets = Object.keys(jsonFileConfig);
+  const admissibleParamSets = Object.keys(JSON_FILE_CONFIG);
   if (name && !admissibleParamSets.includes(name)) {
     throw new Error(
       `Circuit parameters must be one of the following types: ${admissibleParamSets}`

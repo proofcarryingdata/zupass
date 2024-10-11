@@ -1,16 +1,13 @@
 import * as path from "path";
 import { argv } from "process";
-import {
-  artifactsDir,
-  ensureCircuitParamSet,
-  jsonFileConfig
-} from "../src/util";
-import { genCircuitArtifacts } from "./util";
+import { ARTIFACTS_DIR, JSON_FILE_CONFIG } from "../src/internal";
+import { ensureCircuitParamSet } from "../src/util";
+import { genCircuitArtifacts } from "./common";
 
 async function main(): Promise<void> {
   const artifactType = ensureCircuitParamSet(argv[2]);
-  const { circuitsJsonFile } = jsonFileConfig[artifactType];
-  const artifactDir = path.join(artifactsDir, artifactType);
+  const { circuitsJsonFile } = JSON_FILE_CONFIG[artifactType];
+  const artifactDir = path.join(ARTIFACTS_DIR, artifactType);
 
   return genCircuitArtifacts(circuitsJsonFile, artifactDir).then(() =>
     console.log("gen-artifacts completed successfully!")

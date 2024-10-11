@@ -15,7 +15,7 @@
         "circomkit.json",
         "testCircuits.json"
       ],
-      "outputs": ["artifacts/**", "circuits/main/**"],
+      "outputs": ["artifacts/test/**", "circuits/main/**"],
       "outputLogs": "new-only",
       "cache": true
     },

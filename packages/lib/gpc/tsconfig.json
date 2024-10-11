@@ -7,7 +7,8 @@
     "outDir": "dist",
     "declarationDir": "dist/types",
     // Include all source files, including tests
-    "rootDir": "."
+    "rootDir": ".",
+    "typeRoots": ["../gpcircuits/src/declarations"]
   },
   // Some artifact-including packages need to import a JSON file
   "include": [

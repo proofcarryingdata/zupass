@@ -1,10 +1,4 @@
-import {
-  ProtoPODGPC,
-  ProtoPODGPCCircuitDesc,
-  ProtoPODGPCCircuitParams,
-  ensureCircuitParamSet,
-  jsonFileConfig
-} from "@pcd/gpcircuits";
+import { ProtoPODGPCCircuitDesc } from "@pcd/gpcircuits";
 import {
   POD,
   PODCryptographicValue,
@@ -15,10 +9,9 @@ import {
   POD_INT_MIN
 } from "@pcd/pod";
 import { expect } from "chai";
-import { readFileSync as fsReadFile } from "fs";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
-import { env } from "process";
+import { chooseCircuitFamily } from "../../gpcircuits/src/internal";
 import {
   GPCArtifactSource,
   GPCArtifactStability,
@@ -52,18 +45,8 @@ import {
   sampleEntries2
 } from "./common";
 
-// Test circuit parameters. If the environment variable `GPC_FAMILY_TYPE` is set
-// to "prod", then the production circuit family and artifacts will be used.
-const familyType = env["GPC_FAMILY_TYPE"];
-const circuitParamType = ensureCircuitParamSet(familyType ?? "test");
-export const TEST_CIRCUIT_PARAMETERS: [ProtoPODGPCCircuitParams, number][] =
-  JSON.parse(
-    fsReadFile(jsonFileConfig[circuitParamType].circuitParamJsonFile, {
-      encoding: "utf8"
-    })
-  ) as [ProtoPODGPCCircuitParams, number][];
-const testCircuitFamily: ProtoPODGPCCircuitDesc[] =
-  ProtoPODGPC.circuitFamilyFromParams(TEST_CIRCUIT_PARAMETERS);
+// Choose circuit family according to environment variable `GPC_FAMILY_VARIANT`.
+const { circuitParamType, testCircuitFamily } = chooseCircuitFamily();
 
 // Test-specific GPC proof and verification functions
 const gpcCheckProvable = (
@@ -94,7 +77,7 @@ const gpcVerify = (
     testCircuitFamily
   );
 
-describe("gpc library (Compiled test artifacts) should work", async function () {
+describe(`gpc library (Compiled ${circuitParamType} artifacts) should work`, async function () {
   function makeMinimalArgs(
     includeWatermark?: boolean,
     includeList?: boolean,

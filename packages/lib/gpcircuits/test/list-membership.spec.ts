@@ -15,12 +15,14 @@ import {
   processSingleList,
   zipLists
 } from "../src";
+import { chooseCircuitFamily } from "../src/internal";
 import { circomkit } from "./common";
-import { TEST_CIRCUIT_PARAMETERS } from "./proto-pod-gpc.spec";
+
+const { testCircuitFamily } = chooseCircuitFamily();
 
 describe("List membership helpers should work", function () {
   const params1 = {
-    ...TEST_CIRCUIT_PARAMETERS[0][0],
+    ...testCircuitFamily[0],
     maxEntries: 6,
     tupleArity: 2,
     maxLists: 3,
@@ -50,7 +52,7 @@ describe("List membership helpers should work", function () {
     const listComparisonValueIndex2 = [0, 2];
 
     // Restrict attention to those parameters allowing a list membership check.
-    for (const params of TEST_CIRCUIT_PARAMETERS.map((pair) => pair[0]).filter(
+    for (const params of testCircuitFamily.filter(
       (params) => params.maxListElements > 0
     )) {
       // Truncate list if necessary.

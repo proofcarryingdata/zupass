@@ -7,3 +7,4 @@ ptau
 circuits/main
 circuits/test
 artifacts/test
+artifacts/prod

@@ -14,9 +14,6 @@
       "path": "../../lib/gpc/tsconfig.esm.json"
     },
     {
-      "path": "../../lib/gpcircuits/tsconfig.esm.json"
-    },
-    {
       "path": "../../lib/pcd-types/tsconfig.esm.json"
     },
     {

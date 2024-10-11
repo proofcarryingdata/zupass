@@ -31,10 +31,20 @@ import {
   makeCircuitIdentifier
 } from "./gpcUtil";
 
+/**
+ * ProtoPODGPC circuit family type.
+ */
+export type GPCCircuitFamily = ProtoPODGPCCircuitDesc[];
+
+/**
+ * Default production ProtoPODGPC circuit family.
+ */
+export const DefaultCircuitFamily = ProtoPODGPC.CIRCUIT_FAMILY;
+
 function bindConfigWithRequirements(
   proofConfig: GPCProofConfig,
   circuitReq: GPCRequirements,
-  circuitFamily: ProtoPODGPCCircuitDesc[]
+  circuitFamily: GPCCircuitFamily
 ): { boundConfig: GPCBoundConfig; circuitDesc: ProtoPODGPCCircuitDesc } {
   // Assumes proofConfig has already been checked by the caller.
   const circuitDesc = checkCircuitRequirements(
@@ -61,13 +71,13 @@ function bindConfigWithRequirements(
  * will work for all possible inputs. In particular the max POD size supported
  * by an auto-selected circuit might not be sufficient for all inputs.  If you
  * anticipate a larger size, you should pick your circuit explicitly using
- * `proofConfig.circuitIdentifier`.  (See {@link ProtoPODGPC.CIRCUIT_FAMILY}
+ * `proofConfig.circuitIdentifier`.  (See {@link DefaultCircuitFamily}
  * for supported circuits.)
  *
  * @param proofConfig the raw proof config to bind.
- * @param [circuitFamily=ProtaoPODGPC.CIRCUIT_FAMILY] the circuit family to
- *   pick the circuit from. This is assumed to be sorted in order of
- *   increasing circuit count.
+ * @param [circuitFamily=ProtaoPODGPC.CIRCUIT_FAMILY] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
  * @returns a new configuration object bound and canonicalized (see
  *   {@link GPCBoundConfig}), as well as a description of selected circuit.
  * @throws TypeError if the input configuration is malformed
@@ -76,7 +86,7 @@ function bindConfigWithRequirements(
  */
 export function gpcBindConfig(
   proofConfig: GPCProofConfig,
-  circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
 ): {
   boundConfig: GPCBoundConfig;
   circuitDesc: ProtoPODGPCCircuitDesc;
@@ -105,14 +115,14 @@ export function gpcBindConfig(
  * circuit which can fit the configuration and inputs.  If you need a specific
  * circuit to be used instead (e.g. to support larger object sizes for
  * future reuse), you can specify that in `proofConfig.circuitIdentifier`.
- * (See {@link ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
+ * (See {@link DefaultCircuitFamily} for supported circuits.)
  *
  * @param proofConfig the configuration specifying the constraints to be proven.
  * @param proofInputs the input data (PODs and other values) specific to this
  *  proof.
- * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to
- *   pick the circuit from. This is assumed to be sorted in order of
- *   increasing circuit count.
+ * @param [circuitFamily=DefaultCircuitFamily] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
  * @returns a new configuration object bound and canonicalized (see
  *   {@link GPCBoundConfig}), as well as a description of selected circuit.
  * @throws TypeError if any of the arguments is malformed
@@ -122,7 +132,7 @@ export function gpcBindConfig(
 export function gpcCheckProvable(
   proofConfig: GPCProofConfig,
   proofInputs: GPCProofInputs,
-  circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
 ): {
   boundConfig: GPCBoundConfig;
   circuitDesc: ProtoPODGPCCircuitDesc;
@@ -141,7 +151,7 @@ export function gpcCheckProvable(
  * circuit which can fit the configuration and inputs.  If you need a specific
  * circuit to be used instead (e.g. to support larger object sizes for
  * future reuse), you can specify that in `proofConfig.circuitIdentifier`.
- * (See {@link ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
+ * (See {@link DefaultCircuitFamily} for supported circuits.)
  *
  * @param proofConfig the configuration specifying the constraints to be proven.
  * @param proofInputs the input data (PODs and other values) specific to this
@@ -149,9 +159,9 @@ export function gpcCheckProvable(
  * @param pathToArtifacts the path to the root folder where circuit artifacts
  *   can be found.  This may be a URL (in browser) or a filesystem path (in
  *   Node).
- * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to
- *   pick the circuit from. This is assumed to be sorted in order of
- *   increasing circuit count.
+ * @param [circuitFamily=DefaultCircuitFamily] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
  * @returns The Groth16 proof, a bound configuration usable for reliable
  *   verification or future proofs (see {@link GPCBoundConfig}), and the
  *   revealed claims of this proof (see {@link GPCRevealedClaims}).
@@ -162,7 +172,7 @@ export async function gpcProve(
   proofConfig: GPCProofConfig,
   proofInputs: GPCProofInputs,
   pathToArtifacts: string,
-  circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
 ): Promise<{
   proof: GPCProof;
   boundConfig: GPCBoundConfig;
@@ -212,9 +222,9 @@ export async function gpcProve(
  * @param pathToArtifacts the path to the root foler where circuit artifacts
  *   can be found.  This may be a URL (in browser) or a filesystem path (in
  *   Node).
- * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to
- *   pick the circuit from. This is assumed to be sorted in order of
- *   increasing circuit count.
+ * @param [circuitFamily=DefaultCircuitFamily] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
  * @returns true if the proof is valid
  * @throws TypeError if any of the arguments is malformed
  * @throws Error if the proof cannot be verified
@@ -224,7 +234,7 @@ export async function gpcVerify(
   boundConfig: GPCBoundConfig,
   revealedClaims: GPCRevealedClaims,
   pathToArtifacts: string,
-  circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
 ): Promise<boolean> {
   const circuitReq = checkVerifyArgs(boundConfig, revealedClaims);
   const circuitDesc = checkCircuitRequirements(

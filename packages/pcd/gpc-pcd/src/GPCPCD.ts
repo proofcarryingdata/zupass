@@ -1,5 +1,4 @@
-import { GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
-import { ProtoPODGPCCircuitDesc } from "@pcd/gpcircuits";
+import { GPCBoundConfig, GPCCircuitFamily, GPCRevealedClaims } from "@pcd/gpc";
 import {
   PCD,
   PCDArgument,
@@ -42,9 +41,9 @@ export type GPCPCDInitArgs = {
   /**
    * This is the circuit family the GPC compiler will pick the circuit from. If
    * unspecified, the circuit family underlying the pcd/proto-pod-gpc-artifacts
-   * NPM package will be used.
+   * NPM package, viz. the production variant, will be used.
    */
-  circuitFamily?: ProtoPODGPCCircuitDesc[];
+  circuitFamily?: GPCCircuitFamily;
 };
 
 /**

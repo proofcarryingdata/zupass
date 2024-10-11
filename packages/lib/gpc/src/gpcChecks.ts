@@ -61,6 +61,7 @@ import {
   splitPODEntryIdentifier,
   widthOfEntryOrTuple
 } from "./gpcUtil";
+
 // TODO(POD-P2): Split out the parts of this which should be public from
 // internal implementation details.  E.g. the returning of ciruit parameters
 // isn't relevant to checking objects after deserialization.
@@ -1276,9 +1277,9 @@ export function checkVerifyClaimsForConfig(
  * size parameters of a desired configuration.
  *
  * @param circuitReq the circuit size requirements
- * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to
- *   pick the circuit from. This is assumed to be sorted in order of
- *   increasing circuit count.
+ * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
  * @returns the circuit description, or undefined if no circuit can handle
  *   the required parameters.
  * @throws Error if there are no circuits satisfying the given requirements.
@@ -1393,8 +1394,8 @@ export function mergeRequirements(
  * circuit which can satisfy the requirements.
  *
  * @param circuitReq the circuit size requirements
- * @param circuitFamily the circuit family to pick the circuit from. This is
- *   assumed to be sorted in order of increasing circuit count.
+ * @param circuitFamily the circuit family to pick the circuit from. This must
+ * be sorted in order of increasing circuit size (constraint count).
  * @param circuitIdentifier a specific circuit to be used
  * @returns the full description of the circuit to be used for the proof
  * @throws Error if no known circuit can support the given parameters, or if

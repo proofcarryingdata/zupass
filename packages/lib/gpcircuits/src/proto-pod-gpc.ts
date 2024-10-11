@@ -571,8 +571,8 @@ export class ProtoPODGPC {
    *
    * @param requiredParameters a lower bound on the parameters required
    * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to
-   *   pick the circuit from. This is assumed to be sorted in order of
-   *   increasing circuit count.
+   *   pick the circuit from. This must be sorted in order of increasing circuit
+   *   size (constraint count).
    * @returns the circuit description, or undefined if no circuit can handle
    *   the required parameters.
    */
