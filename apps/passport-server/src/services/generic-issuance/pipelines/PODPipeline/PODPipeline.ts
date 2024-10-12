@@ -14,7 +14,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { PODEntries, podEntriesToJSON, serializePODEntries } from "@pcd/pod";
+import { PODEntries, podEntriesToJSON } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { CSVInput, Input } from "@pcd/podbox-shared";
 import { assertUnreachable } from "@pcd/util";
@@ -341,7 +341,7 @@ export class PODPipeline implements BasePipeline {
           );
 
           // TODO(artwyman): Figure out how to phase out this use of the deprecated format.
-          const id = uuidv5(serializePODEntries(entries), this.id);
+          const id = uuidv5(JSON.stringify(podEntriesToJSON(entries)), this.id);
 
           let serializedPCD = await this.getCachedPCD(id);
           if (serializedPCD) {
