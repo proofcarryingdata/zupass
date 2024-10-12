@@ -95,7 +95,7 @@ export default function Page(): JSX.Element {
     setPODPublicKey2(encodePublicKey(derivePublicKey(decodePrivateKey(key))));
   };
   const [podMintUrl, setPODMintUrl] = useState(
-    `${process.env.CONSUMER_SERVER_URL}:4000/api/mintPOD`
+    `${process.env.CONSUMER_SERVER_URL}:4000/api/sign`
   );
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
   const [membershipLists, setMembershipLists] = useState(
