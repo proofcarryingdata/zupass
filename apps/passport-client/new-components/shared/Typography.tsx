@@ -1,7 +1,6 @@
 import { Property } from "csstype";
 import React from "react";
-import styled from "styled-components";
-import { getTruncateEmail } from "./utils";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 
 export type FontWeight = 400 | 500 | 600 | 700 | 800 | 900;
 export type FontSize = 10 | 12 | 14 | 16 | 18 | 20 | 24;
@@ -16,6 +15,14 @@ const LINE_HEIGHT: Record<FontSize, number> = {
   "20": 27,
   "24": 32.4
 };
+
+const TRUNCATE_STYLES = css`
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+`;
 
 const TypographyText = styled.span<{
   $fontSize: FontSize;
@@ -37,16 +44,8 @@ const TypographyText = styled.span<{
   text-decoration: ${({ $underline }): string =>
     $underline ? "underline" : "none"};
   text-align: ${({ $align }): React.CSSProperties["textAlign"] => $align};
-  ${({ $truncate }): string =>
-    $truncate
-      ? `
-    display: block;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-  `
-      : ""}
+  ${({ $truncate }): FlattenSimpleInterpolation | undefined =>
+    $truncate ? TRUNCATE_STYLES : undefined}
 `;
 
 interface TypographyProps {
@@ -73,22 +72,8 @@ export const Typography: React.FC<TypographyProps> = ({
   style,
   family,
   align,
-  truncate = false,
-  truncateEmail = false
+  truncate = false
 }): JSX.Element => {
-  const content = React.useMemo(() => {
-    if (truncateEmail && typeof children === "string") {
-      const emails = children.split("\n");
-      return emails.map((email, index) => (
-        <React.Fragment key={index}>
-          {getTruncateEmail(email.trim(), 30)}
-          {index < emails.length - 1 && <br />}
-        </React.Fragment>
-      ));
-    }
-    return children;
-  }, [children, truncateEmail]);
-
   return (
     <TypographyText
       $family={family ?? "Barlow"}
@@ -101,7 +86,7 @@ export const Typography: React.FC<TypographyProps> = ({
       $truncate={truncate}
       style={style}
     >
-      {content}
+      {children}
     </TypographyText>
   );
 };
