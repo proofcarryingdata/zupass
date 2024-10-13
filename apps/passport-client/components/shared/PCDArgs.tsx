@@ -675,8 +675,8 @@ export function PCDArgInput({
         {...rest}
         error={
           relevantPCDs.length === 0
-            ? (arg.validatorParams?.notFoundMessage ??
-              "You do not have an eligible PCD.")
+            ? arg.validatorParams?.notFoundMessage ??
+              "You do not have an eligible PCD."
             : undefined
         }
       >
@@ -699,8 +699,8 @@ export function PCDArgInput({
       {...rest}
       error={
         relevantPCDs.length === 0
-          ? (arg.validatorParams?.notFoundMessage ??
-            "You do not have an eligible PCD.")
+          ? arg.validatorParams?.notFoundMessage ??
+            "You do not have an eligible PCD."
           : undefined
       }
     >
