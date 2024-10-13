@@ -7,6 +7,7 @@ export interface NewInputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   endIcon?: React.ReactNode;
   hideArrows?: boolean;
+  hasRightIcons?: boolean;
 }
 
 const errorCSS = css`
@@ -44,17 +45,22 @@ export const BigInput2 = styled.input<{
   error?: string;
   hideArrows?: boolean;
   variant: "primary" | "secondary";
+  hasRightIcons?: boolean;
 }>`
   width: 100%;
   height: 54px;
   border-radius: 200px;
   padding: 8px 24px;
+  padding-right: ${({ hasRightIcons }) => (hasRightIcons ? "44px" : "24px")};
   font-size: 16px;
   font-weight: 400;
   border: 1px solid rgba(var(--white-rgb), 0.3);
   background: white;
   color: var(--text-primary);
   box-shadow: 0px 1px 2px 0px #0000000d;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
   ::placeholder {
     color: var(--text-tertiary);
   }
@@ -64,6 +70,7 @@ export const BigInput2 = styled.input<{
     pointer-events: none;
     background: rgba(0, 0, 0, 0.05);
   }
+
   ${({ error }): FlattenSimpleInterpolation | undefined => {
     if (error) return errorCSS;
   }}
@@ -86,9 +93,9 @@ const ErrorContainer = styled.div`
 
 export const Input2 = forwardRef(
   (inputProps: NewInputProps, ref: ForwardedRef<HTMLInputElement>) => {
-    const { error, variant } = inputProps;
+    const { error, variant, hasRightIcons } = inputProps;
     const defaultVariant = variant ?? "primary";
-    const errorComp = (
+    const errorComp = error && (
       <Typography
         color="var(--new-danger)"
         style={{
@@ -101,7 +108,12 @@ export const Input2 = forwardRef(
     return (
       <ErrorContainer>
         <PasswordInputContainer>
-          <BigInput2 {...inputProps} variant={defaultVariant} ref={ref} />
+          <BigInput2
+            {...inputProps}
+            variant={defaultVariant}
+            hasRightIcons={hasRightIcons}
+            ref={ref}
+          />
           {inputProps.endIcon && (
             <IconContainer>{inputProps.endIcon}</IconContainer>
           )}

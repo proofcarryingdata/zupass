@@ -574,6 +574,7 @@ const EmailInput = ({
         variant="secondary"
         value={email}
         onChange={onChange}
+        hasRightIcons={disabled && (canEdit || canDelete)}
       />
       {disabled && (
         <IconsContainer>
