@@ -8,6 +8,6 @@ export type TicketPack = {
   eventTicket: TicketType;
   addOns: TicketType[];
   attendeeEmail: string;
-  eventId: string;
+  eventName: string;
   packType: TicketTypeName;
 };

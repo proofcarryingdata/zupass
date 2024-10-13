@@ -50,7 +50,15 @@ export function PODTicketCardBodyImpl({
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        <TicketQR ticketData={ticketData} idBasedVerifyURL={idBasedVerifyURL} />
+        {!ticketData.qrCodeOverrideImageUrl && (
+          <TicketQR
+            ticketData={ticketData}
+            idBasedVerifyURL={idBasedVerifyURL}
+          />
+        )}
+        {ticketData.qrCodeOverrideImageUrl && (
+          <TicketImage hidePadding={true} ticketData={ticketData} />
+        )}
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
             {ticketData?.attendeeName.toUpperCase() || "Unknown"}
@@ -150,23 +158,21 @@ export function linkToTicket(
   return makeIdBasedVerifyLink(baseUrl, encodedId);
 }
 
-// Might be back soon, consider reuse of this component TicketImage
-// packages/ui/eddsa-ticket-pcd-ui/src/CardBody.tsx
-// function TicketImage({
-//   ticketData,
-//   hidePadding
-// }: {
-//   ticketData: IPODTicketData;
-//   hidePadding?: boolean;
-// }): JSX.Element {
-//   const { imageUrl, imageAltText } = ticketData;
-//   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
-//   return (
-//     <div style={{ padding: "8px" }}>
-//       <img src={imageUrl} alt={imageAltText} />
-//     </div>
-//   );
-// }
+function TicketImage({
+  ticketData,
+  hidePadding
+}: {
+  ticketData: IPODTicketData;
+  hidePadding?: boolean;
+}): JSX.Element {
+  const { imageAltText, qrCodeOverrideImageUrl } = ticketData;
+  if (hidePadding) return <img src={qrCodeOverrideImageUrl} />;
+  return (
+    <div style={{ padding: "8px" }}>
+      <img src={qrCodeOverrideImageUrl} alt={imageAltText} />
+    </div>
+  );
+}
 
 const NEW_UI__Container = styled.div`
   font-family: Rubik;
