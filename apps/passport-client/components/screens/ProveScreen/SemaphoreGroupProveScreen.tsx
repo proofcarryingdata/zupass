@@ -136,18 +136,23 @@ export function SemaphoreGroupProveScreen({
     );
   } else {
     content.push(
-      <Typography color="var(--text-primary)" fontSize={16} family="Rubik">
-        {getHost(req.returnUrl)} will receive a proof that you're one of{" "}
-        <Typography
-          fontSize={16}
-          color="var(--core-accent)"
-          fontWeight={500}
-          family="Rubik"
-        >
-          {group.members.length}
-        </Typography>{" "}
-        members of
-      </Typography>,
+      <InnerContainer>
+        <Typography color="var(--text-primary)" fontSize={20} fontWeight={800}>
+          SIGN IN WITH ZUPASS
+        </Typography>
+        <Typography color="var(--text-primary)" fontSize={16} family="Rubik">
+          {getHost(req.returnUrl)} will receive a proof that you're one of{" "}
+          <Typography
+            fontSize={16}
+            color="var(--core-accent)"
+            fontWeight={500}
+            family="Rubik"
+          >
+            {group.members.length}
+          </Typography>{" "}
+          members of
+        </Typography>
+      </InnerContainer>,
       <GroupNameLabel>
         <Typography
           family="Rubik"
@@ -176,7 +181,7 @@ export function SemaphoreGroupProveScreen({
     <Container>
       <ContentContainer>{content.map((line) => line)}</ContentContainer>
       <ButtonsGroup>
-        {group !== null && (
+        {!isLoading && (
           <Button2 disabled={proving || !!error} onClick={onProveClick}>
             {proving ? (
               <NewLoader color="white" rows={2} columns={3} />
@@ -274,6 +279,11 @@ const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+`;
+
+const InnerContainer = styled.div`
+  display: flex;
+  flex-direction: column;
 `;
 
 const Container = styled.div`
