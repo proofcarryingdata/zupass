@@ -6,7 +6,8 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
-import { PODTicketPCDTypeName, isPODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { uniqWith } from "lodash";
 import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
@@ -30,6 +31,9 @@ import { Typography } from "../../shared/Typography";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 
+// @ts-expect-error TMP fix for bad lib
+const _SwipableViews = SwipableViews.default;
+
 const CARD_GAP = 8;
 const TICKET_VERTICAL_GAP = 20;
 const SCREEN_HORIZONTAL_PADDING = 20;
@@ -42,48 +46,50 @@ const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
 
 const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
-  const tickets = allPCDs.filter(isEventTicketPCD);
+  const tickets = allPCDs.filter(isEventTicketPCD).reverse();
+  //fitering out overlapping eddsa tickets
+  const uniqTickets = uniqWith(tickets, (t1, t2) => {
+    return (
+      t1.claim.ticket.eventId === t2.claim.ticket.eventId &&
+      t1.claim.ticket.attendeeEmail === t2.claim.ticket.attendeeEmail &&
+      t1.type === EdDSATicketPCDTypeName
+    );
+  });
+
+  //  This hook is building "ticket packs"
+  //  ticket pack - main ticket and all its ticket addons, under the same event and attendee
   return useMemo(() => {
     const eventsMap = new Map<string, TicketPack[]>();
-    for (const ticket of tickets) {
-      if (ticket.claim.ticket.ticketName !== "GA") continue;
-      let ticketPacks = eventsMap.get(ticket.claim.ticket.eventName);
+    // creating the initial ticket packs for events - only main event ticket
+    for (const ticket of uniqTickets) {
+      if (ticket.claim.ticket.isAddOn) continue;
+      let ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
       if (!ticketPacks) {
         ticketPacks = [];
-        eventsMap.set(ticket.claim.ticket.eventName, ticketPacks);
-      }
-      if (ticket.type === PODTicketPCDTypeName) {
-        const relatedEddesaTicketPackIdx = ticketPacks.findIndex(
-          (pack) =>
-            pack.attendeeEmail === ticket.claim.ticket.attendeeEmail &&
-            pack.packType === EdDSATicketPCDTypeName
-        );
-        if (relatedEddesaTicketPackIdx >= 0)
-          ticketPacks.splice(relatedEddesaTicketPackIdx, 1);
+        eventsMap.set(ticket.claim.ticket.eventId, ticketPacks);
       }
       ticketPacks.push({
         eventTicket: ticket,
-        eventId: ticket.claim.ticket.eventId,
+        eventName: ticket.claim.ticket.eventName,
         addOns: [],
         attendeeEmail: ticket.claim.ticket.attendeeEmail,
         packType: ticket.type as TicketTypeName
       });
     }
-    for (const ticket of tickets) {
-      if (ticket.claim.ticket.ticketName === "GA") continue;
-      const ticketPacks = eventsMap.get(ticket.claim.ticket.eventName);
+    // adding the addons to their respective ticket pack
+    for (const ticket of uniqTickets) {
+      if (!ticket.claim.ticket.isAddOn) continue;
+      const ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
       if (!ticketPacks) continue;
       const pack = ticketPacks.find(
-        (pack) =>
-          pack.attendeeEmail === ticket.claim.ticket.attendeeEmail &&
-          pack.packType === ticket.type
+        (pack) => pack.attendeeEmail === ticket.claim.ticket.attendeeEmail
       );
 
       if (!pack) continue;
       pack.addOns.push(ticket);
     }
     return Array.from(eventsMap.entries());
-  }, [tickets]);
+  }, [uniqTickets]);
 };
 
 const Container = styled.div<{ ticketsAmount: number }>`
@@ -262,7 +268,7 @@ export const NewHomeScreen = (): ReactElement => {
       {tickets.length > 0 && (
         <>
           <SwipeViewContainer>
-            <SwipableViews
+            <_SwipableViews
               style={{
                 padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
               }}
@@ -271,22 +277,23 @@ export const NewHomeScreen = (): ReactElement => {
               }}
               resistance={true}
               index={currentPos}
-              onChangeIndex={(e) => {
+              onChangeIndex={(e: number) => {
                 setCurrentPos(e);
               }}
             >
-              {tickets.map(([eventName, packs], i) => {
+              {tickets.map(([eventId, packs], i) => {
                 const eventDetails = getEventDetails(packs[0]);
                 return (
-                  <Container key={eventName} ticketsAmount={tickets.length}>
+                  <Container key={eventId} ticketsAmount={tickets.length}>
                     <TicketCard
                       ticketWidth={cardWidth}
-                      key={eventName}
-                      address={eventName}
-                      title={eventName}
-                      ticketDate={new Date(
-                        eventDetails.timestampSigned
-                      ).toDateString()}
+                      address={eventDetails.eventLocation}
+                      title={eventDetails.eventName}
+                      ticketDate={
+                        eventDetails.eventStartDate
+                          ? new Date(eventDetails.eventStartDate).toDateString()
+                          : undefined
+                      }
                       imgSource={eventDetails.imageUrl}
                       ticketCount={packs.length}
                       cardColor={i % 2 === 0 ? "purple" : "orange"}
@@ -298,7 +305,7 @@ export const NewHomeScreen = (): ReactElement => {
                       {packs.map((pack) => {
                         return (
                           <CardBody
-                            key={pack.eventId}
+                            key={pack.eventName}
                             addOns={
                               pack.addOns.length > 0
                                 ? {
@@ -317,9 +324,9 @@ export const NewHomeScreen = (): ReactElement => {
                             }
                             ref={(ref) => {
                               if (!ref) return;
-                              const group = ticketsRef.current.get(eventName);
+                              const group = ticketsRef.current.get(eventId);
                               if (!group) {
-                                ticketsRef.current.set(eventName, [ref]);
+                                ticketsRef.current.set(eventId, [ref]);
                                 return;
                               }
                               group.push(ref);
@@ -333,7 +340,7 @@ export const NewHomeScreen = (): ReactElement => {
                   </Container>
                 );
               })}
-            </SwipableViews>
+            </_SwipableViews>
             {tickets.length > 1 && (
               <ButtonsContainer>
                 <PageCircleButton

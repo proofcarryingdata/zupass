@@ -98,7 +98,8 @@ const appOpts: BuildOptions = {
   metafile: true,
   define,
   splitting: true,
-  format: "esm"
+  format: "esm",
+  drop: process.env.DISABLE_CONSOLE_LOG === "true" ? ["console"] : []
 };
 
 const serviceWorkerOpts: BuildOptions = {
