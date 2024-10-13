@@ -233,7 +233,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
   return (
     <Container>
-      {options?.debug && <pre>{JSON.stringify(args, null, 2)}</pre>}
       <PCDArgs
         args={args}
         setArgs={setArgs}
@@ -251,8 +250,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  align-items: stretch;
   justify-content: space-between;
-  width: 100%;
   height: 100%;
 `;

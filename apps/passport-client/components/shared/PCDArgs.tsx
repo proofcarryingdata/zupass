@@ -41,6 +41,8 @@ import { usePCDCollection } from "../../src/appHooks";
 import Select from "./Select";
 import { Accordion } from "../../new-components/shared/Accordion";
 import { Typography } from "../../new-components/shared/Typography";
+import { Button2 } from "../../new-components/shared/Button";
+import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 
 /**
  * Type used in `PCDArgs` for record container argument flattening process.
@@ -116,7 +118,7 @@ export function PCDArgs<T extends PCDPackage>({
   );
 
   return (
-    <ArgsContainer id="pcd-args">
+    <ArgsContainer>
       <ArgsInnerContainer>
         {visible.map(([parentKey, key, value]) => {
           return (
@@ -131,7 +133,41 @@ export function PCDArgs<T extends PCDPackage>({
             />
           );
         })}
+        {hidden.length > 0 &&
+          /**
+           * NB: we have to render all the hidden inputs so that
+           * any default value can be automatically set.
+           */
+          hidden.map(([parentKey, key, value]) => (
+            <ArgInput
+              key={parentKey !== undefined ? `${parentKey}.${key}` : key}
+              argName={key}
+              parentArgName={parentKey}
+              arg={value}
+              setArgs={setArgs}
+              defaultArg={options?.[parentKey ?? key]}
+              hidden={!showAll}
+              proveOptions={proveOptions}
+            />
+          ))}
       </ArgsInnerContainer>
+      <Button2
+        style={{ marginTop: "auto" }}
+        variant="secondary"
+        onClick={(): void => setShowAll((showAll) => !showAll)}
+      >
+        {showAll ? (
+          <ShowMoreButtonInnerContainer>
+            <EyeSlashIcon width={20} height={20} />
+            <Typography>Hide {hidden.length} more inputs</Typography>
+          </ShowMoreButtonInnerContainer>
+        ) : (
+          <ShowMoreButtonInnerContainer>
+            <EyeIcon width={20} height={20} />
+            <Typography>Show {hidden.length} more inputs</Typography>
+          </ShowMoreButtonInnerContainer>
+        )}
+      </Button2>
     </ArgsContainer>
   );
 }
@@ -358,6 +394,7 @@ export function BigIntArgInput({
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (validator(e.target.value)) {
+        console.log("running validator n' stuff");
         setArg(e.target.value);
         setValid(true);
       } else {
@@ -606,8 +643,8 @@ export function PCDArgInput({
         {...rest}
         error={
           relevantPCDs.length === 0
-            ? arg.validatorParams?.notFoundMessage ??
-              "You do not have an eligible PCD."
+            ? (arg.validatorParams?.notFoundMessage ??
+              "You do not have an eligible PCD.")
             : undefined
         }
       >
@@ -630,8 +667,8 @@ export function PCDArgInput({
       {...rest}
       error={
         relevantPCDs.length === 0
-          ? arg.validatorParams?.notFoundMessage ??
-            "You do not have an eligible PCD."
+          ? (arg.validatorParams?.notFoundMessage ??
+            "You do not have an eligible PCD.")
           : undefined
       }
     >
@@ -773,9 +810,11 @@ const ArgItem = styled.div`
 `;
 
 const ArgsContainer = styled.div`
+  height: 100%;
   display: flex;
   flex-direction: column;
-  flex-grow: 1;
+  justify-content: space-between;
+  margin-bottom: 8px;
 `;
 
 const ErrorText = styled.div`
@@ -816,17 +855,16 @@ const TextareaInput = styled.textarea`
   }
 `;
 
-const ShowMoreButton = styled.a`
-  flex: 1;
-  color: var(--white);
-  font-size: 14px;
-  cursor: pointer;
-  text-decoration: none;
+const ShowMoreButtonInnerContainer = styled.div`
+  display: flex;
+  flex-direction: row;
+  gap: 4px;
 `;
 
 const ArgsInnerContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  flex-grow: 1;
+  max-height: 50vh;
+  overflow: scroll;
 `;

@@ -210,7 +210,7 @@ function RouterImpl(): JSX.Element {
           />
           <Route path="halo" element={<HaloScreen />} />
           <Route path="add" element={<AddScreen />} />
-          <Route path="prove" element={<ProveScreen />} />
+          <Route path="prove" element={<NewHomeScreen />} />
           <Route
             path="scan"
             element={
