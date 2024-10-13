@@ -41,13 +41,10 @@ import {
   OUTDATED_BROWSER_ERROR_MESSAGE
 } from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
-import { Button } from "../../core";
-import { ProgressBar } from "../../core/ProgressBar";
-import { RippleLoader } from "../../core/RippleLoader";
 import { PCDArgs } from "../../shared/PCDArgs";
-import { Typography } from "../../../new-components/shared/Typography";
 import { Button2 } from "../../../new-components/shared/Button";
 import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { Typography } from "../../../new-components/shared/Typography";
 
 /**
  * A reuseable form which can be used to generate a new instance of a PCD
@@ -57,8 +54,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   pcdType,
   initialArgs,
   options,
-  onProve,
-  folder
+  onProve
 }: {
   pcdType: string;
   initialArgs: ArgsOf<T>;
@@ -98,13 +94,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
           isPCDArgument(arg) && !arg.value
       ),
     [args]
-  );
-  console.log(
-    Object.entries(args).find(
-      ([_, arg]) =>
-        // only PCD arguments are required
-        isPCDArgument(arg) && !arg.value
-    )
   );
 
   const onProveClick = useCallback(async () => {
@@ -230,7 +219,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     pcdPackage,
     pcds
   ]);
-
   return (
     <Container>
       <PCDArgs
@@ -239,9 +227,22 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         options={pcdPackage?.getProveDisplayOptions?.()?.defaultArgs}
         proveOptions={options}
       />
-      {error && <ErrorContainer>{error}</ErrorContainer>}
+      {proving && options?.multi && (
+        <Typography style={{ textAlign: "center" }}>
+          Proving {multiProofsCompleted} out of {multiProofsQueued}
+        </Typography>
+      )}
+      {error && (
+        <Typography
+          fontSize={16}
+          color="var(--new-danger)"
+          style={{ textAlign: "center" }}
+        >
+          {error}
+        </Typography>
+      )}
       <Button2 disabled={!isProveReady || proving} onClick={onProveClick}>
-        {proving ? <NewLoader rows={2} columns={3} /> : "Prove"}
+        {proving ? <NewLoader rows={2} columns={3} color="white" /> : "Prove"}
       </Button2>
     </Container>
   );
