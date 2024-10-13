@@ -7,7 +7,7 @@ export interface NewInputProps extends InputHTMLAttributes<HTMLInputElement> {
   error?: string;
   endIcon?: React.ReactNode;
   hideArrows?: boolean;
-  hasRightIcons?: boolean;
+  rightIconSize?: number;
 }
 
 const errorCSS = css`
@@ -45,13 +45,14 @@ export const BigInput2 = styled.input<{
   error?: string;
   hideArrows?: boolean;
   variant: "primary" | "secondary";
-  hasRightIcons?: boolean;
+  rightIconSize?: number;
 }>`
   width: 100%;
   height: 54px;
   border-radius: 200px;
   padding: 8px 24px;
-  padding-right: ${({ hasRightIcons }) => (hasRightIcons ? "44px" : "24px")};
+  padding-right: ${({ rightIconSize }): string =>
+    rightIconSize ? `${rightIconSize + 24}px` : "24px"};
   font-size: 16px;
   font-weight: 400;
   border: 1px solid rgba(var(--white-rgb), 0.3);
@@ -74,9 +75,11 @@ export const BigInput2 = styled.input<{
   ${({ error }): FlattenSimpleInterpolation | undefined => {
     if (error) return errorCSS;
   }}
+
   ${({ variant }): FlattenSimpleInterpolation | undefined => {
     if (variant === "secondary") return secondaryCSS;
   }}
+
   ${({ hideArrows }): FlattenSimpleInterpolation | undefined => {
     if (hideArrows) return noArrowsCSS;
   }}
@@ -90,10 +93,9 @@ const ErrorContainer = styled.div`
   gap: 8px;
   justify-content: flex-start;
 `;
-
 export const Input2 = forwardRef(
   (inputProps: NewInputProps, ref: ForwardedRef<HTMLInputElement>) => {
-    const { error, variant, hasRightIcons } = inputProps;
+    const { error, variant, rightIconSize } = inputProps;
     const defaultVariant = variant ?? "primary";
     const errorComp = error && (
       <Typography
@@ -111,7 +113,7 @@ export const Input2 = forwardRef(
           <BigInput2
             {...inputProps}
             variant={defaultVariant}
-            hasRightIcons={hasRightIcons}
+            rightIconSize={rightIconSize}
             ref={ref}
           />
           {inputProps.endIcon && (

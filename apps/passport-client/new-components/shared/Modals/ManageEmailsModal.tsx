@@ -565,6 +565,7 @@ const EmailInput = ({
   onDelete?: () => void;
   canDelete?: boolean;
 }): JSX.Element => {
+  const iconSize = 20;
   return (
     <EmailInputContainer>
       <Input2
@@ -574,7 +575,7 @@ const EmailInput = ({
         variant="secondary"
         value={email}
         onChange={onChange}
-        hasRightIcons={disabled && (canEdit || canDelete)}
+        rightIconSize={iconSize}
       />
       {disabled && (
         <IconsContainer>
@@ -582,8 +583,8 @@ const EmailInput = ({
             <PencilIcon
               style={{ cursor: "pointer" }}
               color="var(--core-accent)"
-              width={20}
-              height={20}
+              width={iconSize}
+              height={iconSize}
               onClick={onEdit}
             />
           )}
@@ -591,8 +592,8 @@ const EmailInput = ({
             <TrashIcon
               style={{ cursor: "pointer" }}
               color="var(--core-accent)"
-              width={20}
-              height={20}
+              width={iconSize}
+              height={iconSize}
               onClick={onDelete}
             />
           )}
