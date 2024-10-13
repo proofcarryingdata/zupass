@@ -7,6 +7,7 @@ import {
 import { PCDCollection } from "@pcd/pcd-collection";
 import { v3IdentityToPCD } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
+import { initTestData } from "../initTestData";
 import { appConfig } from "./appConfig";
 import {
   loadEncryptionKey,
@@ -74,7 +75,7 @@ export async function loadInitialState(): Promise<AppState> {
     (appConfig.zupassServer.includes("127.0.0.1") ||
       appConfig.zupassServer.includes("localhost"))
   ) {
-    // await initTestData(state);
+    await initTestData(state);
   }
   if (!validateAndLogInitialAppState("loadInitialState", state)) {
     state.userInvalid = true;
