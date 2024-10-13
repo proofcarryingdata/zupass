@@ -41,7 +41,6 @@ import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 // import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
-import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 // import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";

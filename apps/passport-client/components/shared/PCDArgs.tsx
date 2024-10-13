@@ -30,12 +30,7 @@ import {
 } from "@pcd/pcd-types";
 import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { FaCheck, FaHashtag, FaQuestion } from "react-icons/fa";
-import { FaList, FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
-import { GrDocumentLocked } from "react-icons/gr";
-import { TbLetterT } from "react-icons/tb";
 import { SingleValue } from "react-select";
-import { Tooltip } from "react-tooltip";
 import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
 import Select from "./Select";
@@ -517,9 +512,9 @@ function ToggleListArgInput({
       switch (type) {
         case "reveal":
           return value ? (
-            <FaRegEye size={18} />
+            <EyeIcon width={18} height={18} />
           ) : (
-            <FaRegEyeSlash color="var(--text-tertiary)" size={18} />
+            <EyeSlashIcon color="var(--text-tertiary)" width={18} height={18} />
           );
 
         default:
@@ -643,8 +638,8 @@ export function PCDArgInput({
         {...rest}
         error={
           relevantPCDs.length === 0
-            ? (arg.validatorParams?.notFoundMessage ??
-              "You do not have an eligible PCD.")
+            ? arg.validatorParams?.notFoundMessage ??
+              "You do not have an eligible PCD."
             : undefined
         }
       >
@@ -667,8 +662,8 @@ export function PCDArgInput({
       {...rest}
       error={
         relevantPCDs.length === 0
-          ? (arg.validatorParams?.notFoundMessage ??
-            "You do not have an eligible PCD.")
+          ? arg.validatorParams?.notFoundMessage ??
+            "You do not have an eligible PCD."
           : undefined
       }
     >
@@ -743,72 +738,10 @@ function ArgContainer({
     </ArgItemContainer>
   );
 }
-
-// Omit record containers as they should have been flattened out.
-const argTypeIcons: Record<PrimitiveArgumentTypeName, JSX.Element> = {
-  PCD: <GrDocumentLocked />,
-  String: <TbLetterT />,
-  Number: <FaHashtag />,
-  BigInt: <FaHashtag />,
-  Object: <FaList />,
-  StringArray: <FaList />,
-  ToggleList: <FaList />,
-  Boolean: <FaCheck />,
-  Unknown: <FaQuestion />
-};
-
-const ArgName = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 4px;
-`;
-
-const Description = styled.div`
-  font-size: 14px;
-  color: var(--white);
-`;
-
-const End = styled.div`
-  margin-left: auto;
-  margin-right: 8px;
-`;
-
 const ArgItemContainer = styled.div<{ hidden: boolean; error: boolean }>`
   width: 100%;
   display: ${({ hidden }): string => (hidden ? "none" : "")};
 `;
-
-const ArgItemIcon = styled.div`
-  svg {
-    fill: #fff;
-    width: 18px;
-    height: 18px;
-  }
-  filter: opacity(0.8);
-`;
-
-const TooltipIcon = styled.div`
-  svg {
-    fill: #fff;
-    width: 12px;
-    height: 12px;
-  }
-  filter: opacity(0.8);
-`;
-
-const TooltipContainer = styled(Tooltip)`
-  max-width: min(calc(100vw - 32px), 420px);
-`;
-
-const ArgItem = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: stretch;
-  flex-direction: column;
-  gap: 8px;
-  flex: 1;
-`;
-
 const ArgsContainer = styled.div`
   height: 100%;
   display: flex;

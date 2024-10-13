@@ -9,7 +9,6 @@ import {
   ProveOptions,
   requestProveOnServer
 } from "@pcd/passport-interface";
-import { ErrorContainer } from "@pcd/passport-ui";
 import {
   ArgsOf,
   PCDOf,
