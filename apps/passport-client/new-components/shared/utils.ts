@@ -1,10 +1,10 @@
+import { serializeStorage } from "@pcd/passport-interface";
 import { useCallback } from "react";
 import {
   usePCDCollection,
   useSelf,
   useSubscriptions
 } from "../../src/appHooks";
-import { serializeStorage } from "@pcd/passport-interface";
 
 export const useExport = (): (() => Promise<void>) => {
   const user = useSelf();
@@ -33,4 +33,21 @@ export const useExport = (): (() => Promise<void>) => {
     link.click();
     link.remove();
   }, [user, pcds, subscriptions]);
+};
+
+export const getTruncateEmail = (email: string, maxLength: number): string => {
+  const atIndex = email.lastIndexOf("@");
+  if (atIndex === -1 || email.length <= maxLength) {
+    return email;
+  }
+
+  const domain = email.slice(atIndex);
+  const localPart = email.slice(0, atIndex);
+  const availableLength = maxLength - domain.length - 3;
+
+  if (availableLength < 1) {
+    return email;
+  }
+
+  return `${localPart.slice(0, availableLength)}...${domain}`;
 };

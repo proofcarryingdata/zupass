@@ -1,6 +1,7 @@
 import { Property } from "csstype";
 import React from "react";
 import styled from "styled-components";
+import { getTruncateEmail } from "./utils";
 
 export type FontWeight = 400 | 500 | 600 | 700 | 800 | 900;
 export type FontSize = 10 | 12 | 14 | 16 | 18 | 20 | 24;
@@ -59,6 +60,7 @@ interface TypographyProps {
   align?: React.CSSProperties["textAlign"];
   style?: React.CSSProperties;
   truncate?: boolean;
+  truncateEmail?: boolean;
 }
 
 export const Typography: React.FC<TypographyProps> = ({
@@ -71,8 +73,22 @@ export const Typography: React.FC<TypographyProps> = ({
   style,
   family,
   align,
-  truncate = false
+  truncate = false,
+  truncateEmail = false
 }): JSX.Element => {
+  const content = React.useMemo(() => {
+    if (truncateEmail && typeof children === "string") {
+      const emails = children.split("\n");
+      return emails.map((email, index) => (
+        <React.Fragment key={index}>
+          {getTruncateEmail(email.trim(), 30)}
+          {index < emails.length - 1 && <br />}
+        </React.Fragment>
+      ));
+    }
+    return children;
+  }, [children, truncateEmail]);
+
   return (
     <TypographyText
       $family={family ?? "Barlow"}
@@ -85,7 +101,7 @@ export const Typography: React.FC<TypographyProps> = ({
       $truncate={truncate}
       style={style}
     >
-      {children}
+      {content}
     </TypographyText>
   );
 };

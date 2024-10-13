@@ -7,7 +7,7 @@ import {
   InformationCircleIcon,
   TrashIcon
 } from "@heroicons/react/16/solid";
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import styled from "styled-components";
 import {
   useBottomModal,
@@ -137,21 +137,13 @@ export function SettingsBottomModal(): JSX.Element {
     <BottomModal isOpen={activeBottomModal.modalType === "settings"}>
       <SettingsContainer>
         <UserTitleContainer>
-          <Typography fontSize={20} fontWeight={800} align="center" truncate>
-            {state.self?.emails.map((email, index, array) => (
-              <React.Fragment key={email}>
-                {email}
-                {index < array.length - 1 && (
-                  <hr
-                    style={{
-                      margin: "8px 0",
-                      border: "none",
-                      borderTop: "1px solid #ECEAF4"
-                    }}
-                  />
-                )}
-              </React.Fragment>
-            ))}
+          <Typography
+            fontSize={20}
+            fontWeight={800}
+            align="center"
+            truncateEmail
+          >
+            {state.self?.emails.join("\n")}
           </Typography>
         </UserTitleContainer>
         <SettingsActionContainer>
