@@ -75,39 +75,13 @@ export function getScreen(request: PCDGetRequest): JSX.Element | null {
     return null;
   }
 
-  let title: string;
-  let body: JSX.Element;
-
   if (request.options?.genericProveScreen) {
     return <GenericProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreGroupPCDPackage.name) {
-    if (request.options?.title !== undefined) {
-      title = request.options?.title;
-    } else {
-      title = "Prove membership";
-    }
-    body = <SemaphoreGroupProveScreen req={request} />;
+    return <SemaphoreGroupProveScreen req={request} />;
   } else if (request.pcdType === SemaphoreSignaturePCDPackage.name) {
-    if (request.options?.title !== undefined) {
-      title = request.options?.title;
-    } else {
-      title = "Sign a message";
-    }
-    body = <SemaphoreSignatureProveScreen req={request} />;
+    return <SemaphoreSignatureProveScreen req={request} />;
   } else {
     return <GenericProveScreen req={request} />;
   }
-
-  return (
-    <>
-      <MaybeModal fullScreen isProveOrAddScreen={true} />
-      <AppContainer bg="primary">
-        <Spacer h={24} />
-        <H2>{title.toUpperCase()}</H2>
-        <Spacer h={24} />
-        <CenterColumn>{body}</CenterColumn>
-        <Spacer h={24} />
-      </AppContainer>
-    </>
-  );
 }
