@@ -22,6 +22,8 @@ import {
   useState
 } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import { isEmailPCD } from "../../new-components/shared/Modals/PodsCollectionBottomModal";
+import { getTruncateEmail } from "../../new-components/utils/getTruncateEmail";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
 import { pcdRenderers } from "../../src/pcdRenderers";
@@ -332,6 +334,13 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
               idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
             />
           </div>
+        );
+      }
+      if (isEmailPCD(pcd)) {
+        return (
+          <TextCenter>
+            {getTruncateEmail(pcd.claim.emailAddress, 40)}
+          </TextCenter>
         );
       }
       const ui = getUI(pcd.type);

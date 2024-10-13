@@ -19,6 +19,7 @@ import {
   useDispatch,
   usePCDCollection
 } from "../../../src/appHooks";
+import { getTruncateEmail } from "../../utils/getTruncateEmail";
 import { Avatar } from "../Avatar";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
@@ -43,7 +44,7 @@ const getActivePod = (
   }
 };
 
-const isEmailPCD = (pcd: PCD<unknown, unknown>): pcd is EmailPCD =>
+export const isEmailPCD = (pcd: PCD<unknown, unknown>): pcd is EmailPCD =>
   pcd.type === EmailPCDTypeName;
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
@@ -51,7 +52,7 @@ const getPcdName = (pcd: PCD<unknown, unknown>): string => {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
       return pcd.claim.ticket.eventName + " - " + pcd.claim.ticket.ticketName;
     case isEmailPCD(pcd):
-      return pcd.claim.emailAddress;
+      return getTruncateEmail(pcd.claim.emailAddress, 30);
     case isPODPCD(pcd):
       return getPodDisplayOptions(pcd).header ?? pcd.id;
     case isEdDSAFrogPCD(pcd):
