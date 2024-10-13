@@ -29,15 +29,23 @@ import {
   isToggleListArgument
 } from "@pcd/pcd-types";
 import _ from "lodash";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { SingleValue } from "react-select";
 import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
 import Select from "./Select";
-import { Accordion } from "../../new-components/shared/Accordion";
+import { Accordion, AccordionRef } from "../../new-components/shared/Accordion";
 import { Typography } from "../../new-components/shared/Typography";
 import { Button2 } from "../../new-components/shared/Button";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
+import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
+import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
 
 /**
  * Type used in `PCDArgs` for record container argument flattening process.
@@ -496,6 +504,7 @@ function ToggleListArgInput({
   ...rest
 }: ArgInputProps<ToogleListArgument<ToggleList>>): JSX.Element {
   const type = isRevealListArgument(arg) ? "reveal" : "default";
+  const ref = useRef<AccordionRef>(null);
   const getLabel = useCallback(
     (key: string) => {
       switch (type) {
@@ -525,18 +534,33 @@ function ToggleListArgInput({
   );
 
   // ordering by items revealed
+  // const entries = useMemo(
+  //   () =>
+  //     Object.entries(arg.value as unknown as ArrayLike<boolean>).sort(
+  //       ([_key, value], [_key2, value2]) => Number(value2) - Number(value)
+  //     ),
+  //   [arg.value]
+  // );
+
   const entries = useMemo(
     () =>
-      Object.entries(arg.value as unknown as ArrayLike<boolean>).sort(
-        ([_key, value], [_key2, value2]) => Number(value2) - Number(value)
+      Object.entries(arg.value as unknown as ArrayLike<boolean>).filter(
+        ([_key, value]) => {
+          return value;
+        }
       ),
     [arg.value]
   );
+
+  useEffect(() => {
+    ref.current?.open();
+  }, []);
 
   return (
     <ArgContainer arg={arg} {...rest}>
       {!!entries.length && (
         <Accordion
+          ref={ref}
           title={arg.displayName || "revealed information"}
           children={entries.map(([key, value]) => {
             return {
@@ -562,6 +586,7 @@ export function PCDArgInput({
   ...rest
 }: ArgInputProps<PCDArgument>): JSX.Element {
   const pcdCollection = usePCDCollection();
+  const ref = useRef<AccordionRef>(null);
   const relevantPCDs = useMemo(
     () =>
       pcdCollection
@@ -618,9 +643,21 @@ export function PCDArgInput({
       setPCD(undefined);
     }
   }, [arg.value, pcdCollection]);
+
+  useEffect(() => {
+    console.log(arg);
+    if (
+      arg.pcdType === EdDSATicketPCDTypeName ||
+      arg.pcdType === PODTicketPCDTypeName
+    ) {
+      ref.current?.open();
+    }
+  }, [arg]);
+
   if (proveOptions?.multi) {
     return (
       <Accordion
+        ref={ref}
         children={options.map((option) => {
           return {
             title: option.label,
@@ -638,8 +675,8 @@ export function PCDArgInput({
         {...rest}
         error={
           relevantPCDs.length === 0
-            ? arg.validatorParams?.notFoundMessage ??
-              "You do not have an eligible PCD."
+            ? (arg.validatorParams?.notFoundMessage ??
+              "You do not have an eligible PCD.")
             : undefined
         }
       >
@@ -662,8 +699,8 @@ export function PCDArgInput({
       {...rest}
       error={
         relevantPCDs.length === 0
-          ? arg.validatorParams?.notFoundMessage ??
-            "You do not have an eligible PCD."
+          ? (arg.validatorParams?.notFoundMessage ??
+            "You do not have an eligible PCD.")
           : undefined
       }
     >
@@ -800,4 +837,5 @@ const ArgsInnerContainer = styled.div`
   gap: 8px;
   max-height: 50vh;
   overflow: scroll;
+  margin-bottom: 24px;
 `;
