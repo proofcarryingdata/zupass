@@ -471,12 +471,14 @@ export const ManageEmailModal = (): JSX.Element => {
         ))}
       </EmailsContainer>
       <ButtonsContainer>
-        <Button2
-          onClick={() => setEmailManagerState(EmailManagerState.addEmail)}
-          disabled={errorOrLoading}
-        >
-          Add email
-        </Button2>
+        {self && self.emails.length < 5 && (
+          <Button2
+            onClick={() => setEmailManagerState(EmailManagerState.addEmail)}
+            disabled={errorOrLoading}
+          >
+            Add email
+          </Button2>
+        )}
         {backBtn}
       </ButtonsContainer>
     </>
