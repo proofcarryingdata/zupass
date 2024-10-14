@@ -30,8 +30,11 @@ export async function mintPODPCD(
       body: requestBody
     });
     mintResultText = await resp.text();
-  } catch {
-    throw new Error("Mint server error.");
+    if (!resp.ok) {
+      throw new Error(`${resp.status}: ${mintResultText}`);
+    }
+  } catch (e) {
+    throw new Error(`Mint server error: ${getErrorMessage(e)}`);
   }
 
   try {
