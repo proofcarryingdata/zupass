@@ -18,7 +18,7 @@ import {
 import { truncateEmail } from "../../utils/emailUtils";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
-import { Typography } from "../Typography";
+import { FontFamily, FontSize, Typography } from "../Typography";
 import { useExport } from "../utils";
 
 interface SettingItem {
@@ -148,9 +148,10 @@ export function SettingsBottomModal(): JSX.Element {
   const truncatedEmails = useMemo(() => {
     if (!containerWidth) return state.self?.emails ?? [];
 
-    const font = "800 20px Rubik";
+    const fontSize: FontSize = 20;
+    const fontFamily: FontFamily = "Rubik";
     return (state.self?.emails ?? []).map((email) =>
-      truncateEmail(email, containerWidth, font, 48)
+      truncateEmail(email, containerWidth, fontSize, fontFamily, 48)
     );
   }, [state.self?.emails, containerWidth]);
 

@@ -1,9 +1,16 @@
-// type Font = `${FontWeight} ${FontSize}px ${FontFamily}`;
+import { FontFamily, FontSize } from "./../shared/Typography";
 
-export function getTextWidth(text, font) {
+// Helper function to create the font string
+function createFontString(fontSize: FontSize, fontFamily: FontFamily): string {
+  return `${fontSize}px ${fontFamily}`;
+}
+export function getTextWidth(text: string, font: string): number {
   // re-use canvas object for better performance
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
+  if (!context) {
+    throw new Error("Unable to get 2D context from canvas");
+  }
   context.font = font;
   const metrics = context.measureText(text);
   return metrics.width;
@@ -16,7 +23,8 @@ export function getTextWidth(text, font) {
 export function truncateEmail(
   email: string,
   containerWidth: number,
-  font: string,
+  fontSize: FontSize,
+  fontFamily: FontFamily,
   padding: number
 ): string {
   const atIndex = email.lastIndexOf("@");
@@ -25,7 +33,7 @@ export function truncateEmail(
   const localPart = email.slice(0, atIndex);
   const domain = email.slice(atIndex);
   const ellipsis = "...";
-
+  const font = createFontString(fontSize, fontFamily);
   const fullWidth = getTextWidth(email, font);
   if (fullWidth <= containerWidth - padding) {
     return email;
