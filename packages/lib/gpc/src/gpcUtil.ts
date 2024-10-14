@@ -14,6 +14,7 @@ import {
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import _ from "lodash";
 import {
+  ClosedInterval,
   GPCBoundConfig,
   GPCIdentifier,
   GPCProofConfig,
@@ -742,11 +743,6 @@ export type GPCProofMembershipListConfig = Record<
   PODEntryIdentifier | TupleIdentifier,
   ListConfig
 >;
-
-/**
- * Convenient type for closed intervals used in (out of) bounds/range checks.
- */
-export type ClosedInterval = { min: bigint; max: bigint };
 
 /**
  * List configuration for an individual entry or tuple. This specifies the type
