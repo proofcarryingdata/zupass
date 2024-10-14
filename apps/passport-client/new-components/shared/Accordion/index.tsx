@@ -142,7 +142,7 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
             {title.toUpperCase()}
           </Typography>
           <ToggleContainer>
-            {open ? undefined : (
+            {open || children.length === 1 ? undefined : (
               <Typography
                 fontWeight={700}
                 color="var(--text-tertiary)"
