@@ -662,8 +662,8 @@ export function PCDArgInput({
         {...rest}
         error={
           relevantPCDs.length === 0
-            ? (arg.validatorParams?.notFoundMessage ??
-              "You do not have an eligible PCD.")
+            ? arg.validatorParams?.notFoundMessage ??
+              "You do not have an eligible PCD."
             : undefined
         }
       >
@@ -687,8 +687,8 @@ export function PCDArgInput({
       {...rest}
       error={
         relevantPCDs.length === 0
-          ? (arg.validatorParams?.notFoundMessage ??
-            "You do not have an eligible PCD.")
+          ? arg.validatorParams?.notFoundMessage ??
+            "You do not have an eligible PCD."
           : undefined
       }
     >
@@ -722,26 +722,6 @@ const SelectContainer = styled.div`
   padding: 4px;
   gap: 8px;
   flex-direction: column;
-`;
-
-const MultiOptionContainer = styled.div`
-  width: 100%;
-  max-height: 200px;
-  overflow-y: scroll;
-  display: flex;
-  justify-content: stretch;
-  align-items: stretch;
-  flex-direction: column;
-  gap: 4px;
-`;
-
-const MultiOptionSingleOption = styled.div`
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
-  border: 1px solid white;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  padding: 4px 8px;
 `;
 
 function ArgContainer({
