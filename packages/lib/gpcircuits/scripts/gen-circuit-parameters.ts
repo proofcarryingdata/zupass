@@ -1,6 +1,9 @@
 import { argv } from "process";
-import { JSON_FILE_CONFIG } from "../src/internal";
-import { ensureCircuitParamSet, genCircuitParamConfig } from "./common";
+import {
+  JSON_FILE_CONFIG,
+  ensureCircuitParamSet,
+  genCircuitParamConfig
+} from "./common";
 
 async function main(): Promise<void> {
   const paramType = ensureCircuitParamSet(argv[2]);
