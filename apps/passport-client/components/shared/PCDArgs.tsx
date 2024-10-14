@@ -397,7 +397,6 @@ export function BigIntArgInput({
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       if (validator(e.target.value)) {
-        console.log("running validator n' stuff");
         setArg(e.target.value);
         setValid(true);
       } else {
@@ -413,11 +412,16 @@ export function BigIntArgInput({
       error={valid ? undefined : "Please enter a whole number."}
       {...rest}
     >
-      <Input
-        value={arg.value ?? ""}
-        onChange={onChange}
-        disabled={!arg.userProvided}
-      />
+      <ArgWrapper>
+        <Typography fontWeight={700} color="var(--text-tertiary)" fontSize={14}>
+          {arg.displayName?.toUpperCase()}
+        </Typography>
+        <Input
+          value={arg.value ?? ""}
+          onChange={onChange}
+          disabled={!arg.userProvided}
+        />
+      </ArgWrapper>
     </ArgContainer>
   );
 }
@@ -489,11 +493,16 @@ export function ObjectArgInput({
 
   return (
     <ArgContainer arg={arg} {...rest}>
-      <TextareaInput
-        value={JSON.stringify(arg.value, null, 2)}
-        onChange={onChange}
-        disabled={!arg.userProvided}
-      />
+      <ArgWrapper>
+        <Typography fontWeight={700} color="var(--text-tertiary)" fontSize={14}>
+          {arg.displayName?.toUpperCase()}
+        </Typography>
+        <TextareaInput
+          value={JSON.stringify(arg.value, null, 2)}
+          onChange={onChange}
+          disabled={!arg.userProvided}
+        />
+      </ArgWrapper>
     </ArgContainer>
   );
 }
@@ -532,15 +541,6 @@ function ToggleListArgInput({
     },
     [type]
   );
-
-  // ordering by items revealed
-  // const entries = useMemo(
-  //   () =>
-  //     Object.entries(arg.value as unknown as ArrayLike<boolean>).sort(
-  //       ([_key, value], [_key2, value2]) => Number(value2) - Number(value)
-  //     ),
-  //   [arg.value]
-  // );
 
   const entries = useMemo(
     () =>
@@ -645,7 +645,6 @@ export function PCDArgInput({
   }, [arg.value, pcdCollection]);
 
   useEffect(() => {
-    console.log(arg);
     if (
       arg.pcdType === EdDSATicketPCDTypeName ||
       arg.pcdType === PODTicketPCDTypeName
@@ -675,8 +674,8 @@ export function PCDArgInput({
         {...rest}
         error={
           relevantPCDs.length === 0
-            ? arg.validatorParams?.notFoundMessage ??
-              "You do not have an eligible PCD."
+            ? (arg.validatorParams?.notFoundMessage ??
+              "You do not have an eligible PCD.")
             : undefined
         }
       >
@@ -699,8 +698,8 @@ export function PCDArgInput({
       {...rest}
       error={
         relevantPCDs.length === 0
-          ? arg.validatorParams?.notFoundMessage ??
-            "You do not have an eligible PCD."
+          ? (arg.validatorParams?.notFoundMessage ??
+            "You do not have an eligible PCD.")
           : undefined
       }
     >
@@ -792,28 +791,12 @@ const ErrorText = styled.div`
   font-size: 14px;
 `;
 
-const Input = styled.input`
-  width: 100%;
-  height: 32px;
-  background-color: var(--bg-lite-primary);
-  border: 1px solid var(--bg-lite-primary);
-  color: var(--white);
-  font:
-    14px PlexSans,
-    system-ui,
-    sans-serif;
-
-  &:disabled {
-    opacity: 0.5;
-  }
-`;
-
 const TextareaInput = styled.textarea`
   width: 100%;
   height: 4em;
-  background-color: var(--bg-lite-primary);
-  border: 1px solid var(--bg-lite-primary);
-  color: var(--white);
+  background-color: #fff;
+  border: 1px solid #eceaf4;
+  color: var(--text-primary);
   resize: vertical;
   font:
     14px PlexSans,
@@ -838,4 +821,19 @@ const ArgsInnerContainer = styled.div`
   max-height: 50vh;
   overflow: scroll;
   margin-bottom: 24px;
+`;
+
+const ArgWrapper = styled.div`
+  border-radius: 8px;
+  border: 1px solid #eceaf4;
+  background: #f6f8fd;
+  padding: 4px;
+  padding-left: 12px;
+`;
+const Input = styled.input`
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  background: #fff;
+  padding: 8px 4px;
+  width: 100%;
 `;
