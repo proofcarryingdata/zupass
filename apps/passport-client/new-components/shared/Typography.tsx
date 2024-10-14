@@ -1,6 +1,6 @@
 import { Property } from "csstype";
 import React from "react";
-import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import styled from "styled-components";
 
 export type FontWeight = 400 | 500 | 600 | 700 | 800 | 900;
 export type FontSize = 10 | 12 | 14 | 16 | 18 | 20 | 24;
@@ -16,14 +16,6 @@ const LINE_HEIGHT: Record<FontSize, number> = {
   "24": 32.4
 };
 
-const TRUNCATE_STYLES = css`
-  display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  width: 100%;
-`;
-
 const TypographyText = styled.span<{
   $fontSize: FontSize;
   $fontWeight: FontWeight;
@@ -32,7 +24,6 @@ const TypographyText = styled.span<{
   $underline?: boolean;
   $family?: FontFamily;
   $align?: React.CSSProperties["textAlign"];
-  $truncate?: boolean;
 }>`
   font-family: ${({ $family }): string => $family ?? "Barlow"}, sans-serif;
   font-size: ${({ $fontSize }): string => `${$fontSize}px`};
@@ -44,8 +35,6 @@ const TypographyText = styled.span<{
   text-decoration: ${({ $underline }): string =>
     $underline ? "underline" : "none"};
   text-align: ${({ $align }): React.CSSProperties["textAlign"] => $align};
-  ${({ $truncate }): FlattenSimpleInterpolation | undefined =>
-    $truncate ? TRUNCATE_STYLES : undefined}
 `;
 
 interface TypographyProps {
@@ -58,8 +47,6 @@ interface TypographyProps {
   underline?: boolean;
   align?: React.CSSProperties["textAlign"];
   style?: React.CSSProperties;
-  truncate?: boolean;
-  truncateEmail?: boolean;
 }
 
 export const Typography: React.FC<TypographyProps> = ({
@@ -71,8 +58,7 @@ export const Typography: React.FC<TypographyProps> = ({
   underline,
   style,
   family,
-  align,
-  truncate = false
+  align
 }): JSX.Element => {
   return (
     <TypographyText
@@ -83,7 +69,6 @@ export const Typography: React.FC<TypographyProps> = ({
       $opacity={opacity}
       $underline={underline}
       $align={align}
-      $truncate={truncate}
       style={style}
     >
       {children}
