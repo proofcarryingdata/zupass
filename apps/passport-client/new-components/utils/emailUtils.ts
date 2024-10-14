@@ -1,17 +1,19 @@
 import { FontFamily, FontSize } from "./../shared/Typography";
 
-// Helper function to create the font string
-function createFontString(fontSize: FontSize, fontFamily: FontFamily): string {
-  return `${fontSize}px ${fontFamily}`;
-}
-export function getTextWidth(text: string, font: string): number {
-  // re-use canvas object for better performance
+/**
+ * Measures the width of the given text using the specified font size and font family.
+ */
+export function getTextWidth(
+  text: string,
+  fontSize: FontSize,
+  fontFamily: FontFamily
+): number {
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
   if (!context) {
-    throw new Error("Unable to get 2D context from canvas");
+    return -1;
   }
-  context.font = font;
+  context.font = `${fontSize}px ${fontFamily}`;
   const metrics = context.measureText(text);
   return metrics.width;
 }
