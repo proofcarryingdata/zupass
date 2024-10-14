@@ -499,7 +499,10 @@ export const ManageEmailModal = (): JSX.Element => {
       />
       <Input2
         variant="secondary"
-        onChange={(e) => setConfirmationCode(e.target.value)}
+        onChange={(e) => {
+          setConfirmationCode(e.target.value);
+          setError("");
+        }}
         value={confirmationCode}
         error={error}
         placeholder="Enter confirmation code"
