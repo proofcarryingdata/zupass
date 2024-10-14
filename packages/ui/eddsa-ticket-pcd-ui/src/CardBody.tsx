@@ -8,7 +8,7 @@ import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import html2canvas from "html2canvas";
+import { toCanvas } from "html-to-image";
 import { useRef, useState } from "react";
 import { TicketQR } from "./TicketQR";
 
@@ -89,7 +89,7 @@ function EdDSATicketPCDCardBody({
             if (!ticketElement) return;
             await shareOrDownloadImage(
               ticketElement,
-              (ticketData?.eventName || "event-ticket-data") + ".png"
+              (ticketData?.eventName || "event-ticket-data") + ".jpeg"
             );
             setDownloading(false);
           }}
@@ -163,6 +163,7 @@ const NEW_UI__TicketImageContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   padding: 16px 16px 0px 16px;
+  background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
 `;
 
 const NEW_UI__InfoContainer = styled.div`
@@ -268,9 +269,9 @@ const shareOrDownloadImage = async (
 ): Promise<void> => {
   if (!ticketElement) return;
 
-  const canvas: HTMLCanvasElement = await html2canvas(ticketElement);
+  const canvas: HTMLCanvasElement = await toCanvas(ticketElement);
   const blob: Blob | null = await new Promise((resolve) =>
-    canvas.toBlob(resolve, "image/png")
+    canvas.toBlob(resolve, "image/jpeg")
   );
   if (!blob) return; // Ensure the blob exists before proceeding
 
@@ -282,7 +283,7 @@ const shareOrDownloadImage = async (
     link.click();
     URL.revokeObjectURL(url);
   };
-  const file = new File([blob], fileName, { type: "image/png" });
+  const file = new File([blob], fileName, { type: "image/jpeg" });
   if (navigator.share && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({
