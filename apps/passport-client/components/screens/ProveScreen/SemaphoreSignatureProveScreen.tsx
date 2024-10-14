@@ -154,36 +154,20 @@ export function SemaphoreSignatureProveScreen({
   return (
     <Container>
       <ContentContainer>{lines.map((line) => line)}</ContentContainer>
-      <ButtonsGroup>
-        <Button2 disabled={proving || !!error} onClick={onProve}>
-          {proving ? (
-            <NewLoader color="white" rows={2} columns={3} />
-          ) : (
-            <Typography
-              color="var(--text-white)"
-              fontSize={18}
-              fontWeight={500}
-              family="Rubik"
-            >
-              Prove
-            </Typography>
-          )}
-        </Button2>
-        <Button2
-          onClick={
-            req.options?.requesterUrl
-              ? (): void => {
-                  window.location.href = req.options?.requesterUrl as string;
-                }
-              : (): void => window.history.back()
-          }
-          variant="secondary"
-        >
-          <Typography fontSize={18} fontWeight={500} family="Rubik">
-            Back
+      <Button2 disabled={proving || !!error} onClick={onProve}>
+        {proving ? (
+          <NewLoader color="white" rows={2} columns={3} />
+        ) : (
+          <Typography
+            color="var(--text-white)"
+            fontSize={18}
+            fontWeight={500}
+            family="Rubik"
+          >
+            Prove
           </Typography>
-        </Button2>
-      </ButtonsGroup>
+        )}
+      </Button2>
     </Container>
   );
 }
@@ -239,9 +223,4 @@ const Container = styled.div`
   flex-direction: column;
   gap: 20px;
   text-align: center;
-`;
-const ButtonsGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 `;
