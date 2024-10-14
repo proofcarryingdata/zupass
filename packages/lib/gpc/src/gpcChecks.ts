@@ -61,6 +61,7 @@ import {
   splitPODEntryIdentifier,
   widthOfEntryOrTuple
 } from "./gpcUtil";
+
 // TODO(POD-P2): Split out the parts of this which should be public from
 // internal implementation details.  E.g. the returning of ciruit parameters
 // isn't relevant to checking objects after deserialization.
@@ -1276,14 +1277,18 @@ export function checkVerifyClaimsForConfig(
  * size parameters of a desired configuration.
  *
  * @param circuitReq the circuit size requirements
+ * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
  * @returns the circuit description, or undefined if no circuit can handle
  *   the required parameters.
  * @throws Error if there are no circuits satisfying the given requirements.
  */
 export function pickCircuitForRequirements(
-  circuitReq: GPCRequirements
+  circuitReq: GPCRequirements,
+  circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
 ): ProtoPODGPCCircuitDesc {
-  for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
+  for (const circuitDesc of circuitFamily) {
     if (circuitDescMeetsRequirements(circuitDesc, circuitReq)) {
       return circuitDesc;
     }
@@ -1389,6 +1394,8 @@ export function mergeRequirements(
  * circuit which can satisfy the requirements.
  *
  * @param circuitReq the circuit size requirements
+ * @param circuitFamily the circuit family to pick the circuit from. This must
+ * be sorted in order of increasing circuit size (constraint count).
  * @param circuitIdentifier a specific circuit to be used
  * @returns the full description of the circuit to be used for the proof
  * @throws Error if no known circuit can support the given parameters, or if
@@ -1396,12 +1403,17 @@ export function mergeRequirements(
  */
 export function checkCircuitRequirements(
   requiredParameters: GPCRequirements,
+  circuitFamily: ProtoPODGPCCircuitDesc[],
   circuitIdentifier?: GPCIdentifier
 ): ProtoPODGPCCircuitDesc {
   if (circuitIdentifier !== undefined) {
     const { familyName, circuitName } =
       splitCircuitIdentifier(circuitIdentifier);
-    const foundDesc = ProtoPODGPC.findCircuit(familyName, circuitName);
+    const foundDesc = ProtoPODGPC.findCircuit(
+      familyName,
+      circuitName,
+      circuitFamily
+    );
     if (foundDesc === undefined) {
       throw new Error(`Unknown circuit name: "${circuitIdentifier}"`);
     }
@@ -1412,7 +1424,10 @@ export function checkCircuitRequirements(
     }
     return foundDesc;
   } else {
-    const pickedDesc = pickCircuitForRequirements(requiredParameters);
+    const pickedDesc = pickCircuitForRequirements(
+      requiredParameters,
+      circuitFamily
+    );
     if (pickedDesc === undefined) {
       throw new Error(`No supported circuit meets proof requirements.`);
     }

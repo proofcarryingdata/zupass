@@ -569,14 +569,18 @@ export class ProtoPODGPC {
    * Picks the smallest available circuit in this family which can handle the
    * size parameters of a desired configuration.
    *
-   * @param params a lower bound on the parameters required
+   * @param requiredParameters a lower bound on the parameters required
+   * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to
+   *   pick the circuit from. This must be sorted in order of increasing circuit
+   *   size (constraint count).
    * @returns the circuit description, or undefined if no circuit can handle
    *   the required parameters.
    */
   public static pickCircuit(
-    requiredParameters: ProtoPODGPCCircuitParams
+    requiredParameters: ProtoPODGPCCircuitParams,
+    circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
   ): ProtoPODGPCCircuitDesc | undefined {
-    for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
+    for (const circuitDesc of circuitFamily) {
       if (
         ProtoPODGPC.circuitMeetsRequirements(circuitDesc, requiredParameters)
       ) {
@@ -591,17 +595,20 @@ export class ProtoPODGPC {
    *
    * @param familyName the circuit family name
    * @param circuitName the name of the circuit
+   * @param [circuitFamily=ProtoPODGPC.CIRCUIT_FAMILY] the circuit family to
+   *   search
    * @returns the circuit description, or undefined if the name is
    *   unrecognized.
    */
   public static findCircuit(
     familyName: string,
-    circuitName: string
+    circuitName: string,
+    circuitFamily: ProtoPODGPCCircuitDesc[] = ProtoPODGPC.CIRCUIT_FAMILY
   ): ProtoPODGPCCircuitDesc | undefined {
     if (familyName && familyName !== PROTO_POD_GPC_FAMILY_NAME) {
       return undefined;
     }
-    for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
+    for (const circuitDesc of circuitFamily) {
       if (circuitName && circuitDesc.name === circuitName) {
         return circuitDesc;
       }
@@ -674,6 +681,25 @@ export class ProtoPODGPC {
   }
 
   /**
+   * Derives circuit descriptions from circuit parameters.
+   *
+   * @param circuitParams an array of pairs of circuit parameters and circuit
+   * sizes (constraint counts).
+   * @returns an array of the corresponding circuit descriptions arranged in
+   * order of increasing circuit size.
+   */
+  public static circuitFamilyFromParams(
+    circuitParams: [ProtoPODGPCCircuitParams, number][]
+  ): ProtoPODGPCCircuitDesc[] {
+    return circuitParams
+      .sort((a, b) => a[1] - b[1])
+      .map(
+        (pair: [ProtoPODGPCCircuitParams, number]): ProtoPODGPCCircuitDesc =>
+          ProtoPODGPC.circuitDescForParams(pair[0], pair[1])
+      );
+  }
+
+  /**
    * Circuit parameters pulled from `circuitParameters.json`
    * in the form of pairs consisting of the circuit parameters
    * and the cost of the circuit in constraints.
@@ -688,10 +714,7 @@ export class ProtoPODGPC {
    */
   // TODO(POD-P2): Pick convenient circuit sizes for MVP.
   public static CIRCUIT_FAMILY: ProtoPODGPCCircuitDesc[] =
-    ProtoPODGPC.CIRCUIT_PARAMETERS.sort((a, b) => a[1] - b[1]).map(
-      (pair: [ProtoPODGPCCircuitParams, number]): ProtoPODGPCCircuitDesc =>
-        ProtoPODGPC.circuitDescForParams(pair[0], pair[1])
-    );
+    ProtoPODGPC.circuitFamilyFromParams(ProtoPODGPC.CIRCUIT_PARAMETERS);
 
   /**
    * Name of the package on NPM which contains published artifacts for this
