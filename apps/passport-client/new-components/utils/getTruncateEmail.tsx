@@ -1,3 +1,7 @@
+/**
+ * Truncates a single email address while preserving the domain.
+ * If the email is longer than maxLength, it truncates the local part and adds '...'.
+ */
 export const truncateEmail = (email: string, maxLength: number): string => {
   const atIndex = email.lastIndexOf("@");
   if (atIndex === -1 || email.length <= maxLength) {
@@ -15,6 +19,10 @@ export const truncateEmail = (email: string, maxLength: number): string => {
   return `${localPart.slice(0, availableLength)}...${domain}`;
 };
 
+/**
+ * Truncates multiple email addresses separated by newlines.
+ * Applies truncation to each email and preserves the newline separation.
+ */
 export const getTruncateEmail = (
   emailString: string | undefined,
   maxLength: number

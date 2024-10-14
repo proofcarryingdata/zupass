@@ -5,7 +5,6 @@ import styled from "styled-components";
 export type FontWeight = 400 | 500 | 600 | 700 | 800 | 900;
 export type FontSize = 10 | 12 | 14 | 16 | 18 | 20 | 24;
 export type FontFamily = "Barlow" | "Rubik";
-
 const LINE_HEIGHT: Record<FontSize, number> = {
   "10": 13.5,
   "12": 16.2,
@@ -48,7 +47,6 @@ interface TypographyProps {
   align?: React.CSSProperties["textAlign"];
   style?: React.CSSProperties;
 }
-
 export const Typography: React.FC<TypographyProps> = ({
   children,
   fontSize = 14,

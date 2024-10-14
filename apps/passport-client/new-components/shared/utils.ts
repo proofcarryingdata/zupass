@@ -1,10 +1,10 @@
-import { serializeStorage } from "@pcd/passport-interface";
 import { useCallback } from "react";
 import {
   usePCDCollection,
   useSelf,
   useSubscriptions
 } from "../../src/appHooks";
+import { serializeStorage } from "@pcd/passport-interface";
 
 export const useExport = (): (() => Promise<void>) => {
   const user = useSelf();
