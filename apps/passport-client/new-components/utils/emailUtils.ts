@@ -1,20 +1,44 @@
+// type Font = `${FontWeight} ${FontSize}px ${FontFamily}`;
+
+export function getTextWidth(text, font) {
+  // re-use canvas object for better performance
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+  context.font = font;
+  const metrics = context.measureText(text);
+  return metrics.width;
+}
+
 /**
  * Truncates a single email address while preserving the domain.
- * If the email is longer than maxLength, it truncates the local part and adds '...'.
+ * If the email is longer than the container width, it truncates the local part and adds '...'.
  */
-export const truncateEmail = (email: string, maxLength: number): string => {
+export function truncateEmail(
+  email: string,
+  containerWidth: number,
+  font: string,
+  padding: number
+): string {
   const atIndex = email.lastIndexOf("@");
-  if (atIndex === -1 || email.length <= maxLength) {
-    return email;
-  }
+  if (atIndex === -1) return email;
 
-  const domain = email.slice(atIndex);
   const localPart = email.slice(0, atIndex);
-  const availableLength = maxLength - domain.length - 3;
+  const domain = email.slice(atIndex);
+  const ellipsis = "...";
 
-  if (availableLength < 1) {
+  const fullWidth = getTextWidth(email, font);
+  if (fullWidth <= containerWidth - padding) {
     return email;
   }
 
-  return `${localPart.slice(0, availableLength)}...${domain}`;
-};
+  let truncatedLocalPart = localPart;
+  while (
+    getTextWidth(`${truncatedLocalPart}${ellipsis}${domain}`, font) >
+      containerWidth - padding &&
+    truncatedLocalPart.length > 0
+  ) {
+    truncatedLocalPart = truncatedLocalPart.slice(0, -1);
+  }
+
+  return `${truncatedLocalPart}${ellipsis}${domain}`;
+}

@@ -7,7 +7,7 @@ import {
   InformationCircleIcon,
   TrashIcon
 } from "@heroicons/react/16/solid";
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import {
   useBottomModal,
@@ -15,7 +15,7 @@ import {
   useHasSetupPassword,
   useStateContext
 } from "../../../src/appHooks";
-import { truncateEmail } from "../../utils/getTruncateEmail";
+import { truncateEmail } from "../../utils/emailUtils";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { Typography } from "../Typography";
@@ -34,6 +34,9 @@ export function SettingsBottomModal(): JSX.Element {
   const dispatch = useDispatch();
   const hasSetupPassword = useHasSetupPassword();
   const exportData = useExport();
+  const [containerWidth, setContainerWidth] = useState(0);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const isOpen = activeBottomModal.modalType === "settings";
 
   const items: SettingItem[] = useMemo(
     () => [
@@ -134,8 +137,28 @@ export function SettingsBottomModal(): JSX.Element {
     [dispatch, hasSetupPassword, exportData]
   );
 
+  useLayoutEffect(() => {
+    if (!isOpen) return;
+    if (modalRef.current) {
+      const width = modalRef.current.clientWidth;
+      setContainerWidth(width);
+    }
+  }, [isOpen]);
+
+  const truncatedEmails = useMemo(() => {
+    if (!containerWidth) return state.self?.emails ?? [];
+
+    const font = "800 20px Rubik";
+    return (state.self?.emails ?? []).map((email) =>
+      truncateEmail(email, containerWidth, font, 48)
+    );
+  }, [state.self?.emails, containerWidth]);
+
   return (
-    <BottomModal isOpen={activeBottomModal.modalType === "settings"}>
+    <BottomModal
+      ref={modalRef}
+      isOpen={activeBottomModal.modalType === "settings"}
+    >
       <SettingsContainer>
         <UserTitleContainer>
           <Typography
@@ -144,9 +167,7 @@ export function SettingsBottomModal(): JSX.Element {
             align="center"
             style={{ whiteSpace: "pre-line" }}
           >
-            {(state.self?.emails ?? [])
-              .map((email) => truncateEmail(email, 25))
-              .join("\n")}
+            {truncatedEmails.join("\n")}
           </Typography>
         </UserTitleContainer>
         <SettingsActionContainer>
