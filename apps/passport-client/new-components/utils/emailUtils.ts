@@ -35,15 +35,19 @@ export function truncateEmail(
   const localPart = email.slice(0, atIndex);
   const domain = email.slice(atIndex);
   const ellipsis = "...";
-  const font = createFontString(fontSize, fontFamily);
-  const fullWidth = getTextWidth(email, font);
+
+  const fullWidth = getTextWidth(email, fontSize, fontFamily);
   if (fullWidth <= containerWidth - padding) {
     return email;
   }
 
   let truncatedLocalPart = localPart;
   while (
-    getTextWidth(`${truncatedLocalPart}${ellipsis}${domain}`, font) >
+    getTextWidth(
+      `${truncatedLocalPart}${ellipsis}${domain}`,
+      fontSize,
+      fontFamily
+    ) >
       containerWidth - padding &&
     truncatedLocalPart.length > 0
   ) {
