@@ -26,7 +26,6 @@
     "@pcd/eddsa-frog-pcd": "0.3.5",
     "@pcd/eddsa-pcd": "0.6.5",
     "@pcd/eddsa-ticket-pcd": "0.6.5",
-    "@pcd/server-shared": "0.0.5",
     "@pcd/email-pcd": "0.6.5",
     "@pcd/message-pcd": "0.1.6",
     "@pcd/passport-crypto": "0.11.4",
@@ -44,6 +43,7 @@
     "@pcd/semaphore-group-pcd": "0.11.6",
     "@pcd/semaphore-identity-pcd": "0.11.6",
     "@pcd/semaphore-signature-pcd": "0.11.6",
+    "@pcd/server-shared": "0.0.5",
     "@pcd/util": "^0.5.4",
     "@pcd/zk-eddsa-event-ticket-pcd": "0.6.6",
     "@pcd/zk-eddsa-frog-pcd": "0.3.6",
@@ -85,6 +85,7 @@
     "ts-node": "^10.9.2",
     "url-join": "4.0.1",
     "uuid": "^9.0.0",
+    "valibot": "^0.42.1",
     "worker-farm": "^1.7.0",
     "zod": "^3.22.4"
   },
