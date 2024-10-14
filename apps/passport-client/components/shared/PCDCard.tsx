@@ -23,7 +23,7 @@ import {
 } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { isEmailPCD } from "../../new-components/shared/Modals/PodsCollectionBottomModal";
-import { getTruncateEmail } from "../../new-components/utils/getTruncateEmail";
+import { truncateEmail } from "../../new-components/utils/emailUtils";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
 import { pcdRenderers } from "../../src/pcdRenderers";
@@ -310,10 +310,11 @@ type CardBodyProps = {
   isMainIdentity: boolean;
   hidePadding?: boolean;
   addOns?: AddOnsProps;
+  containerWidth?: number;
 };
 
 export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
-  ({ pcd, isMainIdentity, hidePadding, addOns }, ref) => {
+  ({ pcd, isMainIdentity, hidePadding, addOns, containerWidth }, ref) => {
     const pcdCollection = usePCDCollection();
 
     if (isMainIdentity) {
@@ -339,7 +340,14 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
       if (isEmailPCD(pcd)) {
         return (
           <TextCenter>
-            {getTruncateEmail(pcd.claim.emailAddress, 40)}
+            {containerWidth &&
+              truncateEmail(
+                pcd.claim.emailAddress,
+                containerWidth,
+                20,
+                "Barlow",
+                24
+              )}
           </TextCenter>
         );
       }

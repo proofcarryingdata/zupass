@@ -1,6 +1,6 @@
 import { ReactElement } from "react";
 import styled from "styled-components";
-const AVATAR_SIZE = 36;
+export const AVATAR_SIZE = 36;
 type IconProps = {
   imgSrc?: string;
 };

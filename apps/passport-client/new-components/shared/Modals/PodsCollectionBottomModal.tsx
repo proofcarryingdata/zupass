@@ -11,7 +11,14 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isUnknownPCD } from "@pcd/unknown-pcd";
 import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
 import intersectionWith from "lodash/intersectionWith";
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
@@ -19,8 +26,8 @@ import {
   useDispatch,
   usePCDCollection
 } from "../../../src/appHooks";
-import { getTruncateEmail } from "../../utils/getTruncateEmail";
-import { Avatar } from "../Avatar";
+import { truncateEmail } from "../../utils/emailUtils";
+import { AVATAR_SIZE, Avatar } from "../Avatar";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
@@ -47,24 +54,6 @@ const getActivePod = (
 export const isEmailPCD = (pcd: PCD<unknown, unknown>): pcd is EmailPCD =>
   pcd.type === EmailPCDTypeName;
 
-const getPcdName = (pcd: PCD<unknown, unknown>): string => {
-  switch (true) {
-    case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
-      return pcd.claim.ticket.eventName + " - " + pcd.claim.ticket.ticketName;
-    case isEmailPCD(pcd):
-      return getTruncateEmail(pcd.claim.emailAddress, 30);
-    case isPODPCD(pcd):
-      return getPodDisplayOptions(pcd).header ?? pcd.id;
-    case isEdDSAFrogPCD(pcd):
-      return pcd.claim.data.name;
-    case isZKEdDSAFrogPCD(pcd):
-      return pcd.claim.partialFrog.name ?? pcd.id;
-    case isUnknownPCD(pcd):
-    default:
-      return pcd.id;
-  }
-};
-
 const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
   switch (true) {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
@@ -88,6 +77,8 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const activeBottomModal = useBottomModal();
   const [scrollPosition, setScrollPosition] = useState(0);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(0);
   const dispatch = useDispatch();
   const pcdCollection = usePCDCollection();
   const isPodsCollectionModalOpen =
@@ -101,6 +92,38 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
           activeBottomModal.idType ?? "id"
         )
       : undefined;
+
+  useLayoutEffect(() => {
+    if (!isPodsCollectionModalOpen) return;
+    if (modalRef.current) {
+      const width = modalRef.current.clientWidth;
+      setContainerWidth(width);
+    }
+  }, [isPodsCollectionModalOpen]);
+
+  const getPcdName = (pcd: PCD<unknown, unknown>): string => {
+    switch (true) {
+      case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
+        return pcd.claim.ticket.eventName + " - " + pcd.claim.ticket.ticketName;
+      case isEmailPCD(pcd):
+        return truncateEmail(
+          pcd.claim.emailAddress,
+          containerWidth,
+          20,
+          "Barlow",
+          AVATAR_SIZE + 36
+        );
+      case isPODPCD(pcd):
+        return getPodDisplayOptions(pcd).header ?? pcd.id;
+      case isEdDSAFrogPCD(pcd):
+        return pcd.claim.data.name;
+      case isZKEdDSAFrogPCD(pcd):
+        return pcd.claim.partialFrog.name ?? pcd.id;
+      case isUnknownPCD(pcd):
+      default:
+        return pcd.id;
+    }
+  };
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
@@ -143,7 +166,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     }
 
     return Object.values(result);
-  }, [pcdCollection, dispatch]);
+  }, [pcdCollection, dispatch, containerWidth]);
 
   useEffect(() => {
     // Restore scroll position when list is shown again
@@ -160,6 +183,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     <BottomModal
       modalContainerStyle={{ padding: 0, paddingTop: 24 }}
       isOpen={isPodsCollectionModalOpen}
+      ref={modalRef}
     >
       <Container>
         {!activePod && (
@@ -171,7 +195,11 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         )}
         <ListContainer ref={listContainerRef}>
           {activePod ? (
-            <CardBody isMainIdentity={false} pcd={activePod} />
+            <CardBody
+              isMainIdentity={false}
+              pcd={activePod}
+              containerWidth={containerWidth}
+            />
           ) : (
             <List style={{ paddingTop: 0 }} list={podsCollectionList} />
           )}
