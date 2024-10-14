@@ -409,7 +409,12 @@ export const ManageEmailModal = (): JSX.Element => {
               ? onChangeEmail()
               : sendConfirmationCode();
           }}
-          disabled={errorOrLoading}
+          disabled={
+            errorOrLoading ||
+            (emailManagerState ===
+              EmailManagerState.changeEmailEnterConfirmationCode &&
+              !confirmationCode)
+          }
         >
           {textOrLoader(
             emailManagerState ===
