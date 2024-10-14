@@ -133,15 +133,16 @@ export function SemaphoreSignatureProveScreen({
           family="Rubik"
           fontWeight={500}
         >
-          <Typography
-            style={{ overflowWrap: "break-word" }}
-            color="var(--text-primary)"
-            fontSize={16}
-            fontWeight={400}
-            family="Rubik"
-          >
-            Signing message: {req.args.signedMessage.value}
-          </Typography>
+          Signing message:
+        </Typography>
+        <Typography
+          style={{ overflowWrap: "break-word" }}
+          color="var(--text-primary)"
+          fontSize={16}
+          fontWeight={400}
+          family="Rubik"
+        >
+          {req.args.signedMessage.value}
         </Typography>
       </InnerContainer>
     );
