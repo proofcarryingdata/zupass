@@ -497,7 +497,7 @@ export const ManageEmailModal = (): JSX.Element => {
             verifyCode();
             reset();
           }}
-          disabled={errorOrLoading}
+          disabled={errorOrLoading || !confirmationCode}
         >
           {textOrLoader("Verify")}
         </Button2>
