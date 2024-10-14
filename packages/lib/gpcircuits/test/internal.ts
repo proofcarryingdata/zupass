@@ -5,7 +5,7 @@ import {
   ProtoPODGPC,
   ProtoPODGPCCircuitDesc,
   ProtoPODGPCCircuitParams
-} from "./proto-pod-gpc";
+} from "../src/proto-pod-gpc";
 
 /**
  * Constants specifying locations of files and directories relevant to circuit

@@ -38,7 +38,6 @@ import {
   protoPODGPCCircuitParamArray,
   zipLists
 } from "../src";
-import { ARTIFACTS_DIR, chooseCircuitFamily } from "../src/internal";
 import {
   circomkit,
   ownerIdentity,
@@ -49,9 +48,10 @@ import {
   sampleEntries2,
   sampleEntries3
 } from "./common";
+import { ARTIFACTS_DIR, chooseCircuitFamilyForTests } from "./internal";
 
 // Choose circuit family according to environment variable `GPC_FAMILY_VARIANT`.
-const { circuitParamType, testCircuitFamily } = chooseCircuitFamily();
+const { circuitParamType, testCircuitFamily } = chooseCircuitFamilyForTests();
 
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;

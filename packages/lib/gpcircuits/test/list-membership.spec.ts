@@ -15,10 +15,10 @@ import {
   processSingleList,
   zipLists
 } from "../src";
-import { chooseCircuitFamily } from "../src/internal";
 import { circomkit } from "./common";
+import { chooseCircuitFamilyForTests } from "./internal";
 
-const { testCircuitFamily } = chooseCircuitFamily();
+const { testCircuitFamily } = chooseCircuitFamilyForTests();
 
 describe("List membership helpers should work", function () {
   const params1 = {
