@@ -1,3 +1,4 @@
+/// <reference types="./declarations/fastfile.d.ts" />
 import * as fastfile from "fastfile";
 import urljoin from "url-join";
 import { CircuitArtifactPaths, CircuitDesc } from "./types";
