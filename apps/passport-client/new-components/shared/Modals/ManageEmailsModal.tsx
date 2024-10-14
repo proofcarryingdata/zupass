@@ -387,13 +387,15 @@ export const ManageEmailModal = (): JSX.Element => {
           setNewEmail(e.target.value);
           setError("");
         }}
-        error={error}
       />
       {emailManagerState ===
         EmailManagerState.changeEmailEnterConfirmationCode && (
         <Input2
           variant="secondary"
-          onChange={(e) => setConfirmationCode(e.target.value)}
+          onChange={(e) => {
+            setConfirmationCode(e.target.value);
+            setError("");
+          }}
           value={confirmationCode}
           error={error}
           placeholder="Enter confirmation code"
@@ -407,7 +409,12 @@ export const ManageEmailModal = (): JSX.Element => {
               ? onChangeEmail()
               : sendConfirmationCode();
           }}
-          disabled={errorOrLoading}
+          disabled={
+            errorOrLoading ||
+            (emailManagerState ===
+              EmailManagerState.changeEmailEnterConfirmationCode &&
+              !confirmationCode)
+          }
         >
           {textOrLoader(
             emailManagerState ===
@@ -499,7 +506,7 @@ export const ManageEmailModal = (): JSX.Element => {
             verifyCode();
             reset();
           }}
-          disabled={errorOrLoading}
+          disabled={errorOrLoading || !confirmationCode}
         >
           {textOrLoader("Verify")}
         </Button2>
