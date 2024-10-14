@@ -18,19 +18,3 @@ export const truncateEmail = (email: string, maxLength: number): string => {
 
   return `${localPart.slice(0, availableLength)}...${domain}`;
 };
-
-/**
- * Truncates multiple email addresses separated by newlines.
- * Applies truncation to each email and preserves the newline separation.
- */
-export const getTruncateEmail = (
-  emailString: string | undefined,
-  maxLength: number
-): string => {
-  if (!emailString) return "Unknown Email";
-
-  const emails = emailString.split("\n");
-  return emails
-    .map((email) => truncateEmail(email.trim(), maxLength))
-    .join("\n");
-};

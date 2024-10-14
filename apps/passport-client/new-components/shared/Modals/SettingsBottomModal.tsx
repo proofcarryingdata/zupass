@@ -15,7 +15,7 @@ import {
   useHasSetupPassword,
   useStateContext
 } from "../../../src/appHooks";
-import { getTruncateEmail } from "../../utils/getTruncateEmail";
+import { truncateEmail } from "../../utils/getTruncateEmail";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { Typography } from "../Typography";
@@ -144,7 +144,9 @@ export function SettingsBottomModal(): JSX.Element {
             align="center"
             style={{ whiteSpace: "pre-line" }}
           >
-            {getTruncateEmail((state.self?.emails ?? []).join("\n"), 30)}
+            {(state.self?.emails ?? [])
+              .map((email) => truncateEmail(email, 25))
+              .join("\n")}
           </Typography>
         </UserTitleContainer>
         <SettingsActionContainer>
