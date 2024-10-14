@@ -27,6 +27,7 @@ import isEqual from "lodash/isEqual";
 import uniq from "lodash/uniq";
 import { Identity as IdentityV4 } from "semaphore-identity-v4";
 import {
+  ClosedInterval,
   GPCBoundConfig,
   GPCIdentifier,
   GPCProofConfig,
@@ -43,7 +44,6 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
-  ClosedInterval,
   GPCProofMembershipListConfig,
   GPCRequirements,
   LIST_MEMBERSHIP,

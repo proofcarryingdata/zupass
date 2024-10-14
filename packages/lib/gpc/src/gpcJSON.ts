@@ -10,6 +10,35 @@ import {
   requireType
 } from "@pcd/pod";
 import { PODMembershipLists } from "./gpcTypes";
+import type {
+  InferredJSONClosedInterval,
+  InferredJSONProofEntryBoundsCheckConfig
+} from "./gpcValibot";
+
+// TODO(artwyman): Decide how many of the types and converters to expose.
+// Potentially only those for the top-level types: GPCProofConfig,
+// GPCBoundConfig, GPCRevealedClaims.
+
+/**
+ * JSON-compatible type for representing {@link ClosedInterval}, which is
+ * safe to serialize directly using `JSON.stringify`.
+ *
+ * This is identical to the TypeScript type except that `bigint` and
+ * {@link PODValue} elements are replaced by JSON-compatible representations.
+ *
+ * Use {@link gpcClosedIntervalToJSON}
+ */
+export type JSONClosedInterval = InferredJSONClosedInterval;
+
+/**
+ * JSON-compatible type for representing {@link GPCProofEntryBoundsCheckConfig},
+ * which is safe to serialize directly using `JSON.stringify`.
+ *
+ * This is identical to the TypeScript type except that `bigint` and
+ * {@link PODValue} elements are replaced by JSON-compatible representations.
+ */
+export type JSONProofEntryBoundsCheckConfig =
+  InferredJSONProofEntryBoundsCheckConfig;
 
 /**
  * JSON-compatible format for representing a {@link PODMembershipLists}
