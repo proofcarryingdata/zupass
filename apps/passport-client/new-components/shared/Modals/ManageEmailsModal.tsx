@@ -493,6 +493,10 @@ export const ManageEmailModal = (): JSX.Element => {
 
   const enterCodeContainer = (
     <>
+      <BottomModalHeader
+        title="ENTER CONFIRMATION CODE"
+        description="Please enter the confirmation code."
+      />
       <Input2
         variant="secondary"
         onChange={(e) => setConfirmationCode(e.target.value)}
@@ -502,10 +506,7 @@ export const ManageEmailModal = (): JSX.Element => {
       />
       <ButtonsContainer>
         <Button2
-          onClick={() => {
-            verifyCode();
-            reset();
-          }}
+          onClick={() => verifyCode()}
           disabled={errorOrLoading || !confirmationCode}
         >
           {textOrLoader("Verify")}
