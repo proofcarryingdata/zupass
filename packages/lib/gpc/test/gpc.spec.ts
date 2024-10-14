@@ -11,7 +11,7 @@ import {
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
-import { chooseCircuitFamilyForTests } from "../../gpcircuits/test/internal";
+import { chooseCircuitFamilyForTests } from "../../gpcircuits/scripts/common";
 import {
   GPCArtifactSource,
   GPCArtifactStability,

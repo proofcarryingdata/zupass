@@ -17,6 +17,7 @@ import "mocha";
 import path from "path";
 import { poseidon1, poseidon2 } from "poseidon-lite";
 
+import { ARTIFACTS_DIR, chooseCircuitFamilyForTests } from "../scripts/common";
 import {
   CircuitArtifactPaths,
   CircuitSignal,
@@ -48,7 +49,6 @@ import {
   sampleEntries2,
   sampleEntries3
 } from "./common";
-import { ARTIFACTS_DIR, chooseCircuitFamilyForTests } from "./internal";
 
 // Choose circuit family according to environment variable `GPC_FAMILY_VARIANT`.
 const { circuitParamType, testCircuitFamily } = chooseCircuitFamilyForTests();

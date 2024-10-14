@@ -2,6 +2,7 @@ import { PODValue, podValueHash } from "@pcd/pod";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
+import { chooseCircuitFamilyForTests } from "../scripts/common";
 import {
   ListMembershipModuleInputNamesType,
   ListMembershipModuleInputs,
@@ -16,7 +17,6 @@ import {
   zipLists
 } from "../src";
 import { circomkit } from "./common";
-import { chooseCircuitFamilyForTests } from "./internal";
 
 const { testCircuitFamily } = chooseCircuitFamilyForTests();
 

@@ -1,12 +1,12 @@
 import { expect } from "chai";
 import "mocha";
 import path from "path";
+import { chooseCircuitFamilyForTests } from "../scripts/common";
 import {
   githubDownloadRootURL,
   gpcArtifactPaths,
   unpkgDownloadRootURL
 } from "../src";
-import { chooseCircuitFamilyForTests } from "./internal";
 
 const { testCircuitFamily } = chooseCircuitFamilyForTests();
 

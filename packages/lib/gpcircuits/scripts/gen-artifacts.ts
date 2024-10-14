@@ -1,8 +1,7 @@
 import * as path from "path";
 import { argv } from "process";
 import { ARTIFACTS_DIR, JSON_FILE_CONFIG } from "../src/internal";
-import { ensureCircuitParamSet } from "../src/util";
-import { genCircuitArtifacts } from "./common";
+import { ensureCircuitParamSet, genCircuitArtifacts } from "./common";
 
 async function main(): Promise<void> {
   const artifactType = ensureCircuitParamSet(argv[2]);
