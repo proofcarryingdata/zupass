@@ -1,6 +1,7 @@
 import {
   PipelineDefinition,
   isCSVPipelineDefinition,
+  isCSVTicketPipelineDefinition,
   isLemonadePipelineDefinition,
   isPODPipelineDefinition,
   isPretixPipelineDefinition
@@ -23,6 +24,7 @@ import { PersistentCacheService } from "../../../persistentCacheService";
 import { traced } from "../../../telemetryService";
 import { tracePipeline } from "../../honeycombQueries";
 import { CSVPipeline } from "../../pipelines/CSVPipeline/CSVPipeline";
+import { CSVTicketPipeline } from "../../pipelines/CSVTicketPipeline/CSVTicketPipeline";
 import { LemonadePipeline } from "../../pipelines/LemonadePipeline";
 import { PODPipeline } from "../../pipelines/PODPipeline/PODPipeline";
 import { PretixPipeline } from "../../pipelines/PretixPipeline";
@@ -121,6 +123,16 @@ export function instantiatePipeline(
         args.pipelineAtomDB,
         args.credentialSubservice,
         args.consumerDB,
+        args.cacheService
+      );
+    } else if (isCSVTicketPipelineDefinition(definition)) {
+      pipeline = new CSVTicketPipeline(
+        args.eddsaPrivateKey,
+        definition,
+        args.pipelineAtomDB,
+        args.credentialSubservice,
+        args.consumerDB,
+        args.semaphoreHistoryDB,
         args.cacheService
       );
     }
