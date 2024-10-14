@@ -6,7 +6,6 @@ import {
   requestProveOnServer,
   SignInMessagePayload
 } from "@pcd/passport-interface";
-import { ErrorContainer } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   IdentityV3,
@@ -26,10 +25,7 @@ import {
   safeRedirectPending
 } from "../../../src/passportRequest";
 import { getHost, getOrigin, nextFrame } from "../../../src/util";
-import { Button } from "../../core";
-import { RippleLoader } from "../../core/RippleLoader";
 import { Typography } from "../../../new-components/shared/Typography";
-import { Container } from "../../../../../packages/ui/pod-pcd-ui/src/shared";
 import { Button2 } from "../../../new-components/shared/Button";
 import { NewLoader } from "../../../new-components/shared/NewLoader";
 
