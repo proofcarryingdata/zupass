@@ -7,7 +7,6 @@ import {
 import { CircomkitConfig } from "circomkit";
 import { PathLike } from "fs";
 import path from "path";
-import { JSON_FILE_CONFIG } from "./internal";
 import { ObjectModuleInputs } from "./object";
 import { CircuitSignal } from "./types";
 
@@ -245,24 +244,4 @@ export function dummyObjectSignals(
       signatureS: signatures[i].S
     };
   });
-}
-
-/**
- * Ensures that the type of the set of circuit parameters (if provided) is
- * valid.  At present, this amounts to checking for either "prod" or "test".
- *
- * @param name optional string identifying the set of circuit parameters
- * @returns string identifying the set of circuit parameters ("prod" if
- * unspecified).
- * @throws Error if the circuit parameter family set specified is inadmissible.
- */
-export function ensureCircuitParamSet(name: string | undefined): string {
-  const admissibleParamSets = Object.keys(JSON_FILE_CONFIG);
-  if (name && !admissibleParamSets.includes(name)) {
-    throw new Error(
-      `Circuit parameters must be one of the following types: ${admissibleParamSets}`
-    );
-  } else {
-    return name ?? "prod";
-  }
 }

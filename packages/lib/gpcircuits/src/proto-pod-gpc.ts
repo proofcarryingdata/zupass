@@ -682,6 +682,11 @@ export class ProtoPODGPC {
 
   /**
    * Derives circuit descriptions from circuit parameters.
+   *
+   * @param circuitParams an array of pairs of circuit parameters and circuit
+   * sizes (constraint counts).
+   * @returns an array of the corresponding circuit descriptions arranged in
+   * order of increasing circuit size.
    */
   public static circuitFamilyFromParams(
     circuitParams: [ProtoPODGPCCircuitParams, number][]

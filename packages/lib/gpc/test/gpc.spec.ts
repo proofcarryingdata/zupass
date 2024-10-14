@@ -11,7 +11,7 @@ import {
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
-import { chooseCircuitFamily } from "../../gpcircuits/src/internal";
+import { chooseCircuitFamilyForTests } from "../../gpcircuits/src/internal";
 import {
   GPCArtifactSource,
   GPCArtifactStability,
@@ -46,7 +46,7 @@ import {
 } from "./common";
 
 // Choose circuit family according to environment variable `GPC_FAMILY_VARIANT`.
-const { circuitParamType, testCircuitFamily } = chooseCircuitFamily();
+const { circuitParamType, testCircuitFamily } = chooseCircuitFamilyForTests();
 
 // Test-specific GPC proof and verification functions
 const gpcCheckProvable = (
