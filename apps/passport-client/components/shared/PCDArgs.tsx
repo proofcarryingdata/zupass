@@ -120,6 +120,8 @@ export function PCDArgs<T extends PCDPackage>({
       true
   );
 
+  console.log("visible", visible);
+  console.log("hidden", hidden, showAll);
   return (
     <ArgsContainer>
       <ArgsInnerContainer>
@@ -655,20 +657,6 @@ export function PCDArgInput({
 
   if (proveOptions?.multi) {
     return (
-      <Accordion
-        ref={ref}
-        children={options.map((option) => {
-          return {
-            title: option.label,
-            key: option.id
-          };
-        })}
-        title={arg.displayName ?? "tickets"}
-      />
-    );
-  }
-  if (proveOptions?.multi) {
-    return (
       <ArgContainer
         arg={arg}
         {...rest}
@@ -679,15 +667,16 @@ export function PCDArgInput({
             : undefined
         }
       >
-        <MultiOptionContainer>
-          {options.map((option) => {
-            return (
-              <MultiOptionSingleOption key={option.id}>
-                {option.label}
-              </MultiOptionSingleOption>
-            );
+        <Accordion
+          ref={ref}
+          children={options.map((option) => {
+            return {
+              title: option.label,
+              key: option.id
+            };
           })}
-        </MultiOptionContainer>
+          title={arg.displayName ?? "tickets"}
+        />
       </ArgContainer>
     );
   }
