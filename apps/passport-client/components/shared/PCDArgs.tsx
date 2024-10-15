@@ -120,8 +120,6 @@ export function PCDArgs<T extends PCDPackage>({
       true
   );
 
-  console.log("visible", visible);
-  console.log("hidden", hidden, showAll);
   return (
     <ArgsContainer>
       <ArgsInnerContainer>
@@ -664,8 +662,8 @@ export function PCDArgInput({
         {...rest}
         error={
           relevantPCDs.length === 0
-            ? (arg.validatorParams?.notFoundMessage ??
-              "You do not have an eligible PCD.")
+            ? arg.validatorParams?.notFoundMessage ??
+              "You do not have an eligible PCD."
             : undefined
         }
       >
@@ -689,8 +687,8 @@ export function PCDArgInput({
       {...rest}
       error={
         relevantPCDs.length === 0
-          ? (arg.validatorParams?.notFoundMessage ??
-            "You do not have an eligible PCD.")
+          ? arg.validatorParams?.notFoundMessage ??
+            "You do not have an eligible PCD."
           : undefined
       }
     >
