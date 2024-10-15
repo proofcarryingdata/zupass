@@ -5,19 +5,13 @@ import {
   FormControl,
   FormLabel,
   HStack,
-  Input,
-  Tag,
-  TagCloseButton,
-  TagLabel,
-  VStack
+  Input
 } from "@chakra-ui/react";
 import {
   CSVTicketPipelineDefinition,
   PipelineType
 } from "@pcd/passport-interface";
-import uniq from "lodash/uniq";
 import { ReactNode, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { FancyEditor } from "../../../components/FancyEditor";
 import {
   CSVPreview,
@@ -39,8 +33,6 @@ export default function CSVTicketPipelineBuilder(
   props: CSVTicketPipelineBuilderProps
 ): ReactNode {
   const [eventName, setEventName] = useState("My Event");
-  const [products, setProducts] = useState(SAMPLE_PRODUCTS);
-  const [newProduct, setNewProduct] = useState("");
   const [csv, setCsv] = useState(SAMPLE_CSV_DATA);
 
   const [previewType, setPreviewType] = useState<PreviewType | undefined>(
@@ -115,42 +107,6 @@ export default function CSVTicketPipelineBuilder(
                 placeholder="Event Name"
               />
             </FormControl>
-
-            <FormControl mb={4}>
-              <FormLabel>Products</FormLabel>
-              <VStack align="stretch" spacing={2}>
-                {products.map((product, index) => (
-                  <HStack key={index}>
-                    <Tag size="lg">
-                      <TagLabel>{product}</TagLabel>
-                      <TagCloseButton
-                        aria-label="Delete product  "
-                        onClick={() =>
-                          setProducts(products.filter((_, i) => i !== index))
-                        }
-                      />
-                    </Tag>
-                  </HStack>
-                ))}
-                <HStack>
-                  <Input
-                    placeholder="New product name"
-                    value={newProduct}
-                    onChange={(e) => setNewProduct(e.target.value)}
-                  />
-                  <Button
-                    onClick={() => {
-                      if (newProduct.trim()) {
-                        setProducts(uniq([...products, newProduct.trim()]));
-                        setNewProduct("");
-                      }
-                    }}
-                  >
-                    Add
-                  </Button>
-                </HStack>
-              </VStack>
-            </FormControl>
           </Card>
 
           <Button
@@ -167,9 +123,6 @@ export default function CSVTicketPipelineBuilder(
                   editorUserIds: [],
                   options: {
                     eventName,
-                    products: Object.fromEntries(
-                      products.map((productName) => [productName, uuidv4()])
-                    ),
                     pcdTypes: ["EdDSATicketPCD", "PODTicketPCD"],
                     csv,
                     feedOptions: {
