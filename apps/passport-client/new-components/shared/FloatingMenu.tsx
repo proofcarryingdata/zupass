@@ -79,6 +79,29 @@ export const FloatingMenu = (): JSX.Element => {
           </Typography>
         </IconContainer>
       </FloatingMenuItem>
+      <FloatingMenuItem
+        onClick={() =>
+          dispatch({
+            type: "scroll-to-ticket",
+            scrollTo: {
+              eventId: "f474401b-af3e-47a4-92f9-3786b122168b",
+              attendee: "amir@10play.dev"
+            }
+          })
+        }
+      >
+        <IconContainer>
+          <Cog6ToothIcon color="inherit" height={24} />
+          <Typography
+            fontSize={10}
+            fontWeight={500}
+            family="Rubik"
+            color="inherit"
+          >
+            scroll to
+          </Typography>
+        </IconContainer>
+      </FloatingMenuItem>
     </FloatingMenuContainer>
   );
 };

@@ -18,6 +18,7 @@ import {
   useDispatch,
   useLoadedIssuedPCDs,
   usePCDs,
+  useScrollTo,
   useSelf,
   useUserForcedToLogout
 } from "../../../src/appHooks";
@@ -30,6 +31,8 @@ import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
+import { nextFrame } from "../../../src/util";
+import { sleep } from "@pcd/util";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -223,6 +226,7 @@ export const NewHomeScreen = (): ReactElement => {
   const [currentPos, setCurrentPos] = useState(0);
   const dispatch = useDispatch();
   const ticketsRef = useRef<Map<string, HTMLDivElement[]>>(new Map());
+  const scrollTo = useScrollTo();
   const windowWidth = useWindowWidth();
   const self = useSelf();
   const navigate = useNavigate();
@@ -234,6 +238,33 @@ export const NewHomeScreen = (): ReactElement => {
       navigate("/login", { replace: true });
     }
   });
+
+  useEffect(() => {
+    if (scrollTo && isLoadedPCDs && tickets.length > 0) {
+      console.log(tickets, scrollTo.eventId, scrollTo.attendee);
+      const eventPos = tickets.findIndex(
+        (pack) => pack[0] === scrollTo.eventId
+      );
+      if (eventPos < 0) return;
+      if (eventPos !== currentPos) {
+        setCurrentPos(eventPos);
+        return;
+      }
+      (async () => {
+        await nextFrame();
+        const elToScroll = document.getElementById(
+          scrollTo.eventId + scrollTo.attendee
+        );
+        console.log("el to scroll", elToScroll);
+        window.scroll({
+          top: elToScroll?.offsetTop,
+          left: elToScroll?.offsetLeft,
+          behavior: "smooth"
+        });
+        dispatch({ type: "scroll-to-ticket", scrollTo: undefined });
+      })();
+    }
+  }, [scrollTo, currentPos, setCurrentPos, tickets, isLoadedPCDs]);
 
   const cardWidth =
     (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
@@ -278,6 +309,7 @@ export const NewHomeScreen = (): ReactElement => {
               resistance={true}
               index={currentPos}
               onChangeIndex={(e: number) => {
+                console.log("this is the pos", e);
                 setCurrentPos(e);
               }}
             >

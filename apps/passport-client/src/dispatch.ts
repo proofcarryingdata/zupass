@@ -199,6 +199,15 @@ export type Action =
   | {
       type: "zapp-approval";
       approved: boolean;
+    }
+  | {
+      type: "scroll-to-ticket";
+      scrollTo:
+        | {
+            attendee: string;
+            eventId: string;
+          }
+        | undefined;
     };
 
 export type StateContextValue = {
@@ -339,6 +348,10 @@ export async function dispatch(
       return zappConnect(state, update, action.zapp, action.origin);
     case "zapp-approval":
       return zappApproval(state, update, action.approved);
+    case "scroll-to-ticket":
+      const { scrollTo } = action;
+      update({ scrollTo });
+      return;
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);

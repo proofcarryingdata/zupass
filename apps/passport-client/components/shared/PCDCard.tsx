@@ -171,10 +171,10 @@ const getURLsBasedOnCategory = (
     ticketCategory === TicketCategory.Devconnect
       ? `${window.location.origin}/#/checkin-by-id`
       : ticketCategory === TicketCategory.ZuConnect
-      ? `${window.location.origin}/#/verify`
-      : ticketCategory === TicketCategory.Generic
-      ? `${window.location.origin}/#/generic-checkin`
-      : undefined;
+        ? `${window.location.origin}/#/verify`
+        : ticketCategory === TicketCategory.Generic
+          ? `${window.location.origin}/#/generic-checkin`
+          : undefined;
 
   const verifyURL =
     ticketCategory === TicketCategory.Generic
@@ -268,10 +268,10 @@ const TicketWrapper = forwardRef<
     ticketCategory === TicketCategory.Devconnect
       ? `${window.location.origin}/#/checkin-by-id`
       : ticketCategory === TicketCategory.ZuConnect
-      ? `${window.location.origin}/#/verify`
-      : ticketCategory === TicketCategory.Generic
-      ? `${window.location.origin}/#/generic-checkin`
-      : undefined;
+        ? `${window.location.origin}/#/verify`
+        : ticketCategory === TicketCategory.Generic
+          ? `${window.location.origin}/#/generic-checkin`
+          : undefined;
 
   // In the long run, we will want issuers to be able to provide more metadata
   // about how check-in should work, either in the PCD itself or to be looked
@@ -287,7 +287,10 @@ const TicketWrapper = forwardRef<
       : `${window.location.origin}/#/verify`;
 
   return identityPCD ? (
-    <div ref={ref}>
+    <div
+      ref={ref}
+      id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
+    >
       <Card
         hidePadding={hidePadding}
         pcd={pcd}
@@ -319,12 +322,16 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
     }
     if (pcdCollection.hasPackage(pcd.type)) {
       if (isEdDSATicketPCD(pcd)) {
+        console.log(pcd);
         return <TicketWrapper ref={ref} pcd={pcd} hidePadding={hidePadding} />;
       }
       if (isPODTicketPCD(pcd)) {
         const Component = PODTicketPCDUI.renderCardBody;
         return (
-          <div ref={ref}>
+          <div
+            ref={ref}
+            id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
+          >
             <Component
               ticketData={pcd.claim.ticket}
               addOns={addOns}
