@@ -7,7 +7,7 @@ import {
   InformationCircleIcon,
   TrashIcon
 } from "@heroicons/react/16/solid";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useMemo } from "react";
 import styled from "styled-components";
 import {
   useBottomModal,
@@ -15,10 +15,9 @@ import {
   useHasSetupPassword,
   useStateContext
 } from "../../../src/appHooks";
-import { truncateEmail } from "../../utils/emailUtils";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
-import { FontFamily, FontSize, Typography } from "../Typography";
+import { Typography } from "../Typography";
 import { useExport } from "../utils";
 
 interface SettingItem {
@@ -34,9 +33,6 @@ export function SettingsBottomModal(): JSX.Element {
   const dispatch = useDispatch();
   const hasSetupPassword = useHasSetupPassword();
   const exportData = useExport();
-  const [containerWidth, setContainerWidth] = useState(0);
-  const modalRef = useRef<HTMLDivElement>(null);
-  const isOpen = activeBottomModal.modalType === "settings";
 
   const items: SettingItem[] = useMemo(
     () => [
@@ -137,39 +133,34 @@ export function SettingsBottomModal(): JSX.Element {
     [dispatch, hasSetupPassword, exportData]
   );
 
-  useLayoutEffect(() => {
-    if (!isOpen) return;
-    if (modalRef.current) {
-      const width = modalRef.current.clientWidth;
-      setContainerWidth(width);
-    }
-  }, [isOpen]);
-
-  const truncatedEmails = useMemo(() => {
-    if (!containerWidth) return state.self?.emails ?? [];
-
-    const fontSize: FontSize = 20;
-    const fontFamily: FontFamily = "Rubik";
-    return (state.self?.emails ?? []).map((email) =>
-      truncateEmail(email, containerWidth, fontSize, fontFamily, 48)
+  const TruncatedEmail = ({ email }: { email: string }): JSX.Element => {
+    const [username, domain] = email.split("@");
+    return (
+      <EmailWrapper>
+        <Username>{username}</Username>
+        <Domain>@{domain}</Domain>
+        <div style={{ clear: "both" }} />
+      </EmailWrapper>
     );
-  }, [state.self?.emails, containerWidth]);
+  };
 
   return (
-    <BottomModal
-      ref={modalRef}
-      isOpen={activeBottomModal.modalType === "settings"}
-    >
+    <BottomModal isOpen={activeBottomModal.modalType === "settings"}>
       <SettingsContainer>
         <UserTitleContainer>
-          <Typography
-            fontSize={20}
-            fontWeight={800}
-            align="center"
-            style={{ whiteSpace: "pre-line" }}
-          >
-            {truncatedEmails.join("\n")}
-          </Typography>
+          {state.self?.emails.map((email, index) => (
+            <EmailContainer key={index}>
+              <Typography
+                key={index}
+                fontSize={20}
+                fontWeight={800}
+                align="center"
+                style={{ maxWidth: "90%" }}
+              >
+                <TruncatedEmail email={email} />
+              </Typography>
+            </EmailContainer>
+          ))}
         </UserTitleContainer>
         <SettingsActionContainer>
           {items.map(({ icon, title, onClick, variant }, i) => (
@@ -215,10 +206,33 @@ const SettingsContainer = styled.div`
   flex-direction: column;
   gap: 20px;
 `;
+
 const UserTitleContainer = styled.div`
   display: flex;
   flex-direction: column;
+`;
+
+const EmailContainer = styled.div`
+  display: flex;
   justify-content: center;
+`;
+
+const EmailWrapper = styled.span`
+  display: inline-flex;
+  width: 100%;
+  overflow: hidden;
+`;
+
+const Username = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  float: left;
+`;
+
+const Domain = styled.span`
+  float: left;
 `;
 
 const SettingsActionContainer = styled.div`
