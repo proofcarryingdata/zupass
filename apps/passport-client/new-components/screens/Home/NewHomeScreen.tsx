@@ -2,13 +2,21 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import {
   EdDSATicketPCDTypeName,
   ITicketData,
-  isEdDSATicketPCD
+  isEdDSATicketPCD,
+  ticketDisplayName
 } from "@pcd/eddsa-ticket-pcd";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { uniqWith } from "lodash";
-import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ReactElement,
+  ReactNode,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { useNavigate } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
@@ -30,6 +38,7 @@ import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
+import React from "react";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -46,7 +55,7 @@ const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
 
 const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
-  const tickets = allPCDs.filter(isEventTicketPCD).reverse();
+  const tickets = allPCDs.filter(isEventTicketPCD).reverse().slice(0, 5);
   //fitering out overlapping eddsa tickets
   const uniqTickets = uniqWith(tickets, (t1, t2) => {
     return (
@@ -217,6 +226,7 @@ const EmptyCard = (): ReactElement => {
   );
 };
 
+const MemoizedCardBody = React.memo(CardBody);
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
@@ -238,6 +248,43 @@ export const NewHomeScreen = (): ReactElement => {
   const cardWidth =
     (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
     SCREEN_HORIZONTAL_PADDING * 2;
+
+  const packsMemo = useMemo(() => {
+    console.log("rendering this shit");
+    const memoizedCardMap = new Map<string, ReactNode[]>();
+    for (const [eventId, packs] of tickets) {
+      const list: ReactNode[] = [];
+      for (const pack of packs) {
+        const card = (
+          <MemoizedCardBody
+            key={pack.eventName}
+            addOns={
+              pack.addOns.length > 0
+                ? {
+                    text: `View ${pack.addOns.length} addon items`,
+                    onClick(): void {}
+                  }
+                : undefined
+            }
+            ref={(ref) => {
+              if (!ref) return;
+              const group = ticketsRef.current.get(eventId);
+              if (!group) {
+                ticketsRef.current.set(eventId, [ref]);
+                return;
+              }
+              group.push(ref);
+            }}
+            pcd={pack.eventTicket}
+            isMainIdentity={false}
+          />
+        );
+        list.push(card);
+      }
+      memoizedCardMap.set(eventId, list);
+    }
+    return memoizedCardMap;
+  }, [tickets]);
 
   // if not loaded pcds yet and the user session is valid
   if (!isLoadedPCDs && !isInvalidUser) {
@@ -302,40 +349,7 @@ export const NewHomeScreen = (): ReactElement => {
                       $width={cardWidth}
                       key={packs.map((pack) => pack.eventTicket.id).join("-")}
                     >
-                      {packs.map((pack) => {
-                        return (
-                          <CardBody
-                            key={pack.eventName}
-                            addOns={
-                              pack.addOns.length > 0
-                                ? {
-                                    text: `View ${pack.addOns.length} add-on items`,
-                                    onClick(): void {
-                                      dispatch({
-                                        type: "set-bottom-modal",
-                                        modal: {
-                                          addOns: pack.addOns,
-                                          modalType: "ticket-add-ons"
-                                        }
-                                      });
-                                    }
-                                  }
-                                : undefined
-                            }
-                            ref={(ref) => {
-                              if (!ref) return;
-                              const group = ticketsRef.current.get(eventId);
-                              if (!group) {
-                                ticketsRef.current.set(eventId, [ref]);
-                                return;
-                              }
-                              group.push(ref);
-                            }}
-                            pcd={pack.eventTicket}
-                            isMainIdentity={false}
-                          />
-                        );
-                      })}
+                      {packsMemo.get(eventId)}
                     </TicketsContainer>
                   </Container>
                 );
