@@ -322,7 +322,6 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
     }
     if (pcdCollection.hasPackage(pcd.type)) {
       if (isEdDSATicketPCD(pcd)) {
-        console.log(pcd);
         return <TicketWrapper ref={ref} pcd={pcd} hidePadding={hidePadding} />;
       }
       if (isPODTicketPCD(pcd)) {
