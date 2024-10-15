@@ -63,10 +63,6 @@ export const NewPasswordForm2 = ({
       setError(
         `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters.`
       );
-    } else if (!window.zxcvbn) {
-      setError(
-        "Background libraries have not loaded yet. Please retry in a few seconds."
-      );
     } else if (!checkPasswordStrength(password)) {
       // Inspired by Dashlane's zxcvbn guidance:
       // https://www.dashlane.com/blog/dashlanes-new-zxcvbn-guidance-helps-you-create-stronger-master-passwords-and-eliminates-the-guessing-game
