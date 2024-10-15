@@ -74,6 +74,7 @@ export const AddOnsModal = (): JSX.Element | null => {
           console.log(e);
           setActiveIdx(e);
         }}
+        enableMouseEvents
       >
         {addOns.map((addOn) => {
           return (
