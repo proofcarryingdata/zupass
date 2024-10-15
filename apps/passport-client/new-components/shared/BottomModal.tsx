@@ -1,4 +1,4 @@
-import { ReactNode, forwardRef } from "react";
+import { ReactNode } from "react";
 import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
@@ -48,50 +48,44 @@ export type BottomModalProps = {
   dismissable?: boolean;
 };
 
-export const BottomModal = forwardRef<HTMLDivElement, BottomModalProps>(
-  (
-    {
-      isOpen,
-      children,
-      modalContainerStyle,
-      onClickOutside,
-      height,
-      dismissable = true
-    },
-    ref
-  ) => {
-    const dispatch = useDispatch();
+export const BottomModal = ({
+  isOpen,
+  children,
+  modalContainerStyle,
+  onClickOutside,
+  height,
+  dismissable = true
+}: BottomModalProps): JSX.Element | null => {
+  const dispatch = useDispatch();
 
-    if (!isOpen) {
-      return null;
-    }
-    return (
-      <BottomModalOverlay
-        onClick={() => {
-          if (dismissable) {
-            dispatch({
-              type: "set-bottom-modal",
-              modal: { modalType: "none" }
-            });
-          }
-          onClickOutside && onClickOutside();
-        }}
-      >
-        <BottomModalContainer
-          ref={ref}
-          style={modalContainerStyle}
-          onClick={(e) => {
-            // Consider use clickOutside hook instead of that
-            e.stopPropagation();
-          }}
-          $height={height}
-        >
-          {children}
-        </BottomModalContainer>
-      </BottomModalOverlay>
-    );
+  if (!isOpen) {
+    return null;
   }
-);
+  return (
+    <BottomModalOverlay
+      onClick={() => {
+        if (dismissable) {
+          dispatch({
+            type: "set-bottom-modal",
+            modal: { modalType: "none" }
+          });
+        }
+        onClickOutside && onClickOutside();
+      }}
+    >
+      <BottomModalContainer
+        style={modalContainerStyle}
+        onClick={(e) => {
+          // Consider use clickOutside hook instead of that
+          e.stopPropagation();
+        }}
+        $height={height}
+      >
+        {children}
+      </BottomModalContainer>
+    </BottomModalOverlay>
+  );
+};
 
 const TextBlock = styled.div`
   display: flex;
