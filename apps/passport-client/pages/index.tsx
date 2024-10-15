@@ -18,17 +18,9 @@ import {
 import { RippleLoader } from "../components/core/RippleLoader";
 // Go over all the files and remove what not needed
 // import { AddEmailScreen } from "../components/screens/AddEmailScreen";
-import { AddScreen } from "../components/screens/AddScreen/AddScreen";
-import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 // import { ChangeEmailScreen } from "../components/screens/ChangeEmailScreen";
 // import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
-import { EmbeddedScreen } from "../components/screens/EmbeddedScreens/EmbeddedScreen";
 // import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
-import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
-import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
-import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
-import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
-import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
 // import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
 // import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
@@ -40,16 +32,9 @@ import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStor
 // import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
-import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 // import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
 import styled from "styled-components";
-import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
-import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
-import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
-import { ApprovePermissionsScreen } from "../components/screens/ZappScreens/ApprovePermissionsScreen";
-import { AuthenticateIFrameScreen } from "../components/screens/ZappScreens/AuthenticateIFrameScreen";
-import { ConnectPopupScreen } from "../components/screens/ZappScreens/ConnectPopupScreen";
 import {
   AppContainer,
   Background,
@@ -204,45 +189,7 @@ function RouterImpl(): JSX.Element {
             path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
             element={<NewOneClickLoginScreen2 />}
           />
-          <Route
-            path="get-without-proving"
-            element={<GetWithoutProvingScreen />}
-          />
-          <Route path="halo" element={<HaloScreen />} />
-          <Route path="add" element={<AddScreen />} />
-          <Route path="prove" element={<ProveScreen />} />
-          <Route
-            path="scan"
-            element={
-              <React.Suspense fallback={<RippleLoader />}>
-                <LazyScanScreen />
-              </React.Suspense>
-            }
-          />
-          <Route path="subscriptions" element={<SubscriptionsScreen />} />
-          <Route path="add-subscription" element={<AddSubscriptionScreen />} />
-          <Route path="telegram" element={<HomeScreen />} />
-          <Route path="pond-control" element={<FrogManagerScreen />} />
-          <Route path="frogscriptions" element={<FrogSubscriptionScreen />} />
-          <Route
-            path="frogscriptions/:feedCode"
-            element={<FrogSubscriptionScreen />}
-          />
-          <Route path="server-error" element={<ServerErrorScreen />} />
-          <Route
-            path="generic-checkin"
-            element={<PodboxScannedTicketScreen />}
-          />
-          <Route path="connect-popup" element={<ConnectPopupScreen />} />
-          <Route
-            path="approve-permissions"
-            element={<ApprovePermissionsScreen />}
-          />
-          <Route
-            path="authenticate-iframe"
-            element={<AuthenticateIFrameScreen />}
-          />
-          <Route path="embedded" element={<EmbeddedScreen />} />
+
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>

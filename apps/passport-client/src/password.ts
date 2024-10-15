@@ -1,7 +1,6 @@
 import { HexString, PCDCrypto } from "@pcd/passport-crypto";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
-import zxcvbn from "zxcvbn";
 import { Dispatcher, ZuUpdate } from "./dispatch";
 import { updateBlobKeyForEncryptedStorage } from "./useSyncE2EEStorage";
 
@@ -11,11 +10,6 @@ export enum PasswordStrength {
   MODERATE = 1,
   STRONG = 2
 }
-
-export const checkPasswordStrength = (password: string): boolean => {
-  const { score } = zxcvbn(password);
-  return score >= PasswordStrength.STRONG;
-};
 
 export const PASSWORD_MINIMUM_LENGTH = 8;
 

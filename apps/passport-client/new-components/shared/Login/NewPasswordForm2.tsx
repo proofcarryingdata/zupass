@@ -1,9 +1,7 @@
 import { Dispatch, ReactNode, SetStateAction, useRef } from "react";
 import styled from "styled-components";
-import {
-  PASSWORD_MINIMUM_LENGTH,
-  checkPasswordStrength
-} from "../../../src/password";
+import { checkPasswordStrength } from "../../../src/checkPasswordStrength";
+import { PASSWORD_MINIMUM_LENGTH } from "../../../src/password";
 import { Button2 } from "../Button";
 import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
