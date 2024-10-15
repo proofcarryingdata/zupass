@@ -31,7 +31,6 @@ import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
 // import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
-// import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 // import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 // import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
 // import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
