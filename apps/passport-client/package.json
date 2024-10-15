@@ -3,12 +3,13 @@
   "version": "0.0.37",
   "license": "GPL-3.0-or-later",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "ts-node build.ts dev",
-    "build": "tsc --noEmit && ts-node build.ts build",
+    "dev": "tsx build.ts dev",
+    "build": "tsc --noEmit && tsx build.ts build",
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --type-check --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "vitest run",
     "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico tsconfig.tsbuildinfo && yarn clean-test-artifacts",
     "gen-test-artifacts": "scripts/copy-test-artifacts.sh",
     "clean-test-artifacts": "rm -rf public/artifacts/test",
@@ -103,6 +104,7 @@
     "styled-components": "^5.3.6",
     "tsparticles": "^2.12.0",
     "tsparticles-engine": "^2.12.0",
+    "tsx": "^4.19.1",
     "typewriter-effect": "^2.21.0",
     "ua-parser-js": "^1.0.38",
     "use-file-picker": "^2.1.1",
@@ -115,10 +117,8 @@
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
     "@pcd/eslint-config-custom": "0.11.4",
     "@pcd/proto-pod-gpc-artifacts": "0.11.0",
-    "@types/chai": "^4.3.11",
     "@types/email-validator": "^1.0.6",
     "@types/express": "^4.17.17",
-    "@types/mocha": "^10.0.1",
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.0.7",
     "@types/styled-components": "^5.1.26",
@@ -133,10 +133,8 @@
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "express": "^4.18.2",
-    "mocha": "^10.2.0",
-    "ts-mocha": "^10.0.0",
-    "ts-node": "^10.9.2",
     "tsparticles-plugin-emitters": "^2.12.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^2.1.2"
   }
 }

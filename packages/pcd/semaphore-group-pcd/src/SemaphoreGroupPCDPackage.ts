@@ -2,11 +2,7 @@ import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import { requireDefinedParameter } from "@pcd/util";
-import {
-  SemaphoreProof,
-  generateProof,
-  verifyProof
-} from "@semaphore-protocol/proof";
+import type { SemaphoreProof } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import {
@@ -68,7 +64,9 @@ export async function prove(
     );
   }
 
-  const deserializedGroup = deserializeSemaphoreGroup(serializedGroup);
+  const deserializedGroup = await deserializeSemaphoreGroup(serializedGroup);
+
+  const { generateProof } = await import("@semaphore-protocol/proof");
 
   const fullProof = await generateProof(
     identityPCD.claim.identityV3,
@@ -102,6 +100,8 @@ export async function verify(pcd: SemaphoreGroupPCD): Promise<boolean> {
     signal: pcd.claim.signal,
     proof: pcd.proof
   };
+
+  const { verifyProof } = await import("@semaphore-protocol/proof");
 
   const valid = await verifyProof(fullProof, pcd.claim.depth);
 
