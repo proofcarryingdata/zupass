@@ -68,6 +68,7 @@ import { NewPrivacyNoticeScreen } from "../new-components/screens/NewPrivacyNoti
 import { NewTermsScreen } from "../new-components/screens/NewTermsScreen";
 import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTermsScreen";
 import { NewLoader } from "../new-components/shared/NewLoader";
+import { Typography } from "../new-components/shared/Typography";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
@@ -127,15 +128,18 @@ function RouterImpl(): JSX.Element {
 
   if (isDeletingAccount) {
     return (
-      <AppContainer bg="primary">
-        <Spacer h={64} />
-        <TextCenter>
-          <H1>ZUPASS</H1>
-          <Spacer h={24} />
-          Deleting your Account
-          <Spacer h={8} />
-          <RippleLoader />
-        </TextCenter>
+      <AppContainer bg="gray" fullscreen>
+        <LoaderContainer>
+          <NewLoader columns={5} rows={5} />
+          <Typography
+            fontSize={18}
+            fontWeight={800}
+            color="#8B94AC"
+            style={{ marginTop: 12 }}
+          >
+            DELETING YOUR ACCOUNT
+          </Typography>
+        </LoaderContainer>
       </AppContainer>
     );
   }
