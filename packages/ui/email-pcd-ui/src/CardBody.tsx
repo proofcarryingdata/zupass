@@ -17,6 +17,7 @@ function EmailCardBody({ pcd }: { pcd: EmailPCD }): JSX.Element {
         <EmailWrapper>
           <Username>{username}</Username>
           <Domain>@{domain}</Domain>
+          <div style={{ clear: "both" }} />
         </EmailWrapper>
       </EmailInfo>
     </Container>
@@ -53,4 +54,5 @@ const Username = styled.span`
 
 const Domain = styled.span`
   flex-shrink: 0;
+  margin-left: -1px;
 `;
