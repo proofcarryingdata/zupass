@@ -6,8 +6,6 @@ export const SemaphoreIdentityPCDUI: PCDUI<SemaphoreIdentityPCD> = {
   renderCardBody: SemaphoreIdentityCardBody
 };
 
-// Ideally would love to use BottomModalHeader from packages/lib/passport-ui/src/BottomModalHeader.tsx
-// Need to figure out how to share components between packages - might move it to passport-ui in some point
 function SemaphoreIdentityCardBody({
   pcd
 }: {

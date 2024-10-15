@@ -4,11 +4,9 @@ import { PODPCD } from "@pcd/pod-pcd";
 
 const StyledPre = styled.pre`
   color: var(--text-primary);
-  // TODO: check about this font-family
-  // font-family: "Roboto Mono";
   font-size: 14px;
   font-weight: 400;
-  line-height: 135%; /* 18.9px */
+  line-height: 135%;
 `;
 
 export function DefaultPODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
