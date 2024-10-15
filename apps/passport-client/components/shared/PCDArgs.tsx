@@ -156,23 +156,25 @@ export function PCDArgs<T extends PCDPackage>({
             />
           ))}
       </ArgsInnerContainer>
-      <Button2
-        style={{ marginTop: "auto" }}
-        variant="secondary"
-        onClick={(): void => setShowAll((showAll) => !showAll)}
-      >
-        {showAll ? (
-          <ShowMoreButtonInnerContainer>
-            <EyeSlashIcon width={20} height={20} />
-            <Typography>Hide {hidden.length} more inputs</Typography>
-          </ShowMoreButtonInnerContainer>
-        ) : (
-          <ShowMoreButtonInnerContainer>
-            <EyeIcon width={20} height={20} />
-            <Typography>Show {hidden.length} more inputs</Typography>
-          </ShowMoreButtonInnerContainer>
-        )}
-      </Button2>
+      {hidden.length > 0 && (
+        <Button2
+          style={{ marginTop: "auto" }}
+          variant="secondary"
+          onClick={(): void => setShowAll((showAll) => !showAll)}
+        >
+          {showAll ? (
+            <ShowMoreButtonInnerContainer>
+              <EyeSlashIcon width={20} height={20} />
+              <Typography>Hide {hidden.length} more inputs</Typography>
+            </ShowMoreButtonInnerContainer>
+          ) : (
+            <ShowMoreButtonInnerContainer>
+              <EyeIcon width={20} height={20} />
+              <Typography>Show {hidden.length} more inputs</Typography>
+            </ShowMoreButtonInnerContainer>
+          )}
+        </Button2>
+      )}
     </ArgsContainer>
   );
 }
@@ -662,8 +664,8 @@ export function PCDArgInput({
         {...rest}
         error={
           relevantPCDs.length === 0
-            ? arg.validatorParams?.notFoundMessage ??
-              "You do not have an eligible PCD."
+            ? (arg.validatorParams?.notFoundMessage ??
+              "You do not have an eligible PCD.")
             : undefined
         }
       >
@@ -687,8 +689,8 @@ export function PCDArgInput({
       {...rest}
       error={
         relevantPCDs.length === 0
-          ? arg.validatorParams?.notFoundMessage ??
-            "You do not have an eligible PCD."
+          ? (arg.validatorParams?.notFoundMessage ??
+            "You do not have an eligible PCD.")
           : undefined
       }
     >
