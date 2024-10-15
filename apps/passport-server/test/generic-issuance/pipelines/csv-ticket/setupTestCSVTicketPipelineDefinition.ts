@@ -19,10 +19,6 @@ export function setupTestCSVTicketPipelineDefinition(
     editorUserIds: [],
     options: {
       eventName: "My Event",
-      products: {
-        GA: randomUUID(),
-        Speaker: randomUUID()
-      },
       pcdTypes: ["EdDSATicketPCD", "PODTicketPCD"],
       csv: `ticketName,attendeeName,attendeeEmail,imageUrl
 GA,Gabe,gabe@gmail.com,https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Europe_map.png/598px-Europe_map.png

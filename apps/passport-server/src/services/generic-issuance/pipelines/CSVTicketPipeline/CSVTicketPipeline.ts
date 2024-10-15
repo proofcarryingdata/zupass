@@ -89,7 +89,6 @@ export class CSVTicketPipeline implements BasePipeline {
   private consumerDB: IPipelineConsumerDB;
   private semaphoreUpdateQueue: PQueue;
   private cacheService: PersistentCacheService;
-  private cachedIds: Map<string, string> = new Map();
 
   public get id(): string {
     return this.definition.id;
@@ -386,16 +385,9 @@ export class CSVTicketPipeline implements BasePipeline {
         const TicketAtomSchema = v.pipe(
           // First make sure we have the correct inputs
           InputRowSchema,
-          // Check that the ticket name is in the products list
-          v.check(([ticketName]) => {
-            if (ticketName in this.definition.options.products) {
-              return true;
-            }
-            return false;
-          }, "ticket name not found in products"),
           // Then transform to an object
           v.transform(([ticketName, attendeeName, attendeeEmail, imageUrl]) => {
-            const productId = this.definition.options.products[ticketName];
+            const productId = uuidv5(ticketName, eventId);
             const ticketId = uuidv5(`${attendeeEmail}-${productId}`, eventId);
 
             return {
