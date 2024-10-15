@@ -308,7 +308,6 @@ export const NewHomeScreen = (): ReactElement => {
               resistance={true}
               index={currentPos}
               onChangeIndex={(e: number) => {
-                console.log("this is the pos", e);
                 setCurrentPos(e);
               }}
             >
