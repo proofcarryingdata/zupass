@@ -32,7 +32,6 @@ import { Typography } from "../../shared/Typography";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 import { nextFrame } from "../../../src/util";
-import { sleep } from "@pcd/util";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -241,30 +240,30 @@ export const NewHomeScreen = (): ReactElement => {
 
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {
-      console.log(tickets, scrollTo.eventId, scrollTo.attendee);
+      // getting the pos of the event card
       const eventPos = tickets.findIndex(
         (pack) => pack[0] === scrollTo.eventId
       );
       if (eventPos < 0) return;
+      // scrolling to it and re-running the hook
       if (eventPos !== currentPos) {
         setCurrentPos(eventPos);
         return;
       }
-      (async () => {
+      (async (): Promise<void> => {
+        // making sure we let the tickets render before we fetch them from the dom
         await nextFrame();
         const elToScroll = document.getElementById(
           scrollTo.eventId + scrollTo.attendee
         );
-        console.log("el to scroll", elToScroll);
         window.scroll({
           top: elToScroll?.offsetTop,
-          left: elToScroll?.offsetLeft,
-          behavior: "smooth"
+          left: elToScroll?.offsetLeft
         });
         dispatch({ type: "scroll-to-ticket", scrollTo: undefined });
       })();
     }
-  }, [scrollTo, currentPos, setCurrentPos, tickets, isLoadedPCDs]);
+  }, [dispatch, scrollTo, currentPos, setCurrentPos, tickets, isLoadedPCDs]);
 
   const cardWidth =
     (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
