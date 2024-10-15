@@ -54,7 +54,27 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
       t1.claim.ticket.attendeeEmail === t2.claim.ticket.attendeeEmail &&
       t1.type === EdDSATicketPCDTypeName
     );
+  }).sort((t1, t2) => {
+    // if one of the tickets doesnt have a date, immidiatly retrun the other one as the bigger one
+    if (!t1.claim.ticket.eventStartDate) return -1;
+    if (!t2.claim.ticket.eventStartDate) return 1;
+
+    // parse the date
+    const date1 = Date.parse(t1.claim.ticket.eventStartDate);
+    const date2 = Date.parse(t2.claim.ticket.eventStartDate);
+    const now = Date.now();
+
+    const timeToDate1 = date1 - now;
+    const timeToDate2 = date2 - now;
+    // if one of the dates passed its due date, immidately return the other one
+    if (timeToDate1 < 0) return -1;
+    if (timeToDate2 < 0) return 1;
+
+    // return which date is closer
+    return timeToDate1 - timeToDate2;
   });
+
+  console.log(uniqTickets);
 
   //  This hook is building "ticket packs"
   //  ticket pack - main ticket and all its ticket addons, under the same event and attendee
