@@ -57,15 +57,10 @@ export function PODTicketCardBodyImpl({
     return (
       <NEW_UI__Container>
         <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-          {!ticketData.qrCodeOverrideImageUrl && (
-            <TicketQR
-              ticketData={ticketData}
-              idBasedVerifyURL={idBasedVerifyURL}
-            />
-          )}
-          {ticketData.qrCodeOverrideImageUrl && (
-            <TicketImage hidePadding={true} ticketData={ticketData} />
-          )}
+          <TicketQR
+            ticketData={ticketData}
+            idBasedVerifyURL={idBasedVerifyURL}
+          />
           <NEW_UI__InfoContainer>
             <NEW_UI__AttendeeName>
               {ticketData?.attendeeName.toUpperCase() || "Unknown"}
@@ -211,11 +206,11 @@ function TicketImage({
   ticketData: IPODTicketData;
   hidePadding?: boolean;
 }): JSX.Element {
-  const { imageAltText, qrCodeOverrideImageUrl } = ticketData;
-  if (hidePadding) return <img src={qrCodeOverrideImageUrl} />;
+  const { imageUrl, imageAltText } = ticketData;
+  if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
   return (
     <div style={{ padding: "8px" }}>
-      <img src={qrCodeOverrideImageUrl} alt={imageAltText} />
+      <img src={imageUrl} alt={imageAltText} />
     </div>
   );
 }
