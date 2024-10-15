@@ -34,7 +34,6 @@ import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStor
 // import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 // import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 // import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
-import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 // import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
 // import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
 // import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
@@ -43,6 +42,7 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 // import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
+import styled from "styled-components";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
@@ -59,7 +59,6 @@ import {
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { NewHomeScreen } from "../new-components/screens/Home";
 import { NewAlreadyRegisteredScreen } from "../new-components/screens/Login/NewAlreadyRegisteredScreen";
-import { NewCreatePasswordScreen } from "../new-components/screens/Login/NewCreatePasswordScreen";
 import { NewEnterConfirmationCodeScreen } from "../new-components/screens/Login/NewEnterConfirmationCodeScreen";
 import { NewLoginInterstitialScreen } from "../new-components/screens/Login/NewLoginInterstitialScreen";
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
@@ -69,6 +68,7 @@ import { NewOneClickLoginScreen2 } from "../new-components/screens/NewOneClickLo
 import { NewPrivacyNoticeScreen } from "../new-components/screens/NewPrivacyNoticeScreen";
 import { NewTermsScreen } from "../new-components/screens/NewTermsScreen";
 import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTermsScreen";
+import { NewLoader } from "../new-components/shared/NewLoader";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
@@ -147,6 +147,14 @@ function RouterImpl(): JSX.Element {
     }))
   );
 
+  const LazyCreatePasswordScreen = React.lazy(() =>
+    import("../new-components/screens/Login/NewCreatePasswordScreen").then(
+      (module) => ({
+        default: module.NewCreatePasswordScreen
+      })
+    )
+  );
+
   return (
     <HashRouter>
       <Routes>
@@ -158,7 +166,6 @@ function RouterImpl(): JSX.Element {
             path="enter-confirmation-code"
             element={<NewEnterConfirmationCodeScreen />}
           />
-          <Route path="create-password" element={<NewCreatePasswordScreen />} />
           <Route
             path="already-registered"
             element={<NewAlreadyRegisteredScreen />}
@@ -171,31 +178,24 @@ function RouterImpl(): JSX.Element {
           <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
           <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
           <Route path="terms" element={<NewTermsScreen />} />
-        </Route>
-        <Route path="/">
-          <Route index element={<NewHomeScreen />} />
-          <Route path="login" element={<NewLoginScreen />} />
-          <Route path="new-passport" element={<NewPassportScreen2 />} />
+
           <Route
-            path="enter-confirmation-code"
-            element={<NewEnterConfirmationCodeScreen />}
+            path="create-password"
+            element={
+              <React.Suspense
+                fallback={
+                  <AppContainer bg="gray" fullscreen>
+                    <LoaderContainer>
+                      <NewLoader />
+                    </LoaderContainer>
+                  </AppContainer>
+                }
+              >
+                <LazyCreatePasswordScreen />
+              </React.Suspense>
+            }
           />
-          <Route path="create-password" element={<NewCreatePasswordScreen />} />
-          <Route
-            path="already-registered"
-            element={<NewAlreadyRegisteredScreen />}
-          />
-          <Route
-            path="login-interstitial"
-            element={<NewLoginInterstitialScreen />}
-          />
-          <Route path="sync-existing" element={<NewSyncExistingScreen />} />
-          <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
-          <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
           <Route path="terms" element={<NewTermsScreen />} />
-          <Route path="terms" element={<TermsScreen />} />
-          <Route index element={<HomeScreen />} />
-          <Route path="login" element={<LoginScreen />} />
           {/* <Route
             path="one-click-login/:email/:code/:targetFolder"
             element={<OneClickLoginScreen />}
@@ -370,3 +370,11 @@ loadInitialState()
       </RollbarProvider>
     );
   });
+
+const LoaderContainer = styled.div`
+  display: flex;
+  flex: 1;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+`;
