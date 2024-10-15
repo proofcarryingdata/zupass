@@ -10,10 +10,8 @@ import {
   requireType
 } from "@pcd/pod";
 import { PODMembershipLists } from "./gpcTypes";
-import type {
-  InferredJSONClosedInterval,
-  InferredJSONProofEntryBoundsCheckConfig
-} from "./gpcValibot";
+import type { InferredJSONProofEntryBoundsCheckConfig } from "./gpcValibot";
+import * as ValibotClosedInterval from "./valibot/closedInterval";
 
 // TODO(artwyman): Decide how many of the types and converters to expose.
 // Potentially only those for the top-level types: GPCProofConfig,
@@ -28,7 +26,7 @@ import type {
  *
  * Use {@link gpcClosedIntervalToJSON}
  */
-export type JSONClosedInterval = InferredJSONClosedInterval;
+export type JSONClosedInterval = ValibotClosedInterval.JSONType;
 
 /**
  * JSON-compatible type for representing {@link GPCProofEntryBoundsCheckConfig},
