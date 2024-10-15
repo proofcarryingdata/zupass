@@ -43,6 +43,7 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 // import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
+import styled from "styled-components";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
@@ -69,6 +70,8 @@ import { NewOneClickLoginScreen2 } from "../new-components/screens/NewOneClickLo
 import { NewPrivacyNoticeScreen } from "../new-components/screens/NewPrivacyNoticeScreen";
 import { NewTermsScreen } from "../new-components/screens/NewTermsScreen";
 import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTermsScreen";
+import { NewLoader } from "../new-components/shared/NewLoader";
+import { Typography } from "../new-components/shared/Typography";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
@@ -128,15 +131,13 @@ function RouterImpl(): JSX.Element {
 
   if (isDeletingAccount) {
     return (
-      <AppContainer bg="primary">
-        <Spacer h={64} />
-        <TextCenter>
-          <H1>ZUPASS</H1>
-          <Spacer h={24} />
-          Deleting your Account
-          <Spacer h={8} />
-          <RippleLoader />
-        </TextCenter>
+      <AppContainer bg="gray" fullscreen>
+        <DeleteAccountContainer>
+          <NewLoader columns={5} rows={5} />
+          <Typography fontSize={18} fontWeight={800} color="#8B94AC">
+            DELETING YOUR ACCOUNT
+          </Typography>
+        </DeleteAccountContainer>
       </AppContainer>
     );
   }
@@ -370,3 +371,12 @@ loadInitialState()
       </RollbarProvider>
     );
   });
+
+const DeleteAccountContainer = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+`;
