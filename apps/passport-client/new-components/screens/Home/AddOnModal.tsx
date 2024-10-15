@@ -23,6 +23,7 @@ const QRContainer = styled.div`
 type DotsProp = {
   amount: number;
   activeIdx: number;
+  onDotClick: (index: number) => void;
 };
 const Dot = styled.div<{ active: boolean }>`
   width: 8px;
@@ -45,11 +46,13 @@ const ContentContainer = styled.div`
   flex-direction: column;
   gap: 12px;
 `;
-const Dots = ({ amount, activeIdx }: DotsProp): ReactElement => {
+const Dots = ({ amount, activeIdx, onDotClick }: DotsProp): ReactElement => {
   return (
     <DotContainer>
       {[...new Array(amount)].map((_, i) => {
-        return <Dot active={i === activeIdx} />;
+        return (
+          <Dot key={i} active={i === activeIdx} onClick={() => onDotClick(i)} />
+        );
       })}
     </DotContainer>
   );
@@ -64,15 +67,20 @@ export const AddOnsModal = (): JSX.Element | null => {
   }
 
   const addOns = activeModal.addOns;
+
+  const handleDotClick = (index: number): void => {
+    setActiveIdx(index);
+  };
+
   return (
     <BottomModal isOpen={activeModal.modalType === "ticket-add-ons"}>
       <_SwipableViews
         containerStyle={{ width: "100%", paddingBottom: 12 }}
         slideStyle={{ padding: "0 10px" }}
         resistance={true}
-        onChangeIndex={(e: number) => {
-          console.log(e);
-          setActiveIdx(e);
+        index={activeIdx}
+        onChangeIndex={(index: number) => {
+          setActiveIdx(index);
         }}
         enableMouseEvents
       >
@@ -92,7 +100,11 @@ export const AddOnsModal = (): JSX.Element | null => {
         })}
       </_SwipableViews>
       <ContentContainer>
-        <Dots amount={addOns.length} activeIdx={activeIdx} />
+        <Dots
+          amount={addOns.length}
+          activeIdx={activeIdx}
+          onDotClick={handleDotClick}
+        />
         <Typography color="var(--text-tertiary)" fontWeight={500} fontSize={14}>
           {addOns.length} redeemable {addOns.length > 1 ? "items" : "item"}
         </Typography>
