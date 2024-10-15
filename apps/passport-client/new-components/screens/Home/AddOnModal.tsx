@@ -1,4 +1,4 @@
-import { ReactElement, useState } from "react";
+import { ReactElement } from "react";
 import SwipeableViews from "react-swipeable-views";
 import styled from "styled-components";
 import { TicketQRWrapper } from "../../../components/shared/PCDCard";
@@ -6,6 +6,7 @@ import { useBottomModal, useDispatch } from "../../../src/appHooks";
 import { BottomModal } from "../../shared/BottomModal";
 import { Button2 } from "../../shared/Button";
 import { Typography } from "../../shared/Typography";
+import { useTrackpadSwipe } from "./hooks/useSwipeNavigation";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipeableViews.default;
@@ -61,44 +62,49 @@ const Dots = ({ amount, activeIdx, onDotClick }: DotsProp): ReactElement => {
 export const AddOnsModal = (): JSX.Element | null => {
   const activeModal = useBottomModal();
   const dispatch = useDispatch();
-  const [activeIdx, setActiveIdx] = useState(0);
-  if (activeModal.modalType !== "ticket-add-ons") {
-    return null;
-  }
+  const isAddOnsModal = activeModal.modalType === "ticket-add-ons";
+  const addOns = isAddOnsModal ? activeModal.addOns : [];
 
-  const addOns = activeModal.addOns;
+  const { containerRef, activeIdx, setActiveIdx } = useTrackpadSwipe({
+    isEnabled: isAddOnsModal,
+    itemCount: addOns.length
+  });
 
   const handleDotClick = (index: number): void => {
     setActiveIdx(index);
   };
 
+  if (!isAddOnsModal) {
+    return null;
+  }
+
   return (
     <BottomModal isOpen={activeModal.modalType === "ticket-add-ons"}>
-      <_SwipableViews
-        containerStyle={{ width: "100%", paddingBottom: 12 }}
-        slideStyle={{ padding: "0 10px" }}
-        resistance={true}
-        index={activeIdx}
-        onChangeIndex={(index: number) => {
-          setActiveIdx(index);
-        }}
-        enableMouseEvents
-      >
-        {addOns.map((addOn) => {
-          return (
-            <QRContainer>
-              <TicketQRWrapper pcd={addOn} />
-              <Typography
-                color="var(--text-primary)"
-                fontSize={16}
-                fontWeight={500}
-              >
-                {addOn.claim.ticket.ticketName}
-              </Typography>
-            </QRContainer>
-          );
-        })}
-      </_SwipableViews>
+      <div ref={containerRef}>
+        <_SwipableViews
+          containerStyle={{ width: "100%", paddingBottom: 12 }}
+          slideStyle={{ padding: "0 10px" }}
+          resistance={true}
+          index={activeIdx}
+          onChangeIndex={setActiveIdx}
+          enableMouseEvents
+        >
+          {addOns.map((addOn) => {
+            return (
+              <QRContainer>
+                <TicketQRWrapper pcd={addOn} />
+                <Typography
+                  color="var(--text-primary)"
+                  fontSize={16}
+                  fontWeight={500}
+                >
+                  {addOn.claim.ticket.ticketName}
+                </Typography>
+              </QRContainer>
+            );
+          })}
+        </_SwipableViews>
+      </div>
       <ContentContainer>
         <Dots
           amount={addOns.length}
