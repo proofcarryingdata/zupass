@@ -14,7 +14,8 @@ import {
 } from "@chakra-ui/react";
 import {
   PipelineDefinition,
-  PipelineInfoResponseValue
+  PipelineInfoResponseValue,
+  isCSVTicketPipelineDefinition
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { ReactNode } from "react";
@@ -37,6 +38,7 @@ import {
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
+import { PipelineProductsSection } from "./DetailsSections/PipelineProductsSection";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 import { PipelineVersionHistorySection } from "./DetailsSections/PipelineVersionHistorySection";
 import { PipelineZuAuthConfigSection } from "./DetailsSections/PipelineZuAuthConfig";
@@ -103,6 +105,15 @@ export function PipelineDetailSection({
             </SectionContainer>
           </AccordionPanel>
         </AccordionItem>
+
+        {isCSVTicketPipelineDefinition(pipeline) && (
+          <AccordionItem>
+            <AccordionButton>Products</AccordionButton>
+            <AccordionPanel>
+              <PipelineProductsSection pipeline={pipeline} />
+            </AccordionPanel>
+          </AccordionItem>
+        )}
 
         {isAdminView && (
           <>
