@@ -30,7 +30,7 @@ import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
-import { usePCDCollection } from "../../../src/appHooks";
+import { useDispatch, usePCDCollection } from "../../../src/appHooks";
 import {
   getOOMErrorMessage,
   getOutdatedBrowserErrorMessage
@@ -75,7 +75,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const pcdPackage = pcds.getPackage<T>(pcdType);
   const [multiProofsCompleted, setMultiProofsCompleted] = useState(0);
   const [multiProofsQueued, setMultiProofsQueued] = useState(0);
-
+  const dispatch = useDispatch();
   useEffect(() => {
     if (options?.multi && !isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
       setError("multi-proofs are only supported for ZKEdDSAEventTicketPCD");
@@ -240,9 +240,23 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
           {error}
         </Typography>
       )}
-      <Button2 disabled={!isProveReady || proving} onClick={onProveClick}>
-        {proving ? <NewLoader rows={2} columns={3} color="white" /> : "Prove"}
-      </Button2>
+      <ButtonsContainer>
+        <Button2 disabled={!isProveReady || proving} onClick={onProveClick}>
+          {proving ? <NewLoader rows={2} columns={3} color="white" /> : "Prove"}
+        </Button2>
+
+        <Button2
+          onClick={() => {
+            dispatch({
+              type: "set-bottom-modal",
+              modal: { modalType: "none" }
+            });
+          }}
+          variant="secondary"
+        >
+          Back
+        </Button2>
+      </ButtonsContainer>
     </Container>
   );
 }
@@ -252,4 +266,9 @@ const Container = styled.div`
   flex-direction: column;
   justify-content: space-between;
   height: 100%;
+`;
+const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `;

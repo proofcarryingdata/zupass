@@ -19,7 +19,7 @@ import { cloneDeep } from "lodash";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
-import { useIdentityV3, useSelf } from "../../../src/appHooks";
+import { useDispatch, useIdentityV3, useSelf } from "../../../src/appHooks";
 import {
   safeRedirect,
   safeRedirectPending
@@ -39,7 +39,7 @@ export function SemaphoreSignatureProveScreen({
   const identity = useIdentityV3();
   const [proving, setProving] = useState(false);
   const [error, setError] = useState<string | undefined>();
-
+  const dispatch = useDispatch();
   const onProve = useCallback(async () => {
     setProving(true);
 
@@ -154,20 +154,34 @@ export function SemaphoreSignatureProveScreen({
   return (
     <Container>
       <ContentContainer>{lines.map((line) => line)}</ContentContainer>
-      <Button2 disabled={proving || !!error} onClick={onProve}>
-        {proving ? (
-          <NewLoader color="white" rows={2} columns={3} />
-        ) : (
-          <Typography
-            color="var(--text-white)"
-            fontSize={18}
-            fontWeight={500}
-            family="Rubik"
-          >
-            Prove
-          </Typography>
-        )}
-      </Button2>
+      <ButtonsContainer>
+        <Button2 disabled={proving || !!error} onClick={onProve}>
+          {proving ? (
+            <NewLoader color="white" rows={2} columns={3} />
+          ) : (
+            <Typography
+              color="var(--text-white)"
+              fontSize={18}
+              fontWeight={500}
+              family="Rubik"
+            >
+              Prove
+            </Typography>
+          )}
+        </Button2>
+
+        <Button2
+          onClick={() => {
+            dispatch({
+              type: "set-bottom-modal",
+              modal: { modalType: "none" }
+            });
+          }}
+          variant="secondary"
+        >
+          Back
+        </Button2>
+      </ButtonsContainer>
     </Container>
   );
 }
@@ -223,4 +237,9 @@ const Container = styled.div`
   flex-direction: column;
   gap: 20px;
   text-align: center;
+`;
+const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `;
