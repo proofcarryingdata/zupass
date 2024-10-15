@@ -139,6 +139,7 @@ export function SettingsBottomModal(): JSX.Element {
       <EmailWrapper>
         <Username>{username}</Username>
         <Domain>@{domain}</Domain>
+        <div style={{ clear: "both" }} />
       </EmailWrapper>
     );
   };
@@ -226,12 +227,12 @@ const Username = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
   min-width: 0;
+  float: left;
 `;
 
 const Domain = styled.span`
-  flex-shrink: 0;
+  float: left;
 `;
 
 const SettingsActionContainer = styled.div`

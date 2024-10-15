@@ -67,22 +67,20 @@ const IconContainer = styled.div`
   justify-content: center;
 `;
 
-const EmailWrapper = styled.span`
+const EmailWrapper = styled.div`
   display: inline-flex;
   width: 100%;
+  overflow: hidden;
 `;
 
 const Username = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  flex: 1;
   min-width: 0;
 `;
 
-const Domain = styled.span`
-  flex-shrink: 0;
-`;
+const Domain = styled.span``;
 
 const TruncatedEmail = ({ email }: { email: string }): JSX.Element => {
   const [username, domain] = email.split("@");
