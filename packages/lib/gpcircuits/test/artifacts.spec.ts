@@ -1,18 +1,20 @@
 import { expect } from "chai";
 import "mocha";
 import path from "path";
+import { chooseCircuitFamilyForTests } from "../scripts/common";
 import {
-  ProtoPODGPC,
   githubDownloadRootURL,
   gpcArtifactPaths,
   unpkgDownloadRootURL
 } from "../src";
 
+const { testCircuitFamily } = chooseCircuitFamilyForTests();
+
 describe("artifact URL helpers should work", function () {
   it("gpcArtifactPaths should work for file paths", async () => {
     const root = path.join(__dirname, "../artifacts/test");
     const paths: Set<string> = new Set();
-    for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
+    for (const circuitDesc of testCircuitFamily) {
       const artifacts = gpcArtifactPaths(root, circuitDesc);
 
       expect(artifacts.wasmPath.startsWith(root)).to.be.true;
@@ -36,7 +38,7 @@ describe("artifact URL helpers should work", function () {
   it("gpcArtifactPaths should work for URL paths", async () => {
     const root = "https://myhost.com/somepath";
     const paths: Set<string> = new Set();
-    for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
+    for (const circuitDesc of testCircuitFamily) {
       const artifacts = gpcArtifactPaths(root, circuitDesc);
 
       expect(artifacts.wasmPath.startsWith(root)).to.be.true;
@@ -58,28 +60,22 @@ describe("artifact URL helpers should work", function () {
   });
 
   it("gpcArtifactPaths should allow relative paths with or without leading slash", async () => {
-    const pathsNoSlash = gpcArtifactPaths(
-      "foo/bar",
-      ProtoPODGPC.CIRCUIT_FAMILY[0]
-    );
+    const pathsNoSlash = gpcArtifactPaths("foo/bar", testCircuitFamily[0]);
     expect(pathsNoSlash.pkeyPath.startsWith("foo/bar")).to.be.true;
     expect(pathsNoSlash.vkeyPath.startsWith("foo/bar")).to.be.true;
     expect(pathsNoSlash.wasmPath.startsWith("foo/bar")).to.be.true;
 
-    const pathsWithSlash = gpcArtifactPaths(
-      "/foo/bar",
-      ProtoPODGPC.CIRCUIT_FAMILY[0]
-    );
+    const pathsWithSlash = gpcArtifactPaths("/foo/bar", testCircuitFamily[0]);
     expect(pathsWithSlash.pkeyPath.startsWith("/foo/bar")).to.be.true;
     expect(pathsWithSlash.vkeyPath.startsWith("/foo/bar")).to.be.true;
     expect(pathsWithSlash.wasmPath.startsWith("/foo/bar")).to.be.true;
 
-    const pathsSlashRoot = gpcArtifactPaths("/", ProtoPODGPC.CIRCUIT_FAMILY[0]);
+    const pathsSlashRoot = gpcArtifactPaths("/", testCircuitFamily[0]);
     expect(pathsSlashRoot.pkeyPath.startsWith("/")).to.be.true;
     expect(pathsSlashRoot.vkeyPath.startsWith("/")).to.be.true;
     expect(pathsSlashRoot.wasmPath.startsWith("/")).to.be.true;
 
-    const pathsEmptyRoot = gpcArtifactPaths("", ProtoPODGPC.CIRCUIT_FAMILY[0]);
+    const pathsEmptyRoot = gpcArtifactPaths("", testCircuitFamily[0]);
     expect(pathsEmptyRoot.pkeyPath).to.not.contain("/");
     expect(pathsEmptyRoot.vkeyPath).to.not.contain("/");
     expect(pathsEmptyRoot.wasmPath).to.not.contain("/");
