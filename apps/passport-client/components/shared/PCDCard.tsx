@@ -171,10 +171,10 @@ const getURLsBasedOnCategory = (
     ticketCategory === TicketCategory.Devconnect
       ? `${window.location.origin}/#/checkin-by-id`
       : ticketCategory === TicketCategory.ZuConnect
-        ? `${window.location.origin}/#/verify`
-        : ticketCategory === TicketCategory.Generic
-          ? `${window.location.origin}/#/generic-checkin`
-          : undefined;
+      ? `${window.location.origin}/#/verify`
+      : ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : undefined;
 
   const verifyURL =
     ticketCategory === TicketCategory.Generic
@@ -268,10 +268,10 @@ const TicketWrapper = forwardRef<
     ticketCategory === TicketCategory.Devconnect
       ? `${window.location.origin}/#/checkin-by-id`
       : ticketCategory === TicketCategory.ZuConnect
-        ? `${window.location.origin}/#/verify`
-        : ticketCategory === TicketCategory.Generic
-          ? `${window.location.origin}/#/generic-checkin`
-          : undefined;
+      ? `${window.location.origin}/#/verify`
+      : ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : undefined;
 
   // In the long run, we will want issuers to be able to provide more metadata
   // about how check-in should work, either in the PCD itself or to be looked
