@@ -41,7 +41,6 @@ describe("generic issuance - CSVTicketPipeline", function () {
   const pipelineDefinitions = [csvTicketPipelineDefinition];
 
   const gaIdentity = new Identity();
-  const speakerIdentity = new Identity();
 
   /**
    * Sets up a Zupass/Generic issuance backend with one pipelines:
@@ -143,9 +142,6 @@ describe("generic issuance - CSVTicketPipeline", function () {
     const ticket = tickets[0];
     expectIsEdDSATicketPCD(ticket);
     expect(ticket.claim.ticket.attendeeEmail).to.eq("gabe@gmail.com");
-    expect(ticket.claim.ticket.productId).to.eq(
-      csvTicketPipelineDefinition.options.products["GA"]
-    );
     const ticket2 = tickets[1];
     expectIsPODTicketPCD(ticket2);
     expect(ticket2.claim.ticket.attendeeEmail).to.eq("gabe@gmail.com");

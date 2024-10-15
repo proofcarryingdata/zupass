@@ -708,7 +708,6 @@ export function isPODPipelineDefinition(
 
 const CSVTicketPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   eventName: z.string(),
-  products: z.record(z.string(), z.string().uuid()),
   csv: z.string(),
   feedOptions: FeedIssuanceOptionsSchema,
   pcdTypes: z.array(z.enum(["EdDSATicketPCD", "PODTicketPCD"])).min(1),

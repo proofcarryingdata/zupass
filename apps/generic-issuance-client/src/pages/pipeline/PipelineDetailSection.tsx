@@ -14,8 +14,7 @@ import {
 } from "@chakra-ui/react";
 import {
   PipelineDefinition,
-  PipelineInfoResponseValue,
-  isCSVTicketPipelineDefinition
+  PipelineInfoResponseValue
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { ReactNode } from "react";
@@ -38,7 +37,6 @@ import {
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
-import { PipelineProductsSection } from "./DetailsSections/PipelineProductsSection";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 import { PipelineVersionHistorySection } from "./DetailsSections/PipelineVersionHistorySection";
 import { PipelineZuAuthConfigSection } from "./DetailsSections/PipelineZuAuthConfig";
@@ -106,14 +104,16 @@ export function PipelineDetailSection({
           </AccordionPanel>
         </AccordionItem>
 
-        {isCSVTicketPipelineDefinition(pipeline) && (
-          <AccordionItem>
-            <AccordionButton>Products</AccordionButton>
-            <AccordionPanel>
-              <PipelineProductsSection pipeline={pipeline} />
-            </AccordionPanel>
-          </AccordionItem>
-        )}
+        <AccordionItem>
+          <AccordionButton>ZuAuth Config</AccordionButton>
+          <AccordionPanel>
+            <CappedSectionContainer>
+              <PipelineZuAuthConfigSection
+                pipelineZuAuthConfig={pipelineInfo.zuAuthConfig}
+              />
+            </CappedSectionContainer>
+          </AccordionPanel>
+        </AccordionItem>
 
         {isAdminView && (
           <>
@@ -136,17 +136,6 @@ export function PipelineDetailSection({
                     lastLoad={pipelineInfo.lastLoad}
                   />
                 </SectionContainer>
-              </AccordionPanel>
-            </AccordionItem>
-
-            <AccordionItem>
-              <AccordionButton>ZuAuth Config</AccordionButton>
-              <AccordionPanel>
-                <CappedSectionContainer>
-                  <PipelineZuAuthConfigSection
-                    pipelineZuAuthConfig={pipelineInfo.zuAuthConfig}
-                  />
-                </CappedSectionContainer>
               </AccordionPanel>
             </AccordionItem>
 
