@@ -74,8 +74,6 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
     return timeToDate1 - timeToDate2;
   });
 
-  console.log(uniqTickets);
-
   //  This hook is building "ticket packs"
   //  ticket pack - main ticket and all its ticket addons, under the same event and attendee
   return useMemo(() => {
