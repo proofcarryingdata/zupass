@@ -12,7 +12,11 @@ import {
   ModalHeader,
   ModalOverlay
 } from "@chakra-ui/react";
-import { CSVPipelineDefinition } from "@pcd/passport-interface";
+import {
+  CSVPipelineDefinition,
+  CSVTicketPipelineDefinition,
+  isCSVTicketPipelineDefinition
+} from "@pcd/passport-interface";
 import { validateEmail } from "@pcd/util";
 import { CreatableSelect } from "chakra-react-select";
 import { stringify as stringifyCSV } from "csv-stringify/sync";
@@ -32,7 +36,7 @@ export function AddDataModal({
   onClose
 }: {
   addingData: boolean;
-  pipeline: CSVPipelineDefinition;
+  pipeline: CSVPipelineDefinition | CSVTicketPipelineDefinition;
   onClose: () => void;
 }): ReactNode {
   const userJWT = useJWT();
@@ -48,12 +52,23 @@ export function AddDataModal({
     const ticketNames = new Set<string>();
     const imageUrls = new Set<string>();
 
-    for (let i = 1; i < parsedTickets.length; i++) {
-      const row = parsedTickets[i];
-      eventNames.add(row[0]);
-      ticketNames.add(row[1]);
-      if (row[4]) {
-        imageUrls.add(row[4]);
+    if (isCSVTicketPipelineDefinition(pipeline)) {
+      eventNames.add(pipeline.options.eventName);
+      for (let i = 1; i < parsedTickets.length; i++) {
+        const row = parsedTickets[i];
+        ticketNames.add(row[0]);
+        if (row[3]) {
+          imageUrls.add(row[3]);
+        }
+      }
+    } else {
+      for (let i = 1; i < parsedTickets.length; i++) {
+        const row = parsedTickets[i];
+        eventNames.add(row[0]);
+        ticketNames.add(row[1]);
+        if (row[4]) {
+          imageUrls.add(row[4]);
+        }
       }
     }
 
@@ -71,7 +86,7 @@ export function AddDataModal({
         value: imageUrl
       }))
     ];
-  }, [parsedTickets]);
+  }, [parsedTickets, pipeline]);
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -109,9 +124,12 @@ ticket: ${ticketName.label}`
       JSON.stringify(pipeline)
     ) as CSVPipelineDefinition;
 
-    const newTickets = parsedTickets.concat([
-      [eventName.value, ticketName.value, name, email, imageUrl.value, ""]
-    ]);
+    // CSV ticket pipeline has four columns, CSV pipeline has six
+    const newTickets = isCSVTicketPipelineDefinition(pipeline)
+      ? parsedTickets.concat([[ticketName.value, name, email, imageUrl.value]])
+      : parsedTickets.concat([
+          [eventName.value, ticketName.value, name, email, imageUrl.value, ""]
+        ]);
 
     pipelineCopy.options.csv = stringifyCSV(newTickets);
 
