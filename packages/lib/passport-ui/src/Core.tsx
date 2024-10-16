@@ -22,8 +22,13 @@ export const Separator = styled.div`
   user-select: none;
 `;
 
-export const FieldLabel = styled.span`
+export const FieldLabel = styled.div`
   font-weight: bold;
+  color: var(--text-tertiary);
+  font-family: Barlow;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 135%; /* 18.9px */
 `;
 
 export const StyledLinkButton = styled.a`

@@ -8,11 +8,17 @@ export const EmailPCDUI: PCDUI<EmailPCD> = {
 
 function EmailCardBody({ pcd }: { pcd: EmailPCD }): JSX.Element {
   const emailAddress = getEmailAddress(pcd);
+  if (!emailAddress) return <></>;
+  const [username, domain] = emailAddress.split("@");
 
   return (
     <Container>
       <EmailInfo>
-        <span>{emailAddress}</span>
+        <EmailWrapper>
+          <Username>{username}</Username>
+          <Domain>@{domain}</Domain>
+          <div style={{ clear: "both" }} />
+        </EmailWrapper>
       </EmailInfo>
     </Container>
   );
@@ -30,4 +36,23 @@ const EmailInfo = styled.div`
   justify-content: center;
   align-items: center;
   flex-direction: column;
+`;
+
+const EmailWrapper = styled.div`
+  display: flex;
+  max-width: 80%;
+  overflow: hidden;
+`;
+
+const Username = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+`;
+
+const Domain = styled.span`
+  flex-shrink: 0;
+  margin-left: -1px;
 `;

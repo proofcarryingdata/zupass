@@ -79,7 +79,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
         verifyToken(result.value?.devToken);
       } else {
         if (email && identityCommitment) {
-          window.location.href = `#/new/enter-confirmation-code?email=${encodeURIComponent(
+          window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
             email
           )}&identityCommitment=${encodeURIComponent(
             identityCommitment
@@ -117,7 +117,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
         identityCommitment
       }
     );
-    window.location.href = "#/new/sync-existing";
+    window.location.href = "#/sync-existing";
   }, [email, identityCommitment]);
 
   const onSubmitPassword = useCallback(
@@ -157,8 +157,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
         await dispatch({
           type: "load-after-login",
           storage: storageResult.value,
-          encryptionKey: encryptionKey,
-          newUi: true
+          encryptionKey: encryptionKey
         });
       } catch (e) {
         setIsLoggingIn(false);
@@ -169,15 +168,15 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
   );
 
   const onCancelClick = useCallback(() => {
-    window.location.href = "#/new";
+    window.location.href = "#/";
   }, []);
 
   useEffect(() => {
     if (self || !email || !identityCommitment) {
       if (hasPendingRequest()) {
-        window.location.hash = "#/new/login-interstitial";
+        window.location.hash = "#/login-interstitial";
       } else {
-        window.location.hash = "#/new";
+        window.location.hash = "#/";
       }
     }
   }, [self, email, identityCommitment]);

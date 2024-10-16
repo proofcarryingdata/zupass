@@ -50,14 +50,13 @@ export const NewCreatePasswordScreen = (): JSX.Element | null => {
           email,
           token,
           targetFolder,
-          autoRegister,
-          newUi: true
+          autoRegister
         });
       }
     } finally {
       setSettingPassword(false);
       if (autoRegister) {
-        window.location.href = "#/new";
+        window.location.href = "#/";
       }
     }
   }, [dispatch, email, token, targetFolder, autoRegister]);
@@ -79,9 +78,9 @@ export const NewCreatePasswordScreen = (): JSX.Element | null => {
       }
 
       if (hasPendingRequest()) {
-        window.location.hash = "#/new/login-interstitial";
+        window.location.hash = "#/login-interstitial";
       } else {
-        window.location.hash = "#/new";
+        window.location.hash = "#/";
       }
       return;
     }
@@ -130,8 +129,7 @@ export const NewCreatePasswordScreen = (): JSX.Element | null => {
           type: "login",
           email,
           token,
-          password,
-          newUi: true
+          password
         });
       }
     } finally {
@@ -140,7 +138,7 @@ export const NewCreatePasswordScreen = (): JSX.Element | null => {
   }, [dispatch, email, password, token]);
 
   const onCancelClick = useCallback(() => {
-    window.location.href = "#/new";
+    window.location.href = "#/";
   }, []);
 
   // If either email or token are undefined, we will already have redirected

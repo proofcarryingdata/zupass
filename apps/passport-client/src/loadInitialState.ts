@@ -38,17 +38,7 @@ export async function loadInitialState(): Promise<AppState> {
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
 
-  let modal = { modalType: "none" } as AppState["modal"];
-
-  if (
-    // If on Zupass legacy login, ask user to set password
-    self &&
-    !encryptionKey &&
-    !self.salt
-  ) {
-    console.log("Asking existing user to set a password");
-    modal = { modalType: "upgrade-account-modal" };
-  }
+  const modal = { modalType: "none" } as AppState["modal"];
 
   const credentialCache = createStorageBackedCredentialCache();
 

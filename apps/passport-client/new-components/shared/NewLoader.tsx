@@ -2,8 +2,8 @@ import { ReactElement, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 
 type LoaderProps = {
-  rows: number;
-  columns: number;
+  rows?: number;
+  columns?: number;
   color?: string;
 };
 
@@ -35,8 +35,8 @@ const generateStaticNoise = (rows: number, columns: number): number[][] => {
 };
 
 export const NewLoader = ({
-  rows,
-  columns,
+  rows = 5,
+  columns = 5,
   color
 }: LoaderProps): ReactElement => {
   const [noise, setNoise] = useState(generateStaticNoise(rows, columns));

@@ -14,7 +14,7 @@ export const NewUpdatedTermsScreen = (): JSX.Element => {
 
   useEffect(() => {
     if (!self) {
-      window.location.hash = "#/new/login";
+      window.location.hash = "#/login";
     }
   }, [self]);
 
@@ -30,16 +30,14 @@ export const NewUpdatedTermsScreen = (): JSX.Element => {
     if (result.success) {
       dispatch({
         type: "handle-agreed-privacy-notice",
-        version: result.value.version,
-        newUi: true
+        version: result.value.version
       });
     } else {
       // Persist to local storage and sync this later
       savePrivacyNoticeAgreed(LATEST_PRIVACY_NOTICE);
       dispatch({
         type: "handle-agreed-privacy-notice",
-        version: LATEST_PRIVACY_NOTICE,
-        newUi: true
+        version: LATEST_PRIVACY_NOTICE
       });
     }
   }, [dispatch, identity]);

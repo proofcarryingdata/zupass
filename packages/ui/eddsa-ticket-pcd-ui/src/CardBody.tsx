@@ -5,17 +5,11 @@ import {
   getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
-import {
-  FlattenSimpleInterpolation,
-  Spacer,
-  ToggleSwitch,
-  css,
-  styled
-} from "@pcd/passport-ui";
+import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import html2canvas from "html2canvas";
-import { useCallback, useRef, useState } from "react";
+import { toCanvas } from "html-to-image";
+import { useRef, useState } from "react";
 import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
@@ -37,8 +31,6 @@ export interface EdDSATicketPCDCardProps {
   idBasedVerifyURL?: string;
   // If true, hides the visual padding around the image
   hidePadding?: boolean;
-  // Temporary
-  newUI?: boolean;
   // when clicked on the the addons sections, if there is any, do something
   addOns?: NEW_UI__AddOns;
 }
@@ -54,130 +46,81 @@ function EdDSATicketPCDCardBody({
   identityPCD,
   verifyURL,
   idBasedVerifyURL,
-  hidePadding,
-  newUI,
   addOns
 }: {
   pcd: EdDSATicketPCD;
 } & EdDSATicketPCDCardProps): JSX.Element {
   const ticketImageRef = useRef<HTMLDivElement>(null);
-  const hasImage = pcd.claim.ticket.imageUrl !== undefined;
-
   const ticketData = getEdDSATicketData(pcd);
-
-  const [zk, setZk] = useState<boolean>(idBasedVerifyURL === undefined);
   const [downloading, setDownloading] = useState(false);
 
-  const onToggle = useCallback(() => {
-    setZk(!zk);
-  }, [zk]);
-
-  const redact = zk && idBasedVerifyURL !== undefined;
-  if (newUI) {
-    return (
-      <NEW_UI__Container>
-        <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-          <TicketQR
-            pcd={pcd}
-            identityPCD={identityPCD}
-            verifyURL={verifyURL}
-            idBasedVerifyURL={idBasedVerifyURL}
-            zk={zk}
-          />
-          <NEW_UI__InfoContainer>
-            <NEW_UI__AttendeeName>
-              {ticketData?.attendeeName.toUpperCase() || "Unknown"}
-            </NEW_UI__AttendeeName>
-            <NEW_UI__ExtraInfoContainer>
-              <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
-              <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
-              <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
-            </NEW_UI__ExtraInfoContainer>
-          </NEW_UI__InfoContainer>
-        </NEW_UI__TicketImageContainer>
-        <div>
-          <NEW_UI__ExtraSection
-            onClick={async () => {
-              if (downloading) return;
-              setDownloading(true);
-              const ticketElement = ticketImageRef.current;
-              if (!ticketElement) return;
-              await shareOrDownloadImage(
-                ticketElement,
-                (ticketData?.eventName || "event-ticket-data") + ".png"
-              );
-              setDownloading(false);
-            }}
-          >
-            <NEW_UI__ExtraSectionText $disabled={downloading}>
-              Download ticket
-            </NEW_UI__ExtraSectionText>
-            <DownloadIcon />
+  return (
+    <NEW_UI__Container>
+      <NEW_UI__TicketImageContainer ref={ticketImageRef}>
+        <TicketQR
+          pcd={pcd}
+          identityPCD={identityPCD}
+          verifyURL={verifyURL}
+          idBasedVerifyURL={idBasedVerifyURL}
+          zk={idBasedVerifyURL !== undefined}
+        />
+        <NEW_UI__InfoContainer>
+          <NEW_UI__AttendeeName>
+            {ticketData?.attendeeName.toUpperCase() || "Unknown"}
+          </NEW_UI__AttendeeName>
+          <NEW_UI__ExtraInfoContainer>
+            <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
+            <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
+            <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
+          </NEW_UI__ExtraInfoContainer>
+        </NEW_UI__InfoContainer>
+      </NEW_UI__TicketImageContainer>
+      <div>
+        <NEW_UI__ExtraSection
+          onClick={async () => {
+            if (downloading) return;
+            setDownloading(true);
+            const ticketElement = ticketImageRef.current;
+            if (!ticketElement) return;
+            await shareOrDownloadImage(
+              ticketElement,
+              (ticketData?.eventName || "event-ticket-data") + ".jpeg"
+            );
+            setDownloading(false);
+          }}
+        >
+          <NEW_UI__ExtraSectionText $disabled={downloading}>
+            Download ticket
+          </NEW_UI__ExtraSectionText>
+          <DownloadIcon />
+        </NEW_UI__ExtraSection>
+        {addOns && (
+          <NEW_UI__ExtraSection onClick={addOns.onClick}>
+            <NEW_UI__ExtraSectionText>{addOns.text}</NEW_UI__ExtraSectionText>
+            <QRIcon />
           </NEW_UI__ExtraSection>
-          {addOns && (
-            <NEW_UI__ExtraSection onClick={addOns.onClick}>
-              <NEW_UI__ExtraSectionText>{addOns.text}</NEW_UI__ExtraSectionText>
-              <QRIcon />
-            </NEW_UI__ExtraSection>
-          )}
-        </div>
-      </NEW_UI__Container>
-    );
-  }
-  return (
-    <Container padding={!hasImage}>
-      {hasImage && (
-        <TicketInfo>
-          <TicketImage hidePadding={hidePadding} pcd={pcd} />
-          <span>{ticketData?.attendeeName}</span>
-          <span>{ticketData?.attendeeEmail}</span>
-        </TicketInfo>
-      )}
-      {!hasImage && (
-        <TicketInfo>
-          <TicketQR
-            pcd={pcd}
-            identityPCD={identityPCD}
-            verifyURL={verifyURL}
-            idBasedVerifyURL={idBasedVerifyURL}
-            zk={zk}
-          />
-          <Spacer h={8} />
-          {ticketData?.attendeeName && (
-            <RedactedText redacted={redact}>
-              {ticketData?.attendeeName}
-            </RedactedText>
-          )}
-          <RedactedText redacted={redact}>
-            {ticketData?.attendeeEmail}
-          </RedactedText>
-          {/* TODO: Turn on ZK mode when we have an end-to-end story for it. */}
-          {false && (
-            <ZKMode>
-              <ToggleSwitch label="ZK mode" checked={zk} onChange={onToggle} />
-            </ZKMode>
-          )}
-        </TicketInfo>
-      )}
-    </Container>
+        )}
+      </div>
+    </NEW_UI__Container>
   );
 }
 
-function TicketImage({
-  pcd,
-  hidePadding
-}: {
-  pcd: EdDSATicketPCD;
-  hidePadding?: boolean;
-}): JSX.Element {
-  const { imageUrl, imageAltText } = pcd.claim.ticket;
-  if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
-  return (
-    <div style={{ padding: "8px" }}>
-      <img src={imageUrl} alt={imageAltText} />
-    </div>
-  );
-}
+// TODO: implement hiding the QRCode
+// function TicketImage({
+//   pcd,
+//   hidePadding
+// }: {
+//   pcd: EdDSATicketPCD;
+//   hidePadding?: boolean;
+// }): JSX.Element {
+//   const { imageUrl, imageAltText } = pcd.claim.ticket;
+//   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
+//   return (
+//     <div style={{ padding: "8px" }}>
+//       <img src={imageUrl} alt={imageAltText} />
+//     </div>
+//   );
+// }
 
 function getHeader({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   let header;
@@ -193,67 +136,8 @@ function getHeader({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   return <Uppercase>{header}</Uppercase>;
 }
 
-const Container = styled.span<{ padding: boolean }>`
-  ${({ padding }): FlattenSimpleInterpolation =>
-    padding
-      ? css`
-          padding: 16px;
-        `
-      : css``}
-  overflow: hidden;
-  width: 100%;
-`;
-
-const TicketInfo = styled.div`
-  margin-top: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-`;
-
 const Uppercase = styled.span`
   text-transform: uppercase;
-`;
-
-const RedactedText = styled.div<{ redacted: boolean }>`
-  ${({ redacted }): FlattenSimpleInterpolation =>
-    redacted
-      ? css`
-          color: transparent;
-          &:before {
-            border-radius: 4px;
-            background-color: var(--bg-dark-primary);
-            color: var(--bg-dark-primary);
-            content: "REDACTED";
-            color: white;
-            font-weight: bold;
-            min-width: 100%;
-            text-align: center;
-            position: absolute;
-            left: 0;
-          }
-        `
-      : css``}
-
-  margin-bottom: 4px;
-  padding: 2px;
-  width: 300px;
-  position: relative;
-  text-align: center;
-  transition-property: color, background-color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  /* Same duration as the toggle slide */
-  transition-duration: 300ms;
-`;
-
-const ZKMode = styled.div`
-  display: flex;
-  text-align: right;
-  margin-top: 8px;
-  padding: 0px 16px;
-  width: 100%;
-  justify-content: flex-end;
 `;
 
 const NEW_UI__Container = styled.div`
@@ -274,6 +158,7 @@ const NEW_UI__TicketImageContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   padding: 16px 16px 0px 16px;
+  background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
 `;
 
 const NEW_UI__InfoContainer = styled.div`
@@ -379,9 +264,9 @@ const shareOrDownloadImage = async (
 ): Promise<void> => {
   if (!ticketElement) return;
 
-  const canvas: HTMLCanvasElement = await html2canvas(ticketElement);
+  const canvas: HTMLCanvasElement = await toCanvas(ticketElement);
   const blob: Blob | null = await new Promise((resolve) =>
-    canvas.toBlob(resolve, "image/png")
+    canvas.toBlob(resolve, "image/jpeg")
   );
   if (!blob) return; // Ensure the blob exists before proceeding
 
@@ -393,7 +278,7 @@ const shareOrDownloadImage = async (
     link.click();
     URL.revokeObjectURL(url);
   };
-  const file = new File([blob], fileName, { type: "image/png" });
+  const file = new File([blob], fileName, { type: "image/jpeg" });
   if (navigator.share && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({

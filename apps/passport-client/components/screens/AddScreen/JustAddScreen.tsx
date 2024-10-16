@@ -4,7 +4,10 @@ import {
 } from "@pcd/passport-interface";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useRef, useState } from "react";
-import styled from "styled-components";
+import { BottomModal } from "../../../new-components/shared/BottomModal";
+import { Button2 } from "../../../new-components/shared/Button";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { Typography } from "../../../new-components/shared/Typography";
 import {
   useCredentialManager,
   useDispatch,
@@ -18,15 +21,10 @@ import {
 } from "../../../src/sessionStorage";
 import { useDeserialized } from "../../../src/useDeserialized";
 import { err } from "../../../src/util";
-import { Button, H2, Spacer } from "../../core";
-import { RippleLoader } from "../../core/RippleLoader";
-import { MaybeModal } from "../../modals/Modal";
+import { Spacer } from "../../core";
 import { AddedPCD } from "../../shared/AddedPCD";
-import { AppContainer } from "../../shared/AppContainer";
-import { AppHeader } from "../../shared/AppHeader";
 import { PCDCard } from "../../shared/PCDCard";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
-import { ProtocolWorldsStyling } from "../ProtocolWorldsScreens/ProtocolWorldsStyling";
 
 /**
  * Screen that allows the user to respond to a `PCDAddRequest` and add
@@ -105,8 +103,7 @@ export function JustAddScreen({
   } else if (!added) {
     content = (
       <>
-        {isProtocolWorlds && <H2>{"TENSION DISCOVERED".toUpperCase()}</H2>}
-        <Spacer h={16} />
+        {/* {isProtocolWorlds && <H2>{"TENSION DISCOVERED".toUpperCase()}</H2>} */}
         {pcd && (
           <PCDCard
             hidePadding={isProtocolWorlds}
@@ -116,16 +113,26 @@ export function JustAddScreen({
           />
         )}
         {!isProtocolWorlds && request.folder && (
-          <div>
-            This item will be added to folder:
-            <br /> <strong>{request.folder}</strong>
+          <div style={{ textAlign: "center" }}>
+            <Typography
+              family="Rubik"
+              fontWeight={500}
+              color="var(--text-tertiary)"
+            >
+              This item will be added to folder{" "}
+              <Typography family="Rubik" fontWeight={500}>
+                {request.folder}
+              </Typography>
+            </Typography>
           </div>
         )}
         {error && JSON.stringify(error)}
-        <Spacer h={16} />
-        <Button onClick={onAddClick}>
-          {isProtocolWorlds ? "Collect" : isMintable ? "Mint" : "Add"}
-        </Button>
+        <Spacer h={24} />
+        <div style={{ paddingLeft: 24, paddingRight: 24 }}>
+          <Button2 onClick={onAddClick}>
+            {isProtocolWorlds ? "Collect" : isMintable ? "Mint" : "Add"}
+          </Button2>
+        </div>
       </>
     );
   } else if (isProtocolWorlds) {
@@ -137,30 +144,31 @@ export function JustAddScreen({
       window.location.hash = "#/";
     }
   } else if (autoAdd) {
-    content = <RippleLoader />;
+    content = <NewLoader />;
   } else {
     content = <AddedPCD onCloseClick={(): void => window.close()} />;
   }
 
   return (
     <>
-      {isProtocolWorlds && <ProtocolWorldsStyling />}
-      <MaybeModal fullScreen isProveOrAddScreen={true} />
-      <AppContainer bg="primary">
+      {/* {isProtocolWorlds && <ProtocolWorldsStyling />} */}
+
+      {/* <MaybeModal fullScreen isProveOrAddScreen={true} /> */}
+      <BottomModal
+        modalContainerStyle={{ padding: 0, paddingTop: 24, paddingBottom: 24 }}
+        isOpen={true}
+        dismissable={false}
+      >
+        {content}
+      </BottomModal>
+      {/* <AppContainer bg="primary">
         <Container>
           <Spacer h={16} />
           <AppHeader isProveOrAddScreen={true} />
           <Spacer h={16} />
           {content}
         </Container>
-      </AppContainer>
+      </AppContainer> */}
     </>
   );
 }
-
-const Container = styled.div`
-  padding: 16px;
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-`;

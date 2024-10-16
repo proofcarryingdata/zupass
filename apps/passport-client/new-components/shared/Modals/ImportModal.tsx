@@ -241,7 +241,7 @@ export const ImportModal = (): ReactNode => {
     <>
       <TextContainer>
         <Typography fontWeight={800} fontSize={20}>
-          IMPORT BACKUP MODAL
+          IMPORT BACKUP DATA
         </Typography>
         <Typography fontSize={16}>
           If you have previously exported a backup of your account, you can

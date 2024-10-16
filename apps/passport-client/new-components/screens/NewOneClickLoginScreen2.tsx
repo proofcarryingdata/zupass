@@ -1,16 +1,16 @@
-import { ReactNode, useCallback, useEffect, useState } from "react";
-import { useDispatch, useSelf } from "../../src/appHooks";
-import { useParams } from "react-router-dom";
-import { IPODTicketData } from "@pcd/pod-ticket-pcd";
 import { requestGenericIssuanceTicketPreviews } from "@pcd/passport-interface";
-import { appConfig } from "../../src/appConfig";
-import { AppContainer } from "../../components/shared/AppContainer";
-import { Typography } from "../shared/Typography";
-import { Button2 } from "../shared/Button";
-import styled from "styled-components";
+import { IPODTicketData } from "@pcd/pod-ticket-pcd";
 import { TicketQR } from "@pcd/pod-ticket-pcd-ui";
+import { ReactNode, useCallback, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import styled from "styled-components";
+import { AppContainer } from "../../components/shared/AppContainer";
+import { appConfig } from "../../src/appConfig";
+import { useDispatch, useSelf } from "../../src/appHooks";
+import { Button2 } from "../shared/Button";
 import { NewLoader } from "../shared/NewLoader";
 import { TicketCard } from "../shared/TicketCard";
+import { Typography } from "../shared/Typography";
 
 const TicketContainer = styled.div`
   border-radius: 16px;
@@ -69,7 +69,7 @@ const OneClickTicket = ({ data }: { data: IPODTicketData }): JSX.Element => {
 };
 
 const redirectToTargetFolder = (): void => {
-  window.location.hash = `#/new`;
+  window.location.hash = `#/`;
 };
 
 export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
@@ -117,16 +117,14 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
         type: "one-click-login",
         email,
         code,
-        targetFolder,
-        newUI: true
+        targetFolder
       });
 
       dispatch({
-        type: "set-bottom-modal",
-        modal: {
-          modalType: "pods-collection",
-          activePodId: ticketPreviews[0].ticketId,
-          idType: "ticketId"
+        type: "scroll-to-ticket",
+        scrollTo: {
+          attendee: ticketPreviews[0].attendeeEmail,
+          eventId: ticketPreviews[0].eventId
         }
       });
     } catch (err) {
@@ -157,12 +155,12 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
                 self.emails.join(", ")
           }. Please log out and try navigating to the link again.`
         );
-        window.location.hash = "#/new";
+        window.location.hash = "#/";
       } else {
         redirectToTargetFolder();
       }
     } else if (!email || !code) {
-      window.location.hash = "#/new";
+      window.location.hash = "#/";
     } else {
       handleLoadTicketPreviews();
     }

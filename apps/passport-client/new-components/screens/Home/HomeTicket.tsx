@@ -1,7 +1,7 @@
 import { PCD } from "@pcd/pcd-types";
+import { ReactElement } from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
-import { ReactElement } from "react";
 
 const Container = styled.div`
   border-radius: 16px;
@@ -15,7 +15,7 @@ export const HomeTicket = (props: { pcd: PCD }): ReactElement => {
   const { pcd } = props;
   return (
     <Container>
-      <CardBody newUI={true} pcd={pcd} isMainIdentity={false} />
+      <CardBody pcd={pcd} isMainIdentity={false} />
     </Container>
   );
 };
