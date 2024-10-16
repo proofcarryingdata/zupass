@@ -167,6 +167,10 @@ export function useBottomModal(): AppState["bottomModal"] {
   return useSelector<AppState["bottomModal"]>((s) => s.bottomModal, []);
 }
 
+export function useScrollTo(): AppState["scrollTo"] {
+  return useSelector<AppState["scrollTo"]>((s) => s.scrollTo, []);
+}
+
 export function useSyncKey(): string | undefined {
   return useSelector<string | undefined>((s) => s.encryptionKey, []);
 }
@@ -279,21 +283,6 @@ export function useSubscriptions(): Wrapper<FeedSubscriptionManager> {
 export function useHasSetupPassword(): boolean {
   const self = useSelf();
   return !!self && hasSetupPassword(self);
-}
-
-// Hook that when invoked, requires the user to set a password if they haven't already
-export function useRequirePassword(): void {
-  const self = useSelf();
-  const hasSetupPassword = useHasSetupPassword();
-  const dispatch = useDispatch();
-  if (self && !hasSetupPassword) {
-    dispatch({
-      type: "set-modal",
-      modal: {
-        modalType: "require-add-password"
-      }
-    });
-  }
 }
 
 // Hook that enables keystrokes to properly listen to laser scanning inputs from supported devices

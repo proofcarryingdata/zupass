@@ -1,5 +1,3 @@
-import styled from "styled-components";
-
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import {
   CredentialManager,
@@ -16,6 +14,7 @@ import {
   useState,
   useTransition
 } from "react";
+import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
   useBottomModal,
@@ -431,7 +430,7 @@ export const ManageEmailModal = (): JSX.Element => {
   const addEmailView = (
     <>
       <BottomModalHeader
-        title="ADD EMAIL"
+        title="ADD NEW EMAIL"
         description="Enter your new email address. We'll send a confirmation code to verify it."
       />
       <EmailInput

@@ -4,7 +4,7 @@ import {
   requestPasswordSalt
 } from "@pcd/passport-interface";
 import { getErrorMessage } from "@pcd/util";
-import { useCallback, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
@@ -21,8 +21,16 @@ import { loadEncryptionKey } from "../../../src/localstorage";
 import { setPassword } from "../../../src/password";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { BottomModal } from "../BottomModal";
-import { NewPasswordForm2 } from "../Login/NewPasswordForm2";
+import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
+
+const NewPasswordForm2 = React.lazy(() =>
+  import("../../shared/Login/NewPasswordForm2").then((module) => {
+    return {
+      default: module.NewPasswordForm2
+    };
+  })
+);
 
 export const ChangePasswordModal = (): JSX.Element | null => {
   useSyncE2EEStorage();
@@ -145,7 +153,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
       <Container>
         <TitleContainer>
           <Typography fontSize={20} fontWeight={800}>
-            {hasSetupPassword ? "Change" : "Add"} Password
+            {hasSetupPassword ? "CHANGE" : "ADD"} PASSWORD
           </Typography>
           <Typography fontSize={16} fontWeight={400} family="Rubik">
             Make sure that your {hasSetupPassword ? "new" : ""} password is
@@ -154,28 +162,36 @@ export const ChangePasswordModal = (): JSX.Element | null => {
             PODs.
           </Typography>
         </TitleContainer>
-        <NewPasswordForm2
-          setRevealPassword={setRevealPassword}
-          revealPassword={revealPassword}
-          loading={loading}
-          autoFocus={!hasSetupPassword}
-          error={error}
-          setError={setError}
-          passwordInputPlaceholder={
-            hasSetupPassword ? "New password" : "Password"
+        <Suspense
+          fallback={
+            <PasswordLoaderContainer>
+              <NewLoader />
+            </PasswordLoaderContainer>
           }
-          emails={self.emails}
-          submitButtonText="Confirm"
-          password={newPassword}
-          confirmPassword={confirmPassword}
-          setPassword={setNewPassword}
-          setConfirmPassword={setConfirmPassword}
-          onSuccess={onChangePassword}
-          onCancel={onCancel}
-          isChangePassword={hasSetupPassword}
-          currentPassword={currentPassword}
-          setCurrentPassword={setCurrentPassword}
-        />
+        >
+          <NewPasswordForm2
+            setRevealPassword={setRevealPassword}
+            revealPassword={revealPassword}
+            loading={loading}
+            autoFocus={!hasSetupPassword}
+            error={error}
+            setError={setError}
+            passwordInputPlaceholder={
+              hasSetupPassword ? "New password" : "Password"
+            }
+            emails={self.emails}
+            submitButtonText="Confirm"
+            password={newPassword}
+            confirmPassword={confirmPassword}
+            setPassword={setNewPassword}
+            setConfirmPassword={setConfirmPassword}
+            onSuccess={onChangePassword}
+            onCancel={onCancel}
+            isChangePassword={hasSetupPassword}
+            currentPassword={currentPassword}
+            setCurrentPassword={setCurrentPassword}
+          />
+        </Suspense>
       </Container>
     </BottomModal>
   );
@@ -191,4 +207,12 @@ const TitleContainer = styled.div`
   flex-direction: column;
   gap: 4px;
   align-items: flex-start;
+`;
+
+const PasswordLoaderContainer = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 250px;
+  width: 100%;
 `;

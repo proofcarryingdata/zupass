@@ -113,7 +113,6 @@ const TextBlock = styled.div`
   align-items: flex-start;
 `;
 
-// TODO: use this on all other bottom modal and reuse code
 export const BottomModalHeader = ({
   title,
   description,
