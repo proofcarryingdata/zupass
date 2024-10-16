@@ -1,4 +1,4 @@
-import { ReactElement } from "react";
+import { ReactElement, useCallback } from "react";
 import SwipeableViews from "react-swipeable-views";
 import styled from "styled-components";
 import { TicketQRWrapper } from "../../../components/shared/PCDCard";
@@ -74,12 +74,24 @@ export const AddOnsModal = (): JSX.Element | null => {
     setActiveIdx(index);
   };
 
+  const handleCloseModal = useCallback(() => {
+    dispatch({
+      type: "set-bottom-modal",
+      modal: {
+        modalType: "none"
+      }
+    });
+  }, [dispatch]);
+
   if (!isAddOnsModal) {
     return null;
   }
 
   return (
-    <BottomModal isOpen={activeModal.modalType === "ticket-add-ons"}>
+    <BottomModal
+      isOpen={activeModal.modalType === "ticket-add-ons"}
+      onClickOutside={handleCloseModal}
+    >
       <div ref={containerRef}>
         <_SwipableViews
           containerStyle={{ width: "100%", paddingBottom: 12 }}
@@ -115,18 +127,7 @@ export const AddOnsModal = (): JSX.Element | null => {
           {addOns.length} redeemable {addOns.length > 1 ? "items" : "item"}
         </Typography>
       </ContentContainer>
-      <Button2
-        onClick={() => {
-          dispatch({
-            type: "set-bottom-modal",
-            modal: {
-              modalType: "none"
-            }
-          });
-        }}
-      >
-        Close
-      </Button2>
+      <Button2 onClick={handleCloseModal}>Close</Button2>
     </BottomModal>
   );
 };

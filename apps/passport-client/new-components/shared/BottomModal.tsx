@@ -1,4 +1,4 @@
-import { ReactNode, forwardRef } from "react";
+import { ReactNode, forwardRef, useCallback, useRef } from "react";
 import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
@@ -61,21 +61,34 @@ export const BottomModal = forwardRef<HTMLDivElement, BottomModalProps>(
     ref
   ) => {
     const dispatch = useDispatch();
+    const modalContentRef = useRef<HTMLDivElement>(null);
+    const isClickInsideModalRef = useRef(false);
+
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+      isClickInsideModalRef.current = !!modalContentRef.current?.contains(
+        e.target as Node
+      );
+    }, []);
+
+    const handleMouseUp = useCallback(() => {
+      if (!isClickInsideModalRef.current && dismissable) {
+        dispatch({
+          type: "set-bottom-modal",
+          modal: { modalType: "none" }
+        });
+        onClickOutside && onClickOutside();
+      }
+      isClickInsideModalRef.current = false;
+    }, [dismissable, dispatch, onClickOutside]);
 
     if (!isOpen) {
       return null;
     }
+
     return (
       <BottomModalOverlay
-        onClick={() => {
-          if (dismissable) {
-            dispatch({
-              type: "set-bottom-modal",
-              modal: { modalType: "none" }
-            });
-          }
-          onClickOutside && onClickOutside();
-        }}
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
       >
         <BottomModalContainer
           ref={ref}
@@ -86,7 +99,7 @@ export const BottomModal = forwardRef<HTMLDivElement, BottomModalProps>(
           }}
           $height={height}
         >
-          {children}
+          <div ref={modalContentRef}>{children}</div>
         </BottomModalContainer>
       </BottomModalOverlay>
     );
