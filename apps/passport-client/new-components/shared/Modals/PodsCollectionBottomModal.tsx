@@ -63,7 +63,6 @@ const getPcdName = (pcd: PCD<unknown, unknown>): string => {
       return pcd.id;
   }
 };
-
 const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
   switch (true) {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
@@ -75,9 +74,9 @@ const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
       }
       return undefined;
     case isEdDSAFrogPCD(pcd):
-      return pcd.claim.data.imageUrl;
+      return <Avatar imgSrc={pcd.claim.data.imageUrl} />;
     case isZKEdDSAFrogPCD(pcd):
-      return pcd.claim.partialFrog.imageUrl;
+      return <Avatar imgSrc={pcd.claim.partialFrog.imageUrl} />;
     case isUnknownPCD(pcd):
     default:
       return undefined;
