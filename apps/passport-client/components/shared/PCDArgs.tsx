@@ -28,11 +28,10 @@ import {
   isStringArrayArgument,
   isToggleListArgument
 } from "@pcd/pcd-types";
-import _, { has } from "lodash";
+import _ from "lodash";
 import React, {
   useCallback,
   useEffect,
-  useLayoutEffect,
   useMemo,
   useRef,
   useState
@@ -51,8 +50,6 @@ import { Button2 } from "../../new-components/shared/Button";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
-import { setLogger } from "tsparticles-engine";
-import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 
 /**
  * Type used in `PCDArgs` for record container argument flattening process.
@@ -87,7 +84,7 @@ export function PCDArgs<T extends PCDPackage>({
   // argument to properly mutate (cf. `setArg`) as well as inheriting argument
   // fields from the record container argument.  Validator parameters are also
   // combined.
-  const flattenedArgs: FlattpuenedArgTriple[] = Object.entries(args).flatMap(
+  const flattenedArgs: FlattenedArgTriple[] = Object.entries(args).flatMap(
     ([argName, arg]: [
       string,
       Argument<ArgumentTypeName>
@@ -336,11 +333,7 @@ export function StringArgInput({
 
   return (
     <ArgContainer arg={arg} {...rest}>
-      <input
-        value={arg.value}
-        onChange={onChange}
-        disabled={!arg.userProvided}
-      />
+      <input value={arg.value} onChange={onChange} disabled={true} />
     </ArgContainer>
   );
 }
@@ -379,11 +372,7 @@ export function NumberArgInput({
       error={valid ? undefined : "Please enter a number."}
       {...rest}
     >
-      <input
-        value={arg.value}
-        onChange={onChange}
-        disabled={!arg.userProvided}
-      />
+      <input value={arg.value} onChange={onChange} disabled={true} />
     </ArgContainer>
   );
 }
@@ -425,11 +414,7 @@ export function BigIntArgInput({
         <Typography fontWeight={700} color="var(--text-tertiary)" fontSize={14}>
           {arg.displayName?.toUpperCase()}
         </Typography>
-        <Input
-          value={arg.value ?? ""}
-          onChange={onChange}
-          disabled={!arg.userProvided}
-        />
+        <Input value={arg.value ?? ""} onChange={onChange} disabled={true} />
       </ArgWrapper>
     </ArgContainer>
   );
@@ -455,7 +440,7 @@ export function BooleanArgInput({
           type="checkbox"
           checked={arg.value}
           onChange={onChange}
-          disabled={!arg.userProvided}
+          disabled={true}
         />
       }
       {...rest}
@@ -509,7 +494,7 @@ export function ObjectArgInput({
         <TextareaInput
           value={JSON.stringify(arg.value, null, 2)}
           onChange={onChange}
-          disabled={!arg.userProvided}
+          disabled={true}
         />
       </ArgWrapper>
     </ArgContainer>
@@ -727,7 +712,7 @@ export function PCDArgInput({
             value={options.find((option) => option.id === pcd?.id)}
             options={options}
             onChange={onChange}
-            isDisabled={!arg.userProvided}
+            isDisabled={true}
           />
         </SelectContainer>
       )}
