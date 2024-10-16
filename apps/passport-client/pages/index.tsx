@@ -31,10 +31,8 @@ import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
 // import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
-// import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 // import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 // import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
-import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
 // import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
 // import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
 // import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
@@ -60,7 +58,6 @@ import {
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { NewHomeScreen } from "../new-components/screens/Home";
 import { NewAlreadyRegisteredScreen } from "../new-components/screens/Login/NewAlreadyRegisteredScreen";
-import { NewCreatePasswordScreen } from "../new-components/screens/Login/NewCreatePasswordScreen";
 import { NewEnterConfirmationCodeScreen } from "../new-components/screens/Login/NewEnterConfirmationCodeScreen";
 import { NewLoginInterstitialScreen } from "../new-components/screens/Login/NewLoginInterstitialScreen";
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
@@ -132,12 +129,17 @@ function RouterImpl(): JSX.Element {
   if (isDeletingAccount) {
     return (
       <AppContainer bg="gray" fullscreen>
-        <DeleteAccountContainer>
+        <LoaderContainer>
           <NewLoader columns={5} rows={5} />
-          <Typography fontSize={18} fontWeight={800} color="#8B94AC">
+          <Typography
+            fontSize={18}
+            fontWeight={800}
+            color="#8B94AC"
+            style={{ marginTop: 12 }}
+          >
             DELETING YOUR ACCOUNT
           </Typography>
-        </DeleteAccountContainer>
+        </LoaderContainer>
       </AppContainer>
     );
   }
@@ -146,6 +148,14 @@ function RouterImpl(): JSX.Element {
     import("../components/screens/ScanScreen").then((module) => ({
       default: module.ScanScreen
     }))
+  );
+
+  const LazyCreatePasswordScreen = React.lazy(() =>
+    import("../new-components/screens/Login/NewCreatePasswordScreen").then(
+      (module) => ({
+        default: module.NewCreatePasswordScreen
+      })
+    )
   );
 
   return (
@@ -159,7 +169,6 @@ function RouterImpl(): JSX.Element {
             path="enter-confirmation-code"
             element={<NewEnterConfirmationCodeScreen />}
           />
-          <Route path="create-password" element={<NewCreatePasswordScreen />} />
           <Route
             path="already-registered"
             element={<NewAlreadyRegisteredScreen />}
@@ -172,31 +181,24 @@ function RouterImpl(): JSX.Element {
           <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
           <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
           <Route path="terms" element={<NewTermsScreen />} />
-        </Route>
-        <Route path="/">
-          <Route index element={<NewHomeScreen />} />
-          <Route path="login" element={<NewLoginScreen />} />
-          <Route path="new-passport" element={<NewPassportScreen2 />} />
+
           <Route
-            path="enter-confirmation-code"
-            element={<NewEnterConfirmationCodeScreen />}
+            path="create-password"
+            element={
+              <React.Suspense
+                fallback={
+                  <AppContainer bg="gray" fullscreen>
+                    <LoaderContainer>
+                      <NewLoader />
+                    </LoaderContainer>
+                  </AppContainer>
+                }
+              >
+                <LazyCreatePasswordScreen />
+              </React.Suspense>
+            }
           />
-          <Route path="create-password" element={<NewCreatePasswordScreen />} />
-          <Route
-            path="already-registered"
-            element={<NewAlreadyRegisteredScreen />}
-          />
-          <Route
-            path="login-interstitial"
-            element={<NewLoginInterstitialScreen />}
-          />
-          <Route path="sync-existing" element={<NewSyncExistingScreen />} />
-          <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
-          <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
           <Route path="terms" element={<NewTermsScreen />} />
-          <Route path="terms" element={<TermsScreen />} />
-          <Route index element={<HomeScreen />} />
-          <Route path="login" element={<LoginScreen />} />
           {/* <Route
             path="one-click-login/:email/:code/:targetFolder"
             element={<OneClickLoginScreen />}
@@ -372,11 +374,10 @@ loadInitialState()
     );
   });
 
-const DeleteAccountContainer = styled.div`
+const LoaderContainer = styled.div`
   display: flex;
   flex: 1;
-  flex-direction: column;
+  height: 100%;
   align-items: center;
   justify-content: center;
-  gap: 12px;
 `;

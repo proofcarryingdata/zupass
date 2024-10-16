@@ -49,12 +49,10 @@ export interface AppState {
   modal:
     | { modalType: "info" }
     | { modalType: "settings" }
-    | { modalType: "upgrade-account-modal" }
     | { modalType: "invalid-participant" }
     | { modalType: "changed-password" }
     | { modalType: "another-device-changed-password" }
     | { modalType: "resolve-subscription-error" }
-    | { modalType: "require-add-password" }
     | { modalType: "privacy-notice" }
     | { modalType: "none" }
     | {
