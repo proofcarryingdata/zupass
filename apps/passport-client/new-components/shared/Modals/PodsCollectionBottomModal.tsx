@@ -1,6 +1,6 @@
 import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
+import { isEmailPCD } from "@pcd/email-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import {
@@ -42,9 +42,6 @@ const getActivePod = (
     return collection.getById(activePodId);
   }
 };
-
-const isEmailPCD = (pcd: PCD<unknown, unknown>): pcd is EmailPCD =>
-  pcd.type === EmailPCDTypeName;
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -110,7 +107,9 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       return a.claim.ticket.ticketId === b.claim.ticket.ticketId;
     }).map((ticket) => ticket.id);
     const filteredPcds = allPcds.filter(
-      (pcd) => !isEdDSATicketPCD(pcd) || !badTicketsIds.includes(pcd.id)
+      (pcd) =>
+        (!isEdDSATicketPCD(pcd) || !badTicketsIds.includes(pcd.id)) &&
+        !isEmailPCD(pcd)
     );
 
     // Group PCDs by folder and create a list of groups with the items inside
@@ -141,7 +140,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       });
     }
 
-    return Object.values(result);
+    return Object.values(result).filter((group) => group.children.length > 0);
   }, [pcdCollection, dispatch]);
 
   useEffect(() => {
