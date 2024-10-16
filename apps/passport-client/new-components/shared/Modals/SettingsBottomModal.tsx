@@ -50,7 +50,7 @@ export function SettingsBottomModal(): JSX.Element {
         }
       },
       {
-        title: `${hasSetupPassword ? "Change" : "Add"} Password`,
+        title: `${hasSetupPassword ? "CHANGE" : "ADD"} PASSWORD`,
         icon: <EyeIcon width={24} height={24} color="#7C8BB4" />,
         onClick: (): void => {
           dispatch({
