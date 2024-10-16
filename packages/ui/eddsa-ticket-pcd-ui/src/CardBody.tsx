@@ -7,7 +7,6 @@ import {
 import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { toCanvas } from "html-to-image";
 import { useRef, useState } from "react";
 import { TicketQR } from "./TicketQR";
@@ -17,9 +16,6 @@ type NEW_UI__AddOns = {
   text: string;
 };
 export interface EdDSATicketPCDCardProps {
-  // The user's Semaphore identity is necessary for generating a ZK proof from
-  // the EdDSATicketPCD.
-  identityPCD: SemaphoreIdentityPCD;
   // The URL to use when encoding a serialized PCD on the query string.
   verifyURL: string;
   // The URL to use for the simpler case of sending some identifiers rather
@@ -28,7 +24,7 @@ export interface EdDSATicketPCDCardProps {
   // If this parameter is set, then the default QR code will use this URL.
   // "ZK mode" will then be enabled, allowing the user to switch to using the
   // `verifyURL` with a ZK proof of their ticket as the payload.
-  idBasedVerifyURL?: string;
+  idBasedVerifyURL: string;
   // If true, hides the visual padding around the image
   hidePadding?: boolean;
   // when clicked on the the addons sections, if there is any, do something
@@ -43,7 +39,6 @@ export const EdDSATicketPCDUI: PCDUI<EdDSATicketPCD, EdDSATicketPCDCardProps> =
 
 function EdDSATicketPCDCardBody({
   pcd,
-  identityPCD,
   verifyURL,
   idBasedVerifyURL,
   addOns
@@ -59,7 +54,6 @@ function EdDSATicketPCDCardBody({
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
         <TicketQR
           pcd={pcd}
-          identityPCD={identityPCD}
           verifyURL={verifyURL}
           idBasedVerifyURL={idBasedVerifyURL}
         />

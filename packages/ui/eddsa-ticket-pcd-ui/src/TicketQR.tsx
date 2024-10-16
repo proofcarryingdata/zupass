@@ -25,7 +25,7 @@ export function TicketQR({
       return pcd.claim.ticket.ticketSecret;
     } else {
       return linkToTicket(
-        idBasedVerifyURL!,
+        idBasedVerifyURL,
         pcd.claim.ticket.ticketId,
         pcd.claim.ticket.eventId
       );
