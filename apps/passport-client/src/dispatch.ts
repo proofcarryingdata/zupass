@@ -864,17 +864,7 @@ async function loadAfterLogin(
     }
   }
 
-  let modal: AppState["modal"] = { modalType: "none" };
-  if (
-    // If on Zupass legacy login, ask user to set passwrod
-    self &&
-    !encryptionKey &&
-    !storage.storage.self.salt
-  ) {
-    console.log("Asking existing user to set a password");
-    modal = { modalType: "upgrade-account-modal" };
-  }
-
+  const modal: AppState["modal"] = { modalType: "none" };
   console.log(`[SYNC] saving state at login: revision ${storage.revision}`);
   await savePCDs(pcds);
   await saveSubscriptions(subscriptions);

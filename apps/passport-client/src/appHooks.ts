@@ -285,21 +285,6 @@ export function useHasSetupPassword(): boolean {
   return !!self && hasSetupPassword(self);
 }
 
-// Hook that when invoked, requires the user to set a password if they haven't already
-export function useRequirePassword(): void {
-  const self = useSelf();
-  const hasSetupPassword = useHasSetupPassword();
-  const dispatch = useDispatch();
-  if (self && !hasSetupPassword) {
-    dispatch({
-      type: "set-modal",
-      modal: {
-        modalType: "require-add-password"
-      }
-    });
-  }
-}
-
 // Hook that enables keystrokes to properly listen to laser scanning inputs from supported devices
 export function useLaserScannerKeystrokeInput(): string {
   const [typedText, setTypedText] = useState("");

@@ -15,7 +15,6 @@
         "public/semaphore-artifacts/**",
         "public/global-zupass.css",
         "public/index.hbs",
-        "public/zxcvbn.js",
         "src/**",
         "test/**",
         "build.ts",

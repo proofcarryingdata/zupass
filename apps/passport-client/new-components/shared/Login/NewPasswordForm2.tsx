@@ -1,9 +1,7 @@
 import { Dispatch, ReactNode, SetStateAction, useRef } from "react";
 import styled from "styled-components";
-import {
-  PASSWORD_MINIMUM_LENGTH,
-  checkPasswordStrength
-} from "../../../src/password";
+import { checkPasswordStrength } from "../../../src/checkPasswordStrength";
+import { PASSWORD_MINIMUM_LENGTH } from "../../../src/password";
 import { Button2 } from "../Button";
 import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
@@ -62,10 +60,6 @@ export const NewPasswordForm2 = ({
     } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
       setError(
         `Password must be at least ${PASSWORD_MINIMUM_LENGTH} characters.`
-      );
-    } else if (!window.zxcvbn) {
-      setError(
-        "Background libraries have not loaded yet. Please retry in a few seconds."
       );
     } else if (!checkPasswordStrength(password)) {
       // Inspired by Dashlane's zxcvbn guidance:
