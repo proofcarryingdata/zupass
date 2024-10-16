@@ -15,11 +15,11 @@ import {
   SemaphoreSignaturePCDArgs,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { cloneDeep, without } from "lodash";
+import { cloneDeep } from "lodash";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
-import { useDispatch, useIdentityV3, useSelf } from "../../../src/appHooks";
+import { useIdentityV3, useSelf } from "../../../src/appHooks";
 import {
   safeRedirect,
   safeRedirectPending
@@ -39,7 +39,6 @@ export function SemaphoreSignatureProveScreen({
   const identity = useIdentityV3();
   const [proving, setProving] = useState(false);
   const [error, setError] = useState<string | undefined>();
-  const dispatch = useDispatch();
   const onProve = useCallback(async () => {
     setProving(true);
 
