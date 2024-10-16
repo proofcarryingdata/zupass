@@ -149,7 +149,10 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
    * Insert a POD into the PCD collection.
    */
   public async insert(collectionId: string, podData: PODData): Promise<void> {
-    if (!this.getPermissions().INSERT_POD?.collections.includes(collectionId)) {
+    if (
+      !this.getPermissions().INSERT_POD?.collections.includes(collectionId) ||
+      collectionId === "Devcon Swag"
+    ) {
       throw new MissingPermissionError("INSERT_POD", "pod.insert");
     }
     const id = uuidv4();
@@ -170,7 +173,10 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
    * Delete all PODs with the given signature.
    */
   public async delete(collectionId: string, signature: string): Promise<void> {
-    if (!this.getPermissions().DELETE_POD?.collections.includes(collectionId)) {
+    if (
+      !this.getPermissions().DELETE_POD?.collections.includes(collectionId) ||
+      collectionId === "Devcon Swag"
+    ) {
       throw new MissingPermissionError("DELETE_POD", "pod.delete");
     }
     const allPCDs = this.getContext()
