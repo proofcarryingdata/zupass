@@ -68,8 +68,11 @@ export interface AppState {
     attendee: string;
     eventId: string;
   };
-  // User metadata.
-  self?: User;
+
+  // stores the eligibility state of all pcd type props that that the prove has,
+  // if one is not valid, we show a full screen error stat
+  proveStateEligiblePCDs?: boolean[];
+  self?: User; // User metadata.
 
   // if the client is in the process of logging out,
   // shows alternate UI on the login page to prevent

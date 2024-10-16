@@ -30,7 +30,11 @@ import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
-import { useDispatch, usePCDCollection } from "../../../src/appHooks";
+import {
+  usePCDCollection,
+  useProveState,
+  useProveStateCount
+} from "../../../src/appHooks";
 import {
   getOOMErrorMessage,
   getOutdatedBrowserErrorMessage
@@ -75,7 +79,8 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const pcdPackage = pcds.getPackage<T>(pcdType);
   const [multiProofsCompleted, setMultiProofsCompleted] = useState(0);
   const [multiProofsQueued, setMultiProofsQueued] = useState(0);
-
+  const proveState = useProveState();
+  const proveStateCount = useProveStateCount();
   useEffect(() => {
     if (options?.multi && !isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
       setError("multi-proofs are only supported for ZKEdDSAEventTicketPCD");
@@ -95,6 +100,15 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     [args]
   );
 
+  const pcdsPropCount = useMemo(() => {
+    let count = 0;
+    for (const [_, arg] of Object.entries(args)) {
+      if (isPCDArgument(arg)) count++;
+    }
+    return count;
+  }, [args]);
+
+  console.log(pcdsPropCount);
   const onProveClick = useCallback(async () => {
     setProving(true);
     setError(undefined);
@@ -218,8 +232,31 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     pcdPackage,
     pcds
   ]);
+
+  console.log(proveState);
   return (
     <Container>
+      {proveState !== undefined && !proveState && (
+        <AbsoluteContainer>
+          <Typography>Missing PCDs</Typography>
+          <Button2
+            style={{ marginTop: "auto" }}
+            onClick={() => {
+              window.history.back();
+            }}
+            variant="secondary"
+          >
+            Back
+          </Button2>
+        </AbsoluteContainer>
+      )}
+      {proveStateCount < pcdsPropCount && (
+        <AbsoluteContainer>
+          <NewLoader columns={5} rows={5} />
+          <Typography>Loading the proof</Typography>
+        </AbsoluteContainer>
+      )}
+
       <PCDArgs
         args={args}
         setArgs={setArgs}
@@ -259,6 +296,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 }
 
 const Container = styled.div`
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -268,4 +306,16 @@ const ButtonsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
+`;
+
+const AbsoluteContainer = styled.div`
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  z-index: 100;
+  background: white;
 `;

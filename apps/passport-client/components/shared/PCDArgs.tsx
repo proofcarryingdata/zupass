@@ -28,17 +28,22 @@ import {
   isStringArrayArgument,
   isToggleListArgument
 } from "@pcd/pcd-types";
-import _ from "lodash";
+import _, { has } from "lodash";
 import React, {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState
 } from "react";
 import { SingleValue } from "react-select";
 import styled from "styled-components";
-import { usePCDCollection } from "../../src/appHooks";
+import {
+  useDispatch,
+  usePCDCollection,
+  useProveState
+} from "../../src/appHooks";
 import Select from "./Select";
 import { Accordion, AccordionRef } from "../../new-components/shared/Accordion";
 import { Typography } from "../../new-components/shared/Typography";
@@ -46,6 +51,8 @@ import { Button2 } from "../../new-components/shared/Button";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
+import { setLogger } from "tsparticles-engine";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 
 /**
  * Type used in `PCDArgs` for record container argument flattening process.
@@ -80,7 +87,7 @@ export function PCDArgs<T extends PCDPackage>({
   // argument to properly mutate (cf. `setArg`) as well as inheriting argument
   // fields from the record container argument.  Validator parameters are also
   // combined.
-  const flattenedArgs: FlattenedArgTriple[] = Object.entries(args).flatMap(
+  const flattenedArgs: FlattpuenedArgTriple[] = Object.entries(args).flatMap(
     ([argName, arg]: [
       string,
       Argument<ArgumentTypeName>
@@ -589,6 +596,9 @@ export function PCDArgInput({
 }: ArgInputProps<PCDArgument>): JSX.Element {
   const pcdCollection = usePCDCollection();
   const ref = useRef<AccordionRef>(null);
+  const dispatch = useDispatch();
+  const [loaded, setLoaded] = useState(false);
+  const proveState = useProveState();
   const relevantPCDs = useMemo(
     () =>
       pcdCollection
@@ -596,6 +606,17 @@ export function PCDArgInput({
         .filter((pcd) => isValid(pcd) && pcd.type === arg.pcdType),
     [pcdCollection, isValid, arg]
   );
+
+  useEffect(() => {
+    const updateProveState = proveState === undefined || proveState;
+    if (loaded || !updateProveState) return;
+    console.log(arg.displayName, proveState);
+    dispatch({
+      type: "prove-state",
+      eligible: relevantPCDs.length > 0
+    });
+    setLoaded(true);
+  }, [arg, loaded, relevantPCDs, dispatch, proveState]);
 
   const setPCDById = useCallback(
     async (id: string) => {

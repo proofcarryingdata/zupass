@@ -141,6 +141,18 @@ export function useIdentityV3(): Identity {
   return useSelector<Identity>((s) => s.identityV3, []);
 }
 
+export function useProveStateCount(): number {
+  return useSelector<number>((s) => s.proveStateEligiblePCDs?.length ?? 0, []);
+}
+export function useProveState(): boolean | undefined {
+  return useSelector<boolean | undefined>(
+    (s) =>
+      s.proveStateEligiblePCDs === undefined
+        ? undefined
+        : s.proveStateEligiblePCDs.every(Boolean),
+    []
+  );
+}
 export function useDispatch(): Dispatcher {
   const { dispatch } = useContext(StateContext);
   return dispatch;
