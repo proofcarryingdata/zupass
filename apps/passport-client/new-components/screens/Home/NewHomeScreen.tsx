@@ -37,10 +37,10 @@ import { TicketPack, TicketType, TicketTypeName } from "./types";
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
 
-const CARD_GAP = isMobile ? 8 : 40;
-const TICKET_VERTICAL_GAP = 20;
 const SCREEN_HORIZONTAL_PADDING = 20;
+const TICKET_VERTICAL_GAP = 20;
 const BUTTONS_CONTAINER_HEIGHT = 40;
+const CARD_GAP = isMobile ? 8 : SCREEN_HORIZONTAL_PADDING * 2;
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
   // TODO: fetch the pods type as well and prioritize it if theres a conflict.
