@@ -5,7 +5,10 @@
     "module": "ESNext",
     "tsBuildInfoFile": "./tsconfig.esm.tsbuildinfo"
   },
-  "include": ["src", "src/*.json"],
+  "include": [
+    "src",
+    "src/*.json"
+  ],
   "references": [
     {
       "path": "../../pcd/eddsa-ticket-pcd/tsconfig.esm.json"
@@ -18,12 +21,6 @@
     },
     {
       "path": "../../lib/pcd-types/tsconfig.esm.json"
-    },
-    {
-      "path": "../../pcd/semaphore-identity-pcd/tsconfig.esm.json"
-    },
-    {
-      "path": "../../pcd/zk-eddsa-event-ticket-pcd/tsconfig.esm.json"
     }
   ]
 }
