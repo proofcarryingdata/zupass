@@ -24,19 +24,20 @@ import {
 } from "../../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { nextFrame } from "../../../src/util";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
 import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
+import { isMobile } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
-import { nextFrame } from "../../../src/util";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
 
-const CARD_GAP = 8;
+const CARD_GAP = isMobile ? 8 : 40;
 const TICKET_VERTICAL_GAP = 20;
 const SCREEN_HORIZONTAL_PADDING = 20;
 const BUTTONS_CONTAINER_HEIGHT = 40;
