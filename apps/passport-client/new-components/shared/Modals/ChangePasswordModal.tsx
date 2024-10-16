@@ -153,7 +153,7 @@ export const ChangePasswordModal = (): JSX.Element | null => {
       <Container>
         <TitleContainer>
           <Typography fontSize={20} fontWeight={800}>
-            {hasSetupPassword ? "Change" : "Add"} Password
+            {hasSetupPassword ? "CHANGE" : "ADD"} PASSWORD
           </Typography>
           <Typography fontSize={16} fontWeight={400} family="Rubik">
             Make sure that your {hasSetupPassword ? "new" : ""} password is
