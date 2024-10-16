@@ -62,7 +62,6 @@ function EdDSATicketPCDCardBody({
           identityPCD={identityPCD}
           verifyURL={verifyURL}
           idBasedVerifyURL={idBasedVerifyURL}
-          zk={idBasedVerifyURL !== undefined}
         />
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>

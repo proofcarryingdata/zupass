@@ -31,18 +31,13 @@
     "@pcd/passport-interface": "^0.11.9",
     "@pcd/passport-ui": "0.11.6",
     "@pcd/pcd-types": "0.11.4",
-    "@pcd/semaphore-identity-pcd": "^0.11.6",
-    "@pcd/zk-eddsa-event-ticket-pcd": "^0.6.6",
-    "html-to-image": "^1.11.11",
-    "react-icons": "^5.0.1",
-    "url-join": "4.0.1"
+    "html-to-image": "^1.11.11"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.11.4",
     "@pcd/tsconfig": "0.11.4",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
-    "@types/url-join": "4.0.1",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",
     "typescript": "^5.3.3"
