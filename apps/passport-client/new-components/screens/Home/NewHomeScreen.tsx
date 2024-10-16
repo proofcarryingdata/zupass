@@ -43,8 +43,10 @@ const BUTTONS_CONTAINER_HEIGHT = 40;
 const CARD_GAP = isMobile ? 8 : SCREEN_HORIZONTAL_PADDING * 2;
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
-  // TODO: fetch the pods type as well and prioritize it if theres a conflict.
-  return isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd);
+  return (
+    (isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd)) &&
+    !!pcd.claim.ticket.eventStartDate
+  );
 };
 
 const useTickets = (): Array<[string, TicketPack[]]> => {
@@ -73,7 +75,7 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
     if (timeToDate1 < 0) return -1;
     if (timeToDate2 < 0) return 1;
 
-    // return which date is closer
+    // return which date is closer to the current time
     return timeToDate1 - timeToDate2;
   });
 
