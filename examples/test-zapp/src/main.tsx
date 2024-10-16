@@ -18,7 +18,7 @@ const zapp: Zapp = {
   permissions: {
     REQUEST_PROOF: { collections: ["Apples", "Bananas"] },
     SIGN_POD: {},
-    READ_POD: { collections: ["Apples", "Bananas"] },
+    READ_POD: { collections: ["Apples", "Bananas", "Devcon Swag"] },
     INSERT_POD: { collections: ["Apples", "Bananas"] },
     DELETE_POD: { collections: ["Bananas"] },
     READ_PUBLIC_IDENTIFIERS: {}
