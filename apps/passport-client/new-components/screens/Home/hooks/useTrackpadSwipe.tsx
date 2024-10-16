@@ -22,14 +22,13 @@ export const useTrackpadSwipe = ({
 
     let wheelTimeout: NodeJS.Timeout;
     let lastWheelTime = 0;
-    // ms - Minimum time between wheel events to process
-    const wheelThreshold = 50;
+    const wheelThreshold = 500; // ms - Minimum time between wheel events to process
+    const swipeThreshold = 5; // Swipe sensitivity threshold
 
     const handleWheel = (e: WheelEvent): void => {
-      // Prevent default scrolling behavior
       e.preventDefault();
       const now = Date.now();
-      // Throttle wheel events to prevent over-sensitivity
+
       if (now - lastWheelTime < wheelThreshold) {
         return;
       }
@@ -38,11 +37,14 @@ export const useTrackpadSwipe = ({
 
       clearTimeout(wheelTimeout);
       wheelTimeout = setTimeout(() => {
-        // Check if swipe is significant enough and we're not at the end of the list
-        if (e.deltaX > 50 && activeIdx < itemCount - 1) {
-          setActiveIdx((prevIdx) => prevIdx + 1);
-        } else if (e.deltaX < -50 && activeIdx > 0) {
-          setActiveIdx((prevIdx) => prevIdx - 1);
+        if (Math.abs(e.deltaX) > swipeThreshold) {
+          setActiveIdx((prevIdx) => {
+            if (e.deltaX > 0) {
+              return Math.min(prevIdx + 1, itemCount - 1);
+            } else {
+              return Math.max(prevIdx - 1, 0);
+            }
+          });
         }
       }, 50);
     };
@@ -52,7 +54,7 @@ export const useTrackpadSwipe = ({
     return () => {
       container.removeEventListener("wheel", handleWheel);
     };
-  }, [activeIdx, isEnabled, itemCount]);
+  }, [isEnabled, itemCount]);
 
   return {
     containerRef,
