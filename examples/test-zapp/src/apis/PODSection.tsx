@@ -36,7 +36,7 @@ export function PODSection(): ReactNode {
 function QueryPODs({ z }: { z: ParcnetAPI }): ReactNode {
   const [pods, setPODs] = useState<p.PODData[] | undefined>(undefined);
   const [selectedCollection, setSelectedCollection] = useState<
-    "Apples" | "Bananas" | "Devcon Swag"
+    "Apples" | "Bananas"
   >("Apples");
 
   return (
@@ -44,18 +44,7 @@ function QueryPODs({ z }: { z: ParcnetAPI }): ReactNode {
       <p>
         Querying PODs is done like this:
         <code className="block text-xs font-base rounded-md p-2 whitespace-pre">
-          {selectedCollection === "Devcon Swag"
-            ? `const q = p.pod({
-  entries: {
-    eventLocation: {
-      type: "string",
-      isMemberOf: [{ type: "string", value: "Bangkok" }]
-    }
-  }
-});
-const pods = await z.pod.collection(${selectedCollection}).query(q);
-`
-            : `const q = p.pod({
+          {`const q = p.pod({
   entries: {
     wis: {
       type: "int",
@@ -67,7 +56,7 @@ const pods = await z.pod.collection(${selectedCollection}).query(q);
     }
   }
 });
-const pods = await z.pod.collection(${selectedCollection}).query(q);
+const pods = await z.pod.collection("${selectedCollection}").query(q);
 `}
         </code>
       </p>
@@ -77,44 +66,30 @@ const pods = await z.pod.collection(${selectedCollection}).query(q);
           <select
             value={selectedCollection}
             onChange={(e) =>
-              setSelectedCollection(
-                e.target.value as "Apples" | "Bananas" | "Devcon Swag"
-              )
+              setSelectedCollection(e.target.value as "Apples" | "Bananas")
             }
             className="w-full rounded-md bg-gray-100 border-transparent focus:border-gray-500 focus:bg-white focus:ring-0"
           >
             <option value="Apples">Apples</option>
             <option value="Bananas">Bananas</option>
-            <option value="Devcon Swag">Devcon Swag</option>
           </select>
         </label>
       </div>
       <TryIt
         onClick={async () => {
           try {
-            const q = p.pod(
-              selectedCollection === "Devcon Swag"
-                ? {
-                    entries: {
-                      eventLocation: {
-                        type: "string",
-                        isMemberOf: [{ type: "string", value: "Bangkok" }]
-                      }
-                    }
-                  }
-                : {
-                    entries: {
-                      wis: {
-                        type: "int",
-                        inRange: { min: BigInt(8), max: POD_INT_MAX }
-                      },
-                      str: {
-                        type: "int",
-                        inRange: { min: BigInt(5), max: POD_INT_MAX }
-                      }
-                    }
-                  }
-            );
+            const q = p.pod({
+              entries: {
+                wis: {
+                  type: "int",
+                  inRange: { min: BigInt(8), max: POD_INT_MAX }
+                },
+                str: {
+                  type: "int",
+                  inRange: { min: BigInt(5), max: POD_INT_MAX }
+                }
+              }
+            });
             const pods = await z.pod.collection(selectedCollection).query(q);
             setPODs(pods);
           } catch (e) {
