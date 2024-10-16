@@ -75,7 +75,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const pcdPackage = pcds.getPackage<T>(pcdType);
   const [multiProofsCompleted, setMultiProofsCompleted] = useState(0);
   const [multiProofsQueued, setMultiProofsQueued] = useState(0);
-  const dispatch = useDispatch();
+
   useEffect(() => {
     if (options?.multi && !isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
       setError("multi-proofs are only supported for ZKEdDSAEventTicketPCD");
@@ -247,10 +247,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
         <Button2
           onClick={() => {
-            dispatch({
-              type: "set-bottom-modal",
-              modal: { modalType: "none" }
-            });
+            window.history.back();
           }}
           variant="secondary"
         >

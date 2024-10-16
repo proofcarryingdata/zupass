@@ -87,7 +87,7 @@ export function GenericProveScreen({
     err(dispatch, "Unsupported request", `Expected a PCD GET request`);
     return null;
   }
-  console.log(req);
+
   return (
     <Container>
       <Header>

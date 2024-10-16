@@ -15,7 +15,7 @@ import {
   SemaphoreSignaturePCDArgs,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { cloneDeep } from "lodash";
+import { cloneDeep, without } from "lodash";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
@@ -172,10 +172,7 @@ export function SemaphoreSignatureProveScreen({
 
         <Button2
           onClick={() => {
-            dispatch({
-              type: "set-bottom-modal",
-              modal: { modalType: "none" }
-            });
+            window.history.back();
           }}
           variant="secondary"
         >
