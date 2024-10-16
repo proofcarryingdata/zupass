@@ -6,7 +6,7 @@ import { useBottomModal, useDispatch } from "../../../src/appHooks";
 import { BottomModal } from "../../shared/BottomModal";
 import { Button2 } from "../../shared/Button";
 import { Typography } from "../../shared/Typography";
-import { useTrackpadSwipe } from "./hooks/useSwipeNavigation";
+import { useTrackpadSwipe } from "./hooks/useTrackpadSwipe";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipeableViews.default;

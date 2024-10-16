@@ -280,6 +280,7 @@ export const NewHomeScreen = (): ReactElement => {
               onChangeIndex={(e: number) => {
                 setCurrentPos(e);
               }}
+              enableMouseEvents
             >
               {tickets.map(([eventId, packs], i) => {
                 const eventDetails = getEventDetails(packs[0]);
