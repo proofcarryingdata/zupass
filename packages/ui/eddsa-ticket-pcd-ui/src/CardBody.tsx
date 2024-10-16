@@ -57,18 +57,13 @@ function EdDSATicketPCDCardBody({
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        {!ticketData?.qrCodeOverrideImageUrl && (
-          <TicketQR
-            pcd={pcd}
-            identityPCD={identityPCD}
-            verifyURL={verifyURL}
-            idBasedVerifyURL={idBasedVerifyURL}
-            zk={idBasedVerifyURL !== undefined}
-          />
-        )}
-        {ticketData?.qrCodeOverrideImageUrl && (
-          <TicketImage pcd={pcd} hidePadding={true} />
-        )}
+        <TicketQR
+          pcd={pcd}
+          identityPCD={identityPCD}
+          verifyURL={verifyURL}
+          idBasedVerifyURL={idBasedVerifyURL}
+          zk={idBasedVerifyURL !== undefined}
+        />
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
             {ticketData?.attendeeName.toUpperCase() || "Unknown"}
@@ -110,22 +105,22 @@ function EdDSATicketPCDCardBody({
   );
 }
 
-function TicketImage({
-  pcd,
-  hidePadding
-}: {
-  pcd: EdDSATicketPCD;
-  hidePadding?: boolean;
-}): JSX.Element {
-  const { qrCodeOverrideImageUrl, imageAltText } = pcd.claim.ticket;
-  if (hidePadding)
-    return <img src={qrCodeOverrideImageUrl} alt={imageAltText} />;
-  return (
-    <div style={{ padding: "8px" }}>
-      <img src={qrCodeOverrideImageUrl} alt={imageAltText} />
-    </div>
-  );
-}
+// TODO: implement hiding the QRCode
+// function TicketImage({
+//   pcd,
+//   hidePadding
+// }: {
+//   pcd: EdDSATicketPCD;
+//   hidePadding?: boolean;
+// }): JSX.Element {
+//   const { imageUrl, imageAltText } = pcd.claim.ticket;
+//   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
+//   return (
+//     <div style={{ padding: "8px" }}>
+//       <img src={imageUrl} alt={imageAltText} />
+//     </div>
+//   );
+// }
 
 function getHeader({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   let header;

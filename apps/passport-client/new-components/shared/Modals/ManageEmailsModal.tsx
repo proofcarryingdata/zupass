@@ -1,5 +1,4 @@
 import styled from "styled-components";
-
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import {
   CredentialManager,

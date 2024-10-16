@@ -66,6 +66,10 @@ export interface AppState {
       }
     | { modalType: "frogcrypto-export-pcds" };
 
+  scrollTo?: {
+    attendee: string;
+    eventId: string;
+  };
   // User metadata.
   self?: User;
 

@@ -1,8 +1,8 @@
-import styled, { FlattenSimpleInterpolation, css } from "styled-components";
-import { Typography } from "../Typography";
-import { FaChevronRight } from "react-icons/fa";
-import { Avatar } from "../Avatar";
 import { ReactElement } from "react";
+import { FaChevronRight } from "react-icons/fa";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import { Avatar } from "../Avatar";
+import { Typography } from "../Typography";
 
 export type ListItemVariant = "primary" | "danger";
 export type ListItemType = {
@@ -47,7 +47,7 @@ const ListItemContainer = styled.div<{
 
 const ListItemRightContainer = styled.div<{ showBottomBorder: boolean }>`
   flex: 1 1 auto;
-
+  min-width: 0;
   display: flex;
   height: 56px;
   align-items: center;
@@ -67,6 +67,31 @@ const IconContainer = styled.div`
   justify-content: center;
 `;
 
+const EmailWrapper = styled.div`
+  display: inline-flex;
+  width: 100%;
+  overflow: hidden;
+`;
+
+const Username = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+`;
+
+const Domain = styled.span``;
+
+const TruncatedEmail = ({ email }: { email: string }): JSX.Element => {
+  const [username, domain] = email.split("@");
+  return (
+    <EmailWrapper>
+      <Username>{username}</Username>
+      <Domain>@{domain}</Domain>
+    </EmailWrapper>
+  );
+};
+
 export const ListItem = ({
   title,
   LeftIcon,
@@ -77,6 +102,7 @@ export const ListItem = ({
   const defaultVariant = variant ?? "primary";
   const defaultShowBottomBorder =
     showBottomBorder !== undefined ? showBottomBorder : true;
+  const isEmail = title.includes("@");
   return (
     <ListItemContainer
       variant={defaultVariant}
@@ -90,8 +116,12 @@ export const ListItem = ({
           fontWeight={500}
           fontSize={16}
           color={getVariantColor(defaultVariant)}
+          style={{
+            minWidth: 0,
+            maxWidth: "90%"
+          }}
         >
-          {title}
+          {isEmail ? <TruncatedEmail email={title} /> : title}
         </Typography>
         <FaChevronRight color={getVariantColor(defaultVariant)} />
       </ListItemRightContainer>

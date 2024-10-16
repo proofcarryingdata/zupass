@@ -287,7 +287,10 @@ const TicketWrapper = forwardRef<
       : `${window.location.origin}/#/verify`;
 
   return identityPCD ? (
-    <div ref={ref}>
+    <div
+      ref={ref}
+      id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
+    >
       <Card
         hidePadding={hidePadding}
         pcd={pcd}
@@ -324,7 +327,10 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
       if (isPODTicketPCD(pcd)) {
         const Component = PODTicketPCDUI.renderCardBody;
         return (
-          <div ref={ref}>
+          <div
+            ref={ref}
+            id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
+          >
             <Component
               ticketData={pcd.claim.ticket}
               addOns={addOns}

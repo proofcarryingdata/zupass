@@ -7,7 +7,6 @@ const CardImg = styled.img`
 `;
 const CardTitle = styled.p`
   color: var(--text-primary, #1e2c50);
-  /* text-lg (18px)/extrabold-barlow */
   text-transform: uppercase;
   padding-top: 4px;
   font-family: Barlow;
@@ -18,7 +17,6 @@ const CardTitle = styled.p`
 const CardDescription = styled.p`
   color: var(--text-primary, #1e2c50);
 
-  /* text-sm (14px)/regular-rubik */
   font-family: Rubik;
   font-size: 14px;
   font-style: normal;

@@ -25,6 +25,7 @@ import {
   useDispatch,
   useIsSyncSettled,
   usePCDs,
+  useScrollTo,
   useSelf,
   useUserForcedToLogout
 } from "../../../src/appHooks";
@@ -38,6 +39,7 @@ import { Typography } from "../../shared/Typography";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 import { PCDGetRequest } from "@pcd/passport-interface";
+import { nextFrame } from "../../../src/util";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -61,6 +63,24 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
       t1.claim.ticket.attendeeEmail === t2.claim.ticket.attendeeEmail &&
       t1.type === EdDSATicketPCDTypeName
     );
+  }).sort((t1, t2) => {
+    // if one of the tickets doesnt have a date, immidiatly retrun the other one as the bigger one
+    if (!t1.claim.ticket.eventStartDate) return -1;
+    if (!t2.claim.ticket.eventStartDate) return 1;
+
+    // parse the date
+    const date1 = Date.parse(t1.claim.ticket.eventStartDate);
+    const date2 = Date.parse(t2.claim.ticket.eventStartDate);
+    const now = Date.now();
+
+    const timeToDate1 = date1 - now;
+    const timeToDate2 = date2 - now;
+    // if one of the dates passed its due date, immidately return the other one
+    if (timeToDate1 < 0) return -1;
+    if (timeToDate2 < 0) return 1;
+
+    // return which date is closer
+    return timeToDate1 - timeToDate2;
   });
 
   //  This hook is building "ticket packs"
@@ -229,6 +249,7 @@ export const NewHomeScreen = (): ReactElement => {
   const [currentPos, setCurrentPos] = useState(0);
   const dispatch = useDispatch();
   const ticketsRef = useRef<Map<string, HTMLDivElement[]>>(new Map());
+  const scrollTo = useScrollTo();
   const windowWidth = useWindowWidth();
   const self = useSelf();
   const navigate = useNavigate();
@@ -258,6 +279,33 @@ export const NewHomeScreen = (): ReactElement => {
       console.log(request);
     }
   }, [isLoadedPCDs, location, dispatch]);
+
+  useEffect(() => {
+    if (scrollTo && isLoadedPCDs && tickets.length > 0) {
+      // getting the pos of the event card
+      const eventPos = tickets.findIndex(
+        (pack) => pack[0] === scrollTo.eventId
+      );
+      if (eventPos < 0) return;
+      // scrolling to it and re-running the hook
+      if (eventPos !== currentPos) {
+        setCurrentPos(eventPos);
+        return;
+      }
+      (async (): Promise<void> => {
+        // making sure we let the tickets render before we fetch them from the dom
+        await nextFrame();
+        const elToScroll = document.getElementById(
+          scrollTo.eventId + scrollTo.attendee
+        );
+        window.scroll({
+          top: elToScroll?.offsetTop,
+          left: elToScroll?.offsetLeft
+        });
+        dispatch({ type: "scroll-to-ticket", scrollTo: undefined });
+      })();
+    }
+  }, [dispatch, scrollTo, currentPos, setCurrentPos, tickets, isLoadedPCDs]);
 
   const cardWidth =
     (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -

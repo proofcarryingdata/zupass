@@ -21,17 +21,16 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
-    "watch": "tsc --watch -p tsconfig.cjs.json & tsc --watch -p tsconfig.esm.json",
     "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pod": "0.1.7",
-    "@pcd/pod-pcd": "0.1.7",
     "@pcd/passport-ui": "0.11.6",
     "@pcd/pcd-types": "0.11.4",
+    "@pcd/pod": "0.1.7",
+    "@pcd/pod-pcd": "0.1.7",
     "@pcd/util": "0.5.4",
     "react": "^18.2.0"
   },

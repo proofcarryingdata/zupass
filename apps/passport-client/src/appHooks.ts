@@ -167,6 +167,10 @@ export function useBottomModal(): AppState["bottomModal"] {
   return useSelector<AppState["bottomModal"]>((s) => s.bottomModal, []);
 }
 
+export function useScrollTo(): AppState["scrollTo"] {
+  return useSelector<AppState["scrollTo"]>((s) => s.scrollTo, []);
+}
+
 export function useSyncKey(): string | undefined {
   return useSelector<string | undefined>((s) => s.encryptionKey, []);
 }

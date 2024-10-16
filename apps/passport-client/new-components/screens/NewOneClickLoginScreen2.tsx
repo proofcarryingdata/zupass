@@ -121,11 +121,10 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
       });
 
       dispatch({
-        type: "set-bottom-modal",
-        modal: {
-          modalType: "pods-collection",
-          activePodId: ticketPreviews[0].ticketId,
-          idType: "ticketId"
+        type: "scroll-to-ticket",
+        scrollTo: {
+          attendee: ticketPreviews[0].attendeeEmail,
+          eventId: ticketPreviews[0].eventId
         }
       });
     } catch (err) {
