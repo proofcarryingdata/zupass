@@ -331,7 +331,24 @@ export function checkPODEntryName(name?: string, strict?: boolean): string {
 }
 
 /**
- * Checks the format of a PODEntryIdentifier, and return its subcomponents.
+ * Checks the format of a PODEntryIdentifier, and returns it whole.
+ *
+ * @param nameForErrorMessages the name for this value, used only for error
+ *   messages.
+ * @param entryIdentifier the value to check
+ * @returns the same identifiers
+ * @throws TypeError if the identifier does not match the expected format
+ */
+export function checkPODEntryIdentifier(
+  nameForErrorMessages: string,
+  entryIdentifier: PODEntryIdentifier
+): PODEntryIdentifier {
+  checkPODEntryIdentifierParts(nameForErrorMessages, entryIdentifier);
+  return entryIdentifier;
+}
+
+/**
+ * Checks the format of a PODEntryIdentifier, and returns its subcomponents.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -339,7 +356,7 @@ export function checkPODEntryName(name?: string, strict?: boolean): string {
  * @returns the two sub-parts of the identifiers
  * @throws TypeError if the identifier does not match the expected format
  */
-export function checkPODEntryIdentifier(
+export function checkPODEntryIdentifierParts(
   nameForErrorMessages: string,
   entryIdentifier: PODEntryIdentifier
 ): [PODName, PODName | PODVirtualEntryName] {
@@ -376,7 +393,7 @@ export function splitPODEntryIdentifier(entryIdentifier: PODEntryIdentifier): {
   objName: PODName;
   entryName: PODName | PODVirtualEntryName;
 } {
-  const names = checkPODEntryIdentifier(entryIdentifier, entryIdentifier);
+  const names = checkPODEntryIdentifierParts(entryIdentifier, entryIdentifier);
   return { objName: names[0], entryName: names[1] };
 }
 
@@ -545,15 +562,31 @@ export function widthOfEntryOrTuple(value: PODValue | PODValue[]): number {
 }
 
 /**
- * Checks the format of a GPCIdentifier, and return its subcomponents.
+ * Checks the format of a GPCIdentifier, and returns it whole.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
- * @param entryIdentifier the value to check
- * @returns the two sub-parts of the identifiers
+ * @param circuitIdentifier the value to check
+ * @returns the same identifier
  * @throws TypeError if the identifier does not match the expected format
  */
 export function checkCircuitIdentifier(
+  circuitIdentifier: GPCIdentifier
+): GPCIdentifier {
+  checkCircuitIdentifierParts(circuitIdentifier);
+  return circuitIdentifier;
+}
+
+/**
+ * Checks the format of a GPCIdentifier, and returns its subcomponents.
+ *
+ * @param nameForErrorMessages the name for this value, used only for error
+ *   messages.
+ * @param circuitIdentifier the value to check
+ * @returns the two sub-parts of the identifiers
+ * @throws TypeError if the identifier does not match the expected format
+ */
+export function checkCircuitIdentifierParts(
   circuitIdentifier: GPCIdentifier
 ): [string, string] {
   requireType("circuitIdentifier", circuitIdentifier, "string");
@@ -579,7 +612,7 @@ export function splitCircuitIdentifier(circuitIdentifier: GPCIdentifier): {
   familyName: PODName;
   circuitName: PODName;
 } {
-  const names = checkCircuitIdentifier(circuitIdentifier);
+  const names = checkCircuitIdentifierParts(circuitIdentifier);
   return { familyName: names[0], circuitName: names[1] };
 }
 

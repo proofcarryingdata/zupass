@@ -1,21 +1,17 @@
+import { bigintFromJSON, bigintToSimplestJSON, JSONBigInt } from "@pcd/pod";
 import * as v from "valibot";
-import { ClosedInterval } from "../gpcTypes";
-import * as ValibotBigInt from "./bigint";
 import { valibotParse } from "./valibotUtil";
 
 export const Schema = {
-  ToJSON: v.strictObject({
-    min: ValibotBigInt.Schema.ToJSON,
-    max: ValibotBigInt.Schema.ToJSON
-  }),
-  FromJSON: v.strictObject({
-    min: ValibotBigInt.Schema.FromJSON,
-    max: ValibotBigInt.Schema.FromJSON
-  })
+  ToJSON: v.pipe(v.bigint(), v.transform(bigintToSimplestJSON)),
+  FromJSON: v.pipe(
+    v.union([v.string(), v.number()]),
+    v.transform(bigintFromJSON)
+  )
 };
 
-export type TSType = ClosedInterval;
-export type JSONType = v.InferOutput<typeof Schema.ToJSON>;
+export type TSType = bigint;
+export type JSONType = JSONBigInt;
 
 //
 // Don't customize below this point.  This boilerplate is intended to be the
