@@ -11,8 +11,7 @@ import {
 } from "@pcd/pod";
 import { checkBoundConfig, checkProofConfig } from "./gpcChecks";
 import { GPCBoundConfig, GPCProofConfig, PODMembershipLists } from "./gpcTypes";
-import * as ValibotBoundConfig from "./valibot/boundConfig";
-import * as ValibotProofConfig from "./valibot/proofConfig";
+import { ValibotBoundConfig, ValibotProofConfig } from "./gpcValibot";
 
 // TODO(artwyman): Decide how many of the types and converters to expose.
 // Potentially only those for the top-level types: GPCProofConfig,

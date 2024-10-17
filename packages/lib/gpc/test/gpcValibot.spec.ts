@@ -20,18 +20,20 @@ import {
   PODEntryIdentifier,
   SEMAPHORE_V3
 } from "../src";
-import * as ValibotBigInt from "../src/valibot/bigint";
-import * as ValibotBoundConfig from "../src/valibot/boundConfig";
-import * as ValidbotCircuitIdentifier from "../src/valibot/circuitIdentifier";
-import * as ValibotClosedInterval from "../src/valibot/closedInterval";
-import * as ValibotPODEntryIdentifier from "../src/valibot/podEntryIdentifier";
-import * as ValibotPODName from "../src/valibot/podName";
-import * as ValibotPODValue from "../src/valibot/podValue";
-import * as ValibotProofConfig from "../src/valibot/proofConfig";
-import * as ValibotProofEntryConfig from "../src/valibot/proofEntryConfig";
-import * as ValibotProofEntryConfigCommon from "../src/valibot/proofEntryConfigCommon";
-import * as ValibotProofObjectConfig from "../src/valibot/proofObjectConfig";
-import * as ValibotProofTupleConfig from "../src/valibot/proofTupleConfig";
+import {
+  ValibotBigInt,
+  ValibotBoundConfig,
+  ValibotClosedInterval,
+  ValibotPODEntryIdentifier,
+  ValibotPODName,
+  ValibotPODValue,
+  ValibotProofConfig,
+  ValibotProofEntryConfig,
+  ValibotProofEntryConfigCommon,
+  ValibotProofObjectConfig,
+  ValibotProofTupleConfig,
+  ValidbotCircuitIdentifier
+} from "../src/gpcValibot";
 
 describe("gpcValibot value types should work", () => {
   it("PODName conversion", () => {
