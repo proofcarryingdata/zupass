@@ -1,4 +1,5 @@
-import { PODEntries, PODValue } from "./podTypes";
+import { podValueToJSON } from "./podJSON";
+import { PODEntries, PODValue, PODValueTuple } from "./podTypes";
 
 /**
  * Gets the numeric representation of the given value for inclusion in a
@@ -53,6 +54,41 @@ export function clonePODEntries(entries: PODEntries): PODEntries {
     newEntries[entryName] = clonePODValue(entryValue);
   }
   return newEntries;
+}
+
+/**
+ * Converts a POD value to a human-readable string for logging our user display
+ * purposes.  The output is based on the {@link JSONPODValue} format, but also
+ * allows the entire value to be undefined
+ *
+ * @param podValue the POD value (or undefined) to print
+ * @returns a human-readable string
+ * @throws if the POD value is malformed
+ */
+export function printPODValue(podValue: PODValue | undefined): string {
+  return JSON.stringify(podValue ? podValueToJSON(podValue) : undefined);
+}
+
+/**
+ * Converts a POD value or tuple to a human-readable string for logging our user
+ * display purposes.  The output is based on the {@link JSONPODValue} format,
+ * but also handles the case where the whole value is undefined (but not
+ * undefined values inside of a tuple).
+ *
+ * @param podValue the POD value (or undefined) to print
+ * @returns a human-readable string
+ * @throws if the POD value is malformed
+ */
+export function printPODValueOrTuple(
+  value: PODValue | PODValueTuple | undefined
+): string {
+  return JSON.stringify(
+    value
+      ? Array.isArray(value)
+        ? value.map((v) => podValueToJSON(v))
+        : podValueToJSON(value)
+      : undefined
+  );
 }
 
 /**

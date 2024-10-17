@@ -1094,7 +1094,7 @@ describe(`gpc library (Compiled ${circuitParamType} artifacts) should work`, asy
         }
       },
       "Error",
-      'Comparison value {"type":"cryptographic","value":999} corresponding to identifier "somePodName.ticketID" is a member of list "inadmissibleTickets".'
+      'Comparison value {"cryptographic":999} corresponding to identifier "somePodName.ticketID" is a member of list "inadmissibleTickets".'
     );
 
     await doIllegalArgTest(

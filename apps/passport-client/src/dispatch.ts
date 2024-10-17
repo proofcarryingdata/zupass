@@ -29,7 +29,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { ArgumentTypeName, PCD, SerializedPCD } from "@pcd/pcd-types";
-import { encodePrivateKey } from "@pcd/pod";
+import { encodePrivateKey, podEntriesToJSON } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
@@ -1607,14 +1607,14 @@ async function zappApproval(
     const newZapp = (await PODPCDPackage.prove({
       entries: {
         argumentType: ArgumentTypeName.Object,
-        value: {
+        value: podEntriesToJSON({
           origin: { type: "string", value: state.zappOrigin },
           name: { type: "string", value: zapp.name },
           permissions: {
             type: "string",
             value: JSON.stringify(zapp.permissions)
           }
-        }
+        })
       },
       privateKey: {
         argumentType: ArgumentTypeName.String,

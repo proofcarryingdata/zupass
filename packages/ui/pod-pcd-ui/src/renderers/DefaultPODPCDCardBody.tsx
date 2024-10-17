@@ -5,7 +5,7 @@ import {
   Spacer,
   TextContainer
 } from "@pcd/passport-ui";
-import { podEntriesToSimplifiedJSON } from "@pcd/pod";
+import { podEntriesToJSON } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { Container } from "../shared";
 
@@ -21,7 +21,9 @@ export function DefaultPODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
       <TextContainer
         style={{ overflowX: "auto", maxHeight: "300px", overflowY: "auto" }}
       >
-        <pre>{podEntriesToSimplifiedJSON(pcd.claim.entries, 2)}</pre>
+        <pre>
+          {JSON.stringify(podEntriesToJSON(pcd.claim.entries), null, 2)}
+        </pre>
       </TextContainer>
       <Spacer h={8} />
       <FieldLabel>EdDSA Public Key</FieldLabel>

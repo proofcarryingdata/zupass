@@ -14,7 +14,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { PODEntries, serializePODEntries } from "@pcd/pod";
+import { PODEntries, podEntriesToJSON } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { CSVInput, Input } from "@pcd/podbox-shared";
 import { assertUnreachable } from "@pcd/util";
@@ -340,7 +340,8 @@ export class PODPipeline implements BasePipeline {
             credential
           );
 
-          const id = uuidv5(serializePODEntries(entries), this.id);
+          // TODO(artwyman): Figure out how to phase out this use of the deprecated format.
+          const id = uuidv5(JSON.stringify(podEntriesToJSON(entries)), this.id);
 
           let serializedPCD = await this.getCachedPCD(id);
           if (serializedPCD) {
@@ -351,7 +352,7 @@ export class PODPipeline implements BasePipeline {
           // @todo handle wrapper PCD outputs
           const pcd = await PODPCDPackage.prove({
             entries: {
-              value: entries,
+              value: podEntriesToJSON(entries),
               argumentType: ArgumentTypeName.Object
             },
             privateKey: {
