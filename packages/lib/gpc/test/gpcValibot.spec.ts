@@ -11,8 +11,8 @@ import {
 import { expect } from "chai";
 import "mocha";
 import {
-  ClosedInterval,
   GPCBoundConfig,
+  GPCClosedInterval,
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryConfig,
@@ -233,7 +233,7 @@ describe("gpcValibot value types should work", () => {
 
 describe("gpcValibot config object type conversions should work", () => {
   it("ClosedInterval conversion", () => {
-    const tsIn = { min: 123n, max: 456n } as unknown as ClosedInterval;
+    const tsIn = { min: 123n, max: 456n } as unknown as GPCClosedInterval;
 
     const jsOut = ValibotClosedInterval.toJSON(tsIn);
     const jsDeserialized = JSON.parse(JSON.stringify(jsOut));
