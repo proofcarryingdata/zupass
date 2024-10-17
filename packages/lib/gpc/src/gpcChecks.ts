@@ -49,7 +49,7 @@ import {
   LIST_MEMBERSHIP,
   LIST_NONMEMBERSHIP,
   canonicalizeBoundsCheckConfig,
-  checkPODEntryIdentifier,
+  checkPODEntryIdentifierParts,
   checkPODEntryName,
   isVirtualEntryIdentifier,
   isVirtualEntryName,
@@ -304,14 +304,14 @@ export function checkProofEntryConfig(
   }
 
   if (entryConfig.equalsEntry !== undefined) {
-    checkPODEntryIdentifier(
+    checkPODEntryIdentifierParts(
       `${nameForErrorMessages}.equalsEntry`,
       entryConfig.equalsEntry
     );
   }
 
   if (entryConfig.notEqualsEntry !== undefined) {
-    checkPODEntryIdentifier(
+    checkPODEntryIdentifierParts(
       `${nameForErrorMessages}.notEqualsEntry`,
       entryConfig.notEqualsEntry
     );
@@ -399,7 +399,7 @@ export function checkProofEntryInequalityConfig(
           entryConfig[ineqCheck as keyof typeof entryConfig];
         if (otherEntryIdentifier !== undefined) {
           // The other entry identifier should be valid.
-          checkPODEntryIdentifier(
+          checkPODEntryIdentifierParts(
             `${entryIdentifier}.${ineqCheck}`,
             otherEntryIdentifier
           );
@@ -1444,7 +1444,7 @@ export function checkPODEntryIdentifierExists(
   pods: Record<PODName, GPCProofObjectConfig>
 ): void {
   // Check that the tuples reference entries included in the config.
-  const [podName, entryName] = checkPODEntryIdentifier(
+  const [podName, entryName] = checkPODEntryIdentifierParts(
     tupleNameForErrorMessages,
     entryIdentifier
   );

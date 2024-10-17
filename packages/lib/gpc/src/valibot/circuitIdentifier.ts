@@ -1,21 +1,21 @@
 import * as v from "valibot";
-import { ClosedInterval } from "../gpcTypes";
-import * as ValibotBigInt from "./bigint";
+import { GPCIdentifier } from "../gpcTypes";
+import { checkCircuitIdentifier } from "../gpcUtil";
 import { valibotParse } from "./valibotUtil";
 
 export const Schema = {
-  ToJSON: v.strictObject({
-    min: ValibotBigInt.Schema.ToJSON,
-    max: ValibotBigInt.Schema.ToJSON
-  }),
-  FromJSON: v.strictObject({
-    min: ValibotBigInt.Schema.FromJSON,
-    max: ValibotBigInt.Schema.FromJSON
-  })
+  ToJSON: v.pipe(
+    v.string(),
+    v.transform((n) => checkCircuitIdentifier(n as GPCIdentifier))
+  ),
+  FromJSON: v.pipe(
+    v.string(),
+    v.transform((n) => checkCircuitIdentifier(n as GPCIdentifier))
+  )
 };
 
-export type TSType = ClosedInterval;
-export type JSONType = v.InferOutput<typeof Schema.ToJSON>;
+export type TSType = GPCIdentifier;
+export type JSONType = GPCIdentifier;
 
 //
 // Don't customize below this point.  This boilerplate is intended to be the
