@@ -5228,6 +5228,18 @@
     "@parcnet-js/client-rpc" "1.0.0"
     "@parcnet-js/podspec" "1.0.0"
 
+"@pcd/libsodium-sumo@^0.7.15":
+  version "0.7.15"
+  resolved "https://registry.yarnpkg.com/@pcd/libsodium-sumo/-/libsodium-sumo-0.7.15.tgz#9ff83bf0f3f9b6d275e76a76918795b0225f1777"
+  integrity sha512-/0i91IUdcIM4AFQ85Zs01wVqu5PU9qqX0bSjC3Utct7KPsgXZOfMdnwgTT7Tq/2AwLgcFq8s1kdMQiBP0kSCqw==
+
+"@pcd/libsodium-wrappers-sumo@^0.7.15-1":
+  version "0.7.15-1"
+  resolved "https://registry.yarnpkg.com/@pcd/libsodium-wrappers-sumo/-/libsodium-wrappers-sumo-0.7.15-1.tgz#007c6ab2f22eb334150eb6283fb7fdae7780c399"
+  integrity sha512-GwhGaz+d5y7FMFQReDTaaDtTVH2cmtao7BQ7cJXbIjm+80QUhXyUnXiyntrWemEf/RaDX2cmMVhEdW9vo24ZCg==
+  dependencies:
+    "@pcd/libsodium-sumo" "^0.7.15"
+
 "@pcd/proto-pod-gpc-artifacts@0.11.0":
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.11.0.tgz#4c7e09b10da1e731932d3916d63d090b5612714c"
@@ -15680,17 +15692,17 @@ libhoney@^4.0.1:
     superagent "^8.0.0"
     url-join "^5.0.0"
 
-libsodium-sumo@^0.7.11:
-  version "0.7.11"
-  resolved "https://registry.yarnpkg.com/libsodium-sumo/-/libsodium-sumo-0.7.11.tgz#ab0389e2424fca5c1dc8c4fd394906190da88a11"
-  integrity sha512-bY+7ph7xpk51Ez2GbE10lXAQ5sJma6NghcIDaSPbM/G9elfrjLa0COHl/7P6Wb/JizQzl5UQontOOP1z0VwbLA==
+libsodium-sumo@^0.7.15:
+  version "0.7.15"
+  resolved "https://registry.yarnpkg.com/libsodium-sumo/-/libsodium-sumo-0.7.15.tgz#91c1d863fe3fbce6d6b9db1aadaa622733a1d007"
+  integrity sha512-5tPmqPmq8T8Nikpm1Nqj0hBHvsLFCXvdhBFV7SGOitQPZAA6jso8XoL0r4L7vmfKXr486fiQInvErHtEvizFMw==
 
-libsodium-wrappers-sumo@^0.7.11:
-  version "0.7.11"
-  resolved "https://registry.yarnpkg.com/libsodium-wrappers-sumo/-/libsodium-wrappers-sumo-0.7.11.tgz#d96329ee3c0e7ec7f5fcf4cdde16cc3a1ae91d82"
-  integrity sha512-DGypHOmJbB1nZn89KIfGOAkDgfv5N6SBGC3Qvmy/On0P0WD1JQvNRS/e3UL3aFF+xC0m+MYz5M+MnRnK2HMrKQ==
+libsodium-wrappers-sumo@^0.7.15:
+  version "0.7.15"
+  resolved "https://registry.yarnpkg.com/libsodium-wrappers-sumo/-/libsodium-wrappers-sumo-0.7.15.tgz#0ef2a99b4b17e8385aa7e6850593660dbaf5fb40"
+  integrity sha512-aSWY8wKDZh5TC7rMvEdTHoyppVq/1dTSAeAR7H6pzd6QRT3vQWcT5pGwCotLcpPEOLXX6VvqihSPkpEhYAjANA==
   dependencies:
-    libsodium-sumo "^0.7.11"
+    libsodium-sumo "^0.7.15"
 
 liftoff@^4.0.0:
   version "4.0.0"
@@ -20564,7 +20576,16 @@ string-template@~0.2.1:
   resolved "https://registry.yarnpkg.com/string-template/-/string-template-0.2.1.tgz#42932e598a352d01fc22ec3367d9d84eec6c9add"
   integrity sha512-Yptehjogou2xm4UJbxJ4CxgZx12HBfeystp0y3x7s4Dj32ltVVG1Gg8YhKjHZkHicuKpZX/ffilA8505VbUbpw==
 
-"string-width-cjs@npm:string-width@^4.2.0", string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
+"string-width-cjs@npm:string-width@^4.2.0":
+  version "4.2.3"
+  resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
+  integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
+  dependencies:
+    emoji-regex "^8.0.0"
+    is-fullwidth-code-point "^3.0.0"
+    strip-ansi "^6.0.1"
+
+string-width@^4.1.0, string-width@^4.2.0, string-width@^4.2.3:
   version "4.2.3"
   resolved "https://registry.yarnpkg.com/string-width/-/string-width-4.2.3.tgz#269c7117d27b05ad2e536830a8ec895ef9c6d010"
   integrity sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==
@@ -20697,7 +20718,14 @@ stringify-entities@^4.0.0:
     character-entities-html4 "^2.0.0"
     character-entities-legacy "^3.0.0"
 
-"strip-ansi-cjs@npm:strip-ansi@^6.0.1", strip-ansi@^6.0.0, strip-ansi@^6.0.1:
+"strip-ansi-cjs@npm:strip-ansi@^6.0.1":
+  version "6.0.1"
+  resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
+  integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
+  dependencies:
+    ansi-regex "^5.0.1"
+
+strip-ansi@^6.0.0, strip-ansi@^6.0.1:
   version "6.0.1"
   resolved "https://registry.yarnpkg.com/strip-ansi/-/strip-ansi-6.0.1.tgz#9e26c63d30f53443e9489495b2105d37b67a85d9"
   integrity sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==
@@ -23216,7 +23244,7 @@ workspace-tools@^0.36.4:
     js-yaml "^4.1.0"
     micromatch "^4.0.0"
 
-"wrap-ansi-cjs@npm:wrap-ansi@^7.0.0", wrap-ansi@^7.0.0:
+"wrap-ansi-cjs@npm:wrap-ansi@^7.0.0":
   version "7.0.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
   integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
@@ -23229,6 +23257,15 @@ wrap-ansi@^6.0.1, wrap-ansi@^6.2.0:
   version "6.2.0"
   resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-6.2.0.tgz#e9393ba07102e6c91a3b221478f0257cd2856e53"
   integrity sha512-r6lPcBGxZXlIcymEu7InxDMhdW0KDxpLgoFLcguasxCaJ/SOIZwINatK9KY/tf+ZrlywOKU0UDj3ATXUBfxJXA==
+  dependencies:
+    ansi-styles "^4.0.0"
+    string-width "^4.1.0"
+    strip-ansi "^6.0.0"
+
+wrap-ansi@^7.0.0:
+  version "7.0.0"
+  resolved "https://registry.yarnpkg.com/wrap-ansi/-/wrap-ansi-7.0.0.tgz#67e145cff510a6a6984bdf1152911d69d2eb9e43"
+  integrity sha512-YVGIj2kamLSTxw6NsZjoBxfSwsn0ycdesmc4p+Q21c5zPuZ1pl+NfxVdxPtdHvmNVOQ6XSYG4AUtyt/Fi7D16Q==
   dependencies:
     ansi-styles "^4.0.0"
     string-width "^4.1.0"
