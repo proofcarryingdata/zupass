@@ -2,13 +2,98 @@ import { POD_INT_MAX } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
 import {
+  boundConfigFromJSON,
+  boundConfigToJSON,
+  GPCBoundConfig,
+  GPCProofConfig,
+  JSONBoundConfig,
   JSONPODMembershipLists,
+  JSONProofConfig,
   PODMembershipLists,
   podMembershipListsFromJSON,
-  podMembershipListsToJSON
+  podMembershipListsToJSON,
+  proofConfigFromJSON,
+  proofConfigToJSON
 } from "../src";
 
-describe("gpcJSON conversions should work", () => {
+describe("gpcJSON config conversions should work", () => {
+  // Note that the details of conversion and validation are covered in
+  // gpcValibot.spec.ts.  This suite just covers the gpcJSON wrappers.
+
+  it("should round-trip a valid unbound config", () => {
+    const tsConfig: GPCProofConfig = {
+      pods: { foo: { entries: { foo1: { isRevealed: true } } } },
+      uniquePODs: true
+    };
+
+    expect(() => boundConfigToJSON(tsConfig as GPCBoundConfig)).to.throw();
+    const jsConfig = proofConfigToJSON(tsConfig);
+
+    const jsDeserialized = JSON.parse(JSON.stringify(jsConfig));
+    expect(jsDeserialized).to.deep.eq(jsConfig);
+
+    expect(proofConfigFromJSON(jsDeserialized)).to.deep.eq(tsConfig);
+    expect(() => boundConfigFromJSON(jsDeserialized)).to.throw();
+  });
+
+  it("should round-trip a valid bound config", () => {
+    const tsBoundConfig: GPCBoundConfig = {
+      circuitIdentifier: "foo_bar",
+      pods: { foo: { entries: { foo1: { isRevealed: true } } } },
+      uniquePODs: true
+    };
+    const tsConfig = tsBoundConfig satisfies GPCProofConfig;
+
+    const jsBoundConfig = boundConfigToJSON(tsBoundConfig);
+    const jsConfig = proofConfigToJSON(tsConfig);
+    expect(jsConfig).to.deep.eq(jsBoundConfig);
+
+    const jsDeserialized = JSON.parse(JSON.stringify(jsBoundConfig));
+    expect(jsDeserialized).to.deep.eq(jsConfig);
+
+    expect(boundConfigFromJSON(jsDeserialized)).to.deep.eq(tsBoundConfig);
+    expect(proofConfigFromJSON(jsDeserialized)).to.deep.eq(tsConfig);
+  });
+
+  it("should reject based on validity checks not covered by Valibot", () => {
+    // Inequality checks cannot be run without a corresponding range check.
+    // This cross-entry rule isn't checked by Valibot, but is checked by
+    // checkProofConfig().
+    const tsConfig: GPCProofConfig = {
+      circuitIdentifier: "foo_bar",
+      pods: {
+        foo: {
+          entries: {
+            foo1: { isRevealed: true, lessThan: "foo.foo2" },
+            foo2: { isRevealed: false }
+          }
+        }
+      },
+      uniquePODs: true
+    };
+
+    expect(() => boundConfigToJSON(tsConfig as GPCBoundConfig)).to.throw();
+    expect(() => proofConfigToJSON(tsConfig)).to.throw();
+
+    const jsConfig: JSONProofConfig = {
+      circuitIdentifier: "foo_bar",
+      pods: {
+        foo: {
+          entries: {
+            foo1: { isRevealed: true, lessThan: "foo.foo2" },
+            foo2: { isRevealed: false }
+          }
+        }
+      },
+      uniquePODs: true
+    };
+
+    expect(() => proofConfigFromJSON(jsConfig)).to.throw();
+    expect(() => boundConfigFromJSON(jsConfig as JSONBoundConfig)).to.throw();
+  });
+});
+
+describe("gpcJSON PODMembershipLists conversions should work", () => {
   const testMembershipListsInputOutput: [
     PODMembershipLists,
     JSONPODMembershipLists

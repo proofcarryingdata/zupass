@@ -9,39 +9,112 @@ import {
   PODValueTuple,
   requireType
 } from "@pcd/pod";
-import { PODMembershipLists } from "./gpcTypes";
-import type { InferredJSONProofEntryBoundsCheckConfig } from "./gpcValibot";
-import * as ValibotClosedInterval from "./valibot/closedInterval";
+import { checkBoundConfig, checkProofConfig } from "./gpcChecks";
+import { GPCBoundConfig, GPCProofConfig, PODMembershipLists } from "./gpcTypes";
+import * as ValibotBoundConfig from "./valibot/boundConfig";
+import * as ValibotProofConfig from "./valibot/proofConfig";
 
 // TODO(artwyman): Decide how many of the types and converters to expose.
 // Potentially only those for the top-level types: GPCProofConfig,
 // GPCBoundConfig, GPCRevealedClaims.
 
 /**
- * JSON-compatible type for representing {@link ClosedInterval}, which is
+ * JSON-compatible type for representing {@link GPCProofConfig}, which is
  * safe to serialize directly using `JSON.stringify`.
  *
  * This is identical to the TypeScript type except that `bigint` and
- * {@link PODValue} elements are replaced by JSON-compatible representations.
+ * {@link PODValue} elements are replaced by JSON-compatible representations
+ * defined by {@link JSONBigInt} and {@link JSONPODValue} respectively.
  *
- * Use {@link gpcClosedIntervalToJSON}
+ * Use {@link proofConfigToJSON} and {@link proofConfigFromJSON} to convert
+ * between JSON and TypeScript represenations.
  */
-export type JSONClosedInterval = ValibotClosedInterval.JSONType;
+export type JSONProofConfig = ValibotProofConfig.JSONType;
 
 /**
- * JSON-compatible type for representing {@link GPCProofEntryBoundsCheckConfig},
- * which is safe to serialize directly using `JSON.stringify`.
+ * Converts a {@link GPCProofConfig} to a JSON-compatible representation which
+ * can be serialized directly using `JSON.stringify`.  See
+ * {@link JSONProofConfig} for information about the format.
+ *
+ * @param config the config object to convert
+ * @returns a JSON representation
+ * @throws if the config is invalid
+ */
+export function proofConfigToJSON(config: GPCProofConfig): JSONProofConfig {
+  checkProofConfig(config);
+  return ValibotProofConfig.toJSON(config);
+}
+
+/**
+ * Parses a {@link GPCProofConfig} from a JSON-compatible representation,
+ * potentially received directly from `JSON.parse`.  See {@link JSONProofConfig}
+ * for information about the format.
+ *
+ * @param config the JSON representation
+ * @returns a config object
+ * @throws if the config is invalid
+ */
+export function proofConfigFromJSON(
+  jsonConfig: JSONProofConfig
+): GPCProofConfig {
+  const config = ValibotProofConfig.fromJSON(jsonConfig);
+  checkProofConfig(config);
+  return config;
+}
+
+/**
+ * JSON-compatible type for representing {@link GPCBoundConfig}, which is
+ * safe to serialize directly using `JSON.stringify`.
  *
  * This is identical to the TypeScript type except that `bigint` and
- * {@link PODValue} elements are replaced by JSON-compatible representations.
+ * {@link PODValue} elements are replaced by JSON-compatible representations
+ * defined by {@link JSONBigInt} and {@link JSONPODValue} respectively.
+ *
+ * Use {@link boundConfigToJSON} and {@link boundConfigFromJSON} to convert
+ * between JSON and TypeScript represenations.
  */
-export type JSONProofEntryBoundsCheckConfig =
-  InferredJSONProofEntryBoundsCheckConfig;
+export type JSONBoundConfig = ValibotBoundConfig.JSONType;
+
+/**
+ * Converts a {@link GPCProofConfig} to a JSON-compatible representation which
+ * can be serialized directly using `JSON.stringify`.  See
+ * {@link JSONProofConfig} for information about the format.
+ *
+ * @param config the config object to convert
+ * @returns a JSON representation
+ * @throws if the config is invalid
+ */
+export function boundConfigToJSON(config: GPCBoundConfig): JSONBoundConfig {
+  checkBoundConfig(config);
+  return ValibotBoundConfig.toJSON(config);
+}
+
+/**
+ * Parses a {@link GPCProofConfig} from a JSON-compatible representation,
+ * potentially received directly from `JSON.parse`.  See {@link JSONProofConfig}
+ * for information about the format.
+ *
+ * @param config the JSON representation
+ * @returns a config object
+ * @throws if the config is invalid
+ */
+export function boundConfigFromJSON(
+  jsonConfig: JSONBoundConfig
+): GPCBoundConfig {
+  const config = ValibotBoundConfig.fromJSON(jsonConfig);
+  checkBoundConfig(config);
+  return config;
+}
+
+// TODO(artwyman): JSONRevealedClaims
+// TODO(artwyman): JSONProofInputs?
+// TODO(artwyman): Convert the below into Valibot as part of GPCProofInputs
 
 /**
  * JSON-compatible format for representing a {@link PODMembershipLists}
  * structure.  The structure is the same as PODMembershipLists except that
- * each individual value should be JSON formated using {@link podValueToJSON}.
+ * each individual value should be JSON formated as defined by
+ * {@link JSONPODValue}.
  */
 export type JSONPODMembershipLists = Record<
   PODName,
