@@ -4,6 +4,7 @@ import { isEmailPCD } from "@pcd/email-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import {
+  getImageUrlEntry,
   getDisplayOptions as getPodDisplayOptions,
   isPODPCD
 } from "@pcd/pod-pcd";
@@ -65,7 +66,7 @@ const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
       return <Avatar imgSrc={pcd.claim.ticket.imageUrl} />;
     case isPODPCD(pcd):
-      const imageUrl = pcd.claim.entries["zupass_image_url"]?.value;
+      const imageUrl = getImageUrlEntry(pcd)?.value;
       if (typeof imageUrl === "string") {
         return <Avatar imgSrc={imageUrl} />;
       }

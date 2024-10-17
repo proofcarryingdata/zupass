@@ -11,6 +11,7 @@ import {
   PODPCDProof,
   PODPCDTypeName
 } from "./PODPCD";
+import { getTitleEntry } from "./utils";
 
 /**
  * Creates a new {@link PODPCD} by generating an {@link PODPCDProof}
@@ -100,7 +101,7 @@ export function getDisplayOptions(
   // data outside of claim + proof?
   pcd: PCD<PODPCDClaim, PODPCDProof>
 ): DisplayOptions {
-  const titleEntry = pcd.claim.entries["zupass_title"];
+  const titleEntry = getTitleEntry(pcd);
   if (titleEntry?.type === "string" && titleEntry.value.length > 0) {
     return {
       header: titleEntry.value,
