@@ -14,8 +14,6 @@ export function valibotParse<
 >(schema: TSchema, input: unknown): v.InferOutput<TSchema> {
   const result = v.safeParse(schema, input);
   if (!result.success) {
-    console.log(result.issues);
-    console.log(v.getDotPath(result.issues[0]));
     const issue = result.issues[0];
     const dotPath = v.getDotPath(result.issues[0]);
     throw new TypeError(

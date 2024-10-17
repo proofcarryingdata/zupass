@@ -62,9 +62,12 @@ import {
   widthOfEntryOrTuple
 } from "./gpcUtil";
 
-// TODO(POD-P2): Split out the parts of this which should be public from
+// TODO(POD-P3): Split out the parts of this which should be public from
 // internal implementation details.  E.g. the returning of ciruit parameters
 // isn't relevant to checking objects after deserialization.
+
+// TODO(POD-P4): Integrate most of the checking logic here into the Valibot
+// schema currently used only for JSON conversion.
 
 /**
  * Checks the validity of the arguments for generating a proof.  This will throw
@@ -275,8 +278,10 @@ export function checkProofEntryConfig(
     "boolean"
   );
 
+  const isVirtualEntry = isVirtualEntryIdentifier(nameForErrorMessages);
+
   if (entryConfig.isOwnerID !== undefined) {
-    if (isVirtualEntryIdentifier(nameForErrorMessages)) {
+    if (isVirtualEntry) {
       throw new Error("Can't use isOwnerID on a virtual entry.");
     }
 
@@ -319,12 +324,14 @@ export function checkProofEntryConfig(
 
   const nBoundsChecks = checkProofEntryBoundsCheckConfig(
     nameForErrorMessages,
-    entryConfig
+    entryConfig,
+    isVirtualEntry
   );
 
   const inequalityChecks = checkProofEntryInequalityConfig(
     nameForErrorMessages,
-    entryConfig
+    entryConfig,
+    isVirtualEntry
   );
 
   const hasOwnerV3Check = entryConfig.isOwnerID === SEMAPHORE_V3;
@@ -340,8 +347,21 @@ export function checkProofEntryConfig(
 
 export function checkProofEntryBoundsCheckConfig(
   nameForErrorMessages: PODEntryIdentifier,
-  entryConfig: GPCProofEntryBoundsCheckConfig
+  entryConfig: GPCProofEntryBoundsCheckConfig,
+  isVirtualEntry: boolean
 ): number {
+  if (isVirtualEntry) {
+    if (
+      entryConfig.inRange !== undefined ||
+      entryConfig.notInRange !== undefined
+    ) {
+      throw new TypeError(
+        `Range constraints are not allowed on virtual entry ${nameForErrorMessages}.`
+      );
+    }
+    return 0;
+  }
+
   // Canonicalize to simplify in cases where this is necessary.
   const boundsCheckConfig = canonicalizeBoundsCheckConfig(
     entryConfig.inRange,
@@ -390,8 +410,23 @@ export function checkProofEntryBoundsCheckConfig(
 
 export function checkProofEntryInequalityConfig(
   entryIdentifier: PODEntryIdentifier,
-  entryConfig: GPCProofEntryInequalityConfig
+  entryConfig: GPCProofEntryInequalityConfig,
+  isVirtualEntry: boolean
 ): Record<string, PODEntryIdentifier> {
+  if (isVirtualEntry) {
+    if (
+      entryConfig.lessThan !== undefined ||
+      entryConfig.lessThanEq !== undefined ||
+      entryConfig.greaterThan !== undefined ||
+      entryConfig.greaterThanEq !== undefined
+    ) {
+      throw new TypeError(
+        `Inequality constraints are not allowed on virtual entry ${entryIdentifier}.`
+      );
+    }
+    return {};
+  }
+
   return Object.fromEntries(
     ["lessThan", "lessThanEq", "greaterThan", "greaterThanEq"].flatMap(
       (ineqCheck: string): [string, PODEntryIdentifier][] => {
