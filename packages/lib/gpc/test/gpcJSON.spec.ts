@@ -6,14 +6,18 @@ import {
   boundConfigToJSON,
   GPCBoundConfig,
   GPCProofConfig,
+  GPCRevealedClaims,
   JSONBoundConfig,
   JSONPODMembershipLists,
   JSONProofConfig,
+  JSONRevealedClaims,
   PODMembershipLists,
   podMembershipListsFromJSON,
   podMembershipListsToJSON,
   proofConfigFromJSON,
-  proofConfigToJSON
+  proofConfigToJSON,
+  revealedClaimsFromJSON,
+  revealedClaimsToJSON
 } from "../src";
 
 describe("gpcJSON config conversions should work", () => {
@@ -93,56 +97,82 @@ describe("gpcJSON config conversions should work", () => {
   });
 });
 
-describe("gpcJSON PODMembershipLists conversions should work", () => {
-  const testMembershipListsInputOutput: [
-    PODMembershipLists,
-    JSONPODMembershipLists
-  ][] = [
-    [{}, {}],
-    [
-      { list1: [], list2: [] },
-      { list1: [], list2: [] }
-    ],
-    [
-      {
-        list: [
-          { type: "int", value: 1n },
-          { type: "string", value: "hello" },
-          {
-            type: "cryptographic",
-            value:
-              0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefn
-          },
-          {
-            type: "eddsa_pubkey",
-            value:
-              "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
-          }
-        ]
+describe("gpcJSON revealed claims conversions should work", () => {
+  // Note that the details of conversion and validation are covered in
+  // gpcValibot.spec.ts.  This suite just covers the gpcJSON wrappers.
+
+  it("should round-trip valid claims", () => {
+    const tsClaims: GPCRevealedClaims = {
+      pods: {
+        foo: {
+          entries: { foo1: { type: "string", value: "hello" } },
+          contentID: 0n
+        }
       },
-      {
-        list: [
-          1,
-          "hello",
-          {
-            cryptographic:
-              "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
-          },
-          {
-            eddsa_pubkey:
-              "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
-          }
-        ]
+      owner: {
+        externalNullifier: { type: "int", value: 123n },
+        nullifierHashV4: 42n
+      },
+      membershipLists: {
+        list: [{ type: "cryptographic", value: 999n }]
+      },
+      watermark: { type: "string", value: "wm" }
+    };
+
+    const jsClaims = revealedClaimsToJSON(tsClaims);
+
+    const jsDeserialized = JSON.parse(JSON.stringify(jsClaims));
+    expect(jsDeserialized).to.deep.eq(jsClaims);
+
+    expect(revealedClaimsFromJSON(jsDeserialized)).to.deep.eq(tsClaims);
+  });
+
+  it("should reject based on validity checks not covered by Valibot", () => {
+    // Public key string format isn't checked by Valibot, but is checked by
+    // checkRevealedClaims().
+    const tsClaims: GPCRevealedClaims = {
+      pods: {
+        foo: {
+          entries: { foo1: { type: "string", value: "hello" } },
+          signerPublicKey: "not_a_key"
+        }
       }
-    ],
-    [
-      {
-        list: [
-          [
+    };
+
+    expect(() => revealedClaimsToJSON(tsClaims)).to.throw();
+
+    const jsClaims: JSONRevealedClaims = {
+      pods: {
+        foo: {
+          entries: { foo1: "hello" },
+          signerPublicKey: "not_a_key"
+        }
+      }
+    };
+
+    expect(() => revealedClaimsFromJSON(jsClaims)).to.throw();
+  });
+});
+
+describe("gpcJSON membership lists conversions should work", () => {
+  // Note that the details of conversion and validation are covered in
+  // gpcValibot.spec.ts.  This suite just covers the gpcJSON wrappers.
+
+  it("PODMembershipLists conversions should convert valid formats", () => {
+    const testMembershipListsInputOutput: [
+      PODMembershipLists,
+      JSONPODMembershipLists
+    ][] = [
+      [{}, {}],
+      [
+        { list1: [], list2: [] },
+        { list1: [], list2: [] }
+      ],
+      [
+        {
+          list: [
             { type: "int", value: 1n },
-            { type: "string", value: "hello" }
-          ],
-          [
+            { type: "string", value: "hello" },
             {
               type: "cryptographic",
               value:
@@ -154,12 +184,11 @@ describe("gpcJSON PODMembershipLists conversions should work", () => {
                 "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
             }
           ]
-        ]
-      },
-      {
-        list: [
-          [1, "hello"],
-          [
+        },
+        {
+          list: [
+            1,
+            "hello",
             {
               cryptographic:
                 "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
@@ -169,14 +198,50 @@ describe("gpcJSON PODMembershipLists conversions should work", () => {
                 "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
             }
           ]
-        ]
-      }
-    ]
-  ];
+        }
+      ],
+      [
+        {
+          list: [
+            [
+              { type: "int", value: 1n },
+              { type: "string", value: "hello" }
+            ],
+            [
+              {
+                type: "cryptographic",
+                value:
+                  0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefn
+              },
+              {
+                type: "eddsa_pubkey",
+                value:
+                  "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+              }
+            ]
+          ]
+        },
+        {
+          list: [
+            [1, "hello"],
+            [
+              {
+                cryptographic:
+                  "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+              },
+              {
+                eddsa_pubkey:
+                  "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+              }
+            ]
+          ]
+        }
+      ]
+    ];
 
-  it("podMembershipListsFromJSON should convert valid formats", () => {
-    for (const [input, output] of testMembershipListsInputOutput) {
-      expect(podMembershipListsToJSON(input)).to.deep.eq(output);
+    for (const [tsVal, jsVal] of testMembershipListsInputOutput) {
+      expect(podMembershipListsToJSON(tsVal)).to.deep.eq(jsVal);
+      expect(podMembershipListsFromJSON(jsVal)).to.deep.eq(tsVal);
     }
   });
 
@@ -200,12 +265,6 @@ describe("gpcJSON PODMembershipLists conversions should work", () => {
     for (const [badInput, expectedError] of badLists) {
       const fn = (): PODMembershipLists => podMembershipListsFromJSON(badInput);
       expect(fn).to.throw(expectedError);
-    }
-  });
-
-  it("podMembershipListsToJSON should convert valid formats", () => {
-    for (const [output, input] of testMembershipListsInputOutput) {
-      expect(podMembershipListsFromJSON(input)).to.deep.eq(output);
     }
   });
 

@@ -7,6 +7,7 @@
 export * as ValibotBoundConfig from "../src/valibot/boundConfig";
 export * as ValidbotCircuitIdentifier from "../src/valibot/circuitIdentifier";
 export * as ValibotClosedInterval from "../src/valibot/closedInterval";
+export * as ValibotPODEntries from "../src/valibot/podEntries";
 export * as ValibotPODEntryIdentifier from "../src/valibot/podEntryIdentifier";
 export * as ValibotPODName from "../src/valibot/podName";
 export * as ValibotPODValue from "../src/valibot/podValue";
@@ -16,3 +17,6 @@ export * as ValibotProofEntryConfigCommon from "../src/valibot/proofEntryConfigC
 export * as ValibotProofObjectConfig from "../src/valibot/proofObjectConfig";
 export * as ValibotProofTupleConfig from "../src/valibot/proofTupleConfig";
 export * as ValibotBigInt from "./valibot/bigint";
+export * as ValibotMembershipLists from "./valibot/membershipLists";
+export * as ValibotRevealedClaims from "./valibot/revealedClaims";
+export * as ValibotRevealedObjectClaims from "./valibot/revealedObjectClaims";

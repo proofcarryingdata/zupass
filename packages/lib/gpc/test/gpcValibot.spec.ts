@@ -1,8 +1,10 @@
 import {
   JSONBigInt,
+  JSONPODEntries,
   JSONPODValue,
   POD_INT_MAX,
   POD_INT_MIN,
+  PODEntries,
   PODName,
   PODValue
 } from "@pcd/pod";
@@ -17,13 +19,20 @@ import {
   GPCProofEntryConfigCommon,
   GPCProofObjectConfig,
   GPCProofTupleConfig,
+  GPCRevealedClaims,
+  GPCRevealedObjectClaims,
+  JSONPODMembershipLists,
+  JSONRevealedClaims,
   PODEntryIdentifier,
+  PODMembershipLists,
   SEMAPHORE_V3
 } from "../src";
 import {
   ValibotBigInt,
   ValibotBoundConfig,
   ValibotClosedInterval,
+  ValibotMembershipLists,
+  ValibotPODEntries,
   ValibotPODEntryIdentifier,
   ValibotPODName,
   ValibotPODValue,
@@ -32,6 +41,8 @@ import {
   ValibotProofEntryConfigCommon,
   ValibotProofObjectConfig,
   ValibotProofTupleConfig,
+  ValibotRevealedClaims,
+  ValibotRevealedObjectClaims,
   ValidbotCircuitIdentifier
 } from "../src/gpcValibot";
 
@@ -174,9 +185,53 @@ describe("gpcValibot value types should work", () => {
       }
     }
   });
+
+  it("PODEntries conversion", () => {
+    const tsToJSON: [PODEntries, JSONPODEntries, boolean][] = [
+      [
+        undefined as unknown as PODEntries,
+        undefined as unknown as JSONPODEntries,
+        false
+      ],
+      [{}, {}, true],
+      [{ foo: { type: "string", value: "hello" } }, { foo: "hello" }, true],
+      [
+        {
+          foo: { type: "string", value: "hello" },
+          bar: { type: "int", value: 123n }
+        },
+        { foo: "hello", bar: 123 },
+        true
+      ],
+      [
+        { "!@#$%": { type: "string", value: "hello" } },
+        { "!@#$%": "hello" },
+        false
+      ],
+      [
+        { foo: { type: "int", value: "hello" } } as unknown as PODEntries,
+        { foo: { int: "hello" } } as unknown as JSONPODEntries,
+        false
+      ]
+    ];
+
+    for (const [tsVal, jsVal, isValid] of tsToJSON) {
+      if (isValid) {
+        const jsOut = ValibotPODEntries.toJSON(tsVal);
+        expect(jsOut).to.deep.eq(jsVal);
+        const jsDeserialized = JSON.parse(JSON.stringify(jsOut));
+        expect(jsDeserialized).to.deep.eq(jsOut);
+        const tsOut = ValibotPODEntries.fromJSON(jsDeserialized);
+        expect(tsOut).to.deep.equals(tsVal);
+      } else {
+        expect(() => ValibotPODEntries.toJSON(tsVal)).to.throw();
+        expect(() => ValibotPODEntries.fromJSON(jsVal)).to.throw();
+      }
+    }
+  });
 });
 
-describe("gpcValibot object type conversions should work", () => {
+describe("gpcValibot config object type conversions should work", () => {
   it("ClosedInterval conversion", () => {
     const tsIn = { min: 123n, max: 456n } as unknown as ClosedInterval;
 
@@ -771,6 +826,335 @@ describe("gpcValibot object type conversions should work", () => {
       } else {
         expect(() => ValibotProofConfig.toJSON(tsVal)).to.throw();
         expect(() => ValibotProofConfig.fromJSON(jsVal)).to.throw();
+      }
+    }
+  });
+});
+
+describe("gpcValibot revealed object type conversions should work", () => {
+  it("PODMembershipLists conversion", () => {
+    const tsToJSON: [PODMembershipLists, JSONPODMembershipLists, boolean][] = [
+      [
+        undefined as unknown as PODMembershipLists,
+        undefined as unknown as JSONPODMembershipLists,
+        false
+      ],
+      [{}, {}, true],
+      [{ list1: [], list2: [] }, { list1: [], list2: [] }, true],
+      [
+        {
+          list: [
+            { type: "int", value: 1n },
+            { type: "string", value: "hello" },
+            {
+              type: "cryptographic",
+              value:
+                0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefn
+            },
+            {
+              type: "eddsa_pubkey",
+              value:
+                "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+            }
+          ]
+        },
+        {
+          list: [
+            1,
+            "hello",
+            {
+              cryptographic:
+                "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+            },
+            {
+              eddsa_pubkey:
+                "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+            }
+          ]
+        },
+        true
+      ],
+      [
+        {
+          list: [
+            [
+              { type: "int", value: 1n },
+              { type: "string", value: "hello" }
+            ],
+            [
+              {
+                type: "cryptographic",
+                value:
+                  0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdefn
+              },
+              {
+                type: "eddsa_pubkey",
+                value:
+                  "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+              }
+            ]
+          ]
+        },
+        {
+          list: [
+            [1, "hello"],
+            [
+              {
+                cryptographic:
+                  "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+              },
+              {
+                eddsa_pubkey:
+                  "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+              }
+            ]
+          ]
+        },
+        true
+      ],
+      [
+        null as unknown as PODMembershipLists,
+        null as unknown as JSONPODMembershipLists,
+        false
+      ],
+      [
+        "hello" as unknown as PODMembershipLists,
+        "hello" as unknown as JSONPODMembershipLists,
+        false
+      ],
+      [
+        [1, 2, 3] as unknown as PODMembershipLists,
+        [1, 2, 3] as unknown as JSONPODMembershipLists,
+        false
+      ],
+      [
+        { list: undefined } as unknown as PODMembershipLists,
+        { list: undefined } as unknown as JSONPODMembershipLists,
+        false
+      ],
+      [
+        { list: null } as unknown as PODMembershipLists,
+        { list: null } as unknown as JSONPODMembershipLists,
+        false
+      ],
+      [
+        { list: "hello" } as unknown as PODMembershipLists,
+        { list: "hello" } as unknown as JSONPODMembershipLists,
+        false
+      ],
+      [
+        { list: {} } as unknown as PODMembershipLists,
+        { list: {} } as unknown as JSONPODMembershipLists,
+        false
+      ],
+      [
+        { list: [undefined] } as unknown as PODMembershipLists,
+        { list: [undefined] } as unknown as JSONPODMembershipLists,
+        false
+      ],
+      [
+        {
+          list: [{ type: "wrongType", value: 123n }]
+        } as unknown as PODMembershipLists,
+        { list: [{ wrongType: 123 }] } as unknown as JSONPODMembershipLists,
+        false
+      ],
+      [
+        { list: [{ type: "int", value: POD_INT_MAX + 1n }] },
+        { list: [Number(POD_INT_MAX + 1n)] },
+        false
+      ]
+    ];
+
+    for (const [tsVal, jsVal, isValid] of tsToJSON) {
+      if (isValid) {
+        const jsOut = ValibotMembershipLists.toJSON(tsVal);
+        expect(jsOut).to.deep.eq(jsVal);
+        const jsDeserialized = JSON.parse(JSON.stringify(jsOut));
+        expect(jsDeserialized).to.deep.eq(jsOut);
+        const tsOut = ValibotMembershipLists.fromJSON(jsDeserialized);
+        expect(tsOut).to.deep.equals(tsVal);
+      } else {
+        expect(() => ValibotMembershipLists.toJSON(tsVal)).to.throw();
+        expect(() => ValibotMembershipLists.fromJSON(jsVal)).to.throw();
+      }
+    }
+  });
+
+  it("GPCRevealedObjectClaims conversion", () => {
+    const tsToJSON: [
+      GPCRevealedObjectClaims,
+      ValibotRevealedObjectClaims.JSONType,
+      boolean
+    ][] = [
+      [
+        undefined as unknown as GPCRevealedObjectClaims,
+        undefined as unknown as ValibotRevealedObjectClaims.JSONType,
+        false
+      ],
+      [{}, {}, true],
+      [
+        {
+          entries: {},
+          contentID:
+            18003549444852780886592139349318927700964545643704389119309344945101355208480n,
+          signerPublicKey: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+        },
+        {
+          entries: {},
+          contentID:
+            "0x27cda5db59bc5d2d7c5e40f5cd563556c062823ff4dcb161e92c160de65dcf20",
+          signerPublicKey: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+        },
+        true
+      ],
+      [
+        {
+          entries: { "!@#$": { type: "int", value: 0n } }
+        },
+        {
+          entries: { "!@#$": 0 }
+        },
+        false
+      ],
+      [
+        {
+          contentID: 0 as unknown as bigint
+        },
+        {
+          contentID: 0n as unknown as number
+        },
+        false
+      ],
+      [
+        {
+          signerPublicKey: 0 as unknown as string
+        },
+        {
+          signerPublicKey: 0n as unknown as string
+        },
+        false
+      ]
+    ];
+
+    for (const [tsVal, jsVal, isValid] of tsToJSON) {
+      if (isValid) {
+        const jsOut = ValibotRevealedObjectClaims.toJSON(tsVal);
+        expect(jsOut).to.deep.eq(jsVal);
+        const jsDeserialized = JSON.parse(JSON.stringify(jsOut));
+        expect(jsDeserialized).to.deep.eq(jsOut);
+        const tsOut = ValibotRevealedObjectClaims.fromJSON(jsDeserialized);
+        expect(tsOut).to.deep.equals(tsVal);
+      } else {
+        expect(() => ValibotRevealedObjectClaims.toJSON(tsVal)).to.throw();
+        expect(() => ValibotRevealedObjectClaims.fromJSON(jsVal)).to.throw();
+      }
+    }
+  });
+
+  it("GPCRevealedClaims conversion", () => {
+    const tsToJSON: [GPCRevealedClaims, JSONRevealedClaims, boolean][] = [
+      [
+        undefined as unknown as GPCRevealedClaims,
+        undefined as unknown as JSONRevealedClaims,
+        false
+      ],
+      [
+        {} as unknown as GPCRevealedClaims,
+        {} as unknown as JSONRevealedClaims,
+        false
+      ],
+      [{ pods: {} }, { pods: {} }, true],
+      [
+        { pods: {}, owner: {} } as unknown as GPCRevealedClaims,
+        { pods: {}, owner: {} } as unknown as JSONRevealedClaims,
+        false
+      ],
+      [
+        { pods: {}, owner: { externalNullifier: { type: "int", value: 0n } } },
+        { pods: {}, owner: { externalNullifier: 0 } },
+        true
+      ],
+      [
+        {
+          pods: {},
+          owner: { externalNullifier: { type: "bad", value: 0n } }
+        } as unknown as GPCRevealedClaims,
+        {
+          pods: {},
+          owner: { externalNullifier: 0n }
+        } as unknown as JSONRevealedClaims,
+        false
+      ],
+      [
+        {
+          extra: true,
+          pods: {},
+          owner: { externalNullifier: { type: "int", value: 0n } }
+        } as unknown as GPCRevealedClaims,
+        {
+          extra: true,
+          pods: {},
+          owner: { externalNullifier: 0 }
+        } as unknown as JSONRevealedClaims,
+        false
+      ],
+      [
+        {
+          pods: {
+            foo: {
+              entries: {},
+              contentID:
+                18003549444852780886592139349318927700964545643704389119309344945101355208480n,
+              signerPublicKey: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+            }
+          },
+          owner: {
+            externalNullifier: { type: "string", value: "hello" },
+            nullifierHashV3: 0n,
+            nullifierHashV4: 0n
+          },
+          membershipLists: {
+            vlist: [{ type: "int", value: 1n }],
+            tlist: [[{ type: "string", value: "hello" }]]
+          },
+          watermark: { type: "string", value: "watermark" }
+        },
+        {
+          pods: {
+            foo: {
+              entries: {},
+              contentID:
+                "0x27cda5db59bc5d2d7c5e40f5cd563556c062823ff4dcb161e92c160de65dcf20",
+              signerPublicKey: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+            }
+          },
+          owner: {
+            externalNullifier: "hello",
+            nullifierHashV3: 0,
+            nullifierHashV4: 0
+          },
+          membershipLists: {
+            vlist: [1],
+            tlist: [["hello"]]
+          },
+          watermark: "watermark"
+        },
+        true
+      ]
+    ];
+
+    for (const [tsVal, jsVal, isValid] of tsToJSON) {
+      if (isValid) {
+        const jsOut = ValibotRevealedClaims.toJSON(tsVal);
+        expect(jsOut).to.deep.eq(jsVal);
+        const jsDeserialized = JSON.parse(JSON.stringify(jsOut));
+        expect(jsDeserialized).to.deep.eq(jsOut);
+        const tsOut = ValibotRevealedClaims.fromJSON(jsDeserialized);
+        expect(tsOut).to.deep.equals(tsVal);
+      } else {
+        expect(() => ValibotRevealedClaims.toJSON(tsVal)).to.throw();
+        expect(() => ValibotRevealedClaims.fromJSON(jsVal)).to.throw();
       }
     }
   });
