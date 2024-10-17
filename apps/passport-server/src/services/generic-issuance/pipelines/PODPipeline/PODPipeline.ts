@@ -25,6 +25,8 @@ import {
   PipelineAtom
 } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { sqlTransaction } from "../../../../database/sqlQuery";
+import { ApplicationContext } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { setError, traced } from "../../../telemetryService";
@@ -54,6 +56,7 @@ export class PODPipeline implements BasePipeline {
   public type = PipelineType.POD;
   public capabilities: BasePipelineCapability[];
 
+  private context: ApplicationContext;
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<PODAtom>;
   private definition: PODPipelineDefinition;
@@ -71,6 +74,7 @@ export class PODPipeline implements BasePipeline {
   }
 
   public constructor(
+    context: ApplicationContext,
     eddsaPrivateKey: string,
     definition: PODPipelineDefinition,
     db: IPipelineAtomDB,
@@ -78,6 +82,7 @@ export class PODPipeline implements BasePipeline {
     consumerDB: IPipelineConsumerDB,
     cacheService: PersistentCacheService
   ) {
+    this.context = context;
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PODAtom>;
@@ -319,9 +324,17 @@ export class PODPipeline implements BasePipeline {
       span?.setAttribute("email", emails?.map((e) => e.email)?.join(",") ?? "");
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      for (const e of emails ?? []) {
-        await this.consumerDB.save(this.id, e.email, semaphoreId, new Date());
-      }
+      await sqlTransaction(this.context.dbPool, async (client) => {
+        for (const e of emails ?? []) {
+          await this.consumerDB.save(
+            client,
+            this.id,
+            e.email,
+            semaphoreId,
+            new Date()
+          );
+        }
+      });
 
       // Consumer is validated, so save them in the consumer list
 

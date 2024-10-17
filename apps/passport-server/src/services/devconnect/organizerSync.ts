@@ -41,6 +41,7 @@ import {
   softDeletePretixItemInfo,
   updatePretixItemsInfo
 } from "../../database/queries/pretixItemInfo";
+import { namedSqlTransaction, sqlTransaction } from "../../database/sqlQuery";
 import {
   mostRecentCheckinEvent,
   pretixTicketsDifferent
@@ -92,7 +93,7 @@ type SyncPhase = "fetching" | "validating" | "saving" | "pushingCheckins";
 export class OrganizerSync {
   private organizer: DevconnectPretixOrganizerConfig;
   private pretixAPI: IDevconnectPretixAPI;
-  private db: Pool;
+  private pool: Pool;
   private _isRunning: boolean;
 
   public get isRunning(): boolean {
@@ -102,11 +103,11 @@ export class OrganizerSync {
   public constructor(
     organizer: DevconnectPretixOrganizerConfig,
     pretixAPI: IDevconnectPretixAPI,
-    db: Pool
+    pool: Pool
   ) {
     this.organizer = organizer;
     this.pretixAPI = pretixAPI;
-    this.db = db;
+    this.pool = pool;
     this._isRunning = false;
   }
 
@@ -480,45 +481,47 @@ export class OrganizerSync {
     checkinListId: string
   ): Promise<void> {
     return traced(NAME, "syncEventInfos", async (span) => {
-      span?.setAttribute("org_url", organizer.orgURL);
-      span?.setAttribute("event_slug", event.eventID);
-      span?.setAttribute("event_name", eventInfo.name?.en);
+      await namedSqlTransaction(this.pool, "syncEventInfos", async (client) => {
+        span?.setAttribute("org_url", organizer.orgURL);
+        span?.setAttribute("event_slug", event.eventID);
+        span?.setAttribute("event_name", eventInfo.name?.en);
 
-      const { orgURL } = organizer;
-      const { eventID, id: eventConfigID } = event;
+        const { orgURL } = organizer;
+        const { eventID, id: eventConfigID } = event;
 
-      try {
-        const {
-          name: { en: eventNameFromAPI }
-        } = eventInfo;
-        const existingEvent = await fetchPretixEventInfo(
-          this.db,
-          eventConfigID
-        );
-        if (!existingEvent) {
-          await insertPretixEventsInfo(
-            this.db,
-            eventNameFromAPI,
-            eventConfigID,
-            checkinListId
+        try {
+          const {
+            name: { en: eventNameFromAPI }
+          } = eventInfo;
+          const existingEvent = await fetchPretixEventInfo(
+            client,
+            eventConfigID
           );
-        } else {
-          await updatePretixEventsInfo(
-            this.db,
-            existingEvent.id,
-            eventNameFromAPI,
-            false,
-            checkinListId
+          if (!existingEvent) {
+            await insertPretixEventsInfo(
+              client,
+              eventNameFromAPI,
+              eventConfigID,
+              checkinListId
+            );
+          } else {
+            await updatePretixEventsInfo(
+              client,
+              existingEvent.id,
+              eventNameFromAPI,
+              false,
+              checkinListId
+            );
+          }
+        } catch (e) {
+          logger(
+            `[DEVCONNECT PRETIX] Error while syncing event for ${orgURL} and ${eventID}, skipping update`,
+            { error: e }
           );
+          setError(e, span);
+          throw e;
         }
-      } catch (e) {
-        logger(
-          `[DEVCONNECT PRETIX] Error while syncing event for ${orgURL} and ${eventID}, skipping update`,
-          { error: e }
-        );
-        setError(e, span);
-        throw e;
-      }
+      });
     });
   }
 
@@ -532,137 +535,141 @@ export class OrganizerSync {
     itemsFromAPI: DevconnectPretixItem[]
   ): Promise<void> {
     return traced(NAME, "syncItemInfos", async (span) => {
-      span?.setAttribute("org_url", organizer.orgURL);
-      span?.setAttribute("event_slug", event.eventID);
-      span?.setAttribute(
-        "item_names",
-        itemsFromAPI.map((item) => `'${item.name}'`).join(", ")
-      );
+      await namedSqlTransaction(this.pool, "syncItemInfos", async (client) => {
+        span?.setAttribute("org_url", organizer.orgURL);
+        span?.setAttribute("event_slug", event.eventID);
+        span?.setAttribute(
+          "item_names",
+          itemsFromAPI.map((item) => `'${item.name}'`).join(", ")
+        );
 
-      const { orgURL } = organizer;
-      const { eventID, activeItemIDs, id: eventConfigID } = event;
+        const { orgURL } = organizer;
+        const { eventID, activeItemIDs, id: eventConfigID } = event;
 
-      try {
-        const eventInfo = await fetchPretixEventInfo(this.db, eventConfigID);
+        try {
+          const eventInfo = await fetchPretixEventInfo(client, eventConfigID);
 
-        if (!eventInfo) {
-          throw new Error(
-            `Couldn't find an event info matching event config id ${eventConfigID}`
+          if (!eventInfo) {
+            throw new Error(
+              `Couldn't find an event info matching event config id ${eventConfigID}`
+            );
+          }
+
+          span?.setAttribute("event_name", eventInfo?.event_name);
+
+          const newItemIDsSet = new Set(
+            itemsFromAPI.map((i) => i.id.toString())
           );
-        }
-
-        span?.setAttribute("event_name", eventInfo?.event_name);
-
-        const newItemIDsSet = new Set(itemsFromAPI.map((i) => i.id.toString()));
-        const activeItemIDsSet = new Set(activeItemIDs);
-        // Ensure all configured "active items" exist under the Pretix event's returned items.
-        // If any do not exist under active items, log an error and stop syncing.
-        if (activeItemIDs.some((i) => !newItemIDsSet.has(i))) {
-          throw new Error(
-            `One or more of event's active items no longer exist on Pretix.\n` +
-              `old event set: ${activeItemIDs.join(",")}\n` +
-              `new event set: ${Array.from(newItemIDsSet).join(",")}\n`
+          const activeItemIDsSet = new Set(activeItemIDs);
+          // Ensure all configured "active items" exist under the Pretix event's returned items.
+          // If any do not exist under active items, log an error and stop syncing.
+          if (activeItemIDs.some((i) => !newItemIDsSet.has(i))) {
+            throw new Error(
+              `One or more of event's active items no longer exist on Pretix.\n` +
+                `old event set: ${activeItemIDs.join(",")}\n` +
+                `new event set: ${Array.from(newItemIDsSet).join(",")}\n`
+            );
+          }
+          const newActiveItems = itemsFromAPI.filter((i) =>
+            activeItemIDsSet.has(i.id.toString())
           );
-        }
-        const newActiveItems = itemsFromAPI.filter((i) =>
-          activeItemIDsSet.has(i.id.toString())
-        );
 
-        const newActiveItemsByItemID = new Map(
-          newActiveItems.map((i) => [i.id.toString(), i])
-        );
-        const existingItemsInfo = await fetchPretixItemsInfoByEvent(
-          this.db,
-          eventInfo.id
-        );
-        const existingItemsInfoByItemID = new Map(
-          existingItemsInfo.map((i) => [i.item_id, i])
-        );
-        const itemsToInsert = newActiveItems.filter(
-          (i) => !existingItemsInfoByItemID.has(i.id.toString())
-        );
+          const newActiveItemsByItemID = new Map(
+            newActiveItems.map((i) => [i.id.toString(), i])
+          );
+          const existingItemsInfo = await fetchPretixItemsInfoByEvent(
+            client,
+            eventInfo.id
+          );
+          const existingItemsInfoByItemID = new Map(
+            existingItemsInfo.map((i) => [i.item_id, i])
+          );
+          const itemsToInsert = newActiveItems.filter(
+            (i) => !existingItemsInfoByItemID.has(i.id.toString())
+          );
 
-        // Step 1 of saving: insert items that are new
-        logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Inserting ${itemsToInsert.length} item infos`
-        );
-        for (const item of itemsToInsert) {
+          // Step 1 of saving: insert items that are new
           logger(
-            `[DEVCONNECT PRETIX] [${
-              eventInfo.event_name
-            }] Inserting item info ${JSON.stringify(item)}`
+            `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Inserting ${itemsToInsert.length} item infos`
           );
-          await insertPretixItemsInfo(
-            this.db,
-            item.id.toString(),
-            eventInfo.id,
-            getI18nString(item.name)
-          );
-        }
-        span?.setAttribute("items_inserted", itemsToInsert.length);
+          for (const item of itemsToInsert) {
+            logger(
+              `[DEVCONNECT PRETIX] [${
+                eventInfo.event_name
+              }] Inserting item info ${JSON.stringify(item)}`
+            );
+            await insertPretixItemsInfo(
+              client,
+              item.id.toString(),
+              eventInfo.id,
+              getI18nString(item.name)
+            );
+          }
+          span?.setAttribute("items_inserted", itemsToInsert.length);
 
-        // Step 2 of saving: update items that have changed
-        // Filter to items that existed before, and filter to those that have changed.
-        const itemsToUpdate = newActiveItems
-          .filter((i) => existingItemsInfoByItemID.has(i.id.toString()))
-          .filter((i) => {
+          // Step 2 of saving: update items that have changed
+          // Filter to items that existed before, and filter to those that have changed.
+          const itemsToUpdate = newActiveItems
+            .filter((i) => existingItemsInfoByItemID.has(i.id.toString()))
+            .filter((i) => {
+              const oldItem = existingItemsInfoByItemID.get(
+                i.id.toString()
+              ) as PretixItemInfo;
+              return oldItem.item_name !== getI18nString(i.name);
+            });
+
+          // For the active item that have changed, update them in the database.
+          logger(
+            `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Updating ${itemsToUpdate.length} item infos`
+          );
+          for (const item of itemsToUpdate) {
             const oldItem = existingItemsInfoByItemID.get(
-              i.id.toString()
+              item.id.toString()
             ) as PretixItemInfo;
-            return oldItem.item_name !== getI18nString(i.name);
-          });
+            logger(
+              `[DEVCONNECT PRETIX] [${
+                eventInfo.event_name
+              }] Updating item info ${JSON.stringify(
+                oldItem
+              )} to ${JSON.stringify({
+                ...oldItem,
+                item_name: getI18nString(item.name)
+              })}`
+            );
+            await updatePretixItemsInfo(
+              client,
+              oldItem.id,
+              getI18nString(item.name),
+              false
+            );
+          }
+          span?.setAttribute("items_updated", itemsToUpdate.length);
 
-        // For the active item that have changed, update them in the database.
-        logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Updating ${itemsToUpdate.length} item infos`
-        );
-        for (const item of itemsToUpdate) {
-          const oldItem = existingItemsInfoByItemID.get(
-            item.id.toString()
-          ) as PretixItemInfo;
+          // Step 3 of saving: remove items that are not active anymore
+          const itemsToRemove = existingItemsInfo.filter(
+            (existing) => !newActiveItemsByItemID.has(existing.item_id)
+          );
           logger(
-            `[DEVCONNECT PRETIX] [${
-              eventInfo.event_name
-            }] Updating item info ${JSON.stringify(
-              oldItem
-            )} to ${JSON.stringify({
-              ...oldItem,
-              item_name: getI18nString(item.name)
-            })}`
+            `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${itemsToRemove.length} item infos`
           );
-          await updatePretixItemsInfo(
-            this.db,
-            oldItem.id,
-            getI18nString(item.name),
-            false
-          );
-        }
-        span?.setAttribute("items_updated", itemsToUpdate.length);
-
-        // Step 3 of saving: remove items that are not active anymore
-        const itemsToRemove = existingItemsInfo.filter(
-          (existing) => !newActiveItemsByItemID.has(existing.item_id)
-        );
-        logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${itemsToRemove.length} item infos`
-        );
-        for (const item of itemsToRemove) {
+          for (const item of itemsToRemove) {
+            logger(
+              `[DEVCONNECT PRETIX] [${
+                eventInfo.event_name
+              }] Deleting item info ${JSON.stringify(item)}`
+            );
+            await softDeletePretixItemInfo(client, item.id);
+          }
+          span?.setAttribute("items_deleted", itemsToRemove.length);
+        } catch (e) {
           logger(
-            `[DEVCONNECT PRETIX] [${
-              eventInfo.event_name
-            }] Deleting item info ${JSON.stringify(item)}`
+            `[DEVCONNECT PRETIX] Error while syncing items for ${orgURL} and ${eventID}, skipping update`,
+            { error: e }
           );
-          await softDeletePretixItemInfo(this.db, item.id);
+          setError(e, span);
+          throw e;
         }
-        span?.setAttribute("items_deleted", itemsToRemove.length);
-      } catch (e) {
-        logger(
-          `[DEVCONNECT PRETIX] Error while syncing items for ${orgURL} and ${eventID}, skipping update`,
-          { error: e }
-        );
-        setError(e, span);
-        throw e;
-      }
+      });
     });
   }
 
@@ -744,128 +751,130 @@ export class OrganizerSync {
     pretixOrders: DevconnectPretixOrder[]
   ): Promise<void> {
     return traced(NAME, "syncTickets", async (span) => {
-      span?.setAttribute("org_url", organizer.orgURL);
-      span?.setAttribute("event_slug", event.eventID);
+      await namedSqlTransaction(this.pool, "syncTickets", async (client) => {
+        span?.setAttribute("org_url", organizer.orgURL);
+        span?.setAttribute("event_slug", event.eventID);
 
-      const { orgURL } = organizer;
-      const { eventID, id: eventConfigID } = event;
+        const { orgURL } = organizer;
+        const { eventID, id: eventConfigID } = event;
 
-      try {
-        const eventInfo = await fetchPretixEventInfo(this.db, eventConfigID);
+        try {
+          const eventInfo = await fetchPretixEventInfo(client, eventConfigID);
 
-        if (!eventInfo) {
-          throw new Error(
-            `Couldn't find an event info matching event config id ${eventConfigID}`
+          if (!eventInfo) {
+            throw new Error(
+              `Couldn't find an event info matching event config id ${eventConfigID}`
+            );
+          }
+          span?.setAttribute("event_name", eventInfo.event_name);
+
+          // Fetch updated version after DB updates
+          const updatedItemsInfo = await fetchPretixItemsInfoByEvent(
+            client,
+            eventInfo.id
           );
-        }
-        span?.setAttribute("event_name", eventInfo.event_name);
 
-        // Fetch updated version after DB updates
-        const updatedItemsInfo = await fetchPretixItemsInfoByEvent(
-          this.db,
-          eventInfo.id
-        );
+          const ticketsFromPretix = await this.ordersToDevconnectTickets(
+            eventInfo,
+            pretixOrders,
+            updatedItemsInfo,
+            eventConfigID
+          );
 
-        const ticketsFromPretix = await this.ordersToDevconnectTickets(
-          eventInfo,
-          pretixOrders,
-          updatedItemsInfo,
-          eventConfigID
-        );
+          const existingTickets = await fetchDevconnectPretixTicketsByEvent(
+            client,
+            eventConfigID
+          );
 
-        const existingTickets = await fetchDevconnectPretixTicketsByEvent(
-          this.db,
-          eventConfigID
-        );
+          const pretixTicketsByPositionId = new Map(
+            ticketsFromPretix.map((ticket) => [ticket.position_id, ticket])
+          );
 
-        const pretixTicketsByPositionId = new Map(
-          ticketsFromPretix.map((ticket) => [ticket.position_id, ticket])
-        );
+          // Only remove tickets if they aren't in the Pretix response
+          const ticketsToRemove = existingTickets.filter((ticket) => {
+            return !pretixTicketsByPositionId.has(ticket.position_id);
+          });
 
-        // Only remove tickets if they aren't in the Pretix response
-        const ticketsToRemove = existingTickets.filter((ticket) => {
-          return !pretixTicketsByPositionId.has(ticket.position_id);
-        });
+          const changes = compareArrays(
+            existingTickets,
+            ticketsFromPretix,
+            "position_id",
+            pretixTicketsDifferent
+          );
 
-        const changes = compareArrays(
-          existingTickets,
-          ticketsFromPretix,
-          "position_id",
-          pretixTicketsDifferent
-        );
+          const existingTicketsByPositionId = new Map(
+            existingTickets.map((t) => [t.position_id, t])
+          );
 
-        const existingTicketsByPositionId = new Map(
-          existingTickets.map((t) => [t.position_id, t])
-        );
-
-        // Step 1 of saving: insert tickets that are new
-        logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Inserting ${changes.new.length} new tickets`
-        );
-        for (const ticket of changes.new.map(this.checkinDataForNewTicket)) {
+          // Step 1 of saving: insert tickets that are new
           logger(
-            `[DEVCONNECT PRETIX] [${
-              eventInfo.event_name
-            }] Inserting ticket ${JSON.stringify(ticket)}`
+            `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Inserting ${changes.new.length} new tickets`
           );
+          for (const ticket of changes.new.map(this.checkinDataForNewTicket)) {
+            logger(
+              `[DEVCONNECT PRETIX] [${
+                eventInfo.event_name
+              }] Inserting ticket ${JSON.stringify(ticket)}`
+            );
 
-          await insertDevconnectPretixTicket(this.db, ticket);
-        }
+            await insertDevconnectPretixTicket(client, ticket);
+          }
 
-        // Step 2 of saving: update tickets that have changed
-        // For the tickets that have changed, update them in the database.
-        logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Updating ${changes.updated.length} tickets`
-        );
-        for (const ticket of changes.updated) {
-          const oldTicket = existingTicketsByPositionId.get(
-            ticket.position_id
-          ) as DevconnectPretixTicketDB;
-          const updatedTicket = this.checkinDataForExistingTicket(
-            ticket,
-            oldTicket
-          );
+          // Step 2 of saving: update tickets that have changed
+          // For the tickets that have changed, update them in the database.
           logger(
-            `[DEVCONNECT PRETIX] [${
-              eventInfo.event_name
-            }] Updating ticket ${JSON.stringify(oldTicket)} to ${JSON.stringify(
-              updatedTicket
-            )}`
+            `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Updating ${changes.updated.length} tickets`
           );
+          for (const ticket of changes.updated) {
+            const oldTicket = existingTicketsByPositionId.get(
+              ticket.position_id
+            ) as DevconnectPretixTicketDB;
+            const updatedTicket = this.checkinDataForExistingTicket(
+              ticket,
+              oldTicket
+            );
+            logger(
+              `[DEVCONNECT PRETIX] [${
+                eventInfo.event_name
+              }] Updating ticket ${JSON.stringify(
+                oldTicket
+              )} to ${JSON.stringify(updatedTicket)}`
+            );
 
-          // Merge the checkin details into the ticket for saving.
-          await updateDevconnectPretixTicket(this.db, updatedTicket);
-        }
+            // Merge the checkin details into the ticket for saving.
+            await updateDevconnectPretixTicket(client, updatedTicket);
+          }
 
-        // Step 3 of saving: soft delete tickets that don't exist anymore
-        logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${changes.removed.length} tickets`
-        );
-        for (const removedTicket of ticketsToRemove) {
+          // Step 3 of saving: soft delete tickets that don't exist anymore
           logger(
-            `[DEVCONNECT PRETIX] [${
-              eventInfo.event_name
-            }] Deleting ticket ${JSON.stringify(removedTicket)}`
+            `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${changes.removed.length} tickets`
           );
-          await softDeleteDevconnectPretixTicket(this.db, removedTicket);
+          for (const removedTicket of ticketsToRemove) {
+            logger(
+              `[DEVCONNECT PRETIX] [${
+                eventInfo.event_name
+              }] Deleting ticket ${JSON.stringify(removedTicket)}`
+            );
+            await softDeleteDevconnectPretixTicket(client, removedTicket);
+          }
+
+          span?.setAttribute("ticketsInserted", changes.new.length);
+          span?.setAttribute("ticketsUpdated", changes.updated.length);
+          span?.setAttribute("ticketsDeleted", changes.removed.length);
+
+          span?.setAttribute(
+            "ticketsTotal",
+            existingTickets.length + changes.new.length - changes.removed.length
+          );
+        } catch (e) {
+          logger(
+            `[DEVCONNECT PRETIX] error while syncing for ${orgURL} and ${eventID}, skipping update`,
+            { error: e }
+          );
+          setError(e, span);
+          throw e;
         }
-
-        span?.setAttribute("ticketsInserted", changes.new.length);
-        span?.setAttribute("ticketsUpdated", changes.updated.length);
-        span?.setAttribute("ticketsDeleted", changes.removed.length);
-
-        span?.setAttribute(
-          "ticketsTotal",
-          existingTickets.length + changes.new.length - changes.removed.length
-        );
-      } catch (e) {
-        logger(
-          `[DEVCONNECT PRETIX] error while syncing for ${orgURL} and ${eventID}, skipping update`,
-          { error: e }
-        );
-        setError(e, span);
-        throw e;
-      }
+      });
     });
   }
 
@@ -977,9 +986,8 @@ export class OrganizerSync {
    */
   private async pushCheckins(): Promise<void> {
     // Get the tickets which have been checked in but not yet synced
-    const ticketsToSync = await fetchDevconnectTicketsAwaitingSync(
-      this.db,
-      this.organizer.orgURL
+    const ticketsToSync = await sqlTransaction(this.pool, (client) =>
+      fetchDevconnectTicketsAwaitingSync(client, this.organizer.orgURL)
     );
 
     for (const ticket of ticketsToSync) {
@@ -994,11 +1002,12 @@ export class OrganizerSync {
         checkinTimestamp.toISOString()
       );
 
-      // Update the DB so that this ticket doesn't require sync
-      await updateDevconnectPretixTicket(this.db, {
-        ...ticket,
-        pretix_checkin_timestamp: checkinTimestamp
-      });
+      await sqlTransaction(this.pool, (client) =>
+        updateDevconnectPretixTicket(client, {
+          ...ticket,
+          pretix_checkin_timestamp: checkinTimestamp
+        })
+      );
     }
   }
 }

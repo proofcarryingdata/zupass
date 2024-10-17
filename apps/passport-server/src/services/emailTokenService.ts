@@ -1,8 +1,8 @@
+import { PoolClient } from "postgres-pool";
 import {
   fetchEmailToken,
   insertEmailToken
 } from "../database/queries/emailToken";
-import { ApplicationContext } from "../types";
 import { randomEmailToken } from "../util/util";
 
 /**
@@ -10,38 +10,36 @@ import { randomEmailToken } from "../util/util";
  * tokens that users use for logging in.
  */
 export class EmailTokenService {
-  private context: ApplicationContext;
-
-  public constructor(context: ApplicationContext) {
-    this.context = context;
-  }
-
   public async checkTokenCorrect(
+    client: PoolClient,
     email: string,
     token: string
   ): Promise<boolean> {
-    const savedToken = await this.getTokenForEmail(email);
+    const savedToken = await this.getTokenForEmail(client, email);
     if (!savedToken) {
       return false;
     }
     return token === savedToken;
   }
 
-  public async getTokenForEmail(email: string): Promise<string | null> {
-    const token = await fetchEmailToken(this.context.dbPool, email);
+  public async getTokenForEmail(
+    client: PoolClient,
+    email: string
+  ): Promise<string | null> {
+    const token = await fetchEmailToken(client, email);
     return token;
   }
 
-  public async saveNewTokenForEmail(email: string): Promise<string> {
+  public async saveNewTokenForEmail(
+    client: PoolClient,
+    email: string
+  ): Promise<string> {
     const token = randomEmailToken();
-    await insertEmailToken(this.context.dbPool, { email, token });
+    await insertEmailToken(client, { email, token });
     return token;
   }
 }
 
-export function startEmailTokenService(
-  context: ApplicationContext
-): EmailTokenService {
-  const emailTokenService = new EmailTokenService(context);
-  return emailTokenService;
+export function startEmailTokenService(): EmailTokenService {
+  return new EmailTokenService();
 }

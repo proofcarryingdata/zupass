@@ -39,6 +39,7 @@ import {
   UserFromGetMe
 } from "grammy/types";
 import _ from "lodash";
+import { PoolClient } from "postgres-pool";
 import { v1 as uuidV1 } from "uuid";
 import { AnonMessageWithDetails } from "../database/models";
 import {
@@ -71,6 +72,7 @@ import {
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
 import { insertTelegramReaction } from "../database/queries/telegram/insertTelegramReaction";
+import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
 import { ApplicationContext } from "../types";
 import { handleFrogVerification } from "../util/frogTelegramHelpers";
 import { logger } from "../util/logger";
@@ -179,10 +181,9 @@ export class TelegramService {
             `[TELEGRAM] Got chat join request for ${chatId} from ${userId}`
           );
           // Check if this user is verified for the chat in question
-          const isVerified = await fetchTelegramVerificationStatus(
+          const isVerified = await sqlTransaction(
             this.context.dbPool,
-            userId,
-            chatId
+            (client) => fetchTelegramVerificationStatus(client, userId, chatId)
           );
 
           if (isVerified) {
@@ -241,34 +242,43 @@ export class TelegramService {
     this.authBot.on("chat_member", async (ctx) => {
       return traced("telegram", "chat_member", async (span) => {
         try {
-          const newMember = ctx.update.chat_member.new_chat_member;
-          span?.setAttribute("userId", newMember.user.id.toString());
-          span?.setAttribute("status", newMember.status);
+          namedSqlTransaction(
+            this.context.dbPool,
+            "chat_member",
+            async (client) => {
+              const newMember = ctx.update.chat_member.new_chat_member;
+              span?.setAttribute("userId", newMember.user.id.toString());
+              span?.setAttribute("status", newMember.status);
 
-          if (newMember.status === "left" || newMember.status === "kicked") {
-            logger(
-              `[TELEGRAM] Deleting verification for user leaving ${
-                newMember.user.username || newMember.user.first_name
-              } in chat ${ctx.chat.id}`
-            );
-            await deleteTelegramVerification(
-              this.context.dbPool,
-              newMember.user.id,
-              ctx.chat.id
-            );
-            const chat = await getGroupChat(ctx.api, ctx.chat.id);
-            span?.setAttribute("chatId", chat.id);
-            span?.setAttribute("chatTitle", chat.title);
+              if (
+                newMember.status === "left" ||
+                newMember.status === "kicked"
+              ) {
+                logger(
+                  `[TELEGRAM] Deleting verification for user leaving ${
+                    newMember.user.username || newMember.user.first_name
+                  } in chat ${ctx.chat.id}`
+                );
+                await deleteTelegramVerification(
+                  client,
+                  newMember.user.id,
+                  ctx.chat.id
+                );
+                const chat = await getGroupChat(ctx.api, ctx.chat.id);
+                span?.setAttribute("chatId", chat.id);
+                span?.setAttribute("chatTitle", chat.title);
 
-            const userId = newMember.user.id;
-            if (!newMember.user.is_bot) {
-              await this.authBot.api.sendMessage(
-                userId,
-                `<i>You left ${chat?.title}. To join again, you must re-verify by typing /start.</i>`,
-                { parse_mode: "HTML" }
-              );
+                const userId = newMember.user.id;
+                if (!newMember.user.is_bot) {
+                  await this.authBot.api.sendMessage(
+                    userId,
+                    `<i>You left ${chat?.title}. To join again, you must re-verify by typing /start.</i>`,
+                    { parse_mode: "HTML" }
+                  );
+                }
+              }
             }
-          }
+          );
         } catch (e) {
           logger("[TELEGRAM] chat_member error", e);
           this.rollbarService?.reportError(e);
@@ -291,11 +301,15 @@ export class TelegramService {
             const name = firstName || username;
             ctx.session.directLinkMode = false;
             if (ctx.match && Number.isInteger(Number(ctx.match))) {
-              const [chatWithMembership] = await getChatsWithMembershipStatus(
+              const [chatWithMembership] = await sqlTransaction(
                 ctx.session.dbPool,
-                ctx,
-                userId,
-                Number(ctx.match)
+                (client) =>
+                  getChatsWithMembershipStatus(
+                    client,
+                    ctx,
+                    userId,
+                    Number(ctx.match)
+                  )
               );
               if (chatWithMembership) {
                 ctx.session.chatToJoin = chatWithMembership;
@@ -440,9 +454,8 @@ export class TelegramService {
         userId,
         `Loading tickets and events...`
       );
-      const events = await fetchEventsWithTelegramChats(
-        this.context.dbPool,
-        false
+      const events = await sqlTransaction(ctx.session.dbPool, (client) =>
+        fetchEventsWithTelegramChats(client, false)
       );
       const eventsWithChats = await chatIDsToChats(ctx, events);
 
@@ -486,63 +499,75 @@ export class TelegramService {
 
     this.authBot.on(":forum_topic_created", async (ctx) => {
       return traced("telegram", "forum_topic_created", async (span) => {
-        const topicName = ctx.update?.message?.forum_topic_created.name;
-        const messageThreadId = ctx.update.message?.message_thread_id;
-        const chatId = ctx.chat.id;
-        span?.setAttributes({ topicName, messageThreadId, chatId });
-
-        if (!chatId || !topicName)
-          throw new Error(`Missing chatId or topic name`);
-
-        await insertTelegramChat(this.context.dbPool, chatId);
-        await insertTelegramTopic(
+        await namedSqlTransaction(
           this.context.dbPool,
-          chatId,
-          topicName,
-          messageThreadId,
-          false
-        );
+          "forum_topic_created",
+          async (client) => {
+            const topicName = ctx.update?.message?.forum_topic_created.name;
+            const messageThreadId = ctx.update.message?.message_thread_id;
+            const chatId = ctx.chat.id;
+            span?.setAttributes({ topicName, messageThreadId, chatId });
 
-        logger(`[TELEGRAM CREATED]`, topicName, messageThreadId, chatId);
+            if (!chatId || !topicName)
+              throw new Error(`Missing chatId or topic name`);
+
+            await insertTelegramChat(client, chatId);
+            await insertTelegramTopic(
+              client,
+              chatId,
+              topicName,
+              messageThreadId,
+              false
+            );
+
+            logger(`[TELEGRAM CREATED]`, topicName, messageThreadId, chatId);
+          }
+        );
       });
     });
 
     this.authBot.on(":forum_topic_edited", async (ctx) => {
       return traced("telegram", "forum_topic_edited", async (span) => {
-        const topicName = ctx.update?.message?.forum_topic_edited.name;
-        const chatId = ctx.chat.id;
-        const messageThreadId = ctx.update.message?.message_thread_id;
-        span?.setAttributes({ topicName, messageThreadId, chatId });
-
-        if (!chatId || !topicName)
-          throw new Error(`Missing chatId or topic name`);
-
-        const topic = await fetchTelegramTopic(
+        await namedSqlTransaction(
           this.context.dbPool,
-          chatId,
-          messageThreadId
-        );
+          "forum_topic_edited",
+          async (client) => {
+            const topicName = ctx.update?.message?.forum_topic_edited.name;
+            const chatId = ctx.chat.id;
+            const messageThreadId = ctx.update.message?.message_thread_id;
+            span?.setAttributes({ topicName, messageThreadId, chatId });
 
-        if (!topic) {
-          logger(`[TELEGRAM] adding topic ${topicName} to db`);
-          await insertTelegramChat(this.context.dbPool, chatId);
-          await insertTelegramTopic(
-            this.context.dbPool,
-            chatId,
-            topicName,
-            messageThreadId,
-            false
-          );
-        } else {
-          logger(`[TELEGRAM] updating topic ${topicName} in db`);
-          await insertTelegramTopic(
-            this.context.dbPool,
-            topic.telegramChatID,
-            topicName,
-            topic.topic_id,
-            topic.is_anon_topic
-          );
-        }
+            if (!chatId || !topicName)
+              throw new Error(`Missing chatId or topic name`);
+
+            const topic = await fetchTelegramTopic(
+              client,
+              chatId,
+              messageThreadId
+            );
+
+            if (!topic) {
+              logger(`[TELEGRAM] adding topic ${topicName} to db`);
+              await insertTelegramChat(client, chatId);
+              await insertTelegramTopic(
+                client,
+                chatId,
+                topicName,
+                messageThreadId,
+                false
+              );
+            } else {
+              logger(`[TELEGRAM] updating topic ${topicName} in db`);
+              await insertTelegramTopic(
+                client,
+                topic.telegramChatID,
+                topicName,
+                topic.topic_id,
+                topic.is_anon_topic
+              );
+            }
+          }
+        );
       });
     });
 
@@ -571,80 +596,86 @@ export class TelegramService {
         });
 
       try {
-        const telegramEvents = await fetchTelegramEventsByChatId(
-          this.context.dbPool,
-          ctx.chat.id
-        );
+        await namedSqlTransaction(
+          ctx.session.dbPool,
+          "incognito",
+          async (client) => {
+            const telegramEvents = await fetchTelegramEventsByChatId(
+              client,
+              ctx.chat.id
+            );
 
-        const hasLinked = telegramEvents.length > 0;
-        if (!hasLinked) {
-          await ctx.reply(
-            "This group is not linked to an event. If you're an admin, use /manage to link this group to an event.",
-            { message_thread_id: messageThreadId }
-          );
-          return;
-        }
+            const hasLinked = telegramEvents.length > 0;
+            if (!hasLinked) {
+              await ctx.reply(
+                "This group is not linked to an event. If you're an admin, use /manage to link this group to an event.",
+                { message_thread_id: messageThreadId }
+              );
+              return;
+            }
 
-        const topicToUpdate = await fetchTelegramTopic(
-          this.context.dbPool,
-          ctx.chat.id,
-          messageThreadId
-        );
+            const topicToUpdate = await fetchTelegramTopic(
+              client,
+              ctx.chat.id,
+              messageThreadId
+            );
 
-        if (!topicToUpdate)
-          throw new Error(`Couldn't find this topic in the db.`);
+            if (!topicToUpdate)
+              throw new Error(`Couldn't find this topic in the db.`);
 
-        if (topicToUpdate.is_anon_topic) {
-          await ctx.reply(`This topic is already anonymous.`, {
-            message_thread_id: messageThreadId
-          });
-          return;
-        }
+            if (topicToUpdate.is_anon_topic) {
+              await ctx.reply(`This topic is already anonymous.`, {
+                message_thread_id: messageThreadId
+              });
+              return;
+            }
 
-        const topicName =
-          topicToUpdate?.topic_name ||
-          ctx.message?.reply_to_message?.forum_topic_created?.name;
-        if (!topicName) throw new Error(`No topic name found`);
+            const topicName =
+              topicToUpdate?.topic_name ||
+              ctx.message?.reply_to_message?.forum_topic_created?.name;
+            if (!topicName) throw new Error(`No topic name found`);
 
-        await insertTelegramTopic(
-          this.context.dbPool,
-          ctx.chat.id,
-          topicName,
-          messageThreadId,
-          true
-        );
+            await insertTelegramTopic(
+              client,
+              ctx.chat.id,
+              topicName,
+              messageThreadId,
+              true
+            );
 
-        await ctx.reply(
-          `Linked with topic name <b>${topicName}</b>.\nIf this name is incorrect, edit this topic name to update`,
-          {
-            message_thread_id: messageThreadId,
-            parse_mode: "HTML"
+            await ctx.reply(
+              `Linked with topic name <b>${topicName}</b>.\nIf this name is incorrect, edit this topic name to update`,
+              {
+                message_thread_id: messageThreadId,
+                parse_mode: "HTML"
+              }
+            );
+
+            const directLinkParams: RedirectTopicDataPayload = {
+              type: PayloadType.RedirectTopicData,
+              value: {
+                topicId: messageThreadId,
+                chatId: ctx.chat.id
+              }
+            };
+
+            const encodedPayload = Buffer.from(
+              JSON.stringify(directLinkParams),
+              "utf-8"
+            ).toString("base64");
+
+            const messageToPin = await ctx.reply("Click to post", {
+              message_thread_id: messageThreadId,
+              reply_markup: new InlineKeyboard().url(
+                "Post Anonymously",
+                // NOTE: The order and casing of the direct link params is VERY IMPORTANT. https://github.com/TelegramMessenger/Telegram-iOS/issues/1091
+                `${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startApp=${encodedPayload}&startapp=${encodedPayload}`
+              )
+            });
+            ctx.pinChatMessage(messageToPin.message_id);
+            ctx.api.closeForumTopic(ctx.chat.id, messageThreadId);
           }
         );
-
-        const directLinkParams: RedirectTopicDataPayload = {
-          type: PayloadType.RedirectTopicData,
-          value: {
-            topicId: messageThreadId,
-            chatId: ctx.chat.id
-          }
-        };
-
-        const encodedPayload = Buffer.from(
-          JSON.stringify(directLinkParams),
-          "utf-8"
-        ).toString("base64");
-
-        const messageToPin = await ctx.reply("Click to post", {
-          message_thread_id: messageThreadId,
-          reply_markup: new InlineKeyboard().url(
-            "Post Anonymously",
-            // NOTE: The order and casing of the direct link params is VERY IMPORTANT. https://github.com/TelegramMessenger/Telegram-iOS/issues/1091
-            `${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startApp=${encodedPayload}&startapp=${encodedPayload}`
-          )
-        });
-        ctx.pinChatMessage(messageToPin.message_id);
-        ctx.api.closeForumTopic(ctx.chat.id, messageThreadId);
       } catch (error) {
         logger(`[ERROR] ${error}`);
         await ctx.reply(`Failed to link anonymous chat. ${error} `, {
@@ -677,94 +708,109 @@ export class TelegramService {
 
     if (this.forwardBot) {
       this.forwardBot.command("receive", async (ctx) => {
-        const messageThreadId = ctx.message?.message_thread_id;
-        try {
-          logger(`[TELEGRAM] running receive`);
-          if (isDirectMessage(ctx))
-            return ctx.reply(`/receive can only be run in a group chat`);
+        await namedSqlTransaction(
+          ctx.session.dbPool,
+          "receive",
+          async (client) => {
+            const messageThreadId = ctx.message?.message_thread_id;
+            try {
+              logger(`[TELEGRAM] running receive`);
+              if (isDirectMessage(ctx))
+                return ctx.reply(`/receive can only be run in a group chat`);
 
-          if (!ctx.from?.username)
-            return ctx.reply(`No username found`, {
-              reply_to_message_id: messageThreadId
-            });
+              if (!ctx.from?.username)
+                return ctx.reply(`No username found`, {
+                  reply_to_message_id: messageThreadId
+                });
 
-          if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
-            return ctx.reply(
-              `Only Zupass team members are allowed to run this command.`,
-              { reply_to_message_id: messageThreadId }
-            );
+              if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
+                return ctx.reply(
+                  `Only Zupass team members are allowed to run this command.`,
+                  { reply_to_message_id: messageThreadId }
+                );
 
-          // Look up topic.
-          const topic = await fetchTelegramTopic(
-            this.context.dbPool,
-            ctx.chat.id,
-            messageThreadId
-          );
+              // Look up topic.
+              const topic = await fetchTelegramTopic(
+                client,
+                ctx.chat.id,
+                messageThreadId
+              );
 
-          if (!topic)
-            throw new Error(
-              `No topic found. Edit the topic name and try again!`
-            );
+              if (!topic)
+                throw new Error(
+                  `No topic found. Edit the topic name and try again!`
+                );
 
-          await insertTelegramForward(this.context.dbPool, null, topic.id);
-          logger(`[TELEGRAM] ${topic.topic_name} can receive messages`);
-          await ctx.reply(`<b>${topic.topic_name}</b> can receive messages`, {
-            reply_to_message_id: messageThreadId,
-            parse_mode: "HTML"
-          });
-        } catch (error) {
-          ctx.reply(`${error}`, {
-            reply_to_message_id: messageThreadId
-          });
-        }
+              await insertTelegramForward(client, null, topic.id);
+              logger(`[TELEGRAM] ${topic.topic_name} can receive messages`);
+              await ctx.reply(
+                `<b>${topic.topic_name}</b> can receive messages`,
+                {
+                  reply_to_message_id: messageThreadId,
+                  parse_mode: "HTML"
+                }
+              );
+            } catch (error) {
+              ctx.reply(`${error}`, {
+                reply_to_message_id: messageThreadId
+              });
+            }
+          }
+        );
       });
 
       this.forwardBot.command("stopreceive", async (ctx) => {
-        const messageThreadId = ctx.message?.message_thread_id;
-        try {
-          logger(`[TELEGRAM] running receive`);
-          if (isDirectMessage(ctx))
-            return ctx.reply(`/receive can only be run in a group chat`);
+        await namedSqlTransaction(
+          ctx.session.dbPool,
+          "stopreceive",
+          async (client) => {
+            const messageThreadId = ctx.message?.message_thread_id;
+            try {
+              logger(`[TELEGRAM] running receive`);
+              if (isDirectMessage(ctx))
+                return ctx.reply(`/receive can only be run in a group chat`);
 
-          if (!ctx.from?.username)
-            return ctx.reply(`No username found`, {
-              reply_to_message_id: messageThreadId
-            });
+              if (!ctx.from?.username)
+                return ctx.reply(`No username found`, {
+                  reply_to_message_id: messageThreadId
+                });
 
-          if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
-            return ctx.reply(
-              `Only Zupass team members are allowed to run this command.`,
-              { reply_to_message_id: messageThreadId }
-            );
+              if (!ALLOWED_TICKET_MANAGERS.includes(ctx.from.username))
+                return ctx.reply(
+                  `Only Zupass team members are allowed to run this command.`,
+                  { reply_to_message_id: messageThreadId }
+                );
 
-          // Look up topic.
-          const topic = await fetchTelegramTopic(
-            this.context.dbPool,
-            ctx.chat.id,
-            messageThreadId
-          );
+              // Look up topic.
+              const topic = await fetchTelegramTopic(
+                client,
+                ctx.chat.id,
+                messageThreadId
+              );
 
-          if (!topic)
-            throw new Error(
-              `No topic found. Edit the topic name and try again!`
-            );
+              if (!topic)
+                throw new Error(
+                  `No topic found. Edit the topic name and try again!`
+                );
 
-          await deleteTelegramForward(this.context.dbPool, topic.id, null);
-          logger(
-            `[TELEGRAM] ${topic.topic_name} can no longer receive messages`
-          );
-          await ctx.reply(
-            `<b>${topic.topic_name}</b> can no longer receive messages`,
-            {
-              reply_to_message_id: messageThreadId,
-              parse_mode: "HTML"
+              await deleteTelegramForward(client, topic.id, null);
+              logger(
+                `[TELEGRAM] ${topic.topic_name} can no longer receive messages`
+              );
+              await ctx.reply(
+                `<b>${topic.topic_name}</b> can no longer receive messages`,
+                {
+                  reply_to_message_id: messageThreadId,
+                  parse_mode: "HTML"
+                }
+              );
+            } catch (error) {
+              ctx.reply(`${error}`, {
+                reply_to_message_id: messageThreadId
+              });
             }
-          );
-        } catch (error) {
-          ctx.reply(`${error}`, {
-            reply_to_message_id: messageThreadId
-          });
-        }
+          }
+        );
       });
 
       this.forwardBot.command("forward", async (ctx) => {
@@ -792,82 +838,96 @@ export class TelegramService {
 
       this.forwardBot.on(":forum_topic_edited", async (ctx) => {
         return traced("telegram", "forum_topic_edited", async (span) => {
-          const topicName = ctx.update?.message?.forum_topic_edited.name;
-          const chatId = ctx.chat.id;
-          const messageThreadId = ctx.update.message?.message_thread_id;
-          span?.setAttributes({ topicName, messageThreadId, chatId });
+          await namedSqlTransaction(
+            ctx.session.dbPool,
+            "forum_topic_edited",
+            async (client) => {
+              const topicName = ctx.update?.message?.forum_topic_edited.name;
+              const chatId = ctx.chat.id;
+              const messageThreadId = ctx.update.message?.message_thread_id;
+              span?.setAttributes({ topicName, messageThreadId, chatId });
 
-          if (!chatId || !topicName)
-            throw new Error(`Missing chatId or topic name`);
+              if (!chatId || !topicName)
+                throw new Error(`Missing chatId or topic name`);
 
-          const topic = await fetchTelegramTopic(
-            this.context.dbPool,
-            chatId,
-            messageThreadId
+              const topic = await fetchTelegramTopic(
+                client,
+                chatId,
+                messageThreadId
+              );
+
+              if (!topic) {
+                logger(`[TELEGRAM] adding topic ${topicName} to db`);
+                await insertTelegramChat(client, chatId);
+                await insertTelegramTopic(
+                  client,
+                  chatId,
+                  topicName,
+                  messageThreadId,
+                  false
+                );
+              } else {
+                logger(`[TELEGRAM] updating topic ${topicName} in db`);
+                await insertTelegramTopic(
+                  client,
+                  topic.telegramChatID,
+                  topicName,
+                  topic.topic_id,
+                  topic.is_anon_topic
+                );
+              }
+            }
           );
-
-          if (!topic) {
-            logger(`[TELEGRAM] adding topic ${topicName} to db`);
-            await insertTelegramChat(this.context.dbPool, chatId);
-            await insertTelegramTopic(
-              this.context.dbPool,
-              chatId,
-              topicName,
-              messageThreadId,
-              false
-            );
-          } else {
-            logger(`[TELEGRAM] updating topic ${topicName} in db`);
-            await insertTelegramTopic(
-              this.context.dbPool,
-              topic.telegramChatID,
-              topicName,
-              topic.topic_id,
-              topic.is_anon_topic
-            );
-          }
         });
       });
 
       this.forwardBot.on("message", async (ctx) => {
-        const text = ctx.message.text;
+        await namedSqlTransaction(
+          ctx.session.dbPool,
+          "message",
+          async (client) => {
+            const text = ctx.message.text;
 
-        if (isDirectMessage(ctx)) {
-          return await ctx.reply(`I can only forward messages in a group chat`);
-        } else {
-          const messageThreadId = ctx.message?.message_thread_id;
+            if (isDirectMessage(ctx)) {
+              return await ctx.reply(
+                `I can only forward messages in a group chat`
+              );
+            } else {
+              const messageThreadId = ctx.message?.message_thread_id;
 
-          try {
-            // Check to see if message is from a topic in the forwarding table
-            const forwardResults = await fetchTelegramTopicForwarding(
-              this.context.dbPool,
-              ctx.chat.id,
-              messageThreadId
-            );
-
-            if (forwardResults?.length > 0) {
-              const sentMessages = forwardResults.map((f) => {
-                const destinationTopicID = f.receiverTopicID
-                  ? parseInt(f.receiverTopicID)
-                  : undefined;
-                logger(
-                  `[TElEGRAM] forwarding message ${text} to ${f.receiverTopicName}`
+              try {
+                // Check to see if message is from a topic in the forwarding table
+                const forwardResults = await fetchTelegramTopicForwarding(
+                  client,
+                  ctx.chat.id,
+                  messageThreadId
                 );
-                return ctx.api.forwardMessage(
-                  f.receiverChatID,
-                  f.senderChatID,
-                  ctx.message.message_id,
-                  {
-                    message_thread_id: destinationTopicID
-                  }
-                );
-              });
-              await Promise.allSettled(sentMessages);
+
+                if (forwardResults?.length > 0) {
+                  const sentMessages = forwardResults.map((f) => {
+                    const destinationTopicID = f.receiverTopicID
+                      ? parseInt(f.receiverTopicID)
+                      : undefined;
+                    logger(
+                      `[TElEGRAM] forwarding message ${text} to ${f.receiverTopicName}`
+                    );
+                    return ctx.api.forwardMessage(
+                      f.receiverChatID,
+                      f.senderChatID,
+                      ctx.message.message_id,
+                      {
+                        message_thread_id: destinationTopicID
+                      }
+                    );
+                  });
+                  await Promise.allSettled(sentMessages);
+                }
+              } catch (error) {
+                ctx.reply(`${error}`, { reply_to_message_id: messageThreadId });
+              }
             }
-          } catch (error) {
-            ctx.reply(`${error}`, { reply_to_message_id: messageThreadId });
           }
-        }
+        );
       });
     }
 
@@ -1016,6 +1076,7 @@ export class TelegramService {
   }
 
   private async sendToAnonymousChannel(
+    client: PoolClient,
     chatId: number,
     topicId: number,
     message: string,
@@ -1045,7 +1106,7 @@ export class TelegramService {
             logger(
               `[TELEGRAM] topic has been deleted from Telegram, removing from db...`
             );
-            await deleteTelegramChatTopic(this.context.dbPool, chatId, topicId);
+            await deleteTelegramChatTopic(client, chatId, topicId);
             throw new Error(`Topic has been deleted. Choose a different one!`);
           } else {
             throw new Error(error);
@@ -1092,6 +1153,7 @@ export class TelegramService {
    * This is called from the /telegram/verify route.
    */
   public async handleVerification(
+    client: PoolClient,
     serializedPCD: string,
     telegramUserId: number,
     telegramChatId: string,
@@ -1105,6 +1167,7 @@ export class TelegramService {
       const parsed = JSON.parse(serializedPCD) as SerializedPCD;
       if (parsed.type === ZKEdDSAEventTicketPCDTypeName) {
         await this.handleTicketVerification(
+          client,
           serializedPCD,
           telegramUserId,
           chat.id,
@@ -1112,7 +1175,7 @@ export class TelegramService {
         );
       } else if (parsed.type === ZKEdDSAFrogPCDTypeName) {
         await handleFrogVerification(
-          this.context.dbPool,
+          client,
           serializedPCD,
           telegramUserId,
           chat.id,
@@ -1133,6 +1196,7 @@ export class TelegramService {
    * for later approval when they request to join.
    */
   public async handleTicketVerification(
+    client: PoolClient,
     serializedZKEdDSATicket: string,
     telegramUserId: number,
     telegramChatId: number,
@@ -1180,7 +1244,7 @@ export class TelegramService {
       span?.setAttribute("validEventIds", validEventIds);
 
       const eventsByChat = await fetchTelegramEventsByChatId(
-        this.context.dbPool,
+        client,
         telegramChatId
       );
       if (eventsByChat.length === 0)
@@ -1197,7 +1261,7 @@ export class TelegramService {
       // We've verified that the chat exists, now add the user to our list.
       // This will be important later when the user requests to join.
       await insertTelegramVerification(
-        this.context.dbPool,
+        client,
         telegramUserId,
         telegramChatId,
         attendeeSemaphoreId,
@@ -1207,20 +1271,21 @@ export class TelegramService {
   }
 
   public async handleRequestReactProofLink(
+    client: PoolClient,
     anonPayload: ReactDataPayload
   ): Promise<string> {
     const react = decodeURIComponent(anonPayload.react);
     logger(`[TELEGRAM] got react`, react);
     logger(`[TELEGRAM] payoad id`, anonPayload.anonMessageId);
     const message = await fetchTelegramAnonMessagesById(
-      this.context.dbPool,
+      client,
       anonPayload.anonMessageId
     );
     if (!message) throw new Error(`Message to react to not found`);
 
     // Get valid event Ids
     const events = await fetchTelegramEventsByChatId(
-      this.context.dbPool,
+      client,
       message.telegram_chat_id
     );
     if (events.length === 0)
@@ -1239,6 +1304,7 @@ export class TelegramService {
   }
 
   public async handleReactAnonymousMessage(
+    client: PoolClient,
     serializedZKEdDSATicket: string,
     telegramChatId: string,
     anonMessageId: string,
@@ -1272,7 +1338,7 @@ export class TelegramService {
       span?.setAttribute("externalNullifier", externalNullifier);
 
       const eventsByChat = await fetchTelegramEventsByChatId(
-        this.context.dbPool,
+        client,
         telegramChatId
       );
       if (eventsByChat.length === 0)
@@ -1304,7 +1370,7 @@ export class TelegramService {
       }
 
       const anonMessage = await fetchTelegramAnonMessagesById(
-        this.context.dbPool,
+        client,
         anonMessageId
       );
       if (!anonMessage) {
@@ -1324,7 +1390,7 @@ export class TelegramService {
 
       try {
         await insertTelegramReaction(
-          this.context.dbPool,
+          client,
           serializedZKEdDSATicket,
           anonMessageId,
           reaction,
@@ -1346,7 +1412,7 @@ export class TelegramService {
       }
 
       const reactionsForMessage = await fetchTelegramReactionsForMessage(
-        this.context.dbPool,
+        client,
         anonMessageId
       );
 
@@ -1373,7 +1439,7 @@ export class TelegramService {
       });
 
       const message = await fetchTelegramAnonMessagesById(
-        this.context.dbPool,
+        client,
         anonMessageId
       );
       if (!message) throw new Error(`Message to react to not found`);
@@ -1393,134 +1459,140 @@ export class TelegramService {
     topicId: string
   ): Promise<void> {
     return traced("telegram", "handleSendAnonymousMessage", async (span) => {
-      span?.setAttribute("topicId", topicId);
-      span?.setAttribute("message", rawMessage);
-
-      logger("[TELEGRAM] Verifying anonymous message");
-
-      const pcd = await this.verifyZKEdDSAEventTicketPCD(
-        serializedZKEdDSATicket
-      );
-
-      if (!pcd) {
-        throw new Error("Could not verify PCD for anonymous message");
-      }
-
-      const { watermark, validEventIds, externalNullifier, nullifierHash } =
-        pcd.claim;
-
-      if (!validEventIds) {
-        throw new Error(`User did not submit any valid event ids`);
-      }
-
-      const eventsByChat = await fetchTelegramEventsByChatId(
+      return namedSqlTransaction(
         this.context.dbPool,
-        telegramChatId
-      );
-      if (eventsByChat.length === 0)
-        throw new Error(`No valid events found for given chat`);
-      if (!verifyUserEventIds(eventsByChat, validEventIds)) {
-        throw new Error(`User submitted event Ids are invalid `);
-      }
+        "handleSendAnonymousMessage",
+        async (client) => {
+          span?.setAttribute("topicId", topicId);
+          span?.setAttribute("message", rawMessage);
 
-      span?.setAttribute("chatId", telegramChatId);
+          logger("[TELEGRAM] Verifying anonymous message");
 
-      if (!watermark) {
-        throw new Error("Anonymous message PCD did not contain watermark");
-      }
-
-      if (getMessageWatermark(rawMessage).toString() !== watermark.toString()) {
-        throw new Error(
-          `Anonymous message string ${rawMessage} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(
-            rawMessage
-          ).toString()}`
-        );
-      }
-
-      logger(
-        `[TELEGRAM] Verified PCD for anonynmous message with events ${validEventIds}`
-      );
-
-      const topic = await fetchTelegramTopic(
-        this.context.dbPool,
-        parseInt(telegramChatId),
-        parseInt(topicId)
-      );
-
-      if (!topic || !topic.is_anon_topic || !topic.topic_id) {
-        throw new Error(`this group doesn't have any anon topics`);
-      }
-
-      // The event is linked to a chat. Make sure we can access it.
-      const chat = await getGroupChat(this.anonBot.api, telegramChatId);
-      span?.setAttribute("chatTitle", chat.title);
-
-      if (!nullifierHash) throw new Error(`Nullifier hash not found`);
-
-      const expectedExternalNullifier = getAnonTopicNullifier().toString();
-
-      if (externalNullifier !== expectedExternalNullifier)
-        throw new Error("Nullifier mismatch - try proving again.");
-
-      const nullifierData = await fetchAnonTopicNullifier(
-        this.context.dbPool,
-        nullifierHash,
-        topic.id
-      );
-
-      const currentTime = new Date();
-      const timestamp = currentTime.toISOString();
-
-      if (!nullifierData) {
-        await insertOrUpdateTelegramNullifier(
-          this.context.dbPool,
-          nullifierHash,
-          [timestamp],
-          topic.id
-        );
-      } else {
-        const timestamps = nullifierData.message_timestamps.map((t) =>
-          new Date(t).getTime()
-        );
-        const maxDailyPostsPerTopic = parseInt(
-          process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3"
-        );
-        const rlDuration = ONE_HOUR_MS * 24;
-        const { rateLimitExceeded, newTimestamps } =
-          checkSlidingWindowRateLimit(
-            timestamps,
-            maxDailyPostsPerTopic,
-            rlDuration
+          const pcd = await this.verifyZKEdDSAEventTicketPCD(
+            serializedZKEdDSATicket
           );
-        span?.setAttribute("rateLimitExceeded", rateLimitExceeded);
 
-        if (!rateLimitExceeded) {
-          await insertOrUpdateTelegramNullifier(
-            this.context.dbPool,
+          if (!pcd) {
+            throw new Error("Could not verify PCD for anonymous message");
+          }
+
+          const { watermark, validEventIds, externalNullifier, nullifierHash } =
+            pcd.claim;
+
+          if (!validEventIds) {
+            throw new Error(`User did not submit any valid event ids`);
+          }
+
+          const eventsByChat = await fetchTelegramEventsByChatId(
+            client,
+            telegramChatId
+          );
+          if (eventsByChat.length === 0)
+            throw new Error(`No valid events found for given chat`);
+          if (!verifyUserEventIds(eventsByChat, validEventIds)) {
+            throw new Error(`User submitted event Ids are invalid `);
+          }
+
+          span?.setAttribute("chatId", telegramChatId);
+
+          if (!watermark) {
+            throw new Error("Anonymous message PCD did not contain watermark");
+          }
+
+          if (
+            getMessageWatermark(rawMessage).toString() !== watermark.toString()
+          ) {
+            throw new Error(
+              `Anonymous message string ${rawMessage} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(
+                rawMessage
+              ).toString()}`
+            );
+          }
+
+          logger(
+            `[TELEGRAM] Verified PCD for anonynmous message with events ${validEventIds}`
+          );
+
+          const topic = await fetchTelegramTopic(
+            client,
+            parseInt(telegramChatId),
+            parseInt(topicId)
+          );
+
+          if (!topic || !topic.is_anon_topic || !topic.topic_id) {
+            throw new Error(`this group doesn't have any anon topics`);
+          }
+
+          // The event is linked to a chat. Make sure we can access it.
+          const chat = await getGroupChat(this.anonBot.api, telegramChatId);
+          span?.setAttribute("chatTitle", chat.title);
+
+          if (!nullifierHash) throw new Error(`Nullifier hash not found`);
+
+          const expectedExternalNullifier = getAnonTopicNullifier().toString();
+
+          if (externalNullifier !== expectedExternalNullifier)
+            throw new Error("Nullifier mismatch - try proving again.");
+
+          const nullifierData = await fetchAnonTopicNullifier(
+            client,
             nullifierHash,
-            newTimestamps,
             topic.id
           );
-        } else {
-          const rlError = new Error(
-            `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
-          );
-          rlError.name = "Rate limit exceeded";
-          throw rlError;
-        }
-      }
 
-      const payloadData: NullifierHashPayload = {
-        type: PayloadType.NullifierHash,
-        value: BigInt(nullifierHash).toString()
-      };
+          const currentTime = new Date();
+          const timestamp = currentTime.toISOString();
 
-      const encodedPayload = Buffer.from(
-        JSON.stringify(payloadData),
-        "utf-8"
-      ).toString("base64");
+          if (!nullifierData) {
+            await insertOrUpdateTelegramNullifier(
+              client,
+              nullifierHash,
+              [timestamp],
+              topic.id
+            );
+          } else {
+            const timestamps = nullifierData.message_timestamps.map((t) =>
+              new Date(t).getTime()
+            );
+            const maxDailyPostsPerTopic = parseInt(
+              process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3"
+            );
+            const rlDuration = ONE_HOUR_MS * 24;
+            const { rateLimitExceeded, newTimestamps } =
+              checkSlidingWindowRateLimit(
+                timestamps,
+                maxDailyPostsPerTopic,
+                rlDuration
+              );
+            span?.setAttribute("rateLimitExceeded", rateLimitExceeded);
 
-      const formattedMessage = `
+            if (!rateLimitExceeded) {
+              await insertOrUpdateTelegramNullifier(
+                client,
+                nullifierHash,
+                newTimestamps,
+                topic.id
+              );
+            } else {
+              const rlError = new Error(
+                `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
+              );
+              rlError.name = "Rate limit exceeded";
+              throw rlError;
+            }
+          }
+
+          const payloadData: NullifierHashPayload = {
+            type: PayloadType.NullifierHash,
+            value: BigInt(nullifierHash).toString()
+          };
+
+          const encodedPayload = Buffer.from(
+            JSON.stringify(payloadData),
+            "utf-8"
+          ).toString("base64");
+
+          const formattedMessage = `
       <b>${bigIntToPseudonymEmoji(BigInt(nullifierHash))} <u><a href="${
         process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
       }?startApp=${encodedPayload}&startapp=${encodedPayload}">${bigIntToPseudonymName(
@@ -1529,40 +1601,45 @@ export class TelegramService {
         "en-GB"
       )}</i>\n----------------------------------------------------------`;
 
-      const anonMessageId = uuidV1();
+          const anonMessageId = uuidV1();
 
-      const payloads = getDisplayEmojis().map((emoji) => {
-        return {
-          emoji,
-          payload: encodePayload(buildReactPayload(emoji, anonMessageId))
-        };
-      });
-      const link = process.env.TELEGRAM_ANON_BOT_DIRECT_LINK;
-      const buttons: InlineKeyboardButton[] = payloads.map((p) => {
-        return {
-          text: `${p.emoji}`,
-          url: `${link}?startApp=${p.payload}&startapp=${p.payload}`
-        };
-      });
+          const payloads = getDisplayEmojis().map((emoji) => {
+            return {
+              emoji,
+              payload: encodePayload(buildReactPayload(emoji, anonMessageId))
+            };
+          });
+          const link = process.env.TELEGRAM_ANON_BOT_DIRECT_LINK;
+          const buttons: InlineKeyboardButton[] = payloads.map((p) => {
+            return {
+              text: `${p.emoji}`,
+              url: `${link}?startApp=${p.payload}&startapp=${p.payload}`
+            };
+          });
 
-      const replyMarkup: InlineKeyboardMarkup = { inline_keyboard: [buttons] };
-      const message = await this.sendToAnonymousChannel(
-        chat.id,
-        parseInt(topic.topic_id),
-        formattedMessage,
-        replyMarkup
-      );
-      if (!message) throw new Error(`Failed to send telegram message`);
+          const replyMarkup: InlineKeyboardMarkup = {
+            inline_keyboard: [buttons]
+          };
+          const message = await this.sendToAnonymousChannel(
+            client,
+            chat.id,
+            parseInt(topic.topic_id),
+            formattedMessage,
+            replyMarkup
+          );
+          if (!message) throw new Error(`Failed to send telegram message`);
 
-      await insertTelegramAnonMessage(
-        this.context.dbPool,
-        anonMessageId,
-        nullifierHash,
-        topic.id,
-        rawMessage,
-        serializedZKEdDSATicket,
-        timestamp,
-        message.message_id
+          await insertTelegramAnonMessage(
+            client,
+            anonMessageId,
+            nullifierHash,
+            topic.id,
+            rawMessage,
+            serializedZKEdDSATicket,
+            timestamp,
+            message.message_id
+          );
+        }
       );
     });
   }
@@ -1575,51 +1652,60 @@ export class TelegramService {
       "telegram",
       "handleRequestAnonymousMessageLink",
       async (span) => {
-        // Confirm that topicId exists and is anonymous
-        const topic = await fetchTelegramTopic(
+        return namedSqlTransaction(
           this.context.dbPool,
-          telegramChatId,
-          topicId
-        );
+          "handleRequestAnonymousMessageLink",
+          async (client) => {
+            // Confirm that topicId exists and is anonymous
+            const topic = await fetchTelegramTopic(
+              client,
+              telegramChatId,
+              topicId
+            );
 
-        if (!topic || !topic.is_anon_topic || !topic.topic_id)
-          throw new Error(`No anonymous topic found`);
+            if (!topic || !topic.is_anon_topic || !topic.topic_id)
+              throw new Error(`No anonymous topic found`);
 
-        // Get valid eventIds for this chat
-        const telegramEvents = await fetchTelegramEventsByChatId(
-          this.context.dbPool,
-          telegramChatId
-        );
-        if (telegramEvents.length === 0)
-          throw new Error(`No events associated with this group`);
+            // Get valid eventIds for this chat
+            const telegramEvents = await fetchTelegramEventsByChatId(
+              client,
+              telegramChatId
+            );
+            if (telegramEvents.length === 0)
+              throw new Error(`No events associated with this group`);
 
-        const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
+            const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
 
-        const encodedTopicData = encodeTopicData({
-          type: PayloadType.AnonTopicDataPayload,
-          value: {
-            chatId: telegramChatId,
-            topicName: topic.topic_name,
-            topicId: parseInt(topic.topic_id),
-            validEventIds
+            const encodedTopicData = encodeTopicData({
+              type: PayloadType.AnonTopicDataPayload,
+              value: {
+                chatId: telegramChatId,
+                topicName: topic.topic_name,
+                topicId: parseInt(topic.topic_id),
+                validEventIds
+              }
+            });
+
+            const url = `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`;
+            span?.setAttribute(`redirect url`, url);
+            logger(
+              `[TELEGRAM] generated redirect url to ${process.env.TELEGRAM_ANON_WEBSITE}`
+            );
+
+            return url;
           }
-        });
-
-        const url = `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`;
-        span?.setAttribute(`redirect url`, url);
-        logger(
-          `[TELEGRAM] generated redirect url to ${process.env.TELEGRAM_ANON_WEBSITE}`
         );
-
-        return url;
       }
     );
   }
 
-  public async handleGetAnonTotalKarma(nulliferHash: string): Promise<number> {
+  public async handleGetAnonTotalKarma(
+    client: PoolClient,
+    nulliferHash: string
+  ): Promise<number> {
     return traced("telegram", "handleGetAnonTotalKarma", async () => {
       const totalKarma = await fetchTelegramTotalKarmaForNullifier(
-        this.context.dbPool,
+        client,
         nulliferHash
       );
       return totalKarma;
@@ -1627,11 +1713,12 @@ export class TelegramService {
   }
 
   public async handleGetAnonMessages(
+    client: PoolClient,
     nullifierHash: string
   ): Promise<AnonMessageWithDetails[]> {
     return traced("telegram", "handleGetAnonMessages", async () => {
       const messages = await fetchTelegramAnonMessagesWithTopicByNullifier(
-        this.context.dbPool,
+        client,
         nullifierHash
       );
 

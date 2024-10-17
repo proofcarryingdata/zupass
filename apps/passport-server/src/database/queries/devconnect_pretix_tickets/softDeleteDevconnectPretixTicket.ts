@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { DevconnectPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -6,7 +6,7 @@ import { sqlQuery } from "../../sqlQuery";
  * Soft delete a Devconnect ticket.
  */
 export async function softDeleteDevconnectPretixTicket(
-  client: Pool,
+  client: PoolClient,
   params: DevconnectPretixTicket
 ): Promise<void> {
   await sqlQuery(
