@@ -6,7 +6,7 @@ import {
   isEqualEdDSAPublicKey
 } from "@pcd/eddsa-pcd";
 import {
-  LEMONADE_EDDSA_PUBKEY,
+  DEVCON_2024_EDDSA_PUBKEY,
   NullifierHashPayload,
   PayloadType,
   ReactDataPayload,
@@ -952,12 +952,10 @@ export class TelegramService {
    * Returns all EdDSA public keys that have been whitelisted to
    * sign ticket PCDs that gate entry into Telegram groups. This
    * includes the Zupass public key that signs Zuzalu, Devconnect,
-   * and ZuConnect PCDs, the Lemonade public key that signs legacy
-   * Edge City PCDs, and the generic issuance public key that signs
-   * all other ticket PCDs, including the new Edge City PCDs.
+   * and ZuConnect PCDs, the Devcon public key that signs Devcon SEA
+   * ticket PCDs, and the generic issuance public key that signs
+   * all other ticket PCDs.
    *
-   * TODO: Remove LEMONADE_EDDSA_PUBKEY once the original Edge City
-   * feed server has been deprecated.
    */
   private async getExpectedTicketSigners(): Promise<EdDSAPublicKey[]> {
     if (!process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY)
@@ -972,7 +970,7 @@ export class TelegramService {
     );
     return [
       ZUPASS_EDDSA_PUBKEY,
-      LEMONADE_EDDSA_PUBKEY,
+      DEVCON_2024_EDDSA_PUBKEY,
       GENERIC_ISSUANCE_EDDSA_PUBKEY
     ];
   }
