@@ -27,8 +27,8 @@ import isEqual from "lodash/isEqual";
 import uniq from "lodash/uniq";
 import { Identity as IdentityV4 } from "semaphore-identity-v4";
 import {
-  ClosedInterval,
   GPCBoundConfig,
+  GPCClosedInterval,
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryBoundsCheckConfig,
@@ -372,7 +372,7 @@ export function checkProofEntryBoundsCheckConfig(
   for (const [checkType, inRange] of [
     ["bounds check", boundsCheckConfig.inRange],
     ["out of bounds check", boundsCheckConfig.notInRange]
-  ] as [string, ClosedInterval][]) {
+  ] as [string, GPCClosedInterval][]) {
     if (inRange !== undefined) {
       if (inRange.min < POD_INT_MIN) {
         throw new RangeError(

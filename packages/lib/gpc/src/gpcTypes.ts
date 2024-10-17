@@ -164,7 +164,7 @@ export type GPCProofEntryConfigCommon = {
 /**
  * Convenient type for closed intervals used in (out of) bounds/range checks.
  */
-export type ClosedInterval = { min: bigint; max: bigint };
+export type GPCClosedInterval = { min: bigint; max: bigint };
 
 /**
  * Bounds check configuration for an individual entry. This specifies the bounds
@@ -177,7 +177,7 @@ export type GPCProofEntryBoundsCheckConfig = {
    * signed 64-bit integer values. They will always be revealed by virtue of
    * their inclusion in the proof configuration.
    */
-  inRange?: ClosedInterval;
+  inRange?: GPCClosedInterval;
 
   /**
    * Indicates the range/interval/bounds outside of which this entry should
@@ -185,7 +185,7 @@ export type GPCProofEntryBoundsCheckConfig = {
    * 64-bit integer values. They will always be revealed by virtue of their
    * inclusion in the proof configuration.
    */
-  notInRange?: ClosedInterval;
+  notInRange?: GPCClosedInterval;
 };
 
 /**

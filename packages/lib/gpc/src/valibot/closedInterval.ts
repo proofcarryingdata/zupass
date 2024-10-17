@@ -1,5 +1,5 @@
 import * as v from "valibot";
-import { ClosedInterval } from "../gpcTypes";
+import { GPCClosedInterval } from "../gpcTypes";
 import * as ValibotBigInt from "./bigint";
 import { valibotParse } from "./valibotUtil";
 
@@ -14,7 +14,7 @@ export const Schema = {
   })
 };
 
-export type TSType = ClosedInterval;
+export type TSType = GPCClosedInterval;
 export type JSONType = v.InferOutput<typeof Schema.ToJSON>;
 
 //

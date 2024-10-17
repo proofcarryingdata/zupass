@@ -14,8 +14,8 @@ import {
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import _ from "lodash";
 import {
-  ClosedInterval,
   GPCBoundConfig,
+  GPCClosedInterval,
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryBoundsCheckConfig,
@@ -213,8 +213,8 @@ export function canonicalizeEntryConfig(
 }
 
 export function canonicalizeBoundsCheckConfig(
-  inRange: ClosedInterval | undefined,
-  notInRange: ClosedInterval | undefined
+  inRange: GPCClosedInterval | undefined,
+  notInRange: GPCClosedInterval | undefined
 ): GPCProofEntryBoundsCheckConfig {
   // Throw if an invalid interval is specified to avoid invalid
   // canonicalisations.
