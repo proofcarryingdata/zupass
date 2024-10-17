@@ -50,7 +50,15 @@ export function PODTicketCardBodyImpl({
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        <TicketQR ticketData={ticketData} idBasedVerifyURL={idBasedVerifyURL} />
+        {!ticketData.imageUrl && (
+          <TicketQR
+            ticketData={ticketData}
+            idBasedVerifyURL={idBasedVerifyURL}
+          />
+        )}
+        {ticketData.imageUrl && (
+          <TicketImage hidePadding={true} ticketData={ticketData} />
+        )}
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
             {ticketData?.attendeeName.toUpperCase() || "Unknown"}
@@ -149,22 +157,22 @@ export function linkToTicket(
   ).toString("base64");
   return makeIdBasedVerifyLink(baseUrl, encodedId);
 }
-// TODO: implement QRCode hide mechanism
-// function TicketImage({
-//   ticketData,
-//   hidePadding
-// }: {
-//   ticketData: IPODTicketData;
-//   hidePadding?: boolean;
-// }): JSX.Element {
-//   const { imageUrl, imageAltText } = ticketData;
-//   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
-//   return (
-//     <div style={{ padding: "8px" }}>
-//       <img src={imageUrl} alt={imageAltText} />
-//     </div>
-//   );
-// }
+
+function TicketImage({
+  ticketData,
+  hidePadding
+}: {
+  ticketData: IPODTicketData;
+  hidePadding?: boolean;
+}): JSX.Element {
+  const { imageUrl, imageAltText } = ticketData;
+  if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
+  return (
+    <div style={{ padding: "8px" }}>
+      <img src={imageUrl} alt={imageAltText} />
+    </div>
+  );
+}
 
 const NEW_UI__Container = styled.div`
   font-family: Rubik;
