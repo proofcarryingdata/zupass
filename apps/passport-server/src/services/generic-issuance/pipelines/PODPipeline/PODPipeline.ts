@@ -354,11 +354,7 @@ export class PODPipeline implements BasePipeline {
           );
 
           // TODO(artwyman): Figure out how to phase out this use of the deprecated format.
-<<<<<<< HEAD
           const id = uuidv5(JSON.stringify(podEntriesToJSON(entries)), this.id);
-=======
-          const id = uuidv5(serializePODEntries(entries), this.id);
->>>>>>> 4ed9e9fd2 (GPCPCD uses JSON for PODValues)
 
           let serializedPCD = await this.getCachedPCD(id);
           if (serializedPCD) {
