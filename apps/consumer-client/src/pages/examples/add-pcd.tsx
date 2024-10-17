@@ -44,12 +44,14 @@ import { derivePublicKey } from "@zk-kit/eddsa-poseidon";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { useEffect, useState } from "react";
+import urlJoin from "url-join";
 import { v4 as uuid } from "uuid";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import {
   EVERYONE_SEMAPHORE_GROUP_URL,
   GPC_ARTIFACT_CONFIG,
+  MINT_SERVER_URL,
   ZUPASS_URL
 } from "../../constants";
 import {
@@ -95,7 +97,7 @@ export default function Page(): JSX.Element {
     setPODPublicKey2(encodePublicKey(derivePublicKey(decodePrivateKey(key))));
   };
   const [podMintUrl, setPODMintUrl] = useState(
-    `${process.env.CONSUMER_SERVER_URL}:4000/api/mintPOD`
+    urlJoin(MINT_SERVER_URL, "api/sign")
   );
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
   const [membershipLists, setMembershipLists] = useState(
@@ -322,7 +324,7 @@ export default function Page(): JSX.Element {
             type="text"
             value={podMintUrl}
             placeholder="Enter mint URL..."
-            style={{ marginLeft: "16px" }}
+            style={{ width: "200px", marginLeft: "16px" }}
             onChange={(e): void => {
               setPODMintUrl(e.target.value);
             }}

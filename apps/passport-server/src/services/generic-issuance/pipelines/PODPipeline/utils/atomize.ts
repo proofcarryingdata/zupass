@@ -1,14 +1,9 @@
 import { PODPipelineOutput } from "@pcd/passport-interface";
+import { PODContent, PODEntries, podEntriesToJSON, PODValue } from "@pcd/pod";
 import {
-  PODContent,
-  PODEntries,
-  PODValue,
-  serializePODEntries
-} from "@pcd/pod";
-import {
+  getInputToPODValueConverter,
   InputColumn,
-  InputRow,
-  getInputToPODValueConverter
+  InputRow
 } from "@pcd/podbox-shared";
 import { assertUnreachable } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
@@ -84,8 +79,10 @@ export function atomize(
   // POD uses for sorting and validating entries and their keys.
   const sortedEntries = PODContent.fromEntries(entries).asEntries();
 
-  // TODO(artwyman): Figure out how to phase out this use of the deprecated format.
-  const id = uuidv5(serializePODEntries(sortedEntries), pipelineId);
+  const id = uuidv5(
+    JSON.stringify(podEntriesToJSON(sortedEntries)),
+    pipelineId
+  );
 
   return { entries, outputId, id, matchTo: output.match };
 }

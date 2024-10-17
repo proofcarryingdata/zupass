@@ -21,6 +21,7 @@ export const ZUPASS_SERVER_URL_ENV = sanitizeEnv(
 export const CONSUMER_SERVER_URL_ENV = sanitizeEnv(
   process.env.CONSUMER_SERVER_URL
 );
+export const MINT_SERVER_URL_ENV = sanitizeEnv(process.env.MINT_SERVER_URL);
 
 export const ZUPASS_URL = ZUPASS_CLIENT_URL_ENV
   ? ZUPASS_CLIENT_URL_ENV
@@ -53,6 +54,10 @@ export const CONSUMER_SERVER_URL = CONSUMER_SERVER_URL_ENV
   : IS_STAGING
   ? "https://consumer-server-staging.onrender.com/"
   : "http://localhost:3003/";
+
+export const MINT_SERVER_URL = MINT_SERVER_URL_ENV
+  ? MINT_SERVER_URL_ENV
+  : "http://localhost:4000/";
 
 export const GPC_ARTIFACT_CONFIG = parseGPCArtifactsConfig(
   sanitizeEnv(process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE)
