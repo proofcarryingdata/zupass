@@ -1,12 +1,7 @@
 import { PCDCollection } from "@pcd/pcd-collection";
 import type { POD } from "@pcd/pod";
 import { isPODPCD } from "@pcd/pod-pcd";
-import {
-  PODTicketPCD,
-  PODTicketPCDTypeName,
-  isPODTicketPCD,
-  ticketToPOD
-} from "@pcd/pod-ticket-pcd";
+import { PODTicketPCD, isPODTicketPCD, ticketToPOD } from "@pcd/pod-ticket-pcd";
 
 export const COLLECTIONS_ROOT_FOLDER_NAME = "Collections";
 
@@ -24,10 +19,8 @@ export function getPODsForCollections(
 ): POD[] {
   return collectionIds
     .flatMap((collectionId) =>
-      collectionId === "Devcon Swag"
-        ? pcds
-            .getPCDsByType(PODTicketPCDTypeName)
-            .filter((pcd) => (pcd as PODTicketPCD).claim.ticket.isAddOn)
+      collectionId === "Devcon 7"
+        ? pcds.getAllPCDsInFolder("Devcon 7")
         : pcds.getAllPCDsInFolder(collectionIdToFolderName(collectionId))
     )
     .filter((pcd) => isPODPCD(pcd) || isPODTicketPCD(pcd))
