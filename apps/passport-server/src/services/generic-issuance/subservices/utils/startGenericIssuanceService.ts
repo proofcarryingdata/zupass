@@ -3,7 +3,7 @@ import { RollbarService } from "@pcd/server-shared";
 import stytch, { Client } from "stytch";
 import { ILemonadeAPI } from "../../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
-import { ApplicationContext } from "../../../../types";
+import { ApplicationContext, ServerMode } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { DiscordService } from "../../../discordService";
 import { EmailService } from "../../../emailService";
