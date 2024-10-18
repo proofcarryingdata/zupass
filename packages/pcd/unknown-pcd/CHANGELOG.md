@@ -1,4 +1,4 @@
-# @pcd/podspec
+# @pcd/unknown-pcd
 
 ## 0.2.0
 
@@ -9,7 +9,7 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @pcd/pod@0.3.0
+  - @pcd/pcd-types@0.13.0
 
 ## 0.1.0
 
@@ -20,18 +20,4 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @pcd/pod@0.2.0
-
-## 0.0.4
-
-### Patch Changes
-
-- Updated dependencies
-  - @pcd/pod@0.1.7
-
-## 0.0.3
-
-### Patch Changes
-
-- Updated dependencies
-  - @pcd/pod@0.1.6
+  - @pcd/pcd-types@0.12.0

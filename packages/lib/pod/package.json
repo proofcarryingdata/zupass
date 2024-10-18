@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pod",
-  "version": "0.1.7",
+  "version": "0.3.0",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -38,7 +38,7 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/util": "0.5.4",
+    "@pcd/util": "0.7.0",
     "@zk-kit/eddsa-poseidon": "1.0.3",
     "@zk-kit/lean-imt": "2.2.1",
     "@zk-kit/utils": "1.2.1",
@@ -46,10 +46,10 @@
     "poseidon-lite": "^0.3.0"
   },
   "devDependencies": {
-    "@pcd/eddsa-pcd": "0.6.5",
-    "@pcd/eslint-config-custom": "0.11.4",
-    "@pcd/pcd-types": "0.11.4",
-    "@pcd/tsconfig": "0.11.4",
+    "@pcd/eddsa-pcd": "0.8.0",
+    "@pcd/eslint-config-custom": "0.13.0",
+    "@pcd/pcd-types": "0.13.0",
+    "@pcd/tsconfig": "0.13.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/circomlibjs": "^0.1.6",
     "@types/chai": "^4.3.5",

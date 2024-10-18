@@ -4,10 +4,7 @@
 # example to publish to Verdaccio you might set REGISTRY=http://localhost:4873
 : "${REGISTRY:=https://registry.npmjs.org}"
 
-# Create the changeset, selecting which packages are included
-yarn changeset
-# Assign new versions to affected packages
-yarn changeset version 
+# Assumes that new-version-prepare has already run to generate new versions.
 
 # The path to this script, i.e. one level down from the root of the repo
 full_path=$(realpath $0)
