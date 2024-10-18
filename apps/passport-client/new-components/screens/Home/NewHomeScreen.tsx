@@ -11,9 +11,15 @@ import { uniqWith } from "lodash";
 import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
-import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import styled, {
+  FlattenSimpleInterpolation,
+  css,
+  keyframes
+} from "styled-components";
+import { ZappScreen } from "../../../components/screens/ZappScreens/ZappScreen";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
+import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
   useLoadedIssuedPCDs,
@@ -227,6 +233,7 @@ export const NewHomeScreen = (): ReactElement => {
   const self = useSelf();
   const navigate = useNavigate();
   const isLoadedPCDs = useLoadedIssuedPCDs();
+  const [zappUrl, setZappUrl] = useState("");
 
   const isInvalidUser = useUserForcedToLogout();
   useEffect(() => {
@@ -257,7 +264,23 @@ export const NewHomeScreen = (): ReactElement => {
     );
   }
 
-  // if the user is invalid we show empty card and trigger a session invalid modal
+  if (zappUrl) {
+    return (
+      <AppContainer
+        bg="gray"
+        noPadding={tickets.length > 0}
+        fullscreen={tickets.length > 0}
+      >
+        <SwipeViewContainer>
+          <FloatingReturnButton onClick={() => setZappUrl("")}>
+            <span>Back to Zupass</span>
+          </FloatingReturnButton>
+          <ZappScreen url={zappUrl} />
+        </SwipeViewContainer>
+      </AppContainer>
+    );
+  }
+
   return (
     <AppContainer
       bg="gray"
@@ -298,46 +321,74 @@ export const NewHomeScreen = (): ReactElement => {
                       ticketCount={packs.length}
                       cardColor={i % 2 === 0 ? "purple" : "orange"}
                     />
-                    <TicketsContainer
-                      $width={cardWidth}
-                      key={packs.map((pack) => pack.eventTicket.id).join("-")}
-                    >
-                      {packs.map((pack) => {
-                        return (
-                          <CardBody
-                            key={pack.eventName}
-                            addOns={
-                              pack.addOns.length > 0
-                                ? {
-                                    text: `View ${pack.addOns.length} add-on items`,
-                                    onClick(): void {
-                                      dispatch({
-                                        type: "set-bottom-modal",
-                                        modal: {
-                                          addOns: pack.addOns,
-                                          modalType: "ticket-add-ons"
-                                        }
-                                      });
+                    <ZappsAndTicketsContainer>
+                      {Object.keys(appConfig.embeddedZapps).length && (
+                        <ZappButtonsContainer>
+                          {Object.entries(appConfig.embeddedZapps).map(
+                            ([zappName, url]) => (
+                              <ZappButton
+                                key={zappName}
+                                onClick={() => setZappUrl(url)}
+                              >
+                                {zappName === "frogcrypto" ? (
+                                  <>
+                                    <SuperFunkyFont>
+                                      {zappName.split("").map((letter, i) => (
+                                        <BounceText key={i} delay={i * 0.1}>
+                                          {letter}
+                                        </BounceText>
+                                      ))}
+                                    </SuperFunkyFont>
+                                  </>
+                                ) : (
+                                  zappName
+                                )}
+                              </ZappButton>
+                            )
+                          )}
+                        </ZappButtonsContainer>
+                      )}
+                      <TicketsContainer
+                        $width={cardWidth}
+                        key={packs.map((pack) => pack.eventTicket.id).join("-")}
+                      >
+                        {packs.map((pack) => {
+                          return (
+                            <CardBody
+                              key={pack.eventName}
+                              addOns={
+                                pack.addOns.length > 0
+                                  ? {
+                                      text: `View ${pack.addOns.length} add-on items`,
+                                      onClick(): void {
+                                        dispatch({
+                                          type: "set-bottom-modal",
+                                          modal: {
+                                            addOns: pack.addOns,
+                                            modalType: "ticket-add-ons"
+                                          }
+                                        });
+                                      }
                                     }
-                                  }
-                                : undefined
-                            }
-                            ref={(ref) => {
-                              if (!ref) return;
-                              const group = ticketsRef.current.get(eventId);
-                              if (!group) {
-                                ticketsRef.current.set(eventId, [ref]);
-                                return;
+                                  : undefined
                               }
-                              group.push(ref);
-                            }}
-                            newUI={true}
-                            pcd={pack.eventTicket}
-                            isMainIdentity={false}
-                          />
-                        );
-                      })}
-                    </TicketsContainer>
+                              ref={(ref) => {
+                                if (!ref) return;
+                                const group = ticketsRef.current.get(eventId);
+                                if (!group) {
+                                  ticketsRef.current.set(eventId, [ref]);
+                                  return;
+                                }
+                                group.push(ref);
+                              }}
+                              newUI={true}
+                              pcd={pack.eventTicket}
+                              isMainIdentity={false}
+                            />
+                          );
+                        })}
+                      </TicketsContainer>
+                    </ZappsAndTicketsContainer>
                   </Container>
                 );
               })}
@@ -390,3 +441,105 @@ export const NewHomeScreen = (): ReactElement => {
     </AppContainer>
   );
 };
+
+export const ZappsAndTicketsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;
+
+export const SuperFunkyFont = styled.div`
+  font-family: "SuperFunky";
+  font-size: 20px;
+  display: flex;
+  user-select: none;
+
+  * {
+    background-size: 100%;
+    background-color: #ff9900 !important;
+    color: #ff9900;
+    background-image: linear-gradient(45deg, #ff9900, #afffbc);
+    -webkit-background-clip: text;
+    -moz-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -moz-text-fill-color: transparent;
+  }
+`;
+
+const bounceKeyframes = keyframes`
+  0% {
+      transform: scale(1, 1) translateY(0);
+    }
+    2% {
+      transform: scale(1.1, 0.9) translateY(0);
+    }
+    5% {
+      transform: scale(0.9, 1.1) translateY(-10px);
+    }
+    10% {
+      transform: scale(1.05, 0.95) translateY(0);
+    }
+    12% {
+      transform: scale(1, 1) translateY(-2px);
+    }
+    15% {
+      transform: scale(1, 1) translateY(0);
+    }
+    100% {
+      transform: scale(1, 1) translateY(0);
+    }
+`;
+
+const BounceText = styled.span<{ delay: number }>`
+  animation: ${bounceKeyframes} 5s infinite ${(p): number => p.delay}s;
+  -webkit-animation: ${bounceKeyframes} 5s infinite ${(p): number => p.delay}s;
+`;
+
+const ZappButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+`;
+
+const ZappButton = styled.button`
+  text-align: center;
+  display: flex;
+  padding: 16px 20px;
+  justify-content: center;
+  align-items: center;
+  align-self: stretch;
+
+  border-radius: 20px;
+  border: 2px solid #fff;
+  background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
+
+  /* shadow-sm */
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+`;
+
+const FloatingReturnButton = styled.div`
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 2;
+  transform: translateX(-50%);
+
+  display: inline-flex;
+  padding: 8px 20px;
+  align-items: flex-start;
+
+  border-radius: 200px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(8px);
+
+  /* text */
+  color: #fff;
+  text-align: center;
+  font-family: Rubik;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 135%;
+`;
