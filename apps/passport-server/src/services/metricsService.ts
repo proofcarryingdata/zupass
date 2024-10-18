@@ -3,7 +3,7 @@ import { getCacheSize } from "../database/queries/cache";
 import { fetchE2EEStorageCount } from "../database/queries/e2ee";
 import { fetchUserCount } from "../database/queries/users";
 import { namedSqlTransaction } from "../database/sqlQuery";
-import { ApplicationContext } from "../types";
+import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
 
@@ -91,7 +91,19 @@ export class MetricsService {
 export function startMetricsService(
   context: ApplicationContext,
   rollbarService: RollbarService | null
-): MetricsService {
+): MetricsService | null {
+  if (![ServerMode.UNIFIED, ServerMode.PARALLEL_MAIN].includes(context.mode)) {
+    logger(
+      `[INIT] metrics service not started, not in unified or parallel main mode`
+    );
+    return null;
+  }
+
+  if (process.env.DISABLE_JOBS === "true") {
+    logger("[INIT] generic issuance service not starting because DISABLE_JOBS");
+    return null;
+  }
+
   logger("[INIT] Starting metrics");
   const metricsService = new MetricsService(context, rollbarService);
   metricsService.start();

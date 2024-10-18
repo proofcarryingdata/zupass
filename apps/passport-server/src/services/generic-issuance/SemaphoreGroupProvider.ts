@@ -146,7 +146,7 @@ export class SemaphoreGroupProvider {
     return traced(LOG_NAME, "start", async (span) => {
       span?.setAttribute("pipeline_id", this.pipelineId);
 
-      sqlTransaction(this.context.dbPool, async (client) => {
+      await sqlTransaction(this.context.dbPool, async (client) => {
         // This should be called during pipeline startup.
         // If an exception throws, it will stop the pipeline from starting.
         const latestGroups =

@@ -1,3 +1,7 @@
+import process from "process";
+
+const PID = process.pid;
+
 /**
  * Use in place of `console.log` so that server logs can be turned off.
  */
@@ -6,6 +10,11 @@ export function logger(...args: unknown[]): void {
     return;
   }
 
-  // eslint-disable-next-line no-console
-  console.log(...args);
+  if (process.env.ENABLE_CLUSTER === "true") {
+    // eslint-disable-next-line no-console
+    console.log(`[${PID}]`, ...args);
+  } else {
+    // eslint-disable-next-line no-console
+    console.log(...args);
+  }
 }
