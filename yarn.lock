@@ -5229,6 +5229,16 @@
     "@pcd/pod" "^0.1.7"
     valibot "^0.42.0"
 
+"@parcnet-js/client-rpc@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-1.1.0.tgz#ac4dc2b322243887d17a0f6c3797eef70121b04e"
+  integrity sha512-x5ij94+9Of8R96zzo2d8vonZuNUnhCMfzbfG8fCXo39BcfgohjY9T9+Q3bzUFAX/fZPCoD2cOTRaO2yh64xdOQ==
+  dependencies:
+    "@parcnet-js/podspec" "1.1.0"
+    "@pcd/gpc" "^0.2.0"
+    "@pcd/pod" "^0.3.0"
+    valibot "^0.42.0"
+
 "@parcnet-js/podspec@1.0.0", "@parcnet-js/podspec@^1.0.0":
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-1.0.0.tgz#b5093d2d5fd2a1433ea9129d7075d401a528d791"
@@ -5236,6 +5246,14 @@
   dependencies:
     "@pcd/gpc" "0.0.8"
     "@pcd/pod" "0.1.7"
+
+"@parcnet-js/podspec@1.1.0", "@parcnet-js/podspec@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-1.1.0.tgz#be161ecc10370a179ac34736d348ea9352fade33"
+  integrity sha512-uFnITEppLWRWmRr4LxEr6eWNdJyyTBaDxQ8XGRcPAu46dEabPsYuYb8WRdAKIXUP6rQ0jWM7OMwpyknZ5fit6w==
+  dependencies:
+    "@pcd/gpc" "0.2.0"
+    "@pcd/pod" "0.3.0"
 
 "@parcnet-js/ticket-spec@^1.0.0":
   version "1.0.0"
