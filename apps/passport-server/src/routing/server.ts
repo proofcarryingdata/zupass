@@ -47,6 +47,8 @@ export async function startHttpServer(
       port = getClusterPort();
     }
 
+    logger(`[INIT] Starting HTTP server on port ${port}`);
+
     if (isNaN(port)) {
       throw new Error("couldn't start http server, missing port");
     }

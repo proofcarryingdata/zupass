@@ -54,10 +54,10 @@ async function main(): Promise<void> {
         );
       });
     } else {
-      startApplication(ServerMode.PARALLEL_CHILD);
+      await startApplication(ServerMode.PARALLEL_CHILD);
     }
   } else {
-    startApplication(ServerMode.UNIFIED);
+    await startApplication(ServerMode.UNIFIED);
   }
 }
 
