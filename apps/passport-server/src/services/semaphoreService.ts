@@ -446,7 +446,14 @@ export class SemaphoreService {
 
 export function startSemaphoreService(
   context: ApplicationContext
-): SemaphoreService {
+): SemaphoreService | null {
+  if (![ServerMode.UNIFIED, ServerMode.PARALLEL_MAIN].includes(context.mode)) {
+    logger(
+      `[INIT] semaphore service not started, not in unified or parallel main mode`
+    );
+    return null;
+  }
+
   const semaphoreService = new SemaphoreService(context);
   semaphoreService.start();
   semaphoreService.scheduleReload();
