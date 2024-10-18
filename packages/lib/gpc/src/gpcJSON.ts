@@ -194,5 +194,3 @@ export function podMembershipListsToJSON(
 ): JSONPODMembershipLists {
   return ValibotMembershipLists.toJSON(membershipLists);
 }
-
-// TODO(artwyman): JSONProofInputs?
