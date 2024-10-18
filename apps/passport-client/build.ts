@@ -161,7 +161,9 @@ async function run(command: string): Promise<void> {
         ...serviceWorkerOpts,
         define: {
           ...serviceWorkerOpts.define,
-          "process.env.GENERATED_CHUNKS": JSON.stringify(generatedChunks)
+          "process.env.GENERATED_CHUNKS": JSON.stringify(
+            JSON.stringify(generatedChunks)
+          )
         },
         minify: true
       });

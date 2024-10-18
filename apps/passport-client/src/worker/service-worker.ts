@@ -32,7 +32,7 @@ const CACHE_VERSION = "v2";
  * These will be included in the EPHMERAL_CACHE_RESOURCES set below.
  */
 const GENERATED_CHUNKS: string[] = JSON.parse(
-  process.env.GENERATED_CHUNKS || "[]"
+  process.env.GENERATED_CHUNKS ?? "[]"
 );
 
 /**
