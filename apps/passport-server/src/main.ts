@@ -23,33 +23,6 @@ dotenv.config({ path: dotEnvPath });
 
 const clusterEnabled = process.env.ENABLE_CLUSTER === "true";
 
-// see https://nodejs.org/api/cluster.html
-// see apps/passport-server/src/routing/middlewares/clusterMiddleware.ts
-if (clusterEnabled) {
-  if (cluster.isPrimary) {
-    const clusterSize = getClusterSize();
-
-    logger(`[CLUSTER] Starting ${clusterSize} workers`);
-
-    for (let i = 0; i < clusterSize; i++) {
-      logger(`[CLUSTER] Starting worker ${i}`);
-      cluster.fork();
-    }
-
-    cluster.on("exit", (worker, code, signal) => {
-      logger(
-        `[CLUSTER] worker ${worker.process.pid} died with code ${code} and signal ${signal}`
-      );
-    });
-
-    startApplication(ServerMode.PARALLEL_MAIN);
-  } else {
-    startApplication(ServerMode.PARALLEL_CHILD);
-  }
-} else {
-  startApplication(ServerMode.UNIFIED);
-}
-
 function getClusterSize(): number {
   const numCPUs = os.cpus().length;
   const numWorkers = parseInt(process.env.CLUSTER_PROCESSES ?? `${numCPUs}`);
@@ -58,3 +31,42 @@ function getClusterSize(): number {
   }
   return Math.max(1, Math.min(numWorkers, numCPUs));
 }
+
+async function main(): Promise<void> {
+  // see https://nodejs.org/api/cluster.html
+  // see apps/passport-server/src/routing/middlewares/clusterMiddleware.ts
+  if (clusterEnabled) {
+    if (cluster.isPrimary) {
+      await startApplication(ServerMode.PARALLEL_MAIN);
+
+      const clusterSize = getClusterSize();
+
+      logger(`[CLUSTER] Starting ${clusterSize} workers`);
+
+      for (let i = 0; i < clusterSize; i++) {
+        logger(`[CLUSTER] Starting worker ${i}`);
+        cluster.fork();
+      }
+
+      cluster.on("exit", (worker, code, signal) => {
+        logger(
+          `[CLUSTER] worker ${worker.process.pid} died with code ${code} and signal ${signal}`
+        );
+      });
+    } else {
+      startApplication(ServerMode.PARALLEL_CHILD);
+    }
+  } else {
+    startApplication(ServerMode.UNIFIED);
+  }
+}
+
+main()
+  .then(() => {
+    logger("[INIT] Application started");
+  })
+  .catch((error) => {
+    logger("[INIT] Application failed to start");
+    logger(error);
+    process.exit(0);
+  });
