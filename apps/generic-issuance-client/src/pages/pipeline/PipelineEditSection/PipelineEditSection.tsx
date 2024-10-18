@@ -4,6 +4,7 @@ import {
   PipelineDefinition,
   PipelineInfoResponseValue,
   isCSVPipelineDefinition,
+  isCSVTicketPipelineDefinition,
   isPODPipelineDefinition
 } from "@pcd/passport-interface";
 import { getErrorMessage } from "@pcd/util";
@@ -97,7 +98,8 @@ export function PipelineEditSection({
                 height: "100%"
               }}
             >
-              {isCSVPipelineDefinition(pipeline) && (
+              {(isCSVPipelineDefinition(pipeline) ||
+                isCSVTicketPipelineDefinition(pipeline)) && (
                 <TabList>
                   <Tab>Data</Tab>
                   {isAdminView && <Tab>Configuration</Tab>}
@@ -105,7 +107,8 @@ export function PipelineEditSection({
               )}
 
               <TabPanels style={{ height: "100%", overflow: "hidden" }}>
-                {isCSVPipelineDefinition(pipeline) && (
+                {(isCSVPipelineDefinition(pipeline) ||
+                  isCSVTicketPipelineDefinition(pipeline)) && (
                   <TabPanel style={{ height: "100%", overflowY: "scroll" }}>
                     <CSVPreviewEditWrapper
                       previewType={PreviewType.CSVSheet}

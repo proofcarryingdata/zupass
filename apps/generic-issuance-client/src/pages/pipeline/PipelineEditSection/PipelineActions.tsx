@@ -5,7 +5,8 @@ import {
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue,
-  isCSVPipelineDefinition
+  isCSVPipelineDefinition,
+  isCSVTicketPipelineDefinition
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import React, { ReactNode, useCallback, useState } from "react";
@@ -271,28 +272,32 @@ export function PipelineActions({
     return null;
   }
 
+  const canAddTicket =
+    isCSVTicketPipelineDefinition(pipeline) ||
+    (isCSVPipelineDefinition(pipeline) &&
+      (pipeline.options.outputType === CSVPipelineOutputType.PODTicket ||
+        pipeline.options.outputType === CSVPipelineOutputType.Ticket));
+
   return (
     <Container>
       <HStack minWidth="fit-content" flexWrap={"wrap"}>
-        {isCSVPipelineDefinition(pipeline) &&
-          (pipeline.options.outputType === CSVPipelineOutputType.PODTicket ||
-            pipeline.options.outputType === CSVPipelineOutputType.Ticket) && (
-            <>
-              <AddDataModal
-                addingData={addingTicket}
-                pipeline={pipeline}
-                onClose={onAddTicketClose}
-              />
-              <Button
-                size="sm"
-                onClick={onAddTicketOpen}
-                isDisabled={hasEdits}
-                colorScheme="blue"
-              >
-                Add Ticket
-              </Button>
-            </>
-          )}
+        {canAddTicket && (
+          <>
+            <AddDataModal
+              addingData={addingTicket}
+              pipeline={pipeline}
+              onClose={onAddTicketClose}
+            />
+            <Button
+              size="sm"
+              onClick={onAddTicketOpen}
+              isDisabled={hasEdits}
+              colorScheme="blue"
+            >
+              Add Ticket
+            </Button>
+          </>
+        )}
         <Button size="sm" onClick={(): void => setEditorMaximized(true)}>
           Maximize
         </Button>
