@@ -87,7 +87,6 @@ export async function startServices(
   );
   const userService = startUserService(
     context,
-    semaphoreService,
     emailTokenService,
     emailService,
     rateLimitService,

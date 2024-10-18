@@ -46,7 +46,7 @@ export interface ApplicationContext {
 }
 
 export interface GlobalServices {
-  semaphoreService: SemaphoreService;
+  semaphoreService: SemaphoreService | null;
   userService: UserService;
   e2eeService: E2EEService;
   emailTokenService: EmailTokenService;
@@ -54,7 +54,7 @@ export interface GlobalServices {
   provingService: ProvingService;
   zuzaluPretixSyncService: ZuzaluPretixSyncService | null;
   devconnectPretixSyncService: DevconnectPretixSyncService | null;
-  metricsService: MetricsService;
+  metricsService: MetricsService | null;
   issuanceService: IssuanceService | null;
   discordService: DiscordService | null;
   telegramService: TelegramService | null;
