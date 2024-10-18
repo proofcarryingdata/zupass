@@ -5,12 +5,13 @@ import {
   GPCBoundConfig,
   GPCProofConfig,
   JSONPODMembershipLists,
-  deserializeGPCProofConfig,
+  JSONProofConfig,
   gpcArtifactDownloadURL,
   gpcBindConfig,
   membershipListsToSets,
   podMembershipListsFromJSON,
-  serializeGPCBoundConfig
+  proofConfigFromJSON,
+  proofConfigToJSON
 } from "@pcd/gpc";
 import {
   GPCPCD,
@@ -30,6 +31,12 @@ import {
   useZupassPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import {
+  PODName,
+  bigintToSimplestJSON,
+  checkPODName,
+  podValueToJSON
+} from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { emptyStrToUndefined } from "@pcd/util";
@@ -203,7 +210,11 @@ export default function Page(): JSX.Element {
                 <p>✅ Proof is valid</p>
                 <p>Proof configuration:</p>
                 <CollapsableCode
-                  code={serializeGPCBoundConfig(pcd.claim.config, 2)}
+                  code={JSON.stringify(
+                    proofConfigToJSON(pcd.claim.config),
+                    null,
+                    2
+                  )}
                 />
                 <p>Revealed PODs:</p>
                 <CollapsableCode
@@ -214,13 +225,19 @@ export default function Page(): JSX.Element {
                   )}
                 />
                 {pcd.claim.revealed.watermark && (
-                  <p>{`Watermark: ${pcd.claim.revealed.watermark.value}`}</p>
+                  <p>{`Watermark: ${podValueToJSON(
+                    pcd.claim.revealed.watermark
+                  )}`}</p>
                 )}
                 {pcd.claim.revealed.owner?.externalNullifier && (
-                  <p>{`External Nullifier: ${pcd.claim.revealed.owner?.externalNullifier.value}`}</p>
+                  <p>{`External Nullifier: ${podValueToJSON(
+                    pcd.claim.revealed.owner?.externalNullifier
+                  )}`}</p>
                 )}
                 {pcd.claim.revealed.owner?.nullifierHashV3 && (
-                  <p>{`Nullifier Hash: ${pcd.claim.revealed.owner?.nullifierHashV3}`}</p>
+                  <p>{`Nullifier Hash: ${bigintToSimplestJSON(
+                    pcd.claim.revealed.owner?.nullifierHashV3
+                  )}`}</p>
                 )}
               </>
             )}
@@ -255,6 +272,8 @@ export function openGPCPopup(
   externalNullifier?: string
 ): void {
   // Validate JSON input by parsing locally before sending.
+  const jsonProofConfig: JSONProofConfig = JSON.parse(proofConfig);
+  proofConfigFromJSON(jsonProofConfig);
   let jsonMembershipLists: JSONPODMembershipLists | undefined = undefined;
   if (membershipLists) {
     jsonMembershipLists = JSON.parse(membershipLists);
@@ -269,11 +288,21 @@ export function openGPCPopup(
       fixedPODEntriesFromJSON(jsonPrescribedEntries);
     }
   }
+  let jsonPrescribedSignerPublicKeys: Record<PODName, string> | undefined =
+    undefined;
+  if (prescribedSignerPublicKeys) {
+    jsonPrescribedSignerPublicKeys = JSON.parse(prescribedSignerPublicKeys);
+    if (jsonPrescribedSignerPublicKeys !== undefined) {
+      for (const podName of Object.keys(jsonPrescribedSignerPublicKeys)) {
+        checkPODName(podName);
+      }
+    }
+  }
 
   const args: GPCPCDArgs = {
     proofConfig: {
-      argumentType: ArgumentTypeName.String,
-      value: proofConfig,
+      argumentType: ArgumentTypeName.Object,
+      value: jsonProofConfig,
       userProvided: false
     },
     pods: {
@@ -295,13 +324,10 @@ export function openGPCPopup(
         }
       },
       validatorParams: {
-        proofConfig,
+        proofConfig: jsonProofConfig,
         membershipLists: jsonMembershipLists,
         prescribedEntries: jsonPrescribedEntries,
-        prescribedSignerPublicKeys:
-          prescribedSignerPublicKeys !== undefined
-            ? JSON.parse(prescribedSignerPublicKeys)
-            : undefined
+        prescribedSignerPublicKeys: jsonPrescribedSignerPublicKeys
       }
     },
     identity: {
@@ -426,7 +452,7 @@ async function verifyProof(
   let localBoundConfig: GPCBoundConfig;
   let localProofConfig: GPCProofConfig;
   try {
-    localProofConfig = deserializeGPCProofConfig(proofConfig);
+    localProofConfig = proofConfigFromJSON(JSON.parse(proofConfig));
     localBoundConfig = gpcBindConfig(localProofConfig).boundConfig;
   } catch (configError) {
     return { valid: false, err: "Invalid proof config." };

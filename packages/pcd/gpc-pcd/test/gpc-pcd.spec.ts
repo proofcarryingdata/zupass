@@ -3,7 +3,7 @@ import {
   SEMAPHORE_V3,
   gpcBindConfig,
   podMembershipListsToJSON,
-  serializeGPCProofConfig
+  proofConfigToJSON
 } from "@pcd/gpc";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { POD, PODEdDSAPublicKeyValue, POD_INT_MAX } from "@pcd/pod";
@@ -84,8 +84,8 @@ describe("GPCPCD should work", async function () {
 
     const proveArgs: GPCPCDArgs = {
       proofConfig: {
-        argumentType: ArgumentTypeName.String,
-        value: serializeGPCProofConfig(proofConfig)
+        argumentType: ArgumentTypeName.Object,
+        value: proofConfigToJSON(proofConfig)
       },
       pods: {
         value: {
@@ -186,7 +186,7 @@ describe("GPCPCD input POD validator should work", () => {
   const ticketPOD = POD.sign(sampleEntries1, privateKey);
   const ticketPODPCD = new PODPCD(uuid(), ticketPOD);
 
-  const proofConfig = serializeGPCProofConfig({
+  const jsonProofConfig = proofConfigToJSON({
     pods: {
       pod0: {
         entries: {
@@ -259,7 +259,7 @@ describe("GPCPCD input POD validator should work", () => {
   });
 
   it("Should validate input PODs containing entries in a given proof configuration", () => {
-    const params = { proofConfig };
+    const params = { proofConfig: jsonProofConfig };
     expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
     expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
   });
@@ -274,14 +274,14 @@ describe("GPCPCD input POD validator should work", () => {
         eventID: { type: "cryptographic", value: 456n }
       }
     });
-    const params = { proofConfig, prescribedEntries };
+    const params = { proofConfig: jsonProofConfig, prescribedEntries };
     expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
     expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
   });
 
   it("Should validate input PODs with prescribed entry bounds", () => {
     const params = {
-      proofConfig: serializeGPCProofConfig({
+      proofConfig: proofConfigToJSON({
         pods: {
           pod0: {
             entries: {
@@ -312,13 +312,13 @@ describe("GPCPCD input POD validator should work", () => {
       pod0: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
       ticketPOD: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
     };
-    const params = { proofConfig, prescribedSignerPublicKeys };
+    const params = { proofConfig: jsonProofConfig, prescribedSignerPublicKeys };
     expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
     expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
   });
 
   it("Should validate input PODs with entries lying in membership lists", () => {
-    const params = { proofConfig, membershipLists };
+    const params = { proofConfig: jsonProofConfig, membershipLists };
     expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
     expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
   });
@@ -338,7 +338,7 @@ describe("GPCPCD input POD validator should work", () => {
       ticketPOD: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
     };
     const params = {
-      proofConfig,
+      proofConfig: jsonProofConfig,
       membershipLists,
       prescribedEntries,
       prescribedSignerPublicKeys
@@ -348,7 +348,7 @@ describe("GPCPCD input POD validator should work", () => {
   });
 
   it("Should not validate an input POD lacking entries in a given proof configuration", () => {
-    const proofConfig = serializeGPCProofConfig({
+    const proofConfig = proofConfigToJSON({
       pods: {
         pod0: {
           entries: {
@@ -387,7 +387,7 @@ describe("GPCPCD input POD validator should work", () => {
       ...unserialisedMembershipLists,
       admissibleOwners: [sampleEntries0.C, sampleEntries0.A]
     });
-    const params = { proofConfig, membershipLists };
+    const params = { proofConfig: jsonProofConfig, membershipLists };
     expect(validateInputPOD("pod0", podPCD0, params)).to.be.false;
   });
 
@@ -401,14 +401,14 @@ describe("GPCPCD input POD validator should work", () => {
         eventID: { type: "cryptographic", value: 456n }
       }
     });
-    const params = { proofConfig, prescribedEntries };
+    const params = { proofConfig: jsonProofConfig, prescribedEntries };
     expect(validateInputPOD("pod0", podPCD0, params)).to.be.false;
     expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.true;
   });
 
   it("Should not validate input PODs violating prescribed bounds", () => {
     const params = {
-      proofConfig: serializeGPCProofConfig({
+      proofConfig: proofConfigToJSON({
         pods: {
           pod0: {
             entries: {
@@ -440,7 +440,7 @@ describe("GPCPCD input POD validator should work", () => {
       pod0: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4",
       ticketPOD: "su2CUR47c1us1FwPUN3RNZWzit9nmya2QD60Y/iffxI"
     };
-    const params = { proofConfig, prescribedSignerPublicKeys };
+    const params = { proofConfig: jsonProofConfig, prescribedSignerPublicKeys };
     expect(validateInputPOD("pod0", podPCD0, params)).to.be.true;
     expect(validateInputPOD("ticketPOD", ticketPODPCD, params)).to.be.false;
   });
