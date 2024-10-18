@@ -1,5 +1,19 @@
 # @pcd/ethereum-ownership-pcd-ui
 
+## 0.3.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-ui@0.12.0
+  - @pcd/pcd-types@0.12.0
+  - @pcd/ethereum-ownership-pcd@0.12.0
+  - @pcd/semaphore-signature-pcd@0.12.0
+
 ## 0.2.6
 
 ### Patch Changes

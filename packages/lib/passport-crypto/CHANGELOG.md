@@ -1,5 +1,11 @@
 # @pcd/passport-crypto
 
+## 0.12.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
 ## 0.11.4
 
 ### Patch Changes

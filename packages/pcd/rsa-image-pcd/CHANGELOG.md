@@ -1,5 +1,17 @@
 # @pcd/rsa-image-pcd
 
+## 0.6.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.12.0
+  - @pcd/rsa-pcd@0.7.0
+
 ## 0.5.5
 
 ### Patch Changes

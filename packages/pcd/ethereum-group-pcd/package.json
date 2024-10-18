@@ -1,6 +1,6 @@
 {
   "name": "@pcd/ethereum-group-pcd",
-  "version": "0.5.6",
+  "version": "0.6.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -33,10 +33,10 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.11.4",
-    "@pcd/semaphore-identity-pcd": "0.11.6",
-    "@pcd/semaphore-signature-pcd": "0.11.6",
-    "@pcd/util": "0.5.4",
+    "@pcd/pcd-types": "0.12.0",
+    "@pcd/semaphore-identity-pcd": "0.12.0",
+    "@pcd/semaphore-signature-pcd": "0.12.0",
+    "@pcd/util": "0.6.0",
     "@personaelabs/spartan-ecdsa": "^2.1.4",
     "@semaphore-protocol/identity": "^3.15.2",
     "ethers": "^5.7.2",
@@ -44,8 +44,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.4",
-    "@pcd/tsconfig": "0.11.4",
+    "@pcd/eslint-config-custom": "0.12.0",
+    "@pcd/tsconfig": "0.12.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "eslint": "^8.57.0",

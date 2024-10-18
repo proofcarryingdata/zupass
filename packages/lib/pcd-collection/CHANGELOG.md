@@ -1,5 +1,19 @@
 # @pcd/pcd-types
 
+## 0.12.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.6.0
+  - @pcd/passport-crypto@0.12.0
+  - @pcd/pcd-types@0.12.0
+  - @pcd/semaphore-identity-pcd@0.12.0
+
 ## 0.11.6
 
 ### Patch Changes

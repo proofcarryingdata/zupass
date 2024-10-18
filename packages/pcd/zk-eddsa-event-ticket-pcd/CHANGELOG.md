@@ -1,5 +1,22 @@
 # @pcd/zk-eddsa-event-ticket-pcd
 
+## 0.7.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.12.0
+  - @pcd/util@0.6.0
+  - @pcd/snarkjs@0.8.0
+  - @pcd/eddsa-pcd@0.7.0
+  - @pcd/eddsa-ticket-pcd@0.7.0
+  - @pcd/semaphore-identity-pcd@0.12.0
+  - @pcd/semaphore-signature-pcd@0.12.0
+
 ## 0.6.6
 
 ### Patch Changes

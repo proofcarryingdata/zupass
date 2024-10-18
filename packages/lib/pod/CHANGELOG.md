@@ -1,5 +1,16 @@
 # @pcd/pod
 
+## 0.2.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/util@0.6.0
+
 ## 0.1.7
 
 ### Patch Changes

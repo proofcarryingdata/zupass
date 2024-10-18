@@ -1,5 +1,19 @@
 # @pcd/rln-pcd
 
+## 0.11.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.12.0
+  - @pcd/util@0.6.0
+  - @pcd/semaphore-group-pcd@0.12.0
+  - @pcd/semaphore-identity-pcd@0.12.0
+
 ## 0.10.5
 
 ### Patch Changes

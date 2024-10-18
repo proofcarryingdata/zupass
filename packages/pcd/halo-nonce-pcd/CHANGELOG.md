@@ -1,5 +1,17 @@
 # @pcd/halo-nonce-pcd
 
+## 0.8.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.12.0
+  - @pcd/util@0.6.0
+
 ## 0.7.5
 
 ### Patch Changes

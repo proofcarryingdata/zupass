@@ -1,6 +1,6 @@
 {
   "name": "@pcd/eddsa-frog-pcd",
-  "version": "0.3.5",
+  "version": "0.4.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -32,17 +32,17 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/eddsa-pcd": "0.6.5",
-    "@pcd/pcd-types": "0.11.4",
-    "@pcd/util": "0.5.4",
+    "@pcd/eddsa-pcd": "0.7.0",
+    "@pcd/pcd-types": "0.12.0",
+    "@pcd/util": "0.6.0",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "lodash": "^4.17.21",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.4",
-    "@pcd/tsconfig": "0.11.4",
+    "@pcd/eslint-config-custom": "0.12.0",
+    "@pcd/tsconfig": "0.12.0",
     "@types/json-bigint": "^1.0.1",
     "@types/lodash": "^4.14.191",
     "@types/mocha": "^10.0.1",
