@@ -1,4 +1,4 @@
-import { CircuitDesc } from "@pcd/gpcircuits";
+import { CircuitDesc, ProtoPODGPC } from "@pcd/gpcircuits";
 import {
   POD,
   PODEdDSAPublicKeyValue,
@@ -974,3 +974,9 @@ export function podEntryIdentifierCompare(
     return entryName1 < entryName2 ? -1 : entryName1 > entryName2 ? 1 : 0;
   }
 }
+
+/**
+ * Version of the published artifacts on NPM which are compatible with this
+ * version of the GPC package. Re-exported for convenience.
+ */
+export const GPC_ARTIFACTS_NPM_VERSION = ProtoPODGPC.ARTIFACTS_NPM_VERSION;

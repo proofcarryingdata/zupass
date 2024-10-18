@@ -1,6 +1,9 @@
 // this file is loaded as a service worker
 import { setTimeout as promiseTimeout } from "isomorphic-timers-promises";
-import { SERVICE_WORKER_ENABLED } from "../sharedConstants";
+import {
+  GPC_ARTIFACTS_CONFIG,
+  SERVICE_WORKER_ENABLED
+} from "../sharedConstants";
 
 // Hack to make TypeScript aware of the ServiceWorkerGlobalScope type.
 // We can't redeclare `self`, but `swSelf` can be used with the right type.
@@ -52,6 +55,18 @@ const EPHEMERAL_CACHE_RESOURCES = new Set([
   "/js/index.js",
   ...GENERATED_CHUNKS
 ]);
+
+/**
+ * Z cache is for Z API-relevant resources which do not change frequently, such
+ * as GPC artifacts, where we always use the cached version if available.  This
+ * cache is only updated if the artifact to be fetched is not in the
+ * cache. Previously cached versions are cleared for space-saving purposes.
+ *
+ * Cache name includes deployed artifact version, which protects against using
+ * cached artifacts of a different version.
+ */
+const Z_CACHE_NAME = `${CACHE_VERSION}-${GPC_ARTIFACTS_CONFIG}-Z`;
+const Z_CACHE_RESOURCES = new Set(["/artifacts/proto-pod-gpc"]);
 
 /**
  * Stable cache is for resources which are expected not to change frequently,
@@ -243,6 +258,16 @@ self.addEventListener("fetch", (event: FetchEvent) => {
         return stableResp;
       }
 
+      // Check Z cache next. We fetch if and only if we do not get a hit.
+      const zResp = await checkZCache(event.request);
+      if (zResp) {
+        swLog.V(`cache hit fetching ${event.request?.url}`);
+        return zResp;
+      } else {
+        const respPromise = startFetch(event);
+        return respPromise;
+      }
+
       // Check ephemeral cache next.  We'll only use this if the network
       // request fails or times out, but fetching it first is safer
       // than racing against an update of the same entry.
@@ -261,9 +286,9 @@ self.addEventListener("fetch", (event: FetchEvent) => {
         // at all we can simply return it.
         return await Promise.race([respPromise, timeoutPromise]);
       } catch (error: unknown) {
-        // If stable cache and network both failed, use ephemeral cache, but
-        // still make sure the event waits for the fetch to finish and update
-        // the cachee.
+        // If stable cache, Z cache and network all failed, use ephemeral cache,
+        // but still make sure the event waits for the fetch to finish and
+        // update the cache.
         if (cacheResp) {
           swLog.V(`cache fallback for ${event.request?.url} after ${error}`);
           event.waitUntil(respPromise);
@@ -314,7 +339,7 @@ async function startFetch(event: FetchEvent): Promise<Response> {
     // Update caches if appropriate.
     // The stable cache update should only happen if pre-populating failed at
     // install time, or the cache was cleared by the user, causing a cache miss.
-    // The ephemeral cache update happens after every network fetch.
+    // Ephemeral and Z cache updates happen after every network fetch.
     // Note that Response can be read only once, so needs to be cloned
     // (synchronously) to be added to cache.  This lets the orignal still be
     // readable when returned.
@@ -324,6 +349,8 @@ async function startFetch(event: FetchEvent): Promise<Response> {
     // trigger while we're waiting for the download.
     if (shouldUpdateStableCache(event.request, resp)) {
       await updateCache(STABLE_CACHE_NAME, event.request, resp.clone());
+    } else if (shouldUpdateZCache(event.request, resp)) {
+      await updateCache(Z_CACHE_NAME, event.request, resp.clone());
     } else if (shouldUpdateEphemeralCache(event.request, resp)) {
       await updateCache(EPHEMERAL_CACHE_NAME, event.request, resp.clone());
     }
@@ -356,7 +383,11 @@ async function prePopulateCaches(): Promise<void> {
 async function deleteOldCaches(): Promise<void> {
   // Delete old caches that don't match the current version.
   for (const cacheName of await caches.keys()) {
-    if (cacheName !== STABLE_CACHE_NAME && cacheName !== EPHEMERAL_CACHE_NAME) {
+    if (
+      cacheName !== STABLE_CACHE_NAME &&
+      cacheName !== EPHEMERAL_CACHE_NAME &&
+      cacheName !== Z_CACHE_NAME
+    ) {
       swLog.I(`Deleting unknown cache version: ${cacheName}`);
       await caches.delete(cacheName);
     }
@@ -414,6 +445,10 @@ async function checkEphemeralCache(
   return await fetchFromCache(EPHEMERAL_CACHE_NAME, request);
 }
 
+async function checkZCache(request: Request): Promise<Response | undefined> {
+  return await fetchFromCache(Z_CACHE_NAME, request);
+}
+
 function shouldHandleFetch(request: Request): boolean {
   // This limits the scope of service worker caching to only web resources
   // (i.e. passport-client not passport-server).
@@ -434,6 +469,19 @@ function shouldUpdateStableCache(
   // of stable resources.
   return (
     response.ok && STABLE_CACHE_RESOURCES.has(requestToItemCacheKey(request))
+  );
+}
+
+function shouldUpdateZCache(request: Request, response: Response): boolean {
+  // shouldHandleFetch has already qualified the requests we want to cache, and
+  // we'd never fetch if we had a Z cache hit.  But on a cache miss which we
+  // successfully fetch, we want to add the missing entry if it's in our list of
+  // Z resources, which is specified as a list of directories and/or files.
+  return (
+    response.ok &&
+    Array.from(Z_CACHE_RESOURCES).some((fileOrDir) =>
+      requestToItemCacheKey(request).startsWith(fileOrDir)
+    )
   );
 }
 

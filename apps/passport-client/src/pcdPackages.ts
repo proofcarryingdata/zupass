@@ -31,6 +31,7 @@ import { ZKEdDSAFrogPCDPackage } from "@pcd/zk-eddsa-frog-pcd";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
 import { makeEncodedVerifyLink } from "./qr";
+import { GPC_ARTIFACTS_CONFIG } from "./sharedConstants";
 
 let pcdPackages: Promise<PCDPackage[]> | undefined;
 
@@ -77,14 +78,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await PODPCDPackage.init?.({});
 
-  // Environment variable configure how we fetch GPC artifacts, however we
-  // default to fetching from the Zupass server rather than unpkg.
-  const gpcArtifactsConfig = parseGPCArtifactsConfig(
-    process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined &&
-      process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== ""
-      ? process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
-      : '{"source": "zupass", "stability": "prod", "version": ""}'
-  );
+  const gpcArtifactsConfig = parseGPCArtifactsConfig(GPC_ARTIFACTS_CONFIG);
   await GPCPCDPackage.init?.({
     zkArtifactPath: gpcArtifactDownloadURL(
       gpcArtifactsConfig.source as GPCArtifactSource,

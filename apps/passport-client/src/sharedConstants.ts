@@ -1,3 +1,5 @@
+import { GPC_ARTIFACTS_NPM_VERSION } from "@pcd/gpc";
+
 /**
  * Single constant shared between the service worker and the page code which
  * registers it.
@@ -24,3 +26,15 @@ export const OUTDATED_BROWSER_ERROR_MESSAGE =
 export const OOM_ERROR_MESSAGE = "Out of memory";
 
 export const MAX_WIDTH_SCREEN = 420;
+
+// Environment variable configure how we fetch GPC artifacts, however we
+// default to fetching from the Zupass server rather than unpkg.
+export const GPC_ARTIFACTS_CONFIG = 
+    process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined &&
+      process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== ""
+      ? process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
+      : JSON.stringify({
+          source: "zupass",
+          stability: "prod",
+          version: GPC_ARTIFACTS_NPM_VERSION
+      });
