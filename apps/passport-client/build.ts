@@ -164,8 +164,8 @@ async function run(command: string): Promise<void> {
         "utf-8"
       );
       serviceWorkerSource = serviceWorkerSource.replace(
-        "self.__CHUNKS",
-        JSON.stringify(generatedChunks)
+        "const GENERATED_CHUNKS: string[] = [];",
+        `const GENERATED_CHUNKS: string[] = ${JSON.stringify(generatedChunks)};`
       );
       fs.writeFileSync(
         path.join("public", "service-worker.js"),
