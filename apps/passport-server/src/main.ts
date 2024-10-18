@@ -6,6 +6,7 @@
 import dotenv from "dotenv";
 import path from "path";
 import { startApplication } from "./application";
+import { ServerMode } from "./types";
 import { IS_PROD } from "./util/isProd";
 import { logger } from "./util/logger";
 
@@ -20,4 +21,4 @@ dotenv.config({ path: dotEnvPath });
 logger(`NODE_OPTIONS is ${process.env.NODE_OPTIONS}`);
 logger("[INIT] Starting application");
 
-startApplication();
+startApplication(ServerMode.UNIFIED);

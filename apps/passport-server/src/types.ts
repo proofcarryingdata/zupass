@@ -30,12 +30,19 @@ import { TelegramService } from "./services/telegramService";
 import { UserService } from "./services/userService";
 import { ZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 
+export enum ServerMode {
+  UNIFIED = "UNIFIED",
+  PARALLEL_MAIN = "PARALLEL_MAIN",
+  PARALLEL_CHILD = "PARALLEL_CHILD"
+}
+
 export interface ApplicationContext {
   dbPool: Pool;
   honeyClient: Libhoney | null;
   resourcesDir: string;
   publicResourcesDir: string;
   gitCommitHash: string;
+  mode: ServerMode;
 }
 
 export interface GlobalServices {

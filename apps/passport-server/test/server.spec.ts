@@ -2,7 +2,7 @@
 import { expect } from "chai";
 import "mocha";
 import { startApplication, stopApplication } from "../src/application";
-import { Zupass } from "../src/types";
+import { ServerMode, Zupass } from "../src/types";
 import { overrideEnvironment, testingEnv } from "./util/env";
 
 describe("web server functionality", function () {
@@ -10,7 +10,7 @@ describe("web server functionality", function () {
 
   this.beforeAll(async function () {
     await overrideEnvironment(testingEnv);
-    application = await startApplication();
+    application = await startApplication(ServerMode.UNIFIED);
   });
 
   this.afterAll(async function () {

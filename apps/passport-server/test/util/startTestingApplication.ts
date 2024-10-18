@@ -1,10 +1,9 @@
 import { startApplication } from "../../src/application";
-import { APIs, Zupass } from "../../src/types";
-import { mockAPIs } from "./mockApis";
+import { APIs, ServerMode, Zupass } from "../../src/types";
 
 export async function startTestingApp(
   apiOverrides?: Partial<APIs>
 ): Promise<Zupass> {
-  const application = await startApplication(mockAPIs(apiOverrides));
+  const application = await startApplication(ServerMode.UNIFIED, apiOverrides);
   return application;
 }

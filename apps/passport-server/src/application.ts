@@ -17,7 +17,7 @@ import { getDB } from "./database/postgresPool";
 import { startHttpServer, stopHttpServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
 import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncService";
-import { APIs, ApplicationContext, Zupass } from "./types";
+import { APIs, ApplicationContext, ServerMode, Zupass } from "./types";
 import { logger } from "./util/logger";
 import { trapSigTerm } from "./util/terminate";
 
@@ -34,6 +34,7 @@ process.on("unhandledRejection", (reason) => {
  * the appropriate APIs if they have not been overriden by the caller.
  */
 export async function startApplication(
+  mode: ServerMode,
   apiOverrides?: Partial<APIs>
 ): Promise<Zupass> {
   const dbPool = await getDB();
@@ -44,7 +45,8 @@ export async function startApplication(
     honeyClient,
     resourcesDir: path.join(process.cwd(), "resources"),
     publicResourcesDir: path.join(process.cwd(), "public"),
-    gitCommitHash: await getCommitHash()
+    gitCommitHash: await getCommitHash(),
+    mode
   };
 
   const apis = await getOverridenApis(context, apiOverrides);
