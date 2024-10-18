@@ -19,7 +19,7 @@ import {
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
-import { ApplicationContext } from "../types";
+import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
 import { zuconnectProductIdToZuzaluRole } from "../util/zuconnectTicket";
 import { traced } from "./telemetryService";

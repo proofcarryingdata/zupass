@@ -28,6 +28,13 @@ export async function startGenericIssuanceService(
 ): Promise<GenericIssuanceService | null> {
   logger("[INIT] attempting to start Generic Issuance service");
 
+  if (![ServerMode.UNIFIED, ServerMode.PARALLEL_MAIN].includes(context.mode)) {
+    logger(
+      `[INIT] generic issuance service not started, not in unified or parallel main mode`
+    );
+    return null;
+  }
+
   if (!cacheService) {
     logger(
       "[INIT] not starting generic issuance service - missing persistent cache service"
