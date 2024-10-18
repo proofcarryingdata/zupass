@@ -55,7 +55,6 @@ import { EmailTokenService } from "./emailTokenService";
 import { GenericIssuanceService } from "./generic-issuance/GenericIssuanceService";
 import { CredentialSubservice } from "./generic-issuance/subservices/CredentialSubservice";
 import { RateLimitService } from "./rateLimitService";
-import { SemaphoreService } from "./semaphoreService";
 import { traced } from "./telemetryService";
 
 const AgreedTermsSchema = z.object({
@@ -72,7 +71,6 @@ export class UserService {
    * No particular reason to limit to 6, just needed some limit.
    */
   private static readonly MAX_USER_EMAIL_ADDRESES = 6;
-  private readonly semaphoreService: SemaphoreService;
   private readonly emailTokenService: EmailTokenService;
   private readonly emailService: EmailService;
   private readonly rateLimitService: RateLimitService;
@@ -88,7 +86,6 @@ export class UserService {
 
   public constructor(
     context: ApplicationContext,
-    semaphoreService: SemaphoreService,
     emailTokenService: EmailTokenService,
     emailService: EmailService,
     rateLimitService: RateLimitService,
@@ -96,7 +93,6 @@ export class UserService {
     credentialSubservice: CredentialSubservice
   ) {
     this.context = context;
-    this.semaphoreService = semaphoreService;
     this.emailTokenService = emailTokenService;
     this.emailService = emailService;
     this.rateLimitService = rateLimitService;
@@ -352,9 +348,6 @@ export class UserService {
       extra_issuance: false
     });
 
-    // Reload Merkle trees
-    this.semaphoreService.scheduleReload();
-
     const user = await fetchUserByEmail(client, email);
     if (!user) {
       throw new PCDHTTPError(403, "No user with that email exists");
@@ -454,9 +447,6 @@ export class UserService {
         : LATEST_PRIVACY_NOTICE,
       extra_issuance: false
     });
-
-    // Reload Merkle trees
-    this.semaphoreService.scheduleReload();
 
     const user = await fetchUserByEmail(client, email);
     if (!user) {
@@ -960,7 +950,6 @@ export class UserService {
 
 export function startUserService(
   context: ApplicationContext,
-  semaphoreService: SemaphoreService,
   emailTokenService: EmailTokenService,
   emailService: EmailService,
   rateLimitService: RateLimitService,
@@ -969,7 +958,6 @@ export function startUserService(
 ): UserService {
   const userService = new UserService(
     context,
-    semaphoreService,
     emailTokenService,
     emailService,
     rateLimitService,

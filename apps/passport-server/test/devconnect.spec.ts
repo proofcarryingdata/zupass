@@ -322,7 +322,7 @@ describe("devconnect functionality", function () {
         throw new Error("expected user");
       }
 
-      await application.services.semaphoreService.reload();
+      await application.services.semaphoreService?.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [residentUser.commitment],
@@ -387,7 +387,7 @@ describe("devconnect functionality", function () {
         throw new Error("expected user");
       }
 
-      await application.services.semaphoreService.reload();
+      await application.services.semaphoreService?.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [
@@ -595,7 +595,7 @@ describe("devconnect functionality", function () {
         throw new Error("expected user");
       }
 
-      await application.services.semaphoreService.reload();
+      await application.services.semaphoreService?.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [
@@ -650,7 +650,7 @@ describe("devconnect functionality", function () {
         throw new Error("expected user");
       }
 
-      await application.services.semaphoreService.reload();
+      await application.services.semaphoreService?.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [
@@ -705,7 +705,7 @@ describe("devconnect functionality", function () {
         throw new Error("expected user");
       }
 
-      await application.services.semaphoreService.reload();
+      await application.services.semaphoreService?.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [
@@ -760,7 +760,7 @@ describe("devconnect functionality", function () {
         throw new Error("expected user");
       }
 
-      await application.services.semaphoreService.reload();
+      await application.services.semaphoreService?.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [],
@@ -1608,7 +1608,7 @@ describe("devconnect functionality", function () {
     // New user login schedules an asynchronous reload of the Semaphore
     // service, which we can't rely on having completed by the time we run this
     // test, so we must ensure that groups are reloaded here.
-    await application.services.semaphoreService.reload();
+    await application.services.semaphoreService?.reload();
     expectCurrentSemaphoreToBe(application, {
       p: [],
       r: [],
@@ -1710,7 +1710,7 @@ describe("devconnect functionality", function () {
     loggedInIdentityCommitments.add(result.identity.commitment.toString());
 
     identity = result.identity;
-    await application.services.semaphoreService.reload();
+    await application.services.semaphoreService?.reload();
     MockDate.reset();
   });
 
@@ -1782,7 +1782,7 @@ describe("devconnect functionality", function () {
     "semaphore service should now be aware of the new user" +
       " and their old commitment should have been removed",
     async function () {
-      await application.services.semaphoreService.reload();
+      await application.services.semaphoreService?.reload();
       expectCurrentSemaphoreToBe(application, {
         p: [],
         r: [],
@@ -1813,7 +1813,7 @@ describe("devconnect functionality", function () {
       // Logging in schedules an asynchronous reload, which sometimes occurs
       // before the subsequent tests, and sometimes does not. To be sure, we
       // will await the reload here.
-      await application.services.semaphoreService.reload();
+      await application.services.semaphoreService?.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [],
@@ -1842,7 +1842,7 @@ describe("devconnect functionality", function () {
         await softDeleteDevconnectPretixTicket(client, ticket);
       }
 
-      await application.services.semaphoreService.reload();
+      await application.services.semaphoreService?.reload();
 
       expectCurrentSemaphoreToBe(application, {
         p: [],

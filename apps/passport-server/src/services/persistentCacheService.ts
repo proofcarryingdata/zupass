@@ -36,16 +36,24 @@ export class PersistentCacheService {
   }
 
   public start(): void {
+    if (process.env.DISABLE_JOBS === "true") {
+      logger(
+        "[CACHE] not starting cache expiration loop because DISABLE_JOBS is true"
+      );
+      return;
+    }
+
     logger("[CACHE] starting expiration loop");
 
     namedSqlTransaction(this.pool, "tryExpireOldEntries", (client) =>
       this.tryExpireOldEntries(client)
     );
 
-    this.expirationInterval = setInterval(
-      this.tryExpireOldEntries.bind(this),
-      PersistentCacheService.CACHE_GARBAGE_COLLECT_INTERVAL_MS
-    ) as number;
+    this.expirationInterval = setInterval(() => {
+      namedSqlTransaction(this.pool, "tryExpireOldEntries", (client) =>
+        this.tryExpireOldEntries(client)
+      );
+    }, PersistentCacheService.CACHE_GARBAGE_COLLECT_INTERVAL_MS) as unknown as number;
   }
 
   public stop(): void {

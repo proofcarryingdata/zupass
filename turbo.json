@@ -232,6 +232,10 @@
     "DEVCON_PODBOX_API_URL",
     "DEVCON_PIPELINE_ID",
     "DISABLE_CONSOLE_LOG",
+    "ENABLE_CLUSTER",
+    "CLUSTER_PROCESSES",
+    "CLUSTER_PORT",
+    "DISABLE_JOBS",
     "//// add env vars above this line ////"
   ]
 }

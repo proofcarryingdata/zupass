@@ -30,16 +30,34 @@ import { TelegramService } from "./services/telegramService";
 import { UserService } from "./services/userService";
 import { ZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 
+/**
+ * The Zupass Server Express/NodeJS ap can run in one of three modes:
+ *
+ * - UNIFIED: The server is running as a single process, no clustering
+ * - PARALLEL_MAIN: The server is running as the main process in a cluster.
+ * - PARALLEL_CHILD: The server is running as a child process in a cluster.
+ *
+ * Either there is precisely one instance of the app running in UNIFIED mode,
+ * or there are multiple instances of the app running, precisely one in
+ * PARALLEL_MAIN mode, and one or more extra in PARALLEL_CHILD mode.
+ */
+export enum ServerMode {
+  UNIFIED = "UNIFIED",
+  PARALLEL_MAIN = "PARALLEL_MAIN",
+  PARALLEL_CHILD = "PARALLEL_CHILD"
+}
+
 export interface ApplicationContext {
   dbPool: Pool;
   honeyClient: Libhoney | null;
   resourcesDir: string;
   publicResourcesDir: string;
   gitCommitHash: string;
+  mode: ServerMode;
 }
 
 export interface GlobalServices {
-  semaphoreService: SemaphoreService;
+  semaphoreService: SemaphoreService | null;
   userService: UserService;
   e2eeService: E2EEService;
   emailTokenService: EmailTokenService;
@@ -47,7 +65,7 @@ export interface GlobalServices {
   provingService: ProvingService;
   zuzaluPretixSyncService: ZuzaluPretixSyncService | null;
   devconnectPretixSyncService: DevconnectPretixSyncService | null;
-  metricsService: MetricsService;
+  metricsService: MetricsService | null;
   issuanceService: IssuanceService | null;
   discordService: DiscordService | null;
   telegramService: TelegramService | null;

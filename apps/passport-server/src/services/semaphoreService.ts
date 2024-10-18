@@ -19,7 +19,7 @@ import {
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
-import { ApplicationContext } from "../types";
+import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
 import { zuconnectProductIdToZuzaluRole } from "../util/zuconnectTicket";
 import { traced } from "./telemetryService";
@@ -446,7 +446,14 @@ export class SemaphoreService {
 
 export function startSemaphoreService(
   context: ApplicationContext
-): SemaphoreService {
+): SemaphoreService | null {
+  if (![ServerMode.UNIFIED, ServerMode.PARALLEL_MAIN].includes(context.mode)) {
+    logger(
+      `[INIT] semaphore service not started, not in unified or parallel main mode`
+    );
+    return null;
+  }
+
   const semaphoreService = new SemaphoreService(context);
   semaphoreService.start();
   semaphoreService.scheduleReload();

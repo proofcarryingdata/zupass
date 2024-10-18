@@ -30,7 +30,7 @@ export async function startServices(
 
   const multiprocessService = startMultiProcessService();
   const pagerDutyService = startPagerDutyService();
-  const discordService = await startDiscordService();
+  const discordService = await startDiscordService(context);
   const rollbarService = startRollbarService(context);
   const rateLimitService = startRateLimitService(context, rollbarService);
   const telegramService = await startTelegramService(
@@ -87,7 +87,6 @@ export async function startServices(
   );
   const userService = startUserService(
     context,
-    semaphoreService,
     emailTokenService,
     emailService,
     rateLimitService,
@@ -124,9 +123,9 @@ export async function startServices(
 export async function stopServices(services: GlobalServices): Promise<void> {
   services.userService.stop();
   services.provingService.stop();
-  services.semaphoreService.stop();
+  services.semaphoreService?.stop();
   services.zuzaluPretixSyncService?.stop();
-  services.metricsService.stop();
+  services.metricsService?.stop();
   services.telegramService?.stop();
   services.persistentCacheService.stop();
   services.devconnectPretixSyncService?.stop();
