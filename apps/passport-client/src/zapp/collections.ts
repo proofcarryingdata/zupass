@@ -24,7 +24,18 @@ export function getPODsForCollections(
 ): POD[] {
   return collectionIds
     .flatMap((collectionId) =>
-      collectionId === "Devcon Swag"
+      collectionId === "Devcon"
+        ? pcds.getPCDsByType(PODTicketPCDTypeName).filter((pcd) => {
+            const ticketPCD = pcd as PODTicketPCD;
+            return (
+              ticketPCD.claim.ticket.eventId ===
+                "5074edf5-f079-4099-b036-22223c0c6995" &&
+              ticketPCD.claim.signerPublicKey ===
+                "YwahfUdUYehkGMaWh0+q3F8itx2h8mybjPmt8CmTJSs" &&
+              !ticketPCD.claim.ticket.isAddOn
+            );
+          })
+        : collectionId === "Devcon Swag"
         ? pcds
             .getPCDsByType(PODTicketPCDTypeName)
             .filter((pcd) => (pcd as PODTicketPCD).claim.ticket.isAddOn)
