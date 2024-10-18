@@ -73,7 +73,7 @@ import {
 } from "../database/queries/telegram/insertTelegramConversation";
 import { insertTelegramReaction } from "../database/queries/telegram/insertTelegramReaction";
 import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
-import { ApplicationContext } from "../types";
+import { ApplicationContext, ServerMode } from "../types";
 import { handleFrogVerification } from "../util/frogTelegramHelpers";
 import { logger } from "../util/logger";
 import {
@@ -1778,6 +1778,13 @@ export async function startTelegramService(
   const anonBotToken = process.env.TELEGRAM_ANON_BOT_TOKEN;
   const forwardBotToken = process.env.TELEGRAM_FORWARD_BOT_TOKEN;
   const anonBotExists = !!(anonBotToken && anonBotToken !== botToken);
+
+  if (![ServerMode.UNIFIED, ServerMode.PARALLEL_MAIN].includes(context.mode)) {
+    logger(
+      `[INIT] telegram service not started, not in unified or parallel main mode`
+    );
+    return null;
+  }
 
   if (process.env.TELEGRAM_BOT_DISABLED === "true") {
     logger(
