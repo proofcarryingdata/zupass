@@ -1,7 +1,7 @@
 {
   "name": "@pcd/unknown-pcd-ui",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -26,15 +26,15 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/passport-ui": "0.11.6",
-    "@pcd/pcd-types": "0.11.4",
-    "@pcd/unknown-pcd": "0.0.0",
-    "@pcd/util": "0.5.4",
+    "@pcd/passport-ui": "0.13.0",
+    "@pcd/pcd-types": "0.13.0",
+    "@pcd/unknown-pcd": "0.2.0",
+    "@pcd/util": "0.7.0",
     "react": "^18.2.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.4",
-    "@pcd/tsconfig": "0.11.4",
+    "@pcd/eslint-config-custom": "0.13.0",
+    "@pcd/tsconfig": "0.13.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "eslint": "^8.57.0",
