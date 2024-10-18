@@ -11,12 +11,15 @@ export default function Select<Option = unknown>(
 const StyledSelect: StateManagedSelect = styled(ReactSelect)`
   .Select__control {
     width: 100%;
-    background-color: var(--bg-dark-gray);
-    border: 1px solid var(--bg-lite-gray);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: #fff;
     font:
-      14px PlexSans,
+      14px Barlow,
       system-ui,
       sans-serif;
+    color: var(--text-primary);
+    font-weight: 500;
   }
 
   .Select__control--is-focused {
@@ -24,7 +27,7 @@ const StyledSelect: StateManagedSelect = styled(ReactSelect)`
     outline: none;
 
     .Select__dropdown-indicator {
-      color: hsl(0, 0%, 80%);
+      color: var(--text-primary);
     }
   }
 
@@ -38,25 +41,30 @@ const StyledSelect: StateManagedSelect = styled(ReactSelect)`
 
   .Select__dropdown-indicator {
     &:hover {
-      color: var(--white);
+      color: var(--text-primary);
     }
   }
 
   .Select__menu {
-    background-color: var(--bg-dark-gray);
-    border: 1px solid var(--bg-lite-gray);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    background: #fff;
   }
 
   .Select__option {
-    background-color: var(--bg-dark-gray);
+    background-color: #fff;
 
+    color: var(--text-primary);
+    font:
+      14px Barlow,
+      system-ui,
+      sans-serif;
     &:hover {
-      background-color: var(--bg-lite-gray);
+      border: 1px solid rgba(0, 0, 0, 0.05);
     }
   }
 
   .Select__placeholder,
   .Select__single-value {
-    color: var(--white);
+    color: var(--text-primary);
   }
 `;

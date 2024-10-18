@@ -208,7 +208,9 @@ export type Action =
             eventId: string;
           }
         | undefined;
-    };
+    }
+  | { type: "prove-state"; eligible: boolean }
+  | { type: "reset-prove-state" };
 
 export type StateContextValue = {
   getState: GetState;
@@ -351,6 +353,17 @@ export async function dispatch(
     case "scroll-to-ticket":
       const { scrollTo } = action;
       update({ scrollTo });
+      return;
+    case "prove-state":
+      console.log(action);
+      const newList = state.proveStateEligiblePCDs ?? [];
+      newList.push(action.eligible);
+      update({
+        proveStateEligiblePCDs: newList
+      });
+      return;
+    case "reset-prove-state":
+      update({ proveStateEligiblePCDs: undefined });
       return;
     default:
       // We can ensure that we never get here using the type system
