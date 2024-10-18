@@ -1,4 +1,4 @@
-import { serializeGPCBoundConfig, serializeGPCRevealedClaims } from "@pcd/gpc";
+import { proofConfigToJSON, revealedClaimsToJSON } from "@pcd/gpc";
 import { GPCPCD, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
   Button,
@@ -51,7 +51,9 @@ function GPCCardBody({ pcd }: { pcd: GPCPCD }): JSX.Element {
       <TextContainer
         style={{ overflowX: "auto", maxHeight: "200px", overflowY: "auto" }}
       >
-        <pre>{serializeGPCBoundConfig(pcd.claim.config, 2)}</pre>
+        <pre>
+          {JSON.stringify(proofConfigToJSON(pcd.claim.config), null, 2)}
+        </pre>
       </TextContainer>
       <Spacer h={8} />
 
@@ -60,7 +62,9 @@ function GPCCardBody({ pcd }: { pcd: GPCPCD }): JSX.Element {
       <TextContainer
         style={{ overflowX: "auto", maxHeight: "200px", overflowY: "auto" }}
       >
-        <pre>{serializeGPCRevealedClaims(pcd.claim.revealed, 2)}</pre>
+        <pre>
+          {JSON.stringify(revealedClaimsToJSON(pcd.claim.revealed), null, 2)}
+        </pre>
       </TextContainer>
       <Spacer h={8} />
       <Button

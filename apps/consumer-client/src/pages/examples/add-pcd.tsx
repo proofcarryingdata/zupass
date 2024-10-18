@@ -11,7 +11,9 @@ import {
   GPCArtifactStability,
   GPCArtifactVersion,
   JSONPODMembershipLists,
-  podMembershipListsFromJSON
+  JSONProofConfig,
+  podMembershipListsFromJSON,
+  proofConfigFromJSON
 } from "@pcd/gpc";
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
@@ -839,11 +841,13 @@ async function addGPCPCD(
   const jsonMembershipLists: JSONPODMembershipLists =
     JSON.parse(membershipLists);
   podMembershipListsFromJSON(jsonMembershipLists);
+  const jsonProofConfig: JSONProofConfig = JSON.parse(gpcConfig);
+  proofConfigFromJSON(jsonProofConfig);
 
   const proveArgs: GPCPCDArgs = {
     proofConfig: {
-      argumentType: ArgumentTypeName.String,
-      value: gpcConfig
+      argumentType: ArgumentTypeName.Object,
+      value: jsonProofConfig
     },
     pods: {
       value: {

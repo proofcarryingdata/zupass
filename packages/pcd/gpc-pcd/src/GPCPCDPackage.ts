@@ -2,14 +2,14 @@ import {
   GPCProofConfig,
   GPCProofInputs,
   PODMembershipLists,
-  deserializeGPCBoundConfig,
-  deserializeGPCProofConfig,
-  deserializeGPCRevealedClaims,
+  boundConfigFromJSON,
+  boundConfigToJSON,
   gpcProve,
   gpcVerify,
   podMembershipListsFromJSON,
-  serializeGPCBoundConfig,
-  serializeGPCRevealedClaims
+  proofConfigFromJSON,
+  revealedClaimsFromJSON,
+  revealedClaimsToJSON
 } from "@pcd/gpc";
 import {
   ArgumentTypeName,
@@ -33,7 +33,7 @@ import {
   GPCPCDTypeName,
   PODPCDArgValidatorParams
 } from "./GPCPCD";
-import { fixedPODEntriesFromJSON } from "./util";
+import { fixedPODEntriesFromJSON } from "./json";
 import {
   checkPCDType,
   checkPODAgainstPrescribedSignerPublicKeys,
@@ -73,7 +73,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   if (!args.proofConfig.value) {
     throw new Error("No proof config value provided");
   }
-  const proofConfig = deserializeGPCProofConfig(args.proofConfig.value);
+  const proofConfig = proofConfigFromJSON(args.proofConfig.value);
 
   if (!args.pods.value) {
     throw new Error("No PODs provided");
@@ -214,10 +214,8 @@ export async function serialize(pcd: GPCPCD): Promise<SerializedPCD<GPCPCD>> {
     pcd: JSON.stringify({
       id: pcd.id,
       claim: {
-        // These fields are pre-serialized to a string so that JSONBig isn't
-        // needed above.
-        config: serializeGPCBoundConfig(pcd.claim.config),
-        revealed: serializeGPCRevealedClaims(pcd.claim.revealed)
+        jsonConfig: boundConfigToJSON(pcd.claim.config),
+        jsonRevealed: revealedClaimsToJSON(pcd.claim.revealed)
       },
       proof: pcd.proof
     })
@@ -234,13 +232,12 @@ export async function deserialize(serialized: string): Promise<GPCPCD> {
 
   requireDefinedParameter(deserialized.id, "id");
   requireDefinedParameter(deserialized.claim, "claim");
-  requireDefinedParameter(deserialized.claim.config, "config");
-  const deserializedConfig = deserializeGPCBoundConfig(
-    deserialized.claim.config
-  );
-  requireDefinedParameter(deserialized.claim.revealed, "revealed");
-  const deserializedRevealed = deserializeGPCRevealedClaims(
-    deserialized.claim.revealed
+  requireDefinedParameter(deserialized.claim.jsonConfig, "jsonConfig");
+  const deserializedConfig = boundConfigFromJSON(deserialized.claim.jsonConfig);
+
+  requireDefinedParameter(deserialized.claim.jsonRevealed, "jsonRevealed");
+  const deserializedRevealed = revealedClaimsFromJSON(
+    deserialized.claim.jsonRevealed
   );
 
   requireDefinedParameter(deserialized.proof, "proof");
@@ -285,7 +282,7 @@ function validateInputPOD(
   try {
     proofConfig =
       params.proofConfig !== undefined
-        ? deserializeGPCProofConfig(params.proofConfig)
+        ? proofConfigFromJSON(params.proofConfig)
         : undefined;
 
     membershipLists =
@@ -353,7 +350,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
   return {
     defaultArgs: {
       proofConfig: {
-        argumentType: ArgumentTypeName.String,
+        argumentType: ArgumentTypeName.Object,
         defaultVisible: true,
         displayName: "Proof Configuration",
         description: `This specifies what to prove about the inputs, and which
