@@ -63,6 +63,7 @@ export interface InstantiatePipelineArgs {
  * and expose its {@link Capability}s to the external world.
  */
 export function instantiatePipeline(
+  context: ApplicationContext,
   definition: PipelineDefinition,
   args: InstantiatePipelineArgs
 ): Promise<Pipeline> {
@@ -104,6 +105,7 @@ export function instantiatePipeline(
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(
+        context,
         args.eddsaPrivateKey,
         definition,
         args.pipelineAtomDB,
@@ -113,6 +115,7 @@ export function instantiatePipeline(
       );
     } else if (isPODPipelineDefinition(definition)) {
       pipeline = new PODPipeline(
+        context,
         args.eddsaPrivateKey,
         definition,
         args.pipelineAtomDB,

@@ -42,6 +42,7 @@
     "@pcd/eslint-config-custom": "0.13.0",
     "@pcd/tsconfig": "0.13.0",
     "@types/chai": "^4.3.5",
+    "@types/json-bigint": "^1.0.1",
     "@types/lodash": "^4.17.1",
     "@types/mocha": "^10.0.1",
     "@types/snarkjs": "^0.7.5",

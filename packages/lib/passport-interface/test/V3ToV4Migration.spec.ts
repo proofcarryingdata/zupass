@@ -1,6 +1,6 @@
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { decodePrivateKey } from "@pcd/pod";
+import { decodePrivateKey, podEntriesToJSON } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import {
   IdentityV3,
@@ -69,7 +69,7 @@ describe("V3ToV4Migration", async function () {
     const v4SigOfV3Claim = await PODPCDPackage.prove({
       entries: {
         argumentType: ArgumentTypeName.Object,
-        value: {
+        value: podEntriesToJSON({
           mySemaphoreV3Commitment: {
             type: "cryptographic",
             value: 1n // this is the problem this test is catching; it should be the v3 commitment
@@ -78,7 +78,7 @@ describe("V3ToV4Migration", async function () {
             type: "string",
             value: "zupass_semaphore_v4_migration"
           }
-        }
+        })
       },
       privateKey: {
         argumentType: ArgumentTypeName.String,
@@ -115,7 +115,7 @@ describe("V3ToV4Migration", async function () {
     const v4SigOfV3Claim = await PODPCDPackage.prove({
       entries: {
         argumentType: ArgumentTypeName.Object,
-        value: {
+        value: podEntriesToJSON({
           mySemaphoreV3Commitment: {
             type: "cryptographic",
             value: identityPCD.claim.identityV3.commitment
@@ -124,7 +124,7 @@ describe("V3ToV4Migration", async function () {
             type: "string",
             value: "zupass_semaphore_v4_migration XD"
           }
-        }
+        })
       },
       privateKey: {
         argumentType: ArgumentTypeName.String,

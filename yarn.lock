@@ -5288,6 +5288,18 @@
     snarkjs "^0.7.4"
     url-join "4.0.1"
 
+"@pcd/libsodium-sumo@^0.7.15":
+  version "0.7.15"
+  resolved "https://registry.yarnpkg.com/@pcd/libsodium-sumo/-/libsodium-sumo-0.7.15.tgz#9ff83bf0f3f9b6d275e76a76918795b0225f1777"
+  integrity sha512-/0i91IUdcIM4AFQ85Zs01wVqu5PU9qqX0bSjC3Utct7KPsgXZOfMdnwgTT7Tq/2AwLgcFq8s1kdMQiBP0kSCqw==
+
+"@pcd/libsodium-wrappers-sumo@^0.7.15-1":
+  version "0.7.15-1"
+  resolved "https://registry.yarnpkg.com/@pcd/libsodium-wrappers-sumo/-/libsodium-wrappers-sumo-0.7.15-1.tgz#007c6ab2f22eb334150eb6283fb7fdae7780c399"
+  integrity sha512-GwhGaz+d5y7FMFQReDTaaDtTVH2cmtao7BQ7cJXbIjm+80QUhXyUnXiyntrWemEf/RaDX2cmMVhEdW9vo24ZCg==
+  dependencies:
+    "@pcd/libsodium-sumo" "^0.7.15"
+
 "@pcd/pod@0.1.7", "@pcd/pod@^0.1.7":
   version "0.1.7"
   resolved "https://registry.yarnpkg.com/@pcd/pod/-/pod-0.1.7.tgz#aba96db2bdf687a742f1dd60247c0299334b3f30"
@@ -15876,17 +15888,17 @@ libhoney@^4.0.1:
     superagent "^8.0.0"
     url-join "^5.0.0"
 
-libsodium-sumo@^0.7.11:
-  version "0.7.11"
-  resolved "https://registry.yarnpkg.com/libsodium-sumo/-/libsodium-sumo-0.7.11.tgz#ab0389e2424fca5c1dc8c4fd394906190da88a11"
-  integrity sha512-bY+7ph7xpk51Ez2GbE10lXAQ5sJma6NghcIDaSPbM/G9elfrjLa0COHl/7P6Wb/JizQzl5UQontOOP1z0VwbLA==
+libsodium-sumo@^0.7.15:
+  version "0.7.15"
+  resolved "https://registry.yarnpkg.com/libsodium-sumo/-/libsodium-sumo-0.7.15.tgz#91c1d863fe3fbce6d6b9db1aadaa622733a1d007"
+  integrity sha512-5tPmqPmq8T8Nikpm1Nqj0hBHvsLFCXvdhBFV7SGOitQPZAA6jso8XoL0r4L7vmfKXr486fiQInvErHtEvizFMw==
 
-libsodium-wrappers-sumo@^0.7.11:
-  version "0.7.11"
-  resolved "https://registry.yarnpkg.com/libsodium-wrappers-sumo/-/libsodium-wrappers-sumo-0.7.11.tgz#d96329ee3c0e7ec7f5fcf4cdde16cc3a1ae91d82"
-  integrity sha512-DGypHOmJbB1nZn89KIfGOAkDgfv5N6SBGC3Qvmy/On0P0WD1JQvNRS/e3UL3aFF+xC0m+MYz5M+MnRnK2HMrKQ==
+libsodium-wrappers-sumo@^0.7.15:
+  version "0.7.15"
+  resolved "https://registry.yarnpkg.com/libsodium-wrappers-sumo/-/libsodium-wrappers-sumo-0.7.15.tgz#0ef2a99b4b17e8385aa7e6850593660dbaf5fb40"
+  integrity sha512-aSWY8wKDZh5TC7rMvEdTHoyppVq/1dTSAeAR7H6pzd6QRT3vQWcT5pGwCotLcpPEOLXX6VvqihSPkpEhYAjANA==
   dependencies:
-    libsodium-sumo "^0.7.11"
+    libsodium-sumo "^0.7.15"
 
 liftoff@^4.0.0:
   version "4.0.0"

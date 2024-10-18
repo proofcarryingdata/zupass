@@ -23,7 +23,7 @@ import { expect } from "chai";
 import { sha256 } from "js-sha256";
 import "mocha";
 import MockDate from "mockdate";
-import { Pool } from "postgres-pool";
+import { Pool, PoolClient } from "postgres-pool";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import {
@@ -55,7 +55,8 @@ const DATE_EPOCH_1H1M = new Date(DATE_EPOCH_1H.getTime() + 60 * 1000);
 const DATE_EPOCH_1H1M59S = new Date(DATE_EPOCH_1H1M.getTime() + 59 * 1000);
 
 describe("frogcrypto functionality", function () {
-  let db: Pool;
+  let pool: Pool;
+  let client: PoolClient;
   let application: Zupass;
   let identity: Identity;
   let frogPCD: EdDSAFrogPCD;
@@ -63,10 +64,12 @@ describe("frogcrypto functionality", function () {
 
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
-    db = await getDB();
-    await upsertFrogData(db, testFrogs);
-    await upsertFeedData(db, testFeeds);
-    feeds = await getFeedData(db);
+    pool = await getDB();
+    client = await pool.connect();
+
+    await upsertFrogData(client, testFrogs);
+    await upsertFeedData(client, testFeeds);
+    feeds = await getFeedData(client);
 
     application = await startTestingApp();
 
@@ -75,7 +78,8 @@ describe("frogcrypto functionality", function () {
 
   this.afterAll(async () => {
     await stopApplication(application);
-    await db.end();
+    await client.end();
+    await pool.end();
   });
 
   this.beforeEach(async () => {
@@ -238,7 +242,7 @@ describe("frogcrypto functionality", function () {
       TheCapital: { dropWeightScaler: 1 }
     });
 
-    const prototype = (await getFrogData(db)).find(
+    const prototype = (await getFrogData(client)).find(
       (frog) => frog.biome === "The Capital"
     );
     expectToExist(prototype);
@@ -354,7 +358,7 @@ describe("frogcrypto functionality", function () {
     expect(feed.private).to.be.false;
     expect(feed.cooldown).to.eq(60);
 
-    const client = await db.connect();
+    const client = await pool.connect();
     await incrementScore(
       client,
       identity.getCommitment().toString(),
@@ -367,7 +371,7 @@ describe("frogcrypto functionality", function () {
   });
 
   it("should not increment score if getting an object", async () => {
-    await upsertFrogData(db, testFrogsAndObjects);
+    await upsertFrogData(client, testFrogsAndObjects);
     const feed = feeds[5];
     expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.true;
@@ -412,9 +416,9 @@ describe("frogcrypto functionality", function () {
     expect(loginResult?.identity).to.not.be.empty;
     identity = loginResult?.identity as Identity;
 
-    await insertTelegramChat(db, 101);
+    await insertTelegramChat(client, 101);
     await insertTelegramVerification(
-      db,
+      client,
       11,
       101,
       identity.getCommitment().toString(),
@@ -459,9 +463,9 @@ describe("frogcrypto functionality", function () {
     expect(loginResult?.identity).to.not.be.empty;
     identity = loginResult?.identity as Identity;
 
-    await insertTelegramChat(db, 102);
+    await insertTelegramChat(client, 102);
     await insertTelegramVerification(
-      db,
+      client,
       12,
       102,
       identity.getCommitment().toString()

@@ -19,7 +19,7 @@
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --type-check --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "test": "vitest run",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
@@ -27,20 +27,18 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "buffer": "^6.0.3",
-    "libsodium-wrappers-sumo": "^0.7.11"
+    "@pcd/libsodium-wrappers-sumo": "^0.7.15-1",
+    "buffer": "^6.0.3"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.13.0",
     "@pcd/tsconfig": "0.13.0",
-    "@types/libsodium-wrappers-sumo": "^0.7.6",
-    "@types/mocha": "^10.0.1",
+    "libsodium-wrappers-sumo": "^0.7.15",
     "@types/react": "^18.0.22",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",
-    "mocha": "^10.2.0",
-    "ts-mocha": "^10.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vitest": "^2.1.2"
   },
   "browser": {
     "crypto": false

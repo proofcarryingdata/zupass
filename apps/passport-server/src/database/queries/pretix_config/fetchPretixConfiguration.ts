@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { PretixOrganizersConfig } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -6,7 +6,7 @@ import { sqlQuery } from "../../sqlQuery";
  * Fetch the list of Pretix organizers from the database.
  */
 export async function fetchPretixConfiguration(
-  client: Pool
+  client: PoolClient
 ): Promise<Array<PretixOrganizersConfig>> {
   const result = await sqlQuery(
     client,
@@ -24,7 +24,7 @@ export async function fetchPretixConfiguration(
  * Fetch the list of Pretix organizers from the database.
  */
 export async function fetchEventConfiguration(
-  client: Pool,
+  client: PoolClient,
   orgURL: string,
   eventID: string
 ): Promise<Array<PretixOrganizersConfig>> {

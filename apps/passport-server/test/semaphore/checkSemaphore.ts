@@ -2,6 +2,7 @@ import { deserializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { BigNumberish, Group } from "@semaphore-protocol/group";
 import { expect } from "chai";
 import { fetchLatestHistoricSemaphoreGroups } from "../../src/database/queries/historicSemaphore";
+import { sqlTransaction } from "../../src/database/sqlQuery";
 import { Zupass } from "../../src/types";
 
 export interface SemaphoreGroups {
@@ -83,8 +84,9 @@ function getCurrentSemaphoreServiceGroups(
 async function getLatestHistoricalSemaphoreGroups(
   application: Zupass
 ): Promise<SemaphoreGroups> {
-  const latestGroups = await fetchLatestHistoricSemaphoreGroups(
-    application.context.dbPool
+  const latestGroups = await sqlTransaction(
+    application.context.dbPool,
+    (client) => fetchLatestHistoricSemaphoreGroups(client)
   );
 
   const parsedLatestGroups = await Promise.all(
