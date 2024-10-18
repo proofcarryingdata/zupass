@@ -30,7 +30,7 @@ export async function startServices(
 
   const multiprocessService = startMultiProcessService();
   const pagerDutyService = startPagerDutyService();
-  const discordService = await startDiscordService();
+  const discordService = await startDiscordService(context);
   const rollbarService = startRollbarService(context);
   const rateLimitService = startRateLimitService(context, rollbarService);
   const telegramService = await startTelegramService(

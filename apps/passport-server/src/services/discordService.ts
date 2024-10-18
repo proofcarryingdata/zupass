@@ -4,6 +4,7 @@ import {
   GatewayIntentBits,
   TextBasedChannel
 } from "discord.js";
+import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
 
@@ -36,8 +37,17 @@ export class DiscordService {
   }
 }
 
-export async function startDiscordService(): Promise<DiscordService | null> {
+export async function startDiscordService(
+  context: ApplicationContext
+): Promise<DiscordService | null> {
   logger(`[INIT] initializing Discord`);
+
+  if (![ServerMode.UNIFIED, ServerMode.PARALLEL_MAIN].includes(context.mode)) {
+    logger(
+      `[INIT] discord service not started, not in unified or parallel main mode`
+    );
+    return null;
+  }
 
   if (!process.env.DISCORD_ALERTS_CHANNEL_ID) {
     logger(
