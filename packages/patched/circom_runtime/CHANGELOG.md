@@ -1,5 +1,11 @@
 # @pcd/circom_runtime
 
+## 0.3.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
 ## 0.2.0
 
 ### Minor Changes

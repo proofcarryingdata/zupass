@@ -1,5 +1,17 @@
 # @pcd/halo-nonce-pcd
 
+## 0.9.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.13.0
+  - @pcd/util@0.7.0
+
 ## 0.8.0
 
 ### Minor Changes

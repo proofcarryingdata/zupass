@@ -1,5 +1,19 @@
 # @pcd/pcd-types
 
+## 0.13.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.13.0
+  - @pcd/passport-crypto@0.13.0
+  - @pcd/pcd-types@0.13.0
+  - @pcd/emitter@0.7.0
+
 ## 0.12.0
 
 ### Minor Changes

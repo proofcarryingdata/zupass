@@ -1,5 +1,11 @@
 # @pcd/client-shared
 
+## 0.2.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
 ## 0.1.0
 
 ### Minor Changes

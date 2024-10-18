@@ -1,5 +1,11 @@
 # @pcd/passport-crypto
 
+## 0.13.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
 ## 0.12.0
 
 ### Minor Changes

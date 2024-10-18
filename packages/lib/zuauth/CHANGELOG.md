@@ -1,5 +1,21 @@
 # @pcd/zuauth
 
+## 1.6.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zk-eddsa-event-ticket-pcd@0.8.0
+  - @pcd/semaphore-identity-pcd@0.13.0
+  - @pcd/passport-interface@0.13.0
+  - @pcd/eddsa-ticket-pcd@0.8.0
+  - @pcd/pcd-types@0.13.0
+  - @pcd/eddsa-pcd@0.8.0
+
 ## 1.5.0
 
 ### Minor Changes

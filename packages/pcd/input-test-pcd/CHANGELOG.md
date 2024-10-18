@@ -1,5 +1,16 @@
 # @pcd/input-test-pcd
 
+## 0.13.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.13.0
+
 ## 0.12.0
 
 ### Minor Changes

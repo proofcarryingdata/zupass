@@ -1,7 +1,7 @@
 {
   "name": "@pcd/podbox-shared",
   "private": false,
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -28,17 +28,17 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/passport-interface": "0.12.0",
-    "@pcd/pod": "0.2.0",
-    "@pcd/util": "0.6.0",
+    "@pcd/passport-interface": "0.13.0",
+    "@pcd/pod": "0.3.0",
+    "@pcd/util": "0.7.0",
     "csv-parse": "^5.5.3",
     "csv-stringify": "^6.4.5",
     "uuid": "^9.0.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.12.0",
-    "@pcd/tsconfig": "0.12.0",
+    "@pcd/eslint-config-custom": "0.13.0",
+    "@pcd/tsconfig": "0.13.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "chai-as-promised": "^7.1.1",

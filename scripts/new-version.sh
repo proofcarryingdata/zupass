@@ -16,15 +16,15 @@ dir_path=$(dirname $(dirname $full_path))
 cyan_bold='\033[36;1m'
 
 # Loop over each package
-for dir in $dir_path/packages/*/*;
-do
-  # Extract the package name from the path
-  package_name=$(basename $dir)
-  echo -e "Publishing package ${cyan_bold}$package_name\033[0m"
-  # Publish the package
-  # This might fail if the current version of the package has already been
-  # published, but this is unlikely since new versions were assigned by
-  # `yarn changeset version`. Failure of a single package to publish will
-  # not prevent other packages from publishing.
-  cd $dir && yarn publish --registry=$REGISTRY --non-interactive
-done
+# for dir in $dir_path/packages/*/*;
+# do
+#   # Extract the package name from the path
+#   package_name=$(basename $dir)
+#   echo -e "Publishing package ${cyan_bold}$package_name\033[0m"
+#   # Publish the package
+#   # This might fail if the current version of the package has already been
+#   # published, but this is unlikely since new versions were assigned by
+#   # `yarn changeset version`. Failure of a single package to publish will
+#   # not prevent other packages from publishing.
+#   cd $dir && yarn publish --registry=$REGISTRY --non-interactive
+# done

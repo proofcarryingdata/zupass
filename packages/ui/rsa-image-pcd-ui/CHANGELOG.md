@@ -1,5 +1,18 @@
 # @pcd/rsa-image-pcd-ui
 
+## 0.4.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/rsa-image-pcd@0.7.0
+  - @pcd/passport-ui@0.13.0
+  - @pcd/pcd-types@0.13.0
+
 ## 0.3.0
 
 ### Minor Changes

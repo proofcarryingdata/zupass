@@ -1,5 +1,18 @@
 # @pcd/gpcircuits
 
+## 0.2.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpcircuits@0.3.0
+  - @pcd/util@0.7.0
+  - @pcd/pod@0.3.0
+
 ## 0.1.0
 
 ### Minor Changes

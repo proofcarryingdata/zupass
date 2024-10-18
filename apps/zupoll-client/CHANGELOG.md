@@ -1,5 +1,18 @@
 # zupoll-client
 
+## 0.0.13
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/semaphore-identity-pcd@0.13.0
+  - @pcd/semaphore-group-pcd@0.13.0
+  - @pcd/passport-interface@0.13.0
+  - @pcd/client-shared@0.2.0
+  - @pcd/zupoll-shared@0.2.0
+  - @pcd/pcd-types@0.13.0
+  - @pcd/util@0.7.0
+
 ## 0.0.12
 
 ### Patch Changes

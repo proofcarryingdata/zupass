@@ -1,6 +1,6 @@
 {
   "name": "@pcd/passport-crypto",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -31,8 +31,8 @@
     "libsodium-wrappers-sumo": "^0.7.11"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.12.0",
-    "@pcd/tsconfig": "0.12.0",
+    "@pcd/eslint-config-custom": "0.13.0",
+    "@pcd/tsconfig": "0.13.0",
     "@types/libsodium-wrappers-sumo": "^0.7.6",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",

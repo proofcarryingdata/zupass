@@ -1,5 +1,17 @@
 # @pcd/rsa-image-pcd
 
+## 0.7.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.13.0
+  - @pcd/rsa-pcd@0.8.0
+
 ## 0.6.0
 
 ### Minor Changes

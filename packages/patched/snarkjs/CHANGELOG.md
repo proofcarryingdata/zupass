@@ -1,5 +1,16 @@
 # @pcd/snarkjs
 
+## 0.9.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/circom_runtime@0.3.0
+
 ## 0.8.0
 
 ### Minor Changes
