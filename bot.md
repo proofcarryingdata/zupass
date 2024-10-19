@@ -1,6 +1,6 @@
 # Dev Instructions for Testing ZKMS Bot
 
-_Doing this steps in order is more likely to result in success_
+_Doing these steps in order is more likely to result in success_
 
 ### 0. Prerequisites
 
@@ -61,7 +61,7 @@ This is a one-time setup for serving https locally. You need it for Telegram, be
    mkcert -install
    ```
 
-3. Now, run the follow commands from the repo root to generate a new certificate
+3. Now, run the following commands from the repo root to generate a new certificate
 
    ```bash
    mkdir apps/certificates && cd apps/certificates && mkcert dev.local
@@ -97,5 +97,5 @@ This is a one-time setup for serving https locally. You need it for Telegram, be
 - When restarting your database, make sure to run `localdb:restart` not `yarn localdb:init && yarn localdb:up`.
 
   - If you do accidentally run `init`, you will clear all local data. This is ok, but it causes some problems because your local Zupass ticket still exists in localStorage in the Telegram Web View of Zupass, but doesn't exist in the database.
-  - To rectify this situation, you should clear localStorage on Telegram Zupass by right-clicking the on the Web view, then selecting `Inspect Element`. From there, you can go to the `Storage` tab and clear everything.
+  - To rectify this situation, you should clear localStorage on Telegram Zupass by right-clicking on the Web view, then selecting `Inspect Element`. From there, you can go to the `Storage` tab and clear everything.
   - Then, you just have to login again with an account that has a ticket
