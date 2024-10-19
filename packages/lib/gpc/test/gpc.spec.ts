@@ -1,4 +1,8 @@
-import { ProtoPODGPCCircuitDesc } from "@pcd/gpcircuits";
+import {
+  ProtoPODGPC,
+  ProtoPODGPCCircuitDesc,
+  gpcArtifactPaths
+} from "@pcd/gpcircuits";
 import {
   POD,
   PODCryptographicValue,
@@ -31,7 +35,10 @@ import {
   gpcCheckProvable as _gpcCheckProvable,
   gpcProve as _gpcProve,
   gpcVerify as _gpcVerify,
-  gpcArtifactDownloadURL
+  gpcArtifactDownloadURL,
+  gpcPostProve,
+  gpcPreProve,
+  gpcPreVerify
 } from "../src";
 import { makeCircuitIdentifier, makeWatermarkSignal } from "../src/gpcUtil";
 import {
@@ -203,6 +210,68 @@ describe(`gpc library (Compiled ${circuitParamType} artifacts) should work`, asy
       proofConfig,
       proofInputs,
       expectedRevealedClaims
+    );
+    expect(isVerified).to.be.true;
+
+    // For this small case, the library should auto-pick the smallest circuit.
+    expect(boundConfig.circuitIdentifier).to.eq(
+      makeCircuitIdentifier(testCircuitFamily[0])
+    );
+  });
+
+  it("should prove and verify with pre/post and separate proving system", async function () {
+    const { proofConfig, proofInputs, expectedRevealedClaims } =
+      makeMinimalArgs();
+
+    const {
+      boundConfig: orgBoundConfig,
+      circuitDesc: pCircuitDesc,
+      circuitInputs
+    } = gpcPreProve(proofConfig, proofInputs, testCircuitFamily);
+
+    const artifactPaths = gpcArtifactPaths(
+      GPC_TEST_ARTIFACTS_PATH,
+      pCircuitDesc
+    );
+
+    const { proof: orgProof, outputs: pCircuitOutputs } =
+      await ProtoPODGPC.prove(
+        circuitInputs,
+        artifactPaths.wasmPath,
+        artifactPaths.pkeyPath
+      );
+
+    const { proof, boundConfig, revealedClaims } = gpcPostProve(
+      orgProof,
+      orgBoundConfig,
+      proofInputs,
+      pCircuitOutputs
+    );
+
+    // There's nothing non-canonical about our input, so boundConfig should
+    // only differ by circuit selection.
+    const manuallyBoundConfig = {
+      ...proofConfig,
+      circuitIdentifier: boundConfig.circuitIdentifier
+    };
+    expect(boundConfig).to.deep.eq(manuallyBoundConfig);
+
+    expect(revealedClaims).to.deep.eq(expectedRevealedClaims);
+
+    const {
+      circuitDesc: vCircuitDesc,
+      circuitPublicInputs,
+      circuitOutputs: vCircuitOutputs
+    } = gpcPreVerify(boundConfig, revealedClaims, testCircuitFamily);
+
+    expect(pCircuitDesc).to.deep.eq(vCircuitDesc);
+    expect(pCircuitOutputs).to.deep.eq(vCircuitOutputs);
+
+    const isVerified = await ProtoPODGPC.verify(
+      gpcArtifactPaths(GPC_TEST_ARTIFACTS_PATH, vCircuitDesc).vkeyPath,
+      proof,
+      circuitPublicInputs,
+      vCircuitOutputs
     );
     expect(isVerified).to.be.true;
 
