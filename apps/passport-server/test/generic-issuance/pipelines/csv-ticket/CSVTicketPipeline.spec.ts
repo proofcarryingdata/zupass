@@ -10,7 +10,6 @@ import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
 import { Pool, PoolClient } from "postgres-pool";
 import { stopApplication } from "../../../../src/application";
-import { getCacheSize } from "../../../../src/database/queries/cache";
 import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
 import { GenericIssuanceService } from "../../../../src/services/generic-issuance/GenericIssuanceService";
@@ -149,8 +148,6 @@ describe("generic issuance - CSVTicketPipeline", function () {
     const ticket2 = tickets[1];
     expectIsPODTicketPCD(ticket2);
     expect(ticket2.claim.ticket.attendeeEmail).to.eq("gabe@gmail.com");
-    // Both issues tickets should be cached
-    expect(await getCacheSize(client)).to.eq(2);
   });
 
   step("will not receive tickets for user with no tickets", async () => {
