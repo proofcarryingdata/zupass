@@ -128,7 +128,7 @@ const serviceWorkerOpts: BuildOptions = {
   define: {
     ...define,
     "process.env.SW_ID": JSON.stringify(uuid()),
-    "process.env.GENERATED_CHUNKS": "[]"
+    "process.env.GENERATED_CHUNKS": JSON.stringify("[]")
   }
 };
 
