@@ -142,10 +142,7 @@ export const NewAlreadyRegisteredScreen: React.FC = () => {
       if (!storageResult.success) {
         setIsLoggingIn(false);
         if ("NotFound" === storageResult.error.name) {
-          return setError(
-            "Password incorrect. Double-check your password. " +
-              "If you've lost access, you can reset your account below."
-          );
+          return setError("Password incorrect. Please try again.");
         } else {
           return setError(
             "An error occurred while downloading encrypted storage."
