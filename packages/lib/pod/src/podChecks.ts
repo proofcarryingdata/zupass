@@ -7,6 +7,7 @@ import {
   POD_NAME_REGEX,
   POD_VALUE_STRING_TYPE_IDENTIFIER,
   PODEntries,
+  PODName,
   PODRawValue,
   PODValue
 } from "./podTypes";
@@ -144,7 +145,7 @@ export function checkSignatureFormat(signature: string): string {
  * @returns the unmodified input, for easy chaining
  * @throws TypeError if the format doesn't match
  */
-export function checkPODName(name?: string): string {
+export function checkPODName(name?: string): PODName {
   if (!name) {
     throw new TypeError("POD names cannot be undefined.");
   }
