@@ -9,7 +9,7 @@ import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { toCanvas } from "html-to-image";
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
@@ -54,10 +54,16 @@ function EdDSATicketPCDCardBody({
   const ticketData = getEdDSATicketData(pcd);
   const [downloading, setDownloading] = useState(false);
 
+  // If ticket has an `eventStartDate` render the `qrCodeOverrideImageUrl`, if it exists
+  // Else, render the `imageUrl`, if it existss
+  const imageToRender = ticketData?.eventStartDate
+    ? ticketData.qrCodeOverrideImageUrl
+    : ticketData?.imageUrl;
+
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        {!ticketData?.imageUrl && (
+        {!imageToRender && (
           <TicketQR
             pcd={pcd}
             identityPCD={identityPCD}
@@ -66,7 +72,13 @@ function EdDSATicketPCDCardBody({
             zk={idBasedVerifyURL !== undefined}
           />
         )}
-        {ticketData?.imageUrl && <TicketImage pcd={pcd} hidePadding={true} />}
+        {imageToRender && (
+          <TicketImage
+            imageUrl={imageToRender}
+            imageAltText={ticketData?.imageAltText}
+            hidePadding={true}
+          />
+        )}
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
             {ticketData?.attendeeName.toUpperCase() || "Unknown"}
@@ -109,13 +121,14 @@ function EdDSATicketPCDCardBody({
 }
 
 function TicketImage({
-  pcd,
+  imageUrl,
+  imageAltText,
   hidePadding
 }: {
-  pcd: EdDSATicketPCD;
+  imageUrl: string;
+  imageAltText: string | undefined;
   hidePadding?: boolean;
 }): JSX.Element {
-  const { imageUrl, imageAltText } = pcd.claim.ticket;
   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
   return (
     <div style={{ padding: "8px" }}>

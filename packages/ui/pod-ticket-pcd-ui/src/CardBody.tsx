@@ -47,17 +47,27 @@ export function PODTicketCardBodyImpl({
 
   const [downloading, setDownloading] = useState(false);
 
+  // If ticket has an `eventStartDate` render the `qrCodeOverrideImageUrl`, if it exists
+  // Else, render the `imageUrl`, if it existss
+  const imageToRender = ticketData?.eventStartDate
+    ? ticketData.qrCodeOverrideImageUrl
+    : ticketData?.imageUrl;
+
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        {!ticketData.imageUrl && (
+        {!imageToRender && (
           <TicketQR
             ticketData={ticketData}
             idBasedVerifyURL={idBasedVerifyURL}
           />
         )}
-        {ticketData.imageUrl && (
-          <TicketImage hidePadding={true} ticketData={ticketData} />
+        {imageToRender && (
+          <TicketImage
+            hidePadding={true}
+            imageUrl={imageToRender}
+            imageAltText={ticketData.imageAltText}
+          />
         )}
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
@@ -159,13 +169,14 @@ export function linkToTicket(
 }
 
 function TicketImage({
-  ticketData,
+  imageUrl,
+  imageAltText,
   hidePadding
 }: {
-  ticketData: IPODTicketData;
+  imageUrl: string;
+  imageAltText: string | undefined;
   hidePadding?: boolean;
 }): JSX.Element {
-  const { imageUrl, imageAltText } = ticketData;
   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
   return (
     <div style={{ padding: "8px" }}>
