@@ -76,7 +76,7 @@ export async function makeUpgradeUserWithV4CommitmentRequest(
         },
         pod_type: {
           type: "string",
-          value: "zupass_semaphore_v4_migration"
+          value: "zupass.semaphore_v4_migration"
         }
       })
     },

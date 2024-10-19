@@ -217,9 +217,12 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
     if (
       entries.pod_type &&
       typeof entries.pod_type.value === "string" &&
-      entries.pod_type.value.substring(0, 7) === "zupass_"
+      (entries.pod_type.value.substring(0, 7) === "zupass_" ||
+        entries.pod_type.value.substring(0, 7) === "zupass.")
     ) {
-      throw new Error(`The pod_type prefix "zupass_" is reserved.`);
+      throw new Error(
+        `The pod_type prefixes "zupass." and "zupass_" are reserved.`
+      );
     }
 
     // If the Zapp is embedded, it can sign a POD directly
