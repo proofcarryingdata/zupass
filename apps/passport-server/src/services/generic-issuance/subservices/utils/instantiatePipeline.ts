@@ -127,6 +127,7 @@ export function instantiatePipeline(
       );
     } else if (isCSVTicketPipelineDefinition(definition)) {
       pipeline = new CSVTicketPipeline(
+        context,
         args.eddsaPrivateKey,
         definition,
         args.pipelineAtomDB,

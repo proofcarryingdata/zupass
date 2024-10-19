@@ -8,6 +8,7 @@ import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
+import { Pool, PoolClient } from "postgres-pool";
 import { stopApplication } from "../../../../src/application";
 import { getCacheSize } from "../../../../src/database/queries/cache";
 import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
@@ -31,6 +32,9 @@ describe("generic issuance - CSVTicketPipeline", function () {
 
   let giBackend: Zupass;
   let giService: GenericIssuanceService;
+
+  let pool: Pool;
+  let client: PoolClient;
 
   const adminGIUserId = randomUUID();
   const adminGIUserEmail = "admin@test.com";
@@ -57,8 +61,10 @@ describe("generic issuance - CSVTicketPipeline", function () {
     });
 
     giBackend = await startTestingApp();
+    pool = giBackend.context.dbPool;
+    client = await pool.connect();
 
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const userDB = new PipelineUserDB();
 
     const adminUser: PipelineUser = {
       id: adminGIUserId,
@@ -67,7 +73,7 @@ describe("generic issuance - CSVTicketPipeline", function () {
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(adminUser);
+    await userDB.updateUserById(client, adminUser);
     assertUserMatches(
       {
         id: adminGIUserId,
@@ -76,17 +82,15 @@ describe("generic issuance - CSVTicketPipeline", function () {
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(adminUser.id)
+      await userDB.getUserById(client, adminUser.id)
     );
 
     giService = giBackend.services
       .genericIssuanceService as GenericIssuanceService;
     await giService.stop();
-    const pipelineDefinitionDB = new PipelineDefinitionDB(
-      giBackend.context.dbPool
-    );
-    await pipelineDefinitionDB.deleteAllDefinitions();
-    await pipelineDefinitionDB.upsertDefinitions(pipelineDefinitions);
+    const pipelineDefinitionDB = new PipelineDefinitionDB();
+    await pipelineDefinitionDB.deleteAllDefinitions(client);
+    await pipelineDefinitionDB.upsertDefinitions(client, pipelineDefinitions);
     await giService.start(false);
   });
 
@@ -99,7 +103,7 @@ describe("generic issuance - CSVTicketPipeline", function () {
   });
 
   step("PipelineUserDB", async function () {
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const userDB = new PipelineUserDB();
 
     const adminUser: PipelineUser = {
       id: adminGIUserId,
@@ -108,7 +112,7 @@ describe("generic issuance - CSVTicketPipeline", function () {
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(adminUser);
+    await userDB.updateUserById(client, adminUser);
     assertUserMatches(
       {
         id: adminGIUserId,
@@ -117,7 +121,7 @@ describe("generic issuance - CSVTicketPipeline", function () {
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(adminUser.id)
+      await userDB.getUserById(client, adminUser.id)
     );
   });
 
@@ -146,7 +150,7 @@ describe("generic issuance - CSVTicketPipeline", function () {
     expectIsPODTicketPCD(ticket2);
     expect(ticket2.claim.ticket.attendeeEmail).to.eq("gabe@gmail.com");
     // Both issues tickets should be cached
-    expect(await getCacheSize(giBackend.context.dbPool)).to.eq(2);
+    expect(await getCacheSize(client)).to.eq(2);
   });
 
   step("will not receive tickets for user with no tickets", async () => {

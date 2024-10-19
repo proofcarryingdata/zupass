@@ -24,6 +24,7 @@ import { parse } from "csv-parse";
 import stringify from "fast-json-stable-stringify";
 import uniqBy from "lodash/uniqBy";
 import PQueue from "p-queue";
+import { PoolClient } from "postgres-pool";
 import { v5 as uuidv5 } from "uuid";
 import * as v from "valibot";
 import {
@@ -32,6 +33,8 @@ import {
 } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
+import { sqlTransaction } from "../../../../database/sqlQuery";
+import { ApplicationContext } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { setError, traced } from "../../../telemetryService";
@@ -89,6 +92,7 @@ export class CSVTicketPipeline implements BasePipeline {
   private consumerDB: IPipelineConsumerDB;
   private semaphoreUpdateQueue: PQueue;
   private cacheService: PersistentCacheService;
+  private context: ApplicationContext;
 
   public get id(): string {
     return this.definition.id;
@@ -99,6 +103,7 @@ export class CSVTicketPipeline implements BasePipeline {
   }
 
   public constructor(
+    context: ApplicationContext,
     eddsaPrivateKey: string,
     definition: CSVTicketPipelineDefinition,
     db: IPipelineAtomDB,
@@ -107,6 +112,7 @@ export class CSVTicketPipeline implements BasePipeline {
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
     cacheService: PersistentCacheService
   ) {
+    this.context = context;
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<CSVTicketAtom>;
@@ -126,20 +132,36 @@ export class CSVTicketPipeline implements BasePipeline {
         getSerializedLatestGroup: async (
           groupId: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return this.semaphoreGroupProvider?.getSerializedLatestGroup(groupId);
+          return sqlTransaction(
+            this.context.dbPool,
+            async (client) =>
+              this.semaphoreGroupProvider?.getSerializedLatestGroup(
+                client,
+                groupId
+              )
+          );
         },
         getLatestGroupRoot: async (
           groupId: string
         ): Promise<string | undefined> => {
-          return this.semaphoreGroupProvider?.getLatestGroupRoot(groupId);
+          return sqlTransaction(
+            this.context.dbPool,
+            async (client) =>
+              this.semaphoreGroupProvider?.getLatestGroupRoot(client, groupId)
+          );
         },
         getSerializedHistoricalGroup: async (
           groupId: string,
           rootHash: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
-            groupId,
-            rootHash
+          return sqlTransaction(
+            this.context.dbPool,
+            async (client) =>
+              this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
+                client,
+                groupId,
+                rootHash
+              )
           );
         },
         getSupportedGroups: (): PipelineSemaphoreGroupInfo[] => {
@@ -151,6 +173,7 @@ export class CSVTicketPipeline implements BasePipeline {
     this.consumerDB = consumerDB;
     if (definition.options.semaphoreGroupName) {
       this.semaphoreGroupProvider = new SemaphoreGroupProvider(
+        this.context,
         this.id,
         [
           {
@@ -193,25 +216,28 @@ export class CSVTicketPipeline implements BasePipeline {
           requesterSemaphoreV4Id = semaphoreV4Id;
           // Consumer is validated, so save them in the consumer list
           let didUpdate = false;
-          for (const email of emails) {
-            didUpdate =
-              didUpdate ||
-              (await this.consumerDB.save(
-                this.id,
-                email.email,
-                semaphoreId,
-                new Date()
-              ));
-          }
-
-          if (this.definition.options.semaphoreGroupName) {
-            // If the user's Semaphore commitment has changed, `didUpdate` will be
-            // true, and we need to update the Semaphore groups
-            if (didUpdate) {
-              span?.setAttribute("semaphore_groups_updated", true);
-              await this.triggerSemaphoreGroupUpdate();
+          await sqlTransaction(this.context.dbPool, async (client) => {
+            for (const email of emails) {
+              didUpdate =
+                didUpdate ||
+                (await this.consumerDB.save(
+                  client,
+                  this.id,
+                  email.email,
+                  semaphoreId,
+                  new Date()
+                ));
             }
-          }
+
+            if (this.definition.options.semaphoreGroupName) {
+              // If the user's Semaphore commitment has changed, `didUpdate` will be
+              // true, and we need to update the Semaphore groups
+              if (didUpdate) {
+                span?.setAttribute("semaphore_groups_updated", true);
+                await this.triggerSemaphoreGroupUpdate(client);
+              }
+            }
+          });
         } catch (e) {
           logger(LOG_TAG, "credential PCD not verified for req", req);
         }
@@ -553,7 +579,7 @@ export class CSVTicketPipeline implements BasePipeline {
    * Marked as public so that it can be called from tests, but otherwise should
    * not be called from outside the class.
    */
-  public async triggerSemaphoreGroupUpdate(): Promise<void> {
+  public async triggerSemaphoreGroupUpdate(client: PoolClient): Promise<void> {
     return traced(LOG_NAME, "triggerSemaphoreGroupUpdate", async (_span) => {
       tracePipeline(this.definition);
       // Whenever an update is triggered, we want to make sure that the
@@ -568,7 +594,7 @@ export class CSVTicketPipeline implements BasePipeline {
       // having been processed.
       return this.semaphoreUpdateQueue.add(async () => {
         const data = await this.semaphoreGroupData();
-        await this.semaphoreGroupProvider?.update(data);
+        await this.semaphoreGroupProvider?.update(client, data);
       });
     });
   }
