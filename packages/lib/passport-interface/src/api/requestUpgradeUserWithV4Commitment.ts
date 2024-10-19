@@ -127,7 +127,7 @@ export async function verifyAddV4CommitmentRequestPCD(
     const isRightPodType =
       v4SigOfV3Id.claim.entries["pod_type"]?.type === "string" &&
       v4SigOfV3Id.claim.entries["pod_type"].value ===
-        "zupass_semaphore_v4_migration";
+        "zupass.semaphore_v4_migration";
     if (v3SigVerifies && v4SigVerifies && v4SigIsOfV3Id && isRightPodType) {
       return {
         v3Commitment: expectedV3Id.toString(),
