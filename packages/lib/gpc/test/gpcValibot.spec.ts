@@ -30,6 +30,7 @@ import {
 import {
   ValibotBigInt,
   ValibotBoundConfig,
+  ValibotCircuitIdentifier,
   ValibotClosedInterval,
   ValibotMembershipLists,
   ValibotPODEntries,
@@ -42,8 +43,7 @@ import {
   ValibotProofObjectConfig,
   ValibotProofTupleConfig,
   ValibotRevealedClaims,
-  ValibotRevealedObjectClaims,
-  ValidbotCircuitIdentifier
+  ValibotRevealedObjectClaims
 } from "../src/gpcValibot";
 
 describe("gpcValibot value types should work", () => {
@@ -101,11 +101,11 @@ describe("gpcValibot value types should work", () => {
     ];
     for (const [strVal, isValid] of tsToJSON) {
       if (isValid) {
-        expect(ValidbotCircuitIdentifier.toJSON(strVal)).to.eq(strVal);
-        expect(ValidbotCircuitIdentifier.fromJSON(strVal)).to.eq(strVal);
+        expect(ValibotCircuitIdentifier.toJSON(strVal)).to.eq(strVal);
+        expect(ValibotCircuitIdentifier.fromJSON(strVal)).to.eq(strVal);
       } else {
-        expect(() => ValidbotCircuitIdentifier.toJSON(strVal)).to.throw();
-        expect(() => ValidbotCircuitIdentifier.fromJSON(strVal)).to.throw();
+        expect(() => ValibotCircuitIdentifier.toJSON(strVal)).to.throw();
+        expect(() => ValibotCircuitIdentifier.fromJSON(strVal)).to.throw();
       }
     }
   });

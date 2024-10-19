@@ -5,7 +5,7 @@
 // directive directly.
 
 export * as ValibotBoundConfig from "../src/valibot/boundConfig";
-export * as ValidbotCircuitIdentifier from "../src/valibot/circuitIdentifier";
+export * as ValibotCircuitIdentifier from "../src/valibot/circuitIdentifier";
 export * as ValibotClosedInterval from "../src/valibot/closedInterval";
 export * as ValibotPODEntries from "../src/valibot/podEntries";
 export * as ValibotPODEntryIdentifier from "../src/valibot/podEntryIdentifier";
