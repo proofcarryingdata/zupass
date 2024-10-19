@@ -1,5 +1,5 @@
 import { Alert, AlertIcon } from "@chakra-ui/react";
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { CSVPreview, PreviewType } from "./CSVPreview";
 
 export function CSVPreviewEditWrapper({
@@ -11,14 +11,17 @@ export function CSVPreviewEditWrapper({
   previewType?: PreviewType;
   onChange?: (newCsv: string) => void;
 }): ReactNode {
-  let csv: string = "";
-  let error = false;
-  try {
-    const data = JSON.parse(pipelineDefinitionText);
-    csv = data.options.csv;
-  } catch (e) {
-    error = true;
-  }
+  const { csv, error } = useMemo(() => {
+    let csv: string = "";
+    let error = false;
+    try {
+      const data = JSON.parse(pipelineDefinitionText);
+      csv = data.options.csv;
+    } catch (e) {
+      error = true;
+    }
+    return { csv, error };
+  }, [pipelineDefinitionText]);
 
   if (error) {
     return (
@@ -30,5 +33,9 @@ export function CSVPreviewEditWrapper({
     );
   }
 
-  return <CSVPreview csv={csv} previewType={previewType} onChange={onChange} />;
+  return (
+    <>
+      <CSVPreview csv={csv} previewType={previewType} onChange={onChange} />
+    </>
+  );
 }

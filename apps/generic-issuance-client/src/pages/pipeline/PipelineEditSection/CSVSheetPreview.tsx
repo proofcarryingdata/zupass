@@ -1,6 +1,16 @@
+import { PlusSquareIcon } from "@chakra-ui/icons";
+import { Button, HStack, Icon } from "@chakra-ui/react";
 import { stringify } from "csv-stringify/sync";
-import { ReactNode, useEffect, useState } from "react";
-import { Matrix, Mode, Spreadsheet } from "react-spreadsheet";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { MdDeleteOutline } from "react-icons/md";
+import {
+  EntireRowsSelection,
+  Matrix,
+  Mode,
+  RangeSelection,
+  Selection,
+  Spreadsheet
+} from "react-spreadsheet";
 import styled from "styled-components";
 import { parseCSV } from "./parseCSV";
 
@@ -31,6 +41,45 @@ export function CSVSheetPreview({
 
   const [data, setData] = useState<Matrix<{ value: string }>>([]);
 
+  const [selection, setSelection] = useState<Selection | undefined>(undefined);
+  const validRowSelection = useMemo(() => {
+    if (selection) {
+      return (
+        (selection instanceof RangeSelection &&
+          selection.range.start.row === selection.range.end.row) ||
+        selection instanceof EntireRowsSelection
+      );
+    }
+  }, [selection]);
+
+  const deleteRow = useCallback(
+    (selection: Selection) => {
+      if (
+        !selection ||
+        (!(selection instanceof RangeSelection) &&
+          !(selection instanceof EntireRowsSelection))
+      ) {
+        console.error("Invalid selection for deleteRow", selection);
+        return;
+      }
+      const rowIndices =
+        selection instanceof RangeSelection
+          ? // If range selection, only delete one row!
+            [selection.range.start.row, selection.range.start.row]
+          : [selection.start, selection.end];
+      const newCSVData = parsed
+        .slice(1)
+        .filter((_, index) => index < rowIndices[0] || index > rowIndices[1]);
+      onChange?.(stringify([parsed[0], ...newCSVData]));
+    },
+    [parsed, onChange]
+  );
+
+  const addRow = useCallback(() => {
+    const newCSVData = [...parsed, parsed[0].map(() => "")];
+    onChange?.(stringify(newCSVData));
+  }, [parsed, onChange]);
+
   if (parseError) {
     return <Container>{parseError.message}</Container>;
   }
@@ -59,11 +108,35 @@ export function CSVSheetPreview({
         onChange={(data): void => {
           setData(data);
         }}
+        onSelect={(selection) => {
+          window.setTimeout(() => setSelection(selection), 250);
+        }}
         darkMode={true}
         data={data}
         columnLabels={parsed[0]}
         className={"sheet"}
       />
+      <HStack marginTop={4} spacing={4} alignItems={"start"}>
+        <Button
+          onClick={addRow}
+          leftIcon={<Icon as={PlusSquareIcon} w={4} h={4} />}
+          colorScheme="blue"
+          size="sm"
+        >
+          Add Row
+        </Button>
+        <Button
+          isDisabled={!validRowSelection}
+          onClick={() => {
+            if (selection) deleteRow(selection);
+          }}
+          leftIcon={<Icon as={MdDeleteOutline} w={4} h={4} />}
+          colorScheme="blue"
+          size="sm"
+        >
+          Delete Row
+        </Button>
+      </HStack>
     </Container>
   );
 }
