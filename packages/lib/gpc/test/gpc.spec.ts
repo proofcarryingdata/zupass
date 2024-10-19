@@ -1874,9 +1874,3 @@ describe("gpcArtifactDownloadURL should work", async function () {
     ).to.throw(Error);
   });
 });
-
-// TODO(POD-P2): More detailed feature unit-tests by module:
-// TODO(POD-P2): gpcCompile tests using WitnessTester
-// TODO(POD-P2): gpcChecks tests for positive/negative cases
-// TODO(POD-P2): gpcSerialize tests for positive/negative cases
-// TODO(POD-P3): gpcUtil tests

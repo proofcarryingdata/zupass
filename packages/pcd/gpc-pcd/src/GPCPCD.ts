@@ -2,7 +2,8 @@ import {
   GPCBoundConfig,
   GPCCircuitFamily,
   GPCRevealedClaims,
-  JSONPODMembershipLists
+  JSONPODMembershipLists,
+  JSONProofConfig
 } from "@pcd/gpc";
 import {
   ObjectArgument,
@@ -65,7 +66,8 @@ export type PODPCDRecordArg = RecordContainerArgument<
 
 /**
  * Prescribed signers' public keys for PODs. User inputs to a proof will be
- * filtered to only those PODs containing matching values.
+ * filtered to only those PODs containing matching values.  This object is
+ * JSON compatible, so no conversions are necessary.
  */
 export type PODSignerPublicKeys = Record<PODName, string>;
 
@@ -96,33 +98,33 @@ export type PODPCDArgValidatorParams = {
   notFoundMessage?: string;
 
   /**
-   * JSON-serialised proof configuration used to narrow down the selection of
-   * POD PCDs. This should coincide with the proof config string supplied in the
-   * `GPCPCDArgs`. May be deserialised using {@link deserializeGPCProofConfig}.
+   * JSON-formatted proof configuration used to narrow down the selection of
+   * POD PCDs. This should coincide with the proof config supplied in the
+   * `GPCPCDArgs`. May be parsed using {@link proofConfigFromJSON}.
    */
-  proofConfig?: string;
+  proofConfig?: JSONProofConfig;
 
   /**
-   * JSON-serialised membership lists to narrow down the selection of POD PCDs
+   * JSON-formatted membership lists to narrow down the selection of POD PCDs
    * to those satisfying the list membership check specified in the proof
    * config. This should coincide with the membership lists supplied in
-   * the `GPCPCDArgs` (if any).
+   * the `GPCPCDArgs` (if any).  May be parsed using
+   * {@link podMembershipListsFromJSON}
    */
   membershipLists?: JSONPODMembershipLists;
 
   /**
-   * JSON-serialised `PODEntries`.This is used to narrow down the selection of
+   * JSON-formatted `PODEntries`.This is used to narrow down the selection of
    * POD PCDs to those with entries matching these prescribed values.
    *
-   * You can use {@link podEntriesToJSON} to produce each value in this object.
+   * You can use {@link fixedPODEntriesFromJSON} to parse this object.
    */
   prescribedEntries?: JSONFixedPODEntries;
 
   /**
    * Record of prescribed signers' public keys. This is used to narrow down the
    * selection of POD PCDs to those with signers' public keys matching these
-   * prescribed values. May be serialised and deserialised using {@link
-   * JSON.stringify} and {@link JSON.parse}.
+   * prescribed values.
    */
   prescribedSignerPublicKeys?: PODSignerPublicKeys;
 };
@@ -135,12 +137,11 @@ export type GPCPCDArgs = {
    * A configuration object specifying the constraints to be proven.
    * This will be part of the claims of the resulting proof PCD.
    * See {@link GPCProofConfig} for more information.
+   *
+   * This is formatted in a JSON-compatible format which can be parsed
+   * using {@link proofConfigFromJSON}.
    */
-  proofConfig: StringArgument;
-  // TODO(POD-P2): Figure out serializable format for an object here.
-  // ObjectArgument is intended to be directly JSON serializable, so can't
-  // contain bigints if used for network requests (e.g. ProveAndAdd).  The
-  // choice here should be driven by the needs of the Prove screen.
+  proofConfig: ObjectArgument<JSONProofConfig>;
 
   /**
    * POD objects to prove about. Each object is identified by name in the value
