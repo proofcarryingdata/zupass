@@ -1,3 +1,4 @@
+import { PlusSquareIcon } from "@chakra-ui/icons";
 import { Button, HStack, Icon } from "@chakra-ui/react";
 import { stringify } from "csv-stringify/sync";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
@@ -74,6 +75,11 @@ export function CSVSheetPreview({
     [parsed, onChange]
   );
 
+  const addRow = useCallback(() => {
+    const newCSVData = [...parsed, parsed[0].map(() => "")];
+    onChange?.(stringify(newCSVData));
+  }, [parsed, onChange]);
+
   if (parseError) {
     return <Container>{parseError.message}</Container>;
   }
@@ -103,7 +109,7 @@ export function CSVSheetPreview({
           setData(data);
         }}
         onSelect={(selection) => {
-          window.setTimeout(() => setSelection(selection), 100);
+          window.setTimeout(() => setSelection(selection), 250);
         }}
         darkMode={true}
         data={data}
@@ -111,6 +117,14 @@ export function CSVSheetPreview({
         className={"sheet"}
       />
       <HStack marginTop={4} spacing={4} alignItems={"start"}>
+        <Button
+          onClick={addRow}
+          leftIcon={<Icon as={PlusSquareIcon} w={4} h={4} />}
+          colorScheme="blue"
+          size="sm"
+        >
+          Add Row
+        </Button>
         <Button
           isDisabled={!validRowSelection}
           onClick={() => {
@@ -120,7 +134,7 @@ export function CSVSheetPreview({
           colorScheme="blue"
           size="sm"
         >
-          Delete Ticket
+          Delete Row
         </Button>
       </HStack>
     </Container>
