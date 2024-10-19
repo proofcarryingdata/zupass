@@ -194,6 +194,23 @@ export function decodeSignature(encodedSignature: string): Signature<bigint> {
 }
 
 /**
+ * Calculates the corresponding public key for the given private key.  This is
+ * equivalent to the calculation performed in {@link signPODRoot}, and can be
+ * used to pre-publish the expected public key to clients before signing.
+ *
+ * @param privateKey the signer's private key, which is 32 bytes encoded as
+ *   per {@link encodePrivateKey}.
+ * @returns The signer's public key, which is 32 bytes encoded as per
+ *   {@link encodePublicKey}.
+ * @throws TypeError if any of the individual arguments is incorrectly formatted
+ */
+export function deriveSignerPublicKey(privateKey: string): string {
+  const privateKeyBytes = decodePrivateKey(privateKey);
+  const unpackedPublicKey = derivePublicKey(privateKeyBytes);
+  return encodePublicKey(unpackedPublicKey);
+}
+
+/**
  * Signs a POD's root hash.
  *
  * @param root the root hash (content ID) of the POD.
