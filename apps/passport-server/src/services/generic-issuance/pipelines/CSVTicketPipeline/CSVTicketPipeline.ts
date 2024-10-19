@@ -339,7 +339,7 @@ export class CSVTicketPipeline implements BasePipeline {
     });
 
     const serialized = await EdDSATicketPCDPackage.serialize(pcd);
-    this.cacheService.setValue(
+    await this.cacheService.setValue(
       `eddsa-ticket-${stringifiedAtom}`,
       JSON.stringify(serialized)
     );
@@ -388,7 +388,7 @@ export class CSVTicketPipeline implements BasePipeline {
     });
 
     const serialized = await PODTicketPCDPackage.serialize(pcd);
-    this.cacheService.setValue(
+    await this.cacheService.setValue(
       `pod-ticket-${stringifiedAtom}`,
       JSON.stringify(serialized)
     );
