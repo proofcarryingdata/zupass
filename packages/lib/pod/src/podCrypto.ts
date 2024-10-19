@@ -28,7 +28,6 @@ import { CryptoBytesEncoding, decodeBytesAuto, encodeBytes } from "./podUtil";
  * which could be one of multiple value types (see {@link podValueHash}).
  */
 export function podStringHash(input: string): bigint {
-  // TODO(POD-P2): Finalize choice of hash for POD names and string values.
   return BigInt("0x" + sha256(input)) >> 8n;
 }
 
@@ -37,7 +36,6 @@ export function podStringHash(input: string): bigint {
  * which could be one of multiple value types (see {@link podValueHash}).
  */
 export function podIntHash(input: bigint): bigint {
-  // TODO(POD-P2): Finalize choice of hash for POD integer values.
   return poseidon1([input]);
 }
 
@@ -64,7 +62,6 @@ export function podValueHash(podValue: PODValue): bigint {
       return podStringHash(podValue.value);
     case "int":
     case "cryptographic":
-      // TODO(POD-P2): Finalize choice of hash for POD cryptographics.
       return podIntHash(podValue.value);
     case EDDSA_PUBKEY_TYPE_STRING:
       return podEdDSAPublicKeyHash(podValue.value);

@@ -331,7 +331,7 @@ export function gpcArtifactDownloadURL(
       // pre-release status.
       return unpkgDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
     case "zupass":
-      // TODO(POD-P3): Do we want to expose source=zupass as a public option?
+      // TODO(POD-P4): Do we want to expose source=zupass as a public option?
       // If so, we need the Zupass server to not set `Access-Control-Allow-Origin: *`,
       // or migrate to a different hosting option.
       if (zupassURL === undefined) {

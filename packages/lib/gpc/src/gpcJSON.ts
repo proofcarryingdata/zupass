@@ -99,7 +99,3 @@ export function podMembershipListsToJSON(
   }
   return resultLists;
 }
-
-// TODO(POD-P1): Finish gpcJSON for GPC config/inputs/outputs.  So far it
-// only covers use cases covered by POD values contained in simple JSON
-// containers.

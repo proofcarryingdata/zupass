@@ -62,10 +62,6 @@ import {
   widthOfEntryOrTuple
 } from "./gpcUtil";
 
-// TODO(POD-P2): Split out the parts of this which should be public from
-// internal implementation details.  E.g. the returning of ciruit parameters
-// isn't relevant to checking objects after deserialization.
-
 /**
  * Checks the validity of the arguments for generating a proof.  This will throw
  * if any of the arguments is malformed, or if the different fields do not
@@ -600,10 +596,6 @@ export function checkProofInputsForConfig(
   proofConfig: GPCProofConfig,
   proofInputs: GPCProofInputs
 ): void {
-  // TODO(POD-P3): Think whether we should actually check proof requirements
-  // here, vs. letting prove() simply fail.  At minimum this function could
-  // simply check references between confing and inputs.
-
   // Config and inputs should have same number of objects.
   const nConfiguredObjects = Object.keys(proofConfig.pods).length;
   const nInputObjects = Object.keys(proofInputs.pods).length;
