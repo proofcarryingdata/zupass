@@ -187,10 +187,3 @@ describe("generic issuance - CSVTicketPipeline", function () {
     await stopApplication(giBackend);
   });
 });
-
-// async function requestCSVTicketFeed(
-//   url: string,
-//   feedId: string
-// ): Promise<PollFeedResult> {
-//   return requestPollFeed(url, { feedId, pcd: undefined });
-// }
