@@ -1,8 +1,8 @@
 import { ErrorContainer, SlidingTabs, styled, VIcon } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
-import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
+import { getImageUrlEntry, PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { getErrorMessage } from "@pcd/util";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CollectablePODPCDCardBody } from "./renderers/CollectablePODPCDCardBody";
 import { DefaultPODPCDCardBody } from "./renderers/DefaultPODPCDCardBody";
 import { Container } from "./shared";
@@ -33,21 +33,23 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
   const [sigStatus, setSigStatus] = useState<number>(0);
   const [error, setError] = useState<string | undefined>();
 
+  const hasCollectableContent = useMemo(() => {
+    const imageUrlEntry = getImageUrlEntry(pcd);
+    return imageUrlEntry?.type === "string" && imageUrlEntry.value !== "";
+  }, [pcd]);
+
   const availableDisplayFormat = getPreferredDisplayFormat(pcd);
   const [displayFormat, setDisplayFormat] = useState<PODDisplayFormat>(
-    availableDisplayFormat || PODDisplayFormat.POD
+    hasCollectableContent
+      ? availableDisplayFormat || PODDisplayFormat.Collectable
+      : PODDisplayFormat.POD
   );
 
-  let content = <></>;
-  switch (displayFormat) {
-    case PODDisplayFormat.Collectable:
-      content = <CollectablePODPCDCardBody pcd={pcd} />;
-      break;
-    case PODDisplayFormat.POD:
-    // Fallthrough
-    default:
-      content = <DefaultPODPCDCardBody pcd={pcd} />;
-      break;
+  let content: JSX.Element;
+  if (displayFormat === PODDisplayFormat.Collectable && hasCollectableContent) {
+    content = <CollectablePODPCDCardBody pcd={pcd} />;
+  } else {
+    content = <DefaultPODPCDCardBody pcd={pcd} />;
   }
 
   const sigButtonColor: React.CSSProperties = {};
@@ -91,22 +93,24 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
             )}
           </a>
         </div>
-        <SlidingTabs
-          initialIndex={displayFormat === PODDisplayFormat.POD ? 1 : 0}
-          onChange={(tab) => {
-            setDisplayFormat(tab);
-          }}
-          tabs={[
-            {
-              value: PODDisplayFormat.Collectable,
-              label: getFormatDisplayName(PODDisplayFormat.Collectable)
-            },
-            {
-              value: PODDisplayFormat.POD,
-              label: getFormatDisplayName(PODDisplayFormat.POD)
-            }
-          ]}
-        />
+        {hasCollectableContent && (
+          <SlidingTabs
+            initialIndex={displayFormat === PODDisplayFormat.POD ? 1 : 0}
+            onChange={(tab) => {
+              setDisplayFormat(tab);
+            }}
+            tabs={[
+              {
+                value: PODDisplayFormat.Collectable,
+                label: getFormatDisplayName(PODDisplayFormat.Collectable)
+              },
+              {
+                value: PODDisplayFormat.POD,
+                label: getFormatDisplayName(PODDisplayFormat.POD)
+              }
+            ]}
+          />
+        )}
       </CardWrapper>
     </Container>
   );
