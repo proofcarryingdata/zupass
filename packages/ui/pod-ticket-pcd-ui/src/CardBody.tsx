@@ -71,12 +71,22 @@ export function PODTicketCardBodyImpl({
         )}
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
-            {ticketData?.attendeeName.toUpperCase() || "Unknown"}
+            {ticketData?.attendeeName.toUpperCase() ||
+              ticketData.eventName.toUpperCase() ||
+              "Unknown"}
           </NEW_UI__AttendeeName>
           <NEW_UI__ExtraInfoContainer>
-            <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
-            <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
-            <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
+            {ticketData.attendeeEmail && (
+              <div>
+                <NEW_UI__ExtraInfo>
+                  {ticketData?.attendeeEmail}
+                </NEW_UI__ExtraInfo>
+                <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>{" "}
+              </div>
+            )}
+            {ticketData && (
+              <NEW_UI__ExtraInfo>{ticketData.ticketName}</NEW_UI__ExtraInfo>
+            )}
           </NEW_UI__ExtraInfoContainer>
         </NEW_UI__InfoContainer>
       </NEW_UI__TicketImageContainer>
