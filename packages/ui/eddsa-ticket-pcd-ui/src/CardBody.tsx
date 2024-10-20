@@ -182,6 +182,7 @@ const NEW_UI__TicketImageContainer = styled.div`
   gap: 16px;
   padding: 16px 16px 0px 16px;
   background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
+  border-radius: inherit;
 `;
 
 const NEW_UI__InfoContainer = styled.div`
