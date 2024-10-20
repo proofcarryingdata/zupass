@@ -201,8 +201,6 @@ export const TicketQRWrapper = forwardRef<
       <QRContainer ref={ref}>
         <EddsaTicketQR
           pcd={pcd}
-          zk={false}
-          identityPCD={identityPCD}
           idBasedVerifyURL={urls.idBasedVerifyURL}
           verifyURL={urls.verifyURL}
         />
@@ -294,7 +292,6 @@ const TicketWrapper = forwardRef<
       <Card
         hidePadding={hidePadding}
         pcd={pcd}
-        identityPCD={identityPCD}
         verifyURL={verifyURL}
         idBasedVerifyURL={idBasedVerifyURL}
         addOns={addOns}
