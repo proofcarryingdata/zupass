@@ -1,5 +1,31 @@
 # @pcd/semaphore-identity-pcd
 
+## 0.13.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.13.0
+  - @pcd/util@0.7.0
+  - @pcd/pod@0.3.0
+
+## 0.12.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.12.0
+  - @pcd/pod@0.2.0
+  - @pcd/util@0.6.0
+
 ## 0.11.6
 
 ### Patch Changes

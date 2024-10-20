@@ -6,7 +6,6 @@ import {
   podEntriesFromJSON,
   podEntriesToJSON
 } from "./podJSON";
-import { deserializePODEntries, serializePODEntries } from "./podSerialization";
 import { PODEntries, PODName, PODValue } from "./podTypes";
 import {
   cloneOptionalPODValue,
@@ -186,26 +185,6 @@ export class PODContent {
    */
   public getRawValue(name: string): PODValue["value"] | undefined {
     return this._map.get(name)?.value?.value;
-  }
-
-  /**
-   * Serializes this instance's entries as a JSON string, in a way which
-   * properly preserves all types.
-   */
-  public serialize(): string {
-    return serializePODEntries(this.asEntries());
-  }
-
-  /**
-   * Deserializes POD entries from JSON.
-   *
-   * @param serializedEntries a string previously created by {@link #serialize}.
-   * @returns a new PODContent instance
-   * @throws if the string isn't valid JSON, or represents entries which aren't
-   *   legal for inclusion in a POD
-   */
-  public static deserialize(serializedEntries: string): PODContent {
-    return PODContent.fromEntries(deserializePODEntries(serializedEntries));
   }
 
   /**

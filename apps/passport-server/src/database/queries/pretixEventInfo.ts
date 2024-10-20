@@ -1,9 +1,9 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { PretixEventInfo, PretixItemInfo } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
 export async function fetchPretixEventInfo(
-  client: Pool,
+  client: PoolClient,
   eventConfigID: string
 ): Promise<PretixEventInfo | null> {
   const result = await sqlQuery(
@@ -19,7 +19,7 @@ export async function fetchPretixEventInfo(
 }
 
 export async function insertPretixEventsInfo(
-  client: Pool,
+  client: PoolClient,
   eventName: string,
   eventsConfigID: string,
   checkinListId: string
@@ -37,7 +37,7 @@ export async function insertPretixEventsInfo(
 }
 
 export async function updatePretixEventsInfo(
-  client: Pool,
+  client: PoolClient,
   id: string,
   eventName: string,
   isDeleted: boolean,
@@ -55,7 +55,7 @@ export async function updatePretixEventsInfo(
 }
 
 export async function softDeletePretixEventsInfo(
-  client: Pool,
+  client: PoolClient,
   id: number
 ): Promise<void> {
   await sqlQuery(
@@ -66,7 +66,7 @@ export async function softDeletePretixEventsInfo(
 }
 
 export async function fetchPretixEventInfoByName(
-  client: Pool,
+  client: PoolClient,
   eventName: string
 ): Promise<PretixEventInfo | null> {
   const result = await sqlQuery(

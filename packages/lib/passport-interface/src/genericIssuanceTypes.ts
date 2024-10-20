@@ -8,7 +8,8 @@ export enum PipelineType {
   Lemonade = "Lemonade",
   Pretix = "Pretix",
   CSV = "CSV",
-  POD = "POD"
+  POD = "POD",
+  CSVTicket = "CSVTicket"
 }
 
 export enum IncidentPolicy {
@@ -702,13 +703,46 @@ export function isPODPipelineDefinition(
 }
 
 /**
+ * CSVTicket Pipeline.
+ */
+
+const CSVTicketPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
+  eventName: z.string(),
+  csv: z.string(),
+  feedOptions: FeedIssuanceOptionsSchema,
+  pcdTypes: z.array(z.enum(["EdDSATicketPCD", "PODTicketPCD"])).min(1),
+  issueToUnmatchedEmail: z.boolean().optional(),
+  semaphoreGroupName: z.string().optional()
+});
+
+export type CSVTicketPipelineOptions = z.infer<
+  typeof CSVTicketPipelineOptionsSchema
+>;
+
+const CSVTicketPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
+  type: z.literal(PipelineType.CSVTicket),
+  options: CSVTicketPipelineOptionsSchema
+});
+
+export type CSVTicketPipelineDefinition = z.infer<
+  typeof CSVTicketPipelineDefinitionSchema
+>;
+
+export function isCSVTicketPipelineDefinition(
+  d: PipelineDefinition
+): d is CSVTicketPipelineDefinition {
+  return d.type === PipelineType.CSVTicket;
+}
+
+/**
  * This item is exported so that we can use it for validation on generic issuance server.
  */
 export const PipelineDefinitionSchema = z.discriminatedUnion("type", [
   LemonadePipelineDefinitionSchema,
   PretixPipelineDefinitionSchema,
   CSVPipelineDefinitionSchema,
-  PODPipelineDefinitionSchema
+  PODPipelineDefinitionSchema,
+  CSVTicketPipelineDefinitionSchema
 ]);
 
 /**

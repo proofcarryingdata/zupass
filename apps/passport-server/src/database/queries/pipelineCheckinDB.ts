@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
 /**
@@ -10,24 +10,34 @@ import { sqlQuery } from "../sqlQuery";
 export interface IPipelineCheckinDB {
   // Fetch a check-in record
   getByTicketId(
+    client: PoolClient,
     pipelineId: string,
     ticketId: string
   ): Promise<PipelineCheckin | undefined>;
   getByTicketIds(
+    client: PoolClient,
     pipelineId: string,
     ticketIds: string[]
   ): Promise<PipelineCheckin[]>;
   // Fetch all check-ins for a pipeline
-  getByPipelineId(pipelineId: string): Promise<PipelineCheckin[]>;
+  getByPipelineId(
+    client: PoolClient,
+    pipelineId: string
+  ): Promise<PipelineCheckin[]>;
   // Add a check-in record for a ticket ID
   checkIn(
+    client: PoolClient,
     pipelineId: string,
     ticketId: string,
     timestamp: Date,
     checkerEmail: string
   ): Promise<void>;
   // Delete check-in for a ticket ID
-  deleteCheckIn(pipelineId: string, ticketId: string): Promise<number>;
+  deleteCheckIn(
+    client: PoolClient,
+    pipelineId: string,
+    ticketId: string
+  ): Promise<number>;
 }
 
 /**
@@ -36,21 +46,16 @@ export interface IPipelineCheckinDB {
  * back-end system.
  */
 export class PipelineCheckinDB implements IPipelineCheckinDB {
-  private db: Pool;
-
-  public constructor(db: Pool) {
-    this.db = db;
-  }
-
   /**
    * Retrieve a check-in for a single ticket.
    */
   public async getByTicketId(
+    client: PoolClient,
     pipelineId: string,
     ticketId: string
   ): Promise<PipelineCheckin | undefined> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `SELECT * FROM generic_issuance_checkins WHERE pipeline_id = $1 AND ticket_id = $2`,
       [pipelineId, ticketId]
     );
@@ -69,11 +74,12 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
    * Retrieves check-ins for multiple tickets on a single pipeline.
    */
   public async getByTicketIds(
+    client: PoolClient,
     pipelineId: string,
     ticketIds: string[]
   ): Promise<PipelineCheckin[]> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `SELECT * FROM generic_issuance_checkins WHERE pipeline_id = $1 AND ticket_id = ANY($2)`,
       [pipelineId, ticketIds]
     );
@@ -90,9 +96,12 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
   /**
    * Retrieve all check-ins for a pipeline.
    */
-  public async getByPipelineId(pipelineId: string): Promise<PipelineCheckin[]> {
+  public async getByPipelineId(
+    client: PoolClient,
+    pipelineId: string
+  ): Promise<PipelineCheckin[]> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `SELECT * FROM generic_issuance_checkins WHERE pipeline_id = $1`,
       [pipelineId]
     );
@@ -111,13 +120,14 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
    * throw an error if the ticket is already checked in.
    */
   public async checkIn(
+    client: PoolClient,
     pipelineId: string,
     ticketId: string,
     timestamp: Date,
     checkerEmail: string
   ): Promise<void> {
     await sqlQuery(
-      this.db,
+      client,
       `
     INSERT INTO generic_issuance_checkins (pipeline_id, ticket_id, checkin_timestamp, checker_email) VALUES($1, $2, $3, $4)
     `,
@@ -130,11 +140,12 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
    * exactly 1 if the ticket was previously checked in.
    */
   public async deleteCheckIn(
+    client: PoolClient,
     pipelineId: string,
     ticketId: string
   ): Promise<number> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `
     DELETE FROM generic_issuance_checkins WHERE pipeline_id = $1 AND ticket_id = $2
     `,

@@ -57,6 +57,8 @@ export function pipelineTypeColor(type?: PipelineType): string {
       return "purple";
     case PipelineType.POD:
       return "teal";
+    case PipelineType.CSVTicket:
+      return "orange";
     default:
       // compile-time error for when not all cases are covered
       console.warn(`pipelineTypeColor invalid - '${type}'`);
@@ -74,6 +76,8 @@ export function pipelineTypeIcon(type: PipelineType): ReactNode {
       return <BsTicketPerforatedFill />;
     case PipelineType.POD:
       return <GiPeas />;
+    case PipelineType.CSVTicket:
+      return <FaFileCsv />;
     default:
       console.warn(`pipelineTypeIcon invalid - '${type}'`);
       return null;

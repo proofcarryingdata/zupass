@@ -15,6 +15,22 @@ export class PCDHTTPError extends Error {
 }
 
 /**
+ * Throw an instance of this error in server application within an express
+ * request handler to to return a custom status code, and optionally an object
+ * that is returned a JSON response.
+ */
+export class PCDHTTPJSONError extends Error {
+  public readonly code: number;
+  public readonly json?: object;
+
+  public constructor(code: number, json?: object, options?: ErrorOptions) {
+    super(JSON.stringify(json), options);
+    this.code = code;
+    this.json = json;
+  }
+}
+
+/**
  * If {@link e} is an instance of {@link PCDHTTPError}, returns with the error code
  * and message specified in the error.
  *
@@ -24,7 +40,7 @@ export class PCDHTTPError extends Error {
  * If {@link e} is not an {@link PCDHTTPError}, returns with a generic 500 server error.
  */
 export function respondWithError(
-  e: PCDHTTPError | Error | unknown,
+  e: PCDHTTPError | PCDHTTPJSONError | Error | unknown,
   res: Response
 ): void {
   if (e instanceof PCDHTTPError) {
@@ -33,6 +49,8 @@ export function respondWithError(
     } else {
       res.status(e.code).send(e.message);
     }
+  } else if (e instanceof PCDHTTPJSONError) {
+    res.status(e.code).json(e.json);
   } else {
     res.sendStatus(500);
   }
