@@ -1,5 +1,5 @@
 import { VerifiedCredential } from "@pcd/passport-interface";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { UserRow } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
@@ -8,7 +8,7 @@ import { sqlQuery } from "../sqlQuery";
  * email from the database.
  */
 export async function fetchUserByEmail(
-  client: Pool,
+  client: PoolClient,
   email: string
 ): Promise<UserRow | null> {
   const result = await sqlQuery(
@@ -27,7 +27,7 @@ export async function fetchUserByEmail(
  * Fetches the user row corresponding to a particular uuid from the database.
  */
 export async function fetchUserByUUID(
-  client: Pool,
+  client: PoolClient,
   uuid: string
 ): Promise<UserRow | null> {
   const result = await sqlQuery(
@@ -46,7 +46,7 @@ export async function fetchUserByUUID(
 /**
  * Fetches all the users from the database.
  */
-export async function fetchAllUsers(client: Pool): Promise<UserRow[]> {
+export async function fetchAllUsers(client: PoolClient): Promise<UserRow[]> {
   const result = await sqlQuery(
     client,
     `SELECT u.*, array_agg(ue.email) as emails
@@ -63,7 +63,7 @@ export async function fetchAllUsers(client: Pool): Promise<UserRow[]> {
  * on an interval.
  */
 export async function deleteUserByEmail(
-  client: Pool,
+  client: PoolClient,
   email: string
 ): Promise<void> {
   await sqlQuery(
@@ -81,7 +81,7 @@ export async function deleteUserByEmail(
  * on an interval.
  */
 export async function deleteUserByUUID(
-  client: Pool,
+  client: PoolClient,
   uuid: string
 ): Promise<void> {
   await sqlQuery(client, `DELETE FROM users WHERE uuid = $1`, [uuid]);
@@ -90,7 +90,7 @@ export async function deleteUserByUUID(
 /**
  * Fetches the quantity of users.
  */
-export async function fetchUserCount(client: Pool): Promise<number> {
+export async function fetchUserCount(client: PoolClient): Promise<number> {
   const result = await sqlQuery(client, "SELECT COUNT(*) AS count FROM users");
   return parseInt(result.rows[0].count, 10);
 }
@@ -99,7 +99,7 @@ export async function fetchUserCount(client: Pool): Promise<number> {
  * Fetches a user given a verified credential.
  */
 export async function fetchUserForCredential(
-  client: Pool,
+  client: PoolClient,
   credential?: VerifiedCredential | null
 ): Promise<UserRow | null> {
   if (!credential) {
@@ -113,7 +113,7 @@ export async function fetchUserForCredential(
  * Fetches a user by their semaphore v3 commitment.
  */
 export async function fetchUserByV3Commitment(
-  client: Pool,
+  client: PoolClient,
   v3Commitment: string
 ): Promise<UserRow | null> {
   const result = await sqlQuery(
@@ -137,7 +137,7 @@ export async function fetchUserByV3Commitment(
  * Fetches a user by their semaphore v4 commitment.
  */
 export async function fetchUserByV4Commitment(
-  client: Pool,
+  client: PoolClient,
   v4Commitment: string
 ): Promise<UserRow | null> {
   const result = await sqlQuery(
@@ -161,7 +161,7 @@ export async function fetchUserByV4Commitment(
  * Fetches users who have agreed to minimum legal terms.
  */
 export async function fetchUsersByMinimumAgreedTerms(
-  client: Pool,
+  client: PoolClient,
   version: number
 ): Promise<UserRow[]> {
   const result = await sqlQuery(
@@ -181,7 +181,7 @@ export async function fetchUsersByMinimumAgreedTerms(
  * Fetch all users with Devconnect tickets
  */
 export async function fetchAllUsersWithDevconnectTickets(
-  client: Pool
+  client: PoolClient
 ): Promise<UserRow[]> {
   const result = await sqlQuery(
     client,
@@ -202,7 +202,7 @@ export async function fetchAllUsersWithDevconnectTickets(
  * Fetch all users with superuser Devconnect tickets
  */
 export async function fetchAllUsersWithDevconnectSuperuserTickets(
-  client: Pool
+  client: PoolClient
 ): Promise<UserRow[]> {
   const result = await sqlQuery(
     client,

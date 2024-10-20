@@ -10,6 +10,7 @@ import {
   VerifyTicketResult
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
+import { namedSqlTransaction } from "../../database/sqlQuery";
 import { IssuanceService } from "../../services/issuanceService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -18,7 +19,7 @@ import { PCDHTTPError } from "../pcdHttpError";
 
 export function initPCDIssuanceRoutes(
   app: express.Application,
-  _context: ApplicationContext,
+  context: ApplicationContext,
   { issuanceService }: GlobalServices
 ): void {
   logger("[INIT] initializing PCD issuance routes");
@@ -107,15 +108,29 @@ export function initPCDIssuanceRoutes(
    */
   app.post("/issue/verify-ticket", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleVerifyTicketRequest(
-      req.body as VerifyTicketRequest
+    await namedSqlTransaction(
+      context.dbPool,
+      "/issue/verify-ticket",
+      async (client) => {
+        const result = await issuanceService.handleVerifyTicketRequest(
+          client,
+          req.body as VerifyTicketRequest
+        );
+        return res.json(result satisfies VerifyTicketResult);
+      }
     );
-    return res.json(result satisfies VerifyTicketResult);
   });
 
   app.get("/issue/known-ticket-types", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleKnownTicketTypesRequest();
-    return res.json(result satisfies KnownTicketTypesResult);
+    await namedSqlTransaction(
+      context.dbPool,
+      "/issue/known-ticket-types",
+      async (client) => {
+        const result =
+          await issuanceService.handleKnownTicketTypesRequest(client);
+        return res.json(result satisfies KnownTicketTypesResult);
+      }
+    );
   });
 }

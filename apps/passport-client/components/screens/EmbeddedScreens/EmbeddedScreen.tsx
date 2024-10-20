@@ -7,6 +7,7 @@ import { EmbeddedScreenType } from "../../../src/embedded";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { GenericProveScreen } from "../ProveScreen/GenericProveScreen";
 import { EmbeddedGPCProofScreen } from "./EmbeddedGPCProofScreen";
+import { EmbeddedSignPODScreen } from "./EmbeddedSignPODScreen";
 
 /**
  * EmbeddedScreen is used to control the UI when embedded in an iframe.
@@ -31,6 +32,16 @@ export function EmbeddedScreen(): ReactNode {
         proofRequestSchema={embeddedScreen.screen.proofRequest}
         callback={embeddedScreen.screen.callback}
         collectionIds={embeddedScreen.screen.collectionIds}
+      />
+    );
+  } else if (
+    embeddedScreen.screen?.type === EmbeddedScreenType.EmbeddedSignPOD
+  ) {
+    return (
+      <EmbeddedSignPODScreen
+        entries={embeddedScreen.screen.entries}
+        callback={embeddedScreen.screen.callback}
+        onCancel={embeddedScreen.screen.onCancel}
       />
     );
   } else if (embeddedScreen.screen === undefined) {

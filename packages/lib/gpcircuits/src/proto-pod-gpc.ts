@@ -384,7 +384,7 @@ export type ProtoPODGPCCircuitDesc = CircuitDesc & ProtoPODGPCCircuitParams;
 /**
  * Utility functions for the ProtoPODGPC family of circuits.
  *
- * TODO(POD-P3): Factor out and generalize if/when there are multiple
+ * This can be factored out and generalized if/when there are multiple
  * families and we're clear on what's common between them.
  */
 export class ProtoPODGPC {
@@ -712,7 +712,6 @@ export class ProtoPODGPC {
    * These should match the declarations in circuits.json for circomkit,
    * and each should correspond to an available set of precompiled artifacts.
    */
-  // TODO(POD-P2): Pick convenient circuit sizes for MVP.
   public static CIRCUIT_FAMILY: ProtoPODGPCCircuitDesc[] =
     ProtoPODGPC.circuitFamilyFromParams(ProtoPODGPC.CIRCUIT_PARAMETERS);
 

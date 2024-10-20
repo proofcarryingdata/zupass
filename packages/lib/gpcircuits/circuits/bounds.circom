@@ -40,4 +40,3 @@ template BoundsCheckModule (
     // Indicator of whether minValue <= comparisonValue <= maxValue.
     signal output out <== isGEqLowerBound * isLEqUpperBound;
 }
-// TODO(POD-P3): Audit more thoroughly.

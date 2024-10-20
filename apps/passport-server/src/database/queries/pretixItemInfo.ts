@@ -1,9 +1,9 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { PretixItemInfo } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
 export async function fetchPretixItemsInfoByEvent(
-  client: Pool,
+  client: PoolClient,
   eventInfoId: string
 ): Promise<Array<PretixItemInfo>> {
   const result = await sqlQuery(
@@ -19,7 +19,7 @@ export async function fetchPretixItemsInfoByEvent(
 }
 
 export async function insertPretixItemsInfo(
-  client: Pool,
+  client: PoolClient,
   item_id: string,
   eventInfoId: string,
   item_name: string
@@ -36,7 +36,7 @@ export async function insertPretixItemsInfo(
 }
 
 export async function updatePretixItemsInfo(
-  client: Pool,
+  client: PoolClient,
   id: string,
   item_name: string,
   isDeleted: boolean
@@ -53,7 +53,7 @@ export async function updatePretixItemsInfo(
 }
 
 export async function softDeletePretixItemInfo(
-  client: Pool,
+  client: PoolClient,
   id: string
 ): Promise<void> {
   await sqlQuery(

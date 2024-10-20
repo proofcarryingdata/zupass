@@ -20,6 +20,7 @@ import {
   decodePrivateKey,
   decodePublicKey,
   decodeSignature,
+  deriveSignerPublicKey,
   encodePrivateKey,
   encodePublicKey,
   encodeSignature,
@@ -491,6 +492,7 @@ describe("podCrypto signing should work", async function () {
         const { signature, publicKey } = signPODRoot(fakeRoot, testPrivateKey);
         checkSignatureFormat(signature);
         checkPublicKeyFormat(publicKey);
+        expect(publicKey).to.eq(deriveSignerPublicKey(testPrivateKey));
 
         const isValid = verifyPODRootSignature(fakeRoot, signature, publicKey);
         expect(isValid).to.be.true;
@@ -509,6 +511,18 @@ describe("podCrypto signing should work", async function () {
 
     ({ signature, publicKey } = signPODRoot(expectedContentID2, privateKey));
     expect(signature).to.eq(expectedSignature2);
+    expect(publicKey).to.eq(expectedPublicKey);
+  });
+
+  it("derived public keys should match expected values", function () {
+    // This test exists to detect breaking changes in future which could
+    // impact the compatibility of saved PODs.  If sample inputs changed, you
+    // can simply change the expected outputs.  Otherwise think about why
+    // these values changed.
+    let publicKey = deriveSignerPublicKey(privateKey);
+    expect(publicKey).to.eq(expectedPublicKey);
+
+    publicKey = deriveSignerPublicKey(privateKey);
     expect(publicKey).to.eq(expectedPublicKey);
   });
 

@@ -25,6 +25,7 @@ import {
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { Request } from "express";
+import { PoolClient } from "postgres-pool";
 import { Client } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
@@ -113,14 +114,14 @@ export class GenericIssuanceService {
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.checkinDB = new PipelineCheckinDB(context.dbPool);
-    this.consumerDB = new PipelineConsumerDB(context.dbPool);
-    this.manualTicketDB = new PipelineManualTicketDB(context.dbPool);
-    this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB(context.dbPool);
+    this.checkinDB = new PipelineCheckinDB();
+    this.consumerDB = new PipelineConsumerDB();
+    this.manualTicketDB = new PipelineManualTicketDB();
+    this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB();
     this.genericPretixAPI = pretixAPI;
-    this.contactDB = new ContactSharingDB(this.context.dbPool);
-    this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
-    this.emailDB = new PipelineEmailDB(this.context.dbPool);
+    this.contactDB = new ContactSharingDB();
+    this.badgeDB = new BadgeGiftingDB();
+    this.emailDB = new PipelineEmailDB();
     this.pipelineAtomDB = new InMemoryPipelineAtomDB();
     this.userSubservice = new UserSubservice(
       context,
@@ -178,13 +179,17 @@ export class GenericIssuanceService {
   }
 
   public async getAllUserPipelineDefinitions(
+    client: PoolClient,
     user: PipelineUser
   ): Promise<GenericIssuancePipelineListEntry[]> {
-    return this.pipelineSubservice.getAllUserPipelineDefinitions(user);
+    return this.pipelineSubservice.getAllUserPipelineDefinitions(client, user);
   }
 
-  public async authSession(req: Request): Promise<PipelineUser> {
-    return this.userSubservice.authSession(req);
+  public async authSession(
+    client: PoolClient,
+    req: Request
+  ): Promise<PipelineUser> {
+    return this.userSubservice.authSession(client, req);
   }
 
   public async sendLoginEmail(
@@ -198,33 +203,46 @@ export class GenericIssuanceService {
   }
 
   public getPipeline(
+    client: PoolClient,
     pipelineId: string
   ): Promise<PipelineDefinition | undefined> {
-    return this.pipelineSubservice.loadPipelineDefinition(pipelineId);
+    return this.pipelineSubservice.loadPipelineDefinition(client, pipelineId);
   }
 
   public async upsertPipelineDefinition(
+    client: PoolClient,
     user: PipelineUser,
     pipelineDefinition: PipelineDefinition
   ): Promise<UpsertPipelineResult> {
     return this.pipelineSubservice.upsertPipelineDefinition(
+      client,
       user,
       pipelineDefinition
     );
   }
 
   public async deletePipelineDefinition(
+    client: PoolClient,
     user: PipelineUser,
     pipelineId: string
   ): Promise<void> {
-    return this.pipelineSubservice.deletePipelineDefinition(user, pipelineId);
+    return this.pipelineSubservice.deletePipelineDefinition(
+      client,
+      user,
+      pipelineId
+    );
   }
 
   public async loadPipelineDefinition(
+    client: PoolClient,
     user: PipelineUser,
     id: string
   ): Promise<PipelineDefinition | undefined> {
-    return this.pipelineSubservice.loadPipelineDefinitionForUser(user, id);
+    return this.pipelineSubservice.loadPipelineDefinitionForUser(
+      client,
+      user,
+      id
+    );
   }
 
   public async handlePollFeed(
@@ -235,10 +253,15 @@ export class GenericIssuanceService {
   }
 
   public async handleGetPipelineInfo(
+    client: PoolClient,
     user: PipelineUser,
     pipelineId: string
   ): Promise<PipelineInfoResponseValue> {
-    return this.pipelineSubservice.handleGetPipelineInfo(user, pipelineId);
+    return this.pipelineSubservice.handleGetPipelineInfo(
+      client,
+      user,
+      pipelineId
+    );
   }
 
   public async handleListFeed(
@@ -302,10 +325,15 @@ export class GenericIssuanceService {
   }
 
   public async validateEmailAndPretixOrderCode(
+    client: PoolClient,
     email: string,
     code: string
   ): Promise<boolean> {
-    return this.pipelineSubservice.validateEmailAndPretixOrderCode(email, code);
+    return this.pipelineSubservice.validateEmailAndPretixOrderCode(
+      client,
+      email,
+      code
+    );
   }
 
   public async handleGetPipelineSemaphoreGroups(
@@ -315,10 +343,15 @@ export class GenericIssuanceService {
   }
 
   public async handleSendPipelineEmail(
+    client: PoolClient,
     pipelineId: string,
     email: PipelineEmailType
   ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
-    return this.pipelineSubservice.handleSendPipelineEmail(pipelineId, email);
+    return this.pipelineSubservice.handleSendPipelineEmail(
+      client,
+      pipelineId,
+      email
+    );
   }
 
   /**
@@ -345,8 +378,10 @@ export class GenericIssuanceService {
   /**
    * Used by the Edge City folder UI in Zupass.
    */
-  public async getEdgeCityBalances(): Promise<EdgeCityBalance[]> {
-    return getEdgeCityBalances(this.context.dbPool);
+  public async getEdgeCityBalances(
+    client: PoolClient
+  ): Promise<EdgeCityBalance[]> {
+    return getEdgeCityBalances(client);
   }
 
   /**

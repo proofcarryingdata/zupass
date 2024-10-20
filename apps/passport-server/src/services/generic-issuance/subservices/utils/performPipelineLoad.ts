@@ -1,6 +1,8 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { PipelineLoadSummary } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
+import { Pool } from "postgres-pool";
+import { sqlTransaction } from "../../../../database/sqlQuery";
 import { logger } from "../../../../util/logger";
 import { DiscordService } from "../../../discordService";
 import { PagerDutyService } from "../../../pagerDutyService";
@@ -25,6 +27,7 @@ const LOG_TAG = `[performPipelineLoad]`;
  * alerting, etc.
  */
 export async function performPipelineLoad(
+  pool: Pool,
   pipelineSlot: PipelineSlot,
   pipelineSubservice: PipelineSubservice,
   userSubservice: UserSubservice,
@@ -41,9 +44,10 @@ export async function performPipelineLoad(
       ` of type '${pipeline?.type}'` +
       ` belonging to ${pipelineSlot.definition.ownerUserId}`
   );
-  const owner = await userSubservice.getUserById(
-    pipelineSlot.definition.ownerUserId
+  const owner = await sqlTransaction(pool, async (client) =>
+    userSubservice.getUserById(client, pipelineSlot.definition.ownerUserId)
   );
+
   traceUser(owner);
   tracePipeline(pipelineSlot.definition);
 
@@ -84,7 +88,9 @@ export async function performPipelineLoad(
       success: false,
       errorMessage: "failed to start pipeline"
     };
-    await pipelineSubservice.saveLoadSummary(pipelineId, summary);
+    await sqlTransaction(pool, (client) =>
+      pipelineSubservice.saveLoadSummary(client, pipelineId, summary)
+    );
     traceLoadSummary(summary);
     maybeAlertForPipelineRun(
       pipelineSlot,
@@ -107,7 +113,9 @@ export async function performPipelineLoad(
       `successfully loaded data for pipeline with id '${pipelineId}'` +
         ` of type '${pipelineSlot.definition.type}'`
     );
-    await pipelineSubservice.saveLoadSummary(pipelineId, summary);
+    await sqlTransaction(pool, (client) =>
+      pipelineSubservice.saveLoadSummary(client, pipelineId, summary)
+    );
     traceLoadSummary(summary);
     maybeAlertForPipelineRun(
       pipelineSlot,
@@ -131,7 +139,9 @@ export async function performPipelineLoad(
       }`,
       success: false
     } satisfies PipelineLoadSummary;
-    await pipelineSubservice.saveLoadSummary(pipelineId, summary);
+    await sqlTransaction(pool, (client) =>
+      pipelineSubservice.saveLoadSummary(client, pipelineId, summary)
+    );
     traceLoadSummary(summary);
     maybeAlertForPipelineRun(
       pipelineSlot,

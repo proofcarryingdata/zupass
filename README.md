@@ -185,7 +185,7 @@ Next, the PCD implementation (as represented by its `PCDPackage`) must be added 
 
 Adding the new `PCDPackage` to the appropriate places is necessary for Zupass to be able to 'handle' the new type of PCD correctly.
 
-Here are a few example pull requests that integrate a new `PCDPackage` into Zupass are:
+Here are a few example pull requests that integrate a new `PCDPackage` into Zupass:
 
 - https://github.com/proofcarryingdata/zupass/pull/290
 - https://github.com/proofcarryingdata/zupass/pull/134
@@ -206,7 +206,7 @@ Some `PCDPackage` implementations live inside of the Zupass repository:
 - https://github.com/proofcarryingdata/zupass/pull/290
 - https://github.com/proofcarryingdata/zupass/pull/134
 
-Others live outside off the Zupass repository:
+Others live outside of the Zupass repository:
 
 - https://github.com/proofcarryingdata/zupass/pull/154
 
@@ -214,7 +214,7 @@ The choice between Internal and External is yours to make. In either case, we wi
 
 ### Testing
 
-We recommend that you add an example for how a developer may create and consume your new type of PCD in the `consumer-client` app included in this repository. Check out how other PCDs have done this by navigating to http://localhost:3001/ after running `yarn dev` in the root of your project - this is where the `consumer-client` application lives.
+We recommend that you add an example of how a developer may create and consume your new type of PCD in the `consumer-client` app included in this repository. Check out how other PCDs have done this by navigating to http://localhost:3001/ after running `yarn dev` in the root of your project - this is where the `consumer-client` application lives.
 
 We also recommend that you create a comprehensive test suite for your new PCD, so that we can be confident in your implementation. A few test suites we think are good can be found in the following PCD implementations:
 

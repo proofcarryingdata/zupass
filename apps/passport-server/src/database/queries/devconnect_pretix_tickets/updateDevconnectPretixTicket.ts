@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { DevconnectPretixTicketWithCheckin } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -6,7 +6,7 @@ import { sqlQuery } from "../../sqlQuery";
  * Updates a pretix ticket in our database.
  */
 export async function updateDevconnectPretixTicket(
-  client: Pool,
+  client: PoolClient,
   params: DevconnectPretixTicketWithCheckin
 ): Promise<DevconnectPretixTicketWithCheckin> {
   const result = await sqlQuery(
@@ -38,7 +38,7 @@ returning *`,
  * to toggle on `is_consumed` state, returning the row if it exists.
  */
 export async function consumeDevconnectPretixTicket(
-  client: Pool,
+  client: PoolClient,
   id: string,
   checkerEmail: string
 ): Promise<boolean> {

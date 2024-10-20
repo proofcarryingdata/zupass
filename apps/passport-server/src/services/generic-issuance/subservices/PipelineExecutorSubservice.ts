@@ -4,6 +4,12 @@ import {
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { str } from "@pcd/util";
+import { PoolClient } from "postgres-pool";
+import {
+  namedSqlTransaction,
+  sqlTransaction
+} from "../../../database/sqlQuery";
+import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
@@ -45,6 +51,7 @@ export class PipelineExecutorSubservice {
    */
   private pipelineSlots: PipelineSlot[];
 
+  private context: ApplicationContext;
   private pipelineSubservice: PipelineSubservice;
   private userSubservice: UserSubservice;
   private instantiatePipelineArgs: InstantiatePipelineArgs;
@@ -55,6 +62,7 @@ export class PipelineExecutorSubservice {
 
   public constructor(
     pipelineSubservice: PipelineSubservice,
+    context: ApplicationContext,
     userSubservice: UserSubservice,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
@@ -68,6 +76,7 @@ export class PipelineExecutorSubservice {
     this.userSubservice = userSubservice;
     this.pipelineSubservice = pipelineSubservice;
     this.instantiatePipelineArgs = instantiatePipelineArgs;
+    this.context = context;
   }
 
   /**
@@ -76,7 +85,9 @@ export class PipelineExecutorSubservice {
    * schedules a load loop which loads data for each {@link Pipeline} once per minute.
    */
   public async start(startLoadLoop?: boolean): Promise<void> {
-    await this.loadAndInstantiatePipelines();
+    await sqlTransaction(this.context.dbPool, (client) =>
+      this.loadAndInstantiatePipelines(client)
+    );
 
     if (startLoadLoop !== false) {
       await this.startPipelineLoadLoop();
@@ -132,13 +143,16 @@ export class PipelineExecutorSubservice {
    * tl;dr syncs db <-> pipeline in memory representation
    */
   public async restartPipeline(
+    client: PoolClient,
     pipelineId: string,
     dontLoad?: boolean
   ): Promise<void> {
     return traced(SERVICE_NAME, "restartPipeline", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
-      const definition =
-        await this.pipelineSubservice.loadPipelineDefinition(pipelineId);
+      const definition = await this.pipelineSubservice.loadPipelineDefinition(
+        client,
+        pipelineId
+      );
       if (!definition) {
         logger(
           LOG_TAG,
@@ -158,11 +172,15 @@ export class PipelineExecutorSubservice {
       if (!pipelineSlot) {
         pipelineSlot = {
           definition: definition,
-          owner: await this.userSubservice.getUserById(definition.ownerUserId)
+          owner: await this.userSubservice.getUserById(
+            client,
+            definition.ownerUserId
+          )
         };
         this.pipelineSlots.push(pipelineSlot);
       } else {
         pipelineSlot.owner = await this.userSubservice.getUserById(
+          client,
           definition.ownerUserId
         );
       }
@@ -187,6 +205,7 @@ export class PipelineExecutorSubservice {
       logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
       pipelineSlot.instance = await instantiatePipeline(
+        this.context,
         definition,
         this.instantiatePipelineArgs
       );
@@ -212,10 +231,10 @@ export class PipelineExecutorSubservice {
    *     - {@link PretixPipeline}
    *     - {@link CSVPipeline}
    */
-  private async loadAndInstantiatePipelines(): Promise<void> {
+  private async loadAndInstantiatePipelines(client: PoolClient): Promise<void> {
     return traced(SERVICE_NAME, "loadAndInstantiatePipelines", async (span) => {
       const pipelinesFromDB =
-        await this.pipelineSubservice.loadPipelineDefinitions();
+        await this.pipelineSubservice.loadPipelineDefinitions(client);
       span?.setAttribute("pipeline_count", pipelinesFromDB.length);
 
       await Promise.allSettled(
@@ -231,6 +250,7 @@ export class PipelineExecutorSubservice {
           const slot: PipelineSlot = {
             definition: pipelineDefinition,
             owner: await this.userSubservice.getUserById(
+              client,
               pipelineDefinition.ownerUserId
             )
           };
@@ -240,6 +260,7 @@ export class PipelineExecutorSubservice {
           // log and continue
           try {
             slot.instance = await instantiatePipeline(
+              this.context,
               pipelineDefinition,
               this.instantiatePipelineArgs
             );
@@ -270,6 +291,7 @@ export class PipelineExecutorSubservice {
       "performPipelineLoad",
       async (): Promise<PipelineLoadSummary> => {
         return performPipelineLoad(
+          this.context.dbPool,
           pipelineSlot,
           this.pipelineSubservice,
           this.userSubservice,
@@ -307,9 +329,12 @@ export class PipelineExecutorSubservice {
         this.pipelineSlots.map(async (slot: PipelineSlot): Promise<void> => {
           try {
             const runInfo = await this.performPipelineLoad(slot);
-            await this.pipelineSubservice.saveLoadSummary(
-              slot.definition.id,
-              runInfo
+            await sqlTransaction(this.context.dbPool, (client) =>
+              this.pipelineSubservice.saveLoadSummary(
+                client,
+                slot.definition.id,
+                runInfo
+              )
             );
           } catch (e) {
             logger(
@@ -350,10 +375,17 @@ export class PipelineExecutorSubservice {
     // and re-instantiate the pipeline. do NOT call the pipeline's 'load'
     // function - that will be done the next time `startPipelineLoadLoop`
     // is called.
-    await Promise.allSettled(
-      this.pipelineSlots
-        .slice()
-        .map((s) => this.restartPipeline(s.definition.id, true))
+    await namedSqlTransaction(
+      this.context.dbPool,
+      "startPipelineLoadLoop",
+      async (client) => {
+        await this.loadAndInstantiatePipelines(client);
+        await Promise.allSettled(
+          this.pipelineSlots
+            .slice()
+            .map((s) => this.restartPipeline(client, s.definition.id, true))
+        );
+      }
     );
 
     this.nextLoadTimeout = setTimeout(() => {

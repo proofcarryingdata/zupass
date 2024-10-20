@@ -105,28 +105,6 @@ export function PipelineDetailSection({
         </AccordionItem>
 
         <AccordionItem>
-          <AccordionButton>Feed Subscribers</AccordionButton>
-          <AccordionPanel>
-            <CappedSectionContainer>
-              <PipelineLatestConsumersSection
-                latestConsumers={pipelineInfo.latestConsumers}
-              />
-            </CappedSectionContainer>
-          </AccordionPanel>
-        </AccordionItem>
-
-        <AccordionItem>
-          <AccordionButton>Semaphore Groups</AccordionButton>
-          <AccordionPanel>
-            <SectionContainer>
-              <PipelineSemaphoreGroupsSection
-                lastLoad={pipelineInfo.lastLoad}
-              />
-            </SectionContainer>
-          </AccordionPanel>
-        </AccordionItem>
-
-        <AccordionItem>
           <AccordionButton>ZuAuth Config</AccordionButton>
           <AccordionPanel>
             <CappedSectionContainer>
@@ -137,34 +115,56 @@ export function PipelineDetailSection({
           </AccordionPanel>
         </AccordionItem>
 
-        <AccordionItem>
-          <AccordionButton>Logs</AccordionButton>
-          <AccordionPanel>
-            <PipelineLatestLogsSection lastLoad={pipelineInfo.lastLoad} />
-          </AccordionPanel>
-        </AccordionItem>
-
-        <AccordionItem>
-          <AccordionButton>Data</AccordionButton>
-          <AccordionPanel>
-            <PipelineLatestDataSection
-              lastLoad={pipelineInfo.lastLoad}
-              latestAtoms={pipelineInfo.latestAtoms}
-            />
-          </AccordionPanel>
-        </AccordionItem>
-
-        <AccordionItem>
-          <AccordionButton>Version History</AccordionButton>
-          <AccordionPanel>
-            <CappedSectionContainer>
-              <PipelineVersionHistorySection pipelineInfo={pipelineInfo} />
-            </CappedSectionContainer>
-          </AccordionPanel>
-        </AccordionItem>
-
         {isAdminView && (
           <>
+            <AccordionItem>
+              <AccordionButton>Feed Subscribers</AccordionButton>
+              <AccordionPanel>
+                <CappedSectionContainer>
+                  <PipelineLatestConsumersSection
+                    latestConsumers={pipelineInfo.latestConsumers}
+                  />
+                </CappedSectionContainer>
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <AccordionButton>Semaphore Groups</AccordionButton>
+              <AccordionPanel>
+                <SectionContainer>
+                  <PipelineSemaphoreGroupsSection
+                    lastLoad={pipelineInfo.lastLoad}
+                  />
+                </SectionContainer>
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <AccordionButton>Logs</AccordionButton>
+              <AccordionPanel>
+                <PipelineLatestLogsSection lastLoad={pipelineInfo.lastLoad} />
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <AccordionButton>Data</AccordionButton>
+              <AccordionPanel>
+                <PipelineLatestDataSection
+                  lastLoad={pipelineInfo.lastLoad}
+                  latestAtoms={pipelineInfo.latestAtoms}
+                />
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <AccordionButton>Version History</AccordionButton>
+              <AccordionPanel>
+                <CappedSectionContainer>
+                  <PipelineVersionHistorySection pipelineInfo={pipelineInfo} />
+                </CappedSectionContainer>
+              </AccordionPanel>
+            </AccordionItem>
+
             {supportsAddingManualTickets(pipeline) && isAdminView && (
               <AccordionItem>
                 <AccordionButton>

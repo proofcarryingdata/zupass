@@ -8,7 +8,7 @@ import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { toCanvas } from "html-to-image";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
@@ -74,12 +74,20 @@ function EdDSATicketPCDCardBody({
         )}
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
-            {ticketData?.attendeeName.toUpperCase() || "Unknown"}
+            {ticketData?.attendeeName.toUpperCase() ||
+              ticketData?.eventName.toUpperCase() ||
+              "Unknown"}
           </NEW_UI__AttendeeName>
           <NEW_UI__ExtraInfoContainer>
-            <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
-            <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
-            <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
+            {ticketData?.attendeeEmail && (
+              <NEW_UI__ExtraInfo>{ticketData.attendeeEmail}</NEW_UI__ExtraInfo>
+            )}
+            {ticketData?.attendeeEmail && ticketData?.ticketName && (
+              <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
+            )}
+            {ticketData?.ticketName && (
+              <NEW_UI__ExtraInfo>{ticketData.ticketName}</NEW_UI__ExtraInfo>
+            )}
           </NEW_UI__ExtraInfoContainer>
         </NEW_UI__InfoContainer>
       </NEW_UI__TicketImageContainer>
@@ -167,6 +175,7 @@ const NEW_UI__TicketImageContainer = styled.div`
   gap: 16px;
   padding: 16px 16px 0px 16px;
   background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
+  border-radius: inherit;
 `;
 
 const NEW_UI__InfoContainer = styled.div`

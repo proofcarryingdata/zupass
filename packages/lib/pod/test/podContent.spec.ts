@@ -150,26 +150,6 @@ describe("PODContent class should work", async function () {
     }
   });
 
-  it("should serialize and deserialize", function () {
-    const transferredContent1 = PODContent.deserialize(podContent1.serialize());
-    expect(transferredContent1.size).to.eq(expectedCount1);
-    expect(transferredContent1.contentID).to.eq(podContent1.contentID);
-    expect(transferredContent1.merkleTreeDepth).to.eq(
-      podContent1.merkleTreeDepth
-    );
-    expect(transferredContent1.asEntries()).to.deep.eq(podContent1.asEntries());
-    expect(transferredContent1.listNames()).to.deep.eq(expectedNameOrder1);
-
-    const transferredContent2 = PODContent.deserialize(podContent2.serialize());
-    expect(transferredContent2.size).to.eq(expectedCount2);
-    expect(transferredContent2.contentID).to.eq(podContent2.contentID);
-    expect(transferredContent2.merkleTreeDepth).to.eq(
-      podContent2.merkleTreeDepth
-    );
-    expect(transferredContent2.asEntries()).to.deep.eq(podContent2.asEntries());
-    expect(transferredContent2.listNames()).to.deep.eq(expectedNameOrder2);
-  });
-
   it("should serialize and deserialize as JSON objects", function () {
     const transferredContent1 = PODContent.fromJSON(podContent1.toJSON());
     expect(transferredContent1.size).to.eq(expectedCount1);

@@ -1,7 +1,6 @@
 import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { isEmailPCD } from "@pcd/email-pcd";
-import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import {
   getImageUrlEntry,
@@ -25,24 +24,6 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
-
-const getActivePod = (
-  collection: PCDCollection,
-  activePodId: string,
-  type: "ticketId" | "id"
-): PCD<unknown, unknown> | undefined => {
-  if (type === "ticketId") {
-    return collection
-      .getAll()
-      .find(
-        (pod) =>
-          (isPODTicketPCD(pod) || isEdDSATicketPCD(pod)) &&
-          pod.claim.ticket.ticketId === activePodId
-      );
-  } else {
-    return collection.getById(activePodId);
-  }
-};
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -89,14 +70,9 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const isPodsCollectionModalOpen =
     activeBottomModal.modalType === "pods-collection";
 
-  const activePod =
-    isPodsCollectionModalOpen && activeBottomModal.activePodId
-      ? getActivePod(
-          pcdCollection,
-          activeBottomModal.activePodId,
-          activeBottomModal.idType ?? "id"
-        )
-      : undefined;
+  const activePod = isPodsCollectionModalOpen
+    ? activeBottomModal.activePod
+    : undefined;
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
@@ -127,13 +103,13 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
 
       result[value].children.push({
         title: getPcdName(pcd),
-        key: pcd.id,
+        key: pcd.id || getPcdName(pcd),
         onClick: () => {
           listContainerRef.current &&
             setScrollPosition(listContainerRef.current.scrollTop);
           dispatch({
             type: "set-bottom-modal",
-            modal: { modalType: "pods-collection", activePodId: pcd.id }
+            modal: { modalType: "pods-collection", activePod: pcd }
           });
         },
         LeftIcon: getPCDImage(pcd)

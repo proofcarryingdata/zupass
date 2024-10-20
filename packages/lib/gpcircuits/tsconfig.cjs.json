@@ -6,10 +6,7 @@
     "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
   },
   // For CJS/ESM builds, do not include test files
-  "include": [
-    "src",
-    "src/circuitParameters.json"
-  ],
+  "include": ["src", "src/circuitParameters.json"],
   // DO NOT MODIFY MANUALLY BEYOND THIS POINT
   // References are automatically maintained by `yarn fix-references`
   "references": [

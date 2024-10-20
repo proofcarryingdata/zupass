@@ -15,7 +15,7 @@ interface AppConfig {
   rollbarEnvName: string | undefined;
   // restrict origins allowed to sign PODs to the ones in ZAPP_ALLOWED_SIGNER_ORIGINS?
   zappRestrictOrigins: boolean;
-  // origins that are allowed to sign PODs
+  // origins that are allowed to sign PODs without user approval
   zappAllowedSignerOrigins: string[];
   // folder name -> zapp URL
   embeddedZapps: Record<string, string>;

@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { ZuconnectTicketDB } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -6,7 +6,7 @@ import { sqlQuery } from "../../sqlQuery";
  * Fetches all non-deleted Zuconnect Tickets.
  */
 export async function fetchAllZuconnectTickets(
-  client: Pool
+  client: PoolClient
 ): Promise<ZuconnectTicketDB[]> {
   const result = await sqlQuery(
     client,
@@ -21,7 +21,7 @@ export async function fetchAllZuconnectTickets(
  * Fetches the IDs of all non-deleted Zuconnect tickets.
  */
 export async function fetchAllZuconnectTicketIds(
-  client: Pool
+  client: PoolClient
 ): Promise<ZuconnectTicketDB["id"][]> {
   const result = await sqlQuery(
     client,
@@ -37,7 +37,7 @@ export async function fetchAllZuconnectTicketIds(
  * Fetches all Zuconnect tickets with a given email address.
  */
 export async function fetchZuconnectTicketsByEmail(
-  client: Pool,
+  client: PoolClient,
   email: string
 ): Promise<ZuconnectTicketDB[]> {
   const result = await sqlQuery(
@@ -55,7 +55,7 @@ export async function fetchZuconnectTicketsByEmail(
  * Fetches a Zuconnect ticket by ID.
  */
 export async function fetchZuconnectTicketById(
-  client: Pool,
+  client: PoolClient,
   id: string
 ): Promise<ZuconnectTicketDB | undefined> {
   const result = await sqlQuery(

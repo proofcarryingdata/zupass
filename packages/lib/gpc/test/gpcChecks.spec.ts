@@ -83,7 +83,7 @@ describe("Proof entry config check should work", () => {
   });
 });
 
-// TODO(POD-P3): Test other aspects of this check
+// TODO(POD-P4): Test other aspects of this check
 
 describe("Entry bounds check config check should work", () => {
   it("should pass for bounds checks within the appropriate range", () => {
@@ -483,4 +483,5 @@ describe("Proof entry inequality config check against inputs should work", () =>
     }
   });
 });
-// TODO(POD-P3): More tests
+
+// TODO(POD-P4): More tests

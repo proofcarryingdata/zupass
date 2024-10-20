@@ -1,5 +1,5 @@
 import { PipelineEmailType } from "@pcd/passport-interface";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
 export interface ISentPipelineEmail {
@@ -10,11 +10,13 @@ export interface ISentPipelineEmail {
 
 export interface IPipelineEmailDB {
   recordEmailSent(
+    client: PoolClient,
     pipelineId: string,
     emailType: PipelineEmailType,
     emailAddress: string
   ): Promise<ISentPipelineEmail | undefined>;
   getSentEmails(
+    client: PoolClient,
     pipelineID: string,
     emailType: PipelineEmailType
   ): Promise<ISentPipelineEmail[]>;
@@ -26,18 +28,14 @@ export interface IPipelineEmailDB {
  * back-end system.
  */
 export class PipelineEmailDB implements IPipelineEmailDB {
-  private db: Pool;
-
-  public constructor(db: Pool) {
-    this.db = db;
-  }
   public async recordEmailSent(
+    client: PoolClient,
     pipelineId: string,
     emailType: PipelineEmailType,
     emailAddress: string
   ): Promise<ISentPipelineEmail | undefined> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `insert into generic_issuance_emails (pipeline_id, email_type, email_address) values($1, $2, $3) returning *`,
       [pipelineId, emailType, emailAddress]
     );
@@ -53,11 +51,12 @@ export class PipelineEmailDB implements IPipelineEmailDB {
     };
   }
   public async getSentEmails(
+    client: PoolClient,
     pipelineID: string,
     emailType: PipelineEmailType
   ): Promise<ISentPipelineEmail[]> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `select * from generic_issuance_emails where pipeline_id = $1 and email_type = $2`,
       [pipelineID, emailType]
     );

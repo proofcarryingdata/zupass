@@ -15,6 +15,7 @@ import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomBytes } from "crypto";
+import { sqlTransaction } from "../../src/database/sqlQuery";
 import { Zupass } from "../../src/types";
 
 export async function testLogin(
@@ -74,7 +75,10 @@ export async function testLogin(
     }
     token = confirmationEmailResult.value.devToken;
   } else {
-    const serverToken = await emailTokenService.getTokenForEmail(email);
+    const serverToken = await sqlTransaction(
+      application.context.dbPool,
+      (client) => emailTokenService.getTokenForEmail(client, email)
+    );
     if (serverToken === null) {
       throw new Error(
         "expected to be able to get the verification token from the internal server state"

@@ -1,6 +1,6 @@
 import { PipelineConsumer } from "@pcd/passport-interface";
 import { QueryResultRow } from "pg";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
 /**
@@ -13,6 +13,7 @@ export interface IPipelineConsumerDB {
   // If there is no change then there is no need to update anything, and the
   // consumer's `timeUpdated` field should not change.
   save(
+    client: PoolClient,
     pipelineId: string,
     email: string,
     commitment: string,
@@ -22,31 +23,27 @@ export interface IPipelineConsumerDB {
   // when we have a list of emails from tickets, and want to find the matching
   // consumers for them (typically so that we can build a Semaphore group).
   loadByEmails(
+    client: PoolClient,
     pipelineId: string,
     emailAddresses: string[]
   ): Promise<PipelineConsumer[]>;
-  loadAll(pipelineId: string): Promise<PipelineConsumer[]>;
+  loadAll(client: PoolClient, pipelineId: string): Promise<PipelineConsumer[]>;
 }
 
 export class PipelineConsumerDB implements IPipelineConsumerDB {
-  private db: Pool;
-
-  public constructor(db: Pool) {
-    this.db = db;
-  }
-
   /**
    * Save a consumer to the DB.
    * Returns true if an update to the user's Semaphore commitment was recorded.
    */
   public async save(
+    client: PoolClient,
     pipelineId: string,
     email: string,
     commitment: string,
     now: Date
   ): Promise<boolean> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `
     INSERT INTO generic_issuance_consumers (pipeline_id, email, commitment, time_created, time_updated)
     VALUES($1, $2, $3, $4, $4)
@@ -74,11 +71,12 @@ export class PipelineConsumerDB implements IPipelineConsumerDB {
    * tickets which have not yet been issued via a feed.
    */
   public async loadByEmails(
+    client: PoolClient,
     pipelineId: string,
     emailAddresses: string[]
   ): Promise<PipelineConsumer[]> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `SELECT * FROM generic_issuance_consumers WHERE pipeline_id = $1 AND email = ANY($2)`,
       [pipelineId, emailAddresses]
     );
@@ -89,9 +87,12 @@ export class PipelineConsumerDB implements IPipelineConsumerDB {
   /**
    * Returns all consumers for the pipeline.
    */
-  public async loadAll(pipelineId: string): Promise<PipelineConsumer[]> {
+  public async loadAll(
+    client: PoolClient,
+    pipelineId: string
+  ): Promise<PipelineConsumer[]> {
     const result = await sqlQuery(
-      this.db,
+      client,
       `SELECT * FROM generic_issuance_consumers WHERE pipeline_id = $1`,
       [pipelineId]
     );

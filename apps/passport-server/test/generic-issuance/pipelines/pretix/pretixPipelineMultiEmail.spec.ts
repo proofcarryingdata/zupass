@@ -15,6 +15,7 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
+import { Pool, PoolClient } from "postgres-pool";
 import { stopApplication } from "../../../../src/application";
 import { fetchEmailToken } from "../../../../src/database/queries/emailToken";
 import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
@@ -52,6 +53,9 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
   let giBackend: Zupass;
   let giService: GenericIssuanceService;
 
+  let pool: Pool;
+  let client: PoolClient;
+
   const {
     adminGIUserId,
     adminGIUserEmail,
@@ -86,8 +90,10 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
     });
 
     giBackend = await startTestingApp({});
+    pool = giBackend.context.dbPool;
+    client = await pool.connect();
 
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const userDB = new PipelineUserDB();
     const adminUser: PipelineUser = {
       id: adminGIUserId,
       email: adminGIUserEmail,
@@ -95,7 +101,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(adminUser);
+    await userDB.updateUserById(client, adminUser);
     assertUserMatches(
       {
         id: adminGIUserId,
@@ -104,7 +110,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(adminUser.id)
+      await userDB.getUserById(client, adminUser.id)
     );
     const ethLatAmGIUser: PipelineUser = {
       id: ethLatAmGIUserID,
@@ -113,7 +119,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(ethLatAmGIUser);
+    await userDB.updateUserById(client, ethLatAmGIUser);
     assertUserMatches(
       {
         id: ethLatAmGIUserID,
@@ -122,7 +128,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(ethLatAmGIUser.id)
+      await userDB.getUserById(client, ethLatAmGIUser.id)
     );
 
     // The mock server will intercept any requests for URLs that are registered
@@ -132,11 +138,9 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
     giService = giBackend.services
       .genericIssuanceService as GenericIssuanceService;
     await giService.stop();
-    const pipelineDefinitionDB = new PipelineDefinitionDB(
-      giBackend.context.dbPool
-    );
-    await pipelineDefinitionDB.deleteAllDefinitions();
-    await pipelineDefinitionDB.upsertDefinitions(pipelineDefinitions);
+    const pipelineDefinitionDB = new PipelineDefinitionDB();
+    await pipelineDefinitionDB.deleteAllDefinitions(client);
+    await pipelineDefinitionDB.upsertDefinitions(client, pipelineDefinitions);
     await giService.start(false);
   });
 
@@ -150,6 +154,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
   });
 
   this.afterAll(async () => {
+    await client.release();
     await stopApplication(giBackend);
     mockServer.close();
   });
@@ -257,7 +262,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
       expectTrue(sendTokenResult.success);
 
       // note this is sent to the new email, not old email
-      const token = await fetchEmailToken(giBackend.context.dbPool, newEmail);
+      const token = await fetchEmailToken(client, newEmail);
       expectToExist(token);
 
       // use the confirmation code to change the email
@@ -302,7 +307,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
     );
     expectTrue(sendTokenResult.success);
 
-    const token = await fetchEmailToken(giBackend.context.dbPool, newEmail);
+    const token = await fetchEmailToken(client, newEmail);
     expectToExist(token);
 
     // use the confirmation code to change the email
@@ -433,7 +438,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
       );
       expectTrue(sendTokenResult.success);
 
-      const token = await fetchEmailToken(giBackend.context.dbPool, newEmail);
+      const token = await fetchEmailToken(client, newEmail);
       expectToExist(token);
 
       // use the confirmation code to change the email
@@ -484,7 +489,7 @@ describe("generic issuance - PretixPipeline - multi-email support", function () 
       );
       expectTrue(sendTokenResult.success);
 
-      const token = await fetchEmailToken(giBackend.context.dbPool, newEmail);
+      const token = await fetchEmailToken(client, newEmail);
       expectToExist(token);
 
       // use the confirmation code to change the email

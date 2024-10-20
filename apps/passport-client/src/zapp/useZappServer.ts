@@ -155,7 +155,10 @@ export function useZappServer(mode: ListenMode): void {
       const server = new ZupassRPCProcessor(context, advice);
 
       // @todo handle this with an action
-      context.update({ embeddedScreen: { screen: undefined } });
+      context.update({
+        embeddedScreen: { screen: undefined },
+        listenMode: mode
+      });
       if (window.parent !== window.self) {
         window.location.hash = "embedded";
       }

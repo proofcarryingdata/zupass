@@ -15,6 +15,7 @@ import { randomUUID } from "@pcd/util";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
+import { Pool, PoolClient } from "postgres-pool";
 import { PipelineDefinitionDB } from "../../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../../src/database/queries/pipelineUserDB";
 import { PipelineUser } from "../../src/services/generic-issuance/pipelines/types";
@@ -30,7 +31,10 @@ import { assertUserMatches } from "./util";
  */
 describe("generic issuance - external API", function () {
   const nowDate = new Date();
+
   let giBackend: Zupass;
+  let client: PoolClient;
+  let pool: Pool;
 
   const adminGIUserEmail = "admin@example.com";
   const adminGIUserId = randomUUID();
@@ -117,10 +121,12 @@ t2,i1`,
     });
 
     giBackend = await startTestingApp({});
+    pool = giBackend.context.dbPool;
+    client = await pool.connect();
   });
 
   step("PipelineUserDB", async function () {
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const userDB = new PipelineUserDB();
 
     const adminUser: PipelineUser = {
       id: adminGIUserId,
@@ -129,7 +135,7 @@ t2,i1`,
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(adminUser);
+    await userDB.updateUserById(client, adminUser);
     assertUserMatches(
       {
         id: adminGIUserId,
@@ -138,7 +144,7 @@ t2,i1`,
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(adminUser.id)
+      await userDB.getUserById(client, adminUser.id)
     );
 
     const user1: PipelineUser = {
@@ -148,7 +154,7 @@ t2,i1`,
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(user1);
+    await userDB.updateUserById(client, user1);
     assertUserMatches(
       {
         id: giUser1Id,
@@ -157,7 +163,7 @@ t2,i1`,
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(user1.id)
+      await userDB.getUserById(client, user1.id)
     );
 
     const user2: PipelineUser = {
@@ -167,7 +173,7 @@ t2,i1`,
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(user2);
+    await userDB.updateUserById(client, user2);
     assertUserMatches(
       {
         id: giUser2Id,
@@ -176,7 +182,7 @@ t2,i1`,
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(user2.id)
+      await userDB.getUserById(client, user2.id)
     );
   });
 
@@ -453,10 +459,8 @@ t2,i1`,
 
   step("cannot reuse IDs between pipelines", async () => {
     // Clean up anything from previous tests
-    const pipelineDefinitionDB = new PipelineDefinitionDB(
-      giBackend.context.dbPool
-    );
-    await pipelineDefinitionDB.deleteAllDefinitions();
+    const pipelineDefinitionDB = new PipelineDefinitionDB();
+    await pipelineDefinitionDB.deleteAllDefinitions(client);
 
     const firstPipelineId = randomUUID();
     const secondPipelineId = randomUUID();

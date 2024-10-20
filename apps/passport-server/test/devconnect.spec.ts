@@ -20,7 +20,7 @@ import MockDate from "mockdate";
 import { rest } from "msw";
 import { SetupServer } from "msw/node";
 import NodeRSA from "node-rsa";
-import { Pool } from "postgres-pool";
+import { Pool, PoolClient } from "postgres-pool";
 import {
   DevconnectPretixAPI,
   DevconnectPretixCheckin,
@@ -108,7 +108,9 @@ describe("devconnect functionality", function () {
   let pretixMocker: ZuzaluPretixDataMocker;
   let devconnectPretixSyncService: DevconnectPretixSyncService;
   let poapService: PoapService;
-  let db: Pool;
+  let pool: Pool;
+  let client: PoolClient;
+
   let server: SetupServer;
   let backupData: IMockDevconnectPretixData;
   let emailAPI: IEmailAPI;
@@ -140,19 +142,21 @@ describe("devconnect functionality", function () {
 
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
-    db = await getDB();
+
+    pool = await getDB();
+    client = await pool.connect();
 
     mocker = new DevconnectPretixDataMocker();
 
     organizerConfigId = await insertPretixOrganizerConfig(
-      db,
+      client,
       mocker.get().organizer1.orgUrl,
       mocker.get().organizer1.token,
       mocker.get().organizer1.disabled
     );
 
     eventAConfigId = await insertPretixEventConfig(
-      db,
+      client,
       organizerConfigId,
       [
         mocker.get().organizer1.eventAItem1.id + "",
@@ -163,7 +167,7 @@ describe("devconnect functionality", function () {
     );
 
     eventBConfigId = await insertPretixEventConfig(
-      db,
+      client,
       organizerConfigId,
       [
         mocker.get().organizer1.eventBItem3.id + "",
@@ -174,7 +178,7 @@ describe("devconnect functionality", function () {
     );
 
     eventCConfigId = await insertPretixEventConfig(
-      db,
+      client,
       organizerConfigId,
       [],
       [],
@@ -213,12 +217,13 @@ describe("devconnect functionality", function () {
 
   this.afterAll(async () => {
     await stopApplication(application);
-    await db.end();
+    await client.end();
     server.close();
   });
 
   step("mock pretix api config matches load from DB", async function () {
-    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    const devconnectPretixAPIConfigFromDB =
+      await getDevconnectPretixConfig(client);
     expect(devconnectPretixAPIConfigFromDB).to.deep.equal({
       organizers: [
         {
@@ -288,7 +293,7 @@ describe("devconnect functionality", function () {
   );
 
   step("logging in as a zuzalu resident should work", async function () {
-    const ticketHolders = await fetchAllZuzaluPretixTickets(db);
+    const ticketHolders = await fetchAllZuzaluPretixTickets(client);
     const resident = ticketHolders.find(
       (t) => t.role === ZuzaluUserRole.Resident
     );
@@ -341,7 +346,7 @@ describe("devconnect functionality", function () {
   step(
     "logging in with the remaining two users should work",
     async function () {
-      const ticketHolders = await fetchAllZuzaluPretixTickets(db);
+      const ticketHolders = await fetchAllZuzaluPretixTickets(client);
       const visitor = ticketHolders.find(
         (t) => t.role === ZuzaluUserRole.Visitor
       );
@@ -418,9 +423,7 @@ describe("devconnect functionality", function () {
   step(
     "after devconnect pretix sync, database should reflect devconnect pretix API",
     async function () {
-      const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
-        application.context.dbPool
-      );
+      const tickets = await fetchAllNonDeletedDevconnectPretixTickets(client);
 
       expect(tickets).to.have.length(14);
 
@@ -430,15 +433,15 @@ describe("devconnect functionality", function () {
       }));
 
       // Get item info IDs for event A
-      const eventAItemInfo = await fetchPretixEventInfo(db, eventAConfigId);
+      const eventAItemInfo = await fetchPretixEventInfo(client, eventAConfigId);
       if (!eventAItemInfo) {
         throw new Error("expected to be able to fetch corresponding item info");
       }
       const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
-        await fetchPretixItemsInfoByEvent(db, eventAItemInfo.id);
+        await fetchPretixItemsInfoByEvent(client, eventAItemInfo.id);
 
       // Get item info IDs for event B
-      const eventBItemInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      const eventBItemInfo = await fetchPretixEventInfo(client, eventBConfigId);
       if (!eventBItemInfo) {
         throw new Error("expected to be able to fetch corresponding item info");
       }
@@ -525,6 +528,7 @@ describe("devconnect functionality", function () {
       pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
       await pretixService.trySync();
       const user = await application.services.userService.getUserByEmail(
+        client,
         firstParticipant.email
       );
 
@@ -540,7 +544,7 @@ describe("devconnect functionality", function () {
     async function () {
       const residents = pretixMocker.getResidentsOrOrganizers(false);
       const firstResident = residents[0];
-      const allUsersBefore = await fetchAllUsersWithZuzaluTickets(db);
+      const allUsersBefore = await fetchAllUsersWithZuzaluTickets(client);
       const userBefore = allUsersBefore.find((u) =>
         u.emails.includes(firstResident.email)
       );
@@ -564,7 +568,7 @@ describe("devconnect functionality", function () {
       }
       pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
       await pretixService.trySync();
-      const allUsersAfter = await fetchAllUsersWithZuzaluTickets(db);
+      const allUsersAfter = await fetchAllUsersWithZuzaluTickets(client);
       const userAfter = allUsersAfter.find((u) =>
         u.emails.includes(firstResident.email)
       );
@@ -728,7 +732,7 @@ describe("devconnect functionality", function () {
     "replace zuzalu pretix api and sync should cause all users to be removed from " +
       "their role-specific semaphore groups, but they should remain signed in",
     async function () {
-      const oldTicketHolders = await fetchAllZuzaluPretixTickets(db);
+      const oldTicketHolders = await fetchAllZuzaluPretixTickets(client);
 
       const newAPI = newMockZuzaluPretixAPI();
       if (!newAPI) {
@@ -740,7 +744,7 @@ describe("devconnect functionality", function () {
 
       await sleep(100);
 
-      const newTicketHolders = await fetchAllZuzaluPretixTickets(db);
+      const newTicketHolders = await fetchAllZuzaluPretixTickets(client);
 
       const oldEmails = new Set(...oldTicketHolders.map((t) => t.email));
       const newEmails = new Set(...newTicketHolders.map((t) => t.email));
@@ -801,9 +805,7 @@ describe("devconnect functionality", function () {
 
       await devconnectPretixSyncService.trySync();
 
-      const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
-        application.context.dbPool
-      );
+      const tickets = await fetchAllNonDeletedDevconnectPretixTickets(client);
 
       expect(tickets).to.have.length(14);
 
@@ -813,15 +815,15 @@ describe("devconnect functionality", function () {
       }));
 
       // Get item info IDs for event A
-      const eventAItemInfo = await fetchPretixEventInfo(db, eventAConfigId);
+      const eventAItemInfo = await fetchPretixEventInfo(client, eventAConfigId);
       if (!eventAItemInfo) {
         throw new Error("expected to be able to fetch corresponding item info");
       }
       const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
-        await fetchPretixItemsInfoByEvent(db, eventAItemInfo.id);
+        await fetchPretixItemsInfoByEvent(client, eventAItemInfo.id);
 
       // Get item info IDs for event B
-      const eventBItemInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      const eventBItemInfo = await fetchPretixEventInfo(client, eventBConfigId);
       if (!eventBItemInfo) {
         throw new Error("expected to be able to fetch corresponding item info");
       }
@@ -916,9 +918,7 @@ describe("devconnect functionality", function () {
 
     await devconnectPretixSyncService.trySync();
 
-    const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
-      application.context.dbPool
-    );
+    const tickets = await fetchAllNonDeletedDevconnectPretixTickets(client);
 
     // Because two tickets are removed - see comment above
     expect(tickets).to.have.length(11);
@@ -929,12 +929,12 @@ describe("devconnect functionality", function () {
     }));
 
     // Get item info IDs for event A
-    const eventAItemInfo = await fetchPretixEventInfo(db, eventAConfigId);
+    const eventAItemInfo = await fetchPretixEventInfo(client, eventAConfigId);
     if (!eventAItemInfo) {
       throw new Error("expected to be able to fetch corresponding item info");
     }
     const [{ id: item1EventAInfoID }, { id: item2EventAInfoID }] =
-      await fetchPretixItemsInfoByEvent(db, eventAItemInfo.id);
+      await fetchPretixItemsInfoByEvent(client, eventAItemInfo.id);
 
     expect(ticketsWithEmailEventAndItems).to.have.deep.members([
       {
@@ -990,7 +990,8 @@ describe("devconnect functionality", function () {
    * on the basis of data received from Pretix.
    */
   step("should be able to sync a checked-in ticket", async function () {
-    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    const devconnectPretixAPIConfigFromDB =
+      await getDevconnectPretixConfig(client);
     if (!devconnectPretixAPIConfigFromDB) {
       throw new Error("Could not load API configuration");
     }
@@ -1059,7 +1060,7 @@ describe("devconnect functionality", function () {
     expect(await os.run()).to.not.throw;
 
     const tickets = await fetchDevconnectPretixTicketsByEvent(
-      db,
+      client,
       eventConfigID
     );
 
@@ -1084,7 +1085,8 @@ describe("devconnect functionality", function () {
    * records.
    */
   step("should be able to un-check-in a ticket via sync", async function () {
-    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    const devconnectPretixAPIConfigFromDB =
+      await getDevconnectPretixConfig(client);
     if (!devconnectPretixAPIConfigFromDB) {
       throw new Error("Could not load API configuration");
     }
@@ -1107,7 +1109,7 @@ describe("devconnect functionality", function () {
 
     // In the previous test, we checked these tickets in
     const tickets = await fetchDevconnectPretixTicketsByEvent(
-      db,
+      client,
       eventConfigID
     );
 
@@ -1124,7 +1126,8 @@ describe("devconnect functionality", function () {
    * the check-in entry is superseded by a later "exit" checkin.
    */
   step("should correctly handle a checked-out ticket", async function () {
-    const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
+    const devconnectPretixAPIConfigFromDB =
+      await getDevconnectPretixConfig(client);
     if (!devconnectPretixAPIConfigFromDB) {
       throw new Error("Could not load API configuration");
     }
@@ -1195,7 +1198,7 @@ describe("devconnect functionality", function () {
     expect(await os.run()).to.not.throw;
 
     const tickets = await fetchDevconnectPretixTicketsByEvent(
-      db,
+      client,
       eventConfigID
     );
 
@@ -1219,7 +1222,7 @@ describe("devconnect functionality", function () {
     "should be able to check in a ticket and sync to Pretix",
     async function () {
       const devconnectPretixAPIConfigFromDB =
-        await getDevconnectPretixConfig(db);
+        await getDevconnectPretixConfig(client);
       if (!devconnectPretixAPIConfigFromDB) {
         throw new Error("Could not load API configuration");
       }
@@ -1228,21 +1231,21 @@ describe("devconnect functionality", function () {
       const eventConfigID = organizer.events[0].id;
 
       const ticketsAwaitingSyncBeforeCheckin =
-        await fetchDevconnectTicketsAwaitingSync(db, organizer.orgURL);
+        await fetchDevconnectTicketsAwaitingSync(client, organizer.orgURL);
 
       // There are no tickets awaiting sync
       expect(ticketsAwaitingSyncBeforeCheckin.length).to.eq(0);
 
       // Grab a ticket and consume it
       const tickets = await fetchDevconnectPretixTicketsByEvent(
-        db,
+        client,
         eventConfigID
       );
       const ticket = tickets[0];
 
       const checkerEmail = "test@example.com";
       const result = await consumeDevconnectPretixTicket(
-        db,
+        client,
         ticket.id,
         checkerEmail
       );
@@ -1250,7 +1253,7 @@ describe("devconnect functionality", function () {
       expect(result).to.be.true;
 
       const consumedTicket = await fetchDevconnectPretixTicketByTicketId(
-        db,
+        client,
         ticket.id
       );
 
@@ -1259,7 +1262,7 @@ describe("devconnect functionality", function () {
       expect(consumedTicket?.zupass_checkin_timestamp).to.be.not.null;
 
       const ticketsAwaitingSync = await fetchDevconnectTicketsAwaitingSync(
-        db,
+        client,
         organizer.orgURL
       );
 
@@ -1304,7 +1307,7 @@ describe("devconnect functionality", function () {
       expect(receivedCheckIn).to.be.true;
 
       const consumedTicketAfterSync =
-        await fetchDevconnectPretixTicketByTicketId(db, ticket.id);
+        await fetchDevconnectPretixTicketByTicketId(client, ticket.id);
 
       // Ticket should be marked as consumed
       expect(consumedTicketAfterSync?.is_consumed).to.be.true;
@@ -1332,7 +1335,7 @@ describe("devconnect functionality", function () {
     "should be able to sync an event with valid settings",
     async function () {
       const updatedNameInNewSync = "Will sync to this";
-      const originalEvent = await fetchPretixEventInfo(db, eventAConfigId);
+      const originalEvent = await fetchPretixEventInfo(client, eventAConfigId);
 
       mocker.updateEvent(
         mocker.get().organizer1.orgUrl,
@@ -1351,7 +1354,7 @@ describe("devconnect functionality", function () {
 
       await devconnectPretixSyncService.trySync();
 
-      const event = await fetchPretixEventInfo(db, eventAConfigId);
+      const event = await fetchPretixEventInfo(client, eventAConfigId);
 
       expect(event?.event_name).to.eq(updatedNameInNewSync);
       expect(event?.event_name).to.not.eq(originalEvent?.event_name);
@@ -1367,7 +1370,7 @@ describe("devconnect functionality", function () {
     "should not be able to sync an event with invalid settings",
     async function () {
       const updatedNameInNewSync = "Won't sync to this";
-      const originalEvent = await fetchPretixEventInfo(db, eventAConfigId);
+      const originalEvent = await fetchPretixEventInfo(client, eventAConfigId);
 
       mocker.updateEvent(
         mocker.get().organizer1.orgUrl,
@@ -1391,7 +1394,7 @@ describe("devconnect functionality", function () {
 
       await devconnectPretixSyncService.trySync();
 
-      const event = await fetchPretixEventInfo(db, eventAConfigId);
+      const event = await fetchPretixEventInfo(client, eventAConfigId);
 
       // The event name does *not* match the one fetched during sync
       expect(event?.event_name).to.not.eq(updatedNameInNewSync);
@@ -1412,14 +1415,14 @@ describe("devconnect functionality", function () {
     "should be able to sync an item with valid item settings",
     async function () {
       const updatedNameInNewSync = "Will sync to this";
-      const eventInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      const eventInfo = await fetchPretixEventInfo(client, eventBConfigId);
       if (!eventInfo) {
         throw new Error(`Could not fetch event info for ${eventBConfigId}`);
       }
 
       const originalItemId = mocker.get().organizer1.eventBItem3.id;
       const originalItem = (
-        await fetchPretixItemsInfoByEvent(db, eventInfo.id)
+        await fetchPretixItemsInfoByEvent(client, eventInfo.id)
       ).find((i) => i.item_id === originalItemId.toString());
 
       if (!originalItem) {
@@ -1438,9 +1441,9 @@ describe("devconnect functionality", function () {
       );
 
       await devconnectPretixSyncService.trySync();
-      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id)).find(
-        (i) => i.item_id === originalItemId.toString()
-      );
+      const item = (
+        await fetchPretixItemsInfoByEvent(client, eventInfo.id)
+      ).find((i) => i.item_id === originalItemId.toString());
 
       if (!item) {
         throw new Error(`Could not fetch item info for ${originalItemId}`);
@@ -1457,13 +1460,13 @@ describe("devconnect functionality", function () {
     "should not be able to sync an item with invalid item settings",
     async function () {
       const updatedNameInNewSync = "Won't sync to this";
-      const eventInfo = await fetchPretixEventInfo(db, eventBConfigId);
+      const eventInfo = await fetchPretixEventInfo(client, eventBConfigId);
       if (!eventInfo) {
         throw new Error(`Could not fetch event info for ${eventBConfigId}`);
       }
 
       const originalItem = (
-        await fetchPretixItemsInfoByEvent(db, eventInfo.id)
+        await fetchPretixItemsInfoByEvent(client, eventInfo.id)
       )[0];
 
       mocker.updateItem(
@@ -1479,7 +1482,7 @@ describe("devconnect functionality", function () {
 
       await devconnectPretixSyncService.trySync();
 
-      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id))[0];
+      const item = (await fetchPretixItemsInfoByEvent(client, eventInfo.id))[0];
 
       // The event name does *not* match the one fetched during sync
       expect(item.item_name).to.not.eq(updatedNameInNewSync);
@@ -1655,7 +1658,7 @@ describe("devconnect functionality", function () {
   );
 
   step("account reset has a rate limit", async function () {
-    await resetRateLimitBuckets(db);
+    await resetRateLimitBuckets(pool);
 
     // Perform 5 account resets to exhaust the rate limit
     for (let i = 0; i < 5; i++) {
@@ -1712,7 +1715,7 @@ describe("devconnect functionality", function () {
   });
 
   step("new email token requests have a rate limit", async function () {
-    await resetRateLimitBuckets(db);
+    await resetRateLimitBuckets(pool);
 
     const email = mocker.get().organizer1.EMAIL_1;
 
@@ -1742,7 +1745,7 @@ describe("devconnect functionality", function () {
   });
 
   step("token verification has a rate limit", async function () {
-    await resetRateLimitBuckets(db);
+    await resetRateLimitBuckets(pool);
 
     const email = mocker.get().organizer1.EMAIL_1;
     const incorrectToken = "12345";
@@ -1832,11 +1835,11 @@ describe("devconnect functionality", function () {
     "deleting a ticket removes the user from the semaphore group",
     async function () {
       const ticketsForUser = await fetchDevconnectPretixTicketsByEmail(
-        db,
+        client,
         mocker.get().organizer1.EMAIL_3
       );
       for (const ticket of ticketsForUser) {
-        await softDeleteDevconnectPretixTicket(db, ticket);
+        await softDeleteDevconnectPretixTicket(client, ticket);
       }
 
       await application.services.semaphoreService.reload();
@@ -1969,105 +1972,119 @@ describe("devconnect functionality", function () {
     "get poap claim urls from devconnect, zuzalu, and zuconnect ticket ids",
     async () => {
       // No POAP mint links in DB yet - all links return NULL
-      expect(await poapService.getPoapClaimUrlByTicketId("1", "devconnect")).to
-        .be.null;
-      expect(await poapService.getPoapClaimUrlByTicketId("2", "devconnect")).to
-        .be.null;
-      expect(await poapService.getPoapClaimUrlByTicketId("3", "devconnect")).to
-        .be.null;
-      expect(await poapService.getPoapClaimUrlByTicketId("4", "devconnect")).to
-        .be.null;
-      expect(await poapService.getPoapClaimUrlByTicketId("1", "zuzalu23")).to.be
-        .null;
-      expect(await poapService.getPoapClaimUrlByTicketId("2", "zuzalu23")).to.be
-        .null;
-      expect(await poapService.getPoapClaimUrlByTicketId("3", "zuzalu23")).to.be
-        .null;
-      expect(await poapService.getPoapClaimUrlByTicketId("4", "zuzalu23")).to.be
-        .null;
-      expect(await poapService.getPoapClaimUrlByTicketId("1", "zuconnect")).to
-        .be.null;
-      expect(await poapService.getPoapClaimUrlByTicketId("2", "zuconnect")).to
-        .be.null;
-      expect(await poapService.getPoapClaimUrlByTicketId("3", "zuconnect")).to
-        .be.null;
-      expect(await poapService.getPoapClaimUrlByTicketId("4", "zuconnect")).to
-        .be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "1", "devconnect")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "2", "devconnect")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "3", "devconnect")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "4", "devconnect")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "1", "zuzalu23")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "2", "zuzalu23")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "3", "zuzalu23")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "4", "zuzalu23")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "1", "zuconnect")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "2", "zuconnect")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "3", "zuconnect")
+      ).to.be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "4", "zuconnect")
+      ).to.be.null;
 
       const TEST_POAP_LINK_1 = "https://poap.xyz/mint/qwerty";
       const TEST_POAP_LINK_2 = "https://poap.xyz/mint/zxcvbn";
       const TEST_POAP_LINK_3 = "https://poap.xyz/mint/asdfgh";
       const TEST_POAP_LINK_4 = "https://poap.xyz/mint/tyuiop";
 
-      await insertNewPoapUrl(db, TEST_POAP_LINK_1, "devconnect");
-      await insertNewPoapUrl(db, TEST_POAP_LINK_2, "zuzalu23");
-      await insertNewPoapUrl(db, TEST_POAP_LINK_4, "zuconnect");
+      await insertNewPoapUrl(client, TEST_POAP_LINK_1, "devconnect");
+      await insertNewPoapUrl(client, TEST_POAP_LINK_2, "zuzalu23");
+      await insertNewPoapUrl(client, TEST_POAP_LINK_4, "zuconnect");
 
       // Map ticket ID "1" to a devconnect ticket
       expect(
-        await poapService.getPoapClaimUrlByTicketId("1", "devconnect")
+        await poapService.getPoapClaimUrlByTicketId(client, "1", "devconnect")
       ).to.eq(TEST_POAP_LINK_1);
       // Ran out of mint links for Devconnect
-      expect(await poapService.getPoapClaimUrlByTicketId("2", "devconnect")).to
-        .be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "2", "devconnect")
+      ).to.be.null;
 
-      await insertNewPoapUrl(db, TEST_POAP_LINK_3, "devconnect");
+      await insertNewPoapUrl(client, TEST_POAP_LINK_3, "devconnect");
 
       // Still maps to existing link, regardless of what the poapEvent parameter is.
       // The intended behavior is that the poapEvent parameter is only relevant when
       // a new POAP mint link is being associated with a ticket ID. If an ticket ID
       // is already associated with a POAP mint link, poapEvent should be irrelevant.
       expect(
-        await poapService.getPoapClaimUrlByTicketId("1", "devconnect")
+        await poapService.getPoapClaimUrlByTicketId(client, "1", "devconnect")
       ).to.eq(TEST_POAP_LINK_1);
       expect(
-        await poapService.getPoapClaimUrlByTicketId("1", "zuzalu23")
+        await poapService.getPoapClaimUrlByTicketId(client, "1", "zuzalu23")
       ).to.eq(TEST_POAP_LINK_1);
       expect(
-        await poapService.getPoapClaimUrlByTicketId("1", "zuconnect")
+        await poapService.getPoapClaimUrlByTicketId(client, "1", "zuconnect")
       ).to.eq(TEST_POAP_LINK_1);
       // Map ticket ID "2" to a devconnect ticket
       expect(
-        await poapService.getPoapClaimUrlByTicketId("2", "devconnect")
+        await poapService.getPoapClaimUrlByTicketId(client, "2", "devconnect")
       ).to.eq(TEST_POAP_LINK_3);
       expect(
-        await poapService.getPoapClaimUrlByTicketId("2", "zuzalu23")
+        await poapService.getPoapClaimUrlByTicketId(client, "2", "zuzalu23")
       ).to.eq(TEST_POAP_LINK_3);
       expect(
-        await poapService.getPoapClaimUrlByTicketId("2", "zuconnect")
+        await poapService.getPoapClaimUrlByTicketId(client, "2", "zuconnect")
       ).to.eq(TEST_POAP_LINK_3);
       // Ran out of mint links for Devconnect
-      expect(await poapService.getPoapClaimUrlByTicketId("3", "devconnect")).to
-        .be.null;
+      expect(
+        await poapService.getPoapClaimUrlByTicketId(client, "3", "devconnect")
+      ).to.be.null;
 
       // Map ticket ID "3" to a zuzalu 2023 ticket
       expect(
-        await poapService.getPoapClaimUrlByTicketId("3", "zuzalu23")
+        await poapService.getPoapClaimUrlByTicketId(client, "3", "zuzalu23")
       ).to.be.eq(TEST_POAP_LINK_2);
       // Still maps to existing link, regardless of what the poapEvent parameter is
       expect(
-        await poapService.getPoapClaimUrlByTicketId("3", "zuzalu23")
+        await poapService.getPoapClaimUrlByTicketId(client, "3", "zuzalu23")
       ).to.be.eq(TEST_POAP_LINK_2);
       expect(
-        await poapService.getPoapClaimUrlByTicketId("3", "devconnect")
+        await poapService.getPoapClaimUrlByTicketId(client, "3", "devconnect")
       ).to.be.eq(TEST_POAP_LINK_2);
       expect(
-        await poapService.getPoapClaimUrlByTicketId("3", "zuconnect")
+        await poapService.getPoapClaimUrlByTicketId(client, "3", "zuconnect")
       ).to.be.eq(TEST_POAP_LINK_2);
 
       // Map ticket ID "4" to a zuconnect ticket
       expect(
-        await poapService.getPoapClaimUrlByTicketId("4", "zuconnect")
+        await poapService.getPoapClaimUrlByTicketId(client, "4", "zuconnect")
       ).to.be.eq(TEST_POAP_LINK_4);
       // Still maps to existing link, regardless of what the poapEvent parameter is
       expect(
-        await poapService.getPoapClaimUrlByTicketId("4", "zuzalu23")
+        await poapService.getPoapClaimUrlByTicketId(client, "4", "zuzalu23")
       ).to.be.eq(TEST_POAP_LINK_4);
       expect(
-        await poapService.getPoapClaimUrlByTicketId("4", "devconnect")
+        await poapService.getPoapClaimUrlByTicketId(client, "4", "devconnect")
       ).to.be.eq(TEST_POAP_LINK_4);
       expect(
-        await poapService.getPoapClaimUrlByTicketId("4", "zuconnect")
+        await poapService.getPoapClaimUrlByTicketId(client, "4", "zuconnect")
       ).to.be.eq(TEST_POAP_LINK_4);
     }
   );

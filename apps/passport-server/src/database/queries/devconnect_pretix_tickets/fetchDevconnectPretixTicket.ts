@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import {
   DevconnectPretixTicketDB,
   DevconnectPretixTicketDBWithCheckinListID,
@@ -13,7 +13,7 @@ import { sqlQuery } from "../../sqlQuery";
  * in and accepted legal/privacy terms.
  */
 export async function fetchAllNonDeletedDevconnectPretixTickets(
-  client: Pool
+  client: PoolClient
 ): Promise<Array<DevconnectPretixTicketDB>> {
   const result = await sqlQuery(
     client,
@@ -30,7 +30,7 @@ export async function fetchAllNonDeletedDevconnectPretixTickets(
  * would be redacted.
  */
 export async function fetchDevconnectPretixTicketsByEvent(
-  client: Pool,
+  client: PoolClient,
   eventConfigID: string
 ): Promise<Array<DevconnectPretixTicketDBWithEmailAndItem>> {
   const result = await sqlQuery(
@@ -51,7 +51,7 @@ export async function fetchDevconnectPretixTicketsByEvent(
  * Fetch a devconnect ticket by its unique internal id.
  */
 export async function fetchDevconnectPretixTicketByTicketId(
-  client: Pool,
+  client: PoolClient,
   ticketId: string
 ): Promise<DevconnectPretixTicketDBWithEmailAndItem | undefined> {
   const result = await sqlQuery(
@@ -69,7 +69,7 @@ export async function fetchDevconnectPretixTicketByTicketId(
 }
 
 export async function fetchDevconnectPretixTicketsByEmail(
-  client: Pool,
+  client: PoolClient,
   email: string
 ): Promise<Array<DevconnectPretixTicketDBWithEmailAndItem>> {
   const result = await sqlQuery(
@@ -88,7 +88,7 @@ export async function fetchDevconnectPretixTicketsByEmail(
 }
 
 export async function fetchDevconnectSuperusers(
-  client: Pool
+  client: PoolClient
 ): Promise<Array<DevconnectSuperuser>> {
   const result = await sqlQuery(
     client,
@@ -105,7 +105,7 @@ and t.is_deleted = false;
 }
 
 export async function fetchDevconnectSuperusersForEvent(
-  client: Pool,
+  client: PoolClient,
   eventConfigID: string
 ): Promise<Array<DevconnectSuperuser>> {
   const result = await sqlQuery(
@@ -125,7 +125,7 @@ and t.is_deleted = false
 }
 
 export async function fetchDevconnectSuperusersForEmail(
-  client: Pool,
+  client: PoolClient,
   email: string
 ): Promise<Array<DevconnectSuperuser>> {
   const result = await sqlQuery(
@@ -149,7 +149,7 @@ and t.is_deleted = false
  * on Pretix.
  */
 export async function fetchDevconnectTicketsAwaitingSync(
-  client: Pool,
+  client: PoolClient,
   orgUrl: string
 ): Promise<Array<DevconnectPretixTicketDBWithCheckinListID>> {
   const result = await sqlQuery(
@@ -172,7 +172,7 @@ export async function fetchDevconnectTicketsAwaitingSync(
 }
 
 export async function fetchDevconnectProducts(
-  client: Pool
+  client: PoolClient
 ): Promise<DevconnectProduct[]> {
   const result = await sqlQuery(
     client,

@@ -8,10 +8,12 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD } from "@pcd/pcd-types";
 import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
 import { TicketType } from "../new-components/screens/Home/types";
 import { EmbeddedScreenState } from "./embedded";
 import { Emitter } from "./emitter";
+import { ListenMode } from "./zapp/useZappServer";
 export type GetState = () => AppState;
 export type StateEmitter = Emitter<AppState>;
 
@@ -31,7 +33,7 @@ export interface AppState {
   bottomModal:
     | {
         modalType: "pods-collection";
-        activePodId?: string;
+        activePod?: PCD<unknown, unknown>;
         idType?: "ticketId" | "id";
       }
     | { modalType: "settings" }
@@ -173,6 +175,9 @@ export interface AppState {
 
   // Whether the user has approved the zapp
   zappApproved?: boolean;
+
+  // Whether the client is listening for zapps in embedded mode
+  listenMode?: ListenMode;
 }
 
 export interface AppError {

@@ -955,12 +955,6 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
       await altCircuit.expectPass(inputs, outputs);
     }
   });
-
-  // TODO(POD-P2): Add more directed tests of individual features once
-  // they are more stable. Should focus on cases not already handled in
-  // utests of sub-modules.  Including:
-  // - Different enable/disable config of various modules.
-  // - Negative testing of invalid inputs.
 });
 
 describe(`proto-pod-gpc.ProtoPODGPC (Compiled ${circuitParamType} artifacts) should work`, function () {
@@ -1070,4 +1064,4 @@ describe(`proto-pod-gpc.ProtoPODGPC (Compiled ${circuitParamType} artifacts) sho
   });
 });
 
-// TODO(POD-P1): utests of statics and helpers in proto-pod-gpc.ts
+// TODO(POD-P4): utests of statics and helpers in proto-pod-gpc.ts

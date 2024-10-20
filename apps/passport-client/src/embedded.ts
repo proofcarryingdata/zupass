@@ -1,11 +1,13 @@
 import { ProveResult } from "@parcnet-js/client-rpc";
-import { PodspecProofRequest } from "@parcnet-js/podspec";
+import { PODData, PodspecProofRequest } from "@parcnet-js/podspec";
 import { PCDGetRequest } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
+import type { PODEntries } from "@pcd/pod";
 
 export enum EmbeddedScreenType {
   EmbeddedGetRequest,
-  EmbeddedGPCProof
+  EmbeddedGPCProof,
+  EmbeddedSignPOD
 }
 
 export interface EmbeddedGetRequest {
@@ -21,6 +23,13 @@ export interface EmbeddedGPCProof {
   callback: (result: ProveResult) => void;
 }
 
+export interface EmbeddedSignPOD {
+  type: EmbeddedScreenType.EmbeddedSignPOD;
+  entries: PODEntries;
+  callback: (result: PODData) => void;
+  onCancel: () => void;
+}
+
 export interface EmbeddedScreenState {
-  screen?: EmbeddedGetRequest | EmbeddedGPCProof;
+  screen?: EmbeddedGetRequest | EmbeddedGPCProof | EmbeddedSignPOD;
 }

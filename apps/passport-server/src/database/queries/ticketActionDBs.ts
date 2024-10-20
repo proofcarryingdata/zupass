@@ -1,10 +1,11 @@
 import { ticketDisplayName } from "@pcd/eddsa-ticket-pcd";
 import { Badge, BadgeConfig } from "@pcd/passport-interface";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
 export interface IBadgeGiftingDB {
   giveBadges(
+    client: PoolClient,
     pipelineId: string,
     giverEmail: string,
     receiverEmail: string,
@@ -12,11 +13,13 @@ export interface IBadgeGiftingDB {
   ): Promise<void>;
 
   getBadges(
+    client: PoolClient,
     pipelineId: string,
     receiverEmail: string | undefined
   ): Promise<Badge[]>;
 
   getGivenBadges(
+    client: PoolClient,
     pipelineId: string,
     giverEmail: string,
     badgeIds: string[],
@@ -25,13 +28,8 @@ export interface IBadgeGiftingDB {
 }
 
 export class BadgeGiftingDB implements IBadgeGiftingDB {
-  private db: Pool;
-
-  public constructor(db: Pool) {
-    this.db = db;
-  }
-
   public async giveBadges(
+    client: PoolClient,
     pipelineId: string,
     giverEmail: string,
     receiverEmail: string,
@@ -39,7 +37,7 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
   ): Promise<void> {
     for (const badge of badges) {
       await sqlQuery(
-        this.db,
+        client,
         `
         insert into podbox_given_badges
         (pipeline_id, giver_email, receiver_email, badge_id, badge_name, badge_url)
@@ -58,11 +56,12 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
   }
 
   public async getBadges(
+    client: PoolClient,
     pipelineId: string,
     receiverEmail: string
   ): Promise<Badge[]> {
     const res = await sqlQuery(
-      this.db,
+      client,
       `
       select * from podbox_given_badges 
       where pipeline_id=$1 and receiver_email=$2
@@ -80,13 +79,14 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
   }
 
   public async getGivenBadges(
+    client: PoolClient,
     pipelineId: string,
     giverEmail: string,
     badgeIds: string[],
     startingAgoMs: number
   ): Promise<Badge[]> {
     const res = await sqlQuery(
-      this.db,
+      client,
       `
       select * from podbox_given_badges
       where pipeline_id=$1
@@ -109,30 +109,28 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
 
 export interface IContactSharingDB {
   saveContact(
+    client: PoolClient,
     pipelineId: string,
     collectorEmail: string,
     contactEmail: string
   ): Promise<void>;
 
   getContacts(
+    client: PoolClient,
     pipelineId: string,
     collectorEmail: string | undefined
   ): Promise<string[]>;
 }
 
 export class ContactSharingDB implements IContactSharingDB {
-  private db: Pool;
-  public constructor(db: Pool) {
-    this.db = db;
-  }
-
   public async saveContact(
+    client: PoolClient,
     pipelineId: string,
     collectorEmail: string,
     contactEmail: string
   ): Promise<void> {
     await sqlQuery(
-      this.db,
+      client,
       `
         insert into podbox_collected_contacts
         (pipeline_id, collector_email, contact_email)
@@ -144,11 +142,12 @@ export class ContactSharingDB implements IContactSharingDB {
   }
 
   public async getContacts(
+    client: PoolClient,
     pipelineId: string,
     colletorEmail: string
   ): Promise<string[]> {
     const res = await sqlQuery(
-      this.db,
+      client,
       `
       select * from podbox_collected_contacts 
       where pipeline_id=$1 and collector_email=$2

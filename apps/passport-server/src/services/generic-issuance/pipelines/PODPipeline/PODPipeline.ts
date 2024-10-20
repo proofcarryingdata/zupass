@@ -14,7 +14,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { PODEntries, serializePODEntries } from "@pcd/pod";
+import { PODEntries, podEntriesToJSON } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { CSVInput, Input } from "@pcd/podbox-shared";
 import { assertUnreachable } from "@pcd/util";
@@ -25,6 +25,8 @@ import {
   PipelineAtom
 } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { sqlTransaction } from "../../../../database/sqlQuery";
+import { ApplicationContext } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { setError, traced } from "../../../telemetryService";
@@ -54,6 +56,7 @@ export class PODPipeline implements BasePipeline {
   public type = PipelineType.POD;
   public capabilities: BasePipelineCapability[];
 
+  private context: ApplicationContext;
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<PODAtom>;
   private definition: PODPipelineDefinition;
@@ -71,6 +74,7 @@ export class PODPipeline implements BasePipeline {
   }
 
   public constructor(
+    context: ApplicationContext,
     eddsaPrivateKey: string,
     definition: PODPipelineDefinition,
     db: IPipelineAtomDB,
@@ -78,6 +82,7 @@ export class PODPipeline implements BasePipeline {
     consumerDB: IPipelineConsumerDB,
     cacheService: PersistentCacheService
   ) {
+    this.context = context;
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PODAtom>;
@@ -319,9 +324,17 @@ export class PODPipeline implements BasePipeline {
       span?.setAttribute("email", emails?.map((e) => e.email)?.join(",") ?? "");
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      for (const e of emails ?? []) {
-        await this.consumerDB.save(this.id, e.email, semaphoreId, new Date());
-      }
+      await sqlTransaction(this.context.dbPool, async (client) => {
+        for (const e of emails ?? []) {
+          await this.consumerDB.save(
+            client,
+            this.id,
+            e.email,
+            semaphoreId,
+            new Date()
+          );
+        }
+      });
 
       // Consumer is validated, so save them in the consumer list
 
@@ -340,7 +353,8 @@ export class PODPipeline implements BasePipeline {
             credential
           );
 
-          const id = uuidv5(serializePODEntries(entries), this.id);
+          // TODO(artwyman): Figure out how to phase out this use of the deprecated format.
+          const id = uuidv5(JSON.stringify(podEntriesToJSON(entries)), this.id);
 
           let serializedPCD = await this.getCachedPCD(id);
           if (serializedPCD) {
@@ -351,7 +365,7 @@ export class PODPipeline implements BasePipeline {
           // @todo handle wrapper PCD outputs
           const pcd = await PODPCDPackage.prove({
             entries: {
-              value: entries,
+              value: podEntriesToJSON(entries),
               argumentType: ArgumentTypeName.Object
             },
             privateKey: {

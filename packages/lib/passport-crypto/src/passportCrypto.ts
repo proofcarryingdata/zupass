@@ -10,8 +10,8 @@ import { arrayBufferToHexString } from "./utils";
 export class PCDCrypto {
   private sodium: Sodium;
 
-  public static async newInstance(): Promise<PCDCrypto> {
-    const sodium = await getSodium();
+  public static async newInstance(sodium?: Sodium): Promise<PCDCrypto> {
+    sodium = sodium ?? (await getSodium());
     return new PCDCrypto(sodium);
   }
 

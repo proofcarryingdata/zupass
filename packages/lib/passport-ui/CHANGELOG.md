@@ -1,5 +1,27 @@
 # @pcd/passport-ui
 
+## 0.13.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/message-pcd@0.3.0
+
+## 0.12.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/message-pcd@0.2.0
+
 ## 0.11.6
 
 ### Patch Changes

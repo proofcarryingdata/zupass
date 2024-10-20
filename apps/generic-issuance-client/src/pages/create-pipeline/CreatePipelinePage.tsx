@@ -11,6 +11,7 @@ import { useIsAdminView } from "../../helpers/useIsAdminView";
 import { useJWT } from "../../helpers/userHooks";
 import { SAMPLE_LEMONADE_PIPELINE } from "../SamplePipelines";
 import CSVPipelineBuilder from "./pipeline-builders/CSVPipelineBuilder";
+import CSVTicketPipelineBuilder from "./pipeline-builders/CSVTicketPipelineBuilder";
 import LemonadePipelineBuilder from "./pipeline-builders/LemonadePipelineBuilder";
 import PODPipelineBuilder from "./pipeline-builders/PODPipelineBuilder";
 import PretixPipelineBuilder from "./pipeline-builders/PretixPipelineBuilder";
@@ -23,7 +24,7 @@ export default function CreatePipelinePage(): ReactNode {
   const user = useFetchSelf();
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
   const [selectedPipelineType, setSelectedPipelineType] =
-    useState<ClientPipelineType>(PipelineType.CSV);
+    useState<ClientPipelineType>(PipelineType.CSVTicket);
   const isAdminView = useIsAdminView(user?.value);
 
   const onCreateClick = useCallback(
@@ -57,7 +58,7 @@ export default function CreatePipelinePage(): ReactNode {
    * Complete set of pipeline types can be found in {@link PipelineType}.
    */
   const NON_ADMIN_PIPELINE_TYPES: ClientPipelineType[] = useMemo(
-    () => [PipelineType.CSV, PipelineType.POD],
+    () => [PipelineType.CSVTicket],
     []
   );
 
@@ -101,19 +102,21 @@ export default function CreatePipelinePage(): ReactNode {
 
       <PageContent style={{ padding: "16px" }}>
         <Stack gap={2}>
-          <Select
-            bg="rgba(29,29,29,1)"
-            width="100%"
-            value={selectedPipelineType ?? ""}
-            onChange={(event): void => {
-              setSelectedPipelineType(event.target.value as PipelineType);
-            }}
-          >
-            <option value="" disabled>
-              Select your pipeline type...
-            </option>
-            {options}
-          </Select>
+          {options.length > 1 && (
+            <Select
+              bg="rgba(29,29,29,1)"
+              width="100%"
+              value={selectedPipelineType ?? ""}
+              onChange={(event): void => {
+                setSelectedPipelineType(event.target.value as PipelineType);
+              }}
+            >
+              <option value="" disabled>
+                Select your pipeline type...
+              </option>
+              {options}
+            </Select>
+          )}
 
           {selectedPipelineType === PipelineType.Pretix && (
             <PretixPipelineBuilder onCreate={onCreateClick} />
@@ -136,6 +139,10 @@ export default function CreatePipelinePage(): ReactNode {
 
           {selectedPipelineType === PipelineType.POD && (
             <PODPipelineBuilder onCreate={onCreateClick} />
+          )}
+
+          {selectedPipelineType === PipelineType.CSVTicket && (
+            <CSVTicketPipelineBuilder onCreate={onCreateClick} />
           )}
         </Stack>
       </PageContent>

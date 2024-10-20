@@ -102,9 +102,6 @@ template ProtoPODGPC (
         );
     }
 
-    // TODO(POD-P3): Provide a way to (optionally?) ensure objects are unique
-    // (comparing content IDs, or signers, or signatures).
-
     /*
      * 1+ EntryModule.
      * Each array corresponds to one input/output for each entry module.  Non-array inputs

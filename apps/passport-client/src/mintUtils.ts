@@ -1,6 +1,6 @@
 import { SerializedPCD } from "@pcd/pcd-types";
-import { POD } from "@pcd/pod";
-import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
+import { PODPCD, PODPCDPackage, PODPCDTypeName } from "@pcd/pod-pcd";
+import { getErrorMessage } from "@pcd/util";
 
 export async function mintPODPCD(
   mintUrl: string,
@@ -8,14 +8,17 @@ export async function mintPODPCD(
   semaphoreSignaturePCD: SerializedPCD
 ): Promise<SerializedPCD<PODPCD>> {
   // Request POD by content ID.
-  const pcd = (await PODPCDPackage.deserialize(podPCDTemplate.pcd)) as PODPCD;
-  const contentID = pcd.pod.contentID.toString(16);
+  const templatePCD = (await PODPCDPackage.deserialize(
+    podPCDTemplate.pcd
+  )) as PODPCD;
+  const contentID = templatePCD.pod.contentID.toString(16);
   const requestBody = JSON.stringify({
     contentID,
     semaphoreSignaturePCD
   });
-  let mintedPOD: POD;
-  let serialisedMintedPOD: string;
+  let mintResultText: string;
+  let serializedMintedPODPCD: SerializedPCD<PODPCD>;
+  let mintedPCD: PODPCD;
 
   try {
     const resp = await fetch(mintUrl, {
@@ -26,22 +29,41 @@ export async function mintPODPCD(
       },
       body: requestBody
     });
-    serialisedMintedPOD = await resp.text();
-  } catch {
-    throw new Error("Mint server error.");
+    mintResultText = await resp.text();
+    if (!resp.ok) {
+      throw new Error(`${resp.status}: ${mintResultText}`);
+    }
+  } catch (e) {
+    throw new Error(`Mint server error: ${getErrorMessage(e)}`);
   }
 
   try {
-    mintedPOD = POD.deserialize(serialisedMintedPOD);
-  } catch {
+    serializedMintedPODPCD = JSON.parse(
+      mintResultText
+    ) as SerializedPCD<PODPCD>;
+
+    if (serializedMintedPODPCD.type !== PODPCDTypeName) {
+      throw new Error(
+        `Serialized PODPCD has wrong type ${serializedMintedPODPCD.type}`
+      );
+    }
+
+    mintedPCD = (await PODPCDPackage.deserialize(
+      serializedMintedPODPCD.pcd
+    )) as PODPCD;
+  } catch (e) {
+    console.error(
+      `Invalid minted PODPCD ${getErrorMessage(
+        e
+      )}.\nContents: ${mintResultText}`
+    );
     throw new Error("Invalid mint request!");
   }
 
   // Throw if signer's keys don't match.
-  if (pcd.claim.signerPublicKey !== mintedPOD.signerPublicKey) {
+  if (templatePCD.claim.signerPublicKey !== mintedPCD.claim.signerPublicKey) {
     throw new Error("The minted POD was signed by a different party.");
   }
 
-  const mintedPCD = new PODPCD(pcd.id, mintedPOD);
-  return PODPCDPackage.serialize(mintedPCD);
+  return serializedMintedPODPCD;
 }

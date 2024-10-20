@@ -25,6 +25,7 @@ import {
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import AsyncLock from "async-lock";
 import { isEqual } from "lodash";
+import { PoolClient } from "postgres-pool";
 import { PoapEvent } from "../database/models";
 import { fetchDevconnectPretixTicketByTicketId } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
@@ -155,7 +156,10 @@ export class PoapService {
    *  4. Event of ticket is not Zuzalu 2023
    *  5. Ticket does not actually exist
    */
-  private async validateZuzalu23Ticket(serializedPCD: string): Promise<string> {
+  private async validateZuzalu23Ticket(
+    client: PoolClient,
+    serializedPCD: string
+  ): Promise<string> {
     return traced("poap", "validateZuzalu23Ticket", async (span) => {
       const pcd = await this.validateZKEdDSAEventTicketPCD(serializedPCD);
 
@@ -187,9 +191,7 @@ export class PoapService {
       // A bit of a hack given our implementation details - we know that the ticketId for
       // a Zuzalu EdDSATicketPCD is always set to the user's uuid during issuance, which happens
       // in the function {@link issueZuzaluTicketPCDs} within issuanceService.ts.
-      const allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(
-        this.context.dbPool
-      );
+      const allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(client);
       const matchingTicket = allZuzaluUsers.find((u) => u.uuid === ticketId);
       if (matchingTicket === null) {
         throw new Error("zuzalu ticket does not exist");
@@ -211,6 +213,7 @@ export class PoapService {
    *  5. Ticket does not actually exist
    */
   private async validateZuConnectTicket(
+    client: PoolClient,
     serializedPCD: string
   ): Promise<string> {
     return traced("poap", "validateZuConnectTicket", async (span) => {
@@ -239,10 +242,8 @@ export class PoapService {
 
       logger(`[POAP] fetching zuconnect ticket ${ticketId} from database`);
 
-      const zuconnectTicket = await fetchZuconnectTicketById(
-        this.context.dbPool,
-        ticketId
-      );
+      const zuconnectTicket = await fetchZuconnectTicketById(client, ticketId);
+
       if (!zuconnectTicket) {
         throw new Error("zuconnect ticket does not exist");
       }
@@ -429,6 +430,7 @@ export class PoapService {
    *  7. Invalid product for claiming a poap, e.g. EF Towel
    */
   private async validateDevconnectTicket(
+    client: PoolClient,
     serializedPCD: string
   ): Promise<string> {
     return traced("poap", "validateDevconnectTicket", async (span) => {
@@ -459,10 +461,7 @@ export class PoapService {
         throw new Error("ticket ID must be revealed");
       }
       const devconnectPretixTicket =
-        await fetchDevconnectPretixTicketByTicketId(
-          this.context.dbPool,
-          ticketId
-        );
+        await fetchDevconnectPretixTicketByTicketId(client, ticketId);
       if (!devconnectPretixTicket) {
         throw new Error("ticket ID does not exist");
       }
@@ -508,11 +507,16 @@ export class PoapService {
    *     POAP links exist, return a custom server error URL.
    */
   public async getDevconnectPoapRedirectUrl(
+    client: PoolClient,
     serializedPCD: string
   ): Promise<string> {
     try {
-      const ticketId = await this.validateDevconnectTicket(serializedPCD);
+      const ticketId = await this.validateDevconnectTicket(
+        client,
+        serializedPCD
+      );
       const poapLink = await this.getPoapClaimUrlByTicketId(
+        client,
         ticketId,
         "devconnect"
       );
@@ -542,11 +546,13 @@ export class PoapService {
    *     POAP links exist, return a custom server error URL.
    */
   public async getZuzalu23PoapRedirectUrl(
+    client: PoolClient,
     serializedPCD: string
   ): Promise<string> {
     try {
-      const ticketId = await this.validateZuzalu23Ticket(serializedPCD);
+      const ticketId = await this.validateZuzalu23Ticket(client, serializedPCD);
       const poapLink = await this.getPoapClaimUrlByTicketId(
+        client,
         ticketId,
         "zuzalu23"
       );
@@ -576,11 +582,16 @@ export class PoapService {
    *     POAP links exist, return a custom server error URL.
    */
   public async getZuConnectPoapRedirectUrl(
+    client: PoolClient,
     serializedPCD: string
   ): Promise<string> {
     try {
-      const ticketId = await this.validateZuConnectTicket(serializedPCD);
+      const ticketId = await this.validateZuConnectTicket(
+        client,
+        serializedPCD
+      );
       const poapLink = await this.getPoapClaimUrlByTicketId(
+        client,
         ticketId,
         "zuconnect"
       );
@@ -610,11 +621,13 @@ export class PoapService {
    *     POAP links exist, return a custom server error URL.
    */
   public async getEdgeCityDenverPoapRedirectUrl(
+    client: PoolClient,
     serializedPCD: string
   ): Promise<string> {
     try {
       const ticketId = await this.validateEdgeCityDenverTicket(serializedPCD);
       const poapLink = await this.getPoapClaimUrlByTicketId(
+        client,
         ticketId,
         "edgecitydenver"
       );
@@ -644,11 +657,13 @@ export class PoapService {
    *     POAP links exist, return a custom server error URL.
    */
   public async getETHLatamPoapRedirectUrl(
+    client: PoolClient,
     serializedPCD: string
   ): Promise<string> {
     try {
       const ticketId = await this.validateETHLatamTicket(serializedPCD);
       const poapLink = await this.getPoapClaimUrlByTicketId(
+        client,
         ticketId,
         "ethlatam"
       );
@@ -678,11 +693,13 @@ export class PoapService {
    *     POAP links exist, return a custom server error URL.
    */
   public async getVitaliaPoapRedirectUrl(
+    client: PoolClient,
     serializedPCD: string
   ): Promise<string> {
     try {
       const ticketId = await this.validateVitaliaTicket(serializedPCD);
       const poapLink = await this.getPoapClaimUrlByTicketId(
+        client,
         ticketId,
         "vitalia"
       );
@@ -714,6 +731,7 @@ export class PoapService {
    *     no more unclaimed POAP mint links exist, return NULL.
    */
   public async getPoapClaimUrlByTicketId(
+    client: PoolClient,
     ticketId: string,
     poapEvent: PoapEvent
   ): Promise<string | null> {
@@ -728,7 +746,7 @@ export class PoapService {
         `${ticketId}-${poapEvent}`,
         async () => {
           const existingPoapLink = await getExistingClaimUrlByTicketId(
-            this.context.dbPool,
+            client,
             hashedTicketId
           );
           if (existingPoapLink !== null) {
@@ -738,7 +756,7 @@ export class PoapService {
           }
 
           const newPoapLink = await claimNewPoapUrl(
-            this.context.dbPool,
+            client,
             poapEvent,
             hashedTicketId
           );
