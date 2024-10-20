@@ -5,7 +5,15 @@ import styled from "styled-components";
 export default function Select<Option = unknown>(
   props: React.ComponentProps<typeof ReactSelect<Option>>
 ): JSX.Element {
-  return <StyledSelect classNamePrefix="Select" isSearchable {...props} />;
+  // preventing select to trigger on click outside on modal
+  return (
+    <div
+      onMouseDown={(e) => e.stopPropagation()}
+      onMouseUp={(e) => e.stopPropagation()}
+    >
+      <StyledSelect classNamePrefix="Select" isSearchable {...props} />
+    </div>
+  );
 }
 
 const StyledSelect: StateManagedSelect = styled(ReactSelect)`
