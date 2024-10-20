@@ -15,7 +15,6 @@ import {
   SupportLink,
   TextCenter
 } from "../components/core";
-import { RippleLoader } from "../components/core/RippleLoader";
 // Go over all the files and remove what not needed
 // import { AddEmailScreen } from "../components/screens/AddEmailScreen";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
@@ -138,12 +137,6 @@ function RouterImpl(): JSX.Element {
     );
   }
 
-  const LazyScanScreen = React.lazy(() =>
-    import("../components/screens/ScanScreen").then((module) => ({
-      default: module.ScanScreen
-    }))
-  );
-
   const LazyCreatePasswordScreen = React.lazy(() =>
     import("../new-components/screens/Login/NewCreatePasswordScreen").then(
       (module) => ({
@@ -208,14 +201,6 @@ function RouterImpl(): JSX.Element {
           <Route path="halo" element={<HaloScreen />} />
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<NewHomeScreen />} />
-          <Route
-            path="scan"
-            element={
-              <React.Suspense fallback={<RippleLoader />}>
-                <LazyScanScreen />
-              </React.Suspense>
-            }
-          />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
