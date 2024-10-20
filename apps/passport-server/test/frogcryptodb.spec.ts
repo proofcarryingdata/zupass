@@ -3,8 +3,7 @@ import { expect } from "chai";
 import _ from "lodash";
 import "mocha";
 import { step } from "mocha-steps";
-import { Client } from "pg";
-import { Pool } from "postgres-pool";
+import { Pool, PoolClient } from "postgres-pool";
 import { getDB } from "../src/database/postgresPool";
 import {
   deleteFrogData,
@@ -28,28 +27,28 @@ import {
 } from "./util/frogcrypto";
 
 describe("database reads and writes for frogcrypto features", function () {
-  let db: Pool;
-  let client: Client;
+  let pool: Pool;
+  let client: PoolClient;
 
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
-    db = await getDB();
-    client = await db.connect();
+    pool = await getDB();
+    client = await pool.connect();
   });
 
   this.afterAll(async () => {
     await client.end();
-    await db.end();
+    await pool.end();
   });
 
   step("database should initialize", async function () {
-    expect(db).to.not.eq(null);
+    expect(pool).to.not.eq(null);
   });
 
   step("insert frogs", async function () {
-    await upsertFrogData(db, testFrogs);
+    await upsertFrogData(client, testFrogs);
 
-    const allFrogs = await getFrogData(db);
+    const allFrogs = await getFrogData(client);
     expect(allFrogs.length).to.eq(testFrogs.length);
   });
 
@@ -58,9 +57,9 @@ describe("database reads and writes for frogcrypto features", function () {
       ...testFrogs[3],
       biome: "Swamp"
     };
-    await upsertFrogData(db, [mutatedFrog]);
+    await upsertFrogData(client, [mutatedFrog]);
 
-    const allFrogs = await getFrogData(db);
+    const allFrogs = await getFrogData(client);
     expect(allFrogs.length).to.eq(testFrogs.length);
     expect(allFrogs.find((frog) => frog.id === mutatedFrog.id)?.biome).to.eq(
       "Swamp"
@@ -69,15 +68,15 @@ describe("database reads and writes for frogcrypto features", function () {
 
   step("delete frogs", async function () {
     const frogId = testFrogs[3].id;
-    await deleteFrogData(db, [frogId]);
+    await deleteFrogData(client, [frogId]);
 
-    const allFrogs = await getFrogData(db);
+    const allFrogs = await getFrogData(client);
     expect(allFrogs.length).to.eq(testFrogs.length - 1);
     expect(allFrogs.map((frog) => frog.id)).does.not.include(frogId);
   });
 
   step("sample a frog", async function () {
-    const frog = await sampleFrogData(db, {
+    const frog = await sampleFrogData(client, {
       Jungle: { dropWeightScaler: 1 }
     });
 
@@ -85,7 +84,7 @@ describe("database reads and writes for frogcrypto features", function () {
   });
 
   step("sample a frog from complexly named biome", async function () {
-    const frog = await sampleFrogData(db, {
+    const frog = await sampleFrogData(client, {
       TheCapital: { dropWeightScaler: 1 }
     });
 
@@ -95,7 +94,7 @@ describe("database reads and writes for frogcrypto features", function () {
   step("sample a frog from weighted biomes", async function () {
     const frogs = await Promise.all(
       _.range(0, 1000).map(() =>
-        sampleFrogData(db, {
+        sampleFrogData(client, {
           TheCapital: { dropWeightScaler: 100 },
           Desert: { dropWeightScaler: 0.01 },
           Jungle: { dropWeightScaler: 0 } // 0 weight should be ignored
@@ -110,25 +109,25 @@ describe("database reads and writes for frogcrypto features", function () {
   });
 
   step("return undefined if there is no frog to sample", async function () {
-    const frog = await sampleFrogData(db, {});
+    const frog = await sampleFrogData(client, {});
 
     expect(frog).to.be.undefined;
   });
 
   step("initialize user feed state", async function () {
-    const emptyState = await fetchUserFeedsState(db, "test");
+    const emptyState = await fetchUserFeedsState(client, "test");
     expect(emptyState).to.be.empty;
 
-    await initializeUserFeedState(db, "test", "test");
-    let initState = await fetchUserFeedsState(db, "test");
+    await initializeUserFeedState(client, "test", "test");
+    let initState = await fetchUserFeedsState(client, "test");
     expect(initState).to.not.be.empty;
     let feedState = initState[0];
     expect(feedState.feed_id).to.eq("test");
     expect(feedState.last_fetched_at.getTime()).to.be.eq(0);
 
     // re-init should have no effect
-    await initializeUserFeedState(db, "test", "test");
-    initState = await fetchUserFeedsState(db, "test");
+    await initializeUserFeedState(client, "test", "test");
+    initState = await fetchUserFeedsState(client, "test");
     expect(initState).to.not.be.empty;
     feedState = initState[0];
     expect(feedState.feed_id).to.eq("test");
@@ -140,7 +139,7 @@ describe("database reads and writes for frogcrypto features", function () {
     const firstFetchedAt = await updateUserFeedState(client, "test", "test");
     expect(firstFetchedAt?.getTime()).to.be.eq(0);
 
-    const client2 = await db.connect();
+    const client2 = await pool.connect();
     await client2.query("BEGIN");
     await expect(
       updateUserFeedState(client2, "test", "test")
@@ -150,14 +149,14 @@ describe("database reads and writes for frogcrypto features", function () {
     await client2.query("COMMIT");
     await client2.release();
 
-    const userFeedState = await fetchUserFeedsState(db, "test");
+    const userFeedState = await fetchUserFeedsState(client, "test");
     expect(userFeedState[0].last_fetched_at.getTime()).to.be.greaterThan(0);
   });
 
   step("returns possible frog ids excluding objects", async function () {
-    await upsertFrogData(db, testFrogsAndObjects);
+    await upsertFrogData(client, testFrogsAndObjects);
 
-    const possibleFrogs = await getPossibleFrogs(db);
+    const possibleFrogs = await getPossibleFrogs(client);
     expect(possibleFrogs).to.deep.eq(
       [...testDexFrogs, ...testDexFrogsAndObjects].filter(
         ({ id }) => ![4, 6, 7].includes(id)
@@ -166,9 +165,9 @@ describe("database reads and writes for frogcrypto features", function () {
   });
 
   step("insert feeds", async function () {
-    await upsertFeedData(db, testFeeds);
+    await upsertFeedData(client, testFeeds);
 
-    const allFeeds = await getFeedData(db);
+    const allFeeds = await getFeedData(client);
     expect(allFeeds.length).to.eq(testFeeds.length);
   });
 
@@ -177,9 +176,9 @@ describe("database reads and writes for frogcrypto features", function () {
       JSON.stringify(testFeeds[3])
     ) as FrogCryptoDbFeedData;
     mutatedFeed.feed.private = false;
-    await upsertFeedData(db, [mutatedFeed]);
+    await upsertFeedData(client, [mutatedFeed]);
 
-    const allFeeds = await getFeedData(db);
+    const allFeeds = await getFeedData(client);
     expect(allFeeds.length).to.eq(testFeeds.length);
     expect(
       allFeeds.find((feed) => feed.id === mutatedFeed.uuid)?.private
@@ -195,9 +194,9 @@ describe("database reads and writes for frogcrypto features", function () {
       ...testFeeds[3],
       uuid: "065f829b-8aff-4f6a-9457-768a3a0d757b"
     };
-    await upsertFeedData(db, [mutatedFeed, newFeed]);
+    await upsertFeedData(client, [mutatedFeed, newFeed]);
 
-    const allFeeds = await getFeedData(db);
+    const allFeeds = await getFeedData(client);
     expect(allFeeds.length).to.eq(testFeeds.length + 1);
     expect(
       allFeeds.find((feed) => feed.id === mutatedFeed.uuid)?.activeUntil

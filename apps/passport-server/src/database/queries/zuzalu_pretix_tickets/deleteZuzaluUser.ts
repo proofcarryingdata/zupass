@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -6,7 +6,7 @@ import { sqlQuery } from "../../sqlQuery";
  * identity commitment, if they have logged into the passport.
  */
 export async function deleteZuzaluTicket(
-  client: Pool,
+  client: PoolClient,
   email: string
 ): Promise<void> {
   await sqlQuery(client, `delete from zuzalu_pretix_tickets where email = $1`, [

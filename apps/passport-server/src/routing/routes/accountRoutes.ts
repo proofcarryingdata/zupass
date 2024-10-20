@@ -3,6 +3,7 @@ import {
   AgreeTermsRequest,
   ChangeUserEmailRequest,
   ConfirmEmailRequest,
+  ConfirmEmailResponseValue,
   CreateNewUserRequest,
   DeleteAccountRequest,
   OneClickLoginRequest,
@@ -12,13 +13,14 @@ import {
 } from "@pcd/passport-interface";
 import { normalizeEmail } from "@pcd/util";
 import express, { Request, Response } from "express";
+import { namedSqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkBody, checkQueryParam, checkUrlParam } from "../params";
 
 export function initAccountRoutes(
   app: express.Application,
-  _context: ApplicationContext,
+  context: ApplicationContext,
   { userService }: GlobalServices
 ): void {
   logger("[INIT] initializing account routes");
@@ -34,8 +36,14 @@ export function initAccountRoutes(
    */
   app.get("/account/salt", async (req: Request, res: Response) => {
     const email = normalizeEmail(checkQueryParam(req, "email"));
-    const salt = await userService.getSaltByEmail(email);
-    res.send(salt satisfies SaltResponseValue);
+
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/account/salt",
+      (client) => userService.getSaltByEmail(client, email)
+    );
+
+    res.send(result satisfies SaltResponseValue);
   });
 
   /**
@@ -64,11 +72,20 @@ export function initAccountRoutes(
     const email = normalizeEmail(
       checkBody<ConfirmEmailRequest, "email">(req, "email")
     );
-
     const force =
       checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
 
-    await userService.handleSendTokenEmail(email, force, res);
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/account/send-login-email",
+      (client) => userService.handleSendTokenEmail(client, email, force)
+    );
+
+    if (result) {
+      res.status(200).json(result satisfies ConfirmEmailResponseValue);
+    } else {
+      res.sendStatus(200);
+    }
   });
 
   /**
@@ -82,7 +99,11 @@ export function initAccountRoutes(
     const token = checkBody<VerifyTokenRequest, "token">(req, "token");
     const email = checkBody<VerifyTokenRequest, "email">(req, "email");
 
-    const result = await userService.handleVerifyToken(token, email);
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/account/verify-token",
+      (client) => userService.handleVerifyToken(client, token, email)
+    );
 
     res.status(200).json(result);
   });
@@ -106,14 +127,21 @@ export function initAccountRoutes(
       "encryptionKey"
     );
 
-    await userService.handleOneClickLogin(
-      email,
-      code,
-      commitment,
-      semaphore_v4_pubkey,
-      encryptionKey,
-      res
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/account/one-click-login",
+      (client) =>
+        userService.handleOneClickLogin(
+          client,
+          email,
+          code,
+          commitment,
+          semaphore_v4_pubkey,
+          encryptionKey
+        )
     );
+
+    res.status(200).json(result);
   });
 
   /**
@@ -155,16 +183,23 @@ export function initAccountRoutes(
       "commitment"
     );
 
-    await userService.handleNewUser(
-      token,
-      email,
-      commitment,
-      semaphore_v4_pubkey,
-      salt,
-      encryptionKey,
-      autoRegister,
-      res
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/account/new-participant",
+      (client) =>
+        userService.handleNewUser(
+          client,
+          token,
+          email,
+          commitment,
+          semaphore_v4_pubkey,
+          salt,
+          encryptionKey,
+          autoRegister
+        )
     );
+
+    res.status(200).json(result);
   });
 
   /**
@@ -177,7 +212,11 @@ export function initAccountRoutes(
     async (req: Request, res: Response) => {
       const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
-      const result = await userService.handleAddV4Commitment(pcd);
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/account/upgrade-with-v4-commitment",
+        (client) => userService.handleAddV4Commitment(client, pcd)
+      );
 
       if (result.success) {
         res.status(200).json(result.value);
@@ -193,7 +232,11 @@ export function initAccountRoutes(
   app.post("/account/agree-terms", async (req: Request, res: Response) => {
     const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
-    const result = await userService.handleAgreeTerms(pcd);
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/account/agree-terms",
+      (client) => userService.handleAgreeTerms(client, pcd)
+    );
 
     if (result.success) {
       res.status(200).json(result.value);
@@ -219,26 +262,48 @@ export function initAccountRoutes(
    * should we be returning the `salt` here?
    */
   app.get("/v2/account/user/:uuid", async (req: Request, res: Response) => {
-    await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/v2/account/user/:uuid",
+      (client) => userService.handleGetUser(client, checkUrlParam(req, "uuid"))
+    );
+
+    res.status(200).json(result);
   });
 
   /**
    * temporary, for backwards compat; same as /account/user/:uuid
    */
   app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
-    await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/pcdpass/participant/:uuid",
+      (client) => userService.handleGetUser(client, checkUrlParam(req, "uuid"))
+    );
+
+    res.status(200).json(result);
   });
 
   /**
    * temporary, for backwards compat; same as /account/user/:uuid
    */
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
-    await userService.handleGetUser(checkUrlParam(req, "uuid"), res);
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/zuzalu/participant/:uuid",
+      (client) => userService.handleGetUser(client, checkUrlParam(req, "uuid"))
+    );
+
+    res.status(200).json(result);
   });
 
   app.post("/account/delete", async (req: Request, res: Response) => {
     const pcd = checkBody<DeleteAccountRequest, "pcd">(req, "pcd");
-    await userService.handleDeleteAccount(pcd);
+
+    await namedSqlTransaction(context.dbPool, "/account/delete", (client) =>
+      userService.handleDeleteAccount(client, pcd)
+    );
+
     res.sendStatus(200);
   });
 
@@ -252,10 +317,11 @@ export function initAccountRoutes(
     const pcd = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
     const confirmationCode = req.body.confirmationCode as string | undefined;
 
-    const result = await userService.handleAddUserEmail(
-      newEmail,
-      pcd,
-      confirmationCode
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/account/add-email",
+      (client) =>
+        userService.handleAddUserEmail(client, newEmail, pcd, confirmationCode)
     );
 
     res.status(200).json(result);
@@ -273,7 +339,11 @@ export function initAccountRoutes(
       .toLocaleLowerCase();
     const pcd = checkBody<RemoveUserEmailRequest, "pcd">(req, "pcd");
 
-    const result = await userService.handleRemoveUserEmail(emailToRemove, pcd);
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/account/delete-email",
+      (client) => userService.handleRemoveUserEmail(client, emailToRemove, pcd)
+    );
 
     res.status(200).json(result);
   });
@@ -297,13 +367,19 @@ export function initAccountRoutes(
     const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
     const confirmationCode = req.body.confirmationCode as string | undefined;
 
-    const result = await userService.handleChangeUserEmail(
-      oldEmail,
-      newEmail,
-      pcd,
-      confirmationCode
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/account/change-email",
+      (client) =>
+        userService.handleChangeUserEmail(
+          client,
+          oldEmail,
+          newEmail,
+          pcd,
+          confirmationCode
+        )
     );
 
-    res.status(200).send(result);
+    res.status(200).json(result);
   });
 }

@@ -150,6 +150,7 @@ export function getTicketsFromFeedResponse(
   result: PollFeedResult
 ): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
   expectTrue(result.success);
+
   const secondAction = result.value.actions[1];
   expectIsReplaceInFolderAction(secondAction);
   expect(secondAction.folder).to.eq(expectedFolder);

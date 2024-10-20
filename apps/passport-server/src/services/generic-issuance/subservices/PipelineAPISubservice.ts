@@ -17,8 +17,11 @@ import {
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
 import { str } from "@pcd/util";
+import { PoolClient } from "postgres-pool";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { sqlTransaction } from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
+import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { traceFlattenedObject, traced } from "../../telemetryService";
 import { isCheckinCapability } from "../capabilities/CheckinCapability";
@@ -45,15 +48,18 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
  * {@link PCD} issuance.
  */
 export class PipelineAPISubservice {
+  private context: ApplicationContext;
   private pipelineSubservice: PipelineSubservice;
   private consumerDB: IPipelineConsumerDB;
   private credentialSubservice: CredentialSubservice;
 
   public constructor(
+    context: ApplicationContext,
     consumerDB: IPipelineConsumerDB,
     pipelineSubservice: PipelineSubservice,
     credentailSubservice: CredentialSubservice
   ) {
+    this.context = context;
     this.pipelineSubservice = pipelineSubservice;
     this.consumerDB = consumerDB;
     this.credentialSubservice = credentailSubservice;
@@ -96,6 +102,7 @@ export class PipelineAPISubservice {
    *   does not exist.
    */
   public async handleGetPipelineInfo(
+    client: PoolClient,
     user: PipelineUser,
     pipelineId: string
   ): Promise<PipelineInfoResponseValue> {
@@ -116,6 +123,7 @@ export class PipelineAPISubservice {
         pipelineInstance.capabilities.filter(isFeedIssuanceCapability);
 
       const lastLoad = await this.pipelineSubservice.getLastLoadSummary(
+        client,
         pipelineInstance.id
       );
       const latestAtoms = await this.pipelineSubservice.getPipelineAtoms(
@@ -140,8 +148,9 @@ export class PipelineAPISubservice {
         pipelineHasSemaphoreGroups = true;
       }
 
-      const latestConsumers = await this.consumerDB.loadAll(
-        pipelineInstance.id
+      const latestConsumers = await sqlTransaction(
+        this.context.dbPool,
+        (client) => this.consumerDB.loadAll(client, pipelineInstance.id)
       );
 
       if (!pipelineSlot.owner) {
@@ -175,6 +184,7 @@ export class PipelineAPISubservice {
               .sort((a, b) => b.timeUpdated.localeCompare(a.timeUpdated)),
 
         editHistory: await this.pipelineSubservice.getPipelineEditHistory(
+          client,
           pipelineId,
           100
         )

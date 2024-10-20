@@ -19,10 +19,10 @@ import {
   checkPublicKeyFormat,
   encodePublicKey,
   podValueHash,
+  printPODValueOrTuple,
   requireType
 } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
-import JSONBig from "json-bigint";
 import isEqual from "lodash/isEqual";
 import uniq from "lodash/uniq";
 import { Identity as IdentityV4 } from "semaphore-identity-v4";
@@ -61,15 +61,6 @@ import {
   splitPODEntryIdentifier,
   widthOfEntryOrTuple
 } from "./gpcUtil";
-
-// TODO(POD-P2): Split out the parts of this which should be public from
-// internal implementation details.  E.g. the returning of ciruit parameters
-// isn't relevant to checking objects after deserialization.
-
-const jsonBigSerializer = JSONBig({
-  useNativeBigInt: true,
-  alwaysParseAsBig: true
-});
 
 /**
  * Checks the validity of the arguments for generating a proof.  This will throw
@@ -605,10 +596,6 @@ export function checkProofInputsForConfig(
   proofConfig: GPCProofConfig,
   proofInputs: GPCProofInputs
 ): void {
-  // TODO(POD-P3): Think whether we should actually check proof requirements
-  // here, vs. letting prove() simply fail.  At minimum this function could
-  // simply check references between confing and inputs.
-
   // Config and inputs should have same number of objects.
   const nConfiguredObjects = Object.keys(proofConfig.pods).length;
   const nInputObjects = Object.keys(proofInputs.pods).length;
@@ -919,7 +906,7 @@ export function checkProofListMembershipInputsForConfig(
         isComparisonValueInList === undefined
       ) {
         throw new Error(
-          `Comparison value ${jsonBigSerializer.stringify(
+          `Comparison value ${printPODValueOrTuple(
             comparisonValue
           )} corresponding to identifier ${JSON.stringify(
             comparisonId
@@ -932,7 +919,7 @@ export function checkProofListMembershipInputsForConfig(
         isComparisonValueInList !== undefined
       ) {
         throw new Error(
-          `Comparison value ${jsonBigSerializer.stringify(
+          `Comparison value ${printPODValueOrTuple(
             comparisonValue
           )} corresponding to identifier ${JSON.stringify(
             comparisonId

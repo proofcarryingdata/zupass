@@ -1,5 +1,17 @@
 # @pcd/util
 
+## 0.6.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+## 0.5.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
 ## 0.4.4
 
 ### Patch Changes

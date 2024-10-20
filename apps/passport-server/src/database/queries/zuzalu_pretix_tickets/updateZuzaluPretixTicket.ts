@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { ZuzaluPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
@@ -6,7 +6,7 @@ import { sqlQuery } from "../../sqlQuery";
  * Updates a pretix ticket in our database.
  */
 export async function updateZuzaluPretixTicket(
-  client: Pool,
+  client: PoolClient,
   params: ZuzaluPretixTicket
 ): Promise<number> {
   const result = await sqlQuery(

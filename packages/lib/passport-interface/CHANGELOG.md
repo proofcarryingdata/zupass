@@ -1,5 +1,55 @@
 # @pcd/passport-interface
 
+## 0.13.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/semaphore-signature-pcd@0.13.0
+  - @pcd/semaphore-identity-pcd@0.13.0
+  - @pcd/semaphore-group-pcd@0.13.0
+  - @pcd/eddsa-ticket-pcd@0.8.0
+  - @pcd/passport-crypto@0.13.0
+  - @pcd/pcd-collection@0.13.0
+  - @pcd/eddsa-frog-pcd@0.5.0
+  - @pcd/pod-ticket-pcd@0.3.0
+  - @pcd/pcd-types@0.13.0
+  - @pcd/eddsa-pcd@0.8.0
+  - @pcd/email-pcd@0.8.0
+  - @pcd/emitter@0.7.0
+  - @pcd/pod-pcd@0.3.0
+  - @pcd/util@0.7.0
+  - @pcd/pod@0.3.0
+
+## 0.12.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.6.0
+  - @pcd/passport-crypto@0.12.0
+  - @pcd/pcd-collection@0.12.0
+  - @pcd/pcd-types@0.12.0
+  - @pcd/pod@0.2.0
+  - @pcd/util@0.6.0
+  - @pcd/eddsa-frog-pcd@0.4.0
+  - @pcd/eddsa-pcd@0.7.0
+  - @pcd/eddsa-ticket-pcd@0.7.0
+  - @pcd/email-pcd@0.7.0
+  - @pcd/pod-pcd@0.2.0
+  - @pcd/pod-ticket-pcd@0.2.0
+  - @pcd/semaphore-group-pcd@0.12.0
+  - @pcd/semaphore-identity-pcd@0.12.0
+  - @pcd/semaphore-signature-pcd@0.12.0
+
 ## 0.11.9
 
 ### Patch Changes
