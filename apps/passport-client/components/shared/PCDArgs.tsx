@@ -712,7 +712,6 @@ export function PCDArgInput({
             value={options.find((option) => option.id === pcd?.id)}
             options={options}
             onChange={onChange}
-            isDisabled={true}
           />
         </SelectContainer>
       )}
