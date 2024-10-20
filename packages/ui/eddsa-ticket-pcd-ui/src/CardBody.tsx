@@ -24,7 +24,7 @@ export interface EdDSATicketPCDCardProps {
   // If this parameter is set, then the default QR code will use this URL.
   // "ZK mode" will then be enabled, allowing the user to switch to using the
   // `verifyURL` with a ZK proof of their ticket as the payload.
-  idBasedVerifyURL: string;
+  idBasedVerifyURL?: string;
   // If true, hides the visual padding around the image
   hidePadding?: boolean;
   // when clicked on the the addons sections, if there is any, do something
@@ -51,9 +51,10 @@ function EdDSATicketPCDCardBody({
 
   // If ticket has an `eventStartDate` render the `qrCodeOverrideImageUrl`, if it exists
   // Else, render the `imageUrl`, if it existss
-  const imageToRender = ticketData?.eventStartDate
-    ? ticketData.qrCodeOverrideImageUrl
-    : ticketData?.imageUrl;
+  const imageToRender =
+    ticketData?.eventStartDate && idBasedVerifyURL !== undefined
+      ? ticketData.qrCodeOverrideImageUrl
+      : ticketData?.imageUrl;
 
   return (
     <NEW_UI__Container>

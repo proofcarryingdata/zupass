@@ -165,14 +165,16 @@ function getUI(
 
 const getURLsBasedOnCategory = (
   category: TicketCategory
-): { idBasedVerifyURL: string; verifyURL: string } => {
+): { idBasedVerifyURL: string | undefined; verifyURL: string } => {
   const ticketCategory = category;
   const idBasedVerifyURL =
     ticketCategory === TicketCategory.Devconnect
       ? `${window.location.origin}/#/checkin-by-id`
       : ticketCategory === TicketCategory.ZuConnect
       ? `${window.location.origin}/#/verify`
-      : `${window.location.origin}/#/generic-checkin`;
+      : ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : undefined;
 
   const verifyURL =
     ticketCategory === TicketCategory.Generic
@@ -199,6 +201,8 @@ export const TicketQRWrapper = forwardRef<
       <QRContainer ref={ref}>
         <EddsaTicketQR
           pcd={pcd}
+          zk={false}
+          identityPCD={identityPCD}
           idBasedVerifyURL={urls.idBasedVerifyURL}
           verifyURL={urls.verifyURL}
         />
@@ -265,7 +269,9 @@ const TicketWrapper = forwardRef<
       ? `${window.location.origin}/#/checkin-by-id`
       : ticketCategory === TicketCategory.ZuConnect
       ? `${window.location.origin}/#/verify`
-      : `${window.location.origin}/#/generic-checkin`;
+      : ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : undefined;
 
   // In the long run, we will want issuers to be able to provide more metadata
   // about how check-in should work, either in the PCD itself or to be looked
@@ -288,6 +294,7 @@ const TicketWrapper = forwardRef<
       <Card
         hidePadding={hidePadding}
         pcd={pcd}
+        identityPCD={identityPCD}
         verifyURL={verifyURL}
         idBasedVerifyURL={idBasedVerifyURL}
         addOns={addOns}
