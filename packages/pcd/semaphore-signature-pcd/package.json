@@ -38,7 +38,7 @@
     "@pcd/util": "0.7.0",
     "@semaphore-protocol/group": "^3.15.2",
     "@semaphore-protocol/identity": "^3.15.2",
-    "@semaphore-protocol/proof": "^3.15.2",
+    "@semaphore-protocol/proof": "npm:@pcd/semaphore-proof-v3@^3.15.2",
     "json-bigint": "^1.0.0",
     "uuid": "^9.0.0"
   },
