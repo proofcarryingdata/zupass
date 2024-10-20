@@ -76,7 +76,7 @@ describe("V3ToV4Migration", async function () {
           },
           pod_type: {
             type: "string",
-            value: "zupass_semaphore_v4_migration"
+            value: "zupass.semaphore_v4_migration"
           }
         })
       },
@@ -122,7 +122,7 @@ describe("V3ToV4Migration", async function () {
           },
           pod_type: {
             type: "string",
-            value: "zupass_semaphore_v4_migration XD"
+            value: "zupass.semaphore_v4_migration XD"
           }
         })
       },

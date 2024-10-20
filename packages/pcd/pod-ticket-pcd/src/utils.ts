@@ -129,5 +129,9 @@ export function dataToPodEntries<T>(
         break;
     }
   }
+
+  // Always add pod_type to allow tickets to be identified.
+  entries["pod_type"] = { value: "zupass.ticket", type: "string" };
+
   return entries;
 }
