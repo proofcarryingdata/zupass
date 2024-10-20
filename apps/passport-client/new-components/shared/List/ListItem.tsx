@@ -67,13 +67,13 @@ const IconContainer = styled.div`
   justify-content: center;
 `;
 
-const EmailWrapper = styled.div`
+const ElipsisContainer = styled.div`
   display: inline-flex;
   width: 100%;
   overflow: hidden;
 `;
 
-const Username = styled.span`
+const ElipsisText = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -85,10 +85,10 @@ const Domain = styled.span``;
 const TruncatedEmail = ({ email }: { email: string }): JSX.Element => {
   const [username, domain] = email.split("@");
   return (
-    <EmailWrapper>
-      <Username>{username}</Username>
+    <ElipsisContainer>
+      <ElipsisText>{username}</ElipsisText>
       <Domain>@{domain}</Domain>
-    </EmailWrapper>
+    </ElipsisContainer>
   );
 };
 
@@ -121,7 +121,13 @@ export const ListItem = ({
             maxWidth: "90%"
           }}
         >
-          {isEmail ? <TruncatedEmail email={title} /> : title}
+          {isEmail ? (
+            <TruncatedEmail email={title} />
+          ) : (
+            <ElipsisContainer>
+              <ElipsisText>{title}</ElipsisText>
+            </ElipsisContainer>
+          )}
         </Typography>
         <FaChevronRight color={getVariantColor(defaultVariant)} />
       </ListItemRightContainer>
