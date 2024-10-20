@@ -9,7 +9,7 @@ import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { toCanvas } from "html-to-image";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
@@ -81,12 +81,20 @@ function EdDSATicketPCDCardBody({
         )}
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
-            {ticketData?.attendeeName.toUpperCase() || "Unknown"}
+            {ticketData?.attendeeName.toUpperCase() ||
+              ticketData?.eventName.toUpperCase() ||
+              "Unknown"}
           </NEW_UI__AttendeeName>
           <NEW_UI__ExtraInfoContainer>
-            <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
-            <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
-            <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
+            {ticketData?.attendeeEmail && (
+              <NEW_UI__ExtraInfo>{ticketData.attendeeEmail}</NEW_UI__ExtraInfo>
+            )}
+            {ticketData?.attendeeEmail && ticketData?.ticketName && (
+              <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
+            )}
+            {ticketData?.ticketName && (
+              <NEW_UI__ExtraInfo>{ticketData.ticketName}</NEW_UI__ExtraInfo>
+            )}
           </NEW_UI__ExtraInfoContainer>
         </NEW_UI__InfoContainer>
       </NEW_UI__TicketImageContainer>
