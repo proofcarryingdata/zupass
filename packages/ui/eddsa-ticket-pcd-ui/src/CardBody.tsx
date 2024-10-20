@@ -9,7 +9,7 @@ import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { toCanvas } from "html-to-image";
-import React, { useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
@@ -174,6 +174,7 @@ const NEW_UI__TicketImageContainer = styled.div`
   gap: 16px;
   padding: 16px 16px 0px 16px;
   background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
+  border-radius: inherit;
 `;
 
 const NEW_UI__InfoContainer = styled.div`
