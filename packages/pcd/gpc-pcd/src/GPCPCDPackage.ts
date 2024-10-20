@@ -7,7 +7,7 @@ import {
   deserializeGPCRevealedClaims,
   gpcProve,
   gpcVerify,
-  podMembershipListsFromSimplifiedJSON,
+  podMembershipListsFromJSON,
   serializeGPCBoundConfig,
   serializeGPCRevealedClaims
 } from "@pcd/gpc";
@@ -18,7 +18,7 @@ import {
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
+import { POD, PODName, checkPODName, podValueFromJSON } from "@pcd/pod";
 import { PODPCD, PODPCDPackage, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
@@ -33,7 +33,7 @@ import {
   GPCPCDTypeName,
   PODPCDArgValidatorParams
 } from "./GPCPCD";
-import { fixedPODEntriesFromSimplifiedJSON } from "./util";
+import { fixedPODEntriesFromJSON } from "./util";
 import {
   checkPCDType,
   checkPODAgainstPrescribedSignerPublicKeys,
@@ -112,10 +112,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
 
   const externalNullifier =
     args.externalNullifier.value !== undefined
-      ? ({
-          type: "string",
-          value: args.externalNullifier.value
-        } satisfies PODStringValue)
+      ? podValueFromJSON(args.externalNullifier.value)
       : undefined;
   if (externalNullifier !== undefined && ownerSemaphorePCD === undefined) {
     throw new Error("External nullifier requires an owner identity PCD.");
@@ -123,15 +120,12 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
 
   const membershipLists =
     args.membershipLists.value !== undefined
-      ? args.membershipLists.value
+      ? podMembershipListsFromJSON(args.membershipLists.value)
       : undefined;
 
   const watermark =
     args.watermark.value !== undefined
-      ? ({
-          type: "string",
-          value: args.watermark.value
-        } satisfies PODStringValue)
+      ? podValueFromJSON(args.watermark.value)
       : undefined;
 
   return {
@@ -148,8 +142,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
         : {}),
       ...(membershipLists !== undefined
         ? {
-            membershipLists:
-              podMembershipListsFromSimplifiedJSON(membershipLists)
+            membershipLists
           }
         : {}),
       watermark: watermark
@@ -239,9 +232,6 @@ export async function serialize(pcd: GPCPCD): Promise<SerializedPCD<GPCPCD>> {
 export async function deserialize(serialized: string): Promise<GPCPCD> {
   const deserialized = JSON.parse(serialized);
 
-  // TODO(POD-P2): More careful schema validation, likely with Zod, with
-  // special handling of the PODEntries type and subtypes.
-  // TODO(POD-P3): Backward-compatible schema versioning.
   requireDefinedParameter(deserialized.id, "id");
   requireDefinedParameter(deserialized.claim, "claim");
   requireDefinedParameter(deserialized.claim.config, "config");
@@ -300,12 +290,12 @@ function validateInputPOD(
 
     membershipLists =
       params.membershipLists !== undefined
-        ? podMembershipListsFromSimplifiedJSON(params.membershipLists)
+        ? podMembershipListsFromJSON(params.membershipLists)
         : undefined;
 
     prescribedEntries =
       params.prescribedEntries !== undefined
-        ? fixedPODEntriesFromSimplifiedJSON(params.prescribedEntries)
+        ? fixedPODEntriesFromJSON(params.prescribedEntries)
         : undefined;
   } catch (e) {
     if (e instanceof TypeError || e instanceof Error) {
@@ -388,19 +378,19 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
         user in the Semaphore protocol.`
       },
       membershipLists: {
-        argumentType: ArgumentTypeName.String,
+        argumentType: ArgumentTypeName.Object,
         defaultVisible: false,
         description: `These are the the lists of allowed or disallowed values
         for membership checks in the proof configuration.`
       },
       watermark: {
-        argumentType: ArgumentTypeName.String,
+        argumentType: ArgumentTypeName.Object,
         defaultVisible: false,
         description: `This watermark will be included in the proof.  It can be
         used tie this proof to a specific purpose.`
       },
       externalNullifier: {
-        argumentType: ArgumentTypeName.String,
+        argumentType: ArgumentTypeName.Object,
         defaultVisible: false,
         description: `This input is combined with your identity to produce a
         nullifier, which can be used to identify proofs which come from the

@@ -24,26 +24,29 @@ import {
 } from "../../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { nextFrame } from "../../../src/util";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
 import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
+import { isMobile } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
-import { nextFrame } from "../../../src/util";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
 
-const CARD_GAP = 8;
-const TICKET_VERTICAL_GAP = 20;
 const SCREEN_HORIZONTAL_PADDING = 20;
+const TICKET_VERTICAL_GAP = 20;
 const BUTTONS_CONTAINER_HEIGHT = 40;
+const CARD_GAP = isMobile ? 8 : SCREEN_HORIZONTAL_PADDING * 2;
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
-  // TODO: fetch the pods type as well and prioritize it if theres a conflict.
-  return isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd);
+  return (
+    (isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd)) &&
+    !!pcd.claim.ticket.eventStartDate
+  );
 };
 
 const useTickets = (): Array<[string, TicketPack[]]> => {
@@ -72,7 +75,7 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
     if (timeToDate1 < 0) return -1;
     if (timeToDate2 < 0) return 1;
 
-    // return which date is closer
+    // return which date is closer to the current time
     return timeToDate1 - timeToDate2;
   });
 
@@ -328,6 +331,7 @@ export const NewHomeScreen = (): ReactElement => {
               onChangeIndex={(e: number) => {
                 setCurrentPos(e);
               }}
+              enableMouseEvents
             >
               {tickets.map(([eventId, packs], i) => {
                 const eventDetails = getEventDetails(packs[0]);

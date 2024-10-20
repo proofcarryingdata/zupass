@@ -40,6 +40,12 @@ export type JSONPODValue =
   | JSONPODEdDSAPublicKeyValue;
 
 /**
+ * Defines the JSON encoding of a tuple of POD values.  This is simply an
+ * array of {@link JSONPODValue} objects described elsewhere.
+ */
+export type JSONPODValueTuple = JSONPODValue[];
+
+/**
  * {@link JSONPODValue} type for string entries.  These can be most simply
  * encoded as a JSON string, which is reserved for this type.
  */

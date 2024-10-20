@@ -47,10 +47,28 @@ export function PODTicketCardBodyImpl({
 
   const [downloading, setDownloading] = useState(false);
 
+  // If ticket has an `eventStartDate` render the `qrCodeOverrideImageUrl`, if it exists
+  // Else, render the `imageUrl`, if it existss
+  const imageToRender = ticketData?.eventStartDate
+    ? ticketData.qrCodeOverrideImageUrl
+    : ticketData?.imageUrl;
+
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        <TicketQR ticketData={ticketData} idBasedVerifyURL={idBasedVerifyURL} />
+        {!imageToRender && (
+          <TicketQR
+            ticketData={ticketData}
+            idBasedVerifyURL={idBasedVerifyURL}
+          />
+        )}
+        {imageToRender && (
+          <TicketImage
+            hidePadding={true}
+            imageUrl={imageToRender}
+            imageAltText={ticketData.imageAltText}
+          />
+        )}
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
             {ticketData?.attendeeName.toUpperCase() || "Unknown"}
@@ -142,22 +160,23 @@ export function linkToTicket(
   ).toString("base64");
   return makeIdBasedVerifyLink(baseUrl, encodedId);
 }
-// TODO: implement QRCode hide mechanism
-// function TicketImage({
-//   ticketData,
-//   hidePadding
-// }: {
-//   ticketData: IPODTicketData;
-//   hidePadding?: boolean;
-// }): JSX.Element {
-//   const { imageUrl, imageAltText } = ticketData;
-//   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
-//   return (
-//     <div style={{ padding: "8px" }}>
-//       <img src={imageUrl} alt={imageAltText} />
-//     </div>
-//   );
-// }
+
+function TicketImage({
+  imageUrl,
+  imageAltText,
+  hidePadding
+}: {
+  imageUrl: string;
+  imageAltText: string | undefined;
+  hidePadding?: boolean;
+}): JSX.Element {
+  if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
+  return (
+    <div style={{ padding: "8px" }}>
+      <img src={imageUrl} alt={imageAltText} />
+    </div>
+  );
+}
 
 const NEW_UI__Container = styled.div`
   font-family: Rubik;

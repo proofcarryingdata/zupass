@@ -131,12 +131,7 @@ function RouterImpl(): JSX.Element {
       <AppContainer bg="gray" fullscreen>
         <LoaderContainer>
           <NewLoader columns={5} rows={5} />
-          <Typography
-            fontSize={18}
-            fontWeight={800}
-            color="#8B94AC"
-            style={{ marginTop: 12 }}
-          >
+          <Typography fontSize={18} fontWeight={800} color="#8B94AC">
             DELETING YOUR ACCOUNT
           </Typography>
         </LoaderContainer>
@@ -377,7 +372,8 @@ loadInitialState()
 const LoaderContainer = styled.div`
   display: flex;
   flex: 1;
-  height: 100%;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 12px;
 `;

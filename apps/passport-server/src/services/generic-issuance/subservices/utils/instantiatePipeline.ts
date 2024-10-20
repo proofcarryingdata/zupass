@@ -1,6 +1,7 @@
 import {
   PipelineDefinition,
   isCSVPipelineDefinition,
+  isCSVTicketPipelineDefinition,
   isLemonadePipelineDefinition,
   isPODPipelineDefinition,
   isPretixPipelineDefinition
@@ -23,6 +24,7 @@ import { PersistentCacheService } from "../../../persistentCacheService";
 import { traced } from "../../../telemetryService";
 import { tracePipeline } from "../../honeycombQueries";
 import { CSVPipeline } from "../../pipelines/CSVPipeline/CSVPipeline";
+import { CSVTicketPipeline } from "../../pipelines/CSVTicketPipeline/CSVTicketPipeline";
 import { LemonadePipeline } from "../../pipelines/LemonadePipeline";
 import { PODPipeline } from "../../pipelines/PODPipeline/PODPipeline";
 import { PretixPipeline } from "../../pipelines/PretixPipeline";
@@ -63,6 +65,7 @@ export interface InstantiatePipelineArgs {
  * and expose its {@link Capability}s to the external world.
  */
 export function instantiatePipeline(
+  context: ApplicationContext,
   definition: PipelineDefinition,
   args: InstantiatePipelineArgs
 ): Promise<Pipeline> {
@@ -104,6 +107,7 @@ export function instantiatePipeline(
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(
+        context,
         args.eddsaPrivateKey,
         definition,
         args.pipelineAtomDB,
@@ -113,11 +117,23 @@ export function instantiatePipeline(
       );
     } else if (isPODPipelineDefinition(definition)) {
       pipeline = new PODPipeline(
+        context,
         args.eddsaPrivateKey,
         definition,
         args.pipelineAtomDB,
         args.credentialSubservice,
         args.consumerDB,
+        args.cacheService
+      );
+    } else if (isCSVTicketPipelineDefinition(definition)) {
+      pipeline = new CSVTicketPipeline(
+        context,
+        args.eddsaPrivateKey,
+        definition,
+        args.pipelineAtomDB,
+        args.credentialSubservice,
+        args.consumerDB,
+        args.semaphoreHistoryDB,
         args.cacheService
       );
     }

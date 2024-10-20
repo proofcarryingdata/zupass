@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
-import { Pool } from "postgres-pool";
+import { Pool, PoolClient } from "postgres-pool";
 import { v4 as uuid } from "uuid";
 import {
   DevconnectPretixTicketDBWithEmailAndItem,
@@ -68,19 +68,22 @@ interface ITestTicket extends DevconnectPretixTicketWithCheckin {
 const DEFAULT_CHECKIN_LIST_ID = "1";
 
 describe("database reads and writes for devconnect ticket features", function () {
-  let db: Pool;
+  let pool: Pool;
+  let client: PoolClient;
 
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
-    db = await getDB();
+    pool = await getDB();
+    client = await pool.connect();
   });
 
   this.afterAll(async () => {
-    await db.end();
+    await client.end();
+    await pool.end();
   });
 
   step("database should initialize", async function () {
-    expect(db).to.not.eq(null);
+    expect(client).to.not.eq(null);
   });
 
   const testOrganizers: ITestOrganizer[] = [
@@ -238,7 +241,7 @@ describe("database reads and writes for devconnect ticket features", function ()
   step("should be able to insert organizer configs", async function () {
     for (const organizer of testOrganizers) {
       const id = await insertPretixOrganizerConfig(
-        db,
+        client,
         organizer.organizerUrl,
         organizer.token,
         organizer.disabled
@@ -246,7 +249,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       organizer.dbId = id;
       expect(typeof id).to.eq("string");
     }
-    const allOrganizers = await getAllOrganizers(db);
+    const allOrganizers = await getAllOrganizers(client);
     expect(allOrganizers.length).to.eq(testOrganizers.length);
   });
 
@@ -261,7 +264,7 @@ describe("database reads and writes for devconnect ticket features", function ()
         const superItems = items.filter((item) => item.isSuperUser);
 
         const eventConfigId = await insertPretixEventConfig(
-          db,
+          client,
           organizer.dbId,
           items.map((item) => item.itemId),
           superItems.map((item) => item.itemId),
@@ -281,7 +284,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       const event = testEvents[i];
 
       const dbEventInfoId = await insertPretixEventsInfo(
-        db,
+        client,
         event.eventName,
         event.dbEventConfigId,
         DEFAULT_CHECKIN_LIST_ID
@@ -290,7 +293,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       event.dbEventInfoId = dbEventInfoId;
 
       const eventInfoFromDb = await fetchPretixEventInfo(
-        db,
+        client,
         event.dbEventConfigId
       );
       expect(eventInfoFromDb?.event_name).to.eq(event.eventName);
@@ -306,7 +309,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       const event = testEvents[itemInfo._eventIdx];
 
       const itemInfoId = await insertPretixItemsInfo(
-        db,
+        client,
         itemInfo.itemId,
         event.dbEventInfoId,
         itemInfo.itemName
@@ -318,7 +321,7 @@ describe("database reads and writes for devconnect ticket features", function ()
   });
 
   step("should be able to get pretix configuration", async function () {
-    const configs = await fetchPretixConfiguration(db);
+    const configs = await fetchPretixConfiguration(client);
     expect(configs.length).to.eq(testOrganizers.length);
 
     for (const organizer of testOrganizers) {
@@ -357,7 +360,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       ticket.pretix_events_config_id =
         testEvents[testItems[ticket._itemIdx]._eventIdx].dbEventConfigId;
 
-      const insertedTicket = await insertDevconnectPretixTicket(db, ticket);
+      const insertedTicket = await insertDevconnectPretixTicket(client, ticket);
       expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(
         ticket.devconnect_pretix_items_info_id
       );
@@ -377,13 +380,13 @@ describe("database reads and writes for devconnect ticket features", function ()
       ticket.devconnect_pretix_items_info_id = item.dbId;
 
       const ticketsForEmail = await fetchDevconnectPretixTicketsByEmail(
-        db,
+        client,
         ticket.email
       );
       // This will perform an upsert
-      await insertDevconnectPretixTicket(db, ticket);
+      await insertDevconnectPretixTicket(client, ticket);
       const ticketsForEmailAfterInsert =
-        await fetchDevconnectPretixTicketsByEmail(db, ticket.email);
+        await fetchDevconnectPretixTicketsByEmail(client, ticket.email);
 
       expect(ticketsForEmail.length).to.eq(ticketsForEmailAfterInsert.length);
     }
@@ -391,7 +394,7 @@ describe("database reads and writes for devconnect ticket features", function ()
 
   step("should be able update a ticket", async function () {
     const existingTicket = await fetchDevconnectPretixTicketsByEmail(
-      db,
+      client,
       testTickets[0].email
     );
 
@@ -401,12 +404,12 @@ describe("database reads and writes for devconnect ticket features", function ()
     };
 
     const loadedUpdatedTicket = await updateDevconnectPretixTicket(
-      db,
+      client,
       updatedTicket
     );
 
     const fetchedTickets = await fetchDevconnectPretixTicketsByEmail(
-      db,
+      client,
       updatedTicket.email
     );
 
@@ -417,25 +420,25 @@ describe("database reads and writes for devconnect ticket features", function ()
 
   step("should be able to consume a ticket", async function () {
     const existingTicket = await fetchDevconnectPretixTicketsByEmail(
-      db,
+      client,
       testTickets[0].email
     );
 
     const fetchedTickets = await fetchDevconnectPretixTicketsByEmail(
-      db,
+      client,
       existingTicket[0].email
     );
     const firstTicket = fetchedTickets[0];
     expect(firstTicket.is_consumed).to.eq(false);
 
     await consumeDevconnectPretixTicket(
-      db,
+      client,
       firstTicket.id,
       "checker@example.com"
     );
 
     const afterConsumptionTickets = await fetchDevconnectPretixTicketsByEmail(
-      db,
+      client,
       existingTicket[0].email
     );
     const firstTicketAfterConsumption = afterConsumptionTickets[0];
@@ -447,18 +450,18 @@ describe("database reads and writes for devconnect ticket features", function ()
     async function () {
       // In the previous test, we consumed this ticket
       const existingTicket = await fetchDevconnectPretixTicketsByEmail(
-        db,
+        client,
         testTickets[0].email
       );
 
       const consumedTicket = await fetchDevconnectPretixTicketByTicketId(
-        db,
+        client,
         existingTicket[0].id
       );
       expect(consumedTicket?.is_consumed).to.eq(true);
 
       const ticketsAwaitingSync = await fetchDevconnectTicketsAwaitingSync(
-        db,
+        client,
         testOrganizers[0].organizerUrl
       );
       expect(ticketsAwaitingSync.length).to.eq(1);
@@ -471,22 +474,22 @@ describe("database reads and writes for devconnect ticket features", function ()
 
   step("should be able to soft-delete and restore a ticket", async function () {
     const existingTicket = await fetchDevconnectPretixTicketsByEmail(
-      db,
+      client,
       testTickets[0].email
     );
 
     const fetchedTickets = await fetchDevconnectPretixTicketsByEmail(
-      db,
+      client,
       existingTicket[0].email
     );
 
     const firstTicket = fetchedTickets[0];
     expect(firstTicket.is_deleted).to.eq(false);
 
-    await softDeleteDevconnectPretixTicket(db, firstTicket);
+    await softDeleteDevconnectPretixTicket(client, firstTicket);
 
     const afterDeletionTickets = await fetchDevconnectPretixTicketsByEmail(
-      db,
+      client,
       existingTicket[0].email
     );
 
@@ -502,10 +505,10 @@ describe("database reads and writes for devconnect ticket features", function ()
       }
     );
 
-    await insertDevconnectPretixTicket(db, firstTicket);
+    await insertDevconnectPretixTicket(client, firstTicket);
 
     const afterRestorationTickets = await fetchDevconnectPretixTicketsByEmail(
-      db,
+      client,
       existingTicket[0].email
     );
 
@@ -524,7 +527,7 @@ describe("database reads and writes for devconnect ticket features", function ()
 
   step("fetching tickets by event should work", async function () {
     const fetchedTickets = await fetchDevconnectPretixTicketsByEvent(
-      db,
+      client,
       testEvents[0].dbEventConfigId
     );
 
@@ -538,7 +541,7 @@ describe("database reads and writes for devconnect ticket features", function ()
   });
 
   step("fetching all superusers should work", async function () {
-    const dbSuperUsers = await fetchDevconnectSuperusers(db);
+    const dbSuperUsers = await fetchDevconnectSuperusers(client);
     const expectedSuperUsers = [testTickets[1], testTickets[3]];
 
     const dbEmailSet = new Set(dbSuperUsers.map((t) => t.email));
@@ -551,7 +554,7 @@ describe("database reads and writes for devconnect ticket features", function ()
     "fetching superusers for a particular event should work",
     async function () {
       const progCryptoSuperUsers = await fetchDevconnectSuperusersForEvent(
-        db,
+        client,
         testEvents[0].dbEventConfigId
       );
       expect(progCryptoSuperUsers.length).to.eq(1);
@@ -563,7 +566,7 @@ describe("database reads and writes for devconnect ticket features", function ()
     "fetching superusers for a particular email address should work",
     async function () {
       const superUsersForEmail = await fetchDevconnectSuperusersForEmail(
-        db,
+        client,
         testTickets[1].email
       );
       expect(superUsersForEmail.length).to.eq(1);

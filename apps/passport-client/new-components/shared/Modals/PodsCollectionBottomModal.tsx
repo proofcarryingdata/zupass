@@ -1,9 +1,10 @@
 import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCD, EmailPCDTypeName } from "@pcd/email-pcd";
+import { isEmailPCD } from "@pcd/email-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import {
+  getImageUrlEntry,
   getDisplayOptions as getPodDisplayOptions,
   isPODPCD
 } from "@pcd/pod-pcd";
@@ -43,9 +44,6 @@ const getActivePod = (
   }
 };
 
-const isEmailPCD = (pcd: PCD<unknown, unknown>): pcd is EmailPCD =>
-  pcd.type === EmailPCDTypeName;
-
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
@@ -63,21 +61,20 @@ const getPcdName = (pcd: PCD<unknown, unknown>): string => {
       return pcd.id;
   }
 };
-
 const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
   switch (true) {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
       return <Avatar imgSrc={pcd.claim.ticket.imageUrl} />;
     case isPODPCD(pcd):
-      const imageUrl = pcd.claim.entries["zupass_image_url"]?.value;
+      const imageUrl = getImageUrlEntry(pcd)?.value;
       if (typeof imageUrl === "string") {
         return <Avatar imgSrc={imageUrl} />;
       }
       return undefined;
     case isEdDSAFrogPCD(pcd):
-      return pcd.claim.data.imageUrl;
+      return <Avatar imgSrc={pcd.claim.data.imageUrl} />;
     case isZKEdDSAFrogPCD(pcd):
-      return pcd.claim.partialFrog.imageUrl;
+      return <Avatar imgSrc={pcd.claim.partialFrog.imageUrl} />;
     case isUnknownPCD(pcd):
     default:
       return undefined;
@@ -110,7 +107,9 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       return a.claim.ticket.ticketId === b.claim.ticket.ticketId;
     }).map((ticket) => ticket.id);
     const filteredPcds = allPcds.filter(
-      (pcd) => !isEdDSATicketPCD(pcd) || !badTicketsIds.includes(pcd.id)
+      (pcd) =>
+        (!isEdDSATicketPCD(pcd) || !badTicketsIds.includes(pcd.id)) &&
+        !isEmailPCD(pcd)
     );
 
     // Group PCDs by folder and create a list of groups with the items inside
@@ -141,7 +140,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       });
     }
 
-    return Object.values(result);
+    return Object.values(result).filter((group) => group.children.length > 0);
   }, [pcdCollection, dispatch]);
 
   useEffect(() => {

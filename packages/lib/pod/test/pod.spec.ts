@@ -93,20 +93,6 @@ describe("POD class should work", async function () {
     expect(loadedPOD.signerPublicKey).to.eq(signedPOD1.signerPublicKey);
   });
 
-  it("should serialize and deserialize", function () {
-    for (const sampleEntries of [sampleEntries1, sampleEntries2]) {
-      const signedPOD = POD.sign(sampleEntries, privateKey);
-      expect(signedPOD.verifySignature()).to.be.true;
-
-      const serialized = signedPOD.serialize();
-      const deserializedPOD = POD.deserialize(serialized);
-      expect(deserializedPOD.verifySignature()).to.be.true;
-      expect(deserializedPOD.content.asEntries()).to.deep.eq(sampleEntries);
-      expect(deserializedPOD.signature).to.eq(signedPOD.signature);
-      expect(deserializedPOD.signerPublicKey).to.eq(signedPOD.signerPublicKey);
-    }
-  });
-
   it("should serialize and deserialize as JSON objects", function () {
     for (const sampleEntries of [sampleEntries1, sampleEntries2]) {
       const signedPOD = POD.sign(sampleEntries, privateKey);

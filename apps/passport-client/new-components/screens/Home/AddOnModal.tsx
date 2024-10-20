@@ -1,4 +1,4 @@
-import { ReactElement, useState } from "react";
+import { ReactElement, useCallback } from "react";
 import SwipeableViews from "react-swipeable-views";
 import styled from "styled-components";
 import { TicketQRWrapper } from "../../../components/shared/PCDCard";
@@ -6,6 +6,7 @@ import { useBottomModal, useDispatch } from "../../../src/appHooks";
 import { BottomModal } from "../../shared/BottomModal";
 import { Button2 } from "../../shared/Button";
 import { Typography } from "../../shared/Typography";
+import { useTrackpadSwipe } from "./hooks/useTrackpadSwipe";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipeableViews.default;
@@ -23,6 +24,7 @@ const QRContainer = styled.div`
 type DotsProp = {
   amount: number;
   activeIdx: number;
+  onDotClick: (index: number) => void;
 };
 const Dot = styled.div<{ active: boolean }>`
   width: 8px;
@@ -45,11 +47,13 @@ const ContentContainer = styled.div`
   flex-direction: column;
   gap: 12px;
 `;
-const Dots = ({ amount, activeIdx }: DotsProp): ReactElement => {
+const Dots = ({ amount, activeIdx, onDotClick }: DotsProp): ReactElement => {
   return (
     <DotContainer>
       {[...new Array(amount)].map((_, i) => {
-        return <Dot active={i === activeIdx} />;
+        return (
+          <Dot key={i} active={i === activeIdx} onClick={() => onDotClick(i)} />
+        );
       })}
     </DotContainer>
   );
@@ -58,56 +62,72 @@ const Dots = ({ amount, activeIdx }: DotsProp): ReactElement => {
 export const AddOnsModal = (): JSX.Element | null => {
   const activeModal = useBottomModal();
   const dispatch = useDispatch();
-  const [activeIdx, setActiveIdx] = useState(0);
-  if (activeModal.modalType !== "ticket-add-ons") {
+  const isAddOnsModal = activeModal.modalType === "ticket-add-ons";
+  const addOns = isAddOnsModal ? activeModal.addOns : [];
+
+  const { containerRef, activeIdx, setActiveIdx } = useTrackpadSwipe({
+    isEnabled: isAddOnsModal,
+    itemCount: addOns.length
+  });
+
+  const handleDotClick = (index: number): void => {
+    setActiveIdx(index);
+  };
+
+  const handleCloseModal = useCallback(() => {
+    dispatch({
+      type: "set-bottom-modal",
+      modal: {
+        modalType: "none"
+      }
+    });
+  }, [dispatch]);
+
+  if (!isAddOnsModal) {
     return null;
   }
 
-  const addOns = activeModal.addOns;
   return (
-    <BottomModal isOpen={activeModal.modalType === "ticket-add-ons"}>
-      <_SwipableViews
-        containerStyle={{ width: "100%", paddingBottom: 12 }}
-        slideStyle={{ padding: "0 10px" }}
-        resistance={true}
-        onChangeIndex={(e: number) => {
-          console.log(e);
-          setActiveIdx(e);
-        }}
-      >
-        {addOns.map((addOn) => {
-          return (
-            <QRContainer>
-              <TicketQRWrapper pcd={addOn} />
-              <Typography
-                color="var(--text-primary)"
-                fontSize={16}
-                fontWeight={500}
-              >
-                {addOn.claim.ticket.ticketName}
-              </Typography>
-            </QRContainer>
-          );
-        })}
-      </_SwipableViews>
+    <BottomModal
+      isOpen={activeModal.modalType === "ticket-add-ons"}
+      onClickOutside={handleCloseModal}
+    >
+      <div ref={containerRef}>
+        <_SwipableViews
+          containerStyle={{ width: "100%", paddingBottom: 12 }}
+          slideStyle={{ padding: "0 10px" }}
+          resistance={true}
+          index={activeIdx}
+          onChangeIndex={setActiveIdx}
+          enableMouseEvents
+        >
+          {addOns.map((addOn) => {
+            return (
+              <QRContainer>
+                <TicketQRWrapper pcd={addOn} />
+                <Typography
+                  color="var(--text-primary)"
+                  fontSize={16}
+                  fontWeight={500}
+                >
+                  {addOn.claim.ticket.ticketName}
+                </Typography>
+              </QRContainer>
+            );
+          })}
+        </_SwipableViews>
+      </div>
       <ContentContainer>
-        <Dots amount={addOns.length} activeIdx={activeIdx} />
+        <Dots
+          amount={addOns.length}
+          activeIdx={activeIdx}
+          onDotClick={handleDotClick}
+        />
         <Typography color="var(--text-tertiary)" fontWeight={500} fontSize={14}>
           {addOns.length} redeemable {addOns.length > 1 ? "items" : "item"}
         </Typography>
       </ContentContainer>
-      <Button2
-        onClick={() => {
-          dispatch({
-            type: "set-bottom-modal",
-            modal: {
-              modalType: "none"
-            }
-          });
-        }}
-      >
-        Close
-      </Button2>
+      <Button2 onClick={handleCloseModal}>Close</Button2>
     </BottomModal>
   );
 };

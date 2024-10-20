@@ -8,7 +8,7 @@ import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { toCanvas } from "html-to-image";
-import { useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
@@ -49,14 +49,29 @@ function EdDSATicketPCDCardBody({
   const ticketData = getEdDSATicketData(pcd);
   const [downloading, setDownloading] = useState(false);
 
+  // If ticket has an `eventStartDate` render the `qrCodeOverrideImageUrl`, if it exists
+  // Else, render the `imageUrl`, if it existss
+  const imageToRender = ticketData?.eventStartDate
+    ? ticketData.qrCodeOverrideImageUrl
+    : ticketData?.imageUrl;
+
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        <TicketQR
-          pcd={pcd}
-          verifyURL={verifyURL}
-          idBasedVerifyURL={idBasedVerifyURL}
-        />
+        {!imageToRender && (
+          <TicketQR
+            pcd={pcd}
+            verifyURL={verifyURL}
+            idBasedVerifyURL={idBasedVerifyURL}
+          />
+        )}
+        {imageToRender && (
+          <TicketImage
+            imageUrl={imageToRender}
+            imageAltText={ticketData?.imageAltText}
+            hidePadding={true}
+          />
+        )}
         <NEW_UI__InfoContainer>
           <NEW_UI__AttendeeName>
             {ticketData?.attendeeName.toUpperCase() || "Unknown"}
@@ -98,22 +113,22 @@ function EdDSATicketPCDCardBody({
   );
 }
 
-// TODO: implement hiding the QRCode
-// function TicketImage({
-//   pcd,
-//   hidePadding
-// }: {
-//   pcd: EdDSATicketPCD;
-//   hidePadding?: boolean;
-// }): JSX.Element {
-//   const { imageUrl, imageAltText } = pcd.claim.ticket;
-//   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
-//   return (
-//     <div style={{ padding: "8px" }}>
-//       <img src={imageUrl} alt={imageAltText} />
-//     </div>
-//   );
-// }
+function TicketImage({
+  imageUrl,
+  imageAltText,
+  hidePadding
+}: {
+  imageUrl: string;
+  imageAltText: string | undefined;
+  hidePadding?: boolean;
+}): JSX.Element {
+  if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
+  return (
+    <div style={{ padding: "8px" }}>
+      <img src={imageUrl} alt={imageAltText} />
+    </div>
+  );
+}
 
 function getHeader({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   let header;

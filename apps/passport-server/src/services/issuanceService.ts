@@ -51,7 +51,7 @@ import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import urljoin from "url-join";
 import { UserRow } from "../database/models";
 import {
@@ -64,6 +64,7 @@ import {
 import { fetchUserByV3Commitment } from "../database/queries/users";
 import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchAllUsersWithZuzaluTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -167,26 +168,37 @@ export class IssuanceService {
             const actions: PCDAction[] = [];
 
             try {
-              if (req.pcd === undefined) {
-                throw new Error(`Missing credential`);
-              }
-              const verifiedCredential = await this.verifyCredential(req.pcd);
-              const pcds = await this.issueEmailPCDs(verifiedCredential);
+              await namedSqlTransaction(
+                this.context.dbPool,
+                "issueEmailPCDs",
+                async (client) => {
+                  if (req.pcd === undefined) {
+                    throw new Error(`Missing credential`);
+                  }
+                  const verifiedCredential = await this.verifyCredential(
+                    req.pcd
+                  );
+                  const pcds = await this.issueEmailPCDs(
+                    client,
+                    verifiedCredential
+                  );
 
-              // Clear out the folder
-              actions.push({
-                type: PCDActionType.DeleteFolder,
-                folder: "Email",
-                recursive: false
-              });
+                  // Clear out the folder
+                  actions.push({
+                    type: PCDActionType.DeleteFolder,
+                    folder: "Email",
+                    recursive: false
+                  });
 
-              actions.push({
-                type: PCDActionType.ReplaceInFolder,
-                folder: "Email",
-                pcds: await Promise.all(
-                  pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
-                )
-              });
+                  actions.push({
+                    type: PCDActionType.ReplaceInFolder,
+                    folder: "Email",
+                    pcds: await Promise.all(
+                      pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
+                    )
+                  });
+                }
+              );
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -201,27 +213,40 @@ export class IssuanceService {
             req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
             const actions: PCDAction[] = [];
-            if (req.pcd === undefined) {
-              throw new Error(`Missing credential`);
-            }
+
             try {
-              const verifiedCredential = await this.verifyCredential(req.pcd);
-              const pcds = await this.issueZuzaluTicketPCDs(verifiedCredential);
+              await namedSqlTransaction(
+                this.context.dbPool,
+                "issueZuzaluTicketPCDs",
+                async (client) => {
+                  if (req.pcd === undefined) {
+                    throw new Error(`Missing credential`);
+                  }
 
-              // Clear out the folder
-              actions.push({
-                type: PCDActionType.DeleteFolder,
-                folder: "Zuzalu '23",
-                recursive: false
-              });
+                  const verifiedCredential = await this.verifyCredential(
+                    req.pcd
+                  );
+                  const pcds = await this.issueZuzaluTicketPCDs(
+                    client,
+                    verifiedCredential
+                  );
 
-              actions.push({
-                type: PCDActionType.ReplaceInFolder,
-                folder: "Zuzalu '23",
-                pcds: await Promise.all(
-                  pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                )
-              });
+                  // Clear out the folder
+                  actions.push({
+                    type: PCDActionType.DeleteFolder,
+                    folder: "Zuzalu '23",
+                    recursive: false
+                  });
+
+                  actions.push({
+                    type: PCDActionType.ReplaceInFolder,
+                    folder: "Zuzalu '23",
+                    pcds: await Promise.all(
+                      pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                    )
+                  });
+                }
+              );
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -236,35 +261,46 @@ export class IssuanceService {
             req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
             const actions: PCDAction[] = [];
-            if (req.pcd === undefined) {
-              throw new Error(`Missing credential`);
-            }
+
             try {
-              const verifiedCredential = await this.verifyCredential(req.pcd);
-              const pcds =
-                await this.issueZuconnectTicketPCDs(verifiedCredential);
+              await namedSqlTransaction(
+                this.context.dbPool,
+                "issueZuconnectTicketPCDs",
+                async (client) => {
+                  if (req.pcd === undefined) {
+                    throw new Error(`Missing credential`);
+                  }
+                  const verifiedCredential = await this.verifyCredential(
+                    req.pcd
+                  );
+                  const pcds = await this.issueZuconnectTicketPCDs(
+                    client,
+                    verifiedCredential
+                  );
 
-              // Clear out the old folder
-              actions.push({
-                type: PCDActionType.DeleteFolder,
-                folder: "Zuconnect",
-                recursive: false
-              });
+                  // Clear out the old folder
+                  actions.push({
+                    type: PCDActionType.DeleteFolder,
+                    folder: "Zuconnect",
+                    recursive: false
+                  });
 
-              // Clear out the folder
-              actions.push({
-                type: PCDActionType.DeleteFolder,
-                folder: "ZuConnect",
-                recursive: false
-              });
+                  // Clear out the folder
+                  actions.push({
+                    type: PCDActionType.DeleteFolder,
+                    folder: "ZuConnect",
+                    recursive: false
+                  });
 
-              actions.push({
-                type: PCDActionType.ReplaceInFolder,
-                folder: "ZuConnect",
-                pcds: await Promise.all(
-                  pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                )
-              });
+                  actions.push({
+                    type: PCDActionType.ReplaceInFolder,
+                    folder: "ZuConnect",
+                    pcds: await Promise.all(
+                      pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
+                    )
+                  });
+                }
+              );
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -339,13 +375,11 @@ export class IssuanceService {
     }
   }
 
-  private async checkUserExists({
-    semaphoreId
-  }: VerifiedCredential): Promise<UserRow | null> {
-    const user = await fetchUserByV3Commitment(
-      this.context.dbPool,
-      semaphoreId
-    );
+  private async checkUserExists(
+    client: PoolClient,
+    { semaphoreId }: VerifiedCredential
+  ): Promise<UserRow | null> {
+    const user = await fetchUserByV3Commitment(client, semaphoreId);
 
     if (user === null) {
       logger(
@@ -566,10 +600,11 @@ export class IssuanceService {
    * multiple PCDs if it were possible to verify secondary emails.
    */
   private async issueEmailPCDs(
+    client: PoolClient,
     credential: VerifiedCredential
   ): Promise<EmailPCD[]> {
     return traced("IssuanceService", "issueEmailPCDs", async (span) => {
-      const user = await this.checkUserExists(credential);
+      const user = await this.checkUserExists(client, credential);
 
       if (!user) {
         return [];
@@ -612,6 +647,7 @@ export class IssuanceService {
   }
 
   private async issueZuzaluTicketPCDs(
+    client: PoolClient,
     credential: VerifiedCredential
   ): Promise<EdDSATicketPCD[]> {
     return traced("IssuanceService", "issueZuzaluTicketPCDs", async (span) => {
@@ -627,7 +663,7 @@ export class IssuanceService {
         return [];
       }
 
-      const user = await this.checkUserExists(credential);
+      const user = await this.checkUserExists(client, credential);
       const email = user?.emails?.[0];
       if (user) {
         span?.setAttribute("commitment", user?.commitment?.toString() ?? "");
@@ -640,9 +676,7 @@ export class IssuanceService {
         return [];
       }
 
-      const allUsersAndTickets = await fetchAllUsersWithZuzaluTickets(
-        this.context.dbPool
-      );
+      const allUsersAndTickets = await fetchAllUsersWithZuzaluTickets(client);
       const zuzaluTickets = allUsersAndTickets.find((u) => u.uuid === user.uuid)
         ?.zuzaluTickets;
       if (!zuzaluTickets) {
@@ -684,6 +718,7 @@ export class IssuanceService {
    * a day pass ticket-holder might upgrade to a full ticket.
    */
   private async issueZuconnectTicketPCDs(
+    client: PoolClient,
     credential: VerifiedCredential
   ): Promise<EdDSATicketPCD[]> {
     return traced(
@@ -698,7 +733,7 @@ export class IssuanceService {
           );
           return [];
         }
-        const user = await this.checkUserExists(credential);
+        const user = await this.checkUserExists(client, credential);
 
         if (!user) {
           return [];
@@ -713,7 +748,7 @@ export class IssuanceService {
         const tickets = (
           await Promise.all(
             user.emails.map(async (email) =>
-              fetchZuconnectTicketsByEmail(this.context.dbPool, email)
+              fetchZuconnectTicketsByEmail(client, email)
             )
           )
         ).flat();
@@ -765,6 +800,7 @@ export class IssuanceService {
    *
    */
   private async verifyKnownTicket(
+    client: PoolClient,
     serializedPCD: SerializedPCD
   ): Promise<VerifyTicketResult> {
     if (!serializedPCD.type) {
@@ -838,7 +874,7 @@ export class IssuanceService {
     }
 
     const knownTicketType = await fetchKnownTicketByEventAndProductId(
-      this.context.dbPool,
+      client,
       eventId,
       productId
     );
@@ -871,11 +907,12 @@ export class IssuanceService {
   }
 
   public async handleVerifyTicketRequest(
+    client: PoolClient,
     req: VerifyTicketRequest
   ): Promise<VerifyTicketResult> {
     const pcdStr = req.pcd;
     try {
-      return this.verifyKnownTicket(JSON.parse(pcdStr));
+      return this.verifyKnownTicket(client, JSON.parse(pcdStr));
     } catch (e) {
       throw new PCDHTTPError(500, "The ticket could not be verified", {
         cause: e
@@ -888,9 +925,11 @@ export class IssuanceService {
    * This is used by clients to perform basic checks of validity against
    * ticket PCDs, based on the public key and ticket/event IDs.
    */
-  public async handleKnownTicketTypesRequest(): Promise<KnownTicketTypesResult> {
-    const knownTickets = await fetchKnownTicketTypes(this.context.dbPool);
-    const knownPublicKeys = await fetchKnownPublicKeys(this.context.dbPool);
+  public async handleKnownTicketTypesRequest(
+    client: PoolClient
+  ): Promise<KnownTicketTypesResult> {
+    const knownTickets = await fetchKnownTicketTypes(client);
+    const knownPublicKeys = await fetchKnownPublicKeys(client);
     return {
       success: true,
       value: {
@@ -936,9 +975,8 @@ export async function startIssuanceService(
     return null;
   }
 
-  await setupKnownTicketTypes(
-    context.dbPool,
-    await getEdDSAPublicKey(zupassEddsaKey)
+  await sqlTransaction(context.dbPool, async (client) =>
+    setupKnownTicketTypes(client, await getEdDSAPublicKey(zupassEddsaKey))
   );
 
   const issuanceService = new IssuanceService(
@@ -968,18 +1006,18 @@ export async function startIssuanceService(
  * See also {@link setDevconnectTicketTypes} in the Devconnect sync service.
  */
 async function setupKnownTicketTypes(
-  db: Pool,
+  client: PoolClient,
   eddsaPubKey: EdDSAPublicKey
 ): Promise<void> {
   await setKnownPublicKey(
-    db,
+    client,
     ZUPASS_TICKET_PUBLIC_KEY_NAME,
     KnownPublicKeyType.EdDSA,
     JSON.stringify(eddsaPubKey)
   );
 
   await setKnownTicketType(
-    db,
+    client,
     "ZUZALU23_VISITOR",
     ZUZALU_23_EVENT_ID,
     ZUZALU_23_VISITOR_PRODUCT_ID,
@@ -990,7 +1028,7 @@ async function setupKnownTicketTypes(
   );
 
   await setKnownTicketType(
-    db,
+    client,
     "ZUZALU23_RESIDENT",
     ZUZALU_23_EVENT_ID,
     ZUZALU_23_RESIDENT_PRODUCT_ID,
@@ -1001,7 +1039,7 @@ async function setupKnownTicketTypes(
   );
 
   await setKnownTicketType(
-    db,
+    client,
     "ZUZALU23_ORGANIZER",
     ZUZALU_23_EVENT_ID,
     ZUZALU_23_ORGANIZER_PRODUCT_ID,
@@ -1014,7 +1052,7 @@ async function setupKnownTicketTypes(
   // Store Zuconnect ticket types
   for (const { id, eventId } of Object.values(ZUCONNECT_PRODUCT_ID_MAPPINGS)) {
     setKnownTicketType(
-      db,
+      client,
       `zuconnect-${id}`,
       eventId,
       id,

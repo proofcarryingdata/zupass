@@ -39,3 +39,6 @@ export class EmailPCD implements PCD<EmailPCDClaim, EmailPCDProof> {
     this.proof = proof;
   }
 }
+
+export const isEmailPCD = (pcd: PCD<unknown, unknown>): pcd is EmailPCD =>
+  pcd.type === EmailPCDTypeName;
