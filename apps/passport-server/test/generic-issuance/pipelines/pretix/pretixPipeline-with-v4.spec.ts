@@ -16,6 +16,7 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
+import { Pool, PoolClient } from "postgres-pool";
 import { stopApplication } from "../../../../src/application";
 import { PipelineCheckinDB } from "../../../../src/database/queries/pipelineCheckinDB";
 import { PipelineConsumerDB } from "../../../../src/database/queries/pipelineConsumerDB";
@@ -57,6 +58,9 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
   let giBackend: Zupass;
   let giService: GenericIssuanceService;
 
+  let client: PoolClient;
+  let pool: Pool;
+
   const {
     adminGIUserId,
     adminGIUserEmail,
@@ -95,7 +99,10 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
 
     giBackend = await startTestingApp({});
 
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    pool = giBackend.context.dbPool;
+    client = await pool.connect();
+
+    const userDB = new PipelineUserDB();
 
     const adminUser: PipelineUser = {
       id: adminGIUserId,
@@ -104,7 +111,7 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(adminUser);
+    await userDB.updateUserById(client, adminUser);
     assertUserMatches(
       {
         id: adminGIUserId,
@@ -113,7 +120,7 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(adminUser.id)
+      await userDB.getUserById(client, adminUser.id)
     );
 
     const ethLatAmGIUser: PipelineUser = {
@@ -123,7 +130,7 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(ethLatAmGIUser);
+    await userDB.updateUserById(client, ethLatAmGIUser);
     assertUserMatches(
       {
         id: ethLatAmGIUserID,
@@ -132,7 +139,7 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(ethLatAmGIUser.id)
+      await userDB.getUserById(client, ethLatAmGIUser.id)
     );
 
     // The mock server will intercept any requests for URLs that are registered
@@ -143,11 +150,9 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
     giService = giBackend.services
       .genericIssuanceService as GenericIssuanceService;
     await giService.stop();
-    const pipelineDefinitionDB = new PipelineDefinitionDB(
-      giBackend.context.dbPool
-    );
-    await pipelineDefinitionDB.deleteAllDefinitions();
-    await pipelineDefinitionDB.upsertDefinitions(pipelineDefinitions);
+    const pipelineDefinitionDB = new PipelineDefinitionDB();
+    await pipelineDefinitionDB.deleteAllDefinitions(client);
+    await pipelineDefinitionDB.upsertDefinitions(client, pipelineDefinitions);
     await giService.start(false);
   });
 
@@ -165,7 +170,7 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
   });
 
   step("PipelineUserDB", async function () {
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const userDB = new PipelineUserDB();
 
     const adminUser: PipelineUser = {
       id: adminGIUserId,
@@ -174,7 +179,7 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(adminUser);
+    await userDB.updateUserById(client, adminUser);
     assertUserMatches(
       {
         id: adminGIUserId,
@@ -183,7 +188,7 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(adminUser.id)
+      await userDB.getUserById(client, adminUser.id)
     );
 
     // TODO: comprehensive tests of create update read delete
@@ -450,13 +455,17 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
       } satisfies PodboxTicketActionResponseValue);
 
       // Verify that consumers were saved for each user who requested tickets
-      const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
-      const consumers = await consumerDB.loadByEmails(ethLatAmPipeline.id, [
-        EthLatAmManualAttendeeEmail,
-        EthLatAmManualBouncerEmail,
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
-        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
-      ]);
+      const consumerDB = new PipelineConsumerDB();
+      const consumers = await consumerDB.loadByEmails(
+        client,
+        ethLatAmPipeline.id,
+        [
+          EthLatAmManualAttendeeEmail,
+          EthLatAmManualBouncerEmail,
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+        ]
+      );
       expectLength(consumers, 4);
       expect(consumers).to.deep.include.members([
         {
@@ -565,23 +574,28 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
   step("check-ins for deleted manual tickets are removed", async function () {
     expectToExist(giService);
 
-    const checkinDB = new PipelineCheckinDB(giBackend.context.dbPool);
-    const checkins = await checkinDB.getByPipelineId(ethLatAmPipeline.id);
+    const checkinDB = new PipelineCheckinDB();
+    const checkins = await checkinDB.getByPipelineId(
+      client,
+      ethLatAmPipeline.id
+    );
     // Manual attendee ticket was checked in
     expectLength(checkins, 1);
 
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
-    const adminUser = await userDB.getUserById(adminGIUserId);
+    const userDB = new PipelineUserDB();
+    const adminUser = await userDB.getUserById(client, adminGIUserId);
     expectToExist(adminUser);
 
     // Delete the manual tickets from the definition
     const latestPipeline = (await giService.getPipeline(
+      client,
       ethLatAmPipeline.id
     )) as PretixPipelineDefinition;
     const newPipelineDefinition = structuredClone(latestPipeline);
     newPipelineDefinition.options.manualTickets = [];
     // Update the definition
     const { restartPromise } = await giService.upsertPipelineDefinition(
+      client,
       adminUser,
       newPipelineDefinition
     );
@@ -597,7 +611,10 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
     expect(pipeline.id).to.eq(newPipelineDefinition.id);
     // Verify that there are no checkins in the DB now
     {
-      const checkins = await checkinDB.getByPipelineId(ethLatAmPipeline.id);
+      const checkins = await checkinDB.getByPipelineId(
+        client,
+        ethLatAmPipeline.id
+      );
       // no checkins are found as the tickets have been deleted
       expectLength(checkins, 0);
     }

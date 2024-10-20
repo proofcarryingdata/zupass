@@ -8,7 +8,7 @@ import {
   ZKEdDSAFrogPCDArgs,
   ZKEdDSAFrogPCDPackage
 } from "@pcd/zk-eddsa-frog-pcd";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { insertTelegramVerification } from "../database/queries/telegram/insertTelegramConversation";
 import { loadRSAPrivateKey } from "../services/issuanceService";
 import { traced } from "../services/telemetryService";
@@ -86,7 +86,7 @@ export const generateFrogProofUrl = async (
  * Verify that a PCD relates to a frog. If so, invite the user to the chat.
  */
 export const handleFrogVerification = async (
-  dbPool: Pool,
+  client: PoolClient,
   serializedZKEdDSAFrogPCD: string,
   telegramUserId: number,
   telegramChatId: number,
@@ -162,7 +162,7 @@ export const handleFrogVerification = async (
     // We've verified that the chat exists, now add the user to our list.
     // This will be important later when the user requests to join.
     await insertTelegramVerification(
-      dbPool,
+      client,
       telegramUserId,
       telegramChatId,
       ownerSemaphoreId,

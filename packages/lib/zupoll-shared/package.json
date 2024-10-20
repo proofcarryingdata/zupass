@@ -1,7 +1,7 @@
 {
   "name": "@pcd/zupoll-shared",
   "private": true,
-  "version": "0.0.5",
+  "version": "0.2.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -32,8 +32,8 @@
     "url-join": "^4.0.1"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.4",
-    "@pcd/tsconfig": "0.11.4",
+    "@pcd/eslint-config-custom": "0.13.0",
+    "@pcd/tsconfig": "0.13.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/url-join": "^4.0.3",

@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
 /**
@@ -6,7 +6,7 @@ import { sqlQuery } from "../sqlQuery";
  * if we have sent them a token, null otherwise.
  */
 export async function fetchEmailToken(
-  client: Pool,
+  client: PoolClient,
   email: string
 ): Promise<string | null> {
   const result = await sqlQuery(
@@ -22,7 +22,7 @@ export async function fetchEmailToken(
  * Sets the email auth token for a given user.
  */
 export async function insertEmailToken(
-  client: Pool,
+  client: PoolClient,
   params: {
     email: string;
     token: string;

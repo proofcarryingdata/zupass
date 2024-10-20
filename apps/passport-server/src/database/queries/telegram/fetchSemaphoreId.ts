@@ -1,8 +1,8 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../../sqlQuery";
 
 export async function fetchSemaphoreIdFromTelegramUsername(
-  client: Pool,
+  client: PoolClient,
   telegramUsername: string
 ): Promise<string | null> {
   const result = await sqlQuery(

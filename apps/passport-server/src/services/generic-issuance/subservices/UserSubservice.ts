@@ -1,11 +1,13 @@
 import { GenericIssuanceSendEmailResponseValue } from "@pcd/passport-interface";
 import { normalizeEmail } from "@pcd/util";
 import { Request } from "express";
+import { PoolClient } from "postgres-pool";
 import { Client, Session } from "stytch";
 import {
   IPipelineUserDB,
   PipelineUserDB
 } from "../../../database/queries/pipelineUserDB";
+import { sqlTransaction } from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
@@ -20,6 +22,7 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
  * Encapsulates functionality related to users of Podbox.
  */
 export class UserSubservice {
+  private context: ApplicationContext;
   private pipelineUserDB: IPipelineUserDB;
   private stytchClient: Client | undefined;
   private genericIssuanceClientUrl: string;
@@ -29,7 +32,8 @@ export class UserSubservice {
     stytchClient: Client | undefined,
     genericIssuanceClientUrl: string
   ) {
-    this.pipelineUserDB = new PipelineUserDB(context.dbPool);
+    this.context = context;
+    this.pipelineUserDB = new PipelineUserDB();
     this.stytchClient = stytchClient;
     this.genericIssuanceClientUrl = genericIssuanceClientUrl;
   }
@@ -38,16 +42,21 @@ export class UserSubservice {
    * Should be called immediately after instantiation.
    */
   public async start(): Promise<void> {
-    await this.maybeSetupAdmins();
+    await sqlTransaction(this.context.dbPool, (client) =>
+      this.maybeSetupAdmins(client)
+    );
   }
 
   /**
    * Gets the user identified by the normalized version of the given @param email.
    * If one doesn't exist, creates one.
    */
-  public async getOrCreateUser(email: string): Promise<PipelineUser> {
+  public async getOrCreateUser(
+    client: PoolClient,
+    email: string
+  ): Promise<PipelineUser> {
     return traced(SERVICE_NAME, "getOrCreateUser", async () => {
-      return this.pipelineUserDB.getOrCreateUser(email);
+      return this.pipelineUserDB.getOrCreateUser(client, email);
     });
   }
 
@@ -55,13 +64,14 @@ export class UserSubservice {
    * Gets the user identified by the given @param id.
    */
   public async getUserById(
+    client: PoolClient,
     id: string | undefined
   ): Promise<PipelineUser | undefined> {
     if (id === undefined) {
       return undefined;
     }
 
-    return this.pipelineUserDB.getUserById(id);
+    return this.pipelineUserDB.getUserById(client, id);
   }
 
   /**
@@ -71,7 +81,10 @@ export class UserSubservice {
    *
    * Used to protect sensitive routes in the Podbox API (see `genericIssuanceRoutes.ts`).
    */
-  public async authSession(req: Request): Promise<PipelineUser> {
+  public async authSession(
+    client: PoolClient,
+    req: Request
+  ): Promise<PipelineUser> {
     return traced(SERVICE_NAME, "authSession", async (span) => {
       const reqBody = req?.body;
       const jwt = reqBody?.jwt;
@@ -91,7 +104,7 @@ export class UserSubservice {
             session_jwt: jwt
           });
           const email = this.getEmailFromSession(session);
-          const user = await this.getOrCreateUser(email);
+          const user = await this.getOrCreateUser(client, email);
           traceUser(user);
           return user;
         } else {
@@ -99,7 +112,7 @@ export class UserSubservice {
           //    treats a jwt whose contents is some string with just an email
           //    address in it as a valid JWT authenticate the requester to be
           //    logged in as a new or existing user with the given email address
-          const user = await this.getOrCreateUser(jwt);
+          const user = await this.getOrCreateUser(client, jwt);
           traceUser(user);
           return user;
         }
@@ -179,12 +192,12 @@ export class UserSubservice {
    * Modifies user identified by emails in the environment variable `GENERIC_ISSUANCE_ADMINS`
    * to be Podbox admins. This is an optional environment variable.
    */
-  private async maybeSetupAdmins(): Promise<void> {
+  private async maybeSetupAdmins(client: PoolClient): Promise<void> {
     try {
-      const adminEmailsFromEnv = this.pipelineUserDB.getEnvAdminEmails();
+      const adminEmailsFromEnv = this.pipelineUserDB.getEnvAdminEmails(client);
       logger(LOG_TAG, `setting up generic issuance admins`, adminEmailsFromEnv);
       for (const email of adminEmailsFromEnv) {
-        await this.pipelineUserDB.setUserIsAdmin(email, true);
+        await this.pipelineUserDB.setUserIsAdmin(client, email, true);
       }
     } catch (e) {
       logger(LOG_TAG, `failed to set up generic issuance admins`, e);

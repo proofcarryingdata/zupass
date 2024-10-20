@@ -1,5 +1,5 @@
 import { Card, HiddenText, styled, TextContainer } from "@pcd/passport-ui";
-import { podEntriesToSimplifiedJSON } from "@pcd/pod";
+import { podEntriesToJSON } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 
 const StyledPre = styled.pre`
@@ -20,7 +20,7 @@ export function DefaultPODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
         }}
       >
         <StyledPre>
-          {podEntriesToSimplifiedJSON(pcd.claim.entries, 2)}
+          {JSON.stringify(podEntriesToJSON(pcd.claim.entries), null, 2)}
         </StyledPre>
       </TextContainer>
       <Card title="EdDSA PUBLIC KEY">

@@ -3,7 +3,7 @@ import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import MockDate from "mockdate";
-import { Pool } from "postgres-pool";
+import { Pool, PoolClient } from "postgres-pool";
 import { v4 as uuid } from "uuid";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
@@ -19,14 +19,15 @@ import { resetRateLimitBuckets } from "./util/rateLimit";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("generic rate-limiting features", function () {
-  let db: Pool;
+  let pool: Pool;
+  let client: PoolClient;
   let application: Zupass;
   let rateLimitService: RateLimitService;
 
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
-    db = await getDB();
-
+    pool = await getDB();
+    client = await pool.connect();
     application = await startTestingApp({});
 
     // Prevents the date from advancing except via MockDate.set()
@@ -35,12 +36,13 @@ describe("generic rate-limiting features", function () {
 
   this.afterAll(async () => {
     await stopApplication(application);
-    await db.end();
+    await client.end();
+    await pool.end();
     MockDate.reset();
   });
 
   step("database should initialize", async function () {
-    expect(db).to.not.eq(null);
+    expect(client).to.not.eq(null);
   });
 
   step("rate-limiting service should be running", async function () {
@@ -56,6 +58,7 @@ describe("generic rate-limiting features", function () {
     "password reset should not be rate-limited at first attempt",
     async function () {
       const result = await rateLimitService.requestRateLimitedAction(
+        pool,
         "CHECK_EMAIL_TOKEN",
         "test@example.com"
       );
@@ -67,10 +70,11 @@ describe("generic rate-limiting features", function () {
   step(
     "password reset should be rate-limited after >10 attempts",
     async function () {
-      await resetRateLimitBuckets(db);
+      await resetRateLimitBuckets(pool);
 
       for (let i = 0; i < 10; i++) {
         const result = await rateLimitService.requestRateLimitedAction(
+          pool,
           "CHECK_EMAIL_TOKEN",
           "test@example.com"
         );
@@ -80,6 +84,7 @@ describe("generic rate-limiting features", function () {
 
       const exceededLimitResult =
         await rateLimitService.requestRateLimitedAction(
+          pool,
           "CHECK_EMAIL_TOKEN",
           "test@example.com"
         );
@@ -92,6 +97,7 @@ describe("generic rate-limiting features", function () {
     "password reset should not be rate-limited for a different unique event ID such as e-mail address",
     async function () {
       const result = await rateLimitService.requestRateLimitedAction(
+        pool,
         "CHECK_EMAIL_TOKEN",
         "differentemail@example.com"
       );
@@ -105,6 +111,7 @@ describe("generic rate-limiting features", function () {
     async function () {
       const exceededLimitResult =
         await rateLimitService.requestRateLimitedAction(
+          pool,
           "CHECK_EMAIL_TOKEN",
           "test@example.com"
         );
@@ -116,11 +123,12 @@ describe("generic rate-limiting features", function () {
   step(
     "after time has elapsed, more attempts should be allowed",
     async function () {
-      await resetRateLimitBuckets(db);
+      await resetRateLimitBuckets(pool);
 
       // Exhaust the rate-limit bucket
       for (let i = 0; i < 10; i++) {
         await rateLimitService.requestRateLimitedAction(
+          pool,
           "CHECK_EMAIL_TOKEN",
           "test@example.com"
         );
@@ -133,6 +141,7 @@ describe("generic rate-limiting features", function () {
 
       for (let i = 0; i < 5; i++) {
         const result = await rateLimitService.requestRateLimitedAction(
+          pool,
           "CHECK_EMAIL_TOKEN",
           "test@example.com"
         );
@@ -143,6 +152,7 @@ describe("generic rate-limiting features", function () {
       // But the 6th attempt should fail
       const exceededLimitResult =
         await rateLimitService.requestRateLimitedAction(
+          pool,
           "CHECK_EMAIL_TOKEN",
           "test@example.com"
         );
@@ -155,6 +165,7 @@ describe("generic rate-limiting features", function () {
 
       // One more should succeed
       const result = await rateLimitService.requestRateLimitedAction(
+        pool,
         "CHECK_EMAIL_TOKEN",
         "test@example.com"
       );
@@ -164,6 +175,7 @@ describe("generic rate-limiting features", function () {
       // But only one more; this should fail.
       const finalExceededLimitResult =
         await rateLimitService.requestRateLimitedAction(
+          pool,
           "CHECK_EMAIL_TOKEN",
           "test@example.com"
         );
@@ -173,28 +185,29 @@ describe("generic rate-limiting features", function () {
   );
 
   step("clearing expired rate limits works", async function () {
-    await resetRateLimitBuckets(db);
+    await resetRateLimitBuckets(pool);
 
     // This should give us one bucket
     await rateLimitService.requestRateLimitedAction(
+      pool,
       "CHECK_EMAIL_TOKEN",
       "test@example.com"
     );
 
     // Should not clear anything since the above bucket has not expired
-    await rateLimitService.pruneBuckets();
+    await rateLimitService.pruneBuckets(client);
 
     expect(
-      (await sqlQuery(db, "SELECT * FROM rate_limit_buckets")).rows.length
+      (await sqlQuery(client, "SELECT * FROM rate_limit_buckets")).rows.length
     ).to.eq(1);
 
     // One hour later, the rate limits should have expired
     MockDate.set(Date.now() + 60 * 60 * 1000);
 
-    await rateLimitService.pruneBuckets();
+    await rateLimitService.pruneBuckets(client);
 
     expect(
-      (await sqlQuery(db, "SELECT * FROM rate_limit_buckets")).rows.length
+      (await sqlQuery(client, "SELECT * FROM rate_limit_buckets")).rows.length
     ).to.eq(0);
   });
 
@@ -204,6 +217,7 @@ describe("generic rate-limiting features", function () {
     // Exhaust the available checks
     for (let i = 0; i < 5; i++) {
       const result = await rateLimitService.requestRateLimitedAction(
+        pool,
         "ACCOUNT_RESET",
         dummyUuid
       );
@@ -214,6 +228,7 @@ describe("generic rate-limiting features", function () {
     // Checks now fail
     expect(
       await rateLimitService.requestRateLimitedAction(
+        pool,
         "ACCOUNT_RESET",
         dummyUuid
       )
@@ -227,6 +242,7 @@ describe("generic rate-limiting features", function () {
     MockDate.set(now + (timeToNextCheck - 1) * 1000);
     expect(
       await rateLimitService.requestRateLimitedAction(
+        pool,
         "ACCOUNT_RESET",
         dummyUuid
       )
@@ -236,6 +252,7 @@ describe("generic rate-limiting features", function () {
     MockDate.set(now + timeToNextCheck * 1000);
     expect(
       await rateLimitService.requestRateLimitedAction(
+        pool,
         "ACCOUNT_RESET",
         dummyUuid
       )
@@ -246,13 +263,15 @@ describe("generic rate-limiting features", function () {
     "rate-limiting can be disabled by an environment variable",
     async function () {
       await stopApplication(application);
-      await db.end();
+      await client.end();
       await overrideEnvironment({
         ...testingEnv,
         GENERIC_RATE_LIMIT_DISABLED: "true"
       });
 
-      db = await getDB();
+      pool = await getDB();
+      client = await pool.connect();
+
       application = await startTestingApp({});
       expect(application.services.rateLimitService).to.exist;
       rateLimitService = application.services.rateLimitService;
@@ -261,6 +280,7 @@ describe("generic rate-limiting features", function () {
       // succeed due to the rate limiter being disabled.
       for (let i = 0; i < 20; i++) {
         const result = await rateLimitService.requestRateLimitedAction(
+          pool,
           "CHECK_EMAIL_TOKEN",
           "test@example.com"
         );
@@ -279,7 +299,7 @@ describe("generic rate-limiting features", function () {
     const consumeToken = async () => {
       // We are always going to consume the same token type
       return consumeRateLimitToken(
-        db,
+        client,
         "TEST",
         actionId,
         maxActions,
@@ -399,21 +419,27 @@ describe("generic rate-limiting features", function () {
   step(
     "buckets with unsupported action types can be deleted",
     async function () {
-      await consumeRateLimitToken(db, "UNSUPPORTED", "test", 10, ONE_HOUR_MS);
+      await consumeRateLimitToken(
+        client,
+        "UNSUPPORTED",
+        "test",
+        10,
+        ONE_HOUR_MS
+      );
 
       {
         const result = await sqlQuery(
-          db,
+          client,
           "SELECT * FROM rate_limit_buckets WHERE action_type = 'UNSUPPORTED'"
         );
         expect(result.rowCount).to.eq(1);
       }
 
-      await deleteUnsupportedRateLimitBuckets(db, ["SUPPORTED"]);
+      await deleteUnsupportedRateLimitBuckets(client, ["SUPPORTED"]);
 
       {
         const result = await sqlQuery(
-          db,
+          client,
           "SELECT * FROM rate_limit_buckets WHERE action_type = 'UNSUPPORTED'"
         );
         expect(result.rowCount).to.eq(0);

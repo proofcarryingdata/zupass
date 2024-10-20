@@ -1,5 +1,37 @@
 # @pcd/eddsa-ticket-pcd-ui
 
+## 0.4.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/zk-eddsa-event-ticket-pcd@0.8.0
+  - @pcd/semaphore-identity-pcd@0.13.0
+  - @pcd/passport-interface@0.13.0
+  - @pcd/eddsa-ticket-pcd@0.8.0
+  - @pcd/passport-ui@0.13.0
+  - @pcd/pcd-types@0.13.0
+
+## 0.3.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.12.0
+  - @pcd/passport-ui@0.12.0
+  - @pcd/pcd-types@0.12.0
+  - @pcd/eddsa-ticket-pcd@0.7.0
+  - @pcd/semaphore-identity-pcd@0.12.0
+  - @pcd/zk-eddsa-event-ticket-pcd@0.7.0
+
 ## 0.2.7
 
 ### Patch Changes

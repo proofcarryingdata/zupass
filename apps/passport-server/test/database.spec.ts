@@ -16,7 +16,7 @@ import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
-import { Pool } from "postgres-pool";
+import { Pool, PoolClient } from "postgres-pool";
 import {
   KnownTicketTypeWithKey,
   PoapEvent,
@@ -73,33 +73,36 @@ import { overrideEnvironment, testingEnv } from "./util/env";
 import { expectToExist, randomEmail } from "./util/util";
 
 describe("database reads and writes", function () {
-  let db: Pool;
+  let pool: Pool;
+  let client: PoolClient;
   let testTicket: ZuzaluPretixTicket;
   let otherRole: ZuzaluUserRole;
 
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
-    db = await getDB();
+    pool = await getDB();
+    client = await pool.connect();
   });
 
   this.afterAll(async () => {
-    await db.end();
+    await client.end();
+    await pool.end();
   });
 
   step("database should initialize", async function () {
-    expect(db).to.not.eq(null);
+    expect(client).to.not.eq(null);
   });
 
   step("email tokens should work as expected", async function () {
     const testEmail = randomEmail();
     const testToken = randomEmailToken();
-    await insertEmailToken(db, { email: testEmail, token: testToken });
-    const insertedToken = await fetchEmailToken(db, testEmail);
+    await insertEmailToken(client, { email: testEmail, token: testToken });
+    const insertedToken = await fetchEmailToken(client, testEmail);
     expect(insertedToken).to.eq(testToken);
 
     const newToken = randomEmailToken();
-    await insertEmailToken(db, { email: testEmail, token: newToken });
-    const newInsertedToken = await fetchEmailToken(db, testEmail);
+    await insertEmailToken(client, { email: testEmail, token: newToken });
+    const newInsertedToken = await fetchEmailToken(client, testEmail);
     expect(newToken).to.eq(newInsertedToken);
   });
 
@@ -113,9 +116,9 @@ describe("database reads and writes", function () {
     };
     otherRole = ZuzaluUserRole.Visitor;
 
-    await insertZuzaluPretixTicket(db, testTicket);
+    await insertZuzaluPretixTicket(client, testTicket);
 
-    const allZuzaluUsers = await fetchAllZuzaluPretixTickets(db);
+    const allZuzaluUsers = await fetchAllZuzaluPretixTickets(client);
     const insertedUser = allZuzaluUsers.find(
       (u) => u.email === testTicket.email
     );
@@ -138,7 +141,7 @@ describe("database reads and writes", function () {
     async function () {
       const newIdentity = new Identity();
       const newCommitment = newIdentity.commitment.toString();
-      const newUuid = await upsertUser(db, {
+      const newUuid = await upsertUser(client, {
         uuid: randomUUID(),
         emails: [testTicket.email],
         commitment: newCommitment,
@@ -146,7 +149,7 @@ describe("database reads and writes", function () {
         extra_issuance: false
       });
 
-      let allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(db);
+      let allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(client);
       const loggedinUser = allZuzaluUsers.find((u) => u.uuid === newUuid);
       if (!loggedinUser) {
         throw new Error("user didn't insert properly");
@@ -166,7 +169,7 @@ describe("database reads and writes", function () {
       expect(loggedinUser.uuid).to.eq(newUuid);
       expect(loggedinUser.commitment).to.eq(newCommitment);
 
-      allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(db);
+      allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(client);
       expect(allZuzaluUsers).to.deep.eq([loggedinUser]);
     }
   );
@@ -182,9 +185,9 @@ describe("database reads and writes", function () {
       ]
     };
 
-    await updateZuzaluPretixTicket(db, update);
+    await updateZuzaluPretixTicket(client, update);
 
-    const allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(db);
+    const allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(client);
     const updatedUser = allZuzaluUsers.find((u) =>
       u.emails.includes(update.email)
     );
@@ -203,27 +206,27 @@ describe("database reads and writes", function () {
   });
 
   step("deleting a logged in zuzalu ticket should work", async function () {
-    let allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(db);
+    let allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(client);
     let user = allZuzaluUsers.find((u) => u.emails.includes(testTicket.email));
     if (!user) {
       throw new Error("expected there to be a logged in user");
     }
-    await deleteZuzaluTicket(db, testTicket.email);
+    await deleteZuzaluTicket(client, testTicket.email);
 
-    allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(db);
+    allZuzaluUsers = await fetchAllUsersWithZuzaluTickets(client);
     user = allZuzaluUsers.find((u) => u.emails.includes(testTicket.email));
 
     expect(user).to.eq(undefined);
   });
 
   step("deleting a non logged in user should work", async function () {
-    await insertZuzaluPretixTicket(db, testTicket);
-    let allZuzaluTickets = await fetchAllZuzaluPretixTickets(db);
+    await insertZuzaluPretixTicket(client, testTicket);
+    let allZuzaluTickets = await fetchAllZuzaluPretixTickets(client);
     expect(
       allZuzaluTickets.find((t) => t.email === testTicket.email)
     ).to.not.eq(undefined);
-    await deleteZuzaluTicket(db, testTicket.email);
-    allZuzaluTickets = await fetchAllZuzaluPretixTickets(db);
+    await deleteZuzaluTicket(client, testTicket.email);
+    allZuzaluTickets = await fetchAllZuzaluPretixTickets(client);
     expect(allZuzaluTickets.find((t) => t.email === testTicket.email)).to.eq(
       undefined
     );
@@ -231,12 +234,12 @@ describe("database reads and writes", function () {
 
   step("e2ee should work", async function () {
     const key = "key";
-    const initialStorage = await fetchEncryptedStorage(db, key);
+    const initialStorage = await fetchEncryptedStorage(client, key);
     expect(initialStorage).to.be.undefined;
 
     const value = "value";
-    await setEncryptedStorage(db, key, value);
-    const insertedStorage = await fetchEncryptedStorage(db, key);
+    await setEncryptedStorage(client, key, value);
+    const insertedStorage = await fetchEncryptedStorage(client, key);
     if (!insertedStorage) {
       throw new Error("expected to be able to fetch a e2ee blob");
     }
@@ -246,8 +249,8 @@ describe("database reads and writes", function () {
 
     const updatedValue = "value2";
     expect(value).to.not.eq(updatedValue);
-    await setEncryptedStorage(db, key, updatedValue);
-    const updatedStorage = await fetchEncryptedStorage(db, key);
+    await setEncryptedStorage(client, key, updatedValue);
+    const updatedStorage = await fetchEncryptedStorage(client, key);
     if (!updatedStorage) {
       throw new Error("expected to be able to fetch updated e2ee blog");
     }
@@ -258,8 +261,8 @@ describe("database reads and writes", function () {
     // Storing an empty string is valid, and not treated as deletion.
     const emptyValue = "";
     expect(updatedValue).to.not.eq(emptyValue);
-    await setEncryptedStorage(db, key, emptyValue);
-    const emptyStorage = await fetchEncryptedStorage(db, key);
+    await setEncryptedStorage(client, key, emptyValue);
+    const emptyStorage = await fetchEncryptedStorage(client, key);
     if (!emptyStorage) {
       throw new Error("expected to be able to fetch updated e2ee blog");
     }
@@ -270,19 +273,24 @@ describe("database reads and writes", function () {
 
   step("e2ee update conflict detection should work", async function () {
     const key = "ckey1";
-    const initialStorage = await fetchEncryptedStorage(db, key);
+    const initialStorage = await fetchEncryptedStorage(client, key);
     expect(initialStorage).to.be.undefined;
 
     // Can't use "update" to set initial state.
     const value1 = "value1";
-    const missingResult = await updateEncryptedStorage(db, key, value1, "0");
+    const missingResult = await updateEncryptedStorage(
+      client,
+      key,
+      value1,
+      "0"
+    );
     expect(missingResult.status).to.eq("missing");
     expect(missingResult.revision).to.be.undefined;
 
     // Use "set" to create rev1.
-    const rev1 = await setEncryptedStorage(db, key, value1);
+    const rev1 = await setEncryptedStorage(client, key, value1);
     expect(rev1).to.eq("1");
-    const insertedStorage = await fetchEncryptedStorage(db, key);
+    const insertedStorage = await fetchEncryptedStorage(client, key);
     if (!insertedStorage) {
       throw new Error("expected to be able to fetch a e2ee blob");
     }
@@ -292,10 +300,15 @@ describe("database reads and writes", function () {
 
     // Can update to rev2.
     const value2 = "value2";
-    const updateResult2 = await updateEncryptedStorage(db, key, value2, rev1);
+    const updateResult2 = await updateEncryptedStorage(
+      client,
+      key,
+      value2,
+      rev1
+    );
     expect(updateResult2.status).to.eq("updated");
     expect(updateResult2.revision).to.eq("2");
-    const storage2 = await fetchEncryptedStorage(db, key);
+    const storage2 = await fetchEncryptedStorage(client, key);
     if (!storage2) {
       throw new Error("expected to be able to fetch a e2ee blob");
     }
@@ -306,10 +319,15 @@ describe("database reads and writes", function () {
 
     // Updating based on rev1 is a conflict, leaving storage unchanged.
     const value3 = "value3";
-    const conflictResult = await updateEncryptedStorage(db, key, value3, rev1);
+    const conflictResult = await updateEncryptedStorage(
+      client,
+      key,
+      value3,
+      rev1
+    );
     expect(conflictResult.status).to.eq("conflict");
     expect(conflictResult.revision).to.eq("2");
-    const conflictStorage = await fetchEncryptedStorage(db, key);
+    const conflictStorage = await fetchEncryptedStorage(client, key);
     if (!conflictStorage) {
       throw new Error("expected to be able to fetch a e2ee blob");
     }
@@ -318,10 +336,15 @@ describe("database reads and writes", function () {
     expect(conflictStorage.revision).to.eq("2");
 
     // Updating based on rev2 can succeed regardless of the previous conflict.
-    const updateResult3 = await updateEncryptedStorage(db, key, value2, rev2);
+    const updateResult3 = await updateEncryptedStorage(
+      client,
+      key,
+      value2,
+      rev2
+    );
     expect(updateResult3.status).to.eq("updated");
     expect(updateResult3.revision).to.eq("3");
-    const storage3 = await fetchEncryptedStorage(db, key);
+    const storage3 = await fetchEncryptedStorage(client, key);
     if (!storage3) {
       throw new Error("expected to be able to fetch a e2ee blob");
     }
@@ -337,7 +360,7 @@ describe("database reads and writes", function () {
 
     const email = "e2ee-rekey-user@test.com";
     const commitment = new Identity().commitment.toString();
-    const uuid = await upsertUser(db, {
+    const uuid = await upsertUser(client, {
       uuid: randomUUID(),
       commitment,
       emails: [email],
@@ -349,8 +372,8 @@ describe("database reads and writes", function () {
       throw new Error("expected to be able to insert a commitment");
     }
 
-    await setEncryptedStorage(db, key1, value1);
-    const storage1 = await fetchEncryptedStorage(db, key1);
+    await setEncryptedStorage(client, key1, value1);
+    const storage1 = await fetchEncryptedStorage(client, key1);
     if (!storage1) {
       throw new Error("expected to be able to fetch 1st e2ee blob");
     }
@@ -363,7 +386,7 @@ describe("database reads and writes", function () {
     const salt2 = "5678";
 
     const rekeyResult = await rekeyEncryptedStorage(
-      db,
+      client,
       key1,
       key2,
       uuid,
@@ -372,21 +395,21 @@ describe("database reads and writes", function () {
     );
     expect(rekeyResult.status).to.eq("updated");
     expect(rekeyResult.revision).to.eq("2");
-    const storage2 = await fetchEncryptedStorage(db, key2);
+    const storage2 = await fetchEncryptedStorage(client, key2);
     if (!storage2) {
       throw new Error("expected to be able to fetch 2nd e2ee blob");
     }
     expect(storage2.blob_key).to.eq(key2);
     expect(storage2.encrypted_blob).to.eq(value2);
     expect(storage2.revision).to.eq("2");
-    const storageMissing = await fetchEncryptedStorage(db, key1);
+    const storageMissing = await fetchEncryptedStorage(client, key1);
     if (storageMissing) {
       throw new Error("expected 1st e2ee blob to be gone");
     }
 
     // We can't rekey again because key doesn't match.
     const rekeyResult2 = await rekeyEncryptedStorage(
-      db,
+      client,
       key1,
       key2,
       uuid,
@@ -404,10 +427,10 @@ describe("database reads and writes", function () {
     const salt1 = "1234";
 
     const email = "e2ee-rekey-user@test.com";
-    const existingUser = await fetchUserByEmail(db, email);
+    const existingUser = await fetchUserByEmail(client, email);
     expectToExist(existingUser);
     const commitment = new Identity().commitment.toString();
-    const uuid = await upsertUser(db, {
+    const uuid = await upsertUser(client, {
       commitment,
       uuid: existingUser.uuid,
       emails: existingUser.emails,
@@ -420,9 +443,9 @@ describe("database reads and writes", function () {
     }
 
     // Set storage rev1
-    const rev1 = await setEncryptedStorage(db, key1, value1);
+    const rev1 = await setEncryptedStorage(client, key1, value1);
     expect(rev1).to.eq("1");
-    const storage1 = await fetchEncryptedStorage(db, key1);
+    const storage1 = await fetchEncryptedStorage(client, key1);
     if (!storage1) {
       throw new Error("expected to be able to fetch 1st e2ee blob");
     }
@@ -431,9 +454,9 @@ describe("database reads and writes", function () {
     expect(storage1.revision).to.eq("1");
 
     // Set storage rev2
-    const rev2 = await setEncryptedStorage(db, key1, value2);
+    const rev2 = await setEncryptedStorage(client, key1, value2);
     expect(rev2).to.eq("2");
-    const storage2 = await fetchEncryptedStorage(db, key1);
+    const storage2 = await fetchEncryptedStorage(client, key1);
     if (!storage2) {
       throw new Error("expected to be able to fetch 1st e2ee blob");
     }
@@ -447,7 +470,7 @@ describe("database reads and writes", function () {
 
     // Attempt to rekey based on rev1, causing conflict without changing rev
     const rekeyResult1 = await rekeyEncryptedStorage(
-      db,
+      client,
       key1,
       key2,
       uuid,
@@ -460,7 +483,7 @@ describe("database reads and writes", function () {
 
     // Rekey successfully based on rev2
     const rekeyResult2 = await rekeyEncryptedStorage(
-      db,
+      client,
       key1,
       key2,
       uuid,
@@ -471,21 +494,21 @@ describe("database reads and writes", function () {
     expect(rekeyResult2.status).to.eq("updated");
     expect(rekeyResult2.revision).to.eq("3");
     const rev3 = rekeyResult2.revision;
-    const storageRekeyed = await fetchEncryptedStorage(db, key2);
+    const storageRekeyed = await fetchEncryptedStorage(client, key2);
     if (!storageRekeyed) {
       throw new Error("expected to be able to fetch 2nd e2ee blob");
     }
     expect(storageRekeyed.blob_key).to.eq(key2);
     expect(storageRekeyed.encrypted_blob).to.eq(value3);
     expect(storageRekeyed.revision).to.eq("3");
-    const storageMissing = await fetchEncryptedStorage(db, key1);
+    const storageMissing = await fetchEncryptedStorage(client, key1);
     if (storageMissing) {
       throw new Error("expected 1st e2ee blob to be gone");
     }
 
     // We can't rekey again because key doesn't match.
     const rekeyResult3 = await rekeyEncryptedStorage(
-      db,
+      client,
       key1,
       key2,
       uuid,
@@ -500,7 +523,7 @@ describe("database reads and writes", function () {
   step("zupass user representation should work", async function () {
     const email = "zupassuser@test.com";
     const commitment = new Identity().commitment.toString();
-    const uuid = await upsertUser(db, {
+    const uuid = await upsertUser(client, {
       commitment,
       uuid: randomUUID(),
       emails: [email],
@@ -510,7 +533,7 @@ describe("database reads and writes", function () {
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");
     }
-    const insertedCommitment = await fetchUserByEmail(db, email);
+    const insertedCommitment = await fetchUserByEmail(client, email);
     if (!insertedCommitment) {
       throw new Error("expected to be able to fetch an inserted commitment");
     }
@@ -518,12 +541,12 @@ describe("database reads and writes", function () {
     expect(insertedCommitment.emails).to.deep.eq([email]);
     expect(insertedCommitment.uuid).to.eq(uuid);
 
-    expect(await fetchUserByV3Commitment(db, commitment)).to.deep.eq(
+    expect(await fetchUserByV3Commitment(client, commitment)).to.deep.eq(
       insertedCommitment
     );
 
-    await deleteUserByEmail(db, email);
-    const deletedCommitment = await fetchUserByEmail(db, email);
+    await deleteUserByEmail(client, email);
+    const deletedCommitment = await fetchUserByEmail(client, email);
     expect(deletedCommitment).to.eq(null);
   });
 
@@ -531,10 +554,10 @@ describe("database reads and writes", function () {
     // insert a bunch of old entries
     const oldEntries: CacheEntry[] = [];
     for (let i = 0; i < 20; i++) {
-      oldEntries.push(await setCacheValue(db, "i_" + i, i + ""));
+      oldEntries.push(await setCacheValue(client, "i_" + i, i + ""));
     }
     await sqlQuery(
-      db,
+      client,
       `
     update cache
       set time_created = NOW() - interval '5 days',
@@ -543,42 +566,42 @@ describe("database reads and writes", function () {
     );
 
     // old entries inserted, let's insert some 'new' ones
-    await setCacheValue(db, "key", "value");
-    const firstEntry = await getCacheValue(db, "key");
+    await setCacheValue(client, "key", "value");
+    const firstEntry = await getCacheValue(client, "key");
     expect(firstEntry?.cache_value).to.eq("value");
-    await setCacheValue(db, "key", "value2");
-    const editedFirstEntry = await getCacheValue(db, "key");
+    await setCacheValue(client, "key", "value2");
+    const editedFirstEntry = await getCacheValue(client, "key");
     expect(editedFirstEntry?.cache_value).to.eq("value2");
     expect(editedFirstEntry?.time_created?.getTime()).to.eq(
       firstEntry?.time_created?.getTime()
     );
 
-    await setCacheValue(db, "spongebob", "squarepants");
-    const spongebob = await getCacheValue(db, "spongebob");
+    await setCacheValue(client, "spongebob", "squarepants");
+    const spongebob = await getCacheValue(client, "spongebob");
     expect(spongebob?.cache_value).to.eq("squarepants");
 
     // age nothing out
-    const beforeFirstAgeOut = await getCacheSize(db);
+    const beforeFirstAgeOut = await getCacheSize(client);
     expect(beforeFirstAgeOut).to.eq(22);
-    const firstDeleteCount = await deleteExpiredCacheEntries(db, 10, 22);
+    const firstDeleteCount = await deleteExpiredCacheEntries(client, 10, 22);
     expect(firstDeleteCount).to.eq(0);
-    const afterFirstAgeOut = await getCacheSize(db);
+    const afterFirstAgeOut = await getCacheSize(client);
     expect(afterFirstAgeOut).to.eq(beforeFirstAgeOut);
 
     // age entries older than 10 days or entries that are not one of the 20
     // most recently added entries
-    const beforeSecondAgeOut = await getCacheSize(db);
-    const secondDeleteCount = await deleteExpiredCacheEntries(db, 10, 20);
+    const beforeSecondAgeOut = await getCacheSize(client);
+    const secondDeleteCount = await deleteExpiredCacheEntries(client, 10, 20);
     expect(secondDeleteCount).to.eq(2);
-    const afterSecondAgeOut = await getCacheSize(db);
+    const afterSecondAgeOut = await getCacheSize(client);
     expect(afterSecondAgeOut).to.eq(beforeSecondAgeOut - 2);
 
     // age entries older than 3 days or entries that are not one of the 20
     // most recently added entries
-    const beforeThirdAgeOut = await getCacheSize(db);
-    const thirdDeleteCount = await deleteExpiredCacheEntries(db, 3, 20);
+    const beforeThirdAgeOut = await getCacheSize(client);
+    const thirdDeleteCount = await deleteExpiredCacheEntries(client, 3, 20);
     expect(thirdDeleteCount).to.eq(18);
-    const afterThirdAgeOut = await getCacheSize(db);
+    const afterThirdAgeOut = await getCacheSize(client);
     expect(afterThirdAgeOut).to.eq(beforeThirdAgeOut - 18);
   });
 
@@ -591,7 +614,7 @@ describe("database reads and writes", function () {
     const eddsaPubKey = await eddsaPubKeyPromise;
 
     await setKnownPublicKey(
-      db,
+      client,
       testPublicKeyName,
       KnownPublicKeyType.EdDSA,
       JSON.stringify(eddsaPubKey)
@@ -599,7 +622,7 @@ describe("database reads and writes", function () {
 
     const inserted = (
       await sqlQuery(
-        db,
+        client,
         `select * from known_public_keys where public_key_name = $1`,
         [testPublicKeyName]
       )
@@ -618,14 +641,14 @@ describe("database reads and writes", function () {
     // Replace the public key with a different one, but use the same name
     // and type
     await setKnownPublicKey(
-      db,
+      client,
       testPublicKeyName,
       KnownPublicKeyType.EdDSA,
       JSON.stringify(dummyEddsaPubKey)
     );
 
     let result = await sqlQuery(
-      db,
+      client,
       `select * from known_public_keys where public_key_name = $1`,
       [testPublicKeyName]
     );
@@ -645,14 +668,14 @@ describe("database reads and writes", function () {
 
     // Restore the original public key
     await setKnownPublicKey(
-      db,
+      client,
       testPublicKeyName,
       KnownPublicKeyType.EdDSA,
       JSON.stringify(eddsaPubKey)
     );
 
     result = await sqlQuery(
-      db,
+      client,
       `select * from known_public_keys where public_key_name = $1`,
       [testPublicKeyName]
     );
@@ -676,7 +699,7 @@ describe("database reads and writes", function () {
     const eddsaPubKey = await eddsaPubKeyPromise;
 
     await setKnownTicketType(
-      db,
+      client,
       ticketTypeIdentifier,
       knownEventId,
       knownProductId,
@@ -687,7 +710,7 @@ describe("database reads and writes", function () {
     );
 
     const knownTicketType = (await fetchKnownTicketByEventAndProductId(
-      db,
+      client,
       knownEventId,
       knownProductId
     )) as KnownTicketTypeWithKey;
@@ -714,7 +737,7 @@ describe("database reads and writes", function () {
 
     // Change the ticket type created in the previous test
     await setKnownTicketType(
-      db,
+      client,
       ticketTypeIdentifier,
       newEventId,
       newProductId,
@@ -725,7 +748,7 @@ describe("database reads and writes", function () {
     );
 
     let knownTicketType = await fetchKnownTicketByEventAndProductId(
-      db,
+      client,
       knownEventId,
       knownProductId
     );
@@ -733,7 +756,7 @@ describe("database reads and writes", function () {
     expect(knownTicketType).to.be.null;
 
     const changedTicketType = (await fetchKnownTicketByEventAndProductId(
-      db,
+      client,
       newEventId,
       newProductId
     )) as KnownTicketTypeWithKey;
@@ -754,7 +777,7 @@ describe("database reads and writes", function () {
 
     // Restore the ticket type to the original value
     await setKnownTicketType(
-      db,
+      client,
       ticketTypeIdentifier,
       knownEventId,
       knownProductId,
@@ -765,7 +788,7 @@ describe("database reads and writes", function () {
     );
 
     knownTicketType = (await fetchKnownTicketByEventAndProductId(
-      db,
+      client,
       knownEventId,
       knownProductId
     )) as KnownTicketTypeWithKey;
@@ -787,7 +810,7 @@ describe("database reads and writes", function () {
 
   step("should be able to fetch known ticket type by group", async function () {
     const ticketTypes = await fetchKnownTicketTypesByGroup(
-      db,
+      client,
       KnownTicketGroup.Zuconnect23
     );
 
@@ -796,10 +819,10 @@ describe("database reads and writes", function () {
   });
 
   step("should be able to delete known ticket types", async function () {
-    await deleteKnownTicketType(db, ticketTypeIdentifier);
+    await deleteKnownTicketType(client, ticketTypeIdentifier);
 
     const ticketTypes = await fetchKnownTicketTypesByGroup(
-      db,
+      client,
       KnownTicketGroup.Zuconnect23
     );
 
@@ -812,36 +835,48 @@ describe("database reads and writes", function () {
     const TEST_POAP_B1 = "https://poap.xyz/mint/asdfgh";
 
     // Before urls are claimed, getExistingClaimUrlByTicketId returns null
-    expect(await getExistingClaimUrlByTicketId(db, "hash-1")).to.be.null;
-    expect(await getExistingClaimUrlByTicketId(db, "hash-2")).to.be.null;
-    expect(await getExistingClaimUrlByTicketId(db, "hash-3")).to.be.null;
+    expect(await getExistingClaimUrlByTicketId(client, "hash-1")).to.be.null;
+    expect(await getExistingClaimUrlByTicketId(client, "hash-2")).to.be.null;
+    expect(await getExistingClaimUrlByTicketId(client, "hash-3")).to.be.null;
 
     // Setup
-    await insertNewPoapUrl(db, TEST_POAP_A1, "event-a" as PoapEvent);
-    await insertNewPoapUrl(db, TEST_POAP_A2, "event-a" as PoapEvent);
-    await insertNewPoapUrl(db, TEST_POAP_B1, "event-b" as PoapEvent);
+    await insertNewPoapUrl(client, TEST_POAP_A1, "event-a" as PoapEvent);
+    await insertNewPoapUrl(client, TEST_POAP_A2, "event-a" as PoapEvent);
+    await insertNewPoapUrl(client, TEST_POAP_B1, "event-b" as PoapEvent);
 
     // Check event-a
-    const url1 = await claimNewPoapUrl(db, "event-a" as PoapEvent, "hash-1");
-    const url2 = await claimNewPoapUrl(db, "event-a" as PoapEvent, "hash-2");
+    const url1 = await claimNewPoapUrl(
+      client,
+      "event-a" as PoapEvent,
+      "hash-1"
+    );
+    const url2 = await claimNewPoapUrl(
+      client,
+      "event-a" as PoapEvent,
+      "hash-2"
+    );
     // Ignore order of claiming so long as both are claimed
     expect(
       (url1 === TEST_POAP_A1 && url2 === TEST_POAP_A2) ||
         (url1 === TEST_POAP_A2 && url2 === TEST_POAP_A1)
     ).to.be.true;
-    expect(await claimNewPoapUrl(db, "event-a" as PoapEvent, "hash-9")).to.be
-      .null;
+    expect(await claimNewPoapUrl(client, "event-a" as PoapEvent, "hash-9")).to
+      .be.null;
 
     // Check event-b
-    const url3 = await claimNewPoapUrl(db, "event-b" as PoapEvent, "hash-3");
+    const url3 = await claimNewPoapUrl(
+      client,
+      "event-b" as PoapEvent,
+      "hash-3"
+    );
     expect(url3).to.eq(TEST_POAP_B1);
-    expect(await claimNewPoapUrl(db, "event-a" as PoapEvent, "hash-8")).to.be
-      .null;
+    expect(await claimNewPoapUrl(client, "event-a" as PoapEvent, "hash-8")).to
+      .be.null;
 
     // After urls are claimed, getExistingClaimUrlByTicketId returns correct url
-    expect(await getExistingClaimUrlByTicketId(db, "hash-1")).to.eq(url1);
-    expect(await getExistingClaimUrlByTicketId(db, "hash-2")).to.eq(url2);
-    expect(await getExistingClaimUrlByTicketId(db, "hash-3")).to.eq(url3);
+    expect(await getExistingClaimUrlByTicketId(client, "hash-1")).to.eq(url1);
+    expect(await getExistingClaimUrlByTicketId(client, "hash-2")).to.eq(url2);
+    expect(await getExistingClaimUrlByTicketId(client, "hash-3")).to.eq(url3);
   });
 
   step(
@@ -860,8 +895,8 @@ describe("database reads and writes", function () {
         extra_issuance: false
       };
 
-      const uuid = await upsertUser(db, newUserParams);
-      const createdUser = await fetchUserByUUID(db, uuid);
+      const uuid = await upsertUser(client, newUserParams);
+      const createdUser = await fetchUserByUUID(client, uuid);
 
       expectToExist(createdUser);
       expect(createdUser.uuid).to.eq(newUserParams.uuid);
@@ -877,15 +912,15 @@ describe("database reads and writes", function () {
       createdUser.semaphore_v4_commitment = v4Commitment;
       createdUser.semaphore_v4_pubkey = v4Pubkey;
 
-      await upsertUser(db, createdUser);
+      await upsertUser(client, createdUser);
 
-      const userByUUID = await fetchUserByUUID(db, uuid);
+      const userByUUID = await fetchUserByUUID(client, uuid);
       const userByV3Commitment = await fetchUserByV3Commitment(
-        db,
+        client,
         newUserParams.commitment
       );
       const userByV4Commitment = await fetchUserByV4Commitment(
-        db,
+        client,
         identity.claim.identityV4.commitment.toString()
       );
 

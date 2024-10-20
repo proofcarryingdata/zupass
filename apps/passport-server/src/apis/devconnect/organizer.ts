@@ -1,14 +1,14 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { PretixOrganizersConfig } from "../../database/models";
 import { fetchPretixConfiguration } from "../../database/queries/pretix_config/fetchPretixConfiguration";
 import { logger } from "../../util/logger";
 
 export async function getDevconnectPretixConfig(
-  dbClient: Pool
+  client: PoolClient
 ): Promise<DevconnectPretixConfig | null> {
   try {
     const pretixConfig = pretixConfigDBToDevconnectPretixConfig(
-      await fetchPretixConfiguration(dbClient)
+      await fetchPretixConfiguration(client)
     );
     logger(
       "[DEVCONNECT PRETIX] read config: " +
