@@ -193,12 +193,12 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
 };
 
 const ListContainer = styled.div`
+  position: relative; // important for scrolling to the right position of the folder
   overflow-y: auto;
   max-height: calc(100vh - 260px);
 `;
 
 const Container = styled.div`
-  position: relative; // important for scrolling to the right position of the folder
   display: flex;
   flex-direction: column;
   height: fit-content;
