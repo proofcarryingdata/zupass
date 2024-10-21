@@ -27,7 +27,6 @@ const ListGroup = ({
   id
 }: GroupType): ReactElement => {
   const len = children.length;
-  console.log(id);
   return (
     <GroupContainer key={id} id={id}>
       <Typography color="var(--text-tertiary)" family="Rubik">
@@ -62,7 +61,6 @@ export const List = ({ list, style }: ListProps): ReactElement => {
   return (
     <ListContainer style={style}>
       {list.map((child) => {
-        console.log(child);
         return isListGroup(child) ? (
           <ListGroup {...child} />
         ) : (

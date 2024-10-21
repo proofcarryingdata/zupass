@@ -127,7 +127,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
 
   useLayoutEffect(() => {
     // Restore scroll position when list is shown again
-    if (listContainerRef.current) {
+    if (isPodsCollectionModalOpen && listContainerRef.current) {
       if (!activePod) {
         let pos = scrollPosition;
         const folder = params.get("folder");
@@ -146,7 +146,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         setParams("");
       }
     }
-  }, [activePod, scrollPosition, params, setParams]);
+  }, [activePod, scrollPosition, params, setParams, isPodsCollectionModalOpen]);
 
   return (
     <BottomModal
