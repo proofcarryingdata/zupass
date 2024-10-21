@@ -128,7 +128,7 @@ describe("Entry bounds check config check should work", () => {
     ] satisfies [GPCProofEntryBoundsCheckConfig, number][]) {
       const entryName = "somePOD.someEntry";
       expect(
-        checkProofEntryBoundsCheckConfig(entryName, boundsCheckConfig)
+        checkProofEntryBoundsCheckConfig(entryName, boundsCheckConfig, false)
       ).to.equal(nBoundsChecks);
     }
   });
@@ -150,7 +150,7 @@ describe("Entry bounds check config check should work", () => {
     ]) {
       const entryName = "somePOD.someEntry";
       expect(() =>
-        checkProofEntryBoundsCheckConfig(entryName, boundsCheckConfig)
+        checkProofEntryBoundsCheckConfig(entryName, boundsCheckConfig, false)
       ).to.throw(RangeError);
     }
   });
@@ -169,7 +169,7 @@ describe("Entry bounds check config check should work", () => {
     ]) {
       const entryName = "somePOD.someEntry";
       expect(() =>
-        checkProofEntryBoundsCheckConfig(entryName, boundsCheckConfig)
+        checkProofEntryBoundsCheckConfig(entryName, boundsCheckConfig, false)
       ).to.throw(Error);
     }
   });

@@ -2,6 +2,7 @@ import {
   PCDAddRequest,
   ProtocolWorldsFolderName
 } from "@pcd/passport-interface";
+import { ErrorContainer } from "@pcd/passport-ui";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
@@ -41,8 +42,7 @@ export function JustAddScreen({
 }): JSX.Element {
   const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
-  const { error, pcd } = useDeserialized(request.pcd);
-  console.log("Error: ", error);
+  const { error: deserializeError, pcd } = useDeserialized(request.pcd);
   const syncSettled = useIsSyncSettled();
   const self = useSelf();
   const isMintable =
@@ -115,17 +115,23 @@ export function JustAddScreen({
             hideRemoveButton={true}
           />
         )}
-        {!isProtocolWorlds && request.folder && (
+        {pcd && !isProtocolWorlds && request.folder && (
           <div>
             This item will be added to folder:
             <br /> <strong>{request.folder}</strong>
           </div>
         )}
-        {error && JSON.stringify(error)}
+        {deserializeError && (
+          <ErrorContainer>
+            Deserialization error: {getErrorMessage(deserializeError)}
+          </ErrorContainer>
+        )}
         <Spacer h={16} />
-        <Button onClick={onAddClick}>
-          {isProtocolWorlds ? "Collect" : isMintable ? "Mint" : "Add"}
-        </Button>
+        {pcd && (
+          <Button onClick={onAddClick}>
+            {isProtocolWorlds ? "Collect" : isMintable ? "Mint" : "Add"}
+          </Button>
+        )}
       </>
     );
   } else if (isProtocolWorlds) {
