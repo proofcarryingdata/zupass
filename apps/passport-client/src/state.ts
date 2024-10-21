@@ -34,6 +34,7 @@ export interface AppState {
         modalType: "pods-collection";
         activePod?: PCD<unknown, unknown>;
         idType?: "ticketId" | "id";
+        modalGoBackBehavior?: "close" | "back";
       }
     | { modalType: "settings" }
     | { modalType: "change-password" }
