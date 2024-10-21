@@ -16,7 +16,7 @@ import {
   useRef,
   useState
 } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
@@ -24,6 +24,7 @@ import { CardBody } from "../../../components/shared/PCDCard";
 import {
   useDispatch,
   useLoadedIssuedPCDs,
+  usePCDCollection,
   usePCDs,
   useScrollTo,
   useSelf,
@@ -250,6 +251,7 @@ const EmptyCard = (): ReactElement => {
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
+  const collection = usePCDCollection();
   const [currentPos, setCurrentPos] = useState(0);
   const dispatch = useDispatch();
   const ticketsRef = useRef<Map<string, HTMLDivElement[]>>(new Map());
@@ -267,14 +269,19 @@ export const NewHomeScreen = (): ReactElement => {
   });
 
   useLayoutEffect(() => {
-    if (params.has("folder")) {
-      // const folderToScrollTo = fold
+    const maybeExistingFolder = params.get("folder");
+    if (
+      maybeExistingFolder &&
+      collection.getFoldersInFolder("").includes(decodeURI(maybeExistingFolder))
+    ) {
       dispatch({
         type: "set-bottom-modal",
         modal: { modalType: "pods-collection" }
       });
+    } else {
+      setParams("");
     }
-  }, [params, dispatch]);
+  }, [params, dispatch, collection, setParams]);
 
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {
