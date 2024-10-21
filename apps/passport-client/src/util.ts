@@ -137,3 +137,5 @@ export function uint8arrayToBigint(uint8Array: Uint8Array): bigint {
 export function isInIframe(): boolean {
   return window !== window.parent;
 }
+
+export const ADD_PCD_SIZE_LIMIT_BYTES = 50000;
