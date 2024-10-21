@@ -10,7 +10,6 @@ import { validate } from "email-validator";
 import {
   ChangeEventHandler,
   ReactNode,
-  forwardRef,
   useCallback,
   useRef,
   useState,
@@ -386,7 +385,6 @@ export const ManageEmailModal = (): JSX.Element => {
       </BottomModalHeader>
       <EmailInput
         autoFocus={emailManagerState === EmailManagerState.changeEmail}
-        ref={inputRef}
         email={newEmail}
         onChange={(e) => {
           setNewEmail(e.target.value);
@@ -582,61 +580,54 @@ type EmailInputProps = {
   canDelete?: boolean;
   autoFocus?: boolean;
 };
-const EmailInput = forwardRef<HTMLInputElement, EmailInputProps>(
-  (
-    {
-      email,
-      onChange,
-      disabled,
-      error,
-      onEdit,
-      canEdit,
-      onDelete,
-      canDelete,
-      autoFocus
-    },
-    ref
-  ): JSX.Element => {
-    const iconSize = 20;
-    return (
-      <EmailInputContainer>
-        <Input2
-          autoFocus={autoFocus}
-          ref={ref}
-          error={error}
-          disabled={disabled}
-          placeholder="Email"
-          variant="secondary"
-          value={email}
-          onChange={onChange}
-          rightIconSize={iconSize}
-        />
-        {disabled && (
-          <IconsContainer>
-            {canEdit && (
-              <PencilIcon
-                style={{ cursor: "pointer" }}
-                color="var(--core-accent)"
-                width={iconSize}
-                height={iconSize}
-                onClick={onEdit}
-              />
-            )}
-            {canDelete && (
-              <TrashIcon
-                style={{ cursor: "pointer" }}
-                color="var(--core-accent)"
-                width={iconSize}
-                height={iconSize}
-                onClick={onDelete}
-              />
-            )}
-          </IconsContainer>
-        )}
-      </EmailInputContainer>
-    );
-  }
-);
+
+const EmailInput = ({
+  email,
+  onChange,
+  disabled,
+  error,
+  onEdit,
+  canEdit,
+  onDelete,
+  canDelete
+}: EmailInputProps): JSX.Element => {
+  const iconSize = 20;
+  return (
+    <EmailInputContainer>
+      <Input2
+        error={error}
+        disabled={disabled}
+        placeholder="Email"
+        variant="secondary"
+        value={email}
+        onChange={onChange}
+        rightIconSize={iconSize}
+      />
+      {disabled && (
+        <IconsContainer>
+          {canEdit && (
+            <PencilIcon
+              style={{ cursor: "pointer" }}
+              color="var(--core-accent)"
+              width={iconSize}
+              height={iconSize}
+              onClick={onEdit}
+            />
+          )}
+          {canDelete && (
+            <TrashIcon
+              style={{ cursor: "pointer" }}
+              color="var(--core-accent)"
+              width={iconSize}
+              height={iconSize}
+              onClick={onDelete}
+            />
+          )}
+        </IconsContainer>
+      )}
+    </EmailInputContainer>
+  );
+};
 const EmailsContainer = styled.div`
   display: flex;
   flex-direction: column;
