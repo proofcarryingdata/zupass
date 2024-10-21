@@ -4,6 +4,7 @@ import {
   ITicketData,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
+import { PCDGetRequest } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
@@ -16,14 +17,14 @@ import {
   useRef,
   useState
 } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
   useDispatch,
-  useLoadedIssuedPCDs,
+  useIsSyncSettled,
   usePCDCollection,
   usePCDs,
   useScrollTo,
@@ -56,7 +57,6 @@ const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
     !!pcd.claim.ticket.eventStartDate
   );
 };
-
 const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
   const tickets = allPCDs.filter(isEventTicketPCD).reverse();
@@ -115,7 +115,6 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
       const pack = ticketPacks.find(
         (pack) => pack.attendeeEmail === ticket.claim.ticket.attendeeEmail
       );
-
       if (!pack) continue;
       pack.addOns.push(ticket);
     }
@@ -303,10 +302,12 @@ export const NewHomeScreen = (): ReactElement => {
   const windowWidth = useWindowWidth();
   const self = useSelf();
   const navigate = useNavigate();
-  const isLoadedPCDs = useLoadedIssuedPCDs();
+  const isLoadedPCDs = useIsSyncSettled();
   const [params, setParams] = useSearchParams();
   const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
+  const location = useLocation();
+
   useEffect(() => {
     if (!self) {
       navigate("/login", { replace: true });
@@ -314,6 +315,9 @@ export const NewHomeScreen = (): ReactElement => {
   });
 
   useLayoutEffect(() => {
+    // if we haven't loaded all pcds yet, dont process the prove request
+    if (!isLoadedPCDs) return;
+
     const maybeExistingFolder = params.get("folder");
     if (
       maybeExistingFolder &&
@@ -323,10 +327,22 @@ export const NewHomeScreen = (): ReactElement => {
         type: "set-bottom-modal",
         modal: { modalType: "pods-collection" }
       });
-    } else {
-      setParams("");
+      return;
     }
-  }, [params, dispatch, collection, setParams]);
+    if (location.pathname.includes("prove")) {
+      const params = new URLSearchParams(location.search);
+      const request = JSON.parse(
+        params.get("request") ?? "{}"
+      ) as PCDGetRequest;
+      dispatch({
+        type: "set-bottom-modal",
+        modal: { request, modalType: "prove" }
+      });
+      console.log(request);
+      return;
+    }
+    if (params.size > 0) setParams("");
+  }, [params, collection, setParams, isLoadedPCDs, location, dispatch]);
 
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {

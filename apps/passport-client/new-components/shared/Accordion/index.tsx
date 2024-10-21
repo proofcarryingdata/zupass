@@ -12,6 +12,7 @@ import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 export type AccrodionChild = {
   title: string;
   key?: string;
+  icon?: ReactNode;
   onClick?: () => void;
 };
 
@@ -71,10 +72,20 @@ const ToggleContainer = styled.div`
 const AccordionItem = styled.div<{ lastItem: boolean; clickable: boolean }>`
   padding: 12px 16px;
   color: var(--text-primary);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   cursor: ${({ clickable }): string => (clickable ? "pointer" : "unset")};
   ${({ lastItem }): string | undefined =>
     !lastItem ? "border-bottom: 1.15px solid #eceaf4;" : undefined}
 `;
+
+const ItemContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
 export const Accordion = forwardRef<AccordionRef, AccordionProps>(
   ({ title, children, displayOnly, link }, ref) => {
     const [open, setOpen] = useState(displayOnly || false);
@@ -98,21 +109,26 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
 
     const renderedChildren = useMemo(() => {
       const len = children.length;
-      return children.map((child, i) => {
-        const isLast = len - 1 === i;
-        return (
-          <AccordionItem
-            clickable={!!child.onClick}
-            key={child.key}
-            onClick={child.onClick}
-            lastItem={isLast}
-          >
-            <Typography fontSize={14} fontWeight={500} family="Rubik">
-              {child.title}
-            </Typography>
-          </AccordionItem>
-        );
-      });
+      return (
+        <ItemContainer>
+          {children.map((child, i) => {
+            const isLast = len - 1 === i;
+            return (
+              <AccordionItem
+                clickable={!!child.onClick}
+                key={child.key}
+                onClick={child.onClick}
+                lastItem={isLast}
+              >
+                <Typography fontSize={14} fontWeight={500} family="Rubik">
+                  {child.title}
+                </Typography>
+                {child.icon}
+              </AccordionItem>
+            );
+          })}
+        </ItemContainer>
+      );
     }, [children]);
     const getTitleRight = (): ReactNode[] => {
       const comp: ReactNode[] = [];
@@ -127,7 +143,7 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
             {link.title}
           </Typography>
         );
-      } else if (!open) {
+      } else if (!open && children.length > 1) {
         comp.push(
           <Typography
             fontWeight={700}
