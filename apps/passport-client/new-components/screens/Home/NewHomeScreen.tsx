@@ -16,7 +16,7 @@ import {
   useRef,
   useState
 } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
@@ -24,6 +24,7 @@ import { CardBody } from "../../../components/shared/PCDCard";
 import {
   useDispatch,
   useIsSyncSettled,
+  usePCDCollection,
   usePCDs,
   useScrollTo,
   useSelf,
@@ -189,7 +190,7 @@ const getEventDetails = (tickets: TicketPack): ITicketData => {
 
 const EmptyCardContainer = styled.div`
   display: flex;
-  height: 302px;
+  height: min(80vh, 549px);
   justify-content: center;
   align-items: center;
   border-radius: 16px;
@@ -204,6 +205,7 @@ const InnerContainer = styled.div`
   flex-direction: column;
   align-items: center;
   text-align: center;
+  gap: 10px;
 `;
 
 const useWindowWidth = (): number => {
@@ -230,17 +232,60 @@ const LoadingScreenContainer = styled.div`
   gap: 12px;
   margin: auto 0;
 `;
+const Bar = styled.div`
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
+  width: 180px;
+`;
+
+const BarsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 10px 48px 10px 48px;
+  width: 100%;
+  gap: 5px;
+  margin-bottom: 20px;
+`;
 
 const EmptyCard = (): ReactElement => {
+  const dispatch = useDispatch();
   return (
     <EmptyCardContainer>
       <InnerContainer>
-        <Typography fontWeight={800} color="var(--text-tertiary)">
-          YOU HAVE NO EVENT PASSES
-        </Typography>
-        <Typography color="var(--text-tertiary)">
-          Make sure you are logged in with the correct email address.
-        </Typography>
+        <BarsContainer>
+          <Bar />
+          <Bar />
+          <Bar />
+          <Bar />
+          <Bar />
+        </BarsContainer>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <Typography
+            fontSize={20}
+            color="var(--text-primary)"
+            fontWeight={800}
+          >
+            NO UPCOMING EVENTS
+          </Typography>
+          <Typography>
+            Don't see your ticket?{" "}
+            <a
+              style={{ fontWeight: 500 }}
+              onClick={() => {
+                dispatch({
+                  type: "set-bottom-modal",
+                  modal: {
+                    modalType: "help-modal"
+                  }
+                });
+              }}
+            >
+              Learn more
+            </a>
+          </Typography>
+        </div>
       </InnerContainer>
     </EmptyCardContainer>
   );
@@ -249,6 +294,7 @@ const EmptyCard = (): ReactElement => {
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
+  const collection = usePCDCollection();
   const [currentPos, setCurrentPos] = useState(0);
   const dispatch = useDispatch();
   const ticketsRef = useRef<Map<string, HTMLDivElement[]>>(new Map());
@@ -257,6 +303,8 @@ export const NewHomeScreen = (): ReactElement => {
   const self = useSelf();
   const navigate = useNavigate();
   const isLoadedPCDs = useIsSyncSettled();
+  const [params, setParams] = useSearchParams();
+  const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
 
@@ -267,6 +315,18 @@ export const NewHomeScreen = (): ReactElement => {
   });
 
   useLayoutEffect(() => {
+    const maybeExistingFolder = params.get("folder");
+    if (
+      maybeExistingFolder &&
+      collection.getFoldersInFolder("").includes(decodeURI(maybeExistingFolder))
+    ) {
+      dispatch({
+        type: "set-bottom-modal",
+        modal: { modalType: "pods-collection" }
+      });
+    } else {
+      setParams("");
+    }
     // if we haven't loaded all pcds yet, dont process the prove request
     if (!isLoadedPCDs) return;
 
@@ -281,7 +341,8 @@ export const NewHomeScreen = (): ReactElement => {
       });
       console.log(request);
     }
-  }, [isLoadedPCDs, location, dispatch]);
+  }, [params, collection, setParams, isLoadedPCDs, location, dispatch]);
+
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {
       // getting the pos of the event card
@@ -341,7 +402,20 @@ export const NewHomeScreen = (): ReactElement => {
       {(!tickets.length || isInvalidUser) && <EmptyCard />}
       {tickets.length > 0 && (
         <>
-          <SwipeViewContainer>
+          <SwipeViewContainer
+            onMouseDown={() => {
+              setHolding(true);
+            }}
+            onMouseUp={() => {
+              setHolding(false);
+            }}
+            onMouseLeave={() => {
+              setHolding(false);
+            }}
+            style={{
+              cursor: holding ? "grabbing" : "grab"
+            }}
+          >
             <_SwipableViews
               style={{
                 padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
@@ -380,6 +454,7 @@ export const NewHomeScreen = (): ReactElement => {
                       {packs.map((pack) => {
                         return (
                           <CardBody
+                            showDownloadButton={true}
                             key={pack.eventName}
                             addOns={
                               pack.addOns.length > 0

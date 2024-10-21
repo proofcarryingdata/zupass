@@ -1,12 +1,13 @@
-import { ReactElement, useCallback } from "react";
+import { useCallback, useState } from "react";
 import SwipeableViews from "react-swipeable-views";
-import styled from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { TicketQRWrapper } from "../../../components/shared/PCDCard";
 import { useBottomModal, useDispatch } from "../../../src/appHooks";
 import { BottomModal } from "../../shared/BottomModal";
 import { Button2 } from "../../shared/Button";
 import { Typography } from "../../shared/Typography";
 import { useTrackpadSwipe } from "./hooks/useTrackpadSwipe";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipeableViews.default;
@@ -21,58 +22,49 @@ const QRContainer = styled.div`
   border-radius: 8px;
 `;
 
-type DotsProp = {
-  amount: number;
-  activeIdx: number;
-  onDotClick: (index: number) => void;
-};
-const Dot = styled.div<{ active: boolean }>`
-  width: 8px;
-  height: 8px;
-  border-radius: 8px;
-  background: var(--core-accent);
-  opacity: ${({ active }): number => (active ? 1 : 0.2)};
+const disabledCSS = css`
+  cursor: not-allowed;
+  opacity: 0.2;
+  pointer-events: none;
 `;
 
-const DotContainer = styled.div`
+const AddonCircleButton = styled.button<{
+  disabled: boolean;
+}>`
   display: flex;
-  flex-direction: row;
+  width: 40px;
+  height: 32px;
   justify-content: center;
-  gap: 8px;
-`;
-const ContentContainer = styled.div`
-  display: flex;
   align-items: center;
-  margin-bottom: 32px;
-  flex-direction: column;
-  gap: 12px;
-`;
-const Dots = ({ amount, activeIdx, onDotClick }: DotsProp): ReactElement => {
-  return (
-    <DotContainer>
-      {[...new Array(amount)].map((_, i) => {
-        return (
-          <Dot key={i} active={i === activeIdx} onClick={() => onDotClick(i)} />
-        );
-      })}
-    </DotContainer>
-  );
-};
+  border-radius: 200px;
+  border: 2px solid #fff;
+  background: rgba(255, 255, 255, 0.8);
 
+  /* shadow */
+  box-shadow:
+    0px 1px 3px 0px rgba(0, 0, 0, 0.1),
+    0px 1px 2px 0px rgba(0, 0, 0, 0.06);
+  ${({ disabled }): FlattenSimpleInterpolation | undefined =>
+    disabled ? disabledCSS : undefined}
+`;
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 32px;
+`;
 export const AddOnsModal = (): JSX.Element | null => {
   const activeModal = useBottomModal();
   const dispatch = useDispatch();
   const isAddOnsModal = activeModal.modalType === "ticket-add-ons";
   const addOns = isAddOnsModal ? activeModal.addOns : [];
-
+  const [holding, setHolding] = useState(false);
   const { containerRef, activeIdx, setActiveIdx } = useTrackpadSwipe({
     isEnabled: isAddOnsModal,
     itemCount: addOns.length
   });
-
-  const handleDotClick = (index: number): void => {
-    setActiveIdx(index);
-  };
 
   const handleCloseModal = useCallback(() => {
     dispatch({
@@ -92,7 +84,21 @@ export const AddOnsModal = (): JSX.Element | null => {
       isOpen={activeModal.modalType === "ticket-add-ons"}
       onClickOutside={handleCloseModal}
     >
-      <div ref={containerRef}>
+      <div
+        ref={containerRef}
+        onMouseDown={() => {
+          setHolding(true);
+        }}
+        onMouseUp={() => {
+          setHolding(false);
+        }}
+        onMouseLeave={() => {
+          setHolding(false);
+        }}
+        style={{
+          cursor: holding ? "grabbing" : "grab"
+        }}
+      >
         <_SwipableViews
           containerStyle={{ width: "100%", paddingBottom: 12 }}
           slideStyle={{ padding: "0 10px" }}
@@ -110,23 +116,53 @@ export const AddOnsModal = (): JSX.Element | null => {
                   fontSize={16}
                   fontWeight={500}
                 >
-                  {addOn.claim.ticket.ticketName}
+                  {addOn.claim.ticket.ticketName.toUpperCase()}
                 </Typography>
               </QRContainer>
             );
           })}
         </_SwipableViews>
       </div>
-      <ContentContainer>
-        <Dots
-          amount={addOns.length}
-          activeIdx={activeIdx}
-          onDotClick={handleDotClick}
-        />
-        <Typography color="var(--text-tertiary)" fontWeight={500} fontSize={14}>
-          {addOns.length} redeemable {addOns.length > 1 ? "items" : "item"}
+      <ButtonsContainer>
+        <AddonCircleButton
+          disabled={activeIdx === 0}
+          onClick={() => {
+            setActiveIdx((old) => {
+              if (old === 0) return old;
+              return old - 1;
+            });
+          }}
+        >
+          <ChevronLeftIcon
+            width={20}
+            height={20}
+            color="var(--text-tertiary)"
+          />
+        </AddonCircleButton>
+        <Typography
+          fontWeight={500}
+          fontSize={14}
+          color="var(--text-tertiary)"
+          family="Rubik"
+        >
+          {activeIdx + 1} OF {addOns.length}
         </Typography>
-      </ContentContainer>
+        <AddonCircleButton
+          disabled={activeIdx === addOns.length - 1}
+          onClick={() => {
+            setActiveIdx((old) => {
+              if (old === addOns.length - 1) return old;
+              return old + 1;
+            });
+          }}
+        >
+          <ChevronRightIcon
+            width={20}
+            height={20}
+            color="var(--text-tertiary)"
+          />
+        </AddonCircleButton>
+      </ButtonsContainer>
       <Button2 onClick={handleCloseModal}>Close</Button2>
     </BottomModal>
   );

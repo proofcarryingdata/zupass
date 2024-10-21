@@ -127,7 +127,7 @@ export const BottomModalHeader = ({
       <Typography fontWeight={800} fontSize={20} color="var(--text-primary)">
         {title}
       </Typography>
-      <Typography fontSize={16} color="var(--text-primary)">
+      <Typography fontSize={16} color="var(--text-primary)" family="Rubik">
         {description}
       </Typography>
       {children || null}

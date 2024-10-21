@@ -28,6 +28,7 @@ const errorCSS = css`
 
 const secondaryCSS = css`
   background: var(--secondary-input-bg);
+  box-shadow: none;
 `;
 
 const noArrowsCSS = css`

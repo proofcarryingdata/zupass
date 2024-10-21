@@ -105,7 +105,7 @@ export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
           {ticketDate && (
             <DateChipContainer>
               <Typography fontSize={12} fontWeight={800} color="white">
-                {ticketDate}
+                {ticketDate.toUpperCase()}
               </Typography>
             </DateChipContainer>
           )}
@@ -113,12 +113,13 @@ export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
         </TicketCardImageContainer>
         <TicketCardDetails>
           <Typography fontSize={18} fontWeight={800}>
-            {title}
+            {title.toUpperCase()}
           </Typography>
           <Typography
             fontSize={14}
             fontWeight={400}
             color="rgba(124, 139, 180, 1)"
+            family="Rubik"
           >
             {`${address ? `${address} • ` : ""}${ticketCount} ticket${
               ticketCount > 1 ? "s" : ""

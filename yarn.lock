@@ -6053,10 +6053,10 @@
     ethers "6.10.0"
     snarkjs "0.7.4"
 
-"@semaphore-protocol/proof@^3.15.2":
+"@semaphore-protocol/proof@npm:@pcd/semaphore-proof-v3@^3.15.2":
   version "3.15.2"
-  resolved "https://registry.yarnpkg.com/@semaphore-protocol/proof/-/proof-3.15.2.tgz#729b327b1ae358b00f805886d4b521066bfba97e"
-  integrity sha512-b0PuqYk9au/qRUmmRtAWE6MmkC/LY/vIt1dAUIKB0IzIPnzJ4QwXTNAWJoP3LXduhzaFJmNvLOj4ViB9GDh8+w==
+  resolved "https://registry.yarnpkg.com/@pcd/semaphore-proof-v3/-/semaphore-proof-v3-3.15.2.tgz#f31bdbacce9c05b5273d92f17d484067c6e90139"
+  integrity sha512-2OZJGBzhs2SwC0UjPXNAylAavrKvGCVmLwEOhwZDVOtd3a6Y7sAwC27EPlFwKJvaYvWMEO8D+dBnF/g6QldFMQ==
   dependencies:
     "@ethersproject/bignumber" "^5.5.0"
     "@ethersproject/bytes" "^5.7.0"
@@ -6064,6 +6064,7 @@
     "@ethersproject/strings" "^5.5.0"
     "@zk-kit/groth16" "0.3.0"
     "@zk-kit/incremental-merkle-tree" "0.4.3"
+    poseidon-lite "^0.2.0"
 
 "@semaphore-protocol/utils@4.4.0":
   version "4.4.0"
@@ -18417,7 +18418,7 @@ poseidon-lite@^0.0.2:
   resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.0.2.tgz#dc1a7c57f9393a586c5c9efc21b72b77e2c1acb6"
   integrity sha512-bGdDPTOQkJbBjbtSEWc3gY+YhqlGTxGlZ8041F8TGGg5QyGGp1Cfs4b8AEnFFjHbkPg6WdWXUgEjU1GKOKWAPw==
 
-poseidon-lite@^0.2.1:
+poseidon-lite@^0.2.0, poseidon-lite@^0.2.1:
   version "0.2.1"
   resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.2.1.tgz#7ad98e3a3aa5b91a1fd3a61a87460e9e46fd76d6"
   integrity sha512-xIr+G6HeYfOhCuswdqcFpSX47SPhm0EpisWJ6h7fHlWwaVIvH3dLnejpatrtw6Xc6HaLrpq05y7VRfvDmDGIog==

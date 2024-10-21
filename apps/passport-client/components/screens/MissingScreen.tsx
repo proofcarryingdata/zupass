@@ -1,35 +1,54 @@
 import styled from "styled-components";
 import { Typography } from "../../new-components/shared/Typography";
 import { AppContainer } from "../shared/AppContainer";
+import { Button2 } from "../../new-components/shared/Button";
 
 export function MissingScreen(): JSX.Element {
   return (
     <AppContainer bg="gray" fullscreen>
       <MissingScreenContainer>
-        <TitleContainer>
-          <Four />
-          <Zero />
-          <Four />
-        </TitleContainer>
-        <Typography
-          family="Rubik"
-          fontSize={14}
-          fontWeight={400}
-          color={"var(--text-tertiary)"}
+        <ContentContainer>
+          <TitleContainer>
+            <Four />
+            <Zero />
+            <Four />
+          </TitleContainer>
+          <Typography
+            family="Rubik"
+            fontSize={14}
+            fontWeight={400}
+            color={"var(--text-tertiary)"}
+          >
+            This page cannot be found
+          </Typography>
+        </ContentContainer>
+        <Button2
+          variant="secondary"
+          onClick={() => {
+            window.location.href = "/#";
+          }}
         >
-          This page cannot be found
-        </Typography>
+          Return home
+        </Button2>
       </MissingScreenContainer>
     </AppContainer>
   );
 }
+
+const ContentContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+`;
 
 const MissingScreenContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 24px;
   margin: auto 0;
 `;
 
