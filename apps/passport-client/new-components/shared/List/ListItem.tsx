@@ -129,7 +129,7 @@ export const ListItem = ({
             </ElipsisContainer>
           )}
         </Typography>
-        <FaChevronRight color={getVariantColor(defaultVariant)} />
+        <FaChevronRight color="var(--text-tertiary)" />
       </ListItemRightContainer>
     </ListItemContainer>
   );
