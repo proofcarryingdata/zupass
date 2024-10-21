@@ -28,7 +28,7 @@ const ListGroup = ({
 
   return (
     <GroupContainer>
-      <Typography color="var(--text-tertiary)" family="Rubik">
+      <Typography fontWeight={500} color="var(--text-tertiary)" family="Rubik">
         {title}
       </Typography>
       {children.map((child, i) => {
