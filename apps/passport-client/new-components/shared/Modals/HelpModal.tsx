@@ -4,7 +4,6 @@ import { BottomModal, BottomModalHeader } from "../BottomModal";
 import { Accordion } from "../Accordion";
 import { Button2 } from "../Button";
 import { Spacer } from "@pcd/passport-ui";
-import { redirect } from "react-router-dom";
 
 export const HelpModal = (): JSX.Element => {
   const activeBottomModal = useBottomModal();

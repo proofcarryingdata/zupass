@@ -45,6 +45,7 @@ export interface AppState {
     | { modalType: "manage-emails" }
     | { modalType: "delete-account" }
     | { modalType: "ticket-add-ons"; addOns: TicketType[] }
+    | { modalType: "help-modal" }
     | { modalType: "none" };
 
   // View state
