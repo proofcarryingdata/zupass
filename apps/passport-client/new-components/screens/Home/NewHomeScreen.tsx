@@ -183,7 +183,7 @@ const getEventDetails = (tickets: TicketPack): ITicketData => {
 
 const EmptyCardContainer = styled.div`
   display: flex;
-  height: 302px;
+  height: min(80vh, 549px);
   justify-content: center;
   align-items: center;
   border-radius: 16px;
@@ -198,6 +198,7 @@ const InnerContainer = styled.div`
   flex-direction: column;
   align-items: center;
   text-align: center;
+  gap: 10px;
 `;
 
 const useWindowWidth = (): number => {
@@ -224,17 +225,46 @@ const LoadingScreenContainer = styled.div`
   gap: 12px;
   margin: auto 0;
 `;
+const Bar = styled.div`
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
+  width: 180px;
+`;
+
+const BarsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 10px 48px 10px 48px;
+  width: 100%;
+  gap: 5px;
+  margin-bottom: 20px;
+`;
 
 const EmptyCard = (): ReactElement => {
   return (
     <EmptyCardContainer>
       <InnerContainer>
-        <Typography fontWeight={800} color="var(--text-tertiary)">
-          YOU HAVE NO EVENT PASSES
-        </Typography>
-        <Typography color="var(--text-tertiary)">
-          Make sure you are logged in with the correct email address.
-        </Typography>
+        <BarsContainer>
+          <Bar />
+          <Bar />
+          <Bar />
+          <Bar />
+          <Bar />
+        </BarsContainer>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <Typography
+            fontSize={20}
+            color="var(--text-primary)"
+            fontWeight={800}
+          >
+            NO UPCOMING EVENTS
+          </Typography>
+          <Typography>
+            Don't see your ticket? <a style={{ fontWeight: 500 }}>Learn more</a>
+          </Typography>
+        </div>
       </InnerContainer>
     </EmptyCardContainer>
   );
