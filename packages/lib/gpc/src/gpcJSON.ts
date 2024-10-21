@@ -89,7 +89,7 @@ export function boundConfigToJSON(config: GPCBoundConfig): JSONBoundConfig {
 }
 
 /**
- * Parses a {@link GPCProofConfig} from a JSON-compatible representation,
+ * Parses a {@link GPCBoundConfig} from a JSON-compatible representation,
  * potentially received directly from `JSON.parse`.  See {@link JSONProofConfig}
  * for information about the format.
  *
