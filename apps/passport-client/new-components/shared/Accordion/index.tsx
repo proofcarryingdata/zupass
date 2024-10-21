@@ -19,6 +19,11 @@ export type AccrodionChild = {
 export type AccordionProps = {
   title: string;
   children: AccrodionChild[];
+  displayOnly?: boolean;
+  link?: {
+    title: string;
+    onClick: () => void;
+  };
 };
 
 export type AccordionRef = {
@@ -82,8 +87,8 @@ const ItemContainer = styled.div`
 `;
 
 export const Accordion = forwardRef<AccordionRef, AccordionProps>(
-  ({ title, children }, ref) => {
-    const [open, setOpen] = useState(false);
+  ({ title, children, displayOnly, link }, ref) => {
+    const [open, setOpen] = useState(displayOnly || false);
 
     useImperativeHandle(ref, () => {
       return {
@@ -91,10 +96,10 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
           setOpen(true);
         },
         close(): void {
-          setOpen(false);
+          setOpen(displayOnly || false);
         },
         toggle(): void {
-          setOpen((old) => !old);
+          setOpen((old) => displayOnly || !old);
         },
         getState(): boolean {
           return open;
@@ -115,7 +120,7 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
                 onClick={child.onClick}
                 lastItem={isLast}
               >
-                <Typography fontSize={14} fontWeight={500}>
+                <Typography fontSize={14} fontWeight={500} family="Rubik">
                   {child.title}
                 </Typography>
                 {child.icon}
@@ -125,14 +130,46 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
         </ItemContainer>
       );
     }, [children]);
-
+    const getTitleRight = (): ReactNode[] => {
+      const comp: ReactNode[] = [];
+      if (link) {
+        comp.push(
+          <Typography
+            onClick={link.onClick}
+            fontWeight={700}
+            color="var(--core-accent)"
+            fontSize={14}
+          >
+            {link.title}
+          </Typography>
+        );
+      } else if (!open && children.length > 1) {
+        comp.push(
+          <Typography
+            fontWeight={700}
+            color="var(--text-tertiary)"
+            fontSize={14}
+          >
+            {children.length}
+          </Typography>,
+          <FaChevronRight size={12} />
+        );
+      } else {
+        comp.push(<FaChevronDown size={12} />);
+      }
+      return comp;
+    };
     return (
       <Container open={open}>
         <HeaderContainer
           open={open}
-          onClick={() => {
-            setOpen((old) => !old);
-          }}
+          onClick={
+            displayOnly
+              ? undefined
+              : (): void => {
+                  setOpen((old) => !old);
+                }
+          }
         >
           <Typography
             fontWeight={700}
@@ -141,18 +178,7 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
           >
             {title.toUpperCase()}
           </Typography>
-          <ToggleContainer>
-            {open || children.length === 1 ? undefined : (
-              <Typography
-                fontWeight={700}
-                color="var(--text-tertiary)"
-                fontSize={14}
-              >
-                {children.length}
-              </Typography>
-            )}
-            {open ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
-          </ToggleContainer>
+          <ToggleContainer>{getTitleRight()}</ToggleContainer>
         </HeaderContainer>
         {open && renderedChildren}
       </Container>

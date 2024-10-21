@@ -12,8 +12,7 @@ import styled from "styled-components";
 import {
   useBottomModal,
   useDispatch,
-  useHasSetupPassword,
-  useStateContext
+  useHasSetupPassword
 } from "../../../src/appHooks";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
@@ -29,7 +28,6 @@ interface SettingItem {
 
 export function SettingsBottomModal(): JSX.Element {
   const activeBottomModal = useBottomModal();
-  const state = useStateContext().getState();
   const dispatch = useDispatch();
   const hasSetupPassword = useHasSetupPassword();
   const exportData = useExport();
@@ -133,35 +131,9 @@ export function SettingsBottomModal(): JSX.Element {
     [dispatch, hasSetupPassword, exportData]
   );
 
-  const TruncatedEmail = ({ email }: { email: string }): JSX.Element => {
-    const [username, domain] = email.split("@");
-    return (
-      <EmailWrapper>
-        <Username>{username}</Username>
-        <Domain>@{domain}</Domain>
-        <div style={{ clear: "both" }} />
-      </EmailWrapper>
-    );
-  };
-
   return (
     <BottomModal isOpen={activeBottomModal.modalType === "settings"}>
       <SettingsContainer>
-        <UserTitleContainer>
-          {state.self?.emails.map((email, index) => (
-            <EmailContainer key={index}>
-              <Typography
-                key={index}
-                fontSize={20}
-                fontWeight={800}
-                align="center"
-                style={{ maxWidth: "90%" }}
-              >
-                <TruncatedEmail email={email} />
-              </Typography>
-            </EmailContainer>
-          ))}
-        </UserTitleContainer>
         <SettingsActionContainer>
           {items.map(({ icon, title, onClick, variant }, i) => (
             <SettingsItemButton key={title} onClick={onClick}>
@@ -205,34 +177,6 @@ const SettingsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
-`;
-
-const UserTitleContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-`;
-
-const EmailContainer = styled.div`
-  display: flex;
-  justify-content: center;
-`;
-
-const EmailWrapper = styled.span`
-  display: inline-flex;
-  width: 100%;
-  overflow: hidden;
-`;
-
-const Username = styled.span`
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  min-width: 0;
-  float: left;
-`;
-
-const Domain = styled.span`
-  float: left;
 `;
 
 const SettingsActionContainer = styled.div`

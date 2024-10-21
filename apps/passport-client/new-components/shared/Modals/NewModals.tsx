@@ -11,6 +11,7 @@ import { SettingsBottomModal } from "./SettingsBottomModal";
 import { SuccessModal } from "./SuccessModal";
 import { SessionExpiredModal } from "./SessionExpiredModal";
 import { ProveModal } from "./ProveModal";
+import { HelpModal } from "./HelpModal";
 
 export const NewModals = React.memo((): JSX.Element => {
   const { modalType } = useBottomModal();
@@ -42,6 +43,7 @@ export const NewModals = React.memo((): JSX.Element => {
       <ImportModal />
       <SessionExpiredModal />
       <ProveModal />
+      <HelpModal />
     </>
   );
 });

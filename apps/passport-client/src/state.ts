@@ -8,6 +8,7 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD } from "@pcd/pcd-types";
 import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
 import { TicketType } from "../new-components/screens/Home/types";
 import { EmbeddedScreenState } from "./embedded";
@@ -32,7 +33,7 @@ export interface AppState {
   bottomModal:
     | {
         modalType: "pods-collection";
-        activePodId?: string;
+        activePod?: PCD<unknown, unknown>;
         idType?: "ticketId" | "id";
       }
     | { modalType: "settings" }
@@ -46,6 +47,7 @@ export interface AppState {
     | { modalType: "manage-emails" }
     | { modalType: "delete-account" }
     | { modalType: "ticket-add-ons"; addOns: TicketType[] }
+    | { modalType: "help-modal" }
     | { modalType: "none" };
 
   // View state
