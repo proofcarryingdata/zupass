@@ -381,6 +381,7 @@ export const NewHomeScreen = (): ReactElement => {
                       {packs.map((pack) => {
                         return (
                           <CardBody
+                            showDownloadButton={true}
                             key={pack.eventName}
                             addOns={
                               pack.addOns.length > 0
