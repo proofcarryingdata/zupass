@@ -4,6 +4,7 @@ import {
   ITicketData,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
+import { PCDGetRequest } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
@@ -16,7 +17,7 @@ import {
   useRef,
   useState
 } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
@@ -24,6 +25,7 @@ import { CardBody } from "../../../components/shared/PCDCard";
 import {
   useDispatch,
   useIsSyncSettled,
+  usePCDCollection,
   usePCDs,
   useScrollTo,
   useSelf,
@@ -40,7 +42,6 @@ import { Typography } from "../../shared/Typography";
 import { isMobile } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
-import { PCDGetRequest } from "@pcd/passport-interface";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -293,6 +294,7 @@ const EmptyCard = (): ReactElement => {
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
+  const collection = usePCDCollection();
   const [currentPos, setCurrentPos] = useState(0);
   const dispatch = useDispatch();
   const ticketsRef = useRef<Map<string, HTMLDivElement[]>>(new Map());
@@ -301,7 +303,7 @@ export const NewHomeScreen = (): ReactElement => {
   const self = useSelf();
   const navigate = useNavigate();
   const isLoadedPCDs = useIsSyncSettled();
-
+  const [params, setParams] = useSearchParams();
   const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
@@ -316,6 +318,17 @@ export const NewHomeScreen = (): ReactElement => {
     // if we haven't loaded all pcds yet, dont process the prove request
     if (!isLoadedPCDs) return;
 
+    const maybeExistingFolder = params.get("folder");
+    if (
+      maybeExistingFolder &&
+      collection.getFoldersInFolder("").includes(decodeURI(maybeExistingFolder))
+    ) {
+      dispatch({
+        type: "set-bottom-modal",
+        modal: { modalType: "pods-collection" }
+      });
+      return;
+    }
     if (location.pathname.includes("prove")) {
       const params = new URLSearchParams(location.search);
       const request = JSON.parse(
@@ -326,8 +339,10 @@ export const NewHomeScreen = (): ReactElement => {
         modal: { request, modalType: "prove" }
       });
       console.log(request);
+      return;
     }
-  }, [isLoadedPCDs, location, dispatch]);
+    if (params.size > 0) setParams("");
+  }, [params, collection, setParams, isLoadedPCDs, location, dispatch]);
 
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {

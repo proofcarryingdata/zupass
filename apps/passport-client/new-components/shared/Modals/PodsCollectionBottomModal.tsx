@@ -11,7 +11,7 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isUnknownPCD } from "@pcd/unknown-pcd";
 import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
 import intersectionWith from "lodash/intersectionWith";
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import { ReactNode, useLayoutEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
@@ -24,6 +24,7 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
+import { useSearchParams } from "react-router-dom";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -67,6 +68,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useDispatch();
   const pcdCollection = usePCDCollection();
+  const [params, setParams] = useSearchParams();
   const isPodsCollectionModalOpen =
     activeBottomModal.modalType === "pods-collection";
 
@@ -94,6 +96,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       if (!result[value]) {
         result[value] = {
           title: value.replace(/\//g, " · "),
+          id: value, // setting the folder path as a key
           children: []
         };
       }
@@ -116,19 +119,34 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       });
     }
 
-    return Object.values(result).filter((group) => group.children.length > 0);
+    const collection = Object.values(result).filter(
+      (group) => group.children.length > 0
+    );
+    return collection;
   }, [pcdCollection, dispatch]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Restore scroll position when list is shown again
-    if (listContainerRef.current) {
+    if (isPodsCollectionModalOpen && listContainerRef.current) {
       if (!activePod) {
-        listContainerRef.current.scrollTop = scrollPosition;
+        let pos = scrollPosition;
+        const folder = params.get("folder");
+        // checks if url contains folder route, and if so, scrolls to it
+        if (folder) {
+          const decodedFolderId = decodeURI(folder);
+          const folderContainer = document.getElementById(decodedFolderId);
+          if (folderContainer) {
+            pos = folderContainer.offsetTop;
+          }
+        }
+        listContainerRef.current.scrollTop = pos;
       } else {
         listContainerRef.current.scrollTop = 0;
+        // resetting params when user opens a pod
+        setParams("");
       }
     }
-  }, [activePod, scrollPosition]);
+  }, [activePod, scrollPosition, params, setParams, isPodsCollectionModalOpen]);
 
   return (
     <BottomModal
@@ -175,6 +193,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
 };
 
 const ListContainer = styled.div`
+  position: relative; // important for scrolling to the right position of the folder
   overflow-y: auto;
   max-height: calc(100vh - 260px);
 `;
