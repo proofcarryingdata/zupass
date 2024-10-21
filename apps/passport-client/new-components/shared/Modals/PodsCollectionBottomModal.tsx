@@ -11,14 +11,7 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isUnknownPCD } from "@pcd/unknown-pcd";
 import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
 import intersectionWith from "lodash/intersectionWith";
-import {
-  ReactNode,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState
-} from "react";
+import { ReactNode, useLayoutEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
@@ -101,6 +94,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       if (!result[value]) {
         result[value] = {
           title: value.replace(/\//g, " · "),
+          id: value, // setting the folder path as a key
           children: []
         };
       }
@@ -123,7 +117,10 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       });
     }
 
-    return Object.values(result).filter((group) => group.children.length > 0);
+    const collection = Object.values(result).filter(
+      (group) => group.children.length > 0
+    );
+    return collection;
   }, [pcdCollection, dispatch]);
 
   useLayoutEffect(() => {

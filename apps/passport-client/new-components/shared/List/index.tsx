@@ -7,6 +7,7 @@ export type GroupType = {
   children: ListItemType[];
   title?: string;
   isLastItemBorder?: boolean;
+  id?: string;
 };
 
 type ListChild = GroupType | ListItemType;
@@ -22,12 +23,13 @@ const GroupContainer = styled.div`
 const ListGroup = ({
   children,
   title,
-  isLastItemBorder
+  isLastItemBorder,
+  id
 }: GroupType): ReactElement => {
   const len = children.length;
-
+  console.log(id);
   return (
-    <GroupContainer>
+    <GroupContainer key={id} id={id}>
       <Typography color="var(--text-tertiary)" family="Rubik">
         {title}
       </Typography>
@@ -60,6 +62,7 @@ export const List = ({ list, style }: ListProps): ReactElement => {
   return (
     <ListContainer style={style}>
       {list.map((child) => {
+        console.log(child);
         return isListGroup(child) ? (
           <ListGroup {...child} />
         ) : (
