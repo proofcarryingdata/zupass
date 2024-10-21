@@ -345,6 +345,7 @@ export const ManageEmailModal = (): JSX.Element => {
         description="Please confirm if you want to delete this email from your account. "
       />
       <Input2
+        autoFocus={true}
         variant="secondary"
         placeholder={emailToRemove}
         value={emailToRemoveText}
@@ -381,6 +382,7 @@ export const ManageEmailModal = (): JSX.Element => {
         </Typography>
       </BottomModalHeader>
       <EmailInput
+        autoFocus={emailManagerState === EmailManagerState.changeEmail}
         email={newEmail}
         onChange={(e) => {
           setNewEmail(e.target.value);
@@ -390,6 +392,10 @@ export const ManageEmailModal = (): JSX.Element => {
       {emailManagerState ===
         EmailManagerState.changeEmailEnterConfirmationCode && (
         <Input2
+          autoFocus={
+            emailManagerState ===
+            EmailManagerState.changeEmailEnterConfirmationCode
+          }
           variant="secondary"
           onChange={(e) => {
             setConfirmationCode(e.target.value);
@@ -434,6 +440,7 @@ export const ManageEmailModal = (): JSX.Element => {
         description="Enter your new email address. We'll send a confirmation code to verify it."
       />
       <EmailInput
+        autoFocus={true}
         email={newEmail}
         onChange={(e) => {
           setNewEmail(e.target.value);
@@ -497,6 +504,7 @@ export const ManageEmailModal = (): JSX.Element => {
         description="Please enter the confirmation code."
       />
       <Input2
+        autoFocus={true}
         variant="secondary"
         onChange={(e) => {
           setConfirmationCode(e.target.value);
@@ -558,6 +566,19 @@ const IconsContainer = styled.div`
 const EmailInputContainer = styled.div`
   position: relative;
 `;
+
+type EmailInputProps = {
+  email: string;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
+  disabled?: boolean;
+  error?: string;
+  onEdit?: () => void;
+  canEdit?: boolean;
+  onDelete?: () => void;
+  canDelete?: boolean;
+  autoFocus?: boolean;
+};
+
 const EmailInput = ({
   email,
   onChange,
@@ -567,16 +588,7 @@ const EmailInput = ({
   canEdit,
   onDelete,
   canDelete
-}: {
-  email: string;
-  onChange?: ChangeEventHandler<HTMLInputElement>;
-  disabled?: boolean;
-  error?: string;
-  onEdit?: () => void;
-  canEdit?: boolean;
-  onDelete?: () => void;
-  canDelete?: boolean;
-}): JSX.Element => {
+}: EmailInputProps): JSX.Element => {
   const iconSize = 20;
   return (
     <EmailInputContainer>
@@ -614,7 +626,6 @@ const EmailInput = ({
     </EmailInputContainer>
   );
 };
-
 const EmailsContainer = styled.div`
   display: flex;
   flex-direction: column;
