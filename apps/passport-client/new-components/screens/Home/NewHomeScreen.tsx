@@ -1,4 +1,8 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
+} from "@heroicons/react/16/solid";
 import {
   EdDSATicketPCDTypeName,
   ITicketData,
@@ -19,7 +23,11 @@ import {
 } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
-import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import styled, {
+  FlattenSimpleInterpolation,
+  css,
+  keyframes
+} from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
@@ -254,14 +262,60 @@ const OuterContainer = styled.div`
   justify-content: center;
   flex-direction: column;
   width: 100%;
+  position: relative;
 `;
+
+const anim = keyframes`
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) translateX(-10px);
+  }
+  40% {
+    transform: translateY(10px) translateX(-10px);
+  }
+  60% {
+    transform: translateY(5px) translateX(-10px);
+  }
+`;
+const ScrollIndicatorContainer = styled.div`
+  position: absolute;
+  bottom: 2%;
+  left: 50%;
+  transform: translateX(-10px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  opacity: 0.3;
+
+  animation: ${anim} 1.5s infinite;
+
+  transition: opacity 0.5s ease;
+`;
+
+const ScrollIndicator = (): ReactElement => {
+  return (
+    <ScrollIndicatorContainer>
+      <ChevronDownIcon color="var(--text-tertiary)" width={30} height={30} />
+      <ChevronDownIcon
+        color="var(--text-tertiary)"
+        width={30}
+        height={30}
+        style={{ marginTop: -20 }}
+      />
+    </ScrollIndicatorContainer>
+  );
+};
+
 const NoUpcomingEventsState = (): ReactElement => {
   const dispatch = useDispatch();
   const pods = usePCDCollection();
   const orientation = useOrientation();
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+
+  const timer = useRef<NodeJS.Timeout>();
   const isLandscape =
     orientation.type === "landscape-primary" ||
     orientation.type === "landscape-secondary";
+
   return (
     <OuterContainer>
       <EmptyCardContainer>
@@ -298,7 +352,26 @@ const NoUpcomingEventsState = (): ReactElement => {
           .getAll()
           .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
           .length > 0 && (
-          <ListContainer>
+          <ListContainer
+            onScroll={(e) => {
+              const scrollTop = e.currentTarget.scrollTop;
+              if (scrollTop === 0) {
+                // start timer
+                const id = setTimeout(() => {
+                  setShowScrollIndicator(true);
+                }, 2000);
+                timer.current = id;
+              } else {
+                setShowScrollIndicator(false);
+
+                // clearing timer on scroll so it won't flash to the user mid scroll
+                if (timer.current) {
+                  clearTimeout(timer.current);
+                  timer.current = undefined;
+                }
+              }
+            }}
+          >
             <PodsCollectionList
               onPodClick={(pcd) => {
                 dispatch({
@@ -308,6 +381,7 @@ const NoUpcomingEventsState = (): ReactElement => {
               }}
               style={{ padding: "20px 24px" }}
             />
+            {showScrollIndicator && <ScrollIndicator />}
           </ListContainer>
         ))}
     </OuterContainer>
