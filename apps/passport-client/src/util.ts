@@ -142,4 +142,4 @@ export function stringSizeInBytes(s: string): number {
   return new TextEncoder().encode(s).length;
 }
 
-export const ADD_PCD_SIZE_LIMIT_BYTES = 50000;
+export const ADD_PCD_SIZE_LIMIT_BYTES = 10000;
