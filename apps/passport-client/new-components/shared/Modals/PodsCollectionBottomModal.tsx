@@ -137,6 +137,10 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     ? activeBottomModal.activePod
     : undefined;
 
+  const modalGoBackBehavior =
+    isPodsCollectionModalOpen && activeBottomModal.modalGoBackBehavior
+      ? activeBottomModal.modalGoBackBehavior
+      : "close";
   useLayoutEffect(() => {
     // Restore scroll position when list is shown again
     if (isPodsCollectionModalOpen && listContainerRef.current) {
@@ -184,7 +188,11 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
                   setScrollPosition(listContainerRef.current.scrollTop);
                 dispatch({
                   type: "set-bottom-modal",
-                  modal: { modalType: "pods-collection", activePod: pcd }
+                  modal: {
+                    modalType: "pods-collection",
+                    activePod: pcd,
+                    modalGoBackBehavior: "back"
+                  }
                 });
               }}
             />
@@ -193,7 +201,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         <ContainerWithPadding>
           <Button2
             onClick={() => {
-              if (activePod) {
+              if (activePod && modalGoBackBehavior !== "close") {
                 dispatch({
                   type: "set-bottom-modal",
                   modal: { modalType: "pods-collection" }
@@ -206,7 +214,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
               }
             }}
           >
-            {activePod ? "Back" : "Close"}
+            {activePod && modalGoBackBehavior !== "close" ? "Back" : "Close"}
           </Button2>
         </ContainerWithPadding>
       </Container>
