@@ -252,6 +252,7 @@ export const NewHomeScreen = (): ReactElement => {
   const navigate = useNavigate();
   const isLoadedPCDs = useLoadedIssuedPCDs();
 
+  const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
   useEffect(() => {
     if (!self) {
@@ -318,7 +319,20 @@ export const NewHomeScreen = (): ReactElement => {
       {(!tickets.length || isInvalidUser) && <EmptyCard />}
       {tickets.length > 0 && (
         <>
-          <SwipeViewContainer>
+          <SwipeViewContainer
+            onMouseDown={() => {
+              setHolding(true);
+            }}
+            onMouseUp={() => {
+              setHolding(false);
+            }}
+            onMouseLeave={() => {
+              setHolding(false);
+            }}
+            style={{
+              cursor: holding ? "grabbing" : "grab"
+            }}
+          >
             <_SwipableViews
               style={{
                 padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
