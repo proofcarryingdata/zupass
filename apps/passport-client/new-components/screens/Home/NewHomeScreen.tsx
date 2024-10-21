@@ -243,6 +243,7 @@ const BarsContainer = styled.div`
 `;
 
 const EmptyCard = (): ReactElement => {
+  const dispatch = useDispatch();
   return (
     <EmptyCardContainer>
       <InnerContainer>
@@ -262,7 +263,20 @@ const EmptyCard = (): ReactElement => {
             NO UPCOMING EVENTS
           </Typography>
           <Typography>
-            Don't see your ticket? <a style={{ fontWeight: 500 }}>Learn more</a>
+            Don't see your ticket?{" "}
+            <a
+              style={{ fontWeight: 500 }}
+              onClick={() => {
+                dispatch({
+                  type: "set-bottom-modal",
+                  modal: {
+                    modalType: "help-modal"
+                  }
+                });
+              }}
+            >
+              Learn more
+            </a>
           </Typography>
         </div>
       </InnerContainer>
