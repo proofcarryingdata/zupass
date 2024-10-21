@@ -39,10 +39,12 @@ import { NewModals } from "../../shared/Modals/NewModals";
 import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
-import { isMobile } from "../../shared/utils";
+import { isMobile, useOrientation } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
+import { isEmailPCD } from "@pcd/email-pcd";
+import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -237,7 +239,7 @@ const LoadingScreenContainer = styled.div`
 
 const ListContainer = styled.div`
   width: 100%;
-  height: calc(100vh - ${EMPTY_CARD_CONTAINER_HEIGHT + 64}px);
+  max-height: calc(100vh - ${EMPTY_CARD_CONTAINER_HEIGHT + 64}px);
   overflow-y: scroll;
   border-radius: 20px;
   border: 2px solid var(--text-white);
@@ -255,6 +257,11 @@ const OuterContainer = styled.div`
 `;
 const NoUpcomingEventsState = (): ReactElement => {
   const dispatch = useDispatch();
+  const pods = usePCDCollection();
+  const orientation = useOrientation();
+  const isLandscape =
+    orientation.type === "landscape-primary" ||
+    orientation.type === "landscape-secondary";
   return (
     <OuterContainer>
       <EmptyCardContainer>
@@ -286,17 +293,23 @@ const NoUpcomingEventsState = (): ReactElement => {
           </div>
         </InnerContainer>
       </EmptyCardContainer>
-      <ListContainer>
-        <PodsCollectionList
-          onPodClick={(pcd) => {
-            dispatch({
-              type: "set-bottom-modal",
-              modal: { modalType: "pods-collection", activePod: pcd }
-            });
-          }}
-          style={{ padding: "20px 24px" }}
-        />
-      </ListContainer>
+      {isLandscape ||
+        (pods
+          .getAll()
+          .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
+          .length > 0 && (
+          <ListContainer>
+            <PodsCollectionList
+              onPodClick={(pcd) => {
+                dispatch({
+                  type: "set-bottom-modal",
+                  modal: { modalType: "pods-collection", activePod: pcd }
+                });
+              }}
+              style={{ padding: "20px 24px" }}
+            />
+          </ListContainer>
+        ))}
     </OuterContainer>
   );
 };
