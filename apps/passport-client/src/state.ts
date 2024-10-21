@@ -4,6 +4,7 @@ import {
   FeedSubscriptionManager,
   KnownPublicKey,
   KnownTicketType,
+  PCDGetRequest,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -42,6 +43,7 @@ export interface AppState {
     | { modalType: "success-modal"; title: string; description: string }
     | { modalType: "about" }
     | { modalType: "import" }
+    | { modalType: "prove"; request: PCDGetRequest }
     | { modalType: "manage-emails" }
     | { modalType: "delete-account" }
     | { modalType: "ticket-add-ons"; addOns: TicketType[] }
@@ -69,8 +71,11 @@ export interface AppState {
     attendee: string;
     eventId: string;
   };
-  // User metadata.
-  self?: User;
+
+  // stores the eligibility state of all pcd type props that that the prove has,
+  // if one is not valid, we show a full screen error stat
+  proveStateEligiblePCDs?: boolean[];
+  self?: User; // User metadata.
 
   // if the client is in the process of logging out,
   // shows alternate UI on the login page to prevent
