@@ -4,6 +4,7 @@ import { BottomModal, BottomModalHeader } from "../BottomModal";
 import { Accordion } from "../Accordion";
 import { Button2 } from "../Button";
 import { Spacer } from "@pcd/passport-ui";
+import { redirect } from "react-router-dom";
 
 export const HelpModal = (): JSX.Element => {
   const activeBottomModal = useBottomModal();
@@ -39,7 +40,13 @@ export const HelpModal = (): JSX.Element => {
       )}
       <Spacer h={8} />
       <ButtonsContainer>
-        <Button2>Email support</Button2>
+        <Button2
+          onClick={() => {
+            window.open("mailto:support@zupass.org");
+          }}
+        >
+          Email support
+        </Button2>
         <Button2
           variant="secondary"
           onClick={() => {
