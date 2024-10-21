@@ -1,5 +1,6 @@
 import { PCDProveAndAddRequest } from "@pcd/passport-interface";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
+import { getErrorMessage } from "@pcd/util";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import {
@@ -9,6 +10,7 @@ import {
 } from "../../../src/appHooks";
 import { safeRedirect } from "../../../src/passportRequest";
 import { pendingRequestKeys } from "../../../src/sessionStorage";
+import { err } from "../../../src/util";
 import { H2, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AddedPCD } from "../../shared/AddedPCD";
@@ -37,13 +39,17 @@ export function ProveAndAddScreen({
   const onProve = useCallback(
     async (_: PCD | undefined, serializedPCD: SerializedPCD | undefined) => {
       if (serializedPCD) {
-        await dispatch({
-          type: "add-pcds",
-          pcds: [serializedPCD],
-          folder: request.folder
-        });
-        setProved(true);
-        setSerializedPCD(serializedPCD);
+        try {
+          await dispatch({
+            type: "add-pcds",
+            pcds: [serializedPCD],
+            folder: request.folder
+          });
+          setProved(true);
+          setSerializedPCD(serializedPCD);
+        } catch (e) {
+          await err(dispatch, "Error Adding PCD", getErrorMessage(e));
+        }
       }
     },
     [dispatch, request.folder]
