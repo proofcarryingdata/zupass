@@ -631,7 +631,7 @@ export const NewHomeScreen = (): ReactElement => {
         </>
       )}
       <Spacer h={96} />
-      <FloatingMenu />
+      <FloatingMenu noTickets={tickets.length === 0} />
       <AddOnsModal />
       <NewModals />
     </AppContainer>

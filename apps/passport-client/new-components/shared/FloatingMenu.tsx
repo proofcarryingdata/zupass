@@ -1,9 +1,9 @@
 import { Cog6ToothIcon, Square3Stack3DIcon } from "@heroicons/react/16/solid";
-import styled from "styled-components";
+import styled, { css, FlattenSimpleInterpolation } from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { Typography } from "./Typography";
 
-const FloatingMenuContainer = styled.div`
+const FloatingMenuContainer = styled.div<{ center: boolean }>`
   position: fixed;
   display: flex;
   align-items: center;
@@ -13,14 +13,22 @@ const FloatingMenuContainer = styled.div`
   background: rgba(0, 0, 0, 0.8);
   backdrop-filter: blur(8px);
   z-index: 2;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 10px 24px;
+  ${({ center }): FlattenSimpleInterpolation =>
+    center
+      ? css`
+          left: 50%;
+          transform: translateX(-50%);
+          padding: 10px 24px;
+        `
+      : css`
+          right: 20px;
+          padding: 5px;
+        `}
   border-radius: 200px;
 `;
 
-const FloatingMenuItem = styled.div`
-  width: 56px;
+const FloatingMenuItem = styled.div<{ width: number }>`
+  width: ${({ width }): number => width}px;
   height: 40px;
   justify-content: center;
   align-items: center;
@@ -35,31 +43,39 @@ const IconContainer = styled.div`
   opacity: 0.8;
 `;
 
-export const FloatingMenu = (): JSX.Element => {
+type FloatingMenuProps = {
+  noTickets: boolean;
+};
+
+export const FloatingMenu = ({ noTickets }: FloatingMenuProps): JSX.Element => {
   const dispatch = useDispatch();
   return (
-    <FloatingMenuContainer>
+    <FloatingMenuContainer center={!noTickets}>
+      {!noTickets && (
+        <FloatingMenuItem
+          width={56}
+          onClick={() => {
+            dispatch({
+              type: "set-bottom-modal",
+              modal: { modalType: "pods-collection" }
+            });
+          }}
+        >
+          <IconContainer>
+            <Square3Stack3DIcon color="inherit" height={24} />
+            <Typography
+              fontSize={10}
+              fontWeight={500}
+              family="Rubik"
+              color="inherit"
+            >
+              PODS
+            </Typography>
+          </IconContainer>
+        </FloatingMenuItem>
+      )}
       <FloatingMenuItem
-        onClick={() => {
-          dispatch({
-            type: "set-bottom-modal",
-            modal: { modalType: "pods-collection" }
-          });
-        }}
-      >
-        <IconContainer>
-          <Square3Stack3DIcon color="inherit" height={24} />
-          <Typography
-            fontSize={10}
-            fontWeight={500}
-            family="Rubik"
-            color="inherit"
-          >
-            PODS
-          </Typography>
-        </IconContainer>
-      </FloatingMenuItem>
-      <FloatingMenuItem
+        width={noTickets ? 40 : 56}
         onClick={() =>
           dispatch({
             type: "set-bottom-modal",
@@ -69,14 +85,16 @@ export const FloatingMenu = (): JSX.Element => {
       >
         <IconContainer>
           <Cog6ToothIcon color="inherit" height={24} />
-          <Typography
-            fontSize={10}
-            fontWeight={500}
-            family="Rubik"
-            color="inherit"
-          >
-            SETTINGS
-          </Typography>
+          {!noTickets && (
+            <Typography
+              fontSize={10}
+              fontWeight={500}
+              family="Rubik"
+              color="inherit"
+            >
+              SETTINGS
+            </Typography>
+          )}
         </IconContainer>
       </FloatingMenuItem>
     </FloatingMenuContainer>
