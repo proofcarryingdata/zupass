@@ -33,6 +33,7 @@ import { Typography } from "../../shared/Typography";
 import { isMobile } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
+import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -180,10 +181,10 @@ const TicketsContainer = styled.div<{ $width: number }>`
 const getEventDetails = (tickets: TicketPack): ITicketData => {
   return tickets.eventTicket.claim.ticket as ITicketData;
 };
-
+const EMPTY_CARD_CONTAINER_HEIGHT = 220;
 const EmptyCardContainer = styled.div`
   display: flex;
-  height: 302px;
+  height: ${EMPTY_CARD_CONTAINER_HEIGHT}px;
   justify-content: center;
   align-items: center;
   border-radius: 16px;
@@ -225,18 +226,50 @@ const LoadingScreenContainer = styled.div`
   margin: auto 0;
 `;
 
-const EmptyCard = (): ReactElement => {
+const ListContainer = styled.div`
+  width: 100%;
+  height: calc(100vh - ${EMPTY_CARD_CONTAINER_HEIGHT + 64}px);
+  overflow-y: scroll;
+  border-radius: 20px;
+  border: 2px solid var(--text-white);
+  background: rgba(255, 255, 255, 0.8);
+
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+`;
+const OuterContainer = styled.div`
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+`;
+const NoUpcomingEventsState = (): ReactElement => {
+  const dispatch = useDispatch();
   return (
-    <EmptyCardContainer>
-      <InnerContainer>
-        <Typography fontWeight={800} color="var(--text-tertiary)">
-          YOU HAVE NO EVENT PASSES
-        </Typography>
-        <Typography color="var(--text-tertiary)">
-          Make sure you are logged in with the correct email address.
-        </Typography>
-      </InnerContainer>
-    </EmptyCardContainer>
+    <OuterContainer>
+      <EmptyCardContainer>
+        <InnerContainer>
+          <Typography fontWeight={800} color="var(--text-tertiary)">
+            YOU HAVE NO EVENT PASSES
+          </Typography>
+          <Typography color="var(--text-tertiary)">
+            Make sure you are logged in with the correct email address.
+          </Typography>
+        </InnerContainer>
+      </EmptyCardContainer>
+      <ListContainer>
+        <PodsCollectionList
+          onPodClick={(pcd) => {
+            dispatch({
+              type: "set-bottom-modal",
+              modal: { modalType: "pods-collection", activePod: pcd }
+            });
+          }}
+          style={{ padding: "20px 24px" }}
+        />
+      </ListContainer>
+    </OuterContainer>
   );
 };
 
@@ -315,7 +348,7 @@ export const NewHomeScreen = (): ReactElement => {
       noPadding={tickets.length > 0}
       fullscreen={tickets.length > 0}
     >
-      {(!tickets.length || isInvalidUser) && <EmptyCard />}
+      {(!tickets.length || isInvalidUser) && <NoUpcomingEventsState />}
       {tickets.length > 0 && (
         <>
           <SwipeViewContainer>

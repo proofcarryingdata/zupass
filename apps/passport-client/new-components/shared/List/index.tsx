@@ -52,13 +52,9 @@ type ListProps = {
   style?: React.CSSProperties;
 };
 
-const ListContainer = styled.div`
-  padding: 12px 24px;
-`;
-
 export const List = ({ list, style }: ListProps): ReactElement => {
   return (
-    <ListContainer style={style}>
+    <div style={style}>
       {list.map((child) => {
         return isListGroup(child) ? (
           <ListGroup {...child} />
@@ -66,6 +62,6 @@ export const List = ({ list, style }: ListProps): ReactElement => {
           <ListItem {...child} />
         );
       })}
-    </ListContainer>
+    </div>
   );
 };
