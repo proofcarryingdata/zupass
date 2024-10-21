@@ -11,7 +11,14 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isUnknownPCD } from "@pcd/unknown-pcd";
 import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
 import intersectionWith from "lodash/intersectionWith";
-import { ReactNode, useLayoutEffect, useMemo, useRef, useState } from "react";
+import {
+  ReactElement,
+  ReactNode,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
@@ -62,19 +69,14 @@ const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
       return undefined;
   }
 };
-export const PodsCollectionBottomModal = (): JSX.Element | null => {
-  const activeBottomModal = useBottomModal();
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const listContainerRef = useRef<HTMLDivElement | null>(null);
-  const dispatch = useDispatch();
-  const pcdCollection = usePCDCollection();
-  const [params, setParams] = useSearchParams();
-  const isPodsCollectionModalOpen =
-    activeBottomModal.modalType === "pods-collection";
 
-  const activePod = isPodsCollectionModalOpen
-    ? activeBottomModal.activePod
-    : undefined;
+type PodsCollectionListProps = {
+  onPodClick?: (pcd: PCD<unknown, unknown>) => void;
+};
+export const PodsCollectionList = ({
+  onPodClick
+}: PodsCollectionListProps): ReactElement => {
+  const pcdCollection = usePCDCollection();
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
@@ -108,22 +110,30 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         title: getPcdName(pcd),
         key: pcd.id || getPcdName(pcd),
         onClick: () => {
-          listContainerRef.current &&
-            setScrollPosition(listContainerRef.current.scrollTop);
-          dispatch({
-            type: "set-bottom-modal",
-            modal: { modalType: "pods-collection", activePod: pcd }
-          });
+          onPodClick?.(pcd);
         },
         LeftIcon: getPCDImage(pcd)
       });
     }
 
-    const collection = Object.values(result).filter(
-      (group) => group.children.length > 0
-    );
-    return collection;
-  }, [pcdCollection, dispatch]);
+    return Object.values(result).filter((group) => group.children.length > 0);
+  }, [pcdCollection, onPodClick]);
+
+  return <List style={{ paddingTop: 0 }} list={podsCollectionList} />;
+};
+
+export const PodsCollectionBottomModal = (): JSX.Element | null => {
+  const activeBottomModal = useBottomModal();
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const dispatch = useDispatch();
+  const [params, setParams] = useSearchParams();
+  const isPodsCollectionModalOpen =
+    activeBottomModal.modalType === "pods-collection";
+
+  const activePod = isPodsCollectionModalOpen
+    ? activeBottomModal.activePod
+    : undefined;
 
   useLayoutEffect(() => {
     // Restore scroll position when list is shown again
@@ -165,7 +175,16 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
           {activePod ? (
             <CardBody isMainIdentity={false} pcd={activePod} />
           ) : (
-            <List style={{ paddingTop: 0 }} list={podsCollectionList} />
+            <PodsCollectionList
+              onPodClick={(pcd) => {
+                listContainerRef.current &&
+                  setScrollPosition(listContainerRef.current.scrollTop);
+                dispatch({
+                  type: "set-bottom-modal",
+                  modal: { modalType: "pods-collection", activePod: pcd }
+                });
+              }}
+            />
           )}
         </ListContainer>
         <ContainerWithPadding>

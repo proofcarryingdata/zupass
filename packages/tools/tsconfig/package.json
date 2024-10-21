@@ -2,7 +2,6 @@
   "name": "@pcd/tsconfig",
   "version": "0.13.0",
   "license": "MIT",
-  "private": false,
   "files": [
     "base.json",
     "nextjs.json",

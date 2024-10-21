@@ -42,9 +42,9 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@types/chai-as-promised": "^7.1.5",
     "@pcd/eslint-config-custom": "0.13.0",
     "@pcd/tsconfig": "0.13.0",
+    "@types/chai-as-promised": "^7.1.5",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",
