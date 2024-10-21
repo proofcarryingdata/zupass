@@ -58,7 +58,6 @@ export const ManageEmailModal = (): JSX.Element => {
 
   const [emailToRemove, setEmailToRemove] = useState("");
   const [emailToRemoveText, setEmailToRemoveText] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
   const errorOrLoading = !!error || loading;
   const reset = (): void => {
     startTransition((): void => {
