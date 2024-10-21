@@ -8,8 +8,15 @@ import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { uniqWith } from "lodash";
-import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  ReactElement,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
@@ -17,6 +24,7 @@ import { CardBody } from "../../../components/shared/PCDCard";
 import {
   useDispatch,
   useLoadedIssuedPCDs,
+  usePCDCollection,
   usePCDs,
   useScrollTo,
   useSelf,
@@ -287,6 +295,7 @@ const EmptyCard = (): ReactElement => {
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
+  const collection = usePCDCollection();
   const [currentPos, setCurrentPos] = useState(0);
   const dispatch = useDispatch();
   const ticketsRef = useRef<Map<string, HTMLDivElement[]>>(new Map());
@@ -295,7 +304,7 @@ export const NewHomeScreen = (): ReactElement => {
   const self = useSelf();
   const navigate = useNavigate();
   const isLoadedPCDs = useLoadedIssuedPCDs();
-
+  const [params, setParams] = useSearchParams();
   const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
   useEffect(() => {
@@ -303,6 +312,21 @@ export const NewHomeScreen = (): ReactElement => {
       navigate("/login", { replace: true });
     }
   });
+
+  useLayoutEffect(() => {
+    const maybeExistingFolder = params.get("folder");
+    if (
+      maybeExistingFolder &&
+      collection.getFoldersInFolder("").includes(decodeURI(maybeExistingFolder))
+    ) {
+      dispatch({
+        type: "set-bottom-modal",
+        modal: { modalType: "pods-collection" }
+      });
+    } else {
+      setParams("");
+    }
+  }, [params, dispatch, collection, setParams]);
 
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {
