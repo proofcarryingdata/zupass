@@ -11,14 +11,6 @@ export enum PasswordStrength {
   STRONG = 2
 }
 
-export const checkPasswordStrength = (password: string): boolean => {
-  if (!window.zxcvbn) {
-    throw new Error("zxcvbn has not been loaded yet");
-  }
-  const { score } = window.zxcvbn(password);
-  return score >= PasswordStrength.STRONG;
-};
-
 export const PASSWORD_MINIMUM_LENGTH = 8;
 
 // For when the user has not set a password yet, and wants to add one

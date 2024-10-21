@@ -1,4 +1,4 @@
-import { FieldLabel, HiddenText, Separator, styled } from "@pcd/passport-ui";
+import { CardWithCopy, HiddenText, styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 
@@ -13,13 +13,20 @@ function SemaphoreIdentityCardBody({
 }): JSX.Element {
   return (
     <Container>
-      <p>
+      <p style={{ color: "var(--text-primary, #1E2C50)", marginBottom: 10 }}>
         This PCD represents a Sempahore Identity, which can be used to send
         anonymous group signals, log into websites, etc.
       </p>
-      <Separator />
-      <FieldLabel>Semaphore Commitment</FieldLabel>
-      <HiddenText text={pcd.claim.identityV3.commitment.toString()} />
+      <CardWithCopy
+        title="Semaphore Commitment"
+        onCopy={() => {
+          return navigator.clipboard.writeText(
+            pcd.claim.identityV3.commitment.toString()
+          );
+        }}
+      >
+        <HiddenText text={pcd.claim.identityV3.commitment.toString()} />
+      </CardWithCopy>
     </Container>
   );
 }

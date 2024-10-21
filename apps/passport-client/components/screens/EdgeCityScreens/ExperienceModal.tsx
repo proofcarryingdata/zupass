@@ -41,7 +41,7 @@ export function ExperienceModal({
       }}
     >
       <Container index={0} count={1} color={color}>
-        <PCDCard pcd={pcd} expanded hideRemoveButton hideHeader={isContact} />
+        <PCDCard pcd={pcd} expanded hideRemoveButton />
         {isContact && altText && altText !== "" && (
           <Button
             onClick={(): void => {

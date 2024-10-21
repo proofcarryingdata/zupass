@@ -1,25 +1,43 @@
-import { ReactElement, useCallback } from "react";
-import { BottomModal } from "../BottomModal";
-import { useBottomModal, useDispatch, useSelf } from "../../../src/appHooks";
+import { ReactElement, useCallback, useState } from "react";
 import styled from "styled-components";
+import { useBottomModal, useDispatch, useSelf } from "../../../src/appHooks";
+import { BottomModal, BottomModalHeader } from "../BottomModal";
 import { Button2 } from "../Button";
-import { Typography } from "../Typography";
 import { Input2 } from "../Input";
+import { NewLoader } from "../NewLoader";
+import { Typography } from "../Typography";
 
 export const DeleteAccountModal = (): ReactElement => {
   const state = useBottomModal();
   const self = useSelf();
   const dispatch = useDispatch();
+  const [emailToDelete, setEmailToDelete] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const deleteAccount = useCallback(() => {
+  const deleteAccount = useCallback(async () => {
+    if (loading || !self || emailToDelete !== self.emails[0]) return;
+
     if (
-      window.confirm(
+      !confirm(
         "Are you sure you want to delete your account? This action cannot be undone."
       )
     ) {
-      dispatch({ type: "delete-account" });
+      return;
     }
-  }, [dispatch]);
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await dispatch({ type: "delete-account" });
+    } catch (e) {
+      setLoading(false);
+      setError(
+        "An error occurred while deleting your account. Please try again."
+      );
+    }
+  }, [loading, self, emailToDelete, dispatch]);
 
   const backBtn = (
     <Button2
@@ -28,35 +46,49 @@ export const DeleteAccountModal = (): ReactElement => {
           type: "set-bottom-modal",
           modal: { modalType: "settings" }
         });
+        setEmailToDelete("");
+        setError("");
       }}
       variant="secondary"
     >
       Back
     </Button2>
   );
+
+  const textOrLoader = (text: string): ReactElement => {
+    if (loading) return <NewLoader columns={3} rows={2} color="white" />;
+    return (
+      <Typography color="inherit" fontSize={18} fontWeight={500} family="Rubik">
+        {text}
+      </Typography>
+    );
+  };
+
   return (
     <BottomModal isOpen={state.modalType === "delete-account"}>
       <Container>
-        <TextBlock>
-          <Typography
-            fontWeight={800}
-            fontSize={20}
-            color="var(--text-primary)"
-          >
-            DELETE ACCOUNT
-          </Typography>
-          <Typography fontSize={16} color="var(--text-primary)">
-            Please confirm that you want to delete your account.
-          </Typography>
-        </TextBlock>
-        <Input2 disabled value={self?.emails[0]} />
+        <BottomModalHeader
+          title="DELETE ACCOUNT"
+          description="Please confirm that you want to delete your account. This action cannot be undone."
+        />
+        <Input2
+          variant="secondary"
+          placeholder={self?.emails[0]}
+          value={emailToDelete}
+          onChange={(e) => {
+            setEmailToDelete(e.target.value);
+            setError("");
+          }}
+          error={error}
+          autoFocus={true}
+        />
         <ButtonsContainer>
           <Button2
-            onClick={() => {
-              deleteAccount();
-            }}
+            variant="danger"
+            onClick={deleteAccount}
+            disabled={loading || emailToDelete !== self?.emails[0]}
           >
-            Delete
+            {textOrLoader("Delete Account")}
           </Button2>
           {backBtn}
         </ButtonsContainer>
@@ -75,11 +107,4 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-`;
-
-const TextBlock = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-start;
 `;

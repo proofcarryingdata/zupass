@@ -27,10 +27,10 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pod": "0.3.0",
-    "@pcd/pod-pcd": "0.3.0",
     "@pcd/passport-ui": "0.13.0",
     "@pcd/pcd-types": "0.13.0",
+    "@pcd/pod": "0.3.0",
+    "@pcd/pod-pcd": "0.3.0",
     "@pcd/util": "0.7.0",
     "react": "^18.2.0"
   },

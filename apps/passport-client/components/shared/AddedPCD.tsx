@@ -1,5 +1,6 @@
 import styled from "styled-components";
-import { Button, H1 } from "../core";
+import { BottomModalHeader } from "../../new-components/shared/BottomModal";
+import { Button2 } from "../../new-components/shared/Button";
 
 /**
  * UI that is shown to the user immediately after they added a PCD to
@@ -13,9 +14,11 @@ export function AddedPCD({
 }): JSX.Element {
   return (
     <AddedPCDContainer>
-      <H1>Added</H1>
-      <p>Close this window by clicking the button below.</p>
-      <Button onClick={onCloseClick}>Close</Button>
+      <BottomModalHeader
+        title="Added"
+        description="Close this window by clicking the button below."
+      ></BottomModalHeader>
+      <Button2 onClick={onCloseClick}>Close</Button2>
     </AddedPCDContainer>
   );
 }
@@ -23,8 +26,9 @@ export function AddedPCD({
 const AddedPCDContainer = styled.div`
   display: flex;
   justify-content: center;
-  align-items: center;
   width: 100%;
   gap: 16px;
   flex-direction: column;
+  padding-right: 24px;
+  padding-left: 24px;
 `;

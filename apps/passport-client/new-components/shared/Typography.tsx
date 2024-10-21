@@ -46,6 +46,7 @@ interface TypographyProps {
   underline?: boolean;
   align?: React.CSSProperties["textAlign"];
   style?: React.CSSProperties;
+  onClick?: () => void;
 }
 export const Typography: React.FC<TypographyProps> = ({
   children,
@@ -56,10 +57,12 @@ export const Typography: React.FC<TypographyProps> = ({
   underline,
   style,
   family,
-  align
+  align,
+  onClick
 }): JSX.Element => {
   return (
     <TypographyText
+      onClick={onClick}
       $family={family ?? "Barlow"}
       $fontSize={fontSize}
       $fontWeight={fontWeight}

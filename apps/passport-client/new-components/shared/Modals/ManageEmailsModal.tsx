@@ -1,15 +1,12 @@
-import styled from "styled-components";
-
+import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import {
-  useBottomModal,
-  useDispatch,
-  usePCDCollection,
-  useSelf,
-  useStateContext
-} from "../../../src/appHooks";
-import { BottomModal } from "../BottomModal";
-import { Button2 } from "../Button";
-import { Input2 } from "../Input";
+  CredentialManager,
+  requestAddUserEmail,
+  requestChangeUserEmail,
+  requestRemoveUserEmail
+} from "@pcd/passport-interface";
+import { getErrorMessage } from "@pcd/util";
+import { validate } from "email-validator";
 import {
   ChangeEventHandler,
   ReactNode,
@@ -17,17 +14,19 @@ import {
   useState,
   useTransition
 } from "react";
-import { validate } from "email-validator";
-import {
-  CredentialManager,
-  requestAddUserEmail,
-  requestChangeUserEmail,
-  requestRemoveUserEmail
-} from "@pcd/passport-interface";
+import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
+import {
+  useBottomModal,
+  useDispatch,
+  usePCDCollection,
+  useSelf,
+  useStateContext
+} from "../../../src/appHooks";
 import { getEmailUpdateErrorMessage } from "../../../src/errorMessage";
-import { getErrorMessage } from "@pcd/util";
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
+import { BottomModal, BottomModalHeader } from "../BottomModal";
+import { Button2 } from "../Button";
+import { Input2 } from "../Input";
 import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
 
@@ -87,6 +86,18 @@ export const ManageEmailModal = (): JSX.Element => {
           type: "set-bottom-modal",
           modal: { modalType: "settings" }
         });
+        reset();
+      }}
+      variant="secondary"
+    >
+      Back
+    </Button2>
+  );
+
+  const backToManageBtn = (
+    <Button2
+      onClick={() => {
+        setEmailManagerState(undefined);
         reset();
       }}
       variant="secondary"
@@ -329,15 +340,12 @@ export const ManageEmailModal = (): JSX.Element => {
 
   const deleteEmailContainer = (
     <>
-      <TextBlock>
-        <Typography fontWeight={800} fontSize={20} color="var(--text-primary)">
-          DELETE EMAIL
-        </Typography>
-        <Typography fontSize={16} color="var(--text-primary)">
-          Please confirm if you want to delete this email from your account.{" "}
-        </Typography>
-      </TextBlock>
+      <BottomModalHeader
+        title="DELETE EMAIL"
+        description="Please confirm if you want to delete this email from your account. "
+      />
       <Input2
+        autoFocus={true}
         variant="secondary"
         placeholder={emailToRemove}
         value={emailToRemoveText}
@@ -351,20 +359,17 @@ export const ManageEmailModal = (): JSX.Element => {
         >
           {textOrLoader("Delete")}
         </Button2>
-        {backBtn}
+        {backToManageBtn}
       </ButtonsContainer>
     </>
   );
   const changeEmailContainer = (
     <>
-      <TextBlock>
-        <Typography fontWeight={800} fontSize={20} color="var(--text-primary)">
-          CHANGE EMAIL
-        </Typography>
-        <Typography fontSize={16} color="var(--text-primary)">
-          Enter your new email address. We'll send a confirmation code to verify
-          it.
-        </Typography>
+      <BottomModalHeader
+        title="CHANGE EMAIL"
+        description="Enter your new email address. We'll send a confirmation code to verify
+          it."
+      >
         <Typography fontSize={16} color="var(--text-primary)">
           The email you are about to change is:{" "}
           <Typography
@@ -375,20 +380,27 @@ export const ManageEmailModal = (): JSX.Element => {
             {oldEmail}
           </Typography>
         </Typography>
-      </TextBlock>
+      </BottomModalHeader>
       <EmailInput
+        autoFocus={emailManagerState === EmailManagerState.changeEmail}
         email={newEmail}
         onChange={(e) => {
           setNewEmail(e.target.value);
           setError("");
         }}
-        error={error}
       />
       {emailManagerState ===
         EmailManagerState.changeEmailEnterConfirmationCode && (
         <Input2
+          autoFocus={
+            emailManagerState ===
+            EmailManagerState.changeEmailEnterConfirmationCode
+          }
           variant="secondary"
-          onChange={(e) => setConfirmationCode(e.target.value)}
+          onChange={(e) => {
+            setConfirmationCode(e.target.value);
+            setError("");
+          }}
           value={confirmationCode}
           error={error}
           placeholder="Enter confirmation code"
@@ -402,7 +414,12 @@ export const ManageEmailModal = (): JSX.Element => {
               ? onChangeEmail()
               : sendConfirmationCode();
           }}
-          disabled={errorOrLoading}
+          disabled={
+            errorOrLoading ||
+            (emailManagerState ===
+              EmailManagerState.changeEmailEnterConfirmationCode &&
+              !confirmationCode)
+          }
         >
           {textOrLoader(
             emailManagerState ===
@@ -412,12 +429,42 @@ export const ManageEmailModal = (): JSX.Element => {
           )}
         </Button2>
 
-        {backBtn}
+        {backToManageBtn}
+      </ButtonsContainer>
+    </>
+  );
+  const addEmailView = (
+    <>
+      <BottomModalHeader
+        title="ADD NEW EMAIL"
+        description="Enter your new email address. We'll send a confirmation code to verify it."
+      />
+      <EmailInput
+        autoFocus={true}
+        email={newEmail}
+        onChange={(e) => {
+          setNewEmail(e.target.value);
+          setError("");
+        }}
+        error={error}
+      />
+      <ButtonsContainer>
+        <Button2
+          onClick={() => sendConfirmationCode()}
+          disabled={errorOrLoading}
+        >
+          {textOrLoader("Get confirmation code")}
+        </Button2>
+        {backToManageBtn}
       </ButtonsContainer>
     </>
   );
   const emailListView = (
     <>
+      <BottomModalHeader
+        title="MANAGE EMAILS"
+        description="You will be able to login with any of your connected emails."
+      />
       <EmailsContainer>
         {emails?.map((email) => (
           <EmailInput
@@ -435,30 +482,16 @@ export const ManageEmailModal = (): JSX.Element => {
             }}
           />
         ))}
-        {emailManagerState === EmailManagerState.addEmail && (
-          <EmailInput
-            email={newEmail}
-            onChange={(e) => {
-              setNewEmail(e.target.value);
-              setError("");
-            }}
-            error={error}
-          />
-        )}
       </EmailsContainer>
       <ButtonsContainer>
-        <Button2
-          onClick={() => {
-            !emailManagerState
-              ? setEmailManagerState(EmailManagerState.addEmail)
-              : sendConfirmationCode();
-          }}
-          disabled={errorOrLoading}
-        >
-          {textOrLoader(
-            !emailManagerState ? "Add email" : "Get confirmation code"
-          )}
-        </Button2>
+        {self && self.emails.length < 5 && (
+          <Button2
+            onClick={() => setEmailManagerState(EmailManagerState.addEmail)}
+            disabled={errorOrLoading}
+          >
+            Add email
+          </Button2>
+        )}
         {backBtn}
       </ButtonsContainer>
     </>
@@ -466,24 +499,29 @@ export const ManageEmailModal = (): JSX.Element => {
 
   const enterCodeContainer = (
     <>
+      <BottomModalHeader
+        title="ENTER CONFIRMATION CODE"
+        description="Please enter the confirmation code."
+      />
       <Input2
+        autoFocus={true}
         variant="secondary"
-        onChange={(e) => setConfirmationCode(e.target.value)}
+        onChange={(e) => {
+          setConfirmationCode(e.target.value);
+          setError("");
+        }}
         value={confirmationCode}
         error={error}
         placeholder="Enter confirmation code"
       />
       <ButtonsContainer>
         <Button2
-          onClick={() => {
-            verifyCode();
-            reset();
-          }}
-          disabled={errorOrLoading}
+          onClick={() => verifyCode()}
+          disabled={errorOrLoading || !confirmationCode}
         >
           {textOrLoader("Verify")}
         </Button2>
-        {backBtn}
+        {backToManageBtn}
       </ButtonsContainer>
     </>
   );
@@ -499,6 +537,8 @@ export const ManageEmailModal = (): JSX.Element => {
         return deleteEmailContainer;
       case EmailManagerState.enterConfirmationCode:
         return enterCodeContainer;
+      case EmailManagerState.addEmail:
+        return addEmailView;
       default:
         return emailListView;
     }
@@ -526,6 +566,19 @@ const IconsContainer = styled.div`
 const EmailInputContainer = styled.div`
   position: relative;
 `;
+
+type EmailInputProps = {
+  email: string;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
+  disabled?: boolean;
+  error?: string;
+  onEdit?: () => void;
+  canEdit?: boolean;
+  onDelete?: () => void;
+  canDelete?: boolean;
+  autoFocus?: boolean;
+};
+
 const EmailInput = ({
   email,
   onChange,
@@ -535,16 +588,8 @@ const EmailInput = ({
   canEdit,
   onDelete,
   canDelete
-}: {
-  email: string;
-  onChange?: ChangeEventHandler<HTMLInputElement>;
-  disabled?: boolean;
-  error?: string;
-  onEdit?: () => void;
-  canEdit?: boolean;
-  onDelete?: () => void;
-  canDelete?: boolean;
-}): JSX.Element => {
+}: EmailInputProps): JSX.Element => {
+  const iconSize = 20;
   return (
     <EmailInputContainer>
       <Input2
@@ -554,6 +599,7 @@ const EmailInput = ({
         variant="secondary"
         value={email}
         onChange={onChange}
+        rightIconSize={iconSize}
       />
       {disabled && (
         <IconsContainer>
@@ -561,8 +607,8 @@ const EmailInput = ({
             <PencilIcon
               style={{ cursor: "pointer" }}
               color="var(--core-accent)"
-              width={20}
-              height={20}
+              width={iconSize}
+              height={iconSize}
               onClick={onEdit}
             />
           )}
@@ -570,8 +616,8 @@ const EmailInput = ({
             <TrashIcon
               style={{ cursor: "pointer" }}
               color="var(--core-accent)"
-              width={20}
-              height={20}
+              width={iconSize}
+              height={iconSize}
               onClick={onDelete}
             />
           )}
@@ -580,7 +626,6 @@ const EmailInput = ({
     </EmailInputContainer>
   );
 };
-
 const EmailsContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -597,11 +642,4 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-`;
-
-const TextBlock = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: flex-start;
 `;
