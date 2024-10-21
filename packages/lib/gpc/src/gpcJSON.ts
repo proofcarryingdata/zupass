@@ -75,7 +75,7 @@ export function proofConfigFromJSON(
 export type JSONBoundConfig = ValibotBoundConfig.JSONType;
 
 /**
- * Converts a {@link GPCProofConfig} to a JSON-compatible representation which
+ * Converts a {@link GPCBoundConfig} to a JSON-compatible representation which
  * can be serialized directly using `JSON.stringify`.  See
  * {@link JSONProofConfig} for information about the format.
  *
