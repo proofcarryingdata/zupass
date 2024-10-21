@@ -312,11 +312,24 @@ const NoUpcomingEventsState = (): ReactElement => {
     <OuterContainer>
       <EmptyCardContainer>
         <InnerContainer>
-          <Typography fontWeight={800} color="var(--text-tertiary)">
-            YOU HAVE NO EVENT PASSES
+          <Typography
+            fontWeight={800}
+            fontSize={16}
+            color="var(--text-primary)"
+          >
+            YOU HAVE NO UPCOMING EVENTS
           </Typography>
-          <Typography color="var(--text-tertiary)">
-            Make sure you are logged in with the correct email address.
+          <Typography color="var(--text-primary)">
+            Can’t find your event?{" "}
+            <a
+              href="mailto:support@zupass.org"
+              style={{
+                color: "var(--text-primary)",
+                textDecorationLine: "underline"
+              }}
+            >
+              Click here
+            </a>
           </Typography>
         </InnerContainer>
       </EmptyCardContainer>
@@ -556,7 +569,7 @@ export const NewHomeScreen = (): ReactElement => {
         </>
       )}
       <Spacer h={96} />
-      <FloatingMenu />
+      <FloatingMenu noTickets={tickets.length === 0} />
       <AddOnsModal />
       <NewModals />
     </AppContainer>
