@@ -75,7 +75,7 @@ const Indicator = styled.div`
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
 `;
 
-export const SlidingTabs = <T,>({
+export const SlidingTabs = <T>({
   tabs,
   onChange,
   initialIndex = 0
