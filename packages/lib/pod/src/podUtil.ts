@@ -26,7 +26,7 @@ export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
  * will not affect the original.
  */
 export function clonePODValue(podValue: PODValue): PODValue {
-  // TODO(POD-P3): When we support containers as values, this will have
+  // TODO(POD-P5): When we support containers as values, this will have
   // to become more complex.
   return { ...podValue };
 }

@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pod-gpc-example",
-  "version": "0.0.7",
+  "version": "0.2.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -26,21 +26,21 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/gpc": "0.0.8",
-    "@pcd/gpc-pcd": "0.0.8",
-    "@pcd/pcd-types": "0.11.4",
-    "@pcd/pod": "0.1.7",
-    "@pcd/pod-pcd": "0.1.7",
-    "@pcd/semaphore-identity-pcd": "0.11.6",
+    "@pcd/gpc": "0.2.0",
+    "@pcd/gpc-pcd": "0.2.0",
+    "@pcd/pcd-types": "0.13.0",
+    "@pcd/pod": "0.3.0",
+    "@pcd/pod-pcd": "0.3.0",
+    "@pcd/semaphore-identity-pcd": "0.13.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "lodash": "^4.17.21",
     "snarkjs": "^0.7.4",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.4",
+    "@pcd/eslint-config-custom": "0.13.0",
     "@pcd/proto-pod-gpc-artifacts": "0.11.0",
-    "@pcd/tsconfig": "0.11.4",
+    "@pcd/tsconfig": "0.13.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/snarkjs": "^0.7.5",

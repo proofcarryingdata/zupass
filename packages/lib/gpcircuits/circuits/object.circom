@@ -10,8 +10,6 @@ include "circomlib/circuits/eddsaposeidon.circom";
  * populated with duplicate constraint-satisfying values from used modules.
  */
 template ObjectModule () {
-    // TODO(POD-P2): enable flag?  Or do we simply require prover to provide satisfying values (unrevealed)?
-
     // Root hash of the object's Merkle tree representation
     signal input contentID;
 

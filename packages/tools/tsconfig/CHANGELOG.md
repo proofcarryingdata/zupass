@@ -1,5 +1,17 @@
 # @pcd/tsconfig
 
+## 0.13.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+## 0.12.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
 ## 0.11.4
 
 ### Patch Changes

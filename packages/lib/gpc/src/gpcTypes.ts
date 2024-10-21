@@ -153,8 +153,6 @@ export type GPCProofEntryConfigCommon = {
    */
   isNotMemberOf?: PODName;
 
-  // TODO(POD-P3): Constraints on entry values can go here.  Lower/upper bounds,
-  // comparison to constant, etc.
   // TODO(POD-P3): Think about where to represent "filtering" inputs in
   // public ways.  E.g. comparison to a constant requires revealing anyway,
   // so isn't handled by this layer for now, but that could be a convenience
@@ -277,8 +275,6 @@ export type GPCProofObjectConfig = {
    */
   signerPublicKey?: GPCProofEntryConfigCommon;
 
-  // TODO(POD-P3): Is there anything to configure at this level?  Or can we
-  // collapose it?
   // TODO(POD-P3): Think about where to represent "filtering" inputs in
   // public ways.  E.g. requiring a specific signer, which is revealed anyway,
   // so isn't handled by this layer for now, but that could be a convenience
