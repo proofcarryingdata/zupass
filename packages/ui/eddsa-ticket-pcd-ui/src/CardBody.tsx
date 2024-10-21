@@ -33,6 +33,8 @@ export interface EdDSATicketPCDCardProps {
   hidePadding?: boolean;
   // when clicked on the the addons sections, if there is any, do something
   addOns?: NEW_UI__AddOns;
+  // defined by if the image has QR code displayed and by this flag.
+  showDownloadButton?: boolean;
 }
 
 export const EdDSATicketPCDUI: PCDUI<EdDSATicketPCD, EdDSATicketPCDCardProps> =
@@ -46,7 +48,8 @@ function EdDSATicketPCDCardBody({
   identityPCD,
   verifyURL,
   idBasedVerifyURL,
-  addOns
+  addOns,
+  showDownloadButton
 }: {
   pcd: EdDSATicketPCD;
 } & EdDSATicketPCDCardProps): JSX.Element {
@@ -99,24 +102,26 @@ function EdDSATicketPCDCardBody({
         </NEW_UI__InfoContainer>
       </NEW_UI__TicketImageContainer>
       <div>
-        <NEW_UI__ExtraSection
-          onClick={async () => {
-            if (downloading) return;
-            setDownloading(true);
-            const ticketElement = ticketImageRef.current;
-            if (!ticketElement) return;
-            await shareOrDownloadImage(
-              ticketElement,
-              (ticketData?.eventName || "event-ticket-data") + ".jpeg"
-            );
-            setDownloading(false);
-          }}
-        >
-          <NEW_UI__ExtraSectionText $disabled={downloading}>
-            Download ticket
-          </NEW_UI__ExtraSectionText>
-          <DownloadIcon />
-        </NEW_UI__ExtraSection>
+        {!imageToRender && showDownloadButton && (
+          <NEW_UI__ExtraSection
+            onClick={async () => {
+              if (downloading) return;
+              setDownloading(true);
+              const ticketElement = ticketImageRef.current;
+              if (!ticketElement) return;
+              await shareOrDownloadImage(
+                ticketElement,
+                (ticketData?.eventName || "event-ticket-data") + ".jpeg"
+              );
+              setDownloading(false);
+            }}
+          >
+            <NEW_UI__ExtraSectionText $disabled={downloading}>
+              Download ticket
+            </NEW_UI__ExtraSectionText>
+            <DownloadIcon />
+          </NEW_UI__ExtraSection>
+        )}
         {addOns && (
           <NEW_UI__ExtraSection onClick={addOns.onClick}>
             <NEW_UI__ExtraSectionText>{addOns.text}</NEW_UI__ExtraSectionText>
