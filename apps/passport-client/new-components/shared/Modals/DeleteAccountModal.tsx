@@ -80,6 +80,7 @@ export const DeleteAccountModal = (): ReactElement => {
             setError("");
           }}
           error={error}
+          autoFocus={true}
         />
         <ButtonsContainer>
           <Button2

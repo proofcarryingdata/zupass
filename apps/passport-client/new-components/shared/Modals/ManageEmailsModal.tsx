@@ -10,7 +10,9 @@ import { validate } from "email-validator";
 import {
   ChangeEventHandler,
   ReactNode,
+  forwardRef,
   useCallback,
+  useRef,
   useState,
   useTransition
 } from "react";
@@ -57,6 +59,7 @@ export const ManageEmailModal = (): JSX.Element => {
 
   const [emailToRemove, setEmailToRemove] = useState("");
   const [emailToRemoveText, setEmailToRemoveText] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
   const errorOrLoading = !!error || loading;
   const reset = (): void => {
     startTransition((): void => {
@@ -345,6 +348,7 @@ export const ManageEmailModal = (): JSX.Element => {
         description="Please confirm if you want to delete this email from your account. "
       />
       <Input2
+        autoFocus={true}
         variant="secondary"
         placeholder={emailToRemove}
         value={emailToRemoveText}
@@ -381,6 +385,8 @@ export const ManageEmailModal = (): JSX.Element => {
         </Typography>
       </BottomModalHeader>
       <EmailInput
+        autoFocus={emailManagerState === EmailManagerState.changeEmail}
+        ref={inputRef}
         email={newEmail}
         onChange={(e) => {
           setNewEmail(e.target.value);
@@ -390,6 +396,10 @@ export const ManageEmailModal = (): JSX.Element => {
       {emailManagerState ===
         EmailManagerState.changeEmailEnterConfirmationCode && (
         <Input2
+          autoFocus={
+            emailManagerState ===
+            EmailManagerState.changeEmailEnterConfirmationCode
+          }
           variant="secondary"
           onChange={(e) => {
             setConfirmationCode(e.target.value);
@@ -434,6 +444,7 @@ export const ManageEmailModal = (): JSX.Element => {
         description="Enter your new email address. We'll send a confirmation code to verify it."
       />
       <EmailInput
+        autoFocus={true}
         email={newEmail}
         onChange={(e) => {
           setNewEmail(e.target.value);
@@ -497,6 +508,7 @@ export const ManageEmailModal = (): JSX.Element => {
         description="Please enter the confirmation code."
       />
       <Input2
+        autoFocus={true}
         variant="secondary"
         onChange={(e) => {
           setConfirmationCode(e.target.value);
@@ -558,16 +570,8 @@ const IconsContainer = styled.div`
 const EmailInputContainer = styled.div`
   position: relative;
 `;
-const EmailInput = ({
-  email,
-  onChange,
-  disabled,
-  error,
-  onEdit,
-  canEdit,
-  onDelete,
-  canDelete
-}: {
+
+type EmailInputProps = {
   email: string;
   onChange?: ChangeEventHandler<HTMLInputElement>;
   disabled?: boolean;
@@ -576,45 +580,63 @@ const EmailInput = ({
   canEdit?: boolean;
   onDelete?: () => void;
   canDelete?: boolean;
-}): JSX.Element => {
-  const iconSize = 20;
-  return (
-    <EmailInputContainer>
-      <Input2
-        error={error}
-        disabled={disabled}
-        placeholder="Email"
-        variant="secondary"
-        value={email}
-        onChange={onChange}
-        rightIconSize={iconSize}
-      />
-      {disabled && (
-        <IconsContainer>
-          {canEdit && (
-            <PencilIcon
-              style={{ cursor: "pointer" }}
-              color="var(--core-accent)"
-              width={iconSize}
-              height={iconSize}
-              onClick={onEdit}
-            />
-          )}
-          {canDelete && (
-            <TrashIcon
-              style={{ cursor: "pointer" }}
-              color="var(--core-accent)"
-              width={iconSize}
-              height={iconSize}
-              onClick={onDelete}
-            />
-          )}
-        </IconsContainer>
-      )}
-    </EmailInputContainer>
-  );
+  autoFocus?: boolean;
 };
-
+const EmailInput = forwardRef<HTMLInputElement, EmailInputProps>(
+  (
+    {
+      email,
+      onChange,
+      disabled,
+      error,
+      onEdit,
+      canEdit,
+      onDelete,
+      canDelete,
+      autoFocus
+    },
+    ref
+  ): JSX.Element => {
+    const iconSize = 20;
+    return (
+      <EmailInputContainer>
+        <Input2
+          autoFocus={autoFocus}
+          ref={ref}
+          error={error}
+          disabled={disabled}
+          placeholder="Email"
+          variant="secondary"
+          value={email}
+          onChange={onChange}
+          rightIconSize={iconSize}
+        />
+        {disabled && (
+          <IconsContainer>
+            {canEdit && (
+              <PencilIcon
+                style={{ cursor: "pointer" }}
+                color="var(--core-accent)"
+                width={iconSize}
+                height={iconSize}
+                onClick={onEdit}
+              />
+            )}
+            {canDelete && (
+              <TrashIcon
+                style={{ cursor: "pointer" }}
+                color="var(--core-accent)"
+                width={iconSize}
+                height={iconSize}
+                onClick={onDelete}
+              />
+            )}
+          </IconsContainer>
+        )}
+      </EmailInputContainer>
+    );
+  }
+);
 const EmailsContainer = styled.div`
   display: flex;
   flex-direction: column;
