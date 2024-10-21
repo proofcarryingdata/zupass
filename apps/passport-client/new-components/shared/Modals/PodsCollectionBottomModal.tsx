@@ -11,7 +11,14 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isUnknownPCD } from "@pcd/unknown-pcd";
 import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
 import intersectionWith from "lodash/intersectionWith";
-import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import styled from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
@@ -119,7 +126,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     return Object.values(result).filter((group) => group.children.length > 0);
   }, [pcdCollection, dispatch]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     // Restore scroll position when list is shown again
     if (listContainerRef.current) {
       if (!activePod) {
