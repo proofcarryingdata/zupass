@@ -22,16 +22,16 @@
   // References are automatically maintained by `yarn fix-references`
   "references": [
     {
-      "path": "../../lib/pod"
-    },
-    {
-      "path": "../../pcd/pod-pcd"
-    },
-    {
       "path": "../../lib/passport-ui"
     },
     {
       "path": "../../lib/pcd-types"
+    },
+    {
+      "path": "../../lib/pod"
+    },
+    {
+      "path": "../../pcd/pod-pcd"
     },
     {
       "path": "../../lib/util"

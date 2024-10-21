@@ -11,16 +11,16 @@
   // References are automatically maintained by `yarn fix-references`
   "references": [
     {
-      "path": "../../lib/pod/tsconfig.esm.json"
-    },
-    {
-      "path": "../../pcd/pod-pcd/tsconfig.esm.json"
-    },
-    {
       "path": "../../lib/passport-ui/tsconfig.esm.json"
     },
     {
       "path": "../../lib/pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/pod/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/pod-pcd/tsconfig.esm.json"
     },
     {
       "path": "../../lib/util/tsconfig.esm.json"

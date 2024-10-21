@@ -18,12 +18,6 @@
     },
     {
       "path": "../../lib/pcd-types/tsconfig.cjs.json"
-    },
-    {
-      "path": "../../pcd/semaphore-identity-pcd/tsconfig.cjs.json"
-    },
-    {
-      "path": "../../pcd/zk-eddsa-event-ticket-pcd/tsconfig.cjs.json"
     }
   ]
 }
