@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import SwipeableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { TicketQRWrapper } from "../../../components/shared/PCDCard";
@@ -60,7 +60,7 @@ export const AddOnsModal = (): JSX.Element | null => {
   const dispatch = useDispatch();
   const isAddOnsModal = activeModal.modalType === "ticket-add-ons";
   const addOns = isAddOnsModal ? activeModal.addOns : [];
-
+  const [holding, setHolding] = useState(false);
   const { containerRef, activeIdx, setActiveIdx } = useTrackpadSwipe({
     isEnabled: isAddOnsModal,
     itemCount: addOns.length
@@ -84,7 +84,21 @@ export const AddOnsModal = (): JSX.Element | null => {
       isOpen={activeModal.modalType === "ticket-add-ons"}
       onClickOutside={handleCloseModal}
     >
-      <div ref={containerRef}>
+      <div
+        ref={containerRef}
+        onMouseDown={() => {
+          setHolding(true);
+        }}
+        onMouseUp={() => {
+          setHolding(false);
+        }}
+        onMouseLeave={() => {
+          setHolding(false);
+        }}
+        style={{
+          cursor: holding ? "grabbing" : "grab"
+        }}
+      >
         <_SwipableViews
           containerStyle={{ width: "100%", paddingBottom: 12 }}
           slideStyle={{ padding: "0 10px" }}
