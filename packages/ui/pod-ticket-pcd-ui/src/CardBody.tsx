@@ -14,6 +14,7 @@ export interface PODTicketPCDCardProps {
   ticketData: IPODTicketData;
   idBasedVerifyURL: string;
   addOns?: NEW_UI__AddOns;
+  showDownoladButton?: boolean;
 }
 
 export const PODTicketPCDUI: PCDUI<PODTicketPCD, PODTicketPCDCardProps> = {
@@ -23,14 +24,17 @@ export const PODTicketPCDUI: PCDUI<PODTicketPCD, PODTicketPCDCardProps> = {
 function PODTicketCardBody({
   pcd,
   idBasedVerifyURL,
-  addOns
+  addOns,
+  showDownoladButton
 }: {
   pcd: PODTicketPCD;
   idBasedVerifyURL: string;
   addOns?: NEW_UI__AddOns;
+  showDownoladButton?: boolean;
 }): JSX.Element {
   return (
     <PODTicketCardBodyImpl
+      showDownoladButton={showDownoladButton}
       ticketData={pcd.claim.ticket}
       idBasedVerifyURL={idBasedVerifyURL}
       addOns={addOns}
@@ -41,7 +45,8 @@ function PODTicketCardBody({
 export function PODTicketCardBodyImpl({
   ticketData,
   idBasedVerifyURL,
-  addOns
+  addOns,
+  showDownoladButton
 }: PODTicketPCDCardProps): JSX.Element {
   const ticketImageRef = useRef<HTMLDivElement>(null);
 
@@ -89,24 +94,26 @@ export function PODTicketCardBodyImpl({
         </NEW_UI__InfoContainer>
       </NEW_UI__TicketImageContainer>
       <div>
-        <NEW_UI__ExtraSection
-          onClick={async () => {
-            if (downloading) return;
-            setDownloading(true);
-            const ticketElement = ticketImageRef.current;
-            if (!ticketElement) return;
-            await shareOrDownloadImage(
-              ticketElement,
-              (ticketData?.eventName || "event-ticket-data") + ".jpeg"
-            );
-            setDownloading(false);
-          }}
-        >
-          <NEW_UI__ExtraSectionText $disabled={downloading}>
-            Download ticket
-          </NEW_UI__ExtraSectionText>
-          <DownloadIcon />
-        </NEW_UI__ExtraSection>
+        {showDownoladButton && !imageToRender && (
+          <NEW_UI__ExtraSection
+            onClick={async () => {
+              if (downloading) return;
+              setDownloading(true);
+              const ticketElement = ticketImageRef.current;
+              if (!ticketElement) return;
+              await shareOrDownloadImage(
+                ticketElement,
+                (ticketData?.eventName || "event-ticket-data") + ".jpeg"
+              );
+              setDownloading(false);
+            }}
+          >
+            <NEW_UI__ExtraSectionText $disabled={downloading}>
+              Download ticket
+            </NEW_UI__ExtraSectionText>
+            <DownloadIcon />
+          </NEW_UI__ExtraSection>
+        )}
         {addOns && (
           <NEW_UI__ExtraSection onClick={addOns.onClick}>
             <NEW_UI__ExtraSectionText>{addOns.text}</NEW_UI__ExtraSectionText>
