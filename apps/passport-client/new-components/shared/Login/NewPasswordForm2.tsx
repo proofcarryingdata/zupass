@@ -110,6 +110,7 @@ export const NewPasswordForm2 = ({
       <InputsContainer>
         {isChangePassword && (
           <PasswordInput2
+            autoFocus={true}
             value={currentPassword}
             onChange={({ target: { value } }): void => {
               setError("");
