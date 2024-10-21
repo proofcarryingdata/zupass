@@ -138,4 +138,8 @@ export function isInIframe(): boolean {
   return window !== window.parent;
 }
 
+export function stringSizeInBytes(s: string): number {
+  return new TextEncoder().encode(s).length;
+}
+
 export const ADD_PCD_SIZE_LIMIT_BYTES = 50000;

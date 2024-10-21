@@ -75,7 +75,7 @@ import {
   uploadSerializedStorage,
   uploadStorage
 } from "./useSyncE2EEStorage";
-import { ADD_PCD_SIZE_LIMIT_BYTES } from "./util";
+import { ADD_PCD_SIZE_LIMIT_BYTES, stringSizeInBytes } from "./util";
 import { validateAndLogRunningAppState } from "./validateState";
 
 export type Dispatcher = (action: Action) => Promise<void>;
@@ -775,10 +775,11 @@ async function addPCDs(
   folder?: string
 ): Promise<void> {
   for (const serializedPCD of pcds) {
-    if (serializedPCD.pcd.length > ADD_PCD_SIZE_LIMIT_BYTES) {
+    const bytes = stringSizeInBytes(serializedPCD.pcd);
+    if (bytes > ADD_PCD_SIZE_LIMIT_BYTES) {
       throw new Error(
         `PCD is too large to add.` +
-          ` ${serializedPCD.pcd.length} > ${ADD_PCD_SIZE_LIMIT_BYTES} bytes`
+          ` ${bytes} > ${ADD_PCD_SIZE_LIMIT_BYTES} bytes`
       );
     }
   }
