@@ -19,7 +19,7 @@ import {
   useRef,
   useState
 } from "react";
-import styled from "styled-components";
+import styled, { CSSProperties } from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
   useBottomModal,
@@ -72,9 +72,11 @@ const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
 
 type PodsCollectionListProps = {
   onPodClick?: (pcd: PCD<unknown, unknown>) => void;
+  style?: CSSProperties;
 };
 export const PodsCollectionList = ({
-  onPodClick
+  onPodClick,
+  style
 }: PodsCollectionListProps): ReactElement => {
   const pcdCollection = usePCDCollection();
 
@@ -119,7 +121,7 @@ export const PodsCollectionList = ({
     return Object.values(result).filter((group) => group.children.length > 0);
   }, [pcdCollection, onPodClick]);
 
-  return <List style={{ paddingTop: 0 }} list={podsCollectionList} />;
+  return <List style={style} list={podsCollectionList} />;
 };
 
 export const PodsCollectionBottomModal = (): JSX.Element | null => {
@@ -176,6 +178,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
             <CardBody isMainIdentity={false} pcd={activePod} />
           ) : (
             <PodsCollectionList
+              style={{ padding: "12px 24px", paddingTop: 0 }}
               onPodClick={(pcd) => {
                 listContainerRef.current &&
                   setScrollPosition(listContainerRef.current.scrollTop);
