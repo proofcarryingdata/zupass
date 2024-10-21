@@ -25,7 +25,7 @@ export function useDeserialized(pcd: SerializedPCD): {
         console.log("deserialized pcd", deserialized);
         setDeserialized(deserialized);
       } catch (e) {
-        console.log("error deserializing pcd", e);
+        console.error("error deserializing pcd", e);
         setError(e instanceof Error ? e : new Error("Error deserializing PCD"));
       }
     }

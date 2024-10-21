@@ -2,7 +2,6 @@ import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
 import { Identity as IdentityV4 } from "semaphore-identity-v4";
 import type { Groth16Proof } from "snarkjs";
-import { ClosedInterval } from "./gpcUtil";
 
 /**
  * String specifying a named entry, virtual or otherwise, in a named object, in
@@ -161,6 +160,11 @@ export type GPCProofEntryConfigCommon = {
 };
 
 /**
+ * Convenient type for closed intervals used in (out of) bounds/range checks.
+ */
+export type GPCClosedInterval = { min: bigint; max: bigint };
+
+/**
  * Bounds check configuration for an individual entry. This specifies the bounds
  * checks required for that entry.
  */
@@ -171,7 +175,7 @@ export type GPCProofEntryBoundsCheckConfig = {
    * signed 64-bit integer values. They will always be revealed by virtue of
    * their inclusion in the proof configuration.
    */
-  inRange?: ClosedInterval;
+  inRange?: GPCClosedInterval;
 
   /**
    * Indicates the range/interval/bounds outside of which this entry should
@@ -179,7 +183,7 @@ export type GPCProofEntryBoundsCheckConfig = {
    * 64-bit integer values. They will always be revealed by virtue of their
    * inclusion in the proof configuration.
    */
-  notInRange?: ClosedInterval;
+  notInRange?: GPCClosedInterval;
 };
 
 /**

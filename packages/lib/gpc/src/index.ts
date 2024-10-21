@@ -1,7 +1,6 @@
 export { type ProtoPODGPCCircuitDesc } from "@pcd/gpcircuits";
 export * from "./gpc";
 export * from "./gpcJSON";
-export * from "./gpcSerialize";
 export * from "./gpcTypes";
 
 // TODO(POD-P4): Make these hidden again if they're unneded.  The pre/post

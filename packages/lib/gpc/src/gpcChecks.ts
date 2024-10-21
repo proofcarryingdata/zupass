@@ -28,6 +28,7 @@ import uniq from "lodash/uniq";
 import { Identity as IdentityV4 } from "semaphore-identity-v4";
 import {
   GPCBoundConfig,
+  GPCClosedInterval,
   GPCIdentifier,
   GPCProofConfig,
   GPCProofEntryBoundsCheckConfig,
@@ -43,13 +44,12 @@ import {
   TupleIdentifier
 } from "./gpcTypes";
 import {
-  ClosedInterval,
   GPCProofMembershipListConfig,
   GPCRequirements,
   LIST_MEMBERSHIP,
   LIST_NONMEMBERSHIP,
   canonicalizeBoundsCheckConfig,
-  checkPODEntryIdentifier,
+  checkPODEntryIdentifierParts,
   checkPODEntryName,
   isVirtualEntryIdentifier,
   isVirtualEntryName,
@@ -271,8 +271,10 @@ export function checkProofEntryConfig(
     "boolean"
   );
 
+  const isVirtualEntry = isVirtualEntryIdentifier(nameForErrorMessages);
+
   if (entryConfig.isOwnerID !== undefined) {
-    if (isVirtualEntryIdentifier(nameForErrorMessages)) {
+    if (isVirtualEntry) {
       throw new Error("Can't use isOwnerID on a virtual entry.");
     }
 
@@ -300,14 +302,14 @@ export function checkProofEntryConfig(
   }
 
   if (entryConfig.equalsEntry !== undefined) {
-    checkPODEntryIdentifier(
+    checkPODEntryIdentifierParts(
       `${nameForErrorMessages}.equalsEntry`,
       entryConfig.equalsEntry
     );
   }
 
   if (entryConfig.notEqualsEntry !== undefined) {
-    checkPODEntryIdentifier(
+    checkPODEntryIdentifierParts(
       `${nameForErrorMessages}.notEqualsEntry`,
       entryConfig.notEqualsEntry
     );
@@ -315,12 +317,14 @@ export function checkProofEntryConfig(
 
   const nBoundsChecks = checkProofEntryBoundsCheckConfig(
     nameForErrorMessages,
-    entryConfig
+    entryConfig,
+    isVirtualEntry
   );
 
   const inequalityChecks = checkProofEntryInequalityConfig(
     nameForErrorMessages,
-    entryConfig
+    entryConfig,
+    isVirtualEntry
   );
 
   const hasOwnerV3Check = entryConfig.isOwnerID === SEMAPHORE_V3;
@@ -336,8 +340,21 @@ export function checkProofEntryConfig(
 
 export function checkProofEntryBoundsCheckConfig(
   nameForErrorMessages: PODEntryIdentifier,
-  entryConfig: GPCProofEntryBoundsCheckConfig
+  entryConfig: GPCProofEntryBoundsCheckConfig,
+  isVirtualEntry: boolean
 ): number {
+  if (isVirtualEntry) {
+    if (
+      entryConfig.inRange !== undefined ||
+      entryConfig.notInRange !== undefined
+    ) {
+      throw new TypeError(
+        `Range constraints are not allowed on virtual entry ${nameForErrorMessages}.`
+      );
+    }
+    return 0;
+  }
+
   // Canonicalize to simplify in cases where this is necessary.
   const boundsCheckConfig = canonicalizeBoundsCheckConfig(
     entryConfig.inRange,
@@ -348,7 +365,7 @@ export function checkProofEntryBoundsCheckConfig(
   for (const [checkType, inRange] of [
     ["bounds check", boundsCheckConfig.inRange],
     ["out of bounds check", boundsCheckConfig.notInRange]
-  ] as [string, ClosedInterval][]) {
+  ] as [string, GPCClosedInterval][]) {
     if (inRange !== undefined) {
       if (inRange.min < POD_INT_MIN) {
         throw new RangeError(
@@ -386,8 +403,23 @@ export function checkProofEntryBoundsCheckConfig(
 
 export function checkProofEntryInequalityConfig(
   entryIdentifier: PODEntryIdentifier,
-  entryConfig: GPCProofEntryInequalityConfig
+  entryConfig: GPCProofEntryInequalityConfig,
+  isVirtualEntry: boolean
 ): Record<string, PODEntryIdentifier> {
+  if (isVirtualEntry) {
+    if (
+      entryConfig.lessThan !== undefined ||
+      entryConfig.lessThanEq !== undefined ||
+      entryConfig.greaterThan !== undefined ||
+      entryConfig.greaterThanEq !== undefined
+    ) {
+      throw new TypeError(
+        `Inequality constraints are not allowed on virtual entry ${entryIdentifier}.`
+      );
+    }
+    return {};
+  }
+
   return Object.fromEntries(
     ["lessThan", "lessThanEq", "greaterThan", "greaterThanEq"].flatMap(
       (ineqCheck: string): [string, PODEntryIdentifier][] => {
@@ -395,7 +427,7 @@ export function checkProofEntryInequalityConfig(
           entryConfig[ineqCheck as keyof typeof entryConfig];
         if (otherEntryIdentifier !== undefined) {
           // The other entry identifier should be valid.
-          checkPODEntryIdentifier(
+          checkPODEntryIdentifierParts(
             `${entryIdentifier}.${ineqCheck}`,
             otherEntryIdentifier
           );
@@ -1436,7 +1468,7 @@ export function checkPODEntryIdentifierExists(
   pods: Record<PODName, GPCProofObjectConfig>
 ): void {
   // Check that the tuples reference entries included in the config.
-  const [podName, entryName] = checkPODEntryIdentifier(
+  const [podName, entryName] = checkPODEntryIdentifierParts(
     tupleNameForErrorMessages,
     entryIdentifier
   );

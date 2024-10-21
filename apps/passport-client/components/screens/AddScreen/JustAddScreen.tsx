@@ -2,6 +2,7 @@ import {
   PCDAddRequest,
   ProtocolWorldsFolderName
 } from "@pcd/passport-interface";
+import { ErrorContainer } from "@pcd/passport-ui";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { BottomModal } from "../../../new-components/shared/BottomModal";
@@ -39,8 +40,7 @@ export function JustAddScreen({
 }): JSX.Element {
   const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
-  const { error, pcd } = useDeserialized(request.pcd);
-  console.log("Error: ", error);
+  const { error: deserializeError, pcd } = useDeserialized(request.pcd);
   const syncSettled = useIsSyncSettled();
   const self = useSelf();
   const isMintable =
@@ -112,7 +112,7 @@ export function JustAddScreen({
             hideRemoveButton={true}
           />
         )}
-        {!isProtocolWorlds && request.folder && (
+        {pcd && !isProtocolWorlds && request.folder && (
           <div style={{ textAlign: "center" }}>
             <Typography
               family="Rubik"
@@ -126,13 +126,19 @@ export function JustAddScreen({
             </Typography>
           </div>
         )}
-        {error && JSON.stringify(error)}
-        <Spacer h={24} />
-        <div style={{ paddingLeft: 24, paddingRight: 24 }}>
-          <Button2 onClick={onAddClick}>
-            {isProtocolWorlds ? "Collect" : isMintable ? "Mint" : "Add"}
-          </Button2>
-        </div>
+        {deserializeError && (
+          <ErrorContainer>
+            Deserialization error: {getErrorMessage(deserializeError)}
+          </ErrorContainer>
+        )}
+        <Spacer h={16} />
+        {pcd && (
+          <div style={{ paddingLeft: 24, paddingRight: 24 }}>
+            <Button2 onClick={onAddClick}>
+              {isProtocolWorlds ? "Collect" : isMintable ? "Mint" : "Add"}
+            </Button2>
+          </div>
+        )}
       </>
     );
   } else if (isProtocolWorlds) {
