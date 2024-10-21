@@ -315,6 +315,9 @@ export const NewHomeScreen = (): ReactElement => {
   });
 
   useLayoutEffect(() => {
+    // if we haven't loaded all pcds yet, dont process the prove request
+    if (!isLoadedPCDs) return;
+
     const maybeExistingFolder = params.get("folder");
     if (
       maybeExistingFolder &&
@@ -324,12 +327,8 @@ export const NewHomeScreen = (): ReactElement => {
         type: "set-bottom-modal",
         modal: { modalType: "pods-collection" }
       });
-    } else {
-      setParams("");
+      return;
     }
-    // if we haven't loaded all pcds yet, dont process the prove request
-    if (!isLoadedPCDs) return;
-
     if (location.pathname.includes("prove")) {
       const params = new URLSearchParams(location.search);
       const request = JSON.parse(
@@ -340,7 +339,9 @@ export const NewHomeScreen = (): ReactElement => {
         modal: { request, modalType: "prove" }
       });
       console.log(request);
+      return;
     }
+    if (params.size > 0) setParams("");
   }, [params, collection, setParams, isLoadedPCDs, location, dispatch]);
 
   useEffect(() => {
