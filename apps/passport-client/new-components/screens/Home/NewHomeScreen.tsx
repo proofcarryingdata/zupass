@@ -8,8 +8,15 @@ import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { uniqWith } from "lodash";
-import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  ReactElement,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
@@ -251,13 +258,23 @@ export const NewHomeScreen = (): ReactElement => {
   const self = useSelf();
   const navigate = useNavigate();
   const isLoadedPCDs = useLoadedIssuedPCDs();
-
+  const [params, setParams] = useSearchParams();
   const isInvalidUser = useUserForcedToLogout();
   useEffect(() => {
     if (!self) {
       navigate("/login", { replace: true });
     }
   });
+
+  useLayoutEffect(() => {
+    if (params.has("folder")) {
+      // const folderToScrollTo = fold
+      dispatch({
+        type: "set-bottom-modal",
+        modal: { modalType: "pods-collection" }
+      });
+    }
+  }, [params, dispatch]);
 
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {

@@ -24,6 +24,7 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
+import { useSearchParams } from "react-router-dom";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -67,6 +68,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useDispatch();
   const pcdCollection = usePCDCollection();
+  const [params, setParams] = useSearchParams();
   const isPodsCollectionModalOpen =
     activeBottomModal.modalType === "pods-collection";
 
@@ -127,12 +129,24 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     // Restore scroll position when list is shown again
     if (listContainerRef.current) {
       if (!activePod) {
-        listContainerRef.current.scrollTop = scrollPosition;
+        let pos = scrollPosition;
+        const folder = params.get("folder");
+        // checks if url contains folder route, and if so, scrolls to it
+        if (folder) {
+          const decodedFolderId = decodeURI(folder);
+          const folderContainer = document.getElementById(decodedFolderId);
+          if (folderContainer) {
+            pos = folderContainer.offsetTop;
+          }
+        }
+        listContainerRef.current.scrollTop = pos;
       } else {
         listContainerRef.current.scrollTop = 0;
+        // resetting params when user opens a pod
+        setParams("");
       }
     }
-  }, [activePod, scrollPosition]);
+  }, [activePod, scrollPosition, params, setParams]);
 
   return (
     <BottomModal
@@ -184,6 +198,7 @@ const ListContainer = styled.div`
 `;
 
 const Container = styled.div`
+  position: relative; // important for scrolling to the right position of the folder
   display: flex;
   flex-direction: column;
   height: fit-content;
