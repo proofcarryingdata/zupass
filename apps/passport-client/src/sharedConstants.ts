@@ -38,3 +38,5 @@ export const GPC_ARTIFACTS_CONFIG =
         stability: "prod",
         version: GPC_ARTIFACTS_NPM_VERSION
       });
+
+export const ZUPASS_GPC_ARTIFACT_PATH = glob.ZUPASS_GPC_ARTIFACT_PATH;

@@ -1,8 +1,9 @@
 // this file is loaded as a service worker
+import { GPC_ARTIFACTS_NPM_VERSION } from "@pcd/gpc";
 import { setTimeout as promiseTimeout } from "isomorphic-timers-promises";
 import {
-  GPC_ARTIFACTS_CONFIG,
-  SERVICE_WORKER_ENABLED
+  SERVICE_WORKER_ENABLED,
+  ZUPASS_GPC_ARTIFACT_PATH
 } from "../sharedConstants";
 
 // Hack to make TypeScript aware of the ServiceWorkerGlobalScope type.
@@ -65,8 +66,8 @@ const EPHEMERAL_CACHE_RESOURCES = new Set([
  * Cache name includes deployed artifact version, which protects against using
  * cached artifacts of a different version.
  */
-const Z_CACHE_NAME = `${CACHE_VERSION}-${GPC_ARTIFACTS_CONFIG}-Z`;
-const Z_CACHE_RESOURCES = new Set(["/artifacts/proto-pod-gpc"]);
+const Z_CACHE_NAME = `${CACHE_VERSION}-${GPC_ARTIFACTS_NPM_VERSION}-Z`;
+const Z_CACHE_RESOURCES = new Set([ZUPASS_GPC_ARTIFACT_PATH]);
 
 /**
  * Stable cache is for resources which are expected not to change frequently,

@@ -30,6 +30,7 @@ import { v4 as uuidv4 } from "uuid";
 import { appConfig } from "../appConfig";
 import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";
+import { ZUPASS_GPC_ARTIFACT_PATH } from "../sharedConstants";
 import { collectionIdToFolderName, getPODsForCollections } from "./collections";
 import { QuerySubscriptionManager } from "./query_subscription_manager";
 import { ListenMode } from "./useZappServer";
@@ -365,7 +366,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
       proof,
       boundConfig,
       revealedClaims,
-      new URL("/artifacts/proto-pod-gpc", window.location.origin).toString()
+      new URL(ZUPASS_GPC_ARTIFACT_PATH, window.location.origin).toString()
     );
   }
 
@@ -382,7 +383,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
       proof,
       config as GPCBoundConfig,
       revealedClaims,
-      new URL("/artifacts/proto-pod-gpc", window.location.origin).toString()
+      new URL(ZUPASS_GPC_ARTIFACT_PATH, window.location.origin).toString()
     );
   }
 

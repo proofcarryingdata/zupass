@@ -8,10 +8,15 @@ import Handlebars from "handlebars";
 import https from "https";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
+import { GPC_ARTIFACTS_NPM_VERSION } from "../../packages/lib/gpc/src/gpc";
 
 dotenv.config();
 
+export const ZUPASS_GPC_ARTIFACT_PATH = `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`;
+const GLOB = { ZUPASS_GPC_ARTIFACT_PATH };
+
 const define = {
+  glob: JSON.stringify(GLOB),
   "process.env.ONE_CLICK_LOGIN_ENABLED":
     process.env.ONE_CLICK_LOGIN_ENABLED === "true" ? '"true"' : '"false"',
   "process.env.PASSPORT_SERVER_URL": JSON.stringify(
@@ -219,13 +224,13 @@ function compileHtml(): void {
 }
 
 function copyGPCArtifacts(): void {
-  fs.rmSync(path.join("public/artifacts/proto-pod-gpc"), {
+  fs.rmSync(path.join("public" + ZUPASS_GPC_ARTIFACT_PATH), {
     recursive: true,
     force: true
   });
   fs.cpSync(
     path.join("../../node_modules/@pcd/proto-pod-gpc-artifacts"),
-    path.join("public/artifacts/proto-pod-gpc"),
+    path.join("public" + ZUPASS_GPC_ARTIFACT_PATH),
     { recursive: true }
   );
 }
