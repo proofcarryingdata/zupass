@@ -5,7 +5,6 @@
 
 import cluster from "cluster";
 import dotenv from "dotenv";
-import os from "os";
 import path from "path";
 import process from "process";
 import { startApplication } from "./application";
@@ -24,7 +23,7 @@ dotenv.config({ path: dotEnvPath });
 const clusterEnabled = process.env.ENABLE_CLUSTER === "true";
 
 function getClusterSize(): number {
-  const numCPUs = os.cpus().length;
+  const numCPUs = 2;
   const numWorkers = parseInt(process.env.CLUSTER_PROCESSES ?? `${numCPUs}`);
   if (isNaN(numWorkers)) {
     return numCPUs;
