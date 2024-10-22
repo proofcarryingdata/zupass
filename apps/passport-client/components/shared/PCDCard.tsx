@@ -199,11 +199,7 @@ export const TicketQRWrapper = forwardRef<
     const urls = getURLsBasedOnCategory(pcd.claim.ticket.ticketCategory);
     return (
       <QRContainer ref={ref}>
-        <EddsaTicketQR
-          pcd={pcd}
-          idBasedVerifyURL={urls.idBasedVerifyURL}
-          verifyURL={urls.verifyURL}
-        />
+        <EddsaTicketQR pcd={pcd} verifyURL={urls.verifyURL} />
       </QRContainer>
     );
   }
@@ -249,29 +245,6 @@ const TicketWrapper = forwardRef<
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
-  // If using only an ID in the URL, choose different verification screen based
-  // on ticket category. Worth remembering that this does not check the public
-  // key of the issuer.
-  // If the `idBasedVerifyURL` is set, then the QR code will default to
-  // encoding some simple data, with "ZK mode" as an alternate option. ZK mode
-  // encodes an entire serialized ZKEdDSAEventTicketPCD in the query string,
-  // which may make the resulting QR code difficult to scan on some devices.
-  // If idBasedVerifyURL is undefined, then "ZK mode" is forcibly enabled and
-  // there is no option of a simpler query parameter and smaller QR code.
-  // Because ID-based verification relies on the server to do something, we
-  // only enable it for tickets we think can use it (see caveat about the
-  // issuer public key above; we are using the ticket category as a heuristic
-  // but it's possible for third-party tickets to use these categories even if
-  // we won't be able to do ID-based verification for them).
-  const idBasedVerifyURL =
-    ticketCategory === TicketCategory.Devconnect
-      ? `${window.location.origin}/#/checkin-by-id`
-      : ticketCategory === TicketCategory.ZuConnect
-      ? `${window.location.origin}/#/verify`
-      : ticketCategory === TicketCategory.Generic
-      ? `${window.location.origin}/#/generic-checkin`
-      : undefined;
-
   // In the long run, we will want issuers to be able to provide more metadata
   // about how check-in should work, either in the PCD itself or to be looked
   // up via some kind of registry (e.g. starting from the issuer's public key).
@@ -291,10 +264,10 @@ const TicketWrapper = forwardRef<
       id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
     >
       <Card
+        defaultImage="images/zuzalu/zuzalu.png"
         hidePadding={hidePadding}
         pcd={pcd}
         verifyURL={verifyURL}
-        idBasedVerifyURL={idBasedVerifyURL}
         addOns={addOns}
         showDownloadButton={showDownloadButton}
       />

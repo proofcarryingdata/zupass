@@ -1,6 +1,7 @@
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  // ITicketData,
   TicketCategory,
   getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
@@ -10,6 +11,7 @@ import { PCDUI } from "@pcd/pcd-types";
 import { toCanvas } from "html-to-image";
 import { useRef, useState } from "react";
 import { TicketQR } from "./TicketQR";
+// import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
   onClick: () => void;
@@ -18,13 +20,8 @@ type NEW_UI__AddOns = {
 export interface EdDSATicketPCDCardProps {
   // The URL to use when encoding a serialized PCD on the query string.
   verifyURL: string;
-  // The URL to use for the simpler case of sending some identifiers rather
-  // than a whole serialized ZkEdDSAEventTicketPCD.
-  // This can be useful to ensure the smallest possible QR code payload.
-  // If this parameter is set, then the default QR code will use this URL.
-  // "ZK mode" will then be enabled, allowing the user to switch to using the
-  // `verifyURL` with a ZK proof of their ticket as the payload.
-  idBasedVerifyURL?: string;
+  // to display when there is no images on the ticketData nor secret to render
+  defaultImage: string;
   // If true, hides the visual padding around the image
   hidePadding?: boolean;
   // when clicked on the the addons sections, if there is any, do something
@@ -38,13 +35,14 @@ export const EdDSATicketPCDUI: PCDUI<EdDSATicketPCD, EdDSATicketPCDCardProps> =
     renderCardBody: EdDSATicketPCDCardBody,
     getHeader
   };
+//
 
 function EdDSATicketPCDCardBody({
   pcd,
-  verifyURL,
-  idBasedVerifyURL,
   addOns,
-  showDownloadButton
+  showDownloadButton,
+  defaultImage,
+  verifyURL
 }: {
   pcd: EdDSATicketPCD;
 } & EdDSATicketPCDCardProps): JSX.Element {
@@ -52,23 +50,23 @@ function EdDSATicketPCDCardBody({
   const ticketData = getEdDSATicketData(pcd);
   const [downloading, setDownloading] = useState(false);
 
-  // If ticket has an `eventStartDate` render the `qrCodeOverrideImageUrl`, if it exists
-  // Else, render the `imageUrl`, if it existss
-  const imageToRender =
-    ticketData?.eventStartDate && idBasedVerifyURL !== undefined
-      ? ticketData.qrCodeOverrideImageUrl
-      : ticketData?.imageUrl;
+  const getImageToRender = (): string | undefined => {
+    if (!ticketData) return defaultImage;
+    const imageToRender =
+      ticketData?.qrCodeOverrideImageUrl || ticketData?.imageUrl;
+    if (!imageToRender && !ticketData.ticketSecret) {
+      return defaultImage;
+    } else if (!imageToRender) {
+      return undefined;
+    }
+    return imageToRender;
+  };
+  const imageToRender = getImageToRender();
 
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        {!imageToRender && (
-          <TicketQR
-            pcd={pcd}
-            verifyURL={verifyURL}
-            idBasedVerifyURL={idBasedVerifyURL}
-          />
-        )}
+        {!imageToRender && <TicketQR pcd={pcd} verifyURL={verifyURL} />}
         {imageToRender && (
           <TicketImage
             imageUrl={imageToRender}
