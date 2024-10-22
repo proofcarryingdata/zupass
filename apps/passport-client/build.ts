@@ -12,11 +12,9 @@ import { GPC_ARTIFACTS_NPM_VERSION } from "../../packages/lib/gpc/src/gpc";
 
 dotenv.config();
 
-export const ZUPASS_GPC_ARTIFACT_PATH = `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`;
-const GLOB = { ZUPASS_GPC_ARTIFACT_PATH };
+const ZUPASS_GPC_ARTIFACT_PATH = `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`;
 
 const define = {
-  glob: JSON.stringify(GLOB),
   "process.env.ONE_CLICK_LOGIN_ENABLED":
     process.env.ONE_CLICK_LOGIN_ENABLED === "true" ? '"true"' : '"false"',
   "process.env.PASSPORT_SERVER_URL": JSON.stringify(

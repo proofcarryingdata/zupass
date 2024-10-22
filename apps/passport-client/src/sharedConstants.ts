@@ -39,4 +39,4 @@ export const GPC_ARTIFACTS_CONFIG =
         version: GPC_ARTIFACTS_NPM_VERSION
       });
 
-export const ZUPASS_GPC_ARTIFACT_PATH = glob.ZUPASS_GPC_ARTIFACT_PATH;
+export const ZUPASS_GPC_ARTIFACT_PATH = `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`;
