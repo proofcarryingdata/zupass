@@ -1,8 +1,8 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { Group } from "@semaphore-protocol/group";
-import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import "mocha";
 import * as path from "path";
@@ -25,7 +25,7 @@ describe("rln-pcd should work", function () {
   let args: RLNPCDArgs;
 
   beforeEach(async function () {
-    const identity = new Identity();
+    const identity = new IdentityV3();
     const group = new Group(1, TREE_DEPTH);
     group.addMember(identity.commitment);
     const signal = "hey hey";
