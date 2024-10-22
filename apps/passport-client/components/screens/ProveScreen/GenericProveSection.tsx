@@ -233,12 +233,14 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     pcds
   ]);
 
-  console.log(proveState);
   return (
     <Container>
       {proveState !== undefined && !proveState && (
         <AbsoluteContainer>
-          <Typography>Missing PCDs</Typography>
+          <Typography color="var(--new-danger)">No tickets found</Typography>
+          <Typography color="var(--new-danger)">
+            Please ensure you have connected the right email address.
+          </Typography>
           <Button2
             style={{ marginTop: "auto" }}
             onClick={() => {

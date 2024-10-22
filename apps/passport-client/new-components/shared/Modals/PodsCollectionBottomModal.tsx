@@ -11,6 +11,7 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isUnknownPCD } from "@pcd/unknown-pcd";
 import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
 import intersectionWith from "lodash/intersectionWith";
+import styled, { CSSProperties } from "styled-components";
 import {
   ReactElement,
   ReactNode,
@@ -19,7 +20,7 @@ import {
   useRef,
   useState
 } from "react";
-import styled, { CSSProperties } from "styled-components";
+import { useSearchParams } from "react-router-dom";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
   useBottomModal,
@@ -31,7 +32,6 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
-import { useSearchParams } from "react-router-dom";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -225,13 +225,13 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
 const ListContainer = styled.div`
   position: relative; // important for scrolling to the right position of the folder
   overflow-y: auto;
-  max-height: calc(100vh - 260px);
 `;
 
 const Container = styled.div`
   display: flex;
   flex-direction: column;
-  height: fit-content;
+  // 50px comes from 24px padding we have on the bottom modal
+  max-height: calc(100vh - 50px);
 `;
 const ContainerWithPadding = styled.div`
   padding: 24px 24px 24px 24px;
