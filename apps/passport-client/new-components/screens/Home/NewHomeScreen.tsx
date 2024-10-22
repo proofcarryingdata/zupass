@@ -197,9 +197,10 @@ const getEventDetails = (tickets: TicketPack): ITicketData => {
   return tickets.eventTicket.claim.ticket as ITicketData;
 };
 const EMPTY_CARD_CONTAINER_HEIGHT = 220;
-const EmptyCardContainer = styled.div`
+const EmptyCardContainer = styled.div<{ longVersion: boolean }>`
   display: flex;
-  height: ${EMPTY_CARD_CONTAINER_HEIGHT}px;
+  height: ${({ longVersion }): string =>
+    longVersion ? "min(80vh, 549px)" : EMPTY_CARD_CONTAINER_HEIGHT + "px"};
   justify-content: center;
   align-items: center;
   border-radius: 16px;
@@ -290,6 +291,23 @@ const ScrollIndicatorContainer = styled.div`
   transition: opacity 0.5s ease;
 `;
 
+const Bar = styled.div`
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
+  width: 180px;
+`;
+
+const BarsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 10px 48px 10px 48px;
+  width: 100%;
+  gap: 5px;
+  margin-bottom: 20px;
+`;
+
 const ScrollIndicator = (): ReactElement => {
   return (
     <ScrollIndicatorContainer>
@@ -329,10 +347,26 @@ const NoUpcomingEventsState = ({
       }
     }
   }, [params]);
+
+  const noPods =
+    pods
+      .getAll()
+      .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
+      .length === 0;
+
   return (
     <OuterContainer>
-      <EmptyCardContainer>
+      <EmptyCardContainer longVersion={noPods}>
         <InnerContainer>
+          {noPods && (
+            <BarsContainer>
+              <Bar />
+              <Bar />
+              <Bar />
+              <Bar />
+              <Bar />
+            </BarsContainer>
+          )}
           <div style={{ display: "flex", flexDirection: "column" }}>
             <Typography
               fontSize={20}
@@ -361,10 +395,7 @@ const NoUpcomingEventsState = ({
         </InnerContainer>
       </EmptyCardContainer>
       {isLandscape ||
-        (pods
-          .getAll()
-          .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
-          .length > 0 && (
+        (!noPods && (
           <ListContainer
             ref={listContainerRef}
             onScroll={(e) => {
@@ -419,6 +450,12 @@ export const NewHomeScreen = (): ReactElement => {
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
 
+  const noPods =
+    collection
+      .getAll()
+      .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
+      .length === 0;
+
   const orientation = useOrientation();
   const isLandscape =
     orientation.type === "landscape-primary" ||
@@ -428,7 +465,8 @@ export const NewHomeScreen = (): ReactElement => {
       navigate("/login", { replace: true });
     }
   });
-  const showPodsList = tickets.length === 0 && !isLandscape;
+  const showPodsList = tickets.length === 0 && !isLandscape && !noPods;
+  console.log(tickets.length === 0, isLandscape, noPods);
 
   useLayoutEffect(() => {
     // if we haven't loaded all pcds yet, dont process the prove request
@@ -667,7 +705,7 @@ export const NewHomeScreen = (): ReactElement => {
         </>
       )}
       <Spacer h={96} />
-      <FloatingMenu onlySettings={showPodsList} />
+      <FloatingMenu onlySettings={showPodsList || noPods} />
       <AddOnsModal />
       <NewModals />
     </AppContainer>
