@@ -1,6 +1,5 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
-import { ARTIFACTS_NPM_VERSION } from "@pcd/gpcircuits/constants";
 import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
 import express from "express";
@@ -9,10 +8,9 @@ import Handlebars from "handlebars";
 import https from "https";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
+import { ZUPASS_GPC_ARTIFACT_PATH } from "./src/sharedConstants";
 
 dotenv.config();
-
-const ZUPASS_GPC_ARTIFACT_PATH = `/artifacts/proto-pod-gpc/${ARTIFACTS_NPM_VERSION}`;
 
 const define = {
   "process.env.ONE_CLICK_LOGIN_ENABLED":
