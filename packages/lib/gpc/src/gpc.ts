@@ -459,8 +459,8 @@ export function gpcArtifactDownloadURL(
       return urljoin(
         zupassURL,
         stability === "test" ? "artifacts/test" : "artifacts",
-        PROTO_POD_GPC_FAMILY_NAME,
-        artifactVersion
+        PROTO_POD_GPC_FAMILY_NAME +
+          (stability === "test" ? "" : `/${artifactVersion}`)
       );
     default:
       throw new Error(`Unknown artifact download source ${source}.`);

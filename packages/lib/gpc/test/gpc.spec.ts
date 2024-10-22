@@ -1696,7 +1696,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: undefined,
         zupassURL: "/",
-        expected: "/artifacts/proto-pod-gpc"
+        expected: `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
@@ -1708,7 +1708,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: "foo",
         zupassURL: "/",
-        expected: "/artifacts/proto-pod-gpc"
+        expected: "/artifacts/proto-pod-gpc/foo"
       },
       {
         stability: "test",
@@ -1720,7 +1720,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: undefined,
         zupassURL: "",
-        expected: "artifacts/proto-pod-gpc"
+        expected: `artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
@@ -1732,7 +1732,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: "foo",
         zupassURL: "",
-        expected: "artifacts/proto-pod-gpc"
+        expected: "artifacts/proto-pod-gpc/foo"
       },
       {
         stability: "test",
@@ -1744,7 +1744,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: undefined,
         zupassURL: "https://zupass.org/",
-        expected: "https://zupass.org/artifacts/proto-pod-gpc"
+        expected: `https://zupass.org/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
@@ -1756,7 +1756,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: "foo",
         zupassURL: "https://zupass.org",
-        expected: "https://zupass.org/artifacts/proto-pod-gpc"
+        expected: "https://zupass.org/artifacts/proto-pod-gpc/foo"
       }
     ];
 
