@@ -271,7 +271,7 @@ export class CSVTicketPipeline implements BasePipeline {
         atomsForUser.flatMap((atom) => {
           return [
             this.issueEdDSATicketPCD(atom, semaphoreId),
-            this.issuePODTicketPCD(atom, semaphoreId, semaphoreV4Id)
+            this.issuePODTicketPCD(atom, semaphoreV4Id)
           ];
         })
       );
@@ -349,7 +349,6 @@ export class CSVTicketPipeline implements BasePipeline {
 
   private async issuePODTicketPCD(
     atom: CSVTicketAtom,
-    semaphoreId: string,
     semaphoreV4Id: string
   ): Promise<SerializedPCD> {
     const stringifiedAtom = stringify(atom);
@@ -362,7 +361,6 @@ export class CSVTicketPipeline implements BasePipeline {
 
     const ticket: IPODTicketData = {
       ...atom,
-      attendeeSemaphoreId: semaphoreId,
       owner: semaphoreV4Id,
       eventName: this.definition.options.eventName,
       ticketCategory: TicketCategory.Generic,
