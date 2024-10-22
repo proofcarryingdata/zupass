@@ -208,10 +208,7 @@ export const TicketQRWrapper = forwardRef<
     if (urls.idBasedVerifyURL)
       return (
         <QRContainer ref={ref}>
-          <PODTicketQR
-            ticketData={pcd.claim.ticket}
-            idBasedVerifyURL={urls.idBasedVerifyURL}
-          />
+          <PODTicketQR ticketData={pcd.claim.ticket} />
         </QRContainer>
       );
   }
@@ -312,11 +309,11 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
             id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
           >
             <Component
+              defaultImage="images/zuzalu/zuzalu.png"
               showDownoladButton={showDownloadButton}
               ticketData={pcd.claim.ticket}
               addOns={addOns}
               pcd={pcd}
-              idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
             />
           </div>
         );
