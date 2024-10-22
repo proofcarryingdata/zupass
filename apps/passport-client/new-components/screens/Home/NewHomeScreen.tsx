@@ -143,17 +143,19 @@ const disabledCSS = css`
 `;
 
 export const PageCircleButton = styled.button<{
+  diameter: number;
+  padding: number;
   disabled: boolean;
 }>`
-  width: 40px;
-  height: 32px;
+  ${(p): string => {
+    const size = p.diameter + 2 * p.padding + "px";
+    return `width: ${size};height: ${size};`;
+  }};
   cursor: pointer;
-  border-radius: 200px;
-  border: 2px solid #ffffff;
+  border-radius: 99px;
+  border: none;
   margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  padding: ${(p): number => p.padding}px;
   box-shadow:
     0px 1px 3px 0px rgba(0, 0, 0, 0.1),
     0px 1px 2px 0px rgba(0, 0, 0, 0.06);
@@ -494,6 +496,8 @@ export const NewHomeScreen = (): ReactElement => {
               <ButtonsContainer>
                 <PageCircleButton
                   disabled={currentPos === 0}
+                  padding={6}
+                  diameter={28}
                   onClick={() => {
                     setCurrentPos((old) => {
                       if (old === 0) return old;
@@ -502,22 +506,15 @@ export const NewHomeScreen = (): ReactElement => {
                   }}
                 >
                   <ChevronLeftIcon
-                    width={24}
-                    height={24}
+                    width={20}
+                    height={20}
                     color="var(--text-tertiary)"
                   />
                 </PageCircleButton>
-                <Typography
-                  fontSize={14}
-                  color="#8B94AC"
-                  fontWeight={500}
-                  family="Rubik"
-                  style={{ display: "flex", alignItems: "center" }}
-                >
-                  {currentPos + 1} OF {tickets.length}
-                </Typography>
                 <PageCircleButton
                   disabled={currentPos === tickets.length - 1}
+                  padding={6}
+                  diameter={28}
                   onClick={() => {
                     setCurrentPos((old) => {
                       if (old === tickets.length - 1) return old;
@@ -526,8 +523,8 @@ export const NewHomeScreen = (): ReactElement => {
                   }}
                 >
                   <ChevronRightIcon
-                    width={24}
-                    height={24}
+                    width={20}
+                    height={20}
                     color="var(--text-tertiary)"
                   />
                 </PageCircleButton>
