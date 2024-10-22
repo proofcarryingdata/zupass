@@ -27,9 +27,9 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
+    "@pcd/semaphore-identity-pcd": "0.13.0",
     "@pcd/passport-ui": "0.13.0",
-    "@pcd/pcd-types": "0.13.0",
-    "@pcd/semaphore-identity-pcd": "0.13.0"
+    "@pcd/pcd-types": "0.13.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.13.0",

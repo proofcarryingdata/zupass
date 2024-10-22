@@ -34,7 +34,9 @@
     "buildiifemin": "BROWSER=true rollup -c config/rollup.iife_min.config.js",
     "buildesm": "BROWSER=true rollup -c config/rollup.browser.esm.config"
   },
-  "bin": "build/cli.cjs",
+  "bin": {
+    "snarkjs": "build/cli.cjs"
+  },
   "directories": {
     "templates": "templates"
   },
@@ -55,9 +57,9 @@
   },
   "dependencies": {
     "@iden3/binfileutils": "0.0.12",
-    "@pcd/circom_runtime": "0.3.0",
     "bfj": "^7.0.2",
     "blake2b-wasm": "^2.4.0",
+    "@pcd/circom_runtime": "0.3.0",
     "ejs": "^3.1.6",
     "fastfile": "0.0.20",
     "ffjavascript": "0.3.0",

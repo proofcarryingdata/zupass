@@ -33,10 +33,10 @@
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.13.0",
     "@pcd/tsconfig": "0.13.0",
+    "libsodium-wrappers-sumo": "^0.7.15",
     "@types/react": "^18.0.22",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",
-    "libsodium-wrappers-sumo": "^0.7.15",
     "typescript": "^5.3.3",
     "vitest": "^2.1.2"
   },
