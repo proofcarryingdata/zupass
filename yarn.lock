@@ -8251,13 +8251,6 @@
   dependencies:
     "@zag-js/dom-query" "0.16.0"
 
-"@zk-kit/baby-jubjub@1.0.1":
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-1.0.1.tgz#58a90224f44134cc396880d7fc5d0abcdc068f00"
-  integrity sha512-ADQd4nI71uZLd9mMLHm5u97QS9zwUBOIxK8776Og1gHHrIdsku8q8X1Xi54QAsbidvRBC5FDIQnP7QMUWJK/hQ==
-  dependencies:
-    "@zk-kit/utils" "1.0.0"
-
 "@zk-kit/baby-jubjub@1.0.3":
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-1.0.3.tgz#8d2eccd20d729f1dbd39203dbff9a245a61dea76"
@@ -8271,15 +8264,6 @@
   integrity sha512-yVyx9e+iNYuFvOtKt/f4i+QBhey78VM6K6svwqkgqdi55vnz3MRtXn8dqvnKibNAUEBmnjuwe4SDONgeOQpFEw==
   dependencies:
     circomlib "^2.0.5"
-
-"@zk-kit/eddsa-poseidon@1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-1.0.2.tgz#36d40ade309d7d64f3642fa57d54db3a8c3c4860"
-  integrity sha512-3ON/6LFHjSqrK+ndIYPJoevzXUkqNGrpVHgfZbYX6x1CoCHHxQG83HH7EBhdWRQsMjcIiw5GVL8h6Xa6irNOYw==
-  dependencies:
-    "@zk-kit/baby-jubjub" "1.0.1"
-    "@zk-kit/utils" "1.0.0"
-    buffer "6.0.3"
 
 "@zk-kit/eddsa-poseidon@1.0.3":
   version "1.0.3"
@@ -8324,20 +8308,6 @@
   integrity sha512-Zq5yunUYu+ztp9RR5nuqiG1GpK1wjUoAjC0+x/MB95sI/Ns7zCxpzxo/Om9E0gme74Y3jO9KM5UUh3f9tqU++w==
   dependencies:
     "@zk-kit/utils" "1.2.1"
-
-"@zk-kit/utils@1.0.0":
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.0.0.tgz#db1af01a4e60f5290734a26c2fd9e863bff049e3"
-  integrity sha512-v5UjrZiaRNAN2UJmTFHvlMktaA2Efc2qN1Mwd4060ExX12yRhY8ZhzdlDODhnuHkvW5zPukuBHgQhHMScNP3Pg==
-  dependencies:
-    buffer "^6.0.3"
-
-"@zk-kit/utils@1.2.0":
-  version "1.2.0"
-  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.2.0.tgz#7f5dfadb9512f1a090639c912395a6684b560ba2"
-  integrity sha512-Ut9zfnlBVpopZG/s600Ds/FPSWXiPhO4q8949kmXTzwDXytjnvFbDZIFdWqE/lA7/NZjvykiTnnVwmanMxv2+w==
-  dependencies:
-    buffer "^6.0.3"
 
 "@zk-kit/utils@1.2.1", "@zk-kit/utils@^1.2.1":
   version "1.2.1"
@@ -18235,11 +18205,6 @@ plop@^4.0.1:
     ora "^8.0.0"
     v8flags "^4.0.1"
 
-poseidon-lite@0.2.0:
-  version "0.2.0"
-  resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.2.0.tgz#dbc242ebd9c10c32d507a533fa497231d168fd72"
-  integrity sha512-vivDZnGmz8W4G/GzVA72PXkfYStjilu83rjjUfpL4PueKcC8nfX6hCPh2XhoC5FBgC6y0TA3YuUeUo5YCcNoig==
-
 poseidon-lite@0.3.0, poseidon-lite@^0.3.0:
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.3.0.tgz#93c42f6f9b870f154f2722dfd686b909c4285765"
@@ -19842,16 +19807,6 @@ seek-bzip@^1.0.5:
   integrity sha512-e1QtP3YL5tWww8uKaOCQ18UxIT2laNBXHjV/S2WYCiK4udiv8lkG89KRIoCjUagnAmCBurjF4zEVX2ByBbnCjQ==
   dependencies:
     commander "^2.8.1"
-
-"semaphore-identity-v4@npm:@semaphore-protocol/identity@^4.0.3":
-  version "4.3.0"
-  resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-4.3.0.tgz#5189e32420aeff0f4b1938289fa5b20887a21b3a"
-  integrity sha512-9dE/vBZwwxOAn1PqeMwtVF+NyBuVgBZKsyujr11Idfga4kyCjQEPEbJ91aRTtoq4pqh5cGKiRogaT9R44zr9DA==
-  dependencies:
-    "@zk-kit/baby-jubjub" "1.0.1"
-    "@zk-kit/eddsa-poseidon" "1.0.2"
-    "@zk-kit/utils" "1.2.0"
-    poseidon-lite "0.2.0"
 
 semver-match@0.1.1:
   version "0.1.1"

@@ -50,10 +50,10 @@
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/semaphore-identity-v3-wrapper": "0.0.1",
     "@pcd/tsconfig": "0.14.0",
     "@pcd/util": "^0.8.0",
-    "@semaphore-protocol/identity": "^3.15.2",
-    "semaphore-identity-v4": "npm:@semaphore-protocol/identity@^4.0.3",
+    "@semaphore-protocol/identity": "^4.0.3",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/snarkjs": "^0.7.5",
