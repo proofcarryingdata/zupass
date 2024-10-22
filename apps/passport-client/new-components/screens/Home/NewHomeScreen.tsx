@@ -8,10 +8,12 @@ import {
   ITicketData,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
+import { isEmailPCD } from "@pcd/email-pcd";
 import { PCDGetRequest } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { uniqWith } from "lodash";
 import {
   ReactElement,
@@ -44,15 +46,13 @@ import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { nextFrame } from "../../../src/util";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
+import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
 import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 import { isMobile, useOrientation } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
-import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
-import { isEmailPCD } from "@pcd/email-pcd";
-import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -458,8 +458,9 @@ export const NewHomeScreen = (): ReactElement => {
 
   const orientation = useOrientation();
   const isLandscape =
-    orientation.type === "landscape-primary" ||
-    orientation.type === "landscape-secondary";
+    isMobile &&
+    (orientation.type === "landscape-primary" ||
+      orientation.type === "landscape-secondary");
   useEffect(() => {
     if (!self) {
       navigate("/login", { replace: true });
