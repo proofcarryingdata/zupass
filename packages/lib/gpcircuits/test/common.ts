@@ -6,10 +6,10 @@ import {
 } from "@pcd/pod";
 import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+import { Identity as IdentityV4 } from "@semaphore-protocol/identity";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
-import { Identity as IdentityV4 } from "semaphore-identity-v4";
 import { loadCircomkitConfig } from "../src";
 
 // eslint-disable-next-line import/prefer-default-export
