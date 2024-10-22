@@ -305,16 +305,15 @@ const ScrollIndicator = (): ReactElement => {
   );
 };
 
-const NoUpcomingEventsState = (): ReactElement => {
+const NoUpcomingEventsState = ({
+  isLandscape
+}: {
+  isLandscape: boolean;
+}): ReactElement => {
   const dispatch = useDispatch();
   const pods = usePCDCollection();
-  const orientation = useOrientation();
-  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
-
   const timer = useRef<NodeJS.Timeout>();
-  const isLandscape =
-    orientation.type === "landscape-primary" ||
-    orientation.type === "landscape-secondary";
+  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
 
   return (
     <OuterContainer>
@@ -405,6 +404,10 @@ export const NewHomeScreen = (): ReactElement => {
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
 
+  const orientation = useOrientation();
+  const isLandscape =
+    orientation.type === "landscape-primary" ||
+    orientation.type === "landscape-secondary";
   useEffect(() => {
     if (!self) {
       navigate("/login", { replace: true });
@@ -497,7 +500,9 @@ export const NewHomeScreen = (): ReactElement => {
       noPadding={tickets.length > 0}
       fullscreen={tickets.length > 0}
     >
-      {(!tickets.length || isInvalidUser) && <NoUpcomingEventsState />}
+      {(!tickets.length || isInvalidUser) && (
+        <NoUpcomingEventsState isLandscape={isLandscape} />
+      )}
       {tickets.length > 0 && (
         <>
           <SwipeViewContainer
@@ -631,7 +636,7 @@ export const NewHomeScreen = (): ReactElement => {
         </>
       )}
       <Spacer h={96} />
-      <FloatingMenu noTickets={tickets.length === 0} />
+      <FloatingMenu onlySettings={tickets.length === 0 && !isLandscape} />
       <AddOnsModal />
       <NewModals />
     </AppContainer>

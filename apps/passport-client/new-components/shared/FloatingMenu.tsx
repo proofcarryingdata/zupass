@@ -44,10 +44,10 @@ const IconContainer = styled.div`
 `;
 
 type FloatingMenuProps = {
-  noTickets: boolean;
+  onlySettings: boolean;
 };
 
-export const FloatingMenu = ({ noTickets }: FloatingMenuProps): JSX.Element => {
+export const FloatingMenu = ({ onlySettings: noTickets }: FloatingMenuProps): JSX.Element => {
   const dispatch = useDispatch();
   return (
     <FloatingMenuContainer center={!noTickets}>
