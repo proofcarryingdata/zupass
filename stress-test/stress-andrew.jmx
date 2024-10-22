@@ -1,0 +1,300 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jmeterTestPlan version="1.2" properties="5.0" jmeter="5.6.3">
+  <hashTree>
+    <TestPlan guiclass="TestPlanGui" testclass="TestPlan" testname="Zupass Stress">
+      <elementProp name="TestPlan.user_defined_variables" elementType="Arguments" guiclass="ArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+        <collectionProp name="Arguments.arguments"/>
+      </elementProp>
+      <boolProp name="TestPlan.functional_mode">false</boolProp>
+      <boolProp name="TestPlan.serialize_threadgroups">false</boolProp>
+    </TestPlan>
+    <hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Zupass Load Test">
+        <intProp name="ThreadGroup.num_threads">10000</intProp>
+        <intProp name="ThreadGroup.ramp_time">0</intProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">10</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+          <collectionProp name="HeaderManager.headers">
+            <elementProp name="Accept" elementType="Header">
+              <stringProp name="Header.name">Accept</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+            <elementProp name="Accept-Language" elementType="Header">
+              <stringProp name="Header.name">Accept-Language</stringProp>
+              <stringProp name="Header.value">en-US,en;q=0.9</stringProp>
+            </elementProp>
+            <elementProp name="Content-Type" elementType="Header">
+              <stringProp name="Header.name">Content-Type</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+            <elementProp name="Priority" elementType="Header">
+              <stringProp name="Header.name">Priority</stringProp>
+              <stringProp name="Header.value">u=1, i</stringProp>
+            </elementProp>
+            <elementProp name="Sec-CH-UA" elementType="Header">
+              <stringProp name="Header.name">Sec-CH-UA</stringProp>
+              <stringProp name="Header.value">&quot;Not)A;Brand&quot;;v=&quot;99&quot;, &quot;Google Chrome&quot;;v=&quot;127&quot;, &quot;Chromium&quot;;v=&quot;127&quot;</stringProp>
+            </elementProp>
+            <elementProp name="Sec-CH-UA-Mobile" elementType="Header">
+              <stringProp name="Header.name">Sec-CH-UA-Mobile</stringProp>
+              <stringProp name="Header.value">?0</stringProp>
+            </elementProp>
+            <elementProp name="Sec-CH-UA-Platform" elementType="Header">
+              <stringProp name="Header.name">Sec-CH-UA-Platform</stringProp>
+              <stringProp name="Header.value">&quot;macOS&quot;</stringProp>
+            </elementProp>
+            <elementProp name="Sec-Fetch-Dest" elementType="Header">
+              <stringProp name="Header.name">Sec-Fetch-Dest</stringProp>
+              <stringProp name="Header.value">empty</stringProp>
+            </elementProp>
+            <elementProp name="Sec-Fetch-Mode" elementType="Header">
+              <stringProp name="Header.name">Sec-Fetch-Mode</stringProp>
+              <stringProp name="Header.value">cors</stringProp>
+            </elementProp>
+            <elementProp name="Sec-Fetch-Site" elementType="Header">
+              <stringProp name="Header.name">Sec-Fetch-Site</stringProp>
+              <stringProp name="Header.value">same-site</stringProp>
+            </elementProp>
+          </collectionProp>
+        </HeaderManager>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Sync V3 Load">
+          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.path">/sync/v3/load</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="blobKey" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">f7297eddec01c7b2060fc06626b8c8c988f1e15f8154820f9c31266a3452cf91d61469905654464e4cfa9c2540b206cffd537f2d154d548a3f7ae4f1e1871af0</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">blobKey</stringProp>
+              </elementProp>
+              <elementProp name="knownRevision" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">2</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">knownRevision</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="One Click" enabled="true">
+          <stringProp name="TestPlan.comments">This one click link does not work as it is for staging richard</stringProp>
+          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.path">/account/one-click-login</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;email&quot;:&quot;amir@10play.dev&quot;,&quot;code&quot;:&quot;T0S7R&quot;,&quot;commitment&quot;:&quot;11538863532561689644607378675319099347510195980131239581579362546804274040527&quot;,&quot;semaphore_v4_pubkey&quot;:&quot;e7r81Zfj4jxiSVFrVkjdxGTUDk/1NO4jd+4qvLESmYI&quot;,&quot;encryptionKey&quot;:&quot;635e6f97d30dd757164538fb6403b378cb9783c285f00742228bc5507ec63cbd&quot;}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Feed 3" enabled="true">
+          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.path">/feeds</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;feedId&quot;:&quot;3&quot;,&quot;pcd&quot;:{&quot;type&quot;:&quot;semaphore-signature-pcd&quot;,&quot;pcd&quot;:&quot;{\&quot;type\&quot;:\&quot;semaphore-signature-pcd\&quot;,\&quot;id\&quot;:\&quot;717b12bb-8b2c-48fc-98ef-df7bb5eb2c38\&quot;,\&quot;claim\&quot;:{\&quot;identityCommitment\&quot;:\&quot;14640312523281617020594068409342111752659907426163812657035240520437636932999\&quot;,\&quot;signedMessage\&quot;:\&quot;{\\\&quot;timestamp\\\&quot;:1729593070847}\&quot;,\&quot;nullifierHash\&quot;:\&quot;12056153065253278166586900646979577529271540222421364140219075038751589103125\&quot;},\&quot;proof\&quot;:[\&quot;13528515405016999220814420762897254059453819949310899562613655746031478046254\&quot;,\&quot;19086556901040397893444603922624197718145487650635268571176436648539077992331\&quot;,\&quot;3327391750115795900818646821080190195777674220355385798938578172989109103358\&quot;,\&quot;6350358361036403072981172248626676562139718148197691283122398153520131035081\&quot;,\&quot;8808888709747380937126663726303345769992137823288003319264241756376297918562\&quot;,\&quot;12537819613890196466088096118090590247321732241556536908640439729540678871406\&quot;,\&quot;12919362743119357306794160311913196327432545045008074008325032345797032070473\&quot;,\&quot;9064768981220005103760091391456457218864586557799808182884215454174541229705\&quot;]}&quot;}}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Feed 4" enabled="true">
+          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.path">/feeds</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;feedId&quot;:&quot;4&quot;,&quot;pcd&quot;:{&quot;type&quot;:&quot;semaphore-signature-pcd&quot;,&quot;pcd&quot;:&quot;{\&quot;type\&quot;:\&quot;semaphore-signature-pcd\&quot;,\&quot;id\&quot;:\&quot;717b12bb-8b2c-48fc-98ef-df7bb5eb2c38\&quot;,\&quot;claim\&quot;:{\&quot;identityCommitment\&quot;:\&quot;14640312523281617020594068409342111752659907426163812657035240520437636932999\&quot;,\&quot;signedMessage\&quot;:\&quot;{\\\&quot;timestamp\\\&quot;:1729593070847}\&quot;,\&quot;nullifierHash\&quot;:\&quot;12056153065253278166586900646979577529271540222421364140219075038751589103125\&quot;},\&quot;proof\&quot;:[\&quot;13528515405016999220814420762897254059453819949310899562613655746031478046254\&quot;,\&quot;19086556901040397893444603922624197718145487650635268571176436648539077992331\&quot;,\&quot;3327391750115795900818646821080190195777674220355385798938578172989109103358\&quot;,\&quot;6350358361036403072981172248626676562139718148197691283122398153520131035081\&quot;,\&quot;8808888709747380937126663726303345769992137823288003319264241756376297918562\&quot;,\&quot;12537819613890196466088096118090590247321732241556536908640439729540678871406\&quot;,\&quot;12919362743119357306794160311913196327432545045008074008325032345797032070473\&quot;,\&quot;9064768981220005103760091391456457218864586557799808182884215454174541229705\&quot;]}&quot;}}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Feed 5" enabled="true">
+          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.path">/feeds</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;feedId&quot;:&quot;5&quot;,&quot;pcd&quot;:{&quot;type&quot;:&quot;semaphore-signature-pcd&quot;,&quot;pcd&quot;:&quot;{\&quot;type\&quot;:\&quot;semaphore-signature-pcd\&quot;,\&quot;id\&quot;:\&quot;717b12bb-8b2c-48fc-98ef-df7bb5eb2c38\&quot;,\&quot;claim\&quot;:{\&quot;identityCommitment\&quot;:\&quot;14640312523281617020594068409342111752659907426163812657035240520437636932999\&quot;,\&quot;signedMessage\&quot;:\&quot;{\\\&quot;timestamp\\\&quot;:1729593070847}\&quot;,\&quot;nullifierHash\&quot;:\&quot;12056153065253278166586900646979577529271540222421364140219075038751589103125\&quot;},\&quot;proof\&quot;:[\&quot;13528515405016999220814420762897254059453819949310899562613655746031478046254\&quot;,\&quot;19086556901040397893444603922624197718145487650635268571176436648539077992331\&quot;,\&quot;3327391750115795900818646821080190195777674220355385798938578172989109103358\&quot;,\&quot;6350358361036403072981172248626676562139718148197691283122398153520131035081\&quot;,\&quot;8808888709747380937126663726303345769992137823288003319264241756376297918562\&quot;,\&quot;12537819613890196466088096118090590247321732241556536908640439729540678871406\&quot;,\&quot;12919362743119357306794160311913196327432545045008074008325032345797032070473\&quot;,\&quot;9064768981220005103760091391456457218864586557799808182884215454174541229705\&quot;]}&quot;}}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+      </hashTree>
+      <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Other Zupass" enabled="true">
+        <intProp name="ThreadGroup.num_threads">0</intProp>
+        <intProp name="ThreadGroup.ramp_time">0</intProp>
+        <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
+        <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
+        <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
+          <stringProp name="LoopController.loops">0</stringProp>
+          <boolProp name="LoopController.continue_forever">false</boolProp>
+        </elementProp>
+      </ThreadGroup>
+      <hashTree>
+        <HeaderManager guiclass="HeaderPanel" testclass="HeaderManager" testname="HTTP Header Manager" enabled="true">
+          <collectionProp name="HeaderManager.headers">
+            <elementProp name="" elementType="Header">
+              <stringProp name="Header.name">accept</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+            <elementProp name="" elementType="Header">
+              <stringProp name="Header.name">content-type</stringProp>
+              <stringProp name="Header.value">application/json</stringProp>
+            </elementProp>
+          </collectionProp>
+        </HeaderManager>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Get User" enabled="true">
+          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.path">/v2/account/user/49cb11dc-542e-47ca-a884-d16902743452</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">GET</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">false</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="email" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">amir@10play.dev</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+                <boolProp name="HTTPArgument.use_equals">true</boolProp>
+                <stringProp name="Argument.name">email</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Send Login Email" enabled="true">
+          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.path">/account/send-login-email</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;email&quot;:&quot;amir@10play.dev&quot;,&quot;force&quot;:&quot;false&quot;}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="Prove" enabled="true">
+          <stringProp name="HTTPSampler.protocol">https</stringProp>
+          <stringProp name="HTTPSampler.path">/pcds/prove</stringProp>
+          <boolProp name="HTTPSampler.follow_redirects">true</boolProp>
+          <stringProp name="HTTPSampler.method">POST</stringProp>
+          <boolProp name="HTTPSampler.use_keepalive">true</boolProp>
+          <boolProp name="HTTPSampler.postBodyRaw">true</boolProp>
+          <elementProp name="HTTPsampler.Arguments" elementType="Arguments">
+            <collectionProp name="Arguments.arguments">
+              <elementProp name="" elementType="HTTPArgument">
+                <boolProp name="HTTPArgument.always_encode">false</boolProp>
+                <stringProp name="Argument.value">{&quot;pcdType&quot;:&quot;semaphore-signature-pcd&quot;,&quot;args&quot;:{&quot;signedMessage&quot;:{&quot;argumentType&quot;:&quot;String&quot;,&quot;value&quot;:&quot;HELLO&quot;,&quot;userProvided&quot;:false},&quot;identity&quot;:{&quot;argumentType&quot;:&quot;PCD&quot;,&quot;pcdType&quot;:&quot;semaphore-identity-pcd&quot;,&quot;value&quot;:{&quot;type&quot;:&quot;semaphore-identity-pcd&quot;,&quot;pcd&quot;:&quot;{\&quot;type\&quot;:\&quot;semaphore-identity-pcd\&quot;,\&quot;id\&quot;:\&quot;723d083f-1c44-45b4-8b9f-a65a60738125\&quot;,\&quot;identity\&quot;:\&quot;[\\\&quot;0x4bb8bca0c1ac3b8d6e6df2e2edc1262627147744b9cdd0c9a570fc3f92bb8b\\\&quot;,\\\&quot;0x906b536000de8b64db27e6da67125406ed39d9f41602b24fdd754d316b0360\\\&quot;]\&quot;}&quot;}}}}</stringProp>
+                <stringProp name="Argument.metadata">=</stringProp>
+              </elementProp>
+            </collectionProp>
+          </elementProp>
+        </HTTPSamplerProxy>
+        <hashTree/>
+      </hashTree>
+      <ResultCollector guiclass="ViewResultsFullVisualizer" testclass="ResultCollector" testname="View Results Tree">
+        <boolProp name="ResultCollector.error_logging">false</boolProp>
+        <objProp>
+          <name>saveConfig</name>
+          <value class="SampleSaveConfiguration">
+            <time>true</time>
+            <latency>true</latency>
+            <timestamp>true</timestamp>
+            <success>true</success>
+            <label>true</label>
+            <code>true</code>
+            <message>true</message>
+            <threadName>true</threadName>
+            <dataType>true</dataType>
+            <encoding>false</encoding>
+            <assertions>true</assertions>
+            <subresults>true</subresults>
+            <responseData>false</responseData>
+            <samplerData>false</samplerData>
+            <xml>false</xml>
+            <fieldNames>true</fieldNames>
+            <responseHeaders>false</responseHeaders>
+            <requestHeaders>false</requestHeaders>
+            <responseDataOnError>false</responseDataOnError>
+            <saveAssertionResultsFailureMessage>true</saveAssertionResultsFailureMessage>
+            <assertionsResultsToSave>0</assertionsResultsToSave>
+            <bytes>true</bytes>
+            <sentBytes>true</sentBytes>
+            <url>true</url>
+            <threadCounts>true</threadCounts>
+            <idleTime>true</idleTime>
+            <connectTime>true</connectTime>
+          </value>
+        </objProp>
+        <stringProp name="filename"></stringProp>
+      </ResultCollector>
+      <hashTree/>
+      <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
+        <intProp name="HTTPSampler.connect_timeout">90000</intProp>
+        <intProp name="HTTPSampler.response_timeout">90000</intProp>
+        <stringProp name="HTTPSampler.domain">api-staging-andrew.zupass.org</stringProp>
+        <stringProp name="HTTPSampler.protocol">https</stringProp>
+        <elementProp name="HTTPsampler.Arguments" elementType="Arguments" guiclass="HTTPArgumentsPanel" testclass="Arguments" testname="User Defined Variables">
+          <collectionProp name="Arguments.arguments"/>
+        </elementProp>
+        <stringProp name="HTTPSampler.implementation">HttpClient4</stringProp>
+      </ConfigTestElement>
+      <hashTree/>
+    </hashTree>
+  </hashTree>
+</jmeterTestPlan>
