@@ -1,8 +1,7 @@
-import { Identity } from "@semaphore-protocol/identity";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import assert from "assert";
 import { expect } from "chai";
 import {
-  IdentityV3,
   IdentityV4,
   SemaphoreIdentityPCDPackage,
   v3tov4Identity
@@ -11,7 +10,7 @@ import {
 describe("Semaphore Identity PCD", function () {
   it("should be instantiatable", async function () {
     const { prove, verify } = SemaphoreIdentityPCDPackage;
-    const identity = new Identity();
+    const identity = new IdentityV3();
 
     const identityPCD = await prove({ identityV3: identity });
     const valid = await verify(identityPCD);
@@ -21,7 +20,7 @@ describe("Semaphore Identity PCD", function () {
 
   it("should serialize and deserialize properly", async function () {
     const { prove, serialize, deserialize } = SemaphoreIdentityPCDPackage;
-    const identity = new Identity();
+    const identity = new IdentityV3();
 
     const identityPCD = await prove({ identityV3: identity });
 
@@ -63,7 +62,7 @@ describe("Semaphore Identity PCD", function () {
     expect(deserializedValid).to.eq(true);
     expect(deserialized.id).to.eq("e3bf14ca-b8eb-4a78-9485-c8b1982a497f");
     expect(deserialized.claim.identityV3).to.deep.eq(
-      new Identity(
+      new IdentityV3(
         '["0x5e169461d89b553370b4ac3bae0df93cd7f127abfee5c38d2c1b30d3ebf654","0xc96157535de33d96ef25e41350cd569b34e97243180ec56a7497eb4f0c3d16"]'
       )
     );
