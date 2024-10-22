@@ -10,12 +10,12 @@
     </TestPlan>
     <hashTree>
       <ThreadGroup guiclass="ThreadGroupGui" testclass="ThreadGroup" testname="Zupass Load Test">
-        <intProp name="ThreadGroup.num_threads">5000</intProp>
-        <intProp name="ThreadGroup.ramp_time">0</intProp>
+        <intProp name="ThreadGroup.num_threads">10000</intProp>
+        <intProp name="ThreadGroup.ramp_time">100</intProp>
         <boolProp name="ThreadGroup.same_user_on_next_iteration">true</boolProp>
         <stringProp name="ThreadGroup.on_sample_error">continue</stringProp>
         <elementProp name="ThreadGroup.main_controller" elementType="LoopController" guiclass="LoopControlPanel" testclass="LoopController" testname="Loop Controller">
-          <stringProp name="LoopController.loops">100</stringProp>
+          <stringProp name="LoopController.loops">10</stringProp>
           <boolProp name="LoopController.continue_forever">false</boolProp>
         </elementProp>
       </ThreadGroup>
@@ -76,7 +76,7 @@
             <collectionProp name="Arguments.arguments">
               <elementProp name="blobKey" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
-                <stringProp name="Argument.value">f7297eddec01c7b2060fc06626b8c8c988f1e15f8154820f9c31266a3452cf91d61469905654464e4cfa9c2540b206cffd537f2d154d548a3f7ae4f1e1871af0</stringProp>
+                <stringProp name="Argument.value">5397a8d65a7360f77976142e438f4b37d136da0a8be712d06d3c37f485425abed7a26e5f19d1113d3697cfb211f872fe944220675590de22cf444cbfa3e92226</stringProp>
                 <stringProp name="Argument.metadata">=</stringProp>
                 <boolProp name="HTTPArgument.use_equals">true</boolProp>
                 <stringProp name="Argument.name">blobKey</stringProp>
@@ -92,7 +92,7 @@
           </elementProp>
         </HTTPSamplerProxy>
         <hashTree/>
-        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="One Click" enabled="true">
+        <HTTPSamplerProxy guiclass="HttpTestSampleGui" testclass="HTTPSamplerProxy" testname="One Click">
           <stringProp name="TestPlan.comments">This one click link does not work as it is for staging richard</stringProp>
           <stringProp name="HTTPSampler.protocol">https</stringProp>
           <stringProp name="HTTPSampler.path">/account/one-click-login</stringProp>
@@ -284,7 +284,7 @@
         <stringProp name="filename"></stringProp>
       </ResultCollector>
       <hashTree/>
-      <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults" enabled="true">
+      <ConfigTestElement guiclass="HttpDefaultsGui" testclass="ConfigTestElement" testname="HTTP Request Defaults">
         <intProp name="HTTPSampler.connect_timeout">90000</intProp>
         <intProp name="HTTPSampler.response_timeout">90000</intProp>
         <stringProp name="HTTPSampler.domain">api-staging-andrew.zupass.org</stringProp>
