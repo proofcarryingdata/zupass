@@ -34,6 +34,7 @@
     "@pcd/ethereum-ownership-pcd": "0.13.0",
     "@pcd/ethereum-ownership-pcd-ui": "0.4.0",
     "@pcd/gpc": "0.2.0",
+    "@pcd/gpcircuits": "0.3.0",
     "@pcd/gpc-pcd": "0.2.0",
     "@pcd/gpc-pcd-ui": "0.2.0",
     "@pcd/halo-nonce-pcd": "0.9.0",

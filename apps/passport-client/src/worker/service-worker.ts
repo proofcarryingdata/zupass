@@ -1,10 +1,12 @@
 // this file is loaded as a service worker
-import { GPC_ARTIFACTS_NPM_VERSION } from "@pcd/gpc";
+import { ARTIFACTS_NPM_VERSION } from "@pcd/gpcircuits/constants";
 import { setTimeout as promiseTimeout } from "isomorphic-timers-promises";
 import {
   SERVICE_WORKER_ENABLED,
   ZUPASS_GPC_ARTIFACT_PATH
 } from "../sharedConstants";
+
+const GPC_ARTIFACTS_NPM_VERSION = ARTIFACTS_NPM_VERSION;
 
 // Hack to make TypeScript aware of the ServiceWorkerGlobalScope type.
 // We can't redeclare `self`, but `swSelf` can be used with the right type.

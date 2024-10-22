@@ -1,5 +1,6 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import { ARTIFACTS_NPM_VERSION } from "@pcd/gpcircuits/constants";
 import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
 import express from "express";
@@ -8,11 +9,10 @@ import Handlebars from "handlebars";
 import https from "https";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
-import { GPC_ARTIFACTS_NPM_VERSION } from "../../packages/lib/gpc/src/gpc";
 
 dotenv.config();
 
-const ZUPASS_GPC_ARTIFACT_PATH = `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`;
+const ZUPASS_GPC_ARTIFACT_PATH = `/artifacts/proto-pod-gpc/${ARTIFACTS_NPM_VERSION}`;
 
 const define = {
   "process.env.ONE_CLICK_LOGIN_ENABLED":
@@ -109,13 +109,7 @@ const serviceWorkerOpts: BuildOptions = {
   tsconfig: "./src/worker/tsconfig.json",
   bundle: true,
   entryPoints: ["src/worker/service-worker.ts"],
-  plugins: [
-    NodeModulesPolyfillPlugin(),
-    NodeGlobalsPolyfillPlugin({
-      process: true,
-      buffer: true
-    })
-  ],
+  plugins: [NodeModulesPolyfillPlugin(), NodeGlobalsPolyfillPlugin({})],
   // The output directory here needs to be `public/` rather than
   // `public/js` in order for the service worker to be served from
   // the root of the website, which is necessary because service

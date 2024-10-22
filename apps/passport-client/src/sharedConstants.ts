@@ -1,4 +1,4 @@
-import { GPC_ARTIFACTS_NPM_VERSION } from "@pcd/gpc";
+import { ARTIFACTS_NPM_VERSION } from "@pcd/gpcircuits/constants";
 
 /**
  * Single constant shared between the service worker and the page code which
@@ -36,7 +36,7 @@ export const GPC_ARTIFACTS_CONFIG =
     : JSON.stringify({
         source: "zupass",
         stability: "prod",
-        version: GPC_ARTIFACTS_NPM_VERSION
+        version: ARTIFACTS_NPM_VERSION
       });
 
-export const ZUPASS_GPC_ARTIFACT_PATH = `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`;
+export const ZUPASS_GPC_ARTIFACT_PATH = `/artifacts/proto-pod-gpc/${ARTIFACTS_NPM_VERSION}`;

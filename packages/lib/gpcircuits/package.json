@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./constants": {
+      "types": "./dist/types/src/constants.d.ts",
+      "import": "./dist/esm/src/constants.js",
+      "require": "./dist/cjs/src/constants.js"
     }
   },
   "files": [
