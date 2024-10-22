@@ -40,6 +40,9 @@
       "path": "packages/lib/podspec/tsconfig.esm.json"
     },
     {
+      "path": "packages/lib/semaphore-identity-v3-wrapper/tsconfig.esm.json"
+    },
+    {
       "path": "packages/lib/server-shared/tsconfig.esm.json"
     },
     {

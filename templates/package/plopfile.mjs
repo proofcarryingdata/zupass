@@ -46,7 +46,7 @@ const groupsList = getDirList(packagesPath);
 // Check validity of package names
 const validateInput = (input) => {
   if (input && input !== "") {
-    return /^[a-zA-Z.-]+$/.test(input);
+    return /^[a-zA-Z.-_]+$/.test(input);
   }
   return false;
 };
@@ -74,10 +74,11 @@ export default function (plop) {
     const nameValid = validateInput(name);
     const groupValid = validateInput(group);
     if (!nameValid || !groupValid) {
+      console.log(name);
       throw new Error(
-        `[${!nameValid && "package name"}${
-          !groupValid && ", group name"
-        }}] invalid` // can refer to a conventions url here once ready
+        `[${!nameValid ? "package name" : ""}${
+          !groupValid ? ", group name" : ""
+        }] invalid`
       );
     }
     const { status, message } = checkDuplicateComponent(
