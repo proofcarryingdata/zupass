@@ -22,10 +22,10 @@ import {
   printPODValueOrTuple,
   requireType
 } from "@pcd/pod";
-import { Identity } from "@semaphore-protocol/identity";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
+import { Identity as IdentityV4 } from "@semaphore-protocol/identity";
 import isEqual from "lodash/isEqual";
 import uniq from "lodash/uniq";
-import { Identity as IdentityV4 } from "semaphore-identity-v4";
 import {
   GPCBoundConfig,
   GPCClosedInterval,
@@ -547,7 +547,7 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
   if (proofInputs.owner !== undefined) {
     if (proofInputs.owner.semaphoreV3 !== undefined) {
       requireType(`owner.SemaphoreV3`, proofInputs.owner.semaphoreV3, "object");
-      if (!(proofInputs.owner.semaphoreV3 instanceof Identity)) {
+      if (!(proofInputs.owner.semaphoreV3 instanceof IdentityV3)) {
         throw new TypeError(
           `owner.semaphoreV3 must be a SemaphoreV3 Identity object.`
         );

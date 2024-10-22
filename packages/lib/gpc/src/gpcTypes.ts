@@ -1,6 +1,6 @@
 import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
-import { Identity } from "@semaphore-protocol/identity";
-import { Identity as IdentityV4 } from "semaphore-identity-v4";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
+import { Identity as IdentityV4 } from "@semaphore-protocol/identity";
 import type { Groth16Proof } from "snarkjs";
 
 /**
@@ -422,7 +422,7 @@ export type GPCProofOwnerInputs = {
    * The owner's identity using Semaphore V3. This need not be specified if no
    * entry has {@link isOwnerID} equal to "SemaphoreV3".
    */
-  semaphoreV3?: Identity;
+  semaphoreV3?: IdentityV3;
 
   /**
    * The owner's identity using Semaphore V4. This need not be specified if no

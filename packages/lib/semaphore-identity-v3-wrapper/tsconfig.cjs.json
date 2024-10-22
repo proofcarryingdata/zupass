@@ -9,18 +9,5 @@
   "include": ["src", "artifacts/*.json"],
   // DO NOT MODIFY MANUALLY BEYOND THIS POINT
   // References are automatically maintained by `yarn fix-references`
-  "references": [
-    {
-      "path": "../gpcircuits/tsconfig.cjs.json"
-    },
-    {
-      "path": "../pod/tsconfig.cjs.json"
-    },
-    {
-      "path": "../semaphore-identity-v3-wrapper/tsconfig.cjs.json"
-    },
-    {
-      "path": "../util/tsconfig.cjs.json"
-    }
-  ]
+  "references": []
 }
