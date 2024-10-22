@@ -1,13 +1,19 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
+import {
+  ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon
+} from "@heroicons/react/16/solid";
 import {
   EdDSATicketPCDTypeName,
   ITicketData,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
+import { isEmailPCD } from "@pcd/email-pcd";
 import { PCDGetRequest } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { uniqWith } from "lodash";
 import {
   ReactElement,
@@ -19,7 +25,11 @@ import {
 } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
-import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import styled, {
+  FlattenSimpleInterpolation,
+  css,
+  keyframes
+} from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
@@ -36,10 +46,11 @@ import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { nextFrame } from "../../../src/util";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
+import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
 import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
-import { isMobile } from "../../shared/utils";
+import { isMobile, useOrientation } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 
@@ -143,19 +154,17 @@ const disabledCSS = css`
 `;
 
 export const PageCircleButton = styled.button<{
-  diameter: number;
-  padding: number;
   disabled: boolean;
 }>`
-  ${(p): string => {
-    const size = p.diameter + 2 * p.padding + "px";
-    return `width: ${size};height: ${size};`;
-  }};
+  width: 40px;
+  height: 32px;
   cursor: pointer;
-  border-radius: 99px;
-  border: none;
+  border-radius: 200px;
+  border: 2px solid #ffffff;
   margin: 0;
-  padding: ${(p): number => p.padding}px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   box-shadow:
     0px 1px 3px 0px rgba(0, 0, 0, 0.1),
     0px 1px 2px 0px rgba(0, 0, 0, 0.06);
@@ -187,10 +196,11 @@ const TicketsContainer = styled.div<{ $width: number }>`
 const getEventDetails = (tickets: TicketPack): ITicketData => {
   return tickets.eventTicket.claim.ticket as ITicketData;
 };
-
-const EmptyCardContainer = styled.div`
+const EMPTY_CARD_CONTAINER_HEIGHT = 220;
+const EmptyCardContainer = styled.div<{ longVersion: boolean }>`
   display: flex;
-  height: min(80vh, 549px);
+  height: ${({ longVersion }): string =>
+    longVersion ? "min(80vh, 549px)" : EMPTY_CARD_CONTAINER_HEIGHT + "px"};
   justify-content: center;
   align-items: center;
   border-radius: 16px;
@@ -198,6 +208,7 @@ const EmptyCardContainer = styled.div`
   /* shadow-inset-black */
   box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
   padding: 0 40px;
+  width: 100%;
 `;
 
 const InnerContainer = styled.div`
@@ -232,6 +243,54 @@ const LoadingScreenContainer = styled.div`
   gap: 12px;
   margin: auto 0;
 `;
+
+const ListContainer = styled.div`
+  width: 100%;
+  max-height: calc(100vh - ${EMPTY_CARD_CONTAINER_HEIGHT + 64}px);
+  overflow-y: scroll;
+  border-radius: 20px;
+  border: 2px solid var(--text-white);
+  background: rgba(255, 255, 255, 0.8);
+
+  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+  position: relative;
+`;
+const OuterContainer = styled.div`
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  width: 100%;
+  position: relative;
+`;
+
+const anim = keyframes`
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0) translateX(-10px);
+  }
+  40% {
+    transform: translateY(10px) translateX(-10px);
+  }
+  60% {
+    transform: translateY(5px) translateX(-10px);
+  }
+`;
+const ScrollIndicatorContainer = styled.div`
+  position: absolute;
+  bottom: 2%;
+  left: 50%;
+  transform: translateX(-10px);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  opacity: 0.3;
+
+  animation: ${anim} 1.5s infinite;
+
+  transition: opacity 0.5s ease;
+`;
+
 const Bar = styled.div`
   height: 36px;
   border-radius: 12px;
@@ -249,45 +308,147 @@ const BarsContainer = styled.div`
   margin-bottom: 20px;
 `;
 
-const EmptyCard = (): ReactElement => {
-  const dispatch = useDispatch();
+const ScrollIndicator = (): ReactElement => {
   return (
-    <EmptyCardContainer>
-      <InnerContainer>
-        <BarsContainer>
-          <Bar />
-          <Bar />
-          <Bar />
-          <Bar />
-          <Bar />
-        </BarsContainer>
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          <Typography
-            fontSize={20}
-            color="var(--text-primary)"
-            fontWeight={800}
+    <ScrollIndicatorContainer>
+      <ChevronDownIcon color="var(--text-tertiary)" width={30} height={30} />
+      <ChevronDownIcon
+        color="var(--text-tertiary)"
+        width={30}
+        height={30}
+        style={{ marginTop: -20 }}
+      />
+    </ScrollIndicatorContainer>
+  );
+};
+
+const NoUpcomingEventsState = ({
+  isLandscape
+}: {
+  isLandscape: boolean;
+}): ReactElement => {
+  const dispatch = useDispatch();
+  const pods = usePCDCollection();
+  const timer = useRef<NodeJS.Timeout>();
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const [params] = useSearchParams();
+  const listContainerRef = useRef<HTMLDivElement>(null);
+
+  // New function to check scrollability
+  const checkScrollability = (): void => {
+    if (listContainerRef.current) {
+      const scrollable =
+        listContainerRef.current.scrollHeight >
+        listContainerRef.current.clientHeight;
+      setShowScrollIndicator(scrollable);
+    }
+  };
+
+  // Check scrollability on mount and when pods change
+  useEffect(() => {
+    checkScrollability();
+  }, [pods]);
+
+  useLayoutEffect(() => {
+    // Restore scroll position when list is shown again
+    if (listContainerRef.current) {
+      const folder = params.get("folder");
+      // checks if url contains folder route, and if so, scrolls to it
+      if (folder) {
+        const decodedFolderId = decodeURI(folder);
+        const folderContainer = document.getElementById(decodedFolderId);
+        if (folderContainer) {
+          listContainerRef.current.scrollTop = folderContainer.offsetTop;
+        }
+      }
+    }
+
+    // Check scrollability after layout changes
+    checkScrollability();
+  }, [params]);
+
+  const noPods =
+    pods
+      .getAll()
+      .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
+      .length === 0;
+
+  return (
+    <OuterContainer>
+      <EmptyCardContainer longVersion={noPods}>
+        <InnerContainer>
+          {noPods && (
+            <BarsContainer>
+              <Bar />
+              <Bar />
+              <Bar />
+              <Bar />
+              <Bar />
+            </BarsContainer>
+          )}
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <Typography
+              fontSize={20}
+              color="var(--text-primary)"
+              fontWeight={800}
+            >
+              NO UPCOMING EVENTS
+            </Typography>
+            <Typography>
+              Don't see your ticket?{" "}
+              <a
+                style={{ fontWeight: 500 }}
+                onClick={() => {
+                  dispatch({
+                    type: "set-bottom-modal",
+                    modal: {
+                      modalType: "help-modal"
+                    }
+                  });
+                }}
+              >
+                Learn more
+              </a>
+            </Typography>
+          </div>
+        </InnerContainer>
+      </EmptyCardContainer>
+      {isLandscape ||
+        (!noPods && (
+          <ListContainer
+            ref={listContainerRef}
+            onScroll={(e) => {
+              const scrollTop = e.currentTarget.scrollTop;
+              if (scrollTop === 0) {
+                // start timer
+                const id = setTimeout(() => {
+                  setShowScrollIndicator(true);
+                }, 2000);
+                timer.current = id;
+              } else {
+                setShowScrollIndicator(false);
+
+                // clearing timer on scroll so it won't flash to the user mid scroll
+                if (timer.current) {
+                  clearTimeout(timer.current);
+                  timer.current = undefined;
+                }
+              }
+            }}
           >
-            NO UPCOMING EVENTS
-          </Typography>
-          <Typography>
-            Don't see your ticket?{" "}
-            <a
-              style={{ fontWeight: 500 }}
-              onClick={() => {
+            <PodsCollectionList
+              onPodClick={(pcd) => {
                 dispatch({
                   type: "set-bottom-modal",
-                  modal: {
-                    modalType: "help-modal"
-                  }
+                  modal: { modalType: "pods-collection", activePod: pcd }
                 });
               }}
-            >
-              Learn more
-            </a>
-          </Typography>
-        </div>
-      </InnerContainer>
-    </EmptyCardContainer>
+              style={{ padding: "20px 24px" }}
+            />
+            {showScrollIndicator && <ScrollIndicator />}
+          </ListContainer>
+        ))}
+    </OuterContainer>
   );
 };
 
@@ -308,11 +469,23 @@ export const NewHomeScreen = (): ReactElement => {
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
 
+  const noPods =
+    collection
+      .getAll()
+      .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
+      .length === 0;
+
+  const orientation = useOrientation();
+  const isLandscape =
+    isMobile &&
+    (orientation.type === "landscape-primary" ||
+      orientation.type === "landscape-secondary");
   useEffect(() => {
     if (!self) {
       navigate("/login", { replace: true });
     }
   });
+  const showPodsList = tickets.length === 0 && !isLandscape && !noPods;
 
   useLayoutEffect(() => {
     // if we haven't loaded all pcds yet, dont process the prove request
@@ -323,10 +496,12 @@ export const NewHomeScreen = (): ReactElement => {
       maybeExistingFolder &&
       collection.getFoldersInFolder("").includes(decodeURI(maybeExistingFolder))
     ) {
-      dispatch({
-        type: "set-bottom-modal",
-        modal: { modalType: "pods-collection" }
-      });
+      if (!showPodsList) {
+        dispatch({
+          type: "set-bottom-modal",
+          modal: { modalType: "pods-collection" }
+        });
+      }
       return;
     }
     if (location.pathname.includes("prove")) {
@@ -342,7 +517,15 @@ export const NewHomeScreen = (): ReactElement => {
       return;
     }
     if (params.size > 0) setParams("");
-  }, [params, collection, setParams, isLoadedPCDs, location, dispatch]);
+  }, [
+    params,
+    collection,
+    setParams,
+    isLoadedPCDs,
+    location,
+    dispatch,
+    showPodsList
+  ]);
 
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {
@@ -400,7 +583,9 @@ export const NewHomeScreen = (): ReactElement => {
       noPadding={tickets.length > 0}
       fullscreen={tickets.length > 0}
     >
-      {(!tickets.length || isInvalidUser) && <EmptyCard />}
+      {(!tickets.length || isInvalidUser) && (
+        <NoUpcomingEventsState isLandscape={isLandscape} />
+      )}
       {tickets.length > 0 && (
         <>
           <SwipeViewContainer
@@ -496,8 +681,6 @@ export const NewHomeScreen = (): ReactElement => {
               <ButtonsContainer>
                 <PageCircleButton
                   disabled={currentPos === 0}
-                  padding={6}
-                  diameter={28}
                   onClick={() => {
                     setCurrentPos((old) => {
                       if (old === 0) return old;
@@ -506,15 +689,22 @@ export const NewHomeScreen = (): ReactElement => {
                   }}
                 >
                   <ChevronLeftIcon
-                    width={20}
-                    height={20}
+                    width={24}
+                    height={24}
                     color="var(--text-tertiary)"
                   />
                 </PageCircleButton>
+                <Typography
+                  fontSize={14}
+                  color="#8B94AC"
+                  fontWeight={500}
+                  family="Rubik"
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  {currentPos + 1} OF {tickets.length}
+                </Typography>
                 <PageCircleButton
                   disabled={currentPos === tickets.length - 1}
-                  padding={6}
-                  diameter={28}
                   onClick={() => {
                     setCurrentPos((old) => {
                       if (old === tickets.length - 1) return old;
@@ -523,8 +713,8 @@ export const NewHomeScreen = (): ReactElement => {
                   }}
                 >
                   <ChevronRightIcon
-                    width={20}
-                    height={20}
+                    width={24}
+                    height={24}
                     color="var(--text-tertiary)"
                   />
                 </PageCircleButton>
@@ -534,7 +724,7 @@ export const NewHomeScreen = (): ReactElement => {
         </>
       )}
       <Spacer h={96} />
-      <FloatingMenu />
+      <FloatingMenu onlySettings={showPodsList || noPods} />
       <AddOnsModal />
       <NewModals />
     </AppContainer>

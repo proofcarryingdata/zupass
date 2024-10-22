@@ -55,6 +55,9 @@ html {
 
 body {
   overflow-y: scroll;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
 }
 
 a,
@@ -372,6 +375,7 @@ img {
   -webkit-touch-callout: none;
   user-select: none;
   user-drag: none;
+  pointer-events: none;
 }
 
 /*
