@@ -372,6 +372,7 @@ img {
   -webkit-touch-callout: none;
   user-select: none;
   user-drag: none;
+  pointer-events: none;
 }
 
 /*
