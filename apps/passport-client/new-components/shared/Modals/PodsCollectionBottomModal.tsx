@@ -32,6 +32,7 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
+import { useOrientation } from "../utils";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -130,6 +131,10 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const listContainerRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useDispatch();
   const [params, setParams] = useSearchParams();
+  const orientation = useOrientation();
+  const isLandscape =
+    orientation.type === "landscape-primary" ||
+    orientation.type === "landscape-secondary";
   const isPodsCollectionModalOpen =
     activeBottomModal.modalType === "pods-collection";
 
@@ -169,7 +174,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       modalContainerStyle={{ padding: 0, paddingTop: 24 }}
       isOpen={isPodsCollectionModalOpen}
     >
-      <Container>
+      <Container isLandscape={isLandscape}>
         {!activePod && (
           <UserTitleContainer>
             <Typography fontSize={20} fontWeight={800} align="center">
@@ -227,11 +232,13 @@ const ListContainer = styled.div`
   overflow-y: auto;
 `;
 
-const Container = styled.div`
+const Container = styled.div<{ isLandscape: boolean }>`
   display: flex;
   flex-direction: column;
   // 50px comes from 24px padding we have on the bottom modal
-  max-height: calc(100vh - 50px);
+  max-height: calc(
+    100vh - ${({ isLandscape }): number => (isLandscape ? 50 : 120)}px
+  );
 `;
 const ContainerWithPadding = styled.div`
   padding: 24px 24px 24px 24px;
