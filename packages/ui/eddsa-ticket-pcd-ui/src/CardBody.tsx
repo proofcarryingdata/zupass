@@ -5,17 +5,10 @@ import {
   getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
-import {
-  FlattenSimpleInterpolation,
-  Spacer,
-  ToggleSwitch,
-  css,
-  styled
-} from "@pcd/passport-ui";
+import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import html2canvas from "html2canvas";
-import { useCallback, useRef, useState } from "react";
+import { toCanvas } from "html-to-image";
+import { useRef, useState } from "react";
 import { TicketQR } from "./TicketQR";
 
 type NEW_UI__AddOns = {
@@ -23,9 +16,6 @@ type NEW_UI__AddOns = {
   text: string;
 };
 export interface EdDSATicketPCDCardProps {
-  // The user's Semaphore identity is necessary for generating a ZK proof from
-  // the EdDSATicketPCD.
-  identityPCD: SemaphoreIdentityPCD;
   // The URL to use when encoding a serialized PCD on the query string.
   verifyURL: string;
   // The URL to use for the simpler case of sending some identifiers rather
@@ -37,10 +27,10 @@ export interface EdDSATicketPCDCardProps {
   idBasedVerifyURL?: string;
   // If true, hides the visual padding around the image
   hidePadding?: boolean;
-  // Temporary
-  newUI?: boolean;
   // when clicked on the the addons sections, if there is any, do something
   addOns?: NEW_UI__AddOns;
+  // defined by if the image has QR code displayed and by this flag.
+  showDownloadButton?: boolean;
 }
 
 export const EdDSATicketPCDUI: PCDUI<EdDSATicketPCD, EdDSATicketPCDCardProps> =
@@ -51,51 +41,62 @@ export const EdDSATicketPCDUI: PCDUI<EdDSATicketPCD, EdDSATicketPCDCardProps> =
 
 function EdDSATicketPCDCardBody({
   pcd,
-  identityPCD,
   verifyURL,
   idBasedVerifyURL,
-  hidePadding,
-  newUI,
-  addOns
+  addOns,
+  showDownloadButton
 }: {
   pcd: EdDSATicketPCD;
 } & EdDSATicketPCDCardProps): JSX.Element {
   const ticketImageRef = useRef<HTMLDivElement>(null);
-  const hasImage = pcd.claim.ticket.imageUrl !== undefined;
-
   const ticketData = getEdDSATicketData(pcd);
-
-  const [zk, setZk] = useState<boolean>(idBasedVerifyURL === undefined);
   const [downloading, setDownloading] = useState(false);
 
-  const onToggle = useCallback(() => {
-    setZk(!zk);
-  }, [zk]);
+  // If ticket has an `eventStartDate` render the `qrCodeOverrideImageUrl`, if it exists
+  // Else, render the `imageUrl`, if it existss
+  const imageToRender =
+    ticketData?.eventStartDate && idBasedVerifyURL !== undefined
+      ? ticketData.qrCodeOverrideImageUrl
+      : ticketData?.imageUrl;
 
-  const redact = zk && idBasedVerifyURL !== undefined;
-  if (newUI) {
-    return (
-      <NEW_UI__Container>
-        <NEW_UI__TicketImageContainer ref={ticketImageRef}>
+  return (
+    <NEW_UI__Container>
+      <NEW_UI__TicketImageContainer ref={ticketImageRef}>
+        {!imageToRender && (
           <TicketQR
             pcd={pcd}
-            identityPCD={identityPCD}
             verifyURL={verifyURL}
             idBasedVerifyURL={idBasedVerifyURL}
-            zk={zk}
           />
-          <NEW_UI__InfoContainer>
-            <NEW_UI__AttendeeName>
-              {ticketData?.attendeeName.toUpperCase() || "Unknown"}
-            </NEW_UI__AttendeeName>
-            <NEW_UI__ExtraInfoContainer>
-              <NEW_UI__ExtraInfo>{ticketData?.attendeeEmail}</NEW_UI__ExtraInfo>
+        )}
+        {imageToRender && (
+          <TicketImage
+            imageUrl={imageToRender}
+            imageAltText={ticketData?.imageAltText}
+            hidePadding={true}
+          />
+        )}
+        <NEW_UI__InfoContainer>
+          <NEW_UI__AttendeeName>
+            {ticketData?.attendeeName.toUpperCase() ||
+              ticketData?.eventName.toUpperCase() ||
+              "Unknown"}
+          </NEW_UI__AttendeeName>
+          <NEW_UI__ExtraInfoContainer>
+            {ticketData?.attendeeEmail && (
+              <NEW_UI__ExtraInfo>{ticketData.attendeeEmail}</NEW_UI__ExtraInfo>
+            )}
+            {ticketData?.attendeeEmail && ticketData?.ticketName && (
               <NEW_UI__ExtraInfo>•</NEW_UI__ExtraInfo>
-              <NEW_UI__ExtraInfo>{ticketData?.ticketName}</NEW_UI__ExtraInfo>
-            </NEW_UI__ExtraInfoContainer>
-          </NEW_UI__InfoContainer>
-        </NEW_UI__TicketImageContainer>
-        <div>
+            )}
+            {ticketData?.ticketName && (
+              <NEW_UI__ExtraInfo>{ticketData.ticketName}</NEW_UI__ExtraInfo>
+            )}
+          </NEW_UI__ExtraInfoContainer>
+        </NEW_UI__InfoContainer>
+      </NEW_UI__TicketImageContainer>
+      <div>
+        {!imageToRender && showDownloadButton && (
           <NEW_UI__ExtraSection
             onClick={async () => {
               if (downloading) return;
@@ -104,7 +105,7 @@ function EdDSATicketPCDCardBody({
               if (!ticketElement) return;
               await shareOrDownloadImage(
                 ticketElement,
-                (ticketData?.eventName || "event-ticket-data") + ".png"
+                (ticketData?.eventName || "event-ticket-data") + ".jpeg"
               );
               setDownloading(false);
             }}
@@ -114,63 +115,27 @@ function EdDSATicketPCDCardBody({
             </NEW_UI__ExtraSectionText>
             <DownloadIcon />
           </NEW_UI__ExtraSection>
-          {addOns && (
-            <NEW_UI__ExtraSection onClick={addOns.onClick}>
-              <NEW_UI__ExtraSectionText>{addOns.text}</NEW_UI__ExtraSectionText>
-              <QRIcon />
-            </NEW_UI__ExtraSection>
-          )}
-        </div>
-      </NEW_UI__Container>
-    );
-  }
-  return (
-    <Container padding={!hasImage}>
-      {hasImage && (
-        <TicketInfo>
-          <TicketImage hidePadding={hidePadding} pcd={pcd} />
-          <span>{ticketData?.attendeeName}</span>
-          <span>{ticketData?.attendeeEmail}</span>
-        </TicketInfo>
-      )}
-      {!hasImage && (
-        <TicketInfo>
-          <TicketQR
-            pcd={pcd}
-            identityPCD={identityPCD}
-            verifyURL={verifyURL}
-            idBasedVerifyURL={idBasedVerifyURL}
-            zk={zk}
-          />
-          <Spacer h={8} />
-          {ticketData?.attendeeName && (
-            <RedactedText redacted={redact}>
-              {ticketData?.attendeeName}
-            </RedactedText>
-          )}
-          <RedactedText redacted={redact}>
-            {ticketData?.attendeeEmail}
-          </RedactedText>
-          {/* TODO: Turn on ZK mode when we have an end-to-end story for it. */}
-          {false && (
-            <ZKMode>
-              <ToggleSwitch label="ZK mode" checked={zk} onChange={onToggle} />
-            </ZKMode>
-          )}
-        </TicketInfo>
-      )}
-    </Container>
+        )}
+        {addOns && (
+          <NEW_UI__ExtraSection onClick={addOns.onClick}>
+            <NEW_UI__ExtraSectionText>{addOns.text}</NEW_UI__ExtraSectionText>
+            <QRIcon />
+          </NEW_UI__ExtraSection>
+        )}
+      </div>
+    </NEW_UI__Container>
   );
 }
 
 function TicketImage({
-  pcd,
+  imageUrl,
+  imageAltText,
   hidePadding
 }: {
-  pcd: EdDSATicketPCD;
+  imageUrl: string;
+  imageAltText: string | undefined;
   hidePadding?: boolean;
 }): JSX.Element {
-  const { imageUrl, imageAltText } = pcd.claim.ticket;
   if (hidePadding) return <img src={imageUrl} alt={imageAltText} />;
   return (
     <div style={{ padding: "8px" }}>
@@ -193,67 +158,8 @@ function getHeader({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   return <Uppercase>{header}</Uppercase>;
 }
 
-const Container = styled.span<{ padding: boolean }>`
-  ${({ padding }): FlattenSimpleInterpolation =>
-    padding
-      ? css`
-          padding: 16px;
-        `
-      : css``}
-  overflow: hidden;
-  width: 100%;
-`;
-
-const TicketInfo = styled.div`
-  margin-top: 8px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-`;
-
 const Uppercase = styled.span`
   text-transform: uppercase;
-`;
-
-const RedactedText = styled.div<{ redacted: boolean }>`
-  ${({ redacted }): FlattenSimpleInterpolation =>
-    redacted
-      ? css`
-          color: transparent;
-          &:before {
-            border-radius: 4px;
-            background-color: var(--bg-dark-primary);
-            color: var(--bg-dark-primary);
-            content: "REDACTED";
-            color: white;
-            font-weight: bold;
-            min-width: 100%;
-            text-align: center;
-            position: absolute;
-            left: 0;
-          }
-        `
-      : css``}
-
-  margin-bottom: 4px;
-  padding: 2px;
-  width: 300px;
-  position: relative;
-  text-align: center;
-  transition-property: color, background-color;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  /* Same duration as the toggle slide */
-  transition-duration: 300ms;
-`;
-
-const ZKMode = styled.div`
-  display: flex;
-  text-align: right;
-  margin-top: 8px;
-  padding: 0px 16px;
-  width: 100%;
-  justify-content: flex-end;
 `;
 
 const NEW_UI__Container = styled.div`
@@ -274,6 +180,8 @@ const NEW_UI__TicketImageContainer = styled.div`
   flex-direction: column;
   gap: 16px;
   padding: 16px 16px 0px 16px;
+  background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
+  border-radius: inherit;
 `;
 
 const NEW_UI__InfoContainer = styled.div`
@@ -332,44 +240,45 @@ const NEW_UI__ExtraSectionText = styled.div<{ $disabled?: boolean }>`
 
 const DownloadIcon = (): JSX.Element => (
   <svg
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 16 16"
+    fill="var(--text-tertiary)"
+    className="size-4"
     width={20}
     height={20}
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="var(--text-tertiary)"
-    className="size-6"
   >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
-    />
+    <path d="M6.22 8.72a.75.75 0 0 0 1.06 1.06l5.22-5.22v1.69a.75.75 0 0 0 1.5 0v-3.5a.75.75 0 0 0-.75-.75h-3.5a.75.75 0 0 0 0 1.5h1.69L6.22 8.72Z" />
+    <path d="M3.5 6.75c0-.69.56-1.25 1.25-1.25H7A.75.75 0 0 0 7 4H4.75A2.75 2.75 0 0 0 2 6.75v4.5A2.75 2.75 0 0 0 4.75 14h4.5A2.75 2.75 0 0 0 12 11.25V9a.75.75 0 0 0-1.5 0v2.25c0 .69-.56 1.25-1.25 1.25h-4.5c-.69 0-1.25-.56-1.25-1.25v-4.5Z" />
   </svg>
 );
 
 const QRIcon = (): JSX.Element => (
   <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="var(--text-tertiary)"
+    className="size-4"
     width={20}
     height={20}
-    xmlns="http://www.w3.org/2000/svg"
-    fill="none"
-    viewBox="0 0 24 24"
-    strokeWidth={1.5}
-    stroke="var(--text-tertiary)"
-    className="size-6"
   >
+    <path d="M4.75 4.25a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1Z" />
     <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M3.75 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 3.75 9.375v-4.5ZM3.75 14.625c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5a1.125 1.125 0 0 1-1.125-1.125v-4.5ZM13.5 4.875c0-.621.504-1.125 1.125-1.125h4.5c.621 0 1.125.504 1.125 1.125v4.5c0 .621-.504 1.125-1.125 1.125h-4.5A1.125 1.125 0 0 1 13.5 9.375v-4.5Z"
+      fillRule="evenodd"
+      d="M2 3.5A1.5 1.5 0 0 1 3.5 2H6a1.5 1.5 0 0 1 1.5 1.5V6A1.5 1.5 0 0 1 6 7.5H3.5A1.5 1.5 0 0 1 2 6V3.5Zm1.5 0H6V6H3.5V3.5Z"
+      clipRule="evenodd"
     />
+    <path d="M4.25 11.25a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0Z" />
     <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      d="M6.75 6.75h.75v.75h-.75v-.75ZM6.75 16.5h.75v.75h-.75v-.75ZM16.5 6.75h.75v.75h-.75v-.75ZM13.5 13.5h.75v.75h-.75v-.75ZM13.5 19.5h.75v.75h-.75v-.75ZM19.5 13.5h.75v.75h-.75v-.75ZM19.5 19.5h.75v.75h-.75v-.75ZM16.5 16.5h.75v.75h-.75v-.75Z"
+      fillRule="evenodd"
+      d="M2 10a1.5 1.5 0 0 1 1.5-1.5H6A1.5 1.5 0 0 1 7.5 10v2.5A1.5 1.5 0 0 1 6 14H3.5A1.5 1.5 0 0 1 2 12.5V10Zm1.5 2.5V10H6v2.5H3.5Z"
+      clipRule="evenodd"
     />
+    <path d="M11.25 4.25a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1Z" />
+    <path
+      fillRule="evenodd"
+      d="M10 2a1.5 1.5 0 0 0-1.5 1.5V6A1.5 1.5 0 0 0 10 7.5h2.5A1.5 1.5 0 0 0 14 6V3.5A1.5 1.5 0 0 0 12.5 2H10Zm2.5 1.5H10V6h2.5V3.5Z"
+      clipRule="evenodd"
+    />
+    <path d="M8.5 9.417a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM8.5 13.083a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM13.083 8.5a.917.917 0 1 0 0 1.833.917.917 0 0 0 0-1.833ZM12.166 13.084a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM11.25 10.333a.917.917 0 1 0 0 1.833.917.917 0 0 0 0-1.833Z" />
   </svg>
 );
 
@@ -379,9 +288,9 @@ const shareOrDownloadImage = async (
 ): Promise<void> => {
   if (!ticketElement) return;
 
-  const canvas: HTMLCanvasElement = await html2canvas(ticketElement);
+  const canvas: HTMLCanvasElement = await toCanvas(ticketElement);
   const blob: Blob | null = await new Promise((resolve) =>
-    canvas.toBlob(resolve, "image/png")
+    canvas.toBlob(resolve, "image/jpeg")
   );
   if (!blob) return; // Ensure the blob exists before proceeding
 
@@ -393,7 +302,7 @@ const shareOrDownloadImage = async (
     link.click();
     URL.revokeObjectURL(url);
   };
-  const file = new File([blob], fileName, { type: "image/png" });
+  const file = new File([blob], fileName, { type: "image/jpeg" });
   if (navigator.share && navigator.canShare({ files: [file] })) {
     try {
       await navigator.share({

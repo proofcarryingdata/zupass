@@ -1,4 +1,4 @@
-import { Cog6ToothIcon, Square3Stack3DIcon } from "@heroicons/react/24/solid";
+import { Cog6ToothIcon, Square3Stack3DIcon } from "@heroicons/react/16/solid";
 import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { Typography } from "./Typography";

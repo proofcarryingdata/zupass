@@ -29,7 +29,7 @@
     "@pcd/passport-ui": "0.13.0",
     "@pcd/pcd-types": "0.13.0",
     "@pcd/pod-ticket-pcd": "0.3.0",
-    "html2canvas": "^1.4.1",
+    "html-to-image": "^1.11.11",
     "url-join": "4.0.1"
   },
   "devDependencies": {

@@ -6,14 +6,13 @@ import {
   EyeIcon,
   InformationCircleIcon,
   TrashIcon
-} from "@heroicons/react/24/solid";
+} from "@heroicons/react/16/solid";
 import { useMemo } from "react";
 import styled from "styled-components";
 import {
   useBottomModal,
   useDispatch,
-  useHasSetupPassword,
-  useStateContext
+  useHasSetupPassword
 } from "../../../src/appHooks";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
@@ -29,7 +28,6 @@ interface SettingItem {
 
 export function SettingsBottomModal(): JSX.Element {
   const activeBottomModal = useBottomModal();
-  const state = useStateContext().getState();
   const dispatch = useDispatch();
   const hasSetupPassword = useHasSetupPassword();
   const exportData = useExport();
@@ -39,6 +37,7 @@ export function SettingsBottomModal(): JSX.Element {
       {
         title: "About Zupass",
         icon: <InformationCircleIcon width={24} height={24} color="#7C8BB4" />,
+
         onClick: (): void => {
           dispatch({
             type: "set-bottom-modal",
@@ -135,13 +134,6 @@ export function SettingsBottomModal(): JSX.Element {
   return (
     <BottomModal isOpen={activeBottomModal.modalType === "settings"}>
       <SettingsContainer>
-        <UserTitleContainer>
-          <Typography fontSize={20} fontWeight={800} align="center">
-            {state.self?.emails.map((email) => {
-              return <div>{email}</div>;
-            })}
-          </Typography>
-        </UserTitleContainer>
         <SettingsActionContainer>
           {items.map(({ icon, title, onClick, variant }, i) => (
             <SettingsItemButton key={title} onClick={onClick}>
@@ -185,12 +177,6 @@ const SettingsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
-`;
-
-const UserTitleContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
 `;
 
 const SettingsActionContainer = styled.div`

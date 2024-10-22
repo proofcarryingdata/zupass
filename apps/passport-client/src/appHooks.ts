@@ -141,6 +141,18 @@ export function useIdentityV3(): Identity {
   return useSelector<Identity>((s) => s.identityV3, []);
 }
 
+export function useProveStateCount(): number {
+  return useSelector<number>((s) => s.proveStateEligiblePCDs?.length ?? 0, []);
+}
+export function useProveState(): boolean | undefined {
+  return useSelector<boolean | undefined>(
+    (s) =>
+      s.proveStateEligiblePCDs === undefined
+        ? undefined
+        : s.proveStateEligiblePCDs.every(Boolean),
+    []
+  );
+}
 export function useDispatch(): Dispatcher {
   const { dispatch } = useContext(StateContext);
   return dispatch;
@@ -165,6 +177,10 @@ export function useModal(): AppState["modal"] {
 
 export function useBottomModal(): AppState["bottomModal"] {
   return useSelector<AppState["bottomModal"]>((s) => s.bottomModal, []);
+}
+
+export function useScrollTo(): AppState["scrollTo"] {
+  return useSelector<AppState["scrollTo"]>((s) => s.scrollTo, []);
 }
 
 export function useSyncKey(): string | undefined {
@@ -281,21 +297,6 @@ export function useHasSetupPassword(): boolean {
   return !!self && hasSetupPassword(self);
 }
 
-// Hook that when invoked, requires the user to set a password if they haven't already
-export function useRequirePassword(): void {
-  const self = useSelf();
-  const hasSetupPassword = useHasSetupPassword();
-  const dispatch = useDispatch();
-  if (self && !hasSetupPassword) {
-    dispatch({
-      type: "set-modal",
-      modal: {
-        modalType: "require-add-password"
-      }
-    });
-  }
-}
-
 // Hook that enables keystrokes to properly listen to laser scanning inputs from supported devices
 export function useLaserScannerKeystrokeInput(): string {
   const [typedText, setTypedText] = useState("");
@@ -362,3 +363,35 @@ export function useZapp(): Zapp | undefined {
 export function useZappOrigin(): string | undefined {
   return useSelector<string | undefined>((s) => s.zappOrigin, []);
 }
+
+// Fixes an issue on iOS where components break when switching from landscape to portrait mode.
+// Relevant issue: https://linear.app/0xparc-pcd/issue/0XP-1334/when-changing-to-landscape-and-than-back-to-portrait-the-home-page
+// This hook detects orientation changes and forces a reflow by briefly hiding and redisplaying the document body,
+// ensuring components are re-rendered correctly.
+// https://linear.app/0xparc-pcd/issue/0XP-1334/when-changing-to-landscape-and-than-back-to-portrait-the-home-page
+export const useIOSOrientationFix = (): void => {
+  useEffect(() => {
+    const onOrientationChange = (): void => {
+      document.body.style.display = "none";
+      document.body.offsetHeight; // force document reflow
+      document.body.style.display = "";
+    };
+
+    if (window.screen?.orientation) {
+      window.screen.orientation.addEventListener("change", onOrientationChange);
+    } else {
+      window.addEventListener("orientationchange", onOrientationChange);
+    }
+
+    return (): void => {
+      if (window.screen?.orientation) {
+        window.screen.orientation.removeEventListener(
+          "change",
+          onOrientationChange
+        );
+      } else {
+        window.removeEventListener("orientationchange", onOrientationChange);
+      }
+    };
+  }, []);
+};

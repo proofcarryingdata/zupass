@@ -1,49 +1,62 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/24/solid";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import {
   EdDSATicketPCDTypeName,
   ITicketData,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
+import { PCDGetRequest } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { uniqWith } from "lodash";
-import { ReactElement, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import {
+  ReactElement,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
   useDispatch,
-  useLoadedIssuedPCDs,
+  useIsSyncSettled,
+  usePCDCollection,
   usePCDs,
+  useScrollTo,
   useSelf,
   useUserForcedToLogout
 } from "../../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { nextFrame } from "../../../src/util";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
 import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
+import { isMobile } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
 
-const CARD_GAP = 8;
-const TICKET_VERTICAL_GAP = 20;
 const SCREEN_HORIZONTAL_PADDING = 20;
+const TICKET_VERTICAL_GAP = 20;
 const BUTTONS_CONTAINER_HEIGHT = 40;
+const CARD_GAP = isMobile ? 8 : SCREEN_HORIZONTAL_PADDING * 2;
 
 const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
-  // TODO: fetch the pods type as well and prioritize it if theres a conflict.
-  return isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd);
+  return (
+    (isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd)) &&
+    !!pcd.claim.ticket.eventStartDate
+  );
 };
-
 const useTickets = (): Array<[string, TicketPack[]]> => {
   const allPCDs = usePCDs();
   const tickets = allPCDs.filter(isEventTicketPCD).reverse();
@@ -54,6 +67,24 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
       t1.claim.ticket.attendeeEmail === t2.claim.ticket.attendeeEmail &&
       t1.type === EdDSATicketPCDTypeName
     );
+  }).sort((t1, t2) => {
+    // if one of the tickets doesnt have a date, immidiatly retrun the other one as the bigger one
+    if (!t1.claim.ticket.eventStartDate) return -1;
+    if (!t2.claim.ticket.eventStartDate) return 1;
+
+    // parse the date
+    const date1 = Date.parse(t1.claim.ticket.eventStartDate);
+    const date2 = Date.parse(t2.claim.ticket.eventStartDate);
+    const now = Date.now();
+
+    const timeToDate1 = date1 - now;
+    const timeToDate2 = date2 - now;
+    // if one of the dates passed its due date, immidately return the other one
+    if (timeToDate1 < 0) return -1;
+    if (timeToDate2 < 0) return 1;
+
+    // return which date is closer to the current time
+    return timeToDate1 - timeToDate2;
   });
 
   //  This hook is building "ticket packs"
@@ -84,7 +115,6 @@ const useTickets = (): Array<[string, TicketPack[]]> => {
       const pack = ticketPacks.find(
         (pack) => pack.attendeeEmail === ticket.claim.ticket.attendeeEmail
       );
-
       if (!pack) continue;
       pack.addOns.push(ticket);
     }
@@ -160,7 +190,7 @@ const getEventDetails = (tickets: TicketPack): ITicketData => {
 
 const EmptyCardContainer = styled.div`
   display: flex;
-  height: 302px;
+  height: min(80vh, 549px);
   justify-content: center;
   align-items: center;
   border-radius: 16px;
@@ -175,6 +205,7 @@ const InnerContainer = styled.div`
   flex-direction: column;
   align-items: center;
   text-align: center;
+  gap: 10px;
 `;
 
 const useWindowWidth = (): number => {
@@ -201,17 +232,60 @@ const LoadingScreenContainer = styled.div`
   gap: 12px;
   margin: auto 0;
 `;
+const Bar = styled.div`
+  height: 36px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.05);
+  box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
+  width: 180px;
+`;
+
+const BarsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: 10px 48px 10px 48px;
+  width: 100%;
+  gap: 5px;
+  margin-bottom: 20px;
+`;
 
 const EmptyCard = (): ReactElement => {
+  const dispatch = useDispatch();
   return (
     <EmptyCardContainer>
       <InnerContainer>
-        <Typography fontWeight={800} color="var(--text-tertiary)">
-          YOU HAVE NO EVENT PASSES
-        </Typography>
-        <Typography color="var(--text-tertiary)">
-          Make sure you are logged in with the correct email address.
-        </Typography>
+        <BarsContainer>
+          <Bar />
+          <Bar />
+          <Bar />
+          <Bar />
+          <Bar />
+        </BarsContainer>
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <Typography
+            fontSize={20}
+            color="var(--text-primary)"
+            fontWeight={800}
+          >
+            NO UPCOMING EVENTS
+          </Typography>
+          <Typography>
+            Don't see your ticket?{" "}
+            <a
+              style={{ fontWeight: 500 }}
+              onClick={() => {
+                dispatch({
+                  type: "set-bottom-modal",
+                  modal: {
+                    modalType: "help-modal"
+                  }
+                });
+              }}
+            >
+              Learn more
+            </a>
+          </Typography>
+        </div>
       </InnerContainer>
     </EmptyCardContainer>
   );
@@ -220,20 +294,82 @@ const EmptyCard = (): ReactElement => {
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
+  const collection = usePCDCollection();
   const [currentPos, setCurrentPos] = useState(0);
   const dispatch = useDispatch();
   const ticketsRef = useRef<Map<string, HTMLDivElement[]>>(new Map());
+  const scrollTo = useScrollTo();
   const windowWidth = useWindowWidth();
   const self = useSelf();
   const navigate = useNavigate();
-  const isLoadedPCDs = useLoadedIssuedPCDs();
-
+  const isLoadedPCDs = useIsSyncSettled();
+  const [params, setParams] = useSearchParams();
+  const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
+  const location = useLocation();
+
   useEffect(() => {
     if (!self) {
-      navigate("/new/login", { replace: true });
+      navigate("/login", { replace: true });
     }
   });
+
+  useLayoutEffect(() => {
+    // if we haven't loaded all pcds yet, dont process the prove request
+    if (!isLoadedPCDs) return;
+
+    const maybeExistingFolder = params.get("folder");
+    if (
+      maybeExistingFolder &&
+      collection.getFoldersInFolder("").includes(decodeURI(maybeExistingFolder))
+    ) {
+      dispatch({
+        type: "set-bottom-modal",
+        modal: { modalType: "pods-collection" }
+      });
+      return;
+    }
+    if (location.pathname.includes("prove")) {
+      const params = new URLSearchParams(location.search);
+      const request = JSON.parse(
+        params.get("request") ?? "{}"
+      ) as PCDGetRequest;
+      dispatch({
+        type: "set-bottom-modal",
+        modal: { request, modalType: "prove" }
+      });
+      console.log(request);
+      return;
+    }
+    if (params.size > 0) setParams("");
+  }, [params, collection, setParams, isLoadedPCDs, location, dispatch]);
+
+  useEffect(() => {
+    if (scrollTo && isLoadedPCDs && tickets.length > 0) {
+      // getting the pos of the event card
+      const eventPos = tickets.findIndex(
+        (pack) => pack[0] === scrollTo.eventId
+      );
+      if (eventPos < 0) return;
+      // scrolling to it and re-running the hook
+      if (eventPos !== currentPos) {
+        setCurrentPos(eventPos);
+        return;
+      }
+      (async (): Promise<void> => {
+        // making sure we let the tickets render before we fetch them from the dom
+        await nextFrame();
+        const elToScroll = document.getElementById(
+          scrollTo.eventId + scrollTo.attendee
+        );
+        window.scroll({
+          top: elToScroll?.offsetTop,
+          left: elToScroll?.offsetLeft
+        });
+        dispatch({ type: "scroll-to-ticket", scrollTo: undefined });
+      })();
+    }
+  }, [dispatch, scrollTo, currentPos, setCurrentPos, tickets, isLoadedPCDs]);
 
   const cardWidth =
     (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
@@ -267,7 +403,20 @@ export const NewHomeScreen = (): ReactElement => {
       {(!tickets.length || isInvalidUser) && <EmptyCard />}
       {tickets.length > 0 && (
         <>
-          <SwipeViewContainer>
+          <SwipeViewContainer
+            onMouseDown={() => {
+              setHolding(true);
+            }}
+            onMouseUp={() => {
+              setHolding(false);
+            }}
+            onMouseLeave={() => {
+              setHolding(false);
+            }}
+            style={{
+              cursor: holding ? "grabbing" : "grab"
+            }}
+          >
             <_SwipableViews
               style={{
                 padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
@@ -280,6 +429,7 @@ export const NewHomeScreen = (): ReactElement => {
               onChangeIndex={(e: number) => {
                 setCurrentPos(e);
               }}
+              enableMouseEvents
             >
               {tickets.map(([eventId, packs], i) => {
                 const eventDetails = getEventDetails(packs[0]);
@@ -305,6 +455,7 @@ export const NewHomeScreen = (): ReactElement => {
                       {packs.map((pack) => {
                         return (
                           <CardBody
+                            showDownloadButton={true}
                             key={pack.eventName}
                             addOns={
                               pack.addOns.length > 0
@@ -331,7 +482,6 @@ export const NewHomeScreen = (): ReactElement => {
                               }
                               group.push(ref);
                             }}
-                            newUI={true}
                             pcd={pack.eventTicket}
                             isMainIdentity={false}
                           />

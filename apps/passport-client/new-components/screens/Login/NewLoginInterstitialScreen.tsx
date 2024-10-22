@@ -92,7 +92,7 @@ export function NewLoginInterstitialScreen(): JSX.Element {
             break;
           }
           default:
-            window.location.hash = "#/new";
+            window.location.hash = "#/";
         }
       }
     }
