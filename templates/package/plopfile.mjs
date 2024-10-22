@@ -46,7 +46,7 @@ const groupsList = getDirList(packagesPath);
 // Check validity of package names
 const validateInput = (input) => {
   if (input && input !== "") {
-    return /^[a-zA-Z.-_]+$/.test(input);
+    return /^(@[a-z0-9-~][a-z0-9-._~]*\/)?[a-z0-9-~][a-z0-9-._~]*$/.test(input);
   }
   return false;
 };
