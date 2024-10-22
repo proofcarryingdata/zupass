@@ -4,8 +4,8 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { POD, PODEntries } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import path from "path";
 import { v4 as uuid } from "uuid";
 import { TimerCase } from "../types";
@@ -19,7 +19,7 @@ async function setupProveArgs(): Promise<GPCPCDArgs> {
   // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
   const privateKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 0001020304050607080900010203040506070809000102030405060708090001
 
-  const ownerIdentity = new Identity(
+  const ownerIdentity = new IdentityV3(
     '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
   );
 

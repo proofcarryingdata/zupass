@@ -55,6 +55,9 @@
       "path": "../../pcd/semaphore-identity-pcd"
     },
     {
+      "path": "../semaphore-identity-v3-wrapper"
+    },
+    {
       "path": "../../pcd/pod-pcd"
     },
     {

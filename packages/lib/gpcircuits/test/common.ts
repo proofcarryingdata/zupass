@@ -4,8 +4,8 @@ import {
   PODEntries,
   encodePublicKey
 } from "@pcd/pod";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
@@ -24,7 +24,7 @@ export const privateKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 
 export const privateKey2 = "AAEBAQIDBQEGABABAgMEBQYHCAkAAQIDBAUGBAgJAAA"; // hex 0001010102030501060010010203040506070809000102030405060408090000
 
 // Semaphore V3 identity
-export const ownerIdentity = new Identity(
+export const ownerIdentity = new IdentityV3(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
 );
 

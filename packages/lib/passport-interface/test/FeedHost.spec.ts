@@ -1,6 +1,6 @@
 import { PCDCollection } from "@pcd/pcd-collection";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import MockDate from "mockdate";
@@ -12,7 +12,7 @@ import {
 import { FeedSubscriptionManager } from "../src/SubscriptionManager";
 import { MockFeedApi } from "./MockFeedApi";
 
-const identity = new Identity();
+const identity = new IdentityV3();
 
 describe("feed host", async function () {
   const mockFeedApi = new MockFeedApi();
