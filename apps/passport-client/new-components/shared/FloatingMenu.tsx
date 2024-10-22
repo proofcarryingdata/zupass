@@ -47,7 +47,9 @@ type FloatingMenuProps = {
   onlySettings: boolean;
 };
 
-export const FloatingMenu = ({ onlySettings: noTickets }: FloatingMenuProps): JSX.Element => {
+export const FloatingMenu = ({
+  onlySettings: noTickets
+}: FloatingMenuProps): JSX.Element => {
   const dispatch = useDispatch();
   return (
     <FloatingMenuContainer center={!noTickets}>
