@@ -17,7 +17,7 @@ export const AboutZupassModal = (): JSX.Element => {
           </Typography>
           <Typography fontSize={16} fontWeight={400} family="Rubik">
             Zupass is a ZK data manager that stores records of social activity,
-            including attendance of daily events, participation on community
+            including attendance to daily events, participation on community
             votes, and even fun collectibles like cryptographic frogs.
           </Typography>
         </TitleContainer>
@@ -27,7 +27,7 @@ export const AboutZupassModal = (): JSX.Element => {
               window.open("https://x.com/zupassproject", "_blank");
             }}
           >
-            Visit X.com
+            @ZupassProject
           </Button2>
           <Button2
             variant="secondary"
