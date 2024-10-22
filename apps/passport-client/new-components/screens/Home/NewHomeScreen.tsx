@@ -254,6 +254,7 @@ const ListContainer = styled.div`
   background: rgba(255, 255, 255, 0.8);
 
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+  position: relative;
 `;
 const OuterContainer = styled.div`
   display: flex;
@@ -314,7 +315,22 @@ const NoUpcomingEventsState = ({
   const pods = usePCDCollection();
   const timer = useRef<NodeJS.Timeout>();
   const [showScrollIndicator, setShowScrollIndicator] = useState(true);
-
+  const [params] = useSearchParams();
+  const listContainerRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    // Restore scroll position when list is shown again
+    if (listContainerRef.current) {
+      const folder = params.get("folder");
+      // checks if url contains folder route, and if so, scrolls to it
+      if (folder) {
+        const decodedFolderId = decodeURI(folder);
+        const folderContainer = document.getElementById(decodedFolderId);
+        if (folderContainer) {
+          listContainerRef.current.scrollTop = folderContainer.offsetTop;
+        }
+      }
+    }
+  }, [params]);
   return (
     <OuterContainer>
       <EmptyCardContainer>
@@ -352,6 +368,7 @@ const NoUpcomingEventsState = ({
           .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
           .length > 0 && (
           <ListContainer
+            ref={listContainerRef}
             onScroll={(e) => {
               const scrollTop = e.currentTarget.scrollTop;
               if (scrollTop === 0) {
@@ -413,6 +430,7 @@ export const NewHomeScreen = (): ReactElement => {
       navigate("/login", { replace: true });
     }
   });
+  const showPodsList = tickets.length === 0 && !isLandscape;
 
   useLayoutEffect(() => {
     // if we haven't loaded all pcds yet, dont process the prove request
@@ -423,10 +441,12 @@ export const NewHomeScreen = (): ReactElement => {
       maybeExistingFolder &&
       collection.getFoldersInFolder("").includes(decodeURI(maybeExistingFolder))
     ) {
-      dispatch({
-        type: "set-bottom-modal",
-        modal: { modalType: "pods-collection" }
-      });
+      if (!showPodsList) {
+        dispatch({
+          type: "set-bottom-modal",
+          modal: { modalType: "pods-collection" }
+        });
+      }
       return;
     }
     if (location.pathname.includes("prove")) {
@@ -442,7 +462,15 @@ export const NewHomeScreen = (): ReactElement => {
       return;
     }
     if (params.size > 0) setParams("");
-  }, [params, collection, setParams, isLoadedPCDs, location, dispatch]);
+  }, [
+    params,
+    collection,
+    setParams,
+    isLoadedPCDs,
+    location,
+    dispatch,
+    showPodsList
+  ]);
 
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {
@@ -636,7 +664,7 @@ export const NewHomeScreen = (): ReactElement => {
         </>
       )}
       <Spacer h={96} />
-      <FloatingMenu onlySettings={tickets.length === 0 && !isLandscape} />
+      <FloatingMenu onlySettings={showPodsList} />
       <AddOnsModal />
       <NewModals />
     </AppContainer>
