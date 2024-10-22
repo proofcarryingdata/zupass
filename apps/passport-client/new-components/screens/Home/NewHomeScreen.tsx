@@ -330,9 +330,25 @@ const NoUpcomingEventsState = ({
   const dispatch = useDispatch();
   const pods = usePCDCollection();
   const timer = useRef<NodeJS.Timeout>();
-  const [showScrollIndicator, setShowScrollIndicator] = useState(true);
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const [params] = useSearchParams();
   const listContainerRef = useRef<HTMLDivElement>(null);
+
+  // New function to check scrollability
+  const checkScrollability = (): void => {
+    if (listContainerRef.current) {
+      const scrollable =
+        listContainerRef.current.scrollHeight >
+        listContainerRef.current.clientHeight;
+      setShowScrollIndicator(scrollable);
+    }
+  };
+
+  // Check scrollability on mount and when pods change
+  useEffect(() => {
+    checkScrollability();
+  }, [pods]);
+
   useLayoutEffect(() => {
     // Restore scroll position when list is shown again
     if (listContainerRef.current) {
@@ -346,6 +362,9 @@ const NoUpcomingEventsState = ({
         }
       }
     }
+
+    // Check scrollability after layout changes
+    checkScrollability();
   }, [params]);
 
   const noPods =
