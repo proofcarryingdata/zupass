@@ -466,7 +466,6 @@ export const NewHomeScreen = (): ReactElement => {
     }
   });
   const showPodsList = tickets.length === 0 && !isLandscape && !noPods;
-  console.log(tickets.length === 0, isLandscape, noPods);
 
   useLayoutEffect(() => {
     // if we haven't loaded all pcds yet, dont process the prove request
