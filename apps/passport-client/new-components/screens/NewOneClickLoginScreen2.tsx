@@ -7,13 +7,12 @@ import styled from "styled-components";
 import { AppContainer } from "../../components/shared/AppContainer";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useSelf } from "../../src/appHooks";
-import { Button2 } from "../shared/Button";
 import { NewLoader } from "../shared/NewLoader";
-import { TicketCard } from "../shared/TicketCard";
 import { Typography } from "../shared/Typography";
 
 const TicketContainer = styled.div`
   border-radius: 16px;
+  margin-top: 4px;
   background: var(--white);
   padding: 16px;
   /* shadow-sm */
@@ -28,12 +27,60 @@ const QRContainer = styled.div`
   margin: 0 auto;
 `;
 
-const Container = styled.div`
+const Container = styled.div<{ backgroundImg?: string }>`
   padding: 20px;
   display: flex;
   flex-direction: column;
   width: 100%;
-  gap: 20px;
+  gap: 28px;
+  height: 100vh;
+  // We might want to move this to the html tap so on desktop it will cover the screen
+  ${({ backgroundImg }): string =>
+    backgroundImg
+      ? `background:
+    linear-gradient(0deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%),
+    url(${backgroundImg}) lightgray 50% / cover
+      no-repeat;`
+      : ""}
+`;
+
+const OneClickHeading = styled.div`
+  color: #fff;
+  text-align: center;
+  font-family: Barlow, sans-serif;
+  font-size: 28px;
+  font-style: normal;
+  font-weight: 800;
+  padding-top: 30px;
+`;
+const OneClickSubHeader = styled.div`
+  color: #c0d1ff;
+  text-align: center;
+  font-family: Rubik;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 300;
+`;
+
+const OneClickButton = styled.button`
+  border-radius: 24px;
+  border: 2px solid #ffc971;
+  background: linear-gradient(0deg, #ffae00 0%, #4cccb0 100%);
+  height: 76.552px;
+  width: 100%;
+
+  color: #154133;
+  text-align: center;
+  font-family: "Fragment Mono";
+  font-size: 28px;
+  font-style: normal;
+  font-weight: 400;
+`;
+
+const OneClickButtonBackground = styled.div`
+  border-radius: 24px;
+  background: #ad844f;
+  padding-bottom: 8px;
 `;
 
 const LoadingScreenContainer = styled.div`
@@ -168,11 +215,7 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
 
   const textOrLoader = (text: string): ReactNode => {
     if (loading) return <NewLoader columns={3} rows={2} color="white" />;
-    return (
-      <Typography color="inherit" fontSize={18} fontWeight={500} family="Rubik">
-        {text}
-      </Typography>
-    );
+    return text;
   };
   if (loading) {
     return (
@@ -191,25 +234,25 @@ export const NewOneClickLoginScreen2 = (): JSX.Element | null => {
     );
   }
 
+  const firstTicket = ticketPreviews[0];
+
   return (
     <AppContainer noPadding bg="gray">
-      <Container>
-        <TicketCard
-          ticketWidth={"100%"}
-          title={ticketPreviews[0].eventName}
-          address={ticketPreviews[0].eventName}
-          imgSource={ticketPreviews[0].imageUrl}
-          ticketCount={ticketPreviews.length}
-          cardColor={
-            ticketPreviews[0].eventName.length % 2 ? "purple" : "orange"
-          }
-        />
-        <Button2 onClick={handleOneClickLogin}>
-          <Typography color="var(--text-white)" fontSize={18} fontWeight={500}>
+      <Container backgroundImg={firstTicket.imageUrl}>
+        <div>
+          <OneClickHeading>{firstTicket.eventName}</OneClickHeading>
+          <OneClickSubHeader>{`${
+            firstTicket.eventLocation ? `${firstTicket.eventLocation} • ` : ""
+          }${ticketPreviews.length} ticket${
+            ticketPreviews.length > 1 ? "s" : ""
+          }`}</OneClickSubHeader>
+        </div>
+        <OneClickButtonBackground>
+          <OneClickButton onClick={handleOneClickLogin}>
             {textOrLoader("Continue to Zupass")}
-          </Typography>
-        </Button2>
-        <OneClickTicket data={ticketPreviews[0]} />
+          </OneClickButton>
+        </OneClickButtonBackground>
+        <OneClickTicket data={firstTicket} />
       </Container>
     </AppContainer>
   );
