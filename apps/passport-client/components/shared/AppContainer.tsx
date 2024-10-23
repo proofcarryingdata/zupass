@@ -18,7 +18,7 @@ export function AppContainer({
   fullscreen,
   noPadding
 }: {
-  bg: "primary" | "gray";
+  bg: "primary" | "gray" | "white";
   children?: ReactNode;
   fullscreen?: boolean;
   noPadding?: boolean;
@@ -32,9 +32,17 @@ export function AppContainer({
     () => dispatch({ type: "clear-error" }),
     [dispatch]
   );
-
-  const col =
-    bg === "gray" ? "var(--dot-pattern-bg)" : "var(--bg-dark-primary)";
+  const getBackground = (): string => {
+    switch (bg) {
+      case "primary":
+        return "var(--bg-dark-primary)";
+      case "gray":
+        return "var(--dot-pattern-bg)";
+      case "white":
+        return "#fff";
+    }
+  };
+  const col = getBackground();
   return (
     <Container $fullscreen={!!fullscreen}>
       <GlobalBackground color={col} />
