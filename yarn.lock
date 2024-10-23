@@ -5228,11 +5228,6 @@
     "@parcnet-js/client-rpc" "1.1.1"
     "@parcnet-js/podspec" "1.1.0"
 
-"@pcd/eslint-config-custom@0.13.0":
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/@pcd/eslint-config-custom/-/eslint-config-custom-0.13.0.tgz#cb62252d7073406c43e93b56522637b786fe3826"
-  integrity sha512-+JbOjiPObh+cwGVyY6++RVuMZR+S98p3xK0Xc9tIfZqvg2AuhmbX4rvuxiZ3NA4ZREYGj//7kH4InzbFr2mQpA==
-
 "@pcd/gpc@0.2.0", "@pcd/gpc@^0.2.0":
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/@pcd/gpc/-/gpc-0.2.0.tgz#72a6f286e0376fddc16020383d4d38eeb2d83545"
@@ -5287,11 +5282,6 @@
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.11.0.tgz#4c7e09b10da1e731932d3916d63d090b5612714c"
   integrity sha512-k/lASCefq1vUyqRirHUAc+yiZAMhSfTJx51qnyImXl6ArW8LtNWRyeoTql2BjY9u3BM/mWN279S5+NtghwnsDw==
-
-"@pcd/tsconfig@0.13.0":
-  version "0.13.0"
-  resolved "https://registry.yarnpkg.com/@pcd/tsconfig/-/tsconfig-0.13.0.tgz#4c726a9c474ee50f083bef6b3b81b922256416c0"
-  integrity sha512-OSK7SgGnJOClpGXJJlGoua+2ScBySHOSGxASq/ulC6p3ijERnJCLMzxPLUnxVRNpSGaHcqXBZgAp5XKbVZZm1A==
 
 "@pcd/util@0.7.0":
   version "0.7.0"
