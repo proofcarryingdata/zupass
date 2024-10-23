@@ -33,7 +33,6 @@ const buttonStyle = css`
   color: #fff;
   border: none;
   border-radius: 200px;
-  font-size: 16px;
   font-weight: 500;
   background: var(--core-accent);
   opacity: 1;
@@ -41,6 +40,8 @@ const buttonStyle = css`
   display: flex;
   justify-content: center;
   align-items: center;
+  font-family: Rubik;
+  font-size: 18px;
 
   &:hover {
     background: hsl(210, 100%, 50%);

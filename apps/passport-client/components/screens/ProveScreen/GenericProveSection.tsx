@@ -9,7 +9,6 @@ import {
   ProveOptions,
   requestProveOnServer
 } from "@pcd/passport-interface";
-import { ErrorContainer } from "@pcd/passport-ui";
 import {
   ArgsOf,
   PCDOf,
@@ -31,7 +30,11 @@ import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
-import { usePCDCollection } from "../../../src/appHooks";
+import {
+  usePCDCollection,
+  useProveState,
+  useProveStateCount
+} from "../../../src/appHooks";
 import {
   getOOMErrorMessage,
   getOutdatedBrowserErrorMessage
@@ -41,10 +44,10 @@ import {
   OUTDATED_BROWSER_ERROR_MESSAGE
 } from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
-import { Button } from "../../core";
-import { ProgressBar } from "../../core/ProgressBar";
-import { RippleLoader } from "../../core/RippleLoader";
 import { PCDArgs } from "../../shared/PCDArgs";
+import { Button2 } from "../../../new-components/shared/Button";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { Typography } from "../../../new-components/shared/Typography";
 
 /**
  * A reuseable form which can be used to generate a new instance of a PCD
@@ -54,8 +57,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   pcdType,
   initialArgs,
   options,
-  onProve,
-  folder
+  onProve
 }: {
   pcdType: string;
   initialArgs: ArgsOf<T>;
@@ -77,7 +79,8 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const pcdPackage = pcds.getPackage<T>(pcdType);
   const [multiProofsCompleted, setMultiProofsCompleted] = useState(0);
   const [multiProofsQueued, setMultiProofsQueued] = useState(0);
-
+  const proveState = useProveState();
+  const proveStateCount = useProveStateCount();
   useEffect(() => {
     if (options?.multi && !isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
       setError("multi-proofs are only supported for ZKEdDSAEventTicketPCD");
@@ -97,6 +100,15 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     [args]
   );
 
+  const pcdsPropCount = useMemo(() => {
+    let count = 0;
+    for (const [_, arg] of Object.entries(args)) {
+      if (isPCDArgument(arg)) count++;
+    }
+    return count;
+  }, [args]);
+
+  console.log(pcdsPropCount);
   const onProveClick = useCallback(async () => {
     setProving(true);
     setError(undefined);
@@ -223,9 +235,29 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
   return (
     <Container>
-      {options?.description && <Description>{options.description}</Description>}
-
-      {options?.debug && <pre>{JSON.stringify(args, null, 2)}</pre>}
+      {proveState !== undefined && !proveState && (
+        <AbsoluteContainer>
+          <Typography color="var(--new-danger)">No tickets found</Typography>
+          <Typography color="var(--new-danger)">
+            Please ensure you have connected the right email address.
+          </Typography>
+          <Button2
+            style={{ marginTop: "auto" }}
+            onClick={() => {
+              window.history.back();
+            }}
+            variant="secondary"
+          >
+            Back
+          </Button2>
+        </AbsoluteContainer>
+      )}
+      {proveStateCount < pcdsPropCount && (
+        <AbsoluteContainer>
+          <NewLoader columns={5} rows={5} />
+          <Typography>Loading the proof</Typography>
+        </AbsoluteContainer>
+      )}
 
       <PCDArgs
         args={args}
@@ -233,46 +265,59 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         options={pcdPackage?.getProveDisplayOptions?.()?.defaultArgs}
         proveOptions={options}
       />
-
-      {folder && (
-        <div>
-          PCD will be added to folder: <br />
-          <strong>{folder}</strong>
-        </div>
+      {proving && options?.multi && (
+        <Typography style={{ textAlign: "center" }}>
+          Proving {multiProofsCompleted} out of {multiProofsQueued}
+        </Typography>
       )}
-
-      {error && <ErrorContainer>{error}</ErrorContainer>}
-
-      {proving ? (
-        options?.multi ? (
-          <ProgressBar
-            label="Proving"
-            fractionCompleted={
-              multiProofsCompleted / Math.max(1, multiProofsQueued)
-            }
-          />
-        ) : (
-          <RippleLoader />
-        )
-      ) : (
-        <Button disabled={!isProveReady} onClick={onProveClick}>
-          Prove
-        </Button>
+      {error && (
+        <Typography
+          fontSize={16}
+          color="var(--new-danger)"
+          style={{ textAlign: "center" }}
+        >
+          {error}
+        </Typography>
       )}
+      <ButtonsContainer>
+        <Button2 disabled={!isProveReady || proving} onClick={onProveClick}>
+          {proving ? <NewLoader rows={2} columns={3} color="white" /> : "Prove"}
+        </Button2>
+
+        <Button2
+          onClick={() => {
+            window.history.back();
+          }}
+          variant="secondary"
+        >
+          Back
+        </Button2>
+      </ButtonsContainer>
     </Container>
   );
 }
 
-const Description = styled.div`
-  font-size: 14px;
-  color: rgba(var(--white-rgb), 0.8);
-`;
-
 const Container = styled.div`
+  position: relative;
   display: flex;
   flex-direction: column;
-  align-items: stretch;
-  padding: 16px 8px;
-  gap: 16px;
+  justify-content: space-between;
+  height: 100%;
+`;
+const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const AbsoluteContainer = styled.div`
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
   width: 100%;
+  z-index: 100;
+  background: white;
 `;

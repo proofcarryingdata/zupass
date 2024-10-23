@@ -20,24 +20,29 @@ html {
   --black-rgb: 0, 0, 0;
 
   --text-tertiary: #8b94ac;
-  --text-primary: #1E2C50;
+  --text-primary: #1e2c50;
 
-  --core-accent: #0077FF;
+  --core-accent: #0077ff;
 
   --dot-bg: #ececec;
   --dot-color: #e4e4e4;
   --dot-size: 3px;
   --dot-space: 22px;
-  --dot-pattern-bg: linear-gradient(90deg,
-      var(--dot-bg) calc(var(--dot-space) - var(--dot-size)),
-      transparent 1%) center / var(--dot-space) var(--dot-space),
-    linear-gradient(var(--dot-bg) calc(var(--dot-space) - var(--dot-size)),
-      transparent 1%) center / var(--dot-space) var(--dot-space),
+  --dot-pattern-bg: linear-gradient(
+        90deg,
+        var(--dot-bg) calc(var(--dot-space) - var(--dot-size)),
+        transparent 1%
+      )
+      center / var(--dot-space) var(--dot-space),
+    linear-gradient(
+        var(--dot-bg) calc(var(--dot-space) - var(--dot-size)),
+        transparent 1%
+      )
+      center / var(--dot-space) var(--dot-space),
     var(--dot-color);
 
-  --new-danger: #FF5555;
-  --secondary-input-bg: #EBF1F6;
-
+  --new-danger: #ff5555;
+  --secondary-input-bg: #ebf1f6;
 
   background: var(--dot-pattern-bg);
   color: var(--white);
@@ -50,11 +55,14 @@ html {
 
 body {
   overflow-y: scroll;
+  -webkit-user-select: none; /* Safari */
+  -ms-user-select: none; /* IE 10 and IE 11 */
+  user-select: none; /* Standard syntax */
 }
 
 a,
 a:visited {
-  color: var(--accent-dark);
+  color: var(--core-accent, #07f);
   text-decoration: none;
 }
 
@@ -68,7 +76,8 @@ a:hover {
   font-family: "Barlow";
   font-style: normal;
   font-weight: 200;
-  src: url(/fonts/Barlow-ExtraLight.ttf) format("truetype") url(/fonts/Barlow-ExtraLight.woff) format("woff");
+  src: url(/fonts/Barlow-ExtraLight.ttf) format("truetype")
+    url(/fonts/Barlow-ExtraLight.woff) format("woff");
 }
 
 @font-face {
@@ -125,42 +134,48 @@ a:hover {
   font-family: "PlexSans";
   font-style: normal;
   font-weight: 200;
-  src: url(/fonts/IBMPlexSans-ExtraLight.ttf) format("truetype") url(/fonts/IBMPlexSans-ExtraLight.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-ExtraLight.ttf) format("truetype")
+    url(/fonts/IBMPlexSans-ExtraLight.woff) format("woff");
 }
 
 @font-face {
   font-family: "PlexSans";
   font-style: normal;
   font-weight: 300;
-  src: url(/fonts/IBMPlexSans-Light.ttf) format("truetype") url(/fonts/IBMPlexSans-Light.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-Light.ttf) format("truetype")
+    url(/fonts/IBMPlexSans-Light.woff) format("woff");
 }
 
 @font-face {
   font-family: "PlexSans";
   font-style: italic;
   font-weight: 300;
-  src: url(/fonts/IBMPlexSans-LightItalic.ttf) format("truetype") url(/fonts/IBMPlexSans-LightItalic.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-LightItalic.ttf) format("truetype")
+    url(/fonts/IBMPlexSans-LightItalic.woff) format("woff");
 }
 
 @font-face {
   font-family: "PlexSans";
   font-style: normal;
   font-weight: 400;
-  src: url(/fonts/IBMPlexSans-Regular.ttf) format("truetype") url(/fonts/IBMPlexSans-Regular.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-Regular.ttf) format("truetype")
+    url(/fonts/IBMPlexSans-Regular.woff) format("woff");
 }
 
 @font-face {
   font-family: "PlexSans";
   font-style: normal;
   font-weight: 500;
-  src: url(/fonts/IBMPlexSans-Medium.ttf) format("truetype") url(/fonts/IBMPlexSans-Medium.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-Medium.ttf) format("truetype")
+    url(/fonts/IBMPlexSans-Medium.woff) format("woff");
 }
 
 @font-face {
   font-family: "PlexSans";
   font-style: normal;
   font-weight: 600;
-  src: url(/fonts/IBMPlexSans-SemiBold.ttf) format("truetype") url(/fonts/IBMPlexSans-SemiBold.woff) format("woff");
+  src: url(/fonts/IBMPlexSans-SemiBold.ttf) format("truetype")
+    url(/fonts/IBMPlexSans-SemiBold.woff) format("woff");
 }
 
 @font-face {
@@ -173,7 +188,6 @@ a:hover {
   src: url(/fonts/PressStart2P.ttf) format("truetype");
 }
 
-
 /* Rubik */
 
 @font-face {
@@ -182,7 +196,6 @@ a:hover {
   font-weight: 300;
   src: url(/fonts/Rubik-Light.ttf) format("truetype");
 }
-
 
 @font-face {
   font-family: "Rubik";
@@ -197,7 +210,6 @@ a:hover {
   font-weight: 300;
   src: url(/fonts/Rubik-Itaic.ttf) format("truetype");
 }
-
 
 @font-face {
   font-family: "Rubik";
@@ -363,6 +375,7 @@ img {
   -webkit-touch-callout: none;
   user-select: none;
   user-drag: none;
+  pointer-events: none;
 }
 
 /*
@@ -389,7 +402,7 @@ img {
   height: 80px;
 }
 
-.loader>div {
+.loader > div {
   position: absolute;
   border: 4px solid var(--accent-dark);
   opacity: 1;
@@ -397,7 +410,7 @@ img {
   animation: ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
 }
 
-.loader>div:nth-child(2) {
+.loader > div:nth-child(2) {
   animation-delay: -0.5s;
 }
 

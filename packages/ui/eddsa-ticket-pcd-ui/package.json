@@ -20,6 +20,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "watch": "tsc --watch -p tsconfig.cjs.json & tsc --watch -p tsconfig.esm.json",
     "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
@@ -30,18 +31,13 @@
     "@pcd/passport-interface": "^0.13.0",
     "@pcd/passport-ui": "0.13.0",
     "@pcd/pcd-types": "0.13.0",
-    "@pcd/semaphore-identity-pcd": "^0.13.0",
-    "@pcd/zk-eddsa-event-ticket-pcd": "^0.8.0",
-    "html2canvas": "^1.4.1",
-    "react-icons": "^5.0.1",
-    "url-join": "4.0.1"
+    "html-to-image": "^1.11.11"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.13.0",
     "@pcd/tsconfig": "0.13.0",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
-    "@types/url-join": "4.0.1",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",
     "typescript": "^5.3.3"

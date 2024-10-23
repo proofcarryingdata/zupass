@@ -91,7 +91,6 @@
     "react-icons": "^5.0.1",
     "react-intersection-observer": "^9.5.3",
     "react-markdown": "^9.0.1",
-    "react-qr-reader": "^3.0.0-beta-1",
     "react-responsive-modal": "^6.4.2",
     "react-router-dom": "^6.9.0",
     "react-scroll-parallax": "^3.4.3",
@@ -110,7 +109,8 @@
     "use-file-picker": "^2.1.1",
     "uuid": "^9.0.0",
     "valibot": "^0.42.1",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zxcvbn": "^4.4.2"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",

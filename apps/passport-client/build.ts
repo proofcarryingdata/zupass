@@ -132,7 +132,11 @@ const serviceWorkerOpts: BuildOptions = {
   // is invoked, so that each new production deploy invalidates the previous
   // service worker, which clears the website's application code (html, js, etc.),
   // so that clients are not forever stuck on one version of the code.
-  define: { ...define, "process.env.SW_ID": JSON.stringify(uuid()) }
+  define: {
+    ...define,
+    "process.env.SW_ID": JSON.stringify(uuid()),
+    "process.env.GENERATED_CHUNKS": JSON.stringify("[]")
+  }
 };
 
 run(process.argv[2])
@@ -155,29 +159,21 @@ async function run(command: string): Promise<void> {
         JSON.stringify(appRes.metafile)
       );
 
-      const _serviceWorkerRes = await build({
-        ...serviceWorkerOpts,
-        minify: true
-      });
-
       // Create a array of generated chunks for use with the service worker
       const generatedChunks = Object.keys(appRes.metafile?.outputs || {})
         .filter((output) => !output.endsWith(".map")) // Exclude .map files
         .map((output) => output.replace("public", ""));
 
-      // replace the generated chunks placeholder with the actual chunks
-      let serviceWorkerSource = fs.readFileSync(
-        path.join("public", "service-worker.js"),
-        "utf-8"
-      );
-      serviceWorkerSource = serviceWorkerSource.replace(
-        "self.__CHUNKS",
-        JSON.stringify(generatedChunks)
-      );
-      fs.writeFileSync(
-        path.join("public", "service-worker.js"),
-        serviceWorkerSource
-      );
+      const _serviceWorkerRes = await build({
+        ...serviceWorkerOpts,
+        define: {
+          ...serviceWorkerOpts.define,
+          "process.env.GENERATED_CHUNKS": JSON.stringify(
+            JSON.stringify(generatedChunks)
+          )
+        },
+        minify: true
+      });
 
       console.error("Built service worker");
       break;

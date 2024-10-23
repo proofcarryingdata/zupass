@@ -28,7 +28,6 @@ import { CryptoBytesEncoding, decodeBytesAuto, encodeBytes } from "./podUtil";
  * which could be one of multiple value types (see {@link podValueHash}).
  */
 export function podStringHash(input: string): bigint {
-  // TODO(POD-P2): Finalize choice of hash for POD names and string values.
   return BigInt("0x" + sha256(input)) >> 8n;
 }
 
@@ -37,7 +36,6 @@ export function podStringHash(input: string): bigint {
  * which could be one of multiple value types (see {@link podValueHash}).
  */
 export function podIntHash(input: bigint): bigint {
-  // TODO(POD-P2): Finalize choice of hash for POD integer values.
   return poseidon1([input]);
 }
 
@@ -64,7 +62,6 @@ export function podValueHash(podValue: PODValue): bigint {
       return podStringHash(podValue.value);
     case "int":
     case "cryptographic":
-      // TODO(POD-P2): Finalize choice of hash for POD cryptographics.
       return podIntHash(podValue.value);
     case EDDSA_PUBKEY_TYPE_STRING:
       return podEdDSAPublicKeyHash(podValue.value);
@@ -191,6 +188,23 @@ export function decodeSignature(encodedSignature: string): Signature<bigint> {
       "Signature should be 64 bytes, encoded as hex or Base64."
     )
   );
+}
+
+/**
+ * Calculates the corresponding public key for the given private key.  This is
+ * equivalent to the calculation performed in {@link signPODRoot}, and can be
+ * used to pre-publish the expected public key to clients before signing.
+ *
+ * @param privateKey the signer's private key, which is 32 bytes encoded as
+ *   per {@link encodePrivateKey}.
+ * @returns The signer's public key, which is 32 bytes encoded as per
+ *   {@link encodePublicKey}.
+ * @throws TypeError if any of the individual arguments is incorrectly formatted
+ */
+export function deriveSignerPublicKey(privateKey: string): string {
+  const privateKeyBytes = decodePrivateKey(privateKey);
+  const unpackedPublicKey = derivePublicKey(privateKeyBytes);
+  return encodePublicKey(unpackedPublicKey);
 }
 
 /**
