@@ -124,6 +124,9 @@
       "path": "packages/pcd/zk-eddsa-frog-pcd/tsconfig.cjs.json"
     },
     {
+      "path": "packages/tools/test-package/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/ui/eddsa-frog-pcd-ui/tsconfig.cjs.json"
     },
     {
