@@ -22,6 +22,8 @@ export function PODSection(): ReactNode {
         <QueryPODs z={z} />
         <h2 className="text-lg font-bold mt-4">Sign POD</h2>
         <SignPOD z={z} setSignedPOD={setPOD} />
+        <h2 className="text-lg font-bold mt-4">Sign POD with Prefix</h2>
+        <SignPODWithPrefix z={z} setSignedPOD={setPOD} />
         <h2 className="text-lg font-bold mt-4">Insert POD</h2>
         <InsertPOD z={z} pod={pod} />
         <h2 className="text-lg font-bold mt-4">Delete POD</h2>
@@ -134,6 +136,7 @@ type Action =
   | {
       type: "ADD_ENTRY";
       value: PODValue;
+      prefix?: string;
     }
   | {
       type: "REMOVE_ENTRY";
@@ -150,7 +153,7 @@ const editPODReducer = function (
   switch (action.type) {
     case "ADD_ENTRY": {
       const newState = { ...state };
-      let key = "entry";
+      let key = `${action.prefix ?? ""}entry`;
       let n = 1;
       while (key in newState) {
         key = `entry${n}`;
@@ -288,6 +291,101 @@ ${Object.entries(entries)
           }
         }}
         label="Sign POD"
+      />
+      {creationState !== PODCreationState.None && (
+        <div className="my-2">
+          {creationState === PODCreationState.Success && (
+            <div>
+              POD signed successfully! The signature is{" "}
+              <code className="block text-xs font-base rounded-md p-2 whitespace-pre">
+                {pod?.signature}
+              </code>
+            </div>
+          )}
+          {creationState === PODCreationState.Failure && (
+            <div>An error occurred while signing your POD.</div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SignPODWithPrefix({
+  z,
+  setSignedPOD
+}: {
+  z: ParcnetAPI;
+  setSignedPOD: Dispatch<SetStateAction<PODData | null>>;
+}): ReactNode {
+  const [creationState, setCreationState] = useState<PODCreationState>(
+    PODCreationState.None
+  );
+  const [pod, setPOD] = useState<PODData | null>(null);
+  const [entries, dispatch] = useReducer(editPODReducer, {
+    _UNSAFE_test: { type: "string", value: "Testing" }
+  } satisfies PODEntries);
+  return (
+    <div>
+      <p>
+        To sign a POD, first we have to create the entries. Note that the
+        entries must have a prefix of <code>_UNSAFE_</code>. Select the entries
+        for the POD below:
+      </p>
+      <div className="flex flex-col gap-2 mb-4">
+        {Object.entries(entries).map(([name, value], index) => (
+          <EditPODEntry
+            key={index}
+            showLabels={index === 0}
+            name={name}
+            value={value.value}
+            type={value.type}
+            dispatch={dispatch}
+          />
+        ))}
+        <Button
+          onClick={() =>
+            dispatch({
+              type: "ADD_ENTRY",
+              value: { type: "string", value: "" },
+              prefix: "_UNSAFE_"
+            })
+          }
+        >
+          Add Another Entry
+        </Button>
+      </div>
+      <p>
+        Then we can sign the POD:
+        <code className="block text-xs font-base rounded-md p-2 whitespace-pre">
+          {`const pod = await z.pod.sign({
+${Object.entries(entries)
+  .map(([key, value]) => {
+    return `  ${key}: { type: "${value.type}", value: ${
+      bigintish.includes(value.type)
+        ? `${value.value.toString()}n`
+        : `"${value.value.toString()}"`
+    } }`;
+  })
+  .join(",\n")}
+});
+
+`}
+        </code>
+      </p>
+      <TryIt
+        onClick={async () => {
+          try {
+            const pod = await z.pod.signPrefixed(entries);
+            setPOD(pod);
+            setSignedPOD(pod);
+            setCreationState(PODCreationState.Success);
+          } catch (e) {
+            console.error(e);
+            setCreationState(PODCreationState.Failure);
+          }
+        }}
+        label="Sign POD with Prefix"
       />
       {creationState !== PODCreationState.None && (
         <div className="my-2">
