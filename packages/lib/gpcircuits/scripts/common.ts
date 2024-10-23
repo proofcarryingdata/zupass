@@ -111,7 +111,10 @@ export async function genCircuitArtifacts(
   }
 
   // Instantiate Circomkit object.
-  const circomkit = new Circomkit(circomkitJson as Partial<CircomkitConfig>);
+  const circomkit = new Circomkit({
+    ...circomkitJson,
+    circuits: circuitsJsonFile
+  } as Partial<CircomkitConfig>);
 
   // Read circuit names from circuits.json
   const circuitsJson = await fs
