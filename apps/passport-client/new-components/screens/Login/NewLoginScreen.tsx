@@ -21,7 +21,7 @@ import {
   setPendingViewSubscriptionsRequest
 } from "../../../src/sessionStorage";
 import { Button2 } from "../../shared/Button";
-import { Input2 } from "../../shared/Input";
+import { AutoFocusInput } from "../../shared/Input";
 import {
   LoginContainer,
   LoginForm,
@@ -160,11 +160,10 @@ export const NewLoginScreen = (): JSX.Element => {
           </Typography>
         </LoginTitleContainer>
         <LoginForm onSubmit={onGenPass}>
-          <Input2
+          <AutoFocusInput
             autoCapitalize="off"
             autoCorrect="off"
             type="text"
-            autoFocus
             placeholder="Email"
             value={email}
             onChange={(e) => {

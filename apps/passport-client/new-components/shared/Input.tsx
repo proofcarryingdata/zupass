@@ -1,4 +1,11 @@
-import { ForwardedRef, forwardRef, InputHTMLAttributes, Ref } from "react";
+import {
+  ForwardedRef,
+  forwardRef,
+  InputHTMLAttributes,
+  Ref,
+  useEffect,
+  useRef
+} from "react";
 import styled, { css, FlattenSimpleInterpolation } from "styled-components";
 import { Typography } from "./Typography";
 
@@ -8,6 +15,7 @@ export interface NewInputProps extends InputHTMLAttributes<HTMLInputElement> {
   endIcon?: React.ReactNode;
   hideArrows?: boolean;
   rightIconSize?: number;
+  autoFocus?: boolean;
 }
 
 const errorCSS = css`
@@ -126,6 +134,18 @@ export const Input2 = forwardRef(
     );
   }
 );
+
+export const AutoFocusInput = (props: NewInputProps) => {
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (inputRef && inputRef.current) {
+      setTimeout(() => {
+        inputRef.current && inputRef.current.focus();
+      });
+    }
+  }, [inputRef]);
+  return <Input2 {...props} ref={inputRef} />;
+};
 
 interface EmailCodeInputProps extends InputHTMLAttributes<HTMLInputElement> {
   ref?: Ref<HTMLInputElement>;
