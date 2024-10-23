@@ -308,7 +308,7 @@ const BarsContainer = styled.div`
   margin-bottom: 20px;
 `;
 
-const ScrollIndicator = (): ReactElement => {
+export const ScrollIndicator = (): ReactElement => {
   return (
     <ScrollIndicatorContainer>
       <ChevronDownIcon color="var(--text-tertiary)" width={30} height={30} />
