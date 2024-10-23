@@ -34,6 +34,8 @@ import { collectionIdToFolderName, getPODsForCollections } from "./collections";
 import { QuerySubscriptionManager } from "./query_subscription_manager";
 import { ListenMode } from "./useZappServer";
 
+const DEVCON_FOLDER_NAME = "Devcon SEA";
+
 abstract class BaseZappServer {
   constructor(
     private context: StateContextValue,
@@ -138,7 +140,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       throw new MissingPermissionError("READ_POD", "pod.query");
     }
     if (
-      collectionId === "Devcon 7" &&
+      collectionId === DEVCON_FOLDER_NAME &&
       (!origin || !appConfig.devconTicketQueryOrigins.includes(origin))
     ) {
       throw new Error("Operation not allowed");
@@ -158,7 +160,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
   public async insert(collectionId: string, podData: PODData): Promise<void> {
     if (
       !this.getPermissions().INSERT_POD?.collections.includes(collectionId) ||
-      collectionId === "Devcon 7"
+      collectionId === DEVCON_FOLDER_NAME
     ) {
       throw new MissingPermissionError("INSERT_POD", "pod.insert");
     }
@@ -182,7 +184,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
   public async delete(collectionId: string, signature: string): Promise<void> {
     if (
       !this.getPermissions().DELETE_POD?.collections.includes(collectionId) ||
-      collectionId === "Devcon 7"
+      collectionId === DEVCON_FOLDER_NAME
     ) {
       throw new MissingPermissionError("DELETE_POD", "pod.delete");
     }
