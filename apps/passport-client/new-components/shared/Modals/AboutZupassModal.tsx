@@ -8,6 +8,12 @@ export const AboutZupassModal = (): JSX.Element => {
   const activeBottomModal = useBottomModal();
   const dispatch = useDispatch();
 
+  const modalGoBackBehavior =
+    activeBottomModal.modalType === "about" &&
+    activeBottomModal.modalGoBackBehavior
+      ? activeBottomModal.modalGoBackBehavior
+      : "close";
+
   return (
     <BottomModal isOpen={activeBottomModal.modalType === "about"}>
       <Container>
@@ -32,13 +38,20 @@ export const AboutZupassModal = (): JSX.Element => {
           <Button2
             variant="secondary"
             onClick={() => {
-              dispatch({
-                type: "set-bottom-modal",
-                modal: { modalType: "settings" }
-              });
+              if (modalGoBackBehavior === "back") {
+                dispatch({
+                  type: "set-bottom-modal",
+                  modal: { modalType: "settings" }
+                });
+              } else {
+                dispatch({
+                  type: "set-bottom-modal",
+                  modal: { modalType: "none" }
+                });
+              }
             }}
           >
-            Back
+            {modalGoBackBehavior === "back" ? "Back" : "Close"}
           </Button2>
         </ButtonContainer>
       </Container>

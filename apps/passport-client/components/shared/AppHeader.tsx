@@ -21,22 +21,21 @@ function AppHeaderImpl({
   const self = useSelf();
 
   const setModal = useCallback(
-    (modal: AppState["modal"]) =>
+    (modal: AppState["bottomModal"]) =>
       dispatch({
-        type: "set-modal",
+        type: "set-bottom-modal",
         modal
       }),
     [dispatch]
   );
   const openInfo = useCallback(
-    () => setModal({ modalType: "info" }),
+    () => setModal({ modalType: "about", modalGoBackBehavior: "close" }),
     [setModal]
   );
   const openSettings = useCallback(
     () => setModal({ modalType: "settings" }),
     [setModal]
   );
-
   const openScanner = useCallback(() => (window.location.href = "/#/scan"), []);
 
   const openSubscriptions = useCallback(
@@ -52,7 +51,16 @@ function AppHeaderImpl({
   return (
     <AppHeaderWrap>
       <CircleButton diameter={34} padding={8} onClick={openInfo}>
-        <MdInfo size={34} color={isEdgeCity ? "white" : "var(--accent-lite)"} />
+        <MdInfo
+          size={34}
+          color={
+            isProveOrAddScreen
+              ? "var(--text-primary)"
+              : isEdgeCity
+              ? "white"
+              : "var(--accent-lite)"
+          }
+        />
       </CircleButton>
       {children}
       {!isProveOrAddScreen && (
@@ -80,7 +88,13 @@ function AppHeaderImpl({
       <CircleButton diameter={34} padding={8} onClick={openSettings}>
         <IoMdSettings
           size={34}
-          color={isEdgeCity ? "white" : "var(--accent-lite)"}
+          color={
+            isProveOrAddScreen
+              ? "var(--text-primary)"
+              : isEdgeCity
+              ? "white"
+              : "var(--accent-lite)"
+          }
         />
       </CircleButton>
     </AppHeaderWrap>

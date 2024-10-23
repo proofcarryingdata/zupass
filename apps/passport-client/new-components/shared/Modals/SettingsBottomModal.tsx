@@ -37,12 +37,12 @@ export function SettingsBottomModal(): JSX.Element {
       {
         title: "About Zupass",
         icon: <InformationCircleIcon width={24} height={24} color="#7C8BB4" />,
-
         onClick: (): void => {
           dispatch({
             type: "set-bottom-modal",
             modal: {
-              modalType: "about"
+              modalType: "about",
+              modalGoBackBehavior: "back"
             }
           });
         }

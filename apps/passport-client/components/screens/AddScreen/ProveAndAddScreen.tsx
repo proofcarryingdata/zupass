@@ -3,6 +3,7 @@ import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { getErrorMessage } from "@pcd/util";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
+import { NewModals } from "../../../new-components/shared/Modals/NewModals";
 import {
   useDispatch,
   useIsSyncSettled,
@@ -85,11 +86,12 @@ export function ProveAndAddScreen({
   return (
     <>
       <MaybeModal fullScreen isProveOrAddScreen={true} />
-      <AppContainer bg="primary">
+      <NewModals />
+      <AppContainer bg="gray">
         <Container>
           <Spacer h={24} />
           <AppHeader isProveOrAddScreen={true}>
-            <H2>
+            <H2 col="var(--text-primary)" style={{ fontFamily: "Barlow" }}>
               {request.options?.title ?? `Add and Prove ${request.pcdType}`}
             </H2>
           </AppHeader>
