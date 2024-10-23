@@ -38,6 +38,8 @@ export class PersistentCacheService {
   public start(): void {
     logger("[CACHE] starting expiration loop");
 
+    this.tryExpireOldEntries();
+
     this.expirationInterval = setInterval(
       this.tryExpireOldEntries.bind(this),
       PersistentCacheService.CACHE_GARBAGE_COLLECT_INTERVAL_MS
@@ -71,7 +73,7 @@ export class PersistentCacheService {
   }
 
   private async tryExpireOldEntries(): Promise<void> {
-    namedSqlTransaction(
+    return namedSqlTransaction(
       this.pool,
       "tryExpireOldEntries",
       async (client): Promise<void> => {
