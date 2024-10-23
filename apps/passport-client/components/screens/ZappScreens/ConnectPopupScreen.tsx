@@ -231,7 +231,7 @@ const Container = styled.div`
   align-items: center;
   justify-content: space-between;
   height: 100vh;
-  padding: 24px;
+  padding: 24px 24px 20px 24px;
 `;
 
 const ButtonsContainer = styled.div`

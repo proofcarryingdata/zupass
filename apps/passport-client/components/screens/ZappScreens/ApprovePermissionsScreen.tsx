@@ -1,16 +1,14 @@
 import { Zapp } from "@parcnet-js/client-rpc";
-import { Button, Spacer } from "@pcd/passport-ui";
 import { ReactNode } from "react";
 import styled from "styled-components";
 import { useDispatch, useZapp, useZappOrigin } from "../../../src/appHooks";
-import { H1, TextCenter } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
 import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 import {
-  Accordion,
   DescriptiveAccordion,
   DescriptiveAccrodionChild
 } from "../../../new-components/shared/Accordion";
+import { Button2 } from "../../../new-components/shared/Button";
 
 /**
  * This screen is only ever shown in a popup modal. It is used when Zupass is
@@ -23,15 +21,16 @@ import {
  */
 export function ApprovePermissionsScreen(): ReactNode {
   const zapp = useZapp() as Zapp;
-  // const zappName = zapp?.name;
   const zappOrigin = useZappOrigin();
   return (
-    <AppContainer bg="white">
-      <BottomModalHeader
-        title="PERMISSION REQUEST"
-        description={`${zappOrigin} requests the following permissions:`}
-      />
-      <Permissions zapp={zapp} />
+    <AppContainer bg="white" noPadding>
+      <Container>
+        <BottomModalHeader
+          title="PERMISSION REQUEST"
+          description={`${zappOrigin} requests the following permissions:`}
+        />
+        <Permissions zapp={zapp} />
+      </Container>
     </AppContainer>
   );
 }
@@ -109,42 +108,48 @@ function Permissions({ zapp }: { zapp: Zapp }): ReactNode {
   return (
     <>
       <AccordionContainer>
-        <DescriptiveAccordion children={chidren} title="what the fuck" />
+        <DescriptiveAccordion children={chidren} title="permissions" />
       </AccordionContainer>
-      <Spacer h={24} />
-      <Button
-        onClick={() => dispatch({ type: "zapp-approval", approved: true })}
-      >
-        Approve
-      </Button>
-      <Spacer h={16} />
-      <Button
-        onClick={() => dispatch({ type: "zapp-approval", approved: false })}
-        style="secondary"
-      >
-        Decline
-      </Button>
-      <Spacer h={16} />
-      <TextCenter>
-        <DeclineText>
-          Declining will prevent <ZappName>{zapp.name}</ZappName> from accessing
-          your data but may prevent you from using some features of the app.
-        </DeclineText>
-      </TextCenter>
-      <Spacer h={24} />
+      <ButtonsContainer>
+        <Button2
+          onClick={() => dispatch({ type: "zapp-approval", approved: true })}
+        >
+          Approve
+        </Button2>
+        <Button2
+          onClick={() => dispatch({ type: "zapp-approval", approved: false })}
+          variant="secondary"
+        >
+          Decline
+        </Button2>
+      </ButtonsContainer>
     </>
   );
 }
 
-const AccordionContainer = styled.div`
-  width: 100%;
-  max-height: 60vh;
-  overflow: scroll;
-`;
-const ZappName = styled.span`
-  font-weight: bold;
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  justify-content: space-between;
+  height: 100vh;
+  padding: 24px 24px 20px 24px;
 `;
 
-const DeclineText = styled.div`
-  font-size: 0.8rem;
+const AccordionContainer = styled.div`
+  width: 100%;
+  // max-height: calc(70vh);
+  min-height: 0px;
+  overflow: scroll;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+`;
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
 `;
