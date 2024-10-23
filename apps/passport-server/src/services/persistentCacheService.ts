@@ -38,14 +38,10 @@ export class PersistentCacheService {
   public start(): void {
     logger("[CACHE] starting expiration loop");
 
-    namedSqlTransaction(this.pool, "tryExpireOldEntries", (client) =>
-      this.tryExpireOldEntries(client)
-    );
-
     this.expirationInterval = setInterval(
       this.tryExpireOldEntries.bind(this),
       PersistentCacheService.CACHE_GARBAGE_COLLECT_INTERVAL_MS
-    ) as number;
+    ) as unknown as number;
   }
 
   public stop(): void {
@@ -74,14 +70,21 @@ export class PersistentCacheService {
     });
   }
 
-  private async tryExpireOldEntries(client: PoolClient): Promise<void> {
-    try {
-      this.expireOldEntries(client);
-    } catch (e) {
-      logger("failed to expire old cache entries", e);
-      this.rollbarService?.reportError(e);
-    }
+  private async tryExpireOldEntries(): Promise<void> {
+    namedSqlTransaction(
+      this.pool,
+      "tryExpireOldEntries",
+      async (client): Promise<void> => {
+        try {
+          return this.expireOldEntries(client);
+        } catch (e) {
+          logger("failed to expire old cache entries", e);
+          this.rollbarService?.reportError(e);
+        }
+      }
+    );
   }
+
   private async expireOldEntries(client: PoolClient): Promise<void> {
     return traced("Cache", "expireOldEntries", async (span) => {
       logger("[CACHE] expiring old entries");
