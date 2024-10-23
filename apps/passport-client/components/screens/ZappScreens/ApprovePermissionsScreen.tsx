@@ -91,7 +91,8 @@ function Permissions({ zapp }: { zapp: Zapp }): ReactNode {
         zapp.name
       } to delete PODs from these collections: ${zapp.permissions.DELETE_POD.collections.join(
         ","
-      )}`
+      )}`,
+      color: "var(--new-danger)"
     });
   }
 

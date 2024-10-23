@@ -7,6 +7,7 @@ export type DescriptiveAccrodionChild = {
   title: string;
   key?: string;
   description: string;
+  color?: string;
 };
 
 export type DescriptiveAccordionProps = {
@@ -38,19 +39,14 @@ const HeaderContainer = styled.div`
   cursor: pointer;
 `;
 
-const DescriptiveAccordionItem = styled.div<{
-  lastItem: boolean;
-  open: boolean;
-}>`
+const DescriptiveAccordionItem = styled.div`
   padding: 12px 16px;
   color: var(--text-primary);
   display: flex;
   flex-direction: row;
   gap: 8px;
-  align-items: flex-start;
+  align-items: start;
   cursor: pointer;
-  ${({ lastItem }): string | undefined =>
-    !lastItem ? "border-bottom: 1.15px solid #eceaf4;" : undefined}
 `;
 
 const ItemContainer = styled.div`
@@ -97,16 +93,12 @@ export const DescriptiveAccordion = forwardRef<
   });
 
   const renderedChildren = useMemo(() => {
-    const len = children.length;
     return (
       <ItemContainer>
         {children.map((child, i) => {
-          const isLast = len - 1 === i;
           return (
             <DescriptiveAccordionItem
-              open={open[i]}
               key={child.key}
-              lastItem={isLast}
               onClick={() =>
                 setOpen((old) => {
                   const updated = [...old];
@@ -117,24 +109,37 @@ export const DescriptiveAccordion = forwardRef<
             >
               {open[i] && (
                 <ChevronDownIcon
-                  color="var(--text-tertiary)"
+                  color={child.color ?? "var(--text-tertiary)"}
                   width={20}
                   height={20}
                 />
               )}
               {!open[i] && (
                 <ChevronRightIcon
-                  color="var(--text-tertiary)"
+                  color={child.color ?? "var(--text-tertiary)"}
                   width={20}
                   height={20}
                 />
               )}
               <ContentContainer>
-                <Typography fontSize={14} fontWeight={500} family="Rubik">
+                {/* aligning the text with chevron - since the chevron has some sort of paddin around it, we have to do it on the text*/}
+                <Typography
+                  style={{ lineHeight: "14px", marginTop: 3 }}
+                  color={child.color}
+                  fontSize={14}
+                  fontWeight={500}
+                  family="Rubik"
+                >
                   {child.title}
                 </Typography>
                 {open[i] && (
-                  <Typography fontSize={14} family="Rubik">
+                  // Taking in to account the shift of the title
+                  <Typography
+                    color={child.color}
+                    fontSize={14}
+                    family="Rubik"
+                    style={{ marginTop: 3 }}
+                  >
                     {child.description}
                   </Typography>
                 )}
