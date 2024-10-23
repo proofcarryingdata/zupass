@@ -132,13 +132,7 @@ const gpcProof = await z.gpc.prove({ request });
           <TryIt
             onClick={async () => {
               try {
-                setProveResult(
-                  await z.gpc.prove({
-                    request,
-                    circuitIdentifier:
-                      "proto-pod-gpc_3o-10e-8md-4nv-2ei-2x20l-2x2t-0ov3-1ov4"
-                  })
-                );
+                setProveResult(await z.gpc.prove({ request }));
               } catch (e) {
                 console.log(e);
               }
