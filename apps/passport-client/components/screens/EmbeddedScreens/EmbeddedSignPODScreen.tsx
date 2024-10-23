@@ -64,7 +64,6 @@ export function EmbeddedSignPODScreen({
         </EntriesGrid>
         <Spacer h={4} />
         <div>
-          {/* @ts-expect-error not a meaningful type mismatch */}
           <Button onClick={() => callback(podToPODData(pod))}>Sign</Button>
           <Spacer h={16} />
           <Button onClick={onCancel} style="secondary">

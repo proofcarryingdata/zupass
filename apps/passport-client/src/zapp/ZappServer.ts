@@ -14,6 +14,7 @@ import {
 import * as p from "@parcnet-js/podspec";
 import {
   GPCBoundConfig,
+  GPCIdentifier,
   GPCProof,
   GPCRevealedClaims,
   gpcVerify
@@ -147,7 +148,6 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       collectionId
     ]);
 
-    // @ts-expect-error not a meaningful type mismatch
     const result = p.pod(query).query(pods);
 
     return result.matches.map(p.podToPODData);
@@ -250,7 +250,6 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
           )
         )
       );
-      // @ts-expect-error not a meaningful type mismatch
       return p.podToPODData(pod);
     }
     return new Promise((resolve, reject) => {
@@ -314,7 +313,6 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
         )
       )
     );
-    // @ts-expect-error not a meaningful type mismatch
     return p.podToPODData(pod);
   }
 }
@@ -349,10 +347,12 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
 
   public async prove({
     request,
-    collectionIds
+    collectionIds,
+    circuitIdentifier
   }: {
     request: p.PodspecProofRequest;
     collectionIds?: string[];
+    circuitIdentifier?: GPCIdentifier;
   }): Promise<ProveResult> {
     const realCollectionIds =
       collectionIds ?? this.getPermissions().REQUEST_PROOF?.collections ?? [];
@@ -373,7 +373,6 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
 
     pods.push(...ticketPods);
 
-    // @ts-expect-error not a meaningful type mismatch
     const inputPods = prs.queryForInputs(pods);
     if (
       Object.values(inputPods).some((candidates) => candidates.length === 0)
@@ -391,6 +390,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
           type: EmbeddedScreenType.EmbeddedGPCProof,
           proofRequest: request,
           collectionIds: realCollectionIds,
+          circuitIdentifier,
           callback: (result: ProveResult) => {
             this.getContext().dispatch({
               type: "hide-embedded-screen"
@@ -446,7 +446,6 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
     const pods = this.getPODsIfPermitted(collectionIds, "gpc.canProve");
     const prs = p.proofRequest(request);
 
-    // @ts-expect-error not a meaningful type mismatch
     const inputPods = prs.queryForInputs(pods);
     return Object.values(inputPods).every(
       (candidates) => candidates.length > 0
