@@ -161,11 +161,23 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       POD.load(podData.entries, podData.signature, podData.signerPublicKey)
     );
     const serializedPCD = await PODPCDPackage.serialize(podPCD);
+
+    const currentRevision = this.getContext().getState().serverStorageRevision;
+
     await this.getContext().dispatch({
       type: "add-pcds",
       folder: collectionIdToFolderName(collectionId),
       pcds: [serializedPCD],
       upsert: true
+    });
+
+    return new Promise((resolve) => {
+      const unlisten = this.getContext().stateEmitter.listen((state) => {
+        if (state.serverStorageRevision !== currentRevision) {
+          unlisten();
+          resolve();
+        }
+      });
     });
   }
 
@@ -193,6 +205,8 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       )
       .map((pcd) => pcd.id);
 
+    const currentRevision = this.getContext().getState().serverStorageRevision;
+
     await Promise.all(
       pcdIds.map((id) =>
         this.getContext().dispatch({
@@ -201,6 +215,15 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
         })
       )
     );
+
+    return new Promise((resolve) => {
+      const unlisten = this.getContext().stateEmitter.listen((state) => {
+        if (state.serverStorageRevision !== currentRevision) {
+          unlisten();
+          resolve();
+        }
+      });
+    });
   }
 
   public async sign(entries: PODEntries): Promise<PODData> {
