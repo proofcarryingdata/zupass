@@ -2,7 +2,6 @@ import { ProveResult } from "@parcnet-js/client-rpc";
 import * as p from "@parcnet-js/podspec";
 import { EntriesSchema, PodspecProofRequest } from "@parcnet-js/podspec";
 import { gpcProve } from "@pcd/gpc";
-import { Button, Spacer } from "@pcd/passport-ui";
 import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import {
   PODTicketPCD,
@@ -10,14 +9,21 @@ import {
   ticketToPOD
 } from "@pcd/pod-ticket-pcd";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
-import { Fragment, ReactNode, useMemo, useState } from "react";
+import { ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
-import { useIdentityV3, usePCDCollection } from "../../../src/appHooks";
+import {
+  useIdentityV3,
+  usePCDCollection,
+  useZappOrigin
+} from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { getPODsForCollections } from "../../../src/zapp/collections";
-import { H2 } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
-import { Spinner } from "../../shared/Spinner";
+import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
+import Select from "../../shared/Select";
+import { Typography } from "../../../new-components/shared/Typography";
+import { Button2 } from "../../../new-components/shared/Button";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
 
 export function EmbeddedGPCProofScreen({
   proofRequestSchema,
@@ -68,79 +74,78 @@ export function EmbeddedGPCProofScreen({
   const [proving, setProving] = useState(false);
   const identity = useIdentityV3();
 
+  const textOrLoader = (text: string): ReactNode => {
+    if (proving) return <NewLoader columns={3} rows={2} color="white" />;
+    return (
+      <Typography color="inherit" fontSize={18} fontWeight={500} family="Rubik">
+        {text}
+      </Typography>
+    );
+  };
   return (
-    <AppContainer bg="primary">
-      <Spacer h={4} />
-      <H2
-        style={{
-          flex: 1,
-          textAlign: "center",
-          marginBottom: "8px"
-        }}
-      >
-        GPC Proof Request
-      </H2>
-      <div>
-        <Description>
-          This proof will reveal the following data from your PODs:
-        </Description>
-        <Spacer h={4} />
-        {Object.entries(proofRequestSchema.pods).map(([name, schema]) => {
-          return (
-            <ProvePODInfo
-              key={name}
-              name={name}
-              schema={schema}
-              pods={candidatePODs[name]}
-              selectedPOD={selectedPODs[name]}
-              onChange={(pod) => {
-                setSelectedPODs({
-                  ...selectedPODs,
-                  [name]: pod
-                });
-              }}
-            />
-          );
-        })}
-        <Spacer h={4} />
-        <div>
-          <Button
-            disabled={!canProve}
-            onClick={() => {
-              setProving(true);
+    <AppContainer noPadding bg="white">
+      <Container>
+        <InnerContainer>
+          <BottomModalHeader
+            title="GPC PROOF REQUEST"
+            description="This proof will reveal the following data from your PODs:"
+          />
+          <PodsContainer>
+            {Object.entries(proofRequestSchema.pods).map(([name, schema]) => {
+              return (
+                <ProvePODInfo
+                  key={name}
+                  name={name}
+                  schema={schema}
+                  pods={candidatePODs[name]}
+                  selectedPOD={selectedPODs[name]}
+                  onChange={(pod) => {
+                    setSelectedPODs({
+                      ...selectedPODs,
+                      [name]: pod
+                    });
+                  }}
+                />
+              );
+            })}
+          </PodsContainer>
+        </InnerContainer>
+        <Button2
+          disabled={!canProve || proving}
+          onClick={() => {
+            setProving(true);
 
-              gpcProve(
-                proofRequest.proofConfig,
-                {
-                  pods: selectedPODs as Record<string, POD>,
-                  membershipLists: proofRequest.membershipLists,
-                  watermark: proofRequest.watermark,
-                  owner: {
-                    semaphoreV4: v3tov4Identity(identity),
-                    externalNullifier: proofRequest.externalNullifier
-                  }
-                },
-                new URL(
-                  "/artifacts/proto-pod-gpc",
-                  window.location.origin
-                ).toString()
-              )
-                .then((proof) => {
-                  callback({
-                    success: true,
-                    proof: proof.proof,
-                    boundConfig: proof.boundConfig,
-                    revealedClaims: proof.revealedClaims
-                  });
-                })
-                .catch((error) => console.error(error))
-                .finally(() => setProving(false));
-            }}
-          >
-            <Spinner text={proving ? "Proving..." : "Prove"} show={proving} />
-          </Button>
-        </div>
-      </div>
+            gpcProve(
+              proofRequest.proofConfig,
+              {
+                pods: selectedPODs as Record<string, POD>,
+                membershipLists: proofRequest.membershipLists,
+                watermark: proofRequest.watermark,
+                owner: {
+                  semaphoreV4: v3tov4Identity(identity),
+                  externalNullifier: proofRequest.externalNullifier
+                }
+              },
+              new URL(
+                "/artifacts/proto-pod-gpc",
+                window.location.origin
+              ).toString()
+            )
+              .then((proof) => {
+                callback({
+                  success: true,
+                  proof: proof.proof,
+                  boundConfig: proof.boundConfig,
+                  revealedClaims: proof.revealedClaims
+                });
+              })
+              .catch((error) => console.error(error))
+              .finally(() => setProving(false));
+          }}
+        >
+          {textOrLoader("Prove")}
+        </Button2>
+      </Container>
     </AppContainer>
   );
 }
@@ -159,6 +164,7 @@ function ProvePODInfo({
   onChange: (pod: POD | undefined) => void;
 }): ReactNode {
   const [showOtherStatements, setShowOtherStatements] = useState(false);
+  const zapp = useZappOrigin();
   const revealedEntries = Object.entries(schema.pod.entries)
     .map(([name, entry]) => {
       if (entry.type === "optional") {
@@ -183,163 +189,210 @@ function ProvePODInfo({
         !!entry.isNotMemberOf ||
         !!(entry.type === "int" && entry.inRange)
     );
+  const defaultOption = {
+    value: "",
+    label: "-- None selected --"
+  };
 
+  const options: { label: string; value: string }[] = [
+    defaultOption,
+    ...pods.map((pod) => {
+      return {
+        value: pod.signature,
+        label: schema.pod.meta?.labelEntry
+          ? pod.content.asEntries()[schema.pod.meta.labelEntry].value.toString()
+          : pod.signature.substring(0, 16)
+      };
+    })
+  ];
   return (
     <PODInfo>
       <PODSelectContainer>
-        <PODName>{name}</PODName>
-        <select
-          className="block w-full rounded-md bg-gray-800 border-transparent focus:border-gray-500 focus:ring-0 p-2 text-sm"
-          value={selectedPOD?.signature ?? ""}
-          onChange={(ev) => {
-            onChange(pods.find((pod) => pod.signature === ev.target.value));
-          }}
+        <Typography
+          family="Rubik"
+          color="var(--text-tertiary)"
+          fontWeight={700}
+          style={{ padding: "8px 12px" }}
         >
-          <option value="" disabled>
-            -- None selected --
-          </option>
-          {pods.map((pod) => {
-            return (
-              <option key={pod.signature} value={pod.signature}>
-                {schema.pod.meta?.labelEntry
-                  ? pod.content
-                      .asEntries()
-                      [schema.pod.meta.labelEntry].value.toString()
-                  : pod.signature.substring(0, 16)}
-              </option>
-            );
-          })}
-        </select>
+          {name.toUpperCase()}
+        </Typography>
+        <Select
+          defaultValue={defaultOption}
+          onChange={(ev) => {
+            onChange(pods.find((pod) => pod.signature === ev?.value));
+          }}
+          options={options}
+        />
       </PODSelectContainer>
-      <RevealedEntriesTitle>
-        {revealedEntries.length > 0 && "Revealed entries:"}
-      </RevealedEntriesTitle>
-      <RevealedEntriesGrid>
-        {revealedEntries.map(([entryName, _]) => {
-          return (
-            <Fragment key={`${name}-${entryName}`}>
-              <EntryName>{entryName}</EntryName>
-              <EntryValue>
-                {selectedPODEntries?.[entryName].value.toString() ?? "-"}
-              </EntryValue>
-            </Fragment>
-          );
-        })}
-      </RevealedEntriesGrid>
-      {schema.owner && (
-        <OwnerStatement>
-          Entry <EntryName>{schema.owner.entry}</EntryName> must match your{" "}
-          {schema.owner.protocol === "SemaphoreV3"
-            ? "Semaphore commitment"
-            : "public key"}
-        </OwnerStatement>
-      )}
-      <OtherStatementsButton
-        onClick={() => setShowOtherStatements(!showOtherStatements)}
-      >
-        {showOtherStatements
-          ? "Hide other statements ▼"
-          : "Show other statements ▶"}
-      </OtherStatementsButton>
-      {showOtherStatements && (
-        <>
-          {entriesWithConstraints.length > 0 && (
-            <ConstraintsContainer>
-              <ConstraintsTitle>Proven constraints:</ConstraintsTitle>
-              {entriesWithConstraints.map(([entryName, entry]) => {
+      <ContentContainer>
+        {revealedEntries.length > 0 && (
+          <RevealedEntriesContainer>
+            <Typography family="Rubik">{zapp} will be able to see</Typography>
+            <EntryBox>
+              {revealedEntries.map(([entryName, _]) => {
                 return (
-                  <ConstraintItem key={`${name}-${entryName}-constraints`}>
-                    {entry.isMemberOf && (
-                      <ConstraintText>
-                        <EntryName>{entryName}</EntryName> is member of list:{" "}
-                        <Reveal>
-                          <ConstraintList>
-                            {entry.isMemberOf
-                              .map((v) => v.value.toString())
-                              .join(", ")}
-                          </ConstraintList>
-                        </Reveal>
-                      </ConstraintText>
-                    )}
-                    {entry.isNotMemberOf && (
-                      <ConstraintText>
-                        <EntryName>{entryName}</EntryName> is not member of
-                        list:{" "}
-                        <Reveal>
-                          <ConstraintList>
-                            {entry.isNotMemberOf
-                              .map((v) => v.value.toString())
-                              .join(", ")}
-                          </ConstraintList>
-                        </Reveal>
-                      </ConstraintText>
-                    )}
-                    {entry.type === "int" && entry.inRange && (
-                      <ConstraintText>
-                        <EntryName>{entryName}</EntryName> is
-                        <ConstraintValue>
-                          {entry.inRange.min === POD_INT_MIN &&
-                            entry.inRange.max === POD_INT_MAX &&
-                            "any number"}
-                          {entry.inRange.min !== POD_INT_MIN &&
-                            entry.inRange.max === POD_INT_MAX &&
-                            `greater than ${entry.inRange.min}`}
-                          {entry.inRange.min === POD_INT_MIN &&
-                            entry.inRange.max !== POD_INT_MAX &&
-                            `less than ${entry.inRange.max}`}
-                          {entry.inRange.min !== POD_INT_MIN &&
-                            entry.inRange.max !== POD_INT_MAX &&
-                            `between ${entry.inRange.min} and ${entry.inRange.max}`}
-                        </ConstraintValue>
-                      </ConstraintText>
-                    )}
-                  </ConstraintItem>
+                  <EntryItem>
+                    <Typography family="Rubik" color="var(--core-accent)">
+                      {entryName}
+                    </Typography>
+                    <Typography family="Rubik" color="var(--core-accent)">
+                      {selectedPODEntries?.[entryName].value.toString() ?? "-"}
+                    </Typography>
+                  </EntryItem>
                 );
               })}
-            </ConstraintsContainer>
-          )}
-          {schema.pod.tuples && (
-            <TuplesContainer>
-              <TuplesTitle>Tuples:</TuplesTitle>
-              {schema.pod.tuples.map((tuple) => {
-                return (
-                  <TupleItem key={tuple.entries.join(",")}>
-                    Entries{" "}
-                    {tuple.entries.length === 2 ? (
-                      <>
-                        <EntryName>{tuple.entries[0]}</EntryName> and{" "}
-                      </>
-                    ) : (
-                      <>
-                        {tuple.entries.slice(0, -1).map((entry) => (
-                          <EntryName key={entry}>{entry}, </EntryName>
-                        ))}
-                        and{" "}
-                      </>
-                    )}
-                    <EntryName>
-                      {tuple.entries[tuple.entries.length - 1]}
-                    </EntryName>{" "}
-                    must {tuple.isNotMemberOf ? "not " : ""}match a list:
-                    <br />
-                    <Reveal>
-                      <ConstraintList>
-                        {(tuple.isNotMemberOf ?? tuple.isMemberOf ?? [])
-                          .map((v) =>
-                            v.map((e) => e.value.toString()).join(", ")
-                          )
-                          .map((item) => (
-                            <div>{item}</div>
-                          ))}
-                      </ConstraintList>
-                    </Reveal>
-                  </TupleItem>
-                );
-              })}
-            </TuplesContainer>
-          )}
-        </>
-      )}
+            </EntryBox>
+          </RevealedEntriesContainer>
+        )}
+        {schema.owner && (
+          <EntryBox>
+            <Typography family="Rubik" color="var(--core-accent)">
+              Entry {schema.owner.entry} must match your{" "}
+              {schema.owner.protocol === "SemaphoreV3"
+                ? "Semaphore commitment"
+                : "public key"}
+            </Typography>
+          </EntryBox>
+        )}
+        <Typography
+          family="Rubik"
+          color="var(--text-tertiary)"
+          onClick={() => setShowOtherStatements(!showOtherStatements)}
+          fontWeight={500}
+          style={{ cursor: "pointer" }}
+        >
+          {showOtherStatements
+            ? "Hide other statements ▼"
+            : "Show other statements ▶"}
+        </Typography>
+        {showOtherStatements && (
+          <>
+            {entriesWithConstraints.length > 0 && (
+              <ConstraintsContainer>
+                <Typography family="Rubik">
+                  {zapp} wants to evaluate if:
+                </Typography>
+                <EntryBox>
+                  {entriesWithConstraints.map(([entryName, entry]) => {
+                    return (
+                      <ConstraintItem key={`${name}-${entryName}-constraints`}>
+                        {entry.isMemberOf && (
+                          <Typography color="var(--core-accent)" family="Rubik">
+                            <EntryName>{entryName}</EntryName> is member of
+                            list:{" "}
+                            <Reveal>
+                              {entry.isMemberOf
+                                .map((v) => v.value.toString())
+                                .join(", ")}
+                            </Reveal>
+                          </Typography>
+                        )}
+                        {entry.isNotMemberOf && (
+                          <Typography color="var(--core-accent)" family="Rubik">
+                            <EntryName>{entryName}</EntryName> is not member of
+                            list:{" "}
+                            <Reveal>
+                              {entry.isNotMemberOf
+                                .map((v) => v.value.toString())
+                                .join(", ")}
+                            </Reveal>
+                          </Typography>
+                        )}
+                        {entry.type === "int" && entry.inRange && (
+                          <Typography family="Rubik" color="var(--core-accent)">
+                            {entryName} is{" "}
+                            <Typography
+                              family="Rubik"
+                              color="var(--core-accent)"
+                              fontWeight={700}
+                            >
+                              {entry.inRange.min === POD_INT_MIN &&
+                                entry.inRange.max === POD_INT_MAX &&
+                                "any number"}
+                              {entry.inRange.min !== POD_INT_MIN &&
+                                entry.inRange.max === POD_INT_MAX &&
+                                `greater than ${entry.inRange.min}`}
+                              {entry.inRange.min === POD_INT_MIN &&
+                                entry.inRange.max !== POD_INT_MAX &&
+                                `less than ${entry.inRange.max}`}
+                              {entry.inRange.min !== POD_INT_MIN &&
+                                entry.inRange.max !== POD_INT_MAX &&
+                                `between ${entry.inRange.min} and ${entry.inRange.max}`}
+                            </Typography>
+                          </Typography>
+                        )}
+                      </ConstraintItem>
+                    );
+                  })}
+                </EntryBox>
+              </ConstraintsContainer>
+            )}
+            {schema.pod.tuples && (
+              <>
+                <Typography family="Rubik">tuples:</Typography>
+                <EntryBox>
+                  {schema.pod.tuples.map((tuple) => {
+                    return (
+                      <div key={tuple.entries.join(",")}>
+                        <Typography color="var(--core-accent)" family="Rubik">
+                          Entries{" "}
+                        </Typography>
+                        {tuple.entries.length === 2 ? (
+                          <Typography
+                            family="Rubik"
+                            color="var(--core-accent)"
+                            fontWeight={600}
+                          >
+                            {tuple.entries[0]} and{" "}
+                          </Typography>
+                        ) : (
+                          <>
+                            {tuple.entries.slice(0, -1).map((entry) => (
+                              <Typography
+                                family="Rubik"
+                                fontWeight={600}
+                                color="var(--core-accent)"
+                                key={entry}
+                              >
+                                {entry},{" "}
+                              </Typography>
+                            ))}
+                            and{" "}
+                          </>
+                        )}
+                        <Typography
+                          color="var(--core-accent)"
+                          fontWeight={600}
+                          family="Rubik"
+                        >
+                          {tuple.entries[tuple.entries.length - 1]}
+                        </Typography>{" "}
+                        <Typography color="var(--core-accent)" family="Rubik">
+                          must {tuple.isNotMemberOf ? "not " : ""}match a list:
+                        </Typography>
+                        <Reveal>
+                          {(tuple.isNotMemberOf ?? tuple.isMemberOf ?? [])
+                            .map((v) =>
+                              v.map((e) => e.value.toString()).join(", ")
+                            )
+                            .map((item) => (
+                              <Typography
+                                color="var(--core-accent)"
+                                family="Rubik"
+                              >
+                                {item}
+                              </Typography>
+                            ))}
+                        </Reveal>
+                      </div>
+                    );
+                  })}
+                </EntryBox>
+              </>
+            )}
+          </>
+        )}
+      </ContentContainer>
     </PODInfo>
   );
 }
@@ -348,114 +401,102 @@ function Reveal({ children }: { children: ReactNode }): ReactNode {
   const [isRevealed, setIsRevealed] = useState(false);
   return (
     <>
-      <button onClick={() => setIsRevealed(!isRevealed)}>
-        {isRevealed ? "Hide" : "Reveal"}
-      </button>
+      <RevealButton onClick={() => setIsRevealed(!isRevealed)}>
+        <Typography color="#fff" family="Rubik" fontWeight={500}>
+          {isRevealed ? "Hide" : "Show"}
+        </Typography>
+      </RevealButton>
       {isRevealed && <div className="my-1">{children}</div>}
     </>
   );
 }
 
-const Description = styled.div`
-  font-size: 14px;
-  color: rgba(var(--white-rgb), 0.8);
+const RevealButton = styled.button`
+  padding: 0px 4px;
+  border-radius: 2px;
+  background: var(--core-accent);
+  border: none;
+  cursor: pointer;
+  display: block;
 `;
 
 const PODInfo = styled.div`
-  margin: 8px 0px;
-  border: 1px solid rgba(var(--white-rgb), 0.1);
-  border-radius: 8px;
-  padding: 12px;
-`;
-
-const PODName = styled.div`
-  font-weight: 600;
-  text-transform: capitalize;
+  display: flex;
+  padding: 4px;
+  flex-direction: column;
+  align-items: center;
+  align-self: stretch;
+  border-radius: 10px;
+  border: 1px solid #eceaf4;
+  background: #f6f8fd;
+  width: 100%;
 `;
 
 const PODSelectContainer = styled.label`
   display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 8px;
-`;
-
-const RevealedEntriesTitle = styled.div`
-  margin-top: 16px;
-  margin-bottom: 4px;
-  font-weight: 600;
-`;
-
-const RevealedEntriesGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-  align-items: center;
-  margin-bottom: 16px;
+  flex-direction: column;
+  width: 100%;
 `;
 
 const EntryName = styled.span`
   font-weight: 600;
 `;
 
-const EntryValue = styled.div`
-  padding: 2px 8px;
-  border-radius: 4px;
-  background-color: rgba(var(--black-rgb), 0.3);
-`;
-
 const ConstraintsContainer = styled.div`
   margin-top: 8px;
 `;
 
-const ConstraintsTitle = styled.div`
-  font-weight: 600;
-  margin-bottom: 8px;
-`;
-
 const ConstraintItem = styled.div`
-  margin-bottom: 8px;
+  margin-bottom: 4px;
 `;
 
-const ConstraintText = styled.div``;
-
-const ConstraintValue = styled.span`
-  margin: 0px 4px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background-color: rgba(var(--black-rgb), 0.3);
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100vh;
+  padding: 24px 24px 20px 24px;
+  width: 100%;
 `;
 
-const ConstraintList = styled.div`
-  padding: 4px 8px;
-  border-radius: 4px;
-  background-color: rgba(var(--black-rgb), 0.3);
+const EntryBox = styled.div`
+  display: flex;
+  padding: 12px;
+  flex-direction: column;
+  border-radius: 8px;
+  background: #e9efff;
+  width: 100%;
 `;
 
-const TuplesContainer = styled.div`
-  margin-top: 8px;
+const EntryItem = styled.div`
+  display: flex;
+  justify-content: space-between;
 `;
 
-const TuplesTitle = styled.div`
-  font-weight: 600;
-  margin-bottom: 8px;
+const RevealedEntriesContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+const ContentContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  padding: 12px;
 `;
 
-const TupleItem = styled.div`
-  margin-bottom: 12px;
+const InnerContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
 `;
 
-const OtherStatementsButton = styled.button`
-  border: 0px;
-  background: none;
-  color: rgb(var(--white-rgb));
-  cursor: pointer;
-  font-size: 14px;
-  padding: 0px;
-  margin: 8px 0px;
-`;
-
-const OwnerStatement = styled.div`
-  margin-top: 8px;
-  margin-bottom: 8px;
+const PodsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: calc(100vh - 200px);
+  overflow: scroll;
 `;
