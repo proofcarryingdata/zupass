@@ -147,6 +147,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       collectionId
     ]);
 
+    // @ts-expect-error not a meaningful type mismatch
     const result = p.pod(query).query(pods);
 
     return result.matches.map(p.podToPODData);
@@ -249,6 +250,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
           )
         )
       );
+      // @ts-expect-error not a meaningful type mismatch
       return p.podToPODData(pod);
     }
     return new Promise((resolve, reject) => {
@@ -333,6 +335,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
 
     pods.push(...ticketPods);
 
+    // @ts-expect-error not a meaningful type mismatch
     const inputPods = prs.queryForInputs(pods);
     if (
       Object.values(inputPods).some((candidates) => candidates.length === 0)
@@ -405,6 +408,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
     const pods = this.getPODsIfPermitted(collectionIds, "gpc.canProve");
     const prs = p.proofRequest(request);
 
+    // @ts-expect-error not a meaningful type mismatch
     const inputPods = prs.queryForInputs(pods);
     return Object.values(inputPods).every(
       (candidates) => candidates.length > 0

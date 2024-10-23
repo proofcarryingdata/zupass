@@ -106,6 +106,7 @@ export class QuerySubscriptionManager {
         }
 
         // Input data has changed, so we need to re-run the query.
+        // @ts-expect-error not a meaningful type mismatch
         const queryResult = subscription.query.query(pods);
         const newOutputSignatures = queryResult.matches.map(
           (pod) => pod.signature
@@ -127,6 +128,7 @@ export class QuerySubscriptionManager {
         this.emitter.emit(
           "subscriptionUpdated",
           subscription.id,
+          // @ts-expect-error not a meaningful type mismatch
           queryResult.matches.map((pod) => p.podToPODData(pod as POD)),
           subscription.serial
         );
