@@ -17,6 +17,7 @@ export type DescriptiveAccordionProps = {
 
 export type DescriptiveAccordionRef = {
   open: (index: number) => void;
+  openAll: () => void;
   close: (index: number) => void;
   toggle: (index: number) => void;
 };
@@ -79,6 +80,12 @@ export const DescriptiveAccordion = forwardRef<
         setOpen((old) => {
           const updated = [...old];
           updated[index] = false;
+          return updated;
+        });
+      },
+      openAll(): void {
+        setOpen((old) => {
+          const updated = [...old.map(() => true)];
           return updated;
         });
       },

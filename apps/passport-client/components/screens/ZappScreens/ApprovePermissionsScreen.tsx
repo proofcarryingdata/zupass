@@ -1,11 +1,12 @@
 import { Zapp } from "@parcnet-js/client-rpc";
-import { ReactNode } from "react";
+import { ReactNode, useLayoutEffect, useRef } from "react";
 import styled from "styled-components";
 import { useDispatch, useZapp, useZappOrigin } from "../../../src/appHooks";
 import { AppContainer } from "../../shared/AppContainer";
 import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 import {
   DescriptiveAccordion,
+  DescriptiveAccordionRef,
   DescriptiveAccrodionChild
 } from "../../../new-components/shared/Accordion";
 import { Button2 } from "../../../new-components/shared/Button";
@@ -37,7 +38,7 @@ export function ApprovePermissionsScreen(): ReactNode {
 
 function Permissions({ zapp }: { zapp: Zapp }): ReactNode {
   const dispatch = useDispatch();
-
+  const ref = useRef<DescriptiveAccordionRef>(null);
   const chidren: DescriptiveAccrodionChild[] = [];
   if (zapp.permissions.READ_PUBLIC_IDENTIFIERS) {
     chidren.push({
@@ -106,10 +107,18 @@ function Permissions({ zapp }: { zapp: Zapp }): ReactNode {
       )}`
     });
   }
+
+  useLayoutEffect(() => {
+    ref.current?.openAll();
+  }, []);
   return (
     <>
       <AccordionContainer>
-        <DescriptiveAccordion children={chidren} title="permissions" />
+        <DescriptiveAccordion
+          ref={ref}
+          children={chidren}
+          title="permissions"
+        />
       </AccordionContainer>
       <ButtonsContainer>
         <Button2
@@ -134,7 +143,7 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   gap: 16px;
-  justify-content: space-between;
+  // justify-content: space-between;
   height: 100vh;
   padding: 24px 24px 20px 24px;
 `;
@@ -153,4 +162,5 @@ const ButtonsContainer = styled.div`
   flex-direction: column;
   gap: 8px;
   width: 100%;
+  margin-top: auto;
 `;

@@ -8,6 +8,7 @@ import { useIdentityV3, useZapp, useZappOrigin } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { H2 } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
+import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 
 export function EmbeddedSignPODScreen({
   entries,
@@ -33,25 +34,14 @@ export function EmbeddedSignPODScreen({
   );
 
   return (
-    <AppContainer bg="primary">
-      <Spacer h={4} />
-      <H2
-        style={{
-          flex: 1,
-          textAlign: "center",
-          marginBottom: "8px"
-        }}
-      >
-        Sign POD
-      </H2>
-      <Spacer h={16} />
-      <div>
-        <Description>
-          {zapp?.name} ({zappOrigin}) is requesting that you sign a POD. This
+    <AppContainer bg="white">
+      <BottomModalHeader
+        title="Sign POD"
+        description={`${zapp?.name} (${zappOrigin}) is requesting that you sign a POD. This
           POD will contain the following data, along with your signature and
-          public key:
-        </Description>
-        <Spacer h={24} />
+          public key:`}
+      />
+      <div>
         <EntriesGrid>
           {Object.entries(entries).map(([name, entry]) => {
             return (
