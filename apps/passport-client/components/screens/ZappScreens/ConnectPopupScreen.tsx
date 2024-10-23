@@ -1,5 +1,4 @@
 import { requestDownloadAndDecryptStorage } from "@pcd/passport-interface";
-import { Button, Spacer } from "@pcd/passport-ui";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import urljoin from "url-join";
@@ -7,9 +6,11 @@ import * as v from "valibot";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch } from "../../../src/appHooks";
 import { useSelector } from "../../../src/subscribe";
-import { H1, TextCenter } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
-import { Spinner } from "../../shared/Spinner";
+import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { Typography } from "../../../new-components/shared/Typography";
+import { Button2 } from "../../../new-components/shared/Button";
 
 const IFrameAuthenticationMessageSchema = v.object({
   type: v.literal("auth"),
@@ -170,43 +171,79 @@ export function ConnectPopupScreen(): ReactNode {
   const zappName = useSelector((state) => state.connectedZapp?.name);
   const zappOrigin = useSelector((state) => state.zappOrigin);
 
+  const textOrLoader = (text: string): ReactNode => {
+    if (inProgress) return <NewLoader columns={3} rows={2} color="white" />;
+    return (
+      <Typography color="inherit" fontSize={18} fontWeight={500} family="Rubik">
+        {text}
+      </Typography>
+    );
+  };
   return (
-    <AppContainer bg="primary">
-      <Spacer h={32} />
-      <TextCenter>
-        <H1>ZUPASS</H1>
-        <Spacer h={24} />
-        <TextCenter>
-          <ZappName>{zappName}</ZappName> ({zappOrigin}) would like to connect
-          to your Zupass.
-        </TextCenter>
-        <Spacer h={24} />
-        <Button onClick={openPopup} disabled={inProgress}>
-          <Spinner show={inProgress} text="Connect" />
-        </Button>
-        <Spacer h={24} />
-        {status === PopupAuthenticationStatus.PopupBlocked && (
-          <TextCenter>
-            Your browser may be configured to block popup windows. Please check
-            your browser settings and click the button above to try again.
-          </TextCenter>
-        )}
-        {status === PopupAuthenticationStatus.AuthenticationError && (
-          <TextCenter>
-            An unexpected error occurred. Please try again.
-          </TextCenter>
-        )}
-        {status === PopupAuthenticationStatus.PopupClosed && (
-          <TextCenter>
-            The popup window was closed before authentication could complete.
-            Please try again by clicking the button above.
-          </TextCenter>
-        )}
-      </TextCenter>
+    <AppContainer bg="white" noPadding>
+      <Container>
+        <BottomModalHeader
+          title="CONNECTION REQUEST"
+          description={`${
+            zappOrigin || zappName || "The app"
+          } would like to connect to your Zupass account.`}
+        />
+        <ErrorContainer>
+          {status === PopupAuthenticationStatus.PopupBlocked && (
+            <Typography color="var(--new-danger)">
+              Your browser may be configured to block popup windows. Please
+              check your browser settings and click the button above to try
+              again.
+            </Typography>
+          )}
+          {status === PopupAuthenticationStatus.AuthenticationError && (
+            <Typography color="var(--new-danger)">
+              An unexpected error occurred. Please try again.
+            </Typography>
+          )}
+          {status === PopupAuthenticationStatus.PopupClosed && (
+            <Typography color="var(--new-danger)">
+              The popup window was closed before authentication could complete.
+              Please try again by clicking the "Connect" button below.
+            </Typography>
+          )}
+          <ButtonsContainer>
+            <Button2 onClick={openPopup} disabled={inProgress}>
+              {textOrLoader("Connect")}
+            </Button2>
+            <Button2
+              onClick={() =>
+                dispatch({ type: "zapp-approval", approved: false })
+              }
+              variant="secondary"
+            >
+              Cancel
+            </Button2>
+          </ButtonsContainer>
+        </ErrorContainer>
+      </Container>
     </AppContainer>
   );
 }
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100vh;
+  padding: 24px;
+`;
 
-const ZappName = styled.span`
-  font-weight: bold;
+const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
 `;
