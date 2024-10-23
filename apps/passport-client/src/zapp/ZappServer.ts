@@ -314,6 +314,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
         )
       )
     );
+    // @ts-expect-error not a meaningful type mismatch
     return p.podToPODData(pod);
   }
 }
