@@ -53,6 +53,7 @@ export function EmbeddedGPCProofScreen({
     return pods;
   }, [pcds, collectionIds]);
   const candidatePODs = useMemo(() => {
+    // @ts-expect-error not a meaningful type mismatch
     return prs.queryForInputs(allPods);
   }, [allPods, prs]);
   const proofRequest = useMemo(() => {
@@ -91,6 +92,7 @@ export function EmbeddedGPCProofScreen({
               key={name}
               name={name}
               schema={schema}
+              // @ts-expect-error not a meaningful type mismatch
               pods={candidatePODs[name]}
               selectedPOD={selectedPODs[name]}
               onChange={(pod) => {

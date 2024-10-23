@@ -80,6 +80,7 @@ function isAlreadyAuthorized(
     }
   });
 
+  // @ts-expect-error not a meaningful type mismatch
   const existingPODQuery = appPodSpec.query(zappPODs);
   if (existingPODQuery.matches.length === 1) {
     try {
