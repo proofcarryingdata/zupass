@@ -289,7 +289,7 @@ export class PretixPipeline implements BasePipeline {
 
   public async stop(): Promise<void> {
     logger(LOG_TAG, `stopping PretixPipeline with id ${this.id}`);
-    // TODO: what to actually do for a stopped pipeline?
+    this.abort.abort();
   }
 
   /**
@@ -573,20 +573,42 @@ export class PretixPipeline implements BasePipeline {
       if (event.skipSettingsValidation) {
         settings = VALID_PRETIX_EVENT_SETTINGS;
       } else {
-        settings = await this.api.fetchEventSettings(orgUrl, token, eventId);
+        settings = await this.api.fetchEventSettings(
+          orgUrl,
+          token,
+          eventId,
+          this.abort
+        );
       }
       const categories = await this.api.fetchProductCategories(
         orgUrl,
         token,
-        eventId
+        eventId,
+        this.abort
       );
-      const products = await this.api.fetchProducts(orgUrl, token, eventId);
-      const eventInfo = await this.api.fetchEvent(orgUrl, token, eventId);
-      const orders = await this.api.fetchOrders(orgUrl, token, eventId);
+      const products = await this.api.fetchProducts(
+        orgUrl,
+        token,
+        eventId,
+        this.abort
+      );
+      const eventInfo = await this.api.fetchEvent(
+        orgUrl,
+        token,
+        eventId,
+        this.abort
+      );
+      const orders = await this.api.fetchOrders(
+        orgUrl,
+        token,
+        eventId,
+        this.abort
+      );
       const checkinLists = await this.api.fetchEventCheckinLists(
         orgUrl,
         token,
-        eventId
+        eventId,
+        this.abort
       );
 
       return {
