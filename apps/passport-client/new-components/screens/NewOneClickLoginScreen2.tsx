@@ -54,7 +54,7 @@ const OneClickTicket = ({ data }: { data: IPODTicketData }): JSX.Element => {
   return (
     <TicketContainer>
       <QRContainer>
-        <TicketQR ticketData={data} idBasedVerifyURL="" />
+        <TicketQR ticketData={data} />
       </QRContainer>
       <TextContainer>
         <Typography color="#9A4AC9" fontWeight={800} fontSize={20}>

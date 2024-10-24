@@ -12,7 +12,7 @@ type NEW_UI__AddOns = {
 };
 export interface PODTicketPCDCardProps {
   ticketData: IPODTicketData;
-  idBasedVerifyURL: string;
+  defaultImage: string;
   addOns?: NEW_UI__AddOns;
   showDownoladButton?: boolean;
 }
@@ -21,52 +21,36 @@ export const PODTicketPCDUI: PCDUI<PODTicketPCD, PODTicketPCDCardProps> = {
   renderCardBody: PODTicketCardBody
 };
 
-function PODTicketCardBody({
-  pcd,
-  idBasedVerifyURL,
-  addOns,
-  showDownoladButton
-}: {
-  pcd: PODTicketPCD;
-  idBasedVerifyURL: string;
-  addOns?: NEW_UI__AddOns;
-  showDownoladButton?: boolean;
-}): JSX.Element {
-  return (
-    <PODTicketCardBodyImpl
-      showDownoladButton={showDownoladButton}
-      ticketData={pcd.claim.ticket}
-      idBasedVerifyURL={idBasedVerifyURL}
-      addOns={addOns}
-    />
-  );
+function PODTicketCardBody(props: PODTicketPCDCardProps): JSX.Element {
+  return <PODTicketCardBodyImpl {...props} />;
 }
 
 export function PODTicketCardBodyImpl({
   ticketData,
-  idBasedVerifyURL,
   addOns,
-  showDownoladButton
+  showDownoladButton,
+  defaultImage
 }: PODTicketPCDCardProps): JSX.Element {
   const ticketImageRef = useRef<HTMLDivElement>(null);
 
   const [downloading, setDownloading] = useState(false);
 
-  // If ticket has an `eventStartDate` render the `qrCodeOverrideImageUrl`, if it exists
-  // Else, render the `imageUrl`, if it existss
-  const imageToRender = ticketData?.eventStartDate
-    ? ticketData.qrCodeOverrideImageUrl
-    : ticketData?.imageUrl;
-
+  const getImageToRender = (): string | undefined => {
+    if (!ticketData) return defaultImage;
+    const imageToRender =
+      ticketData?.qrCodeOverrideImageUrl || ticketData?.imageUrl;
+    if (!imageToRender && !ticketData.ticketSecret) {
+      return defaultImage;
+    } else if (!imageToRender) {
+      return undefined;
+    }
+    return imageToRender;
+  };
+  const imageToRender = getImageToRender();
   return (
     <NEW_UI__Container>
       <NEW_UI__TicketImageContainer ref={ticketImageRef}>
-        {!imageToRender && (
-          <TicketQR
-            ticketData={ticketData}
-            idBasedVerifyURL={idBasedVerifyURL}
-          />
-        )}
+        {!imageToRender && <TicketQR ticketData={ticketData} />}
         {imageToRender && (
           <TicketImage
             hidePadding={true}
@@ -125,28 +109,13 @@ export function PODTicketCardBodyImpl({
   );
 }
 export function TicketQR({
-  ticketData,
-  idBasedVerifyURL
+  ticketData
 }: {
   ticketData: IPODTicketData;
-  idBasedVerifyURL: string;
 }): JSX.Element {
   const generate = useCallback(async () => {
-    if (ticketData.ticketSecret) {
-      return ticketData.ticketSecret;
-    }
-
-    return linkToTicket(
-      idBasedVerifyURL,
-      ticketData.ticketId,
-      ticketData.eventId
-    );
-  }, [
-    idBasedVerifyURL,
-    ticketData.eventId,
-    ticketData.ticketId,
-    ticketData.ticketSecret
-  ]);
+    return ticketData.ticketSecret || "";
+  }, [ticketData.ticketSecret]);
 
   return (
     <QRDisplayWithRegenerateAndStorage
