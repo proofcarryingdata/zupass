@@ -67,6 +67,7 @@ import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
+import { LocalFileService } from "../../LocalFileService";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
 import {
@@ -144,6 +145,7 @@ export class PretixPipeline implements BasePipeline {
   private semaphoreUpdateQueue: PQueue;
   private context: ApplicationContext;
   private abort: AbortController;
+  private localFileService: LocalFileService | null;
 
   public get id(): string {
     return this.definition.id;
@@ -172,7 +174,8 @@ export class PretixPipeline implements BasePipeline {
     consumerDB: IPipelineConsumerDB,
     manualTicketDB: IPipelineManualTicketDB,
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
-    context: ApplicationContext
+    context: ApplicationContext,
+    localFileService: LocalFileService | null
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -182,6 +185,7 @@ export class PretixPipeline implements BasePipeline {
     this.manualTicketDB = manualTicketDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
     this.context = context;
+    this.localFileService = localFileService;
     if (this.definition.options.autoIssuance) {
       this.autoIssuanceProvider = new AutoIssuanceProvider(
         this.id,

@@ -62,6 +62,7 @@ import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { DiscordService } from "../discordService";
 import { EmailService } from "../emailService";
+import { LocalFileService } from "../LocalFileService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
@@ -96,6 +97,7 @@ export class GenericIssuanceService {
   private pipelineSubservice: PipelineSubservice;
   private userSubservice: UserSubservice;
   private credentialSubservice: CredentialSubservice;
+  private localFileService: LocalFileService | null;
 
   public constructor(
     context: ApplicationContext,
@@ -110,7 +112,8 @@ export class GenericIssuanceService {
     discordService: DiscordService | null,
     emailService: EmailService,
     cacheService: PersistentCacheService,
-    credentialSubservice: CredentialSubservice
+    credentialSubservice: CredentialSubservice,
+    localFileService: LocalFileService | null
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
@@ -129,6 +132,7 @@ export class GenericIssuanceService {
       genericIssuanceClientUrl
     );
     this.credentialSubservice = credentialSubservice;
+    this.localFileService = localFileService;
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
@@ -153,7 +157,8 @@ export class GenericIssuanceService {
         semaphoreHistoryDB: this.semaphoreHistoryDB,
         credentialSubservice: this.credentialSubservice,
         emailService,
-        context
+        context,
+        localFileService
       } satisfies InstantiatePipelineArgs
     );
   }

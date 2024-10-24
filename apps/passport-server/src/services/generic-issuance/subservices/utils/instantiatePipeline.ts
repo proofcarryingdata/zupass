@@ -20,6 +20,7 @@ import {
 } from "../../../../database/queries/ticketActionDBs";
 import { ApplicationContext } from "../../../../types";
 import { EmailService } from "../../../emailService";
+import { LocalFileService } from "../../../LocalFileService";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { traced } from "../../../telemetryService";
 import { tracePipeline } from "../../honeycombQueries";
@@ -57,6 +58,7 @@ export interface InstantiatePipelineArgs {
   credentialSubservice: CredentialSubservice;
   emailService: EmailService;
   context: ApplicationContext;
+  localFileService: LocalFileService | null;
 }
 
 /**
@@ -103,7 +105,8 @@ export function instantiatePipeline(
         args.consumerDB,
         args.manualTicketDB,
         args.semaphoreHistoryDB,
-        args.context
+        args.context,
+        args.localFileService
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(

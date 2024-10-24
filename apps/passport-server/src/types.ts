@@ -18,6 +18,7 @@ import { FrogcryptoService } from "./services/frogcryptoService";
 import { GenericIssuanceService } from "./services/generic-issuance/GenericIssuanceService";
 import { CredentialSubservice } from "./services/generic-issuance/subservices/CredentialSubservice";
 import { IssuanceService } from "./services/issuanceService";
+import { LocalFileService } from "./services/LocalFileService";
 import { MetricsService } from "./services/metricsService";
 import { MultiProcessService } from "./services/multiProcessService";
 import { PagerDutyService } from "./services/pagerDutyService";
@@ -59,6 +60,7 @@ export interface GlobalServices {
   genericIssuanceService: GenericIssuanceService | null;
   pagerDutyService: PagerDutyService | null;
   credentialSubservice: CredentialSubservice;
+  localFileService: LocalFileService | null;
 }
 
 export interface Zupass {
