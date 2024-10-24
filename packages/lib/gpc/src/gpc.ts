@@ -458,9 +458,9 @@ export function gpcArtifactDownloadURL(
       const artifactVersion = version ?? GPC_ARTIFACTS_NPM_VERSION;
       return urljoin(
         zupassURL,
-        "artifacts",
-        (stability === "test" ? "test/" : "") + PROTO_POD_GPC_FAMILY_NAME,
-        artifactVersion
+        stability === "test" ? "artifacts/test" : "artifacts",
+        PROTO_POD_GPC_FAMILY_NAME +
+          (stability === "test" ? "" : `/${artifactVersion}`)
       );
     default:
       throw new Error(`Unknown artifact download source ${source}.`);
