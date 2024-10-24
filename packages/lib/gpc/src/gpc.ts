@@ -7,6 +7,7 @@ import {
   ProtoPODGPCPublicInputs,
   githubDownloadRootURL,
   gpcArtifactPaths,
+  jsdelivrDownloadRootURL,
   unpkgDownloadRootURL
 } from "@pcd/gpcircuits";
 import urljoin from "url-join";
@@ -392,7 +393,7 @@ export const GPC_ARTIFACTS_NPM_VERSION = ProtoPODGPC.ARTIFACTS_NPM_VERSION;
  * Note that the `zupass` source is not currently usable outside of the
  * Zupass app itself.
  */
-export type GPCArtifactSource = "zupass" | "github" | "unpkg";
+export type GPCArtifactSource = "zupass" | "github" | "unpkg" | "jsdelivr";
 
 /**
  * Stability level of GPC artifacts to use.  Test artifacts are for use
@@ -439,6 +440,13 @@ export function gpcArtifactDownloadURL(
         PROTO_POD_GPC_FAMILY_NAME,
         version
       );
+    case "jsdelivr":
+      if (version === undefined || version === "") {
+        version = GPC_ARTIFACTS_NPM_VERSION;
+      }
+      // stability is intentionally ignored.  NPM version can encode
+      // pre-release status.
+      return jsdelivrDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
     case "unpkg":
       if (version === undefined || version === "") {
         version = GPC_ARTIFACTS_NPM_VERSION;
