@@ -5176,30 +5176,38 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@parcnet-js/app-connector@^1.1.5":
-  version "1.1.5"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-1.1.5.tgz#6a17a88f50c90b9c355c3fa44d28786a6615a61c"
-  integrity sha512-Us7c/LotkNy4dE/zFn/JQpEqye6znUJblzZZmwoH/UgxTSZ+in18gkGAWQLYKeHAhH0V0KzD8USMtxjOFPrVbA==
+"@parcnet-js/app-connector-react@1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector-react/-/app-connector-react-1.0.2.tgz#fa5b5607a7e7afad8a23de0e78057d5d2c72ac9a"
+  integrity sha512-x4OiLcopadv9Zpua2pxzFB+OF/yICy1M1wndfO3MVyNBV9tdc24aH+SrvAktiKDxPkTjCJhm3VchhTS1NbYkHw==
   dependencies:
-    "@parcnet-js/client-rpc" "1.1.4"
+    "@parcnet-js/app-connector" "1.1.7"
+    react-shadow "^20.5.0"
+
+"@parcnet-js/app-connector@1.1.7", "@parcnet-js/app-connector@^1.1.7":
+  version "1.1.7"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-1.1.7.tgz#850612a773d751c9a67c53cb416e1635b73f51f4"
+  integrity sha512-DS69R9rw10EBb2F5Pg2Xhe4m/cOVcdAZdjA+edYhgP+NoSE4K2eZrYHQRamv8Nh8OIS9mYb6pQVKrTItQUVESQ==
+  dependencies:
+    "@parcnet-js/client-rpc" "1.1.5"
     "@parcnet-js/podspec" "1.1.2"
     "@pcd/gpc" "^0.3.0"
     "@pcd/pod" "^0.4.0"
     nanoevents "^9.0.0"
     valibot "^0.42.0"
 
-"@parcnet-js/client-helpers@^1.0.5":
-  version "1.0.5"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-1.0.5.tgz#b577d0c5b6672582b64d3e665d0da6fc05951dc4"
-  integrity sha512-Nl9Gl3CGFQ9tRxtyk5ufPpIXTJXKlehLUKsBXhJU+IxaGr/BmjALOgbAzIz5+0N9YoxpSlyF0kQxU8GIpGwxPw==
+"@parcnet-js/client-helpers@^1.0.6":
+  version "1.0.6"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-1.0.6.tgz#9da0d5ee40ef1aa8fe867f51e5e3e3b751a49786"
+  integrity sha512-rtEsunR6lc20yFOgUE+rylbv7beshAs7x7eqTsLV6nck8BEp/SX+TMZPkCluohuhwg/5KySh3kQb8eUAYqOS2A==
   dependencies:
-    "@parcnet-js/client-rpc" "1.1.4"
+    "@parcnet-js/client-rpc" "1.1.5"
     valibot "^0.42.0"
 
-"@parcnet-js/client-rpc@1.1.4", "@parcnet-js/client-rpc@^1.1.4":
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-1.1.4.tgz#8e46505426e5590ec309fb785aa91935f4bd3001"
-  integrity sha512-Q2WF1tZIll0cNhq2LsSebH9QFv2ETRdrreJjJQPZBvAbJrUK0mZ0TJ0hnUvF7CyVVl7KNr8BUzB89noIOFzylg==
+"@parcnet-js/client-rpc@1.1.5", "@parcnet-js/client-rpc@^1.1.5":
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-1.1.5.tgz#a7c75dc88752be25ce49f97824d81ae69bf06d68"
+  integrity sha512-OzYW+5+AvQiu40PHH3KgCQJNII5qv+HZ/QVuLvaJVhhDubTLOQF63K4q307ta2nUswbbbWKejevlQnX5biZ7RA==
   dependencies:
     "@parcnet-js/podspec" "1.1.2"
     "@pcd/gpc" "^0.3.0"
@@ -5214,12 +5222,12 @@
     "@pcd/gpc" "^0.3.0"
     "@pcd/pod" "^0.4.0"
 
-"@parcnet-js/ticket-spec@^1.1.4":
-  version "1.1.4"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-1.1.4.tgz#9e6e5b4d8a134779a620a04521893f32078dcbf7"
-  integrity sha512-fMapxCan+N6eZFtbivnAJTZ6dQzGIvJ8B++zQtR4equSWBpRktrwEvQeOe7lPWIbI6iItehzrNun9sBo9X3fQw==
+"@parcnet-js/ticket-spec@^1.1.5":
+  version "1.1.5"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-1.1.5.tgz#81b2fdd5ae1b3c9c40dc702231555c1fed52ce91"
+  integrity sha512-YW2IEqyRXLTlrY1opgfXJ1//LIUbLYK8yMPjb59VURk5zGUljrwV2qTe1/N9UF7vylA0x0RfJS2tncHvjaqBIw==
   dependencies:
-    "@parcnet-js/client-rpc" "1.1.4"
+    "@parcnet-js/client-rpc" "1.1.5"
     "@parcnet-js/podspec" "1.1.2"
 
 "@pcd/libsodium-sumo@^0.7.15":
@@ -14072,6 +14080,11 @@ human-signals@^4.3.0:
   resolved "https://registry.yarnpkg.com/human-signals/-/human-signals-4.3.1.tgz#ab7f811e851fca97ffbd2c1fe9a958964de321b2"
   integrity sha512-nZXjEF2nbo7lIw3mgYjItAfgQXog3OjJogSbKa2CQIIvSGWcKgeJnQlNXip6NglNzYH45nSRiEVimMvYL8DDqQ==
 
+humps@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/humps/-/humps-2.0.1.tgz#dd02ea6081bd0568dc5d073184463957ba9ef9aa"
+  integrity sha512-E0eIbrFWUhwfXJmsbdjRQFQPrl5pTEoKlz163j1mTqqUnU9PgR4AgB8AIITzuB3vLBdxZXyZ9TDIrwB2OASz4g==
+
 iconv-lite@0.4.24, iconv-lite@^0.4.24:
   version "0.4.24"
   resolved "https://registry.yarnpkg.com/iconv-lite/-/iconv-lite-0.4.24.tgz#2022b4b25fbddc21d2f524974a474aafe733908b"
@@ -19012,6 +19025,13 @@ react-select@^5.7.7:
     prop-types "^15.6.0"
     react-transition-group "^4.3.0"
     use-isomorphic-layout-effect "^1.1.2"
+
+react-shadow@^20.5.0:
+  version "20.5.0"
+  resolved "https://registry.yarnpkg.com/react-shadow/-/react-shadow-20.5.0.tgz#dbfe87be42c33b57aab88d11a547060ddc8be7f5"
+  integrity sha512-DHukRfWpJrFtZMcZrKrqU3ZwuHjTpTbrjnJdTGZQE3lqtC5ivBDVWqAVVW6lR3Lq6bhphjAbqaJU8NOoTRSCsg==
+  dependencies:
+    humps "^2.0.1"
 
 react-spreadsheet@^0.9.4:
   version "0.9.4"
