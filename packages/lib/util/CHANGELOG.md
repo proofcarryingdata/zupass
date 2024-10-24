@@ -1,5 +1,11 @@
 # @pcd/util
 
+## 0.8.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
 ## 0.7.0
 
 ### Minor Changes

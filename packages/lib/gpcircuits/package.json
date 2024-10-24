@@ -1,6 +1,6 @@
 {
   "name": "@pcd/gpcircuits",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -43,15 +43,15 @@
     "copy-snark-artifacts": "./scripts/copy-snark-artifacts.sh"
   },
   "dependencies": {
-    "@pcd/pod": "0.3.0",
+    "@pcd/pod": "0.4.0",
     "fastfile": "0.0.20",
     "snarkjs": "^0.7.4",
     "url-join": "4.0.1"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.13.0",
-    "@pcd/tsconfig": "0.13.0",
-    "@pcd/util": "^0.7.0",
+    "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/tsconfig": "0.14.0",
+    "@pcd/util": "^0.8.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "semaphore-identity-v4": "npm:@semaphore-protocol/identity@^4.0.3",
     "@types/chai": "^4.3.5",

@@ -77,6 +77,13 @@ const define = {
     ? {
         "process.env.EMBEDDED_ZAPPS": JSON.stringify(process.env.EMBEDDED_ZAPPS)
       }
+    : {}),
+  ...(process.env.DEVCON_TICKET_QUERY_ORIGINS !== undefined
+    ? {
+        "process.env.DEVCON_TICKET_QUERY_ORIGINS": JSON.stringify(
+          process.env.DEVCON_TICKET_QUERY_ORIGINS
+        )
+      }
     : {})
 };
 
