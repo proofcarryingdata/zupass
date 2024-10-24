@@ -84,6 +84,10 @@ export const PodsCollectionList = ({
 }: PodsCollectionListProps): ReactElement => {
   const pcdCollection = usePCDCollection();
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [expendedGroupsIds, setExpendedGroupsIds] = useState<
+    Record<string, boolean>
+  >({});
+
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
     // If we have the same ticket in both POD and EDSA, we want to show only the POD one
@@ -102,10 +106,17 @@ export const PodsCollectionList = ({
     const result: Record<string, GroupType> = {};
     for (const [key, value] of Object.entries(pcdCollection.folders)) {
       if (!result[value]) {
+        const isItTheFirstGroup = !Object.keys(result).length;
+        const shouldExpendedByDefault =
+          isItTheFirstGroup || filteredPcds.length < 20;
         result[value] = {
           title: value.replace(/\//g, " · "),
           id: value, // setting the folder path as a key
-          children: []
+          children: [],
+          expended:
+            expendedGroupsIds[value] === undefined
+              ? !!shouldExpendedByDefault
+              : !!expendedGroupsIds[value]
         };
       }
 
@@ -137,13 +148,14 @@ export const PodsCollectionList = ({
 
         return {
           ...group,
+          expended: true, // In case we filter by inside the group we want to auto expend it
           children: group.children.filter((pod) =>
             pod.title.toLowerCase().includes(searchQuery.toLowerCase())
           )
         };
       })
       .filter((group) => group.children.length > 0);
-  }, [pcdCollection, onPodClick, searchQuery]);
+  }, [pcdCollection, onPodClick, searchQuery, expendedGroupsIds]);
 
   return (
     <>
@@ -154,7 +166,16 @@ export const PodsCollectionList = ({
           onChange={({ target: { value } }) => setSearchQuery(value)}
         />
       </SearchPodInputContainer>
-      <List style={style} list={podsCollectionList} />
+      <List
+        onExpended={(id, newState) => {
+          setExpendedGroupsIds((oldMap) => ({
+            ...oldMap,
+            [id]: newState
+          }));
+        }}
+        style={style}
+        list={podsCollectionList}
+      />
     </>
   );
 };
