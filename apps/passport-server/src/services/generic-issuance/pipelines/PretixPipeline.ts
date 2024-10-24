@@ -143,6 +143,7 @@ export class PretixPipeline implements BasePipeline {
   private autoIssuanceProvider: AutoIssuanceProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
   private context: ApplicationContext;
+  private abort: AbortController;
 
   public get id(): string {
     return this.definition.id;
@@ -271,6 +272,7 @@ export class PretixPipeline implements BasePipeline {
     this.checkinDB = checkinDB;
     this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
     this.credentialSubservice = credentialSubservice;
+    this.abort = new AbortController();
   }
 
   public async start(): Promise<void> {
