@@ -43,7 +43,10 @@ export class LocalFileService {
           return undefined;
         }
         const serialized = await fs.promises.readFile(filePath, "utf8");
-        return JSON.parse(serialized) satisfies SerializedPipelineLoad<T>;
+        const parsed = JSON.parse(
+          serialized
+        ) satisfies SerializedPipelineLoad<T>;
+        return parsed;
       });
     });
   }
@@ -67,7 +70,7 @@ export class LocalFileService {
           `Saving pipeline ('${pipelineId}') load with ${atoms.length} atoms to local file: ${tempPath} with ${serialized.length} bytes`
         );
 
-        await fs.promises.writeFile(tempPath, JSON.stringify(serialized));
+        await fs.promises.writeFile(tempPath, serialized);
       });
     });
   }
