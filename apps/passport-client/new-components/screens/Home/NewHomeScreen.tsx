@@ -723,7 +723,7 @@ export const NewHomeScreen = (): ReactElement => {
           </SwipeViewContainer>
         </>
       )}
-      <Spacer h={96} />
+      {!(showPodsList || noPods) && <Spacer h={96} />}
       <FloatingMenu onlySettings={showPodsList || noPods} />
       <AddOnsModal />
       <NewModals />
