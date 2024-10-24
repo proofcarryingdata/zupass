@@ -44,7 +44,8 @@ module.exports = {
           "CallExpression[callee.name='describe'] MemberExpression[object.type='ThisExpression'][property.name='timeout']",
         message: "Manual timeouts in Mocha tests are not allowed."
       }
-    ]
+    ],
+    "no-restricted-globals": ["error", "origin"]
   },
   settings: {
     "import/resolver": {

@@ -117,6 +117,7 @@
     "ZAPP_ALLOWED_SIGNER_ORIGINS",
     "VITE_CLIENT_URL",
     "EMBEDDED_ZAPPS",
+    "DEVCON_TICKET_QUERY_ORIGINS",
     "GENERATED_CHUNKS",
     "//// add env vars above this line ////"
   ],

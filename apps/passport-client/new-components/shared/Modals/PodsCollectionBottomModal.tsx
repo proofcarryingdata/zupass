@@ -11,20 +11,30 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isUnknownPCD } from "@pcd/unknown-pcd";
 import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
 import intersectionWith from "lodash/intersectionWith";
-import { ReactNode, useLayoutEffect, useMemo, useRef, useState } from "react";
-import styled from "styled-components";
+import {
+  ReactElement,
+  ReactNode,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+import { useSearchParams } from "react-router-dom";
+import styled, { CSSProperties } from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
   useBottomModal,
   useDispatch,
   usePCDCollection
 } from "../../../src/appHooks";
+import { ScrollIndicator } from "../../screens/Home/NewHomeScreen";
 import { Avatar } from "../Avatar";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
-import { useSearchParams } from "react-router-dom";
+import { useOrientation } from "../utils";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -62,19 +72,16 @@ const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
       return undefined;
   }
 };
-export const PodsCollectionBottomModal = (): JSX.Element | null => {
-  const activeBottomModal = useBottomModal();
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const listContainerRef = useRef<HTMLDivElement | null>(null);
-  const dispatch = useDispatch();
-  const pcdCollection = usePCDCollection();
-  const [params, setParams] = useSearchParams();
-  const isPodsCollectionModalOpen =
-    activeBottomModal.modalType === "pods-collection";
 
-  const activePod = isPodsCollectionModalOpen
-    ? activeBottomModal.activePod
-    : undefined;
+type PodsCollectionListProps = {
+  onPodClick?: (pcd: PCD<unknown, unknown>) => void;
+  style?: CSSProperties;
+};
+export const PodsCollectionList = ({
+  onPodClick,
+  style
+}: PodsCollectionListProps): ReactElement => {
+  const pcdCollection = usePCDCollection();
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
@@ -108,22 +115,58 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         title: getPcdName(pcd),
         key: pcd.id || getPcdName(pcd),
         onClick: () => {
-          listContainerRef.current &&
-            setScrollPosition(listContainerRef.current.scrollTop);
-          dispatch({
-            type: "set-bottom-modal",
-            modal: { modalType: "pods-collection", activePod: pcd }
-          });
+          onPodClick?.(pcd);
         },
         LeftIcon: getPCDImage(pcd)
       });
     }
 
-    const collection = Object.values(result).filter(
-      (group) => group.children.length > 0
-    );
-    return collection;
-  }, [pcdCollection, dispatch]);
+    return Object.values(result).filter((group) => group.children.length > 0);
+  }, [pcdCollection, onPodClick]);
+
+  return <List style={style} list={podsCollectionList} />;
+};
+
+export const PodsCollectionBottomModal = (): JSX.Element | null => {
+  const activeBottomModal = useBottomModal();
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const timer = useRef<NodeJS.Timeout>();
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const dispatch = useDispatch();
+  const [params, setParams] = useSearchParams();
+  const orientation = useOrientation();
+  const isLandscape =
+    orientation.type === "landscape-primary" ||
+    orientation.type === "landscape-secondary";
+  const isPodsCollectionModalOpen =
+    activeBottomModal.modalType === "pods-collection";
+
+  const activePod = isPodsCollectionModalOpen
+    ? activeBottomModal.activePod
+    : undefined;
+
+  const modalGoBackBehavior =
+    isPodsCollectionModalOpen && activeBottomModal.modalGoBackBehavior
+      ? activeBottomModal.modalGoBackBehavior
+      : "close";
+
+  // Check scrollability
+  const checkScrollability = (): void => {
+    if (listContainerRef.current) {
+      const scrollable =
+        listContainerRef.current.scrollHeight >
+        listContainerRef.current.clientHeight;
+      setShowScrollIndicator(scrollable);
+    }
+  };
+
+  // Check scrollability on mount and when modal opens
+  useEffect(() => {
+    if (isPodsCollectionModalOpen) {
+      checkScrollability();
+    }
+  }, [isPodsCollectionModalOpen]);
 
   useLayoutEffect(() => {
     // Restore scroll position when list is shown again
@@ -153,7 +196,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       modalContainerStyle={{ padding: 0, paddingTop: 24 }}
       isOpen={isPodsCollectionModalOpen}
     >
-      <Container>
+      <Container isLandscape={isLandscape}>
         {!activePod && (
           <UserTitleContainer>
             <Typography fontSize={20} fontWeight={800} align="center">
@@ -161,17 +204,53 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
             </Typography>
           </UserTitleContainer>
         )}
-        <ListContainer ref={listContainerRef}>
+        <ListContainer
+          ref={listContainerRef}
+          onScroll={(e) => {
+            const scrollTop = e.currentTarget.scrollTop;
+            if (scrollTop === 0) {
+              // start timer
+              const id = setTimeout(() => {
+                setShowScrollIndicator(true);
+              }, 2000);
+              timer.current = id;
+            } else {
+              setShowScrollIndicator(false);
+              // clearing timer on scroll so it won't flash to the user mid scroll
+              if (timer.current) {
+                clearTimeout(timer.current);
+                timer.current = undefined;
+              }
+            }
+          }}
+        >
           {activePod ? (
             <CardBody isMainIdentity={false} pcd={activePod} />
           ) : (
-            <List style={{ paddingTop: 0 }} list={podsCollectionList} />
+            <>
+              <PodsCollectionList
+                style={{ padding: "12px 24px", paddingTop: 0 }}
+                onPodClick={(pcd) => {
+                  listContainerRef.current &&
+                    setScrollPosition(listContainerRef.current.scrollTop);
+                  dispatch({
+                    type: "set-bottom-modal",
+                    modal: {
+                      modalType: "pods-collection",
+                      activePod: pcd,
+                      modalGoBackBehavior: "back"
+                    }
+                  });
+                }}
+              />
+              {showScrollIndicator && <ScrollIndicator />}
+            </>
           )}
         </ListContainer>
         <ContainerWithPadding>
           <Button2
             onClick={() => {
-              if (activePod) {
+              if (activePod && modalGoBackBehavior !== "close") {
                 dispatch({
                   type: "set-bottom-modal",
                   modal: { modalType: "pods-collection" }
@@ -184,7 +263,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
               }
             }}
           >
-            {activePod ? "Back" : "Close"}
+            {activePod && modalGoBackBehavior !== "close" ? "Back" : "Close"}
           </Button2>
         </ContainerWithPadding>
       </Container>
@@ -195,13 +274,15 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
 const ListContainer = styled.div`
   position: relative; // important for scrolling to the right position of the folder
   overflow-y: auto;
-  max-height: calc(100vh - 260px);
 `;
 
-const Container = styled.div`
+const Container = styled.div<{ isLandscape: boolean }>`
   display: flex;
   flex-direction: column;
-  height: fit-content;
+  // 50px comes from 24px padding we have on the bottom modal
+  max-height: calc(
+    100vh - ${({ isLandscape }): number => (isLandscape ? 50 : 120)}px
+  );
 `;
 const ContainerWithPadding = styled.div`
   padding: 24px 24px 24px 24px;

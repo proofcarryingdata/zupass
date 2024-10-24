@@ -1,5 +1,11 @@
 # @pcd/circom_runtime
 
+## 0.4.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
 ## 0.3.0
 
 ### Minor Changes
