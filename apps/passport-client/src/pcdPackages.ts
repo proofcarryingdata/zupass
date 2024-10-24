@@ -1,15 +1,8 @@
-import { parseGPCArtifactsConfig } from "@pcd/client-shared";
 import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
-import {
-  GPCArtifactSource,
-  GPCArtifactStability,
-  GPCArtifactVersion,
-  gpcArtifactDownloadURL
-} from "@pcd/gpc";
 import { GPCPCDPackage } from "@pcd/gpc-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { MessagePCDPackage } from "@pcd/message-pcd";
@@ -31,7 +24,7 @@ import { ZKEdDSAFrogPCDPackage } from "@pcd/zk-eddsa-frog-pcd";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
 import { makeEncodedVerifyLink } from "./qr";
-import { GPC_ARTIFACTS_CONFIG } from "./sharedConstants";
+import { getGPCArtifactsURL } from "./util";
 
 let pcdPackages: Promise<PCDPackage[]> | undefined;
 
@@ -78,12 +71,8 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await PODPCDPackage.init?.({});
 
-  const gpcArtifactsConfig = parseGPCArtifactsConfig(GPC_ARTIFACTS_CONFIG);
   await GPCPCDPackage.init?.({
-    zkArtifactPath: gpcArtifactDownloadURL(
-      gpcArtifactsConfig.source as GPCArtifactSource,
-      gpcArtifactsConfig.stability as GPCArtifactStability,
-      gpcArtifactsConfig.version as GPCArtifactVersion,
+    zkArtifactPath: getGPCArtifactsURL(
       "/" /* zupassURL can use a site-relative URL */
     )
   });
