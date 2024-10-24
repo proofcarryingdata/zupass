@@ -402,6 +402,10 @@ export class PretixPipeline implements BasePipeline {
           };
         }
 
+        if (this.abort.signal.aborted) {
+          throw new Error(`pipeline ${this.id} load aborted`);
+        }
+
         const atomsToSave: PretixAtom[] = tickets.map((ticket) => {
           return {
             email: ticket.email,
