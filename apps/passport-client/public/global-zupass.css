@@ -73,6 +73,14 @@ a:hover {
 
 /* Barlow */
 @font-face {
+  font-family: "Fragment Mono";
+  font-style: normal;
+  font-weight: 400;
+  src: url(/fonts/FragmentMono-Regular.ttf) format("truetype");
+}
+
+/* Barlow */
+@font-face {
   font-family: "Barlow";
   font-style: normal;
   font-weight: 200;
