@@ -14,6 +14,7 @@ import {
 import * as p from "@parcnet-js/podspec";
 import {
   GPCBoundConfig,
+  GPCIdentifier,
   GPCProof,
   GPCRevealedClaims,
   gpcVerify
@@ -30,6 +31,7 @@ import { v4 as uuidv4 } from "uuid";
 import { appConfig } from "../appConfig";
 import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";
+import { ZUPASS_GPC_ARTIFACT_PATH } from "../sharedConstants";
 import { collectionIdToFolderName, getPODsForCollections } from "./collections";
 import { QuerySubscriptionManager } from "./query_subscription_manager";
 import { ListenMode } from "./useZappServer";
@@ -133,8 +135,15 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
     collectionId: string,
     query: PODQuery
   ): Promise<PODData[]> {
+    const origin = this.getContext().getState().zappOrigin;
     if (!this.getPermissions().READ_POD?.collections.includes(collectionId)) {
       throw new MissingPermissionError("READ_POD", "pod.query");
+    }
+    if (
+      collectionId === "Devcon SEA" &&
+      (!origin || !appConfig.devconTicketQueryOrigins.includes(origin))
+    ) {
+      throw new Error("Operation not allowed");
     }
     const pods = getPODsForCollections(this.getContext().getState().pcds, [
       collectionId
@@ -151,7 +160,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
   public async insert(collectionId: string, podData: PODData): Promise<void> {
     if (
       !this.getPermissions().INSERT_POD?.collections.includes(collectionId) ||
-      collectionId === "Devcon Swag"
+      collectionId === "Devcon SEA"
     ) {
       throw new MissingPermissionError("INSERT_POD", "pod.insert");
     }
@@ -175,7 +184,7 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
   public async delete(collectionId: string, signature: string): Promise<void> {
     if (
       !this.getPermissions().DELETE_POD?.collections.includes(collectionId) ||
-      collectionId === "Devcon Swag"
+      collectionId === "Devcon SEA"
     ) {
       throw new MissingPermissionError("DELETE_POD", "pod.delete");
     }
@@ -273,6 +282,43 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       this.getAdvice().showClient();
     });
   }
+
+  public async signPrefixed(entries: PODEntries): Promise<PODData> {
+    const origin = this.getContext().getState().zappOrigin;
+    if (
+      appConfig.zappRestrictOrigins &&
+      (!origin || !appConfig.zappAllowedSignerOrigins.includes(origin))
+    ) {
+      throw new Error("Origin not allowed to sign PODs");
+    }
+    if (!this.getPermissions().SIGN_POD) {
+      throw new MissingPermissionError("SIGN_POD", "pod.sign");
+    }
+
+    for (const name of Object.keys(entries)) {
+      if (!name.startsWith("_UNSAFE_")) {
+        throw new Error(
+          "PODs signed with signPrefixed must have a prefix of _UNSAFE_"
+        );
+      }
+    }
+
+    entries.UNSAFE_META_ORIGIN = {
+      type: "string",
+      value: this.getContext().getState().zappOrigin as string
+    };
+
+    const pod = POD.sign(
+      entries,
+      encodePrivateKey(
+        Buffer.from(
+          v3tov4Identity(this.getContext().getState().identityV3).export(),
+          "base64"
+        )
+      )
+    );
+    return p.podToPODData(pod);
+  }
 }
 
 class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
@@ -305,10 +351,12 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
 
   public async prove({
     request,
-    collectionIds
+    collectionIds,
+    circuitIdentifier
   }: {
     request: p.PodspecProofRequest;
     collectionIds?: string[];
+    circuitIdentifier?: GPCIdentifier;
   }): Promise<ProveResult> {
     const realCollectionIds =
       collectionIds ?? this.getPermissions().REQUEST_PROOF?.collections ?? [];
@@ -346,6 +394,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
           type: EmbeddedScreenType.EmbeddedGPCProof,
           proofRequest: request,
           collectionIds: realCollectionIds,
+          circuitIdentifier,
           callback: (result: ProveResult) => {
             this.getContext().dispatch({
               type: "hide-embedded-screen"
@@ -368,7 +417,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
       proof,
       boundConfig,
       revealedClaims,
-      new URL("/artifacts/proto-pod-gpc", window.location.origin).toString()
+      new URL(ZUPASS_GPC_ARTIFACT_PATH, window.location.origin).toString()
     );
   }
 
@@ -385,7 +434,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
       proof,
       config as GPCBoundConfig,
       revealedClaims,
-      new URL("/artifacts/proto-pod-gpc", window.location.origin).toString()
+      new URL(ZUPASS_GPC_ARTIFACT_PATH, window.location.origin).toString()
     );
   }
 

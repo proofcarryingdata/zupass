@@ -1,6 +1,6 @@
 {
   "name": "@pcd/passport-ui",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -20,6 +20,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "watch": "tsc --watch -p tsconfig.cjs.json & tsc --watch -p tsconfig.esm.json",
     "postbuild": "fix-esm-import-path ./dist/esm/src",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
@@ -27,7 +28,7 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/message-pcd": "0.3.0",
+    "@pcd/message-pcd": "0.4.0",
     "medium-zoom": "^1.0.8",
     "pako": "^2.1.0",
     "qr-image": "^3.2.0",
@@ -36,8 +37,8 @@
     "styled-components": "^5.3.9"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.13.0",
-    "@pcd/tsconfig": "0.13.0",
+    "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/tsconfig": "0.14.0",
     "@types/mocha": "^10.0.1",
     "@types/pako": "^2.0.0",
     "@types/qr-image": "^3.2.7",

@@ -1,13 +1,14 @@
 import { ReactNode, useCallback } from "react";
 import { Toaster } from "react-hot-toast";
 import styled, { createGlobalStyle } from "styled-components";
+import { ErrorBottomModal } from "../../new-components/shared/Modals/ErrorBottomModal";
 import {
   useAppError,
   useDispatch,
+  useIOSOrientationFix,
   useUserShouldAgreeNewPrivacyNotice
 } from "../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
-import { ErrorPopup } from "../modals/ErrorPopup";
 import { ScreenLoader } from "./ScreenLoader";
 
 // Wrapper for all screens.
@@ -25,6 +26,7 @@ export function AppContainer({
   const dispatch = useDispatch();
   const error = useAppError();
   useUserShouldAgreeNewPrivacyNotice();
+  useIOSOrientationFix();
 
   const onClose = useCallback(
     () => dispatch({ type: "clear-error" }),
@@ -51,9 +53,7 @@ export function AppContainer({
             />
           )}
           {children ?? <ScreenLoader text="Zupass" />}
-          {/* When phase3 please remove ErrorPopup with ErrorBottomModal */}
-          {error && <ErrorPopup error={error} onClose={onClose} />}
-          {/* {error && <ErrorBottomModal error={error} onClose={onClose} />} */}
+          {error && <ErrorBottomModal error={error} onClose={onClose} />}
         </CenterColumn>
       </Background>
     </Container>

@@ -1,4 +1,4 @@
-import { GPCProofConfig, serializeGPCProofConfig } from "@pcd/gpc";
+import { GPCProofConfig, proofConfigToJSON } from "@pcd/gpc";
 import { GPCPCD, GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { POD, PODEntries } from "@pcd/pod";
@@ -60,8 +60,8 @@ async function setupProveArgs(): Promise<GPCPCDArgs> {
 
   return {
     proofConfig: {
-      argumentType: ArgumentTypeName.String,
-      value: serializeGPCProofConfig(proofConfig)
+      argumentType: ArgumentTypeName.Object,
+      value: proofConfigToJSON(proofConfig)
     },
     pods: {
       value: {

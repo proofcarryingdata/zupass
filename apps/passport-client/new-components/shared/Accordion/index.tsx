@@ -1,4 +1,10 @@
-import { forwardRef, useImperativeHandle, useMemo, useState } from "react";
+import {
+  ReactNode,
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useState
+} from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { Typography } from "../Typography";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
@@ -6,12 +12,18 @@ import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 export type AccrodionChild = {
   title: string;
   key?: string;
+  icon?: ReactNode;
   onClick?: () => void;
 };
 
 export type AccordionProps = {
   title: string;
   children: AccrodionChild[];
+  displayOnly?: boolean;
+  link?: {
+    title: string;
+    onClick: () => void;
+  };
 };
 
 export type AccordionRef = {
@@ -60,13 +72,23 @@ const ToggleContainer = styled.div`
 const AccordionItem = styled.div<{ lastItem: boolean; clickable: boolean }>`
   padding: 12px 16px;
   color: var(--text-primary);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
   cursor: ${({ clickable }): string => (clickable ? "pointer" : "unset")};
   ${({ lastItem }): string | undefined =>
     !lastItem ? "border-bottom: 1.15px solid #eceaf4;" : undefined}
 `;
+
+const ItemContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
 export const Accordion = forwardRef<AccordionRef, AccordionProps>(
-  ({ title, children }, ref) => {
-    const [open, setOpen] = useState(false);
+  ({ title, children, displayOnly, link }, ref) => {
+    const [open, setOpen] = useState(displayOnly || false);
 
     useImperativeHandle(ref, () => {
       return {
@@ -74,10 +96,10 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
           setOpen(true);
         },
         close(): void {
-          setOpen(false);
+          setOpen(displayOnly || false);
         },
         toggle(): void {
-          setOpen((old) => !old);
+          setOpen((old) => displayOnly || !old);
         },
         getState(): boolean {
           return open;
@@ -87,30 +109,67 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
 
     const renderedChildren = useMemo(() => {
       const len = children.length;
-      return children.map((child, i) => {
-        const isLast = len - 1 === i;
-        return (
-          <AccordionItem
-            clickable={!!child.onClick}
-            key={child.key}
-            onClick={child.onClick}
-            lastItem={isLast}
-          >
-            <Typography fontSize={14} fontWeight={500}>
-              {child.title}
-            </Typography>
-          </AccordionItem>
-        );
-      });
+      return (
+        <ItemContainer>
+          {children.map((child, i) => {
+            const isLast = len - 1 === i;
+            return (
+              <AccordionItem
+                clickable={!!child.onClick}
+                key={child.key}
+                onClick={child.onClick}
+                lastItem={isLast}
+              >
+                <Typography fontSize={14} fontWeight={500} family="Rubik">
+                  {child.title}
+                </Typography>
+                {child.icon}
+              </AccordionItem>
+            );
+          })}
+        </ItemContainer>
+      );
     }, [children]);
-
+    const getTitleRight = (): ReactNode[] => {
+      const comp: ReactNode[] = [];
+      if (link) {
+        comp.push(
+          <Typography
+            onClick={link.onClick}
+            fontWeight={700}
+            color="var(--core-accent)"
+            fontSize={14}
+          >
+            {link.title}
+          </Typography>
+        );
+      } else if (!open && children.length > 1) {
+        comp.push(
+          <Typography
+            fontWeight={700}
+            color="var(--text-tertiary)"
+            fontSize={14}
+          >
+            {children.length}
+          </Typography>,
+          <FaChevronRight size={12} />
+        );
+      } else {
+        comp.push(<FaChevronDown size={12} />);
+      }
+      return comp;
+    };
     return (
       <Container open={open}>
         <HeaderContainer
           open={open}
-          onClick={() => {
-            setOpen((old) => !old);
-          }}
+          onClick={
+            displayOnly
+              ? undefined
+              : (): void => {
+                  setOpen((old) => !old);
+                }
+          }
         >
           <Typography
             fontWeight={700}
@@ -119,18 +178,7 @@ export const Accordion = forwardRef<AccordionRef, AccordionProps>(
           >
             {title.toUpperCase()}
           </Typography>
-          <ToggleContainer>
-            {open ? undefined : (
-              <Typography
-                fontWeight={700}
-                color="var(--text-tertiary)"
-                fontSize={14}
-              >
-                {children.length}
-              </Typography>
-            )}
-            {open ? <FaChevronDown size={12} /> : <FaChevronRight size={12} />}
-          </ToggleContainer>
+          <ToggleContainer>{getTitleRight()}</ToggleContainer>
         </HeaderContainer>
         {open && renderedChildren}
       </Container>

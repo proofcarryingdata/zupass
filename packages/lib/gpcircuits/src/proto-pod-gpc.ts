@@ -2,6 +2,7 @@ import { BABY_JUB_PRIME } from "@pcd/util";
 import { Groth16Proof, groth16 } from "snarkjs";
 import { loadVerificationKey } from "./artifacts";
 import circuitParamJson from "./circuitParameters.json";
+import { ARTIFACTS_NPM_PACKAGE_NAME, ARTIFACTS_NPM_VERSION } from "./constants";
 import { CircuitDesc, CircuitSignal } from "./types";
 import { zeroResidueMod } from "./util";
 
@@ -384,7 +385,7 @@ export type ProtoPODGPCCircuitDesc = CircuitDesc & ProtoPODGPCCircuitParams;
 /**
  * Utility functions for the ProtoPODGPC family of circuits.
  *
- * TODO(POD-P3): Factor out and generalize if/when there are multiple
+ * This can be factored out and generalized if/when there are multiple
  * families and we're clear on what's common between them.
  */
 export class ProtoPODGPC {
@@ -712,7 +713,6 @@ export class ProtoPODGPC {
    * These should match the declarations in circuits.json for circomkit,
    * and each should correspond to an available set of precompiled artifacts.
    */
-  // TODO(POD-P2): Pick convenient circuit sizes for MVP.
   public static CIRCUIT_FAMILY: ProtoPODGPCCircuitDesc[] =
     ProtoPODGPC.circuitFamilyFromParams(ProtoPODGPC.CIRCUIT_PARAMETERS);
 
@@ -720,11 +720,11 @@ export class ProtoPODGPC {
    * Name of the package on NPM which contains published artifacts for this
    * GPC family.
    */
-  public static ARTIFACTS_NPM_PACKAGE_NAME = "@pcd/proto-pod-gpc-artifacts";
+  public static ARTIFACTS_NPM_PACKAGE_NAME = ARTIFACTS_NPM_PACKAGE_NAME;
 
   /**
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.11.0";
+  public static ARTIFACTS_NPM_VERSION = ARTIFACTS_NPM_VERSION;
 }

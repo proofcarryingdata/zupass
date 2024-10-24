@@ -353,7 +353,6 @@ export class PODPipeline implements BasePipeline {
             credential
           );
 
-          // TODO(artwyman): Figure out how to phase out this use of the deprecated format.
           const id = uuidv5(JSON.stringify(podEntriesToJSON(entries)), this.id);
 
           let serializedPCD = await this.getCachedPCD(id);

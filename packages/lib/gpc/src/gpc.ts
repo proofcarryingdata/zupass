@@ -2,6 +2,9 @@ import {
   PROTO_POD_GPC_FAMILY_NAME,
   ProtoPODGPC,
   ProtoPODGPCCircuitDesc,
+  ProtoPODGPCInputs,
+  ProtoPODGPCOutputs,
+  ProtoPODGPCPublicInputs,
   githubDownloadRootURL,
   gpcArtifactPaths,
   unpkgDownloadRootURL
@@ -142,6 +145,91 @@ export function gpcCheckProvable(
 }
 
 /**
+ * Performs only the preparatory steps of {@link gpcProve}, returning all of
+ * the circuit-related info needed to generate a proof using the
+ * {@link @pcd/gpcircuits} package, or another user-supplied proving stack.
+ *
+ * Inputs will be fully validated for structural soundness in the same way as
+ * when generating a proof.  See {@link gpcProve} for more details on inputs
+ * and operation.
+ *
+ * @param proofConfig the configuration specifying the constraints to be proven.
+ * @param proofInputs the input data (PODs and other values) specific to this
+ *  proof.
+ * @param [circuitFamily=DefaultCircuitFamily] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
+ * @returns info necessary to generate a proof with a specific circuit,
+ *   including the bound proof config, circuit description, and its public
+ *   and private input signals
+ * @throws TypeError if any of the arguments is malformed
+ * @throws Error if it is impossible to create a valid proof
+ */
+export function gpcPreProve(
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs,
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
+): {
+  boundConfig: GPCBoundConfig;
+  circuitDesc: ProtoPODGPCCircuitDesc;
+  circuitInputs: ProtoPODGPCInputs;
+} {
+  const { boundConfig, circuitDesc } = gpcCheckProvable(
+    proofConfig,
+    proofInputs,
+    circuitFamily
+  );
+
+  const circuitInputs = compileProofConfig(
+    boundConfig,
+    proofInputs,
+    circuitDesc
+  );
+
+  return { boundConfig, circuitDesc, circuitInputs };
+}
+
+/**
+ * Performs only the post-processing steps of {@link gpcProve}, taking in a
+ * proof already genereated using the {@link @pcd/gpcircuits} package, or
+ * another user-supplied proving stack.  The circuit-specific outputs are
+ * processed into the {@link GPCRevealedClaims} to produce the normal output
+ * of {@link gpcProve}.
+ *
+ * The config and inputs are assumed to have already been processed by
+ * {@link gpcPreProve}, so will not be fully validated by this function.
+ * See {@link gpcProve} for more details on inputs, outputs and operation.
+ *
+ * @param proof the Groth16 proof
+ * @param boundConfig the bound configuration specifying the constraints
+ *   proven, and the specific circuit which was used.
+ * @param proofInputs the input data (PODs and other values) specific to this
+ *  proof.
+ * @returns The Groth16 proof, a bound configuration usable for reliable
+ *   verification or future proofs (see {@link GPCBoundConfig}), and the
+ *   revealed claims of this proof (see {@link GPCRevealedClaims}).
+ * @throws TypeError if any of the arguments is malformed
+ * @throws Error if it is impossible to create a valid proof
+ */
+export function gpcPostProve(
+  proof: GPCProof,
+  boundConfig: GPCBoundConfig,
+  proofInputs: GPCProofInputs,
+  circuitOutputs: ProtoPODGPCOutputs
+): {
+  proof: GPCProof;
+  boundConfig: GPCBoundConfig;
+  revealedClaims: GPCRevealedClaims;
+} {
+  const revealedClaims = makeRevealedClaims(
+    boundConfig,
+    proofInputs,
+    circuitOutputs
+  );
+  return { proof, boundConfig, revealedClaims };
+}
+
+/**
  * Generates a GPC proof for the given configuration and inputs.  See the
  * documentation of the input and output types for more details:
  * {@link GPCProofConfig}, {@link GPCProofInputs}, {@link GPCBoundConfig}, and
@@ -178,7 +266,7 @@ export async function gpcProve(
   boundConfig: GPCBoundConfig;
   revealedClaims: GPCRevealedClaims;
 }> {
-  const { boundConfig, circuitDesc } = gpcCheckProvable(
+  const { boundConfig, circuitDesc, circuitInputs } = gpcPreProve(
     proofConfig,
     proofInputs,
     circuitFamily
@@ -186,23 +274,58 @@ export async function gpcProve(
 
   const artifactPaths = gpcArtifactPaths(pathToArtifacts, circuitDesc);
 
-  const circuitInputs = compileProofConfig(
-    boundConfig,
-    proofInputs,
-    circuitDesc
-  );
-
   const { proof, outputs: circuitOutputs } = await ProtoPODGPC.prove(
     circuitInputs,
     artifactPaths.wasmPath,
     artifactPaths.pkeyPath
   );
-  const revealedClaims = makeRevealedClaims(
-    boundConfig,
-    proofInputs,
-    circuitOutputs
+
+  return gpcPostProve(proof, boundConfig, proofInputs, circuitOutputs);
+}
+
+/**
+ * Performs only the preparatory steps of {@link gpcVerify}, returning all of
+ * the circuit-related info needed to verify a proof using the
+ * {@link @pcd/gpcircuits} package, or another user-supplied verification stack.
+ *
+ * Inputs will be fully validated for structural soundness, but not
+ * cryptographically.  See {@link gpcVerify} for more details on inputs and
+ * operation.
+ *
+ * @param boundConfig the bound configuration specifying the constraints
+ *   proven, and the specific circuit which was used.
+ * @param revealedClaims the revealed parts of the proof inputs and outputs.
+ * @param [circuitFamily=DefaultCircuitFamily] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
+ * @returns info necessary to verify a proof with a specific circuit, including
+ *   the circuit description, and its public input and output signals
+ * @throws TypeError if any of the arguments is malformed
+ * @throws Error if the proof cannot be verified
+ */
+export function gpcPreVerify(
+  boundConfig: GPCBoundConfig,
+  revealedClaims: GPCRevealedClaims,
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
+): {
+  circuitDesc: ProtoPODGPCCircuitDesc;
+  circuitPublicInputs: ProtoPODGPCPublicInputs;
+  circuitOutputs: ProtoPODGPCOutputs;
+} {
+  const circuitReq = checkVerifyArgs(boundConfig, revealedClaims);
+  const circuitDesc = checkCircuitRequirements(
+    circuitReq,
+    circuitFamily,
+    boundConfig.circuitIdentifier
   );
-  return { proof, boundConfig, revealedClaims };
+
+  const { circuitPublicInputs, circuitOutputs } = compileVerifyConfig(
+    boundConfig,
+    revealedClaims,
+    circuitDesc
+  );
+
+  return { circuitDesc, circuitPublicInputs, circuitOutputs };
 }
 
 /**
@@ -236,17 +359,10 @@ export async function gpcVerify(
   pathToArtifacts: string,
   circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
 ): Promise<boolean> {
-  const circuitReq = checkVerifyArgs(boundConfig, revealedClaims);
-  const circuitDesc = checkCircuitRequirements(
-    circuitReq,
-    circuitFamily,
-    boundConfig.circuitIdentifier
-  );
-
-  const { circuitPublicInputs, circuitOutputs } = compileVerifyConfig(
+  const { circuitDesc, circuitPublicInputs, circuitOutputs } = gpcPreVerify(
     boundConfig,
     revealedClaims,
-    circuitDesc
+    circuitFamily
   );
 
   return await ProtoPODGPC.verify(
@@ -266,7 +382,7 @@ export const GPC_ARTIFACTS_NPM_PACKAGE_NAME =
 
 /**
  * Version of the published artifacts on NPM which are compatible with this
- * version of the GPC circuits.
+ * version of the GPC package. Re-exported for convenience.
  */
 export const GPC_ARTIFACTS_NPM_VERSION = ProtoPODGPC.ARTIFACTS_NPM_VERSION;
 
@@ -331,7 +447,7 @@ export function gpcArtifactDownloadURL(
       // pre-release status.
       return unpkgDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
     case "zupass":
-      // TODO(POD-P3): Do we want to expose source=zupass as a public option?
+      // TODO(POD-P4): Do we want to expose source=zupass as a public option?
       // If so, we need the Zupass server to not set `Access-Control-Allow-Origin: *`,
       // or migrate to a different hosting option.
       if (zupassURL === undefined) {
@@ -339,10 +455,12 @@ export function gpcArtifactDownloadURL(
           'Zupass artifact download requires a server URL.  Try "https://zupass.org".'
         );
       }
+      const artifactVersion = version ?? GPC_ARTIFACTS_NPM_VERSION;
       return urljoin(
         zupassURL,
         stability === "test" ? "artifacts/test" : "artifacts",
-        PROTO_POD_GPC_FAMILY_NAME
+        PROTO_POD_GPC_FAMILY_NAME +
+          (stability === "test" ? "" : `/${artifactVersion}`)
       );
     default:
       throw new Error(`Unknown artifact download source ${source}.`);

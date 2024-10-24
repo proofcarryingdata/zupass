@@ -27,7 +27,7 @@ export const NewSyncExistingScreen = (): JSX.Element => {
 
   useEffect(() => {
     if (self) {
-      window.location.href = "#/new";
+      window.location.href = "#/";
     }
   }, [self]);
 
@@ -62,8 +62,7 @@ export const NewSyncExistingScreen = (): JSX.Element => {
       dispatch({
         type: "load-after-login",
         storage: storageResult.value,
-        encryptionKey,
-        newUi: true
+        encryptionKey
       });
     };
 
@@ -71,7 +70,7 @@ export const NewSyncExistingScreen = (): JSX.Element => {
   }, [encryptionKey, dispatch]);
 
   const onClose = useCallback(() => {
-    window.location.hash = "#/new";
+    window.location.hash = "#/";
   }, []);
 
   return (

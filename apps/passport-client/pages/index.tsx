@@ -15,33 +15,31 @@ import {
   SupportLink,
   TextCenter
 } from "../components/core";
-import { RippleLoader } from "../components/core/RippleLoader";
-import { AddEmailScreen } from "../components/screens/AddEmailScreen";
+// Go over all the files and remove what not needed
+// import { AddEmailScreen } from "../components/screens/AddEmailScreen";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
-import { ChangeEmailScreen } from "../components/screens/ChangeEmailScreen";
-import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
+// import { ChangeEmailScreen } from "../components/screens/ChangeEmailScreen";
+// import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { EmbeddedScreen } from "../components/screens/EmbeddedScreens/EmbeddedScreen";
-import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
+// import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
-import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
+// import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
-import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
-import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
-import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
-import { LoginScreen } from "../components/screens/LoginScreens/LoginScreen";
-import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
-import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
-import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
-import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
+// import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
+// import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
+// import { NewPassportScreen } from "../components/screens/LoginScreens/NewPassportScreen";
+// import { OneClickLoginScreen } from "../components/screens/LoginScreens/OneClickLoginScreen";
+// import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
+// import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
-import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
-import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
+// import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
+import styled from "styled-components";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
@@ -56,10 +54,8 @@ import {
   GlobalBackground
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
-import ComponentsScreen from "../new-components/screens/ComponentsScreen";
 import { NewHomeScreen } from "../new-components/screens/Home";
 import { NewAlreadyRegisteredScreen } from "../new-components/screens/Login/NewAlreadyRegisteredScreen";
-import { NewCreatePasswordScreen } from "../new-components/screens/Login/NewCreatePasswordScreen";
 import { NewEnterConfirmationCodeScreen } from "../new-components/screens/Login/NewEnterConfirmationCodeScreen";
 import { NewLoginInterstitialScreen } from "../new-components/screens/Login/NewLoginInterstitialScreen";
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
@@ -69,6 +65,8 @@ import { NewOneClickLoginScreen2 } from "../new-components/screens/NewOneClickLo
 import { NewPrivacyNoticeScreen } from "../new-components/screens/NewPrivacyNoticeScreen";
 import { NewTermsScreen } from "../new-components/screens/NewTermsScreen";
 import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTermsScreen";
+import { NewLoader } from "../new-components/shared/NewLoader";
+import { Typography } from "../new-components/shared/Typography";
 import { appConfig } from "../src/appConfig";
 import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
@@ -128,29 +126,29 @@ function RouterImpl(): JSX.Element {
 
   if (isDeletingAccount) {
     return (
-      <AppContainer bg="primary">
-        <Spacer h={64} />
-        <TextCenter>
-          <H1>ZUPASS</H1>
-          <Spacer h={24} />
-          Deleting your Account
-          <Spacer h={8} />
-          <RippleLoader />
-        </TextCenter>
+      <AppContainer bg="gray" fullscreen>
+        <LoaderContainer>
+          <NewLoader columns={5} rows={5} />
+          <Typography fontSize={18} fontWeight={800} color="#8B94AC">
+            DELETING YOUR ACCOUNT
+          </Typography>
+        </LoaderContainer>
       </AppContainer>
     );
   }
 
-  const LazyScanScreen = React.lazy(() =>
-    import("../components/screens/ScanScreen").then((module) => ({
-      default: module.ScanScreen
-    }))
+  const LazyCreatePasswordScreen = React.lazy(() =>
+    import("../new-components/screens/Login/NewCreatePasswordScreen").then(
+      (module) => ({
+        default: module.NewCreatePasswordScreen
+      })
+    )
   );
 
   return (
     <HashRouter>
       <Routes>
-        <Route path="/new">
+        <Route path="/">
           <Route index element={<NewHomeScreen />} />
           <Route path="login" element={<NewLoginScreen />} />
           <Route path="new-passport" element={<NewPassportScreen2 />} />
@@ -158,7 +156,6 @@ function RouterImpl(): JSX.Element {
             path="enter-confirmation-code"
             element={<NewEnterConfirmationCodeScreen />}
           />
-          <Route path="create-password" element={<NewCreatePasswordScreen />} />
           <Route
             path="already-registered"
             element={<NewAlreadyRegisteredScreen />}
@@ -171,56 +168,39 @@ function RouterImpl(): JSX.Element {
           <Route path="privacy-notice" element={<NewPrivacyNoticeScreen />} />
           <Route path="updated-terms" element={<NewUpdatedTermsScreen />} />
           <Route path="terms" element={<NewTermsScreen />} />
-        </Route>
-        <Route path="/">
-          <Route path="terms" element={<TermsScreen />} />
-          <Route index element={<HomeScreen />} />
-          <Route path="login" element={<LoginScreen />} />
 
-          <Route path="components" element={<ComponentsScreen />} />
           <Route
-            path="login-interstitial"
-            element={<LoginInterstitialScreen />}
+            path="create-password"
+            element={
+              <React.Suspense
+                fallback={
+                  <AppContainer bg="gray" fullscreen>
+                    <LoaderContainer>
+                      <NewLoader />
+                    </LoaderContainer>
+                  </AppContainer>
+                }
+              >
+                <LazyCreatePasswordScreen />
+              </React.Suspense>
+            }
           />
-          <Route
-            path="already-registered"
-            element={<AlreadyRegisteredScreen />}
-          />
-          <Route path="sync-existing" element={<SyncExistingScreen />} />
-          <Route path="privacy-notice" element={<PrivacyNoticeScreen />} />
-          <Route path="create-password" element={<CreatePasswordScreen />} />
-          <Route path="change-password" element={<ChangePasswordScreen />} />
-          <Route path="change-email" element={<ChangeEmailScreen />} />
-          <Route path="add-email" element={<AddEmailScreen />} />
-          <Route path="remove-email" element={<RemoveEmailScreen />} />
-          <Route
+          <Route path="terms" element={<NewTermsScreen />} />
+          {/* <Route
             path="one-click-login/:email/:code/:targetFolder"
             element={<OneClickLoginScreen />}
-          />
+          />  */}
           <Route
             path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
             element={<NewOneClickLoginScreen2 />}
           />
-          <Route
-            path="enter-confirmation-code"
-            element={<EnterConfirmationCodeScreen />}
-          />
-          <Route path="new-passport" element={<NewPassportScreen />} />
           <Route
             path="get-without-proving"
             element={<GetWithoutProvingScreen />}
           />
           <Route path="halo" element={<HaloScreen />} />
           <Route path="add" element={<AddScreen />} />
-          <Route path="prove" element={<ProveScreen />} />
-          <Route
-            path="scan"
-            element={
-              <React.Suspense fallback={<RippleLoader />}>
-                <LazyScanScreen />
-              </React.Suspense>
-            }
-          />
+          <Route path="prove" element={<NewHomeScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
@@ -231,7 +211,6 @@ function RouterImpl(): JSX.Element {
             element={<FrogSubscriptionScreen />}
           />
           <Route path="server-error" element={<ServerErrorScreen />} />
-          <Route path="import" element={<ImportBackupScreen />} />
           <Route
             path="generic-checkin"
             element={<PodboxScannedTicketScreen />}
@@ -373,3 +352,12 @@ loadInitialState()
       </RollbarProvider>
     );
   });
+
+const LoaderContainer = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+`;

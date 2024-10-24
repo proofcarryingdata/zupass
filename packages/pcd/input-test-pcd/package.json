@@ -1,6 +1,6 @@
 {
   "name": "@pcd/input-test-pcd",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -32,13 +32,13 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.13.0",
+    "@pcd/pcd-types": "0.14.0",
     "json-bigint": "^1.0.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.13.0",
-    "@pcd/tsconfig": "0.13.0",
+    "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/tsconfig": "0.14.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",

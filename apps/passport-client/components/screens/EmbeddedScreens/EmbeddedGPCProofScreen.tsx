@@ -1,7 +1,7 @@
 import { ProveResult } from "@parcnet-js/client-rpc";
 import * as p from "@parcnet-js/podspec";
 import { EntriesSchema, PodspecProofRequest } from "@parcnet-js/podspec";
-import { gpcProve } from "@pcd/gpc";
+import { GPCIdentifier, gpcProve } from "@pcd/gpc";
 import { Button, Spacer } from "@pcd/passport-ui";
 import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import {
@@ -13,6 +13,7 @@ import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { Fragment, ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useIdentityV3, usePCDCollection } from "../../../src/appHooks";
+import { ZUPASS_GPC_ARTIFACT_PATH } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { getPODsForCollections } from "../../../src/zapp/collections";
 import { H2 } from "../../core";
@@ -22,10 +23,12 @@ import { Spinner } from "../../shared/Spinner";
 export function EmbeddedGPCProofScreen({
   proofRequestSchema,
   collectionIds,
+  circuitIdentifier,
   callback
 }: {
   proofRequestSchema: PodspecProofRequest;
   collectionIds: string[];
+  circuitIdentifier?: GPCIdentifier;
   callback: (result: ProveResult) => void;
 }): ReactNode {
   useSyncE2EEStorage();
@@ -110,7 +113,10 @@ export function EmbeddedGPCProofScreen({
               setProving(true);
 
               gpcProve(
-                proofRequest.proofConfig,
+                {
+                  ...proofRequest.proofConfig,
+                  ...(circuitIdentifier ? { circuitIdentifier } : {})
+                },
                 {
                   pods: selectedPODs as Record<string, POD>,
                   membershipLists: proofRequest.membershipLists,
@@ -121,7 +127,7 @@ export function EmbeddedGPCProofScreen({
                   }
                 },
                 new URL(
-                  "/artifacts/proto-pod-gpc",
+                  ZUPASS_GPC_ARTIFACT_PATH,
                   window.location.origin
                 ).toString()
               )
