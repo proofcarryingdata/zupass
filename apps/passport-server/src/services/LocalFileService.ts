@@ -20,7 +20,11 @@ export class LocalFileService {
     "pipeline-loads"
   );
 
-  public constructor() {}
+  public constructor() {
+    if (!fs.existsSync(this.tempDirectory)) {
+      fs.mkdirSync(this.tempDirectory, { recursive: true });
+    }
+  }
 
   private getPipelineLoadPath(pipelineId: string): string {
     return path.join(this.tempPipelineLoadDirectory, `${pipelineId}.json`);
@@ -71,6 +75,10 @@ export class LocalFileService {
   }
 }
 
-export function startLocalFileService(): LocalFileService {
+export function startLocalFileService(): LocalFileService | null {
+  if (process.env.LOCAL_FILE_SERVICE_ENABLED !== "true") {
+    return null;
+  }
+
   return new LocalFileService();
 }

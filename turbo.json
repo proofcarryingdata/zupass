@@ -234,6 +234,7 @@
     "DEVCON_PODBOX_API_URL",
     "DEVCON_PIPELINE_ID",
     "DISABLE_CONSOLE_LOG",
+    "LOCAL_FILE_SERVICE_ENABLED",
     "//// add env vars above this line ////"
   ]
 }
