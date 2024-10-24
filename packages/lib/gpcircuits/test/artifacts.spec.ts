@@ -5,6 +5,7 @@ import { chooseCircuitFamilyForTests } from "../scripts/common";
 import {
   githubDownloadRootURL,
   gpcArtifactPaths,
+  jsdelivrDownloadRootURL,
   unpkgDownloadRootURL
 } from "../src";
 
@@ -92,9 +93,15 @@ describe("artifact URL helpers should work", function () {
     );
   });
 
-  it("githubDownloadRootURL should work", async () => {
+  it("unpkgDownloadRootURL should work", async () => {
     expect(unpkgDownloadRootURL("family1", "ver2")).to.eq(
       "https://unpkg.com/@pcd/family1-artifacts@ver2"
+    );
+  });
+
+  it("jsdelivrDownloadRootURL should work", async () => {
+    expect(jsdelivrDownloadRootURL("family1", "ver2")).to.eq(
+      "https://cdn.jsdelivr.net/npm/@pcd/family1-artifacts@ver2"
     );
   });
 });

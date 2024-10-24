@@ -204,7 +204,7 @@ export default function Page(): JSX.Element {
               code={JSONBig({ useNativeBigInt: true }).stringify(pcd, null, 2)}
             />
             {valid === undefined && <p>❓ Proof verifying</p>}
-            {valid === false && <p>❌ Proof is invalid: ${validationError}</p>}
+            {valid === false && <p>❌ Proof is invalid: {validationError}</p>}
             {valid === true && (
               <>
                 <p>✅ Proof is valid</p>
@@ -433,6 +433,7 @@ async function verifyProof(
     )
   });
   const verified = await verify(pcd);
+  console.error("ART_DBG", verified);
   if (!verified) return { valid: false };
 
   const sameExternalNullifier =

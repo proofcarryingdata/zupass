@@ -90,3 +90,20 @@ export function unpkgDownloadRootURL(family: string, version: string): string {
   const packageName = `@pcd/${family}-artifacts`;
   return `https://unpkg.com/${packageName}@${version}`;
 }
+
+/**
+ * Forms a root URL for direct download of artifacts from NPM via jsdelivr.
+ * Pass this root to {@link gpcArtifactPaths} to get paths to individual
+ * artifacts.
+ *
+ * @param family the name of the GPC family
+ * @param version the NPM version identifier
+ * @returns root URL
+ */
+export function jsdelivrDownloadRootURL(
+  family: string,
+  version: string
+): string {
+  const packageName = `@pcd/${family}-artifacts`;
+  return `https://cdn.jsdelivr.net/npm/${packageName}@${version}`;
+}

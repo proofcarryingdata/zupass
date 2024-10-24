@@ -22,7 +22,7 @@ export function parseGPCArtifactsConfig(
   envConfig: string | undefined
 ): GPCArtifactsConfigEnv {
   const defaultConfig = {
-    source: "unpkg",
+    source: "jsdelivr",
     stability: "prod",
     version: undefined // Means to use GPC_ARTIFACTS_NPM_VERSION
   };
