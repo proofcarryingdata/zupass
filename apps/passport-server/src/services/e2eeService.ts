@@ -227,6 +227,13 @@ export class E2EEService {
 
 export function startE2EEService(
   credentialSubservice: CredentialSubservice
-): E2EEService {
+): E2EEService | null {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting e2ee service`
+    );
+    return null;
+  }
+
   return new E2EEService(credentialSubservice);
 }

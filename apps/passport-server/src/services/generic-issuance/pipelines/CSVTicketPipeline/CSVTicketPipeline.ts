@@ -84,6 +84,7 @@ export class CSVTicketPipeline implements BasePipeline {
   public type = PipelineType.CSVTicket;
   public capabilities: BasePipelineCapability[] = [];
 
+  private stopped = false;
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<CSVTicketAtom>;
   private definition: CSVTicketPipelineDefinition;
@@ -478,6 +479,8 @@ export class CSVTicketPipeline implements BasePipeline {
         );
 
         return {
+          fromCache: false,
+          paused: false,
           atomsLoaded: atoms.length,
           atomsExpected: parsedCSV.length,
           lastRunEndTimestamp: end.toISOString(),
@@ -497,6 +500,8 @@ export class CSVTicketPipeline implements BasePipeline {
         );
 
         return {
+          fromCache: false,
+          paused: false,
           atomsLoaded: 0,
           atomsExpected: 0,
           lastRunEndTimestamp: end.toISOString(),
@@ -508,14 +513,23 @@ export class CSVTicketPipeline implements BasePipeline {
     });
   }
 
+  public isStopped(): boolean {
+    return this.stopped;
+  }
+
   public async start(): Promise<void> {
-    logger(LOG_TAG, `starting ticket pipeline`);
-    // Initialize the Semaphore Group provider by loading groups from the DB,
-    // if one exists.
+    if (this.stopped) {
+      throw new Error(`pipeline ${this.id} already stopped`);
+    }
+    logger(LOG_TAG, `starting csv ticket pipeline with id ${this.id}`);
     await this.semaphoreGroupProvider?.start();
   }
 
   public async stop(): Promise<void> {
+    if (this.stopped) {
+      return;
+    }
+    this.stopped = true;
     logger(LOG_TAG, `stopping ticket pipeline`);
   }
 

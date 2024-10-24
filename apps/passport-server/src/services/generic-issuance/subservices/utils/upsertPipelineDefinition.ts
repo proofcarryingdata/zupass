@@ -40,8 +40,6 @@ export async function upsertPipelineDefinition(
   executorSubservice: PipelineExecutorSubservice
 ): Promise<UpsertPipelineResult> {
   traceUser(editor);
-  // TODO: do this in a transaction
-
   const ids = uniqueIdsForPipelineDefinition(newDefinition);
   const seen = new Set<string>();
   for (const id of ids) {
@@ -174,7 +172,47 @@ export async function upsertPipelineDefinition(
     validatedNewDefinition,
     editor.id
   );
+
   if (existingSlot) {
+    const lastLoadSummary = await pipelineSubservice.getLastLoadSummary(
+      newDefinition.id
+    );
+    if (lastLoadSummary && !lastLoadSummary?.success) {
+      await pipelineSubservice.saveLoadSummary(
+        validatedNewDefinition.id,
+        undefined
+      );
+    } else if (validatedNewDefinition.options.paused) {
+      // it's important that we clear the loadPromise before stopping the pipeline,
+      // so that the `AbortError` that is thrown by the `stop()` method can be
+      // handled properly upstream.
+      if (existingSlot.instance && !existingSlot.instance.isStopped()) {
+        existingSlot.loadPromise = undefined;
+        await existingSlot.instance?.stop();
+      }
+
+      if (validatedNewDefinition.options.disableCache) {
+        await pipelineSubservice.saveLoadSummary(
+          validatedNewDefinition.id,
+          undefined
+        );
+        await pipelineSubservice.clearAtoms(validatedNewDefinition.id);
+      }
+    } else {
+      // TODO: maybe still keep these around until the load finishes even without
+      // the caching feature enabled? Alternately, make the env var toggle actually
+      // writing to the file system vs. turning off the intra-instance caching.
+      if (validatedNewDefinition.options.disableCache) {
+        await pipelineSubservice.saveLoadSummary(
+          validatedNewDefinition.id,
+          undefined
+        );
+        await pipelineSubservice.clearAtoms(validatedNewDefinition.id);
+      } else {
+        await pipelineSubservice.resetToCache(validatedNewDefinition.id);
+      }
+    }
+
     existingSlot.owner = await userSubservice.getUserById(
       client,
       validatedNewDefinition.ownerUserId
