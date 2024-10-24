@@ -34,7 +34,7 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
-import { useOrientation } from "../utils";
+import { hideScrollCSS, useOrientation } from "../utils";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -274,6 +274,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
 const ListContainer = styled.div`
   position: relative; // important for scrolling to the right position of the folder
   overflow-y: auto;
+  ${hideScrollCSS}
 `;
 
 const Container = styled.div<{ isLandscape: boolean }>`
