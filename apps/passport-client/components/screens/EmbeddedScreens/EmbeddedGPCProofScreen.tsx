@@ -13,6 +13,7 @@ import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { Fragment, ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useIdentityV3, usePCDCollection } from "../../../src/appHooks";
+import { ZUPASS_GPC_ARTIFACT_PATH } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { getPODsForCollections } from "../../../src/zapp/collections";
 import { H2 } from "../../core";
@@ -126,7 +127,7 @@ export function EmbeddedGPCProofScreen({
                   }
                 },
                 new URL(
-                  "/artifacts/proto-pod-gpc",
+                  ZUPASS_GPC_ARTIFACT_PATH,
                   window.location.origin
                 ).toString()
               )
