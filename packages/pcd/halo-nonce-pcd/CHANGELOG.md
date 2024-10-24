@@ -1,5 +1,17 @@
 # @pcd/halo-nonce-pcd
 
+## 0.10.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.14.0
+  - @pcd/util@0.8.0
+
 ## 0.9.0
 
 ### Minor Changes

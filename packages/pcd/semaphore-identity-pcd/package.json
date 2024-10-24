@@ -1,6 +1,6 @@
 {
   "name": "@pcd/semaphore-identity-pcd",
-  "version": "0.13.0",
+  "version": "0.14.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -32,9 +32,9 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.13.0",
-    "@pcd/pod": "0.3.0",
-    "@pcd/util": "0.7.0",
+    "@pcd/pcd-types": "0.14.0",
+    "@pcd/pod": "0.4.0",
+    "@pcd/util": "0.8.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/json-bigint": "^1.0.3",
     "@zk-kit/eddsa-poseidon": "1.0.3",
@@ -46,8 +46,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.13.0",
-    "@pcd/tsconfig": "0.13.0",
+    "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/tsconfig": "0.14.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",

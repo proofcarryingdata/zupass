@@ -14,6 +14,7 @@ import {
 import * as p from "@parcnet-js/podspec";
 import {
   GPCBoundConfig,
+  GPCIdentifier,
   GPCProof,
   GPCRevealedClaims,
   gpcVerify
@@ -277,6 +278,43 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       this.getAdvice().showClient();
     });
   }
+
+  public async signPrefixed(entries: PODEntries): Promise<PODData> {
+    const origin = this.getContext().getState().zappOrigin;
+    if (
+      appConfig.zappRestrictOrigins &&
+      (!origin || !appConfig.zappAllowedSignerOrigins.includes(origin))
+    ) {
+      throw new Error("Origin not allowed to sign PODs");
+    }
+    if (!this.getPermissions().SIGN_POD) {
+      throw new MissingPermissionError("SIGN_POD", "pod.sign");
+    }
+
+    for (const name of Object.keys(entries)) {
+      if (!name.startsWith("_UNSAFE_")) {
+        throw new Error(
+          "PODs signed with signPrefixed must have a prefix of _UNSAFE_"
+        );
+      }
+    }
+
+    entries.UNSAFE_META_ORIGIN = {
+      type: "string",
+      value: this.getContext().getState().zappOrigin as string
+    };
+
+    const pod = POD.sign(
+      entries,
+      encodePrivateKey(
+        Buffer.from(
+          v3tov4Identity(this.getContext().getState().identityV3).export(),
+          "base64"
+        )
+      )
+    );
+    return p.podToPODData(pod);
+  }
 }
 
 class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
@@ -309,10 +347,12 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
 
   public async prove({
     request,
-    collectionIds
+    collectionIds,
+    circuitIdentifier
   }: {
     request: p.PodspecProofRequest;
     collectionIds?: string[];
+    circuitIdentifier?: GPCIdentifier;
   }): Promise<ProveResult> {
     const realCollectionIds =
       collectionIds ?? this.getPermissions().REQUEST_PROOF?.collections ?? [];
@@ -350,6 +390,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
           type: EmbeddedScreenType.EmbeddedGPCProof,
           proofRequest: request,
           collectionIds: realCollectionIds,
+          circuitIdentifier,
           callback: (result: ProveResult) => {
             this.getContext().dispatch({
               type: "hide-embedded-screen"

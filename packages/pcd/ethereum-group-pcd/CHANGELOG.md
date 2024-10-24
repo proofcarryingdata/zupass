@@ -1,5 +1,19 @@
 # @pcd/ethereum-group-pcd
 
+## 0.8.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.14.0
+  - @pcd/util@0.8.0
+  - @pcd/semaphore-identity-pcd@0.14.0
+  - @pcd/semaphore-signature-pcd@0.14.0
+
 ## 0.7.0
 
 ### Minor Changes

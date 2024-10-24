@@ -1,5 +1,20 @@
 # @pcd/pod-pcd-ui
 
+## 0.4.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-ui@0.14.0
+  - @pcd/pcd-types@0.14.0
+  - @pcd/pod@0.4.0
+  - @pcd/util@0.8.0
+  - @pcd/pod-pcd@0.4.0
+
 ## 0.3.0
 
 ### Minor Changes

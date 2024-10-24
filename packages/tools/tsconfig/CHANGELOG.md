@@ -1,5 +1,11 @@
 # @pcd/tsconfig
 
+## 0.14.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
 ## 0.13.0
 
 ### Minor Changes

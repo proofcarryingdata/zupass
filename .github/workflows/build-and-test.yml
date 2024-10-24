@@ -70,7 +70,7 @@ jobs:
 
       - run: "yarn install"
       - name: "Check that yarn install did not cause changes to yarn.lock"
-        run: "git diff --quiet -- yarn.lock"
+        run: "git diff --exit-code -- yarn.lock"
       - run: "yarn check-references"
       - run: "yarn build"
       - run: "yarn lint"

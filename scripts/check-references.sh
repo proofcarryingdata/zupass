@@ -4,7 +4,7 @@
 # See fix-references.sh for an explanation of project references and the
 # purpose of these scripts.
 
-yarn workspaces-to-typescript-project-references --tsconfigPath tsconfig.json --check 1>/dev/null 2>/dev/null
+yarn workspaces-to-typescript-project-references --tsconfigPath tsconfig.json --check 
 
 retVal=$?
 if [ $retVal -ne 0 ]; then

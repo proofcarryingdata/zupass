@@ -1,5 +1,11 @@
 # @pcd/client-shared
 
+## 0.3.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
 ## 0.2.0
 
 ### Minor Changes

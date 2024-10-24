@@ -1,5 +1,19 @@
 # @pcd/pcd-types
 
+## 0.14.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.8.0
+  - @pcd/passport-crypto@0.14.0
+  - @pcd/pcd-types@0.14.0
+  - @pcd/semaphore-identity-pcd@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes
