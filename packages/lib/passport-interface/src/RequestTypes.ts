@@ -444,7 +444,6 @@ export interface PipelineLog {
 export interface PipelineInfoRequest {
   jwt: string;
   pipelineId: string;
-  smallVersion?: boolean;
 }
 
 export interface PipelineInfoConsumer {

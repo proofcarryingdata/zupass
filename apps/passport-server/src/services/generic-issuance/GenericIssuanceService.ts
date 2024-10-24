@@ -268,14 +268,12 @@ export class GenericIssuanceService {
   public async handleGetPipelineInfo(
     client: PoolClient,
     user: PipelineUser,
-    pipelineId: string,
-    smallVersion?: boolean
+    pipelineId: string
   ): Promise<PipelineInfoResponseValue> {
     return this.pipelineSubservice.handleGetPipelineInfo(
       client,
       user,
-      pipelineId,
-      smallVersion
+      pipelineId
     );
   }
 
