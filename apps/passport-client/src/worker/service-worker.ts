@@ -1,12 +1,10 @@
 // this file is loaded as a service worker
-import { ARTIFACTS_NPM_VERSION } from "@pcd/gpcircuits/constants";
+import { ARTIFACTS_NPM_VERSION as GPC_ARTIFACTS_NPM_VERSION } from "@pcd/gpcircuits/constants";
 import { setTimeout as promiseTimeout } from "isomorphic-timers-promises";
 import {
   SERVICE_WORKER_ENABLED,
   ZUPASS_GPC_ARTIFACT_PATH
 } from "../sharedConstants";
-
-const GPC_ARTIFACTS_NPM_VERSION = ARTIFACTS_NPM_VERSION;
 
 // Hack to make TypeScript aware of the ServiceWorkerGlobalScope type.
 // We can't redeclare `self`, but `swSelf` can be used with the right type.
@@ -63,7 +61,7 @@ const EPHEMERAL_CACHE_RESOURCES = new Set([
  * Z cache is for Z API-relevant resources which do not change frequently, such
  * as GPC artifacts, where we always use the cached version if available.  This
  * cache is only updated if the artifact to be fetched is not in the
- * cache. Previously cached versions are cleared for space-saving purposes.
+ * cache. Previously cached versions are cleared.
  *
  * Cache name includes deployed artifact version, which protects against using
  * cached artifacts of a different version.
