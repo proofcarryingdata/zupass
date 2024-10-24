@@ -57,6 +57,7 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { IPipelineDefinitionDB } from "../../../database/queries/pipelineDefinitionDB";
 import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
@@ -135,6 +136,7 @@ export class PretixPipeline implements BasePipeline {
    * to be stored in-memory.
    */
   private db: IPipelineAtomDB<PretixAtom>;
+  private pipelineDB: IPipelineDefinitionDB;
   private api: IGenericPretixAPI;
   private checkinDB: IPipelineCheckinDB;
   private consumerDB: IPipelineConsumerDB;
@@ -167,6 +169,7 @@ export class PretixPipeline implements BasePipeline {
     eddsaPrivateKey: string,
     definition: PretixPipelineDefinition,
     db: IPipelineAtomDB,
+    pipelineDB: IPipelineDefinitionDB,
     api: IGenericPretixAPI,
     credentialSubservice: CredentialSubservice,
     cacheService: PersistentCacheService,
@@ -180,6 +183,7 @@ export class PretixPipeline implements BasePipeline {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PretixAtom>;
+    this.pipelineDB = pipelineDB;
     this.api = api;
     this.consumerDB = consumerDB;
     this.manualTicketDB = manualTicketDB;
@@ -285,6 +289,33 @@ export class PretixPipeline implements BasePipeline {
     await sqlTransaction(this.context.dbPool, (client) =>
       this.cleanUpManualCheckins(client)
     );
+
+    try {
+      const existingLoad =
+        await this.localFileService?.loadPipelineLoad<PretixAtom>(this.id);
+
+      if (existingLoad) {
+        logger(
+          LOG_TAG,
+          `loaded existing pipeline load for pipeline id ${this.id}`
+        );
+
+        await sqlTransaction(this.context.dbPool, async (client) => {
+          await this.pipelineDB.saveLoadSummary(
+            client,
+            this.id,
+            existingLoad.summary
+          );
+          await this.db.save(this.id, existingLoad.atoms);
+        });
+      }
+    } catch (e) {
+      logger(
+        LOG_TAG,
+        `failed to apply existing pipeline load for pipeline id ${this.id}`,
+        e
+      );
+    }
 
     // Initialize the Semaphore Group provider by loading groups from the DB,
     // if one exists.

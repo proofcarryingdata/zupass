@@ -5,10 +5,10 @@ import { PipelineAtom } from "../database/queries/pipelineAtomDB";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
 
-export interface SerializedPipelineLoad {
+export interface SerializedPipelineLoad<T extends PipelineAtom> {
   pipelineId: string;
   summary: PipelineLoadSummary;
-  atoms: PipelineAtom[];
+  atoms: T[];
 }
 
 export class LocalFileService {
@@ -24,30 +24,30 @@ export class LocalFileService {
     return path.join(this.tempPipelineLoadDirectory, `${pipelineId}.json`);
   }
 
-  public async loadPipelineLoad(
+  public async loadPipelineLoad<T extends PipelineAtom>(
     pipelineId: string
-  ): Promise<SerializedPipelineLoad | undefined> {
+  ): Promise<SerializedPipelineLoad<T> | undefined> {
     return traced("LocalFileService", "loadPipelineLoad", async () => {
       const filePath = this.getPipelineLoadPath(pipelineId);
       if (!fs.existsSync(filePath)) {
         return undefined;
       }
       const serialized = await fs.promises.readFile(filePath, "utf8");
-      return JSON.parse(serialized) satisfies SerializedPipelineLoad;
+      return JSON.parse(serialized) satisfies SerializedPipelineLoad<T>;
     });
   }
 
-  public async savePipelineLoad(
+  public async savePipelineLoad<T extends PipelineAtom>(
     pipelineId: string,
     summary: PipelineLoadSummary,
-    atoms: PipelineAtom[]
+    atoms: T[]
   ): Promise<void> {
     return traced("LocalFileService", "savePipelineLoad", async () => {
       const serialized = JSON.stringify({
         pipelineId,
         summary,
         atoms
-      } satisfies SerializedPipelineLoad);
+      } satisfies SerializedPipelineLoad<T>);
 
       logger(
         `Saving pipeline ('${pipelineId}') load with ${
