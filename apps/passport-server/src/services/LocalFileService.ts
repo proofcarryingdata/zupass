@@ -24,6 +24,9 @@ export class LocalFileService {
     if (!fs.existsSync(this.tempDirectory)) {
       fs.mkdirSync(this.tempDirectory, { recursive: true });
     }
+    if (!fs.existsSync(this.tempPipelineLoadDirectory)) {
+      fs.mkdirSync(this.tempPipelineLoadDirectory, { recursive: true });
+    }
   }
 
   private getPipelineLoadPath(pipelineId: string): string {
@@ -58,18 +61,13 @@ export class LocalFileService {
           atoms
         } satisfies SerializedPipelineLoad<T>);
 
+        const tempPath = this.getPipelineLoadPath(pipelineId);
+
         logger(
-          `Saving pipeline ('${pipelineId}') load with ${
-            atoms.length
-          } atoms to local file: ${JSON.stringify(serialized)} with ${
-            serialized.length
-          } bytes`
+          `Saving pipeline ('${pipelineId}') load with ${atoms.length} atoms to local file: ${tempPath} with ${serialized.length} bytes`
         );
 
-        await fs.promises.writeFile(
-          this.getPipelineLoadPath(pipelineId),
-          JSON.stringify(serialized)
-        );
+        await fs.promises.writeFile(tempPath, JSON.stringify(serialized));
       });
     });
   }
