@@ -1,9 +1,9 @@
+import { Spacer } from "@pcd/passport-ui";
 import styled from "styled-components";
 import { useBottomModal, useDispatch, useSelf } from "../../../src/appHooks";
-import { BottomModal, BottomModalHeader } from "../BottomModal";
 import { Accordion } from "../Accordion";
+import { BottomModal, BottomModalHeader } from "../BottomModal";
 import { Button2 } from "../Button";
-import { Spacer } from "@pcd/passport-ui";
 
 export const HelpModal = (): JSX.Element => {
   const activeBottomModal = useBottomModal();
@@ -44,7 +44,7 @@ export const HelpModal = (): JSX.Element => {
             window.open("mailto:support@zupass.org");
           }}
         >
-          Email support
+          Contact support
         </Button2>
         <Button2
           variant="secondary"

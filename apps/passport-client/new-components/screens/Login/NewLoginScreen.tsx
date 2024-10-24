@@ -156,7 +156,7 @@ export const NewLoginScreen = (): JSX.Element => {
           >
             {redirectedFromAction
               ? "To complete this request, please login or register with your email below."
-              : "Zupass is a zero knowledge application created by 0xPARC. It’s a stepping stone towards building the next internet."}
+              : "Zupass is a new application powered by Programmable Cryptography. It's a stepping stone towards building the next internet."}
           </Typography>
         </LoginTitleContainer>
         <LoginForm onSubmit={onGenPass}>
