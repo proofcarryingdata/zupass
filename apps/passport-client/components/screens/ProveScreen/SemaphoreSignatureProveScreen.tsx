@@ -18,6 +18,9 @@ import {
 import { cloneDeep } from "lodash";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
+import { Button2 } from "../../../new-components/shared/Button";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { Typography } from "../../../new-components/shared/Typography";
 import { appConfig } from "../../../src/appConfig";
 import { useIdentityV3, useSelf } from "../../../src/appHooks";
 import {
@@ -25,9 +28,6 @@ import {
   safeRedirectPending
 } from "../../../src/passportRequest";
 import { getHost, getOrigin, nextFrame } from "../../../src/util";
-import { Typography } from "../../../new-components/shared/Typography";
-import { Button2 } from "../../../new-components/shared/Button";
-import { NewLoader } from "../../../new-components/shared/NewLoader";
 
 export function SemaphoreSignatureProveScreen({
   req
@@ -171,7 +171,7 @@ export function SemaphoreSignatureProveScreen({
 
         <Button2
           onClick={() => {
-            window.history.back();
+            window.close();
           }}
           variant="secondary"
         >

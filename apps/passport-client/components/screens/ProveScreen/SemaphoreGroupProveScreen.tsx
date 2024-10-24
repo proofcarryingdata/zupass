@@ -16,6 +16,9 @@ import { getErrorMessage } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
+import { Button2 } from "../../../new-components/shared/Button";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { Typography } from "../../../new-components/shared/Typography";
 import { appConfig } from "../../../src/appConfig";
 import { useIdentityV3 } from "../../../src/appHooks";
 import {
@@ -23,9 +26,6 @@ import {
   safeRedirectPending
 } from "../../../src/passportRequest";
 import { getHost, nextFrame } from "../../../src/util";
-import { Button2 } from "../../../new-components/shared/Button";
-import { Typography } from "../../../new-components/shared/Typography";
-import { NewLoader } from "../../../new-components/shared/NewLoader";
 
 export function SemaphoreGroupProveScreen({
   req
@@ -203,7 +203,7 @@ export function SemaphoreGroupProveScreen({
               ? (): void => {
                   window.location.href = req.options?.requesterUrl as string;
                 }
-              : (): void => window.history.back()
+              : (): void => window.close()
           }
           variant="secondary"
         >

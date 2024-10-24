@@ -29,6 +29,9 @@ import {
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+import { Button2 } from "../../../new-components/shared/Button";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { Typography } from "../../../new-components/shared/Typography";
 import { appConfig } from "../../../src/appConfig";
 import {
   usePCDCollection,
@@ -45,9 +48,6 @@ import {
 } from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
 import { PCDArgs } from "../../shared/PCDArgs";
-import { Button2 } from "../../../new-components/shared/Button";
-import { NewLoader } from "../../../new-components/shared/NewLoader";
-import { Typography } from "../../../new-components/shared/Typography";
 
 /**
  * A reuseable form which can be used to generate a new instance of a PCD
@@ -244,7 +244,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
           <Button2
             style={{ marginTop: "auto" }}
             onClick={() => {
-              window.history.back();
+              window.close();
             }}
             variant="secondary"
           >
@@ -286,7 +286,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
         <Button2
           onClick={() => {
-            window.history.back();
+            window.close();
           }}
           variant="secondary"
         >
