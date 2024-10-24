@@ -5,6 +5,7 @@ import {
   useSelf,
   useSubscriptions
 } from "../../src/appHooks";
+import { css } from "styled-components";
 
 export const useExport = (): (() => Promise<void>) => {
   const user = useSelf();
@@ -77,3 +78,11 @@ export const replaceDotWithSlash = (folderPath: string): string => {
   }
   return splitted.join("/");
 };
+
+export const hideScrollCSS = css`
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+`;

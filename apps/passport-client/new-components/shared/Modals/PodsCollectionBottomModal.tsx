@@ -37,6 +37,7 @@ import { Typography } from "../Typography";
 import {
   POD_FOLDER_DISPLAY_SEPERATOR,
   replaceDotWithSlash,
+  hideScrollCSS,
   useOrientation
 } from "../utils";
 
@@ -278,6 +279,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
 const ListContainer = styled.div`
   position: relative; // important for scrolling to the right position of the folder
   overflow-y: auto;
+  ${hideScrollCSS}
 `;
 
 const Container = styled.div<{ isLandscape: boolean }>`

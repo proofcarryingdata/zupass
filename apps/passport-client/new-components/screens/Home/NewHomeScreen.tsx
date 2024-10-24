@@ -53,6 +53,7 @@ import { Typography } from "../../shared/Typography";
 import {
   isMobile,
   replaceDotWithSlash,
+  hideScrollCSS,
   useOrientation
 } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
@@ -258,6 +259,8 @@ const ListContainer = styled.div`
 
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
   position: relative;
+
+  ${hideScrollCSS}
 `;
 const OuterContainer = styled.div`
   display: flex;
