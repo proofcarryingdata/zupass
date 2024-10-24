@@ -104,7 +104,8 @@ export class PipelineAPISubservice {
   public async handleGetPipelineInfo(
     client: PoolClient,
     user: PipelineUser,
-    pipelineId: string
+    pipelineId: string,
+    smallVersion?: boolean
   ): Promise<PipelineInfoResponseValue> {
     return traced(SERVICE_NAME, "handleGetPipelineInfo", async (span) => {
       logger(LOG_TAG, "handleGetPipelineInfo", str(user), pipelineId);
@@ -159,7 +160,7 @@ export class PipelineAPISubservice {
 
       const info = {
         ownerEmail: pipelineSlot.owner.email,
-        latestAtoms,
+        latestAtoms: smallVersion ? undefined : latestAtoms,
         lastLoad,
 
         feeds: pipelineFeeds.map((f) => ({

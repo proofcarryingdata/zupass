@@ -479,12 +479,14 @@ export class PipelineSubservice {
   public async handleGetPipelineInfo(
     client: PoolClient,
     user: PipelineUser,
-    pipelineId: string
+    pipelineId: string,
+    smallVersion?: boolean
   ): Promise<PipelineInfoResponseValue> {
     return this.pipelineAPISubservice.handleGetPipelineInfo(
       client,
       user,
-      pipelineId
+      pipelineId,
+      smallVersion
     );
   }
 

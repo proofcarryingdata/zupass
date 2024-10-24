@@ -444,6 +444,7 @@ export interface PipelineLog {
 export interface PipelineInfoRequest {
   jwt: string;
   pipelineId: string;
+  smallVersion?: boolean;
 }
 
 export interface PipelineInfoConsumer {
@@ -495,6 +496,7 @@ export interface PipelineInfoResponseValue {
   latestConsumers?: PipelineInfoConsumer[];
   editHistory?: HydratedPipelineHistoryEntry[];
   zuAuthConfig?: PipelineZuAuthConfig[];
+  smallVersion?: boolean;
 }
 
 export interface ListSingleFeedRequest {

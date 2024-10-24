@@ -227,7 +227,8 @@ export function initGenericIssuanceRoutes(
         return genericIssuanceService.handleGetPipelineInfo(
           client,
           user,
-          reqBody.pipelineId
+          reqBody.pipelineId,
+          reqBody.smallVersion
         );
       }
     );
