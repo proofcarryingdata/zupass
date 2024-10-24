@@ -149,7 +149,7 @@ export function NewOneClickLoginScreen(): JSX.Element | null {
                         {ticket.eventName} ({ticket.ticketName})
                       </CardHeader>
                       <PODTicketCardBodyImpl
-                        idBasedVerifyURL=""
+                        defaultImage="images/zuzalu/zuzalu.png"
                         ticketData={ticket}
                         key={ticket.ticketId}
                       />
