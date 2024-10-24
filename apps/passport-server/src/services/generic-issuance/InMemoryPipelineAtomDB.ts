@@ -3,6 +3,14 @@ import {
   PipelineAtom
 } from "../../database/queries/pipelineAtomDB";
 
+export interface InMemoryAtomsEntry {
+  atomsById: { [atomId: string]: PipelineAtom };
+}
+
+export interface InMemoryAtoms {
+  [pipelineId: string]: InMemoryAtomsEntry;
+}
+
 /**
  * An in-memory implementation of {@link IPipelineAtomDB}.
  *
@@ -12,9 +20,7 @@ import {
 export class InMemoryPipelineAtomDB implements IPipelineAtomDB {
   private readonly loadedFlags: Record<string, boolean> = {};
 
-  public data: {
-    [pipelineId: string]: { [atomId: string]: PipelineAtom };
-  } = {};
+  public data: InMemoryAtoms = {};
 
   public async markAsLoaded(pipelineId: string): Promise<void> {
     this.loadedFlags[pipelineId] = true;
@@ -25,15 +31,21 @@ export class InMemoryPipelineAtomDB implements IPipelineAtomDB {
   }
 
   public async clear(pipelineID: string): Promise<void> {
-    this.data[pipelineID] = {};
+    this.data[pipelineID] = {
+      atomsById: {}
+    };
   }
 
   public async save(pipelineID: string, atoms: PipelineAtom[]): Promise<void> {
     if (!this.data[pipelineID]) {
-      this.data[pipelineID] = {};
+      this.data[pipelineID] = {
+        atomsById: {}
+      };
     }
+
     atoms.forEach((atom) => {
-      this.data[pipelineID][atom.id] = atom;
+      const entry: InMemoryAtomsEntry = this.data[pipelineID];
+      entry.atomsById[atom.id] = atom;
     });
   }
 
