@@ -1,5 +1,30 @@
 # @pcd/passport-interface
 
+## 0.14.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.8.0
+  - @pcd/passport-crypto@0.14.0
+  - @pcd/pcd-collection@0.14.0
+  - @pcd/pcd-types@0.14.0
+  - @pcd/pod@0.4.0
+  - @pcd/util@0.8.0
+  - @pcd/eddsa-frog-pcd@0.6.0
+  - @pcd/eddsa-pcd@0.9.0
+  - @pcd/eddsa-ticket-pcd@0.9.0
+  - @pcd/email-pcd@0.9.0
+  - @pcd/pod-pcd@0.4.0
+  - @pcd/pod-ticket-pcd@0.4.0
+  - @pcd/semaphore-group-pcd@0.14.0
+  - @pcd/semaphore-identity-pcd@0.14.0
+  - @pcd/semaphore-signature-pcd@0.14.0
+
 ## 0.13.0
 
 ### Minor Changes
