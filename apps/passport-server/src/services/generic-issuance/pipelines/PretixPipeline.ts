@@ -307,6 +307,7 @@ export class PretixPipeline implements BasePipeline {
             existingLoad.summary
           );
           await this.db.save(this.id, existingLoad.atoms);
+          await this.db.markAsLoaded(this.id);
         });
       }
     } catch (e) {
