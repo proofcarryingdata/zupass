@@ -198,7 +198,4 @@ describe("PODTicketPCD should work", function () {
         "RD0+uScN/pg6s0KMDiEGy7H4czY/5YEudAWw/DVi/oipeKGmFwE+FuChZPqRkppmAp3hiHU/fF74VfCfuQugAQ"
     });
   });
-
-  // TODO: Test for legacy tickets with SemaphoreV3 ownership?
-  // I don't have any examples in my Zupass.  Does anyone?
 });
