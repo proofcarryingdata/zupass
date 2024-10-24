@@ -34,7 +34,11 @@ import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
-import { useOrientation } from "../utils";
+import {
+  POD_FOLDER_DISPLAY_SEPERATOR,
+  replaceDotWithSlash,
+  useOrientation
+} from "../utils";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -102,7 +106,7 @@ export const PodsCollectionList = ({
     for (const [key, value] of Object.entries(pcdCollection.folders)) {
       if (!result[value]) {
         result[value] = {
-          title: value.replace(/\//g, " · "),
+          title: value.replace(/\//g, ` ${POD_FOLDER_DISPLAY_SEPERATOR} `),
           id: value, // setting the folder path as a key
           children: []
         };
@@ -176,7 +180,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         const folder = params.get("folder");
         // checks if url contains folder route, and if so, scrolls to it
         if (folder) {
-          const decodedFolderId = decodeURI(folder);
+          const decodedFolderId = replaceDotWithSlash(decodeURI(folder));
           const folderContainer = document.getElementById(decodedFolderId);
           if (folderContainer) {
             pos = folderContainer.offsetTop;

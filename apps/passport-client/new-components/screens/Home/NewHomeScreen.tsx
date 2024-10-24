@@ -50,7 +50,11 @@ import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModa
 import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
-import { isMobile, useOrientation } from "../../shared/utils";
+import {
+  isMobile,
+  replaceDotWithSlash,
+  useOrientation
+} from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 
@@ -355,7 +359,7 @@ const NoUpcomingEventsState = ({
       const folder = params.get("folder");
       // checks if url contains folder route, and if so, scrolls to it
       if (folder) {
-        const decodedFolderId = decodeURI(folder);
+        const decodedFolderId = replaceDotWithSlash(decodeURI(folder));
         const folderContainer = document.getElementById(decodedFolderId);
         if (folderContainer) {
           listContainerRef.current.scrollTop = folderContainer.offsetTop;
