@@ -30,10 +30,7 @@ import {
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
-import {
-  IPipelineDefinitionDB,
-  PipelineDefinitionDB
-} from "../../../database/queries/pipelineDefinitionDB";
+import { IPipelineDefinitionDB } from "../../../database/queries/pipelineDefinitionDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
@@ -74,6 +71,7 @@ export class PipelineSubservice {
   public constructor(
     context: ApplicationContext,
     pipelineAtomDB: IPipelineAtomDB,
+    pipelineDB: IPipelineDefinitionDB,
     consumerDB: IPipelineConsumerDB,
     userSubservice: UserSubservice,
     credentialSubservice: CredentialSubservice,
@@ -82,7 +80,7 @@ export class PipelineSubservice {
     rollbarService: RollbarService | null,
     instantiatePipelineArgs: InstantiatePipelineArgs
   ) {
-    this.pipelineDB = new PipelineDefinitionDB();
+    this.pipelineDB = pipelineDB;
     this.pipelineAtomDB = pipelineAtomDB;
     this.executorSubservice = new PipelineExecutorSubservice(
       this,

@@ -40,6 +40,10 @@ import {
   PipelineConsumerDB
 } from "../../database/queries/pipelineConsumerDB";
 import {
+  IPipelineDefinitionDB,
+  PipelineDefinitionDB
+} from "../../database/queries/pipelineDefinitionDB";
+import {
   IPipelineEmailDB,
   PipelineEmailDB
 } from "../../database/queries/pipelineEmailDB";
@@ -85,6 +89,7 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 export class GenericIssuanceService {
   private context: ApplicationContext;
   private pipelineAtomDB: IPipelineAtomDB;
+  private pipelineDB: IPipelineDefinitionDB;
   private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
@@ -126,6 +131,7 @@ export class GenericIssuanceService {
     this.badgeDB = new BadgeGiftingDB();
     this.emailDB = new PipelineEmailDB();
     this.pipelineAtomDB = new InMemoryPipelineAtomDB();
+    this.pipelineDB = new PipelineDefinitionDB();
     this.userSubservice = new UserSubservice(
       context,
       stytchClient,
@@ -136,6 +142,7 @@ export class GenericIssuanceService {
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
+      this.pipelineDB,
       this.consumerDB,
       this.userSubservice,
       this.credentialSubservice,
@@ -148,6 +155,7 @@ export class GenericIssuanceService {
         lemonadeAPI,
         genericPretixAPI: this.genericPretixAPI,
         pipelineAtomDB: this.pipelineAtomDB,
+        pipelineDB: this.pipelineDB,
         checkinDB: this.checkinDB,
         contactDB: this.contactDB,
         emailDB: this.emailDB,

@@ -11,6 +11,7 @@ import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { IPipelineDefinitionDB } from "../../../../database/queries/pipelineDefinitionDB";
 import { IPipelineEmailDB } from "../../../../database/queries/pipelineEmailDB";
 import { IPipelineManualTicketDB } from "../../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
@@ -48,6 +49,7 @@ export interface InstantiatePipelineArgs {
   lemonadeAPI: ILemonadeAPI;
   genericPretixAPI: IGenericPretixAPI;
   pipelineAtomDB: IPipelineAtomDB;
+  pipelineDB: IPipelineDefinitionDB;
   checkinDB: IPipelineCheckinDB;
   contactDB: IContactSharingDB;
   emailDB: IPipelineEmailDB;
@@ -98,6 +100,7 @@ export function instantiatePipeline(
         args.eddsaPrivateKey,
         definition,
         args.pipelineAtomDB,
+        args.pipelineDB,
         args.genericPretixAPI,
         args.credentialSubservice,
         args.cacheService,
