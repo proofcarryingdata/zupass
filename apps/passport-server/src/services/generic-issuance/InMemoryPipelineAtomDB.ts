@@ -5,6 +5,8 @@ import {
 
 export interface InMemoryAtomsEntry {
   atomsById: { [atomId: string]: PipelineAtom };
+  atomsByEmail: { [email: string]: PipelineAtom[] };
+  allAtoms: PipelineAtom[];
 }
 
 export interface InMemoryAtoms {
@@ -19,7 +21,6 @@ export interface InMemoryAtoms {
  */
 export class InMemoryPipelineAtomDB implements IPipelineAtomDB {
   private readonly loadedFlags: Record<string, boolean> = {};
-
   public data: InMemoryAtoms = {};
 
   public async markAsLoaded(pipelineId: string): Promise<void> {
@@ -32,54 +33,48 @@ export class InMemoryPipelineAtomDB implements IPipelineAtomDB {
 
   public async clear(pipelineID: string): Promise<void> {
     this.data[pipelineID] = {
-      atomsById: {}
+      atomsById: {},
+      atomsByEmail: {},
+      allAtoms: []
     };
   }
 
   public async save(pipelineID: string, atoms: PipelineAtom[]): Promise<void> {
-    if (!this.data[pipelineID]) {
-      this.data[pipelineID] = {
-        atomsById: {}
-      };
-    }
+    const pipelineAtoms: InMemoryAtomsEntry = (this.data[pipelineID] = {
+      atomsById: {},
+      atomsByEmail: {},
+      allAtoms: [...atoms]
+    });
 
     atoms.forEach((atom) => {
-      const entry: InMemoryAtomsEntry = this.data[pipelineID];
-      entry.atomsById[atom.id] = atom;
+      pipelineAtoms.atomsById[atom.id] = atom;
+
+      if (atom.email) {
+        const lowerCaseEmail = atom.email.toLowerCase();
+
+        pipelineAtoms.atomsByEmail[lowerCaseEmail] =
+          pipelineAtoms.atomsByEmail[lowerCaseEmail] ?? [];
+
+        pipelineAtoms.atomsByEmail[lowerCaseEmail].push(atom);
+      }
     });
   }
 
   public async load(pipelineID: string): Promise<PipelineAtom[]> {
-    if (!this.data[pipelineID]) {
-      return [];
-    }
-
-    return Object.values(this.data[pipelineID]);
+    return [...(this.data[pipelineID]?.allAtoms ?? [])];
   }
 
   public async loadById(
     pipelineID: string,
     atomID: string
   ): Promise<PipelineAtom | undefined> {
-    const pipelineData = this.data[pipelineID];
-
-    if (!pipelineData) {
-      return undefined;
-    }
-
-    const values = Object.values(pipelineData);
-    return values.find((v) => v.id === atomID);
+    return this.data[pipelineID]?.atomsById?.[atomID];
   }
 
   public async loadByEmail(
     pipelineID: string,
     email: string
   ): Promise<PipelineAtom[]> {
-    const pipelineData = this.data[pipelineID];
-    if (!pipelineData) {
-      return [];
-    }
-    const values = Object.values(pipelineData);
-    return values.filter((v) => v.email?.toLowerCase() === email.toLowerCase());
+    return this.data[pipelineID]?.atomsByEmail?.[email.toLowerCase()] ?? [];
   }
 }
