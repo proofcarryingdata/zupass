@@ -455,7 +455,7 @@ export class PretixPipeline implements BasePipeline {
               await this.triggerSemaphoreGroupUpdate(client);
             }
 
-            return {
+            const loadSummary: PipelineLoadSummary = {
               lastRunEndTimestamp: end.toISOString(),
               lastRunStartTimestamp: startTime.toISOString(),
               latestLogs: logs,
@@ -465,7 +465,25 @@ export class PretixPipeline implements BasePipeline {
               semaphoreGroups:
                 this.semaphoreGroupProvider?.getSupportedGroups(),
               success: true
-            } satisfies PipelineLoadSummary;
+            };
+
+            this.localFileService
+              ?.savePipelineLoad(this.id, loadSummary, atomsToSave)
+              ?.then(() => {
+                logger(
+                  LOG_TAG,
+                  `saved pipeline load for pipeline id ${this.id}`
+                );
+              })
+              ?.catch((e) => {
+                logger(
+                  LOG_TAG,
+                  `failed to save pipeline load for pipeline id ${this.id}`,
+                  e
+                );
+              });
+
+            return loadSummary;
           }
         );
       }
