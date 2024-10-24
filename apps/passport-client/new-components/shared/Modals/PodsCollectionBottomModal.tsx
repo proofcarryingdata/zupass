@@ -32,6 +32,7 @@ import { ScrollIndicator } from "../../screens/Home/NewHomeScreen";
 import { Avatar } from "../Avatar";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
+import { Input2 } from "../Input";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
 import {
@@ -87,6 +88,10 @@ export const PodsCollectionList = ({
   style
 }: PodsCollectionListProps): ReactElement => {
   const pcdCollection = usePCDCollection();
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [expendedGroupsIds, setExpendedGroupsIds] = useState<
+    Record<string, boolean>
+  >({});
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
@@ -106,10 +111,17 @@ export const PodsCollectionList = ({
     const result: Record<string, GroupType> = {};
     for (const [key, value] of Object.entries(pcdCollection.folders)) {
       if (!result[value]) {
+        const isItTheFirstGroup = !Object.keys(result).length;
+        const shouldExpendedByDefault =
+          isItTheFirstGroup || filteredPcds.length < 20;
         result[value] = {
           title: value.replace(/\//g, ` ${POD_FOLDER_DISPLAY_SEPERATOR} `),
           id: value, // setting the folder path as a key
-          children: []
+          children: [],
+          expended:
+            expendedGroupsIds[value] === undefined
+              ? !!shouldExpendedByDefault
+              : !!expendedGroupsIds[value]
         };
       }
 
@@ -126,11 +138,56 @@ export const PodsCollectionList = ({
       });
     }
 
-    return Object.values(result).filter((group) => group.children.length > 0);
-  }, [pcdCollection, onPodClick]);
+    return Object.values(result)
+      .map((group) => {
+        if (!searchQuery) {
+          return group;
+        }
 
-  return <List style={style} list={podsCollectionList} />;
+        if (
+          group.title &&
+          group.title.toLowerCase().includes(searchQuery.toLowerCase())
+        ) {
+          return group;
+        }
+
+        return {
+          ...group,
+          expended: true, // In case we filter by inside the group we want to auto expend it
+          children: group.children.filter((pod) =>
+            pod.title.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        };
+      })
+      .filter((group) => group.children.length > 0);
+  }, [pcdCollection, onPodClick, searchQuery, expendedGroupsIds]);
+
+  return (
+    <>
+      <SearchPodInputContainer>
+        <Input2
+          placeholder="Search for pods..."
+          variant="secondary"
+          onChange={({ target: { value } }) => setSearchQuery(value)}
+        />
+      </SearchPodInputContainer>
+      <List
+        onExpended={(id, newState) => {
+          setExpendedGroupsIds((oldMap) => ({
+            ...oldMap,
+            [id]: newState
+          }));
+        }}
+        style={style}
+        list={podsCollectionList}
+      />
+    </>
+  );
 };
+
+const SearchPodInputContainer = styled.div`
+  padding: 24px;
+`;
 
 export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const activeBottomModal = useBottomModal();
