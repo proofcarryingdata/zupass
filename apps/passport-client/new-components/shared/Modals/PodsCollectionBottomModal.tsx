@@ -32,6 +32,7 @@ import { ScrollIndicator } from "../../screens/Home/NewHomeScreen";
 import { Avatar } from "../Avatar";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
+import { Input2 } from "../Input";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
 import { useOrientation } from "../utils";
@@ -82,7 +83,7 @@ export const PodsCollectionList = ({
   style
 }: PodsCollectionListProps): ReactElement => {
   const pcdCollection = usePCDCollection();
-
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
     // If we have the same ticket in both POD and EDSA, we want to show only the POD one
@@ -121,11 +122,46 @@ export const PodsCollectionList = ({
       });
     }
 
-    return Object.values(result).filter((group) => group.children.length > 0);
-  }, [pcdCollection, onPodClick]);
+    return Object.values(result)
+      .map((group) => {
+        if (!searchQuery) {
+          return group;
+        }
 
-  return <List style={style} list={podsCollectionList} />;
+        if (
+          group.title &&
+          group.title.toLowerCase().includes(searchQuery.toLowerCase())
+        ) {
+          return group;
+        }
+
+        return {
+          ...group,
+          children: group.children.filter((pod) =>
+            pod.title.toLowerCase().includes(searchQuery.toLowerCase())
+          )
+        };
+      })
+      .filter((group) => group.children.length > 0);
+  }, [pcdCollection, onPodClick, searchQuery]);
+
+  return (
+    <>
+      <SearchPodInputContainer>
+        <Input2
+          placeholder="Search for pods..."
+          variant="secondary"
+          onChange={({ target: { value } }) => setSearchQuery(value)}
+        />
+      </SearchPodInputContainer>
+      <List style={style} list={podsCollectionList} />
+    </>
+  );
 };
+
+const SearchPodInputContainer = styled.div`
+  padding: 24px;
+`;
 
 export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const activeBottomModal = useBottomModal();
