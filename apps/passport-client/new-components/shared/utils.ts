@@ -65,3 +65,15 @@ export const useOrientation = (): ScreenOrientation => {
 
   return state;
 };
+
+export const POD_FOLDER_DISPLAY_SEPERATOR = "·";
+
+export const replaceDotWithSlash = (folderPath: string): string => {
+  const splitted = folderPath.split(POD_FOLDER_DISPLAY_SEPERATOR);
+  if (splitted.length === 1) return folderPath;
+
+  for (let i = 0; i < splitted.length; i++) {
+    splitted[i] = splitted[i].trim();
+  }
+  return splitted.join("/");
+};
