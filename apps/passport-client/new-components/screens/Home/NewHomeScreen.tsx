@@ -50,7 +50,7 @@ import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModa
 import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
-import { isMobile, useOrientation } from "../../shared/utils";
+import { hideScrollCSS, isMobile, useOrientation } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 
@@ -254,6 +254,8 @@ const ListContainer = styled.div`
 
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
   position: relative;
+
+  ${hideScrollCSS}
 `;
 const OuterContainer = styled.div`
   display: flex;
