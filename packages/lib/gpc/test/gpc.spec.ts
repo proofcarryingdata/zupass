@@ -1966,6 +1966,90 @@ describe("gpcArtifactDownloadURL should work", async function () {
     }
   });
 
+  it("should work for source=jsdelivr", async function () {
+    const TEST_CASES = [
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: undefined,
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: undefined,
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "test",
+        version: "",
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "test",
+        version: "foo",
+        zupassURL: undefined,
+        expected:
+          "https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@foo"
+      },
+      {
+        stability: "prod",
+        version: "foo",
+        zupassURL: undefined,
+        expected:
+          "https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@foo"
+      },
+      {
+        stability: "prod",
+        version: "foo/bar",
+        zupassURL: "https://zupass.org",
+        expected:
+          "https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@foo/bar"
+      }
+    ];
+
+    for (const testCase of TEST_CASES) {
+      if (testCase.expected !== undefined) {
+        expect(
+          gpcArtifactDownloadURL(
+            "jsdelivr",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.eq(testCase.expected);
+      } else {
+        expect(() =>
+          gpcArtifactDownloadURL(
+            "jsdelivr",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.throw(Error);
+      }
+    }
+  });
+
   it("should throw on missing or invalid source", async function () {
     expect(() =>
       gpcArtifactDownloadURL(

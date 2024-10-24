@@ -166,7 +166,7 @@ export async function gpcDemo(): Promise<boolean> {
   // If this code were running in a browser, we'd need a URL to download
   // artifacts.  We can get one from the function below, to use in a browser,
   // or to download separately into your own Node environment.
-  const artifactsURL = gpcArtifactDownloadURL("unpkg", "prod", undefined);
+  const artifactsURL = gpcArtifactDownloadURL("jsdelivr", "prod", undefined);
   console.log("In browser we'd download artifacts from", artifactsURL);
 
   //////////////////////////////////////////////////////////////////////////////
