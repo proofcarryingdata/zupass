@@ -1360,7 +1360,7 @@ export class PretixPipeline implements BasePipeline {
     delete ticketCopy.timestampSigned;
     const hash = await getHash(
       stable_stringify(ticketCopy) +
-        "2" +
+        "3" +
         eddsaPrivateKey +
         pipelineId +
         PODTicketPCDTypeName

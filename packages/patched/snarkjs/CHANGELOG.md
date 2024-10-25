@@ -1,5 +1,16 @@
 # @pcd/snarkjs
 
+## 0.10.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/circom_runtime@0.4.0
+
 ## 0.9.0
 
 ### Minor Changes

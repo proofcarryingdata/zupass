@@ -1,15 +1,8 @@
-import { parseGPCArtifactsConfig } from "@pcd/client-shared";
 import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
-import {
-  GPCArtifactSource,
-  GPCArtifactStability,
-  GPCArtifactVersion,
-  gpcArtifactDownloadURL
-} from "@pcd/gpc";
 import { GPCPCDPackage } from "@pcd/gpc-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { MessagePCDPackage } from "@pcd/message-pcd";
@@ -31,6 +24,7 @@ import { ZKEdDSAFrogPCDPackage } from "@pcd/zk-eddsa-frog-pcd";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
 import { makeEncodedVerifyLink } from "./qr";
+import { getGPCArtifactsURL } from "./util";
 
 let pcdPackages: Promise<PCDPackage[]> | undefined;
 
@@ -77,19 +71,8 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await PODPCDPackage.init?.({});
 
-  // Environment variable configure how we fetch GPC artifacts, however we
-  // default to fetching from the Zupass server rather than unpkg.
-  const gpcArtifactsConfig = parseGPCArtifactsConfig(
-    process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined &&
-      process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== ""
-      ? process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE
-      : '{"source": "zupass", "stability": "prod", "version": ""}'
-  );
   await GPCPCDPackage.init?.({
-    zkArtifactPath: gpcArtifactDownloadURL(
-      gpcArtifactsConfig.source as GPCArtifactSource,
-      gpcArtifactsConfig.stability as GPCArtifactStability,
-      gpcArtifactsConfig.version as GPCArtifactVersion,
+    zkArtifactPath: getGPCArtifactsURL(
       "/" /* zupassURL can use a site-relative URL */
     )
   });

@@ -36,7 +36,7 @@ export function AuthenticateIFrameScreen(): ReactNode {
           type: "auth",
           encryptionKey: encryptionKey as string
         } satisfies IFrameAuthenticationMessage,
-        origin,
+        window.location.origin,
         [chan.port2]
       );
       window.close();

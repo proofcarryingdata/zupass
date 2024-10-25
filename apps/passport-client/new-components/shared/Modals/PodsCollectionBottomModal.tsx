@@ -11,28 +11,30 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isUnknownPCD } from "@pcd/unknown-pcd";
 import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
 import intersectionWith from "lodash/intersectionWith";
-import styled, { CSSProperties } from "styled-components";
 import {
   ReactElement,
   ReactNode,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
   useState
 } from "react";
 import { useSearchParams } from "react-router-dom";
+import styled, { CSSProperties } from "styled-components";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
   useBottomModal,
   useDispatch,
   usePCDCollection
 } from "../../../src/appHooks";
+import { ScrollIndicator } from "../../screens/Home/NewHomeScreen";
 import { Avatar } from "../Avatar";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
-import { useOrientation } from "../utils";
+import { hideScrollCSS, useOrientation } from "../utils";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -129,6 +131,8 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const activeBottomModal = useBottomModal();
   const [scrollPosition, setScrollPosition] = useState(0);
   const listContainerRef = useRef<HTMLDivElement | null>(null);
+  const timer = useRef<NodeJS.Timeout>();
+  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
   const dispatch = useDispatch();
   const [params, setParams] = useSearchParams();
   const orientation = useOrientation();
@@ -146,6 +150,24 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     isPodsCollectionModalOpen && activeBottomModal.modalGoBackBehavior
       ? activeBottomModal.modalGoBackBehavior
       : "close";
+
+  // Check scrollability
+  const checkScrollability = (): void => {
+    if (listContainerRef.current) {
+      const scrollable =
+        listContainerRef.current.scrollHeight >
+        listContainerRef.current.clientHeight;
+      setShowScrollIndicator(scrollable);
+    }
+  };
+
+  // Check scrollability on mount and when modal opens
+  useEffect(() => {
+    if (isPodsCollectionModalOpen) {
+      checkScrollability();
+    }
+  }, [isPodsCollectionModalOpen]);
+
   useLayoutEffect(() => {
     // Restore scroll position when list is shown again
     if (isPodsCollectionModalOpen && listContainerRef.current) {
@@ -182,25 +204,47 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
             </Typography>
           </UserTitleContainer>
         )}
-        <ListContainer ref={listContainerRef}>
+        <ListContainer
+          ref={listContainerRef}
+          onScroll={(e) => {
+            const scrollTop = e.currentTarget.scrollTop;
+            if (scrollTop === 0) {
+              // start timer
+              const id = setTimeout(() => {
+                setShowScrollIndicator(true);
+              }, 2000);
+              timer.current = id;
+            } else {
+              setShowScrollIndicator(false);
+              // clearing timer on scroll so it won't flash to the user mid scroll
+              if (timer.current) {
+                clearTimeout(timer.current);
+                timer.current = undefined;
+              }
+            }
+          }}
+        >
           {activePod ? (
             <CardBody isMainIdentity={false} pcd={activePod} />
           ) : (
-            <PodsCollectionList
-              style={{ padding: "12px 24px", paddingTop: 0 }}
-              onPodClick={(pcd) => {
-                listContainerRef.current &&
-                  setScrollPosition(listContainerRef.current.scrollTop);
-                dispatch({
-                  type: "set-bottom-modal",
-                  modal: {
-                    modalType: "pods-collection",
-                    activePod: pcd,
-                    modalGoBackBehavior: "back"
-                  }
-                });
-              }}
-            />
+            <>
+              <PodsCollectionList
+                style={{ padding: "12px 24px", paddingTop: 0 }}
+                onPodClick={(pcd) => {
+                  listContainerRef.current &&
+                    setScrollPosition(listContainerRef.current.scrollTop);
+                  dispatch({
+                    type: "set-bottom-modal",
+                    modal: {
+                      modalType: "pods-collection",
+                      activePod: pcd,
+                      modalGoBackBehavior: "back"
+                    }
+                  });
+                }}
+              />
+              {showScrollIndicator && <ScrollIndicator />}
+            </>
           )}
         </ListContainer>
         <ContainerWithPadding>
@@ -230,6 +274,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
 const ListContainer = styled.div`
   position: relative; // important for scrolling to the right position of the folder
   overflow-y: auto;
+  ${hideScrollCSS}
 `;
 
 const Container = styled.div<{ isLandscape: boolean }>`
