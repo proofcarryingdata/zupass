@@ -4,10 +4,12 @@ import { expect } from "chai";
 import "mocha";
 import {
   POD_CRYPTOGRAPHIC_MAX,
+  POD_CRYPTOGRAPHIC_MIN,
   POD_DATE_MAX,
   POD_DATE_MIN,
   POD_INT_MAX,
   POD_INT_MIN,
+  POD_NULL_HASH,
   PODNull
 } from "../src/podTypes";
 
@@ -25,5 +27,16 @@ describe("POD type values should be correct", () => {
   it("PODNull should be well-formed", () => {
     expect(PODNull.type).to.eq("null");
     expect(PODNull.value).to.be.null;
+  });
+
+  it("POD_NULL_HASH should fit in a field element", () => {
+    expect(POD_NULL_HASH >= POD_CRYPTOGRAPHIC_MIN).to.be.true;
+    expect(POD_NULL_HASH <= POD_CRYPTOGRAPHIC_MAX).to.be.true;
+  });
+
+  it("POD_NULL_HASH should be nonzero", () => {
+    // We don't care what its value is, but some other libraries (e.g. LeanIMT)
+    // use 0 for special purposes, so we avoid it.
+    expect(POD_NULL_HASH).to.not.eq(0n);
   });
 });

@@ -15,6 +15,10 @@ export const Schema = {
         value: v.string()
       }),
       v.strictObject({
+        type: v.literal("bytes"),
+        value: v.instance(Uint8Array)
+      }),
+      v.strictObject({
         type: v.literal("int"),
         value: v.bigint()
       }),
@@ -23,8 +27,20 @@ export const Schema = {
         value: v.bigint()
       }),
       v.strictObject({
+        type: v.literal("boolean"),
+        value: v.boolean()
+      }),
+      v.strictObject({
         type: v.literal("eddsa_pubkey"),
         value: v.string()
+      }),
+      v.strictObject({
+        type: v.literal("date"),
+        value: v.date()
+      }),
+      v.strictObject({
+        type: v.literal("null"),
+        value: v.null()
       })
     ]),
     v.transform(podValueToJSON)
@@ -33,10 +49,32 @@ export const Schema = {
     v.union([
       v.string(),
       v.number(),
+      v.boolean(),
+      v.null(),
       v.strictObject({ string: v.string() }),
+      v.strictObject({
+        bytes: v.pipe(
+          v.string(),
+          v.base64("Bytes values must be encoded in Base64.")
+        )
+      }),
       v.strictObject({ int: v.union([v.number(), v.string()]) }),
       v.strictObject({ cryptographic: v.union([v.number(), v.string()]) }),
-      v.strictObject({ eddsa_pubkey: v.string() })
+      v.strictObject({ boolean: v.boolean() }),
+      v.strictObject({
+        eddsa_pubkey: v.union([
+          v.pipe(
+            v.string(),
+            v.hexadecimal("Public key values must be encoded in Base64 or hex.")
+          ),
+          v.pipe(
+            v.string(),
+            v.base64("Public key values must be encoded in Base64 or hex.")
+          )
+        ])
+      }),
+      v.strictObject({ date: v.string() }),
+      v.strictObject({ null: v.null() })
     ]),
     v.transform(podValueFromJSON)
   )

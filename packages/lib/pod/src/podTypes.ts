@@ -178,7 +178,7 @@ export const PODNull: PODNullValue = { type: "null", value: null };
  * Fixed hash value representing a PODNullValue in a circuit.
  */
 export const POD_NULL_HASH =
-  0x1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d_1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d_1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d_1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1dn;
+  0x1d1d1d1d1d1d1d1d_1d1d1d1d1d1d1d1d_1d1d1d1d1d1d1d1d_1d1d1d1d1d1d1d1dn;
 
 /**
  * POD values are tagged with their type.  All values contain `type` and `value`

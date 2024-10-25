@@ -19,6 +19,7 @@ import { getPODsForCollections } from "../../../src/zapp/collections";
 import { H2 } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
 import { Spinner } from "../../shared/Spinner";
+import { displayPODValue } from "../../shared/uiUtil";
 
 export function EmbeddedGPCProofScreen({
   proofRequestSchema,
@@ -205,9 +206,9 @@ function ProvePODInfo({
             return (
               <option key={pod.signature} value={pod.signature}>
                 {schema.pod.meta?.labelEntry
-                  ? pod.content
-                      .asEntries()
-                      [schema.pod.meta.labelEntry].value.toString()
+                  ? displayPODValue(
+                      pod.content.asEntries()[schema.pod.meta.labelEntry]
+                    )
                   : pod.signature.substring(0, 16)}
               </option>
             );
@@ -223,7 +224,9 @@ function ProvePODInfo({
             <Fragment key={`${name}-${entryName}`}>
               <EntryName>{entryName}</EntryName>
               <EntryValue>
-                {selectedPODEntries?.[entryName].value.toString() ?? "-"}
+                {selectedPODEntries?.[entryName].value !== undefined
+                  ? displayPODValue(selectedPODEntries?.[entryName])
+                  : "-"}
               </EntryValue>
             </Fragment>
           );
@@ -258,7 +261,7 @@ function ProvePODInfo({
                         <Reveal>
                           <ConstraintList>
                             {entry.isMemberOf
-                              .map((v) => v.value.toString())
+                              .map((v) => displayPODValue(v))
                               .join(", ")}
                           </ConstraintList>
                         </Reveal>
@@ -271,7 +274,7 @@ function ProvePODInfo({
                         <Reveal>
                           <ConstraintList>
                             {entry.isNotMemberOf
-                              .map((v) => v.value.toString())
+                              .map((v) => displayPODValue(v))
                               .join(", ")}
                           </ConstraintList>
                         </Reveal>
@@ -329,7 +332,7 @@ function ProvePODInfo({
                       <ConstraintList>
                         {(tuple.isNotMemberOf ?? tuple.isMemberOf ?? [])
                           .map((v) =>
-                            v.map((e) => e.value.toString()).join(", ")
+                            v.map((e) => displayPODValue(e)).join(", ")
                           )
                           .map((item) => (
                             <div>{item}</div>

@@ -61,14 +61,14 @@ export const sampleEntries2 = {
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedContentID2 =
-  11644737907761529680775166943005109487924287646828484663425212786253107583193n;
+  14490445713061892907571559700953246722753167030842690801373581812224357192993n;
 
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedSignature2Hex =
-  "17eb1c099899a0457b564718429ce21847f863958a40277a650ee636793de39b621e874ebb0070cad5387b1d8a0811e7ddc0bce2f4bdc79b08fe9369f7cd1204";
+  "5ec3cbeb73492a4ab9f4288ef150b7bc314d18f78d7e70ec377ba09faf1a3908cebc030b891a84d88484050489940c5bf5ea24cb26ae52e2a51b20fdf0579205";
 export const expectedSignature2 =
-  "F+scCZiZoEV7VkcYQpziGEf4Y5WKQCd6ZQ7mNnk945tiHodOuwBwytU4ex2KCBHn3cC84vS9x5sI/pNp980SBA";
+  "XsPL63NJKkq59CiO8VC3vDFNGPeNfnDsN3ugn68aOQjOvAMLiRqE2ISEBQSJlAxb9eokyyauUuKlGyD98FeSBQ";
 
 export const testStringsToHash: string[] = [
   "",

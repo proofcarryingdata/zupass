@@ -5,7 +5,11 @@ import {
   POD_INT_MAX,
   POD_INT_MIN,
   POD_NAME_REGEX,
+  PODBooleanValue,
+  PODCryptographicValue,
+  PODDateValue,
   PODEntries,
+  PODIntValue,
   PODName,
   PODValue
 } from "./podTypes";
@@ -425,6 +429,42 @@ export function checkPODValue(
  * @param podValue the value to check
  * @returns `true` if the given value is numeric
  */
-export function isPODNumericValue(podValue: PODValue): boolean {
+export function isPODNumericValue(
+  podValue: PODValue
+): podValue is
+  | PODCryptographicValue
+  | PODIntValue
+  | PODBooleanValue
+  | PODDateValue {
   return getPODValueForCircuit(podValue) !== undefined;
+}
+
+/**
+ * Checks whether a given value is a bounded numeric value of a type which
+ * can be subject to ordered comparison or arithmetic in a circuit.  The
+ * determination is based on the value's type, not its specific value.  This
+ * returns true for all numeric types with a range fitting inside of the
+ * PODIntValue type.
+ *
+ * @param podValue the value to check
+ * @returns `true` if the given value is arithmetic
+ */
+export function isPODArithmeticValue(
+  podValue: PODValue
+): podValue is PODIntValue | PODBooleanValue | PODDateValue {
+  switch (podValue.type) {
+    case "string":
+    case "bytes":
+    case "eddsa_pubkey":
+    case "null":
+    case "cryptographic":
+      return false;
+    case "int":
+    case "boolean":
+    case "date":
+      return true;
+    default:
+      // @ts-expect-error podValue is of type `never` if we've covered all types
+      throw TypeError(`Unknown PODValue type ${podValue.type}!`);
+  }
 }

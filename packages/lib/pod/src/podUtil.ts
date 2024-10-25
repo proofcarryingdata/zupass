@@ -24,8 +24,32 @@ export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
     case "date":
       return BigInt(podValue.value.getTime());
     default:
-      return undefined;
+      // @ts-expect-error podValue is of type `never` if we've covered all types
+      throw TypeError(`Unknown PODValue type ${podValue.type}!`);
   }
+}
+
+/**
+ * As {@link getPODValueForCircuit} but throws a TypeError if the value is not
+ * of a numeric type.
+ *
+ * @param podValue the value to convert
+ * @param nameForErrorMessages the name of this value, which is used only for
+ *   error messages (not checked for legality).
+ * @returns the numeric value, or undefined if this value cannot be represented
+ *   in a circuit
+ */
+export function getRequiredPODValueForCircuit(
+  podValue: PODValue,
+  nameForErrorMesages?: string
+): bigint {
+  const numericValue = getPODValueForCircuit(podValue);
+  if (numericValue === undefined) {
+    throw new TypeError(
+      `Non-numeric value ${nameForErrorMesages} cannot be represented in-circuit.`
+    );
+  }
+  return numericValue;
 }
 
 /**

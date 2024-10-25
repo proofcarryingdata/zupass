@@ -238,24 +238,27 @@ export class PODPipeline implements BasePipeline {
       if (atom.matchTo.type === "none") {
         // No filter, so all atoms match to all credentials
         matchingAtoms.push(atom);
-      } else if (atom.matchTo.type === "email") {
+      } else {
+        const entry = atom.entries[atom.matchTo.entry];
         if (
+          atom.matchTo.type === "email" &&
+          entry.type === "string" &&
           emails
             ?.map((e) => e.email.toLowerCase())
-            ?.includes(
-              atom.entries[atom.matchTo.entry].value.toString().toLowerCase()
-            )
+            ?.includes(entry.value.toLowerCase())
         ) {
           matchingAtoms.push(atom);
-        }
-      } else if (atom.matchTo.type === "semaphoreID") {
-        // semaphoreId is a string representation of a Semaphore commitment, as
-        // retrieved from the user's credential, which is a
-        // SemaphoreSignaturePCD.
-        // However, in PODs we use bigints (the POD "cryptographic" type) for
-        // this, so it's necessary to convert the value to a string for
-        // comparison.
-        if (atom.entries[atom.matchTo.entry].value.toString() === semaphoreId) {
+        } else if (
+          atom.matchTo.type === "semaphoreID" &&
+          entry.type === "cryptographic" &&
+          entry.value.toString() === semaphoreId
+        ) {
+          // semaphoreId is a string representation of a Semaphore commitment, as
+          // retrieved from the user's credential, which is a
+          // SemaphoreSignaturePCD.
+          // However, in PODs we use bigints (the POD "cryptographic" type) for
+          // this, so it's necessary to convert the value to a string for
+          // comparison above.
           matchingAtoms.push(atom);
         }
       }
