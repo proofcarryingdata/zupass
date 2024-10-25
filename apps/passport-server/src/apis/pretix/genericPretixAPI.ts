@@ -28,7 +28,8 @@ export interface IGenericPretixAPI {
   fetchOrders(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixOrder[]>;
   /**
    * On Pretix you can sell several different types of things to your
@@ -41,29 +42,38 @@ export interface IGenericPretixAPI {
   fetchProducts(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixProduct[]>;
   fetchEvent(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixEvent>;
   fetchEventCheckinLists(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixCheckinList[]>;
   fetchEventSettings(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixEventSettings>;
   fetchProductCategories(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixProductCategory[]>;
-  fetchAllEvents(orgUrl: string, token: string): Promise<GenericPretixEvent[]>;
+  fetchAllEvents(
+    orgUrl: string,
+    token: string,
+    abortController?: AbortController
+  ): Promise<GenericPretixEvent[]>;
   /**
    * It would probably be good practice to have some sort of lock on the act
    * of checking in a generic issuance ticket for a particular external event id.
@@ -74,7 +84,8 @@ export interface IGenericPretixAPI {
     token: string,
     positionSecret: string,
     checkinListId: string,
-    timestamp: string
+    timestamp: string,
+    abortController?: AbortController
   ): Promise<void>;
   cancelPendingRequests(): void;
 }
@@ -128,11 +139,12 @@ class OrganizerRequestQueue {
   public fetch(
     input: RequestInfo | URL,
     init?: RequestInit,
-    priority?: number
+    priority?: number,
+    abort?: AbortController
   ): Promise<Response> {
     // Set up an abort controller for this request. This is used to cancel
     // pending requests, e.g. during app shutdown.
-    const abortController = new AbortController();
+    const abortController = abort ?? new AbortController();
     const abortHandler = (): void => {
       abortController.abort();
     };
@@ -244,7 +256,8 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 
   public async fetchAllEvents(
     orgUrl: string,
-    token: string
+    token: string,
+    abortController?: AbortController
   ): Promise<GenericPretixEvent[]> {
     return traced(TRACE_SERVICE, "fetchAllEvents", async (span) => {
       span?.setAttribute("org_url", orgUrl);
@@ -254,9 +267,14 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       let url = `${orgUrl}/events`;
       while (url) {
         logger(`[GENERIC PRETIX] Fetching events: ${url}`);
-        const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${token}` }
-        });
+        const res = await this.getOrCreateQueue(orgUrl).fetch(
+          url,
+          {
+            headers: { Authorization: `Token ${token}` }
+          },
+          0,
+          abortController
+        );
         if (!res.ok) {
           throw new Error(
             `[GENERIC PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
@@ -284,16 +302,22 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   public async fetchEvent(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixEvent> {
     return traced(TRACE_SERVICE, "fetchEvent", async (span) => {
       span?.setAttribute("org_url", orgUrl);
       // Fetch event API
       const url = `${orgUrl}/events/${eventID}/`;
       logger(`[GENERIC PRETIX] Fetching event: ${url}`);
-      const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-        headers: { Authorization: `Token ${token}` }
-      });
+      const res = await this.getOrCreateQueue(orgUrl).fetch(
+        url,
+        {
+          headers: { Authorization: `Token ${token}` }
+        },
+        0,
+        abortController
+      );
       if (!res.ok) {
         throw new Error(
           `[GENERIC PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
@@ -313,16 +337,22 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   public async fetchEventSettings(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixEventSettings> {
     return traced(TRACE_SERVICE, "fetchEventSettings", async (span) => {
       span?.setAttribute("org_url", orgUrl);
       // Fetch event settings API
       const url = `${orgUrl}/events/${eventID}/settings`;
       logger(`[GENERIC PRETIX] Fetching event settings: ${url}`);
-      const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-        headers: { Authorization: `Token ${token}` }
-      });
+      const res = await this.getOrCreateQueue(orgUrl).fetch(
+        url,
+        {
+          headers: { Authorization: `Token ${token}` }
+        },
+        0,
+        abortController
+      );
       if (!res.ok) {
         throw new Error(
           `[GENERIC PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
@@ -344,7 +374,8 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   public async fetchProductCategories(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixProductCategory[]> {
     return traced(TRACE_SERVICE, "fetchAddons", async (span) => {
       span?.setAttribute("org_url", orgUrl);
@@ -354,9 +385,14 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       let url = `${orgUrl}/events/${eventID}/categories/`;
       while (url) {
         logger(`[GENERIC PRETIX] Fetching categories: ${url}`);
-        const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${token}` }
-        });
+        const res = await this.getOrCreateQueue(orgUrl).fetch(
+          url,
+          {
+            headers: { Authorization: `Token ${token}` }
+          },
+          0,
+          abortController
+        );
         if (!res.ok) {
           throw new Error(
             `[GENERIC PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
@@ -383,7 +419,8 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   public async fetchProducts(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixProduct[]> {
     return traced(TRACE_SERVICE, "fetchItems", async (span) => {
       span?.setAttribute("org_url", orgUrl);
@@ -393,9 +430,14 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       let url = `${orgUrl}/events/${eventID}/items/`;
       while (url) {
         logger(`[GENERIC PRETIX] Fetching items: ${url}`);
-        const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${token}` }
-        });
+        const res = await this.getOrCreateQueue(orgUrl).fetch(
+          url,
+          {
+            headers: { Authorization: `Token ${token}` }
+          },
+          0,
+          abortController
+        );
         if (!res.ok) {
           throw new Error(
             `[GENERIC] Error fetching ${url}: ${res.status} ${res.statusText}`
@@ -423,7 +465,8 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   public async fetchOrders(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixOrder[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async (span) => {
       span?.setAttribute("org_url", orgUrl);
@@ -433,9 +476,14 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       let url = `${orgUrl}/events/${eventID}/orders/`;
       while (url) {
         logger(`[GENERIC PRETIX] Fetching orders ${url}`);
-        const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${token}` }
-        });
+        const res = await this.getOrCreateQueue(orgUrl).fetch(
+          url,
+          {
+            headers: { Authorization: `Token ${token}` }
+          },
+          0,
+          abortController
+        );
         if (!res.ok) {
           throw new Error(
             `[GENERIC PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
@@ -472,7 +520,8 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   public async fetchEventCheckinLists(
     orgUrl: string,
     token: string,
-    eventID: string
+    eventID: string,
+    abortController?: AbortController
   ): Promise<GenericPretixCheckinList[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async (span) => {
       span?.setAttribute("org_url", orgUrl);
@@ -482,9 +531,14 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       let url = `${orgUrl}/events/${eventID}/checkinlists/`;
       while (url) {
         logger(`[GENERIC PRETIX] Fetching orders ${url}`);
-        const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${token}` }
-        });
+        const res = await this.getOrCreateQueue(orgUrl).fetch(
+          url,
+          {
+            headers: { Authorization: `Token ${token}` }
+          },
+          0,
+          abortController
+        );
         if (!res.ok) {
           throw new Error(
             `[GENERIC PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
@@ -514,7 +568,8 @@ export class GenericPretixAPI implements IGenericPretixAPI {
     token: string,
     positionSecret: string,
     checkinListId: string,
-    timestamp: string
+    timestamp: string,
+    abortController?: AbortController
   ): Promise<void> {
     return traced(TRACE_SERVICE, "pushCheckin", async (span) => {
       span?.setAttribute("org_url", orgUrl);
@@ -539,7 +594,8 @@ export class GenericPretixAPI implements IGenericPretixAPI {
         // Priority greater than zero means that this will jump the queue and
         // be processed next, necessary if we happen to be running a sync at
         // the time of check-in.
-        1
+        1,
+        abortController
       );
 
       if (!res.ok) {

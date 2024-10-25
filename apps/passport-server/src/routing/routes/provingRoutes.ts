@@ -7,6 +7,7 @@ import {
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { checkQueryParam } from "../params";
 
 export function initProvingRoutes(
@@ -22,6 +23,7 @@ export function initProvingRoutes(
    * @todo - turn off for zuconnect / devconnect
    */
   app.post("/pcds/prove", async (req: Request, res: Response) => {
+    checkExistsForRoute(provingService);
     const result = await provingService.enqueueProofRequest(
       req.body as ServerProofRequest
     );
@@ -35,6 +37,7 @@ export function initProvingRoutes(
    * @todo - turn off for zuconnect / devconnect
    */
   app.get("/pcds/supported", async (_req: Request, res: Response) => {
+    checkExistsForRoute(provingService);
     res.json(
       provingService.getSupportedPCDTypes() satisfies SupportedPCDsResponseValue
     );
@@ -46,6 +49,7 @@ export function initProvingRoutes(
    * @todo - turn off for zuconnect / devconnect
    */
   app.get("/pcds/status", async (req: Request, res: Response) => {
+    checkExistsForRoute(provingService);
     const result = provingService.getPendingPCDStatus(
       checkQueryParam(req, "hash")
     );

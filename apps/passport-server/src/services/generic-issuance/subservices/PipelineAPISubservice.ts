@@ -17,6 +17,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
 import { str } from "@pcd/util";
+import _ from "lodash";
 import { PoolClient } from "postgres-pool";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { sqlTransaction } from "../../../database/sqlQuery";
@@ -190,7 +191,13 @@ export class PipelineAPISubservice {
         )
       } satisfies PipelineInfoResponseValue;
 
-      traceFlattenedObject(span, { loadSummary: lastLoad });
+      if (lastLoad) {
+        const redactedCopyOfLoadSummary = _.cloneDeep(lastLoad);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (redactedCopyOfLoadSummary as any).latestLogs;
+        traceFlattenedObject(span, { loadSummary: redactedCopyOfLoadSummary });
+      }
+
       traceFlattenedObject(span, { pipelineFeeds });
 
       return info;

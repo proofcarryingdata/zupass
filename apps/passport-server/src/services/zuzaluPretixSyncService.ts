@@ -382,9 +382,21 @@ export class ZuzaluPretixSyncService {
 export function startZuzaluPretixSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
-  semaphoreService: SemaphoreService,
+  semaphoreService: SemaphoreService | null,
   pretixAPI: IZuzaluPretixAPI | null
 ): ZuzaluPretixSyncService | null {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting zuzalu pretix sync service`
+    );
+    return null;
+  }
+
+  if (!semaphoreService) {
+    logger("[PRETIX] can't start sync service - no semaphore service");
+    return null;
+  }
+
   if (!pretixAPI) {
     logger("[PRETIX] can't start sync service - no api instantiated");
     return null;

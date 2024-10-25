@@ -7,6 +7,7 @@ import express, { Request, Response } from "express";
 import { sqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
@@ -30,6 +31,7 @@ export function initSemaphoreRoutes(
   app.get(
     "/semaphore/valid-historic/:id/:root",
     async (req: Request, res: Response) => {
+      checkExistsForRoute(semaphoreService);
       const groupId = checkUrlParam(req, "id");
       const roothash = checkUrlParam(req, "root");
 
@@ -62,6 +64,7 @@ export function initSemaphoreRoutes(
   app.get(
     "/semaphore/historic/:id/:root",
     async (req: Request, res: Response) => {
+      checkExistsForRoute(semaphoreService);
       const historicGroup = await sqlTransaction(context.dbPool, (client) =>
         semaphoreService.getHistoricSemaphoreGroup(
           client,
@@ -89,6 +92,7 @@ export function initSemaphoreRoutes(
    * @todo - write tests?
    */
   app.get("/semaphore/latest-root/:id", async (req: Request, res: Response) => {
+    checkExistsForRoute(semaphoreService);
     const id = checkUrlParam(req, "id");
     const latestGroups = await sqlTransaction(context.dbPool, (client) =>
       semaphoreService.getLatestSemaphoreGroups(client)
@@ -111,6 +115,7 @@ export function initSemaphoreRoutes(
    * @todo - write tests?
    */
   app.get("/semaphore/:id", async (req: Request, res: Response) => {
+    checkExistsForRoute(semaphoreService);
     const semaphoreId = checkUrlParam(req, "id");
     const namedGroup = semaphoreService.getNamedGroup(semaphoreId);
 

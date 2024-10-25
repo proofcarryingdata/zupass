@@ -960,13 +960,25 @@ export class UserService {
 
 export function startUserService(
   context: ApplicationContext,
-  semaphoreService: SemaphoreService,
+  semaphoreService: SemaphoreService | null,
   emailTokenService: EmailTokenService,
   emailService: EmailService,
   rateLimitService: RateLimitService,
   genericIssuanceService: GenericIssuanceService | null,
   credentialSubservice: CredentialSubservice
-): UserService {
+): UserService | null {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting user service`
+    );
+    return null;
+  }
+
+  if (!semaphoreService) {
+    logger("[USER_SERVICE] can't start user service - no semaphore service");
+    return null;
+  }
+
   const userService = new UserService(
     context,
     semaphoreService,

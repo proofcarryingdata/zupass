@@ -495,6 +495,7 @@ export interface PipelineInfoResponseValue {
   latestConsumers?: PipelineInfoConsumer[];
   editHistory?: HydratedPipelineHistoryEntry[];
   zuAuthConfig?: PipelineZuAuthConfig[];
+  smallVersion?: boolean;
 }
 
 export interface ListSingleFeedRequest {

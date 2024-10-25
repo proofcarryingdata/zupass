@@ -1,5 +1,6 @@
 import { requireEnv } from "@pcd/server-shared";
 import { spawn } from "child_process";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 
 /**
  * Generate a random 6-digit random token for use as a token.
@@ -107,4 +108,12 @@ export function ensureDefined<T>(val: T | undefined, errorMessage?: string): T {
     throw new Error(errorMessage ?? "Undefined value");
   }
   return val;
+}
+
+export function checkExistsForRoute(
+  frogcryptoService: unknown | null
+): asserts frogcryptoService {
+  if (!frogcryptoService) {
+    throw new PCDHTTPError(503, "service not instantiated");
+  }
 }

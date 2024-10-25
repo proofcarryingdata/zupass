@@ -11,6 +11,7 @@ import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { IPipelineDefinitionDB } from "../../../../database/queries/pipelineDefinitionDB";
 import { IPipelineEmailDB } from "../../../../database/queries/pipelineEmailDB";
 import { IPipelineManualTicketDB } from "../../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
@@ -20,6 +21,7 @@ import {
 } from "../../../../database/queries/ticketActionDBs";
 import { ApplicationContext } from "../../../../types";
 import { EmailService } from "../../../emailService";
+import { LocalFileService } from "../../../LocalFileService";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { traced } from "../../../telemetryService";
 import { tracePipeline } from "../../honeycombQueries";
@@ -47,6 +49,7 @@ export interface InstantiatePipelineArgs {
   lemonadeAPI: ILemonadeAPI;
   genericPretixAPI: IGenericPretixAPI;
   pipelineAtomDB: IPipelineAtomDB;
+  pipelineDB: IPipelineDefinitionDB;
   checkinDB: IPipelineCheckinDB;
   contactDB: IContactSharingDB;
   emailDB: IPipelineEmailDB;
@@ -57,6 +60,7 @@ export interface InstantiatePipelineArgs {
   credentialSubservice: CredentialSubservice;
   emailService: EmailService;
   context: ApplicationContext;
+  localFileService: LocalFileService | null;
 }
 
 /**
@@ -96,6 +100,7 @@ export function instantiatePipeline(
         args.eddsaPrivateKey,
         definition,
         args.pipelineAtomDB,
+        args.pipelineDB,
         args.genericPretixAPI,
         args.credentialSubservice,
         args.cacheService,
@@ -103,7 +108,8 @@ export function instantiatePipeline(
         args.consumerDB,
         args.manualTicketDB,
         args.semaphoreHistoryDB,
-        args.context
+        args.context,
+        args.localFileService
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(

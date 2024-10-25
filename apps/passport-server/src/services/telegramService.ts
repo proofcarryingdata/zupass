@@ -1779,6 +1779,13 @@ export async function startTelegramService(
   const forwardBotToken = process.env.TELEGRAM_FORWARD_BOT_TOKEN;
   const anonBotExists = !!(anonBotToken && anonBotToken !== botToken);
 
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting telegram service`
+    );
+    return null;
+  }
+
   if (process.env.TELEGRAM_BOT_DISABLED === "true") {
     logger(
       `[INIT] TELEGRAM_BOT_DISABLED is true - not starting telegram service`
