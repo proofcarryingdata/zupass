@@ -175,7 +175,7 @@ describe("PODPCD backward compatibility", async function () {
     expect(deserialized.proof).to.deep.eq(testPCD.proof);
   });
 
-  it("should properly deserialize a PCD in the json-bigint format", async function () {
+  it("should properly deserialize a PCD in the JSON format", async function () {
     const testPCD = await makeCompatTestPCD();
 
     // Serialized when the JSON format was added to serialize()
