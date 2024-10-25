@@ -5,10 +5,8 @@ import {
   POD_INT_MAX,
   POD_INT_MIN,
   POD_NAME_REGEX,
-  POD_VALUE_STRING_TYPE_IDENTIFIER,
   PODEntries,
   PODName,
-  PODRawValue,
   PODValue
 } from "./podTypes";
 import {
@@ -27,6 +25,15 @@ import {
 export const PRIVATE_KEY_REGEX = new RegExp(
   /^(?:([A-Za-z0-9+/]{43}=?)|([0-9A-Fa-f]{64}))$/
 );
+
+/**
+ * Description of the match groups in {@link PRIVATE_KEY_REGEX} and how they
+ * map to encoding formats, as needed by {@link decodeBytesAuto}.
+ */
+export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
+  { index: 1, encoding: "base64" },
+  { index: 2, encoding: "hex" }
+];
 
 /**
  * Public keys are 32 bytes (a packed elliptic curve point), represented as
@@ -64,15 +71,6 @@ export const SIGNATURE_REGEX = new RegExp(
  * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
 export const SIGNATURE_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
-  { index: 1, encoding: "base64" },
-  { index: 2, encoding: "hex" }
-];
-
-/**
- * Description of the match groups in {@link PRIVATE_KEY_REGEX} and how they
- * map to encoding formats, as needed by {@link decodeBytesAuto}.
- */
-export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
   { index: 1, encoding: "base64" },
   { index: 2, encoding: "hex" }
 ];
@@ -138,6 +136,55 @@ export function checkSignatureFormat(signature: string): string {
 }
 
 /**
+ * Regular expression matching valid Base64 encoding of any length, with
+ * optional padding.
+ */
+export const BASE64_REGEX = new RegExp(
+  /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}(?:==)?|[A-Za-z0-9+/]{3}=?)?$/
+);
+
+/**
+ * Checks that the given string is encoded in valid Base64.
+ *
+ * @param encoded the string-encoded bytes
+ * @param errorMessage human-readable message for error thrown if decoding
+ *  fails.
+ * @returns
+ */
+export function checkBase64Encoding(
+  encoded: string,
+  errorMessage?: string
+): string {
+  if (!encoded.match(BASE64_REGEX)) {
+    throw new TypeError(errorMessage ?? "Invalid base64 bytes");
+  }
+  return encoded;
+}
+
+/**
+ * Regular expression matching valid hex encoding.
+ */
+export const HEX_REGEX = new RegExp(/^[0-9A-Fa-f]*$/);
+
+/**
+ * Checks that the given string is encoded in valid Base64.
+ *
+ * @param encoded the string-encoded bytes
+ * @param errorMessage human-readable message for error thrown if decoding
+ *  fails.
+ * @returns
+ */
+export function checkHexEncoding(
+  encoded: string,
+  errorMessage?: string
+): string {
+  if (!encoded.match(HEX_REGEX)) {
+    throw new TypeError(errorMessage ?? "Invalid hex bytes");
+  }
+  return encoded;
+}
+
+/**
  * Checks that the input matches the proper format for an entry name, as given
  * by {@link POD_NAME_REGEX}.
  *
@@ -179,9 +226,10 @@ export function checkPODEntries(podEntries: PODEntries): void {
 /**
  * Checks that `value` has the run-time type given by `typeName`.
  *
- * Works for any runtime JavaScript type, but two values have special meaning.
+ * Works for any runtime JavaScript type, but three values have special meaning.
  * "object" is used specifically to require a non-null non-array object, while
- * "array" is used to mean a non-null array object.
+ * "array" is used to mean a non-null array object, and "null" is used for the
+ * null object.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -208,6 +256,14 @@ export function requireType(
         throw new TypeError(
           `Invalid value for entry ${nameForErrorMessages}.  \
           Expected an array.`
+        );
+      }
+      break;
+    case "null":
+      if (typeof value !== "object" || Array.isArray(value) || value !== null) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+            Expected a null object.`
         );
       }
       break;
@@ -239,34 +295,11 @@ export function requireType(
  */
 export function requireValueType(
   nameForErrorMessages: string,
-  value: PODRawValue,
+  value: PODValue["value"],
   typeName: string
-): PODRawValue {
+): PODValue["value"] {
   requireType(nameForErrorMessages, value, typeName);
   return value;
-}
-
-/**
- * Checks string-encoded value type prefix for its validity, i.e. that
- * it is actually of type {@link POD_VALUE_STRING_TYPE_IDENTIFIER}.
- *
- * @param nameForErrorMessages the name of the value from which the type name is
- *   derived, used only for error messages.
- * @param typePrefix the type prefix to check
- * @returns the type prefix as the appropriate type
- * @throws Error if the type prefix is invalid
- */
-export function checkStringEncodedValueType(
-  nameForErrorMessages: string,
-  typePrefix: string
-): POD_VALUE_STRING_TYPE_IDENTIFIER {
-  if (typePrefix === EDDSA_PUBKEY_TYPE_STRING || typePrefix === "string") {
-    return typePrefix;
-  } else {
-    throw new Error(
-      `Invalid string-encoded value type ${typePrefix} in ${nameForErrorMessages}.`
-    );
-  }
 }
 
 /**
@@ -312,7 +345,8 @@ export function checkPODValue(
 ): PODValue {
   if (podValue === null) {
     throw new TypeError(
-      `POD value for ${nameForErrorMessages} cannot be null.`
+      `POD value for ${nameForErrorMessages} cannot be null.` +
+        "  Consider PODNull instead."
     );
   }
   if (podValue === undefined || podValue.value === undefined) {
@@ -320,20 +354,23 @@ export function checkPODValue(
       `POD value for ${nameForErrorMessages} cannot be undefined.`
     );
   }
-  if (podValue.value === null) {
-    throw new TypeError(
-      `POD value for ${nameForErrorMessages} cannot be null.`
-    );
-  }
-
   if (podValue.type === undefined) {
     throw new TypeError(
       `POD value for ${nameForErrorMessages} must have a type.`
     );
   }
+
   switch (podValue.type) {
     case "string":
       requireValueType(nameForErrorMessages, podValue.value, "string");
+      break;
+    case "bytes":
+      requireValueType(nameForErrorMessages, podValue.value, "object");
+      if (!(podValue.value instanceof Uint8Array)) {
+        throw new TypeError(
+          `Bytes value ${nameForErrorMessages} must be a UInt8Array.`
+        );
+      }
       break;
     case "cryptographic":
       requireValueType(nameForErrorMessages, podValue.value, "bigint");
@@ -353,9 +390,23 @@ export function checkPODValue(
         POD_INT_MAX
       );
       break;
+    case "boolean":
+      requireValueType(nameForErrorMessages, podValue.value, "boolean");
+      break;
     case EDDSA_PUBKEY_TYPE_STRING:
       requireValueType(nameForErrorMessages, podValue.value, "string");
       checkPublicKeyFormat(podValue.value, nameForErrorMessages);
+      break;
+    case "date":
+      requireValueType(nameForErrorMessages, podValue.value, "object");
+      if (!(podValue.value instanceof Date)) {
+        throw new TypeError(
+          `Date value ${nameForErrorMessages} must be a Date object.`
+        );
+      }
+      break;
+    case "null":
+      requireValueType(nameForErrorMessages, podValue.value, "null");
       break;
     default:
       throw new TypeError(

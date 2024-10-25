@@ -51,22 +51,26 @@ export const expectedSignature1 =
 export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },
   eventID: { type: "cryptographic", value: 456n },
-  ticketID: { type: "cryptographic", value: 999n }
+  ticketID: { type: "cryptographic", value: 999n },
+  isConsumed: { type: "boolean", value: true },
+  issueDate: { type: "date", value: new Date(Date.UTC(2024)) },
+  image: { type: "bytes", value: new Uint8Array([1, 2, 3]) },
+  vipStatus: { type: "null", value: null }
 } satisfies PODEntries;
 
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedContentID2 =
-  8121973595251725959527136190050016648811901981184487048534858036206640503232n;
+  11644737907761529680775166943005109487924287646828484663425212786253107583193n;
 
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedSignature2Hex =
-  "4febca252ff7e55c29bbada47b8b4b32f667e1270eb77f3a9b0f8ee73bebe689eb89d8ff85c4abd22bf32da15ad7f7fbf2c7e7b1d40ade685cb39c990f9f8b00";
+  "17eb1c099899a0457b564718429ce21847f863958a40277a650ee636793de39b621e874ebb0070cad5387b1d8a0811e7ddc0bce2f4bdc79b08fe9369f7cd1204";
 export const expectedSignature2 =
-  "T+vKJS/35Vwpu62ke4tLMvZn4ScOt386mw+O5zvr5onridj/hcSr0ivzLaFa1/f78sfnsdQK3mhcs5yZD5+LAA";
+  "F+scCZiZoEV7VkcYQpziGEf4Y5WKQCd6ZQ7mNnk945tiHodOuwBwytU4ex2KCBHn3cC84vS9x5sI/pNp980SBA";
 
-export const testStringsToHash = [
+export const testStringsToHash: string[] = [
   "",
   "a",
   "A",
@@ -74,6 +78,22 @@ export const testStringsToHash = [
   "valid_identifier",
   "not a valid Identifier",
   "😜"
+];
+
+export const testBytesToHash: Uint8Array[] = [
+  new Uint8Array([]),
+  Buffer.from("hello"),
+  new Uint8Array([1, 2, 3]),
+  Buffer.from(
+    "longbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbytes"
+  )
+];
+
+export const testUniqueBytesToHash: Uint8Array[] = [
+  new Uint8Array([1, 2, 3]),
+  Buffer.from(
+    "longbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbytes"
+  )
 ];
 
 export const testIntsToHash = [
@@ -92,6 +112,12 @@ export const testIntsToHash = [
   // Max 256-bit 32-byte integer value (too large for a circuit, but hashable
   // after being reduced mod R).
   0xffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffffn
+];
+
+export const testDatesToHash = [
+  new Date(1234567),
+  new Date(Date.UTC(2024)),
+  new Date("2024-10-25T04:01:00.638Z")
 ];
 
 export const testPublicKeysToHash = [

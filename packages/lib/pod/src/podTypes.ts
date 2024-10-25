@@ -32,6 +32,9 @@ export const POD_STRING_TYPE_REGEX = new RegExp(/pod_([A-Za-z_]\w*):(.*)$/);
 /**
  * POD value for a user-specififed string.  String values can contain any
  * string.  They are not limited like names.
+ *
+ * Strings are represented in circuits by their hash.  They can be compared for
+ * equality but not subjected to arithmetic or inequality comparisons.
  */
 export type PODStringValue = {
   type: "string";
@@ -39,9 +42,24 @@ export type PODStringValue = {
 };
 
 /**
+ * POD vaue for bytes of binary data of any size.
+ *
+ * Like strings, bytes are represented in circuits by their hash.  They are
+ * hashed in the same way as strings, so a string with the same encoding
+ * can be considered equal to a bytes value.
+ */
+export type PODBytesValue = {
+  type: "bytes";
+  value: Uint8Array;
+};
+
+/**
  * POD value for unconstrained integer values such as hashes.  These can be
  * any value which fits into a circuit signal.  The constants
  * POD_CRYPTOGRAPHIC_MIN and POD_CRYPTOGRAPHIC_MAX specify the legal range.
+ *
+ * Cryptographic values are numeric, but can be compared only for equality,
+ * not subjected to arithmetic manipulation or inequality comparisons.
  */
 export type PODCryptographicValue = {
   type: "cryptographic";
@@ -63,9 +81,9 @@ export const POD_CRYPTOGRAPHIC_MAX =
   1n;
 
 /**
- * POD value for constrained integer values intended for comparison and
- * arithmatic manipulation.  The constants POD_INT_MIN and POD_INT_MAX specify
- * the legal range.
+ * POD value for constrained integer values intended for inequality comparison
+ * and arithmetic manipulation.  The constants {@link POD_INT_MIN} and
+ * {@link POD_INT_MAX} specify the legal range.
  *
  * `int` values are 64-bit signed values. Note that this is the same range as
  * the two's complement representation of 64-bit signed numbers on most
@@ -87,6 +105,16 @@ export const POD_INT_MIN = -(1n << 63n);
 export const POD_INT_MAX = (1n << 63n) - 1n;
 
 /**
+ * POD value for a boolean true/false.  Boolean values are cryptographically
+ * identical to "int" values with the value 0 or 1, but distinguished for
+ * readability and ease of use.
+ */
+export type PODBooleanValue = {
+  type: "boolean";
+  value: boolean;
+};
+
+/**
  * POD value for EdDSA (Baby Jubjub) public keys. Such a value is represented as
  * a hex string of the (32-byte) encoded form of the key.
  */
@@ -103,29 +131,73 @@ export function PODEdDSAPublicKeyValue(value: string): PODEdDSAPublicKeyValue {
 }
 
 /**
+ * POD value for a point in time, defined by a date and timestamp in UTC
+ * accurate to the milliseconds.  Time values are represented cryptographically
+ * a signed integer integer counting milliseconds before/after the epoch
+ * (Jan 1 1970 in UTC time), which can be subject to comparison and arithmetic
+ * manipulation.
+ *
+ * The numeric representation of a time value is a signed integer, with
+ * the same represenation and capabilities as {@link PODIntValue}.  The range
+ * of values is constrained to the limits of the JavaScript Date type, as
+ * defined by the constants {@link POD_DATE_MIN} and {@link POD_DATE_MAX}.
+ */
+export type PODDateValue = {
+  type: "date";
+  value: Date;
+};
+
+/**
+ * Minimum legal value of a `date` entry value.
+ */
+export const POD_DATE_MIN = new Date(-8_640_000_000_000_000);
+
+/**
+ * Maximum legal value of a `date` entry value.
+ */
+export const POD_DATE_MAX = new Date(8_640_000_000_000_000);
+
+/**
+ * POD value for null, to act a placeholder for entries not given a value.
+ *
+ * Since circuits cannot prove the absence of a POD entry, null values can be
+ * used to provably provide no value in an entry.  Null values have no
+ * numeric value, and thus cannot be involved in inequality comparisons or
+ * arithmetic.
+ */
+export type PODNullValue = { type: "null"; value: null };
+
+/**
+ * Convenience constant for a null PODValue.  Note that since users are not
+ * required to use this constant, PODNullValues should not be compared using
+ * `===`, but by examining the type or value fields.
+ */
+export const PODNull: PODNullValue = { type: "null", value: null };
+
+/**
+ * Fixed hash value representing a PODNullValue in a circuit.
+ */
+export const POD_NULL_HASH =
+  0x1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d_1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d_1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d_1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1dn;
+
+/**
  * POD values are tagged with their type.  All values contain `type` and `value`
  * fields, which Typescript separates into distinct types for validation.
  */
 export type PODValue =
   | PODStringValue
+  | PODBytesValue
   | PODCryptographicValue
   | PODIntValue
-  | PODEdDSAPublicKeyValue;
+  | PODBooleanValue
+  | PODEdDSAPublicKeyValue
+  | PODDateValue
+  | PODNullValue;
 
 /**
  * Represents a tuple of POD values as an array.
  */
 export type PODValueTuple = PODValue[];
-
-/**
- * POD raw values are simply unwrapped POD values.
- */
-export type PODRawValue = string | bigint;
-
-/**
- * Represents a tuple of POD raw values as an array.
- */
-export type PODRawValueTuple = PODRawValue[];
 
 /**
  * A set of entries defining a POD, represented in an object.  POD entries

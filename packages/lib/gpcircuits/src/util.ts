@@ -1,7 +1,7 @@
 import {
   decodePublicKey,
   decodeSignature,
-  podStringHash,
+  podBytesHash,
   signPODRoot
 } from "@pcd/pod";
 import { CircomkitConfig } from "circomkit";
@@ -221,7 +221,7 @@ export function dummyObjectSignals(
   const messageHashes = Array(numObjects)
     .fill(undefined)
     .map((_, i) => `unused POD ${i}`)
-    .map(podStringHash);
+    .map(podBytesHash);
 
   const encodedSignatures = messageHashes.map((msgHash) =>
     signPODRoot(msgHash, privateKey)

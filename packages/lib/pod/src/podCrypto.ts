@@ -1,9 +1,9 @@
 import { Point } from "@zk-kit/baby-jubjub";
 import {
-  Signature,
   derivePublicKey,
   packPublicKey,
   packSignature,
+  Signature,
   signMessage,
   unpackPublicKey,
   unpackSignature,
@@ -20,14 +20,14 @@ import {
   SIGNATURE_ENCODING_GROUPS,
   SIGNATURE_REGEX
 } from "./podChecks";
-import { EDDSA_PUBKEY_TYPE_STRING, PODValue } from "./podTypes";
+import { EDDSA_PUBKEY_TYPE_STRING, POD_NULL_HASH, PODValue } from "./podTypes";
 import { CryptoBytesEncoding, decodeBytesAuto, encodeBytes } from "./podUtil";
 
 /**
- * Calculates the appropriate hash for a POD value represented as a string,
- * which could be one of multiple value types (see {@link podValueHash}).
+ * Calculates the appropriate hash for a POD value represented as a string or
+ * bytes, which could be one of multiple value types (see {@link podValueHash}).
  */
-export function podStringHash(input: string): bigint {
+export function podBytesHash(input: string | Uint8Array): bigint {
   return BigInt("0x" + sha256(input)) >> 8n;
 }
 
@@ -50,7 +50,7 @@ export function podEdDSAPublicKeyHash(input: string): bigint {
  * Calculates the appropriate hash for a POD entry name.
  */
 export function podNameHash(podName: string): bigint {
-  return podStringHash(podName);
+  return podBytesHash(podName);
 }
 
 /**
@@ -59,12 +59,19 @@ export function podNameHash(podName: string): bigint {
 export function podValueHash(podValue: PODValue): bigint {
   switch (podValue.type) {
     case "string":
-      return podStringHash(podValue.value);
+    case "bytes":
+      return podBytesHash(podValue.value);
     case "int":
     case "cryptographic":
       return podIntHash(podValue.value);
+    case "boolean":
+      return podIntHash(podValue.value ? 1n : 0n);
     case EDDSA_PUBKEY_TYPE_STRING:
       return podEdDSAPublicKeyHash(podValue.value);
+    case "date":
+      return podIntHash(BigInt(podValue.value.getTime()));
+    case "null":
+      return POD_NULL_HASH;
     default:
       throw new TypeError(`Unexpected type in PODValue ${podValue}.`);
   }
