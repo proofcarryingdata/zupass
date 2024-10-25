@@ -35,6 +35,7 @@ const ListGroup = ({
     <GroupContainer key={id} id={id}>
       <Typography
         onClick={() => onExpanded && id && onExpanded(id, !expanded)}
+        style={{ cursor: onExpanded ? "pointer" : "default" }}
         fontWeight={500}
         color="var(--text-tertiary)"
         family="Rubik"
@@ -45,8 +46,7 @@ const ListGroup = ({
             transform: expanded ? "rotate(90deg)" : undefined,
             transition: "transform 0.2s ease-in-out",
             marginRight: 10,
-            verticalAlign: "text-top",
-            color: "var(--text-primary)"
+            verticalAlign: "text-top"
           }}
         />
         {title}
