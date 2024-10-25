@@ -39,4 +39,9 @@ export const GPC_ARTIFACTS_CONFIG =
         version: ARTIFACTS_NPM_VERSION
       });
 
-export const ZUPASS_GPC_ARTIFACT_PATH = `/artifacts/proto-pod-gpc/${ARTIFACTS_NPM_VERSION}`;
+// Don't use these paths directly in code, or you'll keep the environment
+// variable override from working.  Prefer to use getGPCArtifactsURL instead,
+// which uses the config above.
+export const ZUPASS_GPC_ARTIFACT_BASE_PATH = `/artifacts/proto-pod-gpc`;
+export const ZUPASS_GPC_ARTIFACT_PATH =
+  ZUPASS_GPC_ARTIFACT_BASE_PATH + `/${ARTIFACTS_NPM_VERSION}`;

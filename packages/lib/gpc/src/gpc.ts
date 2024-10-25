@@ -455,12 +455,13 @@ export function gpcArtifactDownloadURL(
           'Zupass artifact download requires a server URL.  Try "https://zupass.org".'
         );
       }
-      const artifactVersion = version ?? GPC_ARTIFACTS_NPM_VERSION;
+      if (version === undefined || version === "") {
+        version = GPC_ARTIFACTS_NPM_VERSION;
+      }
       return urljoin(
         zupassURL,
         stability === "test" ? "artifacts/test" : "artifacts",
-        PROTO_POD_GPC_FAMILY_NAME +
-          (stability === "test" ? "" : `/${artifactVersion}`)
+        PROTO_POD_GPC_FAMILY_NAME + (stability === "test" ? "" : `/${version}`)
       );
     default:
       throw new Error(`Unknown artifact download source ${source}.`);
