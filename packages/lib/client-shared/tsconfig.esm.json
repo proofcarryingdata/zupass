@@ -9,5 +9,9 @@
   "include": ["src", "artifacts/*.json"],
   // DO NOT MODIFY MANUALLY BEYOND THIS POINT
   // References are automatically maintained by `yarn fix-references`
-  "references": []
+  "references": [
+    {
+      "path": "../util/tsconfig.esm.json"
+    }
+  ]
 }

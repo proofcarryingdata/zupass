@@ -8,7 +8,10 @@ import Handlebars from "handlebars";
 import https from "https";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
-import { ZUPASS_GPC_ARTIFACT_PATH } from "./src/sharedConstants";
+import {
+  ZUPASS_GPC_ARTIFACT_BASE_PATH,
+  ZUPASS_GPC_ARTIFACT_PATH
+} from "./src/sharedConstants";
 
 dotenv.config();
 
@@ -221,7 +224,7 @@ function compileHtml(): void {
 }
 
 function copyGPCArtifacts(): void {
-  fs.rmSync(path.join("public" + ZUPASS_GPC_ARTIFACT_PATH), {
+  fs.rmSync(path.join("public" + ZUPASS_GPC_ARTIFACT_BASE_PATH), {
     recursive: true,
     force: true
   });

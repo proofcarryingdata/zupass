@@ -1,3 +1,5 @@
+import { emptyStrToUndefined } from "@pcd/util";
+
 /**
  * Settings for calling {@link gpcArtifactDownloadURL} as parsed from an
  * environment variable by {@link parseGPCArtifactsConfig}.
@@ -39,9 +41,10 @@ export function parseGPCArtifactsConfig(
       );
     }
     return {
-      source: config.source ?? defaultConfig.source,
-      stability: config.stability ?? defaultConfig.stability,
-      version: config.version ?? defaultConfig.version
+      source: emptyStrToUndefined(config.source) ?? defaultConfig.source,
+      stability:
+        emptyStrToUndefined(config.stabilit) ?? defaultConfig.stability,
+      version: emptyStrToUndefined(config.version) ?? defaultConfig.version
     };
   } catch (e) {
     console.error(
