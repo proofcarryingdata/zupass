@@ -14,6 +14,7 @@ import intersectionWith from "lodash/intersectionWith";
 import {
   ReactElement,
   ReactNode,
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -77,16 +78,19 @@ const getPCDImage = (pcd: PCD<unknown, unknown>): ReactNode | undefined => {
 type PodsCollectionListProps = {
   onPodClick?: (pcd: PCD<unknown, unknown>) => void;
   style?: CSSProperties;
+  expandedGroupsIds: Record<string, boolean>;
+  setExpandedGroupsIds: React.Dispatch<
+    React.SetStateAction<Record<string, boolean>>
+  >;
 };
 export const PodsCollectionList = ({
   onPodClick,
-  style
+  style,
+  expandedGroupsIds,
+  setExpandedGroupsIds
 }: PodsCollectionListProps): ReactElement => {
   const pcdCollection = usePCDCollection();
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [expandedGroupsIds, setExpandedGroupsIds] = useState<
-    Record<string, boolean>
-  >({});
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
@@ -212,6 +216,10 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       ? activeBottomModal.modalGoBackBehavior
       : "close";
 
+  const [expandedGroupsIds, setExpandedGroupsIds] = useState<
+    Record<string, boolean>
+  >({});
+
   // Check scrollability
   const checkScrollability = (): void => {
     if (listContainerRef.current) {
@@ -252,6 +260,22 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     }
   }, [activePod, scrollPosition, params, setParams, isPodsCollectionModalOpen]);
 
+  const handlePodClick = useCallback(
+    (pcd: PCD<unknown, unknown>) => {
+      listContainerRef.current &&
+        setScrollPosition(listContainerRef.current.scrollTop);
+      dispatch({
+        type: "set-bottom-modal",
+        modal: {
+          modalType: "pods-collection",
+          activePod: pcd,
+          modalGoBackBehavior: "back"
+        }
+      });
+    },
+    [dispatch]
+  );
+
   return (
     <BottomModal
       modalContainerStyle={{ padding: 0, paddingTop: 24 }}
@@ -291,18 +315,9 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
             <>
               <PodsCollectionList
                 style={{ padding: "12px 24px", paddingTop: 0 }}
-                onPodClick={(pcd) => {
-                  listContainerRef.current &&
-                    setScrollPosition(listContainerRef.current.scrollTop);
-                  dispatch({
-                    type: "set-bottom-modal",
-                    modal: {
-                      modalType: "pods-collection",
-                      activePod: pcd,
-                      modalGoBackBehavior: "back"
-                    }
-                  });
-                }}
+                onPodClick={handlePodClick}
+                expandedGroupsIds={expandedGroupsIds}
+                setExpandedGroupsIds={setExpandedGroupsIds}
               />
               {showScrollIndicator && <ScrollIndicator />}
             </>
