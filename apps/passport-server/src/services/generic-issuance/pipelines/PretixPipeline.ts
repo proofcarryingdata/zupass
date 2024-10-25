@@ -190,12 +190,14 @@ export class PretixPipeline implements BasePipeline {
     this.semaphoreHistoryDB = semaphoreHistoryDB;
     this.context = context;
     this.localFileService = localFileService;
-    if (this.definition.options.autoIssuance) {
-      this.autoIssuanceProvider = new AutoIssuanceProvider(
-        this.id,
-        this.definition.options.autoIssuance
-      );
-    }
+
+    // if (this.definition.options.autoIssuance) {
+    //   this.autoIssuanceProvider = new AutoIssuanceProvider(
+    //     this.id,
+    //     this.definition.options.autoIssuance
+    //   );
+    // }
+
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
       this.semaphoreGroupProvider = new SemaphoreGroupProvider(
         this.context,
