@@ -251,6 +251,7 @@ const ListContainer = styled.div`
   border-radius: 20px;
   border: 2px solid var(--text-white);
   background: rgba(255, 255, 255, 0.8);
+  padding-top: 24px;
 
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
   position: relative;
@@ -331,6 +332,9 @@ const NoUpcomingEventsState = ({
   const pods = usePCDCollection();
   const timer = useRef<NodeJS.Timeout>();
   const [showScrollIndicator, setShowScrollIndicator] = useState(false);
+  const [expandedGroupsIds, setExpandedGroupsIds] = useState<
+    Record<string, boolean>
+  >({});
   const [params] = useSearchParams();
   const listContainerRef = useRef<HTMLDivElement>(null);
 
@@ -443,7 +447,9 @@ const NoUpcomingEventsState = ({
                   modal: { modalType: "pods-collection", activePod: pcd }
                 });
               }}
-              style={{ padding: "20px 24px" }}
+              style={{ padding: "0 20px 24px" }}
+              expandedGroupsIds={expandedGroupsIds}
+              setExpandedGroupsIds={setExpandedGroupsIds}
             />
             {showScrollIndicator && <ScrollIndicator />}
           </ListContainer>

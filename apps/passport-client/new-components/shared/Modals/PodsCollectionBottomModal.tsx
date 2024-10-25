@@ -188,8 +188,7 @@ export const PodsCollectionList = ({
 };
 
 const SearchPodInputContainer = styled.div`
-  padding: 24px;
-  padding-bottom: 0;
+  padding: 0 24px 24px 24px;
 `;
 
 export const PodsCollectionBottomModal = (): JSX.Element | null => {
