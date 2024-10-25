@@ -202,6 +202,12 @@ export function ConnectPopupScreen(): ReactNode {
             Please try again by clicking the button above.
           </TextCenter>
         )}
+        <Spacer h={24} />
+        <TextCenter>
+          <Button onClick={() => dispatch({ type: "zapp-cancel-connect" })}>
+            Cancel
+          </Button>
+        </TextCenter>
       </TextCenter>
     </AppContainer>
   );

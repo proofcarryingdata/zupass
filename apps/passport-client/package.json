@@ -18,8 +18,8 @@
   "dependencies": {
     "@babel/runtime": "^7.24.0",
     "@heroicons/react": "^2.1.5",
-    "@parcnet-js/client-helpers": "^1.0.5",
-    "@parcnet-js/client-rpc": "^1.1.4",
+    "@parcnet-js/client-helpers": "^1.0.6",
+    "@parcnet-js/client-rpc": "^1.1.5",
     "@parcnet-js/podspec": "^1.1.2",
     "@pcd/client-shared": "0.3.0",
     "@pcd/eddsa-frog-pcd": "0.6.0",

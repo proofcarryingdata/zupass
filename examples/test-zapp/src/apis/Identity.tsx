@@ -1,10 +1,13 @@
+import {
+  ClientConnectionState,
+  useParcnetClient
+} from "@parcnet-js/app-connector-react";
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { TryIt } from "../components/TryIt";
-import { useParcnetClient } from "../hooks/useParcnetClient";
 
 export function Identity(): ReactNode {
-  const { z, connected } = useParcnetClient();
+  const { z, connectionState } = useParcnetClient();
   const [commitmentV3, setCommitmentV3] = useState<bigint | undefined>(
     undefined
   );
@@ -13,7 +16,7 @@ export function Identity(): ReactNode {
   );
   const [publicKey, setPublicKey] = useState<string | undefined>(undefined);
 
-  return !connected ? null : (
+  return connectionState !== ClientConnectionState.CONNECTED ? null : (
     <div>
       <h1 className="text-xl font-bold mb-2">Identity</h1>
       <div className="prose">
