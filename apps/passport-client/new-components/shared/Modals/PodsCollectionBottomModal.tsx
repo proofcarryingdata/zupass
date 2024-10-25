@@ -84,7 +84,7 @@ export const PodsCollectionList = ({
 }: PodsCollectionListProps): ReactElement => {
   const pcdCollection = usePCDCollection();
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [expendedGroupsIds, setExpendedGroupsIds] = useState<
+  const [expandedGroupsIds, setExpandedGroupsIds] = useState<
     Record<string, boolean>
   >({});
 
@@ -107,16 +107,16 @@ export const PodsCollectionList = ({
     for (const [key, value] of Object.entries(pcdCollection.folders)) {
       if (!result[value]) {
         const isItTheFirstGroup = !Object.keys(result).length;
-        const shouldExpendedByDefault =
+        const shouldExpandedByDefault =
           isItTheFirstGroup || filteredPcds.length < 20;
         result[value] = {
           title: value.replace(/\//g, " · "),
           id: value, // setting the folder path as a key
           children: [],
-          expended:
-            expendedGroupsIds[value] === undefined
-              ? !!shouldExpendedByDefault
-              : !!expendedGroupsIds[value]
+          expanded:
+            expandedGroupsIds[value] === undefined
+              ? !!shouldExpandedByDefault
+              : !!expandedGroupsIds[value]
         };
       }
 
@@ -148,14 +148,14 @@ export const PodsCollectionList = ({
 
         return {
           ...group,
-          expended: true, // In case we filter by inside the group we want to auto expend it
+          expanded: true, // In case we filter by inside the group we want to auto expend it
           children: group.children.filter((pod) =>
             pod.title.toLowerCase().includes(searchQuery.toLowerCase())
           )
         };
       })
       .filter((group) => group.children.length > 0);
-  }, [pcdCollection, onPodClick, searchQuery, expendedGroupsIds]);
+  }, [pcdCollection, onPodClick, searchQuery, expandedGroupsIds]);
 
   return (
     <>
@@ -167,8 +167,8 @@ export const PodsCollectionList = ({
         />
       </SearchPodInputContainer>
       <List
-        onExpended={(id, newState) => {
-          setExpendedGroupsIds((oldMap) => ({
+        onExpanded={(id, newState) => {
+          setExpandedGroupsIds((oldMap) => ({
             ...oldMap,
             [id]: newState
           }));
