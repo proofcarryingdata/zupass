@@ -1693,8 +1693,20 @@ describe("gpcArtifactDownloadURL should work", async function () {
         expected: "/artifacts/test/proto-pod-gpc"
       },
       {
+        stability: "test",
+        version: "",
+        zupassURL: "/",
+        expected: "/artifacts/test/proto-pod-gpc"
+      },
+      {
         stability: "prod",
         version: undefined,
+        zupassURL: "/",
+        expected: `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
         zupassURL: "/",
         expected: `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
@@ -1717,8 +1729,20 @@ describe("gpcArtifactDownloadURL should work", async function () {
         expected: "artifacts/test/proto-pod-gpc"
       },
       {
+        stability: "test",
+        version: "",
+        zupassURL: "",
+        expected: "artifacts/test/proto-pod-gpc"
+      },
+      {
         stability: "prod",
         version: undefined,
+        zupassURL: "",
+        expected: `artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
         zupassURL: "",
         expected: `artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
@@ -1810,6 +1834,12 @@ describe("gpcArtifactDownloadURL should work", async function () {
         expected: undefined
       },
       {
+        stability: "prod",
+        version: "",
+        zupassURL: "https://zupass.org",
+        expected: undefined
+      },
+      {
         stability: "test",
         version: "foo",
         zupassURL: undefined,
@@ -1876,8 +1906,20 @@ describe("gpcArtifactDownloadURL should work", async function () {
         expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
+        stability: "test",
+        version: "",
+        zupassURL: "https://zupass.org",
+        expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
         stability: "prod",
         version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
         zupassURL: "https://zupass.org",
         expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
       },
