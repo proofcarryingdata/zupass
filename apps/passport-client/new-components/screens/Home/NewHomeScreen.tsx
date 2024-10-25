@@ -50,7 +50,7 @@ import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModa
 import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
-import { isMobile, useOrientation } from "../../shared/utils";
+import { hideScrollCSS, isMobile, useOrientation } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 
@@ -254,6 +254,8 @@ const ListContainer = styled.div`
 
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
   position: relative;
+
+  ${hideScrollCSS}
 `;
 const OuterContainer = styled.div`
   display: flex;
@@ -308,7 +310,7 @@ const BarsContainer = styled.div`
   margin-bottom: 20px;
 `;
 
-const ScrollIndicator = (): ReactElement => {
+export const ScrollIndicator = (): ReactElement => {
   return (
     <ScrollIndicatorContainer>
       <ChevronDownIcon color="var(--text-tertiary)" width={30} height={30} />
@@ -723,7 +725,7 @@ export const NewHomeScreen = (): ReactElement => {
           </SwipeViewContainer>
         </>
       )}
-      <Spacer h={96} />
+      {!(showPodsList || noPods) && <Spacer h={96} />}
       <FloatingMenu onlySettings={showPodsList || noPods} />
       <AddOnsModal />
       <NewModals />

@@ -8,6 +8,7 @@ import Handlebars from "handlebars";
 import https from "https";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
+import { ZUPASS_GPC_ARTIFACT_PATH } from "./src/sharedConstants";
 
 dotenv.config();
 
@@ -76,6 +77,13 @@ const define = {
     ? {
         "process.env.EMBEDDED_ZAPPS": JSON.stringify(process.env.EMBEDDED_ZAPPS)
       }
+    : {}),
+  ...(process.env.DEVCON_TICKET_QUERY_ORIGINS !== undefined
+    ? {
+        "process.env.DEVCON_TICKET_QUERY_ORIGINS": JSON.stringify(
+          process.env.DEVCON_TICKET_QUERY_ORIGINS
+        )
+      }
     : {})
 };
 
@@ -106,13 +114,7 @@ const serviceWorkerOpts: BuildOptions = {
   tsconfig: "./src/worker/tsconfig.json",
   bundle: true,
   entryPoints: ["src/worker/service-worker.ts"],
-  plugins: [
-    NodeModulesPolyfillPlugin(),
-    NodeGlobalsPolyfillPlugin({
-      process: true,
-      buffer: true
-    })
-  ],
+  plugins: [NodeModulesPolyfillPlugin(), NodeGlobalsPolyfillPlugin({})],
   // The output directory here needs to be `public/` rather than
   // `public/js` in order for the service worker to be served from
   // the root of the website, which is necessary because service
@@ -219,13 +221,13 @@ function compileHtml(): void {
 }
 
 function copyGPCArtifacts(): void {
-  fs.rmSync(path.join("public/artifacts/proto-pod-gpc"), {
+  fs.rmSync(path.join("public" + ZUPASS_GPC_ARTIFACT_PATH), {
     recursive: true,
     force: true
   });
   fs.cpSync(
     path.join("../../node_modules/@pcd/proto-pod-gpc-artifacts"),
-    path.join("public/artifacts/proto-pod-gpc"),
+    path.join("public" + ZUPASS_GPC_ARTIFACT_PATH),
     { recursive: true }
   );
 }

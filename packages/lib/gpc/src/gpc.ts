@@ -382,7 +382,7 @@ export const GPC_ARTIFACTS_NPM_PACKAGE_NAME =
 
 /**
  * Version of the published artifacts on NPM which are compatible with this
- * version of the GPC circuits.
+ * version of the GPC package. Re-exported for convenience.
  */
 export const GPC_ARTIFACTS_NPM_VERSION = ProtoPODGPC.ARTIFACTS_NPM_VERSION;
 
@@ -455,10 +455,12 @@ export function gpcArtifactDownloadURL(
           'Zupass artifact download requires a server URL.  Try "https://zupass.org".'
         );
       }
+      const artifactVersion = version ?? GPC_ARTIFACTS_NPM_VERSION;
       return urljoin(
         zupassURL,
         stability === "test" ? "artifacts/test" : "artifacts",
-        PROTO_POD_GPC_FAMILY_NAME
+        PROTO_POD_GPC_FAMILY_NAME +
+          (stability === "test" ? "" : `/${artifactVersion}`)
       );
     default:
       throw new Error(`Unknown artifact download source ${source}.`);
