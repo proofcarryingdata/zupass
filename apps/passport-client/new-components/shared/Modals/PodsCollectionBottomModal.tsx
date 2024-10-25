@@ -161,7 +161,8 @@ export const PodsCollectionList = ({
     <>
       <SearchPodInputContainer>
         <Input2
-          placeholder="Search for pods..."
+          autoFocus
+          placeholder="Search for pods"
           variant="secondary"
           onChange={({ target: { value } }) => setSearchQuery(value)}
         />
@@ -182,6 +183,7 @@ export const PodsCollectionList = ({
 
 const SearchPodInputContainer = styled.div`
   padding: 24px;
+  padding-bottom: 0;
 `;
 
 export const PodsCollectionBottomModal = (): JSX.Element | null => {
