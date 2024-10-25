@@ -12,9 +12,10 @@
   "dependencies": {
     "@pcd/pod": "^0.4.0",
     "@parcnet-js/podspec": "^1.1.2",
-    "@parcnet-js/ticket-spec": "^1.1.4",
-    "@parcnet-js/client-rpc": "^1.1.4",
-    "@parcnet-js/app-connector": "^1.1.5",
+    "@parcnet-js/ticket-spec": "^1.1.5",
+    "@parcnet-js/client-rpc": "^1.1.5",
+    "@parcnet-js/app-connector": "^1.1.7",
+    "@parcnet-js/app-connector-react": "1.0.2",
     "json-bigint": "^1.0.0",
     "lodash": "^4.17.21",
     "react": "^18.2.0",
