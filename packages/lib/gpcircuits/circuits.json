@@ -1,10 +1,10 @@
 {
-  "proto-pod-gpc_1o-1e-5md-0nv-0ei-0x0l-0x0t-1ov3-0ov4": {
+  "proto-pod-gpc_1o-10e-5md-0nv-0ei-0x0l-0x0t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       1,
-      1,
+      10,
       5,
       0,
       0,
@@ -12,50 +12,7 @@
       0,
       0,
       0,
-      1,
-      0
-    ],
-    "pubs": [
-      "entryObjectIndex",
-      "entryNameHash",
-      "entryIsValueHashRevealed",
-      "virtualEntryIsValueHashRevealed",
-      "entryEqualToOtherEntryByIndex",
-      "entryIsEqualToOtherEntry",
-      "ownerExternalNullifier",
-      "ownerV3EntryIndex",
-      "ownerV3IsNullifierHashRevealed",
-      "ownerV4EntryIndex",
-      "ownerV4IsNullifierHashRevealed",
-      "numericValueEntryIndices",
-      "numericValueInRange",
-      "numericMinValues",
-      "numericMaxValues",
-      "entryInequalityValueIndex",
-      "entryInequalityOtherValueIndex",
-      "entryInequalityIsLessThan",
-      "tupleIndices",
-      "listComparisonValueIndex",
-      "listContainsComparisonValue",
-      "listValidValues",
-      "requireUniqueContentIDs",
-      "globalWatermark"
-    ]
-  },
-  "proto-pod-gpc_1o-1e-5md-0nv-0ei-0x0l-0x0t-1ov3-1ov4": {
-    "file": "proto-pod-gpc",
-    "template": "ProtoPODGPC",
-    "params": [
-      1,
-      1,
-      5,
       0,
-      0,
-      0,
-      0,
-      0,
-      0,
-      1,
       1
     ],
     "pubs": [
@@ -85,19 +42,19 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-10e-5md-0nv-0ei-1x0l-0x0t-0ov3-1ov4": {
+  "proto-pod-gpc_1o-10e-5md-5nv-5ei-2x20l-1x3t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       1,
       10,
       5,
-      0,
-      0,
+      5,
+      5,
+      2,
+      20,
       1,
-      0,
-      0,
-      0,
+      3,
       0,
       1
     ],
@@ -257,7 +214,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-20e-6md-0nv-0ei-1x0l-0x0t-0ov3-1ov4": {
+  "proto-pod-gpc_1o-20e-6md-0nv-0ei-0x0l-0x0t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -266,7 +223,7 @@
       6,
       0,
       0,
-      1,
+      0,
       0,
       0,
       0,
@@ -300,7 +257,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-20e-6md-20nv-20ei-5x500l-0x0t-0ov3-1ov4": {
+  "proto-pod-gpc_1o-20e-6md-20nv-20ei-5x50l-1x3t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -310,9 +267,9 @@
       20,
       20,
       5,
-      500,
-      0,
-      0,
+      50,
+      1,
+      3,
       0,
       1
     ],
@@ -429,19 +386,19 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-38e-7md-38nv-19ei-0x0l-0x0t-0ov3-1ov4": {
+  "proto-pod-gpc_1o-30e-7md-10nv-5ei-3x100l-1x3t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       1,
-      38,
+      30,
       7,
-      38,
-      19,
-      0,
-      0,
-      0,
-      0,
+      10,
+      5,
+      3,
+      100,
+      1,
+      3,
       0,
       1
     ],
@@ -472,19 +429,19 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-40e-7md-38nv-19ei-0x0l-0x0t-0ov3-1ov4": {
+  "proto-pod-gpc_1o-40e-7md-20nv-10ei-3x100l-2x3t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       1,
       40,
       7,
-      38,
-      19,
-      0,
-      0,
-      0,
-      0,
+      20,
+      10,
+      3,
+      100,
+      2,
+      3,
       0,
       1
     ],
@@ -601,6 +558,49 @@
       "globalWatermark"
     ]
   },
+  "proto-pod-gpc_2o-10e-5md-5nv-5ei-2x20l-1x3t-0ov3-1ov4": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      2,
+      10,
+      5,
+      5,
+      5,
+      2,
+      20,
+      1,
+      3,
+      0,
+      1
+    ],
+    "pubs": [
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "entryIsEqualToOtherEntry",
+      "ownerExternalNullifier",
+      "ownerV3EntryIndex",
+      "ownerV3IsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
+      "numericValueEntryIndices",
+      "numericValueInRange",
+      "numericMinValues",
+      "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listContainsComparisonValue",
+      "listValidValues",
+      "requireUniqueContentIDs",
+      "globalWatermark"
+    ]
+  },
   "proto-pod-gpc_2o-20e-6md-0nv-0ei-0x0l-0x0t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
@@ -644,12 +644,12 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_2o-22e-6md-10nv-10ei-3x20l-3x3t-0ov3-1ov4": {
+  "proto-pod-gpc_2o-20e-6md-10nv-10ei-3x20l-3x3t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       2,
-      22,
+      20,
       6,
       10,
       10,
@@ -700,6 +700,49 @@
       0,
       0,
       0,
+      0,
+      1
+    ],
+    "pubs": [
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "entryIsEqualToOtherEntry",
+      "ownerExternalNullifier",
+      "ownerV3EntryIndex",
+      "ownerV3IsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
+      "numericValueEntryIndices",
+      "numericValueInRange",
+      "numericMinValues",
+      "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listContainsComparisonValue",
+      "listValidValues",
+      "requireUniqueContentIDs",
+      "globalWatermark"
+    ]
+  },
+  "proto-pod-gpc_2o-30e-6md-15nv-10ei-2x50l-2x3t-0ov3-1ov4": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      2,
+      30,
+      6,
+      15,
+      10,
+      2,
+      50,
+      2,
+      3,
       0,
       1
     ],
@@ -859,13 +902,13 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-4nv-2ei-2x20l-2x2t-0ov3-1ov4": {
+  "proto-pod-gpc_3o-10e-6md-4nv-2ei-2x20l-2x2t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       3,
       10,
-      8,
+      6,
       4,
       2,
       2,
@@ -945,6 +988,49 @@
       "globalWatermark"
     ]
   },
+  "proto-pod-gpc_3o-20e-6md-20nv-10ei-3x50l-3x3t-0ov3-1ov4": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      3,
+      20,
+      6,
+      20,
+      10,
+      3,
+      50,
+      3,
+      3,
+      0,
+      1
+    ],
+    "pubs": [
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "entryIsEqualToOtherEntry",
+      "ownerExternalNullifier",
+      "ownerV3EntryIndex",
+      "ownerV3IsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
+      "numericValueEntryIndices",
+      "numericValueInRange",
+      "numericMinValues",
+      "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listContainsComparisonValue",
+      "listValidValues",
+      "requireUniqueContentIDs",
+      "globalWatermark"
+    ]
+  },
   "proto-pod-gpc_3o-30e-6md-0nv-0ei-0x0l-0x0t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
@@ -988,19 +1074,19 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-40e-6md-0nv-0ei-0x0l-0x0t-0ov3-1ov4": {
+  "proto-pod-gpc_3o-40e-6md-20nv-10ei-3x50l-3x3t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       3,
       40,
       6,
-      0,
-      0,
-      0,
-      0,
-      0,
-      0,
+      20,
+      10,
+      3,
+      50,
+      3,
+      3,
       0,
       1
     ],
@@ -1160,6 +1246,49 @@
       "globalWatermark"
     ]
   },
+  "proto-pod-gpc_5o-10e-5md-5nv-5ei-2x20l-2x3t-0ov3-1ov4": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      5,
+      10,
+      5,
+      5,
+      5,
+      2,
+      20,
+      2,
+      3,
+      0,
+      1
+    ],
+    "pubs": [
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "entryIsEqualToOtherEntry",
+      "ownerExternalNullifier",
+      "ownerV3EntryIndex",
+      "ownerV3IsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
+      "numericValueEntryIndices",
+      "numericValueInRange",
+      "numericMinValues",
+      "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listContainsComparisonValue",
+      "listValidValues",
+      "requireUniqueContentIDs",
+      "globalWatermark"
+    ]
+  },
   "proto-pod-gpc_5o-20e-6md-0nv-0ei-0x0l-0x0t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
@@ -1246,6 +1375,92 @@
       "globalWatermark"
     ]
   },
+  "proto-pod-gpc_5o-30e-6md-10nv-5ei-3x100l-2x3t-0ov3-1ov4": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      5,
+      30,
+      6,
+      10,
+      5,
+      3,
+      100,
+      2,
+      3,
+      0,
+      1
+    ],
+    "pubs": [
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "entryIsEqualToOtherEntry",
+      "ownerExternalNullifier",
+      "ownerV3EntryIndex",
+      "ownerV3IsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
+      "numericValueEntryIndices",
+      "numericValueInRange",
+      "numericMinValues",
+      "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listContainsComparisonValue",
+      "listValidValues",
+      "requireUniqueContentIDs",
+      "globalWatermark"
+    ]
+  },
+  "proto-pod-gpc_5o-30e-6md-20nv-15ei-5x200l-5x3t-0ov3-1ov4": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      5,
+      30,
+      6,
+      20,
+      15,
+      5,
+      200,
+      5,
+      3,
+      0,
+      1
+    ],
+    "pubs": [
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "entryIsEqualToOtherEntry",
+      "ownerExternalNullifier",
+      "ownerV3EntryIndex",
+      "ownerV3IsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
+      "numericValueEntryIndices",
+      "numericValueInRange",
+      "numericMinValues",
+      "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listContainsComparisonValue",
+      "listValidValues",
+      "requireUniqueContentIDs",
+      "globalWatermark"
+    ]
+  },
   "proto-pod-gpc_5o-40e-6md-0nv-0ei-0x0l-0x0t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
@@ -1289,17 +1504,17 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_5o-40e-6md-10nv-10ei-4x400l-5x3t-0ov3-1ov4": {
+  "proto-pod-gpc_10o-15e-8md-15nv-30ei-8x200l-5x3t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
-      5,
-      40,
-      6,
       10,
-      10,
-      4,
-      400,
+      15,
+      8,
+      15,
+      30,
+      8,
+      200,
       5,
       3,
       0,
@@ -1332,50 +1547,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_10o-15e-8md-15nv-30ei-8x500l-5x3t-1ov3-1ov4": {
-    "file": "proto-pod-gpc",
-    "template": "ProtoPODGPC",
-    "params": [
-      10,
-      15,
-      8,
-      15,
-      30,
-      8,
-      500,
-      5,
-      3,
-      1,
-      1
-    ],
-    "pubs": [
-      "entryObjectIndex",
-      "entryNameHash",
-      "entryIsValueHashRevealed",
-      "virtualEntryIsValueHashRevealed",
-      "entryEqualToOtherEntryByIndex",
-      "entryIsEqualToOtherEntry",
-      "ownerExternalNullifier",
-      "ownerV3EntryIndex",
-      "ownerV3IsNullifierHashRevealed",
-      "ownerV4EntryIndex",
-      "ownerV4IsNullifierHashRevealed",
-      "numericValueEntryIndices",
-      "numericValueInRange",
-      "numericMinValues",
-      "numericMaxValues",
-      "entryInequalityValueIndex",
-      "entryInequalityOtherValueIndex",
-      "entryInequalityIsLessThan",
-      "tupleIndices",
-      "listComparisonValueIndex",
-      "listContainsComparisonValue",
-      "listValidValues",
-      "requireUniqueContentIDs",
-      "globalWatermark"
-    ]
-  },
-  "proto-pod-gpc_10o-19e-8md-10nv-10ei-4x450l-5x3t-1ov3-1ov4": {
+  "proto-pod-gpc_10o-19e-8md-10nv-10ei-4x450l-4x3t-1ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -1386,7 +1558,7 @@
       10,
       4,
       450,
-      5,
+      4,
       3,
       1,
       1
@@ -1418,7 +1590,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_10o-20e-6md-0nv-0ei-0x0l-0x0t-1ov3-1ov4": {
+  "proto-pod-gpc_10o-20e-6md-0nv-0ei-0x0l-0x0t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -1431,7 +1603,7 @@
       0,
       0,
       0,
-      1,
+      0,
       1
     ],
     "pubs": [
@@ -1461,7 +1633,50 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_10o-30e-6md-0nv-0ei-0x0l-0x0t-1ov3-1ov4": {
+  "proto-pod-gpc_10o-20e-6md-20nv-10ei-2x50l-2x3t-0ov3-1ov4": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      10,
+      20,
+      6,
+      20,
+      10,
+      2,
+      50,
+      2,
+      3,
+      0,
+      1
+    ],
+    "pubs": [
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueHashRevealed",
+      "virtualEntryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "entryIsEqualToOtherEntry",
+      "ownerExternalNullifier",
+      "ownerV3EntryIndex",
+      "ownerV3IsNullifierHashRevealed",
+      "ownerV4EntryIndex",
+      "ownerV4IsNullifierHashRevealed",
+      "numericValueEntryIndices",
+      "numericValueInRange",
+      "numericMinValues",
+      "numericMaxValues",
+      "entryInequalityValueIndex",
+      "entryInequalityOtherValueIndex",
+      "entryInequalityIsLessThan",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listContainsComparisonValue",
+      "listValidValues",
+      "requireUniqueContentIDs",
+      "globalWatermark"
+    ]
+  },
+  "proto-pod-gpc_10o-30e-6md-0nv-0ei-0x0l-0x0t-0ov3-1ov4": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -1474,7 +1689,7 @@
       0,
       0,
       0,
-      1,
+      0,
       1
     ],
     "pubs": [
