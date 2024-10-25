@@ -258,9 +258,23 @@ export class DevconnectPretixSyncService {
 export async function startDevconnectPretixSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
-  semaphoreService: SemaphoreService,
+  semaphoreService: SemaphoreService | null,
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null
 ): Promise<DevconnectPretixSyncService | null> {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting semaphore service`
+    );
+    return null;
+  }
+
+  if (!semaphoreService) {
+    logger(
+      "[DEVCONNECT PRETIX] can't start sync service - no semaphore service"
+    );
+    return null;
+  }
+
   if (!devconnectPretixAPIFactory) {
     logger(
       "[DEVCONNECT PRETIX] Can't start sync service - no api factory instantiated"

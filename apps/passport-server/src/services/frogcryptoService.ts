@@ -444,6 +444,13 @@ export async function startFrogcryptoService(
   rollbarService: RollbarService | null,
   issuanceService: IssuanceService | null
 ): Promise<FrogcryptoService | null> {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting semaphore service`
+    );
+    return null;
+  }
+
   if (!issuanceService) {
     logger("[FROGCRYPTO] Issuance service not configured");
     return null;

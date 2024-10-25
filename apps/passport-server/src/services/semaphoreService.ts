@@ -446,7 +446,14 @@ export class SemaphoreService {
 
 export function startSemaphoreService(
   context: ApplicationContext
-): SemaphoreService {
+): SemaphoreService | null {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting semaphore service`
+    );
+    return null;
+  }
+
   const semaphoreService = new SemaphoreService(context);
   semaphoreService.start();
   semaphoreService.scheduleReload();
