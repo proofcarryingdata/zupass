@@ -161,8 +161,10 @@ export const PodsCollectionList = ({
     <>
       <SearchPodInputContainer>
         <Input2
-          autoFocus
           placeholder="Search for pods"
+          autoCapitalize="off"
+          autoCorrect="off"
+          type="text"
           variant="secondary"
           onChange={({ target: { value } }) => setSearchQuery(value)}
         />
