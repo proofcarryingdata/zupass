@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { namedSqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { checkQueryParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
@@ -13,6 +14,7 @@ export function initPoapRoutes(
   logger("[INIT] initializing poap routes");
 
   app.get("/poap/devconnect/callback", async (req: Request, res: Response) => {
+    checkExistsForRoute(poapService);
     const proof = checkQueryParam(req, "proof");
     if (!proof || typeof proof !== "string") {
       throw new PCDHTTPError(
@@ -33,6 +35,7 @@ export function initPoapRoutes(
   });
 
   app.get("/poap/zuzalu23/callback", async (req: Request, res: Response) => {
+    checkExistsForRoute(poapService);
     const proof = checkQueryParam(req, "proof");
     if (!proof || typeof proof !== "string") {
       throw new PCDHTTPError(
@@ -53,6 +56,7 @@ export function initPoapRoutes(
   });
 
   app.get("/poap/zuconnect/callback", async (req: Request, res: Response) => {
+    checkExistsForRoute(poapService);
     const proof = checkQueryParam(req, "proof");
     if (!proof || typeof proof !== "string") {
       throw new PCDHTTPError(
@@ -73,6 +77,7 @@ export function initPoapRoutes(
   });
 
   app.get("/poap/vitalia/callback", async (req: Request, res: Response) => {
+    checkExistsForRoute(poapService);
     const proof = checkQueryParam(req, "proof");
     if (!proof || typeof proof !== "string") {
       throw new PCDHTTPError(
@@ -95,6 +100,7 @@ export function initPoapRoutes(
   app.get(
     "/poap/edgecitydenver/callback",
     async (req: Request, res: Response) => {
+      checkExistsForRoute(poapService);
       const proof = checkQueryParam(req, "proof");
       if (!proof || typeof proof !== "string") {
         throw new PCDHTTPError(
@@ -116,6 +122,7 @@ export function initPoapRoutes(
   );
 
   app.get("/poap/ethlatam/callback", async (req: Request, res: Response) => {
+    checkExistsForRoute(poapService);
     const proof = checkQueryParam(req, "proof");
     if (!proof || typeof proof !== "string") {
       throw new PCDHTTPError(
