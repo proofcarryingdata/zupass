@@ -176,7 +176,6 @@ export async function genCircuitArtifacts(
 const PROJECT_DIR = path.join(__dirname, "..");
 export const ARTIFACTS_DIR = path.join(PROJECT_DIR, "artifacts");
 export const CIRCUIT_DIR = path.join(PROJECT_DIR, "circuits", "main");
-const PARAM_DIR = path.join(PROJECT_DIR, "scripts", "parameters");
 export const JSON_FILE_CONFIG: Record<
   string,
   {
