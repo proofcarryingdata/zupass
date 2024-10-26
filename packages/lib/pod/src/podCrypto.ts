@@ -14,11 +14,11 @@ import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import {
-  PRIVATE_KEY_REGEX,
+  POD_PRIVATE_KEY_REGEX,
+  POD_PUBLIC_KEY_REGEX,
+  POD_SIGNATURE_REGEX,
   PUBLIC_KEY_ENCODING_GROUPS,
-  PUBLIC_KEY_REGEX,
-  SIGNATURE_ENCODING_GROUPS,
-  SIGNATURE_REGEX
+  SIGNATURE_ENCODING_GROUPS
 } from "./podChecks";
 import { EDDSA_PUBKEY_TYPE_STRING, POD_NULL_HASH, PODValue } from "./podTypes";
 import { CryptoBytesEncoding, decodeBytesAuto, encodeBytes } from "./podUtil";
@@ -118,7 +118,7 @@ export function encodePrivateKey(
 export function decodePrivateKey(privateKey: string): Buffer {
   return decodeBytesAuto(
     privateKey,
-    PRIVATE_KEY_REGEX,
+    POD_PRIVATE_KEY_REGEX,
     PUBLIC_KEY_ENCODING_GROUPS,
     "Private key should be 32 bytes, encoded as hex or Base64."
   );
@@ -153,7 +153,7 @@ export function decodePublicKey(publicKey: string): Point<bigint> {
     leBufferToBigInt(
       decodeBytesAuto(
         publicKey,
-        PUBLIC_KEY_REGEX,
+        POD_PUBLIC_KEY_REGEX,
         PUBLIC_KEY_ENCODING_GROUPS,
         "Public key should be 32 bytes, encoded as hex or Base64."
       )
@@ -190,7 +190,7 @@ export function decodeSignature(encodedSignature: string): Signature<bigint> {
   return unpackSignature(
     decodeBytesAuto(
       encodedSignature,
-      SIGNATURE_REGEX,
+      POD_SIGNATURE_REGEX,
       SIGNATURE_ENCODING_GROUPS,
       "Signature should be 64 bytes, encoded as hex or Base64."
     )

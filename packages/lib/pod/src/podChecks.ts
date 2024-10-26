@@ -26,12 +26,12 @@ import {
  * This regex matches any supported format, with match groups usable to
  * determine the format, in the order above.
  */
-export const PRIVATE_KEY_REGEX = new RegExp(
+export const POD_PRIVATE_KEY_REGEX = new RegExp(
   /^(?:([A-Za-z0-9+/]{43}=?)|([0-9A-Fa-f]{64}))$/
 );
 
 /**
- * Description of the match groups in {@link PRIVATE_KEY_REGEX} and how they
+ * Description of the match groups in {@link POD_PRIVATE_KEY_REGEX} and how they
  * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
 export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
@@ -46,12 +46,12 @@ export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
  * This regex matches any supported format, with match groups usable to
  * determine the format, in the order above.
  */
-export const PUBLIC_KEY_REGEX = new RegExp(
+export const POD_PUBLIC_KEY_REGEX = new RegExp(
   /^(?:([A-Za-z0-9+/]{43}=?)|([0-9A-Fa-f]{64}))$/
 );
 
 /**
- * Description of the match groups in {@link PUBLIC_KEY_REGEX} and how they
+ * Description of the match groups in {@link POD_PUBLIC_KEY_REGEX} and how they
  * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
 export const PUBLIC_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
@@ -66,12 +66,12 @@ export const PUBLIC_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
  * This regex matches any supported format, with match groups usable to
  * determine the format, in the order above.
  */
-export const SIGNATURE_REGEX = new RegExp(
+export const POD_SIGNATURE_REGEX = new RegExp(
   /^(?:([A-Za-z0-9+/]{86}(?:==)?)|([0-9A-Fa-f]{128}))$/
 );
 
 /**
- * Description of the match groups in {@link SIGNATURE_REGEX} and how they
+ * Description of the match groups in {@link POD_SIGNATURE_REGEX} and how they
  * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
 export const SIGNATURE_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
@@ -81,7 +81,7 @@ export const SIGNATURE_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
 
 /**
  * Checks that the input matches the proper format for a private key, as given
- * by {@link PRIVATE_KEY_REGEX}.
+ * by {@link POD_PRIVATE_KEY_REGEX}.
  *
  * @param privateKey the string to check
  * @returns the unmodified input, for easy chaining
@@ -90,7 +90,7 @@ export const SIGNATURE_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
 export function checkPrivateKeyFormat(privateKey: string): string {
   decodeBytesAuto(
     privateKey,
-    PRIVATE_KEY_REGEX,
+    POD_PRIVATE_KEY_REGEX,
     PRIVATE_KEY_ENCODING_GROUPS,
     "Private key should be 32 bytes, encoded as hex or Base64."
   );
@@ -99,7 +99,7 @@ export function checkPrivateKeyFormat(privateKey: string): string {
 
 /**
  * Checks that the input matches the proper format for a public key, as given
- * by {@link PUBLIC_KEY_REGEX}.
+ * by {@link POD_PUBLIC_KEY_REGEX}.
  *
  * @param nameForErrorMessages the name of this value, which is used only for
  *   error messages (not checked for legality).
@@ -113,7 +113,7 @@ export function checkPublicKeyFormat(
 ): string {
   decodeBytesAuto(
     publicKey,
-    PUBLIC_KEY_REGEX,
+    POD_PUBLIC_KEY_REGEX,
     PUBLIC_KEY_ENCODING_GROUPS,
     "Public key should be 32 bytes, encoded as hex or Base64" +
       (nameForErrorMessages ? ` in ${nameForErrorMessages}.` : ".")
@@ -123,7 +123,7 @@ export function checkPublicKeyFormat(
 
 /**
  * Checks that the input matches the proper format for a signature, as given
- * by {@link SIGNATURE_REGEX}.
+ * by {@link POD_SIGNATURE_REGEX}.
  *
  * @param signature the string to check
  * @returns the unmodified input, for easy chaining
@@ -132,7 +132,7 @@ export function checkPublicKeyFormat(
 export function checkSignatureFormat(signature: string): string {
   decodeBytesAuto(
     signature,
-    SIGNATURE_REGEX,
+    POD_SIGNATURE_REGEX,
     SIGNATURE_ENCODING_GROUPS,
     "Signature should be 64 bytes, encoded as hex or Base64."
   );
@@ -140,15 +140,16 @@ export function checkSignatureFormat(signature: string): string {
 }
 
 /**
- * Regular expression matching valid Base64 encoding of any length, with
- * optional padding.
+ * Regular expression matching valid Base64 encoding of any length, allowing
+ * padding to be omitted.
  */
-export const BASE64_REGEX = new RegExp(
+export const POD_BASE64_REGEX = new RegExp(
   /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}(?:==)?|[A-Za-z0-9+/]{3}=?)?$/
 );
 
 /**
- * Checks that the given string is encoded in valid Base64.
+ * Checks that the given string is encoded in valid Base64, allowing padding
+ * to be omitted.
  *
  * @param encoded the string-encoded bytes
  * @param errorMessage human-readable message for error thrown if decoding
@@ -159,7 +160,7 @@ export function checkBase64Encoding(
   encoded: string,
   errorMessage?: string
 ): string {
-  if (!encoded.match(BASE64_REGEX)) {
+  if (!encoded.match(POD_BASE64_REGEX)) {
     throw new TypeError(errorMessage ?? "Invalid base64 bytes");
   }
   return encoded;
@@ -168,7 +169,7 @@ export function checkBase64Encoding(
 /**
  * Regular expression matching valid hex encoding.
  */
-export const HEX_REGEX = new RegExp(/^[0-9A-Fa-f]*$/);
+export const POD_HEX_REGEX = new RegExp(/^[0-9A-Fa-f]*$/);
 
 /**
  * Checks that the given string is encoded in valid Base64.
@@ -182,7 +183,7 @@ export function checkHexEncoding(
   encoded: string,
   errorMessage?: string
 ): string {
-  if (!encoded.match(HEX_REGEX)) {
+  if (!encoded.match(POD_HEX_REGEX)) {
     throw new TypeError(errorMessage ?? "Invalid hex bytes");
   }
   return encoded;

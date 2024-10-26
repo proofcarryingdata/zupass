@@ -15,6 +15,7 @@ import {
   checkPrivateKeyFormat,
   checkPublicKeyFormat,
   checkSignatureFormat,
+  isPODArithmeticValue,
   isPODNumericValue,
   requireValueType
 } from "../src";
@@ -411,11 +412,37 @@ describe("podChecks value helpers should work", async function () {
     expect(isPODNumericValue({ type: "boolean", value: true })).to.be.true;
     expect(isPODNumericValue({ type: "date", value: new Date(Date.UTC(2024)) }))
       .to.be.true;
-    expect(
+    expect(() =>
       isPODNumericValue({
         type: "something",
         value: 123n
       } as unknown as PODValue)
+    ).to.throw(TypeError);
+  });
+
+  it("isPODArithmeticValue should work", function () {
+    expect(isPODArithmeticValue({ type: "string", value: "foo" })).to.be.false;
+    expect(isPODArithmeticValue({ type: "bytes", value: Buffer.from("foo") }))
+      .to.be.false;
+    expect(
+      isPODArithmeticValue({
+        type: EDDSA_PUBKEY_TYPE_STRING,
+        value:
+          "c2478aa919f5d09a68fe264d9e980b94872d2472cb53f514bfc1b19f3029741f"
+      })
     ).to.be.false;
+    expect(isPODArithmeticValue({ type: "int", value: 123n })).to.be.true;
+    expect(isPODArithmeticValue({ type: "cryptographic", value: 123n })).to.be
+      .false;
+    expect(isPODArithmeticValue({ type: "boolean", value: true })).to.be.true;
+    expect(
+      isPODArithmeticValue({ type: "date", value: new Date(Date.UTC(2024)) })
+    ).to.be.true;
+    expect(() =>
+      isPODArithmeticValue({
+        type: "something",
+        value: 123n
+      } as unknown as PODValue)
+    ).to.throw(TypeError);
   });
 });

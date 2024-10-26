@@ -1,5 +1,7 @@
 import {
   JSONPODValue,
+  POD_BASE64_REGEX,
+  POD_PUBLIC_KEY_REGEX,
   PODValue,
   podValueFromJSON,
   podValueToJSON
@@ -55,23 +57,20 @@ export const Schema = {
       v.strictObject({
         bytes: v.pipe(
           v.string(),
-          v.base64("Bytes values must be encoded in Base64.")
+          v.regex(POD_BASE64_REGEX, "Bytes values must be encoded in Base64.")
         )
       }),
       v.strictObject({ int: v.union([v.number(), v.string()]) }),
       v.strictObject({ cryptographic: v.union([v.number(), v.string()]) }),
       v.strictObject({ boolean: v.boolean() }),
       v.strictObject({
-        eddsa_pubkey: v.union([
-          v.pipe(
-            v.string(),
-            v.hexadecimal("Public key values must be encoded in Base64 or hex.")
-          ),
-          v.pipe(
-            v.string(),
-            v.base64("Public key values must be encoded in Base64 or hex.")
+        eddsa_pubkey: v.pipe(
+          v.string(),
+          v.regex(
+            POD_PUBLIC_KEY_REGEX,
+            "Public key should be 32 bytes, encoded as hex or Base64."
           )
-        ])
+        )
       }),
       v.strictObject({ date: v.string() }),
       v.strictObject({ null: v.null() })

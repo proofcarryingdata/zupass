@@ -1,9 +1,11 @@
 import {
   JSONBigInt,
+  JSONPODBooleanValue,
   JSONPODEntries,
   JSONPODValue,
   POD_INT_MAX,
   POD_INT_MIN,
+  PODBooleanValue,
   PODEntries,
   PODName,
   PODValue
@@ -141,6 +143,12 @@ describe("gpcValibot value types should work", () => {
 
   it("PODValue conversion", () => {
     const tsToJSON: [PODValue, JSONPODValue, boolean][] = [
+      [{ type: "string", value: "hello" }, "hello", true],
+      [
+        { type: "bytes", value: new Uint8Array([1, 2, 3]) },
+        { bytes: "AQID" },
+        true
+      ],
       [{ type: "int", value: 0n }, 0, true],
       [{ type: "cryptographic", value: 123n }, { cryptographic: 123 }, true],
       [{ type: "int", value: -123n }, -123, true],
@@ -168,6 +176,55 @@ describe("gpcValibot value types should work", () => {
         },
         false
       ],
+      [{ type: "boolean", value: true }, true, true],
+      [
+        { type: "boolean", value: 1n } as unknown as PODBooleanValue,
+        { bool: 1n } as unknown as JSONPODBooleanValue,
+        false
+      ],
+      [
+        {
+          type: "eddsa_pubkey",
+          value:
+            "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+        },
+        {
+          eddsa_pubkey:
+            "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e"
+        },
+        true
+      ],
+      [
+        {
+          type: "eddsa_pubkey",
+          value: "hello"
+        },
+        {
+          eddsa_pubkey: "hello"
+        },
+        false
+      ],
+      [
+        {
+          type: "date",
+          value: new Date("2024-10-25T04:01:00.638Z")
+        },
+        {
+          date: "2024-10-25T04:01:00.638Z"
+        },
+        true
+      ],
+      [
+        {
+          type: "date",
+          value: new Date("2024Z")
+        },
+        {
+          date: "2024-01-01T00:00:00.000Z"
+        },
+        true
+      ],
+      [{ type: "null", value: null }, null, true],
       [undefined as unknown as PODValue, undefined as unknown as number, false],
       [
         { type: "bad", value: "bad" } as unknown as PODValue,

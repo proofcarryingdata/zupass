@@ -80,9 +80,8 @@ export async function podDemo(): Promise<boolean> {
     my_favorite_dessert: { type: "string", value: "Blueberry Pie" },
 
     // int values are bigints with a range limited to 64-bit signed integers.
-    // Ints will be usable for arithmetic in ZK proofs.
-    // More integer types with different sizes (like int8 or boolean) will be
-    // supported in future.
+    // Ints are usable for range checks and ordering (lessThan, etc) in
+    // ZK proofs.
     someNumber: { type: "int", value: -123n },
 
     // "cryptographic" is a bigint type for values like hashes or unique
@@ -93,18 +92,35 @@ export async function podDemo(): Promise<boolean> {
     mySemaphoreID: {
       type: "cryptographic",
 
-      // The commitment is the part of a Semaphore identity to include in a POD
+      // The commitment is the part of a Semaphore V3 identity to include in a POD
       // to identify a user.
       value: semaphoreIdentity.commitment
     },
 
-    // "cryptographic" entries can be small numbers too, and they behave in the
-    // same way as an "int".  The type controls the range and what you can
-    // do with the number, not its underlying value.
+    // "cryptographic" entries can be small numbers too, and they are considered
+    // equal to an "int" with the same value.  The type controls the range and
+    // what you can do with the number, not its underlying behavior.
     smallCryptographic: {
       type: "cryptographic",
       value: 42n
-    }
+    },
+
+    // There are convenience types which act as special types of int values,
+    // with differen valid ranges.
+    bool: { type: "boolean", value: true },
+    creationDate: { type: "date", value: new Date() },
+
+    // Other non-numeric types exist for special purposes.
+    blob: { type: "bytes", value: new Uint8Array([1, 2, 3]) },
+    userIdentity: {
+      type: "eddsa_pubkey",
+      value: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+    },
+
+    // Explicit null values can be used as placeholders, or to ZK prove that an
+    // entry does not have any other value.  A null entry is not the same as a
+    // missing entry.
+    optionalValue: { type: "null", value: null }
   };
   console.log("Sample entries", sampleEntries);
 
