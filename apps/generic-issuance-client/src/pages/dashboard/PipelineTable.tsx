@@ -2,6 +2,7 @@ import { Table, TableContainer, Td, Th, Thead, Tr } from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
   PipelineDefinition,
+  PipelineLogLevel,
   PipelineType
 } from "@pcd/passport-interface";
 import {
@@ -17,9 +18,12 @@ import { ReactNode, useCallback, useMemo, useState } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { PodLink } from "../../components/Core";
 import {
+  PipelineDataSourceTag,
   PipelineDisplayNameText,
+  PipelineHasCacheTag,
   PipelineStatusTag,
   PipelineTypeTag,
+  PipelineWarningsTag,
   pipelineDetailPagePath,
   pipelineDisplayNameStr,
   pipelineStatusStr,
@@ -30,10 +34,14 @@ import {
   getLoadTraceHoneycombLinkForPipeline
 } from "../../helpers/util";
 
-export type PipelineStateDisplay = "Starting" | "Loaded" | "Error" | "Paused";
+export type PipelineStateDisplay = "Loading" | "Loaded" | "Error" | "Paused";
+export type PipelineCacheStatus = "Disabled" | "Empty" | "Cached";
 
 export type PipelineRow = {
   status: PipelineStateDisplay;
+  warnings: number;
+  fromCache: boolean;
+  cacheStatus: PipelineCacheStatus;
   type: PipelineType;
   owner: string;
   timeCreated: string;
@@ -61,6 +69,17 @@ export function PipelineTable({
     (entry: GenericIssuancePipelineListEntry): PipelineRow => {
       return {
         status: pipelineStatusStr(entry),
+        fromCache: !!entry.extraInfo.lastLoad?.fromCache,
+        warnings:
+          entry.extraInfo?.lastLoad?.latestLogs?.filter(
+            (log) => log.level === PipelineLogLevel.Warning
+          ).length ?? 0,
+        cacheStatus:
+          entry.pipeline.options.disableCache === true
+            ? "Disabled"
+            : entry.extraInfo.hasCachedLoad
+            ? "Cached"
+            : "Empty",
         type: entry.pipeline.type,
         owner: entry.extraInfo.ownerEmail ?? "",
         timeCreated: entry.pipeline.timeCreated,
@@ -122,10 +141,31 @@ export function PipelineTable({
         cell: (props) => <PipelineTypeTag type={props.row.original.type} />
       }),
 
+      columnHelper.accessor("warnings", {
+        header: "Warnings",
+        cell: (props) => (
+          <PipelineWarningsTag warnings={props.row.original.warnings} />
+        )
+      }),
+
       columnHelper.accessor("status", {
         header: "Status",
         cell: (props) => (
           <PipelineStatusTag status={props.row.original.status} />
+        )
+      }),
+
+      columnHelper.accessor("fromCache", {
+        header: "Serving From",
+        cell: (props) => (
+          <PipelineDataSourceTag fromCache={props.row.original.fromCache} />
+        )
+      }),
+
+      columnHelper.accessor("cacheStatus", {
+        header: "Disk Cache",
+        cell: (props) => (
+          <PipelineHasCacheTag cacheStatus={props.row.original.cacheStatus} />
         )
       }),
 

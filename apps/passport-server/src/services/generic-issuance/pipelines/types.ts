@@ -26,6 +26,7 @@ export interface BasePipeline {
   load(): Promise<PipelineLoadSummary>;
   start(): Promise<void>;
   stop(): Promise<void>;
+  isStopped(): boolean;
 }
 
 /**

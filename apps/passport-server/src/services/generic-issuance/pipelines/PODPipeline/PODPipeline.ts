@@ -56,6 +56,7 @@ export class PODPipeline implements BasePipeline {
   public type = PipelineType.POD;
   public capabilities: BasePipelineCapability[];
 
+  private stopped = false;
   private context: ApplicationContext;
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<PODAtom>;
@@ -174,6 +175,8 @@ export class PODPipeline implements BasePipeline {
         );
 
         return {
+          fromCache: false,
+          paused: false,
           lastRunStartTimestamp: start.toISOString(),
           lastRunEndTimestamp: end.toISOString(),
           latestLogs: logs,
@@ -200,6 +203,8 @@ export class PODPipeline implements BasePipeline {
         );
 
         return {
+          fromCache: false,
+          paused: false,
           atomsLoaded: 0,
           atomsExpected: 0,
           lastRunEndTimestamp: end.toISOString(),
@@ -211,11 +216,22 @@ export class PODPipeline implements BasePipeline {
     });
   }
 
+  public isStopped(): boolean {
+    return this.stopped;
+  }
+
   public async start(): Promise<void> {
-    logger(`Starting POD Pipeline ${this.definition.id}`);
+    if (this.stopped) {
+      throw new Error(`pipeline ${this.id} already stopped`);
+    }
+    logger(`starting pod pipeline ${this.definition.id}`);
   }
 
   public async stop(): Promise<void> {
+    if (this.stopped) {
+      return;
+    }
+    this.stopped = true;
     logger(`Stopping POD Pipeline ${this.definition.id}`);
   }
 
