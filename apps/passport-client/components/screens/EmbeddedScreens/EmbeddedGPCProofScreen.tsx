@@ -25,6 +25,7 @@ import Select from "../../shared/Select";
 import { Typography } from "../../../new-components/shared/Typography";
 import { Button2 } from "../../../new-components/shared/Button";
 import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { hideScrollCSS } from "../../../new-components/shared/utils";
 
 export function EmbeddedGPCProofScreen({
   proofRequestSchema,
@@ -502,4 +503,5 @@ const PodsContainer = styled.div`
   gap: 12px;
   max-height: calc(100vh - 200px);
   overflow: scroll;
+  ${hideScrollCSS}
 `;
