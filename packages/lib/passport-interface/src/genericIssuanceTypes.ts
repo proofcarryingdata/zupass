@@ -53,7 +53,8 @@ const BasePipelineOptionsSchema = z.object({
    * Protected pipelines can't be deleted.
    */
   protected: z.boolean().optional(),
-  important: z.boolean().optional()
+  important: z.boolean().optional(),
+  disableCache: z.boolean().optional()
 });
 
 export type BasePipelineOptions = z.infer<typeof BasePipelineOptionsSchema>;

@@ -14,6 +14,7 @@ import { Fragment, ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useIdentityV3, usePCDCollection } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { getGPCArtifactsURL } from "../../../src/util";
 import { getPODsForCollections } from "../../../src/zapp/collections";
 import { H2 } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
@@ -125,10 +126,7 @@ export function EmbeddedGPCProofScreen({
                     externalNullifier: proofRequest.externalNullifier
                   }
                 },
-                new URL(
-                  "/artifacts/proto-pod-gpc",
-                  window.location.origin
-                ).toString()
+                getGPCArtifactsURL(window.location.origin)
               )
                 .then((proof) => {
                   callback({

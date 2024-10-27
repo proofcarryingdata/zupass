@@ -16,6 +16,7 @@ import {
   PipelineDefinition,
   PipelineEmailType,
   PipelineInfoResponseValue,
+  PipelineLoadSummary,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -40,6 +41,10 @@ import {
   PipelineConsumerDB
 } from "../../database/queries/pipelineConsumerDB";
 import {
+  IPipelineDefinitionDB,
+  PipelineDefinitionDB
+} from "../../database/queries/pipelineDefinitionDB";
+import {
   IPipelineEmailDB,
   PipelineEmailDB
 } from "../../database/queries/pipelineEmailDB";
@@ -62,6 +67,7 @@ import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { DiscordService } from "../discordService";
 import { EmailService } from "../emailService";
+import { LocalFileService } from "../LocalFileService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
@@ -84,6 +90,7 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 export class GenericIssuanceService {
   private context: ApplicationContext;
   private pipelineAtomDB: IPipelineAtomDB;
+  private pipelineDB: IPipelineDefinitionDB;
   private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
@@ -96,6 +103,7 @@ export class GenericIssuanceService {
   private pipelineSubservice: PipelineSubservice;
   private userSubservice: UserSubservice;
   private credentialSubservice: CredentialSubservice;
+  private localFileService: LocalFileService | null;
 
   public constructor(
     context: ApplicationContext,
@@ -110,7 +118,8 @@ export class GenericIssuanceService {
     discordService: DiscordService | null,
     emailService: EmailService,
     cacheService: PersistentCacheService,
-    credentialSubservice: CredentialSubservice
+    credentialSubservice: CredentialSubservice,
+    localFileService: LocalFileService | null
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
@@ -123,15 +132,18 @@ export class GenericIssuanceService {
     this.badgeDB = new BadgeGiftingDB();
     this.emailDB = new PipelineEmailDB();
     this.pipelineAtomDB = new InMemoryPipelineAtomDB();
+    this.pipelineDB = new PipelineDefinitionDB();
     this.userSubservice = new UserSubservice(
       context,
       stytchClient,
       genericIssuanceClientUrl
     );
     this.credentialSubservice = credentialSubservice;
+    this.localFileService = localFileService;
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
+      this.pipelineDB,
       this.consumerDB,
       this.userSubservice,
       this.credentialSubservice,
@@ -144,6 +156,7 @@ export class GenericIssuanceService {
         lemonadeAPI,
         genericPretixAPI: this.genericPretixAPI,
         pipelineAtomDB: this.pipelineAtomDB,
+        pipelineDB: this.pipelineDB,
         checkinDB: this.checkinDB,
         contactDB: this.contactDB,
         emailDB: this.emailDB,
@@ -153,7 +166,8 @@ export class GenericIssuanceService {
         semaphoreHistoryDB: this.semaphoreHistoryDB,
         credentialSubservice: this.credentialSubservice,
         emailService,
-        context
+        context,
+        localFileService
       } satisfies InstantiatePipelineArgs
     );
   }
@@ -179,10 +193,9 @@ export class GenericIssuanceService {
   }
 
   public async getAllUserPipelineDefinitions(
-    client: PoolClient,
     user: PipelineUser
   ): Promise<GenericIssuancePipelineListEntry[]> {
-    return this.pipelineSubservice.getAllUserPipelineDefinitions(client, user);
+    return this.pipelineSubservice.getAllUserPipelineDefinitions(user);
   }
 
   public async authSession(
@@ -221,6 +234,15 @@ export class GenericIssuanceService {
     );
   }
 
+  /**
+   * For testing only. Will throw in prod.
+   */
+  public async performPipelineLoad(
+    pipelineId: string
+  ): Promise<PipelineLoadSummary> {
+    return this.pipelineSubservice.performPipelineLoad(pipelineId);
+  }
+
   public async deletePipelineDefinition(
     client: PoolClient,
     user: PipelineUser,
@@ -231,6 +253,14 @@ export class GenericIssuanceService {
       user,
       pipelineId
     );
+  }
+
+  public async clearPipelineCache(
+    client: PoolClient,
+    pipelineId: string,
+    user: PipelineUser
+  ): Promise<void> {
+    return this.pipelineSubservice.clearPipelineCache(client, user, pipelineId);
   }
 
   public async loadPipelineDefinition(

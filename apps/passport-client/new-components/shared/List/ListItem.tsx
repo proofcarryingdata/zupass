@@ -1,5 +1,5 @@
 import { ReactElement } from "react";
-import { FaChevronRight } from "react-icons/fa";
+// import { FaChevronRight } from "react-icons/fa";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { Avatar } from "../Avatar";
 import { Typography } from "../Typography";
@@ -108,6 +108,7 @@ export const ListItem = ({
       variant={defaultVariant}
       onClick={onClick}
       isClickable={!!onClick}
+      style={{ paddingLeft: 24 }}
     >
       <IconContainer>{LeftIcon ? LeftIcon : <Avatar />}</IconContainer>
       <ListItemRightContainer showBottomBorder={defaultShowBottomBorder}>
@@ -129,7 +130,7 @@ export const ListItem = ({
             </ElipsisContainer>
           )}
         </Typography>
-        <FaChevronRight color="var(--text-tertiary)" />
+        {/* <FaChevronRight color="var(--text-tertiary)" /> */}
       </ListItemRightContainer>
     </ListItemContainer>
   );

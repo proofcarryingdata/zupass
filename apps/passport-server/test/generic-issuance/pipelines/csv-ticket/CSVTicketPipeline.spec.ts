@@ -131,7 +131,8 @@ describe("generic issuance - CSVTicketPipeline", function () {
     expectLength(pipelines, 1);
     const csvTicketPipeline = pipelines.find(CSVTicketPipeline.is);
     expectToExist(csvTicketPipeline);
-    const loadRes = await csvTicketPipeline.load();
+    const loadRes = await giService.performPipelineLoad(csvTicketPipeline.id);
+
     expectTrue(loadRes.success);
     const tickets = await requestTicketsFromPipeline(
       csvTicketPipeline.feedCapability.options.feedFolder,
@@ -159,7 +160,7 @@ describe("generic issuance - CSVTicketPipeline", function () {
     expectLength(pipelines, 1);
     const csvTicketPipeline = pipelines.find(CSVTicketPipeline.is);
     expectToExist(csvTicketPipeline);
-    const loadRes = await csvTicketPipeline.load();
+    const loadRes = await giService.performPipelineLoad(csvTicketPipeline.id);
     expectTrue(loadRes.success);
     const tickets = await requestTicketsFromPipeline(
       csvTicketPipeline.feedCapability.options.feedFolder,
