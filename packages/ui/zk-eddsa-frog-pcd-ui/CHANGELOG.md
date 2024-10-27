@@ -1,5 +1,18 @@
 # @pcd/zk-eddsa-frog-pcd-ui
 
+## 0.5.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-ui@0.14.0
+  - @pcd/pcd-types@0.14.0
+  - @pcd/zk-eddsa-frog-pcd@0.6.0
+
 ## 0.4.0
 
 ### Minor Changes

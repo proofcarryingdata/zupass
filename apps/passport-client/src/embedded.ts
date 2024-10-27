@@ -1,5 +1,6 @@
 import { ProveResult } from "@parcnet-js/client-rpc";
 import { PODData, PodspecProofRequest } from "@parcnet-js/podspec";
+import type { GPCIdentifier } from "@pcd/gpc";
 import { PCDGetRequest } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import type { PODEntries } from "@pcd/pod";
@@ -20,6 +21,7 @@ export interface EmbeddedGPCProof {
   type: EmbeddedScreenType.EmbeddedGPCProof;
   proofRequest: PodspecProofRequest;
   collectionIds: string[];
+  circuitIdentifier?: GPCIdentifier;
   callback: (result: ProveResult) => void;
 }
 

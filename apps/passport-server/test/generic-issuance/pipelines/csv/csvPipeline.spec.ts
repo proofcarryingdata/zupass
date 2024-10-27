@@ -130,7 +130,7 @@ describe("generic issuance - CSVPipeline", function () {
     expectLength(pipelines, 1);
     const csvPipeline = pipelines.find(CSVPipeline.is);
     expectToExist(csvPipeline);
-    const loadRes = await csvPipeline.load();
+    const loadRes = await giService.performPipelineLoad(csvPipeline.id);
     expectTrue(loadRes.success);
     const feedRes = await requestCSVFeed(
       csvPipeline.feedCapability.feedUrl,

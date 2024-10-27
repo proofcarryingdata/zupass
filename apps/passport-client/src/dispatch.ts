@@ -211,7 +211,8 @@ export type Action =
         | undefined;
     }
   | { type: "prove-state"; eligible: boolean }
-  | { type: "reset-prove-state" };
+  | { type: "reset-prove-state" }
+  | { type: "zapp-cancel-connect" };
 
 export type StateContextValue = {
   getState: GetState;
@@ -365,6 +366,9 @@ export async function dispatch(
       return;
     case "reset-prove-state":
       update({ proveStateEligiblePCDs: undefined });
+      return;
+    case "zapp-cancel-connect":
+      update({ zappApproved: false });
       return;
     default:
       // We can ensure that we never get here using the type system

@@ -65,7 +65,7 @@ export async function testLogin(
 
   let token: string;
 
-  if (userService.bypassEmail) {
+  if (userService?.bypassEmail) {
     expect(confirmationEmailResult.value).to.not.eq(undefined);
 
     if (!confirmationEmailResult.value?.devToken) {

@@ -5,13 +5,22 @@ import {
   PipelineType
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
-import { BsTicketPerforatedFill } from "react-icons/bs";
+import { BsDatabaseFillX, BsTicketPerforatedFill } from "react-icons/bs";
 import { FaCheck, FaHourglassHalf, FaRegPauseCircle } from "react-icons/fa";
-import { FaFileCsv } from "react-icons/fa6";
+import {
+  FaDatabase,
+  FaFileCsv,
+  FaMemory,
+  FaTriangleExclamation,
+  FaWifi
+} from "react-icons/fa6";
 import { GiCutLemon, GiPeas } from "react-icons/gi";
 import { MdError } from "react-icons/md";
 import { timeAgo } from "../helpers/util";
-import { PipelineStateDisplay } from "../pages/dashboard/PipelineTable";
+import {
+  PipelineCacheStatus,
+  PipelineStateDisplay
+} from "../pages/dashboard/PipelineTable";
 
 export function pipelineStatusIconFromStr(
   str: PipelineStateDisplay
@@ -19,7 +28,7 @@ export function pipelineStatusIconFromStr(
   switch (str) {
     case "Paused":
       return <FaRegPauseCircle />;
-    case "Starting":
+    case "Loading":
       return <FaHourglassHalf />;
     case "Loaded":
       return <FaCheck />;
@@ -35,7 +44,7 @@ export function pipelineStatusColorFromStr(str?: PipelineStateDisplay): string {
   switch (str) {
     case "Paused":
       return "gray";
-    case "Starting":
+    case "Loading":
       return "gray";
     case "Loaded":
       return "green";
@@ -104,13 +113,30 @@ export function PipelineTypeTag({ type }: { type?: PipelineType }): ReactNode {
 export function pipelineStatusStr(
   entry: GenericIssuancePipelineListEntry
 ): PipelineStateDisplay {
-  return entry.pipeline.options?.paused
+  return entry.extraInfo?.lastLoad?.success === false
+    ? "Error"
+    : entry.pipeline.options?.paused
     ? "Paused"
-    : !entry.extraInfo.lastLoad
-    ? "Starting"
-    : entry.extraInfo.lastLoad?.success
-    ? "Loaded"
-    : "Error";
+    : !entry.extraInfo.lastLoad || entry.extraInfo.loading
+    ? "Loading"
+    : "Loaded";
+}
+
+export function PipelineWarningsTag({
+  warnings
+}: {
+  warnings: number;
+}): ReactNode {
+  return (
+    <Tag
+      style={smallerTagStyle}
+      colorScheme={warnings === 0 ? "gray" : "yellow"}
+    >
+      <TagLabel>{warnings === 0 ? "None" : warnings}</TagLabel>
+      &nbsp;
+      {warnings === 0 ? <FaCheck /> : <FaTriangleExclamation />}
+    </Tag>
+  );
 }
 
 export function PipelineStatusTag({
@@ -136,6 +162,49 @@ export function PipelineStatusTag({
       <TagLabel>{status}</TagLabel>
       &nbsp;
       {pipelineStatusIconFromStr(status)}
+    </Tag>
+  );
+}
+
+export function PipelineDataSourceTag({
+  fromCache
+}: {
+  fromCache?: boolean;
+}): ReactNode {
+  return (
+    <Tag style={smallerTagStyle} colorScheme={fromCache ? "yellow" : "green"}>
+      <TagLabel>{fromCache ? "Disk" : "Memory"}</TagLabel>
+      &nbsp;
+      {fromCache ? <FaDatabase /> : <FaMemory />}
+    </Tag>
+  );
+}
+
+export function PipelineHasCacheTag({
+  cacheStatus: cacheStatus
+}: {
+  cacheStatus?: PipelineCacheStatus;
+}): ReactNode {
+  return (
+    <Tag
+      style={smallerTagStyle}
+      colorScheme={
+        cacheStatus === "Disabled"
+          ? "gray"
+          : cacheStatus === "Cached"
+          ? "green"
+          : "yellow"
+      }
+    >
+      <TagLabel>{cacheStatus}</TagLabel>
+      &nbsp;
+      {cacheStatus === "Disabled" ? (
+        <BsDatabaseFillX />
+      ) : cacheStatus === "Cached" ? (
+        <FaDatabase />
+      ) : (
+        <FaWifi />
+      )}
     </Tag>
   );
 }
