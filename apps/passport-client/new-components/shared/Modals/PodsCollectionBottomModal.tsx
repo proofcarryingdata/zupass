@@ -42,6 +42,7 @@ import {
   useOrientation,
   hideScrollCSS
 } from "../utils";
+import { nextFrame } from "../../../src/util";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -251,6 +252,9 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         if (folder) {
           const decodedFolderId = replaceDotWithSlash(decodeURI(folder));
           const folderContainer = document.getElementById(decodedFolderId);
+          setExpandedGroupsIds({
+            [decodedFolderId]: true
+          });
           if (folderContainer) {
             pos = folderContainer.offsetTop;
           }
@@ -262,7 +266,14 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         setParams("");
       }
     }
-  }, [activePod, scrollPosition, params, setParams, isPodsCollectionModalOpen]);
+  }, [
+    activePod,
+    scrollPosition,
+    params,
+    setParams,
+    isPodsCollectionModalOpen,
+    setExpandedGroupsIds
+  ]);
 
   const handlePodClick = useCallback(
     (pcd: PCD<unknown, unknown>) => {

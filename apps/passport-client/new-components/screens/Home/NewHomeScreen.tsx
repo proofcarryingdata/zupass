@@ -362,21 +362,31 @@ const NoUpcomingEventsState = ({
 
   useLayoutEffect(() => {
     // Restore scroll position when list is shown again
-    if (listContainerRef.current) {
-      const folder = params.get("folder");
-      // checks if url contains folder route, and if so, scrolls to it
-      if (folder) {
-        const decodedFolderId = replaceDotWithSlash(decodeURI(folder));
-        const folderContainer = document.getElementById(decodedFolderId);
-        if (folderContainer) {
-          listContainerRef.current.scrollTop = folderContainer.offsetTop;
+    (async (): Promise<void> => {
+      if (listContainerRef.current) {
+        const folder = params.get("folder");
+        // checks if url contains folder route, and if so, scrolls to it
+        if (folder) {
+          const decodedFolderId = replaceDotWithSlash(decodeURI(folder));
+          const folderContainer = document.getElementById(decodedFolderId);
+          setExpandedGroupsIds({
+            [decodedFolderId]: true
+          });
+          await nextFrame();
+          if (folderContainer) {
+            listContainerRef.current.scroll({ top: folderContainer.offsetTop });
+
+            console.log(
+              folderContainer.offsetTop,
+              listContainerRef.current.scrollTop
+            );
+          }
         }
       }
-    }
-
+    })();
     // Check scrollability after layout changes
     checkScrollability();
-  }, [params]);
+  }, [params, setExpandedGroupsIds]);
 
   const noPods =
     pods
@@ -558,6 +568,7 @@ export const NewHomeScreen = (): ReactElement => {
         const elToScroll = document.getElementById(
           scrollTo.eventId + scrollTo.attendee
         );
+
         window.scroll({
           top: elToScroll?.offsetTop,
           left: elToScroll?.offsetLeft
