@@ -1,10 +1,15 @@
 import { Zapp } from "@parcnet-js/client-rpc";
-import { Button, Spacer } from "@pcd/passport-ui";
-import { ReactNode } from "react";
+import { ReactNode, useLayoutEffect, useRef } from "react";
 import styled from "styled-components";
 import { useDispatch, useZapp, useZappOrigin } from "../../../src/appHooks";
-import { H1, TextCenter } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
+import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
+import {
+  DescriptiveAccordion,
+  DescriptiveAccordionRef,
+  DescriptiveAccrodionChild
+} from "../../../new-components/shared/Accordion";
+import { Button2 } from "../../../new-components/shared/Button";
 
 /**
  * This screen is only ever shown in a popup modal. It is used when Zupass is
@@ -17,155 +22,145 @@ import { AppContainer } from "../../shared/AppContainer";
  */
 export function ApprovePermissionsScreen(): ReactNode {
   const zapp = useZapp() as Zapp;
-  const zappName = zapp?.name;
   const zappOrigin = useZappOrigin();
   return (
-    <AppContainer bg="primary">
-      <Spacer h={32} />
-      <TextCenter>
-        <H1>ZUPASS</H1>
-      </TextCenter>
-      <Spacer h={24} />
-      <p>
-        <ZappName>{zappName}</ZappName> ({zappOrigin}) requests the following
-        permissions:
-      </p>
-      <Spacer h={24} />
-      <Permissions zapp={zapp} />
+    <AppContainer bg="white" noPadding>
+      <Container>
+        <BottomModalHeader
+          title="PERMISSION REQUEST"
+          description={`${zappOrigin} requests the following permissions:`}
+        />
+        <Permissions zapp={zapp} />
+      </Container>
     </AppContainer>
   );
 }
 
 function Permissions({ zapp }: { zapp: Zapp }): ReactNode {
   const dispatch = useDispatch();
+  const ref = useRef<DescriptiveAccordionRef>(null);
+  const chidren: DescriptiveAccrodionChild[] = [];
+  if (zapp.permissions.READ_PUBLIC_IDENTIFIERS) {
+    chidren.push({
+      title: "Read public identifiers",
+      description: `This will allow ${zapp.name} to read your
+              public key and Semaphore commitment. Your email address will not
+              be revealed.`
+    });
+  }
+  if (zapp.permissions.SIGN_POD) {
+    chidren.push({
+      title: "Sign POD",
+      description: `This will allow ${zapp.name} to sign PODs
+                using your identity.`
+    });
+  }
+  if (zapp.permissions.REQUEST_PROOF) {
+    chidren.push({
+      title: "Request proof",
+      description: `This will allow ${
+        zapp.name
+      } to request zero-knowldge proofs using data from these collections: ${zapp.permissions.REQUEST_PROOF.collections.join(
+        ","
+      )}`
+    });
+  }
+  if (zapp.permissions.READ_POD) {
+    chidren.push({
+      title: "Read PODs",
+      description: `This will allow ${
+        zapp.name
+      } to read PODs from these collections: ${zapp.permissions.READ_POD.collections.join(
+        ","
+      )}`
+    });
+  }
+  if (zapp.permissions.INSERT_POD) {
+    chidren.push({
+      title: "Insert PODs",
+      description: `This will allow ${
+        zapp.name
+      } to insert PODs from these collections: ${zapp.permissions.INSERT_POD.collections.join(
+        ","
+      )}`
+    });
+  }
+  if (zapp.permissions.DELETE_POD) {
+    chidren.push({
+      title: "Delete PODs",
+      description: `This will allow ${
+        zapp.name
+      } to delete PODs from these collections: ${zapp.permissions.DELETE_POD.collections.join(
+        ","
+      )}`,
+      color: "var(--new-danger)"
+    });
+  }
+
+  if (zapp.permissions.SUGGEST_PODS) {
+    chidren.push({
+      title: "Suggest PODs",
+      description: `This will allow ${
+        zapp.name
+      } to suggest PODs from these collections: ${zapp.permissions.SUGGEST_PODS.collections.join(
+        ","
+      )}`
+    });
+  }
+
+  useLayoutEffect(() => {
+    ref.current?.openAll();
+  }, []);
   return (
     <>
-      <PermissionsList>
-        {zapp.permissions.READ_PUBLIC_IDENTIFIERS && (
-          <PermissionItem>
-            <PermissionName>Read public identifiers</PermissionName>
-            <PermissionDescription>
-              This will allow <ZappName>{zapp.name}</ZappName> to read your
-              public key and Semaphore commitment. Your email address will not
-              be revealed.
-            </PermissionDescription>
-          </PermissionItem>
-        )}
-        {zapp.permissions.SIGN_POD && (
-          <PermissionItem>
-            <PermissionName>Sign POD</PermissionName>
-            <PermissionDescription>
-              This will allow <ZappName>{zapp.name}</ZappName> to sign PODs
-              using your identity.
-            </PermissionDescription>
-          </PermissionItem>
-        )}
-        {zapp.permissions.REQUEST_PROOF && (
-          <PermissionItem>
-            <PermissionName>Request proof</PermissionName>
-            <PermissionDescription>
-              This will allow <ZappName>{zapp.name}</ZappName> to request
-              zero-knowldge proofs using data from these collections:{" "}
-              <strong>
-                {zapp.permissions.REQUEST_PROOF.collections.join(", ")}
-              </strong>
-            </PermissionDescription>
-          </PermissionItem>
-        )}
-        {zapp.permissions.READ_POD && (
-          <PermissionItem>
-            <PermissionName>Read PODs</PermissionName>
-            <PermissionDescription>
-              This will allow <ZappName>{zapp.name}</ZappName> to read PODs from
-              these collections:{" "}
-              <strong>
-                {zapp.permissions.READ_POD.collections.join(", ")}
-              </strong>
-            </PermissionDescription>
-          </PermissionItem>
-        )}
-        {zapp.permissions.INSERT_POD && (
-          <PermissionItem>
-            <PermissionName>Insert PODs</PermissionName>
-            <PermissionDescription>
-              This will allow <ZappName>{zapp.name}</ZappName> to insert PODs
-              into these collections:{" "}
-              <strong>
-                {zapp.permissions.INSERT_POD.collections.join(", ")}
-              </strong>
-            </PermissionDescription>
-          </PermissionItem>
-        )}
-        {zapp.permissions.DELETE_POD && (
-          <PermissionItem>
-            <PermissionName>Delete PODs</PermissionName>
-            <PermissionDescription>
-              This will allow <ZappName>{zapp.name}</ZappName> to delete PODs
-              from these collections:{" "}
-              <strong>
-                {zapp.permissions.DELETE_POD.collections.join(", ")}
-              </strong>
-            </PermissionDescription>
-          </PermissionItem>
-        )}
-        {zapp.permissions.SUGGEST_PODS && (
-          <PermissionItem>
-            <PermissionName>Suggest PODs</PermissionName>
-            <PermissionDescription>
-              This will allow <ZappName>{zapp.name}</ZappName> to suggest PODs
-              for these collections:{" "}
-              <strong>
-                {zapp.permissions.SUGGEST_PODS.collections.join(", ")}
-              </strong>
-            </PermissionDescription>
-          </PermissionItem>
-        )}
-      </PermissionsList>
-      <Spacer h={24} />
-      <Button
-        onClick={() => dispatch({ type: "zapp-approval", approved: true })}
-      >
-        Approve
-      </Button>
-      <Spacer h={16} />
-      <Button
-        onClick={() => dispatch({ type: "zapp-approval", approved: false })}
-        style="secondary"
-      >
-        Decline
-      </Button>
-      <Spacer h={16} />
-      <TextCenter>
-        <DeclineText>
-          Declining will prevent <ZappName>{zapp.name}</ZappName> from accessing
-          your data but may prevent you from using some features of the app.
-        </DeclineText>
-      </TextCenter>
-      <Spacer h={24} />
+      <AccordionContainer>
+        <DescriptiveAccordion
+          ref={ref}
+          children={chidren}
+          title="permissions"
+        />
+      </AccordionContainer>
+      <ButtonsContainer>
+        <Button2
+          onClick={() => dispatch({ type: "zapp-approval", approved: true })}
+        >
+          Approve
+        </Button2>
+        <Button2
+          onClick={() => dispatch({ type: "zapp-approval", approved: false })}
+          variant="secondary"
+        >
+          Decline
+        </Button2>
+      </ButtonsContainer>
     </>
   );
 }
 
-const ZappName = styled.span`
-  font-weight: bold;
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  // justify-content: space-between;
+  height: 100vh;
+  padding: 24px 24px 20px 24px;
 `;
 
-const PermissionsList = styled.div`
+const AccordionContainer = styled.div`
+  width: 100%;
+  // max-height: calc(70vh);
+  min-height: 0px;
+  overflow: scroll;
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+`;
+
+const ButtonsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 8px;
-`;
-
-const PermissionItem = styled.div``;
-
-const PermissionName = styled.div`
-  font-weight: bold;
-`;
-
-const PermissionDescription = styled.div`
-  font-size: 0.9rem;
-`;
-
-const DeclineText = styled.div`
-  font-size: 0.8rem;
+  width: 100%;
+  margin-top: auto;
 `;
