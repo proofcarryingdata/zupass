@@ -1,12 +1,10 @@
 import { PODData, podToPODData } from "@parcnet-js/podspec";
-import { Button, Spacer } from "@pcd/passport-ui";
 import { POD, PODEntries, encodePrivateKey } from "@pcd/pod";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
-import { Fragment, ReactNode, useMemo } from "react";
+import { ReactNode, useMemo } from "react";
 import styled from "styled-components";
-import { useIdentityV3, useZapp, useZappOrigin } from "../../../src/appHooks";
+import { useIdentityV3, useZappOrigin } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
-import { H2 } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
 import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 import { Typography } from "../../../new-components/shared/Typography";
@@ -28,7 +26,6 @@ export function EmbeddedSignPODScreen({
       Buffer.from(v3tov4Identity(identity).export(), "base64")
     );
   }, [identity]);
-  const zapp = useZapp();
   const zappOrigin = useZappOrigin();
   const pod = useMemo(
     () => POD.sign(entries, privateKey),
@@ -93,6 +90,10 @@ const EntriesGrid = styled.div`
   align-self: stretch;
   border-radius: 8px;
   background: #e9efff;
+  overflow: scroll;
+  flex: 1; /* this allows the child to take up remaining space */
+  overflow: auto; /* enables scrolling within the child */
+  min-height: 0; /* critical to prevent overflow with flex children */
 `;
 
 const ButtonsContainer = styled.div`
@@ -109,6 +110,7 @@ const Container = styled.div`
   justify-content: space-between;
   height: 100vh;
   padding: 24px 24px 20px 24px;
+  gap: 16px;
 `;
 
 const InnerContainer = styled.div`
@@ -117,4 +119,5 @@ const InnerContainer = styled.div`
   align-items: center;
   gap: 16px;
   width: 100%;
+  min-height: 0; /* critical to prevent overflow with flex children */
 `;
