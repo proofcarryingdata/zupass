@@ -51,7 +51,7 @@ export function EmbeddedSignPODScreen({
                   <Typography
                     style={{
                       maxWidth: "50%",
-                      overflowWrap: "break-word"
+                      overflowWrap: "anywhere"
                     }}
                     color="var(--core-accent)"
                     fontWeight={500}
@@ -93,7 +93,7 @@ const EntriesGrid = styled.div`
   background: #e9efff;
   overflow: scroll;
   flex: 1; /* this allows the child to take up remaining space */
-  overflow: auto; /* enables scrolling within the child */
+  overflow-y: auto; /* enables scrolling within the child */
   min-height: 0; /* critical to prevent overflow with flex children */
 `;
 
