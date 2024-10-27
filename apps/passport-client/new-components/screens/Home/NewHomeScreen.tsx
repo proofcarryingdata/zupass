@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import {
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -9,7 +10,7 @@ import {
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
 import { isEmailPCD } from "@pcd/email-pcd";
-import { PCDGetRequest } from "@pcd/passport-interface";
+import { PCDGetRequest, requestGenericIssuanceTicketPreviews } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
@@ -23,7 +24,12 @@ import {
   useRef,
   useState
 } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams
+} from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, {
   FlattenSimpleInterpolation,
@@ -53,6 +59,7 @@ import { Typography } from "../../shared/Typography";
 import { hideScrollCSS, isMobile, useOrientation } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
+import { appConfig } from "../../../src/appConfig";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -476,7 +483,7 @@ export const NewHomeScreen = (): ReactElement => {
   const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
-
+  const regularParams = useParams();
   const noPods =
     collection
       .getAll()
@@ -488,11 +495,11 @@ export const NewHomeScreen = (): ReactElement => {
     isMobile &&
     (orientation.type === "landscape-primary" ||
       orientation.type === "landscape-secondary");
-  useEffect(() => {
-    if (!self) {
-      navigate("/login", { replace: true });
-    }
-  });
+  // useEffect(() => {
+  //   if (!self) {
+  //     navigate("/login", { replace: true });
+  //   }
+  // });
   const showPodsList = tickets.length === 0 && !isLandscape && !noPods;
 
   useLayoutEffect(() => {
@@ -512,6 +519,7 @@ export const NewHomeScreen = (): ReactElement => {
       }
       return;
     }
+
     if (location.pathname.includes("prove")) {
       const params = new URLSearchParams(location.search);
       const request = JSON.parse(
@@ -526,6 +534,7 @@ export const NewHomeScreen = (): ReactElement => {
     }
     if (params.size > 0) setParams("");
   }, [
+    regularParams,
     params,
     collection,
     setParams,
@@ -534,7 +543,30 @@ export const NewHomeScreen = (): ReactElement => {
     dispatch,
     showPodsList
   ]);
+  useLayoutEffect(() => {
+    const test = async (): Promise<void> => {
+      if (location.pathname.includes("one-click-preview")) {
+        const { email, code,targetFolder, pipelineId, serverUrl } =
+          regularParams;
+        if (!email || !code) return;
+        // const previewRes = await requestGenericIssuanceTicketPreviews(
+        //   serverUrl ?? appConfig.zupassServer,
+        //   email,
+        //   code,
+        //   pipelineId
+        // );
+      await dispatch({
+        type: "one-click-login",
+        email,
+        code,
+        targetFolder
+      });
+      console.log("done one click login")
 
+      }
+    };
+    test();
+  }, [dispatch, location.pathname, regularParams]);
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {
       // getting the pos of the event card

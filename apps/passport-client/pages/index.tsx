@@ -192,7 +192,7 @@ function RouterImpl(): JSX.Element {
           />  */}
           <Route
             path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
-            element={<NewOneClickLoginScreen2 />}
+            element={<NewHomeScreen />}
           />
           <Route
             path="get-without-proving"
