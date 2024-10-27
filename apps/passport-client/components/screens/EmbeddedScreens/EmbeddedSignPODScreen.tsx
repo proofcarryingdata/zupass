@@ -91,6 +91,10 @@ const EntriesGrid = styled.div`
   align-self: stretch;
   border-radius: 8px;
   background: #e9efff;
+  overflow: scroll;
+  flex: 1; /* this allows the child to take up remaining space */
+  overflow: auto; /* enables scrolling within the child */
+  min-height: 0; /* critical to prevent overflow with flex children */
 `;
 
 const ButtonsContainer = styled.div`
@@ -107,6 +111,7 @@ const Container = styled.div`
   justify-content: space-between;
   height: 100vh;
   padding: 24px 24px 20px 24px;
+  gap: 16px;
 `;
 
 const InnerContainer = styled.div`
@@ -115,4 +120,5 @@ const InnerContainer = styled.div`
   align-items: center;
   gap: 16px;
   width: 100%;
+  min-height: 0; /* critical to prevent overflow with flex children */
 `;
