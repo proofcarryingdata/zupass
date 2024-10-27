@@ -375,11 +375,6 @@ const NoUpcomingEventsState = ({
           await nextFrame();
           if (folderContainer) {
             listContainerRef.current.scroll({ top: folderContainer.offsetTop });
-
-            console.log(
-              folderContainer.offsetTop,
-              listContainerRef.current.scrollTop
-            );
           }
         }
       }

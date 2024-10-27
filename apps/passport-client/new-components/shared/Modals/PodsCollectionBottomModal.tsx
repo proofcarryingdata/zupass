@@ -42,7 +42,6 @@ import {
   useOrientation,
   hideScrollCSS
 } from "../utils";
-import { nextFrame } from "../../../src/util";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
