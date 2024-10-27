@@ -45,9 +45,11 @@ import { ApplicationContext, GlobalServices } from "../../types";
 import { IS_PROD } from "../../util/isProd";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
-import { checkBody, checkUrlParam } from "../params";
+import { checkBody, checkOptionalUrlParam, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
-
+import path from "path";
+import Mustache from "mustache";
+import fs from "fs";
 export function initGenericIssuanceRoutes(
   app: express.Application,
   context: ApplicationContext,
@@ -756,6 +758,30 @@ export function initGenericIssuanceRoutes(
       );
 
       res.json(result satisfies TicketPreviewResultValue);
+    }
+  );
+
+  app.get(
+    "/generic-issueance/one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?",
+    async (req, res) => {
+      checkExistsForRoute(genericIssuanceService);
+      const email = checkUrlParam(req, "email");
+      const code = checkUrlParam(req, "code");
+      const pipeline = req.params.pipelineId;
+
+      const result = await genericIssuanceService.handleGetTicketPreview(
+        email,
+        code,
+        pipeline
+      );
+      const ticket = { ...result.tickets[0] };
+
+      logger();
+      const absPath = path.resolve("./resources/one-click-page/index.html");
+      const file = fs.readFileSync(absPath).toString();
+      const rendered = Mustache.render(file, ticket);
+      logger({ rendered });
+      res.send(rendered);
     }
   );
 }

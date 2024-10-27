@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<style>
+</style>
+<script>
+    const path = window.location.pathname;
+    const newPath = path.replace("generic-issueance", "#");
+    const clientPath = "http://localhost:3000" + newPath;
+    function redirectToZupass() {
+        window.location.replace(clientPath);
+    }
+</script>
+
+<body>
+    <div onclick="">{{attendeeEmail}}</div>
+    <button onclick="redirectToZupass()">go to zupass</button>
+</body>
+
+</html>
