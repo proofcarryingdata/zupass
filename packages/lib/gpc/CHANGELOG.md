@@ -1,5 +1,18 @@
 # @pcd/gpcircuits
 
+## 0.3.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/gpcircuits@0.4.0
+  - @pcd/pod@0.4.0
+  - @pcd/util@0.8.0
+
 ## 0.2.0
 
 ### Minor Changes

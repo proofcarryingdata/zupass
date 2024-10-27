@@ -16,9 +16,9 @@ import {
 import express, { Request, Response } from "express";
 import urljoin from "url-join";
 import { namedSqlTransaction } from "../../database/sqlQuery";
-import { FrogcryptoService } from "../../services/frogcryptoService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
@@ -30,22 +30,11 @@ export function initFrogcryptoRoutes(
   logger("[INIT] initializing frogcrypto routes");
 
   /**
-   * Throws if we don't have an instance of {@link frogcryptoService}.
-   */
-  function checkFrogcryptoServiceStarted(
-    frogcryptoService: FrogcryptoService | null
-  ): asserts frogcryptoService {
-    if (!frogcryptoService) {
-      throw new PCDHTTPError(503, "issuance service not instantiated");
-    }
-  }
-
-  /**
    * Lets a Zupass client (or even a 3rd-party-developed client get PCDs from a
    * particular feed that this server is hosting.
    */
   app.get("/frogcrypto/feeds", async (req, res) => {
-    checkFrogcryptoServiceStarted(frogcryptoService);
+    checkExistsForRoute(frogcryptoService);
     const result = await frogcryptoService.handleListFeedsRequest(
       req.body as PollFeedRequest
     );
@@ -57,7 +46,7 @@ export function initFrogcryptoRoutes(
    * particular feed that this server is hosting.
    */
   app.post("/frogcrypto/feeds", async (req, res) => {
-    checkFrogcryptoServiceStarted(frogcryptoService);
+    checkExistsForRoute(frogcryptoService);
     const result = await frogcryptoService.handleFeedRequest(
       req.body as PollFeedRequest
     );
@@ -65,7 +54,7 @@ export function initFrogcryptoRoutes(
   });
 
   app.get("/frogcrypto/feeds/:feedId", async (req: Request, res: Response) => {
-    checkFrogcryptoServiceStarted(frogcryptoService);
+    checkExistsForRoute(frogcryptoService);
     const feedId = checkUrlParam(req, "feedId");
     const result = await frogcryptoService.handleListSingleFeedRequest({
       feedId
@@ -77,7 +66,7 @@ export function initFrogcryptoRoutes(
   });
 
   app.get("/frogcrypto/scoreboard", async (req, res) => {
-    checkFrogcryptoServiceStarted(frogcryptoService);
+    checkExistsForRoute(frogcryptoService);
     const result = await namedSqlTransaction(
       context.dbPool,
       "/frogcrypto/scoreboard",
@@ -87,7 +76,7 @@ export function initFrogcryptoRoutes(
   });
 
   app.post("/frogcrypto/telegram-handle-sharing", async (req, res) => {
-    checkFrogcryptoServiceStarted(frogcryptoService);
+    checkExistsForRoute(frogcryptoService);
     const result = await namedSqlTransaction(
       context.dbPool,
       "/frogcrypto/telegram-handle-sharing",
@@ -101,7 +90,7 @@ export function initFrogcryptoRoutes(
   });
 
   app.post("/frogcrypto/user-state", async (req, res) => {
-    checkFrogcryptoServiceStarted(frogcryptoService);
+    checkExistsForRoute(frogcryptoService);
     const result = await namedSqlTransaction(
       context.dbPool,
       "/frogcrypto/user-state",
@@ -125,7 +114,7 @@ export function initFrogcryptoRoutes(
   });
 
   app.post("/frogcrypto/admin/frogs", async (req, res) => {
-    checkFrogcryptoServiceStarted(frogcryptoService);
+    checkExistsForRoute(frogcryptoService);
     const result = await namedSqlTransaction(
       context.dbPool,
       "/frogcrypto/admin/frogs",
@@ -139,7 +128,7 @@ export function initFrogcryptoRoutes(
   });
 
   app.post("/frogcrypto/admin/delete-frogs", async (req, res) => {
-    checkFrogcryptoServiceStarted(frogcryptoService);
+    checkExistsForRoute(frogcryptoService);
     const result = await namedSqlTransaction(
       context.dbPool,
       "/frogcrypto/admin/delete-frogs",
@@ -153,7 +142,7 @@ export function initFrogcryptoRoutes(
   });
 
   app.post("/frogcrypto/admin/feeds", async (req, res) => {
-    checkFrogcryptoServiceStarted(frogcryptoService);
+    checkExistsForRoute(frogcryptoService);
     const result = await namedSqlTransaction(
       context.dbPool,
       "/frogcrypto/admin/feeds",

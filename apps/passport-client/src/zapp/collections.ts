@@ -19,8 +19,8 @@ export function getPODsForCollections(
 ): POD[] {
   return collectionIds
     .flatMap((collectionId) =>
-      collectionId === "Devcon 7"
-        ? pcds.getAllPCDsInFolder("Devcon 7")
+      collectionId === "Devcon SEA"
+        ? pcds.getAllPCDsInFolder("Devcon SEA")
         : pcds.getAllPCDsInFolder(collectionIdToFolderName(collectionId))
     )
     .filter((pcd) => isPODPCD(pcd) || isPODTicketPCD(pcd))

@@ -17,12 +17,14 @@ import {
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
 import { str } from "@pcd/util";
+import _ from "lodash";
 import { PoolClient } from "postgres-pool";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { sqlTransaction } from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
+import { LocalFileService } from "../../LocalFileService";
 import { traceFlattenedObject, traced } from "../../telemetryService";
 import { isCheckinCapability } from "../capabilities/CheckinCapability";
 import {
@@ -52,17 +54,20 @@ export class PipelineAPISubservice {
   private pipelineSubservice: PipelineSubservice;
   private consumerDB: IPipelineConsumerDB;
   private credentialSubservice: CredentialSubservice;
+  private localFileService: LocalFileService | null;
 
   public constructor(
     context: ApplicationContext,
     consumerDB: IPipelineConsumerDB,
     pipelineSubservice: PipelineSubservice,
-    credentailSubservice: CredentialSubservice
+    credentailSubservice: CredentialSubservice,
+    localFileService: LocalFileService | null
   ) {
     this.context = context;
     this.pipelineSubservice = pipelineSubservice;
     this.consumerDB = consumerDB;
     this.credentialSubservice = credentailSubservice;
+    this.localFileService = localFileService;
   }
 
   /**
@@ -123,7 +128,6 @@ export class PipelineAPISubservice {
         pipelineInstance.capabilities.filter(isFeedIssuanceCapability);
 
       const lastLoad = await this.pipelineSubservice.getLastLoadSummary(
-        client,
         pipelineInstance.id
       );
       const latestAtoms = await this.pipelineSubservice.getPipelineAtoms(
@@ -159,6 +163,11 @@ export class PipelineAPISubservice {
 
       const info = {
         ownerEmail: pipelineSlot.owner.email,
+        hasCachedLoad:
+          (await this.localFileService?.hasCachedLoad(pipelineId)) ?? false,
+        cachedBytes:
+          (await this.localFileService?.getCachedLoadSize(pipelineId)) ?? 0,
+        loading: !!pipelineSlot.loadPromise,
         latestAtoms,
         lastLoad,
 
@@ -190,7 +199,13 @@ export class PipelineAPISubservice {
         )
       } satisfies PipelineInfoResponseValue;
 
-      traceFlattenedObject(span, { loadSummary: lastLoad });
+      if (lastLoad) {
+        const redactedCopyOfLoadSummary = _.cloneDeep(lastLoad);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (redactedCopyOfLoadSummary as any).latestLogs;
+        traceFlattenedObject(span, { loadSummary: redactedCopyOfLoadSummary });
+      }
+
       traceFlattenedObject(span, { pipelineFeeds });
 
       return info;

@@ -7,6 +7,7 @@ import { ApplicationContext } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { DiscordService } from "../../../discordService";
 import { EmailService } from "../../../emailService";
+import { LocalFileService } from "../../../LocalFileService";
 import { PagerDutyService } from "../../../pagerDutyService";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { GenericIssuanceService } from "../../GenericIssuanceService";
@@ -24,7 +25,8 @@ export async function startGenericIssuanceService(
   discordService: DiscordService | null,
   cacheService: PersistentCacheService | null,
   emailService: EmailService,
-  credentialSubservice: CredentialSubservice
+  credentialSubservice: CredentialSubservice,
+  localFileService: LocalFileService | null
 ): Promise<GenericIssuanceService | null> {
   logger("[INIT] attempting to start Generic Issuance service");
 
@@ -125,10 +127,11 @@ export async function startGenericIssuanceService(
     discordService,
     emailService,
     cacheService,
-    credentialSubservice
+    credentialSubservice,
+    localFileService
   );
 
-  issuanceService.start();
+  issuanceService.start(process.env.GENERIC_ISSUANCE_TEST_MODE !== "true");
 
   return issuanceService;
 }
