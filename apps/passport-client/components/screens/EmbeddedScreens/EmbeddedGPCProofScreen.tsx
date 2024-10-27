@@ -462,6 +462,7 @@ const Container = styled.div`
   height: 100vh;
   padding: 24px 24px 20px 24px;
   width: 100%;
+  gap: 16px;
 `;
 
 const EntryBox = styled.div`
@@ -495,13 +496,15 @@ const InnerContainer = styled.div`
   flex-direction: column;
   gap: 20px;
   width: 100%;
+  overflow: hidden;
 `;
 
 const PodsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: calc(100vh - 200px);
+  min-height: 0;
+  flex: 1;
   overflow: scroll;
   ${hideScrollCSS}
 `;
