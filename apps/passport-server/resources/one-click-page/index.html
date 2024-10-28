@@ -172,7 +172,7 @@
 <script>
     const path = window.location.pathname;
     const newPath = path.replace("generic-issueance", "#");
-    const clientPath = "http://localhost:3000" + newPath;
+    const clientPath = "{{{zupassUrl}}}" + newPath;
     function redirectToZupass() {
         window.location.replace(clientPath);
     }

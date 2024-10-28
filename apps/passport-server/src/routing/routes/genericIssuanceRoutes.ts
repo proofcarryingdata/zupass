@@ -808,7 +808,8 @@ export function initGenericIssuanceRoutes(
         qr: qrCodeData,
         backgroundImage: ticket.imageUrl,
         count: result.tickets.length,
-        isMoreThanOne: result.tickets.length > 1
+        isMoreThanOne: result.tickets.length > 1,
+        zupassUrl: process.env.PASSPORT_CLIENT_URL
       });
       res.send(rendered);
     }
