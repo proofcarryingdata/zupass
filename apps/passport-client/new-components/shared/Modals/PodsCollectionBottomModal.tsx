@@ -113,7 +113,12 @@ export const PodsCollectionList = ({
 
     // Group PCDs by folder and create a list of groups with the items inside
     const result: Record<string, GroupType> = {};
-    for (const [key, value] of Object.entries(pcdCollection.folders)) {
+
+    const sortedEntried = Object.entries(pcdCollection.folders).sort(
+      ([_aKey, aVal], [_bKey, bVal]) => (aVal ?? "").localeCompare(bVal ?? "")
+    );
+    console.log(sortedEntried);
+    for (const [key, value] of sortedEntried) {
       if (!result[value]) {
         const isItTheFirstGroup = !Object.keys(result).length;
         const shouldExpandedByDefault =
@@ -163,8 +168,7 @@ export const PodsCollectionList = ({
           )
         };
       })
-      .filter((group) => group.children.length > 0)
-      .sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""));
+      .filter((group) => group.children.length > 0);
   }, [pcdCollection, onPodClick, searchQuery, expandedGroupsIds]);
 
   return (
