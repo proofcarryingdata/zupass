@@ -1,13 +1,15 @@
+import { ReactElement } from "react";
+import { FaChevronRight } from "react-icons/fa";
 import styled from "styled-components";
 import { Typography } from "../Typography";
 import { ListItem, ListItemType } from "./ListItem";
-import { ReactElement } from "react";
 
 export type GroupType = {
   children: ListItemType[];
   title?: string;
   isLastItemBorder?: boolean;
   id?: string;
+  expanded?: boolean;
 };
 
 type ListChild = GroupType | ListItemType;
@@ -21,29 +23,47 @@ const GroupContainer = styled.div`
 `;
 
 const ListGroup = ({
-  children,
-  title,
-  isLastItemBorder,
-  id
-}: GroupType): ReactElement => {
+  group,
+  onExpanded
+}: {
+  group: GroupType;
+  onExpanded?: (id: string, expanded: boolean) => void;
+}): ReactElement => {
+  const { children, title, expanded, isLastItemBorder, id } = group;
   const len = children.length;
   return (
     <GroupContainer key={id} id={id}>
-      <Typography fontWeight={500} color="var(--text-tertiary)" family="Rubik">
+      <Typography
+        onClick={() => onExpanded && id && onExpanded(id, !expanded)}
+        style={{ cursor: onExpanded ? "pointer" : "default" }}
+        fontWeight={500}
+        color="var(--text-tertiary)"
+        family="Rubik"
+      >
+        <FaChevronRight
+          color="var(--text-tertiary)"
+          style={{
+            transform: expanded ? "rotate(90deg)" : undefined,
+            transition: "transform 0.2s ease-in-out",
+            marginRight: 10,
+            verticalAlign: "text-top"
+          }}
+        />
         {title}
       </Typography>
-      {children.map((child, i) => {
-        if (i === len - 1) {
-          return (
-            <ListItem
-              {...child}
-              showBottomBorder={isLastItemBorder}
-              key={child.key}
-            />
-          );
-        }
-        return <ListItem {...child} key={child.key} />;
-      })}
+      {(!!expanded || !onExpanded) &&
+        children.map((child, i) => {
+          if (i === len - 1) {
+            return (
+              <ListItem
+                {...child}
+                showBottomBorder={isLastItemBorder}
+                key={child.key}
+              />
+            );
+          }
+          return <ListItem {...child} key={child.key} />;
+        })}
     </GroupContainer>
   );
 };
@@ -51,14 +71,15 @@ const ListGroup = ({
 type ListProps = {
   list: ListChild[];
   style?: React.CSSProperties;
+  onExpanded?: (id: string, expanded: boolean) => void;
 };
 
-export const List = ({ list, style }: ListProps): ReactElement => {
+export const List = ({ list, style, onExpanded }: ListProps): ReactElement => {
   return (
     <div style={style}>
       {list.map((child) => {
         return isListGroup(child) ? (
-          <ListGroup {...child} />
+          <ListGroup group={child} onExpanded={onExpanded} />
         ) : (
           <ListItem {...child} />
         );

@@ -373,7 +373,8 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
         bouncerTicket.claim.ticket.attendeeEmail
       );
       MockDate.set(Date.now() + ONE_SECOND_MS);
-      await pipeline.load();
+
+      await giService.performPipelineLoad(pipeline.id);
 
       const manualBouncerChecksInManualAttendee =
         await requestCheckInPipelineTicket(
@@ -508,7 +509,7 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
       const ethLatAmPipeline = pipelines.find(PretixPipeline.is);
       expectToExist(ethLatAmPipeline);
 
-      await ethLatAmPipeline.load();
+      await giService.performPipelineLoad(ethLatAmPipeline.id);
 
       const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
@@ -636,7 +637,8 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
     );
     MockDate.set(Date.now() + ONE_SECOND_MS);
     // Verify that bouncer is checked out in backend
-    await pipeline.load();
+    await giService.performPipelineLoad(pipeline.id);
+
     const bouncerTickets = await requestTicketsFromPipeline(
       pipeline.issuanceCapability.options.feedFolder,
       ethLatAmTicketFeedUrl,
@@ -682,7 +684,8 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
     MockDate.set(Date.now() + ONE_SECOND_MS);
 
     // Reload the pipeline
-    await pipeline.load();
+    await giService.performPipelineLoad(pipeline.id);
+
     {
       // Get updated tickets from feed
       const bouncerTickets = await requestTicketsFromPipeline(
@@ -760,7 +763,8 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
       } as PodboxTicketActionResponseValue);
     }
     // Verify that bouncer is checked out in backend
-    await pipeline.load();
+    await giService.performPipelineLoad(pipeline.id);
+
     {
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
@@ -805,7 +809,8 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
       MockDate.set(Date.now() + ONE_SECOND_MS);
 
       // Reload the pipeline
-      await pipeline.load();
+      await giService.performPipelineLoad(pipeline.id);
+
       {
         const bouncerTickets = await requestTicketsFromPipeline(
           pipeline.issuanceCapability.options.feedFolder,
@@ -856,7 +861,7 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
         { attendee_emails_asked: false, attendee_emails_required: false }
       );
 
-      const runInfo = await pipeline.load();
+      const runInfo = await giService.performPipelineLoad(pipeline.id);
       expect(runInfo.atomsLoaded).to.eq(0);
       expectLength(
         runInfo.latestLogs.filter(
@@ -893,7 +898,7 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
         }
       );
 
-      const runInfo = await pipeline.load();
+      const runInfo = await giService.performPipelineLoad(pipeline.id);
       expect(runInfo.atomsLoaded).to.eq(0);
       expectLength(
         runInfo.latestLogs.filter(
@@ -923,7 +928,8 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
       );
 
       // Verify that bouncer is checked out in backend
-      await pipeline.load();
+      await giService.performPipelineLoad(pipeline.id);
+
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
         ethLatAmTicketFeedUrl,

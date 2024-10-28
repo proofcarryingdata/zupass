@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@rollbar/react": "^0.12.0-beta",
+    "@pcd/util": "0.8.0",
     "react": "^18.2.0",
     "rollbar": "^2.26.4"
   },

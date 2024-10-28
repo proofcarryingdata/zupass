@@ -1,3 +1,10 @@
+import { parseGPCArtifactsConfig } from "@pcd/client-shared";
+import {
+  gpcArtifactDownloadURL,
+  GPCArtifactSource,
+  GPCArtifactStability,
+  GPCArtifactVersion
+} from "@pcd/gpc";
 import {
   EdgeCityFolderName,
   FrogCryptoFolderName,
@@ -8,6 +15,7 @@ import { sleep } from "@pcd/util";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import { Dispatcher } from "./dispatch";
+import { GPC_ARTIFACTS_CONFIG } from "./sharedConstants";
 
 export function getHost(returnURL: string): string {
   const url = new URL(returnURL);
@@ -143,3 +151,13 @@ export function stringSizeInBytes(s: string): number {
 }
 
 export const ADD_PCD_SIZE_LIMIT_BYTES = 10000;
+
+export function getGPCArtifactsURL(zupassURL: string): string {
+  const gpcArtifactsConfig = parseGPCArtifactsConfig(GPC_ARTIFACTS_CONFIG);
+  return gpcArtifactDownloadURL(
+    gpcArtifactsConfig.source as GPCArtifactSource,
+    gpcArtifactsConfig.stability as GPCArtifactStability,
+    gpcArtifactsConfig.version as GPCArtifactVersion,
+    zupassURL
+  );
+}

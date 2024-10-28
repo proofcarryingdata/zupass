@@ -31,6 +31,7 @@ import { v4 as uuidv4 } from "uuid";
 import { appConfig } from "../appConfig";
 import { StateContextValue } from "../dispatch";
 import { EmbeddedScreenType } from "../embedded";
+import { getGPCArtifactsURL } from "../util";
 import { collectionIdToFolderName, getPODsForCollections } from "./collections";
 import { QuerySubscriptionManager } from "./query_subscription_manager";
 import { ListenMode } from "./useZappServer";
@@ -169,11 +170,23 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       POD.load(podData.entries, podData.signature, podData.signerPublicKey)
     );
     const serializedPCD = await PODPCDPackage.serialize(podPCD);
+
+    const currentRevision = this.getContext().getState().serverStorageRevision;
+
     await this.getContext().dispatch({
       type: "add-pcds",
       folder: collectionIdToFolderName(collectionId),
       pcds: [serializedPCD],
       upsert: true
+    });
+
+    return new Promise((resolve) => {
+      const unlisten = this.getContext().stateEmitter.listen((state) => {
+        if (state.serverStorageRevision !== currentRevision) {
+          unlisten();
+          resolve();
+        }
+      });
     });
   }
 
@@ -201,6 +214,8 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
       )
       .map((pcd) => pcd.id);
 
+    const currentRevision = this.getContext().getState().serverStorageRevision;
+
     await Promise.all(
       pcdIds.map((id) =>
         this.getContext().dispatch({
@@ -209,6 +224,15 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
         })
       )
     );
+
+    return new Promise((resolve) => {
+      const unlisten = this.getContext().stateEmitter.listen((state) => {
+        if (state.serverStorageRevision !== currentRevision) {
+          unlisten();
+          resolve();
+        }
+      });
+    });
   }
 
   public async sign(entries: PODEntries): Promise<PODData> {
@@ -225,9 +249,12 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
     if (
       entries.pod_type &&
       typeof entries.pod_type.value === "string" &&
-      entries.pod_type.value.substring(0, 7) === "zupass_"
+      (entries.pod_type.value.substring(0, 7) === "zupass_" ||
+        entries.pod_type.value.substring(0, 7) === "zupass.")
     ) {
-      throw new Error(`The pod_type prefix "zupass_" is reserved.`);
+      throw new Error(
+        `The pod_type prefixes "zupass." and "zupass_" are reserved.`
+      );
     }
 
     // If the Zapp is embedded, it can sign a POD directly
@@ -413,7 +440,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
       proof,
       boundConfig,
       revealedClaims,
-      new URL("/artifacts/proto-pod-gpc", window.location.origin).toString()
+      getGPCArtifactsURL(window.location.origin)
     );
   }
 
@@ -430,7 +457,7 @@ class ZupassGPCRPC extends BaseZappServer implements ParcnetGPCRPC {
       proof,
       config as GPCBoundConfig,
       revealedClaims,
-      new URL("/artifacts/proto-pod-gpc", window.location.origin).toString()
+      getGPCArtifactsURL(window.location.origin)
     );
   }
 

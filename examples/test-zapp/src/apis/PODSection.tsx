@@ -1,4 +1,8 @@
 import type { ParcnetAPI, Subscription } from "@parcnet-js/app-connector";
+import {
+  ClientConnectionState,
+  useParcnetClient
+} from "@parcnet-js/app-connector-react";
 import type { PODData } from "@parcnet-js/podspec";
 import * as p from "@parcnet-js/podspec";
 import type { PODEntries, PODValue } from "@pcd/pod";
@@ -8,13 +12,12 @@ import type { Dispatch, ReactNode, SetStateAction } from "react";
 import { useReducer, useState } from "react";
 import { Button } from "../components/Button";
 import { TryIt } from "../components/TryIt";
-import { useParcnetClient } from "../hooks/useParcnetClient";
 
 export function PODSection(): ReactNode {
-  const { z, connected } = useParcnetClient();
+  const { z, connectionState } = useParcnetClient();
   const [pod, setPOD] = useState<p.PODData | null>(null);
 
-  return !connected ? null : (
+  return connectionState !== ClientConnectionState.CONNECTED ? null : (
     <div>
       <h1 className="text-xl font-bold mb-2">PODs</h1>
       <div className="prose">

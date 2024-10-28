@@ -1,14 +1,19 @@
+import { Spacer } from "@pcd/passport-ui";
+import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import styled from "styled-components";
 import { useBottomModal, useDispatch, useSelf } from "../../../src/appHooks";
-import { BottomModal, BottomModalHeader } from "../BottomModal";
 import { Accordion } from "../Accordion";
+import { BottomModal, BottomModalHeader } from "../BottomModal";
 import { Button2 } from "../Button";
-import { Spacer } from "@pcd/passport-ui";
 
 export const HelpModal = (): JSX.Element => {
   const activeBottomModal = useBottomModal();
   const self = useSelf();
   const dispatch = useDispatch();
+  if (!self) {
+    return <></>;
+  }
+
   return (
     <BottomModal isOpen={activeBottomModal.modalType === "help-modal"}>
       <BottomModalHeader
@@ -41,10 +46,14 @@ export const HelpModal = (): JSX.Element => {
       <ButtonsContainer>
         <Button2
           onClick={() => {
-            window.open("mailto:support@zupass.org");
+            window.open(
+              `mailto:${ZUPASS_SUPPORT_EMAIL}?subject=Ticket Support (${self.emails.join(
+                ", "
+              )})&body=Hi, I'd like to request support on finding my ticket in Zupass. My email(s) are listed in the subject of this email.`
+            );
           }}
         >
-          Email support
+          Contact support
         </Button2>
         <Button2
           variant="secondary"

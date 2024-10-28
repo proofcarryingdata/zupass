@@ -105,6 +105,7 @@ export class LemonadePipeline implements BasePipeline {
   public type = PipelineType.Lemonade;
   public capabilities: BasePipelineCapability[];
 
+  private stopped = false;
   /**
    * Used to sign {@link EdDSATicketPCD}
    */
@@ -265,18 +266,24 @@ export class LemonadePipeline implements BasePipeline {
     this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
   }
 
+  public isStopped(): boolean {
+    return this.stopped;
+  }
+
   public async start(): Promise<void> {
-    // On startup, the pipeline definition may have changed, and manual tickets
-    // may have been deleted. If so, clean up any check-ins for those tickets.
-    // await this.cleanUpManualCheckins();
-    // Initialize the Semaphore Group provider by loading groups from the DB,
-    // if one exists.
+    if (this.stopped) {
+      throw new Error(`pipeline ${this.id} already stopped`);
+    }
+    logger(LOG_TAG, `starting lemonade pipeline with id ${this.id}`);
     await this.semaphoreGroupProvider?.start();
   }
 
   public async stop(): Promise<void> {
+    if (this.stopped) {
+      return;
+    }
+    this.stopped = true;
     logger(LOG_TAG, `stopping LemonadePipeline with id ${this.id}`);
-    // TODO: what to actually do for a stopped pipeline?
   }
 
   /**
@@ -487,6 +494,8 @@ export class LemonadePipeline implements BasePipeline {
       }
 
       return {
+        fromCache: false,
+        paused: false,
         latestLogs: logs,
         lastRunEndTimestamp: end.toISOString(),
         lastRunStartTimestamp: loadStart.toISOString(),
@@ -830,7 +839,10 @@ export class LemonadePipeline implements BasePipeline {
             throw new Error("missing credential pcd");
           }
 
-          if (this.definition.options.paused) {
+          if (
+            this.definition.options.paused &&
+            !(await this.db.hasLoaded(this.id))
+          ) {
             return { actions: [] };
           }
 
