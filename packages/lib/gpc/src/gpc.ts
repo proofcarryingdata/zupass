@@ -204,6 +204,7 @@ export function gpcPreProve(
  * @param proof the Groth16 proof
  * @param boundConfig the bound configuration specifying the constraints
  *   proven, and the specific circuit which was used.
+ * @param circuitDesc the parameters of the circuit used for the proof.
  * @param proofInputs the input data (PODs and other values) specific to this
  *  proof.
  * @returns The Groth16 proof, a bound configuration usable for reliable
@@ -215,6 +216,7 @@ export function gpcPreProve(
 export function gpcPostProve(
   proof: GPCProof,
   boundConfig: GPCBoundConfig,
+  circuitDesc: ProtoPODGPCCircuitDesc,
   proofInputs: GPCProofInputs,
   circuitOutputs: ProtoPODGPCOutputs
 ): {
@@ -224,6 +226,7 @@ export function gpcPostProve(
 } {
   const revealedClaims = makeRevealedClaims(
     boundConfig,
+    circuitDesc,
     proofInputs,
     circuitOutputs
   );
@@ -281,7 +284,13 @@ export async function gpcProve(
     artifactPaths.pkeyPath
   );
 
-  return gpcPostProve(proof, boundConfig, proofInputs, circuitOutputs);
+  return gpcPostProve(
+    proof,
+    boundConfig,
+    circuitDesc,
+    proofInputs,
+    circuitOutputs
+  );
 }
 
 /**

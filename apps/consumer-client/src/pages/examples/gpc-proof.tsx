@@ -433,7 +433,6 @@ async function verifyProof(
     )
   });
   const verified = await verify(pcd);
-  console.error("ART_DBG", verified);
   if (!verified) return { valid: false };
 
   const sameExternalNullifier =

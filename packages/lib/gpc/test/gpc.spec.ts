@@ -246,6 +246,7 @@ describe(`gpc library (Compiled ${circuitParamType} artifacts) should work`, asy
     const { proof, boundConfig, revealedClaims } = gpcPostProve(
       orgProof,
       orgBoundConfig,
+      pCircuitDesc,
       proofInputs,
       pCircuitOutputs
     );
