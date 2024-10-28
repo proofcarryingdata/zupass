@@ -261,8 +261,6 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         listContainerRef.current.scrollTop = pos;
       } else {
         listContainerRef.current.scrollTop = 0;
-        // resetting params when user opens a pod
-        setParams("");
       }
     }
   }, [

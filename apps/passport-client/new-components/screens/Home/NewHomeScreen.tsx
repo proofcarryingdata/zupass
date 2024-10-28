@@ -342,7 +342,7 @@ const NoUpcomingEventsState = ({
   const [expandedGroupsIds, setExpandedGroupsIds] = useState<
     Record<string, boolean>
   >({});
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const listContainerRef = useRef<HTMLDivElement>(null);
 
   // New function to check scrollability
@@ -360,6 +360,12 @@ const NoUpcomingEventsState = ({
     checkScrollability();
   }, [pods]);
 
+  const noPods =
+    pods
+      .getAll()
+      .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
+      .length === 0;
+
   useLayoutEffect(() => {
     // Restore scroll position when list is shown again
     (async (): Promise<void> => {
@@ -369,11 +375,16 @@ const NoUpcomingEventsState = ({
         if (folder) {
           const decodedFolderId = replaceDotWithSlash(decodeURI(folder));
           const folderContainer = document.getElementById(decodedFolderId);
-          setExpandedGroupsIds({
-            [decodedFolderId]: true
+          setExpandedGroupsIds((old) => {
+            console.log(old);
+            return {
+              ...old,
+              [decodedFolderId]: true
+            };
           });
           await nextFrame();
           if (folderContainer) {
+            console.log(folderContainer.scrollTop);
             listContainerRef.current.scroll({ top: folderContainer.offsetTop });
           }
         }
@@ -381,13 +392,7 @@ const NoUpcomingEventsState = ({
     })();
     // Check scrollability after layout changes
     checkScrollability();
-  }, [params, setExpandedGroupsIds]);
-
-  const noPods =
-    pods
-      .getAll()
-      .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
-      .length === 0;
+  }, [noPods, params, setExpandedGroupsIds]);
 
   return (
     <OuterContainer>
@@ -435,6 +440,7 @@ const NoUpcomingEventsState = ({
             ref={listContainerRef}
             onScroll={(e) => {
               const scrollTop = e.currentTarget.scrollTop;
+              console.log(scrollTop);
               if (scrollTop === 0) {
                 // start timer
                 const id = setTimeout(() => {
@@ -512,7 +518,9 @@ export const NewHomeScreen = (): ReactElement => {
     const maybeExistingFolder = params.get("folder");
     if (
       maybeExistingFolder &&
-      collection.getFoldersInFolder("").includes(decodeURI(maybeExistingFolder))
+      collection
+        .getAllFolderNames()
+        .includes(replaceDotWithSlash(decodeURI(maybeExistingFolder)))
     ) {
       if (!showPodsList) {
         dispatch({
