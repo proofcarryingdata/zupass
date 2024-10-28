@@ -117,7 +117,6 @@ export const PodsCollectionList = ({
     const sortedEntried = Object.entries(pcdCollection.folders).sort(
       ([_aKey, aVal], [_bKey, bVal]) => (aVal ?? "").localeCompare(bVal ?? "")
     );
-    console.log(sortedEntried);
     for (const [key, value] of sortedEntried) {
       if (!result[value]) {
         const isItTheFirstGroup = !Object.keys(result).length;
