@@ -143,14 +143,12 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   gap: 16px;
-  // justify-content: space-between;
   height: 100vh;
   padding: 24px 24px 20px 24px;
 `;
 
 const AccordionContainer = styled.div`
   width: 100%;
-  // max-height: calc(70vh);
   min-height: 0px;
   overflow: scroll;
   -ms-overflow-style: none; /* IE and Edge */

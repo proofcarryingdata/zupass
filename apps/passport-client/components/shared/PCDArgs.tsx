@@ -50,6 +50,7 @@ import { Button2 } from "../../new-components/shared/Button";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/16/solid";
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
+import { hideScrollCSS } from "../../new-components/shared/utils";
 
 /**
  * Type used in `PCDArgs` for record container argument flattening process.
@@ -270,7 +271,6 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
     isValid,
     hidden
   ]);
-
   if (isStringArgument(arg)) {
     // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
@@ -333,7 +333,12 @@ export function StringArgInput({
 
   return (
     <ArgContainer arg={arg} {...rest}>
-      <input value={arg.value} onChange={onChange} disabled={true} />
+      <input
+        value={arg.value}
+        onChange={onChange}
+        disabled={true}
+        style={{ width: "100%" }}
+      />
     </ArgContainer>
   );
 }
@@ -372,7 +377,12 @@ export function NumberArgInput({
       error={valid ? undefined : "Please enter a number."}
       {...rest}
     >
-      <input value={arg.value} onChange={onChange} disabled={true} />
+      <input
+        value={arg.value}
+        onChange={onChange}
+        disabled={true}
+        style={{ width: "100%" }}
+      />
     </ArgContainer>
   );
 }
@@ -455,7 +465,6 @@ export function ObjectArgInput({
 }: ArgInputProps<ObjectArgument<unknown>>): JSX.Element {
   const [_loading, setLoading] = useState(arg.remoteUrl !== undefined);
   const [loaded, setLoaded] = useState(false);
-
   const load = useCallback(async (remoteUrl: string) => {
     console.log(`loading ${remoteUrl}`);
     const res = await fetch(remoteUrl);
@@ -795,6 +804,7 @@ const ArgsInnerContainer = styled.div`
   max-height: 50vh;
   overflow: scroll;
   margin-bottom: 24px;
+  ${hideScrollCSS}
 `;
 
 const ArgWrapper = styled.div`
