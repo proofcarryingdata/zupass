@@ -158,7 +158,8 @@ export const PodsCollectionList = ({
           )
         };
       })
-      .filter((group) => group.children.length > 0);
+      .filter((group) => group.children.length > 0)
+      .sort((a, b) => (a.title ?? "").localeCompare(b.title ?? ""));
   }, [pcdCollection, onPodClick, searchQuery, expandedGroupsIds]);
 
   return (
