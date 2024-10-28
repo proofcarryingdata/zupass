@@ -764,7 +764,7 @@ export function initGenericIssuanceRoutes(
   );
 
   app.get(
-    "/generic-issueance/one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?",
+    "/generic-issuance/one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?",
     async (req, res) => {
       checkExistsForRoute(genericIssuanceService);
       const email = checkUrlParam(req, "email");
