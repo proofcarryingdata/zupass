@@ -170,8 +170,13 @@ export function SemaphoreSignatureProveScreen({
         </Button2>
 
         <Button2
-          onClick={() => {
-            window.history.back();
+          onClick={(): void => {
+            if (window.opener && window.opener !== window) {
+              // you are in a popup
+              window.close();
+            } else {
+              window.history.back();
+            }
           }}
           variant="secondary"
         >
