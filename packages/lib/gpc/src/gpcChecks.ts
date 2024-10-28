@@ -266,7 +266,7 @@ export function checkProofEntryConfig(
   inequalityChecks: Record<string, PODEntryIdentifier>;
 } {
   requireType(
-    `${nameForErrorMessages}.isValueRevealed`,
+    `${nameForErrorMessages}.isRevealed`,
     entryConfig.isRevealed,
     "boolean"
   );
@@ -486,8 +486,9 @@ export function checkListMembershipInput(
     Object.entries(membershipLists).map((pair) => [pair[0], pair[1].length])
   );
 
-  // All lists of valid values must be non-empty.
+  // All lists should have valid names and be non-empty.
   for (const [listName, listLength] of Object.entries(numListElements)) {
+    checkPODName(listName);
     if (listLength === 0) {
       throw new Error(`Membership list ${listName} is empty.`);
     }
