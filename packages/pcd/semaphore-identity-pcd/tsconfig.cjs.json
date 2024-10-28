@@ -14,6 +14,9 @@
       "path": "../../lib/pod/tsconfig.cjs.json"
     },
     {
+      "path": "../../lib/semaphore-identity-v3-wrapper/tsconfig.cjs.json"
+    },
+    {
       "path": "../../lib/util/tsconfig.cjs.json"
     }
   ]

@@ -9,13 +9,13 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
 import { TimerCase } from "../types";
@@ -30,7 +30,7 @@ const wasmFilePath = path.join(
 );
 
 async function setupProveArgs(): Promise<ZKEdDSAEventTicketPCDArgs> {
-  const identityV3 = new Identity(
+  const identityV3 = new IdentityV3(
     '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
   );
 

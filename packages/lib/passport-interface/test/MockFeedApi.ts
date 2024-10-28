@@ -1,9 +1,9 @@
 import { PCDActionType, PCDPermissionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import MockDate from "mockdate";
 import {
   FeedHost,
@@ -90,7 +90,7 @@ export class MockFeedApi implements IFeedApi {
                       pcds: [
                         await SemaphoreIdentityPCDPackage.serialize(
                           await SemaphoreIdentityPCDPackage.prove({
-                            identityV3: new Identity()
+                            identityV3: new IdentityV3()
                           })
                         )
                       ]
@@ -138,7 +138,7 @@ export class MockFeedApi implements IFeedApi {
                       pcds: [
                         await SemaphoreIdentityPCDPackage.serialize(
                           await SemaphoreIdentityPCDPackage.prove({
-                            identityV3: new Identity()
+                            identityV3: new IdentityV3()
                           })
                         )
                       ]

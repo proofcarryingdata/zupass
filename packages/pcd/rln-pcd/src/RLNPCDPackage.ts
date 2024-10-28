@@ -1,8 +1,8 @@
 import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { deserializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { requireDefinedParameter } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import { RLN } from "rlnjs";
 import verificationKeyJSON from "../artifacts/16.json";
@@ -66,7 +66,7 @@ export async function verify(pcd: RLNPCD): Promise<boolean> {
   return await RLN.verifySNARKProof(verificationKeyJSON, fullProof.snarkProof);
 }
 
-function getRLNInstance(rlnIdentifier: bigint, identity?: Identity): RLN {
+function getRLNInstance(rlnIdentifier: bigint, identity?: IdentityV3): RLN {
   if (!initArgs) {
     throw new Error("cannot make proof: init has not been called yet");
   }
