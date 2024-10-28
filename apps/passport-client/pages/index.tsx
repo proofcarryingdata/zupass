@@ -61,7 +61,6 @@ import { NewLoginInterstitialScreen } from "../new-components/screens/Login/NewL
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
 import { NewPassportScreen2 } from "../new-components/screens/Login/NewPassportScreen";
 import { NewSyncExistingScreen } from "../new-components/screens/Login/NewSyncExistingScreen";
-import { NewOneClickLoginScreen2 } from "../new-components/screens/NewOneClickLoginScreen2";
 import { NewPrivacyNoticeScreen } from "../new-components/screens/NewPrivacyNoticeScreen";
 import { NewTermsScreen } from "../new-components/screens/NewTermsScreen";
 import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTermsScreen";
