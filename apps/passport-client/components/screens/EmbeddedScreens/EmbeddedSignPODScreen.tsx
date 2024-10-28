@@ -1,13 +1,14 @@
 import { PODData, podToPODData } from "@parcnet-js/podspec";
-import { Button, Spacer } from "@pcd/passport-ui";
 import { POD, PODEntries, encodePrivateKey } from "@pcd/pod";
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
-import { Fragment, ReactNode, useMemo } from "react";
+import { ReactNode, useMemo } from "react";
 import styled from "styled-components";
-import { useIdentityV3, useZapp, useZappOrigin } from "../../../src/appHooks";
+import { useIdentityV3, useZappOrigin } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
-import { H2 } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
+import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
+import { Typography } from "../../../new-components/shared/Typography";
+import { Button2 } from "../../../new-components/shared/Button";
 
 export function EmbeddedSignPODScreen({
   entries,
@@ -25,7 +26,6 @@ export function EmbeddedSignPODScreen({
       Buffer.from(v3tov4Identity(identity).export(), "base64")
     );
   }, [identity]);
-  const zapp = useZapp();
   const zappOrigin = useZappOrigin();
   const pod = useMemo(
     () => POD.sign(entries, privateKey),
@@ -33,69 +33,91 @@ export function EmbeddedSignPODScreen({
   );
 
   return (
-    <AppContainer bg="primary">
-      <Spacer h={4} />
-      <H2
-        style={{
-          flex: 1,
-          textAlign: "center",
-          marginBottom: "8px"
-        }}
-      >
-        Sign POD
-      </H2>
-      <Spacer h={16} />
-      <div>
-        <Description>
-          {zapp?.name} ({zappOrigin}) is requesting that you sign a POD. This
-          POD will contain the following data, along with your signature and
-          public key:
-        </Description>
-        <Spacer h={24} />
-        <EntriesGrid>
-          {Object.entries(entries).map(([name, entry]) => {
-            return (
-              <Fragment key={name}>
-                <EntryName>{name}</EntryName>{" "}
-                <EntryValue>{entry.value.toString()}</EntryValue>
-              </Fragment>
-            );
-          })}
-        </EntriesGrid>
-        <Spacer h={4} />
-        <div>
-          <Button onClick={() => callback(podToPODData(pod))}>Sign</Button>
-          <Spacer h={16} />
-          <Button onClick={onCancel} style="secondary">
+    <AppContainer bg="white" noPadding>
+      <Container>
+        <InnerContainer>
+          <BottomModalHeader
+            title="SIGN POD"
+            description={`${zappOrigin} is requesting that you sign a POD. This POD will contain the following data, along with your signature and public key:`}
+          />
+          <EntriesGrid>
+            {Object.entries(entries).map(([name, entry]) => {
+              return (
+                <Entry key={name}>
+                  <Typography family="Rubik" color="var(--core-accent)">
+                    {name}
+                  </Typography>
+                  <Typography
+                    style={{
+                      maxWidth: "50%",
+                      overflowWrap: "anywhere"
+                    }}
+                    color="var(--core-accent)"
+                    fontWeight={500}
+                    family="Rubik"
+                  >
+                    {entry.value.toString()}
+                  </Typography>
+                </Entry>
+              );
+            })}
+          </EntriesGrid>
+        </InnerContainer>
+        <ButtonsContainer>
+          <Button2 onClick={() => callback(podToPODData(pod))}>Sign</Button2>
+          <Button2 onClick={onCancel} variant="secondary">
             Cancel
-          </Button>
-        </div>
-      </div>
+          </Button2>
+        </ButtonsContainer>
+      </Container>
     </AppContainer>
   );
 }
 
-const Description = styled.div`
-  font-size: 14px;
-  color: rgba(var(--white-rgb), 0.8);
+const Entry = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  align-self: stretch;
 `;
 
 const EntriesGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  padding: 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  align-self: stretch;
+  border-radius: 8px;
+  background: #e9efff;
+  overflow: scroll;
+  flex: 1; /* this allows the child to take up remaining space */
+  overflow-y: auto; /* enables scrolling within the child */
+  min-height: 0; /* critical to prevent overflow with flex children */
+`;
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
   gap: 8px;
+  width: 100%;
+`;
+
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  margin-bottom: 16px;
+  justify-content: space-between;
+  height: 100vh;
+  padding: 24px 24px 20px 24px;
+  gap: 16px;
 `;
 
-const EntryName = styled.span`
-  font-weight: 600;
-`;
-
-const EntryValue = styled.div`
-  padding: 2px 8px;
-  border-radius: 4px;
-  background-color: rgba(var(--black-rgb), 0.3);
-  grid-column: span 2;
-  overflow-wrap: break-word;
+const InnerContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  min-height: 0; /* critical to prevent overflow with flex children */
 `;
