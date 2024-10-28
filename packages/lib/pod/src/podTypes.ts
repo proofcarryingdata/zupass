@@ -132,7 +132,7 @@ export function PODEdDSAPublicKeyValue(value: string): PODEdDSAPublicKeyValue {
 
 /**
  * POD value for a point in time, defined by a date and timestamp in UTC
- * accurate to the milliseconds.  Time values are represented cryptographically
+ * accurate to the millisecond.  Time values are represented cryptographically
  * a signed integer integer counting milliseconds before/after the epoch
  * (Jan 1 1970 in UTC time), which can be subject to comparison and arithmetic
  * manipulation.
