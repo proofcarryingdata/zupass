@@ -935,11 +935,11 @@ function addIdentifierToListConfig(
   const membershipType: ListMembershipEnum =
     entryConfig.isMemberOf !== undefined ? LIST_MEMBERSHIP : LIST_NONMEMBERSHIP;
 
-  const listIdentifier: PODName = (
+  const listIdentifier: PODName = checkPODName(
     membershipType === LIST_MEMBERSHIP
       ? entryConfig.isMemberOf
       : entryConfig.isNotMemberOf
-  ) as PODName;
+  );
 
   gpcListConfig[identifier] = {
     type: membershipType,
