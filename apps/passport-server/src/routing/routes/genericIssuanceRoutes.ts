@@ -786,7 +786,6 @@ export function initGenericIssuanceRoutes(
       );
       const ticket = { ...result.tickets[0] };
 
-      logger();
       const absPath = path.resolve("./resources/one-click-page/index.html");
       const file = fs.readFileSync(absPath).toString();
 
