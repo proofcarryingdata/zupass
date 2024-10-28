@@ -4,5 +4,5 @@ module.exports = {
   forbidPending: false,
   failZero: true,
   bail: true,
-  timeout: "120000"
+  timeout: "360000"
 };

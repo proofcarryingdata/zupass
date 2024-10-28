@@ -264,9 +264,6 @@ self.addEventListener("fetch", (event: FetchEvent) => {
       if (zResp) {
         swLog.V(`cache hit fetching ${event.request?.url}`);
         return zResp;
-      } else {
-        const respPromise = startFetch(event);
-        return respPromise;
       }
 
       // Check ephemeral cache next.  We'll only use this if the network

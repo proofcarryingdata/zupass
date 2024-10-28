@@ -50,7 +50,12 @@ import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModa
 import { NewLoader } from "../../shared/NewLoader";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
-import { hideScrollCSS, isMobile, useOrientation } from "../../shared/utils";
+import {
+  isMobile,
+  replaceDotWithSlash,
+  useOrientation,
+  hideScrollCSS
+} from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 
@@ -355,29 +360,39 @@ const NoUpcomingEventsState = ({
     checkScrollability();
   }, [pods]);
 
-  useLayoutEffect(() => {
-    // Restore scroll position when list is shown again
-    if (listContainerRef.current) {
-      const folder = params.get("folder");
-      // checks if url contains folder route, and if so, scrolls to it
-      if (folder) {
-        const decodedFolderId = decodeURI(folder);
-        const folderContainer = document.getElementById(decodedFolderId);
-        if (folderContainer) {
-          listContainerRef.current.scrollTop = folderContainer.offsetTop;
-        }
-      }
-    }
-
-    // Check scrollability after layout changes
-    checkScrollability();
-  }, [params]);
-
   const noPods =
     pods
       .getAll()
       .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
       .length === 0;
+
+  useLayoutEffect(() => {
+    // Restore scroll position when list is shown again
+    (async (): Promise<void> => {
+      if (listContainerRef.current) {
+        const folder = params.get("folder");
+        // checks if url contains folder route, and if so, scrolls to it
+        if (folder) {
+          const decodedFolderId = replaceDotWithSlash(decodeURI(folder));
+          const folderContainer = document.getElementById(decodedFolderId);
+          setExpandedGroupsIds((old) => {
+            console.log(old);
+            return {
+              ...old,
+              [decodedFolderId]: true
+            };
+          });
+          await nextFrame();
+          if (folderContainer) {
+            console.log(folderContainer.scrollTop);
+            listContainerRef.current.scroll({ top: folderContainer.offsetTop });
+          }
+        }
+      }
+    })();
+    // Check scrollability after layout changes
+    checkScrollability();
+  }, [noPods, params, setExpandedGroupsIds]);
 
   return (
     <OuterContainer>
@@ -425,6 +440,7 @@ const NoUpcomingEventsState = ({
             ref={listContainerRef}
             onScroll={(e) => {
               const scrollTop = e.currentTarget.scrollTop;
+              console.log(scrollTop);
               if (scrollTop === 0) {
                 // start timer
                 const id = setTimeout(() => {
@@ -502,7 +518,9 @@ export const NewHomeScreen = (): ReactElement => {
     const maybeExistingFolder = params.get("folder");
     if (
       maybeExistingFolder &&
-      collection.getFoldersInFolder("").includes(decodeURI(maybeExistingFolder))
+      collection
+        .getAllFolderNames()
+        .includes(replaceDotWithSlash(decodeURI(maybeExistingFolder)))
     ) {
       if (!showPodsList) {
         dispatch({
@@ -553,6 +571,7 @@ export const NewHomeScreen = (): ReactElement => {
         const elToScroll = document.getElementById(
           scrollTo.eventId + scrollTo.attendee
         );
+
         window.scroll({
           top: elToScroll?.offsetTop,
           left: elToScroll?.offsetLeft

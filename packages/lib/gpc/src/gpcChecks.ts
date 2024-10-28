@@ -24,10 +24,10 @@ import {
   printPODValueOrTuple,
   requireType
 } from "@pcd/pod";
-import { Identity } from "@semaphore-protocol/identity";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
+import { Identity as IdentityV4 } from "@semaphore-protocol/identity";
 import isEqual from "lodash/isEqual";
 import uniq from "lodash/uniq";
-import { Identity as IdentityV4 } from "semaphore-identity-v4";
 import {
   GPCBoundConfig,
   GPCClosedInterval,
@@ -268,7 +268,7 @@ export function checkProofEntryConfig(
   inequalityChecks: Record<string, PODEntryIdentifier>;
 } {
   requireType(
-    `${nameForErrorMessages}.isValueRevealed`,
+    `${nameForErrorMessages}.isRevealed`,
     entryConfig.isRevealed,
     "boolean"
   );
@@ -488,8 +488,9 @@ export function checkListMembershipInput(
     Object.entries(membershipLists).map((pair) => [pair[0], pair[1].length])
   );
 
-  // All lists of valid values must be non-empty.
+  // All lists should have valid names and be non-empty.
   for (const [listName, listLength] of Object.entries(numListElements)) {
+    checkPODName(listName);
     if (listLength === 0) {
       throw new Error(`Membership list ${listName} is empty.`);
     }
@@ -549,7 +550,7 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
   if (proofInputs.owner !== undefined) {
     if (proofInputs.owner.semaphoreV3 !== undefined) {
       requireType(`owner.SemaphoreV3`, proofInputs.owner.semaphoreV3, "object");
-      if (!(proofInputs.owner.semaphoreV3 instanceof Identity)) {
+      if (!(proofInputs.owner.semaphoreV3 instanceof IdentityV3)) {
         throw new TypeError(
           `owner.semaphoreV3 must be a SemaphoreV3 Identity object.`
         );

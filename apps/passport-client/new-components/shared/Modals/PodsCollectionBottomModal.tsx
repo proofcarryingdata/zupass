@@ -36,7 +36,12 @@ import { Button2 } from "../Button";
 import { Input2 } from "../Input";
 import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
-import { hideScrollCSS, useOrientation } from "../utils";
+import {
+  POD_FOLDER_DISPLAY_SEPERATOR,
+  replaceDotWithSlash,
+  useOrientation,
+  hideScrollCSS
+} from "../utils";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -108,13 +113,17 @@ export const PodsCollectionList = ({
 
     // Group PCDs by folder and create a list of groups with the items inside
     const result: Record<string, GroupType> = {};
-    for (const [key, value] of Object.entries(pcdCollection.folders)) {
+
+    const sortedEntried = Object.entries(pcdCollection.folders).sort(
+      ([_aKey, aVal], [_bKey, bVal]) => (aVal ?? "").localeCompare(bVal ?? "")
+    );
+    for (const [key, value] of sortedEntried) {
       if (!result[value]) {
         const isItTheFirstGroup = !Object.keys(result).length;
         const shouldExpandedByDefault =
           isItTheFirstGroup || filteredPcds.length < 20;
         result[value] = {
-          title: value.replace(/\//g, " · "),
+          title: value.replace(/\//g, ` ${POD_FOLDER_DISPLAY_SEPERATOR} `),
           id: value, // setting the folder path as a key
           children: [],
           expanded:
@@ -244,8 +253,11 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         const folder = params.get("folder");
         // checks if url contains folder route, and if so, scrolls to it
         if (folder) {
-          const decodedFolderId = decodeURI(folder);
+          const decodedFolderId = replaceDotWithSlash(decodeURI(folder));
           const folderContainer = document.getElementById(decodedFolderId);
+          setExpandedGroupsIds({
+            [decodedFolderId]: true
+          });
           if (folderContainer) {
             pos = folderContainer.offsetTop;
           }
@@ -253,11 +265,16 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
         listContainerRef.current.scrollTop = pos;
       } else {
         listContainerRef.current.scrollTop = 0;
-        // resetting params when user opens a pod
-        setParams("");
       }
     }
-  }, [activePod, scrollPosition, params, setParams, isPodsCollectionModalOpen]);
+  }, [
+    activePod,
+    scrollPosition,
+    params,
+    setParams,
+    isPodsCollectionModalOpen,
+    setExpandedGroupsIds
+  ]);
 
   const handlePodClick = useCallback(
     (pcd: PCD<unknown, unknown>) => {

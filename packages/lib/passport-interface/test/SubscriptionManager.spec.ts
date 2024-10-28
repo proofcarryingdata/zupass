@@ -5,7 +5,7 @@ import {
   SemaphoreIdentityPCDPackage,
   v3tov4Identity
 } from "@pcd/semaphore-identity-pcd";
-import { Identity } from "@semaphore-protocol/identity";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { assert, expect } from "chai";
 import MockDate from "mockdate";
 import {
@@ -23,7 +23,7 @@ describe("Subscription Manager", async function () {
   const mockFeedApi = new MockFeedApi();
   const PROVIDER_NAME = "Mock Provider";
 
-  const identity = new Identity();
+  const identity = new IdentityV3();
 
   this.beforeEach(() => {
     // Means that the time won't change during the test, which could cause
@@ -228,7 +228,7 @@ describe("Subscription Manager", async function () {
       pcds: [
         await SemaphoreIdentityPCDPackage.serialize(
           await SemaphoreIdentityPCDPackage.prove({
-            identityV3: new Identity()
+            identityV3: new IdentityV3()
           })
         )
       ]

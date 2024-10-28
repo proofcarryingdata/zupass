@@ -1,6 +1,6 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { requireDefinedParameter } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import {
@@ -49,9 +49,9 @@ export async function deserialize(
   requireDefinedParameter(id, "id");
   requireDefinedParameter(identity, "identity");
 
-  const v3Identity = new Identity(identity);
+  const v3Identity = new IdentityV3(identity);
   return new SemaphoreIdentityPCD(id, {
-    identityV3: new Identity(identity),
+    identityV3: v3Identity,
     identityV4: v3tov4Identity(v3Identity)
   });
 }

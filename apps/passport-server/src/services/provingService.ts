@@ -185,7 +185,14 @@ export class ProvingService {
 
 export async function startProvingService(
   rollbarService: RollbarService | null
-): Promise<ProvingService> {
+): Promise<ProvingService | null> {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting proving service`
+    );
+    return null;
+  }
+
   const fullPath = path.join(__dirname, "../../public");
 
   await SemaphoreGroupPCDPackage.init?.({

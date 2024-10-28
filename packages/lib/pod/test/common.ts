@@ -1,5 +1,5 @@
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import { Point } from "@zk-kit/baby-jubjub";
 import { PODEntries } from "../src";
 
@@ -17,7 +17,7 @@ export const expectedPublicKeyHex =
   "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e";
 export const expectedPublicKey = "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4";
 
-export const ownerIdentity = new Identity(
+export const ownerIdentity = new IdentityV3(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
 );
 
