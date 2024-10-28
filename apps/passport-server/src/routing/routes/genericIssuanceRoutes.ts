@@ -45,11 +45,13 @@ import { ApplicationContext, GlobalServices } from "../../types";
 import { IS_PROD } from "../../util/isProd";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
-import { checkBody, checkOptionalUrlParam, checkUrlParam } from "../params";
+import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 import path from "path";
 import Mustache from "mustache";
+import * as QRCode from "qrcode";
 import fs from "fs";
+
 export function initGenericIssuanceRoutes(
   app: express.Application,
   context: ApplicationContext,
@@ -769,6 +771,14 @@ export function initGenericIssuanceRoutes(
       const code = checkUrlParam(req, "code");
       const pipeline = req.params.pipelineId;
 
+      const getTicketImage = (
+        ticketData: TicketPreviewResultValue["tickets"][number]
+      ): string | undefined => {
+        const imageToRender = ticketData?.eventStartDate
+          ? ticketData.qrCodeOverrideImageUrl
+          : ticketData?.imageUrl;
+        return imageToRender;
+      };
       const result = await genericIssuanceService.handleGetTicketPreview(
         email,
         code,
@@ -779,8 +789,28 @@ export function initGenericIssuanceRoutes(
       logger();
       const absPath = path.resolve("./resources/one-click-page/index.html");
       const file = fs.readFileSync(absPath).toString();
-      const rendered = Mustache.render(file, ticket);
-      logger({ rendered });
+
+      const qrCodeData =
+        getTicketImage(ticket) ??
+        (ticket.ticketSecret
+          ? await QRCode.toDataURL(ticket.ticketSecret, {
+              type: "image/webp",
+              scale: 10,
+              margin: 0
+            })
+          : "");
+
+      const rendered = Mustache.render(file, {
+        eventName: ticket.eventName.toUpperCase(),
+        attendeeName: ticket.attendeeName.toUpperCase(),
+        attendeeEmail: ticket.attendeeEmail,
+        ticketName: ticket.ticketName,
+        eventLocation: ticket.eventLocation,
+        qr: qrCodeData,
+        backgroundImage: ticket.imageUrl,
+        count: result.tickets.length,
+        isMoreThanOne: result.tickets.length > 1
+      });
       res.send(rendered);
     }
   );

@@ -10,7 +10,10 @@ import {
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
 import { isEmailPCD } from "@pcd/email-pcd";
-import { PCDGetRequest, requestGenericIssuanceTicketPreviews } from "@pcd/passport-interface";
+import {
+  PCDGetRequest,
+  requestGenericIssuanceTicketPreviews
+} from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
@@ -495,11 +498,11 @@ export const NewHomeScreen = (): ReactElement => {
     isMobile &&
     (orientation.type === "landscape-primary" ||
       orientation.type === "landscape-secondary");
-  // useEffect(() => {
-  //   if (!self) {
-  //     navigate("/login", { replace: true });
-  //   }
-  // });
+  useEffect(() => {
+    if (!self && !location.pathname.includes("one-click-preview")) {
+      navigate("/login", { replace: true });
+    }
+  });
   const showPodsList = tickets.length === 0 && !isLandscape && !noPods;
 
   useLayoutEffect(() => {
@@ -546,27 +549,53 @@ export const NewHomeScreen = (): ReactElement => {
   useLayoutEffect(() => {
     const test = async (): Promise<void> => {
       if (location.pathname.includes("one-click-preview")) {
-        const { email, code,targetFolder, pipelineId, serverUrl } =
+        const { email, code, targetFolder, pipelineId, serverUrl } =
           regularParams;
         if (!email || !code) return;
-        // const previewRes = await requestGenericIssuanceTicketPreviews(
-        //   serverUrl ?? appConfig.zupassServer,
-        //   email,
-        //   code,
-        //   pipelineId
-        // );
-      await dispatch({
-        type: "one-click-login",
-        email,
-        code,
-        targetFolder
-      });
-      console.log("done one click login")
 
+        if (self) {
+          if (!self.emails?.includes(email as string)) {
+            alert(
+              `You are already logged in as ${
+                self.emails.length === 1
+                  ? self.emails?.[0]
+                  : "an account that owns the following email addresses: " +
+                    self.emails.join(", ")
+              }. Please log out and try navigating to the link again.`
+            );
+            window.location.hash = "#/";
+            return;
+          }
+        }
+        const previewRes = await requestGenericIssuanceTicketPreviews(
+          serverUrl ?? appConfig.zupassServer,
+          email,
+          code,
+          pipelineId
+        );
+
+        await dispatch({
+          type: "one-click-login",
+          email,
+          code,
+          targetFolder
+        });
+
+        if(previewRes.success){
+          dispatch({
+            type: "scroll-to-ticket",
+            scrollTo: {
+              attendee: previewRes.value.tickets[0].attendeeEmail,
+              eventId: previewRes.value.tickets[0].eventId
+            }
+          });
+        }
       }
     };
     test();
-  }, [dispatch, location.pathname, regularParams]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {
       // getting the pos of the event card
