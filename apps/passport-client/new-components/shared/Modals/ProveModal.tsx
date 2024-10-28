@@ -27,6 +27,8 @@ export const ProveModal = (): ReactElement | null => {
     return null;
   }
   return (
-    <BottomModal isOpen={activeModal.modalType === "prove"}>{view}</BottomModal>
+    <BottomModal dismissable={false} isOpen={activeModal.modalType === "prove"}>
+      {view}
+    </BottomModal>
   );
 };
