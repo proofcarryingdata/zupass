@@ -2,6 +2,7 @@ import { BABY_JUB_PRIME } from "@pcd/util";
 import { Groth16Proof, groth16 } from "snarkjs";
 import { loadVerificationKey } from "./artifacts";
 import circuitParamJson from "./circuitParameters.json";
+import { ARTIFACTS_NPM_PACKAGE_NAME, ARTIFACTS_NPM_VERSION } from "./constants";
 import { CircuitDesc, CircuitSignal } from "./types";
 import { zeroResidueMod } from "./util";
 
@@ -719,11 +720,11 @@ export class ProtoPODGPC {
    * Name of the package on NPM which contains published artifacts for this
    * GPC family.
    */
-  public static ARTIFACTS_NPM_PACKAGE_NAME = "@pcd/proto-pod-gpc-artifacts";
+  public static ARTIFACTS_NPM_PACKAGE_NAME = ARTIFACTS_NPM_PACKAGE_NAME;
 
   /**
    * Version of the published artifacts on NPM which are compatible with this
    * version of the GPC circuits.
    */
-  public static ARTIFACTS_NPM_VERSION = "0.11.0";
+  public static ARTIFACTS_NPM_VERSION = ARTIFACTS_NPM_VERSION;
 }

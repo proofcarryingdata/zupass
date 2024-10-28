@@ -16,6 +16,7 @@ import express, { Request, Response } from "express";
 import { namedSqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { checkBody, checkQueryParam, checkUrlParam } from "../params";
 
 export function initAccountRoutes(
@@ -35,6 +36,7 @@ export function initAccountRoutes(
    * @todo access-control?
    */
   app.get("/account/salt", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const email = normalizeEmail(checkQueryParam(req, "email"));
 
     const result = await namedSqlTransaction(
@@ -69,6 +71,7 @@ export function initAccountRoutes(
    * In the case that an email *was* successfully sent, just returns a 200 OK.
    */
   app.post("/account/send-login-email", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const email = normalizeEmail(
       checkBody<ConfirmEmailRequest, "email">(req, "email")
     );
@@ -96,6 +99,7 @@ export function initAccountRoutes(
    * If the token is invalid, returns a 403 error.
    */
   app.post("/account/verify-token", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const token = checkBody<VerifyTokenRequest, "token">(req, "token");
     const email = checkBody<VerifyTokenRequest, "email">(req, "email");
 
@@ -109,6 +113,7 @@ export function initAccountRoutes(
   });
 
   app.post("/account/one-click-login", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const email = checkBody<OneClickLoginRequest, "email">(req, "email");
     const code = checkBody<OneClickLoginRequest, "code">(req, "code");
     // we only need the v4 pubkey because the commitment is deriveable from it
@@ -166,6 +171,7 @@ export function initAccountRoutes(
    * In the successful case, returns a {@link ZupassUserJson}.
    */
   app.post("/account/new-participant", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const email = normalizeEmail(
       checkBody<CreateNewUserRequest, "email">(req, "email")
     );
@@ -210,6 +216,7 @@ export function initAccountRoutes(
   app.post(
     "/account/upgrade-with-v4-commitment",
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
       const result = await namedSqlTransaction(
@@ -230,6 +237,7 @@ export function initAccountRoutes(
    * Records that the user has agreed to a given version of the legal terms.
    */
   app.post("/account/agree-terms", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
     const result = await namedSqlTransaction(
@@ -262,6 +270,7 @@ export function initAccountRoutes(
    * should we be returning the `salt` here?
    */
   app.get("/v2/account/user/:uuid", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const result = await namedSqlTransaction(
       context.dbPool,
       "/v2/account/user/:uuid",
@@ -275,6 +284,7 @@ export function initAccountRoutes(
    * temporary, for backwards compat; same as /account/user/:uuid
    */
   app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const result = await namedSqlTransaction(
       context.dbPool,
       "/pcdpass/participant/:uuid",
@@ -288,6 +298,7 @@ export function initAccountRoutes(
    * temporary, for backwards compat; same as /account/user/:uuid
    */
   app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const result = await namedSqlTransaction(
       context.dbPool,
       "/zuzalu/participant/:uuid",
@@ -298,6 +309,7 @@ export function initAccountRoutes(
   });
 
   app.post("/account/delete", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const pcd = checkBody<DeleteAccountRequest, "pcd">(req, "pcd");
 
     await namedSqlTransaction(context.dbPool, "/account/delete", (client) =>
@@ -311,6 +323,7 @@ export function initAccountRoutes(
    * Adds a new email address to a user's account.
    */
   app.post("/account/add-email", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const newEmail = checkBody<AddUserEmailRequest, "newEmail">(req, "newEmail")
       .trim()
       .toLocaleLowerCase();
@@ -331,6 +344,7 @@ export function initAccountRoutes(
    * Removes an email address from a user's account.
    */
   app.post("/account/delete-email", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const emailToRemove = checkBody<RemoveUserEmailRequest, "emailToRemove">(
       req,
       "emailToRemove"
@@ -352,6 +366,7 @@ export function initAccountRoutes(
    * Changes a user's email address.
    */
   app.post("/account/change-email", async (req: Request, res: Response) => {
+    checkExistsForRoute(userService);
     const oldEmail = checkBody<ChangeUserEmailRequest, "oldEmail">(
       req,
       "oldEmail"

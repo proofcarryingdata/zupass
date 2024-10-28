@@ -1,6 +1,7 @@
 import { ReactNode, useCallback } from "react";
 import { Toaster } from "react-hot-toast";
 import styled, { createGlobalStyle } from "styled-components";
+import { ErrorBottomModal } from "../../new-components/shared/Modals/ErrorBottomModal";
 import {
   useAppError,
   useDispatch,
@@ -8,7 +9,6 @@ import {
   useUserShouldAgreeNewPrivacyNotice
 } from "../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
-import { ErrorPopup } from "../modals/ErrorPopup";
 import { ScreenLoader } from "./ScreenLoader";
 
 // Wrapper for all screens.
@@ -18,7 +18,7 @@ export function AppContainer({
   fullscreen,
   noPadding
 }: {
-  bg: "primary" | "gray";
+  bg: "primary" | "gray" | "white";
   children?: ReactNode;
   fullscreen?: boolean;
   noPadding?: boolean;
@@ -32,9 +32,17 @@ export function AppContainer({
     () => dispatch({ type: "clear-error" }),
     [dispatch]
   );
-
-  const col =
-    bg === "gray" ? "var(--dot-pattern-bg)" : "var(--bg-dark-primary)";
+  const getBackground = (): string => {
+    switch (bg) {
+      case "primary":
+        return "var(--bg-dark-primary)";
+      case "gray":
+        return "var(--dot-pattern-bg)";
+      case "white":
+        return "#fff";
+    }
+  };
+  const col = getBackground();
   return (
     <Container $fullscreen={!!fullscreen}>
       <GlobalBackground color={col} />
@@ -53,9 +61,7 @@ export function AppContainer({
             />
           )}
           {children ?? <ScreenLoader text="Zupass" />}
-          {/* When phase3 please remove ErrorPopup with ErrorBottomModal */}
-          {error && <ErrorPopup error={error} onClose={onClose} />}
-          {/* {error && <ErrorBottomModal error={error} onClose={onClose} />} */}
+          {error && <ErrorBottomModal error={error} onClose={onClose} />}
         </CenterColumn>
       </Background>
     </Container>

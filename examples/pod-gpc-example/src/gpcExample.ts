@@ -56,7 +56,7 @@ export async function gpcDemo(): Promise<boolean> {
   console.log("Semaphore commitment", semaphoreIdentity.commitment);
   const podSword = POD.sign(
     {
-      pod_type: { type: "string", value: "item.weapon" },
+      pod_type: { type: "string", value: "myrpg.item.weapon" },
       itemSet: { type: "string", value: "celestial" },
       attack: { type: "int", value: 7n },
       weaponType: { type: "string", value: "sword" },
@@ -67,7 +67,7 @@ export async function gpcDemo(): Promise<boolean> {
   console.log("Sword", podSword.content.toJSON());
   const podShield = POD.sign(
     {
-      pod_type: { type: "string", value: "item.shield" },
+      pod_type: { type: "string", value: "myrpg.item.shield" },
       itemSet: { type: "string", value: "celestial" },
       defense: { type: "int", value: 5n },
       owner: { type: "cryptographic", value: semaphoreIdentity.commitment }
@@ -166,7 +166,7 @@ export async function gpcDemo(): Promise<boolean> {
   // If this code were running in a browser, we'd need a URL to download
   // artifacts.  We can get one from the function below, to use in a browser,
   // or to download separately into your own Node environment.
-  const artifactsURL = gpcArtifactDownloadURL("unpkg", "prod", undefined);
+  const artifactsURL = gpcArtifactDownloadURL("jsdelivr", "prod", undefined);
   console.log("In browser we'd download artifacts from", artifactsURL);
 
   //////////////////////////////////////////////////////////////////////////////

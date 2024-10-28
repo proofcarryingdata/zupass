@@ -11,9 +11,9 @@ import {
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { namedSqlTransaction } from "../../database/sqlQuery";
-import { IssuanceService } from "../../services/issuanceService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
@@ -23,17 +23,6 @@ export function initPCDIssuanceRoutes(
   { issuanceService }: GlobalServices
 ): void {
   logger("[INIT] initializing PCD issuance routes");
-
-  /**
-   * Throws if we don't have an instance of {@link issuanceService}.
-   */
-  function checkIssuanceServiceStarted(
-    issuanceService: IssuanceService | null
-  ): asserts issuanceService {
-    if (!issuanceService) {
-      throw new PCDHTTPError(503, "issuance service not instantiated");
-    }
-  }
 
   /**
    * If either of the {@code process.env.SERVER_RSA_PRIVATE_KEY_BASE64} or
@@ -52,7 +41,7 @@ export function initPCDIssuanceRoutes(
    * 3rd parties can verify whether users have proper attestations.
    */
   app.get("/issue/rsa-public-key", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
+    checkExistsForRoute(issuanceService);
     const result = issuanceService.getRSAPublicKey();
     res.send(result satisfies string);
   });
@@ -62,7 +51,7 @@ export function initPCDIssuanceRoutes(
    * 3rd parties can verify whether users have proper attestations.
    */
   app.get("/issue/eddsa-public-key", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
+    checkExistsForRoute(issuanceService);
     const result = await issuanceService.getEdDSAPublicKey();
     res.send(result satisfies EdDSAPublicKey);
   });
@@ -72,7 +61,7 @@ export function initPCDIssuanceRoutes(
    * for polling on this server.
    */
   app.get("/feeds", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
+    checkExistsForRoute(issuanceService);
     const result = await issuanceService.handleListFeedsRequest(
       req.body as ListFeedsRequest
     );
@@ -84,7 +73,7 @@ export function initPCDIssuanceRoutes(
    * particular feed that this server is hosting.
    */
   app.post("/feeds", async (req, res) => {
-    checkIssuanceServiceStarted(issuanceService);
+    checkExistsForRoute(issuanceService);
     const result = await issuanceService.handleFeedRequest(
       req.body as PollFeedRequest
     );
@@ -92,7 +81,7 @@ export function initPCDIssuanceRoutes(
   });
 
   app.get("/feeds/:feedId", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
+    checkExistsForRoute(issuanceService);
     const feedId = checkUrlParam(req, "feedId");
     if (!issuanceService.hasFeedWithId(feedId)) {
       throw new PCDHTTPError(404);
@@ -107,7 +96,7 @@ export function initPCDIssuanceRoutes(
    * known to belong to Zuconnect '23 or Zuzalu '23 tickets.
    */
   app.post("/issue/verify-ticket", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
+    checkExistsForRoute(issuanceService);
     await namedSqlTransaction(
       context.dbPool,
       "/issue/verify-ticket",
@@ -122,7 +111,7 @@ export function initPCDIssuanceRoutes(
   });
 
   app.get("/issue/known-ticket-types", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
+    checkExistsForRoute(issuanceService);
     await namedSqlTransaction(
       context.dbPool,
       "/issue/known-ticket-types",

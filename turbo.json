@@ -234,6 +234,9 @@
     "DEVCON_PODBOX_API_URL",
     "DEVCON_PIPELINE_ID",
     "DISABLE_CONSOLE_LOG",
+    "LOCAL_FILE_SERVICE_ENABLED",
+    "SELF_HOSTED_PODBOX_MODE",
+    "GENERIC_ISSUANCE_TEST_MODE",
     "//// add env vars above this line ////"
   ]
 }

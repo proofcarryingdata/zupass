@@ -1,5 +1,16 @@
 # @pcd/passport-ui
 
+## 0.14.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/message-pcd@0.4.0
+
 ## 0.13.0
 
 ### Minor Changes
