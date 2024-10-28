@@ -342,7 +342,7 @@ const NoUpcomingEventsState = ({
   const [expandedGroupsIds, setExpandedGroupsIds] = useState<
     Record<string, boolean>
   >({});
-  const [params, setParams] = useSearchParams();
+  const [params] = useSearchParams();
   const listContainerRef = useRef<HTMLDivElement>(null);
 
   // New function to check scrollability
