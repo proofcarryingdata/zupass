@@ -6,8 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Barlow:wght@800&family=Fragment+Mono&family=Rubik:wght@300..900&display=swap"
+    <link href="https://fonts.cdnfonts.com/css/super-funky" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@800&family=Rubik:wght@300..900&display=swap"
         rel="stylesheet">
 </head>
 <style>
@@ -149,9 +149,11 @@
         background: linear-gradient(0deg, #ffae00 0%, #4cccb0 100%);
         height: 76px;
         width: 100%;
-        color: #154133;
+        color: #000;
+        /* Fallback for older browsers */
+        color: rgba(0, 0, 0, 0.5);
         text-align: center;
-        font-family: "Fragment Mono";
+        font-family: 'Super Funky';
         font-size: 28px;
         font-style: normal;
         font-weight: 400;
@@ -186,14 +188,14 @@
                 <span class="header__subtitle">{{eventLocation}}</span>
                 <span class="header__subtitle">·</span>
                 {{#isMoreThanOne}}
-                <span class="header__subtitle">{{count}} Tickets</span>
+                <span class="header__subtitle">{{count}} Items</span>
                 {{/isMoreThanOne}}
                 {{^isMoreThanOne}}
-                <span class="header__subtitle">1 Ticket</span>
+                <span class="header__subtitle">1 Item</span>
                 {{/isMoreThanOne}}
             </div>
         </div>
-        <div class="cta__container"><button onclick="redirectToZupass()" class="cta">Continue to Zupass</button></div>
+        <div class="cta__container"><button onclick="redirectToZupass()" class="cta">FROGCRYPTO</button></div>
         <div class="ticket">
             <img class="ticket__qr-code" src="{{qr}}" />
             <div class="ticket__text-container">
