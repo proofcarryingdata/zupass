@@ -77,7 +77,7 @@ export const BigInput2 = styled.input<{
   &:active,
   &:focus-visible,
   &:focus-within {
-    outline: 1px solid var(--core-accent);
+    outline: 2px solid var(--core-accent);
   }
 
   ${({ error }): FlattenSimpleInterpolation | undefined => {
