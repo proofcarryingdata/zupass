@@ -149,9 +149,10 @@ const Container = styled.div<{ ticketsAmount: number }>`
     ticketsAmount > 1 ? 40 + BUTTONS_CONTAINER_HEIGHT : 20}px;
 `;
 
-const SwipeViewContainer = styled.div`
+const SwipeViewContainer = styled.div<{ isZapp?: boolean }>`
   position: relative;
   width: min(100vw, 420px);
+  height: ${({ isZapp }): string => (isZapp ? "100vh" : "inherit")};
 `;
 
 const disabledCSS = css`
@@ -613,7 +614,7 @@ export const NewHomeScreen = (): ReactElement => {
         noPadding={tickets.length > 0}
         fullscreen={tickets.length > 0}
       >
-        <SwipeViewContainer>
+        <SwipeViewContainer isZapp>
           <FloatingReturnButton onClick={() => setZappUrl("")}>
             <span>Back to Zupass</span>
           </FloatingReturnButton>
@@ -852,6 +853,7 @@ const FloatingReturnButton = styled.div`
   bottom: 20px;
   z-index: 2;
   transform: translateX(-50%);
+  cursor: pointer;
 
   display: inline-flex;
   padding: 8px 20px;
