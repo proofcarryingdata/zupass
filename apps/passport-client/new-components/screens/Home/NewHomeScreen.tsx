@@ -682,14 +682,12 @@ export const NewHomeScreen = (): ReactElement => {
                     <ZappsAndTicketsContainer>
                       {Object.keys(appConfig.embeddedZapps).length && (
                         <ZappButtonsContainer>
-                          {/* <ZappModal /> */}
                           {Object.entries(appConfig.embeddedZapps).map(
                             ([zappName, url]) => (
-                              <ZappButton key={zappName}>
-                                {/* <iframe
-                                  src={new URL("button", url).toString()}
-                                  title={`${zappName} button`}
-                                /> */}
+                              <ZappButton
+                                key={zappName}
+                                onClick={() => setZappUrl(url)}
+                              >
                                 <ZappScreen
                                   url={new URL("button", url).toString()}
                                 />
@@ -821,30 +819,6 @@ export const SuperFunkyFont = styled.div`
   }
 `;
 
-const bounceKeyframes = keyframes`
-  0% {
-      transform: scale(1, 1) translateY(0);
-    }
-    2% {
-      transform: scale(1.1, 0.9) translateY(0);
-    }
-    5% {
-      transform: scale(0.9, 1.1) translateY(-10px);
-    }
-    10% {
-      transform: scale(1.05, 0.95) translateY(0);
-    }
-    12% {
-      transform: scale(1, 1) translateY(-2px);
-    }
-    15% {
-      transform: scale(1, 1) translateY(0);
-    }
-    100% {
-      transform: scale(1, 1) translateY(0);
-    }
-`;
-
 const ZappButtonsContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -853,24 +827,22 @@ const ZappButtonsContainer = styled.div`
 `;
 
 const ZappButton = styled.div`
-  text-align: center;
   display: flex;
-  padding: 16px 20px;
+  width: 100%;
   justify-content: center;
   align-items: center;
-  align-self: stretch;
   height: 56px;
+  position: relative;
+  cursor: pointer;
 
-  border-radius: 20px;
-  border: 2px solid #fff;
-  background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
-  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
-
-  iframe {
-    border: none;
-    width: 100%;
-    height: 100%;
-    border-radius: inherit;
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
   }
 `;
 
