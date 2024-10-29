@@ -2,6 +2,70 @@
   [
     {
       "maxObjects": 1,
+      "maxEntries": 1,
+      "merkleMaxDepth": 5,
+      "maxNumericValues": 0,
+      "maxEntryInequalities": 0,
+      "maxLists": 0,
+      "maxListElements": 0,
+      "maxTuples": 0,
+      "tupleArity": 0,
+      "includeOwnerV3": false,
+      "includeOwnerV4": true
+    },
+    7444
+  ],
+  [
+    {
+      "maxObjects": 1,
+      "maxEntries": 1,
+      "merkleMaxDepth": 5,
+      "maxNumericValues": 1,
+      "maxEntryInequalities": 0,
+      "maxLists": 1,
+      "maxListElements": 10,
+      "maxTuples": 0,
+      "tupleArity": 0,
+      "includeOwnerV3": false,
+      "includeOwnerV4": true
+    },
+    7814
+  ],
+  [
+    {
+      "maxObjects": 1,
+      "maxEntries": 5,
+      "merkleMaxDepth": 5,
+      "maxNumericValues": 0,
+      "maxEntryInequalities": 0,
+      "maxLists": 0,
+      "maxListElements": 0,
+      "maxTuples": 0,
+      "tupleArity": 0,
+      "includeOwnerV3": false,
+      "includeOwnerV4": true
+    },
+    12490
+  ],
+  [
+    {
+      "maxObjects": 1,
+      "maxEntries": 5,
+      "merkleMaxDepth": 5,
+      "maxNumericValues": 3,
+      "maxEntryInequalities": 2,
+      "maxLists": 2,
+      "maxListElements": 20,
+      "maxTuples": 2,
+      "tupleArity": 2,
+      "includeOwnerV3": false,
+      "includeOwnerV4": true
+    },
+    14347
+  ],
+  [
+    {
+      "maxObjects": 1,
       "maxEntries": 10,
       "merkleMaxDepth": 5,
       "maxNumericValues": 0,
@@ -82,6 +146,22 @@
   [
     {
       "maxObjects": 1,
+      "maxEntries": 12,
+      "merkleMaxDepth": 5,
+      "maxNumericValues": 4,
+      "maxEntryInequalities": 0,
+      "maxLists": 1,
+      "maxListElements": 5,
+      "maxTuples": 0,
+      "tupleArity": 0,
+      "includeOwnerV3": false,
+      "includeOwnerV4": true
+    },
+    23002
+  ],
+  [
+    {
+      "maxObjects": 1,
       "maxEntries": 20,
       "merkleMaxDepth": 6,
       "maxNumericValues": 0,
@@ -100,8 +180,8 @@
       "maxObjects": 1,
       "maxEntries": 20,
       "merkleMaxDepth": 6,
-      "maxNumericValues": 20,
-      "maxEntryInequalities": 20,
+      "maxNumericValues": 10,
+      "maxEntryInequalities": 5,
       "maxLists": 5,
       "maxListElements": 50,
       "maxTuples": 1,
@@ -109,7 +189,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    48505
+    42215
   ],
   [
     {
