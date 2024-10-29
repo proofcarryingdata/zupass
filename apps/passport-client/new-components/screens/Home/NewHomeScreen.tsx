@@ -45,7 +45,6 @@ import { ZappFullScreen } from "../../../components/screens/ZappScreens/ZappFull
 import { ZappScreen } from "../../../components/screens/ZappScreens/ZappScreen";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
-import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
   useIsSyncSettled,
@@ -579,7 +578,7 @@ export const NewHomeScreen = (): ReactElement => {
     setZappUrl
   ]);
   useLayoutEffect(() => {
-    const test = async (): Promise<void> => {
+    const handleOneClick = async (): Promise<void> => {
       if (location.pathname.includes("one-click-preview")) {
         const { email, code, targetFolder, pipelineId, serverUrl } =
           regularParams;
@@ -612,8 +611,14 @@ export const NewHomeScreen = (): ReactElement => {
           code,
           targetFolder
         });
-
-        if(previewRes.success){
+        const zappEntry = Object.entries(appConfig.embeddedZapps).find(
+          ([key]) => key.toLowerCase() === targetFolder?.toLowerCase()
+        );
+        if (zappEntry) {
+          setZappUrl(zappEntry[1]);
+          return;
+        }
+        if (previewRes.success) {
           dispatch({
             type: "scroll-to-ticket",
             scrollTo: {
@@ -624,7 +629,7 @@ export const NewHomeScreen = (): ReactElement => {
         }
       }
     };
-    test();
+    handleOneClick();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
