@@ -108,7 +108,6 @@ export const ListItem = ({
       variant={defaultVariant}
       onClick={onClick}
       isClickable={!!onClick}
-      style={{ paddingLeft: 24 }}
     >
       <IconContainer>{LeftIcon ? LeftIcon : <Avatar />}</IconContainer>
       <ListItemRightContainer showBottomBorder={defaultShowBottomBorder}>
