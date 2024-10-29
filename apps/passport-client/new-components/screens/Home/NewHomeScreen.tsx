@@ -678,11 +678,6 @@ export const NewHomeScreen = (): ReactElement => {
                       ticketWidth={cardWidth}
                       address={eventDetails.eventLocation}
                       title={eventDetails.eventName}
-                      ticketDate={
-                        eventDetails.eventStartDate
-                          ? new Date(eventDetails.eventStartDate).toDateString()
-                          : undefined
-                      }
                       imgSource={eventDetails.imageUrl}
                       ticketCount={packs.length}
                       cardColor={i % 2 === 0 ? "purple" : "orange"}
