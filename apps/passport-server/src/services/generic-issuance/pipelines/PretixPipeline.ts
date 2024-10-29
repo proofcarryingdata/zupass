@@ -625,6 +625,7 @@ export class PretixPipeline implements BasePipeline {
         orgUrl,
         token,
         eventId,
+        this.definition.options.batchFetch ?? false,
         this.abort
       );
       const checkinLists = await this.api.fetchEventCheckinLists(

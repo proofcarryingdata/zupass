@@ -460,7 +460,13 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   semaphoreGroups: SemaphoreGroupListSchema,
   enablePODTickets: z.boolean().optional(),
   autoIssuance: z.array(AutoIssuanceOptionsSchema).optional(),
-  userPermissions: z.array(UserPermissionsOptionsSchema).optional()
+  userPermissions: z.array(UserPermissionsOptionsSchema).optional(),
+  /**
+   * The corresponding org url must be in the `PRETIX_BATCH_ENABLED_FOR`
+   * environment variable in order to enable batching for this pipeline,
+   * otherwise this field is a no-op.
+   */
+  batchFetch: z.boolean().optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
