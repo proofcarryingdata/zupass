@@ -35,7 +35,7 @@ export const NewModals = React.memo((): JSX.Element => {
       <SettingsBottomModal />
       <ChangePasswordModal />
       <AnotherDeviceChangedPasswordBottomModal />
-      // <PodsCollectionBottomModal />
+      <PodsCollectionBottomModal />
       <SuccessModal />
       <AboutZupassModal />
       <ManageEmailModal />
