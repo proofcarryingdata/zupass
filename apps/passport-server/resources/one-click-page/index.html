@@ -27,13 +27,15 @@
         --text-primary: #1E2C50;
         overflow: hidden;
         height: 100dvh;
-        /* min-height: -webkit-fill-available; */
-        background-color: #00785E;
     }
 
     body {
         overflow: auto;
         height: 100%;
+
+        @media(max-width:460px) {
+            background-color: #00785E;
+        }
     }
 
     .container {
@@ -57,7 +59,6 @@
         align-self: stretch;
         border-radius: 16px;
         background: var(--white);
-
 
         /* shadow-sm */
         box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
@@ -176,6 +177,8 @@
     .page-header {
         padding: 15px 0 25px 0;
         width: 100%;
+        max-width: 460px;
+        margin: 0 auto;
         display: flex;
         align-items: center;
         justify-content: center;
