@@ -1,35 +1,19 @@
-import {
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon
-} from "@heroicons/react/16/solid";
-import {
-  EdDSATicketPCDTypeName,
-  ITicketData,
-  isEdDSATicketPCD
-} from "@pcd/eddsa-ticket-pcd";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
+import * as eddsaTicketPcd from "@pcd/eddsa-ticket-pcd";
 import { isEmailPCD } from "@pcd/email-pcd";
 import { PCDGetRequest } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
-import { PCD } from "@pcd/pcd-types";
-import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import { uniqWith } from "lodash";
 import {
   ReactElement,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useRef,
   useState
 } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
-import styled, {
-  FlattenSimpleInterpolation,
-  css,
-  keyframes
-} from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { ZappButton } from "../../../components/screens/ZappScreens/ZappButton";
 import { ZappButtonsContainer } from "../../../components/screens/ZappScreens/ZappButtonsContainer";
 import { ZappFullScreen } from "../../../components/screens/ZappScreens/ZappFullScreen";
@@ -41,7 +25,6 @@ import {
   useDispatch,
   useIsSyncSettled,
   usePCDCollection,
-  usePCDs,
   useScrollTo,
   useSelf,
   useUserForcedToLogout
@@ -51,19 +34,20 @@ import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { nextFrame } from "../../../src/util";
 import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
-import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
 import { NewLoader } from "../../shared/NewLoader";
 import { SwipeViewContainer } from "../../shared/SwipeViewContainer";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 import {
-  hideScrollCSS,
   isMobile,
   replaceDotWithSlash,
   useOrientation
 } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
-import { TicketPack, TicketType, TicketTypeName } from "./types";
+import { TicketPack } from "./types";
+import { useTickets } from "./hooks/useTickets";
+import { useWindowWidth } from "./hooks/useWindowWidth";
+import { NoUpcomingEventsState } from "./NoUpcomingTicketsState";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -72,78 +56,6 @@ const SCREEN_HORIZONTAL_PADDING = 20;
 const TICKET_VERTICAL_GAP = 20;
 const BUTTONS_CONTAINER_HEIGHT = 40;
 const CARD_GAP = isMobile ? 8 : SCREEN_HORIZONTAL_PADDING * 2;
-
-const isEventTicketPCD = (pcd: PCD<unknown, unknown>): pcd is TicketType => {
-  return (
-    (isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd)) &&
-    !!pcd.claim.ticket.eventStartDate
-  );
-};
-const useTickets = (): Array<[string, TicketPack[]]> => {
-  const allPCDs = usePCDs();
-  const tickets = allPCDs.filter(isEventTicketPCD).reverse();
-  //fitering out overlapping eddsa tickets
-  const uniqTickets = uniqWith(tickets, (t1, t2) => {
-    return (
-      t1.claim.ticket.eventId === t2.claim.ticket.eventId &&
-      t1.claim.ticket.attendeeEmail === t2.claim.ticket.attendeeEmail &&
-      t1.type === EdDSATicketPCDTypeName
-    );
-  }).sort((t1, t2) => {
-    // if one of the tickets doesnt have a date, immidiatly retrun the other one as the bigger one
-    if (!t1.claim.ticket.eventStartDate) return -1;
-    if (!t2.claim.ticket.eventStartDate) return 1;
-
-    // parse the date
-    const date1 = Date.parse(t1.claim.ticket.eventStartDate);
-    const date2 = Date.parse(t2.claim.ticket.eventStartDate);
-    const now = Date.now();
-
-    const timeToDate1 = date1 - now;
-    const timeToDate2 = date2 - now;
-    // if one of the dates passed its due date, immidately return the other one
-    if (timeToDate1 < 0) return -1;
-    if (timeToDate2 < 0) return 1;
-
-    // return which date is closer to the current time
-    return timeToDate1 - timeToDate2;
-  });
-
-  //  This hook is building "ticket packs"
-  //  ticket pack - main ticket and all its ticket addons, under the same event and attendee
-  return useMemo(() => {
-    const eventsMap = new Map<string, TicketPack[]>();
-    // creating the initial ticket packs for events - only main event ticket
-    for (const ticket of uniqTickets) {
-      if (ticket.claim.ticket.isAddOn) continue;
-      let ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
-      if (!ticketPacks) {
-        ticketPacks = [];
-        eventsMap.set(ticket.claim.ticket.eventId, ticketPacks);
-      }
-      ticketPacks.push({
-        eventTicket: ticket,
-        eventName: ticket.claim.ticket.eventName,
-        addOns: [],
-        attendeeEmail: ticket.claim.ticket.attendeeEmail,
-        packType: ticket.type as TicketTypeName
-      });
-    }
-    // adding the addons to their respective ticket pack
-    for (const ticket of uniqTickets) {
-      if (!ticket.claim.ticket.isAddOn) continue;
-      const ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
-      if (!ticketPacks) continue;
-      const pack = ticketPacks.find(
-        (pack) => pack.attendeeEmail === ticket.claim.ticket.attendeeEmail
-      );
-      if (!pack) continue;
-      pack.addOns.push(ticket);
-    }
-    return Array.from(eventsMap.entries());
-  }, [uniqTickets]);
-};
-
 const Container = styled.div<{ ticketsAmount: number }>`
   display: flex;
   flex-direction: column;
@@ -199,49 +111,9 @@ const TicketsContainer = styled.div<{ $width: number }>`
   gap: ${TICKET_VERTICAL_GAP}px;
 `;
 
-const getEventDetails = (tickets: TicketPack): ITicketData => {
-  return tickets.eventTicket.claim.ticket as ITicketData;
+const getEventDetails = (tickets: TicketPack): eddsaTicketPcd.ITicketData => {
+  return tickets.eventTicket.claim.ticket as eddsaTicketPcd.ITicketData;
 };
-const EMPTY_CARD_CONTAINER_HEIGHT = 220;
-const EmptyCardContainer = styled.div<{ longVersion: boolean }>`
-  display: flex;
-  height: ${({ longVersion }): string =>
-    longVersion ? "min(80vh, 549px)" : EMPTY_CARD_CONTAINER_HEIGHT + "px"};
-  justify-content: center;
-  align-items: center;
-  border-radius: 16px;
-  background: #e1e1e2;
-  /* shadow-inset-black */
-  box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
-  padding: 0 40px;
-  width: 100%;
-`;
-
-const InnerContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 10px;
-`;
-
-const useWindowWidth = (): number => {
-  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  useEffect(() => {
-    const onResize = (): void => {
-      setWindowWidth(window.innerWidth);
-    };
-
-    window.addEventListener("resize", onResize);
-
-    return () => {
-      window.removeEventListener("resize", onResize);
-    };
-  }, []);
-
-  return windowWidth;
-};
-
 const LoadingScreenContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -249,233 +121,6 @@ const LoadingScreenContainer = styled.div`
   gap: 12px;
   margin: auto 0;
 `;
-
-const ListContainer = styled.div`
-  width: 100%;
-  max-height: calc(100vh - ${EMPTY_CARD_CONTAINER_HEIGHT + 64}px);
-  overflow-y: scroll;
-  border-radius: 20px;
-  border: 2px solid var(--text-white);
-  background: rgba(255, 255, 255, 0.8);
-  padding-top: 24px;
-
-  box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
-  position: relative;
-
-  ${hideScrollCSS}
-`;
-const OuterContainer = styled.div`
-  display: flex;
-  gap: 24px;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  width: 100%;
-  position: relative;
-`;
-
-const anim = keyframes`
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0) translateX(-10px);
-  }
-  40% {
-    transform: translateY(10px) translateX(-10px);
-  }
-  60% {
-    transform: translateY(5px) translateX(-10px);
-  }
-`;
-const ScrollIndicatorContainer = styled.div`
-  position: absolute;
-  bottom: 2%;
-  left: 50%;
-  transform: translateX(-10px);
-  z-index: 2;
-  display: flex;
-  flex-direction: column;
-  opacity: 0.3;
-
-  animation: ${anim} 1.5s infinite;
-
-  transition: opacity 0.5s ease;
-`;
-
-const Bar = styled.div`
-  height: 36px;
-  border-radius: 12px;
-  background: rgba(0, 0, 0, 0.05);
-  box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
-  width: 180px;
-`;
-
-const BarsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  padding: 10px 48px 10px 48px;
-  width: 100%;
-  gap: 5px;
-  margin-bottom: 20px;
-`;
-
-export const ScrollIndicator = (): ReactElement => {
-  return (
-    <ScrollIndicatorContainer>
-      <ChevronDownIcon color="var(--text-tertiary)" width={30} height={30} />
-      <ChevronDownIcon
-        color="var(--text-tertiary)"
-        width={30}
-        height={30}
-        style={{ marginTop: -20 }}
-      />
-    </ScrollIndicatorContainer>
-  );
-};
-
-const NoUpcomingEventsState = ({
-  isLandscape
-}: {
-  isLandscape: boolean;
-}): ReactElement => {
-  const dispatch = useDispatch();
-  const pods = usePCDCollection();
-  const timer = useRef<NodeJS.Timeout>();
-  const [showScrollIndicator, setShowScrollIndicator] = useState(false);
-  const [expandedGroupsIds, setExpandedGroupsIds] = useState<
-    Record<string, boolean>
-  >({});
-  const [params] = useSearchParams();
-  const listContainerRef = useRef<HTMLDivElement>(null);
-
-  // New function to check scrollability
-  const checkScrollability = (): void => {
-    if (listContainerRef.current) {
-      const scrollable =
-        listContainerRef.current.scrollHeight >
-        listContainerRef.current.clientHeight;
-      setShowScrollIndicator(scrollable);
-    }
-  };
-
-  // Check scrollability on mount and when pods change
-  useEffect(() => {
-    checkScrollability();
-  }, [pods]);
-
-  const noPods =
-    pods
-      .getAll()
-      .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
-      .length === 0;
-
-  useLayoutEffect(() => {
-    // Restore scroll position when list is shown again
-    (async (): Promise<void> => {
-      if (listContainerRef.current) {
-        const folder = params.get("folder");
-        // checks if url contains folder route, and if so, scrolls to it
-        if (folder) {
-          const decodedFolderId = replaceDotWithSlash(decodeURI(folder));
-          const folderContainer = document.getElementById(decodedFolderId);
-          setExpandedGroupsIds((old) => {
-            console.log(old);
-            return {
-              ...old,
-              [decodedFolderId]: true
-            };
-          });
-          await nextFrame();
-          if (folderContainer) {
-            console.log(folderContainer.scrollTop);
-            listContainerRef.current.scroll({ top: folderContainer.offsetTop });
-          }
-        }
-      }
-    })();
-    // Check scrollability after layout changes
-    checkScrollability();
-  }, [noPods, params, setExpandedGroupsIds]);
-
-  return (
-    <OuterContainer>
-      <EmptyCardContainer longVersion={noPods}>
-        <InnerContainer>
-          {noPods && (
-            <BarsContainer>
-              <Bar />
-              <Bar />
-              <Bar />
-              <Bar />
-              <Bar />
-            </BarsContainer>
-          )}
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <Typography
-              fontSize={20}
-              color="var(--text-primary)"
-              fontWeight={800}
-            >
-              NO UPCOMING EVENTS
-            </Typography>
-            <Typography>
-              Don't see your ticket?{" "}
-              <a
-                style={{ fontWeight: 500 }}
-                onClick={() => {
-                  dispatch({
-                    type: "set-bottom-modal",
-                    modal: {
-                      modalType: "help-modal"
-                    }
-                  });
-                }}
-              >
-                Learn more
-              </a>
-            </Typography>
-          </div>
-        </InnerContainer>
-      </EmptyCardContainer>
-      {isLandscape ||
-        (!noPods && (
-          <ListContainer
-            ref={listContainerRef}
-            onScroll={(e) => {
-              const scrollTop = e.currentTarget.scrollTop;
-              console.log(scrollTop);
-              if (scrollTop === 0) {
-                // start timer
-                const id = setTimeout(() => {
-                  setShowScrollIndicator(true);
-                }, 2000);
-                timer.current = id;
-              } else {
-                setShowScrollIndicator(false);
-
-                // clearing timer on scroll so it won't flash to the user mid scroll
-                if (timer.current) {
-                  clearTimeout(timer.current);
-                  timer.current = undefined;
-                }
-              }
-            }}
-          >
-            <PodsCollectionList
-              onPodClick={(pcd) => {
-                dispatch({
-                  type: "set-bottom-modal",
-                  modal: { modalType: "pods-collection", activePod: pcd }
-                });
-              }}
-              style={{ padding: "0 20px 24px" }}
-              expandedGroupsIds={expandedGroupsIds}
-              setExpandedGroupsIds={setExpandedGroupsIds}
-            />
-            {showScrollIndicator && <ScrollIndicator />}
-          </ListContainer>
-        ))}
-    </OuterContainer>
-  );
-};
 
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();

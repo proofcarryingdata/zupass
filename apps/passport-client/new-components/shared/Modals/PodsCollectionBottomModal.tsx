@@ -29,7 +29,7 @@ import {
   useDispatch,
   usePCDCollection
 } from "../../../src/appHooks";
-import { ScrollIndicator } from "../../screens/Home/NewHomeScreen";
+import { ScrollIndicator } from "../../screens/Home/ScrollIndicator";
 import { Avatar } from "../Avatar";
 import { BottomModal } from "../BottomModal";
 import { Button2 } from "../Button";
