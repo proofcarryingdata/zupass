@@ -198,13 +198,14 @@ export function SemaphoreGroupProveScreen({
           </Button2>
         )}
         <Button2
-          onClick={
-            req.options?.requesterUrl
-              ? (): void => {
-                  window.location.href = req.options?.requesterUrl as string;
-                }
-              : (): void => window.history.back()
-          }
+          onClick={(): void => {
+            if (window.opener && window.opener !== window) {
+              // you are in a popup
+              window.close();
+            } else {
+              window.history.back();
+            }
+          }}
           variant="secondary"
         >
           <Typography fontSize={18} fontWeight={500} family="Rubik">

@@ -18,6 +18,7 @@
   "dependencies": {
     "@babel/runtime": "^7.24.0",
     "@heroicons/react": "^2.1.5",
+    "iframe-resizer-react": "1.1.0",
     "@parcnet-js/client-helpers": "^1.0.6",
     "@parcnet-js/client-rpc": "^1.1.5",
     "@parcnet-js/podspec": "^1.1.2",

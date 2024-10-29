@@ -1,3 +1,4 @@
+import IframeResizer from "iframe-resizer-react";
 import { ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useEmbeddedScreenState } from "../../../src/appHooks";
@@ -16,8 +17,12 @@ export function ZappScreen({ url }: { url: string }): ReactNode {
   return (
     <>
       <ZappModal />
-      <iframe
-        style={{ width: "100%", height: "100%", borderRadius: "10px" }}
+      <IframeResizer
+        loading="eager"
+        style={{
+          width: "100%",
+          height: "100%"
+        }}
         src={urlWithOptionalParameter.toString()}
         sandbox="allow-downloads allow-same-origin allow-scripts allow-popups allow-modals allow-forms allow-storage-access-by-user-activation allow-popups-to-escape-sandbox"
       />
