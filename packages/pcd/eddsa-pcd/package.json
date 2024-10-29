@@ -34,7 +34,7 @@
   "dependencies": {
     "@pcd/pcd-types": "0.14.0",
     "@pcd/util": "0.8.0",
-    "@zk-kit/eddsa-poseidon": "1.0.3",
+    "@zk-kit/eddsa-poseidon": "^1.1.0",
     "poseidon-lite": "^0.3.0",
     "uuid": "^9.0.0"
   },

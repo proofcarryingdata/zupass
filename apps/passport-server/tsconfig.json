@@ -39,9 +39,6 @@
       "path": "../../packages/pcd/eddsa-ticket-pcd"
     },
     {
-      "path": "../../packages/lib/server-shared"
-    },
-    {
       "path": "../../packages/pcd/email-pcd"
     },
     {
@@ -91,6 +88,9 @@
     },
     {
       "path": "../../packages/pcd/semaphore-signature-pcd"
+    },
+    {
+      "path": "../../packages/lib/server-shared"
     },
     {
       "path": "../../packages/lib/util"
