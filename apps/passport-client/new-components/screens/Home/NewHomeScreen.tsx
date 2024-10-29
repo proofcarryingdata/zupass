@@ -682,25 +682,17 @@ export const NewHomeScreen = (): ReactElement => {
                     <ZappsAndTicketsContainer>
                       {Object.keys(appConfig.embeddedZapps).length && (
                         <ZappButtonsContainer>
+                          {/* <ZappModal /> */}
                           {Object.entries(appConfig.embeddedZapps).map(
                             ([zappName, url]) => (
-                              <ZappButton
-                                key={zappName}
-                                onClick={() => setZappUrl(url)}
-                              >
-                                {zappName === "frogcrypto" ? (
-                                  <>
-                                    <SuperFunkyFont>
-                                      {zappName.split("").map((letter, i) => (
-                                        <BounceText key={i} delay={i * 0.1}>
-                                          {letter}
-                                        </BounceText>
-                                      ))}
-                                    </SuperFunkyFont>
-                                  </>
-                                ) : (
-                                  zappName
-                                )}
+                              <ZappButton key={zappName}>
+                                {/* <iframe
+                                  src={new URL("button", url).toString()}
+                                  title={`${zappName} button`}
+                                /> */}
+                                <ZappScreen
+                                  url={new URL("button", url).toString()}
+                                />
                               </ZappButton>
                             )
                           )}
@@ -853,11 +845,6 @@ const bounceKeyframes = keyframes`
     }
 `;
 
-const BounceText = styled.span<{ delay: number }>`
-  animation: ${bounceKeyframes} 5s infinite ${(p): number => p.delay}s;
-  -webkit-animation: ${bounceKeyframes} 5s infinite ${(p): number => p.delay}s;
-`;
-
 const ZappButtonsContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -865,20 +852,26 @@ const ZappButtonsContainer = styled.div`
   gap: 8px;
 `;
 
-const ZappButton = styled.button`
+const ZappButton = styled.div`
   text-align: center;
   display: flex;
   padding: 16px 20px;
   justify-content: center;
   align-items: center;
   align-self: stretch;
+  height: 56px;
 
   border-radius: 20px;
   border: 2px solid #fff;
   background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
-
-  /* shadow-sm */
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+
+  iframe {
+    border: none;
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+  }
 `;
 
 const FloatingReturnButton = styled.div`
