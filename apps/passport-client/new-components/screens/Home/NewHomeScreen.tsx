@@ -50,6 +50,7 @@ import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
 import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
 import { NewLoader } from "../../shared/NewLoader";
+import { SwipeViewContainer } from "../../shared/SwipeViewContainer";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 import {
@@ -59,6 +60,7 @@ import {
   useOrientation
 } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
+import { ZappFullScreen } from "./ZappFullScreen";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 
 // @ts-expect-error TMP fix for bad lib
@@ -147,12 +149,6 @@ const Container = styled.div<{ ticketsAmount: number }>`
   width: fit-content;
   gap: ${({ ticketsAmount }): number =>
     ticketsAmount > 1 ? 40 + BUTTONS_CONTAINER_HEIGHT : 20}px;
-`;
-
-const SwipeViewContainer = styled.div<{ isZapp?: boolean }>`
-  position: relative;
-  width: min(100vw, 420px);
-  height: ${({ isZapp }): string => (isZapp ? "100vh" : "inherit")};
 `;
 
 const disabledCSS = css`
@@ -622,24 +618,14 @@ export const NewHomeScreen = (): ReactElement => {
 
   if (zappUrl) {
     return (
-      <AppContainer
-        bg="gray"
-        noPadding={tickets.length > 0}
-        fullscreen={tickets.length > 0}
-      >
-        <SwipeViewContainer isZapp>
-          <FloatingReturnButton
-            onClick={() => {
-              setZappUrl("");
-              params.delete("folder");
-              setParams(params);
-            }}
-          >
-            <span>Back to Zupass</span>
-          </FloatingReturnButton>
-          <ZappScreen url={zappUrl} />
-        </SwipeViewContainer>
-      </AppContainer>
+      <ZappFullScreen
+        url={zappUrl}
+        onReturn={() => {
+          setZappUrl("");
+          params.delete("folder");
+          setParams(params);
+        }}
+      />
     );
   }
 
@@ -849,31 +835,4 @@ const ZappButton = styled.div`
     bottom: 0;
     z-index: 1;
   }
-`;
-
-const FloatingReturnButton = styled.div`
-  position: fixed;
-  left: 50%;
-  bottom: 20px;
-  z-index: 2;
-  transform: translateX(-50%);
-  cursor: pointer;
-
-  display: inline-flex;
-  padding: 8px 20px;
-  align-items: flex-start;
-
-  border-radius: 200px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-
-  /* text */
-  color: #fff;
-  text-align: center;
-  font-family: Rubik;
-  font-size: 14px;
-  font-style: normal;
-  font-weight: 500;
-  line-height: 135%;
 `;
