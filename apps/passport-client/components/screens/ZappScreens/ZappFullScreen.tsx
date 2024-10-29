@@ -1,8 +1,8 @@
 import { ReactElement } from "react";
 import styled from "styled-components";
-import { ZappScreen } from "../../../components/screens/ZappScreens/ZappScreen";
-import { AppContainer } from "../../../components/shared/AppContainer";
-import { SwipeViewContainer } from "../../shared/SwipeViewContainer";
+import { SwipeViewContainer } from "../../../new-components/shared/SwipeViewContainer";
+import { AppContainer } from "../../shared/AppContainer";
+import { ZappScreen } from "./ZappScreen";
 
 const FloatingReturnButton = styled.div`
   position: fixed;

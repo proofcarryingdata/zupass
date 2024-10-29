@@ -30,6 +30,9 @@ import styled, {
   css,
   keyframes
 } from "styled-components";
+import { ZappButton } from "../../../components/screens/ZappScreens/ZappButton";
+import { ZappButtonsContainer } from "../../../components/screens/ZappScreens/ZappButtonsContainer";
+import { ZappFullScreen } from "../../../components/screens/ZappScreens/ZappFullScreen";
 import { ZappScreen } from "../../../components/screens/ZappScreens/ZappScreen";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
@@ -60,7 +63,6 @@ import {
   useOrientation
 } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
-import { ZappFullScreen } from "./ZappFullScreen";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
 
 // @ts-expect-error TMP fix for bad lib
@@ -808,31 +810,4 @@ export const ZappsAndTicketsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
-`;
-
-const ZappButtonsContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-`;
-
-const ZappButton = styled.div`
-  display: flex;
-  width: 100%;
-  justify-content: center;
-  align-items: center;
-  height: 56px;
-  position: relative;
-  cursor: pointer;
-
-  &::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 1;
-  }
 `;
