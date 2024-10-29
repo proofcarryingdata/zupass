@@ -18,7 +18,7 @@ export function ZappScreen({ url }: { url: string }): ReactNode {
     <>
       <ZappModal />
       <IframeResizer
-        rel="preload"
+        loading="eager"
         style={{
           width: "100%",
           height: "100%"
