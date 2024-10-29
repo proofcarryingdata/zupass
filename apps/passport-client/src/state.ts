@@ -45,7 +45,7 @@ export interface AppState {
     | { modalType: "about"; modalGoBackBehavior?: "close" | "back" }
     | { modalType: "import" }
     | { modalType: "prove"; request: PCDGetRequest }
-    | { modalType: "manage-emails" }
+    | { modalType: "manage-emails"; goBackToSupport?: boolean }
     | { modalType: "delete-account" }
     | { modalType: "ticket-add-ons"; addOns: TicketType[] }
     | { modalType: "help-modal" }
