@@ -520,20 +520,32 @@ export const NewHomeScreen = (): ReactElement => {
     if (!isLoadedPCDs) return;
 
     const maybeExistingFolder = params.get("folder");
-    if (
-      maybeExistingFolder &&
-      collection
-        .getAllFolderNames()
-        .includes(replaceDotWithSlash(decodeURI(maybeExistingFolder)))
-    ) {
-      if (!showPodsList) {
-        dispatch({
-          type: "set-bottom-modal",
-          modal: { modalType: "pods-collection" }
-        });
+    if (maybeExistingFolder) {
+      // Check if folder matches any zapp name (case insensitive)
+      const zappEntry = Object.entries(appConfig.embeddedZapps).find(
+        ([key]) => key.toLowerCase() === maybeExistingFolder.toLowerCase()
+      );
+      if (zappEntry) {
+        setZappUrl(zappEntry[1]);
+        return;
       }
-      return;
+
+      // Original folder check logic
+      if (
+        collection
+          .getAllFolderNames()
+          .includes(replaceDotWithSlash(decodeURI(maybeExistingFolder)))
+      ) {
+        if (!showPodsList) {
+          dispatch({
+            type: "set-bottom-modal",
+            modal: { modalType: "pods-collection" }
+          });
+        }
+        return;
+      }
     }
+
     if (location.pathname.includes("prove")) {
       const params = new URLSearchParams(location.search);
       const request = JSON.parse(
@@ -554,7 +566,8 @@ export const NewHomeScreen = (): ReactElement => {
     isLoadedPCDs,
     location,
     dispatch,
-    showPodsList
+    showPodsList,
+    setZappUrl
   ]);
 
   useEffect(() => {
@@ -615,7 +628,13 @@ export const NewHomeScreen = (): ReactElement => {
         fullscreen={tickets.length > 0}
       >
         <SwipeViewContainer isZapp>
-          <FloatingReturnButton onClick={() => setZappUrl("")}>
+          <FloatingReturnButton
+            onClick={() => {
+              setZappUrl("");
+              params.delete("folder");
+              setParams(params);
+            }}
+          >
             <span>Back to Zupass</span>
           </FloatingReturnButton>
           <ZappScreen url={zappUrl} />
@@ -687,7 +706,10 @@ export const NewHomeScreen = (): ReactElement => {
                             ([zappName, url]) => (
                               <ZappButton
                                 key={zappName}
-                                onClick={() => setZappUrl(url)}
+                                onClick={() => {
+                                  setZappUrl(url);
+                                  setParams({ folder: zappName });
+                                }}
                               >
                                 <ZappScreen
                                   url={new URL("button", url).toString()}
@@ -800,24 +822,6 @@ export const ZappsAndTicketsContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
-`;
-
-export const SuperFunkyFont = styled.div`
-  font-family: "SuperFunky";
-  font-size: 20px;
-  display: flex;
-  user-select: none;
-
-  * {
-    background-size: 100%;
-    background-color: #ff9900 !important;
-    color: #ff9900;
-    background-image: linear-gradient(45deg, #ff9900, #afffbc);
-    -webkit-background-clip: text;
-    -moz-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    -moz-text-fill-color: transparent;
-  }
 `;
 
 const ZappButtonsContainer = styled.div`
