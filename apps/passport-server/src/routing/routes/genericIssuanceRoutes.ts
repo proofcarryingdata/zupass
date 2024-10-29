@@ -47,6 +47,10 @@ import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
 import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
+import path from "path";
+import Mustache from "mustache";
+import * as QRCode from "qrcode";
+import fs from "fs";
 
 export function initGenericIssuanceRoutes(
   app: express.Application,
@@ -756,6 +760,58 @@ export function initGenericIssuanceRoutes(
       );
 
       res.json(result satisfies TicketPreviewResultValue);
+    }
+  );
+
+  app.get(
+    "/generic-issuance/one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?",
+    async (req, res) => {
+      checkExistsForRoute(genericIssuanceService);
+      const email = checkUrlParam(req, "email");
+      const code = checkUrlParam(req, "code");
+      const pipeline = req.params.pipelineId;
+
+      const getTicketImage = (
+        ticketData: TicketPreviewResultValue["tickets"][number]
+      ): string | undefined => {
+        const imageToRender = ticketData?.eventStartDate
+          ? ticketData.qrCodeOverrideImageUrl
+          : ticketData?.imageUrl;
+        return imageToRender;
+      };
+      const result = await genericIssuanceService.handleGetTicketPreview(
+        email,
+        code,
+        pipeline
+      );
+      const ticket = { ...result.tickets[0] };
+
+      const absPath = path.resolve("./resources/one-click-page/index.html");
+      const file = fs.readFileSync(absPath).toString();
+
+      const qrCodeData =
+        getTicketImage(ticket) ??
+        (ticket.ticketSecret
+          ? await QRCode.toDataURL(ticket.ticketSecret, {
+              type: "image/webp",
+              scale: 10,
+              margin: 0
+            })
+          : "");
+
+      const rendered = Mustache.render(file, {
+        eventName: ticket.eventName.toUpperCase(),
+        attendeeName: ticket.attendeeName.toUpperCase(),
+        attendeeEmail: ticket.attendeeEmail,
+        ticketName: ticket.ticketName,
+        eventLocation: ticket.eventLocation,
+        qr: qrCodeData,
+        backgroundImage: ticket.imageUrl,
+        count: result.tickets.length,
+        isMoreThanOne: result.tickets.length > 1,
+        zupassUrl: process.env.PASSPORT_CLIENT_URL
+      });
+      res.send(rendered);
     }
   );
 }

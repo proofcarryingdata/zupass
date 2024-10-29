@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.cdnfonts.com/css/super-funky" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@800&family=Rubik:wght@300..900&display=swap"
+        rel="stylesheet">
+</head>
+<style>
+    /* resets */
+    * {
+        margin: 0;
+        padding: 0;
+        border: 0;
+        font-size: 100%;
+        font: inherit;
+        vertical-align: baseline;
+    }
+
+    html {
+        --white: #fff;
+        --text-title: #9A4AC9;
+        --text-primary: #1E2C50;
+        overflow: hidden;
+        height: 100dvh;
+    }
+
+    body {
+        overflow: auto;
+        height: 100vh;
+
+        @media(max-width:460px) {
+            background-color: #00785E;
+        }
+    }
+
+    .container {
+        margin: auto;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        max-width: 420px;
+        padding: 20px;
+        background: linear-gradient(0deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%),
+        url("{{{backgroundImage}}}") lightgray 50% / cover no-repeat;
+    }
+
+
+    .ticket {
+        display: flex;
+        padding: 16px;
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: center;
+        align-self: stretch;
+        border-radius: 16px;
+        background: var(--white);
+
+        /* shadow-sm */
+        box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+        gap: 16px;
+    }
+
+    .ticket__qr-code {
+        width: 100%;
+        height: 100%;
+    }
+
+
+    .ticket__text-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+        width: 100%;
+    }
+
+    .ticket__title {
+        color: var(--text-title);
+        text-align: center;
+        font-family: "Barlow", sans-serif;
+        font-weight: 800;
+        font-style: normal;
+
+        /* text-xl (20px)/extrabold */
+        font-size: 20px;
+        font-style: normal;
+        font-weight: 800;
+        line-height: 135%;
+        /* 27px */
+    }
+
+
+    .ticket__subtitle--text {
+        color: var(--text-primary);
+        text-align: center;
+
+        /* text-sm (14px)/regular-rubik */
+        font-family: Rubik;
+        font-size: 14px;
+        font-style: normal;
+        font-weight: 400;
+        line-height: 135%;
+        /* 18.9px */
+    }
+
+    .ticket__subtitle--container {
+        display: flex;
+        flex-direction: row;
+        gap: 4px;
+        /* justify-content: center; */
+    }
+
+    .header {
+        margin-top: 30px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 26px;
+    }
+
+    .header__title {
+        color: var(--white);
+        text-align: center;
+        font-family: Barlow;
+        font-size: 28px;
+        font-style: normal;
+        font-weight: 800;
+        line-height: 135%;
+        /* 37.8px */
+    }
+
+    .header__subtitle {
+        color: #C0D1FF;
+        text-align: center;
+        font-family: Rubik;
+        font-size: 18px;
+        font-style: normal;
+        font-weight: 300;
+        line-height: 135%;
+        /* 24.3px */
+    }
+
+    .cta {
+        border-radius: 24px;
+        border: 2px solid #ffc971;
+        background: linear-gradient(0deg, #ffae00 0%, #4cccb0 100%);
+        height: 76px;
+        width: 100%;
+        color: #000;
+        /* Fallback for older browsers */
+        color: rgba(0, 0, 0, 0.5);
+        text-align: center;
+        font-family: 'Super Funky';
+        font-size: 28px;
+        font-style: normal;
+        font-weight: 400;
+        cursor: pointer;
+    }
+
+    .cta__container {
+        border-radius: 24px;
+        background: #ad844f;
+        padding-bottom: 8px;
+        width: 350px;
+        height: 82px;
+        flex-shrink: 0;
+        width: 100%;
+        margin-bottom: 45px;
+    }
+
+    .page-header {
+        padding: 15px 0 25px 0;
+        width: 100%;
+        max-width: 460px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-bottom: 1px solid #1D8289;
+        background: linear-gradient(0deg, #00605C 0%, #00785E 100%);
+    }
+</style>
+<script>
+    const path = window.location.pathname;
+    const newPath = path.replace("generic-issuance", "#");
+    const clientPath = "{{{zupassUrl}}}" + newPath;
+    function redirectToZupass() {
+        window.location.replace(clientPath);
+    }
+</script>
+
+<body>
+    <div class="page-header" id="page-header">
+        <svg xmlns="http://www.w3.org/2000/svg" width="118" height="21" viewBox="0 0 118 21" fill="none">
+            <path
+                d="M0.587402 17.6774L13.949 2.65875H1.20393V0.406738H17.4772V2.49193L4.22441 17.4011H18.1248L17.7466 19.6531H0.587402V17.6722V17.6774Z"
+                fill="#FFD6A0" />
+            <path
+                d="M23.5906 0.406738V11.3332C23.5906 16.4002 26.5541 17.7868 29.4347 17.7868C32.9629 17.7868 35.0663 16.1083 35.0663 11.3332V0.406738H37.7604V11.3019C37.7604 17.5627 34.5275 20.0597 29.3569 20.0597C24.1864 20.0597 20.8965 17.5106 20.8965 11.5208V0.406738H23.5906Z"
+                fill="#FFD6A0" />
+            <path
+                d="M43.1799 0.406738H52.1792C56.9197 0.406738 59.1009 2.87248 59.1009 6.07326C59.1009 9.84225 56.5156 11.9535 52.2569 11.9535H45.8999V19.6531H43.1799V0.406738ZM45.8999 9.65458H51.8787C54.521 9.65458 56.3498 8.89349 56.3498 6.10454C56.3498 3.93593 54.894 2.69003 51.8787 2.69003H45.8999V9.65458Z"
+                fill="#FFD6A0" />
+            <path
+                d="M63.8673 13.825L61.3908 19.6531H58.5879L66.8048 0.406738H70.0895L78.6588 19.6531H75.6953L73.1359 13.825H63.8673ZM72.25 11.4948C69.9082 6.18273 68.7995 3.65964 68.3695 2.36161H68.3436C67.9395 3.60751 66.6442 6.91776 64.7066 11.4948H72.25Z"
+                fill="#FFD6A0" />
+            <path
+                d="M83.2646 14.0438C83.964 16.3219 85.6064 17.891 89.3522 17.891C93.098 17.891 94.5797 16.4261 94.5797 14.6381C94.5797 12.7405 93.528 11.5728 88.5698 10.7335C82.8294 9.75872 81.4564 7.93938 81.4564 5.31204C81.4564 1.92359 84.6375 0 88.8134 0C95.0356 0 96.4915 3.27897 96.7091 5.23384H93.9891C93.585 3.90453 92.7768 2.1686 88.7356 2.1686C85.9897 2.1686 84.2075 3.11737 84.2075 5.04096C84.2075 6.61528 84.9898 7.61618 89.3522 8.346C96.248 9.53977 97.3515 11.6823 97.3515 14.3618C97.3515 17.427 94.9268 20.0544 89.1605 20.0544C83.8241 20.0544 81.13 17.5886 80.4824 14.0386H83.2594L83.2646 14.0438Z"
+                fill="#FFD6A0" />
+            <path
+                d="M102.932 14.0438C103.631 16.3219 105.273 17.891 109.019 17.891C112.765 17.891 114.247 16.4261 114.247 14.6381C114.247 12.7405 113.195 11.5728 108.237 10.7335C102.496 9.75872 101.123 7.93938 101.123 5.31204C101.123 1.92359 104.304 0 108.48 0C114.703 0 116.158 3.27897 116.376 5.23384H113.656C113.252 3.90453 112.444 2.1686 108.403 2.1686C105.657 2.1686 103.874 3.11737 103.874 5.04096C103.874 6.61528 104.657 7.61618 109.019 8.346C115.915 9.53977 117.018 11.6823 117.018 14.3618C117.018 17.427 114.594 20.0544 108.827 20.0544C103.491 20.0544 100.797 17.5886 100.155 14.0386H102.932V14.0438Z"
+                fill="#FFD6A0" />
+        </svg>
+    </div>
+    <main class="container" onscroll="test">
+        <div class="header">
+            <span class="header__title">{{eventName}}</span>
+            <div class="ticket__subtitle--container">
+                <span class="header__subtitle">{{eventLocation}}</span>
+                <span class="header__subtitle">·</span>
+                {{#isMoreThanOne}}
+                <span class="header__subtitle">{{count}} Items</span>
+                {{/isMoreThanOne}}
+                {{^isMoreThanOne}}
+                <span class="header__subtitle">1 Item</span>
+                {{/isMoreThanOne}}
+            </div>
+        </div>
+        <div class="cta__container"><button onclick="redirectToZupass()" class="cta">FROGCRYPTO</button></div>
+        <div class="ticket">
+            <img class="ticket__qr-code" src="{{qr}}" />
+            <div class="ticket__text-container">
+                <span class="ticket__title">{{attendeeName}}</span>
+                <div class="ticket__subtitle--container">
+                    <span class="ticket__subtitle--text">{{attendeeEmail}}</span>
+                    <span class="ticket__subtitle--text">·</span>
+                    <span class="ticket__subtitle--text">{{ticketName}}</span>
+                </div>
+            </div>
+        </div>
+    </main>
+</body>
+
+</html>
