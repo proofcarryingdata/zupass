@@ -1,7 +1,7 @@
 import { ZuzaluUserRole } from "@pcd/passport-interface";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { Group } from "@semaphore-protocol/group";
-import { Pool } from "postgres-pool";
+import { Pool, PoolClient } from "postgres-pool";
 import { HistoricSemaphoreGroup, LoggedInZuzaluUser } from "../database/models";
 import {
   fetchHistoricGroupByRoot,
@@ -9,7 +9,6 @@ import {
   insertNewHistoricSemaphoreGroup
 } from "../database/queries/historicSemaphore";
 import {
-  fetchAllUsers,
   fetchAllUsersWithDevconnectSuperuserTickets,
   fetchAllUsersWithDevconnectTickets
 } from "../database/queries/users";
@@ -18,6 +17,7 @@ import {
   fetchAllUsersWithZuzaluTickets,
   UserWithZuzaluTickets
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
+import { sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -134,29 +134,17 @@ export class SemaphoreService {
 
       logger(`[SEMA] Reloading semaphore service...`);
 
-      await this.reloadZuzaluGroups();
-      // turned off for devconnect - lots of users = slow global group.
-      // await this.reloadGenericGroup();
-      await this.reloadDevconnectGroups();
-      await this.saveHistoricSemaphoreGroups();
+      await sqlTransaction(this.dbPool, (client) =>
+        this.reloadZuzaluGroups(client)
+      );
+      await sqlTransaction(this.dbPool, (client) =>
+        this.reloadDevconnectGroups(client)
+      );
+      await sqlTransaction(this.dbPool, (client) =>
+        this.saveHistoricSemaphoreGroups(client)
+      );
 
       logger(`[SEMA] Semaphore service reloaded.`);
-    });
-  }
-
-  private async reloadGenericGroup(): Promise<void> {
-    return traced("Semaphore", "reloadGenericGroup", async (span) => {
-      const allUsers = await fetchAllUsers(this.dbPool);
-      span?.setAttribute("users", allUsers.length);
-      logger(`[SEMA] Rebuilding groups, ${allUsers.length} total users.`);
-
-      const namedGroup = this.getNamedGroup("5");
-      const newGroup = new Group(
-        namedGroup.group.id,
-        namedGroup.group.depth,
-        allUsers.map((c) => c.commitment)
-      );
-      namedGroup.group = newGroup;
     });
   }
 
@@ -191,13 +179,12 @@ export class SemaphoreService {
    * users with any Devconnect ticket, and organizers, which includes all
    * users with any superuser Devconnect ticket.
    */
-  private async reloadDevconnectGroups(): Promise<void> {
+  private async reloadDevconnectGroups(client: PoolClient): Promise<void> {
     return traced("Semaphore", "reloadDevconnectGroups", async (span) => {
-      const devconnectAttendees = await fetchAllUsersWithDevconnectTickets(
-        this.dbPool
-      );
+      const devconnectAttendees =
+        await fetchAllUsersWithDevconnectTickets(client);
       const devconnectOrganizers =
-        await fetchAllUsersWithDevconnectSuperuserTickets(this.dbPool);
+        await fetchAllUsersWithDevconnectSuperuserTickets(client);
 
       span?.setAttribute("attendees", devconnectAttendees.length);
       span?.setAttribute("organizers", devconnectOrganizers.length);
@@ -276,14 +263,14 @@ export class SemaphoreService {
     });
   }
 
-  private async saveHistoricSemaphoreGroups(): Promise<void> {
+  private async saveHistoricSemaphoreGroups(client: PoolClient): Promise<void> {
     if (!this.dbPool) {
       throw new Error("no database connection");
     }
 
     logger(`[SEMA] Semaphore service - diffing historic semaphore groups`);
 
-    const latestGroups = await fetchLatestHistoricSemaphoreGroups(this.dbPool);
+    const latestGroups = await fetchLatestHistoricSemaphoreGroups(client);
 
     for (const localGroup of this.groups.values()) {
       const correspondingLatestGroup = latestGroups.find(
@@ -300,7 +287,7 @@ export class SemaphoreService {
         );
 
         await insertNewHistoricSemaphoreGroup(
-          this.dbPool,
+          client,
           localGroup.group.id.toString(),
           localGroup.group.root.toString(),
           JSON.stringify(
@@ -316,34 +303,34 @@ export class SemaphoreService {
   }
 
   public async getHistoricSemaphoreGroup(
+    client: PoolClient,
     groupId: string,
     rootHash: string
   ): Promise<HistoricSemaphoreGroup | undefined> {
-    return fetchHistoricGroupByRoot(this.dbPool, groupId, rootHash);
+    return fetchHistoricGroupByRoot(client, groupId, rootHash);
   }
 
   public async getHistoricSemaphoreGroupValid(
+    client: PoolClient,
     groupId: string,
     rootHash: string
   ): Promise<boolean> {
-    const group = await fetchHistoricGroupByRoot(
-      this.dbPool,
-      groupId,
-      rootHash
-    );
+    const group = await fetchHistoricGroupByRoot(client, groupId, rootHash);
     return group !== undefined;
   }
 
-  public async getLatestSemaphoreGroups(): Promise<HistoricSemaphoreGroup[]> {
-    return fetchLatestHistoricSemaphoreGroups(this.dbPool);
+  public async getLatestSemaphoreGroups(
+    client: PoolClient
+  ): Promise<HistoricSemaphoreGroup[]> {
+    return fetchLatestHistoricSemaphoreGroups(client);
   }
 
-  private async reloadZuzaluGroups(): Promise<void> {
+  private async reloadZuzaluGroups(client: PoolClient): Promise<void> {
     return traced("Semaphore", "reloadZuzaluGroups", async (span) => {
       const zuzaluUsers: UserWithZuzaluTickets[] =
-        await fetchAllUsersWithZuzaluTickets(this.dbPool);
+        await fetchAllUsersWithZuzaluTickets(client);
 
-      const zuconnectUsers = await fetchAllLoggedInZuconnectUsers(this.dbPool);
+      const zuconnectUsers = await fetchAllLoggedInZuconnectUsers(client);
       // Give Zuconnect users roles equivalent to Zuzalu roles
       const zuconnectUsersWithZuzaluRoles = zuconnectUsers.flatMap((user) => {
         return user.zuconnectTickets.map((t) => ({
@@ -459,7 +446,14 @@ export class SemaphoreService {
 
 export function startSemaphoreService(
   context: ApplicationContext
-): SemaphoreService {
+): SemaphoreService | null {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting semaphore service`
+    );
+    return null;
+  }
+
   const semaphoreService = new SemaphoreService(context);
   semaphoreService.start();
   semaphoreService.scheduleReload();

@@ -15,10 +15,12 @@ interface AppConfig {
   rollbarEnvName: string | undefined;
   // restrict origins allowed to sign PODs to the ones in ZAPP_ALLOWED_SIGNER_ORIGINS?
   zappRestrictOrigins: boolean;
-  // origins that are allowed to sign PODs
+  // origins that are allowed to sign PODs without user approval
   zappAllowedSignerOrigins: string[];
   // folder name -> zapp URL
   embeddedZapps: Record<string, string>;
+  // origins that are allowed to query Devcon tickets directly
+  devconTicketQueryOrigins: string[];
 }
 
 if (
@@ -62,6 +64,16 @@ try {
   embeddedZapps = {};
 }
 
+let devconTicketQueryOrigins: string[];
+
+try {
+  devconTicketQueryOrigins = process.env.DEVCON_TICKET_QUERY_ORIGINS
+    ? JSON.parse(process.env.DEVCON_TICKET_QUERY_ORIGINS)
+    : [];
+} catch (e) {
+  console.error("Failed to parse DEVCON_TICKET_QUERY_ORIGINS", e);
+  devconTicketQueryOrigins = [];
+}
 export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
   zupassServer: process.env.PASSPORT_SERVER_URL as string,
@@ -71,7 +83,8 @@ export const appConfig: AppConfig = {
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
   zappRestrictOrigins: process.env.ZAPP_RESTRICT_ORIGINS === "true",
   zappAllowedSignerOrigins: zappAllowedSignerOrigins,
-  embeddedZapps: embeddedZapps
+  embeddedZapps: embeddedZapps,
+  devconTicketQueryOrigins: devconTicketQueryOrigins
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

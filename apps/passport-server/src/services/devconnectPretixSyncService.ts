@@ -12,6 +12,7 @@ import {
   fetchKnownTicketTypesByGroup,
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
+import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { OrganizerSync } from "./devconnect/organizerSync";
@@ -31,7 +32,7 @@ export class DevconnectPretixSyncService {
 
   private rollbarService: RollbarService | null;
   private semaphoreService: SemaphoreService;
-  private db: Pool;
+  private pool: Pool;
   private timeout: NodeJS.Timeout | undefined;
   private _hasCompletedSyncSinceStarting: boolean;
   private organizers: Map<string, OrganizerSync>;
@@ -47,7 +48,7 @@ export class DevconnectPretixSyncService {
     rollbarService: RollbarService | null,
     semaphoreService: SemaphoreService
   ) {
-    this.db = context.dbPool;
+    this.pool = context.dbPool;
     this.rollbarService = rollbarService;
     this.semaphoreService = semaphoreService;
     this.pretixAPIFactory = pretixAPIFactory;
@@ -106,7 +107,9 @@ export class DevconnectPretixSyncService {
    * (Re)load Pretix configuration, and set up organizers.
    */
   private async setupOrganizers(): Promise<void> {
-    const devconnectPretixConfig = await getDevconnectPretixConfig(this.db);
+    const devconnectPretixConfig = await sqlTransaction(this.pool, (client) =>
+      getDevconnectPretixConfig(client)
+    );
 
     if (!devconnectPretixConfig) {
       throw new Error("Pretix Config could not be loaded");
@@ -129,7 +132,7 @@ export class DevconnectPretixSyncService {
       const org = new OrganizerSync(
         config,
         await this.pretixAPIFactory(),
-        this.db
+        this.pool
       );
       this.organizers.set(id, org);
     }
@@ -210,36 +213,42 @@ export class DevconnectPretixSyncService {
    * See also {@link setupKnownTicketTypes} in the issuance service.
    */
   public async setDevconnectTicketTypes(): Promise<void> {
-    const products = await fetchDevconnectProducts(this.db);
-    const savedProductIds = [];
+    return namedSqlTransaction(
+      this.pool,
+      "setDevconnectTicketTypes",
+      async (client) => {
+        const products = await fetchDevconnectProducts(client);
+        const savedProductIds = [];
 
-    for (const product of products) {
-      await setKnownTicketType(
-        this.db,
-        `sync-${product.product_id}`,
-        product.event_id,
-        product.product_id,
-        ZUPASS_TICKET_PUBLIC_KEY_NAME,
-        KnownPublicKeyType.EdDSA,
-        // This works since we're only using this sync service for Devconnect
-        KnownTicketGroup.Devconnect23,
-        "Devconnect '23"
-      );
+        for (const product of products) {
+          await setKnownTicketType(
+            client,
+            `sync-${product.product_id}`,
+            product.event_id,
+            product.product_id,
+            ZUPASS_TICKET_PUBLIC_KEY_NAME,
+            KnownPublicKeyType.EdDSA,
+            // This works since we're only using this sync service for Devconnect
+            KnownTicketGroup.Devconnect23,
+            "Devconnect '23"
+          );
 
-      savedProductIds.push(product.product_id);
-    }
+          savedProductIds.push(product.product_id);
+        }
 
-    // Check to see if there are any tickets in the DB which were not present
-    // in the sync, and delete them.
-    const existingTicketTypes = await fetchKnownTicketTypesByGroup(
-      this.db,
-      KnownTicketGroup.Devconnect23
-    );
-    for (const existingType of existingTicketTypes) {
-      if (!savedProductIds.find((p) => p === existingType.product_id)) {
-        await deleteKnownTicketType(this.db, existingType.identifier);
+        // Check to see if there are any tickets in the DB which were not present
+        // in the sync, and delete them.
+        const existingTicketTypes = await fetchKnownTicketTypesByGroup(
+          client,
+          KnownTicketGroup.Devconnect23
+        );
+        for (const existingType of existingTicketTypes) {
+          if (!savedProductIds.find((p) => p === existingType.product_id)) {
+            await deleteKnownTicketType(client, existingType.identifier);
+          }
+        }
       }
-    }
+    );
   }
 }
 
@@ -249,9 +258,23 @@ export class DevconnectPretixSyncService {
 export async function startDevconnectPretixSyncService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
-  semaphoreService: SemaphoreService,
+  semaphoreService: SemaphoreService | null,
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null
 ): Promise<DevconnectPretixSyncService | null> {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting semaphore service`
+    );
+    return null;
+  }
+
+  if (!semaphoreService) {
+    logger(
+      "[DEVCONNECT PRETIX] can't start sync service - no semaphore service"
+    );
+    return null;
+  }
+
   if (!devconnectPretixAPIFactory) {
     logger(
       "[DEVCONNECT PRETIX] Can't start sync service - no api factory instantiated"

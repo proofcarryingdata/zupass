@@ -2,14 +2,14 @@ import {
   GPCProofConfig,
   GPCProofInputs,
   PODMembershipLists,
-  deserializeGPCBoundConfig,
-  deserializeGPCProofConfig,
-  deserializeGPCRevealedClaims,
+  boundConfigFromJSON,
+  boundConfigToJSON,
   gpcProve,
   gpcVerify,
-  podMembershipListsFromSimplifiedJSON,
-  serializeGPCBoundConfig,
-  serializeGPCRevealedClaims
+  podMembershipListsFromJSON,
+  proofConfigFromJSON,
+  revealedClaimsFromJSON,
+  revealedClaimsToJSON
 } from "@pcd/gpc";
 import {
   ArgumentTypeName,
@@ -18,7 +18,7 @@ import {
   ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
-import { POD, PODName, PODStringValue, checkPODName } from "@pcd/pod";
+import { POD, PODName, checkPODName, podValueFromJSON } from "@pcd/pod";
 import { PODPCD, PODPCDPackage, isPODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
@@ -33,7 +33,7 @@ import {
   GPCPCDTypeName,
   PODPCDArgValidatorParams
 } from "./GPCPCD";
-import { fixedPODEntriesFromSimplifiedJSON } from "./util";
+import { fixedPODEntriesFromJSON } from "./json";
 import {
   checkPCDType,
   checkPODAgainstPrescribedSignerPublicKeys,
@@ -56,14 +56,14 @@ export async function init(args: GPCPCDInitArgs): Promise<void> {
   savedInitArgs = args;
 }
 
-function ensureInitialized(): string {
+function ensureInitialized(): GPCPCDInitArgs {
   if (
     savedInitArgs === undefined ||
     savedInitArgs.zkArtifactPath === undefined
   ) {
     throw new Error("No ZK artifact path given.  Was init skipped?");
   }
-  return savedInitArgs.zkArtifactPath;
+  return savedInitArgs;
 }
 
 async function checkProofArgs(args: GPCPCDArgs): Promise<{
@@ -73,7 +73,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
   if (!args.proofConfig.value) {
     throw new Error("No proof config value provided");
   }
-  const proofConfig = deserializeGPCProofConfig(args.proofConfig.value);
+  const proofConfig = proofConfigFromJSON(args.proofConfig.value);
 
   if (!args.pods.value) {
     throw new Error("No PODs provided");
@@ -112,10 +112,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
 
   const externalNullifier =
     args.externalNullifier.value !== undefined
-      ? ({
-          type: "string",
-          value: args.externalNullifier.value
-        } satisfies PODStringValue)
+      ? podValueFromJSON(args.externalNullifier.value)
       : undefined;
   if (externalNullifier !== undefined && ownerSemaphorePCD === undefined) {
     throw new Error("External nullifier requires an owner identity PCD.");
@@ -123,15 +120,12 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
 
   const membershipLists =
     args.membershipLists.value !== undefined
-      ? args.membershipLists.value
+      ? podMembershipListsFromJSON(args.membershipLists.value)
       : undefined;
 
   const watermark =
     args.watermark.value !== undefined
-      ? ({
-          type: "string",
-          value: args.watermark.value
-        } satisfies PODStringValue)
+      ? podValueFromJSON(args.watermark.value)
       : undefined;
 
   return {
@@ -148,8 +142,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
         : {}),
       ...(membershipLists !== undefined
         ? {
-            membershipLists:
-              podMembershipListsFromSimplifiedJSON(membershipLists)
+            membershipLists
           }
         : {}),
       watermark: watermark
@@ -167,7 +160,7 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
  * @throws if the arguments are invalid
  */
 export async function prove(args: GPCPCDArgs): Promise<GPCPCD> {
-  const zkArtifactPath = ensureInitialized();
+  const { zkArtifactPath, circuitFamily } = ensureInitialized();
   const { proofConfig, proofInputs } = await checkProofArgs(args);
   const id =
     args.id !== undefined && typeof args.id.value === "string"
@@ -177,7 +170,8 @@ export async function prove(args: GPCPCDArgs): Promise<GPCPCD> {
   const { boundConfig, revealedClaims, proof } = await gpcProve(
     proofConfig,
     proofInputs,
-    zkArtifactPath
+    zkArtifactPath,
+    circuitFamily
   );
 
   return new GPCPCD(
@@ -198,12 +192,13 @@ export async function prove(args: GPCPCDArgs): Promise<GPCPCD> {
  * what was used to prove.
  */
 export async function verify(pcd: GPCPCD): Promise<boolean> {
-  const zkArtifactPath = ensureInitialized();
+  const { zkArtifactPath, circuitFamily } = ensureInitialized();
   return gpcVerify(
     pcd.proof.groth16Proof,
     pcd.claim.config,
     pcd.claim.revealed,
-    zkArtifactPath
+    zkArtifactPath,
+    circuitFamily
   );
 }
 
@@ -219,10 +214,8 @@ export async function serialize(pcd: GPCPCD): Promise<SerializedPCD<GPCPCD>> {
     pcd: JSON.stringify({
       id: pcd.id,
       claim: {
-        // These fields are pre-serialized to a string so that JSONBig isn't
-        // needed above.
-        config: serializeGPCBoundConfig(pcd.claim.config),
-        revealed: serializeGPCRevealedClaims(pcd.claim.revealed)
+        jsonConfig: boundConfigToJSON(pcd.claim.config),
+        jsonRevealed: revealedClaimsToJSON(pcd.claim.revealed)
       },
       proof: pcd.proof
     })
@@ -237,18 +230,14 @@ export async function serialize(pcd: GPCPCD): Promise<SerializedPCD<GPCPCD>> {
 export async function deserialize(serialized: string): Promise<GPCPCD> {
   const deserialized = JSON.parse(serialized);
 
-  // TODO(POD-P2): More careful schema validation, likely with Zod, with
-  // special handling of the PODEntries type and subtypes.
-  // TODO(POD-P3): Backward-compatible schema versioning.
   requireDefinedParameter(deserialized.id, "id");
   requireDefinedParameter(deserialized.claim, "claim");
-  requireDefinedParameter(deserialized.claim.config, "config");
-  const deserializedConfig = deserializeGPCBoundConfig(
-    deserialized.claim.config
-  );
-  requireDefinedParameter(deserialized.claim.revealed, "revealed");
-  const deserializedRevealed = deserializeGPCRevealedClaims(
-    deserialized.claim.revealed
+  requireDefinedParameter(deserialized.claim.jsonConfig, "jsonConfig");
+  const deserializedConfig = boundConfigFromJSON(deserialized.claim.jsonConfig);
+
+  requireDefinedParameter(deserialized.claim.jsonRevealed, "jsonRevealed");
+  const deserializedRevealed = revealedClaimsFromJSON(
+    deserialized.claim.jsonRevealed
   );
 
   requireDefinedParameter(deserialized.proof, "proof");
@@ -293,17 +282,17 @@ function validateInputPOD(
   try {
     proofConfig =
       params.proofConfig !== undefined
-        ? deserializeGPCProofConfig(params.proofConfig)
+        ? proofConfigFromJSON(params.proofConfig)
         : undefined;
 
     membershipLists =
       params.membershipLists !== undefined
-        ? podMembershipListsFromSimplifiedJSON(params.membershipLists)
+        ? podMembershipListsFromJSON(params.membershipLists)
         : undefined;
 
     prescribedEntries =
       params.prescribedEntries !== undefined
-        ? fixedPODEntriesFromSimplifiedJSON(params.prescribedEntries)
+        ? fixedPODEntriesFromJSON(params.prescribedEntries)
         : undefined;
   } catch (e) {
     if (e instanceof TypeError || e instanceof Error) {
@@ -361,7 +350,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
   return {
     defaultArgs: {
       proofConfig: {
-        argumentType: ArgumentTypeName.String,
+        argumentType: ArgumentTypeName.Object,
         defaultVisible: true,
         displayName: "Proof Configuration",
         description: `This specifies what to prove about the inputs, and which
@@ -386,19 +375,19 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
         user in the Semaphore protocol.`
       },
       membershipLists: {
-        argumentType: ArgumentTypeName.String,
+        argumentType: ArgumentTypeName.Object,
         defaultVisible: false,
         description: `These are the the lists of allowed or disallowed values
         for membership checks in the proof configuration.`
       },
       watermark: {
-        argumentType: ArgumentTypeName.String,
+        argumentType: ArgumentTypeName.Object,
         defaultVisible: false,
         description: `This watermark will be included in the proof.  It can be
         used tie this proof to a specific purpose.`
       },
       externalNullifier: {
-        argumentType: ArgumentTypeName.String,
+        argumentType: ArgumentTypeName.Object,
         defaultVisible: false,
         description: `This input is combined with your identity to produce a
         nullifier, which can be used to identify proofs which come from the

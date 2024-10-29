@@ -43,6 +43,7 @@ import stable_stringify from "fast-json-stable-stringify";
 import _ from "lodash";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
+import { PoolClient } from "postgres-pool";
 import urljoin from "url-join";
 import { v5 as uuidv5 } from "uuid";
 import { LemonadeOAuthCredentials } from "../../../apis/lemonade/auth";
@@ -60,6 +61,10 @@ import {
   IBadgeGiftingDB,
   IContactSharingDB
 } from "../../../database/queries/ticketActionDBs";
+import {
+  namedSqlTransaction,
+  sqlTransaction
+} from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
@@ -100,6 +105,7 @@ export class LemonadePipeline implements BasePipeline {
   public type = PipelineType.Lemonade;
   public capabilities: BasePipelineCapability[];
 
+  private stopped = false;
   /**
    * Used to sign {@link EdDSATicketPCD}
    */
@@ -177,6 +183,7 @@ export class LemonadePipeline implements BasePipeline {
 
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
       this.semaphoreGroupProvider = new SemaphoreGroupProvider(
+        this.context,
         this.id,
         this.definition.options.semaphoreGroups ?? [],
         consumerDB,
@@ -214,20 +221,36 @@ export class LemonadePipeline implements BasePipeline {
         getSerializedLatestGroup: async (
           groupId: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return this.semaphoreGroupProvider?.getSerializedLatestGroup(groupId);
+          return sqlTransaction(
+            this.context.dbPool,
+            async (client) =>
+              this.semaphoreGroupProvider?.getSerializedLatestGroup(
+                client,
+                groupId
+              )
+          );
         },
         getLatestGroupRoot: async (
           groupId: string
         ): Promise<string | undefined> => {
-          return this.semaphoreGroupProvider?.getLatestGroupRoot(groupId);
+          return sqlTransaction(
+            this.context.dbPool,
+            async (client) =>
+              this.semaphoreGroupProvider?.getLatestGroupRoot(client, groupId)
+          );
         },
         getSerializedHistoricalGroup: async (
           groupId: string,
           rootHash: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
-            groupId,
-            rootHash
+          return sqlTransaction(
+            this.context.dbPool,
+            async (client) =>
+              this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
+                client,
+                groupId,
+                rootHash
+              )
           );
         },
         getSupportedGroups: (): PipelineSemaphoreGroupInfo[] => {
@@ -243,18 +266,24 @@ export class LemonadePipeline implements BasePipeline {
     this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
   }
 
+  public isStopped(): boolean {
+    return this.stopped;
+  }
+
   public async start(): Promise<void> {
-    // On startup, the pipeline definition may have changed, and manual tickets
-    // may have been deleted. If so, clean up any check-ins for those tickets.
-    // await this.cleanUpManualCheckins();
-    // Initialize the Semaphore Group provider by loading groups from the DB,
-    // if one exists.
+    if (this.stopped) {
+      throw new Error(`pipeline ${this.id} already stopped`);
+    }
+    logger(LOG_TAG, `starting lemonade pipeline with id ${this.id}`);
     await this.semaphoreGroupProvider?.start();
   }
 
   public async stop(): Promise<void> {
+    if (this.stopped) {
+      return;
+    }
+    this.stopped = true;
     logger(LOG_TAG, `stopping LemonadePipeline with id ${this.id}`);
-    // TODO: what to actually do for a stopped pipeline?
   }
 
   /**
@@ -459,10 +488,14 @@ export class LemonadePipeline implements BasePipeline {
       );
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        await this.triggerSemaphoreGroupUpdate();
+        await sqlTransaction(this.context.dbPool, (client) =>
+          this.triggerSemaphoreGroupUpdate(client)
+        );
       }
 
       return {
+        fromCache: false,
+        paused: false,
         latestLogs: logs,
         lastRunEndTimestamp: end.toISOString(),
         lastRunStartTimestamp: loadStart.toISOString(),
@@ -511,7 +544,7 @@ export class LemonadePipeline implements BasePipeline {
    * Marked as public so that it can be called from tests, but otherwise should
    * not be called from outside the class.
    */
-  public async triggerSemaphoreGroupUpdate(): Promise<void> {
+  public async triggerSemaphoreGroupUpdate(client: PoolClient): Promise<void> {
     return traced(LOG_NAME, "triggerSemaphoreGroupUpdate", async (_span) => {
       tracePipeline(this.definition);
       // Whenever an update is triggered, we want to make sure that the
@@ -526,7 +559,7 @@ export class LemonadePipeline implements BasePipeline {
       // having been processed.
       return this.semaphoreUpdateQueue.add(async () => {
         const data = await this.semaphoreGroupData();
-        await this.semaphoreGroupProvider?.update(data);
+        await this.semaphoreGroupProvider?.update(client, data);
       });
     });
   }
@@ -535,14 +568,14 @@ export class LemonadePipeline implements BasePipeline {
    * If manual tickets are removed after being checked in, they can leave
    * orphaned check-in data behind. This method cleans those up.
    */
-  private async cleanUpManualCheckins(): Promise<void> {
+  private async cleanUpManualCheckins(client: PoolClient): Promise<void> {
     return traced(LOG_NAME, "cleanUpManualCheckins", async (span) => {
       const ticketIds = new Set(
         (this.definition.options.manualTickets ?? []).map(
           (manualTicket) => manualTicket.id
         )
       );
-      const checkIns = await this.checkinDB.getByPipelineId(this.id);
+      const checkIns = await this.checkinDB.getByPipelineId(client, this.id);
       for (const checkIn of checkIns) {
         if (!ticketIds.has(checkIn.ticketId)) {
           logger(
@@ -550,13 +583,14 @@ export class LemonadePipeline implements BasePipeline {
           );
           span?.setAttribute("deleted_checkin_ticket_id", checkIn.ticketId);
 
-          this.checkinDB.deleteCheckIn(this.id, checkIn.ticketId);
+          this.checkinDB.deleteCheckIn(client, this.id, checkIn.ticketId);
         }
       }
     });
   }
 
   private async manualTicketToTicketData(
+    client: PoolClient,
     manualTicket: ManualTicket,
     sempahoreId: string
   ): Promise<ITicketData> {
@@ -564,6 +598,7 @@ export class LemonadePipeline implements BasePipeline {
     const product = this.getTicketTypeById(event, manualTicket.productId);
 
     const checkIn = await this.checkinDB.getByTicketId(
+      client,
       this.id,
       manualTicket.id
     );
@@ -601,9 +636,10 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   private async getReceivedBadgesForEmail(
+    client: PoolClient,
     email: string
   ): Promise<SerializedPCD<EdDSATicketPCD>[]> {
-    const badges = await this.badgeDB.getBadges(this.id, email);
+    const badges = await this.badgeDB.getBadges(client, this.id, email);
 
     const badgePCDs = await Promise.all(
       badges.map(async (b, i) => {
@@ -618,7 +654,7 @@ export class LemonadePipeline implements BasePipeline {
 
         // semaphore id intentially left blank, as I'm just trying to get the ticket
         // so that I can link to it, not issue it/make proofs about it
-        const tickets = await this.getTicketsForEmail(b.giver, "");
+        const tickets = await this.getTicketsForEmail(client, b.giver, "");
         const ticket = tickets?.[0]?.claim?.ticket;
         const encodedLink = linkToTicket(
           urljoin(process.env.PASSPORT_CLIENT_URL ?? "", "/#/generic-checkin"),
@@ -680,14 +716,15 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   private async getReceivedContactsForEmail(
+    client: PoolClient,
     email: string
   ): Promise<SerializedPCD<EdDSATicketPCD>[]> {
-    const contacts = await this.contactDB.getContacts(this.id, email);
+    const contacts = await this.contactDB.getContacts(client, this.id, email);
     return Promise.all(
       contacts.map(async (contact) => {
         // semaphore id intentially left blank, as I'm just trying to get the ticket
         // so that I can link to it, not issue it/make proofs about it
-        const tickets = await this.getTicketsForEmail(contact, "");
+        const tickets = await this.getTicketsForEmail(client, contact, "");
         const ticket: ITicketData | undefined = tickets?.[0]?.claim?.ticket;
         const encodedLink = linkToTicket(
           urljoin(process.env.PASSPORT_CLIENT_URL ?? "", "/#/generic-checkin"),
@@ -743,6 +780,7 @@ export class LemonadePipeline implements BasePipeline {
    * definition.
    */
   private async getTicketsForEmail(
+    client: PoolClient,
     email: string,
     identityCommitment: string
   ): Promise<EdDSATicketPCD[]> {
@@ -751,6 +789,7 @@ export class LemonadePipeline implements BasePipeline {
 
     // Load check-in data
     const checkIns = await this.checkinDB.getByTicketIds(
+      client,
       this.id,
       relevantTickets.map((ticket) => ticket.id)
     );
@@ -769,7 +808,11 @@ export class LemonadePipeline implements BasePipeline {
     ticketDatas.push(
       ...(await Promise.all(
         manualTickets.map((manualTicket) =>
-          this.manualTicketToTicketData(manualTicket, identityCommitment)
+          this.manualTicketToTicketData(
+            client,
+            manualTicket,
+            identityCommitment
+          )
         )
       ))
     );
@@ -786,125 +829,139 @@ export class LemonadePipeline implements BasePipeline {
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issueLemonadeTicketPCDs", async (span) => {
-      tracePipeline(this.definition);
+      return namedSqlTransaction(
+        this.context.dbPool,
+        "issueLemonadeTicketPCDs",
+        async (client) => {
+          tracePipeline(this.definition);
 
-      if (!req.pcd) {
-        throw new Error("missing credential pcd");
-      }
+          if (!req.pcd) {
+            throw new Error("missing credential pcd");
+          }
 
-      if (this.definition.options.paused) {
-        return { actions: [] };
-      }
+          if (
+            this.definition.options.paused &&
+            !(await this.db.hasLoaded(this.id))
+          ) {
+            return { actions: [] };
+          }
 
-      const credential =
-        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+          const credential =
+            await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-      const { emails, semaphoreId } = credential;
+          const { emails, semaphoreId } = credential;
 
-      if (!emails || emails.length === 0) {
-        throw new Error("missing emails in credential");
-      }
+          if (!emails || emails.length === 0) {
+            throw new Error("missing emails in credential");
+          }
 
-      span?.setAttribute("emails", emails.map((e) => e.email).join(","));
-      span?.setAttribute("semaphore_id", semaphoreId);
+          span?.setAttribute("emails", emails.map((e) => e.email).join(","));
+          span?.setAttribute("semaphore_id", semaphoreId);
 
-      let didUpdate = false;
-      for (const email of emails) {
-        // Consumer is validated, so save them in the consumer list
-        didUpdate =
-          didUpdate ||
-          (await this.consumerDB.save(
-            this.id,
-            email.email,
-            semaphoreId,
-            new Date()
-          ));
-      }
+          let didUpdate = false;
+          for (const email of emails) {
+            // Consumer is validated, so save them in the consumer list
+            didUpdate =
+              didUpdate ||
+              (await this.consumerDB.save(
+                client,
+                this.id,
+                email.email,
+                semaphoreId,
+                new Date()
+              ));
+          }
 
-      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        // If the user's Semaphore commitment has changed, `didUpdate` will be
-        // true, and we need to update the Semaphore groups
-        if (didUpdate) {
-          span?.setAttribute("semaphore_groups_updated", true);
-          await this.triggerSemaphoreGroupUpdate();
+          if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+            // If the user's Semaphore commitment has changed, `didUpdate` will be
+            // true, and we need to update the Semaphore groups
+            if (didUpdate) {
+              span?.setAttribute("semaphore_groups_updated", true);
+              await this.triggerSemaphoreGroupUpdate(client);
+            }
+          }
+
+          const tickets = (
+            await Promise.all(
+              emails.map((e) =>
+                this.getTicketsForEmail(client, e.email, semaphoreId)
+              )
+            )
+          ).flat();
+
+          const ticketActions: PCDAction[] = [];
+
+          if (await this.db.hasLoaded(this.id)) {
+            ticketActions.push({
+              type: PCDActionType.DeleteFolder,
+              folder: this.definition.options.feedOptions.feedFolder,
+              recursive: true
+            });
+          }
+
+          const ticketPCDs = await Promise.all(
+            tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+          );
+
+          ticketActions.push({
+            type: PCDActionType.ReplaceInFolder,
+            folder: this.definition.options.feedOptions.feedFolder,
+            pcds: ticketPCDs
+          });
+
+          const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;
+          const contacts = (
+            await Promise.all(
+              emails.map((e) =>
+                this.getReceivedContactsForEmail(client, e.email)
+              )
+            )
+          ).flat();
+          const contactActions: PCDAction[] = [
+            {
+              type: PCDActionType.DeleteFolder,
+              folder: contactsFolder,
+              recursive: true
+            },
+            {
+              type: PCDActionType.ReplaceInFolder,
+              folder: contactsFolder,
+              pcds: contacts
+            }
+          ];
+
+          const badgeFolder = `${this.definition.options.feedOptions.feedFolder}/badges`;
+
+          const badges = (
+            await Promise.all(
+              emails.map((e) => this.getReceivedBadgesForEmail(client, e.email))
+            )
+          ).flat();
+          const badgeActions: PCDAction[] = [
+            {
+              type: PCDActionType.DeleteFolder,
+              folder: badgeFolder,
+              recursive: true
+            },
+            {
+              type: PCDActionType.ReplaceInFolder,
+              folder: badgeFolder,
+              pcds: badges
+            }
+          ];
+
+          traceFlattenedObject(span, {
+            pcds_issued: tickets.length + badges.length + contacts.length,
+            tickets_issued: tickets.length,
+            badges_issued: badges.length,
+            contacts_issued: contacts.length
+          });
+
+          return {
+            actions: [...ticketActions, ...contactActions, ...badgeActions]
+          };
         }
-      }
-
-      const tickets = (
-        await Promise.all(
-          emails.map((e) => this.getTicketsForEmail(e.email, semaphoreId))
-        )
-      ).flat();
-
-      const ticketActions: PCDAction[] = [];
-
-      if (await this.db.hasLoaded(this.id)) {
-        ticketActions.push({
-          type: PCDActionType.DeleteFolder,
-          folder: this.definition.options.feedOptions.feedFolder,
-          recursive: true
-        });
-      }
-
-      const ticketPCDs = await Promise.all(
-        tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
       );
-
-      ticketActions.push({
-        type: PCDActionType.ReplaceInFolder,
-        folder: this.definition.options.feedOptions.feedFolder,
-        pcds: ticketPCDs
-      });
-
-      const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;
-      const contacts = (
-        await Promise.all(
-          emails.map((e) => this.getReceivedContactsForEmail(e.email))
-        )
-      ).flat();
-      const contactActions: PCDAction[] = [
-        {
-          type: PCDActionType.DeleteFolder,
-          folder: contactsFolder,
-          recursive: true
-        },
-        {
-          type: PCDActionType.ReplaceInFolder,
-          folder: contactsFolder,
-          pcds: contacts
-        }
-      ];
-
-      const badgeFolder = `${this.definition.options.feedOptions.feedFolder}/badges`;
-
-      const badges = (
-        await Promise.all(
-          emails.map((e) => this.getReceivedBadgesForEmail(e.email))
-        )
-      ).flat();
-      const badgeActions: PCDAction[] = [
-        {
-          type: PCDActionType.DeleteFolder,
-          folder: badgeFolder,
-          recursive: true
-        },
-        {
-          type: PCDActionType.ReplaceInFolder,
-          folder: badgeFolder,
-          pcds: badges
-        }
-      ];
-
-      traceFlattenedObject(span, {
-        pcds_issued: tickets.length + badges.length + contacts.length,
-        tickets_issued: tickets.length,
-        badges_issued: badges.length,
-        contacts_issued: contacts.length
-      });
-
-      return {
-        actions: [...ticketActions, ...contactActions, ...badgeActions]
-      };
     });
   }
 
@@ -1267,11 +1324,13 @@ export class LemonadePipeline implements BasePipeline {
    * is a pending check-in.
    */
   private async notCheckedInManual(
+    client: PoolClient,
     manualTicket: ManualTicket
   ): Promise<true | PodboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInManualTicket", async (span) => {
       // Is the ticket already checked in?
       const checkIn = await this.checkinDB.getByTicketId(
+        client,
         this.id,
         manualTicket.id
       );
@@ -1314,200 +1373,219 @@ export class LemonadePipeline implements BasePipeline {
       LOG_NAME,
       "precheckTicketAction",
       async (span): Promise<ActionConfigResponseValue> => {
-        tracePipeline(this.definition);
+        return namedSqlTransaction(
+          this.context.dbPool,
+          "precheckTicketAction",
+          async (client) => {
+            tracePipeline(this.definition);
 
-        let actorEmails: string[];
+            let actorEmails: string[];
 
-        // This method can only be used to pre-check for check-ins.
-        // There is no pre-check for any other kind of action at this time.
-        if (request.action.checkin !== true) {
-          throw new PCDHTTPError(400, "Not supported");
-        }
+            // This method can only be used to pre-check for check-ins.
+            // There is no pre-check for any other kind of action at this time.
+            if (request.action.checkin !== true) {
+              throw new PCDHTTPError(400, "Not supported");
+            }
 
-        const result: ActionConfigResponseValue = {
-          success: true,
-          giveBadgeActionInfo: undefined,
-          checkinActionInfo: undefined,
-          getContactActionInfo: undefined
-        };
+            const result: ActionConfigResponseValue = {
+              success: true,
+              giveBadgeActionInfo: undefined,
+              checkinActionInfo: undefined,
+              getContactActionInfo: undefined
+            };
 
-        // 1) verify that the requester is who they say they are
-        try {
-          span?.setAttribute("ticket_id", request.ticketId);
-          const credential =
-            await this.credentialSubservice.verifyAndExpectZupassEmail(
-              request.credential
+            // 1) verify that the requester is who they say they are
+            try {
+              span?.setAttribute("ticket_id", request.ticketId);
+              const credential =
+                await this.credentialSubservice.verifyAndExpectZupassEmail(
+                  request.credential
+                );
+
+              const { emails, semaphoreId } = credential;
+              if (!emails || emails.length === 0) {
+                throw new Error("missing emails in credential");
+              }
+
+              span?.setAttribute(
+                "checker_emails",
+                emails.map((e) => e.email)
+              );
+              span?.setAttribute("checked_semaphore_id", semaphoreId);
+
+              actorEmails = emails.map((e) => e.email);
+            } catch (e) {
+              logger(
+                `${LOG_TAG} Failed to verify credential due to error: `,
+                e
+              );
+              setError(e, span);
+              span?.setAttribute("precheck_error", "InvalidSignature");
+              return {
+                success: false,
+                error: { name: "InvalidSignature" }
+              };
+            }
+
+            let eventConfig: LemonadePipelineEventConfig;
+            const manualTicket = this.getManualTicketById(request.ticketId);
+            const ticketAtom = await this.db.loadById(
+              this.id,
+              request.ticketId
             );
+            let ticketInfo: TicketInfo;
+            let notCheckedIn;
 
-          const { emails, semaphoreId } = credential;
-          if (!emails || emails.length === 0) {
-            throw new Error("missing emails in credential");
-          }
+            if (ticketAtom) {
+              eventConfig = this.lemonadeAtomToEvent(ticketAtom);
+              ticketInfo = {
+                eventName: eventConfig.name,
+                ticketName: this.lemonadeAtomToTicketName(ticketAtom),
+                attendeeEmail: ticketAtom.email,
+                attendeeName: ticketAtom.name
+              };
+              notCheckedIn = await this.notCheckedIn(ticketAtom);
+            } else if (manualTicket) {
+              eventConfig = this.getEventById(manualTicket.eventId);
+              const ticketType = this.getTicketTypeById(
+                eventConfig,
+                manualTicket.productId
+              );
+              ticketInfo = {
+                eventName: eventConfig.name,
+                ticketName: ticketType.name,
+                attendeeEmail: manualTicket.attendeeEmail,
+                attendeeName: manualTicket.attendeeName
+              };
+              notCheckedIn = await this.notCheckedInManual(
+                client,
+                manualTicket
+              );
+            } else {
+              return {
+                success: false,
+                error: { name: "InvalidTicket" }
+              };
+            }
 
-          span?.setAttribute(
-            "checker_emails",
-            emails.map((e) => e.email)
-          );
-          span?.setAttribute("checked_semaphore_id", semaphoreId);
+            // 1) checkin action
+            const canCheckIn = await this.canCheckInForEvent(
+              request.eventId,
+              actorEmails
+            );
+            if (canCheckIn !== true) {
+              result.checkinActionInfo = {
+                permissioned: false,
+                canCheckIn: false,
+                reason: { name: "NotSuperuser" }
+              };
+            } else if (notCheckedIn !== true) {
+              result.checkinActionInfo = {
+                permissioned: true,
+                canCheckIn: false,
+                reason: notCheckedIn,
+                ticket: ticketInfo
+              };
+            } else {
+              result.checkinActionInfo = {
+                permissioned: true,
+                canCheckIn: true,
+                ticket: ticketInfo
+              };
+            }
 
-          actorEmails = emails.map((e) => e.email);
-        } catch (e) {
-          logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
-          setError(e, span);
-          span?.setAttribute("precheck_error", "InvalidSignature");
-          return {
-            success: false,
-            error: { name: "InvalidSignature" }
-          };
-        }
+            // 2) badge action
+            if (this.definition.options.ticketActions?.badges?.enabled) {
+              const badgesGivenToTicketHolder = await this.badgeDB.getBadges(
+                client,
+                this.id,
+                ticketInfo.attendeeEmail
+              );
 
-        let eventConfig: LemonadePipelineEventConfig;
-        const manualTicket = this.getManualTicketById(request.ticketId);
-        const ticketAtom = await this.db.loadById(this.id, request.ticketId);
-        let ticketInfo: TicketInfo;
-        let notCheckedIn;
-
-        if (ticketAtom) {
-          eventConfig = this.lemonadeAtomToEvent(ticketAtom);
-          ticketInfo = {
-            eventName: eventConfig.name,
-            ticketName: this.lemonadeAtomToTicketName(ticketAtom),
-            attendeeEmail: ticketAtom.email,
-            attendeeName: ticketAtom.name
-          };
-          notCheckedIn = await this.notCheckedIn(ticketAtom);
-        } else if (manualTicket) {
-          eventConfig = this.getEventById(manualTicket.eventId);
-          const ticketType = this.getTicketTypeById(
-            eventConfig,
-            manualTicket.productId
-          );
-          ticketInfo = {
-            eventName: eventConfig.name,
-            ticketName: ticketType.name,
-            attendeeEmail: manualTicket.attendeeEmail,
-            attendeeName: manualTicket.attendeeName
-          };
-          notCheckedIn = await this.notCheckedInManual(manualTicket);
-        } else {
-          return {
-            success: false,
-            error: { name: "InvalidTicket" }
-          };
-        }
-
-        // 1) checkin action
-        const canCheckIn = await this.canCheckInForEvent(
-          request.eventId,
-          actorEmails
-        );
-        if (canCheckIn !== true) {
-          result.checkinActionInfo = {
-            permissioned: false,
-            canCheckIn: false,
-            reason: { name: "NotSuperuser" }
-          };
-        } else if (notCheckedIn !== true) {
-          result.checkinActionInfo = {
-            permissioned: true,
-            canCheckIn: false,
-            reason: notCheckedIn,
-            ticket: ticketInfo
-          };
-        } else {
-          result.checkinActionInfo = {
-            permissioned: true,
-            canCheckIn: true,
-            ticket: ticketInfo
-          };
-        }
-
-        // 2) badge action
-        if (this.definition.options.ticketActions?.badges?.enabled) {
-          const badgesGivenToTicketHolder = await this.badgeDB.getBadges(
-            this.id,
-            ticketInfo.attendeeEmail
-          );
-
-          const badgesGiveableByUser = (
-            await Promise.all(
-              actorEmails.map((e) => this.getBadgesGiveableByEmail(e))
-            )
-          ).flat();
-
-          const rateLimitedGiveableByUser = badgesGiveableByUser.filter(
-            (b) => b.maxPerDay !== undefined
-          );
-
-          const notAlreadyGivenBadges = badgesGiveableByUser.filter(
-            (c) => !badgesGivenToTicketHolder.find((b) => b.id === c.id)
-          );
-
-          const intervalMs = 24 * 60 * 60 * 1000;
-          const alreadyGivenRateLimited = (
-            await Promise.all(
-              actorEmails.map((e) =>
-                this.badgeDB.getGivenBadges(
-                  this.id,
-                  e,
-                  rateLimitedGiveableByUser.map((b) => b.id),
-                  intervalMs
+              const badgesGiveableByUser = (
+                await Promise.all(
+                  actorEmails.map((e) => this.getBadgesGiveableByEmail(e))
                 )
-              )
-            )
-          ).flat();
+              ).flat();
 
-          result.giveBadgeActionInfo = {
-            permissioned: badgesGiveableByUser.length > 0,
-            giveableBadges: notAlreadyGivenBadges,
-            rateLimitedBadges: badgesGiveableByUser
-              .filter(isPerDayBadge)
-              .filter(() => {
-                return !actorEmails.includes(ticketInfo.attendeeEmail);
-              })
-              .map((b) => ({
-                alreadyGivenInInterval: alreadyGivenRateLimited.filter(
-                  (g) => g.id === b.id
-                ).length,
-                id: b.id,
-                eventName: b.eventName,
-                productName: b.productName,
-                intervalMs,
-                maxInInterval: b.maxPerDay,
-                timestampsGiven: alreadyGivenRateLimited
-                  .filter((g) => g.id === b.id)
-                  .map((g) => g.timeCreated)
-              })),
-            ticket: ticketInfo
-          };
-        }
+              const rateLimitedGiveableByUser = badgesGiveableByUser.filter(
+                (b) => b.maxPerDay !== undefined
+              );
 
-        // 3) contact action
-        if (this.definition.options.ticketActions?.contacts?.enabled) {
-          if (actorEmails.includes(ticketInfo.attendeeEmail)) {
-            result.getContactActionInfo = {
-              permissioned: false,
-              alreadyReceived: false
-            };
-          } else {
-            const received = (
-              await Promise.all(
-                actorEmails.map((e) => this.contactDB.getContacts(this.id, e))
-              )
-            ).flat();
-            result.getContactActionInfo = {
-              permissioned: true,
-              alreadyReceived: received.includes(ticketInfo.attendeeEmail),
-              ticket: ticketInfo
-            };
+              const notAlreadyGivenBadges = badgesGiveableByUser.filter(
+                (c) => !badgesGivenToTicketHolder.find((b) => b.id === c.id)
+              );
+
+              const intervalMs = 24 * 60 * 60 * 1000;
+              const alreadyGivenRateLimited = (
+                await Promise.all(
+                  actorEmails.map((e) =>
+                    this.badgeDB.getGivenBadges(
+                      client,
+                      this.id,
+                      e,
+                      rateLimitedGiveableByUser.map((b) => b.id),
+                      intervalMs
+                    )
+                  )
+                )
+              ).flat();
+
+              result.giveBadgeActionInfo = {
+                permissioned: badgesGiveableByUser.length > 0,
+                giveableBadges: notAlreadyGivenBadges,
+                rateLimitedBadges: badgesGiveableByUser
+                  .filter(isPerDayBadge)
+                  .filter(() => {
+                    return !actorEmails.includes(ticketInfo.attendeeEmail);
+                  })
+                  .map((b) => ({
+                    alreadyGivenInInterval: alreadyGivenRateLimited.filter(
+                      (g) => g.id === b.id
+                    ).length,
+                    id: b.id,
+                    eventName: b.eventName,
+                    productName: b.productName,
+                    intervalMs,
+                    maxInInterval: b.maxPerDay,
+                    timestampsGiven: alreadyGivenRateLimited
+                      .filter((g) => g.id === b.id)
+                      .map((g) => g.timeCreated)
+                  })),
+                ticket: ticketInfo
+              };
+            }
+
+            // 3) contact action
+            if (this.definition.options.ticketActions?.contacts?.enabled) {
+              if (actorEmails.includes(ticketInfo.attendeeEmail)) {
+                result.getContactActionInfo = {
+                  permissioned: false,
+                  alreadyReceived: false
+                };
+              } else {
+                const received = (
+                  await Promise.all(
+                    actorEmails.map((e) =>
+                      this.contactDB.getContacts(client, this.id, e)
+                    )
+                  )
+                ).flat();
+                result.getContactActionInfo = {
+                  permissioned: true,
+                  alreadyReceived: received.includes(ticketInfo.attendeeEmail),
+                  ticket: ticketInfo
+                };
+              }
+            }
+
+            // 4) screen config
+            result.actionScreenConfig =
+              this.definition.options.ticketActions?.screenConfig;
+
+            return result;
           }
-        }
-
-        // 4) screen config
-        result.actionScreenConfig =
-          this.definition.options.ticketActions?.screenConfig;
-
-        return result;
+        );
       }
     );
   }
@@ -1533,201 +1611,223 @@ export class LemonadePipeline implements BasePipeline {
       LOG_NAME,
       "executeTicketAction",
       async (span): Promise<PodboxTicketActionResponseValue> => {
-        tracePipeline(this.definition);
+        return namedSqlTransaction(
+          this.context.dbPool,
+          "executeTicketAction",
+          async (client) => {
+            tracePipeline(this.definition);
 
-        let emails: string[];
-        try {
-          const verifiedCredential =
-            await this.credentialSubservice.verifyAndExpectZupassEmail(
-              request.credential
-            );
-          if (
-            !verifiedCredential.emails ||
-            verifiedCredential.emails.length === 0
-          ) {
-            throw new Error("missing emails in credential");
-          }
-          emails = verifiedCredential.emails.map((e) => e.email);
-        } catch (e) {
-          logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
-          setError(e, span);
-          span?.setAttribute("checkin_error", "InvalidSignature");
-          return { success: false, error: { name: "InvalidSignature" } };
-        }
-
-        const precheck = await this.precheckTicketAction(request);
-        logger(
-          LOG_TAG,
-          `got request to execute ticket action ${str(
-            request
-          )} - precheck - ${str(precheck)}`
-        );
-
-        if (!precheck.success) {
-          return precheck;
-        }
-
-        if (request.action.getContact) {
-          if (!precheck.getContactActionInfo?.permissioned) {
-            return {
-              success: false,
-              error: { name: "InvalidTicket" }
-            };
-          }
-
-          if (precheck.getContactActionInfo?.alreadyReceived) {
-            return {
-              success: false,
-              error: { name: "AlreadyReceived" }
-            };
-          }
-
-          const ticketId = request.ticketId;
-          const ticket = await this.db.loadById(this.id, ticketId);
-          const manualTicket = this.getManualTicketById(ticketId);
-          const scaneeEmail = ticket?.email ?? manualTicket?.attendeeEmail;
-
-          if (scaneeEmail) {
-            await this.contactDB.saveContact(this.id, emails[0], scaneeEmail);
-
-            return {
-              success: true
-            };
-          } else {
-            return {
-              success: false,
-              error: { name: "InvalidTicket" }
-            };
-          }
-        } else if (request.action.giftBadge) {
-          const ticketId = request.ticketId;
-          const ticket = await this.db.loadById(this.id, ticketId);
-          const manualTicket = this.getManualTicketById(ticketId);
-          const recipientEmail = ticket?.email ?? manualTicket?.attendeeEmail;
-
-          const matchingBadges: BadgeConfig[] =
-            request.action.giftBadge.badgeIds
-              .map((id) =>
-                (
-                  this.definition.options?.ticketActions?.badges?.choices ?? []
-                ).find((badge) => badge.id === id)
-              )
-              .filter((badge) => !!badge) as BadgeConfig[];
-
-          const allowedBadges = matchingBadges.filter((b) => {
-            const matchingRateLimitedBadge =
-              precheck.giveBadgeActionInfo?.rateLimitedBadges?.find(
-                (r) => r.id === b.id
-              );
-
-            // prevent too many rate limited badges from being given
-            if (matchingRateLimitedBadge) {
+            let emails: string[];
+            try {
+              const verifiedCredential =
+                await this.credentialSubservice.verifyAndExpectZupassEmail(
+                  request.credential
+                );
               if (
-                matchingRateLimitedBadge.alreadyGivenInInterval >=
-                matchingRateLimitedBadge.maxInInterval
+                !verifiedCredential.emails ||
+                verifiedCredential.emails.length === 0
               ) {
-                return false;
+                throw new Error("missing emails in credential");
               }
-            }
-
-            // prevent wrong ppl from issuing wrong badges
-            if (
-              !b.givers?.includes("*") &&
-              !b.givers?.find((e) => emails.includes(e))
-            ) {
-              return false;
-            }
-
-            return true;
-          });
-
-          if (recipientEmail) {
-            await this.badgeDB.giveBadges(
-              this.id,
-              emails[0],
-              recipientEmail,
-              allowedBadges
-            );
-
-            return {
-              success: true
-            };
-          } else {
-            return {
-              success: false,
-              error: { name: "InvalidTicket" }
-            };
-          }
-        } else if (request.action?.checkin) {
-          if (precheck.checkinActionInfo?.reason) {
-            return {
-              success: false,
-              error: precheck.checkinActionInfo?.reason
-            };
-          }
-
-          const autoGrantBadges: BadgeConfig[] = (
-            this.definition.options?.ticketActions?.badges?.choices ?? []
-          ).filter((badge) => badge.grantOnCheckin);
-
-          // First see if we have an atom which matches the ticket ID
-          const ticketAtom = await this.db.loadById(this.id, request.ticketId);
-          if (
-            ticketAtom &&
-            // Ensure that the checker-provided event ID matches the ticket
-            this.lemonadeAtomToZupassEventId(ticketAtom) === request.eventId
-          ) {
-            if (ticketAtom.email) {
-              await this.badgeDB.giveBadges(
-                this.id,
-                emails[0],
-                ticketAtom.email,
-                autoGrantBadges
-              );
-            }
-
-            return this.podboxLocalCheckIn(
-              {
-                id: ticketAtom.id,
-                eventId: ticketAtom.genericIssuanceEventId,
-                productId: ticketAtom.genericIssuanceProductId,
-                attendeeName: ticketAtom.name,
-                attendeeEmail: ticketAtom.email
-              },
-              emails[0]
-            );
-          } else {
-            // No valid Lemonade atom found, try looking for a manual ticket
-            const manualTicket = this.getManualTicketById(request.ticketId);
-            if (manualTicket && manualTicket.eventId === request.eventId) {
-              await this.badgeDB.giveBadges(
-                this.id,
-                emails[0],
-                manualTicket.attendeeEmail,
-                autoGrantBadges
-              );
-
-              // Manual ticket found, check in with the DB
-              return this.podboxLocalCheckIn(manualTicket, emails[0]);
-            } else {
-              // Didn't find any matching ticket
+              emails = verifiedCredential.emails.map((e) => e.email);
+            } catch (e) {
               logger(
-                `${LOG_TAG} Could not find ticket ${request.ticketId} ` +
-                  `for event ${
-                    request.eventId
-                  } for checkin requested by ${JSON.stringify(emails)} ` +
-                  `on pipeline ${this.id}`
+                `${LOG_TAG} Failed to verify credential due to error: `,
+                e
               );
-              span?.setAttribute("checkin_error", "InvalidTicket");
-              return { success: false, error: { name: "InvalidTicket" } };
+              setError(e, span);
+              span?.setAttribute("checkin_error", "InvalidSignature");
+              return { success: false, error: { name: "InvalidSignature" } };
+            }
+
+            const precheck = await this.precheckTicketAction(request);
+            logger(
+              LOG_TAG,
+              `got request to execute ticket action ${str(
+                request
+              )} - precheck - ${str(precheck)}`
+            );
+
+            if (!precheck.success) {
+              return precheck;
+            }
+
+            if (request.action.getContact) {
+              if (!precheck.getContactActionInfo?.permissioned) {
+                return {
+                  success: false,
+                  error: { name: "InvalidTicket" }
+                };
+              }
+
+              if (precheck.getContactActionInfo?.alreadyReceived) {
+                return {
+                  success: false,
+                  error: { name: "AlreadyReceived" }
+                };
+              }
+
+              const ticketId = request.ticketId;
+              const ticket = await this.db.loadById(this.id, ticketId);
+              const manualTicket = this.getManualTicketById(ticketId);
+              const scaneeEmail = ticket?.email ?? manualTicket?.attendeeEmail;
+
+              if (scaneeEmail) {
+                await this.contactDB.saveContact(
+                  client,
+                  this.id,
+                  emails[0],
+                  scaneeEmail
+                );
+
+                return {
+                  success: true
+                };
+              } else {
+                return {
+                  success: false,
+                  error: { name: "InvalidTicket" }
+                };
+              }
+            } else if (request.action.giftBadge) {
+              const ticketId = request.ticketId;
+              const ticket = await this.db.loadById(this.id, ticketId);
+              const manualTicket = this.getManualTicketById(ticketId);
+              const recipientEmail =
+                ticket?.email ?? manualTicket?.attendeeEmail;
+
+              const matchingBadges: BadgeConfig[] =
+                request.action.giftBadge.badgeIds
+                  .map((id) =>
+                    (
+                      this.definition.options?.ticketActions?.badges?.choices ??
+                      []
+                    ).find((badge) => badge.id === id)
+                  )
+                  .filter((badge) => !!badge) as BadgeConfig[];
+
+              const allowedBadges = matchingBadges.filter((b) => {
+                const matchingRateLimitedBadge =
+                  precheck.giveBadgeActionInfo?.rateLimitedBadges?.find(
+                    (r) => r.id === b.id
+                  );
+
+                // prevent too many rate limited badges from being given
+                if (matchingRateLimitedBadge) {
+                  if (
+                    matchingRateLimitedBadge.alreadyGivenInInterval >=
+                    matchingRateLimitedBadge.maxInInterval
+                  ) {
+                    return false;
+                  }
+                }
+
+                // prevent wrong ppl from issuing wrong badges
+                if (
+                  !b.givers?.includes("*") &&
+                  !b.givers?.find((e) => emails.includes(e))
+                ) {
+                  return false;
+                }
+
+                return true;
+              });
+
+              if (recipientEmail) {
+                await this.badgeDB.giveBadges(
+                  client,
+                  this.id,
+                  emails[0],
+                  recipientEmail,
+                  allowedBadges
+                );
+
+                return {
+                  success: true
+                };
+              } else {
+                return {
+                  success: false,
+                  error: { name: "InvalidTicket" }
+                };
+              }
+            } else if (request.action?.checkin) {
+              if (precheck.checkinActionInfo?.reason) {
+                return {
+                  success: false,
+                  error: precheck.checkinActionInfo?.reason
+                };
+              }
+
+              const autoGrantBadges: BadgeConfig[] = (
+                this.definition.options?.ticketActions?.badges?.choices ?? []
+              ).filter((badge) => badge.grantOnCheckin);
+
+              // First see if we have an atom which matches the ticket ID
+              const ticketAtom = await this.db.loadById(
+                this.id,
+                request.ticketId
+              );
+              if (
+                ticketAtom &&
+                // Ensure that the checker-provided event ID matches the ticket
+                this.lemonadeAtomToZupassEventId(ticketAtom) === request.eventId
+              ) {
+                if (ticketAtom.email) {
+                  await this.badgeDB.giveBadges(
+                    client,
+                    this.id,
+                    emails[0],
+                    ticketAtom.email,
+                    autoGrantBadges
+                  );
+                }
+
+                return this.podboxLocalCheckIn(
+                  {
+                    id: ticketAtom.id,
+                    eventId: ticketAtom.genericIssuanceEventId,
+                    productId: ticketAtom.genericIssuanceProductId,
+                    attendeeName: ticketAtom.name,
+                    attendeeEmail: ticketAtom.email
+                  },
+                  emails[0]
+                );
+              } else {
+                // No valid Lemonade atom found, try looking for a manual ticket
+                const manualTicket = this.getManualTicketById(request.ticketId);
+                if (manualTicket && manualTicket.eventId === request.eventId) {
+                  await this.badgeDB.giveBadges(
+                    client,
+                    this.id,
+                    emails[0],
+                    manualTicket.attendeeEmail,
+                    autoGrantBadges
+                  );
+
+                  // Manual ticket found, check in with the DB
+                  return this.podboxLocalCheckIn(manualTicket, emails[0]);
+                } else {
+                  // Didn't find any matching ticket
+                  logger(
+                    `${LOG_TAG} Could not find ticket ${request.ticketId} ` +
+                      `for event ${
+                        request.eventId
+                      } for checkin requested by ${JSON.stringify(emails)} ` +
+                      `on pipeline ${this.id}`
+                  );
+                  span?.setAttribute("checkin_error", "InvalidTicket");
+                  return { success: false, error: { name: "InvalidTicket" } };
+                }
+              }
+            } else {
+              return {
+                success: false,
+                error: { name: "ServerError" }
+              };
             }
           }
-        } else {
-          return {
-            success: false,
-            error: { name: "ServerError" }
-          };
-        }
+        );
       }
     );
   }
@@ -1743,63 +1843,71 @@ export class LemonadePipeline implements BasePipeline {
       LOG_NAME,
       "checkInManualTicket",
       async (span): Promise<PodboxTicketActionResponseValue> => {
-        const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
-        if (pendingCheckin) {
-          span?.setAttribute("checkin_error", "AlreadyCheckedIn");
-          return {
-            success: false,
-            error: {
-              name: "AlreadyCheckedIn",
-              checkinTimestamp: new Date(
-                pendingCheckin.timestamp
-              ).toISOString(),
-              checker: LEMONADE_CHECKER
-            }
-          };
-        }
-
-        try {
-          await this.checkinDB.checkIn(
-            this.id,
-            manualTicket.id,
-            new Date(),
-            checkerEmail
-          );
-          this.pendingCheckIns.set(manualTicket.id, {
-            status: CheckinStatus.Success,
-            timestamp: Date.now()
-          });
-        } catch (e) {
-          logger(
-            `${LOG_TAG} Failed to check in ticket ${manualTicket.id} for event ${manualTicket.eventId} on behalf of checker ${checkerEmail} on pipeline ${this.id}`
-          );
-          setError(e, span);
-          this.pendingCheckIns.delete(manualTicket.id);
-
-          if (e instanceof DatabaseError) {
-            // We may have received a DatabaseError due to an insertion conflict
-            // Detect this conflict by looking for an existing check-in.
-            const existingCheckin = await this.checkinDB.getByTicketId(
-              this.id,
-              manualTicket.id
-            );
-            if (existingCheckin) {
+        return namedSqlTransaction(
+          this.context.dbPool,
+          "checkInManualTicket",
+          async (client) => {
+            const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
+            if (pendingCheckin) {
               span?.setAttribute("checkin_error", "AlreadyCheckedIn");
               return {
                 success: false,
                 error: {
                   name: "AlreadyCheckedIn",
-                  checkinTimestamp: existingCheckin.timestamp.toISOString(),
+                  checkinTimestamp: new Date(
+                    pendingCheckin.timestamp
+                  ).toISOString(),
                   checker: LEMONADE_CHECKER
                 }
               };
             }
-          }
-          span?.setAttribute("checkin_error", "ServerError");
-          return { success: false, error: { name: "ServerError" } };
-        }
 
-        return { success: true };
+            try {
+              await this.checkinDB.checkIn(
+                client,
+                this.id,
+                manualTicket.id,
+                new Date(),
+                checkerEmail
+              );
+              this.pendingCheckIns.set(manualTicket.id, {
+                status: CheckinStatus.Success,
+                timestamp: Date.now()
+              });
+            } catch (e) {
+              logger(
+                `${LOG_TAG} Failed to check in ticket ${manualTicket.id} for event ${manualTicket.eventId} on behalf of checker ${checkerEmail} on pipeline ${this.id}`
+              );
+              setError(e, span);
+              this.pendingCheckIns.delete(manualTicket.id);
+
+              if (e instanceof DatabaseError) {
+                // We may have received a DatabaseError due to an insertion conflict
+                // Detect this conflict by looking for an existing check-in.
+                const existingCheckin = await this.checkinDB.getByTicketId(
+                  client,
+                  this.id,
+                  manualTicket.id
+                );
+                if (existingCheckin) {
+                  span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+                  return {
+                    success: false,
+                    error: {
+                      name: "AlreadyCheckedIn",
+                      checkinTimestamp: existingCheckin.timestamp.toISOString(),
+                      checker: LEMONADE_CHECKER
+                    }
+                  };
+                }
+              }
+              span?.setAttribute("checkin_error", "ServerError");
+              return { success: false, error: { name: "ServerError" } };
+            }
+
+            return { success: true };
+          }
+        );
       }
     );
   }
@@ -1916,38 +2024,51 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async getManualCheckinSummary(): Promise<PipelineCheckinSummary[]> {
     return traced(LOG_NAME, "getManualCheckinSummary", async (span) => {
-      const results: PipelineCheckinSummary[] = [];
-      const checkIns = await this.checkinDB.getByPipelineId(this.id);
-      const checkInsById = _.keyBy(checkIns, (checkIn) => checkIn.ticketId);
+      return namedSqlTransaction(
+        this.context.dbPool,
+        "getManualCheckinSummary",
+        async (client) => {
+          const results: PipelineCheckinSummary[] = [];
+          const checkIns = await this.checkinDB.getByPipelineId(
+            client,
+            this.id
+          );
+          const checkInsById = _.keyBy(checkIns, (checkIn) => checkIn.ticketId);
 
-      for (const ticketAtom of await this.db.load(this.id)) {
-        const checkIn = checkInsById[ticketAtom.id];
-        results.push({
-          ticketId: ticketAtom.id,
-          ticketName: this.lemonadeAtomToTicketName(ticketAtom),
-          email: ticketAtom.email,
-          timestamp: checkIn ? checkIn.timestamp.toISOString() : "",
-          checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
-          checkedIn: !!checkIn
-        });
-      }
+          for (const ticketAtom of await this.db.load(this.id)) {
+            const checkIn = checkInsById[ticketAtom.id];
+            results.push({
+              ticketId: ticketAtom.id,
+              ticketName: this.lemonadeAtomToTicketName(ticketAtom),
+              email: ticketAtom.email,
+              timestamp: checkIn ? checkIn.timestamp.toISOString() : "",
+              checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
+              checkedIn: !!checkIn
+            });
+          }
 
-      for (const manualTicket of this.definition.options.manualTickets ?? []) {
-        const checkIn = checkInsById[manualTicket.id];
-        const event = this.getEventById(manualTicket.eventId);
-        const product = this.getTicketTypeById(event, manualTicket.productId);
-        results.push({
-          ticketId: manualTicket.id,
-          ticketName: product.name,
-          email: manualTicket.attendeeEmail,
-          timestamp: checkIn ? checkIn.timestamp.toISOString() : "",
-          checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
-          checkedIn: !!checkIn
-        });
-      }
+          for (const manualTicket of this.definition.options.manualTickets ??
+            []) {
+            const checkIn = checkInsById[manualTicket.id];
+            const event = this.getEventById(manualTicket.eventId);
+            const product = this.getTicketTypeById(
+              event,
+              manualTicket.productId
+            );
+            results.push({
+              ticketId: manualTicket.id,
+              ticketName: product.name,
+              email: manualTicket.attendeeEmail,
+              timestamp: checkIn ? checkIn.timestamp.toISOString() : "",
+              checkerEmail: checkIn ? checkIn.checkerEmail : undefined,
+              checkedIn: !!checkIn
+            });
+          }
 
-      span?.setAttribute("result_count", results.length);
-      return results;
+          span?.setAttribute("result_count", results.length);
+          return results;
+        }
+      );
     });
   }
 
@@ -1957,40 +2078,47 @@ export class LemonadePipeline implements BasePipeline {
     checkerEmail: string
   ): Promise<PipelineSetManualCheckInStateResponseValue> {
     return traced(LOG_NAME, "setManualCheckInState", async (span) => {
-      span?.setAttribute("ticket_id", ticketId);
-      span?.setAttribute("checkin_state", checkInState);
-      span?.setAttribute("checker_email", checkerEmail);
-      const atom = await this.db.loadById(this.id, ticketId);
-      if (!atom) {
-        const manualTicket = (this.definition.options.manualTickets ?? []).find(
-          (m) => m.id === ticketId
-        );
-        if (!manualTicket) {
-          throw new PCDHTTPError(
-            404,
-            `Ticket ${ticketId} does not exist on pipeline ${this.id}`
+      return namedSqlTransaction(
+        this.context.dbPool,
+        "getManualCheckinSummary",
+        async (client) => {
+          span?.setAttribute("ticket_id", ticketId);
+          span?.setAttribute("checkin_state", checkInState);
+          span?.setAttribute("checker_email", checkerEmail);
+          const atom = await this.db.loadById(this.id, ticketId);
+          if (!atom) {
+            const manualTicket = (
+              this.definition.options.manualTickets ?? []
+            ).find((m) => m.id === ticketId);
+            if (!manualTicket) {
+              throw new PCDHTTPError(
+                404,
+                `Ticket ${ticketId} does not exist on pipeline ${this.id}`
+              );
+            }
+          }
+
+          logger(
+            `${LOG_TAG} Setting manual check-in state to ${
+              checkInState ? "checked-in" : "checked-out"
+            } for ticket ${ticketId} on pipeline ${this.id}`
           );
+
+          if (checkInState) {
+            await this.checkinDB.checkIn(
+              client,
+              this.id,
+              ticketId,
+              new Date(),
+              checkerEmail
+            );
+          } else {
+            await this.checkinDB.deleteCheckIn(client, this.id, ticketId);
+          }
+
+          return { checkInState };
         }
-      }
-
-      logger(
-        `${LOG_TAG} Setting manual check-in state to ${
-          checkInState ? "checked-in" : "checked-out"
-        } for ticket ${ticketId} on pipeline ${this.id}`
       );
-
-      if (checkInState) {
-        await this.checkinDB.checkIn(
-          this.id,
-          ticketId,
-          new Date(),
-          checkerEmail
-        );
-      } else {
-        await this.checkinDB.deleteCheckIn(this.id, ticketId);
-      }
-
-      return { checkInState };
     });
   }
 
@@ -1999,6 +2127,7 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   public async sendPipelineEmail(
+    client: PoolClient,
     emailType: PipelineEmailType
   ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
     return traced(LOG_NAME, "sendPipelineEmail", async () => {
@@ -2017,8 +2146,12 @@ export class LemonadePipeline implements BasePipeline {
         }
 
         const allAtoms = await this.db.load(this.id);
-        const manualCheckins = await this.checkinDB.getByPipelineId(this.id);
+        const manualCheckins = await this.checkinDB.getByPipelineId(
+          client,
+          this.id
+        );
         const sentEmails = await this.emailDB.getSentEmails(
+          client,
           this.id,
           PipelineEmailType.EsmeraldaOneClick
         );
@@ -2059,6 +2192,7 @@ export class LemonadePipeline implements BasePipeline {
         for (const toSend of filteredAtoms) {
           try {
             await this.emailDB.recordEmailSent(
+              client,
               this.id,
               PipelineEmailType.EsmeraldaOneClick,
               toSend.email

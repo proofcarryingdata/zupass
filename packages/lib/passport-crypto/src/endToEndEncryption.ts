@@ -1,9 +1,12 @@
 import { PCDCrypto } from "./passportCrypto";
 import { EncryptedPacket } from "./types";
 
-const cryptoPromise = PCDCrypto.newInstance();
+const sharedCryptoPromise = PCDCrypto.newInstance();
 
-export async function getHash(str: string): Promise<string> {
+export async function getHash(
+  str: string,
+  cryptoPromise: Promise<PCDCrypto> = sharedCryptoPromise
+): Promise<string> {
   const crypto = await cryptoPromise;
   const hashed = crypto.cryptoHash(str);
   return hashed;
@@ -11,7 +14,8 @@ export async function getHash(str: string): Promise<string> {
 
 export async function passportEncrypt(
   data: string,
-  encryptionKey: string
+  encryptionKey: string,
+  cryptoPromise: Promise<PCDCrypto> = sharedCryptoPromise
 ): Promise<EncryptedPacket> {
   const crypto = await cryptoPromise;
 
@@ -26,7 +30,8 @@ export async function passportEncrypt(
 
 export async function passportDecrypt(
   encryptedStorage: EncryptedPacket,
-  encryptionKey: string
+  encryptionKey: string,
+  cryptoPromise: Promise<PCDCrypto> = sharedCryptoPromise
 ): Promise<string> {
   const crypto = await cryptoPromise;
 

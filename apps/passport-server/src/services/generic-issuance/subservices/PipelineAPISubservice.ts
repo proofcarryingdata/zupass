@@ -17,9 +17,14 @@ import {
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
 import { str } from "@pcd/util";
+import _ from "lodash";
+import { PoolClient } from "postgres-pool";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { sqlTransaction } from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
+import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
+import { LocalFileService } from "../../LocalFileService";
 import { traceFlattenedObject, traced } from "../../telemetryService";
 import { isCheckinCapability } from "../capabilities/CheckinCapability";
 import {
@@ -45,18 +50,24 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
  * {@link PCD} issuance.
  */
 export class PipelineAPISubservice {
+  private context: ApplicationContext;
   private pipelineSubservice: PipelineSubservice;
   private consumerDB: IPipelineConsumerDB;
   private credentialSubservice: CredentialSubservice;
+  private localFileService: LocalFileService | null;
 
   public constructor(
+    context: ApplicationContext,
     consumerDB: IPipelineConsumerDB,
     pipelineSubservice: PipelineSubservice,
-    credentailSubservice: CredentialSubservice
+    credentailSubservice: CredentialSubservice,
+    localFileService: LocalFileService | null
   ) {
+    this.context = context;
     this.pipelineSubservice = pipelineSubservice;
     this.consumerDB = consumerDB;
     this.credentialSubservice = credentailSubservice;
+    this.localFileService = localFileService;
   }
 
   /**
@@ -96,6 +107,7 @@ export class PipelineAPISubservice {
    *   does not exist.
    */
   public async handleGetPipelineInfo(
+    client: PoolClient,
     user: PipelineUser,
     pipelineId: string
   ): Promise<PipelineInfoResponseValue> {
@@ -140,8 +152,9 @@ export class PipelineAPISubservice {
         pipelineHasSemaphoreGroups = true;
       }
 
-      const latestConsumers = await this.consumerDB.loadAll(
-        pipelineInstance.id
+      const latestConsumers = await sqlTransaction(
+        this.context.dbPool,
+        (client) => this.consumerDB.loadAll(client, pipelineInstance.id)
       );
 
       if (!pipelineSlot.owner) {
@@ -150,6 +163,11 @@ export class PipelineAPISubservice {
 
       const info = {
         ownerEmail: pipelineSlot.owner.email,
+        hasCachedLoad:
+          (await this.localFileService?.hasCachedLoad(pipelineId)) ?? false,
+        cachedBytes:
+          (await this.localFileService?.getCachedLoadSize(pipelineId)) ?? 0,
+        loading: !!pipelineSlot.loadPromise,
         latestAtoms,
         lastLoad,
 
@@ -175,12 +193,19 @@ export class PipelineAPISubservice {
               .sort((a, b) => b.timeUpdated.localeCompare(a.timeUpdated)),
 
         editHistory: await this.pipelineSubservice.getPipelineEditHistory(
+          client,
           pipelineId,
           100
         )
       } satisfies PipelineInfoResponseValue;
 
-      traceFlattenedObject(span, { loadSummary: lastLoad });
+      if (lastLoad) {
+        const redactedCopyOfLoadSummary = _.cloneDeep(lastLoad);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        delete (redactedCopyOfLoadSummary as any).latestLogs;
+        traceFlattenedObject(span, { loadSummary: redactedCopyOfLoadSummary });
+      }
+
       traceFlattenedObject(span, { pipelineFeeds });
 
       return info;

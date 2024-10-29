@@ -14,10 +14,8 @@ import { FrogCryptoUpdateTelegramModal } from "./FrogCryptoUpdateTelegramModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
 import { PrivacyNoticeModal } from "./PrivacyNoticeModal";
-import { RequireAddPasswordModal } from "./RequireAddPasswordModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
 import { SettingsModal } from "./SettingsModal";
-import { UpgradeAccountModal } from "./UpgradeAccountModal";
 
 export function MaybeModal({
   fullScreen,
@@ -74,8 +72,6 @@ function isModalDismissable(modal: AppState["modal"]): boolean {
     "invalid-participant",
     "changed-password",
     "another-device-changed-password",
-    "upgrade-account-modal",
-    "require-add-password",
     "privacy-notice"
   ];
 
@@ -99,10 +95,6 @@ function getModalBody(
       return <ChangedPasswordModal />;
     case "resolve-subscription-error":
       return <ResolveSubscriptionErrorModal />;
-    case "upgrade-account-modal":
-      return <UpgradeAccountModal />;
-    case "require-add-password":
-      return <RequireAddPasswordModal />;
     case "privacy-notice":
       return <PrivacyNoticeModal />;
     case "frogcrypto-update-telegram":

@@ -18,11 +18,15 @@ export enum ListenMode {
 async function waitForAuthentication(
   context: StateContextValue
 ): Promise<void> {
-  return new Promise<void>((resolve) => {
+  return new Promise<void>((resolve, reject) => {
     const unlisten = context.stateEmitter.listen((state) => {
       if (state.self) {
         unlisten();
         resolve();
+      }
+      if (state.zappApproved !== undefined && state.zappApproved === false) {
+        unlisten();
+        reject(new Error("User cancelled connection"));
       }
     });
   });
@@ -124,7 +128,13 @@ export function useZappServer(mode: ListenMode): void {
         // If we're not logged in, we need to show a message to the user
         window.location.hash = "connect-popup";
         advice.showClient();
-        await waitForAuthentication(context);
+        try {
+          await waitForAuthentication(context);
+        } catch (e) {
+          advice.hideClient();
+          advice.cancel();
+          return;
+        }
         advice.hideClient();
       }
 
@@ -155,7 +165,10 @@ export function useZappServer(mode: ListenMode): void {
       const server = new ZupassRPCProcessor(context, advice);
 
       // @todo handle this with an action
-      context.update({ embeddedScreen: { screen: undefined } });
+      context.update({
+        embeddedScreen: { screen: undefined },
+        listenMode: mode
+      });
       if (window.parent !== window.self) {
         window.location.hash = "embedded";
       }

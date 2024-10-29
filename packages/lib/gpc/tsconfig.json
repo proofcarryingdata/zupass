@@ -30,6 +30,9 @@
       "path": "../pod"
     },
     {
+      "path": "../semaphore-identity-v3-wrapper"
+    },
+    {
       "path": "../util"
     }
   ]

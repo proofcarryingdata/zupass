@@ -40,6 +40,9 @@
       "path": "packages/lib/podspec/tsconfig.cjs.json"
     },
     {
+      "path": "packages/lib/semaphore-identity-v3-wrapper/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/lib/server-shared/tsconfig.cjs.json"
     },
     {

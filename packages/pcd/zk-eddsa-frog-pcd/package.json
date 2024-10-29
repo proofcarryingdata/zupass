@@ -1,6 +1,6 @@
 {
   "name": "@pcd/zk-eddsa-frog-pcd",
-  "version": "0.3.6",
+  "version": "0.6.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -34,12 +34,12 @@
     "artifacts:generate": "pcd-artifacts generate -o src/artifacts && cp src/artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-frog-pcd && cp src/artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-frog-pcd && cp -f ./artifacts/circuit.json ./src/circuit.json"
   },
   "dependencies": {
-    "@pcd/eddsa-frog-pcd": "^0.3.5",
-    "@pcd/eddsa-pcd": "0.6.5",
-    "@pcd/pcd-types": "^0.11.4",
-    "@pcd/semaphore-identity-pcd": "0.11.6",
-    "@pcd/semaphore-signature-pcd": "0.11.6",
-    "@pcd/util": "0.5.4",
+    "@pcd/eddsa-frog-pcd": "^0.6.0",
+    "@pcd/eddsa-pcd": "0.9.0",
+    "@pcd/pcd-types": "^0.14.0",
+    "@pcd/semaphore-identity-pcd": "0.14.0",
+    "@pcd/semaphore-signature-pcd": "0.14.0",
+    "@pcd/util": "0.8.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "@zk-kit/eddsa-poseidon": "1.0.3",
     "json-bigint": "^1.0.0",
@@ -47,9 +47,9 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/artifacts": "0.4.4",
-    "@pcd/eslint-config-custom": "0.11.4",
-    "@pcd/tsconfig": "0.11.4",
+    "@pcd/artifacts": "0.7.0",
+    "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/tsconfig": "0.14.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/snarkjs": "^0.7.5",

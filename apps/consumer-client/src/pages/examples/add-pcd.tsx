@@ -9,7 +9,11 @@ import {
   gpcArtifactDownloadURL,
   GPCArtifactSource,
   GPCArtifactStability,
-  GPCArtifactVersion
+  GPCArtifactVersion,
+  JSONPODMembershipLists,
+  JSONProofConfig,
+  podMembershipListsFromJSON,
+  proofConfigFromJSON
 } from "@pcd/gpc";
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
@@ -24,7 +28,7 @@ import {
   decodePrivateKey,
   encodePublicKey,
   POD,
-  podEntriesFromSimplifiedJSON
+  podEntriesFromJSON
 } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
@@ -42,12 +46,14 @@ import { derivePublicKey } from "@zk-kit/eddsa-poseidon";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { useEffect, useState } from "react";
+import urlJoin from "url-join";
 import { v4 as uuid } from "uuid";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import {
   EVERYONE_SEMAPHORE_GROUP_URL,
   GPC_ARTIFACT_CONFIG,
+  MINT_SERVER_URL,
   ZUPASS_URL
 } from "../../constants";
 import {
@@ -93,7 +99,7 @@ export default function Page(): JSX.Element {
     setPODPublicKey2(encodePublicKey(derivePublicKey(decodePrivateKey(key))));
   };
   const [podMintUrl, setPODMintUrl] = useState(
-    `${process.env.CONSUMER_SERVER_URL}:4000/api/mintPOD`
+    urlJoin(MINT_SERVER_URL, "api/sign")
   );
   const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
   const [membershipLists, setMembershipLists] = useState(
@@ -320,7 +326,7 @@ export default function Page(): JSX.Element {
             type="text"
             value={podMintUrl}
             placeholder="Enter mint URL..."
-            style={{ marginLeft: "16px" }}
+            style={{ width: "200px", marginLeft: "16px" }}
             onChange={(e): void => {
               setPODMintUrl(e.target.value);
             }}
@@ -743,7 +749,7 @@ async function addPODPCD(
 ): Promise<void> {
   const newPOD = new PODPCD(
     uuid(),
-    POD.sign(podEntriesFromSimplifiedJSON(podContent), podPrivateKey)
+    POD.sign(podEntriesFromJSON(JSON.parse(podContent)), podPrivateKey)
   );
 
   const serializedPODPCD = await PODPCDPackage.serialize(newPOD);
@@ -773,7 +779,7 @@ async function mintPODPCD(
 ): Promise<void> {
   const newPOD = new PODPCD(
     uuid(),
-    POD.sign(podEntriesFromSimplifiedJSON(podContent), podPrivateKey)
+    POD.sign(podEntriesFromJSON(JSON.parse(podContent)), podPrivateKey)
   );
 
   const serializedPODPCD = await PODPCDPackage.serialize(newPOD);
@@ -814,7 +820,7 @@ async function addGPCPCD(
   const examplePODPCD = new PODPCD(
     uuid(),
     POD.sign(
-      podEntriesFromSimplifiedJSON(podContent),
+      podEntriesFromJSON(JSON.parse(podContent)),
       EXAMPLE_EDDSA_PRIVATE_KEY
     )
   );
@@ -822,7 +828,7 @@ async function addGPCPCD(
   const cardPODPCD = new PODPCD(
     uuid(),
     POD.sign(
-      podEntriesFromSimplifiedJSON(podContent2),
+      podEntriesFromJSON(JSON.parse(podContent2)),
       EXAMPLE_EDDSA_PRIVATE_KEY2
     )
   );
@@ -831,10 +837,17 @@ async function addGPCPCD(
     identityV3: EXAMPLE_OWNER_IDENTITY
   });
 
+  // Validate JSON input by parsing locally before sending.
+  const jsonMembershipLists: JSONPODMembershipLists =
+    JSON.parse(membershipLists);
+  podMembershipListsFromJSON(jsonMembershipLists);
+  const jsonProofConfig: JSONProofConfig = JSON.parse(gpcConfig);
+  proofConfigFromJSON(jsonProofConfig);
+
   const proveArgs: GPCPCDArgs = {
     proofConfig: {
-      argumentType: ArgumentTypeName.String,
-      value: gpcConfig
+      argumentType: ArgumentTypeName.Object,
+      value: jsonProofConfig
     },
     pods: {
       value: {
@@ -855,15 +868,15 @@ async function addGPCPCD(
     },
     externalNullifier: {
       value: "example nullifier",
-      argumentType: ArgumentTypeName.String
+      argumentType: ArgumentTypeName.Object
     },
     membershipLists: {
-      value: membershipLists,
-      argumentType: ArgumentTypeName.String
+      value: jsonMembershipLists,
+      argumentType: ArgumentTypeName.Object
     },
     watermark: {
-      value: "example watermark",
-      argumentType: ArgumentTypeName.String
+      value: { cryptographic: 12345 },
+      argumentType: ArgumentTypeName.Object
     },
     id: {
       argumentType: ArgumentTypeName.String,

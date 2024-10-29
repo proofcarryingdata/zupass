@@ -1,4 +1,4 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import {
   AnonMessage,
   AnonMessageWithDetails,
@@ -18,7 +18,7 @@ import { sqlQuery } from "../../sqlQuery";
  * Fetch the list of Telegram conversations from the database.
  */
 export async function fetchTelegramEventByEventId(
-  client: Pool,
+  client: PoolClient,
   eventId: string
 ): Promise<TelegramEvent[]> {
   const result = await sqlQuery(
@@ -34,7 +34,7 @@ export async function fetchTelegramEventByEventId(
 }
 
 export async function fetchTelegramBotEvent(
-  client: Pool,
+  client: PoolClient,
   eventId: string,
   telegramChatID: string | number
 ): Promise<TelegramEvent> {
@@ -51,7 +51,7 @@ export async function fetchTelegramBotEvent(
 }
 
 export async function fetchTelegramChat(
-  client: Pool,
+  client: PoolClient,
   telegramChatId: number
 ): Promise<TelegramChat> {
   const result = await sqlQuery(
@@ -67,7 +67,7 @@ export async function fetchTelegramChat(
 }
 
 export async function fetchTelegramEventsByChatId(
-  client: Pool,
+  client: PoolClient,
   telegramChatId: number | string
 ): Promise<TelegramEvent[]> {
   const result = await sqlQuery(
@@ -83,7 +83,7 @@ export async function fetchTelegramEventsByChatId(
 }
 
 export async function fetchEventsWithTelegramChats(
-  client: Pool,
+  client: PoolClient,
   distinct = true,
   currentTelegramChatId?: number
 ): Promise<LinkedPretixTelegramEvent[]> {
@@ -115,7 +115,7 @@ export async function fetchEventsWithTelegramChats(
 }
 
 export async function fetchEventsPerChat(
-  client: Pool
+  client: PoolClient
 ): Promise<ChatIDWithEventIDs[]> {
   const result = await sqlQuery(
     client,
@@ -132,7 +132,7 @@ export async function fetchEventsPerChat(
 }
 
 export async function fetchTelegramAnonTopicsByChatId(
-  client: Pool,
+  client: PoolClient,
   telegramChatId: number
 ): Promise<TelegramTopicFetch[]> {
   const result = await sqlQuery(
@@ -147,7 +147,7 @@ export async function fetchTelegramAnonTopicsByChatId(
 }
 
 export async function fetchTelegramTopicsByChatId(
-  client: Pool,
+  client: PoolClient,
   telegramChatId: number
 ): Promise<TelegramTopicFetch[]> {
   const result = await sqlQuery(
@@ -162,7 +162,7 @@ export async function fetchTelegramTopicsByChatId(
 }
 
 export async function fetchUserTelegramChats(
-  client: Pool,
+  client: PoolClient,
   telegramUserID: number
 ): Promise<UserIDWithChatIDs | null> {
   const result = await sqlQuery(
@@ -187,7 +187,7 @@ export async function fetchUserTelegramChats(
 // The list is sorted such that chat a user hasn't joined are returned first
 // If a chatId is provided, only chats with that id are returned.
 export async function fetchTelegramChatsWithMembershipStatus(
-  client: Pool,
+  client: PoolClient,
   userId: number,
   chatId?: number
 ): Promise<ChatIDWithEventsAndMembership[]> {
@@ -222,7 +222,7 @@ export async function fetchTelegramChatsWithMembershipStatus(
 }
 
 export async function fetchTelegramTopic(
-  client: Pool,
+  client: PoolClient,
   telegramChatId: number | string,
   topicId?: number | string
 ): Promise<TelegramTopicFetch | null> {
@@ -241,7 +241,7 @@ export async function fetchTelegramTopic(
 }
 
 export async function fetchTelegramTopicsReceiving(
-  client: Pool
+  client: PoolClient
 ): Promise<TelegramTopicWithFwdInfo[]> {
   const result = await sqlQuery(
     client,
@@ -261,7 +261,7 @@ export async function fetchTelegramTopicsReceiving(
  * The resulting value can be used to determine the source and destination for the forwarded message.
  */
 export async function fetchTelegramTopicForwarding(
-  client: Pool,
+  client: PoolClient,
   sendingChatID: string | number,
   sendingTopicID?: string | number
 ): Promise<TelegramForwardFetch[]> {
@@ -291,7 +291,7 @@ export async function fetchTelegramTopicForwarding(
 }
 
 export async function fetchTelegramAnonMessagesByNullifier(
-  client: Pool,
+  client: PoolClient,
   nullifierHash: string
 ): Promise<AnonMessage[]> {
   const result = await sqlQuery(
@@ -306,7 +306,7 @@ export async function fetchTelegramAnonMessagesByNullifier(
 }
 
 export async function fetchTelegramAnonMessagesById(
-  client: Pool,
+  client: PoolClient,
   id: string
 ): Promise<(AnonMessage & { telegram_chat_id: string }) | null> {
   const result = await sqlQuery(
@@ -323,7 +323,7 @@ export async function fetchTelegramAnonMessagesById(
 }
 
 export async function fetchTelegramChatTopicById(
-  client: Pool,
+  client: PoolClient,
   chatTopicId: number
 ): Promise<TelegramTopicFetch> {
   const result = await sqlQuery(
@@ -338,7 +338,7 @@ export async function fetchTelegramChatTopicById(
 }
 
 export async function fetchTelegramAnonMessagesWithTopicByNullifier(
-  client: Pool,
+  client: PoolClient,
   nullifierHash: string
 ): Promise<AnonMessageWithDetails[]> {
   const result = await sqlQuery(

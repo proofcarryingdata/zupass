@@ -1,5 +1,23 @@
 # @pcd/emitter
 
+## 0.8.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+## 0.7.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+## 0.6.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
 ## 0.5.4
 
 ### Patch Changes

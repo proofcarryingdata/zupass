@@ -2,12 +2,12 @@ import { PODValue, podValueHash } from "@pcd/pod";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
+import { chooseCircuitFamilyForTests } from "../scripts/common";
 import {
   ListMembershipModuleInputNamesType,
   ListMembershipModuleInputs,
   ListMembershipModuleOutputNamesType,
   ListMembershipModuleOutputs,
-  ProtoPODGPC,
   extendedSignalArray,
   hashTuple,
   padArray,
@@ -18,9 +18,11 @@ import {
 } from "../src";
 import { circomkit } from "./common";
 
+const { testCircuitFamily } = chooseCircuitFamilyForTests();
+
 describe("List membership helpers should work", function () {
   const params1 = {
-    ...ProtoPODGPC.CIRCUIT_PARAMETERS[0][0],
+    ...testCircuitFamily[0],
     maxEntries: 6,
     tupleArity: 2,
     maxLists: 3,
@@ -50,9 +52,9 @@ describe("List membership helpers should work", function () {
     const listComparisonValueIndex2 = [0, 2];
 
     // Restrict attention to those parameters allowing a list membership check.
-    for (const params of ProtoPODGPC.CIRCUIT_PARAMETERS.map(
-      (pair) => pair[0]
-    ).filter((params) => params.maxListElements > 0)) {
+    for (const params of testCircuitFamily.filter(
+      (params) => params.maxListElements > 0
+    )) {
       // Truncate list if necessary.
       const truncatedList = list1.slice(0, params.maxListElements);
 

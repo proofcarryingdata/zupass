@@ -1,6 +1,6 @@
 {
   "name": "@pcd/rsa-pcd",
-  "version": "0.6.5",
+  "version": "0.9.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -32,16 +32,16 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.11.4",
-    "@pcd/util": "0.5.4",
+    "@pcd/pcd-types": "0.14.0",
+    "@pcd/util": "0.8.0",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "node-rsa": "^1.1.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.4",
-    "@pcd/tsconfig": "0.11.4",
+    "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/tsconfig": "0.14.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/node-rsa": "^1.1.1",

@@ -26,6 +26,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
 import { rest } from "msw";
+import { Pool, PoolClient } from "postgres-pool";
 import urljoin from "url-join";
 import { LemonadeOAuthCredentials } from "../../../../src/apis/lemonade/auth";
 import { LemonadeTicket } from "../../../../src/apis/lemonade/types";
@@ -77,6 +78,9 @@ describe("generic issuance - LemonadePipeline", function () {
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
   let giService: GenericIssuanceService;
+
+  let client: PoolClient;
+  let pool: Pool;
 
   const adminGIUserId = randomUUID();
   const adminGIUserEmail = "admin@test.com";
@@ -131,7 +135,10 @@ describe("generic issuance - LemonadePipeline", function () {
       lemonadeAPI
     });
 
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    pool = giBackend.context.dbPool;
+    client = await pool.connect();
+
+    const userDB = new PipelineUserDB();
 
     const adminUser: PipelineUser = {
       id: adminGIUserId,
@@ -140,7 +147,7 @@ describe("generic issuance - LemonadePipeline", function () {
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(adminUser);
+    await userDB.updateUserById(client, adminUser);
     assertUserMatches(
       {
         id: adminGIUserId,
@@ -149,7 +156,7 @@ describe("generic issuance - LemonadePipeline", function () {
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(adminUser.id)
+      await userDB.getUserById(client, adminUser.id)
     );
 
     const edgeCityDenverUser: PipelineUser = {
@@ -159,7 +166,7 @@ describe("generic issuance - LemonadePipeline", function () {
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(edgeCityDenverUser);
+    await userDB.updateUserById(client, edgeCityDenverUser);
     assertUserMatches(
       {
         id: edgeCityGIUserID,
@@ -168,7 +175,7 @@ describe("generic issuance - LemonadePipeline", function () {
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(edgeCityDenverUser.id)
+      await userDB.getUserById(client, edgeCityDenverUser.id)
     );
 
     // The mock server will intercept any requests for URLs that are registered
@@ -179,11 +186,9 @@ describe("generic issuance - LemonadePipeline", function () {
     giService = giBackend.services
       .genericIssuanceService as GenericIssuanceService;
     await giService.stop();
-    const pipelineDefinitionDB = new PipelineDefinitionDB(
-      giBackend.context.dbPool
-    );
-    await pipelineDefinitionDB.deleteAllDefinitions();
-    await pipelineDefinitionDB.upsertDefinitions(pipelineDefinitions);
+    const pipelineDefinitionDB = new PipelineDefinitionDB();
+    await pipelineDefinitionDB.deleteAllDefinitions(client);
+    await pipelineDefinitionDB.upsertDefinitions(client, pipelineDefinitions);
     await giService.start(false);
   });
 
@@ -201,7 +206,7 @@ describe("generic issuance - LemonadePipeline", function () {
   });
 
   step("PipelineUserDB", async function () {
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const userDB = new PipelineUserDB();
 
     const adminUser: PipelineUser = {
       id: adminGIUserId,
@@ -210,7 +215,7 @@ describe("generic issuance - LemonadePipeline", function () {
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.updateUserById(adminUser);
+    await userDB.updateUserById(client, adminUser);
     assertUserMatches(
       {
         id: adminGIUserId,
@@ -219,7 +224,7 @@ describe("generic issuance - LemonadePipeline", function () {
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUserById(adminUser.id)
+      await userDB.getUserById(client, adminUser.id)
     );
 
     // TODO: comprehensive tests of create update read delete
@@ -448,8 +453,9 @@ describe("generic issuance - LemonadePipeline", function () {
       // backend, will be implemented with the pipeline as the check-in backend
 
       // Verify that consumers were saved for each user who requested tickets
-      const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
+      const consumerDB = new PipelineConsumerDB();
       const consumers = await consumerDB.loadByEmails(
+        client,
         edgeCityDenverPipeline.id,
         [
           EdgeCityManualAttendeeEmail,
@@ -508,7 +514,7 @@ describe("generic issuance - LemonadePipeline", function () {
       const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
       expectToExist(edgeCityDenverPipeline);
 
-      await edgeCityDenverPipeline.load();
+      await giService.performPipelineLoad(edgeCityDenverPipeline.id);
 
       const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
@@ -603,7 +609,7 @@ describe("generic issuance - LemonadePipeline", function () {
         newUser._id,
         newUser.name
       );
-      await edgeCityDenverPipeline.load();
+      await giService.performPipelineLoad(edgeCityDenverPipeline.id);
       const edgeCityDenverTicketFeedUrl =
         edgeCityDenverPipeline.issuanceCapability.feedUrl;
       // The pipeline doesn't know that the user exists until they hit the feed
@@ -688,9 +694,11 @@ describe("generic issuance - LemonadePipeline", function () {
 
       expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
 
-      const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
+      const consumerDB = new PipelineConsumerDB();
       const consumer = (
-        await consumerDB.loadByEmails(edgeCityPipeline.id, [newUser.email])
+        await consumerDB.loadByEmails(client, edgeCityPipeline.id, [
+          newUser.email
+        ])
       )[0];
       expectToExist(consumer);
       const consumerUpdated = consumer.timeUpdated;
@@ -805,7 +813,7 @@ describe("generic issuance - LemonadePipeline", function () {
       }
 
       const consumerAfterChange = (
-        await consumerDB.loadByEmails(edgeCityDenverPipeline.id, [
+        await consumerDB.loadByEmails(client, edgeCityDenverPipeline.id, [
           newUser.email
         ])
       )[0];
@@ -910,7 +918,7 @@ describe("generic issuance - LemonadePipeline", function () {
       const pipeline = pipelines.find(LemonadePipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(edgeCityPipeline.id);
-      const runInfo = await pipeline.load();
+      const runInfo = await giService.performPipelineLoad(pipeline.id);
 
       // The ticket should be loaded
       expect(runInfo.atomsLoaded).to.eq(1);
@@ -936,7 +944,8 @@ describe("generic issuance - LemonadePipeline", function () {
           customLemonadeTicketHandler(lemonadeBackendUrl, tickets)
         );
 
-        const runInfo = await pipeline.load();
+        const runInfo = await giService.performPipelineLoad(pipeline.id);
+
         // Both tickets should have been loaded
         expect(runInfo.atomsLoaded).to.eq(2);
         // Expect no errors to have been logged
@@ -962,7 +971,7 @@ describe("generic issuance - LemonadePipeline", function () {
           customLemonadeTicketHandler(lemonadeBackendUrl, tickets)
         );
 
-        const runInfo = await pipeline.load();
+        const runInfo = await giService.performPipelineLoad(pipeline.id);
         // Despite receiving two tickets, only one should be parsed and saved
         expect(runInfo.atomsLoaded).to.eq(1);
         // Expect one error to have been logged
@@ -989,7 +998,7 @@ describe("generic issuance - LemonadePipeline", function () {
       lemonadeBackend.checkOutAll();
 
       // Verify that bouncer is checked out in backend
-      await pipeline.load();
+      await giService.performPipelineLoad(pipeline.id);
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
         edgeCityTicketFeedUrl,

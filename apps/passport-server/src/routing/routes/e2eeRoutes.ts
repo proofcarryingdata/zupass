@@ -3,13 +3,15 @@ import {
   UploadEncryptedStorageRequest
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
+import { namedSqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { checkOptionalQueryParam, checkQueryParam } from "../params";
 
 export function initE2EERoutes(
   app: express.Application,
-  _context: ApplicationContext,
+  context: ApplicationContext,
   { e2eeService }: GlobalServices
 ): void {
   logger("[INIT] initializing e2ee routes");
@@ -21,8 +23,16 @@ export function initE2EERoutes(
    * salt so they can re-derive their key.
    */
   app.post("/sync/v3/changeBlobKey", async (req: Request, res: Response) => {
+    checkExistsForRoute(e2eeService);
     const request = req.body as ChangeBlobKeyRequest;
-    await e2eeService.handleChangeBlobKey(request, res);
+
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/sync/v3/changeBlobKey",
+      (client) => e2eeService.handleChangeBlobKey(client, request)
+    );
+
+    res.status(200).json(result);
   });
 
   /**
@@ -36,11 +46,19 @@ export function initE2EERoutes(
    * @todo - restrict the calling of this api somehow? at least a rate limit.
    */
   app.get("/sync/v3/load/", async (req: Request, res: Response) => {
-    await e2eeService.handleLoad(
-      checkQueryParam(req, "blobKey"),
-      checkOptionalQueryParam(req, "knownRevision"),
-      res
+    checkExistsForRoute(e2eeService);
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/sync/v3/load/",
+      (client) =>
+        e2eeService.handleLoad(
+          client,
+          checkQueryParam(req, "blobKey"),
+          checkOptionalQueryParam(req, "knownRevision")
+        )
     );
+
+    res.status(200).json(result);
   });
 
   /**
@@ -56,7 +74,14 @@ export function initE2EERoutes(
    * @todo - size limits?
    */
   app.post("/sync/v3/save", async (req: Request, res: Response) => {
+    checkExistsForRoute(e2eeService);
     const request = req.body as UploadEncryptedStorageRequest;
-    await e2eeService.handleSave(request, res);
+    const result = await namedSqlTransaction(
+      context.dbPool,
+      "/sync/v3/save",
+      (client) => e2eeService.handleSave(client, request)
+    );
+
+    res.status(200).json(result);
   });
 }

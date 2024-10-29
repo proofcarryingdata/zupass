@@ -17,18 +17,17 @@
  */
 
 import {
-  GPCProof,
   GPCProofConfig,
   GPCProofInputs,
-  deserializeGPCBoundConfig,
-  deserializeGPCRevealedClaims,
+  boundConfigFromJSON,
+  boundConfigToJSON,
   gpcArtifactDownloadURL,
   gpcBindConfig,
   gpcProve,
   gpcVerify,
-  serializeGPCBoundConfig,
-  serializeGPCProofConfig,
-  serializeGPCRevealedClaims
+  proofConfigToJSON,
+  revealedClaimsFromJSON,
+  revealedClaimsToJSON
 } from "@pcd/gpc";
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -57,7 +56,7 @@ export async function gpcDemo(): Promise<boolean> {
   console.log("Semaphore commitment", semaphoreIdentity.commitment);
   const podSword = POD.sign(
     {
-      pod_type: { type: "string", value: "item.weapon" },
+      pod_type: { type: "string", value: "myrpg.item.weapon" },
       itemSet: { type: "string", value: "celestial" },
       attack: { type: "int", value: 7n },
       weaponType: { type: "string", value: "sword" },
@@ -68,7 +67,7 @@ export async function gpcDemo(): Promise<boolean> {
   console.log("Sword", podSword.content.toJSON());
   const podShield = POD.sign(
     {
-      pod_type: { type: "string", value: "item.shield" },
+      pod_type: { type: "string", value: "myrpg.item.shield" },
       itemSet: { type: "string", value: "celestial" },
       defense: { type: "int", value: 5n },
       owner: { type: "cryptographic", value: semaphoreIdentity.commitment }
@@ -167,7 +166,7 @@ export async function gpcDemo(): Promise<boolean> {
   // If this code were running in a browser, we'd need a URL to download
   // artifacts.  We can get one from the function below, to use in a browser,
   // or to download separately into your own Node environment.
-  const artifactsURL = gpcArtifactDownloadURL("unpkg", "prod", undefined);
+  const artifactsURL = gpcArtifactDownloadURL("jsdelivr", "prod", undefined);
   console.log("In browser we'd download artifacts from", artifactsURL);
 
   //////////////////////////////////////////////////////////////////////////////
@@ -209,7 +208,10 @@ export async function gpcDemo(): Promise<boolean> {
 
   // The revealed claims object contains redacted information about the inputs
   // which should be revealed to the verifier.
-  console.log("Revealed claims", serializeGPCRevealedClaims(revealedClaims, 2));
+  console.log(
+    "Revealed claims",
+    JSON.stringify(revealedClaimsToJSON(revealedClaims), null, 2)
+  );
 
   //////////////////////////////////////////////////////////////////////////////
   // The outputs of proving function are also the inputs to verification.
@@ -265,20 +267,24 @@ export async function gpcDemo(): Promise<boolean> {
   // verifier.
   //////////////////////////////////////////////////////////////////////////////
 
-  // Proof config (bound or unbound) and revealed claims can be serialized.
-  // The proof itself is also a simple JSON object.
+  // Proof config (bound or unbound) and revealed claims can be converted to
+  // a JSON-compatible form to be serialized.
+  // The proof itself is already a simple JSON object.
   // In most cases, they'd be sent from prover to verifier across the network,
-  // so the prover would serialize them like this:
-  const serializedProof = JSON.stringify(proof);
-  const serializedConfig = serializeGPCBoundConfig(boundConfig);
-  const serializedClaims = serializeGPCRevealedClaims(revealedClaims);
+  // so the prover would serialize them something like this:
+  const serializedGPC = JSON.stringify({
+    proof: proof,
+    config: boundConfigToJSON(boundConfig),
+    revealed: revealedClaimsToJSON(revealedClaims)
+  });
 
   // Then the verifier would deserialize the like this.
   // Deserializing also validates their structure, though not (yet) the
   // correctness of the proof.
-  const vProof = JSON.parse(serializedProof) as GPCProof;
-  const vConfig = deserializeGPCBoundConfig(serializedConfig);
-  const vClaims = deserializeGPCRevealedClaims(serializedClaims);
+  const deserializedGPC = JSON.parse(serializedGPC);
+  const vProof = deserializedGPC.proof;
+  const vConfig = boundConfigFromJSON(deserializedGPC.config);
+  const vClaims = revealedClaimsFromJSON(deserializedGPC.revealed);
   if (
     !_.isEqual(vProof, proof) ||
     !_.isEqual(vConfig, boundConfig) ||
@@ -414,8 +420,8 @@ export async function gpcDemo(): Promise<boolean> {
   // any sort of proof.
   const proveArgs: GPCPCDArgs = {
     proofConfig: {
-      argumentType: ArgumentTypeName.String,
-      value: serializeGPCProofConfig(pcdProofConfig)
+      argumentType: ArgumentTypeName.Object,
+      value: proofConfigToJSON(pcdProofConfig)
     },
     pods: {
       value: {
@@ -436,14 +442,17 @@ export async function gpcDemo(): Promise<boolean> {
     },
     externalNullifier: {
       value: "example nullifier",
-      argumentType: ArgumentTypeName.String
+      argumentType: ArgumentTypeName.Object
     },
     membershipLists: {
-      argumentType: ArgumentTypeName.String
+      argumentType: ArgumentTypeName.Object
     },
     watermark: {
-      value: "example watermark",
-      argumentType: ArgumentTypeName.String
+      value: {
+        cryptographic:
+          "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+      },
+      argumentType: ArgumentTypeName.Object
     },
     id: {
       argumentType: ArgumentTypeName.String,

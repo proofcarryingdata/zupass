@@ -1,7 +1,9 @@
 import {
+  GenericIssuanceClearPipelineCacheResponse,
   GenericIssuanceDeletePipelineResponse,
   GenericIssuanceUpsertPipelineResponse,
   PipelineDefinition,
+  requestGenericIssuanceClearPipelineCache,
   requestGenericIssuanceDeletePipeline,
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
@@ -23,6 +25,21 @@ export const savePipeline = async (
     {
       jwt: userJWT,
       pipeline
+    }
+  );
+
+  return saveResponse;
+};
+
+export const clearCache = async (
+  userJWT: string,
+  pipelineId: string
+): Promise<GenericIssuanceClearPipelineCacheResponse> => {
+  const saveResponse = await requestGenericIssuanceClearPipelineCache(
+    ZUPASS_SERVER_URL,
+    {
+      jwt: userJWT,
+      pipelineId
     }
   );
 

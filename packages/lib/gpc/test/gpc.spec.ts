@@ -1,4 +1,8 @@
-import { ProtoPODGPC } from "@pcd/gpcircuits";
+import {
+  ProtoPODGPC,
+  ProtoPODGPCCircuitDesc,
+  gpcArtifactPaths
+} from "@pcd/gpcircuits";
 import {
   POD,
   PODCryptographicValue,
@@ -11,11 +15,13 @@ import {
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
+import { chooseCircuitFamilyForTests } from "../../gpcircuits/scripts/common";
 import {
   GPCArtifactSource,
   GPCArtifactStability,
   GPCArtifactVersion,
   GPCBoundConfig,
+  GPCProof,
   GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofEntryConfigCommon,
@@ -26,10 +32,13 @@ import {
   PODEntryIdentifier,
   SEMAPHORE_V3,
   SEMAPHORE_V4,
+  gpcCheckProvable as _gpcCheckProvable,
+  gpcProve as _gpcProve,
+  gpcVerify as _gpcVerify,
   gpcArtifactDownloadURL,
-  gpcCheckProvable,
-  gpcProve,
-  gpcVerify
+  gpcPostProve,
+  gpcPreProve,
+  gpcPreVerify
 } from "../src";
 import { makeCircuitIdentifier, makeWatermarkSignal } from "../src/gpcUtil";
 import {
@@ -43,7 +52,39 @@ import {
   sampleEntries2
 } from "./common";
 
-describe("gpc library (Compiled test artifacts) should work", async function () {
+// Choose circuit family according to environment variable `GPC_FAMILY_VARIANT`.
+const { circuitParamType, testCircuitFamily } = chooseCircuitFamilyForTests();
+
+// Test-specific GPC proof and verification functions
+const gpcCheckProvable = (
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs
+): { boundConfig: GPCBoundConfig; circuitDesc: ProtoPODGPCCircuitDesc } =>
+  _gpcCheckProvable(proofConfig, proofInputs, testCircuitFamily);
+const gpcProve = (
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs,
+  pathToArtifacts: string
+): Promise<{
+  proof: GPCProof;
+  boundConfig: GPCBoundConfig;
+  revealedClaims: GPCRevealedClaims;
+}> => _gpcProve(proofConfig, proofInputs, pathToArtifacts, testCircuitFamily);
+const gpcVerify = (
+  proof: GPCProof,
+  boundConfig: GPCBoundConfig,
+  revealedClaims: GPCRevealedClaims,
+  pathToArtifacts: string
+): Promise<boolean> =>
+  _gpcVerify(
+    proof,
+    boundConfig,
+    revealedClaims,
+    pathToArtifacts,
+    testCircuitFamily
+  );
+
+describe(`gpc library (Compiled ${circuitParamType} artifacts) should work`, async function () {
   function makeMinimalArgs(
     includeWatermark?: boolean,
     includeList?: boolean,
@@ -174,14 +215,76 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
 
     // For this small case, the library should auto-pick the smallest circuit.
     expect(boundConfig.circuitIdentifier).to.eq(
-      makeCircuitIdentifier(ProtoPODGPC.CIRCUIT_FAMILY[0])
+      makeCircuitIdentifier(testCircuitFamily[0])
+    );
+  });
+
+  it("should prove and verify with pre/post and separate proving system", async function () {
+    const { proofConfig, proofInputs, expectedRevealedClaims } =
+      makeMinimalArgs();
+
+    const {
+      boundConfig: orgBoundConfig,
+      circuitDesc: pCircuitDesc,
+      circuitInputs
+    } = gpcPreProve(proofConfig, proofInputs, testCircuitFamily);
+
+    const artifactPaths = gpcArtifactPaths(
+      GPC_TEST_ARTIFACTS_PATH,
+      pCircuitDesc
+    );
+
+    const { proof: orgProof, outputs: pCircuitOutputs } =
+      await ProtoPODGPC.prove(
+        circuitInputs,
+        artifactPaths.wasmPath,
+        artifactPaths.pkeyPath
+      );
+
+    const { proof, boundConfig, revealedClaims } = gpcPostProve(
+      orgProof,
+      orgBoundConfig,
+      proofInputs,
+      pCircuitOutputs
+    );
+
+    // There's nothing non-canonical about our input, so boundConfig should
+    // only differ by circuit selection.
+    const manuallyBoundConfig = {
+      ...proofConfig,
+      circuitIdentifier: boundConfig.circuitIdentifier
+    };
+    expect(boundConfig).to.deep.eq(manuallyBoundConfig);
+
+    expect(revealedClaims).to.deep.eq(expectedRevealedClaims);
+
+    const {
+      circuitDesc: vCircuitDesc,
+      circuitPublicInputs,
+      circuitOutputs: vCircuitOutputs
+    } = gpcPreVerify(boundConfig, revealedClaims, testCircuitFamily);
+
+    expect(pCircuitDesc).to.deep.eq(vCircuitDesc);
+    expect(pCircuitOutputs).to.deep.eq(vCircuitOutputs);
+
+    const isVerified = await ProtoPODGPC.verify(
+      gpcArtifactPaths(GPC_TEST_ARTIFACTS_PATH, vCircuitDesc).vkeyPath,
+      proof,
+      circuitPublicInputs,
+      vCircuitOutputs
+    );
+    expect(isVerified).to.be.true;
+
+    // For this small case, the library should auto-pick the smallest circuit.
+    expect(boundConfig.circuitIdentifier).to.eq(
+      makeCircuitIdentifier(testCircuitFamily[0])
     );
   });
 
   it("should prove and verify a minimal case with each circuit in the family", async function () {
     const { proofConfig, proofInputs, expectedRevealedClaims } =
       makeMinimalArgs();
-    for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY.slice(1)) {
+    for (const circuitDesc of testCircuitFamily.slice(1)) {
       const circuitID = makeCircuitIdentifier(circuitDesc);
       const { isVerified, boundConfig } = await gpcProofTest(
         {
@@ -1060,7 +1163,7 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
         }
       },
       "Error",
-      'Comparison value {"type":"cryptographic","value":999} corresponding to identifier "somePodName.ticketID" is a member of list "inadmissibleTickets".'
+      'Comparison value {"cryptographic":999} corresponding to identifier "somePodName.ticketID" is a member of list "inadmissibleTickets".'
     );
 
     await doIllegalArgTest(
@@ -1590,10 +1693,22 @@ describe("gpcArtifactDownloadURL should work", async function () {
         expected: "/artifacts/test/proto-pod-gpc"
       },
       {
+        stability: "test",
+        version: "",
+        zupassURL: "/",
+        expected: "/artifacts/test/proto-pod-gpc"
+      },
+      {
         stability: "prod",
         version: undefined,
         zupassURL: "/",
-        expected: "/artifacts/proto-pod-gpc"
+        expected: `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
+        zupassURL: "/",
+        expected: `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
@@ -1605,7 +1720,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: "foo",
         zupassURL: "/",
-        expected: "/artifacts/proto-pod-gpc"
+        expected: "/artifacts/proto-pod-gpc/foo"
       },
       {
         stability: "test",
@@ -1614,10 +1729,22 @@ describe("gpcArtifactDownloadURL should work", async function () {
         expected: "artifacts/test/proto-pod-gpc"
       },
       {
+        stability: "test",
+        version: "",
+        zupassURL: "",
+        expected: "artifacts/test/proto-pod-gpc"
+      },
+      {
         stability: "prod",
         version: undefined,
         zupassURL: "",
-        expected: "artifacts/proto-pod-gpc"
+        expected: `artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
+        zupassURL: "",
+        expected: `artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
@@ -1629,7 +1756,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: "foo",
         zupassURL: "",
-        expected: "artifacts/proto-pod-gpc"
+        expected: "artifacts/proto-pod-gpc/foo"
       },
       {
         stability: "test",
@@ -1641,7 +1768,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: undefined,
         zupassURL: "https://zupass.org/",
-        expected: "https://zupass.org/artifacts/proto-pod-gpc"
+        expected: `https://zupass.org/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
@@ -1653,7 +1780,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: "foo",
         zupassURL: "https://zupass.org",
-        expected: "https://zupass.org/artifacts/proto-pod-gpc"
+        expected: "https://zupass.org/artifacts/proto-pod-gpc/foo"
       }
     ];
 
@@ -1703,6 +1830,12 @@ describe("gpcArtifactDownloadURL should work", async function () {
       {
         stability: "prod",
         version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: undefined
+      },
+      {
+        stability: "prod",
+        version: "",
         zupassURL: "https://zupass.org",
         expected: undefined
       },
@@ -1773,8 +1906,20 @@ describe("gpcArtifactDownloadURL should work", async function () {
         expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
+        stability: "test",
+        version: "",
+        zupassURL: "https://zupass.org",
+        expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
         stability: "prod",
         version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
         zupassURL: "https://zupass.org",
         expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
       },
@@ -1821,6 +1966,90 @@ describe("gpcArtifactDownloadURL should work", async function () {
     }
   });
 
+  it("should work for source=jsdelivr", async function () {
+    const TEST_CASES = [
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: undefined,
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: undefined,
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "test",
+        version: "",
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "test",
+        version: "foo",
+        zupassURL: undefined,
+        expected:
+          "https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@foo"
+      },
+      {
+        stability: "prod",
+        version: "foo",
+        zupassURL: undefined,
+        expected:
+          "https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@foo"
+      },
+      {
+        stability: "prod",
+        version: "foo/bar",
+        zupassURL: "https://zupass.org",
+        expected:
+          "https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@foo/bar"
+      }
+    ];
+
+    for (const testCase of TEST_CASES) {
+      if (testCase.expected !== undefined) {
+        expect(
+          gpcArtifactDownloadURL(
+            "jsdelivr",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.eq(testCase.expected);
+      } else {
+        expect(() =>
+          gpcArtifactDownloadURL(
+            "jsdelivr",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.throw(Error);
+      }
+    }
+  });
+
   it("should throw on missing or invalid source", async function () {
     expect(() =>
       gpcArtifactDownloadURL(
@@ -1840,9 +2069,3 @@ describe("gpcArtifactDownloadURL should work", async function () {
     ).to.throw(Error);
   });
 });
-
-// TODO(POD-P2): More detailed feature unit-tests by module:
-// TODO(POD-P2): gpcCompile tests using WitnessTester
-// TODO(POD-P2): gpcChecks tests for positive/negative cases
-// TODO(POD-P2): gpcSerialize tests for positive/negative cases
-// TODO(POD-P3): gpcUtil tests

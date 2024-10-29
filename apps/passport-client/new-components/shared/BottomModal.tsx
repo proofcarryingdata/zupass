@@ -1,7 +1,8 @@
-import { ReactNode } from "react";
+import { ReactNode, forwardRef, useCallback, useRef } from "react";
 import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
+import { Typography } from "./Typography";
 
 const BottomModalOverlay = styled.div<{ $fullScreen?: boolean }>`
   position: fixed;
@@ -35,6 +36,7 @@ const BottomModalContainer = styled.div<{
   max-height: 100%;
   height: ${({ $height }): string | number => ($height ? $height : "auto")};
   margin: 0 auto;
+  overflow-y: auto;
 `;
 
 export type BottomModalProps = {
@@ -46,40 +48,89 @@ export type BottomModalProps = {
   dismissable?: boolean;
 };
 
-export const BottomModal = ({
-  isOpen,
-  children,
-  modalContainerStyle,
-  onClickOutside,
-  height,
-  dismissable = true
-}: BottomModalProps): JSX.Element | null => {
-  const dispatch = useDispatch();
-  if (!isOpen) {
-    return null;
-  }
-  return (
-    <BottomModalOverlay
-      onClick={() => {
-        if (dismissable) {
-          dispatch({
-            type: "set-bottom-modal",
-            modal: { modalType: "none" }
-          });
-        }
+export const BottomModal = forwardRef<HTMLDivElement, BottomModalProps>(
+  (
+    {
+      isOpen,
+      children,
+      modalContainerStyle,
+      onClickOutside,
+      height,
+      dismissable = true
+    },
+    ref
+  ) => {
+    const dispatch = useDispatch();
+    const modalContentRef = useRef<HTMLDivElement>(null);
+    const isClickInsideModalRef = useRef(false);
+
+    const handleMouseDown = useCallback((e: React.MouseEvent) => {
+      isClickInsideModalRef.current = !!modalContentRef.current?.contains(
+        e.target as Node
+      );
+    }, []);
+
+    const handleMouseUp = useCallback(() => {
+      if (!isClickInsideModalRef.current && dismissable) {
+        dispatch({
+          type: "set-bottom-modal",
+          modal: { modalType: "none" }
+        });
         onClickOutside && onClickOutside();
-      }}
-    >
-      <BottomModalContainer
-        style={modalContainerStyle}
-        onClick={(e) => {
-          // Consider use clickOutside hook instead of that
-          e.stopPropagation();
-        }}
-        $height={height}
+      }
+      isClickInsideModalRef.current = false;
+    }, [dismissable, dispatch, onClickOutside]);
+
+    if (!isOpen) {
+      return null;
+    }
+
+    return (
+      <BottomModalOverlay
+        onMouseDown={handleMouseDown}
+        onMouseUp={handleMouseUp}
       >
-        {children}
-      </BottomModalContainer>
-    </BottomModalOverlay>
+        <BottomModalContainer
+          ref={ref}
+          style={modalContainerStyle}
+          onClick={(e) => {
+            // Consider use clickOutside hook instead of that
+            e.stopPropagation();
+          }}
+          $height={height}
+        >
+          <div ref={modalContentRef}>{children}</div>
+        </BottomModalContainer>
+      </BottomModalOverlay>
+    );
+  }
+);
+
+const TextBlock = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: flex-start;
+`;
+
+export const BottomModalHeader = ({
+  title,
+  description,
+  children
+}: {
+  title: string;
+  description: string;
+  children?: ReactNode;
+}): JSX.Element => {
+  return (
+    <TextBlock>
+      <Typography fontWeight={800} fontSize={20} color="var(--text-primary)">
+        {title}
+      </Typography>
+      <Typography fontSize={16} color="var(--text-primary)" family="Rubik">
+        {description}
+      </Typography>
+      {children || null}
+    </TextBlock>
   );
 };

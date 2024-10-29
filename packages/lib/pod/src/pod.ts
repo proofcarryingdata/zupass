@@ -1,5 +1,3 @@
-import { requireDefinedParameter } from "@pcd/util";
-import JSONBig from "json-bigint";
 import {
   checkPublicKeyFormat,
   checkSignatureFormat,
@@ -125,48 +123,6 @@ export class POD {
       PODContent.fromEntries(entries),
       checkSignatureFormat(signature),
       checkPublicKeyFormat(signerPublicKey)
-    );
-  }
-
-  /**
-   * Serializes this instance as a JSON string.
-   */
-  public serialize(): string {
-    return JSONBig({
-      useNativeBigInt: true,
-      alwaysParseAsBig: true
-    }).stringify({
-      entries: this.content.asEntries(),
-      signature: this.signature,
-      signerPublicKey: this.signerPublicKey
-    });
-  }
-
-  /**
-   * Deserializes a POD from a JSON string.
-   *
-   * @param serializedPOD a string previously created by {@link #serialize}.
-   * @returns a new PODContent instance
-   * @throws if the string isn't valid JSON, or represents entries which aren't
-   *   legal for inclusion in a POD
-   */
-  public static deserialize(serializedPOD: string): POD {
-    const parsedPOD = JSONBig({
-      useNativeBigInt: true,
-      alwaysParseAsBig: true
-    }).parse(serializedPOD);
-
-    // TODO(POD-P2): More careful schema validation, likely with Zod, with
-    // special handling of the PODEntries type and subtypes.
-    // TODO(POD-P3): Backward-compatible schema versioning?
-    requireDefinedParameter(parsedPOD.entries, "entries");
-    requireDefinedParameter(parsedPOD.signature, "signature");
-    requireDefinedParameter(parsedPOD.signerPublicKey, "signerPublicKey");
-
-    return POD.load(
-      parsedPOD.entries,
-      parsedPOD.signature,
-      parsedPOD.signerPublicKey
     );
   }
 

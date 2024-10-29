@@ -13,6 +13,7 @@ import {
   UNREDACT_TICKETS_TERMS_VERSION,
   UpgradeUserWithV4CommitmentResult,
   VerifyTokenResponseValue,
+  ZupassUserJson,
   requestPodboxOneClickEmails,
   verifyAddV4CommitmentRequestPCD
 } from "@pcd/passport-interface";
@@ -28,8 +29,8 @@ import {
   validateEmail
 } from "@pcd/util";
 import { randomUUID } from "crypto";
-import { Response } from "express";
 import { sha256 } from "js-sha256";
+import { PoolClient } from "postgres-pool";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
@@ -66,11 +67,11 @@ const AgreedTermsSchema = z.object({
  */
 export class UserService {
   public readonly bypassEmail: boolean;
+  private context: ApplicationContext;
   /**
    * No particular reason to limit to 6, just needed some limit.
    */
   private static readonly MAX_USER_EMAIL_ADDRESES = 6;
-  private readonly context: ApplicationContext;
   private readonly semaphoreService: SemaphoreService;
   private readonly emailTokenService: EmailTokenService;
   private readonly emailService: EmailService;
@@ -160,8 +161,11 @@ export class UserService {
     });
   }
 
-  public async getSaltByEmail(email: string): Promise<string | null> {
-    const user = await this.getUserByEmail(email);
+  public async getSaltByEmail(
+    client: PoolClient,
+    email: string
+  ): Promise<string | null> {
+    const user = await this.getUserByEmail(client, email);
 
     if (!user) {
       throw new PCDHTTPError(404, `user ${email} does not exist`);
@@ -176,17 +180,18 @@ export class UserService {
    * the user does not have an encryption key stored on the server.
    */
   public async getEncryptionKeyForUser(
+    client: PoolClient,
     email: string
   ): Promise<HexString | null> {
-    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
+    const existingUser = await fetchUserByEmail(client, email);
     return existingUser?.encryption_key ?? null;
   }
 
   public async handleSendTokenEmail(
+    client: PoolClient,
     email: string,
-    force: boolean,
-    res: Response
-  ): Promise<void> {
+    force: boolean
+  ): Promise<ConfirmEmailResponseValue> {
     logger(
       `[USER_SERVICE] send-token-email ${JSON.stringify({
         email,
@@ -200,6 +205,7 @@ export class UserService {
 
     if (
       !(await this.rateLimitService.requestRateLimitedAction(
+        this.context.dbPool,
         "REQUEST_EMAIL_TOKEN",
         email
       ))
@@ -207,22 +213,24 @@ export class UserService {
       throw new PCDHTTPError(401, "Too many attempts. Come back later.");
     }
 
-    const newEmailToken =
-      await this.emailTokenService.saveNewTokenForEmail(email);
-    let existingCommitment = await fetchUserByEmail(this.context.dbPool, email);
+    const newEmailToken = await this.emailTokenService.saveNewTokenForEmail(
+      client,
+      email
+    );
+    let existingCommitment = await fetchUserByEmail(client, email);
     if (
       existingCommitment?.encryption_key &&
       process.env.DELETE_MISSING_USERS === "true"
     ) {
       const blobKey = await getHash(existingCommitment.encryption_key);
-      const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
+      const storage = await fetchEncryptedStorage(client, blobKey);
       if (!storage) {
         logger(
           `[USER_SERVICE] Deleting user with no storage: ${JSON.stringify(
             existingCommitment
           )}`
         );
-        await deleteUserByUUID(this.context.dbPool, existingCommitment.uuid);
+        await deleteUserByUUID(client, existingCommitment.uuid);
         existingCommitment = null;
       }
     }
@@ -239,16 +247,15 @@ export class UserService {
 
     if (this.bypassEmail) {
       logger("[DEV] Bypassing email, returning token");
-      res.status(200).json({
+      return {
         devToken: newEmailToken
-      } satisfies ConfirmEmailResponseValue);
-      return;
+      } satisfies ConfirmEmailResponseValue;
     }
 
     logger(`[USER_SERVICE] Sending token=${newEmailToken} to email=${email}`);
     await this.emailService.sendTokenEmail(email, newEmailToken);
 
-    res.sendStatus(200);
+    return undefined;
   }
 
   /**
@@ -258,13 +265,17 @@ export class UserService {
    * a counter and allow the action to proceed. Can only be called on users
    * that have already created an account.
    */
-  private async checkAccountResetRateLimit(user: UserRow): Promise<void> {
+  private async checkAccountResetRateLimit(
+    client: PoolClient,
+    user: UserRow
+  ): Promise<void> {
     if (process.env.ACCOUNT_RESET_RATE_LIMIT_DISABLED === "true") {
       logger("[USER_SERVICE] account rate limit disabled");
       return;
     }
 
     const allowed = await this.rateLimitService.requestRateLimitedAction(
+      this.context.dbPool,
       "ACCOUNT_RESET",
       user.uuid
     );
@@ -279,13 +290,13 @@ export class UserService {
   }
 
   public async handleOneClickLogin(
+    client: PoolClient,
     email: string,
     code: string,
     commitment: string,
     v4PublicKey: string,
-    encryption_key: string,
-    res: Response
-  ): Promise<void> {
+    encryption_key: string
+  ): Promise<OneClickLoginResponseValue> {
     const validDevcon = this.anonymizedDevconEmails[sha256(email)]?.includes(
       sha256(code)
     );
@@ -293,6 +304,7 @@ export class UserService {
     const valid =
       validDevcon ||
       (await this.genericIssuanceService?.validateEmailAndPretixOrderCode(
+        client,
         email,
         code
       ));
@@ -304,33 +316,32 @@ export class UserService {
       );
     }
 
-    let existingUser = await fetchUserByEmail(this.context.dbPool, email);
+    let existingUser = await fetchUserByEmail(client, email);
     if (
       existingUser?.encryption_key &&
       process.env.DELETE_MISSING_USERS === "true"
     ) {
       const blobKey = await getHash(existingUser.encryption_key);
-      const storage = await fetchEncryptedStorage(this.context.dbPool, blobKey);
+      const storage = await fetchEncryptedStorage(client, blobKey);
       if (!storage) {
         logger(
           `[USER_SERVICE] Deleting user with no storage: ${JSON.stringify(
             existingUser
           )}`
         );
-        await deleteUserByUUID(this.context.dbPool, existingUser.uuid);
+        await deleteUserByUUID(client, existingUser.uuid);
         existingUser = null;
       }
     }
 
     if (existingUser) {
-      res.status(200).json({
+      return {
         isNewUser: false,
         encryptionKey: existingUser.encryption_key
-      } satisfies OneClickLoginResponseValue);
-      return;
+      } satisfies OneClickLoginResponseValue;
     }
     // todo: rate limit
-    await upsertUser(this.context.dbPool, {
+    await upsertUser(client, {
       uuid: randomUUID(),
       emails: [email],
       commitment,
@@ -344,7 +355,7 @@ export class UserService {
     // Reload Merkle trees
     this.semaphoreService.scheduleReload();
 
-    const user = await fetchUserByEmail(this.context.dbPool, email);
+    const user = await fetchUserByEmail(client, email);
     if (!user) {
       throw new PCDHTTPError(403, "No user with that email exists");
     }
@@ -357,7 +368,7 @@ export class UserService {
       user.uuid
     );
     await agreeTermsAndUnredactTickets(
-      this.context.dbPool,
+      client,
       user.uuid,
       LATEST_PRIVACY_NOTICE
     );
@@ -365,22 +376,23 @@ export class UserService {
     const userJson = userRowToZupassUserJson(user);
 
     logger(`[USER_SERVICE] logged in a user`, userJson);
-    res.status(200).json({
+
+    return {
       isNewUser: true,
       zupassUser: userJson
-    } satisfies OneClickLoginResponseValue);
+    } satisfies OneClickLoginResponseValue;
   }
 
   public async handleNewUser(
+    client: PoolClient,
     token: string,
     email: string,
     commitment: string,
     v4PublicKey: string,
     salt: string | undefined,
     encryption_key: string | undefined,
-    autoRegister: boolean | undefined,
-    res: Response
-  ): Promise<void> {
+    autoRegister: boolean | undefined
+  ): Promise<NewUserResponseValue> {
     logger(
       `[USER_SERVICE] new-user ${JSON.stringify({
         token,
@@ -397,7 +409,7 @@ export class UserService {
       );
     }
 
-    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
+    const existingUser = await fetchUserByEmail(client, email);
 
     // Prevent accidental account re-creation/reset for one-click links clicked by existing users
     if (existingUser && autoRegister) {
@@ -407,7 +419,9 @@ export class UserService {
       );
     }
 
-    if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
+    if (
+      !(await this.emailTokenService.checkTokenCorrect(client, email, token))
+    ) {
       throw new PCDHTTPError(
         403,
         autoRegister
@@ -417,13 +431,13 @@ export class UserService {
     }
 
     if (existingUser) {
-      await this.checkAccountResetRateLimit(existingUser);
+      await this.checkAccountResetRateLimit(client, existingUser);
     }
 
-    await this.emailTokenService.saveNewTokenForEmail(email);
+    await this.emailTokenService.saveNewTokenForEmail(client, email);
 
     logger(`[USER_SERVICE] Saving commitment: ${commitment}, ${v4PublicKey}`);
-    await upsertUser(this.context.dbPool, {
+    await upsertUser(client, {
       uuid: existingUser ? existingUser.uuid : randomUUID(),
       emails: existingUser ? existingUser.emails : [email],
       commitment,
@@ -444,7 +458,7 @@ export class UserService {
     // Reload Merkle trees
     this.semaphoreService.scheduleReload();
 
-    const user = await fetchUserByEmail(this.context.dbPool, email);
+    const user = await fetchUserByEmail(client, email);
     if (!user) {
       throw new PCDHTTPError(403, "no user with that email exists");
     }
@@ -454,7 +468,7 @@ export class UserService {
     // a benefit
     logger(`[USER_SERVICE] Unredacting tickets for email`, user.uuid);
     await agreeTermsAndUnredactTickets(
-      this.context.dbPool,
+      client,
       user.uuid,
       LATEST_PRIVACY_NOTICE
     );
@@ -465,7 +479,7 @@ export class UserService {
     };
 
     logger(`[USER_SERVICE] logged in a user`, userJson);
-    res.status(200).json(response);
+    return response;
   }
 
   /**
@@ -473,25 +487,29 @@ export class UserService {
    * If the user does not exist, returns a 404.
    * Otherwise returns the user.
    */
-  public async handleGetUser(uuid: string, res: Response): Promise<void> {
+  public async handleGetUser(
+    client: PoolClient,
+    uuid: string
+  ): Promise<ZupassUserJson> {
     logger(`[USER_SERVICE] Fetching user ${uuid}`);
 
-    const user = await this.getUserByUUID(uuid);
+    const user = await this.getUserByUUID(client, uuid);
 
     if (!user) {
       throw new PCDHTTPError(410, `no user with uuid '${uuid}'`);
     }
 
-    const userJson = userRowToZupassUserJson(user);
-
-    res.status(200).json(userJson);
+    return userRowToZupassUserJson(user);
   }
 
   /**
    * Returns either the user, or null if no user with the given uuid can be found.
    */
-  public async getUserByUUID(uuid: string): Promise<UserRow | null> {
-    const user = await fetchUserByUUID(this.context.dbPool, uuid);
+  public async getUserByUUID(
+    client: PoolClient,
+    uuid: string
+  ): Promise<UserRow | null> {
+    const user = await fetchUserByUUID(client, uuid);
 
     if (!user) {
       logger("[SEMA] no user with that email exists");
@@ -503,8 +521,11 @@ export class UserService {
   /**
    * Gets a user by email address, or null if no user with that email exists.
    */
-  public async getUserByEmail(email: string): Promise<UserRow | null> {
-    const user = await fetchUserByEmail(this.context.dbPool, email);
+  public async getUserByEmail(
+    client: PoolClient,
+    email: string
+  ): Promise<UserRow | null> {
+    const user = await fetchUserByEmail(client, email);
 
     if (!user) {
       logger("[SEMA] no user with that email exists");
@@ -518,9 +539,10 @@ export class UserService {
    * Returns either the user, or null if no user with the given commitment can be found.
    */
   public async getUserByCommitment(
+    client: PoolClient,
     commitment: string
   ): Promise<UserRow | null> {
-    const user = await fetchUserByV3Commitment(this.context.dbPool, commitment);
+    const user = await fetchUserByV3Commitment(client, commitment);
 
     if (!user) {
       logger("[SEMA] no user with that commitment exists");
@@ -531,29 +553,28 @@ export class UserService {
   }
 
   public async handleDeleteAccount(
+    client: PoolClient,
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<void> {
     const verifyResult =
       await this.credentialSubservice.tryVerify(serializedPCD);
 
-    const user = await fetchUserForCredential(
-      this.context.dbPool,
-      verifyResult
-    );
+    const user = await fetchUserForCredential(client, verifyResult);
 
     if (!user) {
       throw new Error("User not found");
     }
 
-    await deleteUserByUUID(this.context.dbPool, user.uuid);
-    await deleteE2EEByV3Commitment(this.context.dbPool, user.commitment);
+    await deleteUserByUUID(client, user.uuid);
+    await deleteE2EEByV3Commitment(client, user.commitment);
   }
 
   public async getUserForUnverifiedCredential(
+    client: PoolClient,
     credential: Credential
   ): Promise<UserRow | null> {
     return fetchUserForCredential(
-      this.context.dbPool,
+      client,
       await this.credentialSubservice.verifyAndExpectZupassEmail(credential)
     );
   }
@@ -562,6 +583,7 @@ export class UserService {
    * @param sig created by {@link makeAddV4CommitmentRequest}
    */
   public async handleAddV4Commitment(
+    client: PoolClient,
     sig: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<UpgradeUserWithV4CommitmentResult> {
     const v3Sig = await SemaphoreSignaturePCDPackage.deserialize(sig.pcd);
@@ -573,7 +595,7 @@ export class UserService {
     }
 
     const user = await fetchUserByV3Commitment(
-      this.context.dbPool,
+      client,
       verification.v3Commitment
     );
 
@@ -584,7 +606,7 @@ export class UserService {
     if (!user.semaphore_v4_commitment && !user.semaphore_v4_pubkey) {
       user.semaphore_v4_commitment = verification.v4Commitment;
       user.semaphore_v4_pubkey = verification.v4PublicKey;
-      await upsertUser(this.context.dbPool, user);
+      await upsertUser(client, user);
     } else if (
       user.semaphore_v4_commitment !== verification.v4Commitment ||
       user.semaphore_v4_pubkey !== verification.v4PublicKey
@@ -605,6 +627,7 @@ export class UserService {
    * Updates the version of the legal terms the user agrees to
    */
   public async handleAgreeTerms(
+    client: PoolClient,
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<AgreeTermsResult> {
     const pcd = await SemaphoreSignaturePCDPackage.deserialize(
@@ -630,7 +653,7 @@ export class UserService {
 
     const payload = parsedPayload.data;
     const user = await fetchUserByV3Commitment(
-      this.context.dbPool,
+      client,
       pcd.claim.identityCommitment
     );
     if (!user) {
@@ -650,17 +673,13 @@ export class UserService {
         `[USER_SERVICE] Unredacting tickets for email due to accepting version ${payload.version} of legal terms`,
         user.uuid
       );
-      await agreeTermsAndUnredactTickets(
-        this.context.dbPool,
-        user.uuid,
-        payload.version
-      );
+      await agreeTermsAndUnredactTickets(client, user.uuid, payload.version);
     } else {
       logger(
         `[USER_SERVICE] Updating user to version ${payload.version} of legal terms`,
         user.uuid
       );
-      await upsertUser(this.context.dbPool, {
+      await upsertUser(client, {
         ...user,
         terms_agreed: payload.version
       });
@@ -673,11 +692,13 @@ export class UserService {
   }
 
   public async handleVerifyToken(
+    client: PoolClient,
     token: string,
     email: string
   ): Promise<VerifyTokenResponseValue> {
     if (
       !(await this.rateLimitService.requestRateLimitedAction(
+        this.context.dbPool,
         "CHECK_EMAIL_TOKEN",
         email
       ))
@@ -686,6 +707,7 @@ export class UserService {
     }
 
     const tokenCorrect = await this.emailTokenService.checkTokenCorrect(
+      client,
       email,
       token
     );
@@ -697,12 +719,12 @@ export class UserService {
       );
     }
 
-    const user = await this.getUserByEmail(email);
+    const user = await this.getUserByEmail(client, email);
 
     // If we return the user's encryption key, change the token so this request
     // can't be replayed.
     if (user?.encryption_key) {
-      await this.emailTokenService.saveNewTokenForEmail(email);
+      await this.emailTokenService.saveNewTokenForEmail(client, email);
     }
 
     return {
@@ -715,6 +737,7 @@ export class UserService {
    * exits without any updates to the user.
    */
   public async handleAddUserEmail(
+    client: PoolClient,
     emailToAdd: string,
     unverifiedCredential: SerializedPCD<SemaphoreSignaturePCD>,
     confirmationCode?: string
@@ -726,8 +749,10 @@ export class UserService {
       unverifiedCredential
     );
 
-    const requestingUser =
-      await this.getUserForUnverifiedCredential(unverifiedCredential);
+    const requestingUser = await this.getUserForUnverifiedCredential(
+      client,
+      unverifiedCredential
+    );
     if (!requestingUser) {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
@@ -736,14 +761,19 @@ export class UserService {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidInput);
     }
 
-    const maybeExistingUserOfNewEmail = await this.getUserByEmail(emailToAdd);
+    const maybeExistingUserOfNewEmail = await this.getUserByEmail(
+      client,
+      emailToAdd
+    );
     if (maybeExistingUserOfNewEmail) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
     }
 
     if (confirmationCode === undefined) {
-      const newToken =
-        await this.emailTokenService.saveNewTokenForEmail(emailToAdd);
+      const newToken = await this.emailTokenService.saveNewTokenForEmail(
+        client,
+        emailToAdd
+      );
 
       if (this.bypassEmail) {
         logger("[DEV] Bypassing email, returning token", newToken);
@@ -756,6 +786,7 @@ export class UserService {
     }
 
     const isCodeValid = await this.emailTokenService.checkTokenCorrect(
+      client,
       emailToAdd,
       confirmationCode
     );
@@ -777,7 +808,7 @@ export class UserService {
     try {
       const newEmailList = [...requestingUser.emails, emailToAdd];
 
-      await upsertUser(this.context.dbPool, {
+      await upsertUser(client, {
         ...requestingUser,
         emails: newEmailList
       });
@@ -789,6 +820,7 @@ export class UserService {
   }
 
   public async handleRemoveUserEmail(
+    client: PoolClient,
     emailToRemove: string,
     unverifiedCredential: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<RemoveUserEmailResponseValue> {
@@ -798,8 +830,10 @@ export class UserService {
       unverifiedCredential
     );
 
-    const requestingUser =
-      await this.getUserForUnverifiedCredential(unverifiedCredential);
+    const requestingUser = await this.getUserForUnverifiedCredential(
+      client,
+      unverifiedCredential
+    );
     if (!requestingUser) {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
@@ -820,7 +854,7 @@ export class UserService {
     );
 
     try {
-      await upsertUser(this.context.dbPool, {
+      await upsertUser(client, {
         ...requestingUser,
         emails: newEmailList
       });
@@ -835,6 +869,7 @@ export class UserService {
    * exits without any updates to the user.
    */
   public async handleChangeUserEmail(
+    client: PoolClient,
     oldEmail: string,
     newEmail: string,
     unverifiedCredential: SerializedPCD<SemaphoreSignaturePCD>,
@@ -848,13 +883,18 @@ export class UserService {
       unverifiedCredential
     );
 
-    const requestingUser =
-      await this.getUserForUnverifiedCredential(unverifiedCredential);
+    const requestingUser = await this.getUserForUnverifiedCredential(
+      client,
+      unverifiedCredential
+    );
     if (!requestingUser) {
       throw new PCDHTTPError(400, EmailUpdateError.InvalidCredential);
     }
 
-    const maybeExistingUserOfNewEmail = await this.getUserByEmail(newEmail);
+    const maybeExistingUserOfNewEmail = await this.getUserByEmail(
+      client,
+      newEmail
+    );
     if (maybeExistingUserOfNewEmail) {
       throw new PCDHTTPError(400, EmailUpdateError.EmailAlreadyRegistered);
     }
@@ -878,8 +918,10 @@ export class UserService {
     }
 
     if (confirmationCode === undefined) {
-      const newToken =
-        await this.emailTokenService.saveNewTokenForEmail(newEmail);
+      const newToken = await this.emailTokenService.saveNewTokenForEmail(
+        client,
+        newEmail
+      );
 
       if (this.bypassEmail) {
         logger("[DEV] Bypassing email, returning token", newToken);
@@ -892,6 +934,7 @@ export class UserService {
     }
 
     const isCodeValid = await this.emailTokenService.checkTokenCorrect(
+      client,
       newEmail,
       confirmationCode
     );
@@ -903,7 +946,7 @@ export class UserService {
     try {
       const newEmailList = [newEmail];
 
-      await upsertUser(this.context.dbPool, {
+      await upsertUser(client, {
         ...requestingUser,
         emails: newEmailList
       });
@@ -917,13 +960,25 @@ export class UserService {
 
 export function startUserService(
   context: ApplicationContext,
-  semaphoreService: SemaphoreService,
+  semaphoreService: SemaphoreService | null,
   emailTokenService: EmailTokenService,
   emailService: EmailService,
   rateLimitService: RateLimitService,
   genericIssuanceService: GenericIssuanceService | null,
   credentialSubservice: CredentialSubservice
-): UserService {
+): UserService | null {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting user service`
+    );
+    return null;
+  }
+
+  if (!semaphoreService) {
+    logger("[USER_SERVICE] can't start user service - no semaphore service");
+    return null;
+  }
+
   const userService = new UserService(
     context,
     semaphoreService,

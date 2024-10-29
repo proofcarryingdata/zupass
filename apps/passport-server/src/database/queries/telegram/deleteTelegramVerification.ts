@@ -1,11 +1,11 @@
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
  * Delete a verification.
  */
 export async function deleteTelegramVerification(
-  client: Pool,
+  client: PoolClient,
   telegramUserId: number,
   telegramChatId: number
 ): Promise<void> {

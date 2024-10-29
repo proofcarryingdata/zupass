@@ -241,9 +241,9 @@ export const ImportModal = (): ReactNode => {
     <>
       <TextContainer>
         <Typography fontWeight={800} fontSize={20}>
-          IMPORT BACKUP MODAL
+          IMPORT BACKUP DATA
         </Typography>
-        <Typography fontSize={16}>
+        <Typography fontSize={16} family="Rubik">
           If you have previously exported a backup of your account, you can
           import the backed-up PODs by selecting the backup file. Importing data
           will not overwrite any of your existing PODs. To begin, select a
@@ -303,7 +303,7 @@ export const ImportModal = (): ReactNode => {
           importState.mergeablePcdIds.size > 0 && (
             <>
               <TextContainer>
-                <Typography fontSize={16} fontWeight={500}>
+                <Typography fontSize={16} fontWeight={400} family="Rubik">
                   The selected file contains{" "}
                   <Typography fontWeight={700}>
                     {importState.mergeablePcdIds.size}
@@ -311,7 +311,9 @@ export const ImportModal = (): ReactNode => {
                   new PCDs
                 </Typography>
                 <div>
-                  Import PCDs from the following backed-up folders:
+                  <Typography fontSize={16} fontWeight={400} family="Rubik">
+                    Import PCDs from the following backed-up folders:
+                  </Typography>
                   <Folders>
                     {Object.entries(importState.folderCounts).map(
                       ([folder, count]) => {

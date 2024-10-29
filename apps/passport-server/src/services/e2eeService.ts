@@ -7,7 +7,7 @@ import {
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
-import { Response } from "express";
+import { PoolClient } from "postgres-pool";
 import {
   UpdateEncryptedStorageResult,
   fetchEncryptedStorage,
@@ -16,8 +16,7 @@ import {
   updateEncryptedStorage
 } from "../database/queries/e2ee";
 import { fetchUserByUUID } from "../database/queries/users";
-import { PCDHTTPError } from "../routing/pcdHttpError";
-import { ApplicationContext } from "../types";
+import { PCDHTTPError, PCDHTTPJSONError } from "../routing/pcdHttpError";
 import { logger } from "../util/logger";
 import { CredentialSubservice } from "./generic-issuance/subservices/CredentialSubservice";
 
@@ -26,28 +25,20 @@ import { CredentialSubservice } from "./generic-issuance/subservices/CredentialS
  * backups of users' PCDs.
  */
 export class E2EEService {
-  private readonly context: ApplicationContext;
   private readonly credentialSubservice: CredentialSubservice;
 
-  public constructor(
-    context: ApplicationContext,
-    credentialsubservice: CredentialSubservice
-  ) {
-    this.context = context;
+  public constructor(credentialsubservice: CredentialSubservice) {
     this.credentialSubservice = credentialsubservice;
   }
 
   public async handleLoad(
+    client: PoolClient,
     blobKey: string,
-    knownRevision: string | undefined,
-    res: Response
-  ): Promise<void> {
+    knownRevision: string | undefined
+  ): Promise<DownloadEncryptedStorageResponseValue> {
     logger(`[E2EE] Loading ${blobKey}`);
 
-    const storageModel = await fetchEncryptedStorage(
-      this.context.dbPool,
-      blobKey
-    );
+    const storageModel = await fetchEncryptedStorage(client, blobKey);
 
     if (!storageModel) {
       throw new PCDHTTPError(
@@ -63,7 +54,8 @@ export class E2EEService {
     if (foundRevision !== knownRevision) {
       result.encryptedBlob = storageModel.encrypted_blob;
     }
-    res.json(result);
+
+    return result;
   }
 
   private checkUpdateResult(
@@ -89,9 +81,9 @@ export class E2EEService {
   }
 
   public async handleSave(
-    request: UploadEncryptedStorageRequest,
-    res: Response
-  ): Promise<void> {
+    client: PoolClient,
+    request: UploadEncryptedStorageRequest
+  ): Promise<UploadEncryptedStorageResponseValue> {
     logger(`[E2EE] Saving ${request.blobKey}`);
 
     if (!request.blobKey || !request.encryptedBlob) {
@@ -114,14 +106,14 @@ export class E2EEService {
     let resultRevision = undefined;
     if (request.knownRevision === undefined) {
       resultRevision = await setEncryptedStorage(
-        this.context.dbPool,
+        client,
         request.blobKey,
         request.encryptedBlob,
         commitment
       );
     } else {
       const updateResult = await updateEncryptedStorage(
-        this.context.dbPool,
+        client,
         request.blobKey,
         request.encryptedBlob,
         request.knownRevision,
@@ -134,42 +126,40 @@ export class E2EEService {
       );
     }
 
-    res.json({
+    return {
       revision: resultRevision
-    } satisfies UploadEncryptedStorageResponseValue);
+    } satisfies UploadEncryptedStorageResponseValue;
   }
 
   private setRekeyResult(
     blobKey: string,
     knownRevision: string | undefined,
-    updateResult: UpdateEncryptedStorageResult,
-    res: Response
-  ): void {
+    updateResult: UpdateEncryptedStorageResult
+  ): ChangeBlobKeyResponseValue {
     switch (updateResult.status) {
       case "updated":
-        res.json({
+        return {
           revision: updateResult.revision
-        } as ChangeBlobKeyResponseValue);
-        break;
+        } as ChangeBlobKeyResponseValue;
       case "conflict":
-        res.status(409).json({
+        throw new PCDHTTPJSONError(409, {
           error: {
             name: "Conflict",
             detailedMessage: `Can't rekey e2ee due to conflict: expected 
               revision ${knownRevision}, found ${updateResult.revision}`
           }
         });
-        break;
       case "missing":
-        res.status(401).json({ error: { name: "PasswordIncorrect" } });
-        break;
+        throw new PCDHTTPJSONError(401, {
+          error: { name: "PasswordIncorrect" }
+        });
     }
   }
 
   public async handleChangeBlobKey(
-    request: ChangeBlobKeyRequest,
-    res: Response
-  ): Promise<void> {
+    client: PoolClient,
+    request: ChangeBlobKeyRequest
+  ): Promise<ChangeBlobKeyResponseValue> {
     logger(
       `[E2EE] Rekeying ${request.oldBlobKey} to ${request.newBlobKey} for ${request.uuid}`
     );
@@ -196,31 +186,28 @@ export class E2EEService {
     }
 
     // Validate user.  User must exist, and new salt must be different.
-    const user = await fetchUserByUUID(this.context.dbPool, request.uuid);
+    const user = await fetchUserByUUID(client, request.uuid);
     if (!user) {
-      // @todo: make {@link PCDHTTPError} be able to return JSON, not just plain text
-      res.status(404).json({
+      throw new PCDHTTPJSONError(404, {
         error: {
           name: "UserNotFound",
           detailedMessage: "User with this uuid was not found"
         }
       });
-      return;
     }
 
     const { salt: oldSalt } = user;
     if (oldSalt === request.newSalt) {
-      res.status(400).json({
+      throw new PCDHTTPJSONError(400, {
         error: {
           name: "RequiresNewSalt",
           detailedMessage: "Updated salt must be different than existing salt"
         }
       });
-      return;
     }
 
     const rekeyResult = await rekeyEncryptedStorage(
-      this.context.dbPool,
+      client,
       request.oldBlobKey,
       request.newBlobKey,
       request.uuid,
@@ -229,18 +216,24 @@ export class E2EEService {
       request.knownRevision,
       commitment
     );
-    this.setRekeyResult(
+
+    return this.setRekeyResult(
       request.oldBlobKey,
       request.knownRevision,
-      rekeyResult,
-      res
+      rekeyResult
     );
   }
 }
 
 export function startE2EEService(
-  context: ApplicationContext,
   credentialSubservice: CredentialSubservice
-): E2EEService {
-  return new E2EEService(context, credentialSubservice);
+): E2EEService | null {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting e2ee service`
+    );
+    return null;
+  }
+
+  return new E2EEService(credentialSubservice);
 }

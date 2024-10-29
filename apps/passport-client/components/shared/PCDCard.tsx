@@ -41,7 +41,6 @@ function PCDCardImpl({
   expanded,
   onClick,
   hideRemoveButton,
-  hideHeader,
   hidePadding
 }: {
   pcd: PCD;
@@ -49,7 +48,6 @@ function PCDCardImpl({
   isMainIdentity?: boolean;
   onClick?: (id: string, cardContainer: HTMLDivElement | undefined) => void;
   hideRemoveButton?: boolean;
-  hideHeader?: boolean;
   hidePadding?: boolean;
 }): JSX.Element {
   const [containerRef, setContainerRef] = useState<HTMLDivElement | undefined>(
@@ -71,11 +69,6 @@ function PCDCardImpl({
     >
       {expanded ? (
         <CardOutlineExpanded>
-          {!hideHeader && (
-            <CardHeader isMainIdentity={isMainIdentity}>
-              <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
-            </CardHeader>
-          )}
           <CardBodyContainer>
             <CardBody
               pcd={pcd}
@@ -208,8 +201,6 @@ export const TicketQRWrapper = forwardRef<
       <QRContainer ref={ref}>
         <EddsaTicketQR
           pcd={pcd}
-          zk={false}
-          identityPCD={identityPCD}
           idBasedVerifyURL={urls.idBasedVerifyURL}
           verifyURL={urls.verifyURL}
         />
@@ -251,10 +242,10 @@ const TicketWrapper = forwardRef<
   {
     pcd: EdDSATicketPCD;
     hidePadding?: boolean;
-    newUI?: boolean;
     addOns?: AddOnsProps;
+    showDownloadButton?: boolean;
   }
->(({ pcd, newUI, hidePadding, addOns }, ref) => {
+>(({ pcd, hidePadding, addOns, showDownloadButton }, ref) => {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
@@ -295,15 +286,17 @@ const TicketWrapper = forwardRef<
       : `${window.location.origin}/#/verify`;
 
   return identityPCD ? (
-    <div ref={ref}>
+    <div
+      ref={ref}
+      id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
+    >
       <Card
-        newUI={newUI}
         hidePadding={hidePadding}
         pcd={pcd}
-        identityPCD={identityPCD}
         verifyURL={verifyURL}
         idBasedVerifyURL={idBasedVerifyURL}
         addOns={addOns}
+        showDownloadButton={showDownloadButton}
       />
     </div>
   ) : null;
@@ -316,12 +309,12 @@ type CardBodyProps = {
   pcd: PCD;
   isMainIdentity: boolean;
   hidePadding?: boolean;
-  newUI?: boolean;
   addOns?: AddOnsProps;
+  showDownloadButton?: boolean;
 };
 
 export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
-  ({ pcd, isMainIdentity, hidePadding, newUI, addOns }, ref) => {
+  ({ pcd, isMainIdentity, hidePadding, addOns, showDownloadButton }, ref) => {
     const pcdCollection = usePCDCollection();
 
     if (isMainIdentity) {
@@ -331,8 +324,8 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
       if (isEdDSATicketPCD(pcd)) {
         return (
           <TicketWrapper
+            showDownloadButton={showDownloadButton}
             ref={ref}
-            newUI={newUI}
             pcd={pcd}
             hidePadding={hidePadding}
           />
@@ -341,11 +334,14 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
       if (isPODTicketPCD(pcd)) {
         const Component = PODTicketPCDUI.renderCardBody;
         return (
-          <div ref={ref}>
+          <div
+            ref={ref}
+            id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
+          >
             <Component
+              showDownoladButton={showDownloadButton}
               ticketData={pcd.claim.ticket}
               addOns={addOns}
-              newUI={newUI}
               pcd={pcd}
               idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
             />
@@ -374,15 +370,12 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
 );
 export const CardContainer = styled.div`
   width: 100%;
-  padding: 8px;
 `;
 
 export const CardOutlineExpanded = styled.div`
   ${({ disabled }: { disabled?: boolean }): FlattenSimpleInterpolation => css`
     width: 100%;
     border-radius: 12px;
-    border: 1px solid var(--accent-dark);
-    background: var(--primary-dark);
     overflow: hidden;
 
     ${disabled &&

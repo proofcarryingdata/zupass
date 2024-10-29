@@ -14,6 +14,17 @@ export type JSONPOD = {
 };
 
 /**
+ * Defines the JSON encoding of a bigint value, which may be represented as
+ * a Number if it's small enough, or otherwise stringified using any format
+ * accepted by the BigInt constructor.
+ *
+ * JSON-encoded bigints are not unambiguously distinguished form strings, and
+ * thus must generally be embedded inside of another type (such as a PODValue)
+ * which gives type hints or context.
+ */
+export type JSONBigInt = number | string;
+
+/**
  * Defines the JSON encoding of a POD value.  Unlike the {@link PODValue} type,
  * values which fit this type contain only JSON-compatible types (no bigints).
  * They can thus be freely combined with other JSON and serialized using
@@ -38,6 +49,12 @@ export type JSONPODValue =
   | JSONPODIntValue
   | JSONPODCryptographicValue
   | JSONPODEdDSAPublicKeyValue;
+
+/**
+ * Defines the JSON encoding of a tuple of POD values.  This is simply an
+ * array of {@link JSONPODValue} objects described elsewhere.
+ */
+export type JSONPODValueTuple = JSONPODValue[];
 
 /**
  * {@link JSONPODValue} type for string entries.  These can be most simply
@@ -220,7 +237,7 @@ export function podValueFromTypedJSON(
  * @throws SyntaxError if a value is unparseable
  */
 export function bigintFromJSON(
-  numericValue: number | string,
+  numericValue: JSONBigInt,
   nameForErrorMessages?: string
 ): bigint {
   nameForErrorMessages = nameForErrorMessages || "(unnamed)";
@@ -326,7 +343,7 @@ export function podValueToJSON(
  * @param n the input integer
  * @returns a number or string representing this integer.
  */
-export function bigintToSimplestJSON(n: bigint): number | string {
+export function bigintToSimplestJSON(n: bigint): JSONBigInt {
   // For values which are in range for a JSON number (2^53), use that.
   if (n <= Number.MAX_SAFE_INTEGER && n >= Number.MIN_SAFE_INTEGER) {
     return Number(n);

@@ -1,10 +1,11 @@
-import { useCallback } from "react";
+import { serializeStorage } from "@pcd/passport-interface";
+import { useCallback, useEffect, useState } from "react";
 import {
   usePCDCollection,
   useSelf,
   useSubscriptions
 } from "../../src/appHooks";
-import { serializeStorage } from "@pcd/passport-interface";
+import { css } from "styled-components";
 
 export const useExport = (): (() => Promise<void>) => {
   const user = useSelf();
@@ -34,3 +35,54 @@ export const useExport = (): (() => Promise<void>) => {
     link.remove();
   }, [user, pcds, subscriptions]);
 };
+
+export const isMobile = /Mobi|Android/i.test(navigator.userAgent);
+
+export const useOrientation = (): ScreenOrientation => {
+  const [state, setState] = useState<ScreenOrientation>(
+    window.screen.orientation
+  );
+
+  useEffect(() => {
+    const screen = window.screen;
+    let mounted = true;
+
+    const onChange = (): void => {
+      if (mounted) {
+        const { orientation } = screen;
+
+        setState(orientation);
+      }
+    };
+
+    window.addEventListener("orientationchange", onChange);
+    onChange();
+
+    return (): void => {
+      mounted = false;
+      window.removeEventListener("orientationchange", onChange);
+    };
+  }, []);
+
+  return state;
+};
+
+export const POD_FOLDER_DISPLAY_SEPERATOR = "·";
+
+export const replaceDotWithSlash = (folderPath: string): string => {
+  const splitted = folderPath.split(POD_FOLDER_DISPLAY_SEPERATOR);
+  if (splitted.length === 1) return folderPath;
+
+  for (let i = 0; i < splitted.length; i++) {
+    splitted[i] = splitted[i].trim();
+  }
+  return splitted.join("/");
+};
+
+export const hideScrollCSS = css`
+  &::-webkit-scrollbar {
+    display: none;
+  }
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+`;

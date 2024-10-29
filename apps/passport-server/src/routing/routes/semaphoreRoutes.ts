@@ -4,14 +4,16 @@ import {
   serializeSemaphoreGroup
 } from "@pcd/semaphore-group-pcd";
 import express, { Request, Response } from "express";
+import { sqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
 export function initSemaphoreRoutes(
   app: express.Application,
-  _context: ApplicationContext,
+  context: ApplicationContext,
   { semaphoreService }: GlobalServices
 ): void {
   logger("[INIT] initializing semaphore routes");
@@ -29,14 +31,19 @@ export function initSemaphoreRoutes(
   app.get(
     "/semaphore/valid-historic/:id/:root",
     async (req: Request, res: Response) => {
+      checkExistsForRoute(semaphoreService);
       const groupId = checkUrlParam(req, "id");
       const roothash = checkUrlParam(req, "root");
 
-      const historicGroupValid =
-        await semaphoreService.getHistoricSemaphoreGroupValid(
-          groupId,
-          roothash
-        );
+      const historicGroupValid = await sqlTransaction(
+        context.dbPool,
+        (client) =>
+          semaphoreService.getHistoricSemaphoreGroupValid(
+            client,
+            groupId,
+            roothash
+          )
+      );
 
       const result = {
         valid: historicGroupValid
@@ -57,9 +64,13 @@ export function initSemaphoreRoutes(
   app.get(
     "/semaphore/historic/:id/:root",
     async (req: Request, res: Response) => {
-      const historicGroup = await semaphoreService.getHistoricSemaphoreGroup(
-        checkUrlParam(req, "id"),
-        checkUrlParam(req, "root")
+      checkExistsForRoute(semaphoreService);
+      const historicGroup = await sqlTransaction(context.dbPool, (client) =>
+        semaphoreService.getHistoricSemaphoreGroup(
+          client,
+          checkUrlParam(req, "id"),
+          checkUrlParam(req, "root")
+        )
       );
 
       if (!historicGroup) {
@@ -81,8 +92,11 @@ export function initSemaphoreRoutes(
    * @todo - write tests?
    */
   app.get("/semaphore/latest-root/:id", async (req: Request, res: Response) => {
+    checkExistsForRoute(semaphoreService);
     const id = checkUrlParam(req, "id");
-    const latestGroups = await semaphoreService.getLatestSemaphoreGroups();
+    const latestGroups = await sqlTransaction(context.dbPool, (client) =>
+      semaphoreService.getLatestSemaphoreGroups(client)
+    );
     const matchingGroup = latestGroups.find((g) => g.groupId.toString() === id);
 
     if (!matchingGroup) {
@@ -101,6 +115,7 @@ export function initSemaphoreRoutes(
    * @todo - write tests?
    */
   app.get("/semaphore/:id", async (req: Request, res: Response) => {
+    checkExistsForRoute(semaphoreService);
     const semaphoreId = checkUrlParam(req, "id");
     const namedGroup = semaphoreService.getNamedGroup(semaphoreId);
 
