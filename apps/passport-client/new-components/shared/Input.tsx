@@ -73,6 +73,13 @@ export const BigInput2 = styled.input<{
     background: rgba(0, 0, 0, 0.05);
   }
 
+  &:focus,
+  &:active,
+  &:focus-visible,
+  &:focus-within {
+    outline: 1px solid var(--core-accent);
+  }
+
   ${({ error }): FlattenSimpleInterpolation | undefined => {
     if (error) return errorCSS;
   }}
