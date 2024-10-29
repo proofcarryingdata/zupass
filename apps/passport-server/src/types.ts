@@ -32,7 +32,7 @@ import { UserService } from "./services/userService";
 import { ZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 
 /**
- * The Zupass Server Express/NodeJS ap can run in one of three modes:
+ * The Zupass Server Express/NodeJS app can run in one of three modes:
  *
  * - UNIFIED: The server is running as a single process, no clustering
  * - PARALLEL_MAIN: The server is running as the main process in a cluster.

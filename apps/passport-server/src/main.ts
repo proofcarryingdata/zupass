@@ -23,12 +23,18 @@ dotenv.config({ path: dotEnvPath });
 const clusterEnabled = process.env.ENABLE_CLUSTER === "true";
 
 function getClusterSize(): number {
-  const numCPUs = 2;
-  const numWorkers = parseInt(process.env.CLUSTER_PROCESSES ?? `${numCPUs}`);
+  const defaultWorkerQuantity = 2;
+  const maxWorkerQuantity = 4;
+  const numWorkers = parseInt(
+    process.env.CLUSTER_PROCESSES ?? `${defaultWorkerQuantity}`,
+    10
+  );
+
   if (isNaN(numWorkers)) {
-    return numCPUs;
+    return defaultWorkerQuantity;
   }
-  return Math.max(1, Math.min(numWorkers, numCPUs));
+
+  return Math.max(1, Math.min(numWorkers, maxWorkerQuantity));
 }
 
 async function main(): Promise<void> {
