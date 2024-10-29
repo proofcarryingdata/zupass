@@ -37,19 +37,21 @@ const ListGroup = ({
         onClick={() => onExpanded && id && onExpanded(id, !expanded)}
         style={{ cursor: onExpanded ? "pointer" : "default" }}
         fontWeight={500}
+        fontSize={14}
         color="var(--text-tertiary)"
         family="Rubik"
       >
+        {title}
         <FaChevronRight
           color="var(--text-tertiary)"
           style={{
             transform: expanded ? "rotate(90deg)" : undefined,
             transition: "transform 0.2s ease-in-out",
-            marginRight: 10,
-            verticalAlign: "text-top"
+            marginLeft: 6,
+            height: 10,
+            verticalAlign: "middle"
           }}
         />
-        {title}
       </Typography>
       {(!!expanded || !onExpanded) &&
         children.map((child, i) => {
