@@ -59,40 +59,17 @@ const TicketCardDetails = styled.div`
   padding: 8px;
 `;
 
-const DateChipContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  border-radius: 200px;
-  padding: 4px 10px;
-  gap: 10px;
-  background-color: black;
-`;
-
 interface TicketCardProps {
   title: string;
   address?: string;
   ticketWidth?: number | string;
   ticketCount: number;
-  ticketDate?: string;
   cardColor: CardColor;
   imgSource?: string;
 }
 export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
   (
-    {
-      imgSource,
-      title,
-      address,
-      ticketCount,
-      cardColor,
-      ticketDate,
-      ticketWidth
-    },
+    { imgSource, title, address, ticketCount, cardColor, ticketWidth },
     ref
   ): JSX.Element => {
     return (
@@ -102,23 +79,17 @@ export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
         $borderColor={CARD_COLORS[cardColor]}
       >
         <TicketCardImageContainer>
-          {ticketDate && (
-            <DateChipContainer>
-              <Typography fontSize={12} fontWeight={800} color="white">
-                {ticketDate}
-              </Typography>
-            </DateChipContainer>
-          )}
           <TicketCardImage src={imgSource} />
         </TicketCardImageContainer>
         <TicketCardDetails>
           <Typography fontSize={18} fontWeight={800}>
-            {title}
+            {title.toUpperCase()}
           </Typography>
           <Typography
             fontSize={14}
             fontWeight={400}
             color="rgba(124, 139, 180, 1)"
+            family="Rubik"
           >
             {`${address ? `${address} • ` : ""}${ticketCount} ticket${
               ticketCount > 1 ? "s" : ""

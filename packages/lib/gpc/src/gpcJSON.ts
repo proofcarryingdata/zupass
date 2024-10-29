@@ -1,20 +1,161 @@
+import { JSONPODValue, JSONPODValueTuple, PODName } from "@pcd/pod";
 import {
-  checkPODName,
-  JSONPODValue,
-  JSONPODValueTuple,
-  PODName,
-  PODValue,
-  podValueFromJSON,
-  podValueToJSON,
-  PODValueTuple,
-  requireType
-} from "@pcd/pod";
-import { PODMembershipLists } from "./gpcTypes";
+  checkBoundConfig,
+  checkProofConfig,
+  checkRevealedClaims
+} from "./gpcChecks";
+import {
+  GPCBoundConfig,
+  GPCProofConfig,
+  GPCRevealedClaims,
+  PODMembershipLists
+} from "./gpcTypes";
+import {
+  ValibotBoundConfig,
+  ValibotMembershipLists,
+  ValibotProofConfig,
+  ValibotRevealedClaims
+} from "./gpcValibot";
+
+/**
+ * JSON-compatible type for representing {@link GPCProofConfig}, which is
+ * safe to serialize directly using `JSON.stringify`.
+ *
+ * This is identical to the TypeScript type except that `bigint` and
+ * {@link PODValue} elements are replaced by JSON-compatible representations
+ * defined by {@link JSONBigInt} and {@link JSONPODValue} respectively.
+ *
+ * Use {@link proofConfigToJSON} and {@link proofConfigFromJSON} to convert
+ * between JSON and TypeScript represenations.
+ */
+export type JSONProofConfig = ValibotProofConfig.JSONType;
+
+/**
+ * Converts a {@link GPCProofConfig} to a JSON-compatible representation which
+ * can be serialized directly using `JSON.stringify`.  See
+ * {@link JSONProofConfig} for information about the format.
+ *
+ * @param config the config object to convert
+ * @returns a JSON representation
+ * @throws if the config is invalid
+ */
+export function proofConfigToJSON(config: GPCProofConfig): JSONProofConfig {
+  checkProofConfig(config);
+  return ValibotProofConfig.toJSON(config);
+}
+
+/**
+ * Parses a {@link GPCProofConfig} from a JSON-compatible representation,
+ * potentially received directly from `JSON.parse`.  See {@link JSONProofConfig}
+ * for information about the format.
+ *
+ * @param config the JSON representation
+ * @returns a config object
+ * @throws if the config is invalid
+ */
+export function proofConfigFromJSON(
+  jsonConfig: JSONProofConfig
+): GPCProofConfig {
+  const config = ValibotProofConfig.fromJSON(jsonConfig);
+  checkProofConfig(config);
+  return config;
+}
+
+/**
+ * JSON-compatible type for representing {@link GPCBoundConfig}, which is
+ * safe to serialize directly using `JSON.stringify`.
+ *
+ * This is identical to the TypeScript type except that `bigint` and
+ * {@link PODValue} elements are replaced by JSON-compatible representations
+ * defined by {@link JSONBigInt} and {@link JSONPODValue} respectively.
+ *
+ * Use {@link boundConfigToJSON} and {@link boundConfigFromJSON} to convert
+ * between JSON and TypeScript represenations.
+ */
+export type JSONBoundConfig = ValibotBoundConfig.JSONType;
+
+/**
+ * Converts a {@link GPCBoundConfig} to a JSON-compatible representation which
+ * can be serialized directly using `JSON.stringify`.  See
+ * {@link JSONProofConfig} for information about the format.
+ *
+ * @param config the config object to convert
+ * @returns a JSON representation
+ * @throws if the config is invalid
+ */
+export function boundConfigToJSON(config: GPCBoundConfig): JSONBoundConfig {
+  checkBoundConfig(config);
+  return ValibotBoundConfig.toJSON(config);
+}
+
+/**
+ * Parses a {@link GPCBoundConfig} from a JSON-compatible representation,
+ * potentially received directly from `JSON.parse`.  See {@link JSONProofConfig}
+ * for information about the format.
+ *
+ * @param config the JSON representation
+ * @returns a config object
+ * @throws if the config is invalid
+ */
+export function boundConfigFromJSON(
+  jsonConfig: JSONBoundConfig
+): GPCBoundConfig {
+  const config = ValibotBoundConfig.fromJSON(jsonConfig);
+  checkBoundConfig(config);
+  return config;
+}
+
+/**
+ * JSON-compatible type for representing {@link GPCRevealedClaims}, which is
+ * safe to serialize directly using `JSON.stringify`.
+ *
+ * This is identical to the TypeScript type except that `bigint` and
+ * {@link PODValue} elements are replaced by JSON-compatible representations
+ * defined by {@link JSONBigInt} and {@link JSONPODValue} respectively.
+ *
+ * Use {@link boundConfigToJSON} and {@link boundConfigFromJSON} to convert
+ * between JSON and TypeScript represenations.
+ */
+export type JSONRevealedClaims = ValibotRevealedClaims.JSONType;
+
+/**
+ * Converts a {@link GPCRevealedClaims} to a JSON-compatible representation
+ * which can be serialized directly using `JSON.stringify`.  See
+ * {@link JSONRevealedClaims} for information about the format.
+ *
+ * @param config the config object to convert
+ * @returns a JSON representation
+ * @throws if the config is invalid
+ */
+export function revealedClaimsToJSON(
+  claims: GPCRevealedClaims
+): JSONRevealedClaims {
+  checkRevealedClaims(claims);
+  return ValibotRevealedClaims.toJSON(claims);
+}
+
+/**
+ * Parses a {@link GPCRevealedClaims} from a JSON-compatible representation,
+ * potentially received directly from `JSON.parse`.  See
+ * {@link JSONRevealedClaims} for information about the format.
+ *
+ * @param config the JSON representation
+ * @returns a config object
+ * @throws if the config is invalid
+ */
+export function revealedClaimsFromJSON(
+  jsonClaims: JSONRevealedClaims
+): GPCRevealedClaims {
+  const claims = ValibotRevealedClaims.fromJSON(jsonClaims);
+  checkRevealedClaims(claims);
+  return claims;
+}
 
 /**
  * JSON-compatible format for representing a {@link PODMembershipLists}
  * structure.  The structure is the same as PODMembershipLists except that
- * each individual value should be JSON formated using {@link podValueToJSON}.
+ * each individual value should be JSON formated as defined by
+ * {@link JSONPODValue}.
  */
 export type JSONPODMembershipLists = Record<
   PODName,
@@ -35,30 +176,7 @@ export type JSONPODMembershipLists = Record<
 export function podMembershipListsFromJSON(
   jsonMembershipLists: JSONPODMembershipLists
 ): PODMembershipLists {
-  requireType("jsonMembershipLists", jsonMembershipLists, "object");
-  const resultLists: PODMembershipLists = {};
-  for (const [listName, list] of Object.entries(jsonMembershipLists)) {
-    checkPODName(listName);
-    requireType(listName, list, "array");
-    if (list.length === 0) {
-      resultLists[listName] = [];
-    } else if (!Array.isArray(list[0])) {
-      // List of PODValues.  podValueFromJSON does all the validation.
-      resultLists[listName] = list.map((jsonValue) =>
-        podValueFromJSON(jsonValue as JSONPODValue)
-      );
-    } else {
-      // List of PODValueTuples.
-      resultLists[listName] = list.map((jsonTuple) => {
-        requireType("jsonTuple", jsonTuple, "array");
-        // podValueFromJSON does the remaining validation.
-        return (jsonTuple as JSONPODValueTuple).map((jsonValue) =>
-          podValueFromJSON(jsonValue as JSONPODValue)
-        );
-      });
-    }
-  }
-  return resultLists;
+  return ValibotMembershipLists.fromJSON(jsonMembershipLists);
 }
 
 /**
@@ -74,32 +192,5 @@ export function podMembershipListsFromJSON(
 export function podMembershipListsToJSON(
   membershipLists: PODMembershipLists
 ): JSONPODMembershipLists {
-  requireType("membershipLists", membershipLists, "object");
-  const resultLists: JSONPODMembershipLists = {};
-  for (const [listName, list] of Object.entries(membershipLists)) {
-    checkPODName(listName);
-    requireType(listName, list, "array");
-    if (list.length === 0) {
-      resultLists[listName] = [];
-    } else if (!Array.isArray(list[0])) {
-      // List of PODValues.  podValueFromJSON does all the validation.
-      resultLists[listName] = list.map((value) =>
-        podValueToJSON(value as PODValue)
-      );
-    } else {
-      // List of PODValueTuples.
-      resultLists[listName] = list.map((tuple) => {
-        requireType("tuple", tuple, "array");
-        // podValueFromJSON does the remaining validation.
-        return (tuple as PODValueTuple).map((value) =>
-          podValueToJSON(value as PODValue)
-        );
-      });
-    }
-  }
-  return resultLists;
+  return ValibotMembershipLists.toJSON(membershipLists);
 }
-
-// TODO(POD-P1): Finish gpcJSON for GPC config/inputs/outputs.  So far it
-// only covers use cases covered by POD values contained in simple JSON
-// containers.

@@ -397,6 +397,13 @@ export function startZuzaluPretixSyncService(
     return null;
   }
 
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting zuzalu pretix sync service`
+    );
+    return null;
+  }
+
   if (!semaphoreService) {
     logger(
       `[INIT] zuzalu pretix sync service not started, no semaphore service`

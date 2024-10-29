@@ -1786,6 +1786,13 @@ export async function startTelegramService(
     return null;
   }
 
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting telegram service`
+    );
+    return null;
+  }
+
   if (process.env.TELEGRAM_BOT_DISABLED === "true") {
     logger(
       `[INIT] TELEGRAM_BOT_DISABLED is true - not starting telegram service`

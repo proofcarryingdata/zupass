@@ -10,7 +10,7 @@
  *   to store for feeds?
  */
 export interface IPipelineAtomDB<T extends PipelineAtom = PipelineAtom> {
-  markAsLoaded(pipelineId: string): Promise<void>;
+  markAsLoaded(pipelineId: string, loaded?: boolean): Promise<void>;
   hasLoaded(pipelineId: string): Promise<boolean>;
   save(pipelineID: string, atoms: T[]): Promise<void>;
   load(pipelineID: string): Promise<T[]>;

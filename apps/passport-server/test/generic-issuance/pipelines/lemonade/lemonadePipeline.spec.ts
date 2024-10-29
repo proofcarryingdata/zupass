@@ -514,7 +514,7 @@ describe("generic issuance - LemonadePipeline", function () {
       const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
       expectToExist(edgeCityDenverPipeline);
 
-      await edgeCityDenverPipeline.load();
+      await giService.performPipelineLoad(edgeCityDenverPipeline.id);
 
       const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
@@ -609,7 +609,7 @@ describe("generic issuance - LemonadePipeline", function () {
         newUser._id,
         newUser.name
       );
-      await edgeCityDenverPipeline.load();
+      await giService.performPipelineLoad(edgeCityDenverPipeline.id);
       const edgeCityDenverTicketFeedUrl =
         edgeCityDenverPipeline.issuanceCapability.feedUrl;
       // The pipeline doesn't know that the user exists until they hit the feed
@@ -918,7 +918,7 @@ describe("generic issuance - LemonadePipeline", function () {
       const pipeline = pipelines.find(LemonadePipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(edgeCityPipeline.id);
-      const runInfo = await pipeline.load();
+      const runInfo = await giService.performPipelineLoad(pipeline.id);
 
       // The ticket should be loaded
       expect(runInfo.atomsLoaded).to.eq(1);
@@ -944,7 +944,8 @@ describe("generic issuance - LemonadePipeline", function () {
           customLemonadeTicketHandler(lemonadeBackendUrl, tickets)
         );
 
-        const runInfo = await pipeline.load();
+        const runInfo = await giService.performPipelineLoad(pipeline.id);
+
         // Both tickets should have been loaded
         expect(runInfo.atomsLoaded).to.eq(2);
         // Expect no errors to have been logged
@@ -970,7 +971,7 @@ describe("generic issuance - LemonadePipeline", function () {
           customLemonadeTicketHandler(lemonadeBackendUrl, tickets)
         );
 
-        const runInfo = await pipeline.load();
+        const runInfo = await giService.performPipelineLoad(pipeline.id);
         // Despite receiving two tickets, only one should be parsed and saved
         expect(runInfo.atomsLoaded).to.eq(1);
         // Expect one error to have been logged
@@ -997,7 +998,7 @@ describe("generic issuance - LemonadePipeline", function () {
       lemonadeBackend.checkOutAll();
 
       // Verify that bouncer is checked out in backend
-      await pipeline.load();
+      await giService.performPipelineLoad(pipeline.id);
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
         edgeCityTicketFeedUrl,

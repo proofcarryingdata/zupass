@@ -52,7 +52,11 @@ export async function testLatestHistoricSemaphoreGroups(
   expectGroupsEqual(latestHistoricSemaphoreGroups, currentSemaphoreGroups);
 }
 
-function nonZeroGroupMembers(group: Group): BigNumberish[] {
+function nonZeroGroupMembers(group: Group | undefined): BigNumberish[] {
+  if (!group) {
+    return [];
+  }
+
   return group.members.filter(
     (m) => m.toString() !== group.zeroValue.toString()
   );
@@ -67,25 +71,25 @@ function getCurrentSemaphoreServiceGroups(
 
   return {
     g: nonZeroGroupMembers(
-      application.services.semaphoreService.groupEveryone().group
+      application.services.semaphoreService?.groupEveryone()?.group
     ).map((m) => m.toString()),
     v: nonZeroGroupMembers(
-      application.services.semaphoreService.groupVisitors().group
+      application.services.semaphoreService?.groupVisitors()?.group
     ).map((m) => m.toString()),
     o: nonZeroGroupMembers(
-      application.services.semaphoreService.groupOrganizers().group
+      application.services.semaphoreService?.groupOrganizers()?.group
     ).map((m) => m.toString()),
     p: nonZeroGroupMembers(
-      application.services.semaphoreService.groupParticipants().group
+      application.services.semaphoreService?.groupParticipants()?.group
     ).map((m) => m.toString()),
     r: nonZeroGroupMembers(
-      application.services.semaphoreService.groupResidents().group
+      application.services.semaphoreService?.groupResidents()?.group
     ).map((m) => m.toString()),
     d: nonZeroGroupMembers(
-      application.services.semaphoreService.groupDevconnectAttendees().group
+      application.services.semaphoreService?.groupDevconnectAttendees()?.group
     ).map((m) => m.toString()),
     s: nonZeroGroupMembers(
-      application.services.semaphoreService.groupDevconnectOrganizers().group
+      application.services.semaphoreService?.groupDevconnectOrganizers()?.group
     ).map((m) => m.toString())
   };
 }

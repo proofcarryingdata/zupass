@@ -63,7 +63,7 @@ without revealing the whole POD.
 ```TypeScript
 const podSword = POD.sign(
   {
-    pod_type: { type: "string", value: "item.weapon" },
+    pod_type: { type: "string", value: "myrpg.item.weapon" },
     attack: { type: "int", value: 7n },
     weaponType: { type: "string", value: "sword" },
     itemSet: { type: "string", value: "celestial" },

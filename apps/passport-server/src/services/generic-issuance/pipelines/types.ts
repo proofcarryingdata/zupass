@@ -1,6 +1,7 @@
 import { PipelineLoadSummary, PipelineType } from "@pcd/passport-interface";
 import { BasePipelineCapability } from "../types";
 import { CSVPipeline } from "./CSVPipeline/CSVPipeline";
+import { CSVTicketPipeline } from "./CSVTicketPipeline/CSVTicketPipeline";
 import { LemonadePipeline } from "./LemonadePipeline";
 import { PODPipeline } from "./PODPipeline/PODPipeline";
 import { PretixPipeline } from "./PretixPipeline";
@@ -13,6 +14,7 @@ export type Pipeline =
   | LemonadePipeline
   | PretixPipeline
   | CSVPipeline
+  | CSVTicketPipeline
   | PODPipeline;
 
 /**
@@ -24,6 +26,7 @@ export interface BasePipeline {
   load(): Promise<PipelineLoadSummary>;
   start(): Promise<void>;
   stop(): Promise<void>;
+  isStopped(): boolean;
 }
 
 /**

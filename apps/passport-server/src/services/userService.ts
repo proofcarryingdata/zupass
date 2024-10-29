@@ -955,7 +955,14 @@ export function startUserService(
   rateLimitService: RateLimitService,
   genericIssuanceService: GenericIssuanceService | null,
   credentialSubservice: CredentialSubservice
-): UserService {
+): UserService | null {
+  if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
+    logger(
+      `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting user service`
+    );
+    return null;
+  }
+
   const userService = new UserService(
     context,
     emailTokenService,

@@ -5,9 +5,11 @@ import {
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue,
-  isCSVPipelineDefinition
+  isCSVPipelineDefinition,
+  isCSVTicketPipelineDefinition
 } from "@pcd/passport-interface";
 import _ from "lodash";
+import prettyBytes from "pretty-bytes";
 import React, { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { AddDataModal } from "../../../components/AddDataModal";
@@ -15,7 +17,11 @@ import {
   useGIContext,
   useViewingPipelineDefinition
 } from "../../../helpers/Context";
-import { deletePipeline, savePipeline } from "../../../helpers/Mutations";
+import {
+  clearCache,
+  deletePipeline,
+  savePipeline
+} from "../../../helpers/Mutations";
 import { useJWT } from "../../../helpers/userHooks";
 import { stringifyAndFormat } from "../../../helpers/util";
 
@@ -258,6 +264,55 @@ export function PipelineActions({
     }
   }, [pipeline, setActionInProgress, userJWT]);
 
+  const onCacheToggleClick = useCallback(async () => {
+    const disableCache = !pipeline.options.disableCache;
+    if (
+      userJWT &&
+      confirm(
+        `Are you sure you want to ${
+          disableCache ? "disable" : "enable"
+        } the disk cache for this pipeline?\n\n`
+      )
+    ) {
+      setActionInProgress(
+        `Changing cache setting of pipeline '${pipeline.id}'...`
+      );
+      const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
+      copyDefinition.options = {
+        ...copyDefinition.options,
+        disableCache
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } satisfies BasePipelineOptions as any;
+      const stringifiedDefinition = JSON.stringify(copyDefinition);
+      const res = await savePipeline(userJWT, stringifiedDefinition);
+      if (res.success) {
+        window.location.reload();
+      } else {
+        alert(res.error);
+        setActionInProgress(undefined);
+      }
+    }
+  }, [pipeline, setActionInProgress, userJWT]);
+
+  const onClearCacheClick = useCallback(async () => {
+    if (
+      userJWT &&
+      confirm(
+        "are you sure you want to clear this pipeline's cache? you won't be able to undo " +
+          "this action, and it will also cause the pipeline to reload, which may take a while."
+      )
+    ) {
+      setActionInProgress(`clearing cache for pipeline '${pipeline.id}'...`);
+      const res = await clearCache(userJWT, pipeline.id);
+      if (res.success) {
+        window.location.reload();
+      } else {
+        alert(res.error);
+        setActionInProgress(undefined);
+      }
+    }
+  }, [userJWT, setActionInProgress, pipeline.id]);
+
   const [addingTicket, setAddingTicket] = useState(false);
   const onAddTicketClose = useCallback(() => {
     setAddingTicket(false);
@@ -271,28 +326,32 @@ export function PipelineActions({
     return null;
   }
 
+  const canAddTicket =
+    isCSVTicketPipelineDefinition(pipeline) ||
+    (isCSVPipelineDefinition(pipeline) &&
+      (pipeline.options.outputType === CSVPipelineOutputType.PODTicket ||
+        pipeline.options.outputType === CSVPipelineOutputType.Ticket));
+
   return (
     <Container>
       <HStack minWidth="fit-content" flexWrap={"wrap"}>
-        {isCSVPipelineDefinition(pipeline) &&
-          (pipeline.options.outputType === CSVPipelineOutputType.PODTicket ||
-            pipeline.options.outputType === CSVPipelineOutputType.Ticket) && (
-            <>
-              <AddDataModal
-                addingData={addingTicket}
-                pipeline={pipeline}
-                onClose={onAddTicketClose}
-              />
-              <Button
-                size="sm"
-                onClick={onAddTicketOpen}
-                isDisabled={hasEdits}
-                colorScheme="blue"
-              >
-                Add Ticket
-              </Button>
-            </>
-          )}
+        {canAddTicket && (
+          <>
+            <AddDataModal
+              addingData={addingTicket}
+              pipeline={pipeline}
+              onClose={onAddTicketClose}
+            />
+            <Button
+              size="sm"
+              onClick={onAddTicketOpen}
+              isDisabled={hasEdits}
+              colorScheme="blue"
+            >
+              Add Ticket
+            </Button>
+          </>
+        )}
         <Button size="sm" onClick={(): void => setEditorMaximized(true)}>
           Maximize
         </Button>
@@ -349,6 +408,19 @@ export function PipelineActions({
                 </Button>
                 <Button size="sm" onClick={onImportantToggleClick}>
                   {pipeline.options.important ? "Unstar" : "Star"}
+                </Button>
+                <Button size="sm" onClick={onCacheToggleClick}>
+                  {pipeline.options.disableCache ? "Enable" : "Disable"} Cache
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={onClearCacheClick}
+                  isDisabled={pipelineInfo.cachedBytes === 0}
+                >
+                  Clear Cache
+                  {pipelineInfo.cachedBytes > 0
+                    ? " " + `(${prettyBytes(pipelineInfo.cachedBytes)})`
+                    : null}
                 </Button>
               </>
             )}

@@ -143,7 +143,7 @@ describe("generic issuance - PODPipeline", function () {
     expectLength(pipelines, 1);
     const podPipeline = pipelines.find(PODPipeline.is);
     expectToExist(podPipeline);
-    const loadRes = await podPipeline.load();
+    const loadRes = await giService.performPipelineLoad(podPipeline.id);
     expectTrue(loadRes.success);
     expect(loadRes.atomsLoaded).to.eq(2);
 
@@ -192,7 +192,7 @@ describe("generic issuance - PODPipeline", function () {
     expectLength(pipelines, 1);
     const podPipeline = pipelines.find(PODPipeline.is);
     expectToExist(podPipeline);
-    const loadRes = await podPipeline.load();
+    const loadRes = await giService.performPipelineLoad(podPipeline.id);
     expectTrue(loadRes.success);
     expect(loadRes.atomsLoaded).to.eq(2);
 
@@ -251,7 +251,7 @@ describe("generic issuance - PODPipeline", function () {
       expectLength(pipelines, 1);
       const podPipeline = pipelines.find(PODPipeline.is);
       expectToExist(podPipeline);
-      const loadRes = await podPipeline.load();
+      const loadRes = await giService.performPipelineLoad(podPipeline.id);
       expectTrue(loadRes.success);
       expect(loadRes.atomsLoaded).to.eq(2);
 
@@ -355,7 +355,7 @@ describe("generic issuance - PODPipeline", function () {
       expectLength(pipelines, 1);
       const podPipeline = pipelines.find(PODPipeline.is);
       expectToExist(podPipeline);
-      const loadRes = await podPipeline.load();
+      const loadRes = await giService.performPipelineLoad(podPipeline.id);
       expectTrue(loadRes.success);
       expect(loadRes.atomsLoaded).to.eq(3);
 
@@ -452,7 +452,7 @@ describe("generic issuance - PODPipeline", function () {
     expectLength(pipelines, 1);
     const podPipeline = pipelines.find(PODPipeline.is);
     expectToExist(podPipeline);
-    const loadRes = await podPipeline.load();
+    const loadRes = await giService.performPipelineLoad(podPipeline.id);
     expectTrue(loadRes.success);
     expect(loadRes.atomsLoaded).to.eq(3);
 
@@ -522,7 +522,7 @@ describe("generic issuance - PODPipeline", function () {
     expectLength(pipelines, 1);
     const podPipeline = pipelines.find(PODPipeline.is);
     expectToExist(podPipeline);
-    const loadRes = await podPipeline.load();
+    const loadRes = await giService.performPipelineLoad(podPipeline.id);
     expectTrue(loadRes.success);
     expect(loadRes.atomsLoaded).to.eq(3);
 

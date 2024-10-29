@@ -11,7 +11,7 @@ export const NewPrivacyNoticeScreen = (): JSX.Element | null => {
 
   const onClick = useCallback(() => {
     if (!email || !token) return;
-    window.location.hash = `#/new/create-password?email=${encodeURIComponent(
+    window.location.hash = `#/create-password?email=${encodeURIComponent(
       email
     )}&token=${encodeURIComponent(token)}`;
   }, [email, token]);
@@ -19,9 +19,9 @@ export const NewPrivacyNoticeScreen = (): JSX.Element | null => {
   useEffect(() => {
     if (!email || !token) {
       if (hasPendingRequest()) {
-        window.location.hash = "#/new/login-interstitial";
+        window.location.hash = "#/login-interstitial";
       } else {
-        window.location.hash = "#/new";
+        window.location.hash = "#/";
       }
     }
   }, [email, token]);

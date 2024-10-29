@@ -18,6 +18,7 @@ import { FrogcryptoService } from "./services/frogcryptoService";
 import { GenericIssuanceService } from "./services/generic-issuance/GenericIssuanceService";
 import { CredentialSubservice } from "./services/generic-issuance/subservices/CredentialSubservice";
 import { IssuanceService } from "./services/issuanceService";
+import { LocalFileService } from "./services/LocalFileService";
 import { MetricsService } from "./services/metricsService";
 import { MultiProcessService } from "./services/multiProcessService";
 import { PagerDutyService } from "./services/pagerDutyService";
@@ -58,11 +59,11 @@ export interface ApplicationContext {
 
 export interface GlobalServices {
   semaphoreService: SemaphoreService | null;
-  userService: UserService;
-  e2eeService: E2EEService;
+  userService: UserService | null;
+  e2eeService: E2EEService | null;
   emailTokenService: EmailTokenService;
   rollbarService: RollbarService | null;
-  provingService: ProvingService;
+  provingService: ProvingService | null;
   zuzaluPretixSyncService: ZuzaluPretixSyncService | null;
   devconnectPretixSyncService: DevconnectPretixSyncService | null;
   metricsService: MetricsService | null;
@@ -70,13 +71,14 @@ export interface GlobalServices {
   discordService: DiscordService | null;
   telegramService: TelegramService | null;
   frogcryptoService: FrogcryptoService | null;
-  poapService: PoapService;
+  poapService: PoapService | null;
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
   rateLimitService: RateLimitService;
   genericIssuanceService: GenericIssuanceService | null;
   pagerDutyService: PagerDutyService | null;
   credentialSubservice: CredentialSubservice;
+  localFileService: LocalFileService | null;
 }
 
 export interface Zupass {

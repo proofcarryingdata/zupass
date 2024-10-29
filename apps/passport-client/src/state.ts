@@ -4,9 +4,11 @@ import {
   FeedSubscriptionManager,
   KnownPublicKey,
   KnownTicketType,
+  PCDGetRequest,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD } from "@pcd/pcd-types";
 import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
 import { TicketType } from "../new-components/screens/Home/types";
 import { EmbeddedScreenState } from "./embedded";
@@ -31,31 +33,32 @@ export interface AppState {
   bottomModal:
     | {
         modalType: "pods-collection";
-        activePodId?: string;
+        activePod?: PCD<unknown, unknown>;
         idType?: "ticketId" | "id";
+        modalGoBackBehavior?: "close" | "back";
       }
     | { modalType: "settings" }
     | { modalType: "change-password" }
     | { modalType: "another-device-changed-password" }
     | { modalType: "invalid-participant" }
     | { modalType: "success-modal"; title: string; description: string }
-    | { modalType: "about" }
+    | { modalType: "about"; modalGoBackBehavior?: "close" | "back" }
     | { modalType: "import" }
-    | { modalType: "manage-emails" }
+    | { modalType: "prove"; request: PCDGetRequest }
+    | { modalType: "manage-emails"; goBackToSupport?: boolean }
     | { modalType: "delete-account" }
     | { modalType: "ticket-add-ons"; addOns: TicketType[] }
+    | { modalType: "help-modal" }
     | { modalType: "none" };
 
   // View state
   modal:
     | { modalType: "info" }
     | { modalType: "settings" }
-    | { modalType: "upgrade-account-modal" }
     | { modalType: "invalid-participant" }
     | { modalType: "changed-password" }
     | { modalType: "another-device-changed-password" }
     | { modalType: "resolve-subscription-error" }
-    | { modalType: "require-add-password" }
     | { modalType: "privacy-notice" }
     | { modalType: "none" }
     | {
@@ -65,8 +68,15 @@ export interface AppState {
       }
     | { modalType: "frogcrypto-export-pcds" };
 
-  // User metadata.
-  self?: User;
+  scrollTo?: {
+    attendee: string;
+    eventId: string;
+  };
+
+  // stores the eligibility state of all pcd type props that that the prove has,
+  // if one is not valid, we show a full screen error stat
+  proveStateEligiblePCDs?: boolean[];
+  self?: User; // User metadata.
 
   // if the client is in the process of logging out,
   // shows alternate UI on the login page to prevent

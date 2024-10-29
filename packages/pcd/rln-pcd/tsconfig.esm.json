@@ -17,6 +17,9 @@
       "path": "../semaphore-identity-pcd/tsconfig.esm.json"
     },
     {
+      "path": "../../lib/semaphore-identity-v3-wrapper/tsconfig.esm.json"
+    },
+    {
       "path": "../../lib/util/tsconfig.esm.json"
     }
   ]

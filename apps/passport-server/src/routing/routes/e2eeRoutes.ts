@@ -6,6 +6,7 @@ import express, { Request, Response } from "express";
 import { namedSqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { clusterProxy } from "../middlewares/clusterMiddleware";
 import { checkOptionalQueryParam, checkQueryParam } from "../params";
 
@@ -26,6 +27,7 @@ export function initE2EERoutes(
     "/sync/v3/changeBlobKey",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(e2eeService);
       const request = req.body as ChangeBlobKeyRequest;
 
       const result = await namedSqlTransaction(
@@ -52,6 +54,7 @@ export function initE2EERoutes(
     "/sync/v3/load/",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(e2eeService);
       const result = await namedSqlTransaction(
         context.dbPool,
         "/sync/v3/load/",
@@ -83,6 +86,7 @@ export function initE2EERoutes(
     "/sync/v3/save",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(e2eeService);
       const request = req.body as UploadEncryptedStorageRequest;
       const result = await namedSqlTransaction(
         context.dbPool,

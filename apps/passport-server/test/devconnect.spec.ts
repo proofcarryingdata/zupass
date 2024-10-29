@@ -107,7 +107,7 @@ describe("devconnect functionality", function () {
   let mocker: DevconnectPretixDataMocker;
   let pretixMocker: ZuzaluPretixDataMocker;
   let devconnectPretixSyncService: DevconnectPretixSyncService;
-  let poapService: PoapService;
+  let poapService: PoapService | null;
   let pool: Pool;
   let client: PoolClient;
 
@@ -527,7 +527,7 @@ describe("devconnect functionality", function () {
       }
       pretixService.replaceApi(getMockPretixAPI(pretixMocker.getMockData()));
       await pretixService.trySync();
-      const user = await application.services.userService.getUserByEmail(
+      const user = await application.services.userService?.getUserByEmail(
         client,
         firstParticipant.email
       );
@@ -1973,40 +1973,40 @@ describe("devconnect functionality", function () {
     async () => {
       // No POAP mint links in DB yet - all links return NULL
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "1", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "1", "devconnect")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "2", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "2", "devconnect")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "3", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "3", "devconnect")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "4", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "4", "devconnect")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "1", "zuzalu23")
+        await poapService?.getPoapClaimUrlByTicketId(client, "1", "zuzalu23")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "2", "zuzalu23")
+        await poapService?.getPoapClaimUrlByTicketId(client, "2", "zuzalu23")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "3", "zuzalu23")
+        await poapService?.getPoapClaimUrlByTicketId(client, "3", "zuzalu23")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "4", "zuzalu23")
+        await poapService?.getPoapClaimUrlByTicketId(client, "4", "zuzalu23")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "1", "zuconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "1", "zuconnect")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "2", "zuconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "2", "zuconnect")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "3", "zuconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "3", "zuconnect")
       ).to.be.null;
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "4", "zuconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "4", "zuconnect")
       ).to.be.null;
 
       const TEST_POAP_LINK_1 = "https://poap.xyz/mint/qwerty";
@@ -2020,11 +2020,11 @@ describe("devconnect functionality", function () {
 
       // Map ticket ID "1" to a devconnect ticket
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "1", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "1", "devconnect")
       ).to.eq(TEST_POAP_LINK_1);
       // Ran out of mint links for Devconnect
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "2", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "2", "devconnect")
       ).to.be.null;
 
       await insertNewPoapUrl(client, TEST_POAP_LINK_3, "devconnect");
@@ -2034,57 +2034,57 @@ describe("devconnect functionality", function () {
       // a new POAP mint link is being associated with a ticket ID. If an ticket ID
       // is already associated with a POAP mint link, poapEvent should be irrelevant.
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "1", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "1", "devconnect")
       ).to.eq(TEST_POAP_LINK_1);
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "1", "zuzalu23")
+        await poapService?.getPoapClaimUrlByTicketId(client, "1", "zuzalu23")
       ).to.eq(TEST_POAP_LINK_1);
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "1", "zuconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "1", "zuconnect")
       ).to.eq(TEST_POAP_LINK_1);
       // Map ticket ID "2" to a devconnect ticket
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "2", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "2", "devconnect")
       ).to.eq(TEST_POAP_LINK_3);
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "2", "zuzalu23")
+        await poapService?.getPoapClaimUrlByTicketId(client, "2", "zuzalu23")
       ).to.eq(TEST_POAP_LINK_3);
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "2", "zuconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "2", "zuconnect")
       ).to.eq(TEST_POAP_LINK_3);
       // Ran out of mint links for Devconnect
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "3", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "3", "devconnect")
       ).to.be.null;
 
       // Map ticket ID "3" to a zuzalu 2023 ticket
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "3", "zuzalu23")
+        await poapService?.getPoapClaimUrlByTicketId(client, "3", "zuzalu23")
       ).to.be.eq(TEST_POAP_LINK_2);
       // Still maps to existing link, regardless of what the poapEvent parameter is
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "3", "zuzalu23")
+        await poapService?.getPoapClaimUrlByTicketId(client, "3", "zuzalu23")
       ).to.be.eq(TEST_POAP_LINK_2);
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "3", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "3", "devconnect")
       ).to.be.eq(TEST_POAP_LINK_2);
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "3", "zuconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "3", "zuconnect")
       ).to.be.eq(TEST_POAP_LINK_2);
 
       // Map ticket ID "4" to a zuconnect ticket
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "4", "zuconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "4", "zuconnect")
       ).to.be.eq(TEST_POAP_LINK_4);
       // Still maps to existing link, regardless of what the poapEvent parameter is
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "4", "zuzalu23")
+        await poapService?.getPoapClaimUrlByTicketId(client, "4", "zuzalu23")
       ).to.be.eq(TEST_POAP_LINK_4);
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "4", "devconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "4", "devconnect")
       ).to.be.eq(TEST_POAP_LINK_4);
       expect(
-        await poapService.getPoapClaimUrlByTicketId(client, "4", "zuconnect")
+        await poapService?.getPoapClaimUrlByTicketId(client, "4", "zuconnect")
       ).to.be.eq(TEST_POAP_LINK_4);
     }
   );

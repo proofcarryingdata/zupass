@@ -16,6 +16,7 @@ import express, { Request, Response } from "express";
 import { namedSqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { clusterProxy } from "../middlewares/clusterMiddleware";
 import { checkBody, checkQueryParam, checkUrlParam } from "../params";
 
@@ -39,6 +40,7 @@ export function initAccountRoutes(
     "/account/salt",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const email = normalizeEmail(checkQueryParam(req, "email"));
 
       const result = await namedSqlTransaction(
@@ -77,6 +79,7 @@ export function initAccountRoutes(
     "/account/send-login-email",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const email = normalizeEmail(
         checkBody<ConfirmEmailRequest, "email">(req, "email")
       );
@@ -108,6 +111,7 @@ export function initAccountRoutes(
     "/account/verify-token",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const token = checkBody<VerifyTokenRequest, "token">(req, "token");
       const email = checkBody<VerifyTokenRequest, "email">(req, "email");
 
@@ -125,6 +129,7 @@ export function initAccountRoutes(
     "/account/one-click-login",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const email = checkBody<OneClickLoginRequest, "email">(req, "email");
       const code = checkBody<OneClickLoginRequest, "code">(req, "code");
       // we only need the v4 pubkey because the commitment is deriveable from it
@@ -186,6 +191,7 @@ export function initAccountRoutes(
     "/account/new-participant",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const email = normalizeEmail(
         checkBody<CreateNewUserRequest, "email">(req, "email")
       );
@@ -232,6 +238,7 @@ export function initAccountRoutes(
     "/account/upgrade-with-v4-commitment",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
       const result = await namedSqlTransaction(
@@ -255,6 +262,7 @@ export function initAccountRoutes(
     "/account/agree-terms",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
       const result = await namedSqlTransaction(
@@ -295,6 +303,7 @@ export function initAccountRoutes(
     "/v2/account/user/:uuid",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const result = await namedSqlTransaction(
         context.dbPool,
         "/v2/account/user/:uuid",
@@ -313,6 +322,7 @@ export function initAccountRoutes(
     "/pcdpass/participant/:uuid",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const result = await namedSqlTransaction(
         context.dbPool,
         "/pcdpass/participant/:uuid",
@@ -331,6 +341,7 @@ export function initAccountRoutes(
     "/zuzalu/participant/:uuid",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const result = await namedSqlTransaction(
         context.dbPool,
         "/zuzalu/participant/:uuid",
@@ -346,6 +357,7 @@ export function initAccountRoutes(
     "/account/delete",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const pcd = checkBody<DeleteAccountRequest, "pcd">(req, "pcd");
 
       await namedSqlTransaction(context.dbPool, "/account/delete", (client) =>
@@ -363,6 +375,7 @@ export function initAccountRoutes(
     "/account/add-email",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const newEmail = checkBody<AddUserEmailRequest, "newEmail">(
         req,
         "newEmail"
@@ -395,6 +408,7 @@ export function initAccountRoutes(
     "/account/delete-email",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const emailToRemove = checkBody<RemoveUserEmailRequest, "emailToRemove">(
         req,
         "emailToRemove"
@@ -421,6 +435,7 @@ export function initAccountRoutes(
     "/account/change-email",
     clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const oldEmail = checkBody<ChangeUserEmailRequest, "oldEmail">(
         req,
         "oldEmail"

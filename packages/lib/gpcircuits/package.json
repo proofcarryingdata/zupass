@@ -1,6 +1,6 @@
 {
   "name": "@pcd/gpcircuits",
-  "version": "0.1.7",
+  "version": "0.4.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./constants": {
+      "types": "./dist/types/src/constants.d.ts",
+      "import": "./dist/esm/src/constants.js",
+      "require": "./dist/cjs/src/constants.js"
     }
   },
   "files": [
@@ -38,17 +43,17 @@
     "copy-snark-artifacts": "./scripts/copy-snark-artifacts.sh"
   },
   "dependencies": {
-    "@pcd/pod": "0.1.7",
+    "@pcd/pod": "0.4.0",
     "fastfile": "0.0.20",
     "snarkjs": "^0.7.4",
     "url-join": "4.0.1"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.4",
-    "@pcd/tsconfig": "0.11.4",
-    "@pcd/util": "^0.5.4",
-    "@semaphore-protocol/identity": "^3.15.2",
-    "semaphore-identity-v4": "npm:@semaphore-protocol/identity@^4.0.3",
+    "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/semaphore-identity-v3-wrapper": "0.0.1",
+    "@pcd/tsconfig": "0.14.0",
+    "@pcd/util": "^0.8.0",
+    "@semaphore-protocol/identity": "^4.0.3",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/snarkjs": "^0.7.5",
