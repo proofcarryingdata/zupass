@@ -173,19 +173,19 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
 
     const currentRevision = this.getContext().getState().serverStorageRevision;
 
-    await this.getContext().dispatch({
-      type: "add-pcds",
-      folder: collectionIdToFolderName(collectionId),
-      pcds: [serializedPCD],
-      upsert: true
-    });
-
     return new Promise((resolve) => {
       const unlisten = this.getContext().stateEmitter.listen((state) => {
         if (state.serverStorageRevision !== currentRevision) {
           unlisten();
           resolve();
         }
+      });
+
+      this.getContext().dispatch({
+        type: "add-pcds",
+        folder: collectionIdToFolderName(collectionId),
+        pcds: [serializedPCD],
+        upsert: true
       });
     });
   }
@@ -216,15 +216,6 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
 
     const currentRevision = this.getContext().getState().serverStorageRevision;
 
-    await Promise.all(
-      pcdIds.map((id) =>
-        this.getContext().dispatch({
-          type: "remove-pcd",
-          id
-        })
-      )
-    );
-
     return new Promise((resolve) => {
       const unlisten = this.getContext().stateEmitter.listen((state) => {
         if (state.serverStorageRevision !== currentRevision) {
@@ -232,6 +223,13 @@ class ZupassPODRPC extends BaseZappServer implements ParcnetPODRPC {
           resolve();
         }
       });
+
+      for (const id of pcdIds) {
+        this.getContext().dispatch({
+          type: "remove-pcd",
+          id
+        });
+      }
     });
   }
 
