@@ -1,13 +1,14 @@
 import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
-import { GenericProveScreen } from "./GenericProveScreen";
-import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { ReactElement } from "react";
+import { useSearchParams } from "react-router-dom";
 import { ProveModal } from "../../../new-components/shared/Modals/ProveModal";
 import { useDispatch } from "../../../src/appHooks";
-import { useSearchParams } from "react-router-dom";
-import { ReactElement } from "react";
+import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { GenericProveScreen } from "./GenericProveScreen";
+import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
+import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 
 export function getScreen(request: PCDGetRequest): JSX.Element | null {
   if (request.type !== PCDRequestType.Get) {
@@ -26,6 +27,7 @@ export function getScreen(request: PCDGetRequest): JSX.Element | null {
 }
 
 export const ProveScreen = (): ReactElement => {
+  useSyncE2EEStorage();
   const [params] = useSearchParams();
   const request = JSON.parse(params.get("request") ?? "{}") as PCDGetRequest;
   const dispatch = useDispatch();

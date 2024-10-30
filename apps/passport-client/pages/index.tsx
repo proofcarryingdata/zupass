@@ -27,7 +27,6 @@ import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManager
 import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
-import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
 // import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
 // import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
@@ -40,6 +39,7 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 // import { RemoveEmailScreen } from "../components/screens/RemoveEmailScreen";
 import styled from "styled-components";
+import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
@@ -76,7 +76,6 @@ import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { ListenMode, useZappServer } from "../src/zapp/useZappServer";
-import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 
 enableLiveReload();
 
@@ -203,7 +202,7 @@ function RouterImpl(): JSX.Element {
           <Route path="prove" element={<ProveScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
-          <Route path="telegram" element={<HomeScreen />} />
+          <Route path="telegram" element={<NewHomeScreen />} />
           <Route path="pond-control" element={<FrogManagerScreen />} />
           <Route path="frogscriptions" element={<FrogSubscriptionScreen />} />
           <Route
