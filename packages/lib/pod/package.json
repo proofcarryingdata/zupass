@@ -39,9 +39,9 @@
   },
   "dependencies": {
     "@pcd/util": "0.8.0",
-    "@zk-kit/eddsa-poseidon": "1.0.3",
-    "@zk-kit/lean-imt": "2.2.1",
-    "@zk-kit/utils": "1.2.1",
+    "@zk-kit/eddsa-poseidon": "~1.0.4",
+    "@zk-kit/lean-imt": "^2.2.1",
+    "@zk-kit/utils": "^1.2.1",
     "js-sha256": "^0.10.1",
     "poseidon-lite": "^0.3.0"
   },
@@ -54,7 +54,7 @@
     "@types/circomlibjs": "^0.1.6",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
-    "@zk-kit/baby-jubjub": "1.0.3",
+    "@zk-kit/baby-jubjub": "^1.0.3",
     "circomlibjs": "^0.1.7",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",

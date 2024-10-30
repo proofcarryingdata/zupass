@@ -23,16 +23,16 @@
   ],
   "references": [
     {
-      "path": "../../packages/lib/pod"
-    },
-    {
-      "path": "../../packages/lib/podbox-shared"
-    },
-    {
       "path": "../../packages/lib/client-shared"
     },
     {
       "path": "../../packages/lib/passport-interface"
+    },
+    {
+      "path": "../../packages/lib/pod"
+    },
+    {
+      "path": "../../packages/lib/podbox-shared"
     },
     {
       "path": "../../packages/lib/util"
