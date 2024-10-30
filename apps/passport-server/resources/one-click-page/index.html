@@ -201,6 +201,51 @@
     function redirectToZupass() {
       window.location.replace(clientPath);
     }
+
+    async function registerServiceWorker() {
+      const SERVICE_WORKER_ENABLED = true;
+      if (!("serviceWorker" in navigator)) {
+        console.log(`[SERVICE_WORKER] service workers not supported`);
+        return;
+      }
+
+      if (!SERVICE_WORKER_ENABLED) {
+        console.log(
+          `[SERVICE_WORKER] not registering service worker in development mode`
+        );
+        return;
+      }
+
+      const serviceWorkerPath = "/service-worker.js";
+
+      console.log(
+        `[SERVICE_WORKER] attempting to register ${serviceWorkerPath}`
+      );
+
+      try {
+        await navigator.serviceWorker.register(serviceWorkerPath, {
+          scope: "/"
+        });
+
+        navigator.serviceWorker.ready.then((registration) => {
+          registration.active.postMessage(
+            JSON.stringify({
+              action: "cache",
+              url: window.location.href
+            })
+          );
+        });
+
+        console.log(`[SERVICE_WORKER] registered ${serviceWorkerPath}`);
+      } catch (e) {
+        console.log(
+          `[SERVICE_WORKER] error registering service worker ${serviceWorkerPath}`,
+          e
+        );
+      }
+    }
+
+    registerServiceWorker();
   </script>
 
   <body>
