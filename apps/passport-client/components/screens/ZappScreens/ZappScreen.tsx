@@ -7,11 +7,14 @@ import { EmbeddedScreen } from "../EmbeddedScreens/EmbeddedScreen";
 
 export function ZappScreen({ url }: { url: string }): ReactNode {
   const [searchParams] = useSearchParams();
-  const queryParam = searchParams.get("q");
   const urlWithOptionalParameter = new URL(url);
-  if (queryParam) {
-    urlWithOptionalParameter.searchParams.set("q", queryParam);
-  }
+
+  // Copy all search params to forward into Zapp except 'folder'
+  searchParams.forEach((value, key) => {
+    if (key !== "folder") {
+      urlWithOptionalParameter.searchParams.set(key, value);
+    }
+  });
 
   return (
     <>
