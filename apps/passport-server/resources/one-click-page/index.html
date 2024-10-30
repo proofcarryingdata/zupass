@@ -26,6 +26,10 @@
     --white: #fff;
     --text-title: #9a4ac9;
     --text-primary: #1e2c50;
+    --bg-white-transparent: rgba(255, 255, 255, 0.80);
+    --text-tertiary: #8B94AC;
+    --core-accent: #01685C;
+
     overflow: hidden;
     height: 100dvh;
   }
@@ -57,7 +61,7 @@
 
   .ticket {
     display: flex;
-    padding: 16px;
+    padding: 16px 16px 0px 16px;
     flex-direction: column;
     justify-content: space-between;
     align-items: center;
@@ -96,6 +100,16 @@
     font-weight: 800;
     line-height: 135%;
     /* 27px */
+  }
+
+  .ticket__addons-btn {
+    width: 100%;
+    background: none;
+    border: none;
+    padding: 16px 0;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-start;
   }
 
   .ticket__subtitle--text {
@@ -174,6 +188,7 @@
     height: 82px;
     flex-shrink: 0;
     width: 100%;
+    margin-top: 30px;
     margin-bottom: 45px;
   }
 
@@ -203,13 +218,18 @@
     bottom: 12px;
     box-shadow: 0px 4px 6px -1px #0000001a;
     margin: 0 auto;
-    max-width: 290px;
+    width: 100%;
+    max-width: 420px;
+    max-height: 100%;
     padding: 20px;
-    overflow: scroll;
     -ms-overflow-style: none;
     /* Internet Explorer 10+ */
     scrollbar-width: none;
     /* Firefox */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
   }
 
   .modal__container::-webkit-scrollbar {
@@ -218,8 +238,20 @@
   }
 
   .modal__qr {
-    width: 250px;
-    height: 250px;
+    width: 265px;
+    height: 265px;
+  }
+
+  .modal__qr--text {
+    color: var(--text-primary);
+    text-align: center;
+    /* text-lg (18px)/text-base (16px)/medium-rubik */
+    font-family: Rubik;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 135%;
+    /* 21.6px */
   }
 
   .modal__qr--image {
@@ -230,6 +262,15 @@
     object-fit: cover;
   }
 
+  .modal__qr--container {
+    display: flex;
+    flex-direction: column;
+    padding: 12px;
+    gap: 12px;
+    align-items: center;
+    border: 1px solid #e5dfdf;
+    border-radius: 8px;
+  }
 
   .page-header {
     padding: 25px 0 25px 0;
@@ -240,13 +281,88 @@
     align-items: center;
     justify-content: center;
     border-bottom: 1px solid #1d8289;
-    background: linear-gradient(0deg, #00605c 0%, #00785e 100%);
+    background: linear-gradient;
   }
+
+  .swiper-container {
+    width: 290px;
+    margin: 0 auto;
+    overflow: hidden;
+  }
+
+  .swiper__navigation--text {
+    color: var(--text-tertiary);
+    text-align: center;
+
+    /* text-sm (14px)/medium-rubik */
+    font-family: Rubik;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 135%;
+    /* 18.9px */
+  }
+
+  .swiper__navigation--container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .swiper__navigation--btn-disabled {
+    opacity: 0.4;
+    pointer-events: none;
+  }
+
+  .swiper__navigation--btn {
+    display: flex;
+    width: 40px;
+    height: 32px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    border-radius: 200px;
+    border: 2px solid #FFF;
+    background: var(--bg-white-transparent);
+
+    /* shadow */
+    box-shadow: 0px 1px 3px 0px rgba(0, 0, 0, 0.10), 0px 1px 2px 0px rgba(0, 0, 0, 0.06);
+  }
+
+  .btn__container--primary {
+    display: flex;
+    height: 54px;
+    padding: 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    align-self: stretch;
+    border-radius: 200px;
+    background: var(--core-accent);
+    /* shadow-sm */
+    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+
+  }
+
+  .btn__text--primary {
+    color: var(--white);
+    text-align: center;
+
+    /* text-lg (18px)/medium-rubik */
+    font-family: Rubik;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 135%;
+    /* 24.3px */
+  }
+
+  _
 </style>
 
 <body>
   <div class="page-header" id="page-header">
-    <svg xmlns="http://www.w3.org/2000/svg" width="118" height="21" viewBox="0 0 118 21" fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="118" height="21" viewBox="0 0 118 21" fil="none">
       <path
         d="M0.587402 17.6774L13.949 2.65875H1.20393V0.406738H17.4772V2.49193L4.22441 17.4011H18.1248L17.7466 19.6531H0.587402V17.6722V17.6774Z"
         fill="#FFD6A0" />
@@ -290,35 +406,75 @@
             <span class="ticket__subtitle--text">{{ticketName}}</span>
           </div>
         </div>
-        <button id="modal-btn">view addons</button>
+        {{#addonsCount}}
+        <button id="addons-btn" type="button" class="ticket__addons-btn">
+          <span class="ticket__subtitle--text" style="font-size: 16px;">view {{addonsCount}} addons</span>
+        </button>
+        {{/addonsCount}}
+        {{^addonsCount}}
+        <!-- spacer when we dont have any addon -->
+        <div style="height:16px;" />
+        {{/addonsCount}}
       </div>
     </div>
   </main>
   <!-- Tiny-Swiper -->
   <div id="modal-overlay" class="modal__overlay modal__overlay--disabled">
     <div id="modal" class="modal__container">
-      <button id="close">X</button>
       <div class="swiper-container">
         <div class="swiper-wrapper">
           {{#addons}}
           <div class="swiper-slide">
-            <div class="modal__qr">
-              <img class="modal__qr--image" src="{{.}}" />
+            <div class="modal__qr--container">
+              <div class="modal__qr">
+                <img class="modal__qr--image" src="{{image}}" />
+              </div>
+              <span class="modal__qr--text">{{name}}</span>
             </div>
           </div>
           {{/addons}}
         </div>
       </div>
+      <div class="swiper__navigation--container">
+        <button id="back" type="button" class="swiper__navigation--btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="var(--text-tertiary)" class="size-4"
+            style="width:24px; height: 24px;">
+            <path fill-rule="evenodd"
+              d="M9.78 4.22a.75.75 0 0 1 0 1.06L7.06 8l2.72 2.72a.75.75 0 1 1-1.06 1.06L5.47 8.53a.75.75 0 0 1 0-1.06l3.25-3.25a.75.75 0 0 1 1.06 0Z"
+              clip-rule="evenodd" />
+          </svg>
+        </button>
+        <span class="swiper__navigation--text"><span id="current-item-text">1</span> of {{addonsCount}}</span>
+        <button id="next" type="button" class="swiper__navigation--btn">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="var(--text-tertiary)" class="size-4"
+            style="width:24px; height: 24px;">
+            <path fill-rule="evenodd"
+              d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"
+              clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+      <button type="button" id="close" class="btn__container--primary"><span
+          class="btn__text--primary">Close</span></button>
     </div>
+  </div>
   </div>
   <!-- Tiny-Swiper JS -->
   <script src="https://unpkg.com/tiny-swiper@latest/lib/index.min.js"></script>
+  <script src="https://unpkg.com/tiny-swiper@latest/lib/modules/navigation.min.js"></script>
 
   <script>
     const modal = document.getElementById("modal");
     const overlay = document.getElementById("modal-overlay");
-    const modalClose = document.getElementById("close");
-    const modalBtn = document.getElementById("modal-btn");
+    const closeBtn = document.getElementById("close");
+    const addonsBtn = document.getElementById("addons-btn");
+    const nextBtn = document.getElementById("next");
+    const backBtn = document.getElementById("back");
+    const currentIdxText = document.getElementById("current-item-text");
+
+    const path = window.location.pathname;
+    const oneClickMatch = path.match(/\/one-click-preview.*/);
+    const newPath = oneClickMatch ? oneClickMatch[0] : "";
 
     function joinPaths(...parts) {
       return parts
@@ -327,31 +483,42 @@
         .join("/");
     }
 
-    const path = window.location.pathname;
-    const oneClickMatch = path.match(/\/one-click-preview.*/);
-    const newPath = oneClickMatch ? oneClickMatch[0] : "";
-    const clientPath = joinPaths("{{{zupassUrl}}}", "#", newPath);
-
-
     function redirectToZupass() {
       window.location.replace(clientPath);
     }
 
-    modal.onclick = function block(e) {
+    const clientPath = joinPaths("{{{zupassUrl}}}", "#", newPath);
+
+
+
+    modal.onclick = function (e) {
       e.stopPropagation()
     }
 
-    modalClose.onclick = function () {
+    overlay.onclick = function () {
       overlay.classList.add("modal__overlay--disabled");
     }
 
-    modalBtn.onclick = function () {
-      console.log("clicking")
+    closeBtn.onclick = function () {
+      overlay.classList.add("modal__overlay--disabled");
+    }
+    addonsBtn.onclick = function () {
       overlay.classList.remove("modal__overlay--disabled");
       const swiper = new Swiper(".swiper-container", {
-        spaceBetween: 20
+        spaceBetween: 12,
+        navigation: {
+          prevEl: backBtn,
+          nextEl: nextBtn,
+          disabledClass: "swiper__navigation--btn-disabled"
+        },
+        plugins: [SwiperPluginNavigation]
       });
+      swiper.on("after-slide", function (newIdx, state) {
+        currentIdxText.innerText = newIdx + 1;
+      })
     }
+
+
   </script>
 </body>
 
