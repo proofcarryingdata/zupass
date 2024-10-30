@@ -1,4 +1,6 @@
 // This file is the source of truth for GPC production circuit configurations.
+// Many configurations are commented out for the moment due to NPM package size
+// limitations.
 //
 // Run `yarn gen-circuit-parameters && yarn gen-artifacts` after editing.
 import { ProtoPODGPCCircuitParams } from "../../src";
