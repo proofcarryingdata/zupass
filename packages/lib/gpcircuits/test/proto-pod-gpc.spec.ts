@@ -939,7 +939,9 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     // above, and is larger than the test data in all dimensions (so padding is
     // exercised).  What we're testing here is the ability to handle smaller
     // sizes, with truncated data as necessary.
-    for (const params of testCircuitFamily) {
+    for (const params of ProtoPODGPC.CIRCUIT_PARAMETERS.map(
+      (pair) => pair[0]
+    )) {
       const { inputs, outputs } = makeTestSignals(
         params,
         true /*isNullifierHashRevealed*/,
@@ -1044,7 +1046,7 @@ describe(`proto-pod-gpc.ProtoPODGPC (Compiled ${circuitParamType} artifacts) sho
     // above, and is larger than the test data in all dimensions (so padding is
     // exercised).  What we're testing here is the ability to handle smaller
     // sizes, with truncated data as necessary.
-    for (const { family: _f, name: _n, cost: _c, ...cd } of testCircuitFamily) {
+    for (const cd of ProtoPODGPC.CIRCUIT_PARAMETERS.map((pair) => pair[0])) {
       // Skip the default (largest) config, already tested above.
       if (_.isEqual(cd, GPC_PARAMS)) {
         continue;
