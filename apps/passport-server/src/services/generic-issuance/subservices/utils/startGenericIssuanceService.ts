@@ -3,7 +3,7 @@ import { RollbarService } from "@pcd/server-shared";
 import stytch, { Client } from "stytch";
 import { ILemonadeAPI } from "../../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
-import { ApplicationContext } from "../../../../types";
+import { ApplicationContext, ServerMode } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { DiscordService } from "../../../discordService";
 import { EmailService } from "../../../emailService";
@@ -29,6 +29,18 @@ export async function startGenericIssuanceService(
   localFileService: LocalFileService | null
 ): Promise<GenericIssuanceService | null> {
   logger("[INIT] attempting to start Generic Issuance service");
+
+  if (process.env.DISABLE_JOBS === "true") {
+    logger("[INIT] generic issuance service not starting because DISABLE_JOBS");
+    return null;
+  }
+
+  if (![ServerMode.UNIFIED, ServerMode.PARALLEL_MAIN].includes(context.mode)) {
+    logger(
+      `[INIT] generic issuance service not started, not in unified or parallel main mode`
+    );
+    return null;
+  }
 
   if (!cacheService) {
     logger(

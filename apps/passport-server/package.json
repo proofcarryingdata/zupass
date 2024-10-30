@@ -66,6 +66,7 @@
     "flat": "^5.0.1",
     "grammy": "^1.18.1",
     "graphql": "^16.8.1",
+    "http-proxy-middleware": "^3.0.3",
     "js-sha256": "^0.10.1",
     "json-bigint": "^1.0.0",
     "libhoney": "^4.0.1",

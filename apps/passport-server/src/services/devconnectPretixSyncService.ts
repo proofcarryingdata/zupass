@@ -13,7 +13,7 @@ import {
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
 import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
-import { ApplicationContext } from "../types";
+import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
 import { OrganizerSync } from "./devconnect/organizerSync";
 import { ZUPASS_TICKET_PUBLIC_KEY_NAME } from "./issuanceService";
@@ -261,6 +261,13 @@ export async function startDevconnectPretixSyncService(
   semaphoreService: SemaphoreService | null,
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null
 ): Promise<DevconnectPretixSyncService | null> {
+  if (process.env.DISABLE_JOBS === "true") {
+    logger(
+      "[DEVCONNECT PRETIX] Can't start sync service - DISABLE_JOBS is true"
+    );
+    return null;
+  }
+
   if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
     logger(
       `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting semaphore service`
@@ -278,6 +285,20 @@ export async function startDevconnectPretixSyncService(
   if (!devconnectPretixAPIFactory) {
     logger(
       "[DEVCONNECT PRETIX] Can't start sync service - no api factory instantiated"
+    );
+    return null;
+  }
+
+  if (![ServerMode.UNIFIED, ServerMode.PARALLEL_MAIN].includes(context.mode)) {
+    logger(
+      `[INIT] devconnect pretix sync service not started, not in unified or parallel main mode`
+    );
+    return null;
+  }
+
+  if (!semaphoreService) {
+    logger(
+      `[INIT] devconnect pretix sync service not started, no semaphore service`
     );
     return null;
   }

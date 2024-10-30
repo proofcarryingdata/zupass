@@ -14,6 +14,7 @@ import { namedSqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
+import { clusterProxy } from "../middlewares/clusterMiddleware";
 import { checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
@@ -31,36 +32,48 @@ export function initPCDIssuanceRoutes(
    * to work, except users won't get any 'issued' tickets - Devconnect,
    * Zuconnect, Zuzalu, etc.
    */
-  app.get("/issue/enabled", async (req: Request, res: Response) => {
-    const result = issuanceService !== null;
-    res.json(result satisfies IssuanceEnabledResponseValue);
-  });
+  app.get(
+    "/issue/enabled",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      const result = issuanceService !== null;
+      res.json(result satisfies IssuanceEnabledResponseValue);
+    }
+  );
 
   /**
    * Gets the RSA public key this server is using for its attestations, so that
    * 3rd parties can verify whether users have proper attestations.
    */
-  app.get("/issue/rsa-public-key", async (req: Request, res: Response) => {
-    checkExistsForRoute(issuanceService);
-    const result = issuanceService.getRSAPublicKey();
-    res.send(result satisfies string);
-  });
+  app.get(
+    "/issue/rsa-public-key",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(issuanceService);
+      const result = issuanceService.getRSAPublicKey();
+      res.send(result satisfies string);
+    }
+  );
 
   /**
    * Gets the EdDSA public key this server is using for its attestations, so that
    * 3rd parties can verify whether users have proper attestations.
    */
-  app.get("/issue/eddsa-public-key", async (req: Request, res: Response) => {
-    checkExistsForRoute(issuanceService);
-    const result = await issuanceService.getEdDSAPublicKey();
-    res.send(result satisfies EdDSAPublicKey);
-  });
+  app.get(
+    "/issue/eddsa-public-key",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(issuanceService);
+      const result = await issuanceService.getEdDSAPublicKey();
+      res.send(result satisfies EdDSAPublicKey);
+    }
+  );
 
   /**
    * Lets the Zupass client and 3rd parties inspect what feeds are available
    * for polling on this server.
    */
-  app.get("/feeds", async (req: Request, res: Response) => {
+  app.get("/feeds", clusterProxy(), async (req: Request, res: Response) => {
     checkExistsForRoute(issuanceService);
     const result = await issuanceService.handleListFeedsRequest(
       req.body as ListFeedsRequest
@@ -72,7 +85,7 @@ export function initPCDIssuanceRoutes(
    * Lets a Zupass client (or even a 3rd-party-developed client get PCDs from a
    * particular feed that this server is hosting.
    */
-  app.post("/feeds", async (req, res) => {
+  app.post("/feeds", clusterProxy(), async (req, res) => {
     checkExistsForRoute(issuanceService);
     const result = await issuanceService.handleFeedRequest(
       req.body as PollFeedRequest
@@ -80,14 +93,18 @@ export function initPCDIssuanceRoutes(
     res.json(result satisfies PollFeedResponseValue);
   });
 
-  app.get("/feeds/:feedId", async (req: Request, res: Response) => {
-    checkExistsForRoute(issuanceService);
-    const feedId = checkUrlParam(req, "feedId");
-    if (!issuanceService.hasFeedWithId(feedId)) {
-      throw new PCDHTTPError(404);
+  app.get(
+    "/feeds/:feedId",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(issuanceService);
+      const feedId = checkUrlParam(req, "feedId");
+      if (!issuanceService.hasFeedWithId(feedId)) {
+        throw new PCDHTTPError(404);
+      }
+      res.json(await issuanceService.handleListSingleFeedRequest({ feedId }));
     }
-    res.json(await issuanceService.handleListSingleFeedRequest({ feedId }));
-  });
+  );
 
   /**
    * For non-Devconnect ticket PCDs, the standard QR code generates a link
@@ -95,31 +112,39 @@ export function initPCDIssuanceRoutes(
    * to verify the ticket. Tickets are only verified if they match criteria
    * known to belong to Zuconnect '23 or Zuzalu '23 tickets.
    */
-  app.post("/issue/verify-ticket", async (req: Request, res: Response) => {
-    checkExistsForRoute(issuanceService);
-    await namedSqlTransaction(
-      context.dbPool,
-      "/issue/verify-ticket",
-      async (client) => {
-        const result = await issuanceService.handleVerifyTicketRequest(
-          client,
-          req.body as VerifyTicketRequest
-        );
-        return res.json(result satisfies VerifyTicketResult);
-      }
-    );
-  });
+  app.post(
+    "/issue/verify-ticket",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(issuanceService);
+      await namedSqlTransaction(
+        context.dbPool,
+        "/issue/verify-ticket",
+        async (client) => {
+          const result = await issuanceService.handleVerifyTicketRequest(
+            client,
+            req.body as VerifyTicketRequest
+          );
+          return res.json(result satisfies VerifyTicketResult);
+        }
+      );
+    }
+  );
 
-  app.get("/issue/known-ticket-types", async (req: Request, res: Response) => {
-    checkExistsForRoute(issuanceService);
-    await namedSqlTransaction(
-      context.dbPool,
-      "/issue/known-ticket-types",
-      async (client) => {
-        const result =
-          await issuanceService.handleKnownTicketTypesRequest(client);
-        return res.json(result satisfies KnownTicketTypesResult);
-      }
-    );
-  });
+  app.get(
+    "/issue/known-ticket-types",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(issuanceService);
+      await namedSqlTransaction(
+        context.dbPool,
+        "/issue/known-ticket-types",
+        async (client) => {
+          const result =
+            await issuanceService.handleKnownTicketTypesRequest(client);
+          return res.json(result satisfies KnownTicketTypesResult);
+        }
+      );
+    }
+  );
 }
