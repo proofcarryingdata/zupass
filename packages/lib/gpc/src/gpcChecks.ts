@@ -24,8 +24,6 @@ import {
   printPODValueOrTuple,
   requireType
 } from "@pcd/pod";
-import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
-import { Identity as IdentityV4 } from "@semaphore-protocol/identity";
 import isEqual from "lodash/isEqual";
 import uniq from "lodash/uniq";
 import {
@@ -549,21 +547,40 @@ export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
 
   if (proofInputs.owner !== undefined) {
     if (proofInputs.owner.semaphoreV3 !== undefined) {
+      // instanceof checking is overly strict across separate libraries, so we
+      // directly check the properties of the fields we need to access.
       requireType(`owner.SemaphoreV3`, proofInputs.owner.semaphoreV3, "object");
-      if (!(proofInputs.owner.semaphoreV3 instanceof IdentityV3)) {
-        throw new TypeError(
-          `owner.semaphoreV3 must be a SemaphoreV3 Identity object.`
-        );
-      }
+      requireType(
+        `owner.SemaphoreV3.commitment`,
+        proofInputs.owner.semaphoreV3.commitment,
+        "bigint"
+      );
     }
 
     if (proofInputs.owner.semaphoreV4 !== undefined) {
+      // instanceof checking is overly strict across separate libraries, so we
+      // directly check the properties of the fields we need to access.
       requireType(`owner.SemaphoreV4`, proofInputs.owner.semaphoreV4, "object");
-      if (!(proofInputs.owner.semaphoreV4 instanceof IdentityV4)) {
+      requireType(
+        `owner.SemaphoreV4.publicKey`,
+        proofInputs.owner.semaphoreV4.publicKey,
+        "array"
+      );
+      if (proofInputs.owner.semaphoreV4.publicKey.length !== 2) {
         throw new TypeError(
-          `owner.semaphoreV4 must be a SemaphoreV4 Identity object.`
+          `owner.semaphoreV4.publicKey must be a Point (array of 2 bigints)`
         );
       }
+      requireType(
+        "proofInputs.owner.semaphoreV4.publicKey[0]",
+        proofInputs.owner.semaphoreV4.publicKey[0],
+        "bigint"
+      );
+      requireType(
+        "proofInputs.owner.semaphoreV4.publicKey[1]",
+        proofInputs.owner.semaphoreV4.publicKey[1],
+        "bigint"
+      );
     }
 
     if (proofInputs.owner.externalNullifier !== undefined) {

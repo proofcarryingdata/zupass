@@ -1528,6 +1528,7 @@ export function compileVerifyOwnerV4(
  */
 export function makeRevealedClaims(
   proofConfig: GPCBoundConfig,
+  circuitDesc: ProtoPODGPCCircuitDesc,
   proofInputs: GPCProofInputs,
   circuitOutputs: ProtoPODGPCOutputs
 ): GPCRevealedClaims {
@@ -1578,14 +1579,16 @@ export function makeRevealedClaims(
       ? {
           owner: {
             externalNullifier: proofInputs.owner.externalNullifier,
-            ...(proofInputs.owner?.semaphoreV3 !== undefined
+            ...(proofInputs.owner?.semaphoreV3 !== undefined &&
+            circuitDesc.includeOwnerV3
               ? {
                   nullifierHashV3: BigInt(
                     circuitOutputs.ownerV3RevealedNullifierHash[0]
                   )
                 }
               : {}),
-            ...(proofInputs.owner?.semaphoreV4 !== undefined
+            ...(proofInputs.owner?.semaphoreV4 !== undefined &&
+            circuitDesc.includeOwnerV4
               ? {
                   nullifierHashV4: BigInt(
                     circuitOutputs.ownerV4RevealedNullifierHash[0]

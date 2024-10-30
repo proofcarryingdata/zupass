@@ -12,17 +12,17 @@
  * created, transmitted, stored, and displayed in apps like Zupass and
  * Podbox which understand many types of PCDs.
  *
- * All the GPC code is an early prototype, and details are subject to change.
- * Feedback is welcome.
+ * The GPC library is in beta, and the details of proofs and circuits may
+ * change in future.  Feedback is welcome.
  */
 
 import {
-  GPCProofConfig,
-  GPCProofInputs,
   boundConfigFromJSON,
   boundConfigToJSON,
   gpcArtifactDownloadURL,
   gpcBindConfig,
+  GPCProofConfig,
+  GPCProofInputs,
   gpcProve,
   gpcVerify,
   proofConfigToJSON,
@@ -31,9 +31,13 @@ import {
 } from "@pcd/gpc";
 import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { POD, PODEntries } from "@pcd/pod";
+import { encodePublicKey, POD, PODEntries } from "@pcd/pod";
 import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  IdentityV3,
+  SemaphoreIdentityPCDPackage,
+  v4PublicKey
+} from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import * as path from "path";
@@ -51,9 +55,10 @@ export async function gpcDemo(): Promise<boolean> {
   // explanatory comments.
   //////////////////////////////////////////////////////////////////////////////
 
-  const privateKey = "ASNFZ4mrze8BI0VniavN7wEjRWeJq83vASNFZ4mrze8";
+  const signerPrivateKey = "ASNFZ4mrze8BI0VniavN7wEjRWeJq83vASNFZ4mrze8";
   const semaphoreIdentity = new Identity();
-  console.log("Semaphore commitment", semaphoreIdentity.commitment);
+  const semaphorePublicKey = encodePublicKey(semaphoreIdentity.publicKey);
+  console.log("Semaphore public key", semaphorePublicKey);
   const podSword = POD.sign(
     {
       pod_type: { type: "string", value: "myrpg.item.weapon" },
@@ -61,9 +66,9 @@ export async function gpcDemo(): Promise<boolean> {
       attack: { type: "int", value: 7n },
       weaponType: { type: "string", value: "sword" },
       isMagical: { type: "boolean", value: true },
-      owner: { type: "cryptographic", value: semaphoreIdentity.commitment }
+      owner: { type: "eddsa_pubkey", value: semaphorePublicKey }
     } satisfies PODEntries,
-    privateKey
+    signerPrivateKey
   );
   console.log("Sword", podSword.content.toJSON());
   const podShield = POD.sign(
@@ -72,9 +77,9 @@ export async function gpcDemo(): Promise<boolean> {
       itemSet: { type: "string", value: "celestial" },
       defense: { type: "int", value: 5n },
       isMagical: { type: "boolean", value: true },
-      owner: { type: "cryptographic", value: semaphoreIdentity.commitment }
+      owner: { type: "eddsa_pubkey", value: semaphorePublicKey }
     } satisfies PODEntries,
-    privateKey
+    signerPrivateKey
   );
   console.log("Shield", podShield.content.toJSON());
   const signerPublicKey = podSword.signerPublicKey;
@@ -89,7 +94,8 @@ export async function gpcDemo(): Promise<boolean> {
   // The purpose of the GPC library is to hide the details of the ZK circuits
   // used to generate and verify proofs.  Proofs can be created using a
   // high-level configuration, and the library will automatically pick a
-  // suitable circuit from many available circuits from a GPC family.
+  // suitable circuit from a family of circuits of different sizes and
+  // capabilities.
   //////////////////////////////////////////////////////////////////////////////
 
   // A GPCConfig specifies what we want to prove about one or more PODs.  It's
@@ -106,9 +112,9 @@ export async function gpcDemo(): Promise<boolean> {
           attack: { isRevealed: true },
 
           // I'm proving the presence of an entry called "owner".  I'm not
-          // revealing it, but will be proving I own the corresponding
-          // Semaphore V3 identity secrets.
-          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" }
+          // revealing it, but will be proving I have the corresponding
+          // private key.
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV4" }
         }
       }
     }
@@ -117,7 +123,7 @@ export async function gpcDemo(): Promise<boolean> {
   // Note that anything not mentioned in the config isn't being proven
   // or revealed.  For instance, I didn't check the `pod_type`, so this config
   // could be met by some other type with a "damage" field.  My POD also may or
-  // may not have many other entries not included in the proof.
+  // may not have other entries not included in the proof.
 
   // To generate a proof I need to pair a config with a set of inputs, including
   // the POD(s) to prove about.  Inputs can also enable extra security features
@@ -132,18 +138,18 @@ export async function gpcDemo(): Promise<boolean> {
       // Here I provide my private identity info.  It's never revealed in the
       // proof, but used to prove the correctness of the `owner` entry as
       // specified in the config.
-      semaphoreV3: semaphoreIdentity,
+      semaphoreV4: semaphoreIdentity,
 
       // I can optionally ask to generate a nullifier, which is tied to my
       // identity and to the external nullifier value here.  This can be used
       // to avoid exploits like double-voting.
-      externalNullifier: { type: "string", value: "attack round 3" }
+      externalNullifier: { type: "string", value: "combat round 3" }
     },
 
     // Watermark gets carried in the proof and can be used to ensure the same
     // proof isn't reused outside of its intended context.  A timestamp is
     // one possible way to do that.
-    watermark: { type: "int", value: BigInt(Date.now()) }
+    watermark: { type: "date", value: new Date() }
   };
 
   //////////////////////////////////////////////////////////////////////////////
@@ -183,8 +189,15 @@ export async function gpcDemo(): Promise<boolean> {
   );
 
   // The proof object is the mathematical proof of the configured properties.
-  // It's just a bunch of opaque numbers.
+  // It's just a bunch of opaque numbers, associated with the Groth16 scheme.
   console.log("Proof", proof);
+
+  // The revealed claims object contains redacted information about the inputs
+  // which should be revealed to the verifier.
+  console.log(
+    "Revealed claims",
+    JSON.stringify(revealedClaimsToJSON(revealedClaims), null, 2)
+  );
 
   // The bound config is a canonicalized version of our original proof config
   // with one important addition.  The circuit identifier specifies the ZK
@@ -208,15 +221,8 @@ export async function gpcDemo(): Promise<boolean> {
     circuitDesc
   );
 
-  // The revealed claims object contains redacted information about the inputs
-  // which should be revealed to the verifier.
-  console.log(
-    "Revealed claims",
-    JSON.stringify(revealedClaimsToJSON(revealedClaims), null, 2)
-  );
-
   //////////////////////////////////////////////////////////////////////////////
-  // The outputs of proving function are also the inputs to verification.
+  // The outputs of the proving function are also the inputs to verification.
   // In many cases, these objects would be transmitted from prover to verifier
   // via the network.  See below for more details on serialization, but for
   // now let's look directly at verification.
@@ -281,8 +287,8 @@ export async function gpcDemo(): Promise<boolean> {
   });
 
   // Then the verifier would deserialize the like this.
-  // Deserializing also validates their structure, though not (yet) the
-  // correctness of the proof.
+  // Deserializing also validates each object's structure, though not the
+  // cryptographic correctness of the proof.
   const deserializedGPC = JSON.parse(serializedGPC);
   const vProof = deserializedGPC.proof;
   const vConfig = boundConfigFromJSON(deserializedGPC.config);
@@ -298,8 +304,8 @@ export async function gpcDemo(): Promise<boolean> {
   //////////////////////////////////////////////////////////////////////////////
   // Here's a more complicated example proving about multiple PODs and more
   // constraints.  This example isn't exhaustive.  Check out the type
-  // documentation for GPCProofConfig to see the current options.  Even more
-  // options will be coming in future.
+  // documentation for GPCProofConfig to see all the current things a GPC can
+  // prove.  Even more options will be coming in future.
   //////////////////////////////////////////////////////////////////////////////
 
   // For my app logic here, I'm proving I have two items from a matching item
@@ -310,7 +316,7 @@ export async function gpcDemo(): Promise<boolean> {
     pods: {
       weapon: {
         entries: {
-          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" },
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV4" },
           attack: { isRevealed: true },
 
           // The equalsEntry constraint can refer to an entry in another
@@ -324,7 +330,7 @@ export async function gpcDemo(): Promise<boolean> {
       },
       armor: {
         entries: {
-          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" },
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV4" },
           defense: { isRevealed: true },
 
           // We could put an equalsEntry here as well, but it would be redundant.
@@ -345,7 +351,7 @@ export async function gpcDemo(): Promise<boolean> {
     multiPODProofConfig,
     {
       pods: { weapon: podSword, armor: podShield },
-      owner: { semaphoreV3: semaphoreIdentity },
+      owner: { semaphoreV4: semaphoreIdentity },
       membershipLists: {
         acceptedWeaponTypes: [
           { type: "string", value: "dagger" },
@@ -380,9 +386,8 @@ export async function gpcDemo(): Promise<boolean> {
   // and other apps which use the PCD SDK.
   //
   // GPCPCD is a generic PCD suitable for hackers and experimenters.  It
-  // exposes a lot of details directly in the UI.  Some user scenarios will be
-  // best served by higher-level app-specific wrappers with user-friendly UI,
-  // such as a ZK proof of PODTickets.
+  // exposes a lot of details directly in the UI.  A better user experience
+  // can be had using the ZAPI to integrate with Zupass directly.
   //////////////////////////////////////////////////////////////////////////////
 
   // The GPCPCD package needs to be initialized with the path to find ZK
@@ -391,26 +396,60 @@ export async function gpcDemo(): Promise<boolean> {
     zkArtifactPath: GPC_ARTIFACTS_PATH
   });
 
-  // POD and Semaphore Identity are also contained in PCDs at this layer.
-  const swordPODPCD = new PODPCD(uuid(), podSword);
-  const shieldPODPCD = new PODPCD(uuid(), podShield);
+  // Zupass stores its identity in a SemaphoreIdentityPCDPackage.  For
+  // historical reasons, this starts with a Semaphore V3 identity (which uses
+  // a different format), and derives the V4 identity from it.
+  const semaphoreIdentityV3 = new IdentityV3();
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-    identityV3: semaphoreIdentity
+    identityV3: semaphoreIdentityV3
   });
 
+  // PODs in Zupass are also contained in PCDs.  Let's collect some frogs.
+  const frog1PODPCD = new PODPCD(
+    uuid(),
+    POD.sign(
+      {
+        pod_type: { type: "string", value: "frogcrypto.frog" },
+        species: { type: "string", value: "Budgett's Frog" },
+        owner: {
+          type: "eddsa_pubkey",
+          value: v4PublicKey(identityPCD.claim.identityV4)
+        }
+        // Real frogs have additional fields.
+      },
+      signerPrivateKey
+    )
+  );
+  const frog2PODPCD = new PODPCD(
+    uuid(),
+    POD.sign(
+      {
+        pod_type: { type: "string", value: "frogcrypto.frog" },
+        species: { type: "string", value: "Mimic Poison Frog" },
+        owner: {
+          type: "eddsa_pubkey",
+          value: v4PublicKey(identityPCD.claim.identityV4)
+        }
+        // Real frogs have additional fields.
+      },
+      signerPrivateKey
+    )
+  );
+
   // The GPCPCD allows us to prove about an arbitrary number of PODs.
+  // Here we reveal only the species of our two frogs.
   const pcdProofConfig: GPCProofConfig = {
     pods: {
-      swordPOD: {
+      frog1: {
         entries: {
-          attack: { isRevealed: true },
-          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" }
+          species: { isRevealed: true },
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV4" }
         }
       },
-      shieldPOD: {
+      frog2: {
         entries: {
-          defense: { isRevealed: true },
-          owner: { isRevealed: false, isOwnerID: "SemaphoreV3" }
+          species: { isRevealed: true },
+          owner: { isRevealed: false, isOwnerID: "SemaphoreV4" }
         }
       }
     }
@@ -427,12 +466,12 @@ export async function gpcDemo(): Promise<boolean> {
     },
     pods: {
       value: {
-        swordPOD: {
-          value: await PODPCDPackage.serialize(swordPODPCD),
+        frog1: {
+          value: await PODPCDPackage.serialize(frog1PODPCD),
           argumentType: ArgumentTypeName.PCD
         },
-        shieldPOD: {
-          value: await PODPCDPackage.serialize(shieldPODPCD),
+        frog2: {
+          value: await PODPCDPackage.serialize(frog2PODPCD),
           argumentType: ArgumentTypeName.PCD
         }
       },
