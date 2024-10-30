@@ -403,25 +403,29 @@ export const useIOSOrientationFix = (): void => {
  * even if a different user is logged in.
  */
 const ONE_CLICK_REDIRECT_KEY = "one_click_redirect";
-export const useAutoLoginFromOneClick = (): void => {
+export const useAutoLoginFromOneClick = (): { loading: boolean } => {
   const dispatch = useDispatch();
   const self = useSelf();
   const attemptedLogin = useRef(false);
+  const [oneClickRedirect, setOneClickRedirect] = useState(
+    localStorage.getItem(ONE_CLICK_REDIRECT_KEY)
+  );
 
   useEffect(() => {
-    // prevent multiple login attempts
     if (attemptedLogin.current) return;
+    // prevent multiple login attempts
     attemptedLogin.current = true;
-
-    // get one click redirect from local storage
-    const oneClickRedirect = localStorage.getItem(ONE_CLICK_REDIRECT_KEY);
     if (!oneClickRedirect) return;
 
-    const autoLogin = async (): Promise<void> => {
+    const attemptAutoLogin = async (): Promise<void> => {
       try {
         const [, , email, code] = oneClickRedirect.split("/");
+
+        // If the same user is already logged in we don't want to auto-login again
         if (self?.emails?.includes(email))
           throw new Error("User is already logged in");
+
+        // Attempt to login with the one-click-login flow
         await dispatch({
           type: "one-click-login",
           email,
@@ -432,8 +436,12 @@ export const useAutoLoginFromOneClick = (): void => {
         console.error("Unable to auto-login", error);
       } finally {
         localStorage.removeItem(ONE_CLICK_REDIRECT_KEY);
+        setOneClickRedirect(null);
       }
     };
-    autoLogin();
-  }, [dispatch, self]);
+
+    attemptAutoLogin();
+  }, [dispatch, self, oneClickRedirect]);
+
+  return { loading: !!oneClickRedirect };
 };
