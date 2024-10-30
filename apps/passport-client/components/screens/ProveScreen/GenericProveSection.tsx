@@ -29,6 +29,9 @@ import {
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+import { Button2 } from "../../../new-components/shared/Button";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { Typography } from "../../../new-components/shared/Typography";
 import { appConfig } from "../../../src/appConfig";
 import {
   usePCDCollection,
@@ -45,9 +48,6 @@ import {
 } from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
 import { PCDArgs } from "../../shared/PCDArgs";
-import { Button2 } from "../../../new-components/shared/Button";
-import { NewLoader } from "../../../new-components/shared/NewLoader";
-import { Typography } from "../../../new-components/shared/Typography";
 
 /**
  * A reuseable form which can be used to generate a new instance of a PCD
@@ -238,10 +238,15 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       {proveState !== undefined && !proveState && (
         <AbsoluteContainer>
           <Typography color="var(--new-danger)">No tickets found</Typography>
+          <Typography />
           <Typography color="var(--new-danger)">
-            Please ensure you have connected the right email address.
+            Please ensure you have connected to an email address that has a
+            valid ticket for this event. Contact support@zupass.org for more
+            questions.
           </Typography>
-          <Button2
+          {/* FIXME: Removing the back button here until we have a better resolution to TG webview */}
+          {/* https://linear.app/0xparc-pcd/issue/0XP-1495/the-back-button-for-zktelegram-prove-page-doesnt-work  */}
+          {/* <Button2
             style={{ marginTop: "auto" }}
             onClick={() => {
               if (window.opener && window.opener !== window) {
@@ -254,7 +259,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
             variant="secondary"
           >
             Back
-          </Button2>
+          </Button2> */}
         </AbsoluteContainer>
       )}
       {proveStateCount < pcdsPropCount && (
