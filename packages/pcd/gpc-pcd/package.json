@@ -42,7 +42,7 @@
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.14.0",
     "@pcd/pod": "0.4.0",
-    "@pcd/proto-pod-gpc-artifacts": "0.11.0",
+    "@pcd/proto-pod-gpc-artifacts": "0.12.0",
     "@pcd/tsconfig": "0.14.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",

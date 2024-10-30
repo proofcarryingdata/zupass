@@ -5242,10 +5242,10 @@
   dependencies:
     "@pcd/libsodium-sumo" "^0.7.15"
 
-"@pcd/proto-pod-gpc-artifacts@0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.11.0.tgz#4c7e09b10da1e731932d3916d63d090b5612714c"
-  integrity sha512-k/lASCefq1vUyqRirHUAc+yiZAMhSfTJx51qnyImXl6ArW8LtNWRyeoTql2BjY9u3BM/mWN279S5+NtghwnsDw==
+"@pcd/proto-pod-gpc-artifacts@0.12.0":
+  version "0.12.0"
+  resolved "https://registry.yarnpkg.com/@pcd/proto-pod-gpc-artifacts/-/proto-pod-gpc-artifacts-0.12.0.tgz#6683b5e8d5fda4c4b554d70bcaebe71997146546"
+  integrity sha512-gVL0qZnVo1/i83IQurrhLvthKR5MG5KWIIJhP59hRFtM6UphjQFx9tPLgNxDReAccLMpgZcMkvsKmTMyP/v9RQ==
 
 "@peculiar/asn1-android@^2.3.3":
   version "2.3.6"
