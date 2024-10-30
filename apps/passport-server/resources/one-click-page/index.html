@@ -4,11 +4,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.cdnfonts.com/css/super-funky" rel="stylesheet" />
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@800&family=Rubik:wght@300..900&display=swap"
-    rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Barlow:wght@800&family=Fragment+Mono&family=IBM+Plex+Sans&family=Rubik:wght@300..900&display=swap"
+    rel="stylesheet">
 </head>
 <style>
   /* resets */
@@ -28,8 +28,9 @@
     --text-primary: #1e2c50;
     --bg-white-transparent: rgba(255, 255, 255, 0.80);
     --text-tertiary: #8B94AC;
+    --frogcrypto: #17A34A;
     --core-accent: #01685C;
-
+    --max-width: 460px;
     overflow: hidden;
     height: 100dvh;
   }
@@ -38,9 +39,10 @@
     overflow: auto;
     height: 100%;
 
-    @media (max-width: 420px) {
-      background-color: #00785e;
+    @media (max-width: 460px) {
+      background: #00785e;
     }
+
 
     display: flex;
     flex-direction: column;
@@ -53,7 +55,7 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    max-width: 420px;
+    max-width: var(--max-width);
     padding: 0 20px;
     background: linear-gradient(0deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%),
     url("{{{backgroundImage}}}") lightgray 50% / cover no-repeat;
@@ -164,16 +166,20 @@
   }
 
   .cta {
-    border-radius: 24px;
-    border: 2px solid #ffc971;
-    background: linear-gradient(0deg, #ffae00 0%, #4cccb0 100%);
+    border-radius: 8px;
+    border: 2px solid #FFC971;
+    background: linear-gradient(0deg, #FFAE00 0%, #4CCCB0 100%);
     height: 76px;
     width: 100%;
     color: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
     /* Fallback for older browsers */
-    color: rgba(0, 0, 0, 0.5);
+    color: #154133;
     text-align: center;
-    font-family: "Super Funky";
+    font-family: "Fragment Mono";
     font-size: 28px;
     font-style: normal;
     font-weight: 400;
@@ -214,14 +220,12 @@
   .modal__container {
     background: #ffffff;
     border-radius: 40px;
-    margin-top: 12px;
-    bottom: 12px;
     box-shadow: 0px 4px 6px -1px #0000001a;
-    margin: 0 auto;
     width: 100%;
-    max-width: 420px;
+    max-width: var(--max-width);
     max-height: 100%;
     padding: 20px;
+    margin: 0 auto;
     -ms-overflow-style: none;
     /* Internet Explorer 10+ */
     scrollbar-width: none;
@@ -230,6 +234,14 @@
     flex-direction: column;
     align-items: center;
     gap: 20px;
+  }
+
+  .modal__container--hide {
+    display: none !important;
+  }
+
+  .modal__container--center {
+    margin: auto;
   }
 
   .modal__container::-webkit-scrollbar {
@@ -275,13 +287,14 @@
   .page-header {
     padding: 25px 0 25px 0;
     width: 100%;
-    max-width: 420px;
+    max-width: var(--max-width);
     margin: 0 auto;
     display: flex;
     align-items: center;
     justify-content: center;
     border-bottom: 1px solid #1d8289;
-    background: linear-gradient;
+    background: linear-gradient(0deg, #00605C 0%, #00785E 100%);
+    ;
   }
 
   .swiper-container {
@@ -357,7 +370,54 @@
     /* 24.3px */
   }
 
-  _
+  .time__modal--container {
+    height: 230px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .time-modal__text {
+    color: #242E24;
+    font-family: "IBM Plex Sans";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 140%;
+    letter-spacing: 0.36px;
+  }
+
+  .time-modal__text--frogcrypto {
+    color: var(--frogcrypto);
+    text-align: center;
+    font-family: "IBM Plex Sans";
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 140%;
+    /* 25.2px */
+    letter-spacing: 0.36px;
+  }
+
+  .time-modal__text--time {
+    background: linear-gradient(90deg, #FF8585 28.44%, #B4BD51 41.87%, #5CEB8E 55.83%, #4B6EE2 66.68%, #DD4BE2 78.56%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: "IBM Plex Sans";
+    font-size: 32px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: 140%;
+    letter-spacing: 0.64px;
+  }
+
+
+  /*   .btn__container--frogcrypto { */
+  /*     background: var(--frogcrypto);border-radius: 4px; */
+  /* background: #17A34A; */
+  /*   } */
 </style>
 
 <body>
@@ -395,7 +455,27 @@
         <span class="header__subtitle">1 Ticket</span>
         {{/isMoreThanOne}}
       </div>
-      <div class="cta__container"><button onclick="redirectToZupass()" class="cta">FROGCRYPTO</button></div>
+      <div class="cta__container"><button onclick="redirectToZupass()" class="cta">Score: 0 <svg
+            xmlns="http://www.w3.org/2000/svg" width="41" height="32" viewBox="0 0 41 32" fill="none">
+            <path
+              d="M39.8985 9.69016C39.8985 5.42073 36.4459 1.95996 32.1865 1.95996C29.0961 1.95996 26.4383 3.78611 25.2076 6.41626C23.7812 6.19747 22.293 6.07843 20.7611 6.07843C19.2292 6.07843 17.7802 6.19481 16.3703 6.40762C15.1383 3.78212 12.4825 1.95996 9.39539 1.95996C5.13599 1.95996 1.68335 5.42073 1.68335 9.69016C1.68335 11.2769 2.1617 12.7512 2.97975 13.9782C2.23203 15.2743 1.82268 16.6749 1.82268 18.1366C1.82268 24.7961 10.3017 30.1947 20.7604 30.1947C31.2192 30.1947 39.6982 24.7961 39.6982 18.1366C39.6982 16.6935 39.2988 15.3102 38.569 14.0274C39.4069 12.7905 39.8979 11.2975 39.8979 9.68949L39.8985 9.69016Z"
+              fill="#74DB61" stroke="#154133" stroke-width="2" />
+            <path
+              d="M9.45699 11.1948C10.7167 11.1948 11.738 9.86595 11.738 8.22678C11.738 6.5876 10.7167 5.25879 9.45699 5.25879C8.19725 5.25879 7.17603 6.5876 7.17603 8.22678C7.17603 9.86595 8.19725 11.1948 9.45699 11.1948Z"
+              fill="#154133" />
+            <path
+              d="M32.1245 11.1948C33.3842 11.1948 34.4054 9.86595 34.4054 8.22678C34.4054 6.5876 33.3842 5.25879 32.1245 5.25879C30.8647 5.25879 29.8435 6.5876 29.8435 8.22678C29.8435 9.86595 30.8647 11.1948 32.1245 11.1948Z"
+              fill="#154133" />
+            <path
+              d="M9.19039 20.2213C10.4501 20.2213 11.4714 18.6094 11.4714 16.6209C11.4714 14.6325 10.4501 13.0205 9.19039 13.0205C7.93065 13.0205 6.90942 14.6325 6.90942 16.6209C6.90942 18.6094 7.93065 20.2213 9.19039 20.2213Z"
+              fill="#F9C1D4" />
+            <path
+              d="M32.3916 20.2213C33.6513 20.2213 34.6725 18.6094 34.6725 16.6209C34.6725 14.6325 33.6513 13.0205 32.3916 13.0205C31.1318 13.0205 30.1106 14.6325 30.1106 16.6209C30.1106 18.6094 31.1318 20.2213 32.3916 20.2213Z"
+              fill="#F9C1D4" />
+            <path
+              d="M20.7908 18.8751C17.9001 18.8751 15.5488 16.6925 15.5488 14.0098C15.5488 13.6068 15.8746 13.2803 16.2766 13.2803C16.6787 13.2803 17.0045 13.6068 17.0045 14.0098C17.0045 15.8878 18.7029 17.4154 20.7901 17.4154C22.8774 17.4154 24.5758 15.8878 24.5758 14.0098C24.5758 13.6068 24.9023 13.2803 25.3037 13.2803C25.705 13.2803 26.0315 13.6068 26.0315 14.0098C26.0315 16.6925 23.6802 18.8751 20.7895 18.8751H20.7908Z"
+              fill="#154133" />
+          </svg></button></div>
       <div class="ticket">
         <img class="ticket__qr-code" src="{{qr}}" />
         <div class="ticket__text-container">
@@ -418,9 +498,16 @@
       </div>
     </div>
   </main>
-  <!-- Tiny-Swiper -->
+
   <div id="modal-overlay" class="modal__overlay modal__overlay--disabled">
-    <div id="modal" class="modal__container">
+    <div id="modal-time"
+      class="modal__container modal__container--hide modal__container--center time__modal--container ">
+      <span class="time-modal__text">
+        <span class="time-modal__text--frogcrypto">FROGCRYPTO</span>
+        unlocks in</span>
+      <span id="time-left" class="time-modal__text--time"></span>
+    </div>
+    <div id="modal-addons" class="modal__container modal__container--hide">
       <div class="swiper-container">
         <div class="swiper-wrapper">
           {{#addons}}
@@ -464,13 +551,17 @@
   <script src="https://unpkg.com/tiny-swiper@latest/lib/modules/navigation.min.js"></script>
 
   <script>
-    const modal = document.getElementById("modal");
+    const addonsModal = document.getElementById("modal-addons");
+    const timeModal = document.getElementById("modal-time");
     const overlay = document.getElementById("modal-overlay");
     const closeBtn = document.getElementById("close");
     const addonsBtn = document.getElementById("addons-btn");
     const nextBtn = document.getElementById("next");
     const backBtn = document.getElementById("back");
     const currentIdxText = document.getElementById("current-item-text");
+    const timeLeftText = document.getElementById("time-left");
+
+    let interval;
 
     const path = window.location.pathname;
     const oneClickMatch = path.match(/\/one-click-preview.*/);
@@ -483,27 +574,62 @@
         .join("/");
     }
 
+    function timeToStartDate() {
+      const startDate = new Date("{{startDate}}");
+
+      const gap = Math.abs(Date.now() - startDate.getTime());
+      let seconds = Math.floor(gap / 1000);
+      const days = Math.floor(seconds / (24 * 3600));
+      seconds %= 24 * 3600;
+      const hours = Math.floor(seconds / 3600);
+      seconds %= 3600;
+      const minutes = Math.floor(seconds / 60);
+      seconds %= 60;
+      // Format the time string without spans
+      return `${days}d:${hours}h:${minutes}m:${seconds}s`;
+    }
+
     function redirectToZupass() {
-      window.location.replace(clientPath);
+      const maybeDate = Date.parse("{{startDate}}");
+      if (isNaN(maybeDate)) {
+        console.log(maybeDate)
+        window.location.replace(clientPath);
+      }
+      else {
+        timeLeftText.innerText = timeToStartDate();
+        overlay.classList.remove("modal__overlay--disabled");
+        timeModal.classList.remove("modal__container--hide");
+
+        interval = setInterval(function () {
+          timeLeftText.innerText = timeToStartDate();
+        }, 500)
+      }
     }
 
     const clientPath = joinPaths("{{{zupassUrl}}}", "#", newPath);
 
-
-
-    modal.onclick = function (e) {
-      e.stopPropagation()
+    addonsModal.onclick = function (e) {
+      e.stopPropagation();
     }
+    timeModal.onclick = function (e) {
+      e.stopPropagation();
+    }
+
 
     overlay.onclick = function () {
       overlay.classList.add("modal__overlay--disabled");
+      addonsModal.classList.add("modal__container--hide");
+      timeModal.classList.add("modal__container--hide");
+      clearInterval(interval);
     }
 
     closeBtn.onclick = function () {
       overlay.classList.add("modal__overlay--disabled");
+      addonsModal.classList.add("modal__container--hide");
     }
     addonsBtn.onclick = function () {
       overlay.classList.remove("modal__overlay--disabled");
+      addonsModal.classList.remove("modal__container--hide");
       const swiper = new Swiper(".swiper-container", {
         spaceBetween: 12,
         navigation: {
@@ -517,6 +643,7 @@
         currentIdxText.innerText = newIdx + 1;
       })
     }
+
 
 
   </script>

@@ -835,7 +835,8 @@ export function initGenericIssuanceRoutes(
         isMoreThanOne: ticketsCount > 1,
         zupassUrl: process.env.PASSPORT_CLIENT_URL,
         addons: addOnsQrs,
-        addonsCount: addOnsQrs.length
+        addonsCount: addOnsQrs.length,
+        startDate: ticket.eventStartDate
       });
       res.send(rendered);
     }
