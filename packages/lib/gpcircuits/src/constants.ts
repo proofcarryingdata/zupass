@@ -2,7 +2,7 @@
  * Version of the published artifacts on NPM which are compatible with this
  * version of the GPC package.
  */
-export const ARTIFACTS_NPM_VERSION = "0.11.0";
+export const ARTIFACTS_NPM_VERSION = "0.13.0";
 
 /**
  * Name of the package on NPM which contains published artifacts for this
