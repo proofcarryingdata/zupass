@@ -784,11 +784,21 @@ export function initGenericIssuanceRoutes(
         code,
         pipeline
       );
-      const ticket = { ...result.tickets[0] };
+      const main: TicketPreviewResultValue["tickets"] = [];
+      const addOns: TicketPreviewResultValue["tickets"] = [];
 
+      logger({ tickets: result.tickets });
+      for (const ticket of result.tickets) {
+        if (ticket.isAddOn) {
+          addOns.push(ticket);
+        } else {
+          main.push(ticket);
+        }
+      }
       const absPath = path.resolve("./resources/one-click-page/index.html");
       const file = fs.readFileSync(absPath).toString();
 
+      const ticket = main[0];
       const qrCodeData =
         getTicketImage(ticket) ??
         (ticket.ticketSecret
@@ -802,6 +812,18 @@ export function initGenericIssuanceRoutes(
       // filter out add-ons
       const ticketsCount = result.tickets.filter((t) => !t.isAddOn).length;
 
+      const addOnsQrs = await Promise.all(
+        addOns.map((addon) => {
+          // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+          return QRCode.toDataURL(addon.ticketSecret!, {
+            type: "image/webp",
+            scale: 10,
+            margin: 0
+          });
+        })
+      );
+
+      logger({ addOnsQrs: addOnsQrs });
       const rendered = Mustache.render(file, {
         eventName: ticket.eventName.toUpperCase(),
         attendeeName: ticket.attendeeName.toUpperCase(),
@@ -812,7 +834,8 @@ export function initGenericIssuanceRoutes(
         backgroundImage: ticket.imageUrl,
         count: ticketsCount,
         isMoreThanOne: ticketsCount > 1,
-        zupassUrl: process.env.PASSPORT_CLIENT_URL
+        zupassUrl: process.env.PASSPORT_CLIENT_URL,
+        addons: addOnsQrs
       });
       res.send(rendered);
     }
