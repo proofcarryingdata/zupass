@@ -186,9 +186,18 @@
     }
   </style>
   <script>
+    function joinPaths(...parts) {
+      return parts
+        .map((part) => part.replace(/^\/+|\/+$/g, "")) // Remove leading/trailing slashes
+        .filter((part) => part.length > 0) // Remove empty segments
+        .join("/");
+    }
+
     const path = window.location.pathname;
-    const newPath = path.replace("generic-issuance", "#");
-    const clientPath = "{{{zupassUrl}}}" + newPath;
+    const oneClickMatch = path.match(/\/one-click-preview.*/);
+    const newPath = oneClickMatch ? oneClickMatch[0] : "";
+    const clientPath = joinPaths("{{{zupassUrl}}}", "#", newPath);
+
     function redirectToZupass() {
       window.location.replace(clientPath);
     }
