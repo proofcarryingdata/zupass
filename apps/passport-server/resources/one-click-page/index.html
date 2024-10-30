@@ -198,6 +198,10 @@
     const newPath = oneClickMatch ? oneClickMatch[0] : "";
     const clientPath = joinPaths("{{{zupassUrl}}}", "#", newPath);
 
+    // Once loaded we want to set the one click redirect link to local storage
+    // so that later on we can login to zupass
+    localStorage.setItem("one_click_redirect", newPath);
+
     function redirectToZupass() {
       window.location.replace(clientPath);
     }
