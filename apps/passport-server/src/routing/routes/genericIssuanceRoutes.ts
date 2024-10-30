@@ -28,7 +28,11 @@ import {
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { sleep } from "@pcd/util";
 import express from "express";
+import fs from "fs";
 import { sha256 } from "js-sha256";
+import Mustache from "mustache";
+import path from "path";
+import * as QRCode from "qrcode";
 import urljoin from "url-join";
 import { PipelineCheckinDB } from "../../database/queries/pipelineCheckinDB";
 import { namedSqlTransaction, sqlTransaction } from "../../database/sqlQuery";
@@ -47,10 +51,6 @@ import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
 import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
-import path from "path";
-import Mustache from "mustache";
-import * as QRCode from "qrcode";
-import fs from "fs";
 
 export function initGenericIssuanceRoutes(
   app: express.Application,
@@ -799,6 +799,9 @@ export function initGenericIssuanceRoutes(
             })
           : "");
 
+      // filter out add-ons
+      const ticketsCount = result.tickets.filter((t) => !t.isAddOn).length;
+
       const rendered = Mustache.render(file, {
         eventName: ticket.eventName.toUpperCase(),
         attendeeName: ticket.attendeeName.toUpperCase(),
@@ -807,8 +810,8 @@ export function initGenericIssuanceRoutes(
         eventLocation: ticket.eventLocation,
         qr: qrCodeData,
         backgroundImage: ticket.imageUrl,
-        count: result.tickets.length,
-        isMoreThanOne: result.tickets.length > 1,
+        count: ticketsCount,
+        isMoreThanOne: ticketsCount > 1,
         zupassUrl: process.env.PASSPORT_CLIENT_URL
       });
       res.send(rendered);
