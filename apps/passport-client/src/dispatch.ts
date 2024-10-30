@@ -1535,7 +1535,7 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   const res = await requestDeleteAccount(appConfig.zupassServer, { pcd });
 
   if (res.success) {
-    resetPassport(state, update);
+    resetPassport(undefined, state, update);
     update({ deletingAccount: false });
   } else {
     alert(`Error deleting account: ${res.error}`);
