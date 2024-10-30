@@ -403,7 +403,7 @@ export const useIOSOrientationFix = (): void => {
  * even if a different user is logged in.
  */
 const ONE_CLICK_REDIRECT_KEY = "one_click_redirect";
-export const useAutoLoginFromOneClick = (): void => {
+export const useAutoLoginFromOneClick = (): { loading: boolean } => {
   const dispatch = useDispatch();
   const self = useSelf();
   const attemptedLogin = useRef(false);
@@ -442,4 +442,6 @@ export const useAutoLoginFromOneClick = (): void => {
 
     attemptAutoLogin();
   }, [dispatch, self, oneClickRedirect]);
+
+  return { loading: !!oneClickRedirect };
 };
