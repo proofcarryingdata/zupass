@@ -824,6 +824,7 @@ export function initGenericIssuanceRoutes(
           return { image, name };
         })
       );
+
       const rendered = Mustache.render(file, {
         eventName: ticket.eventName.toUpperCase(),
         attendeeName:
@@ -840,6 +841,7 @@ export function initGenericIssuanceRoutes(
         zupassUrl: process.env.PASSPORT_CLIENT_URL,
         addons: addOnsQrs,
         addonsCount: addOnsQrs.length,
+        moreThanOneAddon: addOnsQrs.length > 1,
         startDate: ticket.eventStartDate
       });
       res.send(rendered);

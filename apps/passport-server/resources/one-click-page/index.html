@@ -486,7 +486,13 @@
         </div>
         {{#addonsCount}}
         <button id="addons-btn" type="button" class="ticket__addons-btn">
-          <span class="ticket__subtitle--text" style="font-size: 16px;">view {{addonsCount}} addons</span>
+          {{#moreThanOneAddon}}
+          <span class="ticket__subtitle--text" style="font-size: 16px;">view {{addonsCount}}
+            addons</span>
+          {{/moreThanOneAddon}}
+          {{^moreThanOneAddon}}
+          <span class="ticket__subtitle--text" style="font-size: 16px;">view addon</span>
+          {{/moreThanOneAddon}}
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="var(--text-tertiary)" class="size-4"
             style="width: 20px;">
             <path d="M4.75 4.25a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1Z" />
@@ -537,6 +543,8 @@
           {{/addons}}
         </div>
       </div>
+
+      {{#moreThanOneAddon}}
       <div class="swiper__navigation--container">
         <button id="back" type="button" class="swiper__navigation--btn">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="var(--text-tertiary)" class="size-4"
@@ -556,6 +564,7 @@
           </svg>
         </button>
       </div>
+      {{/moreThanOneAddon}}
       <button type="button" id="close" class="btn__container--primary"><span
           class="btn__text--primary">Close</span></button>
     </div>
