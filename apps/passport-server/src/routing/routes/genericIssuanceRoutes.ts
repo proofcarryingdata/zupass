@@ -771,48 +771,78 @@ export function initGenericIssuanceRoutes(
       const code = checkUrlParam(req, "code");
       const pipeline = req.params.pipelineId;
 
-      const getTicketImage = (
+      const getTicketImage = async (
         ticketData: TicketPreviewResultValue["tickets"][number]
-      ): string | undefined => {
+      ): Promise<string> => {
         const imageToRender = ticketData?.eventStartDate
           ? ticketData.qrCodeOverrideImageUrl
           : ticketData?.imageUrl;
-        return imageToRender;
+
+        return (
+          imageToRender ??
+          (ticket.ticketSecret
+            ? await QRCode.toDataURL(ticket.ticketSecret, {
+                type: "image/webp",
+                scale: 10,
+                margin: 0
+              })
+            : "")
+        );
       };
+      const absPath = path.resolve("./resources/one-click-page/index.html");
       const result = await genericIssuanceService.handleGetTicketPreview(
         email,
         code,
         pipeline
       );
-      const ticket = { ...result.tickets[0] };
+      if (!result.tickets.length) {
+        res.sendFile(absPath.replace("index", "error"));
+        return;
+      }
 
-      const absPath = path.resolve("./resources/one-click-page/index.html");
+      const main: TicketPreviewResultValue["tickets"] = [];
+      const addOns: TicketPreviewResultValue["tickets"] = [];
+
+      for (const ticket of result.tickets) {
+        if (ticket.isAddOn) {
+          addOns.push(ticket);
+        } else {
+          main.push(ticket);
+        }
+      }
       const file = fs.readFileSync(absPath).toString();
 
-      const qrCodeData =
-        getTicketImage(ticket) ??
-        (ticket.ticketSecret
-          ? await QRCode.toDataURL(ticket.ticketSecret, {
-              type: "image/webp",
-              scale: 10,
-              margin: 0
-            })
-          : "");
+      const ticket = main[0];
 
       // filter out add-ons
       const ticketsCount = result.tickets.filter((t) => !t.isAddOn).length;
 
+      const addOnsQrs = await Promise.all(
+        addOns.map(async (addon) => {
+          const image = await getTicketImage(addon);
+          const name = addon.ticketName.toUpperCase();
+          return { image, name };
+        })
+      );
+
       const rendered = Mustache.render(file, {
         eventName: ticket.eventName.toUpperCase(),
-        attendeeName: ticket.attendeeName.toUpperCase(),
+        attendeeName:
+          ticket.attendeeName !== ""
+            ? ticket.attendeeName.toUpperCase()
+            : ticket.eventName.toUpperCase(),
         attendeeEmail: ticket.attendeeEmail,
         ticketName: ticket.ticketName,
         eventLocation: ticket.eventLocation,
-        qr: qrCodeData,
+        qr: await getTicketImage(ticket),
         backgroundImage: ticket.imageUrl,
         count: ticketsCount,
         isMoreThanOne: ticketsCount > 1,
-        zupassUrl: process.env.PASSPORT_CLIENT_URL
+        zupassUrl: process.env.PASSPORT_CLIENT_URL,
+        addons: addOnsQrs,
+        addonsCount: addOnsQrs.length,
+        moreThanOneAddon: addOnsQrs.length > 1,
+        startDate: ticket.eventStartDate
       });
       res.send(rendered);
     }
