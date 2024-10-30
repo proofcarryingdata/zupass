@@ -127,6 +127,7 @@ export type Action =
     }
   | {
       type: "reset-passport";
+      redirectTo?: string;
     }
   | { type: "participant-invalid" }
   | {
@@ -269,7 +270,7 @@ export async function dispatch(
     case "clear-error":
       return clearError(state, update);
     case "reset-passport":
-      return resetPassport(state, update);
+      return resetPassport(action.redirectTo, state, update);
     case "load-after-login":
       return loadAfterLogin(action.encryptionKey, action.storage, update);
     case "set-modal":
@@ -401,6 +402,7 @@ async function oneClickLogin(
   update({
     modal: { modalType: "none" }
   });
+
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
@@ -739,7 +741,11 @@ function clearError(state: AppState, update: ZuUpdate): void {
   update({ error: undefined });
 }
 
-async function resetPassport(state: AppState, update: ZuUpdate): Promise<void> {
+async function resetPassport(
+  redirectTo: string | undefined,
+  state: AppState,
+  update: ZuUpdate
+): Promise<void> {
   requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
     emails: state.self?.emails,
@@ -757,7 +763,11 @@ async function resetPassport(state: AppState, update: ZuUpdate): Promise<void> {
   });
 
   setTimeout(() => {
-    window.location.reload();
+    if (window.location.href === redirectTo) {
+      window.location.reload();
+    } else {
+      window.location.href = redirectTo ?? "/";
+    }
   }, 1);
 
   notifyLogoutToOtherTabs();
