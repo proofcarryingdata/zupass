@@ -631,7 +631,7 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
     tupleArity: 3,
     includeOwnerV3: false,
     includeOwnerV4: true
-  },
+  }
   // 30 entries
   // {
   //   maxObjects: 10,
