@@ -12,13 +12,44 @@ import { PODEntries, PODValue, PODValueTuple } from "./podTypes";
 export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
   switch (podValue.type) {
     case "string":
+    case "bytes":
+    case "eddsa_pubkey":
+    case "null":
       return undefined;
     case "int":
     case "cryptographic":
       return podValue.value;
+    case "boolean":
+      return podValue.value ? 1n : 0n;
+    case "date":
+      return BigInt(podValue.value.getTime());
     default:
-      return undefined;
+      // @ts-expect-error podValue is of type `never` if we've covered all types
+      throw TypeError(`Unknown PODValue type ${podValue.type}!`);
   }
+}
+
+/**
+ * As {@link getPODValueForCircuit} but throws a TypeError if the value is not
+ * of a numeric type.
+ *
+ * @param podValue the value to convert
+ * @param nameForErrorMessages the name of this value, which is used only for
+ *   error messages (not checked for legality).
+ * @returns the numeric value, or undefined if this value cannot be represented
+ *   in a circuit
+ */
+export function getRequiredPODValueForCircuit(
+  podValue: PODValue,
+  nameForErrorMesages?: string
+): bigint {
+  const numericValue = getPODValueForCircuit(podValue);
+  if (numericValue === undefined) {
+    throw new TypeError(
+      `Non-numeric value ${nameForErrorMesages} cannot be represented in-circuit.`
+    );
+  }
+  return numericValue;
 }
 
 /**
@@ -180,7 +211,7 @@ export function decodeBytesRaw(
  * Decodes cryptographic bytes from a string, auto-determining the encoding
  * based on the input length and character set.
  *
- * @param encoded the string-encoded bytesd
+ * @param encoded the string-encoded bytes
  * @param encodingPattern a regex which matches valid encodings of bytes with
  *   an expected fixed size.  This pattern is expected to have groups
  *   separately matching each of the supported encodings.  See
@@ -197,10 +228,8 @@ export function decodeBytesAuto(
   encodingGroups: CryptoBytesEncodingGroups,
   errorMessage?: string
 ): Buffer {
-  //  console.log("decodePrivateKey", encoded, encodingPattern);
   if (encoded && typeof encoded === "string" && encoded !== "") {
     const matched = encoded.match(encodingPattern);
-    //    console.log("decodePrivateKey", matched);
     if (matched !== null) {
       for (const encodingGroup of encodingGroups) {
         if (
@@ -213,5 +242,5 @@ export function decodeBytesAuto(
       // Fallthrough if no group matches.
     }
   }
-  throw new TypeError(errorMessage);
+  throw new TypeError(errorMessage ?? "Invalid encoded bytes");
 }

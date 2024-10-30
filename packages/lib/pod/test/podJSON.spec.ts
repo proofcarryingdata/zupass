@@ -31,6 +31,13 @@ describe("podJSON conversions should work", async function () {
       s1: "hello",
       s2: { string: "world" },
 
+      by1: { bytes: "AQID" },
+      by2: { bytes: "aGVsbG8" },
+
+      cs1: { cryptographic: 456 },
+
+      cb1: { cryptographic: "1234567890912345678901234567890" },
+
       is1: 123,
       is2: { int: 456 },
 
@@ -41,12 +48,17 @@ describe("podJSON conversions should work", async function () {
 
       ibn1: { int: "-9223372036854775123" },
 
-      cs1: { cryptographic: 456 },
-
-      cb1: { cryptographic: "1234567890912345678901234567890" },
+      b0: false,
+      b1: { boolean: true },
 
       pk1: { eddsa_pubkey: expectedPublicKey },
-      pk2: { eddsa_pubkey: expectedPublicKeyHex }
+      pk2: { eddsa_pubkey: expectedPublicKeyHex },
+
+      d1: { date: "2024Z" },
+      d2: { date: "2024-10-25T04:01:00.638Z" },
+
+      n1: null,
+      n2: { null: null }
     } satisfies JSONPODEntries;
     const parsedEntries = podEntriesFromJSON(jsonInput);
     expect(Object.keys(parsedEntries)).to.deep.eq(Object.keys(jsonInput));
@@ -54,6 +66,13 @@ describe("podJSON conversions should work", async function () {
     const expectedEntries = {
       s1: { type: "string", value: "hello" },
       s2: { type: "string", value: "world" },
+
+      by1: { type: "bytes", value: new Uint8Array([1, 2, 3]) },
+      by2: { type: "bytes", value: Buffer.from("hello") },
+
+      cs1: { type: "cryptographic", value: 456n },
+
+      cb1: { type: "cryptographic", value: 1234567890912345678901234567890n },
 
       is1: { type: "int", value: 123n },
       is2: { type: "int", value: 456n },
@@ -65,12 +84,17 @@ describe("podJSON conversions should work", async function () {
 
       ibn1: { type: "int", value: -9223372036854775123n },
 
-      cs1: { type: "cryptographic", value: 456n },
-
-      cb1: { type: "cryptographic", value: 1234567890912345678901234567890n },
+      b0: { type: "boolean", value: false },
+      b1: { type: "boolean", value: true },
 
       pk1: { type: "eddsa_pubkey", value: expectedPublicKey },
-      pk2: { type: "eddsa_pubkey", value: expectedPublicKeyHex }
+      pk2: { type: "eddsa_pubkey", value: expectedPublicKeyHex },
+
+      d1: { type: "date", value: new Date(Date.UTC(2024)) },
+      d2: { type: "date", value: new Date("2024-10-25T04:01:00.638Z") },
+
+      n1: { type: "null", value: null },
+      n2: { type: "null", value: null }
     } satisfies PODEntries;
     expect(parsedEntries).to.deep.eq(expectedEntries);
     checkPODEntries(expectedEntries);
@@ -121,6 +145,12 @@ describe("podJSON conversions should work", async function () {
       "hello",
       { string: "world" },
 
+      { bytes: "AQID" },
+      { bytes: "aGVsbG8" },
+
+      { cryptographic: 456 },
+      { cryptographic: "1234567890912345678901234567890" },
+
       123,
       { int: 456 },
 
@@ -130,15 +160,27 @@ describe("podJSON conversions should work", async function () {
       { int: "9223372036854775123" },
       { int: "-9223372036854775123" },
 
-      { cryptographic: 456 },
-      { cryptographic: "1234567890912345678901234567890" },
+      false,
+      { boolean: true },
 
       { eddsa_pubkey: expectedPublicKey },
-      { eddsa_pubkey: expectedPublicKeyHex }
+      { eddsa_pubkey: expectedPublicKeyHex },
+
+      { date: "2024Z" },
+      { date: "2024-10-25T04:01:00.638Z" },
+
+      null,
+      { null: null }
     ] satisfies JSONPODValue[];
     const expectedValues = [
       { type: "string", value: "hello" },
       { type: "string", value: "world" },
+
+      { type: "bytes", value: new Uint8Array([1, 2, 3]) },
+      { type: "bytes", value: Buffer.from("hello") },
+
+      { type: "cryptographic", value: 456n },
+      { type: "cryptographic", value: 1234567890912345678901234567890n },
 
       { type: "int", value: 123n },
       { type: "int", value: 456n },
@@ -149,11 +191,17 @@ describe("podJSON conversions should work", async function () {
       { type: "int", value: 9223372036854775123n },
       { type: "int", value: -9223372036854775123n },
 
-      { type: "cryptographic", value: 456n },
-      { type: "cryptographic", value: 1234567890912345678901234567890n },
+      { type: "boolean", value: false },
+      { type: "boolean", value: true },
 
       { type: "eddsa_pubkey", value: expectedPublicKey },
-      { type: "eddsa_pubkey", value: expectedPublicKeyHex }
+      { type: "eddsa_pubkey", value: expectedPublicKeyHex },
+
+      { type: "date", value: new Date(Date.UTC(2024)) },
+      { type: "date", value: new Date("2024-10-25T04:01:00.638Z") },
+
+      { type: "null", value: null },
+      { type: "null", value: null }
     ] satisfies PODValue[];
 
     for (let i = 0; i < testValues.length; i++) {
@@ -167,6 +215,11 @@ describe("podJSON conversions should work", async function () {
   it("podValueToJSON should pick smallest format", function () {
     const expectedInputOutput = [
       [{ type: "string", value: "hello" }, "hello"],
+      [{ type: "cryptographic", value: 456n }, { cryptographic: 456 }],
+      [
+        { type: "cryptographic", value: 1234567890912345678901234567890n },
+        { cryptographic: "0xf951a9fce668f22f345ef0ad2" }
+      ],
       [{ type: "int", value: 123n }, 123],
       [
         { type: "int", value: 9223372036854775123n },
@@ -176,11 +229,8 @@ describe("podJSON conversions should work", async function () {
         { type: "int", value: -9223372036854775123n },
         { int: "-9223372036854775123" }
       ],
-      [{ type: "cryptographic", value: 456n }, { cryptographic: 456 }],
-      [
-        { type: "cryptographic", value: 1234567890912345678901234567890n },
-        { cryptographic: "0xf951a9fce668f22f345ef0ad2" }
-      ]
+      [{ type: "boolean", value: true }, true],
+      [{ type: "null", value: null }, null]
     ] satisfies [PODValue, JSONPODValue][];
 
     for (const [input, output] of expectedInputOutput) {
@@ -192,7 +242,6 @@ describe("podJSON conversions should work", async function () {
     const nameForErrorMessages = "expectedName";
     const badInputs = [
       [undefined as unknown as JSONPODValue, TypeError],
-      [null as unknown as JSONPODValue, TypeError],
       [{} as unknown as JSONPODValue, TypeError],
       [[1] as unknown as JSONPODValue, TypeError],
       [Number.MAX_SAFE_INTEGER + 1, RangeError],
@@ -233,6 +282,11 @@ describe("podJSON conversions should work", async function () {
     const testValues = [
       ["string", "hello"],
 
+      ["bytes", "AQID"],
+
+      ["cryptographic", 456],
+      ["cryptographic", "1234567890912345678901234567890"],
+
       ["int", 123],
 
       ["int", -123],
@@ -240,14 +294,24 @@ describe("podJSON conversions should work", async function () {
       ["int", "9223372036854775123"],
       ["int", "-9223372036854775123"],
 
-      ["cryptographic", 456],
-      ["cryptographic", "1234567890912345678901234567890"],
+      ["boolean", true],
+      ["boolean", false],
 
       ["eddsa_pubkey", expectedPublicKey],
-      ["eddsa_pubkey", expectedPublicKeyHex]
-    ] satisfies [string, number | string][];
+      ["eddsa_pubkey", expectedPublicKeyHex],
+
+      ["date", "2024Z"],
+      ["date", "2024-10-25T04:01:00.638Z"],
+
+      ["null", null]
+    ] satisfies [string, number | string | boolean | null][];
     const expectedValues = [
       { type: "string", value: "hello" },
+
+      { type: "bytes", value: new Uint8Array([1, 2, 3]) },
+
+      { type: "cryptographic", value: 456n },
+      { type: "cryptographic", value: 1234567890912345678901234567890n },
 
       { type: "int", value: 123n },
       { type: "int", value: -123n },
@@ -255,11 +319,16 @@ describe("podJSON conversions should work", async function () {
       { type: "int", value: 9223372036854775123n },
       { type: "int", value: -9223372036854775123n },
 
-      { type: "cryptographic", value: 456n },
-      { type: "cryptographic", value: 1234567890912345678901234567890n },
+      { type: "boolean", value: true },
+      { type: "boolean", value: false },
 
       { type: "eddsa_pubkey", value: expectedPublicKey },
-      { type: "eddsa_pubkey", value: expectedPublicKeyHex }
+      { type: "eddsa_pubkey", value: expectedPublicKeyHex },
+
+      { type: "date", value: new Date(Date.UTC(2024)) },
+      { type: "date", value: new Date("2024-10-25T04:01:00.638Z") },
+
+      { type: "null", value: null }
     ] satisfies PODValue[];
 
     for (let i = 0; i < testValues.length; i++) {
@@ -275,16 +344,22 @@ describe("podJSON conversions should work", async function () {
       [undefined as unknown as string, 123, TypeError],
       [null as unknown as string, 123, TypeError],
       ["string", 123, TypeError],
+      ["string", null, TypeError],
+      ["bytes", 123, TypeError],
+      ["bytes", "!@#$%^&*()", TypeError],
+      ["cryptographic", "hello", SyntaxError],
+      ["cryptographic", Number.MAX_SAFE_INTEGER + 1, RangeError],
+      ["cryptographic", Number.MIN_SAFE_INTEGER - 1, RangeError],
       ["int", "hello", SyntaxError],
       ["int", 123n as unknown as number, TypeError],
       ["int", Number.MAX_SAFE_INTEGER + 1, RangeError],
       ["int", Number.MIN_SAFE_INTEGER - 1, RangeError],
-      ["cryptographic", "hello", SyntaxError],
-      ["cryptographic", Number.MAX_SAFE_INTEGER + 1, RangeError],
-      ["cryptographic", Number.MIN_SAFE_INTEGER - 1, RangeError],
       ["eddsa_pubkey", 123, TypeError],
-      ["eddsa_pubkey", "hello", TypeError]
-    ] satisfies [string, number | string, ErrorConstructor][];
+      ["eddsa_pubkey", "hello", TypeError],
+      ["date", "2024-10-24", TypeError],
+      ["date", "2024-10-25T04:01:00.638+01:00", TypeError],
+      ["null", "hello", TypeError]
+    ] satisfies [string, number | string | boolean | null, ErrorConstructor][];
 
     for (const [badType, badValue, expectedError] of badInputs) {
       const fn = (): PODValue =>

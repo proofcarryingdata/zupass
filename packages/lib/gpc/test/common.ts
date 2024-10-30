@@ -73,6 +73,31 @@ export const sampleEntries2 = {
   ticketID: { type: "cryptographic", value: 999n }
 } satisfies PODEntries;
 
+// 8 entries, max depth 4
+export const allTypesEntries = {
+  vString: { type: "string", value: "hello" },
+  vBytes: { type: "bytes", value: new Uint8Array([1, 2, 3]) },
+  vCryptographic: {
+    type: "cryptographic",
+    value:
+      18003549444852780886592139349318927700964545643704389119309344945101355208480n
+  },
+  vInt: {
+    type: "int",
+    value: 123n
+  },
+  vBoolean: { type: "boolean", value: true },
+  vEddsaPubkey: {
+    type: "eddsa_pubkey",
+    value: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+  },
+  vDate: {
+    type: "date",
+    value: new Date("2024-01-01T00:00:00.000Z")
+  },
+  vNull: { type: "null", value: null }
+} satisfies PODEntries;
+
 export async function expectAsyncError(
   fn: () => Promise<void>,
   typeName: string,

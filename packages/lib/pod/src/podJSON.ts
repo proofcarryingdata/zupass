@@ -1,5 +1,11 @@
-import { checkPODName, checkPODValue, requireType } from "./podChecks";
+import {
+  checkBase64Encoding,
+  checkPODName,
+  checkPODValue,
+  requireType
+} from "./podChecks";
 import { PODEntries, PODName, PODValue } from "./podTypes";
+import { decodeBytesRaw, encodeBytes } from "./podUtil";
 
 /**
  * Defines the JSON encoding of a POD.  Unlike the {@link POD} class, objects
@@ -46,9 +52,13 @@ export type JSONBigInt = number | string;
  */
 export type JSONPODValue =
   | JSONPODStringValue
-  | JSONPODIntValue
+  | JSONPODBytesValue
   | JSONPODCryptographicValue
-  | JSONPODEdDSAPublicKeyValue;
+  | JSONPODIntValue
+  | JSONPODBooleanValue
+  | JSONPODEdDSAPublicKeyValue
+  | JSONPODDateValue
+  | JSONPODNullValue;
 
 /**
  * Defines the JSON encoding of a tuple of POD values.  This is simply an
@@ -58,19 +68,16 @@ export type JSONPODValueTuple = JSONPODValue[];
 
 /**
  * {@link JSONPODValue} type for string entries.  These can be most simply
- * encoded as a JSON string, which is reserved for this type.
+ * encoded as a JSON string, which is reserved for this type.  They can
+ * optionally be expressed with an explicit type.
  */
 export type JSONPODStringValue = string | { string: string };
 
 /**
- * {@link JSONPODValue} type for int entries.  These can be most simply
- * encoded as a JSON number, but only if they are in the range between
- * `Number.MIN_SAFE_INTEGER` and `Number.MAX_SAFE_INTEGER` where no accuracy
- * is lost.  Larger positive/negative values must be stringified and use one of
- * the other encodings to specify value type.  Any string encoding accepted by
- * `BigInt(s)` is acceptable.
+ * {@link JSONPODValue} type for bytes entries.  These are encoded as
+ * strings using Base64.
  */
-export type JSONPODIntValue = number | { int: number | string };
+export type JSONPODBytesValue = { bytes: string };
 
 /**
  * {@link JSONPODValue} type for cryptographic entries.  These must always use
@@ -83,12 +90,43 @@ export type JSONPODIntValue = number | { int: number | string };
 export type JSONPODCryptographicValue = { cryptographic: number | string };
 
 /**
+ * {@link JSONPODValue} type for int entries.  These can be most simply
+ * encoded as a JSON number, but only if they are in the range between
+ * `Number.MIN_SAFE_INTEGER` and `Number.MAX_SAFE_INTEGER` where no accuracy
+ * is lost.  Larger positive/negative values must be stringified and use one of
+ * the other encodings to specify value type.  Any string encoding accepted by
+ * `BigInt(s)` is acceptable.
+ */
+export type JSONPODIntValue = number | { int: number | string };
+
+/**
+ * {@link JSONPODValue} type for boolean entries.  These can be most simply
+ * encoded as a JSON boolean, which is reserved for this type.  They can
+ * optionally be expressed with an explicit type.
+ */
+export type JSONPODBooleanValue = boolean | { boolean: boolean };
+
+/**
  * {@link JSONPODValue} type for EdDSA public key entries.  These must always
  * use an explicit typed object since a bare `string` is reserved for string
  * values.  The value within the typed object should be a string in a format
  * accepted by {@link decodePublicKey}.
  */
 export type JSONPODEdDSAPublicKeyValue = { eddsa_pubkey: string };
+
+/**
+ * {@link JSONPODValue} type for date entries.  These must always
+ * use an explicit typed object containing an ISO string encoding of
+ * the date, which must use the `Z` suffix for UTC.
+ */
+export type JSONPODDateValue = { date: string };
+
+/**
+ * {@link JSONPODValue} type for null entries.  These can be most simply
+ * encoded as a JSON null, which is reserved for this type.  They can
+ * optionally be expressed with an explicit type.
+ */
+export type JSONPODNullValue = null | { null: null };
 
 /**
  * Defines the JSON encoding a set of POD entries.  Unlike the
@@ -145,6 +183,8 @@ export function podValueFromJSON(
       return podValueFromTypedJSON("string", jsonValue, nameForErrorMessages);
     case "number":
       return podValueFromTypedJSON("int", jsonValue, nameForErrorMessages);
+    case "boolean":
+      return podValueFromTypedJSON("boolean", jsonValue, nameForErrorMessages);
     case "object":
       if (Array.isArray(jsonValue)) {
         throw new TypeError(
@@ -152,11 +192,10 @@ export function podValueFromJSON(
             "  It should be an object not an array."
         );
       }
-      if (
-        jsonValue === null ||
-        Array.isArray(jsonValue) ||
-        Object.keys(jsonValue).length !== 1
-      ) {
+      if (jsonValue === null) {
+        return podValueFromTypedJSON("null", null, nameForErrorMessages);
+      }
+      if (Object.keys(jsonValue).length !== 1) {
         throw new TypeError(
           `Value ${nameForErrorMessages} isn't a well-formed JSON POD Value.` +
             "  It should be an object with a single key."
@@ -189,7 +228,7 @@ export function podValueFromJSON(
  */
 export function podValueFromTypedJSON(
   podValueType: string,
-  jsonRawValue: number | string,
+  jsonRawValue: number | string | boolean | null,
   nameForErrorMessages?: string
 ): PODValue {
   nameForErrorMessages = nameForErrorMessages || "(unnamed)";
@@ -197,22 +236,61 @@ export function podValueFromTypedJSON(
     case "string":
       return checkPODValue(nameForErrorMessages, {
         type: "string",
-        value: jsonRawValue as string // checkPODValue check this
+        value: jsonRawValue as string // checkPODValue checks this
       });
-    case "int":
+    case "bytes":
+      requireType(nameForErrorMessages, jsonRawValue, "string");
       return checkPODValue(nameForErrorMessages, {
-        type: "int",
-        value: bigintFromJSON(jsonRawValue, nameForErrorMessages)
+        type: "bytes",
+        value: decodeBytesRaw(
+          checkBase64Encoding(
+            jsonRawValue as string,
+            `Value ${nameForErrorMessages} must be encoded in base64.`
+          ),
+          "base64"
+        )
       });
     case "cryptographic":
       return checkPODValue(nameForErrorMessages, {
         type: "cryptographic",
-        value: bigintFromJSON(jsonRawValue, nameForErrorMessages)
+        value: bigintFromJSON(
+          jsonRawValue as JSONBigInt, // bigintFromJSON checks this
+          nameForErrorMessages
+        )
+      });
+    case "int":
+      return checkPODValue(nameForErrorMessages, {
+        type: "int",
+        value: bigintFromJSON(
+          jsonRawValue as JSONBigInt, // bigintFromJSON checks this
+          nameForErrorMessages
+        )
+      });
+    case "boolean":
+      return checkPODValue(nameForErrorMessages, {
+        type: "boolean",
+        value: jsonRawValue as boolean // checkPODValue checks this
       });
     case "eddsa_pubkey":
       return checkPODValue(nameForErrorMessages, {
         type: "eddsa_pubkey",
-        value: jsonRawValue as string
+        value: jsonRawValue as string // checkPODValue checks this
+      });
+    case "date":
+      requireType(nameForErrorMessages, jsonRawValue, "string");
+      if (!(jsonRawValue as string).endsWith("Z")) {
+        throw new TypeError(
+          `Value ${nameForErrorMessages} must be encoded in UTC.`
+        );
+      }
+      return checkPODValue(nameForErrorMessages, {
+        type: "date",
+        value: new Date(jsonRawValue as string)
+      });
+    case "null":
+      return checkPODValue(nameForErrorMessages, {
+        type: "null",
+        value: jsonRawValue as null // checkPODValue checks this
       });
     default:
       throw new TypeError(
@@ -309,16 +387,24 @@ export function podValueToJSON(
   switch (podValue.type) {
     case "string":
       return podValue.value;
+    case "bytes":
+      return { bytes: encodeBytes(podValue.value, "base64") };
+    case "cryptographic":
+      return { cryptographic: bigintToSimplestJSON(podValue.value) };
     case "int":
       const numValue = bigintToSimplestJSON(podValue.value);
       if (typeof numValue === "number") {
         return numValue;
       }
       return { int: numValue };
-    case "cryptographic":
-      return { cryptographic: bigintToSimplestJSON(podValue.value) };
+    case "boolean":
+      return podValue.value;
     case "eddsa_pubkey":
       return { eddsa_pubkey: podValue.value };
+    case "date":
+      return { date: podValue.value.toJSON() };
+    case "null":
+      return null;
     default:
       throw TypeError(
         `Value ${nameForErrorMessages} has unhandled POD value ` +

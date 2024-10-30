@@ -9,6 +9,7 @@ import {
   PODEdDSAPublicKeyValue,
   PODValue,
   PODValueTuple,
+  POD_DATE_MAX,
   POD_INT_MAX,
   POD_INT_MIN
 } from "@pcd/pod";
@@ -43,6 +44,7 @@ import {
 import { makeCircuitIdentifier, makeWatermarkSignal } from "../src/gpcUtil";
 import {
   GPC_TEST_ARTIFACTS_PATH,
+  allTypesEntries,
   expectAsyncError,
   ownerIdentity,
   ownerIdentityV4,
@@ -353,6 +355,48 @@ describe(`gpc library (Compiled ${circuitParamType} artifacts) should work`, asy
     membershipLists: typicalProofInputs.membershipLists,
     watermark: { type: "int", value: 1337n }
   };
+
+  it("should prove and verify with all value types", async function () {
+    const allTypesPOD = POD.sign(allTypesEntries, privateKey);
+
+    // All entries are revealed.  Arithmetic values are range-checked and
+    // compared.
+    const proofConfig: GPCProofConfig = {
+      pods: {
+        allTypes: {
+          entries: {
+            vString: { isRevealed: true },
+            vBytes: { isRevealed: true },
+            vCryptographic: { isRevealed: true },
+            vInt: { isRevealed: true, inRange: { min: 0n, max: 1000n } },
+            vBoolean: {
+              isRevealed: true,
+              inRange: { min: 0n, max: 1n },
+              lessThan: "allTypes.vInt"
+            },
+            vEddsaPubkey: { isRevealed: true },
+            vDate: {
+              isRevealed: true,
+              inRange: { min: 0n, max: BigInt(POD_DATE_MAX.getTime()) },
+              greaterThan: "allTypes.vInt"
+            },
+            vNull: { isRevealed: true }
+          },
+          signerPublicKey: { isRevealed: false }
+        }
+      }
+    };
+    const proofInputs: GPCProofInputs = { pods: { allTypes: allTypesPOD } };
+    const expectedRevealedClaims: GPCRevealedClaims = {
+      pods: { allTypes: { entries: allTypesEntries } }
+    };
+    const { isVerified } = await gpcProofTest(
+      proofConfig,
+      proofInputs,
+      expectedRevealedClaims
+    );
+    expect(isVerified).to.be.true;
+  });
 
   it("should prove and verify a typical case with Semaphore V3 owner identity", async function () {
     const { isVerified } = await gpcProofTest(

@@ -5,10 +5,12 @@ import {
   POD_INT_MAX,
   POD_INT_MIN,
   POD_NAME_REGEX,
-  POD_VALUE_STRING_TYPE_IDENTIFIER,
+  PODBooleanValue,
+  PODCryptographicValue,
+  PODDateValue,
   PODEntries,
+  PODIntValue,
   PODName,
-  PODRawValue,
   PODValue
 } from "./podTypes";
 import {
@@ -24,9 +26,18 @@ import {
  * This regex matches any supported format, with match groups usable to
  * determine the format, in the order above.
  */
-export const PRIVATE_KEY_REGEX = new RegExp(
+export const POD_PRIVATE_KEY_REGEX = new RegExp(
   /^(?:([A-Za-z0-9+/]{43}=?)|([0-9A-Fa-f]{64}))$/
 );
+
+/**
+ * Description of the match groups in {@link POD_PRIVATE_KEY_REGEX} and how they
+ * map to encoding formats, as needed by {@link decodeBytesAuto}.
+ */
+export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
+  { index: 1, encoding: "base64" },
+  { index: 2, encoding: "hex" }
+];
 
 /**
  * Public keys are 32 bytes (a packed elliptic curve point), represented as
@@ -35,12 +46,12 @@ export const PRIVATE_KEY_REGEX = new RegExp(
  * This regex matches any supported format, with match groups usable to
  * determine the format, in the order above.
  */
-export const PUBLIC_KEY_REGEX = new RegExp(
+export const POD_PUBLIC_KEY_REGEX = new RegExp(
   /^(?:([A-Za-z0-9+/]{43}=?)|([0-9A-Fa-f]{64}))$/
 );
 
 /**
- * Description of the match groups in {@link PUBLIC_KEY_REGEX} and how they
+ * Description of the match groups in {@link POD_PUBLIC_KEY_REGEX} and how they
  * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
 export const PUBLIC_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
@@ -55,12 +66,12 @@ export const PUBLIC_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
  * This regex matches any supported format, with match groups usable to
  * determine the format, in the order above.
  */
-export const SIGNATURE_REGEX = new RegExp(
+export const POD_SIGNATURE_REGEX = new RegExp(
   /^(?:([A-Za-z0-9+/]{86}(?:==)?)|([0-9A-Fa-f]{128}))$/
 );
 
 /**
- * Description of the match groups in {@link SIGNATURE_REGEX} and how they
+ * Description of the match groups in {@link POD_SIGNATURE_REGEX} and how they
  * map to encoding formats, as needed by {@link decodeBytesAuto}.
  */
 export const SIGNATURE_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
@@ -69,17 +80,8 @@ export const SIGNATURE_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
 ];
 
 /**
- * Description of the match groups in {@link PRIVATE_KEY_REGEX} and how they
- * map to encoding formats, as needed by {@link decodeBytesAuto}.
- */
-export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
-  { index: 1, encoding: "base64" },
-  { index: 2, encoding: "hex" }
-];
-
-/**
  * Checks that the input matches the proper format for a private key, as given
- * by {@link PRIVATE_KEY_REGEX}.
+ * by {@link POD_PRIVATE_KEY_REGEX}.
  *
  * @param privateKey the string to check
  * @returns the unmodified input, for easy chaining
@@ -88,7 +90,7 @@ export const PRIVATE_KEY_ENCODING_GROUPS: CryptoBytesEncodingGroups = [
 export function checkPrivateKeyFormat(privateKey: string): string {
   decodeBytesAuto(
     privateKey,
-    PRIVATE_KEY_REGEX,
+    POD_PRIVATE_KEY_REGEX,
     PRIVATE_KEY_ENCODING_GROUPS,
     "Private key should be 32 bytes, encoded as hex or Base64."
   );
@@ -97,7 +99,7 @@ export function checkPrivateKeyFormat(privateKey: string): string {
 
 /**
  * Checks that the input matches the proper format for a public key, as given
- * by {@link PUBLIC_KEY_REGEX}.
+ * by {@link POD_PUBLIC_KEY_REGEX}.
  *
  * @param nameForErrorMessages the name of this value, which is used only for
  *   error messages (not checked for legality).
@@ -111,7 +113,7 @@ export function checkPublicKeyFormat(
 ): string {
   decodeBytesAuto(
     publicKey,
-    PUBLIC_KEY_REGEX,
+    POD_PUBLIC_KEY_REGEX,
     PUBLIC_KEY_ENCODING_GROUPS,
     "Public key should be 32 bytes, encoded as hex or Base64" +
       (nameForErrorMessages ? ` in ${nameForErrorMessages}.` : ".")
@@ -121,7 +123,7 @@ export function checkPublicKeyFormat(
 
 /**
  * Checks that the input matches the proper format for a signature, as given
- * by {@link SIGNATURE_REGEX}.
+ * by {@link POD_SIGNATURE_REGEX}.
  *
  * @param signature the string to check
  * @returns the unmodified input, for easy chaining
@@ -130,11 +132,61 @@ export function checkPublicKeyFormat(
 export function checkSignatureFormat(signature: string): string {
   decodeBytesAuto(
     signature,
-    SIGNATURE_REGEX,
+    POD_SIGNATURE_REGEX,
     SIGNATURE_ENCODING_GROUPS,
     "Signature should be 64 bytes, encoded as hex or Base64."
   );
   return signature;
+}
+
+/**
+ * Regular expression matching valid Base64 encoding of any length, allowing
+ * padding to be omitted.
+ */
+export const POD_BASE64_REGEX = new RegExp(
+  /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}(?:==)?|[A-Za-z0-9+/]{3}=?)?$/
+);
+
+/**
+ * Checks that the given string is encoded in valid Base64, allowing padding
+ * to be omitted.
+ *
+ * @param encoded the string-encoded bytes
+ * @param errorMessage human-readable message for error thrown if decoding
+ *  fails.
+ * @returns
+ */
+export function checkBase64Encoding(
+  encoded: string,
+  errorMessage?: string
+): string {
+  if (!encoded.match(POD_BASE64_REGEX)) {
+    throw new TypeError(errorMessage ?? "Invalid base64 bytes");
+  }
+  return encoded;
+}
+
+/**
+ * Regular expression matching valid hex encoding.
+ */
+export const POD_HEX_REGEX = new RegExp(/^[0-9A-Fa-f]*$/);
+
+/**
+ * Checks that the given string is encoded in valid Base64.
+ *
+ * @param encoded the string-encoded bytes
+ * @param errorMessage human-readable message for error thrown if decoding
+ *  fails.
+ * @returns
+ */
+export function checkHexEncoding(
+  encoded: string,
+  errorMessage?: string
+): string {
+  if (!encoded.match(POD_HEX_REGEX)) {
+    throw new TypeError(errorMessage ?? "Invalid hex bytes");
+  }
+  return encoded;
 }
 
 /**
@@ -179,9 +231,10 @@ export function checkPODEntries(podEntries: PODEntries): void {
 /**
  * Checks that `value` has the run-time type given by `typeName`.
  *
- * Works for any runtime JavaScript type, but two values have special meaning.
+ * Works for any runtime JavaScript type, but three values have special meaning.
  * "object" is used specifically to require a non-null non-array object, while
- * "array" is used to mean a non-null array object.
+ * "array" is used to mean a non-null array object, and "null" is used for the
+ * null object.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -208,6 +261,14 @@ export function requireType(
         throw new TypeError(
           `Invalid value for entry ${nameForErrorMessages}.  \
           Expected an array.`
+        );
+      }
+      break;
+    case "null":
+      if (typeof value !== "object" || Array.isArray(value) || value !== null) {
+        throw new TypeError(
+          `Invalid value for entry ${nameForErrorMessages}.  \
+            Expected a null object.`
         );
       }
       break;
@@ -239,34 +300,11 @@ export function requireType(
  */
 export function requireValueType(
   nameForErrorMessages: string,
-  value: PODRawValue,
+  value: PODValue["value"],
   typeName: string
-): PODRawValue {
+): PODValue["value"] {
   requireType(nameForErrorMessages, value, typeName);
   return value;
-}
-
-/**
- * Checks string-encoded value type prefix for its validity, i.e. that
- * it is actually of type {@link POD_VALUE_STRING_TYPE_IDENTIFIER}.
- *
- * @param nameForErrorMessages the name of the value from which the type name is
- *   derived, used only for error messages.
- * @param typePrefix the type prefix to check
- * @returns the type prefix as the appropriate type
- * @throws Error if the type prefix is invalid
- */
-export function checkStringEncodedValueType(
-  nameForErrorMessages: string,
-  typePrefix: string
-): POD_VALUE_STRING_TYPE_IDENTIFIER {
-  if (typePrefix === EDDSA_PUBKEY_TYPE_STRING || typePrefix === "string") {
-    return typePrefix;
-  } else {
-    throw new Error(
-      `Invalid string-encoded value type ${typePrefix} in ${nameForErrorMessages}.`
-    );
-  }
 }
 
 /**
@@ -312,7 +350,8 @@ export function checkPODValue(
 ): PODValue {
   if (podValue === null) {
     throw new TypeError(
-      `POD value for ${nameForErrorMessages} cannot be null.`
+      `POD value for ${nameForErrorMessages} cannot be null.` +
+        "  Consider PODNull instead."
     );
   }
   if (podValue === undefined || podValue.value === undefined) {
@@ -320,20 +359,23 @@ export function checkPODValue(
       `POD value for ${nameForErrorMessages} cannot be undefined.`
     );
   }
-  if (podValue.value === null) {
-    throw new TypeError(
-      `POD value for ${nameForErrorMessages} cannot be null.`
-    );
-  }
-
   if (podValue.type === undefined) {
     throw new TypeError(
       `POD value for ${nameForErrorMessages} must have a type.`
     );
   }
+
   switch (podValue.type) {
     case "string":
       requireValueType(nameForErrorMessages, podValue.value, "string");
+      break;
+    case "bytes":
+      requireValueType(nameForErrorMessages, podValue.value, "object");
+      if (!(podValue.value instanceof Uint8Array)) {
+        throw new TypeError(
+          `Bytes value ${nameForErrorMessages} must be a UInt8Array.`
+        );
+      }
       break;
     case "cryptographic":
       requireValueType(nameForErrorMessages, podValue.value, "bigint");
@@ -353,9 +395,23 @@ export function checkPODValue(
         POD_INT_MAX
       );
       break;
+    case "boolean":
+      requireValueType(nameForErrorMessages, podValue.value, "boolean");
+      break;
     case EDDSA_PUBKEY_TYPE_STRING:
       requireValueType(nameForErrorMessages, podValue.value, "string");
       checkPublicKeyFormat(podValue.value, nameForErrorMessages);
+      break;
+    case "date":
+      requireValueType(nameForErrorMessages, podValue.value, "object");
+      if (!(podValue.value instanceof Date)) {
+        throw new TypeError(
+          `Date value ${nameForErrorMessages} must be a Date object.`
+        );
+      }
+      break;
+    case "null":
+      requireValueType(nameForErrorMessages, podValue.value, "null");
       break;
     default:
       throw new TypeError(
@@ -374,6 +430,42 @@ export function checkPODValue(
  * @param podValue the value to check
  * @returns `true` if the given value is numeric
  */
-export function isPODNumericValue(podValue: PODValue): boolean {
+export function isPODNumericValue(
+  podValue: PODValue
+): podValue is
+  | PODCryptographicValue
+  | PODIntValue
+  | PODBooleanValue
+  | PODDateValue {
   return getPODValueForCircuit(podValue) !== undefined;
+}
+
+/**
+ * Checks whether a given value is a bounded numeric value of a type which
+ * can be subject to ordered comparison or arithmetic in a circuit.  The
+ * determination is based on the value's type, not its specific value.  This
+ * returns true for all numeric types with a range fitting inside of the
+ * PODIntValue type.
+ *
+ * @param podValue the value to check
+ * @returns `true` if the given value is arithmetic
+ */
+export function isPODArithmeticValue(
+  podValue: PODValue
+): podValue is PODIntValue | PODBooleanValue | PODDateValue {
+  switch (podValue.type) {
+    case "string":
+    case "bytes":
+    case "eddsa_pubkey":
+    case "null":
+    case "cryptographic":
+      return false;
+    case "int":
+    case "boolean":
+    case "date":
+      return true;
+    default:
+      // @ts-expect-error podValue is of type `never` if we've covered all types
+      throw TypeError(`Unknown PODValue type ${podValue.type}!`);
+  }
 }

@@ -14,6 +14,7 @@ import {
   calcMinMerkleDepthForEntries,
   clonePODEntries,
   clonePODValue,
+  getPODValueForCircuit,
   isPODNumericValue,
   podEntriesToJSON,
   podNameHash,
@@ -128,7 +129,9 @@ describe("PODContent class should work", async function () {
           expect(circuitSignals.nameHash).to.eq(podNameHash(entryName));
           expect(circuitSignals.valueHash).to.eq(podValueHash(entryValue));
           expect(circuitSignals.value).to.eq(
-            isPODNumericValue(entryValue) ? entryValue.value : undefined
+            isPODNumericValue(entryValue)
+              ? getPODValueForCircuit(entryValue)
+              : undefined
           );
 
           expect(PODContent.verifyEntryProof(circuitSignals.proof)).to.be.true;
@@ -199,7 +202,6 @@ describe("PODContent class should work", async function () {
     const badInputs = [
       [{ ...goodJSON, "!@#$": "hello" }, TypeError],
       [{ ...goodJSON, hello: undefined }, TypeError],
-      [{ ...goodJSON, hello: null }, TypeError],
       [{ ...goodJSON, hello: { type: "string", value: 123n } }, TypeError]
     ] as [JSONPODEntries, ErrorConstructor][];
 

@@ -11,6 +11,11 @@ import {
 import { v3tov4Identity } from "@pcd/semaphore-identity-pcd";
 import { ReactNode, useMemo, useState } from "react";
 import styled from "styled-components";
+import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
+import { Button2 } from "../../../new-components/shared/Button";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { Typography } from "../../../new-components/shared/Typography";
+import { hideScrollCSS } from "../../../new-components/shared/utils";
 import {
   useIdentityV3,
   usePCDCollection,
@@ -20,12 +25,8 @@ import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { getGPCArtifactsURL } from "../../../src/util";
 import { getPODsForCollections } from "../../../src/zapp/collections";
 import { AppContainer } from "../../shared/AppContainer";
-import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 import Select from "../../shared/Select";
-import { Typography } from "../../../new-components/shared/Typography";
-import { Button2 } from "../../../new-components/shared/Button";
-import { NewLoader } from "../../../new-components/shared/NewLoader";
-import { hideScrollCSS } from "../../../new-components/shared/utils";
+import { displayPODValue } from "../../shared/uiUtil";
 
 export function EmbeddedGPCProofScreen({
   proofRequestSchema,
@@ -204,7 +205,7 @@ function ProvePODInfo({
       return {
         value: pod.signature,
         label: schema.pod.meta?.labelEntry
-          ? pod.content.asEntries()[schema.pod.meta.labelEntry].value.toString()
+          ? displayPODValue(pod.content.asEntries()[schema.pod.meta.labelEntry])
           : pod.signature.substring(0, 16)
       };
     })
@@ -240,7 +241,9 @@ function ProvePODInfo({
                       {entryName}
                     </Typography>
                     <Typography family="Rubik" color="var(--core-accent)">
-                      {selectedPODEntries?.[entryName].value.toString() ?? "-"}
+                      {selectedPODEntries?.[entryName] !== undefined
+                        ? displayPODValue(selectedPODEntries?.[entryName])
+                        : "-"}
                     </Typography>
                   </EntryItem>
                 );
@@ -286,7 +289,7 @@ function ProvePODInfo({
                             list:{" "}
                             <Reveal>
                               {entry.isMemberOf
-                                .map((v) => v.value.toString())
+                                .map((v) => displayPODValue(v))
                                 .join(", ")}
                             </Reveal>
                           </Typography>
@@ -297,7 +300,7 @@ function ProvePODInfo({
                             list:{" "}
                             <Reveal>
                               {entry.isNotMemberOf
-                                .map((v) => v.value.toString())
+                                .map((v) => displayPODValue(v))
                                 .join(", ")}
                             </Reveal>
                           </Typography>
@@ -377,7 +380,7 @@ function ProvePODInfo({
                         <Reveal>
                           {(tuple.isNotMemberOf ?? tuple.isMemberOf ?? [])
                             .map((v) =>
-                              v.map((e) => e.value.toString()).join(", ")
+                              v.map((e) => displayPODValue(e)).join(", ")
                             )
                             .map((item) => (
                               <Typography

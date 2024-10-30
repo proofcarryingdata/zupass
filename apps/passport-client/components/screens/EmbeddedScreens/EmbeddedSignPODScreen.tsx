@@ -8,6 +8,7 @@ import { useIdentityV3, useZapp, useZappOrigin } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { H2 } from "../../core";
 import { AppContainer } from "../../shared/AppContainer";
+import { displayPODValue } from "../../shared/uiUtil";
 
 export function EmbeddedSignPODScreen({
   entries,
@@ -57,7 +58,7 @@ export function EmbeddedSignPODScreen({
             return (
               <Fragment key={name}>
                 <EntryName>{name}</EntryName>{" "}
-                <EntryValue>{entry.value.toString()}</EntryValue>
+                <EntryValue>{displayPODValue(entry)}</EntryValue>
               </Fragment>
             );
           })}

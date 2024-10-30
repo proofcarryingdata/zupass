@@ -60,6 +60,7 @@ export async function gpcDemo(): Promise<boolean> {
       itemSet: { type: "string", value: "celestial" },
       attack: { type: "int", value: 7n },
       weaponType: { type: "string", value: "sword" },
+      isMagical: { type: "boolean", value: true },
       owner: { type: "cryptographic", value: semaphoreIdentity.commitment }
     } satisfies PODEntries,
     privateKey
@@ -70,6 +71,7 @@ export async function gpcDemo(): Promise<boolean> {
       pod_type: { type: "string", value: "myrpg.item.shield" },
       itemSet: { type: "string", value: "celestial" },
       defense: { type: "int", value: 5n },
+      isMagical: { type: "boolean", value: true },
       owner: { type: "cryptographic", value: semaphoreIdentity.commitment }
     } satisfies PODEntries,
     privateKey

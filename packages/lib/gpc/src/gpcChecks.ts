@@ -18,6 +18,8 @@ import {
   checkPODValue,
   checkPublicKeyFormat,
   encodePublicKey,
+  getRequiredPODValueForCircuit,
+  isPODArithmeticValue,
   podValueHash,
   printPODValueOrTuple,
   requireType
@@ -791,31 +793,33 @@ export function checkProofBoundsCheckInputsForConfig(
   entryValue: PODValue
 ): void {
   if (entryConfig.inRange !== undefined) {
-    if (entryValue.type !== "int") {
+    if (!isPODArithmeticValue(entryValue)) {
       throw new TypeError(
-        `Proof configuration for entry ${entryName} has bounds check but entry value is not of type "int".`
+        `Proof configuration for entry ${entryName} has bounds check but entry value is not of a bounded arithmetic type.`
       );
     }
-    if (entryValue.value < entryConfig.inRange.min) {
+    const numericValue = getRequiredPODValueForCircuit(entryValue, entryName);
+    if (numericValue < entryConfig.inRange.min) {
       throw new RangeError(
         `Entry ${entryName} is less than its prescribed minimum value ${entryConfig.inRange.min}.`
       );
     }
-    if (entryValue.value > entryConfig.inRange.max) {
+    if (numericValue > entryConfig.inRange.max) {
       throw new RangeError(
         `Entry ${entryName} is greater than its prescribed maximum value ${entryConfig.inRange.max}.`
       );
     }
   }
   if (entryConfig.notInRange !== undefined) {
-    if (entryValue.type !== "int") {
+    if (!isPODArithmeticValue(entryValue)) {
       throw new TypeError(
-        `Proof configuration for entry ${entryName} has out of bounds check but entry value is not of type "int".`
+        `Proof configuration for entry ${entryName} has out of bounds check but entry value is not of a bounded arithmetic type.`
       );
     }
+    const numericValue = getRequiredPODValueForCircuit(entryValue, entryName);
     if (
-      entryConfig.notInRange.min <= entryValue.value &&
-      entryValue.value <= entryConfig.notInRange.max
+      entryConfig.notInRange.min <= numericValue &&
+      numericValue <= entryConfig.notInRange.max
     ) {
       throw new RangeError(
         `Entry ${entryName} does not lie outside of the interval [${entryConfig.notInRange.min},${entryConfig.notInRange.max}].`

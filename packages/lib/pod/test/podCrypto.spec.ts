@@ -14,6 +14,8 @@ import {
   CryptoBytesEncoding,
   EDDSA_PUBKEY_TYPE_STRING,
   PODContent,
+  PODNull,
+  POD_NULL_HASH,
   checkPrivateKeyFormat,
   checkPublicKeyFormat,
   checkSignatureFormat,
@@ -24,11 +26,11 @@ import {
   encodePrivateKey,
   encodePublicKey,
   encodeSignature,
+  podBytesHash,
   podEdDSAPublicKeyHash,
   podIntHash,
   podMerkleTreeHash,
   podNameHash,
-  podStringHash,
   podValueHash,
   signPODRoot,
   verifyPODRootSignature
@@ -47,26 +49,46 @@ import {
   privateKeyHex,
   sampleEntries1,
   stripB64,
+  testBytesToHash,
+  testDatesToHash,
   testIntsToHash,
   testPrivateKeys,
   testPrivateKeysAllFormats,
   testPrivateKeysBase64,
   testPrivateKeysHex,
   testPublicKeysToHash,
-  testStringsToHash
+  testStringsToHash,
+  testUniqueBytesToHash
 } from "./common";
 
 describe("podCrypto hashes should work", async function () {
-  it("podStringHash should produce unique repeatable results", function () {
+  it("podBytesHash should produce unique repeatable results on strings", function () {
     const seenHashes = new Set();
     for (const s of testStringsToHash) {
-      const h = podStringHash(s);
+      const h = podBytesHash(s);
       expect(seenHashes.has(h)).to.be.false;
       seenHashes.add(h);
 
-      const h2 = podStringHash(s);
+      const h2 = podBytesHash(s);
       expect(h2).to.eq(h);
     }
+  });
+
+  it("podBytesHash should produce unique repeatable results on bytes", function () {
+    const seenHashes = new Set();
+    for (const s of testBytesToHash) {
+      const h = podBytesHash(s);
+      expect(seenHashes.has(h)).to.be.false;
+      seenHashes.add(h);
+
+      const h2 = podBytesHash(s);
+      expect(h2).to.eq(h);
+    }
+  });
+
+  it("podBytesHash should treat strings and bytes the same", function () {
+    expect(podBytesHash("hello")).to.eq(podBytesHash(Buffer.from("hello")));
+    expect(podBytesHash("")).to.eq(podBytesHash(new Uint8Array([])));
   });
 
   it("podEdDSAPublicKeyHash should produce unique repeatable results", function () {
@@ -89,7 +111,7 @@ describe("podCrypto hashes should work", async function () {
       const publicKeyPt = derivePublicKey(privateKey);
       const encodedPublicKey = encodePublicKey(publicKeyPt);
       const expectedHash = poseidon2(publicKeyPt);
-      const unexpectedHash = podStringHash(encodedPublicKey);
+      const unexpectedHash = podBytesHash(encodedPublicKey);
       const computedHash = podEdDSAPublicKeyHash(encodedPublicKey);
 
       expect(computedHash).to.eq(expectedHash);
@@ -132,12 +154,27 @@ describe("podCrypto hashes should work", async function () {
 
   it("podValueHash should produce unique repeatable results", function () {
     const seenHashes = new Set();
+
+    const nh1 = podValueHash(PODNull);
+    seenHashes.add(nh1);
+
+    const nh2 = podValueHash({ type: "null", value: null });
+    expect(nh2).to.eq(nh1);
+
     for (const s of testStringsToHash) {
       const h = podValueHash({ type: "string", value: s });
       expect(seenHashes.has(h)).to.be.false;
       seenHashes.add(h);
 
       const h2 = podValueHash({ type: "string", value: s });
+      expect(h2).to.eq(h);
+    }
+    for (const b of testUniqueBytesToHash) {
+      const h = podValueHash({ type: "bytes", value: b });
+      expect(seenHashes.has(h)).to.be.false;
+      seenHashes.add(h);
+
+      const h2 = podValueHash({ type: "bytes", value: b });
       expect(h2).to.eq(h);
     }
     for (const s of testPublicKeysToHash) {
@@ -161,7 +198,45 @@ describe("podCrypto hashes should work", async function () {
 
       const h4 = podValueHash({ type: "int", value: i });
       expect(h4).to.eq(h);
+
+      if (i === 0n || i === 1n) {
+        const h5 = podValueHash({ type: "boolean", value: i === 1n });
+        expect(h5).to.eq(h);
+
+        const h6 = podValueHash({ type: "boolean", value: i === 1n });
+        expect(h6).to.eq(h);
+      }
     }
+    for (const d of testDatesToHash) {
+      const h = podValueHash({ type: "date", value: d });
+      expect(seenHashes.has(h)).to.be.false;
+      seenHashes.add(h);
+
+      const h2 = podValueHash({ type: "date", value: d });
+      expect(h2).to.eq(h);
+    }
+  });
+
+  it("podValueHash should return the expected value for null", function () {
+    expect(podValueHash(PODNull)).to.eq(POD_NULL_HASH);
+  });
+
+  it("podValueHash should treat expected types the same", function () {
+    expect(podValueHash({ type: "string", value: "" })).to.eq(
+      podValueHash({ type: "bytes", value: new Uint8Array([]) })
+    );
+    expect(podValueHash({ type: "string", value: "hello" })).to.eq(
+      podValueHash({ type: "bytes", value: Buffer.from("hello") })
+    );
+    expect(podValueHash({ type: "cryptographic", value: 123n })).to.eq(
+      podValueHash({ type: "int", value: 123n })
+    );
+    expect(podValueHash({ type: "boolean", value: true })).to.eq(
+      podValueHash({ type: "int", value: 1n })
+    );
+    expect(podValueHash({ type: "date", value: new Date(123) })).to.eq(
+      podValueHash({ type: "int", value: 123n })
+    );
   });
 
   it("podMerkleTreeHash should produce unique repeatable results", function () {
@@ -631,10 +706,10 @@ describe("podCrypto's zk-kit should be compatible with circomlibjs", async funct
     altCrypto = await AltCryptCircomlibjs.create();
   });
 
-  it("podStringHash should match", function () {
+  it("podBytesHash should match", function () {
     for (const s of testStringsToHash) {
-      const podH = podStringHash(s);
-      const altH = altCrypto.podStringHash(s);
+      const podH = podBytesHash(s);
+      const altH = altCrypto.podBytesHash(s);
       expect(altH).to.eq(podH);
     }
   });

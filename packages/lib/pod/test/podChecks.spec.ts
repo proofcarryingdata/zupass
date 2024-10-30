@@ -5,6 +5,8 @@ import {
   PODValue,
   POD_CRYPTOGRAPHIC_MAX,
   POD_CRYPTOGRAPHIC_MIN,
+  POD_DATE_MAX,
+  POD_DATE_MIN,
   POD_INT_MAX,
   POD_INT_MIN,
   checkBigintBounds,
@@ -13,6 +15,7 @@ import {
   checkPrivateKeyFormat,
   checkPublicKeyFormat,
   checkSignatureFormat,
+  isPODArithmeticValue,
   isPODNumericValue,
   requireValueType
 } from "../src";
@@ -185,8 +188,11 @@ describe("podChecks input checkers should work", async function () {
       ["hello", "string"],
       [{}, "object"],
       [{ abc: 123 }, "object"],
+      [new Uint8Array([1, 2, 3]), "object"],
+      [new Date(Date.UTC(2024)), "object"],
       [[], "array"],
-      [[1, 2, 3, "abc"], "array"]
+      [[1, 2, 3, "abc"], "array"],
+      [null, "null"]
     ] as [string | bigint, string][];
     for (const testInput of testCases) {
       const checked = requireValueType("valueName", testInput[0], testInput[1]);
@@ -205,6 +211,8 @@ describe("podChecks input checkers should work", async function () {
       [undefined, "string"],
       [{}, "array"],
       [{ abc: 123 }, "array"],
+      [new Uint8Array([1, 2, 3]), "array"],
+      [new Date(Date.UTC(2024)), "null"],
       [null, "array"],
       [[], "object"],
       [[1, 2, 3, "abc"], "object"],
@@ -280,6 +288,20 @@ describe("podChecks input checkers should work", async function () {
           "no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_"
       },
       {
+        type: "bytes",
+        value: new Uint8Array([])
+      },
+      {
+        type: "bytes",
+        value: new Uint8Array([1, 2, 3])
+      },
+      {
+        type: "bytes",
+        value: Buffer.from(
+          "no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_no_size_limit_"
+        )
+      },
+      {
         type: EDDSA_PUBKEY_TYPE_STRING,
         value:
           "4f5fb4898c477d8c17227ddd81eb597125e4d437489c01a6085b5db54e053b0a"
@@ -303,11 +325,17 @@ describe("podChecks input checkers should work", async function () {
       { type: "cryptographic", value: 123n },
       { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MIN },
       { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MAX },
+      { type: "boolean", value: true },
+      { type: "boolean", value: false },
       { type: "int", value: -1n },
       { type: "int", value: 0n },
       { type: "int", value: 123n },
       { type: "int", value: POD_INT_MIN },
-      { type: "int", value: POD_INT_MAX }
+      { type: "int", value: POD_INT_MAX },
+      { type: "date", value: new Date(Date.UTC(2024)) },
+      { type: "date", value: POD_DATE_MIN },
+      { type: "date", value: POD_DATE_MAX },
+      { type: "null", value: null }
     ] as (undefined | PODValue)[];
     for (const testInput of testCases) {
       const checked = checkPODValue("valueName", testInput);
@@ -323,11 +351,17 @@ describe("podChecks input checkers should work", async function () {
       [{ value: 0n }, TypeError],
       [{ type: undefined, value: 0n }, TypeError],
       [{ type: "string", value: undefined }, TypeError],
+      [{ type: "string", value: null }, TypeError],
       [{ type: "something", value: 0n }, TypeError],
       [{ type: "bigint", value: 0n }, TypeError],
       [{ type: "something", value: "something" }, TypeError],
       [{ type: "string", value: 0n }, TypeError],
       [{ type: "string", value: 123 }, TypeError],
+      [{ type: "string", value: new Uint8Array([1, 2, 3]) }, TypeError],
+      [{ type: "bytes", value: new Uint16Array([1, 2, 3]) }, TypeError],
+      [{ type: "bytes", value: "hello" }, TypeError],
+      [{ type: "bytes", value: true }, TypeError],
+      [{ type: "string", value: Buffer.from("hello") }, TypeError],
       [{ type: EDDSA_PUBKEY_TYPE_STRING, value: "hello" }, TypeError],
       [{ type: EDDSA_PUBKEY_TYPE_STRING, value: "0" }, TypeError],
       [{ type: EDDSA_PUBKEY_TYPE_STRING, value: 0n }, TypeError],
@@ -345,7 +379,11 @@ describe("podChecks input checkers should work", async function () {
       [{ type: "int", value: "hello" }, TypeError],
       [{ type: "int", value: 123 }, TypeError],
       [{ type: "int", value: POD_INT_MIN - 1n }, RangeError],
-      [{ type: "int", value: POD_INT_MAX + 1n }, RangeError]
+      [{ type: "int", value: POD_INT_MAX + 1n }, RangeError],
+      [{ type: "boolean", value: 123 }, TypeError],
+      [{ type: "date", value: 12345 }, TypeError],
+      [{ type: "date", value: { year: 2024 } }, TypeError],
+      [{ type: "null", value: 1n }, TypeError]
     ] as [PODValue, ErrorConstructor][];
     for (const [testInput, expectedError] of testCases) {
       const fn = (): void => {
@@ -359,6 +397,8 @@ describe("podChecks input checkers should work", async function () {
 describe("podChecks value helpers should work", async function () {
   it("isPODNumericValue should work", function () {
     expect(isPODNumericValue({ type: "string", value: "foo" })).to.be.false;
+    expect(isPODNumericValue({ type: "bytes", value: Buffer.from("foo") })).to
+      .be.false;
     expect(
       isPODNumericValue({
         type: EDDSA_PUBKEY_TYPE_STRING,
@@ -369,11 +409,40 @@ describe("podChecks value helpers should work", async function () {
     expect(isPODNumericValue({ type: "int", value: 123n })).to.be.true;
     expect(isPODNumericValue({ type: "cryptographic", value: 123n })).to.be
       .true;
-    expect(
+    expect(isPODNumericValue({ type: "boolean", value: true })).to.be.true;
+    expect(isPODNumericValue({ type: "date", value: new Date(Date.UTC(2024)) }))
+      .to.be.true;
+    expect(() =>
       isPODNumericValue({
         type: "something",
         value: 123n
       } as unknown as PODValue)
+    ).to.throw(TypeError);
+  });
+
+  it("isPODArithmeticValue should work", function () {
+    expect(isPODArithmeticValue({ type: "string", value: "foo" })).to.be.false;
+    expect(isPODArithmeticValue({ type: "bytes", value: Buffer.from("foo") }))
+      .to.be.false;
+    expect(
+      isPODArithmeticValue({
+        type: EDDSA_PUBKEY_TYPE_STRING,
+        value:
+          "c2478aa919f5d09a68fe264d9e980b94872d2472cb53f514bfc1b19f3029741f"
+      })
     ).to.be.false;
+    expect(isPODArithmeticValue({ type: "int", value: 123n })).to.be.true;
+    expect(isPODArithmeticValue({ type: "cryptographic", value: 123n })).to.be
+      .false;
+    expect(isPODArithmeticValue({ type: "boolean", value: true })).to.be.true;
+    expect(
+      isPODArithmeticValue({ type: "date", value: new Date(Date.UTC(2024)) })
+    ).to.be.true;
+    expect(() =>
+      isPODArithmeticValue({
+        type: "something",
+        value: 123n
+      } as unknown as PODValue)
+    ).to.throw(TypeError);
   });
 });
