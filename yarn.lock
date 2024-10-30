@@ -5176,59 +5176,59 @@
     browser-or-node "^2.0.0"
     cross-fetch "^3.0.6"
 
-"@parcnet-js/app-connector-react@1.0.2":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector-react/-/app-connector-react-1.0.2.tgz#fa5b5607a7e7afad8a23de0e78057d5d2c72ac9a"
-  integrity sha512-x4OiLcopadv9Zpua2pxzFB+OF/yICy1M1wndfO3MVyNBV9tdc24aH+SrvAktiKDxPkTjCJhm3VchhTS1NbYkHw==
+"@parcnet-js/app-connector-react@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector-react/-/app-connector-react-1.0.3.tgz#da99f63b1e35c6cd2f457e32af47cf9b53eb0b69"
+  integrity sha512-MjmUQM2NV4MKJya4uBbvOjsQZwsjNnDRMb1hhqNXN6TEVNsG0iH8vSx9lGSjqPdrnLgQ5CnKyG3ntvbetAWAzA==
   dependencies:
-    "@parcnet-js/app-connector" "1.1.7"
+    "@parcnet-js/app-connector" "1.1.8"
     react-shadow "^20.5.0"
 
-"@parcnet-js/app-connector@1.1.7", "@parcnet-js/app-connector@^1.1.7":
-  version "1.1.7"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-1.1.7.tgz#850612a773d751c9a67c53cb416e1635b73f51f4"
-  integrity sha512-DS69R9rw10EBb2F5Pg2Xhe4m/cOVcdAZdjA+edYhgP+NoSE4K2eZrYHQRamv8Nh8OIS9mYb6pQVKrTItQUVESQ==
+"@parcnet-js/app-connector@1.1.8", "@parcnet-js/app-connector@^1.1.8":
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/app-connector/-/app-connector-1.1.8.tgz#a0520dec5f2485ff22093074f10189910ad7b0f4"
+  integrity sha512-sKuvYNpPqJOBmtd1EV4gPyBJ+99ZpQTty1SEBEf0bMm4Zxu8CYsYXPSnW+wtOocknoLsXg+u6eLwMDoiX2nzkQ==
   dependencies:
-    "@parcnet-js/client-rpc" "1.1.5"
-    "@parcnet-js/podspec" "1.1.2"
+    "@parcnet-js/client-rpc" "1.1.6"
+    "@parcnet-js/podspec" "1.1.3"
     "@pcd/gpc" "^0.3.0"
     "@pcd/pod" "^0.4.0"
     nanoevents "^9.0.0"
     valibot "^0.42.0"
 
-"@parcnet-js/client-helpers@^1.0.6":
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-1.0.6.tgz#9da0d5ee40ef1aa8fe867f51e5e3e3b751a49786"
-  integrity sha512-rtEsunR6lc20yFOgUE+rylbv7beshAs7x7eqTsLV6nck8BEp/SX+TMZPkCluohuhwg/5KySh3kQb8eUAYqOS2A==
+"@parcnet-js/client-helpers@^1.0.7":
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-1.0.7.tgz#64f83b3f6a164a2fc903033fefcea30d5ddf4971"
+  integrity sha512-lzXJs+aQNiMecrOfFS/4MblmPuNvwN5K2navXyGeZ9yrgZRAupz/W+SLjcDA9Swa0vHAms22KFLy3o616Zhwxw==
   dependencies:
-    "@parcnet-js/client-rpc" "1.1.5"
+    "@parcnet-js/client-rpc" "1.1.6"
     valibot "^0.42.0"
 
-"@parcnet-js/client-rpc@1.1.5", "@parcnet-js/client-rpc@^1.1.5":
-  version "1.1.5"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-1.1.5.tgz#a7c75dc88752be25ce49f97824d81ae69bf06d68"
-  integrity sha512-OzYW+5+AvQiu40PHH3KgCQJNII5qv+HZ/QVuLvaJVhhDubTLOQF63K4q307ta2nUswbbbWKejevlQnX5biZ7RA==
+"@parcnet-js/client-rpc@1.1.6", "@parcnet-js/client-rpc@^1.1.6":
+  version "1.1.6"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-1.1.6.tgz#3eec196b5872f103d3eca7f20ed6fa1ebc4f6372"
+  integrity sha512-uG907LFJoF5A4emsPFDdQy+3Pe9Kkxfe3jm0fEOODqwOfn1t0uSV63lIuaps+Zc+bsGVYS1HgvevHJz3x6TkHg==
   dependencies:
-    "@parcnet-js/podspec" "1.1.2"
+    "@parcnet-js/podspec" "1.1.3"
     "@pcd/gpc" "^0.3.0"
     "@pcd/pod" "^0.4.0"
     valibot "^0.42.0"
 
-"@parcnet-js/podspec@1.1.2", "@parcnet-js/podspec@^1.1.2":
-  version "1.1.2"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-1.1.2.tgz#a26c6573d5e4c3ac4c5db54d4410f20041967e75"
-  integrity sha512-XI7WUnAV2EwTWN5SRh52JnNaDqL2m5XQaDRcdyeKdQ0l3BnWWIWIck0LQ/tAvx+pagkl1ksmx7Yu0cB6uVRUZg==
+"@parcnet-js/podspec@1.1.3", "@parcnet-js/podspec@^1.1.3":
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-1.1.3.tgz#ab3ff3e1ad62d1ad488b6fb72d12ce32c31b8b30"
+  integrity sha512-eEoy74K9q1Mq2hQ4YPuoL+iXq8rRsS1vnjo4r2g9chzBzIgYUL9tYXV0Z6EmfPXMRQQeArjwpwzAXPn0pwypTQ==
   dependencies:
     "@pcd/gpc" "^0.3.0"
     "@pcd/pod" "^0.4.0"
 
-"@parcnet-js/ticket-spec@^1.1.5":
-  version "1.1.5"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-1.1.5.tgz#81b2fdd5ae1b3c9c40dc702231555c1fed52ce91"
-  integrity sha512-YW2IEqyRXLTlrY1opgfXJ1//LIUbLYK8yMPjb59VURk5zGUljrwV2qTe1/N9UF7vylA0x0RfJS2tncHvjaqBIw==
+"@parcnet-js/ticket-spec@^1.1.8":
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/ticket-spec/-/ticket-spec-1.1.8.tgz#4c26a17401af0fd37d5e46576b654ba4ce16e5df"
+  integrity sha512-2PrDSj1VbtvJYpEqDoJ49jPBIbnMlkhjxn2tOimJ6LVltk8Cmi+sV0fUepsOAB4hHhqVii75+e8DsMi0pT+lQw==
   dependencies:
-    "@parcnet-js/client-rpc" "1.1.5"
-    "@parcnet-js/podspec" "1.1.2"
+    "@parcnet-js/client-rpc" "1.1.6"
+    "@parcnet-js/podspec" "1.1.3"
 
 "@pcd/eslint-config-custom@0.13.0":
   version "0.13.0"
