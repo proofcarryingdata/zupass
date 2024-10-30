@@ -291,19 +291,19 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
   //   includeOwnerV3: false,
   //   includeOwnerV4: true
   // },
-  {
-    maxObjects: 2,
-    maxEntries: 20,
-    merkleMaxDepth: 6,
-    maxNumericValues: 10,
-    maxEntryInequalities: 10,
-    maxLists: 3,
-    maxListElements: 20,
-    maxTuples: 3,
-    tupleArity: 3,
-    includeOwnerV3: false,
-    includeOwnerV4: true
-  },
+  // {
+  //   maxObjects: 2,
+  //   maxEntries: 20,
+  //   merkleMaxDepth: 6,
+  //   maxNumericValues: 10,
+  //   maxEntryInequalities: 10,
+  //   maxLists: 3,
+  //   maxListElements: 20,
+  //   maxTuples: 3,
+  //   tupleArity: 3,
+  //   includeOwnerV3: false,
+  //   includeOwnerV4: true
+  // },
   // 30 entries
   // {
   //   maxObjects: 2,
@@ -318,19 +318,19 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
   //   includeOwnerV3: false,
   //   includeOwnerV4: true
   // },
-  {
-    maxObjects: 2,
-    maxEntries: 30,
-    merkleMaxDepth: 6,
-    maxNumericValues: 15,
-    maxEntryInequalities: 10,
-    maxLists: 2,
-    maxListElements: 50,
-    maxTuples: 2,
-    tupleArity: 3,
-    includeOwnerV3: false,
-    includeOwnerV4: true
-  },
+  // {
+  //   maxObjects: 2,
+  //   maxEntries: 30,
+  //   merkleMaxDepth: 6,
+  //   maxNumericValues: 15,
+  //   maxEntryInequalities: 10,
+  //   maxLists: 2,
+  //   maxListElements: 50,
+  //   maxTuples: 2,
+  //   tupleArity: 3,
+  //   includeOwnerV3: false,
+  //   includeOwnerV4: true
+  // },
   // 48 entries
   // Kitchen sink config
   // {
@@ -377,19 +377,19 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
   //   includeOwnerV3: false,
   //   includeOwnerV4: true
   // },
-  {
-    maxObjects: 3,
-    maxEntries: 10,
-    merkleMaxDepth: 6,
-    maxNumericValues: 4,
-    maxEntryInequalities: 2,
-    maxLists: 2,
-    maxListElements: 20,
-    maxTuples: 2,
-    tupleArity: 2,
-    includeOwnerV3: false,
-    includeOwnerV4: true
-  },
+  // {
+  //   maxObjects: 3,
+  //   maxEntries: 10,
+  //   merkleMaxDepth: 6,
+  //   maxNumericValues: 4,
+  //   maxEntryInequalities: 2,
+  //   maxLists: 2,
+  //   maxListElements: 20,
+  //   maxTuples: 2,
+  //   tupleArity: 2,
+  //   includeOwnerV3: false,
+  //   includeOwnerV4: true
+  // },
   // 20 entries
   // {
   //   maxObjects: 3,
@@ -404,19 +404,19 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
   //   includeOwnerV3: false,
   //   includeOwnerV4: true
   // },
-  {
-    maxObjects: 3,
-    maxEntries: 20,
-    merkleMaxDepth: 6,
-    maxNumericValues: 20,
-    maxEntryInequalities: 10,
-    maxLists: 3,
-    maxListElements: 50,
-    maxTuples: 3,
-    tupleArity: 3,
-    includeOwnerV3: false,
-    includeOwnerV4: true
-  },
+  // {
+  //   maxObjects: 3,
+  //   maxEntries: 20,
+  //   merkleMaxDepth: 6,
+  //   maxNumericValues: 10,
+  //   maxEntryInequalities: 5,
+  //   maxLists: 3,
+  //   maxListElements: 50,
+  //   maxTuples: 3,
+  //   tupleArity: 3,
+  //   includeOwnerV3: false,
+  //   includeOwnerV4: true
+  // },
   // 30 entries
   // {
   //   maxObjects: 3,
@@ -444,7 +444,7 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
     tupleArity: 3,
     includeOwnerV3: false,
     includeOwnerV4: true
-  },
+  }
   // 45 entries
   // Kitchen sink config
   // {
@@ -491,19 +491,19 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
   //   includeOwnerV3: false,
   //   includeOwnerV4: true
   // },
-  {
-    maxObjects: 5,
-    maxEntries: 10,
-    merkleMaxDepth: 5,
-    maxNumericValues: 5,
-    maxEntryInequalities: 5,
-    maxLists: 2,
-    maxListElements: 20,
-    maxTuples: 2,
-    tupleArity: 3,
-    includeOwnerV3: false,
-    includeOwnerV4: true
-  },
+  // {
+  //   maxObjects: 5,
+  //   maxEntries: 10,
+  //   merkleMaxDepth: 5,
+  //   maxNumericValues: 5,
+  //   maxEntryInequalities: 5,
+  //   maxLists: 2,
+  //   maxListElements: 20,
+  //   maxTuples: 2,
+  //   tupleArity: 3,
+  //   includeOwnerV3: false,
+  //   includeOwnerV4: true
+  // },
   // 20 entries
   // {
   //   maxObjects: 5,
@@ -532,19 +532,19 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
   //   includeOwnerV3: false,
   //   includeOwnerV4: true
   // },
-  {
-    maxObjects: 5,
-    maxEntries: 30,
-    merkleMaxDepth: 6,
-    maxNumericValues: 10,
-    maxEntryInequalities: 5,
-    maxLists: 3,
-    maxListElements: 100,
-    maxTuples: 2,
-    tupleArity: 3,
-    includeOwnerV3: false,
-    includeOwnerV4: true
-  },
+  // {
+  //   maxObjects: 5,
+  //   maxEntries: 30,
+  //   merkleMaxDepth: 6,
+  //   maxNumericValues: 10,
+  //   maxEntryInequalities: 5,
+  //   maxLists: 3,
+  //   maxListElements: 100,
+  //   maxTuples: 2,
+  //   tupleArity: 3,
+  //   includeOwnerV3: false,
+  //   includeOwnerV4: true
+  // },
   // Kitchen sink config
   // {
   //   maxObjects: 5,
@@ -619,19 +619,19 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
   //   includeOwnerV3: false,
   //   includeOwnerV4: true
   // },
-  {
-    maxObjects: 10,
-    maxEntries: 20,
-    merkleMaxDepth: 6,
-    maxNumericValues: 20,
-    maxEntryInequalities: 10,
-    maxLists: 2,
-    maxListElements: 50,
-    maxTuples: 2,
-    tupleArity: 3,
-    includeOwnerV3: false,
-    includeOwnerV4: true
-  }
+  // {
+  //   maxObjects: 10,
+  //   maxEntries: 20,
+  //   merkleMaxDepth: 6,
+  //   maxNumericValues: 20,
+  //   maxEntryInequalities: 10,
+  //   maxLists: 2,
+  //   maxListElements: 50,
+  //   maxTuples: 2,
+  //   tupleArity: 3,
+  //   includeOwnerV3: false,
+  //   includeOwnerV4: true
+  // }
   // 30 entries
   // {
   //   maxObjects: 10,
