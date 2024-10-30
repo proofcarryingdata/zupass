@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.json",
   "files": ["service-worker.ts", "../sharedConstants.ts"],
   "compilerOptions": {
-    "lib": ["ES2020", "DOM", "WebWorker"]
+    "lib": ["ES2020", "DOM", "WebWorker"],
+    "inlineSourceMap": true
   }
 }

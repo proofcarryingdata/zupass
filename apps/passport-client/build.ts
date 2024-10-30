@@ -5,6 +5,7 @@ import { build, BuildOptions, context } from "esbuild";
 import express from "express";
 import fs from "fs";
 import Handlebars from "handlebars";
+import http from "http";
 import https from "https";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
@@ -31,6 +32,13 @@ const define = {
     ? {
         "process.env.ROLLBAR_ENV_NAME": JSON.stringify(
           process.env.ROLLBAR_ENV_NAME
+        )
+      }
+    : {}),
+  ...(process.env.ENABLE_LOCAL_DEV_SERVICE_WORKER !== undefined
+    ? {
+        "process.env.ENABLE_LOCAL_DEV_SERVICE_WORKER": JSON.stringify(
+          process.env.ENABLE_LOCAL_DEV_SERVICE_WORKER
         )
       }
     : {}),
@@ -198,11 +206,93 @@ async function run(command: string): Promise<void> {
           console.log(`Serving Zupass client on https://dev.local:${port}`);
         });
       } else {
-        const { host } = await ctx.serve({
+        // start the esbuild server on a random port. this is the process
+        // that watches the source files, rebuilds them, and serves/hosts
+        // the built artifacts over HTTP. this is NOT the server that
+        // developers will be hitting with their browsers during local
+        // development. for that, we run a proxy server on port 3000 that
+        // forwards requests to the esbuild server. The reason we do that
+        // is so that we can also intercept requests to the one-click-preview
+        // page, to emulate how it will behave in production. This is useful
+        // because it allows developers to test the url-rewritten one-click-preview
+        // flow in local development, which in particular lets them test the
+        // service worker's offline caching behavior.
+        const { host, port: hiddenPort } = await ctx.serve({
           servedir: "public",
-          port,
           host: "0.0.0.0"
         });
+
+        // start a proxy server on port 3000
+        http
+          .createServer(async (req, res) => {
+            const url = new URL(req.url ?? "/", `http://${req.headers.host}`);
+
+            // forward one-click-preview requests to the local passport-server/podbox-server
+            if (url.pathname.startsWith("/one-click-preview")) {
+              if (req.url?.includes("?slow")) {
+                const delaySeconds = 30;
+                console.log(
+                  `proxying to passport server - simulating slow response ${delaySeconds}s - ${url.pathname}`
+                );
+                await sleep(1000 * delaySeconds);
+                console.log(
+                  `proxying to passport server - continuing slow response ${delaySeconds}s - ${url.pathname}`
+                );
+              } else {
+                console.log(
+                  `proxying to passport server - not slow response - ${url.pathname}`
+                );
+              }
+
+              const proxyReq = http.request(
+                {
+                  hostname: host,
+                  port: 3002,
+                  path: "/generic-issuance" + req.url,
+                  method: req.method,
+                  headers: req.headers
+                },
+                (proxyRes) => {
+                  res.writeHead(proxyRes.statusCode ?? 200, proxyRes.headers);
+                  proxyRes.pipe(res, { end: true });
+                }
+              );
+
+              proxyReq.on("error", (err) => {
+                console.error(
+                  "Error proxying to passport server:",
+                  err.message
+                );
+                res.writeHead(502, { "Content-Type": "text/plain" });
+                res.end("Failed to connect to passport server");
+              });
+
+              // Forward the body of the request to esbuild
+              req.pipe(proxyReq, { end: true });
+
+              return;
+            }
+
+            // Forward each incoming request to esbuild
+            const proxyReq = http.request(
+              {
+                hostname: host,
+                port: hiddenPort,
+                path: req.url,
+                method: req.method,
+                headers: req.headers
+              },
+              (proxyRes) => {
+                res.writeHead(proxyRes.statusCode ?? 200, proxyRes.headers);
+                proxyRes.pipe(res, { end: true });
+              }
+            );
+
+            // Forward the body of the request to esbuild
+            req.pipe(proxyReq, { end: true });
+          })
+          .listen(3000);
+
         console.log(`Serving Zupass client on ${host}:${port}`);
       }
 
@@ -239,4 +329,8 @@ function copyGPCArtifacts(): void {
 function clearBuildDirectory(outDir: string): void {
   fs.rmSync(outDir, { recursive: true, force: true });
   console.log(`Cleared build directory: ${outDir}`);
+}
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }

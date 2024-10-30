@@ -305,6 +305,34 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 });
 
 /**
+ * This is called when the page sends a message to the service worker.
+ * We use this only to pre-populate the cache with the url that the page
+ * is currently on, which is only used by the one-click-preview page.
+ *
+ * See apps/passport-server/resources/one-click-page/index.html
+ */
+addEventListener("message", async (event) => {
+  interface ServiceWorkerMessage {
+    action: string;
+    url: string;
+  }
+
+  try {
+    const parsedRequest = JSON.parse(event.data) as ServiceWorkerMessage;
+    switch (parsedRequest.action) {
+      case "cache":
+        const set = new Set<string>([parsedRequest.url]);
+        await addResourcesToCache(EPHEMERAL_CACHE_NAME, set);
+        break;
+      default:
+        swLog.V(`unknown action: ${parsedRequest.action}`);
+    }
+  } catch (e) {
+    swLog.V(`error handling posted message: ${event.data}: ${e}`);
+  }
+});
+
+/**
  * Sets up a promise which will throw after a timeout expires.  The promise
  * is never fulfilled, only rejected.  The timeout is configured based on
  * the expected network conditions.

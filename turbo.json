@@ -241,6 +241,7 @@
     "LOCAL_FILE_SERVICE_ENABLED",
     "SELF_HOSTED_PODBOX_MODE",
     "GENERIC_ISSUANCE_TEST_MODE",
+    "ENABLE_LOCAL_DEV_SERVICE_WORKER",
     "//// add env vars above this line ////"
   ]
 }
