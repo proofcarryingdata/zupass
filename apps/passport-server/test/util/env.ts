@@ -51,7 +51,8 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   ACCOUNT_RESET_RATE_LIMIT_DISABLED: undefined,
   TICKET_ISSUANCE_CUTOFF_DATE: undefined,
   GENERIC_RATE_LIMIT_DISABLED: undefined,
-  STYTCH_BYPASS: undefined
+  STYTCH_BYPASS: undefined,
+  GENERIC_ISSUANCE_TEST_MODE: "true"
 });
 
 export async function overrideEnvironment(

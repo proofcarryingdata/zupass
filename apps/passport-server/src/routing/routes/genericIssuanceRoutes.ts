@@ -1,5 +1,6 @@
 import {
   ActionConfigResponseValue,
+  GenericIssuanceClearPipelineCacheRequest,
   GenericIssuanceDeletePipelineResponseValue,
   GenericIssuanceFetchPretixEventsRequest,
   GenericIssuanceFetchPretixEventsResponseValue,
@@ -27,11 +28,14 @@ import {
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { sleep } from "@pcd/util";
 import express from "express";
+import fs from "fs";
 import { sha256 } from "js-sha256";
+import Mustache from "mustache";
+import path from "path";
+import * as QRCode from "qrcode";
 import urljoin from "url-join";
 import { PipelineCheckinDB } from "../../database/queries/pipelineCheckinDB";
 import { namedSqlTransaction, sqlTransaction } from "../../database/sqlQuery";
-import { GenericIssuanceService } from "../../services/generic-issuance/GenericIssuanceService";
 import {
   getAllGenericIssuanceHTTPQuery,
   getAllGenericIssuanceQuery,
@@ -44,6 +48,7 @@ import { createQueryUrl } from "../../services/telemetryService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { IS_PROD } from "../../util/isProd";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
 import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
@@ -53,17 +58,6 @@ export function initGenericIssuanceRoutes(
   { genericIssuanceService }: GlobalServices
 ): void {
   logger("[INIT] initializing generic issuance routes");
-
-  /**
-   * Throws if we don't have an instance of {@link GenericIssuanceService}.
-   */
-  function checkGenericIssuanceServiceStarted(
-    issuanceService: GenericIssuanceService | null
-  ): asserts issuanceService {
-    if (!issuanceService) {
-      throw new PCDHTTPError(503, "generic issuance service not instantiated");
-    }
-  }
 
   app.get("/generic-issuance/status", async (req, res) => {
     if (genericIssuanceService) {
@@ -79,7 +73,7 @@ export function initGenericIssuanceRoutes(
    * P.S. GraphQL would be so nice.
    */
   app.post("/generic-issuance/api/self", async (req, res) => {
-    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    checkExistsForRoute(genericIssuanceService);
     const user = await sqlTransaction(context.dbPool, (client) =>
       genericIssuanceService.authSession(client, req)
     );
@@ -96,7 +90,7 @@ export function initGenericIssuanceRoutes(
   });
 
   app.get("/generic-issuance/api/voucher-stats/:key", async (req, res) => {
-    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    checkExistsForRoute(genericIssuanceService);
 
     if (
       checkUrlParam(req, "key") !== process.env.VOUCHER_API_KEY ||
@@ -190,7 +184,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/feed/:pipelineID/:feedId",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
       const feedId = checkUrlParam(req, "feedId");
       const request = req.body as PollFeedRequest;
@@ -216,7 +210,7 @@ export function initGenericIssuanceRoutes(
    * is visible to the logged in user
    */
   app.post("/generic-issuance/api/pipeline-info", async (req, res) => {
-    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    checkExistsForRoute(genericIssuanceService);
     const result = await namedSqlTransaction(
       context.dbPool,
       "/generic-issuance/api/pipeline-info",
@@ -240,7 +234,7 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/feed/:pipelineID/:feedId",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
       const feedId = checkUrlParam(req, "feedId");
       const result = await genericIssuanceService.handleListFeed(
@@ -257,7 +251,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/check-in",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const request = req.body as PodboxTicketActionRequest;
       const result = await genericIssuanceService.handleCheckIn(request);
       res.json(result satisfies PodboxTicketActionResponseValue);
@@ -270,7 +264,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/pre-check",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const request = req.body as PodboxTicketActionPreCheckRequest;
       const result = await genericIssuanceService.handlePreCheck(request);
       res.json(result satisfies ActionConfigResponseValue);
@@ -280,7 +274,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/user/send-email/:email",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const email = checkUrlParam(req, "email");
       if (process.env.STYTCH_BYPASS === "true") {
         if (IS_PROD) {
@@ -308,17 +302,14 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/get-all-user-pipelines",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const result = await namedSqlTransaction(
         context.dbPool,
         "/generic-issuance/api/get-all-user-pipelines",
         async (client) => {
           const user = await genericIssuanceService.authSession(client, req);
           traceUser(user);
-          return genericIssuanceService.getAllUserPipelineDefinitions(
-            client,
-            user
-          );
+          return genericIssuanceService.getAllUserPipelineDefinitions(user);
         }
       );
       res.json(
@@ -333,7 +324,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/get-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const result = await namedSqlTransaction(
         context.dbPool,
         "/generic-issuance/api/get-pipeline/:id",
@@ -362,7 +353,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/upsert-pipeline",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const result = await namedSqlTransaction(
         context.dbPool,
         "/generic-issuance/api/upsert-pipeline",
@@ -390,7 +381,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/delete-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const result = await namedSqlTransaction(
         context.dbPool,
         "/generic-issuance/api/delete-pipeline/:id",
@@ -405,6 +396,28 @@ export function initGenericIssuanceRoutes(
         }
       );
       res.json(result satisfies GenericIssuanceDeletePipelineResponseValue);
+    }
+  );
+
+  app.post(
+    `/generic-issuance/api/clear-pipeline-cache`,
+    async (req: express.Request, res: express.Response) => {
+      checkExistsForRoute(genericIssuanceService);
+      const reqBody = req.body as GenericIssuanceClearPipelineCacheRequest;
+      await namedSqlTransaction(
+        context.dbPool,
+        "/generic-issuance/api/clear-pipeline-cache",
+        async (client) => {
+          const user = await genericIssuanceService.authSession(client, req);
+          await genericIssuanceService.clearPipelineCache(
+            client,
+            reqBody.pipelineId,
+            user
+          );
+        }
+      );
+
+      res.json({});
     }
   );
 
@@ -458,7 +471,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/fetch-pretix-events",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const result = await namedSqlTransaction(
         context.dbPool,
         "/generic-issuance/api/fetch-pretix-events",
@@ -485,7 +498,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/fetch-pretix-products",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const user = await sqlTransaction(context.dbPool, (client) =>
         genericIssuanceService.authSession(client, req)
       );
@@ -511,7 +524,7 @@ export function initGenericIssuanceRoutes(
   );
 
   app.post("/edgecity/balances", async (req, res) => {
-    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    checkExistsForRoute(genericIssuanceService);
     await namedSqlTransaction(
       context.dbPool,
       "/edgecity/balances",
@@ -527,7 +540,7 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/semaphore/:pipelineId/:groupId",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const pipelineId = checkUrlParam(req, "pipelineId");
       const groupId = checkUrlParam(req, "groupId");
 
@@ -546,7 +559,7 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/semaphore/:pipelineId/:groupId/latest-root",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const pipelineId = checkUrlParam(req, "pipelineId");
       const groupId = checkUrlParam(req, "groupId");
 
@@ -566,7 +579,7 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/semaphore/:pipelineId/:groupId/:root",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const pipelineId = checkUrlParam(req, "pipelineId");
       const groupId = checkUrlParam(req, "groupId");
       const root = checkUrlParam(req, "root");
@@ -588,7 +601,7 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/semaphore/:pipelineId/:groupId/valid/:root",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const pipelineId = checkUrlParam(req, "pipelineId");
       const groupId = checkUrlParam(req, "groupId");
       const root = checkUrlParam(req, "root");
@@ -609,7 +622,7 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/semaphore-groups/:pipelineId",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const pipelineId = checkUrlParam(req, "pipelineId");
 
       const result =
@@ -632,7 +645,7 @@ export function initGenericIssuanceRoutes(
     async (req, res) => {
       logger("[PODBOX] handling one-click-emails:", req.params);
 
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
       const pipelineId = checkUrlParam(req, "pipelineId");
       const apiKey = checkUrlParam(req, "apiKey");
 
@@ -686,7 +699,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/send-email",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
 
       if (process.env.PIPELINE_EMAIL_SEND !== "true") {
         throw new PCDHTTPError(
@@ -734,7 +747,7 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/ticket-previews/:email/:orderCode/:pipelineId?",
     async (req, res) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkExistsForRoute(genericIssuanceService);
 
       const email = checkUrlParam(req, "email");
       const orderCode = checkUrlParam(req, "orderCode");
@@ -747,6 +760,61 @@ export function initGenericIssuanceRoutes(
       );
 
       res.json(result satisfies TicketPreviewResultValue);
+    }
+  );
+
+  app.get(
+    "/generic-issuance/one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?",
+    async (req, res) => {
+      checkExistsForRoute(genericIssuanceService);
+      const email = checkUrlParam(req, "email");
+      const code = checkUrlParam(req, "code");
+      const pipeline = req.params.pipelineId;
+
+      const getTicketImage = (
+        ticketData: TicketPreviewResultValue["tickets"][number]
+      ): string | undefined => {
+        const imageToRender = ticketData?.eventStartDate
+          ? ticketData.qrCodeOverrideImageUrl
+          : ticketData?.imageUrl;
+        return imageToRender;
+      };
+      const result = await genericIssuanceService.handleGetTicketPreview(
+        email,
+        code,
+        pipeline
+      );
+      const ticket = { ...result.tickets[0] };
+
+      const absPath = path.resolve("./resources/one-click-page/index.html");
+      const file = fs.readFileSync(absPath).toString();
+
+      const qrCodeData =
+        getTicketImage(ticket) ??
+        (ticket.ticketSecret
+          ? await QRCode.toDataURL(ticket.ticketSecret, {
+              type: "image/webp",
+              scale: 10,
+              margin: 0
+            })
+          : "");
+
+      // filter out add-ons
+      const ticketsCount = result.tickets.filter((t) => !t.isAddOn).length;
+
+      const rendered = Mustache.render(file, {
+        eventName: ticket.eventName.toUpperCase(),
+        attendeeName: ticket.attendeeName.toUpperCase(),
+        attendeeEmail: ticket.attendeeEmail,
+        ticketName: ticket.ticketName,
+        eventLocation: ticket.eventLocation,
+        qr: qrCodeData,
+        backgroundImage: ticket.imageUrl,
+        count: ticketsCount,
+        isMoreThanOne: ticketsCount > 1,
+        zupassUrl: process.env.PASSPORT_CLIENT_URL
+      });
+      res.send(rendered);
     }
   );
 }

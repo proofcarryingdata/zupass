@@ -1,11 +1,11 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDArgs,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import * as path from "path";
 import { TimerCase } from "../types";
 
@@ -19,7 +19,7 @@ const wasmFilePath = path.join(
 );
 
 async function setupProveArgs(): Promise<SemaphoreSignaturePCDArgs> {
-  const identityV3 = new Identity();
+  const identityV3 = new IdentityV3();
   const identityPCD = await SemaphoreIdentityPCDPackage.serialize(
     await SemaphoreIdentityPCDPackage.prove({ identityV3 })
   );

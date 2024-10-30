@@ -9,7 +9,10 @@ import {
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
 import { isEmailPCD } from "@pcd/email-pcd";
-import { PCDGetRequest } from "@pcd/passport-interface";
+import {
+  PCDGetRequest,
+  requestGenericIssuanceTicketPreviews
+} from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
@@ -23,13 +26,22 @@ import {
   useRef,
   useState
 } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams
+} from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, {
   FlattenSimpleInterpolation,
   css,
   keyframes
 } from "styled-components";
+import { ZappButton } from "../../../components/screens/ZappScreens/ZappButton";
+import { ZappButtonsContainer } from "../../../components/screens/ZappScreens/ZappButtonsContainer";
+import { ZappFullScreen } from "../../../components/screens/ZappScreens/ZappFullScreen";
+import { ZappScreen } from "../../../components/screens/ZappScreens/ZappScreen";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
 import {
@@ -48,11 +60,18 @@ import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
 import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
 import { NewLoader } from "../../shared/NewLoader";
+import { SwipeViewContainer } from "../../shared/SwipeViewContainer";
 import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
-import { hideScrollCSS, isMobile, useOrientation } from "../../shared/utils";
+import {
+  hideScrollCSS,
+  isMobile,
+  replaceDotWithSlash,
+  useOrientation
+} from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
+import { appConfig } from "../../../src/appConfig";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -140,11 +159,6 @@ const Container = styled.div<{ ticketsAmount: number }>`
   width: fit-content;
   gap: ${({ ticketsAmount }): number =>
     ticketsAmount > 1 ? 40 + BUTTONS_CONTAINER_HEIGHT : 20}px;
-`;
-
-const SwipeViewContainer = styled.div`
-  position: relative;
-  width: min(100vw, 420px);
 `;
 
 const disabledCSS = css`
@@ -355,29 +369,39 @@ const NoUpcomingEventsState = ({
     checkScrollability();
   }, [pods]);
 
-  useLayoutEffect(() => {
-    // Restore scroll position when list is shown again
-    if (listContainerRef.current) {
-      const folder = params.get("folder");
-      // checks if url contains folder route, and if so, scrolls to it
-      if (folder) {
-        const decodedFolderId = decodeURI(folder);
-        const folderContainer = document.getElementById(decodedFolderId);
-        if (folderContainer) {
-          listContainerRef.current.scrollTop = folderContainer.offsetTop;
-        }
-      }
-    }
-
-    // Check scrollability after layout changes
-    checkScrollability();
-  }, [params]);
-
   const noPods =
     pods
       .getAll()
       .filter((pcd) => !isEmailPCD(pcd) && !isSemaphoreIdentityPCD(pcd))
       .length === 0;
+
+  useLayoutEffect(() => {
+    // Restore scroll position when list is shown again
+    (async (): Promise<void> => {
+      if (listContainerRef.current) {
+        const folder = params.get("folder");
+        // checks if url contains folder route, and if so, scrolls to it
+        if (folder) {
+          const decodedFolderId = replaceDotWithSlash(decodeURI(folder));
+          const folderContainer = document.getElementById(decodedFolderId);
+          setExpandedGroupsIds((old) => {
+            console.log(old);
+            return {
+              ...old,
+              [decodedFolderId]: true
+            };
+          });
+          await nextFrame();
+          if (folderContainer) {
+            console.log(folderContainer.scrollTop);
+            listContainerRef.current.scroll({ top: folderContainer.offsetTop });
+          }
+        }
+      }
+    })();
+    // Check scrollability after layout changes
+    checkScrollability();
+  }, [noPods, params, setExpandedGroupsIds]);
 
   return (
     <OuterContainer>
@@ -425,6 +449,7 @@ const NoUpcomingEventsState = ({
             ref={listContainerRef}
             onScroll={(e) => {
               const scrollTop = e.currentTarget.scrollTop;
+              console.log(scrollTop);
               if (scrollTop === 0) {
                 // start timer
                 const id = setTimeout(() => {
@@ -473,10 +498,11 @@ export const NewHomeScreen = (): ReactElement => {
   const navigate = useNavigate();
   const isLoadedPCDs = useIsSyncSettled();
   const [params, setParams] = useSearchParams();
+  const [zappUrl, setZappUrl] = useState("");
   const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
-
+  const regularParams = useParams();
   const noPods =
     collection
       .getAll()
@@ -489,7 +515,7 @@ export const NewHomeScreen = (): ReactElement => {
     (orientation.type === "landscape-primary" ||
       orientation.type === "landscape-secondary");
   useEffect(() => {
-    if (!self) {
+    if (!self && !location.pathname.includes("one-click-preview")) {
       navigate("/login", { replace: true });
     }
   });
@@ -500,18 +526,32 @@ export const NewHomeScreen = (): ReactElement => {
     if (!isLoadedPCDs) return;
 
     const maybeExistingFolder = params.get("folder");
-    if (
-      maybeExistingFolder &&
-      collection.getFoldersInFolder("").includes(decodeURI(maybeExistingFolder))
-    ) {
-      if (!showPodsList) {
-        dispatch({
-          type: "set-bottom-modal",
-          modal: { modalType: "pods-collection" }
-        });
+    if (maybeExistingFolder) {
+      // Check if folder matches any zapp name (case insensitive)
+      const zappEntry = Object.entries(appConfig.embeddedZapps).find(
+        ([key]) => key.toLowerCase() === maybeExistingFolder.toLowerCase()
+      );
+      if (zappEntry) {
+        setZappUrl(zappEntry[1]);
+        return;
       }
-      return;
+
+      // Original folder check logic
+      if (
+        collection
+          .getAllFolderNames()
+          .includes(replaceDotWithSlash(decodeURI(maybeExistingFolder)))
+      ) {
+        if (!showPodsList) {
+          dispatch({
+            type: "set-bottom-modal",
+            modal: { modalType: "pods-collection" }
+          });
+        }
+        return;
+      }
     }
+
     if (location.pathname.includes("prove")) {
       const params = new URLSearchParams(location.search);
       const request = JSON.parse(
@@ -526,14 +566,71 @@ export const NewHomeScreen = (): ReactElement => {
     }
     if (params.size > 0) setParams("");
   }, [
+    regularParams,
     params,
     collection,
     setParams,
     isLoadedPCDs,
     location,
     dispatch,
-    showPodsList
+    showPodsList,
+    setZappUrl
   ]);
+  useLayoutEffect(() => {
+    const handleOneClick = async (): Promise<void> => {
+      if (location.pathname.includes("one-click-preview")) {
+        const { email, code, targetFolder, pipelineId, serverUrl } =
+          regularParams;
+        if (!email || !code) return;
+
+        if (self) {
+          if (!self.emails?.includes(email as string)) {
+            alert(
+              `You are already logged in as ${
+                self.emails.length === 1
+                  ? self.emails?.[0]
+                  : "an account that owns the following email addresses: " +
+                    self.emails.join(", ")
+              }. Please log out and try navigating to the link again.`
+            );
+            window.location.hash = "#/";
+            return;
+          }
+        }
+        const previewRes = await requestGenericIssuanceTicketPreviews(
+          serverUrl ?? appConfig.zupassServer,
+          email,
+          code,
+          pipelineId
+        );
+
+        await dispatch({
+          type: "one-click-login",
+          email,
+          code,
+          targetFolder
+        });
+        const zappEntry = Object.entries(appConfig.embeddedZapps).find(
+          ([key]) => key.toLowerCase() === targetFolder?.toLowerCase()
+        );
+        if (zappEntry) {
+          setZappUrl(zappEntry[1]);
+          return;
+        }
+        if (previewRes.success) {
+          dispatch({
+            type: "scroll-to-ticket",
+            scrollTo: {
+              attendee: previewRes.value.tickets[0].attendeeEmail,
+              eventId: previewRes.value.tickets[0].eventId
+            }
+          });
+        }
+      }
+    };
+    handleOneClick();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {
@@ -553,6 +650,7 @@ export const NewHomeScreen = (): ReactElement => {
         const elToScroll = document.getElementById(
           scrollTo.eventId + scrollTo.attendee
         );
+
         window.scroll({
           top: elToScroll?.offsetTop,
           left: elToScroll?.offsetLeft
@@ -584,7 +682,19 @@ export const NewHomeScreen = (): ReactElement => {
     );
   }
 
-  // if the user is invalid we show empty card and trigger a session invalid modal
+  if (zappUrl) {
+    return (
+      <ZappFullScreen
+        url={zappUrl}
+        onReturn={() => {
+          setZappUrl("");
+          params.delete("folder");
+          setParams(params);
+        }}
+      />
+    );
+  }
+
   return (
     <AppContainer
       bg="gray"
@@ -632,55 +742,71 @@ export const NewHomeScreen = (): ReactElement => {
                       ticketWidth={cardWidth}
                       address={eventDetails.eventLocation}
                       title={eventDetails.eventName}
-                      ticketDate={
-                        eventDetails.eventStartDate
-                          ? new Date(eventDetails.eventStartDate).toDateString()
-                          : undefined
-                      }
                       imgSource={eventDetails.imageUrl}
                       ticketCount={packs.length}
                       cardColor={i % 2 === 0 ? "purple" : "orange"}
                     />
-                    <TicketsContainer
-                      $width={cardWidth}
-                      key={packs.map((pack) => pack.eventTicket.id).join("-")}
-                    >
-                      {packs.map((pack) => {
-                        return (
-                          <CardBody
-                            showDownloadButton={true}
-                            key={pack.eventName}
-                            addOns={
-                              pack.addOns.length > 0
-                                ? {
-                                    text: `View ${pack.addOns.length} add-on items`,
-                                    onClick(): void {
-                                      dispatch({
-                                        type: "set-bottom-modal",
-                                        modal: {
-                                          addOns: pack.addOns,
-                                          modalType: "ticket-add-ons"
-                                        }
-                                      });
+                    <ZappsAndTicketsContainer>
+                      {Object.keys(appConfig.embeddedZapps).length && (
+                        <ZappButtonsContainer>
+                          {Object.entries(appConfig.embeddedZapps).map(
+                            ([zappName, url]) => (
+                              <ZappButton
+                                key={zappName}
+                                onClick={() => {
+                                  setZappUrl(url);
+                                  setParams({ folder: zappName });
+                                }}
+                              >
+                                <ZappScreen
+                                  url={new URL("button", url).toString()}
+                                />
+                              </ZappButton>
+                            )
+                          )}
+                        </ZappButtonsContainer>
+                      )}
+                      <TicketsContainer
+                        $width={cardWidth}
+                        key={packs.map((pack) => pack.eventTicket.id).join("-")}
+                      >
+                        {packs.map((pack) => {
+                          return (
+                            <CardBody
+                              showDownloadButton={true}
+                              key={pack.eventName}
+                              addOns={
+                                pack.addOns.length > 0
+                                  ? {
+                                      text: `View ${pack.addOns.length} add-on items`,
+                                      onClick(): void {
+                                        dispatch({
+                                          type: "set-bottom-modal",
+                                          modal: {
+                                            addOns: pack.addOns,
+                                            modalType: "ticket-add-ons"
+                                          }
+                                        });
+                                      }
                                     }
-                                  }
-                                : undefined
-                            }
-                            ref={(ref) => {
-                              if (!ref) return;
-                              const group = ticketsRef.current.get(eventId);
-                              if (!group) {
-                                ticketsRef.current.set(eventId, [ref]);
-                                return;
+                                  : undefined
                               }
-                              group.push(ref);
-                            }}
-                            pcd={pack.eventTicket}
-                            isMainIdentity={false}
-                          />
-                        );
-                      })}
-                    </TicketsContainer>
+                              ref={(ref) => {
+                                if (!ref) return;
+                                const group = ticketsRef.current.get(eventId);
+                                if (!group) {
+                                  ticketsRef.current.set(eventId, [ref]);
+                                  return;
+                                }
+                                group.push(ref);
+                              }}
+                              pcd={pack.eventTicket}
+                              isMainIdentity={false}
+                            />
+                          );
+                        })}
+                      </TicketsContainer>
+                    </ZappsAndTicketsContainer>
                   </Container>
                 );
               })}
@@ -738,3 +864,9 @@ export const NewHomeScreen = (): ReactElement => {
     </AppContainer>
   );
 };
+
+export const ZappsAndTicketsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+`;

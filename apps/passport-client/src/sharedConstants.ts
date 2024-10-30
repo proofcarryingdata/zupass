@@ -28,7 +28,7 @@ export const OOM_ERROR_MESSAGE = "Out of memory";
 export const MAX_WIDTH_SCREEN = 420;
 
 // Environment variable configure how we fetch GPC artifacts, however we
-// default to fetching from the Zupass server rather than unpkg.
+// default to fetching from the Zupass server rather than jsdelivr.
 export const GPC_ARTIFACTS_CONFIG =
   process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined &&
   process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== ""

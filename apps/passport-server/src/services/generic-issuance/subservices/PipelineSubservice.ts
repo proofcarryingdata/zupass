@@ -30,14 +30,12 @@ import {
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
-import {
-  IPipelineDefinitionDB,
-  PipelineDefinitionDB
-} from "../../../database/queries/pipelineDefinitionDB";
+import { IPipelineDefinitionDB } from "../../../database/queries/pipelineDefinitionDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
+import { LocalFileService } from "../../LocalFileService";
 import { PagerDutyService } from "../../pagerDutyService";
 import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
@@ -70,10 +68,12 @@ export class PipelineSubservice {
   private userSubservice: UserSubservice;
   private executorSubservice: PipelineExecutorSubservice;
   private pipelineAPISubservice: PipelineAPISubservice;
+  private localFileService: LocalFileService | null;
 
   public constructor(
     context: ApplicationContext,
     pipelineAtomDB: IPipelineAtomDB,
+    pipelineDB: IPipelineDefinitionDB,
     consumerDB: IPipelineConsumerDB,
     userSubservice: UserSubservice,
     credentialSubservice: CredentialSubservice,
@@ -82,7 +82,7 @@ export class PipelineSubservice {
     rollbarService: RollbarService | null,
     instantiatePipelineArgs: InstantiatePipelineArgs
   ) {
-    this.pipelineDB = new PipelineDefinitionDB();
+    this.pipelineDB = pipelineDB;
     this.pipelineAtomDB = pipelineAtomDB;
     this.executorSubservice = new PipelineExecutorSubservice(
       this,
@@ -98,8 +98,10 @@ export class PipelineSubservice {
       context,
       consumerDB,
       this,
-      credentialSubservice
+      credentialSubservice,
+      instantiatePipelineArgs.localFileService
     );
+    this.localFileService = instantiatePipelineArgs.localFileService;
   }
 
   /**
@@ -210,10 +212,29 @@ export class PipelineSubservice {
    * which {@link PipelineExecutorSubservice} saves after each {@link Pipeline} load.
    */
   public async getLastLoadSummary(
-    client: PoolClient,
     id: string
   ): Promise<PipelineLoadSummary | undefined> {
-    return this.pipelineDB.getLastLoadSummary(client, id);
+    return this.pipelineDB.getLastLoadSummary(id);
+  }
+
+  public async saveLoadSummary(
+    id: string,
+    summary: PipelineLoadSummary | undefined
+  ): Promise<void> {
+    return this.pipelineDB.saveLoadSummary(id, summary);
+  }
+
+  public async resetToCache(pipelineId: string): Promise<void> {
+    const cached = await this.localFileService?.getCachedLoad(pipelineId);
+
+    if (cached) {
+      this.pipelineDB.saveLoadSummary(pipelineId, cached.summary);
+      await this.pipelineAtomDB.save(pipelineId, cached?.atoms);
+    }
+  }
+
+  public async clearAtoms(pipelineId: string): Promise<void> {
+    return this.pipelineAtomDB.clear(pipelineId);
   }
 
   /**
@@ -270,10 +291,24 @@ export class PipelineSubservice {
         );
       }
       await this.pipelineDB.deleteDefinition(client, pipelineId);
-      await this.pipelineDB.saveLoadSummary(client, pipelineId, undefined);
+      await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
       await this.pipelineAtomDB.clear(pipelineId);
       await this.executorSubservice.restartPipeline(client, pipelineId);
+      await this.localFileService?.clearPipelineCache(pipelineId);
     });
+  }
+
+  public async clearPipelineCache(
+    client: PoolClient,
+    user: PipelineUser,
+    pipelineId: string
+  ): Promise<void> {
+    const pipeline = await this.loadPipelineDefinition(client, pipelineId);
+    this.ensureUserHasPipelineDefinitionAccess(user, pipeline);
+    await this.localFileService?.clearPipelineCache(pipelineId);
+    await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
+    await this.pipelineAtomDB.clear(pipelineId);
+    await this.executorSubservice.restartPipeline(client, pipelineId);
   }
 
   public async getPipelineEditHistory(
@@ -334,6 +369,25 @@ export class PipelineSubservice {
     });
   }
 
+  /**
+   * For testing only. Will throw in prod.
+   */
+  public async performPipelineLoad(
+    pipelineId: string
+  ): Promise<PipelineLoadSummary> {
+    const pipelineSlot = await this.getPipelineSlot(pipelineId);
+
+    if (!pipelineSlot) {
+      throw new PCDHTTPError(400, `no pipeline slot for ${pipelineId}`);
+    }
+
+    if (this.executorSubservice.looping()) {
+      throw new PCDHTTPError(400, `pipeline ${pipelineId} is already loading`);
+    }
+
+    return this.executorSubservice.performPipelineLoad(pipelineSlot);
+  }
+
   public async handleSendPipelineEmail(
     client: PoolClient,
     pipelineId: string,
@@ -353,7 +407,6 @@ export class PipelineSubservice {
    * can see given their user type and in the future sharing permissions.
    */
   public async getAllUserPipelineDefinitions(
-    client: PoolClient,
     user: PipelineUser
   ): Promise<GenericIssuancePipelineListEntry[]> {
     return traced(
@@ -372,14 +425,16 @@ export class PipelineSubservice {
         return Promise.all(
           visiblePipelines.map(async (slot) => {
             const owner = slot.owner;
-            const summary = await this.getLastLoadSummary(
-              client,
-              slot.definition.id
-            );
+            const summary = await this.getLastLoadSummary(slot.definition.id);
             return {
               extraInfo: {
                 ownerEmail: owner?.email,
-                lastLoad: summary
+                loading: !!slot.loadPromise,
+                lastLoad: summary,
+                hasCachedLoad:
+                  (await this.localFileService?.hasCachedLoad(
+                    slot.definition.id
+                  )) ?? false
               },
               pipeline: slot.definition
             } satisfies GenericIssuancePipelineListEntry;
@@ -447,18 +502,6 @@ export class PipelineSubservice {
       pipeline.ownerUserId === user.id ||
       pipeline.editorUserIds.includes(user.id)
     );
-  }
-
-  /**
-   * Saves a {@link PipelineLoadSummary} to in-memory store for a {@link Pipeline}
-   * identified by the @param pipelineId.
-   */
-  public async saveLoadSummary(
-    client: PoolClient,
-    id: string,
-    summary: PipelineLoadSummary | undefined
-  ): Promise<void> {
-    await this.pipelineDB.saveLoadSummary(client, id, summary);
   }
 
   /**

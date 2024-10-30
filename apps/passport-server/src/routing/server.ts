@@ -7,8 +7,14 @@ import * as https from "https";
 import morgan from "morgan";
 import nocache from "nocache";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
-import { ApplicationContext, GlobalServices, Zupass } from "../types";
+import {
+  ApplicationContext,
+  GlobalServices,
+  ServerMode,
+  Zupass
+} from "../types";
 import { logger } from "../util/logger";
+import { getClusterPort } from "./middlewares/clusterMiddleware";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { respondWithError } from "./pcdHttpError";
 import { initAccountRoutes } from "./routes/accountRoutes";
@@ -35,7 +41,16 @@ export async function startHttpServer(
     server: http.Server;
     localEndpoint: string;
   }>((resolve, reject) => {
-    const port = parseInt(process.env.PORT ?? "3002", 10);
+    let port = parseInt(process.env.PORT ?? "3002", 10);
+
+    if (context.mode === ServerMode.PARALLEL_CHILD) {
+      port = getClusterPort();
+    }
+
+    logger(
+      `[INIT] Starting HTTP server in mode ${context.mode} on port ${port}`
+    );
+
     if (isNaN(port)) {
       throw new Error("couldn't start http server, missing port");
     }

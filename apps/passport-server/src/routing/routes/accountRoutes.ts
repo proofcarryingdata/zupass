@@ -16,6 +16,8 @@ import express, { Request, Response } from "express";
 import { namedSqlTransaction } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
+import { checkExistsForRoute } from "../../util/util";
+import { clusterProxy } from "../middlewares/clusterMiddleware";
 import { checkBody, checkQueryParam, checkUrlParam } from "../params";
 
 export function initAccountRoutes(
@@ -34,17 +36,22 @@ export function initAccountRoutes(
    *
    * @todo access-control?
    */
-  app.get("/account/salt", async (req: Request, res: Response) => {
-    const email = normalizeEmail(checkQueryParam(req, "email"));
+  app.get(
+    "/account/salt",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const email = normalizeEmail(checkQueryParam(req, "email"));
 
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/account/salt",
-      (client) => userService.getSaltByEmail(client, email)
-    );
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/account/salt",
+        (client) => userService.getSaltByEmail(client, email)
+      );
 
-    res.send(result satisfies SaltResponseValue);
-  });
+      res.send(result satisfies SaltResponseValue);
+    }
+  );
 
   /**
    * Step 1 of account creation on Zupass.
@@ -68,25 +75,30 @@ export function initAccountRoutes(
    *
    * In the case that an email *was* successfully sent, just returns a 200 OK.
    */
-  app.post("/account/send-login-email", async (req: Request, res: Response) => {
-    const email = normalizeEmail(
-      checkBody<ConfirmEmailRequest, "email">(req, "email")
-    );
-    const force =
-      checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
+  app.post(
+    "/account/send-login-email",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const email = normalizeEmail(
+        checkBody<ConfirmEmailRequest, "email">(req, "email")
+      );
+      const force =
+        checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
 
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/account/send-login-email",
-      (client) => userService.handleSendTokenEmail(client, email, force)
-    );
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/account/send-login-email",
+        (client) => userService.handleSendTokenEmail(client, email, force)
+      );
 
-    if (result) {
-      res.status(200).json(result satisfies ConfirmEmailResponseValue);
-    } else {
-      res.sendStatus(200);
+      if (result) {
+        res.status(200).json(result satisfies ConfirmEmailResponseValue);
+      } else {
+        res.sendStatus(200);
+      }
     }
-  });
+  );
 
   /**
    * Step 2 of account creation.
@@ -95,54 +107,64 @@ export function initAccountRoutes(
    *
    * If the token is invalid, returns a 403 error.
    */
-  app.post("/account/verify-token", async (req: Request, res: Response) => {
-    const token = checkBody<VerifyTokenRequest, "token">(req, "token");
-    const email = checkBody<VerifyTokenRequest, "email">(req, "email");
+  app.post(
+    "/account/verify-token",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const token = checkBody<VerifyTokenRequest, "token">(req, "token");
+      const email = checkBody<VerifyTokenRequest, "email">(req, "email");
 
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/account/verify-token",
-      (client) => userService.handleVerifyToken(client, token, email)
-    );
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/account/verify-token",
+        (client) => userService.handleVerifyToken(client, token, email)
+      );
 
-    res.status(200).json(result);
-  });
+      res.status(200).json(result);
+    }
+  );
 
-  app.post("/account/one-click-login", async (req: Request, res: Response) => {
-    const email = checkBody<OneClickLoginRequest, "email">(req, "email");
-    const code = checkBody<OneClickLoginRequest, "code">(req, "code");
-    // we only need the v4 pubkey because the commitment is deriveable from it
-    // using the function `v4PublicKeyToCommitment`
-    const semaphore_v4_pubkey = checkBody<
-      OneClickLoginRequest,
-      "semaphore_v4_pubkey"
-    >(req, "semaphore_v4_pubkey");
-    // v3 commitment
-    const commitment = checkBody<OneClickLoginRequest, "commitment">(
-      req,
-      "commitment"
-    );
-    const encryptionKey = checkBody<OneClickLoginRequest, "encryptionKey">(
-      req,
-      "encryptionKey"
-    );
+  app.post(
+    "/account/one-click-login",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const email = checkBody<OneClickLoginRequest, "email">(req, "email");
+      const code = checkBody<OneClickLoginRequest, "code">(req, "code");
+      // we only need the v4 pubkey because the commitment is deriveable from it
+      // using the function `v4PublicKeyToCommitment`
+      const semaphore_v4_pubkey = checkBody<
+        OneClickLoginRequest,
+        "semaphore_v4_pubkey"
+      >(req, "semaphore_v4_pubkey");
+      // v3 commitment
+      const commitment = checkBody<OneClickLoginRequest, "commitment">(
+        req,
+        "commitment"
+      );
+      const encryptionKey = checkBody<OneClickLoginRequest, "encryptionKey">(
+        req,
+        "encryptionKey"
+      );
 
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/account/one-click-login",
-      (client) =>
-        userService.handleOneClickLogin(
-          client,
-          email,
-          code,
-          commitment,
-          semaphore_v4_pubkey,
-          encryptionKey
-        )
-    );
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/account/one-click-login",
+        (client) =>
+          userService.handleOneClickLogin(
+            client,
+            email,
+            code,
+            commitment,
+            semaphore_v4_pubkey,
+            encryptionKey
+          )
+      );
 
-    res.status(200).json(result);
-  });
+      res.status(200).json(result);
+    }
+  );
 
   /**
    * Step 3 of account creation.
@@ -165,42 +187,47 @@ export function initAccountRoutes(
    *
    * In the successful case, returns a {@link ZupassUserJson}.
    */
-  app.post("/account/new-participant", async (req: Request, res: Response) => {
-    const email = normalizeEmail(
-      checkBody<CreateNewUserRequest, "email">(req, "email")
-    );
-    const { salt, encryptionKey, autoRegister } =
-      req.body as CreateNewUserRequest as CreateNewUserRequest;
-    const token = checkBody<CreateNewUserRequest, "token">(req, "token");
-    // we only need the v4 pubkey because the commitment is deriveable from it
-    // using the function `v4PublicKeyToCommitment`
-    const semaphore_v4_pubkey = checkBody<
-      CreateNewUserRequest,
-      "semaphore_v4_pubkey"
-    >(req, "semaphore_v4_pubkey");
-    const commitment = checkBody<CreateNewUserRequest, "commitment">(
-      req,
-      "commitment"
-    );
+  app.post(
+    "/account/new-participant",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const email = normalizeEmail(
+        checkBody<CreateNewUserRequest, "email">(req, "email")
+      );
+      const { salt, encryptionKey, autoRegister } =
+        req.body as CreateNewUserRequest as CreateNewUserRequest;
+      const token = checkBody<CreateNewUserRequest, "token">(req, "token");
+      // we only need the v4 pubkey because the commitment is deriveable from it
+      // using the function `v4PublicKeyToCommitment`
+      const semaphore_v4_pubkey = checkBody<
+        CreateNewUserRequest,
+        "semaphore_v4_pubkey"
+      >(req, "semaphore_v4_pubkey");
+      const commitment = checkBody<CreateNewUserRequest, "commitment">(
+        req,
+        "commitment"
+      );
 
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/account/new-participant",
-      (client) =>
-        userService.handleNewUser(
-          client,
-          token,
-          email,
-          commitment,
-          semaphore_v4_pubkey,
-          salt,
-          encryptionKey,
-          autoRegister
-        )
-    );
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/account/new-participant",
+        (client) =>
+          userService.handleNewUser(
+            client,
+            token,
+            email,
+            commitment,
+            semaphore_v4_pubkey,
+            salt,
+            encryptionKey,
+            autoRegister
+          )
+      );
 
-    res.status(200).json(result);
-  });
+      res.status(200).json(result);
+    }
+  );
 
   /**
    * Lets a client upload its v4 commitment to zupass, which happens in the case that
@@ -209,7 +236,9 @@ export function initAccountRoutes(
    */
   app.post(
     "/account/upgrade-with-v4-commitment",
+    clusterProxy(),
     async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
       const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
       const result = await namedSqlTransaction(
@@ -229,28 +258,37 @@ export function initAccountRoutes(
   /**
    * Records that the user has agreed to a given version of the legal terms.
    */
-  app.post("/account/agree-terms", async (req: Request, res: Response) => {
-    const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
+  app.post(
+    "/account/agree-terms",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/account/agree-terms",
-      (client) => userService.handleAgreeTerms(client, pcd)
-    );
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/account/agree-terms",
+        (client) => userService.handleAgreeTerms(client, pcd)
+      );
 
-    if (result.success) {
-      res.status(200).json(result.value);
-    } else {
-      res.status(403).send(result.error);
+      if (result.success) {
+        res.status(200).json(result.value);
+      } else {
+        res.status(403).send(result.error);
+      }
     }
-  });
+  );
 
   /**
    * Prevent old clients from using the old /account/user route.
    */
-  app.get("/account/user/:uuid", async (req: Request, res: Response) => {
-    res.status(503).send("Not implemented");
-  });
+  app.get(
+    "/account/user/:uuid",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      res.status(503).send("Not implemented");
+    }
+  );
 
   /**
    * Gets a Zupass user by their uuid.
@@ -261,125 +299,172 @@ export function initAccountRoutes(
    * @todo - should we censor part of this unless you're the given user? eg.
    * should we be returning the `salt` here?
    */
-  app.get("/v2/account/user/:uuid", async (req: Request, res: Response) => {
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/v2/account/user/:uuid",
-      (client) => userService.handleGetUser(client, checkUrlParam(req, "uuid"))
-    );
+  app.get(
+    "/v2/account/user/:uuid",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/v2/account/user/:uuid",
+        (client) =>
+          userService.handleGetUser(client, checkUrlParam(req, "uuid"))
+      );
 
-    res.status(200).json(result);
-  });
-
-  /**
-   * temporary, for backwards compat; same as /account/user/:uuid
-   */
-  app.get("/pcdpass/participant/:uuid", async (req: Request, res: Response) => {
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/pcdpass/participant/:uuid",
-      (client) => userService.handleGetUser(client, checkUrlParam(req, "uuid"))
-    );
-
-    res.status(200).json(result);
-  });
+      res.status(200).json(result);
+    }
+  );
 
   /**
    * temporary, for backwards compat; same as /account/user/:uuid
    */
-  app.get("/zuzalu/participant/:uuid", async (req: Request, res: Response) => {
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/zuzalu/participant/:uuid",
-      (client) => userService.handleGetUser(client, checkUrlParam(req, "uuid"))
-    );
+  app.get(
+    "/pcdpass/participant/:uuid",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/pcdpass/participant/:uuid",
+        (client) =>
+          userService.handleGetUser(client, checkUrlParam(req, "uuid"))
+      );
 
-    res.status(200).json(result);
-  });
+      res.status(200).json(result);
+    }
+  );
 
-  app.post("/account/delete", async (req: Request, res: Response) => {
-    const pcd = checkBody<DeleteAccountRequest, "pcd">(req, "pcd");
+  /**
+   * temporary, for backwards compat; same as /account/user/:uuid
+   */
+  app.get(
+    "/zuzalu/participant/:uuid",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/zuzalu/participant/:uuid",
+        (client) =>
+          userService.handleGetUser(client, checkUrlParam(req, "uuid"))
+      );
 
-    await namedSqlTransaction(context.dbPool, "/account/delete", (client) =>
-      userService.handleDeleteAccount(client, pcd)
-    );
+      res.status(200).json(result);
+    }
+  );
 
-    res.sendStatus(200);
-  });
+  app.post(
+    "/account/delete",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const pcd = checkBody<DeleteAccountRequest, "pcd">(req, "pcd");
+
+      await namedSqlTransaction(context.dbPool, "/account/delete", (client) =>
+        userService.handleDeleteAccount(client, pcd)
+      );
+
+      res.sendStatus(200);
+    }
+  );
 
   /**
    * Adds a new email address to a user's account.
    */
-  app.post("/account/add-email", async (req: Request, res: Response) => {
-    const newEmail = checkBody<AddUserEmailRequest, "newEmail">(req, "newEmail")
-      .trim()
-      .toLocaleLowerCase();
-    const pcd = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
-    const confirmationCode = req.body.confirmationCode as string | undefined;
+  app.post(
+    "/account/add-email",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const newEmail = checkBody<AddUserEmailRequest, "newEmail">(
+        req,
+        "newEmail"
+      )
+        .trim()
+        .toLocaleLowerCase();
+      const pcd = checkBody<AddUserEmailRequest, "pcd">(req, "pcd");
+      const confirmationCode = req.body.confirmationCode as string | undefined;
 
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/account/add-email",
-      (client) =>
-        userService.handleAddUserEmail(client, newEmail, pcd, confirmationCode)
-    );
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/account/add-email",
+        (client) =>
+          userService.handleAddUserEmail(
+            client,
+            newEmail,
+            pcd,
+            confirmationCode
+          )
+      );
 
-    res.status(200).json(result);
-  });
+      res.status(200).json(result);
+    }
+  );
 
   /**
    * Removes an email address from a user's account.
    */
-  app.post("/account/delete-email", async (req: Request, res: Response) => {
-    const emailToRemove = checkBody<RemoveUserEmailRequest, "emailToRemove">(
-      req,
-      "emailToRemove"
-    )
-      .trim()
-      .toLocaleLowerCase();
-    const pcd = checkBody<RemoveUserEmailRequest, "pcd">(req, "pcd");
+  app.post(
+    "/account/delete-email",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const emailToRemove = checkBody<RemoveUserEmailRequest, "emailToRemove">(
+        req,
+        "emailToRemove"
+      )
+        .trim()
+        .toLocaleLowerCase();
+      const pcd = checkBody<RemoveUserEmailRequest, "pcd">(req, "pcd");
 
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/account/delete-email",
-      (client) => userService.handleRemoveUserEmail(client, emailToRemove, pcd)
-    );
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/account/delete-email",
+        (client) =>
+          userService.handleRemoveUserEmail(client, emailToRemove, pcd)
+      );
 
-    res.status(200).json(result);
-  });
+      res.status(200).json(result);
+    }
+  );
 
   /**
    * Changes a user's email address.
    */
-  app.post("/account/change-email", async (req: Request, res: Response) => {
-    const oldEmail = checkBody<ChangeUserEmailRequest, "oldEmail">(
-      req,
-      "oldEmail"
-    )
-      .trim()
-      .toLocaleLowerCase();
-    const newEmail = checkBody<ChangeUserEmailRequest, "newEmail">(
-      req,
-      "newEmail"
-    )
-      .trim()
-      .toLocaleLowerCase();
-    const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
-    const confirmationCode = req.body.confirmationCode as string | undefined;
+  app.post(
+    "/account/change-email",
+    clusterProxy(),
+    async (req: Request, res: Response) => {
+      checkExistsForRoute(userService);
+      const oldEmail = checkBody<ChangeUserEmailRequest, "oldEmail">(
+        req,
+        "oldEmail"
+      )
+        .trim()
+        .toLocaleLowerCase();
+      const newEmail = checkBody<ChangeUserEmailRequest, "newEmail">(
+        req,
+        "newEmail"
+      )
+        .trim()
+        .toLocaleLowerCase();
+      const pcd = checkBody<ChangeUserEmailRequest, "pcd">(req, "pcd");
+      const confirmationCode = req.body.confirmationCode as string | undefined;
 
-    const result = await namedSqlTransaction(
-      context.dbPool,
-      "/account/change-email",
-      (client) =>
-        userService.handleChangeUserEmail(
-          client,
-          oldEmail,
-          newEmail,
-          pcd,
-          confirmationCode
-        )
-    );
+      const result = await namedSqlTransaction(
+        context.dbPool,
+        "/account/change-email",
+        (client) =>
+          userService.handleChangeUserEmail(
+            client,
+            oldEmail,
+            newEmail,
+            pcd,
+            confirmationCode
+          )
+      );
 
-    res.status(200).json(result);
-  });
+      res.status(200).json(result);
+    }
+  );
 }

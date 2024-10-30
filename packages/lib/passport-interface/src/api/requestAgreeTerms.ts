@@ -1,7 +1,7 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import {
   AgreeTermsPayload,
   AgreeTermsRequest,
@@ -32,7 +32,7 @@ export async function requestAgreeTerms(
 export async function agreeTerms(
   zupassServerUrl: string,
   version: number,
-  identityV3: Identity
+  identityV3: IdentityV3
 ): Promise<AgreeTermsResult> {
   return requestAgreeTerms(zupassServerUrl, {
     // A generic authenticated route solution might make this much simpler

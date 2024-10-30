@@ -34,12 +34,10 @@ export interface IPipelineDefinitionDB {
     definitions: PipelineDefinition[]
   ): Promise<void>;
   saveLoadSummary(
-    client: PoolClient,
     pipelineId: string,
     lastRunInfo?: PipelineLoadSummary
   ): Promise<void>;
   getLastLoadSummary(
-    client: PoolClient,
     pipelineId: string
   ): Promise<PipelineLoadSummary | undefined>;
   appendToEditHistory(
@@ -65,7 +63,6 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * {@link Pipeline} identified by the @param pipelineId.
    */
   public async getLastLoadSummary(
-    client: PoolClient,
     pipelineId: string
   ): Promise<PipelineLoadSummary | undefined> {
     return this.runInfos[pipelineId];
@@ -76,7 +73,6 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * identified by the @param pipelineId.
    */
   public async saveLoadSummary(
-    client: PoolClient,
     pipelineId: string,
     lastRunInfo: PipelineLoadSummary | undefined
   ): Promise<void> {

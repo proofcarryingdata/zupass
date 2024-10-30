@@ -42,10 +42,10 @@ export interface AppState {
     | { modalType: "another-device-changed-password" }
     | { modalType: "invalid-participant" }
     | { modalType: "success-modal"; title: string; description: string }
-    | { modalType: "about" }
+    | { modalType: "about"; modalGoBackBehavior?: "close" | "back" }
     | { modalType: "import" }
     | { modalType: "prove"; request: PCDGetRequest }
-    | { modalType: "manage-emails" }
+    | { modalType: "manage-emails"; goBackToSupport?: boolean }
     | { modalType: "delete-account" }
     | { modalType: "ticket-add-ons"; addOns: TicketType[] }
     | { modalType: "help-modal" }

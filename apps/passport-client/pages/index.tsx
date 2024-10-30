@@ -61,7 +61,6 @@ import { NewLoginInterstitialScreen } from "../new-components/screens/Login/NewL
 import { NewLoginScreen } from "../new-components/screens/Login/NewLoginScreen";
 import { NewPassportScreen2 } from "../new-components/screens/Login/NewPassportScreen";
 import { NewSyncExistingScreen } from "../new-components/screens/Login/NewSyncExistingScreen";
-import { NewOneClickLoginScreen2 } from "../new-components/screens/NewOneClickLoginScreen2";
 import { NewPrivacyNoticeScreen } from "../new-components/screens/NewPrivacyNoticeScreen";
 import { NewTermsScreen } from "../new-components/screens/NewTermsScreen";
 import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTermsScreen";
@@ -77,6 +76,7 @@ import { loadInitialState } from "../src/loadInitialState";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { ListenMode, useZappServer } from "../src/zapp/useZappServer";
+import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 
 enableLiveReload();
 
@@ -192,7 +192,7 @@ function RouterImpl(): JSX.Element {
           />  */}
           <Route
             path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
-            element={<NewOneClickLoginScreen2 />}
+            element={<NewHomeScreen />}
           />
           <Route
             path="get-without-proving"
@@ -200,7 +200,7 @@ function RouterImpl(): JSX.Element {
           />
           <Route path="halo" element={<HaloScreen />} />
           <Route path="add" element={<AddScreen />} />
-          <Route path="prove" element={<NewHomeScreen />} />
+          <Route path="prove" element={<ProveScreen />} />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
