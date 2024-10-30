@@ -14,7 +14,7 @@ import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Dispatcher,
@@ -394,4 +394,43 @@ export const useIOSOrientationFix = (): void => {
       }
     };
   }, []);
+};
+
+/**
+ * Hook that attempts to login from the one_click_redirect key in local storage.
+ * This is set inside the static one click login page.
+ * If this key exists it will attempt to login with the one-click-login flow
+ * even if a different user is logged in.
+ */
+const ONE_CLICK_REDIRECT_KEY = "one_click_redirect";
+export const useAutoLoginFromOneClick = (): void => {
+  const dispatch = useDispatch();
+  const attemptedLogin = useRef(false);
+
+  useEffect(() => {
+    // prevent multiple login attempts
+    if (attemptedLogin.current) return;
+    attemptedLogin.current = true;
+
+    // get one click redirect from local storage
+    const oneClickRedirect = localStorage.getItem(ONE_CLICK_REDIRECT_KEY);
+    if (!oneClickRedirect) return;
+
+    const autoLogin = async (): Promise<void> => {
+      try {
+        const [, , email, code] = oneClickRedirect.split("/");
+        await dispatch({
+          type: "one-click-login",
+          email,
+          code,
+          targetFolder: undefined
+        });
+      } catch (error) {
+        console.error("Unable to auto-login", error);
+      } finally {
+        localStorage.removeItem(ONE_CLICK_REDIRECT_KEY);
+      }
+    };
+    autoLogin();
+  }, [dispatch]);
 };

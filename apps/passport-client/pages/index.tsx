@@ -67,7 +67,11 @@ import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTerms
 import { NewLoader } from "../new-components/shared/NewLoader";
 import { Typography } from "../new-components/shared/Typography";
 import { appConfig } from "../src/appConfig";
-import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
+import {
+  useAutoLoginFromOneClick,
+  useIsDeletingAccount,
+  useStateContext
+} from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
 import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
@@ -120,6 +124,7 @@ const Router = React.memo(RouterImpl);
 
 function RouterImpl(): JSX.Element {
   useTsParticles();
+  useAutoLoginFromOneClick();
 
   const isDeletingAccount = useIsDeletingAccount();
 
