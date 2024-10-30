@@ -405,6 +405,7 @@ export const useIOSOrientationFix = (): void => {
 const ONE_CLICK_REDIRECT_KEY = "one_click_redirect";
 export const useAutoLoginFromOneClick = (): void => {
   const dispatch = useDispatch();
+  const self = useSelf();
   const attemptedLogin = useRef(false);
 
   useEffect(() => {
@@ -419,6 +420,8 @@ export const useAutoLoginFromOneClick = (): void => {
     const autoLogin = async (): Promise<void> => {
       try {
         const [, , email, code] = oneClickRedirect.split("/");
+        if (self?.emails?.includes(email))
+          throw new Error("User is already logged in");
         await dispatch({
           type: "one-click-login",
           email,
@@ -432,5 +435,5 @@ export const useAutoLoginFromOneClick = (): void => {
       }
     };
     autoLogin();
-  }, [dispatch]);
+  }, [dispatch, self]);
 };
