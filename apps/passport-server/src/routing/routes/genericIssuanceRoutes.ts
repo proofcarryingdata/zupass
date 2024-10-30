@@ -28,7 +28,11 @@ import {
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { sleep } from "@pcd/util";
 import express from "express";
+import fs from "fs";
 import { sha256 } from "js-sha256";
+import Mustache from "mustache";
+import path from "path";
+import * as QRCode from "qrcode";
 import urljoin from "url-join";
 import { PipelineCheckinDB } from "../../database/queries/pipelineCheckinDB";
 import { namedSqlTransaction, sqlTransaction } from "../../database/sqlQuery";
@@ -756,6 +760,61 @@ export function initGenericIssuanceRoutes(
       );
 
       res.json(result satisfies TicketPreviewResultValue);
+    }
+  );
+
+  app.get(
+    "/generic-issuance/one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?",
+    async (req, res) => {
+      checkExistsForRoute(genericIssuanceService);
+      const email = checkUrlParam(req, "email");
+      const code = checkUrlParam(req, "code");
+      const pipeline = req.params.pipelineId;
+
+      const getTicketImage = (
+        ticketData: TicketPreviewResultValue["tickets"][number]
+      ): string | undefined => {
+        const imageToRender = ticketData?.eventStartDate
+          ? ticketData.qrCodeOverrideImageUrl
+          : ticketData?.imageUrl;
+        return imageToRender;
+      };
+      const result = await genericIssuanceService.handleGetTicketPreview(
+        email,
+        code,
+        pipeline
+      );
+      const ticket = { ...result.tickets[0] };
+
+      const absPath = path.resolve("./resources/one-click-page/index.html");
+      const file = fs.readFileSync(absPath).toString();
+
+      const qrCodeData =
+        getTicketImage(ticket) ??
+        (ticket.ticketSecret
+          ? await QRCode.toDataURL(ticket.ticketSecret, {
+              type: "image/webp",
+              scale: 10,
+              margin: 0
+            })
+          : "");
+
+      // filter out add-ons
+      const ticketsCount = result.tickets.filter((t) => !t.isAddOn).length;
+
+      const rendered = Mustache.render(file, {
+        eventName: ticket.eventName.toUpperCase(),
+        attendeeName: ticket.attendeeName.toUpperCase(),
+        attendeeEmail: ticket.attendeeEmail,
+        ticketName: ticket.ticketName,
+        eventLocation: ticket.eventLocation,
+        qr: qrCodeData,
+        backgroundImage: ticket.imageUrl,
+        count: ticketsCount,
+        isMoreThanOne: ticketsCount > 1,
+        zupassUrl: process.env.PASSPORT_CLIENT_URL
+      });
+      res.send(rendered);
     }
   );
 }

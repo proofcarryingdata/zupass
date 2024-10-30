@@ -1,7 +1,10 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import * as eddsaTicketPcd from "@pcd/eddsa-ticket-pcd";
 import { isEmailPCD } from "@pcd/email-pcd";
-import { PCDGetRequest } from "@pcd/passport-interface";
+import {
+  PCDGetRequest,
+  requestGenericIssuanceTicketPreviews
+} from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import {
@@ -11,7 +14,12 @@ import {
   useRef,
   useState
 } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams
+} from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { ZappButton } from "../../../components/screens/ZappScreens/ZappButton";
@@ -20,7 +28,6 @@ import { ZappFullScreen } from "../../../components/screens/ZappScreens/ZappFull
 import { ZappScreen } from "../../../components/screens/ZappScreens/ZappScreen";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
-import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
   useIsSyncSettled,
@@ -48,6 +55,7 @@ import { TicketPack } from "./types";
 import { useTickets } from "./hooks/useTickets";
 import { useWindowWidth } from "./hooks/useWindowWidth";
 import { NoUpcomingEventsState } from "./NoUpcomingTicketsState";
+import { appConfig } from "../../../src/appConfig";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -139,7 +147,7 @@ export const NewHomeScreen = (): ReactElement => {
   const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
-
+  const regularParams = useParams();
   const noPods =
     collection
       .getAll()
@@ -152,7 +160,7 @@ export const NewHomeScreen = (): ReactElement => {
     (orientation.type === "landscape-primary" ||
       orientation.type === "landscape-secondary");
   useEffect(() => {
-    if (!self) {
+    if (!self && !location.pathname.includes("one-click-preview")) {
       navigate("/login", { replace: true });
     }
   });
@@ -203,6 +211,7 @@ export const NewHomeScreen = (): ReactElement => {
     }
     if (params.size > 0) setParams("");
   }, [
+    regularParams,
     params,
     collection,
     setParams,
@@ -212,6 +221,61 @@ export const NewHomeScreen = (): ReactElement => {
     showPodsList,
     setZappUrl
   ]);
+  useLayoutEffect(() => {
+    const handleOneClick = async (): Promise<void> => {
+      if (location.pathname.includes("one-click-preview")) {
+        const { email, code, targetFolder, pipelineId, serverUrl } =
+          regularParams;
+        if (!email || !code) return;
+
+        if (self) {
+          if (!self.emails?.includes(email as string)) {
+            alert(
+              `You are already logged in as ${
+                self.emails.length === 1
+                  ? self.emails?.[0]
+                  : "an account that owns the following email addresses: " +
+                    self.emails.join(", ")
+              }. Please log out and try navigating to the link again.`
+            );
+            window.location.hash = "#/";
+            return;
+          }
+        }
+        const previewRes = await requestGenericIssuanceTicketPreviews(
+          serverUrl ?? appConfig.zupassServer,
+          email,
+          code,
+          pipelineId
+        );
+
+        await dispatch({
+          type: "one-click-login",
+          email,
+          code,
+          targetFolder
+        });
+        const zappEntry = Object.entries(appConfig.embeddedZapps).find(
+          ([key]) => key.toLowerCase() === targetFolder?.toLowerCase()
+        );
+        if (zappEntry) {
+          setZappUrl(zappEntry[1]);
+          return;
+        }
+        if (previewRes.success) {
+          dispatch({
+            type: "scroll-to-ticket",
+            scrollTo: {
+              attendee: previewRes.value.tickets[0].attendeeEmail,
+              eventId: previewRes.value.tickets[0].eventId
+            }
+          });
+        }
+      }
+    };
+    handleOneClick();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (scrollTo && isLoadedPCDs && tickets.length > 0) {
@@ -323,11 +387,6 @@ export const NewHomeScreen = (): ReactElement => {
                       ticketWidth={cardWidth}
                       address={eventDetails.eventLocation}
                       title={eventDetails.eventName}
-                      ticketDate={
-                        eventDetails.eventStartDate
-                          ? new Date(eventDetails.eventStartDate).toDateString()
-                          : undefined
-                      }
                       imgSource={eventDetails.imageUrl}
                       ticketCount={packs.length}
                       cardColor={i % 2 === 0 ? "purple" : "orange"}

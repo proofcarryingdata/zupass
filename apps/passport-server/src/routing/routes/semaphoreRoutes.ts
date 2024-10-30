@@ -16,6 +16,11 @@ export function initSemaphoreRoutes(
   context: ApplicationContext,
   { semaphoreService }: GlobalServices
 ): void {
+  if (!semaphoreService) {
+    logger(`[INIT] semaphore routes not started, no semaphore service`);
+    return;
+  }
+
   logger("[INIT] initializing semaphore routes");
 
   /**

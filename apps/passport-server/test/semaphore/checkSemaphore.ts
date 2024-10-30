@@ -16,9 +16,14 @@ export interface SemaphoreGroups {
 }
 
 export function expectGroupsEqual(
-  lhs: SemaphoreGroups,
-  rhs: SemaphoreGroups
+  lhs: SemaphoreGroups | undefined,
+  rhs: SemaphoreGroups | undefined
 ): void {
+  if (!lhs || !rhs) {
+    expect(lhs).to.deep.eq(rhs);
+    return;
+  }
+
   expect(new Set(lhs.p)).to.deep.eq(new Set(rhs.p));
   expect(new Set(lhs.r)).to.deep.eq(new Set(rhs.r));
   expect(new Set(lhs.v)).to.deep.eq(new Set(rhs.v));
@@ -59,7 +64,11 @@ function nonZeroGroupMembers(group: Group | undefined): BigNumberish[] {
 
 function getCurrentSemaphoreServiceGroups(
   application: Zupass
-): SemaphoreGroups {
+): SemaphoreGroups | undefined {
+  if (!application.services.semaphoreService) {
+    return undefined;
+  }
+
   return {
     g: nonZeroGroupMembers(
       application.services.semaphoreService?.groupEveryone()?.group

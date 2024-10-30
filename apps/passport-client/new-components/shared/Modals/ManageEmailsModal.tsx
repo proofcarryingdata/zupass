@@ -82,9 +82,14 @@ export const ManageEmailModal = (): JSX.Element => {
   const backBtn = (
     <Button2
       onClick={() => {
+        let goBackToSupport = false;
+        const isManageModal = activeBottomModal.modalType === "manage-emails";
+        if (isManageModal) {
+          goBackToSupport = !!activeBottomModal.goBackToSupport;
+        }
         dispatch({
           type: "set-bottom-modal",
-          modal: { modalType: "settings" }
+          modal: { modalType: goBackToSupport ? "help-modal" : "settings" }
         });
         reset();
       }}

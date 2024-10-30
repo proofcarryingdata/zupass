@@ -12,7 +12,7 @@ import { fetchAllZuzaluPretixTickets } from "../database/queries/zuzalu_pretix_t
 import { insertZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { updateZuzaluPretixTicket } from "../database/queries/zuzalu_pretix_tickets/updateZuzaluPretixTicket";
 import { namedSqlTransaction } from "../database/sqlQuery";
-import { ApplicationContext } from "../types";
+import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
 import {
   pretixTicketsDifferent,
@@ -385,6 +385,18 @@ export function startZuzaluPretixSyncService(
   semaphoreService: SemaphoreService | null,
   pretixAPI: IZuzaluPretixAPI | null
 ): ZuzaluPretixSyncService | null {
+  if (process.env.DISABLE_JOBS === "true") {
+    logger("[PRETIX] not starting because DISABLE_JOBS");
+    return null;
+  }
+
+  if (![ServerMode.UNIFIED, ServerMode.PARALLEL_MAIN].includes(context.mode)) {
+    logger(
+      `[INIT] zuzalu pretix sync service not started, not in unified or parallel main mode`
+    );
+    return null;
+  }
+
   if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
     logger(
       `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting zuzalu pretix sync service`
@@ -393,7 +405,9 @@ export function startZuzaluPretixSyncService(
   }
 
   if (!semaphoreService) {
-    logger("[PRETIX] can't start sync service - no semaphore service");
+    logger(
+      `[INIT] zuzalu pretix sync service not started, no semaphore service`
+    );
     return null;
   }
 

@@ -19,7 +19,7 @@ import {
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
-import { ApplicationContext } from "../types";
+import { ApplicationContext, ServerMode } from "../types";
 import { logger } from "../util/logger";
 import { zuconnectProductIdToZuzaluRole } from "../util/zuconnectTicket";
 import { traced } from "./telemetryService";
@@ -447,6 +447,13 @@ export class SemaphoreService {
 export function startSemaphoreService(
   context: ApplicationContext
 ): SemaphoreService | null {
+  if (![ServerMode.UNIFIED, ServerMode.PARALLEL_MAIN].includes(context.mode)) {
+    logger(
+      `[INIT] semaphore service not started, not in unified or parallel main mode`
+    );
+    return null;
+  }
+
   if (process.env.SELF_HOSTED_PODBOX_MODE === "true") {
     logger(
       `[INIT] SELF_HOSTED_PODBOX_MODE is true - not starting semaphore service`
