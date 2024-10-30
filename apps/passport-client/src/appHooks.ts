@@ -419,19 +419,13 @@ export const useAutoLoginFromOneClick = (): { loading: boolean } => {
 
     const attemptAutoLogin = async (): Promise<void> => {
       try {
-        const [, , email, code] = oneClickRedirect.split("/");
+        const [, , email] = oneClickRedirect.split("/");
 
         // If the same user is already logged in we don't want to auto-login again
         if (self?.emails?.includes(email))
           throw new Error("User is already logged in");
 
-        // Attempt to login with the one-click-login flow
-        await dispatch({
-          type: "one-click-login",
-          email,
-          code,
-          targetFolder: undefined
-        });
+        location.hash = `#${oneClickRedirect}`;
       } catch (error) {
         console.error("Unable to auto-login", error);
       } finally {
