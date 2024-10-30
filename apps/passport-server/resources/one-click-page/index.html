@@ -610,6 +610,7 @@
   <script src="https://unpkg.com/tiny-swiper@latest/lib/modules/navigation.min.js"></script>
 
   <script>
+
     const addonsModal = document.getElementById("modal-addons");
     const timeModal = document.getElementById("modal-time");
     const overlay = document.getElementById("modal-overlay");
@@ -626,6 +627,12 @@
     const path = window.location.pathname;
     const oneClickMatch = path.match(/\/one-click-preview.*/);
     const newPath = oneClickMatch ? oneClickMatch[0] : "";
+
+
+    // Once loaded we want to set the one click redirect link to local storage
+    // so that later on we can login to zupass
+    localStorage.setItem("one_click_redirect", newPath);
+
 
     function joinPaths(...parts) {
       return parts

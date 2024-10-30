@@ -67,7 +67,11 @@ import { NewUpdatedTermsScreen } from "../new-components/screens/NewUpdatedTerms
 import { NewLoader } from "../new-components/shared/NewLoader";
 import { Typography } from "../new-components/shared/Typography";
 import { appConfig } from "../src/appConfig";
-import { useIsDeletingAccount, useStateContext } from "../src/appHooks";
+import {
+  useAutoLoginFromOneClick,
+  useIsDeletingAccount,
+  useStateContext
+} from "../src/appHooks";
 import { useBackgroundJobs } from "../src/backgroundJobs";
 import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
@@ -120,8 +124,22 @@ const Router = React.memo(RouterImpl);
 
 function RouterImpl(): JSX.Element {
   useTsParticles();
+  const { loading: isLoadingAutoLogin } = useAutoLoginFromOneClick();
 
   const isDeletingAccount = useIsDeletingAccount();
+
+  if (isLoadingAutoLogin) {
+    return (
+      <AppContainer bg="gray" fullscreen>
+        <LoaderContainer>
+          <NewLoader columns={5} rows={5} />
+          <Typography fontSize={18} fontWeight={800} color="#8B94AC">
+            LOGGING IN
+          </Typography>
+        </LoaderContainer>
+      </AppContainer>
+    );
+  }
 
   if (isDeletingAccount) {
     return (

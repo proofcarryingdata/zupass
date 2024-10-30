@@ -13,8 +13,6 @@ import {
   protoPODGPCCircuitParamArray
 } from "../src/proto-pod-gpc";
 import { batchPromise } from "../src/util";
-import { PARAMS as PROD_PARAMS } from "./parameters/paramGen";
-import { PARAMS as TEST_PARAMS } from "./parameters/testParamGen";
 import { clearDir } from "./util";
 
 /**
@@ -28,7 +26,7 @@ export const MAX_PARALLEL_PROMISES = 4;
  * `circuits.json` and `circuitParameters.json` files.
  */
 export async function genCircuitParamConfig(
-  circuitParams: ProtoPODGPCCircuitParams[],
+  circuitParamGenJsonFile: string,
   circuitParamJsonFile: string,
   circuitsJsonFile: string
 ): Promise<void> {
@@ -36,6 +34,12 @@ export async function genCircuitParamConfig(
   if (fsExists(CIRCUIT_DIR)) {
     await clearDir(CIRCUIT_DIR);
   }
+
+  // Read circuit parameters from JSON.
+  const circuitParams = (await fs
+    .readFile(circuitParamGenJsonFile, "utf8")
+    .then((str) => JSON.parse(str))) as ProtoPODGPCCircuitParams[];
+
   // Instantiate Circomkit object.
   const circomkit = new Circomkit(circomkitJson as Partial<CircomkitConfig>);
 
@@ -107,10 +111,7 @@ export async function genCircuitArtifacts(
   }
 
   // Instantiate Circomkit object.
-  const circomkit = new Circomkit({
-    ...circomkitJson,
-    circuits: circuitsJsonFile
-  } as Partial<CircomkitConfig>);
+  const circomkit = new Circomkit(circomkitJson as Partial<CircomkitConfig>);
 
   // Read circuit names from circuits.json
   const circuitsJson = await fs
@@ -176,16 +177,10 @@ export async function genCircuitArtifacts(
 const PROJECT_DIR = path.join(__dirname, "..");
 export const ARTIFACTS_DIR = path.join(PROJECT_DIR, "artifacts");
 export const CIRCUIT_DIR = path.join(PROJECT_DIR, "circuits", "main");
-export const JSON_FILE_CONFIG: Record<
-  string,
-  {
-    circuitParams: ProtoPODGPCCircuitParams[];
-    circuitParamJsonFile: string;
-    circuitsJsonFile: string;
-  }
-> = {
+const PARAM_DIR = path.join(PROJECT_DIR, "scripts", "parameters");
+export const JSON_FILE_CONFIG: Record<string, Record<string, string>> = {
   prod: {
-    circuitParams: PROD_PARAMS,
+    circuitParamGenJsonFile: path.join(PARAM_DIR, "paramGen.json"),
     circuitParamJsonFile: path.join(
       PROJECT_DIR,
       "src",
@@ -194,7 +189,7 @@ export const JSON_FILE_CONFIG: Record<
     circuitsJsonFile: path.join(PROJECT_DIR, "circuits.json")
   },
   test: {
-    circuitParams: TEST_PARAMS,
+    circuitParamGenJsonFile: path.join(PARAM_DIR, "testParamGen.json"),
     circuitParamJsonFile: path.join(
       PROJECT_DIR,
       "src",

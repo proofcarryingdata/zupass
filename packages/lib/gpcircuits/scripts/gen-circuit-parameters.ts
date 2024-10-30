@@ -7,11 +7,11 @@ import {
 
 async function main(): Promise<void> {
   const paramType = ensureCircuitParamSet(argv[2]);
-  const { circuitParams, circuitParamJsonFile, circuitsJsonFile } =
+  const { circuitParamGenJsonFile, circuitParamJsonFile, circuitsJsonFile } =
     JSON_FILE_CONFIG[paramType];
 
   return genCircuitParamConfig(
-    circuitParams,
+    circuitParamGenJsonFile,
     circuitParamJsonFile,
     circuitsJsonFile
   ).then(() => console.log("gen-circuit-parameters completed successfully!"));

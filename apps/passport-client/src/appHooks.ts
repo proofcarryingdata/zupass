@@ -14,7 +14,7 @@ import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Dispatcher,
@@ -394,4 +394,48 @@ export const useIOSOrientationFix = (): void => {
       }
     };
   }, []);
+};
+
+/**
+ * Hook that attempts to login from the one_click_redirect key in local storage.
+ * This is set inside the static one click login page.
+ * If this key exists it will attempt to login with the one-click-login flow
+ * even if a different user is logged in.
+ */
+const ONE_CLICK_REDIRECT_KEY = "one_click_redirect";
+export const useAutoLoginFromOneClick = (): { loading: boolean } => {
+  const dispatch = useDispatch();
+  const self = useSelf();
+  const attemptedLogin = useRef(false);
+  const [oneClickRedirect, setOneClickRedirect] = useState(
+    localStorage.getItem(ONE_CLICK_REDIRECT_KEY)
+  );
+
+  useEffect(() => {
+    if (attemptedLogin.current) return;
+    // prevent multiple login attempts
+    attemptedLogin.current = true;
+    if (!oneClickRedirect) return;
+
+    const attemptAutoLogin = async (): Promise<void> => {
+      try {
+        const [, , email] = oneClickRedirect.split("/");
+
+        // If the same user is already logged in we don't want to auto-login again
+        if (self?.emails?.includes(email))
+          throw new Error("User is already logged in");
+
+        location.hash = `#${oneClickRedirect}`;
+      } catch (error) {
+        console.error("Unable to auto-login", error);
+      } finally {
+        localStorage.removeItem(ONE_CLICK_REDIRECT_KEY);
+        setOneClickRedirect(null);
+      }
+    };
+
+    attemptAutoLogin();
+  }, [dispatch, self, oneClickRedirect]);
+
+  return { loading: !!oneClickRedirect };
 };
