@@ -1,4 +1,3 @@
-import IframeResizer from "iframe-resizer-react";
 import { ReactNode } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useDispatch, useEmbeddedScreenState } from "../../../src/appHooks";
@@ -17,7 +16,7 @@ export function ZappScreen({ url }: { url: string }): ReactNode {
   return (
     <>
       <ZappModal />
-      <IframeResizer
+      <iframe
         loading="eager"
         style={{
           width: "100%",
