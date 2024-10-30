@@ -44,6 +44,7 @@ import { ZappFullScreen } from "../../../components/screens/ZappScreens/ZappFull
 import { ZappScreen } from "../../../components/screens/ZappScreens/ZappScreen";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
+import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
   useIsSyncSettled,
@@ -71,7 +72,6 @@ import {
 } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
 import { TicketPack, TicketType, TicketTypeName } from "./types";
-import { appConfig } from "../../../src/appConfig";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -581,22 +581,17 @@ export const NewHomeScreen = (): ReactElement => {
       if (location.pathname.includes("one-click-preview")) {
         const { email, code, targetFolder, pipelineId, serverUrl } =
           regularParams;
+
         if (!email || !code) return;
 
-        if (self) {
-          if (!self.emails?.includes(email as string)) {
-            alert(
-              `You are already logged in as ${
-                self.emails.length === 1
-                  ? self.emails?.[0]
-                  : "an account that owns the following email addresses: " +
-                    self.emails.join(", ")
-              }. Please log out and try navigating to the link again.`
-            );
-            window.location.hash = "#/";
-            return;
-          }
+        if (self && !self.emails?.includes(email as string)) {
+          await dispatch({
+            type: "reset-passport",
+            redirectTo: window.location.href
+          });
+          return;
         }
+
         const previewRes = await requestGenericIssuanceTicketPreviews(
           serverUrl ?? appConfig.zupassServer,
           email,
@@ -610,6 +605,7 @@ export const NewHomeScreen = (): ReactElement => {
           code,
           targetFolder
         });
+
         const zappEntry = Object.entries(appConfig.embeddedZapps).find(
           ([key]) => key.toLowerCase() === targetFolder?.toLowerCase()
         );
@@ -617,6 +613,7 @@ export const NewHomeScreen = (): ReactElement => {
           setZappUrl(zappEntry[1]);
           return;
         }
+
         if (previewRes.success) {
           dispatch({
             type: "scroll-to-ticket",
