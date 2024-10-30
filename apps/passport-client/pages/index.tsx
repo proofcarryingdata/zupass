@@ -124,22 +124,9 @@ const Router = React.memo(RouterImpl);
 
 function RouterImpl(): JSX.Element {
   useTsParticles();
-  const { loading: isLoadingAutoLogin } = useAutoLoginFromOneClick();
+  useAutoLoginFromOneClick();
 
   const isDeletingAccount = useIsDeletingAccount();
-
-  if (isLoadingAutoLogin) {
-    return (
-      <AppContainer bg="gray" fullscreen>
-        <LoaderContainer>
-          <NewLoader columns={5} rows={5} />
-          <Typography fontSize={18} fontWeight={800} color="#8B94AC">
-            LOGGING IN
-          </Typography>
-        </LoaderContainer>
-      </AppContainer>
-    );
-  }
 
   if (isDeletingAccount) {
     return (
