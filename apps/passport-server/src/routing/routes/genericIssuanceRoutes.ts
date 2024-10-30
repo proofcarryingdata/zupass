@@ -789,15 +789,20 @@ export function initGenericIssuanceRoutes(
             : "")
         );
       };
+      const absPath = path.resolve("./resources/one-click-page/index.html");
       const result = await genericIssuanceService.handleGetTicketPreview(
         email,
         code,
         pipeline
       );
+      if (!result.tickets.length) {
+        res.sendFile(absPath.replace("index", "error"));
+        return;
+      }
+
       const main: TicketPreviewResultValue["tickets"] = [];
       const addOns: TicketPreviewResultValue["tickets"] = [];
 
-      logger({ tickets: result.tickets });
       for (const ticket of result.tickets) {
         if (ticket.isAddOn) {
           addOns.push(ticket);
@@ -805,7 +810,6 @@ export function initGenericIssuanceRoutes(
           main.push(ticket);
         }
       }
-      const absPath = path.resolve("./resources/one-click-page/index.html");
       const file = fs.readFileSync(absPath).toString();
 
       const ticket = main[0];
