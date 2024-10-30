@@ -19,6 +19,7 @@
     font-size: 100%;
     font: inherit;
     vertical-align: baseline;
+    box-sizing: border-box;
   }
 
   html {
@@ -31,20 +32,25 @@
 
   body {
     overflow: auto;
-    height: 100vh;
+    height: 100%;
 
-    @media (max-width: 460px) {
+    @media (max-width: 420px) {
       background-color: #00785e;
     }
+
+    display: flex;
+    flex-direction: column;
+
   }
 
   .container {
     margin: auto;
-    height: 100%;
+    flex: 1;
+    width: 100%;
     display: flex;
     flex-direction: column;
     max-width: 420px;
-    padding: 20px;
+    padding: 0 20px;
     background: linear-gradient(0deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.5) 100%),
     url("{{{backgroundImage}}}") lightgray 50% / cover no-repeat;
   }
@@ -197,13 +203,9 @@
     bottom: 12px;
     box-shadow: 0px 4px 6px -1px #0000001a;
     margin: 0 auto;
-    max-width: 250px;
+    max-width: 290px;
     padding: 20px;
     overflow: scroll;
-  }
-
-
-  .modal__container {
     -ms-overflow-style: none;
     /* Internet Explorer 10+ */
     scrollbar-width: none;
@@ -215,12 +217,10 @@
     /* Safari and Chrome */
   }
 
-
   .modal__qr {
     width: 250px;
     height: 250px;
   }
-
 
   .modal__qr--image {
     max-width: inherit;
@@ -228,6 +228,19 @@
     height: inherit;
     width: inherit;
     object-fit: cover;
+  }
+
+
+  .page-header {
+    padding: 25px 0 25px 0;
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-bottom: 1px solid #1d8289;
+    background: linear-gradient(0deg, #00605c 0%, #00785e 100%);
   }
 </style>
 
@@ -277,7 +290,7 @@
             <span class="ticket__subtitle--text">{{ticketName}}</span>
           </div>
         </div>
-        <button onclick="showModal()">view addons</button>
+        <button id="modal-btn">view addons</button>
       </div>
     </div>
   </main>
@@ -302,12 +315,10 @@
   <script src="https://unpkg.com/tiny-swiper@latest/lib/index.min.js"></script>
 
   <script>
-
-    const path = window.location.pathname;
-
     const modal = document.getElementById("modal");
     const overlay = document.getElementById("modal-overlay");
     const modalClose = document.getElementById("close");
+    const modalBtn = document.getElementById("modal-btn");
 
     function joinPaths(...parts) {
       return parts
@@ -326,19 +337,20 @@
       window.location.replace(clientPath);
     }
 
-
-    function showModal(e) {
-      overlay.classList.remove("modal__overlay--disabled");
-      const swiper = new Swiper(".swiper-container", {
-        spaceBetween: 20
-      });
-    }
     modal.onclick = function block(e) {
       e.stopPropagation()
     }
 
     modalClose.onclick = function () {
       overlay.classList.add("modal__overlay--disabled");
+    }
+
+    modalBtn.onclick = function () {
+      console.log("clicking")
+      overlay.classList.remove("modal__overlay--disabled");
+      const swiper = new Swiper(".swiper-container", {
+        spaceBetween: 20
+      });
     }
   </script>
 </body>
