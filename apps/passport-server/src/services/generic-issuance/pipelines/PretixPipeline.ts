@@ -2305,6 +2305,18 @@ export class PretixPipeline implements BasePipeline {
     };
   }
 
+  public async getAllTicketsForEmail(email: string): Promise<{
+    atoms: PretixAtom[];
+    manual: ManualTicket[];
+  }> {
+    return {
+      atoms: await this.db.loadByEmail(this.id, email.toLowerCase()),
+      manual: (this.definition.options.manualTickets ?? []).filter(
+        (mt) => mt.attendeeEmail.toLowerCase() === email.toLowerCase()
+      )
+    };
+  }
+
   public static is(p: Pipeline | undefined): p is PretixPipeline {
     return p?.type === PipelineType.Pretix;
   }
