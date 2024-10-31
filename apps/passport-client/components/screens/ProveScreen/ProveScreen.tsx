@@ -10,6 +10,7 @@ import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 import { pendingRequestKeys } from "../../../src/sessionStorage";
+import { ManageEmailModal } from "../../../new-components/shared/Modals/ManageEmailsModal";
 
 export function getScreen(request: PCDGetRequest): JSX.Element | null {
   if (request.type !== PCDRequestType.Get) {
@@ -44,5 +45,10 @@ export const ProveScreen = (): ReactElement | null => {
     type: "set-bottom-modal",
     modal: { request, modalType: "prove" }
   });
-  return <ProveModal />;
+  return (
+    <>
+      <ProveModal />;
+      <ManageEmailModal />
+    </>
+  );
 };

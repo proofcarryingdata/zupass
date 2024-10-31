@@ -112,6 +112,7 @@ export function GenericProveScreen({
         onProve={onProve}
         pcdType={req.pcdType}
         options={req.options}
+        originalReq={req}
       />
     </Container>
   );

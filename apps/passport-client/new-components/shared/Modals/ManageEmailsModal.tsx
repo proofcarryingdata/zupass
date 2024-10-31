@@ -29,6 +29,7 @@ import { Button2 } from "../Button";
 import { Input2 } from "../Input";
 import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
+import { AppState } from "../../../src/state";
 
 enum EmailManagerState {
   addEmail = 1,
@@ -82,14 +83,14 @@ export const ManageEmailModal = (): JSX.Element => {
   const backBtn = (
     <Button2
       onClick={() => {
-        let goBackToSupport = false;
+        let prevModal: AppState["bottomModal"] = { modalType: "settings" };
         const isManageModal = activeBottomModal.modalType === "manage-emails";
-        if (isManageModal) {
-          goBackToSupport = !!activeBottomModal.goBackToSupport;
+        if (isManageModal && activeBottomModal.prevModal) {
+          prevModal = activeBottomModal.prevModal;
         }
         dispatch({
           type: "set-bottom-modal",
-          modal: { modalType: goBackToSupport ? "help-modal" : "settings" }
+          modal: prevModal
         });
         reset();
       }}
@@ -550,6 +551,11 @@ export const ManageEmailModal = (): JSX.Element => {
   };
   return (
     <BottomModal
+      dismissable={
+        activeBottomModal.modalType === "manage-emails"
+          ? activeBottomModal.dismissble
+          : undefined
+      }
       onClickOutside={() => reset()}
       isOpen={activeBottomModal.modalType === "manage-emails"}
     >

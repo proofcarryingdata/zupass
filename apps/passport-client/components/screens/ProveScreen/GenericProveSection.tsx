@@ -5,6 +5,7 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import {
   ISSUANCE_STRING,
+  PCDGetRequest,
   PendingPCD,
   ProveOptions,
   requestProveOnServer
@@ -34,6 +35,7 @@ import { NewLoader } from "../../../new-components/shared/NewLoader";
 import { Typography } from "../../../new-components/shared/Typography";
 import { appConfig } from "../../../src/appConfig";
 import {
+  useDispatch,
   usePCDCollection,
   useProveState,
   useProveStateCount,
@@ -50,7 +52,6 @@ import {
 import { nextFrame } from "../../../src/util";
 import { PCDArgs } from "../../shared/PCDArgs";
 import { Accordion } from "../../../new-components/shared/Accordion";
-import { Spacer } from "@pcd/passport-ui";
 
 /**
  * A reuseable form which can be used to generate a new instance of a PCD
@@ -60,7 +61,8 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   pcdType,
   initialArgs,
   options,
-  onProve
+  onProve,
+  originalReq
 }: {
   pcdType: string;
   initialArgs: ArgsOf<T>;
@@ -71,8 +73,10 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     pendingPCD: PendingPCD | undefined,
     multiplePCDs?: Array<SerializedPCD<PCDOf<T>>>
   ) => void;
+  originalReq: PCDGetRequest;
   folder?: string;
 }): JSX.Element {
+  const dispatch = useDispatch();
   const pcds = usePCDCollection();
   const [args, setArgs] = useState<ArgsOf<T>>(
     JSON.parse(JSON.stringify(initialArgs))
@@ -249,10 +253,17 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
                   link={{
                     title: "EDIT",
                     onClick: () => {
-                      // dispatch({
-                      //   type: "set-bottom-modal",
-                      //   modal: { modalType: "manage-emails", goBackToSupport: true }
-                      // });
+                      dispatch({
+                        type: "set-bottom-modal",
+                        modal: {
+                          modalType: "manage-emails",
+                          prevModal: {
+                            modalType: "prove",
+                            request: originalReq
+                          },
+                          dismissble: false
+                        }
+                      });
                     }
                   }}
                   displayOnly={true}
@@ -301,7 +312,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
           <Typography>Loading the proof</Typography>
         </AbsoluteContainer>
       )}
-
       <PCDArgs
         args={args}
         setArgs={setArgs}
