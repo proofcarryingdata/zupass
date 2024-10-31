@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import * as v from "valibot";
 import { useStateContext } from "../appHooks";
 import { StateContextValue } from "../dispatch";
+import { useSyncE2EEStorage } from "../useSyncE2EEStorage";
 import { ZupassRPCProcessor } from "./ZappServer";
 
 export enum ListenMode {
@@ -105,6 +106,7 @@ function isAlreadyAuthorized(
 
 export function useZappServer(mode: ListenMode): void {
   const context = useStateContext();
+  useSyncE2EEStorage();
 
   useEffect(() => {
     if (
