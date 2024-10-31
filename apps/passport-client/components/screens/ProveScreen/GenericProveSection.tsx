@@ -337,19 +337,22 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
           {proving ? <NewLoader rows={2} columns={3} color="white" /> : "Prove"}
         </Button2>
 
-        <Button2
-          onClick={() => {
-            if (window.opener && window.opener !== window) {
-              // you are in a popup
-              window.close();
-            } else {
-              window.history.back();
-            }
-          }}
-          variant="secondary"
-        >
-          Back
-        </Button2>
+        {/* FIXME: Removing the back button here until we have a better resolution to TG webview */}
+        {/* https://linear.app/0xparc-pcd/issue/0XP-1495/the-back-button-for-zktelegram-prove-page-doesnt-work  */}
+        {/* <Button2
+            style={{ marginTop: "auto" }}
+            onClick={() => {
+              if (window.opener && window.opener !== window) {
+                // you are in a popup
+                window.close();
+              } else {
+                window.history.back();
+              }
+            }}
+            variant="secondary"
+          >
+            Back
+          </Button2> */}
       </ButtonsContainer>
     </Container>
   );
