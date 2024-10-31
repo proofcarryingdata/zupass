@@ -8,7 +8,10 @@ import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import { useCallback, useEffect, useState } from "react";
 import { useFilePicker } from "use-file-picker";
 import { useDispatch, usePCDCollection } from "../../src/appHooks";
-import { getPackages } from "../../src/pcdPackages";
+import {
+  fallbackDeserializeFunction,
+  getPackages
+} from "../../src/pcdPackages";
 import { AppState } from "../../src/state";
 import { useSelector } from "../../src/subscribe";
 import { Button, H2 } from "../core";
@@ -105,7 +108,11 @@ export function ImportBackupScreen(): JSX.Element {
             // Deserialize the storage - throws an error if the content is not
             // recognized
             parsedCollection = (
-              await deserializeStorage(storageExport, await getPackages())
+              await deserializeStorage(
+                storageExport,
+                await getPackages(),
+                fallbackDeserializeFunction
+              )
             ).pcds;
           } catch (e) {
             // The file is not valid, so bail out
@@ -246,7 +253,7 @@ export function ImportBackupScreen(): JSX.Element {
   return (
     <>
       <MaybeModal />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <ScreenNavigation label={"Home"} to="/" />
         <Container>
           <Spacer h={8} />

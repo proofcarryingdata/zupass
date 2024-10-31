@@ -1,12 +1,12 @@
 import { EdgeCityBalance } from "@pcd/passport-interface";
-import { Pool } from "postgres-pool";
+import { PoolClient } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
 export async function getEdgeCityBalances(
-  pool: Pool
+  client: PoolClient
 ): Promise<EdgeCityBalance[]> {
   const { rows } = await sqlQuery(
-    pool,
+    client,
     `
     SELECT '0x' || encode(sha256('edgecity' || email::bytea), 'hex') as email_hash, balance, RANK() OVER (ORDER BY balance DESC) AS rank
     FROM (

@@ -7,6 +7,7 @@ import { startFrogcryptoService } from "./services/frogcryptoService";
 import { startCredentialSubservice } from "./services/generic-issuance/subservices/CredentialSubservice";
 import { startGenericIssuanceService } from "./services/generic-issuance/subservices/utils/startGenericIssuanceService";
 import { startIssuanceService } from "./services/issuanceService";
+import { startLocalFileService } from "./services/LocalFileService";
 import { startMetricsService } from "./services/metricsService";
 import { startMultiProcessService } from "./services/multiProcessService";
 import { startPagerDutyService } from "./services/pagerDutyService";
@@ -30,7 +31,7 @@ export async function startServices(
 
   const multiprocessService = startMultiProcessService();
   const pagerDutyService = startPagerDutyService();
-  const discordService = await startDiscordService();
+  const discordService = await startDiscordService(context);
   const rollbarService = startRollbarService(context);
   const rateLimitService = startRateLimitService(context, rollbarService);
   const telegramService = await startTelegramService(
@@ -41,7 +42,7 @@ export async function startServices(
   const credentialSubservice = await startCredentialSubservice(context.dbPool);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
-  const emailTokenService = startEmailTokenService(context);
+  const emailTokenService = startEmailTokenService();
   const semaphoreService = startSemaphoreService(context);
   const zuzaluPretixSyncService = startZuzaluPretixSyncService(
     context,
@@ -56,7 +57,7 @@ export async function startServices(
     apis.devconnectPretixAPIFactory
   );
 
-  const e2eeService = startE2EEService(context, credentialSubservice);
+  const e2eeService = startE2EEService(credentialSubservice);
   const metricsService = startMetricsService(context, rollbarService);
   const persistentCacheService = startPersistentCacheService(
     context.dbPool,
@@ -74,6 +75,7 @@ export async function startServices(
     issuanceService
   );
   const poapService = startPoapService(context, rollbarService);
+  const localFileService = startLocalFileService();
   const genericIssuanceService = await startGenericIssuanceService(
     context,
     rollbarService,
@@ -83,11 +85,11 @@ export async function startServices(
     discordService,
     persistentCacheService,
     emailService,
-    credentialSubservice
+    credentialSubservice,
+    localFileService
   );
   const userService = startUserService(
     context,
-    semaphoreService,
     emailTokenService,
     emailService,
     rateLimitService,
@@ -115,18 +117,19 @@ export async function startServices(
     rateLimitService,
     genericIssuanceService,
     pagerDutyService,
-    credentialSubservice
+    credentialSubservice,
+    localFileService
   };
 
   return services;
 }
 
 export async function stopServices(services: GlobalServices): Promise<void> {
-  services.userService.stop();
-  services.provingService.stop();
-  services.semaphoreService.stop();
+  services.userService?.stop();
+  services.provingService?.stop();
+  services.semaphoreService?.stop();
   services.zuzaluPretixSyncService?.stop();
-  services.metricsService.stop();
+  services.metricsService?.stop();
   services.telegramService?.stop();
   services.persistentCacheService.stop();
   services.devconnectPretixSyncService?.stop();

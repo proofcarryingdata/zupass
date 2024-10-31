@@ -2,8 +2,12 @@ import {
   PROTO_POD_GPC_FAMILY_NAME,
   ProtoPODGPC,
   ProtoPODGPCCircuitDesc,
+  ProtoPODGPCInputs,
+  ProtoPODGPCOutputs,
+  ProtoPODGPCPublicInputs,
   githubDownloadRootURL,
   gpcArtifactPaths,
+  jsdelivrDownloadRootURL,
   unpkgDownloadRootURL
 } from "@pcd/gpcircuits";
 import urljoin from "url-join";
@@ -31,13 +35,25 @@ import {
   makeCircuitIdentifier
 } from "./gpcUtil";
 
+/**
+ * ProtoPODGPC circuit family type.
+ */
+export type GPCCircuitFamily = ProtoPODGPCCircuitDesc[];
+
+/**
+ * Default production ProtoPODGPC circuit family.
+ */
+export const DefaultCircuitFamily = ProtoPODGPC.CIRCUIT_FAMILY;
+
 function bindConfigWithRequirements(
   proofConfig: GPCProofConfig,
-  circuitReq: GPCRequirements
+  circuitReq: GPCRequirements,
+  circuitFamily: GPCCircuitFamily
 ): { boundConfig: GPCBoundConfig; circuitDesc: ProtoPODGPCCircuitDesc } {
   // Assumes proofConfig has already been checked by the caller.
   const circuitDesc = checkCircuitRequirements(
     circuitReq,
+    circuitFamily,
     proofConfig.circuitIdentifier
   );
   const boundConfig = canonicalizeConfig(
@@ -59,22 +75,162 @@ function bindConfigWithRequirements(
  * will work for all possible inputs. In particular the max POD size supported
  * by an auto-selected circuit might not be sufficient for all inputs.  If you
  * anticipate a larger size, you should pick your circuit explicitly using
- * `proofConfig.circuitIdentifier`.  (See {@link ProtoPODGPC.CIRCUIT_FAMILY}
+ * `proofConfig.circuitIdentifier`.  (See {@link DefaultCircuitFamily}
  * for supported circuits.)
  *
  * @param proofConfig the raw proof config to bind.
- * @returns a new configuration object bound and canonicalized as described
- *   above.
+ * @param [circuitFamily=ProtaoPODGPC.CIRCUIT_FAMILY] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
+ * @returns a new configuration object bound and canonicalized (see
+ *   {@link GPCBoundConfig}), as well as a description of selected circuit.
  * @throws TypeError if the input configuration is malformed
  * @throws Error if the requirements of the given configuration are impossible
  *   to meet with the given circuit
  */
-export function gpcBindConfig(proofConfig: GPCProofConfig): {
+export function gpcBindConfig(
+  proofConfig: GPCProofConfig,
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
+): {
   boundConfig: GPCBoundConfig;
   circuitDesc: ProtoPODGPCCircuitDesc;
 } {
   const circuitReq = checkProofConfig(proofConfig);
-  return bindConfigWithRequirements(proofConfig, circuitReq);
+  return bindConfigWithRequirements(proofConfig, circuitReq, circuitFamily);
+}
+
+/**
+ * Checks whether the the given configuration and inputs can be used to generate
+ * a valid GPC Proof.  This function performs all of the argument checks of
+ * {@link gpcProve}, but does not perform expensive proof generation or trigger
+ * any side-effects such as downloading artifacts.  See the
+ * documentation of the input and output types for more details:
+ * {@link GPCProofConfig}, {@link GPCProofInputs}, {@link GPCBoundConfig}, and
+ * {@link ProtoPODGPCCircuitDesc}.
+ *
+ * If the config or inputs cannot be used to generate a valid proof with
+ * the supported circuits, this function will throw an exception with a message
+ * explaining why.  If this function returns successfully, it should be possible
+ * to later call {@link gpcProve} with the same arguments without any risk of
+ * failing due to config or inputs, though internal errors in proof generation
+ * or artifact download are still possible.
+ *
+ * The specific ZK circuit needed will be picked as the smallest supported
+ * circuit which can fit the configuration and inputs.  If you need a specific
+ * circuit to be used instead (e.g. to support larger object sizes for
+ * future reuse), you can specify that in `proofConfig.circuitIdentifier`.
+ * (See {@link DefaultCircuitFamily} for supported circuits.)
+ *
+ * @param proofConfig the configuration specifying the constraints to be proven.
+ * @param proofInputs the input data (PODs and other values) specific to this
+ *  proof.
+ * @param [circuitFamily=DefaultCircuitFamily] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
+ * @returns a new configuration object bound and canonicalized (see
+ *   {@link GPCBoundConfig}), as well as a description of selected circuit.
+ * @throws TypeError if any of the arguments is malformed
+ * @throws Error if the requirements of the given configuration are impossible
+ *   to meet with the given circuit
+ */
+export function gpcCheckProvable(
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs,
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
+): {
+  boundConfig: GPCBoundConfig;
+  circuitDesc: ProtoPODGPCCircuitDesc;
+} {
+  const circuitReq = checkProofArgs(proofConfig, proofInputs);
+  return bindConfigWithRequirements(proofConfig, circuitReq, circuitFamily);
+}
+
+/**
+ * Performs only the preparatory steps of {@link gpcProve}, returning all of
+ * the circuit-related info needed to generate a proof using the
+ * {@link @pcd/gpcircuits} package, or another user-supplied proving stack.
+ *
+ * Inputs will be fully validated for structural soundness in the same way as
+ * when generating a proof.  See {@link gpcProve} for more details on inputs
+ * and operation.
+ *
+ * @param proofConfig the configuration specifying the constraints to be proven.
+ * @param proofInputs the input data (PODs and other values) specific to this
+ *  proof.
+ * @param [circuitFamily=DefaultCircuitFamily] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
+ * @returns info necessary to generate a proof with a specific circuit,
+ *   including the bound proof config, circuit description, and its public
+ *   and private input signals
+ * @throws TypeError if any of the arguments is malformed
+ * @throws Error if it is impossible to create a valid proof
+ */
+export function gpcPreProve(
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs,
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
+): {
+  boundConfig: GPCBoundConfig;
+  circuitDesc: ProtoPODGPCCircuitDesc;
+  circuitInputs: ProtoPODGPCInputs;
+} {
+  const { boundConfig, circuitDesc } = gpcCheckProvable(
+    proofConfig,
+    proofInputs,
+    circuitFamily
+  );
+
+  const circuitInputs = compileProofConfig(
+    boundConfig,
+    proofInputs,
+    circuitDesc
+  );
+
+  return { boundConfig, circuitDesc, circuitInputs };
+}
+
+/**
+ * Performs only the post-processing steps of {@link gpcProve}, taking in a
+ * proof already genereated using the {@link @pcd/gpcircuits} package, or
+ * another user-supplied proving stack.  The circuit-specific outputs are
+ * processed into the {@link GPCRevealedClaims} to produce the normal output
+ * of {@link gpcProve}.
+ *
+ * The config and inputs are assumed to have already been processed by
+ * {@link gpcPreProve}, so will not be fully validated by this function.
+ * See {@link gpcProve} for more details on inputs, outputs and operation.
+ *
+ * @param proof the Groth16 proof
+ * @param boundConfig the bound configuration specifying the constraints
+ *   proven, and the specific circuit which was used.
+ * @param circuitDesc the parameters of the circuit used for the proof.
+ * @param proofInputs the input data (PODs and other values) specific to this
+ *  proof.
+ * @returns The Groth16 proof, a bound configuration usable for reliable
+ *   verification or future proofs (see {@link GPCBoundConfig}), and the
+ *   revealed claims of this proof (see {@link GPCRevealedClaims}).
+ * @throws TypeError if any of the arguments is malformed
+ * @throws Error if it is impossible to create a valid proof
+ */
+export function gpcPostProve(
+  proof: GPCProof,
+  boundConfig: GPCBoundConfig,
+  circuitDesc: ProtoPODGPCCircuitDesc,
+  proofInputs: GPCProofInputs,
+  circuitOutputs: ProtoPODGPCOutputs
+): {
+  proof: GPCProof;
+  boundConfig: GPCBoundConfig;
+  revealedClaims: GPCRevealedClaims;
+} {
+  const revealedClaims = makeRevealedClaims(
+    boundConfig,
+    circuitDesc,
+    proofInputs,
+    circuitOutputs
+  );
+  return { proof, boundConfig, revealedClaims };
 }
 
 /**
@@ -87,7 +243,7 @@ export function gpcBindConfig(proofConfig: GPCProofConfig): {
  * circuit which can fit the configuration and inputs.  If you need a specific
  * circuit to be used instead (e.g. to support larger object sizes for
  * future reuse), you can specify that in `proofConfig.circuitIdentifier`.
- * (See {@link ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
+ * (See {@link DefaultCircuitFamily} for supported circuits.)
  *
  * @param proofConfig the configuration specifying the constraints to be proven.
  * @param proofInputs the input data (PODs and other values) specific to this
@@ -95,6 +251,9 @@ export function gpcBindConfig(proofConfig: GPCProofConfig): {
  * @param pathToArtifacts the path to the root folder where circuit artifacts
  *   can be found.  This may be a URL (in browser) or a filesystem path (in
  *   Node).
+ * @param [circuitFamily=DefaultCircuitFamily] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
  * @returns The Groth16 proof, a bound configuration usable for reliable
  *   verification or future proofs (see {@link GPCBoundConfig}), and the
  *   revealed claims of this proof (see {@link GPCRevealedClaims}).
@@ -104,37 +263,79 @@ export function gpcBindConfig(proofConfig: GPCProofConfig): {
 export async function gpcProve(
   proofConfig: GPCProofConfig,
   proofInputs: GPCProofInputs,
-  pathToArtifacts: string
+  pathToArtifacts: string,
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
 ): Promise<{
   proof: GPCProof;
   boundConfig: GPCBoundConfig;
   revealedClaims: GPCRevealedClaims;
 }> {
-  const circuitReq = checkProofArgs(proofConfig, proofInputs);
-  const { boundConfig, circuitDesc } = bindConfigWithRequirements(
+  const { boundConfig, circuitDesc, circuitInputs } = gpcPreProve(
     proofConfig,
-    circuitReq
+    proofInputs,
+    circuitFamily
   );
 
   const artifactPaths = gpcArtifactPaths(pathToArtifacts, circuitDesc);
-
-  const circuitInputs = compileProofConfig(
-    boundConfig,
-    proofInputs,
-    circuitDesc
-  );
 
   const { proof, outputs: circuitOutputs } = await ProtoPODGPC.prove(
     circuitInputs,
     artifactPaths.wasmPath,
     artifactPaths.pkeyPath
   );
-  const revealedClaims = makeRevealedClaims(
+
+  return gpcPostProve(
+    proof,
     boundConfig,
+    circuitDesc,
     proofInputs,
     circuitOutputs
   );
-  return { proof, boundConfig, revealedClaims };
+}
+
+/**
+ * Performs only the preparatory steps of {@link gpcVerify}, returning all of
+ * the circuit-related info needed to verify a proof using the
+ * {@link @pcd/gpcircuits} package, or another user-supplied verification stack.
+ *
+ * Inputs will be fully validated for structural soundness, but not
+ * cryptographically.  See {@link gpcVerify} for more details on inputs and
+ * operation.
+ *
+ * @param boundConfig the bound configuration specifying the constraints
+ *   proven, and the specific circuit which was used.
+ * @param revealedClaims the revealed parts of the proof inputs and outputs.
+ * @param [circuitFamily=DefaultCircuitFamily] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
+ * @returns info necessary to verify a proof with a specific circuit, including
+ *   the circuit description, and its public input and output signals
+ * @throws TypeError if any of the arguments is malformed
+ * @throws Error if the proof cannot be verified
+ */
+export function gpcPreVerify(
+  boundConfig: GPCBoundConfig,
+  revealedClaims: GPCRevealedClaims,
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
+): {
+  circuitDesc: ProtoPODGPCCircuitDesc;
+  circuitPublicInputs: ProtoPODGPCPublicInputs;
+  circuitOutputs: ProtoPODGPCOutputs;
+} {
+  const circuitReq = checkVerifyArgs(boundConfig, revealedClaims);
+  const circuitDesc = checkCircuitRequirements(
+    circuitReq,
+    circuitFamily,
+    boundConfig.circuitIdentifier
+  );
+
+  const { circuitPublicInputs, circuitOutputs } = compileVerifyConfig(
+    boundConfig,
+    revealedClaims,
+    circuitDesc
+  );
+
+  return { circuitDesc, circuitPublicInputs, circuitOutputs };
 }
 
 /**
@@ -154,6 +355,9 @@ export async function gpcProve(
  * @param pathToArtifacts the path to the root foler where circuit artifacts
  *   can be found.  This may be a URL (in browser) or a filesystem path (in
  *   Node).
+ * @param [circuitFamily=DefaultCircuitFamily] the circuit family to pick
+ *   the circuit from. This must be sorted in order of increasing circuit size
+ *   (constraint count).
  * @returns true if the proof is valid
  * @throws TypeError if any of the arguments is malformed
  * @throws Error if the proof cannot be verified
@@ -162,18 +366,13 @@ export async function gpcVerify(
   proof: GPCProof,
   boundConfig: GPCBoundConfig,
   revealedClaims: GPCRevealedClaims,
-  pathToArtifacts: string
+  pathToArtifacts: string,
+  circuitFamily: GPCCircuitFamily = DefaultCircuitFamily
 ): Promise<boolean> {
-  const circuitReq = checkVerifyArgs(boundConfig, revealedClaims);
-  const circuitDesc = checkCircuitRequirements(
-    circuitReq,
-    boundConfig.circuitIdentifier
-  );
-
-  const { circuitPublicInputs, circuitOutputs } = compileVerifyConfig(
+  const { circuitDesc, circuitPublicInputs, circuitOutputs } = gpcPreVerify(
     boundConfig,
     revealedClaims,
-    circuitDesc
+    circuitFamily
   );
 
   return await ProtoPODGPC.verify(
@@ -193,7 +392,7 @@ export const GPC_ARTIFACTS_NPM_PACKAGE_NAME =
 
 /**
  * Version of the published artifacts on NPM which are compatible with this
- * version of the GPC circuits.
+ * version of the GPC package. Re-exported for convenience.
  */
 export const GPC_ARTIFACTS_NPM_VERSION = ProtoPODGPC.ARTIFACTS_NPM_VERSION;
 
@@ -203,7 +402,7 @@ export const GPC_ARTIFACTS_NPM_VERSION = ProtoPODGPC.ARTIFACTS_NPM_VERSION;
  * Note that the `zupass` source is not currently usable outside of the
  * Zupass app itself.
  */
-export type GPCArtifactSource = "zupass" | "github" | "unpkg";
+export type GPCArtifactSource = "zupass" | "github" | "unpkg" | "jsdelivr";
 
 /**
  * Stability level of GPC artifacts to use.  Test artifacts are for use
@@ -250,6 +449,13 @@ export function gpcArtifactDownloadURL(
         PROTO_POD_GPC_FAMILY_NAME,
         version
       );
+    case "jsdelivr":
+      if (version === undefined || version === "") {
+        version = GPC_ARTIFACTS_NPM_VERSION;
+      }
+      // stability is intentionally ignored.  NPM version can encode
+      // pre-release status.
+      return jsdelivrDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
     case "unpkg":
       if (version === undefined || version === "") {
         version = GPC_ARTIFACTS_NPM_VERSION;
@@ -258,7 +464,7 @@ export function gpcArtifactDownloadURL(
       // pre-release status.
       return unpkgDownloadRootURL(PROTO_POD_GPC_FAMILY_NAME, version);
     case "zupass":
-      // TODO(POD-P3): Do we want to expose source=zupass as a public option?
+      // TODO(POD-P4): Do we want to expose source=zupass as a public option?
       // If so, we need the Zupass server to not set `Access-Control-Allow-Origin: *`,
       // or migrate to a different hosting option.
       if (zupassURL === undefined) {
@@ -266,10 +472,13 @@ export function gpcArtifactDownloadURL(
           'Zupass artifact download requires a server URL.  Try "https://zupass.org".'
         );
       }
+      if (version === undefined || version === "") {
+        version = GPC_ARTIFACTS_NPM_VERSION;
+      }
       return urljoin(
         zupassURL,
         stability === "test" ? "artifacts/test" : "artifacts",
-        PROTO_POD_GPC_FAMILY_NAME
+        PROTO_POD_GPC_FAMILY_NAME + (stability === "test" ? "" : `/${version}`)
       );
     default:
       throw new Error(`Unknown artifact download source ${source}.`);

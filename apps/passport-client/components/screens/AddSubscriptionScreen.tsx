@@ -187,7 +187,7 @@ export function AddSubscriptionScreen(): JSX.Element | null {
   return (
     <>
       <MaybeModal />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <ScreenNavigation label={"Subscriptions"} to="/subscriptions" />
         <SubscriptionsScreenContainer>
           {mismatchedEmails && (

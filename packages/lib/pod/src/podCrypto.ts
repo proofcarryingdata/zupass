@@ -1,9 +1,9 @@
 import { Point } from "@zk-kit/baby-jubjub";
 import {
-  Signature,
   derivePublicKey,
   packPublicKey,
   packSignature,
+  Signature,
   signMessage,
   unpackPublicKey,
   unpackSignature,
@@ -13,24 +13,21 @@ import { BigNumber, leBigIntToBuffer, leBufferToBigInt } from "@zk-kit/utils";
 import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
-import { EDDSA_PUBKEY_TYPE_STRING, PODValue } from "./podTypes";
 import {
-  CryptoBytesEncoding,
-  PRIVATE_KEY_REGEX,
+  POD_PRIVATE_KEY_REGEX,
+  POD_PUBLIC_KEY_REGEX,
+  POD_SIGNATURE_REGEX,
   PUBLIC_KEY_ENCODING_GROUPS,
-  PUBLIC_KEY_REGEX,
-  SIGNATURE_ENCODING_GROUPS,
-  SIGNATURE_REGEX,
-  decodeBytesAuto,
-  encodeBytes
-} from "./podUtil";
+  SIGNATURE_ENCODING_GROUPS
+} from "./podChecks";
+import { EDDSA_PUBKEY_TYPE_STRING, POD_NULL_HASH, PODValue } from "./podTypes";
+import { CryptoBytesEncoding, decodeBytesAuto, encodeBytes } from "./podUtil";
 
 /**
- * Calculates the appropriate hash for a POD value represented as a string,
- * which could be one of multiple value types (see {@link podValueHash}).
+ * Calculates the appropriate hash for a POD value represented as a string or
+ * bytes, which could be one of multiple value types (see {@link podValueHash}).
  */
-export function podStringHash(input: string): bigint {
-  // TODO(POD-P2): Finalize choice of hash for POD names and string values.
+export function podBytesHash(input: string | Uint8Array): bigint {
   return BigInt("0x" + sha256(input)) >> 8n;
 }
 
@@ -39,7 +36,6 @@ export function podStringHash(input: string): bigint {
  * which could be one of multiple value types (see {@link podValueHash}).
  */
 export function podIntHash(input: bigint): bigint {
-  // TODO(POD-P2): Finalize choice of hash for POD integer values.
   return poseidon1([input]);
 }
 
@@ -54,7 +50,7 @@ export function podEdDSAPublicKeyHash(input: string): bigint {
  * Calculates the appropriate hash for a POD entry name.
  */
 export function podNameHash(podName: string): bigint {
-  return podStringHash(podName);
+  return podBytesHash(podName);
 }
 
 /**
@@ -63,13 +59,19 @@ export function podNameHash(podName: string): bigint {
 export function podValueHash(podValue: PODValue): bigint {
   switch (podValue.type) {
     case "string":
-      return podStringHash(podValue.value);
+    case "bytes":
+      return podBytesHash(podValue.value);
     case "int":
     case "cryptographic":
-      // TODO(POD-P2): Finalize choice of hash for POD cryptographics.
       return podIntHash(podValue.value);
+    case "boolean":
+      return podIntHash(podValue.value ? 1n : 0n);
     case EDDSA_PUBKEY_TYPE_STRING:
       return podEdDSAPublicKeyHash(podValue.value);
+    case "date":
+      return podIntHash(BigInt(podValue.value.getTime()));
+    case "null":
+      return POD_NULL_HASH;
     default:
       throw new TypeError(`Unexpected type in PODValue ${podValue}.`);
   }
@@ -116,7 +118,7 @@ export function encodePrivateKey(
 export function decodePrivateKey(privateKey: string): Buffer {
   return decodeBytesAuto(
     privateKey,
-    PRIVATE_KEY_REGEX,
+    POD_PRIVATE_KEY_REGEX,
     PUBLIC_KEY_ENCODING_GROUPS,
     "Private key should be 32 bytes, encoded as hex or Base64."
   );
@@ -151,7 +153,7 @@ export function decodePublicKey(publicKey: string): Point<bigint> {
     leBufferToBigInt(
       decodeBytesAuto(
         publicKey,
-        PUBLIC_KEY_REGEX,
+        POD_PUBLIC_KEY_REGEX,
         PUBLIC_KEY_ENCODING_GROUPS,
         "Public key should be 32 bytes, encoded as hex or Base64."
       )
@@ -188,11 +190,28 @@ export function decodeSignature(encodedSignature: string): Signature<bigint> {
   return unpackSignature(
     decodeBytesAuto(
       encodedSignature,
-      SIGNATURE_REGEX,
+      POD_SIGNATURE_REGEX,
       SIGNATURE_ENCODING_GROUPS,
       "Signature should be 64 bytes, encoded as hex or Base64."
     )
   );
+}
+
+/**
+ * Calculates the corresponding public key for the given private key.  This is
+ * equivalent to the calculation performed in {@link signPODRoot}, and can be
+ * used to pre-publish the expected public key to clients before signing.
+ *
+ * @param privateKey the signer's private key, which is 32 bytes encoded as
+ *   per {@link encodePrivateKey}.
+ * @returns The signer's public key, which is 32 bytes encoded as per
+ *   {@link encodePublicKey}.
+ * @throws TypeError if any of the individual arguments is incorrectly formatted
+ */
+export function deriveSignerPublicKey(privateKey: string): string {
+  const privateKeyBytes = decodePrivateKey(privateKey);
+  const unpackedPublicKey = derivePublicKey(privateKeyBytes);
+  return encodePublicKey(unpackedPublicKey);
 }
 
 /**

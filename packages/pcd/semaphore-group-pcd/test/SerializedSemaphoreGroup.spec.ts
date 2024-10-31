@@ -13,7 +13,7 @@ describe("Serializing Semaphore groups", function () {
     const identity = new Identity();
     originalGroup.addMember(identity.commitment);
     const serialized = serializeSemaphoreGroup(originalGroup, groupName);
-    const deserialized = deserializeSemaphoreGroup(serialized);
+    const deserialized = await deserializeSemaphoreGroup(serialized);
 
     assert.equal(deserialized.id, originalGroup.id);
     assert.deepEqual(deserialized.members, originalGroup.members);

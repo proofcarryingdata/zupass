@@ -6,6 +6,7 @@ export function clearAllPendingRequests(): void {
   clearPendingViewSubscriptionsRequest();
   clearPendingAddSubscriptionRequest();
   clearPendingGenericIssuanceCheckinRequest();
+  clearPendingAuthenticateIFrameRequest();
 }
 
 export function hasPendingRequest(): boolean {
@@ -17,7 +18,8 @@ export function hasPendingRequest(): boolean {
     getPendingViewSubscriptionsPageRequest() ||
     getPendingAddSubscriptionPageRequest() ||
     getPendingViewFrogCryptoPageRequest() ||
-    getPendingGenericIssuanceCheckinRequest()
+    getPendingGenericIssuanceCheckinRequest() ||
+    getPendingAuthenticateIFrameRequest()
   );
 }
 
@@ -29,7 +31,8 @@ export const pendingRequestKeys: Record<string, string> = {
   viewSubscriptions: "pendingViewSubscriptions",
   addSubscription: "pendingAddSubscription",
   viewFrogCrypto: "pendingViewFrogCrypto",
-  genericIssuanceCheckin: "pendingGenericIssuanceCheckin"
+  genericIssuanceCheckin: "pendingGenericIssuanceCheckin",
+  authenticateIFrame: "pendingAuthenticateIFrame"
 } as const;
 
 export function setPendingGetWithoutProvingRequest(request: string): void {
@@ -135,6 +138,19 @@ export function getPendingGenericIssuanceCheckinRequest(): string | undefined {
   const value = sessionStorage.getItem(
     pendingRequestKeys.genericIssuanceCheckin
   );
+  return value ?? undefined;
+}
+
+export function setPendingAuthenticateIFrameRequest(request: string): void {
+  sessionStorage.setItem(pendingRequestKeys.authenticateIFrame, request);
+}
+
+export function clearPendingAuthenticateIFrameRequest(): void {
+  sessionStorage.removeItem(pendingRequestKeys.authenticateIFrame);
+}
+
+export function getPendingAuthenticateIFrameRequest(): string | undefined {
+  const value = sessionStorage.getItem(pendingRequestKeys.authenticateIFrame);
   return value ?? undefined;
 }
 

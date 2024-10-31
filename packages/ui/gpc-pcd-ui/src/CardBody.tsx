@@ -1,4 +1,4 @@
-import { serializeGPCBoundConfig, serializeGPCRevealedClaims } from "@pcd/gpc";
+import { proofConfigToJSON, revealedClaimsToJSON } from "@pcd/gpc";
 import { GPCPCD, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
   Button,
@@ -48,15 +48,23 @@ function GPCCardBody({ pcd }: { pcd: GPCPCD }): JSX.Element {
 
       <FieldLabel>Proof Config</FieldLabel>
       <p>This specifies what has been proven and revealed.</p>
-      <TextContainer style={{ overflowX: "auto" }}>
-        <pre>{serializeGPCBoundConfig(pcd.claim.config, 2)}</pre>
+      <TextContainer
+        style={{ overflowX: "auto", maxHeight: "200px", overflowY: "auto" }}
+      >
+        <pre>
+          {JSON.stringify(proofConfigToJSON(pcd.claim.config), null, 2)}
+        </pre>
       </TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Revealed Claims</FieldLabel>
       <p>These are the entries and metadata revealed in the proof.</p>
-      <TextContainer style={{ overflowX: "auto" }}>
-        <pre>{serializeGPCRevealedClaims(pcd.claim.revealed, 2)}</pre>
+      <TextContainer
+        style={{ overflowX: "auto", maxHeight: "200px", overflowY: "auto" }}
+      >
+        <pre>
+          {JSON.stringify(revealedClaimsToJSON(pcd.claim.revealed), null, 2)}
+        </pre>
       </TextContainer>
       <Spacer h={8} />
       <Button

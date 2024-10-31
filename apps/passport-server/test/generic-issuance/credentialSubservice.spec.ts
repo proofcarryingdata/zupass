@@ -39,7 +39,7 @@ describe("generic issuance - credential subservice", function () {
    * Sets up a Zupass/Generic issuance backend.
    */
   this.beforeAll(async () => {
-    ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
+    ZUPASS_EDDSA_PRIVATE_KEY = testingEnv.SERVER_EDDSA_PRIVATE_KEY as string;
     zupassPublicKey = await getEdDSAPublicKey(ZUPASS_EDDSA_PRIVATE_KEY);
 
     await overrideEnvironment({

@@ -1,12 +1,14 @@
 import { ProveResult } from "@parcnet-js/client-rpc";
-import { PodspecProofRequest } from "@parcnet-js/podspec";
+import { PODData, PodspecProofRequest } from "@parcnet-js/podspec";
+import type { GPCIdentifier } from "@pcd/gpc";
 import { PCDGetRequest } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
+import type { PODEntries } from "@pcd/pod";
 
 export enum EmbeddedScreenType {
   EmbeddedGetRequest,
-  EmbeddedAddSubscription,
-  EmbeddedGPCProof
+  EmbeddedGPCProof,
+  EmbeddedSignPOD
 }
 
 export interface EmbeddedGetRequest {
@@ -15,18 +17,21 @@ export interface EmbeddedGetRequest {
   callback: (serialized: SerializedPCD) => void;
 }
 
-export interface EmbeddedAddSubscription {
-  type: EmbeddedScreenType.EmbeddedAddSubscription;
-  feedUrl: string;
-  feedId: string;
-}
-
 export interface EmbeddedGPCProof {
   type: EmbeddedScreenType.EmbeddedGPCProof;
   proofRequest: PodspecProofRequest;
+  collectionIds: string[];
+  circuitIdentifier?: GPCIdentifier;
   callback: (result: ProveResult) => void;
 }
 
+export interface EmbeddedSignPOD {
+  type: EmbeddedScreenType.EmbeddedSignPOD;
+  entries: PODEntries;
+  callback: (result: PODData) => void;
+  onCancel: () => void;
+}
+
 export interface EmbeddedScreenState {
-  screen?: EmbeddedGetRequest | EmbeddedAddSubscription | EmbeddedGPCProof;
+  screen?: EmbeddedGetRequest | EmbeddedGPCProof | EmbeddedSignPOD;
 }

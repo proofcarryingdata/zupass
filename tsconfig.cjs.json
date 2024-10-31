@@ -40,6 +40,9 @@
       "path": "packages/lib/podspec/tsconfig.cjs.json"
     },
     {
+      "path": "packages/lib/semaphore-identity-v3-wrapper/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/lib/server-shared/tsconfig.cjs.json"
     },
     {
@@ -112,6 +115,9 @@
       "path": "packages/pcd/semaphore-signature-pcd/tsconfig.cjs.json"
     },
     {
+      "path": "packages/pcd/unknown-pcd/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/pcd/webauthn-pcd/tsconfig.cjs.json"
     },
     {
@@ -170,6 +176,9 @@
     },
     {
       "path": "packages/ui/semaphore-signature-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/unknown-pcd-ui/tsconfig.cjs.json"
     },
     {
       "path": "packages/ui/webauthn-pcd-ui/tsconfig.cjs.json"

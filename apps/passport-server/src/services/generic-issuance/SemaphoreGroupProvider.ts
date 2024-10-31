@@ -10,8 +10,11 @@ import {
 import { uuidToBigInt } from "@pcd/util";
 import { Group } from "@semaphore-protocol/group";
 import _ from "lodash";
+import { PoolClient } from "postgres-pool";
 import { IPipelineConsumerDB } from "../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../database/queries/pipelineSemaphoreHistoryDB";
+import { sqlTransaction } from "../../database/sqlQuery";
+import { ApplicationContext } from "../../types";
 import { traced } from "../telemetryService";
 import { makeGenericIssuanceSemaphoreGroupUrl } from "./capabilities/SemaphoreGroupCapability";
 
@@ -39,6 +42,7 @@ const LOG_NAME = "SemaphoreGroupProvider";
  * Provides reusable Semaphore group features for pipelines.
  */
 export class SemaphoreGroupProvider {
+  private context: ApplicationContext;
   // The semaphore group configuration from the pipeline definition.
   private groupConfigs: SemaphoreGroupConfig[];
   private consumerDB: IPipelineConsumerDB;
@@ -48,11 +52,13 @@ export class SemaphoreGroupProvider {
   private groups: Map<string, Group>;
 
   public constructor(
+    context: ApplicationContext,
     pipelineId: string,
     groupConfigs: SemaphoreGroupConfig[],
     consumerDB: IPipelineConsumerDB,
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
   ) {
+    this.context = context;
     this.groupConfigs = groupConfigs;
     this.consumerDB = consumerDB;
     this.pipelineId = pipelineId;
@@ -73,9 +79,11 @@ export class SemaphoreGroupProvider {
    * Get the latest group as a {@link SerializedSemaphoreGroup}.
    */
   public async getSerializedLatestGroup(
+    client: PoolClient,
     groupId: string
   ): Promise<SerializedSemaphoreGroup | undefined> {
     const group = await this.semaphoreHistoryDB.getLatestHistoryForGroup(
+      client,
       this.pipelineId,
       groupId
     );
@@ -90,9 +98,11 @@ export class SemaphoreGroupProvider {
    * Get the latest root hash for a group.
    */
   public async getLatestGroupRoot(
+    client: PoolClient,
     groupId: string
   ): Promise<string | undefined> {
     const group = await this.semaphoreHistoryDB.getLatestHistoryForGroup(
+      client,
       this.pipelineId,
       groupId
     );
@@ -106,10 +116,12 @@ export class SemaphoreGroupProvider {
    * Get a historical group as a {@link SerializedSemaphoreGroup}.
    */
   public async getSerializedHistoricalGroup(
+    client: PoolClient,
     groupId: string,
     rootHash: string
   ): Promise<SerializedSemaphoreGroup | undefined> {
     const group = await this.semaphoreHistoryDB.getHistoricalGroup(
+      client,
       this.pipelineId,
       groupId,
       rootHash
@@ -134,43 +146,51 @@ export class SemaphoreGroupProvider {
     return traced(LOG_NAME, "start", async (span) => {
       span?.setAttribute("pipeline_id", this.pipelineId);
 
-      // This should be called during pipeline startup.
-      // If an exception throws, it will stop the pipeline from starting.
-      const latestGroups =
-        await this.semaphoreHistoryDB.getLatestGroupsForPipeline(
-          this.pipelineId
+      await sqlTransaction(this.context.dbPool, async (client) => {
+        // This should be called during pipeline startup.
+        // If an exception throws, it will stop the pipeline from starting.
+        const latestGroups =
+          await this.semaphoreHistoryDB.getLatestGroupsForPipeline(
+            client,
+            this.pipelineId
+          );
+
+        const latestGroupMap = new Map(
+          latestGroups.map((group) => [group.groupId, group])
         );
-      const latestGroupMap = new Map(
-        latestGroups.map((group) => [group.groupId, group])
-      );
 
-      for (const groupConfig of this.groupConfigs) {
-        const historicalGroup = latestGroupMap.get(groupConfig.groupId);
+        for (const groupConfig of this.groupConfigs) {
+          const historicalGroup = latestGroupMap.get(groupConfig.groupId);
 
-        this.groups.set(
-          groupConfig.groupId,
-          historicalGroup
-            ? deserializeSemaphoreGroup(
-                JSON.parse(historicalGroup.serializedGroup)
-              )
-            : new Group(
-                uuidToBigInt(groupConfig.groupId),
-                SEMAPHORE_GROUP_DEPTH
-              )
-        );
-      }
-
-      span?.setAttribute("groups_in_db_count", latestGroupMap.size);
-      span?.setAttribute("configured_groups_count", this.groupConfigs.length);
-
-      const configuredGroupIds = new Set(
-        this.groupConfigs.map((gc) => gc.groupId)
-      );
-      for (const groupId of latestGroupMap.keys()) {
-        if (!configuredGroupIds.has(groupId)) {
-          this.semaphoreHistoryDB.deleteGroupHistory(this.pipelineId, groupId);
+          this.groups.set(
+            groupConfig.groupId,
+            historicalGroup
+              ? await deserializeSemaphoreGroup(
+                  JSON.parse(historicalGroup.serializedGroup)
+                )
+              : new Group(
+                  uuidToBigInt(groupConfig.groupId),
+                  SEMAPHORE_GROUP_DEPTH
+                )
+          );
         }
-      }
+
+        span?.setAttribute("groups_in_db_count", latestGroupMap.size);
+        span?.setAttribute("configured_groups_count", this.groupConfigs.length);
+
+        const configuredGroupIds = new Set(
+          this.groupConfigs.map((gc) => gc.groupId)
+        );
+        for (const groupId of latestGroupMap.keys()) {
+          if (!configuredGroupIds.has(groupId)) {
+            this.semaphoreHistoryDB.deleteGroupHistory(
+              client,
+              this.pipelineId,
+              groupId
+            );
+          }
+        }
+      });
     });
   }
 
@@ -178,7 +198,10 @@ export class SemaphoreGroupProvider {
    * Updates the in-memory Semaphore groups using data on the current ticket
    * set.
    */
-  public async update(data: SemaphoreGroupTicketInfo[]): Promise<void> {
+  public async update(
+    client: PoolClient,
+    data: SemaphoreGroupTicketInfo[]
+  ): Promise<void> {
     return traced(LOG_NAME, "update", async (span) => {
       const groups = this.groupEmailsFromTicketData(data);
 
@@ -186,7 +209,7 @@ export class SemaphoreGroupProvider {
       span?.setAttribute("group_count", groups.size);
 
       for (const [groupConfig, emails] of groups.entries()) {
-        await this.updateGroup(groupConfig, emails);
+        await this.updateGroup(client, groupConfig, emails);
       }
     });
   }
@@ -203,13 +226,14 @@ export class SemaphoreGroupProvider {
    * representation as required.
    */
   private async updateGroup(
+    client: PoolClient,
     groupConfig: SemaphoreGroupConfig,
     emails: string[]
   ): Promise<void> {
     return traced(LOG_NAME, "updateGroup", async (span) => {
       const consumers =
         emails.length > 0
-          ? await this.consumerDB.loadByEmails(this.pipelineId, emails)
+          ? await this.consumerDB.loadByEmails(client, this.pipelineId, emails)
           : [];
 
       const semaphoreIds = _.uniq(
@@ -237,6 +261,7 @@ export class SemaphoreGroupProvider {
         }
 
         await this.semaphoreHistoryDB.addGroupHistoryEntry(
+          client,
           this.pipelineId,
           groupConfig.groupId,
           group.root.toString(),

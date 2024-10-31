@@ -23,6 +23,8 @@ import {
   PODValueTuple,
   decodePublicKey,
   decodeSignature,
+  getRequiredPODValueForCircuit,
+  isPODArithmeticValue,
   podNameHash,
   podValueHash
 } from "@pcd/pod";
@@ -30,7 +32,6 @@ import {
   BABY_JUB_NEGATIVE_ONE,
   BABY_JUB_SUBGROUP_ORDER_MINUS_ONE
 } from "@pcd/util";
-import _ from "lodash";
 import {
   GPCBoundConfig,
   GPCProofEntryConfig,
@@ -474,15 +475,17 @@ function compileProofNumericValues(
         .get(entryId)
         ?.objInput?.content.getValue(entryName);
 
-      if (entryValue?.type !== "int") {
-        throw new TypeError("Type of value of entry ${entryId} must be 'int'.");
+      if (entryValue === undefined || !isPODArithmeticValue(entryValue)) {
+        throw new TypeError(
+          "Type of value of entry ${entryId} must be a bounded arithmetic type."
+        );
       }
 
       // Duplicate value if both `inRange` and `notInRange` are present for the
       // entry.
       return Object.keys(
         numericValueConfig.get(entryId)?.boundsCheckConfig ?? {}
-      ).map((_) => entryValue.value);
+      ).map((_) => getRequiredPODValueForCircuit(entryValue));
     }
   );
 
@@ -1525,6 +1528,7 @@ export function compileVerifyOwnerV4(
  */
 export function makeRevealedClaims(
   proofConfig: GPCBoundConfig,
+  circuitDesc: ProtoPODGPCCircuitDesc,
   proofInputs: GPCProofInputs,
   circuitOutputs: ProtoPODGPCOutputs
 ): GPCRevealedClaims {
@@ -1575,14 +1579,16 @@ export function makeRevealedClaims(
       ? {
           owner: {
             externalNullifier: proofInputs.owner.externalNullifier,
-            ...(proofInputs.owner?.semaphoreV3 !== undefined
+            ...(proofInputs.owner?.semaphoreV3 !== undefined &&
+            circuitDesc.includeOwnerV3
               ? {
                   nullifierHashV3: BigInt(
                     circuitOutputs.ownerV3RevealedNullifierHash[0]
                   )
                 }
               : {}),
-            ...(proofInputs.owner?.semaphoreV4 !== undefined
+            ...(proofInputs.owner?.semaphoreV4 !== undefined &&
+            circuitDesc.includeOwnerV4
               ? {
                   nullifierHashV4: BigInt(
                     circuitOutputs.ownerV4RevealedNullifierHash[0]

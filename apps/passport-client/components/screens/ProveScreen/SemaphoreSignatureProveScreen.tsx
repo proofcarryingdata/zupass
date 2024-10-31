@@ -6,7 +6,6 @@ import {
   requestProveOnServer,
   SignInMessagePayload
 } from "@pcd/passport-interface";
-import { ErrorContainer } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
   IdentityV3,
@@ -26,8 +25,9 @@ import {
   safeRedirectPending
 } from "../../../src/passportRequest";
 import { getHost, getOrigin, nextFrame } from "../../../src/util";
-import { Button } from "../../core";
-import { RippleLoader } from "../../core/RippleLoader";
+import { Typography } from "../../../new-components/shared/Typography";
+import { Button2 } from "../../../new-components/shared/Button";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
 
 export function SemaphoreSignatureProveScreen({
   req
@@ -39,7 +39,6 @@ export function SemaphoreSignatureProveScreen({
   const identity = useIdentityV3();
   const [proving, setProving] = useState(false);
   const [error, setError] = useState<string | undefined>();
-
   const onProve = useCallback(async () => {
     setProving(true);
 
@@ -105,42 +104,86 @@ export function SemaphoreSignatureProveScreen({
   if (req.args.signedMessage.value === undefined) {
     // Website is asking for a signature of the Zuzalu UUID for auth
     lines.push(
-      <p>
-        <b>{getHost(req.returnUrl)}</b> will receive your name, your email, and
-        your Semaphore public key.
-      </p>
+      <InnerContainer>
+        <Typography color="var(--text-primary)" fontSize={20} fontWeight={800}>
+          SIGN IN WITH ZUPASS
+        </Typography>
+        <Typography color="var(--text-primary)" fontSize={16} family="Rubik">
+          {getHost(req.returnUrl)} will receive your name, your email, and your
+          Semaphore public key.
+        </Typography>
+      </InnerContainer>
     );
-
-    if (error) {
-      lines.push(<ErrorContainer>{error}</ErrorContainer>);
-    } else if (!proving) {
-      lines.push(<Button onClick={onProve}>Continue</Button>);
-    } else {
-      lines.push(<RippleLoader />);
-    }
   } else {
     // Website is asking for a signature of a custom message
     lines.push(
-      <p>
-        Signing message: <b>{req.args.signedMessage.value}</b>
-      </p>
+      <InnerContainer>
+        <Typography color="var(--text-primary)" fontSize={20} fontWeight={800}>
+          SIGN IN WITH ZUPASS
+        </Typography>
+        <Typography
+          style={{ overflowWrap: "break-word" }}
+          color="var(--text-primary)"
+          fontSize={16}
+          family="Rubik"
+          fontWeight={500}
+        >
+          Signing message:
+        </Typography>
+        <Typography
+          style={{ overflowWrap: "break-word" }}
+          color="var(--text-primary)"
+          fontSize={16}
+          fontWeight={400}
+          family="Rubik"
+        >
+          {req.args.signedMessage.value}
+        </Typography>
+      </InnerContainer>
     );
-
-    if (error) {
-      lines.push(<ErrorContainer>{error}</ErrorContainer>);
-    } else if (!proving) {
-      lines.push(<Button onClick={onProve}>Prove</Button>);
-    } else {
-      lines.push(<RippleLoader />);
-    }
   }
 
+  if (error !== undefined) {
+    lines.push(
+      <Typography color="var(--new-danger)" fontSize={16} family="Rubik">
+        {error}
+      </Typography>
+    );
+  }
   return (
-    <div>
-      {lines.map((line, i) => (
-        <LineWrap key={i}>{line}</LineWrap>
-      ))}
-    </div>
+    <Container>
+      <ContentContainer>{lines.map((line) => line)}</ContentContainer>
+      <ButtonsContainer>
+        <Button2 disabled={proving || !!error} onClick={onProve}>
+          {proving ? (
+            <NewLoader color="white" rows={2} columns={3} />
+          ) : (
+            <Typography
+              color="var(--text-white)"
+              fontSize={18}
+              fontWeight={500}
+              family="Rubik"
+            >
+              Prove
+            </Typography>
+          )}
+        </Button2>
+
+        <Button2
+          onClick={(): void => {
+            if (window.opener && window.opener !== window) {
+              // you are in a popup
+              window.close();
+            } else {
+              window.history.back();
+            }
+          }}
+          variant="secondary"
+        >
+          Back
+        </Button2>
+      </ButtonsContainer>
+    </Container>
   );
 }
 
@@ -180,6 +223,24 @@ async function fillArgs(
   return args;
 }
 
-const LineWrap = styled.div`
-  margin-bottom: 16px;
+const InnerContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const ContentContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+`;
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  text-align: center;
+`;
+const ButtonsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 `;

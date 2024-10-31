@@ -1,5 +1,6 @@
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { podEntriesToJSON } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import {
   SemaphoreIdentityPCD,
@@ -68,16 +69,16 @@ export async function makeUpgradeUserWithV4CommitmentRequest(
   const v4SigOfV3Claim = await PODPCDPackage.prove({
     entries: {
       argumentType: ArgumentTypeName.Object,
-      value: {
+      value: podEntriesToJSON({
         mySemaphoreV3Commitment: {
           type: "cryptographic",
           value: identity.claim.identityV3.commitment
         },
         pod_type: {
           type: "string",
-          value: "zupass_semaphore_v4_migration"
+          value: "zupass.semaphore_v4_migration"
         }
-      }
+      })
     },
     privateKey: {
       argumentType: ArgumentTypeName.String,
@@ -126,7 +127,7 @@ export async function verifyAddV4CommitmentRequestPCD(
     const isRightPodType =
       v4SigOfV3Id.claim.entries["pod_type"]?.type === "string" &&
       v4SigOfV3Id.claim.entries["pod_type"].value ===
-        "zupass_semaphore_v4_migration";
+        "zupass.semaphore_v4_migration";
     if (v3SigVerifies && v4SigVerifies && v4SigIsOfV3Id && isRightPodType) {
       return {
         v3Commitment: expectedV3Id.toString(),

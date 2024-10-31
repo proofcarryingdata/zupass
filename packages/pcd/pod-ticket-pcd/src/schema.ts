@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { TicketCategory } from "./PODTicketPCD";
-import { canBeBigInt, cryptographic } from "./utils";
+import { canBeBigInt, cryptographic, eddsaPublicKey } from "./utils";
 
 export const TicketDataSchema = z.object({
   eventName: z.string(),
@@ -30,17 +30,20 @@ export const TicketDataSchema = z.object({
    */
   owner: z
     .string()
-    .refine(canBeBigInt)
     .optional()
     // important that the transform comes last, otherwise
     // `dataToPodEntries` will not work
-    .transform(cryptographic),
+    .transform(eddsaPublicKey),
   isConsumed: z.boolean(),
   isRevoked: z.boolean(),
   ticketCategory: z.nativeEnum(TicketCategory),
   attendeeName: z.string(),
   attendeeEmail: z.string(),
-  ticketSecret: z.string().optional()
+  qrCodeOverrideImageUrl: z.string().optional(),
+  ticketSecret: z.string().optional(),
+  eventLocation: z.string().optional(),
+  eventStartDate: z.string().optional(),
+  isAddOn: z.boolean().optional()
 });
 
 export type IPODTicketData = z.infer<typeof TicketDataSchema>;

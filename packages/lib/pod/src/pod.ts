@@ -1,9 +1,12 @@
-import { requireDefinedParameter } from "@pcd/util";
-import JSONBig from "json-bigint";
+import {
+  checkPublicKeyFormat,
+  checkSignatureFormat,
+  requireType
+} from "./podChecks";
 import { PODContent } from "./podContent";
 import { signPODRoot, verifyPODRootSignature } from "./podCrypto";
+import { JSONPOD, podEntriesFromJSON, podEntriesToJSON } from "./podJSON";
 import { PODEntries } from "./podTypes";
-import { checkPublicKeyFormat, checkSignatureFormat } from "./podUtil";
 
 /**
  * Class encapsulating a signed POD with functions for common use cases.
@@ -124,44 +127,49 @@ export class POD {
   }
 
   /**
-   * Serializes this instance as a JSON string.
+   * Converts this POD to a JSON-compatible format which can be safely
+   * serialized using `JSON.stringify` without any loss of information.  To
+   * reconstitute a POD object from JSON, see {@link fromJSON}.
+   *
+   * @returns a JSON-compatible representation of this POD.
    */
-  public serialize(): string {
-    return JSONBig({
-      useNativeBigInt: true,
-      alwaysParseAsBig: true
-    }).stringify({
-      entries: this.content.asEntries(),
-      signature: this.signature,
-      signerPublicKey: this.signerPublicKey
-    });
+  public toJSON(): JSONPOD {
+    return {
+      entries: podEntriesToJSON(this._content.asEntries()),
+      signature: this._signature,
+      signerPublicKey: this._signerPublicKey
+    };
   }
 
   /**
-   * Deserializes a POD from a JSON string.
+   * Rebuilds a POD object from the JSON-compatible format produced by
+   * {@link toJSON}.  The input can be taken directly from `JSON.parse` and
+   * will be fully validated by this function.
    *
-   * @param serializedPOD a string previously created by {@link #serialize}.
-   * @returns a new PODContent instance
-   * @throws if the string isn't valid JSON, or represents entries which aren't
-   *   legal for inclusion in a POD
+   * @param jsonPOD the JSON-encoded POD.
+   * @returns a new POD object
+   * @throws TypeError if the input is malformed
+   * @throws RangeError if a value is outside of the bounds
    */
-  public static deserialize(serializedPOD: string): POD {
-    const parsedPOD = JSONBig({
-      useNativeBigInt: true,
-      alwaysParseAsBig: true
-    }).parse(serializedPOD);
+  public static fromJSON(jsonPOD: JSONPOD): POD {
+    requireType("jsonPOD", jsonPOD, "object");
 
-    // TODO(POD-P2): More careful schema validation, likely with Zod, with
-    // special handling of the PODEntries type and subtypes.
-    // TODO(POD-P3): Backward-compatible schema versioning?
-    requireDefinedParameter(parsedPOD.entries, "entries");
-    requireDefinedParameter(parsedPOD.signature, "signature");
-    requireDefinedParameter(parsedPOD.signerPublicKey, "signerPublicKey");
+    // The loading below validates that the expected keys exist with valid
+    // values.  Here we also rule out extra unrecognized keys to avoid lossy
+    // parsing of a future format which might have more fields.  This includes
+    // rejecting any potential "version" field, so that if we add one later old
+    // code won't ignore it.
+    if (Object.keys(jsonPOD).length !== 3) {
+      throw TypeError(
+        "JSON POD should contain only the 3 expected keys: " +
+          "entries, signature, signerPublicKey"
+      );
+    }
 
     return POD.load(
-      parsedPOD.entries,
-      parsedPOD.signature,
-      parsedPOD.signerPublicKey
+      podEntriesFromJSON(jsonPOD.entries),
+      jsonPOD.signature,
+      jsonPOD.signerPublicKey
     );
   }
 }

@@ -16,14 +16,17 @@ import {
   PipelineDefinition,
   PipelineEmailType,
   PipelineInfoResponseValue,
+  PipelineLoadSummary,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  TicketPreviewResultValue
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { Request } from "express";
+import { PoolClient } from "postgres-pool";
 import { Client } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
@@ -37,6 +40,10 @@ import {
   IPipelineConsumerDB,
   PipelineConsumerDB
 } from "../../database/queries/pipelineConsumerDB";
+import {
+  IPipelineDefinitionDB,
+  PipelineDefinitionDB
+} from "../../database/queries/pipelineDefinitionDB";
 import {
   IPipelineEmailDB,
   PipelineEmailDB
@@ -55,13 +62,16 @@ import {
   IBadgeGiftingDB,
   IContactSharingDB
 } from "../../database/queries/ticketActionDBs";
+import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { DiscordService } from "../discordService";
 import { EmailService } from "../emailService";
+import { LocalFileService } from "../LocalFileService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
+import { PretixPipeline } from "./pipelines/PretixPipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { CredentialSubservice } from "./subservices/CredentialSubservice";
 import { PipelineSubservice } from "./subservices/PipelineSubservice";
@@ -80,6 +90,7 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 export class GenericIssuanceService {
   private context: ApplicationContext;
   private pipelineAtomDB: IPipelineAtomDB;
+  private pipelineDB: IPipelineDefinitionDB;
   private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
@@ -92,6 +103,7 @@ export class GenericIssuanceService {
   private pipelineSubservice: PipelineSubservice;
   private userSubservice: UserSubservice;
   private credentialSubservice: CredentialSubservice;
+  private localFileService: LocalFileService | null;
 
   public constructor(
     context: ApplicationContext,
@@ -106,28 +118,32 @@ export class GenericIssuanceService {
     discordService: DiscordService | null,
     emailService: EmailService,
     cacheService: PersistentCacheService,
-    credentialSubservice: CredentialSubservice
+    credentialSubservice: CredentialSubservice,
+    localFileService: LocalFileService | null
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.checkinDB = new PipelineCheckinDB(context.dbPool);
-    this.consumerDB = new PipelineConsumerDB(context.dbPool);
-    this.manualTicketDB = new PipelineManualTicketDB(context.dbPool);
-    this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB(context.dbPool);
+    this.checkinDB = new PipelineCheckinDB();
+    this.consumerDB = new PipelineConsumerDB();
+    this.manualTicketDB = new PipelineManualTicketDB();
+    this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB();
     this.genericPretixAPI = pretixAPI;
-    this.contactDB = new ContactSharingDB(this.context.dbPool);
-    this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
-    this.emailDB = new PipelineEmailDB(this.context.dbPool);
+    this.contactDB = new ContactSharingDB();
+    this.badgeDB = new BadgeGiftingDB();
+    this.emailDB = new PipelineEmailDB();
     this.pipelineAtomDB = new InMemoryPipelineAtomDB();
+    this.pipelineDB = new PipelineDefinitionDB();
     this.userSubservice = new UserSubservice(
       context,
       stytchClient,
       genericIssuanceClientUrl
     );
     this.credentialSubservice = credentialSubservice;
+    this.localFileService = localFileService;
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
+      this.pipelineDB,
       this.consumerDB,
       this.userSubservice,
       this.credentialSubservice,
@@ -140,6 +156,7 @@ export class GenericIssuanceService {
         lemonadeAPI,
         genericPretixAPI: this.genericPretixAPI,
         pipelineAtomDB: this.pipelineAtomDB,
+        pipelineDB: this.pipelineDB,
         checkinDB: this.checkinDB,
         contactDB: this.contactDB,
         emailDB: this.emailDB,
@@ -149,7 +166,8 @@ export class GenericIssuanceService {
         semaphoreHistoryDB: this.semaphoreHistoryDB,
         credentialSubservice: this.credentialSubservice,
         emailService,
-        context
+        context,
+        localFileService
       } satisfies InstantiatePipelineArgs
     );
   }
@@ -180,8 +198,11 @@ export class GenericIssuanceService {
     return this.pipelineSubservice.getAllUserPipelineDefinitions(user);
   }
 
-  public async authSession(req: Request): Promise<PipelineUser> {
-    return this.userSubservice.authSession(req);
+  public async authSession(
+    client: PoolClient,
+    req: Request
+  ): Promise<PipelineUser> {
+    return this.userSubservice.authSession(client, req);
   }
 
   public async sendLoginEmail(
@@ -195,33 +216,63 @@ export class GenericIssuanceService {
   }
 
   public getPipeline(
+    client: PoolClient,
     pipelineId: string
   ): Promise<PipelineDefinition | undefined> {
-    return this.pipelineSubservice.loadPipelineDefinition(pipelineId);
+    return this.pipelineSubservice.loadPipelineDefinition(client, pipelineId);
   }
 
   public async upsertPipelineDefinition(
+    client: PoolClient,
     user: PipelineUser,
     pipelineDefinition: PipelineDefinition
   ): Promise<UpsertPipelineResult> {
     return this.pipelineSubservice.upsertPipelineDefinition(
+      client,
       user,
       pipelineDefinition
     );
   }
 
+  /**
+   * For testing only. Will throw in prod.
+   */
+  public async performPipelineLoad(
+    pipelineId: string
+  ): Promise<PipelineLoadSummary> {
+    return this.pipelineSubservice.performPipelineLoad(pipelineId);
+  }
+
   public async deletePipelineDefinition(
+    client: PoolClient,
     user: PipelineUser,
     pipelineId: string
   ): Promise<void> {
-    return this.pipelineSubservice.deletePipelineDefinition(user, pipelineId);
+    return this.pipelineSubservice.deletePipelineDefinition(
+      client,
+      user,
+      pipelineId
+    );
+  }
+
+  public async clearPipelineCache(
+    client: PoolClient,
+    pipelineId: string,
+    user: PipelineUser
+  ): Promise<void> {
+    return this.pipelineSubservice.clearPipelineCache(client, user, pipelineId);
   }
 
   public async loadPipelineDefinition(
+    client: PoolClient,
     user: PipelineUser,
     id: string
   ): Promise<PipelineDefinition | undefined> {
-    return this.pipelineSubservice.loadPipelineDefinitionForUser(user, id);
+    return this.pipelineSubservice.loadPipelineDefinitionForUser(
+      client,
+      user,
+      id
+    );
   }
 
   public async handlePollFeed(
@@ -232,10 +283,15 @@ export class GenericIssuanceService {
   }
 
   public async handleGetPipelineInfo(
+    client: PoolClient,
     user: PipelineUser,
     pipelineId: string
   ): Promise<PipelineInfoResponseValue> {
-    return this.pipelineSubservice.handleGetPipelineInfo(user, pipelineId);
+    return this.pipelineSubservice.handleGetPipelineInfo(
+      client,
+      user,
+      pipelineId
+    );
   }
 
   public async handleListFeed(
@@ -299,10 +355,15 @@ export class GenericIssuanceService {
   }
 
   public async validateEmailAndPretixOrderCode(
+    client: PoolClient,
     email: string,
     code: string
   ): Promise<boolean> {
-    return this.pipelineSubservice.validateEmailAndPretixOrderCode(email, code);
+    return this.pipelineSubservice.validateEmailAndPretixOrderCode(
+      client,
+      email,
+      code
+    );
   }
 
   public async handleGetPipelineSemaphoreGroups(
@@ -312,10 +373,15 @@ export class GenericIssuanceService {
   }
 
   public async handleSendPipelineEmail(
+    client: PoolClient,
     pipelineId: string,
     email: PipelineEmailType
   ): Promise<GenericIssuanceSendPipelineEmailResponseValue> {
-    return this.pipelineSubservice.handleSendPipelineEmail(pipelineId, email);
+    return this.pipelineSubservice.handleSendPipelineEmail(
+      client,
+      pipelineId,
+      email
+    );
   }
 
   /**
@@ -342,7 +408,48 @@ export class GenericIssuanceService {
   /**
    * Used by the Edge City folder UI in Zupass.
    */
-  public async getEdgeCityBalances(): Promise<EdgeCityBalance[]> {
-    return getEdgeCityBalances(this.context.dbPool);
+  public async getEdgeCityBalances(
+    client: PoolClient
+  ): Promise<EdgeCityBalance[]> {
+    return getEdgeCityBalances(client);
+  }
+
+  /**
+   * Given an email and order code, and optionally a pipeline ID (which defaults to DEVCON_PIPELINE_ID),
+   * returns the ticket previews for the given email and order code. A ticket preview is basically a
+   * PODTicket in non-pcd form - just the raw IPODTicketData. This is used to display all the tickets
+   * a user might need when trying to check into an event, without having them go through a costly
+   * and slow account registration flow.
+   */
+  public async handleGetTicketPreview(
+    email: string,
+    orderCode: string,
+    pipelineId?: string
+  ): Promise<TicketPreviewResultValue> {
+    const requestedPipelineId = pipelineId ?? process.env.DEVCON_PIPELINE_ID;
+    const pipeline = (await this.getAllPipelineInstances()).find(
+      (p) => p.id === requestedPipelineId && PretixPipeline.is(p)
+    ) as PretixPipeline | undefined;
+
+    if (!pipeline) {
+      throw new PCDHTTPError(
+        400,
+        "handleGetTicketPreview: pipeline not found " + requestedPipelineId
+      );
+    }
+
+    const tickets = await pipeline.getAllTickets();
+
+    const matchingTickets = tickets.atoms.filter(
+      (atom) => atom.email === email && atom.orderCode === orderCode
+    );
+
+    const ticketDatas = matchingTickets.map(
+      (atom) => pipeline.atomToPODTicketData(atom, "1") // fake semaphore id as it's not needed for the ticket preview
+    );
+
+    return {
+      tickets: ticketDatas
+    } satisfies TicketPreviewResultValue;
   }
 }

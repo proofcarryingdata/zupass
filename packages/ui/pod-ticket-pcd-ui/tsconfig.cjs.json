@@ -8,13 +8,13 @@
   "include": ["src", "src/*.json"],
   "references": [
     {
-      "path": "../../pcd/pod-ticket-pcd/tsconfig.cjs.json"
-    },
-    {
       "path": "../../lib/passport-ui/tsconfig.cjs.json"
     },
     {
       "path": "../../lib/pcd-types/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/pod-ticket-pcd/tsconfig.cjs.json"
     }
   ]
 }

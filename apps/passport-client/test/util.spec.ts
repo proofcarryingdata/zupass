@@ -1,4 +1,5 @@
-import assert from "assert";
+import { afterEach, assert, beforeEach, describe, it } from "vitest";
+
 import { getLastValidVerifyUrl } from "../src/util";
 
 describe("util", async function () {

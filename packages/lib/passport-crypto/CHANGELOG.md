@@ -1,5 +1,23 @@
 # @pcd/passport-crypto
 
+## 0.14.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+## 0.13.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+## 0.12.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
 ## 0.11.4
 
 ### Patch Changes

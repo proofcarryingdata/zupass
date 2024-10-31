@@ -17,6 +17,7 @@ import { SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { parse } from "csv-parse";
 import PQueue from "p-queue";
+import { PoolClient } from "postgres-pool";
 import { v4 as uuid, v5 as uuidv5 } from "uuid";
 import {
   IPipelineAtomDB,
@@ -24,6 +25,8 @@ import {
 } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
+import { sqlTransaction } from "../../../../database/sqlQuery";
+import { ApplicationContext } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { setError, traced } from "../../../telemetryService";
 import {
@@ -60,6 +63,8 @@ export class CSVPipeline implements BasePipeline {
   public type = PipelineType.CSV;
   public capabilities: BasePipelineCapability[] = [];
 
+  private stopped = false;
+  private context: ApplicationContext;
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<CSVAtom>;
   private definition: CSVPipelineDefinition;
@@ -77,6 +82,7 @@ export class CSVPipeline implements BasePipeline {
   }
 
   public constructor(
+    context: ApplicationContext,
     eddsaPrivateKey: string,
     definition: CSVPipelineDefinition,
     db: IPipelineAtomDB,
@@ -84,6 +90,7 @@ export class CSVPipeline implements BasePipeline {
     consumerDB: IPipelineConsumerDB,
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
   ) {
+    this.context = context;
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<CSVAtom>;
@@ -103,20 +110,36 @@ export class CSVPipeline implements BasePipeline {
         getSerializedLatestGroup: async (
           groupId: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return this.semaphoreGroupProvider?.getSerializedLatestGroup(groupId);
+          return sqlTransaction(
+            this.context.dbPool,
+            async (client) =>
+              this.semaphoreGroupProvider?.getSerializedLatestGroup(
+                client,
+                groupId
+              )
+          );
         },
         getLatestGroupRoot: async (
           groupId: string
         ): Promise<string | undefined> => {
-          return this.semaphoreGroupProvider?.getLatestGroupRoot(groupId);
+          return sqlTransaction(
+            this.context.dbPool,
+            async (client) =>
+              this.semaphoreGroupProvider?.getLatestGroupRoot(client, groupId)
+          );
         },
         getSerializedHistoricalGroup: async (
           groupId: string,
           rootHash: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
-            groupId,
-            rootHash
+          return sqlTransaction(
+            this.context.dbPool,
+            async (client) =>
+              this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
+                client,
+                groupId,
+                rootHash
+              )
           );
         },
         getSupportedGroups: (): PipelineSemaphoreGroupInfo[] => {
@@ -128,6 +151,7 @@ export class CSVPipeline implements BasePipeline {
     this.consumerDB = consumerDB;
     if (definition.options.semaphoreGroupName) {
       this.semaphoreGroupProvider = new SemaphoreGroupProvider(
+        this.context,
         this.id,
         [
           {
@@ -171,26 +195,31 @@ export class CSVPipeline implements BasePipeline {
           requesterSemaphoreId = semaphoreId;
           requesterSemaphoreV4Id = semaphoreV4Id;
           // Consumer is validated, so save them in the consumer list
-          let didUpdate = false;
-          for (const email of emails) {
-            didUpdate =
-              didUpdate ||
-              (await this.consumerDB.save(
-                this.id,
-                email.email,
-                semaphoreId,
-                new Date()
-              ));
-          }
 
-          if (this.definition.options.semaphoreGroupName) {
-            // If the user's Semaphore commitment has changed, `didUpdate` will be
-            // true, and we need to update the Semaphore groups
-            if (didUpdate) {
-              span?.setAttribute("semaphore_groups_updated", true);
-              await this.triggerSemaphoreGroupUpdate();
+          let didUpdate = false;
+
+          await sqlTransaction(this.context.dbPool, async (client) => {
+            for (const email of emails) {
+              didUpdate =
+                didUpdate ||
+                (await this.consumerDB.save(
+                  client,
+                  this.id,
+                  email.email,
+                  semaphoreId,
+                  new Date()
+                ));
             }
-          }
+
+            if (this.definition.options.semaphoreGroupName) {
+              // If the user's Semaphore commitment has changed, `didUpdate` will be
+              // true, and we need to update the Semaphore groups
+              if (didUpdate) {
+                span?.setAttribute("semaphore_groups_updated", true);
+                await this.triggerSemaphoreGroupUpdate(client);
+              }
+            }
+          });
         } catch (e) {
           logger(LOG_TAG, "credential PCD not verified for req", req);
         }
@@ -293,6 +322,8 @@ export class CSVPipeline implements BasePipeline {
         }
 
         return {
+          fromCache: false,
+          paused: false,
           atomsLoaded: atoms.length,
           atomsExpected: parsedCSV.length,
           lastRunEndTimestamp: end.toISOString(),
@@ -312,6 +343,8 @@ export class CSVPipeline implements BasePipeline {
         );
 
         return {
+          fromCache: false,
+          paused: false,
           atomsLoaded: 0,
           atomsExpected: 0,
           lastRunEndTimestamp: end.toISOString(),
@@ -323,14 +356,23 @@ export class CSVPipeline implements BasePipeline {
     });
   }
 
+  public isStopped(): boolean {
+    return this.stopped;
+  }
+
   public async start(): Promise<void> {
-    logger(LOG_TAG, `starting csv pipeline`);
-    // Initialize the Semaphore Group provider by loading groups from the DB,
-    // if one exists.
+    if (this.stopped) {
+      throw new Error(`pipeline ${this.id} stopped`);
+    }
+    logger(LOG_TAG, `starting csv pipeline with id ${this.id}`);
     await this.semaphoreGroupProvider?.start();
   }
 
   public async stop(): Promise<void> {
+    if (this.stopped) {
+      return;
+    }
+    this.stopped = true;
     logger(LOG_TAG, `stopping csv pipeline`);
   }
 
@@ -409,7 +451,7 @@ export class CSVPipeline implements BasePipeline {
    * Marked as public so that it can be called from tests, but otherwise should
    * not be called from outside the class.
    */
-  public async triggerSemaphoreGroupUpdate(): Promise<void> {
+  public async triggerSemaphoreGroupUpdate(client: PoolClient): Promise<void> {
     return traced(LOG_NAME, "triggerSemaphoreGroupUpdate", async (_span) => {
       tracePipeline(this.definition);
       // Whenever an update is triggered, we want to make sure that the
@@ -424,7 +466,7 @@ export class CSVPipeline implements BasePipeline {
       // having been processed.
       return this.semaphoreUpdateQueue.add(async () => {
         const data = await this.semaphoreGroupData();
-        await this.semaphoreGroupProvider?.update(data);
+        await this.semaphoreGroupProvider?.update(client, data);
       });
     });
   }

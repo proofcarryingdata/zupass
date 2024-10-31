@@ -3,11 +3,24 @@ import {
   TicketCategory,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
-import { EdDSATicketPCDUI } from "@pcd/eddsa-ticket-pcd-ui";
+import {
+  EdDSATicketPCDUI,
+  TicketQR as EddsaTicketQR
+} from "@pcd/eddsa-ticket-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
-import { PODTicketPCDUI } from "@pcd/pod-ticket-pcd-ui";
-import { memo, useCallback, useContext, useMemo, useState } from "react";
+import {
+  PODTicketPCDUI,
+  TicketQR as PODTicketQR
+} from "@pcd/pod-ticket-pcd-ui";
+import {
+  forwardRef,
+  memo,
+  useCallback,
+  useContext,
+  useMemo,
+  useState
+} from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
@@ -28,7 +41,6 @@ function PCDCardImpl({
   expanded,
   onClick,
   hideRemoveButton,
-  hideHeader,
   hidePadding
 }: {
   pcd: PCD;
@@ -36,7 +48,6 @@ function PCDCardImpl({
   isMainIdentity?: boolean;
   onClick?: (id: string, cardContainer: HTMLDivElement | undefined) => void;
   hideRemoveButton?: boolean;
-  hideHeader?: boolean;
   hidePadding?: boolean;
 }): JSX.Element {
   const [containerRef, setContainerRef] = useState<HTMLDivElement | undefined>(
@@ -58,11 +69,6 @@ function PCDCardImpl({
     >
       {expanded ? (
         <CardOutlineExpanded>
-          {!hideHeader && (
-            <CardHeader isMainIdentity={isMainIdentity}>
-              <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
-            </CardHeader>
-          )}
           <CardBodyContainer>
             <CardBody
               pcd={pcd}
@@ -157,19 +163,89 @@ function getUI(
     : undefined;
 }
 
+const getURLsBasedOnCategory = (
+  category: TicketCategory
+): { idBasedVerifyURL: string | undefined; verifyURL: string } => {
+  const ticketCategory = category;
+  const idBasedVerifyURL =
+    ticketCategory === TicketCategory.Devconnect
+      ? `${window.location.origin}/#/checkin-by-id`
+      : ticketCategory === TicketCategory.ZuConnect
+      ? `${window.location.origin}/#/verify`
+      : ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : undefined;
+
+  const verifyURL =
+    ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : `${window.location.origin}/#/verify`;
+  return { idBasedVerifyURL, verifyURL };
+};
+
+const QRContainer = styled.div`
+  height: 265px;
+  width: 265px;
+`;
+export const TicketQRWrapper = forwardRef<
+  HTMLDivElement,
+  {
+    pcd: PCD<unknown, unknown>;
+  }
+>(({ pcd }, ref) => {
+  const identityPCD = useUserIdentityPCD();
+
+  if (isEdDSATicketPCD(pcd) && identityPCD) {
+    const urls = getURLsBasedOnCategory(pcd.claim.ticket.ticketCategory);
+    return (
+      <QRContainer ref={ref}>
+        <EddsaTicketQR
+          pcd={pcd}
+          idBasedVerifyURL={urls.idBasedVerifyURL}
+          verifyURL={urls.verifyURL}
+        />
+      </QRContainer>
+    );
+  }
+  if (isPODTicketPCD(pcd)) {
+    const urls = getURLsBasedOnCategory(pcd.claim.ticket.ticketCategory);
+    if (urls.idBasedVerifyURL)
+      return (
+        <QRContainer ref={ref}>
+          <PODTicketQR
+            ticketData={pcd.claim.ticket}
+            idBasedVerifyURL={urls.idBasedVerifyURL}
+          />
+        </QRContainer>
+      );
+  }
+
+  return (
+    <>
+      <TextCenter>
+        {pcd.type} unsupported <br />
+        no implementation of a ui for this type of card found
+      </TextCenter>
+      <Spacer h={16} />
+    </>
+  );
+});
+
 /**
  * EdDSATicketPCD cards require some extra context and configuration. In
  * particular, they require access to the user's identity PCD for generation
  * of ZK proofs, and can be configured to include different URLs in their QR
  * codes based on the type of ticket provided.
  */
-function TicketWrapper({
-  pcd,
-  hidePadding
-}: {
-  pcd: EdDSATicketPCD;
-  hidePadding?: boolean;
-}): JSX.Element | null {
+const TicketWrapper = forwardRef<
+  HTMLDivElement,
+  {
+    pcd: EdDSATicketPCD;
+    hidePadding?: boolean;
+    addOns?: AddOnsProps;
+    showDownloadButton?: boolean;
+  }
+>(({ pcd, hidePadding, addOns, showDownloadButton }, ref) => {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
@@ -210,74 +286,96 @@ function TicketWrapper({
       : `${window.location.origin}/#/verify`;
 
   return identityPCD ? (
-    <Card
-      hidePadding={hidePadding}
-      pcd={pcd}
-      identityPCD={identityPCD}
-      verifyURL={verifyURL}
-      idBasedVerifyURL={idBasedVerifyURL}
-    />
+    <div
+      ref={ref}
+      id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
+    >
+      <Card
+        hidePadding={hidePadding}
+        pcd={pcd}
+        verifyURL={verifyURL}
+        idBasedVerifyURL={idBasedVerifyURL}
+        addOns={addOns}
+        showDownloadButton={showDownloadButton}
+      />
+    </div>
   ) : null;
-}
-
-function CardBody({
-  pcd,
-  isMainIdentity,
-  hidePadding
-}: {
+});
+export type AddOnsProps = {
+  onClick: () => void;
+  text: string;
+};
+type CardBodyProps = {
   pcd: PCD;
   isMainIdentity: boolean;
   hidePadding?: boolean;
-}): JSX.Element {
-  const pcdCollection = usePCDCollection();
+  addOns?: AddOnsProps;
+  showDownloadButton?: boolean;
+};
 
-  if (isMainIdentity) {
-    return <MainIdentityCard />;
+export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
+  ({ pcd, isMainIdentity, hidePadding, addOns, showDownloadButton }, ref) => {
+    const pcdCollection = usePCDCollection();
+
+    if (isMainIdentity) {
+      return <MainIdentityCard />;
+    }
+    if (pcdCollection.hasPackage(pcd.type)) {
+      if (isEdDSATicketPCD(pcd)) {
+        return (
+          <TicketWrapper
+            showDownloadButton={showDownloadButton}
+            ref={ref}
+            pcd={pcd}
+            hidePadding={hidePadding}
+          />
+        );
+      }
+      if (isPODTicketPCD(pcd)) {
+        const Component = PODTicketPCDUI.renderCardBody;
+        return (
+          <div
+            ref={ref}
+            id={pcd.claim.ticket.eventId + pcd.claim.ticket.attendeeEmail}
+          >
+            <Component
+              showDownoladButton={showDownloadButton}
+              ticketData={pcd.claim.ticket}
+              addOns={addOns}
+              pcd={pcd}
+              idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
+            />
+          </div>
+        );
+      }
+      const ui = getUI(pcd.type);
+      if (ui) {
+        const Component = ui.renderCardBody;
+        return <Component pcd={pcd} />;
+      } else {
+        console.warn(`Could not find a UI renderer for PCD type "${pcd.type}"`);
+      }
+    }
+
+    return (
+      <>
+        <TextCenter>
+          {pcd.type} unsupported <br />
+          no implementation of a ui for this type of card found
+        </TextCenter>
+        <Spacer h={16} />
+      </>
+    );
   }
-  if (pcdCollection.hasPackage(pcd.type)) {
-    if (isEdDSATicketPCD(pcd)) {
-      return <TicketWrapper pcd={pcd} hidePadding={hidePadding} />;
-    }
-    if (isPODTicketPCD(pcd)) {
-      const Component = PODTicketPCDUI.renderCardBody;
-      return (
-        <Component
-          pcd={pcd}
-          idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
-        />
-      );
-    }
-    const ui = getUI(pcd.type);
-    if (ui) {
-      const Component = ui.renderCardBody;
-      return <Component pcd={pcd} />;
-    } else {
-      console.warn(`Could not find a UI renderer for PCD type "${pcd.type}"`);
-    }
-  }
-
-  return (
-    <>
-      <TextCenter>
-        {pcd.type} unsupported <br />
-        no implementation of a ui for this type of card found
-      </TextCenter>
-      <Spacer h={16} />
-    </>
-  );
-}
-
+);
 export const CardContainer = styled.div`
   width: 100%;
-  padding: 8px;
 `;
 
 export const CardOutlineExpanded = styled.div`
   ${({ disabled }: { disabled?: boolean }): FlattenSimpleInterpolation => css`
     width: 100%;
     border-radius: 12px;
-    border: 1px solid var(--accent-dark);
-    background: var(--primary-dark);
     overflow: hidden;
 
     ${disabled &&

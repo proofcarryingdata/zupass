@@ -104,7 +104,7 @@ export function GetWithoutProvingScreen(): JSX.Element | null {
   return (
     <>
       <MaybeModal fullScreen isProveOrAddScreen={true} />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <Container>
           <Spacer h={16} />
           <AppHeader isProveOrAddScreen={true} />

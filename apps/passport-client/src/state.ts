@@ -4,12 +4,16 @@ import {
   FeedSubscriptionManager,
   KnownPublicKey,
   KnownTicketType,
+  PCDGetRequest,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD } from "@pcd/pcd-types";
 import { IdentityV3 } from "@pcd/semaphore-identity-pcd";
+import { TicketType } from "../new-components/screens/Home/types";
 import { EmbeddedScreenState } from "./embedded";
 import { Emitter } from "./emitter";
+import { ListenMode } from "./zapp/useZappServer";
 export type GetState = () => AppState;
 export type StateEmitter = Emitter<AppState>;
 
@@ -21,19 +25,40 @@ export interface AppState {
   identityV3: IdentityV3;
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;
+  pauseSync?: boolean;
   encryptionKey?: string;
   credentialCache: CredentialCache;
+
+  // bottom modal will deprecate modal
+  bottomModal:
+    | {
+        modalType: "pods-collection";
+        activePod?: PCD<unknown, unknown>;
+        idType?: "ticketId" | "id";
+        modalGoBackBehavior?: "close" | "back";
+      }
+    | { modalType: "settings" }
+    | { modalType: "change-password" }
+    | { modalType: "another-device-changed-password" }
+    | { modalType: "invalid-participant" }
+    | { modalType: "success-modal"; title: string; description: string }
+    | { modalType: "about"; modalGoBackBehavior?: "close" | "back" }
+    | { modalType: "import" }
+    | { modalType: "prove"; request: PCDGetRequest }
+    | { modalType: "manage-emails"; goBackToSupport?: boolean }
+    | { modalType: "delete-account" }
+    | { modalType: "ticket-add-ons"; addOns: TicketType[] }
+    | { modalType: "help-modal" }
+    | { modalType: "none" };
 
   // View state
   modal:
     | { modalType: "info" }
     | { modalType: "settings" }
-    | { modalType: "upgrade-account-modal" }
     | { modalType: "invalid-participant" }
     | { modalType: "changed-password" }
     | { modalType: "another-device-changed-password" }
     | { modalType: "resolve-subscription-error" }
-    | { modalType: "require-add-password" }
     | { modalType: "privacy-notice" }
     | { modalType: "none" }
     | {
@@ -43,8 +68,15 @@ export interface AppState {
       }
     | { modalType: "frogcrypto-export-pcds" };
 
-  // User metadata.
-  self?: User;
+  scrollTo?: {
+    attendee: string;
+    eventId: string;
+  };
+
+  // stores the eligibility state of all pcd type props that that the prove has,
+  // if one is not valid, we show a full screen error stat
+  proveStateEligiblePCDs?: boolean[];
+  self?: User; // User metadata.
 
   // if the client is in the process of logging out,
   // shows alternate UI on the login page to prevent
@@ -135,13 +167,19 @@ export interface AppState {
     error?: string;
   };
 
-  strichSDKstate: "initialized" | "error" | undefined;
-
-  // If Zupass is in an embedded iframe, the state of the embedded screen.
+  // If we're showing a screen in an embedded iframe or a dialog above an
+  // embedded Zapp, the state of that screen.
   embeddedScreen?: EmbeddedScreenState;
 
+  // When we're connected to a zapp, the zapp and its origin
   connectedZapp?: Zapp;
   zappOrigin?: string;
+
+  // Whether the user has approved the zapp
+  zappApproved?: boolean;
+
+  // Whether the client is listening for zapps in embedded mode
+  listenMode?: ListenMode;
 }
 
 export interface AppError {

@@ -1,32 +1,38 @@
 import { normalizeEmail } from "@pcd/util";
-import { Pool, PoolClient } from "postgres-pool";
+import { validate } from "email-validator";
+import { PoolClient } from "postgres-pool";
 import { v4 as uuid } from "uuid";
 import { traceUser } from "../../services/generic-issuance/honeycombQueries";
 import { PipelineUser } from "../../services/generic-issuance/pipelines/types";
 import { traced } from "../../services/telemetryService";
 import { GenericIssuanceUserRow } from "../models";
-import { sqlQuery, sqlTransaction } from "../sqlQuery";
+import { sqlQuery } from "../sqlQuery";
 
 export interface IPipelineUserDB {
-  loadAllUsers(): Promise<PipelineUser[]>;
-  clearAllUsers(): Promise<void>;
-  getUserById(userID: string): Promise<PipelineUser | undefined>;
-  getUserByEmail(email: string): Promise<PipelineUser | undefined>;
-  getOrCreateUser(email: string): Promise<PipelineUser>;
+  loadAllUsers(client: PoolClient): Promise<PipelineUser[]>;
+  clearAllUsers(client: PoolClient): Promise<void>;
+  getUserById(
+    client: PoolClient,
+    userID: string
+  ): Promise<PipelineUser | undefined>;
+  getUserByEmail(
+    client: PoolClient,
+    email: string
+  ): Promise<PipelineUser | undefined>;
+  getOrCreateUser(client: PoolClient, email: string): Promise<PipelineUser>;
   updateUserById(
+    client: PoolClient,
     user: Omit<PipelineUser, "timeCreated" | "timeUpdated">
   ): Promise<PipelineUser>;
-  setUserIsAdmin(email: string, isAdmin: boolean): Promise<void>;
-  getEnvAdminEmails(): string[];
+  setUserIsAdmin(
+    client: PoolClient,
+    email: string,
+    isAdmin: boolean
+  ): Promise<void>;
+  getEnvAdminEmails(client: PoolClient): string[];
 }
 
 export class PipelineUserDB implements IPipelineUserDB {
-  private db: Pool;
-
-  public constructor(db: Pool) {
-    this.db = db;
-  }
-
   public getEnvAdminEmails(): string[] {
     if (!process.env.GENERIC_ISSUANCE_ADMINS) {
       return [];
@@ -50,36 +56,41 @@ export class PipelineUserDB implements IPipelineUserDB {
     }
   }
 
-  public async getOrCreateUser(email: string): Promise<PipelineUser> {
+  public async getOrCreateUser(
+    client: PoolClient,
+    email: string
+  ): Promise<PipelineUser> {
     return traced("PipelineUserDB", "createOrGetUser", async (span) => {
-      return sqlTransaction<PipelineUser>(
-        this.db,
-        "createOrGetUser",
-        async (client): Promise<PipelineUser> => {
-          span?.setAttribute("email", email);
-          const existingUser = await this.getUserByEmail(email, client);
-          if (existingUser) {
-            span?.setAttribute("is_new", false);
-            traceUser(existingUser);
-            return existingUser;
-          }
-          span?.setAttribute("is_new", true);
-          const newUser = {
-            id: uuid(),
-            email,
-            isAdmin: this.getEnvAdminEmails().includes(email)
-          };
-          const savedNewUser = await this.updateUserById(newUser, client);
-          traceUser(savedNewUser);
-          return savedNewUser;
-        }
-      );
+      if (!validate(email)) {
+        throw new Error(`Invalid email: ${email}`);
+      }
+
+      span?.setAttribute("email", email);
+      const existingUser = await this.getUserByEmail(client, email);
+      if (existingUser) {
+        span?.setAttribute("is_new", false);
+        traceUser(existingUser);
+        return existingUser;
+      }
+      span?.setAttribute("is_new", true);
+      const newUser = {
+        id: uuid(),
+        email,
+        isAdmin: this.getEnvAdminEmails().includes(email)
+      };
+      const savedNewUser = await this.updateUserById(client, newUser);
+      traceUser(savedNewUser);
+      return savedNewUser;
     });
   }
 
-  public async setUserIsAdmin(email: string, isAdmin: boolean): Promise<void> {
+  public async setUserIsAdmin(
+    client: PoolClient,
+    email: string,
+    isAdmin: boolean
+  ): Promise<void> {
     await sqlQuery(
-      this.db,
+      client,
       "update generic_issuance_users set is_admin=$1 where email=$2",
       [isAdmin, normalizeEmail(email)]
     );
@@ -95,21 +106,24 @@ export class PipelineUserDB implements IPipelineUserDB {
     };
   }
 
-  public async loadAllUsers(): Promise<PipelineUser[]> {
+  public async loadAllUsers(client: PoolClient): Promise<PipelineUser[]> {
     const result = await sqlQuery(
-      this.db,
+      client,
       "SELECT * FROM generic_issuance_users"
     );
     return result.rows.map(this.dbRowToPipelineUser);
   }
 
-  public async clearAllUsers(): Promise<void> {
-    await sqlQuery(this.db, "DELETE FROM generic_issuance_users");
+  public async clearAllUsers(client: PoolClient): Promise<void> {
+    await sqlQuery(client, "DELETE FROM generic_issuance_users");
   }
 
-  public async getUserById(userID: string): Promise<PipelineUser | undefined> {
+  public async getUserById(
+    client: PoolClient,
+    userID: string
+  ): Promise<PipelineUser | undefined> {
     const result = await sqlQuery(
-      this.db,
+      client,
       "SELECT * FROM generic_issuance_users WHERE id = $1",
       [userID]
     );
@@ -121,11 +135,11 @@ export class PipelineUserDB implements IPipelineUserDB {
   }
 
   public async getUserByEmail(
-    email: string,
-    db?: PoolClient
+    client: PoolClient,
+    email: string
   ): Promise<PipelineUser | undefined> {
     const res = await sqlQuery(
-      db ?? this.db,
+      client,
       `select * from generic_issuance_users where email = $1`,
       [normalizeEmail(email)]
     );
@@ -138,11 +152,11 @@ export class PipelineUserDB implements IPipelineUserDB {
   }
 
   public async updateUserById(
-    user: Omit<PipelineUser, "timeCreated" | "timeUpdated">,
-    db?: PoolClient
+    client: PoolClient,
+    user: Omit<PipelineUser, "timeCreated" | "timeUpdated">
   ): Promise<PipelineUser> {
     const res = await sqlQuery(
-      db ?? this.db,
+      client,
       `
     INSERT INTO generic_issuance_users (id, email, is_admin) VALUES($1, $2, $3)
     ON CONFLICT(id) DO UPDATE

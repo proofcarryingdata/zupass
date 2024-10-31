@@ -27,7 +27,7 @@ export function HaloScreen(): JSX.Element {
 
   if (!syncSettled) {
     return (
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <SyncingPCDs />
       </AppContainer>
     );
@@ -35,7 +35,7 @@ export function HaloScreen(): JSX.Element {
 
   if (!screen) {
     // Need AppContainer to display error
-    return <AppContainer bg="gray" />;
+    return <AppContainer bg="primary" />;
   }
 
   return screen;

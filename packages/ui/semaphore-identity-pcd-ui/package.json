@@ -1,6 +1,6 @@
 {
   "name": "@pcd/semaphore-identity-pcd-ui",
-  "version": "0.2.6",
+  "version": "0.5.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -21,18 +21,19 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "postbuild": "fix-esm-import-path ./dist/esm/src",
+    "watch": "tsc -b tsconfig.cjs.json tsconfig.esm.json --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/semaphore-identity-pcd": "0.11.6",
-    "@pcd/passport-ui": "0.11.6",
-    "@pcd/pcd-types": "0.11.4"
+    "@pcd/semaphore-identity-pcd": "0.14.0",
+    "@pcd/passport-ui": "0.14.0",
+    "@pcd/pcd-types": "0.14.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.11.4",
-    "@pcd/tsconfig": "0.11.4",
+    "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/tsconfig": "0.14.0",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
     "eslint": "^8.57.0",

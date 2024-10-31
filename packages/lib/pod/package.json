@@ -1,6 +1,6 @@
 {
   "name": "@pcd/pod",
-  "version": "0.1.7",
+  "version": "0.4.0",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -10,6 +10,16 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./podChecks": {
+      "types": "./dist/types/src/podChecks.d.ts",
+      "import": "./dist/esm/src/podChecks.js",
+      "require": "./dist/cjs/src/podChecks.js"
+    },
+    "./podTypes": {
+      "types": "./dist/types/src/podTypes.d.ts",
+      "import": "./dist/esm/src/podTypes.js",
+      "require": "./dist/cjs/src/podTypes.js"
     }
   },
   "files": [
@@ -28,23 +38,23 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/util": "0.5.4",
-    "@zk-kit/baby-jubjub": "1.0.3",
-    "@zk-kit/eddsa-poseidon": "1.0.3",
-    "@zk-kit/lean-imt": "2.2.1",
-    "@zk-kit/utils": "1.2.1",
+    "@pcd/util": "0.8.0",
+    "@zk-kit/eddsa-poseidon": "~1.0.4",
+    "@zk-kit/lean-imt": "^2.2.1",
+    "@zk-kit/utils": "^1.2.1",
     "js-sha256": "^0.10.1",
-    "json-bigint": "^1.0.0",
-    "poseidon-lite": "^0.2.1"
+    "poseidon-lite": "^0.3.0"
   },
   "devDependencies": {
-    "@pcd/eddsa-pcd": "0.6.5",
-    "@pcd/eslint-config-custom": "0.11.4",
-    "@pcd/pcd-types": "0.11.4",
-    "@pcd/tsconfig": "0.11.4",
-    "@semaphore-protocol/identity": "^3.15.2",
+    "@pcd/eddsa-pcd": "0.9.0",
+    "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/pcd-types": "0.14.0",
+    "@pcd/semaphore-identity-v3-wrapper": "0.0.1",
+    "@pcd/tsconfig": "0.14.0",
+    "@types/circomlibjs": "^0.1.6",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
+    "@zk-kit/baby-jubjub": "^1.0.3",
     "circomlibjs": "^0.1.7",
     "eslint": "^8.57.0",
     "fix-esm-import-path": "^1.10.0",
@@ -54,5 +64,6 @@
   },
   "publishConfig": {
     "access": "public"
-  }
+  },
+  "sideEffects": false
 }

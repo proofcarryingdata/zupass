@@ -1,7 +1,9 @@
 import { expect } from "chai";
 import "mocha";
 import {
+  JSONPODEntries,
   PODContent,
+  PODEntries,
   PODName,
   PODValue,
   POD_CRYPTOGRAPHIC_MAX,
@@ -12,7 +14,9 @@ import {
   calcMinMerkleDepthForEntries,
   clonePODEntries,
   clonePODValue,
+  getPODValueForCircuit,
   isPODNumericValue,
+  podEntriesToJSON,
   podNameHash,
   podValueHash
 } from "../src";
@@ -125,7 +129,9 @@ describe("PODContent class should work", async function () {
           expect(circuitSignals.nameHash).to.eq(podNameHash(entryName));
           expect(circuitSignals.valueHash).to.eq(podValueHash(entryValue));
           expect(circuitSignals.value).to.eq(
-            isPODNumericValue(entryValue) ? entryValue.value : undefined
+            isPODNumericValue(entryValue)
+              ? getPODValueForCircuit(entryValue)
+              : undefined
           );
 
           expect(PODContent.verifyEntryProof(circuitSignals.proof)).to.be.true;
@@ -147,8 +153,8 @@ describe("PODContent class should work", async function () {
     }
   });
 
-  it("should serialize and deserialize", function () {
-    const transferredContent1 = PODContent.deserialize(podContent1.serialize());
+  it("should serialize and deserialize as JSON objects", function () {
+    const transferredContent1 = PODContent.fromJSON(podContent1.toJSON());
     expect(transferredContent1.size).to.eq(expectedCount1);
     expect(transferredContent1.contentID).to.eq(podContent1.contentID);
     expect(transferredContent1.merkleTreeDepth).to.eq(
@@ -157,7 +163,7 @@ describe("PODContent class should work", async function () {
     expect(transferredContent1.asEntries()).to.deep.eq(podContent1.asEntries());
     expect(transferredContent1.listNames()).to.deep.eq(expectedNameOrder1);
 
-    const transferredContent2 = PODContent.deserialize(podContent2.serialize());
+    const transferredContent2 = PODContent.fromJSON(podContent2.toJSON());
     expect(transferredContent2.size).to.eq(expectedCount2);
     expect(transferredContent2.contentID).to.eq(podContent2.contentID);
     expect(transferredContent2.merkleTreeDepth).to.eq(
@@ -165,6 +171,44 @@ describe("PODContent class should work", async function () {
     );
     expect(transferredContent2.asEntries()).to.deep.eq(podContent2.asEntries());
     expect(transferredContent2.listNames()).to.deep.eq(expectedNameOrder2);
+  });
+
+  it("should serialize and deserialize as JSON strings", function () {
+    const transferredContent1 = PODContent.fromJSON(
+      JSON.parse(JSON.stringify(podContent1.toJSON()))
+    );
+    expect(transferredContent1.size).to.eq(expectedCount1);
+    expect(transferredContent1.contentID).to.eq(podContent1.contentID);
+    expect(transferredContent1.merkleTreeDepth).to.eq(
+      podContent1.merkleTreeDepth
+    );
+    expect(transferredContent1.asEntries()).to.deep.eq(podContent1.asEntries());
+    expect(transferredContent1.listNames()).to.deep.eq(expectedNameOrder1);
+
+    const transferredContent2 = PODContent.fromJSON(
+      JSON.parse(JSON.stringify(podContent2.toJSON()))
+    );
+    expect(transferredContent2.size).to.eq(expectedCount2);
+    expect(transferredContent2.contentID).to.eq(podContent2.contentID);
+    expect(transferredContent2.merkleTreeDepth).to.eq(
+      podContent2.merkleTreeDepth
+    );
+    expect(transferredContent2.asEntries()).to.deep.eq(podContent2.asEntries());
+    expect(transferredContent2.listNames()).to.deep.eq(expectedNameOrder2);
+  });
+
+  it("should reject invalid JSON input", function () {
+    const goodJSON = podEntriesToJSON(sampleEntries1);
+    const badInputs = [
+      [{ ...goodJSON, "!@#$": "hello" }, TypeError],
+      [{ ...goodJSON, hello: undefined }, TypeError],
+      [{ ...goodJSON, hello: { type: "string", value: 123n } }, TypeError]
+    ] as [JSONPODEntries, ErrorConstructor][];
+
+    for (const [badInput, expectedError] of badInputs) {
+      const fn = (): PODContent => PODContent.fromJSON(badInput);
+      expect(fn).to.throw(expectedError);
+    }
   });
 
   it("should not be mutable via getValue", function () {
@@ -212,6 +256,24 @@ describe("PODContent class should work", async function () {
     expect(pc.getRawValue("A")).to.eq(123n);
   });
 
+  it("should reject invalid types at construction", function () {
+    const badInputs = [
+      "",
+      "hello",
+      123,
+      undefined,
+      null,
+      ["hello", "world"],
+      [1, 2, 3]
+    ];
+    for (const badInput of badInputs) {
+      const fn = (): void => {
+        PODContent.fromEntries(badInput as unknown as PODEntries);
+      };
+      expect(fn).to.throw(TypeError);
+    }
+  });
+
   it("should reject invalid names at construction", function () {
     const badNames = [
       "",
@@ -242,28 +304,34 @@ describe("PODContent class should work", async function () {
 
   it("should reject invalid values at construction", function () {
     const testCases = [
-      undefined,
-      {},
-      { type: "int" },
-      { value: 0n },
-      { type: undefined, value: 0n },
-      { type: "string", value: undefined },
-      { type: "something", value: 0n },
-      { type: "bigint", value: 0n },
-      { type: "something", value: "something" },
-      { type: "string", value: 0n },
-      { type: "string", value: 123 },
-      { type: "cryptographic", value: "hello" },
-      { type: "cryptographic", value: 123 },
-      { type: "cryptographic", value: -1n },
-      { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MIN - 1n },
-      { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MAX + 1n },
-      { type: "int", value: "hello" },
-      { type: "int", value: 123 },
-      { type: "int", value: POD_INT_MIN - 1n },
-      { type: "int", value: POD_INT_MAX + 1n }
-    ] as PODValue[];
-    for (const testInput of testCases) {
+      [undefined, TypeError],
+      [{}, TypeError],
+      [{ type: "int" }, TypeError],
+      [{ value: 0n }, TypeError],
+      [{ type: undefined, value: 0n }, TypeError],
+      [{ type: "string", value: undefined }, TypeError],
+      [{ type: "something", value: 0n }, TypeError],
+      [{ type: "bigint", value: 0n }, TypeError],
+      [{ type: "something", value: "something" }, TypeError],
+      [{ type: "string", value: 0n }, TypeError],
+      [{ type: "string", value: 123 }, TypeError],
+      [{ type: "cryptographic", value: "hello" }, TypeError],
+      [{ type: "cryptographic", value: 123 }, TypeError],
+      [{ type: "cryptographic", value: -1n }, RangeError],
+      [
+        { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MIN - 1n },
+        RangeError
+      ],
+      [
+        { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MAX + 1n },
+        RangeError
+      ],
+      [{ type: "int", value: "hello" }, TypeError],
+      [{ type: "int", value: 123 }, TypeError],
+      [{ type: "int", value: POD_INT_MIN - 1n }, RangeError],
+      [{ type: "int", value: POD_INT_MAX + 1n }, RangeError]
+    ] as [PODValue, ErrorConstructor][];
+    for (const [testInput, expectedError] of testCases) {
       const testEntries = clonePODEntries(sampleEntries1) as Record<
         PODName,
         PODValue
@@ -273,7 +341,7 @@ describe("PODContent class should work", async function () {
       const fn = (): void => {
         PODContent.fromEntries(testEntries);
       };
-      expect(fn).to.throw(TypeError, "badValueName");
+      expect(fn).to.throw(expectedError, "badValueName");
     }
   });
 });

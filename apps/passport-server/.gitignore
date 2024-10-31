@@ -6,3 +6,4 @@ db
 *.ignore
 dev-build
 *.tsbuildinfo
+temp

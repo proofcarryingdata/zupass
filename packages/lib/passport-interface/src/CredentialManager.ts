@@ -7,7 +7,6 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import {
   Credential,
   CredentialPayload,
@@ -72,7 +71,7 @@ export class CredentialManager implements CredentialManagerAPI {
   >;
 
   public constructor(
-    identity: Identity,
+    identity: IdentityV3,
     pcds: PCDCollection,
     cache: CredentialCache
   ) {

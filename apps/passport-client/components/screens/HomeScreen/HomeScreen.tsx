@@ -13,6 +13,7 @@ import React, {
 } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled, { CSSProperties } from "styled-components";
+import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
   useFolders,
@@ -38,6 +39,7 @@ import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
 import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
 import { ProtocolWorldsHome } from "../ProtocolWorldsScreens/ProtocolWorldsHome";
+import { ZappScreen } from "../ZappScreens/ZappScreen";
 import {
   FolderCard,
   FolderDetails,
@@ -127,6 +129,8 @@ export function HomeScreenImpl(): JSX.Element | null {
   const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
   const isEdgeCity = isEdgeCityFolder(browsingFolder);
   const isProtocolWorlds = isProtocolWorldsFolder(browsingFolder);
+  const isZappFolder = !!appConfig.embeddedZapps[browsingFolder];
+
   const shouldShowFrogCrypto = useMemo(() => {
     const folders = pcdCollection.value.getAllFolderNames();
     const goodFolders = [
@@ -164,7 +168,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   return (
     <>
       <MaybeModal />
-      <AppContainer bg="gray">
+      <AppContainer bg="primary">
         <Spacer h={24} />
         <AppHeader isEdgeCity={isEdgeCity} />
         <Spacer h={24} />
@@ -211,6 +215,14 @@ export function HomeScreenImpl(): JSX.Element | null {
                   onFolderClick={onFolderClick}
                 />
               )}
+              {isRoot &&
+                Object.keys(appConfig.embeddedZapps).map((folder) => (
+                  <FolderCard
+                    key={folder}
+                    onFolderClick={onFolderClick}
+                    folder={folder}
+                  />
+                ))}
             </FolderExplorerContainer>
           )}
 
@@ -220,6 +232,8 @@ export function HomeScreenImpl(): JSX.Element | null {
             <ProtocolWorldsHome />
           ) : isEdgeCity ? (
             <EdgeCityHome />
+          ) : isZappFolder ? (
+            <ZappScreen url={appConfig.embeddedZapps[browsingFolder]} />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}

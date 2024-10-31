@@ -1,8 +1,7 @@
 import { POD, PODEntries, PODName, PODValue, PODValueTuple } from "@pcd/pod";
-import { Identity as IdentityV4 } from "@semaphore-protocol/core";
-import { Identity } from "@semaphore-protocol/identity";
-import { Groth16Proof } from "snarkjs";
-import { ClosedInterval } from "./gpcUtil";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
+import { Identity as IdentityV4 } from "@semaphore-protocol/identity";
+import type { Groth16Proof } from "snarkjs";
 
 /**
  * String specifying a named entry, virtual or otherwise, in a named object, in
@@ -154,13 +153,16 @@ export type GPCProofEntryConfigCommon = {
    */
   isNotMemberOf?: PODName;
 
-  // TODO(POD-P3): Constraints on entry values can go here.  Lower/upper bounds,
-  // comparison to constant, etc.
   // TODO(POD-P3): Think about where to represent "filtering" inputs in
   // public ways.  E.g. comparison to a constant requires revealing anyway,
   // so isn't handled by this layer for now, but that could be a convenience
   // feature for use cases where the verifier uses a hard-coded config.
 };
+
+/**
+ * Convenient type for closed intervals used in (out of) bounds/range checks.
+ */
+export type GPCClosedInterval = { min: bigint; max: bigint };
 
 /**
  * Bounds check configuration for an individual entry. This specifies the bounds
@@ -173,7 +175,7 @@ export type GPCProofEntryBoundsCheckConfig = {
    * signed 64-bit integer values. They will always be revealed by virtue of
    * their inclusion in the proof configuration.
    */
-  inRange?: ClosedInterval;
+  inRange?: GPCClosedInterval;
 
   /**
    * Indicates the range/interval/bounds outside of which this entry should
@@ -181,7 +183,7 @@ export type GPCProofEntryBoundsCheckConfig = {
    * 64-bit integer values. They will always be revealed by virtue of their
    * inclusion in the proof configuration.
    */
-  notInRange?: ClosedInterval;
+  notInRange?: GPCClosedInterval;
 };
 
 /**
@@ -273,8 +275,6 @@ export type GPCProofObjectConfig = {
    */
   signerPublicKey?: GPCProofEntryConfigCommon;
 
-  // TODO(POD-P3): Is there anything to configure at this level?  Or can we
-  // collapose it?
   // TODO(POD-P3): Think about where to represent "filtering" inputs in
   // public ways.  E.g. requiring a specific signer, which is revealed anyway,
   // so isn't handled by this layer for now, but that could be a convenience
@@ -422,7 +422,7 @@ export type GPCProofOwnerInputs = {
    * The owner's identity using Semaphore V3. This need not be specified if no
    * entry has {@link isOwnerID} equal to "SemaphoreV3".
    */
-  semaphoreV3?: Identity;
+  semaphoreV3?: IdentityV3;
 
   /**
    * The owner's identity using Semaphore V4. This need not be specified if no

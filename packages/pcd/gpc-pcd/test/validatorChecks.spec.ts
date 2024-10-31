@@ -1,8 +1,4 @@
-import {
-  GPCProofConfig,
-  SEMAPHORE_V3,
-  serializeGPCProofConfig
-} from "@pcd/gpc";
+import { GPCProofConfig, proofConfigToJSON, SEMAPHORE_V3 } from "@pcd/gpc";
 import { POD, POD_INT_MAX, POD_INT_MIN } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -81,7 +77,7 @@ describe("POD entry check against proof configuration should work", () => {
       }
     };
     const params = {
-      proofConfig: serializeGPCProofConfig(proofConfig),
+      proofConfig: proofConfigToJSON(proofConfig),
       notFoundMessage: undefined
     };
     expect(
@@ -103,7 +99,7 @@ describe("POD entry check against proof configuration should work", () => {
       }
     };
     const params = {
-      proofConfig: serializeGPCProofConfig(proofConfig),
+      proofConfig: proofConfigToJSON(proofConfig),
       notFoundMessage: undefined
     };
     expect(
@@ -132,7 +128,7 @@ describe("POD entry check against proof configuration should work", () => {
         }
       };
       const params = {
-        proofConfig: serializeGPCProofConfig(proofConfig),
+        proofConfig: proofConfigToJSON(proofConfig),
         notFoundMessage: undefined
       };
       expect(
@@ -160,7 +156,7 @@ describe("POD entry check against proof configuration should work", () => {
         }
       };
       const params = {
-        proofConfig: serializeGPCProofConfig(proofConfig),
+        proofConfig: proofConfigToJSON(proofConfig),
         notFoundMessage: undefined
       };
       expect(
@@ -191,7 +187,7 @@ describe("POD entry check against proof configuration should work", () => {
         }
       };
       const params = {
-        proofConfig: serializeGPCProofConfig(proofConfig),
+        proofConfig: proofConfigToJSON(proofConfig),
         notFoundMessage: undefined
       };
       expect(
@@ -213,7 +209,7 @@ describe("POD entry check against proof configuration should work", () => {
       }
     };
     const params = {
-      proofConfig: serializeGPCProofConfig(proofConfig),
+      proofConfig: proofConfigToJSON(proofConfig),
       notFoundMessage: undefined
     };
     expect(
@@ -548,7 +544,6 @@ describe("POD check against prescribed signers' public keys should work", () => 
         params
       )
     ).to.be.false;
-    console.log(params.notFoundMessage);
     expect(params.notFoundMessage).to.be.eq(
       "Public key should be 32 bytes, encoded as hex or Base64."
     );

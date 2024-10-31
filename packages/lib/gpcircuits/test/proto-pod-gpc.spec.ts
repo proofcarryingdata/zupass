@@ -16,6 +16,8 @@ import _ from "lodash";
 import "mocha";
 import path from "path";
 import { poseidon1, poseidon2 } from "poseidon-lite";
+
+import { ARTIFACTS_DIR, chooseCircuitFamilyForTests } from "../scripts/common";
 import {
   CircuitArtifactPaths,
   CircuitSignal,
@@ -47,6 +49,9 @@ import {
   sampleEntries2,
   sampleEntries3
 } from "./common";
+
+// Choose circuit family according to environment variable `GPC_FAMILY_VARIANT`.
+const { circuitParamType, testCircuitFamily } = chooseCircuitFamilyForTests();
 
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
@@ -934,9 +939,7 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     // above, and is larger than the test data in all dimensions (so padding is
     // exercised).  What we're testing here is the ability to handle smaller
     // sizes, with truncated data as necessary.
-    for (const params of ProtoPODGPC.CIRCUIT_PARAMETERS.map(
-      (pair) => pair[0]
-    )) {
+    for (const params of testCircuitFamily) {
       const { inputs, outputs } = makeTestSignals(
         params,
         true /*isNullifierHashRevealed*/,
@@ -950,19 +953,13 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
       await altCircuit.expectPass(inputs, outputs);
     }
   });
-
-  // TODO(POD-P2): Add more directed tests of individual features once
-  // they are more stable. Should focus on cases not already handled in
-  // utests of sub-modules.  Including:
-  // - Different enable/disable config of various modules.
-  // - Negative testing of invalid inputs.
 });
 
-describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", function () {
+describe(`proto-pod-gpc.ProtoPODGPC (Compiled ${circuitParamType} artifacts) should work`, function () {
   function prepGroth16Test(
     params: ProtoPODGPCCircuitParams
   ): CircuitArtifactPaths {
-    const circuitDesc = ProtoPODGPC.pickCircuit(params);
+    const circuitDesc = ProtoPODGPC.pickCircuit(params, testCircuitFamily);
     if (!circuitDesc) {
       throw new Error(
         `None of the circuit descriptions can accommodate the following parameters: ${JSON.stringify(
@@ -972,7 +969,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
     }
 
     const artifacts = gpcArtifactPaths(
-      path.join(__dirname, "../artifacts/test"),
+      path.join(ARTIFACTS_DIR, circuitParamType),
       circuitDesc
     );
     expect(artifacts.wasmPath).to.not.be.empty;
@@ -1010,40 +1007,44 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
     expect(verified).to.be.true;
   }
 
-  it("should accept a sample input", async () => {
-    const artifacts = prepGroth16Test(GPC_PARAMS);
-    await groth16Test(artifacts, sampleInput, sampleOutput);
-  });
+  // Skip sample input tests if dealing with other parameter families, as there
+  // is no guarantee that the circuit parameters assumed here are present.
+  if (circuitParamType === "test") {
+    it("should accept a sample input", async () => {
+      const artifacts = prepGroth16Test(GPC_PARAMS);
+      await groth16Test(artifacts, sampleInput, sampleOutput);
+    });
 
-  it("should accept dynamic input", async () => {
-    const artifacts = prepGroth16Test(GPC_PARAMS);
+    it("should accept dynamic input", async () => {
+      const artifacts = prepGroth16Test(GPC_PARAMS);
 
-    let { inputs, outputs } = makeTestSignals(
-      GPC_PARAMS,
-      true /*isNullifierHashRevealed*/,
-      true /*isV4NullifierHashRevealed*/,
-      false /*requireUniqueContentIDs*/
-    );
-    expect(inputs).to.deep.eq(sampleInput);
-    expect(outputs).to.deep.eq(sampleOutput);
-    await groth16Test(artifacts, inputs, outputs);
-
-    for (const isV4NullifierHashRevealed of [true, false]) {
-      ({ inputs, outputs } = makeTestSignals(
+      let { inputs, outputs } = makeTestSignals(
         GPC_PARAMS,
-        false /*isNullifierHashRevealed*/,
-        isV4NullifierHashRevealed
-      ));
+        true /*isNullifierHashRevealed*/,
+        true /*isV4NullifierHashRevealed*/,
+        false /*requireUniqueContentIDs*/
+      );
+      expect(inputs).to.deep.eq(sampleInput);
+      expect(outputs).to.deep.eq(sampleOutput);
       await groth16Test(artifacts, inputs, outputs);
-    }
-  });
+
+      for (const isV4NullifierHashRevealed of [true, false]) {
+        ({ inputs, outputs } = makeTestSignals(
+          GPC_PARAMS,
+          false /*isNullifierHashRevealed*/,
+          isV4NullifierHashRevealed
+        ));
+        await groth16Test(artifacts, inputs, outputs);
+      }
+    });
+  }
 
   it("should accept with each circuit in family", async () => {
     // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8, ... } is the default
     // above, and is larger than the test data in all dimensions (so padding is
     // exercised).  What we're testing here is the ability to handle smaller
     // sizes, with truncated data as necessary.
-    for (const cd of ProtoPODGPC.CIRCUIT_PARAMETERS.map((pair) => pair[0])) {
+    for (const { family: _f, name: _n, cost: _c, ...cd } of testCircuitFamily) {
       // Skip the default (largest) config, already tested above.
       if (_.isEqual(cd, GPC_PARAMS)) {
         continue;
@@ -1061,4 +1062,4 @@ describe("proto-pod-gpc.ProtoPODGPC (Compiled test artifacts) should work", func
   });
 });
 
-// TODO(POD-P1): utests of statics and helpers in proto-pod-gpc.ts
+// TODO(POD-P4): utests of statics and helpers in proto-pod-gpc.ts

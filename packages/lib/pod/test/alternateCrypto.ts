@@ -39,11 +39,13 @@ export class AltCryptCircomlibjs {
     return new AltCryptCircomlibjs(await clBuildEddsa());
   }
 
-  public podStringHash(input: string): bigint {
+  public podBytesHash(input: string): bigint {
     // String hashing happens outside circuits, and doesn't use circomlibjs.
     // This helper represents how strings are hashed in EdDSATicketPCD, so
     // it lets us validate that PODs are using the same algorithm.
     // This might go away if we intentionally change the algorithm.
+    // generateSnarkMessageHash never handled Uint8Arrays, so there's no
+    // compatibility to check there.
     return generateSnarkMessageHash(input);
   }
 

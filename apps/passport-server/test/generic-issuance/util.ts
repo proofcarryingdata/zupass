@@ -22,6 +22,7 @@ import {
   expectIsReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { encodePublicKey } from "@pcd/pod";
 import {
   PODTicketPCD,
   PODTicketPCDPackage,
@@ -149,6 +150,7 @@ export function getTicketsFromFeedResponse(
   result: PollFeedResult
 ): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
   expectTrue(result.success);
+
   const secondAction = result.value.actions[1];
   expectIsReplaceInFolderAction(secondAction);
   expect(secondAction.folder).to.eq(expectedFolder);
@@ -353,7 +355,7 @@ export async function proveEmailPCD(
     },
     semaphoreV4Id: {
       value: includeV4Id
-        ? v3tov4Identity(identity).commitment.toString()
+        ? encodePublicKey(v3tov4Identity(identity).publicKey)
         : undefined,
       argumentType: ArgumentTypeName.String
     }

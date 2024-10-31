@@ -1,11 +1,18 @@
-import { GPCBoundConfig, GPCRevealedClaims } from "@pcd/gpc";
 import {
+  GPCBoundConfig,
+  GPCCircuitFamily,
+  GPCRevealedClaims,
+  JSONPODMembershipLists,
+  JSONProofConfig
+} from "@pcd/gpc";
+import {
+  ObjectArgument,
   PCD,
   PCDArgument,
   RecordContainerArgument,
   StringArgument
 } from "@pcd/pcd-types";
-import { PODEntries, PODName } from "@pcd/pod";
+import { JSONPODEntries, JSONPODValue, PODEntries, PODName } from "@pcd/pod";
 import { PODPCD } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Groth16Proof } from "snarkjs";
@@ -29,13 +36,21 @@ export const GPCPCDTypeName = "gpc-pcd";
 /**
  * Interface containing the arguments that 3rd parties use to
  * initialize this PCD package.
- *
- * This is the root path from which to fetch the ZK artifacts required
- * to prove and verify.  This can be a URL (in browser) or a file path
- * (in Node server or utests).
  */
 export type GPCPCDInitArgs = {
+  /**
+   * This is the root path from which to fetch the ZK artifacts required
+   * to prove and verify.  This can be a URL (in browser) or a file path
+   * (in Node server or utests).
+   */
   zkArtifactPath: string;
+
+  /**
+   * This is the circuit family the GPC compiler will pick the circuit from. If
+   * unspecified, the circuit family underlying the pcd/proto-pod-gpc-artifacts
+   * NPM package, viz. the production variant, will be used.
+   */
+  circuitFamily?: GPCCircuitFamily;
 };
 
 /**
@@ -51,7 +66,8 @@ export type PODPCDRecordArg = RecordContainerArgument<
 
 /**
  * Prescribed signers' public keys for PODs. User inputs to a proof will be
- * filtered to only those PODs containing matching values.
+ * filtered to only those PODs containing matching values.  This object is
+ * JSON compatible, so no conversions are necessary.
  */
 export type PODSignerPublicKeys = Record<PODName, string>;
 
@@ -60,6 +76,14 @@ export type PODSignerPublicKeys = Record<PODName, string>;
  * those PODs containing matching values.
  */
 export type FixedPODEntries = Record<PODName, PODEntries>;
+
+/**
+ * JSON-compatible format for {@link FixedPODEntries}, which can be safely
+ * serialized directly using JSON.stringify.  You can convert to/from this
+ * format using {@link fixedPODEntriesToJSON} and
+ * {@link fixedPODEntriesFromJSON}.
+ */
+export type JSONFixedPODEntries = Record<PODName, JSONPODEntries>;
 
 /**
  * Validator parameters for POD PCD arguments. These will play a role in
@@ -74,33 +98,33 @@ export type PODPCDArgValidatorParams = {
   notFoundMessage?: string;
 
   /**
-   * JSON-serialised proof configuration used to narrow down the selection of
-   * POD PCDs. This should coincide with the proof config string supplied in the
-   * `GPCPCDArgs`. May be deserialised using {@link deserializeGPCProofConfig}.
+   * JSON-formatted proof configuration used to narrow down the selection of
+   * POD PCDs. This should coincide with the proof config supplied in the
+   * `GPCPCDArgs`. May be parsed using {@link proofConfigFromJSON}.
    */
-  proofConfig?: string;
+  proofConfig?: JSONProofConfig;
 
   /**
-   * JSON-serialised membership lists to narrow down the selection of POD PCDs
+   * JSON-formatted membership lists to narrow down the selection of POD PCDs
    * to those satisfying the list membership check specified in the proof
-   * config. This should coincide with the membership list string supplied in
-   * the `GPCPCDArgs` (if any). May be deserialised using {@link
-   * podMembershipListsFromSimplifiedJSON}.
+   * config. This should coincide with the membership lists supplied in
+   * the `GPCPCDArgs` (if any).  May be parsed using
+   * {@link podMembershipListsFromJSON}
    */
-  membershipLists?: string;
+  membershipLists?: JSONPODMembershipLists;
 
   /**
-   * JSON-serialised `PODEntries`.This is used to narrow down the selection of
-   * POD PCDs to those with entries matching these prescribed values. May be
-   * deserialised using {@link podEntryRecordFromSimplifiedJSON}.
+   * JSON-formatted `PODEntries`.This is used to narrow down the selection of
+   * POD PCDs to those with entries matching these prescribed values.
+   *
+   * You can use {@link fixedPODEntriesFromJSON} to parse this object.
    */
-  prescribedEntries?: string;
+  prescribedEntries?: JSONFixedPODEntries;
 
   /**
    * Record of prescribed signers' public keys. This is used to narrow down the
    * selection of POD PCDs to those with signers' public keys matching these
-   * prescribed values. May be serialised and deserialised using {@link
-   * JSON.stringify} and {@link JSON.parse}.
+   * prescribed values.
    */
   prescribedSignerPublicKeys?: PODSignerPublicKeys;
 };
@@ -113,12 +137,11 @@ export type GPCPCDArgs = {
    * A configuration object specifying the constraints to be proven.
    * This will be part of the claims of the resulting proof PCD.
    * See {@link GPCProofConfig} for more information.
+   *
+   * This is formatted in a JSON-compatible format which can be parsed
+   * using {@link proofConfigFromJSON}.
    */
-  proofConfig: StringArgument;
-  // TODO(POD-P2): Figure out serializable format for an object here.
-  // ObjectArgument is intended to be directly JSON serializable, so can't
-  // contain bigints if used for network requests (e.g. ProveAndAdd).  The
-  // choice here should be driven by the needs of the Prove screen.
+  proofConfig: ObjectArgument<JSONProofConfig>;
 
   /**
    * POD objects to prove about. Each object is identified by name in the value
@@ -138,27 +161,31 @@ export type GPCPCDArgs = {
   identity: PCDArgument<SemaphoreIdentityPCD>;
 
   /**
-   * Optional external nullifier can be any string.  It will be used (by hash)
-   * to generate a nullifier hash which is unique to the combination of
-   * this value and owner identity.  This can be used to avoid duplicate actions
-   * by the same user, without revealing the user's identity.
+   * Optional external nullifier can be any type of POD value.  It will be used
+   * (by hash) to generate a nullifier hash which is unique to the combination
+   * of this value and owner identity.  This can be used to avoid duplicate
+   * actions by the same user, without revealing the user's identity.
+   *
+   * You can use {@link podValueToJSON} to produce this format.
    */
-  externalNullifier: StringArgument;
+  externalNullifier: ObjectArgument<JSONPODValue>;
 
   /**
    * Optional membership lists, if needed by the proof configuration. This is
-   * always revealed. Taken to be a JSON-serialised string for the same reasons
-   * outlined for `proofConfig` above.
+   * always revealed.
+   *
+   * You can use {@link podMembershipListsToJSON} to produce this format.
    */
-  membershipLists: StringArgument;
+  membershipLists: ObjectArgument<JSONPODMembershipLists>;
 
   /**
-   * Optional watermark can be any string.  It will be included (by hash) in the
-   * proof and cryptographically verified.  This can be used to avoid reuse of
-   * the same proof.
+   * Optional watermark can be any POD value.  It will be included (by hash) in
+   * the proof and cryptographically verified.  This can be used to avoid reuse
+   * of the same proof.
+   *
+   * You can use {@link podValueToJSON} to produce this format.
    */
-  watermark: StringArgument;
-  // TODO(POD-P3): Support PODValue of multiple types.
+  watermark: ObjectArgument<JSONPODValue>;
 
   /**
    * A string that uniquely identifies a {@link GPCPCD}. If this argument is
@@ -169,7 +196,6 @@ export type GPCPCDArgs = {
    * this PCD type doesn't enforce that.
    */
   id?: StringArgument;
-  // TODO(POD-P3): Support PODValue of multiple types.
 };
 
 /**

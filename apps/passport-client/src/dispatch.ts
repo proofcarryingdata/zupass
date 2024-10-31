@@ -28,7 +28,9 @@ import {
   ZupassFeedIds
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
-import { PCD, SerializedPCD } from "@pcd/pcd-types";
+import { ArgumentTypeName, PCD, SerializedPCD } from "@pcd/pcd-types";
+import { encodePrivateKey, podEntriesToJSON } from "@pcd/pod";
+import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
   isSemaphoreIdentityPCD,
@@ -38,7 +40,6 @@ import {
   v4PublicKey
 } from "@pcd/semaphore-identity-pcd";
 import { assertUnreachable, sleep } from "@pcd/util";
-import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
@@ -65,7 +66,7 @@ import {
   saveSelf,
   saveSubscriptions
 } from "./localstorage";
-import { getPackages } from "./pcdPackages";
+import { fallbackDeserializeFunction, getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { findUserIdentityPCD } from "./user";
@@ -74,6 +75,7 @@ import {
   uploadSerializedStorage,
   uploadStorage
 } from "./useSyncE2EEStorage";
+import { ADD_PCD_SIZE_LIMIT_BYTES, stringSizeInBytes } from "./util";
 import { validateAndLogRunningAppState } from "./validateState";
 
 export type Dispatcher = (action: Action) => Promise<void>;
@@ -113,6 +115,10 @@ export type Action =
       modal: AppState["modal"];
     }
   | {
+      type: "set-bottom-modal";
+      modal: AppState["bottomModal"];
+    }
+  | {
       type: "error";
       error: AppError;
     }
@@ -121,6 +127,7 @@ export type Action =
     }
   | {
       type: "reset-passport";
+      redirectTo?: string;
     }
   | { type: "participant-invalid" }
   | {
@@ -174,9 +181,6 @@ export type Action =
       collection: PCDCollection;
       pcdsToMergeIds: Set<PCD["id"]>;
     }
-  | {
-      type: "initialize-strich";
-    }
   | { type: "delete-account" }
   | {
       type: "show-embedded-screen";
@@ -189,7 +193,27 @@ export type Action =
       type: "zapp-connect";
       zapp: Zapp;
       origin: string;
-    };
+    }
+  | {
+      type: "pauseSync";
+      value: boolean;
+    }
+  | {
+      type: "zapp-approval";
+      approved: boolean;
+    }
+  | {
+      type: "scroll-to-ticket";
+      scrollTo:
+        | {
+            attendee: string;
+            eventId: string;
+          }
+        | undefined;
+    }
+  | { type: "prove-state"; eligible: boolean }
+  | { type: "reset-prove-state" }
+  | { type: "zapp-cancel-connect" };
 
 export type StateContextValue = {
   getState: GetState;
@@ -209,6 +233,9 @@ export async function dispatch(
   update: ZuUpdate
 ): Promise<void> {
   switch (action.type) {
+    case "pauseSync":
+      update({ pauseSync: action.value });
+      break;
     case "new-passport":
       return genPassport(state.identityV3, action.email, update);
     case "create-user-skip-password":
@@ -243,12 +270,16 @@ export async function dispatch(
     case "clear-error":
       return clearError(state, update);
     case "reset-passport":
-      return resetPassport(state, update);
+      return resetPassport(action.redirectTo, state, update);
     case "load-after-login":
       return loadAfterLogin(action.encryptionKey, action.storage, update);
     case "set-modal":
       return update({
         modal: action.modal
+      });
+    case "set-bottom-modal":
+      return update({
+        bottomModal: action.modal
       });
     case "password-change-on-other-tab":
       return handlePasswordChangeOnOtherTab(update);
@@ -294,9 +325,9 @@ export async function dispatch(
         action.permissions
       );
     case "handle-agreed-privacy-notice":
-      return handleAgreedPrivacyNotice(state, update, action.version);
+      return handleAgreedPrivacyNotice(state, action.version);
     case "prompt-to-agree-privacy-notice":
-      return promptToAgreePrivacyNotice(state, update);
+      return promptToAgreePrivacyNotice(state);
     case "sync-subscription":
       return syncSubscription(
         state,
@@ -312,8 +343,6 @@ export async function dispatch(
         action.collection,
         action.pcdsToMergeIds
       );
-    case "initialize-strich":
-      return initializeStrich(state, update);
     case "delete-account":
       return deleteAccount(state, update);
     case "show-embedded-screen":
@@ -322,6 +351,26 @@ export async function dispatch(
       return hideEmbeddedScreen(state, update);
     case "zapp-connect":
       return zappConnect(state, update, action.zapp, action.origin);
+    case "zapp-approval":
+      return zappApproval(state, update, action.approved);
+    case "scroll-to-ticket":
+      const { scrollTo } = action;
+      update({ scrollTo });
+      return;
+    case "prove-state":
+      console.log(action);
+      const newList = state.proveStateEligiblePCDs ?? [];
+      newList.push(action.eligible);
+      update({
+        proveStateEligiblePCDs: newList
+      });
+      return;
+    case "reset-prove-state":
+      update({ proveStateEligiblePCDs: undefined });
+      return;
+    case "zapp-cancel-connect":
+      update({ zappApproved: false });
+      return;
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -339,7 +388,8 @@ async function genPassport(
   await savePCDs(pcds);
   update({ pcds });
 
-  window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
+  const route = "#/new-passport";
+  window.location.hash = `${route}?email=` + encodeURIComponent(email);
 }
 
 async function oneClickLogin(
@@ -352,6 +402,7 @@ async function oneClickLogin(
   update({
     modal: { modalType: "none" }
   });
+
   // Because we skip the genPassword() step of setting the initial PCDs
   // in the one-click flow, we'll need to do it here.
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({
@@ -419,8 +470,10 @@ async function oneClickLogin(
       });
     }
 
+    const base = "#";
     // Account has password - direct to enter password
-    window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
+    window.location.hash =
+      base + "/new-passport?email=" + encodeURIComponent(email);
     return;
   }
 
@@ -523,7 +576,7 @@ async function createNewUserWithPassword(
   );
 
   if (newUserResult.success) {
-    return finishAccountCreation(newUserResult.value, state, update);
+    return finishAccountCreation(newUserResult.value, state, update, undefined);
   }
 
   update({
@@ -615,12 +668,14 @@ async function finishAccountCreation(
   // Account creation is complete.  Close any existing modal, and redirect
   // user if they were in the middle of something.
   update({ modal: { modalType: "none" } });
+
+  const baseRoute = "#/";
   if (hasPendingRequest()) {
-    window.location.hash = "#/login-interstitial";
+    window.location.hash = `${baseRoute}login-interstitial`;
   } else {
     window.location.hash = targetFolder
-      ? `#/?folder=${encodeURIComponent(targetFolder)}`
-      : "#/";
+      ? `${baseRoute}?folder=${encodeURIComponent(targetFolder)}`
+      : baseRoute;
   }
 }
 
@@ -686,7 +741,11 @@ function clearError(state: AppState, update: ZuUpdate): void {
   update({ error: undefined });
 }
 
-async function resetPassport(state: AppState, update: ZuUpdate): Promise<void> {
+async function resetPassport(
+  redirectTo: string | undefined,
+  state: AppState,
+  update: ZuUpdate
+): Promise<void> {
   requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
     emails: state.self?.emails,
@@ -704,7 +763,11 @@ async function resetPassport(state: AppState, update: ZuUpdate): Promise<void> {
   });
 
   setTimeout(() => {
-    window.location.reload();
+    if (window.location.href === redirectTo) {
+      window.location.reload();
+    } else {
+      window.location.href = redirectTo ?? "/";
+    }
   }, 1);
 
   notifyLogoutToOtherTabs();
@@ -717,6 +780,15 @@ async function addPCDs(
   upsert?: boolean,
   folder?: string
 ): Promise<void> {
+  for (const serializedPCD of pcds) {
+    const bytes = stringSizeInBytes(serializedPCD.pcd);
+    if (bytes > ADD_PCD_SIZE_LIMIT_BYTES) {
+      throw new Error(
+        `PCD is too large to add.` +
+          ` ${bytes} > ${ADD_PCD_SIZE_LIMIT_BYTES} bytes`
+      );
+    }
+  }
   const deserializedPCDs = await state.pcds.deserializeAll(pcds);
   state.pcds.addAll(deserializedPCDs, { upsert });
   if (folder !== undefined) {
@@ -771,7 +843,8 @@ async function loadAfterLogin(
 ): Promise<void> {
   const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
-    await getPackages()
+    await getPackages(),
+    fallbackDeserializeFunction
   );
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
@@ -828,17 +901,7 @@ async function loadAfterLogin(
     }
   }
 
-  let modal: AppState["modal"] = { modalType: "none" };
-  if (
-    // If on Zupass legacy login, ask user to set passwrod
-    self &&
-    !encryptionKey &&
-    !storage.storage.self.salt
-  ) {
-    console.log("Asking existing user to set a password");
-    modal = { modalType: "upgrade-account-modal" };
-  }
-
+  const modal: AppState["modal"] = { modalType: "none" };
   console.log(`[SYNC] saving state at login: revision ${storage.revision}`);
   await savePCDs(pcds);
   await saveSubscriptions(subscriptions);
@@ -907,16 +970,19 @@ async function saveNewPasswordAndBroadcast(
 }
 
 function userInvalid(update: ZuUpdate): void {
+  console.log("user is invalid");
   update({
     userInvalid: true,
-    modal: { modalType: "invalid-participant" }
+    modal: { modalType: "invalid-participant" },
+    bottomModal: { modalType: "invalid-participant" }
   });
 }
 
 function anotherDeviceChangedPassword(update: ZuUpdate): void {
   update({
     anotherDeviceChangedPassword: true,
-    modal: { modalType: "another-device-changed-password" }
+    modal: { modalType: "another-device-changed-password" },
+    bottomModal: { modalType: "another-device-changed-password" }
   });
 }
 
@@ -1112,7 +1178,6 @@ async function doSync(
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }
-
     return {
       loadedIssuedPCDs: true,
       loadingIssuedPCDs: false,
@@ -1336,16 +1401,11 @@ async function updateSubscriptionPermissions(
  */
 async function handleAgreedPrivacyNotice(
   state: AppState,
-  update: ZuUpdate,
   version: number
 ): Promise<void> {
   if (state.self) {
     saveSelf({ ...state.self, terms_agreed: version });
-    update({
-      self: { ...state.self, terms_agreed: version },
-      loadedIssuedPCDs: false,
-      modal: { modalType: "none" }
-    });
+    window.location.hash = "#/";
   }
 }
 
@@ -1355,10 +1415,7 @@ async function handleAgreedPrivacyNotice(
  * to sync it. If so, sync to server. If not, prompt user with an
  * un-dismissable modal.
  */
-async function promptToAgreePrivacyNotice(
-  state: AppState,
-  update: ZuUpdate
-): Promise<void> {
+async function promptToAgreePrivacyNotice(state: AppState): Promise<void> {
   const cachedTerms = loadPrivacyNoticeAgreed();
   if (cachedTerms === LATEST_PRIVACY_NOTICE) {
     // sync to server
@@ -1368,11 +1425,8 @@ async function promptToAgreePrivacyNotice(
       state.identityV3
     );
   } else {
-    update({
-      modal: {
-        modalType: "privacy-notice"
-      }
-    });
+    // on new ui this is not a modal
+    window.location.hash = "#/updated-terms";
   }
 }
 
@@ -1458,29 +1512,6 @@ async function removeAllPCDsInFolder(
   window.scrollTo({ top: 0 });
 }
 
-async function initializeStrich(
-  state: AppState,
-  update: ZuUpdate
-): Promise<void> {
-  if (!appConfig.strichLicenseKey) {
-    console.log("Strich license key is not defined");
-    return;
-  }
-  try {
-    await Promise.race([
-      StrichSDK.initialize(appConfig.strichLicenseKey),
-      sleep(10000)
-    ]);
-    if (StrichSDK.isInitialized()) {
-      update({ strichSDKstate: "initialized" });
-    } else {
-      update({ strichSDKstate: "error" });
-    }
-  } catch (e) {
-    update({ strichSDKstate: "error" });
-  }
-}
-
 async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   update({
     deletingAccount: true,
@@ -1504,7 +1535,7 @@ async function deleteAccount(state: AppState, update: ZuUpdate): Promise<void> {
   const res = await requestDeleteAccount(appConfig.zupassServer, { pcd });
 
   if (res.success) {
-    resetPassport(state, update);
+    resetPassport(undefined, state, update);
     update({ deletingAccount: false });
   } else {
     alert(`Error deleting account: ${res.error}`);
@@ -1516,6 +1547,9 @@ async function showEmbeddedScreen(
   update: ZuUpdate,
   screen: EmbeddedScreenState["screen"]
 ): Promise<void> {
+  if (window.parent !== window.self) {
+    window.location.hash = "embedded";
+  }
   update({
     embeddedScreen: { screen }
   });
@@ -1540,4 +1574,46 @@ async function zappConnect(
     zappOrigin: origin,
     connectedZapp: zapp
   });
+}
+
+async function zappApproval(
+  state: AppState,
+  update: ZuUpdate,
+  approved: boolean
+): Promise<void> {
+  const zapp = state.connectedZapp;
+  if (!zapp || !state.zappOrigin) {
+    return;
+  }
+  if (approved) {
+    const newZapp = (await PODPCDPackage.prove({
+      entries: {
+        argumentType: ArgumentTypeName.Object,
+        value: podEntriesToJSON({
+          origin: { type: "string", value: state.zappOrigin },
+          name: { type: "string", value: zapp.name },
+          permissions: {
+            type: "string",
+            value: JSON.stringify(zapp.permissions)
+          }
+        })
+      },
+      privateKey: {
+        argumentType: ArgumentTypeName.String,
+        value: encodePrivateKey(
+          Buffer.from(v3tov4Identity(state.identityV3).export(), "base64")
+        )
+      },
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: `zapp-${zapp.name}-${state.zappOrigin}`
+      }
+    })) as PODPCD;
+
+    const newZappSerialized = await PODPCDPackage.serialize(newZapp);
+    update({ zappApproved: true });
+    return addPCDs(state, update, [newZappSerialized], true, "Zapps");
+  } else {
+    update({ zappApproved: false });
+  }
 }

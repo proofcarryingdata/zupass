@@ -4,22 +4,25 @@ import {
   GPCArtifactVersion,
   GPCBoundConfig,
   GPCProofConfig,
-  deserializeGPCProofConfig,
+  JSONPODMembershipLists,
+  JSONProofConfig,
   gpcArtifactDownloadURL,
   gpcBindConfig,
   membershipListsToSets,
-  podMembershipListsFromSimplifiedJSON,
-  serializeGPCBoundConfig
+  podMembershipListsFromJSON,
+  proofConfigFromJSON,
+  proofConfigToJSON
 } from "@pcd/gpc";
 import {
   GPCPCD,
   GPCPCDArgs,
   GPCPCDPackage,
+  JSONFixedPODEntries,
   checkPODAgainstPrescribedSignerPublicKeys,
   checkPODEntriesAgainstPrescribedEntries,
   checkPrescribedEntriesAgainstProofConfig,
   checkPrescribedSignerPublicKeysAgainstProofConfig,
-  fixedPODEntriesFromSimplifiedJSON
+  fixedPODEntriesFromJSON
 } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdGetRequestUrl,
@@ -28,6 +31,12 @@ import {
   useZupassPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import {
+  PODName,
+  bigintToSimplestJSON,
+  checkPODName,
+  podValueToJSON
+} from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { emptyStrToUndefined } from "@pcd/util";
@@ -195,13 +204,17 @@ export default function Page(): JSX.Element {
               code={JSONBig({ useNativeBigInt: true }).stringify(pcd, null, 2)}
             />
             {valid === undefined && <p>❓ Proof verifying</p>}
-            {valid === false && <p>❌ Proof is invalid: ${validationError}</p>}
+            {valid === false && <p>❌ Proof is invalid: {validationError}</p>}
             {valid === true && (
               <>
                 <p>✅ Proof is valid</p>
                 <p>Proof configuration:</p>
                 <CollapsableCode
-                  code={serializeGPCBoundConfig(pcd.claim.config, 2)}
+                  code={JSON.stringify(
+                    proofConfigToJSON(pcd.claim.config),
+                    null,
+                    2
+                  )}
                 />
                 <p>Revealed PODs:</p>
                 <CollapsableCode
@@ -212,13 +225,19 @@ export default function Page(): JSX.Element {
                   )}
                 />
                 {pcd.claim.revealed.watermark && (
-                  <p>{`Watermark: ${pcd.claim.revealed.watermark.value}`}</p>
+                  <p>{`Watermark: ${podValueToJSON(
+                    pcd.claim.revealed.watermark
+                  )}`}</p>
                 )}
                 {pcd.claim.revealed.owner?.externalNullifier && (
-                  <p>{`External Nullifier: ${pcd.claim.revealed.owner?.externalNullifier.value}`}</p>
+                  <p>{`External Nullifier: ${podValueToJSON(
+                    pcd.claim.revealed.owner?.externalNullifier
+                  )}`}</p>
                 )}
                 {pcd.claim.revealed.owner?.nullifierHashV3 && (
-                  <p>{`Nullifier Hash: ${pcd.claim.revealed.owner?.nullifierHashV3}`}</p>
+                  <p>{`Nullifier Hash: ${bigintToSimplestJSON(
+                    pcd.claim.revealed.owner?.nullifierHashV3
+                  )}`}</p>
                 )}
               </>
             )}
@@ -252,10 +271,38 @@ export function openGPCPopup(
   watermark?: string,
   externalNullifier?: string
 ): void {
+  // Validate JSON input by parsing locally before sending.
+  const jsonProofConfig: JSONProofConfig = JSON.parse(proofConfig);
+  proofConfigFromJSON(jsonProofConfig);
+  let jsonMembershipLists: JSONPODMembershipLists | undefined = undefined;
+  if (membershipLists) {
+    jsonMembershipLists = JSON.parse(membershipLists);
+    if (jsonMembershipLists !== undefined) {
+      podMembershipListsFromJSON(jsonMembershipLists);
+    }
+  }
+  let jsonPrescribedEntries: JSONFixedPODEntries | undefined = undefined;
+  if (prescribedEntries) {
+    jsonPrescribedEntries = JSON.parse(prescribedEntries);
+    if (jsonPrescribedEntries !== undefined) {
+      fixedPODEntriesFromJSON(jsonPrescribedEntries);
+    }
+  }
+  let jsonPrescribedSignerPublicKeys: Record<PODName, string> | undefined =
+    undefined;
+  if (prescribedSignerPublicKeys) {
+    jsonPrescribedSignerPublicKeys = JSON.parse(prescribedSignerPublicKeys);
+    if (jsonPrescribedSignerPublicKeys !== undefined) {
+      for (const podName of Object.keys(jsonPrescribedSignerPublicKeys)) {
+        checkPODName(podName);
+      }
+    }
+  }
+
   const args: GPCPCDArgs = {
     proofConfig: {
-      argumentType: ArgumentTypeName.String,
-      value: proofConfig,
+      argumentType: ArgumentTypeName.Object,
+      value: jsonProofConfig,
       userProvided: false
     },
     pods: {
@@ -277,13 +324,10 @@ export function openGPCPopup(
         }
       },
       validatorParams: {
-        proofConfig,
-        membershipLists,
-        prescribedEntries,
-        prescribedSignerPublicKeys:
-          prescribedSignerPublicKeys !== undefined
-            ? JSON.parse(prescribedSignerPublicKeys)
-            : undefined
+        proofConfig: jsonProofConfig,
+        membershipLists: jsonMembershipLists,
+        prescribedEntries: jsonPrescribedEntries,
+        prescribedSignerPublicKeys: jsonPrescribedSignerPublicKeys
       }
     },
     identity: {
@@ -293,17 +337,17 @@ export function openGPCPopup(
       userProvided: true
     },
     externalNullifier: {
-      argumentType: ArgumentTypeName.String,
+      argumentType: ArgumentTypeName.Object,
       value: externalNullifier,
       userProvided: false
     },
     membershipLists: {
-      argumentType: ArgumentTypeName.String,
-      value: membershipLists,
+      argumentType: ArgumentTypeName.Object,
+      value: jsonMembershipLists,
       userProvided: false
     },
     watermark: {
-      argumentType: ArgumentTypeName.String,
+      argumentType: ArgumentTypeName.Object,
       value: watermark,
       userProvided: false
     }
@@ -408,7 +452,7 @@ async function verifyProof(
   let localBoundConfig: GPCBoundConfig;
   let localProofConfig: GPCProofConfig;
   try {
-    localProofConfig = deserializeGPCProofConfig(proofConfig);
+    localProofConfig = proofConfigFromJSON(JSON.parse(proofConfig));
     localBoundConfig = gpcBindConfig(localProofConfig).boundConfig;
   } catch (configError) {
     return { valid: false, err: "Invalid proof config." };
@@ -425,7 +469,7 @@ async function verifyProof(
     membershipLists === undefined
       ? {}
       : membershipListsToSets(
-          podMembershipListsFromSimplifiedJSON(membershipLists)
+          podMembershipListsFromJSON(JSON.parse(membershipLists))
         )
   );
   if (!sameMembershipLists) {
@@ -435,8 +479,9 @@ async function verifyProof(
   // Check that revealed entries match up with prescribed entries.
   if (prescribedEntries !== undefined) {
     const params = { notFoundMessage: undefined };
-    const deserialisedPrescribedEntries =
-      fixedPODEntriesFromSimplifiedJSON(prescribedEntries);
+    const deserialisedPrescribedEntries = fixedPODEntriesFromJSON(
+      JSON.parse(prescribedEntries)
+    );
 
     for (const podName of Object.keys(deserialisedPrescribedEntries)) {
       const revealedPODData = pcd.claim.revealed.pods[podName];

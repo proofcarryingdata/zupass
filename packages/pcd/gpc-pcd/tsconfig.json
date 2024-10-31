@@ -40,6 +40,9 @@
     },
     {
       "path": "../../lib/pod"
+    },
+    {
+      "path": "../../lib/semaphore-identity-v3-wrapper"
     }
   ]
 }

@@ -1,4 +1,4 @@
-import { Group } from "@semaphore-protocol/group";
+import type { Group } from "@semaphore-protocol/group";
 
 export interface SerializedSemaphoreGroup {
   id: string;
@@ -21,9 +21,10 @@ export function serializeSemaphoreGroup(
   };
 }
 
-export function deserializeSemaphoreGroup(
+export async function deserializeSemaphoreGroup(
   serializedGroup: SerializedSemaphoreGroup
-): Group {
+): Promise<Group> {
+  const { Group } = await import("@semaphore-protocol/group");
   const group = new Group(
     BigInt(serializedGroup.id),
     serializedGroup.depth,

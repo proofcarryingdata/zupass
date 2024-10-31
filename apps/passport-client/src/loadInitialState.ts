@@ -38,17 +38,7 @@ export async function loadInitialState(): Promise<AppState> {
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
 
-  let modal = { modalType: "none" } as AppState["modal"];
-
-  if (
-    // If on Zupass legacy login, ask user to set password
-    self &&
-    !encryptionKey &&
-    !self.salt
-  ) {
-    console.log("Asking existing user to set a password");
-    modal = { modalType: "upgrade-account-modal" };
-  }
+  const modal = { modalType: "none" } as AppState["modal"];
 
   const credentialCache = createStorageBackedCredentialCache();
 
@@ -60,16 +50,22 @@ export async function loadInitialState(): Promise<AppState> {
     pcds,
     identityV3,
     modal,
+    bottomModal: { modalType: "none" },
     subscriptions,
     resolvingSubscriptionId: undefined,
     credentialCache,
     offline: !window.navigator.onLine,
     serverStorageRevision: persistentSyncStatus.serverStorageRevision,
     serverStorageHash: persistentSyncStatus.serverStorageHash,
-    importScreen: undefined,
-    strichSDKstate: undefined
+    importScreen: undefined
   };
-
+  if (
+    appConfig.devMode &&
+    (appConfig.zupassServer.includes("127.0.0.1") ||
+      appConfig.zupassServer.includes("localhost"))
+  ) {
+    // await initTestData(state);
+  }
   if (!validateAndLogInitialAppState("loadInitialState", state)) {
     state.userInvalid = true;
     state.modal = { modalType: "invalid-participant" };

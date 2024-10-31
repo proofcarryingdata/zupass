@@ -83,6 +83,14 @@ export function LoginInterstitialScreen(): JSX.Element {
             });
             break;
           }
+          case "authenticateIFrame": {
+            console.log("Redirecting to Authenticate IFrame screen");
+            clearAllPendingRequests();
+            navigate(`/authenticate-iframe`, {
+              replace: true
+            });
+            break;
+          }
           default:
             window.location.hash = "#/";
         }

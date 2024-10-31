@@ -8,12 +8,14 @@
         "../../../node_modules/circomkit/**",
         "../../../node_modules/circomlib/**",
         "../../../node_modules/@zk-kit/circuits/**",
-        "scripts/gen-test-artifacts.ts",
+        "scripts/gen-artifacts.ts",
         "circuits/**",
+        "!circuits/test/**",
+        "!circuits/main/**",
         "circomkit.json",
-        "circuits.json"
+        "testCircuits.json"
       ],
-      "outputs": ["artifacts/**"],
+      "outputs": ["artifacts/test/**", "circuits/main/**"],
       "outputLogs": "new-only",
       "cache": true
     },
@@ -23,6 +25,8 @@
         "$TURBO_DEFAULT$",
         "src/**",
         "circuits/**",
+        "!circuits/test/**",
+        "!circuits/main/**",
         "circomkit.json",
         "circuits.json"
       ],
@@ -31,7 +35,13 @@
     },
     "test": {
       "dependsOn": ["build", "^gen-test-artifacts", "gen-test-artifacts"],
-      "inputs": ["$TURBO_DEFAULT$", "test/**", "artifacts/**"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "test/**",
+        "artifacts/**",
+        "circuits/**",
+        "!circuits/test/**"
+      ],
       "outputs": [],
       "cache": true
     }

@@ -6,6 +6,7 @@ import {
 } from "@pcd/passport-interface";
 import { onlyDefined, str } from "@pcd/util";
 import _ from "lodash";
+import { PoolClient } from "postgres-pool";
 import { v4 as uuidv4 } from "uuid";
 import { PCDHTTPError } from "../../../../routing/pcdHttpError";
 import { logger } from "../../../../util/logger";
@@ -31,6 +32,7 @@ export interface UpsertPipelineResult {
  * represented in {@link PipelineExecutorSubservice} by a {@link PipelineSlot}.
  */
 export async function upsertPipelineDefinition(
+  client: PoolClient,
   editor: PipelineUser,
   newDefinition: PipelineDefinition,
   userSubservice: UserSubservice,
@@ -38,8 +40,6 @@ export async function upsertPipelineDefinition(
   executorSubservice: PipelineExecutorSubservice
 ): Promise<UpsertPipelineResult> {
   traceUser(editor);
-  // TODO: do this in a transaction
-
   const ids = uniqueIdsForPipelineDefinition(newDefinition);
   const seen = new Set<string>();
   for (const id of ids) {
@@ -53,7 +53,7 @@ export async function upsertPipelineDefinition(
   }
 
   const otherPipelines = (
-    await pipelineSubservice.loadPipelineDefinitions()
+    await pipelineSubservice.loadPipelineDefinitions(client)
   ).filter((definition) => definition.id !== newDefinition.id);
 
   for (const definition of otherPipelines) {
@@ -75,7 +75,7 @@ export async function upsertPipelineDefinition(
   }
 
   const existingPipelineDefinition =
-    await pipelineSubservice.loadPipelineDefinition(newDefinition.id);
+    await pipelineSubservice.loadPipelineDefinition(client, newDefinition.id);
   const existingSlot = executorSubservice
     .getAllPipelineSlots()
     .find((slot) => slot.definition.id === existingPipelineDefinition?.id);
@@ -104,8 +104,10 @@ export async function upsertPipelineDefinition(
         throw new PCDHTTPError(400, "Cannot change owner of pipeline");
       }
       if (
-        (await userSubservice.getUserById(newDefinition.ownerUserId)) ===
-        undefined
+        (await userSubservice.getUserById(
+          client,
+          newDefinition.ownerUserId
+        )) === undefined
       ) {
         throw new PCDHTTPError(
           400,
@@ -132,7 +134,9 @@ export async function upsertPipelineDefinition(
     }
     newDefinition.editorUserIds = (
       await Promise.all(
-        newDefinition.editorUserIds.map((id) => userSubservice.getUserById(id))
+        newDefinition.editorUserIds.map((id) =>
+          userSubservice.getUserById(client, id)
+        )
       ).then(onlyDefined)
     ).map((u) => u.id);
 
@@ -163,9 +167,54 @@ export async function upsertPipelineDefinition(
     `executing upsert of pipeline ${str(validatedNewDefinition)}`
   );
   tracePipeline(validatedNewDefinition);
-  await pipelineSubservice.saveDefinition(validatedNewDefinition, editor.id);
+  await pipelineSubservice.saveDefinition(
+    client,
+    validatedNewDefinition,
+    editor.id
+  );
+
   if (existingSlot) {
+    const lastLoadSummary = await pipelineSubservice.getLastLoadSummary(
+      newDefinition.id
+    );
+    if (lastLoadSummary && !lastLoadSummary?.success) {
+      await pipelineSubservice.saveLoadSummary(
+        validatedNewDefinition.id,
+        undefined
+      );
+    } else if (validatedNewDefinition.options.paused) {
+      // it's important that we clear the loadPromise before stopping the pipeline,
+      // so that the `AbortError` that is thrown by the `stop()` method can be
+      // handled properly upstream.
+      if (existingSlot.instance && !existingSlot.instance.isStopped()) {
+        existingSlot.loadPromise = undefined;
+        await existingSlot.instance?.stop();
+      }
+
+      if (validatedNewDefinition.options.disableCache) {
+        await pipelineSubservice.saveLoadSummary(
+          validatedNewDefinition.id,
+          undefined
+        );
+        await pipelineSubservice.clearAtoms(validatedNewDefinition.id);
+      }
+    } else {
+      // TODO: maybe still keep these around until the load finishes even without
+      // the caching feature enabled? Alternately, make the env var toggle actually
+      // writing to the file system vs. turning off the intra-instance caching.
+      if (validatedNewDefinition.options.disableCache) {
+        await pipelineSubservice.saveLoadSummary(
+          validatedNewDefinition.id,
+          undefined
+        );
+        await pipelineSubservice.clearAtoms(validatedNewDefinition.id);
+      } else {
+        await pipelineSubservice.resetToCache(validatedNewDefinition.id);
+      }
+    }
+
     existingSlot.owner = await userSubservice.getUserById(
+      client,
       validatedNewDefinition.ownerUserId
     );
   }
@@ -173,11 +222,13 @@ export async function upsertPipelineDefinition(
   // purposely not awaited as this also performs a Pipeline load,
   // which can take an arbitrary amount of time.
   const restartPromise = executorSubservice.restartPipeline(
+    client,
     validatedNewDefinition.id
   );
 
   // To get accurate timestamps, we need to load the pipeline definition
   const savedDefinition = await pipelineSubservice.getPipeline(
+    client,
     validatedNewDefinition.id
   );
   if (savedDefinition === undefined) {

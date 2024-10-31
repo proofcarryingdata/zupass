@@ -6,15 +6,14 @@ import { useEmbeddedScreenState } from "../../../src/appHooks";
 import { EmbeddedScreenType } from "../../../src/embedded";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { GenericProveScreen } from "../ProveScreen/GenericProveScreen";
-import { EmbeddedAddSubscription } from "./EmbeddedAddSubscription";
 import { EmbeddedGPCProofScreen } from "./EmbeddedGPCProofScreen";
+import { EmbeddedSignPODScreen } from "./EmbeddedSignPODScreen";
 
 /**
  * EmbeddedScreen is used to control the UI when embedded in an iframe.
  */
 export function EmbeddedScreen(): ReactNode {
   const embeddedScreen = useEmbeddedScreenState();
-  useSyncE2EEStorage();
   if (!embeddedScreen) {
     return null;
   }
@@ -26,27 +25,34 @@ export function EmbeddedScreen(): ReactNode {
       />
     );
   } else if (
-    embeddedScreen.screen?.type === EmbeddedScreenType.EmbeddedAddSubscription
-  ) {
-    return (
-      <EmbeddedAddSubscription
-        feedUrl={embeddedScreen.screen.feedUrl}
-        feedId={embeddedScreen.screen.feedId}
-      />
-    );
-  } else if (
     embeddedScreen.screen?.type === EmbeddedScreenType.EmbeddedGPCProof
   ) {
     return (
       <EmbeddedGPCProofScreen
         proofRequestSchema={embeddedScreen.screen.proofRequest}
         callback={embeddedScreen.screen.callback}
+        collectionIds={embeddedScreen.screen.collectionIds}
+      />
+    );
+  } else if (
+    embeddedScreen.screen?.type === EmbeddedScreenType.EmbeddedSignPOD
+  ) {
+    return (
+      <EmbeddedSignPODScreen
+        entries={embeddedScreen.screen.entries}
+        callback={embeddedScreen.screen.callback}
+        onCancel={embeddedScreen.screen.onCancel}
       />
     );
   } else if (embeddedScreen.screen === undefined) {
-    return <div></div>;
+    return <DefaultEmbeddedScreen />;
   }
   assertUnreachable(embeddedScreen.screen);
+}
+
+function DefaultEmbeddedScreen(): ReactNode {
+  useSyncE2EEStorage();
+  return <div></div>;
 }
 
 function EmbeddedGetRequest({
@@ -56,6 +62,7 @@ function EmbeddedGetRequest({
   request: PCDGetRequest;
   callback: (serialized: SerializedPCD) => void;
 }): ReactNode {
+  useSyncE2EEStorage();
   const onProve = useCallback(
     (
       pcd: PCD,

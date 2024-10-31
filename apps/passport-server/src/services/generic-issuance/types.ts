@@ -1,4 +1,7 @@
-import { PipelineDefinition } from "@pcd/passport-interface";
+import {
+  PipelineDefinition,
+  PipelineLoadSummary
+} from "@pcd/passport-interface";
 import { PipelineCapability } from "./capabilities/types";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 
@@ -38,4 +41,5 @@ export interface PipelineSlot {
   owner?: PipelineUser;
   loadIncidentId?: string;
   lastLoadDiscordMsgTimestamp?: Date;
+  loadPromise?: Promise<PipelineLoadSummary>;
 }

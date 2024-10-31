@@ -5,9 +5,9 @@ import {
   PODEntries,
   encodePublicKey
 } from "@pcd/pod";
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import { Identity as IdentityV4 } from "@semaphore-protocol/core";
-import { Identity } from "@semaphore-protocol/identity";
+import { Identity as IdentityV4 } from "@semaphore-protocol/identity";
 import { AssertionError, assert, expect } from "chai";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
@@ -34,7 +34,7 @@ export const privateKey = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAUGBwgJAAE"; // hex 
 export const privateKey2 = "AAECAwQFBgcICQABAgMEBQYHCAkAAQIDBAQFBggIAAA"; // hex 0001020304050607080900010203040506070809000102030404050608080000
 
 // Semaphore V3 identity
-export const ownerIdentity = new Identity(
+export const ownerIdentity = new IdentityV3(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
 );
 
@@ -71,6 +71,31 @@ export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },
   eventID: { type: "cryptographic", value: 456n },
   ticketID: { type: "cryptographic", value: 999n }
+} satisfies PODEntries;
+
+// 8 entries, max depth 4
+export const allTypesEntries = {
+  vString: { type: "string", value: "hello" },
+  vBytes: { type: "bytes", value: new Uint8Array([1, 2, 3]) },
+  vCryptographic: {
+    type: "cryptographic",
+    value:
+      18003549444852780886592139349318927700964545643704389119309344945101355208480n
+  },
+  vInt: {
+    type: "int",
+    value: 123n
+  },
+  vBoolean: { type: "boolean", value: true },
+  vEddsaPubkey: {
+    type: "eddsa_pubkey",
+    value: "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4"
+  },
+  vDate: {
+    type: "date",
+    value: new Date("2024-01-01T00:00:00.000Z")
+  },
+  vNull: { type: "null", value: null }
 } satisfies PODEntries;
 
 export async function expectAsyncError(

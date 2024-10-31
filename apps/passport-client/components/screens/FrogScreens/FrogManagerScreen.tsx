@@ -19,7 +19,7 @@ export function FrogManagerScreen(): JSX.Element {
   }
 
   return (
-    <AppContainer bg="gray">
+    <AppContainer bg="primary">
       <ButtonGroup>
         <Button
           disabled={tab === "frogs"}

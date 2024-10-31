@@ -1,8 +1,4 @@
-import {
-  requestDownloadAndDecryptStorage,
-  requestLogToServer
-} from "@pcd/passport-interface";
-import { TextButton } from "@pcd/passport-ui";
+import { requestLogToServer } from "@pcd/passport-interface";
 import { validateEmail } from "@pcd/util";
 import {
   ChangeEvent,
@@ -11,7 +7,6 @@ import {
   useEffect,
   useState
 } from "react";
-import { UAParser } from "ua-parser-js";
 import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
@@ -23,13 +18,13 @@ import {
   pendingRequestKeys,
   setPendingAddRequest,
   setPendingAddSubscriptionRequest,
+  setPendingAuthenticateIFrameRequest,
   setPendingGenericIssuanceCheckinRequest,
   setPendingGetWithoutProvingRequest,
   setPendingProofRequest,
   setPendingViewFrogCryptoRequest,
   setPendingViewSubscriptionsRequest
 } from "../../../src/sessionStorage";
-import { useSelector } from "../../../src/subscribe";
 import {
   BigInput,
   Button,
@@ -43,23 +38,12 @@ import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
 import { InlineError } from "../../shared/InlineError";
 
-enum StorageAccessStatus {
-  None, // Default status
-  CanRequest, // Suitable browser, show the option to request
-  Requesting, // Request dialog visible
-  Granted, // Access granted
-  NoLocalStorage, // Access granted but no relevant storage values found
-  Denied // Access denied
-}
-
 export function LoginScreen(): JSX.Element {
   const dispatch = useDispatch();
   const state = useStateContext().getState();
   const [error, setError] = useState<string | undefined>();
   const query = useQuery();
   const redirectedFromAction = query?.get("redirectedFromAction") === "true";
-  const connectedZapp = useSelector((state) => state.connectedZapp);
-  const zappOrigin = useSelector((state) => state.zappOrigin);
 
   const pendingGetWithoutProvingRequest = query?.get(
     pendingRequestKeys.getWithoutProving
@@ -78,6 +62,10 @@ export function LoginScreen(): JSX.Element {
   const pendingGenericIssuanceCheckinRequest = query?.get(
     pendingRequestKeys.genericIssuanceCheckin
   );
+  const pendingAuthenticateIFrameRequest = query?.get(
+    pendingRequestKeys.authenticateIFrame
+  );
+
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
 
@@ -104,6 +92,9 @@ export function LoginScreen(): JSX.Element {
         pendingGenericIssuanceCheckinRequest
       );
       pendingRequestForLogging = pendingRequestKeys.genericIssuanceCheckin;
+    } else if (pendingAuthenticateIFrameRequest) {
+      setPendingAuthenticateIFrameRequest(pendingAuthenticateIFrameRequest);
+      pendingRequestForLogging = pendingRequestKeys.authenticateIFrame;
     }
 
     if (pendingRequestForLogging) {
@@ -118,7 +109,8 @@ export function LoginScreen(): JSX.Element {
     pendingViewSubscriptionsRequest,
     pendingAddSubscriptionRequest,
     pendingViewFrogCryptoRequest,
-    pendingGenericIssuanceCheckinRequest
+    pendingGenericIssuanceCheckinRequest,
+    pendingAuthenticateIFrameRequest
   ]);
 
   const suggestedEmail = query?.get("email");
@@ -142,104 +134,6 @@ export function LoginScreen(): JSX.Element {
     },
     [dispatch, email]
   );
-
-  const [storageAccessStatus, setStorageAccessStatus] = useState(
-    StorageAccessStatus.None
-  );
-
-  /**
-   * Assuming we're in Chrome and an iframe, and we've successfully loaded an
-   * encryption key from local storage, try to use it to log in.
-   */
-  const tryToLogin = useCallback(
-    async (encryptionKey: string) => {
-      // Try to download and decrypt the storage
-      const storageRequest = await requestDownloadAndDecryptStorage(
-        appConfig.zupassServer,
-        encryptionKey
-      );
-      if (storageRequest.success) {
-        // Success, log in
-        dispatch({
-          type: "load-after-login",
-          storage: storageRequest.value,
-          encryptionKey
-        });
-      } else {
-        // Something unexpected went wrong
-        setError(
-          "Unable to log in automatically, please enter your email to log in"
-        );
-        setStorageAccessStatus(StorageAccessStatus.Denied);
-      }
-    },
-    [dispatch]
-  );
-
-  /**
-   * This will only be called if we're in an iframe and Chrome.
-   */
-  const requestStorageAndLogIn = useCallback(async () => {
-    try {
-      setStorageAccessStatus(StorageAccessStatus.Requesting);
-      // @ts-expect-error Chrome-only API
-      const handle: { localStorage: Storage } =
-        // @ts-expect-error Chrome-only API
-        await document.requestStorageAccess({ localStorage: true });
-
-      setStorageAccessStatus(StorageAccessStatus.Granted);
-      // Access granted, try reading the local storage
-      const encryptionKey = handle.localStorage.getItem("encryption_key");
-      if (encryptionKey) {
-        await tryToLogin(encryptionKey);
-      } else {
-        setStorageAccessStatus(StorageAccessStatus.NoLocalStorage);
-      }
-    } catch (_e) {
-      // If the user rejected the storage access request, set an error message.
-      // The finally block will return the user to the regular login flow.
-      setError(
-        "Unable to log in automatically, please enter your email to log in"
-      );
-      setStorageAccessStatus(StorageAccessStatus.Denied);
-    }
-  }, [tryToLogin]);
-
-  useEffect(() => {
-    (async (): Promise<void> => {
-      // Are we in an iframe? If so, we might be able to skip requesting the
-      // user's email and password by retrieving their encryption key from the
-      // first-party local storage. Currently this only works on Chrome 125+.
-      const parser = new UAParser();
-      const browserName = parser.getBrowser().name;
-      const browserVersion = parser.getBrowser().version;
-      const isChrome125OrAbove =
-        browserName === "Chrome" &&
-        browserVersion &&
-        parseInt(browserVersion) >= 125;
-
-      if (window.parent !== window && isChrome125OrAbove) {
-        // Do we already have access?
-        const hasAccess = await document.hasStorageAccess();
-        if (!hasAccess) {
-          // No access, try requesting it interactively
-          // Setting this state will trigger the UI to show the "Connect to
-          // Zupass" button. To request storage access, the user must click
-          // the button and approve the dialog.
-          // Storage access requests must occur in response to a user action,
-          // so we can't request it automatically here and must wait for the
-          // user to click the button.
-          setStorageAccessStatus(StorageAccessStatus.CanRequest);
-        } else {
-          // Access is allowed in principle, now we can request storage
-          // Show a spinner:
-          setStorageAccessStatus(StorageAccessStatus.Requesting);
-          // Try to read from storage and log in
-          requestStorageAndLogIn();
-        }
-      }
-    })();
-  }, [dispatch, requestStorageAndLogIn, tryToLogin]);
 
   useEffect(() => {
     // Redirect to home if already logged in
@@ -281,61 +175,32 @@ export function LoginScreen(): JSX.Element {
         </>
       )}
 
-      {storageAccessStatus === StorageAccessStatus.CanRequest && (
-        <TextCenter>
+      {!state.loggingOut && (
+        <>
           <Spacer h={24} />
-          Do you want to allow <em>{connectedZapp?.name}</em> ({zappOrigin}) to
-          connect to Zupass?
-          <Spacer h={24} />
-          <Button onClick={requestStorageAndLogIn}>
-            Connect to Zupass
-          </Button>{" "}
-          <Spacer h={24} />
-          <TextButton
-            onClick={() => setStorageAccessStatus(StorageAccessStatus.Denied)}
-          >
-            Log in manually
-          </TextButton>
-        </TextCenter>
+          <CenterColumn>
+            <form onSubmit={onGenPass}>
+              <BigInput
+                autoCapitalize="off"
+                autoCorrect="off"
+                type="text"
+                autoFocus
+                placeholder="email address"
+                value={email}
+                onChange={(e: ChangeEvent<HTMLInputElement>) =>
+                  setEmail(e.target.value)
+                }
+              />
+              <InlineError error={error} />
+              <Spacer h={8} />
+              <Button style="primary" type="submit">
+                Continue
+              </Button>
+            </form>
+          </CenterColumn>
+          <Spacer h={64} />
+        </>
       )}
-
-      {(storageAccessStatus === StorageAccessStatus.Requesting ||
-        storageAccessStatus === StorageAccessStatus.Granted) && (
-        <TextCenter>
-          <Spacer h={24} />
-          <RippleLoader />
-        </TextCenter>
-      )}
-
-      {(storageAccessStatus === StorageAccessStatus.None ||
-        storageAccessStatus === StorageAccessStatus.Denied ||
-        storageAccessStatus === StorageAccessStatus.NoLocalStorage) &&
-        !state.loggingOut && (
-          <>
-            <Spacer h={24} />
-            <CenterColumn>
-              <form onSubmit={onGenPass}>
-                <BigInput
-                  autoCapitalize="off"
-                  autoCorrect="off"
-                  type="text"
-                  autoFocus
-                  placeholder="email address"
-                  value={email}
-                  onChange={(e: ChangeEvent<HTMLInputElement>) =>
-                    setEmail(e.target.value)
-                  }
-                />
-                <InlineError error={error} />
-                <Spacer h={8} />
-                <Button style="primary" type="submit">
-                  Continue
-                </Button>
-              </form>
-            </CenterColumn>
-            <Spacer h={64} />
-          </>
-        )}
     </AppContainer>
   );
 }

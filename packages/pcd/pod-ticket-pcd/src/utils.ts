@@ -17,6 +17,13 @@ export function cryptographic<T extends PotentialBigInt>(a?: T): T | undefined {
 }
 
 /**
+ * Converts a public key to a commitment.
+ */
+export function eddsaPublicKey<T extends string>(a?: T): string | undefined {
+  return a;
+}
+
+/**
  * Validator that ensures that a value can really be transformed into a BigInt.
  * Only relevant for strings which may contain non-numeric values.
  */
@@ -109,11 +116,22 @@ export function dataToPodEntries<T>(
               type: "cryptographic"
             };
           }
+        } else if (field._def.effect.transform === eddsaPublicKey) {
+          if (data[key] !== null && data[key] !== undefined) {
+            entries[key] = {
+              value: data[key],
+              type: "eddsa_pubkey"
+            };
+          }
         } else {
           throw new Error(`Unrecognized transform on key ${key}`);
         }
         break;
     }
   }
+
+  // Always add pod_type to allow tickets to be identified.
+  entries["pod_type"] = { value: "zupass.ticket", type: "string" };
+
   return entries;
 }

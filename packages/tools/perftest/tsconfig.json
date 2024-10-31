@@ -48,6 +48,9 @@
       "path": "../../pcd/semaphore-signature-pcd"
     },
     {
+      "path": "../../lib/semaphore-identity-v3-wrapper"
+    },
+    {
       "path": "../../lib/util"
     },
     {

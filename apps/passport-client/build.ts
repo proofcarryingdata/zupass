@@ -8,6 +8,10 @@ import Handlebars from "handlebars";
 import https from "https";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
+import {
+  ZUPASS_GPC_ARTIFACT_BASE_PATH,
+  ZUPASS_GPC_ARTIFACT_PATH
+} from "./src/sharedConstants";
 
 dotenv.config();
 
@@ -51,13 +55,6 @@ const define = {
         )
       }
     : {}),
-  ...(process.env.STRICH_LICENSE_KEY !== undefined
-    ? {
-        "process.env.STRICH_LICENSE_KEY": JSON.stringify(
-          process.env.STRICH_LICENSE_KEY
-        )
-      }
-    : {}),
   ...(process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE !== undefined
     ? {
         "process.env.GPC_ARTIFACTS_CONFIG_OVERRIDE": JSON.stringify(
@@ -78,9 +75,22 @@ const define = {
           process.env.ZAPP_ALLOWED_SIGNER_ORIGINS
         )
       }
+    : {}),
+  ...(process.env.EMBEDDED_ZAPPS !== undefined
+    ? {
+        "process.env.EMBEDDED_ZAPPS": JSON.stringify(process.env.EMBEDDED_ZAPPS)
+      }
+    : {}),
+  ...(process.env.DEVCON_TICKET_QUERY_ORIGINS !== undefined
+    ? {
+        "process.env.DEVCON_TICKET_QUERY_ORIGINS": JSON.stringify(
+          process.env.DEVCON_TICKET_QUERY_ORIGINS
+        )
+      }
     : {})
 };
 
+const APP_OUT_DIR = "public/js";
 const appOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
@@ -95,22 +105,19 @@ const appOpts: BuildOptions = {
   loader: {
     ".svg": "dataurl"
   },
-  outdir: "public/js",
+  outdir: APP_OUT_DIR,
   metafile: true,
-  define
+  define,
+  splitting: true,
+  format: "esm",
+  drop: process.env.DISABLE_CONSOLE_LOG === "true" ? ["console"] : []
 };
 
 const serviceWorkerOpts: BuildOptions = {
   tsconfig: "./src/worker/tsconfig.json",
   bundle: true,
   entryPoints: ["src/worker/service-worker.ts"],
-  plugins: [
-    NodeModulesPolyfillPlugin(),
-    NodeGlobalsPolyfillPlugin({
-      process: true,
-      buffer: true
-    })
-  ],
+  plugins: [NodeModulesPolyfillPlugin(), NodeGlobalsPolyfillPlugin({})],
   // The output directory here needs to be `public/` rather than
   // `public/js` in order for the service worker to be served from
   // the root of the website, which is necessary because service
@@ -123,7 +130,11 @@ const serviceWorkerOpts: BuildOptions = {
   // is invoked, so that each new production deploy invalidates the previous
   // service worker, which clears the website's application code (html, js, etc.),
   // so that clients are not forever stuck on one version of the code.
-  define: { ...define, "process.env.SW_ID": JSON.stringify(uuid()) }
+  define: {
+    ...define,
+    "process.env.SW_ID": JSON.stringify(uuid()),
+    "process.env.GENERATED_CHUNKS": JSON.stringify("[]")
+  }
 };
 
 run(process.argv[2])
@@ -131,16 +142,12 @@ run(process.argv[2])
   .catch((err) => console.error(err));
 
 async function run(command: string): Promise<void> {
+  clearBuildDirectory(APP_OUT_DIR);
   compileHtml();
   copyGPCArtifacts();
 
   switch (command) {
     case "build":
-      if (!define["process.env.STRICH_LICENSE_KEY"]) {
-        console.warn(
-          "STRICH_LICENSE_KEY is not defined, fallback QR code reader will be used"
-        );
-      }
       const appRes = await build({ ...appOpts, minify: true });
       console.error("Built client");
 
@@ -150,10 +157,22 @@ async function run(command: string): Promise<void> {
         JSON.stringify(appRes.metafile)
       );
 
+      // Create a array of generated chunks for use with the service worker
+      const generatedChunks = Object.keys(appRes.metafile?.outputs || {})
+        .filter((output) => !output.endsWith(".map")) // Exclude .map files
+        .map((output) => output.replace("public", ""));
+
       const _serviceWorkerRes = await build({
         ...serviceWorkerOpts,
+        define: {
+          ...serviceWorkerOpts.define,
+          "process.env.GENERATED_CHUNKS": JSON.stringify(
+            JSON.stringify(generatedChunks)
+          )
+        },
         minify: true
       });
+
       console.error("Built service worker");
       break;
     case "dev":
@@ -205,13 +224,19 @@ function compileHtml(): void {
 }
 
 function copyGPCArtifacts(): void {
-  fs.rmSync(path.join("public/artifacts/proto-pod-gpc"), {
+  fs.rmSync(path.join("public" + ZUPASS_GPC_ARTIFACT_BASE_PATH), {
     recursive: true,
     force: true
   });
   fs.cpSync(
     path.join("../../node_modules/@pcd/proto-pod-gpc-artifacts"),
-    path.join("public/artifacts/proto-pod-gpc"),
+    path.join("public" + ZUPASS_GPC_ARTIFACT_PATH),
     { recursive: true }
   );
+}
+
+// Function to clear the previous build directory
+function clearBuildDirectory(outDir: string): void {
+  fs.rmSync(outDir, { recursive: true, force: true });
+  console.log(`Cleared build directory: ${outDir}`);
 }

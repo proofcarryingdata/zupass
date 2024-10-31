@@ -146,7 +146,8 @@ yargs
         `Creating event with org: ${argv.orgUrl} id: ${argv.eventId} and active items: ${argv.activeItemIds}`
       );
 
-      const db = await getDB();
+      const pool = await getDB();
+      const db = await pool.connect();
 
       const organizerConfigId = await insertPretixOrganizerConfig(
         db,
@@ -247,7 +248,8 @@ yargs
       const activeItemIds = [itemId];
       const checkinListId = "0";
 
-      const db = await getDB();
+      const pool = await getDB();
+      const db = await pool.connect();
 
       const organizerConfigId = await insertPretixOrganizerConfig(
         db,

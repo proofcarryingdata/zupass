@@ -1,5 +1,53 @@
 # @pcd/zk-eddsa-frog-pcd
 
+## 0.6.0
+
+### Minor Changes
+
+- updates to JSON encoding for PODPCD and GPCPCD
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.14.0
+  - @pcd/util@0.8.0
+  - @pcd/eddsa-frog-pcd@0.6.0
+  - @pcd/eddsa-pcd@0.9.0
+  - @pcd/semaphore-identity-pcd@0.14.0
+  - @pcd/semaphore-signature-pcd@0.14.0
+
+## 0.5.0
+
+### Minor Changes
+
+- Release for compatibility with Zupass prod
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/semaphore-signature-pcd@0.13.0
+  - @pcd/semaphore-identity-pcd@0.13.0
+  - @pcd/eddsa-frog-pcd@0.5.0
+  - @pcd/pcd-types@0.13.0
+  - @pcd/eddsa-pcd@0.8.0
+  - @pcd/util@0.7.0
+
+## 0.4.0
+
+### Minor Changes
+
+- Compatibility with updated Zupass with new GPC artifacts
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.12.0
+  - @pcd/util@0.6.0
+  - @pcd/eddsa-frog-pcd@0.4.0
+  - @pcd/eddsa-pcd@0.7.0
+  - @pcd/semaphore-identity-pcd@0.12.0
+  - @pcd/semaphore-signature-pcd@0.12.0
+
 ## 0.3.6
 
 ### Patch Changes

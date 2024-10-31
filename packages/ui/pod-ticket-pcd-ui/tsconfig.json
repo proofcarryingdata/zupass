@@ -11,13 +11,13 @@
   ],
   "references": [
     {
-      "path": "../../pcd/pod-ticket-pcd"
-    },
-    {
       "path": "../../lib/passport-ui"
     },
     {
       "path": "../../lib/pcd-types"
+    },
+    {
+      "path": "../../pcd/pod-ticket-pcd"
     }
   ],
   "compilerOptions": {

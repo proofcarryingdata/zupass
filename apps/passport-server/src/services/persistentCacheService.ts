@@ -1,11 +1,12 @@
 import { RollbarService } from "@pcd/server-shared";
-import { Pool } from "postgres-pool";
+import { Pool, PoolClient } from "postgres-pool";
 import {
   CacheEntry,
   deleteExpiredCacheEntries,
   getCacheValue,
   setCacheValue
 } from "../database/queries/cache";
+import { namedSqlTransaction } from "../database/sqlQuery";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
 
@@ -25,22 +26,30 @@ export class PersistentCacheService {
    */
   private static readonly CACHE_GARBAGE_COLLECT_INTERVAL_MS = 60_000;
 
-  private expirationInterval: ReturnType<typeof setInterval> | undefined;
-  private db: Pool;
+  private expirationInterval: number | undefined;
+  private pool: Pool;
   private rollbarService: RollbarService | null;
 
-  public constructor(db: Pool, rollbarService: RollbarService | null) {
-    this.db = db;
+  public constructor(pool: Pool, rollbarService: RollbarService | null) {
+    this.pool = pool;
     this.rollbarService = rollbarService;
   }
 
   public start(): void {
+    if (process.env.DISABLE_JOBS === "true") {
+      logger(
+        "[CACHE] not starting cache expiration loop because DISABLE_JOBS is true"
+      );
+      return;
+    }
+
     logger("[CACHE] starting expiration loop");
+
     this.tryExpireOldEntries();
-    this.expirationInterval = setInterval(
-      this.tryExpireOldEntries.bind(this),
-      PersistentCacheService.CACHE_GARBAGE_COLLECT_INTERVAL_MS
-    );
+
+    this.expirationInterval = setInterval(() => {
+      this.tryExpireOldEntries.bind(this);
+    }, PersistentCacheService.CACHE_GARBAGE_COLLECT_INTERVAL_MS) as unknown as number;
   }
 
   public stop(): void {
@@ -52,32 +61,43 @@ export class PersistentCacheService {
   public async setValue(key: string, value: string): Promise<void> {
     return traced("Cache", "setValue", async (span) => {
       span?.setAttribute("cache_key", key);
-      await setCacheValue(this.db, key, value);
+      await namedSqlTransaction(this.pool, "setValue", (client) =>
+        setCacheValue(client, key, value)
+      );
     });
   }
 
   public async getValue(key: string): Promise<CacheEntry | undefined> {
     return traced("Cache", "getValue", async (span) => {
       span?.setAttribute("cache_key", key);
-      const value = getCacheValue(this.db, key);
-      span?.setAttribute("hit", !!value);
-      return value;
+      return await namedSqlTransaction(this.pool, "getValue", (client) => {
+        const value = getCacheValue(client, key);
+        span?.setAttribute("hit", !!value);
+        return value;
+      });
     });
   }
 
   private async tryExpireOldEntries(): Promise<void> {
-    try {
-      this.expireOldEntries();
-    } catch (e) {
-      logger("failed to expire old cache entries", e);
-      this.rollbarService?.reportError(e);
-    }
+    return namedSqlTransaction(
+      this.pool,
+      "tryExpireOldEntries",
+      async (client): Promise<void> => {
+        try {
+          return this.expireOldEntries(client);
+        } catch (e) {
+          logger("failed to expire old cache entries", e);
+          this.rollbarService?.reportError(e);
+        }
+      }
+    );
   }
-  private async expireOldEntries(): Promise<void> {
+
+  private async expireOldEntries(client: PoolClient): Promise<void> {
     return traced("Cache", "expireOldEntries", async (span) => {
       logger("[CACHE] expiring old entries");
       const deleted_count = await deleteExpiredCacheEntries(
-        this.db,
+        client,
         PersistentCacheService.MAX_CACHE_ENTRY_AGE_DAYS,
         PersistentCacheService.MAX_CACHE_ENTRY_COUNT
       );
@@ -87,11 +107,11 @@ export class PersistentCacheService {
 }
 
 export function startPersistentCacheService(
-  db: Pool,
+  pool: Pool,
   rollbarService: RollbarService | null
 ): PersistentCacheService {
   logger("[INIT] starting PersistentCacheService");
-  const cacheService = new PersistentCacheService(db, rollbarService);
+  const cacheService = new PersistentCacheService(pool, rollbarService);
   cacheService.start();
   return cacheService;
 }

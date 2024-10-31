@@ -14,7 +14,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { PODEntries, serializePODEntries } from "@pcd/pod";
+import { PODEntries, podEntriesToJSON } from "@pcd/pod";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { CSVInput, Input } from "@pcd/podbox-shared";
 import { assertUnreachable } from "@pcd/util";
@@ -25,6 +25,8 @@ import {
   PipelineAtom
 } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { sqlTransaction } from "../../../../database/sqlQuery";
+import { ApplicationContext } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { setError, traced } from "../../../telemetryService";
@@ -54,6 +56,8 @@ export class PODPipeline implements BasePipeline {
   public type = PipelineType.POD;
   public capabilities: BasePipelineCapability[];
 
+  private stopped = false;
+  private context: ApplicationContext;
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<PODAtom>;
   private definition: PODPipelineDefinition;
@@ -71,6 +75,7 @@ export class PODPipeline implements BasePipeline {
   }
 
   public constructor(
+    context: ApplicationContext,
     eddsaPrivateKey: string,
     definition: PODPipelineDefinition,
     db: IPipelineAtomDB,
@@ -78,6 +83,7 @@ export class PODPipeline implements BasePipeline {
     consumerDB: IPipelineConsumerDB,
     cacheService: PersistentCacheService
   ) {
+    this.context = context;
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PODAtom>;
@@ -169,6 +175,8 @@ export class PODPipeline implements BasePipeline {
         );
 
         return {
+          fromCache: false,
+          paused: false,
           lastRunStartTimestamp: start.toISOString(),
           lastRunEndTimestamp: end.toISOString(),
           latestLogs: logs,
@@ -195,6 +203,8 @@ export class PODPipeline implements BasePipeline {
         );
 
         return {
+          fromCache: false,
+          paused: false,
           atomsLoaded: 0,
           atomsExpected: 0,
           lastRunEndTimestamp: end.toISOString(),
@@ -206,11 +216,22 @@ export class PODPipeline implements BasePipeline {
     });
   }
 
+  public isStopped(): boolean {
+    return this.stopped;
+  }
+
   public async start(): Promise<void> {
-    logger(`Starting POD Pipeline ${this.definition.id}`);
+    if (this.stopped) {
+      throw new Error(`pipeline ${this.id} already stopped`);
+    }
+    logger(`starting pod pipeline ${this.definition.id}`);
   }
 
   public async stop(): Promise<void> {
+    if (this.stopped) {
+      return;
+    }
+    this.stopped = true;
     logger(`Stopping POD Pipeline ${this.definition.id}`);
   }
 
@@ -233,24 +254,27 @@ export class PODPipeline implements BasePipeline {
       if (atom.matchTo.type === "none") {
         // No filter, so all atoms match to all credentials
         matchingAtoms.push(atom);
-      } else if (atom.matchTo.type === "email") {
+      } else {
+        const entry = atom.entries[atom.matchTo.entry];
         if (
+          atom.matchTo.type === "email" &&
+          entry.type === "string" &&
           emails
             ?.map((e) => e.email.toLowerCase())
-            ?.includes(
-              atom.entries[atom.matchTo.entry].value.toString().toLowerCase()
-            )
+            ?.includes(entry.value.toLowerCase())
         ) {
           matchingAtoms.push(atom);
-        }
-      } else if (atom.matchTo.type === "semaphoreID") {
-        // semaphoreId is a string representation of a Semaphore commitment, as
-        // retrieved from the user's credential, which is a
-        // SemaphoreSignaturePCD.
-        // However, in PODs we use bigints (the POD "cryptographic" type) for
-        // this, so it's necessary to convert the value to a string for
-        // comparison.
-        if (atom.entries[atom.matchTo.entry].value.toString() === semaphoreId) {
+        } else if (
+          atom.matchTo.type === "semaphoreID" &&
+          entry.type === "cryptographic" &&
+          entry.value.toString() === semaphoreId
+        ) {
+          // semaphoreId is a string representation of a Semaphore commitment, as
+          // retrieved from the user's credential, which is a
+          // SemaphoreSignaturePCD.
+          // However, in PODs we use bigints (the POD "cryptographic" type) for
+          // this, so it's necessary to convert the value to a string for
+          // comparison above.
           matchingAtoms.push(atom);
         }
       }
@@ -319,9 +343,17 @@ export class PODPipeline implements BasePipeline {
       span?.setAttribute("email", emails?.map((e) => e.email)?.join(",") ?? "");
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      for (const e of emails ?? []) {
-        await this.consumerDB.save(this.id, e.email, semaphoreId, new Date());
-      }
+      await sqlTransaction(this.context.dbPool, async (client) => {
+        for (const e of emails ?? []) {
+          await this.consumerDB.save(
+            client,
+            this.id,
+            e.email,
+            semaphoreId,
+            new Date()
+          );
+        }
+      });
 
       // Consumer is validated, so save them in the consumer list
 
@@ -340,7 +372,7 @@ export class PODPipeline implements BasePipeline {
             credential
           );
 
-          const id = uuidv5(serializePODEntries(entries), this.id);
+          const id = uuidv5(JSON.stringify(podEntriesToJSON(entries)), this.id);
 
           let serializedPCD = await this.getCachedPCD(id);
           if (serializedPCD) {
@@ -351,7 +383,7 @@ export class PODPipeline implements BasePipeline {
           // @todo handle wrapper PCD outputs
           const pcd = await PODPCDPackage.prove({
             entries: {
-              value: entries,
+              value: podEntriesToJSON(entries),
               argumentType: ArgumentTypeName.Object
             },
             privateKey: {

@@ -14,11 +14,15 @@ import {
   safeRedirectPending
 } from "../../../src/passportRequest";
 import { err } from "../../../src/util";
-import { H2, Spacer } from "../../core";
-import { MaybeModal } from "../../modals/Modal";
-import { AppContainer } from "../../shared/AppContainer";
-import { AppHeader } from "../../shared/AppHeader";
 import { GenericProveSection } from "./GenericProveSection";
+import styled from "styled-components";
+import { Typography } from "../../../new-components/shared/Typography";
+
+const Header = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
 
 /**
  * Renders a UI in response to a request from Zupass to calculate
@@ -85,27 +89,27 @@ export function GenericProveScreen({
   }
 
   return (
-    <>
-      <MaybeModal fullScreen isProveOrAddScreen={true} />
-      <AppContainer bg="gray">
-        <AppHeader isProveOrAddScreen={true}>
-          <H2
-            style={{
-              flex: 1,
-              textAlign: "center"
-            }}
-          >
-            {req.options?.title ?? "Prove " + req.pcdType}
-          </H2>
-        </AppHeader>
-        <GenericProveSection
-          initialArgs={req.args}
-          onProve={onProve}
-          pcdType={req.pcdType}
-          options={req.options}
-        />
-        <Spacer h={64} />
-      </AppContainer>
-    </>
+    <Container>
+      <Header>
+        <Typography color="var(--text-primary)" fontSize={20} fontWeight={800}>
+          SIGN IN WITH ZUPASS
+        </Typography>
+        <Typography color="var(--text-primary)" fontSize={16}>
+          {req.options?.description}
+        </Typography>
+      </Header>
+      <GenericProveSection
+        initialArgs={req.args}
+        onProve={onProve}
+        pcdType={req.pcdType}
+        options={req.options}
+      />
+    </Container>
   );
 }
+const Container = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  height: 100%;
+`;

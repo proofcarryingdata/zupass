@@ -1,21 +1,28 @@
-import { ProtoPODGPC } from "@pcd/gpcircuits";
+import {
+  ProtoPODGPC,
+  ProtoPODGPCCircuitDesc,
+  gpcArtifactPaths
+} from "@pcd/gpcircuits";
 import {
   POD,
   PODCryptographicValue,
   PODEdDSAPublicKeyValue,
   PODValue,
   PODValueTuple,
+  POD_DATE_MAX,
   POD_INT_MAX,
   POD_INT_MIN
 } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
+import { chooseCircuitFamilyForTests } from "../../gpcircuits/scripts/common";
 import {
   GPCArtifactSource,
   GPCArtifactStability,
   GPCArtifactVersion,
   GPCBoundConfig,
+  GPCProof,
   GPCProofConfig,
   GPCProofEntryConfig,
   GPCProofEntryConfigCommon,
@@ -26,13 +33,18 @@ import {
   PODEntryIdentifier,
   SEMAPHORE_V3,
   SEMAPHORE_V4,
+  gpcCheckProvable as _gpcCheckProvable,
+  gpcProve as _gpcProve,
+  gpcVerify as _gpcVerify,
   gpcArtifactDownloadURL,
-  gpcProve,
-  gpcVerify
+  gpcPostProve,
+  gpcPreProve,
+  gpcPreVerify
 } from "../src";
 import { makeCircuitIdentifier, makeWatermarkSignal } from "../src/gpcUtil";
 import {
   GPC_TEST_ARTIFACTS_PATH,
+  allTypesEntries,
   expectAsyncError,
   ownerIdentity,
   ownerIdentityV4,
@@ -42,7 +54,39 @@ import {
   sampleEntries2
 } from "./common";
 
-describe("gpc library (Compiled test artifacts) should work", async function () {
+// Choose circuit family according to environment variable `GPC_FAMILY_VARIANT`.
+const { circuitParamType, testCircuitFamily } = chooseCircuitFamilyForTests();
+
+// Test-specific GPC proof and verification functions
+const gpcCheckProvable = (
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs
+): { boundConfig: GPCBoundConfig; circuitDesc: ProtoPODGPCCircuitDesc } =>
+  _gpcCheckProvable(proofConfig, proofInputs, testCircuitFamily);
+const gpcProve = (
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs,
+  pathToArtifacts: string
+): Promise<{
+  proof: GPCProof;
+  boundConfig: GPCBoundConfig;
+  revealedClaims: GPCRevealedClaims;
+}> => _gpcProve(proofConfig, proofInputs, pathToArtifacts, testCircuitFamily);
+const gpcVerify = (
+  proof: GPCProof,
+  boundConfig: GPCBoundConfig,
+  revealedClaims: GPCRevealedClaims,
+  pathToArtifacts: string
+): Promise<boolean> =>
+  _gpcVerify(
+    proof,
+    boundConfig,
+    revealedClaims,
+    pathToArtifacts,
+    testCircuitFamily
+  );
+
+describe(`gpc library (Compiled ${circuitParamType} artifacts) should work`, async function () {
   function makeMinimalArgs(
     includeWatermark?: boolean,
     includeList?: boolean,
@@ -173,14 +217,77 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
 
     // For this small case, the library should auto-pick the smallest circuit.
     expect(boundConfig.circuitIdentifier).to.eq(
-      makeCircuitIdentifier(ProtoPODGPC.CIRCUIT_FAMILY[0])
+      makeCircuitIdentifier(testCircuitFamily[0])
+    );
+  });
+
+  it("should prove and verify with pre/post and separate proving system", async function () {
+    const { proofConfig, proofInputs, expectedRevealedClaims } =
+      makeMinimalArgs();
+
+    const {
+      boundConfig: orgBoundConfig,
+      circuitDesc: pCircuitDesc,
+      circuitInputs
+    } = gpcPreProve(proofConfig, proofInputs, testCircuitFamily);
+
+    const artifactPaths = gpcArtifactPaths(
+      GPC_TEST_ARTIFACTS_PATH,
+      pCircuitDesc
+    );
+
+    const { proof: orgProof, outputs: pCircuitOutputs } =
+      await ProtoPODGPC.prove(
+        circuitInputs,
+        artifactPaths.wasmPath,
+        artifactPaths.pkeyPath
+      );
+
+    const { proof, boundConfig, revealedClaims } = gpcPostProve(
+      orgProof,
+      orgBoundConfig,
+      pCircuitDesc,
+      proofInputs,
+      pCircuitOutputs
+    );
+
+    // There's nothing non-canonical about our input, so boundConfig should
+    // only differ by circuit selection.
+    const manuallyBoundConfig = {
+      ...proofConfig,
+      circuitIdentifier: boundConfig.circuitIdentifier
+    };
+    expect(boundConfig).to.deep.eq(manuallyBoundConfig);
+
+    expect(revealedClaims).to.deep.eq(expectedRevealedClaims);
+
+    const {
+      circuitDesc: vCircuitDesc,
+      circuitPublicInputs,
+      circuitOutputs: vCircuitOutputs
+    } = gpcPreVerify(boundConfig, revealedClaims, testCircuitFamily);
+
+    expect(pCircuitDesc).to.deep.eq(vCircuitDesc);
+    expect(pCircuitOutputs).to.deep.eq(vCircuitOutputs);
+
+    const isVerified = await ProtoPODGPC.verify(
+      gpcArtifactPaths(GPC_TEST_ARTIFACTS_PATH, vCircuitDesc).vkeyPath,
+      proof,
+      circuitPublicInputs,
+      vCircuitOutputs
+    );
+    expect(isVerified).to.be.true;
+
+    // For this small case, the library should auto-pick the smallest circuit.
+    expect(boundConfig.circuitIdentifier).to.eq(
+      makeCircuitIdentifier(testCircuitFamily[0])
     );
   });
 
   it("should prove and verify a minimal case with each circuit in the family", async function () {
     const { proofConfig, proofInputs, expectedRevealedClaims } =
       makeMinimalArgs();
-    for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY.slice(1)) {
+    for (const circuitDesc of testCircuitFamily.slice(1)) {
       const circuitID = makeCircuitIdentifier(circuitDesc);
       const { isVerified, boundConfig } = await gpcProofTest(
         {
@@ -249,6 +356,48 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
     membershipLists: typicalProofInputs.membershipLists,
     watermark: { type: "int", value: 1337n }
   };
+
+  it("should prove and verify with all value types", async function () {
+    const allTypesPOD = POD.sign(allTypesEntries, privateKey);
+
+    // All entries are revealed.  Arithmetic values are range-checked and
+    // compared.
+    const proofConfig: GPCProofConfig = {
+      pods: {
+        allTypes: {
+          entries: {
+            vString: { isRevealed: true },
+            vBytes: { isRevealed: true },
+            vCryptographic: { isRevealed: true },
+            vInt: { isRevealed: true, inRange: { min: 0n, max: 1000n } },
+            vBoolean: {
+              isRevealed: true,
+              inRange: { min: 0n, max: 1n },
+              lessThan: "allTypes.vInt"
+            },
+            vEddsaPubkey: { isRevealed: true },
+            vDate: {
+              isRevealed: true,
+              inRange: { min: 0n, max: BigInt(POD_DATE_MAX.getTime()) },
+              greaterThan: "allTypes.vInt"
+            },
+            vNull: { isRevealed: true }
+          },
+          signerPublicKey: { isRevealed: false }
+        }
+      }
+    };
+    const proofInputs: GPCProofInputs = { pods: { allTypes: allTypesPOD } };
+    const expectedRevealedClaims: GPCRevealedClaims = {
+      pods: { allTypes: { entries: allTypesEntries } }
+    };
+    const { isVerified } = await gpcProofTest(
+      proofConfig,
+      proofInputs,
+      expectedRevealedClaims
+    );
+    expect(isVerified).to.be.true;
+  });
 
   it("should prove and verify a typical case with Semaphore V3 owner identity", async function () {
     const { isVerified } = await gpcProofTest(
@@ -829,356 +978,309 @@ describe("gpc library (Compiled test artifacts) should work", async function () 
   it("proving should throw on illegal inputs", async function () {
     const { proofConfig, proofInputs } = makeMinimalArgs(true);
 
+    async function doIllegalArgTest(
+      proofConfig: GPCProofConfig,
+      proofInputs: GPCProofInputs,
+      errorType: string,
+      errorMessage: string
+    ): Promise<void> {
+      // Expected error should be thrown by gpcProve.
+      await expectAsyncError(
+        async () => {
+          await gpcProve(proofConfig, proofInputs, GPC_TEST_ARTIFACTS_PATH);
+        },
+        errorType,
+        errorMessage
+      );
+
+      // The same error should be seen in gpcCheckProvable.
+      // This isn't async, but use expectAsyncError for consistency of args.
+      await expectAsyncError(
+        async () => {
+          gpcCheckProvable(proofConfig, proofInputs);
+        },
+        errorType,
+        errorMessage
+      );
+    }
+
     // Config is illegal.
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            pods: {
-              somePodName: { entries: {} }
-            }
-          },
-          proofInputs,
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        pods: {
+          somePodName: { entries: {} }
+        }
       },
+      proofInputs,
       "TypeError",
       "Must prove at least one entry in object"
     );
 
-    await expectAsyncError(
-      async () => {
-        const pod1 = POD.sign(sampleEntries, privateKey);
-        await gpcProve(
-          {
-            pods: {
-              pod1: {
-                entries: {
-                  A: {
-                    isRevealed: false,
-                    inRange: { min: POD_INT_MIN, max: POD_INT_MAX },
-                    greaterThan: "pod2.H"
-                  }
-                }
-              },
-              pod2: {
-                entries: {
-                  H: { isRevealed: false }
-                }
+    const pod1 = POD.sign(sampleEntries, privateKey);
+    await doIllegalArgTest(
+      {
+        pods: {
+          pod1: {
+            entries: {
+              A: {
+                isRevealed: false,
+                inRange: { min: POD_INT_MIN, max: POD_INT_MAX },
+                greaterThan: "pod2.H"
               }
             }
           },
-          { pods: { pod1, pod2: pod1 } },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          pod2: {
+            entries: {
+              H: { isRevealed: false }
+            }
+          }
+        }
       },
+      { pods: { pod1, pod2: pod1 } },
       "Error",
       "Entry pod2.H requires a bounds check to be used in an entry inequality."
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            tuples: {
-              someTupleName: { entries: [] }
-            }
-          },
-          proofInputs,
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        tuples: {
+          someTupleName: { entries: [] }
+        }
       },
+      proofInputs,
       "TypeError",
       "Tuple someTupleName specifies invalid tuple configuration. Tuples must have arity at least 2."
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            pods: {
-              somePodName: {
-                entries: {
-                  ticketID: {
-                    isRevealed: true,
-                    isMemberOf: "specialTickets",
-                    isNotMemberOf: "inadmissibleTickets"
-                  }
-                }
+    await doIllegalArgTest(
+      {
+        pods: {
+          somePodName: {
+            entries: {
+              ticketID: {
+                isRevealed: true,
+                isMemberOf: "specialTickets",
+                isNotMemberOf: "inadmissibleTickets"
               }
             }
-          },
-          {
-            ...proofInputs,
-            membershipLists: {
-              inadmissibleTickets: [sampleEntries2.attendee, sampleEntries.J],
-              specialTickets: [sampleEntries2.ticketID]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
+      },
+      {
+        ...proofInputs,
+        membershipLists: {
+          inadmissibleTickets: [sampleEntries2.attendee, sampleEntries.J],
+          specialTickets: [sampleEntries2.ticketID]
+        }
       },
       "Error",
       "Both membership and non-membership lists are specified in the configuration of somePodName.ticketID."
     );
 
     // Input is illegal.
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          proofConfig,
-          {
-            ...proofInputs,
-            watermark: { type: "string", value: 123n } as unknown as PODValue
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      proofConfig,
+      {
+        ...proofInputs,
+        watermark: { type: "string", value: 123n } as unknown as PODValue
       },
       "TypeError",
       "Invalid value for entry watermark"
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            pods: {
-              somePodName: {
-                entries: {
-                  ticketID: {
-                    isRevealed: true,
-                    isMemberOf: "admissibleTickets"
-                  }
-                }
+    await doIllegalArgTest(
+      {
+        pods: {
+          somePodName: {
+            entries: {
+              ticketID: {
+                isRevealed: true,
+                isMemberOf: "admissibleTickets"
               }
             }
-          },
-          { ...proofInputs, membershipLists: { admissibleTickets: [] } },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
       },
+      { ...proofInputs, membershipLists: { admissibleTickets: [] } },
       "Error",
       "Membership list admissibleTickets is empty."
     );
 
     // Config doesn't match input.
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            pods: {
-              wrongPODName: {
-                entries: {
-                  ticketID: { isRevealed: true }
-                }
-              }
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        pods: {
+          wrongPODName: {
+            entries: {
+              ticketID: { isRevealed: true }
             }
-          },
-          proofInputs,
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
       },
+      proofInputs,
       "ReferenceError",
       "Configured POD object wrongPODName not provided in inputs"
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            pods: {
-              somePodName: {
-                entries: {
-                  ticketID: {
-                    isRevealed: true,
-                    isMemberOf: "admissibleTickets"
-                  }
-                }
+    await doIllegalArgTest(
+      {
+        pods: {
+          somePodName: {
+            entries: {
+              ticketID: {
+                isRevealed: true,
+                isMemberOf: "admissibleTickets"
               }
             }
-          },
-          proofInputs,
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
       },
+      proofInputs,
       "Error",
       'Config and input list mismatch.  Configuration expects lists ["admissibleTickets"].  Input contains [].'
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          proofConfig,
-          {
-            ...proofInputs,
-            membershipLists: {
-              admissibleTickets: [
-                sampleEntries2.ticketID,
-                sampleEntries2.ticketID
-              ]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      proofConfig,
+      {
+        ...proofInputs,
+        membershipLists: {
+          admissibleTickets: [sampleEntries2.ticketID, sampleEntries2.ticketID]
+        }
       },
       "Error",
       'Config and input list mismatch.  Configuration expects lists [].  Input contains ["admissibleTickets"].'
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            pods: {
-              somePodName: {
-                entries: {
-                  ticketID: {
-                    isRevealed: true,
-                    isMemberOf: "admissibleTickets"
-                  }
-                }
+    await doIllegalArgTest(
+      {
+        pods: {
+          somePodName: {
+            entries: {
+              ticketID: {
+                isRevealed: true,
+                isMemberOf: "admissibleTickets"
               }
             }
-          },
-          {
-            ...proofInputs,
-            membershipLists: {
-              admissibleTickets: [
-                [
-                  sampleEntries2.ticketID,
-                  sampleEntries.otherTicketID,
-                  sampleEntries.G
-                ]
-              ]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
+      },
+      {
+        ...proofInputs,
+        membershipLists: {
+          admissibleTickets: [
+            [
+              sampleEntries2.ticketID,
+              sampleEntries.otherTicketID,
+              sampleEntries.G
+            ]
+          ]
+        }
       },
       "TypeError",
       'Membership list admissibleTickets in input contains element of width 3 while comparison value with identifier "somePodName.ticketID" has width 1.'
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            pods: {
-              somePodName: {
-                entries: {
-                  ticketID: {
-                    isRevealed: true,
-                    isNotMemberOf: "inadmissibleTickets"
-                  }
-                }
+    await doIllegalArgTest(
+      {
+        pods: {
+          somePodName: {
+            entries: {
+              ticketID: {
+                isRevealed: true,
+                isNotMemberOf: "inadmissibleTickets"
               }
             }
-          },
-          {
-            ...proofInputs,
-            membershipLists: {
-              inadmissibleTickets: [
-                sampleEntries2.ticketID,
-                sampleEntries.otherTicketID,
-                sampleEntries.G
-              ]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+          }
+        }
+      },
+      {
+        ...proofInputs,
+        membershipLists: {
+          inadmissibleTickets: [
+            sampleEntries2.ticketID,
+            sampleEntries.otherTicketID,
+            sampleEntries.G
+          ]
+        }
       },
       "Error",
-      'Comparison value {"type":"cryptographic","value":999} corresponding to identifier "somePodName.ticketID" is a member of list "inadmissibleTickets".'
+      'Comparison value {"cryptographic":999} corresponding to identifier "somePodName.ticketID" is a member of list "inadmissibleTickets".'
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            tuples: {
-              tuple1: {
-                entries: ["somePodName.ticketID", "somePodName.ticketID"],
-                isMemberOf: "list1"
-              }
-            }
-          },
-          {
-            ...proofInputs,
-            membershipLists: {
-              list1: [
-                [sampleEntries2.ticketID, sampleEntries2.ticketID],
-                [
-                  sampleEntries2.ticketID,
-                  sampleEntries.G,
-                  sampleEntries.otherTicketID
-                ],
-                [sampleEntries.otherTicketID, sampleEntries.G]
-              ]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        tuples: {
+          tuple1: {
+            entries: ["somePodName.ticketID", "somePodName.ticketID"],
+            isMemberOf: "list1"
+          }
+        }
+      },
+      {
+        ...proofInputs,
+        membershipLists: {
+          list1: [
+            [sampleEntries2.ticketID, sampleEntries2.ticketID],
+            [
+              sampleEntries2.ticketID,
+              sampleEntries.G,
+              sampleEntries.otherTicketID
+            ],
+            [sampleEntries.otherTicketID, sampleEntries.G]
+          ]
+        }
       },
       "TypeError",
       "Membership list list1 in input has a type mismatch: It contains an element of width 2 and one of width 3."
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            tuples: {
-              tuple1: {
-                entries: ["somePodName.ticketID", "somePodName.ticketID"],
-                isMemberOf: "list1"
-              }
-            }
-          },
-          {
-            ...proofInputs,
-            membershipLists: {
-              list1: [
-                [sampleEntries2.ticketID, sampleEntries2.ticketID],
-                [sampleEntries2.ticketID],
-                [sampleEntries.otherTicketID, sampleEntries.G]
-              ]
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        tuples: {
+          tuple1: {
+            entries: ["somePodName.ticketID", "somePodName.ticketID"],
+            isMemberOf: "list1"
+          }
+        }
+      },
+      {
+        ...proofInputs,
+        membershipLists: {
+          list1: [
+            [sampleEntries2.ticketID, sampleEntries2.ticketID],
+            [sampleEntries2.ticketID],
+            [sampleEntries.otherTicketID, sampleEntries.G]
+          ]
+        }
       },
       "TypeError",
       "Membership list list1 in input contains an invalid tuple. Tuples must have arity at least 2."
     );
 
-    await expectAsyncError(
-      async () => {
-        await gpcProve(
-          {
-            ...proofConfig,
-            pods: {
-              ...proofConfig.pods,
-              someOtherPodName: {
-                entries: { ticketID: { isRevealed: false } },
-                signerPublicKey: { isRevealed: false }
-              }
-            },
-            uniquePODs: true
-          },
-          {
-            ...proofInputs,
-            pods: {
-              ...proofInputs.pods,
-              someOtherPodName: proofInputs.pods.somePodName
-            }
-          },
-          GPC_TEST_ARTIFACTS_PATH
-        );
+    await doIllegalArgTest(
+      {
+        ...proofConfig,
+        pods: {
+          ...proofConfig.pods,
+          someOtherPodName: {
+            entries: { ticketID: { isRevealed: false } },
+            signerPublicKey: { isRevealed: false }
+          }
+        },
+        uniquePODs: true
+      },
+      {
+        ...proofInputs,
+        pods: {
+          ...proofInputs.pods,
+          someOtherPodName: proofInputs.pods.somePodName
+        }
       },
       "Error",
       "Proof configuration specifies that the PODs should have unique content IDs, but they don't."
@@ -1636,10 +1738,22 @@ describe("gpcArtifactDownloadURL should work", async function () {
         expected: "/artifacts/test/proto-pod-gpc"
       },
       {
+        stability: "test",
+        version: "",
+        zupassURL: "/",
+        expected: "/artifacts/test/proto-pod-gpc"
+      },
+      {
         stability: "prod",
         version: undefined,
         zupassURL: "/",
-        expected: "/artifacts/proto-pod-gpc"
+        expected: `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
+        zupassURL: "/",
+        expected: `/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
@@ -1651,7 +1765,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: "foo",
         zupassURL: "/",
-        expected: "/artifacts/proto-pod-gpc"
+        expected: "/artifacts/proto-pod-gpc/foo"
       },
       {
         stability: "test",
@@ -1660,10 +1774,22 @@ describe("gpcArtifactDownloadURL should work", async function () {
         expected: "artifacts/test/proto-pod-gpc"
       },
       {
+        stability: "test",
+        version: "",
+        zupassURL: "",
+        expected: "artifacts/test/proto-pod-gpc"
+      },
+      {
         stability: "prod",
         version: undefined,
         zupassURL: "",
-        expected: "artifacts/proto-pod-gpc"
+        expected: `artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
+        zupassURL: "",
+        expected: `artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
@@ -1675,7 +1801,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: "foo",
         zupassURL: "",
-        expected: "artifacts/proto-pod-gpc"
+        expected: "artifacts/proto-pod-gpc/foo"
       },
       {
         stability: "test",
@@ -1687,7 +1813,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: undefined,
         zupassURL: "https://zupass.org/",
-        expected: "https://zupass.org/artifacts/proto-pod-gpc"
+        expected: `https://zupass.org/artifacts/proto-pod-gpc/${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
         stability: "test",
@@ -1699,7 +1825,7 @@ describe("gpcArtifactDownloadURL should work", async function () {
         stability: "prod",
         version: "foo",
         zupassURL: "https://zupass.org",
-        expected: "https://zupass.org/artifacts/proto-pod-gpc"
+        expected: "https://zupass.org/artifacts/proto-pod-gpc/foo"
       }
     ];
 
@@ -1749,6 +1875,12 @@ describe("gpcArtifactDownloadURL should work", async function () {
       {
         stability: "prod",
         version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: undefined
+      },
+      {
+        stability: "prod",
+        version: "",
         zupassURL: "https://zupass.org",
         expected: undefined
       },
@@ -1819,8 +1951,20 @@ describe("gpcArtifactDownloadURL should work", async function () {
         expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
       },
       {
+        stability: "test",
+        version: "",
+        zupassURL: "https://zupass.org",
+        expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
         stability: "prod",
         version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
         zupassURL: "https://zupass.org",
         expected: `https://unpkg.com/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
       },
@@ -1867,6 +2011,90 @@ describe("gpcArtifactDownloadURL should work", async function () {
     }
   });
 
+  it("should work for source=jsdelivr", async function () {
+    const TEST_CASES = [
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: undefined,
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: undefined,
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "test",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "test",
+        version: "",
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: undefined,
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "prod",
+        version: "",
+        zupassURL: "https://zupass.org",
+        expected: `https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@${GPC_ARTIFACTS_NPM_VERSION}`
+      },
+      {
+        stability: "test",
+        version: "foo",
+        zupassURL: undefined,
+        expected:
+          "https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@foo"
+      },
+      {
+        stability: "prod",
+        version: "foo",
+        zupassURL: undefined,
+        expected:
+          "https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@foo"
+      },
+      {
+        stability: "prod",
+        version: "foo/bar",
+        zupassURL: "https://zupass.org",
+        expected:
+          "https://cdn.jsdelivr.net/npm/@pcd/proto-pod-gpc-artifacts@foo/bar"
+      }
+    ];
+
+    for (const testCase of TEST_CASES) {
+      if (testCase.expected !== undefined) {
+        expect(
+          gpcArtifactDownloadURL(
+            "jsdelivr",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.eq(testCase.expected);
+      } else {
+        expect(() =>
+          gpcArtifactDownloadURL(
+            "jsdelivr",
+            testCase.stability as GPCArtifactStability,
+            testCase.version as GPCArtifactVersion,
+            testCase.zupassURL
+          )
+        ).to.throw(Error);
+      }
+    }
+  });
+
   it("should throw on missing or invalid source", async function () {
     expect(() =>
       gpcArtifactDownloadURL(
@@ -1886,9 +2114,3 @@ describe("gpcArtifactDownloadURL should work", async function () {
     ).to.throw(Error);
   });
 });
-
-// TODO(POD-P2): More detailed feature unit-tests by module:
-// TODO(POD-P2): gpcCompile tests using WitnessTester
-// TODO(POD-P2): gpcChecks tests for positive/negative cases
-// TODO(POD-P2): gpcSerialize tests for positive/negative cases
-// TODO(POD-P3): gpcUtil tests

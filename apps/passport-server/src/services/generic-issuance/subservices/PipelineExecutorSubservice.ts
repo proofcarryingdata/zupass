@@ -3,9 +3,23 @@ import {
   PipelineLoadSummary
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
-import { str } from "@pcd/util";
+import { sleep, str } from "@pcd/util";
+import _ from "lodash";
+import { PoolClient } from "postgres-pool";
+import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
+import { IPipelineDefinitionDB } from "../../../database/queries/pipelineDefinitionDB";
+import {
+  namedSqlTransaction,
+  sqlTransaction
+} from "../../../database/sqlQuery";
+import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
+import { isAbortError } from "../../../util/util";
 import { DiscordService } from "../../discordService";
+import {
+  LocalFileService,
+  SerializedPipelineLoad
+} from "../../LocalFileService";
 import { PagerDutyService } from "../../pagerDutyService";
 import { setError, traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
@@ -45,6 +59,7 @@ export class PipelineExecutorSubservice {
    */
   private pipelineSlots: PipelineSlot[];
 
+  private context: ApplicationContext;
   private pipelineSubservice: PipelineSubservice;
   private userSubservice: UserSubservice;
   private instantiatePipelineArgs: InstantiatePipelineArgs;
@@ -52,9 +67,13 @@ export class PipelineExecutorSubservice {
   private discordService: DiscordService | null;
   private rollbarService: RollbarService | null;
   private nextLoadTimeout: NodeJS.Timeout | undefined;
+  private db: IPipelineAtomDB;
+  private pipelineDB: IPipelineDefinitionDB;
+  private localFileService: LocalFileService | null;
 
   public constructor(
     pipelineSubservice: PipelineSubservice,
+    context: ApplicationContext,
     userSubservice: UserSubservice,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
@@ -68,6 +87,10 @@ export class PipelineExecutorSubservice {
     this.userSubservice = userSubservice;
     this.pipelineSubservice = pipelineSubservice;
     this.instantiatePipelineArgs = instantiatePipelineArgs;
+    this.context = context;
+    this.db = instantiatePipelineArgs.pipelineAtomDB;
+    this.pipelineDB = instantiatePipelineArgs.pipelineDB;
+    this.localFileService = instantiatePipelineArgs.localFileService;
   }
 
   /**
@@ -76,7 +99,9 @@ export class PipelineExecutorSubservice {
    * schedules a load loop which loads data for each {@link Pipeline} once per minute.
    */
   public async start(startLoadLoop?: boolean): Promise<void> {
-    await this.loadAndInstantiatePipelines();
+    await sqlTransaction(this.context.dbPool, (client) =>
+      this.loadAndInstantiatePipelines(client)
+    );
 
     if (startLoadLoop !== false) {
       await this.startPipelineLoadLoop();
@@ -132,13 +157,16 @@ export class PipelineExecutorSubservice {
    * tl;dr syncs db <-> pipeline in memory representation
    */
   public async restartPipeline(
+    client: PoolClient,
     pipelineId: string,
     dontLoad?: boolean
   ): Promise<void> {
     return traced(SERVICE_NAME, "restartPipeline", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
-      const definition =
-        await this.pipelineSubservice.loadPipelineDefinition(pipelineId);
+      const definition = await this.pipelineSubservice.loadPipelineDefinition(
+        client,
+        pipelineId
+      );
       if (!definition) {
         logger(
           LOG_TAG,
@@ -158,11 +186,15 @@ export class PipelineExecutorSubservice {
       if (!pipelineSlot) {
         pipelineSlot = {
           definition: definition,
-          owner: await this.userSubservice.getUserById(definition.ownerUserId)
+          owner: await this.userSubservice.getUserById(
+            client,
+            definition.ownerUserId
+          )
         };
         this.pipelineSlots.push(pipelineSlot);
       } else {
         pipelineSlot.owner = await this.userSubservice.getUserById(
+          client,
           definition.ownerUserId
         );
       }
@@ -170,30 +202,26 @@ export class PipelineExecutorSubservice {
       tracePipeline(pipelineSlot.definition);
       traceUser(pipelineSlot.owner);
 
-      if (pipelineSlot.instance) {
-        logger(
-          LOG_TAG,
-          `killing already running pipeline instance '${pipelineId}'`
-        );
-        span?.setAttribute("stopping", true);
-        await pipelineSlot.instance.stop();
-      } else {
-        logger(
-          LOG_TAG,
-          `no need to kill existing pipeline - none exists '${pipelineId}'`
-        );
-      }
-
-      logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
+      const existingInstance = pipelineSlot.instance;
+      const stopPipeline = async (): Promise<void> => {
+        if (existingInstance && !existingInstance.isStopped()) {
+          span?.setAttribute("stopping", true);
+          await existingInstance.stop();
+        }
+      };
 
       pipelineSlot.instance = await instantiatePipeline(
+        this.context,
         definition,
         this.instantiatePipelineArgs
       );
+
       pipelineSlot.definition = definition;
 
       if (dontLoad !== true) {
-        await this.performPipelineLoad(pipelineSlot);
+        await this.performPipelineLoad(pipelineSlot, stopPipeline);
+      } else {
+        await stopPipeline();
       }
     });
   }
@@ -212,15 +240,17 @@ export class PipelineExecutorSubservice {
    *     - {@link PretixPipeline}
    *     - {@link CSVPipeline}
    */
-  private async loadAndInstantiatePipelines(): Promise<void> {
+  private async loadAndInstantiatePipelines(client: PoolClient): Promise<void> {
     return traced(SERVICE_NAME, "loadAndInstantiatePipelines", async (span) => {
       const pipelinesFromDB =
-        await this.pipelineSubservice.loadPipelineDefinitions();
+        await this.pipelineSubservice.loadPipelineDefinitions(client);
       span?.setAttribute("pipeline_count", pipelinesFromDB.length);
+
+      logger(LOG_TAG, `stopping ${this.pipelineSlots.length} pipelines`);
 
       await Promise.allSettled(
         this.pipelineSlots.map(async (entry) => {
-          if (entry.instance) {
+          if (entry.instance && !entry.instance.isStopped()) {
             await entry.instance.stop();
           }
         })
@@ -228,18 +258,24 @@ export class PipelineExecutorSubservice {
 
       this.pipelineSlots = await Promise.all(
         pipelinesFromDB.map(async (pipelineDefinition: PipelineDefinition) => {
-          const slot: PipelineSlot = {
+          const existingSlot = this.pipelineSlots.find(
+            (s) => s.definition.id === pipelineDefinition.id
+          );
+
+          const slot: PipelineSlot = Object.assign(existingSlot ?? {}, {
             definition: pipelineDefinition,
             owner: await this.userSubservice.getUserById(
+              client,
               pipelineDefinition.ownerUserId
             )
-          };
+          });
 
           // attempt to instantiate a {@link Pipeline}
           // for this slot. no worries in case of error -
           // log and continue
           try {
             slot.instance = await instantiatePipeline(
+              this.context,
               pipelineDefinition,
               this.instantiatePipelineArgs
             );
@@ -259,24 +295,117 @@ export class PipelineExecutorSubservice {
   }
 
   /**
+   * Returns whether or not this executor is loading pipelines on a loop. Is only
+   * not true in testing.
+   */
+  public looping(): boolean {
+    return !!this.nextLoadTimeout;
+  }
+
+  /**
    * All {@link Pipeline}s load data from some data source. This function
    * executes the load for the given {@link PipelineSlot}.
+   *
+   * Saves results of the load to the appropriate places.
+   *
+   * If load result caching is enabled globally and for this pipeline, takes care of that too.
    */
   public async performPipelineLoad(
-    pipelineSlot: PipelineSlot
+    pipelineSlot: PipelineSlot,
+    loadStarted?: () => Promise<void>
   ): Promise<PipelineLoadSummary> {
     return traced<PipelineLoadSummary>(
       SERVICE_NAME,
       "performPipelineLoad",
       async (): Promise<PipelineLoadSummary> => {
-        return performPipelineLoad(
+        let cachedLoadFromDisk: SerializedPipelineLoad | undefined;
+
+        try {
+          if (pipelineSlot.definition.options.disableCache !== true) {
+            cachedLoadFromDisk = await this.localFileService?.getCachedLoad(
+              pipelineSlot.definition.id
+            );
+          }
+
+          const previousLoadSummary = await this.pipelineDB.getLastLoadSummary(
+            pipelineSlot.definition.id
+          );
+
+          if (cachedLoadFromDisk && !previousLoadSummary) {
+            logger(
+              LOG_TAG,
+              `loaded existing pipeline load for pipeline id ${pipelineSlot.definition.id}`
+            );
+            await this.pipelineDB.saveLoadSummary(
+              pipelineSlot.definition.id,
+              cachedLoadFromDisk.summary
+            );
+            await this.db.save(
+              pipelineSlot.definition.id,
+              cachedLoadFromDisk.atoms
+            );
+            await this.db.markAsLoaded(pipelineSlot.definition.id);
+          }
+        } catch (e) {
+          logger(
+            LOG_TAG,
+            `failed to apply existing pipeline load for pipeline id ${pipelineSlot.definition.id}`,
+            e
+          );
+        }
+
+        let runInfo = await performPipelineLoad(
+          this.context.dbPool,
           pipelineSlot,
           this.pipelineSubservice,
           this.userSubservice,
           this.discordService,
           this.pagerdutyService,
-          this.rollbarService
+          this.rollbarService,
+          loadStarted
         );
+
+        if (cachedLoadFromDisk) {
+          if (runInfo.paused) {
+            runInfo = cachedLoadFromDisk.summary;
+            await this.db.save(
+              pipelineSlot.definition.id,
+              cachedLoadFromDisk.atoms
+            );
+          }
+
+          if (!runInfo.success) {
+            const newestRunInfo = runInfo;
+            runInfo = _.cloneDeep(cachedLoadFromDisk.summary);
+            runInfo.latestLogs = newestRunInfo.latestLogs;
+            runInfo.success = false;
+            await this.db.save(
+              pipelineSlot.definition.id,
+              cachedLoadFromDisk.atoms
+            );
+          }
+        } else if (
+          !runInfo.success &&
+          pipelineSlot.definition.options.disableCache
+        ) {
+          await this.db.clear(pipelineSlot.definition.id);
+        }
+
+        await this.pipelineDB.saveLoadSummary(
+          pipelineSlot.definition.id,
+          runInfo
+        );
+
+        // we only save success cases - it's not useful to have a cache of an error or pause result
+        if (runInfo.success && !runInfo.paused) {
+          await this.localFileService?.saveCachedLoad(
+            pipelineSlot.definition.id,
+            runInfo,
+            await this.db.load(pipelineSlot.definition.id)
+          );
+        }
+
+        return runInfo;
       }
     );
   }
@@ -306,12 +435,33 @@ export class PipelineExecutorSubservice {
       await Promise.allSettled(
         this.pipelineSlots.map(async (slot: PipelineSlot): Promise<void> => {
           try {
-            const runInfo = await this.performPipelineLoad(slot);
-            await this.pipelineSubservice.saveLoadSummary(
-              slot.definition.id,
-              runInfo
-            );
+            if (slot.loadPromise) {
+              await slot.loadPromise;
+            } else {
+              await this.performPipelineLoad(slot);
+            }
           } catch (e) {
+            // an abort means a podbox user either deleted or edited (and thus restarted)
+            // this pipeline. in the case that it was deleted, `slot.loadPromise` will be
+            // set to `undefined`. In the case that it was edited, Podbox will restart the
+            // pipeline, and set `slot.loadPromise` to a new promise representing the
+            // pipeline's load operation.
+            if (isAbortError(e)) {
+              while (slot.loadPromise) {
+                try {
+                  await slot.loadPromise;
+                  slot.loadPromise = undefined;
+                  break;
+                } catch (e) {
+                  if (isAbortError(e)) {
+                    await sleep(50);
+                  }
+                }
+              }
+              // no load promise means we're done here
+              return;
+            }
+
             logger(
               LOG_TAG,
               `failed to perform pipeline load for pipeline ${slot.definition.id}`,
@@ -320,6 +470,8 @@ export class PipelineExecutorSubservice {
           }
         })
       );
+
+      logger(LOG_TAG, "finished performing all pipeline loads");
     });
   }
 
@@ -337,6 +489,25 @@ export class PipelineExecutorSubservice {
       logger(LOG_TAG, "pipeline datas failed to refresh", e);
     }
 
+    logger(LOG_TAG, "refreshing pipeline definitions");
+
+    // for each pipeline slot, reload its definition from the database,
+    // and re-instantiate the pipeline. do NOT call the pipeline's 'load'
+    // function - that will be done the next time `startPipelineLoadLoop`
+    // is called.
+    await namedSqlTransaction(
+      this.context.dbPool,
+      "startPipelineLoadLoop",
+      async (client) => {
+        await this.loadAndInstantiatePipelines(client);
+        await Promise.allSettled(
+          this.pipelineSlots
+            .slice()
+            .map((s) => this.restartPipeline(client, s.definition.id, true))
+        );
+      }
+    );
+
     logger(
       LOG_TAG,
       "scheduling next pipeline refresh for",
@@ -344,16 +515,6 @@ export class PipelineExecutorSubservice {
         PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS / 1000
       ),
       "s from now"
-    );
-
-    // for each pipeline slot, reload its definition from the database,
-    // and re-instantiate the pipeline. do NOT call the pipeline's 'load'
-    // function - that will be done the next time `startPipelineLoadLoop`
-    // is called.
-    await Promise.allSettled(
-      this.pipelineSlots
-        .slice()
-        .map((s) => this.restartPipeline(s.definition.id, true))
     );
 
     this.nextLoadTimeout = setTimeout(() => {

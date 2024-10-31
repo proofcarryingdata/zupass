@@ -26,22 +26,69 @@
       type="font/woff"
       crossorigin="anonymous"
     />
-    <script defer src="/js/index.js"></script>
-    {{!-- Lazily load zxcvbn.js since it contains 700KB+ of data --}}
-    <script async type="text/javascript" src="zxcvbn.js"></script>
+    <link
+      rel="preload"
+      href="/fonts/Barlow-Regular.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/Barlow-Light.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/Barlow-Bold.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/Barlow-ExtraBold.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/Rubik-Regular.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/Rubik-Light.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/Rubik-Medium.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin="anonymous"
+    />
+    <link
+      rel="preload"
+      href="/fonts/Rubik-ExtraBold.ttf"
+      as="font"
+      type="font/ttf"
+      crossorigin="anonymous"
+    />
+    <link rel="preconnect" href="https://frogcrypto.vercel.app" />
+    <script defer type="module" src="/js/index.js"></script>
   </head>
   <body>
     <div id="root">
       {{!-- Match LoadInterstitialScreen.tsx --}}
       <div style="height: 64px"></div>
-      {{!-- This shows the RippleLoader in the background so we don't get a
-      blank green screen --}}
-      <div class="loaderWrapper">
-        <div class="loader">
-          <div></div>
-          <div></div>
-        </div>
-      </div>
     </div>
     <script
       async

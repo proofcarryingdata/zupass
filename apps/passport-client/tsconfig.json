@@ -2,6 +2,7 @@
   "compilerOptions": {
     "incremental": false,
     "moduleResolution": "bundler",
+    "module": "ESNext",
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "jsx": "react-jsx",
@@ -10,7 +11,7 @@
       "ES2020",
       "DOM"
     ],
-    "esModuleInterop": true,
+    "moduleDetection": "force",
     // To allow for mocha and jest to work together:
     // https://stackoverflow.com/a/65568463
     "skipLibCheck": true,
@@ -18,7 +19,8 @@
   },
   "include": [
     "**/*.ts",
-    "**/*.tsx"
+    "**/*.tsx",
+    "./build.ts"
   ],
   "exclude": [
     "node_modules",
@@ -71,6 +73,9 @@
       "path": "../../packages/ui/gpc-pcd-ui"
     },
     {
+      "path": "../../packages/lib/gpcircuits"
+    },
+    {
       "path": "../../packages/pcd/halo-nonce-pcd"
     },
     {
@@ -113,9 +118,6 @@
       "path": "../../packages/ui/pod-ticket-pcd-ui"
     },
     {
-      "path": "../../packages/lib/podspec"
-    },
-    {
       "path": "../../packages/pcd/rsa-image-pcd"
     },
     {
@@ -150,6 +152,12 @@
     },
     {
       "path": "../../packages/ui/semaphore-signature-pcd-ui"
+    },
+    {
+      "path": "../../packages/pcd/unknown-pcd"
+    },
+    {
+      "path": "../../packages/ui/unknown-pcd-ui"
     },
     {
       "path": "../../packages/lib/util"

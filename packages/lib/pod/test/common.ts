@@ -1,5 +1,5 @@
+import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import { Point } from "@zk-kit/baby-jubjub";
 import { PODEntries } from "../src";
 
@@ -17,7 +17,7 @@ export const expectedPublicKeyHex =
   "c433f7a696b7aa3a5224efb3993baf0ccd9e92eecee0c29a3f6c8208a9e81d9e";
 export const expectedPublicKey = "xDP3ppa3qjpSJO+zmTuvDM2eku7O4MKaP2yCCKnoHZ4";
 
-export const ownerIdentity = new Identity(
+export const ownerIdentity = new IdentityV3(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
 );
 
@@ -51,22 +51,26 @@ export const expectedSignature1 =
 export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },
   eventID: { type: "cryptographic", value: 456n },
-  ticketID: { type: "cryptographic", value: 999n }
+  ticketID: { type: "cryptographic", value: 999n },
+  isConsumed: { type: "boolean", value: true },
+  issueDate: { type: "date", value: new Date(Date.UTC(2024)) },
+  image: { type: "bytes", value: new Uint8Array([1, 2, 3]) },
+  vipStatus: { type: "null", value: null }
 } satisfies PODEntries;
 
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedContentID2 =
-  8121973595251725959527136190050016648811901981184487048534858036206640503232n;
+  14490445713061892907571559700953246722753167030842690801373581812224357192993n;
 
 // If sample entries or private key change above, this value will need to
 // change.  Test failures will indicate the new value.
 export const expectedSignature2Hex =
-  "4febca252ff7e55c29bbada47b8b4b32f667e1270eb77f3a9b0f8ee73bebe689eb89d8ff85c4abd22bf32da15ad7f7fbf2c7e7b1d40ade685cb39c990f9f8b00";
+  "5ec3cbeb73492a4ab9f4288ef150b7bc314d18f78d7e70ec377ba09faf1a3908cebc030b891a84d88484050489940c5bf5ea24cb26ae52e2a51b20fdf0579205";
 export const expectedSignature2 =
-  "T+vKJS/35Vwpu62ke4tLMvZn4ScOt386mw+O5zvr5onridj/hcSr0ivzLaFa1/f78sfnsdQK3mhcs5yZD5+LAA";
+  "XsPL63NJKkq59CiO8VC3vDFNGPeNfnDsN3ugn68aOQjOvAMLiRqE2ISEBQSJlAxb9eokyyauUuKlGyD98FeSBQ";
 
-export const testStringsToHash = [
+export const testStringsToHash: string[] = [
   "",
   "a",
   "A",
@@ -74,6 +78,22 @@ export const testStringsToHash = [
   "valid_identifier",
   "not a valid Identifier",
   "😜"
+];
+
+export const testBytesToHash: Uint8Array[] = [
+  new Uint8Array([]),
+  Buffer.from("hello"),
+  new Uint8Array([1, 2, 3]),
+  Buffer.from(
+    "longbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbytes"
+  )
+];
+
+export const testUniqueBytesToHash: Uint8Array[] = [
+  new Uint8Array([1, 2, 3]),
+  Buffer.from(
+    "longbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbyteslongbytes\0longerbytes"
+  )
 ];
 
 export const testIntsToHash = [
@@ -92,6 +112,12 @@ export const testIntsToHash = [
   // Max 256-bit 32-byte integer value (too large for a circuit, but hashable
   // after being reduced mod R).
   0xffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffffn
+];
+
+export const testDatesToHash = [
+  new Date(1234567),
+  new Date(Date.UTC(2024)),
+  new Date("2024-10-25T04:01:00.638Z")
 ];
 
 export const testPublicKeysToHash = [

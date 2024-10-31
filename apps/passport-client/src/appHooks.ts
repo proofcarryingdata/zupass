@@ -1,3 +1,4 @@
+import { Zapp } from "@parcnet-js/client-rpc";
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { wrap, Wrapper } from "@pcd/emitter";
 import {
@@ -13,7 +14,7 @@ import { PCD } from "@pcd/pcd-types";
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { useContext, useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Dispatcher,
@@ -140,6 +141,18 @@ export function useIdentityV3(): Identity {
   return useSelector<Identity>((s) => s.identityV3, []);
 }
 
+export function useProveStateCount(): number {
+  return useSelector<number>((s) => s.proveStateEligiblePCDs?.length ?? 0, []);
+}
+export function useProveState(): boolean | undefined {
+  return useSelector<boolean | undefined>(
+    (s) =>
+      s.proveStateEligiblePCDs === undefined
+        ? undefined
+        : s.proveStateEligiblePCDs.every(Boolean),
+    []
+  );
+}
 export function useDispatch(): Dispatcher {
   const { dispatch } = useContext(StateContext);
   return dispatch;
@@ -160,6 +173,14 @@ export function useStateContext(): StateContextValue {
 
 export function useModal(): AppState["modal"] {
   return useSelector<AppState["modal"]>((s) => s.modal, []);
+}
+
+export function useBottomModal(): AppState["bottomModal"] {
+  return useSelector<AppState["bottomModal"]>((s) => s.bottomModal, []);
+}
+
+export function useScrollTo(): AppState["scrollTo"] {
+  return useSelector<AppState["scrollTo"]>((s) => s.scrollTo, []);
 }
 
 export function useSyncKey(): string | undefined {
@@ -218,6 +239,10 @@ export function useIsLoggedIn(): boolean {
   return useSelector<boolean>((s) => s.self !== undefined, []);
 }
 
+export function useCanSync(): boolean {
+  return useSelector<boolean>((s) => !s.pauseSync, []);
+}
+
 export function useIsDeletingAccount(): boolean {
   return useSelector<boolean>((s) => !!s.deletingAccount, []);
 }
@@ -270,21 +295,6 @@ export function useSubscriptions(): Wrapper<FeedSubscriptionManager> {
 export function useHasSetupPassword(): boolean {
   const self = useSelf();
   return !!self && hasSetupPassword(self);
-}
-
-// Hook that when invoked, requires the user to set a password if they haven't already
-export function useRequirePassword(): void {
-  const self = useSelf();
-  const hasSetupPassword = useHasSetupPassword();
-  const dispatch = useDispatch();
-  if (self && !hasSetupPassword) {
-    dispatch({
-      type: "set-modal",
-      modal: {
-        modalType: "require-add-password"
-      }
-    });
-  }
 }
 
 // Hook that enables keystrokes to properly listen to laser scanning inputs from supported devices
@@ -342,10 +352,90 @@ export function useLoginIfNoSelf(
   }, [key, request, self, userForcedToLogout]);
 }
 
-export function useStrichSDKState(): AppState["strichSDKstate"] {
-  return useSelector((s) => s.strichSDKstate, []);
-}
-
 export function useEmbeddedScreenState(): AppState["embeddedScreen"] {
   return useSelector((s) => s.embeddedScreen, []);
 }
+
+export function useZapp(): Zapp | undefined {
+  return useSelector<Zapp | undefined>((s) => s.connectedZapp, []);
+}
+
+export function useZappOrigin(): string | undefined {
+  return useSelector<string | undefined>((s) => s.zappOrigin, []);
+}
+
+// Fixes an issue on iOS where components break when switching from landscape to portrait mode.
+// Relevant issue: https://linear.app/0xparc-pcd/issue/0XP-1334/when-changing-to-landscape-and-than-back-to-portrait-the-home-page
+// This hook detects orientation changes and forces a reflow by briefly hiding and redisplaying the document body,
+// ensuring components are re-rendered correctly.
+// https://linear.app/0xparc-pcd/issue/0XP-1334/when-changing-to-landscape-and-than-back-to-portrait-the-home-page
+export const useIOSOrientationFix = (): void => {
+  useEffect(() => {
+    const onOrientationChange = (): void => {
+      document.body.style.display = "none";
+      document.body.offsetHeight; // force document reflow
+      document.body.style.display = "";
+    };
+
+    if (window.screen?.orientation) {
+      window.screen.orientation.addEventListener("change", onOrientationChange);
+    } else {
+      window.addEventListener("orientationchange", onOrientationChange);
+    }
+
+    return (): void => {
+      if (window.screen?.orientation) {
+        window.screen.orientation.removeEventListener(
+          "change",
+          onOrientationChange
+        );
+      } else {
+        window.removeEventListener("orientationchange", onOrientationChange);
+      }
+    };
+  }, []);
+};
+
+/**
+ * Hook that attempts to login from the one_click_redirect key in local storage.
+ * This is set inside the static one click login page.
+ * If this key exists it will attempt to login with the one-click-login flow
+ * even if a different user is logged in.
+ */
+const ONE_CLICK_REDIRECT_KEY = "one_click_redirect";
+export const useAutoLoginFromOneClick = (): { loading: boolean } => {
+  const dispatch = useDispatch();
+  const self = useSelf();
+  const attemptedLogin = useRef(false);
+  const [oneClickRedirect, setOneClickRedirect] = useState(
+    localStorage.getItem(ONE_CLICK_REDIRECT_KEY)
+  );
+
+  useEffect(() => {
+    if (attemptedLogin.current) return;
+    // prevent multiple login attempts
+    attemptedLogin.current = true;
+    if (!oneClickRedirect) return;
+
+    const attemptAutoLogin = async (): Promise<void> => {
+      try {
+        const [, , email] = oneClickRedirect.split("/");
+
+        // If the same user is already logged in we don't want to auto-login again
+        if (self?.emails?.includes(email))
+          throw new Error("User is already logged in");
+
+        location.hash = `#${oneClickRedirect}`;
+      } catch (error) {
+        console.error("Unable to auto-login", error);
+      } finally {
+        localStorage.removeItem(ONE_CLICK_REDIRECT_KEY);
+        setOneClickRedirect(null);
+      }
+    };
+
+    attemptAutoLogin();
+  }, [dispatch, self, oneClickRedirect]);
+
+  return { loading: !!oneClickRedirect };
+};
