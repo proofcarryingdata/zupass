@@ -28,7 +28,6 @@ import {
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { sleep } from "@pcd/util";
 import express from "express";
-import fs from "fs";
 import { sha256 } from "js-sha256";
 import Mustache from "mustache";
 import path from "path";
@@ -51,6 +50,7 @@ import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
 import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
+import { readFileWithCache } from "../../util/file";
 
 export function initGenericIssuanceRoutes(
   app: express.Application,
@@ -796,7 +796,10 @@ export function initGenericIssuanceRoutes(
         pipeline
       );
       if (!result.tickets.length) {
-        res.sendFile(absPath.replace("index", "error"));
+        const errorPage = await readFileWithCache(
+          absPath.replace("index", "error")
+        );
+        res.send(errorPage);
         return;
       }
 
@@ -810,7 +813,7 @@ export function initGenericIssuanceRoutes(
           main.push(ticket);
         }
       }
-      const file = fs.readFileSync(absPath).toString();
+      const file = await readFileWithCache(absPath);
 
       const ticket = main[0];
 
