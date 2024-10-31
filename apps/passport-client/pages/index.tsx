@@ -208,7 +208,7 @@ function RouterImpl(): JSX.Element {
             element={<OneClickLoginScreen />}
           />  */}
           <Route
-            path="one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?"
+            path="one-click-preview/:email/:code/:targetFolder?/:pipelineId?/:serverUrl?"
             element={<NewHomeScreen />}
           />
           <Route
