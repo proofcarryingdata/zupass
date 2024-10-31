@@ -8,7 +8,6 @@ export const ZappButton = styled.div`
   height: 56px;
   position: relative;
   cursor: pointer;
-  border: 1px solid red;
   &::after {
     content: "";
     position: absolute;
