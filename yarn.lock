@@ -5213,12 +5213,12 @@
     nanoevents "^9.0.0"
     valibot "^0.42.0"
 
-"@parcnet-js/client-helpers@^1.0.7":
-  version "1.0.7"
-  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-1.0.7.tgz#64f83b3f6a164a2fc903033fefcea30d5ddf4971"
-  integrity sha512-lzXJs+aQNiMecrOfFS/4MblmPuNvwN5K2navXyGeZ9yrgZRAupz/W+SLjcDA9Swa0vHAms22KFLy3o616Zhwxw==
+"@parcnet-js/client-helpers@^1.0.8":
+  version "1.0.8"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-helpers/-/client-helpers-1.0.8.tgz#b0a865630e92b4b2574c15fdbea3947616c87b2e"
+  integrity sha512-xD/jrmDjwZtbSOE2oHdV1ejYiiDrhoTh0Ysyg97RYl+mYhgy4/24jw3Ueq2iuu2XGwjZiISOcPnjO1mESNWjgQ==
   dependencies:
-    "@parcnet-js/client-rpc" "1.1.6"
+    "@parcnet-js/client-rpc" "1.2.0"
     valibot "^0.42.0"
 
 "@parcnet-js/client-rpc@1.1.6", "@parcnet-js/client-rpc@^1.1.6":
@@ -5231,6 +5231,16 @@
     "@pcd/pod" "^0.4.0"
     valibot "^0.42.0"
 
+"@parcnet-js/client-rpc@1.2.0", "@parcnet-js/client-rpc@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/client-rpc/-/client-rpc-1.2.0.tgz#b6b12442456296ee4897c32606183a5309b0f618"
+  integrity sha512-Mmv+inaoWu13buhCQJHKUrSqIJbBWFDcHFDQh7R+qTWjgPX3iB8nF8tSvujv6OsKNLj0mj8k0sTj+bKZG4Lfag==
+  dependencies:
+    "@parcnet-js/podspec" "1.2.0"
+    "@pcd/gpc" "^0.4.0"
+    "@pcd/pod" "^0.5.0"
+    valibot "^0.42.0"
+
 "@parcnet-js/podspec@1.1.3", "@parcnet-js/podspec@^1.1.3":
   version "1.1.3"
   resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-1.1.3.tgz#ab3ff3e1ad62d1ad488b6fb72d12ce32c31b8b30"
@@ -5238,6 +5248,14 @@
   dependencies:
     "@pcd/gpc" "^0.3.0"
     "@pcd/pod" "^0.4.0"
+
+"@parcnet-js/podspec@1.2.0", "@parcnet-js/podspec@^1.2.0":
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/@parcnet-js/podspec/-/podspec-1.2.0.tgz#b584ccb48c41de43f245ce2848f1132ab34d0189"
+  integrity sha512-VOksMRk9POo+mECc3VS7+YGDIv+yQ9Tu+bf8C9jZRnn9sKL8p8FE4fKdINZFimEeTe7xdR3dm47LwRcghFcWLQ==
+  dependencies:
+    "@pcd/gpc" "^0.4.0"
+    "@pcd/pod" "^0.5.0"
 
 "@parcnet-js/ticket-spec@^1.1.8":
   version "1.1.8"

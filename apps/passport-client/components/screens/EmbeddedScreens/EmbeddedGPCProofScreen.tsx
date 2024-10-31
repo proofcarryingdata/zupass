@@ -190,9 +190,10 @@ function ProvePODInfo({
     })
     .filter(
       ([_, entry]) =>
-        !!entry.isMemberOf ||
-        !!entry.isNotMemberOf ||
-        !!(entry.type === "int" && entry.inRange)
+        entry.type !== "null" &&
+        (!!entry.isMemberOf ||
+          !!entry.isNotMemberOf ||
+          !!(entry.type === "int" && entry.inRange))
     );
   const defaultOption = {
     value: "",
@@ -283,7 +284,7 @@ function ProvePODInfo({
                   {entriesWithConstraints.map(([entryName, entry]) => {
                     return (
                       <ConstraintItem key={`${name}-${entryName}-constraints`}>
-                        {entry.isMemberOf && (
+                        {entry.type !== "null" && entry.isMemberOf && (
                           <Typography color="var(--core-accent)" family="Rubik">
                             <EntryName>{entryName}</EntryName> is member of
                             list:{" "}
@@ -294,7 +295,7 @@ function ProvePODInfo({
                             </Reveal>
                           </Typography>
                         )}
-                        {entry.isNotMemberOf && (
+                        {entry.type !== "null" && entry.isNotMemberOf && (
                           <Typography color="var(--core-accent)" family="Rubik">
                             <EntryName>{entryName}</EntryName> is not member of
                             list:{" "}
