@@ -56,8 +56,14 @@
     display: flex;
     flex-direction: column;
     max-width: var(--max-width);
-    padding: 0 20px;
+    max-height: calc(100vh - 72px);
     background: url("{{{backgroundImage}}}") lightgray 50% / cover no-repeat;
+  }
+
+  .scroll {
+    padding: 0 20px;
+    height: 100%;
+    overflow: scroll;
   }
 
   .ticket {
@@ -452,80 +458,83 @@
     </svg>
   </div>
   <main class="container" onscroll="test" ontouchstart>
-    <div class="header">
-      <span class="header__title">{{eventName}}</span>
-      <div class="ticket__subtitle--container">
-        <span class="header__subtitle">{{eventLocation}}</span>
-        <span class="header__subtitle">·</span>
-        {{#isMoreThanOne}}
-        <span class="header__subtitle">{{count}} Tickets</span>
-        {{/isMoreThanOne}} {{^isMoreThanOne}}
-        <span class="header__subtitle">1 Ticket</span>
-        {{/isMoreThanOne}}
-      </div>
-      <button onclick="redirectToZupass()" class="cta">Score: 0 <svg xmlns="http://www.w3.org/2000/svg" width="41"
-          height="32" viewBox="0 0 41 32" fill="none">
-          <path
-            d="M39.8985 9.69016C39.8985 5.42073 36.4459 1.95996 32.1865 1.95996C29.0961 1.95996 26.4383 3.78611 25.2076 6.41626C23.7812 6.19747 22.293 6.07843 20.7611 6.07843C19.2292 6.07843 17.7802 6.19481 16.3703 6.40762C15.1383 3.78212 12.4825 1.95996 9.39539 1.95996C5.13599 1.95996 1.68335 5.42073 1.68335 9.69016C1.68335 11.2769 2.1617 12.7512 2.97975 13.9782C2.23203 15.2743 1.82268 16.6749 1.82268 18.1366C1.82268 24.7961 10.3017 30.1947 20.7604 30.1947C31.2192 30.1947 39.6982 24.7961 39.6982 18.1366C39.6982 16.6935 39.2988 15.3102 38.569 14.0274C39.4069 12.7905 39.8979 11.2975 39.8979 9.68949L39.8985 9.69016Z"
-            fill="#74DB61" stroke="#154133" stroke-width="2" />
-          <path
-            d="M9.45699 11.1948C10.7167 11.1948 11.738 9.86595 11.738 8.22678C11.738 6.5876 10.7167 5.25879 9.45699 5.25879C8.19725 5.25879 7.17603 6.5876 7.17603 8.22678C7.17603 9.86595 8.19725 11.1948 9.45699 11.1948Z"
-            fill="#154133" />
-          <path
-            d="M32.1245 11.1948C33.3842 11.1948 34.4054 9.86595 34.4054 8.22678C34.4054 6.5876 33.3842 5.25879 32.1245 5.25879C30.8647 5.25879 29.8435 6.5876 29.8435 8.22678C29.8435 9.86595 30.8647 11.1948 32.1245 11.1948Z"
-            fill="#154133" />
-          <path
-            d="M9.19039 20.2213C10.4501 20.2213 11.4714 18.6094 11.4714 16.6209C11.4714 14.6325 10.4501 13.0205 9.19039 13.0205C7.93065 13.0205 6.90942 14.6325 6.90942 16.6209C6.90942 18.6094 7.93065 20.2213 9.19039 20.2213Z"
-            fill="#F9C1D4" />
-          <path
-            d="M32.3916 20.2213C33.6513 20.2213 34.6725 18.6094 34.6725 16.6209C34.6725 14.6325 33.6513 13.0205 32.3916 13.0205C31.1318 13.0205 30.1106 14.6325 30.1106 16.6209C30.1106 18.6094 31.1318 20.2213 32.3916 20.2213Z"
-            fill="#F9C1D4" />
-          <path
-            d="M20.7908 18.8751C17.9001 18.8751 15.5488 16.6925 15.5488 14.0098C15.5488 13.6068 15.8746 13.2803 16.2766 13.2803C16.6787 13.2803 17.0045 13.6068 17.0045 14.0098C17.0045 15.8878 18.7029 17.4154 20.7901 17.4154C22.8774 17.4154 24.5758 15.8878 24.5758 14.0098C24.5758 13.6068 24.9023 13.2803 25.3037 13.2803C25.705 13.2803 26.0315 13.6068 26.0315 14.0098C26.0315 16.6925 23.6802 18.8751 20.7895 18.8751H20.7908Z"
-            fill="#154133" />
-        </svg></button>
-      <div class="ticket">
-        <img class="ticket__qr-code" src="{{qr}}" />
-        <div class="ticket__text-container">
-          <span class="ticket__title">{{attendeeName}}</span>
-          <div class="ticket__subtitle--container">
-            <span class="ticket__subtitle--text">{{attendeeEmail}}</span>
-            <span class="ticket__subtitle--text">·</span>
-            <span class="ticket__subtitle--text">{{ticketName}}</span>
-          </div>
+    <div class="scroll">
+
+      <div class="header">
+        <span class="header__title">{{eventName}}</span>
+        <div class="ticket__subtitle--container">
+          <span class="header__subtitle">{{eventLocation}}</span>
+          <span class="header__subtitle">·</span>
+          {{#isMoreThanOne}}
+          <span class="header__subtitle">{{count}} Tickets</span>
+          {{/isMoreThanOne}} {{^isMoreThanOne}}
+          <span class="header__subtitle">1 Ticket</span>
+          {{/isMoreThanOne}}
         </div>
-        {{#addonsCount}}
-        <button id="addons-btn" type="button" class="ticket__addons-btn">
-          {{#moreThanOneAddon}}
-          <span class="ticket__subtitle--text" style="font-size: 16px;">View {{addonsCount}}
-            add-on items</span>
-          {{/moreThanOneAddon}}
-          {{^moreThanOneAddon}}
-          <span class="ticket__subtitle--text" style="font-size: 16px;">View add-on item</span>
-          {{/moreThanOneAddon}}
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="var(--text-tertiary)" class="size-4"
-            style="width: 20px;">
-            <path d="M4.75 4.25a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1Z" />
-            <path fill-rule="evenodd"
-              d="M2 3.5A1.5 1.5 0 0 1 3.5 2H6a1.5 1.5 0 0 1 1.5 1.5V6A1.5 1.5 0 0 1 6 7.5H3.5A1.5 1.5 0 0 1 2 6V3.5Zm1.5 0H6V6H3.5V3.5Z"
-              clip-rule="evenodd" />
-            <path d="M4.25 11.25a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0Z" />
-            <path fill-rule="evenodd"
-              d="M2 10a1.5 1.5 0 0 1 1.5-1.5H6A1.5 1.5 0 0 1 7.5 10v2.5A1.5 1.5 0 0 1 6 14H3.5A1.5 1.5 0 0 1 2 12.5V10Zm1.5 2.5V10H6v2.5H3.5Z"
-              clip-rule="evenodd" />
-            <path d="M11.25 4.25a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1Z" />
-            <path fill-rule="evenodd"
-              d="M10 2a1.5 1.5 0 0 0-1.5 1.5V6A1.5 1.5 0 0 0 10 7.5h2.5A1.5 1.5 0 0 0 14 6V3.5A1.5 1.5 0 0 0 12.5 2H10Zm2.5 1.5H10V6h2.5V3.5Z"
-              clip-rule="evenodd" />
+        <button onclick="redirectToZupass()" class="cta">Score: 0 <svg xmlns="http://www.w3.org/2000/svg" width="41"
+            height="32" viewBox="0 0 41 32" fill="none">
             <path
-              d="M8.5 9.417a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM8.5 13.083a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM13.083 8.5a.917.917 0 1 0 0 1.833.917.917 0 0 0 0-1.833ZM12.166 13.084a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM11.25 10.333a.917.917 0 1 0 0 1.833.917.917 0 0 0 0-1.833Z" />
-          </svg>
-        </button>
-        {{/addonsCount}}
-        {{^addonsCount}}
-        <!-- spacer when we dont have any addon -->
-        <div style="height:16px;" />
-        {{/addonsCount}}
+              d="M39.8985 9.69016C39.8985 5.42073 36.4459 1.95996 32.1865 1.95996C29.0961 1.95996 26.4383 3.78611 25.2076 6.41626C23.7812 6.19747 22.293 6.07843 20.7611 6.07843C19.2292 6.07843 17.7802 6.19481 16.3703 6.40762C15.1383 3.78212 12.4825 1.95996 9.39539 1.95996C5.13599 1.95996 1.68335 5.42073 1.68335 9.69016C1.68335 11.2769 2.1617 12.7512 2.97975 13.9782C2.23203 15.2743 1.82268 16.6749 1.82268 18.1366C1.82268 24.7961 10.3017 30.1947 20.7604 30.1947C31.2192 30.1947 39.6982 24.7961 39.6982 18.1366C39.6982 16.6935 39.2988 15.3102 38.569 14.0274C39.4069 12.7905 39.8979 11.2975 39.8979 9.68949L39.8985 9.69016Z"
+              fill="#74DB61" stroke="#154133" stroke-width="2" />
+            <path
+              d="M9.45699 11.1948C10.7167 11.1948 11.738 9.86595 11.738 8.22678C11.738 6.5876 10.7167 5.25879 9.45699 5.25879C8.19725 5.25879 7.17603 6.5876 7.17603 8.22678C7.17603 9.86595 8.19725 11.1948 9.45699 11.1948Z"
+              fill="#154133" />
+            <path
+              d="M32.1245 11.1948C33.3842 11.1948 34.4054 9.86595 34.4054 8.22678C34.4054 6.5876 33.3842 5.25879 32.1245 5.25879C30.8647 5.25879 29.8435 6.5876 29.8435 8.22678C29.8435 9.86595 30.8647 11.1948 32.1245 11.1948Z"
+              fill="#154133" />
+            <path
+              d="M9.19039 20.2213C10.4501 20.2213 11.4714 18.6094 11.4714 16.6209C11.4714 14.6325 10.4501 13.0205 9.19039 13.0205C7.93065 13.0205 6.90942 14.6325 6.90942 16.6209C6.90942 18.6094 7.93065 20.2213 9.19039 20.2213Z"
+              fill="#F9C1D4" />
+            <path
+              d="M32.3916 20.2213C33.6513 20.2213 34.6725 18.6094 34.6725 16.6209C34.6725 14.6325 33.6513 13.0205 32.3916 13.0205C31.1318 13.0205 30.1106 14.6325 30.1106 16.6209C30.1106 18.6094 31.1318 20.2213 32.3916 20.2213Z"
+              fill="#F9C1D4" />
+            <path
+              d="M20.7908 18.8751C17.9001 18.8751 15.5488 16.6925 15.5488 14.0098C15.5488 13.6068 15.8746 13.2803 16.2766 13.2803C16.6787 13.2803 17.0045 13.6068 17.0045 14.0098C17.0045 15.8878 18.7029 17.4154 20.7901 17.4154C22.8774 17.4154 24.5758 15.8878 24.5758 14.0098C24.5758 13.6068 24.9023 13.2803 25.3037 13.2803C25.705 13.2803 26.0315 13.6068 26.0315 14.0098C26.0315 16.6925 23.6802 18.8751 20.7895 18.8751H20.7908Z"
+              fill="#154133" />
+          </svg></button>
+        <div class="ticket">
+          <img class="ticket__qr-code" src="{{qr}}" />
+          <div class="ticket__text-container">
+            <span class="ticket__title">{{attendeeName}}</span>
+            <div class="ticket__subtitle--container">
+              <span class="ticket__subtitle--text">{{attendeeEmail}}</span>
+              <span class="ticket__subtitle--text">·</span>
+              <span class="ticket__subtitle--text">{{ticketName}}</span>
+            </div>
+          </div>
+          {{#addonsCount}}
+          <button id="addons-btn" type="button" class="ticket__addons-btn">
+            {{#moreThanOneAddon}}
+            <span class="ticket__subtitle--text" style="font-size: 16px;">View {{addonsCount}}
+              add-on items</span>
+            {{/moreThanOneAddon}}
+            {{^moreThanOneAddon}}
+            <span class="ticket__subtitle--text" style="font-size: 16px;">View add-on item</span>
+            {{/moreThanOneAddon}}
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="var(--text-tertiary)" class="size-4"
+              style="width: 20px;">
+              <path d="M4.75 4.25a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1Z" />
+              <path fill-rule="evenodd"
+                d="M2 3.5A1.5 1.5 0 0 1 3.5 2H6a1.5 1.5 0 0 1 1.5 1.5V6A1.5 1.5 0 0 1 6 7.5H3.5A1.5 1.5 0 0 1 2 6V3.5Zm1.5 0H6V6H3.5V3.5Z"
+                clip-rule="evenodd" />
+              <path d="M4.25 11.25a.5.5 0 1 1 1 0 .5.5 0 0 1-1 0Z" />
+              <path fill-rule="evenodd"
+                d="M2 10a1.5 1.5 0 0 1 1.5-1.5H6A1.5 1.5 0 0 1 7.5 10v2.5A1.5 1.5 0 0 1 6 14H3.5A1.5 1.5 0 0 1 2 12.5V10Zm1.5 2.5V10H6v2.5H3.5Z"
+                clip-rule="evenodd" />
+              <path d="M11.25 4.25a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1Z" />
+              <path fill-rule="evenodd"
+                d="M10 2a1.5 1.5 0 0 0-1.5 1.5V6A1.5 1.5 0 0 0 10 7.5h2.5A1.5 1.5 0 0 0 14 6V3.5A1.5 1.5 0 0 0 12.5 2H10Zm2.5 1.5H10V6h2.5V3.5Z"
+                clip-rule="evenodd" />
+              <path
+                d="M8.5 9.417a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM8.5 13.083a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM13.083 8.5a.917.917 0 1 0 0 1.833.917.917 0 0 0 0-1.833ZM12.166 13.084a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM11.25 10.333a.917.917 0 1 0 0 1.833.917.917 0 0 0 0-1.833Z" />
+            </svg>
+          </button>
+          {{/addonsCount}}
+          {{^addonsCount}}
+          <!-- spacer when we dont have any addon -->
+          <div style="height:16px;" />
+          {{/addonsCount}}
+        </div>
       </div>
     </div>
   </main>
