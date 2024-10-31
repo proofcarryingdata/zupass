@@ -54,6 +54,7 @@ import { useTickets } from "./hooks/useTickets";
 import { useWindowWidth } from "./hooks/useWindowWidth";
 import { NoUpcomingEventsState } from "./NoUpcomingTicketsState";
 import { EventTitle } from "./EventTitle";
+import { ImageBackground } from "./ImageBackground";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -118,15 +119,6 @@ const LoadingScreenContainer = styled.div`
   gap: 12px;
   margin: auto 0;
 `;
-
-const Background = styled.div`
-  position: absolute;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 100vh;
-`;
-
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
@@ -345,6 +337,10 @@ export const NewHomeScreen = (): ReactElement => {
       )}
       {tickets.length > 0 && (
         <>
+          <Spacer h={48} />
+          <ImageBackground
+            image={tickets[currentPos][1][0].eventTicket.claim.ticket.imageUrl}
+          />
           <EventTitle packs={tickets[currentPos][1]} />
           <SwipeViewContainer
             onMouseDown={() => {
