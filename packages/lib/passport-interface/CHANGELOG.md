@@ -1,5 +1,31 @@
 # @pcd/passport-interface
 
+## 0.15.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.9.0
+  - @pcd/passport-crypto@0.15.0
+  - @pcd/pcd-collection@0.15.0
+  - @pcd/pcd-types@0.15.0
+  - @pcd/pod@0.5.0
+  - @pcd/semaphore-identity-v3-wrapper@0.1.0
+  - @pcd/util@0.9.0
+  - @pcd/eddsa-frog-pcd@0.7.0
+  - @pcd/eddsa-pcd@0.10.0
+  - @pcd/eddsa-ticket-pcd@0.10.0
+  - @pcd/email-pcd@0.10.0
+  - @pcd/pod-pcd@0.5.0
+  - @pcd/pod-ticket-pcd@0.5.0
+  - @pcd/semaphore-group-pcd@0.15.0
+  - @pcd/semaphore-identity-pcd@0.15.0
+  - @pcd/semaphore-signature-pcd@0.15.0
+
 ## 0.14.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @pcd/util
 
+## 0.8.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
 ## 0.7.0
 
 ### Minor Changes

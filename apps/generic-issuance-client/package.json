@@ -1,6 +1,6 @@
 {
   "name": "generic-issuance-client",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -18,11 +18,11 @@
     "@emotion/react": "^11.11.3",
     "@emotion/styled": "^11.11.0",
     "@monaco-editor/react": "^4.6.0",
-    "@pcd/client-shared": "0.3.0",
-    "@pcd/passport-interface": "0.14.0",
-    "@pcd/pod": "0.4.0",
-    "@pcd/podbox-shared": "0.3.0",
-    "@pcd/util": "0.8.0",
+    "@pcd/client-shared": "0.4.0",
+    "@pcd/passport-interface": "0.15.0",
+    "@pcd/pod": "0.5.0",
+    "@pcd/podbox-shared": "0.4.0",
+    "@pcd/util": "0.9.0",
     "@rollbar/react": "^0.11.2",
     "@stytch/react": "^15.0.0",
     "@stytch/vanilla-js": "^4.4.2",
@@ -52,7 +52,7 @@
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@pcd/eslint-config-custom": "0.14.0",
+    "@pcd/eslint-config-custom": "0.15.0",
     "@types/javascript-time-ago": "^2.0.8",
     "@types/lodash": "^4.14.202",
     "@types/react": "^18.2.6",

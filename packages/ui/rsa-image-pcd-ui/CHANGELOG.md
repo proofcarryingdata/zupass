@@ -1,5 +1,18 @@
 # @pcd/rsa-image-pcd-ui
 
+## 0.6.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-ui@0.15.0
+  - @pcd/pcd-types@0.15.0
+  - @pcd/rsa-image-pcd@0.9.0
+
 ## 0.5.0
 
 ### Minor Changes

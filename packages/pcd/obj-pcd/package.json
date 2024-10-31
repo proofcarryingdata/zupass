@@ -1,6 +1,6 @@
 {
   "name": "@pcd/obj-pcd",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -27,13 +27,13 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pcd-types": "^0.14.0",
-    "@pcd/util": "^0.8.0",
+    "@pcd/pcd-types": "^0.15.0",
+    "@pcd/util": "^0.9.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.14.0",
-    "@pcd/tsconfig": "0.14.0",
+    "@pcd/eslint-config-custom": "0.15.0",
+    "@pcd/tsconfig": "0.15.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.8",
