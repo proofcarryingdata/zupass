@@ -655,7 +655,7 @@
 
     function redirectToZupass() {
       const maybeDate = Date.parse("{{startDate}}");
-      if (isNaN(maybeDate)) {
+      if (isNaN(maybeDate) || maybeDate.getTime() < Date.now()) {
         window.location.replace(clientPath);
       }
       else {
