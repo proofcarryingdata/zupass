@@ -5,7 +5,7 @@ export const ZappButton = styled.div`
   width: 100%;
   justify-content: center;
   align-items: center;
-  height: 56px;
+  height: 80px;
   position: relative;
   cursor: pointer;
 
