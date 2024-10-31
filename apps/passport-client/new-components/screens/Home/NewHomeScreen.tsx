@@ -226,6 +226,11 @@ export const NewHomeScreen = (): ReactElement => {
   useLayoutEffect(() => {
     const handleOneClick = async (): Promise<void> => {
       if (location.pathname.includes("one-click-preview")) {
+        const queryString = window.location.hash.includes("?")
+          ? window.location.hash.split("?")[1]
+          : "";
+        const params = new URLSearchParams(queryString);
+        const redirectHash = params.get("redirectHash");
         const { email, code, targetFolder, pipelineId, serverUrl } =
           regularParams;
 
@@ -252,6 +257,12 @@ export const NewHomeScreen = (): ReactElement => {
           code,
           targetFolder
         });
+
+        // If there is a redirect hash, redirect to it (happens on auto login)
+        if (redirectHash) {
+          window.location.hash = redirectHash;
+          return;
+        }
 
         const zappEntry = Object.entries(appConfig.embeddedZapps).find(
           ([key]) => key.toLowerCase() === targetFolder?.toLowerCase()
@@ -487,7 +498,10 @@ export const NewHomeScreen = (): ReactElement => {
                             }}
                           >
                             <ZappScreen
-                              url={new URL("button", url).toString()}
+                              url={new URL(
+                                `button/${self?.semaphore_v4_commitment ?? ""}`,
+                                url
+                              ).toString()}
                             />
                           </ZappButton>
                         )
