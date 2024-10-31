@@ -442,8 +442,8 @@ export const NewHomeScreen = (): ReactElement => {
                   );
                 })}
               </_SwipableViews>
-              {tickets.length > 1 && (
-                <ButtonsContainer>
+              <ButtonsContainer>
+                {tickets.length > 1 && (
                   <NavigationContainer>
                     <PageCircleButton
                       disabled={currentPos === 0}
@@ -485,31 +485,30 @@ export const NewHomeScreen = (): ReactElement => {
                       />
                     </PageCircleButton>
                   </NavigationContainer>
-
-                  {Object.keys(appConfig.embeddedZapps).length && (
-                    <ZappButtonsContainer>
-                      {Object.entries(appConfig.embeddedZapps).map(
-                        ([zappName, url]) => (
-                          <ZappButton
-                            key={zappName}
-                            onClick={() => {
-                              setZappUrl(url);
-                              setParams({ folder: zappName });
-                            }}
-                          >
-                            <ZappScreen
-                              url={new URL(
-                                `button/${self?.semaphore_v4_commitment ?? ""}`,
-                                url
-                              ).toString()}
-                            />
-                          </ZappButton>
-                        )
-                      )}
-                    </ZappButtonsContainer>
-                  )}
-                </ButtonsContainer>
-              )}
+                )}
+                {Object.keys(appConfig.embeddedZapps).length && (
+                  <ZappButtonsContainer>
+                    {Object.entries(appConfig.embeddedZapps).map(
+                      ([zappName, url]) => (
+                        <ZappButton
+                          key={zappName}
+                          onClick={() => {
+                            setZappUrl(url);
+                            setParams({ folder: zappName });
+                          }}
+                        >
+                          <ZappScreen
+                            url={new URL(
+                              `button/${self?.semaphore_v4_commitment ?? ""}`,
+                              url
+                            ).toString()}
+                          />
+                        </ZappButton>
+                      )
+                    )}
+                  </ZappButtonsContainer>
+                )}
+              </ButtonsContainer>
             </SwipeViewContainer>
             {!(showPodsList || noPods) && <Spacer h={96} />}
           </ScrollContainer>
