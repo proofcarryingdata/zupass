@@ -14,6 +14,8 @@ import { nextFrame } from "../../../src/util";
 import styled from "styled-components";
 import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
 import { ScrollIndicator } from "./ScrollIndicator";
+import { Typography } from "../../shared/Typography";
+import { BANNER_HEIGHT } from "../../../src/sharedConstants";
 
 const EMPTY_CARD_CONTAINER_HEIGHT = 220;
 const EmptyCardContainer = styled.div<{ longVersion: boolean }>`
@@ -40,7 +42,9 @@ const InnerContainer = styled.div`
 
 const ListContainer = styled.div`
   width: 100%;
-  max-height: calc(100vh - ${EMPTY_CARD_CONTAINER_HEIGHT + 64}px);
+  max-height: calc(
+    100vh - ${EMPTY_CARD_CONTAINER_HEIGHT + 64 + BANNER_HEIGHT}px
+  );
   overflow-y: scroll;
   border-radius: 20px;
   border: 2px solid var(--text-white);
