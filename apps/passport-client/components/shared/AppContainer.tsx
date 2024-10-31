@@ -8,25 +8,9 @@ import {
   useIOSOrientationFix,
   useUserShouldAgreeNewPrivacyNotice
 } from "../../src/appHooks";
-import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
+import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 import { ScreenLoader } from "./ScreenLoader";
-import { ZupassSVG } from "./ZupassSVG";
 
-const Banner = styled.div`
-  padding: 25px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-bottom: 1px solid #1d8289;
-  background: linear-gradient(0deg, #00605c 0%, #00785e 100%);
-  width: ${MAX_WIDTH_SCREEN}px;
-  height: ${BANNER_HEIGHT}px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  position: fixed;
-  top: 0;
-`;
 // Wrapper for all screens.
 export function AppContainer({
   children,
@@ -62,9 +46,6 @@ export function AppContainer({
   return (
     <Container $fullscreen={!!fullscreen}>
       <GlobalBackground color={col} />
-      <Banner>
-        <ZupassSVG />
-      </Banner>
       <Background>
         <CenterColumn defaultPadding={!noPadding}>
           {children && (
@@ -108,7 +89,6 @@ export const CenterColumn = styled.div<{ defaultPadding: boolean }>`
   margin: 0 auto;
   position: relative;
   ${({ defaultPadding }): string => (defaultPadding ? "padding: 16px;" : "")}
-  padding-top: ${BANNER_HEIGHT}px;
 `;
 
 const Container = styled.div<{ $fullscreen: boolean }>`

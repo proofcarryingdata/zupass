@@ -45,4 +45,3 @@ export const GPC_ARTIFACTS_CONFIG =
 export const ZUPASS_GPC_ARTIFACT_BASE_PATH = `/artifacts/proto-pod-gpc`;
 export const ZUPASS_GPC_ARTIFACT_PATH =
   ZUPASS_GPC_ARTIFACT_BASE_PATH + `/${ARTIFACTS_NPM_VERSION}`;
-export const BANNER_HEIGHT = 72;
