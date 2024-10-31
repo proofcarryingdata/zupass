@@ -36,7 +36,7 @@ import {
   useSelf,
   useUserForcedToLogout
 } from "../../../src/appHooks";
-import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
+import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { nextFrame } from "../../../src/util";
 import { FloatingMenu } from "../../shared/FloatingMenu";
@@ -54,7 +54,6 @@ import { useTickets } from "./hooks/useTickets";
 import { useWindowWidth } from "./hooks/useWindowWidth";
 import { NoUpcomingEventsState } from "./NoUpcomingTicketsState";
 import { EventTitle } from "./EventTitle";
-import { ImageBackground } from "./ImageBackground";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -121,6 +120,18 @@ const LoadingScreenContainer = styled.div`
   gap: 12px;
   margin: auto 0;
 `;
+
+const BackgroundContainer = styled.div<{ image?: string }>`
+  background: url(${({ image }): string | undefined => image}) transparent 70% /
+    cover no-repeat;
+  max-height: calc(100vh - ${BANNER_HEIGHT}px);
+  overflow: scroll;
+`;
+
+const ScrollContainer = styled.div`
+  height: 100%;
+`;
+
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
@@ -341,152 +352,155 @@ export const NewHomeScreen = (): ReactElement => {
         </>
       )}
       {tickets.length > 0 && (
-        <>
-          <Spacer h={48} />
-          <ImageBackground
-            image={tickets[currentPos][1][0].eventTicket.claim.ticket.imageUrl}
-          />
-          <EventTitle packs={tickets[currentPos][1]} />
-          <SwipeViewContainer
-            onMouseDown={() => {
-              setHolding(true);
-            }}
-            onMouseUp={() => {
-              setHolding(false);
-            }}
-            onMouseLeave={() => {
-              setHolding(false);
-            }}
-            style={{
-              cursor: holding ? "grabbing" : "grab"
-            }}
-          >
-            <_SwipableViews
+        <BackgroundContainer
+          image={tickets[currentPos][1][0].eventTicket.claim.ticket.imageUrl}
+        >
+          <ScrollContainer>
+            <Spacer h={48} />
+            <EventTitle packs={tickets[currentPos][1]} />
+            <SwipeViewContainer
+              onMouseDown={() => {
+                setHolding(true);
+              }}
+              onMouseUp={() => {
+                setHolding(false);
+              }}
+              onMouseLeave={() => {
+                setHolding(false);
+              }}
               style={{
-                padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
+                cursor: holding ? "grabbing" : "grab"
               }}
-              slideStyle={{
-                padding: `0 ${CARD_GAP / 2}px`
-              }}
-              resistance={true}
-              index={currentPos}
-              onChangeIndex={(e: number) => {
-                setCurrentPos(e);
-              }}
-              enableMouseEvents
             >
-              {tickets.map(([eventId, packs]) => {
-                return (
-                  <TicketsContainer
-                    $width={cardWidth}
-                    key={packs.map((pack) => pack.eventTicket.id).join("-")}
-                  >
-                    {packs.map((pack) => {
-                      return (
-                        <CardBody
-                          showDownloadButton={true}
-                          key={pack.eventName + pack.attendeeEmail}
-                          addOns={
-                            pack.addOns.length > 0
-                              ? {
-                                  text: `View ${pack.addOns.length} add-on items`,
-                                  onClick(): void {
-                                    dispatch({
-                                      type: "set-bottom-modal",
-                                      modal: {
-                                        addOns: pack.addOns,
-                                        modalType: "ticket-add-ons"
-                                      }
-                                    });
+              <_SwipableViews
+                style={{
+                  padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
+                }}
+                slideStyle={{
+                  padding: `0 ${CARD_GAP / 2}px`
+                }}
+                resistance={true}
+                index={currentPos}
+                onChangeIndex={(e: number) => {
+                  setCurrentPos(e);
+                }}
+                enableMouseEvents
+              >
+                {tickets.map(([eventId, packs]) => {
+                  return (
+                    <TicketsContainer
+                      $width={cardWidth}
+                      key={packs.map((pack) => pack.eventTicket.id).join("-")}
+                    >
+                      {packs.map((pack) => {
+                        return (
+                          <CardBody
+                            showDownloadButton={true}
+                            key={pack.eventName + pack.attendeeEmail}
+                            addOns={
+                              pack.addOns.length > 0
+                                ? {
+                                    text: `View ${pack.addOns.length} add-on items`,
+                                    onClick(): void {
+                                      dispatch({
+                                        type: "set-bottom-modal",
+                                        modal: {
+                                          addOns: pack.addOns,
+                                          modalType: "ticket-add-ons"
+                                        }
+                                      });
+                                    }
                                   }
-                                }
-                              : undefined
-                          }
-                          ref={(ref) => {
-                            if (!ref) return;
-                            const group = ticketsRef.current.get(eventId);
-                            if (!group) {
-                              ticketsRef.current.set(eventId, [ref]);
-                              return;
+                                : undefined
                             }
-                            group.push(ref);
-                          }}
-                          pcd={pack.eventTicket}
-                          isMainIdentity={false}
-                        />
-                      );
-                    })}
-                  </TicketsContainer>
-                );
-              })}
-            </_SwipableViews>
-            {tickets.length > 1 && (
-              <ButtonsContainer>
-                <NavigationContainer>
-                  <PageCircleButton
-                    disabled={currentPos === 0}
-                    onClick={() => {
-                      setCurrentPos((old) => {
-                        if (old === 0) return old;
-                        return old - 1;
-                      });
-                    }}
-                  >
-                    <ChevronLeftIcon
-                      width={24}
-                      height={24}
-                      color="var(--text-tertiary)"
-                    />
-                  </PageCircleButton>
-                  <Typography
-                    fontSize={14}
-                    color="#8B94AC"
-                    fontWeight={500}
-                    family="Rubik"
-                    style={{ display: "flex", alignItems: "center" }}
-                  >
-                    {currentPos + 1} OF {tickets.length}
-                  </Typography>
-                  <PageCircleButton
-                    disabled={currentPos === tickets.length - 1}
-                    onClick={() => {
-                      setCurrentPos((old) => {
-                        if (old === tickets.length - 1) return old;
-                        return old + 1;
-                      });
-                    }}
-                  >
-                    <ChevronRightIcon
-                      width={24}
-                      height={24}
-                      color="var(--text-tertiary)"
-                    />
-                  </PageCircleButton>
-                </NavigationContainer>
+                            ref={(ref) => {
+                              if (!ref) return;
+                              const group = ticketsRef.current.get(eventId);
+                              if (!group) {
+                                ticketsRef.current.set(eventId, [ref]);
+                                return;
+                              }
+                              group.push(ref);
+                            }}
+                            pcd={pack.eventTicket}
+                            isMainIdentity={false}
+                          />
+                        );
+                      })}
+                    </TicketsContainer>
+                  );
+                })}
+              </_SwipableViews>
+              {tickets.length > 1 && (
+                <ButtonsContainer>
+                  <NavigationContainer>
+                    <PageCircleButton
+                      disabled={currentPos === 0}
+                      onClick={() => {
+                        setCurrentPos((old) => {
+                          if (old === 0) return old;
+                          return old - 1;
+                        });
+                      }}
+                    >
+                      <ChevronLeftIcon
+                        width={24}
+                        height={24}
+                        color="var(--text-tertiary)"
+                      />
+                    </PageCircleButton>
+                    <Typography
+                      fontSize={14}
+                      color="#8B94AC"
+                      fontWeight={500}
+                      family="Rubik"
+                      style={{ display: "flex", alignItems: "center" }}
+                    >
+                      {currentPos + 1} OF {tickets.length}
+                    </Typography>
+                    <PageCircleButton
+                      disabled={currentPos === tickets.length - 1}
+                      onClick={() => {
+                        setCurrentPos((old) => {
+                          if (old === tickets.length - 1) return old;
+                          return old + 1;
+                        });
+                      }}
+                    >
+                      <ChevronRightIcon
+                        width={24}
+                        height={24}
+                        color="var(--text-tertiary)"
+                      />
+                    </PageCircleButton>
+                  </NavigationContainer>
 
-                {Object.keys(appConfig.embeddedZapps).length && (
-                  <ZappButtonsContainer>
-                    {Object.entries(appConfig.embeddedZapps).map(
-                      ([zappName, url]) => (
-                        <ZappButton
-                          key={zappName}
-                          onClick={() => {
-                            setZappUrl(url);
-                            setParams({ folder: zappName });
-                          }}
-                        >
-                          <ZappScreen url={new URL("button", url).toString()} />
-                        </ZappButton>
-                      )
-                    )}
-                  </ZappButtonsContainer>
-                )}
-              </ButtonsContainer>
-            )}
-          </SwipeViewContainer>
-        </>
+                  {Object.keys(appConfig.embeddedZapps).length && (
+                    <ZappButtonsContainer>
+                      {Object.entries(appConfig.embeddedZapps).map(
+                        ([zappName, url]) => (
+                          <ZappButton
+                            key={zappName}
+                            onClick={() => {
+                              setZappUrl(url);
+                              setParams({ folder: zappName });
+                            }}
+                          >
+                            <ZappScreen
+                              url={new URL("button", url).toString()}
+                            />
+                          </ZappButton>
+                        )
+                      )}
+                    </ZappButtonsContainer>
+                  )}
+                </ButtonsContainer>
+              )}
+            </SwipeViewContainer>
+            {!(showPodsList || noPods) && <Spacer h={96} />}
+          </ScrollContainer>
+        </BackgroundContainer>
       )}
-      {!(showPodsList || noPods) && <Spacer h={96} />}
       <FloatingMenu onlySettings={showPodsList || noPods} />
       <AddOnsModal />
       <NewModals />
