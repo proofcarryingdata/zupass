@@ -1,5 +1,4 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
-import * as eddsaTicketPcd from "@pcd/eddsa-ticket-pcd";
 import { isEmailPCD } from "@pcd/email-pcd";
 import {
   PCDGetRequest,
@@ -44,7 +43,6 @@ import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
 import { NewLoader } from "../../shared/NewLoader";
 import { SwipeViewContainer } from "../../shared/SwipeViewContainer";
-import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 import {
   isMobile,
@@ -52,26 +50,17 @@ import {
   useOrientation
 } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
-import { TicketPack } from "./types";
 import { useTickets } from "./hooks/useTickets";
 import { useWindowWidth } from "./hooks/useWindowWidth";
 import { NoUpcomingEventsState } from "./NoUpcomingTicketsState";
+import { EventTitle } from "./EventTitle";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
 
 const SCREEN_HORIZONTAL_PADDING = 20;
 const TICKET_VERTICAL_GAP = 20;
-const BUTTONS_CONTAINER_HEIGHT = 40;
 const CARD_GAP = isMobile ? 8 : SCREEN_HORIZONTAL_PADDING * 2;
-const Container = styled.div<{ ticketsAmount: number }>`
-  display: flex;
-  flex-direction: column;
-  margin-top: 20px;
-  width: fit-content;
-  gap: ${({ ticketsAmount }): number =>
-    ticketsAmount > 1 ? 40 + BUTTONS_CONTAINER_HEIGHT : 20}px;
-`;
 
 const disabledCSS = css`
   cursor: not-allowed;
@@ -122,15 +111,20 @@ const TicketsContainer = styled.div<{ $width: number }>`
   gap: ${TICKET_VERTICAL_GAP}px;
 `;
 
-const getEventDetails = (tickets: TicketPack): eddsaTicketPcd.ITicketData => {
-  return tickets.eventTicket.claim.ticket as eddsaTicketPcd.ITicketData;
-};
 const LoadingScreenContainer = styled.div`
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
   margin: auto 0;
+`;
+
+const Background = styled.div`
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 100vh;
 `;
 
 export const NewHomeScreen = (): ReactElement => {
@@ -349,11 +343,9 @@ export const NewHomeScreen = (): ReactElement => {
       {(!tickets.length || isInvalidUser) && (
         <NoUpcomingEventsState isLandscape={isLandscape} />
       )}
-
-      <Typography> test</Typography>
-      <Typography> natenarteina</Typography>
       {tickets.length > 0 && (
         <>
+          <EventTitle packs={tickets[currentPos][1]} />
           <SwipeViewContainer
             onMouseDown={() => {
               setHolding(true);
@@ -382,8 +374,7 @@ export const NewHomeScreen = (): ReactElement => {
               }}
               enableMouseEvents
             >
-              {tickets.map(([eventId, packs], i) => {
-                const eventDetails = getEventDetails(packs[0]);
+              {tickets.map(([eventId, packs]) => {
                 return (
                   <TicketsContainer
                     $width={cardWidth}
