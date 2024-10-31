@@ -8,6 +8,8 @@ import {
 } from "@pcd/passport-interface";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { useCallback } from "react";
+import styled from "styled-components";
+import { Typography } from "../../../new-components/shared/Typography";
 import { useDispatch, useProveState } from "../../../src/appHooks";
 import {
   safeRedirect,
@@ -15,8 +17,6 @@ import {
 } from "../../../src/passportRequest";
 import { err } from "../../../src/util";
 import { GenericProveSection } from "./GenericProveSection";
-import styled from "styled-components";
-import { Typography } from "../../../new-components/shared/Typography";
 
 const Header = styled.div`
   display: flex;
@@ -101,8 +101,12 @@ export function GenericProveScreen({
           </Typography>
         )}
         {proveState !== undefined && !proveState && (
-          <Typography color="var(--text-primary)" fontSize={16}>
-            We don’t see an upcoming event that matches the emails under your
+          <Typography
+            style={{ marginTop: 20 }}
+            color="var(--text-primary)"
+            fontSize={16}
+          >
+            We don't see an upcoming event that matches the emails under your
             account.
           </Typography>
         )}
