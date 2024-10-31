@@ -611,17 +611,17 @@ export const NewHomeScreen = (): ReactElement => {
           targetFolder
         });
 
+        // If there is a redirect hash, redirect to it (happens on auto login)
+        if (redirectHash) {
+          window.location.hash = redirectHash;
+          return;
+        }
+
         const zappEntry = Object.entries(appConfig.embeddedZapps).find(
           ([key]) => key.toLowerCase() === targetFolder?.toLowerCase()
         );
         if (zappEntry) {
           setZappUrl(zappEntry[1]);
-          return;
-        }
-
-        // If there is a redirect hash, redirect to it (happens on auto login)
-        if (redirectHash) {
-          window.location.hash = redirectHash;
           return;
         }
 
