@@ -94,6 +94,8 @@ const NavigationContainer = styled.div`
   display: flex;
   gap: 12px;
   align-self: center;
+  border-radius: 200px;
+  backdrop-filter: blur(12px);
 `;
 const ButtonsContainer = styled.div`
   display: flex;
@@ -380,7 +382,7 @@ export const NewHomeScreen = (): ReactElement => {
                       return (
                         <CardBody
                           showDownloadButton={true}
-                          key={pack.eventName}
+                          key={pack.eventName + pack.attendeeEmail}
                           addOns={
                             pack.addOns.length > 0
                               ? {
