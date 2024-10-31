@@ -767,7 +767,12 @@ export const NewHomeScreen = (): ReactElement => {
                                 }}
                               >
                                 <ZappScreen
-                                  url={new URL("button", url).toString()}
+                                  url={new URL(
+                                    `button/${
+                                      self?.semaphore_v4_commitment ?? ""
+                                    }`,
+                                    url
+                                  ).toString()}
                                 />
                               </ZappButton>
                             )
