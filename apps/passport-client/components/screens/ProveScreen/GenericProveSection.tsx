@@ -21,7 +21,7 @@ import {
   SemaphoreSignaturePCDPackage,
   SemaphoreSignaturePCDTypeName
 } from "@pcd/semaphore-signature-pcd";
-import { ZUPASS_SUPPORT_EMAIL, getErrorMessage } from "@pcd/util";
+import { getErrorMessage } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage,
@@ -30,6 +30,7 @@ import {
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
+import { Accordion } from "../../../new-components/shared/Accordion";
 import { Button2 } from "../../../new-components/shared/Button";
 import { NewLoader } from "../../../new-components/shared/NewLoader";
 import { Typography } from "../../../new-components/shared/Typography";
@@ -51,7 +52,6 @@ import {
 } from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
 import { PCDArgs } from "../../shared/PCDArgs";
-import { Accordion } from "../../../new-components/shared/Accordion";
 
 /**
  * A reuseable form which can be used to generate a new instance of a PCD
@@ -276,15 +276,19 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
                 />
               </ErrorContent>
               <Button2
-                onClick={() => {
-                  window.open(
-                    `mailto:${ZUPASS_SUPPORT_EMAIL}?subject=Ticket Support (${self.emails.join(
-                      ", "
-                    )})&body=Hi, I'd like to request support on finding my ticket in Zupass. My email(s) are listed in the subject of this email.`
-                  );
+                onClick={async () => {
+                  if (
+                    window.confirm(
+                      "Are you sure you want to log out? You will be prompted to sign in with another email."
+                    )
+                  )
+                    await dispatch({
+                      type: "reset-passport",
+                      redirectTo: window.location.href
+                    });
                 }}
               >
-                Contact support
+                Switch account
               </Button2>
             </ErrorContainer>
           )}
