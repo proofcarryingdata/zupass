@@ -485,6 +485,7 @@ export const ManageEmailModal = (): JSX.Element => {
               setOldEmail(email);
               setEmailManagerState(EmailManagerState.changeEmail);
             }}
+            key={email}
           />
         ))}
       </EmailsContainer>

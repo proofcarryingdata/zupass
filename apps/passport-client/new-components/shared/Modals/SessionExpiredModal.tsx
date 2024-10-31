@@ -1,10 +1,10 @@
-import React, { ReactElement, useCallback } from "react";
-import { BottomModal } from "../BottomModal";
-import { Typography } from "../Typography";
-import { useBottomModal, useDispatch } from "../../../src/appHooks";
-import { Button2 } from "../Button";
-import { useExport } from "../utils";
+import { ReactElement, useCallback } from "react";
 import styled from "styled-components";
+import { useBottomModal, useDispatch } from "../../../src/appHooks";
+import { BottomModal } from "../BottomModal";
+import { Button2 } from "../Button";
+import { Typography } from "../Typography";
+import { useExport } from "../utils";
 
 const optionsList = [
   "Reload this page",
@@ -101,7 +101,7 @@ export const SessionExpiredModal = (): ReactElement => {
             </Typography>
             <ListContainer>
               {optionsList.map((option, i) => (
-                <ListItem>
+                <ListItem key={option}>
                   <ListCounter>
                     <Typography fontWeight={700} fontSize={14}>
                       {i + 1}

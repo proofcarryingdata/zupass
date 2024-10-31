@@ -579,6 +579,11 @@ export const NewHomeScreen = (): ReactElement => {
   useLayoutEffect(() => {
     const handleOneClick = async (): Promise<void> => {
       if (location.pathname.includes("one-click-preview")) {
+        const queryString = window.location.hash.includes("?")
+          ? window.location.hash.split("?")[1]
+          : "";
+        const params = new URLSearchParams(queryString);
+        const redirectHash = params.get("redirectHash");
         const { email, code, targetFolder, pipelineId, serverUrl } =
           regularParams;
 
@@ -611,6 +616,12 @@ export const NewHomeScreen = (): ReactElement => {
         );
         if (zappEntry) {
           setZappUrl(zappEntry[1]);
+          return;
+        }
+
+        // If there is a redirect hash, redirect to it (happens on auto login)
+        if (redirectHash) {
+          window.location.hash = redirectHash;
           return;
         }
 
