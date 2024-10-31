@@ -6,7 +6,7 @@ import { getScreen } from "../../../components/screens/ProveScreen/ProveScreen";
 export const ProveModal = (): ReactElement | null => {
   const activeModal = useBottomModal();
   const dispatch = useDispatch();
-  if (activeModal.modalType !== "prove") {
+  if (activeModal.modalType !== "prove" || !activeModal.request) {
     return null;
   }
 
