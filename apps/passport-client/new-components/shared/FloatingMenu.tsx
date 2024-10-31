@@ -10,7 +10,7 @@ const FloatingMenuContainer = styled.div<{ center: boolean }>`
   justify-content: space-between;
   bottom: 20px;
   border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(0, 0, 0, 0.8);
+  background: #016a5c;
   backdrop-filter: blur(8px);
   z-index: 2;
   ${({ center }): FlattenSimpleInterpolation =>
@@ -39,8 +39,8 @@ const FloatingMenuItem = styled.div<{ width: number }>`
 const IconContainer = styled.div`
   display: flex;
   flex-direction: column;
-  color: #fff;
-  opacity: 0.8;
+  color: #ccc092;
+  gap: 2px;
 `;
 
 type FloatingMenuProps = {
