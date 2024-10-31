@@ -17,7 +17,6 @@ const BackgroundImage = styled.div<{ image: string }>`
 
   background: url(${({ image }): string => image}) var(--dot-bg) 70% / cover
     no-repeat;
-  transition: background 1s linear;
 `;
 
 const Gredient = styled.div`
