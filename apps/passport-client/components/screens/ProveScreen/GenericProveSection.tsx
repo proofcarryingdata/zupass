@@ -73,7 +73,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     pendingPCD: PendingPCD | undefined,
     multiplePCDs?: Array<SerializedPCD<PCDOf<T>>>
   ) => void;
-  originalReq: PCDGetRequest;
+  originalReq?: PCDGetRequest;
   folder?: string;
 }): JSX.Element {
   const dispatch = useDispatch();

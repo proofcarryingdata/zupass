@@ -44,7 +44,7 @@ export interface AppState {
     | { modalType: "success-modal"; title: string; description: string }
     | { modalType: "about"; modalGoBackBehavior?: "close" | "back" }
     | { modalType: "import" }
-    | { modalType: "prove"; request: PCDGetRequest }
+    | { modalType: "prove"; request?: PCDGetRequest }
     | {
         modalType: "manage-emails";
         prevModal?: AppState["bottomModal"];
