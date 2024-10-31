@@ -36,7 +36,7 @@
     "@pcd/pod": "0.5.0",
     "@pcd/semaphore-identity-v3-wrapper": "0.1.0",
     "@pcd/util": "0.9.0",
-    "@semaphore-protocol/identity": "^4.5.0",
+    "@semaphore-protocol/core": "^4.5.0",
     "@types/json-bigint": "^1.0.3",
     "@zk-kit/eddsa-poseidon": "~1.0.4",
     "@zk-kit/utils": "^1.2.1",

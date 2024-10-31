@@ -32,7 +32,7 @@
     "@pcd/pod": "0.5.0",
     "@pcd/pod-pcd": "0.5.0",
     "@pcd/semaphore-identity-pcd": "0.15.0",
-    "@semaphore-protocol/identity": "^4.0.3",
+    "@semaphore-protocol/core": "^4.0.3",
     "lodash": "^4.17.21",
     "snarkjs": "^0.7.4",
     "uuid": "^9.0.0"
