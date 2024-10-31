@@ -166,7 +166,7 @@ const NEW_UI__Container = styled.div`
   font-family: Rubik;
   border-radius: 16px;
   border: 2px solid var(--text-white, #fff);
-  background: var(--bg-white-transparent, rgba(255, 255, 255, 0.8));
+  background: #fff;
 
   /* shadow-sm */
   box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
