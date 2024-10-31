@@ -8,7 +8,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { useCallback } from "react";
-import { useDispatch } from "../../../src/appHooks";
+import { useDispatch, useProveState } from "../../../src/appHooks";
 import {
   safeRedirect,
   safeRedirectPending
@@ -77,6 +77,7 @@ export function GenericProveScreen({
     [req.postMessage, req.returnUrl]
   );
 
+  const proveState = useProveState();
   // This allows us to pass in a custom onProve function for use in embedded
   // screens.
   if (!onProve) {
@@ -94,9 +95,17 @@ export function GenericProveScreen({
         <Typography color="var(--text-primary)" fontSize={20} fontWeight={800}>
           SIGN IN WITH ZUPASS
         </Typography>
-        <Typography color="var(--text-primary)" fontSize={16}>
-          {req.options?.description}
-        </Typography>
+        {!!proveState && (
+          <Typography color="var(--text-primary)" fontSize={16}>
+            {req.options?.description}
+          </Typography>
+        )}
+        {proveState !== undefined && !proveState && (
+          <Typography color="var(--text-primary)" fontSize={16}>
+            We don’t see an upcoming event that matches the emails under your
+            account.
+          </Typography>
+        )}
       </Header>
       <GenericProveSection
         initialArgs={req.args}

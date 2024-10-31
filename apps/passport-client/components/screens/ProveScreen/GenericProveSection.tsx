@@ -20,7 +20,7 @@ import {
   SemaphoreSignaturePCDPackage,
   SemaphoreSignaturePCDTypeName
 } from "@pcd/semaphore-signature-pcd";
-import { getErrorMessage } from "@pcd/util";
+import { ZUPASS_SUPPORT_EMAIL, getErrorMessage } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage,
@@ -36,7 +36,8 @@ import { appConfig } from "../../../src/appConfig";
 import {
   usePCDCollection,
   useProveState,
-  useProveStateCount
+  useProveStateCount,
+  useSelf
 } from "../../../src/appHooks";
 import {
   getOOMErrorMessage,
@@ -48,6 +49,8 @@ import {
 } from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
 import { PCDArgs } from "../../shared/PCDArgs";
+import { Accordion } from "../../../new-components/shared/Accordion";
+import { Spacer } from "@pcd/passport-ui";
 
 /**
  * A reuseable form which can be used to generate a new instance of a PCD
@@ -81,6 +84,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   const [multiProofsQueued, setMultiProofsQueued] = useState(0);
   const proveState = useProveState();
   const proveStateCount = useProveStateCount();
+  const self = useSelf();
   useEffect(() => {
     if (options?.multi && !isZKEdDSAEventTicketPCDPackage(pcdPackage)) {
       setError("multi-proofs are only supported for ZKEdDSAEventTicketPCD");
@@ -237,13 +241,42 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     <Container>
       {proveState !== undefined && !proveState && (
         <AbsoluteContainer>
-          <Typography color="var(--new-danger)">No tickets found</Typography>
-          <Typography />
-          <Typography color="var(--new-danger)">
-            Please ensure you have connected to an email address that has a
-            valid ticket for this event. Contact support@zupass.org for more
-            questions.
-          </Typography>
+          {self && (
+            <ErrorContainer>
+              <ErrorContent>
+                <Accordion
+                  title="CONNECTED EMAILS"
+                  link={{
+                    title: "EDIT",
+                    onClick: () => {
+                      // dispatch({
+                      //   type: "set-bottom-modal",
+                      //   modal: { modalType: "manage-emails", goBackToSupport: true }
+                      // });
+                    }
+                  }}
+                  displayOnly={true}
+                  children={self.emails.map((email) => {
+                    return {
+                      title: email,
+                      key: email
+                    };
+                  })}
+                />
+              </ErrorContent>
+              <Button2
+                onClick={() => {
+                  window.open(
+                    `mailto:${ZUPASS_SUPPORT_EMAIL}?subject=Ticket Support (${self.emails.join(
+                      ", "
+                    )})&body=Hi, I'd like to request support on finding my ticket in Zupass. My email(s) are listed in the subject of this email.`
+                  );
+                }}
+              >
+                Contact support
+              </Button2>
+            </ErrorContainer>
+          )}
           {/* FIXME: Removing the back button here until we have a better resolution to TG webview */}
           {/* https://linear.app/0xparc-pcd/issue/0XP-1495/the-back-button-for-zktelegram-prove-page-doesnt-work  */}
           {/* <Button2
@@ -331,8 +364,24 @@ const AbsoluteContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
+
   height: 100%;
   width: 100%;
   z-index: 100;
   background: white;
+`;
+
+const ErrorContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+`;
+
+const ErrorContent = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `;
