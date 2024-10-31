@@ -100,15 +100,18 @@ export const PageCircleButton = styled.button<{
     disabled ? disabledCSS : undefined}
 `;
 
+const NavigationContainer = styled.div`
+  display: flex;
+  gap: 12px;
+  align-self: center;
+`;
 const ButtonsContainer = styled.div`
   display: flex;
-  position: absolute;
+  flex-direction: column;
   gap: 12px;
-  top: ${TicketCardHeight +
-  BUTTONS_CONTAINER_HEIGHT / 2 +
-  20}px; /* 20 px gap above card */
-  left: 50%;
-  transform: translateX(-50%);
+  margin-bottom: 36px;
+  margin-top: 24px;
+  padding: 0 20px;
 `;
 
 const TicketsContainer = styled.div<{ $width: number }>`
@@ -346,6 +349,9 @@ export const NewHomeScreen = (): ReactElement => {
       {(!tickets.length || isInvalidUser) && (
         <NoUpcomingEventsState isLandscape={isLandscape} />
       )}
+
+      <Typography> test</Typography>
+      <Typography> natenarteina</Typography>
       {tickets.length > 0 && (
         <>
           <SwipeViewContainer
@@ -379,121 +385,110 @@ export const NewHomeScreen = (): ReactElement => {
               {tickets.map(([eventId, packs], i) => {
                 const eventDetails = getEventDetails(packs[0]);
                 return (
-                  <Container key={eventId} ticketsAmount={tickets.length}>
-                    <TicketCard
-                      ticketWidth={cardWidth}
-                      address={eventDetails.eventLocation}
-                      title={eventDetails.eventName}
-                      imgSource={eventDetails.imageUrl}
-                      ticketCount={packs.length}
-                      cardColor={i % 2 === 0 ? "purple" : "orange"}
-                    />
-                    <ZappsAndTicketsContainer>
-                      {Object.keys(appConfig.embeddedZapps).length && (
-                        <ZappButtonsContainer>
-                          {Object.entries(appConfig.embeddedZapps).map(
-                            ([zappName, url]) => (
-                              <ZappButton
-                                key={zappName}
-                                onClick={() => {
-                                  setZappUrl(url);
-                                  setParams({ folder: zappName });
-                                }}
-                              >
-                                <ZappScreen
-                                  url={new URL("button", url).toString()}
-                                />
-                              </ZappButton>
-                            )
-                          )}
-                        </ZappButtonsContainer>
-                      )}
-                      <TicketsContainer
-                        $width={cardWidth}
-                        key={packs.map((pack) => pack.eventTicket.id).join("-")}
-                      >
-                        {packs.map((pack) => {
-                          return (
-                            <CardBody
-                              showDownloadButton={true}
-                              key={pack.eventName}
-                              addOns={
-                                pack.addOns.length > 0
-                                  ? {
-                                      text: `View ${pack.addOns.length} add-on items`,
-                                      onClick(): void {
-                                        dispatch({
-                                          type: "set-bottom-modal",
-                                          modal: {
-                                            addOns: pack.addOns,
-                                            modalType: "ticket-add-ons"
-                                          }
-                                        });
+                  <TicketsContainer
+                    $width={cardWidth}
+                    key={packs.map((pack) => pack.eventTicket.id).join("-")}
+                  >
+                    {packs.map((pack) => {
+                      return (
+                        <CardBody
+                          showDownloadButton={true}
+                          key={pack.eventName}
+                          addOns={
+                            pack.addOns.length > 0
+                              ? {
+                                  text: `View ${pack.addOns.length} add-on items`,
+                                  onClick(): void {
+                                    dispatch({
+                                      type: "set-bottom-modal",
+                                      modal: {
+                                        addOns: pack.addOns,
+                                        modalType: "ticket-add-ons"
                                       }
-                                    }
-                                  : undefined
-                              }
-                              ref={(ref) => {
-                                if (!ref) return;
-                                const group = ticketsRef.current.get(eventId);
-                                if (!group) {
-                                  ticketsRef.current.set(eventId, [ref]);
-                                  return;
+                                    });
+                                  }
                                 }
-                                group.push(ref);
-                              }}
-                              pcd={pack.eventTicket}
-                              isMainIdentity={false}
-                            />
-                          );
-                        })}
-                      </TicketsContainer>
-                    </ZappsAndTicketsContainer>
-                  </Container>
+                              : undefined
+                          }
+                          ref={(ref) => {
+                            if (!ref) return;
+                            const group = ticketsRef.current.get(eventId);
+                            if (!group) {
+                              ticketsRef.current.set(eventId, [ref]);
+                              return;
+                            }
+                            group.push(ref);
+                          }}
+                          pcd={pack.eventTicket}
+                          isMainIdentity={false}
+                        />
+                      );
+                    })}
+                  </TicketsContainer>
                 );
               })}
             </_SwipableViews>
             {tickets.length > 1 && (
               <ButtonsContainer>
-                <PageCircleButton
-                  disabled={currentPos === 0}
-                  onClick={() => {
-                    setCurrentPos((old) => {
-                      if (old === 0) return old;
-                      return old - 1;
-                    });
-                  }}
-                >
-                  <ChevronLeftIcon
-                    width={24}
-                    height={24}
-                    color="var(--text-tertiary)"
-                  />
-                </PageCircleButton>
-                <Typography
-                  fontSize={14}
-                  color="#8B94AC"
-                  fontWeight={500}
-                  family="Rubik"
-                  style={{ display: "flex", alignItems: "center" }}
-                >
-                  {currentPos + 1} OF {tickets.length}
-                </Typography>
-                <PageCircleButton
-                  disabled={currentPos === tickets.length - 1}
-                  onClick={() => {
-                    setCurrentPos((old) => {
-                      if (old === tickets.length - 1) return old;
-                      return old + 1;
-                    });
-                  }}
-                >
-                  <ChevronRightIcon
-                    width={24}
-                    height={24}
-                    color="var(--text-tertiary)"
-                  />
-                </PageCircleButton>
+                <NavigationContainer>
+                  <PageCircleButton
+                    disabled={currentPos === 0}
+                    onClick={() => {
+                      setCurrentPos((old) => {
+                        if (old === 0) return old;
+                        return old - 1;
+                      });
+                    }}
+                  >
+                    <ChevronLeftIcon
+                      width={24}
+                      height={24}
+                      color="var(--text-tertiary)"
+                    />
+                  </PageCircleButton>
+                  <Typography
+                    fontSize={14}
+                    color="#8B94AC"
+                    fontWeight={500}
+                    family="Rubik"
+                    style={{ display: "flex", alignItems: "center" }}
+                  >
+                    {currentPos + 1} OF {tickets.length}
+                  </Typography>
+                  <PageCircleButton
+                    disabled={currentPos === tickets.length - 1}
+                    onClick={() => {
+                      setCurrentPos((old) => {
+                        if (old === tickets.length - 1) return old;
+                        return old + 1;
+                      });
+                    }}
+                  >
+                    <ChevronRightIcon
+                      width={24}
+                      height={24}
+                      color="var(--text-tertiary)"
+                    />
+                  </PageCircleButton>
+                </NavigationContainer>
+
+                {Object.keys(appConfig.embeddedZapps).length && (
+                  <ZappButtonsContainer>
+                    {Object.entries(appConfig.embeddedZapps).map(
+                      ([zappName, url]) => (
+                        <ZappButton
+                          key={zappName}
+                          onClick={() => {
+                            setZappUrl(url);
+                            setParams({ folder: zappName });
+                          }}
+                        >
+                          <ZappScreen url={new URL("button", url).toString()} />
+                        </ZappButton>
+                      )
+                    )}
+                  </ZappButtonsContainer>
+                )}
               </ButtonsContainer>
             )}
           </SwipeViewContainer>
