@@ -19,7 +19,7 @@ const Banner = styled.div`
   justify-content: center;
   border-bottom: 1px solid #1d8289;
   background: linear-gradient(0deg, #00605c 0%, #00785e 100%);
-  width: ${MAX_WIDTH_SCREEN}px;
+  width: 100%;
   height: ${BANNER_HEIGHT}px;
   left: 50%;
   transform: translateX(-50%);

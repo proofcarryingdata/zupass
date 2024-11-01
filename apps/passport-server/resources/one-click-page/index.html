@@ -56,10 +56,14 @@
     width: 100%;
     display: flex;
     flex-direction: column;
-    max-width: var(--max-width);
+    align-items: center;
     max-height: calc(100vh);
     position: relative;
-    background: url("{{{backgroundImage}}}") lightgray 50% / cover no-repeat;
+    background: url("{{{zupassUrl}}}/images/devcon/devcon-landscape.webp") lightgray 50% / cover no-repeat;
+
+    @media (max-width: 460px) {
+      background: url("{{{zupassUrl}}}/images/devcon/devcon-portrait.webp") lightgray 50% / cover no-repeat;
+    }
   }
 
   .scroll {
@@ -86,6 +90,7 @@
     align-self: stretch;
     border-radius: 16px;
     background: var(--white);
+    /* max-width: var(--max-width); */
     &:not(:last-child) {
       margin-bottom: 25px;
     }
@@ -196,6 +201,7 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    /* max-width: var(--max-width); */
     /* Fallback for older browsers */
     color: #154133;
     text-align: center;
@@ -226,6 +232,7 @@
     right: 0;
     overflow-x: hidden;
     overflow-y: hidden;
+    /* max-width: var(--max-width); */
     backdrop-filter: blur(4px);
     z-index: 9999;
     padding: 0px 12px 12px 12px;
@@ -303,7 +310,6 @@
   .page-header {
     padding: 25px 0 25px 0;
     width: 100%;
-    max-width: var(--max-width);
     margin: 0 auto;
     display: flex;
     align-items: center;
@@ -314,6 +320,7 @@
     top: 0;
     left: 50%;
     transform: translateX(-50%);
+    z-index: 100;
   }
 
   .swiper-container {
@@ -449,7 +456,6 @@
 </style>
 
 <body>
-  <main class="container" ontouchstart>
     <div class="page-header" id="page-header">
       <svg xmlns="http://www.w3.org/2000/svg" width="118" height="21" viewBox="0 0 118 21" fil="none">
         <path
@@ -472,6 +478,7 @@
           fill="#FFD6A0" />
       </svg>
     </div>
+    <main class="container" ontouchstart>
     <div class="scroll">
 
       <div class="header">
