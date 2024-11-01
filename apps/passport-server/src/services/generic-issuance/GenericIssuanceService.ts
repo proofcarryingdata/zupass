@@ -438,10 +438,10 @@ export class GenericIssuanceService {
       );
     }
 
-    const tickets = await pipeline.getAllTickets();
+    const tickets = await pipeline.getAllTicketsForEmail(email);
 
     const matchingTickets = tickets.atoms.filter(
-      (atom) => atom.email === email && atom.orderCode === orderCode
+      (atom) => atom.orderCode === orderCode
     );
 
     const ticketDatas = matchingTickets.map(

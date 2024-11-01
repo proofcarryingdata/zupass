@@ -12,6 +12,7 @@ import {
   GenericPretixProductCategorySchema,
   GenericPretixProductSchema
 } from "@pcd/passport-interface";
+import { toError } from "@pcd/util";
 import { setMaxListeners } from "events";
 import PQueue from "p-queue";
 import { z } from "zod";
@@ -29,6 +30,7 @@ export interface IGenericPretixAPI {
     orgUrl: string,
     token: string,
     eventID: string,
+    batch: boolean,
     abortController?: AbortController
   ): Promise<GenericPretixOrder[]>;
   /**
@@ -91,9 +93,8 @@ export interface IGenericPretixAPI {
 }
 
 export interface GenericPretixAPIOptions {
-  requestsPerInterval?: number;
-  concurrency?: number;
-  intervalMs?: number;
+  maxRequestsPerMinute?: number;
+  maxConcurrency?: number;
 }
 
 /**
@@ -107,9 +108,9 @@ export interface GenericPretixAPIOptions {
  * occur at a time.
  */
 class OrganizerRequestQueue {
+  private readonly interval = 60_000;
   private readonly maxConcurrentRequests: number;
   private readonly intervalCap: number;
-  private readonly interval: number;
   private cancelController: AbortController;
   private requestQueue: PQueue;
 
@@ -118,13 +119,12 @@ class OrganizerRequestQueue {
     cancelController: AbortController,
     onIdle: () => void
   ) {
-    this.intervalCap = options.requestsPerInterval;
-    this.maxConcurrentRequests = options.concurrency;
-    this.interval = options.intervalMs;
+    this.intervalCap = options.maxRequestsPerMinute;
+    this.maxConcurrentRequests = options.maxConcurrency;
     this.cancelController = cancelController;
     this.requestQueue = new PQueue({
-      concurrency: this.maxConcurrentRequests,
       interval: this.interval,
+      concurrency: this.maxConcurrentRequests,
       intervalCap: this.intervalCap
     });
     // The "idle" handler can be used by the caller to delete this queue once
@@ -193,37 +193,49 @@ class OrganizerRequestQueue {
  */
 export class GenericPretixAPI implements IGenericPretixAPI {
   private cancelController: AbortController;
-  private readonly maxConcurrentRequests: number;
-  private readonly intervalCap: number;
-  private readonly interval: number;
+
+  private readonly defaultMaxRequestsPerMinute = 100;
+  private readonly defaultMaxConcurrentRequests = 1;
+
+  private readonly batchedMaxRequestsPerMinute = 200;
+  private readonly batchedMaxConcurrentRequests = 30;
+
   private organizerQueues: Record<string, OrganizerRequestQueue>;
 
-  public constructor(options?: GenericPretixAPIOptions) {
-    // These configuration options apply to the per-organizer queues:
-    // By default, allow 100 requests per organizer per minute. Pretix maximum
-    // is 300.
-    this.intervalCap = options?.requestsPerInterval ?? 100;
-    // By default, allow one request at a time (per organizer).
-    this.maxConcurrentRequests = options?.concurrency ?? 1;
-    // Rate limit time period is 60 seconds (one minute).
-    this.interval = options?.intervalMs ?? 60_000;
-    // No organizer queues exist at startup.
+  public constructor() {
     this.organizerQueues = {};
-    // Used to cancel all pending requests.
     this.cancelController = this.newCancelController();
   }
 
   private newCancelController(): AbortController {
     const ac = new AbortController();
-    // Since we never have more than maxConcurrentRequests at the same time,
-    // there should never be more than that number of event listeners.
-    setMaxListeners(this.maxConcurrentRequests, ac.signal);
+    setMaxListeners(1000, ac.signal);
     return ac;
   }
 
   public cancelPendingRequests(): void {
     this.cancelController.abort();
     this.cancelController = this.newCancelController();
+  }
+
+  /**
+   * Check if batching is enabled for a given organizer. Enabled by the
+   * `PRETIX_BATCH_ENABLED_FOR` environment variable. See
+   * `apps/passport-server/.env.example` for more details.
+   */
+  private isBatchingEnabled(orgUrl: string): boolean {
+    try {
+      const enabledFor = JSON.parse(
+        process.env.PRETIX_BATCH_ENABLED_FOR ?? "[]"
+      );
+      return enabledFor instanceof Array && enabledFor.includes(orgUrl);
+    } catch (e) {
+      logger(
+        `[GENERIC PRETIX] Error checking if batching is enabled for ${orgUrl}`,
+        e
+      );
+      return false;
+    }
   }
 
   /**
@@ -237,11 +249,16 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   private getOrCreateQueue(orgUrl: string): OrganizerRequestQueue {
     let queue: OrganizerRequestQueue = this.organizerQueues[orgUrl];
     if (!queue) {
+      const batchingEnabled = this.isBatchingEnabled(orgUrl);
+
       queue = new OrganizerRequestQueue(
         {
-          intervalMs: this.interval,
-          requestsPerInterval: this.intervalCap,
-          concurrency: this.maxConcurrentRequests
+          maxRequestsPerMinute: batchingEnabled
+            ? this.batchedMaxRequestsPerMinute
+            : this.defaultMaxRequestsPerMinute,
+          maxConcurrency: batchingEnabled
+            ? this.batchedMaxConcurrentRequests
+            : this.defaultMaxConcurrentRequests
         },
         this.cancelController,
         () => {
@@ -461,13 +478,196 @@ export class GenericPretixAPI implements IGenericPretixAPI {
     });
   }
 
-  // Fetch all orders for a given event.
-  public async fetchOrders(
+  // Fetch all orders for a given event in parallel batches, which is faster
+  // than fetching them sequentially.
+  private async fetchOrdersParallelBatch(
     orgUrl: string,
     token: string,
     eventID: string,
     abortController?: AbortController
   ): Promise<GenericPretixOrder[]> {
+    return traced(TRACE_SERVICE, "fetchOrdersParallelBatch", async (span) => {
+      /**
+       * This type is only relevant internally to this function. It represents a
+       * response by the Pretix API to a request for a page of orders in a particular event.
+       */
+      type PageResult =
+        | {
+            orders: GenericPretixOrder[];
+            error?: never;
+            reachedEnd?: never;
+          }
+        | {
+            orders?: never;
+            error: Error;
+            reachedEnd?: never;
+          }
+        | {
+            orders?: never;
+            error?: never;
+            reachedEnd: true;
+          };
+
+      /**
+       * An 'actual error' is an error that is *NOT* due to reaching the end of
+       * the list of orders. I.e. a 404 error for the first page, or *ANY* other
+       * error for any other page.
+       */
+      function findActualErrors(pageResults: PageResult[]): PageResult[] {
+        return pageResults.filter((pageResult) => pageResult.error);
+      }
+
+      /**
+       * We 'reached the end' when we get a 404 on a request for a page of orders
+       * that is not the first page. We've not reached the end successfully if there
+       * is an 'actual error', as defined by the implementation of {@link findActualErrors}.
+       */
+      function reachedEnd(pageResults: PageResult[]): boolean {
+        if (findActualErrors(pageResults).length !== 0) {
+          return false;
+        }
+
+        return pageResults.some((pageResult) => pageResult.reachedEnd);
+      }
+
+      /**
+       * The quantity of pages of orders to fetch in parallel in a single 'batch'.
+       */
+      const batchSize = 30;
+
+      /**
+       * The maximum page index that this batch loading mechanism will fetch. It's intended
+       * to prevent infinite loops in case of bugs in the Pretix API or this code.
+       */
+      const maxPages = 1000;
+
+      const orders: GenericPretixOrder[] = [];
+      let cursor = 0;
+
+      span?.setAttribute("org_url", orgUrl);
+
+      // to prevent infinite loops, limit the number of pages we fetch to `maxPages`
+      while (cursor < maxPages - batchSize) {
+        const pageIndexes = new Array(batchSize)
+          .fill(0)
+          .map((_, i) => i + cursor);
+
+        // for each page index, load that page. none of these promises should throw,
+        // the page load result state is encapsulated in the `PageResult` type, which is
+        // why we can use `Promise.all` here.
+        const batchOfPages = await Promise.all(
+          pageIndexes.map(async (pageIndex): Promise<PageResult> => {
+            try {
+              const pageUrl =
+                `${orgUrl}/events/${eventID}/orders/` +
+                (pageIndex > 0 ? `?page=${pageIndex}` : "");
+
+              logger(`[GENERIC PRETIX] Fetching orders ${pageUrl}`);
+
+              const res = await this.getOrCreateQueue(orgUrl).fetch(
+                pageUrl,
+                {
+                  headers: { Authorization: `Token ${token}` }
+                },
+                0,
+                abortController
+              );
+
+              // an error could be legitimate, or because we've reached the end of the set of orders.
+              if (!res.ok) {
+                // if we get a 404 for anything other than the first page, that is ok, since that means
+                // we've reached the end of the list of orders.
+                if (res.status === 404 && pageIndex !== 0) {
+                  return {
+                    reachedEnd: true
+                  };
+                }
+                // otherwise, all other errors are actual errors
+                else {
+                  return {
+                    error: new Error(
+                      `[GENERIC PRETIX] Error fetching ${pageUrl}: ${res.status} ${res.statusText}`
+                    )
+                  };
+                }
+              }
+
+              const page = await res.json();
+              const results = z
+                .array(GenericPretixOrderSchema)
+                .safeParse(page.results);
+
+              // the page must parse successfully - incorrectly formatted responses are considered
+              // to be 'real' errors.
+              if (results.success) {
+                return {
+                  orders: results.data
+                };
+              } else {
+                return {
+                  error: new Error(
+                    `[GENERIC PRETIX] Error parsing response from ${pageUrl}: ${results.error.message}`
+                  )
+                };
+              }
+            } catch (e) {
+              return {
+                error: toError(e)
+              };
+            }
+          })
+        );
+
+        const fetchedOrdersInBatch: GenericPretixOrder[] = batchOfPages
+          .map((result) => result.orders ?? [])
+          .flat();
+
+        orders.push(...fetchedOrdersInBatch);
+
+        const actualErrors = findActualErrors(batchOfPages);
+
+        // an actual error happens when we get an error other than a 404 on fetching a page
+        // of orders, or when we get a 404 response to a request for the first page. If we have
+        // an actual error, we throw it.
+        if (actualErrors.length !== 0) {
+          throw actualErrors[0].error;
+        }
+        // if we haven't encountered a real error yet, and also haven't reached the end of
+        // the set of pages of orders, then we increment the cursor and continue in this loop
+        // to fetch the next batch of pages.
+        else if (!reachedEnd(batchOfPages)) {
+          cursor += batchSize;
+          continue;
+        }
+        // otherwise, if we haven't encountered a real error, and we've 'reached the end' of the
+        // list of pages of orders, then we are done fetching all the orders, and we break
+        // out of the loop.
+        else {
+          break;
+        }
+      }
+
+      return orders;
+    });
+  }
+
+  // Fetch all orders for a given event.
+  public async fetchOrders(
+    orgUrl: string,
+    token: string,
+    eventID: string,
+    batch: boolean,
+    abortController?: AbortController
+  ): Promise<GenericPretixOrder[]> {
+    if (batch && this.isBatchingEnabled(orgUrl)) {
+      return this.fetchOrdersParallelBatch(
+        orgUrl,
+        token,
+        eventID,
+        abortController
+      );
+    }
+
     return traced(TRACE_SERVICE, "fetchOrders", async (span) => {
       span?.setAttribute("org_url", orgUrl);
       const orders = [];
