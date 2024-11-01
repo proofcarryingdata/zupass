@@ -625,6 +625,7 @@ export class PretixPipeline implements BasePipeline {
         orgUrl,
         token,
         eventId,
+        this.definition.options.batchFetch ?? false,
         this.abort
       );
       const checkinLists = await this.api.fetchEventCheckinLists(
@@ -2301,6 +2302,18 @@ export class PretixPipeline implements BasePipeline {
     return {
       atoms: await this.db.load(this.id),
       manual: this.definition.options.manualTickets ?? []
+    };
+  }
+
+  public async getAllTicketsForEmail(email: string): Promise<{
+    atoms: PretixAtom[];
+    manual: ManualTicket[];
+  }> {
+    return {
+      atoms: await this.db.loadByEmail(this.id, email.toLowerCase()),
+      manual: (this.definition.options.manualTickets ?? []).filter(
+        (mt) => mt.attendeeEmail.toLowerCase() === email.toLowerCase()
+      )
     };
   }
 

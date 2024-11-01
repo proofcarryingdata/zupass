@@ -438,11 +438,11 @@ export class GenericIssuanceService {
       );
     }
 
-    const tickets = await pipeline.getAllTickets();
+    const tickets = await pipeline.getAllTicketsForEmail(email);
 
-    // Check that a valid atom exists with the given orderCode and email
+    // Check that a valid atom exists with the given orderCode
     const validAtom = tickets.atoms.find(
-      (atom) => atom.orderCode === orderCode && atom.email === email
+      (atom) => atom.orderCode === orderCode
     );
     if (!validAtom) {
       throw new PCDHTTPError(
@@ -451,11 +451,7 @@ export class GenericIssuanceService {
       );
     }
 
-    const matchingTickets = tickets.atoms.filter(
-      (atom) => atom.email === email
-    );
-
-    const ticketDatas = matchingTickets.map(
+    const ticketDatas = tickets.atoms.map(
       (atom) => pipeline.atomToPODTicketData(atom, "1") // fake semaphore id as it's not needed for the ticket preview
     );
 
