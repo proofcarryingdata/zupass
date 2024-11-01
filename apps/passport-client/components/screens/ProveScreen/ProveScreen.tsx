@@ -3,9 +3,11 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ReactElement } from "react";
 import { useSearchParams } from "react-router-dom";
+import styled from "styled-components";
 import { ManageEmailModal } from "../../../new-components/shared/Modals/ManageEmailsModal";
 import { ProveModal } from "../../../new-components/shared/Modals/ProveModal";
 import { NewLoader } from "../../../new-components/shared/NewLoader";
+import { Typography } from "../../../new-components/shared/Typography";
 import {
   useDispatch,
   useIsSyncSettled,
@@ -14,6 +16,7 @@ import {
 } from "../../../src/appHooks";
 import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { AppContainer } from "../../shared/AppContainer";
 import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
@@ -54,7 +57,16 @@ export const ProveScreen = (): ReactElement | null => {
   });
 
   if (!syncSettled) {
-    return <NewLoader columns={5} rows={5} />;
+    return (
+      <AppContainer bg="gray" fullscreen>
+        <LoaderContainer>
+          <NewLoader columns={5} rows={5} />
+          <Typography fontSize={18} fontWeight={800} color="#8B94AC">
+            FETCHING PODS
+          </Typography>
+        </LoaderContainer>
+      </AppContainer>
+    );
   }
 
   return (
@@ -64,3 +76,12 @@ export const ProveScreen = (): ReactElement | null => {
     </>
   );
 };
+
+const LoaderContainer = styled.div`
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+`;
