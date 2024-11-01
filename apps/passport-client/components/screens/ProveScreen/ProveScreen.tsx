@@ -3,14 +3,20 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ReactElement } from "react";
 import { useSearchParams } from "react-router-dom";
+import { ManageEmailModal } from "../../../new-components/shared/Modals/ManageEmailsModal";
 import { ProveModal } from "../../../new-components/shared/Modals/ProveModal";
-import { useDispatch, useLoginIfNoSelf, useSelf } from "../../../src/appHooks";
+import { NewLoader } from "../../../new-components/shared/NewLoader";
+import {
+  useDispatch,
+  useIsSyncSettled,
+  useLoginIfNoSelf,
+  useSelf
+} from "../../../src/appHooks";
+import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
-import { pendingRequestKeys } from "../../../src/sessionStorage";
-import { ManageEmailModal } from "../../../new-components/shared/Modals/ManageEmailsModal";
 
 export function getScreen(request: PCDGetRequest): JSX.Element | null {
   if (request.type !== PCDRequestType.Get) {
@@ -30,6 +36,7 @@ export function getScreen(request: PCDGetRequest): JSX.Element | null {
 
 export const ProveScreen = (): ReactElement | null => {
   useSyncE2EEStorage();
+  const syncSettled = useIsSyncSettled();
   const [params] = useSearchParams();
   const self = useSelf();
   const request = JSON.parse(params.get("request") ?? "{}") as PCDGetRequest;
@@ -45,6 +52,11 @@ export const ProveScreen = (): ReactElement | null => {
     type: "set-bottom-modal",
     modal: { request, modalType: "prove" }
   });
+
+  if (!syncSettled) {
+    return <NewLoader />;
+  }
+
   return (
     <>
       <ProveModal />;
