@@ -75,6 +75,9 @@
     align-self: stretch;
     border-radius: 16px;
     background: var(--white);
+    &:not(:last-child) {
+      margin-bottom: 25px;
+    }
 
     /* shadow-sm */
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
@@ -492,6 +495,8 @@
               d="M20.7908 18.8751C17.9001 18.8751 15.5488 16.6925 15.5488 14.0098C15.5488 13.6068 15.8746 13.2803 16.2766 13.2803C16.6787 13.2803 17.0045 13.6068 17.0045 14.0098C17.0045 15.8878 18.7029 17.4154 20.7901 17.4154C22.8774 17.4154 24.5758 15.8878 24.5758 14.0098C24.5758 13.6068 24.9023 13.2803 25.3037 13.2803C25.705 13.2803 26.0315 13.6068 26.0315 14.0098C26.0315 16.6925 23.6802 18.8751 20.7895 18.8751H20.7908Z"
               fill="#154133" />
           </svg></button>
+        
+        {{#tickets}}
         <div class="ticket">
           <img class="ticket__qr-code" src="{{qr}}" draggable="false" />
           <div class="ticket__text-container">
@@ -502,7 +507,7 @@
               <span class="ticket__subtitle--text">{{ticketName}}</span>
             </div>
           </div>
-          {{#addonsCount}}
+          {{#showAddons}}
           <button id="addons-btn" type="button" class="ticket__addons-btn">
             {{#moreThanOneAddon}}
             <span class="ticket__subtitle--text" style="font-size: 16px;">View {{addonsCount}}
@@ -529,12 +534,13 @@
                 d="M8.5 9.417a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM8.5 13.083a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM13.083 8.5a.917.917 0 1 0 0 1.833.917.917 0 0 0 0-1.833ZM12.166 13.084a.917.917 0 1 1 1.833 0 .917.917 0 0 1-1.833 0ZM11.25 10.333a.917.917 0 1 0 0 1.833.917.917 0 0 0 0-1.833Z" />
             </svg>
           </button>
-          {{/addonsCount}}
-          {{^addonsCount}}
+          {{/showAddons}}
+          {{^showAddons}}
           <!-- spacer when we dont have any addon -->
           <div style="height:16px;" />
-          {{/addonsCount}}
+          {{/showAddons}}
         </div>
+        {{/tickets}}
       </div>
     </div>
   </main>

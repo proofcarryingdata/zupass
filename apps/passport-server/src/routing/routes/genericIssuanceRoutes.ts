@@ -826,15 +826,21 @@ export function initGenericIssuanceRoutes(
       );
 
       const rendered = Mustache.render(file, {
+        tickets: await Promise.all(
+          main.map(async (ticket, i) => ({
+            // only show add-ons for the first ticket, and if we have 1 or more add-on
+            showAddons: i === 0 && addOnsQrs.length > 0,
+            attendeeName:
+              ticket.attendeeName !== ""
+                ? ticket.attendeeName.toUpperCase()
+                : ticket.eventName.toUpperCase(),
+            attendeeEmail: ticket.attendeeEmail,
+            ticketName: ticket.ticketName,
+            qr: await getTicketImage(ticket)
+          }))
+        ),
         eventName: ticket.eventName.toUpperCase(),
-        attendeeName:
-          ticket.attendeeName !== ""
-            ? ticket.attendeeName.toUpperCase()
-            : ticket.eventName.toUpperCase(),
-        attendeeEmail: ticket.attendeeEmail,
-        ticketName: ticket.ticketName,
         eventLocation: ticket.eventLocation,
-        qr: await getTicketImage(ticket),
         backgroundImage: ticket.imageUrl,
         count: ticketsCount,
         isMoreThanOne: ticketsCount > 1,
