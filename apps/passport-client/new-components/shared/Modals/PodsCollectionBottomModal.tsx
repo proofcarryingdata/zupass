@@ -29,7 +29,6 @@ import {
   useDispatch,
   usePCDCollection
 } from "../../../src/appHooks";
-import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { ScrollIndicator } from "../../screens/Home/ScrollIndicator";
 import { Avatar } from "../Avatar";
 import { BottomModal } from "../BottomModal";
@@ -199,7 +198,6 @@ export const PodsCollectionList = ({
 
 const SearchPodInputContainer = styled.div`
   padding: 0 24px 24px 24px;
-  /* max-width: ${MAX_WIDTH_SCREEN}px; */
 `;
 
 export const PodsCollectionBottomModal = (): JSX.Element | null => {
