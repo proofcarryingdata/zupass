@@ -1,3 +1,5 @@
+import { isEmailPCD } from "@pcd/email-pcd";
+import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import {
   ReactElement,
   useEffect,
@@ -5,17 +7,15 @@ import {
   useRef,
   useState
 } from "react";
-import { useDispatch, usePCDCollection } from "../../../src/appHooks";
 import { useSearchParams } from "react-router-dom";
-import { isEmailPCD } from "@pcd/email-pcd";
-import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import { hideScrollCSS, replaceDotWithSlash } from "../../shared/utils";
-import { nextFrame } from "../../../src/util";
 import styled from "styled-components";
-import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
-import { ScrollIndicator } from "./ScrollIndicator";
-import { Typography } from "../../shared/Typography";
+import { useDispatch, usePCDCollection } from "../../../src/appHooks";
 import { BANNER_HEIGHT } from "../../../src/sharedConstants";
+import { nextFrame } from "../../../src/util";
+import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
+import { Typography } from "../../shared/Typography";
+import { hideScrollCSS, replaceDotWithSlash } from "../../shared/utils";
+import { ScrollIndicator } from "./ScrollIndicator";
 
 const EMPTY_CARD_CONTAINER_HEIGHT = 220;
 const EmptyCardContainer = styled.div<{ longVersion: boolean }>`
