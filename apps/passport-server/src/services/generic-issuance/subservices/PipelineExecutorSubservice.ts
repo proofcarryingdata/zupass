@@ -48,7 +48,7 @@ export class PipelineExecutorSubservice {
    * 2. save that data, represented by {@link PipelineAtom}, and a corresponding
    *    {@link PipelineLoadSummary}, which contains information about that particular
    *    data load.
-   * 3. wait {@link PIPELINE_REFRESH_INTERVAL_MS} milliseconds
+   * 3. wait until the time is at least {@link PIPELINE_REFRESH_INTERVAL_MS} milliseconds after the last load started
    * 4. go back to step one
    */
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
@@ -67,6 +67,8 @@ export class PipelineExecutorSubservice {
   private discordService: DiscordService | null;
   private rollbarService: RollbarService | null;
   private nextLoadTimeout: NodeJS.Timeout | undefined;
+  private lastLoadStartedTimestamp: number | undefined;
+  private lastLoadCompletedTimestamp: number | undefined;
   private db: IPipelineAtomDB;
   private pipelineDB: IPipelineDefinitionDB;
   private localFileService: LocalFileService | null;
@@ -425,6 +427,8 @@ export class PipelineExecutorSubservice {
    */
   private async performAllPipelineLoads(): Promise<void> {
     return traced(SERVICE_NAME, "performAllPipelineLoads", async (span) => {
+      this.lastLoadStartedTimestamp = Date.now();
+
       const pipelineIds = str(this.pipelineSlots.map((p) => p.definition.id));
       logger(
         LOG_TAG,
@@ -472,6 +476,8 @@ export class PipelineExecutorSubservice {
       );
 
       logger(LOG_TAG, "finished performing all pipeline loads");
+
+      this.lastLoadCompletedTimestamp = Date.now();
     });
   }
 
@@ -508,17 +514,27 @@ export class PipelineExecutorSubservice {
       }
     );
 
+    // we schedule the next load to happen `PIPELINE_REFRESH_INTERVAL_MS` after
+    // the last load *started*. Thus, we cap the amount of pipeline reloads to be
+    // one per `PIPELINE_REFRESH_INTERVAL_MS`.
+    const nextLoadTimestamp =
+      (this.lastLoadStartedTimestamp ?? Date.now()) +
+      PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS;
+
+    const msUntilNextLoadTimestamp = Math.max(
+      nextLoadTimestamp - Date.now(),
+      1000
+    );
+
     logger(
       LOG_TAG,
       "scheduling next pipeline refresh for",
-      Math.floor(
-        PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS / 1000
-      ),
+      Math.floor(msUntilNextLoadTimestamp / 1000),
       "s from now"
     );
 
     this.nextLoadTimeout = setTimeout(() => {
       this.startPipelineLoadLoop();
-    }, PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS);
+    }, msUntilNextLoadTimestamp);
   }
 }
