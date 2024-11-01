@@ -54,7 +54,7 @@ export const ProveScreen = (): ReactElement | null => {
   });
 
   if (!syncSettled) {
-    return <NewLoader />;
+    return <NewLoader columns={5} rows={5} />;
   }
 
   return (
