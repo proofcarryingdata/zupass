@@ -38,9 +38,9 @@ import { GroupType, List } from "../List";
 import { Typography } from "../Typography";
 import {
   POD_FOLDER_DISPLAY_SEPERATOR,
+  hideScrollCSS,
   replaceDotWithSlash,
-  useOrientation,
-  hideScrollCSS
+  useOrientation
 } from "../utils";
 
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {

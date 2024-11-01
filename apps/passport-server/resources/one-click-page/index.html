@@ -67,7 +67,7 @@
   }
 
   .scroll {
-    padding: 0 20px;
+    padding: 0 20px 25px;
     height: 100%;
     overflow: scroll;
     -ms-overflow-style: none;
@@ -90,10 +90,7 @@
     align-self: stretch;
     border-radius: 16px;
     background: var(--white);
-    /* max-width: var(--max-width); */
-    &:not(:last-child) {
-      margin-bottom: 25px;
-    }
+    margin-bottom: 25px;
 
     /* shadow-sm */
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
@@ -156,7 +153,6 @@
     display: flex;
     flex-direction: row;
     gap: 4px;
-    /* justify-content: center; */
   }
 
   .header {
@@ -201,7 +197,6 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
-    /* max-width: var(--max-width); */
     /* Fallback for older browsers */
     color: #154133;
     text-align: center;
@@ -232,7 +227,6 @@
     right: 0;
     overflow-x: hidden;
     overflow-y: hidden;
-    /* max-width: var(--max-width); */
     backdrop-filter: blur(4px);
     z-index: 9999;
     padding: 0px 12px 12px 12px;
