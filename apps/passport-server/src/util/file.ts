@@ -1,7 +1,12 @@
 import { promises as fs } from "fs";
 
+interface FileCacheData {
+  content: string;
+  mtime: number;
+}
+
 export const readFileWithCache = (() => {
-  const cache = new Map();
+  const cache = new Map<string, FileCacheData>();
 
   return async (filePath: string): Promise<string> => {
     const stats = await fs.stat(filePath);
