@@ -50,8 +50,7 @@ import { ConnectPopupScreen } from "../components/screens/ZappScreens/ConnectPop
 import {
   AppContainer,
   Background,
-  CenterColumn,
-  GlobalBackground
+  CenterColumn
 } from "../components/shared/AppContainer";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { NewHomeScreen } from "../new-components/screens/Home";
@@ -347,8 +346,7 @@ loadInitialState()
           environmentName: appConfig.rollbarEnvName
         }}
       >
-        <GlobalBackground color={"var(--bg-dark-primary)"} />
-        <Background>
+        <Background color={"var(--bg-dark-primary)"}>
           <CenterColumn defaultPadding={false}>
             <TextCenter>
               <Spacer h={64} />

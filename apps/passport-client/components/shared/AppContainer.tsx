@@ -1,6 +1,6 @@
 import { ReactNode, useCallback } from "react";
 import { Toaster } from "react-hot-toast";
-import styled, { createGlobalStyle } from "styled-components";
+import styled from "styled-components";
 import { ErrorBottomModal } from "../../new-components/shared/Modals/ErrorBottomModal";
 import {
   useAppError,
@@ -61,11 +61,10 @@ export function AppContainer({
   const col = getBackground();
   return (
     <Container $fullscreen={!!fullscreen}>
-      <GlobalBackground color={col} />
       <Banner>
         <ZupassSVG />
       </Banner>
-      <Background>
+      <Background color={col}>
         <CenterColumn defaultPadding={!noPadding}>
           {children && (
             <Toaster
@@ -86,16 +85,10 @@ export function AppContainer({
     </Container>
   );
 }
-
-export const GlobalBackground = createGlobalStyle<{ color: string }>`
-  html {
-    background: ${(p): string => p.color};
-  }
-`;
-
-export const Background = styled.div`
+export const Background = styled.div<{ color: string }>`
   width: 100%;
   min-height: 100%;
+  background: ${(p): string => p.color};
 `;
 
 export const CenterColumn = styled.div<{ defaultPadding: boolean }>`
