@@ -8284,13 +8284,24 @@
   dependencies:
     circomlib "^2.0.5"
 
-"@zk-kit/eddsa-poseidon@1.0.4", "@zk-kit/eddsa-poseidon@~1.0.4":
+"@zk-kit/eddsa-poseidon@1.0.4":
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-1.0.4.tgz#80e20fd94eca610002e58a5dc8c1716458f0cb60"
   integrity sha512-w0HrF5F+Kh+77+VK/p9qzB7wvitiZMAoWnqrmzPUM+MWlaNp0ipmtuO8KTLxnj8ACjt98GAK4voxl7XeWjC4XQ==
   dependencies:
     "@zk-kit/baby-jubjub" "1.0.3"
     "@zk-kit/utils" "1.2.1"
+    buffer "6.0.3"
+    poseidon-lite "0.3.0"
+
+"@zk-kit/eddsa-poseidon@^1.1.0":
+  version "1.1.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-1.1.0.tgz#08ef95ccbb2fbb5260617b6b5120dfb25a25229b"
+  integrity sha512-Djc+zOZjd73FpLLf32/XeVZi8GX4ShPQJGS4Iig1QMAR/2CggEi++6Jrkr9N2FM3M4MRCH1qxz2u22DjOLtASg==
+  dependencies:
+    "@zk-kit/baby-jubjub" "1.0.3"
+    "@zk-kit/utils" "1.2.1"
+    blakejs "^1.2.1"
     buffer "6.0.3"
     poseidon-lite "0.3.0"
 
@@ -9190,7 +9201,7 @@ blake2b@^2.1.3:
     blake2b-wasm "^2.4.0"
     nanoassert "^2.0.0"
 
-blakejs@^1.1.0:
+blakejs@^1.1.0, blakejs@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/blakejs/-/blakejs-1.2.1.tgz#5057e4206eadb4a97f7c0b6e197a505042fc3814"
   integrity sha512-QXUSXI3QVc/gJME0dBpXrag1kbzOqCjCX8/b54ntNyW6sjtoqxqRk3LTmXzaJoh71zMsDCjM+47jS7XiwN/+fQ==
