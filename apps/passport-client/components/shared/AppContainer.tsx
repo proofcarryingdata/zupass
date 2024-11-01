@@ -8,7 +8,7 @@ import {
   useIOSOrientationFix,
   useUserShouldAgreeNewPrivacyNotice
 } from "../../src/appHooks";
-import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
+import { BANNER_HEIGHT } from "../../src/sharedConstants";
 import { ScreenLoader } from "./ScreenLoader";
 import { ZupassSVG } from "./ZupassSVG";
 
@@ -19,7 +19,7 @@ const Banner = styled.div`
   justify-content: center;
   border-bottom: 1px solid #1d8289;
   background: linear-gradient(0deg, #00605c 0%, #00785e 100%);
-  width: ${MAX_WIDTH_SCREEN}px;
+  width: 100%;
   height: ${BANNER_HEIGHT}px;
   left: 50%;
   transform: translateX(-50%);
@@ -97,7 +97,6 @@ export const CenterColumn = styled.div<{ defaultPadding: boolean }>`
   align-items: center;
   flex-direction: column;
   min-height: 100%;
-  max-width: ${MAX_WIDTH_SCREEN}px;
   margin: 0 auto;
   position: relative;
   ${({ defaultPadding }): string => (defaultPadding ? "padding: 16px;" : "")}

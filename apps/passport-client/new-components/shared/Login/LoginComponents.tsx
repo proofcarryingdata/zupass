@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 
 export const LoginContainer = styled.div`
   display: flex;
@@ -7,7 +8,7 @@ export const LoginContainer = styled.div`
   justify-content: flex-end;
   gap: 12px;
   align-items: center;
-  max-width: 100%;
+  max-width: ${MAX_WIDTH_SCREEN}px;
 `;
 export const LoginTitleContainer = styled.div`
   display: flex;

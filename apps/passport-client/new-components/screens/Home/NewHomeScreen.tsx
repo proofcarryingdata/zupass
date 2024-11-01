@@ -50,10 +50,10 @@ import {
   useOrientation
 } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
+import { EventTitle } from "./EventTitle";
+import { NoUpcomingEventsState } from "./NoUpcomingTicketsState";
 import { useTickets } from "./hooks/useTickets";
 import { useWindowWidth } from "./hooks/useWindowWidth";
-import { NoUpcomingEventsState } from "./NoUpcomingTicketsState";
-import { EventTitle } from "./EventTitle";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -122,14 +122,42 @@ const LoadingScreenContainer = styled.div`
 `;
 
 const BackgroundContainer = styled.div<{ image?: string }>`
-  background: url(${({ image }): string | undefined => image}) transparent 70% /
-    cover no-repeat;
-  max-height: calc(100vh - ${BANNER_HEIGHT}px);
-  overflow: scroll;
+  margin: auto;
+  flex: 1;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: calc(100vh - ${BANNER_HEIGHT}px);
+  position: relative;
+  overflow: hidden;
+
+  ${({ image }): string =>
+    image
+      ? `
+    @media (min-width: 461px) {
+      background: url("/images/devcon/devcon-landscape.webp") lightgray 50% / cover no-repeat;
+    }
+    
+    @media (max-width: 460px) {
+      background: url("/images/devcon/devcon-portrait.webp") lightgray 50% / cover no-repeat;
+    }
+  `
+      : ""}
 `;
 
 const ScrollContainer = styled.div`
+  padding: 0 20px;
   height: 100%;
+  overflow: scroll;
+  -ms-overflow-style: none; /* Internet Explorer 10+ */
+  scrollbar-width: none; /* Firefox */
+  width: 100%;
+  max-width: ${MAX_WIDTH_SCREEN}px;
+
+  &::-webkit-scrollbar {
+    display: none; /* Safari and Chrome */
+  }
 `;
 
 export const NewHomeScreen = (): ReactElement => {
@@ -370,15 +398,9 @@ export const NewHomeScreen = (): ReactElement => {
             <Spacer h={48} />
             <EventTitle packs={tickets[currentPos][1]} />
             <SwipeViewContainer
-              onMouseDown={() => {
-                setHolding(true);
-              }}
-              onMouseUp={() => {
-                setHolding(false);
-              }}
-              onMouseLeave={() => {
-                setHolding(false);
-              }}
+              onMouseDown={() => setHolding(true)}
+              onMouseUp={() => setHolding(false)}
+              onMouseLeave={() => setHolding(false)}
               style={{
                 cursor: holding ? "grabbing" : "grab"
               }}
@@ -486,7 +508,7 @@ export const NewHomeScreen = (): ReactElement => {
                     </PageCircleButton>
                   </NavigationContainer>
                 )}
-                {Object.keys(appConfig.embeddedZapps).length && (
+                {Object.keys(appConfig.embeddedZapps).length > 0 && (
                   <ZappButtonsContainer>
                     {Object.entries(appConfig.embeddedZapps).map(
                       ([zappName, url]) => (
