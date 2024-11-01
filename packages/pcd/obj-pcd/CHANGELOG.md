@@ -1,5 +1,17 @@
 # @pcd/obj-pcd
 
+## 0.4.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.15.0
+  - @pcd/util@0.9.0
+
 ## 0.3.0
 
 ### Minor Changes

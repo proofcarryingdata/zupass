@@ -1,5 +1,16 @@
 # @pcd/client-shared
 
+## 0.4.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/util@0.9.0
+
 ## 0.3.0
 
 ### Minor Changes

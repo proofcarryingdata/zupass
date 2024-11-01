@@ -1,5 +1,16 @@
 # @pcd/snarkjs
 
+## 0.11.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/circom_runtime@0.5.0
+
 ## 0.10.0
 
 ### Minor Changes

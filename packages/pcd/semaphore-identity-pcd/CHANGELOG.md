@@ -1,5 +1,19 @@
 # @pcd/semaphore-identity-pcd
 
+## 0.15.0
+
+### Minor Changes
+
+- GPC v4 enhancements, PODValue types, more GPC configurations
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.15.0
+  - @pcd/pod@0.5.0
+  - @pcd/semaphore-identity-v3-wrapper@0.1.0
+  - @pcd/util@0.9.0
+
 ## 0.14.0
 
 ### Minor Changes

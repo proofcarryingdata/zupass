@@ -7,7 +7,7 @@ import {
 } from "@pcd/pod";
 import { Identity as IdentityV3 } from "@pcd/semaphore-identity-v3-wrapper";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import { Identity as IdentityV4 } from "@semaphore-protocol/identity";
+import { Identity as IdentityV4 } from "@semaphore-protocol/core";
 import { AssertionError, assert, expect } from "chai";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";

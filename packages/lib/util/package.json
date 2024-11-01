@@ -1,6 +1,6 @@
 {
   "name": "@pcd/util",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -34,8 +34,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.14.0",
-    "@pcd/tsconfig": "0.14.0",
+    "@pcd/eslint-config-custom": "0.15.0",
+    "@pcd/tsconfig": "0.15.0",
     "@types/chai": "^4.3.5",
     "@types/email-validator": "^1.0.6",
     "@types/mocha": "^10.0.1",

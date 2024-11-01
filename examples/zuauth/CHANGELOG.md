@@ -1,5 +1,14 @@
 # zuauth-example
 
+## 0.1.21
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-interface@0.15.0
+  - @pcd/util@0.9.0
+  - @pcd/zuauth@1.8.0
+
 ## 0.1.20
 
 ### Patch Changes
