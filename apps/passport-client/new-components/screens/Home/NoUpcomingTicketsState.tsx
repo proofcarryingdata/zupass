@@ -10,7 +10,7 @@ import {
 import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { useDispatch, usePCDCollection } from "../../../src/appHooks";
-import { BANNER_HEIGHT } from "../../../src/sharedConstants";
+import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { nextFrame } from "../../../src/util";
 import { PodsCollectionList } from "../../shared/Modals/PodsCollectionBottomModal";
 import { Typography } from "../../shared/Typography";
@@ -30,6 +30,7 @@ const EmptyCardContainer = styled.div<{ longVersion: boolean }>`
   box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
   padding: 0 40px;
   width: 100%;
+  max-width: ${MAX_WIDTH_SCREEN}px;
 `;
 
 const InnerContainer = styled.div`
@@ -42,6 +43,7 @@ const InnerContainer = styled.div`
 
 const ListContainer = styled.div`
   width: 100%;
+  max-width: ${MAX_WIDTH_SCREEN}px;
   max-height: calc(
     100vh - ${EMPTY_CARD_CONTAINER_HEIGHT + 64 + BANNER_HEIGHT}px
   );
