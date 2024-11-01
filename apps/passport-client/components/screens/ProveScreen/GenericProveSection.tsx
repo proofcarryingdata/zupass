@@ -250,22 +250,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
               <ErrorContent>
                 <Accordion
                   title="CONNECTED EMAILS"
-                  link={{
-                    title: "EDIT",
-                    onClick: () => {
-                      dispatch({
-                        type: "set-bottom-modal",
-                        modal: {
-                          modalType: "manage-emails",
-                          prevModal: {
-                            modalType: "prove",
-                            request: originalReq
-                          },
-                          dismissble: false
-                        }
-                      });
-                    }
-                  }}
                   displayOnly={true}
                   children={self.emails.map((email) => {
                     return {

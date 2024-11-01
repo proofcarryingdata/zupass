@@ -101,14 +101,27 @@ export function GenericProveScreen({
           </Typography>
         )}
         {proveState !== undefined && !proveState && (
-          <Typography
-            style={{ marginTop: 20 }}
-            color="var(--text-primary)"
-            fontSize={16}
-          >
-            We don't see an upcoming event that matches the emails under your
-            account.
-          </Typography>
+          <>
+            <Typography
+              style={{ marginTop: 20 }}
+              color="var(--text-primary)"
+              fontSize={16}
+            >
+              We don't see an upcoming event that matches the emails under your
+              account. Please try switching your account below.
+            </Typography>
+            <Typography
+              style={{ marginTop: 20 }}
+              color="var(--text-primary)"
+              fontSize={16}
+            >
+              If you continue to have issues, please contact{" "}
+              <a style={{ fontWeight: 500 }} href="mailto:support@zupass.org">
+                support@zupass.org
+              </a>
+              .
+            </Typography>
+          </>
         )}
       </Header>
       <GenericProveSection
