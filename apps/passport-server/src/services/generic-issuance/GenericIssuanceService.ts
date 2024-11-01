@@ -65,9 +65,9 @@ import {
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
+import { LocalFileService } from "../LocalFileService";
 import { DiscordService } from "../discordService";
 import { EmailService } from "../emailService";
-import { LocalFileService } from "../LocalFileService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
@@ -440,8 +440,19 @@ export class GenericIssuanceService {
 
     const tickets = await pipeline.getAllTickets();
 
+    // Check that a valid atom exists with the given orderCode and email
+    const validAtom = tickets.atoms.find(
+      (atom) => atom.orderCode === orderCode && atom.email === email
+    );
+    if (!validAtom) {
+      throw new PCDHTTPError(
+        400,
+        `No ticket found with order code ${orderCode} and email ${email}`
+      );
+    }
+
     const matchingTickets = tickets.atoms.filter(
-      (atom) => atom.email === email && atom.orderCode === orderCode
+      (atom) => atom.email === email
     );
 
     const ticketDatas = matchingTickets.map(
