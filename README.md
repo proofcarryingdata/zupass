@@ -33,7 +33,7 @@ As a developer, if you are interested in working with Zupass, the PCD SDK, or an
 All PCDs consist of:
 
 - a "claim", which is an arbitrarily-structured set of fields (cryptographic identifiers such as public keys, hashes, Merkle roots, etc.) and an implicit set of claimed relationships between these fields. The set of claimed relationships is given by the PCD "type."
-- a "proof" attached to the "claim," which is a cryptographic proof of the claim. All PCDs within this SDK also expose a `prove` and `verify` function, which allow you to instantiate them, and verify that they are indeed correct.
+- a "proof" attached to the "claim," which is a cryptographic proof of the claim. All PCDs within this SDK also expose a `prove` and `verify` function, which allows you to instantiate them, and verify that they are indeed correct.
 
 Many PCDs are [zkSNARKs](https://learn.0xparc.org/materials/circom/prereq-materials/topic-sampler). However, not all PCDs are zkSNARKs, or even zero-knowledge proofs. For example, one PCD that is not a zkSNARK is a piece of data signed by an RSA private key along with the corresponding public key:
 
@@ -51,7 +51,7 @@ This is a PCD because anyone can verify that what it claims is true by running t
 
 ### What is the PCD SDK?
 
-The PCD SDK is a framework for developing applications that use PCDs for the proper functioning of their core feature set. It defines the set of interfaces necessary for correctly reasoning about and processing PCDs. It defines the interfaces through which PCDs are produced and consumed. It also includes a "passport" web application that lets a user manage their personal PCDs, and enables third party applications to request PCDs from the passport, and add new PCDs into it.
+The PCD SDK is a framework for developing applications that use PCDs for the proper functioning of their core feature set. It defines the set of interfaces necessary for correctly reasoning about and processing PCDs. It defines the interfaces through which PCDs are produced and consumed. It also includes a "passport" web application that lets a user manage their personal PCDs, and enables third party applications to request PCDs from the passport, and add new PCDs to it.
 
 ## For Developers: Local Development
 
@@ -100,7 +100,7 @@ The passport has its own client and server. We also included an example applicat
 - `apps/passport-client`: http://localhost:3000/ - this is the application that allows users to manage their PCDs, and 3rd party applications to save or load PCDs from
 - `apps/consumer-client`: http://localhost:3001/ - this is an example 3rd party application, whose code demonstrates the API by which other 3rd party applications might interface with the passport, and how they might use the PCDs they get from the passport
 - `apps/passport-server`: http://localhost:3002/ - this is the server-side application which backs the passport client. currently it is used to manage Zuzalu participants, send confirmation emails, end-to-end encrypted backup of PCDs from the passport client, and serving some heavy assets for the client.
-- `apps/consumer-server`: http://localhost:3003/ - this is an example server application which would back an example 3rd party client app. currently this app is not useful as an example since it contains no meaningful example code, but we have included it for completeness, and for future examples.
+- `apps/consumer-server`: http://localhost:3003/ - this is an example server application which would back an example 3rd party client app. Currently this app is not useful as an example since it contains no meaningful example code, but we have included it for completeness, and for future examples.
 
 ## Packages
 
