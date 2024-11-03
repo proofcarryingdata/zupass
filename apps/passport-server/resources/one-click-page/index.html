@@ -59,24 +59,16 @@
     margin-top: 72px;
 
     padding: 25px 20px 25px 20px;
+    -ms-overflow-style: none;
+    /* Internet Explorer 10+ */
+    scrollbar-width: none;
+    /* Firefox */
   }
 
-  .bg {}
-
-  /* .scroll { */
-  /*   padding: 0 20px 25px; */
-  /*   height: 100%; */
-  /*   overflow: scroll; */
-  /*   -ms-overflow-style: none; */
-  /*   /* Internet Explorer 10+ */
-  /*   scrollbar-width: none; */
-  /*   /* Firefox */
-  /* } */
-  /**/
-  /* .scroll::-webkit-scrollbar { */
-  /*   display: none; */
-  /*   /* Safari and Chrome */
-  /* } */
+  .container::-webkit-scrollbar {
+    display: none;
+    /* Safari and Chrome */
+  }
 
   .ticket {
     display: flex;
