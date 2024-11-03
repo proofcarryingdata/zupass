@@ -4,7 +4,7 @@ import { useCallback, useLayoutEffect, useState } from "react";
 import styled from "styled-components";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { appConfig } from "../../../src/appConfig";
-import { useQuery } from "../../../src/appHooks";
+import { useDispatch, useQuery } from "../../../src/appHooks";
 import { Button2 } from "../../shared/Button";
 import { Input2 } from "../../shared/Input";
 import {
@@ -16,6 +16,7 @@ import { Typography } from "../../shared/Typography";
 
 export const NewEnterConfirmationCodeScreen = (): JSX.Element => {
   const query = useQuery();
+  const dispatch = useDispatch();
   const email = query?.get("email") ?? "";
   const isReset = query?.get("isReset");
   const [verifyingCode, setVerifyingCode] = useState(false);
@@ -37,16 +38,20 @@ export const NewEnterConfirmationCodeScreen = (): JSX.Element => {
       email,
       token
     );
-    setVerifyingCode(false);
 
     if (verifyTokenResult.success) {
-      window.location.hash = `#/create-password?email=${encodeURIComponent(
-        email
-      )}&token=${encodeURIComponent(token)}`;
+      await dispatch({
+        type: "create-user-skip-password",
+        email,
+        token,
+        targetFolder: undefined,
+        autoRegister: false
+      });
     } else {
       setError("The code you entered is incorrect");
     }
-  }, [email, input]);
+    setVerifyingCode(false);
+  }, [email, input, dispatch]);
 
   const onCancelClick = useCallback(() => {
     window.location.href = "#/";
