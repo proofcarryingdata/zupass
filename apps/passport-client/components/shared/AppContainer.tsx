@@ -93,7 +93,7 @@ export const Background = styled.div<{ color: string }>`
 
 export const CenterColumn = styled.div<{
   defaultPadding: boolean;
-  $fullscreen: boolean;
+  $fullscreen?: boolean;
 }>`
   display: flex;
   justify-content: flex-start;
