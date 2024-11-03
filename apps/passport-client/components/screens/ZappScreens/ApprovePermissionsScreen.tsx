@@ -1,15 +1,16 @@
 import { Zapp } from "@parcnet-js/client-rpc";
-import { ReactNode, useLayoutEffect, useRef } from "react";
+import { ReactNode, useRef } from "react";
 import styled from "styled-components";
-import { useDispatch, useZapp, useZappOrigin } from "../../../src/appHooks";
-import { AppContainer } from "../../shared/AppContainer";
-import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 import {
   DescriptiveAccordion,
   DescriptiveAccordionRef,
   DescriptiveAccrodionChild
 } from "../../../new-components/shared/Accordion";
+import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 import { Button2 } from "../../../new-components/shared/Button";
+import { useDispatch, useZapp, useZappOrigin } from "../../../src/appHooks";
+import { BANNER_HEIGHT } from "../../../src/sharedConstants";
+import { AppContainer } from "../../shared/AppContainer";
 
 /**
  * This screen is only ever shown in a popup modal. It is used when Zupass is
@@ -56,61 +57,43 @@ function Permissions({ zapp }: { zapp: Zapp }): ReactNode {
     });
   }
   if (zapp.permissions.REQUEST_PROOF) {
+    const collections = zapp.permissions.REQUEST_PROOF.collections.join(", ");
     chidren.push({
-      title: "Request proof",
-      description: `This will allow ${
-        zapp.name
-      } to request zero-knowldge proofs using data from these collections: ${zapp.permissions.REQUEST_PROOF.collections.join(
-        ","
-      )}`
+      title: `Request ZK proofs from ${collections}`,
+      description: `This will allow ${zapp.name} to request zero-knowldge proofs using data from these collections: ${collections}`
     });
   }
   if (zapp.permissions.READ_POD) {
+    const collections = zapp.permissions.READ_POD.collections.join(", ");
     chidren.push({
-      title: "Read PODs",
-      description: `This will allow ${
-        zapp.name
-      } to read PODs from these collections: ${zapp.permissions.READ_POD.collections.join(
-        ","
-      )}`
+      title: `Read PODs from ${collections}`,
+      description: `This will allow ${zapp.name} to read PODs from these collections: ${collections}`
     });
   }
   if (zapp.permissions.INSERT_POD) {
+    const collections = zapp.permissions.INSERT_POD.collections.join(", ");
     chidren.push({
-      title: "Insert PODs",
-      description: `This will allow ${
-        zapp.name
-      } to insert PODs from these collections: ${zapp.permissions.INSERT_POD.collections.join(
-        ","
-      )}`
+      title: `Insert PODs to ${collections}`,
+      description: `This will allow ${zapp.name} to insert PODs to these collections: ${collections}`
     });
   }
   if (zapp.permissions.DELETE_POD) {
+    const collections = zapp.permissions.DELETE_POD.collections.join(", ");
     chidren.push({
-      title: "Delete PODs",
-      description: `This will allow ${
-        zapp.name
-      } to delete PODs from these collections: ${zapp.permissions.DELETE_POD.collections.join(
-        ","
-      )}`,
+      title: `Delete PODs from ${collections}`,
+      description: `This will allow ${zapp.name} to delete PODs from these collections: ${collections}`,
       color: "var(--new-danger)"
     });
   }
 
   if (zapp.permissions.SUGGEST_PODS) {
+    const collections = zapp.permissions.SUGGEST_PODS.collections.join(", ");
     chidren.push({
-      title: "Suggest PODs",
-      description: `This will allow ${
-        zapp.name
-      } to suggest PODs from these collections: ${zapp.permissions.SUGGEST_PODS.collections.join(
-        ","
-      )}`
+      title: `Suggest PODs to ${collections}`,
+      description: `This will allow ${zapp.name} to suggest PODs to these collections: ${collections}`
     });
   }
 
-  useLayoutEffect(() => {
-    ref.current?.openAll();
-  }, []);
   return (
     <>
       <AccordionContainer>
