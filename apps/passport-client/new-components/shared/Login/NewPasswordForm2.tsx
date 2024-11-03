@@ -54,7 +54,10 @@ export const NewPasswordForm2 = ({
 }: NewPasswordForm): JSX.Element => {
   const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
-  const checkPasswordAndSubmit = (): void => {
+  const checkPasswordAndSubmit = (e?: React.FormEvent): void => {
+    if (e) {
+      e.preventDefault();
+    }
     if (password === "") {
       setError("Enter a password");
     } else if (password.length < PASSWORD_MINIMUM_LENGTH) {
@@ -104,7 +107,7 @@ export const NewPasswordForm2 = ({
   };
 
   return (
-    <PasswordForm style={style}>
+    <PasswordForm onSubmit={checkPasswordAndSubmit} style={style}>
       {/* For password manager autofill */}
       <input hidden readOnly value={emails[0]} />
       <InputsContainer>
@@ -150,7 +153,7 @@ export const NewPasswordForm2 = ({
         />
       </InputsContainer>
       <InputsContainer>
-        <Button2 onClick={checkPasswordAndSubmit} disabled={!!error || loading}>
+        <Button2 type="submit" disabled={!!error || loading}>
           {textOrLoader(submitButtonText)}
         </Button2>
         <Button2 onClick={onCancel} variant="secondary">
@@ -166,7 +169,7 @@ export const NewPasswordForm2 = ({
   );
 };
 
-const PasswordForm = styled.div`
+const PasswordForm = styled.form`
   display: flex;
   flex-direction: column;
   gap: 12px;
