@@ -121,16 +121,27 @@ const LoadingScreenContainer = styled.div`
   margin: auto 0;
 `;
 
-const BackgroundContainer = styled.div<{ image?: string }>`
+const MaxWidthContainer = styled.div`
   margin: auto;
   flex: 1;
   width: 100%;
+  max-width: ${MAX_WIDTH_SCREEN}px;
   display: flex;
   flex-direction: column;
   align-items: center;
   height: calc(100vh - ${BANNER_HEIGHT}px);
   position: relative;
   overflow: hidden;
+`;
+const BackgroundContainer = styled.div<{ image?: string }>`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
 
   ${({ image }): string =>
     image
@@ -144,20 +155,6 @@ const BackgroundContainer = styled.div<{ image?: string }>`
     }
   `
       : ""}
-`;
-
-const ScrollContainer = styled.div`
-  padding: 0 20px;
-  height: 100%;
-  overflow: scroll;
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  scrollbar-width: none; /* Firefox */
-  width: 100%;
-  max-width: ${MAX_WIDTH_SCREEN}px;
-
-  &::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
-  }
 `;
 
 export const NewHomeScreen = (): ReactElement => {
@@ -391,10 +388,11 @@ export const NewHomeScreen = (): ReactElement => {
         </>
       )}
       {tickets.length > 0 && (
-        <BackgroundContainer
-          image={tickets[currentPos][1][0].eventTicket.claim.ticket.imageUrl}
-        >
-          <ScrollContainer>
+        <>
+          <BackgroundContainer
+            image={tickets[currentPos][1][0].eventTicket.claim.ticket.imageUrl}
+          />
+          <MaxWidthContainer>
             <Spacer h={48} />
             <EventTitle packs={tickets[currentPos][1]} />
             <SwipeViewContainer
@@ -533,8 +531,8 @@ export const NewHomeScreen = (): ReactElement => {
               </ButtonsContainer>
             </SwipeViewContainer>
             {!(showPodsList || noPods) && <Spacer h={96} />}
-          </ScrollContainer>
-        </BackgroundContainer>
+          </MaxWidthContainer>
+        </>
       )}
       <FloatingMenu onlySettings={showPodsList || noPods} />
       <AddOnsModal />
