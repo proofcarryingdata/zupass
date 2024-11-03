@@ -3,14 +3,15 @@ import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import urljoin from "url-join";
 import * as v from "valibot";
-import { appConfig } from "../../../src/appConfig";
-import { useDispatch } from "../../../src/appHooks";
-import { useSelector } from "../../../src/subscribe";
-import { AppContainer } from "../../shared/AppContainer";
 import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
+import { Button2 } from "../../../new-components/shared/Button";
 import { NewLoader } from "../../../new-components/shared/NewLoader";
 import { Typography } from "../../../new-components/shared/Typography";
-import { Button2 } from "../../../new-components/shared/Button";
+import { appConfig } from "../../../src/appConfig";
+import { useDispatch } from "../../../src/appHooks";
+import { BANNER_HEIGHT } from "../../../src/sharedConstants";
+import { useSelector } from "../../../src/subscribe";
+import { AppContainer } from "../../shared/AppContainer";
 
 const IFrameAuthenticationMessageSchema = v.object({
   type: v.literal("auth"),
@@ -230,7 +231,7 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  height: 100vh;
+  height: calc(100vh - ${BANNER_HEIGHT}px);
   padding: 24px 24px 20px 24px;
 `;
 
