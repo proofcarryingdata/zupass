@@ -126,7 +126,7 @@ const Container = styled.div`
   align-items: center;
   justify-content: center;
   gap: 16px;
-  height: 100vh;
+  height: calc(100vh - ${BANNER_HEIGHT}px);
   padding: 24px 24px 20px 24px;
 `;
 

@@ -21,6 +21,7 @@ import {
   usePCDCollection,
   useZappOrigin
 } from "../../../src/appHooks";
+import { BANNER_HEIGHT } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { getGPCArtifactsURL } from "../../../src/util";
 import { getPODsForCollections } from "../../../src/zapp/collections";
@@ -463,7 +464,7 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  height: 100vh;
+  height: calc(100vh - ${BANNER_HEIGHT}px);
   padding: 24px 24px 20px 24px;
   width: 100%;
   gap: 16px;
