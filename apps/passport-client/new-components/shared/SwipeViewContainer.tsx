@@ -2,7 +2,7 @@ import styled from "styled-components";
 
 export const SwipeViewContainer = styled.div<{ isZapp?: boolean }>`
   position: relative;
-  height: ${({ isZapp }): string => (isZapp ? "100vh" : "inherit")};
+  ${({ isZapp }): string => (isZapp ? "height:  100vh;" : "")};
   display: flex;
   flex-direction: column-reverse;
   align-items: center;
