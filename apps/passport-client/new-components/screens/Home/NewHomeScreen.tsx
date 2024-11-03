@@ -45,6 +45,7 @@ import { NewLoader } from "../../shared/NewLoader";
 import { SwipeViewContainer } from "../../shared/SwipeViewContainer";
 import { Typography } from "../../shared/Typography";
 import {
+  hideScrollCSS,
   isMobile,
   replaceDotWithSlash,
   useOrientation
@@ -147,17 +148,12 @@ const BackgroundContainer = styled.div<{ image?: string }>`
 `;
 
 const ScrollContainer = styled.div`
-  padding: 0 20px;
   height: 100%;
   overflow: scroll;
-  -ms-overflow-style: none; /* Internet Explorer 10+ */
-  scrollbar-width: none; /* Firefox */
   width: 100%;
   max-width: ${MAX_WIDTH_SCREEN}px;
 
-  &::-webkit-scrollbar {
-    display: none; /* Safari and Chrome */
-  }
+  ${hideScrollCSS}
 `;
 
 export const NewHomeScreen = (): ReactElement => {
