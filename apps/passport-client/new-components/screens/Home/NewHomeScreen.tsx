@@ -152,9 +152,7 @@ const BackgroundContainer = styled.div<{ image?: string }>`
     
     @media (max-width: 460px) {
       background: url("/images/devcon/devcon-portrait.webp") lightgray 50% / cover no-repeat;
-  
-  
-      }
+    }
   `
       : ""}
 `;
