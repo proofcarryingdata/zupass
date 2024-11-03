@@ -190,7 +190,7 @@ const SendEmailVerification = ({
     } else if (loadingAccount) {
       loaderText = "LOADING ACCOUNT INFORMATION...";
     } else if (emailSending) {
-      loaderText = "CHECKING IF YOU ALREADY HAVE AN ACCOUNT...";
+      loaderText = "CHECKING IF YOU HAVE AN ACCOUNT...";
     }
     return (
       <AppContainer fullscreen={true} bg="gray">
@@ -200,6 +200,7 @@ const SendEmailVerification = ({
             fontSize={18}
             fontWeight={800}
             color="var(--text-tertiary)"
+            style={{ textAlign: "center" }}
           >
             {loaderText}
           </Typography>
