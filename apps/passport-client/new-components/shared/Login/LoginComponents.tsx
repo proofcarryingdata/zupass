@@ -8,7 +8,6 @@ export const LoginContainer = styled.div`
   flex-direction: column;
   justify-content: ${(): string =>
     isInWebview() ? " flex-start" : "flex-end"};
-  border: ${(): string => (isInWebview() ? "1px solid red" : "")};
   gap: 12px;
   align-items: center;
   max-width: ${MAX_WIDTH_SCREEN}px;
