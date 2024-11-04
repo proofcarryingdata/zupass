@@ -26,7 +26,7 @@ import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { getGPCArtifactsURL } from "../../../src/util";
 import { getPODsForCollections } from "../../../src/zapp/collections";
 import { AppContainer } from "../../shared/AppContainer";
-import Select from "../../shared/Select";
+import { NativeSelect } from "../../shared/NativeSelect";
 import { displayPODValue } from "../../shared/uiUtil";
 
 export function EmbeddedGPCProofScreen({
@@ -223,7 +223,7 @@ function ProvePODInfo({
         >
           {name.toUpperCase()}
         </Typography>
-        <Select
+        <NativeSelect
           defaultValue={defaultOption}
           onChange={(ev) => {
             onChange(pods.find((pod) => pod.signature === ev?.value));
