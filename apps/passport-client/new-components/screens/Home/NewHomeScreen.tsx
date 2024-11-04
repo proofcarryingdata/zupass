@@ -380,6 +380,12 @@ export const NewHomeScreen = (): ReactElement => {
       bg="gray"
       noPadding={tickets.length > 0}
       fullscreen={tickets.length > 0}
+      style={{
+        cursor: holding ? "grabbing" : "grab"
+      }}
+      onMouseDown={() => setHolding(true)}
+      onMouseUp={() => setHolding(false)}
+      onMouseLeave={() => setHolding(false)}
     >
       {(!tickets.length || isInvalidUser) && (
         <>
@@ -395,14 +401,7 @@ export const NewHomeScreen = (): ReactElement => {
           <MaxWidthContainer>
             <Spacer h={48} />
             <EventTitle packs={tickets[currentPos][1]} />
-            <SwipeViewContainer
-              onMouseDown={() => setHolding(true)}
-              onMouseUp={() => setHolding(false)}
-              onMouseLeave={() => setHolding(false)}
-              style={{
-                cursor: holding ? "grabbing" : "grab"
-              }}
-            >
+            <SwipeViewContainer>
               <_SwipableViews
                 style={{
                   padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
@@ -410,7 +409,6 @@ export const NewHomeScreen = (): ReactElement => {
                 slideStyle={{
                   padding: `0 ${CARD_GAP / 2}px`
                 }}
-                resistance={true}
                 index={currentPos}
                 onChangeIndex={(e: number) => {
                   setCurrentPos(e);

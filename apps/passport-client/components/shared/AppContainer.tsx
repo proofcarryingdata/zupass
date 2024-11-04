@@ -32,8 +32,9 @@ export function AppContainer({
   children,
   bg,
   fullscreen,
-  noPadding
-}: {
+  noPadding,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & {
   bg: "primary" | "gray" | "white";
   children?: ReactNode;
   fullscreen?: boolean;
@@ -60,7 +61,7 @@ export function AppContainer({
   };
   const col = getBackground();
   return (
-    <Container $fullscreen={!!fullscreen}>
+    <Container $fullscreen={!!fullscreen} {...props}>
       <Banner>
         <ZupassSVG />
       </Banner>
