@@ -1,11 +1,14 @@
 import styled from "styled-components";
 import { MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
+import { isInWebview } from "../utils";
 
 export const LoginContainer = styled.div`
   display: flex;
   flex: 1;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: ${(): string =>
+    isInWebview() ? " flex-start" : "flex-end"};
+  padding-top: ${(): string => (isInWebview() ? " 20px" : "")};
   gap: 12px;
   align-items: center;
   max-width: ${MAX_WIDTH_SCREEN}px;
