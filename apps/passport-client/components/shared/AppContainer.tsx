@@ -8,7 +8,7 @@ import {
   useIOSOrientationFix,
   useUserShouldAgreeNewPrivacyNotice
 } from "../../src/appHooks";
-import { BANNER_HEIGHT } from "../../src/sharedConstants";
+import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 import { ScreenLoader } from "./ScreenLoader";
 import { ZupassSVG } from "./ZupassSVG";
 
@@ -65,7 +65,7 @@ export function AppContainer({
         <ZupassSVG />
       </Banner>
       <Background color={col}>
-        <CenterColumn defaultPadding={!noPadding}>
+        <CenterColumn defaultPadding={!noPadding} $fullscreen={!!fullscreen}>
           {children && (
             <Toaster
               toastOptions={{
@@ -91,7 +91,10 @@ export const Background = styled.div<{ color: string }>`
   background: ${(p): string => p.color};
 `;
 
-export const CenterColumn = styled.div<{ defaultPadding: boolean }>`
+export const CenterColumn = styled.div<{
+  defaultPadding: boolean;
+  $fullscreen?: boolean;
+}>`
   display: flex;
   justify-content: flex-start;
   align-items: center;
@@ -99,6 +102,8 @@ export const CenterColumn = styled.div<{ defaultPadding: boolean }>`
   min-height: 100%;
   margin: 0 auto;
   position: relative;
+  ${({ $fullscreen }): string =>
+    !$fullscreen ? `max-width: ${MAX_WIDTH_SCREEN}px` : ""};
   ${({ defaultPadding }): string => (defaultPadding ? "padding: 16px;" : "")}
   padding-top: ${BANNER_HEIGHT}px;
 `;
