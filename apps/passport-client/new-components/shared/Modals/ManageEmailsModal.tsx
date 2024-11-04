@@ -24,12 +24,12 @@ import {
   useStateContext
 } from "../../../src/appHooks";
 import { getEmailUpdateErrorMessage } from "../../../src/errorMessage";
+import { AppState } from "../../../src/state";
 import { BottomModal, BottomModalHeader } from "../BottomModal";
 import { Button2 } from "../Button";
 import { Input2 } from "../Input";
 import { NewLoader } from "../NewLoader";
 import { Typography } from "../Typography";
-import { AppState } from "../../../src/state";
 
 enum EmailManagerState {
   addEmail = 1,
@@ -196,6 +196,8 @@ export const ManageEmailModal = (): JSX.Element => {
         stateContext.update({
           extraSubscriptionFetchRequested: true
         });
+        setConfirmationCode("");
+        setNewEmail("");
       } else {
         setError(
           `Couldn't add '${newEmail}', please wait and try again later.`
@@ -359,8 +361,8 @@ export const ManageEmailModal = (): JSX.Element => {
       />
       <ButtonsContainer>
         <Button2
+          type="submit"
           variant="danger"
-          onClick={onRemoveEmail}
           disabled={errorOrLoading || emailToRemove !== emailToRemoveText}
         >
           {textOrLoader("Delete")}
@@ -373,8 +375,7 @@ export const ManageEmailModal = (): JSX.Element => {
     <>
       <BottomModalHeader
         title="CHANGE EMAIL"
-        description="Enter your new email address. We'll send a confirmation code to verify
-          it."
+        description="Enter your new email address. We'll send a confirmation code to verify it."
       >
         <Typography fontSize={16} color="var(--text-primary)">
           The email you are about to change is:{" "}
@@ -394,6 +395,7 @@ export const ManageEmailModal = (): JSX.Element => {
           setNewEmail(e.target.value);
           setError("");
         }}
+        error={error}
       />
       {emailManagerState ===
         EmailManagerState.changeEmailEnterConfirmationCode && (
@@ -414,12 +416,7 @@ export const ManageEmailModal = (): JSX.Element => {
       )}
       <ButtonsContainer>
         <Button2
-          onClick={() => {
-            emailManagerState ===
-            EmailManagerState.changeEmailEnterConfirmationCode
-              ? onChangeEmail()
-              : sendConfirmationCode();
-          }}
+          type="submit"
           disabled={
             errorOrLoading ||
             (emailManagerState ===
@@ -434,11 +431,11 @@ export const ManageEmailModal = (): JSX.Element => {
               : "Get confirmation code"
           )}
         </Button2>
-
         {backToManageBtn}
       </ButtonsContainer>
     </>
   );
+
   const addEmailView = (
     <>
       <BottomModalHeader
@@ -455,16 +452,14 @@ export const ManageEmailModal = (): JSX.Element => {
         error={error}
       />
       <ButtonsContainer>
-        <Button2
-          onClick={() => sendConfirmationCode()}
-          disabled={errorOrLoading}
-        >
+        <Button2 type="submit" disabled={errorOrLoading}>
           {textOrLoader("Get confirmation code")}
         </Button2>
         {backToManageBtn}
       </ButtonsContainer>
     </>
   );
+
   const emailListView = (
     <>
       <BottomModalHeader
@@ -493,7 +488,10 @@ export const ManageEmailModal = (): JSX.Element => {
       <ButtonsContainer>
         {self && self.emails.length < 5 && (
           <Button2
-            onClick={() => setEmailManagerState(EmailManagerState.addEmail)}
+            onClick={(e) => {
+              e.preventDefault();
+              setEmailManagerState(EmailManagerState.addEmail);
+            }}
             disabled={errorOrLoading}
           >
             Add email
@@ -522,10 +520,7 @@ export const ManageEmailModal = (): JSX.Element => {
         placeholder="Enter confirmation code"
       />
       <ButtonsContainer>
-        <Button2
-          onClick={() => verifyCode()}
-          disabled={errorOrLoading || !confirmationCode}
-        >
+        <Button2 type="submit" disabled={errorOrLoading || !confirmationCode}>
           {textOrLoader("Verify")}
         </Button2>
         {backToManageBtn}
@@ -550,6 +545,7 @@ export const ManageEmailModal = (): JSX.Element => {
         return emailListView;
     }
   };
+
   return (
     <BottomModal
       dismissable={
@@ -560,7 +556,36 @@ export const ManageEmailModal = (): JSX.Element => {
       onClickOutside={() => reset()}
       isOpen={activeBottomModal.modalType === "manage-emails"}
     >
-      <Container>{getComponentState(emailManagerState)}</Container>
+      <Container
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (emailManagerState) {
+            switch (emailManagerState) {
+              case EmailManagerState.addEmail:
+                sendConfirmationCode();
+                break;
+              case EmailManagerState.changeEmail:
+                sendConfirmationCode();
+                break;
+              case EmailManagerState.changeEmailEnterConfirmationCode:
+                onChangeEmail();
+                break;
+              case EmailManagerState.deleteEmail:
+                if (emailToRemove === emailToRemoveText) {
+                  onRemoveEmail();
+                }
+                break;
+              case EmailManagerState.enterConfirmationCode:
+                if (confirmationCode) {
+                  verifyCode();
+                }
+                break;
+            }
+          }
+        }}
+      >
+        {getComponentState(emailManagerState)}
+      </Container>
     </BottomModal>
   );
 };
@@ -638,6 +663,7 @@ const EmailInput = ({
     </EmailInputContainer>
   );
 };
+
 const EmailsContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -650,7 +676,7 @@ const ButtonsContainer = styled.div`
   gap: 8px;
 `;
 
-const Container = styled.div`
+const Container = styled.form`
   display: flex;
   flex-direction: column;
   gap: 24px;

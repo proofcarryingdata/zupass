@@ -3,23 +3,43 @@ import EyeSlashIcon from "@heroicons/react/16/solid/EyeSlashIcon";
 import { ForwardedRef, forwardRef, useState } from "react";
 import { Input2, NewInputProps } from "../Input";
 
+interface PasswordInputProps extends NewInputProps {
+  showPassword?: boolean;
+  onTogglePassword?: () => void;
+}
+
 export const PasswordInput2 = forwardRef(
-  (props: NewInputProps, ref: ForwardedRef<HTMLInputElement>): JSX.Element => {
-    const [showPassword, setShowPassword] = useState(false);
+  (
+    props: PasswordInputProps,
+    ref: ForwardedRef<HTMLInputElement>
+  ): JSX.Element => {
+    const [localShowPassword, setLocalShowPassword] = useState(false);
+    const { showPassword, onTogglePassword, ...inputProps } = props;
+
+    // Use local state if not provided
+    const isPasswordVisible = showPassword ?? localShowPassword;
+    const handleToggle = (): void => {
+      if (onTogglePassword) {
+        onTogglePassword();
+      } else {
+        setLocalShowPassword((prev) => !prev);
+      }
+    };
 
     return (
       <Input2
-        {...props}
-        type={!showPassword ? "password" : "text"}
+        {...inputProps}
+        type={!isPasswordVisible ? "password" : "text"}
         ref={ref}
         endIcon={
-          !showPassword ? (
+          !isPasswordVisible ? (
             <EyeSlashIcon
-              onClick={() => setShowPassword(true)}
+              onClick={handleToggle}
               color="#8B94AC"
+              cursor="pointer"
             />
           ) : (
-            <EyeIcon onClick={() => setShowPassword(false)} color="#8B94AC" />
+            <EyeIcon onClick={handleToggle} color="#8B94AC" cursor="pointer" />
           )
         }
       />
