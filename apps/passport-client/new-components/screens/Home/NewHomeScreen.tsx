@@ -30,7 +30,7 @@ import { CardBody } from "../../../components/shared/PCDCard";
 import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
-  useIsSyncSettled,
+  useIsDownloaded,
   usePCDCollection,
   useScrollTo,
   useSelf,
@@ -54,6 +54,7 @@ import { EventTitle } from "./EventTitle";
 import { NoUpcomingEventsState } from "./NoUpcomingTicketsState";
 import { useTickets } from "./hooks/useTickets";
 import { useWindowWidth } from "./hooks/useWindowWidth";
+import { useLoadingSync } from "./hooks/useLoadingSync";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -168,13 +169,14 @@ export const NewHomeScreen = (): ReactElement => {
   const windowWidth = useWindowWidth();
   const self = useSelf();
   const navigate = useNavigate();
-  const isLoadedPCDs = useIsSyncSettled();
+  const isDownloaded = useIsDownloaded();
   const [params, setParams] = useSearchParams();
   const [zappUrl, setZappUrl] = useState("");
   const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
   const regularParams = useParams();
+  useLoadingSync();
   const noPods =
     collection
       .getAll()
@@ -186,6 +188,7 @@ export const NewHomeScreen = (): ReactElement => {
     isMobile &&
     (orientation.type === "landscape-primary" ||
       orientation.type === "landscape-secondary");
+
   useEffect(() => {
     if (!self && !location.pathname.includes("one-click-preview")) {
       navigate("/login", { replace: true });
@@ -195,7 +198,7 @@ export const NewHomeScreen = (): ReactElement => {
 
   useLayoutEffect(() => {
     // if we haven't loaded all pcds yet, dont process the prove request
-    if (!isLoadedPCDs) return;
+    if (!isDownloaded) return;
 
     const maybeExistingFolder = params.get("folder");
     if (maybeExistingFolder) {
@@ -242,7 +245,7 @@ export const NewHomeScreen = (): ReactElement => {
     params,
     collection,
     setParams,
-    isLoadedPCDs,
+    isDownloaded,
     location,
     dispatch,
     showPodsList,
@@ -313,7 +316,7 @@ export const NewHomeScreen = (): ReactElement => {
   }, []);
 
   useEffect(() => {
-    if (scrollTo && isLoadedPCDs && tickets.length > 0) {
+    if (scrollTo && isDownloaded && tickets.length > 0) {
       // getting the pos of the event card
       const eventPos = tickets.findIndex(
         (pack) => pack[0] === scrollTo.eventId
@@ -338,14 +341,14 @@ export const NewHomeScreen = (): ReactElement => {
         dispatch({ type: "scroll-to-ticket", scrollTo: undefined });
       })();
     }
-  }, [dispatch, scrollTo, currentPos, setCurrentPos, tickets, isLoadedPCDs]);
+  }, [dispatch, scrollTo, currentPos, setCurrentPos, tickets, isDownloaded]);
 
   const cardWidth =
     (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
     SCREEN_HORIZONTAL_PADDING * 2;
 
   // if not loaded pcds yet and the user session is valid
-  if (!isLoadedPCDs && !isInvalidUser) {
+  if (!isDownloaded && !isInvalidUser) {
     return (
       <AppContainer fullscreen={true} bg="gray">
         <LoadingScreenContainer>
