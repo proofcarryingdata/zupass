@@ -334,22 +334,39 @@ export function useLaserScannerKeystrokeInput(): string {
 
 export function useLoginIfNoSelf(
   key: string,
-  request?: PCDRequest | string
+  request?: PCDRequest | string,
+  options: {
+    disableRedirect?: boolean; // conditionally disable the redirect
+    disablePendingRequest?: boolean; // conditionally disable the pending request
+  } = {}
 ): void {
   const self = useSelf();
   const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
+    if (options.disableRedirect) return;
     if (!self || userForcedToLogout) {
       clearAllPendingRequests();
+      if (options.disablePendingRequest) {
+        window.location.href = "/#/login";
+        return;
+      }
       const stringifiedRequest = JSON.stringify(request ?? "");
+      console.log("stringifiedRequest", stringifiedRequest);
 
       sessionStorage.setItem(key, stringifiedRequest);
       window.location.href = `/#/login?redirectedFromAction=true&${key}=${encodeURIComponent(
         stringifiedRequest
       )}`;
     }
-  }, [key, request, self, userForcedToLogout]);
+  }, [
+    key,
+    request,
+    self,
+    userForcedToLogout,
+    options.disableRedirect,
+    options.disablePendingRequest
+  ]);
 }
 
 export function useEmbeddedScreenState(): AppState["embeddedScreen"] {
