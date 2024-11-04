@@ -10,6 +10,7 @@ import {
   ReactElement,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState
 } from "react";
@@ -340,9 +341,72 @@ export const NewHomeScreen = (): ReactElement => {
     }
   }, [dispatch, scrollTo, currentPos, setCurrentPos, tickets, isLoadedPCDs]);
 
-  const cardWidth =
-    (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
-    SCREEN_HORIZONTAL_PADDING * 2;
+  const test = useMemo(() => {
+    const cardWidth =
+      (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
+      SCREEN_HORIZONTAL_PADDING * 2;
+    return (
+      <_SwipableViews
+        style={{
+          padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
+        }}
+        slideStyle={{
+          padding: `0 ${CARD_GAP / 2}px`
+        }}
+        index={currentPos}
+        resistance={true}
+        onChangeIndex={(e: number) => {
+          setCurrentPos(e);
+        }}
+        enableMouseEvents
+      >
+        {tickets.map(([eventId, packs]) => {
+          return (
+            <TicketsContainer
+              $width={cardWidth}
+              key={packs.map((pack) => pack.eventTicket.id).join("-")}
+            >
+              {packs.map((pack) => {
+                return (
+                  <CardBody
+                    showDownloadButton={true}
+                    key={pack.eventName + pack.attendeeEmail}
+                    addOns={
+                      pack.addOns.length > 0
+                        ? {
+                            text: `View ${pack.addOns.length} add-on items`,
+                            onClick(): void {
+                              dispatch({
+                                type: "set-bottom-modal",
+                                modal: {
+                                  addOns: pack.addOns,
+                                  modalType: "ticket-add-ons"
+                                }
+                              });
+                            }
+                          }
+                        : undefined
+                    }
+                    ref={(ref) => {
+                      if (!ref) return;
+                      const group = ticketsRef.current.get(eventId);
+                      if (!group) {
+                        ticketsRef.current.set(eventId, [ref]);
+                        return;
+                      }
+                      group.push(ref);
+                    }}
+                    pcd={pack.eventTicket}
+                    isMainIdentity={false}
+                  />
+                );
+              })}
+            </TicketsContainer>
+          );
+        })}
+      </_SwipableViews>
+    );
+  }, [currentPos, dispatch, tickets, windowWidth]);
 
   // if not loaded pcds yet and the user session is valid
   if (!isLoadedPCDs && !isInvalidUser) {
@@ -402,64 +466,7 @@ export const NewHomeScreen = (): ReactElement => {
             <Spacer h={48} />
             <EventTitle packs={tickets[currentPos][1]} />
             <SwipeViewContainer>
-              <_SwipableViews
-                style={{
-                  padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
-                }}
-                slideStyle={{
-                  padding: `0 ${CARD_GAP / 2}px`
-                }}
-                index={currentPos}
-                onChangeIndex={(e: number) => {
-                  setCurrentPos(e);
-                }}
-                enableMouseEvents
-              >
-                {tickets.map(([eventId, packs]) => {
-                  return (
-                    <TicketsContainer
-                      $width={cardWidth}
-                      key={packs.map((pack) => pack.eventTicket.id).join("-")}
-                    >
-                      {packs.map((pack) => {
-                        return (
-                          <CardBody
-                            showDownloadButton={true}
-                            key={pack.eventName + pack.attendeeEmail}
-                            addOns={
-                              pack.addOns.length > 0
-                                ? {
-                                    text: `View ${pack.addOns.length} add-on items`,
-                                    onClick(): void {
-                                      dispatch({
-                                        type: "set-bottom-modal",
-                                        modal: {
-                                          addOns: pack.addOns,
-                                          modalType: "ticket-add-ons"
-                                        }
-                                      });
-                                    }
-                                  }
-                                : undefined
-                            }
-                            ref={(ref) => {
-                              if (!ref) return;
-                              const group = ticketsRef.current.get(eventId);
-                              if (!group) {
-                                ticketsRef.current.set(eventId, [ref]);
-                                return;
-                              }
-                              group.push(ref);
-                            }}
-                            pcd={pack.eventTicket}
-                            isMainIdentity={false}
-                          />
-                        );
-                      })}
-                    </TicketsContainer>
-                  );
-                })}
-              </_SwipableViews>
+              {test}
               <ButtonsContainer>
                 {tickets.length > 1 && (
                   <NavigationContainer>
