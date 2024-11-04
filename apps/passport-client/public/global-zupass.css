@@ -52,10 +52,6 @@ body {
   overflow: auto;
   height: 100%;
 
-  @media (max-width: 440px) {
-    background: #00785e;
-  }
-
   overflow-y: scroll;
   -webkit-user-select: none;
   /* Safari */
