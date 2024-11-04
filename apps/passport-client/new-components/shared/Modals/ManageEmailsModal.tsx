@@ -196,6 +196,8 @@ export const ManageEmailModal = (): JSX.Element => {
         stateContext.update({
           extraSubscriptionFetchRequested: true
         });
+        setConfirmationCode("");
+        setNewEmail("");
       } else {
         setError(
           `Couldn't add '${newEmail}', please wait and try again later.`
