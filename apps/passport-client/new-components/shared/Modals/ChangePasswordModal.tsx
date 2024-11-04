@@ -5,7 +5,6 @@ import {
 } from "@pcd/passport-interface";
 import { getErrorMessage } from "@pcd/util";
 import React, { Suspense, useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
@@ -41,7 +40,6 @@ export const ChangePasswordModal = (): JSX.Element | null => {
   const stateContext = useStateContext();
   const dispatch = useDispatch();
   const update = useUpdate();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -58,12 +56,6 @@ export const ChangePasswordModal = (): JSX.Element | null => {
       setError(undefined);
     };
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!self) {
-      navigate("/login", { replace: true });
-    }
-  }, [self, navigate]);
 
   const onChangePassword = useCallback(async () => {
     if (loading || !self) return;

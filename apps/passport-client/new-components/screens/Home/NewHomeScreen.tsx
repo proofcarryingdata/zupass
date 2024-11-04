@@ -13,12 +13,7 @@ import {
   useRef,
   useState
 } from "react";
-import {
-  useLocation,
-  useNavigate,
-  useParams,
-  useSearchParams
-} from "react-router-dom";
+import { useLocation, useParams, useSearchParams } from "react-router-dom";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { ZappButton } from "../../../components/screens/ZappScreens/ZappButton";
@@ -31,11 +26,13 @@ import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
   useIsSyncSettled,
+  useLoginIfNoSelf,
   usePCDCollection,
   useScrollTo,
   useSelf,
   useUserForcedToLogout
 } from "../../../src/appHooks";
+import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { nextFrame } from "../../../src/util";
@@ -167,7 +164,6 @@ export const NewHomeScreen = (): ReactElement => {
   const scrollTo = useScrollTo();
   const windowWidth = useWindowWidth();
   const self = useSelf();
-  const navigate = useNavigate();
   const isLoadedPCDs = useIsSyncSettled();
   const [params, setParams] = useSearchParams();
   const [zappUrl, setZappUrl] = useState("");
@@ -186,11 +182,11 @@ export const NewHomeScreen = (): ReactElement => {
     isMobile &&
     (orientation.type === "landscape-primary" ||
       orientation.type === "landscape-secondary");
-  useEffect(() => {
-    if (!self && !location.pathname.includes("one-click-preview")) {
-      navigate("/login", { replace: true });
-    }
+  useLoginIfNoSelf(pendingRequestKeys.searchParams, location.search, {
+    disableRedirect: location.pathname.includes("one-click-preview"),
+    disablePendingRequest: !location.search
   });
+
   const showPodsList = tickets.length === 0 && !isLandscape && !noPods;
 
   useLayoutEffect(() => {
