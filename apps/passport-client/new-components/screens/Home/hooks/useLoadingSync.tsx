@@ -1,12 +1,14 @@
 import { useEffect } from "react";
-import { useIsSyncSettled } from "../../../../src/appHooks";
+import { useIsSyncSettled, useSelf } from "../../../../src/appHooks";
 import { toast } from "react-hot-toast";
 import { DocumentCheckIcon } from "@heroicons/react/16/solid";
 
 const SYNC_LOADING_TOAST_ID = "syncing-toast-id";
 export const useLoadingSync = (): void => {
   const isSyncSettled = useIsSyncSettled();
+  const self = useSelf();
   useEffect(() => {
+    if (!self) return;
     if (!isSyncSettled) {
       toast.loading("Syncing...", { id: SYNC_LOADING_TOAST_ID });
     } else {
@@ -15,5 +17,5 @@ export const useLoadingSync = (): void => {
         icon: <DocumentCheckIcon width={20} height={20} color="#ccc092" />
       });
     }
-  }, [isSyncSettled]);
+  }, [isSyncSettled, self]);
 };
