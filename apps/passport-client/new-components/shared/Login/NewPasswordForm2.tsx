@@ -1,4 +1,4 @@
-import { Dispatch, ReactNode, SetStateAction, useRef } from "react";
+import { Dispatch, ReactNode, SetStateAction, useRef, useState } from "react";
 import styled from "styled-components";
 import { checkPasswordStrength } from "../../../src/checkPasswordStrength";
 import { PASSWORD_MINIMUM_LENGTH } from "../../../src/password";
@@ -53,6 +53,8 @@ export const NewPasswordForm2 = ({
   style
 }: NewPasswordForm): JSX.Element => {
   const confirmPasswordRef = useRef<HTMLInputElement>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const togglePassword = (): void => setShowPassword((prev) => !prev);
 
   const checkPasswordAndSubmit = (e?: React.FormEvent): void => {
     if (e) {
@@ -122,6 +124,8 @@ export const NewPasswordForm2 = ({
             placeholder="Current password"
             error={getErrorMessage("change")}
             variant="secondary"
+            showPassword={showPassword}
+            onTogglePassword={togglePassword}
           />
         )}
         <PasswordInput2
@@ -139,6 +143,8 @@ export const NewPasswordForm2 = ({
           autoFocus={autoFocus}
           error={getErrorMessage("password")}
           variant="secondary"
+          showPassword={showPassword}
+          onTogglePassword={togglePassword}
         />
         <PasswordInput2
           ref={confirmPasswordRef}
@@ -150,6 +156,8 @@ export const NewPasswordForm2 = ({
           placeholder="Confirm password"
           error={getErrorMessage("confirm")}
           variant="secondary"
+          showPassword={showPassword}
+          onTogglePassword={togglePassword}
         />
       </InputsContainer>
       <InputsContainer>
