@@ -156,11 +156,11 @@ export const NewPasswordForm2 = ({
         <Button2 type="submit" disabled={!!error || loading}>
           {textOrLoader(submitButtonText)}
         </Button2>
-        <Button2 onClick={onCancel} variant="secondary">
+        <Button2 type="button" onClick={onCancel} variant="secondary">
           Back
         </Button2>
         {showSkipConfirm && (
-          <Button2 onClick={onSkipConfirm} variant="danger">
+          <Button2 type="button" onClick={onSkipConfirm} variant="danger">
             Skip for now
           </Button2>
         )}
