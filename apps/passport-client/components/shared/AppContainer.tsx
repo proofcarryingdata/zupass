@@ -12,6 +12,7 @@ import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 import { ScreenLoader } from "./ScreenLoader";
 import { ZupassSVG } from "./ZupassSVG";
 import { NewLoader } from "../../new-components/shared/NewLoader";
+import { isMobile } from "../../new-components/shared/utils";
 
 const Banner = styled.div`
   padding: 25px 0;
@@ -75,7 +76,7 @@ export function AppContainer({
                   backdropFilter: "blur(8px)",
                   color: "#ccc092"
                 },
-                position: "bottom-left",
+                position: isMobile ? "top-left" : "bottom-left",
                 loading: {
                   icon: (
                     <NewLoader
