@@ -18,8 +18,13 @@ export const PasswordInput2 = forwardRef(
 
     // Use local state if not provided
     const isPasswordVisible = showPassword ?? localShowPassword;
-    const handleToggle =
-      onTogglePassword ?? (() => setLocalShowPassword((prev) => !prev));
+    const handleToggle = (): void => {
+      if (onTogglePassword) {
+        onTogglePassword();
+      } else {
+        setLocalShowPassword((prev) => !prev);
+      }
+    };
 
     return (
       <Input2

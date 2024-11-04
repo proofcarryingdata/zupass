@@ -54,7 +54,7 @@ export const NewPasswordForm2 = ({
 }: NewPasswordForm): JSX.Element => {
   const confirmPasswordRef = useRef<HTMLInputElement>(null);
   const [showPassword, setShowPassword] = useState(false);
-  const togglePassword = () => setShowPassword((prev) => !prev);
+  const togglePassword = (): void => setShowPassword((prev) => !prev);
 
   const checkPasswordAndSubmit = (e?: React.FormEvent): void => {
     if (e) {
