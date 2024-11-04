@@ -393,6 +393,7 @@ export const ManageEmailModal = (): JSX.Element => {
           setNewEmail(e.target.value);
           setError("");
         }}
+        error={error}
       />
       {emailManagerState ===
         EmailManagerState.changeEmailEnterConfirmationCode && (
