@@ -86,3 +86,14 @@ export const hideScrollCSS = css`
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
 `;
+
+declare global {
+  interface Window {
+    TelegramWebviewProxy: {
+      postEvent: (...args: unknown[]) => unknown;
+    };
+  }
+}
+
+export const isInWebview = (): boolean =>
+  !!window?.TelegramWebviewProxy?.postEvent;
