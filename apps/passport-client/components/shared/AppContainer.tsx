@@ -11,6 +11,7 @@ import {
 import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 import { ScreenLoader } from "./ScreenLoader";
 import { ZupassSVG } from "./ZupassSVG";
+import { NewLoader } from "../../new-components/shared/NewLoader";
 
 const Banner = styled.div`
   padding: 25px 0;
@@ -69,6 +70,23 @@ export function AppContainer({
           {children && (
             <Toaster
               toastOptions={{
+                style: {
+                  background: "#016a5c",
+                  backdropFilter: "blur(8px)",
+                  color: "#ccc092"
+                },
+                position: "bottom-left",
+                loading: {
+                  icon: (
+                    <NewLoader
+                      size={2}
+                      gap={1}
+                      color="#ccc092"
+                      rows={3}
+                      columns={3}
+                    />
+                  )
+                },
                 success: {
                   duration: 5000
                 },
