@@ -74,7 +74,7 @@ export function AppContainer({
                 style: {
                   background: "rgba(0, 0, 0, 0.80)",
                   backdropFilter: "blur(8px)",
-                  color: "#ccc092",
+                  color: "#fff",
                   width: isMobile ? "100%" : "unset"
                 },
                 position: isMobile ? "top-left" : "bottom-left",
