@@ -1,24 +1,4 @@
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
-import { isEmailPCD } from "@pcd/email-pcd";
-import {
-  PCDGetRequest,
-  requestGenericIssuanceTicketPreviews
-} from "@pcd/passport-interface";
-import { Spacer } from "@pcd/passport-ui";
-import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import {
-  ReactElement,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState
-} from "react";
-import {
-  useLocation,
-  useNavigate,
-  useParams,
-  useSearchParams
-} from "react-router-dom";
+import { ChevronLeftIcon } from "@heroicons/react/16/solid";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { ZappButton } from "../../../components/screens/ZappScreens/ZappButton";
@@ -43,6 +23,7 @@ import { FloatingMenu } from "../../shared/FloatingMenu";
 import { NewModals } from "../../shared/Modals/NewModals";
 import { NewLoader } from "../../shared/NewLoader";
 import { SwipeViewContainer } from "../../shared/SwipeViewContainer";
+import { TicketCard, TicketCardHeight } from "../../shared/TicketCard";
 import { Typography } from "../../shared/Typography";
 import {
   isMobile,
@@ -50,10 +31,34 @@ import {
   useOrientation
 } from "../../shared/utils";
 import { AddOnsModal } from "./AddOnModal";
-import { EventTitle } from "./EventTitle";
 import { NoUpcomingEventsState } from "./NoUpcomingTicketsState";
 import { useTickets } from "./hooks/useTickets";
 import { useWindowWidth } from "./hooks/useWindowWidth";
+
+import { ITicketData } from "@pcd/eddsa-ticket-pcd";
+import { TicketPack } from "./types";
+
+import { ChevronRightIcon } from "@heroicons/react/16/solid";
+import { isEmailPCD } from "@pcd/email-pcd";
+import {
+  PCDGetRequest,
+  requestGenericIssuanceTicketPreviews
+} from "@pcd/passport-interface";
+import { Spacer } from "@pcd/passport-ui";
+import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import {
+  ReactElement,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState
+} from "react";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams
+} from "react-router-dom";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -61,6 +66,7 @@ const _SwipableViews = SwipableViews.default;
 const SCREEN_HORIZONTAL_PADDING = 20;
 const TICKET_VERTICAL_GAP = 20;
 const CARD_GAP = isMobile ? 8 : SCREEN_HORIZONTAL_PADDING * 2;
+const BUTTONS_CONTAINER_HEIGHT = 32;
 
 const disabledCSS = css`
   cursor: not-allowed;
@@ -98,19 +104,21 @@ const NavigationContainer = styled.div`
 `;
 const ButtonsContainer = styled.div`
   display: flex;
-  flex-direction: column;
+  position: absolute;
+  height: ${BUTTONS_CONTAINER_HEIGHT}px;
   gap: 12px;
-  margin-bottom: 36px;
-  margin-top: 24px;
-  padding: 0 20px;
+  top: ${TicketCardHeight + 20}px; /* 20 px gap above card */
+  left: 50%;
+  transform: translateX(-50%);
 `;
 
-const TicketsContainer = styled.div<{ $width: number }>`
+const TicketsContainer = styled.div<{ $width: number; $bigGap?: boolean }>`
   width: ${({ $width }): number => $width}px;
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: ${TICKET_VERTICAL_GAP}px;
+  gap: ${({ $bigGap }): number =>
+    $bigGap ? 40 + BUTTONS_CONTAINER_HEIGHT : TICKET_VERTICAL_GAP}px;
 `;
 
 const LoadingScreenContainer = styled.div`
@@ -142,6 +150,7 @@ const BackgroundContainer = styled.div<{ image?: string }>`
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  background: var(--dot-bg);
 
   ${({ image }): string =>
     image
@@ -156,6 +165,10 @@ const BackgroundContainer = styled.div<{ image?: string }>`
   `
       : ""}
 `;
+
+const getEventDetails = (tickets: TicketPack): ITicketData => {
+  return tickets.eventTicket.claim.ticket as ITicketData;
+};
 
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
@@ -389,12 +402,9 @@ export const NewHomeScreen = (): ReactElement => {
       )}
       {tickets.length > 0 && (
         <>
-          <BackgroundContainer
-            image={tickets[currentPos][1][0].eventTicket.claim.ticket.imageUrl}
-          />
+          <BackgroundContainer />
           <MaxWidthContainer>
             <Spacer h={48} />
-            <EventTitle packs={tickets[currentPos][1]} />
             <SwipeViewContainer
               onMouseDown={() => setHolding(true)}
               onMouseUp={() => setHolding(false)}
@@ -417,12 +427,22 @@ export const NewHomeScreen = (): ReactElement => {
                 }}
                 enableMouseEvents
               >
-                {tickets.map(([eventId, packs]) => {
+                {tickets.map(([eventId, packs], i) => {
+                  const eventDetails = getEventDetails(packs[0]);
                   return (
                     <TicketsContainer
                       $width={cardWidth}
+                      $bigGap={tickets.length > 1}
                       key={packs.map((pack) => pack.eventTicket.id).join("-")}
                     >
+                      <TicketCard
+                        ticketWidth={cardWidth}
+                        address={eventDetails.eventLocation}
+                        title={eventDetails.eventName}
+                        imgSource={eventDetails.imageUrl}
+                        ticketCount={packs.length}
+                        cardColor={i % 2 === 0 ? "purple" : "orange"}
+                      />
                       {packs.map((pack) => {
                         return (
                           <CardBody
