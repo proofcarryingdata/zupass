@@ -72,9 +72,10 @@ export function AppContainer({
             <Toaster
               toastOptions={{
                 style: {
-                  background: "#016a5c",
+                  background: "rgba(0, 0, 0, 0.80)",
                   backdropFilter: "blur(8px)",
-                  color: "#ccc092"
+                  color: "#ccc092",
+                  width: isMobile ? "100%" : "unset"
                 },
                 position: isMobile ? "top-left" : "bottom-left",
                 loading: {
