@@ -111,7 +111,7 @@ const ButtonsContainer = styled.div`
   padding: 0 16px;
   position: absolute;
   align-items: center;
-  gap: 12px;
+  gap: 20px;
   top: ${TicketCardHeight + 20}px; /* 20 px gap above card */
   left: 50%;
   transform: translateX(-50%);
