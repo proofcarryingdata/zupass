@@ -1,7 +1,9 @@
-import { ChevronLeftIcon } from "@heroicons/react/16/solid";
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
-import { ZappButton } from "../../../components/screens/ZappScreens/ZappButton";
+import {
+  ZAPP_BUTTON_HEIGHT,
+  ZappButton
+} from "../../../components/screens/ZappScreens/ZappButton";
 import { ZappButtonsContainer } from "../../../components/screens/ZappScreens/ZappButtonsContainer";
 import { ZappFullScreen } from "../../../components/screens/ZappScreens/ZappFullScreen";
 import { ZappScreen } from "../../../components/screens/ZappScreens/ZappScreen";
@@ -38,7 +40,7 @@ import { useWindowWidth } from "./hooks/useWindowWidth";
 import { ITicketData } from "@pcd/eddsa-ticket-pcd";
 import { TicketPack } from "./types";
 
-import { ChevronRightIcon } from "@heroicons/react/16/solid";
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { isEmailPCD } from "@pcd/email-pcd";
 import {
   PCDGetRequest,
@@ -104,8 +106,11 @@ const NavigationContainer = styled.div`
 `;
 const ButtonsContainer = styled.div`
   display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 0 16px;
   position: absolute;
-  height: ${BUTTONS_CONTAINER_HEIGHT}px;
+  align-items: center;
   gap: 12px;
   top: ${TicketCardHeight + 20}px; /* 20 px gap above card */
   left: 50%;
@@ -118,7 +123,12 @@ const TicketsContainer = styled.div<{ $width: number; $bigGap?: boolean }>`
   flex-direction: column;
   height: 100%;
   gap: ${({ $bigGap }): number =>
-    $bigGap ? 40 + BUTTONS_CONTAINER_HEIGHT : TICKET_VERTICAL_GAP}px;
+    $bigGap
+      ? 40 +
+        20 +
+        Object.entries(appConfig.embeddedZapps).length * ZAPP_BUTTON_HEIGHT +
+        BUTTONS_CONTAINER_HEIGHT
+      : TICKET_VERTICAL_GAP}px;
 `;
 
 const LoadingScreenContainer = styled.div`
@@ -140,30 +150,6 @@ const MaxWidthContainer = styled.div`
   height: calc(100vh - ${BANNER_HEIGHT}px);
   position: relative;
   overflow: hidden;
-`;
-const BackgroundContainer = styled.div<{ image?: string }>`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  background: var(--dot-bg);
-
-  ${({ image }): string =>
-    image
-      ? `
-    @media (min-width: 461px) {
-      background: url("/images/devcon/devcon-landscape.webp") lightgray 50% / cover no-repeat;
-    }
-    
-    @media (max-width: 460px) {
-      background: url("/images/devcon/devcon-portrait.webp") lightgray 50% / cover no-repeat;
-    }
-  `
-      : ""}
 `;
 
 const getEventDetails = (tickets: TicketPack): ITicketData => {
@@ -402,7 +388,6 @@ export const NewHomeScreen = (): ReactElement => {
       )}
       {tickets.length > 0 && (
         <>
-          <BackgroundContainer />
           <MaxWidthContainer>
             <Spacer h={48} />
             <SwipeViewContainer
