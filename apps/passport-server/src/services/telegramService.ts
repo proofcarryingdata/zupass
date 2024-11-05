@@ -93,6 +93,7 @@ import {
   getChatsWithMembershipStatus,
   getDisplayEmojis,
   getGroupChat,
+  getProductIdFromTelegramChat,
   getSessionKey,
   helpResponse,
   isDirectMessage,
@@ -1226,7 +1227,7 @@ export class TelegramService {
         );
       }
 
-      const { attendeeSemaphoreId } = pcd.claim.partialTicket;
+      const { attendeeSemaphoreId, productId } = pcd.claim.partialTicket;
 
       if (!attendeeSemaphoreId) {
         throw new Error(
@@ -1251,6 +1252,13 @@ export class TelegramService {
         throw new Error(`No valid events found for given chat`);
       if (!verifyUserEventIds(eventsByChat, validEventIds)) {
         throw new Error(`User submitted event Ids are invalid `);
+      }
+
+      const expectedProductId = getProductIdFromTelegramChat(telegramChatId);
+      if (expectedProductId && productId !== expectedProductId) {
+        throw new Error(
+          `Product id ${productId} does not match expected product id ${expectedProductId}`
+        );
       }
 
       logger(
