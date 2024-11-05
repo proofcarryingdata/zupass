@@ -26,34 +26,32 @@ export const useTickets = (): Array<[string, TicketPack[]]> => {
       t1.claim.ticket.attendeeEmail === t2.claim.ticket.attendeeEmail &&
       t1.type === EdDSATicketPCDTypeName
     );
-  })
-    .sort(() => Math.random() - 0.5)
-    .sort((t1, t2) => {
-      // if one of the tickets doesnt have a date, immidiatly retrun the other one as the bigger one
-      if (!t1.claim.ticket.eventStartDate) return 1;
-      if (!t2.claim.ticket.eventStartDate) return -1;
+  }).sort((t1, t2) => {
+    // if one of the tickets doesnt have a date, immidiatly retrun the other one as the bigger one
+    if (!t1.claim.ticket.eventStartDate) return 1;
+    if (!t2.claim.ticket.eventStartDate) return -1;
 
-      // parse the date
-      const date1 = Date.parse(t1.claim.ticket.eventStartDate);
-      const date2 = Date.parse(t2.claim.ticket.eventStartDate);
-      const now = Date.now();
-      // const now = Date.parse("2024-03-15T08:00:00.000");
+    // parse the date
+    const date1 = Date.parse(t1.claim.ticket.eventStartDate);
+    const date2 = Date.parse(t2.claim.ticket.eventStartDate);
+    const now = Date.now();
+    // const now = Date.parse("2024-03-15T08:00:00.000");
 
-      const timeToDate1 = date1 - now;
-      const timeToDate2 = date2 - now;
+    const timeToDate1 = date1 - now;
+    const timeToDate2 = date2 - now;
 
-      // 1. both events are upcoming
-      // the smaller timeToDate should be first - ordering by nearest upcoming event first.
-      if (timeToDate1 >= 0 && timeToDate2 >= 0) {
-        return timeToDate1 < timeToDate2 ? -1 : 1;
-      }
+    // 1. both events are upcoming
+    // the smaller timeToDate should be first - ordering by nearest upcoming event first.
+    if (timeToDate1 >= 0 && timeToDate2 >= 0) {
+      return timeToDate1 < timeToDate2 ? -1 : 1;
+    }
 
-      // 2. event1 is upcoming event, event2 has passed
-      // one of the timeToDates is positive(upcoming) - positive should be ordered first
-      // 3. both events have passed
-      // both timeToDates are negative - larger means closer to the current time.
-      return timeToDate1 > timeToDate2 ? -1 : 1;
-    });
+    // 2. event1 is upcoming event, event2 has passed
+    // one of the timeToDates is positive(upcoming) - positive should be ordered first
+    // 3. both events have passed
+    // both timeToDates are negative - larger means closer to the current time.
+    return timeToDate1 > timeToDate2 ? -1 : 1;
+  });
 
   //  This hook is building "ticket packs"
   //  ticket pack - main ticket and all its ticket addons, under the same event and attendee
