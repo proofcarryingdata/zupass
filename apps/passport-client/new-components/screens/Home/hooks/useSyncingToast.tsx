@@ -4,7 +4,7 @@ import { toast } from "react-hot-toast";
 import { DocumentCheckIcon } from "@heroicons/react/16/solid";
 
 const SYNC_LOADING_TOAST_ID = "syncing-toast-id";
-export const useLoadingSync = (): void => {
+export const useSyncingToast = (): void => {
   const isSyncSettled = useIsSyncSettled();
   const self = useSelf();
   useEffect(() => {
