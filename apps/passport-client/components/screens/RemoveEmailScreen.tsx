@@ -4,7 +4,8 @@ import {
 } from "@pcd/passport-interface";
 import { LinkButton } from "@pcd/passport-ui";
 import { getErrorMessage } from "@pcd/util";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
 import {
   useDispatch,
@@ -25,11 +26,18 @@ export function RemoveEmailScreen(): JSX.Element | null {
   const self = useSelf();
   const stateContext = useStateContext();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [emailToRemove, setEmailToRemove] = useState<string | undefined>();
   const [error, setError] = useState<string | undefined>();
   const [finished, setFinished] = useState(false);
   const pcds = usePCDCollection();
+
+  useEffect(() => {
+    if (!self) {
+      navigate("/login", { replace: true });
+    }
+  }, [self, navigate]);
 
   const onRemoveEmail = useCallback(async () => {
     if (loading || !self || !emailToRemove) return;

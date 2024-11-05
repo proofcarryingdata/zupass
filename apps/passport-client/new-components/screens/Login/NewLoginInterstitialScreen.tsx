@@ -91,16 +91,6 @@ export function NewLoginInterstitialScreen(): JSX.Element {
             });
             break;
           }
-          case "searchParams": {
-            console.log(
-              "Redirecting to home screen with search params",
-              pendingRequest
-            );
-            clearAllPendingRequests();
-            const encReq = JSON.parse(pendingRequest.value);
-            navigate(`/${encReq}`, { replace: true });
-            break;
-          }
           default:
             window.location.hash = "#/";
         }
