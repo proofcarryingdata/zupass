@@ -54,7 +54,7 @@ import { EventTitle } from "./EventTitle";
 import { NoUpcomingEventsState } from "./NoUpcomingTicketsState";
 import { useTickets } from "./hooks/useTickets";
 import { useWindowWidth } from "./hooks/useWindowWidth";
-import { useLoadingSync } from "./hooks/useLoadingSync";
+import { useSyncingToast } from "./hooks/useSyncingToast";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -176,7 +176,7 @@ export const NewHomeScreen = (): ReactElement => {
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
   const regularParams = useParams();
-  useLoadingSync();
+  useSyncingToast();
   const noPods =
     collection
       .getAll()
