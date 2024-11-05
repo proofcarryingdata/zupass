@@ -36,6 +36,7 @@ import {
   useSelf,
   useUserForcedToLogout
 } from "../../../src/appHooks";
+import { setPendingZapp } from "../../../src/sessionStorage";
 import { BANNER_HEIGHT, MAX_WIDTH_SCREEN } from "../../../src/sharedConstants";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { nextFrame } from "../../../src/util";
@@ -188,6 +189,10 @@ export const NewHomeScreen = (): ReactElement => {
       orientation.type === "landscape-secondary");
   useEffect(() => {
     if (!self && !location.pathname.includes("one-click-preview")) {
+      if (window.location.href.includes("folder=frogcrypto")) {
+        setPendingZapp(window.location.href);
+      }
+
       navigate("/login", { replace: true });
     }
   });
