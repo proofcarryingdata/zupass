@@ -247,7 +247,6 @@ const ExtraSectionSecondaryText = styled.div`
   color: var(--text-tertiary);
   text-align: center;
 
-  /* text-xs (12px)/regular-rubik */
   font-family: Rubik;
   font-size: 12px;
   font-style: normal;
