@@ -7,6 +7,7 @@ export function clearAllPendingRequests(): void {
   clearPendingAddSubscriptionRequest();
   clearPendingGenericIssuanceCheckinRequest();
   clearPendingAuthenticateIFrameRequest();
+  clearPendingZapp();
 }
 
 export function hasPendingRequest(): boolean {
@@ -19,7 +20,8 @@ export function hasPendingRequest(): boolean {
     getPendingAddSubscriptionPageRequest() ||
     getPendingViewFrogCryptoPageRequest() ||
     getPendingGenericIssuanceCheckinRequest() ||
-    getPendingAuthenticateIFrameRequest()
+    getPendingAuthenticateIFrameRequest() ||
+    getPendingZapp()
   );
 }
 
@@ -32,7 +34,8 @@ export const pendingRequestKeys: Record<string, string> = {
   addSubscription: "pendingAddSubscription",
   viewFrogCrypto: "pendingViewFrogCrypto",
   genericIssuanceCheckin: "pendingGenericIssuanceCheckin",
-  authenticateIFrame: "pendingAuthenticateIFrame"
+  authenticateIFrame: "pendingAuthenticateIFrame",
+  pendingZapp: "pendingZapp"
 } as const;
 
 export function setPendingGetWithoutProvingRequest(request: string): void {
@@ -151,6 +154,19 @@ export function clearPendingAuthenticateIFrameRequest(): void {
 
 export function getPendingAuthenticateIFrameRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingRequestKeys.authenticateIFrame);
+  return value ?? undefined;
+}
+
+export function setPendingZapp(request: string): void {
+  sessionStorage.setItem(pendingRequestKeys.pendingZapp, request);
+}
+
+export function clearPendingZapp(): void {
+  sessionStorage.removeItem(pendingRequestKeys.pendingZapp);
+}
+
+export function getPendingZapp(): string | undefined {
+  const value = sessionStorage.getItem(pendingRequestKeys.pendingZapp);
   return value ?? undefined;
 }
 
