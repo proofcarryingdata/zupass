@@ -112,10 +112,15 @@ const ButtonsContainer = styled.div`
   position: absolute;
   align-items: center;
   gap: 20px;
-  top: ${TicketCardHeight + 20}px; /* 20 px gap above card */
+  top: ${TicketCardHeight + TICKET_VERTICAL_GAP}px; /* 20 px gap above card */
   left: 50%;
   transform: translateX(-50%);
 `;
+
+const getZappsHeight = (): number => {
+  const zapps = Object.entries(appConfig.embeddedZapps);
+  return zapps.length * ZAPP_BUTTON_HEIGHT + zapps.length * TICKET_VERTICAL_GAP;
+};
 
 const TicketsContainer = styled.div<{ $width: number; $bigGap?: boolean }>`
   width: ${({ $width }): number => $width}px;
@@ -124,11 +129,8 @@ const TicketsContainer = styled.div<{ $width: number; $bigGap?: boolean }>`
   height: 100%;
   gap: ${({ $bigGap }): number =>
     $bigGap
-      ? 40 +
-        20 +
-        Object.entries(appConfig.embeddedZapps).length * ZAPP_BUTTON_HEIGHT +
-        BUTTONS_CONTAINER_HEIGHT
-      : TICKET_VERTICAL_GAP}px;
+      ? TICKET_VERTICAL_GAP * 2 + getZappsHeight() + BUTTONS_CONTAINER_HEIGHT
+      : getZappsHeight() + TICKET_VERTICAL_GAP}px;
 `;
 
 const LoadingScreenContainer = styled.div`
@@ -152,6 +154,12 @@ const MaxWidthContainer = styled.div`
   overflow: hidden;
 `;
 
+const TicketCardsContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: ${TICKET_VERTICAL_GAP}px;
+  height: 100%;
+`;
 const getEventDetails = (tickets: TicketPack): ITicketData => {
   return tickets.eventTicket.claim.ticket as ITicketData;
 };
@@ -427,41 +435,43 @@ export const NewHomeScreen = (): ReactElement => {
                         ticketCount={packs.length}
                         cardColor={i % 2 === 0 ? "purple" : "orange"}
                       />
-                      {packs.map((pack) => {
-                        return (
-                          <CardBody
-                            showDownloadButton={true}
-                            key={pack.eventName + pack.attendeeEmail}
-                            addOns={
-                              pack.addOns.length > 0
-                                ? {
-                                    text: `View ${pack.addOns.length} add-on items`,
-                                    onClick(): void {
-                                      dispatch({
-                                        type: "set-bottom-modal",
-                                        modal: {
-                                          addOns: pack.addOns,
-                                          modalType: "ticket-add-ons"
-                                        }
-                                      });
+                      <TicketCardsContainer>
+                        {packs.map((pack) => {
+                          return (
+                            <CardBody
+                              showDownloadButton={true}
+                              key={pack.eventName + pack.attendeeEmail}
+                              addOns={
+                                pack.addOns.length > 0
+                                  ? {
+                                      text: `View ${pack.addOns.length} add-on items`,
+                                      onClick(): void {
+                                        dispatch({
+                                          type: "set-bottom-modal",
+                                          modal: {
+                                            addOns: pack.addOns,
+                                            modalType: "ticket-add-ons"
+                                          }
+                                        });
+                                      }
                                     }
-                                  }
-                                : undefined
-                            }
-                            ref={(ref) => {
-                              if (!ref) return;
-                              const group = ticketsRef.current.get(eventId);
-                              if (!group) {
-                                ticketsRef.current.set(eventId, [ref]);
-                                return;
+                                  : undefined
                               }
-                              group.push(ref);
-                            }}
-                            pcd={pack.eventTicket}
-                            isMainIdentity={false}
-                          />
-                        );
-                      })}
+                              ref={(ref) => {
+                                if (!ref) return;
+                                const group = ticketsRef.current.get(eventId);
+                                if (!group) {
+                                  ticketsRef.current.set(eventId, [ref]);
+                                  return;
+                                }
+                                group.push(ref);
+                              }}
+                              pcd={pack.eventTicket}
+                              isMainIdentity={false}
+                            />
+                          );
+                        })}
+                      </TicketCardsContainer>
                     </TicketsContainer>
                   );
                 })}
