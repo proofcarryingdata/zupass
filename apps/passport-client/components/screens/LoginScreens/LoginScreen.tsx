@@ -23,8 +23,7 @@ import {
   setPendingGetWithoutProvingRequest,
   setPendingProofRequest,
   setPendingViewFrogCryptoRequest,
-  setPendingViewSubscriptionsRequest,
-  setPendingZapp
+  setPendingViewSubscriptionsRequest
 } from "../../../src/sessionStorage";
 import {
   BigInput,
@@ -66,7 +65,6 @@ export function LoginScreen(): JSX.Element {
   const pendingAuthenticateIFrameRequest = query?.get(
     pendingRequestKeys.authenticateIFrame
   );
-  const pendingZapp = query?.get(pendingRequestKeys.pendingZapp);
 
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
@@ -97,9 +95,6 @@ export function LoginScreen(): JSX.Element {
     } else if (pendingAuthenticateIFrameRequest) {
       setPendingAuthenticateIFrameRequest(pendingAuthenticateIFrameRequest);
       pendingRequestForLogging = pendingRequestKeys.authenticateIFrame;
-    } else if (pendingZapp) {
-      setPendingZapp(pendingZapp);
-      pendingRequestForLogging = pendingRequestKeys.pendingZapp;
     }
 
     if (pendingRequestForLogging) {
@@ -115,8 +110,7 @@ export function LoginScreen(): JSX.Element {
     pendingAddSubscriptionRequest,
     pendingViewFrogCryptoRequest,
     pendingGenericIssuanceCheckinRequest,
-    pendingAuthenticateIFrameRequest,
-    pendingZapp
+    pendingAuthenticateIFrameRequest
   ]);
 
   const suggestedEmail = query?.get("email");
