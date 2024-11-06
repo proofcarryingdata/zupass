@@ -352,7 +352,8 @@ const generateProofUrl = async (
   telegramChatId: string,
   validEventIds: string[],
   eventNames: string[],
-  telegramUsername?: string
+  telegramUsername?: string,
+  productId?: string
 ): Promise<string> => {
   if (eventNames.find((e) => e.endsWith(FROG_SLUG))) {
     logger(`[TELEGRAM] found frog event`, eventNames);
@@ -367,7 +368,8 @@ const generateProofUrl = async (
     telegramUserId,
     telegramChatId,
     validEventIds,
-    telegramUsername
+    telegramUsername,
+    productId
   );
 };
 
@@ -375,7 +377,8 @@ const generateTicketProofUrl = async (
   telegramUserId: number,
   telegramChatId: string,
   validEventIds: string[],
-  telegramUsername?: string
+  telegramUsername?: string,
+  productId?: string
 ): Promise<string> => {
   return traced("telegram", "generateTicketProofUrl", async (span) => {
     span?.setAttribute("userId", telegramUserId.toString());
@@ -384,7 +387,7 @@ const generateTicketProofUrl = async (
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
       revealTicketId: false,
       revealEventId: false,
-      revealProductId: false,
+      revealProductId: !!productId,
       revealTimestampConsumed: false,
       revealTimestampSigned: false,
       revealAttendeeSemaphoreId: true,
@@ -401,8 +404,8 @@ const generateTicketProofUrl = async (
         displayName: "Your Ticket",
         description: "",
         validatorParams: {
-          eventIds: validEventIds,
-          productIds: [],
+          eventIds: productId ? [] : validEventIds,
+          productIds: productId ? [productId] : [],
           // TODO: surface which event ticket we are looking for
           notFoundMessage: "You don't have a ticket to this event."
         },
@@ -482,7 +485,7 @@ export const generateReactProofUrl = async (
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
       revealTicketId: false,
       revealEventId: false,
-      revealProductId: false,
+      revealProductId: true,
       revealTimestampConsumed: false,
       revealTimestampSigned: false,
       revealAttendeeSemaphoreId: false,
@@ -740,12 +743,14 @@ export const chatsToJoinV2 = async (
       if (ctx.session.chatToJoin) {
         const chat = ctx.session.chatToJoin;
         const telegramUsername = ctx.from?.username;
+        const productId = getProductIdFromTelegramChat(chat.telegramChatID);
         const proofUrl = await generateProofUrl(
           userId,
           chat.telegramChatID,
           chat.ticketEventIds,
           chat.eventNames,
-          telegramUsername
+          telegramUsername,
+          productId
         );
 
         if (chat.isChatMember) {
@@ -1190,3 +1195,17 @@ export function getDisplayEmojis(messageTimestamp?: Date): string[] {
     return ["👍", "👎️", "🐸"];
   }
 }
+
+export const getProductIdFromTelegramChat = (
+  chatId: string | number
+): string | undefined => {
+  try {
+    const chatToProductIds = JSON.parse(
+      process.env.TELEGRAM_CHAT_TO_PRODUCT_IDS || "{}"
+    );
+    return chatToProductIds[String(chatId)];
+  } catch (error) {
+    logger("[TELEGRAM] Error parsing TELEGRAM_CHAT_TO_PRODUCT_IDS:", error);
+    return undefined;
+  }
+};
