@@ -34,8 +34,7 @@ export async function performPipelineLoad(
   userSubservice: UserSubservice,
   discordService: DiscordService | null,
   pagerdutyService: PagerDutyService | null,
-  rollbarService: RollbarService | null,
-  loadStarted?: () => Promise<void>
+  rollbarService: RollbarService | null
 ): Promise<PipelineLoadSummary> {
   const startTime = new Date();
   const pipelineId = pipelineSlot.definition.id;
@@ -110,20 +109,10 @@ export async function performPipelineLoad(
       `loading data for pipeline with id '${pipelineId}'` +
         ` of type '${pipelineSlot.definition.type}'`
     );
-    const loadPromise = pipeline.load();
-    pipelineSlot.loadPromise = loadPromise;
-    try {
-      // we `.stop()` the previous instance of this pipeline
-      // here, so that by the time the `AbortError` is thrown/caught,
-      // we're ready for it with the above `pipelineSlot.loadPromise`
-      // which can be awaited again, until the load either succeeds
-      // or fails with an error other than `AbortError`.
-      await loadStarted?.();
-    } catch (e) {
-      logger(LOG_TAG, "failed to run loadStarted callback", e);
-    }
-    const summary = await loadPromise;
-    pipelineSlot.loadPromise = undefined;
+
+    pipelineSlot.loading = true;
+    const summary = await pipeline.load();
+
     logger(
       LOG_TAG,
       `successfully loaded data for pipeline with id '${pipelineId}'` +
@@ -170,5 +159,7 @@ export async function performPipelineLoad(
       discordService
     );
     return summary;
+  } finally {
+    pipelineSlot.loading = false;
   }
 }

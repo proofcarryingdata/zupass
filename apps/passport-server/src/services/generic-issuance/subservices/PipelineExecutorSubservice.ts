@@ -3,7 +3,7 @@ import {
   PipelineLoadSummary
 } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
-import { sleep, str } from "@pcd/util";
+import { str } from "@pcd/util";
 import _ from "lodash";
 import { PoolClient } from "postgres-pool";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
@@ -14,7 +14,6 @@ import {
 } from "../../../database/sqlQuery";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
-import { isAbortError } from "../../../util/util";
 import { DiscordService } from "../../discordService";
 import {
   LocalFileService,
@@ -191,7 +190,8 @@ export class PipelineExecutorSubservice {
           owner: await this.userSubservice.getUserById(
             client,
             definition.ownerUserId
-          )
+          ),
+          loading: false
         };
         this.pipelineSlots.push(pipelineSlot);
       } else {
@@ -204,13 +204,10 @@ export class PipelineExecutorSubservice {
       tracePipeline(pipelineSlot.definition);
       traceUser(pipelineSlot.owner);
 
-      const existingInstance = pipelineSlot.instance;
-      const stopPipeline = async (): Promise<void> => {
-        if (existingInstance && !existingInstance.isStopped()) {
-          span?.setAttribute("stopping", true);
-          await existingInstance.stop();
-        }
-      };
+      if (pipelineSlot.instance && !pipelineSlot.instance.isStopped()) {
+        span?.setAttribute("stopping", true);
+        await pipelineSlot.instance.stop();
+      }
 
       pipelineSlot.instance = await instantiatePipeline(
         this.context,
@@ -221,9 +218,9 @@ export class PipelineExecutorSubservice {
       pipelineSlot.definition = definition;
 
       if (dontLoad !== true) {
-        await this.performPipelineLoad(pipelineSlot, stopPipeline);
-      } else {
-        await stopPipeline();
+        this.performPipelineLoad(pipelineSlot).catch((e) => {
+          logger(LOG_TAG, "failed to perform pipeline load", e);
+        });
       }
     });
   }
@@ -254,6 +251,7 @@ export class PipelineExecutorSubservice {
         this.pipelineSlots.map(async (entry) => {
           if (entry.instance && !entry.instance.isStopped()) {
             await entry.instance.stop();
+            entry.loading = false;
           }
         })
       );
@@ -269,7 +267,8 @@ export class PipelineExecutorSubservice {
             owner: await this.userSubservice.getUserById(
               client,
               pipelineDefinition.ownerUserId
-            )
+            ),
+            loading: false
           });
 
           // attempt to instantiate a {@link Pipeline}
@@ -313,8 +312,7 @@ export class PipelineExecutorSubservice {
    * If load result caching is enabled globally and for this pipeline, takes care of that too.
    */
   public async performPipelineLoad(
-    pipelineSlot: PipelineSlot,
-    loadStarted?: () => Promise<void>
+    pipelineSlot: PipelineSlot
   ): Promise<PipelineLoadSummary> {
     return traced<PipelineLoadSummary>(
       SERVICE_NAME,
@@ -363,8 +361,7 @@ export class PipelineExecutorSubservice {
           this.userSubservice,
           this.discordService,
           this.pagerdutyService,
-          this.rollbarService,
-          loadStarted
+          this.rollbarService
         );
 
         if (cachedLoadFromDisk) {
@@ -438,40 +435,7 @@ export class PipelineExecutorSubservice {
 
       await Promise.allSettled(
         this.pipelineSlots.map(async (slot: PipelineSlot): Promise<void> => {
-          try {
-            if (slot.loadPromise) {
-              await slot.loadPromise;
-            } else {
-              await this.performPipelineLoad(slot);
-            }
-          } catch (e) {
-            // an abort means a podbox user either deleted or edited (and thus restarted)
-            // this pipeline. in the case that it was deleted, `slot.loadPromise` will be
-            // set to `undefined`. In the case that it was edited, Podbox will restart the
-            // pipeline, and set `slot.loadPromise` to a new promise representing the
-            // pipeline's load operation.
-            if (isAbortError(e)) {
-              while (slot.loadPromise) {
-                try {
-                  await slot.loadPromise;
-                  slot.loadPromise = undefined;
-                  break;
-                } catch (e) {
-                  if (isAbortError(e)) {
-                    await sleep(50);
-                  }
-                }
-              }
-              // no load promise means we're done here
-              return;
-            }
-
-            logger(
-              LOG_TAG,
-              `failed to perform pipeline load for pipeline ${slot.definition.id}`,
-              e
-            );
-          }
+          await this.performPipelineLoad(slot);
         })
       );
 
