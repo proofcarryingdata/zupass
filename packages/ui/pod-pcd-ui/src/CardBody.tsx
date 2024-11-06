@@ -186,7 +186,6 @@ async function verifySignature(pcd: PODPCD): Promise<{
 }
 
 const Text = styled.span`
-  /* text-sm (14px)/medium-rubik */
   font-family: Rubik;
   font-size: 14px;
   font-style: normal;
