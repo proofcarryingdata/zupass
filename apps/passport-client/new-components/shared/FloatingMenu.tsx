@@ -43,6 +43,7 @@ const IconContainer = styled.div`
   flex-direction: column;
   color: #ffffff;
   gap: 2px;
+  opacity: 0.8;
 `;
 
 type FloatingMenuProps = {
