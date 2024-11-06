@@ -50,7 +50,7 @@ export class PipelineExecutorSubservice {
    * 3. wait until the time is at least {@link PIPELINE_REFRESH_INTERVAL_MS} milliseconds after the last load started
    * 4. go back to step one
    */
-  private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
+  private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000; // 1 minute
 
   /**
    * Podbox maintains an instance of a {@link PipelineSlot} for each pipeline

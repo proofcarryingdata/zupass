@@ -1,6 +1,7 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { PipelineLoadSummary } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
+import { sleep } from "@pcd/util";
 import { Pool } from "postgres-pool";
 import { sqlTransaction } from "../../../../database/sqlQuery";
 import { logger } from "../../../../util/logger";
@@ -21,6 +22,7 @@ import { UserSubservice } from "../UserSubservice";
 import { maybeAlertForPipelineRun } from "./maybeAlertForPipelineRun";
 
 const LOG_TAG = `[performPipelineLoad]`;
+const PIPELINE_LOAD_TIMEOUT_MS = 1000 * 60 * 10; // 10 minutes
 
 /**
  * Performs a {@link Pipeline#load} for the given {@link Pipeline}, and
@@ -111,7 +113,15 @@ export async function performPipelineLoad(
     );
 
     pipelineSlot.loading = true;
-    const summary = await pipeline.load();
+
+    // in case a pipeline hangs, continue after 10 minutes.
+    const summary = await Promise.race([
+      pipeline.load(),
+      (async (): Promise<PipelineLoadSummary> => {
+        await sleep(PIPELINE_LOAD_TIMEOUT_MS);
+        throw new Error(`TIME_OUT: ${pipeline.id}`);
+      })()
+    ]);
 
     logger(
       LOG_TAG,
