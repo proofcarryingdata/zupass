@@ -10,6 +10,8 @@ import { displayPODValue } from "../../shared/uiUtil";
 import { BottomModalHeader } from "../../../new-components/shared/BottomModal";
 import { Typography } from "../../../new-components/shared/Typography";
 import { Button2 } from "../../../new-components/shared/Button";
+import { BANNER_HEIGHT } from "../../../src/sharedConstants";
+import { hideScrollCSS } from "../../../new-components/shared/utils";
 
 export function EmbeddedSignPODScreen({
   entries,
@@ -95,6 +97,7 @@ const EntriesGrid = styled.div`
   flex: 1; /* this allows the child to take up remaining space */
   overflow-y: auto; /* enables scrolling within the child */
   min-height: 0; /* critical to prevent overflow with flex children */
+  ${hideScrollCSS}
 `;
 
 const ButtonsContainer = styled.div`
@@ -109,7 +112,7 @@ const Container = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: space-between;
-  height: 100vh;
+  height: calc(100vh - ${BANNER_HEIGHT}px);
   padding: 24px 24px 20px 24px;
   gap: 16px;
 `;
