@@ -93,10 +93,10 @@ function PODPCDCardBody({
               {sigStatus === 0
                 ? "Check signature"
                 : isValidSig
-                  ? "Valid signature"
-                  : error !== undefined
-                    ? "Signature error!"
-                    : "Bad signature!"}
+                ? "Valid signature"
+                : error !== undefined
+                ? "Signature error!"
+                : "Bad signature!"}
             </Text>
             {isValidSig && (
               <span style={{ paddingRight: 8 }}>

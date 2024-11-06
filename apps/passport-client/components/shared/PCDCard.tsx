@@ -22,11 +22,7 @@ import {
   useState
 } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
-import {
-  useDispatch,
-  usePCDCollection,
-  useUserIdentityPCD
-} from "../../src/appHooks";
+import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
 import { pcdRenderers } from "../../src/pcdRenderers";
 import { usePackage } from "../../src/usePackage";
@@ -334,7 +330,6 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
   ) => {
     const pcdCollection = usePCDCollection();
 
-    const dispatch = useDispatch();
     if (isMainIdentity) {
       return <MainIdentityCard />;
     }
