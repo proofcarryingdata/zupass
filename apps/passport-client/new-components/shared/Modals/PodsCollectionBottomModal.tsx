@@ -275,7 +275,6 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     isPodsCollectionModalOpen,
     setExpandedGroupsIds
   ]);
-  console.log(activePod);
   const handlePodClick = useCallback(
     (pcd: PCD<unknown, unknown>) => {
       listContainerRef.current &&
