@@ -1,5 +1,9 @@
 import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
-import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
+
+import {
+  EdDSATicketPCDTypeName,
+  isEdDSATicketPCD
+} from "@pcd/eddsa-ticket-pcd";
 import { isEmailPCD } from "@pcd/email-pcd";
 import { PCD } from "@pcd/pcd-types";
 import {
@@ -10,7 +14,6 @@ import {
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isUnknownPCD } from "@pcd/unknown-pcd";
 import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
-import intersectionWith from "lodash/intersectionWith";
 import {
   ReactElement,
   ReactNode,
@@ -42,7 +45,25 @@ import {
   replaceDotWithSlash,
   useOrientation
 } from "../utils";
+import { uniqWith } from "lodash";
 
+const filterOverlappingEdDSATickets = (
+  pcds: PCD<unknown, unknown>[]
+): PCD<unknown, unknown>[] => {
+  const noDupTickets = uniqWith(pcds.reverse(), (a, b) => {
+    const isPodOrEddsa1 = isPODTicketPCD(a) || isEdDSATicketPCD(a);
+    const isPodOrEddsa2 = isPODTicketPCD(b) || isEdDSATicketPCD(b);
+    if (!isPodOrEddsa1 || !isPodOrEddsa2) return false;
+    return (
+      a.claim.ticket.attendeeEmail === b.claim.ticket.attendeeEmail &&
+      a.claim.ticket.eventId === b.claim.ticket.eventId &&
+      a.type === EdDSATicketPCDTypeName
+    );
+  });
+
+  const noEmails = noDupTickets.filter((p) => !isEmailPCD(p));
+  return noEmails;
+};
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
@@ -99,18 +120,7 @@ export const PodsCollectionList = ({
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
-    // If we have the same ticket in both POD and EDSA, we want to show only the POD one
-    const podTickets = allPcds.filter(isPODTicketPCD);
-    const eddsaTickets = allPcds.filter(isEdDSATicketPCD);
-    const badTicketsIds = intersectionWith(eddsaTickets, podTickets, (a, b) => {
-      return a.claim.ticket.ticketId === b.claim.ticket.ticketId;
-    }).map((ticket) => ticket.id);
-    const filteredPcds = allPcds.filter(
-      (pcd) =>
-        (!isEdDSATicketPCD(pcd) || !badTicketsIds.includes(pcd.id)) &&
-        !isEmailPCD(pcd)
-    );
-
+    const filteredPods = filterOverlappingEdDSATickets(allPcds);
     // Group PCDs by folder and create a list of groups with the items inside
     const result: Record<string, GroupType> = {};
 
@@ -121,7 +131,7 @@ export const PodsCollectionList = ({
       if (!result[value]) {
         const isItTheFirstGroup = !Object.keys(result).length;
         const shouldExpandedByDefault =
-          isItTheFirstGroup || filteredPcds.length < 20;
+          isItTheFirstGroup || filteredPods.length < 20;
         result[value] = {
           title: value.replace(/\//g, ` ${POD_FOLDER_DISPLAY_SEPERATOR} `),
           id: value, // setting the folder path as a key
@@ -133,7 +143,7 @@ export const PodsCollectionList = ({
         };
       }
 
-      const pcd = filteredPcds.find((pcd) => pcd.id === key);
+      const pcd = filteredPods.find((pcd) => pcd.id === key);
       if (!pcd) continue;
 
       result[value].children.push({
