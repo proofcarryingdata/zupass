@@ -511,8 +511,11 @@ export const ManageEmailModal = (): JSX.Element => {
       <Input2
         autoFocus={true}
         variant="secondary"
+        type="number"
+        pattern="[0-9]*"
+        inputMode="numeric"
         onChange={(e) => {
-          setConfirmationCode(e.target.value);
+          setConfirmationCode(e.target.value.replace(/\D/g, ""));
           setError("");
         }}
         value={confirmationCode}

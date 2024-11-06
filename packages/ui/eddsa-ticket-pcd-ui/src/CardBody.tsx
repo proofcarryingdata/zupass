@@ -122,6 +122,11 @@ function EdDSATicketPCDCardBody({
             <QRIcon />
           </NEW_UI__ExtraSection>
         )}
+        <NEW_UI__ExtraSection style={{ justifyContent: "center" }}>
+          <ExtraSectionSecondaryText>
+            QR POD • ZK powered by ZUPASS
+          </ExtraSectionSecondaryText>
+        </NEW_UI__ExtraSection>
       </div>
     </NEW_UI__Container>
   );
@@ -236,6 +241,18 @@ const NEW_UI__ExtraSectionText = styled.div<{ $disabled?: boolean }>`
   font-size: 16px;
   font-weight: 400;
   line-height: 135%;
+`;
+
+const ExtraSectionSecondaryText = styled.div`
+  color: var(--text-tertiary);
+  text-align: center;
+
+  /* text-xs (12px)/regular-rubik */
+  font-family: Rubik;
+  font-size: 12px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: 135%; /* 16.2px */
 `;
 
 const DownloadIcon = (): JSX.Element => (
