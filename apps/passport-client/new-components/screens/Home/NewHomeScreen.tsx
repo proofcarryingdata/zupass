@@ -13,7 +13,6 @@ import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
   useIsDownloaded,
-  useIsSyncSettled,
   usePCDCollection,
   useScrollTo,
   useSelf,
@@ -62,6 +61,7 @@ import {
   useParams,
   useSearchParams
 } from "react-router-dom";
+import { SyncIndicator } from "./SyncIndicator";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipableViews.default;
@@ -69,7 +69,7 @@ const _SwipableViews = SwipableViews.default;
 const SCREEN_HORIZONTAL_PADDING = 20;
 const TICKET_VERTICAL_GAP = 20;
 const CARD_GAP = isMobile ? 8 : SCREEN_HORIZONTAL_PADDING * 2;
-
+const SYNC_INDICATOR_CONTAINER = 12;
 const disabledCSS = css`
   cursor: not-allowed;
   opacity: 0.2;
@@ -117,7 +117,8 @@ const ButtonsContainer = styled.div`
   position: absolute;
   align-items: center;
   gap: 20px;
-  top: ${TicketCardHeight + TICKET_VERTICAL_GAP}px; /* 20 px gap above card */
+  top: ${TicketCardHeight +
+  SYNC_INDICATOR_CONTAINER}px; /* 20 px gap above card */
   left: 50%;
   transform: translateX(-50%);
 `;
@@ -127,15 +128,14 @@ const getZappsHeight = (): number => {
   return zapps.length * ZAPP_BUTTON_HEIGHT + zapps.length * TICKET_VERTICAL_GAP;
 };
 
-const TicketsContainer = styled.div<{ $width: number; $bigGap?: boolean }>`
+const TicketsContainer = styled.div<{ $width: number }>`
   width: ${({ $width }): number => $width}px;
   display: flex;
   flex-direction: column;
   height: 100%;
-  gap: ${({ $bigGap }): number =>
-    $bigGap
-      ? TICKET_VERTICAL_GAP * 2 + getZappsHeight() + 20
-      : getZappsHeight() + TICKET_VERTICAL_GAP}px;
+  gap: ${getZappsHeight()
+    ? getZappsHeight() + 28 + TICKET_VERTICAL_GAP
+    : 28 + TICKET_VERTICAL_GAP}px;
 `;
 
 const LoadingScreenContainer = styled.div`
@@ -152,7 +152,7 @@ const MaxWidthContainer = styled.div`
   width: 100%;
   max-width: ${MAX_WIDTH_SCREEN}px;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: center;
   height: calc(100vh - ${BANNER_HEIGHT}px);
   position: relative;
@@ -167,44 +167,6 @@ const TicketCardsContainer = styled.div`
 `;
 const getEventDetails = (tickets: TicketPack): ITicketData => {
   return tickets.eventTicket.claim.ticket as ITicketData;
-};
-
-const SyncIndicator = () => {
-  const [dots, setDots] = useState("");
-  const [minutesSinceSynced, setMinutesSinceSynced] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setDots((prevDots) => (prevDots.length < 3 ? prevDots + "." : ""));
-    }, 500);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const isSyncSettled = useIsSyncSettled();
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (isSyncSettled) {
-        setMinutesSinceSynced((oldValue) => oldValue + 1);
-      } else {
-        setMinutesSinceSynced(0);
-      }
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [isSyncSettled]);
-
-  if (isSyncSettled) {
-    if (minutesSinceSynced) {
-      return `Synced ${minutesSinceSynced} minute${
-        minutesSinceSynced > 1 ? "s" : ""
-      } ago`;
-    } else {
-      return "Just synced";
-    }
-  }
-  return `Syncing${dots}`;
 };
 
 export const NewHomeScreen = (): ReactElement => {
@@ -440,50 +402,7 @@ export const NewHomeScreen = (): ReactElement => {
       {tickets.length > 0 && (
         <>
           <MaxWidthContainer>
-            <Spacer h={20} />
-            {tickets.length > 1 && (
-              <NavigationContainer>
-                <PageCircleButton
-                  disabled={currentPos === 0}
-                  onClick={() => {
-                    setCurrentPos((old) => {
-                      if (old === 0) return old;
-                      return old - 1;
-                    });
-                  }}
-                >
-                  <ChevronLeftIcon
-                    width={24}
-                    height={24}
-                    color="var(--text-tertiary)"
-                  />
-                </PageCircleButton>
-                <Typography
-                  fontSize={14}
-                  color="#8B94AC"
-                  fontWeight={500}
-                  family="Rubik"
-                  style={{ display: "flex", alignItems: "center" }}
-                >
-                  {currentPos + 1} OF {tickets.length}
-                </Typography>
-                <PageCircleButton
-                  disabled={currentPos === tickets.length - 1}
-                  onClick={() => {
-                    setCurrentPos((old) => {
-                      if (old === tickets.length - 1) return old;
-                      return old + 1;
-                    });
-                  }}
-                >
-                  <ChevronRightIcon
-                    width={24}
-                    height={24}
-                    color="var(--text-tertiary)"
-                  />
-                </PageCircleButton>
-              </NavigationContainer>
-            )}
+            {!(showPodsList || noPods) && <Spacer h={96} />}
             <SwipeViewContainer
               onMouseDown={() => setHolding(true)}
               onMouseUp={() => setHolding(false)}
@@ -510,7 +429,6 @@ export const NewHomeScreen = (): ReactElement => {
                   return (
                     <TicketsContainer
                       $width={cardWidth}
-                      $bigGap={tickets.length > 1}
                       key={packs.map((pack) => pack.eventTicket.id).join("-")}
                     >
                       <TicketCard
@@ -563,9 +481,7 @@ export const NewHomeScreen = (): ReactElement => {
                 })}
               </_SwipableViews>
               <ButtonsContainer>
-                <Typography color="var(--text-tertiary)">
-                  <SyncIndicator />
-                </Typography>
+                <SyncIndicator />
                 {Object.keys(appConfig.embeddedZapps).length > 0 && (
                   <ZappButtonsContainer>
                     {Object.entries(appConfig.embeddedZapps).map(
@@ -590,7 +506,50 @@ export const NewHomeScreen = (): ReactElement => {
                 )}
               </ButtonsContainer>
             </SwipeViewContainer>
-            {!(showPodsList || noPods) && <Spacer h={96} />}
+            {tickets.length > 1 && (
+              <NavigationContainer>
+                <PageCircleButton
+                  disabled={currentPos === 0}
+                  onClick={() => {
+                    setCurrentPos((old) => {
+                      if (old === 0) return old;
+                      return old - 1;
+                    });
+                  }}
+                >
+                  <ChevronLeftIcon
+                    width={24}
+                    height={24}
+                    color="var(--text-tertiary)"
+                  />
+                </PageCircleButton>
+                <Typography
+                  fontSize={14}
+                  color="#8B94AC"
+                  fontWeight={500}
+                  family="Rubik"
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  {currentPos + 1} OF {tickets.length}
+                </Typography>
+                <PageCircleButton
+                  disabled={currentPos === tickets.length - 1}
+                  onClick={() => {
+                    setCurrentPos((old) => {
+                      if (old === tickets.length - 1) return old;
+                      return old + 1;
+                    });
+                  }}
+                >
+                  <ChevronRightIcon
+                    width={24}
+                    height={24}
+                    color="var(--text-tertiary)"
+                  />
+                </PageCircleButton>
+              </NavigationContainer>
+            )}
+            <Spacer h={20} />
           </MaxWidthContainer>
         </>
       )}
