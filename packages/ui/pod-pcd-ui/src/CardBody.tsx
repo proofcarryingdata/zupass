@@ -117,7 +117,7 @@ function PODPCDCardBody({
               }}
               onClick={deletePcd}
             >
-              delete
+              Delete
             </Text>
           )}
         </div>
