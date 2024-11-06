@@ -21,12 +21,6 @@ export function NewLoginInterstitialScreen(): JSX.Element {
       const pendingRequest = getPendingRequest();
       if (pendingRequest) {
         switch (pendingRequest.key) {
-          case "pendingZapp": {
-            console.log("Redirecting to zapp screen");
-            clearAllPendingRequests();
-            window.location.href = pendingRequest.value;
-            break;
-          }
           case "proof": {
             console.log("Redirecting to prove screen");
             const encReq = encodeURIComponent(pendingRequest.value);
