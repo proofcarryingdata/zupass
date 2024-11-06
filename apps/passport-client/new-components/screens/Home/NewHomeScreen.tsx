@@ -12,6 +12,7 @@ import { CardBody } from "../../../components/shared/PCDCard";
 import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
+  useIsDownloaded,
   useIsSyncSettled,
   usePCDCollection,
   useScrollTo,
@@ -68,7 +69,6 @@ const _SwipableViews = SwipableViews.default;
 const SCREEN_HORIZONTAL_PADDING = 20;
 const TICKET_VERTICAL_GAP = 20;
 const CARD_GAP = isMobile ? 8 : SCREEN_HORIZONTAL_PADDING * 2;
-const BUTTONS_CONTAINER_HEIGHT = 32;
 
 const disabledCSS = css`
   cursor: not-allowed;
@@ -103,6 +103,11 @@ const NavigationContainer = styled.div`
   align-self: center;
   border-radius: 200px;
   backdrop-filter: blur(12px);
+  padding-bottom: 12px;
+  width: 100%;
+  justify-content: space-between;
+  padding-left: 20px;
+  padding-right: 20px;
 `;
 const ButtonsContainer = styled.div`
   display: flex;
@@ -129,7 +134,7 @@ const TicketsContainer = styled.div<{ $width: number; $bigGap?: boolean }>`
   height: 100%;
   gap: ${({ $bigGap }): number =>
     $bigGap
-      ? TICKET_VERTICAL_GAP * 2 + getZappsHeight() + BUTTONS_CONTAINER_HEIGHT
+      ? TICKET_VERTICAL_GAP * 2 + getZappsHeight() + 20
       : getZappsHeight() + TICKET_VERTICAL_GAP}px;
 `;
 
@@ -164,6 +169,44 @@ const getEventDetails = (tickets: TicketPack): ITicketData => {
   return tickets.eventTicket.claim.ticket as ITicketData;
 };
 
+const SyncIndicator = () => {
+  const [dots, setDots] = useState("");
+  const [minutesSinceSynced, setMinutesSinceSynced] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setDots((prevDots) => (prevDots.length < 3 ? prevDots + "." : ""));
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const isSyncSettled = useIsSyncSettled();
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (isSyncSettled) {
+        setMinutesSinceSynced((oldValue) => oldValue + 1);
+      } else {
+        setMinutesSinceSynced(0);
+      }
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [isSyncSettled]);
+
+  if (isSyncSettled) {
+    if (minutesSinceSynced) {
+      return `Synced ${minutesSinceSynced} minute${
+        minutesSinceSynced > 1 ? "s" : ""
+      } ago`;
+    } else {
+      return "Just synced";
+    }
+  }
+  return `Syncing${dots}`;
+};
+
 export const NewHomeScreen = (): ReactElement => {
   useSyncE2EEStorage();
   const tickets = useTickets();
@@ -175,7 +218,7 @@ export const NewHomeScreen = (): ReactElement => {
   const windowWidth = useWindowWidth();
   const self = useSelf();
   const navigate = useNavigate();
-  const isLoadedPCDs = useIsSyncSettled();
+  const isDownloaded = useIsDownloaded();
   const [params, setParams] = useSearchParams();
   const [zappUrl, setZappUrl] = useState("");
   const [holding, setHolding] = useState(false);
@@ -202,7 +245,7 @@ export const NewHomeScreen = (): ReactElement => {
 
   useLayoutEffect(() => {
     // if we haven't loaded all pcds yet, dont process the prove request
-    if (!isLoadedPCDs) return;
+    if (!isDownloaded) return;
 
     const maybeExistingFolder = params.get("folder");
     if (maybeExistingFolder) {
@@ -249,7 +292,7 @@ export const NewHomeScreen = (): ReactElement => {
     params,
     collection,
     setParams,
-    isLoadedPCDs,
+    isDownloaded,
     location,
     dispatch,
     showPodsList,
@@ -320,7 +363,7 @@ export const NewHomeScreen = (): ReactElement => {
   }, []);
 
   useEffect(() => {
-    if (scrollTo && isLoadedPCDs && tickets.length > 0) {
+    if (scrollTo && isDownloaded && tickets.length > 0) {
       // getting the pos of the event card
       const eventPos = tickets.findIndex(
         (pack) => pack[0] === scrollTo.eventId
@@ -345,14 +388,14 @@ export const NewHomeScreen = (): ReactElement => {
         dispatch({ type: "scroll-to-ticket", scrollTo: undefined });
       })();
     }
-  }, [dispatch, scrollTo, currentPos, setCurrentPos, tickets, isLoadedPCDs]);
+  }, [dispatch, scrollTo, currentPos, setCurrentPos, tickets, isDownloaded]);
 
   const cardWidth =
     (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
     SCREEN_HORIZONTAL_PADDING * 2;
 
   // if not loaded pcds yet and the user session is valid
-  if (!isLoadedPCDs && !isInvalidUser) {
+  if (!isDownloaded && !isInvalidUser) {
     return (
       <AppContainer fullscreen={true} bg="gray">
         <LoadingScreenContainer>
@@ -397,7 +440,50 @@ export const NewHomeScreen = (): ReactElement => {
       {tickets.length > 0 && (
         <>
           <MaxWidthContainer>
-            <Spacer h={48} />
+            <Spacer h={20} />
+            {tickets.length > 1 && (
+              <NavigationContainer>
+                <PageCircleButton
+                  disabled={currentPos === 0}
+                  onClick={() => {
+                    setCurrentPos((old) => {
+                      if (old === 0) return old;
+                      return old - 1;
+                    });
+                  }}
+                >
+                  <ChevronLeftIcon
+                    width={24}
+                    height={24}
+                    color="var(--text-tertiary)"
+                  />
+                </PageCircleButton>
+                <Typography
+                  fontSize={14}
+                  color="#8B94AC"
+                  fontWeight={500}
+                  family="Rubik"
+                  style={{ display: "flex", alignItems: "center" }}
+                >
+                  {currentPos + 1} OF {tickets.length}
+                </Typography>
+                <PageCircleButton
+                  disabled={currentPos === tickets.length - 1}
+                  onClick={() => {
+                    setCurrentPos((old) => {
+                      if (old === tickets.length - 1) return old;
+                      return old + 1;
+                    });
+                  }}
+                >
+                  <ChevronRightIcon
+                    width={24}
+                    height={24}
+                    color="var(--text-tertiary)"
+                  />
+                </PageCircleButton>
+              </NavigationContainer>
+            )}
             <SwipeViewContainer
               onMouseDown={() => setHolding(true)}
               onMouseUp={() => setHolding(false)}
@@ -477,49 +563,9 @@ export const NewHomeScreen = (): ReactElement => {
                 })}
               </_SwipableViews>
               <ButtonsContainer>
-                {tickets.length > 1 && (
-                  <NavigationContainer>
-                    <PageCircleButton
-                      disabled={currentPos === 0}
-                      onClick={() => {
-                        setCurrentPos((old) => {
-                          if (old === 0) return old;
-                          return old - 1;
-                        });
-                      }}
-                    >
-                      <ChevronLeftIcon
-                        width={24}
-                        height={24}
-                        color="var(--text-tertiary)"
-                      />
-                    </PageCircleButton>
-                    <Typography
-                      fontSize={14}
-                      color="#8B94AC"
-                      fontWeight={500}
-                      family="Rubik"
-                      style={{ display: "flex", alignItems: "center" }}
-                    >
-                      {currentPos + 1} OF {tickets.length}
-                    </Typography>
-                    <PageCircleButton
-                      disabled={currentPos === tickets.length - 1}
-                      onClick={() => {
-                        setCurrentPos((old) => {
-                          if (old === tickets.length - 1) return old;
-                          return old + 1;
-                        });
-                      }}
-                    >
-                      <ChevronRightIcon
-                        width={24}
-                        height={24}
-                        color="var(--text-tertiary)"
-                      />
-                    </PageCircleButton>
-                  </NavigationContainer>
-                )}
+                <Typography color="var(--text-tertiary)">
+                  <SyncIndicator />
+                </Typography>
                 {Object.keys(appConfig.embeddedZapps).length > 0 && (
                   <ZappButtonsContainer>
                     {Object.entries(appConfig.embeddedZapps).map(
