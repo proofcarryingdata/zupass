@@ -139,9 +139,6 @@ function PODPCDCardBody({
             ]}
           />
         )}
-        <div style={{ margin: "0 auto", color: "var(--text-tertiary)" }}>
-          <Text>POD • ZK powered by ZUPASS</Text>
-        </div>
       </CardWrapper>
     </Container>
   );
