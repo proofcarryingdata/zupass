@@ -7,7 +7,7 @@ import { CollectablePODPCDCardBody } from "./renderers/CollectablePODPCDCardBody
 import { DefaultPODPCDCardBody } from "./renderers/DefaultPODPCDCardBody";
 import { Container } from "./shared";
 
-export const PODPCDUI: PCDUI<PODPCD> = {
+export const PODPCDUI: PCDUI<PODPCD, { deletePcd?: () => Promise<void> }> = {
   renderCardBody: PODPCDCardBody
 };
 
@@ -29,7 +29,13 @@ enum PODDisplayFormat {
 /**
  * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
-function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
+function PODPCDCardBody({
+  pcd,
+  deletePcd
+}: {
+  pcd: PODPCD;
+  deletePcd?: () => Promise<void>;
+}): JSX.Element {
   const [sigStatus, setSigStatus] = useState<number>(0);
   const [error, setError] = useState<string | undefined>();
 
@@ -78,20 +84,42 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
               textDecoration: isValidSig ? "none" : undefined
             }}
           >
-            <span style={{ paddingRight: 8 }}>
+            <Text
+              style={{
+                paddingRight: isValidSig ? 2 : 8,
+                color: "var(--core-accent)"
+              }}
+            >
               {sigStatus === 0
                 ? "Check signature"
                 : isValidSig
-                ? "Valid signature"
-                : error !== undefined
-                ? "Signature error!"
-                : "Bad signature!"}
-            </span>
-            {isValidSig && <VIcon />}
+                  ? "Valid signature"
+                  : error !== undefined
+                    ? "Signature error!"
+                    : "Bad signature!"}
+            </Text>
+            {isValidSig && (
+              <span style={{ paddingRight: 8 }}>
+                <VIcon />
+              </span>
+            )}
             {error === undefined ? null : (
               <ErrorContainer>{error}</ErrorContainer>
             )}
           </a>
+
+          {deletePcd && (
+            <Text
+              style={{
+                paddingRight: 12,
+                color: "var(--text-tertiary)",
+                cursor: "pointer"
+              }}
+              onClick={deletePcd}
+            >
+              delete
+            </Text>
+          )}
         </div>
         {hasCollectableContent && (
           <SlidingTabs
@@ -111,6 +139,9 @@ function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
             ]}
           />
         )}
+        <div style={{ margin: "0 auto", color: "var(--text-tertiary)" }}>
+          <Text>POD • ZK powered by ZUPASS</Text>
+        </div>
       </CardWrapper>
     </Container>
   );
@@ -156,3 +187,12 @@ async function verifySignature(pcd: PODPCD): Promise<{
     return { isValid: false, errorMessage: getErrorMessage(e) };
   }
 }
+
+const Text = styled.span`
+  /* text-sm (14px)/medium-rubik */
+  font-family: Rubik;
+  font-size: 14px;
+  font-style: normal;
+  font-weight: 500;
+  line-height: 135%; /* 18.9px */
+`;
