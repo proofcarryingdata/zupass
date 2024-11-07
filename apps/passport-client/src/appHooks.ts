@@ -199,6 +199,10 @@ export function useLoadedIssuedPCDs(): boolean {
   return useSelector<boolean>((s) => !!s.loadedIssuedPCDs, []);
 }
 
+export function useExtraSubscriptionFetchRequested(): boolean {
+  return useSelector<boolean>((s) => !!s.extraSubscriptionFetchRequested, []);
+}
+
 export function useIsDownloaded(): boolean {
   return useSelector<boolean>((s) => !!s.downloadedPCDs, []);
 }
@@ -231,8 +235,9 @@ export function useUserShouldAgreeNewPrivacyNotice(): void {
 export function useIsSyncSettled(): boolean {
   const isDownloaded = useIsDownloaded();
   const loadedIssued = useLoadedIssuedPCDs();
-
-  return isDownloaded && loadedIssued;
+  const extraFetchSubscriptionRequested = useExtraSubscriptionFetchRequested();
+  console.log(isDownloaded, loadedIssued, extraFetchSubscriptionRequested);
+  return isDownloaded && loadedIssued && !extraFetchSubscriptionRequested;
 }
 
 export function useIsLoggedIn(): boolean {
