@@ -715,34 +715,42 @@
       clearInterval(interval);
     }
 
-    closeBtn.onclick = function () {
-      overlay.classList.add("modal__overlay--disabled");
-      for(const addonModal of addonsModals){
-        addonModal.classList.add("modal__container--hide");
+    for(const addonsBtn of addonsBtns){
+      const id = addonsBtn.id.split("_")[2];
+      const addonsModal = document.getElementById("modal_addons_"+id);
+      addonsBtn.onclick = function () {
+        overlay.classList.remove("modal__overlay--disabled");
+        addonsModal.classList.remove("modal__container--hide");
+
+        // Select the specific navigation buttons and index text within the modal
+        const swiperContainer = addonsModal.querySelector(".swiper-container");
+        const prevButton = addonsModal.querySelector("#back");
+        const nextButton = addonsModal.querySelector("#next");
+        const currentIdxText = addonsModal.querySelector("#current-item-text");
+        const closeBtn = addonsModal.querySelector("#close");
+
+        // Initialize a new Swiper instance for the specific modal
+        const swiper = new Swiper(swiperContainer, {
+          spaceBetween: 12,
+          navigation: {
+            prevEl: prevButton,
+            nextEl: nextButton,
+            disabledClass: "swiper__navigation--btn-disabled"
+          },
+          plugins: [SwiperPluginNavigation]
+        });
+
+        swiper.on("after-slide", function (newIdx, state) {
+          currentIdxText.innerText = newIdx + 1;
+        });
+
+        // Close button functionality for the specific modal
+        closeBtn.onclick = function () {
+          overlay.classList.add("modal__overlay--disabled");
+          addonsModal.classList.add("modal__container--hide");
+        };
       }
     }
-
-      for(const addonsBtn of addonsBtns){
-        const id = addonsBtn.id.split("_")[2];
-        const addonsModal = document.getElementById("modal_addons_"+id);
-        console.log(addonsModal,"modal-addons-"+id);
-        addonsBtn.onclick = function () {
-          overlay.classList.remove("modal__overlay--disabled");
-          addonsModal.classList.remove("modal__container--hide");
-          const swiper = new Swiper(".swiper-container", {
-            spaceBetween: 12,
-            navigation: {
-              prevEl: backBtn,
-              nextEl: nextBtn,
-              disabledClass: "swiper__navigation--btn-disabled"
-            },
-            plugins: [SwiperPluginNavigation]
-          });
-          swiper.on("after-slide", function (newIdx, state) {
-            currentIdxText.innerText = newIdx + 1;
-          })
-        }
-      }
 
 
 

@@ -780,8 +780,8 @@ export function initGenericIssuanceRoutes(
 
         return (
           imageToRender ??
-          (ticket.ticketSecret
-            ? await QRCode.toDataURL(ticket.ticketSecret, {
+          (ticketData.ticketSecret
+            ? await QRCode.toDataURL(ticketData.ticketSecret, {
                 type: "image/webp",
                 scale: 10,
                 margin: 0
@@ -820,14 +820,6 @@ export function initGenericIssuanceRoutes(
       // filter out add-ons
       const ticketsCount = result.tickets.filter((t) => !t.isAddOn).length;
 
-      const addOnsQrs = await Promise.all(
-        addOns.map(async (addon) => {
-          const image = await getTicketImage(addon);
-          const name = addon.ticketName.toUpperCase();
-          return { image, name };
-        })
-      );
-
       const tickets = await Promise.all(
         main.map(async (ticket) => {
           // Find all add-ons that belong to this main ticket
@@ -847,6 +839,7 @@ export function initGenericIssuanceRoutes(
             ticketName: ticket.ticketName,
             qr: await getTicketImage(ticket),
             showAddons: ticketAddons.length > 0,
+            id: ticket.ticketId,
             moreThanOneAddon: ticketAddons.length > 1,
             addonsCount: ticketAddons.length,
             addons: await Promise.all(ticketAddons)
@@ -854,7 +847,7 @@ export function initGenericIssuanceRoutes(
         })
       );
 
-      console.log("TICKETS", tickets);
+      console.log("TICKETS", JSON.stringify(tickets, null, 2));
 
       const rendered = Mustache.render(file, {
         tickets,
