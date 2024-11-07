@@ -35,7 +35,10 @@ async function waitForAuthentication(
 
 async function waitForFirstSync(context: StateContextValue): Promise<void> {
   return new Promise<void>((resolve) => {
-    if (context.getState().completedFirstSync) {
+    if (
+      context.getState().downloadedPCDs &&
+      context.getState().pcds.getAllPCDsInFolder("Devcon SEA").length > 0
+    ) {
       resolve();
       return;
     }
