@@ -847,8 +847,6 @@ export function initGenericIssuanceRoutes(
         })
       );
 
-      console.log("TICKETS", JSON.stringify(tickets, null, 2));
-
       const rendered = Mustache.render(file, {
         tickets,
         eventName: ticket.eventName.toUpperCase(),
