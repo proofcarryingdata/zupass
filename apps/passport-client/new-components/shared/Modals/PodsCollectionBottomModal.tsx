@@ -331,6 +331,13 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
               deletePodPcd={
                 isPODPCD(activePod)
                   ? async (): Promise<void> => {
+                      if (
+                        !confirm(
+                          "Are you sure you want to delete this? This action is not reversible."
+                        )
+                      ) {
+                        return;
+                      }
                       await dispatch({ type: "remove-pcd", id: activePod.id });
                       if (modalGoBackBehavior === "back") {
                         dispatch({
