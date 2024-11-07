@@ -226,8 +226,6 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     ? activeBottomModal.activePod
     : undefined;
 
-  useEffect(() => {
-  }, [activePod]);
   const modalGoBackBehavior =
     isPodsCollectionModalOpen && activeBottomModal.modalGoBackBehavior
       ? activeBottomModal.modalGoBackBehavior
@@ -306,7 +304,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
       modalContainerStyle={{ padding: 0, paddingTop: 24 }}
       isOpen={isPodsCollectionModalOpen}
     >
-      <Container style={{ border: "1px solid blue" }} isLandscape={isLandscape}>
+      <Container isLandscape={isLandscape}>
         {!activePod && (
           <UserTitleContainer>
             <Typography fontSize={20} fontWeight={800} align="center">
