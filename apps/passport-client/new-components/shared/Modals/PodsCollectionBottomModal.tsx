@@ -1,9 +1,5 @@
 import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
-
-import {
-  EdDSATicketPCDTypeName,
-  isEdDSATicketPCD
-} from "@pcd/eddsa-ticket-pcd";
+import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { isEmailPCD } from "@pcd/email-pcd";
 import { PCD } from "@pcd/pcd-types";
 import {
@@ -45,24 +41,25 @@ import {
   replaceDotWithSlash,
   useOrientation
 } from "../utils";
-import { uniqWith } from "lodash";
 
 const filterOverlappingEdDSATickets = (
   pcds: PCD<unknown, unknown>[]
 ): PCD<unknown, unknown>[] => {
-  const noDupTickets = uniqWith(pcds.reverse(), (a, b) => {
-    const isPodOrEddsa1 = isPODTicketPCD(a) || isEdDSATicketPCD(a);
-    const isPodOrEddsa2 = isPODTicketPCD(b) || isEdDSATicketPCD(b);
-    if (!isPodOrEddsa1 || !isPodOrEddsa2) return false;
-    return (
-      a.claim.ticket.attendeeEmail === b.claim.ticket.attendeeEmail &&
-      a.claim.ticket.eventId === b.claim.ticket.eventId &&
-      a.type === EdDSATicketPCDTypeName
-    );
-  });
+  const eddsaTickets = pcds.filter(isEdDSATicketPCD);
+  const podTickets = pcds.filter(isPODTicketPCD);
+  const overlapping = eddsaTickets
+    .filter((eddsa) =>
+      podTickets.find(
+        (pod) =>
+          pod.claim.ticket.attendeeEmail === eddsa.claim.ticket.attendeeEmail &&
+          pod.claim.ticket.eventId === eddsa.claim.ticket.eventId
+      )
+    )
+    .map((eddsa) => eddsa.id);
 
-  const noEmails = noDupTickets.filter((p) => !isEmailPCD(p));
-  return noEmails;
+  const noEmails = pcds.filter((p) => !isEmailPCD(p));
+
+  return noEmails.filter((pcd) => !overlapping.includes(pcd.id));
 };
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
@@ -155,7 +152,6 @@ export const PodsCollectionList = ({
         LeftIcon: getPCDImage(pcd)
       });
     }
-
     return Object.values(result)
       .map((group) => {
         if (!searchQuery) {
@@ -219,6 +215,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const dispatch = useDispatch();
   const [params, setParams] = useSearchParams();
   const orientation = useOrientation();
+
   const isLandscape =
     orientation.type === "landscape-primary" ||
     orientation.type === "landscape-secondary";
@@ -285,6 +282,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     isPodsCollectionModalOpen,
     setExpandedGroupsIds
   ]);
+
   const handlePodClick = useCallback(
     (pcd: PCD<unknown, unknown>) => {
       listContainerRef.current &&
