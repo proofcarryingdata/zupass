@@ -399,7 +399,13 @@ export class PretixPipeline implements BasePipeline {
             secret: ticket.secret,
             timestampConsumed: ticket.pretix_checkin_timestamp,
             isConsumed: !!ticket.pretix_checkin_timestamp,
-            orderCode: ticket.order_code
+            orderCode: ticket.order_code,
+            parentAtomId: ticket.addon_to_position_id
+              ? uuidv5(
+                  ticket.addon_to_position_id,
+                  ticket.event.genericIssuanceId
+                )
+              : null
           };
         });
 
@@ -862,7 +868,8 @@ export class PretixPipeline implements BasePipeline {
           attendee_email,
           secret,
           checkins,
-          answers
+          answers,
+          addon_to
         } = position;
 
         const product = products.get(item.toString());
@@ -930,7 +937,8 @@ export class PretixPipeline implements BasePipeline {
             position_id: id.toString(),
             secret,
             pretix_checkin_timestamp,
-            order_code: order.code
+            order_code: order.code,
+            addon_to_position_id: addon_to?.toString() ?? null
           });
         }
       }
@@ -1264,7 +1272,8 @@ export class PretixPipeline implements BasePipeline {
       isAddOn: this.atomToIsAddOn(atom),
       isConsumed: atom.isConsumed,
       isRevoked: false,
-      ticketCategory: TicketCategory.Generic
+      ticketCategory: TicketCategory.Generic,
+      parentTicketId: atom.parentAtomId ?? undefined
     };
   }
 
@@ -2389,6 +2398,7 @@ export interface PretixTicket {
   order_code: string;
   position_id: string;
   pretix_checkin_timestamp: Date | null;
+  addon_to_position_id: string | null;
 }
 
 export interface PretixAtom extends PipelineAtom {
@@ -2399,6 +2409,7 @@ export interface PretixAtom extends PipelineAtom {
   secret: string;
   timestampConsumed: Date | null;
   isConsumed: boolean;
+  parentAtomId: string | null;
 }
 
 export function isPretixAtom(atom: PipelineAtom): atom is PretixAtom {
