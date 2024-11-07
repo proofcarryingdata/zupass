@@ -81,7 +81,7 @@ export const NewEnterConfirmationCodeScreen = (): JSX.Element => {
             {isReset && (
               <>
                 Once you reset your account, you'll lose access to all your
-                PCDs!
+                PODs!
               </>
             )}
           </Typography>
