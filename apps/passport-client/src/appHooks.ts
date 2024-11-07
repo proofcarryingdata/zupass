@@ -236,7 +236,6 @@ export function useIsSyncSettled(): boolean {
   const isDownloaded = useIsDownloaded();
   const loadedIssued = useLoadedIssuedPCDs();
   const extraFetchSubscriptionRequested = useExtraSubscriptionFetchRequested();
-  console.log(isDownloaded, loadedIssued, extraFetchSubscriptionRequested);
   return isDownloaded && loadedIssued && !extraFetchSubscriptionRequested;
 }
 
