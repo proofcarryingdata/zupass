@@ -848,9 +848,6 @@ export function initGenericIssuanceRoutes(
         })
       );
 
-      console.log("ALL", result.tickets);
-      console.log("RES", tickets);
-
       const rendered = Mustache.render(file, {
         tickets,
         eventName: ticket?.eventName.toUpperCase(),
