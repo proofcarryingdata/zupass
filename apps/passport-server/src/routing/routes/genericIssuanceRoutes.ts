@@ -847,6 +847,8 @@ export function initGenericIssuanceRoutes(
             ticketName: ticket.ticketName,
             qr: await getTicketImage(ticket),
             showAddons: ticketAddons.length > 0,
+            moreThanOneAddon: ticketAddons.length > 1,
+            addonsCount: ticketAddons.length,
             addons: await Promise.all(ticketAddons)
           };
         })
@@ -862,9 +864,6 @@ export function initGenericIssuanceRoutes(
         count: ticketsCount,
         isMoreThanOne: ticketsCount > 1,
         zupassUrl: process.env.PASSPORT_CLIENT_URL,
-        addons: addOnsQrs,
-        addonsCount: addOnsQrs.length,
-        moreThanOneAddon: addOnsQrs.length > 1,
         startDate: ticket.eventStartDate
       });
       res.send(rendered);
