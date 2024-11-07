@@ -45,12 +45,12 @@ import {
 import { PretixPipeline } from "../../services/generic-issuance/pipelines/PretixPipeline";
 import { createQueryUrl } from "../../services/telemetryService";
 import { ApplicationContext, GlobalServices } from "../../types";
+import { readFileWithCache } from "../../util/file";
 import { IS_PROD } from "../../util/isProd";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
 import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
-import { readFileWithCache } from "../../util/file";
 
 export function initGenericIssuanceRoutes(
   app: express.Application,
@@ -780,8 +780,8 @@ export function initGenericIssuanceRoutes(
 
         return (
           imageToRender ??
-          (ticket.ticketSecret
-            ? await QRCode.toDataURL(ticket.ticketSecret, {
+          (ticketData.ticketSecret
+            ? await QRCode.toDataURL(ticketData.ticketSecret, {
                 type: "image/webp",
                 scale: 10,
                 margin: 0
@@ -820,37 +820,41 @@ export function initGenericIssuanceRoutes(
       // filter out add-ons
       const ticketsCount = result.tickets.filter((t) => !t.isAddOn).length;
 
-      const addOnsQrs = await Promise.all(
-        addOns.map(async (addon) => {
-          const image = await getTicketImage(addon);
-          const name = addon.ticketName.toUpperCase();
-          return { image, name };
-        })
-      );
+      const tickets = await Promise.all(
+        main.map(async (ticket) => {
+          // Find all add-ons that belong to this main ticket
+          const ticketAddons = addOns
+            .filter((addon) => addon.parentTicketId === ticket.ticketId)
+            .map(async (addon) => ({
+              image: await getTicketImage(addon),
+              name: addon.ticketName.toUpperCase()
+            }));
 
-      const rendered = Mustache.render(file, {
-        tickets: await Promise.all(
-          main.map(async (ticket, i) => ({
-            // only show add-ons for the first ticket, and if we have 1 or more add-on
-            showAddons: i === 0 && addOnsQrs.length > 0,
+          return {
             attendeeName:
               ticket.attendeeName !== ""
                 ? ticket.attendeeName.toUpperCase()
                 : ticket.eventName.toUpperCase(),
             attendeeEmail: ticket.attendeeEmail,
             ticketName: ticket.ticketName,
-            qr: await getTicketImage(ticket)
-          }))
-        ),
+            qr: await getTicketImage(ticket),
+            showAddons: ticketAddons.length > 0,
+            id: ticket.ticketId,
+            moreThanOneAddon: ticketAddons.length > 1,
+            addonsCount: ticketAddons.length,
+            addons: await Promise.all(ticketAddons)
+          };
+        })
+      );
+
+      const rendered = Mustache.render(file, {
+        tickets,
         eventName: ticket.eventName.toUpperCase(),
         eventLocation: ticket.eventLocation,
         backgroundImage: ticket.imageUrl,
         count: ticketsCount,
         isMoreThanOne: ticketsCount > 1,
         zupassUrl: process.env.PASSPORT_CLIENT_URL,
-        addons: addOnsQrs,
-        addonsCount: addOnsQrs.length,
-        moreThanOneAddon: addOnsQrs.length > 1,
         startDate: ticket.eventStartDate
       });
       res.send(rendered);
