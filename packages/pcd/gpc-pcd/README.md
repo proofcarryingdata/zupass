@@ -73,7 +73,7 @@ There is a known issue with a dependency `fastfile` which can be resolved by pol
 
 ## Stability and Security
 
-POD and GPC libraries are in beta and subject change. We encourage devs to try them out and use them for apps, but be aware that updates will come in future.
+POD and GPC libraries are in beta and subject to change. We encourage devs to try them out and use them for apps, but be aware that updates will come in future.
 
 GPC proofs are considered ephemeral (for now), primarily intended for
 transactional use cases. Saved proofs may not be verifiable with future versions

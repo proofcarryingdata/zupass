@@ -67,7 +67,7 @@ a browser requires polyfill for some Node modules, including `buffer`.
 
 ## Stability and Security
 
-POD and GPC libraries are in beta and subject change. We encourage devs to try them out and use them for apps, but be aware that updates will come in future.
+POD and GPC libraries are in beta and subject to change. We encourage devs to try them out and use them for apps, but be aware that updates will come in future.
 
 The PODs themselves are persistent data, and we expect to maintain
 backward-compatibility when we make changes to the format. Library interfaces
