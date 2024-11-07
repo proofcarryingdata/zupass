@@ -55,9 +55,6 @@ export const NewLoginScreen = (): JSX.Element => {
   const pendingGenericIssuanceCheckinRequest = query?.get(
     pendingRequestKeys.genericIssuanceCheckin
   );
-  const pendingSearchParamsRequest = query?.get(
-    pendingRequestKeys.searchParams
-  );
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
 
