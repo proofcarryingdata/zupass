@@ -795,13 +795,6 @@ export function initGenericIssuanceRoutes(
         code,
         pipeline
       );
-      if (!result.tickets.length) {
-        const errorPage = await readFileWithCache(
-          absPath.replace("index", "error")
-        );
-        res.send(errorPage);
-        return;
-      }
 
       const main: TicketPreviewResultValue["tickets"] = [];
       const addOns: TicketPreviewResultValue["tickets"] = [];
@@ -813,12 +806,20 @@ export function initGenericIssuanceRoutes(
           main.push(ticket);
         }
       }
-      const file = await readFileWithCache(absPath);
 
+      if (!main.length) {
+        const errorPage = await readFileWithCache(
+          absPath.replace("index", "error")
+        );
+        res.send(errorPage);
+        return;
+      }
+
+      const file = await readFileWithCache(absPath);
       const ticket = main[0];
 
       // filter out add-ons
-      const ticketsCount = result.tickets.filter((t) => !t.isAddOn).length;
+      const ticketsCount = main.length;
 
       const tickets = await Promise.all(
         main.map(async (ticket) => {
@@ -849,13 +850,13 @@ export function initGenericIssuanceRoutes(
 
       const rendered = Mustache.render(file, {
         tickets,
-        eventName: ticket.eventName.toUpperCase(),
-        eventLocation: ticket.eventLocation,
-        backgroundImage: ticket.imageUrl,
+        eventName: ticket?.eventName.toUpperCase(),
+        eventLocation: ticket?.eventLocation,
+        backgroundImage: ticket?.imageUrl,
         count: ticketsCount,
         isMoreThanOne: ticketsCount > 1,
         zupassUrl: process.env.PASSPORT_CLIENT_URL,
-        startDate: ticket.eventStartDate
+        startDate: ticket?.eventStartDate
       });
       res.send(rendered);
     }
