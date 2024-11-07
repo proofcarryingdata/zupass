@@ -1269,7 +1269,7 @@ export class PretixPipeline implements BasePipeline {
       qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
       eventStartDate: this.atomToEventStartDate(atom),
       eventLocation: this.atomToEventLocation(atom),
-      isAddOn: this.atomToIsAddOn(atom),
+      isAddOn: !!atom.parentAtomId,
       isConsumed: atom.isConsumed,
       isRevoked: false,
       ticketCategory: TicketCategory.Generic,
@@ -1305,10 +1305,11 @@ export class PretixPipeline implements BasePipeline {
       qrCodeOverrideImageUrl: this.atomToQrCodeOverrideImageUrl(atom),
       eventStartDate: this.atomToEventStartDate(atom),
       eventLocation: this.atomToEventLocation(atom),
-      isAddOn: this.atomToIsAddOn(atom),
+      isAddOn: !!atom.parentAtomId,
       isConsumed: atom.isConsumed,
       isRevoked: false,
-      ticketCategory: TicketCategory.Generic
+      ticketCategory: TicketCategory.Generic,
+      parentTicketId: atom.parentAtomId ?? undefined
     };
   }
 
