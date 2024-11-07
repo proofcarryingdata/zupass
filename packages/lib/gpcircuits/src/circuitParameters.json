@@ -51,7 +51,7 @@
     {
       "maxObjects": 1,
       "maxEntries": 11,
-      "merkleMaxDepth": 5,
+      "merkleMaxDepth": 6,
       "maxNumericValues": 0,
       "maxEntryInequalities": 0,
       "maxLists": 0,
@@ -61,7 +61,7 @@
       "includeOwnerV3": false,
       "includeOwnerV4": true
     },
-    20176
+    22882
   ],
   [
     {

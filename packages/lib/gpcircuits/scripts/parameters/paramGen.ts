@@ -107,11 +107,11 @@ export const PARAMS: ProtoPODGPCCircuitParams[] = [
   //   includeOwnerV4: true
   // },
   // 11 entries
-  // Minimal POD ticket configuration.
+  // Minimal POD ticket/frog POD configuration.
   {
     maxObjects: 1,
     maxEntries: 11,
-    merkleMaxDepth: 5,
+    merkleMaxDepth: 6,
     maxNumericValues: 0,
     maxEntryInequalities: 0,
     maxLists: 0,
