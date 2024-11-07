@@ -33,15 +33,39 @@
     --max-width: 460px;
     overflow: hidden;
     height: 100dvh;
+    background-color: #ECECEC;
   }
 
-  body {
-    background: url("{{{zupassUrl}}}/images/devcon/devcon-landscape.webp") lightgray 50% / cover no-repeat;
+  .zupass-link {
+    display: block;
+    text-align: center;
+    color: #0077FF;
+    text-decoration: none;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    font-family: Rubik;
+    font-size: 14px;
+    background-color: #FCE5B2;
+    border: 1px solid #E2DCAD;
+  }
 
-    @media (max-width: 460px) {
-      background: url("{{{zupassUrl}}}/images/devcon/devcon-portrait.webp") lightgray 50% / cover no-repeat;
-    }
+  .zupass-link:hover {
+    text-decoration: underline;
+  }
 
+  .ticket__footer {
+    color: var(--text-tertiary);
+    text-align: center;
+    font-family: Rubik;
+    font-size: 12px;
+    font-style: normal;
+    font-weight: 400;
+    width: 100%;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    border-top: 1px solid #eee;
   }
 
   .container {
@@ -154,7 +178,7 @@
   }
 
   .header__title {
-    color: var(--white);
+    color: #1E2C50;
     text-align: center;
     font-family: Barlow;
     font-size: 28px;
@@ -165,7 +189,7 @@
   }
 
   .header__subtitle {
-    color: #c0d1ff;
+    color: #7C8BB4;
     text-align: center;
     font-family: Rubik;
     font-size: 18px;
@@ -440,29 +464,8 @@
 </style>
 
 <body>
-  <div class="page-header" id="page-header">
-    <svg xmlns="http://www.w3.org/2000/svg" width="118" height="21" viewBox="0 0 118 21" fil="none">
-      <path
-        d="M0.587402 17.6774L13.949 2.65875H1.20393V0.406738H17.4772V2.49193L4.22441 17.4011H18.1248L17.7466 19.6531H0.587402V17.6722V17.6774Z"
-        fill="#FFD6A0" />
-      <path
-        d="M23.5906 0.406738V11.3332C23.5906 16.4002 26.5541 17.7868 29.4347 17.7868C32.9629 17.7868 35.0663 16.1083 35.0663 11.3332V0.406738H37.7604V11.3019C37.7604 17.5627 34.5275 20.0597 29.3569 20.0597C24.1864 20.0597 20.8965 17.5106 20.8965 11.5208V0.406738H23.5906Z"
-        fill="#FFD6A0" />
-      <path
-        d="M43.1799 0.406738H52.1792C56.9197 0.406738 59.1009 2.87248 59.1009 6.07326C59.1009 9.84225 56.5156 11.9535 52.2569 11.9535H45.8999V19.6531H43.1799V0.406738ZM45.8999 9.65458H51.8787C54.521 9.65458 56.3498 8.89349 56.3498 6.10454C56.3498 3.93593 54.894 2.69003 51.8787 2.69003H45.8999V9.65458Z"
-        fill="#FFD6A0" />
-      <path
-        d="M63.8673 13.825L61.3908 19.6531H58.5879L66.8048 0.406738H70.0895L78.6588 19.6531H75.6953L73.1359 13.825H63.8673ZM72.25 11.4948C69.9082 6.18273 68.7995 3.65964 68.3695 2.36161H68.3436C67.9395 3.60751 66.6442 6.91776 64.7066 11.4948H72.25Z"
-        fill="#FFD6A0" />
-      <path
-        d="M83.2646 14.0438C83.964 16.3219 85.6064 17.891 89.3522 17.891C93.098 17.891 94.5797 16.4261 94.5797 14.6381C94.5797 12.7405 93.528 11.5728 88.5698 10.7335C82.8294 9.75872 81.4564 7.93938 81.4564 5.31204C81.4564 1.92359 84.6375 0 88.8134 0C95.0356 0 96.4915 3.27897 96.7091 5.23384H93.9891C93.585 3.90453 92.7768 2.1686 88.7356 2.1686C85.9897 2.1686 84.2075 3.11737 84.2075 5.04096C84.2075 6.61528 84.9898 7.61618 89.3522 8.346C96.248 9.53977 97.3515 11.6823 97.3515 14.3618C97.3515 17.427 94.9268 20.0544 89.1605 20.0544C83.8241 20.0544 81.13 17.5886 80.4824 14.0386H83.2594L83.2646 14.0438Z"
-        fill="#FFD6A0" />
-      <path
-        d="M102.932 14.0438C103.631 16.3219 105.273 17.891 109.019 17.891C112.765 17.891 114.247 16.4261 114.247 14.6381C114.247 12.7405 113.195 11.5728 108.237 10.7335C102.496 9.75872 101.123 7.93938 101.123 5.31204C101.123 1.92359 104.304 0 108.48 0C114.703 0 116.158 3.27897 116.376 5.23384H113.656C113.252 3.90453 112.444 2.1686 108.403 2.1686C105.657 2.1686 103.874 3.11737 103.874 5.04096C103.874 6.61528 104.657 7.61618 109.019 8.346C115.915 9.53977 117.018 11.6823 117.018 14.3618C117.018 17.427 114.594 20.0544 108.827 20.0544C103.491 20.0544 100.797 17.5886 100.155 14.0386H102.932V14.0438Z"
-        fill="#FFD6A0" />
-    </svg>
-  </div>
   <main class="container" ontouchstart>
+    <a href="#" onclick="redirectToZupass()" class="zupass-link">View full page in Zupass</a>
     <div class="header">
       <span class="header__title">{{eventName}}</span>
       <div class="ticket__subtitle--container">
@@ -497,26 +500,26 @@
           fill="#154133" />
       </svg></button>
 
-    {{#tickets}}
-    <div class="ticket">
-      <img class="ticket__qr-code" src="{{qr}}" draggable="false" />
-      <div class="ticket__text-container">
-        <span class="ticket__title">{{attendeeName}}</span>
-        <div class="ticket__subtitle--container">
-          <span class="ticket__subtitle--text">{{attendeeEmail}}</span>
-          <span class="ticket__subtitle--text">·</span>
-          <span class="ticket__subtitle--text">{{ticketName}}</span>
+      {{#tickets}}
+      <div class="ticket">
+        <img class="ticket__qr-code" src="{{qr}}" draggable="false" />
+        <div class="ticket__text-container">
+          <span class="ticket__title">{{attendeeName}}</span>
+          <div class="ticket__subtitle--container">
+            <span class="ticket__subtitle--text">{{attendeeEmail}}</span>
+            <span class="ticket__subtitle--text">·</span>
+            <span class="ticket__subtitle--text">{{ticketName}}</span>
+          </div>
         </div>
-      </div>
-      {{#showAddons}}
-      <button id="addons-btn" type="button" class="ticket__addons-btn">
-        {{#moreThanOneAddon}}
-        <span class="ticket__subtitle--text" style="font-size: 16px;">View {{addonsCount}}
-          add-on items</span>
-        {{/moreThanOneAddon}}
-        {{^moreThanOneAddon}}
-        <span class="ticket__subtitle--text" style="font-size: 16px;">View add-on item</span>
-        {{/moreThanOneAddon}}
+        {{#showAddons}}
+        <button id="addons-btn" type="button" class="ticket__addons-btn">
+          {{#moreThanOneAddon}}
+          <span class="ticket__subtitle--text" style="font-size: 16px;">View {{addonsCount}}
+            add-on items</span>
+          {{/moreThanOneAddon}}
+          {{^moreThanOneAddon}}
+          <span class="ticket__subtitle--text" style="font-size: 16px;">View add-on item</span>
+          {{/moreThanOneAddon}}
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="var(--text-tertiary)" class="size-4"
           style="width: 20px;">
           <path d="M4.75 4.25a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1Z" />
@@ -540,6 +543,9 @@
       <!-- spacer when we dont have any addon -->
       <div style="height:16px;"></div>
       {{/showAddons}}
+      <div class="ticket__footer">
+        QR POD • ZK powered by ZUPASS
+      </div>
     </div>
     {{/tickets}}
   </main>
