@@ -6,7 +6,6 @@ import {
 } from "../../../components/screens/ZappScreens/ZappButton";
 import { ZappButtonsContainer } from "../../../components/screens/ZappScreens/ZappButtonsContainer";
 import { ZappFullScreen } from "../../../components/screens/ZappScreens/ZappFullScreen";
-import { ZappScreen } from "../../../components/screens/ZappScreens/ZappScreen";
 import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
 import { appConfig } from "../../../src/appConfig";
@@ -493,8 +492,12 @@ export const NewHomeScreen = (): ReactElement => {
                             setParams({ folder: zappName });
                           }}
                         >
-                          <ZappScreen
-                            url={new URL(
+                          <iframe
+                            style={{
+                              width: "100%",
+                              height: "100%"
+                            }}
+                            src={new URL(
                               `button/${self?.semaphore_v4_commitment ?? ""}`,
                               url
                             ).toString()}
