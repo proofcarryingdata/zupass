@@ -45,12 +45,12 @@ import {
 import { PretixPipeline } from "../../services/generic-issuance/pipelines/PretixPipeline";
 import { createQueryUrl } from "../../services/telemetryService";
 import { ApplicationContext, GlobalServices } from "../../types";
+import { readFileWithCache } from "../../util/file";
 import { IS_PROD } from "../../util/isProd";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
 import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
-import { readFileWithCache } from "../../util/file";
 
 export function initGenericIssuanceRoutes(
   app: express.Application,
@@ -828,20 +828,34 @@ export function initGenericIssuanceRoutes(
         })
       );
 
-      const rendered = Mustache.render(file, {
-        tickets: await Promise.all(
-          main.map(async (ticket, i) => ({
-            // only show add-ons for the first ticket, and if we have 1 or more add-on
-            showAddons: i === 0 && addOnsQrs.length > 0,
+      const tickets = await Promise.all(
+        main.map(async (ticket) => {
+          // Find all add-ons that belong to this main ticket
+          const ticketAddons = addOns
+            .filter((addon) => addon.parentTicketId === ticket.ticketId)
+            .map(async (addon) => ({
+              image: await getTicketImage(addon),
+              name: addon.ticketName.toUpperCase()
+            }));
+
+          return {
             attendeeName:
               ticket.attendeeName !== ""
                 ? ticket.attendeeName.toUpperCase()
                 : ticket.eventName.toUpperCase(),
             attendeeEmail: ticket.attendeeEmail,
             ticketName: ticket.ticketName,
-            qr: await getTicketImage(ticket)
-          }))
-        ),
+            qr: await getTicketImage(ticket),
+            showAddons: ticketAddons.length > 0,
+            addons: await Promise.all(ticketAddons)
+          };
+        })
+      );
+
+      console.log("TICKETS", tickets);
+
+      const rendered = Mustache.render(file, {
+        tickets,
         eventName: ticket.eventName.toUpperCase(),
         eventLocation: ticket.eventLocation,
         backgroundImage: ticket.imageUrl,
