@@ -5,7 +5,7 @@ import { Typography } from "../../shared/Typography";
 
 const syncStates = {
   now: (_: number): string => "Synced just now",
-  near: (_: number): string => "Synced few seconds ago",
+  near: (_: number): string => "Synced a few seconds ago",
   aboutMinute: (_: number): string => "Synced about a minute ago",
   minutes: (seconds: number): string => `Synced ${seconds / 60} minutes ago`
 } as const;
