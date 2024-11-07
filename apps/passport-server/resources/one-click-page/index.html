@@ -80,7 +80,7 @@
     max-height: calc(100dvh - 72px);
     position: relative;
     overflow: scroll;
-    margin-top: 72px;
+    margin-top: 40px;
 
     padding: 25px 20px 25px 20px;
     -ms-overflow-style: none;
@@ -142,7 +142,7 @@
     width: 100%;
     background: none;
     border: none;
-    padding: 16px 0;
+    padding: 16px 0 0 0;
     border-top: 1px solid #eee;
     display: flex;
     justify-content: space-between;
@@ -169,12 +169,12 @@
   }
 
   .header {
-    margin-top: 30px;
+    margin-top: 20px;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    margin-bottom: 26px;
+    margin-bottom: 12px;
   }
 
   .header__title {
@@ -200,28 +200,28 @@
   }
 
   .cta {
-    border-radius: 8px;
-    border: 2px solid #FFC971;
+    border-radius: 16px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
     background: linear-gradient(0deg, #FFAE00 0%, #4CCCB0 100%);
-    height: 76px;
+    height: 55px;
     width: 100%;
     color: #000;
     display: flex;
     align-items: center;
     padding: 20px 0;
     justify-content: center;
-    gap: 8px;
+    gap: 16px;
     /* Fallback for older browsers */
-    color: #154133;
+    color: #1E4F3F;
     text-align: center;
-    font-family: "Fragment Mono";
-    font-size: 28px;
+    font-family: "Rubik";
+    font-size: 24px;
+    line-height: 32.4px;
     font-style: normal;
-    font-weight: 400;
+    font-weight: 500;
     cursor: pointer;
-    box-shadow: 0 10px #A8650F;
-    margin-top: 30px;
-    margin-bottom: 45px;
+    box-shadow: 0 4px #B3901B;
+    margin-bottom: 20px;
   }
 
   .cta:active {
@@ -478,11 +478,11 @@
         {{/isMoreThanOne}}
       </div>
     </div>
-    <button onclick="redirectToZupass()" class="cta">Score: 0 <svg xmlns="http://www.w3.org/2000/svg" width="41"
+    <button onclick="redirectToZupass()" class="cta">SCORE: 0 <svg xmlns="http://www.w3.org/2000/svg" width="41"
         height="32" viewBox="0 0 41 32" fill="none">
         <path
           d="M39.8985 9.69016C39.8985 5.42073 36.4459 1.95996 32.1865 1.95996C29.0961 1.95996 26.4383 3.78611 25.2076 6.41626C23.7812 6.19747 22.293 6.07843 20.7611 6.07843C19.2292 6.07843 17.7802 6.19481 16.3703 6.40762C15.1383 3.78212 12.4825 1.95996 9.39539 1.95996C5.13599 1.95996 1.68335 5.42073 1.68335 9.69016C1.68335 11.2769 2.1617 12.7512 2.97975 13.9782C2.23203 15.2743 1.82268 16.6749 1.82268 18.1366C1.82268 24.7961 10.3017 30.1947 20.7604 30.1947C31.2192 30.1947 39.6982 24.7961 39.6982 18.1366C39.6982 16.6935 39.2988 15.3102 38.569 14.0274C39.4069 12.7905 39.8979 11.2975 39.8979 9.68949L39.8985 9.69016Z"
-          fill="#74DB61" stroke="#154133" stroke-width="2" />
+          fill="#74DB61" stroke="#154133" stroke-width="1.7" />
         <path
           d="M9.45699 11.1948C10.7167 11.1948 11.738 9.86595 11.738 8.22678C11.738 6.5876 10.7167 5.25879 9.45699 5.25879C8.19725 5.25879 7.17603 6.5876 7.17603 8.22678C7.17603 9.86595 8.19725 11.1948 9.45699 11.1948Z"
           fill="#154133" />
