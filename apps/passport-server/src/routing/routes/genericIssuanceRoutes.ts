@@ -789,7 +789,7 @@ export function initGenericIssuanceRoutes(
             : "")
         );
       };
-      const absPath = path.resolve("./resources/one-click-page/index.html");
+      const absPath = path.resolve("./resources/one-click-page/index.mu");
       const result = await genericIssuanceService.handleGetTicketPreview(
         email,
         code,
@@ -827,18 +827,32 @@ export function initGenericIssuanceRoutes(
           return { image, name };
         })
       );
+      const test = addOnsQrs.length / ticketsCount;
+
+      const splitList = () => {
+        const result = [];
+        for (let i = 0; i < addOnsQrs.length; i += test) {
+          result.push(addOnsQrs.slice(i, i + test));
+        }
+        return result;
+      };
+
+      const splitQRs = splitList();
 
       const rendered = Mustache.render(file, {
         tickets: await Promise.all(
           main.map(async (ticket, i) => ({
             // only show add-ons for the first ticket, and if we have 1 or more add-on
-            showAddons: i === 0 && addOnsQrs.length > 0,
+            showAddons: splitQRs[i]?.length > 0,
+            addons: splitQRs[i],
+            moreThanOneAddon: splitQRs[i]?.length > 1,
             attendeeName:
               ticket.attendeeName !== ""
                 ? ticket.attendeeName.toUpperCase()
                 : ticket.eventName.toUpperCase(),
             attendeeEmail: ticket.attendeeEmail,
             ticketName: ticket.ticketName,
+            id: ticket.ticketId,
             qr: await getTicketImage(ticket)
           }))
         ),
@@ -848,9 +862,6 @@ export function initGenericIssuanceRoutes(
         count: ticketsCount,
         isMoreThanOne: ticketsCount > 1,
         zupassUrl: process.env.PASSPORT_CLIENT_URL,
-        addons: addOnsQrs,
-        addonsCount: addOnsQrs.length,
-        moreThanOneAddon: addOnsQrs.length > 1,
         startDate: ticket.eventStartDate
       });
       res.send(rendered);
