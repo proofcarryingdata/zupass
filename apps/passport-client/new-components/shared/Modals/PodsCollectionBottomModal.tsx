@@ -285,7 +285,6 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     isPodsCollectionModalOpen,
     setExpandedGroupsIds
   ]);
-
   const handlePodClick = useCallback(
     (pcd: PCD<unknown, unknown>) => {
       listContainerRef.current &&
@@ -336,7 +335,37 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
           }}
         >
           {activePod ? (
-            <CardBody isMainIdentity={false} pcd={activePod} />
+            <CardBody
+              isMainIdentity={false}
+              pcd={activePod}
+              deletePodPcd={
+                isPODPCD(activePod)
+                  ? async (): Promise<void> => {
+                      if (
+                        !confirm(
+                          "Are you sure you want to delete this? This action is not reversible."
+                        )
+                      ) {
+                        return;
+                      }
+                      await dispatch({ type: "remove-pcd", id: activePod.id });
+                      if (modalGoBackBehavior === "back") {
+                        dispatch({
+                          type: "set-bottom-modal",
+                          modal: {
+                            modalType: "pods-collection"
+                          }
+                        });
+                      } else {
+                        dispatch({
+                          type: "set-bottom-modal",
+                          modal: { modalType: "none" }
+                        });
+                      }
+                    }
+                  : undefined
+              }
+            />
           ) : (
             <>
               <PodsCollectionList
