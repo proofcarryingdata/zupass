@@ -227,7 +227,6 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
     : undefined;
 
   useEffect(() => {
-    console.log(activePod);
   }, [activePod]);
   const modalGoBackBehavior =
     isPodsCollectionModalOpen && activeBottomModal.modalGoBackBehavior
