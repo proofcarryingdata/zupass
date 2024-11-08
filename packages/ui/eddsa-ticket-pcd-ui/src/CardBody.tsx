@@ -122,7 +122,7 @@ function EdDSATicketPCDCardBody({
             <QRIcon />
           </NEW_UI__ExtraSection>
         )}
-        <NEW_UI__ExtraSection style={{ justifyContent: "center" }}>
+        <NEW_UI__ExtraSection style={{ justifyContent: "center", cursor: "default" }}>
           <ExtraSectionSecondaryText>
             QR POD • ZK powered by ZUPASS
           </ExtraSectionSecondaryText>

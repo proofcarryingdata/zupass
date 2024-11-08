@@ -12,6 +12,7 @@ import { appConfig } from "../../../src/appConfig";
 import {
   useDispatch,
   useIsDownloaded,
+  useIsSyncSettled,
   usePCDCollection,
   useScrollTo,
   useSelf,
@@ -41,10 +42,7 @@ import { TicketPack } from "./types";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { isEmailPCD } from "@pcd/email-pcd";
-import {
-  PCDGetRequest,
-  requestGenericIssuanceTicketPreviews
-} from "@pcd/passport-interface";
+import { PCDGetRequest } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { isSemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import {
@@ -180,9 +178,9 @@ export const NewHomeScreen = (): ReactElement => {
   const self = useSelf();
   const navigate = useNavigate();
   const isDownloaded = useIsDownloaded();
+  const isSyncSettled = useIsSyncSettled();
   const [params, setParams] = useSearchParams();
   const [zappUrl, setZappUrl] = useState("");
-  const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
   const regularParams = useParams();
@@ -204,9 +202,16 @@ export const NewHomeScreen = (): ReactElement => {
   });
   const showPodsList = tickets.length === 0 && !isLandscape && !noPods;
 
+  // default wait for full sync, but "short-circuit" this process
+  // if finished downloading and already fetched devcon tickets,
+  // similar to https://github.com/proofcarryingdata/zupass/pull/2120
+  const isReadyToLoadPage =
+    isSyncSettled ||
+    (isDownloaded && collection.getAllPCDsInFolder("Devcon SEA").length > 0);
+
   useLayoutEffect(() => {
     // if we haven't loaded all pcds yet, dont process the prove request
-    if (!isDownloaded) return;
+    if (!isReadyToLoadPage) return;
 
     const maybeExistingFolder = params.get("folder");
     if (maybeExistingFolder) {
@@ -244,7 +249,6 @@ export const NewHomeScreen = (): ReactElement => {
         type: "set-bottom-modal",
         modal: { request, modalType: "prove" }
       });
-      console.log(request);
       return;
     }
     if (params.size > 0) setParams("");
@@ -253,7 +257,7 @@ export const NewHomeScreen = (): ReactElement => {
     params,
     collection,
     setParams,
-    isDownloaded,
+    isReadyToLoadPage,
     location,
     dispatch,
     showPodsList,
@@ -267,8 +271,7 @@ export const NewHomeScreen = (): ReactElement => {
           : "";
         const params = new URLSearchParams(queryString);
         const redirectHash = params.get("redirectHash");
-        const { email, code, targetFolder, pipelineId, serverUrl } =
-          regularParams;
+        const { email, code, targetFolder } = regularParams;
 
         if (!email || !code) return;
 
@@ -279,13 +282,6 @@ export const NewHomeScreen = (): ReactElement => {
           });
           return;
         }
-
-        const previewRes = await requestGenericIssuanceTicketPreviews(
-          serverUrl ?? appConfig.zupassServer,
-          email,
-          code,
-          pipelineId
-        );
 
         await dispatch({
           type: "one-click-login",
@@ -307,16 +303,6 @@ export const NewHomeScreen = (): ReactElement => {
           setZappUrl(zappEntry[1]);
           return;
         }
-
-        if (previewRes.success) {
-          dispatch({
-            type: "scroll-to-ticket",
-            scrollTo: {
-              attendee: previewRes.value.tickets[0].attendeeEmail,
-              eventId: previewRes.value.tickets[0].eventId
-            }
-          });
-        }
       }
     };
     handleOneClick();
@@ -324,7 +310,7 @@ export const NewHomeScreen = (): ReactElement => {
   }, []);
 
   useEffect(() => {
-    if (scrollTo && isDownloaded && tickets.length > 0) {
+    if (scrollTo && isSyncSettled && tickets.length > 0) {
       // getting the pos of the event card
       const eventPos = tickets.findIndex(
         (pack) => pack[0] === scrollTo.eventId
@@ -349,14 +335,14 @@ export const NewHomeScreen = (): ReactElement => {
         dispatch({ type: "scroll-to-ticket", scrollTo: undefined });
       })();
     }
-  }, [dispatch, scrollTo, currentPos, setCurrentPos, tickets, isDownloaded]);
+  }, [dispatch, scrollTo, currentPos, setCurrentPos, tickets, isSyncSettled]);
 
   const cardWidth =
     (windowWidth > MAX_WIDTH_SCREEN ? MAX_WIDTH_SCREEN : windowWidth) -
     SCREEN_HORIZONTAL_PADDING * 2;
 
-  // if not loaded pcds yet and the user session is valid
-  if (!isDownloaded && !isInvalidUser) {
+  // if not ready yet and the user session is valid
+  if (!isReadyToLoadPage && !isInvalidUser) {
     return (
       <AppContainer fullscreen={true} bg="gray">
         <LoadingScreenContainer>
@@ -366,7 +352,7 @@ export const NewHomeScreen = (): ReactElement => {
             fontWeight={800}
             color="var(--text-tertiary)"
           >
-            GENERATING PODS
+            {isDownloaded ? "COLLECTING PODS" : "GENERATING PODS"}
           </Typography>
         </LoadingScreenContainer>
       </AppContainer>
@@ -402,14 +388,7 @@ export const NewHomeScreen = (): ReactElement => {
         <>
           <MaxWidthContainer>
             {!(showPodsList || noPods) && <Spacer h={96} />}
-            <SwipeViewContainer
-              onMouseDown={() => setHolding(true)}
-              onMouseUp={() => setHolding(false)}
-              onMouseLeave={() => setHolding(false)}
-              style={{
-                cursor: holding ? "grabbing" : "grab"
-              }}
-            >
+            <SwipeViewContainer>
               <_SwipableViews
                 style={{
                   padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`

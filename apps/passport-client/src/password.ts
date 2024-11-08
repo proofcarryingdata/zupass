@@ -41,7 +41,7 @@ export const setPassword = async (
       );
     } else if (res.error.name === "Conflict") {
       update({ extraDownloadRequested: true });
-      throw new Error(`Cannot change password while PCDs are syncing.  
+      throw new Error(`Cannot change password while PODs are syncing.  
         Wait for download to complete or reload the page and try again.`);
     } else {
       throw new Error(
