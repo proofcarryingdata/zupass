@@ -2,12 +2,12 @@ import {
   EdDSATicketPCDTypeName,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
-import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
-import { TicketPack, TicketType, TicketTypeName } from "../types";
-import { usePCDs } from "../../../../src/appHooks";
-import uniqWith from "lodash/uniqWith";
 import { PCD } from "@pcd/pcd-types";
+import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
+import uniqWith from "lodash/uniqWith";
 import { useMemo } from "react";
+import { usePCDs } from "../../../../src/appHooks";
+import { TicketPack, TicketType, TicketTypeName } from "../types";
 export const isEventTicketPCD = (
   pcd: PCD<unknown, unknown>
 ): pcd is TicketType => {
@@ -80,12 +80,13 @@ export const useTickets = (): Array<[string, TicketPack[]]> => {
       const ticketPacks = eventsMap.get(ticket.claim.ticket.eventId);
       if (!ticketPacks) continue;
       const pack = ticketPacks.find(
-        (pack) => pack.attendeeEmail === ticket.claim.ticket.attendeeEmail
+        (pack) =>
+          pack.eventTicket.claim.ticket.ticketId ===
+          ticket.claim.ticket.parentTicketId
       );
       if (!pack) continue;
       pack.addOns.push(ticket);
     }
-    console.log(Array.from(eventsMap.entries()));
 
     return Array.from(eventsMap.entries());
   }, [uniqTickets]);

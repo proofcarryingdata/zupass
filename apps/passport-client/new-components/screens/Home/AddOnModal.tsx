@@ -1,3 +1,4 @@
+import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 import { useCallback, useState } from "react";
 import SwipeableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
@@ -7,7 +8,6 @@ import { BottomModal } from "../../shared/BottomModal";
 import { Button2 } from "../../shared/Button";
 import { Typography } from "../../shared/Typography";
 import { useTrackpadSwipe } from "./hooks/useTrackpadSwipe";
-import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/16/solid";
 
 // @ts-expect-error TMP fix for bad lib
 const _SwipableViews = SwipeableViews.default;
@@ -116,7 +116,7 @@ export const AddOnsModal = (): JSX.Element | null => {
                   fontSize={16}
                   fontWeight={500}
                 >
-                  {addOn.claim.ticket.ticketName.toUpperCase()}
+                  {addOn.claim.ticket.ticketName}
                 </Typography>
               </QRContainer>
             );
