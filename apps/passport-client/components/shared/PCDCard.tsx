@@ -28,6 +28,8 @@ import { pcdRenderers } from "../../src/pcdRenderers";
 import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { MainIdentityCard } from "./MainIdentityCard";
+import { isPODPCD } from "@pcd/pod-pcd";
+import { PODPCDUI } from "@pcd/pod-pcd-ui";
 
 export const PCDCard = memo(PCDCardImpl);
 
@@ -311,10 +313,21 @@ type CardBodyProps = {
   hidePadding?: boolean;
   addOns?: AddOnsProps;
   showDownloadButton?: boolean;
+  deletePodPcd?: () => Promise<void>;
 };
 
 export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
-  ({ pcd, isMainIdentity, hidePadding, addOns, showDownloadButton }, ref) => {
+  (
+    {
+      pcd,
+      isMainIdentity,
+      hidePadding,
+      addOns,
+      showDownloadButton,
+      deletePodPcd
+    },
+    ref
+  ) => {
     const pcdCollection = usePCDCollection();
 
     if (isMainIdentity) {
@@ -347,6 +360,10 @@ export const CardBody = forwardRef<HTMLDivElement, CardBodyProps>(
             />
           </div>
         );
+      }
+      if (isPODPCD(pcd)) {
+        const Component = PODPCDUI.renderCardBody;
+        return <Component pcd={pcd} deletePcd={deletePodPcd} />;
       }
       const ui = getUI(pcd.type);
       if (ui) {

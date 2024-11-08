@@ -10,7 +10,6 @@ import {
 import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { isUnknownPCD } from "@pcd/unknown-pcd";
 import { isZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
-import intersectionWith from "lodash/intersectionWith";
 import {
   ReactElement,
   ReactNode,
@@ -43,6 +42,25 @@ import {
   useOrientation
 } from "../utils";
 
+const filterOverlappingEdDSATickets = (
+  pcds: PCD<unknown, unknown>[]
+): PCD<unknown, unknown>[] => {
+  const eddsaTickets = pcds.filter(isEdDSATicketPCD);
+  const podTickets = pcds.filter(isPODTicketPCD);
+  const overlapping = eddsaTickets
+    .filter((eddsa) =>
+      podTickets.find(
+        (pod) =>
+          pod.claim.ticket.attendeeEmail === eddsa.claim.ticket.attendeeEmail &&
+          pod.claim.ticket.eventId === eddsa.claim.ticket.eventId
+      )
+    )
+    .map((eddsa) => eddsa.id);
+
+  const noEmails = pcds.filter((p) => !isEmailPCD(p));
+
+  return noEmails.filter((pcd) => !overlapping.includes(pcd.id));
+};
 const getPcdName = (pcd: PCD<unknown, unknown>): string => {
   switch (true) {
     case isEdDSATicketPCD(pcd) || isPODTicketPCD(pcd):
@@ -99,18 +117,7 @@ export const PodsCollectionList = ({
 
   const podsCollectionList = useMemo(() => {
     const allPcds = pcdCollection.getAll();
-    // If we have the same ticket in both POD and EDSA, we want to show only the POD one
-    const podTickets = allPcds.filter(isPODTicketPCD);
-    const eddsaTickets = allPcds.filter(isEdDSATicketPCD);
-    const badTicketsIds = intersectionWith(eddsaTickets, podTickets, (a, b) => {
-      return a.claim.ticket.ticketId === b.claim.ticket.ticketId;
-    }).map((ticket) => ticket.id);
-    const filteredPcds = allPcds.filter(
-      (pcd) =>
-        (!isEdDSATicketPCD(pcd) || !badTicketsIds.includes(pcd.id)) &&
-        !isEmailPCD(pcd)
-    );
-
+    const filteredPods = filterOverlappingEdDSATickets(allPcds);
     // Group PCDs by folder and create a list of groups with the items inside
     const result: Record<string, GroupType> = {};
 
@@ -121,7 +128,7 @@ export const PodsCollectionList = ({
       if (!result[value]) {
         const isItTheFirstGroup = !Object.keys(result).length;
         const shouldExpandedByDefault =
-          isItTheFirstGroup || filteredPcds.length < 20;
+          isItTheFirstGroup || filteredPods.length < 20;
         result[value] = {
           title: value.replace(/\//g, ` ${POD_FOLDER_DISPLAY_SEPERATOR} `),
           id: value, // setting the folder path as a key
@@ -133,7 +140,7 @@ export const PodsCollectionList = ({
         };
       }
 
-      const pcd = filteredPcds.find((pcd) => pcd.id === key);
+      const pcd = filteredPods.find((pcd) => pcd.id === key);
       if (!pcd) continue;
 
       result[value].children.push({
@@ -145,7 +152,6 @@ export const PodsCollectionList = ({
         LeftIcon: getPCDImage(pcd)
       });
     }
-
     return Object.values(result)
       .map((group) => {
         if (!searchQuery) {
@@ -209,6 +215,7 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
   const dispatch = useDispatch();
   const [params, setParams] = useSearchParams();
   const orientation = useOrientation();
+
   const isLandscape =
     orientation.type === "landscape-primary" ||
     orientation.type === "landscape-secondary";
@@ -326,7 +333,37 @@ export const PodsCollectionBottomModal = (): JSX.Element | null => {
           }}
         >
           {activePod ? (
-            <CardBody isMainIdentity={false} pcd={activePod} />
+            <CardBody
+              isMainIdentity={false}
+              pcd={activePod}
+              deletePodPcd={
+                isPODPCD(activePod)
+                  ? async (): Promise<void> => {
+                      if (
+                        !confirm(
+                          "Are you sure you want to delete this? This action is not reversible."
+                        )
+                      ) {
+                        return;
+                      }
+                      await dispatch({ type: "remove-pcd", id: activePod.id });
+                      if (modalGoBackBehavior === "back") {
+                        dispatch({
+                          type: "set-bottom-modal",
+                          modal: {
+                            modalType: "pods-collection"
+                          }
+                        });
+                      } else {
+                        dispatch({
+                          type: "set-bottom-modal",
+                          modal: { modalType: "none" }
+                        });
+                      }
+                    }
+                  : undefined
+              }
+            />
           ) : (
             <>
               <PodsCollectionList
