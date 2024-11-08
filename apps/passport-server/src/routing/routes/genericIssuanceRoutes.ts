@@ -827,7 +827,7 @@ export function initGenericIssuanceRoutes(
             .filter((addon) => addon.parentTicketId === ticket.ticketId)
             .map(async (addon) => ({
               image: await getTicketImage(addon),
-              name: addon.ticketName.toUpperCase()
+              name: addon.ticketName
             }));
 
           return {
