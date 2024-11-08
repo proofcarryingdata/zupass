@@ -397,6 +397,7 @@ export class PretixPipeline implements BasePipeline {
             // unique within the namespace of the event.
             id: uuidv5(ticket.position_id, ticket.event.genericIssuanceId),
             secret: ticket.secret,
+            orderSecret: ticket.order_secret,
             timestampConsumed: ticket.pretix_checkin_timestamp,
             isConsumed: !!ticket.pretix_checkin_timestamp,
             orderCode: ticket.order_code,
@@ -936,6 +937,7 @@ export class PretixPipeline implements BasePipeline {
             is_consumed: pretix_checkin_timestamp !== null,
             position_id: id.toString(),
             secret,
+            order_secret: order.secret,
             pretix_checkin_timestamp,
             order_code: order.code,
             addon_to_position_id: addon_to?.toString() ?? null
@@ -1259,6 +1261,7 @@ export class PretixPipeline implements BasePipeline {
       ticketName: this.atomToTicketName(atom),
       checkerEmail: undefined,
       ticketSecret: atom.secret,
+      orderSecret: atom.orderSecret,
       ticketId: atom.id,
       eventId: atom.eventId,
       productId: atom.productId,
@@ -1293,6 +1296,7 @@ export class PretixPipeline implements BasePipeline {
       ticketName: this.atomToTicketName(atom),
       checkerEmail: undefined,
       ticketSecret: atom.secret,
+      orderSecret: atom.orderSecret,
 
       // signed fields
       ticketId: atom.id,
@@ -2400,6 +2404,7 @@ export interface PretixTicket {
   position_id: string;
   pretix_checkin_timestamp: Date | null;
   addon_to_position_id: string | null;
+  order_secret: string;
 }
 
 export interface PretixAtom extends PipelineAtom {
@@ -2408,6 +2413,7 @@ export interface PretixAtom extends PipelineAtom {
   productId: string; // UUID
   orderCode: string;
   secret: string;
+  orderSecret: string;
   timestampConsumed: Date | null;
   isConsumed: boolean;
   parentAtomId: string | null;

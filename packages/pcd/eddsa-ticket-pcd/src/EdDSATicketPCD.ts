@@ -47,6 +47,7 @@ export interface ITicketData {
   imageUrl?: string | undefined;
   imageAltText?: string | undefined;
   ticketSecret?: string | undefined;
+  orderSecret?: string | undefined;
   // The fields below are signed using the passport-server's private EdDSA key
   // and can be used by 3rd parties to represent their own tickets.
   ticketId: string; // The ticket ID is a unique identifier of the ticket.

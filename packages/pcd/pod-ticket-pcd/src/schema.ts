@@ -41,6 +41,7 @@ export const TicketDataSchema = z.object({
   attendeeEmail: z.string(),
   qrCodeOverrideImageUrl: z.string().optional(),
   ticketSecret: z.string().optional(),
+  orderSecret: z.string().optional(),
   eventLocation: z.string().optional(),
   eventStartDate: z.string().optional(),
   isAddOn: z.boolean().optional(),
