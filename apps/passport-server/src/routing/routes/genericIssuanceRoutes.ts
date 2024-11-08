@@ -810,7 +810,7 @@ export function initGenericIssuanceRoutes(
       if (!main.length) {
         throw new PCDHTTPError(
           400,
-          `No ticket found with order code ${code} and email ${email}. Please contact support@0zupass.org immediately.`
+          `No ticket found with order code ${code} and email ${email}. Please contact support@zupass.org immediately.`
         );
       }
 
