@@ -393,9 +393,6 @@ export const NewHomeScreen = (): ReactElement => {
               onMouseDown={() => setHolding(true)}
               onMouseUp={() => setHolding(false)}
               onMouseLeave={() => setHolding(false)}
-              style={{
-                cursor: holding ? "grabbing" : "grab"
-              }}
             >
               <_SwipableViews
                 style={{
