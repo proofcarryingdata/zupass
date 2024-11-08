@@ -713,6 +713,8 @@
     for(const addonsBtn of addonsBtns){
       const id = addonsBtn.id.split("_")[2];
       const addonsModal = document.getElementById("modal_addons_"+id);
+      let swiper; // Declare swiper variable outside the function
+
       addonsBtn.onclick = function () {
         overlay.classList.remove("modal__overlay--disabled");
         addonsModal.classList.remove("modal__container--hide");
@@ -725,7 +727,7 @@
         const closeBtn = addonsModal.querySelector("#close");
 
         // Initialize a new Swiper instance for the specific modal
-        const swiper = new Swiper(swiperContainer, {
+        swiper = new Swiper(swiperContainer, {
           spaceBetween: 12,
           navigation: {
             prevEl: prevButton,
@@ -743,6 +745,7 @@
         closeBtn.onclick = function () {
           overlay.classList.add("modal__overlay--disabled");
           addonsModal.classList.add("modal__container--hide");
+          swiper.slideTo(0); // Reset swiper to the first slide
         };
       }
     }
