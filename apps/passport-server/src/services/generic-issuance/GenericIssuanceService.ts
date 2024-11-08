@@ -438,17 +438,15 @@ export class GenericIssuanceService {
       );
     }
 
-    const tickets = await pipeline.getAllTicketsForEmail(email);
+    const atoms = await pipeline.getAllAtomsForEmail(email);
 
     // Check that a valid atom exists with the given orderCode
-    const validAtom = tickets.atoms.find(
-      (atom) => atom.orderCode === orderCode
-    );
+    const validAtom = atoms.find((atom) => atom.orderCode === orderCode);
     if (!validAtom) {
       return { tickets: [] } satisfies TicketPreviewResultValue;
     }
 
-    const ticketDatas = tickets.atoms.map(
+    const ticketDatas = atoms.map(
       (atom) => pipeline.atomToPODTicketData(atom, "1") // fake semaphore id as it's not needed for the ticket preview
     );
 

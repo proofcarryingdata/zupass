@@ -886,7 +886,9 @@ export class PretixPipeline implements BasePipeline {
         // ensure it. But TypeScript doesn't know that.
         if (product) {
           // Try getting email from response to question; otherwise, default to email of purchaser
-          const email = normalizeEmail(attendee_email ?? order.email);
+          const email = addon_to
+            ? ""
+            : normalizeEmail(attendee_email ?? order.email);
 
           // Checkin events can be either "entry" or "exit".
           // Exits cancel out entries, so we want to find out if the most
@@ -1051,7 +1053,7 @@ export class PretixPipeline implements BasePipeline {
     identityCommitment: string
   ): Promise<EdDSATicketPCD[]> {
     // Load atom-backed tickets
-    const relevantTickets = await this.db.loadByEmail(this.id, email);
+    const relevantTickets = await this.getAllAtomsForEmail(email);
     // Convert atoms to ticket data
     const ticketDatas = relevantTickets.map((t) =>
       this.atomToEdDSATicketData(t, identityCommitment)
@@ -1091,7 +1093,7 @@ export class PretixPipeline implements BasePipeline {
     semaphoreV4Id: string
   ): Promise<PODTicketPCD[]> {
     // Load atom-backed tickets
-    const relevantTickets = await this.db.loadByEmail(this.id, email);
+    const relevantTickets = await this.getAllAtomsForEmail(email);
     // Convert atoms to ticket data
     const ticketDatas: IPODTicketData[] = relevantTickets.map((t) =>
       this.atomToPODTicketData(t, semaphoreV4Id)
@@ -1166,7 +1168,7 @@ export class PretixPipeline implements BasePipeline {
                 provider.maybeIssueForUser(
                   e.email,
                   await this.getAllManualTickets(client),
-                  await this.db.loadByEmail(this.id, e.email)
+                  await this.getAllAtomsForEmail(e.email)
                 )
               )
             )
@@ -2316,35 +2318,16 @@ export class PretixPipeline implements BasePipeline {
     };
   }
 
-  public async getAllTicketsForEmail(
-    email: string,
-    includeAddOns: boolean
-  ): Promise<{
-    atoms: PretixAtom[];
-    manual: ManualTicket[];
-  }> {
-    const ticketsForEmail = {
-      atoms: await this.db.loadByEmail(this.id, email.toLowerCase()),
-      manual: (this.definition.options.manualTickets ?? []).filter(
-        (mt) => mt.attendeeEmail.toLowerCase() === email.toLowerCase()
-      )
-    };
-
-    // If we're including add-ons, we need to fetch the corresponding child tickets
-    if (includeAddOns) {
-      const allAtoms = await this.db.load(this.id);
-      const addOns = allAtoms.filter(
-        (atom) =>
-          atom.parentAtomId &&
-          ticketsForEmail.atoms.map((a) => a.id).includes(atom.parentAtomId)
-      );
-      ticketsForEmail.atoms = uniqBy(
-        [...ticketsForEmail.atoms, ...addOns],
-        (a) => a.id
-      );
-    }
-
-    return ticketsForEmail;
+  public async getAllAtomsForEmail(email: string): Promise<PretixAtom[]> {
+    // To include add-ons, we need to fetch the corresponding child tickets
+    const allAtoms = await this.db.load(this.id);
+    const emailAtoms = await this.db.loadByEmail(this.id, email.toLowerCase());
+    const addOns = allAtoms.filter(
+      (atom) =>
+        atom.parentAtomId &&
+        emailAtoms.map((a) => a.id).includes(atom.parentAtomId)
+    );
+    return uniqBy([...emailAtoms, ...addOns], (a) => a.id);
   }
 
   public static is(p: Pipeline | undefined): p is PretixPipeline {
