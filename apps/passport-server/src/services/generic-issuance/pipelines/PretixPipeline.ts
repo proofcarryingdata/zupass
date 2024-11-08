@@ -46,6 +46,7 @@ import { IPODTicketData } from "@pcd/pod-ticket-pcd/src/schema";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import stable_stringify from "fast-json-stable-stringify";
+import { uniqBy } from "lodash";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
 import { PoolClient } from "postgres-pool";
@@ -2315,16 +2316,35 @@ export class PretixPipeline implements BasePipeline {
     };
   }
 
-  public async getAllTicketsForEmail(email: string): Promise<{
+  public async getAllTicketsForEmail(
+    email: string,
+    includeAddOns: boolean
+  ): Promise<{
     atoms: PretixAtom[];
     manual: ManualTicket[];
   }> {
-    return {
+    const ticketsForEmail = {
       atoms: await this.db.loadByEmail(this.id, email.toLowerCase()),
       manual: (this.definition.options.manualTickets ?? []).filter(
         (mt) => mt.attendeeEmail.toLowerCase() === email.toLowerCase()
       )
     };
+
+    // If we're including add-ons, we need to fetch the corresponding child tickets
+    if (includeAddOns) {
+      const allAtoms = await this.db.load(this.id);
+      const addOns = allAtoms.filter(
+        (atom) =>
+          atom.parentAtomId &&
+          ticketsForEmail.atoms.map((a) => a.id).includes(atom.parentAtomId)
+      );
+      ticketsForEmail.atoms = uniqBy(
+        [...ticketsForEmail.atoms, ...addOns],
+        (a) => a.id
+      );
+    }
+
+    return ticketsForEmail;
   }
 
   public static is(p: Pipeline | undefined): p is PretixPipeline {
