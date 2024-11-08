@@ -500,7 +500,7 @@
         {{/isMoreThanOne}}
       </div>
     </div>
-    <button onclick="redirectToZupass()" class="cta">SCORE: 0 <svg xmlns="http://www.w3.org/2000/svg" width="33" height="25" viewBox="0 0 33 25" fill="none">
+    <button onclick="onFrogcryptoClick()" class="cta">SCORE: 0 <svg xmlns="http://www.w3.org/2000/svg" width="33" height="25" viewBox="0 0 33 25" fill="none">
       <path d="M30.0348 7.97566C30.0348 4.95142 27.5891 2.5 24.572 2.5C22.3829 2.5 20.5003 3.79354 19.6285 5.65661C18.6181 5.50163 17.564 5.4173 16.4788 5.4173C15.3937 5.4173 14.3673 5.49974 13.3687 5.65048C12.496 3.79072 10.6147 2.5 8.42799 2.5C5.41086 2.5 2.96519 4.95142 2.96519 7.97566C2.96519 9.09962 3.30403 10.144 3.88349 11.0131C3.35385 11.9312 3.06389 12.9233 3.06389 13.9587C3.06389 18.6759 9.06995 22.5 16.4784 22.5C23.8868 22.5 29.8929 18.6759 29.8929 13.9587C29.8929 12.9364 29.61 11.9566 29.093 11.0479C29.6866 10.1718 30.0343 9.11422 30.0343 7.97519L30.0348 7.97566Z" fill="#74DB61" stroke="white" stroke-width="5.00467"/>
       <path d="M30.0348 7.97566C30.0348 4.95142 27.5891 2.5 24.572 2.5C22.3829 2.5 20.5003 3.79354 19.6285 5.65661C18.6181 5.50163 17.564 5.4173 16.4788 5.4173C15.3937 5.4173 14.3673 5.49974 13.3687 5.65048C12.496 3.79072 10.6147 2.5 8.42799 2.5C5.41086 2.5 2.96519 4.95142 2.96519 7.97566C2.96519 9.09962 3.30403 10.144 3.88349 11.0131C3.35385 11.9312 3.06389 12.9233 3.06389 13.9587C3.06389 18.6759 9.06995 22.5 16.4784 22.5C23.8868 22.5 29.8929 18.6759 29.8929 13.9587C29.8929 12.9364 29.61 11.9566 29.093 11.0479C29.6866 10.1718 30.0343 9.11422 30.0343 7.97519L30.0348 7.97566Z" fill="#74DB61" stroke="#154133" stroke-width="1.41669"/>
       <path d="M8.47167 9.04127C9.36401 9.04127 10.0874 8.10001 10.0874 6.93891C10.0874 5.77781 9.36401 4.83655 8.47167 4.83655C7.57934 4.83655 6.85596 5.77781 6.85596 6.93891C6.85596 8.10001 7.57934 9.04127 8.47167 9.04127Z" fill="#154133"/>
@@ -655,6 +655,7 @@
     const path = window.location.pathname;
     const oneClickMatch = path.match(/\/one-click-preview.*/);
     const newPath = oneClickMatch ? oneClickMatch[0] : "";
+    const clientPath = joinPaths("{{{zupassUrl}}}", "#", newPath);
 
 
     // Once loaded we want to set the one click redirect link to local storage
@@ -683,11 +684,15 @@
       // Format the time string without spans
       return `${days}d:${hours}h:${minutes}m:${seconds}s`;
     }
-
+    
     function redirectToZupass() {
+      window.location.replace(clientPath);
+    }
+
+    function onFrogcryptoClick() {
       const maybeDate = Date.parse("{{startDate}}");
       if (isNaN(maybeDate) || maybeDate < Date.now()) {
-        window.location.replace(clientPath);
+        redirectToZupass()
       }
       else {
         timeLeftText.innerText = timeToStartDate();
@@ -699,8 +704,6 @@
         }, 500)
       }
     }
-
-    const clientPath = joinPaths("{{{zupassUrl}}}", "#", newPath);
 
     for(const addonModal of addonsModals){
       addonModal.onclick = function (e) {
