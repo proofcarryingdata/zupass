@@ -445,10 +445,7 @@ export class GenericIssuanceService {
       (atom) => atom.orderCode === orderCode
     );
     if (!validAtom) {
-      throw new PCDHTTPError(
-        400,
-        `No ticket found with order code ${orderCode} and email ${email}`
-      );
+      return { tickets: [] } satisfies TicketPreviewResultValue;
     }
 
     const ticketDatas = tickets.atoms.map(

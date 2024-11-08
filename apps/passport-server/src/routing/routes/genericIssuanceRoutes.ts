@@ -808,11 +808,10 @@ export function initGenericIssuanceRoutes(
       }
 
       if (!main.length) {
-        const errorPage = await readFileWithCache(
-          absPath.replace("index", "error")
+        throw new PCDHTTPError(
+          400,
+          `No ticket found with order code ${code} and email ${email}. Please contact support@0zupass.org immediately.`
         );
-        res.send(errorPage);
-        return;
       }
 
       const file = await readFileWithCache(absPath);
