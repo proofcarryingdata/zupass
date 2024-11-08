@@ -424,6 +424,7 @@ export class GenericIssuanceService {
   public async handleGetTicketPreview(
     email: string,
     orderCode: string,
+    orderSecret: string,
     pipelineId?: string
   ): Promise<TicketPreviewResultValue> {
     const requestedPipelineId = pipelineId ?? process.env.DEVCON_PIPELINE_ID;
@@ -440,14 +441,14 @@ export class GenericIssuanceService {
 
     const tickets = await pipeline.getAllTicketsForEmail(email);
 
-    // Check that a valid atom exists with the given orderCode
+    // Check that a valid atom exists with the given orderCode and orderSecret
     const validAtom = tickets.atoms.find(
-      (atom) => atom.orderCode === orderCode
+      (atom) => atom.orderCode === orderCode && atom.orderSecret === orderSecret
     );
     if (!validAtom) {
       throw new PCDHTTPError(
         400,
-        `No ticket found with order code ${orderCode} and email ${email}`
+        `No ticket found with order code ${orderCode}, email ${email}, and order secret ${orderSecret}`
       );
     }
 

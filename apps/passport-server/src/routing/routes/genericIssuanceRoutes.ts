@@ -764,12 +764,13 @@ export function initGenericIssuanceRoutes(
   );
 
   app.get(
-    "/generic-issuance/one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?",
+    "/generic-issuance/one-click-preview/:email/:code/:targetFolder/:pipelineId?/:serverUrl?/:orderSecret?",
     async (req, res) => {
       checkExistsForRoute(genericIssuanceService);
       const email = checkUrlParam(req, "email");
       const code = checkUrlParam(req, "code");
       const pipeline = req.params.pipelineId;
+      const orderSecret = checkUrlParam(req, "orderSecret");
 
       const getTicketImage = async (
         ticketData: TicketPreviewResultValue["tickets"][number]
@@ -793,6 +794,7 @@ export function initGenericIssuanceRoutes(
       const result = await genericIssuanceService.handleGetTicketPreview(
         email,
         code,
+        orderSecret,
         pipeline
       );
 
