@@ -82,12 +82,13 @@ function PODPCDCardBody({
             style={{
               color: isValidSig ? "#5B952C" : undefined,
               textDecoration: isValidSig ? "none" : undefined
+              // TODO: remove cursor pointer when we have a valid signature
             }}
           >
             <Text
               style={{
                 paddingRight: isValidSig ? 2 : 8,
-                color: "var(--core-accent)"
+                color: isValidSig ? "#5B952C" : "var(--core-accent)"
               }}
             >
               {sigStatus === 0
