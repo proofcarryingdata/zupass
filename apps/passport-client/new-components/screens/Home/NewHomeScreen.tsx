@@ -181,7 +181,6 @@ export const NewHomeScreen = (): ReactElement => {
   const isSyncSettled = useIsSyncSettled();
   const [params, setParams] = useSearchParams();
   const [zappUrl, setZappUrl] = useState("");
-  const [holding, setHolding] = useState(false);
   const isInvalidUser = useUserForcedToLogout();
   const location = useLocation();
   const regularParams = useParams();
@@ -389,11 +388,7 @@ export const NewHomeScreen = (): ReactElement => {
         <>
           <MaxWidthContainer>
             {!(showPodsList || noPods) && <Spacer h={96} />}
-            <SwipeViewContainer
-              onMouseDown={() => setHolding(true)}
-              onMouseUp={() => setHolding(false)}
-              onMouseLeave={() => setHolding(false)}
-            >
+            <SwipeViewContainer>
               <_SwipableViews
                 style={{
                   padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
