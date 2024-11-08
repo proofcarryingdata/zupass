@@ -41,23 +41,36 @@
   }
 
   .zupass-link {
-    display: block;
-    text-align: center;
-    color: #0077FF;
-    text-decoration: none;
-    padding-left: 20px;
-    padding-right: 20px;
-    padding-top: 2px;
-    padding-bottom: 2px;
-    font-family: Rubik;
-    font-size: 14px;
-    background-color: #FCE5B2;
-    border: 1px solid #E2DCAD;
-    margin-top: 20px;
+    display: flex;
+    padding: 6px 12px 6px 16px;
+    justify-content: center;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+
+    border-radius: 200px;
+    border: 2px solid var(--text-white, #FFF);
+    background: var(--bg-white-transparent, rgba(255, 255, 255, 0.80));
+
+    /* shadow-sm */
+    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
   }
 
-  .zupass-link:hover {
-    text-decoration: underline;
+  .zupass-link__text {
+    color: var(--text-tertiary, #8B94AC);
+    text-align: center;
+
+    /* text-sm (14px)/medium-rubik */
+    font-family: Rubik;
+    font-size: 14px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 135%; /* 18.9px */
+  }
+
+  .zupass-link__icon {
+    width: 16px;
+    height: 16px;
   }
 
   .ticket__footer {
@@ -466,7 +479,9 @@
 
 <body>
   <main class="container" ontouchstart>
-    <a href="#" onclick="redirectToZupass()" class="zupass-link">View full page in Zupass</a>
+    <button onclick="redirectToZupass()" class="zupass-link"><div class="zupass-link__text">View full page in Zupass</div><div class="zupass-link__icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17" fill="none">
+      <path fill-rule="evenodd" clip-rule="evenodd" d="M6.71967 4.71967C7.01256 4.42678 7.48744 4.42678 7.78033 4.71967L11.0303 7.96967C11.3232 8.26256 11.3232 8.73744 11.0303 9.03033L7.78033 12.2803C7.48744 12.5732 7.01256 12.5732 6.71967 12.2803C6.42678 11.9874 6.42678 11.5126 6.71967 11.2197L9.43934 8.5L6.71967 5.78033C6.42678 5.48744 6.42678 5.01256 6.71967 4.71967Z" fill="#8B94AC"/>
+    </svg></div></button>
     <div class="header">
       <span class="header__title">WELCOME TO {{eventName}}</span>
       <div class="ticket__subtitle--container">
