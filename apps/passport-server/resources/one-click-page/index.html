@@ -31,9 +31,13 @@
     --frogcrypto: #17A34A;
     --core-accent: #01685C;
     --max-width: 460px;
-    overflow: hidden;
-    height: 100dvh;
     background-color: #ECECEC;
+  }
+
+  body {
+    margin: 0;
+    display: flex;
+    justify-content: center;
   }
 
   .zupass-link {
@@ -77,16 +81,12 @@
     flex-direction: column;
     max-width: var(--max-width);
     align-items: center;
-    max-height: calc(100vh - 72px);
-    max-height: calc(100dvh - 72px);
     position: relative;
-    overflow: scroll;
-
+    overflow-y: auto;
+    overflow-x: hidden;
     padding: 25px 20px 25px 20px;
     -ms-overflow-style: none;
-    /* Internet Explorer 10+ */
     scrollbar-width: none;
-    /* Firefox */
   }
 
   .container::-webkit-scrollbar {
@@ -468,7 +468,7 @@
   <main class="container" ontouchstart>
     <a href="#" onclick="redirectToZupass()" class="zupass-link">View full page in Zupass</a>
     <div class="header">
-      <span class="header__title">{{eventName}}</span>
+      <span class="header__title">WELCOME TO {{eventName}}</span>
       <div class="ticket__subtitle--container">
         <span class="header__subtitle">{{eventLocation}}</span>
         <span class="header__subtitle">·</span>
