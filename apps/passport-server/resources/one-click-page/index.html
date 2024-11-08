@@ -696,8 +696,7 @@
       }
       else {
         timeLeftText.innerText = timeToStartDate();
-        overlay.classList.remove("modal__overlay--disabled");
-        timeModal.classList.remove("modal__container--hide");
+        openModal(timeModal);
 
         interval = setInterval(function () {
           timeLeftText.innerText = timeToStartDate();
@@ -717,19 +716,17 @@
 
 
     yesBtn.onclick = function () {
-      overlay.classList.add("modal__overlay--disabled");
+      closeModal(timeModal);
       for(const addonModal of addonsModals){
-        addonModal.classList.add("modal__container--hide");
+        closeModal(addonModal);
       }
-      timeModal.classList.add("modal__container--hide");
       clearInterval(interval);
     }
     overlay.onclick = function () {
-      overlay.classList.add("modal__overlay--disabled");
+      closeModal(timeModal);
       for(const addonModal of addonsModals){
-        addonModal.classList.add("modal__container--hide");
+        closeModal(addonModal);
       }
-     timeModal.classList.add("modal__container--hide");
       clearInterval(interval);
     }
 
@@ -739,8 +736,7 @@
       let swiper; // Declare swiper variable outside the function
 
       addonsBtn.onclick = function () {
-        overlay.classList.remove("modal__overlay--disabled");
-        addonsModal.classList.remove("modal__container--hide");
+        openModal(addonsModal);
 
         // Select the specific navigation buttons and index text within the modal
         const swiperContainer = addonsModal.querySelector(".swiper-container");
@@ -766,14 +762,29 @@
 
         // Close button functionality for the specific modal
         closeBtn.onclick = function () {
-          overlay.classList.add("modal__overlay--disabled");
-          addonsModal.classList.add("modal__container--hide");
+          closeModal(addonsModal);
           swiper.slideTo(0); // Reset swiper to the first slide
         };
       }
     }
 
+    function toggleBodyScroll(enable) {
+      document.body.style.overflow = enable ? 'auto' : 'hidden';
+    }
 
+    // When opening a modal
+    function openModal(modal) {
+      overlay.classList.remove("modal__overlay--disabled");
+      modal.classList.remove("modal__container--hide");
+      toggleBodyScroll(false); // Disable scrolling
+    }
+
+    // When closing a modal
+    function closeModal(modal) {
+      overlay.classList.add("modal__overlay--disabled");
+      modal.classList.add("modal__container--hide");
+      toggleBodyScroll(true); // Enable scrolling
+    }
 
   </script>
 </body>
