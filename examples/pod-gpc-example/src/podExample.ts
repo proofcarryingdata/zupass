@@ -182,6 +182,9 @@ export async function podDemo(): Promise<boolean> {
   // recreate it without signing again.
   const loadedPOD = POD.load(sampleEntries, signature, signerPublicKey);
   console.log("Loaded POD content ID", loadedPOD.contentID);
+  if (!loadedPOD.verifySignature()) {
+    throw new Error("Bad POD!");
+  }
 
   //////////////////////////////////////////////////////////////////////////////
   // POD contents can be serialized to/from a JSON-compatible format, which can
