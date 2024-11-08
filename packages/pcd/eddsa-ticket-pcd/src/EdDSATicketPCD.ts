@@ -64,6 +64,7 @@ export interface ITicketData {
   eventLocation?: string;
   eventStartDate?: string;
   isAddOn?: boolean;
+  parentTicketId?: string;
 }
 
 /**

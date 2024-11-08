@@ -3,33 +3,53 @@ import { useIsSyncSettled } from "../../../src/appHooks";
 import { NewLoader } from "../../shared/NewLoader";
 import { Typography } from "../../shared/Typography";
 
+const syncStates = {
+  now: (_: number): string => "Synced just now",
+  near: (_: number): string => "Synced a few seconds ago",
+  aboutMinute: (_: number): string => "Synced about a minute ago",
+  minutes: (seconds: number): string => `Synced ${seconds / 60} minutes ago`
+} as const;
+
+const getSyncState = (seconds: number): keyof typeof syncStates => {
+  switch (true) {
+    case seconds <= 10:
+      return "now";
+    case seconds <= 50:
+      return "near";
+    case seconds <= 120:
+      return "aboutMinute";
+    default:
+      return "minutes";
+  }
+};
 export const SyncIndicator = (): ReactElement => {
-  const [minutesSinceSynced, setMinutesSinceSynced] = useState(0);
+  const [syncState, setSyncState] = useState<string | undefined>();
   const isSyncSettled = useIsSyncSettled();
 
   useEffect(() => {
+    let seconds = 0;
     const interval = setInterval(() => {
       if (isSyncSettled) {
-        setMinutesSinceSynced((oldValue) => oldValue + 1);
+        seconds += 10;
+        setSyncState(syncStates[getSyncState(seconds)](seconds));
       } else {
-        setMinutesSinceSynced(0);
+        setSyncState(undefined);
+        seconds = 0;
       }
-    }, 60000);
+    }, 10000);
 
+    if (isSyncSettled) {
+      seconds += 10;
+      setSyncState(syncStates[getSyncState(seconds)](seconds));
+    } else {
+      setSyncState(undefined);
+      seconds = 0;
+    }
     return () => clearInterval(interval);
   }, [isSyncSettled]);
 
-  if (isSyncSettled) {
-    if (minutesSinceSynced) {
-      return (
-        <Typography color="var(--text-tertiary)">
-          Synced {minutesSinceSynced} minute
-          {minutesSinceSynced > 1 ? "s" : ""} ago
-        </Typography>
-      );
-    } else {
-      return <Typography color="var(--text-tertiary)">Just synced</Typography>;
-    }
+  if (isSyncSettled && syncState) {
+    return <Typography color="var(--text-tertiary)">{syncState}</Typography>;
   }
   return (
     <Typography

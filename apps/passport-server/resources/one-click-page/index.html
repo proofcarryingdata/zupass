@@ -348,6 +348,7 @@
     font-style: normal;
     font-weight: 500;
     line-height: 135%;
+    user-select: none;
     /* 18.9px */
   }
 
@@ -500,15 +501,15 @@
             <span class="ticket__subtitle--text">{{ticketName}}</span>
           </div>
         </div>
-        {{#showAddons}}
-        <button id="addons-btn" type="button" class="ticket__addons-btn">
-          {{#moreThanOneAddon}}
-          <span class="ticket__subtitle--text" style="font-size: 16px;">View {{addonsCount}}
-            add-on items</span>
-          {{/moreThanOneAddon}}
-          {{^moreThanOneAddon}}
-          <span class="ticket__subtitle--text" style="font-size: 16px;">View add-on item</span>
-          {{/moreThanOneAddon}}
+      {{#showAddons}}
+      <button id="addons_btn_{{id}}" type="button" class="addons-btn ticket__addons-btn">
+        {{#moreThanOneAddon}}
+        <span class="ticket__subtitle--text" style="font-size: 16px;">View {{addonsCount}}
+          add-on items</span>
+        {{/moreThanOneAddon}}
+        {{^moreThanOneAddon}}
+        <span class="ticket__subtitle--text" style="font-size: 16px;">View add-on item</span>
+        {{/moreThanOneAddon}}
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="var(--text-tertiary)" class="size-4"
           style="width: 20px;">
           <path d="M4.75 4.25a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1Z" />
@@ -569,7 +570,8 @@
             fill="#154133" />
         </svg></button>
     </div>
-    <div id="modal-addons" class="modal__container modal__container--hide">
+    {{#tickets}}
+    <div id="modal_addons_{{id}}" class="modal-addons modal__container modal__container--hide">
       <div class="swiper-container">
         <div class="swiper-wrapper">
           {{#addons}}
@@ -584,7 +586,6 @@
           {{/addons}}
         </div>
       </div>
-
       {{#moreThanOneAddon}}
       <div class="swiper__navigation--container">
         <button id="back" type="button" class="swiper__navigation--btn">
@@ -609,6 +610,7 @@
       <button type="button" id="close" class="btn__container--primary"><span
           class="btn__text--primary">Close</span></button>
     </div>
+  {{/tickets}}
   </div>
   </div>
   <!-- Tiny-Swiper JS -->
@@ -617,11 +619,11 @@
 
   <script>
 
-    const addonsModal = document.getElementById("modal-addons");
+    const addonsModals = document.getElementsByClassName("modal-addons");
     const timeModal = document.getElementById("modal-time");
     const overlay = document.getElementById("modal-overlay");
     const closeBtn = document.getElementById("close");
-    const addonsBtn = document.getElementById("addons-btn");
+    const addonsBtns = document.getElementsByClassName("addons-btn");
     const nextBtn = document.getElementById("next");
     const backBtn = document.getElementById("back");
     const yesBtn = document.getElementById("yes-btn");
@@ -680,9 +682,12 @@
 
     const clientPath = joinPaths("{{{zupassUrl}}}", "#", newPath);
 
-    addonsModal.onclick = function (e) {
-      e.stopPropagation();
+    for(const addonModal of addonsModals){
+      addonModal.onclick = function (e) {
+        e.stopPropagation();
+      }
     }
+
     timeModal.onclick = function (e) {
       e.stopPropagation();
     }
@@ -690,36 +695,56 @@
 
     yesBtn.onclick = function () {
       overlay.classList.add("modal__overlay--disabled");
-      addonsModal.classList.add("modal__container--hide");
+      for(const addonModal of addonsModals){
+        addonModal.classList.add("modal__container--hide");
+      }
       timeModal.classList.add("modal__container--hide");
       clearInterval(interval);
     }
     overlay.onclick = function () {
       overlay.classList.add("modal__overlay--disabled");
-      addonsModal.classList.add("modal__container--hide");
-      timeModal.classList.add("modal__container--hide");
+      for(const addonModal of addonsModals){
+        addonModal.classList.add("modal__container--hide");
+      }
+     timeModal.classList.add("modal__container--hide");
       clearInterval(interval);
     }
 
-    closeBtn.onclick = function () {
-      overlay.classList.add("modal__overlay--disabled");
-      addonsModal.classList.add("modal__container--hide");
-    }
-    addonsBtn.onclick = function () {
-      overlay.classList.remove("modal__overlay--disabled");
-      addonsModal.classList.remove("modal__container--hide");
-      const swiper = new Swiper(".swiper-container", {
-        spaceBetween: 12,
-        navigation: {
-          prevEl: backBtn,
-          nextEl: nextBtn,
-          disabledClass: "swiper__navigation--btn-disabled"
-        },
-        plugins: [SwiperPluginNavigation]
-      });
-      swiper.on("after-slide", function (newIdx, state) {
-        currentIdxText.innerText = newIdx + 1;
-      })
+    for(const addonsBtn of addonsBtns){
+      const id = addonsBtn.id.split("_")[2];
+      const addonsModal = document.getElementById("modal_addons_"+id);
+      addonsBtn.onclick = function () {
+        overlay.classList.remove("modal__overlay--disabled");
+        addonsModal.classList.remove("modal__container--hide");
+
+        // Select the specific navigation buttons and index text within the modal
+        const swiperContainer = addonsModal.querySelector(".swiper-container");
+        const prevButton = addonsModal.querySelector("#back");
+        const nextButton = addonsModal.querySelector("#next");
+        const currentIdxText = addonsModal.querySelector("#current-item-text");
+        const closeBtn = addonsModal.querySelector("#close");
+
+        // Initialize a new Swiper instance for the specific modal
+        const swiper = new Swiper(swiperContainer, {
+          spaceBetween: 12,
+          navigation: {
+            prevEl: prevButton,
+            nextEl: nextButton,
+            disabledClass: "swiper__navigation--btn-disabled"
+          },
+          plugins: [SwiperPluginNavigation]
+        });
+
+        swiper.on("after-slide", function (newIdx, state) {
+          currentIdxText.innerText = newIdx + 1;
+        });
+
+        // Close button functionality for the specific modal
+        closeBtn.onclick = function () {
+          overlay.classList.add("modal__overlay--disabled");
+          addonsModal.classList.add("modal__container--hide");
+        };
+      }
     }
 
 
