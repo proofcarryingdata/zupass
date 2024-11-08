@@ -26,6 +26,9 @@ export class DiscordService {
         this.alertsChannelId
       ) as TextBasedChannel;
 
+      // max discord message length is 4000
+      msg = msg.substring(0, 3500);
+
       logger(`[DISCORD] sending alert ${msg}`);
       return alertsChannel?.send(msg);
     });
