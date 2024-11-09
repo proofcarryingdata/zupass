@@ -6,13 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500&family=Fragment+Mono&display=swap"
     rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400&family=Fragment+Mono&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400&family=Fragment+Mono&display=swap"
     rel="stylesheet">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-      href="https://fonts.googleapis.com/css2?family=Barlow:wght@800&family=Fragment+Mono&family=IBM+Plex+Sans&family=Rubik:wght@300..900&family=IBM+Plex+Mono:wght@500&display=swap"
-      rel="stylesheet">
+    href="https://fonts.googleapis.com/css2?family=Barlow:wght@800&family=Fragment+Mono&family=IBM+Plex+Sans&family=Rubik:wght@300..900&family=IBM+Plex+Mono:wght@500&display=swap"
+    rel="stylesheet">
   <title>Missing ticket</title>
 </head>
 <style>
@@ -59,6 +59,7 @@
     height: 100%;
   }
 
+
   .no-ticket__container {
     display: flex;
     flex-direction: column;
@@ -70,7 +71,7 @@
     /* shadow-inset-black */
     box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
     padding: 0 40px;
-    width: 100%; 
+    width: 100%;
     height: 220px;
   }
 
@@ -91,28 +92,105 @@
   }
 
   .card-title__link {
-    color:  #07f;
+    color: #07f;
     font-family: Barlow;
     font-weight: 400;
     font-size: 14px;
     line-height: 18.9px;
   }
-</style>
 
+  .modal__overlay--disabled {
+    display: none !important;
+  }
+
+  .modal__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    backdrop-filter: blur(4px);
+    z-index: 9999;
+    padding: 0px 12px 12px 12px;
+    display: flex;
+    align-items: end;
+  }
+
+  .modal__container {
+    background: #ffffff;
+    border-radius: 40px;
+    box-shadow: 0px 4px 6px -1px #0000001a;
+    width: 100%;
+    max-width: var(--max-width);
+    max-height: 100%;
+    padding: 20px;
+    margin: 0 auto;
+    -ms-overflow-style: none;
+    /* Internet Explorer 10+ */
+    scrollbar-width: none;
+    /* Firefox */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .modal__container--hide {
+    display: none !important;
+  }
+
+  .modal__container::-webkit-scrollbar {
+    display: none;
+    /* Safari and Chrome */
+  }
+</style>
 
 <body>
   <main class="container">
     <div class="no-ticket__container">
       <span class="card-title__header">NO UPCOMING EVENTS</span>
-      <span class="card-title__text">Don't see your ticket? <a class="card-title__link">Learn more</a></span>
+      <span class="card-title__text">Don't see you ticket? <a href="" id="learn-more-btn">Learn more</a></span>
     </div>
   </main>
+  <!-- overlay -->
+  <!-- modal -->
+  <div id="modal-overlay" class="modal__overlay modal__overlay--disabled">
+    <div id="learn-more-modal" class="modal__container modal__container--hide">
+      cool
+    </div>
+  </div>
 
   <script>
-    const redirectBtn = document.getElementById("cta");
-    redirectBtn.onclick = function () {
-      window.location.href = "https://zupass.org/#";
+    const learnMoreModal = document.getElementById("learn-more-modal");
+    const overlay = document.getElementById("modal-overlay");
+    const learnMoreBtn = document.getElementById("learn-more-btn");
+
+    learnMoreBtn.onclick = (e) => {
+      e.preventDefault();
+      openModal(learnMoreModal);
+    }
+
+    console.log(learnMoreBtn.onclick)
+
+    overlay.onclick = (e) => {
+      closeModal(learnMoreModal);
+    }
+    // When opening a modal
+    function openModal(modal) {
+      overlay.classList.remove("modal__overlay--disabled");
+      modal.classList.remove("modal__container--hide");
+    }
+
+    // When closing a modal
+    function closeModal(modal) {
+      overlay.classList.add("modal__overlay--disabled");
+      modal.classList.add("modal__container--hide");
     }
   </script>
+
+
+
 
 </html>
