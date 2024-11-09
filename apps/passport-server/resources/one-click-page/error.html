@@ -34,7 +34,7 @@
     --bg-white-transparent: rgba(255, 255, 255, 0.80);
     --text-tertiary: #8B94AC;
     --frogcrypto: #17A34A;
-    --core-accent: #01685C;
+    --core-accent: #07F;
     --max-width: 460px;
     height: 100dvh;
     overflow: hidden;
@@ -160,6 +160,47 @@
     line-height: 21.6px;
     color: var(--text-primary);
   }
+
+  .button {
+    cursor: pointer;
+    display: flex;
+    height: 54px;
+    padding: 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    align-self: stretch;
+    border-radius: 200px;
+
+    /* shadow-sm */
+    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+  }
+
+  .button--primary {
+    background: var(--core-accent);
+  }
+
+  .button--secondary {
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    background: #FFF;
+  }
+
+
+  .button__text {
+    font-family: Rubik;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 500;
+    line-height: 135%;
+  }
+
+  .button__text--primary {
+    color: #fff;
+  }
+
+  .button__text--secondary {
+    color: var(--text-primary);
+  }
 </style>
 
 <body>
@@ -168,6 +209,8 @@
       <span class="card-title__header">NO UPCOMING EVENTS</span>
       <span class="card-title__text">Don't see you ticket? <a href="" id="learn-more-btn">Learn more</a></span>
     </div>
+    <button id="learn-more-2" type="button" class="button button--primary"><span
+        class="button__text button__text--primary">Learn more</span></button>
   </main>
   <!-- overlay -->
   <!-- modal -->
@@ -181,6 +224,11 @@
           We don’t see an upcoming event that matches the emails under your account.
         </span>
       </div>
+      <button id="contact-support-btn" type="button" class="button button--primary"><span
+          class="button__text button__text--primary">Mail
+          support</span></button>
+      <button id="close-btn" type="button" class="button button--secondary"><span
+          class="button__text button__text--secondary">Close</span></button>
     </div>
   </div>
 
@@ -188,13 +236,32 @@
     const learnMoreModal = document.getElementById("learn-more-modal");
     const overlay = document.getElementById("modal-overlay");
     const learnMoreBtn = document.getElementById("learn-more-btn");
+    const learnMoreBtn2 = document.getElementById("learn-more-2");
+    const contactSupportBtn = document.getElementById("contact-support-btn");
+    const closeBtn = document.getElementById("close-btn");
 
     learnMoreBtn.onclick = (e) => {
       e.preventDefault();
       openModal(learnMoreModal);
     }
 
-    console.log(learnMoreBtn.onclick)
+    learnMoreBtn2.onclick = (e) => {
+      openModal(learnMoreModal);
+    }
+    closeBtn.onclick = (e) => {
+      closeModal(learnMoreModal);
+    }
+
+    learnMoreModal.onclick = function (e) {
+      e.stopPropagation();
+    }
+
+    contactSupportBtn.onclick = function (e) {
+      window.open(
+        `mailto:{{zupassSupport}}?subject=Ticket Support ({{email}})&body=Hi, I'd like to request support on finding my ticket in Zupass. My email(s) are listed in the subject of this email.`
+      );
+    }
+
 
     overlay.onclick = (e) => {
       closeModal(learnMoreModal);
@@ -211,4 +278,5 @@
       modal.classList.add("modal__container--hide");
     }
   </script>
+
 </html>
