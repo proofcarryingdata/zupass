@@ -29,7 +29,7 @@ import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { ZUPASS_SUPPORT_EMAIL, sleep } from "@pcd/util";
 import express from "express";
 import { sha256 } from "js-sha256";
-import Mustache, { render } from "mustache";
+import Mustache from "mustache";
 import path from "path";
 import * as QRCode from "qrcode";
 import urljoin from "url-join";
