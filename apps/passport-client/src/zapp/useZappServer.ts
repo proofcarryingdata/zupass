@@ -43,6 +43,13 @@ async function waitForFirstSync(context: StateContextValue): Promise<void> {
       return;
     }
     const unlisten = context.stateEmitter.listen((state) => {
+      if (
+        context.getState().downloadedPCDs &&
+        context.getState().pcds.getAllPCDsInFolder("Devcon SEA").length > 0
+      ) {
+        resolve();
+        return;
+      }
       if (state.completedFirstSync) {
         unlisten();
         resolve();

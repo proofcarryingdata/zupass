@@ -82,6 +82,21 @@ import { ListenMode, useZappServer } from "../src/zapp/useZappServer";
 
 enableLiveReload();
 
+// Delete local storage and reload if forceNewSession is set
+if (typeof window !== "undefined") {
+  const params = new URLSearchParams(window.location.search);
+  if (params.has("forceNewSession")) {
+    localStorage.clear();
+    const newParams = new URLSearchParams(window.location.search);
+    newParams.delete("forceNewSession");
+    const newSearch = newParams.toString();
+    const newPath = `${window.location.pathname}${
+      newSearch ? `?${newSearch}` : ""
+    }${window.location.hash}`;
+    window.location.replace(newPath);
+  }
+}
+
 function App(): JSX.Element {
   useBackgroundJobs();
   useZappServer(ListenMode.LISTEN_IF_EMBEDDED);
