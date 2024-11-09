@@ -30,8 +30,7 @@
     "@pcd/eddsa-ticket-pcd": "0.10.0",
     "@pcd/passport-interface": "^0.15.0",
     "@pcd/passport-ui": "0.15.0",
-    "@pcd/pcd-types": "0.15.0",
-    "html-to-image": "^1.11.11"
+    "@pcd/pcd-types": "0.15.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.15.0",
