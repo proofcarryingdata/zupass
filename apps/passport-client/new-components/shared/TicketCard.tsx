@@ -1,6 +1,6 @@
 import { Property } from "csstype";
-import { forwardRef } from "react";
-import styled from "styled-components";
+import { forwardRef, useState } from "react";
+import styled, { keyframes } from "styled-components";
 import { Typography } from "./Typography";
 
 export const TicketCardHeight = 300;
@@ -33,13 +33,54 @@ const TicketCardContainer = styled.div<{
     0px 4px 6px -1px rgba(0, 0, 0, 0.1);
 `;
 
-const TicketCardImage = styled.div<{ src?: string }>`
-  ${({ src }): string | undefined =>
-    src ? `background: url(${src});` : undefined}
+const TicketCardImage = styled.img<{ src?: string }>`
   background-size: cover;
   background-position: 50% 50%;
   width: 100%;
   height: 100%;
+`;
+
+const shimmer = keyframes`
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+`;
+
+const LoaderContainer = styled.div`
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* Skeleton styling */
+  .skeleton {
+    width: 100%;
+    height: 100%;
+    background-color: #e0e0e0;
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+
+    &::before {
+      content: "";
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 200%;
+      height: 100%;
+      background-image: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0) 0%,
+        rgba(255, 255, 255, 0.4) 50%,
+        /* Increased opacity for more contrast */ rgba(255, 255, 255, 0) 100%
+      );
+      animation: ${shimmer} 2s infinite linear;
+    }
+  }
 `;
 
 const TicketCardImageContainer = styled.div`
@@ -72,6 +113,7 @@ export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
     { imgSource, title, address, ticketCount, cardColor, ticketWidth },
     ref
   ): JSX.Element => {
+    const [imageLoading, setImageLoading] = useState(true);
     return (
       <TicketCardContainer
         $width={ticketWidth || 300}
@@ -79,7 +121,18 @@ export const TicketCard = forwardRef<HTMLDivElement, TicketCardProps>(
         $borderColor={CARD_COLORS[cardColor]}
       >
         <TicketCardImageContainer>
-          <TicketCardImage src={imgSource} />
+          {imageLoading && (
+            <LoaderContainer>
+              <div className="skeleton"></div>
+            </LoaderContainer>
+          )}
+          <TicketCardImage
+            style={{ opacity: imageLoading ? 0 : 1 }}
+            onLoad={() => {
+              setImageLoading(false);
+            }}
+            src={imgSource}
+          />
         </TicketCardImageContainer>
         <TicketCardDetails>
           <Typography fontSize={18} fontWeight={800}>
