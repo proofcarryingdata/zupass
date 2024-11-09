@@ -26,7 +26,7 @@ import {
   TicketPreviewResultValue
 } from "@pcd/passport-interface";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
-import { sleep } from "@pcd/util";
+import { ZUPASS_SUPPORT_EMAIL, sleep } from "@pcd/util";
 import express from "express";
 import { sha256 } from "js-sha256";
 import Mustache from "mustache";
@@ -790,74 +790,87 @@ export function initGenericIssuanceRoutes(
         );
       };
       const absPath = path.resolve("./resources/one-click-page/index.html");
-      const result = await genericIssuanceService.handleGetTicketPreview(
-        email,
-        code,
-        pipeline
-      );
 
-      const main: TicketPreviewResultValue["tickets"] = [];
-      const addOns: TicketPreviewResultValue["tickets"] = [];
-
-      for (const ticket of result.tickets) {
-        if (ticket.isAddOn) {
-          addOns.push(ticket);
-        } else {
-          main.push(ticket);
-        }
-      }
-
-      if (!main.length) {
-        throw new PCDHTTPError(
-          400,
-          `No ticket found with order code ${code} and email ${email}. Please contact support@zupass.org immediately.`
+      try {
+        const result = await genericIssuanceService.handleGetTicketPreview(
+          email,
+          code,
+          pipeline
         );
+
+        const main: TicketPreviewResultValue["tickets"] = [];
+        const addOns: TicketPreviewResultValue["tickets"] = [];
+
+        for (const ticket of result.tickets) {
+          if (ticket.isAddOn) {
+            addOns.push(ticket);
+          } else {
+            main.push(ticket);
+          }
+        }
+
+        if (!main.length) {
+          throw new PCDHTTPError(
+            400,
+            `No ticket found with order code ${code} and email ${email}. Please contact support@zupass.org immediately.`
+          );
+        }
+
+        const file = await readFileWithCache(absPath);
+        const ticket = main[0];
+
+        // filter out add-ons
+        const ticketsCount = main.length;
+
+        const tickets = await Promise.all(
+          main.map(async (ticket) => {
+            // Find all add-ons that belong to this main ticket
+            const ticketAddons = addOns
+              .filter((addon) => addon.parentTicketId === ticket.ticketId)
+              .map(async (addon) => ({
+                image: await getTicketImage(addon),
+                name: addon.ticketName
+              }));
+
+            return {
+              attendeeName:
+                ticket.attendeeName !== ""
+                  ? ticket.attendeeName.toUpperCase()
+                  : ticket.eventName.toUpperCase(),
+              attendeeEmail: ticket.attendeeEmail,
+              ticketName: ticket.ticketName,
+              qr: await getTicketImage(ticket),
+              showAddons: ticketAddons.length > 0,
+              id: ticket.ticketId,
+              moreThanOneAddon: ticketAddons.length > 1,
+              addonsCount: ticketAddons.length,
+              addons: await Promise.all(ticketAddons)
+            };
+          })
+        );
+
+        const rendered = Mustache.render(file, {
+          tickets,
+          eventName: ticket?.eventName.toUpperCase(),
+          eventLocation: ticket?.eventLocation,
+          backgroundImage: ticket?.imageUrl,
+          count: ticketsCount,
+          isMoreThanOne: ticketsCount > 1,
+          zupassUrl: process.env.PASSPORT_CLIENT_URL,
+          startDate: ticket?.eventStartDate
+        });
+        res.send(rendered);
+      } catch {
+        const errorFilePath = path.resolve(
+          "./resources/one-click-page/error.html"
+        );
+        const file = await readFileWithCache(errorFilePath);
+        const rendered = Mustache.render(file, {
+          zupassSupport: ZUPASS_SUPPORT_EMAIL,
+          email: email
+        });
+        res.send(rendered);
       }
-
-      const file = await readFileWithCache(absPath);
-      const ticket = main[0];
-
-      // filter out add-ons
-      const ticketsCount = main.length;
-
-      const tickets = await Promise.all(
-        main.map(async (ticket) => {
-          // Find all add-ons that belong to this main ticket
-          const ticketAddons = addOns
-            .filter((addon) => addon.parentTicketId === ticket.ticketId)
-            .map(async (addon) => ({
-              image: await getTicketImage(addon),
-              name: addon.ticketName
-            }));
-
-          return {
-            attendeeName:
-              ticket.attendeeName !== ""
-                ? ticket.attendeeName.toUpperCase()
-                : ticket.eventName.toUpperCase(),
-            attendeeEmail: ticket.attendeeEmail,
-            ticketName: ticket.ticketName,
-            qr: await getTicketImage(ticket),
-            showAddons: ticketAddons.length > 0,
-            id: ticket.ticketId,
-            moreThanOneAddon: ticketAddons.length > 1,
-            addonsCount: ticketAddons.length,
-            addons: await Promise.all(ticketAddons)
-          };
-        })
-      );
-
-      const rendered = Mustache.render(file, {
-        tickets,
-        eventName: ticket?.eventName.toUpperCase(),
-        eventLocation: ticket?.eventLocation,
-        backgroundImage: ticket?.imageUrl,
-        count: ticketsCount,
-        isMoreThanOne: ticketsCount > 1,
-        zupassUrl: process.env.PASSPORT_CLIENT_URL,
-        startDate: ticket?.eventStartDate
-      });
-      res.send(rendered);
     }
   );
 }

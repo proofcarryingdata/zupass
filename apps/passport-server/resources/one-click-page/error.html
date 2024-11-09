@@ -6,6 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@500&family=Fragment+Mono&display=swap"
     rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400&family=Fragment+Mono&display=swap"
+    rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Barlow:wght@800&family=Fragment+Mono&family=IBM+Plex+Sans&family=Rubik:wght@300..900&family=IBM+Plex+Mono:wght@500&display=swap"
+    rel="stylesheet">
   <title>Missing ticket</title>
 </head>
 <style>
@@ -27,26 +34,15 @@
     --bg-white-transparent: rgba(255, 255, 255, 0.80);
     --text-tertiary: #8B94AC;
     --frogcrypto: #17A34A;
-    --core-accent: #01685C;
+    --core-accent: #07F;
     --max-width: 460px;
     height: 100dvh;
     overflow: hidden;
+    background-color: #ECECEC;
   }
 
   body {
     height: 100%;
-  }
-
-  .page-header {
-    padding: 25px 0 25px 0;
-    width: 100%;
-    max-width: var(--max-width);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-bottom: 1px solid #1d8289;
-    background: linear-gradient(0deg, #00605C 0%, #00785E 100%);
-    margin: 0 auto;
   }
 
   .container {
@@ -56,80 +52,239 @@
     display: flex;
     flex-direction: column;
     max-width: var(--max-width);
-    padding: 0 20px;
+    padding: 24px 24px 20px 24px;
     align-items: center;
-    justify-content: center;
     gap: 20px;
     overflow: hidden;
     height: 100%;
   }
 
-  .error-text {
-    color: #154133;
-    text-align: center;
-    font-family: "Barlow", sans-serif;
 
-    font-size: 27px;
+  .no-ticket__container {
+    display: flex;
+    flex-direction: column;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 16px;
+    background: #e1e1e2;
+    /* shadow-inset-black */
+    box-shadow: 1px 1px 0px 0px rgba(0, 0, 0, 0.1) inset;
+    padding: 0 40px;
+    width: 100%;
+    height: 220px;
+  }
+
+  .card-title__header {
+    color: var(--text-primary);
+    font-family: Barlow;
+    font-style: normal;
+    font-weight: 800;
+    font-size: 20px;
+  }
+
+  .card-title__text {
+    color: var(--text-primary);
+    font-family: Barlow;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 18.9px;
+  }
+
+  .card-title__link {
+    color: #07f;
+    font-family: Barlow;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 18.9px;
+  }
+
+  .modal__overlay--disabled {
+    display: none !important;
+  }
+
+  .modal__overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    overflow-x: hidden;
+    overflow-y: hidden;
+    background: rgba(0, 0, 0, 0.50);
+    z-index: 9999;
+    padding: 0px 12px 12px 12px;
+    display: flex;
+    align-items: end;
+  }
+
+  .modal__container {
+    background: #ffffff;
+    border-radius: 40px;
+    box-shadow: 0px 4px 6px -1px #0000001a;
+    width: 100%;
+    max-width: var(--max-width);
+    max-height: 100%;
+    padding: 20px;
+    margin: 0 auto;
+    -ms-overflow-style: none;
+    /* Internet Explorer 10+ */
+    scrollbar-width: none;
+    /* Firefox */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .modal__container--hide {
+    display: none !important;
+  }
+
+  .modal__container::-webkit-scrollbar {
+    display: none;
+    /* Safari and Chrome */
+  }
+
+  .modal__title_container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .modal__title_text {
+    font-family: Rubik, sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    line-height: 21.6px;
+    color: var(--text-primary);
+  }
+
+  .button {
+    cursor: pointer;
+    display: flex;
+    height: 54px;
+    padding: 8px;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    align-self: stretch;
+    border-radius: 200px;
+
+    /* shadow-sm */
+    box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.05);
+  }
+
+  .button--primary {
+    background: var(--core-accent);
+  }
+
+  .button--secondary {
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    background: #FFF;
+  }
+
+
+  .button__text {
+    font-family: Rubik;
+    font-size: 18px;
     font-style: normal;
     font-weight: 500;
     line-height: 135%;
   }
 
-  .cta {
-    border-radius: 8px;
-    border: 2px solid #FFC971;
-    background: linear-gradient(0deg, #FFAE00 0%, #4CCCB0 100%);
-    height: 76px;
-    width: 100%;
-    color: #000;
+  .button__text--primary {
+    color: #fff;
+  }
+
+  .button__text--secondary {
+    color: var(--text-primary);
+  }
+
+  .modal__button_container {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-direction: column;
+    width: 100%;
     gap: 8px;
-    /* Fallback for older browsers */
-    color: #154133;
-    text-align: center;
-    font-family: "Fragment Mono";
-    font-size: 28px;
-    font-style: normal;
-    font-weight: 400;
-    cursor: pointer;
   }
 </style>
 
-
 <body>
-  <div class="page-header" id="page-header">
-    <svg xmlns="http://www.w3.org/2000/svg" width="118" height="21" viewBox="0 0 118 21" fil="none">
-      <path
-        d="M0.587402 17.6774L13.949 2.65875H1.20393V0.406738H17.4772V2.49193L4.22441 17.4011H18.1248L17.7466 19.6531H0.587402V17.6722V17.6774Z"
-        fill="#FFD6A0" />
-      <path
-        d="M23.5906 0.406738V11.3332C23.5906 16.4002 26.5541 17.7868 29.4347 17.7868C32.9629 17.7868 35.0663 16.1083 35.0663 11.3332V0.406738H37.7604V11.3019C37.7604 17.5627 34.5275 20.0597 29.3569 20.0597C24.1864 20.0597 20.8965 17.5106 20.8965 11.5208V0.406738H23.5906Z"
-        fill="#FFD6A0" />
-      <path
-        d="M43.1799 0.406738H52.1792C56.9197 0.406738 59.1009 2.87248 59.1009 6.07326C59.1009 9.84225 56.5156 11.9535 52.2569 11.9535H45.8999V19.6531H43.1799V0.406738ZM45.8999 9.65458H51.8787C54.521 9.65458 56.3498 8.89349 56.3498 6.10454C56.3498 3.93593 54.894 2.69003 51.8787 2.69003H45.8999V9.65458Z"
-        fill="#FFD6A0" />
-      <path
-        d="M63.8673 13.825L61.3908 19.6531H58.5879L66.8048 0.406738H70.0895L78.6588 19.6531H75.6953L73.1359 13.825H63.8673ZM72.25 11.4948C69.9082 6.18273 68.7995 3.65964 68.3695 2.36161H68.3436C67.9395 3.60751 66.6442 6.91776 64.7066 11.4948H72.25Z"
-        fill="#FFD6A0" />
-      <path
-        d="M83.2646 14.0438C83.964 16.3219 85.6064 17.891 89.3522 17.891C93.098 17.891 94.5797 16.4261 94.5797 14.6381C94.5797 12.7405 93.528 11.5728 88.5698 10.7335C82.8294 9.75872 81.4564 7.93938 81.4564 5.31204C81.4564 1.92359 84.6375 0 88.8134 0C95.0356 0 96.4915 3.27897 96.7091 5.23384H93.9891C93.585 3.90453 92.7768 2.1686 88.7356 2.1686C85.9897 2.1686 84.2075 3.11737 84.2075 5.04096C84.2075 6.61528 84.9898 7.61618 89.3522 8.346C96.248 9.53977 97.3515 11.6823 97.3515 14.3618C97.3515 17.427 94.9268 20.0544 89.1605 20.0544C83.8241 20.0544 81.13 17.5886 80.4824 14.0386H83.2594L83.2646 14.0438Z"
-        fill="#FFD6A0" />
-      <path
-        d="M102.932 14.0438C103.631 16.3219 105.273 17.891 109.019 17.891C112.765 17.891 114.247 16.4261 114.247 14.6381C114.247 12.7405 113.195 11.5728 108.237 10.7335C102.496 9.75872 101.123 7.93938 101.123 5.31204C101.123 1.92359 104.304 0 108.48 0C114.703 0 116.158 3.27897 116.376 5.23384H113.656C113.252 3.90453 112.444 2.1686 108.403 2.1686C105.657 2.1686 103.874 3.11737 103.874 5.04096C103.874 6.61528 104.657 7.61618 109.019 8.346C115.915 9.53977 117.018 11.6823 117.018 14.3618C117.018 17.427 114.594 20.0544 108.827 20.0544C103.491 20.0544 100.797 17.5886 100.155 14.0386H102.932V14.0438Z"
-        fill="#FFD6A0" />
-    </svg>
-  </div>
-  <main class="container" onscroll="test">
-    <span class="error-text">Whoops, looks like you don't have a ticket.</span>
-    <button id="cta" class="cta">Go to Zupass</button>
+  <main class="container">
+    <div class="no-ticket__container">
+      <span class="card-title__header">NO UPCOMING EVENTS</span>
+      <span class="card-title__text">Don't see you ticket? <a href="" id="learn-more-btn">Learn more</a></span>
+    </div>
+    <button id="learn-more-2" type="button" class="button button--primary"><span
+        class="button__text button__text--primary">Learn more</span></button>
   </main>
+  <!-- overlay -->
+  <!-- modal -->
+  <div id="modal-overlay" class="modal__overlay modal__overlay--disabled">
+    <div id="learn-more-modal" class="modal__container modal__container--hide">
+      <div class="modal__title_container">
+        <span class="card-title__header">
+          DON'T SEE YOUR TICKET?
+        </span>
+        <span class="modal__title_text">
+          The ticket that this link refers to either does not exist or was updated.
+        </span>
+      </div>
+      <div class="modal__button_container">
+        <button id="contact-support-btn" type="button" class="button button--primary"><span
+          class="button__text button__text--primary">Contact
+          support</span></button>
+          <button id="close-btn" type="button" class="button button--secondary"><span
+            class="button__text button__text--secondary">Close</span></button>
+      </div>
+    </div>
+  </div>
 
   <script>
-    const redirectBtn = document.getElementById("cta");
-    redirectBtn.onclick = function () {
-      window.location.href = "https://zupass.org/#";
+    const learnMoreModal = document.getElementById("learn-more-modal");
+    const overlay = document.getElementById("modal-overlay");
+    const learnMoreBtn = document.getElementById("learn-more-btn");
+    const learnMoreBtn2 = document.getElementById("learn-more-2");
+    const contactSupportBtn = document.getElementById("contact-support-btn");
+    const closeBtn = document.getElementById("close-btn");
+
+    learnMoreBtn.onclick = (e) => {
+      e.preventDefault();
+      openModal(learnMoreModal);
+    }
+
+    learnMoreBtn2.onclick = (e) => {
+      openModal(learnMoreModal);
+    }
+    closeBtn.onclick = (e) => {
+      closeModal(learnMoreModal);
+    }
+
+    learnMoreModal.onclick = function (e) {
+      e.stopPropagation();
+    }
+
+    contactSupportBtn.onclick = function (e) {
+      window.open(
+        `mailto:{{zupassSupport}}?subject=Ticket Support ({{email}})&body=Hi, I'd like to request support on finding my ticket in Zupass. My email(s) are listed in the subject of this email.`
+      );
+    }
+
+
+    overlay.onclick = (e) => {
+      closeModal(learnMoreModal);
+    }
+    // When opening a modal
+    function openModal(modal) {
+      overlay.classList.remove("modal__overlay--disabled");
+      modal.classList.remove("modal__container--hide");
+    }
+
+    // When closing a modal
+    function closeModal(modal) {
+      overlay.classList.add("modal__overlay--disabled");
+      modal.classList.add("modal__container--hide");
     }
   </script>
 
