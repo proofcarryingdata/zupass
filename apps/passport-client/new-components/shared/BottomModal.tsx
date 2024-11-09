@@ -12,7 +12,7 @@ const BottomModalOverlay = styled.div<{ $fullScreen?: boolean }>`
   right: 0;
   overflow-x: hidden;
   overflow-y: hidden;
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
   z-index: 9999;
   padding: 0px 12px 12px 12px;
   display: flex;

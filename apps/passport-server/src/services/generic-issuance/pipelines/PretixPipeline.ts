@@ -409,6 +409,27 @@ export class PretixPipeline implements BasePipeline {
           };
         });
 
+        // Make a map from atom id to atom
+        const atomMap = new Map<string, PretixAtom>();
+        atomsToSave.forEach((a) => {
+          atomMap.set(a.id, a);
+        });
+
+        // For each atom, if it has a parentAtomId, set the email to the parent atom's email
+        atomsToSave.forEach((a) => {
+          if (a.parentAtomId) {
+            const parentAtom = atomMap.get(a.parentAtomId);
+            if (parentAtom) {
+              a.email = parentAtom.email;
+            } else {
+              logger(
+                LOG_TAG,
+                `parent atom ${a.parentAtomId} not found for atom ${a.id} in pipeline ${this.id}`
+              );
+            }
+          }
+        });
+
         logger(
           LOG_TAG,
           `saving ${atomsToSave.length} atoms for pipeline id '${this.id}' of type ${this.type}`

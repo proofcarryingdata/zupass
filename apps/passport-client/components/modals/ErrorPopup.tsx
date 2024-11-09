@@ -38,7 +38,6 @@ const ErrorBg = styled.div`
   right: 0;
   overflow-y: scroll;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
   z-index: 999;
   display: flex;
   justify-content: flex-start;

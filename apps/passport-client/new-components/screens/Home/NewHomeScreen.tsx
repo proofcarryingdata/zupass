@@ -378,7 +378,7 @@ export const NewHomeScreen = (): ReactElement => {
       noPadding={tickets.length > 0}
       fullscreen={tickets.length > 0}
     >
-      {(!tickets.length || isInvalidUser) && (
+      {!tickets.length && (
         <>
           <Spacer h={20} />
           <NoUpcomingEventsState isLandscape={isLandscape} />
