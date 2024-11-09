@@ -25,7 +25,6 @@ const ModalBg = styled.div`
   bottom: 0;
   right: 0;
   background: rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(4px);
   z-index: 999;
 `;
 

@@ -31,7 +31,7 @@
     --bg-white-transparent: rgba(255, 255, 255, 0.80);
     --text-tertiary: #8B94AC;
     --frogcrypto: #17A34A;
-    --core-accent: #01685C;
+    --core-accent: #0077FF;
     --max-width: 460px;
     background-color: #ECECEC;
   }
@@ -255,6 +255,7 @@
   }
 
   .modal__overlay {
+    background: rgba(0, 0, 0, 0.50);
     position: fixed;
     top: 0;
     left: 0;
@@ -262,7 +263,6 @@
     right: 0;
     overflow-x: hidden;
     overflow-y: hidden;
-    backdrop-filter: blur(4px);
     z-index: 9999;
     padding: 0px 12px 12px 12px;
     display: flex;
@@ -748,25 +748,29 @@
         const currentIdxText = addonsModal.querySelector("#current-item-text");
         const closeBtn = addonsModal.querySelector("#close");
 
-        // Initialize a new Swiper instance for the specific modal
-        swiper = new Swiper(swiperContainer, {
-          spaceBetween: 12,
-          navigation: {
-            prevEl: prevButton,
-            nextEl: nextButton,
-            disabledClass: "swiper__navigation--btn-disabled"
-          },
-          plugins: [SwiperPluginNavigation]
-        });
+        // Initialize a new Swiper instance only if there is more than one add-on
+        if (addonsModal.querySelectorAll('.swiper-slide').length > 1) {
+          swiper = new Swiper(swiperContainer, {
+            spaceBetween: 12,
+            navigation: {
+              prevEl: prevButton,
+              nextEl: nextButton,
+              disabledClass: "swiper__navigation--btn-disabled"
+            },
+            plugins: [SwiperPluginNavigation]
+          });
 
-        swiper.on("after-slide", function (newIdx, state) {
-          currentIdxText.innerText = newIdx + 1;
-        });
+          swiper.on("after-slide", function (newIdx, state) {
+            currentIdxText.innerText = newIdx + 1;
+          });
+        }
 
         // Close button functionality for the specific modal
         closeBtn.onclick = function () {
           closeModal(addonsModal);
-          swiper.slideTo(0); // Reset swiper to the first slide
+          if (swiper) {
+            swiper.slideTo(0); // Reset swiper to the first slide
+          }
         };
       }
     }
