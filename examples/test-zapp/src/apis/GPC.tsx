@@ -201,13 +201,10 @@ const ticketData = {
   ticketName: "Ticket 1",
   eventName: "Event 1",
   ticketSecret: "secret123",
-  timestampConsumed: 1714857600,
   timestampSigned: 1714857600,
   attendeeSemaphoreId: ${identityV3},
   owner: "${publicKey}",
   isConsumed: 0,
-  isRevoked: 0,
-  ticketCategory: 0,
   attendeeName: "John Doe",
   attendeeEmail: "test@example.com"
 };
@@ -227,13 +224,13 @@ await z.pod.insert(pod);
                 ticketName: "Ticket 1",
                 eventName: "Event 1",
                 ticketSecret: "secret123",
-                timestampConsumed: 1714857600,
+                //timestampConsumed: 1714857600,
                 timestampSigned: 1714857600,
                 attendeeSemaphoreId: identityV3 as bigint,
                 owner: publicKey as string,
                 isConsumed: 0,
-                isRevoked: 0,
-                ticketCategory: 0,
+                //isRevoked: 0,
+                //ticketCategory: 0,
                 attendeeName: "John Doe",
                 attendeeEmail: "test@example.com"
               };

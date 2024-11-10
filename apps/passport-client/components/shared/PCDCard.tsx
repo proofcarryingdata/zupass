@@ -210,7 +210,9 @@ export const TicketQRWrapper = forwardRef<
     );
   }
   if (isPODTicketPCD(pcd)) {
-    const urls = getURLsBasedOnCategory(pcd.claim.ticket.ticketCategory);
+    const urls = getURLsBasedOnCategory(
+      pcd.claim.ticket.ticketCategory ?? TicketCategory.Generic
+    );
     if (urls.idBasedVerifyURL)
       return (
         <QRContainer ref={ref}>

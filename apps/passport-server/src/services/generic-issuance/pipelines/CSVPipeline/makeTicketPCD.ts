@@ -111,14 +111,14 @@ export function csvRowToPODTicketData(
       ticketId, // The ticket ID is a unique identifier of the ticket.
       eventId, // The event ID uniquely identifies an event.
       productId, // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
-      timestampConsumed: 0, // change if checkin feature enabled for csv pipelines
+      timestampConsumed: undefined, // change if checkin feature enabled for csv pipelines
       timestampSigned: Date.now(),
       attendeeSemaphoreId,
       ticketSecret: undefined,
       owner,
-      isConsumed: false, // changes if checkin feature enabled for csv pipelines
-      isRevoked: false,
-      ticketCategory: TicketCategory.Generic,
+      isConsumed: false, // change if checkin feature enabled for csv pipelines
+      isRevoked: undefined, // change if revocation feature changes to not just delete tickets
+      ticketCategory: undefined, // change if we ever support multiple categories for csv pipelines
       attendeeName,
       attendeeEmail
     } satisfies IPODTicketData;

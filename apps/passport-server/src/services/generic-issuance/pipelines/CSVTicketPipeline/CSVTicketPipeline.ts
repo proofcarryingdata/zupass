@@ -364,11 +364,11 @@ export class CSVTicketPipeline implements BasePipeline {
       ...atom,
       owner: semaphoreV4Id,
       eventName: this.definition.options.eventName,
-      ticketCategory: TicketCategory.Generic,
-      timestampConsumed: 0,
+      //ticketCategory: TicketCategory.Generic,
+      //timestampConsumed: 0,
       timestampSigned: new Date().getTime(),
-      isConsumed: false,
-      isRevoked: false
+      isConsumed: false
+      //isRevoked: false
     };
 
     const pcd = await PODTicketPCDPackage.prove({

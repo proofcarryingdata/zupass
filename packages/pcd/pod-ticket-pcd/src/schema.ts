@@ -11,7 +11,7 @@ export const TicketDataSchema = z.object({
   ticketId: z.string().uuid(),
   eventId: z.string().uuid(),
   productId: z.string().uuid(),
-  timestampConsumed: z.number().int().nonnegative(),
+  timestampConsumed: z.number().int().nonnegative().optional(),
   timestampSigned: z.number().int().nonnegative(),
   /**
    * V3 semaphore commitment.
@@ -35,8 +35,8 @@ export const TicketDataSchema = z.object({
     // `dataToPodEntries` will not work
     .transform(eddsaPublicKey),
   isConsumed: z.boolean(),
-  isRevoked: z.boolean(),
-  ticketCategory: z.nativeEnum(TicketCategory),
+  isRevoked: z.boolean().optional(),
+  ticketCategory: z.nativeEnum(TicketCategory).optional(),
   attendeeName: z.string(),
   attendeeEmail: z.string(),
   qrCodeOverrideImageUrl: z.string().optional(),

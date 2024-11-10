@@ -71,7 +71,7 @@ export function dataToPodEntries<T>(
     // wraps a String is either a String or missing entirely.
     if (typeName === "ZodOptional") {
       // If there's no value for this field, don't add an entry for it.
-      if (!data[key]) {
+      if (data[key] === undefined) {
         continue;
       } else {
         typeName = field._def.innerType._def.typeName;
