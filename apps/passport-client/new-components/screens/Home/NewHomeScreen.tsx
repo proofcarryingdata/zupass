@@ -372,6 +372,8 @@ export const NewHomeScreen = (): ReactElement => {
     );
   }
 
+  const moreThanOneTicket = tickets.length > 1;
+
   return (
     <AppContainer
       bg="gray"
@@ -390,6 +392,7 @@ export const NewHomeScreen = (): ReactElement => {
             {!(showPodsList || noPods) && <Spacer h={96} />}
             <SwipeViewContainer>
               <_SwipableViews
+                disabled={!moreThanOneTicket}
                 style={{
                   padding: `0 ${SCREEN_HORIZONTAL_PADDING - CARD_GAP / 2}px`
                 }}
@@ -487,7 +490,7 @@ export const NewHomeScreen = (): ReactElement => {
                 )}
               </ButtonsContainer>
             </SwipeViewContainer>
-            {tickets.length > 1 && (
+            {moreThanOneTicket && (
               <NavigationContainer>
                 <PageCircleButton
                   disabled={currentPos === 0}
