@@ -40,7 +40,7 @@ export const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
 export const useOrientation = (): ScreenOrientation => {
   const [state, setState] = useState<ScreenOrientation>(
-    window.screen.orientation ?? { type: "portrait-primary" }
+    window.screen?.orientation ?? { type: "portrait-primary" }
   );
 
   useEffect(() => {
