@@ -784,7 +784,11 @@ export function initGenericIssuanceRoutes(
             ? await QRCode.toDataURL(ticketData.ticketSecret, {
                 type: "image/webp",
                 scale: 10,
-                margin: 0
+                margin: 1,
+                color: {
+                  dark: "#000000",
+                  light: "#ffffff"
+                }
               })
             : "")
         );
