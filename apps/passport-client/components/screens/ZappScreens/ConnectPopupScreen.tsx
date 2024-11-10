@@ -187,7 +187,7 @@ export function ConnectPopupScreen(): ReactNode {
           title="CONNECTION REQUEST"
           description={`${
             zappOrigin || zappName || "The app"
-          } would like to connect to your Zupass account.`}
+          } would like to connect to your Zupass on this device. Zupass stores your data locally to maintain privacy, so you will need to authenticate again if you switch devices.`}
         />
         <ErrorContainer>
           {status === PopupAuthenticationStatus.PopupBlocked && (
