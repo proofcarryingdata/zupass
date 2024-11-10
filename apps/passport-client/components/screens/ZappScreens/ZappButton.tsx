@@ -21,7 +21,7 @@ export const Container = styled.div`
   }
 `;
 
-const FakeFrogcryptoContainer = styled.div`
+const FakeFrogcryptoContainer = styled.div<{ addPadding: boolean }>`
   position: absolute;
   display: flex;
   justify-content: center;
@@ -30,7 +30,8 @@ const FakeFrogcryptoContainer = styled.div`
   gap: 16px;
   background: linear-gradient(0deg, #ffae00 0%, #4cccb0 100%);
   align-self: stretch;
-  width: calc(100% - 32px);
+  width: ${({ addPadding }): string =>
+    addPadding ? "calc(100% - 32px)" : "100%"};
   max-width: 420px;
   height: 55px;
   z-index: 1000;
@@ -54,8 +55,10 @@ export const LoadingFrogcyrypto = ({
 }: {
   onClick?: () => void;
 }): ReactElement => {
+  console.log(!!onclick);
   return (
     <FakeFrogcryptoContainer
+      addPadding={onclick !== undefined}
       onClick={onClick}
       style={{ cursor: onClick ? "pointer" : "unset" }}
     >
@@ -236,7 +239,7 @@ export const ZappButton = ({
       {!loaded && loadingComponent[zappName as keyof typeof loadingComponent]}
       <iframe
         onLoad={() => {
-          setLoaded(true);
+          setLoaded(false);
         }}
         style={{
           width: "100%",
