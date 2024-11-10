@@ -25,6 +25,7 @@ const Container = styled.div`
   align-items: center;
   width: 100%;
   gap: 20px;
+  height: 100%;
 `;
 
 const YesButton = styled.div`
@@ -65,7 +66,7 @@ export const TimerModal = (): ReactElement | null => {
     return null;
 
   return (
-    <BottomModal isOpen={isOpen} height={"230px"} center>
+    <BottomModal isOpen={isOpen} center>
       <Container>
         <Typography>
           <Typography family="PlexSans" color="#17a34a" fontSize={18}>
