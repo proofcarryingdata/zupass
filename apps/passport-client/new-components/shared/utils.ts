@@ -1,11 +1,11 @@
 import { serializeStorage } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
+import { css } from "styled-components";
 import {
   usePCDCollection,
   useSelf,
   useSubscriptions
 } from "../../src/appHooks";
-import { css } from "styled-components";
 
 export const useExport = (): (() => Promise<void>) => {
   const user = useSelf();
@@ -40,7 +40,7 @@ export const isMobile = /Mobi|Android/i.test(navigator.userAgent);
 
 export const useOrientation = (): ScreenOrientation => {
   const [state, setState] = useState<ScreenOrientation>(
-    window.screen.orientation
+    window.screen?.orientation ?? { type: "portrait-primary" }
   );
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export const useOrientation = (): ScreenOrientation => {
     let mounted = true;
 
     const onChange = (): void => {
-      if (mounted) {
+      if (mounted && screen.orientation) {
         const { orientation } = screen;
 
         setState(orientation);
