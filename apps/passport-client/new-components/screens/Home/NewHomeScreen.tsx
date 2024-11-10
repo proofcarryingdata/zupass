@@ -1,6 +1,7 @@
 import SwipableViews from "react-swipeable-views";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import {
+  LoadingFrogcyrypto,
   ZAPP_BUTTON_HEIGHT,
   ZappButton
 } from "../../../components/screens/ZappScreens/ZappButton";
@@ -122,7 +123,9 @@ const ButtonsContainer = styled.div`
 
 const getZappsHeight = (): number => {
   const zapps = Object.entries(appConfig.embeddedZapps);
-  return zapps.length * ZAPP_BUTTON_HEIGHT + zapps.length * TICKET_VERTICAL_GAP;
+  return (
+    zapps.length * (ZAPP_BUTTON_HEIGHT + zapps.length * TICKET_VERTICAL_GAP)
+  );
 };
 
 const TicketsContainer = styled.div<{ $width: number }>`
@@ -132,7 +135,7 @@ const TicketsContainer = styled.div<{ $width: number }>`
   height: 100%;
   gap: ${getZappsHeight()
     ? getZappsHeight() + 28 + TICKET_VERTICAL_GAP
-    : 28 + TICKET_VERTICAL_GAP}px;
+    : 108 + TICKET_VERTICAL_GAP}px;
 `;
 
 const LoadingScreenContainer = styled.div`
@@ -459,31 +462,26 @@ export const NewHomeScreen = (): ReactElement => {
               </_SwipableViews>
               <ButtonsContainer>
                 <SyncIndicator />
-                {Object.keys(appConfig.embeddedZapps).length > 0 && (
+                {Object.keys(appConfig.embeddedZapps).length > 0 ? (
                   <ZappButtonsContainer>
                     {Object.entries(appConfig.embeddedZapps).map(
                       ([zappName, url]) => (
                         <ZappButton
-                          key={zappName}
                           onClick={() => {
                             setZappUrl(url);
                             setParams({ folder: zappName });
                           }}
-                        >
-                          <iframe
-                            style={{
-                              width: "100%",
-                              height: "100%"
-                            }}
-                            src={new URL(
-                              `button/${self?.semaphore_v4_commitment ?? ""}`,
-                              url
-                            ).toString()}
-                          />
-                        </ZappButton>
+                          zappName={zappName}
+                          src={new URL(
+                            `button/${self?.semaphore_v4_commitment ?? ""}`,
+                            url
+                          ).toString()}
+                        />
                       )
                     )}
                   </ZappButtonsContainer>
+                ) : (
+                  <LoadingFrogcyrypto />
                 )}
               </ButtonsContainer>
             </SwipeViewContainer>
