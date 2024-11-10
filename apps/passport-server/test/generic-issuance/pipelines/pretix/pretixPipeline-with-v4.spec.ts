@@ -420,9 +420,8 @@ describe("generic issuance - PretixPipeline with semaphore v4 enabled", function
         expect(ManualAttendeePODTicket.claim.ticket.imageUrl).to.eq(
           EthLatAmImageUrl
         );
-        expect(ManualAttendeePODTicket.claim.ticket.timestampConsumed).to.eq(
-          Date.now()
-        );
+        expect(ManualAttendeePODTicket.claim.ticket.timestampConsumed).to.be
+          .undefined;
       }
 
       const manualBouncerChecksInManualAttendeeAgain =
