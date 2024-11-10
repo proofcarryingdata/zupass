@@ -867,7 +867,8 @@ export function initGenericIssuanceRoutes(
         const file = await readFileWithCache(errorFilePath);
         const rendered = Mustache.render(file, {
           zupassSupport: ZUPASS_SUPPORT_EMAIL,
-          email: email
+          email: email,
+          orderCode: code
         });
         res.send(rendered);
       }
