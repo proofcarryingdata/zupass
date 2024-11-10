@@ -1,5 +1,5 @@
 import { gzip, ungzip } from "pako";
-import qr, { SvgObject } from "qr-image";
+import * as QRCode from "qrcode";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "./StyledWrapper";
 
@@ -152,28 +152,23 @@ export function QR({
   fgColor: string;
   bgColor: string;
 }): JSX.Element {
-  const [svgObject, setSvgObject] = useState<SvgObject | undefined>();
+  const [dataURL, setDataURL] = useState<string | undefined>();
 
   useEffect(() => {
-    const svgObject = qr.svgObject(value, "L");
-    setSvgObject(svgObject);
+    const generateQR = async (): Promise<void> => {
+      const dataUrl = await QRCode.toDataURL(value, {
+        type: "image/webp",
+        scale: 10,
+        margin: 0
+      });
+      setDataURL(dataUrl);
+    };
+    generateQR();
   }, [bgColor, fgColor, value]);
 
   return (
     <Container>
-      {svgObject && (
-        <svg
-          viewBox={`0 0 ${svgObject.size} ${svgObject.size}`}
-          preserveAspectRatio="none"
-        >
-          <path
-            width="100%"
-            height="100%"
-            d={svgObject.path}
-            fill={fgColor}
-          ></path>
-        </svg>
-      )}
+      <img src={dataURL} />
     </Container>
   );
 }
@@ -182,7 +177,7 @@ const Container = styled.div`
   width: 100% !important;
   height: 100% !important;
 
-  svg {
+  img {
     position: absolute;
     width: 100%;
     height: 100%;
