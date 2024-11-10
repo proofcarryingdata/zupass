@@ -688,8 +688,12 @@
       return `${days}d:${hours}h:${minutes}m:${seconds}s`;
     }
     
-    function redirectToZupass() {
-      window.location.replace(clientPath);
+    function redirectToZupass(folder) {
+      let redirectPath = clientPath;
+      if (folder) {
+        redirectPath = joinPaths(redirectPath, folder);
+      }
+      window.location.replace(redirectPath);
     }
 
     function onFrogcryptoClick() {
