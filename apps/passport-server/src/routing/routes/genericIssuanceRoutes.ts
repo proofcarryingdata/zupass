@@ -784,7 +784,11 @@ export function initGenericIssuanceRoutes(
             ? await QRCode.toDataURL(ticketData.ticketSecret, {
                 type: "image/webp",
                 scale: 10,
-                margin: 0
+                margin: 1,
+                color: {
+                  dark: "#000000",
+                  light: "#ffffff"
+                }
               })
             : "")
         );
@@ -867,7 +871,8 @@ export function initGenericIssuanceRoutes(
         const file = await readFileWithCache(errorFilePath);
         const rendered = Mustache.render(file, {
           zupassSupport: ZUPASS_SUPPORT_EMAIL,
-          email: email
+          email: email,
+          orderCode: code
         });
         res.send(rendered);
       }
