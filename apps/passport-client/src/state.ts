@@ -38,6 +38,7 @@ export interface AppState {
         modalGoBackBehavior?: "close" | "back";
       }
     | { modalType: "settings" }
+    | { modalType: "timer"; ticket: TicketType }
     | { modalType: "change-password" }
     | { modalType: "another-device-changed-password" }
     | { modalType: "invalid-participant" }
