@@ -3,7 +3,6 @@ import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 import { Typography } from "./Typography";
-import { CenterColumn } from "../../components/shared/AppContainer";
 
 const BottomModalOverlay = styled.div<{ $fullScreen?: boolean }>`
   position: fixed;
