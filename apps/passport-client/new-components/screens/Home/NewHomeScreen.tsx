@@ -123,9 +123,7 @@ const ButtonsContainer = styled.div`
 
 const getZappsHeight = (): number => {
   const zapps = Object.entries(appConfig.embeddedZapps);
-  return (
-    zapps.length * (ZAPP_BUTTON_HEIGHT + zapps.length * TICKET_VERTICAL_GAP)
-  );
+  return zapps.length * (ZAPP_BUTTON_HEIGHT + TICKET_VERTICAL_GAP);
 };
 
 const TicketsContainer = styled.div<{ $width: number }>`
@@ -135,7 +133,7 @@ const TicketsContainer = styled.div<{ $width: number }>`
   height: 100%;
   gap: ${getZappsHeight()
     ? getZappsHeight() + 28 + TICKET_VERTICAL_GAP
-    : 108 + TICKET_VERTICAL_GAP}px;
+    : 128 + TICKET_VERTICAL_GAP}px;
 `;
 
 const LoadingScreenContainer = styled.div`
@@ -462,27 +460,41 @@ export const NewHomeScreen = (): ReactElement => {
               </_SwipableViews>
               <ButtonsContainer>
                 <SyncIndicator />
-                {Object.keys(appConfig.embeddedZapps).length > 0 ? (
+                {
                   <ZappButtonsContainer>
-                    {Object.entries(appConfig.embeddedZapps).map(
-                      ([zappName, url]) => (
-                        <ZappButton
-                          onClick={() => {
-                            setZappUrl(url);
-                            setParams({ folder: zappName });
-                          }}
-                          zappName={zappName}
-                          src={new URL(
-                            `button/${self?.semaphore_v4_commitment ?? ""}`,
-                            url
-                          ).toString()}
-                        />
+                    {Object.keys(appConfig.embeddedZapps).length > 0 ? (
+                      Object.entries(appConfig.embeddedZapps).map(
+                        ([zappName, url]) => (
+                          <ZappButton
+                            onClick={() => {
+                              setZappUrl(url);
+                              setParams({ folder: zappName });
+                            }}
+                            zappName={zappName}
+                            src={new URL(
+                              `button/${self?.semaphore_v4_commitment ?? ""}`,
+                              url
+                            ).toString()}
+                          />
+                        )
                       )
+                    ) : (
+                      <LoadingFrogcyrypto
+                        onClick={() => {
+                          const eventPacks = tickets[currentPos][1];
+                          const ticket = eventPacks[0].eventTicket;
+                          dispatch({
+                            type: "set-bottom-modal",
+                            modal: {
+                              modalType: "timer",
+                              ticket: ticket
+                            }
+                          });
+                        }}
+                      />
                     )}
                   </ZappButtonsContainer>
-                ) : (
-                  <LoadingFrogcyrypto />
-                )}
+                }
               </ButtonsContainer>
             </SwipeViewContainer>
             {tickets.length > 1 && (

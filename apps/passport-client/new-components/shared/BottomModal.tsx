@@ -3,6 +3,7 @@ import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { MAX_WIDTH_SCREEN } from "../../src/sharedConstants";
 import { Typography } from "./Typography";
+import { CenterColumn } from "../../components/shared/AppContainer";
 
 const BottomModalOverlay = styled.div<{ $fullScreen?: boolean }>`
   position: fixed;
@@ -21,13 +22,14 @@ const BottomModalOverlay = styled.div<{ $fullScreen?: boolean }>`
 
 const BottomModalContainer = styled.div<{
   $height?: React.CSSProperties["height"];
+  $center?: boolean;
 }>`
   padding: 24px 24px 20px 24px;
   gap: 20px;
   border-radius: 40px;
   background: #ffffff;
   margin-top: 12px;
-  bottom: 12px;
+  bottom: 50%;
   color: black;
   flex: 1;
   box-shadow: 0px 4px 6px -1px #0000001a;
@@ -35,7 +37,7 @@ const BottomModalContainer = styled.div<{
   max-width: ${MAX_WIDTH_SCREEN}px;
   max-height: 100%;
   height: ${({ $height }): string | number => ($height ? $height : "auto")};
-  margin: 0 auto;
+  margin: ${({ $center }): string => ($center ? "auto" : "0")} auto;
   overflow-y: auto;
 `;
 
@@ -45,6 +47,7 @@ export type BottomModalProps = {
   modalContainerStyle?: React.CSSProperties;
   onClickOutside?: () => void;
   height?: React.CSSProperties["height"];
+  center?: boolean;
   dismissable?: boolean;
 };
 
@@ -56,7 +59,8 @@ export const BottomModal = forwardRef<HTMLDivElement, BottomModalProps>(
       modalContainerStyle,
       onClickOutside,
       height,
-      dismissable = true
+      dismissable = true,
+      center = false
     },
     ref
   ) => {
@@ -98,6 +102,7 @@ export const BottomModal = forwardRef<HTMLDivElement, BottomModalProps>(
             e.stopPropagation();
           }}
           $height={height}
+          $center={center}
         >
           <div ref={modalContentRef}>{children}</div>
         </BottomModalContainer>
