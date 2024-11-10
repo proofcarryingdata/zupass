@@ -411,7 +411,7 @@ const Container = styled.div<{ isLandscape: boolean }>`
   flex-direction: column;
   // 50px comes from 24px padding we have on the bottom modal
   max-height: calc(
-    100vh - ${({ isLandscape }): number => (isLandscape ? 50 : 120)}px
+    100vh - ${({ isLandscape }): number => (isLandscape ? 80 : 150)}px
   );
 `;
 const ContainerWithPadding = styled.div`
