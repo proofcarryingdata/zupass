@@ -243,6 +243,7 @@
     "SELF_HOSTED_PODBOX_MODE",
     "GENERIC_ISSUANCE_TEST_MODE",
     "PRETIX_BATCH_ENABLED_FOR",
+    "SENGRID_DEDICATED_IP_PERCENTAGE",
     "//// add env vars above this line ////"
   ]
 }
