@@ -10,6 +10,7 @@ import { AppContainer } from "../../../components/shared/AppContainer";
 import { CardBody } from "../../../components/shared/PCDCard";
 import { appConfig } from "../../../src/appConfig";
 import {
+  useCanSync,
   useDispatch,
   useIsDownloaded,
   useIsSyncSettled,
@@ -201,13 +202,15 @@ export const NewHomeScreen = (): ReactElement => {
     }
   });
   const showPodsList = tickets.length === 0 && !isLandscape && !noPods;
+  const canSync = useCanSync();
 
   // default wait for full sync, but "short-circuit" this process
   // if finished downloading and already fetched devcon tickets,
   // similar to https://github.com/proofcarryingdata/zupass/pull/2120
   const isReadyToLoadPage =
     isSyncSettled ||
-    (isDownloaded && collection.getAllPCDsInFolder("Devcon SEA").length > 0);
+    (isDownloaded && collection.getAllPCDsInFolder("Devcon SEA").length > 0) ||
+    !canSync; // when importing we pause sync - so we should still load the page
 
   useLayoutEffect(() => {
     // if we haven't loaded all pcds yet, dont process the prove request
