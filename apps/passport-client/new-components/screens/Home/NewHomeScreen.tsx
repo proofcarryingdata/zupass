@@ -283,7 +283,7 @@ export const NewHomeScreen = (): ReactElement => {
             });
           } else {
             window.location.hash = "#";
-          } // else user is already logged in with the right email
+          }
           return;
         }
         await dispatch({
