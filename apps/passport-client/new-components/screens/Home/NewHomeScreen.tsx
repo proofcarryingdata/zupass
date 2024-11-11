@@ -281,8 +281,9 @@ export const NewHomeScreen = (): ReactElement => {
               type: "reset-passport",
               redirectTo: window.location.href
             });
+          } else {
+            window.location.hash = "#";
           } // else user is already logged in with the right email
-          window.location.hash = "#";
           return;
         }
         await dispatch({
