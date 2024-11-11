@@ -107,24 +107,6 @@ const VALID_PRETIX_EVENT_SETTINGS: GenericPretixEventSettings = {
   attendee_emails_required: true
 };
 
-// const VARIATION_NUMBER_TO_VARIATION_NAME: Record<number, string> = {
-//   2: "Small (S)",
-//   3: "Medium (M)",
-//   4: "Large (L)",
-//   5: "Extra Large (XL)",
-//   6: "Extra-Extra Large (XXL)",
-//   7: "Small (S)",
-//   8: "Medium (M)",
-//   9: "Large (L)",
-//   10: "Extra Large (XL)",
-//   11: "Extra-Extra Large (XXL)",
-//   12: "Small (S)",
-//   13: "Medium (M)",
-//   14: "Large (L)",
-//   15: "Extra Large (XL)",
-//   16: "Extra-Extra Large (XXL)"
-// };
-
 const VARIATION_NUMBER_TO_VARIATION_NAME: Record<number, string> = {
   2: "S",
   3: "M",
