@@ -282,6 +282,7 @@ export const NewHomeScreen = (): ReactElement => {
               redirectTo: window.location.href
             });
           } // else user is already logged in with the right email
+          window.location.hash = "#";
           return;
         }
         await dispatch({
