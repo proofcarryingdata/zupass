@@ -67,7 +67,8 @@
     font-size: 14px;
     font-style: normal;
     font-weight: 500;
-    line-height: 135%; /* 18.9px */
+    line-height: 135%;
+    /* 18.9px */
   }
 
   .zupass-link__icon {
@@ -231,7 +232,8 @@
     font-size: 20px;
     font-style: normal;
     font-weight: 500;
-    line-height: 135%; /* 27px */
+    line-height: 135%;
+    /* 27px */
     letter-spacing: -0.4px;
     cursor: pointer;
     box-shadow: 0 4px #B3901B;
@@ -488,9 +490,15 @@
 
 <body>
   <main class="container" ontouchstart>
-    <button onclick="redirectToZupass()" class="zupass-link"><div class="zupass-link__text">View full page in Zupass</div><div class="zupass-link__icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17" fill="none">
-      <path fill-rule="evenodd" clip-rule="evenodd" d="M6.71967 4.71967C7.01256 4.42678 7.48744 4.42678 7.78033 4.71967L11.0303 7.96967C11.3232 8.26256 11.3232 8.73744 11.0303 9.03033L7.78033 12.2803C7.48744 12.5732 7.01256 12.5732 6.71967 12.2803C6.42678 11.9874 6.42678 11.5126 6.71967 11.2197L9.43934 8.5L6.71967 5.78033C6.42678 5.48744 6.42678 5.01256 6.71967 4.71967Z" fill="#8B94AC"/>
-    </svg></div></button>
+    <button onclick="redirectToZupass()" class="zupass-link">
+      <div class="zupass-link__text">View full page in Zupass</div>
+      <div class="zupass-link__icon"><svg xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 17 17"
+          fill="none">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M6.71967 4.71967C7.01256 4.42678 7.48744 4.42678 7.78033 4.71967L11.0303 7.96967C11.3232 8.26256 11.3232 8.73744 11.0303 9.03033L7.78033 12.2803C7.48744 12.5732 7.01256 12.5732 6.71967 12.2803C6.42678 11.9874 6.42678 11.5126 6.71967 11.2197L9.43934 8.5L6.71967 5.78033C6.42678 5.48744 6.42678 5.01256 6.71967 4.71967Z"
+            fill="#8B94AC" />
+        </svg></div>
+    </button>
     <div class="header">
       <span class="header__title">WELCOME TO {{eventName}}</span>
       <div class="ticket__subtitle--container">
@@ -503,27 +511,42 @@
         {{/isMoreThanOne}}
       </div>
     </div>
-    <button onclick="onFrogcryptoClick()" class="cta">SCORE: 0 <svg xmlns="http://www.w3.org/2000/svg" width="33" height="25" viewBox="0 0 33 25" fill="none">
-      <path d="M30.0348 7.97566C30.0348 4.95142 27.5891 2.5 24.572 2.5C22.3829 2.5 20.5003 3.79354 19.6285 5.65661C18.6181 5.50163 17.564 5.4173 16.4788 5.4173C15.3937 5.4173 14.3673 5.49974 13.3687 5.65048C12.496 3.79072 10.6147 2.5 8.42799 2.5C5.41086 2.5 2.96519 4.95142 2.96519 7.97566C2.96519 9.09962 3.30403 10.144 3.88349 11.0131C3.35385 11.9312 3.06389 12.9233 3.06389 13.9587C3.06389 18.6759 9.06995 22.5 16.4784 22.5C23.8868 22.5 29.8929 18.6759 29.8929 13.9587C29.8929 12.9364 29.61 11.9566 29.093 11.0479C29.6866 10.1718 30.0343 9.11422 30.0343 7.97519L30.0348 7.97566Z" fill="#74DB61" stroke="white" stroke-width="5.00467"/>
-      <path d="M30.0348 7.97566C30.0348 4.95142 27.5891 2.5 24.572 2.5C22.3829 2.5 20.5003 3.79354 19.6285 5.65661C18.6181 5.50163 17.564 5.4173 16.4788 5.4173C15.3937 5.4173 14.3673 5.49974 13.3687 5.65048C12.496 3.79072 10.6147 2.5 8.42799 2.5C5.41086 2.5 2.96519 4.95142 2.96519 7.97566C2.96519 9.09962 3.30403 10.144 3.88349 11.0131C3.35385 11.9312 3.06389 12.9233 3.06389 13.9587C3.06389 18.6759 9.06995 22.5 16.4784 22.5C23.8868 22.5 29.8929 18.6759 29.8929 13.9587C29.8929 12.9364 29.61 11.9566 29.093 11.0479C29.6866 10.1718 30.0343 9.11422 30.0343 7.97519L30.0348 7.97566Z" fill="#74DB61" stroke="#154133" stroke-width="1.41669"/>
-      <path d="M8.47167 9.04127C9.36401 9.04127 10.0874 8.10001 10.0874 6.93891C10.0874 5.77781 9.36401 4.83655 8.47167 4.83655C7.57934 4.83655 6.85596 5.77781 6.85596 6.93891C6.85596 8.10001 7.57934 9.04127 8.47167 9.04127Z" fill="#154133"/>
-      <path d="M24.528 9.04133C25.4204 9.04133 26.1438 8.10007 26.1438 6.93897C26.1438 5.77787 25.4204 4.83661 24.528 4.83661C23.6357 4.83661 22.9123 5.77787 22.9123 6.93897C22.9123 8.10007 23.6357 9.04133 24.528 9.04133Z" fill="#154133"/>
-      <path d="M8.28279 15.4355C9.17512 15.4355 9.8985 14.2936 9.8985 12.8851C9.8985 11.4766 9.17512 10.3348 8.28279 10.3348C7.39045 10.3348 6.66707 11.4766 6.66707 12.8851C6.66707 14.2936 7.39045 15.4355 8.28279 15.4355Z" fill="#F9C1D4"/>
-      <path d="M24.7173 15.4353C25.6096 15.4353 26.333 14.2935 26.333 12.885C26.333 11.4765 25.6096 10.3347 24.7173 10.3347C23.8249 10.3347 23.1016 11.4765 23.1016 12.885C23.1016 14.2935 23.8249 15.4353 24.7173 15.4353Z" fill="#F9C1D4"/>
-      <path d="M16.4999 14.4816C14.4523 14.4816 12.7868 12.9356 12.7868 11.0353C12.7868 10.7498 13.0175 10.5186 13.3023 10.5186C13.5871 10.5186 13.8178 10.7498 13.8178 11.0353C13.8178 12.3656 15.0209 13.4476 16.4994 13.4476C17.9779 13.4476 19.181 12.3656 19.181 11.0353C19.181 10.7498 19.4122 10.5186 19.6966 10.5186C19.9809 10.5186 20.2121 10.7498 20.2121 11.0353C20.2121 12.9356 18.5466 14.4816 16.499 14.4816H16.4999Z" fill="#154133"/>
-    </svg>      </button>
+    <button onclick="onFrogcryptoClick()" class="cta">SCORE: 0 <svg xmlns="http://www.w3.org/2000/svg" width="33"
+        height="25" viewBox="0 0 33 25" fill="none">
+        <path
+          d="M30.0348 7.97566C30.0348 4.95142 27.5891 2.5 24.572 2.5C22.3829 2.5 20.5003 3.79354 19.6285 5.65661C18.6181 5.50163 17.564 5.4173 16.4788 5.4173C15.3937 5.4173 14.3673 5.49974 13.3687 5.65048C12.496 3.79072 10.6147 2.5 8.42799 2.5C5.41086 2.5 2.96519 4.95142 2.96519 7.97566C2.96519 9.09962 3.30403 10.144 3.88349 11.0131C3.35385 11.9312 3.06389 12.9233 3.06389 13.9587C3.06389 18.6759 9.06995 22.5 16.4784 22.5C23.8868 22.5 29.8929 18.6759 29.8929 13.9587C29.8929 12.9364 29.61 11.9566 29.093 11.0479C29.6866 10.1718 30.0343 9.11422 30.0343 7.97519L30.0348 7.97566Z"
+          fill="#74DB61" stroke="white" stroke-width="5.00467" />
+        <path
+          d="M30.0348 7.97566C30.0348 4.95142 27.5891 2.5 24.572 2.5C22.3829 2.5 20.5003 3.79354 19.6285 5.65661C18.6181 5.50163 17.564 5.4173 16.4788 5.4173C15.3937 5.4173 14.3673 5.49974 13.3687 5.65048C12.496 3.79072 10.6147 2.5 8.42799 2.5C5.41086 2.5 2.96519 4.95142 2.96519 7.97566C2.96519 9.09962 3.30403 10.144 3.88349 11.0131C3.35385 11.9312 3.06389 12.9233 3.06389 13.9587C3.06389 18.6759 9.06995 22.5 16.4784 22.5C23.8868 22.5 29.8929 18.6759 29.8929 13.9587C29.8929 12.9364 29.61 11.9566 29.093 11.0479C29.6866 10.1718 30.0343 9.11422 30.0343 7.97519L30.0348 7.97566Z"
+          fill="#74DB61" stroke="#154133" stroke-width="1.41669" />
+        <path
+          d="M8.47167 9.04127C9.36401 9.04127 10.0874 8.10001 10.0874 6.93891C10.0874 5.77781 9.36401 4.83655 8.47167 4.83655C7.57934 4.83655 6.85596 5.77781 6.85596 6.93891C6.85596 8.10001 7.57934 9.04127 8.47167 9.04127Z"
+          fill="#154133" />
+        <path
+          d="M24.528 9.04133C25.4204 9.04133 26.1438 8.10007 26.1438 6.93897C26.1438 5.77787 25.4204 4.83661 24.528 4.83661C23.6357 4.83661 22.9123 5.77787 22.9123 6.93897C22.9123 8.10007 23.6357 9.04133 24.528 9.04133Z"
+          fill="#154133" />
+        <path
+          d="M8.28279 15.4355C9.17512 15.4355 9.8985 14.2936 9.8985 12.8851C9.8985 11.4766 9.17512 10.3348 8.28279 10.3348C7.39045 10.3348 6.66707 11.4766 6.66707 12.8851C6.66707 14.2936 7.39045 15.4355 8.28279 15.4355Z"
+          fill="#F9C1D4" />
+        <path
+          d="M24.7173 15.4353C25.6096 15.4353 26.333 14.2935 26.333 12.885C26.333 11.4765 25.6096 10.3347 24.7173 10.3347C23.8249 10.3347 23.1016 11.4765 23.1016 12.885C23.1016 14.2935 23.8249 15.4353 24.7173 15.4353Z"
+          fill="#F9C1D4" />
+        <path
+          d="M16.4999 14.4816C14.4523 14.4816 12.7868 12.9356 12.7868 11.0353C12.7868 10.7498 13.0175 10.5186 13.3023 10.5186C13.5871 10.5186 13.8178 10.7498 13.8178 11.0353C13.8178 12.3656 15.0209 13.4476 16.4994 13.4476C17.9779 13.4476 19.181 12.3656 19.181 11.0353C19.181 10.7498 19.4122 10.5186 19.6966 10.5186C19.9809 10.5186 20.2121 10.7498 20.2121 11.0353C20.2121 12.9356 18.5466 14.4816 16.499 14.4816H16.4999Z"
+          fill="#154133" />
+      </svg> </button>
 
-      {{#tickets}}
-      <div class="ticket">
-        <img class="ticket__qr-code" src="{{qr}}" draggable="false" />
-        <div class="ticket__text-container">
-          <span class="ticket__title">{{attendeeName}}</span>
-          <div class="ticket__subtitle--container">
-            <span class="ticket__subtitle--text">{{attendeeEmail}}</span>
-            <span class="ticket__subtitle--text">·</span>
-            <span class="ticket__subtitle--text">{{ticketName}}</span>
-          </div>
+    {{#tickets}}
+    <div class="ticket">
+      <img class="ticket__qr-code" src="{{qr}}" draggable="false" />
+      <div class="ticket__text-container">
+        <span class="ticket__title">{{attendeeName}}</span>
+        <div class="ticket__subtitle--container">
+          <span class="ticket__subtitle--text">{{attendeeEmail}}</span>
+          <span class="ticket__subtitle--text">·</span>
+          <span class="ticket__subtitle--text">{{ticketName}}</span>
         </div>
+      </div>
       {{#showAddons}}
       <button id="addons_btn_{{id}}" type="button" class="addons-btn ticket__addons-btn">
         {{#moreThanOneAddon}}
@@ -633,7 +656,7 @@
       <button type="button" id="close" class="btn__container--primary"><span
           class="btn__text--primary">Close</span></button>
     </div>
-  {{/tickets}}
+    {{/tickets}}
   </div>
   </div>
   <!-- Tiny-Swiper JS -->
@@ -687,7 +710,7 @@
       // Format the time string without spans
       return `${days}d:${hours}h:${minutes}m:${seconds}s`;
     }
-    
+
     function redirectToZupass(folder) {
       let redirectPath = clientPath;
       if (folder) {
@@ -699,7 +722,7 @@
     function onFrogcryptoClick() {
       const maybeDate = Date.parse("{{startDate}}");
       if (isNaN(maybeDate) || maybeDate < Date.now()) {
-        redirectToZupass()
+        redirectToZupass("frogcrypto")
       }
       else {
         timeLeftText.innerText = timeToStartDate();
@@ -711,7 +734,7 @@
       }
     }
 
-    for(const addonModal of addonsModals){
+    for (const addonModal of addonsModals) {
       addonModal.onclick = function (e) {
         e.stopPropagation();
       }
@@ -724,22 +747,22 @@
 
     yesBtn.onclick = function () {
       closeModal(timeModal);
-      for(const addonModal of addonsModals){
+      for (const addonModal of addonsModals) {
         closeModal(addonModal);
       }
       clearInterval(interval);
     }
     overlay.onclick = function () {
       closeModal(timeModal);
-      for(const addonModal of addonsModals){
+      for (const addonModal of addonsModals) {
         closeModal(addonModal);
       }
       clearInterval(interval);
     }
 
-    for(const addonsBtn of addonsBtns){
+    for (const addonsBtn of addonsBtns) {
       const id = addonsBtn.id.split("_")[2];
-      const addonsModal = document.getElementById("modal_addons_"+id);
+      const addonsModal = document.getElementById("modal_addons_" + id);
       let swiper; // Declare swiper variable outside the function
 
       addonsBtn.onclick = function () {
