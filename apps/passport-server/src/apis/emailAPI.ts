@@ -1,4 +1,5 @@
-import sendgrid from "@sendgrid/mail";
+import sendgrid, { MailDataRequired } from "@sendgrid/mail";
+import _ from "lodash";
 import PQueue from "p-queue";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
@@ -59,7 +60,21 @@ export class EmailAPI implements IEmailAPI {
       logger(LOG_TAG, "Sending email via Sendgrid", JSON.stringify(params));
 
       await this.sendQueue.add(async () => {
-        const message = await sendgrid.send(params);
+        const clonedParams = _.clone(params);
+
+        const percentage = parseFloat(
+          process.env.SENGRID_DEDICATED_IP_PERCENTAGE ?? "0"
+        );
+
+        if (Math.random() < percentage && !isNaN(percentage)) {
+          logger(LOG_TAG, "Using dedicated IP pool", JSON.stringify(params));
+          Object.assign(clonedParams, {
+            ipPoolName: "verification_emails"
+          } satisfies Partial<MailDataRequired>);
+        }
+
+        const message = await sendgrid.send(clonedParams);
+
         logger(
           LOG_TAG,
           "sent API request to sendgrid",

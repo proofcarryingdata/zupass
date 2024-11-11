@@ -864,7 +864,7 @@ export function initGenericIssuanceRoutes(
           startDate: ticket?.eventStartDate
         });
         res.send(rendered);
-      } catch {
+      } catch (e) {
         const errorFilePath = path.resolve(
           "./resources/one-click-page/error.html"
         );
