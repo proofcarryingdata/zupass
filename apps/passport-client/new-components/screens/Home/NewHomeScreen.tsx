@@ -279,7 +279,10 @@ export const NewHomeScreen = (): ReactElement => {
           if (!self.emails?.includes(email as string)) {
             await dispatch({
               type: "reset-passport",
-              redirectTo: window.location.href
+              redirectTo:
+                window.location.href + targetFolder
+                  ? `?folder=${targetFolder}`
+                  : ""
             });
           } else {
             window.location.hash = targetFolder
