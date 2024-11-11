@@ -699,7 +699,7 @@
     function onFrogcryptoClick() {
       const maybeDate = Date.parse("{{startDate}}");
       if (isNaN(maybeDate) || maybeDate < Date.now()) {
-        redirectToZupass()
+        redirectToZupass('frogcrypto')
       }
       else {
         timeLeftText.innerText = timeToStartDate();
