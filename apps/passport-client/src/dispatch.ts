@@ -399,6 +399,8 @@ async function oneClickLogin(
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
+  if (state.self) throw new Error("User is already logged in");
+
   update({
     modal: { modalType: "none" }
   });
