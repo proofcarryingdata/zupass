@@ -51,6 +51,7 @@ const GenericPretixPositionSchema = z.object({
   secret: z.string(),
   checkins: z.array(GenericPretixCheckinSchema),
   addon_to: z.number().nullable(), // id of the position this is an add-on to
+  variation: z.number().nullable(), // id of the purchased variation
   answers: z.array(GenericPretixAnswerSchema).optional()
 });
 
