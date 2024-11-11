@@ -1,6 +1,12 @@
 import { ErrorContainer, SlidingTabs, styled, VIcon } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
-import { getImageUrlEntry, PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
+import {
+  getDescriptionEntry,
+  getImageUrlEntry,
+  getTitleEntry,
+  PODPCD,
+  PODPCDPackage
+} from "@pcd/pod-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { useMemo, useState } from "react";
 import { CollectablePODPCDCardBody } from "./renderers/CollectablePODPCDCardBody";
@@ -41,7 +47,13 @@ function PODPCDCardBody({
 
   const hasCollectableContent = useMemo(() => {
     const imageUrlEntry = getImageUrlEntry(pcd);
-    return imageUrlEntry?.type === "string" && imageUrlEntry.value !== "";
+    const titleEntry = getTitleEntry(pcd);
+    const descriptionEntry = getDescriptionEntry(pcd);
+    return (
+      (imageUrlEntry?.type === "string" && imageUrlEntry.value !== "") ||
+      (titleEntry?.type === "string" && titleEntry.value !== "") ||
+      (descriptionEntry?.type === "string" && descriptionEntry.value !== "")
+    );
   }, [pcd]);
 
   const availableDisplayFormat = getPreferredDisplayFormat(pcd);
