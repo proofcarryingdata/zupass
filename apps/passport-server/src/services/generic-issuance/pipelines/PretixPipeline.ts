@@ -107,6 +107,24 @@ const VALID_PRETIX_EVENT_SETTINGS: GenericPretixEventSettings = {
   attendee_emails_required: true
 };
 
+const VARIATION_NUMBER_TO_VARIATION_NAME: Record<number, string> = {
+  2: "S",
+  3: "M",
+  4: "L",
+  5: "XL",
+  6: "XXL",
+  7: "S",
+  8: "M",
+  9: "L",
+  10: "XL",
+  11: "XXL",
+  12: "S",
+  13: "M",
+  14: "L",
+  15: "XL",
+  16: "XXL"
+};
+
 /**
  * Class encapsulating the complete set of behaviors that a {@link Pipeline} which
  * loads data from Pretix is capable of.
@@ -391,6 +409,10 @@ export class PretixPipeline implements BasePipeline {
             name: ticket.full_name,
             eventId: ticket.event.genericIssuanceId,
             productId: ticket.product.genericIssuanceId,
+            variationName: ticket.variation
+              ? VARIATION_NUMBER_TO_VARIATION_NAME[ticket.variation] ??
+                `Unknown (${ticket.variation})`
+              : null,
             // Use the event ID as the "namespace" when hashing the position ID.
             // The event ID is a UUID that is part of our configuration, and is
             // globally unique. The position ID is not globally unique, but is
@@ -890,7 +912,8 @@ export class PretixPipeline implements BasePipeline {
           secret,
           checkins,
           answers,
-          addon_to
+          addon_to,
+          variation
         } = position;
 
         const product = products.get(item.toString());
@@ -959,7 +982,8 @@ export class PretixPipeline implements BasePipeline {
             secret,
             pretix_checkin_timestamp,
             order_code: order.code,
-            addon_to_position_id: addon_to?.toString() ?? null
+            addon_to_position_id: addon_to?.toString() ?? null,
+            variation
           });
         }
       }
@@ -2271,6 +2295,9 @@ export class PretixPipeline implements BasePipeline {
   private atomToTicketName(atom: PretixAtom): string {
     const event = this.getEventById(atom.eventId);
     const product = this.getProductById(event, atom.productId);
+    if (atom.variationName) {
+      return `${product.name} (${atom.variationName})`;
+    }
     return product.name;
   }
 
@@ -2419,6 +2446,7 @@ export interface PretixTicket {
   secret: string;
   order_code: string;
   position_id: string;
+  variation: number | null;
   pretix_checkin_timestamp: Date | null;
   addon_to_position_id: string | null;
 }
@@ -2431,6 +2459,7 @@ export interface PretixAtom extends PipelineAtom {
   secret: string;
   timestampConsumed: Date | null;
   isConsumed: boolean;
+  variationName: string | null;
   parentAtomId: string | null;
 }
 
