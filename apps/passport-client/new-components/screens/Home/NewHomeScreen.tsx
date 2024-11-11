@@ -282,7 +282,10 @@ export const NewHomeScreen = (): ReactElement => {
               redirectTo: window.location.href
             });
           } else {
-            window.location.hash = "#";
+            window.location.hash = targetFolder
+              ? "/?folder=" + targetFolder
+              : "/";
+            window.location.reload();
           }
           return;
         }
