@@ -1160,14 +1160,27 @@ async function doSync(
         onSubscriptionResult,
         state.subscriptions
           .getActiveSubscriptions()
-          .filter(
-            (s) =>
-              s.id !==
+          .filter((s) => {
+            if (
+              s.id ===
               state.subscriptions.findSubscription(
                 ZUPASS_FEED_URL,
                 ZupassFeedIds.Email
               )?.id
-          )
+            ) {
+              return false;
+            }
+
+            if (appConfig.ignoreNonPriorityFeeds) {
+              // Check if this is the Devcon ticket feed
+              return (
+                s.providerUrl ===
+                "https://podbox-server.onrender.com/generic-issuance/api/feed/7dbd164b-3a50-4410-a815-d6e05b8c7107/default-feed"
+              );
+            }
+
+            return true;
+          })
           .map((s) => s.id)
       );
 

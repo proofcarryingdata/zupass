@@ -87,6 +87,13 @@ const define = {
           process.env.DEVCON_TICKET_QUERY_ORIGINS
         )
       }
+    : {}),
+  ...(process.env.IGNORE_NON_PRIORITY_FEEDS !== undefined
+    ? {
+        "process.env.IGNORE_NON_PRIORITY_FEEDS": JSON.stringify(
+          process.env.IGNORE_NON_PRIORITY_FEEDS
+        )
+      }
     : {})
 };
 
