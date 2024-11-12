@@ -1090,7 +1090,6 @@ export class PretixPipeline implements BasePipeline {
    * definition.
    */
   private async getEdDSATicketsForEmail(
-    client: PoolClient,
     email: string,
     identityCommitment: string
   ): Promise<EdDSATicketPCD[]> {
@@ -1100,20 +1099,30 @@ export class PretixPipeline implements BasePipeline {
     const ticketDatas = relevantTickets.map((t) =>
       this.atomToEdDSATicketData(t, identityCommitment)
     );
-    // Load manual tickets from the definition
-    const manualTickets = await this.getManualTicketsForEmail(client, email);
 
-    // Convert manual tickets to ticket data and add to array
-    ticketDatas.push(
-      ...(await Promise.all(
-        manualTickets.map((manualTicket) =>
-          this.manualTicketToTicketData(
-            client,
-            manualTicket,
-            identityCommitment
-          )
-        )
-      ))
+    await namedSqlTransaction(
+      this.context.dbPool,
+      "getEdDSATicketsForEmail",
+      async (client) => {
+        // Load manual tickets from the definition
+        const manualTickets = await this.getManualTicketsForEmail(
+          client,
+          email
+        );
+
+        // Convert manual tickets to ticket data and add to array
+        ticketDatas.push(
+          ...(await Promise.all(
+            manualTickets.map((manualTicket) =>
+              this.manualTicketToTicketData(
+                client,
+                manualTicket,
+                identityCommitment
+              )
+            )
+          ))
+        );
+      }
     );
 
     // Turn ticket data into PCDs
@@ -1130,7 +1139,6 @@ export class PretixPipeline implements BasePipeline {
    * definition.
    */
   private async getPODTicketsForEmail(
-    client: PoolClient,
     email: string,
     semaphoreV4Id: string
   ): Promise<PODTicketPCD[]> {
@@ -1140,16 +1148,30 @@ export class PretixPipeline implements BasePipeline {
     const ticketDatas: IPODTicketData[] = relevantTickets.map((t) =>
       this.atomToPODTicketData(t, semaphoreV4Id)
     );
-    // Load manual tickets from the definition
-    const manualTickets = await this.getManualTicketsForEmail(client, email);
 
-    // Convert manual tickets to ticket data and add to array
-    ticketDatas.push(
-      ...(await Promise.all(
-        manualTickets.map((manualTicket) =>
-          this.manualTicketToPODTicketData(client, manualTicket, semaphoreV4Id)
-        )
-      ))
+    await namedSqlTransaction(
+      this.context.dbPool,
+      "getPODTicketsForEmail",
+      async (client) => {
+        // Load manual tickets from the definition
+        const manualTickets = await this.getManualTicketsForEmail(
+          client,
+          email
+        );
+
+        // Convert manual tickets to ticket data and add to array
+        ticketDatas.push(
+          ...(await Promise.all(
+            manualTickets.map((manualTicket) =>
+              this.manualTicketToPODTicketData(
+                client,
+                manualTicket,
+                semaphoreV4Id
+              )
+            )
+          ))
+        );
+      }
     );
 
     // Turn ticket data into PCDs
@@ -1189,103 +1211,99 @@ export class PretixPipeline implements BasePipeline {
 
       //let didUpdate = false;
 
-      return namedSqlTransaction(this.context.dbPool, "", async (client) => {
-        // for (const e of emails) {
-        //   didUpdate =
-        //     didUpdate ||
-        //     (await this.consumerDB.save(
-        //       client,
-        //       this.id,
-        //       e.email,
-        //       semaphoreId,
-        //       new Date()
-        //     ));
-        // }
+      // for (const e of emails) {
+      //   didUpdate =
+      //     didUpdate ||
+      //     (await this.consumerDB.save(
+      //       client,
+      //       this.id,
+      //       e.email,
+      //       semaphoreId,
+      //       new Date()
+      //     ));
+      // }
 
-        // const provider = this.autoIssuanceProvider;
-        // if (provider) {
-        //   const newManualTickets = (
-        //     await Promise.all(
-        //       emails.map(async (e) =>
-        //         provider.maybeIssueForUser(
-        //           e.email,
-        //           await this.getAllManualTickets(client),
-        //           await this.db.loadByEmail(this.id, e.email)
-        //         )
-        //       )
-        //     )
-        //   ).flat();
+      // const provider = this.autoIssuanceProvider;
+      // if (provider) {
+      //   const newManualTickets = (
+      //     await Promise.all(
+      //       emails.map(async (e) =>
+      //         provider.maybeIssueForUser(
+      //           e.email,
+      //           await this.getAllManualTickets(client),
+      //           await this.db.loadByEmail(this.id, e.email)
+      //         )
+      //       )
+      //     )
+      //   ).flat();
 
-        //   await Promise.allSettled(
-        //     newManualTickets.map((t) =>
-        //       this.manualTicketDB.save(client, this.id, t)
-        //     )
-        //   );
-        // }
+      //   await Promise.allSettled(
+      //     newManualTickets.map((t) =>
+      //       this.manualTicketDB.save(client, this.id, t)
+      //     )
+      //   );
+      // }
 
-        // If the user's Semaphore commitment has changed, `didUpdate` will be
-        // true, and we need to update the Semaphore groups
-        // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        //   if (didUpdate) {
-        //     span?.setAttribute("semaphore_groups_updated", true);
-        //     await this.triggerSemaphoreGroupUpdate(client);
-        //   }
-        // }
+      // If the user's Semaphore commitment has changed, `didUpdate` will be
+      // true, and we need to update the Semaphore groups
+      // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+      //   if (didUpdate) {
+      //     span?.setAttribute("semaphore_groups_updated", true);
+      //     await this.triggerSemaphoreGroupUpdate(client);
+      //   }
+      // }
 
-        const tickets = (
+      const tickets = (
+        await Promise.all(
+          emails.map((e) => this.getEdDSATicketsForEmail(e.email, semaphoreId))
+        )
+      ).flat();
+
+      span?.setAttribute("pcds_issued", tickets.length);
+
+      const actions: PCDAction[] = [];
+
+      if (await this.db.hasLoaded(this.id)) {
+        actions.push({
+          type: PCDActionType.DeleteFolder,
+          folder: this.definition.options.feedOptions.feedFolder,
+          recursive: true
+        });
+      }
+
+      const ticketPCDs = await Promise.all(
+        tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+      );
+
+      if (this.definition.options.enablePODTickets) {
+        const podTickets = (
           await Promise.all(
             emails.map((e) =>
-              this.getEdDSATicketsForEmail(client, e.email, semaphoreId)
+              e.semaphoreV4Id
+                ? this.getPODTicketsForEmail(e.email, e.semaphoreV4Id)
+                : undefined
             )
           )
-        ).flat();
+        )
+          .flat()
+          .filter((t) => t !== undefined) as PODTicketPCD[];
 
-        span?.setAttribute("pcds_issued", tickets.length);
-
-        const actions: PCDAction[] = [];
-
-        if (await this.db.hasLoaded(this.id)) {
-          actions.push({
-            type: PCDActionType.DeleteFolder,
-            folder: this.definition.options.feedOptions.feedFolder,
-            recursive: true
-          });
-        }
-
-        const ticketPCDs = await Promise.all(
-          tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+        ticketPCDs.push(
+          ...(await Promise.all(
+            podTickets.map((t) => PODTicketPCDPackage.serialize(t))
+          ))
         );
+      }
 
-        if (this.definition.options.enablePODTickets) {
-          const podTickets = (
-            await Promise.all(
-              emails.map((e) =>
-                e.semaphoreV4Id
-                  ? this.getPODTicketsForEmail(client, e.email, e.semaphoreV4Id)
-                  : undefined
-              )
-            )
-          )
-            .flat()
-            .filter((t) => t !== undefined) as PODTicketPCD[];
-
-          ticketPCDs.push(
-            ...(await Promise.all(
-              podTickets.map((t) => PODTicketPCDPackage.serialize(t))
-            ))
-          );
-        }
-
-        actions.push({
-          type: PCDActionType.ReplaceInFolder,
-          folder: this.definition.options.feedOptions.feedFolder,
-          pcds: ticketPCDs
-        });
-
-        const result: PollFeedResponseValue = { actions };
-
-        return result;
+      actions.push({
+        type: PCDActionType.ReplaceInFolder,
+        folder: this.definition.options.feedOptions.feedFolder,
+        pcds: ticketPCDs
       });
+
+      const result: PollFeedResponseValue = { actions };
+
+      return result;
     });
   }
 

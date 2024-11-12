@@ -70,7 +70,7 @@ import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { EmailService } from "../../emailService";
 import { PersistentCacheService } from "../../persistentCacheService";
-import { setError, traceFlattenedObject, traced } from "../../telemetryService";
+import { setError, traced } from "../../telemetryService";
 import {
   SemaphoreGroupProvider,
   SemaphoreGroupTicketInfo
@@ -829,139 +829,141 @@ export class LemonadePipeline implements BasePipeline {
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issueLemonadeTicketPCDs", async (span) => {
-      return namedSqlTransaction(
+      tracePipeline(this.definition);
+
+      if (!req.pcd) {
+        throw new Error("missing credential pcd");
+      }
+
+      if (
+        this.definition.options.paused &&
+        !(await this.db.hasLoaded(this.id))
+      ) {
+        return { actions: [] };
+      }
+
+      const credential =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+
+      const { emails, semaphoreId } = credential;
+
+      if (!emails || emails.length === 0) {
+        throw new Error("missing emails in credential");
+      }
+
+      span?.setAttribute("emails", emails.map((e) => e.email).join(","));
+      span?.setAttribute("semaphore_id", semaphoreId);
+
+      // let didUpdate = false;
+      // for (const email of emails) {
+      //   // Consumer is validated, so save them in the consumer list
+      //   didUpdate =
+      //     didUpdate ||
+      //     (await this.consumerDB.save(
+      //       client,
+      //       this.id,
+      //       email.email,
+      //       semaphoreId,
+      //       new Date()
+      //     ));
+      // }
+
+      // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+      //   // If the user's Semaphore commitment has changed, `didUpdate` will be
+      //   // true, and we need to update the Semaphore groups
+      //   if (didUpdate) {
+      //     span?.setAttribute("semaphore_groups_updated", true);
+      //     await this.triggerSemaphoreGroupUpdate(client);
+      //   }
+      // }
+
+      const tickets = await namedSqlTransaction(
         this.context.dbPool,
-        "issueLemonadeTicketPCDs",
+        "getTicketsForEmail",
         async (client) => {
-          tracePipeline(this.definition);
-
-          if (!req.pcd) {
-            throw new Error("missing credential pcd");
-          }
-
-          if (
-            this.definition.options.paused &&
-            !(await this.db.hasLoaded(this.id))
-          ) {
-            return { actions: [] };
-          }
-
-          const credential =
-            await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
-
-          const { emails, semaphoreId } = credential;
-
-          if (!emails || emails.length === 0) {
-            throw new Error("missing emails in credential");
-          }
-
-          span?.setAttribute("emails", emails.map((e) => e.email).join(","));
-          span?.setAttribute("semaphore_id", semaphoreId);
-
-          // let didUpdate = false;
-          // for (const email of emails) {
-          //   // Consumer is validated, so save them in the consumer list
-          //   didUpdate =
-          //     didUpdate ||
-          //     (await this.consumerDB.save(
-          //       client,
-          //       this.id,
-          //       email.email,
-          //       semaphoreId,
-          //       new Date()
-          //     ));
-          // }
-
-          // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-          //   // If the user's Semaphore commitment has changed, `didUpdate` will be
-          //   // true, and we need to update the Semaphore groups
-          //   if (didUpdate) {
-          //     span?.setAttribute("semaphore_groups_updated", true);
-          //     await this.triggerSemaphoreGroupUpdate(client);
-          //   }
-          // }
-
-          const tickets = (
+          return (
             await Promise.all(
               emails.map((e) =>
                 this.getTicketsForEmail(client, e.email, semaphoreId)
               )
             )
           ).flat();
-
-          const ticketActions: PCDAction[] = [];
-
-          if (await this.db.hasLoaded(this.id)) {
-            ticketActions.push({
-              type: PCDActionType.DeleteFolder,
-              folder: this.definition.options.feedOptions.feedFolder,
-              recursive: true
-            });
-          }
-
-          const ticketPCDs = await Promise.all(
-            tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-          );
-
-          ticketActions.push({
-            type: PCDActionType.ReplaceInFolder,
-            folder: this.definition.options.feedOptions.feedFolder,
-            pcds: ticketPCDs
-          });
-
-          const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;
-          const contacts = (
-            await Promise.all(
-              emails.map((e) =>
-                this.getReceivedContactsForEmail(client, e.email)
-              )
-            )
-          ).flat();
-          const contactActions: PCDAction[] = [
-            {
-              type: PCDActionType.DeleteFolder,
-              folder: contactsFolder,
-              recursive: true
-            },
-            {
-              type: PCDActionType.ReplaceInFolder,
-              folder: contactsFolder,
-              pcds: contacts
-            }
-          ];
-
-          const badgeFolder = `${this.definition.options.feedOptions.feedFolder}/badges`;
-
-          const badges = (
-            await Promise.all(
-              emails.map((e) => this.getReceivedBadgesForEmail(client, e.email))
-            )
-          ).flat();
-          const badgeActions: PCDAction[] = [
-            {
-              type: PCDActionType.DeleteFolder,
-              folder: badgeFolder,
-              recursive: true
-            },
-            {
-              type: PCDActionType.ReplaceInFolder,
-              folder: badgeFolder,
-              pcds: badges
-            }
-          ];
-
-          traceFlattenedObject(span, {
-            pcds_issued: tickets.length + badges.length + contacts.length,
-            tickets_issued: tickets.length,
-            badges_issued: badges.length,
-            contacts_issued: contacts.length
-          });
-
-          return {
-            actions: [...ticketActions, ...contactActions, ...badgeActions]
-          };
         }
       );
+
+      const ticketActions: PCDAction[] = [];
+
+      if (await this.db.hasLoaded(this.id)) {
+        ticketActions.push({
+          type: PCDActionType.DeleteFolder,
+          folder: this.definition.options.feedOptions.feedFolder,
+          recursive: true
+        });
+      }
+
+      const ticketPCDs = await Promise.all(
+        tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+      );
+
+      ticketActions.push({
+        type: PCDActionType.ReplaceInFolder,
+        folder: this.definition.options.feedOptions.feedFolder,
+        pcds: ticketPCDs
+      });
+
+      // We can turn this on again after Devcon:
+
+      // const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;
+      // const contacts = (
+      //   await Promise.all(
+      //     emails.map((e) => this.getReceivedContactsForEmail(client, e.email))
+      //   )
+      // ).flat();
+      // const contactActions: PCDAction[] = [
+      //   {
+      //     type: PCDActionType.DeleteFolder,
+      //     folder: contactsFolder,
+      //     recursive: true
+      //   },
+      //   {
+      //     type: PCDActionType.ReplaceInFolder,
+      //     folder: contactsFolder,
+      //     pcds: contacts
+      //   }
+      // ];
+
+      // We can turn this on again after Devcon:
+
+      // const badgeFolder = `${this.definition.options.feedOptions.feedFolder}/badges`;
+
+      // const badges = (
+      //   await Promise.all(
+      //     emails.map((e) => this.getReceivedBadgesForEmail(client, e.email))
+      //   )
+      // ).flat();
+      // const badgeActions: PCDAction[] = [
+      //   {
+      //     type: PCDActionType.DeleteFolder,
+      //     folder: badgeFolder,
+      //     recursive: true
+      //   },
+      //   {
+      //     type: PCDActionType.ReplaceInFolder,
+      //     folder: badgeFolder,
+      //     pcds: badges
+      //   }
+      // ];
+
+      // traceFlattenedObject(span, {
+      //   pcds_issued: tickets.length + badges.length + contacts.length,
+      //   tickets_issued: tickets.length,
+      //   badges_issued: badges.length,
+      //   contacts_issued: contacts.length
+      // });
+
+      return {
+        actions: [...ticketActions /* ...contactActions, ...badgeActions*/]
+      };
     });
   }
 
