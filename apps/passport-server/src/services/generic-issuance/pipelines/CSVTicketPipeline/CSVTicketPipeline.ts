@@ -216,29 +216,29 @@ export class CSVTicketPipeline implements BasePipeline {
           requesterSemaphoreId = semaphoreId;
           requesterSemaphoreV4Id = semaphoreV4Id;
           // Consumer is validated, so save them in the consumer list
-          let didUpdate = false;
-          await sqlTransaction(this.context.dbPool, async (client) => {
-            for (const email of emails) {
-              didUpdate =
-                didUpdate ||
-                (await this.consumerDB.save(
-                  client,
-                  this.id,
-                  email.email,
-                  semaphoreId,
-                  new Date()
-                ));
-            }
+          // let didUpdate = false;
+          // await sqlTransaction(this.context.dbPool, async (client) => {
+          //   for (const email of emails) {
+          //     didUpdate =
+          //       didUpdate ||
+          //       (await this.consumerDB.save(
+          //         client,
+          //         this.id,
+          //         email.email,
+          //         semaphoreId,
+          //         new Date()
+          //       ));
+          //   }
 
-            if (this.definition.options.semaphoreGroupName) {
-              // If the user's Semaphore commitment has changed, `didUpdate` will be
-              // true, and we need to update the Semaphore groups
-              if (didUpdate) {
-                span?.setAttribute("semaphore_groups_updated", true);
-                await this.triggerSemaphoreGroupUpdate(client);
-              }
-            }
-          });
+          //   if (this.definition.options.semaphoreGroupName) {
+          //     // If the user's Semaphore commitment has changed, `didUpdate` will be
+          //     // true, and we need to update the Semaphore groups
+          //     if (didUpdate) {
+          //       span?.setAttribute("semaphore_groups_updated", true);
+          //       await this.triggerSemaphoreGroupUpdate(client);
+          //     }
+          //   }
+          // });
         } catch (e) {
           logger(LOG_TAG, "credential PCD not verified for req", req);
         }
