@@ -32,7 +32,7 @@ export function getDatabaseConfiguration(): PoolOptionsExplicit & SslSettings {
     if (isNaN(poolSize)) {
       poolSize = 32;
     }
-    poolSize = Math.min(Math.max(poolSize, 32), 70);
+    poolSize = Math.min(Math.max(poolSize, 32), 500);
   }
 
   // defaults here: https://github.com/postgres-pool/postgres-pool/blob/9d623823dc365b5edea3303cab6ae519bfaa94f7/src/index.ts#L264C10-L290
