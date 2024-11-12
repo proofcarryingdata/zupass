@@ -47,7 +47,7 @@ export function respondWithError(
     if (!e.message) {
       res.sendStatus(e.code);
     } else {
-      res.status(e.code).send(e.message);
+      res.type("text").status(e.code).send(e.message);
     }
   } else if (e instanceof PCDHTTPJSONError) {
     res.status(e.code).json(e.json);
