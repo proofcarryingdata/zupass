@@ -40,7 +40,7 @@ export async function startApplication(
   logger(`[INIT] Starting application in mode ${mode}`);
 
   const dbPool = await getDB();
-  const internalPool = await getDB(5);
+  const internalPool = await getDB(10);
 
   const honeyClient = getHoneycombAPI();
 
