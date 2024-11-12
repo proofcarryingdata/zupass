@@ -1,5 +1,8 @@
 import { ReactElement, useEffect, useState } from "react";
-import { useIsSyncSettled } from "../../../src/appHooks";
+import {
+  useExtraSubscriptionFetchRequested,
+  useIsSyncSettled
+} from "../../../src/appHooks";
 import { NewLoader } from "../../shared/NewLoader";
 import { Typography } from "../../shared/Typography";
 
@@ -24,12 +27,16 @@ const getSyncState = (seconds: number): keyof typeof syncStates => {
 };
 export const SyncIndicator = (): ReactElement => {
   const [syncState, setSyncState] = useState<string | undefined>();
+
+  const extraFetchSubscriptionRequested = useExtraSubscriptionFetchRequested();
   const isSyncSettled = useIsSyncSettled();
+  const isBackgroundSyncSettled =
+    isSyncSettled && !extraFetchSubscriptionRequested;
 
   useEffect(() => {
     let seconds = 0;
     const interval = setInterval(() => {
-      if (isSyncSettled) {
+      if (isBackgroundSyncSettled) {
         seconds += 10;
         setSyncState(syncStates[getSyncState(seconds)](seconds));
       } else {
@@ -38,7 +45,7 @@ export const SyncIndicator = (): ReactElement => {
       }
     }, 10000);
 
-    if (isSyncSettled) {
+    if (isBackgroundSyncSettled) {
       seconds += 10;
       setSyncState(syncStates[getSyncState(seconds)](seconds));
     } else {
@@ -46,9 +53,9 @@ export const SyncIndicator = (): ReactElement => {
       seconds = 0;
     }
     return () => clearInterval(interval);
-  }, [isSyncSettled]);
+  }, [isBackgroundSyncSettled]);
 
-  if (isSyncSettled && syncState) {
+  if (isBackgroundSyncSettled && syncState) {
     return <Typography color="var(--text-tertiary)">{syncState}</Typography>;
   }
   return (
