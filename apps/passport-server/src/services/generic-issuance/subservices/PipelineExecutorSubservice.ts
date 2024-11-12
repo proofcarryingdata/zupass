@@ -101,7 +101,7 @@ export class PipelineExecutorSubservice {
    * schedules a load loop which loads data for each {@link Pipeline} once per minute.
    */
   public async start(startLoadLoop?: boolean): Promise<void> {
-    await sqlTransaction(this.context.dbPool, (client) =>
+    await sqlTransaction(this.context.internalPool, (client) =>
       this.loadAndInstantiatePipelines(client)
     );
 
@@ -357,7 +357,7 @@ export class PipelineExecutorSubservice {
         }
 
         let runInfo = await performPipelineLoad(
-          this.context.dbPool,
+          this.context.internalPool,
           pipelineSlot,
           this.pipelineSubservice,
           this.userSubservice,
@@ -502,7 +502,7 @@ export class PipelineExecutorSubservice {
     // function - that will be done the next time `startPipelineLoadLoop`
     // is called.
     await namedSqlTransaction(
-      this.context.dbPool,
+      this.context.internalPool,
       "startPipelineLoadLoop",
       async (client) => {
         await this.loadAndInstantiatePipelines(client);

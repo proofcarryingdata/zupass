@@ -10,7 +10,7 @@ export interface DBConfiguration extends ClientConfig {
 }
 
 export function getDatabaseConfiguration(
-  overwriteMaxConnections: number | undefined
+  overwriteMaxConnections?: number
 ): PoolOptionsExplicit & SslSettings {
   if (process.env.DATABASE_USERNAME === undefined) {
     throw new Error("Missing environment variable: DATABASE_USERNAME");

@@ -57,7 +57,7 @@ export class SemaphoreService {
   public groupDevconnectOrganizers = (): NamedGroup => this.getNamedGroup("7");
 
   public constructor(config: ApplicationContext) {
-    this.dbPool = config.dbPool;
+    this.dbPool = config.internalPool;
     this.groups = SemaphoreService.createGroups();
   }
 
