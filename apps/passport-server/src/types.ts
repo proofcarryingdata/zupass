@@ -50,6 +50,7 @@ export enum ServerMode {
 
 export interface ApplicationContext {
   dbPool: Pool;
+  internalPool: Pool;
   honeyClient: Libhoney | null;
   resourcesDir: string;
   publicResourcesDir: string;

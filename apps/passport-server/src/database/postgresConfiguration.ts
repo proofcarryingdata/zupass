@@ -9,7 +9,9 @@ export interface DBConfiguration extends ClientConfig {
   port: number;
 }
 
-export function getDatabaseConfiguration(): PoolOptionsExplicit & SslSettings {
+export function getDatabaseConfiguration(
+  overwriteMaxConnections?: number
+): PoolOptionsExplicit & SslSettings {
   if (process.env.DATABASE_USERNAME === undefined) {
     throw new Error("Missing environment variable: DATABASE_USERNAME");
   }
@@ -33,6 +35,10 @@ export function getDatabaseConfiguration(): PoolOptionsExplicit & SslSettings {
       poolSize = 32;
     }
     poolSize = Math.min(Math.max(poolSize, 32), 500);
+  }
+
+  if (overwriteMaxConnections !== undefined) {
+    poolSize = overwriteMaxConnections;
   }
 
   // defaults here: https://github.com/postgres-pool/postgres-pool/blob/9d623823dc365b5edea3303cab6ae519bfaa94f7/src/index.ts#L264C10-L290
