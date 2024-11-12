@@ -858,28 +858,28 @@ export class LemonadePipeline implements BasePipeline {
           span?.setAttribute("emails", emails.map((e) => e.email).join(","));
           span?.setAttribute("semaphore_id", semaphoreId);
 
-          let didUpdate = false;
-          for (const email of emails) {
-            // Consumer is validated, so save them in the consumer list
-            didUpdate =
-              didUpdate ||
-              (await this.consumerDB.save(
-                client,
-                this.id,
-                email.email,
-                semaphoreId,
-                new Date()
-              ));
-          }
+          // let didUpdate = false;
+          // for (const email of emails) {
+          //   // Consumer is validated, so save them in the consumer list
+          //   didUpdate =
+          //     didUpdate ||
+          //     (await this.consumerDB.save(
+          //       client,
+          //       this.id,
+          //       email.email,
+          //       semaphoreId,
+          //       new Date()
+          //     ));
+          // }
 
-          if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-            // If the user's Semaphore commitment has changed, `didUpdate` will be
-            // true, and we need to update the Semaphore groups
-            if (didUpdate) {
-              span?.setAttribute("semaphore_groups_updated", true);
-              await this.triggerSemaphoreGroupUpdate(client);
-            }
-          }
+          // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+          //   // If the user's Semaphore commitment has changed, `didUpdate` will be
+          //   // true, and we need to update the Semaphore groups
+          //   if (didUpdate) {
+          //     span?.setAttribute("semaphore_groups_updated", true);
+          //     await this.triggerSemaphoreGroupUpdate(client);
+          //   }
+          // }
 
           const tickets = (
             await Promise.all(

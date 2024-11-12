@@ -1187,50 +1187,50 @@ export class PretixPipeline implements BasePipeline {
       span?.setAttribute("email", emails.map((e) => e.email).join(","));
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      let didUpdate = false;
+      //let didUpdate = false;
 
       return namedSqlTransaction(this.context.dbPool, "", async (client) => {
-        for (const e of emails) {
-          didUpdate =
-            didUpdate ||
-            (await this.consumerDB.save(
-              client,
-              this.id,
-              e.email,
-              semaphoreId,
-              new Date()
-            ));
-        }
+        // for (const e of emails) {
+        //   didUpdate =
+        //     didUpdate ||
+        //     (await this.consumerDB.save(
+        //       client,
+        //       this.id,
+        //       e.email,
+        //       semaphoreId,
+        //       new Date()
+        //     ));
+        // }
 
-        const provider = this.autoIssuanceProvider;
-        if (provider) {
-          const newManualTickets = (
-            await Promise.all(
-              emails.map(async (e) =>
-                provider.maybeIssueForUser(
-                  e.email,
-                  await this.getAllManualTickets(client),
-                  await this.db.loadByEmail(this.id, e.email)
-                )
-              )
-            )
-          ).flat();
+        // const provider = this.autoIssuanceProvider;
+        // if (provider) {
+        //   const newManualTickets = (
+        //     await Promise.all(
+        //       emails.map(async (e) =>
+        //         provider.maybeIssueForUser(
+        //           e.email,
+        //           await this.getAllManualTickets(client),
+        //           await this.db.loadByEmail(this.id, e.email)
+        //         )
+        //       )
+        //     )
+        //   ).flat();
 
-          await Promise.allSettled(
-            newManualTickets.map((t) =>
-              this.manualTicketDB.save(client, this.id, t)
-            )
-          );
-        }
+        //   await Promise.allSettled(
+        //     newManualTickets.map((t) =>
+        //       this.manualTicketDB.save(client, this.id, t)
+        //     )
+        //   );
+        // }
 
         // If the user's Semaphore commitment has changed, `didUpdate` will be
         // true, and we need to update the Semaphore groups
-        if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-          if (didUpdate) {
-            span?.setAttribute("semaphore_groups_updated", true);
-            await this.triggerSemaphoreGroupUpdate(client);
-          }
-        }
+        // if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+        //   if (didUpdate) {
+        //     span?.setAttribute("semaphore_groups_updated", true);
+        //     await this.triggerSemaphoreGroupUpdate(client);
+        //   }
+        // }
 
         const tickets = (
           await Promise.all(
