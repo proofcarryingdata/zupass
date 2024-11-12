@@ -51,7 +51,7 @@ export async function startServer(
       ) => {
         console.error(`[ERROR] ${req.method} ${req.url}`);
         console.error(err.stack);
-        res.status(500).send(err.message);
+        res.status(500).type("text").send(err.message);
       }
     );
 
