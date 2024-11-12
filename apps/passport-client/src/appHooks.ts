@@ -235,8 +235,7 @@ export function useUserShouldAgreeNewPrivacyNotice(): void {
 export function useIsSyncSettled(): boolean {
   const isDownloaded = useIsDownloaded();
   const loadedIssued = useLoadedIssuedPCDs();
-  const extraFetchSubscriptionRequested = useExtraSubscriptionFetchRequested();
-  return isDownloaded && loadedIssued && !extraFetchSubscriptionRequested;
+  return isDownloaded && loadedIssued;
 }
 
 export function useIsLoggedIn(): boolean {
