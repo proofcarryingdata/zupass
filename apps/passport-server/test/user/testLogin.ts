@@ -15,6 +15,7 @@ import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomBytes } from "crypto";
+import { sqlQueryWithPool } from "../../src/database/sqlQuery";
 import { Zupass } from "../../src/types";
 
 export async function testLogin(

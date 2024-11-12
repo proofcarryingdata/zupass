@@ -52,7 +52,7 @@ import {
   insertTelegramEvent,
   insertTelegramForward
 } from "../database/queries/telegram/insertTelegramConversation";
-import { namedSqlTransaction, sqlQueryWithPool } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { traced } from "../services/telemetryService";
 import { generateFrogProofUrl } from "./frogTelegramHelpers";
 import { logger } from "./logger";
@@ -971,7 +971,7 @@ export const chatsToForwardTo = async (
       return;
     }
 
-    await namedSqlTransaction(db, "chatsToForwardTo", async (client) => {
+    await sqlQueryWithPool(db, async (client) => {
       const userId = ctx.from?.id;
       if (!userId) {
         range.text(`User not found. Try again...`);
