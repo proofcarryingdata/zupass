@@ -63,6 +63,18 @@ export function sqlTransaction<T>(
   );
 }
 
+export async function sqlQueryWithPool<T>(
+  pool: Pool,
+  func: (client: PoolClient) => Promise<T>
+): Promise<T> {
+  const client = await pool.connect();
+  try {
+    return await func(client);
+  } finally {
+    client.release();
+  }
+}
+
 /**
  * Executes a given function inside a transaction against the database, and
  * traces its performance.  Retries queries that fail due to a connection error.
