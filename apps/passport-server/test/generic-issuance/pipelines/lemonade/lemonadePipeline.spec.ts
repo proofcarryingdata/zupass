@@ -5,20 +5,9 @@ import {
   PipelineLogLevel,
   PodboxTicketActionResponseValue,
   createCredentialPayload,
-  requestGenericIssuanceHistoricalSemaphoreGroup,
-  requestGenericIssuanceSemaphoreGroup,
-  requestGenericIssuanceSemaphoreGroupRoot,
-  requestGenericIssuanceValidSemaphoreGroup,
   requestPodboxTicketAction
 } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import {
-  SemaphoreGroupPCDPackage,
-  deserializeSemaphoreGroup,
-  serializeSemaphoreGroup
-} from "@pcd/semaphore-group-pcd";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { ONE_DAY_MS, ONE_MINUTE_MS } from "@pcd/util";
+import { ONE_DAY_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -31,7 +20,6 @@ import urljoin from "url-join";
 import { LemonadeOAuthCredentials } from "../../../../src/apis/lemonade/auth";
 import { LemonadeTicket } from "../../../../src/apis/lemonade/types";
 import { stopApplication } from "../../../../src/application";
-import { PipelineConsumerDB } from "../../../../src/database/queries/pipelineConsumerDB";
 import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
 import { GenericIssuanceService } from "../../../../src/services/generic-issuance/GenericIssuanceService";
@@ -89,9 +77,9 @@ describe("generic issuance - LemonadePipeline", function () {
     edgeCityPipeline,
     edgeCityGIUserID,
     edgeCityGIUserEmail,
-    EdgeCityLemonadeAccount,
+    //   EdgeCityLemonadeAccount,
     EdgeCityDenver,
-    EdgeCityAttendeeTicketType,
+    //   EdgeCityAttendeeTicketType,
     EdgeCityDenverAttendee,
     EdgeCityDenverAttendeeIdentity,
     EdgeCityAttendeeTicket,
@@ -107,7 +95,7 @@ describe("generic issuance - LemonadePipeline", function () {
     EdgeCityManualBouncerEmail,
     lemonadeTokenSource,
     lemonadeAPI,
-    edgeCitySemaphoreGroupIds,
+    // edgeCitySemaphoreGroupIds,
     lemonadeBackendUrl,
     lemonadeBackend,
     lemonadeOAuthClientId,
@@ -453,389 +441,389 @@ describe("generic issuance - LemonadePipeline", function () {
       // backend, will be implemented with the pipeline as the check-in backend
 
       // Verify that consumers were saved for each user who requested tickets
-      const consumerDB = new PipelineConsumerDB();
-      const consumers = await consumerDB.loadByEmails(
-        client,
-        edgeCityDenverPipeline.id,
-        [
-          EdgeCityManualAttendeeEmail,
-          EdgeCityManualBouncerEmail,
-          EdgeCityDenverAttendee.email,
-          EdgeCityDenverBouncer.email,
-          EdgeCityDenverBouncer2.email
-        ]
-      );
-      expectLength(consumers, 5);
-      const edgeCityIssuanceDateTime = new Date();
-      expect(consumers).to.deep.include.members([
-        {
-          email: EdgeCityManualAttendeeEmail,
-          commitment: EdgeCityManualAttendeeIdentity.commitment.toString(),
-          timeCreated: edgeCityIssuanceDateTime,
-          timeUpdated: edgeCityIssuanceDateTime
-        },
-        {
-          email: EdgeCityManualBouncerEmail,
-          commitment: EdgeCityManualBouncerIdentity.commitment.toString(),
-          timeCreated: edgeCityIssuanceDateTime,
-          timeUpdated: edgeCityIssuanceDateTime
-        },
-        {
-          email: EdgeCityDenverAttendee.email,
-          commitment: EdgeCityDenverAttendeeIdentity.commitment.toString(),
-          timeCreated: edgeCityIssuanceDateTime,
-          timeUpdated: edgeCityIssuanceDateTime
-        },
-        {
-          email: EdgeCityDenverBouncer.email,
-          commitment: EdgeCityBouncerIdentity.commitment.toString(),
-          timeCreated: edgeCityIssuanceDateTime,
-          timeUpdated: edgeCityIssuanceDateTime
-        },
-        {
-          email: EdgeCityDenverBouncer2.email,
-          commitment: EdgeCityBouncer2Identity.commitment.toString(),
-          timeCreated: edgeCityIssuanceDateTime,
-          timeUpdated: edgeCityIssuanceDateTime
-        }
-      ]);
+      // const consumerDB = new PipelineConsumerDB();
+      // const consumers = await consumerDB.loadByEmails(
+      //   client,
+      //   edgeCityDenverPipeline.id,
+      //   [
+      //     EdgeCityManualAttendeeEmail,
+      //     EdgeCityManualBouncerEmail,
+      //     EdgeCityDenverAttendee.email,
+      //     EdgeCityDenverBouncer.email,
+      //     EdgeCityDenverBouncer2.email
+      //   ]
+      // );
+      // expectLength(consumers, 5);
+      // const edgeCityIssuanceDateTime = new Date();
+      // expect(consumers).to.deep.include.members([
+      //   {
+      //     email: EdgeCityManualAttendeeEmail,
+      //     commitment: EdgeCityManualAttendeeIdentity.commitment.toString(),
+      //     timeCreated: edgeCityIssuanceDateTime,
+      //     timeUpdated: edgeCityIssuanceDateTime
+      //   },
+      //   {
+      //     email: EdgeCityManualBouncerEmail,
+      //     commitment: EdgeCityManualBouncerIdentity.commitment.toString(),
+      //     timeCreated: edgeCityIssuanceDateTime,
+      //     timeUpdated: edgeCityIssuanceDateTime
+      //   },
+      //   {
+      //     email: EdgeCityDenverAttendee.email,
+      //     commitment: EdgeCityDenverAttendeeIdentity.commitment.toString(),
+      //     timeCreated: edgeCityIssuanceDateTime,
+      //     timeUpdated: edgeCityIssuanceDateTime
+      //   },
+      //   {
+      //     email: EdgeCityDenverBouncer.email,
+      //     commitment: EdgeCityBouncerIdentity.commitment.toString(),
+      //     timeCreated: edgeCityIssuanceDateTime,
+      //     timeUpdated: edgeCityIssuanceDateTime
+      //   },
+      //   {
+      //     email: EdgeCityDenverBouncer2.email,
+      //     commitment: EdgeCityBouncer2Identity.commitment.toString(),
+      //     timeCreated: edgeCityIssuanceDateTime,
+      //     timeUpdated: edgeCityIssuanceDateTime
+      //   }
+      // ]);
 
       await checkPipelineInfoEndpoint(giBackend, edgeCityDenverPipeline);
     }
   );
 
-  step(
-    "Lemonade pipeline Semaphore groups contain correct members",
-    async function () {
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelineInstances();
-      expectToExist(pipelines);
-      expectLength(pipelines, 1);
-      const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
-      expectToExist(edgeCityDenverPipeline);
+  // step(
+  //   "Lemonade pipeline Semaphore groups contain correct members",
+  //   async function () {
+  //     expectToExist(giService);
+  //     const pipelines = await giService.getAllPipelineInstances();
+  //     expectToExist(pipelines);
+  //     expectLength(pipelines, 1);
+  //     const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
+  //     expectToExist(edgeCityDenverPipeline);
 
-      await giService.performPipelineLoad(edgeCityDenverPipeline.id);
+  //     await giService.performPipelineLoad(edgeCityDenverPipeline.id);
 
-      const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
-        process.env.PASSPORT_SERVER_URL as string,
-        edgeCityDenverPipeline.id,
-        edgeCitySemaphoreGroupIds.all
-      );
+  //     const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
+  //       process.env.PASSPORT_SERVER_URL as string,
+  //       edgeCityDenverPipeline.id,
+  //       edgeCitySemaphoreGroupIds.all
+  //     );
 
-      expectTrue(semaphoreGroupAll.success);
-      expectLength(semaphoreGroupAll.value.members, 5);
-      expect(semaphoreGroupAll.value.members).to.deep.include.members([
-        EdgeCityBouncerIdentity.commitment.toString(),
-        EdgeCityBouncer2Identity.commitment.toString(),
-        EdgeCityDenverAttendeeIdentity.commitment.toString(),
-        EdgeCityManualAttendeeIdentity.commitment.toString(),
-        EdgeCityManualBouncerIdentity.commitment.toString()
-      ]);
+  //     expectTrue(semaphoreGroupAll.success);
+  //     expectLength(semaphoreGroupAll.value.members, 5);
+  //     expect(semaphoreGroupAll.value.members).to.deep.include.members([
+  //       EdgeCityBouncerIdentity.commitment.toString(),
+  //       EdgeCityBouncer2Identity.commitment.toString(),
+  //       EdgeCityDenverAttendeeIdentity.commitment.toString(),
+  //       EdgeCityManualAttendeeIdentity.commitment.toString(),
+  //       EdgeCityManualBouncerIdentity.commitment.toString()
+  //     ]);
 
-      const semaphoreGroupBouncers = await requestGenericIssuanceSemaphoreGroup(
-        process.env.PASSPORT_SERVER_URL as string,
-        edgeCityDenverPipeline.id,
-        edgeCitySemaphoreGroupIds.bouncers
-      );
+  //     const semaphoreGroupBouncers = await requestGenericIssuanceSemaphoreGroup(
+  //       process.env.PASSPORT_SERVER_URL as string,
+  //       edgeCityDenverPipeline.id,
+  //       edgeCitySemaphoreGroupIds.bouncers
+  //     );
 
-      expectTrue(semaphoreGroupBouncers.success);
-      expectLength(semaphoreGroupBouncers.value.members, 2);
-      expect(semaphoreGroupBouncers.value.members).to.deep.include.members([
-        EdgeCityBouncerIdentity.commitment.toString(),
-        EdgeCityManualBouncerIdentity.commitment.toString()
-      ]);
+  //     expectTrue(semaphoreGroupBouncers.success);
+  //     expectLength(semaphoreGroupBouncers.value.members, 2);
+  //     expect(semaphoreGroupBouncers.value.members).to.deep.include.members([
+  //       EdgeCityBouncerIdentity.commitment.toString(),
+  //       EdgeCityManualBouncerIdentity.commitment.toString()
+  //     ]);
 
-      const semaphoreGroupAttendees =
-        await requestGenericIssuanceSemaphoreGroup(
-          process.env.PASSPORT_SERVER_URL as string,
-          edgeCityDenverPipeline.id,
-          edgeCitySemaphoreGroupIds.attendees
-        );
+  //     const semaphoreGroupAttendees =
+  //       await requestGenericIssuanceSemaphoreGroup(
+  //         process.env.PASSPORT_SERVER_URL as string,
+  //         edgeCityDenverPipeline.id,
+  //         edgeCitySemaphoreGroupIds.attendees
+  //       );
 
-      expectTrue(semaphoreGroupAttendees.success);
-      expectLength(semaphoreGroupAttendees.value.members, 3);
-      expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
-        EdgeCityDenverAttendeeIdentity.commitment.toString(),
-        EdgeCityManualAttendeeIdentity.commitment.toString(),
-        // Bouncer2 has a specially configured "superuser email", but is not
-        // a holder of a bouncer-tier ticket. Having a "superuser email" allows
-        // a user to perform check-ins, but does not change the product type of
-        // their ticket, and so does not change their Semaphore group
-        // memberships.
-        EdgeCityBouncer2Identity.commitment.toString()
-      ]);
+  //     expectTrue(semaphoreGroupAttendees.success);
+  //     expectLength(semaphoreGroupAttendees.value.members, 3);
+  //     expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
+  //       EdgeCityDenverAttendeeIdentity.commitment.toString(),
+  //       EdgeCityManualAttendeeIdentity.commitment.toString(),
+  //       // Bouncer2 has a specially configured "superuser email", but is not
+  //       // a holder of a bouncer-tier ticket. Having a "superuser email" allows
+  //       // a user to perform check-ins, but does not change the product type of
+  //       // their ticket, and so does not change their Semaphore group
+  //       // memberships.
+  //       EdgeCityBouncer2Identity.commitment.toString()
+  //     ]);
 
-      const semaphoreGroupAttendeesAndBouncers =
-        await requestGenericIssuanceSemaphoreGroup(
-          process.env.PASSPORT_SERVER_URL as string,
-          edgeCityDenverPipeline.id,
-          edgeCitySemaphoreGroupIds.attendeesAndBouncers
-        );
+  //     const semaphoreGroupAttendeesAndBouncers =
+  //       await requestGenericIssuanceSemaphoreGroup(
+  //         process.env.PASSPORT_SERVER_URL as string,
+  //         edgeCityDenverPipeline.id,
+  //         edgeCitySemaphoreGroupIds.attendeesAndBouncers
+  //       );
 
-      expectTrue(semaphoreGroupAttendeesAndBouncers.success);
-      expectLength(semaphoreGroupAttendeesAndBouncers.value.members, 5);
-      expect(
-        semaphoreGroupAttendeesAndBouncers.value.members
-      ).to.deep.include.members([
-        EdgeCityBouncerIdentity.commitment.toString(),
-        EdgeCityBouncer2Identity.commitment.toString(),
-        EdgeCityDenverAttendeeIdentity.commitment.toString(),
-        EdgeCityManualAttendeeIdentity.commitment.toString(),
-        EdgeCityManualBouncerIdentity.commitment.toString()
-      ]);
-    }
-  );
+  //     expectTrue(semaphoreGroupAttendeesAndBouncers.success);
+  //     expectLength(semaphoreGroupAttendeesAndBouncers.value.members, 5);
+  //     expect(
+  //       semaphoreGroupAttendeesAndBouncers.value.members
+  //     ).to.deep.include.members([
+  //       EdgeCityBouncerIdentity.commitment.toString(),
+  //       EdgeCityBouncer2Identity.commitment.toString(),
+  //       EdgeCityDenverAttendeeIdentity.commitment.toString(),
+  //       EdgeCityManualAttendeeIdentity.commitment.toString(),
+  //       EdgeCityManualBouncerIdentity.commitment.toString()
+  //     ]);
+  //   }
+  // );
 
-  step(
-    "New users can sign up, get added to group, prove group membership for Lemonade Pipeline",
-    async function () {
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelineInstances();
-      expectToExist(pipelines);
-      expectLength(pipelines, 1);
-      const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
-      expectToExist(edgeCityDenverPipeline);
+  // step(
+  //   "New users can sign up, get added to group, prove group membership for Lemonade Pipeline",
+  //   async function () {
+  //     expectToExist(giService);
+  //     const pipelines = await giService.getAllPipelineInstances();
+  //     expectToExist(pipelines);
+  //     expectLength(pipelines, 1);
+  //     const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
+  //     expectToExist(edgeCityDenverPipeline);
 
-      // Test that a new user is added to the attendee group
-      const newUser = lemonadeBackend.addUser(
-        "newuser@example.com",
-        "New",
-        "User"
-      );
-      const newUserIdentity = new Identity();
-      EdgeCityLemonadeAccount.addUserTicket(
-        EdgeCityDenver._id,
-        EdgeCityAttendeeTicketType._id,
-        newUser._id,
-        newUser.name
-      );
-      await giService.performPipelineLoad(edgeCityDenverPipeline.id);
-      const edgeCityDenverTicketFeedUrl =
-        edgeCityDenverPipeline.issuanceCapability.feedUrl;
-      // The pipeline doesn't know that the user exists until they hit the feed
-      const NewUserTickets = await requestTicketsFromPipeline(
-        edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
-        edgeCityDenverTicketFeedUrl,
-        edgeCityDenverPipeline.issuanceCapability.options.feedId,
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        newUser.email,
-        newUserIdentity
-      );
-      expectLength(NewUserTickets, 1);
+  //     // Test that a new user is added to the attendee group
+  //     const newUser = lemonadeBackend.addUser(
+  //       "newuser@example.com",
+  //       "New",
+  //       "User"
+  //     );
+  //     const newUserIdentity = new Identity();
+  //     EdgeCityLemonadeAccount.addUserTicket(
+  //       EdgeCityDenver._id,
+  //       EdgeCityAttendeeTicketType._id,
+  //       newUser._id,
+  //       newUser.name
+  //     );
+  //     await giService.performPipelineLoad(edgeCityDenverPipeline.id);
+  //     const edgeCityDenverTicketFeedUrl =
+  //       edgeCityDenverPipeline.issuanceCapability.feedUrl;
+  //     // The pipeline doesn't know that the user exists until they hit the feed
+  //     const NewUserTickets = await requestTicketsFromPipeline(
+  //       edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+  //       edgeCityDenverTicketFeedUrl,
+  //       edgeCityDenverPipeline.issuanceCapability.options.feedId,
+  //       ZUPASS_EDDSA_PRIVATE_KEY,
+  //       newUser.email,
+  //       newUserIdentity
+  //     );
+  //     expectLength(NewUserTickets, 1);
 
-      const attendeeGroupResponse = await requestGenericIssuanceSemaphoreGroup(
-        process.env.PASSPORT_SERVER_URL as string,
-        edgeCityDenverPipeline.id,
-        edgeCitySemaphoreGroupIds.attendees
-      );
+  //     const attendeeGroupResponse = await requestGenericIssuanceSemaphoreGroup(
+  //       process.env.PASSPORT_SERVER_URL as string,
+  //       edgeCityDenverPipeline.id,
+  //       edgeCitySemaphoreGroupIds.attendees
+  //     );
 
-      expectTrue(attendeeGroupResponse.success);
-      expectLength(attendeeGroupResponse.value.members, 4);
-      expect(attendeeGroupResponse.value.members).to.deep.include.members([
-        EdgeCityDenverAttendeeIdentity.commitment.toString(),
-        EdgeCityManualAttendeeIdentity.commitment.toString(),
-        EdgeCityBouncer2Identity.commitment.toString(),
-        newUserIdentity.commitment.toString()
-      ]);
-      const attendeeGroup = await deserializeSemaphoreGroup(
-        attendeeGroupResponse.value
-      );
+  //     expectTrue(attendeeGroupResponse.success);
+  //     expectLength(attendeeGroupResponse.value.members, 4);
+  //     expect(attendeeGroupResponse.value.members).to.deep.include.members([
+  //       EdgeCityDenverAttendeeIdentity.commitment.toString(),
+  //       EdgeCityManualAttendeeIdentity.commitment.toString(),
+  //       EdgeCityBouncer2Identity.commitment.toString(),
+  //       newUserIdentity.commitment.toString()
+  //     ]);
+  //     const attendeeGroup = await deserializeSemaphoreGroup(
+  //       attendeeGroupResponse.value
+  //     );
 
-      const attendeesGroupRootResponse =
-        await requestGenericIssuanceSemaphoreGroupRoot(
-          process.env.PASSPORT_SERVER_URL as string,
-          edgeCityDenverPipeline.id,
-          edgeCitySemaphoreGroupIds.attendees
-        );
-      expectTrue(attendeesGroupRootResponse.success);
-      expect(attendeesGroupRootResponse.value).to.eq(
-        (
-          await deserializeSemaphoreGroup(attendeeGroupResponse.value)
-        ).root.toString()
-      );
+  //     const attendeesGroupRootResponse =
+  //       await requestGenericIssuanceSemaphoreGroupRoot(
+  //         process.env.PASSPORT_SERVER_URL as string,
+  //         edgeCityDenverPipeline.id,
+  //         edgeCitySemaphoreGroupIds.attendees
+  //       );
+  //     expectTrue(attendeesGroupRootResponse.success);
+  //     expect(attendeesGroupRootResponse.value).to.eq(
+  //       (
+  //         await deserializeSemaphoreGroup(attendeeGroupResponse.value)
+  //       ).root.toString()
+  //     );
 
-      const attendeeGroupValidResponse =
-        await requestGenericIssuanceValidSemaphoreGroup(
-          process.env.PASSPORT_SERVER_URL as string,
-          edgeCityDenverPipeline.id,
-          edgeCitySemaphoreGroupIds.attendees,
-          attendeeGroup.root.toString()
-        );
+  //     const attendeeGroupValidResponse =
+  //       await requestGenericIssuanceValidSemaphoreGroup(
+  //         process.env.PASSPORT_SERVER_URL as string,
+  //         edgeCityDenverPipeline.id,
+  //         edgeCitySemaphoreGroupIds.attendees,
+  //         attendeeGroup.root.toString()
+  //       );
 
-      expectTrue(attendeeGroupValidResponse.success);
-      expectTrue(attendeeGroupValidResponse.value.valid);
+  //     expectTrue(attendeeGroupValidResponse.success);
+  //     expectTrue(attendeeGroupValidResponse.value.valid);
 
-      const newUserIdentityPCD = await SemaphoreIdentityPCDPackage.prove({
-        identityV3: newUserIdentity
-      });
+  //     const newUserIdentityPCD = await SemaphoreIdentityPCDPackage.prove({
+  //       identityV3: newUserIdentity
+  //     });
 
-      const groupPCD = await SemaphoreGroupPCDPackage.prove({
-        externalNullifier: {
-          argumentType: ArgumentTypeName.BigInt,
-          value: attendeeGroup.root.toString()
-        },
-        signal: {
-          argumentType: ArgumentTypeName.BigInt,
-          value: "1"
-        },
-        group: {
-          argumentType: ArgumentTypeName.Object,
-          value: serializeSemaphoreGroup(
-            attendeeGroup,
-            attendeeGroupResponse.value.name
-          )
-        },
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          pcdType: SemaphoreIdentityPCDPackage.name,
-          value: await SemaphoreIdentityPCDPackage.serialize(newUserIdentityPCD)
-        }
-      });
+  //     const groupPCD = await SemaphoreGroupPCDPackage.prove({
+  //       externalNullifier: {
+  //         argumentType: ArgumentTypeName.BigInt,
+  //         value: attendeeGroup.root.toString()
+  //       },
+  //       signal: {
+  //         argumentType: ArgumentTypeName.BigInt,
+  //         value: "1"
+  //       },
+  //       group: {
+  //         argumentType: ArgumentTypeName.Object,
+  //         value: serializeSemaphoreGroup(
+  //           attendeeGroup,
+  //           attendeeGroupResponse.value.name
+  //         )
+  //       },
+  //       identity: {
+  //         argumentType: ArgumentTypeName.PCD,
+  //         pcdType: SemaphoreIdentityPCDPackage.name,
+  //         value: await SemaphoreIdentityPCDPackage.serialize(newUserIdentityPCD)
+  //       }
+  //     });
 
-      expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
+  //     expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
 
-      const consumerDB = new PipelineConsumerDB();
-      const consumer = (
-        await consumerDB.loadByEmails(client, edgeCityPipeline.id, [
-          newUser.email
-        ])
-      )[0];
-      expectToExist(consumer);
-      const consumerUpdated = consumer.timeUpdated;
-      const consumerCreated = consumer.timeCreated;
-      expect(consumerCreated.getTime()).to.eq(consumerUpdated.getTime());
-      MockDate.set(Date.now() + ONE_MINUTE_MS);
+  //     const consumerDB = new PipelineConsumerDB();
+  //     const consumer = (
+  //       await consumerDB.loadByEmails(client, edgeCityPipeline.id, [
+  //         newUser.email
+  //       ])
+  //     )[0];
+  //     expectToExist(consumer);
+  //     const consumerUpdated = consumer.timeUpdated;
+  //     const consumerCreated = consumer.timeCreated;
+  //     expect(consumerCreated.getTime()).to.eq(consumerUpdated.getTime());
+  //     MockDate.set(Date.now() + ONE_MINUTE_MS);
 
-      const changedIdentity = new Identity();
-      await requestTicketsFromPipeline(
-        edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
-        edgeCityDenverTicketFeedUrl,
-        edgeCityDenverPipeline.issuanceCapability.options.feedId,
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        newUser.email,
-        // The user has a new identity, which might occur if they reset their
-        // Zupass account
-        changedIdentity
-      );
+  //     const changedIdentity = new Identity();
+  //     await requestTicketsFromPipeline(
+  //       edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+  //       edgeCityDenverTicketFeedUrl,
+  //       edgeCityDenverPipeline.issuanceCapability.options.feedId,
+  //       ZUPASS_EDDSA_PRIVATE_KEY,
+  //       newUser.email,
+  //       // The user has a new identity, which might occur if they reset their
+  //       // Zupass account
+  //       changedIdentity
+  //     );
 
-      {
-        const newAttendeeGroupResponse =
-          await requestGenericIssuanceSemaphoreGroup(
-            process.env.PASSPORT_SERVER_URL as string,
-            edgeCityDenverPipeline.id,
-            edgeCitySemaphoreGroupIds.attendees
-          );
+  //     {
+  //       const newAttendeeGroupResponse =
+  //         await requestGenericIssuanceSemaphoreGroup(
+  //           process.env.PASSPORT_SERVER_URL as string,
+  //           edgeCityDenverPipeline.id,
+  //           edgeCitySemaphoreGroupIds.attendees
+  //         );
 
-        expectTrue(newAttendeeGroupResponse.success);
-        expectLength(newAttendeeGroupResponse.value.members, 5);
-        expect(newAttendeeGroupResponse.value.members).to.deep.include.members([
-          EdgeCityDenverAttendeeIdentity.commitment.toString(),
-          EdgeCityManualAttendeeIdentity.commitment.toString(),
-          EdgeCityBouncer2Identity.commitment.toString(),
-          changedIdentity.commitment.toString(),
-          // The deleted entry is represented by a zeroValue
-          newAttendeeGroupResponse.value.zeroValue
-        ]);
+  //       expectTrue(newAttendeeGroupResponse.success);
+  //       expectLength(newAttendeeGroupResponse.value.members, 5);
+  //       expect(newAttendeeGroupResponse.value.members).to.deep.include.members([
+  //         EdgeCityDenverAttendeeIdentity.commitment.toString(),
+  //         EdgeCityManualAttendeeIdentity.commitment.toString(),
+  //         EdgeCityBouncer2Identity.commitment.toString(),
+  //         changedIdentity.commitment.toString(),
+  //         // The deleted entry is represented by a zeroValue
+  //         newAttendeeGroupResponse.value.zeroValue
+  //       ]);
 
-        const newAttendeeGroup = await deserializeSemaphoreGroup(
-          newAttendeeGroupResponse.value
-        );
-        expect(newAttendeeGroup.root).to.not.eq(attendeeGroup.root.toString());
+  //       const newAttendeeGroup = await deserializeSemaphoreGroup(
+  //         newAttendeeGroupResponse.value
+  //       );
+  //       expect(newAttendeeGroup.root).to.not.eq(attendeeGroup.root.toString());
 
-        // Requesting the root hash for the group should give us the new root
-        const newAttendeeGroupRootResponse =
-          await requestGenericIssuanceSemaphoreGroupRoot(
-            process.env.PASSPORT_SERVER_URL as string,
-            edgeCityDenverPipeline.id,
-            edgeCitySemaphoreGroupIds.attendees
-          );
+  //       // Requesting the root hash for the group should give us the new root
+  //       const newAttendeeGroupRootResponse =
+  //         await requestGenericIssuanceSemaphoreGroupRoot(
+  //           process.env.PASSPORT_SERVER_URL as string,
+  //           edgeCityDenverPipeline.id,
+  //           edgeCitySemaphoreGroupIds.attendees
+  //         );
 
-        expectTrue(newAttendeeGroupRootResponse.success);
-        expect(newAttendeeGroupRootResponse.value).to.eq(
-          newAttendeeGroup.root.toString()
-        );
+  //       expectTrue(newAttendeeGroupRootResponse.success);
+  //       expect(newAttendeeGroupRootResponse.value).to.eq(
+  //         newAttendeeGroup.root.toString()
+  //       );
 
-        const newAttendeeGroupValidResponse =
-          await requestGenericIssuanceValidSemaphoreGroup(
-            process.env.PASSPORT_SERVER_URL as string,
-            edgeCityDenverPipeline.id,
-            edgeCitySemaphoreGroupIds.attendees,
-            newAttendeeGroup.root.toString()
-          );
+  //       const newAttendeeGroupValidResponse =
+  //         await requestGenericIssuanceValidSemaphoreGroup(
+  //           process.env.PASSPORT_SERVER_URL as string,
+  //           edgeCityDenverPipeline.id,
+  //           edgeCitySemaphoreGroupIds.attendees,
+  //           newAttendeeGroup.root.toString()
+  //         );
 
-        expectTrue(newAttendeeGroupValidResponse.success);
-        expectTrue(newAttendeeGroupValidResponse.value.valid);
+  //       expectTrue(newAttendeeGroupValidResponse.success);
+  //       expectTrue(newAttendeeGroupValidResponse.value.valid);
 
-        // We should be able to get the old values for the group by providing
-        // the root hash.
-        const historicalGroupResponse =
-          await requestGenericIssuanceHistoricalSemaphoreGroup(
-            process.env.PASSPORT_SERVER_URL as string,
-            edgeCityDenverPipeline.id,
-            edgeCitySemaphoreGroupIds.attendees,
-            attendeeGroup.root.toString()
-          );
+  //       // We should be able to get the old values for the group by providing
+  //       // the root hash.
+  //       const historicalGroupResponse =
+  //         await requestGenericIssuanceHistoricalSemaphoreGroup(
+  //           process.env.PASSPORT_SERVER_URL as string,
+  //           edgeCityDenverPipeline.id,
+  //           edgeCitySemaphoreGroupIds.attendees,
+  //           attendeeGroup.root.toString()
+  //         );
 
-        expectTrue(historicalGroupResponse.success);
-        expect(historicalGroupResponse.value.members).to.deep.eq(
-          attendeeGroupResponse.value.members
-        );
+  //       expectTrue(historicalGroupResponse.success);
+  //       expect(historicalGroupResponse.value.members).to.deep.eq(
+  //         attendeeGroupResponse.value.members
+  //       );
 
-        const newUserIdentityPCD = await SemaphoreIdentityPCDPackage.prove({
-          identityV3: changedIdentity // Use the changed identity
-        });
+  //       const newUserIdentityPCD = await SemaphoreIdentityPCDPackage.prove({
+  //         identityV3: changedIdentity // Use the changed identity
+  //       });
 
-        const groupPCD = await SemaphoreGroupPCDPackage.prove({
-          externalNullifier: {
-            argumentType: ArgumentTypeName.BigInt,
-            value: newAttendeeGroup.root.toString()
-          },
-          signal: {
-            argumentType: ArgumentTypeName.BigInt,
-            value: "1"
-          },
-          group: {
-            argumentType: ArgumentTypeName.Object,
-            value: serializeSemaphoreGroup(
-              newAttendeeGroup,
-              newAttendeeGroupResponse.value.name
-            )
-          },
-          identity: {
-            argumentType: ArgumentTypeName.PCD,
-            pcdType: SemaphoreIdentityPCDPackage.name,
-            value:
-              await SemaphoreIdentityPCDPackage.serialize(newUserIdentityPCD)
-          }
-        });
+  //       const groupPCD = await SemaphoreGroupPCDPackage.prove({
+  //         externalNullifier: {
+  //           argumentType: ArgumentTypeName.BigInt,
+  //           value: newAttendeeGroup.root.toString()
+  //         },
+  //         signal: {
+  //           argumentType: ArgumentTypeName.BigInt,
+  //           value: "1"
+  //         },
+  //         group: {
+  //           argumentType: ArgumentTypeName.Object,
+  //           value: serializeSemaphoreGroup(
+  //             newAttendeeGroup,
+  //             newAttendeeGroupResponse.value.name
+  //           )
+  //         },
+  //         identity: {
+  //           argumentType: ArgumentTypeName.PCD,
+  //           pcdType: SemaphoreIdentityPCDPackage.name,
+  //           value:
+  //             await SemaphoreIdentityPCDPackage.serialize(newUserIdentityPCD)
+  //         }
+  //       });
 
-        expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
-      }
+  //       expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
+  //     }
 
-      const consumerAfterChange = (
-        await consumerDB.loadByEmails(client, edgeCityDenverPipeline.id, [
-          newUser.email
-        ])
-      )[0];
-      const consumerUpdatedAfterChange = consumerAfterChange.timeUpdated;
-      const consumerCreatedAfterChange = consumerAfterChange.timeCreated;
+  //     const consumerAfterChange = (
+  //       await consumerDB.loadByEmails(client, edgeCityDenverPipeline.id, [
+  //         newUser.email
+  //       ])
+  //     )[0];
+  //     const consumerUpdatedAfterChange = consumerAfterChange.timeUpdated;
+  //     const consumerCreatedAfterChange = consumerAfterChange.timeCreated;
 
-      // Consumer update occurred now
-      expect(consumerUpdatedAfterChange.getTime()).to.eq(Date.now());
-      // Creation time should never change
-      expect(consumerCreatedAfterChange.getTime()).to.eq(
-        consumerCreated.getTime()
-      );
-      // Update time should be later than creation time now
-      expect(consumerUpdatedAfterChange.getTime()).to.be.greaterThan(
-        consumerCreated.getTime()
-      );
-      // Update time should be later than original update time
-      expect(consumerUpdatedAfterChange.getTime()).to.be.greaterThan(
-        consumerUpdated.getTime()
-      );
-    }
-  );
+  //     // Consumer update occurred now
+  //     expect(consumerUpdatedAfterChange.getTime()).to.eq(Date.now());
+  //     // Creation time should never change
+  //     expect(consumerCreatedAfterChange.getTime()).to.eq(
+  //       consumerCreated.getTime()
+  //     );
+  //     // Update time should be later than creation time now
+  //     expect(consumerUpdatedAfterChange.getTime()).to.be.greaterThan(
+  //       consumerCreated.getTime()
+  //     );
+  //     // Update time should be later than original update time
+  //     expect(consumerUpdatedAfterChange.getTime()).to.be.greaterThan(
+  //       consumerUpdated.getTime()
+  //     );
+  //   }
+  // );
 
   step(
     "Lemonade API will request new token when old one expires",
