@@ -62,6 +62,7 @@ import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManua
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   namedSqlTransaction,
+  sqlQueryWithPool,
   sqlTransaction
 } from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
@@ -253,7 +254,7 @@ export class PretixPipeline implements BasePipeline {
         getSerializedLatestGroup: async (
           groupId: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getSerializedLatestGroup(
@@ -265,7 +266,7 @@ export class PretixPipeline implements BasePipeline {
         getLatestGroupRoot: async (
           groupId: string
         ): Promise<string | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getLatestGroupRoot(client, groupId)
@@ -275,7 +276,7 @@ export class PretixPipeline implements BasePipeline {
           groupId: string,
           rootHash: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getSerializedHistoricalGroup(

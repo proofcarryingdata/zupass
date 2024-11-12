@@ -52,7 +52,7 @@ import {
   insertTelegramEvent,
   insertTelegramForward
 } from "../database/queries/telegram/insertTelegramConversation";
-import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
+import { namedSqlTransaction, sqlQueryWithPool } from "../database/sqlQuery";
 import { traced } from "../services/telemetryService";
 import { generateFrogProofUrl } from "./frogTelegramHelpers";
 import { logger } from "./logger";
@@ -622,7 +622,7 @@ export const eventsToLink = async (
       .text(
         `Yes, ${event.isLinkedToCurrentChat ? "remove" : "add"}`,
         async (ctx) => {
-          await sqlTransaction(ctx.session.dbPool, async (client) => {
+          await sqlQueryWithPool(ctx.session.dbPool, async (client) => {
             let replyText = "";
             if (!(await senderIsAdmin(ctx))) return;
 
@@ -645,7 +645,7 @@ export const eventsToLink = async (
   }
   // Otherwise, display all events to add or remove.
   else {
-    const events = await sqlTransaction(ctx.session.dbPool, (client) =>
+    const events = await sqlQueryWithPool(ctx.session.dbPool, (client) =>
       fetchEventsWithTelegramChats(client, true, chatId)
     );
 
@@ -688,7 +688,7 @@ export const chatsToJoin = async (
     }
     span?.setAttribute("userId", userId?.toString());
 
-    const chatsWithMembership = await sqlTransaction(
+    const chatsWithMembership = await sqlQueryWithPool(
       ctx.session.dbPool,
       (client) => getChatsWithMembershipStatus(client, ctx, userId)
     );
@@ -771,7 +771,7 @@ export const chatsToJoinV2 = async (
           });
         }
       } else {
-        const chatsWithMembership = await sqlTransaction(
+        const chatsWithMembership = await sqlQueryWithPool(
           ctx.session.dbPool,
           (client) => getChatsWithMembershipStatus(client, ctx, userId)
         );
@@ -834,7 +834,7 @@ export const chatsToPostIn = async (
         const chat = ctx.session.selectedChat;
 
         // Fetch anon topics for the selected chat
-        const { topics, telegramEvents } = await sqlTransaction(
+        const { topics, telegramEvents } = await sqlQueryWithPool(
           ctx.session.dbPool,
           async (client) => {
             const topics = await fetchTelegramAnonTopicsByChatId(
@@ -896,7 +896,7 @@ export const chatsToPostIn = async (
       // Otherwise, give the user a list of chats that they are members of.
       else {
         // Only show chats a user is in
-        const chatsWithMembership = await sqlTransaction(
+        const chatsWithMembership = await sqlQueryWithPool(
           ctx.session.dbPool,
           async (client) =>
             (await getChatsWithMembershipStatus(client, ctx, userId)).filter(

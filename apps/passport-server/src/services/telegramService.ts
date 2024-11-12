@@ -182,7 +182,7 @@ export class TelegramService {
             `[TELEGRAM] Got chat join request for ${chatId} from ${userId}`
           );
           // Check if this user is verified for the chat in question
-          const isVerified = await sqlTransaction(
+          const isVerified = await sqlQueryWithPool(
             this.context.dbPool,
             (client) => fetchTelegramVerificationStatus(client, userId, chatId)
           );
@@ -302,7 +302,7 @@ export class TelegramService {
             const name = firstName || username;
             ctx.session.directLinkMode = false;
             if (ctx.match && Number.isInteger(Number(ctx.match))) {
-              const [chatWithMembership] = await sqlTransaction(
+              const [chatWithMembership] = await sqlQueryWithPool(
                 ctx.session.dbPool,
                 (client) =>
                   getChatsWithMembershipStatus(
@@ -455,7 +455,7 @@ export class TelegramService {
         userId,
         `Loading tickets and events...`
       );
-      const events = await sqlTransaction(ctx.session.dbPool, (client) =>
+      const events = await sqlQueryWithPool(ctx.session.dbPool, (client) =>
         fetchEventsWithTelegramChats(client, false)
       );
       const eventsWithChats = await chatIDsToChats(ctx, events);

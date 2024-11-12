@@ -63,6 +63,7 @@ import {
 } from "../../../database/queries/ticketActionDBs";
 import {
   namedSqlTransaction,
+  sqlQueryWithPool,
   sqlTransaction
 } from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
@@ -221,7 +222,7 @@ export class LemonadePipeline implements BasePipeline {
         getSerializedLatestGroup: async (
           groupId: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getSerializedLatestGroup(
@@ -233,7 +234,7 @@ export class LemonadePipeline implements BasePipeline {
         getLatestGroupRoot: async (
           groupId: string
         ): Promise<string | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getLatestGroupRoot(client, groupId)
@@ -243,7 +244,7 @@ export class LemonadePipeline implements BasePipeline {
           groupId: string,
           rootHash: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getSerializedHistoricalGroup(

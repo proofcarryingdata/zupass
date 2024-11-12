@@ -64,7 +64,7 @@ import {
 import { fetchUserByV3Commitment } from "../database/queries/users";
 import { fetchZuconnectTicketsByEmail } from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchAllUsersWithZuzaluTickets } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
-import { namedSqlTransaction, sqlTransaction } from "../database/sqlQuery";
+import { namedSqlTransaction, sqlQueryWithPool } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -975,7 +975,7 @@ export async function startIssuanceService(
     return null;
   }
 
-  await sqlTransaction(context.dbPool, async (client) =>
+  await sqlQueryWithPool(context.dbPool, async (client) =>
     setupKnownTicketTypes(client, await getEdDSAPublicKey(zupassEddsaKey))
   );
 

@@ -1,6 +1,6 @@
 import { AnonWebAppPayload, PayloadType } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
-import { namedSqlTransaction, sqlTransaction } from "../../database/sqlQuery";
+import { namedSqlTransaction, sqlQueryWithPool } from "../../database/sqlQuery";
 import { startTelegramService } from "../../services/telegramService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -214,7 +214,7 @@ export function initTelegramRoutes(
         }
 
         case PayloadType.ReactData: {
-          const proofUrl = await sqlTransaction(context.dbPool, (client) =>
+          const proofUrl = await sqlQueryWithPool(context.dbPool, (client) =>
             telegramService.handleRequestReactProofLink(client, anonPayload)
           );
           res.redirect(proofUrl);

@@ -25,7 +25,7 @@ import {
   PipelineAtom
 } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
-import { sqlTransaction } from "../../../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../../../database/sqlQuery";
 import { ApplicationContext } from "../../../../types";
 import { logger } from "../../../../util/logger";
 import { PersistentCacheService } from "../../../persistentCacheService";
@@ -343,7 +343,7 @@ export class PODPipeline implements BasePipeline {
       span?.setAttribute("email", emails?.map((e) => e.email)?.join(",") ?? "");
       span?.setAttribute("semaphore_id", semaphoreId);
 
-      await sqlTransaction(this.context.dbPool, async (client) => {
+      await sqlQueryWithPool(this.context.dbPool, async (client) => {
         for (const e of emails ?? []) {
           await this.consumerDB.save(
             client,
