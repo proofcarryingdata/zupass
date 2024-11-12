@@ -94,6 +94,13 @@ const define = {
           process.env.IGNORE_NON_PRIORITY_FEEDS
         )
       }
+    : {}),
+  ...(process.env.PRIORITY_FEED_PROVIDER_URLS !== undefined
+    ? {
+        "process.env.PRIORITY_FEED_PROVIDER_URLS": JSON.stringify(
+          process.env.PRIORITY_FEED_PROVIDER_URLS
+        )
+      }
     : {})
 };
 

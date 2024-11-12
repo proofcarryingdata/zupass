@@ -23,6 +23,8 @@ interface AppConfig {
   devconTicketQueryOrigins: string[];
   // If IGNORE_NON_PRIORITY_FEEDS=true, then non-priority feeds will be ignored.
   ignoreNonPriorityFeeds: boolean;
+  // URLs of feed providers that are priority feeds.
+  priorityFeedProviderUrls: string[];
 }
 
 if (
@@ -87,7 +89,10 @@ export const appConfig: AppConfig = {
   zappAllowedSignerOrigins: zappAllowedSignerOrigins,
   embeddedZapps: embeddedZapps,
   devconTicketQueryOrigins: devconTicketQueryOrigins,
-  ignoreNonPriorityFeeds: process.env.IGNORE_NON_PRIORITY_FEEDS === "true"
+  ignoreNonPriorityFeeds: process.env.IGNORE_NON_PRIORITY_FEEDS === "true",
+  priorityFeedProviderUrls: process.env.PRIORITY_FEED_PROVIDER_URLS
+    ? JSON.parse(process.env.PRIORITY_FEED_PROVIDER_URLS)
+    : []
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));
