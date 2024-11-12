@@ -10,7 +10,7 @@ import {
   VerifyTicketResult
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
-import { namedSqlTransaction } from "../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
@@ -117,17 +117,13 @@ export function initPCDIssuanceRoutes(
     clusterProxy(),
     async (req: Request, res: Response) => {
       checkExistsForRoute(issuanceService);
-      await namedSqlTransaction(
-        context.dbPool,
-        "/issue/verify-ticket",
-        async (client) => {
-          const result = await issuanceService.handleVerifyTicketRequest(
-            client,
-            req.body as VerifyTicketRequest
-          );
-          return res.json(result satisfies VerifyTicketResult);
-        }
-      );
+      await sqlQueryWithPool(context.dbPool, async (client) => {
+        const result = await issuanceService.handleVerifyTicketRequest(
+          client,
+          req.body as VerifyTicketRequest
+        );
+        return res.json(result satisfies VerifyTicketResult);
+      });
     }
   );
 
@@ -136,15 +132,11 @@ export function initPCDIssuanceRoutes(
     clusterProxy(),
     async (req: Request, res: Response) => {
       checkExistsForRoute(issuanceService);
-      await namedSqlTransaction(
-        context.dbPool,
-        "/issue/known-ticket-types",
-        async (client) => {
-          const result =
-            await issuanceService.handleKnownTicketTypesRequest(client);
-          return res.json(result satisfies KnownTicketTypesResult);
-        }
-      );
+      await sqlQueryWithPool(context.dbPool, async (client) => {
+        const result =
+          await issuanceService.handleKnownTicketTypesRequest(client);
+        return res.json(result satisfies KnownTicketTypesResult);
+      });
     }
   );
 }

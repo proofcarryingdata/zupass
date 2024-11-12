@@ -8,10 +8,7 @@ import _ from "lodash";
 import { PoolClient } from "postgres-pool";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineDefinitionDB } from "../../../database/queries/pipelineDefinitionDB";
-import {
-  namedSqlTransaction,
-  sqlQueryWithPool
-} from "../../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../../database/sqlQuery";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { isAbortError } from "../../../util/util";
@@ -501,18 +498,14 @@ export class PipelineExecutorSubservice {
     // and re-instantiate the pipeline. do NOT call the pipeline's 'load'
     // function - that will be done the next time `startPipelineLoadLoop`
     // is called.
-    await namedSqlTransaction(
-      this.context.internalPool,
-      "startPipelineLoadLoop",
-      async (client) => {
-        await this.loadAndInstantiatePipelines(client);
-        await Promise.allSettled(
-          this.pipelineSlots
-            .slice()
-            .map((s) => this.restartPipeline(client, s.definition.id, true))
-        );
-      }
-    );
+    await sqlQueryWithPool(this.context.internalPool, async (client) => {
+      await this.loadAndInstantiatePipelines(client);
+      await Promise.allSettled(
+        this.pipelineSlots
+          .slice()
+          .map((s) => this.restartPipeline(client, s.definition.id, true))
+      );
+    });
 
     // we schedule the next load to happen `PIPELINE_REFRESH_INTERVAL_MS` after
     // the last load *started*. Thus, we cap the amount of pipeline reloads to be

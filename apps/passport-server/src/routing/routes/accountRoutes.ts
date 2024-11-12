@@ -13,7 +13,11 @@ import {
 } from "@pcd/passport-interface";
 import { normalizeEmail } from "@pcd/util";
 import express, { Request, Response } from "express";
-import { namedSqlTransaction } from "../../database/sqlQuery";
+import {
+  namedSqlTransaction,
+  sqlQueryWithPool,
+  sqlTransaction
+} from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkExistsForRoute } from "../../util/util";
@@ -43,10 +47,8 @@ export function initAccountRoutes(
       checkExistsForRoute(userService);
       const email = normalizeEmail(checkQueryParam(req, "email"));
 
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/account/salt",
-        (client) => userService.getSaltByEmail(client, email)
+      const result = await sqlQueryWithPool(context.dbPool, (client) =>
+        userService.getSaltByEmail(client, email)
       );
 
       res.send(result satisfies SaltResponseValue);
@@ -86,10 +88,8 @@ export function initAccountRoutes(
       const force =
         checkBody<ConfirmEmailRequest, "force">(req, "force") === "true";
 
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/account/send-login-email",
-        (client) => userService.handleSendTokenEmail(client, email, force)
+      const result = await sqlQueryWithPool(context.dbPool, (client) =>
+        userService.handleSendTokenEmail(client, email, force)
       );
 
       if (result) {
@@ -115,10 +115,8 @@ export function initAccountRoutes(
       const token = checkBody<VerifyTokenRequest, "token">(req, "token");
       const email = checkBody<VerifyTokenRequest, "email">(req, "email");
 
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/account/verify-token",
-        (client) => userService.handleVerifyToken(client, token, email)
+      const result = await sqlQueryWithPool(context.dbPool, (client) =>
+        userService.handleVerifyToken(client, token, email)
       );
 
       res.status(200).json(result);
@@ -148,18 +146,15 @@ export function initAccountRoutes(
         "encryptionKey"
       );
 
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/account/one-click-login",
-        (client) =>
-          userService.handleOneClickLogin(
-            client,
-            email,
-            code,
-            commitment,
-            semaphore_v4_pubkey,
-            encryptionKey
-          )
+      const result = await sqlTransaction(context.dbPool, (client) =>
+        userService.handleOneClickLogin(
+          client,
+          email,
+          code,
+          commitment,
+          semaphore_v4_pubkey,
+          encryptionKey
+        )
       );
 
       res.status(200).json(result);
@@ -209,20 +204,17 @@ export function initAccountRoutes(
         "commitment"
       );
 
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/account/new-participant",
-        (client) =>
-          userService.handleNewUser(
-            client,
-            token,
-            email,
-            commitment,
-            semaphore_v4_pubkey,
-            salt,
-            encryptionKey,
-            autoRegister
-          )
+      const result = await sqlTransaction(context.dbPool, (client) =>
+        userService.handleNewUser(
+          client,
+          token,
+          email,
+          commitment,
+          semaphore_v4_pubkey,
+          salt,
+          encryptionKey,
+          autoRegister
+        )
       );
 
       res.status(200).json(result);
@@ -241,10 +233,8 @@ export function initAccountRoutes(
       checkExistsForRoute(userService);
       const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/account/upgrade-with-v4-commitment",
-        (client) => userService.handleAddV4Commitment(client, pcd)
+      const result = await sqlTransaction(context.dbPool, (client) =>
+        userService.handleAddV4Commitment(client, pcd)
       );
 
       if (result.success) {
@@ -265,10 +255,8 @@ export function initAccountRoutes(
       checkExistsForRoute(userService);
       const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
 
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/account/agree-terms",
-        (client) => userService.handleAgreeTerms(client, pcd)
+      const result = await sqlTransaction(context.dbPool, (client) =>
+        userService.handleAgreeTerms(client, pcd)
       );
 
       if (result.success) {
@@ -304,11 +292,8 @@ export function initAccountRoutes(
     clusterProxy(),
     async (req: Request, res: Response) => {
       checkExistsForRoute(userService);
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/v2/account/user/:uuid",
-        (client) =>
-          userService.handleGetUser(client, checkUrlParam(req, "uuid"))
+      const result = await sqlQueryWithPool(context.dbPool, (client) =>
+        userService.handleGetUser(client, checkUrlParam(req, "uuid"))
       );
 
       res.status(200).json(result);
@@ -323,11 +308,8 @@ export function initAccountRoutes(
     clusterProxy(),
     async (req: Request, res: Response) => {
       checkExistsForRoute(userService);
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/pcdpass/participant/:uuid",
-        (client) =>
-          userService.handleGetUser(client, checkUrlParam(req, "uuid"))
+      const result = await sqlQueryWithPool(context.dbPool, (client) =>
+        userService.handleGetUser(client, checkUrlParam(req, "uuid"))
       );
 
       res.status(200).json(result);
@@ -342,11 +324,8 @@ export function initAccountRoutes(
     clusterProxy(),
     async (req: Request, res: Response) => {
       checkExistsForRoute(userService);
-      const result = await namedSqlTransaction(
-        context.dbPool,
-        "/zuzalu/participant/:uuid",
-        (client) =>
-          userService.handleGetUser(client, checkUrlParam(req, "uuid"))
+      const result = await sqlQueryWithPool(context.dbPool, (client) =>
+        userService.handleGetUser(client, checkUrlParam(req, "uuid"))
       );
 
       res.status(200).json(result);

@@ -6,7 +6,7 @@ import {
   deleteUnsupportedRateLimitBuckets,
   pruneRateLimitBuckets
 } from "../database/queries/rateLimit";
-import { sqlQueryWithPool, sqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
@@ -96,14 +96,16 @@ export class RateLimitService {
 
         const limit = this.bucketConfig[actionType];
 
-        const result = await sqlTransaction(pool, (client) =>
-          consumeRateLimitToken(
-            client,
-            actionType,
-            actionId,
-            limit.maxActions,
-            limit.timePeriodMs
-          )
+        const result = await sqlQueryWithPool(
+          pool,
+          async (client) =>
+            await consumeRateLimitToken(
+              client,
+              actionType,
+              actionId,
+              limit.maxActions,
+              limit.timePeriodMs
+            )
         );
 
         // -1 indicates that the action should be declined

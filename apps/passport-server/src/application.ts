@@ -90,6 +90,7 @@ export async function stopApplication(app?: Zupass): Promise<void> {
   await stopServices(app.services);
   await stopHttpServer(app);
   await app.context.dbPool.end();
+  await app.context.internalPool.end();
 }
 
 async function getOverridenApis(
