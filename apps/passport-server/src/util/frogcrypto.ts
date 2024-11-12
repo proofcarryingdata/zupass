@@ -17,7 +17,7 @@ import { PCDPackage } from "@pcd/pcd-types";
 import _ from "lodash";
 import { Pool } from "postgres-pool";
 import { getFeedData } from "../database/queries/frogcrypto";
-import { namedSqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 
 export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
@@ -61,10 +61,8 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
    * Refetch the list of feeds that this server is hosting from the database.
    */
   public async refreshFeeds(): Promise<void> {
-    const feeds = await namedSqlTransaction(
-      this.dbPool,
-      "refreshFeeds",
-      (client) => getFeedData(client)
+    const feeds = await sqlQueryWithPool(this.dbPool, (client) =>
+      getFeedData(client)
     );
     this.hostedFeed.length = 0;
     this.hostedFeed.push(

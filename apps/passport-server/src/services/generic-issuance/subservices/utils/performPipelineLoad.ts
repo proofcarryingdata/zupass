@@ -2,7 +2,7 @@ import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils"
 import { PipelineLoadSummary } from "@pcd/passport-interface";
 import { RollbarService } from "@pcd/server-shared";
 import { Pool } from "postgres-pool";
-import { sqlTransaction } from "../../../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../../../database/sqlQuery";
 import { logger } from "../../../../util/logger";
 import { isAbortError } from "../../../../util/util";
 import { DiscordService } from "../../../discordService";
@@ -46,7 +46,7 @@ export async function performPipelineLoad(
       ` of type '${pipeline?.type}'` +
       ` belonging to ${pipelineSlot.definition.ownerUserId}`
   );
-  const owner = await sqlTransaction(pool, async (client) =>
+  const owner = await sqlQueryWithPool(pool, async (client) =>
     userSubservice.getUserById(client, pipelineSlot.definition.ownerUserId)
   );
 

@@ -7,7 +7,7 @@ import {
   IPipelineUserDB,
   PipelineUserDB
 } from "../../../database/queries/pipelineUserDB";
-import { sqlTransaction } from "../../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
@@ -42,7 +42,7 @@ export class UserSubservice {
    * Should be called immediately after instantiation.
    */
   public async start(): Promise<void> {
-    await sqlTransaction(this.context.dbPool, (client) =>
+    await sqlQueryWithPool(this.context.dbPool, (client) =>
       this.maybeSetupAdmins(client)
     );
   }
