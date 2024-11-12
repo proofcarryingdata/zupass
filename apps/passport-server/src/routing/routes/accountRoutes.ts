@@ -240,7 +240,7 @@ export function initAccountRoutes(
       if (result.success) {
         res.status(200).json(result.value);
       } else {
-        res.status(403).send(result.error);
+        res.status(403).type("text").send(result.error);
       }
     }
   );
@@ -262,7 +262,7 @@ export function initAccountRoutes(
       if (result.success) {
         res.status(200).json(result.value);
       } else {
-        res.status(403).send(result.error);
+        res.status(403).type("text").send(result.error);
       }
     }
   );
