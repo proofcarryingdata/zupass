@@ -34,7 +34,7 @@ import path from "path";
 import * as QRCode from "qrcode";
 import urljoin from "url-join";
 import { PipelineCheckinDB } from "../../database/queries/pipelineCheckinDB";
-import { namedSqlTransaction, sqlTransaction } from "../../database/sqlQuery";
+import { namedSqlTransaction, sqlQueryWithPool } from "../../database/sqlQuery";
 import {
   getAllGenericIssuanceHTTPQuery,
   getAllGenericIssuanceQuery,
@@ -74,7 +74,7 @@ export function initGenericIssuanceRoutes(
    */
   app.post("/generic-issuance/api/self", async (req, res) => {
     checkExistsForRoute(genericIssuanceService);
-    const user = await sqlTransaction(context.dbPool, (client) =>
+    const user = await sqlQueryWithPool(context.dbPool, (client) =>
       genericIssuanceService.authSession(client, req)
     );
 
@@ -110,7 +110,7 @@ export function initGenericIssuanceRoutes(
 
     const checkinDb = new PipelineCheckinDB();
     const tickets = await pipeline.getAllTickets();
-    const checkins = await sqlTransaction(context.dbPool, (client) =>
+    const checkins = await sqlQueryWithPool(context.dbPool, (client) =>
       checkinDb.getByPipelineId(client, pragueId)
     );
 
@@ -499,7 +499,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/fetch-pretix-products",
     async (req: express.Request, res: express.Response) => {
       checkExistsForRoute(genericIssuanceService);
-      const user = await sqlTransaction(context.dbPool, (client) =>
+      const user = await sqlQueryWithPool(context.dbPool, (client) =>
         genericIssuanceService.authSession(client, req)
       );
       traceUser(user);

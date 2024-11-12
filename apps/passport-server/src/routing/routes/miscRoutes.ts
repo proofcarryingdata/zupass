@@ -1,7 +1,7 @@
 import { bigintToPseudonymNumber, emailToBigint } from "@pcd/util";
 import express, { Request, Response } from "express";
 import { kvGetByPrefix } from "../../database/queries/kv";
-import { sqlTransaction } from "../../database/sqlQuery";
+import { sqlQueryWithPool } from "../../database/sqlQuery";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 
@@ -15,7 +15,7 @@ export function initMiscRoutes(
   app.get(
     "/misc/protocol-worlds-scoreboard",
     async (req: Request, res: Response) => {
-      const scores = (await sqlTransaction(context.dbPool, (client) =>
+      const scores = (await sqlQueryWithPool(context.dbPool, (client) =>
         kvGetByPrefix(client, "protocol_worlds_score:")
       )) as Array<{ email: string; score: number }>;
 

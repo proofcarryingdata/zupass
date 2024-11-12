@@ -10,7 +10,7 @@ import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineDefinitionDB } from "../../../database/queries/pipelineDefinitionDB";
 import {
   namedSqlTransaction,
-  sqlTransaction
+  sqlQueryWithPool
 } from "../../../database/sqlQuery";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
@@ -101,7 +101,7 @@ export class PipelineExecutorSubservice {
    * schedules a load loop which loads data for each {@link Pipeline} once per minute.
    */
   public async start(startLoadLoop?: boolean): Promise<void> {
-    await sqlTransaction(this.context.internalPool, (client) =>
+    await sqlQueryWithPool(this.context.internalPool, (client) =>
       this.loadAndInstantiatePipelines(client)
     );
 

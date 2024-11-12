@@ -62,6 +62,7 @@ import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManua
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   namedSqlTransaction,
+  sqlQueryWithPool,
   sqlTransaction
 } from "../../../database/sqlQuery";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
@@ -253,7 +254,7 @@ export class PretixPipeline implements BasePipeline {
         getSerializedLatestGroup: async (
           groupId: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getSerializedLatestGroup(
@@ -265,7 +266,7 @@ export class PretixPipeline implements BasePipeline {
         getLatestGroupRoot: async (
           groupId: string
         ): Promise<string | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getLatestGroupRoot(client, groupId)
@@ -275,7 +276,7 @@ export class PretixPipeline implements BasePipeline {
           groupId: string,
           rootHash: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return sqlTransaction(
+          return sqlQueryWithPool(
             this.context.dbPool,
             async (client) =>
               this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
@@ -457,85 +458,80 @@ export class PretixPipeline implements BasePipeline {
           `saving ${atomsToSave.length} atoms for pipeline id '${this.id}' of type ${this.type}`
         );
 
-        return namedSqlTransaction(
-          this.context.dbPool,
-          "load",
-          async (client) => {
-            if (this.autoIssuanceProvider) {
-              const newManualTickets =
-                await this.autoIssuanceProvider.dripNewManualTickets(
-                  client,
-                  this.consumerDB,
-                  await this.getAllManualTickets(client),
-                  atomsToSave
-                );
-
-              await Promise.allSettled(
-                newManualTickets.map((t) =>
-                  this.manualTicketDB.save(client, this.id, t)
-                )
+        return sqlQueryWithPool(this.context.dbPool, async (client) => {
+          if (this.autoIssuanceProvider) {
+            const newManualTickets =
+              await this.autoIssuanceProvider.dripNewManualTickets(
+                client,
+                this.consumerDB,
+                await this.getAllManualTickets(client),
+                atomsToSave
               );
-            }
 
-            await this.db.clear(this.definition.id);
-            await this.db.save(this.definition.id, atomsToSave);
-            await this.db.markAsLoaded(this.id);
-
-            logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
-
-            const loadEnd = Date.now();
-
-            logger(
-              LOG_TAG,
-              `loaded ${atomsToSave.length} atoms for pipeline id ${
-                this.id
-              } in ${loadEnd - startTime.getTime()}ms`
-            );
-
-            span?.setAttribute("atoms_saved", atomsToSave.length);
-
-            // Remove any pending check-ins that succeeded before loading started.
-            // Those that succeeded after loading started might not be represented in
-            // the data we fetched, so we can remove them on the next run.
-            // Pending checkins with the "Pending" status should not be removed, as
-            // they are still in-progress.
-            this.pendingCheckIns.forEach((value, key) => {
-              if (
-                value.status === CheckinStatus.Success &&
-                value.timestamp <= startTime.getTime()
-              ) {
-                this.pendingCheckIns.delete(key);
-              }
-            });
-
-            const end = new Date();
-            logs.push(
-              makePLogInfo(
-                `load finished in ${end.getTime() - startTime.getTime()}ms`
+            await Promise.allSettled(
+              newManualTickets.map((t) =>
+                this.manualTicketDB.save(client, this.id, t)
               )
             );
-
-            if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-              await this.triggerSemaphoreGroupUpdate(client);
-            }
-
-            const loadSummary: PipelineLoadSummary = {
-              paused: false,
-              fromCache: false,
-              lastRunEndTimestamp: end.toISOString(),
-              lastRunStartTimestamp: startTime.toISOString(),
-              latestLogs: logs,
-              atomsLoaded: atomsToSave.length,
-              atomsExpected: atomsToSave.length,
-              errorMessage: undefined,
-              semaphoreGroups:
-                this.semaphoreGroupProvider?.getSupportedGroups(),
-              success: true
-            };
-
-            return loadSummary;
           }
-        );
+
+          await this.db.clear(this.definition.id);
+          await this.db.save(this.definition.id, atomsToSave);
+          await this.db.markAsLoaded(this.id);
+
+          logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
+
+          const loadEnd = Date.now();
+
+          logger(
+            LOG_TAG,
+            `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
+              loadEnd - startTime.getTime()
+            }ms`
+          );
+
+          span?.setAttribute("atoms_saved", atomsToSave.length);
+
+          // Remove any pending check-ins that succeeded before loading started.
+          // Those that succeeded after loading started might not be represented in
+          // the data we fetched, so we can remove them on the next run.
+          // Pending checkins with the "Pending" status should not be removed, as
+          // they are still in-progress.
+          this.pendingCheckIns.forEach((value, key) => {
+            if (
+              value.status === CheckinStatus.Success &&
+              value.timestamp <= startTime.getTime()
+            ) {
+              this.pendingCheckIns.delete(key);
+            }
+          });
+
+          const end = new Date();
+          logs.push(
+            makePLogInfo(
+              `load finished in ${end.getTime() - startTime.getTime()}ms`
+            )
+          );
+
+          if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+            await this.triggerSemaphoreGroupUpdate(client);
+          }
+
+          const loadSummary: PipelineLoadSummary = {
+            paused: false,
+            fromCache: false,
+            lastRunEndTimestamp: end.toISOString(),
+            lastRunStartTimestamp: startTime.toISOString(),
+            latestLogs: logs,
+            atomsLoaded: atomsToSave.length,
+            atomsExpected: atomsToSave.length,
+            errorMessage: undefined,
+            semaphoreGroups: this.semaphoreGroupProvider?.getSupportedGroups(),
+            success: true
+          };
+
+          return loadSummary;
+        });
       }
     );
   }
@@ -1189,7 +1185,7 @@ export class PretixPipeline implements BasePipeline {
 
       //let didUpdate = false;
 
-      return namedSqlTransaction(this.context.dbPool, "", async (client) => {
+      return sqlQueryWithPool(this.context.dbPool, async (client) => {
         // for (const e of emails) {
         //   didUpdate =
         //     didUpdate ||

@@ -6,7 +6,7 @@ import {
   deleteUnsupportedRateLimitBuckets,
   pruneRateLimitBuckets
 } from "../database/queries/rateLimit";
-import { sqlTransaction } from "../database/sqlQuery";
+import { sqlQueryWithPool, sqlTransaction } from "../database/sqlQuery";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
@@ -40,13 +40,13 @@ export class RateLimitService {
     this.context = context;
     this.rollbarService = rollbarService;
     const pruneExpiredBuckets = async (): Promise<void> => {
-      await sqlTransaction(this.context.dbPool, (client) =>
+      await sqlQueryWithPool(this.context.dbPool, (client) =>
         this.pruneBuckets(client)
       );
       this.pruneTimeout = setTimeout(() => pruneExpiredBuckets(), ONE_HOUR_MS);
     };
     pruneExpiredBuckets();
-    sqlTransaction(this.context.dbPool, (client) =>
+    sqlQueryWithPool(this.context.dbPool, (client) =>
       this.removeUnsupportedBuckets(client)
     );
     this.disabled = disabled;
