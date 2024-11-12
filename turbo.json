@@ -243,6 +243,7 @@
     "SELF_HOSTED_PODBOX_MODE",
     "GENERIC_ISSUANCE_TEST_MODE",
     "PRETIX_BATCH_ENABLED_FOR",
+    "DB_POOL_SIZE",
     "//// add env vars above this line ////"
   ]
 }
