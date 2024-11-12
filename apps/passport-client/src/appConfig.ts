@@ -21,6 +21,10 @@ interface AppConfig {
   embeddedZapps: Record<string, string>;
   // origins that are allowed to query Devcon tickets directly
   devconTicketQueryOrigins: string[];
+  // If IGNORE_NON_PRIORITY_FEEDS=true, then non-priority feeds will be ignored.
+  ignoreNonPriorityFeeds: boolean;
+  // URLs of feed providers that are priority feeds.
+  priorityFeedProviderUrls: string[];
 }
 
 if (
@@ -84,7 +88,11 @@ export const appConfig: AppConfig = {
   zappRestrictOrigins: process.env.ZAPP_RESTRICT_ORIGINS === "true",
   zappAllowedSignerOrigins: zappAllowedSignerOrigins,
   embeddedZapps: embeddedZapps,
-  devconTicketQueryOrigins: devconTicketQueryOrigins
+  devconTicketQueryOrigins: devconTicketQueryOrigins,
+  ignoreNonPriorityFeeds: process.env.IGNORE_NON_PRIORITY_FEEDS === "true",
+  priorityFeedProviderUrls: process.env.PRIORITY_FEED_PROVIDER_URLS
+    ? JSON.parse(process.env.PRIORITY_FEED_PROVIDER_URLS)
+    : []
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));
